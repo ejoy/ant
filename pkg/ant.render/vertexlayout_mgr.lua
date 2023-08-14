@@ -57,32 +57,32 @@ function mgr.layout_stride(corrected_layout)
 	return stride
 end
 
-local decls = {}
+local LAYOUT_NAMES = {}
 
-local function decl_name(elemname)
-	local decl = decls[elemname]
-	if decl == nil then
+local function layout_name(elemname)
+	local ln = LAYOUT_NAMES[elemname]
+	if ln == nil then
 		assert(#elemname == 6)
 		local attrib 	= get_attrib(elemname)
 		local num 		= tonumber(elemname:sub(2, 2))
 		local normalize = elemname:sub(4, 4) == "n"
 		local asint		= elemname:sub(5, 5) == "i"
 		local type 		= assert(SHORTNAME_MAPPER[elemname:sub(6, 6)])
-		decl = {attrib, num, type, normalize, asint}
-		decls[elemname] = decl
+		ln = {attrib, num, type, normalize, asint}
+		LAYOUT_NAMES[elemname] = ln
 	end
 
-	return decl
+	return ln
 end
 
-local function create_decl(vb_layout)
-	local decl = {}
+local function create_layout(vb_layout)
+	local layoutnames = {}
 	for e in vb_layout:gmatch("%w+") do
-		decl[#decl+1] = decl_name(e)
+		layoutnames[#layoutnames+1] = layout_name(e)
 	end
 
 	local bgfx = require "bgfx"
-	local d, stride = bgfx.vertex_layout(decl)
+	local d, stride = bgfx.vertex_layout(layoutnames)
 	return {handle=d, stride=stride}
 end
 
@@ -137,7 +137,7 @@ function mgr.get(layout)
 
 		l = LAYOUTS[newlayout]
 		if l == nil then
-			l = create_decl(newlayout)
+			l = create_layout(newlayout)
 			LAYOUTS[layout]		= l
 			LAYOUTS[newlayout]	= l
 		end
