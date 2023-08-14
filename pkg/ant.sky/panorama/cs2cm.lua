@@ -15,7 +15,7 @@ local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local imaterial = ecs.require "ant.asset|material"
-local icompute  = ecs.import.interface "ant.render|icompute"
+local icompute  = ecs.require "ant.render|compute.compute"
 local iibl      = ecs.import.interface "ant.render|iibl"
 local icubemap_mipmap = ecs.import.interface "ant.sky|icubemap_mipmap"
 local panorama_util=require "panorama.util"

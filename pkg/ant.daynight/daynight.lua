@@ -2,12 +2,10 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local mathpkg   = import_package "ant.math"
-local mc, mu    = mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
 
 local imaterial = ecs.require "ant.asset|material"
-local ilight    = ecs.import.interface "ant.render|ilight"
+local ilight    = ecs.require "ant.render|light.light"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local dn_sys = ecs.system "daynight_system"

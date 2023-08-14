@@ -16,27 +16,11 @@ system "shadow_system"
     .method "camera_usage"
     .method "update_filter"
 
-interface "ishadow"
-    .implement "shadow/shadow.lua"
-    .method "crop_matrix"
-
-    .method "setting"
-    .method "fb_index"
-    .method "shadowmap_size"
-
-    .method "shadow_param"
-    .method "shadow_param2"
-    .method "split_num"
-
-    .method "calc_split_frustums"
-    .method "split_frustums"
-
 component "csm_directional_light"
 component "csm".type "lua"
 policy "csm_queue"
     .require_system "ant.render|shadow_system"
     --.require_system "ant.render|shadow_debug_system"
-    .require_interface "ant.render|ishadow"
     .component "csm"
 
 for i=1, 4 do

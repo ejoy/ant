@@ -12,7 +12,7 @@ local queuemgr	= require "queue_mgr"
 local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
-local irl		= ecs.import.interface "ant.render|irender_layer"
+local irl		= ecs.require "ant.render|render_layer"
 
 local render_sys= ecs.system "render_system"
 

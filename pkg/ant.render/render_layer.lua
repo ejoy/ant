@@ -31,7 +31,7 @@ local function find_layeridx(name)
     end
 end
 
-local irl = ecs.interface "irender_layer"
+local irl =  {}
 
 local rl_mb = world:sub {"render_layer_changed"}
 
@@ -95,3 +95,5 @@ function rl_sys:start_frame()
         break
     end
 end
+
+return irl

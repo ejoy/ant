@@ -7,17 +7,7 @@ system "modifier_system"
     .method "exit"
 
 component "modifier".type "lua"
+
 policy "modifier"
     .require_system     "ant.modifier|modifier_system"
-    .require_interface  "ant.modifier|imodifier"
     .component "modifier"
-
-interface "imodifier"
-    .implement "modifier.lua"
-    .method "start"
-    .method "stop"
-    .method "delete"
-    .method "set_target"
-    .method "create_bone_modifier"
-    .method "create_srt_modifier"
-    .method "create_mtl_modifier"

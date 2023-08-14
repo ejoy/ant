@@ -8,15 +8,11 @@ local mc		= mathpkg.constant
 local INV_Z<const> = true
 
 local viewidmgr = require "viewid_mgr"
-local fbmgr     = require "framebuffer_mgr"
-local irender   = ecs.require "ant.render|render_system.render"
-local imesh		= ecs.require "ant.asset|mesh"
 
 local math3d    = require "math3d"
 
 local ientity   = ecs.require "ant.render|components.entity"
-local ilight	= ecs.import.interface "ant.render|ilight"
-local ishadow	= ecs.import.interface "ant.render|ishadow"
+local ishadow	= ecs.require "ant.render|shadow.shadow"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local icamera	= ecs.require "ant.camera|camera"
 local iom		= ecs.require "ant.objcontroller|obj_motion"

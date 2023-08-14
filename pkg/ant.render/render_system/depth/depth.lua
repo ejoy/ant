@@ -1,7 +1,7 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local idrawindirect = ecs.import.interface "ant.render|idrawindirect"
+local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local setting       = import_package "ant.settings".setting
 local renderutil    = require "util"
 local queuemgr      = require "queue_mgr"
@@ -17,7 +17,7 @@ end
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
-local irl       = ecs.import.interface "ant.render|irender_layer"
+local irl       = ecs.require "ant.render|render_layer"
 
 local pre_depth_material
 local pre_depth_skinning_material

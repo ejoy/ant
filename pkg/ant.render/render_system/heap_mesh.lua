@@ -1,19 +1,16 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local idrawindirect = ecs.import.interface "ant.render|idrawindirect"
+local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local math3d 	= require "math3d"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
-local declmgr   = import_package "ant.render".declmgr
 local main_viewid = viewidmgr.get "csm_fb"
-local bgfx 			= require "bgfx"
-local assetmgr  = import_package "ant.asset"
-local icompute = ecs.import.interface "ant.render|icompute"
-local iheapmesh = ecs.interface "iheapmesh"
+local icompute = ecs.require "ant.render|compute.compute"
 local imaterial = ecs.require "ant.asset|material"
 local hm_sys = ecs.system "heap_mesh"
 
+local iheapmesh = {}
 
 local function update_heap_compute(draw_indirect, dispatch, numToDraw, heap_params, aabb_size, interval_size, instance_params)
     local idb_handle, itb_handle = draw_indirect.idb_handle, draw_indirect.itb_handle
@@ -127,3 +124,5 @@ function iheapmesh.update_heap_mesh_number(eid, num)
     e.heapmesh.curHeapNum = num
     e.heapmesh_changed = true
 end
+
+return iheapmesh

@@ -1,13 +1,3 @@
-interface "irender_layer"
-    .implement "render_layer.lua"
-    .method "add_layers"
-    .method "remove_layer"
-    .method "layeridx"
-    .method "layername"
-    .method "set_layer"
-    .method "is_opacity_layer"
-
 system "render_layer_system"
     .implement "render_layer.lua"
-    .require_interface "ant.render|irender_layer"
     .method "start_frame"

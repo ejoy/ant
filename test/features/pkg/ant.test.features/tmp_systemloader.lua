@@ -7,7 +7,7 @@ local ientity       = ecs.require "ant.render|components.entity"
 local imaterial     = ecs.require "ant.asset|material"
 local imesh         = ecs.require "ant.asset|mesh"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
-local irl           = ecs.import.interface "ant.render|irender_layer"
+local irl           = ecs.require "ant.render|render_layer"
 local idn           = ecs.import.interface "ant.daynight|idaynight"
 local itimer        = ecs.require "ant.timer|timer_system"
 local assetmgr      = import_package "ant.asset"
@@ -17,7 +17,7 @@ local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
 
 local init_loader_sys   = ecs.system 'init_loader_system'
-local iheapmesh = ecs.import.interface "ant.render|iheapmesh"
+local iheapmesh = ecs.require "ant.render|render_system.heap_mesh"
 local printer_eid
 local printer_percent = 0
 local function point_light_test()

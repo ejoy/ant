@@ -93,7 +93,7 @@ shadowcfg.fb_index = fbmgr.create(
 
 
 
-local ishadow = ecs.interface "ishadow"
+local ishadow = {}
 
 function ishadow.setting()
 	return shadowcfg

@@ -27,7 +27,7 @@ local math3d    = require "math3d"
 
 local util      = ecs.require "postprocess.util"
 
-local icompute  = ecs.import.interface "ant.render|icompute"
+local icompute  = ecs.require "ant.render|compute.compute"
 local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 

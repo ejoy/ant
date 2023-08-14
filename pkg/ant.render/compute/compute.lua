@@ -6,7 +6,7 @@ local assetmgr = import_package "ant.asset"
 
 local bgfx = require "bgfx"
 
-local ic = ecs.interface "icompute"
+local ic = {}
 
 local progman = require "programan.client"
 
@@ -66,3 +66,5 @@ function cs:entity_init()
         e.dispatch.fx       = e.material_result.fx
 	end
 end
+
+return ic

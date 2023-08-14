@@ -11,7 +11,7 @@ local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local icompute  = ecs.import.interface "ant.render|icompute"
+local icompute  = ecs.require "ant.render|compute.compute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
 local imaterial = ecs.require "ant.asset|material"
 

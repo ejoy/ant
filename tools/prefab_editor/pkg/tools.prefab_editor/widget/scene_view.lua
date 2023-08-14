@@ -129,7 +129,7 @@ local function get_icon_by_object_type(node)
         return icons.ICON_OBJECT
     end
 end
-local imodifier 		= ecs.import.interface "ant.modifier|imodifier"
+local imodifier 		= ecs.require "ant.modifier|modifier"
 local function show_scene_node(node)
     local e <close> = w:entity(node.eid, "animation?in")
     if e.animation then

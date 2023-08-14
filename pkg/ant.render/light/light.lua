@@ -48,7 +48,7 @@ local function isChanged()
 	--TODO state
 end
 
-local ilight = ecs.interface "ilight"
+local ilight = {}
 
 local function check_intensity_unit(unit)
 	assert(unit == "lux" or unit == "candela")
@@ -359,3 +359,5 @@ function lightsys:update_system_properties()
 		update_light_buffers()
 	end
 end
+
+return ilight

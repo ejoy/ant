@@ -19,9 +19,9 @@ local road_material
 local group_table = {}
 local road_default_group = 30001
 local viewidmgr = renderpkg.viewidmgr
-local icompute = ecs.import.interface "ant.render|icompute"
+local icompute = ecs.require "ant.render|compute.compute"
 local main_viewid = viewidmgr.get "csm_fb"
-local idrawindirect = ecs.import.interface "ant.render|idrawindirect"
+local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local TERRAIN_TYPES<const> = {
     road1 = "1",
     road2 = "2",

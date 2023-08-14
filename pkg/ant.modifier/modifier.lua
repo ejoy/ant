@@ -6,15 +6,16 @@ local assetmgr  = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
 local modifier_sys = ecs.system "modifier_system"
-local imodifier = ecs.interface "imodifier"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local timer     = ecs.require "ant.timer|timer_system"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ika       = ecs.import.interface "ant.animation|ikeyframe"
 local imaterial = ecs.require "ant.asset|material"
 local mathpkg	= import_package "ant.math"
-local mc, mu	= mathpkg.constant, mathpkg.util
+local mc	= mathpkg.constant
 local math3d    = require "math3d"
+
+local imodifier = {}
 
 function modifier_sys:init()
 
@@ -267,3 +268,4 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     return modifier
 end
 
+return imodifier

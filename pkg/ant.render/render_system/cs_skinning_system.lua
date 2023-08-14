@@ -27,7 +27,7 @@ local math3d 	= require "math3d"
 local bgfx 		= require "bgfx"
 
 -- skinning system
-local icompute = ecs.import.interface "ant.render|icompute"
+local icompute = ecs.require "ant.render|compute.compute"
 
 local r2l_mat<const> = mc.R2L_MAT
 

@@ -21,8 +21,8 @@ local sampler = renderpkg.sampler
 
 local bgfx = require "bgfx"
 
-local icompute = ecs.import.interface "ant.render|icompute"
-local ishadow	= ecs.import.interface "ant.render|ishadow"
+local icompute = ecs.require "ant.render|compute.compute"
+local ishadow	= ecs.require "ant.render|shadow.shadow"
 local imaterial = ecs.require "ant.asset|material"
 
 local vblur_viewid<const> = viewidmgr.get "vblur"

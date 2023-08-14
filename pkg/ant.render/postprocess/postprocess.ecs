@@ -51,7 +51,6 @@ policy "postprocess_queue"
     .component "queue_name"
 
 system "postprocess_obj_system"
-    .require_interface "ant.render|irender_layer"
     .implement "postprocess/postprocess_obj.lua"
     .method "init"
 

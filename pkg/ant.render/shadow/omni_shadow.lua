@@ -32,7 +32,7 @@ local math3d        = require "math3d"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera   = ecs.require "ant.camera|camera"
 local ivs       = ecs.require "ant.render|visible_state"
-local ilight    = ecs.import.interface "ant.render|ilight"
+local ilight    = ecs.require "ant.render|light.light"
 local ientity   = ecs.require "ant.render|components.entity"
 
 local function get_render_buffers(width, height)

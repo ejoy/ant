@@ -8,7 +8,7 @@ local fbmgr     = require "framebuffer_mgr"
 
 local bgfx      = require "bgfx"
 
-local icompute = ecs.import.interface "ant.render|icompute"
+local icompute = ecs.require "ant.render|compute.compute"
 
 --resolve depth
 local depth_resolve_sys = ecs.system "depth_resolve_system"

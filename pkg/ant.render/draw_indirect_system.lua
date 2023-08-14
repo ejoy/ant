@@ -2,10 +2,10 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local bgfx 			= require "bgfx"
-local math3d = require "math3d"
 local draw_indirect_system = ecs.system "draw_indirect_system"
 local declmgr   = import_package "ant.render".declmgr
-local idrawindirect = ecs.interface "idrawindirect"
+
+local idrawindirect = {}
 
 local type_table = {
     ["ROAD"] = {1, 0, 0, 0},
@@ -36,3 +36,5 @@ end
 function idrawindirect.get_draw_indirect_type(indirect_type)
     return type_table[indirect_type]
 end
+
+return idrawindirect
