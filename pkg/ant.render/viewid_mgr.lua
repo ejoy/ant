@@ -1,6 +1,6 @@
 local viewid_pool = {}
 
-local max_viewid<const>					= 256
+local MAX_VIEWID<const>	= 256
 local bindings = {}
 local viewid_names = {}
 
@@ -9,8 +9,8 @@ local remapping_id_list = {}
 --viewid is base 0
 local function add_view(name, afterview_idx)
 	local id = #remapping_id_list
-	if id >= max_viewid then
-		error(("not enough view id, max viewid: %d"):format(max_viewid))
+	if id >= MAX_VIEWID then
+		error(("not enough view id, max viewid: %d"):format(MAX_VIEWID))
 	end
 
 	local real_id = (afterview_idx and afterview_idx+1 or id)

@@ -1,4 +1,4 @@
-local mgr = {}; mgr.__index = mgr
+local mgr = {}
 
 local bgfx = require "bgfx"
 
