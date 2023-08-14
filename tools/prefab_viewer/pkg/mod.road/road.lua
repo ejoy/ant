@@ -14,7 +14,7 @@ local math3d    = require "math3d"
 local layout_name<const>    = declmgr.correct_layout "p3|t20|t22"
 local layout                = declmgr.get(layout_name)
 local width, height = 20, 20
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 local road_material
 local group_table = {}
 local road_default_group = 30001

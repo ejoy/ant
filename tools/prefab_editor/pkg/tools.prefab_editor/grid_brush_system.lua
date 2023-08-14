@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom           = ecs.require "ant.objcontroller|obj_motion"
 local ivs		    = ecs.import.interface "ant.scene|ivisible_state"
 local computil      = ecs.import.interface "ant.render|ientity"
 local irq           = ecs.import.interface "ant.render|irenderqueue"

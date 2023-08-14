@@ -5,7 +5,7 @@ local math3d    = require "math3d"
 
 local icamera   = ecs.import.interface "ant.camera|icamera"
 local irender   = ecs.import.interface "ant.render|irender"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local renderpkg = import_package "ant.render"

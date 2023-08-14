@@ -19,7 +19,6 @@ system "bounding_system"
 
 system "scenespace_system"
     .implement ":system.scene"
-    .require_interface "ant.objcontroller|iobj_motion"
     .method "entity_init"
     .method "scene_changed"
     .method "scene_remove"

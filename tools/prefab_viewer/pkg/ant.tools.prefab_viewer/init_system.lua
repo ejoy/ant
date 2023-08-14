@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local math3d = require "math3d"
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 local iterrain  = ecs.import.interface "mod.terrain|iterrain"
 local S = ecs.system "init_system"
 

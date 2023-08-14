@@ -13,7 +13,6 @@ import_package "ant.window".start {
         "ant.test.simple|init_system",
     },
     interface = {
-        "ant.objcontroller|iobj_motion",
         "ant.animation|ianimation",
     },
     policy = {

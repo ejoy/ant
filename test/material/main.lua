@@ -12,9 +12,6 @@ import_package "ant.window".start {
     system = {
         "ant.test.material|init_system",
     },
-    interface = {
-        "ant.objcontroller|iobj_motion",
-    },
     policy = {
         "ant.general|name",
         "ant.scene|scene_object",

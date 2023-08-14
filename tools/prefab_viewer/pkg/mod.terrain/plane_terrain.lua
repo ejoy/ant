@@ -15,7 +15,7 @@ local layout_name<const>    = declmgr.correct_layout "p3|t20|t42"
 local layout                = declmgr.get(layout_name)
 local noise1 = {}
 local terrain_width, terrain_height, unit, origin_offset_width, origin_offset_height
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 local default_quad_ib<const> = {
     0, 1, 2,
     2, 3, 0,

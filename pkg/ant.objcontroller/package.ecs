@@ -1,4 +1,2 @@
-import "obj_motion.ecs"
 import "screen_3dobj.ecs"
 import "pickup/pickup_system.ecs"
-

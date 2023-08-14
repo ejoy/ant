@@ -6,7 +6,7 @@ local imgui     = require "imgui"
 local math3d    = require "math3d"
 
 local icamera   = ecs.import.interface "ant.camera|icamera"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 
 local CAMERA_SETTING_NAME<const> = "CameraSetting"

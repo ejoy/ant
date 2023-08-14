@@ -5,7 +5,7 @@ local w     = world.w
 local math3d    = require "math3d"
 
 local iefk      = ecs.import.interface "ant.efk|iefk"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local is = ecs.system "init_system"
 

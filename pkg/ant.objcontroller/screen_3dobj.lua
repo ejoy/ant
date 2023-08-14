@@ -5,10 +5,8 @@ local w     = world.w
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-local ecs_intrf = ecs.import.interface
-
-local irq = ecs_intrf "ant.render|irenderqueue"
-local iom = ecs_intrf "ant.objcontroller|iobj_motion"
+local irq = ecs.import.interface "ant.render|irenderqueue"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local math3d = require "math3d"
 

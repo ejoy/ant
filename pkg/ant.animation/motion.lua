@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 local timer     = ecs.require "ant.timer|timer_system"
 local mathpkg	= import_package "ant.math"
 local mu	    = mathpkg.util

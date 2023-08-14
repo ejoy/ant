@@ -6,7 +6,7 @@ local world = ecs.world
 -- local fbmgr     = require "framebuffer_mgr"
 
 -- local ipp       = ecs.import.interface "ant.render|postprocess"
--- local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+-- local iom       = ecs.require "ant.objcontroller|obj_motion"
 -- local imaterial = ecs.import.interface "ant.asset|imaterial"
 -- local icamera   = ecs.import.interface "ant.camera|icamera"
 

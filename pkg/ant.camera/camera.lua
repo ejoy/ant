@@ -136,7 +136,7 @@ function ic.update_frustum(ce, ww, hh)
     end
 end
 
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 function ic.lookto(ce, ...)
     iom.lookto(ce, ...)
 end

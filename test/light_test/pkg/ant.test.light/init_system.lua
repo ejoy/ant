@@ -16,7 +16,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local S = ecs.system "init_system"
 
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local function create_instance(prefab, on_ready)
     local p = ecs.create_instance(prefab)

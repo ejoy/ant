@@ -6,7 +6,7 @@ local math3d = require "math3d"
 local ientity 	= ecs.import.interface "ant.render|ientity"
 local imesh		= ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom		= ecs.require "ant.objcontroller|obj_motion"
 
 local function create_instance(pfile, s, r, t)
 	s = s or {0.1, 0.1, 0.1}

@@ -5,7 +5,7 @@ local math3d = require "math3d"
 local mu     = import_package "ant.math".util
 local mc     = import_package "ant.math".constant
 
-local iobj_motion = ecs.interface "iobj_motion"
+local iobj_motion = {}
 
 local function set_changed(e)
     w:extend(e, "scene:out scene_needchange?out")
@@ -267,3 +267,5 @@ function iobj_motion.screen_to_ndc(pt2d, vp_size)
     local ndc = mu.pt2D_to_NDC(pt2d, vp_size)
     return {ndc[1], ndc[2], pt2d[3]}
 end
+
+return iobj_motion

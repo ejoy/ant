@@ -3,7 +3,7 @@ local world = ecs.world
 local w 	= world.w
 
 local assetmgr 		= import_package "ant.asset"
-local iom 			= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom 			= ecs.require "ant.objcontroller|obj_motion"
 local animodule 	= require "hierarchy".animation
 
 local ani_sys 		= ecs.system "animation_system"

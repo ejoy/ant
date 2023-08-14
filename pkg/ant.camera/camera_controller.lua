@@ -4,7 +4,7 @@ local w = world.w
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local cc_sys = ecs.system "default_camera_controller"
 

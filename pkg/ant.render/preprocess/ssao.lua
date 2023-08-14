@@ -29,7 +29,7 @@ local util      = ecs.require "postprocess.util"
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"

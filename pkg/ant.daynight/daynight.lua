@@ -8,7 +8,7 @@ local math3d    = require "math3d"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ilight    = ecs.import.interface "ant.render|ilight"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local dn_sys = ecs.system "daynight_system"
 local default_intensity = ilight.default_intensity "directional"

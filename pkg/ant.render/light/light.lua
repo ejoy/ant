@@ -5,7 +5,7 @@ local w = world.w
 local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
-local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom		= ecs.require "ant.objcontroller|obj_motion"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 

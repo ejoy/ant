@@ -61,7 +61,6 @@ system "init_loader_system"
     .require_policy "ant.render|outline_info"
 
     .require_interface "ant.camera|icamera"
-    .require_interface "ant.objcontroller|iobj_motion"
     .require_interface "ant.render|iwidget_drawer"
     .require_interface "ant.render|ilight"
     .require_interface "ant.test.features|ivertex_attrib_visualizer"

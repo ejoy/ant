@@ -10,7 +10,7 @@ local imgui         = require "imgui"
 
 local serialize     = import_package "ant.serialize"
 
-local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom           = ecs.require "ant.objcontroller|obj_motion"
 local icamera       = ecs.import.interface "ant.camera|icamera"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 

@@ -6,7 +6,7 @@ local example_sys = ecs.system "lightmap_example"
 local ilm = ecs.import.interface "ant.bake|ilightmap"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 local ientity = ecs.import.interface "ant.render|ientity"
 local math3d = require "math3d"
 

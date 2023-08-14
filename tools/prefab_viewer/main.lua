@@ -13,9 +13,6 @@ import_package "ant.window".start {
     system = {
         "ant.tools.prefab_viewer|init_system",
     },
-    interface = {
-        "ant.objcontroller|iobj_motion",
-    },
     policy = {
         "ant.general|name",
         "ant.scene|scene_object",

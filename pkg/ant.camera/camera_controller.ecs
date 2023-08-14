@@ -1,6 +1,5 @@
 system "default_camera_controller"
     .implement "camera_controller.lua"
-    .require_interface "ant.objcontroller|iobj_motion"
     --.method "data_changed"
     --.method "init_world"
     .method "camera_usage"

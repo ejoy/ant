@@ -4,7 +4,7 @@ local w = world.w
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
-local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom   = ecs.require "ant.objcontroller|obj_motion"
 
 --TODO: this file need skeleton component, should move to animation package to fix circle dependence
 

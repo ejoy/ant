@@ -19,7 +19,7 @@ local ilight	= ecs.import.interface "ant.render|ilight"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local icamera	= ecs.import.interface "ant.camera|icamera"
-local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom		= ecs.require "ant.objcontroller|obj_motion"
 
 local shadowdbg_sys = ecs.system "shadow_debug_system"
 

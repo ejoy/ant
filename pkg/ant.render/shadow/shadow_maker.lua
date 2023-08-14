@@ -34,7 +34,7 @@ local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom		= ecs.require "ant.objcontroller|obj_motion"
 local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
 

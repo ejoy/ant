@@ -4,7 +4,7 @@ local w     = world.w
 
 local math3d= require "math3d"
 
-local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iom   = ecs.require "ant.objcontroller|obj_motion"
 
 local hn_test_sys = ecs.system "hitch_node_test_system"
 local hitch_test_group_id<const> = 1000
