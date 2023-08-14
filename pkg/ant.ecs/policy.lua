@@ -4,7 +4,6 @@ local function create(w, policies)
         component_opt = {},
     }
     local componentset = {}
-    local unionset = {}
     local policyset = {}
     local function import_policy(name)
         if policyset[name] then
@@ -14,12 +13,6 @@ local function create(w, policies)
         local class = w:_import("policy", name)
         if not class then
             error(("policy `%s` is not defined."):format(name))
-        end
-        if class.union then
-            if unionset[class.union] then
-                error(("duplicate union `%s` in `%s` and `%s`."):format(class.union, name, unionset[class.union]))
-            end
-            unionset[class.union] = name
         end
         for _, v in ipairs(class.policy) do
             import_policy(v)

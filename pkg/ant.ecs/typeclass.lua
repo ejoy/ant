@@ -22,14 +22,10 @@ end
 
 local function solve_policy(fullname, v)
 	local _, policy_name = splitname(fullname)
-	local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
-	if not union_name then
-		name = policy_name:match "^([%a_][%w_]*)$"
-	end
+	local name = policy_name:match "^([%a_][%w_]*)$"
 	if not name then
 		error(("invalid policy name: `%s`."):format(policy_name))
 	end
-	v.union = union_name
 end
 
 local check_map = {
