@@ -1,4 +1,0 @@
-interface "ik"
-    .implement "ik.lua"
-    .method "do_ik"
-    .method "setup"

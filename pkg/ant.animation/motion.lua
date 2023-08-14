@@ -6,7 +6,7 @@ local timer     = ecs.require "ant.timer|timer_system"
 local mathpkg	= import_package "ant.math"
 local mu	    = mathpkg.util
 local im_sys    = ecs.system "motion_system"
-local im        = ecs.interface "imotion"
+local im        = {}
 
 local all_motions = {}
 
@@ -94,3 +94,5 @@ function im_sys:data_changed()
         all_motions[eid] = nil
     end
 end
+
+return im

@@ -11,10 +11,6 @@ system "system_name"
 	.stage "stage_a"
 	.stage "stage_b"
 
-interface "interface_name"
-	.require_system "system_name"
-	.method "funcname"
-
 policy "policy_name"
 	.require_system "system_name"
 	.require_transform "transform_name"

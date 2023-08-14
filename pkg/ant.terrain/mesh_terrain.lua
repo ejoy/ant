@@ -47,7 +47,8 @@ function mt_sys:entity_init()
     end
 end
 
-local ims = ecs.interface "imeshshape"
+local ims = {}
+
 function ims.set(e, midx, iw, ih)
     w:extend(e, "shape_terrain:in eid:in")
     local st = e.shape_terrain
@@ -68,3 +69,5 @@ function ims.set_resource(te, idx, prefabres)
     local st = te.shape_terrain
     st.mesh_shape.meshes[idx] = prefabres
 end
+
+return ims

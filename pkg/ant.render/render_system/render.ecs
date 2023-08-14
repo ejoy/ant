@@ -227,10 +227,6 @@ system "cull_system"
     .method "exit"
     .method "cull"
 
-interface "icull_primitive"
-    .implement "cull_system.lua"
-    .method "cull"
-
 import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"
 

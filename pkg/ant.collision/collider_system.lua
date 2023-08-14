@@ -81,7 +81,7 @@ end
 -- 	}
 -- end
 
-local icoll = ecs.interface "icollider"
+local icoll = {}
 
 local function set_obj_transform(obj, t, r)
 	rp3d_world:set_transform(obj, t, r)
@@ -143,3 +143,5 @@ function collider_sys:entity_remove()
 		end
 	end
 end
+
+return icoll

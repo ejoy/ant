@@ -10,23 +10,7 @@ system "terrain_system"
     .implement "terrain_system.lua"
     .method "init"
     .method "data_changed"
-
-interface "iterrain"
-    .implement "terrain_system.lua"
-    .method "gen_terrain_field"
-    .method "create_roadnet_entity"
-    .method "update_roadnet_entity"
-    .method "delete_roadnet_entity"
-    .method "is_stone_mountain" ]]
-
--- interface "terrain"
---     .implement "terrain_system.lua"
---     .method "min_max_height"
---     .method "grid_height"
---     .method "grid_width"
---     .method "tile_length"
---     .method "vertices_num"
---     .method "heightfield"
+]]
 
 -- system "terrain_system"
 --     .implement "terrain_system.lua"

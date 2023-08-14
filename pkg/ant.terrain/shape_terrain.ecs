@@ -6,11 +6,7 @@
 component "plane_terrain".type "lua"
 component "section_index".type "lua"
 
-interface "iplane_terrain"
-    .implement "plane_terrain.lua"
-    .method "init_plane_terrain"
-    .method "update_plane_terrain"
-    .method "set_wh" ]]
+]]
 
 system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
@@ -21,23 +17,14 @@ system "cube_shape_terrain_system"
 component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"
 
--- interface "ishape_terrain"
---     .implement "cube_shape_terrain.lua"
---     .method "shape_types"
-
 system "mesh_terrain_system"
     .implement "mesh_terrain.lua"
     .method "entity_init"
 
-interface "imeshshape"
-    .implement "mesh_terrain.lua"
-    .method "set"
-    .method "set_resource"
 
 --[[ policy "shape_terrain"
     --.require_system "ant.terrain|mesh_terrain_system"
     .require_system "ant.terrain|plane_terrain_system"
-    .require_interface "ant.terrain|imeshshape"
     .component "shape_terrain" ]]
 
 -- quad_strip

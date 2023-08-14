@@ -1,3 +1,0 @@
-interface "ivertex_attrib_visualizer"
-    .implement "debug/vertex_attrib_visualizer.lua"
-    .method "display_normal"

@@ -4,7 +4,3 @@ import "@ant.general"
 system "motion_system"
     .implement "motion.lua"
     .method "data_changed"
-
-interface "imotion"
-    .implement "motion.lua"
-    .method "play"

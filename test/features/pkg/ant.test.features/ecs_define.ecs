@@ -59,9 +59,6 @@ system "init_loader_system"
     .require_policy "ant.render|heap_mesh"
     .require_policy "ant.daynight|daynight"
     .require_policy "ant.render|outline_info"
-
-    .require_interface "ant.test.features|ivertex_attrib_visualizer"
-
     .method "init"
     .method "init_world"
     .method "ui_update"
@@ -133,7 +130,3 @@ system "motion_sampler_test_system"
 --     .implement "texture_test.lua"
 --     .method "init"
 --     .method "data_changed"
-
-
-
-import "debug/vertex_attrib_visualizer.ecs"

@@ -63,7 +63,8 @@ local function prepare_ikdata(ikdata)
 	return ikdata_cache
 end
 
-local ik_i = ecs.interface "ik"
+local ik_i = {}
+
 function ik_i.setup(e)
 	local skehandle = e.skeleton._handle
 	e.pose_result:setup(skehandle)
@@ -72,3 +73,5 @@ end
 function ik_i.do_ik(pr, ikdata)
 	pr:do_ik(prepare_ikdata(ikdata))
 end
+
+return ik_i
