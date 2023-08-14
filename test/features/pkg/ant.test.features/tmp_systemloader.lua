@@ -9,7 +9,7 @@ local imesh         = ecs.import.interface "ant.asset|imesh"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irl           = ecs.import.interface "ant.render|irender_layer"
 local idn           = ecs.import.interface "ant.daynight|idaynight"
-local itimer        = ecs.import.interface "ant.timer|itimer"
+local itimer        = ecs.require "ant.timer|timer_system"
 
 local ims           = ecs.import.interface "ant.motion_sampler|imotion_sampler"
 

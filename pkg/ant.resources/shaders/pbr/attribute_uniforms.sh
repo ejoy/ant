@@ -89,7 +89,7 @@ mediump vec3 remap_normal(mediump vec2 normalTSXY)
 
 mediump vec3 fetch_normal(sampler2D normaltex, mediump vec2 texcoord)
 {
-    #if BGFX_SHADER_LANGUAGE_METAL
+    #if BX_PLATFORM_OSX || BX_PLATFORM_IOS || BX_PLATFORM_ANDROID
         return remap_normal(texture2DAstc(normaltex, texcoord));
     #else
         return remap_normal(texture2DBc5(normaltex, texcoord));

@@ -90,7 +90,7 @@ function ma_sys:component_init()
     -- end
 end
 
-local timer = ecs.import.interface "ant.timer|itimer"
+local timer = ecs.require "ant.timer|timer_system"
 
 local function step_keyframe(e, delta_time, absolute)
 	-- w:extend(e, "keyframe:in")

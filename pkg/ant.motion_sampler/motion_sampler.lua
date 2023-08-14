@@ -8,7 +8,7 @@ local math3d= require "math3d"
 local lms   = ecs.clibs "motion.sampler"
 local ltween = require "motion.tween"
 
-local itimer= ecs.import.interface "ant.timer|itimer"
+local itimer= ecs.require "ant.timer|timer_system"
 
 local motion_sampler_group<const> = 101010
 

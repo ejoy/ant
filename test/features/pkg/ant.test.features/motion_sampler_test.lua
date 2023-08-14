@@ -6,7 +6,7 @@ local math3d    = require "math3d"
 local ms_test_sys   = ecs.system "motion_sampler_test_system"
 
 local ims           = ecs.import.interface "ant.motion_sampler|imotion_sampler"
-local itimer        = ecs.import.interface "ant.timer|itimer"
+local itimer        = ecs.require "ant.timer|timer_system"
 
 local function motion_sampler_test()
     local g = ims.sampler_group()

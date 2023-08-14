@@ -14,7 +14,7 @@ local assetmgr  = import_package "ant.asset"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
-local itimer    = ecs.import.interface "ant.timer|itimer"
+local itimer    = ecs.require "ant.timer|timer_system"
 
 local PH
 
