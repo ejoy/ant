@@ -1154,13 +1154,13 @@ function m.create_target_animation(at, target)
     end
 end
 
-local ivs		= ecs.import.interface "ant.scene|ivisible_state"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ivs		= ecs.require "ant.render|visible_state"
+local imaterial = ecs.require "ant.asset|material"
 local bone_color = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
 local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 
 local ientity 	= ecs.require "ant.render|components.entity"
-local imesh 	= ecs.import.interface "ant.asset|imesh"
+local imesh 	= ecs.require "ant.asset|mesh"
 
 local function create_joint_entity(joint_name)
     local template = {

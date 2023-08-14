@@ -7,7 +7,7 @@ local setting   = import_package "ant.settings".setting
 local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 
-local ivs           = ecs.import.interface "ant.scene|ivisible_state"
+local ivs           = ecs.require "ant.render|visible_state"
 local sd_sys        = ecs.system "scene_depth_system"
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = require "queue_mgr"

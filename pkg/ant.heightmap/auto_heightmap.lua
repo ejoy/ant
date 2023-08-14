@@ -18,7 +18,7 @@ local mc        = mathpkg.constant
 local irender   = ecs.require "ant.render|render_system.render"
 local icamera   = ecs.require "ant.camera|camera"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local ientity   = ecs.require "ant.render|components.entity"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial

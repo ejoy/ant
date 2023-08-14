@@ -11,7 +11,7 @@ local bgfx 			= require "bgfx"
 local assetmgr  = import_package "ant.asset"
 local icompute = ecs.import.interface "ant.render|icompute"
 local iheapmesh = ecs.interface "iheapmesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local hm_sys = ecs.system "heap_mesh"
 
 

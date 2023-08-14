@@ -10,7 +10,7 @@ local viewidmgr = require "viewid_mgr"
 local queuemgr	= require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render_system.render"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.import.interface "ant.render|irender_layer"
 

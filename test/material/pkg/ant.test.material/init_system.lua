@@ -2,8 +2,8 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local imesh     = ecs.import.interface "ant.asset|imesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imesh     = ecs.require "ant.asset|mesh"
+local imaterial = ecs.require "ant.asset|material"
 local is = ecs.system "init_system"
 
 function is:init()

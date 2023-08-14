@@ -6,7 +6,7 @@ local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
 local mc = import_package "ant.math".constant
 
-local ivs = ecs.import.interface "ant.scene|ivisible_state"
+local ivs = ecs.require "ant.render|visible_state"
 local bgfx = require "bgfx"
 local math3d = require "math3d"
 

@@ -5,8 +5,8 @@ local w = world.w
 local m = ecs.system 'init_system'
 local irq = ecs.require "ant.render|render_system.renderqueue"
 local ientity = ecs.require "ant.render|components.entity"
-local imesh = ecs.import.interface "ant.asset|imesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imesh = ecs.require "ant.asset|mesh"
+local imaterial = ecs.require "ant.asset|material"
 local math3d = require "math3d"
 local function create_plane()
     ecs.create_entity{

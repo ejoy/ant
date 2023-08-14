@@ -68,7 +68,7 @@ function mss:do_motion_sample()
     lms.sample(motion_sampler_group, itimer.delta())
 end
 
-local ims = ecs.interface "imotion_sampler"
+local ims = {}
 
 function ims.sampler_group()
     return ecs.group(motion_sampler_group)
@@ -136,3 +136,5 @@ function ims.set_stop(e, stop)
     e.scene_needchange = true
     w:submit(e)
 end
+
+return ims

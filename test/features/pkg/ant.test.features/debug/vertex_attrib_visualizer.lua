@@ -7,7 +7,7 @@ local math3d = require "math3d"
 local declmgr = import_package "ant.render".declmgr
 
 local ivav = ecs.interface "ivertex_attrib_visualizer"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local function find_stream(vb, what)
     for i=1, #vb do

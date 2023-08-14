@@ -6,7 +6,7 @@ local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 

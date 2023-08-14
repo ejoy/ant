@@ -10,7 +10,7 @@ local INV_Z<const> = true
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local irender   = ecs.require "ant.render|render_system.render"
-local imesh		= ecs.import.interface "ant.asset|imesh"
+local imesh		= ecs.require "ant.asset|mesh"
 
 local math3d    = require "math3d"
 

@@ -93,7 +93,7 @@ local function material_init()
     update_texture(tex)
 
     --[[
-        local imaterial = import_package "ant.asset|imaterial"
+        local imaterial = ecs.require "ant.asset|material"
         imaterial.set_property(e, "s_tex", tex)
     ]]
 

@@ -4,7 +4,7 @@ local w = world.w
 
 local math3d = require "math3d"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local function update_decal(decal)
     local hw, hh = decal.w * 0.5, decal.h * 0.5

@@ -517,7 +517,7 @@ local function remove_entity_self(eid)
     w:remove(eid)
 end
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 function m:create_ground()
     if not self.plane then

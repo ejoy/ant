@@ -1,18 +1,3 @@
-interface "imaterial"
-    .implement "material.lua"
-    .method "load_res"
-    .method "unload_res"
-    .method "resource"
-    .method "set_property"
-    .method "system_attribs"
-    .method "get_color_palette"
-    .method "set_color_palette"
-    .method "set_state"
-
-interface "imesh"
-    .implement "mesh.lua"
-    .method "init_mesh"
-
 system "matobj_system"
     .implement "matobj_system.lua"
     .method "init"

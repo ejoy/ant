@@ -14,7 +14,7 @@ local iexposure = ecs.import.interface "ant.camera|iexposure"
 
 local thread_group_size<const> = 8
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local cubemap_mipmap_sys = ecs.system "cubemap_mipmap_system"
 

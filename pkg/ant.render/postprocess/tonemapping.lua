@@ -7,7 +7,7 @@ local viewidmgr = require "viewid_mgr"
 local tm_sys    = ecs.system "tonemapping_system"
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local util      = ecs.require "postprocess.util"
 

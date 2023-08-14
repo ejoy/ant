@@ -11,7 +11,7 @@ local layout    = declmgr.get(layoutfmt)
 local stride<const> = layout.stride
 
 local iql       = ecs.import.interface "ant.render|ipolyline"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local function add_quad(p0, p1, normal, ww, offset, clr, vertices)
     local d = math3d.sub(p1, p0)

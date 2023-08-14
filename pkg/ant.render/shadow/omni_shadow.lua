@@ -31,7 +31,7 @@ local math3d        = require "math3d"
 
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera   = ecs.require "ant.camera|camera"
-local ivs       = ecs.import.interface "ant.scene|ivisible_state"
+local ivs       = ecs.require "ant.render|visible_state"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local ientity   = ecs.require "ant.render|components.entity"
 

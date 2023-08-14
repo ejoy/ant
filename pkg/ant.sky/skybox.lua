@@ -14,8 +14,8 @@ local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 
 local iibl      = ecs.import.interface "ant.render|iibl"
-local imesh		= ecs.import.interface "ant.asset|imesh"
-local imaterial	= ecs.import.interface "ant.asset|imaterial"
+local imesh		= ecs.require "ant.asset|mesh"
+local imaterial	= ecs.require "ant.asset|material"
 
 local skybox_sys = ecs.system "skybox_system"
 

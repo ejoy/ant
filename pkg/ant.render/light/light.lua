@@ -7,7 +7,7 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0

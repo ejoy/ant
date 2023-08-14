@@ -4,7 +4,7 @@ local w         = world.w
 local fbmgr     = require "framebuffer_mgr"
 local math3d    = require "math3d"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local util      = ecs.require "postprocess.util"
 local pp_sys    = ecs.system "postprocess_system"
 

@@ -12,7 +12,7 @@ local mc, mu    = mathpkg.constant, mathpkg.util
 local assetmgr  = import_package "ant.asset"
 
 local irender   = ecs.require "ant.render|render_system.render"
-local ivs       = ecs.import.interface "ant.scene|ivisible_state"
+local ivs       = ecs.require "ant.render|visible_state"
 
 local decl<const> = "p3|T4|t2"
 local layout<const> = declmgr.get(decl)

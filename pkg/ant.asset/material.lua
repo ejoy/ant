@@ -5,7 +5,8 @@ local w		= world.w
 local assetmgr		= require "main"
 local matobj		= require "matobj"
 local bgfx			= require "bgfx"
-local imaterial = ecs.interface "imaterial"
+
+local imaterial = {}
 
 function imaterial.set_property(e, who, what, mattype)
 	w:extend(e, "filter_material:in")
@@ -124,3 +125,5 @@ function ms:end_frame()
 		end
 	end
 end
+
+return imaterial

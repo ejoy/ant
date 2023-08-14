@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
 local declmgr   = require "vertexdecl_mgr"
 

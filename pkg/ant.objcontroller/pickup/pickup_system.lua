@@ -14,7 +14,7 @@ local viewidmgr = renderpkg.viewidmgr
 local queuemgr	= renderpkg.queuemgr
 
 local irender   = ecs.require "ant.render|render_system.render"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local INV_Z<const> = true
 

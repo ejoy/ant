@@ -7,11 +7,11 @@ local mc, mu	= mathpkg.constant, mathpkg.util
 
 local icamera	= ecs.require "ant.camera|camera"
 local iom 		= ecs.require "ant.objcontroller|obj_motion"
-local ivs 		= ecs.import.interface "ant.scene|ivisible_state"
+local ivs 		= ecs.require "ant.render|visible_state"
 local ientity 	= ecs.require "ant.render|components.entity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 local prefab_mgr = ecs.require "prefab_manager"

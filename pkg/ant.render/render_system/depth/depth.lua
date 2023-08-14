@@ -16,7 +16,7 @@ end
 
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local irl       = ecs.import.interface "ant.render|irender_layer"
 
 local pre_depth_material

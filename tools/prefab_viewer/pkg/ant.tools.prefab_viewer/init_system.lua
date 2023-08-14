@@ -10,7 +10,7 @@ local S = ecs.system "init_system"
 function S.init()
 
 end
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local iefk = ecs.import.interface "ant.efk|iefk"
 local fs = require "filesystem"
 function S.init_world()

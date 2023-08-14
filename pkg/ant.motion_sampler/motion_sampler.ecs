@@ -16,18 +16,7 @@ component "motion_sampler"
 
 policy "motion_sampler"
     .require_system "ant.motion_sampler|motion_sampler_system"
-    .require_interface "ant.motion_sampler|imotion_sampler"
     .component "motion_sampler"
-
-interface "imotion_sampler"
-    .implement "motion_sampler.lua"
-    .method "sampler_group"
-    .method "set_duration"
-    .method "set_keyframes"
-    .method "set_ratio"
-    .method "set_tween"
-    .method "set_stop"
-    .method "stop_system"
 
 system "motion_sampler_system"
     .implement "motion_sampler.lua"

@@ -4,7 +4,7 @@ local w     = world.w
 
 local math3d = require "math3d"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local imesh     = ecs.import.interface "ant.asset|imesh"
+local imesh     = ecs.require "ant.asset|mesh"
 
 
 local S         = ecs.system "init_system"

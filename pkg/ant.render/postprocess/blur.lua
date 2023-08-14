@@ -23,7 +23,7 @@ local bgfx = require "bgfx"
 
 local icompute = ecs.import.interface "ant.render|icompute"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local vblur_viewid<const> = viewidmgr.get "vblur"
 local hblur_viewid<const> = viewidmgr.get "hblur"

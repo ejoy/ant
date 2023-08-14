@@ -6,7 +6,7 @@ local fs = require "filesystem"
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local math3d    = require "math3d"
 
 local function create_pbr_entity(name, srt, material,

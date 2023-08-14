@@ -28,7 +28,7 @@ local math3d    = require "math3d"
 local util      = ecs.require "postprocess.util"
 
 local icompute  = ecs.import.interface "ant.render|icompute"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal

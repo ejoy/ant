@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local ivs = ecs.interface "ivisible_state"
+local ivs = {}
 
 function ivs.has_state(e, name)
 	w:extend(e, "visible_state:in")
@@ -55,3 +55,5 @@ function m:component_init()
         e.visible_state = vs
     end
 end
+
+return ivs

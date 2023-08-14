@@ -11,7 +11,7 @@ local assetmgr  = import_package "ant.asset"
 
 local ilight    = ecs.import.interface "ant.render|ilight"
 local icompute  = ecs.import.interface "ant.render|icompute"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local cfs = ecs.system "cluster_forward_system"
 

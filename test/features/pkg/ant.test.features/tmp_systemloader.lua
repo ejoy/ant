@@ -4,20 +4,15 @@ local w             = world.w
 local math3d        = require "math3d"
 
 local ientity       = ecs.require "ant.render|components.entity"
-local imaterial     = ecs.import.interface "ant.asset|imaterial"
-local imesh         = ecs.import.interface "ant.asset|imesh"
+local imaterial     = ecs.require "ant.asset|material"
+local imesh         = ecs.require "ant.asset|mesh"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irl           = ecs.import.interface "ant.render|irender_layer"
 local idn           = ecs.import.interface "ant.daynight|idaynight"
 local itimer        = ecs.require "ant.timer|timer_system"
-
-local ims           = ecs.import.interface "ant.motion_sampler|imotion_sampler"
-
 local assetmgr      = import_package "ant.asset"
-
 local mathpkg       = import_package"ant.math"
 local mc, mu        = mathpkg.constant, mathpkg.util
-
 local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
 

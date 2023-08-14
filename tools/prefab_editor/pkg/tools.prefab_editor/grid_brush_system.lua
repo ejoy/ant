@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local iom           = ecs.require "ant.objcontroller|obj_motion"
-local ivs		    = ecs.import.interface "ant.scene|ivisible_state"
+local ivs		    = ecs.require "ant.render|visible_state"
 local computil      = ecs.require "ant.render|components.entity"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"

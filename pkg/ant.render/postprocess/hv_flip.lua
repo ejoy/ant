@@ -21,7 +21,7 @@ local fbmgr     = require "framebuffer_mgr"
 
 local util      = ecs.require "postprocess.util"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local hvflip_viewid = viewidmgr.generate("hv_flip", "fxaa")
 

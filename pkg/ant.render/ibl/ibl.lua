@@ -13,7 +13,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"

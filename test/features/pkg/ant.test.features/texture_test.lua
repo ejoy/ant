@@ -7,8 +7,8 @@ local bgfx = require "bgfx"
 local renderpkg = import_package "ant.render"
 local sampler = renderpkg.sampler
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh		= ecs.import.interface "ant.asset|imesh"
+local imaterial = ecs.require "ant.asset|material"
+local imesh		= ecs.require "ant.asset|mesh"
 local ientity 	= ecs.require "ant.render|components.entity"
 local dtt_sys = ecs.system "dynamic_texture_test_system"
 local declmgr= import_package "ant.render".declmgr

@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ivs = ecs.import.interface "ant.scene|ivisible_state"
+local imaterial = ecs.require "ant.asset|material"
+local ivs = ecs.require "ant.render|visible_state"
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local gizmo = {

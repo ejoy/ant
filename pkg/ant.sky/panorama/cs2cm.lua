@@ -14,11 +14,10 @@ local assetmgr  = import_package "ant.asset"
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iibl      = ecs.import.interface "ant.render|iibl"
 local icubemap_mipmap = ecs.import.interface "ant.sky|icubemap_mipmap"
-local rhwi      = import_package "ant.hwi"
 local panorama_util=require "panorama.util"
 
 local thread_group_size<const> = 32

@@ -11,10 +11,10 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local ivs		= ecs.import.interface "ant.scene|ivisible_state"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ivs		= ecs.require "ant.render|visible_state"
+local imaterial = ecs.require "ant.asset|material"
 local irender	= ecs.require "ant.render|render_system.render"
-local imesh 	= ecs.import.interface "ant.asset|imesh"
+local imesh 	= ecs.require "ant.asset|mesh"
 local bgfx 		= require "bgfx"
 
 local function create_dynamic_mesh(layout, vb, ib)

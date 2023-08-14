@@ -24,14 +24,6 @@ system "scenespace_system"
     .method "scene_remove"
     .method "bounding_update"
 
-system "visible_state_system"
-    .implement "visible_state.lua"
-    .method "component_init"
-
-interface "ivisible_state"
-    .implement "visible_state.lua"
-    .method "has_state"
-    .method "set_state"
 
 policy "scene_object"
     .require_policy "ant.scene|bounding"
@@ -70,12 +62,6 @@ component "scene"
     .method "marshal"
     .method "demarshal"
     .method "unmarshal"
-
-component "visible_state"
-    .type "lua"
-    .require_system "ant.scene|visible_state_system"
-
-component "visible_state_changed"
 
 component "widget_entity"
 component "scene_needchange"

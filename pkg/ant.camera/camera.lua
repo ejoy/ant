@@ -7,7 +7,7 @@ local mathpkg   = import_package "ant.math"
 local mc    = mathpkg.constant
 
 local defcomp 	= import_package "ant.general".default
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 
 local INV_Z<const> = true
 

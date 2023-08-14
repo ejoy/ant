@@ -2,11 +2,11 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local computil  = ecs.require "ant.render|components.entity"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local ivs       = ecs.import.interface "ant.scene|ivisible_state"
+local ivs       = ecs.require "ant.render|visible_state"
 local geo_utils = ecs.require "editor.geometry_utils"
 local math3d    = require "math3d"
 local gizmo_const = require "gizmo.const"

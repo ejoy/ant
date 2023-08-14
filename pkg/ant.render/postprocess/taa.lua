@@ -23,7 +23,7 @@ local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 local util      = ecs.require "postprocess.util"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 
