@@ -10,7 +10,6 @@ local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 local iom           = ecs.require "ant.objcontroller|obj_motion"
-local iUiRt = ecs.interface "iuirt"
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ui_rt_group_id = 110000
@@ -20,6 +19,8 @@ local rt_table = {}
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = renderpkg.queuemgr
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
+
+local iUiRt = {}
 
 local S = ltask.dispatch()
 
@@ -390,3 +391,5 @@ function ui_rt_sys:update_filter()
         end
     end
 end
+
+return iUiRt

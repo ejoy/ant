@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w     = world.w
-local iani      = ecs.import.interface "ant.animation|ianimation"
+local iani      = ecs.require "ant.animation|controller.state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local keyframe_view = ecs.require "widget.keyframe_view"

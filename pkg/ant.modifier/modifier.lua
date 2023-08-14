@@ -6,10 +6,10 @@ local assetmgr  = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
 local modifier_sys = ecs.system "modifier_system"
-local iani      = ecs.import.interface "ant.animation|ianimation"
+local iani      = ecs.require "ant.animation|controller.state_machine"
 local timer     = ecs.require "ant.timer|timer_system"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local ika       = ecs.import.interface "ant.animation|ikeyframe"
+local ika       = ecs.require "ant.animation|keyframe"
 local imaterial = ecs.require "ant.asset|material"
 local mathpkg	= import_package "ant.math"
 local mc	= mathpkg.constant

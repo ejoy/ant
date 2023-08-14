@@ -8,10 +8,9 @@ local iterrain  = ecs.import.interface "mod.terrain|iterrain"
 local S = ecs.system "init_system"
 
 function S.init()
-
 end
-local imaterial = ecs.require "ant.asset|material"
-local iefk = ecs.import.interface "ant.efk|iefk"
+
+local iefk = ecs.require "ant.efk|efk"
 local fs = require "filesystem"
 function S.init_world()
     local files = {}

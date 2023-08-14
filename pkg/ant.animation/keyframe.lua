@@ -2,9 +2,10 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 local mathpkg	= import_package "ant.math"
-local mc, mu	= mathpkg.constant, mathpkg.util
--- keyframe
-local ika = ecs.interface "ikeyframe"
+local mu	= mathpkg.util
+
+local ika = {}
+
 function ika.create(frames)
     return ecs.create_entity{
         policy = {
@@ -177,3 +178,5 @@ function ma_sys.data_changed()
 		step_keyframe(e, delta_time * 0.001)
 	end
 end
+
+return ika

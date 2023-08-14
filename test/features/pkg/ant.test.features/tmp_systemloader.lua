@@ -388,7 +388,7 @@ function init_loader_sys:ui_update()
             local t = assetmgr.resource "/pkg/ant.test.features/assets/glb/headquater-1.glb|images/headquater_color.texture"
             imaterial.set_property(te, "s_basecolor", t.id)
         elseif key == "N" and press == 0 then
-            -- local icw = ecs.import.interface "ant.render|icurve_world"
+            -- local icw = ecs.require "ant.render|curve_world"
             -- icw.enable(not icw.param().enable)
 
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
@@ -407,7 +407,7 @@ function init_loader_sys:ui_update()
             local d = w:first("directional_light scene:in eid:in")
             iom.set_position(d, {0, 1, 0})
         elseif key == "C" and press == 0 then
-            local icanvas = ecs.import.interface "ant.terrain|icanvas"
+            local icanvas = ecs.require "ant.terrain|canvas"
             if itemsids then
                 icanvas.show(w:entity(canvas_eid), false)
                 icanvas.remove_item(w:entity(canvas_eid), itemsids[1])

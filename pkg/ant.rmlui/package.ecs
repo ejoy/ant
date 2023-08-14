@@ -17,10 +17,3 @@ system "ui_rt_system"
     .implement "ui_rt_system.lua"
     .method "update_filter"
     .method "data_changed"
-    
-interface "iuirt"
-    .implement "ui_rt_system.lua"
-    .method "get_group_id"
-    .method "set_rt_prefab"
-
-

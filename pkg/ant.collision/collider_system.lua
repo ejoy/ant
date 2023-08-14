@@ -50,7 +50,7 @@ end
 
 --local tcb = ecs.transform "terrain_collider_transform"
 
--- local iterrain = ecs.import.interface "ant.terrain|terrain"
+-- local iterrain = ecs.require "ant.terrain|terrain"
 
 -- function tcb.process_entity(e)
 -- 	local terraincomp = e.terrain

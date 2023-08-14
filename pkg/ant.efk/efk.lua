@@ -19,7 +19,7 @@ local itimer    = ecs.require "ant.timer|timer_system"
 local PH
 
 local efk_sys = ecs.system "efk_system"
-local iefk = ecs.interface "iefk"
+local iefk = {}
 
 local function init_fx_files()
     local tasks = {}
@@ -369,3 +369,5 @@ function iefk.is_playing(eid)
     local e <close> = w:entity(eid, "efk?in")
     return e.efk and e.efk.play_handle ~= nil
 end
+
+return iefk

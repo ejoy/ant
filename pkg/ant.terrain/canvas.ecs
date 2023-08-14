@@ -3,18 +3,9 @@ system "canvas_system"
     .method "component_init"
     .method "entity_remove"
 
-interface "icanvas"
-    .implement "canvas.lua"
-    .method "add_items"
-    .method "remove_item"
-    .method "add_text"
-    .method "show"
-    .method "build"
-
 component "canvas".type "lua"
 component "canvas_drawer".type "lua"
 
 policy "canvas"
     .require_system "ant.terrain|canvas_system"
-    .require_interface "ant.terrain|icanvas"
     .component "canvas"

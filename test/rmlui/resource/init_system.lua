@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local init_sys   = ecs.system "init_system"
-local iRmlUi     = ecs.import.interface "ant.rmlui|irmlui"
+local iRmlUi     = ecs.require "ant.rmlui|rmlui_system"
 local bgfx     = require "bgfx"
 
 local OpenDebugger  = false

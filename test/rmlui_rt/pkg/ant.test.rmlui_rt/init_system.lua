@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iUiRt     = ecs.import.interface "ant.rmlui|iuirt"
+local iUiRt     = ecs.require "ant.rmlui|ui_rt_system"
 local init_sys   = ecs.system "init_system"
 local iRmlUi     = ecs.require "ant.rmlui|rmlui_system"
 local kb_mb = world:sub{"keyboard"}

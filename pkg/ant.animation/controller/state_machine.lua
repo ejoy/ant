@@ -1,12 +1,13 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local iefk	= ecs.import.interface "ant.efk|iefk"
+local iefk	= ecs.require "ant.efk|efk"
 local fs 	= require "filesystem"
 local datalist  = require "datalist"
-local iani 	= ecs.interface "ianimation"
-local EditMode = false
 
+local iani = {}
+
+local EditMode = false
 function iani.set_edit_mode(b)
 	EditMode = b
 end
@@ -287,3 +288,5 @@ function iani.release_pose(pose)
 		pose.pose = nil
 	end
 end
+
+return iani

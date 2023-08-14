@@ -12,9 +12,6 @@ import_package "ant.window".start {
     system = {
         "ant.test.simple|init_system",
     },
-    interface = {
-        "ant.animation|ianimation",
-    },
     policy = {
         "ant.general|name",
         "ant.scene|scene_object",

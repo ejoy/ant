@@ -5,7 +5,7 @@ local world = ecs.world
 -- local viewidmgr = require "viewid_mgr"
 -- local fbmgr     = require "framebuffer_mgr"
 
--- local ipp       = ecs.import.interface "ant.render|postprocess"
+-- local ipp       = ecs.require "ant.render|postprocess"
 -- local iom       = ecs.require "ant.objcontroller|obj_motion"
 -- local imaterial = ecs.require "ant.asset|material"
 -- local icamera   = ecs.require "ant.camera|camera"

@@ -181,7 +181,7 @@ function canvas_sys:entity_remove()
     end
 end
 
-local icanvas = ecs.interface "icanvas"
+local icanvas = {}
 
 local function id_generator()
     local id = 0
@@ -309,3 +309,5 @@ function icanvas.show(e, b)
         ivs.set_state(re, "main_view|selectable", b)
     end
 end
+
+return icanvas

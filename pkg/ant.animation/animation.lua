@@ -8,7 +8,7 @@ local animodule 	= require "hierarchy".animation
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
-local iefk          = ecs.import.interface "ant.efk|iefk"
+local iefk          = ecs.require "ant.efk|efk"
 local audio 		= import_package "ant.audio"
 local fs        = require "filesystem"
 local datalist  = require "datalist"
@@ -84,7 +84,7 @@ local function process_keyframe_event(task)
 	end
 end
 
-local iani = ecs.import.interface "ant.animation|ianimation"
+local iani = ecs.require "ant.animation|controller.state_machine"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()

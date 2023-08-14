@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local iefk          = ecs.import.interface "ant.efk|iefk"
+local iefk          = ecs.require "ant.efk|efk"
 local imgui         = require "imgui"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
