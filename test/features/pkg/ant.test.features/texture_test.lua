@@ -8,13 +8,11 @@ local renderpkg = import_package "ant.render"
 local sampler = renderpkg.sampler
 
 local imaterial = ecs.require "ant.asset|material"
-local imesh		= ecs.require "ant.asset|mesh"
-local ientity 	= ecs.require "ant.render|components.entity"
-local dtt_sys = ecs.system "dynamic_texture_test_system"
-local declmgr= import_package "ant.render".declmgr
+local dtt_sys   = ecs.system "dynamic_texture_test_system"
+local layoutmgr = import_package "ant.render".layoutmgr
 local test_eid
 local test_billboard
-local layout    = declmgr.get "p3|t2"
+local layout    = layoutmgr.get "p3|t2"
 local tex_handle 
 
 local m={

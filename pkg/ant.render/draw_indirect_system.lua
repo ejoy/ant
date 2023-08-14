@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 local bgfx 			= require "bgfx"
 local draw_indirect_system = ecs.system "draw_indirect_system"
-local declmgr   = import_package "ant.render".declmgr
+local layoutmgr   = import_package "ant.render".layoutmgr
 
 local idrawindirect = {}
 
@@ -15,7 +15,7 @@ local type_table = {
 function draw_indirect_system:entity_init()
     for e in w:select "INIT draw_indirect:update" do
         local max_num = e.draw_indirect.max_num
-        e.draw_indirect.itb_handle = bgfx.create_dynamic_vertex_buffer(max_num, declmgr.get("t45NIf|t46NIf|t47NIf").handle, e.draw_indirect.itb_flag)
+        e.draw_indirect.itb_handle = bgfx.create_dynamic_vertex_buffer(max_num, layoutmgr.get("t45NIf|t46NIf|t47NIf").handle, e.draw_indirect.itb_flag)
         e.draw_indirect.idb_handle = bgfx.create_indirect_buffer(max_num)
     end
 end

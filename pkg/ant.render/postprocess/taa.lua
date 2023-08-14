@@ -7,17 +7,20 @@ local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
 local renderutil = require "util"
 local taasys = ecs.system "taa_system"
-local declmgr		= require "vertexdecl_mgr"
-local viewidmgr = require "viewid_mgr"
+
 if not ENABLE_TAA then
     renderutil.default_system(taasys, "init", "init_world", "taa", "taa_copy", "taa_present", "data_changed", "end_frame")
     return
 end
+
+local viewidmgr = require "viewid_mgr"
+
 local taa_present_viewid
 if not ENABLE_FXAA then
     taa_present_viewid = viewidmgr.get "taa_present"
 end
 
+local layoutmgr	= require "vertexlayout_mgr"
 local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
@@ -44,7 +47,7 @@ function taasys:init()
             scene           = {},
         }
     } 
-    local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), declmgr.get "p10NIu".handle)
+    local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), layoutmgr.get "p10NIu".handle)
     local fullquad<const> = {
         vb = {
             start = 0, num = 3,

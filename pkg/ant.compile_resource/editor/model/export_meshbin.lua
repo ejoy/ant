@@ -557,11 +557,11 @@ end
 -- 				break
 -- 			end
 
--- 			stride_offset = stride_offset + declmgr.elem_size(d)
+-- 			stride_offset = stride_offset + layoutmgr.elem_size(d)
 -- 		end
 -- 	end
 
--- 	local stride = declmgr.layout_stride(b.declname)
+-- 	local stride = layoutmgr.layout_stride(b.declname)
 -- 	if fmt == nil then
 -- 		error "invalid vertex buffer"
 -- 	end

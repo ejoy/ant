@@ -4,7 +4,7 @@ local w     = world.w
 
 local bgfx = require "bgfx"
 local math3d = require "math3d"
-local declmgr = import_package "ant.render".declmgr
+local layoutmgr = import_package "ant.render".layoutmgr
 
 local ivav = {}
 local imaterial = ecs.require "ant.asset|material"
@@ -14,7 +14,7 @@ local function find_stream(vb, what)
         local v = vb[i]
         local s = 1
         for dn in v.declname:gmatch "[^|]+" do
-            local stride = declmgr.layout_stride(dn)
+            local stride = layoutmgr.layout_stride(dn)
             if dn:match(what) then
                 return {
                     s = v, 
@@ -41,7 +41,7 @@ local function create_line_arrow_mesh(len)
                 0.0, 0.0, len,
                 -head_height, 0.0, len - head_len,
                     head_height, 0.0, len - head_len,
-            }), declmgr.get "p3".handle),
+            }), layoutmgr.get "p3".handle),
         },
         ib = {
             start = 0,
@@ -102,8 +102,8 @@ function ivav.display_normal(e)
 
         return data:sub(offset, offset+stride-1)
     end
-    local ps_stride = declmgr.layout_stride(ps.s.declname)
-    local ns_stride = declmgr.layout_stride(ns.s.declname)
+    local ps_stride = layoutmgr.layout_stride(ps.s.declname)
+    local ns_stride = layoutmgr.layout_stride(ns.s.declname)
 
     local function read_attrib(vdata, s, n)
         return vdata:sub(s, s+n-1)

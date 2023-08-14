@@ -1,7 +1,7 @@
 local ecs	= ...
 local world = ecs.world
 local w		= world.w
-local declmgr   = require "vertexdecl_mgr"
+local layoutmgr   = require "vertexlayout_mgr"
 local math3d    = require "math3d"
 local hwi		= import_package "ant.hwi"
 local geopkg    = import_package "ant.geometry"
@@ -18,7 +18,7 @@ local imesh 	= ecs.require "ant.asset|mesh"
 local bgfx 		= require "bgfx"
 
 local function create_dynamic_mesh(layout, vb, ib)
-	local decl = declmgr.get(layout)
+	local decl = layoutmgr.get(layout)
 	return {
 		vb = {
 			handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), decl.handle, "a")
@@ -39,8 +39,8 @@ local function create_mesh(vbdata, ibdata, aabb)
 		mesh.bounding = {aabb=aabb}
 	end
 	
-	local correct_layout = declmgr.correct_layout(vbdata[1])
-	local flag = declmgr.vertex_desc_str(correct_layout)
+	local correct_layout = layoutmgr.correct_layout(vbdata[1])
+	local flag = layoutmgr.vertex_desc_str(correct_layout)
 
 	vb.num = #vbdata[2] // #flag
 	vb.declname = correct_layout
@@ -407,13 +407,13 @@ function ientity.create_screen_line_list(points, scene, uniforms, dynamic, layer
 	local layout_desc = "p3"
 	local mesh
 	if dynamic then
-		local correct_layout = declmgr.correct_layout(layout_desc)
-		local flag = declmgr.vertex_desc_str(correct_layout)
+		local correct_layout = layoutmgr.correct_layout(layout_desc)
+		local flag = layoutmgr.vertex_desc_str(correct_layout)
 		mesh = {
 			vb = {
 				start = 0,
 				num = #vb // #flag,
-				handle = bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fff", vb), declmgr.get(layout_desc).handle, "a"),
+				handle = bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fff", vb), layoutmgr.get(layout_desc).handle, "a"),
 			}
 		}
 	else
@@ -592,7 +592,7 @@ function ientity.create_gamma_test_entity()
 						100, 132, 0.0, 1.0,
 						420, 200, 1.0, 0.0,
 						420, 132, 1.0, 1.0,
-					}), declmgr.get "p2|t2".handle),
+					}), layoutmgr.get "p2|t2".handle),
 					owned = true,
                 }
             },
@@ -609,7 +609,7 @@ local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
 	headratio = headratio or 0.15
 	local headlen<const> = arrowlen * (1.0-headratio)
 	local fmt<const> = "fff"
-	local layout<const> = declmgr.get "p3"
+	local layout<const> = layoutmgr.get "p3"
 
 	coneradius	= coneradius or 0.1
 	cylinderradius	= cylinderradius or coneradius * 0.5
@@ -740,7 +740,7 @@ function ientity.create_quad_lines_entity(name, scene, material, quadnum, width,
             v = v+1.0
         end
 
-        return bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(vertices)), declmgr.get "p3|t2".handle)
+        return bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(vertices)), layoutmgr.get "p3|t2".handle)
     end
 
 	local function create_index_buffer()

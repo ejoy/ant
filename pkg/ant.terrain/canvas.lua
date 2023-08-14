@@ -5,7 +5,7 @@ local w     = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
+local layoutmgr = renderpkg.layoutmgr
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 
@@ -15,7 +15,7 @@ local irender   = ecs.require "ant.render|render_system.render"
 local ivs       = ecs.require "ant.render|visible_state"
 
 local decl<const> = "p3|T4|t2"
-local layout<const> = declmgr.get(decl)
+local layout<const> = layoutmgr.get(decl)
 
 local canvas_sys = ecs.system "canvas_system"
 

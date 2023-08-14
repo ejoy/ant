@@ -14,7 +14,7 @@ local assetmgr      = import_package "ant.asset"
 local mathpkg       = import_package"ant.math"
 local mc, mu        = mathpkg.constant, mathpkg.util
 local renderpkg     = import_package "ant.render"
-local declmgr       = renderpkg.declmgr
+local layoutmgr     = renderpkg.layoutmgr
 
 local init_loader_sys   = ecs.system 'init_loader_system'
 local iheapmesh = ecs.require "ant.render|render_system.heap_mesh"
@@ -99,7 +99,7 @@ local function color_palette_test()
                         0.0, 0.0, 0.0, 
                         0.0, 0.0, 1.0,
                         1.0, 0.0, 0.0,
-                    }), declmgr.get "p3".handle)
+                    }), layoutmgr.get "p3".handle)
                 }
             },
             material = "/pkg/ant.resources/materials/color_palette_test.material",

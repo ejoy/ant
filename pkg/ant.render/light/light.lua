@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local declmgr	= require "vertexdecl_mgr"
+local layoutmgr	= require "vertexlayout_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
@@ -276,7 +276,7 @@ function ilight.use_cluster_shading()
 	return enable_cluster_shading
 end
 
-local light_buffer = bgfx.create_dynamic_vertex_buffer(1, declmgr.get "t40".handle, "ra")
+local light_buffer = bgfx.create_dynamic_vertex_buffer(1, layoutmgr.get "t40".handle, "ra")
 
 local function update_light_buffers()
 	local lights = create_light_buffers()

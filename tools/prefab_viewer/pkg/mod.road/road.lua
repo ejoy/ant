@@ -5,12 +5,12 @@ local w     = world.w
 local imaterial = ecs.require "ant.asset|material"
 local init_system = ecs.system "init_system"
 local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
+local layoutmgr   = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
---local layout_name<const>    = declmgr.correct_layout "p3|t20|t21|T3"
-local layout_name<const>    = declmgr.correct_layout "p3|t20|t22"
-local layout                = declmgr.get(layout_name)
+--local layout_name<const>    = layoutmgr.correct_layout "p3|t20|t21|T3"
+local layout_name<const>    = layoutmgr.correct_layout "p3|t20|t22"
+local layout                = layoutmgr.get(layout_name)
 local width, height = 20, 20
 local iom = ecs.require "ant.objcontroller|obj_motion"
 local road_material

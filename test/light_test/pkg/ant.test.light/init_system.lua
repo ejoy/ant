@@ -9,10 +9,7 @@ local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
 
 local renderpkg = import_package "ant.render"
-local declmgr = renderpkg.declmgr
-
-local assetmgr = import_package "ant.asset"
-local imaterial = ecs.require "ant.asset|material"
+local layoutmgr = renderpkg.layoutmgr
 
 local S = ecs.system "init_system"
 
@@ -61,7 +58,7 @@ local function create_simple_triangles()
                         1.0, 0.0, 1.0, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0,
                         1.0, 0.0, 0.0, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0,
                         0.0, 0.0, 0.0, nx, ny, nz, 1.0, 0.0, 0.0, 0.0, 1.0,
-                    }), declmgr.get "p3|n3|T3|t2".handle)
+                    }), layoutmgr.get "p3|n3|T3|t2".handle)
                 },
             },
             material = "/pkg/ant.test.light/assets/materials/default.material",

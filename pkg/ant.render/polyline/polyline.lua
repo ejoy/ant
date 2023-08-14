@@ -6,7 +6,7 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
-local declmgr   = require "vertexdecl_mgr"
+local layoutmgr = require "vertexlayout_mgr"
 
 local ipl       = {}
 
@@ -70,10 +70,10 @@ end
 
 local strip_ib = create_strip_index_buffer(3072)
 local function create_vb_desc(fmt)
-    local ffmt<const>  = declmgr.correct_layout(fmt)
+    local ffmt<const>  = layoutmgr.correct_layout(fmt)
     return {
-        layout = declmgr.get(ffmt),
-        desc_str = declmgr.vertex_desc_str(ffmt),
+        layout = layoutmgr.get(ffmt),
+        desc_str = layoutmgr.vertex_desc_str(ffmt),
     }
 end
 local stripline_desc = create_vb_desc "p3|t20|t31|t32|t33"

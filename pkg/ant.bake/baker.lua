@@ -10,7 +10,7 @@ local math3d    = require "math3d"
 
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
-local declmgr   = renderpkg.declmgr
+local layoutmgr = renderpkg.layoutmgr
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
@@ -364,7 +364,7 @@ local function load_geometry_info(worldmat, mesh)
         for _, vb in ipairs(mesh.vb) do
             local offset = 0
             local declname = vb.declname
-            local stride = declmgr.layout_stride(declname)
+            local stride = layoutmgr.layout_stride(declname)
             for d in declname:gmatch "%w+" do
                 if d:sub(1, 3):match(name) then
                     return {
@@ -374,7 +374,7 @@ local function load_geometry_info(worldmat, mesh)
                         type   = get_type(d:sub(6, 6)),
                     }
                 end
-                offset = offset + declmgr.elem_size(d)
+                offset = offset + layoutmgr.elem_size(d)
             end
         end
 

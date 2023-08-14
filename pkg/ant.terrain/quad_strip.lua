@@ -5,9 +5,9 @@ local w     = world.w
 local math3d    = require "math3d"
 
 local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
-local layoutfmt<const> = declmgr.correct_layout "p3|c40niu|t20"
-local layout    = declmgr.get(layoutfmt)
+local layoutmgr = renderpkg.layoutmgr
+local layoutfmt<const> = layoutmgr.correct_layout "p3|c40niu|t20"
+local layout    = layoutmgr.get(layoutfmt)
 local stride<const> = layout.stride
 
 local iql       = ecs.require "ant.render|polyline.polyline"

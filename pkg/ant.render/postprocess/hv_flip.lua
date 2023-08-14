@@ -15,7 +15,7 @@ if not ENABLE_HV_FLIP then
 end
 
 local bgfx      = require "bgfx"
-local declmgr   = require "vertexdecl_mgr"
+local layoutmgr = require "vertexlayout_mgr"
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 
@@ -55,7 +55,7 @@ function hvflip_sys:init()
 						1.0, 1.0, 1.0, 0.0,
                        -1.0,-1.0, 0.0, 1.0,
 						1.0,-1.0, 0.0, 0.0,
-					}), declmgr.get "p2|t2".handle),
+					}), layoutmgr.get "p2|t2".handle),
 					owned = true,
                 }
             },

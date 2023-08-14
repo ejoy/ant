@@ -116,7 +116,7 @@ function mgr.vertex_desc_str(correct_layout)
 	local s = ""
 	for e in correct_layout:gmatch "%w+" do
 		if #e ~= 6 then
-			error(("layout should be corrected, use declmgr.correct_layout:%s, %s"):format(e, correct_layout))
+			error(("layout should be corrected, use 'correct_layout':%s, %s"):format(e, correct_layout))
 		end
 		local n = e:sub(2, 2)
 		local t = e:sub(6, 6)

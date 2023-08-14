@@ -11,7 +11,7 @@ local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
-local declmgr		= require "vertexdecl_mgr"
+local layoutmgr		= require "vertexlayout_mgr"
 local sampler		= require "sampler"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
@@ -300,7 +300,7 @@ function irender.quad_ib_num()
 	return quad_ib_num
 end
 
-local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), declmgr.get "p10NIu".handle)
+local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), layoutmgr.get "p10NIu".handle)
 local fullquad<const> = {
 	vb = {
 		start = 0, num = 3,

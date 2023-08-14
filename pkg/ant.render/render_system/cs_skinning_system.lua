@@ -17,7 +17,7 @@ local mc		= mathpkg.constant
 
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
-local declmgr   = import_package "ant.render".declmgr
+local layoutmgr = renderpkg.layoutmgr
 local sk_viewid = viewidmgr.get "skinning"
 
 local assetmgr  = import_package "ant.asset"
@@ -143,7 +143,7 @@ function cs_skinning_sys:entity_init()
             local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
             
             e.skininfo = {
-                skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r"),
+                skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("p4").handle, "r"),
                 skinning_in_dynamic_vb 	= nil,
                 skinning_out_dynamic_vb = nil,
                 dispatch_entity         = nil,
@@ -162,7 +162,7 @@ function cs_skinning_sys:entity_ready()
         e.skininfo.skinning_in_dynamic_vb = e.render_object.vb_handle
         local layout = e.mesh.vb.declname
         local output_layout = get_output_layout(layout)
-        e.skininfo.skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get(output_layout).handle, "w")
+        e.skininfo.skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, layoutmgr.get(output_layout).handle, "w")
 
         e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num, pack_attrib_indices(layout))
 

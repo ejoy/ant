@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
+local layoutmgr = renderpkg.layoutmgr
 
 local fs        = require "filesystem"
 local datalist  = require "datalist"
@@ -32,8 +32,8 @@ local function is_power_of_2(n)
 	end
 end
 
-local layout_name<const>    = declmgr.correct_layout "p3|n3|T3|c40niu|t20"
-local layout                = declmgr.get(layout_name)
+local layout_name<const>    = layoutmgr.correct_layout "p3|n3|T3|c40niu|t20"
+local layout                = layoutmgr.get(layout_name)
 
 --[[
      5-------6

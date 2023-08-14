@@ -5,22 +5,24 @@ local bgfx      = require "bgfx"
 local fastio    = require "fastio"
 local datalist  = require "datalist"
 local async     = require "async"
-local declmgr   = import_package "ant.render".declmgr
+local layoutmgr = import_package "ant.render".layoutmgr
 
 local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
+
+local function is_cs_skinning_buffer(layoutname)
+    return USE_CS_SKINNING and ("iw"):match(layoutname:sub(1, 1))
+end
+
 local proxy_vb = {}
 function proxy_vb:__index(k)
     if k == "handle" then
         assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
         local membuf = bgfx.memory_buffer(table.unpack(self.memory))
-        local declname = self.declname
-        local h
-         if USE_CS_SKINNING and string.match(declname, "i40") and string.match(declname, "w40")  then
-            h = bgfx.create_dynamic_vertex_buffer(membuf, declmgr.get(self.declname).handle, "r")
-        else
-            h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
-        end
-        --h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
+        local layoutname = self.declname
+        local layouthandle = layoutmgr.get(layoutname).handle
+        local h = is_cs_skinning_buffer(layoutname) and
+                bgfx.create_dynamic_vertex_buffer(membuf, layouthandle, "r") or
+                bgfx.create_vertex_buffer(membuf, layouthandle)
         self.handle = h
         return h
     end

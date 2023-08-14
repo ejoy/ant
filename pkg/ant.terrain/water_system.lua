@@ -3,17 +3,13 @@ local world = ecs.world
 local w     = world.w
 
 local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
-local fbmgr     = renderpkg.fbmgr
-local viewidmgr = renderpkg.viewidmgr
+local layoutmgr = renderpkg.layoutmgr
 
-local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 local bgfx      = require "bgfx"
 
-local layout    = declmgr.get "p3|t2"
+local layout    = layoutmgr.get "p3|t2"
 
 local water_sys = ecs.system "water_system"
 local layoutfmt<const> = "fffff"    --p3|t2

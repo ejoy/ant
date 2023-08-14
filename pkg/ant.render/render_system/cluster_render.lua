@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local declmgr   = require "vertexdecl_mgr"
+local layoutmgr = require "vertexlayout_mgr"
 local viewidmgr = require "viewid_mgr"
 
 local assetmgr  = import_package "ant.asset"
@@ -65,7 +65,7 @@ local cluster_buffers = {
         build_access = "w",
         cull_access = "r",
         name = "CLUSTER_BUFFER_AABB_STAGE",
-        layout = declmgr.get "t40",
+        layout = layoutmgr.get "t40",
     },
     -- TODO: not use
     -- index buffer of 32bit, and only 1 element
@@ -105,7 +105,7 @@ local cluster_buffers = {
         cull_access = "r",
         render_access = "r",
         name = "CLUSTER_BUFFER_LIGHT_INFO_STAGE",
-        layout = declmgr.get "t40",
+        layout = layoutmgr.get "t40",
     }
 }
 

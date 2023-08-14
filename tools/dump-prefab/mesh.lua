@@ -2,7 +2,7 @@ local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 local renderpkg = import_package "ant.render"
 local sha1 = require "sha1"
-local declmgr   = renderpkg.declmgr
+local layoutmgr = renderpkg.layoutmgr
 
 
 local function get_type(t)
@@ -18,7 +18,7 @@ local function get_attrib_item(mesh, name)
     for i, vb in ipairs(mesh.vb) do
         local offset = 0
         local declname = vb.declname
-        local stride = declmgr.layout_stride(declname)
+        local stride = layoutmgr.layout_stride(declname)
         for d in declname:gmatch "%w+" do
             if d:sub(1, 3):match(name) then
                 return {
@@ -28,7 +28,7 @@ local function get_attrib_item(mesh, name)
                     type   = get_type(d:sub(6, 6)),
                 }
             end
-            offset = offset + declmgr.elem_size(d)
+            offset = offset + layoutmgr.elem_size(d)
         end
     end
     --error(("not found attrib name:%s"):format(name))

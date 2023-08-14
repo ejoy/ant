@@ -1,20 +1,22 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
+local ecs	= ...
+local world	= ecs.world
+local w		= world.w
 
-local geometry_drawer = import_package "ant.geometry".drawer
-local setting		= import_package "ant.settings".setting
-local mc = import_package "ant.math".constant
+local bgfx		= require "bgfx"
+local math3d	= require "math3d"
 
-local ivs = ecs.require "ant.render|visible_state"
-local bgfx = require "bgfx"
-local math3d = require "math3d"
+local geometry_drawer	= import_package "ant.geometry".drawer
+local setting			= import_package "ant.settings".setting
+local layoutmgr			= import_package "ant.render".layoutmgr
+local mc				= import_package "ant.math".constant
+
+local ivs		= ecs.require "ant.render|visible_state"
 
 local widget_drawer_sys = ecs.system "widget_drawer_system"
 
 local function create_dynamic_buffer(layout, num_vertices, num_indices)
-	local declmgr = import_package "ant.render".declmgr
-	local decl = declmgr.get(layout)
+	
+	local decl = layoutmgr.get(layout)
 	local vb_size = num_vertices * decl.stride
 	assert(num_vertices <= 65535)
 	local ib_size = num_indices * 2
@@ -22,7 +24,7 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 		vb = {
 			start = 0,
 			num = 0,
-			handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
+			handle=bgfx.create_dynamic_vertex_buffer(vb_size, layoutmgr.get(layout).handle, "a")
 		},
 		ib = {
 			start = 0,

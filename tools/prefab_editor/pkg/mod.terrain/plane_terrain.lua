@@ -5,12 +5,12 @@ local ww     = world.w
 local iplane_terrain  = {}
 local p_ts = ecs.system "plane_terrain_system"
 local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
+local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local terrain_module = require "terrain"
-local layout_name<const>    = declmgr.correct_layout "p3|t20|t42"
-local layout                = declmgr.get(layout_name)
+local layout_name<const>    = layoutmgr.correct_layout "p3|t20|t42"
+local layout                = layoutmgr.get(layout_name)
 local noise1 = {}
 local terrain_width, terrain_height, unit, origin_offset_width, origin_offset_height
 local iom = ecs.require "ant.objcontroller|obj_motion"

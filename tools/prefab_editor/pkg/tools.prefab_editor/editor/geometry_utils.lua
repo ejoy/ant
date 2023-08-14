@@ -9,16 +9,17 @@ local geopkg 	= import_package "ant.geometry"
 local geolib 	= geopkg.geometry
 local geometry_drawer = geopkg.drawer
 
+local layoutmgr = import_package "ant.render".layoutmgr
+
 local m = {}
 
 local function create_dynamic_mesh(layout, vb, ib)
-	local declmgr = import_package "ant.render".declmgr
-	local correct_layout = declmgr.correct_layout(layout)
-	local flag = declmgr.vertex_desc_str(correct_layout)
+	local correct_layout = layoutmgr.correct_layout(layout)
+	local flag = layoutmgr.vertex_desc_str(correct_layout)
 	return {
 		vb = {
 			start = 0, num = #vb // #flag,
-			handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), declmgr.get(layout).handle, "a"),
+			handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), layoutmgr.get(layout).handle, "a"),
 		},
 		ib = {
 			start = 0, num = #ib,

@@ -2,7 +2,7 @@ local ecs       = ...
 local world     = ecs.world
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local declmgr   = require "declmgr"
+local layoutmgr = require "layoutmgr"
 local fs        = require "filesystem"
 local sampler   = require "sampler"
 local platform  = require "bee.platform"
@@ -29,7 +29,7 @@ local mesh = {
                 -1, 1, 0,
                  1, 1, 0,
                  1,-1, 0,
-            }), declmgr.get "p3".handle, ""
+            }), layoutmgr.get "p3".handle, ""
         ),
         start = 0,
         num = 4,
