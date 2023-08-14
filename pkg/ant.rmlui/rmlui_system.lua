@@ -9,7 +9,6 @@ local font      = import_package "ant.font"
 local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
-local iRmlUi = ecs.interface "irmlui"
 local fs = require "filesystem"
 local ui_viewid<const> = viewidmgr.get "uiruntime"
 
@@ -106,6 +105,8 @@ local function import_font(path)
     end
 end
 
+local iRmlUi = {}
+
 function iRmlUi.font_dir(dir)
     import_font(fs.path(dir))
 end
@@ -143,3 +144,5 @@ function iRmlUi.open(url)
     end
     return w
 end
+
+return iRmlUi

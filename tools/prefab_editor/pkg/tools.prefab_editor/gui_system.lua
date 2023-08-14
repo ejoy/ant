@@ -173,7 +173,7 @@ end
 
 local stat_window
 function m:init_world()
-    local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
+    local iRmlUi = ecs.require "ant.rmlui|rmlui_system"
     stat_window = iRmlUi.open "bgfx_stat.rml"
 end
 

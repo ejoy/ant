@@ -3,11 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local math3d = require "math3d"
-local mathpkg = import_package "ant.math"
-local mu, mc = mathpkg.util, mathpkg.constant
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
-local iani = ecs.import.interface "ant.animation|ianimation"
-local irmlui = ecs.import.interface "ant.rmlui|irmlui"
 local iterrain  = ecs.import.interface "mod.terrain|iterrain"
 local S = ecs.system "init_system"
 

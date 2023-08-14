@@ -4,8 +4,7 @@ local w = world.w
 
 local iUiRt     = ecs.import.interface "ant.rmlui|iuirt"
 local init_sys   = ecs.system "init_system"
-local iRmlUi     = ecs.import.interface "ant.rmlui|irmlui"
-local ivs		= ecs.import.interface "ant.scene|ivisible_state"
+local iRmlUi     = ecs.require "ant.rmlui|rmlui_system"
 local kb_mb = world:sub{"keyboard"}
 local function getArguments()
     return ecs.world.args.ecs.args
@@ -25,10 +24,6 @@ function init_sys:post_init()
     end)
 end
 
-local math3d        = require "math3d"
-local ientity       = ecs.import.interface "ant.render|ientity"
-local imaterial     = ecs.import.interface "ant.asset|imaterial"
-local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 function init_sys:data_changed()
     for _, key, press in kb_mb:unpack() do
         local rt_name = "rt1"
