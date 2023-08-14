@@ -167,23 +167,19 @@ function bloom_sys:init_world()
     create_chain_sample_queue(mqvr)
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
+local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
 function bloom_sys:data_changed()
-    local need_recreate
-    for _, vp in vp_changed_mb:unpack() do
-        local q = w:first("bloom_upsample"..BLOOM_MIPCOUNT .. " render_target:in")
+    for _,_, vp in vr_mb:unpack() do
+        local q = w:first(("bloom_upsample%d render_target:in"):format(BLOOM_MIPCOUNT))
         if q then
             local bloom_vr = q.render_target.view_rect
             if vp.w ~= bloom_vr.w or vp.h ~= bloom_vr.h then
                 remove_all_bloom_queue() -- enter twice in same frame
-                need_recreate = vp
+                create_chain_sample_queue(vp)
+                break
             end
         end
-    end
-    if need_recreate then
-        create_chain_sample_queue(need_recreate)
-        need_recreate = nil
     end
 end
 
@@ -213,12 +209,11 @@ local function do_bloom_sample(viewid, drawertag, ppi_handle, next_mip)
             ppi_handle = rbhandle 
         end
     
-        return ppi_handle       
+        return ppi_handle
     end
 end
 
 function bloom_sys:bloom()
-
     --we just sample result to bloom buffer, and map bloom buffer from tonemapping stage
     local mip = 0
 

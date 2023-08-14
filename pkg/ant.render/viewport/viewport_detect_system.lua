@@ -11,7 +11,7 @@ local vp_detect_sys = ecs.system "viewport_detect_system"
 
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
-local view_resize_mb = world:sub {"resize"}
+
 local fb_cache, rb_cache
 local function clear_cache()
 	fb_cache, rb_cache = {}, {}

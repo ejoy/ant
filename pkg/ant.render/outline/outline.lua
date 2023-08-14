@@ -105,13 +105,8 @@ function outline_system:render_submit()
 	bgfx.touch(viewid)
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
 local mc_mb = world:sub{"main_queue", "camera_changed"}
 function outline_system:data_changed()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("outline_queue", vp)
-    end
-
     for _, _, ceid in mc_mb:unpack() do
         local e = w:first "outline_queue camera_ref:out"
         e.camera_ref = ceid

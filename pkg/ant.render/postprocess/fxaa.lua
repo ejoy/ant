@@ -16,7 +16,6 @@ end
 local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
 local viewidmgr = require "viewid_mgr"
-local sampler   = require "sampler"
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.asset|material"
@@ -43,23 +42,6 @@ end
 local fxaa_viewid<const> = viewidmgr.get "fxaa"
 
 function fxaasys:init_world()
-    -- local vr = world.args.viewport
-    -- local fbidx = fbmgr.create(
-    --     {
-    --         rbidx = fbmgr.create_rb{
-    --             w = vr.w, h = vr.h, layers = 1,
-    --             format = "RGBA8",
-    --             flags = sampler{
-    --                 U = "CLAMP",
-    --                 V = "CLAMP",
-    --                 MIN="LINEAR",
-    --                 MAG="LINEAR",
-    --                 RT="RT_ON",
-    --                 }
-    --             },
-    --     }
-    -- )
-    --util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), fbidx, "fxaa_queue", "fxaa_queue")
     util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), nil, "fxaa_queue", "fxaa_queue")
 end
 
@@ -71,7 +53,6 @@ function fxaasys:data_changed()
         break
     end
 end
-
 
 function fxaasys:fxaa()
     local sceneldr_handle
@@ -85,11 +66,5 @@ function fxaasys:fxaa()
 
     local fd = w:first "fxaa_drawer filter_material:in"
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
-
---[[      local tme = w:first "tonemapping_queue render_target:in"
-    local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
-
-    local fd = w:first "fxaa_drawer filter_material:in"
-    imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)  ]]
 end
 

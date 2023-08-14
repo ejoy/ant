@@ -82,11 +82,6 @@ function m.show()
             vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
             world:pub{"world_viewport_changed", vp}
             world:pub{"resize", ww, hh}
-            -- TODO: remove this
-            local mq = w:first("main_queue camera_ref:in render_target:in")
-            local camera <close> = w:entity(mq.camera_ref)
-            w:extend(camera, "scene_needchange:out")
-            camera.scene_needchange = true
         end
     end
     imgui.windows.PopStyleVar(3)

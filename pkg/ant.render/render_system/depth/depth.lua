@@ -42,15 +42,10 @@ function s:init()
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
-local vp_changed_mb = world:sub{"world_viewport_changed"}
 local mc_mb = world:sub{"main_queue", "camera_changed"}
 function s:data_changed()
     for _, _, vr in vr_mb:unpack() do
         irq.set_view_rect("pre_depth_queue", vr)
-    end
-
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("pre_depth_queue", vp)
     end
 
     for _, _, ceid in mc_mb:unpack() do
