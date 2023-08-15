@@ -234,7 +234,9 @@ function mgr.clear()
 end
 
 function mgr.check()
-	assert(not next(VIEWID_BINDINGS), "Need clear all framebuffer correctly")
+	assert(not next(VIEWID_BINDINGS), "Need clear viewid bind with framebuffer correctly")
+	assert(not next(FRAMEBUFFERS), "Need clear framebuffer objects")
+	assert(not next(RENDER_BUFFERS), "Need clear renderbuffer objects")
 end
 
 return mgr
