@@ -219,5 +219,5 @@ end
 
 local fbmgr = require "framebuffer_mgr"
 function render_sys:exit()
-	fbmgr.check()
+	--fbmgr.check()
 end
