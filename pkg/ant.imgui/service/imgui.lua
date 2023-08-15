@@ -36,16 +36,20 @@ function message.size(width,height)
 	init_height = height
 end
 
-local imgui_max_viewid_count<const> = 16
 local viewidcount = 0
+local imgui_viewids = {}
+
+for i=1, 16 do
+	imgui_viewids[i] = rhwi.viewid_generate("imgui_eidtor" .. i, "uiruntime")
+end
 
 function message.viewid()
-	if viewidcount > imgui_max_viewid_count then
-		error(("imgui viewid range exceeded, max count:%d"):format(imgui_max_viewid_count))
+	if viewidcount > #imgui_viewids then
+		error(("imgui viewid range exceeded, max count:%d"):format(#imgui_viewids))
 	end
 
 	viewidcount = viewidcount + 1
-	return rhwi.viewid_generate("imgui_eidtor" .. viewidcount, "uiruntime")
+	return imgui_viewids[viewidcount]
 end
 
 local function update_size()
