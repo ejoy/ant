@@ -5,14 +5,12 @@ local w     = world.w
 local cs2cm_sys = ecs.system "cs2cm_system"
 
 local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 
-local assetmgr  = import_package "ant.asset"
+local hwi       = import_package "ant.hwi"
 
-local setting   = import_package "ant.settings".setting
-local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local assetmgr  = import_package "ant.asset"
 
 local imaterial = ecs.require "ant.asset|material"
 local icompute  = ecs.require "ant.render|compute.compute"
@@ -42,7 +40,8 @@ function cs2cm_sys:init()
     }
 end
 
-local p2c_viewid = viewidmgr.get "panorama2cubmap"
+local p2c_viewid<const> = hwi.viewid_get "panorama2cubmap"
+
 local cm_flags = sampler{
     MIN="LINEAR",
     MAG="LINEAR",

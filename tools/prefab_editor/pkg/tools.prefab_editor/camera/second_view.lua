@@ -7,8 +7,7 @@ local mc        = mathpkg.constant
 
 local defaultcomp= import_package "ant.general".default
 
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
+local hwi       = import_package "ant.hwi"
 
 local INV_Z<const> = true
 
@@ -54,7 +53,7 @@ function second_camera_sys:init_world()
             camera_ref = DEFAULT_camera,
             render_target = {
                 view_rect = vr,
-                viewid = viewidmgr.generate "second_view",
+                viewid = hwi.viewid_generate "second_view",
                 view_mode = mqrt.view_mode,
                 clear_state = mqrt.clear_state,
                 fb_idx = mqrt.fb_idx,

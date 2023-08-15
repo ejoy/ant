@@ -151,9 +151,9 @@ function hw.renderer()
 	return init_args.renderer
 end
 
+local ltask = require "ltask"
+local ServiceBgfxMain = ltask.queryservice "ant.hwi|bgfx_main"
 function hw.init_bgfx()
-    local ltask = require "ltask"
-    local ServiceBgfxMain = ltask.queryservice "ant.hwi|bgfx_main"
     for _, name in ipairs(ltask.call(ServiceBgfxMain, "CALL")) do
         bgfx[name] = function (...)
             return ltask.call(ServiceBgfxMain, name, ...)
@@ -164,6 +164,14 @@ function hw.init_bgfx()
             ltask.send(ServiceBgfxMain, name, ...)
         end
     end
+end
+
+function hw.viewid_get(name)
+	return ltask.call(ServiceBgfxMain, "viewid_get", name)
+end
+
+function hw.viewid_generate(...)
+	return ltask.call(ServiceBgfxMain, "viewid_generate", ...)
 end
 
 return hw

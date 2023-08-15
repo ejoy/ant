@@ -8,9 +8,10 @@ local EFK_SERVER
 
 local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
+
+local hwi       = import_package "ant.hwi"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
@@ -112,7 +113,7 @@ end
 
 local need_update_framebuffer
 
-local effect_viewid<const> = viewidmgr.get "effect_view"
+local effect_viewid<const> = hwi.viewid_get "effect_view"
 
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")

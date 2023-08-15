@@ -10,7 +10,8 @@ local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
-local viewidmgr = renderpkg.viewidmgr
+
+local hwi		= import_package "ant.hwi"
 
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 
@@ -132,6 +133,9 @@ end
 
 local pickup_sys = ecs.system "pickup_system"
 
+local blit_viewid<const> = hwi.viewid_get "pickup_blit"
+local pickupviewid<const> = hwi.viewid_get "pickup"
+
 local function blit_buffer_init(blit_buffer)
 	blit_buffer.handle = bgfx.memory_texture(blit_buffer.w*blit_buffer.h * blit_buffer.elemsize)
 	blit_buffer.rb_idx = fbmgr.create_rb {
@@ -147,12 +151,9 @@ local function blit_buffer_init(blit_buffer)
 			V="CLAMP",
 		}
 	}
-	blit_buffer.blit_viewid = viewidmgr.get "pickup_blit"
 end
 
 local pickup_buffer_w<const>, pickup_buffer_h<const> = 8, 8
-local pickupviewid<const> = viewidmgr.get "pickup"
-
 local fb_renderbuffer_flag<const> = sampler {
 	RT="RT_ON",
 	MIN="POINT",
@@ -282,7 +283,7 @@ end
 local function blit(blit_buffer, render_target)
 	local rb = fbmgr.get_rb(blit_buffer.rb_idx)
 	local rbhandle = rb.handle
-	bgfx.blit(blit_buffer.blit_viewid, rbhandle, 0, 0, assert(fbmgr.get_rb(render_target.fb_idx, 1).handle))
+	bgfx.blit(blit_viewid, rbhandle, 0, 0, assert(fbmgr.get_rb(render_target.fb_idx, 1).handle))
 	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 

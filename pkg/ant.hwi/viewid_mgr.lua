@@ -1,25 +1,25 @@
-local viewid_pool = {}
+local mgr = {}
 
 local MAX_VIEWID<const>	= 256
-local bindings = {}
-local viewid_names = {}
+local BINDINGS = {}
+local VIEWID_NAMES = {}
 
-local remapping_id_list = {}
+local REMAPPING_LIST = {}
 
 --viewid is base 0
 local function add_view(name, afterview_idx)
-	local id = #remapping_id_list
+	local id = #REMAPPING_LIST
 	if id >= MAX_VIEWID then
 		error(("not enough view id, max viewid: %d"):format(MAX_VIEWID))
 	end
 
 	local real_id = (afterview_idx and afterview_idx+1 or id)
 
-	bindings[name] = id
-	viewid_names[id] = name
+	BINDINGS[name] = id
+	VIEWID_NAMES[id] = name
 	
-	assert(#remapping_id_list == id)
-	table.insert(remapping_id_list, real_id+1, id)
+	assert(#REMAPPING_LIST == id)
+	table.insert(REMAPPING_LIST, real_id+1, id)
 	return id
 end
 
@@ -75,11 +75,11 @@ add_view "uiruntime"
 
 local remapping_need_update = true
 
-function viewid_pool.generate(name, afterwho, count)
-	assert(nil == viewid_pool.get(name), ("%s already defined"):format(name))
+function mgr.generate(name, afterwho, count)
+	assert(nil == mgr.get(name), ("%s already defined"):format(name))
 
 	count = count or 1
-	local viewid = add_view(name, viewid_pool.get(afterwho))
+	local viewid = add_view(name, mgr.get(afterwho))
 	for i=2, count do
 		add_view(name, viewid)
 	end
@@ -88,50 +88,46 @@ function viewid_pool.generate(name, afterwho, count)
 	return viewid
 end
 
-function viewid_pool.all_bindings()
-	return bindings
+function mgr.get(name)
+	return BINDINGS[name]
 end
 
-function viewid_pool.clear_remapping()
-	remapping_need_update = false
+function mgr.name(viewid)
+	return VIEWID_NAMES[viewid]	--viewid base 0
 end
 
-function viewid_pool.need_update_remapping()
-	return remapping_need_update
+local bgfx = require "bgfx"
+function mgr.check_remapping()
+	if remapping_need_update then
+        bgfx.set_view_order(REMAPPING_LIST)
+        for n, viewid in pairs(BINDINGS) do
+            bgfx.set_view_name(viewid, n)
+        end
+		remapping_need_update = false
+	end
 end
 
-function viewid_pool.remapping()
-	return remapping_id_list
-end
-
-function viewid_pool.get(name)
-	return bindings[name]
-end
-
-function viewid_pool.viewname(viewid)
-	return viewid_names[viewid]	--viewid base 0
-end
 
 --test
 -- print "all viewid:"
 
 -- local function print_viewids()
 -- 	local viewids = {}
--- 	for viewid in pairs(viewid_names) do
+-- 	for viewid in pairs(VIEWID_NAMES) do
 -- 		viewids[#viewids+1] = viewid
 -- 	end
 
 -- 	table.sort(viewids)
 
 -- 	for _, viewid in ipairs(viewids) do
--- 		local viewname = viewid_names[viewid]
--- 		print("viewname:", viewname, "viewid:", viewid, "binding:", bindings[viewname])
+-- 		local viewname = VIEWID_NAMES[viewid]
+-- 		print("viewname:", viewname, "viewid:", viewid, "binding:", BINDINGS[viewname])
 -- 	end
 -- end
 
 -- print_viewids()
 
--- viewid_pool.generate("main_view1", "main_view")
+-- mgr.generate("main_view1", "main_view")
 
 -- print "============================="
 
@@ -139,24 +135,24 @@ end
 
 
 -- local function print_rempping()
--- 	for idx, mviewid in ipairs(remapping_id_list) do
+-- 	for idx, mviewid in ipairs(REMAPPING_LIST) do
 -- 		local viewid = idx-1
--- 		local viewname = viewid_names[mviewid]
+-- 		local viewname = VIEWID_NAMES[mviewid]
 -- 		print("viewname:", viewname, "viewid:", viewid, "mapping_viewid:", mviewid)
 -- 	end
 -- end
 
--- if viewid_pool.need_update_remapping() then
+-- if mgr.need_update_remapping() then
 -- 	print "============================="
 -- 	print_rempping()
--- 	viewid_pool.clear_remapping()
+-- 	mgr.clear_remapping()
 -- end
 
 -- print "============================="
--- print("main_view:", viewid_pool.get "main_view", "main_view1:", viewid_pool.get "main_view1", "remapping main_view1:", remapping_id_list[viewid_pool.get "main_view1"])
+-- print("main_view:", mgr.get "main_view", "main_view1:", mgr.get "main_view1", "remapping main_view1:", REMAPPING_LIST[mgr.get "main_view1"])
 
--- if viewid_pool.get(viewid_names[#viewid_names]) >= viewid_pool.get "main_view1" then
+-- if mgr.get(VIEWID_NAMES[#VIEWID_NAMES]) >= mgr.get "main_view1" then
 -- 	error "Invalid in generate viewid"
 -- end
 
-return viewid_pool
+return mgr

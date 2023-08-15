@@ -5,7 +5,7 @@ local w = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local layoutmgr = require "vertexlayout_mgr"
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 
 local assetmgr  = import_package "ant.asset"
 
@@ -138,7 +138,7 @@ local function check_light_index_list()
     return true
 end
 
-local main_viewid = viewidmgr.get "main_view"
+local main_viewid<const> = hwi.viewid_get "main_view"
 
 local cr_camera_mb      = world:sub{"main_queue", "camera_changed"}
 

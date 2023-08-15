@@ -7,7 +7,7 @@ local mc		= mathpkg.constant
 
 local INV_Z<const> = true
 
-local viewidmgr = require "viewid_mgr"
+local hwi		= import_package "ant.hwi"
 
 local math3d    = require "math3d"
 
@@ -88,7 +88,7 @@ local function print_points(points)
 	end
 end
 
-local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
+local blit_shadowmap_viewid<const> = hwi.viewid_generate "blit_shadowmap"
 
 local function check_shadow_matrix()
 	local se = world[find_csm_entity(1)]

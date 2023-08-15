@@ -13,11 +13,11 @@ if not ENABLE_TAA then
     return
 end
 
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 
 local taa_present_viewid
 if not ENABLE_FXAA then
-    taa_present_viewid = viewidmgr.get "taa_present"
+    taa_present_viewid = hwi.viewid_get "taa_present"
 end
 
 local layoutmgr	= require "vertexlayout_mgr"
@@ -103,8 +103,8 @@ function taasys:init()
 end
 
 
-local taa_viewid<const> = viewidmgr.get "taa"
-local taa_copy_viewid<const> = viewidmgr.get "taa_copy"
+local taa_viewid<const>      = hwi.viewid_get "taa"
+local taa_copy_viewid<const> = hwi.viewid_get "taa_copy"
 
 
 function taasys:init_world()

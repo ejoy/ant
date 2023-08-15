@@ -12,7 +12,8 @@ local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 local layoutmgr = renderpkg.layoutmgr
 local fbmgr     = renderpkg.fbmgr
-local viewidmgr = renderpkg.viewidmgr
+
+local hwi       = import_package "ant.hwi"
 
 local mathpkg   = import_package "ant.math"
 local mc    = mathpkg.constant
@@ -27,10 +28,10 @@ local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
 local fb_hemi_half_size<const> = fb_hemi_unit_size/2
 
 local downsample_viewid_count<const> = 10
-viewidmgr.generate("lightmap_ds", "fxaa", downsample_viewid_count)
-local lightmap_viewid<const> = viewidmgr.get "lightmap_ds1"
+hwi.viewid_generate("lightmap_ds", "fxaa", downsample_viewid_count)
+local lightmap_viewid<const> = hwi.viewid_get "lightmap_ds1"
 
-local lightmap_storage_viewid<const> = viewidmgr.get "lightmap_storage"
+local lightmap_storage_viewid<const> = hwi.viewid_get "lightmap_storage"
 
 local function default_weight()
     return 1.0

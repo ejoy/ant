@@ -3,8 +3,9 @@ local world = ecs.world
 local w = world.w
 
 local renderpkg = import_package "ant.render"
-local sampler = renderpkg.sampler
-local viewidmgr = renderpkg.viewidmgr
+local sampler   = renderpkg.sampler
+
+local hwi       = import_package "ant.hwi"
 
 local icompute = ecs.require "ant.render|compute.compute"
 
@@ -14,7 +15,7 @@ local cubemap_mipmap_sys = ecs.system "cubemap_mipmap_system"
 
 local icubemap_mipmap = {}
 
-local p2c_viewid = viewidmgr.get "panorama2cubmap"
+local p2c_viewid = hwi.viewid_get "panorama2cubmap"
 
 local cubemap_textures = {
     source = {
@@ -31,15 +32,6 @@ local cubemap_textures = {
     }
 }
 
-local cubemap_flags<const> = sampler {
-    MIN="LINEAR",
-    MAG="LINEAR",
-    MIP="LINEAR",
-    U="CLAMP",
-    V="CLAMP",
-    W="CLAMP",
-    BLIT="BLIT_COMPUTEWRITE",
-}
 
 local function build_cubemap_textures(facesize, cm_rbhandle)
     cubemap_textures.source.value = cm_rbhandle

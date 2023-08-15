@@ -5,7 +5,7 @@ local outline_system = ecs.system "outline_system"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local imaterial = ecs.require "ant.asset|material"
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 local queuemgr  = ecs.require "queue_mgr"
 local R         = ecs.clibs "render.render_material"
 
@@ -44,10 +44,11 @@ local function which_material(skinning)
     end
 end
 
+local outline_viewid<const> = hwi.viewid_get "outline"
+
 local function create_outline_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local vp = world.args.viewport
-    local viewid = viewidmgr.get "outline"
     ecs.create_entity{
         policy = {
             "ant.general|name",
@@ -59,7 +60,7 @@ local function create_outline_queue()
             outline_queue = true,
             render_target = {
                 view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
-                viewid = viewid,
+                viewid = outline_viewid,
                 fb_idx = mq.render_target.fb_idx,
                 view_mode = "s",
                 clear_state = {
@@ -100,8 +101,7 @@ function outline_system:update_filter()
 end
 
 function outline_system:render_submit()
-	local viewid = viewidmgr.get "outline"
-	bgfx.touch(viewid)
+	bgfx.touch(outline_viewid)
 end
 
 local mc_mb = world:sub{"main_queue", "camera_changed"}

@@ -318,11 +318,14 @@ function S.fontmanager()
     return fontmanager.instance()
 end
 
+local viewidmgr = require "viewid_mgr"
+
 local function mainloop()
     while initialized do
         if encoder_num > 0 and encoder_cur == encoder_num then
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
+            viewidmgr.check_remapping()
             local f = bgfx.frame()
             bgfx.dbg_text_clear()
             if pause_token then
@@ -392,4 +395,7 @@ for _, name in ipairs(SEND) do
     end
 end
 
+S.viewid_get        = viewidmgr.get
+S.viewid_generate   = viewidmgr.generate
+S.viewid_name       = viewidmgr.name
 return S

@@ -8,8 +8,7 @@ local irender   = ecs.require "ant.render|render_system.render"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
+local hwi       = import_package "ant.hwi"
 
 local INV_Z<const> = true
 
@@ -119,7 +118,7 @@ function svs:init()
 
     local lastname = "main_view"
     for k, v in pairs(orthoview) do
-        viewidmgr.generate(v.name, lastname)
+        hwi.viewid_generate(v.name, lastname)
         irender.create_view_queue({x=0, y=0, w=1, h=1}, v.name, v.camera_ref)
         lastname = v.name
     end

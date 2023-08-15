@@ -9,7 +9,8 @@ local datalist  = require "datalist"
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
-local viewidmgr = renderpkg.viewidmgr
+
+local hwi       = import_package "ant.hwi"
 
 local icompute  = ecs.require "ant.render|compute.compute"
 local iexposure = ecs.require "ant.camera|exposure"
@@ -19,7 +20,7 @@ local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 local ENABLE_IBL_LUT<const>       = setting:get "graphic/ibl/enable_lut"
 
-local ibl_viewid= viewidmgr.get "ibl"
+local ibl_viewid<const> = hwi.viewid_get "ibl"
 
 local thread_group_size<const> = 8
 

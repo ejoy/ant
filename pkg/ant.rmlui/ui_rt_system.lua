@@ -3,20 +3,24 @@ local world = ecs.world
 local w = world.w
 local ui_rt_sys = ecs.system "ui_rt_system"
 local ivs		= ecs.require "ant.render|visible_state"
-local math3d = require "math3d"
+local math3d    = require "math3d"
 local ltask     = require "ltask"
+local bgfx 		= require "bgfx"
+
 local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
-local iom           = ecs.require "ant.objcontroller|obj_motion"
+
+local hwi       = import_package "ant.hwi"
+
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ui_rt_group_id = 110000
-local bgfx 			= require "bgfx"
 
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = ecs.require "ant.render|queue_mgr"
+
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local iUiRt = {}
@@ -80,7 +84,7 @@ local lastname = "fxaa"
 
 local function create_rt_queue(width, height, name, fbidx)
     local queuename = name .. "_queue"
-    local viewid = viewidmgr.generate(name, lastname)
+    local viewid = hwi.viewid_generate(name, lastname)
     lastname = name
     gen_group_id(name)
     local ui_rt_material_idx = queuemgr.material_index("main_queue")
@@ -139,7 +143,7 @@ local function create_rt_queue(width, height, name, fbidx)
 	}
 end
 
-local function get_fbidx(width, height)
+local function create_fbidx(width, height)
     return fbmgr.create(
         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = rb_flags}},
         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16", flags = rb_flags}}
@@ -179,7 +183,7 @@ function S.render_target_create(width, height, rt_name)
         local queuename = rt_name .. "_queue"
         fbidx = update_fb(rt.w, rt.h, queuename)
     else -- first create rt
-        fbidx = get_fbidx(width, height)
+        fbidx = create_fbidx(width, height)
         rt = {}
         rt_table[rt_name] = rt
         rt.w, rt.h = width, height
@@ -247,7 +251,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     if not rt then
         rt = {}
         rt_table[rt_name] = rt
-        local fbidx = get_fbidx(1, 1)
+        local fbidx = create_fbidx(1, 1)
         create_rt_queue(1, 1, rt_name, fbidx)
         rt.rt_id = ltask.call(ServiceResource, "texture_register_id")
     elseif not rt.rt_handle then

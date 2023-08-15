@@ -10,7 +10,8 @@ local image     = require "image"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
-local viewidmgr = renderpkg.viewidmgr
+
+local hwi       = import_package "ant.hwi"
 
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
@@ -45,7 +46,7 @@ local renderinfo = {
     },
     
     init = function (ri)
-        ri.auto_hm_viewid = viewidmgr.generate "auto_heightmap"
+        ri.auto_hm_viewid = hwi.viewid_generate "auto_heightmap"
         ri.fbidx = fbmgr.create(
             {rbidx=fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="R32F"}},
             {rbidx=fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="D24S8"}})
@@ -53,7 +54,7 @@ local renderinfo = {
         bgfx.set_view_rect(ri.auto_hm_viewid, 0, 0, rbsize, rbsize)
         bgfx.set_view_frame_buffer(ri.auto_hm_viewid, fbmgr.get(ri.fbidx).handle)
 
-        ri.blit_viewid = viewidmgr.generate "blit_hm_viewid"
+        ri.blit_viewid = hwi.viewid_generate "blit_hm_viewid"
         ri.blitrb = fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags=ri.blitflags, format="R32F"}
     end,
     color_handle = function (ri)

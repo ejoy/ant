@@ -13,9 +13,11 @@ if not ENABLE_FXAA then
     return
 end
 
+local hwi       = import_package "ant.hwi"
+
 local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
+
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.asset|material"
@@ -39,7 +41,7 @@ function fxaasys:init()
     }
 end
 
-local fxaa_viewid<const> = viewidmgr.get "fxaa"
+local fxaa_viewid<const> = hwi.viewid_get "fxaa"
 
 function fxaasys:init_world()
     util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), nil, "fxaa_queue", "fxaa_queue")

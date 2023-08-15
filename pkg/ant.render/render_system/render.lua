@@ -9,9 +9,10 @@ local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 
 local bgfx 			= require "bgfx"
-local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local layoutmgr		= require "vertexlayout_mgr"
+
+local hwi			= import_package "ant.hwi"
 local sampler		= import_package "ant.compile_resource".sampler
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
@@ -77,7 +78,7 @@ end
 function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, visible)
 	filtertype = filtertype or "main_view"
 
-	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+	local fbidx = fbmgr.get_fb_idx(hwi.viewid_get "main_view")
 	ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -87,7 +88,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 		data = {
 			camera_ref = assert(camera_ref),
 			render_target = {
-				viewid		= viewidmgr.get(view_queuename),
+				viewid		= hwi.viewid_get(view_queuename),
 				clear_state	= default_clear_state,
 				view_rect	= {x=view_rect.x, y=view_rect.y, w=view_rect.w, h=view_rect.h, ratio=view_rect.ratio},
 				fb_idx		= fbidx,
@@ -117,7 +118,7 @@ local function create_depth_rb(ww, hh)
 end
 
 function irender.create_pre_depth_queue(vr, camera_ref)
-	local depth_viewid = viewidmgr.get "pre_depth"
+	local depth_viewid = hwi.viewid_get "pre_depth"
 	local fbidx = fbmgr.create{rbidx = create_depth_rb(vr.w, vr.h)}
 
 	fbmgr.bind(depth_viewid, fbidx)
@@ -153,7 +154,7 @@ end
 local function create_main_fb(fbsize)
 	local function get_depth_buffer()
 		if ENABLE_PRE_DEPTH then
-			local depth_viewid = viewidmgr.get "pre_depth"
+			local depth_viewid = hwi.viewid_get "pre_depth"
 			local depthfb = fbmgr.get_byviewid(depth_viewid)
 			return depthfb[#depthfb]
 		end
@@ -185,7 +186,7 @@ function irender.create_main_queue(vr, camera_ref)
 			name = "main_queue",
 			camera_ref = camera_ref,
 			render_target = {
-				viewid = viewidmgr.get "main_view",
+				viewid = hwi.viewid_get "main_view",
 				view_mode = "d",
 				clear_state = default_clear_state,
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
@@ -252,9 +253,9 @@ function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 		}
 	}).handle
 
-	local viewid = viewidmgr.get "blit"
+	local viewid = hwi.viewid_get "blit"
 	if viewid == nil then
-		viewid = viewidmgr.generate "blit"
+		viewid = hwi.viewid_generate "blit"
 	end
 	bgfx.blit(viewid, rb_handle, 0, 0, rb.handle)
 	bgfx.read_texture(rb_handle, memory_handle)

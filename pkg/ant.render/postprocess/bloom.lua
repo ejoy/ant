@@ -1,9 +1,8 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local assetmgr  = import_package "ant.asset"
+
 local math3d    = require "math3d"
-local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.compile_resource".sampler
 local irender   = ecs.require "ant.render|render_system.render"
@@ -19,8 +18,10 @@ if not ENABLE_BLOOM then
     return
 end
 
-local bloom_ds_viewid<const> = viewidmgr.get "bloom_ds1"
-local bloom_us_viewid<const> = viewidmgr.get "bloom_us1"
+local hwi       = import_package "ant.hwi"
+
+local bloom_ds_viewid<const> = hwi.viewid_get "bloom_ds1"
+local bloom_us_viewid<const> = hwi.viewid_get "bloom_us1"
 local BLOOM_MIPCOUNT<const> = 4
 local BLOOM_PARAM = math3d.ref(math3d.vector(0, bloom_setting.inv_highlight, bloom_setting.threshold, 0))
 

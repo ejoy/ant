@@ -14,16 +14,19 @@ if not ENABLE_HV_FLIP then
     return
 end
 
+local hwi       = import_package "ant.hwi"
+local mu        = import_package "ant.math".util
+
 local bgfx      = require "bgfx"
 local layoutmgr = require "vertexlayout_mgr"
-local viewidmgr = require "viewid_mgr"
+
 local fbmgr     = require "framebuffer_mgr"
 
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.asset|material"
 
-local hvflip_viewid = viewidmgr.generate("hv_flip", "fxaa")
+local hvflip_viewid<const> = hwi.viewid_generate("hv_flip", "fxaa")
 
 function hvflip_sys:init()
     ecs.create_entity{
@@ -68,10 +71,7 @@ function hvflip_sys:init()
 end
 
 function hvflip_sys:init_world()
-    local vp = world.args.viewport
-    local vr = {x=vp.x, y=vp.y, w=vp.h, h=vp.w}
-
-    util.create_queue(hvflip_viewid, vr, nil, "hv_flip_queue", "hv_flip_queue", false)
+    util.create_queue(hvflip_viewid, mu.copy_viewrect(world.args.viewport), nil, "hv_flip_queue", "hv_flip_queue", false)
 end
 
 function hvflip_sys:flip()

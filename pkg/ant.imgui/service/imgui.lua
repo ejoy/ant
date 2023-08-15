@@ -4,8 +4,6 @@ local ltask		= require "ltask"
 local bgfx		= require "bgfx"
 local PM		= require "programan.client"
 local imgui		= require "imgui"
-local renderpkg	= import_package "ant.render"
-local viewidmgr	= renderpkg.viewidmgr
 local assetmgr	= import_package "ant.asset"
 local rhwi		= import_package "ant.hwi"
 local exclusive	= require "ltask.exclusive"
@@ -39,18 +37,15 @@ function message.size(width,height)
 end
 
 local imgui_max_viewid_count<const> = 16
-local uieditor_viewid<const> = viewidmgr.generate("uieditor", "uiruntime")
-local viewidcount = 1
+local viewidcount = 0
 
 function message.viewid()
 	if viewidcount > imgui_max_viewid_count then
 		error(("imgui viewid range exceeded, max count:%d"):format(imgui_max_viewid_count))
 	end
-	local lastname = viewidmgr.viewname(uieditor_viewid+viewidcount-1)
-	local newname = "uieditor" .. viewidcount
-	local viewid = viewidmgr.generate(newname, lastname)
+
 	viewidcount = viewidcount + 1
-	return viewid
+	return rhwi.viewid_generate("imgui_eidtor" .. viewidcount, "uiruntime")
 end
 
 local function update_size()

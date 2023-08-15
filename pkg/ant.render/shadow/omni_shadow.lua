@@ -20,9 +20,9 @@ local w = world.w
 local INV_Z<const> = true
 
 local fbmgr         = require "framebuffer_mgr"
-local viewidmgr     = require "viewid_mgr"
 local sampler       = require "sampler"
 
+local hwi           = import_package "ant.hwi"
 local mathpkg       = import_package "ant.math"
 local mu            = mathpkg.util
 
@@ -231,7 +231,7 @@ function ios.create(point_eid)
                 camera_ref = camera_ref,
                 render_target = {
                     view_rect = t.view_rect,
-                    viewid = viewidmgr.get(queuename),
+                    viewid = hwi.viewid_get(queuename),
                     fb_idx = fb_index,
                 },
                 clear_state = {

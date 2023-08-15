@@ -5,7 +5,7 @@ local velocity_system = ecs.system "velocity_system"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 local imaterial = ecs.require "ant.asset|material"
 local queuemgr  = ecs.require "queue_mgr"
 local R         = ecs.clibs "render.render_material"
@@ -56,10 +56,11 @@ local function which_material(polylinelist, skinning)
     return velocity_material.object
 end
 
+local velocity_viewid<const> = hwi.viewid_get "velocity"
+
 local function create_velocity_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local vp = world.args.viewport
-    local viewid = viewidmgr.get "velocity"
     ecs.create_entity{
         policy = {
             "ant.general|name",
@@ -71,7 +72,7 @@ local function create_velocity_queue()
             velocity_queue = true,
             render_target = {
                 view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
-                viewid = viewid,
+                viewid = velocity_viewid,
                 fb_idx = fbmgr.create(
                     {
                         rbidx=fbmgr.create_rb(
@@ -133,8 +134,7 @@ function velocity_system:update_filter()
 end
 
 function velocity_system:render_submit()
-	local viewid = viewidmgr.get "velocity"
-	bgfx.touch(viewid)
+	bgfx.touch(velocity_viewid)
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}

@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 local sampler   = require "sampler"
 local fbmgr     = require "framebuffer_mgr"
 
@@ -62,7 +62,7 @@ function depth_resolve_sys:data_changed()
     end
 end
 
-local depth_resolve_viewid = viewidmgr.get "depth_resolve"
+local depth_resolve_viewid<const> = hwi.viewid_get "depth_resolve"
 function depth_resolve_sys:depth_resolve()
     local e = w:first "depth_resolve dispatch:in"
     local m = e.dispatch.material

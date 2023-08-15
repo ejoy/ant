@@ -24,7 +24,7 @@ local assetmgr	= import_package "ant.asset"
 
 local queuemgr	= ecs.require "queue_mgr"
 
-local viewidmgr = require "viewid_mgr"
+local hwi		= import_package "ant.hwi"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
 local idrawindirect = ecs.require "ant.render|draw_indirect_system"
@@ -294,7 +294,7 @@ local function create_clear_shadowmap_queue(fbidx)
                     clear = "D",
                 },
 				fb_idx = fbidx,
-				viewid = viewidmgr.get "csm_fb",
+				viewid = hwi.viewid_get "csm_fb",
 				view_rect = {x=0, y=0, w=ww, h=hh},
 			},
 			clear_sm = true,
@@ -330,7 +330,7 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			camera_ref = camera_ref,
 			render_target = {
-				viewid = viewidmgr.get(csmname),
+				viewid = hwi.viewid_get(csmname),
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
 					clear = "",
@@ -489,7 +489,7 @@ function sm:refine_camera()
 end
 
 function sm:render_submit()
-	local viewid = viewidmgr.get "csm_fb"
+	local viewid = hwi.viewid_get "csm_fb"
 	bgfx.touch(viewid)
 end
 

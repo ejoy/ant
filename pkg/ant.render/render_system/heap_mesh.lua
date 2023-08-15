@@ -1,13 +1,17 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
-local w = world.w
+local w     = world.w
+
+local math3d 	    = require "math3d"
+
+
 local idrawindirect = ecs.require "ant.render|draw_indirect_system"
-local math3d 	= require "math3d"
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
-local main_viewid = viewidmgr.get "csm_fb"
-local icompute = ecs.require "ant.render|compute.compute"
-local imaterial = ecs.require "ant.asset|material"
+local icompute      = ecs.require "ant.render|compute.compute"
+local imaterial     = ecs.require "ant.asset|material"
+
+local hwi           = import_package "ant.hwi"
+local main_viewid   = hwi.viewid_get "csm_fb"
+
 local hm_sys = ecs.system "heap_mesh"
 
 local iheapmesh = {}

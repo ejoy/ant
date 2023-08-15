@@ -15,7 +15,7 @@ if not ENABLE_SHADOW then
 end
 
 local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
+local hwi       = import_package "ant.hwi"
 local fbmgr		= require "framebuffer_mgr"
 local sampler = renderpkg.sampler
 
@@ -25,8 +25,8 @@ local icompute = ecs.require "ant.render|compute.compute"
 local ishadow	= ecs.require "ant.render|shadow.shadow"
 local imaterial = ecs.require "ant.asset|material"
 
-local vblur_viewid<const> = viewidmgr.get "vblur"
-local hblur_viewid<const> = viewidmgr.get "hblur"
+local vblur_viewid<const> = hwi.viewid_get "vblur"
+local hblur_viewid<const> = hwi.viewid_get "hblur"
 
 local blur_textures = {}
 local blur_w

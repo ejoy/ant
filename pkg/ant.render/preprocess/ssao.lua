@@ -22,7 +22,7 @@ local mu, mc    = mathpkg.util, mathpkg.constant
 
 local sampler   = import_package "ant.compile_resource".sampler
 
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 local fbmgr     = require "framebuffer_mgr"
 
 local math3d    = require "math3d"
@@ -138,7 +138,7 @@ function ssao_sys:init()
     icompute.create_compute_entity("bilateral_filter_dispatcher", BILATERAL_FILTER_MATERIAL, {0, 0, 1})
 end
 
-local ssao_viewid<const> = viewidmgr.get "ssao"
+local ssao_viewid<const> = hwi.viewid_get "ssao"
 
 local function create_rbidx(ww, hh)
     local rb_flags = sampler{

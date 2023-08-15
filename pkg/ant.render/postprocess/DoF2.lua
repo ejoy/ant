@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 -- local w = world.w
 -- local sampler   = require "sampler"
--- local viewidmgr = require "viewid_mgr"
 -- local fbmgr     = require "framebuffer_mgr"
 
 -- local ipp       = ecs.require "ant.render|postprocess"

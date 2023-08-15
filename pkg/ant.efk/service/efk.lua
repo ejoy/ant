@@ -15,13 +15,12 @@ local DISABLE_EFK<const> = setting:get "efk/disable"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
-import_package "ant.hwi".init_bgfx()
-local renderpkg = import_package "ant.render"
+local hwi       = import_package "ant.hwi"
+hwi.init_bgfx()
 
-local viewidmgr = renderpkg.viewidmgr
 local assetmgr  = import_package "ant.asset"
 
-local effect_viewid<const> = viewidmgr.get "effect_view"
+local effect_viewid<const> = hwi.viewid_get "effect_view"
 
 bgfx.init()
 assetmgr.init()

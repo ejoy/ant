@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 
 local tm_sys    = ecs.system "tonemapping_system"
 local irender   = ecs.require "ant.render|render_system.render"
@@ -23,7 +23,7 @@ local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
 local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_lut"
 local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_dim"
-local tm_viewid<const>      = viewidmgr.get "tonemapping"
+local tm_viewid<const>      = hwi.viewid_get "tonemapping"
 
 local colorgrading   = require "postprocess.colorgrading.color_grading"
 

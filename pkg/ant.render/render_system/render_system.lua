@@ -6,7 +6,6 @@ local assetmgr  = import_package "ant.asset"
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
-local viewidmgr = require "viewid_mgr"
 
 local queuemgr	= ecs.require "queue_mgr"
 
@@ -18,13 +17,6 @@ local irl		= ecs.require "ant.render|render_layer"
 local render_sys= ecs.system "render_system"
 
 local R			= ecs.clibs "render.render_material"
-
-local function update_viewid_remappings()
-    bgfx.set_view_order(viewidmgr.remapping())
-    for n, viewid in pairs(viewidmgr.all_bindings()) do
-		bgfx.set_view_name(viewid, n)
-	end
-end
 
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
@@ -154,10 +146,6 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_preprocess()
-	if viewidmgr.need_update_remapping() then
-		update_viewid_remappings()
-		viewidmgr.clear_remapping()
-	end
 	for qe in w:select "visible camera_ref:in render_target:in" do
 		local viewid = qe.render_target.viewid
 		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in camera_changed?in")

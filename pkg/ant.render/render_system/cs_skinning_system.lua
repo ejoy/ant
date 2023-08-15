@@ -16,9 +16,10 @@ local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
 
 local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
 local layoutmgr = renderpkg.layoutmgr
-local sk_viewid = viewidmgr.get "skinning"
+
+local hwi		= import_package "ant.hwi"
+local sk_viewid = hwi.viewid_get "skinning"
 
 local assetmgr  = import_package "ant.asset"
 

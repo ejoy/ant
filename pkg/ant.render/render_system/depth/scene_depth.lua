@@ -20,7 +20,7 @@ end
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
-local viewidmgr = require "viewid_mgr"
+local hwi       = import_package "ant.hwi"
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 
@@ -37,7 +37,7 @@ function sd_sys:post_init()
             camera_ref = 0,
             render_target = {
                 view_rect = mu.copy_viewrect(vr),
-                viewid = viewidmgr.get "scene_depth",
+                viewid = hwi.viewid_get "scene_depth",
                 fb_idx = fbmgr.create{
                     rbidx = fbmgr.create_rb{
                         format = "D16F", layers = 1,

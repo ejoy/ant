@@ -3,14 +3,18 @@ local world = ecs.world
 local w = world.w
 
 local ltask     = require "ltask"
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
-local font      = import_package "ant.font"
+local fs        = require "filesystem"
 local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
+
 local irq       = ecs.require "ant.render|render_system.renderqueue"
+
+local hwi       = import_package "ant.hwi"
+local font      = import_package "ant.font"
+
 local rmlui_sys = ecs.system "rmlui_system"
-local fs = require "filesystem"
-local ui_viewid<const> = viewidmgr.get "uiruntime"
+
+
+local ui_viewid<const> = hwi.viewid_get "uiruntime"
 
 function rmlui_sys:init()
     ltask.call(ServiceRmlUi, "initialize", {

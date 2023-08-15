@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
--- local viewidmgr     = require "viewid_mgr"
+-- local hwi           = import_package "ant.hwi"
 -- local fbmgr         = require "framebuffer_mgr"
 -- local sampler       = require "sampler"
 -- local ipp           = ecs.require "ant.render|postprocess"
@@ -13,7 +13,7 @@ local world = ecs.world
 -- local dof_sys       = ecs.system "dof_system"
 
 -- function dof_sys.post_init()
---     local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+--     local main_fbidx = fbmgr.get_fb_idx(hwi.viewid_get "main_view")
 --     local fbw, fbh = ipp.main_rb_size(main_fbidx)
 --     local hfbw, hfbh = fbw/2, fbh/2
     
