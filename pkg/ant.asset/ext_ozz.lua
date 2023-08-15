@@ -45,7 +45,10 @@ local function loader(filename)
 		error "not support type"
 		return
 	end
-	return fn(localfilename)
+	local ozz_res = fn(localfilename)
+	-- filename for Editor
+	ozz_res.filename = filename
+	return ozz_res
 end
 
 local function unloader()
