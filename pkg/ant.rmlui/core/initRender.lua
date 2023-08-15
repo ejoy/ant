@@ -1,6 +1,8 @@
 local rmlui = require "rmlui"
 local bgfx = require "bgfx"
-import_package "ant.hwi".init_bgfx()
+local hwi = import_package "ant.hwi"
+
+hwi.init_bgfx()
 
 local function create_shaders()
     local ltask = require "ltask"
@@ -51,9 +53,11 @@ end
 
 local shaders = create_shaders()
 
-return function(t)
-    t.shader = shaders
-    t.callback = require "core.callback"
-    t.font_mgr = bgfx.fontmanager()
-    rmlui.RmlInitialise(t)
+return function ()
+    rmlui.RmlInitialise {
+        viewid = hwi.viewid_get "uiruntime",
+        shader = shaders,
+        callback = require "core.callback",
+        font_mgr = bgfx.fontmanager(),
+    }
 end

@@ -40,11 +40,11 @@ end
 
 local S = {}
 
-function S.initialize(t)
+function S.initialize(service_world)
+    ServiceWorld = service_world
     bgfx.init()
     audio.init()
-    ServiceWorld = t.service_world
-    initRender(t)
+    initRender()
     ltask.fork(Render)
 end
 

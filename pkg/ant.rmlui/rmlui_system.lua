@@ -13,15 +13,7 @@ local font      = import_package "ant.font"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-
-local ui_viewid<const> = hwi.viewid_get "uiruntime"
-
 function rmlui_sys:init()
-    ltask.call(ServiceRmlUi, "initialize", {
-        service_world = ltask.self(),
-        viewid = ui_viewid,
-    })
-
     local vp = world.args.viewport
     ecs.create_entity{
         policy = {
@@ -33,7 +25,7 @@ function rmlui_sys:init()
             rmlui_obj = true,
             render_target = {
                 view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
-                viewid = ui_viewid,
+                viewid = hwi.viewid_get "uiruntime",
                 clear_state = {
                     clear = "",
                 },

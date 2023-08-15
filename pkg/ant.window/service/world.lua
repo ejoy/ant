@@ -11,6 +11,7 @@ local bgfx      = require "bgfx"
 local ServiceRmlUi
 ltask.fork(function ()
     ServiceRmlUi = ltask.uniqueservice "ant.rmlui|rmlui"
+    ltask.call(ServiceRmlUi, "initialize", ltask.self())
 end)
 
 local S = ltask.dispatch {}
