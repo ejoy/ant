@@ -1,5 +1,6 @@
-local rmlui = require "rmlui"
+ServiceWorld = ...
 
+local rmlui = require "rmlui"
 local timer = require "core.timer"
 local task = require "core.task"
 local filemanager = require "core.filemanager"
@@ -40,14 +41,6 @@ end
 
 local S = {}
 
-function S.initialize(service_world)
-    ServiceWorld = service_world
-    bgfx.init()
-    audio.init()
-    initRender()
-    ltask.fork(Render)
-end
-
 function S.shutdown()
     quit = {}
     ltask.wait(quit)
@@ -64,5 +57,10 @@ S.set_prefix = filemanager.set_prefix
 S.gesture = contextManager.process_gesture
 S.touch = contextManager.process_touch
 S.update_context_size = contextManager.set_dimensions
+
+bgfx.init()
+audio.init()
+initRender()
+ltask.fork(Render)
 
 return S
