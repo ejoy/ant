@@ -12,6 +12,8 @@ function mos:init()
 end
 
 function mos:exit()
+    matobj.color_palettes = nil
+    matobj.sa = nil
     matobj.rmat.release()
     matobj.rmat = nil
 end
