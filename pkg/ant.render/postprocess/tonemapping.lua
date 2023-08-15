@@ -25,7 +25,24 @@ local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_l
 local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_dim"
 local tm_viewid<const>      = hwi.viewid_get "tonemapping"
 
-local colorgrading   = require "postprocess.colorgrading.color_grading"
+local lut_handle
+
+if ENABLE_TM_LUT then
+    local colorgrading   = require "postprocess.colorgrading.color_grading"
+    if colorgrading.lut_handle == nil then
+        local r = colorgrading.bake(assert(LUT_DIM))
+        --TODO: format should be R10G10B10A2
+        local flags<const> = sampler{
+            U = "CLAMP",
+            V = "CLAMP",
+            W = "CLAMP",
+            MIN="LINEAR",
+            MAG="LINEAR",
+        }
+        colorgrading.lut_handle = bgfx.create_texture3d(LUT_DIM, LUT_DIM, LUT_DIM, false, "RGBA32F", flags, r)
+    end
+    lut_handle = colorgrading.lut_handle
+end
 
 function tm_sys:init()
     local drawer_material = ENABLE_TM_LUT and "/pkg/ant.resources/materials/postprocess/tonemapping_lut.material" or "/pkg/ant.resources/materials/postprocess/tonemapping.material"
@@ -40,21 +57,9 @@ function tm_sys:init()
             material        = drawer_material,
             visible_state   = "tonemapping_queue",
             tonemapping_drawer=true,
-            on_ready = function (e)
-                if ENABLE_TM_LUT then
-                    local r = colorgrading.bake(assert(LUT_DIM))
-                    --TODO: format should be R10G10B10A2
-                    local flags<const> = sampler{
-                        U = "CLAMP",
-                        V = "CLAMP",
-                        W = "CLAMP",
-                        MIN="LINEAR",
-                        MAG="LINEAR",
-                    }
-                    local handle = bgfx.create_texture3d(LUT_DIM, LUT_DIM, LUT_DIM, false, "RGBA32F", flags, r)
-                    imaterial.set_property(e, "s_colorgrading_lut", handle)
-                end
-            end,
+            on_ready = ENABLE_TM_LUT and function (e)
+                imaterial.set_property(e, "s_colorgrading_lut", lut_handle)
+            end or nil,
             scene           = {},
         }
     }
