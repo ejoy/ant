@@ -44,7 +44,7 @@ for i=1, 16 do
 end
 
 function message.viewid()
-	if viewidcount > #imgui_viewids then
+	if viewidcount >= #imgui_viewids then
 		error(("imgui viewid range exceeded, max count:%d"):format(#imgui_viewids))
 	end
 
