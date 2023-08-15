@@ -10,9 +10,9 @@ function m.init()
 end
 
 function m.load(banks)
-    for i, f in ipairs(banks) do
-        banks[i] = fs.path(f):localpath():string()
-    end
+	for i, f in ipairs(banks) do
+		banks[i] = fs.path(f):localpath():string()
+	end
 	ltask.send(ServiceAudio, "load", banks)
 end
 
