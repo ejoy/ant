@@ -2,10 +2,10 @@ local mgr = {}
 
 local bgfx = require "bgfx"
 
-local framebuffers = {}
-local renderbuffers = {}
+local FRAMEBUFFERS = {}
+local RENDER_BUFFERS = {}
 
-local viewid_bindings = {}
+local VIEWID_BINDINGS = {}
 
 local VALID_DEPTH_FMT<const> = {
 	D24S8 = true, D24 = true, D24X8 = true, D32F = true, D16F = true
@@ -13,26 +13,26 @@ local VALID_DEPTH_FMT<const> = {
 
 function mgr.bind(viewid, fb_idx)
 	if not fb_idx then return end
-	viewid_bindings[viewid] = fb_idx
+	VIEWID_BINDINGS[viewid] = fb_idx
 	local fb = mgr.get(fb_idx)
 	bgfx.set_view_frame_buffer(viewid, assert(fb.handle))
 end
 
 function mgr.unbind(viewid)
-	viewid_bindings[viewid] = nil
+	VIEWID_BINDINGS[viewid] = nil
 end
 
 function mgr.get_byviewid(viewid)
-	local fb_idx = viewid_bindings[viewid]
-	return framebuffers[fb_idx]
+	local fb_idx = VIEWID_BINDINGS[viewid]
+	return FRAMEBUFFERS[fb_idx]
 end
 
 function mgr.get_fb_idx(viewid)
-	return viewid_bindings[viewid]
+	return VIEWID_BINDINGS[viewid]
 end
 
 function mgr.get(fb_idx)
-	return framebuffers[fb_idx]
+	return FRAMEBUFFERS[fb_idx]
 end
 
 local function unique_idx_generator()
@@ -87,14 +87,14 @@ function mgr.create(...)
 	attachments.handle = create_fb(attachments)
 
 	local fb_idx = generate_fb_idx()
-	framebuffers[fb_idx] = attachments
+	FRAMEBUFFERS[fb_idx] = attachments
 	return fb_idx
 end
 
 
 local function find_rb_have_multi_ref(rbidx)
 	local found = 0
-	for fbidx, fb in pairs(framebuffers) do
+	for fbidx, fb in pairs(FRAMEBUFFERS) do
 		for i=1, #fb do
 			if fb[i].rbidx == rbidx then
 				found = found + 1
@@ -111,7 +111,7 @@ local function destroy_rb(rbidx, mark_rbidx)
 		local rb = mgr.get_rb(rbidx)
 		bgfx.destroy(rb.handle)
 		if mark_rbidx then
-			renderbuffers[rbidx] = nil
+			RENDER_BUFFERS[rbidx] = nil
 		end
 	end
 end
@@ -119,22 +119,22 @@ end
 mgr.destroy_rb = destroy_rb
 
 function mgr.destroy(fbidx, keep_rbs)
-	local oldfb = framebuffers[fbidx]
+	local oldfb = FRAMEBUFFERS[fbidx]
 	if not keep_rbs then
 		for i=1, #oldfb do
 			destroy_rb(oldfb[i].rbidx, true)
 		end
 	end
 	bgfx.destroy(oldfb.handle)
-	framebuffers[fbidx] = nil
+	FRAMEBUFFERS[fbidx] = nil
 end
 
 function mgr.recreate(fbidx, attachments)
-	local oldfb = framebuffers[fbidx]
+	local oldfb = FRAMEBUFFERS[fbidx]
 	--we assume that only framebuffer handle need recreate, render buffer should handle before call it
 	bgfx.destroy(oldfb.handle)
 	attachments.handle = create_fb(attachments)
-	framebuffers[fbidx] = attachments
+	FRAMEBUFFERS[fbidx] = attachments
 end
 
 function mgr.copy(fbidx)
@@ -170,13 +170,13 @@ function mgr.create_rb(rb)
 	local myrb = copy_arg(rb)
 	myrb.handle = create_rb_handle(rb)
 	local idx = generate_rb_idx()
-	renderbuffers[idx] = myrb
+	RENDER_BUFFERS[idx] = myrb
 	return idx
 end
 
 function mgr.get_rb(fbidx, rbidx)
 	rbidx = rbidx and mgr.get(fbidx)[rbidx].rbidx or fbidx
-	return renderbuffers[rbidx]
+	return RENDER_BUFFERS[rbidx]
 end
 
 function mgr.resize_rb(rbidx, w, h)
@@ -188,7 +188,7 @@ function mgr.resize_rb(rbidx, w, h)
 	elseif rb.w ~= w or rb.h ~= h then
 		rb.w, rb.h = w, h
 	else
-		changed = nil
+		changed = false
 	end
 
 	if changed then
@@ -228,6 +228,13 @@ function mgr.get_depth(fbidx)
 	local rb = mgr.get_rb(fb[#fb].rbidx)
 	assert(VALID_DEPTH_FMT[rb.format])
 	return rb
+end
+
+function mgr.clear()
+end
+
+function mgr.check()
+	assert(not next(VIEWID_BINDINGS), "Need clear all framebuffer correctly")
 end
 
 return mgr

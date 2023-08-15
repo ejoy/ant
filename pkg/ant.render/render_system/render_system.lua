@@ -215,3 +215,9 @@ end
 function render_sys:end_filter()
 	w:clear "filter_result"
 end
+
+
+local fbmgr = require "framebuffer_mgr"
+function render_sys:exit()
+	fbmgr.check()
+end

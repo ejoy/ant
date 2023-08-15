@@ -203,6 +203,7 @@ system "render_system"
     .method "end_filter"
     .method "scene_update"
     .method "render_preprocess"
+    .method "exit"
 
 policy "indirect"
     .component "indirect"
