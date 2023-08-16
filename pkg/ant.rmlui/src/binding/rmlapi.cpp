@@ -9,6 +9,7 @@
 #include <binding/luabind.h>
 #include <binding/render.h>
 #include <binding/context.h>
+#include <util/HtmlParser.h>
 
 #include <string.h>
 
@@ -29,6 +30,13 @@ template <typename T>
 T* lua_checkobject(lua_State* L, int idx) {
 	luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
 	return static_cast<T*>(lua_touserdata(L, idx));
+}
+
+static std::string_view
+lua_checkstrview(lua_State* L, int idx) {
+	size_t sz = 0;
+	const char* str = luaL_checklstring(L, idx, &sz);
+	return std::string_view(str, sz);
 }
 
 static std::string
@@ -59,18 +67,50 @@ lDocumentCreate(lua_State* L) {
 		(float)luaL_checkinteger(L, 1),
 		(float)luaL_checkinteger(L, 2)
 	);
-	Rml::Document* doc = new Rml::Document(dimensions);
+	std::string path = lua_checkstdstring(L, 3);
+	Rml::Document* doc = new Rml::Document(dimensions, path);
 	lua_pushlightuserdata(L, doc);
 	return 1;
 }
 
 static int
-lDocumentLoad(lua_State* L) {
+lDocumentParseHtml(lua_State* L) {
+	auto path = lua_checkstrview(L, 1);
+	auto data = lua_checkstrview(L, 2);
+	bool inner = lua_toboolean(L, 3);
+	auto html = (Rml::HtmlElement*)lua_newuserdatauv(L, sizeof(Rml::HtmlElement), 0);
+	new (html) Rml::HtmlElement;
+	if (Rml::ParseHtml(path, data, inner, *html)) {
+		return 1;
+	}
+	return 0;
+}
+
+static int
+lDocumentInstanceHead(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	std::string url = lua_checkstdstring(L, 2);
-	bool ok = doc->Load(url);
-	lua_pushboolean(L, ok);
+	auto html = (Rml::HtmlElement*)lua_touserdata(L, 2);
+	lua_newtable(L);
+	lua_Integer n = 0;
+	doc->InstanceHead(*html, [&](const std::string& str, int line) {
+		lua_createtable(L, 2, 0);
+		lua_pushlstring(L, str.data(), str.size());
+		lua_seti(L, -2, 1);
+		if (line >= 0) {
+			lua_pushinteger(L, line);
+			lua_seti(L, -2, 2);
+		}
+		lua_seti(L, -2, ++n);
+	});
 	return 1;
+}
+
+static int
+lDocumentInstanceBody(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	auto html = (Rml::HtmlElement*)lua_touserdata(L, 2);
+	doc->InstanceBody(*html);
+	return 0;
 }
 
 static int
@@ -586,7 +626,9 @@ luaopen_rmlui(lua_State* L) {
 	luabind::init(L);
 	luaL_Reg l[] = {
 		{ "DocumentCreate", lDocumentCreate },
-		{ "DocumentLoad", lDocumentLoad },
+		{ "DocumentParseHtml", lDocumentParseHtml },
+		{ "DocumentInstanceHead", lDocumentInstanceHead },
+		{ "DocumentInstanceBody", lDocumentInstanceBody },
 		{ "DocumentDestroy", lDocumentDestroy },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentFlush", lDocumentFlush },

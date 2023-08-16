@@ -80,8 +80,6 @@ public:
 
 class Plugin {
 public:
-	virtual void OnLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line) = 0;
-	virtual void OnLoadExternalScript(Document* document, const std::string& source_path) = 0;
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnCreateText(Document* document, Text* text) = 0;
 	virtual void OnUpdateDataModel(Document* document) = 0;

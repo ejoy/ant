@@ -1,4 +1,5 @@
 #include <util/HtmlParser.h>
+#include <util/Log.h>
 
 #include <assert.h>
 #include <string.h>
@@ -93,8 +94,7 @@ static std::string& SkipSpace(std::string& s) {
 	return s;
 }
 
-HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
-	HtmlElement root;
+void HtmlParser::Parse(std::string_view stream, bool inner, HtmlElement& root) {
     std::stack<HtmlElement*> stack;
 	stack.push(&root);
 
@@ -348,7 +348,6 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 	default:
 		break;
 	}
-	return root;
 }
 
 bool HtmlParser::EnterOpenElement(std::stack<HtmlElement*>& stack, char c) {
@@ -770,6 +769,23 @@ void HtmlParser::RethrowException(HtmlParserException& e, HtmlError nCheckCode, 
 	if (e.GetCode() == nCheckCode)
 		e.m_code = nSubstituteCode;
 	throw e;
+}
+
+bool ParseHtml(const std::string_view& path, const std::string_view& data, bool inner, HtmlElement& html) {
+	try {
+		HtmlParser parser;
+		parser.Parse(data, inner, html);
+		return true;
+	}
+	catch (HtmlParserException& e) {
+		if (path.empty()) {
+			Log::Message(Log::Level::Error, "Parse error: %s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
+		}
+		else {
+			Log::Message(Log::Level::Error, "%s Parse error: %s Line: %d Column: %d", path.data(), e.what(), e.GetLine(), e.GetColumn());
+		}
+		return false;
+	}
 }
 
 }

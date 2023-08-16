@@ -28,6 +28,17 @@ function m.exists(path)
     return fs.exists(prefixPath / path)
 end
 
+function m.readfile(source_path)
+    local realpath = m.realpath(source_path)
+    local f = io.open(realpath)
+    if not f then
+        return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
+    end
+    local data = f:read 'a'
+    f:close()
+    return data
+end
+
 local pendQueue = {}
 local readyQueue = {}
 

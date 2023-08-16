@@ -5,6 +5,7 @@ local createSandbox = require "core.sandbox.create"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
+local console = require "core.sandbox.console"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -34,18 +35,47 @@ local function notifyDocumentDestroy(document)
 	environment[document] = nil
 end
 
-function m.open(url)
-    local doc = rmlui.DocumentCreate(width, height)
+local function OnLoadInlineScript(document, content, source_path, source_line)
+	local f, err = filemanager.loadString(content, source_path, source_line, environment[document])
+	if not f then
+		console.warn(err)
+		return
+	end
+	f()
+end
+
+local function OnLoadExternalScript(document, source_path)
+	local f, err = filemanager.loadFile(source_path, environment[document])
+	if not f then
+		console.warn(("file '%s' load failed: %s."):format(source_path, err))
+		return
+	end
+	f()
+end
+
+function m.open(path)
+    local doc = rmlui.DocumentCreate(width, height, path)
     if not doc then
         return
     end
     documents[#documents+1] = doc
     notifyDocumentCreate(doc)
-    local ok = rmlui.DocumentLoad(doc, url)
-    if not ok then
+    local data = filemanager.readfile(path)
+    local html = rmlui.DocumentParseHtml(path, data, false)
+    if not html then
         m.close(doc)
         return
     end
+    local scripts = rmlui.DocumentInstanceHead(doc, html)
+    for _, script in ipairs(scripts) do
+        if script[2] then
+            OnLoadInlineScript(doc, script[1], path, script[2])
+        else
+            OnLoadExternalScript(doc, script[1])
+        end
+    end
+    rmlui.DocumentInstanceBody(doc, html)
+    rmlui.DocumentFlush(doc)
     return doc
 end
 

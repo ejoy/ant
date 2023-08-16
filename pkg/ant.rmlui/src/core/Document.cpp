@@ -11,85 +11,66 @@
 
 namespace Rml {
 
-Document::Document(const Size& _dimensions)
+Document::Document(const Size& _dimensions, const std::string& path)
 	: body(this, "body")
 	, dimensions(_dimensions)
+	, source_url(path)
 { }
 
 Document::~Document() {
 	body.RemoveAllChildren();
 }
 
-bool Document::Load(const std::string& path) {
-	std::ifstream input(GetPlugin()->OnRealPath(path));
-	if (!input) {
-		return false;
-	}
-	std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-	input.close();
-	SetSourceURL(path);
-	if (auto dom = ParseHtml(path, data)) {
-		Instance(*dom);
-		Flush();
-		return true;
-	}
-	return false;
-}
-
-std::optional<HtmlElement> Document::ParseHtml(const std::string& path, const std::string& data) {
-	try {
-		HtmlParser parser;
-		return parser.Parse(data, false);
-	}
-	catch (HtmlParserException& e) {
-		Log::Message(Log::Level::Error, "%s Parse error: %s Line: %d Column: %d", path.c_str(), e.what(), e.GetLine(), e.GetColumn());
-		return std::nullopt;
-	}
-}
-
-void Document::Instance(const HtmlElement& html) {
+void Document::InstanceHead(const HtmlElement& html, std::function<void(const std::string&, int)> func) {
 	assert(html.children.size() == 1);
 	auto const& rootHtml = std::get<HtmlElement>(html.children[0]);
 	assert(rootHtml.children.size() == 2);
 	auto const& headHtml = std::get<HtmlElement>(rootHtml.children[0]);
-	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
-	
 	for (auto const& node : headHtml.children) {
 		auto element = std::get_if<HtmlElement>(&node);
 		if (element) {
 			if (element->tag == "script") {
 				if (element->children.size() > 0) {
-					LoadInlineScript(std::get<HtmlString>(element->children[0]), std::get<0>(element->position));
+					auto& content = std::get<HtmlString>(element->children[0]);
+					auto source_line = std::get<0>(element->position);
+					func(content, source_line);
 				}
 				else {
 					auto it = element->attributes.find("path");
 					if (it != element->attributes.end()) {
-						LoadExternalScript(it->second);
+						auto& source_path = it->second;
+						func(source_path, -1);
 					}
 				}
 			}
 			else if (element->tag == "style") {
 				if (element->children.size() > 0) {
-					LoadInlineStyle(std::get<HtmlString>(element->children[0]), std::get<0>(element->position));
+					auto& content = std::get<HtmlString>(element->children[0]);
+					auto source_line = std::get<0>(element->position);
+					StyleSheetFactory::CombineStyleSheet(style_sheet, content, GetSourceURL(), source_line);
 				}
 				else {
 					auto it = element->attributes.find("path");
 					if (it != element->attributes.end()) {
-						LoadExternalStyle(it->second);
+						auto& source_path = it->second;
+						StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
 					}
 				}
 			}
 		}
 	}
 	style_sheet.Sort();
+}
+
+void Document::InstanceBody(const HtmlElement& html) {
+	assert(html.children.size() == 1);
+	auto const& rootHtml = std::get<HtmlElement>(html.children[0]);
+	assert(rootHtml.children.size() == 2);
+	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
 	body.InstanceOuter(bodyHtml);
 	body.NotifyCreated();
 	body.InstanceInner(bodyHtml);
 	body.DirtyDefinition();
-}
-
-void Document::SetSourceURL(const std::string& url) {
-	source_url = url;
 }
 
 const std::string& Document::GetSourceURL() const {
@@ -98,22 +79,6 @@ const std::string& Document::GetSourceURL() const {
 
 const StyleSheet& Document::GetStyleSheet() const {
 	return style_sheet;
-}
-
-void Document::LoadInlineScript(const std::string& content, int source_line) {
-	GetPlugin()->OnLoadInlineScript(this, content, GetSourceURL(), source_line);
-}
-
-void Document::LoadExternalScript(const std::string& source_path) {
-	GetPlugin()->OnLoadExternalScript(this, source_path);
-}
-
-void Document::LoadInlineStyle(const std::string& content, int source_line) {
-	StyleSheetFactory::CombineStyleSheet(style_sheet, content, GetSourceURL(), source_line);
-}
-
-void Document::LoadExternalStyle(const std::string& source_path) {
-	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
 }
 
 void Document::UpdateDataModel() {

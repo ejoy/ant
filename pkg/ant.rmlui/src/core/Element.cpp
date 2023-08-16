@@ -287,15 +287,10 @@ void Element::SetInnerHTML(const std::string& html) {
 		RemoveAllChildren();
 		return;
 	}
-	try {
-		HtmlParser parser;
-		HtmlElement dom = parser.Parse(html, true);
+	HtmlElement dom;
+	if (ParseHtml({}, html, true, dom)) {
 		RemoveAllChildren();
 		InstanceInner(dom);
-	}
-	catch (HtmlParserException& e) {
-		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
-		return;
 	}
 }
 
@@ -306,16 +301,11 @@ void Element::SetOuterHTML(const std::string& html) {
 		RemoveAllChildren();
 		return;
 	}
-	try {
-		HtmlParser parser;
-		HtmlElement dom = parser.Parse(html, false);
+	HtmlElement dom;
+	if (ParseHtml({}, html, false, dom)) {
 		RemoveAllChildren();
 		InstanceOuter(dom);
 		InstanceInner(dom);
-	}
-	catch (HtmlParserException& e) {
-		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
-		return;
 	}
 }
 

@@ -42,24 +42,6 @@ lua_plugin::~lua_plugin() {
 	luaref_close(reference);
 }
 
-void lua_plugin::OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) {
-	luabind::invoke([&](lua_State* L) {
-		lua_pushlightuserdata(L, (void*)document);
-		lua_pushlstring(L, content.data(), content.size());
-		lua_pushlstring(L, source_path.data(), source_path.size());
-		lua_pushinteger(L, source_line);
-		call(L, LuaEvent::OnLoadInlineScript, 4);
-	});
-}
-
-void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string& source_path) {
-	luabind::invoke([&](lua_State* L) {
-		lua_pushlightuserdata(L, (void*)document);
-		lua_pushlstring(L, source_path.data(), source_path.size());
-		call(L, LuaEvent::OnLoadExternalScript, 2);
-	});
-}
-
 void lua_plugin::OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
@@ -242,8 +224,6 @@ void lua_plugin::register_event(lua_State* L) {
 	lua_remove(L, 1);
 	luaL_checktype(L, 1, LUA_TTABLE);
 	reference = luaref_init(L);
-	ref_function(reference, L, "OnLoadInlineScript");
-	ref_function(reference, L, "OnLoadExternalScript");
 	ref_function(reference, L, "OnCreateElement");
 	ref_function(reference, L, "OnCreateText");
 	ref_function(reference, L, "OnUpdateDataModel");

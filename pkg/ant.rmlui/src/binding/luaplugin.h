@@ -12,9 +12,7 @@ class Event;
 }
 
 enum class LuaEvent : uint8_t {
-	OnLoadInlineScript = 2,
-	OnLoadExternalScript,
-	OnCreateElement,
+	OnCreateElement = 2,
 	OnCreateText,
 	OnUpdateDataModel,
 	OnDispatchEvent,
@@ -28,8 +26,6 @@ class lua_plugin final : public Rml::Plugin {
 public:
 	lua_plugin(lua_State* L);
 	~lua_plugin();
-	void OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) override;
-	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;
 	void OnCreateText(Rml::Document* document, Rml::Text* text) override;
 	void OnUpdateDataModel(Rml::Document* document) override;

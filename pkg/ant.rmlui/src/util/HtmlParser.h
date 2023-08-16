@@ -5,6 +5,8 @@
 #include <stack>
 #include <vector>
 #include <variant>
+#include <string_view>
+#include <optional>
 #include <cstdint>
 
 namespace Rml {
@@ -71,7 +73,7 @@ struct HtmlElement {
 
 class HtmlParser {
 public:
-    HtmlElement Parse(std::string_view stream, bool inner);
+    void Parse(std::string_view stream, bool inner, HtmlElement& root);
 
 private:
     unsigned int m_line   = 0;
@@ -93,5 +95,7 @@ private:
     void EnterEntity(void* pData);
     void EnterAttribute(HtmlString& name, HtmlString& value, char c);
 };
+
+bool ParseHtml(const std::string_view& path, const std::string_view& data, bool inner, HtmlElement& html);
 
 }
