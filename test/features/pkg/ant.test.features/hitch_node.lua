@@ -15,6 +15,7 @@ local function create_simple_test_group()
     defgroup:create_entity {
         policy = {
             "ant.render|hitch_object",
+            "ant.general|name",
         },
         data = {
             scene = {
@@ -24,11 +25,13 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
+            name = "hitch_static1",
         }
     }
     defgroup:create_entity {
         policy = {
             "ant.render|hitch_object",
+            "ant.general|name",
         },
         data = {
             scene = {
@@ -38,11 +41,13 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
+            name = "hitch_static2",
         }
     }
     defgroup:create_entity {
         policy = {
             "ant.render|hitch_object",
+            "ant.general|name",
         },
         data = {
             scene = {
@@ -52,6 +57,7 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
+            name = "hitch_static2",
         }
     }
 
@@ -69,7 +75,7 @@ local function create_simple_test_group()
             scene = {},
             on_ready = function (e)
                 iom.set_position(e, math3d.vector(0, 2, 0))
-                iom.set_scale(e, 3)
+                --iom.set_scale(e, 3)
             end,
             name = "virtual_node_p1",
         },
@@ -100,7 +106,10 @@ local change_hitch_eid
 local function create_skeleton_test_group()
     --dynamic
     ecs.create_entity {
-        policy = "ant.render|hitch_object",
+        policy = {
+            "ant.render|hitch_object",
+            "ant.general|name",
+        },
         data = {
             scene = {
                 s = 0.1,
@@ -110,11 +119,15 @@ local function create_skeleton_test_group()
                 group = skeleton_test_group_id
             },
             visible_state = "main_view",
+            name = "hitch_dynamic1",
         }
     }
 
     change_hitch_eid = ecs.create_entity {
-        policy = "ant.render|hitch_object",
+        policy = {
+            "ant.render|hitch_object",
+            "ant.general|name",
+        },
         data = {
             scene = {
                 s = 0.1,
@@ -125,6 +138,7 @@ local function create_skeleton_test_group()
                 group = skeleton_test_group_id
             },
             visible_state = "main_view",
+            name = "hitch_dynamic2",
         }
     }
 
@@ -154,12 +168,28 @@ function hn_test_sys:init()
     --create_skeleton_test_group()
 end
 
+local TICK = 0
+
 local key_mb = world:sub {"keyboard"}
 function hn_test_sys:data_changed()
     for _, key, press in key_mb:unpack() do
         if key == "Y" and press == 0 then
-            local e <close> = world:entity(change_hitch_eid, "hitch:update")
+            local e <close> = w:entity(change_hitch_eid, "hitch:update hitch_bounding?out")
             e.hitch.group = skeleton_test_group_id+1
+            e.hitch_bounding = true
         end
     end
+
+    -- if TICK == 20 then
+    --     local queuemgr = ecs.require "ant.render|queue_mgr"
+    --     local mainmask = queuemgr.queue_mask "main_queue"
+    --     for e in w:select "hitch:in name:in" do
+    --         print("hitch object:", e.name, 0 ~= (e.hitch.cull_masks & mainmask) and "culled" or "not culled")
+    --     end
+
+    --     TICK = 0
+    -- else
+    --     TICK = TICK + 1
+    -- end
+    
 end
