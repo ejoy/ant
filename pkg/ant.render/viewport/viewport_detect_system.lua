@@ -61,7 +61,7 @@ local function update_render_queue(q, viewsize)
 	check_viewrect_size(vr, viewsize)
 
 	if q.camera_ref then
-		local camera <close> = w:entity(q.camera_ref)
+		local camera <close> = world:entity(q.camera_ref)
 		icamera.update_frustum(camera, vr.w, vr.h)
 	end
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)

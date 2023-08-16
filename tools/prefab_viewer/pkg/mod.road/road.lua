@@ -363,7 +363,7 @@ function init_system:data_changed()
         local road_num = 0
         if road_info then road_num = #road_info end
         if road_num > 0 then
-            local de <close> = w:entity(road.draw_indirect_eid, "draw_indirect:in dispatch:in")
+            local de <close> = world:entity(road.draw_indirect_eid, "draw_indirect:in dispatch:in")
             local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
             local instance_memory_buffer = get_instance_memory_buffer(road_info, 500)
             bgfx.update(itb_handle, 0, instance_memory_buffer)

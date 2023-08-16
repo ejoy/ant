@@ -27,7 +27,7 @@ end
 function screen_3dobj_sys:camera_usage()
     if w:check "scene_changed camera" then
         local mq = w:first("main_queue camera_ref:in")
-        local ce <close> = w:entity(mq.camera_ref, "scene_changed?in camera:in")
+        local ce <close> = world:entity(mq.camera_ref, "scene_changed?in camera:in")
         if ce.scene_changed then
             local camera = ce.camera
             for e in w:select "screen_3dobj:in render_object:update eid:in scene:update" do

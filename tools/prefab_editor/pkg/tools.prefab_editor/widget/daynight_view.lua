@@ -22,7 +22,7 @@ local function check_relative_path(path, basepath)
 end
 
 local function save_prefab(eid, path)
-    local e <close> = w:entity(eid, "daynight?in")
+    local e <close> = world:entity(eid, "daynight?in")
     local dn = {}
     for tn, t in pairs(e.daynight) do
         if (not tn:match("direction")) and (not tn:match("rotate_normal")) then
@@ -204,7 +204,7 @@ function DaynightView:set_eid(eid)
         self.eid = nil
         return
     end
-    local e <close> = w:entity(eid, "daynight?update")
+    local e <close> = world:entity(eid, "daynight?update")
     if e.daynight then
         if #self.daynight.subproperty > 1 then
             self.daynight:set_subproperty(self.daynight.subproperty)

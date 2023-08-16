@@ -82,7 +82,7 @@ end
 function S.init()
     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
         local leid = e.tag['*'][2]
-        local le<close> = w:entity(leid, "directional_light scene:update")
+        local le<close> = world:entity(leid, "directional_light scene:update")
 
         local r2l_mat<const> = mc.R2L_MAT
         local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
@@ -96,7 +96,7 @@ local peids
 
 function S.init_world()
     local mq = w:first "main_queue camera_ref:in"
-    local ce<close> = w:entity(mq.camera_ref, "camera:in")
+    local ce<close> = world:entity(mq.camera_ref, "camera:in")
     local eyepos = math3d.vector(0, 10, -10)
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
@@ -106,35 +106,35 @@ function S.init_world()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
     --     local leid = e.tag['*'][1]
-    --     local le<close> = w:entity(leid, "scene:update")
+    --     local le<close> = world:entity(leid, "scene:update")
     --     iom.set_scale(le, 0.1)
     -- end)
 
     -- create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
     --     peids = e.tag['*']
     --     local leid = e.tag['*'][1]
-    --     -- local le<close> = w:entity(leid, "scene:update")
+    --     -- local le<close> = world:entity(leid, "scene:update")
     --     -- iom.set_scale(le, 0.1)
     -- end)
 
     create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
         peids = e.tag['*']
         local leid = e.tag['*'][1]
-        local le<close> = w:entity(leid, "scene:update")
+        local le<close> = world:entity(leid, "scene:update")
         iom.set_scale(le, 0.1)
     end)
 
     -- create_instance("/pkg/ant.test.light/assets/plane.glb|mesh.prefab", function (e)
     --     local normaltex = assetmgr.resource "/pkg/ant.test.light/assets/normal.texture"
     --     local leidobj = e.tag['*'][2]
-    --     local obj<close> = w:entity(leidobj)
+    --     local obj<close> = world:entity(leidobj)
 
     --     imaterial.set_property(obj, "s_normal", normaltex.id)
     -- end)
 
     -- create_instance("/pkg/ant.test.light/assets/ground_01.glb|mesh.prefab", function (e)
     --     local leid = e.tag['*'][1]
-    --     local le<close> = w:entity(leid, "scene:update")
+    --     local le<close> = world:entity(leid, "scene:update")
     --     iom.set_scale(le, 0.1)
     --     iom.set_position(le, math3d.vector(5, 0, 0))
     -- end)
@@ -168,7 +168,7 @@ function S:data_changed()
     for _, code, press, state in kb_mb:unpack() do
         if code == "T" and press == 0 then
             for _, eid in ipairs(peids) do
-                local e<close> = w:entity(eid)
+                local e<close> = world:entity(eid)
                 w:remove(e)
             end
         end

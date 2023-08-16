@@ -29,7 +29,7 @@ function SlotView:_init()
                     local tp = hierarchy:get_template(self.eid)
                     if tp.template.data.slot.joint_name ~= name then
                         tp.template.data.slot.joint_name = name
-                        local e <close> = w:entity(self.eid, "slot:in")
+                        local e <close> = world:entity(self.eid, "slot:in")
                         e.slot.joint_name = name
                         e.slot.joint_index = nil
                         -- if name == "None" then
@@ -53,7 +53,7 @@ function SlotView:_init()
                     end
                     local tp = hierarchy:get_template(self.eid)
                     tp.template.data.slot.follow_flag = flag
-                    local e <close> = w:entity(self.eid, "slot:in")
+                    local e <close> = world:entity(self.eid, "slot:in")
                     e.slot.follow_flag = flag
                 end,
             }),
@@ -80,7 +80,7 @@ function SlotView:set_eid(eid)
         self.eid = nil
         return
     end
-    local e <close> = w:entity(eid, "slot?in")
+    local e <close> = world:entity(eid, "slot?in")
     if not e.slot then
         self.eid = nil
         return

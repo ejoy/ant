@@ -227,7 +227,7 @@ local highlight_aabb = {
 local function update_highlight_aabb(eid)
     local visible = false
     if eid then
-        local e <close> = w:entity(eid, "bounding?in scene?in")
+        local e <close> = world:entity(eid, "bounding?in scene?in")
         local bounding = e.bounding
         if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
             -- local wm = e.scene and iom.worldmat(e) or mc.IDENTITY_MAT
@@ -248,13 +248,13 @@ end
 
 local function on_target(old, new)
     if old then
-        local oe <close> = w:entity(old, "light?in")
+        local oe <close> = world:entity(old, "light?in")
         if oe and oe.light then
             light_gizmo.bind()
         end
     end
     if new then
-        local ne <close> = w:entity(new, "camera?in light?in scene?in render_object?in")
+        local ne <close> = world:entity(new, "camera?in light?in scene?in render_object?in")
         if ne.camera then
             camera_mgr.set_second_camera(new, true)
         end
@@ -272,7 +272,7 @@ end
 local function on_update(eid)
     world:pub {"UpdateAABB", eid}
     if not eid then return end
-    local e <close> = w:entity(eid, "camera?in light?in")
+    local e <close> = world:entity(eid, "camera?in light?in")
     if e.camera then
         camera_mgr.update_frustrum(eid)
     elseif e.light then
@@ -303,7 +303,7 @@ local function update_visible(node, visible)
     local rv
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
-        local e <close> = w:entity(eid, "visible_state?in")
+        local e <close> = world:entity(eid, "visible_state?in")
         if e.visible_state then
             set_visible(e, visible)
             if not rv then
@@ -311,7 +311,7 @@ local function update_visible(node, visible)
             end
         end
     end
-    local ne <close> = w:entity(node.eid, "visible_state?in")
+    local ne <close> = world:entity(node.eid, "visible_state?in")
     if ne.visible_state then
         set_visible(ne, visible)
         local template = hierarchy:get_template(node.eid)
@@ -366,7 +366,7 @@ function m:handle_event()
         elseif what == "name" or what == "tag" then
             transform_dirty = false
             if what == "name" then
-                local e <close> = w:entity(target, "collider?in slot?in")
+                local e <close> = world:entity(target, "collider?in slot?in")
                 hierarchy:update_display_name(target, v1)
                 if e.collider then
                     hierarchy:update_collider_list(world)
@@ -384,7 +384,7 @@ function m:handle_event()
     end
     for _, what, target, value in hierarchy_event:unpack() do
         if what == "visible" then
-            local e <close> = w:entity(target.eid, "efk?in light?in")
+            local e <close> = world:entity(target.eid, "efk?in light?in")
             hierarchy:set_visible(target, value, true)
             if e.efk then
                 iefk.set_visible(target.eid, value)
@@ -402,7 +402,7 @@ function m:handle_event()
         elseif what == "lock" then
             hierarchy:set_lock(target, value)
         elseif what == "delete" then
-            local e <close> = w:entity(gizmo.target_eid, "collider?in slot?in")
+            local e <close> = world:entity(gizmo.target_eid, "collider?in slot?in")
             if e.collider or e.slot then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end

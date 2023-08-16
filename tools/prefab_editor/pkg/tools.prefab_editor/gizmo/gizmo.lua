@@ -28,7 +28,7 @@ local gizmo = {
 }
 
 local function set_color(eid, color)
-	local e <close> = w:entity(eid)
+	local e <close> = world:entity(eid)
 	imaterial.set_property(e, "u_color", color)
 end
 
@@ -67,7 +67,7 @@ function gizmo:highlight_axis_or_plane(axis)
 end
 
 local function set_visible(eid, b)
-	local e <close> = w:entity(eid)
+	local e <close> = world:entity(eid)
 	ivs.set_state(e, "main_view", b)
 	ivs.set_state(e, "selectable", b)
 end

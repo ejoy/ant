@@ -158,7 +158,7 @@ local exp_mb = world:sub{"exposure_changed"}
 
 local function update_ibl_param(intensity)
     local mq = w:first("main_queue camera_ref:in")
-    local camera <close> = w:entity(mq.camera_ref)
+    local camera <close> = world:entity(mq.camera_ref)
     local ev = iexposure.exposure(camera)
 
     intensity = intensity or 1

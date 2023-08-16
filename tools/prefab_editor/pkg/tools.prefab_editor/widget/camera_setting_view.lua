@@ -21,7 +21,7 @@ local function show_camera_setting(open)
     local change, opened = imgui.windows.BeginPopupModal(CAMERA_SETTING_NAME, imgui.flags.Window{"AlwaysAutoResize"})
     if change then
         local mq = w:first "main_queue camera_ref:in"
-        local e<close> = w:entity(mq.camera_ref, "camera:update scene:update")
+        local e<close> = world:entity(mq.camera_ref, "camera:update scene:update")
 
         if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
 

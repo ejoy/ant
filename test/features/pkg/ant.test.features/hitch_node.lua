@@ -120,7 +120,7 @@ local function create_skeleton_test_group()
     local function create_obj(g, file, s, t)
         local p = g:create_instance(file)
         p.on_ready = function (e)
-            local ee<close> = w:entity(e.tag['*'][1], "scene:in")
+            local ee<close> = world:entity(e.tag['*'][1], "scene:in")
             if s then
                 iom.set_scale(ee, s)
             end
@@ -147,7 +147,7 @@ local key_mb = world:sub {"keyboard"}
 function hn_test_sys:data_changed()
     for _, key, press in key_mb:unpack() do
         if key == "Y" and press == 0 then
-            local e <close> = w:entity(change_hitch_eid, "hitch:update")
+            local e <close> = world:entity(change_hitch_eid, "hitch:update")
             e.hitch.group = skeleton_test_group_id+1
         end
     end

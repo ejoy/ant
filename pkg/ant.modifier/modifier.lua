@@ -37,7 +37,7 @@ end
 local modifierevent = world:sub {"modifier"}
 function modifier_sys:entity_ready()
     for _, m, desc in modifierevent:unpack() do
-        local e <close> = w:entity(m.eid, "modifier:in")
+        local e <close> = world:entity(m.eid, "modifier:in")
         if not e then
             goto continue
         end
@@ -48,7 +48,7 @@ function modifier_sys:entity_ready()
             if desc.name then
                 iani.play(m.anim_eid, desc)
             else
-                local anim <close> = w:entity(m.anim_eid)
+                local anim <close> = world:entity(m.anim_eid)
                 ika.play(anim, desc)
             end
         end
@@ -75,7 +75,7 @@ function imodifier.delete(m)
     if not m then
         return
     end
-    local e <close> = w:entity(m.eid, "modifier:in")
+    local e <close> = world:entity(m.eid, "modifier:in")
     local mf = e.modifier
     if mf.target then
         mf:reset()
@@ -87,7 +87,7 @@ function imodifier.set_target(m, target)
     if not m then
         return
     end
-    local e <close> = w:entity(m.eid, "modifier:in")
+    local e <close> = world:entity(m.eid, "modifier:in")
     local mf = e.modifier
     if target == mf.target then
         return
@@ -98,7 +98,7 @@ function imodifier.set_target(m, target)
         if not target then
             return
         end
-        local e <close> = w:entity(target, "material:in")
+        local e <close> = world:entity(target, "material:in")
         local filename = e.material
         if not filename then
             return
@@ -118,14 +118,14 @@ end
 
 function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreupdate)
     local function get_value(kfe, time)
-        local e <close> = w:entity(kfe, "keyframe:in")
+        local e <close> = world:entity(kfe, "keyframe:in")
         local kfanim = e.keyframe
         return kfanim.play_state.current_value, kfanim.play_state.playing
     end
 
     local init_value
     if target then
-        local e <close> = w:entity(target, "material:in")
+        local e <close> = world:entity(target, "material:in")
         local filename = e.material
         if string.find(filename, ".glb|") then
             filename = filename .. "/main.cfg"
@@ -157,7 +157,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                 foreupdate = foreupdate,
                 kfeid = kfeid,
                 reset = function (self)
-                    local e <close> = w:entity(self.target)
+                    local e <close> = world:entity(self.target)
                     imaterial.set_property(e, self.property, self.init_value)
                 end,
                 update = function(self, time)
@@ -169,7 +169,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                     if not running and not self.keep and not self.foreupdate then
                         apply_value = self.init_value
                     end
-                    local e <close> = w:entity(self.target)
+                    local e <close> = world:entity(self.target)
                     imaterial.set_property(e, self.property, apply_value)
                     self.continue = running
                 end
@@ -187,7 +187,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
     if type(generator) == "table" then
         anim_eid = ika.create(generator)
         local function get_value(kfe, time)
-            local e <close> = w:entity(kfe, "keyframe:in")
+            local e <close> = world:entity(kfe, "keyframe:in")
             local kfanim = e.keyframe
             return kfanim.play_state.current_value, kfanim.play_state.playing
         end
@@ -217,7 +217,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                 keep = keep,
                 foreupdate = foreupdate,
                 reset = function (self)
-                    local e <close> = w:entity(self.target)
+                    local e <close> = world:entity(self.target)
                     iom.set_srt_offset_matrix(e, mc.IDENTITY_MAT)
                 end,
                 update = function(self, time)
@@ -229,7 +229,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                     if not running and not self.keep and not self.foreupdate then
                         apply_value = mc.IDENTITY_MAT
                     end
-                    local e <close> = w:entity(self.target)
+                    local e <close> = world:entity(self.target)
                     iom.set_srt_offset_matrix(e, apply_value)
                     self.continue = running
                 end
@@ -253,14 +253,14 @@ function imodifier.stop(m)
     if not m then
         return
     end
-    local e <close> = w:entity(m.eid, "modifier:in")
+    local e <close> = world:entity(m.eid, "modifier:in")
     e.modifier.continue = false
 end
 
 function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local anim_prefab = ecs.create_instance(filename)
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
-            local anim <close> = w:entity(anim_prefab.tag["*"][1], "anim_ctrl:in skeleton:in")
+            local anim <close> = world:entity(anim_prefab.tag["*"][1], "anim_ctrl:in skeleton:in")
             local pr = anim.anim_ctrl.pose_result
             return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
         end)

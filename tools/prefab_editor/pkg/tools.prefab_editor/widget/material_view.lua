@@ -231,7 +231,7 @@ local function create_property_ui(n, p, mv)
                 for i=1, #value do
                     pp[i] = value[i]
                 end
-                local e <close> = w:entity(mv.eid)
+                local e <close> = world:entity(mv.eid)
                 imaterial.set_property(e, n, math3d.vector(pp))
                 mv.need_reload = true
             end
@@ -250,7 +250,7 @@ local function create_property_ui(n, p, mv)
                     for ii=1, #value do
                         ppp[ii] = value[ii]
                     end
-                    local e <close> = w:entity(mv.eid)
+                    local e <close> = world:entity(mv.eid)
                     imaterial.set_property(e, n, math3d.vector(pp))
                     mv.need_reload = true
                 end
@@ -400,7 +400,7 @@ local function build_properties_ui(mv)
 
         local function create_uvmotion_ui()
             local function update_uvmotion_in_material(u)
-                local e <close> = w:entity(mv.eid, "render_object:in")
+                local e <close> = world:entity(mv.eid, "render_object:in")
                 local m = e.render_object.material
                 m.u_uvmotion = math3d.vector(u)
             end
@@ -471,7 +471,7 @@ local function build_properties_ui(mv)
                     setter = function (value)
                         value = math3d.vector({value[1], value[2], value[3], value[4]})
                         set_factor("basecolor", value)
-                        local e <close> = w:entity(mv.eid)
+                        local e <close> = world:entity(mv.eid)
                         imaterial.set_property(e, "u_basecolor_factor", math3d.vector(value))
                     end
                 })
@@ -489,7 +489,7 @@ local function build_properties_ui(mv)
                         setter = function (value)
                             local pbrfactor = get_pbr_factor(t)
                             pbrfactor[1] = value
-                            local e <close> = w:entity(mv.eid)
+                            local e <close> = world:entity(mv.eid)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                         end
                     }),
@@ -501,7 +501,7 @@ local function build_properties_ui(mv)
                         setter = function (value)
                             local pbrfactor = get_pbr_factor(t)
                             pbrfactor[2] = value
-                            local e <close> = w:entity(mv.eid)
+                            local e <close> = world:entity(mv.eid)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                         end,
                     })
@@ -523,7 +523,7 @@ local function build_properties_ui(mv)
                 end,
                 setter = function (value)
                     set_factor("emissive", value)
-                    local e <close> = w:entity(mv.eid)
+                    local e <close> = world:entity(mv.eid)
                     imaterial.set_property(e, "u_emissive_factor", math3d.vector(value))
                 end
             })
@@ -546,7 +546,7 @@ local function build_properties_ui(mv)
                 setter = function (value)
                     local pbrfactor = get_pbr_factor(t)
                     pbrfactor[3] = value
-                    local e <close> = w:entity(mv.eid)
+                    local e <close> = world:entity(mv.eid)
                     imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                 end
             })
@@ -561,7 +561,7 @@ local function build_properties_ui(mv)
             setter = function (value)
                 local pbrfactor = get_pbr_factor(t)
                 pbrfactor[4] = value
-                local e <close> = w:entity(mv.eid)
+                local e <close> = world:entity(mv.eid)
                 imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
             end
         })
@@ -1020,7 +1020,7 @@ function MaterialView:set_eid(eid)
         self.eid = nil
         return
     end
-    local e <close> = w:entity(eid, "filter_material?in render_object?in")
+    local e <close> = world:entity(eid, "filter_material?in render_object?in")
     if not e.filter_material and not e.render_object then
         self.eid = nil
         return

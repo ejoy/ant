@@ -148,7 +148,7 @@ end
 function render_sys:render_preprocess()
 	for qe in w:select "visible camera_ref:in render_target:in" do
 		local viewid = qe.render_target.viewid
-		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
+		local camera <close> = world:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
 		if camera.scene_changed or camera.camera_changed then
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)

@@ -54,7 +54,7 @@ function im_sys:data_changed()
     local delta_time = timer.delta() * 0.001
     local finished = {}
     for eid, m in pairs(all_motions) do
-        local e <close> = w:entity(eid)
+        local e <close> = world:entity(eid)
         local current = m.motions[m.current_midx]
         local ratio = current.time / current.duration
         if current.from.scale then

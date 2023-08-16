@@ -34,14 +34,14 @@ local function update_postprocess_param()
 
     if not need_update_pp_param then
         local mq = w:first "main_queue camera_ref:in"
-        local ce = w:entity(mq.camera_ref, "camera_changed?in")
+        local ce = world:entity(mq.camera_ref, "camera_changed?in")
         if ce.camera_changed then
             need_update_pp_param = mq.camera_ref
         end
     end
 
     if need_update_pp_param then
-        local ce = w:entity(need_update_pp_param, "camera:in")
+        local ce = world:entity(need_update_pp_param, "camera:in")
         local projmat = ce.camera.projmat
         local X, Y, A, B = util.reverse_position_param(projmat)
         local sa = imaterial.system_attribs()

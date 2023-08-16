@@ -17,7 +17,7 @@ function ColliderView:_init()
     self.inited = true
     self.radius = uiproperty.Float({label = "Radius", min = 0.01, max = 10.0, speed = 0.01}, {
         getter = function()
-            local e <close> = w:entity(self.eid, "collider:in")
+            local e <close> = world:entity(self.eid, "collider:in")
             if e.collider.capsule then
                 return e.collider.capsule[1].radius
             else
@@ -26,7 +26,7 @@ function ColliderView:_init()
             end
         end,
         setter = function(r)
-            local ce <close> = w:entity(self.eid)
+            local ce <close> = world:entity(self.eid)
             iom.set_scale(ce, r * 100)
             --prefab_mgr:update_current_aabb(self.e)
             world:pub {"UpdateAABB", self.eid}
@@ -35,7 +35,7 @@ function ColliderView:_init()
     })
     self.height = uiproperty.Float({label = "Height", min = 0.01, max = 10.0, speed = 0.01}, {
         getter = function()
-            local e <close> = w:entity(self.eid, "collider:in")
+            local e <close> = world:entity(self.eid, "collider:in")
             return e.collider.capsule[1].height
         end
     })
@@ -45,7 +45,7 @@ function ColliderView:_init()
             return {scale[1] / 200, scale[2] / 200, scale[3] / 200}
         end,
         setter = function(sz)
-            local ce <close> = w:entity(self.eid)
+            local ce <close> = world:entity(self.eid)
             iom.set_scale(ce, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
             --prefab_mgr:update_current_aabb(self.e)
             world:pub {"UpdateAABB", self.eid}
@@ -66,7 +66,7 @@ function ColliderView:set_eid(eid)
         self.eid = nil
         return
     end
-    local e <close> = w:entity(eid, "collider?in")
+    local e <close> = world:entity(eid, "collider?in")
     if not e.collider then
         self.eid = nil
         return
@@ -80,7 +80,7 @@ function ColliderView:has_scale()
 end
 
 function ColliderView:on_set_color(...)
-    local e <close> = w:entity(self.eid)
+    local e <close> = world:entity(self.eid)
     imaterial.set_property(e, "u_color", ...)
 end
 
@@ -94,7 +94,7 @@ function ColliderView:update()
     if not self.eid then
         return
     end
-    local e <close> = w:entity(self.eid, "collider:in")
+    local e <close> = world:entity(self.eid, "collider:in")
     if e.collider.sphere then
         self.radius:update()
     elseif e.collider.capsule then
@@ -110,7 +110,7 @@ function ColliderView:show()
     if not self.eid then
         return
     end
-    local e <close> = w:entity(self.eid, "collider:in")
+    local e <close> = world:entity(self.eid, "collider:in")
     if e.collider.sphere then
         self.radius:show()
     elseif e.collider.capsule then

@@ -28,7 +28,7 @@ local function build_cull_args()
 	w:clear "cull_args"
 	
 	for qe in w:select "visible queue_name:in camera_ref:in cull_args:new" do
-		local ce <close> = w:entity(qe.camera_ref, "camera:in")
+		local ce <close> = world:entity(qe.camera_ref, "camera:in")
 		local ca = CULL_ARGS[qe.queue_name]
 		ca.frustum_planes = math3d.frustum_planes(ce.camera.viewprojmat)
 		qe.cull_args = ca

@@ -16,7 +16,7 @@ function cmd_queue:undo()
 	if not cmd then
 		return
 	end
-	local e <close> = w:entity(cmd.eid)
+	local e <close> = world:entity(cmd.eid)
 	if not e then
 		return
 	end
@@ -44,7 +44,7 @@ function cmd_queue:redo()
 	if not cmd then
 		return
 	end
-	local e <close> = w:entity(cmd.eid)
+	local e <close> = world:entity(cmd.eid)
 	if not e then
 		return
 	end

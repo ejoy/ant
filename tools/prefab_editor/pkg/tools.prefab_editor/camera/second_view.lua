@@ -86,7 +86,7 @@ function second_camera_sys:update_camera()
     if not svq then
         return
     end
-    local ce <close> = w:entity(svq.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
+    local ce <close> = world:entity(svq.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
     if ce.scene_changed or ce.camera_changed then
         local camera, scene = ce.camera, ce.scene
 
@@ -150,7 +150,7 @@ local function scale_frustum_points(frustum_points, len)
 end
 
 local function create_frustum_entity(eid)
-    local e <close> = w:entity(eid, "camera:in")
+    local e <close> = world:entity(eid, "camera:in")
     local camera = e.camera
 
     local function add_v(p, vb)

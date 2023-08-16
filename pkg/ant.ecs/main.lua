@@ -674,6 +674,22 @@ function world:clibs(name)
     return funcs
 end
 
+local submit = setmetatable({}, {__mode="k", __index = function (t, w)
+    local mt = {}
+    function mt:__close()
+        w:submit(self)
+    end
+    t[w] = mt
+    return mt
+end})
+
+function world:entity(eid, pattern)
+    local v = self.w:fetch(eid, pattern)
+    if v then
+        return setmetatable(v, submit[self.w])
+    end
+end
+
 event.init(world)
 
 local m = {}

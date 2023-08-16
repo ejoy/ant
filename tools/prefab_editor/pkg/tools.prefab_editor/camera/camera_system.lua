@@ -51,7 +51,7 @@ local function on_key(key, press)
 		return
 	end
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local pos = iom.get_position(ce)
 	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
 	local xdir = math3d.normalize(math3d.index(mat, 1))
@@ -77,7 +77,7 @@ end
 
 local function on_middle_mouse(dx, dy)
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local pos = iom.get_position(ce)
 	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
 	local xdir = math3d.normalize(math3d.index(mat, 1))
@@ -90,7 +90,7 @@ end
 local shift_down = false
 local function on_right_mouse(dx, dy)
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local delta_yaw = dx * rotate_speed-- * camera_speed
 	local delta_pitch = dy * rotate_speed
 	local rad = math3d.tovalue(math3d.quat2euler(iom.get_rotation(ce)))
@@ -118,7 +118,7 @@ end
 
 local function on_wheel(delta)
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local dt = delta * zoom_speed * move_speed * camera_speed
 	local pos = iom.get_position(ce)
 	local zdir = math3d.index(math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}, 3)
@@ -137,7 +137,7 @@ local function do_animation()
 		return true
 	end
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	if not animation.from_rot then
 		local target = math3d.vector(animation.target)
 		animation.from_rot = math3d.ref(iom.get_rotation(ce))

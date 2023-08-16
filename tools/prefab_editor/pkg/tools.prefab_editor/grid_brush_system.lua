@@ -87,7 +87,7 @@ local function set_color(irow, icol, color)
             for i = vb_offset + 1, vb_offset + 16 do
                 vb[#vb + 1] = grid_vb[i]
             end
-            local e <close> = world.w:entity(grid_eid, "render_object:in")
+            local e <close> = world.world:entity(grid_eid, "render_object:in")
             local vbdesc = e.render_object.vb
             bgfx.update(vbdesc.handles[1], vb_offset / 4, bgfx.memory_buffer("fffd", vb));
             grid.data[row][col][1] = current_brush_id
@@ -121,7 +121,7 @@ end
 function grid:show(show)
     if not grid_eid then return end
     self.visible = show
-    local e <close> = world.w:entity(grid_eid)
+    local e <close> = world.world:entity(grid_eid)
     ivs.set_state(e, "main_view", show)
 end
 

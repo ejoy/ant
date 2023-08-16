@@ -243,7 +243,7 @@ ilight.count_visible_light = count_visible_light
 local function create_light_buffers()
 	local lights = {}
 	local mq = w:first("main_queue camera_ref:in")
-    local camera <close> = w:entity(mq.camera_ref)
+    local camera <close> = world:entity(mq.camera_ref)
 	local ev = iexposure.exposure(camera)
 
 	local function pack_light(e)

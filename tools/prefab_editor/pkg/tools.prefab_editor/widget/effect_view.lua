@@ -45,7 +45,7 @@ function EffectView:set_eid(eid)
         self.eid = nil
         return
     end
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if not e.efk then
         self.eid = nil
         return

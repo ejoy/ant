@@ -67,9 +67,9 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do
-					local e0 <close> = w:entity(eid, "scene:in")
-					local e1 <close> = w:entity(e0.scene.parent, "scene:in")
-					local e2 <close> = w:entity(e1.scene.parent, "scene:in")
+					local e0 <close> = world:entity(eid, "scene:in")
+					local e1 <close> = world:entity(e0.scene.parent, "scene:in")
+					local e2 <close> = world:entity(e1.scene.parent, "scene:in")
 					iom.set_position(e2, event.move)
 				end
 			end
@@ -183,7 +183,7 @@ local function init_prefab_anim(entity)
 	local skin_eid
 	local ctrl_eid
 	for _, eid in ipairs(entitys) do
-		local e <close> = w:entity(eid, "meshskin?in anim_ctrl?in skinning?in slot?in name?in")
+		local e <close> = world:entity(eid, "meshskin?in anim_ctrl?in skinning?in slot?in name?in")
 		if e.meshskin then
 			if not skin_eid then
 				skin_eid = eid
@@ -199,18 +199,18 @@ local function init_prefab_anim(entity)
 	local skeleton
 	local pose
 	if skin_eid then
-		local skin <close> = w:entity(skin_eid, "meshskin:in skeleton:in")
+		local skin <close> = world:entity(skin_eid, "meshskin:in skeleton:in")
 		skeleton = skin.skeleton
 		pose = skin.meshskin.pose
 		pose.skeleton = skeleton
 	elseif ctrl_eid then
-		local ctrl <close> = w:entity(ctrl_eid, "skeleton:in")
+		local ctrl <close> = world:entity(ctrl_eid, "skeleton:in")
 		skeleton = ctrl.skeleton
 		pose = iani.create_pose()
 		pose.skeleton = skeleton
 	end
 	for _, eid in pairs(slot_eid) do
-		local slot_e <close> = w:entity(eid, "slot:in")
+		local slot_e <close> = world:entity(eid, "slot:in")
 		local slot = slot_e.slot
 		if slot.joint_name and skeleton then
 			slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
@@ -222,7 +222,7 @@ local function init_prefab_anim(entity)
 		slot.pose = pose
 	end
 	if ctrl_eid then
-		local ctrl_e <close> = w:entity(ctrl_eid, "anim_ctrl:in pose_dirty?out")
+		local ctrl_e <close> = world:entity(ctrl_eid, "anim_ctrl:in pose_dirty?out")
 		local ctrl = ctrl_e.anim_ctrl
 		pose.pose_result = ctrl.pose_result
 		ctrl.slot_eid = slot_eid

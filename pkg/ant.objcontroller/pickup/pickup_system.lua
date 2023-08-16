@@ -31,7 +31,7 @@ local function packeid_as_rgba(eid)
 end
 
 local function find_camera(id)
-	local e <close> = w:entity(id, "camera:in")
+	local e <close> = world:entity(id, "camera:in")
 	return e.camera
 end
 
@@ -57,7 +57,7 @@ local function update_camera(pu_camera_ref, clickpt)
 		eye, at = at, eye
 	end
 
-	local mqc = w:entity(mq.camera_ref, "camera:in")
+	local mqc = world:entity(mq.camera_ref, "camera:in")
 	local maincamera = mqc.camera
 	local vp = maincamera.viewprojmat
 	local ivp = math3d.inverse(vp)
@@ -65,7 +65,7 @@ local function update_camera(pu_camera_ref, clickpt)
 	at = math3d.transformH(ivp, at, 1)
 
 	--use scene_changed here, not scene_needchange, see render_system.lua, it check for 'scene_changed' component
-	local pqc<close> = w:entity(pu_camera_ref, "camera:in scene_changed?out")
+	local pqc<close> = world:entity(pu_camera_ref, "camera:in scene_changed?out")
 	pqc.scene_changed = true
 	local camera = pqc.camera
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
@@ -269,7 +269,7 @@ function pickup_sys:update_camera_depend()
 	if puq then
 		update_camera(puq.camera_ref, puq.pickup.clickpt)
 		-- if cw_enable then
-		-- 	local main_camera <close> = w:entity(irq.main_camera())
+		-- 	local main_camera <close> = world:entity(irq.main_camera())
 		-- 	local mc_viewmat = main_camera.camera.viewmat
 		-- 	local mc_inv_viewmat = math3d.inverse(mc_viewmat)
 		-- 	for _, pm in pairs(pickup_materials) do
@@ -292,7 +292,7 @@ local function select_obj(pc, render_target)
 	local viewrect = render_target.view_rect
 	local eid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if eid then
-		local e <close> = w:entity(eid, "name?in")
+		local e <close> = world:entity(eid, "name?in")
 		local n = ""
 		if e then
 			local cb = pc.picked_callback
