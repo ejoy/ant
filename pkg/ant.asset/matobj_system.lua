@@ -16,4 +16,6 @@ function mos:exit()
     matobj.sa = nil
     matobj.rmat.release()
     matobj.rmat = nil
+    local assetmgr = require "main"
+    assetmgr.unload_all()
 end
