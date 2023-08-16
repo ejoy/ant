@@ -658,21 +658,20 @@ function world:memory(async)
 end
 
 function world:clibs(name)
-	local w = self
-	local funcs = require(name)
-	if w._initializing then
-		local t = w._clibs
-		if not t then
-			t = {}
-			w._clibs = t
-		end
-		t[#t+1] = name
-	else
-		for _, f in pairs(funcs) do
-			debug.setupvalue(f, 1, w._ecs_world)
-		end
-	end
-	return funcs
+    local w = self
+    local loaded = w._clibs_loaded
+    if loaded[name] then
+        return loaded[name]
+    end
+    local initfunc = assert(package.preload[name])
+    local funcs = initfunc()
+    loaded[name] = funcs
+    if not w._initializing then
+        for _, f in pairs(funcs) do
+            debug.setupvalue(f, 1, w._ecs_world)
+        end
+    end
+    return funcs
 end
 
 event.init(world)
@@ -708,6 +707,7 @@ function m.new_world(config)
 		},
 		_create_queue = {},
 		_destruct = {},
+		_clibs_loaded = {},
 		w = ecs,
 	}, world_metatable)
 
@@ -715,12 +715,11 @@ function m.new_world(config)
 	typeclass.init(w, config)
 	system.solve(w)
 
-	if w._clibs then
-		for _, name in ipairs(w._clibs) do
-			w:clibs(name)
-		end
-		w._clibs = nil
-	end
+    for _, funcs in pairs(w._clibs_loaded) do
+        for _, f in pairs(funcs) do
+            debug.setupvalue(f, 1, w._ecs_world)
+        end
+    end
     return w
 end
 
