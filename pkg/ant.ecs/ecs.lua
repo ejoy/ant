@@ -80,15 +80,12 @@ return function (w, package)
     local _ECS_LOADED = {}
     local _ECS_LOADING = {}
     local function require_load(env, name)
-        local msg = ''
 		local searcher_lua = env.package.searchers[2]
-		local f, extra = searcher_lua(name)
+		local f = searcher_lua(name)
 		if type(f) == 'function' then
-			return f, extra, 1
-		elseif type(f) == 'string' then
-			msg = "\n\t" .. f
+			return f
 		end
-        error(("module '%s' not found:%s"):format(name, msg))
+        error(("module '%s' not found:\n\t%s"):format(name, f))
     end
 	function ecs.require_ecs(file)
         assert(type(file) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(file)))
