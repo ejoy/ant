@@ -96,7 +96,7 @@ function auto_hm_sys:init()
     renderinfo:init()
 
     local eid = ientity.create_quad_entity({x=0, y=0, w=2, h=2}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
-    local e <close> = w:entity(eid)
+    local e <close> = world:entity(eid)
     imaterial.set_property(e, "s_tex", renderinfo:color_handle())
 end
 

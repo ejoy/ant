@@ -57,7 +57,7 @@ local function create_debug_entity()
 
 	do
 		local mq = w:first "main_queue camera_ref:in"
-		local mc_e <close> = w:entity(mq.camera_ref, "camera:in")
+		local mc_e <close> = world:entity(mq.camera_ref, "camera:in")
 		local camera = mc_e.camera
 		for idx, f in ipairs(ishadow.split_frustums()) do
 			local vp = math3d.mul(math3d.projmat(f, INV_Z), camera.viewmat)
@@ -69,7 +69,7 @@ local function create_debug_entity()
 	
 	for se in w:select "csm:in camera_ref:in name:in" do
 		local idx = se.csm.index
-		local ce <close> = w:entity(se.camera_ref, "camera:in")
+		local ce <close> = world:entity(se.camera_ref, "camera:in")
 		local c = ce.camera
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
@@ -219,7 +219,7 @@ local function check_shadow_matrix()
 end
 
 local function log_split_distance()
-	local mc <close> = w:entity(irq.main_camera())
+	local mc <close> = world:entity(irq.main_camera())
 	for idx, f in ipairs(ishadow.calc_split_frustums(icamera.get_frustum(mc))) do
 		print(string.format("csm%d, distance[%f, %f]", idx, f.n, f.f))
 	end

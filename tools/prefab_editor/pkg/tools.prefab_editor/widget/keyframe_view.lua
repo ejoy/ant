@@ -767,7 +767,7 @@ local function anim_pause(p)
         else
             for _, anim in ipairs(current.target_anims) do
                 if anim.modifier then
-                    local kfa <close> = w:entity(anim.modifier.anim_eid)
+                    local kfa <close> = world:entity(anim.modifier.anim_eid)
                     ika.stop(kfa)
                 end
             end
@@ -782,7 +782,7 @@ local function anim_set_loop(loop)
         else
             for _, anim in ipairs(current.target_anims) do
                 if anim.modifier then
-                    local kfa <close> = w:entity(anim.modifier.anim_eid)
+                    local kfa <close> = world:entity(anim.modifier.anim_eid)
                     ika.set_loop(kfa, loop)
                 end
             end
@@ -802,7 +802,7 @@ local function anim_set_time(t)
     else
         for _, anim in ipairs(current_anim.target_anims) do
             if anim.modifier then
-                local kfa <close> = w:entity(anim.modifier.anim_eid)
+                local kfa <close> = world:entity(anim.modifier.anim_eid)
                 ika.set_time(kfa, t)
             end
         end
@@ -831,7 +831,7 @@ local function create_animation(animtype, name, duration, target_anims)
                 _sampling_context = animation.new_sampling_context(1)
             }
             new_anim.raw_animation:setup(current_skeleton._handle, td)
-            local e <close> = w:entity(anim_eid, "animation:in")
+            local e <close> = world:entity(anim_eid, "animation:in")
             e.animation[name] = new_anim
         end
         local edit_anim = {
@@ -1048,7 +1048,7 @@ function m.show()
             if current_anim.type == "mtl" or current_anim.type == "srt" then
                 for _, anim in ipairs(current_anim.target_anims) do
                     if anim.modifier then
-                        local kfa <close> = w:entity(anim.modifier.anim_eid)
+                        local kfa <close> = world:entity(anim.modifier.anim_eid)
                         current_anim.is_playing = ika.is_playing(kfa)
                         if current_anim.is_playing then
                             current_anim.current_frame = math.floor(ika.get_time(kfa) * sample_ratio)
@@ -1097,7 +1097,7 @@ function m.show()
             else
                 for _, anim in ipairs(current_anim.target_anims) do
                     if anim.modifier then
-                        local kfa <close> = w:entity(anim.modifier.anim_eid)
+                        local kfa <close> = world:entity(anim.modifier.anim_eid)
                         current_time = ika.get_time(kfa)
                         break
                     end
@@ -1287,7 +1287,7 @@ local function read_file(fn)
     return f:read "a"
 end
 function m.create_target_animation(at, target)
-    local e <close> = w:entity(target, "material?in name:in")
+    local e <close> = world:entity(target, "material?in name:in")
     create_context = {}
     create_context.type = at
     new_anim_widget = true
@@ -1418,12 +1418,12 @@ local function create_bone_entity(joint_name)
 end
 
 function m.on_eid_delete(eid)
-    local e <close> = w:entity(eid, "material?in name:in")
+    local e <close> = world:entity(eid, "material?in name:in")
     target_map[e.name] = nil
     for _, anim in pairs(allanims) do
         for _, subanim in ipairs(anim.target_anims) do
             if subanim.modifier then
-                local me <close> = w:entity(subanim.modifier.eid, "modifier:in")
+                local me <close> = world:entity(subanim.modifier.eid, "modifier:in")
                 if eid == me.modifier.target then
                     imodifier.set_target(subanim.modifier)
                 end
@@ -1448,11 +1448,11 @@ function m.init(skeleton)
     current_skeleton = skeleton
     joint_utils.on_select_joint = function(old, new)
         if old and old.mesh then
-            local e <close> = w:entity(old.mesh)
+            local e <close> = world:entity(old.mesh)
             imaterial.set_property(e, "u_basecolor_factor", bone_color)
         end
         if new then
-            local e <close> = w:entity(new.mesh)
+            local e <close> = world:entity(new.mesh)
             imaterial.set_property(e, "u_basecolor_factor", bone_highlight_color)
             if current_anim then
                 local layer_index = find_anim_by_name(new.name) or 0
@@ -1480,12 +1480,12 @@ function m.init(skeleton)
         if pose_result then
             for _, joint in ipairs(jlist) do
                 if joint.mesh then
-                    local mesh_e <close> = w:entity(joint.mesh, "scene?in")
+                    local mesh_e <close> = world:entity(joint.mesh, "scene?in")
                     if mesh_e.scene then
                         -- joint
                         iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))
                         -- bone
-                        local bone_mesh_e <close> = w:entity(joint.bone_mesh, "scene?in")
+                        local bone_mesh_e <close> = world:entity(joint.bone_mesh, "scene?in")
                         local parent_idx = skeleton._handle:parent(joint.index)
                         local show = false
                         if parent_idx > 0 then

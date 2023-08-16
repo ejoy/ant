@@ -1,5 +1,3 @@
-ServiceWorld = ...
-
 local rmlui = require "rmlui"
 local timer = require "core.timer"
 local task = require "core.task"

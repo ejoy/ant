@@ -10,7 +10,7 @@ function bb_sys:camera_usage()
     for e in w:select "billboard render_object:update scene:update" do
 
         local mq = w:first("main_queue render_target:in camera_ref:in")
-        local ce = w:entity(mq.camera_ref, "camera:in")
+        local ce = world:entity(mq.camera_ref, "camera:in")
         local camera_world_mat=math3d.inverse(ce.camera.viewmat)
         local right=math3d.index(camera_world_mat,1)
         local up=math3d.index(camera_world_mat,2)

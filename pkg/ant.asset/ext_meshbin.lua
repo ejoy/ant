@@ -104,7 +104,7 @@ local function loader(filename)
     return init(mesh)
 end
 
-local function unloader(filename, res, obj)
+local function unloader(res, obj)
     local mesh = res
     local bounding = mesh.bounding
     if bounding and bounding.aabb then

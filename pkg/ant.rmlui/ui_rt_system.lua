@@ -161,7 +161,7 @@ local function update_fb(width, height, queuename)
     vr.w, vr.h = width, height
     
     if qe.camera_ref then
-		local camera <close> = w:entity(qe.camera_ref)
+		local camera <close> = world:entity(qe.camera_ref)
 		icamera.set_frustum_aspect(camera, vr.w/vr.h)
 	end
 
@@ -208,7 +208,7 @@ end
 
 local function calc_camera_t(queuename, aabb, scene, distance)
     if scene and scene.parent ~= 0 then
-        local p<close> = w:entity(scene.parent, "scene?in")
+        local p<close> = world:entity(scene.parent, "scene?in")
         if p.scene then
             aabb = math3d.aabb_transform(math3d.matrix(p.scene), aabb)
         end
@@ -216,7 +216,7 @@ local function calc_camera_t(queuename, aabb, scene, distance)
     local select_condition = queuename .. " camera_ref:in"
     local rtq = w:first(select_condition)
     if rtq then
-        local rt_camera<close> = w:entity(rtq.camera_ref, "scene:update")
+        local rt_camera<close> = world:entity(rtq.camera_ref, "scene:update")
         local aabb_min, aabb_max = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
         local triple_offset = 3 * math3d.length(math3d.sub(aabb_max, aabb_min))
         local unit_dir = math3d.normalize(rt_camera.scene.t)
@@ -280,7 +280,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
         if clear_color then
             irq.set_view_clear_color(queuename, clear_color)  
         end
-        local re <close> = w:entity(alleid[1])
+        local re <close> = world:entity(alleid[1])
         if srt.s then
             iom.set_scale(re, math3d.vector(srt.s))
         end
@@ -291,7 +291,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
             iom.set_position(re, math3d.vector(srt.t))
         end
         for _, eid in ipairs(alleid) do
-            local ee <close> = w:entity(eid, "visible_state?in focus_obj?update mesh?in")
+            local ee <close> = world:entity(eid, "visible_state?in focus_obj?update mesh?in")
             if ee.mesh then
                 if ee.visible_state then
                     ivs.set_state(ee, "main_view|selectable|cast_shadow", false)

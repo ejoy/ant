@@ -62,7 +62,7 @@ function hm_sys:entity_init()
                     max_num = max_num
                 },
                 on_ready = function()
-                    local ee <close> = w:entity(eid, "heapmesh heapmesh_changed?update heapmesh_ready?update")
+                    local ee <close> = world:entity(eid, "heapmesh heapmesh_changed?update heapmesh_ready?update")
                     ee.heapmesh_changed = true
                     ee.heapmesh_ready = true
                 end 
@@ -110,7 +110,7 @@ function hm_sys:heap_mesh()
             local aabb_size = extent
             local instance_params = math3d.vector(0, ro.vb_num, 0, ro.ib_num)
             local interval_size = math3d.vector(interval)
-            local de <close> = w:entity(heapmesh.draw_indirect_eid, "draw_indirect:in dispatch:in")
+            local de <close> = world:entity(heapmesh.draw_indirect_eid, "draw_indirect:in dispatch:in")
             update_heap_compute(de.draw_indirect, de.dispatch, curHeapNum, heap_params, aabb_size, interval_size, instance_params)
             e.render_object.idb_handle = de.draw_indirect.idb_handle
             e.render_object.itb_handle = de.draw_indirect.itb_handle
@@ -124,7 +124,7 @@ end
 
 
 function iheapmesh.update_heap_mesh_number(eid, num)
-    local e <close> = w:entity(eid, "heapmesh_ready heapmesh:update heapmesh_changed?update")
+    local e <close> = world:entity(eid, "heapmesh_ready heapmesh:update heapmesh_changed?update")
     e.heapmesh.curHeapNum = num
     e.heapmesh_changed = true
 end

@@ -44,6 +44,20 @@ function assetmgr.reload(fullpath)
 	return robj
 end
 
+function assetmgr.unload_all()
+	local REMOVED = {}
+	for fullpath, robj in pairs(FILELIST) do
+		local ext = fullpath:match "[^.]*$"
+		if ext == "material" or ext == "efk" then
+			require_ext(ext).unloader(robj)
+			REMOVED[fullpath] = true
+		end
+	end
+	for fullpath in pairs(REMOVED) do
+		FILELIST[fullpath] = nil
+	end
+end
+
 assetmgr.resource = assetmgr.load
 
 assetmgr.compile 			= async.compile

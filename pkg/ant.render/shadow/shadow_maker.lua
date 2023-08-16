@@ -131,7 +131,7 @@ local function update_shadow_frustum(dl, main_camera)
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
-		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
+		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
 		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
@@ -208,7 +208,7 @@ local function update_shadow_frustum(dl, main_camera)
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
-		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
+		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
 		csm_frustum.n = 1
 		update_csm_frustum(lightdir, setting.shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
@@ -228,7 +228,7 @@ end
 		local updir = math3d.index(main_world, 1)
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
-		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
+		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
 		local frustum_corners_world = math3d.frustum_points(main_camera.viewprojmat)
 		local prev_split_dist, split_dist = shadow_setting.split_ratios[csm.index][1], shadow_setting.split_ratios[csm.index][2]
 		local frustum_corners_table = {}
@@ -363,7 +363,7 @@ function sm:init()
 end
 
 -- local function main_camera_changed(ceid)
--- 	local camera <close> = w:entity(ceid, "camera:in").camera
+-- 	local camera <close> = world:entity(ceid, "camera:in").camera
 -- 	local csmfrustums = ishadow.calc_split_frustums(camera.frustum)
 -- 	for cqe in w:select "csm:in" do
 -- 		local csm = cqe.csm
@@ -416,7 +416,7 @@ function sm:update_camera_depend()
 	local dl = w:first("csm_directional_light light:in scene:in scene_changed?in")
 	if dl then
 		local mq = w:first("main_queue camera_ref:in")
-		local camera <close> = w:entity(mq.camera_ref, "camera:in scene:in")
+		local camera <close> = world:entity(mq.camera_ref, "camera:in scene:in")
 		--update_shadow_camera(dl, camera.camera)
 		update_shadow_frustum(dl, camera)
 		commit_csm_matrices_attribs()
@@ -496,7 +496,7 @@ end
 function sm:camera_usage()
 	-- local sa = imaterial.system_attribs()
 	-- local mq = w:first("main_queue camera_ref:in")
-	-- local camera <close> = w:entity(mq.camera_ref, "camera:in")
+	-- local camera <close> = world:entity(mq.camera_ref, "camera:in")
 	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)	local scene_aabb = math3d.aabb()
 --[[ 	local scene_aabb = {}
 	local groups = {}

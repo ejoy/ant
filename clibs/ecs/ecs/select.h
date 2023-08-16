@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <tuple>
 #include <array>
+#include <span>
 #include <optional>
 #include <cstdint>
 
@@ -459,26 +460,6 @@ namespace ecs_api {
 
         template <typename ...Args>
         using cached_selector = basic_selector<cached_context<Args...>, Args...>;
-
-        template <typename Component>
-        struct array_range {
-            array_range(ecs_context* ctx) noexcept {
-                first = (Component*)entity_fetch(ctx, component_id<Component>, 0, NULL);
-                if (!first) {
-                    last = nullptr;
-                    return;
-                }
-                last = first + (size_t)entity_count(ctx, component_id<Component>);
-            }
-            Component* begin() noexcept {
-                return first;
-            }
-            Component* end() noexcept {
-                return last;
-            }
-            Component* first;
-            Component* last;
-        };
     }
 
     template <typename Component>
@@ -520,8 +501,13 @@ namespace ecs_api {
 
     template <typename Component>
         requires (!is_tag<Component>)
-    auto array(ecs_context* ctx) noexcept {
-        return impl::array_range<Component>(ctx);
+    std::span<Component> array(ecs_context* ctx) noexcept {
+        Component* first = (Component*)entity_fetch(ctx, component_id<Component>, 0, NULL);
+        if (!first) {
+            return {};
+        }
+        Component* last = first + (size_t)entity_count(ctx, component_id<Component>);
+        return { first, last };
     }
 
     template <typename ...Args>

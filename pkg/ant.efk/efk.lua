@@ -156,12 +156,12 @@ function efk_sys:camera_usage()
 
     if not need_update_framebuffer then
         local mq = w:first "main_queue camera_ref:in"
-        local ce = w:entity(mq.camera_ref, "camera_changed?in")
+        local ce = world:entity(mq.camera_ref, "camera_changed?in")
         need_update_framebuffer = ce.camera_changed
     end
 
     local mq = w:first "main_queue camera_ref:in"
-    local ce <close> = w:entity(mq.camera_ref, "camera:in camera_changed?in scene_changed?in")
+    local ce <close> = world:entity(mq.camera_ref, "camera:in camera_changed?in scene_changed?in")
     local camera = ce.camera
 
     if need_update_framebuffer then
@@ -181,7 +181,7 @@ function efk_sys:follow_transform_updated()
             for eid, handle in pairs(efk.play_handle_hitchs) do
                 if not handle:is_alive() then
                     if efk.loop then
-                        local e <close> = w:entity(eid, "scene:in")
+                        local e <close> = world:entity(eid, "scene:in")
                         local wm = math3d.mul(v.scene.worldmat, e.scene.worldmat)
                         new_handles[eid] = PH.create(efk.handle, wm, efk.speed)
                     else
@@ -215,7 +215,7 @@ function efk_sys:follow_transform_updated()
                             efk.play_handle_hitchs = {}
                         end
                         for eid, _ in pairs(efk.hitchs) do
-                            local e <close> = w:entity(eid, "scene:in")
+                            local e <close> = world:entity(eid, "scene:in")
                             local wm = math3d.mul(e.scene.worldmat, v.scene.worldmat)
                             efk.play_handle_hitchs[eid] = PH.create(efk.handle, wm, efk.speed)
                         end
@@ -281,7 +281,7 @@ function iefk.preload(textures)
 end
 
 local function do_play(eid)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if not e.efk then return end
     iefk.stop(eid)
     e.efk.do_play = true
@@ -299,14 +299,14 @@ function iefk.play(efk)
 end
 
 function iefk.pause(eid, b)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if e.efk and e.efk.play_handle then
         e.efk.play_handle:set_pause(b)
     end
 end
 
 function iefk.set_time(eid, t)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if not e.efk then return end
     if e.efk.do_settime then
         return
@@ -319,7 +319,7 @@ function iefk.set_time(eid, t)
 end
 
 function iefk.set_speed(eid, s)
-    local e <close> = w:entity(eid, "efk:in")
+    local e <close> = world:entity(eid, "efk:in")
     e.efk.speed = s
     if e.efk.play_handle then
         e.efk.play_handle:set_speed(s)
@@ -327,7 +327,7 @@ function iefk.set_speed(eid, s)
 end
 
 function iefk.set_visible(eid, b)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if not e.efk then return end
     e.efk.visible = b
     if e.efk.play_handle then
@@ -336,19 +336,19 @@ function iefk.set_visible(eid, b)
 end
 
 function iefk.set_loop(eid, b)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if not e.efk then return end
     e.efk.loop = b
 end
 
 function iefk.destroy(eid)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if not e.efk then return end
     e.efk.play_handle = nil
 end
 
 local function do_stop(eid, delay)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     if e.efk and e.efk.play_handle then
         e.efk.play_handle:set_stop(delay)
         e.efk.play_handle = nil
@@ -367,7 +367,7 @@ function iefk.stop(efk, delay)
 end
 
 function iefk.is_playing(eid)
-    local e <close> = w:entity(eid, "efk?in")
+    local e <close> = world:entity(eid, "efk?in")
     return e.efk and e.efk.play_handle ~= nil
 end
 

@@ -16,17 +16,17 @@ local function get_anim_e(eid)
 	if type(eid) == "table" then
 		local entitys = eid.tag["*"]
 		for _, eid in ipairs(entitys) do
-			local e = w:entity(eid, "anim_ctrl?in")
+			local e = world:entity(eid, "anim_ctrl?in")
 			if e.anim_ctrl then
 				w:extend(e, "anim_ctrl:in animation:in skeleton:in")
 				return e
 			end
 		end
 		if eid.tag["*"] then
-			return w:entity(eid.tag["*"][2], "anim_ctrl:in animation:in skeleton:in")
+			return world:entity(eid.tag["*"][2], "anim_ctrl:in animation:in skeleton:in")
 		end
 	else
-		return w:entity(eid, "anim_ctrl:in animation:in skeleton:in")
+		return world:entity(eid, "anim_ctrl:in animation:in skeleton:in")
 	end
 end
 
@@ -255,7 +255,7 @@ end
 function iani.set_pose_to_prefab(instance, pose)
 	local entitys = instance.tag["*"]
 	for _, eid in ipairs(entitys) do
-		local e <close> = w:entity(eid, "meshskin?in slot?in animation?in")
+		local e <close> = world:entity(eid, "meshskin?in slot?in animation?in")
 		if e.meshskin then
 			w:extend(e, "skeleton:in")
 			pose.skeleton = e.skeleton

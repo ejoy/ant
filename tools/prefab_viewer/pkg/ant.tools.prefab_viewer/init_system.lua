@@ -51,7 +51,7 @@ function S.init_world()
     -- function miner:on_init() end
     -- miner.on_ready = function(instance)
     --     for _, eid in ipairs(instance.tag["*"]) do
-    --         local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
+    --         local e <close> = world:entity(eid, "tag?in anim_ctrl?in")
     --         if e.anim_ctrl then
     --             iani.load_events(eid, "/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.event")
     --         end
@@ -64,7 +64,7 @@ function S.init_world()
 
     -- camera
     local mq = w:first "main_queue camera_ref:in"
-    local ce<close> = w:entity(mq.camera_ref, "camera:in")
+    local ce<close> = world:entity(mq.camera_ref, "camera:in")
     local eyepos = math3d.vector(0, 60, -60)
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
@@ -96,7 +96,7 @@ local function on_joystick()
 		return
 	end
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local pos = iom.get_position(ce)
 	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
 	local xdir = math3d.normalize(math3d.index(mat, 1))
@@ -119,7 +119,7 @@ local function on_key(key, press)
 		return
 	end
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local pos = iom.get_position(ce)
 	local dt = move_speed * camera_speed
 	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
@@ -142,7 +142,7 @@ end
 
 local function on_right_mouse(dx, dy)
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local delta_yaw = dx * rotate_speed-- * camera_speed
 	local delta_pitch = dy * rotate_speed
 	local rad = math3d.tovalue(math3d.quat2euler(iom.get_rotation(ce)))
@@ -160,7 +160,7 @@ end
 
 local function on_middle_mouse(dx, dy)
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local pos = iom.get_position(ce)
 	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
 	local xdir = math3d.normalize(math3d.index(mat, 1))
@@ -171,7 +171,7 @@ end
 
 local function on_wheel(delta)
 	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = w:entity(mq.camera_ref, "scene:update")
+	local ce<close> = world:entity(mq.camera_ref, "scene:update")
 	local dt = delta * zoom_speed * move_speed * camera_speed
 	local pos = iom.get_position(ce)
 	local zdir = math3d.index(math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}, 3)

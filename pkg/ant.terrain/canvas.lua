@@ -176,7 +176,7 @@ end
 function canvas_sys:entity_remove()
     for e in w:select "REMOVED canvas:in" do
         for _, eid in pairs(e.canvas.materials) do
-            w:remove(w:entity(eid))
+            w:remove(world:entity(eid))
         end
     end
 end
@@ -259,7 +259,7 @@ function icanvas.add_items(e, key, ...)
     local materials = canvas.materials
 
     local item_ids = {}
-    local de = assert(w:entity(materials[key], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(key))
+    local de = assert(world:entity(materials[key], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(key))
     local items = de.canvas_drawer.items
 
     for i=1, newitem_count do
@@ -284,7 +284,7 @@ end
 
 function icanvas.remove_item(e, itemid)
     local deid = find_drawer_eid(e, itemid)
-    local de = w:entity(deid, "canvas_drawer:in")
+    local de = world:entity(deid, "canvas_drawer:in")
     if de.canvas_drawer.items[itemid] then
         de.canvas_drawer.items[itemid] = nil
         update_drawer_items(de)
@@ -305,7 +305,7 @@ function icanvas.show(e, b)
     canvas.show = b
 
     for _, eid in pairs(canvas.materials) do
-        local re <close> = w:entity(eid)
+        local re <close> = world:entity(eid)
         ivs.set_state(re, "main_view|selectable", b)
     end
 end

@@ -175,7 +175,7 @@ function m:clone(eid)
     end
     local dsttpl = utils.deep_copy(srctpl.template)
     local tmp = utils.deep_copy(dsttpl)
-    local e <close> = w:entity(eid, "name:in scene?in")
+    local e <close> = world:entity(eid, "name:in scene?in")
     if not e.scene then
         print("can not clone noscene node.")
         return
@@ -234,7 +234,7 @@ function m:create(what, config)
             local tmp = utils.deep_copy(template)
             local hitch
             if parent_eid then
-                local pe <close> = w:entity(parent_eid, "hitch?in")
+                local pe <close> = world:entity(parent_eid, "hitch?in")
                 hitch = pe.hitch
             end
             local new_entity
@@ -339,7 +339,7 @@ function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
         for _, eid in ipairs(entitys) do
-            local e <close> = w:entity(eid, "eid:in")
+            local e <close> = world:entity(eid, "eid:in")
             if e.eid == id then
                 return eid
             end
@@ -349,10 +349,10 @@ function m:on_prefab_ready(prefab)
     local function sub_tree(eid, idx)
         local st = {}
         local st_set = {}
-        local e <close> = w:entity(eid, "eid:in")
+        local e <close> = world:entity(eid, "eid:in")
         st_set[e.eid] = true
         for i = idx, #entitys do
-            local entity <close> = w:entity(entitys[i], "scene?in eid:in")
+            local entity <close> = world:entity(entitys[i], "scene?in eid:in")
             if not entity.scene or st_set[entity.scene.parent] == nil then
                 break
             end
@@ -377,7 +377,7 @@ function m:on_prefab_ready(prefab)
     local j = 1
     for idx, pt in ipairs(final_template) do
         local eid = entitys[j]
-        local e <close> = w:entity(eid, "scene?in light?in")
+        local e <close> = world:entity(eid, "scene?in light?in")
         local scene = e.scene
         local parent = scene and find_e(entitys, scene.parent)
         if pt.prefab then
@@ -495,7 +495,7 @@ function m:open(filename)
 end
 
 local function remove_entity_self(eid)
-    local e <close> = w:entity(eid, "light?in")
+    local e <close> = world:entity(eid, "light?in")
     if e.light then
         light_gizmo.on_remove_light(eid)
     end
@@ -664,7 +664,7 @@ function m:add_prefab(path)
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
-            local e <close> = w:entity(child, "camera?in")
+            local e <close> = world:entity(child, "camera?in")
             if e.camera then
                 local temp = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, v_root)
@@ -740,7 +740,7 @@ function m:save(path)
 end
 
 function m:set_parent(target, parent)
-    local te <close> = w:entity(target, "scene?in")
+    local te <close> = world:entity(target, "scene?in")
     if te.scene then
         local function new_entity(te, pe, scene)
             local template = hierarchy:get_template(te).template
@@ -767,7 +767,7 @@ function m:set_parent(target, parent)
 
         local targetWorldMat = mc.IDENTITY_MAT
         if parent then
-            local se <close> = w:entity(parent, "scene?in")
+            local se <close> = world:entity(parent, "scene?in")
             targetWorldMat = iom.worldmat(se)
         end
         local ts, tr, tt = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
@@ -828,7 +828,7 @@ function m.set_anim_view(aview)
 end
 function m:get_eid_by_name(name)
     for _, eid in ipairs(self.entities) do
-        local e <close> = w:entity(eid, "name?in")
+        local e <close> = world:entity(eid, "name?in")
         if e.name == name then
             return eid
         end
@@ -847,13 +847,13 @@ function m:get_world_aabb(eid)
         end
     end
     local waabb
-    local e <close> = w:entity(eid, "bounding?in meshskin?in name:in")
+    local e <close> = world:entity(eid, "bounding?in meshskin?in name:in")
     local bounding = e.bounding
     if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
         waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
     end
     for _, c in ipairs(children) do
-        local ec <close> = w:entity(c, "bounding?in")
+        local ec <close> = world:entity(c, "bounding?in")
         local bounding = ec.bounding
         if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
             if not waabb then
@@ -866,7 +866,7 @@ function m:get_world_aabb(eid)
     -- TODO: if eid is scene root or meshskin, merge skinning node
     if e.name == "Scene" or e.meshskin then
         for key, _ in pairs(hierarchy.all_node) do
-            local ea <close> = w:entity(key, "bounding?in skinning?in")
+            local ea <close> = world:entity(key, "bounding?in skinning?in")
             local bounding = ea.bounding
             if ea.skinning and bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
                 if not waabb then

@@ -110,7 +110,7 @@ local function anim_group_delete(anim_name)
     local tdata = tpl.template.data
     local animation_map = tdata.animation
     animation_map[anim_name] = nil
-    local e <close> = w:entity(anim_eid, "animation:in")
+    local e <close> = world:entity(anim_eid, "animation:in")
     e.animation[anim_name] = nil
     if tdata.animation_birth == anim_name then
         tdata.animation_birth = next(animation_map) or ""
@@ -176,7 +176,7 @@ local function get_runtime_events()
 end
 
 local function set_event_dirty(num)
-    local e <close> = w:entity(anim_eid, "anim_ctrl:in")
+    local e <close> = world:entity(anim_eid, "anim_ctrl:in")
     iani.stop_effect(anim_eid)
     e.anim_ctrl.keyframe_events[current_anim.name] = to_runtime_event(anim_key_event)
     anim_state.event_dirty = num
@@ -198,7 +198,7 @@ local function set_current_anim(anim_name)
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                local e <close> = w:entity(col.eid)
+                local e <close> = world:entity(col.eid)
                 ivs.set_state(e, "visible", false)
             end
         end
@@ -207,7 +207,7 @@ local function set_current_anim(anim_name)
     if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                local e <close> = w:entity(col.eid)
+                local e <close> = world:entity(col.eid)
                 ivs.set_state(e, "visible", true)
             end
         end
@@ -361,7 +361,7 @@ local function show_events()
 end
 
 local function do_record(collision, eid)
-    local e <close> = w:entity(eid, "collider?in")
+    local e <close> = world:entity(eid, "collider?in")
     if not e.collider then
         return
     end
@@ -402,7 +402,7 @@ local function show_current_event()
                         if eid == -1 then
                             collision.shape_type = "None"
                         else
-                            local e <close> = w:entity(eid, "collider:in")
+                            local e <close> = world:entity(eid, "collider:in")
                             collision.shape_type = e.collider.sphere and "sphere" or "box"
                             do_record(collision, eid)
                         end
@@ -543,9 +543,9 @@ end
 
 function m.on_remove_entity(eid)
     local dirty = false
-    local e <close> = w:entity(eid, "slot?in name:in")
+    local e <close> = world:entity(eid, "slot?in name:in")
     if e.slot and anim_eid then
-        local ae <close> = w:entity(anim_eid, "anim_ctrl?in")
+        local ae <close> = world:entity(anim_eid, "anim_ctrl?in")
         ae.anim_ctrl.slot_eid[e.name] = nil
     end
     if dirty then
@@ -565,7 +565,7 @@ local function update_collision()
     for idx, ke in ipairs(anim_state.current_event_list) do
         if ke.collision and ke.collision.col_eid and ke.collision.col_eid ~= -1 then
             local eid = ke.collision.col_eid
-            local e <close> = w:entity(eid)
+            local e <close> = world:entity(eid)
             iom.set_position(e, ke.collision.position)
             local factor = e.collider.sphere and 100 or 200
             iom.set_scale(e, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
@@ -692,9 +692,9 @@ local function show_skeleton(b)
     end
     for _, joint in ipairs(joints_list) do
         if joint.mesh then
-            local e <close> = w:entity(joint.mesh)
+            local e <close> = world:entity(joint.mesh)
             ivs.set_state(e, "main_view", b)
-            local be <close> = w:entity(joint.bone_mesh)
+            local be <close> = world:entity(joint.bone_mesh)
             ivs.set_state(be, "main_view", b)
         end
     end
@@ -708,7 +708,7 @@ function m.show()
             for name, eid in pairs(hierarchy.slot_list) do
                 slotlist[name] = eid
             end
-            local e <close> = w:entity(anim_eid, "anim_ctrl:in")
+            local e <close> = world:entity(anim_eid, "anim_ctrl:in")
             e.anim_ctrl.slot_eid = slotlist
             break
         end
@@ -752,7 +752,7 @@ function m.show()
             if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
-                    local e <close> = w:entity(anim_eid, "animation:in")
+                    local e <close> = world:entity(anim_eid, "animation:in")
                     if e.animation[anim_name] then
                         local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                         uiutils.confirm_dialog(confirm)
@@ -897,7 +897,7 @@ function m.on_prefab_load(entities)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
     for _, eid in ipairs(entities) do
-        local e <close> = w:entity(eid, "anim_ctrl?in animation?in skeleton?in animation_birth?in")
+        local e <close> = world:entity(eid, "anim_ctrl?in animation?in skeleton?in animation_birth?in")
         if e.anim_ctrl then
             anim_eid = eid
             local prefab_filename = prefab_mgr:get_current_filename()

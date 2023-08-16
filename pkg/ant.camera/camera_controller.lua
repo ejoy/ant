@@ -93,14 +93,14 @@ end
 
 local function camera_entity()
     local mq = w:first("main_queue camera_ref:in render_target:in")
-    return w:entity(mq.camera_ref, "scene:update")
+    return world:entity(mq.camera_ref, "scene:update")
 end
 
 local action = {}
 
 function action.scale(v)
     local mq = w:first("main_queue camera_ref:in render_target:in")
-    local ce <close> = w:entity(mq.camera_ref, "scene:update")
+    local ce <close> = world:entity(mq.camera_ref, "scene:update")
     calc_zoom_distance(v)
     local cur_lookat = calc_cur_lookat()
     iom.set_position(ce, math3d.add(last_ru, cur_lookat))
@@ -118,7 +118,7 @@ function action.pan(x, y)
     end
     pan_x, pan_y = x, y
     local mq = w:first("main_queue camera_ref:in render_target:in")
-    local ce <close> = w:entity(mq.camera_ref, "scene:update")
+    local ce <close> = world:entity(mq.camera_ref, "scene:update")
     dx, dy = dxdy(dx, dy, mq.render_target.view_rect)
     local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
     right = math3d.normalize(right)
@@ -135,7 +135,7 @@ function cc_sys:camera_usage()
     end
     if init == false then
         local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = w:entity(mq.camera_ref, "scene:in camera:in")
+        local ce<close> = world:entity(mq.camera_ref, "scene:in camera:in")
         local t = ce.scene.t
         if mu.equal3d(t, mc.ZERO, 10e-6) then
             distance = 0.0
@@ -218,7 +218,7 @@ function cc_sys:camera_usage()
 
     if move_x then
         local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = w:entity(mq.camera_ref, "scene:update")
+        local ce<close> = world:entity(mq.camera_ref, "scene:update")
         move_x  = move_x / mq.render_target.view_rect.w * 30
         local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(right, -move_x*math.max(1.0, distance)))
@@ -228,7 +228,7 @@ function cc_sys:camera_usage()
 
     if move_y then
         local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = w:entity(mq.camera_ref, "scene:update")
+        local ce<close> = world:entity(mq.camera_ref, "scene:update")
         move_y = move_y / mq.render_target.view_rect.h * 30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(up, -move_y*math.max(1.0,distance)))
@@ -240,7 +240,7 @@ function cc_sys:camera_usage()
 
     if move_z then
         local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = w:entity(mq.camera_ref, "scene:update")
+        local ce<close> = world:entity(mq.camera_ref, "scene:update")
         calc_zoom_distance(move_z)
         local cur_lookat = calc_cur_lookat()
         iom.set_position(ce, math3d.add(last_ru, cur_lookat))
@@ -248,7 +248,7 @@ function cc_sys:camera_usage()
 
     if motiontype and newx and newy then
         local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = w:entity(mq.camera_ref, "scene:update")
+        local ce<close> = world:entity(mq.camera_ref, "scene:update")
         local dx, dy = dxdy(newx-mouse_lastx, newy-mouse_lasty, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then

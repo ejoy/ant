@@ -37,12 +37,12 @@ function m.bind(eid)
     m.current_light = eid
     m.current_gizmo = nil
     if not eid then return end 
-    local ec <close> = w:entity(eid, "light:in")
+    local ec <close> = world:entity(eid, "light:in")
     local lt = ec.light.type
     m.current_gizmo = m[lt]
     if m.current_gizmo then
         m.update_gizmo()
-        local er <close> = w:entity(m.current_gizmo.root, "name:in")
+        local er <close> = world:entity(m.current_gizmo.root, "name:in")
         iom.set_position(er, iom.get_position(ec))
         iom.set_rotation(er, iom.get_rotation(ec))
         -- er.name = ec.name
@@ -51,8 +51,8 @@ function m.bind(eid)
 end
 
 function m.update()
-    local er <close> = w:entity(m.current_gizmo.root)
-    local ec <close> = w:entity(m.current_light)
+    local er <close> = world:entity(m.current_gizmo.root)
+    local ec <close> = world:entity(m.current_light)
     iom.set_position(er, iom.get_position(ec))
     iom.set_rotation(er, iom.get_rotation(ec))
     world:pub{"component_changed", "light", m.current_light, "transform"}
@@ -61,7 +61,7 @@ end
 function m.show(b)
     if m.current_gizmo then
         for i, eid in ipairs(m.current_gizmo.eid) do
-            local e <close> = w:entity(eid)
+            local e <close> = world:entity(eid)
             ivs.set_state(e, "main_view", b)
         end
     end
@@ -72,12 +72,12 @@ function m.highlight(b)
 
     if b then
         for _, eid in ipairs(m.current_gizmo.eid) do
-            local e <close> = w:entity(eid)
+            local e <close> = world:entity(eid)
             imaterial.set_property(e, "u_color", gizmo_const.COLOR.HIGHLIGHT)
         end
     else
         for _, eid in ipairs(m.current_gizmo.eid) do
-            local e <close> = w:entity(eid)
+            local e <close> = world:entity(eid)
             imaterial.set_property(e, "u_color", math3d.vector(gizmo_const.COLOR.GRAY))
         end
     end
@@ -116,7 +116,7 @@ local function create_directional_gizmo(initpos, initrot)
 end
 
 local function update_circle_vb(eid, radian)
-    local e <close> = w:entity(eid, "simplemesh:in")
+    local e <close> = world:entity(eid, "simplemesh:in")
     local mesh = e.simplemesh
     local vb, _ = geo_utils.get_circle_vb_ib(radian, gizmo_const.ROTATE_SLICES)
     bgfx.update(mesh.vb.handle, 0, bgfx.memory_buffer("fffd", vb));
@@ -126,7 +126,7 @@ local function update_point_gizmo()
     local root = m.point.root
     local range = 1.0
     if m.current_light then
-        local e <close> = w:entity(m.current_light, "light:in")
+        local e <close> = world:entity(m.current_light, "light:in")
         range = ilight.range(e)
     end
     
@@ -148,7 +148,7 @@ local function update_spot_gizmo()
     local range = 1.0
     local radian = 10
     if m.current_light then
-        local e <close> = w:entity(m.current_light, "light:in")
+        local e <close> = world:entity(m.current_light, "light:in")
         range = ilight.range(e)
         radian = ilight.outter_radian(e) or 10
     end
@@ -164,11 +164,11 @@ local function update_spot_gizmo()
         m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else
         update_circle_vb(m.spot.eid[6], radius)
-        local spot_e <close> = w:entity(m.spot.eid[6])
+        local spot_e <close> = world:entity(m.spot.eid[6])
         iom.set_position(spot_e, {0, 0, range})
 
         local function update_vb(eid, tp2)
-            local e <close> = w:entity(eid, "simplemesh:in")
+            local e <close> = world:entity(eid, "simplemesh:in")
             local vb = e.simplemesh.vb
             bgfx.update(vb.handle, 0, bgfx.memory_buffer("fffd", {0, 0, 0, 0xffffffff, tp2[1], tp2[2], tp2[3], 0xffffffff}));
         end
@@ -212,7 +212,7 @@ function m.init()
     local initpos
     local initrot
     if m.current_light then
-        local e <close> = w:entity(m.current_light)
+        local e <close> = world:entity(m.current_light)
         initpos = iom.get_position(e)
         initrot = iom.get_rotation(e)
     end

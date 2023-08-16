@@ -67,7 +67,7 @@ function BaseView:set_eid(eid)
     local property = {}
     property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
-    local e <close> = w:entity(self.eid, "scene?in")
+    local e <close> = world:entity(self.eid, "scene?in")
     if e.scene then
         property[#property + 1] = self.base.position
         if self.has_rotate then
@@ -115,13 +115,13 @@ end
 function BaseView:on_set_name(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.name = value
-    local e <close> = w:entity(self.eid, "name:out")
+    local e <close> = world:entity(self.eid, "name:out")
     e.name = value
     world:pub {"EntityEvent", "name", self.eid, value}
 end
 
 function BaseView:on_get_name()
-    local e <close> = w:entity(self.eid, "name?in")
+    local e <close> = world:entity(self.eid, "name?in")
     if type(e.name) == "number" then
         return tostring(e.name)
     end
@@ -154,7 +154,7 @@ function BaseView:on_set_position(value)
         world:pub {"EntityEvent", "move", self.eid, template.template.data.scene.t or {0,0,0}, t}
         template.template.data.scene.t = t
     else
-        local e <close> = w:entity(self.eid)
+        local e <close> = world:entity(self.eid)
         world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(e)), t}
     end
 end
@@ -164,7 +164,7 @@ function BaseView:on_get_position()
     if template.template then
         return template.template.data.scene.t or {0,0,0}
     else
-        local e <close> = w:entity(self.eid)
+        local e <close> = world:entity(self.eid)
         return math3d.totable(iom.get_position(e))
     end
 end
@@ -183,7 +183,7 @@ function BaseView:on_get_rotate()
     if template.template then
         r = template.template.data.scene.r or {0,0,0,1}
     else
-        local e <close> = w:entity(self.eid)
+        local e <close> = world:entity(self.eid)
         r = iom.get_rotation(e)
     end
     local rad = math3d.tovalue(math3d.quat2euler(r))
@@ -198,7 +198,7 @@ function BaseView:on_set_scale(value)
         world:pub {"EntityEvent", "scale", self.eid, template.template.data.scene.s or {1,1,1}, s}
         template.template.data.scene.s = s
     else
-        local e <close> = w:entity(self.eid)
+        local e <close> = world:entity(self.eid)
         world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(e)), s}
     end
 end
@@ -213,7 +213,7 @@ function BaseView:on_get_scale()
             return {1,1,1}
         end
     else
-        local e <close> = w:entity(self.eid)
+        local e <close> = world:entity(self.eid)
         return math3d.tovalue(iom.get_scale(e))
     end
 end
@@ -224,7 +224,7 @@ function BaseView:on_set_aabbmin(value)
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             template.template.data.bounding.aabb[1] = tv
-            local e <close> = w:entity(self.eid, "bounding?in")
+            local e <close> = world:entity(self.eid, "bounding?in")
             local bounding = e.bounding
             if bounding then
                 local aabbmax = {0,0,0}
@@ -256,7 +256,7 @@ function BaseView:on_set_aabbmax(value)
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             template.template.data.bounding.aabb[2] = tv
-            local e <close> = w:entity(self.eid, "bounding?in")
+            local e <close> = world:entity(self.eid, "bounding?in")
             local bounding = e.bounding
             if bounding then
                 local aabbmin = {0,0,0}
@@ -303,7 +303,7 @@ function BaseView:delete_aabb()
         self.base.delete_aabb:set_visible(false)
         self.base.aabbmin:set_visible(false)
         self.base.aabbmax:set_visible(false)
-        local e <close> = w:entity(self.eid, "bounding?in")
+        local e <close> = world:entity(self.eid, "bounding?in")
         local bounding = e.bounding
         if bounding.aabb and bounding.aabb ~= mc.NULL then
             bounding.aabb = mc.NULL

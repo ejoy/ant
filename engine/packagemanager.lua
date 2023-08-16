@@ -7,46 +7,77 @@ local vfs = require "vfs"
 
 local registered = {}
 
+local pm_loadfile; do
+    local function errmsg(err, filename, real_filename)
+        local first, last = err:find(real_filename, 1, true)
+        if not first then
+            return err
+        end
+        return err:sub(1, first-1) .. filename .. err:sub(last+1)
+    end
+    local supportFirmware <const> = package.preload.firmware ~= nil
+    if supportFirmware then
+        function pm_loadfile(realpath, path)
+            local f, err = io.open(realpath, 'rb')
+            if not f then
+                err = errmsg(err, path, realpath)
+                return nil, err
+            end
+            local str = f:read 'a'
+            f:close()
+            return load(str, '@' .. path)
+        end
+    else
+        function pm_loadfile(realpath, path)
+            local f, err = io.open(realpath, 'rb')
+            if not f then
+                err = errmsg(err, path, realpath)
+                return nil, err
+            end
+            local str = f:read 'a'
+            f:close()
+            return load(str, '@' .. realpath)
+        end
+    end
+end
+
+local function searchpath(name, path)
+    name = string.gsub(name, '%.', '/')
+    for c in string.gmatch(path, '[^;]+') do
+        local filename = string.gsub(c, '%?', name)
+        if vfs.type(filename) ~= nil then
+            return filename
+        end
+    end
+    return nil, "no file '"..path:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
+end
+
 local function sandbox_env(packagename)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
+    local _PRELOAD = package.preload
+    local PATH = "/pkg/"..packagename..'/?.lua'
 
-    local function searchpath(name, path)
-        name = string.gsub(name, '%.', '/')
-        for c in string.gmatch(path, '[^;]+') do
-            local filename = string.gsub(c, '%?', name)
-            if vfs.type(filename) ~= nil then
-                return filename
-            end
+    local function searcher_preload(name)
+        local func = _PRELOAD[name]
+        if func then
+            return func, ":preload:"
         end
-        return nil, "no file '"..path:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
+        return ("no field package.preload['%s']"):format(name)
     end
 
     local function searcher_lua(name)
-        assert(type(env.package.path) == "string", "'package.path' must be a string")
-        local path, err1 = searchpath(name, env.package.path)
-        if not path then
-            return err1
-        end
-        local func, err2 = loadfile(path)
-        if not func then
-            error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
-        end
-        return func, path
-    end
-
-    local function require_load(name, _SEARCHERS)
-        local msg = ''
-        assert(type(_SEARCHERS) == "table", "'package.searchers' must be a table")
-        for i, searcher in ipairs(_SEARCHERS) do
-            local f, extra = searcher(name)
-            if type(f) == 'function' then
-                return f, extra, i
-            elseif type(f) == 'string' then
-                msg = msg .. "\n\t" .. f
+        local filename = name:gsub('%.', '/')
+        local path = PATH:gsub('%?', filename)
+        local realpath = vfs.realpath(path)
+        if realpath then
+            local func, err = pm_loadfile(realpath, path)
+            if not func then
+                error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
             end
+            return func, path
         end
-        error(("module '%s' not found:%s"):format(name, msg))
+        return "no file '"..path.."'"
     end
 
     function env.require(name)
@@ -55,33 +86,43 @@ local function sandbox_env(packagename)
         if p ~= nil then
             return p
         end
-        local initfunc, extra, idx = require_load(name, env.package.searchers)
-        debug.setupvalue(initfunc, 1, env)
-        local r = initfunc(name, extra)
-        if r == nil then
-            r = true
+        local initfunc, extra = searcher_preload(name)
+        if type(initfunc) == "function" then
+            debug.setupvalue(initfunc, 1, env)
+            local r = initfunc(name, extra)
+            if r == nil then
+                r = true
+            end
+            package.loaded[name] = r
+            return r
         end
-        if idx == 2 then
+        initfunc, extra = searcher_lua(name)
+        if type(initfunc) == "function" then
+            debug.setupvalue(initfunc, 1, env)
+            local r = initfunc(name, extra)
+            if r == nil then
+                r = true
+            end
             _LOADED[name] = r
-        else
-            package.loaded[name]= r
+            return r
         end
-        return r
+        local filename = name:gsub('%.', '/')
+        local path = PATH:gsub('%?', filename)
+        error(("module '%s' not found:\n\tno field package.preload['%s']\n\tno file '%s'"):format(name, name, path))
     end
 
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
-        preload = package.preload,
-        path = "/pkg/"..packagename..'/?.lua',
+        preload = _PRELOAD,
+        path = PATH,
         cpath = "",
         searchpath = searchpath,
-        searchers = {}
+        searchers = {
+            searcher_preload,
+            searcher_lua,
+        }
     }
-    for i, searcher in ipairs(package.searchers) do
-        env.package.searchers[i] = searcher
-    end
-    env.package.searchers[2] = searcher_lua
     return env
 end
 

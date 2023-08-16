@@ -26,7 +26,7 @@ end
 function is:init_world()
 
     local mq = w:first "main_queue camera_ref:in"
-    local ce <close> = w:entity(mq.camera_ref)
+    local ce <close> = world:entity(mq.camera_ref)
     iom.set_position(ce, math3d.vector(0.0, 0.0, 10.0))
     iom.set_direction(ce, math3d.vector(0.0, 0.0, -1.0))
 end

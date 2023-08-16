@@ -39,7 +39,7 @@ local mq_vr_changed = world:sub{"view_rect_changed", "main_queue"}
 function fr_sys:data_changed()
 	if irender.use_pre_depth() then
 		local mq = w:first "main_queue camera_ref:in"
-		local ce = w:entity(mq.camera_ref, "camera_changed?in")
+		local ce = world:entity(mq.camera_ref, "camera_changed?in")
 		if ce.camera_changed then
 			local pdq = w:first "pre_depth_queue camera_ref:out"
 			pdq.camera_ref = mq.camera_ref

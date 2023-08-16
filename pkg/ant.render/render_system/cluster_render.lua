@@ -184,7 +184,7 @@ local function update_shading_param(ce)
 end
 
 local function build_cluster_aabb_struct(viewid, ceid)
-    local e <close> = w:entity(ceid, "camera:in")
+    local e <close> = world:entity(ceid, "camera:in")
     update_shading_param(e)
 
     local e = w:first("cluster_build_aabb dispatch:in")
@@ -266,7 +266,7 @@ function cfs:data_changed()
     end
 
     local mq = w:first "main_queue camera_ref:in"
-    local ce = w:entity(mq.camera_ref, "camera_changed?in")
+    local ce = world:entity(mq.camera_ref, "camera_changed?in")
 
     if ce.camera_changed then
         build_cluster_aabb_struct(main_viewid, mq.camera_ref)

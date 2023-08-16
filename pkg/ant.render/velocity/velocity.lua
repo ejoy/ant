@@ -29,7 +29,7 @@ end
 
 function velocity_system:end_frame()
     local mq = w:first("main_queue camera_ref:in")
-    local camera <close> = w:entity(mq.camera_ref, "camera:in scene:in")
+    local camera <close> = world:entity(mq.camera_ref, "camera:in scene:in")
     local viewprojmat = camera.camera.viewprojmat
     for e in w:select "render_object:in visible_state:in filter_material:in polyline?in skinning?in" do
         if e.visible_state["velocity_queue"] then

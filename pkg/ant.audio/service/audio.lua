@@ -4,12 +4,16 @@ local fmod = require "fmod"
 local instance = fmod.init()
 local background = instance:background()
 local event_list = {}
+local loaded = {}
 
 local S = {}
 
 function S.load(banks)
     for _, f in ipairs(banks) do
-        instance:load_bank(f, event_list)
+        if not loaded[f] then
+            loaded[f] = true
+            instance:load_bank(f, event_list)
+        end
     end
 end
 

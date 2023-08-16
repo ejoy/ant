@@ -59,7 +59,7 @@ end
 function S.init()
     create_instance( "/pkg/ant.test.atmosphere/assets/light.prefab", function (e)
         local leid = e.tag['*'][1]
-        local le<close> = w:entity(leid, "scene:update")
+        local le<close> = world:entity(leid, "scene:update")
         iom.set_direction(le, math3d.vector(0.6, -1.0, -0.8))
     end)
 
@@ -70,7 +70,7 @@ end
 
 function S.init_world()
     local mq = w:first("main_queue camera_ref:in")
-    local camera_ref<close> = w:entity(mq.camera_ref)
+    local camera_ref<close> = world:entity(mq.camera_ref)
     local eyepos = math3d.vector(0, 8, -8)
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))

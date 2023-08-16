@@ -280,7 +280,7 @@ end
 function ssao_sys:build_ssao()
     local aod = w:first "ssao_dispatcher dispatch:in"
     local mq = w:first "main_queue camera_ref:in"
-    local ce = w:entity(mq.camera_ref, "camera:in")
+    local ce = world:entity(mq.camera_ref, "camera:in")
     local d = aod.dispatch
     update_ao_frame_properties(d, ce)
 
@@ -289,7 +289,7 @@ end
 
 function ssao_sys:bilateral_filter()
     local mq = w:first "main_queue camera_ref:in"
-    local ce = w:entity(mq.camera_ref, "camera:in")
+    local ce = world:entity(mq.camera_ref, "camera:in")
     local inv_camera_far_with_bilateral_threshold<const> = ce.camera.frustum.f / bilateral_config.bilateral_threshold
     
     local bfd = w:first "bilateral_filter_dispatcher dispatch:in"

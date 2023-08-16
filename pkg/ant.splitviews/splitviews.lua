@@ -223,7 +223,7 @@ function svs:update_camera()
         local qn = v.name
         local qe = w:first(qn .. " camera_ref:in")
         local ceid = qe.camera_ref
-        local cref <close> = w:entity(ceid, "scene_changed?in camera:update scene:in")
+        local cref <close> = world:entity(ceid, "scene_changed?in camera:update scene:in")
         if cref.scene_changed then
             local camera = cref.camera
             local scene = cref.scene

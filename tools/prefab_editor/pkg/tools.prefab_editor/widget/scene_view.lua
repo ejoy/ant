@@ -54,14 +54,14 @@ local function node_context_menu(eid)
         if imgui.widget.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
             local can_delete = true
             if as_main_camera_mode() then
-                local e <close> = w:entity(eid, "camera?in")
+                local e <close> = world:entity(eid, "camera?in")
                 if e.camera then
                     can_delete = false
                 else
                     local children = hierarchy:get_node(eid).children
                     if #children > 0 then
                         --TODO: for camera
-                        local ce <close> = w:entity(children[1].eid, "camera?in")
+                        local ce <close> = world:entity(children[1].eid, "camera?in")
                         if ce.camera then
                             can_delete = false
                         end
@@ -99,7 +99,7 @@ local function get_icon_by_object_type(node)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        local e <close> = w:entity(node.eid, "camera?in light?in mesh?in slot?in")
+        local e <close> = world:entity(node.eid, "camera?in light?in mesh?in slot?in")
         if e.camera then
             return icons.ICON_CAMERA3D
         end
@@ -131,7 +131,7 @@ local function get_icon_by_object_type(node)
 end
 local imodifier 		= ecs.require "ant.modifier|modifier"
 local function show_scene_node(node)
-    local e <close> = w:entity(node.eid, "animation?in")
+    local e <close> = world:entity(node.eid, "animation?in")
     if e.animation then
         return
     end
@@ -178,7 +178,7 @@ local function show_scene_node(node)
         imgui.table.NextColumn();
         imgui.util.PushID(tostring(eid))
         local current_visible = hierarchy:is_visible(eid)
-        local e <close> = w:entity(eid, "visible_state?in")
+        local e <close> = world:entity(eid, "visible_state?in")
         if e.visible_state then
             local rv = ivs.has_state(e, "main_view")
             if current_visible ~= rv then

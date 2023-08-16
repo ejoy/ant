@@ -16,7 +16,7 @@ local imaterial = ecs.require "ant.asset|material"
 local frustum_entity
 local function create_frustum_entity()
 	local pq = w:first("pickup_queue camera_ref:in")
-	local camera <close> = w:entity(pq.camera_ref, "camera:in")
+	local camera <close> = world:entity(pq.camera_ref, "camera:in")
 	local points = math3d.frustum_points(camera.camera.viewprojmat)
 	return ientity.create_frustum_entity(points, "pickup_frustum")
 end
