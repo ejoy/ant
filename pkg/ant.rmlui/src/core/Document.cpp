@@ -27,20 +27,24 @@ bool Document::Load(const std::string& path) {
 	}
 	std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
 	input.close();
-	source_url = path;
+	SetSourceURL(path);
+	if (auto dom = ParseHtml(path, data)) {
+		Instance(*dom);
+		Flush();
+		return true;
+	}
+	return false;
+}
 
+std::optional<HtmlElement> Document::ParseHtml(const std::string& path, const std::string& data) {
 	try {
 		HtmlParser parser;
-		HtmlElement dom = parser.Parse(data, false);
-		Instance(dom);
+		return parser.Parse(data, false);
 	}
 	catch (HtmlParserException& e) {
 		Log::Message(Log::Level::Error, "%s Parse error: %s Line: %d Column: %d", path.c_str(), e.what(), e.GetLine(), e.GetColumn());
-		return false;
+		return std::nullopt;
 	}
-
-	Flush();
-	return true;
 }
 
 void Document::Instance(const HtmlElement& html) {
@@ -82,6 +86,10 @@ void Document::Instance(const HtmlElement& html) {
 	body.NotifyCreated();
 	body.InstanceInner(bodyHtml);
 	body.DirtyDefinition();
+}
+
+void Document::SetSourceURL(const std::string& url) {
+	source_url = url;
 }
 
 const std::string& Document::GetSourceURL() const {

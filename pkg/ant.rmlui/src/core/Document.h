@@ -18,6 +18,7 @@ public:
 	Document(const Size& dimensions);
 	virtual ~Document();
 	bool Load(const std::string& path);
+	void SetSourceURL(const std::string& url);
 	const std::string& GetSourceURL() const;
 	const StyleSheet& GetStyleSheet() const;
 	void LoadInlineScript(const std::string& content, int source_line);
@@ -38,6 +39,7 @@ public:
 	RichText* CreateRichTextNode(const std::string& str);
 	void Instance(const HtmlElement& html);
 	void RecycleNode(std::unique_ptr<Node>&& node);
+	std::optional<HtmlElement> ParseHtml(const std::string& path, const std::string& data);
 
 private:
 	std::string source_url;
