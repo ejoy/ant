@@ -125,7 +125,7 @@ function access.list_files(repo, pathname)
 	local files = {}
 	for _, mountpoint in ipairs(repo._mountpoint) do
 		local path = mountpoint / pathname:sub(2)
-		if lfs.exists(path) then
+		if lfs.is_directory(path) then
 			local ignore = vfsignore(path)
 			for name in lfs.pairs(path) do
 				local filename = name:filename():string()
