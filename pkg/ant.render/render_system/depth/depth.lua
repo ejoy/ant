@@ -1,6 +1,9 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
+
+local bgfx          = require "bgfx"
+
 local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local setting       = import_package "ant.settings".setting
 local renderutil    = require "util"
@@ -57,31 +60,33 @@ function s:data_changed()
     end
 end
 
-local function create_depth_only_material(mo, fm)
-    local newstate = irender.check_set_state(mo, fm.main_queue, function (d, s)
-        d.PT, d.CULL = s.PT, s.CULL
-        d.DEPTH_TEST = "GREATER"
-        return d
-    end)
+local NO_DEPTH_TEST_STATES<const> = {
+    NEVER = true, ALWAYS = true, NONE = true
+}
 
-    local mi = mo:instance()
-    mi:set_state(newstate)
-    return mi
+local function no_depth_test(dt)
+    return dt and NO_DEPTH_TEST_STATES[dt] or false
 end
 
 function s:update_filter()
     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
         if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
-            local mo = assert(which_material(e.skinning, e.indirect))
-            local ro = e.render_object
             local fm = e.filter_material
-            local mi = create_depth_only_material(mo, fm)
-            if e.indirect then
-				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
-				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
-			end
-            fm["pre_depth_queue"] = mi
-            R.set(ro.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
+			local srcstate = bgfx.parse_state(fm.main_queue:get_state())
+            if not no_depth_test(srcstate.DEPTH_TEST) then
+                local mo = assert(which_material(e.skinning, e.indirect))
+                local dststate = bgfx.parse_state(mo:get_state())
+                dststate.PT, dststate.CULL = srcstate.PT, srcstate.CULL
+                local mi = mo:instance()
+                mi:set_state(bgfx.make_state(dststate))
+
+                if e.indirect then
+                    local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
+                    mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
+                end
+                fm["pre_depth_queue"] = mi
+                R.set(e.render_object.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
+            end
         end
     end
 end

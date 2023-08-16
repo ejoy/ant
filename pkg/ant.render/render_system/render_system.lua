@@ -124,8 +124,11 @@ function render_sys:entity_init()
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
-	for e in w:select "INIT render_object visible_state_changed?out filter_result:new" do
+	for e in w:select "INIT render_object filter_result:new" do
 		e.filter_result = true
+	end
+
+	for e in w:select "INIT visible_state bounding visible_state_changed?out" do
 		e.visible_state_changed = true
 	end
 end
