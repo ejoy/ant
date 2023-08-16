@@ -316,4 +316,28 @@ function fs.switch_sync()
     return close_sync
 end
 
+-- lfs patch
+local platform  = require "bee.platform"
+local isWindows <const> = platform.os == "windows"
+local isMinGW   <const> = isWindows and platform.CRT == "libstdc++"
+
+if isMinGW then
+    local exists = lfs.exists
+    function lfs.exists(path)
+        local ok = exists(path)
+        if not ok then
+            return false
+        end
+        if type(path) ~= "string" then
+            path = path:string()
+        end
+        if path:sub(-1,-1) == "/" then
+            if not lfs.is_directory(path) then
+                return false
+            end
+        end
+        return true
+    end
+end
+
 return fs
