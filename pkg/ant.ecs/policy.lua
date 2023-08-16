@@ -17,7 +17,7 @@ local function create(w, policies)
                 error(("policy `%s` is not defined."):format(name))
             end
         end
-        for _, v in ipairs(class.policy) do
+        for _, v in ipairs(class.require_policy) do
             import_policy(v)
         end
         for _, v in ipairs(class.component) do

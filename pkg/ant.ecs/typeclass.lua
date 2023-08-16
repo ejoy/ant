@@ -95,7 +95,7 @@ local function create_importor(w)
 		end
 		log.debug("Import  policy", name)
 		local res = {
-			policy = v.require_policy,
+			require_policy = v.require_policy,
 			component = v.component,
 			component_opt = v.component_opt,
 		}
