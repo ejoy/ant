@@ -355,6 +355,7 @@ function pickup_sys:update_filter()
 			local dst_mo = which_material(e.skinning, e.indirect)
 			local newstate = irender.check_set_state(dst_mo, src_mo, function (d, s)
 					d.PT, d.CULL = s.PT, s.CULL
+					d.DEPTH_TEST   = "GREATER"
 					return d
 			end)
 			local new_mi = dst_mo:instance()

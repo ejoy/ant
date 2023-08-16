@@ -64,8 +64,11 @@ local NO_DEPTH_TEST_STATES<const> = {
     NEVER = true, ALWAYS = true, NONE = true
 }
 
-local function no_depth_test(dt)
-    return dt and NO_DEPTH_TEST_STATES[dt] or false
+local function has_depth_test(dt)
+    if dt then
+        return not NO_DEPTH_TEST_STATES[dt]
+    end
+    return false
 end
 
 function s:update_filter()
@@ -73,10 +76,11 @@ function s:update_filter()
         if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
             local fm = e.filter_material
 			local srcstate = bgfx.parse_state(fm.main_queue:get_state())
-            if not no_depth_test(srcstate.DEPTH_TEST) then
+            if has_depth_test(srcstate.DEPTH_TEST) then
                 local mo = assert(which_material(e.skinning, e.indirect))
                 local dststate = bgfx.parse_state(mo:get_state())
                 dststate.PT, dststate.CULL = srcstate.PT, srcstate.CULL
+                dststate.DEPTH_TEST = "GREATER"
                 local mi = mo:instance()
                 mi:set_state(bgfx.make_state(dststate))
 
