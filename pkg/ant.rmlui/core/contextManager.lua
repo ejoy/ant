@@ -6,6 +6,7 @@ local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
 local console = require "core.sandbox.console"
+local datamodel = require "core.datamodel.api"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -75,6 +76,7 @@ function m.open(path)
         end
     end
     rmlui.DocumentInstanceBody(doc, html)
+    datamodel.update(doc)
     rmlui.DocumentFlush(doc)
     return doc
 end
@@ -93,6 +95,7 @@ function m.hide(doc)
 end
 
 function m.flush(doc)
+    datamodel.update(doc)
     rmlui.DocumentFlush(doc)
 end
 
@@ -277,6 +280,7 @@ function m.update(delta)
     rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         if not hidden[doc] then
+            datamodel.update(doc)
             rmlui.DocumentUpdate(doc, delta)
         end
     end

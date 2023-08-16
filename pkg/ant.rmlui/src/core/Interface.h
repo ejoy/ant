@@ -82,7 +82,6 @@ class Plugin {
 public:
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnCreateText(Document* document, Text* text) = 0;
-	virtual void OnUpdateDataModel(Document* document) = 0;
 	virtual void OnDispatchEvent(Document* document, Element* element, const std::string& type, const luavalue::table& eventData) = 0;
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 	virtual std::string OnRealPath(const std::string& path) = 0;

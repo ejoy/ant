@@ -59,13 +59,6 @@ void lua_plugin::OnCreateText(Rml::Document* document, Rml::Text* text) {
 	});
 }
 
-void lua_plugin::OnUpdateDataModel(Rml::Document* document) {
-	luabind::invoke([&](lua_State* L) {
-		lua_pushlightuserdata(L, (void*)document);
-		call(L, LuaEvent::OnUpdateDataModel, 1);
-	});
-}
-
 void lua_plugin::OnDispatchEvent(Rml::Document* document, Rml::Element* element, const std::string& type, const luavalue::table& eventData) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
@@ -226,7 +219,6 @@ void lua_plugin::register_event(lua_State* L) {
 	reference = luaref_init(L);
 	ref_function(reference, L, "OnCreateElement");
 	ref_function(reference, L, "OnCreateText");
-	ref_function(reference, L, "OnUpdateDataModel");
 	ref_function(reference, L, "OnDispatchEvent");
 	ref_function(reference, L, "OnDestroyNode");
 	ref_function(reference, L, "OnRealPath");

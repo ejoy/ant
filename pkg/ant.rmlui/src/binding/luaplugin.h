@@ -14,7 +14,6 @@ class Event;
 enum class LuaEvent : uint8_t {
 	OnCreateElement = 2,
 	OnCreateText,
-	OnUpdateDataModel,
 	OnDispatchEvent,
 	OnDestroyNode,
 	OnRealPath,
@@ -28,7 +27,6 @@ public:
 	~lua_plugin();
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;
 	void OnCreateText(Rml::Document* document, Rml::Text* text) override;
-	void OnUpdateDataModel(Rml::Document* document) override;
 	void OnDispatchEvent(Rml::Document* document, Rml::Element* element, const std::string& type, const luavalue::table& eventData) override;
 	void OnDestroyNode(Rml::Document* document, Rml::Node* node) override;
 	std::string OnRealPath(const std::string& path) override;

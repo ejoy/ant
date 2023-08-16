@@ -25,7 +25,6 @@ public:
 	void Flush();
 	void Update(float delta);
 	void UpdateLayout();
-	void UpdateDataModel();
 	Element* GetBody();
 	const Element* GetBody() const;
 	Element* CreateElement(const std::string& tag);

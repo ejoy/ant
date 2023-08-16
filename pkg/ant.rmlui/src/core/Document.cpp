@@ -81,10 +81,6 @@ const StyleSheet& Document::GetStyleSheet() const {
 	return style_sheet;
 }
 
-void Document::UpdateDataModel() {
-	GetPlugin()->OnUpdateDataModel(this);
-}
-
 void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
@@ -101,20 +97,18 @@ const Size& Document::GetDimensions() {
 }
 
 void Document::Flush() {
-	UpdateDataModel();
 	body.Update();
 	UpdateLayout();
 	body.UpdateRender();
 }
 
 void Document::Update(float delta) {
-	removednodes.clear();
-	UpdateDataModel();
 	body.Update();
 	body.UpdateAnimations(delta);
 	Style::Instance().Flush();//TODO
 	UpdateLayout();
 	body.Render();
+	removednodes.clear();
 }
 
 void Document::UpdateLayout() {
