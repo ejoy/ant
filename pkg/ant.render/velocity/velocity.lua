@@ -2,30 +2,30 @@ local ecs = ...
 local world = ecs.world
 local w     = world.w
 local velocity_system = ecs.system "velocity_system"
-local math3d	= require "math3d"
-local bgfx		= require "bgfx"
-
-local hwi       = import_package "ant.hwi"
-local imaterial = ecs.require "ant.asset|material"
-local queuemgr  = ecs.require "queue_mgr"
-local R         = ecs.clibs "render.render_material"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
-local fbmgr     = require "framebuffer_mgr"
-local sampler   = require "sampler"
-local default_comp 	= import_package "ant.general".default
-local velocity_material
-local velocity_polylinelist_material
-local velocity_material_idx
-local mathpkg	= import_package "ant.math"
 local renderutil = require "util"
-local mc		= mathpkg.constant
-local velocity_skinning_material
 local setting = import_package "ant.settings".setting
 local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
 if not ENABLE_TAA then
     renderutil.default_system(velocity_system, "init", "init_world", "update_filter", "data_changed", "end_frame", "render_submit")
     return
 end
+
+local math3d	    = require "math3d"
+local bgfx		    = require "bgfx"
+
+local hwi           = import_package "ant.hwi"
+local imaterial     = ecs.require "ant.asset|material"
+local queuemgr      = ecs.require "queue_mgr"
+local R             = ecs.clibs "render.render_material"
+local irq           = ecs.require "ant.render|render_system.renderqueue"
+local fbmgr         = require "framebuffer_mgr"
+local sampler       = import_package "ant.compile_resource".sampler
+local default_comp  = import_package "ant.general".default
+
+local velocity_material
+local velocity_polylinelist_material
+local velocity_material_idx
+local velocity_skinning_material
 
 function velocity_system:end_frame()
     local mq = w:first("main_queue camera_ref:in")
@@ -105,10 +105,10 @@ local function create_velocity_queue()
 end
 
 function velocity_system:init()
-    velocity_material 			= imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity.material"
-    velocity_polylinelist_material = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity_polylinelist.material"
-    velocity_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity_skinning.material"
-    velocity_material_idx	    = queuemgr.alloc_material()
+    velocity_material 			    = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity.material"
+    velocity_polylinelist_material  = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity_polylinelist.material"
+    velocity_skinning_material      = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity_skinning.material"
+    velocity_material_idx	        = queuemgr.alloc_material()
     queuemgr.register_queue("velocity_queue", velocity_material_idx)
 end
 
