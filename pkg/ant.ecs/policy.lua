@@ -1,4 +1,5 @@
 local function create(w, policies)
+    assert(type(policies) == "table")
     local res = {
         component = {},
         component_opt = {},
