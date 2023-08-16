@@ -87,6 +87,12 @@ function rmlui_sys:ui_update()
     end
 end
 
+function rmlui_sys:exit()
+    for _, window in pairs(windows) do
+        window.close()
+    end
+end
+
 local maxID = 0
 
 local function import_font(path)
@@ -123,22 +129,22 @@ function iRmlUi.open(url)
     maxID = maxID + 1
     local name = "#"..maxID
     ltask.send(ServiceRmlUi, "open", name, url)
-    local w = {}
+    local window = {}
     local event = {}
-    windows[name] = w
+    windows[name] = window
     events[name] = event
-    function w.close()
+    function window.close()
         ltask.send(ServiceRmlUi, "close", name)
         windows[name] = nil
         events[name] = nil
     end
-    function w.postMessage(data)
+    function window.postMessage(data)
         ltask.send(ServiceRmlUi, "postMessage", name, data)
     end
-    function w.addEventListener(type, listener)
+    function window.addEventListener(type, listener)
         event[type] = listener
     end
-    return w
+    return window
 end
 
 return iRmlUi
