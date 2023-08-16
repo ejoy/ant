@@ -1,7 +1,6 @@
 local fs = require "filesystem"
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
-local bundle = import_package "ant.bundle"
 
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
@@ -11,28 +10,22 @@ local rt_table = {}
 
 local prefixPath = fs.path "/"
 
-local function fullpath(path)
-    return (prefixPath / path):string()
-end
-
-function m.add_bundle(path)
-    bundle.open(path)
-end
-
-function m.del_bundle(path)
-    bundle.close(path)
-end
-
 function m.set_prefix(v)
     prefixPath = fs.path(v)
 end
 
-function m.prepath(source_path)
-    return fullpath(source_path)
+function m.fullpath(source_path)
+    return (prefixPath / source_path):string()
 end
 
 function m.realpath(source_path)
-    return bundle.get(fullpath(source_path))
+    local _ <close> = fs.switch_sync()
+    return (prefixPath / source_path):localpath():string()
+end
+
+function m.exists(path)
+    local _ <close> = fs.switch_sync()
+    return fs.exists(prefixPath / path)
 end
 
 local pendQueue = {}
@@ -42,7 +35,6 @@ local readyQueue = {}
 function m.loadTexture(doc, e, path, width, height, isRT)
     width  = math.floor(width)
     height = math.floor(height)
-    local realpath = fullpath(path)
     local element = constructor.Element(doc, false, e)
     local q = pendQueue[path]
     if q then
@@ -82,7 +74,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
         end 
     else
         ltask.fork(function ()
-            local info = ltask.call(ServiceResource, "texture_create", realpath)
+            local info = ltask.call(ServiceResource, "texture_create", m.fullpath(path))
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],
@@ -105,23 +97,17 @@ function m.updateTexture()
     return q
 end
 
-function m.exists(path)
-    return bundle.exist(fullpath(path))
-end
-
 function m.loadString(content, source_path, source_line, env)
-    local path = fullpath(source_path)
-    local realpath = bundle.get(path)
-	local source = "--@"..realpath..":"..source_line.."\n "..content
+    local realpath = m.realpath(source_path)
+    local source = "--@"..realpath..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
 function m.loadFile(source_path, env)
-    local path = fullpath(source_path)
-    local realpath = bundle.get(path)
+    local realpath = m.realpath(source_path)
     local f = io.open(realpath)
     if not f then
-        return nil, ('%s:No such file or directory.'):format(path)
+        return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
     end
     local str = f:read 'a'
     f:close()
