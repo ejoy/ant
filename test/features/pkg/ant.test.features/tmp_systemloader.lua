@@ -133,7 +133,7 @@ function init_loader_sys:init()
         local root<close> = world:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
     end) 
-    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 

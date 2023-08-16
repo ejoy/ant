@@ -123,13 +123,6 @@ get_material(struct render_material * R, const ecs::render_object* ro, size_t mi
 }
 
 using matrix_array = std::vector<math_t>;
-using group_matrices = std::unordered_map<int, matrix_array>;
-struct obj_data {
-	const ecs::render_object* obj;
-	const matrix_array* mats;
-};
-
-using objarray = std::vector<obj_data>;
 
 static inline transform
 update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, obj_transforms &trans_cache){
@@ -192,13 +185,19 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 	submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_ALL);
 }
 
+using group_queues = std::array<matrix_array, 64>;
+using group_collection = std::unordered_map<int, group_queues>;
 struct submit_cache{
 	obj_transforms	transforms;
 
 	//TODO: need more fine control of the cache
-	group_matrices	groups;
+	group_collection	groups;
 
-	const ecs::render_args* ra[MAX_VISIBLE_QUEUE] = {0};
+	struct render_args {
+		const ecs::render_args* a;
+		int queue_idx;
+	};
+	render_args ra[MAX_VISIBLE_QUEUE] = {0};
 	uint8_t ra_count = 0;
 
 	void clear(){
@@ -213,13 +212,28 @@ struct submit_cache{
 	}
 };
 
+template<typename ObjType>
+static bool obj_visible(const ObjType &o, uint64_t mask){
+	return	(0 != (o.visible_masks & mask)) && 
+			(0 == (o.cull_masks & mask));
+}
+
+static inline int queue_idx(uint64_t mask){
+	for (int ii=0; ii<64; ++ii){
+		if (((1i64 << ii) & mask) != 0){
+			return ii;
+		}
+	}
+	return -1;
+}
+
 static inline void
-draw_objs(lua_State *L, struct ecs_world *w, ecs::render_object& obj, const matrix_array *mats, submit_cache &cc){
+draw_objs(lua_State *L, struct ecs_world *w, ecs::render_object& obj, const group_queues *g, submit_cache &cc){
 	for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-		const auto ra = cc.ra[ii];
-		if (0 != (obj.visible_masks & ra->queue_mask) && 
-			(0 == (obj.cull_masks & ra->queue_mask))){
-			draw_obj(L, w, cc.ra[ii], &obj, mats, cc.transforms);
+		const auto& ra = cc.ra[ii];
+		if (obj_visible(obj, ra.a->queue_mask)){
+			const auto mats = g ? &((*g)[ra.queue_idx]) : nullptr;
+			draw_obj(L, w, ra.a, &obj, mats, cc.transforms);
 		}
 	}
 }
@@ -227,7 +241,7 @@ draw_objs(lua_State *L, struct ecs_world *w, ecs::render_object& obj, const matr
 static inline void
 find_render_args(struct ecs_world *w, submit_cache &cc) {
 	for (auto& r : ecs_api::array<ecs::render_args>(w->ecs)) {
-		cc.ra[cc.ra_count++] = &r;
+		cc.ra[cc.ra_count++] = {&r, queue_idx(r.queue_mask)};
 	}
 }
 
@@ -236,25 +250,47 @@ lsubmit(lua_State *L) {
 	auto w = getworld(L);
 
 	static submit_cache cc;
+	find_render_args(w, cc);
 
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)) {
-		const auto &h = e.get<ecs::hitch>();
-		const auto &s = e.get<ecs::scene>();
-		if (h.group != 0){
-			cc.groups[h.group].push_back(s.worldmat);
+	// draw simple objects
+	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
+		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+			const auto& ra = cc.ra[ii];
+			const auto& obj = e.get<ecs::render_object>();
+			if (obj_visible(obj, ra.a->queue_mask)){
+				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
+			}
 		}
 	}
 
-	find_render_args(w, cc);
-	
-	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
-		draw_objs(L, w, e.get<ecs::render_object>(), nullptr, cc);
+	// draw object which hanging on hitch node
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)) {
+		const auto &h = e.get<ecs::hitch>();
+		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+			const auto &ra = cc.ra[ii];
+			const auto queue_mask = ra.a->queue_mask;
+			if (obj_visible(h, queue_mask)){
+				const auto &s = e.get<ecs::scene>();
+				if (h.group != 0){
+					cc.groups[h.group][ra.queue_idx].push_back(s.worldmat);
+				}
+			}
+		}
 	}
-	for (auto const& [groupid, mats] : cc.groups) {
+
+	for (auto const& [groupid, g] : cc.groups) {
 		int gids[] = {groupid};
 		ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
 		for (auto& e : ecs_api::select<ecs::hitch_tag, ecs::render_object>(w->ecs)) {
-			draw_objs(L, w, e.get<ecs::render_object>(), &mats, cc);
+			for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+				const auto& ra = cc.ra[ii];
+				const auto &mats = g[ra.queue_idx];
+				if (!mats.empty()){
+					const auto& obj = e.get<ecs::render_object>();
+					// render_object visible would not care, hitch object already define whether it visible or not
+					draw_obj(L, w, ra.a, &obj, &mats, cc.transforms);
+				}
+			}
 		}
 	}
 

@@ -13,7 +13,9 @@ local skeleton_test_group_id<const> = 1001
 local function create_simple_test_group()
     local defgroup = ecs.group(0)
     defgroup:create_entity {
-        policy = "ant.scene|hitch_object",
+        policy = {
+            "ant.render|hitch_object",
+        },
         data = {
             scene = {
                 t = {0, 3, 0},
@@ -21,10 +23,13 @@ local function create_simple_test_group()
             hitch = {
                 group = hitch_test_group_id
             },
+            visible_state = "main_view",
         }
     }
     defgroup:create_entity {
-        policy = "ant.scene|hitch_object",
+        policy = {
+            "ant.render|hitch_object",
+        },
         data = {
             scene = {
                 t = {1, 2, 0},
@@ -32,10 +37,13 @@ local function create_simple_test_group()
             hitch = {
                 group = hitch_test_group_id
             },
+            visible_state = "main_view",
         }
     }
     defgroup:create_entity {
-        policy = "ant.scene|hitch_object",
+        policy = {
+            "ant.render|hitch_object",
+        },
         data = {
             scene = {
                 t = {0, 0, 3},
@@ -43,6 +51,7 @@ local function create_simple_test_group()
             hitch = {
                 group = hitch_test_group_id
             },
+            visible_state = "main_view",
         }
     }
 
@@ -91,7 +100,7 @@ local change_hitch_eid
 local function create_skeleton_test_group()
     --dynamic
     ecs.create_entity {
-        policy = "ant.scene|hitch_object",
+        policy = "ant.render|hitch_object",
         data = {
             scene = {
                 s = 0.1,
@@ -100,11 +109,12 @@ local function create_skeleton_test_group()
             hitch = {
                 group = skeleton_test_group_id
             },
+            visible_state = "main_view",
         }
     }
 
     change_hitch_eid = ecs.create_entity {
-        policy = "ant.scene|hitch_object",
+        policy = "ant.render|hitch_object",
         data = {
             scene = {
                 s = 0.1,
@@ -114,6 +124,7 @@ local function create_skeleton_test_group()
             hitch = {
                 group = skeleton_test_group_id
             },
+            visible_state = "main_view",
         }
     }
 
@@ -139,8 +150,8 @@ local function create_skeleton_test_group()
 end
 
 function hn_test_sys:init()
-    --create_simple_test_group()
-    create_skeleton_test_group()
+    create_simple_test_group()
+    --create_skeleton_test_group()
 end
 
 local key_mb = world:sub {"keyboard"}

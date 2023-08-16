@@ -18,14 +18,36 @@ extern "C"{
 using tags = std::vector<int>;
 using cull_infos = std::unordered_map<uint64_t, tags>;
 
-struct cull_array {
-	uint64_t mid;
-	int n;
+struct cullinfo{
+	math_t		mid;
+	uint64_t	masks;
 };
 
-struct cull_cached: public ecs_api::cached_context<ecs::view_visible, ecs::bounding, ecs::render_object> {
-	cull_cached(struct ecs_context* ctx)
-		: ecs_api::cached_context<ecs::view_visible, ecs::bounding, ecs::render_object>(ctx) {}
+struct cull_cached {
+	cull_cached(struct ecs_context* ctx) : render_obj(ctx), hitch_obj(ctx){}
+	ecs_api::cached_context<ecs::view_visible, ecs::bounding, ecs::render_object> render_obj;
+	ecs_api::cached_context<ecs::view_visible, ecs::bounding, ecs::hitch> hitch_obj;
+}; 
+
+static inline void
+set_mark(int64_t &s, uint64_t m, bool set){
+	s = set ? (s|m) : (s&(~m));
+}
+
+template<typename ObjType>
+struct cull_operation{
+	template<typename EntityType>
+	static void cull(struct ecs_world*w, EntityType &e, struct cullinfo *ci, uint8_t c){
+		const auto &b = e.get<ecs::bounding>();
+
+		if (!math_isnull(b.scene_aabb)){
+			auto &o = e.get<ObjType>();
+			for (uint8_t ii=0; ii<c; ++ii){
+				const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
+				set_mark(o.cull_masks, ci[ii].masks, isculled);
+			}
+		}
+	}
 };
 
 static int
@@ -47,10 +69,7 @@ constexpr uint8_t MAX_QUEUE_COUNT = 64;
 static int
 lcull(lua_State *L) {
 	auto w = getworld(L);
-	struct cullinfo{
-		math_t		mid;
-		uint64_t	masks;
-	};
+
 	uint8_t c = 0;
 	struct cullinfo ci[MAX_QUEUE_COUNT];
 
@@ -75,17 +94,12 @@ lcull(lua_State *L) {
 	if (0 == c)
 		return 0;
 
-	for (auto e : ecs_api::cached_select(*w->cull_cached)) {
-		const auto &b = e.get<ecs::bounding>();
+	for (auto e : ecs_api::cached_select(w->cull_cached->render_obj)) {
+		cull_operation<ecs::render_object>::cull(w, e, ci, c);
+	}
 
-		if (math_isnull(b.scene_aabb))
-			continue;
-
-		auto &ro = e.get<ecs::render_object>();
-		for (uint8_t ii=0; ii<c; ++ii){
-			const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
-			ro.cull_masks = isculled ? (ro.cull_masks|ci[ii].masks) : (ro.cull_masks&(~ci[ii].masks));
-		}
+	for (auto& e : ecs_api::cached_select(w->cull_cached->hitch_obj)) {
+		cull_operation<ecs::hitch>::cull(w, e, ci, c);
 	}
 
 	return 0;

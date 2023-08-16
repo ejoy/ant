@@ -67,12 +67,3 @@ component "widget_entity"
 component "scene_needchange"
 component "scene_changed"
 component "scene_mutable"
-
-component "hitch_tag"
-component "hitch"
-    .type "c"
-    .field "group:int"
-
-policy "hitch_object"
-    .require_policy "ant.scene|scene_object"
-    .component "hitch"

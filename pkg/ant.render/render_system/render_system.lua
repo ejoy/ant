@@ -74,12 +74,21 @@ local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 	return v
 end})
 
-local function update_visible_masks(ro, vs)
+local function update_visible_masks(e)
+	local vs = e.visible_state
 	for qe in w:select "queue_name:in" do
 		local qn = qe.queue_name
 		
 		local mask = assert(queuemgr.queue_mask(qn))
-		ro.visible_masks = vs[qn] and (ro.visible_masks | mask) or (ro.visible_masks & (~mask))
+
+		local function update_masks(o)
+			if o then
+				o.visible_masks = vs[qn] and (o.visible_masks | mask) or (o.visible_masks & (~mask))
+			end
+		end
+
+		update_masks(e.render_object)
+		update_masks(e.hitch)
 	end
 end
 
@@ -139,8 +148,8 @@ function render_sys:scene_update()
 		e.render_object.worldmat = e.scene.worldmat
 	end
 
-	for e in w:select "visible_state_changed visible_state:in render_object:update" do
-		update_visible_masks(e.render_object, e.visible_state)
+	for e in w:select "visible_state_changed visible_state:in render_object?update hitch?update" do
+		update_visible_masks(e)
 	end
 	w:clear "visible_state_changed"
 end

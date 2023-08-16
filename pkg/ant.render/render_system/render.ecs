@@ -5,7 +5,7 @@ import "@ant.asset"
 import "@ant.objcontroller"
 
 import "render_system/depth/depth.ecs"
-import "render_layer.ecs"
+import "render_system/hitch.ecs"
 
 component "main_queue"
 
@@ -242,11 +242,7 @@ pipeline "render"
     .pipeline "render_process"
     .pipeline "postprocess"
 
-import "ibl/ibl.ecs"
-
 component "view_visible"
 system "viewgroup_system"
     .implement "render_system/render_system.lua"
     .method "init"
-
-component "render_layer".type "lua"

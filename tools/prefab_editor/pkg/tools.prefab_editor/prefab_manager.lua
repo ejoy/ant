@@ -76,7 +76,7 @@ function m:create_hitch(slot)
             follow_flag = 1,
         }
     else
-        template.policy[#template.policy + 1] = "ant.scene|hitch_object"
+        template.policy[#template.policy + 1] = "ant.render|hitch_object"
         template.data.hitch = { group = 0 }
     end
     local tpl = utils.deep_copy(template)
