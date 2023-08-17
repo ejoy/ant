@@ -4,6 +4,8 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT
 
 #include "common/default_inputs_structure.sh"
 
+$$CUSTOM_FS_PROP$$
+
 $$CUSTOM_FS_FUNC$$
 
 void main()

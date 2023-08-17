@@ -32,6 +32,7 @@ local default_pbr_param = {
         texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
         factor = {1, 1, 1, 1},
         stage = 0,
+        precision = "lowp"
     },
     metallic_roughness = {
         texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
@@ -273,6 +274,8 @@ return function (status)
             return {
                 texture = filename,
                 stage = default_pbr_param[name].stage,
+                sampler = default_pbr_param[name].sampler,
+                precision = default_pbr_param[name].precision,
             }
         end
     end

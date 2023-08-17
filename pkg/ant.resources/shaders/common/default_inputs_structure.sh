@@ -1,6 +1,8 @@
 #ifndef __DEFAULT_INPUTS_STRUCTURE_SH__
 #define __DEFAULT_INPUTS_STRUCTURE_SH__
-
+#include <bgfx_shader.sh>
+#include <bgfx_compute.sh>
+#include <shaderlib.sh>
 struct VSInput {
 	highp vec3 pos;
 	lowp  vec4 color;

@@ -194,28 +194,81 @@ end
 
 local DEF_SHADER_INFO<const> = {
     vs = {
-        CUSTOM_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
+        CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
         content = readfile(SHADER_BASE / "dynamic_material/vs_default.sc"),
     },
     fs = {
-        CUSTOM_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
+        CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
+        CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
         content = readfile(SHADER_BASE / "dynamic_material/fs_default.sc"),
     }
 }
 
-DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_KEY, [[#include "common/default_vs_func.sh"]])
-DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_KEY, [[#include "common/default_fs_func.sh"]])
+DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_FUNC_KEY, [[#include "common/default_vs_func.sh"]])
+DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "common/default_fs_func.sh"]])
 
-local function generate_shader(shader, code)
-    if code then
-        return generate_code(shader.content, shader.CUSTOM_KEY, code)
+local DEF_PBR_UNIFORM = {
+    u_basecolor_factor = "uniform mediump vec4 u_basecolor_factor;\n",
+    u_emissive_factor  = "uniform mediump vec4 u_emissive_factor;\n",
+    u_pbr_factor       = "uniform mediump vec4 u_pbr_factor;\n"
+}
+local function generate_properties(properties)
+    local content = ""
+    for k, v in pairs(properties) do
+        local result
+        if k:find("s_") == 1 then
+            -- precision(default mediump) / sampler(default SAMPLER2D) / stage 
+            local precision = v.precision or "mediump"
+            local sampler = v.sampler or "SAMPLER2D"
+            local stage = v.stage
+            if v.image then assert(v.mip, "image format should config mipmap level! \n") end
+            assert(stage, "texture must config stage! \n")
+            result = {precision, " ", sampler, "(", k, ", ", stage, ");\n"}
+        elseif k:find("u_") == 1 then
+            -- precision(default mediump) type(default vec4)
+            local precision = v.precsion or "mediump"
+            local type = v.type or "vec4"
+            result = {"uniform ", precision, " ", type, " ", k, ";\n"}
+        elseif k:find("b_") == 1 then
+            -- access stage type(default vec4)
+            local access, stage, buffer_access = v.access, v.stage, nil
+            local type = v.type or "vec4"
+            assert(access and stage, "buffer must config access and stage! \n")
+            if stage == 'r' then buffer_access = "BUFFER_RO"
+            elseif stage == 'w' then buffer_access = "BUFFER_WR"
+            else log.error("wrong access type, access should be read/write! \n") end
+            result = {buffer_access,"(", k, ", ", type, ", ", stage, ");\n"}
+        else
+            log.error("wrong property name, property should be sampler/uniform/buffer! \n")
+        end
+        content = content .. table.concat(result)
     end
-    return shader.default
+    for k,v in pairs(DEF_PBR_UNIFORM) do
+        if not properties[k] then
+            content = content .. v
+        end
+    end
+    return content
 end
 
-local function create_PBR_shader(inputpath, fx, stage)
+local function generate_shader(shader, code, properties)
+    local updated_shader
+    if code then
+        updated_shader = generate_code(shader.content, shader.CUSTOM_FUNC_KEY, code)
+    else
+        updated_shader = shader.default
+    end
+    if properties then
+        local prop_content = generate_properties(properties)
+        return generate_code(updated_shader, shader.CUSTOM_PROP_KEY, prop_content)
+    else
+        return updated_shader
+    end
+end
+
+local function create_PBR_shader(inputpath, fx, stage, properties)
     local si = assert(DEF_SHADER_INFO[stage])
-    local nc = generate_shader(si, fx[stage .. "_code"])
+    local nc = generate_shader(si, fx[stage .. "_code"], properties)
 
     local fw <close> = assert(io.open(inputpath:string(), "wb"))
     fw:write(nc)
@@ -293,6 +346,7 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
+    local properties
     mergeCfgSetting(fx, localpath)
     check_update_fx(fx)
 
@@ -307,7 +361,8 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
             local varying_path = find_varying_path(fx, stage, localpath)
             if fx.shader_type == "PBR" then
                 inputpath = output / inputpath
-                create_PBR_shader(inputpath, fx, stage)
+                if stage == "fs" then properties = mat.properties end
+                create_PBR_shader(inputpath, fx, stage, properties)
             else
                 inputpath = localpath(inputpath)
             end

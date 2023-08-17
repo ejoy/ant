@@ -4,54 +4,6 @@
 #include "pbr/attribute_define.sh"
 #include "common/utils.sh"
 
-// material properites
-#ifdef HAS_BASECOLOR_TEXTURE
-lowp SAMPLER2D(s_basecolor,          0);
-#endif //HAS_BASECOLOR_TEXTURE
-
-#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
-mediump SAMPLER2D(s_metallic_roughness, 1);
-#endif //HAS_METALLIC_ROUGHNESS_TEXTURE
-
-#ifdef HAS_NORMAL_TEXTURE
-mediump SAMPLER2D(s_normal,             2);
-#endif //HAS_NORMAL_TEXTURE
-
-#ifdef HAS_EMISSIVE_TEXTURE
-mediump SAMPLER2D(s_emissive,           3);
-#endif //HAS_EMISSIVE_TEXTURE
-
-#ifdef HAS_OCCLUSION_TEXTURE
-mediump SAMPLER2D(s_occlusion,          4);
-#endif //HAS_OCCLUSION_TEXTURE
-
-#ifdef USING_LIGHTMAP
-mediump SAMPLER2D(s_lightmap,           8);
-#endif //USING_LIGHTMAP
-
-#ifdef HAS_MARK_ALPHA_TEXTURE
-SAMPLER2DARRAY(s_mark_alpha,       3);
-#endif
-
-#ifdef HAS_TERRAIN_BASECOLOR_ARRAY_TEXTURE
-SAMPLER2DARRAY(s_basecolor_array,       0);
-#endif
-
-#ifdef HAS_CRACK_HEIGHT_TEXTURE
-SAMPLER2D(s_height,       3);
-#endif
-
-#ifdef HAS_TERRAIN_HEIGHT_ARRAY_TEXTURE
-SAMPLER2DARRAY(s_height,       1);
-#endif
-
-#ifdef HAS_TERRAIN_NORMAL_ARRAY_TEXTURE
-SAMPLER2DARRAY(s_normal_array,       2);
-#endif
-
-uniform mediump vec4 u_basecolor_factor;
-uniform mediump vec4 u_emissive_factor;
-uniform mediump vec4 u_pbr_factor;
 #define u_metallic_factor    u_pbr_factor.x
 #define u_roughness_factor   u_pbr_factor.y
 #define u_alpha_mask_cutoff  u_pbr_factor.z
