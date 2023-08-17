@@ -22,6 +22,9 @@ function hitch_sys:entity_init()
 end
 
 function hitch_sys:entity_ready()
+    if 0 == w:count "hitch_bounding" then
+        return
+    end
     local groups = setmetatable({}, {__index=function(t, gid)
         local gg = {}
         t[gid] = gg
