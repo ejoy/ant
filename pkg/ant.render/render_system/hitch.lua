@@ -3,6 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local math3d    = require "math3d"
+local mc        = import_package "ant.math".constant
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -39,7 +40,9 @@ function hitch_sys:entity_ready()
 
         local h_aabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in" do
-            h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
+            if mc.NULL ~= re.bounding.aabb then
+                h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
+            end
         end
 
         if math3d.aabb_isvalid(h_aabb) then
