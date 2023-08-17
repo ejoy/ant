@@ -76,20 +76,6 @@ void lua_plugin::OnDestroyNode(Rml::Document* document, Rml::Node* node) {
 	});
 }
 
-std::string lua_plugin::OnRealPath(const std::string& path) {
-    std::string res;
-    luabind::invoke([&](lua_State* L) {
-        lua_pushlstring(L, path.data(), path.size());
-        call(L, LuaEvent::OnRealPath, 1, 1);
-        if (lua_type(L, -1) == LUA_TSTRING) {
-            size_t sz = 0;
-            const char* str = lua_tolstring(L, -1, &sz);
-            res.assign(str, sz);
-        }
-    });
-    return res;
-}
-
 void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path) {
     luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
@@ -220,7 +206,6 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnCreateText");
 	ref_function(reference, L, "OnDispatchEvent");
 	ref_function(reference, L, "OnDestroyNode");
-	ref_function(reference, L, "OnRealPath");
 	ref_function(reference, L, "OnLoadTexture");
 	ref_function(reference, L, "OnParseText");
 }

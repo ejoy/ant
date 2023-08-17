@@ -10,6 +10,7 @@
 #include <binding/render.h>
 #include <binding/context.h>
 #include <util/HtmlParser.h>
+#include <bee/nonstd/unreachable.h>
 
 #include <string.h>
 
@@ -92,13 +93,25 @@ lDocumentInstanceHead(lua_State* L) {
 	auto html = (Rml::HtmlElement*)lua_touserdata(L, 2);
 	lua_newtable(L);
 	lua_Integer n = 0;
-	doc->InstanceHead(*html, [&](const std::string& str, int line) {
-		lua_createtable(L, 2, 0);
+	doc->InstanceHead(*html, [&](Rml::HtmlHead type, const std::string& str, int line) {
+		lua_createtable(L, 3, 0);
+		switch (type) {
+		case Rml::HtmlHead::Script:
+			lua_pushstring(L, "script");
+			lua_seti(L, -2, 1);
+			break;
+		case Rml::HtmlHead::Style:
+			lua_pushstring(L, "style");
+			lua_seti(L, -2, 1);
+			break;
+		default:
+			std::unreachable();
+		}
 		lua_pushlstring(L, str.data(), str.size());
-		lua_seti(L, -2, 1);
+		lua_seti(L, -2, 2);
 		if (line >= 0) {
 			lua_pushinteger(L, line);
-			lua_seti(L, -2, 2);
+			lua_seti(L, -2, 3);
 		}
 		lua_seti(L, -2, ++n);
 	});
@@ -110,6 +123,35 @@ lDocumentInstanceBody(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	auto html = (Rml::HtmlElement*)lua_touserdata(L, 2);
 	doc->InstanceBody(*html);
+	return 0;
+}
+
+static int
+lDocumentLoadStyleSheet(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	switch (lua_gettop(L)) {
+	case 1:
+	case 2: {
+		auto path = lua_checkstrview(L, 2);
+		bool ok = doc->LoadStyleSheet(path);
+		lua_pushboolean(L, ok);
+		return 1;
+	}
+	case 3: {
+		auto path = lua_checkstrview(L, 2);
+		auto data = lua_checkstrview(L, 3);
+		doc->LoadStyleSheet(path, data);
+		return 0;
+	}
+	default:
+	case 4: {
+		auto path = lua_checkstrview(L, 2);
+		auto data = lua_checkstrview(L, 3);
+		auto line = luaL_checkinteger(L, 4);
+		doc->LoadStyleSheet(path, data, line);
+		return 0;
+	}
+	}
 	return 0;
 }
 
@@ -621,6 +663,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentParseHtml", lDocumentParseHtml },
 		{ "DocumentInstanceHead", lDocumentInstanceHead },
 		{ "DocumentInstanceBody", lDocumentInstanceBody },
+		{ "DocumentLoadStyleSheet", lDocumentLoadStyleSheet },
 		{ "DocumentDestroy", lDocumentDestroy },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentFlush", lDocumentFlush },

@@ -36,7 +36,7 @@ local function notifyDocumentDestroy(document)
 	environment[document] = nil
 end
 
-local function OnLoadInlineScript(document, content, source_path, source_line)
+local function OnLoadInlineScript(document, source_path, content, source_line)
 	local f, err = filemanager.loadString(content, source_path, source_line, environment[document])
 	if not f then
 		console.warn(err)
@@ -54,6 +54,16 @@ local function OnLoadExternalScript(document, source_path)
 	f()
 end
 
+local function OnLoadInlineStyle(document, source_path, content, source_line)
+    rmlui.DocumentLoadStyleSheet(document, source_path, content, source_line)
+end
+
+local function OnLoadExternalStyle(document, source_path)
+    if not rmlui.DocumentLoadStyleSheet(document, source_path) then
+        rmlui.DocumentLoadStyleSheet(document, source_path, filemanager.readfile(source_path))
+    end
+end
+
 function m.open(path)
     local doc = rmlui.DocumentCreate(width, height, path)
     if not doc then
@@ -68,11 +78,20 @@ function m.open(path)
         return
     end
     local scripts = rmlui.DocumentInstanceHead(doc, html)
-    for _, script in ipairs(scripts) do
-        if script[2] then
-            OnLoadInlineScript(doc, script[1], path, script[2])
-        else
-            OnLoadExternalScript(doc, script[1])
+    for _, load in ipairs(scripts) do
+        local type, str, line = load[1], load[2], load[3]
+        if type == "script" then
+            if line then
+                OnLoadInlineScript(doc, path, str, line)
+            else
+                OnLoadExternalScript(doc, str)
+            end
+        elseif type == "style" then
+            if line then
+                OnLoadInlineStyle(doc, path, str, line)
+            else
+                OnLoadExternalStyle(doc, str)
+            end
         end
     end
     rmlui.DocumentInstanceBody(doc, html)

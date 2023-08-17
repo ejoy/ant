@@ -16,7 +16,6 @@ enum class LuaEvent : uint8_t {
 	OnCreateText,
 	OnDispatchEvent,
 	OnDestroyNode,
-	OnRealPath,
 	OnLoadTexture,
 	OnParseText,
 };
@@ -29,7 +28,6 @@ public:
 	void OnCreateText(Rml::Document* document, Rml::Text* text) override;
 	void OnDispatchEvent(Rml::Document* document, Rml::Element* element, const std::string& type, const luavalue::table& eventData) override;
 	void OnDestroyNode(Rml::Document* document, Rml::Node* node) override;
-	std::string OnRealPath(const std::string& path) override;
 	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path) override;
 	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path, Rml::Size size) override;
 	void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupMap,std::vector<Rml::image>& images,std::vector<int>& imageMap,std::string& ctext,Rml::group& default_group) override;

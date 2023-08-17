@@ -69,6 +69,7 @@ lm:lua_source "rmlui_binding" {
         ROOT .. "3rd/bgfx/3rdparty",
         ROOT .. "3rd/glm",
         ROOT .. "3rd/yoga",
+        ROOT .. "3rd/bee.lua",
         ROOT .. "clibs/luabind",
         ROOT .. "pkg/ant.bundle/src/",
     },

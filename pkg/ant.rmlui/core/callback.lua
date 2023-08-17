@@ -32,11 +32,6 @@ function m.OnDispatchEvent(document, element, type, eventData)
 	eventListener.dispatch(document, element, type, eventData)
 end
 
-function m.OnRealPath(path)
-	local _ <close> = fs.switch_sync()
-	return filemanager.realpath(path)
-end
-
 function m.OnLoadTexture(doc, e, path, width, height, isRT)
 	filemanager.loadTexture(doc, e, path, width, height, isRT)
 end

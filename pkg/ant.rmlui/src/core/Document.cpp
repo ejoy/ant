@@ -6,6 +6,7 @@
 #include <core/Text.h>
 #include <css/StyleSheetFactory.h>
 #include <util/HtmlParser.h>
+#include <util/File.h>
 #include <fstream>
 
 namespace Rml {
@@ -20,7 +21,7 @@ Document::~Document() {
 	body.RemoveAllChildren();
 }
 
-void Document::InstanceHead(const HtmlElement& html, std::function<void(const std::string&, int)> func) {
+void Document::InstanceHead(const HtmlElement& html, std::function<void(HtmlHead, const std::string&, int)> func) {
 	assert(html.children.size() == 1);
 	auto const& rootHtml = std::get<HtmlElement>(html.children[0]);
 	assert(rootHtml.children.size() == 2);
@@ -32,13 +33,13 @@ void Document::InstanceHead(const HtmlElement& html, std::function<void(const st
 				if (element->children.size() > 0) {
 					auto& content = std::get<HtmlString>(element->children[0]);
 					auto source_line = std::get<0>(element->position);
-					func(content, source_line);
+					func(HtmlHead::Script, content, source_line);
 				}
 				else {
 					auto it = element->attributes.find("path");
 					if (it != element->attributes.end()) {
 						auto& source_path = it->second;
-						func(source_path, -1);
+						func(HtmlHead::Script, source_path, -1);
 					}
 				}
 			}
@@ -46,19 +47,18 @@ void Document::InstanceHead(const HtmlElement& html, std::function<void(const st
 				if (element->children.size() > 0) {
 					auto& content = std::get<HtmlString>(element->children[0]);
 					auto source_line = std::get<0>(element->position);
-					StyleSheetFactory::CombineStyleSheet(style_sheet, content, source_url, source_line);
+					func(HtmlHead::Style, content, source_line);
 				}
 				else {
 					auto it = element->attributes.find("path");
 					if (it != element->attributes.end()) {
 						auto& source_path = it->second;
-						StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
+						func(HtmlHead::Style, source_path, -1);
 					}
 				}
 			}
 		}
 	}
-	style_sheet.Sort();
 }
 
 void Document::InstanceBody(const HtmlElement& html) {
@@ -66,6 +66,7 @@ void Document::InstanceBody(const HtmlElement& html) {
 	auto const& rootHtml = std::get<HtmlElement>(html.children[0]);
 	assert(rootHtml.children.size() == 2);
 	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
+	style_sheet.Sort();
 	body.InstanceOuter(bodyHtml);
 	body.NotifyCreated();
 	body.InstanceInner(bodyHtml);
@@ -149,4 +150,17 @@ void Document::RecycleNode(std::unique_ptr<Node>&& node) {
 	GetPlugin()->OnDestroyNode(this, node.get());
 	removednodes.emplace_back(std::forward<std::unique_ptr<Node>>(node));
 }
+
+bool Document::LoadStyleSheet(std::string_view source_path) {
+	return StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
+}
+
+void Document::LoadStyleSheet(std::string_view source_path, std::string_view content) {
+	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path, content);
+}
+
+void Document::LoadStyleSheet(std::string_view source_path, std::string_view content, int source_line) {
+	StyleSheetFactory::CombineStyleSheet(style_sheet, source_url, content, source_line);
+}
+
 }
