@@ -37,7 +37,7 @@ local function notifyDocumentDestroy(document)
 end
 
 local function OnLoadInlineScript(document, source_path, content, source_line)
-	local f, err = filemanager.loadString(content, source_path, source_line, environment[document])
+	local f, err = filemanager.loadstring(content, source_path, source_line, environment[document])
 	if not f then
 		console.warn(err)
 		return
@@ -46,7 +46,7 @@ local function OnLoadInlineScript(document, source_path, content, source_line)
 end
 
 local function OnLoadExternalScript(document, source_path)
-	local f, err = filemanager.loadFile(source_path, environment[document])
+	local f, err = filemanager.loadfile(source_path, environment[document])
 	if not f then
 		console.warn(("file '%s' load failed: %s."):format(source_path, err))
 		return

@@ -6,20 +6,18 @@ local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local m = {}
 
-local rt_table = {}
-
 local prefixPath = fs.path "/"
 
 function m.set_prefix(v)
     prefixPath = fs.path(v)
 end
 
-function m.fullpath(source_path)
-    return (prefixPath / source_path):string()
+local function localpath(source_path)
+    return (prefixPath / source_path):localpath():string()
 end
 
-function m.realpath(source_path)
-    return (prefixPath / source_path):localpath():string()
+function m.fullpath(source_path)
+    return (prefixPath / source_path):string()
 end
 
 function m.exists(path)
@@ -27,7 +25,7 @@ function m.exists(path)
 end
 
 function m.readfile(source_path)
-    local realpath = m.realpath(source_path)
+    local realpath = localpath(source_path)
     local f = io.open(realpath)
     if not f then
         return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
@@ -37,9 +35,26 @@ function m.readfile(source_path)
     return data
 end
 
+function m.loadstring(content, source_path, source_line, env)
+    local realpath = localpath(source_path)
+    local source = "--@"..realpath..":"..source_line.."\n "..content
+    return load(source, source, "t", env)
+end
+
+function m.loadfile(source_path, env)
+    local realpath = localpath(source_path)
+    local f = io.open(realpath)
+    if not f then
+        return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
+    end
+    local str = f:read 'a'
+    f:close()
+    return load(str, "@" .. realpath, "bt", env)
+end
+
+local rt_table = {}
 local pendQueue = {}
 local readyQueue = {}
-
 
 function m.loadTexture(doc, e, path, width, height, isRT)
     width  = math.floor(width)
@@ -94,7 +109,6 @@ function m.loadTexture(doc, e, path, width, height, isRT)
             pendQueue[path] = nil
         end)
     end
-
 end
 
 function m.updateTexture()
@@ -104,23 +118,6 @@ function m.updateTexture()
     local q = readyQueue
     readyQueue = {}
     return q
-end
-
-function m.loadString(content, source_path, source_line, env)
-    local realpath = m.realpath(source_path)
-    local source = "--@"..realpath..":"..source_line.."\n "..content
-    return load(source, source, "t", env)
-end
-
-function m.loadFile(source_path, env)
-    local realpath = m.realpath(source_path)
-    local f = io.open(realpath)
-    if not f then
-        return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
-    end
-    local str = f:read 'a'
-    f:close()
-    return load(str, "@" .. realpath, "bt", env)
 end
 
 return m

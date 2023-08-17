@@ -1,4 +1,4 @@
-local fm = require "core.filemanager"
+local filemanager = require "core.filemanager"
 
 return function (env)
     local package = {
@@ -10,7 +10,7 @@ return function (env)
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            if fm.exists(filename) then
+            if filemanager.exists(filename) then
                 return filename
             end
         end
@@ -22,7 +22,7 @@ return function (env)
         if not path then
             return err1
         end
-        local func, err2 = fm.loadFile(path, env)
+        local func, err2 = filemanager.loadfile(path, env)
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end
