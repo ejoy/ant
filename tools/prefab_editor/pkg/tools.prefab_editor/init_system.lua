@@ -154,8 +154,9 @@ function m:init_world()
 end
 
 function m:post_init()
+	local font = import_package "ant.font"
+    font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
     iRmlUi.set_prefix "/pkg/tools.prefab_editor/res/ui"
-    iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 end
 
 function m:data_changed()
