@@ -8,7 +8,6 @@
 #include <core/Interface.h>
 #include <util/Log.h>
 #include <css/Property.h>
-#include <util/Stream.h>
 #include <util/StringUtilities.h>
 #include <css/StyleSheetParser.h>
 #include <css/StyleSheetSpecification.h>

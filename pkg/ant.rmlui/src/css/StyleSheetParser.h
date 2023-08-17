@@ -12,11 +12,12 @@ public:
 	StyleSheetParser();
 	~StyleSheetParser();
 
-	bool Parse(Stream& stream, StyleSheet& style_sheet, int begin_line_number);
+	bool Parse(Stream& stream, StyleSheet& style_sheet, const std::string& source_url, int begin_line_number);
 	bool ParseProperties(PropertyVector& vec, const std::string& properties);
 
 private:
 	Stream* stream;
+	std::string source_url;
 	size_t line_number;
 
 	bool ReadProperties(PropertyVector& vec);

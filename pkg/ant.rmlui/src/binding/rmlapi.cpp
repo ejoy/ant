@@ -191,14 +191,6 @@ lDocumentCreateTextNode(lua_State* L) {
 }
 
 static int
-lDocumentGetSourceURL(lua_State *L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	const std::string &url = doc->GetSourceURL();
-	lua_pushstdstring(L, url);
-	return 1;
-}
-
-static int
 lElementSetPseudoClass(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const char* lst[] = { "hover", "active", NULL };
@@ -634,7 +626,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentFlush", lDocumentFlush },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
-		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },

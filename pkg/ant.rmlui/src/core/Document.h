@@ -17,7 +17,6 @@ class Document {
 public:
 	Document(const Size& dimensions, const std::string& path);
 	virtual ~Document();
-	const std::string& GetSourceURL() const;
 	const StyleSheet& GetStyleSheet() const;
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();

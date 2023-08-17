@@ -1,7 +1,10 @@
 #include <css/StyleSheetFactory.h>
 #include <css/StyleSheet.h>
+#include <core/Interface.h>
+#include <core/Core.h>
 #include <util/Stream.h>
 #include <util/Log.h>
+#include <util/File.h>
 #include <css/StyleSheetNode.h>
 #include <css/StyleSheetNodeSelector.h>
 #include <css/StyleSheetParser.h>
@@ -30,6 +33,19 @@ public:
 	std::unordered_map<std::string, StyleSheet> stylesheets;
 };
 
+static std::string_view ReadAll(const std::string& path) {
+	auto realpath = GetPlugin()->OnRealPath(path);
+	File f(realpath);
+	if (!f) {
+		Log::Message(Log::Level::Warning, "Unable to open file %s.", path.c_str());
+		return {};
+	}
+	size_t len = f.Length();
+	uint8_t* buf = new uint8_t[len];
+	len = f.Read(buf, len);
+	return {(char*)buf, len};
+}
+
 void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::string& source_path) {
 	auto itr = stylesheets.find(source_path);
 	if (itr != stylesheets.end()) {
@@ -38,8 +54,8 @@ void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::str
 	}
 	auto& newsheet = stylesheets[source_path];
 	StyleSheetParser parser;
-	Stream stream(source_path);
-	if (!parser.Parse(stream, newsheet, 1)) {
+	Stream stream(ReadAll(source_path));
+	if (!parser.Parse(stream, newsheet, source_path, 1)) {
 		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", source_path.c_str());
 		return;
 	}
@@ -48,8 +64,8 @@ void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::str
 
 void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line) {
 	StyleSheetParser parser;
-	Stream stream(source_path, (const uint8_t*)content.data(), content.size());
-	if (!parser.Parse(stream, sheet, line)) {
+	Stream stream(content);
+	if (!parser.Parse(stream, sheet, source_path, line)) {
 		Log::Message(Log::Level::Error, "Failed to load style sheet in %s:%d.", source_path.c_str(), line);
 	}
 }

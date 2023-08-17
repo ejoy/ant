@@ -2,7 +2,6 @@
 #include <core/Core.h>
 #include <core/Interface.h>
 #include <util/Log.h>
-#include <util/Stream.h>
 #include <css/StyleSheet.h>
 #include <core/Text.h>
 #include <css/StyleSheetFactory.h>
@@ -47,7 +46,7 @@ void Document::InstanceHead(const HtmlElement& html, std::function<void(const st
 				if (element->children.size() > 0) {
 					auto& content = std::get<HtmlString>(element->children[0]);
 					auto source_line = std::get<0>(element->position);
-					StyleSheetFactory::CombineStyleSheet(style_sheet, content, GetSourceURL(), source_line);
+					StyleSheetFactory::CombineStyleSheet(style_sheet, content, source_url, source_line);
 				}
 				else {
 					auto it = element->attributes.find("path");
@@ -71,10 +70,6 @@ void Document::InstanceBody(const HtmlElement& html) {
 	body.NotifyCreated();
 	body.InstanceInner(bodyHtml);
 	body.DirtyDefinition();
-}
-
-const std::string& Document::GetSourceURL() const {
-	return source_url;
 }
 
 const StyleSheet& Document::GetStyleSheet() const {
