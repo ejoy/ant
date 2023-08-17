@@ -33,14 +33,18 @@ if __ANT_RUNTIME__ then
     set_setting = vfs.resource_setting
 else
     local editor = require "editor.compile"
-    local compiled = {}
-    function compile_file(input)
-        if compiled[input] then
-            return compiled[input]
+    if __ANT_EDITOR__ then
+        compile_file = editor.compile_file
+    else
+        local compiled = {}
+        function compile_file(input)
+            if compiled[input] then
+                return compiled[input]
+            end
+            local output = editor.compile_file(input)
+            compiled[input] = output
+            return output
         end
-        local output = editor.compile_file(input)
-        compiled[input] = output
-        return output
     end
     function compile(pathstring)
         local pos = pathstring:find("|", 1, true)
