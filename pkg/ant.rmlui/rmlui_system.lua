@@ -111,12 +111,6 @@ function iRmlUi.font_dir(dir)
     import_font(fs.path(dir))
 end
 
-function iRmlUi.add_bundle()
-end
-
-function iRmlUi.del_bundle()
-end
-
 function iRmlUi.set_prefix(dir)
     ltask.call(ServiceRmlUi, "set_prefix", dir)
 end

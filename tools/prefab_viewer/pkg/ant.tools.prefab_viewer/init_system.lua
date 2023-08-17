@@ -72,7 +72,6 @@ function S.init_world()
 
     -- rmlui
     irmlui.set_prefix "/pkg/ant.tools.prefab_viewer/assets/ui"
-    irmlui.add_bundle "/pkg/ant.tools.prefab_viewer/assets/ui/ui.bundle"
     irmlui.font_dir "/pkg/ant.tools.prefab_viewer/assets/ui/font"
     local window = irmlui.open "joystick.rml"
 	window.addEventListener("message", function(event) world:pub {"joystick", event.data} end)

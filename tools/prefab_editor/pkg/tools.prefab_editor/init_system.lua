@@ -154,7 +154,6 @@ function m:init_world()
 end
 
 function m:post_init()
-    iRmlUi.add_bundle "/rml.bundle"
     iRmlUi.set_prefix "/pkg/tools.prefab_editor/res/ui"
     iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 end
