@@ -3,9 +3,9 @@
 #include <core/Color.h>
 #include <core/Animation.h>
 #include <core/Transform.h>
+#include <css/PropertyFloat.h>
 #include <variant>
 #include <string>
-#include <css/PropertyFloat.h>
 
 namespace Rml {
 

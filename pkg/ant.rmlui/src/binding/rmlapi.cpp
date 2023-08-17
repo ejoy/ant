@@ -148,7 +148,7 @@ lDocumentLoadStyleSheet(lua_State* L) {
 		auto path = lua_checkstrview(L, 2);
 		auto data = lua_checkstrview(L, 3);
 		auto line = luaL_checkinteger(L, 4);
-		doc->LoadStyleSheet(path, data, line);
+		doc->LoadStyleSheet(path, data, (int)line);
 		return 0;
 	}
 	}

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <css/StyleSheet.h>
 #include <core/Types.h>
+#include <css/StyleSheet.h>
 #include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <css/StyleSheetNodeSelector.h>
@@ -9,8 +9,8 @@
 namespace Rml {
 
 struct StructuralSelector {
-	StructuralSelector(Selector::IsApplicable selector, int a, int b) : selector(selector), a(a), b(b) {}
-	Selector::IsApplicable selector;
+	StructuralSelector(IsApplicable selector, int a, int b) : selector(selector), a(a), b(b) {}
+	IsApplicable selector;
 	int a;
 	int b;
 };

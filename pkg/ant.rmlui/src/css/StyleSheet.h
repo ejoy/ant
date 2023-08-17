@@ -1,9 +1,9 @@
 #pragma once
 
 #include <core/ID.h>
+#include <core/AnimationKey.h>
 #include <css/PropertyVector.h>
 #include <css/StyleCache.h>
-#include <core/AnimationKey.h>
 #include <unordered_map>
 #include <vector>
 
