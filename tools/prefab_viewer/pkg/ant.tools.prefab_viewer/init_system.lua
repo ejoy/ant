@@ -6,6 +6,7 @@ local math3d = require "math3d"
 local iom = ecs.require "ant.objcontroller|obj_motion"
 local iterrain  = ecs.require "mod.terrain|terrain_system"
 local S = ecs.system "init_system"
+local font = import_package "ant.font"
 
 function S.init()
 end
@@ -71,9 +72,8 @@ function S.init_world()
     iom.set_direction(ce, dir)
 
     -- rmlui
+    font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
     irmlui.set_prefix "/pkg/ant.tools.prefab_viewer/assets/ui"
-    irmlui.add_bundle "/pkg/ant.tools.prefab_viewer/assets/ui/ui.bundle"
-    irmlui.font_dir "/pkg/ant.tools.prefab_viewer/assets/ui/font"
     local window = irmlui.open "joystick.rml"
 	window.addEventListener("message", function(event) world:pub {"joystick", event.data} end)
 end

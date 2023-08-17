@@ -2,14 +2,10 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local ltask     = require "ltask"
-local fs        = require "filesystem"
+local ltask = require "ltask"
 local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
-
-local irq       = ecs.require "ant.render|render_system.renderqueue"
-
-local hwi       = import_package "ant.hwi"
-local font      = import_package "ant.font"
+local irq = ecs.require "ant.render|render_system.renderqueue"
+local hwi = import_package "ant.hwi"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
@@ -93,29 +89,7 @@ function rmlui_sys:exit()
     end
 end
 
-local function import_font(path)
-    for p in fs.pairs(path) do
-        if fs.is_directory(p) then
-            import_font(p)
-        elseif fs.is_regular_file(p) then
-            if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
-                font.import(p)
-            end
-        end
-    end
-end
-
 local iRmlUi = {}
-
-function iRmlUi.font_dir(dir)
-    import_font(fs.path(dir))
-end
-
-function iRmlUi.add_bundle()
-end
-
-function iRmlUi.del_bundle()
-end
 
 function iRmlUi.set_prefix(dir)
     ltask.call(ServiceRmlUi, "set_prefix", dir)

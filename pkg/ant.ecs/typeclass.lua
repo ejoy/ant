@@ -144,8 +144,9 @@ local function cstruct(...)
 	for i = 1, ref.n do
 		t[i] = toint(ref[i])
 	end
-	return string.pack("<"..("T"):rep(ref.n), table.unpack(t))
-		, ref
+	local ecs_util = require "ecs.util"
+	local data = string.pack("<"..("T"):rep(ref.n), table.unpack(t))
+	return ecs_util.userdata(data, ref)
 end
 
 local function create_context(w)
@@ -182,8 +183,7 @@ local function create_context(w)
 	end
 	w._component_decl = nil
 	local ecs_context = ecs:context()
-	w._ecs_world,
-	w._ecs_ref = cstruct(
+	w._ecs_world = cstruct(
 		ecs_context,
 		bgfx.CINTERFACE,
 		math3d.CINTERFACE,

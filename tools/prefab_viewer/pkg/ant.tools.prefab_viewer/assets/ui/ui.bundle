@@ -1,4 +1,0 @@
-s /pkg/ant.tools.prefab_viewer/assets/ui/**/*.lua
-s /pkg/ant.tools.prefab_viewer/assets/ui/**/*.rml
-s /pkg/ant.tools.prefab_viewer/assets/ui/**/*.rcss
-s /pkg/ant.tools.prefab_viewer/assets/ui/**/*.cfg

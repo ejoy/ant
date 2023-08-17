@@ -15,8 +15,8 @@ namespace Rml {
 static StructuralSelector GetSelector(const std::string& name) {
 	const size_t parameter_start = name.find('(');
 	auto func = (parameter_start == std::string::npos)
-			? StyleSheetFactory::GetSelector(name)
-			: StyleSheetFactory::GetSelector(name.substr(0, parameter_start))
+			? CreateSelector(name)
+			: CreateSelector(name.substr(0, parameter_start))
 			;
 	if (!func)
 		return StructuralSelector(nullptr, 0, 0);

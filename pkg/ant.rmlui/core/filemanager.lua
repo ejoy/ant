@@ -1,5 +1,6 @@
 local fs = require "filesystem"
 local ltask = require "ltask"
+local fastio = require "fastio"
 local constructor = require "core.DOM.constructor"
 
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
@@ -12,10 +13,6 @@ function m.set_prefix(v)
     prefixPath = fs.path(v)
 end
 
-local function localpath(source_path)
-    return (prefixPath / source_path):localpath():string()
-end
-
 function m.fullpath(source_path)
     return (prefixPath / source_path):string()
 end
@@ -25,31 +22,26 @@ function m.exists(path)
 end
 
 function m.readfile(source_path)
-    local realpath = localpath(source_path)
-    local f = io.open(realpath)
-    if not f then
-        return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
-    end
-    local data = f:read 'a'
-    f:close()
-    return data
+    local fullpath = prefixPath / source_path
+    local realpath = fullpath:localpath():string()
+    return fastio.readall_s(realpath, fullpath:string())
 end
 
 function m.loadstring(content, source_path, source_line, env)
-    local realpath = localpath(source_path)
+    local fullpath = prefixPath / source_path
+    local realpath = fullpath:localpath():string()
     local source = "--@"..realpath..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
 function m.loadfile(source_path, env)
-    local realpath = localpath(source_path)
-    local f = io.open(realpath)
-    if not f then
-        return nil, ('%s:No such file or directory.'):format(m.fullpath(source_path))
+    local fullpath = prefixPath / source_path
+    local realpath = fullpath:localpath():string()
+    local data, err = fastio.readall_s(realpath, fullpath:string())
+    if not data then
+        return nil, err
     end
-    local str = f:read 'a'
-    f:close()
-    return load(str, "@" .. realpath, "bt", env)
+    return load(data, "@"..realpath, "bt", env)
 end
 
 local rt_table = {}

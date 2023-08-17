@@ -1,8 +1,7 @@
 #include <css/StyleSheetNodeSelector.h>
 #include <core/Element.h>
-#include <core/Text.h>
 
-namespace Rml::Selector {
+namespace Rml {
 
 template <typename T>
 struct reversion_wrapper {
@@ -21,7 +20,7 @@ static bool IsNth(int a, int b, int count) {
 	return (x >= 0 && x * a + b == count);
 }
 
-bool Empty(const Element* element, int, int) {
+static bool Empty(const Element* element, int, int) {
 	for (const Element* child : element->Children()) {
 		if (child->IsVisible())
 			return false;
@@ -29,7 +28,7 @@ bool Empty(const Element* element, int, int) {
 	return true;
 }
 
-bool FirstChild(const Element* element, int, int) {
+static bool FirstChild(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -41,7 +40,7 @@ bool FirstChild(const Element* element, int, int) {
 	return false;
 }
 
-bool FirstOfType(const Element* element, int, int) {
+static bool FirstOfType(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -54,7 +53,7 @@ bool FirstOfType(const Element* element, int, int) {
 	return false;
 }
 
-bool LastChild(const Element* element, int, int) {
+static bool LastChild(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -66,7 +65,7 @@ bool LastChild(const Element* element, int, int) {
 	return false;
 }
 
-bool LastOfType(const Element* element, int, int) {
+static bool LastOfType(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -79,7 +78,7 @@ bool LastOfType(const Element* element, int, int) {
 	return false;
 }
 
-bool NthChild(const Element* element, int a, int b) {
+static bool NthChild(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -94,7 +93,7 @@ bool NthChild(const Element* element, int a, int b) {
 	return IsNth(a, b, element_index);
 }
 
-bool NthLastChild(const Element* element, int a, int b) {
+static bool NthLastChild(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -109,7 +108,7 @@ bool NthLastChild(const Element* element, int a, int b) {
 	return IsNth(a, b, element_index);
 }
 
-bool NthLastOfType(const Element* element, int a, int b) {
+static bool NthLastOfType(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -124,7 +123,7 @@ bool NthLastOfType(const Element* element, int a, int b) {
 	return IsNth(a, b, element_index);
 }
 
-bool NthOfType(const Element* element, int a, int b) {
+static bool NthOfType(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -139,7 +138,7 @@ bool NthOfType(const Element* element, int a, int b) {
 	return IsNth(a, b, element_index);
 }
 
-bool OnlyChild(const Element* element, int, int) {
+static bool OnlyChild(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -153,7 +152,7 @@ bool OnlyChild(const Element* element, int, int) {
 	return true;
 }
 
-bool OnlyOfType(const Element* element, int, int) {
+static bool OnlyOfType(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -165,6 +164,27 @@ bool OnlyOfType(const Element* element, int, int) {
 		return false;
 	}
 	return true;
+}
+
+static std::unordered_map<std::string_view, IsApplicable> selectors = {
+	{ "nth-child", NthChild },
+	{ "nth-last-child", NthLastChild },
+	{ "nth-of-type", NthOfType },
+	{ "nth-last-of-type", NthLastOfType },
+	{ "first-child", FirstChild },
+	{ "last-child", LastChild },
+	{ "first-of-type", FirstOfType },
+	{ "last-of-type", LastOfType },
+	{ "only-child", OnlyChild },
+	{ "only-of-type", OnlyOfType },
+	{ "empty", Empty },
+};
+
+IsApplicable CreateSelector(std::string_view name) {
+	auto it = selectors.find(name);
+	if (it == selectors.end())
+		return nullptr;
+	return it->second;
 }
 
 }

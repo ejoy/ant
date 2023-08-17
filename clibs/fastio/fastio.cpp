@@ -80,10 +80,10 @@ static int pusherror(lua_State *L, const char *filename) {
 }
 
 static int readall(lua_State *L) {
-    const char *filename = luaL_checkstring(L, 1);
+    const char* filename = luaL_checkstring(L, 1);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return pusherror(L, filename);
+        return pusherror(L, luaL_optstring(L, 2, filename));
     }
     size_t size = f.size();
     void* data = create_memory(L, size);
@@ -99,10 +99,10 @@ static int readall(lua_State *L) {
 }
 
 static int readall_s(lua_State *L) {
-    const char *filename = luaL_checkstring(L, 1);
+    const char* filename = luaL_checkstring(L, 1);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return pusherror(L, filename);
+        return pusherror(L, luaL_optstring(L, 2, filename));
     }
     size_t size = f.size();
     void* data = create_memory(L, size);

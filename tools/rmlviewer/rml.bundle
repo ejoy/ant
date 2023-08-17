@@ -1,5 +1,0 @@
-s /resource/**/*.lua
-s /resource/**/*.rml
-s /resource/**/*.rcss
-s /resource/**/*.png
-s /resource/**/*.texture
