@@ -6,7 +6,6 @@
 #include <core/Text.h>
 #include <css/StyleSheetFactory.h>
 #include <util/HtmlParser.h>
-#include <util/File.h>
 #include <fstream>
 
 namespace Rml {

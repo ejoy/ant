@@ -4,7 +4,6 @@
 #include <core/Core.h>
 #include <util/Stream.h>
 #include <util/Log.h>
-#include <util/File.h>
 #include <css/StyleSheetNode.h>
 #include <css/StyleSheetNodeSelector.h>
 #include <css/StyleSheetParser.h>

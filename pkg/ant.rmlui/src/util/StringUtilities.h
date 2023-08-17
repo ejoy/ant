@@ -31,13 +31,6 @@ namespace StringUtilities {
 	}
 
 	std::string StripWhitespace(const std::string& string);
-
-	template <typename T>
-	inline T SeekBackwardUTF8(T p, T p_begin) {
-		while ((p + 1) != p_begin && (*p & 0b1100'0000) == 0b1000'0000)
-			--p;
-		return p;
-	}
 }
 
 }
