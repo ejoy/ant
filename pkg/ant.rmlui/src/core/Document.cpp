@@ -1,7 +1,6 @@
 #include <core/Document.h>
 #include <core/Core.h>
 #include <core/Interface.h>
-#include <util/Log.h>
 #include <css/StyleSheet.h>
 #include <core/Text.h>
 #include <css/StyleSheetFactory.h>

@@ -1,6 +1,5 @@
 #include <core/Transform.h>
 #include <core/Element.h>
-#include <util/StringUtilities.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>
