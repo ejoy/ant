@@ -1,6 +1,5 @@
 #include <core/Transform.h>
 #include <core/Element.h>
-#include <util/StringUtilities.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>
@@ -10,6 +9,10 @@
 namespace Rml {
 
 using namespace Transforms;
+
+static std::string ToString(const float& v) {
+	return std::to_string(v);
+}
 
 static glm::mat4x4 skew(float angle_x, float angle_y) {
 	float skewX = tanf(angle_x);

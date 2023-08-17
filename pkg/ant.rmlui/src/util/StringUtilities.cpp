@@ -1,46 +1,7 @@
 #include <util/StringUtilities.h>
-#include <util/Log.h>
 #include <algorithm>
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 
-namespace Rml {
-
-static int FormatString(std::string& string, size_t max_size, const char* format, va_list argument_list) {
-	const int INTERNAL_BUFFER_SIZE = 1024;
-	static char buffer[INTERNAL_BUFFER_SIZE];
-	char* buffer_ptr = buffer;
-
-	if (max_size + 1 > INTERNAL_BUFFER_SIZE)
-		buffer_ptr = new char[max_size + 1];
-
-	int length = vsnprintf(buffer_ptr, max_size, format, argument_list);
-	buffer_ptr[length >= 0 ? length : max_size] = '\0';
-#if !defined NDEBUG
-	if (length == -1) {
-		Log::Message(Log::Level::Warning, "FormatString: std::string truncated to %d bytes when processing %s", max_size, format);
-	}
-#endif
-
-	string = buffer_ptr;
-
-	if (buffer_ptr != buffer)
-		delete[] buffer_ptr;
-
-	return length;
-}
-
-std::string CreateString(size_t max_size, const char* format, ...) {
-	std::string result;
-	result.reserve(max_size);
-	va_list argument_list;
-	va_start(argument_list, format);
-	FormatString(result, max_size, format, argument_list);
-	va_end(argument_list);
-	return result;
-}
+namespace Rml::StringUtilities {
 
 static inline char CharToLower(char c) {
 	if (c >= 'A' && c <= 'Z')
@@ -48,13 +9,13 @@ static inline char CharToLower(char c) {
 	return c;
 }
 
-std::string StringUtilities::ToLower(const std::string& string) {
+std::string ToLower(const std::string& string) {
 	std::string str_lower = string;
 	std::transform(str_lower.begin(), str_lower.end(), str_lower.begin(), &CharToLower);
 	return str_lower;
 }
 
-void StringUtilities::ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter) {
+void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter) {
 	char quote = 0;
 	bool last_char_delimiter = true;
 	const char* ptr = string.c_str();
@@ -109,8 +70,7 @@ void StringUtilities::ExpandString(std::vector<std::string>& string_list, const 
 		string_list.emplace_back(start_ptr, end_ptr + 1);
 }
 
-
-void StringUtilities::ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters) {
+void ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters) {
 	int quote_mode_depth = 0;
 	const char* ptr = string.c_str();
 	const char* start_ptr = nullptr;
@@ -154,7 +114,7 @@ void StringUtilities::ExpandString2(std::vector<std::string>& string_list, const
 		string_list.emplace_back(start_ptr, end_ptr + 1);
 }
 
-std::string StringUtilities::StripWhitespace(const std::string& s) {
+std::string StripWhitespace(const std::string& s) {
 	auto start = s.begin();
 	auto end = s.end();
 	while (start < end && IsWhitespace(*start))
@@ -164,36 +124,6 @@ std::string StringUtilities::StripWhitespace(const std::string& s) {
 	if (start < end)
 		return std::string(start, end);
 	return std::string();
-}
-
-template <>
-float FromString<float>(const std::string& str, float def) {
-	errno = 0;
-	float r = strtof(str.c_str(), NULL);
-	if (errno != 0) {
-		return def;
-	}
-	return r;
-}
-
-template <>
-int FromString<int>(const std::string& str, int def) {
-	errno = 0;
-	long r = strtol(str.c_str(), NULL, 10);
-	if (errno != 0) {
-		return def;
-	}
-	return r;
-}
-
-template <>
-std::string ToString<float>(const float& v) {
-	return std::to_string(v);
-}
-
-template <>
-std::string ToString<int>(const int& v) {
-	return std::to_string(v);
 }
 
 }

@@ -1,7 +1,6 @@
 #include <core/Texture.h>
 #include <core/Core.h>
 #include <core/Element.h>
-#include <util/Log.h>
 #include <unordered_map>
 
 namespace Rml::Texture {
