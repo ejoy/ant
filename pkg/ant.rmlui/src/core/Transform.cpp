@@ -11,6 +11,10 @@ namespace Rml {
 
 using namespace Transforms;
 
+static std::string ToString(const float& v) {
+	return std::to_string(v);
+}
+
 static glm::mat4x4 skew(float angle_x, float angle_y) {
 	float skewX = tanf(angle_x);
 	float skewY = tanf(angle_y);
