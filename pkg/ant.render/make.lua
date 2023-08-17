@@ -138,7 +138,7 @@ lm:lua_source "render_core"{
         ROOT .. "3rd/glm",
         ROOT .. "3rd/luaecs",
         ROOT .. "clibs/ecs",
-        ROOT .. "pkg/ant.bundle/src",
+        ROOT .. "pkg/ant.compile_resource/src",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",

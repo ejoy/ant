@@ -71,7 +71,7 @@ lm:lua_source "rmlui_binding" {
         ROOT .. "3rd/yoga",
         ROOT .. "3rd/bee.lua",
         ROOT .. "clibs/luabind",
-        ROOT .. "pkg/ant.bundle/src/",
+        ROOT .. "pkg/ant.compile_resource/src/",
     },
     defines = "GLM_FORCE_QUAT_DATA_XYZW",
     sources = {
