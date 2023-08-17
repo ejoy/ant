@@ -3,7 +3,6 @@
 #include <css/StyleSheetNode.h>
 #include <util/Log.h>
 #include <css/Property.h>
-#include <util/Stream.h>
 #include <css/StyleSheet.h>
 #include <css/StyleSheetSpecification.h>
 #include <util/StringUtilities.h>
@@ -78,18 +77,7 @@ static StructuralSelector GetSelector(const std::string& name) {
 	return StructuralSelector(func, a, b);
 }
 
-StyleSheetParser::StyleSheetParser()
-{
-	line_number = 0;
-	stream = nullptr;
-}
-
-StyleSheetParser::~StyleSheetParser()
-{
-}
-
-static bool IsValidIdentifier(const std::string& str)
-{
+static bool IsValidIdentifier(const std::string& str) {
 	if (str.empty())
 		return false;
 
@@ -147,11 +135,13 @@ bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::st
 	return true;
 }
 
-bool StyleSheetParser::Parse(Stream& _stream, StyleSheet& style_sheet, std::string_view source_url, int begin_line_number) {
-	int rule_count = 0;
+bool StyleSheetParser::Parse(std::string_view data, StyleSheet& style_sheet, std::string_view url, int begin_line_number) {
+	view = data;
+	pos = 0;
 	line_number = begin_line_number;
-	this->source_url = source_url;
-	stream = &_stream;
+	source_url = url;
+
+	int rule_count = 0;
 
 	enum class State : uint8_t { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
 	State state = State::Global;
@@ -265,14 +255,12 @@ bool StyleSheetParser::Parse(Stream& _stream, StyleSheet& style_sheet, std::stri
 	return rule_count >= 0;
 }
 
-bool StyleSheetParser::ParseProperties(PropertyVector& vec, const std::string& properties)
-{
-	assert(!stream);
-	Stream stream_owner(properties);
-	stream = &stream_owner;
-	bool success = ReadProperties(vec);
-	stream = nullptr;
-	return success;
+bool StyleSheetParser::ParseProperties(std::string_view data, PropertyVector& vec) {
+	view = data;
+	pos = 0;
+	line_number = 0;
+	source_url = "";
+	return ReadProperties(vec);
 }
 
 bool StyleSheetParser::ReadProperties(PropertyVector& vec)
@@ -287,7 +275,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 	char previous_character = 0;
 	while (ReadCharacter(character))
 	{
-		stream->Next();
+		Next();
 
 		switch (state)
 		{
@@ -475,12 +463,12 @@ char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool r
 	while (ReadCharacter(character)) {
 		if (strchr(tokens, character) != nullptr) {
 			if (remove_token)
-				stream->Next();
+				Next();
 			return character;
 		}
 		else {
 			buffer += character;
-			stream->Next();
+			Next();
 		}
 	}
 	return 0;
@@ -495,43 +483,43 @@ bool StyleSheetParser::ReadCharacter(char& buffer)
 	// stream or we find the requested token
 	do
 	{
-		while (!stream->End())
+		while (!End())
 		{
-			if (stream->Peek() == '\n')
+			if (Peek() == '\n')
 				line_number++;
 			else if (comment)
 			{
 				// Check for closing comment
-				if (stream->Peek() == '*')
+				if (Peek() == '*')
 				{
-					stream->Next();
-					if (stream->End())
+					Next();
+					if (End())
 					{
 						return false;
 					}
 
-					if (stream->Peek() == '/')
+					if (Peek() == '/')
 						comment = false;
 				}
 			}
 			else
 			{
 				// Check for an opening comment
-				if (stream->Peek() == '/')
+				if (Peek() == '/')
 				{
-					stream->Next();
-					if (stream->End())
+					Next();
+					if (End())
 					{
 						buffer = '/';
 						return true;
 					}
 					
-					if (stream->Peek() == '*')
+					if (Peek() == '*')
 						comment = true;
 					else
 					{
 						buffer = '/';
-						stream->Undo();
+						Undo();
 						return true;
 					}
 				}
@@ -539,17 +527,35 @@ bool StyleSheetParser::ReadCharacter(char& buffer)
 				if (!comment)
 				{
 					// If we find a character, return it
-					buffer = stream->Peek();
+					buffer = Peek();
 					return true;
 				}
 			}
 
-			stream->Next();
+			Next();
 		}
 	}
 	while (false);
 
 	return false;
+}
+
+
+
+uint8_t StyleSheetParser::Peek() const {
+	return view[pos];
+}
+
+bool StyleSheetParser::End() const {
+	return pos >= view.size();
+}
+
+void StyleSheetParser::Next() {
+	pos++;
+}
+
+void StyleSheetParser::Undo() {
+	pos--;
 }
 
 }

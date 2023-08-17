@@ -2,7 +2,6 @@
 #include <css/StyleSheet.h>
 #include <core/Interface.h>
 #include <core/Core.h>
-#include <util/Stream.h>
 #include <util/Log.h>
 #include <css/StyleSheetNode.h>
 #include <css/StyleSheetNodeSelector.h>
@@ -45,8 +44,7 @@ bool StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, std::string_vi
 void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, std::string_view source_path, std::string_view content) {
 	auto& newsheet = stylesheets[source_path];
 	StyleSheetParser parser;
-	Stream stream(content);
-	if (!parser.Parse(stream, newsheet, source_path, 1)) {
+	if (!parser.Parse(content, newsheet, source_path, 1)) {
 		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", source_path.data());
 		return;
 	}
@@ -55,8 +53,7 @@ void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, std::string_vi
 
 void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, std::string_view source_path, std::string_view content, int line) {
 	StyleSheetParser parser;
-	Stream stream(content);
-	if (!parser.Parse(stream, sheet, source_path, line)) {
+	if (!parser.Parse(content, sheet, source_path, line)) {
 		Log::Message(Log::Level::Error, "Failed to load style sheet in %s:%d.", source_path.data(), line);
 	}
 }

@@ -11,7 +11,6 @@ namespace Rml {
 
 class Element;
 class StyleSheetNode;
-class Stream;
 
 struct Keyframes {
 	std::map<PropertyId, std::vector<AnimationKey>> properties;

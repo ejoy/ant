@@ -5,26 +5,27 @@
 
 namespace Rml {
 
-class Stream;
-
 class StyleSheetParser {
 public:
-	StyleSheetParser();
-	~StyleSheetParser();
-
-	bool Parse(Stream& stream, StyleSheet& style_sheet, std::string_view source_url, int begin_line_number);
-	bool ParseProperties(PropertyVector& vec, const std::string& properties);
+	bool Parse(std::string_view data, StyleSheet& style_sheet, std::string_view source_url, int begin_line_number);
+	bool ParseProperties(std::string_view data, PropertyVector& vec);
 
 private:
-	Stream* stream;
+	std::string_view view;
+	size_t           pos;
 	std::string_view source_url;
-	size_t line_number;
+	size_t           line_number;
 
 	bool ReadProperties(PropertyVector& vec);
 	static void ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties);
 	bool ParseKeyframeBlock(StyleSheet& style_sheet, const std::string & identifier, const std::string & rules, const PropertyVector& properties);
 	char FindToken(std::string& buffer, const char* tokens, bool remove_token);
 	bool ReadCharacter(char& buffer);
+
+	uint8_t Peek() const;
+	bool End() const;
+	void Next();
+	void Undo();
 };
 
 }
