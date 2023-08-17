@@ -1,4 +1,4 @@
-__ANT_RUNTIME__ = "0.0.1"
+__ANT_RUNTIME__ = true
 
 local platform = require "bee.platform"
 
@@ -117,5 +117,8 @@ local fw = require "firmware"
 assert(fw.loadfile "io.lua")()
 ]]
 
-vfs.initfunc("init_thread.lua", c:detach())
+vfs.initfunc("init_thread.lua", {
+	fd = c:detach(),
+	editor = __ANT_EDITOR__,
+})
 dofile "/main.lua"

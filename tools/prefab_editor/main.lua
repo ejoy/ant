@@ -1,3 +1,5 @@
+__ANT_EDITOR__ = true
+
 package.path = "engine/?.lua"
 require "bootstrap"
 import_package "ant.imgui".start {

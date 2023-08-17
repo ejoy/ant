@@ -41,7 +41,17 @@ namespace luavalue {
     }
 
     void set(lua_State* L, int idx, table& t) {
-        luaL_error(L, "TODO");
+        luaL_checktype(L, idx, LUA_TTABLE);
+        lua_pushnil(L);
+        while (lua_next(L, idx)) {
+            size_t sz = 0;
+            const char* str = luaL_checklstring(L, -2, &sz);
+            std::pair<std::string, value> pair;
+            pair.first.assign(str, sz);
+            set(L, -1, pair.second);
+            t.emplace(pair);
+            lua_pop(L, 1);
+        }
     }
 
     void get(lua_State* L, const value& v) {

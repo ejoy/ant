@@ -2,10 +2,12 @@ local thread = require "bee.thread"
 local socket = require "bee.socket"
 local io_req = thread.channel "IOreq"
 
-__ANT_RUNTIME__ = package.preload.firmware ~= nil
+local vfs, global = ...
 
-local vfs, fddata = ...
-local fd = socket.fd(fddata)
+__ANT_RUNTIME__ = package.preload.firmware ~= nil
+__ANT_EDITOR__ = global.editor
+
+local fd = socket.fd(global.fd)
 
 local function call(...)
 	local r, _ = thread.rpc_create()

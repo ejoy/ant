@@ -764,8 +764,7 @@ local function ltask_loadfile(path, realpath)
 	end
 	local str = f:read 'a'
 	f:close()
-	local supportFirmware = package.preload.firmware ~= nil
-	if supportFirmware then
+	if package.preload.firmware ~= nil then
 		return load(str, '@' .. path)
 	else
 		return load(str, '@' .. realpath)

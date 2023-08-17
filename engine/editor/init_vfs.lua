@@ -39,4 +39,7 @@ vfs.iothread = boot.preinit [[
     assert(loadfile "engine/editor/io.lua")(io_req:bpop())
 ]]
 
-vfs.initfunc("engine/firmware/init_thread.lua", c:detach())
+vfs.initfunc("engine/firmware/init_thread.lua", {
+	fd = c:detach(),
+	editor = __ANT_EDITOR__,
+})

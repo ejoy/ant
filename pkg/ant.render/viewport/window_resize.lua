@@ -42,17 +42,19 @@ local resize_mb = world:sub {"resize"}
 
 local winresize_sys = ecs.system "window_resize_system"
 
-function winresize_sys:start_frame()
-	if world.args.disable_resize then
-		return 
+if __ANT_EDITOR__ then
+	function winresize_sys:start_frame()
 	end
-	for _, ww, hh in resize_mb:unpack() do
-		local nww, nhh = calc_fb_size(ww, hh, world.args.framebuffer.ratio)
-		log.info("resize framebuffer from:", ww, hh, ", to:", nww, nhh)
-		update_config(world.args, nww, nhh)
-		rhwi.reset(nil, nww, nhh)
-		local vp = world.args.viewport
-		log.info("main viewport:", vp.x, vp.y, vp.w, vp.h, vp.ratio or "(viewport ratio is nil)")
-		world:pub{"world_viewport_changed", vp}
+else
+	function winresize_sys:start_frame()
+		for _, ww, hh in resize_mb:unpack() do
+			local nww, nhh = calc_fb_size(ww, hh, world.args.framebuffer.ratio)
+			log.info("resize framebuffer from:", ww, hh, ", to:", nww, nhh)
+			update_config(world.args, nww, nhh)
+			rhwi.reset(nil, nww, nhh)
+			local vp = world.args.viewport
+			log.info("main viewport:", vp.x, vp.y, vp.w, vp.h, vp.ratio or "(viewport ratio is nil)")
+			world:pub{"world_viewport_changed", vp}
+		end
 	end
 end

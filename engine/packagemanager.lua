@@ -15,8 +15,7 @@ local pm_loadfile; do
         end
         return err:sub(1, first-1) .. filename .. err:sub(last+1)
     end
-    local supportFirmware <const> = package.preload.firmware ~= nil
-    if supportFirmware then
+    if __ANT_RUNTIME__ then
         function pm_loadfile(realpath, path)
             local f, err = io.open(realpath, 'rb')
             if not f then

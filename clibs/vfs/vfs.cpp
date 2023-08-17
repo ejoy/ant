@@ -6,15 +6,15 @@
 #include "../luabind/luavalue.h"
 
 std::string initfunc;
-luavalue::value initargs;
+luavalue::table initargs;
 std::mutex mutex;
 
 static const std::string_view initscript = R"(
 local initfunc, initargs = ...
 local vfs = {}
 local io_open = io.open
-local supportFirmware = package.preload.firmware ~= nil
-if supportFirmware then
+local __ANT_RUNTIME__ = package.preload.firmware ~= nil
+if __ANT_RUNTIME__ then
     local fw = require "firmware"
     local rawvfs = assert(fw.loadfile "vfs.lua")()
     local repo = rawvfs.new "./"
@@ -45,7 +45,7 @@ local function vfs_loadrealfile(path, realpath, ...)
     end
     local str = f:read 'a'
     f:close()
-    if supportFirmware then
+    if __ANT_RUNTIME__ then
         return load(str, '@' .. path, ...)
     else
         return load(str, '@' .. realpath, ...)
@@ -92,7 +92,7 @@ local function searcher_lua(name)
     return func, path
 end
 if initfunc then
-    if supportFirmware then
+    if __ANT_RUNTIME__ then
         local fw = require "firmware"
         assert(fw.loadfile(initfunc))(vfs, initargs)
     else
@@ -113,8 +113,7 @@ return vfs
 static const std::string_view updateinitfunc = R"(
 local vfs, initfunc, initargs = ...
 if initfunc then
-    local supportFirmware = package.preload.firmware ~= nil
-    if supportFirmware then
+    if package.preload.firmware ~= nil then
         local fw = require "firmware"
         assert(fw.loadfile(initfunc))(vfs, initargs)
     else
