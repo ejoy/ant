@@ -1,8 +1,0 @@
-system "msg_system"
-    .implement "msg_system.lua"
-    .method "data_changed"
-
-system "console_system"
-    .implement "console_system.lua"
-    .require_system "msg_system"
-    .method "data_changed"
