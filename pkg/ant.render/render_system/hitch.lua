@@ -22,13 +22,13 @@ function hitch_sys:entity_init()
 end
 
 function hitch_sys:entity_ready()
-    local groups = {}
+    local groups = setmetatable({}, {__index=function(t, gid)
+        local gg = {}
+        t[gid] = gg
+        return gg
+    end})
     for e in w:select "hitch_bounding hitch:in eid:in" do
         local g = groups[e.hitch.group]
-        if g == nil then
-            g = {}
-            groups[e.hitch.group] = g
-        end
         g[#g+1] = e.eid
     end
 
@@ -47,7 +47,7 @@ function hitch_sys:entity_ready()
 
         if math3d.aabb_isvalid(h_aabb) then
             for _, heid in ipairs(hitchs) do
-                local e<close> = w:entity(heid, "bounding:update scene_needchange?out")
+                local e<close> = world:entity(heid, "bounding:update scene_needchange?out")
                 math3d.unmark(e.bounding.aabb)
                 e.bounding.aabb = math3d.mark(h_aabb)
             end
