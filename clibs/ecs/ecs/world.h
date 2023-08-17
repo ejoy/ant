@@ -35,11 +35,12 @@ struct ecs_world {
 };
 
 static inline struct ecs_world* getworld(lua_State* L) {
-	size_t sz = 0;
-	struct ecs_world* ctx = (struct ecs_world*)luaL_checklstring(L, lua_upvalueindex(1), &sz);
-	if (sizeof(struct ecs_world) > sz) {
+#if !defined(NDEBUG)
+	luaL_checktype(L, lua_upvalueindex(1), LUA_TUSERDATA);
+	if (sizeof(struct ecs_world) > lua_rawlen(L, lua_upvalueindex(1))) {
 		luaL_error(L, "invalid ecs_world");
 		return NULL;
 	}
-	return ctx;
+#endif
+	return (struct ecs_world*)lua_touserdata(L, lua_upvalueindex(1));
 }

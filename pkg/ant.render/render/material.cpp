@@ -149,7 +149,7 @@ struct material_instance {
 
 static inline void
 check_ecs_world_in_upvalue1(lua_State *L){
-	luaL_checkstring(L, lua_upvalueindex(1));
+	getworld(L);
 }
 
 static int

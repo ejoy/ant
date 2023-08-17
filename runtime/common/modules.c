@@ -41,6 +41,7 @@ int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_vfs(lua_State* L);
 int luaopen_ecs_core(lua_State* L);
 int luaopen_ecs_components(lua_State* L);
+int luaopen_ecs_util(lua_State* L);
 int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
@@ -106,6 +107,7 @@ void ant_loadmodules(lua_State* L) {
         { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
         { "ecs.components", luaopen_ecs_components},
+        { "ecs.util", luaopen_ecs_util},
         { "fastio", luaopen_fastio},
         { "render.material",    luaopen_material},
         { "render.render_material", luaopen_render_material},
