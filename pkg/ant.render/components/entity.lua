@@ -256,7 +256,7 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 			visible_state= "main_view",
 			name 		= "",
 			render_layer= render_layer,
-			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
+			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}), true),
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
