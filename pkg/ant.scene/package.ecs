@@ -14,7 +14,7 @@ pipeline "scene"
     .stage "follow_transform_updated"
 
 system "bounding_system"
-    .implement "scenespace.lua"
+    .implement "bounding.lua"
     .method "entity_init"
 
 system "scenespace_system"
