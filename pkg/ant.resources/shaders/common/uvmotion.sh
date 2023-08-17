@@ -2,7 +2,6 @@
 #define _UVMOTION_SH_
 #include "common/common.sh"
 
-uniform vec4 u_uvmotion;
 #define u_uvmotion_speed u_uvmotion.xy
 #define u_uvmotion_tile u_uvmotion.zw
 
