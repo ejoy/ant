@@ -5,6 +5,8 @@ local environment = require "core.environment"
 local event = require "core.event"
 local parsetext = require "core.parsetext"
 local eventListener = require "core.event.listener"
+local fs = require "filesystem"
+
 local m = {}
 
 function m.OnCreateElement(document, element, tagName)
@@ -26,10 +28,12 @@ function m.OnDestroyNode(document, node)
 end
 
 function m.OnDispatchEvent(document, element, type, eventData)
+	local _ <close> = fs.switch_sync()
 	eventListener.dispatch(document, element, type, eventData)
 end
 
 function m.OnRealPath(path)
+	local _ <close> = fs.switch_sync()
 	return filemanager.realpath(path)
 end
 

@@ -19,12 +19,10 @@ function m.fullpath(source_path)
 end
 
 function m.realpath(source_path)
-    local _ <close> = fs.switch_sync()
     return (prefixPath / source_path):localpath():string()
 end
 
 function m.exists(path)
-    local _ <close> = fs.switch_sync()
     return fs.exists(prefixPath / path)
 end
 

@@ -8,6 +8,7 @@ local m = {}
 
 local documents = {}
 local names = {}
+local messages = {}
 
 local function find_window(name)
     local document = documents[name]
@@ -20,15 +21,27 @@ local function find_window(name)
 end
 
 function m.open(name, url)
+    assert(documents[name] == nil)
     local doc = contextManager.open(url)
     if doc then
         documents[name] = doc
         names[doc] = name
         contextManager.onload(doc)
+        local msgs = messages[name]
+        if msgs then
+            messages[name] = nil
+            local window = find_window(name)
+            if window then
+                for _, data in ipairs(msgs) do
+                    window.postMessage(data)
+                end
+            end
+        end
     end
 end
 
 function m.close(name)
+    messages[name] = nil
     local window = find_window(name)
     if window then
         window.close()
@@ -37,6 +50,14 @@ function m.close(name)
 end
 
 function m.postMessage(name, data)
+    if not documents[name] then
+        if messages[name] then
+            table.insert(messages[name], data)
+        else
+            messages[name] = { data }
+        end
+        return
+    end
     local window = find_window(name)
     if window then
         window.postMessage(data)

@@ -93,8 +93,6 @@ function rmlui_sys:exit()
     end
 end
 
-local maxID = 0
-
 local function import_font(path)
     for p in fs.pairs(path) do
         if fs.is_directory(p) then
@@ -113,19 +111,18 @@ function iRmlUi.font_dir(dir)
     import_font(fs.path(dir))
 end
 
-function iRmlUi.add_bundle(dir)
+function iRmlUi.add_bundle()
 end
 
-function iRmlUi.del_bundle(dir)
+function iRmlUi.del_bundle()
 end
 
 function iRmlUi.set_prefix(dir)
     ltask.call(ServiceRmlUi, "set_prefix", dir)
 end
 
-function iRmlUi.open(url)
-    maxID = maxID + 1
-    local name = "#"..maxID
+function iRmlUi.open(name, url)
+    url = url or name
     ltask.send(ServiceRmlUi, "open", name, url)
     local window = {}
     local event = {}
