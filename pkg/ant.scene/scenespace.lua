@@ -11,9 +11,9 @@ local function init_bounding(bounding, bb)
     if bb and bb.aabb ~= mc.NULL then
 		local aabb = bb.aabb
 		math3d.unmark(bounding.aabb)
-        bounding.aabb = math3d.mark(aabb)
+        bounding.aabb = math3d.mark(math3d.aabb(aabb[1], aabb[2]))
 		math3d.unmark(bounding.scene_aabb)
-        bounding.scene_aabb = math3d.mark(aabb)
+        bounding.scene_aabb = math3d.mark(bounding.aabb)
     end
 end
 

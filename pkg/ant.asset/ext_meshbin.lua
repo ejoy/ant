@@ -1,6 +1,5 @@
 local setting   = import_package "ant.settings".setting
 
-local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local fastio    = require "fastio"
 local datalist  = require "datalist"
@@ -97,20 +96,11 @@ local function loader(filename)
     if ib then
         load_mem(ib.memory, filename)
     end
-    local bounding = mesh.bounding
-    if bounding then
-        bounding.aabb = math3d.marked_aabb(bounding.aabb[1], bounding.aabb[2])
-    end
     return init(mesh)
 end
 
 local function unloader(res, obj)
-    local mesh = res
-    local bounding = mesh.bounding
-    if bounding and bounding.aabb then
-        math3d.unmark(bounding.aabb)
-    end
-    delete(mesh)
+    delete(res)
 end
 
 return {
