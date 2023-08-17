@@ -288,7 +288,9 @@ lsubmit(lua_State *L) {
 				if (!mats.empty()){
 					const auto& obj = e.get<ecs::render_object>();
 					// render_object visible would not care, hitch object already define whether it visible or not
-					draw_obj(L, w, ra.a, &obj, &mats, cc.transforms);
+					if (obj_visible(obj, ra.a->queue_mask)){
+						draw_obj(L, w, ra.a, &obj, &mats, cc.transforms);
+					}
 				}
 			}
 		}
