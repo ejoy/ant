@@ -10,4 +10,6 @@ properties:
         texture: /pkg/ant.resources/textures/default.texture
     s_prefilter:
         stage: 1
-        texture: /pkg/ant.resources/textures/default.texture
+        mip: 0
+        access: w
+        image: /pkg/ant.resources/textures/default.texture

@@ -2,8 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w     = world.w
 local velocity_system = ecs.system "velocity_system"
-local renderutil = require "util"
-local setting = import_package "ant.settings".setting
+
+local renderutil        = require "util"
+local setting           = import_package "ant.settings".setting
 local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
 if not ENABLE_TAA then
     renderutil.default_system(velocity_system, "init", "init_world", "update_filter", "data_changed", "end_frame", "render_submit")
@@ -15,12 +16,15 @@ local bgfx		    = require "bgfx"
 
 local hwi           = import_package "ant.hwi"
 local imaterial     = ecs.require "ant.asset|material"
+local RM            = ecs.require "ant.material|material"
 local queuemgr      = ecs.require "queue_mgr"
 local R             = ecs.clibs "render.render_material"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local fbmgr         = require "framebuffer_mgr"
 local sampler       = import_package "ant.compile_resource".sampler
 local default_comp  = import_package "ant.general".default
+
+local assetmgr      = import_package "ant.asset"
 
 local velocity_material
 local velocity_polylinelist_material
@@ -105,9 +109,9 @@ local function create_velocity_queue()
 end
 
 function velocity_system:init()
-    velocity_material 			    = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity.material"
-    velocity_polylinelist_material  = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity_polylinelist.material"
-    velocity_skinning_material      = imaterial.load_res "/pkg/ant.resources/materials/velocity/velocity_skinning.material"
+    velocity_material 			    = assetmgr.resource "/pkg/ant.resources/materials/velocity/velocity.material"
+    velocity_polylinelist_material  = assetmgr.resource "/pkg/ant.resources/materials/velocity/velocity_polylinelist.material"
+    velocity_skinning_material      = assetmgr.resource "/pkg/ant.resources/materials/velocity/velocity_skinning.material"
     velocity_material_idx	        = queuemgr.alloc_material()
     queuemgr.register_queue("velocity_queue", velocity_material_idx)
 end
@@ -126,7 +130,7 @@ function velocity_system:update_filter()
             local mo = assert(which_material(polylinelist, e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
-            local mi = mo:instance()
+            local mi = RM.create_instance(mo)
             fm["velocity_queue"] = mi
             R.set(ro.rm_idx, queuemgr.material_index "velocity_queue", mi:ptr())
         end
@@ -164,12 +168,11 @@ local jitter_origin_table = {
 local jitter_current_table = {}
 
 local function update_jitter_param()
-	local sa = imaterial.system_attribs()
 	local jitter_index = jitter_cnt % 16
 	local jitter = jitter_current_table[jitter_index]
 	local jw, jh = jitter[1], jitter[2]
 	jitter_param.v = math3d.set_index(jitter_param, 1, jw, jh)
-	sa:update("u_jitter", jitter_param)
+	imaterial.system_attrib_update("u_jitter", jitter_param)
 	jitter_cnt = jitter_cnt + 1
 end
 

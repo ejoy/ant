@@ -45,11 +45,12 @@ local cubemap_flags<const> = sampler {
 }
 
 local IBL_INFO = {
-    source = {facesize = 0, stage=0, value=nil},
+    source = {facesize = 0, stage=0, value=nil, type="t"},
     prefilter    = {
         value = nil,
         size = 0,
         mipmap_count = 0,
+        type="t",
     },
 }
 
@@ -163,7 +164,7 @@ local function update_ibl_param(intensity)
 
     intensity = intensity or 1
     intensity = intensity * IBL_INFO.intensity * ev
-    imaterial.system_attribs():update("u_ibl_param", math3d.vector(IBL_INFO.prefilter.mipmap_count, intensity, 0.0 ,0.0))
+    imaterial.system_attrib_update("u_ibl_param", math3d.vector(IBL_INFO.prefilter.mipmap_count, intensity, 0.0 ,0.0))
 end
 
 function ibl_sys:data_changed()
@@ -181,13 +182,13 @@ local sample_count<const> = 512
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
 
-    for e in w:select "irradiance_builder material:in dispatch:in" do
+    for e in w:select "irradiance_builder dispatch:in" do
         local dis = e.dispatch
-        local mo = assetmgr.resource(e.material).object
+        local mi = dis.material
 
-        mo:set_attrib("s_source",           source_tex)
-        mo:set_attrib("s_irradiance",       icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
-        mo:set_attrib("u_build_ibl_param",  math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0))
+        mi.s_source         = source_tex
+        mi.s_irradiance     = icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w")
+        mi.u_build_ibl_param= math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
 
         assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
@@ -209,7 +210,7 @@ function ibl_sys:render_preprocess()
             return math3d.array_vector(c.irradiance_SH)
         end
 
-        imaterial.system_attribs():update("u_irradianceSH", load_Eml())
+        imaterial.system_attrib_update("u_irradianceSH", load_Eml())
         w:remove(e)
     end
 
@@ -218,10 +219,10 @@ function ibl_sys:render_preprocess()
         local dis = e.dispatch
         local prefilter_stage<const> = 1
 
-        local mo = assetmgr.resource(e.material).object
-        mo:set_attrib("s_source",           source_tex)
-        mo:set_attrib("s_prefilter",        icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w"))
-        mo:set_attrib("u_build_ibl_param",  math3d.vector(sample_count, 0, IBL_INFO.source.facesize, prefilter.roughness))
+        local mi = dis.material
+        mi.s_source             = source_tex
+        mi.s_prefilter          = icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w")
+        mi.u_build_ibl_param    = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, prefilter.roughness)
 
         assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
@@ -232,9 +233,9 @@ function ibl_sys:render_preprocess()
     local LUT_stage<const> = 0
     for e in w:select "LUT_builder material:in dispatch:in" do
         local dis = e.dispatch
-        local mo = assetmgr.resource(e.material).object
+        local mi = dis.material
 
-        mo:set_attrib("s_LUT", icompute.create_image_property(IBL_INFO.LUT.value, LUT_stage, 0, "w"))
+        mi.s_LUT = icompute.create_image_property(IBL_INFO.LUT.value, LUT_stage, 0, "w")
         icompute.dispatch(ibl_viewid, dis)
 
         w:remove(e)
@@ -304,14 +305,13 @@ local function create_ibl_entities()
 end
 
 local function update_ibl_texture_info()
-    local sa = imaterial.system_attribs()
-    sa:update("s_prefilter", IBL_INFO.prefilter.value)
+    imaterial.system_attrib_update("s_prefilter", IBL_INFO.prefilter.value)
 
     if not irradianceSH_bandnum then
-        sa:update("s_irradiance", IBL_INFO.irradiance.value)
+        imaterial.system_attrib_update("s_irradiance", IBL_INFO.irradiance.value)
     end
     if ENABLE_IBL_LUT then
-        sa:update("s_LUT",  IBL_INFO.LUT.value)
+        imaterial.system_attrib_update("s_LUT", IBL_INFO.LUT.value)
     end
     update_ibl_param()
 end

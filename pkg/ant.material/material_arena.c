@@ -15,7 +15,7 @@
 #define MAX_GLOBAL_COUNT ( MATERIAL_SYSTEM_ATTRIB_CHUNK * 64 )
 
 #if !defined(MATERIAL_DEBUG)
-#define MATERIAL_DEBUG 0
+#define MATERIAL_DEBUG 1
 #endif
 
 #define ATTRIB_HEARDER \
@@ -173,8 +173,8 @@ attrib_arena_init_image(struct attrib_arena *A, int id, uint32_t handle, uint8_t
 }
 
 const char *
-attrib_arena_init_buffer(struct attrib_arena *A, int id, uint32_t handle, uint8_t stage, bgfx_access_t access, uint8_t mip) {
-	return attrib_arena_init_resource_(A, id, ATTRIB_BUFFER, handle, stage, access, mip);
+attrib_arena_init_buffer(struct attrib_arena *A, int id, uint32_t handle, uint8_t stage, bgfx_access_t access) {
+	return attrib_arena_init_resource_(A, id, ATTRIB_BUFFER, handle, stage, access, 0);
 }
 
 static attrib_id
@@ -219,13 +219,17 @@ attrib_arena_delete(struct attrib_arena *A, attrib_id prev, attrib_id current) {
 }
 
 attrib_id
-attrib_arena_clone(struct attrib_arena *A, attrib_id prev, attrib_id node) {
+attrib_arena_clone(struct attrib_arena *A, attrib_id prev, attrib_id head, attrib_id node) {
 	attrib_type *a = get_attrib(A, node);
 	name_id key = a->h.key;
+
+	attrib_id next = prev == INVALID_ATTRIB ? head : get_attrib(A, prev)->h.next;
+
 	attrib_id r = attrib_arena_new(A, prev, key);
 	if (r == INVALID_ATTRIB)
 		return r;
 	attrib_type * clone = get_attrib(A, r);
+	clone->h.next = next;
 	uint8_t type = a->h.type;
 	if (type == ATTRIB_UNIFORM)
 		type = ATTRIB_UNIFORM_INSTANCE;
@@ -427,11 +431,15 @@ get_next_attrib(struct attrib_arena *A, attrib_id *id1, attrib_id *id2) {
 	if (*id2 == INVALID_ATTRIB) {
 		return get_next(A, id1);
 	}
-	if (*id1 == *id2) {
+
+	attrib_type* a1 = get_attrib(A, *id1);
+	attrib_type* a2 = get_attrib(A, *id2);
+
+	if (a1->h.key == a2->h.key) {
 		get_next(A, id2);
 		return get_next(A, id1);
 	}
-	if (*id1 < *id2) {
+	if (a1->h.key < a2->h.key) {
 		return get_next(A, id1);
 	}
 	return get_next(A, id2);

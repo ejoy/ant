@@ -3,6 +3,7 @@ fx:
     fs: /pkg/ant.resources/shaders/sky/skybox/fs_skybox.sc
     setting:
         lighting: off
+        no_predepth: true
 properties:
     s_skybox:
         stage: 0

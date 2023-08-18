@@ -4,10 +4,12 @@ local w     = world.w
 local outline_system = ecs.system "outline_system"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
-local imaterial = ecs.require "ant.asset|material"
+local assetmgr  = import_package "ant.asset"
+
 local hwi       = import_package "ant.hwi"
 local queuemgr  = ecs.require "queue_mgr"
 local R         = ecs.clibs "render.render_material"
+local RM        = ecs.require "ant.material|material"
 
 local outline_material
 local outline_skinning_material
@@ -76,8 +78,8 @@ local function create_outline_queue()
 end
 
 function outline_system:init()
-    outline_material 			= imaterial.load_res "/pkg/ant.resources/materials/outline/scale.material"
-    outline_skinning_material   = imaterial.load_res "/pkg/ant.resources/materials/outline/scale_skinning.material"
+    outline_material 			= assetmgr.resource "/pkg/ant.resources/materials/outline/scale.material"
+    outline_skinning_material   = assetmgr.resource "/pkg/ant.resources/materials/outline/scale_skinning.material"
     outline_material_idx	    = queuemgr.alloc_material()
     queuemgr.register_queue("outline_queue", outline_material_idx)
 end
@@ -92,7 +94,7 @@ function outline_system:update_filter()
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
-            local mi = mo:instance()
+            local mi = RM.create_instance(mo)
             fm["outline_queue"] = mi
             fm["main_queue"]:set_stencil(DEFAULT_STENCIL)
             R.set(ro.rm_idx, queuemgr.material_index "outline_queue", mi:ptr())

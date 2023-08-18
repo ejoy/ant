@@ -38,6 +38,7 @@ local SETTING_MAPPING = {
     varying_path= DEF_FUNC,
     subsurface  = DEF_FUNC,
     shadow_cast = DEF_FUNC,
+    no_predepth = DEF_FUNC,
 }
 
 local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"

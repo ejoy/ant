@@ -1,12 +1,15 @@
 local serialize = import_package "ant.serialize"
 local bgfx      = require "bgfx"
-local math3d    = require "math3d"
-local sd        = import_package "ant.settings".setting
-local use_cluster_shading = sd:get "graphic.cluster_shading" ~= 0
-local cs_skinning = sd:get "graphic.skinning.use_cs"
-local matobj	= require "matobj"
 local async 	= require "async"
 local fs 	    = require "filesystem"
+
+local setting   = import_package "ant.settings".setting
+local use_cluster_shading<const>	= setting:get "graphic/cluster_shading" ~= 0
+local cs_skinning<const>			= setting:get "graphic/skinning/use_cs"
+
+local matpkg	= import_package "ant.material"
+local MA, matutil = matpkg.arena, matpkg.util
+local sa		= require "system_attribs"
 
 local function readall(filename)
     local f <close> = assert(fs.open(fs.path(filename), "rb"))
@@ -17,16 +20,31 @@ local function load(filename)
     return type(filename) == "string" and serialize.parse(filename, readall(filename)) or filename
 end
 
+local function is_vec(v) return #v == 4 end
+
 local function to_math_v(v)
-	local function is_vec(v) return #v == 4 end
 	local T = type(v[1])
 	if T == 'number' then
-		return is_vec(v) and math3d.vector(v) or math3d.matrix(v)
+		if is_vec(v) then
+			return matutil.tv4(v), "v1"
+		end
+		return matutil.tm4(v), "m1"
 	end
 
 	if T == 'table' then
 		assert(type(v[1]) == 'table')
-		return is_vec(v[1]) and math3d.array_vector(v) or math3d.array_matrix(v)
+		local function from_array(array, op)
+			local t = {}
+			for _, a in ipairs(array) do
+				t[#t+1] = op(a)
+			end
+			return table.concat(t)
+		end
+
+		if is_vec(v[1]) then
+			return from_array(v, matutil.tv4), "v" .. #v
+		end
+		return from_array(v, matutil.tm4), "m" .. #v
 	end
 
 	error "Invalid property"
@@ -40,20 +58,10 @@ local function to_v(t, h)
 	end
 
 	local v = {handle=h}
-	if t.index then
-		v.type = 'p'
-		local n = t.palette
-		local cp_idx = matobj.color_palettes[n]
-		if cp_idx == nil then
-			error(("Invalid color palette:%s"):format(n))
-		end
-
-		v.value = {pal=cp_idx, color=t.index}
-		return v
-	end
+	assert(not t.index, "not support color palette")
 
 	v.type = 'u'
-	v.value = to_math_v(t)
+	v.value, v.utype = to_math_v(t)
 	return v
 end
 
@@ -92,23 +100,34 @@ local function generate_properties(fx, properties)
 		end
 	end
 
-	local setting = fx.setting
-	if setting.lighting == "on" then
-		new_properties["b_light_info"] = {type = 'b'}
-		if use_cluster_shading then
-			new_properties["b_light_grids"] = {type='b'}
-			new_properties["b_light_index_lists"] = {type='b'}
-		end
+	
+	if fx.shader_type == "COMPUTE" then
+		return {}, new_properties
 	end
-	if cs_skinning then
-		if setting.skinning == "on" then
-			new_properties["b_skinning_matrices_vb"].type = 'b'
-			new_properties["b_skinning_in_dynamic_vb"].type = 'b'
-			new_properties["b_skinning_out_dynamic_vb"].type = 'b'
+
+	local system, attrib = {}, {}
+	for k, p in pairs(new_properties) do
+		if sa[k] then
+			system[#system+1] = k
+		else
+			attrib[k] = p
 		end
 	end
 
-	return new_properties
+	local setting = fx.setting
+	if setting.lighting == "on" then
+		system[#system+1] = "b_light_info"
+		if use_cluster_shading then
+			system[#system+1] = "b_light_grids"
+			system[#system+1] = "b_light_index_lists"
+		end
+	end
+	if cs_skinning and setting.skinning == "on" then
+		attrib["b_skinning_matrices_vb"].type	= 'b'
+		attrib["b_skinning_in_dynamic_vb"].type	= 'b'
+		attrib["b_skinning_out_dynamic_vb"].type= 'b'
+	end
+	return system, attrib
 end
 
 local function loader(filename)
@@ -121,8 +140,8 @@ local function loader(filename)
     if material.stencil then
         material.stencil = bgfx.make_stencil(load(material.stencil))
     end
-    material.properties = generate_properties(material.fx, material.properties)
-    material.object = matobj.rmat.material(material.state, material.stencil, material.properties, material.fx.prog)
+    material.system, material.attrib = generate_properties(material.fx, material.properties)
+    material.object = MA.material_load(filename, material.state, material.stencil, material.fx.prog, material.system, material.attrib)
     return material
 end
 

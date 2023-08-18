@@ -186,13 +186,12 @@ local function update_camera(e)
 end
 
 local function update_camera_info(e)
-    local sa = imaterial.system_attribs()
     local camerapos = iom.get_position(e)
 	local f = ic.get_frustum(e)
-	sa:update("u_eyepos", camerapos)
+	imaterial.system_attrib_update("u_eyepos", camerapos)
     local nn, ff = f.n, f.f
     local inv_nn, inv_ff = 1.0/nn, 1.0/ff
-	sa:update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
+	imaterial.system_attrib_update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
 end
 
 function cameraview_sys:update_camera()

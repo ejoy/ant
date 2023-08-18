@@ -1,12 +1,14 @@
 local s = {}
 
-local rmat = require "render.material"
-
 local cr = import_package "ant.compile_resource"
 
-local fs = require "filesystem"
-local math3d = require "math3d"
-local bgfx = require "bgfx"
+local fs        = require "filesystem"
+local math3d    = require "math3d"
+local bgfx      = require "bgfx"
+local MC        = require "material.core"
+local RM        = require "material"    --ant.material/material
+local RA        = require "arena"       --ant.material/arena
+local SA        = require "system_attribs"
 
 local function build_ecs_worldobj()
     local ecs_worldobj = {
@@ -32,8 +34,6 @@ local ecs_ref = build_ecs_worldobj()
 for k, v in pairs(rmat) do
     debug.setupvalue(v, 1, ecs_ref)
 end
-
-local system_attribs = rmat.system_attribs{}
 
 local function load_fx(fx, setting)
 	setting = setting or {}
@@ -108,8 +108,8 @@ local function material_init()
         PT = "TRISTRIP",
         WRITE_MASK = "RGBA",
     }
-    local material = rmat.material(state, properties, fx.prog)
-    local mi = material:instance()
+    local material = RA.material_load("TEST", state, fx.prog, {}, properties)
+    local mi = RM.create_instance(material)
 
     local state2 = bgfx.make_state{
         ALPHA_REF = 0,
@@ -118,8 +118,8 @@ local function material_init()
         PT = "TRISTRIP",
         WRITE_MASK = "RGBAZ",
     }
-    local material2 = material:copy(state2)
-    local mi2 = material2:instance()
+    local material2 = RA.material_load("TEST2", state2, properties, fx.prog, {}, properties)
+    local mi2 = RM.create_instance(material2)
 
     bgfx.encoder_begin()
     mi{}
@@ -132,7 +132,6 @@ local function material_init()
     mi2 = nil
     material = nil
     material2 = nil
-
     collectgarbage "collect"
 end
 

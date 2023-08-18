@@ -2,9 +2,9 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local assetmgr = import_package "ant.asset"
-
-local bgfx = require "bgfx"
+local assetmgr  = import_package "ant.asset"
+local RM        = ecs.require "ant.material|material"
+local bgfx      = require "bgfx"
 
 local ic = {}
 
@@ -62,7 +62,7 @@ local cs = ecs.system "compute_system"
 function cs:entity_init()
 	for e in w:select "INIT material_result:in dispatch:in" do
         -- no state for compute shader
-        e.dispatch.material = e.material_result.object:instance()
+        e.dispatch.material = RM.create_instance(e.material_result.object)
         e.dispatch.fx       = e.material_result.fx
 	end
 end

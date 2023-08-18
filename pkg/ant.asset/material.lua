@@ -3,8 +3,9 @@ local world = ecs.world
 local w		= world.w
 
 local assetmgr		= require "main"
-local matobj		= require "matobj"
 local bgfx			= require "bgfx"
+
+local RM			= ecs.require "ant.material|material"
 
 local imaterial = {}
 
@@ -15,25 +16,14 @@ function imaterial.set_property(e, who, what, mattype)
 	fm[mattype][who] = what
 end
 
-imaterial.load_res = assetmgr.resource
-imaterial.unload_res = assetmgr.unload
-
-function imaterial.system_attribs()
-	return matobj.sa
+function imaterial.instance_material(filename)
+	local r = assetmgr.resource(filename)
+    return RM.create_instance(r.object)
 end
 
-local function get_palid(palname)
-	return assert(matobj.color_palettes[palname], ("Invalid color palette name:%s"):format(palname))
-end
-
-function imaterial.set_color_palette(palname, coloridx, value)
-	local palid = get_palid(palname)
-	matobj.rmat.color_palette_set(palid, coloridx, value)
-end
-
-function imaterial.get_color_palette(palname, coloridx)
-	local palid = get_palid(palname)
-	return matobj.rmat.color_palette_get(palid, coloridx)
+assert(RM.system_attrib_update == nil, "'system_attrib_update' should not ready")
+function imaterial.system_attrib_update(...)
+	return RM.system_attrib_update(...)
 end
 
 function imaterial.resource(e)
@@ -88,8 +78,8 @@ local function stat_material_info(verbose)
 	end
 	print("Instance number: ", numinstance, "instance attribs: ", #instance_attribs)
 
-	local s = matobj.rmat.stat()
-	print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
+	print("NEED material.core provide stat info")
+	--print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
 end
 
 local DEBUG_MATERIAL_ATTRIBUTES<const> = false
@@ -97,7 +87,7 @@ function ms:component_init()
 	w:clear "material_result"
 
 	for e in w:select "INIT material:in material_result:new" do
-		e.material_result = imaterial.load_res(e.material)
+		e.material_result = assetmgr.resource(e.material)
 		if DEBUG_MATERIAL_ATTRIBUTES then
 			w:extend(e, "name?in eid:in")
 			print("created material entity:", e.eid, e.name, e.material)

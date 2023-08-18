@@ -46,7 +46,7 @@ local function load_lightmap_material(mf, setting)
     -- s['ENABLE_IBL'] = 'off'
 
     local newmf = nil   --TODO
-    return imaterial.load_res(newmf)
+    return assetmgr.resource(newmf)
 end
 
 function lm_sys:update_filter()

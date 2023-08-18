@@ -14,6 +14,7 @@ pipeline "_frame_finish"
     .stage "update_world"
 
 pipeline "_init"
+    .stage "preinit"
     .pipeline "init"
     .stage "entity_create"
     .stage "init_world"

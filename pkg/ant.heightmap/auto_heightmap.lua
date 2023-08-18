@@ -16,6 +16,8 @@ local hwi       = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
+local assetmgr  = import_package "ant.asset"
+
 local irender   = ecs.require "ant.render|render_system.render"
 local icamera   = ecs.require "ant.camera|camera"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
@@ -76,7 +78,7 @@ local renderinfo = {
 local camera_ref
 
 function auto_hm_sys:init()
-    depthmaterial = imaterial.load_res "/pkg/ant.heightmap/assets/depth.material"
+    depthmaterial = assetmgr.resource "/pkg/ant.heightmap/assets/depth.material"
 
     camera_ref = icamera.create{
         frustum = {

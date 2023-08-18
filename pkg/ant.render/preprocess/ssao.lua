@@ -194,8 +194,7 @@ function ssao_sys:init_world()
     local aod = w:first "ssao_dispatcher dispatch:in"
     local aod_dis = aod.dispatch
     aod_dis.rb_idx = rbidx
-    local sa = imaterial.system_attribs()
-    sa:update("s_ssao", fbmgr.get_rb(rbidx).handle)
+    imaterial.system_attrib_update("s_ssao", fbmgr.get_rb(rbidx).handle)
 
     update_ao_properties(aod_dis.material)
     update_ssct_properties(aod_dis.material)
@@ -267,8 +266,7 @@ function ssao_sys:data_changed()
         local new_vr = mu.calc_viewport(vr, ssao_configs.resolution)
 
         fbmgr.resize_rb(aod.dispatch.rb_idx, new_vr.w, new_vr.h)
-        local sa = imaterial.system_attribs()
-        sa:update("s_ssao", fbmgr.get_rb(aod.dispatch.rb_idx).handle)
+        imaterial.system_attrib_update("s_ssao", fbmgr.get_rb(aod.dispatch.rb_idx).handle)
 
         fbmgr.resize_rb(bfd.dispatch.rb_idx, new_vr.w, new_vr.h)
 

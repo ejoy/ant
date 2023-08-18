@@ -36,6 +36,8 @@ local ishadow	= ecs.require "ant.render|shadow.shadow"
 local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
+
+local RM        = ecs.require "ant.material|material"
 local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
 
@@ -353,9 +355,9 @@ function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
-	shadow_material = imaterial.load_res "/pkg/ant.resources/materials/predepth.material"
-	gpu_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_skin.material"
-	shadow_indirect_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_indirect.material"
+	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
+	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+	shadow_indirect_material 	= assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect.material"
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -400,16 +402,14 @@ function sm:entity_remove()
 end
 
 local function commit_csm_matrices_attribs()
-	local sa = imaterial.system_attribs()
-	sa:update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
-	sa:update("u_csm_split_distances",	split_distances_VS)
+	imaterial.system_attrib_update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
+	imaterial.system_attrib_update("u_csm_split_distances",	split_distances_VS)
 end
 
 function sm:init_world()
-	local sa = imaterial.system_attribs()
-	sa:update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
-	sa:update("u_shadow_param1", ishadow.shadow_param())
-	sa:update("u_shadow_param2", ishadow.shadow_param2())
+	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
+	imaterial.system_attrib_update("u_shadow_param1", ishadow.shadow_param())
+	imaterial.system_attrib_update("u_shadow_param2", ishadow.shadow_param2())
 end
 
 function sm:update_camera_depend()
@@ -494,10 +494,9 @@ function sm:render_submit()
 end
 
 function sm:camera_usage()
-	-- local sa = imaterial.system_attribs()
 	-- local mq = w:first("main_queue camera_ref:in")
 	-- local camera <close> = world:entity(mq.camera_ref, "camera:in")
-	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)	local scene_aabb = math3d.aabb()
+	-- imaterial.system_attrib_update("u_main_camera_matrix",camera.camera.viewmat)	local scene_aabb = math3d.aabb()
 --[[ 	local scene_aabb = {}
 	local groups = {}
 	local tmp_eids = {}
@@ -534,14 +533,13 @@ end
 
 local function which_material(skinning, indirect)
 	if indirect then
-		return shadow_indirect_material.object
+		return shadow_indirect_material
 	end
 	if skinning then
-		return gpu_skinning_material.object
+		return gpu_skinning_material
 	end
 	
-		return shadow_material.object		
-	--return skinning and gpu_skinning_material or shadow_material
+	return shadow_material
 end
 
 local omni_stencils = {
@@ -555,6 +553,20 @@ local omni_stencils = {
 	},
 }
 
+local function create_depth_state(srcstate, dststate)
+	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
+	d.PT = s.PT
+	-- not s.CULL equals s.CULL == "NONE"
+	if not s.CULL then
+		d.CULL = s.CULL
+	else
+		d.CULL = "CCW"
+	end 
+	d.DEPTH_TEST = "GREATER"
+
+	return bgfx.make_state(d)
+end
+
 function sm:update_filter()
     for e in w:select "filter_result visible_state:in render_object:in filter_material:in material:in skinning?in indirect?in bounding:in" do
 		if not e.visible_state["cast_shadow"] then
@@ -565,22 +577,10 @@ function sm:update_filter()
 
 		local mat_ptr
 		if mt.fx.setting.shadow_cast == "on" then
-			local mo = which_material(e.skinning, e.indirect)
+			local dstres = which_material(e.skinning, e.indirect)
 			local fm = e.filter_material
-			local newstate = irender.check_set_state(mo, fm.main_queue, function (d, s)
- 				d.PT = s.PT
-				-- not s.CULL equals s.CULL == "NONE"
-				if not s.CULL then
-					d.CULL = s.CULL
-				else
-					d.CULL = "CCW"
-				end 
-				d.DEPTH_TEST = "GREATER"
-				return d
-			end)
-
-			local mi = mo:instance()
-			mi:set_state(newstate)
+			local mi = RM.create_instance(dstres.object)
+			mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
 			if e.indirect then
 				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
 				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)

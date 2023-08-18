@@ -283,8 +283,7 @@ local function update_light_buffers()
 	if #lights ~= 0 then
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
 	end
-	local sa = imaterial.system_attribs()
-	sa:update("u_light_count", math3d.vector(#lights, 0, 0, 0))
+	imaterial.system_attrib_update("u_light_count", math3d.vector(#lights, 0, 0, 0))
 end
 
 function ilight.light_buffer()
@@ -342,8 +341,7 @@ end
 
 function lightsys:init_world()
 	if not ilight.use_cluster_shading() then
-		local sa = imaterial.system_attribs()
-		sa:update("b_light_info", ilight.light_buffer())
+		imaterial.system_attrib_update("b_light_info", ilight.light_buffer())
 	end
 end
 

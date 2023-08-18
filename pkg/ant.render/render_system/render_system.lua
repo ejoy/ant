@@ -13,6 +13,7 @@ local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer"
+local RM        = ecs.require "ant.material|material"
 
 local render_sys= ecs.system "render_system"
 
@@ -96,7 +97,7 @@ function render_sys:entity_init()
 	for e in w:select "INIT material_result:in render_object:in filter_material:in" do
 		local mr = e.material_result
 		local fm = e.filter_material
-		local mi = mr.object:instance()
+		local mi = RM.create_instance(mr.object)
 		fm["main_queue"] = mi
 		local ro = e.render_object
 		R.set(ro.rm_idx, queuemgr.material_index "main_queue", mi:ptr())
@@ -136,10 +137,9 @@ end
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
 local timepassed = 0.0
 local function update_timer_param()
-	local sa = imaterial.system_attribs()
 	timepassed = timepassed + itimer.delta()
 	time_param.v = math3d.set_index(time_param, 1, timepassed*0.001, itimer.delta()*0.001)
-	sa:update("u_time", time_param)
+	imaterial.system_attrib_update("u_time", time_param)
 end
 
 function render_sys:commit_system_properties()

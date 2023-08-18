@@ -108,8 +108,7 @@ function idn.update_cycle(e, cycle)
         iom.set_direction(dl, math3d.todirection(rotator))
         w:submit(dl)        
     end
-    local sa = imaterial.system_attribs()
-    sa:update("u_indirect_modulate_color", ambient)
+    imaterial.system_attrib_update("u_indirect_modulate_color", ambient)
 end
 
 function idn.add_property_cycle(e, pn, p)

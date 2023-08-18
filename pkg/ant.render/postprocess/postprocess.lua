@@ -44,8 +44,7 @@ local function update_postprocess_param()
         local ce = world:entity(need_update_pp_param, "camera:in")
         local projmat = ce.camera.projmat
         local X, Y, A, B = util.reverse_position_param(projmat)
-        local sa = imaterial.system_attribs()
-        sa:update("u_reverse_pos_param", math3d.vector(X, Y, A, B))
+        imaterial.system_attrib_update("u_reverse_pos_param", math3d.vector(X, Y, A, B))
         need_update_pp_param = nil
     end
 end

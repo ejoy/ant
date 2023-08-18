@@ -18,6 +18,8 @@ local mc		= mathpkg.constant
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 
+local RM        = ecs.require "ant.material|material"
+
 local hwi		= import_package "ant.hwi"
 local sk_viewid = hwi.viewid_get "skinning"
 
@@ -92,9 +94,7 @@ local function create_skinning_compute(skininfo, vb_num, attrib_indices)
 	}
     local dis = {}
 	dis.size = dispatchsize
-
-	local mo = skinning_material.object
-	dis.material = mo:instance()
+	dis.material = RM.create_instance(skinning_material.object)
 	local m = dis.material
 	m.b_skinning_matrices_vb	= skininfo.skinning_matrices_vb
 	m.b_skinning_in_dynamic_vb	= skininfo.skinning_in_dynamic_vb

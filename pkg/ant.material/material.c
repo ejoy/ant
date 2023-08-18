@@ -12,6 +12,7 @@
 #include <bgfx/c99/bgfx.h>
 #include <luabgfx.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAX_ATTRIB 1024
 
@@ -115,7 +116,7 @@ fetch_math_value(lua_State *L, int index, int *n) {
 	if (sz % 16 != 0) {
 		luaL_error(L, "Invalid math uniform 'value' field, should be float4 packed string, size = %d", (int)sz);
 	}
-	*n = sz / 16;
+	*n = (int)sz / 16;
 	lua_pop(L, 1);
 	return f;
 }
@@ -208,10 +209,12 @@ fetch_access(lua_State *L, int index) {
 }
 
 static inline uint32_t
-fetch_resource(lua_State *L, int index, int *mip, bgfx_access_t *access, int *stage) {
+fetch_resource(lua_State *L, int index, int *mip, bgfx_access_t *access, uint8_t *stage) {
 	const int lt = lua_type(L, index);
 	if (lt == LUA_TTABLE) {
-		*mip	= fetch_mip(L, index);
+		if (mip){
+			*mip	= fetch_mip(L, index);
+		}
 		*access	= fetch_access(L, index);
 		*stage	= fetch_stage(L, index);
 		return fetch_value_handle(L, index);
@@ -250,15 +253,20 @@ init_attrib(lua_State *L, struct attrib_arena *A, int id, int index) {
 			luaL_error(L, "Init sampler error : %s", err);
 		break;
 	}
-	case ATTRIB_BUFFER:
-	case ATTRIB_IMAGE: {
-		int stage;
-		int mip;
-		bgfx_access_t access;
-		uint32_t handle = fetch_resource(L, index, &mip, &access, &stage);
-		const char *err = ((t == ATTRIB_BUFFER) ? attrib_arena_init_buffer : attrib_arena_init_image)(A, id, handle, stage, access, mip);
+	case ATTRIB_BUFFER:{
+		uint8_t stage; bgfx_access_t access;
+		uint32_t handle = fetch_resource(L, index, NULL, &access, &stage);
+		const char* err = attrib_arena_init_buffer(A, id, handle, stage, access);
 		if (err)
-			luaL_error(L, "Init resource error : %s", err);
+			luaL_error(L, "Init buffer error : %s", err);
+		break;
+	}
+	case ATTRIB_IMAGE: {
+		int mip; uint8_t stage; bgfx_access_t access;
+		uint32_t handle = fetch_resource(L, index, &mip, &access, &stage);
+		const char *err = attrib_arena_init_image(A, id, handle, stage, access, mip);
+		if (err)
+			luaL_error(L, "Init image error : %s", err);
 		break;
 	}
 	default: luaL_error(L, "Attribute type:%d, could not update", t);	break;
@@ -271,7 +279,7 @@ init_attrib(lua_State *L, struct attrib_arena *A, int id, int index) {
 static int
 larena_system_attrib(lua_State *L) {
 	struct attrib_arena *A = (struct attrib_arena *)lua_touserdata(L, 1);
-	int id = luaL_checkinteger(L, 2);
+	int id = (int)luaL_checkinteger(L, 2);
 	if (id < 1)
 		return luaL_error(L, "Invalid system attrib id %d", id);
 	init_attrib(L, A, -id, 3);
@@ -343,18 +351,19 @@ static void
 fetch_system_attrib_set(lua_State *L, int index, uint64_t *set) {
 	int max_id = MATERIAL_SYSTEM_ATTRIB_CHUNK * 64;
 	luaL_checktype(L, index, LUA_TTABLE);
-	int n = lua_rawlen(L, index);
+	int n = (int)lua_rawlen(L, index);
+	memset(set, 0, sizeof(*set) * MATERIAL_SYSTEM_ATTRIB_CHUNK);
 	int i;
 	for (i=0;i<n;i++) {
 		lua_geti(L, index, i+1);
-		int id = luaL_checkinteger(L, -1);
+		int id = (int)luaL_checkinteger(L, -1);
 		if (id <= 0 || id > max_id)
 			luaL_error(L, "Invalid system attrib id %d", id);
 		lua_pop(L, 1);
 		--id;
 		int idx = id / 64;
 		int shift = id % 64;
-		set[idx] |= (1 << shift);
+		set[idx] |= (uint64_t)(1 << shift);
 	}
 }
 
@@ -393,7 +402,7 @@ lmaterial_new(lua_State *L) {
 	while (lua_next(L, 6) != 0) {
 		if (key_n >= MAX_ATTRIB)
 			return luaL_error(L, "Too many attrib %d", key_n);
-		key[key_n] = luaL_checkinteger(L, -2);
+		key[key_n] = (int)luaL_checkinteger(L, -2);
 		if (key[key_n] <= 0)
 			return luaL_error(L, "Invalid key id %d", key[key_n]);
 		lua_pop(L, 1);
@@ -462,10 +471,11 @@ fetch_math_id(lua_State *L, struct ecs_world* w, int index) {
 static void
 set_attrib(lua_State *L, struct attrib_arena *A, int id, int index) {
 	int t = attrib_arena_type(A, id);
-	int lt = fetch_attrib_type(L, index);
+	//int lt = fetch_attrib_type(L, index);
 	switch (t) {
 	case ATTRIB_UNIFORM:
 	case ATTRIB_UNIFORM_INSTANCE: {
+		int lt = fetch_attrib_type(L, index);
 		if (lt != ATTRIB_UNIFORM)
 			luaL_error(L, "Invalid attrib %d , need uniform", id);
 		struct ecs_world* w = getworld(L);
@@ -482,22 +492,26 @@ set_attrib(lua_State *L, struct attrib_arena *A, int id, int index) {
 	case ATTRIB_SAMPLER:
 	case ATTRIB_IMAGE:
 	case ATTRIB_BUFFER:
-		if (t != lt) {
-			luaL_error(L, "Invalid attrib %d (%d != %d)", id, t , lt);
-		}
 		if (lua_type(L, index) == LUA_TNUMBER) {
 			uint32_t handle = (uint32_t)lua_tointeger(L, index);
 			attrib_arena_set_handle(A, id, handle);
-		} else if (t == ATTRIB_SAMPLER) {
-			int stage;
-			uint32_t handle = fetch_sampler(L, index, &stage);
-			attrib_arena_set_sampler(A, id, handle, stage);
 		} else {
-			int mip;
-			bgfx_access_t access;
-			int stage;
-			uint32_t handle = fetch_resource(L, index, &mip, &access, &stage);
-			attrib_arena_set_resource(A, id, handle, stage, access, mip);
+			int lt = fetch_attrib_type(L, index);
+			if (t != lt) {
+				luaL_error(L, "Invalid attrib %d (%d != %d)", id, t , lt);
+			}
+
+			if (t == ATTRIB_SAMPLER) {
+				int stage;
+				uint32_t handle = fetch_sampler(L, index, &stage);
+				attrib_arena_set_sampler(A, id, handle, stage);
+			} else {
+				int mip = 0;
+				bgfx_access_t access;
+				uint8_t stage;
+				uint32_t handle = fetch_resource(L, index, t == ATTRIB_BUFFER ? NULL : &mip, &access, &stage);
+				attrib_arena_set_resource(A, id, handle, stage, access, mip);
+			}
 		}
 		break;
 	case ATTRIB_NONE:
@@ -515,7 +529,7 @@ linstance_set_attrib(lua_State *L) {
 	if (lua_gettable(L, lua_upvalueindex(2)) != LUA_TNUMBER) {
 		return luaL_error(L, "No attrib %s", lua_tostring(L, 2));
 	}
-	int key = lua_tointeger(L, -1);
+	int key = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	struct material_instance* mi = to_instance(L, 1);
 	struct attrib_arena *A = mi->m->A;
@@ -543,7 +557,7 @@ linstance_set_attrib(lua_State *L) {
 	if (id == INVALID_ATTRIB) {
 		return luaL_error(L, "No attrib %s in instance", lua_tostring(L, 2));
 	}
-	attrib_id patch = attrib_arena_clone(A, prev, id);
+	attrib_id patch = attrib_arena_clone(A, prev, mi->patch_attrib, id);
 	if (patch == INVALID_ATTRIB)
 		return luaL_error(L, "Clone attrib %s fail", lua_tostring(L, 2));
 	if (prev == INVALID_ATTRIB)
@@ -577,6 +591,13 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 	const char * err = attrib_arena_apply_list(mi->m->A, mi->m->attrib, mi->patch_attrib, &ctx);
 	if (err)
 		luaL_error(L, "Apply error : %s", err);
+
+	for (int ii = 0; ii < MATERIAL_SYSTEM_ATTRIB_CHUNK; ++ii) {
+		err = attrib_arena_apply_global(mi->m->A, mi->m->global[ii], ii * 64, &ctx);
+		if (err)
+			luaL_error(L, "Apply global error : %s", err);
+	}
+
 }
 
 static int
@@ -716,10 +737,11 @@ lmaterial_instance_init(lua_State *L) {
 static int
 lsystem_attrib_update(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TSTRING);	// key
+	lua_pushvalue(L, 1);
 	if (lua_gettable(L, lua_upvalueindex(2)) != LUA_TNUMBER) {
 		return luaL_error(L, "%s is not a system attrib name", lua_tostring(L, 1));
 	}
-	int id = lua_tointeger(L, -1);
+	int id = (int)lua_tointeger(L, -1);
 	if (id <= 0 && id > MATERIAL_SYSTEM_ATTRIB_CHUNK * 64) {
 		return luaL_error(L, "Invalid system attrib %s (%d)", lua_tostring(L, 1), id);
 	}

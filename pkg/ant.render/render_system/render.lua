@@ -51,13 +51,6 @@ function irender.create_material_from_template(template_material_obj, state, cac
 	return m
 end
 
-function irender.check_set_state(dst_m, src_m, state_op)
-	return bgfx.make_state(state_op(
-		bgfx.parse_state(dst_m:get_state()),
-		bgfx.parse_state(src_m:get_state())
-	))
-end
-
 function irender.get_main_view_rendertexture()
 	local mq = w:first "main_queue render_target:in"
 	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle

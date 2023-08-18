@@ -139,15 +139,13 @@ lm:lua_source "render_core"{
         ROOT .. "3rd/luaecs",
         ROOT .. "clibs/ecs",
         ROOT .. "pkg/ant.compile_resource/src",
+        ROOT .. "pkg/ant.material",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
     },
     objdeps = "compile_ecs",
     sources = {
-        "render/material.c",
-        "render/render_material.c",
-		"render/material_arena.c",
         "render/render.cpp",
     },
     -- macos = {
@@ -177,5 +175,8 @@ lm:lua_source "render" {
         "cull.cpp",
     },
     objdeps = "compile_ecs",
-    deps = "render_core",
+    deps = {
+        "material_core",
+        "render_core",
+    }
 }

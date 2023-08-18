@@ -11,6 +11,10 @@ local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
 
+local assetmgr  = import_package "ant.asset"
+
+local RM		= ecs.require "ant.material|material"
+
 local hwi		= import_package "ant.hwi"
 
 local queuemgr  = ecs.require "ant.render|queue_mgr"
@@ -234,9 +238,9 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
-	pickup_material			= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity.material'
-	pickup_skin_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_skin.material'
-	pickup_indirect_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect.material'
+	pickup_material			= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity.material'
+	pickup_skin_material	= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_skin.material'
+	pickup_indirect_material= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect.material'
 end
 
 function pickup_sys:entity_init()
@@ -335,13 +339,19 @@ end
 
 local function which_material(skinning, indirect)
     if indirect then
-        return pickup_indirect_material.object
+        return pickup_indirect_material
     end
     if skinning then
-        return pickup_skin_material.object
+        return pickup_skin_material
     end
 
-    return pickup_material.object
+    return pickup_material
+end
+
+local function create_pickup_state(srcstate, dststate)
+	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
+	d.PT, d.CULL = s.PT, s.CULL
+	return bgfx.make_state(d)
 end
 
 function pickup_sys:update_filter()
@@ -349,26 +359,20 @@ function pickup_sys:update_filter()
 		if e.visible_state["pickup_queue"] then
 			local ro = e.render_object
 			local fm = e.filter_material
-			local matres = imaterial.resource(e)
 
-			local src_mo = matres.object
-			local dst_mo = which_material(e.skinning, e.indirect)
-			local newstate = irender.check_set_state(dst_mo, src_mo, function (d, s)
-					d.PT, d.CULL = s.PT, s.CULL
-					d.DEPTH_TEST   = "GREATER"
-					return d
-			end)
-			local new_mi = dst_mo:instance()
-			new_mi:set_state(newstate)
-			new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
+			local dstres = which_material(e.skinning, e.indirect)
+
+			local mi = RM.create_instance(dstres.object)
+			mi:set_state(create_pickup_state(fm.main_queue:get_state(), dstres.state))
+			mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 			if e.indirect then
 				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
-				new_mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
+				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
 			end
 
-			fm["pickup_queue"] = new_mi
+			fm["pickup_queue"] = mi
 
-			R.set(ro.rm_idx, queuemgr.material_index "pickup_queue", new_mi:ptr())
+			R.set(ro.rm_idx, queuemgr.material_index "pickup_queue", mi:ptr())
 		end
 	end
 end
