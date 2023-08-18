@@ -3,17 +3,25 @@ local fs = require "bee.filesystem"
 
 local runtime = false
 
-local RuntimeBacklist = {
+local RuntimeBacklist <const> = {
     filedialog = true,
     imgui = true,
     effekseer = true,
     remotedebug = true,
 }
 
-local EditorBacklist = {
+local EditorBacklist <const> = {
     firmware = true,
     effekseer = true,
     remotedebug = true,
+}
+
+local RuntimeAlias <const> = {
+    fastio = "fastio_runtime",
+}
+
+local EditorAlias <const> = {
+    fastio = "fastio_editor",
 }
 
 local RuntimeModules = {}
@@ -23,12 +31,16 @@ local function checkAddModule(name, makefile)
     if not RuntimeBacklist[name] or not EditorBacklist[name] then
         lm:import(makefile)
     end
-    if lm:has(name) then
-        if not RuntimeBacklist[name] then
-            RuntimeModules[#RuntimeModules + 1] = name
+    if not RuntimeBacklist[name] then
+        local alias = RuntimeAlias[name] or name
+        if lm:has(alias) then
+            RuntimeModules[#RuntimeModules + 1] = alias
         end
-        if not EditorBacklist[name] then
-            EditorModules[#EditorModules + 1] = name
+    end
+    if not EditorBacklist[name] then
+        local alias = EditorAlias[name] or name
+        if lm:has(alias) then
+            EditorModules[#EditorModules + 1] = alias
         end
     end
 end

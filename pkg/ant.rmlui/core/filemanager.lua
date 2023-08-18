@@ -37,11 +37,7 @@ end
 function m.loadfile(source_path, env)
     local fullpath = prefixPath / source_path
     local realpath = fullpath:localpath():string()
-    local data, err = fastio.readall_s(realpath, fullpath:string())
-    if not data then
-        return nil, err
-    end
-    return load(data, "@"..realpath, "bt", env)
+    return fastio.loadfile(realpath, fullpath:string(), env)
 end
 
 local rt_table = {}

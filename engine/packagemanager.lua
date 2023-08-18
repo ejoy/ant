@@ -4,41 +4,9 @@ require "filesystem"
 require "directory"
 
 local vfs = require "vfs"
+local fastio = require "fastio"
 
 local registered = {}
-
-local pm_loadfile; do
-    local function errmsg(err, filename, real_filename)
-        local first, last = err:find(real_filename, 1, true)
-        if not first then
-            return err
-        end
-        return err:sub(1, first-1) .. filename .. err:sub(last+1)
-    end
-    if __ANT_RUNTIME__ then
-        function pm_loadfile(realpath, path)
-            local f, err = io.open(realpath, 'rb')
-            if not f then
-                err = errmsg(err, path, realpath)
-                return nil, err
-            end
-            local str = f:read 'a'
-            f:close()
-            return load(str, '@' .. path)
-        end
-    else
-        function pm_loadfile(realpath, path)
-            local f, err = io.open(realpath, 'rb')
-            if not f then
-                err = errmsg(err, path, realpath)
-                return nil, err
-            end
-            local str = f:read 'a'
-            f:close()
-            return load(str, '@' .. realpath)
-        end
-    end
-end
 
 local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
@@ -70,7 +38,7 @@ local function sandbox_env(packagename)
         local path = PATH:gsub('%?', filename)
         local realpath = vfs.realpath(path)
         if realpath then
-            local func, err = pm_loadfile(realpath, path)
+            local func, err = fastio.loadfile(realpath, path, env)
             if not func then
                 error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
             end
@@ -87,7 +55,6 @@ local function sandbox_env(packagename)
         end
         local initfunc, extra = searcher_preload(name)
         if type(initfunc) == "function" then
-            debug.setupvalue(initfunc, 1, env)
             local r = initfunc(name, extra)
             if r == nil then
                 r = true
@@ -97,7 +64,6 @@ local function sandbox_env(packagename)
         end
         initfunc, extra = searcher_lua(name)
         if type(initfunc) == "function" then
-            debug.setupvalue(initfunc, 1, env)
             local r = initfunc(name, extra)
             if r == nil then
                 r = true
