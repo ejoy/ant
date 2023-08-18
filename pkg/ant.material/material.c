@@ -160,10 +160,11 @@ fetch_sampler(lua_State *L, int index, int *stage) {
 	if (lt == LUA_TTABLE) {
 		*stage = fetch_stage(L, index);
 		return fetch_value_handle(L, index);
-	} else if (lt == LUA_TNUMBER) {
-		*stage = 0;
-		return (uint32_t)luaL_checkinteger(L, index);
 	} else {
+		*stage = 0;
+		if (lt == LUA_TNUMBER)
+			return (uint32_t)luaL_checkinteger(L, index);
+		else
 		return luaL_error(L, "Invalid type for 'texture':%s, bgfx texture handle or table:{stage=0, value=bgfxhandle}", lua_typename(L, lt));
 	}
 }
@@ -212,19 +213,18 @@ static inline uint32_t
 fetch_resource(lua_State *L, int index, int *mip, bgfx_access_t *access, uint8_t *stage) {
 	const int lt = lua_type(L, index);
 	if (lt == LUA_TTABLE) {
-		if (mip){
-			*mip	= fetch_mip(L, index);
-		}
+		if (mip) *mip = fetch_mip(L, index);
 		*access	= fetch_access(L, index);
 		*stage	= fetch_stage(L, index);
 		return fetch_value_handle(L, index);
-	} else if (lt == LUA_TNUMBER) {
-		*mip = 0;
+	} else {
+		if (mip) *mip = 0;
 		*access = BGFX_ACCESS_READ;
 		*stage = 0;
-		return (uint32_t)luaL_checkinteger(L, index);
-	} else {
-		return luaL_error(L, "Invalid type for 'resource':%s, bgfx texture handle or table:{stage=0, value=bgfxhandle, mip=0, access='r'}", lua_typename(L, lt));
+		if (lt == LUA_TNUMBER)
+			return (uint32_t)luaL_checkinteger(L, index);
+		else
+			return luaL_error(L, "Invalid type for 'resource':%s, bgfx texture handle or table:{stage=0, value=bgfxhandle, mip=0, access='r'}", lua_typename(L, lt));
 	}
 }
 
@@ -592,7 +592,8 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 	if (err)
 		luaL_error(L, "Apply error : %s", err);
 
-	for (int ii = 0; ii < MATERIAL_SYSTEM_ATTRIB_CHUNK; ++ii) {
+	int ii;
+	for (ii = 0; ii < MATERIAL_SYSTEM_ATTRIB_CHUNK; ++ii) {
 		err = attrib_arena_apply_global(mi->m->A, mi->m->global[ii], ii * 64, &ctx);
 		if (err)
 			luaL_error(L, "Apply global error : %s", err);

@@ -90,7 +90,7 @@ attrib_arena_init(struct attrib_arena *A) {
 }
 
 static inline attrib_type *
-get_attrib(struct attrib_arena *A, int id) {
+get_attrib_from_id(struct attrib_arena *A, int id) {
 	if (id < 0) {
 		id = -id - 1;
 		if (id >= MAX_GLOBAL_COUNT)
@@ -103,9 +103,15 @@ get_attrib(struct attrib_arena *A, int id) {
 	}
 }
 
+static inline attrib_type *
+get_attrib(struct attrib_arena *A, attrib_id id) {
+	assert(id < MAX_ATTRIB_COUNT);
+	return &A->a[id];
+}
+
 const char *
 attrib_arena_init_uniform(struct attrib_arena *A, int id, bgfx_uniform_handle_t h, const float *v, int n, int elem) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
 	if (a == NULL)
 		return "Invalid attrib id";
 	if (a->h.type == ATTRIB_NONE) {
@@ -131,7 +137,7 @@ attrib_arena_init_uniform(struct attrib_arena *A, int id, bgfx_uniform_handle_t 
 
 const char *
 attrib_arena_init_sampler(struct attrib_arena *A, int id, bgfx_uniform_handle_t h, uint32_t handle, uint8_t stage) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
 	if (a == NULL)
 		return "Invalid attrib id";
 	if (a->h.type == ATTRIB_NONE) {
@@ -150,7 +156,7 @@ attrib_arena_init_sampler(struct attrib_arena *A, int id, bgfx_uniform_handle_t 
 // set image or buffer
 static const char *
 attrib_arena_init_resource_(struct attrib_arena *A, int id, int type, uint32_t handle, uint8_t stage, bgfx_access_t access, uint8_t mip) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
 	if (a == NULL)
 		return "Invalid attrib id";
 	if (a->h.type == ATTRIB_NONE) {
@@ -276,7 +282,8 @@ attrib_arena_find(struct attrib_arena *A, attrib_id head, name_id key, attrib_id
 
 void
 attrib_arena_set_uniform(struct attrib_arena *A, int id, const float *v) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
+	assert(a);
 	assert(a->h.type == ATTRIB_UNIFORM);
 	int n = a->u.u.v.n;
 	memcpy(A->v + a->u.u.v.vec, v, n * sizeof(struct vec));
@@ -284,7 +291,8 @@ attrib_arena_set_uniform(struct attrib_arena *A, int id, const float *v) {
 
 math_t
 attrib_arena_set_uniform_instance(struct attrib_arena *A, int id, math_t m) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
+	assert(a);
 	assert(a->h.type == ATTRIB_UNIFORM_INSTANCE);
 	math_t r = a->u.u.m;
 	a->u.u.m = m;
@@ -293,7 +301,8 @@ attrib_arena_set_uniform_instance(struct attrib_arena *A, int id, math_t m) {
 
 void
 attrib_arena_set_handle(struct attrib_arena *A, int id, uint32_t handle) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
+	assert(a);
 	switch (a->h.type) {
 	case ATTRIB_SAMPLER:
 		a->u.u.t.handle = handle;
@@ -310,16 +319,18 @@ attrib_arena_set_handle(struct attrib_arena *A, int id, uint32_t handle) {
 
 void
 attrib_arena_set_sampler(struct attrib_arena *A, int id, uint32_t handle, int stage) {
-	attrib_type *a = get_attrib(A, id);
-	assert(a && a->h.type == ATTRIB_SAMPLER);
+	attrib_type *a = get_attrib_from_id(A, id);
+	assert(a);
+	assert(a->h.type == ATTRIB_SAMPLER);
 	a->u.u.t.handle = handle;
 	a->u.u.t.stage = stage;
 }
 
 void
 attrib_arena_set_resource(struct attrib_arena *A, int id, uint32_t handle, uint8_t stage, bgfx_access_t access, uint8_t mip) {
-	attrib_type *a = get_attrib(A, id);
-	assert(a && a->h.type == ATTRIB_IMAGE || a->h.type == ATTRIB_BUFFER);
+	attrib_type *a = get_attrib_from_id(A, id);
+	assert(a);
+	assert(a->h.type == ATTRIB_IMAGE || a->h.type == ATTRIB_BUFFER);
 	a->r.stage = stage;
 	a->r.access = access;
 	a->r.mip = mip;
@@ -339,7 +350,7 @@ check_get_texture_handle(struct attrib_arena_apply_context *ctx, uint32_t handle
 
 const char *
 attrib_arena_apply(struct attrib_arena *A, int id, struct attrib_arena_apply_context *ctx) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
 	if (a == NULL)
 		return "Invalid attrib";
 	switch(a->h.type){
@@ -532,7 +543,7 @@ attrib_arena_remove(struct attrib_arena *A, attrib_id *prev) {
 
 int
 attrib_arena_type(struct attrib_arena *A, int id) {
-	attrib_type *a = get_attrib(A, id);
+	attrib_type *a = get_attrib_from_id(A, id);
 	if (a == NULL)
 		return ATTRIB_NONE;
 	return a->h.type;
