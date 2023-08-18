@@ -460,7 +460,7 @@ to_instance(lua_State *L, int instanceidx){
 
 static inline void
 check_ecs_world_in_upvalue1(lua_State *L){
-	luaL_checkstring(L, lua_upvalueindex(1));
+	getworld(L);
 }
 
 static inline math_t
