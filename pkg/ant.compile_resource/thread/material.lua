@@ -12,10 +12,6 @@ local function readall(filename)
     return fastio.readall(cr.compile(filename))
 end
 
-local function readall_s(filename)
-    return fastio.readall_s(cr.compile(filename))
-end
-
 local function uniform_info(shader, uniforms, mark)
     local shader_uniforms = bgfx.get_shader_uniforms(shader)
     if shader_uniforms then
@@ -31,7 +27,7 @@ end
 
 local function loadShader(shaderfile)
     if shaderfile then
-        local h = bgfx.create_shader(readall_s(shaderfile))
+        local h = bgfx.create_shader(bgfx.memory_buffer(readall(shaderfile)))
         bgfx.set_name(h, shaderfile)
         return h
     end
