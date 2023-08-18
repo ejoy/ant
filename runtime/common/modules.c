@@ -44,7 +44,8 @@ int luaopen_ecs_components(lua_State* L);
 int luaopen_ecs_util(lua_State* L);
 int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
-int luaopen_material(lua_State *L);
+int luaopen_material_arena(lua_State *L);
+int luaopen_material_core(lua_State *L);
 int luaopen_render_material(lua_State *L);
 int luaopen_system_render(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
@@ -109,7 +110,8 @@ void ant_loadmodules(lua_State* L) {
         { "ecs.components", luaopen_ecs_components},
         { "ecs.util", luaopen_ecs_util},
         { "fastio", luaopen_fastio},
-        { "render.material",    luaopen_material},
+        { "render.material.arena",    luaopen_material_arena},
+		{ "render.material.core",    luaopen_material_core},
         { "render.render_material", luaopen_render_material},
         { "system.render",      luaopen_system_render},
         { "motion.sampler",     luaopen_motion_sampler},
