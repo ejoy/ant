@@ -1,5 +1,6 @@
 local lfs           = require "bee.filesystem"
 local fs            = require "filesystem"
+local fastio        = require "fastio"
 local toolset       = require "editor.material.toolset"
 local fxsetting     = require "editor.material.setting"
 local setting       = import_package "ant.settings".setting
@@ -158,11 +159,6 @@ local function compile_debug_shader(platform, renderer)
     return platform == "windows" and (renderer:match "direct3d" or renderer:match "vulkan")
 end
 
-local function readfile(filename)
-	local f <close> = assert(io.open(filename:string(), "rb"))
-	return f:read "a"
-end
-
 local function writefile(filename, data)
 	local f <close> = assert(io.open(filename:string(), "wb"))
 	f:write(serialize.stringify(data))
@@ -172,7 +168,7 @@ local function mergeCfgSetting(fx, localpath)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
-        fx.setting = serialize.parse(fx.setting, readfile(localpath(fx.setting)))
+        fx.setting = serialize.parse(fx.setting, fastio.readall(localpath(fx.setting):string()))
     else
         assert(type(fx.setting) == "table")
     end
@@ -190,17 +186,15 @@ local function generate_code(content, replacement_key, replacement_content)
     return content:gsub(replacement_key, replacement_content)
 end
 
-
-
 local DEF_SHADER_INFO<const> = {
     vs = {
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
-        content = readfile(SHADER_BASE / "dynamic_material/vs_default.sc"),
+        content = fastio.readall_s((SHADER_BASE / "dynamic_material/vs_default.sc"):string()),
     },
     fs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
-        content = readfile(SHADER_BASE / "dynamic_material/fs_default.sc"),
+        content = fastio.readall_s((SHADER_BASE / "dynamic_material/fs_default.sc"):string()),
     }
 }
 

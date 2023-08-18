@@ -1,6 +1,7 @@
 local lfs       = require "bee.filesystem"
 local fs        = require "filesystem"
 local datalist  = require "datalist"
+local fastio    = require "fastio"
 
 local m = {}
 
@@ -41,13 +42,8 @@ local function writefile(filename, data)
 	f:write(data)
 end
 
-local function readfile(filename)
-	local f <close> = assert(io.open(filename:string()))
-	return f:read "a"
-end
-
 local function readconfig(filename)
-    return datalist.parse(readfile(filename))
+    return datalist.parse(fastio.readall(filename:string()))
 end
 
 function m.writefile(filename, t)

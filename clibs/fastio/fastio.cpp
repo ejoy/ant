@@ -71,7 +71,7 @@ struct file_t {
     FILE* f;
 };
 
-static int pusherror(lua_State *L, const char* what, const char *filename) {
+static int push_error(lua_State *L, const char* what, const char *filename) {
     int en = errno;
     luaL_pushfail(L);
     lua_pushfstring(L, "cannot %s %s: %s", what, filename, strerror(en));
@@ -79,14 +79,18 @@ static int pusherror(lua_State *L, const char* what, const char *filename) {
     return 3;
 }
 
+static int raise_error(lua_State *L, const char* what, const char *filename) {
+    return luaL_error(L, "cannot %s %s: %s", what, filename, strerror(errno));
+}
+
 static int readall(lua_State *L) {
     const char* filename = luaL_checkstring(L, 1);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
 #if defined(__ANT_RUNTIME__)
-        return pusherror(L, "open", luaL_optstring(L, 2, filename));
+        return raise_error(L, "open", luaL_optstring(L, 2, filename));
 #else
-        return pusherror(L, "open", filename);
+        return raise_error(L, "open", filename);
 #endif
     }
     size_t size = f.size();
@@ -107,9 +111,9 @@ static int readall_s(lua_State *L) {
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
 #if defined(__ANT_RUNTIME__)
-        return pusherror(L, "open", luaL_optstring(L, 2, filename));
+        return raise_error(L, "open", luaL_optstring(L, 2, filename));
 #else
-        return pusherror(L, "open", filename);
+        return raise_error(L, "open", filename);
 #endif
     }
     size_t size = f.size();
@@ -149,7 +153,7 @@ static int loadfile(lua_State *L) {
     lua_settop(L, 3);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return pusherror(L, "open", symbol);
+        return push_error(L, "open", symbol);
     }
     LoadF lf;
     lf.f = f.f;
@@ -157,7 +161,7 @@ static int loadfile(lua_State *L) {
     lua_pushfstring(L, "@%s", symbol);
     int status = lua_load(L, getF, &lf, lua_tostring(L, -1), "t");
     if (ferror(lf.f)) {
-        return pusherror(L, "read", symbol);
+        return push_error(L, "read", symbol);
     }
     if (status != LUA_OK) {
         luaL_pushfail(L);

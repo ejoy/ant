@@ -1,11 +1,10 @@
 local compile = require "editor.texture.compile"
 local datalist = require "datalist"
+local fastio = require "fastio"
 local depends = require "editor.depends"
 
 local function readdatalist(filepath)
-	local f <close> = assert(io.open(filepath, "r"))
-	local data = f:read "a"
-	return datalist.parse(data,function(args)
+	return datalist.parse(fastio.readall(filepath), function(args)
 		return args[2]
 	end)
 end

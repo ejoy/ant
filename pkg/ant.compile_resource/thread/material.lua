@@ -1,6 +1,7 @@
 local cr = require "thread.compile"
 local serialize = import_package "ant.serialize"
 local bgfx = require "bgfx"
+local fastio = require "fastio"
 
 local PM = require "programan.server"
 PM.program_init{
@@ -8,8 +9,11 @@ PM.program_init{
 }
 
 local function readall(filename)
-    local f <close> = assert(io.open(cr.compile(filename), "rb"))
-    return f:read "a"
+    return fastio.readall(cr.compile(filename))
+end
+
+local function readall_s(filename)
+    return fastio.readall_s(cr.compile(filename))
 end
 
 local function uniform_info(shader, uniforms, mark)
@@ -27,7 +31,7 @@ end
 
 local function loadShader(shaderfile)
     if shaderfile then
-        local h = bgfx.create_shader(readall(shaderfile))
+        local h = bgfx.create_shader(readall_s(shaderfile))
         bgfx.set_name(h, shaderfile)
         return h
     end

@@ -1,6 +1,7 @@
 local lfs = require "bee.filesystem"
 local utility = require "editor.model.utility"
 local datalist = require "datalist"
+local fastio = require "fastio"
 local texture_compile = require "editor.texture.compile"
 local parallel_task   = require "editor.parallel_task"
 
@@ -116,9 +117,7 @@ local STATE_FILES = {}
 local function read_state_file(statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        local f <close> = assert(io.open(statefile:string()))
-        local c = f:read "a"
-        s = datalist.parse(c)
+        s = datalist.parse(fastio.readall(statefile:string()))
     end
 
     return s

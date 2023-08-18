@@ -10,6 +10,7 @@ local parallel_task     = require "editor.parallel_task"
 local lfs               = require "bee.filesystem"
 local fs                = require "filesystem"
 local datalist          = require "datalist"
+local fastio            = require "fastio"
 local material_compile  = require "editor.material.compile"
 
 local function build_scene_tree(gltfscene)
@@ -24,13 +25,8 @@ local function build_scene_tree(gltfscene)
     return scenetree
 end
 
-local function readfile(filename)
-	local f <close> = assert(io.open(filename:string(), "r"))
-	return f:read "a"
-end
-
 local function readdatalist(filepath)
-	return datalist.parse(readfile(filepath), function(args)
+	return datalist.parse(fastio.readall(filepath:string()), function(args)
 		return args[2]
 	end)
 end

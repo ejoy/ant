@@ -75,16 +75,12 @@ local function load_mem(m, filename)
     local binname = m[1]
     assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
-    local data, err = fastio.readall(async.compile(parent_path(filename) .. "/" .. binname))
-    if not data then
-        error(("read file failed:%s, error:%s"):format(binname, err))
-    end
-    m[1] = data
+    m[1] = fastio.readall(async.compile(parent_path(filename) .. "/" .. binname))
 end
 
 local function loader(filename)
     local local_filename = async.compile(filename)
-    local mesh = datalist.parse(fastio.readall_s(local_filename))
+    local mesh = datalist.parse(fastio.readall(local_filename))
 
     local vb = assert(mesh.vb)
     load_mem(vb.memory, filename)

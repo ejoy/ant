@@ -1,9 +1,10 @@
 local fs = require "filesystem"
 local datalist = require "datalist"
+local fastio = require "fastio"
 
 local function read_default_setting_from_file()
-    local f <close> = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
-    return f:read "a"
+    local setting <const> = "/pkg/ant.resources/settings/default.setting"
+    return fastio.readall(fs.path(setting):localpath():string(), setting)
 end
 
 local defaultSetting = datalist.parse(read_default_setting_from_file())

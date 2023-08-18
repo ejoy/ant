@@ -14,10 +14,6 @@ local function readall(filename)
     return bgfx.memory_buffer(fastio.readall(filename))
 end
 
-local function readall_s(filename)
-    return fastio.readall_s(filename)
-end
-
 local function createTexture(c)
     local h
     if c.value then
@@ -43,7 +39,7 @@ local function createTexture(c)
 end
 
 local function loadTexture(name)
-    local c = datalist.parse(readall_s(cr.compile(name.."|main.cfg")))
+    local c = datalist.parse(fastio.readall(cr.compile(name.."|main.cfg")))
     c.name = name
     if not c.value then
         c.path = cr.compile(name.."|main.bin")

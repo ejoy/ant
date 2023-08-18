@@ -1,15 +1,11 @@
 local compile = require "editor.material.compile"
 local depends = require "editor.depends"
 local datalist = require "datalist"
+local fastio = require "fastio"
 local parallel_task = require "editor.parallel_task"
 
-local function readfile(filename)
-	local f <close> = assert(io.open(filename, "r"))
-	return f:read "a"
-end
-
 local function readdatalist(filepath)
-	return datalist.parse(readfile(filepath), function(args)
+	return datalist.parse(fastio.readall(filepath), function(args)
 		return args[2]
 	end)
 end

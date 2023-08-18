@@ -15,7 +15,7 @@ end
 
 local function load_patch(patchLst, depfiles, path)
     depends.add(depfiles, path)
-    for _, patch in ipairs(assert(datalist.parse(fastio.readall_s(path)))) do
+    for _, patch in ipairs(assert(datalist.parse(fastio.readall(path)))) do
         if patch.include then
             load_patch(patchLst, depfiles, absolute_path(patch.include, path))
         else

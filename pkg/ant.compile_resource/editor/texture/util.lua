@@ -4,6 +4,7 @@ local lfs 			= require "bee.filesystem"
 local image 		= require "image"
 local math3d		= require "math3d"
 local ltask			= require "ltask"
+local fastio		= require "fastio"
 
 local stringify 	= import_package "ant.serialize".stringify
 
@@ -76,17 +77,12 @@ local function writefile(filename, data)
 	f:write(data)
 end
 
-local function readall(filename)
-	local f <close> = assert(io.open(filename:string(), "rb"))
-	return f:read "a"
-end
-
 local function is_png(path)
 	return path:equal_extension "png" ~= nil
 end
 
 local function gray2rgb(path, outfile)
-	local c = readall(path)
+	local c = fastio.readall_s(path:string())
 	local fc = image.png.gray2rgba(c)
 	if fc then
 		writefile(outfile, fc)
@@ -174,11 +170,11 @@ return function (output, setting, param)
 		local output_bin = output / "main.bin"
 		lfs.rename(binfile, output_bin)
 
-		local info = image.parse(readall(output_bin))
+		local info = image.parse(fastio.readall_s(output_bin:string()))
 		config.info = info
 
 		if config.build_irradianceSH then
-			local c = readall(output_bin)
+			local c = fastio.readall_s(output_bin:string())
 			local nomip<const> = true
 			local info, content = image.parse(c, true, "RGBA32F", nomip)
 			if not info.cubeMap then
