@@ -220,7 +220,7 @@ static bool obj_visible(const ObjType &o, uint64_t mask){
 
 static inline int queue_idx(uint64_t mask){
 	for (int ii=0; ii<64; ++ii){
-		if (((1i64 << ii) & mask) != 0){
+		if (((UINT64_C(1) << ii) & mask) != 0){
 			return ii;
 		}
 	}
