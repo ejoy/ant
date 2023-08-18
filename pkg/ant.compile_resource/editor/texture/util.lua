@@ -82,7 +82,7 @@ local function is_png(path)
 end
 
 local function gray2rgb(path, outfile)
-	local c = fastio.readall_s(path:string())
+	local c = fastio.readall(path:string())
 	local fc = image.png.gray2rgba(c)
 	if fc then
 		writefile(outfile, fc)
@@ -170,13 +170,12 @@ return function (output, setting, param)
 		local output_bin = output / "main.bin"
 		lfs.rename(binfile, output_bin)
 
-		local info = image.parse(fastio.readall_s(output_bin:string()))
+		local info = image.parse(fastio.readall(output_bin:string()))
 		config.info = info
 
 		if config.build_irradianceSH then
-			local c = fastio.readall_s(output_bin:string())
 			local nomip<const> = true
-			local info, content = image.parse(c, true, "RGBA32F", nomip)
+			local info, content = image.parse(fastio.readall(output_bin:string()), true, "RGBA32F", nomip)
 			if not info.cubeMap then
 				error "build SH need cubemap texture"
 			end

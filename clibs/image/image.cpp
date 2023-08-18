@@ -17,6 +17,25 @@
 
 #include "lua2struct.h"
 
+static std::string_view getmemory(lua_State* L, int idx) {
+    switch (lua_type(L, idx)) {
+    case LUA_TSTRING: {
+        size_t sz;
+        const char* data = lua_tolstring(L, idx, &sz);
+        return { data, sz };
+    }
+    case LUA_TUSERDATA: {
+        const char* data = (const char*)lua_touserdata(L, idx);
+        size_t sz = lua_rawlen(L, idx);
+        return { data, sz };
+    }
+    default:
+        luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, idx)));
+        //std::unreachable();
+        return {};
+    }
+}
+
 LUA2STRUCT(bimg::TextureInfo, format, storageSize, width, height, depth, numLayers, numMips, bitsPerPixel, cubeMap);
 
 namespace lua_struct {
@@ -106,8 +125,7 @@ static bimg::ImageContainer* create_nomip_image(bx::AllocatorI &allocator, const
 
 static int
 lparse(lua_State *L) {
-    size_t srcsize = 0;
-    auto src = luaL_checklstring(L, 1, &srcsize);
+    auto memory = getmemory(L, 1);
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
 
@@ -122,7 +140,7 @@ lparse(lua_State *L) {
 
     const bool nomip = !lua_isnoneornil(L, 4);
     
-    auto image = bimg::imageParse(&allocator, src, (uint32_t)srcsize, texfmt, nullptr);
+    auto image = bimg::imageParse(&allocator, (const void*)memory.data(), (uint32_t)memory.size(), texfmt, nullptr);
     if (!image){
         lua_pushstring(L, "Invalid image content");
         return lua_error(L);
@@ -310,13 +328,12 @@ gray2rgba(const bimg::ImageContainer &ic, AlignedAllocator &allocator){
 
 static int
 lpng_convert(lua_State *L){
-    size_t srcsize = 0;
-    auto src = luaL_checklstring(L, 1, &srcsize);
+    auto memory = getmemory(L, 1);
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer ic;
     bx::Error err;
-    bimg::imageParse(ic, src, (uint32_t)srcsize, &err);
+    bimg::imageParse(ic, (const void*)memory.data(), (uint32_t)memory.size(), &err);
 
     bimg::ImageContainer *dstimage = &ic;
     if (ic.m_format == bimg::TextureFormat::RG8){
@@ -332,13 +349,12 @@ lpng_convert(lua_State *L){
 
 static int
 lpng_gray2rgba(lua_State *L){
-    size_t srcsize = 0;
-    auto src = luaL_checklstring(L, 1, &srcsize);
+    auto memory = getmemory(L, 1);
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer ic;
     bx::Error err;
-    bimg::imageParse(ic, src, (uint32_t)srcsize, &err);
+    bimg::imageParse(ic, (const void*)memory.data(), (uint32_t)memory.size(), &err);
 
     bimg::ImageContainer *dstimage = &ic;
     if (ic.m_format != bimg::TextureFormat::RG8)
@@ -479,9 +495,8 @@ lpack2cubemap(lua_State *L){
     for (int i=0; i<n; ++i){
         lua_geti(L, 1, i+1);{
             bx::Error err;
-            size_t srcsize = 0;
-            const char* src = lua_tolstring(L, -1, &srcsize);
-            auto face = bimg::imageParse(&allocator, src, (uint32_t)srcsize, bimg::TextureFormat::RGBA32F, &err);
+            auto memory = getmemory(L, -1);
+            auto face = bimg::imageParse(&allocator, (const void*)memory.data(), (uint32_t)memory.size(), bimg::TextureFormat::RGBA32F, &err);
             if (!face){
                 luaL_error(L, "parse image failed:%d", i);
             }
