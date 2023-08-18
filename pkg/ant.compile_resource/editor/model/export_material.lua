@@ -289,6 +289,9 @@ return function (status)
 
 
     status.material = {}
+    status.material_idx = {}
+    status.material_cfg = {}
+    status.material_cache = {}
     for matidx, mat in ipairs(materials) do
         local name = mat.name or tostring(matidx)
         local pbr_mr = mat.pbrMetallicRoughness
@@ -346,11 +349,9 @@ return function (status)
         end
         local materialname = refine_name(name)
         local filename = "materials/" .. materialname .. ".material"
+        status.material_idx[matidx] = filename
         utility.apply_patch(status, filename, material, function (name, desc)
-            status.material[matidx] = {
-                filename = lfs.path(name),
-                material = desc,
-            }
+            status.material[name] = desc
         end)
     end
 end

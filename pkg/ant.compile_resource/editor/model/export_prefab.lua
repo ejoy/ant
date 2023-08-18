@@ -15,20 +15,18 @@ local function fix_invalid_name(name)
     return name:gsub(pattern_fmt, replace_char)
 end
 
-local prefab
-
-local function create_entity(t)
+local function create_entity(status, t)
     if t.parent then
         t.mount = t.parent
         t.data.scene = t.data.scene or {}
     end
     table.sort(t.policy)
-    prefab[#prefab+1] = {
+    status.prefab[#status.prefab+1] = {
         policy = t.policy,
         data = t.data,
         mount = t.mount,
     }
-    return #prefab
+    return #status.prefab
 end
 
 local function get_transform(math3d, node)
@@ -76,11 +74,8 @@ local PRIMITIVE_MODES<const> = {
     false, --TRIANGLE_FAN not support
 }
 
-local check_update_material_info, clean_material_cache;
+local check_update_material_info;
 do
-    local CACHE
-    function clean_material_cache() CACHE = {} end
-
     local function build_cfg_name(basename, cfg)
         local t = {}
         if cfg.with_color_attrib then
@@ -107,28 +102,13 @@ do
         return ("%s_%s"):format(basename, table.concat(t))
     end
 
-    local function material_info_need_change(name, mi)
-        return name:match(mi.filename:stem():string())
-    end
-
-    local function build_name(mi, cfg)
-        local basename = mi.filename:stem():string()
+    local function build_name(filename, cfg)
+        local basename = lfs.path(filename):stem():string()
         return build_cfg_name(basename, cfg)
     end
 
-    local function build_material(mi, name, cfg)
-        if not material_info_need_change(name, mi) then
-            return mi
-        end
-
-        local nm = duplicate_table(mi.material)
-        assert(mi.filename:extension():string() == ".material")
-
-        local nmi = {
-            filename = mi.filename:parent_path() / (name .. ".material"),
-            material = nm,
-        }
-
+    local function build_material(material, cfg)
+        local nm = duplicate_table(material)
         local function add_setting(n, v)
             if nil == nm.fx.setting then
                 nm.fx.setting = {}
@@ -138,7 +118,7 @@ do
         end
 
         if cfg.modename ~= "" then
-            mi.state.PT = cfg.modename
+            nm.state.PT = cfg.modename
         end
 
         if cfg.with_color_attrib then
@@ -160,34 +140,36 @@ do
         if not cfg.pack_tangent_frame then
             add_setting("PACK_TANGENT_TO_QUAT", 0)
         end
-        return nmi
+        return nm
     end
-    function check_update_material_info(mi, cfg)
-        local name = build_name(mi, cfg)
-        local c = CACHE[name]
+    function check_update_material_info(status, filename, material, cfg)
+        local name = build_name(filename, cfg)
+        local c = status.material_cache[name]
         if c == nil then
-            c = build_material(mi, name, cfg)
-            CACHE[name] = c
+            c = {
+                filename = "materials/"..name..".material",
+                material = build_material(material, cfg),
+            }
+            material_compile(status.tasks, status.depfiles, c.material, status.input, status.output / c.filename, status.setting, function (path)
+                return fs.path(path):localpath()
+            end)
+            status.material_cache[name] = c
         end
         return c
     end
 end
 
-local function read_file(fn)
-    local f <close> = fs.open(fn)
-    return f:read "a"
-end
+local DEFAULT_MATERIAL_PATH <const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
 
-local function read_material_file(filename)
-    local mi = serialize.parse(filename:string(), read_file(filename))
-    if type(mi.state) == "string" then
-        mi.state = serialize.parse(filename:string(), read_file(fs.path(mi.state)))
+local function seri_material(status, filename, cfg)
+    if DEFAULT_MATERIAL_PATH == filename then
+        return DEFAULT_MATERIAL_PATH
+    else
+        local material = assert(status.material[filename])
+        local info = check_update_material_info(status, filename, material, cfg)
+        return info.filename
     end
-    return mi
 end
-
-local DEFAULT_MATERIAL_PATH<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
-local DEFAULT_MATERIAL_INFO
 
 local function has_skin(gltfscene, status, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
@@ -196,36 +178,6 @@ local function has_skin(gltfscene, status, nodeidx)
             return true
         end
     end
-end
-
-local function load_material_info(status, materialidx, cfg)
-    local mi
-    if materialidx then
-        mi = assert(status.material[materialidx+1])
-    end
-
-    if DEFAULT_MATERIAL_INFO == nil then
-        DEFAULT_MATERIAL_INFO = {
-            material = read_material_file(DEFAULT_MATERIAL_PATH),
-            filename = DEFAULT_MATERIAL_PATH,
-        }
-    end
-
-    return check_update_material_info(mi or DEFAULT_MATERIAL_INFO, cfg)
-end
-
-local function seri_material(input, output, status, materialidx, cfg, setting)
-    local em = status.material
-    if em  and #em > 0 then
-        local mi = load_material_info(status, materialidx, cfg)
-        if mi and mi.filename ~= DEFAULT_MATERIAL_PATH then
-            material_compile(status.tasks, status.depfiles, mi.material, input, output / mi.filename, setting, function (path)
-                return fs.path(path):localpath()
-            end)
-            return mi.filename
-        end
-    end
-    return DEFAULT_MATERIAL_PATH
 end
 
 local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, status, setting)
@@ -239,7 +191,14 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
         local em = status.mesh[meshidx+1][primidx]
         local hasskin = has_skin(gltfscene, status, nodeidx)
         local mode = prim.mode or 4
-        local cfg = {
+
+        local materialfile = status.material_idx[prim.material+1]
+        local meshfile = em.meshbinfile
+        if meshfile == nil then
+            error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
+        end
+
+        status.material_cfg[meshfile] = {
             hasskin                 = hasskin,                  --NOT define by default
             with_color_attrib       = em.with_color_attrib,     --NOT define by default
             pack_tangent_frame      = em.pack_tangent_frame,    --define by default, as 1
@@ -248,16 +207,10 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
             modename                = assert(PRIMITIVE_MODES[mode+1], "Invalid primitive mode"),
         }
 
-        local materialfile = seri_material(input, output, status, prim.material, cfg, setting)
-        local meshfile = em.meshbinfile
-        if meshfile == nil then
-            error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
-        end
-
         local data = {
             mesh        = meshfile,
 ---@diagnostic disable-next-line: need-check-nil
-            material    = materialfile:string(),
+            material    = materialfile,
             name        = node.name or "",
             visible_state= DEFAULT_STATE,
         }
@@ -275,11 +228,11 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
         end
 
         --TODO: need a mesh node to reference all mesh.primitives, we assume primitives only have one right now
-        entity = create_entity {
+        entity = create_entity(status, {
             policy = policy,
             data = data,
             parent = (not hasskin) and parent,
-        }
+        })
     end
     return entity
 end
@@ -297,11 +250,11 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
         scene = {s=srt.s,r=srt.r,t=srt.t}
     }
     --add_animation(gltfscene, status, nodeidx, policy, data)
-    return create_entity {
+    return create_entity(status, {
         policy = policy,
         data = data,
         parent = parent,
-    }
+    })
 end
 
 local function create_skin_entity(status, parent, withanim)
@@ -320,11 +273,11 @@ local function create_skin_entity(status, parent, withanim)
     }
     data.skeleton = status.skeleton
     data.meshskin = status.skin[1]
-    return create_entity {
+    return create_entity(status, {
         policy = policy,
         data = data,
         parent = parent,
-    }
+    })
 end
 
 local function create_animation_entity(status)
@@ -346,10 +299,10 @@ local function create_animation_entity(status)
     table.sort(anilst)
     data.animation_birth = anilst[1] or ""
     data.anim_ctrl = {}
-    create_entity {
+    create_entity(status, {
         policy = policy,
         data = data,
-    }
+    })
 end
 
 local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
@@ -365,11 +318,6 @@ local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
     end
 end
 
-local function cleanup()
-    prefab = {}
-    clean_material_cache()
-end
-
 local function serialize_path(path)
     if path:sub(1,1) ~= "/" then
         return serialize.path(path)
@@ -377,7 +325,7 @@ local function serialize_path(path)
     return path
 end
 
-local function serialize_prefab(data)
+local function serialize_prefab(status, data)
     for _, v in ipairs(data) do
         local e = v.data
         if e.animation then
@@ -385,11 +333,12 @@ local function serialize_prefab(data)
                 e.animation[name] = serialize_path(file)
             end
         end
+        if e.material then
+            e.material = seri_material(status, e.material, status.material_cfg[e.mesh])
+            e.material = serialize_path(e.material)
+        end
         if e.mesh then
             e.mesh = serialize_path(e.mesh)
-        end
-        if e.material then
-            e.material = serialize_path(e.material)
         end
         if e.skeleton then
             e.skeleton = serialize_path(e.skeleton)
@@ -407,13 +356,13 @@ return function (status)
     local glbdata = status.glbdata
     local setting = status.setting
     local math3d = status.math3d
-
-    cleanup()
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]
 
-    local rootid = create_entity {
+    status.prefab = {}
+
+    local rootid = create_entity(status, {
         policy = {
             "ant.general|name",
             "ant.scene|scene_object",
@@ -422,7 +371,7 @@ return function (status)
             name = scene.name or "Rootscene",
             scene = {},
         },
-    }
+    })
 
     local meshnodes = {}
     find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
@@ -484,7 +433,11 @@ return function (status)
                 },
             }
         }
-        utility.save_txt_file(status, "animation.prefab", anim_prefab, serialize_prefab)
+        utility.save_txt_file(status, "animation.prefab", anim_prefab, function (data)
+            return serialize_prefab(status, data)
+        end)
     end
-    utility.save_txt_file(status, "mesh.prefab", prefab, serialize_prefab)
+    utility.save_txt_file(status, "mesh.prefab", status.prefab, function (data)
+        return serialize_prefab(status, data)
+    end)
 end
