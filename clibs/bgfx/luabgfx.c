@@ -753,6 +753,10 @@ push_supported(lua_State *L, uint64_t supported) {
 		CAPSNAME(TEXTURE_READ_BACK)     // Read-back texture is supported.
 		CAPSNAME(VERTEX_ATTRIB_HALF)    // Vertex attribute half-float is supported.
 		CAPSNAME(VERTEX_ATTRIB_UINT10)  // Vertex attribute 10_10_10_2 is supported.
+		CAPSNAME(VERTEX_ID)             // Rendering with VertexID only is supported.
+		CAPSNAME(PRIMITIVE_ID)          // PrimitiveID is available in fragment shader.
+		CAPSNAME(VIEWPORT_LAYER_ARRAY)  // Viewport layer is available in vertex shader.
+		CAPSNAME(DRAW_INDIRECT_COUNT)   // Draw indirect with indirect count is supported.
 	};
 	int n = sizeof(flags) / sizeof(flags[0]);
 	lua_createtable(L, 0, n);
