@@ -71,8 +71,7 @@ function m.open(path)
     end
     documents[#documents+1] = doc
     notifyDocumentCreate(doc)
-    local data = filemanager.readfile(path)
-    local html = rmlui.DocumentParseHtml(path, data, false)
+    local html = rmlui.DocumentParseHtml(path, filemanager.readfile(path), false)
     if not html then
         m.close(doc)
         return

@@ -24,7 +24,7 @@ end
 function m.readfile(source_path)
     local fullpath = prefixPath / source_path
     local realpath = fullpath:localpath():string()
-    return fastio.readall_s(realpath, fullpath:string())
+    return fastio.readall(realpath, fullpath:string())
 end
 
 function m.loadstring(content, source_path, source_line, env)

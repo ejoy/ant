@@ -59,7 +59,24 @@ lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
 	return 2;
 }
 
-	
+static std::string_view getmemory(lua_State* L, int idx) {
+    switch (lua_type(L, idx)) {
+    case LUA_TSTRING: {
+        size_t sz;
+        const char* data = lua_tolstring(L, idx, &sz);
+        return { data, sz };
+    }
+    case LUA_TUSERDATA: {
+        const char* data = (const char*)lua_touserdata(L, idx);
+        size_t sz = lua_rawlen(L, idx);
+        return { data, sz };
+    }
+    default:
+        luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, idx)));
+        std::unreachable();
+    }
+}
+
 namespace {
 
 static int
@@ -77,7 +94,7 @@ lDocumentCreate(lua_State* L) {
 static int
 lDocumentParseHtml(lua_State* L) {
 	auto path = lua_checkstrview(L, 1);
-	auto data = lua_checkstrview(L, 2);
+	auto data = getmemory(L, 2);
 	bool inner = lua_toboolean(L, 3);
 	auto html = (Rml::HtmlElement*)lua_newuserdatauv(L, sizeof(Rml::HtmlElement), 0);
 	new (html) Rml::HtmlElement;
@@ -139,14 +156,14 @@ lDocumentLoadStyleSheet(lua_State* L) {
 	}
 	case 3: {
 		auto path = lua_checkstrview(L, 2);
-		auto data = lua_checkstrview(L, 3);
+		auto data = getmemory(L, 3);
 		doc->LoadStyleSheet(path, data);
 		return 0;
 	}
 	default:
 	case 4: {
 		auto path = lua_checkstrview(L, 2);
-		auto data = lua_checkstrview(L, 3);
+		auto data = getmemory(L, 3);
 		auto line = luaL_checkinteger(L, 4);
 		doc->LoadStyleSheet(path, data, (int)line);
 		return 0;
