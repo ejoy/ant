@@ -1271,9 +1271,7 @@ lsetDebug(lua_State *L) {
 
 static int
 lcreateShader(lua_State *L) {
-	size_t sz;
-	const char *s = luaL_checklstring(L, 1, &sz);
-	const bgfx_memory_t * m = BGFX(copy)(s, sz);
+	const bgfx_memory_t *mem = getMemory(L, 1);
 	bgfx_shader_handle_t handle = BGFX(create_shader)(m);
 	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create shader failed");
