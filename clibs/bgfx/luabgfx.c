@@ -1270,17 +1270,6 @@ lsetDebug(lua_State *L) {
 }
 
 static int
-lcreateShader(lua_State *L) {
-	const bgfx_memory_t *mem = getMemory(L, 1);
-	bgfx_shader_handle_t handle = BGFX(create_shader)(m);
-	if (!BGFX_HANDLE_IS_VALID(handle)) {
-		return luaL_error(L, "create shader failed");
-	}
-	lua_pushinteger(L, BGFX_LUAHANDLE(SHADER, handle));
-	return 1;
-}
-
-static int
 ldestroy(lua_State *L) {
 	if (lua_isnoneornil(L, 1))
 		return 0;
@@ -2767,6 +2756,17 @@ getMemory(lua_State *L, int idx) {
 	}
 	luaL_checkudata(L, idx, "BGFX_MEMORY");
 	return bgfxMemory(L, idx);
+}
+
+static int
+lcreateShader(lua_State *L) {
+	const bgfx_memory_t *mem = getMemory(L, 1);
+	bgfx_shader_handle_t handle = BGFX(create_shader)(mem);
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
+		return luaL_error(L, "create shader failed");
+	}
+	lua_pushinteger(L, BGFX_LUAHANDLE(SHADER, handle));
+	return 1;
 }
 
 /*
