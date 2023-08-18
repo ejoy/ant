@@ -11,7 +11,7 @@ local r2l_mat<const> = mc.R2L_MAT
 
 return {
     loader = function (filename)
-        local c = fastio.readall_s(async.compile(filename), filename)
+        local c = fastio.readall(async.compile(filename), filename)
         local data = serialization.unpack(c)
         local ibm = data.inverse_bind_matrices
 
