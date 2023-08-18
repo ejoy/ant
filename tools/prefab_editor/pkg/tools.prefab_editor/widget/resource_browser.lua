@@ -418,7 +418,7 @@ function m.show()
                         selected_file = path
                         current_filter_key = 1
                         if imgui.util.IsMouseDoubleClicked(0) then
-                            if path:equal_extension(".prefab") or path:equal_extension(".glb") or path:equal_extension(".fbx") then
+                            if path:equal_extension(".glb") or path:equal_extension(".fbx") then
                                 world:pub {"OpenFile", path}
                             elseif path:equal_extension ".material" then
                                 local me = ecs.require "widget.material_editor"
