@@ -25,7 +25,7 @@ function camera_mgr.create_camera()
     local template = {
         policy = {
             "ant.general|name",
-            "ant.general|tag",
+            -- "ant.general|tag",
             "ant.camera|camera",
         },
         data = {
@@ -43,7 +43,7 @@ function camera_mgr.create_camera()
                 t = {math3d.index(srt.t, 1, 2, 3)},
                 updir   = {0, 1, 0, 0},
             },
-            tag = {"camera"},
+            -- tag = {"camera"},
         }
     }
     return ecs.create_entity(utils.deep_copy(template)), template

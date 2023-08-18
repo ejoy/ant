@@ -71,7 +71,7 @@ function m.show()
                         local ff = f:match "([^|]+)|mesh.prefab"
                         ff = ff or f
                         if fs.exists(fs.path(ff)) and imgui.widget.MenuItem(ff) then
-                            world:pub{"OpenFile", "Prefab", f}
+                            world:pub{"OpenFile", f}
                         end
                     end
                 end
@@ -82,12 +82,12 @@ function m.show()
                 prefab_mgr:save()
             end
             
-            if imgui.widget.MenuItem(faicons.ICON_FA_DOWNLOAD.." Save As..") then
-                local path = widget_utils.get_saveas_path("Prefab", "prefab")
-                if path then
-                    prefab_mgr:save(path)
-                end
-            end
+            -- if imgui.widget.MenuItem(faicons.ICON_FA_DOWNLOAD.." Save As..") then
+            --     local path = widget_utils.get_saveas_path("Prefab", "prefab")
+            --     if path then
+            --         prefab_mgr:save(path)
+            --     end
+            -- end
             imgui.widget.EndMenu()
         end
         if imgui.widget.BeginMenu "Edit" then

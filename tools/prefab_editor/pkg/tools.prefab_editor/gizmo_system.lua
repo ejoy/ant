@@ -94,7 +94,7 @@ function gizmo:set_scale(inscale)
 	iom.set_scale(e, inscale)
 	local template = hierarchy:get_template(self.target_eid)
 	template.template.data.scene.s = inscale
-	
+	prefab_mgr:on_patch_tranform(self.target_eid, "s", inscale)
 	world:pub {"UpdateAABB", self.target_eid}
 end
 
@@ -121,7 +121,9 @@ function gizmo:set_position(worldpos, gizmoonly)
 			iom.set_position(target, localPos)
 			local template = hierarchy:get_template(self.target_eid)
 			local tp = (type(localPos) == "table") and localPos or math3d.tovalue(localPos)
-			template.template.data.scene.t = {tp[1], tp[2], tp[3]}
+			local t = {tp[1], tp[2], tp[3]}
+			template.template.data.scene.t = t
+			prefab_mgr:on_patch_tranform(self.target_eid, "t", t)
 		end
 	else
 		local wm = iom.worldmat(target)
@@ -129,7 +131,7 @@ function gizmo:set_position(worldpos, gizmoonly)
 			local _, _, t = math3d.srt(wm)
 			newpos = t
 		else
-			newpos = mc..ZERO
+			newpos = mc.ZERO
 		end
 	end
 	local root <close> = world:entity(self.root_eid);
@@ -149,7 +151,9 @@ function gizmo:set_rotation(inrot, gizmoonly)
 			iom.set_rotation(target, inrot)
 			local template = hierarchy:get_template(self.target_eid)
 			local tv = math3d.tovalue(inrot)
-			template.template.data.scene.r = {tv[1], tv[2], tv[3], tv[4]}
+			local r = {tv[1], tv[2], tv[3], tv[4]}
+			template.template.data.scene.r = 
+			prefab_mgr:on_patch_tranform(self.target_eid, "r", r)
 		end
 	else
 		newrot = iom.get_rotation(target)

@@ -193,6 +193,7 @@ function m:ui_update()
     console_widget.show()
     log_widget.show()
     choose_project()
+    prefab_mgr:choose_prefab()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
 
@@ -357,12 +358,16 @@ function m:handle_event()
         if what == "move" then
             gizmo:set_position(v2)
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
+            prefab_mgr:on_patch_tranform(target, "t", v2)
         elseif what == "rotate" then
-            gizmo:set_rotation(math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])})
+            local rot = math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])}
+            gizmo:set_rotation(rot)
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
+            prefab_mgr:on_patch_tranform(target, "r", math3d.tovalue(rot))
         elseif what == "scale" then
             gizmo:set_scale(v2)
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
+            prefab_mgr:on_patch_tranform(target, "s", v2)
         elseif what == "name" or what == "tag" then
             transform_dirty = false
             if what == "name" then
@@ -373,6 +378,7 @@ function m:handle_event()
                 elseif e.slot then
                     hierarchy:update_slot_list(world)
                 end
+                prefab_mgr:on_patch_name(target, v1)
             end
         elseif what == "parent" then
             target = prefab_mgr:set_parent(target, v1)
@@ -425,12 +431,9 @@ function m:handle_event()
         on_open_proj()
     end
 
-    for _, tn, filename in event_open_file:unpack() do
-        if tn == "FBX" then
-            prefab_mgr:open_fbx(filename)
-        elseif tn == "Prefab" then
-            prefab_mgr:open(filename)
-        end
+    for _, filename in event_open_file:unpack() do
+        -- prefab_mgr:open(filename)
+        global_data.glb_filename = filename
     end
 
     for _, filename in event_add_prefab:unpack() do

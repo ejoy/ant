@@ -91,61 +91,6 @@ local function find_policy(t, policy)
     return nil
 end
 
-function hierarchy:update_prefab_template()
-    local raw_tpl = {}
-    local patch_tpl = {}
-    local function construct_entity(eid, rpt, ppt)
-        local node = self.all_node[eid]
-        if node.template.temporary then
-            return
-        end
-        local templ = node.template.template
-        if templ and templ.data then
-            if templ.data.tag then
-                -- local policy_name = "ant.general|tag"
-                -- local find = find_policy(templ.policy, policy_name)
-                -- if #templ.data.tag > 0 then
-                --     if not find then
-                --         templ.policy[#templ.policy + 1] = policy_name
-                --     end
-                -- elseif find then
-                --     templ.data.tag = nil
-                --     table.remove(templ.policy, find)
-                -- end
-                templ.data.tag = nil
-            end
-            local scene = templ.data.scene
-            if scene and scene.parent then
-                scene.parent = nil
-            end
-        end
-        local cur_tp = node.template.patch and ppt or rpt
-        table.insert(cur_tp, templ)
-
-        local pidx = #cur_tp > 0 and #cur_tp or nil
-        local prefab_filename = node.template.filename
-        if prefab_filename then
-            table.insert(cur_tp, {mount = #rpt + pidx, name = node.template.name, editor = node.template.editor, prefab = prefab_filename})
-        end
-        for _, child in ipairs(node.children) do
-            local nd = self.all_node[child.eid]
-            local tt = nd.template.template
-            if nd.parent ~= self.root.eid and tt then
-                if nd.template.patch then
-                    if self.all_node[nd.parent].template.patch or (tt.mount and tt.mount ~= 1) then
-                        tt.mount = #ppt
-                    end
-                else
-                    tt.mount = pidx
-                end
-            end
-            construct_entity(child.eid, rpt, ppt)
-        end
-    end
-    construct_entity(self.root.eid, raw_tpl, patch_tpl)
-    return raw_tpl, patch_tpl
-end
-
 function hierarchy:get_locked_uidata(eid)
     return self.all_node[eid].locked
 end

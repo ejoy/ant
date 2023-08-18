@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+local imgui         = require "imgui"
 local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
@@ -68,8 +69,8 @@ function m:create_hitch(slot)
         }
     }
     if slot then
-        template.policy[#template.policy + 1] = "ant.general|tag"
-        template.data.tag = { auto_name }
+        -- template.policy[#template.policy + 1] = "ant.general|tag"
+        -- template.data.tag = { auto_name }
         template.policy[#template.policy + 1] = "ant.animation|slot"
         template.data.slot = {
             joint_name = "None",
@@ -101,9 +102,14 @@ local function create_simple_entity(name, parent)
     return ecs.create_entity(utils.deep_copy(template)), template
 end
 
-function m:add_entity(new_entity, parent, temp)
+function m:add_entity(new_entity, parent, tpl)
     self.entities[#self.entities+1] = new_entity
-    hierarchy:add(new_entity, {template = temp, patch = self.create_as_patch}, parent)
+    if self.scene ~= new_entity then
+        self.prefab_template[#self.prefab_template + 1] = tpl
+        tpl.index = #self.prefab_template
+        self:pacth_add(tpl)
+    end
+    hierarchy:add(new_entity, {template = tpl}, parent)
 end
 
 local function create_default_light(lt, parent)
@@ -202,7 +208,7 @@ function m:create(what, config)
         self:create_hitch(true)
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
-        hierarchy:add(new_camera, {template = template, patch = true}, self.root)
+        hierarchy:add(new_camera, {template = template}, self.root)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
@@ -322,7 +328,7 @@ function m:open_fbx(filename)
 	if not ok then
 		return false, msg
 	end
-    local prefabFilename = string.sub(filename, 1, string.find(filename, ".fbx")) .. "glb|mesh.prefab"
+    local prefabFilename = string.sub(filename, 1, string.find(filename, ".fbx")) .. "glb"
     self:open(prefabFilename)
 end
 
@@ -365,14 +371,15 @@ function m:on_prefab_ready(prefab)
     local node_map = {}
 
     local final_template = {}
-    for _, value in ipairs(self.prefab_template) do
+    for idx, value in ipairs(self.prefab_template) do
+        value.index = idx
         final_template[#final_template + 1] = value
     end
-    if self.patch_template then
-        for _, value in ipairs(self.patch_template) do
-            final_template[#final_template + 1] = value
-        end
-    end
+    -- if self.patch_template then
+    --     for _, value in ipairs(self.patch_template) do
+    --         final_template[#final_template + 1] = value
+    --     end
+    -- end
 
     local j = 1
     for idx, pt in ipairs(final_template) do
@@ -389,7 +396,7 @@ function m:on_prefab_ready(prefab)
             target_node.editor = pt.editor or false
         else
             self.entities[#self.entities + 1] = eid
-            node_map[eid] = {template = pt, parent = parent, patch = (idx > #self.prefab_template)}
+            node_map[eid] = {template = pt, parent = parent}
             j = j + 1
         end
 
@@ -409,9 +416,9 @@ function m:on_prefab_ready(prefab)
         local tp = node.template
         if children then
             set_select_adapter(children, eid)
-            tp = {template = node.template, filename = node.filename, editor = node.editor, patch = node.patch}
+            tp = {template = node.template, filename = node.filename, editor = node.editor}
         else
-            tp = {template = node.template, patch = node.patch}
+            tp = {template = node.template}
         end
         hierarchy:add(eid, tp, node.parent or self.root)
     end
@@ -422,7 +429,7 @@ function m:on_prefab_ready(prefab)
 
     local srt = self.prefab_template[1].data.scene
     if srt then
-        self.root_mat = math3d.ref(math3d.matrix(srt)) 
+        self.root_mat = math3d.ref(math3d.matrix(srt))
     end
 end
 
@@ -452,23 +459,114 @@ local function check_animation(template)
         template[#template + 1] = anim_template
     end
 end
-function m:open(filename)
-    self:reset_prefab(true)
-    self.prefab_filename = filename
-    self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
-    for _, value in ipairs(self.prefab_template) do
-        if value.data and value.data.mesh then
-            -- if prefab from glb file, create entity as patch node
-            self.create_as_patch = true
-            break
+
+local prefabe_name_ui = {text = ""}
+local prefab_list = {}
+local selected_prefab
+local patch_template
+local faicons   = require "common.fa_icons"
+local function reset_open_context()
+    gd.glb_filename = nil
+    prefab_list = {}
+    prefabe_name_ui = {text = ""}
+end
+function m:choose_prefab()
+    if not gd.glb_filename then
+        return
+    end
+    if #prefab_list < 1 then
+        local patchfile = tostring(gd.glb_filename) .. ".patch"
+        patch_template = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
+        local prefab_set = {}
+        for _, patch in ipairs(patch_template) do
+            local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.value or nil)
+            if k then
+                prefab_set[k] = true
+            end
+        end
+        prefab_list = {"mesh.prefab"}
+        for key, _ in pairs(prefab_set) do
+            prefab_list[#prefab_list + 1] = key
         end
     end
-    local patchfile = filename .. ".patch"
-    if fs.exists(fs.path(patchfile)) then
-        self.patch_template = serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile))))
+
+    local title = "Choose prefab"
+    if not imgui.windows.IsPopupOpen(title) then
+        imgui.windows.OpenPopup(title)
     end
-    local eff_host_tpl = self.patch_template or self.prefab_template
-    for _, value in ipairs(eff_host_tpl) do
+    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    if change then
+        imgui.widget.Text("Create new or open existing prefab.")
+        if imgui.widget.InputText("##PrefabName", prefabe_name_ui) then
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
+            local name = tostring(prefabe_name_ui.text)
+            if #name > 0 then
+                local existing = false
+                for _, value in ipairs(prefab_list) do
+                    if value == name..".prefab" then
+                        existing = true
+                        break
+                    end
+                end
+                if not existing then
+                    prefab_list[#prefab_list + 1] = name..".prefab"
+                    prefabe_name_ui.text = ""
+                    table.insert(patch_template, 1, {
+                        file = "mesh.prefab",
+                        op = "copyfile",
+                        value = prefab_list[#prefab_list]
+                    })
+                    utils.write_file(tostring(gd.glb_filename)..".patch", stringify(patch_template))
+                end
+            end
+        end
+        imgui.cursor.Separator()
+        for _, n in ipairs(prefab_list) do
+            if imgui.widget.Selectable(n, selected_prefab and selected_prefab == n, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                selected_prefab = n
+                -- if imgui.util.IsMouseDoubleClicked(0) then
+                    self:open(tostring(gd.glb_filename) .. "|" .. selected_prefab, selected_prefab, patch_template)
+                -- end
+            end
+        end
+        imgui.cursor.Separator()
+        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Open") then
+            if selected_prefab then
+                self:open(tostring(gd.glb_filename) .. "|" .. selected_prefab, selected_prefab, patch_template)
+            end
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
+            reset_open_context()
+            imgui.windows.CloseCurrentPopup()
+        end
+        imgui.windows.EndPopup()
+    end
+end
+
+function m:open(filename, prefab_name, patch_tpl)
+    assert(prefab_name and patch_tpl)
+    reset_open_context()
+    self:reset_prefab(true)
+    self.prefab_name = prefab_name or "mesh.prefab"
+    -- if path:equal_extension(".fbx") then
+    --     self:open_fbx(tostring(path))
+    -- elseif path:equal_extension(".glb") then
+    --     filename = filename .. "|" .. self.prefab_name
+    -- end
+    self.prefab_filename = filename
+    self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
+    self.patch_template = patch_tpl or {}
+    self.patch_index_map = {}
+    for index, value in ipairs(self.patch_template) do
+        if value.file == self.prefab_name and value.op == "add" then
+            self.patch_index_map[#self.patch_index_map + 1] = index
+        end
+    end
+    self.patch_start_index = #self.prefab_template - #self.patch_index_map + 1
+    for _, value in ipairs(self.prefab_template) do
         if value.data and value.data.efk then
             self.check_effect_preload(value.data.efk.path)
         end
@@ -570,12 +668,11 @@ function m:reset_prefab(noscene)
     self.patch_template = nil
     self.prefab_instance = nil
     self.scene = nil
-    self.create_as_patch = false
     if not noscene then
         local parent = self.root
         local new_entity, temp = create_simple_entity("Scene", parent)
-        self:add_entity(new_entity, parent, temp)
         self.scene = new_entity
+        self:add_entity(new_entity, parent, temp)
     end
     if not self.main_camera then
         self.main_camera = irq.camera "main_queue"
@@ -592,7 +689,7 @@ function m:reload()
     if filename == 'nil' then
         self:save((gd.project_root / "res/__temp__.prefab"):string())
     else
-        self:open(filename)
+        self:open(filename, self.prefab_name, self.patch_template)
     end
 end
 local global_data       = require "common.global_data"
@@ -625,11 +722,11 @@ function m:add_effect(filename)
             "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
-            "ant.general|tag"
+            -- "ant.general|tag"
 		},
 		data = {
             name = fs.path(filename):stem():string(),
-            tag = {"effect"},
+            -- tag = {"effect"},
             scene = {parent = parent},
             efk = {
                 path = filename,
@@ -676,67 +773,43 @@ function m:add_prefab(path)
     function prefab:on_message(msg) end
     function prefab:on_update() end
     world:create_object(prefab)
-    local node = hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false, patch = true}, parent)
+    local node = hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
     node.prefab = prefab
 end
 
 function m:save(path)
     local filename
-    local patchfilename
+    -- local patchfilename
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
             path = widget_utils.get_saveas_path("Prefab", "prefab")
         end
     end
-    -- if path then
-    --     filename = string.gsub(path, "\\", "/")
-    --     local pos = string.find(filename, "%.prefab")
-    --     if #filename > pos + 6 then
-    --         filename = string.sub(filename, 1, pos + 6)
-    --     end
-    -- end
     assert(path or self.prefab_filename)
     filename = path
     local prefab_filename = self.prefab_filename or ""
     filename = filename or prefab_filename
-    patchfilename = filename .. ".patch"
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
-
-    local raw_tpl, patch_tpl = hierarchy:update_prefab_template()
-    
+    local path_list = split(prefab_filename)
     if not saveas then
-        local path_list = split(prefab_filename)
         local glb_filename
         if #path_list > 1 then
             glb_filename = path_list[1]
         end
         if glb_filename then
-            local msg = "cann't save glb file, please save as prefab"
-            log.error({tag = "Editor", message = msg})
-            widget_utils.message_box({title = "SaveError", info = msg})
-        else
-            utils.write_file(filename, stringify(raw_tpl))
-            if #patch_tpl > 0 then
-                utils.write_file(patchfilename, stringify(patch_tpl))  
+            if self.patch_template then
+                utils.write_file(glb_filename..".patch", stringify(self.patch_template))
+                assetmgr.unload(glb_filename..".patch")
+                assetmgr.unload(glb_filename.."|"..self.prefab_name)
             end
-            
             anim_view.save_keyevent()
+            world:pub {"ResourceBrowser", "dirty"}
         end
         if prefab_filename then
             ecs.release_cache(prefab_filename)
         end
         return
     end
-    utils.write_file(filename, stringify(raw_tpl))
-    if #patch_tpl > 0  then
-        utils.write_file(patchfilename, stringify(patch_tpl))
-    end
-
-    anim_view.save_keyevent(string.sub(filename, 1, -8) .. ".event")
-    local lfilename = lfs.path(filename)
-    assert(lfilename:is_absolute(), ("filename should be local path:%s"):format(filename))
-    self:open(access.virtualpath(global_data.repo, lfilename))
-    world:pub {"ResourceBrowser", "dirty"}
 end
 
 function m:set_parent(target, parent)
@@ -810,6 +883,9 @@ function m:do_remove_entity(eid)
     end
 end
 function m:remove_entity(eid)
+    if not self:pacth_remove(eid) then
+        return
+    end
     self:do_remove_entity(eid)
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
@@ -878,5 +954,96 @@ function m:get_world_aabb(eid)
         end
     end
     return waabb
+end
+-- modify patch file
+function m:get_patch_node(path)
+    for index, patch in ipairs(self.patch_template) do
+        if patch.file == self.prefab_name and patch.path == path then
+            return index, patch
+        end
+    end
+end
+
+function m:pacth_remove(eid)
+    local tpl = hierarchy:get_template(eid)
+    local pidx = tpl.template.index
+    if pidx < self.patch_start_index then
+        return false
+    end
+    table.remove(self.prefab_template, pidx)
+    table.remove(self.patch_template, self.patch_index_map[pidx - self.patch_start_index + 1])
+    table.remove(self.patch_index_map, pidx - self.patch_start_index + 1)
+    return true
+end
+
+function m:pacth_add(template)
+    local tpl = utils.deep_copy(template)
+    tpl.index = nil
+    local parent = tpl.data.scene.parent
+    if parent then
+        local parent_tpl = hierarchy:get_template(parent)
+        tpl.data.scene.parent = nil
+        tpl.mount = parent_tpl.template.index
+    end
+    self.patch_template[#self.patch_template + 1] = {
+        file = self.prefab_name,
+        op = "add",
+        path = "/-",
+        value = tpl
+    }
+    self.patch_index_map[#self.patch_index_map + 1] = #self.patch_template
+end
+
+function m:pacth_modify(pidx, p, v)
+    local index
+    local patch_node
+    if pidx >= self.patch_start_index then
+        patch_node = self.patch_template[self.patch_index_map[pidx - self.patch_start_index + 1]]
+        assert(patch_node)
+        local sep = "/"
+        local current_value
+        local last_value = patch_node.value
+        local key
+        for str in string.gmatch(p, "([^"..sep.."]+)") do
+            if current_value then
+                last_value = current_value
+                key = str
+            end
+            current_value = last_value[str]
+        end
+        last_value[key] = v
+    else
+        local path = "/"..pidx..p
+        index, patch_node = self:get_patch_node(path)
+        if patch_node then
+            if not v then
+                table.remove(self.patch_template, index)
+            else
+                patch_node.value = v
+            end
+        elseif v then
+            self.patch_template[#self.patch_template + 1] = {
+                file = self.prefab_name,
+                op = "replace",
+                path = path,
+                value = v,
+            }
+        end
+    end
+end
+
+function m:on_patch_name(eid, v)
+    local tpl = hierarchy:get_template(eid)
+    self:pacth_modify(tpl.template.index, "/data/name", v)
+end
+
+function m:on_patch_tranform(eid, n, v)
+    local tpl = hierarchy:get_template(eid)
+    self:pacth_modify(tpl.template.index, "/data/scene/"..n, v)
+end
+
+function m:on_patch_animation(eid, name, path)
+    local tpl = hierarchy:get_template(eid)
+    self:pacth_modify(tpl.template.index, "/data/animation/"..name, path)
 end
 return m

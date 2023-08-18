@@ -112,6 +112,7 @@ local function anim_group_delete(anim_name)
     animation_map[anim_name] = nil
     local e <close> = world:entity(anim_eid, "animation:in")
     e.animation[anim_name] = nil
+    prefab_mgr:on_patch_animation(anim_eid, anim_name)
     if tdata.animation_birth == anim_name then
         tdata.animation_birth = next(animation_map) or ""
     end
@@ -763,6 +764,7 @@ function m.show()
                     if update then
                         local template = hierarchy:get_template(anim_eid)
                         template.template.data.animation[anim_name] = anim_path
+                        prefab_mgr:on_patch_animation(anim_eid, anim_name, anim_path)
                         e.animation[anim_name] = anim_path
                         --TODO:reload
                         reload = true
