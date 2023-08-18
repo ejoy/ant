@@ -1,5 +1,6 @@
 local fs = require "filesystem"
 local datalist  = require "datalist"
+local fastio = require "fastio"
 local animodule = require "hierarchy".animation
 local assetmgr 	= import_package "ant.asset"
 local math3d = require "math3d"
@@ -31,10 +32,7 @@ local Dir = {
 }
 
 local function read_file(filename)
-    local f = assert(io.open(filename:localpath():string(), "rb"))
-    local c = f:read "a"
-    f:close()
-    return c
+    return fastio.readall(filename:localpath():string(), filename:string())
 end
 
 local function build_animation(ske, raw_animation, joint_anims, sample_ratio)

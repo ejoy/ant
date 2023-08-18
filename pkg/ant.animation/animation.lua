@@ -117,17 +117,6 @@ function ani_sys:data_changed()
 	end
 end
 
-local function load_events(filename)
-    local path = string.sub(filename, 1, -6) .. ".event"
-    local f = fs.open(fs.path(path))
-    if not f then
-        return {}
-    end
-    local data = f:read "a"
-    f:close()
-    return datalist.parse(data)
-end
-
 function ani_sys:component_init()
 	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in eid:in" do
 		local ani = e.animation

@@ -7,6 +7,7 @@ local layoutmgr = renderpkg.layoutmgr
 
 local fs        = require "filesystem"
 local datalist  = require "datalist"
+local fastio    = require "fastio"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
@@ -19,7 +20,7 @@ local shape_ts = ecs.system "cube_shape_terrain_system"
 
 local function read_terrain_field(tf)
     if type(tf) == "string" then
-        return datalist.parse(fs.open(fs.path(tf)):read "a")
+        return datalist.parse(fastio.readall(fs.path(tf):localpath():string(), tf))
     end
 
     return tf
