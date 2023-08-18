@@ -38,10 +38,10 @@ template<typename ObjType>
 struct cull_operation{
 	template<typename EntityType>
 	static void cull(struct ecs_world*w, EntityType &e, struct cullinfo *ci, uint8_t c){
-		const auto &b = e.get<ecs::bounding>();
+		const auto &b = e.template get<ecs::bounding>();
 
 		if (!math_isnull(b.scene_aabb)){
-			auto &o = e.get<ObjType>();
+			auto &o = e.template get<ObjType>();
 			for (uint8_t ii=0; ii<c; ++ii){
 				const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
 				set_mark(o.cull_masks, ci[ii].masks, isculled);
