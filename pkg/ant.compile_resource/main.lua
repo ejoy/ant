@@ -1,3 +1,9 @@
+if __ANT_RUNTIME__ then
+    return {
+        sampler = require "texture.sampler",
+    }
+end
+
 local lfs     = require "bee.filesystem"
 local sha1    = require "hash".sha1
 local config  = require "config"
