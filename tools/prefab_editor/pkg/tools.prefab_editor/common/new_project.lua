@@ -88,7 +88,6 @@ function m.gen_package_ecs()
     local ecs = [[
 import "@ant.general"
 import "@ant.render"
-import "@ant.collision"
 import "@ant.animation"
 import "@ant.sky"
 import "@ant.camera"
