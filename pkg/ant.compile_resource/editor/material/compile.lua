@@ -165,7 +165,7 @@ local function writefile(filename, data)
 	f:write(serialize.stringify(data))
 end
 
-local function mergeCfgSetting(fx, localpath)
+local function merge_cfg_setting(fx, localpath)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
@@ -189,6 +189,7 @@ end
 
 local DEF_SHADER_INFO<const> = {
     vs = {
+        CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
         content = fastio.readall_s((SHADER_BASE / "dynamic_material/vs_default.sc"):string()),
     },
@@ -247,18 +248,8 @@ local function generate_properties(properties)
 end
 
 local function generate_shader(shader, code, properties)
-    local updated_shader
-    if code then
-        updated_shader = generate_code(shader.content, shader.CUSTOM_FUNC_KEY, code)
-    else
-        updated_shader = shader.default
-    end
-    if properties then
-        local prop_content = generate_properties(properties)
-        return generate_code(updated_shader, shader.CUSTOM_PROP_KEY, prop_content)
-    else
-        return updated_shader
-    end
+    local updated_shader = code and generate_code(shader.content, shader.CUSTOM_FUNC_KEY, code) or shader.default
+    return properties and generate_code(updated_shader, shader.CUSTOM_PROP_KEY, generate_properties(properties)) or updated_shader
 end
 
 local function create_PBR_shader(inputpath, fx, stage, properties)
@@ -341,8 +332,7 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
-    local properties
-    mergeCfgSetting(fx, localpath)
+    merge_cfg_setting(fx, localpath)
     check_update_fx(fx)
 
     setmetatable(fx, CHECK_MT)
@@ -356,8 +346,7 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
             local varying_path = find_varying_path(fx, stage, localpath)
             if fx.shader_type == "PBR" then
                 inputpath = output / inputpath
-                if stage == "fs" then properties = mat.properties end
-                create_PBR_shader(inputpath, fx, stage, properties)
+                create_PBR_shader(inputpath, fx, stage, mat.properties)
             else
                 inputpath = localpath(inputpath)
             end

@@ -7,7 +7,6 @@
 #include "common/uvmotion.sh"
 #include "pbr/lighting.sh"
 #include "pbr/indirect_lighting.sh"
-#include "pbr/pbr.sh"
 #include "postprocess/tonemapping.sh"
 #include "common/default_inputs_structure.sh"
 #include "pbr/input_attributes.sh"

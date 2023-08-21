@@ -5,7 +5,9 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPU
 
 #include "common/default_inputs_structure.sh"
 
- $$CUSTOM_VS_FUNC$$ 
+$$CUSTOM_VS_PROP$$
+
+$$CUSTOM_VS_FUNC$$ 
 
 void main()
 {
