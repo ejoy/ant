@@ -57,13 +57,9 @@ end
 
 local function init(c)
 	config = c
-	if config.service_path then
-		config.service_path = config.service_path .. ";/engine/task/service/?.lua"
-	else
-		config.service_path = "/engine/task/service/?.lua"
-	end
-	config.lua_cpath = config.lua_cpath or ""
-
+	config.lua_path = nil
+	config.lua_cpath = ""
+	config.service_path = "${package}/service/?.lua;/engine/task/service/?.lua"
 
 	local servicelua = readall "/engine/task/service/service.lua"
 
@@ -141,9 +137,6 @@ end
 function vfs.send(...)
 	return send(...)
 end
-]]
-	if config.support_package then
-		config.preload = config.preload .. [[
 local rawsearchpath = package.searchpath
 package.searchpath = function(name, path, sep, dirsep)
 	local package, file = name:match "^([^|]*)|(.*)$"
@@ -171,7 +164,6 @@ function loadfile(filename, mode, env)
 	return rawloadfile(filename, mode, env)
 end
 ]]
-	end
 end
 
 return function (c)

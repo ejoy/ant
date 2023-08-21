@@ -7,8 +7,6 @@ local function start(initargs)
 	local directory = require "directory"
 	local log_path = directory.log_path()
     task {
-        support_package = true,
-        service_path = "${package}/service/?.lua",
         bootstrap = { "ant.window|boot", initargs },
         logger = { "logger" },
         exclusive = exclusive,

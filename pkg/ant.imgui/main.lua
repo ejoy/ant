@@ -5,8 +5,6 @@ local function start(initargs)
         exclusive[#exclusive+1] = "subprocess"
     end
     task {
-        support_package = true,
-        service_path = "${package}/service/?.lua",
         bootstrap = { "ant.imgui|boot" },
         logger = { "logger" },
         exclusive = exclusive,
