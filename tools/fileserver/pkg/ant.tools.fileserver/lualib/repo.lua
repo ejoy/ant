@@ -114,12 +114,12 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	local filelist = access.list_files(self, filepath)
 	for _, name in ipairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
-		if not self._resource and is_resource(fullname) then
-			table.insert(hashs, string.format("r %s %s", name, fullname))
+		if filelist[name] == "d" then
+			local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
+			table.insert(hashs, string.format("d %s %s", name, hash))
 		else
-			if filelist[name] == "v" or lfs.is_directory(self:realpath(fullname)) then
-				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
-				table.insert(hashs, string.format("d %s %s", name, hash))
+			if not self._resource and is_resource(fullname) then
+				table.insert(hashs, string.format("r %s %s", name, fullname))
 			else
 				local realfullname = self:realpath(fullname)
 				local mtime = lfs.last_write_time(realfullname)	-- timestamp

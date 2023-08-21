@@ -9,14 +9,15 @@ return function (repopath, access)
             return rp:string()
         end
     end
-    local ListValue <const> = {
-        dir = true,
-        file = false,
-    }
     function vfs.list(path)
         local item = {}
-        for _, filename in ipairs(access.list_files(repo, path)) do
-            item[filename] = ListValue[vfs.type(path .. filename)]
+        local filelist = access.list_files(repo, path)
+        for _, name in ipairs(filelist) do
+            if filelist[name] == "d" then
+                item[name] = true
+            else
+                item[name] = false
+            end
         end
         return item
     end

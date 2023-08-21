@@ -127,12 +127,12 @@ function access.list_files(repo, pathname)
 		local path = mountpoint / pathname:sub(2)
 		if lfs.is_directory(path) then
 			local ignore = vfsignore(path)
-			for name in lfs.pairs(path) do
+			for name, status in lfs.pairs(path) do
 				local filename = name:filename():string()
 				if filename:sub(1,1) ~= '.' -- ignore .xxx file
 					and not ignore(filename)
 				then
-					files[filename] = "l"
+					files[filename] = status:is_directory() and "d" or "f"
 				end
 			end
 		end
@@ -145,7 +145,7 @@ function access.list_files(repo, pathname)
 		n = n + 1
 	end
 	table.sort(list)
-	for _,name in ipairs(list) do
+	for _, name in ipairs(list) do
 		list[name] = files[name]
 	end
 	return list
