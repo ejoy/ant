@@ -21,7 +21,7 @@ local ui_rt_group_id = 110000
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = ecs.require "ant.render|queue_mgr"
 
-local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
+local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 
 local iUiRt = {}
 local fb_cache, rb_cache = {}, {}

@@ -3,7 +3,7 @@ local ltask = require "ltask"
 local fastio = require "fastio"
 local constructor = require "core.DOM.constructor"
 
-local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
+local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 
 local m = {}
 

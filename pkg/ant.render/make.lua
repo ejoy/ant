@@ -138,7 +138,7 @@ lm:lua_source "render_core"{
         ROOT .. "3rd/glm",
         ROOT .. "3rd/luaecs",
         ROOT .. "clibs/ecs",
-        ROOT .. "pkg/ant.compile_resource/src",
+        ROOT .. "pkg/ant.resource_manager/src",
         ROOT .. "pkg/ant.material",
     },
     defines = {

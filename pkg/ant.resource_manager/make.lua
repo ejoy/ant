@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 local ROOT <const> = "../../"
 
-lm:lua_source "compile_resource" {
+lm:lua_source "resource_manager" {
     includes = {
         ROOT .. "clibs/bgfx",
         ROOT .. "3rd/bgfx/include",

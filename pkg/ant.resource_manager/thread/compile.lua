@@ -32,7 +32,7 @@ if __ANT_RUNTIME__ then
     end
     set_setting = vfs.resource_setting
 else
-    local editor = require "editor.compile"
+    local editor = import_package "ant.compile_resource".fileserver()
     if __ANT_EDITOR__ then
         compile_file = editor.compile_file
     else

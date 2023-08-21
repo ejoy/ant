@@ -8,7 +8,7 @@ lm:lua_source "material_core"{
         ROOT .. "3rd/math3d",
         ROOT .. "clibs/bgfx",
         ROOT .. "clibs/ecs",
-        ROOT .. "pkg/ant.compile_resource/src",
+        ROOT .. "pkg/ant.resource_manager/src",
     },
     sources = {
         "material_arena.c",

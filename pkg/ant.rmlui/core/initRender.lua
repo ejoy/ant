@@ -6,7 +6,7 @@ hwi.init_bgfx()
 
 local function create_shaders()
     local ltask = require "ltask"
-    local ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
+    local ServiceResource = ltask.uniqueservice "ant.resource_manager|resource"
     local function load_material(filename)
         return ltask.call(ServiceResource, "material_create", filename)
     end
