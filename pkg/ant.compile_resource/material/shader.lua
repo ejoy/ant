@@ -1,10 +1,10 @@
-local SHADERC    = require "editor.tool_exe_path"("shaderc")
-local subprocess = require "editor.subprocess"
-local sha1       = require "editor.hash".sha1
+local SHADERC    = require "tool_exe_path"("shaderc")
+local subprocess = require "subprocess"
+local sha1       = require "hash".sha1
 local lfs        = require "bee.filesystem"
 local vfs        = require "vfs"
 local ltask      = require "ltask"
-local depends    = require "editor.depends"
+local depends    = require "depends"
 
 local ROOT
 

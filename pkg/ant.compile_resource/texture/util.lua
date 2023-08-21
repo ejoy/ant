@@ -1,5 +1,5 @@
-local subprocess 	= require "editor.subprocess"
-local sampler 		= require "editor.texture.sampler"
+local subprocess 	= require "subprocess"
+local sampler 		= require "texture.sampler"
 local lfs 			= require "bee.filesystem"
 local image 		= require "image"
 local math3d		= require "math3d"
@@ -8,7 +8,7 @@ local fastio		= require "fastio"
 
 local stringify 	= import_package "ant.serialize".stringify
 
-local TEXTUREC 		= require "editor.tool_exe_path"("texturec")
+local TEXTUREC 		= require "tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
 local SH, texutil	= shpkg.sh, shpkg.texture
 

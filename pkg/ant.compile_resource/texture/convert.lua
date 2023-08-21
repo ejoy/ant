@@ -1,7 +1,7 @@
-local compile = require "editor.texture.compile"
+local compile = require "texture.compile"
 local datalist = require "datalist"
 local fastio = require "fastio"
-local depends = require "editor.depends"
+local depends = require "depends"
 
 local function readdatalist(filepath)
 	return datalist.parse(fastio.readall(filepath), function(args)

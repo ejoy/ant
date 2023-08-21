@@ -2,7 +2,7 @@ local serialize = import_package "ant.serialize"
 local fs        = require "bee.filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
-local depends   = require "editor.depends"
+local depends   = require "depends"
 
 local m = {}
 

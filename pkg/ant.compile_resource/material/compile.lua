@@ -1,12 +1,12 @@
 local lfs           = require "bee.filesystem"
 local fs            = require "filesystem"
 local fastio        = require "fastio"
-local toolset       = require "editor.material.toolset"
-local fxsetting     = require "editor.material.setting"
+local toolset       = require "material.toolset"
+local fxsetting     = require "material.setting"
 local setting       = import_package "ant.settings".setting
 local serialize     = import_package "ant.serialize"
-local depends       = require "editor.depends"
-local parallel_task = require "editor.parallel_task"
+local depends       = require "depends"
+local parallel_task = require "parallel_task"
 
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 

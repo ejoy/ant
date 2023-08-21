@@ -1,4 +1,4 @@
-local convert_image = require "editor.texture.util"
+local convert_image = require "texture.util"
 
 return function (content, output, setting, localpath)
 	if content.path then

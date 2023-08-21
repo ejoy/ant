@@ -1,8 +1,8 @@
-local utility = require "editor.model.utility"
+local utility = require "model.utility"
 local serialize = import_package "ant.serialize"
 local lfs = require "bee.filesystem"
 local fs = require "filesystem"
-local material_compile = require "editor.material.compile"
+local material_compile = require "material.compile"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'

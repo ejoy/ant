@@ -1,8 +1,8 @@
-local compile = require "editor.material.compile"
-local depends = require "editor.depends"
+local compile = require "material.compile"
+local depends = require "depends"
 local datalist = require "datalist"
 local fastio = require "fastio"
-local parallel_task = require "editor.parallel_task"
+local parallel_task = require "parallel_task"
 
 local function readdatalist(filepath)
 	return datalist.parse(fastio.readall(filepath), function(args)

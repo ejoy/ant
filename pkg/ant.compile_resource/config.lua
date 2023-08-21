@@ -1,8 +1,8 @@
 local lfs = require "bee.filesystem"
-local sha1 = require "editor.hash".sha1
+local sha1 = require "hash".sha1
 local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
-local shader = require "editor.material.shader"
+local shader = require "material.shader"
 
 local function writefile(filename, data)
     local f <close> = assert(io.open(filename:string(), "wb"))
@@ -16,9 +16,9 @@ local config = {
 }
 
 local ResourceCompiler <const> = {
-    glb     = "editor.model.glb",
-    texture = "editor.texture.convert",
-    material = "editor.material.convert",
+    glb     = "model.glb",
+    texture = "texture.convert",
+    material = "material.convert",
 }
 
 local function parse(arguments)

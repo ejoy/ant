@@ -1,6 +1,6 @@
-local gltfutil  = require "editor.model.glTF.util"
-local utility   = require "editor.model.utility"
-local packer = require "editor.model.pack_vertex_data"
+local gltfutil  = require "model.glTF.util"
+local utility   = require "model.utility"
+local packer = require "model.pack_vertex_data"
 local pack_vertex_data = packer.pack
 
 local LAYOUT_NAMES<const> = {

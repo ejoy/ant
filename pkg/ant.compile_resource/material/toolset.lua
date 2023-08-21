@@ -1,5 +1,5 @@
-local shader = require "editor.material.shader"
-local subprocess = require "editor.subprocess"
+local shader = require "material.shader"
+local subprocess = require "subprocess"
 local lfs = require "bee.filesystem"
 local toolset = {}
 

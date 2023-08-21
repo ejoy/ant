@@ -9,7 +9,7 @@ local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 local access = require "vfs.repoaccess"
 require "editor.create_repo" (REPOPATH, access)
 local vfs = require "vfs"
-local cr = import_package "ant.compile_resource".fileserver()
+local cr = import_package "ant.compile_resource"
 cr.init_setting()
 
 local S = {}

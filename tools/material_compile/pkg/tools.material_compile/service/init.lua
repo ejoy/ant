@@ -3,7 +3,7 @@ require "bootstrap"
 
 local platform  = require "bee.platform"
 
-local cr = import_package "ant.compile_resource".fileserver()
+local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
 local access = require "vfs.repoaccess"

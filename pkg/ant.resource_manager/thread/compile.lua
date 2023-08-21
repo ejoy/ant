@@ -32,16 +32,16 @@ if __ANT_RUNTIME__ then
     end
     set_setting = vfs.resource_setting
 else
-    local editor = import_package "ant.compile_resource".fileserver()
+    local cr = import_package "ant.compile_resource"
     if __ANT_EDITOR__ then
-        compile_file = editor.compile_file
+        compile_file = cr.compile_file
     else
         local compiled = {}
         function compile_file(input)
             if compiled[input] then
                 return compiled[input]
             end
-            local output = editor.compile_file(input)
+            local output = cr.compile_file(input)
             compiled[input] = output
             return output
         end
@@ -61,8 +61,8 @@ else
             end
         end
     end
-    init_setting = editor.init_setting
-    set_setting = editor.set_setting
+    init_setting = cr.init_setting
+    set_setting = cr.set_setting
 end
 
 local function sortpairs(t)

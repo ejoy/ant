@@ -1,7 +1,7 @@
 local serialize     = import_package "ant.serialize"
 local fs            = require "bee.filesystem"
 local serialization = require "bee.serialization"
-local patch         = require "editor.model.patch"
+local patch         = require "model.patch"
 
 local function writeFile(status, path, data)
     path = status.output / path
