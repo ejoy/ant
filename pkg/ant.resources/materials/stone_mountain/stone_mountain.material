@@ -10,3 +10,9 @@ properties:
     stage: 0
     access: w
     buffer: indirect_buffer
+  u_instance_params1: {0, 0, 0, 0}
+  u_instance_params2: {0, 0, 0, 0}
+  u_instance_params3: {0, 0, 0, 0}
+  u_instance_params4: {0, 0, 0, 0}
+  u_indirect_params: {0, 0, 0, 0}
+  u_mesh_offset: {0, 0, 0, 0}

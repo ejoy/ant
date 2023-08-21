@@ -2,6 +2,7 @@ fx:
   vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
   fs: /pkg/ant.resources/shaders/postprocess/bloom/fs_upsample.sc
 properties:
+  u_bloom_param: {0, 0, 0, 0}
   s_scene_color:
     stage: 0
     access: "r"

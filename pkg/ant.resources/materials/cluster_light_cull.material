@@ -12,15 +12,11 @@ properties:
         access: rw
         stage: 1
         buffer: "global_index_count"
-    b_light_grids:
+    b_light_grids_write:
         access: w
         stage: 2
         buffer: "light_grids"
-    b_light_index_lists:
+    b_light_index_lists_write:
         access: w
         stage: 3
         buffer: "light_index_lists"
-    b_light_info:
-        access: r
-        stage: 4
-        buffer: "light_info"

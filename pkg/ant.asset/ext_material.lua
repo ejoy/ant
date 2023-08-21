@@ -65,63 +65,48 @@ local DEF_PROPERTIES<const> = {}
 
 local function generate_properties(fx, properties)
 	local uniforms = fx.uniforms
-	local new_properties = {}
 	properties = properties or DEF_PROPERTIES
+
+	local system, attrib = {}, {}
 	if uniforms and #uniforms > 0 then
 		for _, u in ipairs(uniforms) do
 			local n = u.name
 			if not n:match "@data" then
-				local v
-				if "s_lightmap" == n then
-					v = {stage = 8, handle = u.handle, value = nil, type = 't'}
+				if sa[n] then
+					system[#system+1] = n
 				else
-					local pv = properties[n] or {0.0, 0.0, 0.0, 0.0}
-					v = to_v(pv, u.handle)
+					attrib[n] = to_v(assert(properties[n]), u.handle)
 				end
-
-				new_properties[n] = v
 			end
 		end
 	end
 
 	for k, v in pairs(properties) do
-		if new_properties[k] == nil then
-			if v.image or v.buffer then
-				assert(v.access and v.stage)
-				if v.image then
-					assert(v.mip)
-				end
-				new_properties[k] = v
-			end
-		end
-	end
-
-	
-	if fx.shader_type == "COMPUTE" then
-		return {}, new_properties
-	end
-
-	local system, attrib = {}, {}
-	for k, p in pairs(new_properties) do
 		if sa[k] then
-			system[#system+1] = k
-		else
-			attrib[k] = p
+			error(("Invalid property name:%s, same as System attribute"):format(k))
+		end
+
+		if (not attrib[k]) and (v.image or v.buffer) then
+			assert(v.access and v.stage, "image or buffer property need define 'access' and 'stage'")
+			if v.image then
+				assert(v.mip, "image property need define 'mip'")
+			end
+			attrib[k] = v
 		end
 	end
 
-	local setting = fx.setting
-	if setting.lighting == "on" then
+	if fx.setting.lighting == "on" then
 		system[#system+1] = "b_light_info"
 		if use_cluster_shading then
 			system[#system+1] = "b_light_grids"
 			system[#system+1] = "b_light_index_lists"
 		end
 	end
-	if cs_skinning and setting.skinning == "on" then
-		attrib["b_skinning_matrices_vb"].type	= 'b'
-		attrib["b_skinning_in_dynamic_vb"].type	= 'b'
-		attrib["b_skinning_out_dynamic_vb"].type= 'b'
+
+	if cs_skinning and fx.setting.skinning == "on" then
+		assert(attrib["b_skinning_matrices_vb"]).type	= 'b'
+		assert(attrib["b_skinning_in_dynamic_vb"]).type	= 'b'
+		assert(attrib["b_skinning_out_dynamic_vb"]).type= 'b'
 	end
 	return system, attrib
 end

@@ -9,7 +9,7 @@ SAMPLER3D(s_multiple_scattering_texture,        2);
 #define OUPUT_FMT rgba32f
 
 IMAGE2D_WR(s_delta_irradiance,  OUPUT_FMT,      3);
-IMAGE2D_WR(s_irradiance,        OUPUT_FMT,      4);
+IMAGE2D_WR(s_irradiance_write,        OUPUT_FMT,      4);
 
 uniform mat4 luminance_from_radiance;
 uniform vec4 u_scattering_order;
@@ -29,5 +29,5 @@ void main()
     vec3 irradiance = mul(mat3(luminance_from_radiance), delta_irradiance);
 
     imageStore(s_delta_irradiance,  gl_GlobalInvocationID.xy, vec4(delta_irradiance, 1.0));
-    imageStore(s_irradiance,        gl_GlobalInvocationID.xy, vec4(irradiance, 1.0));
+    imageStore(s_irradiance_write,        gl_GlobalInvocationID.xy, vec4(irradiance, 1.0));
 }

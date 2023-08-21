@@ -186,9 +186,9 @@ function ibl_sys:render_preprocess()
         local dis = e.dispatch
         local mi = dis.material
 
-        mi.s_source         = source_tex
-        mi.s_irradiance     = icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w")
-        mi.u_build_ibl_param= math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
+        mi.s_source             = source_tex
+        mi.s_irradiance_write   = icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w")
+        mi.u_build_ibl_param    = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
 
         assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
@@ -221,7 +221,7 @@ function ibl_sys:render_preprocess()
 
         local mi = dis.material
         mi.s_source             = source_tex
-        mi.s_prefilter          = icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w")
+        mi.s_prefilter_write    = icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w")
         mi.u_build_ibl_param    = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, prefilter.roughness)
 
         assert(assetmgr.material_isvalid(dis.fx.prog))

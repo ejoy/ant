@@ -228,17 +228,6 @@ static inline int queue_idx(uint64_t mask){
 }
 
 static inline void
-draw_objs(lua_State *L, struct ecs_world *w, ecs::render_object& obj, const group_queues *g, submit_cache &cc){
-	for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-		const auto& ra = cc.ra[ii];
-		if (obj_visible(obj, ra.a->queue_mask)){
-			const auto mats = g ? &((*g)[ra.queue_idx]) : nullptr;
-			draw_obj(L, w, ra.a, &obj, mats, cc.transforms);
-		}
-	}
-}
-
-static inline void
 find_render_args(struct ecs_world *w, submit_cache &cc) {
 	for (auto& r : ecs_api::array<ecs::render_args>(w->ecs)) {
 		cc.ra[cc.ra_count++] = {&r, queue_idx(r.queue_mask)};

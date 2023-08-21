@@ -7,6 +7,8 @@ fx:
     shadow_receive: off
     subsurface: off
     WITHOUT_DEFAULT_UV: 1
+properties:
+  u_draw_indirect_type: {0, 0, 0, 0}
 state:
   ALPHA_REF: 0
   CULL: CCW

@@ -6,7 +6,7 @@
 SAMPLER2D(s_transmittance_texture, 0);
 
 IMAGE_WR(s_delta_irradiance, rgb32f, 1);
-IMAGE_WR(s_irradiance, rgb32f, 2);
+IMAGE_WR(s_irradiance_write, rgb32f, 2);
 
 NUM_THREADS(16, 16, 1)
 void main()
@@ -22,5 +22,5 @@ void main()
 
     vec3 irradiance = vec3_splat(0.0);
     //TODO: ?
-    imageStore(s_irradiance, gl_GlobalInvocationID.xy, irradiance); 
+    imageStore(s_irradiance_write, gl_GlobalInvocationID.xy, irradiance); 
 }

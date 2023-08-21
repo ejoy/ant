@@ -8,7 +8,3 @@ properties:
         stage: 0
         access: w
         buffer: "cluster_AABBs"
-    b_light_info:
-        stage: 4
-        access: r
-        buffer: "light_info"

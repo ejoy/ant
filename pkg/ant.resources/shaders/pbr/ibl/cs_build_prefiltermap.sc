@@ -6,12 +6,12 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_ARRAY_WR(s_prefilter, rgba16f, 1);
+IMAGE2D_ARRAY_WR(s_prefilter_write, rgba16f, 1);
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    ivec3 isize = imageSize(s_prefilter);
+    ivec3 isize = imageSize(s_prefilter_write);
     if (any(gl_GlobalInvocationID.xy >= isize.xy))
         return;
 
@@ -41,5 +41,5 @@ void main()
         }
     }
 
-    imageStore(s_prefilter, gl_GlobalInvocationID, color / u_sample_count);
+    imageStore(s_prefilter_write, gl_GlobalInvocationID, color / u_sample_count);
 }

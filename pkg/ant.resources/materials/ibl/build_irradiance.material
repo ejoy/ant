@@ -8,6 +8,8 @@ properties:
     s_source:
         stage: 0
         texture: /pkg/ant.resources/textures/default.texture
-    s_irradiance:
+    s_irradiance_write:
         stage: 1
-        texture: /pkg/ant.resources/textures/default.texture
+        mip: 0
+        access: w
+        image: /pkg/ant.resources/textures/default.texture

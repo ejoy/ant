@@ -14,3 +14,5 @@ properties:
     stage: 1
     access: w
     buffer: instance_buffer
+  u_instance_params: {0.0, 0.0, 0.0, 0.0}
+  u_indirect_params: {0.0, 0.0, 0.0, 0.0}

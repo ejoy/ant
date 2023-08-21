@@ -8,7 +8,10 @@ $input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE1 INPUT_INSTANCE2 INP
  */
 
 #include <bgfx_shader.sh>
-#include "common/curve_world.sh"
+#ifdef DRAW_INDIRECT
+uniform vec4 u_draw_indirect_type;
+#endif //DRAW_INDIRECT
+
 #include "common/transform.sh"
 #include "common/default_inputs_structure.sh"
 

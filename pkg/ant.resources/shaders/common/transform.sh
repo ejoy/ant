@@ -9,9 +9,6 @@
 #ifdef ENABLE_CURVE_WORLD
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
-#ifdef DRAW_INDIRECT
-	uniform vec4 u_draw_indirect_type;
-#endif
 
 vec2 get_tex(float idx){
 	if(idx == 0){

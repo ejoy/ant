@@ -33,12 +33,12 @@ void main(){
     uint offset = cluster_idx * light_count;
     const uint direciontal_light_idx = 0;
     for(uint light_idx=direciontal_light_idx+1; light_idx<light_count; ++light_idx){
-        light_info l; load_light_info(b_lights, light_idx, l);
+        light_info l; load_light_info(b_light_info, light_idx, l);
 
         if(interset_aabb(l, aabb)){
-            b_light_index_lists[offset+visible_light_count] = light_idx;
+            b_light_index_lists_write[offset+visible_light_count] = light_idx;
             ++visible_light_count;
         }
     }
-    store_light_grid2(b_light_grids, cluster_idx, offset, visible_light_count);
+    store_light_grid2(b_light_grids_write, cluster_idx, offset, visible_light_count);
 }

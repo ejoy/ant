@@ -72,7 +72,7 @@ void init_light_info(inout light_info l, vec3 posWS)
 
 light_info get_light(uint ilight, vec3 posWS)
 {
-    light_info l; load_light_info(b_lights, ilight, l);
+    light_info l; load_light_info(b_light_info, ilight, l);
     init_light_info(l, posWS);
     return l;
 }

@@ -60,52 +60,48 @@ local cluster_aabb_buffer_size<const> = cluster_count * cluster_aabb_size_in_vec
 
 local cluster_buffers = {
     AABB = {
-        build_stage = 0,
-        cull_stage = 0,
-        build_access = "w",
-        cull_access = "r",
-        name = "CLUSTER_BUFFER_AABB_STAGE",
-        layout = layoutmgr.get "t40",
+        build_stage     = 0,
+        build_access    = "w",
+
+        cull_stage      = 0,
+        cull_access     = "r",
+        name            = "CLUSTER_BUFFER_AABB_STAGE",
+        layout          = layoutmgr.get "t40",
     },
     -- TODO: not use
     -- index buffer of 32bit, and only 1 element
     global_index_count = {
-        cull_stage = 1,
-        cull_access = "rw",
-        name = "CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE",
+        cull_stage      = 1,
+        cull_access     = "rw",
+        name            = "CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE",
     },
     -- index buffer of 32bit
     light_grids = {
-        cull_stage = 2,
-        render_stage = 10,
-        cull_access = "w",
-        render_access = "r",
-        name = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
+        cull_stage      = 2,
+        cull_access     = "w",
+
+        render_stage    = 10,
+        render_access   = "r",
+        name            = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
     },
     -- index buffer of 32bit
     light_index_lists = {
-        cull_stage = 3,
-        size = 0,
-        cull_access = "w",
-        render_access = "r",
-        render_stage = 11,
-        name = "CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE",
+        cull_stage      = 3,
+        cull_access     = "w",
+
+        render_stage    = 11,
+        render_access   = "r",
+        size            = 0,
+        name            = "CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE",
     },
-    --[[
-        struct light_info{
-            vec4 pos; vec4 dir; vec4 color; 
-            vec4 param;
-        };
-    ]]
     light_info = {
-        build_stage = 4,
-        cull_stage = 4,
-        render_stage = 12,
-        build_access = "r",
-        cull_access = "r",
-        render_access = "r",
-        name = "CLUSTER_BUFFER_LIGHT_INFO_STAGE",
-        layout = layoutmgr.get "t40",
+        cull_stage      = 12,
+        cull_access     = "r",
+
+        render_stage    = 12,
+        render_access   = "r",
+        name            = "CLUSTER_BUFFER_LIGHT_INFO_STAGE",
+        layout          = layoutmgr.get "t40",
     }
 }
 
@@ -129,7 +125,7 @@ local function check_light_index_list()
     if lil.handle ~= oldhandle then
         assert(lil.handle)
         local ce = w:first "cluster_cull_light dispatch:in"
-        ce.dispatch.material.b_light_index_lists = lil.handle
+        ce.dispatch.material.b_light_index_lists_write = lil.handle
 
         imaterial.system_attrib_update("b_light_index_lists", lil.handle)
     end
@@ -209,19 +205,17 @@ function cfs:init_world()
     --build
     local be = w:first "cluster_build_aabb dispatch:in"
     local bmi = be.dispatch.material
-    bmi.b_cluster_AABBs = create_buffer_property(cluster_buffers.AABB,       "build")
-    bmi.b_light_info    = create_buffer_property(cluster_buffers.light_info, "build")
+    bmi.b_cluster_AABBs= create_buffer_property(cluster_buffers.AABB,       "build")
 
     build_cluster_aabb_struct(main_viewid, ceid)
 
     --cull
     local ce = w:first "cluster_cull_light dispatch:in"
     local cmi = ce.dispatch.material
-    cmi.b_cluster_AABBs      = create_buffer_property(cluster_buffers.AABB,                 "cull")
-    cmi.b_global_index_count = create_buffer_property(cluster_buffers.global_index_count,   "cull")
-    cmi.b_light_grids        = create_buffer_property(cluster_buffers.light_grids,          "cull")
-    cmi.b_light_index_lists  = create_buffer_property(cluster_buffers.light_index_lists,    "cull")
-    cmi.b_light_info         = create_buffer_property(cluster_buffers.light_info,           "cull")
+    cmi.b_cluster_AABBs             = create_buffer_property(cluster_buffers.AABB,                 "cull")
+    cmi.b_global_index_count        = create_buffer_property(cluster_buffers.global_index_count,   "cull")
+    cmi.b_light_grids_write         = create_buffer_property(cluster_buffers.light_grids,          "cull")
+    cmi.b_light_index_lists_write   = create_buffer_property(cluster_buffers.light_index_lists,    "cull")
 end
 
 local function cull_lights(viewid)

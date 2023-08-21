@@ -8,7 +8,7 @@ properties:
     s_source:
         stage: 0
         texture: /pkg/ant.resources/textures/default.texture
-    s_prefilter:
+    s_prefilter_write:
         stage: 1
         mip: 0
         access: w

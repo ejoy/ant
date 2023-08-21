@@ -7,13 +7,13 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
+IMAGE2D_ARRAY_WR(s_irradiance_write, rgba16f, 1);
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
     vec3 color = vec3_splat(0.0);
-    ivec3 isize = imageSize(s_irradiance);
+    ivec3 isize = imageSize(s_irradiance_write);
     vec3 N = id2dir(gl_GlobalInvocationID, vec2(isize.xy));
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
@@ -38,5 +38,5 @@ void main()
 
     color /= u_sample_count;
 
-    imageStore(s_irradiance, gl_GlobalInvocationID, vec4(color, 1.0));
+    imageStore(s_irradiance_write, gl_GlobalInvocationID, vec4(color, 1.0));
 }

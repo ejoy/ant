@@ -15,3 +15,7 @@ properties:
     stage: 1
     access: w
     buffer: instance_buffer
+  u_heap_params: {0.0, 0.0, 0.0, 0.0}
+  u_aabb_size: {0.0, 0.0, 0.0, 0.0}
+  u_interval_size: {0.0, 0.0, 0.0, 0.0}
+  u_instance_params: {0.0, 0.0, 0.0, 0.0}
