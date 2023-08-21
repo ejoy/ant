@@ -82,21 +82,17 @@ end
 
 local function do_open_proj(path)
     local lpath = lfs.path(path)
-    if lfs.exists(lpath / ".mount") then
-        local topname = global_data:update_root(lpath)
-        local bfs = require "bee.filesystem"
-        start_fileserver(tostring(bfs.exe_path()), path)
-        log_widget.init_log_receiver()
-        console_widget.init_console_sender()
-        world:pub { "UpdateDefaultLight", true }
-        if topname then
-            log.warn("need handle effect file")
-            return topname
-        else
-            print("Can not add effekseer resource seacher path.")
-        end
+    local topname = global_data:update_root(lpath)
+    local bfs = require "bee.filesystem"
+    start_fileserver(tostring(bfs.exe_path()), path)
+    log_widget.init_log_receiver()
+    console_widget.init_console_sender()
+    world:pub { "UpdateDefaultLight", true }
+    if topname then
+        log.warn("need handle effect file")
+        return topname
     else
-        log_widget.error({tag = "Editor", message = "no project exist!"})
+        print("Can not add effekseer resource seacher path.")
     end
 end
 
