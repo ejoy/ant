@@ -159,11 +159,9 @@ do
     end
 end
 
-local DEFAULT_MATERIAL_PATH <const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
-
 local function seri_material(status, filename, cfg)
-    if DEFAULT_MATERIAL_PATH == filename then
-        return DEFAULT_MATERIAL_PATH
+    if filename:sub(1, 1) == "/" then
+        return filename
     else
         local material = assert(status.material[filename])
         local info = check_update_material_info(status, filename, material, cfg)
