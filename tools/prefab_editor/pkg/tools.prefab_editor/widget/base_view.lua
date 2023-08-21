@@ -9,6 +9,7 @@ local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
 local BaseView = {}
+local render_layer_name = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 function BaseView:_init()
     if self.inited then
         return
@@ -28,7 +29,8 @@ function BaseView:_init()
         aabbmin  = uiproperty.Float({label = "AABB Min", dim = 3, speed = 0.05}),
         aabbmax  = uiproperty.Float({label = "AABB Max", dim = 3, speed = 0.05}),
         create_aabb  = uiproperty.Button({label="Create AABB"}),
-        delete_aabb  = uiproperty.Button({label="Delete AABB"})
+        delete_aabb  = uiproperty.Button({label="Delete AABB"}),
+        render_layer = uiproperty.Combo({label="Render Layer", options = render_layer_name})
     }
     self.general_property = uiproperty.Group({label = "General"}, self.base)
     --
@@ -51,6 +53,8 @@ function BaseView:_init()
     self.base.aabbmax:set_getter(function() return self:on_get_aabbmax() end)
     self.base.create_aabb:set_click(function() self:create_aabb() end)
     self.base.delete_aabb:set_click(function() self:delete_aabb() end)
+    self.base.render_layer:set_getter(function() return self:on_get_render_layer() end)
+    self.base.render_layer:set_setter(function(value) self:on_set_render_layer(value) end)
 end
 
 function BaseView:set_eid(eid)
@@ -67,7 +71,7 @@ function BaseView:set_eid(eid)
     local property = {}
     property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
-    local e <close> = world:entity(self.eid, "scene?in")
+    local e <close> = world:entity(self.eid, "scene?in render_layer?in")
     if e.scene then
         property[#property + 1] = self.base.position
         if self.has_rotate then
@@ -75,6 +79,9 @@ function BaseView:set_eid(eid)
         end
         if self.has_scale then
             property[#property + 1] = self.base.scale
+        end
+        if e.render_layer then
+            property[#property + 1] = self.base.render_layer
         end
         property[#property + 1] = self.base.aabbmin
         property[#property + 1] = self.base.aabbmax
@@ -280,6 +287,17 @@ function BaseView:on_get_aabbmax()
         end
     end
     return {0,0,0}
+end
+
+function BaseView:on_get_render_layer()
+    local e <close> = world:entity(self.eid, "render_layer?in")
+    return e.render_layer
+end
+
+local irl = ecs.require "ant.render|render_layer"
+function BaseView:on_set_render_layer(value)
+    local e <close> = world:entity(self.eid)
+    irl.set_layer(e, value)
 end
 
 function BaseView:create_aabb()

@@ -15,7 +15,7 @@ local iefk = ecs.require "ant.efk|efk"
 local fs = require "filesystem"
 function S.init_world()
     local files = {}
-    for file in fs.pairs(fs.path("/pkg/ant.tools.prefab_viewer/assets/efk")) do
+    for file in fs.pairs(fs.path("/pkg/tools.prefab_viewer/assets/efk")) do
         local s = file:string()
         if s:match("%.texture$") then
             files[#files+1] = s
@@ -23,7 +23,7 @@ function S.init_world()
     end
     iefk.preload(files)
 	--
-    world:create_object(ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/light.prefab"))
+    world:create_object(ecs.create_instance("/pkg/tools.prefab_viewer/assets/prefabs/light.prefab"))
 	-- ground plane
 	-- ecs.create_entity {
 	-- 	policy = {
@@ -32,8 +32,8 @@ function S.init_world()
 	-- 	},
 	-- 	data = {
 	-- 		scene = {s = {200, 1, 200}},
-	-- 		mesh  = "/pkg/ant.tools.prefab_viewer/assets/glb/plane.glb|meshes/Plane_P1.meshbin",
-	-- 		material    = "/pkg/ant.tools.prefab_viewer/assets/materials/texture_plane.material",
+	-- 		mesh  = "/pkg/tools.prefab_viewer/assets/glb/plane.glb|meshes/Plane_P1.meshbin",
+	-- 		material    = "/pkg/tools.prefab_viewer/assets/materials/texture_plane.material",
 	-- 		render_layer = "background",
 	-- 		visible_state= "main_view",
 	-- 		name        = "ground",
@@ -47,14 +47,14 @@ function S.init_world()
 	iterrain.gen_terrain_field(128, 128, 64, 10)
 	
 	-- test prefab
-	world:create_object(ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/preview.prefab"))
-    -- local miner = ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.prefab")
+	world:create_object(ecs.create_instance("/pkg/tools.prefab_viewer/assets/prefabs/preview.prefab"))
+    -- local miner = ecs.create_instance("/pkg/tools.prefab_viewer/assets/prefabs/miner-1.prefab")
     -- function miner:on_init() end
     -- miner.on_ready = function(instance)
     --     for _, eid in ipairs(instance.tag["*"]) do
     --         local e <close> = world:entity(eid, "tag?in anim_ctrl?in")
     --         if e.anim_ctrl then
-    --             iani.load_events(eid, "/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.event")
+    --             iani.load_events(eid, "/pkg/tools.prefab_viewer/assets/prefabs/miner-1.event")
     --         end
     --     end
     --     iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
@@ -73,7 +73,7 @@ function S.init_world()
 
     -- rmlui
     font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
-    irmlui.set_prefix "/pkg/ant.tools.prefab_viewer/assets/ui"
+    irmlui.set_prefix "/pkg/tools.prefab_viewer/assets/ui"
     local window = irmlui.open "joystick.rml"
 	window.addEventListener("message", function(event) world:pub {"joystick", event.data} end)
 end
