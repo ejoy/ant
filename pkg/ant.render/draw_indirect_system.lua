@@ -9,8 +9,8 @@ local idrawindirect = {}
 
 local type_table = {
     ["ROAD"] = {1, 0, 0, 0},
-    ["STONE_MOUNTAIN"] = {0, 1, 0, 0},
-    ["HEAP_MESH"] = {0, 0, 1, 0}
+    ["STONE_MOUNTAIN"] = {2, 0, 0, 0},
+    ["HEAP_MESH"] = {3, 0, 0, 0}
 }
 function draw_indirect_system:entity_init()
     for e in w:select "INIT draw_indirect:update" do

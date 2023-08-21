@@ -10,6 +10,48 @@
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
 
+#ifdef DRAW_INDIRECT
+	#define DRAW_INDIRECT_TYPE     u_draw_indirect_type.x
+	#define DRAW_INDIRECT_ROAD     1
+	#define DRAW_INDIRECT_MOUNTAIN 2
+	#define DRAW_INDIRECT_HEAPMESH 3
+
+mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
+{
+	mat4 wm = u_model[0];
+	if(DRAW_INDIRECT_TYPE == DRAW_INDIRECT_MOUNTAIN){
+		float s = d1.x;
+		float r = d1.y;
+		float tx = d1.z;
+		float tz = d1.w;
+		float rad = radians(r);
+		float cosy = cos(rad);
+		float siny = sin(rad);	
+		wm = mat4(
+			   s,          0,          0,        0, 
+			   0,          s,          0,        0, 
+			   0,          0,          s,        0, 
+			   0,          0,          0,        1
+		);
+		mat4 rm = mat4(
+			cosy,          0,      -siny,        0, 
+			   0,          1,          0,        0, 
+			siny,          0,       cosy,        0, 
+			   0,          0,          0,        1
+		);
+		wm = mul(rm, wm);
+		wm[0][3] = wm[0][3] + tx;
+		wm[2][3] = wm[2][3] + tz;		
+	}
+	else{
+		wm[0][3] = wm[0][3] + d1.x;
+		wm[1][3] = wm[1][3] + d1.y;
+		wm[2][3] = wm[2][3] + d1.z;		
+	}
+	return wm;
+}
+#endif
+
 static const vec2 s_rotate_texcorrds[] = {
 	vec2(0, 1),
 	vec2(0, 0),
@@ -55,44 +97,6 @@ highp vec3 quat_to_tangent(const highp vec4 q){
         	vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
 }
 
-mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_type)
-{
-	mat4 wm = u_model[0];
-	if(draw_indirect_type.x == 1 || draw_indirect_type.z == 1){
-		wm[0][3] = wm[0][3] + d1.x;
-		wm[1][3] = wm[1][3] + d1.y;
-		wm[2][3] = wm[2][3] + d1.z;
-	}
-	else if(draw_indirect_type.y == 1){
-		float s = d1.x;
-		float r = d1.y;
-		float tx = d1.z;
-		float tz = d1.w;
-		float rad = radians(r);
-		float cosy = cos(rad);
-		float siny = sin(rad);	
-		wm = mat4(
-			   s,          0,          0,        0, 
-			   0,          s,          0,        0, 
-			   0,          0,          s,        0, 
-			   0,          0,          0,        1
-		);
-		mat4 rm = mat4(
-			cosy,          0,      -siny,        0, 
-			   0,          1,          0,        0, 
-			siny,          0,       cosy,        0, 
-			   0,          0,          0,        1
-		);
-		wm = mul(rm, wm);
-		wm[0][3] = wm[0][3] + tx;
-		wm[2][3] = wm[2][3] + tz;
-	}
-	else{
-		
-	}
-	return wm;
-}
-
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 {
 	mat4 wolrdMat = mat4(
@@ -124,7 +128,7 @@ mat4 get_world_matrix_default(VSInput vs_input)
 mat4 get_world_matrix(VSInput vs_input)
 {
 #ifdef DRAW_INDIRECT
-	return get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2, u_draw_indirect_type);
+	return get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2);
 #else//!DRAW_INDIRECT
 #	if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
 	return calc_bone_transform(vs_input.index, vs_input.weight);
