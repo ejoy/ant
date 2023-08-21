@@ -7,7 +7,7 @@ local S = {}
 function S.INIT(repopath)
     local access = dofile "/engine/vfs/repoaccess.lua"
     dofile "/engine/editor/create_repo.lua" (repopath, access)
-    cr = import_package "ant.compile_resource"
+    cr = require "main"
     cr.init_setting()
 end
 
