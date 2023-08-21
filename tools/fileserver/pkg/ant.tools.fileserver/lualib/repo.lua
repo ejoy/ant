@@ -395,6 +395,8 @@ function REPO_MT:build_dir(lpath)
 		_repo = self._repo,
 		_namecache = {},
 		_mountpoint = {},
+		_mountengine = {},
+		_mountextension = self._mountextension,
 		_resource = true,
 	}
 	access.addmount(r, lpath)

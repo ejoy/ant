@@ -1,6 +1,7 @@
 local access = {}
 
 local lfs = require "bee.filesystem"
+local datalist = require "datalist"
 
 function access.addmount(repo, path)
 	if not lfs.exists(path) then
@@ -14,23 +15,59 @@ function access.addmount(repo, path)
 	repo._mountpoint[#repo._mountpoint+1] = lfs.path(path)
 end
 
+local MountConfig <const> = [[
+mount:
+    %engine%
+    %project%
+    %project%/mod
+engine:
+    engine
+    pkg
+extension:
+    .settings
+    .prefab
+    .ecs
+    .lua
+    .rcss
+    .rml
+    .efk
+    .ttf
+    .otf
+    .ttc
+    .bank
+    .event
+    .anim
+    .bin
+    .cfg
+    .ozz
+    .vbbin
+    .vb2bin
+    .ibbin
+    .meshbin
+    .skinbin
+]]
+
+local function loadmount(repo)
+	local f <close> = io.open((repo._root / ".mount"):string(), "rb")
+	if f then
+		local cfg = datalist.parse(f:read "a")
+		if cfg then
+			return cfg
+		end
+	end
+	return datalist.parse(MountConfig)
+end
+
 function access.readmount(repo)
+	local cfg = loadmount(repo)
+	repo._mountengine = cfg.engine
+	repo._mountextension = cfg.extension
 	repo._mountpoint = {}
-	local f <close> = assert(io.open((repo._root / ".mount"):string(), "rb"))
-	for line in f:lines() do
-		local text = line
-			:gsub("#.*$","")	-- strip comment
-			:gsub("^%s*","")
-			:gsub("%s*$","")
-			:gsub("%${([^}]*)}", {
+	for _, line in ipairs(cfg.mount) do
+		access.addmount(repo, line:gsub("%%([^%%]*)%%", {
 			engine = lfs.current_path():string(),
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1"),
-		})
-		if text:match "^%s*$" then
-			goto continue
-		end
-		access.addmount(repo, text)
-		::continue::
+		}))
 	end
 end
 
@@ -87,52 +124,28 @@ function access.virtualpath(repo, pathname)
 	end
 end
 
-local DefIgnoreFunc <const> = function() end
-
-local function vfsignore(path)
-	local f <close> = io.open((path / ".vfs"):string(), "r")
-	if not f then
-		return DefIgnoreFunc
-	end
-	local include = {}
-	local exclude = {}
-	for line in f:lines() do
-		local type, name = line:match "^([ie][nx]clude)%s+(.*)$"
-		if name then
-			if type == "include" then
-				include[#include+1] = name
-			elseif type == "exclude" then
-				exclude[#exclude+1] = name
-			end
-		end
-	end
-	return function (v)
-		for i = 1, #exclude do
-			if v:match(exclude[i]) then
-				return true
-			end
-		end
-		for i = 1, #include do
-			if v:match(include[i]) then
-				return
-			end
-		end
-		return true
-	end
-end
-
 function access.list_files(repo, pathname)
 	local files = {}
-	for _, mountpoint in ipairs(repo._mountpoint) do
+	local start = 1
+	if pathname == "/" and not repo._resource then
+		local mountpoint = repo._mountpoint[1]
+		for _, name in ipairs(repo._mountengine) do
+			files[name] = (mountpoint / name):is_directory() and "d" or "f"
+		end
+		start = 2
+	end
+	for i = start, #repo._mountpoint do
+		local mountpoint = repo._mountpoint[i]
 		local path = mountpoint / pathname:sub(2)
 		if lfs.is_directory(path) then
-			local ignore = vfsignore(path)
 			for name, status in lfs.pairs(path) do
 				local filename = name:filename():string()
-				if filename:sub(1,1) ~= '.' -- ignore .xxx file
-					and not ignore(filename)
-				then
-					files[filename] = status:is_directory() and "d" or "f"
+				if filename:sub(1,1) ~= "." then
+					if status:is_directory() then
+						files[filename] = "d"
+					else
+						files[filename] = "f"
+					end
 				end
 			end
 		end
