@@ -160,11 +160,16 @@ do
 end
 
 local function seri_material(status, filename, cfg)
+    local material_names = status.material_names
+    local stem = fs.path(filename):stem():string()
+
     if filename:sub(1, 1) == "/" then
+        material_names[stem] = stem
         return filename
     else
         local material = assert(status.material[filename])
         local info = check_update_material_info(status, filename, material, cfg)
+        material_names[stem] = fs.path(info.filename):stem():string()
         return info.filename
     end
 end
@@ -359,7 +364,7 @@ return function (status)
     local scene = gltfscene.scenes[sceneidx+1]
 
     status.prefab = {}
-
+    status.material_names = {}
     local rootid = create_entity(status, {
         policy = {
             "ant.general|name",
@@ -438,4 +443,6 @@ return function (status)
     utility.save_txt_file(status, "mesh.prefab", status.prefab, function (data)
         return serialize_prefab(status, data)
     end)
+
+    utility.save_txt_file(status, "materials/materials.names", status.material_names, function (data) return data end)
 end
