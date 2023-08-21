@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
+local fs = require "bee.filesystem"
 
 local FD = ...
 
@@ -9,7 +10,10 @@ local ServiceCompile = ltask.uniqueservice "compile"
 local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
 local ServiceLogManager = ltask.uniqueservice "log.manager"
 local ServiceEditor = ltask.uniqueservice "editor"
+local ServiceArguments = ltask.queryservice "arguments"
 local ServiceDebugProxy
+local arg = ltask.call(ServiceArguments, "QUERY")
+local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 
 local LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE")
 local LoggerQueue = {}
@@ -40,6 +44,7 @@ function message.SHAKEHANDS()
 end
 
 function message.ROOT()
+	ltask.call(ServiceCompile, "INIT", REPOPATH)
 	response("ROOT", roothash)
 end
 
