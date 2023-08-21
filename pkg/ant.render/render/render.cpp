@@ -22,7 +22,6 @@ extern "C"{
 #include <memory.h>
 #include <string.h>
 #include <algorithm>
-
 struct transform {
 	uint32_t tid;
 	uint32_t stride;
@@ -41,23 +40,29 @@ enum queue_type{
 
 static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 
-using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
+using obj_transforms = std::unordered_map<uint64_t, transform>;
 static inline transform
-update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
-	auto it = trans.find(ro);
+update_transform(struct ecs_world* w, const ecs::render_object *ro, const math_t& hwm, obj_transforms &trans){
+	uint64_t tran_key = (uint64_t)ro ^ hwm.idx;
+	auto it = trans.find(tran_key);
 	if (it == trans.end()){
 		const math_t wm = ro->worldmat;
 		assert(math_valid(w->math3d->M, wm) && !math_isnull(wm) && "Invalid world mat");
-		const float * v = math_value(w->math3d->M, wm);
 		const int num = math_size(w->math3d->M, wm);
 		transform t;
 		bgfx_transform_t bt;
 		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &bt, (uint16_t)num);
 		t.stride = num;
-		memcpy(bt.data, v, sizeof(float)*16*num);
-		it = trans.insert(std::make_pair(ro, t)).first;
+		if(hwm.idx == MATH_NULL.idx){
+			const float * v = math_value(w->math3d->M, wm);
+			memcpy(bt.data, v, sizeof(float)*16*num);
+		}
+		else{
+			math_t r = math_ref(w->math3d->M, bt.data, MATH_TYPE_MAT, t.stride);
+			math3d_mul_matrix_array(w->math3d->M, hwm, wm, r);			
+		}
+		it = trans.insert(std::make_pair(tran_key, t)).first;
 	}
-
 	return it->second;
 }
 
@@ -124,27 +129,6 @@ get_material(struct render_material * R, const ecs::render_object* ro, size_t mi
 
 using matrix_array = std::vector<math_t>;
 
-static inline transform
-update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, obj_transforms &trans_cache){
-	auto it = trans_cache.find(ro);
-	if (trans_cache.end() == it){
-		transform t;
-		t.stride = math_size(w->math3d->M, ro->worldmat);
-		const auto nummat = worldmats.size();
-		const auto num = nummat * t.stride;
-		bgfx_transform_t trans;
-		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &trans, (uint16_t)num);
-		for (size_t i=0; i<nummat; ++i){
-			math_t r = math_ref(w->math3d->M, trans.data+i*t.stride*16, MATH_TYPE_MAT, t.stride);
-			math3d_mul_matrix_array(w->math3d->M, worldmats[i], ro->worldmat, r);
-		}
-
-		it = trans_cache.insert(std::make_pair(ro, t)).first;
-	}
-
-	return it->second;
-}
-
 static inline void
 submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object *obj, bgfx_program_handle_t prog, uint8_t discardflags){
 	if(is_indirect_draw(obj)){
@@ -171,14 +155,14 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 	
 	transform t;
 	if (mats){
-		t = update_hitch_transform(w, obj, *mats, trans);
 		for (int i=0; i<mats->size()-1; ++i) {
+			t = update_transform(w, obj, (*mats)[i], trans);
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 			submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
-			t.tid += t.stride;
 		}
+		t = update_transform(w, obj, (*mats)[mats->size()-1], trans);
 	} else {
-		t = update_transform(w, obj, trans);
+		t = update_transform(w, obj, MATH_NULL, trans);
 	}
 
 	w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
