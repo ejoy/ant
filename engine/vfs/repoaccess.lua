@@ -130,7 +130,7 @@ function access.list_files(repo, pathname)
 	if pathname == "/" and not repo._resource then
 		local mountpoint = repo._mountpoint[1]
 		for _, name in ipairs(repo._mountengine) do
-			files[name] = (mountpoint / name):is_directory() and "d" or "f"
+			files[name] = lfs.is_directory(mountpoint / name) and "d" or "f"
 		end
 		start = 2
 	end
