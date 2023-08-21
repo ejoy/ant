@@ -1,8 +1,10 @@
-require "init_package"
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
 local repo_new = require "repo".new
+
+local ServiceArguments = ltask.queryservice "s|arguments"
+local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = arg[1]
 
 local rebuild = false

@@ -1,10 +1,9 @@
-require "init_package"
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
 local convert = require "converdbgpath"
-local ServiceDebugListen = ltask.uniqueservice "debug.listen"
-local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
+local ServiceDebugListen = ltask.uniqueservice "s|debug.listen"
+local ServiceVfsMgr = ltask.uniqueservice "s|vfsmgr"
 local RuntimeFD, VfsSessionId = ...
 local DebuggerFD = ltask.call(ServiceDebugListen, "LISTEN")
 

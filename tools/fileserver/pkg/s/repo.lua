@@ -7,7 +7,7 @@ local REPO_MT = {}
 REPO_MT.__index = REPO_MT
 
 local lfs = require "bee.filesystem"
-local access = require "vfs.repoaccess"
+local access = dofile "/engine/vfs/repoaccess.lua"
 local crypt = require "crypt"
 
 local function byte2hex(c)

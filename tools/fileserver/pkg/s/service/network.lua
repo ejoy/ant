@@ -179,7 +179,10 @@ end
 
 function S.connect(protocol, ...)
     local fd = assert(socket(protocol))
-    assert(fd:connect(...) ~= nil)
+    local r, err = fd:connect(...)
+    if r == nil then
+        return r, err
+    end
     local s = {
         fd = fd,
         wait_write = {},

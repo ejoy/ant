@@ -6,12 +6,12 @@ local fs = require "bee.filesystem"
 local FD = ...
 
 local message = {}
-local ServiceCompile = ltask.uniqueservice "compile"
-local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
-local ServiceLogManager = ltask.uniqueservice "log.manager"
-local ServiceEditor = ltask.uniqueservice "editor"
-local ServiceArguments = ltask.queryservice "arguments"
 local ServiceDebugProxy
+local ServiceCompile = ltask.uniqueservice "s|compile"
+local ServiceVfsMgr = ltask.uniqueservice "s|vfsmgr"
+local ServiceLogManager = ltask.uniqueservice "s|log.manager"
+local ServiceEditor = ltask.uniqueservice "s|editor"
+local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 
@@ -118,7 +118,7 @@ end
 
 function message.DBG(data)
 	--if not ServiceDebugProxy then
-	--	ServiceDebugProxy = ltask.spawn("debug.proxy", FD)
+	--	ServiceDebugProxy = ltask.spawn("s|debug.proxy", FD)
 	--end
 	--ltask.send(ServiceDebugProxy, "MESSAGE", data)
 end

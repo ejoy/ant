@@ -5,8 +5,6 @@ local cr
 local S = {}
 
 function S.INIT(repopath)
-    package.path = "/engine/?.lua"
-    require "bootstrap"
     local access = dofile "/engine/vfs/repoaccess.lua"
     dofile "/engine/editor/create_repo.lua" (repopath, access)
     cr = import_package "ant.compile_resource"

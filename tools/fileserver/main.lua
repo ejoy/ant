@@ -2,10 +2,10 @@ package.path = "engine/?.lua"
 require "bootstrap"
 local task = dofile "/engine/task/bootstrap.lua"
 task {
-    service_path = "/pkg/ant.tools.fileserver/service/?.lua;/engine/service/?.lua",
-    lua_path = "/pkg/ant.tools.fileserver/lualib/?.lua",
-    bootstrap = { "listen", arg },
-    logger = { "log.server" },
-    exclusive = { "timer", "network", "subprocess" },
+    support_package = true,
+    service_path = "${package}/service/?.lua",
+    bootstrap = { "s|listen", arg },
+    logger = { "s|log.server" },
+    exclusive = { "timer", "s|network", "subprocess" },
     debuglog = "server_log.txt",
 }

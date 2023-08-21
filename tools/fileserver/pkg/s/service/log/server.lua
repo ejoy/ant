@@ -1,5 +1,5 @@
 local ltask = require "ltask"
-local ServiceEditor = ltask.uniqueservice "editor"
+local ServiceEditor = ltask.uniqueservice "s|editor"
 
 local S = {}
 local lables = {}
