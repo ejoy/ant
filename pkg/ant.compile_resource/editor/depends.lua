@@ -97,13 +97,13 @@ function m.read_if_not_dirty(path)
 end
 
 function m.make_depend_graphic_settings(depfiles, localpath)
-    m.add(depfiles, localpath "/pkg/ant.settings/default/graphic_settings")
-    local gp = fs.path "/graphic_settings"
+    m.add(depfiles, localpath "/pkg/ant.settings/default/graphic.settings")
+    local gp = fs.path "/graphic.settings"
     if fs.exists(gp) then
-        m.add(depfiles, localpath "/graphic_settings")
+        m.add(depfiles, localpath "/graphic.settings")
     else
         local pp = localpath "/"
-        m.add(depfiles, pp:string() .. "/graphic_settings")
+        m.add(depfiles, pp:string() .. "/graphic.settings")
     end
 end
 

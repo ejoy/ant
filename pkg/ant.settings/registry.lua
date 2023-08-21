@@ -1,14 +1,12 @@
-local fs = require 'filesystem'
-local datalist = require 'datalist'
+local fs = require "filesystem"
+local datalist = require "datalist"
+local fastio = require "fastio"
 
 local mt = {}
 mt.__index = mt
 
-local function load(path)
-    local f = assert(fs.open(path, 'r'))
-    local str = f:read "a"
-    f:close()
-    return str
+local function readall(path)
+    return fastio.readall(fs.path(path):localpath():string(), path)
 end
 
 local function split(s)
@@ -156,8 +154,7 @@ local m = {}
 
 function m.create(path)
     local self = setmetatable({}, mt)
-    self._path = path
-    local data = datalist.parse(load(path))
+    local data = datalist.parse(readall(path))
     if not data then
         return
     end

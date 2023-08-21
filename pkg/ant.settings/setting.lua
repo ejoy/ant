@@ -6,7 +6,7 @@ local function read_setting(defpath, userpath)
     local default_settings = assert(reg.create(defpath))
     reg.use(default_settings, platform.os)
 
-    if fs.exists(userpath) then
+    if fs.exists(fs.path(userpath)) then
         local userdef_settings = assert(reg.create(userpath))
         reg.use(userdef_settings, platform.os)
         reg.merge(userdef_settings, default_settings)
@@ -16,9 +16,9 @@ local function read_setting(defpath, userpath)
     end
 end
 
-local userdef_settings          = read_setting(fs.path "/pkg/ant.settings/default/settings",          fs.path "/settings")
-local userdef_graphic_settings  = read_setting(fs.path "/pkg/ant.settings/default/graphic_settings",  fs.path "/graphic_settings")
+local general_settings = read_setting("/pkg/ant.settings/default/general.settings", "/general.settings")
+local graphic_settings = read_setting("/pkg/ant.settings/default/graphic.settings", "/graphic.settings")
 
-reg.merge(userdef_settings, userdef_graphic_settings)
+reg.merge(general_settings, graphic_settings)
 
-return userdef_settings
+return general_settings
