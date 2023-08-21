@@ -2,12 +2,12 @@ local luaecs = import_package "ant.luaecs"
 local policy = require "policy"
 local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
-local fs = require "filesystem"
 local typeclass = require "typeclass"
 local system = require "system"
 local event = require "event"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
+local fastio = require "fastio"
 
 local world_metatable = {}
 local world = {}
@@ -173,37 +173,14 @@ local function create_template_(w, t)
     return prefab
 end
 
-local function read_file(filename)
-    local f
-    if string.sub(filename, 1, 1) == "/" then
-        f = assert(io.open(assetmgr.compile(filename), "rb"))
-    else
-        f = assert(io.open(filename, "rb"))
-    end
-    local c = f:read "a"
-    f:close()
-    return c
-end
-
 function create_template(w, filename)
     if type(filename) ~= "string" then
         return create_template_(w, filename)
     end
     if not templates[filename] then
-        local t = serialize.parse(filename, read_file(filename))
-        local patchfile = filename .. ".patch"
-        local count = #t
-        if fs.exists(fs.path(patchfile)) then
-            local patch = serialize.parse(patchfile, read_file(patchfile))
-            for index, value in ipairs(patch) do
-                if value.mount and value.mount ~= 1 then
-                    value.mount = count + index - 1
-                else
-                    value.mount = 1
-                end
-                t[#t + 1] = value
-            end
-        end
+        local realpath = assetmgr.compile(filename)
+        local data = fastio.readall(realpath, filename)
+        local t = serialize.parse(filename, data)
         templates[filename] = create_template_(w, t)
     end
     return templates[filename]

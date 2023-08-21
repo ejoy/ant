@@ -6,7 +6,7 @@ mt.__index = mt
 
 local function load(path)
     local f = assert(fs.open(path, 'r'))
-    local str = f:read 'a'
+    local str = f:read "a"
     f:close()
     return str
 end
