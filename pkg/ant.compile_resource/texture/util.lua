@@ -1,5 +1,5 @@
 local subprocess 	= require "subprocess"
-local sampler 		= require "texture.sampler"
+local sampler 		= import_package "ant.general".sampler
 local lfs 			= require "bee.filesystem"
 local image 		= require "image"
 local math3d		= require "math3d"

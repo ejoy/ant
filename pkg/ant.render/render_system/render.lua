@@ -13,7 +13,7 @@ local fbmgr			= require "framebuffer_mgr"
 local layoutmgr		= require "vertexlayout_mgr"
 
 local hwi			= import_package "ant.hwi"
-local sampler		= import_package "ant.compile_resource".sampler
+local sampler		= import_package "ant.general".sampler
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 

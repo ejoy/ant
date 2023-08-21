@@ -20,7 +20,7 @@ end
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
 
-local sampler   = import_package "ant.compile_resource".sampler
+local sampler   = import_package "ant.general".sampler
 
 local hwi       = import_package "ant.hwi"
 local fbmgr     = require "framebuffer_mgr"
