@@ -82,10 +82,8 @@ end
 
 local _dofile = dofile
 function dofile(path)
-    local f = assert(io.open(path))
-    local str = f:read "a"
-    f:close()
-    return assert(load(str, "@" .. path))()
+	local fastio = require "fastio"
+    return assert(fastio.loadfile(path))()
 end
 local i = 1
 while true do

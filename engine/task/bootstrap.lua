@@ -49,9 +49,10 @@ local function toclose(f)
 	return setmetatable({}, {__close=f})
 end
 
-local function readall(filename)
-	local f <close> = assert(io.open(vfs.realpath(filename), "rb"))
-	return f:read "a"
+local function readall(path)
+	local fastio = require "fastio"
+	local realpath = vfs.realpath(path)
+	return fastio.readall_s(realpath, path)
 end
 
 local function init(c)

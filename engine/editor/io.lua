@@ -3,6 +3,7 @@ local repopath, fddata = ...
 package.path = "engine/?.lua"
 package.cpath = ""
 
+local fastio = require "fastio"
 local vfs = require "vfs"
 local thread = require "bee.thread"
 local socket = require "bee.socket"
@@ -12,18 +13,8 @@ thread.setname "ant - IO thread"
 local quit = false
 local channelfd = socket.fd(fddata)
 
-local function loadfile(path)
-	local f = io.open(path)
-	if not f then
-		return nil, path..':No such file or directory.'
-	end
-	local str = f:read 'a'
-	f:close()
-	return load(str, "@" .. path)
-end
-
 local function dofile(path)
-	return assert(loadfile(path))()
+	return assert(fastio.loadfile(path))()
 end
 
 dofile "engine/log.lua"
@@ -145,7 +136,7 @@ local function ltask_ready()
 end
 
 local function ltask_init()
-	assert(loadfile "engine/task/service/service.lua")(true)
+	assert(fastio.loadfile "engine/task/service/service.lua")(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()

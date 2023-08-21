@@ -13,6 +13,7 @@ if path then
 end
 
 -- C libs only
+local fastio = require "fastio"
 local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
@@ -749,30 +750,8 @@ local function ltask_ready()
 	return coroutine.yield() == nil
 end
 
-local function ltask_loadfile(path, realpath)
-	local f, err, ec = io.open(realpath, 'rb')
-	if not f then
-		local function errmsg(err, filename, real_filename)
-			local first, last = err:find(real_filename, 1, true)
-			if not first then
-				return err
-			end
-			return err:sub(1, first-1) .. filename .. err:sub(last+1)
-		end
-		err = errmsg(err, path, realpath)
-		return nil, err, ec
-	end
-	local str = f:read 'a'
-	f:close()
-	if package.preload.firmware ~= nil then
-		return load(str, '@' .. path)
-	else
-		return load(str, '@' .. realpath)
-	end
-end
-
 local function ltask_init(path, realpath)
-	assert(ltask_loadfile(path, realpath))(true)
+	assert(fastio.loadfile(realpath, path))(true)
 	ltask = require "ltask"
 	ltask.dispatch(S)
 	local waitfunc, fd = exclusive.eventinit()

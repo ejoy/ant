@@ -25,18 +25,10 @@ vfs.iothread = boot.preinit [[
         dbg:event("setThreadName", "IO thread")
         dbg:event "wait"
     end
-    local function loadfile(path)
-        local f = io.open(path)
-        if not f then
-            return nil, path..':No such file or directory.'
-        end
-        local str = f:read 'a'
-        f:close()
-        return load(str, "@" .. path)
-    end
+    local fastio = require "fastio"
     local thread = require "bee.thread"
     local io_req = thread.channel "IOreq"
-    assert(loadfile "engine/editor/io.lua")(io_req:bpop())
+    assert(fastio.loadfile "engine/editor/io.lua")(io_req:bpop())
 ]]
 
 vfs.initfunc("engine/firmware/init_thread.lua", {
