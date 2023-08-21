@@ -19,9 +19,6 @@
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "3rd/reactphysics3d"]
-	path = 3rd/reactphysics3d
-	url = https://github.com/DanielChappuis/reactphysics3d.git
 [submodule "3rd/yoga"]
 	path = 3rd/yoga
 	url = https://github.com/facebook/yoga.git

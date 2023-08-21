@@ -21,7 +21,6 @@ int luaopen_remotedebug_hookmgr(lua_State* L);
 int luaopen_remotedebug_stdio(lua_State* L);
 int luaopen_remotedebug_visitor(lua_State* L);
 int luaopen_rmlui(lua_State* L);
-int luaopen_rp3d_core(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_textureman_client(lua_State *L);
@@ -91,7 +90,6 @@ void ant_loadmodules(lua_State* L) {
         //{ "remotedebug.stdio", luaopen_remotedebug_stdio },
         //{ "remotedebug.visitor", luaopen_remotedebug_visitor },
         { "rmlui", luaopen_rmlui },
-        { "rp3d.core", luaopen_rp3d_core },
         { "window", luaopen_window },
         { "terrain", luaopen_terrain },
         { "textureman.client", luaopen_textureman_client },
