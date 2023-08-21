@@ -4,7 +4,7 @@ compress:
   windows: BC3
 maxsize: 256x256
 mipmap: 9
-path: /pkg/ant.tools.prefab_viewer/assets/textures/tile.dds
+path: /pkg/tools.prefab_viewer/assets/textures/tile.dds
 sampler:
   MAG: LINEAR
   MIN: LINEAR

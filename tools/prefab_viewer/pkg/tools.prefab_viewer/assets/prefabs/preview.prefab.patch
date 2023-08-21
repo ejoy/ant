@@ -8,4 +8,4 @@ policy:
 ---
 editor: false
 mount: 2
-prefab: /pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.prefab
+prefab: /pkg/tools.prefab_viewer/assets/prefabs/miner-1.prefab

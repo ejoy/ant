@@ -1,7 +1,7 @@
 colorspace: linear
 normalmap: false
 equirect: true
-path: /pkg/ant.tools.prefab_viewer/assets/textures/cubemap/aerodynamics_workshop_2k.hdr
+path: /pkg/tools.prefab_viewer/assets/textures/cubemap/aerodynamics_workshop_2k.hdr
 mipmap: 0
 build_irradianceSH: true
 sampler:

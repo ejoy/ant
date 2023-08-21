@@ -8,7 +8,7 @@ data:
       size: 32
     prefilter:
       size: 128
-  material: /pkg/ant.tools.prefab_viewer/assets/materials/sky/skybox.material
+  material: /pkg/tools.prefab_viewer/assets/materials/sky/skybox.material
   name: skybox_test
   render_layer: background
   scene: {}

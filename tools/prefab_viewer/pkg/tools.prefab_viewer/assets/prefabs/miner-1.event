@@ -2,7 +2,7 @@ work:
   ---
   event_list:
     ---
-    asset_path: /pkg/ant.tools.prefab_viewer/assets/efk/miner_dust.efk
+    asset_path: /pkg/tools.prefab_viewer/assets/efk/miner_dust.efk
     event_type: Effect
     life_time: 2
     link_info:

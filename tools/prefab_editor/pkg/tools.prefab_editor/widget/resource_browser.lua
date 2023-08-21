@@ -86,13 +86,15 @@ function m.update_resource_tree(hiden_engine_res)
         packages = {}
         for _, p in ipairs(global_data.packages) do
             local isengine
-            for _, ep in ipairs(engine_package_resources) do
-                if p.name == ep then
-                    isengine = true
-                    break
-                end
+            -- for _, ep in ipairs(engine_package_resources) do
+            --     if p.name == ep then
+            --         isengine = true
+            --         break
+            --     end
+            -- end
+            if string.sub(p.name, 1, 4) == "ant." then
+                isengine = true
             end
-
             if not isengine then
                 packages[#packages+1] = p
             end

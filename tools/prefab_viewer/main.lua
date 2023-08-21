@@ -3,7 +3,7 @@ require "bootstrap"
 import_package "ant.window".start {
     enable_mouse = true,
     import = {
-        "@ant.tools.prefab_viewer",
+        "@tools.prefab_viewer",
     },
     pipeline = {
         "init",
@@ -11,7 +11,7 @@ import_package "ant.window".start {
         "exit",
     },
     system = {
-        "ant.tools.prefab_viewer|init_system",
+        "tools.prefab_viewer|init_system",
     },
     policy = {
         "ant.general|name",
