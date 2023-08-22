@@ -1,29 +1,29 @@
-local fs = require "filesystem"
 local ltask = require "ltask"
 local fastio = require "fastio"
+local vfs = require "vfs"
 local constructor = require "core.DOM.constructor"
 
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 
 local m = {}
 
-function m.exists(path)
-    return fs.exists(fs.path(path))
+function m.is_file(path)
+    return vfs.type(path) == "file"
 end
 
 function m.readfile(source_path)
-    local realpath = fs.path(source_path):localpath():string()
+    local realpath = vfs.realpath(source_path)
     return fastio.readall(realpath, source_path)
 end
 
 function m.loadstring(content, source_path, source_line, env)
-    local realpath = fs.path(source_path):localpath():string()
+    local realpath = vfs.realpath(source_path)
     local source = "--@"..realpath..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
 function m.loadfile(source_path, env)
-    local realpath = fs.path(source_path):localpath():string()
+    local realpath = vfs.realpath(source_path)
     return fastio.loadfile(realpath, source_path, env)
 end
 

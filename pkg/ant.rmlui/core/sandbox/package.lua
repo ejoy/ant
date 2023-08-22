@@ -10,7 +10,7 @@ return function (env, path)
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            if filemanager.exists(filename) then
+            if filemanager.is_file(filename) then
                 return filename
             end
         end
