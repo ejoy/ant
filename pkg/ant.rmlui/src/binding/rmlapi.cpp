@@ -85,8 +85,7 @@ lDocumentCreate(lua_State* L) {
 		(float)luaL_checkinteger(L, 1),
 		(float)luaL_checkinteger(L, 2)
 	);
-	std::string path = lua_checkstdstring(L, 3);
-	Rml::Document* doc = new Rml::Document(dimensions, path);
+	Rml::Document* doc = new Rml::Document(dimensions);
 	lua_pushlightuserdata(L, doc);
 	return 1;
 }

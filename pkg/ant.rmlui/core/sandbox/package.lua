@@ -1,10 +1,10 @@
 local filemanager = require "core.filemanager"
 
-return function (env)
+return function (env, path)
     local package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = {},
-        path = '?.lua'
+        path = path:match("^(.+/)[^/]*$")..'?.lua'
     }
     local function searchpath(name, path)
         name = string.gsub(name, '%.', '/')

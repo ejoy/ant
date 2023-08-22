@@ -31,8 +31,8 @@ local stdlib = {
     audio = require "core.sandbox.audio",
 }
 
-return function ()
+return function (path)
     local env = {}
-    createPackage(env)
+    createPackage(env, path)
     return setmetatable(env, {__index = stdlib})
 end

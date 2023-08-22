@@ -20,7 +20,7 @@ enum class HtmlHead {
 
 class Document {
 public:
-	Document(const Size& dimensions, const std::string& path);
+	Document(const Size& dimensions);
 	virtual ~Document();
 	const StyleSheet& GetStyleSheet() const;
 	void SetDimensions(const Size& dimensions);
@@ -47,7 +47,6 @@ private:
 	std::deque<std::unique_ptr<Node>> removednodes;
 	Element body;
 	Size dimensions;
-	std::string source_url;
 	bool dirty_dimensions = false;
 };
 

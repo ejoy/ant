@@ -9,10 +9,9 @@
 
 namespace Rml {
 
-Document::Document(const Size& _dimensions, const std::string& path)
+Document::Document(const Size& _dimensions)
 	: body(this, "body")
 	, dimensions(_dimensions)
-	, source_url(path)
 { }
 
 Document::~Document() {
@@ -158,7 +157,7 @@ void Document::LoadStyleSheet(std::string_view source_path, std::string_view con
 }
 
 void Document::LoadStyleSheet(std::string_view source_path, std::string_view content, int source_line) {
-	StyleSheetFactory::CombineStyleSheet(style_sheet, source_url, content, source_line);
+	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path, content, source_line);
 }
 
 }
