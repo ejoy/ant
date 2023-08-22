@@ -202,6 +202,11 @@ static bool obj_visible(const ObjType &o, uint64_t mask){
 			(0 == (o.cull_masks & mask));
 }
 
+template<typename ObjType>
+static bool obj_queue_visible(const ObjType &o, uint64_t mask){
+	return	(0 != (o.visible_masks & mask));
+}
+
 static inline int queue_idx(uint64_t mask){
 	for (int ii=0; ii<64; ++ii){
 		if (((UINT64_C(1) << ii) & mask) != 0){
@@ -260,7 +265,7 @@ lsubmit(lua_State *L) {
 				const auto &mats = g[ra.queue_idx];
 				if (!mats.empty()){
 					const auto& obj = e.get<ecs::render_object>();
-					if (obj_visible(obj, ra.a->queue_mask)){
+					if (obj_queue_visible(obj, ra.a->queue_mask)){
 						draw_obj(L, w, ra.a, &obj, &mats, cc.transforms);
 					}
 				}
