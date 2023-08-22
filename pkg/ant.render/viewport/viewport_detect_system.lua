@@ -44,21 +44,18 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 end
 
-local function check_viewrect_size(vr, viewsize)
-	if viewsize and (vr.w ~= viewsize.w or vr.h ~= viewsize.h) then
-		local ratio = vr.ratio
-		if ratio ~= nil and ratio ~= 1 then
-			vr.w, vr.h = mu.cvt_size(viewsize.w, ratio), mu.cvt_size(viewsize.h, ratio)
-		else
-			vr.w, vr.h = viewsize.w, viewsize.h
-		end
+local function check_viewrect_size(queue_vr, new_viewrect, sceneratio)
+	local scale_new_vr = mu.calc_viewrect(new_viewrect, sceneratio)
+	if queue_vr.w ~= scale_new_vr.w or queue_vr.h ~= scale_new_vr.h then
+		scale_new_vr.ratio = sceneratio
+		mu.copy2viewrect(scale_new_vr, queue_vr)
 	end
 end
 
-local function update_render_queue(q, viewsize)
+local function update_render_queue(q, viewsize, sceneratio)
 	local rt = q.render_target
 	local vr = rt.view_rect
-	check_viewrect_size(vr, viewsize)
+	check_viewrect_size(vr, viewsize, sceneratio)
 
 	if q.camera_ref then
 		local camera <close> = world:entity(q.camera_ref)
@@ -68,10 +65,10 @@ local function update_render_queue(q, viewsize)
 	irq.update_rendertarget(q.queue_name, rt)
 end
 
-local function update_render_target(viewsize)
+local function update_render_target(viewsize, sceneratio)
 	clear_cache()
 	for qe in w:select "watch_screen_buffer render_target:in queue_name:in camera_ref?in" do
-		update_render_queue(qe, viewsize)
+		update_render_queue(qe, viewsize, sceneratio)
 	end
 
 	for qe in w:select "render_target:in watch_screen_buffer:absent" do
@@ -85,16 +82,31 @@ end
 function vp_detect_sys:post_init()
 	update_render_target()
 end
+
 local vp_changed_mb = world:sub{"world_viewport_changed"}
+local scene_vp_changed_mb = world:sub{"scene_viewport_ratio_changed"}
+
 function vp_detect_sys:data_changed()
-	local new_fbw, new_fbh
 	for _, vp in vp_changed_mb:unpack() do
 		if vp.w ~= 0 and vp.h ~= 0 then
-			new_fbw, new_fbh = vp.w, vp.h
+			update_render_target(vp, world.args.framebuffer.scene_ratio)
+			break
 		end
 	end
 
-	if new_fbw then
-		update_render_target{w=new_fbw, h=new_fbh}
+	for _, newratio in scene_vp_changed_mb:unpack() do
+		if newratio <= 1e-6 then
+			error "scene ratio should larger than 0"
+		end
+
+		update_render_target(world.args.viewport, newratio)
+		do
+			local mq = w:first "main_queue render_target:in"
+			local vr = mq.render_target.view_rect
+			log.info(("scene viewrect:x=%2f, y=%2f, w=%2f, h=%2f, scene_ratio=%2f"):format(vr.x, vr.y, vr.w, vr.h, vr.ratio or 1.0))
+		end
+
+		world.args.framebuffer.scene_ratio = newratio
+		break
 	end
 end

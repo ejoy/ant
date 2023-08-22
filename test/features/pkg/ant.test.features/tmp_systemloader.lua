@@ -452,7 +452,10 @@ function init_loader_sys:ui_update()
             local ee <close> = world:entity(outline_eid, "outline_remove?update")
             ee.outline_remove = true
         elseif key == "M" and press == 0 then
-
+            local irender = ecs.require "ant.render|render_system.render"
+            local whichratio = "scene_ratio"    -- "ratio"
+            local r = irender.get_framebuffer_ratio(whichratio)
+            irender.set_framebuffer_ratio(whichratio, r - 0.1)
         end
     end
 

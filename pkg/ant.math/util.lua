@@ -242,19 +242,20 @@ function util.is_rect_equal(lhs, rhs)
 			lhs.w == rhs.w and lhs.h == rhs.h
 end
 
-function util.cvt_size(s, ratio)
-	return math.max(1, math.floor(s*ratio))
+function util.cvt_size(s, ratio, dv)
+	dv = dv or 1
+	return math.max(dv, math.floor(s*ratio))
 end
 
-function util.calc_viewport(viewport, ratio)
+function util.calc_viewrect(vr, ratio)
 	if ratio == 1 then
-		return viewport
+		return vr
 	end
 	return {
-		x = viewport.x,
-		y = viewport.y,
-		w = util.cvt_size(viewport.w, ratio),
-		h = util.cvt_size(viewport.h, ratio),
+		x = vr.x and util.cvt_size(vr.x, ratio, 0) or nil,
+		y = vr.y and util.cvt_size(vr.y, ratio, 0) or nil,
+		w = util.cvt_size(vr.w, ratio),
+		h = util.cvt_size(vr.h, ratio),
 	}
 end
 

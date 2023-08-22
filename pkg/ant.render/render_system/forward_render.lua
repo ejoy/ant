@@ -13,7 +13,7 @@ local fr_sys = ecs.system "forward_render_system"
 
 function fr_sys:init()
 	local ratio = world.args.framebuffer.scene_ratio
-	local vr = mu.calc_viewport(world.args.viewport, ratio)
+	local vr = mu.calc_viewrect(world.args.viewport, ratio)
 	if ratio then
 		vr.ratio = ratio
 	end

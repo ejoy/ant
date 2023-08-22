@@ -188,7 +188,7 @@ local function update_ssct_properties(material)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.calc_viewport(world.args.viewport, ssao_configs.resolution)
+    local vr = mu.calc_viewrect(world.args.viewport, ssao_configs.resolution)
     local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"
@@ -263,7 +263,7 @@ function ssao_sys:data_changed()
     for _, _, vr in mqvr_mb:unpack() do
         local aod = w:first "ssao_dispatcher dispatch:in"
         local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
-        local new_vr = mu.calc_viewport(vr, ssao_configs.resolution)
+        local new_vr = mu.calc_viewrect(vr, ssao_configs.resolution)
 
         fbmgr.resize_rb(aod.dispatch.rb_idx, new_vr.w, new_vr.h)
         imaterial.system_attrib_update("s_ssao", fbmgr.get_rb(aod.dispatch.rb_idx).handle)

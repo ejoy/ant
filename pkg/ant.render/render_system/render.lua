@@ -1,6 +1,6 @@
-local ecs = ...
+local ecs	= ...
 local world = ecs.world
-local w = world.w
+local w 	= world.w
 
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
@@ -303,6 +303,14 @@ local fullquad<const> = {
 }
 function irender.full_quad()
 	return fullquad
+end
+
+function irender.set_framebuffer_ratio(which, ratio)
+	world:pub{"framebuffer_ratio_changed", which, ratio}
+end
+
+function irender.get_framebuffer_ratio(which)
+	return assert(world.args.framebuffer[which], "Invalid ratio type:" .. which)
 end
 
 return irender
