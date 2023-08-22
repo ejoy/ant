@@ -444,5 +444,15 @@ return function (status)
         return serialize_prefab(status, data)
     end)
 
+    utility.save_txt_file(status, "translucent.prefab", status.prefab, function (data)
+        for _, v in ipairs(data) do
+            local e = v.data
+            if e.material then
+                e.material = serialize_path "/pkg/ant.resources/materials/translucent.material"
+            end
+        end
+        return data
+    end)
+
     utility.save_txt_file(status, "materials/materials.names", status.material_names, function (data) return data end)
 end
