@@ -7,13 +7,13 @@ local FD = ...
 
 local message = {}
 local ServiceDebugProxy
-local ServiceCompile = ltask.uniqueservice "ant.compile_resource|compile"
 local ServiceVfsMgr = ltask.uniqueservice "s|vfsmgr"
 local ServiceLogManager = ltask.uniqueservice "s|log.manager"
 local ServiceEditor = ltask.uniqueservice "s|editor"
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
+local ServiceCompile = ltask.uniqueservice("ant.compile_resource|compile", REPOPATH)
 
 local LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE")
 local LoggerQueue = {}
@@ -44,7 +44,6 @@ function message.SHAKEHANDS()
 end
 
 function message.ROOT()
-	ltask.call(ServiceCompile, "INIT", REPOPATH)
 	response("ROOT", roothash)
 end
 
