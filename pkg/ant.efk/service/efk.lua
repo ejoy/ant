@@ -132,8 +132,32 @@ function S.update_cb_data(background_handle, depth)
     efk_cb_handle.depth = depth
 end
 
+local EFKFILES = {}
+
 function S.create(filename)
-    return efk_ctx:create(filename)
+    local info = EFKFILES[filename]
+    if not info then
+        log.info("Create efk file:", filename)
+        info = {
+            handle = efk_ctx:create(filename),
+            count = 0,
+        }
+        EFKFILES[filename] = info
+    end
+
+    info.count = info.count + 1
+    return info.handle
+end
+
+function S.destroy(filename)
+    local info = assert(EFKFILES[filename], "Invalid efk file: " .. filename)
+    info.count = info.count - 1
+    if 0 == info.count then
+        log.info("Destroy efk file:", filename)
+        
+        efk_ctx:destroy(info.handle)
+        EFKFILES[filename] = nil
+    end
 end
 
 function S.preload_texture(texture, id)

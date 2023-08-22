@@ -33,36 +33,15 @@ function efk_sys:exit()
 end
 
 local load_efk_file, unload_efk_file; do
-    local EFKFILES = {}
-    function load_efk_file(efkfile)
-        local info = EFKFILES[efkfile]
-        if not info then
-            log.info("Load efk file:", efkfile)
-            info = {
-                handle = ltask.call(EFK_SERVER, "create", efkfile),
-                count = 0,
-            }
-            EFKFILES[efkfile] = info
-        end
-
-        info.count = info.count + 1
-        return info.handle
-    end
 
     function unload_efk_file(efkfile)
-        local info = assert(EFKFILES[efkfile], "Invalid efk file: " .. efkfile)
-        info.count = info.count - 1
-        if 0 == info.count then
-            log.info("Unload efk file:", efkfile)
-            ltask.send(EFK_SERVER, "destroy", info.handle)
-            EFKFILES[efkfile] = nil
-        end
+
     end
 end
 
 function efk_sys:component_init()
     for e in w:select "INIT efk:in eid:in" do
-        e.efk.handle = load_efk_file(e.efk.path)
+        e.efk.handle = ltask.call(EFK_SERVER, "create", e.efk.path)
         e.efk.speed = e.efk.speed or 1.0
         e.efk.loop = e.efk.loop or false
         e.efk.visible = e.efk.visible or true
@@ -86,7 +65,7 @@ function efk_sys:entity_remove()
         end
         e.efk.play_handle = nil
 
-        unload_efk_file(e.efk.path)
+        ltask.send(EFK_SERVER, "destroy", e.efk.path)
         e.efk.path = nil
         e.efk.handle = nil
     end
