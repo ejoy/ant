@@ -1,15 +1,15 @@
+local repopath = ...
 
 local vfs = require "vfs"
-local cr
+local cr = require "main"
+cr.init_setting()
 
-local S = {}
-
-function S.INIT(repopath)
+if repopath then
     local access = dofile "/engine/vfs/repoaccess.lua"
     dofile "/engine/editor/create_repo.lua" (repopath, access)
-    cr = import_package "ant.compile_resource"
-    cr.init_setting()
 end
+
+local S = {}
 
 function S.COMPILE(path)
     return cr.compile_file(vfs.realpath(path))

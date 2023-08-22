@@ -67,11 +67,11 @@ function vfs.switch()
 	send("SWITCH", servicelua, vfs.realpath(servicelua))
 end
 
-if __ANT_RUNTIME__ then
-	function vfs.resource_setting(ext, setting)
-		return call("RESOURCE_SETTING", ext, setting)
-	end
-else
+function vfs.resource_setting(ext, setting)
+	return call("RESOURCE_SETTING", ext, setting)
+end
+
+if not __ANT_RUNTIME__ then
 	function vfs.repopath()
 		return call("REPOPATH")
 	end

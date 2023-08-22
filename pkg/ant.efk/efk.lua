@@ -22,48 +22,47 @@ local PH
 local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
-local function init_fx_files()
-    local tasks = {}
-    local FxFiles = {}
-    for _, name in ipairs{
-        "sprite_unlit",
-        "sprite_lit",
-        "sprite_distortion",
-        "sprite_adv_unlit",
-        "sprite_adv_lit",
-        "sprite_adv_distortion",
-
-        "model_unlit",
-        "model_lit",
-        "model_distortion",
-        "model_adv_unlit",
-        "model_adv_lit",
-        "model_adv_distortion",
-    } do
-        tasks[#tasks+1] = {function ()
-            local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
-            local r = assetmgr.load_material(filename)
-            FxFiles[name] = r.fx
-        end}
-    end
-
-    for _, t in ltask.parallel(tasks) do
-    end
-    return FxFiles
-end
-
 function efk_sys:init()
     EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
-    ltask.call(EFK_SERVER, "init", init_fx_files())
-    PH = require "playhandle"
+    ltask.call(EFK_SERVER, "init")
+    PH = ecs.require "playhandle"
 end
 
 function efk_sys:exit()
+    ltask.call(EFK_SERVER, "exit")
+end
+
+local load_efk_file, unload_efk_file; do
+    local EFKFILES = {}
+    function load_efk_file(efkfile)
+        local info = EFKFILES[efkfile]
+        if not info then
+            log.info("Load efk file:", efkfile)
+            info = {
+                handle = ltask.call(EFK_SERVER, "create", efkfile),
+                count = 0,
+            }
+            EFKFILES[efkfile] = info
+        end
+
+        info.count = info.count + 1
+        return info.handle
+    end
+
+    function unload_efk_file(efkfile)
+        local info = assert(EFKFILES[efkfile], "Invalid efk file: " .. efkfile)
+        info.count = info.count - 1
+        if 0 == info.count then
+            log.info("Unload efk file:", efkfile)
+            ltask.send(EFK_SERVER, "destroy", info.handle)
+            EFKFILES[efkfile] = nil
+        end
+    end
 end
 
 function efk_sys:component_init()
     for e in w:select "INIT efk:in eid:in" do
-        e.efk.handle = assetmgr.resource(e.efk.path).handle
+        e.efk.handle = load_efk_file(e.efk.path)
         e.efk.speed = e.efk.speed or 1.0
         e.efk.loop = e.efk.loop or false
         e.efk.visible = e.efk.visible or true
@@ -86,6 +85,10 @@ function efk_sys:entity_remove()
             e.efk.play_handle:set_stop()
         end
         e.efk.play_handle = nil
+
+        unload_efk_file(e.efk.path)
+        e.efk.path = nil
+        e.efk.handle = nil
     end
 end
 

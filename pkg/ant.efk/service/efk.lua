@@ -25,14 +25,44 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 bgfx.init()
 assetmgr.init()
 
-local FxFiles = {};
-
 local function preopen(filename)
     local _ <close> = fs.switch_sync()
     return fs.path(filename):localpath():string()
 end
 
 local filefactory = FI.factory { preopen = preopen }
+
+local function init_fx_files()
+    local tasks = {}
+    local FxFiles = {}
+    for _, name in ipairs{
+        "sprite_unlit",
+        "sprite_lit",
+        "sprite_distortion",
+        "sprite_adv_unlit",
+        "sprite_adv_lit",
+        "sprite_adv_distortion",
+
+        "model_unlit",
+        "model_lit",
+        "model_distortion",
+        "model_adv_unlit",
+        "model_adv_lit",
+        "model_adv_distortion",
+    } do
+        tasks[#tasks+1] = {function ()
+            local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
+            local r = assetmgr.load_material(filename)
+            FxFiles[name] = r.fx
+        end}
+    end
+
+    for _, t in ltask.parallel(tasks) do
+    end
+    return FxFiles
+end
+
+local FxFiles = init_fx_files()
 
 local function shader_load(materialfile, shadername, stagetype)
     assert(materialfile == nil)
@@ -60,24 +90,25 @@ local function error_handle(msg)
     print("[EFK ERROR]", debug.traceback(msg))
 end
 
-local efk_cb_handle, efk_ctx
+local efk_cb_handle = efk_cb.callback{
+    shader_load     = shader_load,
+    texture_load    = texture_load,
+    texture_unload  = texture_unload,
+    texture_map     = {},
+    error           = error_handle,
+}
 
-local ident_mat<const> = ("f"):rep(16):pack(
-    1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.0, 0.0, 0.0, 1.0)
+local efk_ctx
 
-function S.init(fx_files)
-    FxFiles = fx_files
-    efk_cb_handle =  efk_cb.callback{
-        shader_load     = shader_load,
-        texture_load    = texture_load,
-        texture_unload  = texture_unload,
-        texture_map     = {},
-        error           = error_handle,
-    }
+local function shutdown()
+    if efk_ctx then
+        efk.shutdown(efk_ctx)
+        efk_ctx = nil
+    end
+end
 
+function S.init()
+    assert(not efk_ctx, "efk context need clean before efk service init")
     efk_ctx = efk.startup{
         max_count       = 2000,
         viewid          = effect_viewid,
@@ -92,6 +123,10 @@ function S.init(fx_files)
     }
 end
 
+function S.exit()
+    shutdown()
+end
+
 function S.update_cb_data(background_handle, depth)
     efk_cb_handle.background = background_handle
     efk_cb_handle.depth = depth
@@ -99,14 +134,6 @@ end
 
 function S.create(filename)
     return efk_ctx:create(filename)
-end
-
-local function shutdown()
-    if efk_ctx then
-        efk.shutdown(efk_ctx)
-        bgfx.shutdown()
-        efk_ctx = nil
-    end
 end
 
 function S.preload_texture(texture, id)
@@ -151,7 +178,8 @@ function S.quit()
     if not DISABLE_EFK then
         bgfx.encoder_destroy()
     end
-    shutdown()
+
+    bgfx.shutdown()
     ltask.quit()
 end
 

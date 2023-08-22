@@ -15,7 +15,7 @@ static uint32_t g_texture_timestamp[TEXTURE_MAX_ID];
 
 static int
 ltexture_create(lua_State *L) {
-	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 1));
+	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, (int)luaL_checkinteger(L, 1));
 	if (g_texture_id >= TEXTURE_MAX_ID) {
 		return luaL_error(L, "Too many textures");
 	}
@@ -28,7 +28,7 @@ ltexture_create(lua_State *L) {
 
 static inline int
 checktextureid(lua_State *L, int index) {
-	int id = luaL_checkinteger(L, index);
+	int id = (int)luaL_checkinteger(L, index);
 	if (id <= 0 || id > g_texture_id)
 		return luaL_error(L, "Invalid texture handle %d", id);
 	return id;
@@ -58,7 +58,7 @@ texture_get(int id) {
 static int
 ltexture_set(lua_State *L) {
 	int id = checktextureid(L, 1);
-	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
+	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, (int)luaL_checkinteger(L, 2));
 	g_texture[id - 1] = handle;
 	return 0;
 }
@@ -80,7 +80,7 @@ static int
 ltexture_timestamp(lua_State *L) {
 	if (lua_istable(L, 1)) {
 		lua_settop(L, 1);
-		int n = lua_rawlen(L, 1);
+		int n = (int)lua_rawlen(L, 1);
 		int i;
 		for (i=1;i<=n;i++) {
 			lua_geti(L, 1, i);
@@ -115,7 +115,7 @@ frame_get(lua_State *L,int index, int range, uint16_t* filter, size_t filter_n) 
 	if (range >= 0) {
 		// filter new
 		for (i=0;i<g_texture_id;i++) {
-			if (is_invalid(i, filter, filter_n) && read_timestamp(i) <= range) {
+			if (is_invalid(i, filter, filter_n) && (int)read_timestamp(i) <= range) {
 				lua_pushinteger(L, i+1);
 				lua_rawseti(L, index, ++n);
 			}
@@ -124,13 +124,13 @@ frame_get(lua_State *L,int index, int range, uint16_t* filter, size_t filter_n) 
 		// filter old
 		int old = - range;
 		for (i=0;i<g_texture_id;i++) {
-			if (!is_invalid(i, filter, filter_n) && read_timestamp(i) >= old) {
+			if (!is_invalid(i, filter, filter_n) && (int)read_timestamp(i) >= old) {
 				lua_pushinteger(L, i+1);
 				lua_rawseti(L, index, ++n);
 			}
 		}
 	}
-	int on = lua_rawlen(L, index);
+	int on = (int)lua_rawlen(L, index);
 	for (i=n+1;i<=on;i++) {
 		lua_pushnil(L);
 		lua_rawseti(L, index, i);
@@ -150,7 +150,7 @@ check_result(lua_State *L, int index) {
 
 static int
 lframe_new(lua_State *L) {
-	int range = luaL_optinteger(L, 1, 0);
+	int range = (int)luaL_optinteger(L, 1, 0);
 	if (range < 0)
 		return luaL_error(L, "Invalid range %d", range);
 	size_t sz = 0;
@@ -162,7 +162,7 @@ lframe_new(lua_State *L) {
 
 static int
 lframe_old(lua_State *L) {
-	int range = luaL_checkinteger(L, 1);
+	int range = (int)luaL_checkinteger(L, 1);
 	if (range <= 0)
 		return luaL_error(L, "Invalid range %d", range);
 	size_t sz = 0;
