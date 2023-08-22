@@ -170,7 +170,7 @@ end
 local stat_window
 function m:init_world()
     local iRmlUi = ecs.require "ant.rmlui|rmlui_system"
-    stat_window = iRmlUi.open "bgfx_stat.rml"
+    stat_window = iRmlUi.open "/pkg/tools.prefab_editor/res/ui/bgfx_stat.rml"
 end
 
 function m:ui_update()

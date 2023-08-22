@@ -121,7 +121,7 @@ end
 for idx, info in pairs(texture_cfg_table) do
     --local cfg = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
     if filemanager.exists(info.cfg_path) then
-        local bundle_cfg_path = fs.path(filemanager.fullpath(info.cfg_path))
+        local bundle_cfg_path = fs.path(info.cfg_path)
         local file = fs.open(bundle_cfg_path):read "a"
         local cfg = datalist.parse(file) 
         if cfg then
@@ -133,8 +133,7 @@ for idx, info in pairs(texture_cfg_table) do
         if not path_table then
             path_table = {}
         end
-        local bundle_texture_path = filemanager.fullpath(info.texture_path)
-        path_table[idx] = {path = bundle_texture_path, list = {}} 
+        path_table[idx] = {path = info.texture_path, list = {}} 
     end
 end 
 

@@ -49,7 +49,6 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
-S.set_prefix = filemanager.set_prefix
 S.gesture = contextManager.process_gesture
 S.touch = contextManager.process_touch
 S.update_context_size = contextManager.set_dimensions

@@ -10,7 +10,6 @@ end
 function init_sys:post_init()
     local args = getArguments()
     font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
-    iRmlUi.set_prefix "/resource"
     local window = iRmlUi.open(args[1])
     window.addEventListener("message", function (event)
         print("Message: " .. event.data)

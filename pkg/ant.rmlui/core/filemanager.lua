@@ -7,37 +7,24 @@ local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 
 local m = {}
 
-local prefixPath = fs.path "/"
-
-function m.set_prefix(v)
-    prefixPath = fs.path(v)
-end
-
-function m.fullpath(source_path)
-    return (prefixPath / source_path):string()
-end
-
 function m.exists(path)
-    return fs.exists(prefixPath / path)
+    return fs.exists(fs.path(path))
 end
 
 function m.readfile(source_path)
-    local fullpath = prefixPath / source_path
-    local realpath = fullpath:localpath():string()
-    return fastio.readall(realpath, fullpath:string())
+    local realpath = fs.path(source_path):localpath():string()
+    return fastio.readall(realpath, source_path)
 end
 
 function m.loadstring(content, source_path, source_line, env)
-    local fullpath = prefixPath / source_path
-    local realpath = fullpath:localpath():string()
+    local realpath = fs.path(source_path):localpath():string()
     local source = "--@"..realpath..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
 function m.loadfile(source_path, env)
-    local fullpath = prefixPath / source_path
-    local realpath = fullpath:localpath():string()
-    return fastio.loadfile(realpath, fullpath:string(), env)
+    local realpath = fs.path(source_path):localpath():string()
+    return fastio.loadfile(realpath, source_path, env)
 end
 
 local rt_table = {}
@@ -86,7 +73,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
         end 
     else
         ltask.fork(function ()
-            local info = ltask.call(ServiceResource, "texture_create", m.fullpath(path))
+            local info = ltask.call(ServiceResource, "texture_create", path)
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],

@@ -91,10 +91,6 @@ end
 
 local iRmlUi = {}
 
-function iRmlUi.set_prefix(dir)
-    ltask.call(ServiceRmlUi, "set_prefix", dir)
-end
-
 function iRmlUi.open(name, url)
     url = url or name
     ltask.send(ServiceRmlUi, "open", name, url)
