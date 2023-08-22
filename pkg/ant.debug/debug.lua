@@ -41,6 +41,7 @@ local function hitch_cull_test()
         print("hitch object group_no_culled:", group_no_culled)
         print("hitch object group_sum:", group_sum)
         print("----------------------------------------------------------------------")
+        tick = 0
     else
         tick = tick + 1 
     end   
