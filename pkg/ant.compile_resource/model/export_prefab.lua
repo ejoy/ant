@@ -454,5 +454,5 @@ return function (status)
         return data
     end)
 
-    utility.save_txt_file(status, "materials/materials.names", status.material_names, function (data) return data end)
+    utility.save_txt_file(status, "materials.names", status.material_names, function (data) return data end)
 end
