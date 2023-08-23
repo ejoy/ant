@@ -44,18 +44,19 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 end
 
-local function check_viewrect_size(queue_vr, new_viewrect, sceneratio)
-	local scale_new_vr = mu.calc_viewrect(new_viewrect, sceneratio)
-	if queue_vr.w ~= scale_new_vr.w or queue_vr.h ~= scale_new_vr.h then
-		scale_new_vr.ratio = sceneratio
-		mu.copy2viewrect(scale_new_vr, queue_vr)
+local function check_viewrect_size(queue_vr, newsize, sceneratio)
+	local nw, nh = mu.cvt_size(newsize.w, sceneratio), mu.cvt_size(newsize.h, sceneratio)
+	if queue_vr.w ~= nw or queue_vr.h ~= nh then
+		queue_vr.w, queue_vr.h = nw, nh
+		queue_vr.x, queue_vr.y = mu.cvt_size(queue_vr.x, sceneratio, 0), mu.cvt_size(queue_vr.x, sceneratio, 0)
+		queue_vr.ratio = sceneratio
 	end
 end
 
-local function update_render_queue(q, viewsize, sceneratio)
+local function update_render_queue(q, newsize, sceneratio)
 	local rt = q.render_target
 	local vr = rt.view_rect
-	check_viewrect_size(vr, viewsize, sceneratio)
+	check_viewrect_size(vr, newsize, sceneratio)
 
 	if q.camera_ref then
 		local camera <close> = world:entity(q.camera_ref)
@@ -65,10 +66,10 @@ local function update_render_queue(q, viewsize, sceneratio)
 	irq.update_rendertarget(q.queue_name, rt)
 end
 
-local function update_render_target(viewsize, sceneratio)
+local function update_render_target(newsize, sceneratio)
 	clear_cache()
 	for qe in w:select "watch_screen_buffer render_target:in queue_name:in camera_ref?in" do
-		update_render_queue(qe, viewsize, sceneratio)
+		update_render_queue(qe, newsize, sceneratio)
 	end
 
 	for qe in w:select "render_target:in watch_screen_buffer:absent" do
