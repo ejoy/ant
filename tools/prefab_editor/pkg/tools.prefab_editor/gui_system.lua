@@ -354,24 +354,22 @@ function m:handle_event()
         if what == "move" then
             gizmo:set_position(v2)
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
-            prefab_mgr:on_patch_tranform(target, "t", v2)
+            -- prefab_mgr:on_patch_tranform(target, "t", v2)
         elseif what == "rotate" then
             local rot = math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])}
             gizmo:set_rotation(rot)
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
-            prefab_mgr:on_patch_tranform(target, "r", math3d.tovalue(rot))
+            -- prefab_mgr:on_patch_tranform(target, "r", math3d.tovalue(rot))
         elseif what == "scale" then
             gizmo:set_scale(v2)
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
-            prefab_mgr:on_patch_tranform(target, "s", v2)
+            -- prefab_mgr:on_patch_tranform(target, "s", v2)
         elseif what == "name" or what == "tag" then
             transform_dirty = false
             if what == "name" then
-                local e <close> = world:entity(target, "collider?in slot?in")
+                local e <close> = world:entity(target, "slot?in")
                 hierarchy:update_display_name(target, v1)
-                if e.collider then
-                    hierarchy:update_collider_list(world)
-                elseif e.slot then
+                if e.slot then
                     hierarchy:update_slot_list(world)
                 end
                 prefab_mgr:on_patch_name(target, v1)
@@ -404,8 +402,8 @@ function m:handle_event()
         elseif what == "lock" then
             hierarchy:set_lock(target, value)
         elseif what == "delete" then
-            local e <close> = world:entity(gizmo.target_eid, "collider?in slot?in")
-            if e.collider or e.slot then
+            local e <close> = world:entity(gizmo.target_eid, "slot?in")
+            if e.slot then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             keyframe_view.on_eid_delete(target)

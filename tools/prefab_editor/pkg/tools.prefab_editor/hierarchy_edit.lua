@@ -91,6 +91,43 @@ local function find_policy(t, policy)
     return nil
 end
 
+function hierarchy:get_prefab_template()
+    local new_tpl = {}
+    local function construct_entity(eid, tpl)
+        local node = self.all_node[eid]
+        if node.template.temporary then
+            return
+        end
+        local template = node.template.template
+        if template and template.data then
+            if template.data.tag then
+                template.data.tag = nil
+            end
+            local scene = template.data.scene
+            if scene and scene.parent then
+                scene.parent = nil
+            end
+        end
+        table.insert(tpl, template)
+
+        local pidx = #tpl > 0 and #tpl or nil
+        local prefab_filename = node.template.filename
+        if prefab_filename then
+            table.insert(tpl, {mount = #tpl + pidx, name = node.template.name, editor = node.template.editor, prefab = prefab_filename})
+        end
+        for _, child in ipairs(node.children) do
+            local nd = self.all_node[child.eid]
+            local tt = nd.template.template
+            if nd.parent ~= self.root.eid and tt then
+                tt.mount = pidx
+            end
+            construct_entity(child.eid, tpl)
+        end
+    end
+    construct_entity(self.root.eid, new_tpl)
+    return new_tpl
+end
+
 function hierarchy:get_locked_uidata(eid)
     return self.all_node[eid].locked
 end
@@ -183,14 +220,14 @@ function hierarchy:update_slot_list(world)
 end
 
 function hierarchy:update_collider_list(world)
-    local collider_list = {["None"] = -1}
-    for _, value in pairs(self.all_node) do
-        local e <close> = world:entity(value.eid, "collider?in")
-        if e.collider then
-            collider_list[world[value.eid].name] = value.eid
-        end
-    end
-    self.collider_list = collider_list
+    -- local collider_list = {["None"] = -1}
+    -- for _, value in pairs(self.all_node) do
+    --     local e <close> = world:entity(value.eid, "collider?in")
+    --     if e.collider then
+    --         collider_list[world[value.eid].name] = value.eid
+    --     end
+    -- end
+    -- self.collider_list = collider_list
 end
 
 local function find_table(eid)
