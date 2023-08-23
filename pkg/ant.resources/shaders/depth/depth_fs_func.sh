@@ -1,5 +1,5 @@
 #include <bgfx_shader.sh>
-#include "common/default_inputs_structure.sh"
+#include "default/inputs_structure.sh"
 
 void CUSTOM_FS_FUNC(in FSInput fs_input, inout FSOutput fs_output)
 {

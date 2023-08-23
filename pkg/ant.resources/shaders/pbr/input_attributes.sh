@@ -3,7 +3,7 @@
 
 #include "pbr/attribute_define.sh"
 #include "pbr/attribute_uniforms.sh"
-#include "common/default_inputs_structure.sh"
+#include "default/inputs_structure.sh"
 #include "common/utils.sh"
 #include "common/uvmotion.sh"
 

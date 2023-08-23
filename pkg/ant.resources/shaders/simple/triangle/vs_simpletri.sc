@@ -1,4 +1,4 @@
-#include "common/default_inputs_define.sh"
+#include "default/inputs_define.sh"
 
 $input a_position INPUT_COLOR0
 $output OUTPUT_COLOR0

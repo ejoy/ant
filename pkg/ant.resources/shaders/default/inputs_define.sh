@@ -1,5 +1,5 @@
 #ifdef BGFX_SHADER_H_HEADER_GUARD
-#error "input.sh file should define before bgfx_shader.sh"
+#error "'default_inputs_define.sh' file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
 #ifdef DRAW_INDIRECT

@@ -1,7 +1,7 @@
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
-#include "common/default_inputs_structure.sh"
+#include "default/inputs_structure.sh"
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {

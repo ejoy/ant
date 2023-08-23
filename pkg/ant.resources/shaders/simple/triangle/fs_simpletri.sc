@@ -1,5 +1,5 @@
-#include "common/default_inputs_define.sh"
-#include "common/default_inputs_define.sh"
+#include "default/inputs_define.sh"
+#include "default/inputs_define.sh"
 #ifdef WITH_COLOR_ATTRIB
 $input OUTPUT_COLOR0
 #else //!WITH_COLOR_ATTRIB

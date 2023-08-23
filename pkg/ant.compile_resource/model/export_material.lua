@@ -336,7 +336,7 @@ return function (status)
                 end
             end
         end
-        if mat.doubleSided and (not is_Blender_exporter()) then
+        if mat.doubleSided then --and (not is_Blender_exporter()) then
             --default is CCW
             material.state.CULL = "NONE"
         end

@@ -1,4 +1,4 @@
-#include "common/default_inputs_define.sh"
+#include "default/inputs_define.sh"
 
 $input 	a_position INPUT_NORMAL INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT
 
@@ -44,7 +44,7 @@ void main()
 #	endif//PACK_TANGENT_TO_QUAT
 
     VSInput vs_input = (VSInput)0;
-    #include "common/default_vs_inputs_getter.sh"
+    #include "default/vs_inputs_getter.sh"
     mediump mat4 wm = get_world_matrix(vs_input);
 
 #ifdef VIEW_SPACE

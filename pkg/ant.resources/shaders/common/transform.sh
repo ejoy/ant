@@ -5,7 +5,7 @@
 #include <shaderlib.sh>
 #include "common/constants.sh"
 #include "common/camera.sh"
-#include "common/default_inputs_structure.sh"
+#include "default/inputs_structure.sh"
 #ifdef ENABLE_CURVE_WORLD
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD

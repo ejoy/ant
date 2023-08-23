@@ -1,4 +1,4 @@
-#include "common/default_inputs_define.sh"
+#include "default/inputs_define.sh"
 $input v_prev_pos v_cur_pos
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>

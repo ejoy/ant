@@ -200,8 +200,8 @@ local DEF_SHADER_INFO<const> = {
     }
 }
 
-DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_FUNC_KEY, [[#include "common/default_vs_func.sh"]])
-DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "common/default_fs_func.sh"]])
+DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_FUNC_KEY, [[#include "default/vs_func.sh"]])
+DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "default/fs_func.sh"]])
 
 local DEF_PBR_UNIFORM = {
     u_basecolor_factor = "uniform mediump vec4 u_basecolor_factor;\n",
