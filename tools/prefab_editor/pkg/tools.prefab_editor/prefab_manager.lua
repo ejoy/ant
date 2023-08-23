@@ -550,6 +550,10 @@ function m:open(filename, prefab_name, patch_tpl)
     assert(prefab_name and patch_tpl)
     reset_open_context()
     self:reset_prefab(true)
+    local path_list = split(filename)
+    if #path_list > 1 then
+        self.glb_filename = path_list[1]
+    end
     self.prefab_name = prefab_name or "mesh.prefab"
     -- if path:equal_extension(".fbx") then
     --     self:open_fbx(tostring(path))
@@ -558,35 +562,34 @@ function m:open(filename, prefab_name, patch_tpl)
     -- end
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
-    self.patch_template = patch_tpl or {}
-    self.patch_index_map = {}
-    for index, value in ipairs(self.patch_template) do
-        if value.file == self.prefab_name and value.op == "add" then
-            self.patch_index_map[#self.patch_index_map + 1] = index
+    if self.glb_filename then
+        self.patch_template = patch_tpl or {}
+        for index, value in ipairs(self.patch_template) do
+            if value.file == self.prefab_name and value.op == "add" then
+                self.patch_index_map[#self.patch_index_map + 1] = index
+            end
         end
+        self.patch_start_index = #self.prefab_template - #self.patch_index_map + 1
     end
-    self.patch_start_index = #self.prefab_template - #self.patch_index_map + 1
+
     for _, value in ipairs(self.prefab_template) do
         if value.data and value.data.efk then
             self.check_effect_preload(value.data.efk.path)
         end
-    end 
+    end
     -- check_animation(self.prefab_template)
 
     local prefab = ecs.create_instance(filename)
-    function prefab:on_init()
-    end
-    
+    function prefab:on_init() end
     prefab.on_ready = function(instance)
         self:on_prefab_ready(instance)
         hierarchy:update_slot_list(world)
         anim_view.on_prefab_load(self.entities)
         world:pub {"LookAtTarget", self.entities[1]}
     end
-    
     function prefab:on_message(msg) end
     function prefab:on_update() end
-    self.prefab_instance = world:create_object(prefab)
+    world:create_object(prefab)
     editor_setting.add_recent_file(filename)
     editor_setting.save()
     world:pub {"WindowTitle", filename}
@@ -663,10 +666,11 @@ function m:reset_prefab(noscene)
     -- end
     gizmo:set_target()
     self:create_ground()
+    self.prefab_template = {}
+    self.patch_template = {}
+    self.patch_index_map = {}
     self.prefab_filename = nil
-    self.prefab_template = nil
-    self.patch_template = nil
-    self.prefab_instance = nil
+    self.glb_filename = nil
     self.scene = nil
     if not noscene then
         local parent = self.root
@@ -778,38 +782,37 @@ function m:add_prefab(path)
 end
 
 function m:save(path)
-    local filename
-    -- local patchfilename
+    -- patch glb file
+    if self.glb_filename then
+        if self.patch_template then
+            utils.write_file(self.glb_filename..".patch", stringify(self.patch_template))
+            assetmgr.unload(self.glb_filename..".patch")
+            assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
+            anim_view.save_keyevent()
+            world:pub {"ResourceBrowser", "dirty"}
+        end
+        return
+    end
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
             path = widget_utils.get_saveas_path("Prefab", "prefab")
         end
     end
     assert(path or self.prefab_filename)
-    filename = path
     local prefab_filename = self.prefab_filename or ""
-    filename = filename or prefab_filename
+    local filename = path or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
-    local path_list = split(prefab_filename)
-    if not saveas then
-        local glb_filename
-        if #path_list > 1 then
-            glb_filename = path_list[1]
-        end
-        if glb_filename then
-            if self.patch_template then
-                utils.write_file(glb_filename..".patch", stringify(self.patch_template))
-                assetmgr.unload(glb_filename..".patch")
-                assetmgr.unload(glb_filename.."|"..self.prefab_name)
-            end
-            anim_view.save_keyevent()
-            world:pub {"ResourceBrowser", "dirty"}
-        end
-        if prefab_filename then
-            ecs.release_cache(prefab_filename)
-        end
-        return
+    local template = hierarchy:get_prefab_template()
+    utils.write_file(filename, stringify(template))
+    if saveas then
+        self:open(filename)
+        world:pub {"WindowTitle", filename}
     end
+    if prefab_filename then
+        ecs.release_cache(prefab_filename)
+    end
+    anim_view.save_keyevent()
+    world:pub {"ResourceBrowser", "dirty"}
 end
 
 function m:set_parent(target, parent)
@@ -965,6 +968,7 @@ function m:get_patch_node(path)
 end
 
 function m:pacth_remove(eid)
+    if not self.glb_filename then return end
     local tpl = hierarchy:get_template(eid)
     local pidx = tpl.template.index
     if pidx < self.patch_start_index then
@@ -977,6 +981,7 @@ function m:pacth_remove(eid)
 end
 
 function m:pacth_add(template)
+    if not self.glb_filename then return end
     local tpl = utils.deep_copy(template)
     tpl.index = nil
     local parent = tpl.data.scene.parent
@@ -995,6 +1000,7 @@ function m:pacth_add(template)
 end
 
 function m:pacth_modify(pidx, p, v)
+    if not self.glb_filename then return end
     local index
     local patch_node
     if pidx >= self.patch_start_index then
