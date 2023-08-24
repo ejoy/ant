@@ -191,12 +191,12 @@ local DEF_SHADER_INFO<const> = {
     vs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
-        content = fastio.readall_s((SHADER_BASE / "dynamic_material/vs_default.sc"):string()),
+        content = fastio.readall_s((SHADER_BASE / "default/vs_default.sc"):string()),
     },
     fs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
-        content = fastio.readall_s((SHADER_BASE / "dynamic_material/fs_default.sc"):string()),
+        content = fastio.readall_s((SHADER_BASE / "default/fs_default.sc"):string()),
     }
 }
 
@@ -204,12 +204,12 @@ DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADE
 DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "default/fs_func.sh"]])
 
 local DEF_PBR_UNIFORM = {
-    u_basecolor_factor = "uniform mediump vec4 u_basecolor_factor;\n",
-    u_emissive_factor  = "uniform mediump vec4 u_emissive_factor;\n",
-    u_pbr_factor       = "uniform mediump vec4 u_pbr_factor;\n"
+    u_basecolor_factor = "uniform mediump vec4 u_basecolor_factor;",
+    u_emissive_factor  = "uniform mediump vec4 u_emissive_factor;",
+    u_pbr_factor       = "uniform mediump vec4 u_pbr_factor;"
 }
 local function generate_properties(properties)
-    local content = ""
+    local content = {}
     for k, v in pairs(properties) do
         local result
         if k:find("s_") == 1 then
@@ -219,12 +219,12 @@ local function generate_properties(properties)
             local stage = v.stage
             if v.image then assert(v.mip, "image format should config mipmap level! \n") end
             assert(stage, "texture must config stage! \n")
-            result = {precision, " ", sampler, "(", k, ", ", stage, ");\n"}
+            result = {precision, " ", sampler, "(", k, ", ", stage, ");"}
         elseif k:find("u_") == 1 then
             -- precision(default mediump) type(default vec4)
             local precision = v.precsion or "mediump"
             local type = v.type or "vec4"
-            result = {"uniform ", precision, " ", type, " ", k, ";\n"}
+            result = {"uniform ", precision, " ", type, " ", k, ";"}
         elseif k:find("b_") == 1 then
             -- access stage type(default vec4)
             local access, stage, buffer_access = v.access, v.stage, nil
@@ -233,18 +233,18 @@ local function generate_properties(properties)
             if stage == 'r' then buffer_access = "BUFFER_RO"
             elseif stage == 'w' then buffer_access = "BUFFER_WR"
             else log.error("wrong access type, access should be read/write! \n") end
-            result = {buffer_access,"(", k, ", ", type, ", ", stage, ");\n"}
+            result = {buffer_access,"(", k, ", ", type, ", ", stage, ");"}
         else
-            log.error("wrong property name, property should be sampler/uniform/buffer! \n")
+            error(("wrong property name:%s, property should be sampler/uniform/buffer!"):format(k))
         end
-        content = content .. table.concat(result)
+        content[#content+1] = table.concat(result)
     end
     for k,v in pairs(DEF_PBR_UNIFORM) do
         if not properties[k] then
-            content = content .. v
+            content[#content+1] = v
         end
     end
-    return content
+    return table.concat(content, "\n")
 end
 
 local function generate_shader(shader, code, properties)
