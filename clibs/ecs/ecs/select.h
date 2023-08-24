@@ -348,19 +348,36 @@ namespace ecs_api {
             return *std::get<T*>(c);
         }
         template <typename T>
-            requires (is_tag<T>)
+            requires (
+                !impl::has_element_v<T, MainKey, SubKey...>
+            )
+        int component_index() const noexcept {
+            return ctx.template component_index<T>(token, index);
+        }
+        template <typename T>
+            requires (
+                !impl::has_element_v<T, MainKey, SubKey...>
+                && component_id<T> == EntityID
+            )
+        T component() const noexcept {
+            return (T)ctx.template component<T>(token, index);
+        }
+        template <typename T>
+            requires (
+                !impl::has_element_v<T, MainKey, SubKey...>
+                && is_tag<T>
+            )
         bool component() const noexcept {
             return ctx.template component<T>(token, index);
         }
         template <typename T>
-            requires (component_id<T> != EntityID && !is_tag<T>)
+            requires (
+                !impl::has_element_v<T, MainKey, SubKey...>
+                && component_id<T> != EntityID
+                && !is_tag<T>
+            )
         T* component() const noexcept {
             return ctx.template component<T>(token, index);
-        }
-        template <typename T>
-            requires (component_id<T> == EntityID)
-        T component() const noexcept {
-            return (T)ctx.template component<T>(token, index);
         }
         template <typename T>
             requires (is_tag<T>)
