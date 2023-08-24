@@ -1,0 +1,30 @@
+mount:
+    %engine%
+    %project%
+    %project%/mod
+    test/light_test
+engine:
+    engine
+    pkg
+extension:
+    .settings
+    .prefab
+    .ecs
+    .lua
+    .rcss
+    .rml
+    .efk
+    .ttf
+    .otf
+    .ttc
+    .bank
+    .event
+    .anim
+    .bin
+    .cfg
+    .ozz
+    .vbbin
+    .vb2bin
+    .ibbin
+    .meshbin
+    .skinbin

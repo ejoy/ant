@@ -1,13 +1,10 @@
-package.path = "/engine/?.lua"
-require "bootstrap"
-
 local platform  = require "bee.platform"
 
 local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
-local access = require "vfs.repoaccess"
-require "editor.create_repo" ("./tools/material_compile", access)
+local access = dofile "/engine/vfs/repoaccess.lua"
+dofile "/engine/editor/create_repo.lua" ("./tools/material_compile", access)
 
 local fs = require "filesystem"
 local lfs = require "bee.filesystem"
