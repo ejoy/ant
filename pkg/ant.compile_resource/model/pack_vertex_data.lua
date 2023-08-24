@@ -54,7 +54,7 @@ local function f2i(v)
     return math.floor(check_nan(v) * 32767+0.5)
 end
 
-local DISABLE_PACK_TANGENT_FRAME<const> = false -- true
+local PACK_TANGENT_FRAME<const> = true
 
 return {
 	pack = function (math3d, layouts, vertices)
@@ -72,7 +72,7 @@ return {
 		local need_compress_color<const>			= check_need_compress_color()
 		local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 
-		local need_pack_tangent_frame<const>        = DISABLE_PACK_TANGENT_FRAME and normal_attrib_idx and tangent_attrib_idx
+		local need_pack_tangent_frame<const>        = PACK_TANGENT_FRAME and normal_attrib_idx and tangent_attrib_idx
 
 		local need_compress_tangent_frame<const>	= need_pack_tangent_frame
 		local need_compress_weights<const>			= weights_attrib_idx
@@ -185,7 +185,7 @@ return {
 		return new_vertices, table.concat(new_layouts, "|")
 	end,
 	is_pack2tangentframe = function (layouts)
-		return DISABLE_PACK_TANGENT_FRAME and find_layout_idx(layouts, "NORMAL") and find_layout_idx(layouts, "TANGENT")
+		return PACK_TANGENT_FRAME and find_layout_idx(layouts, "NORMAL") and find_layout_idx(layouts, "TANGENT")
 	end,
 	find_attrib = function (layouts, attribname)
 		return find_layout_idx(layouts, attribname)
