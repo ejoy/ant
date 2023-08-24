@@ -76,6 +76,13 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !std::is_function_v<T>
+            )
+        int component_index(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return entity_component_index(ctx(), token, component_id<T>);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
                 && is_tag<T>
             )
         bool component(ecs_token token, [[maybe_unused]] int i) noexcept {
@@ -138,6 +145,15 @@ namespace ecs_api {
             )
         T* fetch(int i, ecs_token& token) noexcept {
             return (T*)entity_fetch(ctx(), component_id<T>, i, &token);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && impl::has_element_v<T, Components...>
+                && component_id<T> != EntityID
+            )
+        int component_index(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return entity_cache_fetch_index(ctx(), c, i, component_id<T>);
         }
         template <typename T>
             requires (
@@ -306,8 +322,14 @@ namespace ecs_api {
         void remove() const noexcept {
             entity_remove(ctx.ctx(), token);
         }
+        template <typename T>
         int get_index() const noexcept {
-            return index;
+            if constexpr (component_id<MainKey> == component_id<T>) {
+                return index;
+            }
+            else {
+                return ctx.template component_index<T>(token, index);
+            }
         }
         ecs_token get_token() const noexcept {
             return token;
