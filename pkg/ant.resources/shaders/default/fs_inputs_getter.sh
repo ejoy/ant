@@ -5,13 +5,10 @@
 
 #ifndef MATERIAL_UNLIT
     fsinput.pos    = v_posWS;
-#   ifdef WITH_NORMAL_ATTRIB
     fsinput.normal = v_normal;
-#   endif //WITH_NORMAL_ATTRIB
-
-#   ifdef WITH_TANGENT_ATTRIB
+#   ifdef HAS_NORMAL_TEXTURE
     fsinput.tangent = v_tangent;
-#   endif //WITH_TANGENT_ATTRIB
+#   endif //HAS_NORMAL_TEXTURE
 
 #endif //MATERIAL_UNLIT
 
