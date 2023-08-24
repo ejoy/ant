@@ -147,7 +147,7 @@ local function render_layer_test()
          },
         data = {
             scene  = {s = 1, t = {0, 1, 0}},
-            --material    = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
+            --material    = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001_nup.material",
             --material    = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|materials/Material.001_skin.material",
             --material    = "/pkg/ant.resources/materials/pbr_stencil.material", 
             --material    = "/pkg/ant.resources.binary/meshes/Duck.glb|materials/blinn3-fx.material", 
@@ -228,7 +228,7 @@ local function drawindirect_test()
         data = {
             mesh = "/pkg/ant.test.features/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
             scene = {s = {0.125, 0.125, 0.125}, t = {5, 0, 5}},
-            material = "/pkg/ant.test.features/mountain1.glb|materials/Material_c.material",
+            material = "/pkg/ant.test.features/mountain1.glb|materials/Material_cnup.material",
             --material = "/pkg/ant.test.features/assets/pbr_test.material",
             visible_state = "main_view",
             name = "test",

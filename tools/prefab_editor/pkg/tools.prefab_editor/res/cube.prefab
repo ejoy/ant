@@ -7,7 +7,7 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material
+  material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001_nup.material
   mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin
   name: Cube
   scene:
