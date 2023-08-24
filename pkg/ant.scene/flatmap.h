@@ -275,6 +275,10 @@ public:
             : m(m)
             , n(n)
         {
+            if (m.m_size == 0) {
+                this->n = m.m_mask + 1;
+                return;
+            }
             next_valid();
         }
         bool operator!=(iterator& rhs) const {
