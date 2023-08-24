@@ -1,3 +1,3 @@
 {
-    gl_FragColor = fs_output.color;
+    gl_FragColor = fsoutput.color;
 }

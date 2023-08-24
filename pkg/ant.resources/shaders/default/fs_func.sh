@@ -9,16 +9,18 @@
 #include "pbr/indirect_lighting.sh"
 #include "postprocess/tonemapping.sh"
 #include "default/inputs_structure.sh"
-#include "pbr/input_attributes.sh"
 
-void CUSTOM_FS_FUNC(in FSInput fs_input, inout FSOutput fs_output)
+#include "pbr/material_info.sh"
+
+//TODO: move to pbr folder
+void CUSTOM_FS_FUNC(in FSInput input, inout FSOutput output)
 {
-    input_attributes input_attribs = (input_attributes)0;
-    build_fs_input_attribs(fs_input, input_attribs);
-
+    material_info mi = (material_info)0;
+    init_material_info(input, mi);
 #ifdef MATERIAL_UNLIT
-    fs_output.color = mul_inverse_tonemap(input_attribs.basecolor + input_attribs.emissive);
+    output.color = mul_inverse_tonemap(mi.basecolor + mi.emissive);
 #else //!MATERIAL_UNLIT
-    fs_output.color = compute_lighting(input_attribs);
+    build_material_info(mi);
+    output.color = compute_lighting(mi);
 #endif //MATERIAL_UNLIT
 }

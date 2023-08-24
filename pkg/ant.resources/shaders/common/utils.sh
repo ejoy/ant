@@ -2,7 +2,7 @@
 #define __SHADER_UTILS_SH__
 #include <shaderlib.sh>
 
-vec2 get_normalize_fragcoord(vec2 fragcoord)
+vec2 calc_normalize_fragcoord(vec2 fragcoord)
 {
     vec2 fg = fragcoord - u_viewRect.xy;
     return fg / u_viewRect.zw;

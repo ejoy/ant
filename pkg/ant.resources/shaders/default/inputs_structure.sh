@@ -38,6 +38,8 @@ struct VSOutput{
 struct FSInput{
  	highp vec4 pos;
 	lowp  vec4 color;
+	lowp  vec4 emissive;
+
 	mediump vec3 normal;
 	mediump vec3 tangent;
 	highp vec2 uv0;

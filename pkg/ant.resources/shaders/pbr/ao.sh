@@ -2,7 +2,6 @@
 #define _AO_SH_
 
 #include "common/math.sh"
-#include "pbr/input_attributes.sh"
 
 #ifdef ENABLE_BENT_NORMAL
 SAMPLER2DARRAY(s_ssao, 9);
@@ -128,13 +127,13 @@ ao_value fetch_ao(vec2 uv, float depthVS)
     return av;
 }
 
-float calc_specularAO(input_attributes input_attribs, material_info mi, ao_value av)
+float calc_specularAO(in material_info mi, ao_value av)
 {
 #ifdef HIGH_QULITY_SPECULAR_AO
-    float specularAO = SpecularAO_Cones(input_attribs.bent_normal, mi.reflect_vector, av.ao, mi.roughness);
+    float specularAO = SpecularAO_Cones(mi.bent_normal, mi.reflect_vector, av.ao, mi.roughness);
 
 #   ifdef ENABLE_BENT_NORMAL
-    vec3 bn = fetch_bent_normal(input_attribs.screen_uv, av.weights);
+    vec3 bn = fetch_bent_normal(mi.screen_uv, av.weights);
     float ssSpecularAO = SpecularAO_Cones(bn, mi.reflect_vector, av.ao, mi.roughness);
     // Combine the specular AO from the texture with screen space specular AO
     specularAO = min(specularAO, ssSpecularAO);
@@ -145,13 +144,13 @@ float calc_specularAO(input_attributes input_attribs, material_info mi, ao_value
 #endif //HIGH_QULITY_SPECULAR_AO
 }
 
-void apply_occlusion(input_attributes input_attribs, material_info mi, float depthVS, inout vec3 indirect_diffuse, inout vec3 indirect_specular)
+void apply_occlusion(in material_info mi, inout vec3 indirect_diffuse, inout vec3 indirect_specular)
 {
-    ao_value av = fetch_ao(input_attribs.screen_uv, depthVS);
-    av.ao = min(av.ao, input_attribs.occlusion);
+    ao_value av = fetch_ao(mi.screen_uv, mi.distanceVS);
+    av.ao = min(av.ao, mi.occlusion);
 
     indirect_diffuse *= av.ao;
-    indirect_specular *= calc_specularAO(input_attribs, mi, av);
+    indirect_specular *= calc_specularAO(mi, av);
 }
 
 #endif //_AO_SH_

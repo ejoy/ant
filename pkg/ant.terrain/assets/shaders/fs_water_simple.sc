@@ -36,7 +36,7 @@ vec4 normal_blending(vec4 top, vec4 bottom)
 
 void main()
 {
-    vec2 uv = get_normalize_fragcoord(gl_FragCoord.xy);
+    vec2 uv = calc_normalize_fragcoord(gl_FragCoord.xy);
     float scene_depthVS = linear_depth(texture2D(s_scene_depth, uv.xy).r);
     float obj_depthVS = gl_FragCoord.w;
     float depth_diff = scene_depthVS - obj_depthVS;

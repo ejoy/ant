@@ -10,11 +10,11 @@ $$CUSTOM_FS_FUNC$$
 
 void main()
 {
-    FSInput fs_input = (FSInput)0;
-    FSOutput fs_output = (FSOutput)0;
+    FSInput fsinput = (FSInput)0;
     #include "default/fs_inputs_getter.sh"
 
-    CUSTOM_FS_FUNC(fs_input, fs_output);
+    FSOutput fsoutput = (FSOutput)0;
+    CUSTOM_FS_FUNC(fsinput, fsoutput);
 
     #include "default/fs_outputs_getter.sh"
 }

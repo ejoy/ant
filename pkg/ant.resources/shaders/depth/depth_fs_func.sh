@@ -1,13 +1,13 @@
 #include <bgfx_shader.sh>
 #include "default/inputs_structure.sh"
 
-void CUSTOM_FS_FUNC(in FSInput fs_input, inout FSOutput fs_output)
+void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
 {
-	float depth = fs_input.frag_coord.z;
+	float depth = fsinput.frag_coord.z;
 	float depthSq = depth * depth;
 #ifdef PACK_RGBA8
-	fs_output.color = vec4(packHalfFloat(depth), packHalfFloat(depthSq));
+	fsoutput.color = vec4(packHalfFloat(depth), packHalfFloat(depthSq));
 #else //!PACK_RGBA8
-	fs_output.color = vec4_splat(depthSq);
+	fsoutput.color = vec4_splat(depthSq);
 #endif //PACK_RGBA8
 }

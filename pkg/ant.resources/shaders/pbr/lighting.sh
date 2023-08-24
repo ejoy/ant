@@ -78,27 +78,27 @@ light_info get_light(uint ilight, vec3 posWS)
 }
 
 #if BGFX_SHADER_TYPE_FRAGMENT
-float directional_light_visibility(in input_attributes input_attribs)
+float directional_light_visibility(in material_info mi)
 {
 #   ifdef ENABLE_SHADOW
-    const vec4 posWS = vec4(input_attribs.posWS + input_attribs.gN * u_normal_offset, 1.0);
-	return shadow_visibility(input_attribs.distanceVS, posWS);
+    const vec4 posWS = vec4(mi.posWS + mi.gN * u_normal_offset, 1.0);
+	return shadow_visibility(mi.distanceVS, posWS);
 #   else //!ENABLE_SHADOW
     return 1.0;
 #   endif //ENABLE_SHADOW
 }
 
-vec3 shading_color(in input_attributes input_attribs, in material_info mi, in uint ilight)
+vec3 shading_color(in material_info mi, in uint ilight)
 {
-    const light_info l = get_light(0, input_attribs.posWS);
+    const light_info l = get_light(0, mi.posWS);
     mi.NdotL = dot(mi.N, l.pt2l);
     return mi.NdotL > 0 ? surface_shading(mi, l) : vec3_splat(0.0);
 }
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
-vec3 debug_cascade_level(input_attributes input_attrib)
+vec3 debug_cascade_level(in material_info mi)
 {
-    int cascadeidx = select_cascade(input_attribs.distanceVS);
+    int cascadeidx = select_cascade(mi.distanceVS);
     vec3 colors[4] = {
         vec3(1.0, 0.0, 0.0),
         vec3(0.0, 1.0, 0.0),
@@ -109,17 +109,17 @@ vec3 debug_cascade_level(input_attributes input_attrib)
 }
 #endif //ENABLE_DEBUG_CASCADE_LEVEL
 
-vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
+vec3 calc_direct_light(in material_info mi)
 {
     vec3 color = vec3_splat(0.0);
 #ifdef USING_LIGHTMAP
-    vec4 irradiance = texture2D(s_lightmap, input_attribs.uv1);
-    color += input_attribs.basecolor.rgb * irradiance.rgb * PI * 0.5;
+    vec4 irradiance = texture2D(s_lightmap, mi.lightmap_uv);
+    color += mi.basecolor.rgb * irradiance.rgb * PI * 0.5;
 #else //!USING_LIGHTMAP
-    const float dl_visibility = directional_light_visibility(input_attribs);
+    const float dl_visibility = directional_light_visibility(mi);
     if (dl_visibility > 0.0)
     {
-        color += shading_color(input_attribs, mi, 0) * dl_visibility;
+        color += shading_color(mi, 0) * dl_visibility;
     }
 #endif //USING_LIGHTMAP
 
@@ -130,28 +130,26 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
     if (u_light_count[0] > 1)
     {
         //TODO: other lights not check visibility right now
-        light_grid g = get_light_grid(input_attribs.fragcoord);
+        light_grid g = get_light_grid(mi.fragcoord);
         for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
         {
             uint ilight = get_light_index(ii);
-            color += shading_color(input_attribs, mi, ilight);
+            color += shading_color(mi, ilight);
         }
     }
     return color;
 }
 
-vec4 compute_lighting(input_attributes input_attribs){
-    material_info mi = init_material_info(input_attribs);
-
-    vec3 color = calc_direct_light(input_attribs, mi);
+vec4 compute_lighting(in material_info mi){
+    vec3 color = calc_direct_light(mi);
 #ifdef ENABLE_IBL
-    vec3 indirect_light_color = calc_indirect_light(input_attribs, mi);
+    vec3 indirect_light_color = calc_indirect_light(mi);
 #ifdef ENABLE_MODULATE_INDIRECT_COLOR
     indirect_light_color *= u_indirect_modulate_color.rgb;
 #endif //ENABLE_MODULATE_INDIRECT_COLOR
     color += indirect_light_color;
 #endif //ENABLE_IBL
-    return vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
+    return vec4(color, mi.basecolor.a) + mi.emissive;
 }
 
 #endif //BGFX_SHADER_TYPE_FRAGMENT

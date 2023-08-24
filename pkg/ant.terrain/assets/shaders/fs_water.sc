@@ -11,7 +11,7 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 #include "common/uvmotion.sh"
 
 #include "pbr/lighting.sh"
-#include "pbr/input_attributes.sh"
+#include "pbr/material_info.sh"
 
 // Surface settings:
 //s_scene_color/s_scene_depth define in postprocess.sh as stage 0/1
@@ -122,14 +122,13 @@ void main()
 #endif //VIEW_WATER_WITHOUT_LIGHTING
 
     //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
-	input_attributes input_attribs;
-	input_attribs.V = u_eyepos.xyz - v_posWS.xyz;
-	input_attribs.N = N;
-	input_attribs.basecolor = vec4(color, 1.0);
-	input_attribs.emissive = vec4(0.0, 0.0, 0.0, 0.0);
-	input_attribs.metallic = 0.1;
-	input_attribs.perceptual_roughness = 0.2;
-    material_info mi = init_material_info(input_attribs);
+	material_info mi;
+	mi.V = u_eyepos.xyz - v_posWS.xyz;
+	mi.N = N;
+	mi.basecolor = vec4(color, 1.0);
+	mi.emissive = vec4(0.0, 0.0, 0.0, 0.0);
+	mi.metallic = 0.1;
+	mi.perceptual_roughness = 0.2;
 
     light_info l;
 	l.pos = vec3(0.0, 0.0, 0.0);
