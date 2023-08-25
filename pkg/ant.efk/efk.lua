@@ -28,24 +28,37 @@ function efk_sys:init()
     PH = ecs.require "playhandle"
 end
 
-function efk_sys:exit()
-    ltask.call(EFK_SERVER, "exit")
+local function cleanup_efk(efk)
+    if efk.play_handle then
+        efk.play_handle:set_stop()
+        efk.play_handle = nil
+    end
+
+    if efk.handle then
+        ltask.send(EFK_SERVER, "destroy", assert(efk.path))
+        print("destroy:", efk.path, efk.handle)
+        efk.path = nil
+        efk.handle = nil
+    end
 end
 
-local load_efk_file, unload_efk_file; do
-
-    function unload_efk_file(efkfile)
-
+function efk_sys:exit()
+    for e in w:select "efk:in eid:in name?in" do
+        log.warn(("'efk_system' is exiting, but efk entity:%d, %s is not REMOVED"):format(e.eid, e.name or ""))
+        cleanup_efk(e.efk)
     end
+    ltask.call(EFK_SERVER, "exit")
 end
 
 function efk_sys:component_init()
     for e in w:select "INIT efk:in eid:in" do
-        e.efk.handle = ltask.call(EFK_SERVER, "create", e.efk.path)
-        e.efk.speed = e.efk.speed or 1.0
-        e.efk.loop = e.efk.loop or false
-        e.efk.visible = e.efk.visible or true
-        if e.efk.auto_play then
+        local efk = e.efk
+        efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
+        print(efk.path, efk.handle)
+        efk.speed = efk.speed or 1.0
+        efk.loop = efk.loop or false
+        efk.visible = efk.visible or true
+        if efk.auto_play then
             world:pub {"playeffect", e.eid}
         end
     end
@@ -60,14 +73,7 @@ end
 
 function efk_sys:entity_remove()
     for e in w:select "REMOVED efk:in" do
-        if e.efk.play_handle then
-            e.efk.play_handle:set_stop()
-        end
-        e.efk.play_handle = nil
-
-        ltask.send(EFK_SERVER, "destroy", e.efk.path)
-        e.efk.path = nil
-        e.efk.handle = nil
+        cleanup_efk(e.efk)
     end
 end
 

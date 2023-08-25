@@ -98,18 +98,23 @@ local efk_cb_handle = efk_cb.callback{
     error           = error_handle,
 }
 
-local efk_ctx
+local EFKCTX
+local EFKFILES = {}
 
 local function shutdown()
-    if efk_ctx then
-        efk.shutdown(efk_ctx)
-        efk_ctx = nil
+    if EFKCTX then
+        efk.shutdown(EFKCTX)
+        EFKCTX = nil
+    end
+
+    if next(EFKFILES) then
+        error("efk file is not removed before 'shutdown'")
     end
 end
 
 function S.init()
-    assert(not efk_ctx, "efk context need clean before efk service init")
-    efk_ctx = efk.startup{
+    assert(not EFKCTX, "efk context need clean before efk service init")
+    EFKCTX = efk.startup{
         max_count       = 2000,
         viewid          = effect_viewid,
         shader_load     = efk_cb.shader_load,
@@ -124,6 +129,7 @@ function S.init()
 end
 
 function S.exit()
+    assert(not next(EFKFILES), "efk files should cleanup after shutdown")
     shutdown()
 end
 
@@ -132,14 +138,12 @@ function S.update_cb_data(background_handle, depth)
     efk_cb_handle.depth = depth
 end
 
-local EFKFILES = {}
-
 function S.create(filename)
     local info = EFKFILES[filename]
     if not info then
         log.info("Create efk file:", filename)
         info = {
-            handle = efk_ctx:create(filename),
+            handle = EFKCTX:create(filename),
             count = 0,
         }
         EFKFILES[filename] = info
@@ -155,7 +159,7 @@ function S.destroy(filename)
     if 0 == info.count then
         log.info("Destroy efk file:", filename)
         
-        efk_ctx:destroy(info.handle)
+        EFKCTX:destroy(info.handle)
         EFKFILES[filename] = nil
     end
 end
@@ -167,35 +171,35 @@ function S.preload_texture(texture, id)
 end
 
 function S.play(efkhandle, mat, speed)
-    return efk_ctx:play(efkhandle, mat, speed)
+    return EFKCTX:play(efkhandle, mat, speed)
 end
 
 function S.is_alive(handle)
-    return efk_ctx:is_alive(handle)
+    return EFKCTX:is_alive(handle)
 end
 
 function S.set_stop(handle, delay)
-    return efk_ctx:stop(handle, delay)
+    return EFKCTX:stop(handle, delay)
 end
 
 function S.set_time(handle, time)
-    efk_ctx:set_time(handle, time)
+    EFKCTX:set_time(handle, time)
 end
 
 function S.set_transform(handle, mat)
-    efk_ctx:update_transform(handle, mat)
+    EFKCTX:update_transform(handle, mat)
 end
 
 function S.set_speed(handle, speed)
-    efk_ctx:set_speed(handle, speed)
+    EFKCTX:set_speed(handle, speed)
 end
 
 function S.set_pause(handle, p)
-    efk_ctx:pause(handle, p)
+    EFKCTX:pause(handle, p)
 end
 
 function S.set_visible(handle, v)
-    efk_ctx:set_visible(handle, v)
+    EFKCTX:set_visible(handle, v)
 end
 
 function S.quit()
@@ -211,9 +215,9 @@ local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
     while true do
-        if efk_ctx then
+        if EFKCTX then
             local viewmat, projmat, deltatime = ltask.call(bgfxmainS, "fetch_world_camera")
-            efk_ctx:render(viewmat, projmat, deltatime)
+            EFKCTX:render(viewmat, projmat, deltatime)
         end
         bgfx.encoder_frame()
     end
