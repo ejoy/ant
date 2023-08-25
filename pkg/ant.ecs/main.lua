@@ -1,13 +1,13 @@
 local luaecs = import_package "ant.luaecs"
-local policy = require "policy"
 local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
-local typeclass = require "typeclass"
-local system = require "system"
-local event = require "event"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
 local fastio = require "fastio"
+local policy = require "policy"
+local typeclass = require "typeclass"
+local system = require "system"
+local event = require "event"
 
 local world_metatable = {}
 local world = {}
@@ -222,7 +222,6 @@ function world:create_object(inner_proxy)
     local w = self
     local on_init = inner_proxy.on_init
     local on_ready = inner_proxy.on_ready
-    local on_update = inner_proxy.on_update
     local on_message = inner_proxy.on_message
     local proxy_entity = {
         prefab = inner_proxy,
@@ -237,19 +236,14 @@ function world:create_object(inner_proxy)
             on_ready(inner_proxy)
         end
     end
-    if on_update then
-        function proxy_entity.on_update()
-            on_update(inner_proxy)
-        end
-    end
     local prefab = create_entity_by_data(w, inner_proxy.group, proxy_entity)
 
-    if not on_update and not on_message then
+    if not on_message then
         w:pub {"object_detach", prefab}
         return
     end
 
-    local outer_proxy = {root = inner_proxy.root}
+    local outer_proxy = {}
     if on_message then
         function outer_proxy:send(...)
             w:pub {"object_message", on_message, inner_proxy, ...}
@@ -257,12 +251,6 @@ function world:create_object(inner_proxy)
         function inner_proxy:send(...)
             w:pub {"object_message", on_message, inner_proxy, ...}
         end
-    end
-    function outer_proxy:detach()
-        w:pub {"object_detach", prefab}
-    end
-    function inner_proxy:detach()
-        w:pub {"object_detach", prefab}
     end
     function outer_proxy:remove()
         w:pub {"object_remove", prefab}

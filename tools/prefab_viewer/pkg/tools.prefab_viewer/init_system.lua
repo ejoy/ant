@@ -59,8 +59,6 @@ function S.init_world()
     --     end
     --     iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
     -- end
-    -- function miner:on_message(msg) end
-    -- function miner:on_update() end
     -- world:create_object(miner)
 
     -- camera

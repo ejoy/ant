@@ -587,8 +587,6 @@ function m:open(filename, prefab_name, patch_tpl)
         anim_view.on_prefab_load(self.entities)
         world:pub {"LookAtTarget", self.entities[1]}
     end
-    function prefab:on_message(msg) end
-    function prefab:on_update() end
     world:create_object(prefab)
     editor_setting.add_recent_file(filename)
     editor_setting.save()
@@ -774,8 +772,6 @@ function m:add_prefab(path)
         end
         set_select_adapter(children, v_root)
     end
-    function prefab:on_message(msg) end
-    function prefab:on_update() end
     world:create_object(prefab)
     local node = hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
     node.prefab = prefab

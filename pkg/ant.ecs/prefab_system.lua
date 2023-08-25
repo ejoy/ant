@@ -11,20 +11,6 @@ local evObjectRemove  = world:sub {"object_remove"}
 local evPrefabDetach  = world:sub {"prefab_system", "detach"}
 local evPrefabRemove  = world:sub {"prefab_system", "remove"}
 
-function m:entity_init()
-    for v in w:select "on_init:in" do
-        v:on_init()
-    end
-    w:clear "on_init"
-end
-
-function m:entity_ready()
-    for v in w:select "on_ready:in" do
-        v:on_ready()
-    end
-    w:clear "on_ready"
-end
-
 function m:data_changed()
     for _, prefab in evObjectDetach:unpack() do
         world:pub{"prefab_system", "detach", prefab}
@@ -35,9 +21,6 @@ function m:data_changed()
     for msg in evObjectMessage:each() do
         local f = msg[2]
         f(table.unpack(msg, 3))
-    end
-    for v in w:select "on_update:in" do
-        v:on_update()
     end
 end
 

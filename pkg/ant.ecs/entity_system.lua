@@ -13,6 +13,20 @@ local function update_group_tag(groupid, data)
     end
 end
 
+function m:entity_init()
+    for v in w:select "on_init:in" do
+        v:on_init()
+    end
+    w:clear "on_init"
+end
+
+function m:entity_ready()
+    for v in w:select "on_ready:in" do
+        v:on_ready()
+    end
+    w:clear "on_ready"
+end
+
 function m:entity_create()
     local queue = world._create_queue
     if #queue == 0 then
