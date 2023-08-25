@@ -141,8 +141,6 @@ local function create_entity_template(w, v)
     }, template_mt)
 end
 
-local templates = {}
-
 local create_template
 
 local function create_template_(w, t)
@@ -174,16 +172,15 @@ local function create_template_(w, t)
 end
 
 function create_template(w, filename)
-    if type(filename) ~= "string" then
-        return create_template_(w, filename)
-    end
-    if not templates[filename] then
+    local v = w._templates[filename]
+    if not v then
         local realpath = assetmgr.compile(filename)
         local data = fastio.readall(realpath, filename)
         local t = serialize.parse(filename, data)
-        templates[filename] = create_template_(w, t)
+        v = create_template_(w, t)
+        w._templates[filename] = v
     end
-    return templates[filename]
+    return v
 end
 
 local function add_tag(dict, tag, eid)
@@ -282,7 +279,7 @@ function world:create_object(inner_proxy)
 end
 
 function world:_release_cache(filename)
-    templates[filename] = nil
+    self._templates[filename] = nil
 end
 
 function world:_create_instance(group, parent, filename)
@@ -701,6 +698,7 @@ function m.new_world(config)
 		_create_queue = {},
 		_destruct = {},
 		_clibs_loaded = {},
+		_templates = {},
 		w = ecs,
 	}, world_metatable)
 
