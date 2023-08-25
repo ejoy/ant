@@ -237,12 +237,6 @@ function world:create_object(inner_proxy)
         end
     end
     local prefab = create_entity_by_data(w, inner_proxy.group, proxy_entity)
-
-    if not on_message then
-        w:pub {"object_detach", prefab}
-        return
-    end
-
     local outer_proxy = {}
     if on_message then
         function outer_proxy:send(...)
@@ -281,10 +275,6 @@ function world:_create_instance(group, parent, filename)
         group = group,
         tag = create_tags(prefab, template)
     }
-end
-
-function world:detach_instance(instance)
-    --Nothing to do
 end
 
 function world:_create_group(id)
