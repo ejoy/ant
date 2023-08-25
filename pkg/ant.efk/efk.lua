@@ -36,7 +36,6 @@ local function cleanup_efk(efk)
 
     if efk.handle then
         ltask.send(EFK_SERVER, "destroy", assert(efk.path))
-        print("destroy:", efk.path, efk.handle)
         efk.path = nil
         efk.handle = nil
     end
@@ -54,7 +53,6 @@ function efk_sys:component_init()
     for e in w:select "INIT efk:in eid:in" do
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
-        print(efk.path, efk.handle)
         efk.speed = efk.speed or 1.0
         efk.loop = efk.loop or false
         efk.visible = efk.visible or true
