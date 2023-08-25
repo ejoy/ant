@@ -6,9 +6,9 @@
 #ifndef MATERIAL_UNLIT
     fsinput.pos    = v_posWS;
     fsinput.normal = v_normal;
-#   ifdef HAS_NORMAL_TEXTURE
+#   if defined(WITH_TANGENT_ATTRIB) || defined(WITH_CUSTOM_TANGENT_ATTRIB)
     fsinput.tangent = v_tangent;
-#   endif //HAS_NORMAL_TEXTURE
+#   endif //TANGENT_VARYING
 
 #endif //MATERIAL_UNLIT
 
