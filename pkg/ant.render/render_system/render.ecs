@@ -214,12 +214,16 @@ policy "draw_indirect"
     .component "draw_indirect"
 
 component "draw_indirect".type "lua"
+component "draw_indirect_cull".type "lua"
+component "draw_indirect_queue".type "lua"
+component "draw_indirect_ready".type "lua"
 
 system "draw_indirect_system"
     .implement "draw_indirect_system.lua"
     .require_system "ant.render|draw_indirect_system"
     .method "entity_init"
     .method "entity_remove"
+    .method "data_changed"
 
 system "cull_system"
     .implement "cull_system.lua"

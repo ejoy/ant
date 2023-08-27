@@ -235,7 +235,7 @@ lsubmit(lua_State *L) {
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto& ra = cc.ra[ii];
 			const auto& obj = e.get<ecs::render_object>();
-			if (obj_visible(obj, ra.a->queue_mask)){
+			if (obj_visible(obj, ra.a->queue_mask) || is_indirect_draw(&obj)){
 				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
 			}
 		}

@@ -1,0 +1,22 @@
+fx:
+  cs: /pkg/ant.resources/shaders/mesh/cs_indirect_queue.sc
+  setting:
+    lighting: off
+properties:
+  b_visibility_buffer:
+    stage: 0
+    access: r
+    buffer: b_visibility_buffer
+  b_indirect_buffer:
+    stage: 1
+    access: w
+    buffer: b_indirect_buffer
+  b_indirect_params_buffer:
+    stage: 2
+    access: r
+    buffer: b_indirect_params_buffer
+  b_obj_buffer:
+    stage: 3
+    access: r
+    buffer: b_obj_params_buffer
+  u_queue_params: {0.0, 0.0, 0.0, 0.0}
