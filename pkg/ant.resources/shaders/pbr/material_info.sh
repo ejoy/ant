@@ -155,6 +155,17 @@ void fetch_normal(in FSInput fsinput, inout material_info mi)
     mi.N = mi.gN;
 #endif //HAS_NORMAL_TEXTURE
 
+#ifdef WITH_DOUBLE_SIDE
+    if (fsinput.is_frontfacing){
+#ifdef HAS_NORMAL_TEXTURE
+        mi.T = -mi.T;
+        mi.B = -mi.B;
+#endif //HAS_NORMAL_TEXTURE
+        mi.N = -mi.N;
+        mi.gN = -mi.gN;
+    }
+#endif //WITH_DOUBLE_SIDE
+
 #endif //!MATERIAL_UNLIT
 }
 

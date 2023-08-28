@@ -90,7 +90,7 @@ float directional_light_visibility(in material_info mi)
 
 vec3 shading_color(in material_info mi, in uint ilight)
 {
-    const light_info l = get_light(0, mi.posWS);
+    const light_info l = get_light(ilight, mi.posWS);
     mi.NdotL = dot(mi.N, l.pt2l);
     return mi.NdotL > 0 ? surface_shading(mi, l) : vec3_splat(0.0);
 }

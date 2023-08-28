@@ -7,6 +7,10 @@ fx:
     # VIEW_WATER_SCENE_COLOR: 1
     #WITHOUT_SCENE_COLOR: 1
 properties:
+  u_basecolor_factor: {1.0, 1.0, 1.0, 1.0}
+  u_emissive_factor: {0.0, 0.0, 0.0, 0.0}
+  u_pbr_factor: {1.0, 0.0, 0.0, 1.0}
+
   #wave define: xy = Direction, z = Steepness, w = Length
   u_wave_a: {1.0, 1.0, 0.35, 3.0}
   u_wave_b: {1.0, 0.6, 0.30, 1.55}

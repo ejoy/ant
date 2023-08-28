@@ -50,6 +50,9 @@ struct FSInput{
 	mediump vec4 user3;
 	mediump vec4 user4;
 	mediump vec4 frag_coord; 
+#ifdef WITH_DOUBLE_SIDE
+	bool is_frontfacing;
+#endif //WITH_DOUBLE_SIDE
 };
 
 struct FSOutput{
