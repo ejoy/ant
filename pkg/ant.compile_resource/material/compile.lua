@@ -207,39 +207,53 @@ local DEF_SHADER_INFO<const> = {
 DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_FUNC_KEY, [[#include "default/vs_func.sh"]])
 DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "default/fs_func.sh"]])
 
-local DEF_PBR_UNIFORM = {
+local DEF_PBR_UNIFORM<const> = {
     u_basecolor_factor = "uniform mediump vec4 u_basecolor_factor;",
     u_emissive_factor  = "uniform mediump vec4 u_emissive_factor;",
     u_pbr_factor       = "uniform mediump vec4 u_pbr_factor;"
 }
+
+local ACCESS_NAMES<const> = {
+    r = "BUFFER_RO",
+    w = "BUFFER_WR",
+    rw= "BUFFER_RW",
+}
+
+local function is_array_uniform(p)
+    if not p.stage then
+        assert(type(p) == "table")
+        return type(p[1]) == "table"
+    end
+end
+
 local function generate_properties(properties)
     local content = {}
-    for k, v in pairs(properties) do
+    for name, v in pairs(properties) do
         local result
-        if k:find("s_") == 1 then
-            -- precision(default mediump) / sampler(default SAMPLER2D) / stage 
-            local precision = v.precision or "mediump"
-            local sampler = v.sampler or "SAMPLER2D"
-            local stage = v.stage
-            if v.image then assert(v.mip, "image format should config mipmap level! \n") end
-            assert(stage, "texture must config stage! \n")
-            result = string.format("%s %s(%s, %d);", precision, sampler, k, stage)
-        elseif k:find("u_") == 1 then
+        if name:find("s_") == 1 then
+            --EX: mediump SAMPLER2D(name, stage)
+            result = ("%s %s(%s, %d);"):format(
+                    v.precision or "mediump",
+                    v.sampler or "SAMPLER2D",
+                    name, v.stage)
+        elseif name:find("u_") == 1 then
+            assert(not is_array_uniform(v), "Need implement array uniforms")
+
+            --EX: uniform mediump vec4 name;
             -- precision(default mediump) type(default vec4)
             local precision = v.precsion or "mediump"
             local type = v.type or "vec4"
-            result = string.format("%s %s %s %s;", "uniform", precision, type, k)
-        elseif k:find("b_") == 1 then
+            result = ("uniform %s %s %s;"):format(precision, type, name)
+        elseif name:find("b_") == 1 then
             -- access stage type(default vec4)
-            local access, stage, buffer_access = v.access, v.stage, nil
+            local access = assert(v.access, "buffer property need define 'access' field")
+            local stage = assert(v.stage, "buffer property need define 'stage' field")
             local type = v.type or "vec4"
-            assert(access and stage, "buffer must config access and stage! \n")
-            if stage == 'r' then buffer_access = "BUFFER_RO"
-            elseif stage == 'w' then buffer_access = "BUFFER_WR"
-            else log.error("wrong access type, access should be read/write! \n") end
-            result = string.format("%s(%s, %s, %d);", buffer_access, k, type, stage)
+    
+            local ba = assert(ACCESS_NAMES[access], "wrong access type, access should be read/write! \n")
+            result = ("%s(%s, %s, %d);"):format(ba, name, type, stage)
         else
-            error(("wrong property name:%s, property should be sampler/uniform/buffer!"):format(k))
+            error(("wrong property name:%s, property should be sampler/uniform/buffer!"):format(name))
         end
         content[#content+1] = result
     end
