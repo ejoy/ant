@@ -219,12 +219,12 @@ local function generate_properties(properties)
             local stage = v.stage
             if v.image then assert(v.mip, "image format should config mipmap level! \n") end
             assert(stage, "texture must config stage! \n")
-            result = {precision, " ", sampler, "(", k, ", ", stage, ");"}
+            result = string.format("%s %s(%s, %d);", precision, sampler, k, stage)
         elseif k:find("u_") == 1 then
             -- precision(default mediump) type(default vec4)
             local precision = v.precsion or "mediump"
             local type = v.type or "vec4"
-            result = {"uniform ", precision, " ", type, " ", k, ";"}
+            result = string.format("%s %s %s %s;", "uniform", precision, type, k)
         elseif k:find("b_") == 1 then
             -- access stage type(default vec4)
             local access, stage, buffer_access = v.access, v.stage, nil
@@ -233,11 +233,11 @@ local function generate_properties(properties)
             if stage == 'r' then buffer_access = "BUFFER_RO"
             elseif stage == 'w' then buffer_access = "BUFFER_WR"
             else log.error("wrong access type, access should be read/write! \n") end
-            result = {buffer_access,"(", k, ", ", type, ", ", stage, ");"}
+            result = string.format("%s(%s, %s, %d);", buffer_access, k, type, stage)
         else
             error(("wrong property name:%s, property should be sampler/uniform/buffer!"):format(k))
         end
-        content[#content+1] = table.concat(result)
+        content[#content+1] = result
     end
     for k,v in pairs(DEF_PBR_UNIFORM) do
         if not properties[k] then
