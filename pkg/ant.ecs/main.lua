@@ -41,7 +41,7 @@ local function create_entity_by_template(w, group, template)
     return eid, initargs
 end
 
-function world:_create_entity(group, v)
+function world:create_entity(v, group)
     local policy_info = policy.create(self, v.policy)
     local data = v.data
     for c, def in pairs(policy_info.component_opt) do
@@ -55,7 +55,7 @@ function world:_create_entity(group, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return create_entity_by_data(self, group, data)
+    return create_entity_by_data(self, group or 0, data)
 end
 
 local function table_append(t, a)
@@ -222,17 +222,17 @@ function world:_prefab_instance(group, parent, filename, tags)
     end)
 end
 
-function world:_create_instance(group, parent, filename)
+function world:create_instance(filename, parent, group)
     local q = self._create_prefab_queue
     local tags = {['*']={}}
     q[#q+1] = {
-        group = group,
+        group = group or 0,
         parent = parent,
         filename = filename,
         tags = tags,
     }
     return {
-        group = group,
+        group = group or 0,
         tag = tags
     }
 end
@@ -283,56 +283,41 @@ function world:reset_prefab_cache(filename)
     self._templates[filename] = nil
 end
 
-local function create_group(w, id)
-    local group_tags = w._group_tags
-    local mt = {}
-    local api = {}
-    mt.__index = api
-    function api:create_entity(v)
-        return w:_create_entity(id, v)
+function world:group_enable_tag(tag, id)
+    local w = self
+    local t = w._group_tags[tag]
+    if not t then
+        t = {
+            args = {},
+        }
+        w._group_tags[tag] = t
     end
-    function api:create_instance(filename, parent)
-        return w:_create_instance(id, parent, filename)
+    if t[id] then
+        return
     end
-    local function tags(tag)
-        local t = group_tags[tag]
-        if not t then
-            t = {
-                args = {},
-            }
-            group_tags[tag] = t
-        end
-        return t
-    end
-    function api:enable(tag)
-        local t = tags(tag)
-        if t[id] then
-            return
-        end
-        t.dirty = true
-        t[id] = true
-        table.insert(t.args, id)
-    end
-    function api:disable(tag)
-        local t = tags(tag)
-        if t[id] == nil then
-            return
-        end
-        t.dirty = true
-        t[id] = nil
-        for i = 1, #t.args do
-            local v = t.args[i]
-            if v == id then
-                table.remove(t.args, i)
-                break
-            end
-        end
-    end
-    return setmetatable({}, mt)
+    t.dirty = true
+    t[id] = true
+    table.insert(t.args, id)
 end
 
-function world:group(id)
-    return self._group[id]
+function world:group_disable_tag(tag, id)
+    local w = self
+    local t = w._group_tags[tag]
+    if not t then
+        return
+    end
+    if t[id] == nil then
+        return
+    end
+    t.dirty = true
+    t[id] = nil
+    for i = 1, #t.args do
+        local v = t.args[i]
+        if v == id then
+            table.remove(t.args, i)
+            break
+        end
+    end
 end
 
 function world:group_flush(tag)
@@ -635,14 +620,6 @@ function world:clibs(name)
     return funcs
 end
 
-function world:create_entity(v)
-    return self:_create_entity(0, v)
-end
-
-function world:create_instance(filename, parent)
-    return self:_create_instance(0, parent, filename)
-end
-
 local submit = setmetatable({}, {__mode="k", __index = function (t, w)
     local mt = {}
     function mt:__close()
@@ -687,11 +664,6 @@ function m.new_world(config)
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_ecs = {},
-		_group = setmetatable({}, {__index = function (t, id)
-			local g = create_group(w, id)
-			t[id] = g
-			return g
-		end}),
 		_group_tags = {},
 		_create_entity_queue = {},
 		_create_prefab_queue = {},

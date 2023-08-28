@@ -54,8 +54,7 @@ function msc.remove(v)
 end
 
 function mss:init()
-    local g = world:group(motion_sampler_group)
-    g:enable "motion_sampler_tag"
+    world:group_enable_tag("motion_sampler_tag", motion_sampler_group)
     world:group_flush "motion_sampler_tag"
 end
 
@@ -71,7 +70,7 @@ end
 local ims = {}
 
 function ims.sampler_group()
-    return world:group(motion_sampler_group)
+    return motion_sampler_group
 end
 
 

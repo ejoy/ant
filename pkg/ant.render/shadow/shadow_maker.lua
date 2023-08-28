@@ -510,8 +510,7 @@ function sm:camera_usage()
 	for gid, wms in pairs(groups) do
         --local select_tag = "view_visible:in scene:in bounding:in eid:in"
 		local select_tag = "hitch_tag:in scene:in bounding:in eid:in"
-		local g = world:group(gid)
-        g:enable("hitch_tag")
+        world:group_enable_tag("hitch_tag", gid)
 		for ee in w:select(select_tag) do
 			tmp_eids[ee.eid] = true
 			local is_aabb_valid = ee.bounding.aabb and ee.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(ee.bounding.aabb)
@@ -527,7 +526,7 @@ function sm:camera_usage()
 				end
 			end
         end
-        g:disable("hitch_tag")
+        world:group_disable_tag("hitch_tag", gid)
 	end ]]
 end
 

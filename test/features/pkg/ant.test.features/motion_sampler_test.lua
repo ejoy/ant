@@ -9,8 +9,8 @@ local ims           = ecs.require "ant.motion_sampler|motion_sampler"
 local itimer        = ecs.require "ant.timer|timer_system"
 
 local function motion_sampler_test()
-    local g = ims.sampler_group()
-    local eid = g:create_entity {
+    local sampler_group = ims.sampler_group()
+    local eid = world:create_entity({
         policy = {
             "ant.scene|scene_object",
             "ant.motion_sampler|motion_sampler",
@@ -29,15 +29,12 @@ local function motion_sampler_test()
                 }
             }
         }
-    }
+    }, sampler_group)
 
-    g:enable "view_visible"
+    world:group_enable_tag("view_visible", sampler_group)
     world:group_flush "view_visible"
 
-    local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
-    p.on_ready = function (e)
-        
-    end
+    local p = world:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid, sampler_group)
     world:create_object(p)
 end
 

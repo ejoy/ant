@@ -237,7 +237,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
 		},
     }
     return {
-        eid = group_id and world:group(group_id):create_entity(template) or world:create_entity(template),
+        eid = world:create_entity(template, group_id),
         anim_eid = anim_eid
     }
 end

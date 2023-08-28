@@ -36,9 +36,7 @@ function hitch_sys:entity_ready()
     end
 
     for gid, hitchs in pairs(groups) do
-        local g = world:group(gid)
-
-        g:enable "hitch_tag"
+        world:group_enable_tag("hitch_tag", gid)
         world:group_flush "hitch_tag"
 
         local h_aabb = math3d.aabb()

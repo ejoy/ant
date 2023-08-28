@@ -25,15 +25,14 @@ local function hitch_cull_test()
         end
     
         for gid, gg in pairs(groups) do
-            local g = world:group(gid)
-            g:enable "hitch_tag"
+            world:group_enable_tag("hitch_tag", gid)
             world:group_flush "hitch_tag"
             local culled, no_culled, hitch_sum = gg.culled, gg.no_culled, gg.hitch_sum
             for e in w:select "hitch_tag:in render_object:in" do
                 gg.hitch_tag = gg.hitch_tag + 1
             end
             group_culled, group_no_culled, group_sum = group_culled + gg.hitch_tag * culled, group_no_culled + gg.hitch_tag * no_culled, group_sum + gg.hitch_tag * hitch_sum
-            g:disable "hitch_tag"
+            world:group_disable_tag("hitch_tag", gid)
             world:group_flush "hitch_tag"
         end
     

@@ -11,8 +11,7 @@ local hitch_test_group_id<const> = 1000
 local skeleton_test_group_id<const> = 1001
 
 local function create_simple_test_group()
-    local defgroup = world:group(0)
-    defgroup:create_entity {
+    world:create_entity {
         policy = {
             "ant.render|hitch_object",
             "ant.general|name",
@@ -28,7 +27,7 @@ local function create_simple_test_group()
             name = "hitch_static1",
         }
     }
-    defgroup:create_entity {
+    world:create_entity {
         policy = {
             "ant.render|hitch_object",
             "ant.general|name",
@@ -44,7 +43,7 @@ local function create_simple_test_group()
             name = "hitch_static2",
         }
     }
-    defgroup:create_entity {
+    world:create_entity {
         policy = {
             "ant.render|hitch_object",
             "ant.general|name",
@@ -61,9 +60,8 @@ local function create_simple_test_group()
         }
     }
 
-    local static_group = world:group(hitch_test_group_id)
     --standalone sub tree
-    local p1 = static_group:create_entity {
+    local p1 = world:create_entity({
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -79,9 +77,9 @@ local function create_simple_test_group()
             end,
             name = "virtual_node_p1",
         },
-    }
+    }, hitch_test_group_id)
 
-    static_group:create_entity {
+    world:create_entity({
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -98,7 +96,7 @@ local function create_simple_test_group()
             end,
             name = "virtual_node",
         },
-    }
+    }, hitch_test_group_id)
 end
 
 local change_hitch_eid
@@ -142,8 +140,8 @@ local function create_skeleton_test_group()
         }
     }
 
-    local function create_obj(g, file, s, t)
-        local p = g:create_instance(file)
+    local function create_obj(gid, file, s, t)
+        local p = world:create_instance(file, nil, gid)
         p.on_ready = function (e)
             local ee<close> = world:entity(e.tag['*'][1], "scene:in")
             if s then
@@ -156,11 +154,8 @@ local function create_skeleton_test_group()
         world:create_object(p)
     end
 
-    local dynamic_group = world:group(skeleton_test_group_id)
-    create_obj(dynamic_group, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)
-
-    local d2g = world:group(skeleton_test_group_id+1)
-    create_obj(d2g, "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab")
+    create_obj(skeleton_test_group_id, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)
+    create_obj(skeleton_test_group_id+1, "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab")
 end
 
 function hn_test_sys:init()

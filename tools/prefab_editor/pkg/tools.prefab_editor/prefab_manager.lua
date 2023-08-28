@@ -248,8 +248,7 @@ function m:create(what, config)
                 if hitch.group == 0 then
                     hitch.group = get_group_id()
                 end
-                local group = world:group(hitch.group)
-                new_entity = group:create_entity(tmp)
+                new_entity = world:create_entity(tmp, hitch.group)
             else
                 tmp.data.scene.parent = parent_eid
                 new_entity = world:create_entity(tmp)

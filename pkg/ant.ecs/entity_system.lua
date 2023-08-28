@@ -6,7 +6,7 @@ local math3d = require "math3d"
 local m = ecs.system "entity_system"
 
 local function update_group_tag(groupid, data)
-    for tag, t in pairs(world._group.tags) do
+    for tag, t in pairs(world._group_tags) do
         if t[groupid] then
             data[tag] = true
         end

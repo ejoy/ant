@@ -394,11 +394,11 @@ function init_loader_sys:ui_update()
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
             
             if enable == 1 then
-                world:group(1):enable "view_visible"
-                world:group(0):disable "view_visible"
+                world:group_enable_tag ("view_visible", 1)
+                world:group_disable_tag("view_visible", 0)
             else
-                world:group(0):enable "view_visible"
-                world:group(1):disable "view_visible"
+                world:group_enable_tag ("view_visible", 0)
+                world:group_disable_tag("view_visible", 1)
             end
             enable = enable == 1 and 0 or 1
             world:group_flush "view_visible"

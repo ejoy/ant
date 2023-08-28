@@ -257,7 +257,7 @@ function iefk.create(filename, config)
             -- end
         },
     }
-    return config.group_id and world:group(config.group_id):create_entity(template) or world:create_entity(template)
+    return world:create_entity(template, config.group_id)
 end
 
 function iefk.preload(textures)

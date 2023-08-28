@@ -46,8 +46,7 @@ local function gen_group_id(rt_name)
         w:register{ name = objname }
         w:register{ name = queuename }
         rt_table[rt_name].gid = gid
-        local g = world:group(gid)
-        g:enable(objname)
+        world:group_enable_tag(objname, gid)
         world:group_flush(objname)
     end
 end
@@ -272,9 +271,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     local srt = focus_srt
     local gid = rt_table[rt_name].gid
     rt.distance = distance
-    local g = world:group(gid)
-    --local light_instance = g:create_instance(light_path)
-    local focus_instance = g:create_instance(focus_path)
+    local focus_instance = world:create_instance(focus_path, nil, gid)
     focus_instance.on_ready = function (inst)
         local alleid = inst.tag['*']
         if clear_color then
@@ -303,7 +300,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     end
     focus_instance.on_message = on_message
     world:create_object(focus_instance)
-    g:enable "view_visible"
+    world:group_enable_tag("view_visible", gid)
     world:group_flush "view_visible"
     rt.prefab = focus_instance 
     rt.prefab_path = focus_path
