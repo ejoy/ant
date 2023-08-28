@@ -475,7 +475,7 @@ function m:choose_prefab()
         return
     end
     if #prefab_list < 1 then
-        local patchfile = tostring(gd.glb_filename) .. ".patch"
+        local patchfile = gd.glb_filename .. ".patch"
         patch_template = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
         local prefab_set = {}
         for _, patch in ipairs(patch_template) do
@@ -518,7 +518,7 @@ function m:choose_prefab()
                         op = "copyfile",
                         value = prefab_list[#prefab_list]
                     })
-                    utils.write_file(tostring(gd.glb_filename)..".patch", stringify(patch_template))
+                    utils.write_file(gd.glb_filename..".patch", stringify(patch_template))
                 end
             end
         end
@@ -527,14 +527,14 @@ function m:choose_prefab()
             if imgui.widget.Selectable(n, selected_prefab and selected_prefab == n, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                 selected_prefab = n
                 -- if imgui.util.IsMouseDoubleClicked(0) then
-                    self:open(tostring(gd.glb_filename) .. "|" .. selected_prefab, selected_prefab, patch_template)
+                    self:open(gd.glb_filename .. "|" .. selected_prefab, selected_prefab, patch_template)
                 -- end
             end
         end
         imgui.cursor.Separator()
         if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Open") then
             if selected_prefab then
-                self:open(tostring(gd.glb_filename) .. "|" .. selected_prefab, selected_prefab, patch_template)
+                self:open(gd.glb_filename .. "|" .. selected_prefab, selected_prefab, patch_template)
             end
         end
         imgui.cursor.SameLine()
@@ -547,14 +547,8 @@ function m:choose_prefab()
 end
 
 function m:open(filename, prefab_name, patch_tpl)
-    assert(prefab_name and patch_tpl)
     reset_open_context()
     self:reset_prefab(true)
-    local path_list = split(filename)
-    if #path_list > 1 then
-        self.glb_filename = path_list[1]
-    end
-    self.prefab_name = prefab_name or "mesh.prefab"
     -- if path:equal_extension(".fbx") then
     --     self:open_fbx(tostring(path))
     -- elseif path:equal_extension(".glb") then
@@ -562,7 +556,10 @@ function m:open(filename, prefab_name, patch_tpl)
     -- end
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
-    if self.glb_filename then
+    local path_list = split(filename)
+    if #path_list > 1 then
+        self.glb_filename = path_list[1]
+        self.prefab_name = prefab_name or "mesh.prefab"
         self.patch_template = patch_tpl or {}
         for index, value in ipairs(self.patch_template) do
             if value.file == self.prefab_name and value.op == "add" then
@@ -571,7 +568,7 @@ function m:open(filename, prefab_name, patch_tpl)
         end
         self.patch_start_index = #self.prefab_template - #self.patch_index_map + 1
     end
-
+    
     for _, value in ipairs(self.prefab_template) do
         if value.data and value.data.efk then
             self.check_effect_preload(value.data.efk.path)
@@ -791,7 +788,11 @@ function m:save(path)
     end
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
-            path = widget_utils.get_saveas_path("Prefab", "prefab")
+            local lp = widget_utils.get_saveas_path("Prefab", "prefab")
+            if not lp then
+                return
+            end
+            path = tostring(access.virtualpath(gd.repo, lfs.path(lp)))
         end
     end
     assert(path or self.prefab_filename)
@@ -923,9 +924,9 @@ function m:get_world_aabb(eid)
     end
     local waabb
     local e <close> = world:entity(eid, "bounding?in meshskin?in name:in")
-    local bounding = e.bounding
-    if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
-        waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+    local bbox = e.bounding
+    if bbox and bbox.scene_aabb and bbox.scene_aabb ~= mc.NULL then
+        waabb = math3d.aabb(math3d.array_index(bbox.scene_aabb, 1), math3d.array_index(bbox.scene_aabb, 2))
     end
     for _, c in ipairs(children) do
         local ec <close> = world:entity(c, "bounding?in")
