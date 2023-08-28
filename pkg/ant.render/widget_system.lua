@@ -40,7 +40,7 @@ function widget_drawer_sys:init()
 		indices_num = 2048,
 		declname = "p3|c40niu",
 	}
-	ecs.create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|simplerender",
 			"ant.render|bounding_draw",

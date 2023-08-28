@@ -29,7 +29,7 @@ end
 local st_sys	= ecs.system "shadow_test_system"
 function st_sys:init()
 	create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {10, 0.1, 10}, nil, {10, 0, 0, 1})
-	local root = ecs.create_entity {
+	local root = world:create_entity {
 		policy = {
 			"ant.scene|scene_object",
 			"ant.general|name",
@@ -42,7 +42,7 @@ function st_sys:init()
 
 	create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
 
-	ecs.create_entity{
+	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 			"ant.general|name",

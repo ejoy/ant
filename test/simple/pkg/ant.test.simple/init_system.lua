@@ -9,7 +9,7 @@ local imesh = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
 local math3d = require "math3d"
 local function create_plane()
-    ecs.create_entity{
+    world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 			"ant.general|name",

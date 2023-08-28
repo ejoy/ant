@@ -29,7 +29,7 @@ local imaterial = ecs.require "ant.asset|material"
 local hvflip_viewid<const> = hwi.viewid_generate("hv_flip", "fxaa")
 
 function hvflip_sys:init()
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

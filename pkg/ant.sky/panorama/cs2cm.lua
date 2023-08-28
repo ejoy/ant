@@ -22,7 +22,7 @@ local thread_group_size<const> = 32
 
 local cs2cm_convertor_eid
 function cs2cm_sys:init()
-    cs2cm_convertor_eid = ecs.create_entity {
+    cs2cm_convertor_eid = world:create_entity {
         policy = {
             "ant.render|compute_policy",
             "ant.general|name",

@@ -20,7 +20,7 @@ function ic.dispatch(viewid, ds)
 end
 
 function ic.create_compute_entity(name, materialfile, size, onready)
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|compute_policy",
             "ant.general|name",

@@ -11,7 +11,7 @@ local rmlui_sys = ecs.system "rmlui_system"
 
 function rmlui_sys:init()
     local vp = world.args.viewport
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render_target",

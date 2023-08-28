@@ -84,7 +84,7 @@ function m.highlight(b)
 end
 
 local function create_gizmo_root(initpos, initrot)
-    return ecs.create_entity{
+    return world:create_entity{
 		policy = {
 			"ant.general|name",
             "ant.scene|scene_object",

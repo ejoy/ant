@@ -40,7 +40,7 @@ function ic.create(info)
         policy[#policy+1] = "ant.camera|exposure"
     end
 
-    return ecs.create_entity {
+    return world:create_entity {
         policy = policy,
         data = {
             scene = {

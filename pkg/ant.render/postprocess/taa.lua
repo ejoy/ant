@@ -33,7 +33,7 @@ local irq       = ecs.require "ant.render|render_system.renderqueue"
 local taa_first_frame_eid
 local taa_after_first_frame
 function taasys:init()
-     ecs.create_entity{
+     world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -54,7 +54,7 @@ function taasys:init()
             handle = fullquad_vbhandle,
         }
     }
-    taa_first_frame_eid = ecs.create_entity{
+    taa_first_frame_eid = world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -69,7 +69,7 @@ function taasys:init()
             scene           = {},
         }
     }
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -84,7 +84,7 @@ function taasys:init()
         }
     }
     if not ENABLE_FXAA then
-        ecs.create_entity{
+        world:create_entity{
             policy = {
                 "ant.render|simplerender",
                 "ant.general|name",

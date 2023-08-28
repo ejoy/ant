@@ -104,7 +104,7 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local vp = world.args.viewport
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.general|name",
             "ant.efk|efk_queue",
@@ -257,7 +257,7 @@ function iefk.create(filename, config)
             -- end
         },
     }
-    return config.group_id and ecs.group(config.group_id):create_entity(template) or ecs.create_entity(template)
+    return config.group_id and world:group(config.group_id):create_entity(template) or world:create_entity(template)
 end
 
 function iefk.preload(textures)

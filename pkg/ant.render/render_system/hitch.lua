@@ -36,10 +36,10 @@ function hitch_sys:entity_ready()
     end
 
     for gid, hitchs in pairs(groups) do
-        local g = ecs.group(gid)
+        local g = world:group(gid)
 
         g:enable "hitch_tag"
-        ecs.group_flush "hitch_tag"
+        world:group_flush "hitch_tag"
 
         local h_aabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in" do

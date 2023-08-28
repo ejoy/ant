@@ -46,7 +46,7 @@ function hm_sys:entity_init()
         local curMaxSize  = calc_max_num(curSideSize)
         local max_num = curMaxSize
         local eid = e.eid
-        local draw_indirect_eid = ecs.create_entity {
+        local draw_indirect_eid = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
                 "ant.render|draw_indirect"

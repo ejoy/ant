@@ -25,16 +25,16 @@ local function hitch_cull_test()
         end
     
         for gid, gg in pairs(groups) do
-            local g = ecs.group(gid)
+            local g = world:group(gid)
             g:enable "hitch_tag"
-            ecs.group_flush "hitch_tag"
+            world:group_flush "hitch_tag"
             local culled, no_culled, hitch_sum = gg.culled, gg.no_culled, gg.hitch_sum
             for e in w:select "hitch_tag:in render_object:in" do
                 gg.hitch_tag = gg.hitch_tag + 1
             end
             group_culled, group_no_culled, group_sum = group_culled + gg.hitch_tag * culled, group_no_culled + gg.hitch_tag * no_culled, group_sum + gg.hitch_tag * hitch_sum
             g:disable "hitch_tag"
-            ecs.group_flush "hitch_tag"
+            world:group_flush "hitch_tag"
         end
     
         print("hitch object group_culled:", group_culled)

@@ -28,7 +28,7 @@ local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 function sd_sys:post_init()
     local vr = world.args.viewport
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|scene_depth_queue",
             "ant.general|name",

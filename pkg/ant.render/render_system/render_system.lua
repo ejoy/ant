@@ -22,8 +22,8 @@ local R			= ecs.clibs "render.render_material"
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
 function vg_sys:init()
-    ecs.group(def_group_id):enable "view_visible"
-	ecs.group_flush "view_visible"
+    world:group(def_group_id):enable "view_visible"
+	world:group_flush "view_visible"
 end
 
 function render_sys:start_frame()

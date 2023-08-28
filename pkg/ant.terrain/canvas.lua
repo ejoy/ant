@@ -196,7 +196,7 @@ local gen_texture_id = id_generator()
 local gen_item_id = id_generator()
 
 local function create_texture_item_entity(canvas_eid, show, materialpath, render_layer)
-    return ecs.create_entity{
+    return world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

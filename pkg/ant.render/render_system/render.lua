@@ -72,7 +72,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 	filtertype = filtertype or "main_view"
 
 	local fbidx = fbmgr.get_fb_idx(hwi.viewid_get "main_view")
-	ecs.create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
@@ -116,7 +116,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 
 	fbmgr.bind(depth_viewid, fbidx)
 
-	ecs.create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|pre_depth_queue",
 			"ant.render|watch_screen_buffer",
@@ -168,7 +168,7 @@ end
 
 function irender.create_main_queue(vr, camera_ref)
 	local fbidx = create_main_fb(vr)
-	ecs.create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|watch_screen_buffer",
 			"ant.render|main_queue",

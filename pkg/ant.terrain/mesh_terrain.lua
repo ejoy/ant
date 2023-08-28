@@ -5,7 +5,7 @@ local w     = world.w
 local mt_sys = ecs.system "mesh_terrain_system"
 
 local function instance(pid, mp, centerpos)
-    local root = ecs.create_entity {
+    local root = world:create_entity {
         policy = {
             "ant.scene|scene_object",
         },

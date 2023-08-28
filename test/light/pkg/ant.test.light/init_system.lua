@@ -41,7 +41,7 @@ local function create_simple_triangles()
     -- add_v(vertices, math3d.vector(0.0, 0.0, 1.0), n, t)
     -- add_v(vertices, math3d.vector(1.0, 0.0, 0.0), n, t)
     local nx, ny, nz = math3d.index(math3d.normalize(math3d.vector(1, 10, 0.0)), 1, 2, 3, 4)
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -139,7 +139,7 @@ function S.init_world()
     --     iom.set_position(le, math3d.vector(5, 0, 0))
     -- end)
 
-    -- ecs.create_entity{
+    -- world:create_entity{
     --     policy = {
     --         "ant.render|render",
     --         "ant.general|name",

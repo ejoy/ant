@@ -54,9 +54,9 @@ function msc.remove(v)
 end
 
 function mss:init()
-    local g = ecs.group(motion_sampler_group)
+    local g = world:group(motion_sampler_group)
     g:enable "motion_sampler_tag"
-    ecs.group_flush "motion_sampler_tag"
+    world:group_flush "motion_sampler_tag"
 end
 
 local STOP_SYSTEM
@@ -71,7 +71,7 @@ end
 local ims = {}
 
 function ims.sampler_group()
-    return ecs.group(motion_sampler_group)
+    return world:group(motion_sampler_group)
 end
 
 

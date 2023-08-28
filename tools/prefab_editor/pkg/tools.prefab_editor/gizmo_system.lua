@@ -198,7 +198,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		color = gizmo_const.COLOR.Z
 	end
 
-	local cylindereid = ecs.create_entity{
+	local cylindereid = world:create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
@@ -221,7 +221,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			end
 		}
 	}
-	local coneeid = ecs.create_entity{
+	local coneeid = world:create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
@@ -306,7 +306,7 @@ end
 
 local test_bone
 function gizmo_sys:post_init()
-	local axis_root = ecs.create_entity {
+	local axis_root = world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.scene|scene_object",
@@ -317,7 +317,7 @@ function gizmo_sys:post_init()
 		},
 	}
 	gizmo.root_eid = axis_root
-	local rot_circle_root = ecs.create_entity {
+	local rot_circle_root = world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.scene|scene_object",
@@ -330,7 +330,7 @@ function gizmo_sys:post_init()
 
 	gizmo.rot_circle_root_eid = rot_circle_root
 
-	local uniform_rot_root = ecs.create_entity {
+	local uniform_rot_root = world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.scene|scene_object",
@@ -408,7 +408,7 @@ function gizmo_sys:post_init()
 	
 	-- scale axis
 	local function create_scale_cube(axis_name, scene, color)
-		local eid = ecs.create_entity {
+		local eid = world:create_entity {
 			policy = {
 				"ant.render|render",
 				"ant.general|name",

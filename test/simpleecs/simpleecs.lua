@@ -5,7 +5,7 @@ local w = world.w
 
 local initsys = ecs.system "init_system"
 function initsys:init()
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.test.simpleecs|testpolicy",
             "ant.test.simpleecs|name",

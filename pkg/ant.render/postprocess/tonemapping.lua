@@ -46,7 +46,7 @@ end
 
 function tm_sys:init()
     local drawer_material = ENABLE_TM_LUT and "/pkg/ant.resources/materials/postprocess/tonemapping_lut.material" or "/pkg/ant.resources/materials/postprocess/tonemapping.material"
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

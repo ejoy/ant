@@ -92,7 +92,7 @@ local function simple_render_entity_data(name, material, mesh, scene, uniforms, 
 end
 
 local function create_simple_render_entity(name, material, mesh, scene, uniforms, hide, render_layer, queue)
-	return ecs.create_entity(simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer, queue))
+	return world:create_entity(simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer, queue))
 end
 
 ientity.create_simple_render_entity = create_simple_render_entity
@@ -165,7 +165,7 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath, 
 		end
 	end
 
-	return vb, ecs.create_entity(grid_mesh_entity_data(name, materialpath, vb, ib, render_layer))
+	return vb, world:create_entity(grid_mesh_entity_data(name, materialpath, vb, ib, render_layer))
 end
 
 function ientity.create_grid_entity_simple(name, w, h, unit, scene)
@@ -245,7 +245,7 @@ local plane_vb<const> = {
 }
 
 function ientity.create_prim_plane_entity(materialpath, scene, color, hide, render_layer)
-	return ecs.create_entity{
+	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 			"ant.general|name",
@@ -339,7 +339,7 @@ function ientity.frustum_entity_data(frustum_points, name, color)
 end
 
 function ientity.create_frustum_entity(frustum_points, name, color)
-	return ecs.create_entity(ientity.frustum_entity_data(frustum_points, name, color))
+	return world:create_entity(ientity.frustum_entity_data(frustum_points, name, color))
 end
 
 local function axis_mesh(color)
@@ -363,12 +363,12 @@ function ientity.axis_entity_data(name, scene, color, material)
 end
 
 function ientity.create_axis_entity(name, scene, color, material)
-	return ecs.create_entity(ientity.axis_entity_data(name, scene, color, material))
+	return world:create_entity(ientity.axis_entity_data(name, scene, color, material))
 end
 
 function ientity.create_screen_axis_entity(name, screen_3dobj, scene, color, material)
 	local mesh = axis_mesh(color)
-	return ecs.create_entity{
+	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 			"ant.objcontroller|screen_3dobj",
@@ -533,7 +533,7 @@ end
 
 function ientity.create_procedural_sky(settings)
 	settings = settings or {}
-    return ecs.create_entity {
+    return world:create_entity {
 		policy = {
 			"ant.render|simplerender",
 			"ant.sky|procedural_sky",
@@ -570,7 +570,7 @@ function ientity.create_procedural_sky(settings)
 end
 
 function ientity.create_gamma_test_entity()
-	ecs.create_entity {
+	world:create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -705,7 +705,7 @@ end
 ientity.arrow_mesh = arrow_mesh
 
 function ientity.create_arrow_entity(headratio, color, material, scene)
-	return ecs.create_entity{
+	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 			"ant.general|name",
@@ -760,7 +760,7 @@ function ientity.create_quad_lines_entity(name, scene, material, quadnum, width,
 		return bgfx.create_index_buffer(bgfx.memory_buffer("w", ib))
 	end
 
-    return ecs.create_entity {
+    return world:create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

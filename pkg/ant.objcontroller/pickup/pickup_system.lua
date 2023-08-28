@@ -167,7 +167,7 @@ local fb_renderbuffer_flag<const> = sampler {
 }
 
 local function create_pick_entity()
-	local camera_ref = ecs.create_entity{
+	local camera_ref = world:create_entity{
 		policy = {
 			"ant.camera|camera",
 			"ant.general|name"
@@ -199,7 +199,7 @@ local function create_pick_entity()
 			flags = fb_renderbuffer_flag,
 		}})
 
-	ecs.create_entity {
+	world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render_queue",

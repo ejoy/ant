@@ -284,7 +284,7 @@ end ]]
 local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
 	local ww, hh = rb.w, rb.h
-	ecs.create_entity{
+	world:create_entity{
 		policy = {
 			"ant.render|postprocess_queue",
 			"ant.general|name",
@@ -319,7 +319,7 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			name = csmname
 		}
-	ecs.create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|cull",
@@ -510,7 +510,7 @@ function sm:camera_usage()
 	for gid, wms in pairs(groups) do
         --local select_tag = "view_visible:in scene:in bounding:in eid:in"
 		local select_tag = "hitch_tag:in scene:in bounding:in eid:in"
-		local g = ecs.group(gid)
+		local g = world:group(gid)
         g:enable("hitch_tag")
 		for ee in w:select(select_tag) do
 			tmp_eids[ee.eid] = true

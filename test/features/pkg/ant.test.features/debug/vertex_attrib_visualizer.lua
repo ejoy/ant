@@ -56,7 +56,7 @@ end
 local line_arrow_mesh<const> = create_line_arrow_mesh(1.0)
 
 local function create_line_arrow_entity(parent, srt, color)
-    return ecs.create_entity{
+    return world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

@@ -16,7 +16,7 @@ local function create_instance(prefab, on_ready)
 end
 
 local function raymarch_entity()
-    return ecs.create_entity{
+    return world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

@@ -25,7 +25,7 @@ local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 function fxaasys:init()
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

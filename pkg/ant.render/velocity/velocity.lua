@@ -65,7 +65,7 @@ local velocity_viewid<const> = hwi.viewid_get "velocity"
 local function create_velocity_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local vp = world.args.viewport
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.general|name",
             "ant.render|velocity_queue",

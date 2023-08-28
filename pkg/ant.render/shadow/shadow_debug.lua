@@ -41,7 +41,7 @@ local debug_entities = {}
 local function create_debug_entity()
 --[[ 	do
 		local splitnum = ishadow.split_num()
-		debug_entities[#debug_entities+1] = ecs.create_entity {
+		debug_entities[#debug_entities+1] = world:create_entity {
 			policy = {
 				"ant.render|simplerender",
 			},
@@ -74,11 +74,11 @@ local function create_debug_entity()
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
-		debug_entities[#debug_entities+1] = ecs.create_entity(ientity.frustum_entity_data(frustum_points, "frusutm:" .. se.name, color))
+		debug_entities[#debug_entities+1] = world:create_entity(ientity.frustum_entity_data(frustum_points, "frusutm:" .. se.name, color))
 
 		local d = ientity.axis_entity_data("csm_axis:" .. idx, ce.scene, color)
 		d.data.on_ready = nil
-		debug_entities[#debug_entities+1] = ecs.create_entity(d)
+		debug_entities[#debug_entities+1] = world:create_entity(d)
 	end
 end
 

@@ -32,7 +32,7 @@ local function motion_sampler_test()
     }
 
     g:enable "view_visible"
-    ecs.group_flush "view_visible"
+    world:group_flush "view_visible"
 
     local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)

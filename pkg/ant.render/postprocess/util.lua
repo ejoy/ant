@@ -1,4 +1,5 @@
 local ecs = ...
+local world = ecs.world
 
 local irender = ecs.require "ant.render|render_system.render"
 
@@ -35,7 +36,7 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
         template.policy[#template.policy+1] = "ant.render|watch_screen_buffer"
         template.data.watch_screen_buffer = true
     end
-    ecs.create_entity(template)
+    world:create_entity(template)
 end
 
 -- estimate of the size in pixel of a 1m tall/wide object viewed from 1m away (i.e. at z=1)

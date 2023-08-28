@@ -46,9 +46,9 @@ local function gen_group_id(rt_name)
         w:register{ name = objname }
         w:register{ name = queuename }
         rt_table[rt_name].gid = gid
-        local g = ecs.group(gid)
+        local g = world:group(gid)
         g:enable(objname)
-        ecs.group_flush(objname)
+        world:group_flush(objname)
     end
 end
 
@@ -89,14 +89,14 @@ local function create_rt_queue(width, height, name, fbidx)
     gen_group_id(name)
     local ui_rt_material_idx = queuemgr.material_index("main_queue")
     queuemgr.register_queue(queuename, ui_rt_material_idx)
-    ecs.create_entity {
+    world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			--"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
-            camera_ref = ecs.create_entity{
+            camera_ref = world:create_entity{
                 policy = {
                     "ant.general|name",
                     "ant.camera|camera"
@@ -272,7 +272,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     local srt = focus_srt
     local gid = rt_table[rt_name].gid
     rt.distance = distance
-    local g = ecs.group(gid)
+    local g = world:group(gid)
     --local light_instance = g:create_instance(light_path)
     local focus_instance = g:create_instance(focus_path)
     focus_instance.on_ready = function (inst)
@@ -304,7 +304,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     focus_instance.on_message = on_message
     world:create_object(focus_instance)
     g:enable "view_visible"
-    ecs.group_flush "view_visible"
+    world:group_flush "view_visible"
     rt.prefab = focus_instance 
     rt.prefab_path = focus_path
     return rt.prefab

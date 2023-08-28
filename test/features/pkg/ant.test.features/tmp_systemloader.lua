@@ -62,7 +62,7 @@ end
 local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
     local m = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size)))
     m.vb.owned = true
-    return ecs.create_entity{
+    return world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -86,7 +86,7 @@ end
 
 local function color_palette_test()
     local bgfx = require "bgfx"
-    return ecs.create_entity {
+    return world:create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -141,7 +141,7 @@ local velocity_eid
 local function render_layer_test()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
---[[     velocity_eid = ecs.create_entity {
+--[[     velocity_eid = world:create_entity {
         policy = {
             "ant.render|render",
          },
@@ -178,7 +178,7 @@ local function render_layer_test()
         end
     end)
 
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -220,7 +220,7 @@ local sampler_eid
 local heap_eid
 local sm_id
 local function drawindirect_test()
-    sm_id = ecs.create_entity {
+    sm_id = world:create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -234,7 +234,7 @@ local function drawindirect_test()
             name = "test",
         }
     }
---[[     ecs.create_entity {
+--[[     world:create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -247,7 +247,7 @@ local function drawindirect_test()
             name = "test",
         }
     }
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -260,7 +260,7 @@ local function drawindirect_test()
             name = "test",
         }
     } ]]
---[[     heap_eid = ecs.create_entity {
+--[[     heap_eid = world:create_entity {
         policy = {
             "ant.render|render",
             "ant.render|heap_mesh",
@@ -282,7 +282,7 @@ local function drawindirect_test()
         },
     }   ]]
     
---[[     ecs.create_entity {
+--[[     world:create_entity {
         policy = {
             "ant.render|render",
             "ant.render|heap_mesh",
@@ -303,7 +303,7 @@ local function drawindirect_test()
     }   ]]
 
    local t = 1  
---[[      ecs.create_entity {
+--[[      world:create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -326,7 +326,7 @@ end
 
 local canvas_eid
 local function canvas_test()
-    canvas_eid = ecs.create_entity {
+    canvas_eid = world:create_entity {
         policy = {
             "ant.scene|scene_object",
             "ant.terrain|canvas",
@@ -394,14 +394,14 @@ function init_loader_sys:ui_update()
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
             
             if enable == 1 then
-                ecs.group(1):enable "view_visible"
-                ecs.group(0):disable "view_visible"
+                world:group(1):enable "view_visible"
+                world:group(0):disable "view_visible"
             else
-                ecs.group(0):enable "view_visible"
-                ecs.group(1):disable "view_visible"
+                world:group(0):enable "view_visible"
+                world:group(1):disable "view_visible"
             end
             enable = enable == 1 and 0 or 1
-            ecs.group_flush "view_visible"
+            world:group_flush "view_visible"
 
         elseif key == "LEFT" and press == 0 then
             local d = w:first("directional_light scene:in eid:in")

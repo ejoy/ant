@@ -91,7 +91,7 @@ function ilight.create(light)
 			visible = true,
 		}
 	}
-	return ecs.create_entity(template), template
+	return world:create_entity(template), template
 end
 
 function ilight.data(e)

@@ -23,7 +23,7 @@ local m={
 }
 function dtt_sys:init()
 
-    test_billboard=ecs.create_entity{
+    test_billboard=world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

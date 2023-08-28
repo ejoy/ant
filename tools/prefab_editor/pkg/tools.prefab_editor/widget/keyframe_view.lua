@@ -1344,7 +1344,7 @@ local function create_joint_entity(joint_name)
 			end
         }
     }
-    return ecs.create_entity(template)
+    return world:create_entity(template)
 end
 
 local bone_vert
@@ -1414,7 +1414,7 @@ local function create_bone_entity(joint_name)
 			end
 		}
 	}
-    return ecs.create_entity(template)
+    return world:create_entity(template)
 end
 
 function m.on_eid_delete(eid)

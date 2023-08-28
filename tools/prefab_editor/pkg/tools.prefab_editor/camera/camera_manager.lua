@@ -46,7 +46,7 @@ function camera_mgr.create_camera()
             -- tag = {"camera"},
         }
     }
-    return ecs.create_entity(utils.deep_copy(template)), template
+    return world:create_entity(utils.deep_copy(template)), template
 end
 
 function camera_mgr.clear()

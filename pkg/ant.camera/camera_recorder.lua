@@ -12,7 +12,7 @@ local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local cr = {}
 function cr.start(name)
-    return ecs.create_entity{
+    return world:create_entity{
         policy = {
             "ant.camera|camera_recorder",
             "ant.general|name",

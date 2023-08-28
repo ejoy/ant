@@ -25,7 +25,7 @@ function S.init_world()
 	--
     world:create_object(ecs.create_instance("/pkg/tools.prefab_viewer/assets/prefabs/light.prefab"))
 	-- ground plane
-	-- ecs.create_entity {
+	-- world:create_entity {
 	-- 	policy = {
 	-- 		"ant.render|render",
 	-- 		"ant.general|name",

@@ -84,7 +84,7 @@ function m:create_hitch(slot)
     if slot then
         tpl.data.on_ready = function (e) hierarchy:update_slot_list(world) end
     end
-    self:add_entity(ecs.create_entity(tpl), parent_eid, template)
+    self:add_entity(world:create_entity(tpl), parent_eid, template)
 end
 
 local function create_simple_entity(name, parent)
@@ -99,7 +99,7 @@ local function create_simple_entity(name, parent)
             -- bounding = {aabb = {{0,0,0}, {1,1,1}}}
 		},
     }
-    return ecs.create_entity(utils.deep_copy(template)), template
+    return world:create_entity(utils.deep_copy(template)), template
 end
 
 function m:add_entity(new_entity, parent, tpl)
@@ -193,7 +193,7 @@ function m:clone(eid)
     if e.scene.slot then
         tmp.data.on_ready = function (obj) hierarchy:update_slot_list(world) end
     end
-    local new_entity = ecs.create_entity(tmp)
+    local new_entity = world:create_entity(tmp)
     dsttpl.data.name = name
     self:add_entity(new_entity, pid, dsttpl)
 end
@@ -248,11 +248,11 @@ function m:create(what, config)
                 if hitch.group == 0 then
                     hitch.group = get_group_id()
                 end
-                local group = ecs.group(hitch.group)
+                local group = world:group(hitch.group)
                 new_entity = group:create_entity(tmp)
             else
                 tmp.data.scene.parent = parent_eid
-                new_entity = ecs.create_entity(tmp)
+                new_entity = world:create_entity(tmp)
             end
 
             self:add_entity(new_entity, parent_eid, template)
@@ -620,7 +620,7 @@ local imaterial = ecs.require "ant.asset|material"
 
 function m:create_ground()
     if not self.plane then
-        self.plane = ecs.create_entity {
+        self.plane = world:create_entity {
             policy = {
                 "ant.render|render",
                 "ant.general|name",
@@ -656,7 +656,7 @@ function m:reset_prefab(noscene)
     world:pub {"UpdateAABB"}
     hierarchy:set_root(self.root)
     if self.prefab_filename then
-        ecs.release_cache(self.prefab_filename)
+        world:reset_prefab_cache(self.prefab_filename)
     end
     -- for _, value in ipairs(assetmgr.textures) do
     --     -- value:unload()
@@ -741,7 +741,7 @@ function m:add_effect(filename)
     }
     local tpl = utils.deep_copy(template)
     tpl.data.efk.auto_play = true
-    self:add_entity(ecs.create_entity(tpl), parent, template)
+    self:add_entity(world:create_entity(tpl), parent, template)
 end
 
 function m:add_prefab(path)
@@ -805,7 +805,7 @@ function m:save(path)
         world:pub {"WindowTitle", filename}
     end
     if prefab_filename then
-        ecs.release_cache(prefab_filename)
+        world:reset_prefab_cache(prefab_filename)
     end
     anim_view.save_keyevent()
     world:pub {"ResourceBrowser", "dirty"}
@@ -823,7 +823,7 @@ function m:set_parent(target, parent)
                 template.data.scene.r = scene.r
                 template.data.scene.t = scene.t
             end
-            local e = ecs.create_entity(tpl)
+            local e = world:create_entity(tpl)
             self:add_entity(e, pe, template)
             return e
         end

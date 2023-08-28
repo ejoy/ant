@@ -7,7 +7,7 @@ local mu	= mathpkg.util
 local ika = {}
 
 function ika.create(frames)
-    return ecs.create_entity{
+    return world:create_entity{
         policy = {
             "ant.animation|keyframe",
             "ant.general|name",

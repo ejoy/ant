@@ -36,7 +36,7 @@ function bloom_sys:init()
         w:register{name = us_queue}
         w:register{name = ds_drawer}
         w:register{name = us_drawer}
-        ecs.create_entity{
+        world:create_entity{
             policy = {
                 "ant.render|simplerender",
                 "ant.general|name",
@@ -51,7 +51,7 @@ function bloom_sys:init()
                 scene             = {},
             }
         }
-        ecs.create_entity{
+        world:create_entity{
             policy = {
                 "ant.render|simplerender",
                 "ant.general|name",

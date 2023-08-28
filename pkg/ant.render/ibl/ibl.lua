@@ -83,7 +83,7 @@ local function create_irradiance_entity()
 end
 
 local function create_irradianceSH_entity()
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.general|name",
             "ant.render|irradianceSH_builder",
@@ -104,7 +104,7 @@ local function create_prefilter_entities()
     local r = 0
 
     local function create_prefilter_compute_entity(dispatchsize, prefilter)
-        ecs.create_entity {
+        world:create_entity {
             policy = {
                 "ant.render|compute_policy",
                 "ant.render|prefilter",

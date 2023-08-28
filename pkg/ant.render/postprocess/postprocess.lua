@@ -11,7 +11,7 @@ local pp_sys    = ecs.system "postprocess_system"
 local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
 
 function pp_sys:init()
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|postprocess_object",
             "ant.general|name",

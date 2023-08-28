@@ -279,13 +279,12 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:_release_cache(filename)
+function world:reset_prefab_cache(filename)
     self._templates[filename] = nil
 end
 
-function world:_create_group(id)
-    local w = self
-    local group = w._group
+local function create_group(w, id)
+    local group_tags = w._group_tags
     local mt = {}
     local api = {}
     mt.__index = api
@@ -296,12 +295,12 @@ function world:_create_group(id)
         return w:_create_instance(id, parent, filename)
     end
     local function tags(tag)
-        local t = group.tags[tag]
+        local t = group_tags[tag]
         if not t then
             t = {
                 args = {},
             }
-            group.tags[tag] = t
+            group_tags[tag] = t
         end
         return t
     end
@@ -332,17 +331,21 @@ function world:_create_group(id)
     return setmetatable({}, mt)
 end
 
-function world:_group_flush(tag)
+function world:group(id)
+    return self._group[id]
+end
+
+function world:group_flush(tag)
     local w = self
-    local group = w._group
-    local t = group.tags[tag]
+    local group_tags = w._group_tags
+    local t = group_tags[tag]
     if not t.dirty then
         return
     end
     t.dirty = nil
     if #t.args == 0 then
         w.w:group_enable(tag)
-        group.tags[tag] = nil
+        group_tags[tag] = nil
     else
         w.w:group_enable(tag, table.unpack(t.args))
     end
@@ -632,6 +635,14 @@ function world:clibs(name)
     return funcs
 end
 
+function world:create_entity(v)
+    return self:_create_entity(0, v)
+end
+
+function world:create_instance(filename, parent)
+    return self:_create_instance(0, parent, filename)
+end
+
 local submit = setmetatable({}, {__mode="k", __index = function (t, w)
     local mt = {}
     function mt:__close()
@@ -671,14 +682,17 @@ function m.new_world(config)
         luaecs.check_select(true)
     end
     local ecs = luaecs.world()
-	local w = setmetatable({
+	local w; w = setmetatable({
 		args = config,
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_ecs = {},
-		_group = {
-			tags = {}
-		},
+		_group = setmetatable({}, {__index = function (t, id)
+			local g = create_group(w, id)
+			t[id] = g
+			return g
+		end}),
+		_group_tags = {},
 		_create_entity_queue = {},
 		_create_prefab_queue = {},
 		_destruct = {},

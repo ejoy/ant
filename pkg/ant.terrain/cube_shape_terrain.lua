@@ -447,7 +447,7 @@ function shape_ts:entity_init()
                 
                 local terrain_mesh = build_section_mesh(ss, sectionidx, unit, ctf)
                 if terrain_mesh then
-                    local eid; eid = ecs.create_entity{
+                    local eid; eid = world:create_entity{
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -472,7 +472,7 @@ function shape_ts:entity_init()
                 local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
                     edge_meshes.bounding = {aabb = math3d.ref(calc_edge_aabb(terrain_mesh.bounding.aabb, ctf.edge.thickness * unit))}
-                    local eid; eid = ecs.create_entity {
+                    local eid; eid = world:create_entity {
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",

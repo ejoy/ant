@@ -11,7 +11,7 @@ local hitch_test_group_id<const> = 1000
 local skeleton_test_group_id<const> = 1001
 
 local function create_simple_test_group()
-    local defgroup = ecs.group(0)
+    local defgroup = world:group(0)
     defgroup:create_entity {
         policy = {
             "ant.render|hitch_object",
@@ -61,7 +61,7 @@ local function create_simple_test_group()
         }
     }
 
-    local static_group = ecs.group(hitch_test_group_id)
+    local static_group = world:group(hitch_test_group_id)
     --standalone sub tree
     local p1 = static_group:create_entity {
         policy = {
@@ -105,7 +105,7 @@ local change_hitch_eid
 
 local function create_skeleton_test_group()
     --dynamic
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|hitch_object",
             "ant.general|name",
@@ -123,7 +123,7 @@ local function create_skeleton_test_group()
         }
     }
 
-    change_hitch_eid = ecs.create_entity {
+    change_hitch_eid = world:create_entity {
         policy = {
             "ant.render|hitch_object",
             "ant.general|name",
@@ -156,10 +156,10 @@ local function create_skeleton_test_group()
         world:create_object(p)
     end
 
-    local dynamic_group = ecs.group(skeleton_test_group_id)
+    local dynamic_group = world:group(skeleton_test_group_id)
     create_obj(dynamic_group, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)
 
-    local d2g = ecs.group(skeleton_test_group_id+1)
+    local d2g = world:group(skeleton_test_group_id+1)
     create_obj(d2g, "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab")
 end
 

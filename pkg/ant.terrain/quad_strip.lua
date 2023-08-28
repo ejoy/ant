@@ -45,7 +45,7 @@ function qs_sys:entity_init()
         local speed = uvm.speed
         local tile = uvm.tile
         local quadstrip_mesh = iql.create_linestrip_mesh(qs.points, qs.width, qs.color, uvm.rotation, qs.loop)
-        ecs.create_entity{
+        world:create_entity{
             policy = {
                 "ant.render|simplerender",
                 "ant.general|name",

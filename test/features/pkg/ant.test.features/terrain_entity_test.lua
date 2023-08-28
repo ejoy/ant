@@ -32,7 +32,7 @@ function tet_sys:init()
     for ih=1, h_in_entity do
         for iw=1, w_in_entity do
             local gid = group_id(iw, ih)
-            local g = ecs.group(gid)
+            local g = world:group(gid)
             local tagname = tag_name(gid)
             w:register{name=tagname}
             local p = g:create_instance(prefabfile)
@@ -59,14 +59,14 @@ local function update_group(ce)
     local frustum_planes = math3d.frustum_planes(ce.camera.viewprojmat)
     for gid, aabb in pairs(group_aabbs) do
         local culled = math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0
-        local g = ecs.group(gid)
+        local g = world:group(gid)
         if culled then
             g:disable "view_visible"
         else
             g:enable "view_visible"
         end
     end
-    ecs.group_flush "view_visible"
+    world:group_flush "view_visible"
 end
 
 function tet_sys:data_changed()

@@ -49,7 +49,7 @@ local function create_cubemap_entities()
     local mipmap_count = cubemap_textures.result.mipmap_count
 
     local function create_cubemap_compute_entity(dispatchsize, cubemap_mipmap)
-        ecs.create_entity {
+        world:create_entity {
             policy = {
                 "ant.render|compute_policy",
                 "ant.general|name",

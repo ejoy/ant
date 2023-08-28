@@ -122,7 +122,7 @@ local rb_flags = sampler{
 local function create_downsample()
     local function create_ds(tag, material)
         w:register {name = tag}
-        ecs.create_entity {
+        world:create_entity {
             policy = {
                 "ant.render|render",
                 "ant.general|name",
@@ -288,7 +288,7 @@ local function create_lightmap_queue()
         {rbidx=fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=rb_flags}},
         {rbidx=fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=rb_flags}})
 
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|render_queue",
             "ant.render|cull",

@@ -44,7 +44,7 @@ function second_camera_sys:init_world()
         frustum = defaultcomp.frustum(vr.w / vr.h),
         name    = "second_view_camera",
     }
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|render_queue",
             "ant.general|name",
@@ -167,7 +167,7 @@ local function create_frustum_entity(eid)
         add_v(frustum_points[i], vb)
 	end
 
-    local frustum_root = ecs.create_entity {
+    local frustum_root = world:create_entity {
         policy = {
             "ant.scene|scene_object",
             "ant.general|name"
@@ -183,7 +183,7 @@ local function create_frustum_entity(eid)
         imaterial.set_property(e, "u_color", mc.YELLOW_HALF)
     end
 
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -220,7 +220,7 @@ local function create_frustum_entity(eid)
     local tri_edge_len_half<const> = tri_edge_len * 0.5
     local tri_edge_height<const> = tri_edge_len * 2 / 3.0
 
-    ecs.create_entity {
+    world:create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",

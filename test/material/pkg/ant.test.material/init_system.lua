@@ -7,7 +7,7 @@ local imaterial = ecs.require "ant.asset|material"
 local is = ecs.system "init_system"
 
 function is:init()
-    ecs.create_entity{
+    world:create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
