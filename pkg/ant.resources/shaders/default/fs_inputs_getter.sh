@@ -1,6 +1,9 @@
 
 {
     fsinput.frag_coord = gl_FragCoord;
+#ifdef WITH_DOUBLE_SIDE
+    fsinput.is_frontfacing = gl_FrontFacing;
+#endif //WITH_DOUBLE_SIDE
     fsinput.uv0 = uv_motion(v_texcoord0);
 
 #ifndef MATERIAL_UNLIT
