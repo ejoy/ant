@@ -18,7 +18,7 @@ local type_table = {
 }
 
 local function get_sm_worldmat(srt)
-    local s, r, tx, tz = table.unpack(srt[1], 1, 4)
+    local s, r, tx, tz = table.unpack(math3d.tovalue(srt))
     local rad = math.rad(r)
     local cosy, siny = math.cos(rad), math.sin(rad)
     local sm = math3d.matrix({
@@ -44,51 +44,47 @@ end
 
 local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table)
     local draw_num = #srt_table
-    local fmt<const> = "ffff"
     local memory_buffer = bgfx.memory_buffer(2 * 16 * draw_num)
-    local memory_buffer_offset = 1
+    local memory_table = {}
     for obj_idx, srt in pairs(srt_table) do
         local wm = get_sm_worldmat(srt)
-        local mesh_idx = mesh_idx_table[obj_idx]
+        local mesh_idx = math3d.index(mesh_idx_table[obj_idx], 4)
         local taabb = math3d.aabb_transform(wm, aabb_table[mesh_idx])
         local center, extent = math3d.aabb_center_extents(taabb)
         local aabb_min, aabb_max = math3d.sub(center, extent), math3d.add(center, extent)
-        local obj_params = math3d.tovalue(aabb_min)
-        obj_params[4] = mesh_idx
-        memory_buffer[memory_buffer_offset] = fmt:pack(table.unpack(obj_params))
-        memory_buffer[memory_buffer_offset+16] = fmt:pack(table.unpack(math3d.tovalue(aabb_max)))
-        memory_buffer_offset = memory_buffer_offset + 32
+        local obj_params = math3d.sub(math3d.add(aabb_min, mesh_idx_table[obj_idx]), math3d.vector(0, 0, 0, 1))
+        memory_table[#memory_table+1] = math3d.serialize(obj_params)
+        memory_table[#memory_table+1] = math3d.serialize(aabb_max)
     end
+    memory_buffer[1] = table.concat(memory_table)
     return bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("t41NIf").handle, "r") 
 end
 
 local function get_instance_buffer(srt_info, itb_flag)
     local draw_num = #srt_info
-    local fmt<const> = "ffff"
     local memory_buffer = bgfx.memory_buffer(3 * 16 * draw_num)
-    local memory_buffer_offset = 1
+    local memory_table = {}
+    local vector_zero = math3d.vector(0, 0, 0, 0)
     for _, srt in pairs(srt_info) do
         for data_idx = 1, 3 do
             if data_idx == 1 then
-                memory_buffer[memory_buffer_offset] = fmt:pack(table.unpack(srt[1]))
+                memory_table[#memory_table+1] = math3d.serialize(srt)
             else
-                memory_buffer[memory_buffer_offset] = fmt:pack(table.unpack({0, 0, 0, 0})) 
+                memory_table[#memory_table+1] = math3d.serialize(vector_zero)
             end
-            memory_buffer_offset = memory_buffer_offset + 16
         end
     end
-
+    memory_buffer[1] = table.concat(memory_table)
     return bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("t45NIf|t46NIf|t47NIf").handle, itb_flag)
 end
 
 local function get_indirect_params_buffer(indirect_params_table)
-    local fmt<const> = "ffff"
     local memory_buffer = bgfx.memory_buffer(16 * #indirect_params_table)
-    local memory_buffer_offset = 1
+    local memory_table = {}
     for _, indirect_params in ipairs(indirect_params_table) do
-        memory_buffer[memory_buffer_offset] = fmt:pack(table.unpack(indirect_params))
-        memory_buffer_offset = memory_buffer_offset + 16
+        memory_table[#memory_table+1] = math3d.serialize(indirect_params)
     end
+    memory_buffer[1] = table.concat(memory_table)
     return bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("t43NIf").handle, "r")    
 end
 
@@ -153,21 +149,17 @@ local function get_frustum_planes(queue_name)
 end
 
 local function update_plane_buffer()
-    local fmt<const> = "ffff"
+    local memory_table = {}
     local memory_buffer = bgfx.memory_buffer(2 * 6 * 16)
-    local memory_buffer_offset = 1
     local planes_table = {
-        [1] = get_frustum_planes("csm1_queue"),
-        [2] = get_frustum_planes("main_queue")
+        get_frustum_planes("csm1_queue"),
+        get_frustum_planes("main_queue")
     }
     for planes_idx = 1, #planes_table do
         local planes = planes_table[planes_idx]
-        for plane_idx = 1, 6 do
-            local plane = math3d.array_index(planes, plane_idx)
-            memory_buffer[memory_buffer_offset] = fmt:pack(table.unpack(math3d.tovalue(plane)))
-            memory_buffer_offset = memory_buffer_offset + 16
-        end
-    end
+        memory_table[#memory_table+1] = math3d.serialize(planes)
+    end 
+    memory_buffer[1] = table.concat(memory_table)
     return memory_buffer
 end
 
