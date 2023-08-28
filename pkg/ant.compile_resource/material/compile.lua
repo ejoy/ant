@@ -143,7 +143,7 @@ local function get_macros(setting, mat)
 
     local state = mat.state
     if state.CULL == "NONE" then
-        macros[#macros+1] = "WITH_DOUBLE_SIDE"
+        macros[#macros+1] = "WITH_DOUBLE_SIDE=1"
     end
     local st = assert(mat.fx.shader_type)
     if st == "PBR" then
