@@ -34,7 +34,7 @@ function m:init_world()
     ientity.create_procedural_sky()
     create_plane()
     irq.set_view_clear_color("main_queue", 0xff0000ff)
-    ecs.create_instance "/res/scenes.prefab"
+    world:create_instance "/res/scenes.prefab"
 end
 
 local EventGesture = world:sub { "gesture" }

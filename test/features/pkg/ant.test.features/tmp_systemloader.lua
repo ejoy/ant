@@ -42,21 +42,21 @@ local function point_light_test()
     }
 
     for _, p in ipairs(pl_pos) do
-        local  pl = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+        local  pl = world:create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
         pl.on_ready = function()
             iom.set_position(pl.root, p)
         end
         world:create_object(pl)
     end
 
-    local ce = ecs.create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
+    local ce = world:create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     ce.on_ready = function ()
         iom.set_position(ce.root, {0, 0, 0, 1})
     end
     world:create_object(ce)
     
 
-    ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    world:create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 end
 
 local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
@@ -114,7 +114,7 @@ local cp_eid, quad_eid
 local testprefab
 
 local function create_instance(prefab, onready)
-    local p = ecs.create_instance(prefab)
+    local p = world:create_instance(prefab)
     p.on_ready = onready
     world:create_object(p)
 end
@@ -133,7 +133,7 @@ function init_loader_sys:init()
         local root<close> = world:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
     end) 
-    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+    --world:create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 
@@ -164,8 +164,8 @@ local function render_layer_test()
 
         },
     } ]]
-     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab" 
+     --world:create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
+    --world:create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab" 
 --[[     create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
         local ee <close> = world:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))

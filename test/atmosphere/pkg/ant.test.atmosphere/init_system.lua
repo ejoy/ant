@@ -10,7 +10,7 @@ local imesh     = ecs.require "ant.asset|mesh"
 local S         = ecs.system "init_system"
 
 local function create_instance(prefab, on_ready)
-    local p = ecs.create_instance(prefab)
+    local p = world:create_instance(prefab)
     p.on_ready = on_ready
     world:create_object(p)
 end

@@ -10,7 +10,7 @@ local iom		= ecs.require "ant.objcontroller|obj_motion"
 
 local function create_instance(pfile, s, r, t)
 	s = s or {0.1, 0.1, 0.1}
-	local p = ecs.create_instance(pfile)
+	local p = world:create_instance(pfile)
 	p.on_ready = function (e)
 		local ee<close> = world:entity(e.tag["*"][1])
 		iom.set_scale(ee, s)

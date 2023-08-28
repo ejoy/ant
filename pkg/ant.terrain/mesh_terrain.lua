@@ -16,7 +16,7 @@ local function instance(pid, mp, centerpos)
             }
         }
     }
-    local p = ecs.create_instance(mp, root)
+    local p = world:create_instance(mp, root)
     world:create_object(p)
     return p
 end

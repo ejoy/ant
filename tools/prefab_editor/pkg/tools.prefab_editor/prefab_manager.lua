@@ -147,7 +147,7 @@ function m:update_default_light(enable)
         end
         self.light_prefab = filename
         if not self.default_light then
-            self.default_light = ecs.create_instance(self.light_prefab)
+            self.default_light = world:create_instance(self.light_prefab)
         end
     end
 end
@@ -579,7 +579,7 @@ function m:open(filename, prefab_name, patch_tpl)
     end
     -- check_animation(self.prefab_template)
 
-    local prefab = ecs.create_instance(filename)
+    local prefab = world:create_instance(filename)
     function prefab:on_init() end
     prefab.on_ready = function(instance)
         self:on_prefab_ready(instance)
@@ -758,7 +758,7 @@ function m:add_prefab(path)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):filename()), parent)
     -- local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
     self.entities[#self.entities+1] = v_root
-    prefab = ecs.create_instance(prefab_filename, v_root)
+    prefab = world:create_instance(prefab_filename, v_root)
     prefab.on_ready = function(inst)
         local children = inst.tag["*"]
         if #children == 1 then
