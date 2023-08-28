@@ -2,17 +2,6 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 
 #include <bgfx_shader.sh>
 
-#include "water.sh"
-#include "common/camera.sh"
-#include "common/common.sh"
-#include "common/transform.sh"
-#include "common/utils.sh"
-#include "common/postprocess.sh"
-#include "common/uvmotion.sh"
-
-#include "pbr/lighting.sh"
-#include "pbr/material_info.sh"
-
 // Surface settings:
 //s_scene_color/s_scene_depth define in postprocess.sh as stage 0/1
 SAMPLER2D(s_dudv,           2); // UV motion sampler for shifting the normalmap
@@ -21,6 +10,9 @@ SAMPLER2D(s_normalmapB,     4); // Normalmap sampler B
 SAMPLER2D(s_foam,           5); // Foam sampler
 SAMPLER2DARRAY(s_caustic,   6); // Caustic sampler, (Texture array with 16 Textures for the animation)
 
+uniform vec4 u_basecolor_factor;
+uniform vec4 u_emissive_factor;
+uniform vec4 u_pbr_factor;
 
 uniform vec4 u_water_surface = vec4(0.5, 0.075, 2.0, -0.75);
 #define u_foam_level    u_water_surface.x   //Foam level -> distance from the object (0.0 - 0.5)
@@ -37,6 +29,18 @@ uniform vec4 u_directional_light_dir;
 #define u_directional_light_intensity u_directional_light_dir.w
 uniform vec4 u_direciontal_light_color;
 
+
+#include "water.sh"
+#include "common/camera.sh"
+#include "common/common.sh"
+#include "common/transform.sh"
+#include "common/utils.sh"
+#include "common/postprocess.sh"
+#include "common/uvmotion.sh"
+
+#include "pbr/lighting.sh"
+#include "pbr/material_info.sh"
+
 void main()
 {
 	// Calculation of the UV with the UV motion sampler
@@ -46,8 +50,8 @@ void main()
 	vec2 uv 				= v_texcoord0 + uv_sampler_uv_offset;
 	
 	//TODO: we should try to merge this two normal map offline
-	vec3 N = mix(	fetch_bc5_normal(s_normalmapA, uv - uv_offset*2.0).xyz,   // 75 % s_normalmapA
-					fetch_bc5_normal(s_normalmapB, uv + uv_offset).xyz,       // 25 % s_normalmapB
+	vec3 N = mix(	fetch_normal_from_tex(s_normalmapA, uv - uv_offset*2.0).xyz,   // 75 % s_normalmapA
+					fetch_normal_from_tex(s_normalmapB, uv + uv_offset).xyz,       // 25 % s_normalmapB
 					0.25);
     mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
 	N = normalize(instMul(N, tbn));
