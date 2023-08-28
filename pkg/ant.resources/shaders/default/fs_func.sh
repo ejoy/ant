@@ -11,12 +11,13 @@
 #include "default/inputs_structure.sh"
 
 #include "pbr/material_info.sh"
+#include "pbr/material_default.sh"
 
 //TODO: move to pbr folder
 void CUSTOM_FS_FUNC(in FSInput input, inout FSOutput output)
 {
     material_info mi = (material_info)0;
-    init_material_info(input, mi);
+    default_init_material_info(input, mi);
 #ifdef MATERIAL_UNLIT
     output.color = mul_inverse_tonemap(mi.basecolor + mi.emissive);
 #else //!MATERIAL_UNLIT
