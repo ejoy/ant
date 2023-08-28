@@ -141,6 +141,10 @@ local function get_macros(setting, mat)
         end
     end
 
+    local state = mat.state
+    if state.CULL == "NONE" then
+        macros[#macros+1] = "WITH_DOUBLE_SIDE"
+    end
     local st = assert(mat.fx.shader_type)
     if st == "PBR" then
         local properties = mat.properties
