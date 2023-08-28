@@ -127,15 +127,9 @@ return function (w, package)
         end
         _ECS_LOADED[file] = r
         _ECS_LOADING[file] = nil
-	end
-    function ecs.create_entity(v)
-        return w:_create_entity(nil, v)
     end
     function ecs.release_cache(v)
         return w:_release_cache(v)
-    end
-    function ecs.create_instance(v, parent)
-        return w:_create_instance(nil, parent, v)
     end
     function ecs.group(id)
         return w:_create_group(id)
@@ -145,6 +139,13 @@ return function (w, package)
     end
     function ecs.clibs(name)
         return w:clibs(name)
+    end
+    local default_group = w:_create_group(0)
+    function ecs.create_entity(v)
+        return default_group:create_entity(v)
+    end
+    function ecs.create_instance(v, parent)
+        return default_group:create_instance(v, parent)
     end
     w._ecs[package] = ecs
     return ecs

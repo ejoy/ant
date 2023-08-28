@@ -14,7 +14,7 @@ local world = {}
 world_metatable.__index = world
 
 local function create_entity_by_data(w, group, data)
-    local queue = w._create_queue
+    local queue = w._create_entity_queue
     local eid = w.w:new {
         debug = debug.traceback()
     }
@@ -28,7 +28,7 @@ local function create_entity_by_data(w, group, data)
 end
 
 local function create_entity_by_template(w, group, template)
-    local queue = w._create_queue
+    local queue = w._create_entity_queue
     local eid = w.w:new {
         debug = debug.traceback()
     }
@@ -42,14 +42,14 @@ local function create_entity_by_template(w, group, template)
 end
 
 function world:_create_entity(group, v)
-    local res = policy.create(self, v.policy)
+    local policy_info = policy.create(self, v.policy)
     local data = v.data
-    for c, def in pairs(res.component_opt) do
+    for c, def in pairs(policy_info.component_opt) do
         if data[c] == nil then
             data[c] = def
         end
     end
-    for _, c in ipairs(res.component) do
+    for _, c in ipairs(policy_info.component) do
         local d = data[c]
         if d == nil then
             error(("component `%s` must exists"):format(c))
@@ -201,9 +201,14 @@ local function each_prefab(entities, template, f)
     end
 end
 
-local function create_tags(entities, template)
-    local tags = {['*']={}}
-    each_prefab(entities, template, function (e, tag)
+function world:_prefab_instance(group, parent, filename, tags)
+    local w = self
+    local template = create_template(w, filename)
+    local prefab, noparent = create_instance(w, group, template)
+    for _, m in ipairs(noparent) do
+        m.parent = parent
+    end
+    each_prefab(prefab, template, function (e, tag)
         if tag then
             if type(tag) == "table" then
                 for _, tag_ in ipairs(tag) do
@@ -215,7 +220,21 @@ local function create_tags(entities, template)
         end
         table.insert(tags['*'], e)
     end)
-    return tags
+end
+
+function world:_create_instance(group, parent, filename)
+    local q = self._create_prefab_queue
+    local tags = {['*']={}}
+    q[#q+1] = {
+        group = group,
+        parent = parent,
+        filename = filename,
+        tags = tags,
+    }
+    return {
+        group = group,
+        tag = tags
+    }
 end
 
 function world:create_object(inner_proxy)
@@ -264,19 +283,6 @@ function world:_release_cache(filename)
     self._templates[filename] = nil
 end
 
-function world:_create_instance(group, parent, filename)
-    local w = self
-    local template = create_template(w, filename)
-    local prefab, noparent = create_instance(w, group, template)
-    for _, m in ipairs(noparent) do
-        m.parent = parent
-    end
-    return {
-        group = group,
-        tag = create_tags(prefab, template)
-    }
-end
-
 function world:_create_group(id)
     local w = self
     local group = w._group
@@ -286,8 +292,8 @@ function world:_create_group(id)
     function api:create_entity(v)
         return w:_create_entity(id, v)
     end
-    function api:create_instance(v, parent)
-        return w:_create_instance(id, parent, v)
+    function api:create_instance(filename, parent)
+        return w:_create_instance(id, parent, filename)
     end
     local function tags(tag)
         local t = group.tags[tag]
@@ -673,7 +679,8 @@ function m.new_world(config)
 		_group = {
 			tags = {}
 		},
-		_create_queue = {},
+		_create_entity_queue = {},
+		_create_prefab_queue = {},
 		_destruct = {},
 		_clibs_loaded = {},
 		_templates = {},

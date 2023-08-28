@@ -27,12 +27,24 @@ function m:entity_ready()
     w:clear "on_ready"
 end
 
-function m:entity_create()
-    local queue = world._create_queue
+local function create_prefab()
+    local queue = world._create_prefab_queue
     if #queue == 0 then
         return
     end
-    world._create_queue = {}
+    world._create_prefab_queue = {}
+    for i = 1, #queue do
+        local q = queue[i]
+        world:_prefab_instance(q.group, q.parent, q.filename, q.tags)
+    end
+end
+
+local function create_entity()
+    local queue = world._create_entity_queue
+    if #queue == 0 then
+        return
+    end
+    world._create_entity_queue = {}
 
     for i = 1, #queue do
         local initargs = queue[i]
@@ -66,6 +78,10 @@ function m:entity_create()
 
     world:pipeline_entity_init()
     w:clear "INIT"
+end
+function m:entity_create()
+    create_prefab()
+    create_entity()
 end
 
 function m:update_world()
