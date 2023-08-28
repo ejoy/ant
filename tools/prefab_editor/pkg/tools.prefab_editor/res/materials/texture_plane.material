@@ -17,7 +17,7 @@ properties:
   u_uvmotion: {0, 0, 1.0, 1.0}
 state:
   ALPHA_REF: 0
-  CULL: NONE
+  CULL: CCW
   DEPTH_TEST: GREATER
   MSAA: true
   WRITE_MASK: RGBAZ
