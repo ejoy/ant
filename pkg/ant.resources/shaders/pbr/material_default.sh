@@ -63,13 +63,6 @@ void fetch_occlusion(in FSInput fsinput, inout material_info mi)
     mi.occlusion *= u_occlusion_strength;
 }
 
-vec3 remap_normal(vec2 normalTSXY)
-{
-    mediump vec2 normalXY = normalTSXY * 2.0 - 1.0;
-	mediump float z = sqrt(1.0 - dot(normalXY, normalXY));
-    return mediump vec3(normalXY, z);
-}
-
 vec3 fetch_normal_from_tex(sampler2D normaltex, vec2 texcoord)
 {
     #if BX_PLATFORM_OSX || BX_PLATFORM_IOS || BX_PLATFORM_ANDROID

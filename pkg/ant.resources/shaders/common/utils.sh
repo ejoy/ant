@@ -14,6 +14,13 @@ vec4 fetch_texture2d_size(sampler2D tex, int lod)
     return vec4(s.x, s.y, 1.0/s.x, 1.0/s.y);
 }
 
+vec3 remap_normal(vec2 normalTSXY)
+{
+    mediump vec2 normalXY = normalTSXY * 2.0 - 1.0;
+	mediump float z = sqrt(1.0 - dot(normalXY, normalXY));
+    return mediump vec3(normalXY, z);
+}
+
 vec2 id2uv(ivec2 uvidx, ivec2 size)
 {
     const vec2 texeloffset = vec2(0.5, 0.5);
