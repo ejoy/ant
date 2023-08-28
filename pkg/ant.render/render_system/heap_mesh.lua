@@ -36,7 +36,7 @@ end
 
 function hm_sys:entity_init()
     for e in w:select "INIT heapmesh:update render_object?update mesh:in scene:in indirect?update eid:in" do
-        local heapmesh = e.heapmesh
+--[[         local heapmesh = e.heapmesh
         local interval = heapmesh.interval
         for idx = 1, 3 do
             interval[idx] = tonumber(interval[idx]) 
@@ -69,7 +69,7 @@ function hm_sys:entity_init()
             }
         }
         heapmesh.draw_indirect_eid = draw_indirect_eid
-        e.render_object.draw_num = 0
+        e.render_object.draw_num = 0 ]]
     end
 end
 
@@ -91,7 +91,7 @@ end
 
 function hm_sys:heap_mesh()
     for e in w:select "heapmesh_ready heapmesh_changed heapmesh:update render_object?update bounding?update scene?in" do
-        local heapmesh = e.heapmesh
+--[[         local heapmesh = e.heapmesh
         local interval = e.heapmesh.interval
         local curSideSize = heapmesh.curSideSize
         local curMaxSize  = calc_max_num(curSideSize)
@@ -117,16 +117,16 @@ function hm_sys:heap_mesh()
         end
         e.heapmesh.curHeapNum = curHeapNum
         e.heapmesh.lastHeapNum = curHeapNum
-        e.render_object.draw_num = curHeapNum
+        e.render_object.draw_num = curHeapNum ]]
 	end
     w:clear("heapmesh_changed")
 end
 
 
 function iheapmesh.update_heap_mesh_number(eid, num)
-    local e <close> = world:entity(eid, "heapmesh_ready heapmesh:update heapmesh_changed?update")
+--[[     local e <close> = world:entity(eid, "heapmesh_ready heapmesh:update heapmesh_changed?update")
     e.heapmesh.curHeapNum = num
-    e.heapmesh_changed = true
+    e.heapmesh_changed = true ]]
 end
 
 return iheapmesh

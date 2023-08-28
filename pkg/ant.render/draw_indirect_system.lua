@@ -173,7 +173,7 @@ function draw_indirect_system:entity_init()
         di.obj_buffer   = get_obj_buffer(aabb_table, srt_table, mesh_idx_table)
         di.plane_buffer = bgfx.create_dynamic_vertex_buffer(12, layoutmgr.get("t42NIf").handle, "r")
         di.indirect_params_buffer = get_indirect_params_buffer(indirect_params_table)
-        local di_cull_id = ecs.create_entity {
+        local di_cull_id = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
             },
@@ -188,7 +188,7 @@ function draw_indirect_system:entity_init()
                 },
             }
         }
-        local di_shadow_id = ecs.create_entity {
+        local di_shadow_id = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
             },
@@ -205,7 +205,7 @@ function draw_indirect_system:entity_init()
                 },
             }
         }
-        local di_main_id = ecs.create_entity {
+        local di_main_id = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
             },
