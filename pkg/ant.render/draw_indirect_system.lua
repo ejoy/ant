@@ -42,17 +42,36 @@ local function get_sm_worldmat(srt)
     return math3d.mul(tm, math3d.mul(rm, sm))
 end
 
-local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table)
+local function get_road_worldmat(srt)
+    local tx, ty, tz = math3d.index(srt, 1, 2, 3)
+    return math3d.matrix({
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        tx, ty, tz, 1,
+    })
+end
+
+local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type)
     local draw_num = #srt_table
     local memory_buffer = bgfx.memory_buffer(2 * 16 * draw_num)
     local memory_table = {}
     for obj_idx, srt in pairs(srt_table) do
-        local wm = get_sm_worldmat(srt)
-        local mesh_idx = math3d.index(mesh_idx_table[obj_idx], 4)
+        local wm
+        if indirect_type:match "stone_mountain" then
+            wm = get_sm_worldmat(srt[1])
+        elseif indirect_type:match "road" then
+            wm = get_road_worldmat(srt[1])
+        end
+        local mesh_idx, mesh_idx_vector = 1, math3d.vector(0, 0, 0, 1)
+        if mesh_idx_table then
+            mesh_idx = math3d.index(mesh_idx_table[obj_idx], 4)
+            mesh_idx_vector = mesh_idx_table[obj_idx]
+        end
         local taabb = math3d.aabb_transform(wm, aabb_table[mesh_idx])
         local center, extent = math3d.aabb_center_extents(taabb)
         local aabb_min, aabb_max = math3d.sub(center, extent), math3d.add(center, extent)
-        local obj_params = math3d.sub(math3d.add(aabb_min, mesh_idx_table[obj_idx]), math3d.vector(0, 0, 0, 1))
+        local obj_params = math3d.sub(math3d.add(aabb_min, mesh_idx_vector), math3d.vector(0, 0, 0, 1))
         memory_table[#memory_table+1] = math3d.serialize(obj_params)
         memory_table[#memory_table+1] = math3d.serialize(aabb_max)
     end
@@ -64,14 +83,9 @@ local function get_instance_buffer(srt_info, itb_flag)
     local draw_num = #srt_info
     local memory_buffer = bgfx.memory_buffer(3 * 16 * draw_num)
     local memory_table = {}
-    local vector_zero = math3d.vector(0, 0, 0, 0)
     for _, srt in pairs(srt_info) do
         for data_idx = 1, 3 do
-            if data_idx == 1 then
-                memory_table[#memory_table+1] = math3d.serialize(srt)
-            else
-                memory_table[#memory_table+1] = math3d.serialize(vector_zero)
-            end
+            memory_table[#memory_table+1] = math3d.serialize(srt[data_idx])
         end
     end
     memory_buffer[1] = table.concat(memory_table)
@@ -166,11 +180,12 @@ end
 function draw_indirect_system:entity_init()
     for e in w:select "INIT draw_indirect:update eid:in" do
         local di = e.draw_indirect
-        local aabb_table, indirect_params_table, mesh_idx_table, srt_table, draw_num = di.aabb_table, di.indirect_params_table, di.mesh_idx_table, di.srt_table, di.draw_num
+        local aabb_table, indirect_params_table, mesh_idx_table, srt_table, draw_num, indirect_type = 
+        di.aabb_table, di.indirect_params_table, di.mesh_idx_table, di.srt_table, di.draw_num, di.indirect_type
         di.itb_handle   = get_instance_buffer(srt_table, e.draw_indirect.itb_flag)
         di.vib_handle   = bgfx.create_dynamic_vertex_buffer(draw_num, layoutmgr.get("t40NIf").handle, "rw")
         di.idb_handle   = bgfx.create_indirect_buffer(draw_num)
-        di.obj_buffer   = get_obj_buffer(aabb_table, srt_table, mesh_idx_table)
+        di.obj_buffer   = get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type)
         di.plane_buffer = bgfx.create_dynamic_vertex_buffer(12, layoutmgr.get("t42NIf").handle, "r")
         di.indirect_params_buffer = get_indirect_params_buffer(indirect_params_table)
         local di_cull_id = world:create_entity {
