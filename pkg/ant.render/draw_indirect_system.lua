@@ -256,7 +256,7 @@ function draw_indirect_system:entity_init()
 end
 
 function draw_indirect_system:data_changed()
-    for e in w:select "draw_indirect:in dispatch:in" do
+    for e in w:select "draw_indirect:in" do
         local plane_buffer = e.draw_indirect.plane_buffer
         local plane_memory_buffer = update_plane_buffer()
         bgfx.update(plane_buffer, 0, plane_memory_buffer)
