@@ -1,0 +1,17 @@
+fx:
+  cs: /pkg/ant.resources/shaders/mesh/cs_indirect_cull.sc
+  setting:
+    lighting: off
+properties:
+    b_visiblity_buffer:
+      stage: 0
+      access: w
+      buffer: "b_visiblity_buffer"
+    b_obj_buffer:
+      stage: 1
+      access: r
+      buffer: "b_obj_buffer"
+    b_plane_buffer:
+      stage: 2
+      access: r
+      buffer: "b_plane_buffer"
