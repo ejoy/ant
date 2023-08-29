@@ -10,9 +10,10 @@ local stringify 	= import_package "ant.serialize".stringify
 
 local TEXTUREC 		= require "tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
+local setting		= import_package "ant.settings"
 local SH, texutil	= shpkg.sh, shpkg.texture
 
-local irradianceSH_bandnum<const> = import_package "ant.settings".setting:get "graphic/ibl/irradiance_bandnum"
+local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local function add_option(commands, name, value)
 	if name then

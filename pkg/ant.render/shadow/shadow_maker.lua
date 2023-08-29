@@ -2,7 +2,7 @@ local ecs 	= ...
 local world = ecs.world
 local w     = world.w
 
-local setting	= import_package "ant.settings".setting
+local setting	= import_package "ant.settings"
 local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
 local renderutil= require "util"
 local sm = ecs.system "shadow_system"

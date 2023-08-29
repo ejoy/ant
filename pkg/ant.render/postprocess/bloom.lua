@@ -8,12 +8,10 @@ local sampler   = import_package "ant.general".sampler
 local irender   = ecs.require "ant.render|render_system.render"
 local util      = ecs.require "postprocess.util"
 local renderutil= require "util"
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 local bloom_sys = ecs.system "bloom_system"
-local bloom_setting = setting:data().graphic.postprocess.bloom
-local ENABLE_BLOOM<const> = bloom_setting.enable
 
-if not ENABLE_BLOOM then
+if not setting:get "graphic/postprocess/bloom/enable" then
     renderutil.default_system(bloom_sys, "init", "init_world", "data_changed", "bloom")
     return
 end
@@ -23,7 +21,7 @@ local hwi       = import_package "ant.hwi"
 local bloom_ds_viewid<const> = hwi.viewid_get "bloom_ds1"
 local bloom_us_viewid<const> = hwi.viewid_get "bloom_us1"
 local BLOOM_MIPCOUNT<const> = 4
-local BLOOM_PARAM = math3d.ref(math3d.vector(0, bloom_setting.inv_highlight, bloom_setting.threshold, 0))
+local BLOOM_PARAM = math3d.ref(math3d.vector(0, setting:get "graphic/postprocess/bloom/inv_highlight", setting:get "graphic/postprocess/bloom/threshold", 0))
 
 
 function bloom_sys:init()

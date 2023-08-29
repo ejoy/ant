@@ -4,7 +4,7 @@ local fastio 	= require "fastio"
 local async 	= require "async"
 local fs 	    = require "filesystem"
 
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 local use_cluster_shading<const>	= setting:get "graphic/cluster_shading" ~= 0
 local cs_skinning<const>			= setting:get "graphic/skinning/use_cs"
 

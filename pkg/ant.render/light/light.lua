@@ -9,8 +9,8 @@ local iom		= ecs.require "ant.objcontroller|obj_motion"
 local iexposure = ecs.require "ant.camera|exposure"
 local imaterial = ecs.require "ant.asset|material"
 
-local setting	= import_package "ant.settings".setting
-local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
+local setting	= import_package "ant.settings"
+local enable_cluster_shading = setting:get "graphic/lighting/cluster_shading" ~= 0
 
 local DEFAULT_LIGHT<const> = {
 	directional = {

@@ -6,7 +6,7 @@ local bgfx		= require "bgfx"
 local math3d	= require "math3d"
 
 local geometry_drawer	= import_package "ant.geometry".drawer
-local setting			= import_package "ant.settings".setting
+local setting			= import_package "ant.settings"
 local layoutmgr			= import_package "ant.render".layoutmgr
 local mc				= import_package "ant.math".constant
 
@@ -191,8 +191,7 @@ end
 local rmb_sys = ecs.system "render_mesh_bounding_system"
 
 function rmb_sys:follow_transform_updated()
-	local sd  = setting:data()
-	if sd.debug and sd.debug.show_bounding then
+	if setting:get "debug" and setting:get "debug/show_bounding" then
 		local desc={vb={}, ib={}}
 		for e in w:select "render_object scene bounding:in" do
 			local aabb = e.bounding.scene_aabb

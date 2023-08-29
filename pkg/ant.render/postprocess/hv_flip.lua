@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local setting = import_package "ant.settings".setting
+local setting = import_package "ant.settings"
 
 local ru = require "util"
 local hvflip_sys = ecs.system "hv_flip_system"

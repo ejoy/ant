@@ -2,7 +2,7 @@ local ecs 	= ...
 local world = ecs.world
 local w 	= world.w
 
-local setting	= import_package "ant.settings".setting
+local setting	= import_package "ant.settings"
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
 local math3d	= require "math3d"
@@ -12,7 +12,20 @@ local bgfx		= require "bgfx"
 local fbmgr		= require "framebuffer_mgr"
 local sampler   = import_package "ant.general".sampler
 
-local shadowcfg = setmetatable({}, {__index= setting:data().graphic.shadow})
+local shadowcfg = {
+	color = setting:get "graphic/shadow/color",
+	depth_multiplier = setting:get "graphic/shadow/depth_multiplier",
+	enable = setting:get "graphic/shadow/enable",
+	far_offset = setting:get "graphic/shadow/far_offset",
+	min_variance = setting:get "graphic/shadow/min_variance",
+	normal_offset = setting:get "graphic/shadow/normal_offset",
+	size = setting:get "graphic/shadow/size",
+	split_lamada = setting:get "graphic/shadow/split_lamada",
+	split_num = setting:get "graphic/shadow/split_num",
+	height = setting:get "graphic/shadow/height",
+	split_ratios = setting:get "graphic/shadow/split_ratios",
+	type = setting:get "graphic/shadow/type",
+}
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 

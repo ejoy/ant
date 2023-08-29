@@ -4,8 +4,8 @@ local w     = world.w
 local velocity_system = ecs.system "velocity_system"
 
 local renderutil        = require "util"
-local setting           = import_package "ant.settings".setting
-local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
+local setting           = import_package "ant.settings"
+local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 if not ENABLE_TAA then
     renderutil.default_system(velocity_system, "init", "init_world", "update_filter", "data_changed", "end_frame", "render_submit")
     return

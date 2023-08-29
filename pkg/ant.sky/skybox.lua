@@ -2,7 +2,7 @@ local ecs 		= ...
 local world 	= ecs.world
 local w 		= world.w
 
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local assetmgr	= import_package "ant.asset"
