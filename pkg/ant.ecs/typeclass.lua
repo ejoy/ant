@@ -6,37 +6,28 @@ local create_ecs = require "ecs"
 local check_map = {
 	require_system = "system",
 	require_policy = "policy",
-	require_transform = "transform",
 	component = "component",
 	component_opt = "component",
 }
 
 local function create_importor(w)
 	local import = {}
-	local system_class = {}
 	local system_decl = w._decl.system
-	local component_class = {}
 	local component_decl = w._decl.component
-	local policy_class = {}
 	local policy_decl = w._decl.policy
-	w._class.system = system_class
-	w._class.component = component_class
-	w._class.policy = policy_class
 	function import.system(name)
-		local v = system_class[name]
-		if v then
-			return v
+		local v = system_decl[name]
+		if not v then
+			error(("invalid system name: `%s`."):format(name))
+		end
+		if v.imported then
+			return
 		end
 		if not w._initializing then
 			error(("system `%s` can only be imported during initialization."):format(name))
 		end
-		v = system_decl[name]
-		if not v then
-			error(("invalid system name: `%s`."):format(name))
-		end
 		log.debug("Import  system", name)
-		local res = {}
-		system_class[name] = res
+		v.imported = true
 		for _, tuple in ipairs(v.value) do
 			local what, k = tuple[1], tuple[2]
 			local attrib = check_map[what]
@@ -55,20 +46,17 @@ local function create_importor(w)
 				w._ecs[pkg].include_ecs(file)
 			end
 		end
-		return res
 	end
 	function import.component(name)
-		local v = component_class[name]
-		if v then
-			return v
-		end
-		v = component_decl[name]
+		local v = component_decl[name]
 		if not v then
 			error(("invalid component name: `%s`."):format(name))
 		end
+		if v.imported then
+			return
+		end
 		log.debug("Import  component", name)
-		local res = {}
-		component_class[name] = res
+		v.imported = true
 		for _, tuple in ipairs(v.value) do
 			local what, k = tuple[1], tuple[2]
 			local attrib = check_map[what]
@@ -82,24 +70,17 @@ local function create_importor(w)
 			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
 			w._ecs[pkg].include_ecs(file)
 		end
-		return res
 	end
 	function import.policy(name)
-		local v = policy_class[name]
-		if v then
-			return v
-		end
-		v = policy_decl[name]
+		local v = policy_decl[name]
 		if not v then
 			error(("invalid policy name: `%s`."):format(name))
 		end
+		if v.imported then
+			return
+		end
 		log.debug("Import  policy", name)
-		local res = {
-			require_policy = v.require_policy,
-			component = v.component,
-			component_opt = v.component_opt,
-		}
-		policy_class[name] = res
+		v.imported = true
 		for _, tuple in ipairs(v.value) do
 			local what, k = tuple[1], tuple[2]
 			local attrib = check_map[what]
@@ -107,7 +88,6 @@ local function create_importor(w)
 				import[attrib](k)
 			end
 		end
-		return res
 	end
 	return import
 end
@@ -271,7 +251,10 @@ end
 
 local function init(w, config)
 	w._initializing = true
-	w._class = {}
+	w._class = {
+		system = {},
+		component = {},
+	}
 	w._decl = interface.new(function(_, packname, filename)
 		local file = "/pkg/"..packname.."/"..filename
 		log.debug(("Import decl %q"):format(file))

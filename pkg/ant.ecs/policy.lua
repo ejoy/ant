@@ -11,23 +11,20 @@ local function create(w, policies)
             return
         end
         policyset[name] = true
-        local class = w._class.policy[name]
-        if not class then
-            class = w._importor.policy(name)
-            if not class then
-                error(("policy `%s` is not defined."):format(name))
-            end
+        local decl = w._decl.policy[name]
+        if not decl then
+            error(("policy `%s` is not defined."):format(name))
         end
-        for _, v in ipairs(class.require_policy) do
+        for _, v in ipairs(decl.require_policy) do
             import_policy(v)
         end
-        for _, v in ipairs(class.component) do
+        for _, v in ipairs(decl.component) do
             if not componentset[v] then
                 componentset[v] = true
                 res.component[#res.component+1] = v
             end
         end
-        for _, v in ipairs(class.component_opt) do
+        for _, v in ipairs(decl.component_opt) do
             if res.component_opt[v] == nil then
                 local component_class = w._decl.component
                 local component_type =  component_class[v].type[1]

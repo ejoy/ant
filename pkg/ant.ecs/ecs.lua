@@ -42,8 +42,10 @@ return function (w, package)
                 end
                 decl.source = {}
                 decl.defined = sourceinfo()
+                import[what](fullname)
                 local callback = keys(decl.method)
-                local object = import[what](fullname)
+                local object = {}
+                w._class[what][fullname] = object
                 setmetatable(r, {
                     __pairs = function ()
                         return pairs(object)
