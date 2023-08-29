@@ -93,20 +93,18 @@ lefkctx_create(lua_State *L){
     return 1;
 }
 
-static bool
-check_effect_valid(efk_ctx *ctx, int handle){
-    return 0 <= handle && handle < ctx->effects.size();
+static void
+check_effect_valid(lua_State *L, efk_ctx *ctx, int handle){
+     if (0 > handle || handle >= ctx->effects.size()){
+        luaL_error(L, "invalid handle: %d", handle);
+    }
 }
 
 static int
 lefkctx_destroy(lua_State *L){
     auto ctx = EC(L);
     auto handle = (int)luaL_checkinteger(L, 2);
-    if (!check_effect_valid(ctx, handle)){
-        return luaL_error(L, "invalid handle: %d", handle);
-    }
-
-    auto e = ctx->effects[handle];
+    check_effect_valid(L, ctx, handle);
     ctx->effects[handle] = nullptr;
     return 0;
 }
@@ -145,7 +143,7 @@ static int
 lefkctx_play(lua_State *L){
     auto ctx = EC(L);
     auto handle = (int)luaL_checkinteger(L, 2);
-    assert(check_effect_valid(ctx, handle));
+    check_effect_valid(L, ctx, handle);
 	
     Effekseer::Matrix43 effekMat;
 	auto effekMat44 = TOM(L, 3);
