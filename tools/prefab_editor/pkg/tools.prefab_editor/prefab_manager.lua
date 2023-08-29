@@ -106,7 +106,9 @@ function m:add_entity(new_entity, parent, tpl)
     self.entities[#self.entities+1] = new_entity
     if self.scene ~= new_entity then
         self.prefab_template[#self.prefab_template + 1] = tpl
-        tpl.index = #self.prefab_template
+        if self.glb_filename then
+            tpl.index = #self.prefab_template
+        end
         self:pacth_add(tpl)
     end
     hierarchy:add(new_entity, {template = tpl}, parent)
@@ -358,7 +360,7 @@ function m:on_prefab_ready(prefab)
         st_set[e.eid] = true
         for i = idx, #entitys do
             local entity <close> = world:entity(entitys[i], "scene?in eid:in")
-            if not entity.scene or st_set[entity.scene.parent] == nil then
+            if entity.scene and st_set[entity.scene.parent] == nil then
                 break
             end
             st_set[entity.eid] = true
@@ -368,20 +370,14 @@ function m:on_prefab_ready(prefab)
     end
 
     local node_map = {}
-
-    local final_template = {}
-    for idx, value in ipairs(self.prefab_template) do
-        value.index = idx
-        final_template[#final_template + 1] = value
+    if self.glb_filename then
+        for idx, value in ipairs(self.prefab_template) do
+            value.index = idx
+        end
     end
-    -- if self.patch_template then
-    --     for _, value in ipairs(self.patch_template) do
-    --         final_template[#final_template + 1] = value
-    --     end
-    -- end
 
     local j = 1
-    for idx, pt in ipairs(final_template) do
+    for _, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
         local e <close> = world:entity(eid, "scene?in light?in")
         local scene = e.scene
@@ -594,18 +590,15 @@ local function remove_entity_self(eid)
     if e.light then
         light_gizmo.on_remove_light(eid)
     end
-    local en = hierarchy:get_node(eid)
-    if en.prefab then
+    local adaptee = hierarchy:get_select_adaptee(eid)
+    if #adaptee > 0 then
         -- TODO: for camera, remove this for
-        for i = #en.children, 1, -1 do
-            hierarchy:del(en.children[i])
+        for i = #adaptee, 1, -1 do
+            hierarchy:del(adaptee[i])
         end
-        for _, id in ipairs(en.prefab.tag["*"]) do
+        for _, id in ipairs(adaptee) do
             w:remove(id)
         end
-    end
-    local teml = hierarchy:get_template(eid)
-    if teml and teml.children then
         hierarchy:clear_adapter(eid)
     end
     hierarchy:del(eid)
@@ -761,16 +754,15 @@ function m:add_prefab(path)
             local child = children[1]
             local e <close> = world:entity(child, "camera?in")
             if e.camera then
-                local temp = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
-                hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, v_root)
+                local tpl = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
+                hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
                 return
             end
         end
         set_select_adapter(children, v_root)
     end
     world:create_object(prefab)
-    local node = hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
-    node.prefab = prefab
+    hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
 end
 
 function m:save(path)
@@ -864,7 +856,10 @@ function m:do_remove_entity(eid)
         return
     end
     local en = hierarchy:get_node(eid)
-    if not en.prefab then
+    if not en or en.temporary then
+        return
+    end
+    if en.children then
         for i = #en.children, 1, -1 do
             self:do_remove_entity(en.children[i])
         end
@@ -964,7 +959,9 @@ function m:get_patch_node(path)
 end
 
 function m:pacth_remove(eid)
-    if not self.glb_filename then return end
+    if not self.glb_filename then
+        return true
+    end
     local tpl = hierarchy:get_template(eid)
     local pidx = tpl.template.index
     if pidx < self.patch_start_index then
