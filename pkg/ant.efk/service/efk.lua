@@ -1,5 +1,6 @@
 local S = {}
 
+local math3d    = require "math3d"
 local ltask     = require "ltask"
 local bgfx      = require "bgfx"
 
@@ -133,6 +134,12 @@ function S.exit()
     shutdown()
 end
 
+function S.update_hitch_transforms(handle, hitch_mats)
+    for _, m in ipairs(hitch_mats) do
+        EFKCTX:update_transform(handle, m)
+    end
+end
+
 function S.update_cb_data(background_handle, depth)
     efk_cb_handle.background = background_handle
     efk_cb_handle.depth = depth
@@ -170,8 +177,8 @@ function S.preload_texture(texture, id)
     end
 end
 
-function S.play(efkhandle, mat, speed)
-    return EFKCTX:play(efkhandle, mat, speed)
+function S.play(efkhandle, speed)
+    EFKCTX:play(efkhandle, speed)
 end
 
 function S.is_alive(handle)
@@ -186,7 +193,7 @@ function S.set_time(handle, time)
     EFKCTX:set_time(handle, time)
 end
 
-function S.set_transform(handle, mat)
+function S.update_transform(handle, mat)
     EFKCTX:update_transform(handle, mat)
 end
 

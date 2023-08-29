@@ -125,7 +125,7 @@ lefkctx_create(lua_State *L) {
 		handle = ctx->freelist;
 		ctx->freelist = slot->next;
 	} else {
-		handle = ctx->effects.size();
+		handle = (int)ctx->effects.size();
 		ctx->effects.resize(handle + 1);
 	}
 
@@ -148,7 +148,7 @@ check_effect_valid(lua_State *L, efk_ctx *ctx, int handle){
 
 static struct efk_instance *
 get_instance(lua_State *L, efk_ctx *ctx, int index) {
-	int handle = luaL_checkinteger(L, index);
+	int handle = (int)luaL_checkinteger(L, index);
 	check_effect_valid(L, ctx, handle);
 	return &ctx->effects[handle];
 }
@@ -174,7 +174,7 @@ stop_all(efk_ctx* ctx, struct efk_instance *slot, int delay) {
 static int
 lefkctx_destroy(lua_State *L) {
     auto ctx = EC(L);
-	int handle = luaL_checkinteger(L, 2);
+	int handle = (int)luaL_checkinteger(L, 2);
 	check_effect_valid(L, ctx, handle);
     auto slot = &ctx->effects[handle];
 	slot->eptr = nullptr;

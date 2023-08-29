@@ -158,6 +158,41 @@ function efk_sys:camera_usage()
     ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
+local qm = ecs.require "ant.render|queue_mgr"
+
+function efk_sys:render_submit()
+    for e in w:select "view_visible efk:in scene:in" do
+        local ph = e.efk.play_handle
+        if ph then
+            ph:update_transform(e.scene.worldmat)
+        end
+    end
+    local mq_mask = qm.queue_mask "main_queue"
+    local groups = setmetatable({}, {__index=function (tt, idx) local t = {}; tt[idx] = t;return t end})
+    for e in w:select "view_visible hitch:in scene:in" do
+        local h = e.hitch
+        if 0 == (h.cull_masks & mq_mask) then
+            local s = e.scene
+            if h.group ~= 0 then
+                local mats = groups[h.group]
+                mats[#mats+1] = s.worldmat
+            end
+        end
+	end
+
+    for gid, mats in pairs(groups) do
+        world:group_enable_tag("hitch_tag", gid)
+        world:group_flush "hitch_tag"
+
+        for e in w:select "hitch_tag efk:in scene:in" do
+            local ph = e.efk.play_handle
+            if ph then
+                ph:update_hitch_transforms(mats, e.scene.worldmat)
+            end
+        end
+    end
+end
+
 function efk_sys:follow_transform_updated()
     for v in w:select "view_visible efk:in scene:in scene_changed?in" do
         local efk = v.efk
@@ -168,8 +203,7 @@ function efk_sys:follow_transform_updated()
                 if not handle:is_alive() then
                     if efk.loop then
                         local e <close> = world:entity(eid, "scene:in")
-                        local wm = math3d.mul(v.scene.worldmat, e.scene.worldmat)
-                        new_handles[eid] = PH.create(efk.handle, wm, efk.speed)
+                        new_handles[eid] = PH.create(efk.handle, math3d.mul(v.scene.worldmat, e.scene.worldmat), efk.speed)
                     else
                         del_handles[#del_handles + 1] = eid
                     end
@@ -185,13 +219,9 @@ function efk_sys:follow_transform_updated()
         
         if efk.play_handle then
             if not efk.play_handle:is_alive() then
-                if efk.loop then
-                    efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
-                else
-                    efk.play_handle = nil
-                end
+                efk.play_handle = efk.loop and PH.create(efk.handle, v.scene.worldmat, efk.speed) or nil
             elseif v.scene_changed then
-                efk.play_handle:set_transform(v.scene.worldmat)
+                efk.play_handle:update_transform(v.scene.worldmat)
             end
         else
             if efk.visible then
@@ -202,8 +232,7 @@ function efk_sys:follow_transform_updated()
                         end
                         for eid, _ in pairs(efk.hitchs) do
                             local e <close> = world:entity(eid, "scene:in")
-                            local wm = math3d.mul(e.scene.worldmat, v.scene.worldmat)
-                            efk.play_handle_hitchs[eid] = PH.create(efk.handle, wm, efk.speed)
+                            efk.play_handle_hitchs[eid] = PH.create(efk.handle, math3d.mul(e.scene.worldmat, v.scene.worldmat), efk.speed)
                         end
                     else
                         efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
