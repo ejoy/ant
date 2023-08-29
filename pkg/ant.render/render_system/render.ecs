@@ -217,6 +217,7 @@ component "draw_indirect".type "lua"
 component "draw_indirect_cull".type "lua"
 component "draw_indirect_queue".type "lua"
 component "draw_indirect_ready".type "lua"
+component "draw_indirect_update".type "lua"
 
 system "draw_indirect_system"
     .implement "draw_indirect_system.lua"

@@ -38,7 +38,30 @@ local shape_dir_table = {
     ['T'] = {shape = 3, rot_idx = 1}, ['X'] = {shape = 4, rot_idx = 4}, ['O'] = {shape = 5, rot_idx = 4}
 }
 
+local road_indirect_table = {}
+local mark_indirect_table = {}
+
 local NUM_QUAD_VERTICES<const> = 4
+
+local function to_mesh_buffer(vb, ib_handle)
+    local vbbin = table.concat(vb, "")
+    local numv = #vbbin // layout.stride
+    local numi = (numv // NUM_QUAD_VERTICES) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
+
+    return {
+        bounding = nil,
+        vb = {
+            start = 0,
+            num = numv,
+            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
+        },
+        ib = {
+            start = 0,
+            num = numi,
+            handle = ib_handle,
+        }
+    }
+end
 
 local function build_ib(num_quad)
     local b = {}
@@ -54,6 +77,22 @@ local function build_ib(num_quad)
     end
     return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
 end
+
+local function build_mesh()
+    local packfmt<const> = "fffff"
+    local ox, oz = 0, 0
+    local nx, nz = width, height
+    local vb = {
+        packfmt:pack(ox, 0, oz, 0, 1),
+        packfmt:pack(ox, 0, nz, 0, 0),
+        packfmt:pack(nx, 0, nz, 1, 0),
+        packfmt:pack(nx, 0, oz, 1, 1),        
+    }
+    local ib_handle = build_ib(1)
+    return to_mesh_buffer(vb, ib_handle)
+end
+
+local mesh = build_mesh()
 
 local function get_srt_info_table(update_list)
     local function get_layer_info(instance, layer, info_table)
@@ -78,51 +117,20 @@ local function get_srt_info_table(update_list)
     return road_info_table, mark_info_table
 end
 
-local function to_mesh_buffer(vb, ib_handle)
-    local vbbin = table.concat(vb, "")
-    local numv = #vbbin // layout.stride
-    local numi = (numv // NUM_QUAD_VERTICES) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
-
-    return {
-        bounding = nil,
-        vb = {
-            start = 0,
-            num = numv,
-            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
-        },
-        ib = {
-            start = 0,
-            num = numi,
-            handle = ib_handle,
-        }
-    }
-end
-
-local function build_mesh()
-    local packfmt<const> = "fffff"
-    local ox, oz = 0, 0
-    local nx, nz = width, height
-    local vb = {
-        packfmt:pack(ox, 0, oz, 0, 1),
-        packfmt:pack(ox, 0, nz, 0, 0),
-        packfmt:pack(nx, 0, nz, 1, 0),
-        packfmt:pack(nx, 0, oz, 1, 1),        
-    }
-    local ib_handle = build_ib(1)
-    return to_mesh_buffer(vb, ib_handle)
-end
-
 function iroad.set_args(ww, hh)
     width, height = ww, hh
 end
 
-local road_group = {}
-
-local function create_road_group(gid, update_list, render_layer)
-    local function create_layer_entity(info_table, mesh, material_table)
-        for road_idx = 1, #info_table do
-            local road_info = info_table[road_idx]
-                world:create_entity({
+function iroad.update_roadnet_group(gid, update_list, render_layer)
+    local function update_layer_entity(info_table, material_table, indirect_table)
+        for srt_idx = 1, 6 do
+            local srt_info = info_table[srt_idx]
+            if indirect_table[srt_idx] then
+                local e <close> = world:entity(indirect_table[srt_idx], "road:update draw_indirect_update:update")
+                e.road.srt_info = srt_info
+                e.draw_indirect_update = true
+            else
+                local eid = world:create_entity({
                     policy = {
                         "ant.scene|scene_object",
                         "ant.render|simplerender",
@@ -132,77 +140,60 @@ local function create_road_group(gid, update_list, render_layer)
                     data = {
                         scene = {},
                         simplemesh  = mesh,
-                        material    = material_table[road_idx],
+                        material    = material_table[srt_idx],
                         visible_state = "main_view|selectable|pickup",
-                        road = {srt_info = road_info, gid = gid, road_type = road_idx},
+                        road = {srt_info = srt_info, road_type = srt_idx},
                         render_layer = render_layer,
                         draw_indirect_ready = false,
+                        draw_indirect_update = false,
                         indirect = "ROAD",
                         on_ready = function(e)
                             local draw_indirect_type = idrawindirect.get_draw_indirect_type("ROAD")
                             imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
                         end
                     },
-                }, gid)
+                })
+                indirect_table[srt_idx] = eid
+            end
         end
     end
     if not render_layer then render_layer = "background" end
     local road_info_table, mark_info_table = get_srt_info_table(update_list)
-    local mesh = build_mesh()
-    create_layer_entity(road_info_table, mesh, road_material_table)
-    create_layer_entity(mark_info_table, mesh, mark_material_table)
-    world:group_enable_tag("view_visible", gid)
-    world:group_flush "view_visible"
-end
-
-local function update_road_group(gid, update_list)
-    local road_table, mark_table = get_srt_info_table(update_list)
-    local select_tag = "view_visible road:update"
-    for e in w:select(select_tag) do
-        if e.road.gid == gid then
-            if e.road.road_type then
-                local road_info = road_table[e.road.road_type]
-                e.road.srt_info = road_info 
-            end
-            if e.road.mark_type then
-                local mark_info = mark_table[e.road.mark_type]
-                e.road.srt_info = mark_info 
-            end
-            e.road.ready = true
-        end
-    end
+    update_layer_entity(road_info_table, road_material_table, road_indirect_table)
+    update_layer_entity(mark_info_table, mark_material_table, mark_indirect_table)
 end
 
 function road_system:entity_init()
     for e in w:select "INIT road:update render_object?update indirect?update eid:in" do
         local road = e.road
         local draw_num = #road.srt_info
-        if draw_num > 0 then
-            local draw_indirect_eid = world:create_entity {
-                policy = {
-                    "ant.render|draw_indirect"
+        local max_num = 500
+        local draw_indirect_eid = world:create_entity {
+            policy = {
+                "ant.render|draw_indirect"
+            },
+            data = {
+                draw_indirect = {
+                    target_eid = e.eid,
+                    itb_flag = "r",
+                    draw_num = draw_num,
+                    max_num = max_num,
+                    srt_table = e.road.srt_info,
+                    indirect_params_table = {math3d.vector(0, 0, 6, 0)},
+                    aabb_table = {math3d.ref(math3d.aabb(math3d.vector(-10, 0, -10), math3d.vector(10, 0, 10)))},
+                    indirect_type = "road"
                 },
-                data = {
-                    draw_indirect = {
-                        target_eid = e.eid,
-                        itb_flag = "r",
-                        draw_num = draw_num,
-                        srt_table = e.road.srt_info,
-                        indirect_params_table = {math3d.vector(0, 0, 6, 0)},
-                        aabb_table = {math3d.aabb(math3d.vector(-10, 0, -10), math3d.vector(10, 0, 10))},
-                        indirect_type = "road"
-                    },
-                    on_ready = function()
-                        road.ready = true
-                    end 
-                }
+                on_ready = function()
+                    road.ready = true
+                end 
             }
-            road.draw_indirect_eid = draw_indirect_eid
-            e.render_object.draw_num = 0
-            e.render_object.idb_handle = 0xffffffff
-            e.render_object.itb_handle = 0xffffffff       
-        end
-    end   
+        }
+        road.draw_indirect_eid = draw_indirect_eid
+        e.render_object.draw_num = 0
+        e.render_object.idb_handle = 0xffffffff
+        e.render_object.itb_handle = 0xffffffff 
+    end
+    
 end
 
 function road_system:entity_remove()
@@ -235,19 +226,15 @@ function road_system:data_changed()
         e.draw_indirect_ready = false
         ::continue::
     end
-end
-
-function iroad.update_roadnet_group(gid, update_list, render_layer)
-    if not gid then
-        gid = 30001
+    for e in w:select "road:update render_object:update draw_indirect_update:update" do
+        if e.draw_indirect_update ~= true then
+            goto continue
+        end
+        local die <close> = world:entity(e.road.draw_indirect_eid, "draw_indirect:update")
+        idrawindirect.update_draw_indirect(e, die, e.road.srt_info)
+        e.draw_indirect_update = false
+        ::continue::
     end
-    if road_group[gid] then
-        update_road_group(gid, update_list)
-    else
-        create_road_group(gid, update_list, render_layer)
-        road_group[gid] = true
-    end
-
 end
 
 return iroad

@@ -52,9 +52,8 @@ local function get_road_worldmat(srt)
     })
 end
 
-local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type)
-    local draw_num = #srt_table
-    local memory_buffer = bgfx.memory_buffer(2 * 16 * draw_num)
+local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type, max_num)
+    local memory_buffer = bgfx.memory_buffer(2 * 16 * max_num)
     local memory_table = {}
     for obj_idx, srt in pairs(srt_table) do
         local wm
@@ -76,12 +75,11 @@ local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_ty
         memory_table[#memory_table+1] = math3d.serialize(aabb_max)
     end
     memory_buffer[1] = table.concat(memory_table)
-    return bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("t41NIf").handle, "r") 
+    return memory_buffer
 end
 
-local function get_instance_buffer(srt_info, itb_flag)
-    local draw_num = #srt_info
-    local memory_buffer = bgfx.memory_buffer(3 * 16 * draw_num)
+local function get_instance_buffer(srt_info, max_num)
+    local memory_buffer = bgfx.memory_buffer(3 * 16 * max_num)
     local memory_table = {}
     for _, srt in pairs(srt_info) do
         for data_idx = 1, 3 do
@@ -89,7 +87,7 @@ local function get_instance_buffer(srt_info, itb_flag)
         end
     end
     memory_buffer[1] = table.concat(memory_table)
-    return bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("t45NIf|t46NIf|t47NIf").handle, itb_flag)
+    return memory_buffer
 end
 
 local function get_indirect_params_buffer(indirect_params_table)
@@ -180,12 +178,14 @@ end
 function draw_indirect_system:entity_init()
     for e in w:select "INIT draw_indirect:update eid:in" do
         local di = e.draw_indirect
-        local aabb_table, indirect_params_table, mesh_idx_table, srt_table, draw_num, indirect_type = 
-        di.aabb_table, di.indirect_params_table, di.mesh_idx_table, di.srt_table, di.draw_num, di.indirect_type
-        di.itb_handle   = get_instance_buffer(srt_table, e.draw_indirect.itb_flag)
-        di.vib_handle   = bgfx.create_dynamic_vertex_buffer(draw_num, layoutmgr.get("t40NIf").handle, "rw")
-        di.idb_handle   = bgfx.create_indirect_buffer(draw_num)
-        di.obj_buffer   = get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type)
+        local aabb_table, indirect_params_table, mesh_idx_table, srt_table, indirect_type, max_num = 
+        di.aabb_table, di.indirect_params_table, di.mesh_idx_table, di.srt_table, di.indirect_type, di.max_num
+        local instance_memory_buffer = get_instance_buffer(srt_table, max_num)
+        local obj_memory_buffer = get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type, max_num)
+        di.itb_handle   = bgfx.create_dynamic_vertex_buffer(instance_memory_buffer, layoutmgr.get("t45NIf|t46NIf|t47NIf").handle, di.itb_flag)
+        di.vib_handle   = bgfx.create_dynamic_vertex_buffer(max_num, layoutmgr.get("t40NIf").handle, "rw")
+        di.idb_handle   = bgfx.create_indirect_buffer(max_num)
+        di.obj_buffer   = bgfx.create_dynamic_vertex_buffer(obj_memory_buffer, layoutmgr.get("t41NIf").handle, "r") 
         di.plane_buffer = bgfx.create_dynamic_vertex_buffer(12, layoutmgr.get("t42NIf").handle, "r")
         di.indirect_params_buffer = get_indirect_params_buffer(indirect_params_table)
         local di_cull_id = world:create_entity {
@@ -310,6 +310,17 @@ end
 
 function idrawindirect.get_draw_indirect_type(indirect_type)
     return type_table[indirect_type]
+end
+
+function idrawindirect.update_draw_indirect(e, die, srt_table)
+    local di = die.draw_indirect
+    local aabb_table, mesh_idx_table, indirect_type, max_num = di.aabb_table, di.mesh_idx_table, di.indirect_type, di.max_num
+    local instance_memory_buffer = get_instance_buffer(srt_table, max_num)
+    local obj_memory_buffer = get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type, max_num)
+    bgfx.update(di.itb_handle, 0, instance_memory_buffer)
+    bgfx.update(di.obj_buffer, 0, obj_memory_buffer)
+    di.draw_num = #srt_table
+    e.render_object.draw_num = di.draw_num
 end
 
 return idrawindirect

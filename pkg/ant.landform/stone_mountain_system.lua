@@ -221,6 +221,7 @@ function sm_sys:entity_init()
     for e in w:select "INIT stonemountain:update render_object?update eid:in" do
         local stonemountain = e.stonemountain
         update_ro(e.render_object)
+        local max_num = 5000
         local draw_indirect_eid = world:create_entity {
             policy = {
                 "ant.render|draw_indirect"
@@ -233,6 +234,7 @@ function sm_sys:entity_init()
                     mesh_idx_table = mesh_idx_table,
                     srt_table = stonemountain.srt_info,
                     draw_num = stonemountain.draw_num,
+                    max_num = max_num,
                     indirect_params_table = get_indirect_params(),
                     indirect_type = "stone_mountain"
                 },
@@ -242,7 +244,30 @@ function sm_sys:entity_init()
         e.render_object.draw_num = 0
         e.render_object.idb_handle = 0xffffffff
         e.render_object.itb_handle = 0xffffffff
-    end  
+    end
+
+    
+    for e in w:select "stonemountain:update render_object:update scene:in bounding:update draw_indirect_ready:update" do
+        if e.draw_indirect_ready ~= true then
+            goto continue
+        end
+        local stonemountain = e.stonemountain
+        local draw_num = stonemountain.draw_num
+        if draw_num > 0 then
+            local de <close> = world:entity(stonemountain.draw_indirect_eid, "draw_indirect:in")
+            local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
+            e.render_object.idb_handle = idb_handle
+            e.render_object.itb_handle = itb_handle
+            e.render_object.draw_num = draw_num
+        else
+            e.render_object.idb_handle = 0xffffffff
+            e.render_object.itb_handle = 0xffffffff
+            e.render_object.draw_num = 0
+        end
+
+        e.draw_indirect_ready = false
+        ::continue::
+    end
 end
 
 local function create_sm_entity()
@@ -298,28 +323,7 @@ function sm_sys:entity_remove()
 end
 
 function sm_sys:data_changed()
-    
-    for e in w:select "stonemountain:update render_object:update scene:in bounding:update draw_indirect_ready:update" do
-        if e.draw_indirect_ready ~= true then
-            goto continue
-        end
-        local stonemountain = e.stonemountain
-        local draw_num = stonemountain.draw_num
-        if draw_num > 0 then
-            local de <close> = world:entity(stonemountain.draw_indirect_eid, "draw_indirect:in")
-            local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
-            e.render_object.idb_handle = idb_handle
-            e.render_object.itb_handle = itb_handle
-            e.render_object.draw_num = draw_num
-        else
-            e.render_object.idb_handle = 0xffffffff
-            e.render_object.itb_handle = 0xffffffff
-            e.render_object.draw_num = 0
-        end
 
-        e.draw_indirect_ready = false
-        ::continue::
-    end
 end
 
 return ism
