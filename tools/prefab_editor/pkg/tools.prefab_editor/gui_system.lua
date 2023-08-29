@@ -335,6 +335,11 @@ local function update_visible(node, visible)
     return rv
 end
 
+-- local test1
+-- local test2
+-- local test_prefab1
+-- local test_prefab2
+-- local iani      = ecs.require "ant.animation|controller.state_machine"
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -425,9 +430,12 @@ function m:handle_event()
         on_open_proj()
     end
 
-    for _, filename in event_open_file:unpack() do
-        -- prefab_mgr:open(filename)
-        global_data.glb_filename = filename
+    for _, filename, isprefab in event_open_file:unpack() do
+        if isprefab then
+            prefab_mgr:open(filename)
+        else
+            global_data.glb_filename = filename
+        end
     end
 
     for _, filename in event_add_prefab:unpack() do
@@ -459,6 +467,66 @@ function m:handle_event()
             on_open_proj()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
+        -- elseif state.CTRL and key == "T" and press == 1 then
+        --     if test1 then
+        --         iani.detach_hitch(test_prefab1, test1)
+        --     else
+        --         local hitch_test_group_id<const> = 1000
+        --         test1 = ecs.create_entity {
+        --             policy = {
+        --                 "ant.general|name",
+        --                 "ant.render|hitch_object"
+        --             },
+        --             data = {
+        --                 name = "test1",
+        --                 scene = { t = math3d.vector(-50, 0, 0) },
+        --                 hitch = {
+        --                     group = hitch_test_group_id,
+        --                     hitch_bounding = true
+        --                 },
+        --                 visible_state = "main_view|cast_shadow|selectable",
+        --                 scene_needchange = true,
+        --             }
+        --         }
+        --         test2 = ecs.create_entity {
+        --             policy = {
+        --                 "ant.general|name",
+        --                 "ant.render|hitch_object"
+        --             },
+        --             data = {
+        --                 name = "test2",
+        --                 scene = { t = math3d.vector(50, 0, 0) },
+        --                 hitch = {
+        --                     group = hitch_test_group_id,
+        --                     hitch_bounding = true
+        --                 },
+        --                 visible_state = "main_view|cast_shadow|selectable",
+        --                 scene_needchange = true,
+        --             }
+        --         }
+        --         local g1 = ecs.group(hitch_test_group_id)
+        --         -- g1:enable "scene_update"
+        --         local prefab = g1:create_instance("/pkg/vaststars.resources/glbs/miner-1.glb|mesh.prefab")
+        --         function prefab:on_init() end
+        --         prefab.on_ready = function(instance)
+        --             for _, eid in ipairs(instance.tag["*"]) do
+        --                 local e <close> = world:entity(eid, "tag?in anim_ctrl?in")
+        --                 if e.anim_ctrl then
+        --                     iani.load_events(eid, "/pkg/vaststars.resources/animations/miner-1.event")
+        --                     if not e.anim_ctrl.hitchs then
+        --                         e.anim_ctrl.hitchs = {}
+        --                     end
+        --                     iani.attach_hitch(eid, test1)
+        --                     iani.attach_hitch(eid, test2)
+        --                 end
+        --             end
+        --             iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
+        --         end
+        --         function prefab:on_message(msg) end
+        --         function prefab:on_update() end
+        --         world:create_object(prefab)
+        --         test_prefab1 = prefab
+        --     end
         end
     end
     for _, what, type in event_create:unpack() do
