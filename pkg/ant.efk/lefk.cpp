@@ -24,11 +24,7 @@ public:
     Effekseer::ManagerRef manager;
     struct file_interface *fi;
 
-    struct effect {
-        Effekseer::EffectRef eff;
-        Effekseer::Handle    handle;
-    };
-    std::vector<effect>   effects;
+    std::vector<Effekseer::EffectRef>   effects;
 };
 
 static efk_ctx*
@@ -91,12 +87,7 @@ lefkctx_create(lua_State *L){
     if (eff == nullptr){
         return luaL_error(L, "create effect failed, filename:%s", filename);
     }
-    auto it = std::find_if(std::begin(ctx->effects), std::end(ctx->effects),
-        [](const efk_ctx::effect &e){
-            return (e.eff == nullptr);
-        }
-    );
-    ctx->effects.emplace_back(efk_ctx::effect{ eff, 0 });
+    ctx->effects.emplace_back(eff);
     auto handle = ctx->effects.size() - 1;
     lua_pushinteger(L, handle);
     return 1;
@@ -116,8 +107,7 @@ lefkctx_destroy(lua_State *L){
     }
 
     auto e = ctx->effects[handle];
-    ctx->effects[handle] = {nullptr, INT_MAX};
-    e.eff = nullptr;
+    ctx->effects[handle] = nullptr;
     return 0;
 }
 
@@ -160,7 +150,7 @@ lefkctx_play(lua_State *L){
     Effekseer::Matrix43 effekMat;
 	auto effekMat44 = TOM(L, 3);
 	ToMatrix43(*effekMat44, effekMat);
-    auto play_handle = ctx->manager->Play(ctx->effects[handle].eff, 0, 0, 0);
+    auto play_handle = ctx->manager->Play(ctx->effects[handle], 0, 0, 0);
 	ctx->manager->SetMatrix(play_handle, effekMat);
 	float speed = (float)luaL_checknumber(L, 4);
 	ctx->manager->SetSpeed(play_handle, speed);
