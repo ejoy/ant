@@ -42,21 +42,24 @@ local function point_light_test()
     }
 
     for _, p in ipairs(pl_pos) do
-        local  pl = world:create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
-        pl.on_ready = function()
-            iom.set_position(pl.root, p)
+        world:create_instance {
+            prefab = "/pkg/ant.test.features/assets/entities/light_point.prefab",
+            on_ready = function(pl)
+                iom.set_position(pl.root, pl)
+            end
+        }
+    end
+
+    world:create_instance {
+        prefab = "/pkg/ant.test.features/assets/entities/pbr_cube.prefab",
+        on_ready = function (ce)
+            iom.set_position(ce.root, {0, 0, 0, 1})
         end
-        world:create_object(pl)
-    end
-
-    local ce = world:create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
-    ce.on_ready = function ()
-        iom.set_position(ce.root, {0, 0, 0, 1})
-    end
-    world:create_object(ce)
+    }
     
-
-    world:create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    world:create_instance {
+        prefab = "/pkg/ant.test.features/assets/entities/light_directional.prefab",
+    }
 end
 
 local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
@@ -113,10 +116,11 @@ end
 local cp_eid, quad_eid
 local testprefab
 
-local function create_instance(prefab, onready)
-    local p = world:create_instance(prefab)
-    p.on_ready = onready
-    world:create_object(p)
+local function create_instance(prefab, on_ready)
+    local p = world:create_instance {
+        prefab = prefab,
+        on_ready = on_ready,
+    }
 end
 
 local after_init_mb = world:sub{"after_init"}
@@ -133,7 +137,6 @@ function init_loader_sys:init()
         local root<close> = world:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
     end) 
-    --world:create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 

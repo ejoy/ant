@@ -186,8 +186,9 @@ function ani_sys:component_init()
 end
 
 local event_animation = world:sub{"AnimationEvent"}
-local function init_prefab_anim(entity)
-	local entitys = entity.prefab.tag["*"]
+
+local function init_animation(instance)
+	local entitys = instance.tag["*"]
 	local anim_eid = {}
 	local slot_eid = {}
 	local skin_eid
@@ -240,12 +241,6 @@ local function init_prefab_anim(entity)
 	end
 end
 
-function ani_sys:entity_init()
-	for entity in w:select "INIT prefab:in" do
-		init_prefab_anim(entity)
-	end
-end
-
 function ani_sys:entity_ready()
 	for _, what, e, p0, p1 in event_animation:unpack() do
 		if what == "step" then
@@ -270,3 +265,7 @@ if not mt.adapter then
 	mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
 	animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
 end
+
+return {
+	init_animation = init_animation,
+}

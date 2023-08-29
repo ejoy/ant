@@ -5,6 +5,8 @@ local w = world.w
 local math3d = require "math3d"
 local m = ecs.system "entity_system"
 
+local evOnMessage = world:sub {"EntityMessage"}
+
 local function update_group_tag(groupid, data)
     for tag, t in pairs(world._group_tags) do
         if t[groupid] then
@@ -27,6 +29,17 @@ function m:entity_ready()
     w:clear "on_ready"
 end
 
+function m:data_changed()
+    for msg in evOnMessage:each() do
+        local eid = msg[2]
+        local v = w:fetch(eid, "on_message:in")
+        if v then
+            v:on_message(table.unpack(msg, 3))
+            w:submit(v)
+        end
+    end
+end
+
 local function create_prefab()
     local queue = world._create_prefab_queue
     if #queue == 0 then
@@ -35,7 +48,7 @@ local function create_prefab()
     world._create_prefab_queue = {}
     for i = 1, #queue do
         local q = queue[i]
-        world:_prefab_instance(q.group, q.parent, q.filename, q.tags)
+        world:_prefab_instance(q.instance, q.args)
     end
 end
 

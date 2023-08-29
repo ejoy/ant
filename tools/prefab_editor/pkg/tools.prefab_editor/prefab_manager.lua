@@ -149,7 +149,9 @@ function m:update_default_light(enable)
         end
         self.light_prefab = filename
         if not self.default_light then
-            self.default_light = world:create_instance(self.light_prefab)
+            self.default_light = world:create_instance {
+                prefab = self.light_prefab
+            }
         end
     end
 end
@@ -571,15 +573,15 @@ function m:open(filename, prefab_name, patch_tpl)
     end
     -- check_animation(self.prefab_template)
 
-    local prefab = world:create_instance(filename)
-    function prefab:on_init() end
-    prefab.on_ready = function(instance)
-        self:on_prefab_ready(instance)
-        hierarchy:update_slot_list(world)
-        anim_view.on_prefab_load(self.entities)
-        world:pub {"LookAtTarget", self.entities[1]}
-    end
-    world:create_object(prefab)
+    world:create_instance {
+        prefab = filename,
+        on_ready = function(instance)
+            self:on_prefab_ready(instance)
+            hierarchy:update_slot_list(world)
+            anim_view.on_prefab_load(self.entities)
+            world:pub {"LookAtTarget", self.entities[1]}
+        end
+    }
     editor_setting.add_recent_file(filename)
     editor_setting.save()
     world:pub {"WindowTitle", filename}
@@ -747,21 +749,24 @@ function m:add_prefab(path)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):filename()), parent)
     -- local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
     self.entities[#self.entities+1] = v_root
-    prefab = world:create_instance(prefab_filename, v_root)
-    prefab.on_ready = function(inst)
-        local children = inst.tag["*"]
-        if #children == 1 then
-            local child = children[1]
-            local e <close> = world:entity(child, "camera?in")
-            if e.camera then
-                local tpl = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
-                hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
-                return
+    world:create_instance {
+        prefab = prefab_filename,
+        parent = v_root,
+        on_ready = function(inst)
+            local children = inst.tag["*"]
+            if #children == 1 then
+                local child = children[1]
+                local e <close> = world:entity(child, "camera?in")
+                if e.camera then
+                    local tpl = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
+                    hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
+                    return
+                end
+                set_select_adapter(children, v_root)
             end
+            set_select_adapter(children, v_root)
         end
-        set_select_adapter(children, v_root)
-    end
-    world:create_object(prefab)
+    }
     hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
 end
 

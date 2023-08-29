@@ -44,7 +44,9 @@ local function stop_all_effect(all_events, delay)
 end
 
 function iani.create(filename)
-	return world:create_instance(filename)
+	return world:create_instance {
+		prefab = filename,
+	}
 end
 
 function iani.load_events(anim_e, filename)

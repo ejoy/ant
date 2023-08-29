@@ -258,7 +258,9 @@ function imodifier.stop(m)
 end
 
 function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
-    local anim_prefab = world:create_instance(filename)
+    local anim_prefab = world:create_instance {
+		prefab = filename,
+	}
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             local anim <close> = world:entity(anim_prefab.tag["*"][1], "anim_ctrl:in skeleton:in")
             local pr = anim.anim_ctrl.pose_result

@@ -141,17 +141,19 @@ local function create_skeleton_test_group()
     }
 
     local function create_obj(gid, file, s, t)
-        local p = world:create_instance(file, nil, gid)
-        p.on_ready = function (e)
-            local ee<close> = world:entity(e.tag['*'][1], "scene:in")
-            if s then
-                iom.set_scale(ee, s)
+        world:create_instance {
+            prefab = file,
+            group = gid,
+            on_ready = function (e)
+                local ee<close> = world:entity(e.tag['*'][1], "scene:in")
+                if s then
+                    iom.set_scale(ee, s)
+                end
+                if t then
+                    iom.set_position(ee, t)
+                end
             end
-            if t then
-                iom.set_position(ee, t)
-            end
-        end
-        world:create_object(p)
+        }
     end
 
     create_obj(skeleton_test_group_id, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)

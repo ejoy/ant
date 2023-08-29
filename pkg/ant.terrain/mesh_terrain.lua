@@ -16,9 +16,10 @@ local function instance(pid, mp, centerpos)
             }
         }
     }
-    local p = world:create_instance(mp, root)
-    world:create_object(p)
-    return p
+    return world:create_instance {
+        prefab = mp,
+        parent = root,
+    }
 end
 
 function mt_sys:entity_init()

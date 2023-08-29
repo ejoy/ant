@@ -23,7 +23,9 @@ function S.init_world()
     end
     iefk.preload(files)
 	--
-    world:create_object(world:create_instance("/pkg/tools.prefab_viewer/assets/prefabs/light.prefab"))
+    world:create_instance {
+		prefab = "/pkg/tools.prefab_viewer/assets/prefabs/light.prefab",
+	}
 	-- ground plane
 	-- world:create_entity {
 	-- 	policy = {
@@ -47,9 +49,10 @@ function S.init_world()
 	iterrain.gen_terrain_field(128, 128, 64, 10)
 	
 	-- test prefab
-	world:create_object(world:create_instance("/pkg/tools.prefab_viewer/assets/prefabs/preview.prefab"))
+	world:create_instance {
+		prefab = "/pkg/tools.prefab_viewer/assets/prefabs/preview.prefab"
+	}
     -- local miner = world:create_instance("/pkg/tools.prefab_viewer/assets/prefabs/miner-1.prefab")
-    -- function miner:on_init() end
     -- miner.on_ready = function(instance)
     --     for _, eid in ipairs(instance.tag["*"]) do
     --         local e <close> = world:entity(eid, "tag?in anim_ctrl?in")
@@ -59,7 +62,6 @@ function S.init_world()
     --     end
     --     iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
     -- end
-    -- world:create_object(miner)
 
     -- camera
     local mq = w:first "main_queue camera_ref:in"

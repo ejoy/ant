@@ -10,9 +10,10 @@ local imesh     = ecs.require "ant.asset|mesh"
 local S         = ecs.system "init_system"
 
 local function create_instance(prefab, on_ready)
-    local p = world:create_instance(prefab)
-    p.on_ready = on_ready
-    world:create_object(p)
+    local p = world:create_instance {
+        prefab = prefab,
+        on_ready = on_ready,
+    })
 end
 
 local function raymarch_entity()
