@@ -177,29 +177,31 @@ function road_system:entity_init()
     for e in w:select "INIT road:update render_object?update indirect?update eid:in" do
         local road = e.road
         local draw_num = #road.srt_info
-        local draw_indirect_eid = world:create_entity {
-            policy = {
-                "ant.render|draw_indirect"
-            },
-            data = {
-                draw_indirect = {
-                    target_eid = e.eid,
-                    itb_flag = "r",
-                    draw_num = draw_num,
-                    srt_table = e.road.srt_info,
-                    indirect_params_table = {math3d.vector(0, 0, 6, 0)},
-                    aabb_table = {math3d.aabb(math3d.vector(-10, 0, -10), math3d.vector(10, 0, 10))},
-                    indirect_type = "road"
+        if draw_num > 0 then
+            local draw_indirect_eid = world:create_entity {
+                policy = {
+                    "ant.render|draw_indirect"
                 },
-                on_ready = function()
-                    road.ready = true
-                end 
+                data = {
+                    draw_indirect = {
+                        target_eid = e.eid,
+                        itb_flag = "r",
+                        draw_num = draw_num,
+                        srt_table = e.road.srt_info,
+                        indirect_params_table = {math3d.vector(0, 0, 6, 0)},
+                        aabb_table = {math3d.aabb(math3d.vector(-10, 0, -10), math3d.vector(10, 0, 10))},
+                        indirect_type = "road"
+                    },
+                    on_ready = function()
+                        road.ready = true
+                    end 
+                }
             }
-        }
-        road.draw_indirect_eid = draw_indirect_eid
-        e.render_object.draw_num = 0
-        e.render_object.idb_handle = 0xffffffff
-        e.render_object.itb_handle = 0xffffffff
+            road.draw_indirect_eid = draw_indirect_eid
+            e.render_object.draw_num = 0
+            e.render_object.idb_handle = 0xffffffff
+            e.render_object.itb_handle = 0xffffffff       
+        end
     end   
 end
 
