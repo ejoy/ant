@@ -87,11 +87,19 @@ lefkctx_render(lua_State *L){
     ctx->renderer->EndRendering();
 
 	// set invisible
-	for (auto const &slot : ctx->effects) {
+	for (auto &slot : ctx->effects) {
 		if (slot.eptr != nullptr) {
 			ctx->manager->SetShown(slot.inst, false);
-			for (auto handle : slot.clone) {
-				ctx->manager->SetShown(handle, false);
+			if (slot.n == 0) {
+				for (auto handle : slot.clone) {
+					ctx->manager->StopEffect(handle);
+				}
+				slot.clone.resize(0);
+			} else {
+				for (auto handle : slot.clone) {
+					ctx->manager->SetShown(handle, false);
+				}
+				slot.n = 0;
 			}
 		}
 	}
