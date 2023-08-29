@@ -74,19 +74,19 @@ function hm_sys:entity_init()
 end
 
 function hm_sys:entity_ready()
-    for e in w:select "heapmesh_changed heapmesh:update bounding:in scene:in material:in indirect:in" do
+--[[     for e in w:select "heapmesh_changed heapmesh:update bounding:in scene:in material:in indirect:in" do
         local _, extent = math3d.aabb_center_extents(e.bounding.aabb)
         extent = math3d.ref(math3d.mul(e.scene.s, math3d.mul(2, extent)))
         e.heapmesh.extent = extent
         local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
         imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
-    end
+    end ]]
 end
 
 function hm_sys:entity_remove()
-    for e in w:select "REMOVED heapmesh:update" do
+--[[     for e in w:select "REMOVED heapmesh:update" do
         w:remove(e.heapmesh.draw_indirect_eid)
-    end
+    end ]]
 end
 
 function hm_sys:heap_mesh()
@@ -119,7 +119,6 @@ function hm_sys:heap_mesh()
         e.heapmesh.lastHeapNum = curHeapNum
         e.render_object.draw_num = curHeapNum ]]
 	end
-    w:clear("heapmesh_changed")
 end
 
 
