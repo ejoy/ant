@@ -8,6 +8,7 @@ system "efk_system"
     .method "camera_usage"
     .method "follow_transform_updated"
     .method "exit"
+    .method "render_submit"
 component "efk_queue"
 
 policy "efk_queue"

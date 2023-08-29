@@ -16,9 +16,10 @@ local S = ecs.system "init_system"
 local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local function create_instance(prefab, on_ready)
-    local p = world:create_instance(prefab)
-    p.on_ready = on_ready
-    world:create_object(p)
+    local p = world:create_instance {
+        prefab = prefab,
+        on_ready = on_ready,
+    }
 end
 
 local function create_simple_triangles()
@@ -89,7 +90,6 @@ function S.init()
         iom.set_direction(le, v)
     end)
 
-    --world:create_instance "/pkg/ant.test.light/assets/skybox.prefab"
 end
 
 local peids

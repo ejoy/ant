@@ -58,6 +58,11 @@ function world:create_entity(v, group)
     return create_entity_by_data(self, group or 0, data)
 end
 
+function world:remove_entity(e)
+    local w = self
+    w.w:remove(e)
+end
+
 local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
 end
@@ -201,13 +206,14 @@ local function each_prefab(entities, template, f)
     end
 end
 
-function world:_prefab_instance(group, parent, filename, tags)
+function world:_prefab_instance(instance, args)
     local w = self
-    local template = create_template(w, filename)
-    local prefab, noparent = create_instance(w, group, template)
+    local template = create_template(w, args.prefab)
+    local prefab, noparent = create_instance(w, args.group, template)
     for _, m in ipairs(noparent) do
-        m.parent = parent
+        m.parent = args.parent
     end
+    local tags = instance.tag
     each_prefab(prefab, template, function (e, tag)
         if tag then
             if type(tag) == "table" then
@@ -222,61 +228,41 @@ function world:_prefab_instance(group, parent, filename, tags)
     end)
 end
 
-function world:create_instance(filename, parent, group)
-    local q = self._create_prefab_queue
-    local tags = {['*']={}}
-    q[#q+1] = {
-        group = group or 0,
-        parent = parent,
-        filename = filename,
-        tags = tags,
-    }
-    return {
-        group = group or 0,
-        tag = tags
-    }
-end
-
-function world:create_object(inner_proxy)
+function world:create_instance(args)
     local w = self
-    local on_init = inner_proxy.on_init
-    local on_ready = inner_proxy.on_ready
-    local on_message = inner_proxy.on_message
-    local proxy_entity = {
-        prefab = inner_proxy,
+    args.group = args.group or 0
+    local instance = {
+        group = args.group,
+        tag = {['*']={}}
     }
-    if on_init then
-        function proxy_entity.on_init()
-            on_init(inner_proxy)
-        end
+    local q = self._create_prefab_queue
+    q[#q+1] = {
+        instance = instance,
+        args = args,
+    }
+    local on_ready = args.on_ready
+    local on_message = args.on_message
+    local proxy_entity = {}
+    function proxy_entity.on_init(_, ...)
+        local m = w._ecs["ant.animation"].require "animation"
+        m.init_animation(instance)
     end
     if on_ready then
         function proxy_entity.on_ready()
-            on_ready(inner_proxy)
+            on_ready(instance)
         end
     end
-    local prefab = create_entity_by_data(w, inner_proxy.group, proxy_entity)
-    local outer_proxy = {}
     if on_message then
-        function outer_proxy:send(...)
-            w:pub {"object_message", on_message, inner_proxy, ...}
-        end
-        function inner_proxy:send(...)
-            w:pub {"object_message", on_message, inner_proxy, ...}
+        function proxy_entity.on_message(_, ...)
+            on_message(instance, ...)
         end
     end
-    function outer_proxy:remove()
-        w:pub {"object_remove", prefab}
-    end
-    function inner_proxy:remove()
-        w:pub {"object_remove", prefab}
-    end
+    instance.proxy = create_entity_by_data(w, args.group, proxy_entity)
+    return instance
+end
 
-    local proxy = {}
-    local proxy_mt = { __index = proxy, __newindex = proxy }
-    setmetatable(outer_proxy, proxy_mt)
-    setmetatable(inner_proxy, proxy_mt)
-    return outer_proxy
+function world:remove_instance(instance)
+    world:pub {"RemoveInstance1", instance}
 end
 
 function world:reset_prefab_cache(filename)
@@ -448,6 +434,14 @@ function world:entity(eid, pattern)
     if v then
         return setmetatable(v, submit[self.w])
     end
+end
+
+function world:entity_message(eid, ...)
+    self:pub {"EntityMessage", eid, ...}
+end
+
+function world:instance_message(instance, ...)
+    self:pub {"EntityMessage", instance.proxy, ...}
 end
 
 event.init(world)

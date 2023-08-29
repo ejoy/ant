@@ -15,6 +15,17 @@ extern "C" {
     #include <textureman.h>
 }
 
+struct efk_instance {
+	Effekseer::EffectRef eptr;
+	Effekseer::Handle inst;
+	union {
+		int next;
+		int n;
+	};
+	bool shown;
+	std::vector<Effekseer::Handle> clone;
+};
+
 class efk_ctx {
 public:
     efk_ctx() = default;
@@ -23,8 +34,9 @@ public:
     EffekseerRenderer::RendererRef renderer;
     Effekseer::ManagerRef manager;
     struct file_interface *fi;
-
-    std::vector<Effekseer::EffectRef>   effects;
+	
+	int freelist = -1;
+    std::vector<efk_instance>   effects;
 };
 
 static efk_ctx*
@@ -73,11 +85,29 @@ lefkctx_render(lua_State *L){
     drawParameter.ViewProjectionMatrix = ctx->renderer->GetCameraProjectionMatrix();
     ctx->manager->Draw(drawParameter);
     ctx->renderer->EndRendering();
+
+	// set invisible
+	for (auto &slot : ctx->effects) {
+		if (slot.eptr != nullptr) {
+			ctx->manager->SetShown(slot.inst, false);
+			if (slot.n == 0) {
+				for (auto handle : slot.clone) {
+					ctx->manager->StopEffect(handle);
+				}
+				slot.clone.resize(0);
+			} else {
+				for (auto handle : slot.clone) {
+					ctx->manager->SetShown(handle, false);
+				}
+				slot.n = 0;
+			}
+		}
+	}
     return 0;
 }
 
 static int
-lefkctx_create(lua_State *L){
+lefkctx_create(lua_State *L) {
     auto ctx = EC(L);
     auto filename = luaL_checkstring(L, 2);
     const float mag = (float)luaL_optnumber(L, 3, 1.f);
@@ -87,25 +117,70 @@ lefkctx_create(lua_State *L){
     if (eff == nullptr){
         return luaL_error(L, "create effect failed, filename:%s", filename);
     }
-    ctx->effects.emplace_back(eff);
-    auto handle = ctx->effects.size() - 1;
-    lua_pushinteger(L, handle);
+
+	int handle;
+
+	if (ctx->freelist >= 0) {
+		auto slot = &ctx->effects[ctx->freelist];
+		handle = ctx->freelist;
+		ctx->freelist = slot->next;
+	} else {
+		handle = (int)ctx->effects.size();
+		ctx->effects.resize(handle + 1);
+	}
+
+
+	struct efk_instance * slot = &ctx->effects[handle];
+	slot->eptr = eff;
+	slot->inst = -1;
+	slot->n = 0;
+	slot->shown = true;
+	lua_pushinteger(L, handle);
     return 1;
 }
 
 static void
 check_effect_valid(lua_State *L, efk_ctx *ctx, int handle){
-     if (0 > handle || handle >= ctx->effects.size()){
+     if (0 > handle || handle >= (int)ctx->effects.size() || ctx->effects[handle].eptr == nullptr) {
         luaL_error(L, "invalid handle: %d", handle);
     }
 }
 
+static struct efk_instance *
+get_instance(lua_State *L, efk_ctx *ctx, int index) {
+	int handle = (int)luaL_checkinteger(L, index);
+	check_effect_valid(L, ctx, handle);
+	return &ctx->effects[handle];
+}
+
+static void
+stop_all(efk_ctx* ctx, struct efk_instance *slot, int delay) {
+	if (delay) {
+        ctx->manager->SetSpawnDisabled(slot->inst, true);
+		for (auto handle : slot->clone) {
+			ctx->manager->SetSpawnDisabled(handle, true);
+		}
+	} else {
+		ctx->manager->StopEffect(slot->inst);
+		for (auto handle : slot->clone) {
+			ctx->manager->StopEffect(handle);
+		}
+	}
+	slot->inst = -1;
+	slot->clone.resize(0);
+	slot->n = 0;
+}
+
 static int
-lefkctx_destroy(lua_State *L){
+lefkctx_destroy(lua_State *L) {
     auto ctx = EC(L);
-    auto handle = (int)luaL_checkinteger(L, 2);
-    check_effect_valid(L, ctx, handle);
-    ctx->effects[handle] = nullptr;
+	int handle = (int)luaL_checkinteger(L, 2);
+	check_effect_valid(L, ctx, handle);
+    auto slot = &ctx->effects[handle];
+	slot->eptr = nullptr;
+	stop_all(ctx, slot, false);
+	slot->next = ctx->freelist;
+	ctx->freelist = handle;
     return 0;
 }
 
@@ -118,92 +193,114 @@ static void ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst)
     }
 }
 
+static void
+clone_effect(efk_ctx *ctx, struct efk_instance *slot, const Effekseer::Matrix43 &mat) {
+	auto handle = ctx->manager->Play(slot->eptr, 0, 0, 0);
+	float speed = ctx->manager->GetSpeed(slot->inst);
+	ctx->manager->SetSpeed(handle, speed);
+	bool paused = ctx->manager->GetPaused(slot->inst);
+	ctx->manager->SetPaused(handle, paused);
+	slot->clone.emplace_back(handle);
+	++slot->n;
+}
+
 static int
 lefkctx_update_transform(lua_State* L) {
 	auto ctx = EC(L);
-	auto play_handle = (int)luaL_checkinteger(L, 2);
-    if (ctx->manager->Exists(play_handle)) {
-		Effekseer::Matrix43 effekMat;
-		auto effekMat44 = TOM(L, 3);
-		ToMatrix43(*effekMat44, effekMat);
-		ctx->manager->SetMatrix(play_handle, effekMat);
-    }
+    auto slot = get_instance(L, ctx, 2);
+    if (ctx->manager->Exists(slot->inst)) {
+		if (slot->shown) {
+			Effekseer::Matrix43 effekMat;
+			auto effekMat44 = TOM(L, 3);
+			ToMatrix43(*effekMat44, effekMat);
+			if (slot->n == 0) {
+				ctx->manager->SetMatrix(slot->inst, effekMat);
+				ctx->manager->SetShown(slot->inst, true);
+				slot->n = 1;
+			} else {
+				int idx = slot->n - 1;
+				if (idx < (int)slot->clone.size()) {
+					ctx->manager->SetMatrix(slot->clone[idx], effekMat);
+					ctx->manager->SetShown(slot->clone[idx], true);
+					++slot->n;
+				} else {
+					clone_effect(ctx, slot, effekMat);
+				}
+			}
+		}
+    } else {
+		stop_all(ctx, slot, false);
+	}
 	return 0;
 }
 
 static int
 lefkctx_is_alive(lua_State* L) {
     auto ctx = EC(L);
-	auto play_handle = (int)luaL_checkinteger(L, 2);
-    lua_pushboolean(L, ctx->manager->Exists(play_handle));
+    auto slot = get_instance(L, ctx, 2);
+    lua_pushboolean(L, ctx->manager->Exists(slot->inst));
     return 1;
 }
 
 static int
-lefkctx_play(lua_State *L){
+lefkctx_play(lua_State *L) {
     auto ctx = EC(L);
-    auto handle = (int)luaL_checkinteger(L, 2);
-    check_effect_valid(L, ctx, handle);
+    auto slot = get_instance(L, ctx, 2);
+    if (ctx->manager->Exists(slot->inst)) {
+		stop_all(ctx, slot, false);
+	}
+	slot->inst = ctx->manager->Play(slot->eptr, 0, 0, 0);
 	
-    Effekseer::Matrix43 effekMat;
-	auto effekMat44 = TOM(L, 3);
-	ToMatrix43(*effekMat44, effekMat);
-    auto play_handle = ctx->manager->Play(ctx->effects[handle], 0, 0, 0);
-	ctx->manager->SetMatrix(play_handle, effekMat);
-	float speed = (float)luaL_checknumber(L, 4);
-	ctx->manager->SetSpeed(play_handle, speed);
+	float speed = (float)luaL_checknumber(L, 3);
+	ctx->manager->SetSpeed(slot->inst, speed);
 
-    lua_pushinteger(L, play_handle);
-    return 1;
+    return 0;
 }
 
 static int
 lefkctx_stop(lua_State *L){
     auto ctx = EC(L);
-    auto play_handle = (Effekseer::Handle)luaL_checkinteger(L, 2);
+    auto slot = get_instance(L, ctx, 2);
     bool delay = false;
 	if (lua_type(L, 3) == LUA_TBOOLEAN) {
         delay = lua_toboolean(L, 3);
 	}
-    if (delay) {
-        ctx->manager->SetSpawnDisabled(play_handle, true);
-    }
-    else {
-        ctx->manager->StopEffect(play_handle);
-    }
+	stop_all(ctx, slot, delay);
     return 0;
 }
 
 static int
 lefkctx_set_visible(lua_State* L) {
 	auto ctx = EC(L);
-	auto play_handle = (int)luaL_checkinteger(L, 2);
-
+    auto slot = get_instance(L, ctx, 2);
 	bool visible = true;
 	if (lua_type(L, 3) == LUA_TBOOLEAN) {
 		visible = lua_toboolean(L, 3);
 	}
-    ctx->manager->SetShown(play_handle, visible);
+	slot->shown = visible;
 	return 0;
 }
 
 static int
 lefkctx_pause(lua_State* L) {
 	auto ctx = EC(L);
-	auto play_handle = (int)luaL_checkinteger(L, 2);
+    auto slot = get_instance(L, ctx, 2);
 
 	bool pause = false;
 	if (lua_type(L, 3) == LUA_TBOOLEAN) {
         pause = lua_toboolean(L, 3);
 	}
-    ctx->manager->SetPaused(play_handle, pause);
+	ctx->manager->SetPaused(slot->inst, pause);
+	for (auto handle : slot->clone) {
+		ctx->manager->SetPaused(handle, pause);
+	}
 	return 0;
 }
 
 static int
 lefkctx_set_time(lua_State* L) {
 	auto ctx = EC(L);
-	auto play_handle = (int)luaL_checkinteger(L, 2);
+    auto slot = get_instance(L, ctx, 2);
 
 	float frame = 0.0f;
 	if (lua_type(L, 3) == LUA_TNUMBER) {
@@ -212,19 +309,32 @@ lefkctx_set_time(lua_State* L) {
             frame = 0.0f;
         }
 	}
+
+	auto play_handle = slot->inst;
     ctx->manager->SetPaused(play_handle, false);
-    ctx->manager->UpdateHandleToMoveToFrame(play_handle, frame);
+    ctx->manager->UpdateHandleToMoveToFrame(slot->inst, frame);
     ctx->manager->SetPaused(play_handle, true);
+
+	for (auto handle : slot->clone) {
+		ctx->manager->SetPaused(handle, false);
+	    ctx->manager->UpdateHandleToMoveToFrame(handle, frame);
+		ctx->manager->SetPaused(handle, true);
+	}
+
 	return 0;
 }
 
 static int
 lefkctx_set_speed(lua_State* L) {
 	auto ctx = EC(L);
-	auto play_handle = (int)luaL_checkinteger(L, 2);
+    auto slot = get_instance(L, ctx, 2);
 
     float speed = (float)lua_tonumber(L, 3);
-    ctx->manager->SetSpeed(play_handle, speed);
+
+	ctx->manager->SetSpeed(slot->inst, speed);
+	for (auto handle : slot->clone) {
+		ctx->manager->SetSpeed(handle, speed);
+	}
 	return 0;
 }
 

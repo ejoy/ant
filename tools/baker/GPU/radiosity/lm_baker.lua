@@ -18,7 +18,9 @@ local scenepath<const>			= fs.path "/pkg/ant.tool.baker/GPU/radiosity/assets/sce
 local sceneprefab<const>		= scenepath / "scene.prefab"
 
 function lm_baker:init_world()
-	local p = world:create_instance(sceneprefab:string())
+	world:create_instance {
+		prefab = sceneprefab:string()
+	}
 
 	for e in w:select "lightmapper lightmap_path:out" do
 		e.lightmap_path = scenepath / "lightmaps"

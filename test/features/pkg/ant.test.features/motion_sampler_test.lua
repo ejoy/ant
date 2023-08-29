@@ -34,8 +34,11 @@ local function motion_sampler_test()
     world:group_enable_tag("view_visible", sampler_group)
     world:group_flush "view_visible"
 
-    local p = world:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid, sampler_group)
-    world:create_object(p)
+    world:create_instance {
+        prefab = "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab",
+        parent = eid,
+        group = sampler_group,
+    }
 end
 
 function ms_test_sys:init()

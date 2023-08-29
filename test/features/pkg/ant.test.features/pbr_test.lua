@@ -57,6 +57,8 @@ local function pbr_spheres()
 end
 
 function pbr_test_sys:init()
-    world:create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", {})
+    world:create_instance {
+        prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab",
+    }
     pbr_spheres()
 end

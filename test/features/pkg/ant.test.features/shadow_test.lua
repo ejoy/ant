@@ -10,20 +10,21 @@ local iom		= ecs.require "ant.objcontroller|obj_motion"
 
 local function create_instance(pfile, s, r, t)
 	s = s or {0.1, 0.1, 0.1}
-	local p = world:create_instance(pfile)
-	p.on_ready = function (e)
-		local ee<close> = world:entity(e.tag["*"][1])
-		iom.set_scale(ee, s)
-
-		if r then
-			iom.set_rotation(ee, r)
+	world:create_instance {
+        prefab = pfile,
+		on_ready = function (p)
+			local ee<close> = world:entity(p.tag["*"][1])
+			iom.set_scale(ee, s)
+	
+			if r then
+				iom.set_rotation(ee, r)
+			end
+	
+			if t then
+				iom.set_position(ee, t)
+			end
 		end
-
-		if t then
-			iom.set_position(ee, t)
-		end
-	end
-	world:create_object(p)
+    }
 end
 
 local st_sys	= ecs.system "shadow_test_system"

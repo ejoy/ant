@@ -271,35 +271,37 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     local srt = focus_srt
     local gid = rt_table[rt_name].gid
     rt.distance = distance
-    local focus_instance = world:create_instance(focus_path, nil, gid)
-    focus_instance.on_ready = function (inst)
-        local alleid = inst.tag['*']
-        if clear_color then
-            irq.set_view_clear_color(queuename, clear_color)  
-        end
-        local re <close> = world:entity(alleid[1])
-        if srt.s then
-            iom.set_scale(re, math3d.vector(srt.s))
-        end
-        if srt.r then
-            iom.set_direction(re, math3d.vector(srt.r))
-        end
-        if srt.t then
-            iom.set_position(re, math3d.vector(srt.t))
-        end
-        for _, eid in ipairs(alleid) do
-            local ee <close> = world:entity(eid, "visible_state?in focus_obj?update mesh?in")
-            if ee.mesh then
-                if ee.visible_state then
-                    ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                    ivs.set_state(ee, queuename, true)
-                    ee.focus_obj = true
-                end 
+    local focus_instance = world:create_instance {
+        prefab = focus_path,
+        group = gid,
+        on_message = on_message,
+        on_ready = function (inst)
+            local alleid = inst.tag['*']
+            if clear_color then
+                irq.set_view_clear_color(queuename, clear_color)  
+            end
+            local re <close> = world:entity(alleid[1])
+            if srt.s then
+                iom.set_scale(re, math3d.vector(srt.s))
+            end
+            if srt.r then
+                iom.set_direction(re, math3d.vector(srt.r))
+            end
+            if srt.t then
+                iom.set_position(re, math3d.vector(srt.t))
+            end
+            for _, eid in ipairs(alleid) do
+                local ee <close> = world:entity(eid, "visible_state?in focus_obj?update mesh?in")
+                if ee.mesh then
+                    if ee.visible_state then
+                        ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
+                        ivs.set_state(ee, queuename, true)
+                        ee.focus_obj = true
+                    end 
+                end
             end
         end
-    end
-    focus_instance.on_message = on_message
-    world:create_object(focus_instance)
+    }
     world:group_enable_tag("view_visible", gid)
     world:group_flush "view_visible"
     rt.prefab = focus_instance 

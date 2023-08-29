@@ -4,30 +4,22 @@ local w = world.w
 
 local m = ecs.system "prefab_system"
 
-local evObjectMessage = world:sub {"object_message"}
-local evObjectRemove  = world:sub {"object_remove"}
-
-local evPrefabRemove  = world:sub {"prefab_system", "remove"}
+local evRemoveInstance1 = world:sub {"RemoveInstance1"}
+local evRemoveInstance2 = world:sub {"RemoveInstance2"}
 
 function m:data_changed()
-    for _, prefab in evObjectRemove:unpack() do
-        world:pub{"prefab_system", "remove", prefab}
-    end
-    for msg in evObjectMessage:each() do
-        local f = msg[2]
-        f(table.unpack(msg, 3))
+    for _, instance in evRemoveInstance1:unpack() do
+        world:pub {"RemoveInstance2", instance}
     end
 end
 
 function m:prefab_remove()
-    for _, _, id in evPrefabRemove:unpack() do
-        local prefab <close> = world:entity(id, "prefab?in")
-        if prefab and prefab.prefab then
-            local instance = prefab.prefab
-            for _, entity in ipairs(instance.tag["*"]) do
-                w:remove(entity)
-            end
-            w:remove(id)
+    for _, instance in evRemoveInstance2:unpack() do
+        if instance.proxy then
+            w:remove(instance.proxy)
+        end
+        for _, entity in ipairs(instance.tag["*"]) do
+            w:remove(entity)
         end
     end
 end

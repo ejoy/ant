@@ -34,13 +34,15 @@ function tet_sys:init()
             local gid = group_id(iw, ih)
             local tagname = tag_name(gid)
             w:register{name=tagname}
-            local p = world:create_instance(prefabfile, nil, gid)
-            p.on_ready = function (e)
-                for _, eid in ipairs(e.tag["*"]) do
-                    world[eid][tagname] = true
+            world:create_instance {
+                prefab = prefabfile,
+                group = gid,
+                on_ready = function (e)
+                    for _, eid in ipairs(e.tag["*"]) do
+                        world[eid][tagname] = true
+                    end
                 end
-            end
-            world:create_object(p)
+            }
         end
     end
 end
