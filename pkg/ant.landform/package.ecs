@@ -1,0 +1,63 @@
+import "@ant.render"
+import "@ant.asset"
+
+system "plane_terrain_system"
+    .implement "plane_terrain.lua"
+    .method "init"
+
+component "plane_terrain".type "lua"
+component "shape_terrain".type "lua"
+
+policy "shape_terrain"
+    .require_system "ant.landform|plane_terrain_system"
+    .component "shape_terrain"
+
+component "st".type "lua"
+
+system "terrain_system"
+    .implement "terrain_system.lua"
+    .method "init"
+
+component "road".type "lua"
+system "road_system"
+    .implement "road.lua"
+    .require_policy "ant.render|draw_indirect"
+    .require_system "ant.render|draw_indirect_system"
+    .method "entity_init"
+    .method "entity_remove"
+    .method "data_changed"
+
+policy "road"
+    .require_system "ant.landform|road_system"
+    .component "road"
+
+system "translucent_plane_system"
+    .implement "translucent_plane_system.lua"
+    .method "init_world"
+    .method "data_changed"
+
+policy "translucent_plane"
+    .require_system "ant.landform|translucent_plane_system"
+    .require_system "ant.render|postprocess_obj_system"
+
+component "breath".type "lua"
+
+system "stone_mountain_system"
+    .implement "stone_mountain_system.lua"
+    .method "init"
+    .method "stone_mountain"
+    .method "entity_init"
+    .method "entity_remove"
+    .method "data_changed"
+
+component "stonemountain".type "lua"
+component "stonemountain_aabb".type "lua"
+
+policy "stonemountain_aabb"
+    .require_system "ant.landform|stone_mountain_system"
+    .component "stonemountain_aabb"
+
+
+policy "stonemountain"
+    .require_system "ant.landform|stone_mountain_system"
+    .component "stonemountain"

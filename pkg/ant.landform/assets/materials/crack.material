@@ -1,0 +1,32 @@
+fx:
+  vs_code: "\n#include \"default/vs_func.sh\"\n"
+  fs_code: "\n#include \"crack_fs_func.sh\"\n"
+  setting:
+    lighting: on
+    shadow_cast: off
+    shadow_receive: on
+    subsurface: off
+    HAS_NORMAL_TEXTURE: 1
+    HAS_BASECOLOR_TEXTURE: 1
+    HAS_CRACK_HEIGHT_TEXTURE: 1
+properties:
+  u_pbr_factor: {0.1, 0.8, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor: {0.0, 0.0, 0.0, 0.0}
+  u_basecolor_factor: {1.0, 1.0, 1.0, 1.0}
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.landform/assets/textures/crack_color.texture
+  s_normal:
+    stage: 2
+    texture: /pkg/ant.landform/assets/textures/crack_normal.texture
+  s_height:
+    stage: 3
+    texture: /pkg/ant.landform/assets/textures/crack_height.texture
+state: 
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBAZ
+  BLEND_FUNC: "aA"
+  BLEND_ENABLE: "i"

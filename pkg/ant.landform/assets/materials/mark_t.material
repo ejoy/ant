@@ -1,0 +1,26 @@
+fx:
+  vs_code: "#include \"road_vs_func.sh\""
+  fs_code: "#include \"mark_fs_func.sh\""
+  setting:
+    lighting: on
+    shadow_cast: off
+    shadow_receive: on
+    subsurface: off
+    DRAW_INDIRECT: 1
+    USER_ATTR: 1
+    INPUT_USER_ATTR_0: 1
+    OUTPUT_USER_ATTR_0: 1
+    WITH_CUSTOM_TANGENT_ATTRIB: 1
+properties:
+  s_alpha:
+    stage: 0
+    texture: /pkg/ant.landform/assets/textures/mt_alpha.texture
+  u_draw_indirect_type: {0, 0, 0, 0}
+state: 
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBAZ
+  BLEND_FUNC: "aA"
+  BLEND_ENABLE: "i"

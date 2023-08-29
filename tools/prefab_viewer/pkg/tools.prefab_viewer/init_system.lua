@@ -4,7 +4,7 @@ local w     = world.w
 
 local math3d = require "math3d"
 local iom = ecs.require "ant.objcontroller|obj_motion"
-local iterrain  = ecs.require "mod.terrain|terrain_system"
+local iterrain  = ecs.require "ant.landform|terrain_system"
 local S = ecs.system "init_system"
 local font = import_package "ant.font"
 
