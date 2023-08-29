@@ -211,15 +211,13 @@ function road_system:data_changed()
         local srt_info = road.srt_info
         local draw_num = 0
         if srt_info then draw_num = #srt_info end
+        local de <close> = world:entity(road.draw_indirect_eid, "draw_indirect:in")
+        local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
+        e.render_object.idb_handle = idb_handle
+        e.render_object.itb_handle = itb_handle
         if draw_num > 0 then
-            local de <close> = world:entity(road.draw_indirect_eid, "draw_indirect:in")
-            local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
-            e.render_object.idb_handle = idb_handle
-            e.render_object.itb_handle = itb_handle
             e.render_object.draw_num = draw_num
         else
-            e.render_object.idb_handle = 0xffffffff
-            e.render_object.itb_handle = 0xffffffff
             e.render_object.draw_num = 0
         end
 
