@@ -5,48 +5,10 @@ BUFFER_WR(b_visiblity_buffer, vec4, 0);
 BUFFER_RO(b_obj_buffer, vec4, 1);
 BUFFER_RO(b_plane_buffer, vec4, 2);
 
-int plane_intersect(vec4 plane, vec3 min, vec3 max)
+vec3 negativeVertex(vec3 bmin, vec3 bmax, vec3 n)
 {
-	float minD, maxD;
-	if (plane.x > 0.0f) {
-		minD = plane.x * min.x;
-		maxD = plane.x * max.x;
-	}
-	else {
-		minD = plane.x * max.x;
-		maxD = plane.x * min.x;
-	}
-
-	if (plane.y > 0.0f) {
-		minD += plane.y * min.y;
-		maxD += plane.y * max.y;
-	}
-	else {
-		minD += plane.y * max.y;
-		maxD += plane.y * min.y;
-	}
-
-	if (plane.z > 0.0f) {
-		minD += plane.z * min.z;
-		maxD += plane.z * max.z;
-	}
-	else {
-		minD += plane.z * max.z;
-		maxD += plane.z * min.z;
-	}
-
-	// in front of the plane
-	if (minD > -plane.w) {
-		return 1;
-	}
-
-	// in back of the plane
-	if (maxD < -plane.w) {
-		return -1;
-	}
-
-	// straddle of the plane
-	return 0;
+	bvec3 b = greaterThan(n, vec3(0.0, 0.0, 0.0));
+	return mix(bmin, bmax, b);
 }
 
 uint cull(vec3 aabb_min, vec3 aabb_max)
@@ -55,16 +17,11 @@ uint cull(vec3 aabb_min, vec3 aabb_max)
 	for(uint i = 0; i < 2; ++i)
 	{
 		int r = 1;
-		for (uint ii = 0; ii < 6; ++ii)
+ 		for (int ii = 0; ii < 6 && r >= 0; ++ii)
 		{
-			vec4 plane = b_plane_buffer[i*6+ii];
-			int t = plane_intersect(plane, aabb_min, aabb_max);
-			r = t < r ? t : r;
-			if (r < 0)
-			{
-				break;
-			}
-		}
+			vec3 n = negativeVertex(aabb_min, aabb_max, b_plane_buffer[i*6+ii].xyz);
+			r = dot(vec4(n, 1.0f), b_plane_buffer[i*6+ii]);
+		}	 
 		if(r < 0)
 		{
 			queue_visible &=  ~(1 << i); // is_culled
