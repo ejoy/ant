@@ -13,7 +13,6 @@ system "system_name"
 
 policy "policy_name"
 	.require_system "system_name"
-	.require_transform "transform_name"
 
 -----------------------
 

@@ -24,11 +24,7 @@ public:
     Effekseer::ManagerRef manager;
     struct file_interface *fi;
 
-    struct effect {
-        Effekseer::EffectRef eff;
-        Effekseer::Handle    handle;
-    };
-    std::vector<effect>   effects;
+    std::vector<Effekseer::EffectRef>   effects;
 };
 
 static efk_ctx*
@@ -91,33 +87,25 @@ lefkctx_create(lua_State *L){
     if (eff == nullptr){
         return luaL_error(L, "create effect failed, filename:%s", filename);
     }
-    auto it = std::find_if(std::begin(ctx->effects), std::end(ctx->effects),
-        [](const efk_ctx::effect &e){
-            return (e.eff == nullptr);
-        }
-    );
-    ctx->effects.emplace_back(efk_ctx::effect{ eff, 0 });
+    ctx->effects.emplace_back(eff);
     auto handle = ctx->effects.size() - 1;
     lua_pushinteger(L, handle);
     return 1;
 }
 
-static bool
-check_effect_valid(efk_ctx *ctx, int handle){
-    return 0 <= handle && handle < ctx->effects.size();
+static void
+check_effect_valid(lua_State *L, efk_ctx *ctx, int handle){
+     if (0 > handle || handle >= ctx->effects.size()){
+        luaL_error(L, "invalid handle: %d", handle);
+    }
 }
 
 static int
 lefkctx_destroy(lua_State *L){
     auto ctx = EC(L);
     auto handle = (int)luaL_checkinteger(L, 2);
-    if (!check_effect_valid(ctx, handle)){
-        return luaL_error(L, "invalid handle: %d", handle);
-    }
-
-    auto e = ctx->effects[handle];
-    ctx->effects[handle] = {nullptr, INT_MAX};
-    e.eff = nullptr;
+    check_effect_valid(L, ctx, handle);
+    ctx->effects[handle] = nullptr;
     return 0;
 }
 
@@ -155,12 +143,12 @@ static int
 lefkctx_play(lua_State *L){
     auto ctx = EC(L);
     auto handle = (int)luaL_checkinteger(L, 2);
-    assert(check_effect_valid(ctx, handle));
+    check_effect_valid(L, ctx, handle);
 	
     Effekseer::Matrix43 effekMat;
 	auto effekMat44 = TOM(L, 3);
 	ToMatrix43(*effekMat44, effekMat);
-    auto play_handle = ctx->manager->Play(ctx->effects[handle].eff, 0, 0, 0);
+    auto play_handle = ctx->manager->Play(ctx->effects[handle], 0, 0, 0);
 	ctx->manager->SetMatrix(play_handle, effekMat);
 	float speed = (float)luaL_checknumber(L, 4);
 	ctx->manager->SetSpeed(play_handle, speed);
