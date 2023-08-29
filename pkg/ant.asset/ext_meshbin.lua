@@ -1,4 +1,4 @@
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 
 local bgfx      = require "bgfx"
 local fastio    = require "fastio"

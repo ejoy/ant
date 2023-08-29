@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 local mu		= import_package "ant.math".util
 
 local rhwi      = import_package "ant.hwi"

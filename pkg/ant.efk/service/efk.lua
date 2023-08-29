@@ -10,7 +10,7 @@ local efk       = require "efk"
 
 local FI        = require "fileinterface"
 
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"

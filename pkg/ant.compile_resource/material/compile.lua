@@ -3,7 +3,7 @@ local fs            = require "filesystem"
 local fastio        = require "fastio"
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
-local setting       = import_package "ant.settings".setting
+local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local depends       = require "depends"
 local parallel_task = require "parallel_task"
@@ -47,16 +47,11 @@ local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 
 local enable_cs<const>      = setting:get "graphic/lighting/cluster_shading" ~= 0
 local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
-local fxaa_setting<const>   = setting:data().graphic.postprocess.fxaa
+local fxaa_enable<const>   = setting:get "graphic/postprocess/fxaa/enable"
+local fxaa_use_green_as_luma<const> = setting:get "graphic/postprocess/fxaa/use_green_as_luma"
 local enable_ao<const>      = setting:get "graphic/ao/enable"
 local enable_ao_bentnormal<const> = setting:get "graphic/ao/bent_normal"
 local ao_qulity<const>      = enable_ao and setting:get "graphic/ao/qulity" or ""
-
--- local curve_world = setting:data().graphic.curve_world
--- local curve_world_type_macros<const> = {
---     view_sphere = 1,
---     cylinder = 2,
--- }
 
 local function default_macros(setting)
     local m = {
@@ -71,10 +66,6 @@ local function default_macros(setting)
         m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
         m[#m+1] = "CLUSTER_SHADING=1"
     end
-
-    -- if curve_world.enable then
-    --     m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type_macros[curve_world.type]
-    -- end
 
     if enable_bloom then
         m[#m+1] = "BLOOM_ENABLE=1"
@@ -92,7 +83,7 @@ local function default_macros(setting)
         end
     end
 
-    if fxaa_setting.enable and not fxaa_setting.use_green_as_luma then
+    if fxaa_enable and not fxaa_use_green_as_luma then
         m[#m+1] = "COMPUTE_LUMINANCE_TO_ALPHA=1"
     end
 

@@ -3,7 +3,7 @@ local world = ecs.world
 local w 	= world.w
 
 local default_comp 	= import_package "ant.general".default
-local setting		= import_package "ant.settings".setting
+local setting		= import_package "ant.settings"
 local ENABLE_PRE_DEPTH<const> = not setting:get "graphic/disable_pre_z"
 local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
@@ -57,7 +57,7 @@ function irender.get_main_view_rendertexture()
 end
 
 local default_clear_state = {
-	color = setting:data().graphic.render.clear_color or 0x000000ff,
+	color = setting:get "graphic/render/clear_color" or 0x000000ff,
 	depth = 0.0,
 	clear = "SCD",
 	stencil = 0.0

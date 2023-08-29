@@ -3,7 +3,7 @@ local bgfx          = require "bgfx"
 local texture_mgr	= require "texture_mgr"
 local matpkg		= import_package "ant.material"
 local matutil 		= matpkg.util
-local setting		= import_package "ant.settings".setting
+local setting		= import_package "ant.settings"
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local function texture_value(stage, defaultid)

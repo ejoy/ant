@@ -1,9 +1,8 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local assetmgr  = import_package "ant.asset"
-local setting = import_package "ant.settings".setting
-local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
+local setting = import_package "ant.settings"
+local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
 
 local blur_sys = ecs.system "blur_system"
 if not ENABLE_SHADOW then

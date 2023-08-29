@@ -16,7 +16,7 @@ local icompute  = ecs.require "ant.render|compute.compute"
 local iexposure = ecs.require "ant.camera|exposure"
 local imaterial = ecs.require "ant.asset|material"
 
-local setting   = import_package "ant.settings".setting
+local setting   = import_package "ant.settings"
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 local ENABLE_IBL_LUT<const>       = setting:get "graphic/ibl/enable_lut"
 

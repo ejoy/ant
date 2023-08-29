@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 
-local setting       = import_package "ant.settings".setting
+local setting       = import_package "ant.settings"
 local renderutil    = require "util"
 
 local s             = ecs.system "pre_depth_system"

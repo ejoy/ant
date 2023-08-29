@@ -2,15 +2,13 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local setting = import_package "ant.settings".setting
-
-local ao_setting<const> = setting:data().graphic.ao
+local setting = import_package "ant.settings"
 
 local ssao_sys  = ecs.system "ssao_system"
 
 local renderutil= require "util"
 
-local ENABLE_SSAO<const> = ao_setting.enable
+local ENABLE_SSAO<const> = setting:get "graphic/ao/enable"
 
 if not ENABLE_SSAO then
     renderutil.default_system(ssao_sys, "init", "init_world", "data_changed", "build_ssao", "bilateral_filter")
@@ -33,7 +31,7 @@ local icompute  = ecs.require "ant.render|compute.compute"
 local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
-local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
+local ENABLE_BENT_NORMAL<const>         = setting:get "graphic/ao/bent_normal"
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
 local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
 
@@ -55,9 +53,9 @@ local SAMPLE_CONFIG<const> = {
     }
 }
 
-local HOWTO_SAMPLE<const> = SAMPLE_CONFIG[ao_setting.quality]
+local HOWTO_SAMPLE<const> = SAMPLE_CONFIG[setting:get "graphic/ao/quality"]
 
-local ssao_configs = setmetatable({
+local ssao_configs = {
     sample_count = HOWTO_SAMPLE.sample_count,
     spiral_turns = HOWTO_SAMPLE.spiral_turns,
 
@@ -77,9 +75,17 @@ local ssao_configs = setmetatable({
         sample_count            = 4,            -- tracing sample count, between 1 and 255
         ray_count               = 1,            -- # of rays to trace, between 1 and 255
     }
-}, {__index=ao_setting})
+}
 
 do
+    ssao_configs.radius = setting:get "graphic/ao/radius"
+    ssao_configs.min_horizon_angle = setting:get "graphic/ao/min_horizon_angle"
+    ssao_configs.power = setting:get "graphic/ao/min_horizon_angle"
+    ssao_configs.intensity = setting:get "graphic/ao/intensity"
+    ssao_configs.bilateral_threshold = setting:get "graphic/ao/bilateral_threshold"
+    ssao_configs.bias = setting:get "graphic/ao/bias"
+    ssao_configs.resolution = setting:get "graphic/ao/resolution"
+
     ssao_configs.inv_radius_squared             = 1.0/(ssao_configs.radius * ssao_configs.radius)
     ssao_configs.min_horizon_angle_sine_squared = math.sin(ssao_configs.min_horizon_angle) ^ 2.0
 

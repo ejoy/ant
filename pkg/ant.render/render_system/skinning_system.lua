@@ -2,7 +2,7 @@ local ecs 		= ...
 local world 	= ecs.world
 local w 		= world.w
 
-local setting	= import_package "ant.settings".setting
+local setting	= import_package "ant.settings"
 local USE_CS_SKINNING<const>	= setting:get "graphic/skinning/use_cs"
 local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa"
 local imaterial = ecs.require "ant.asset|material"
