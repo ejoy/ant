@@ -10,8 +10,7 @@ local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
 local iefk          = ecs.require "ant.efk|efk"
 local audio 		= import_package "ant.audio"
-local fs        = require "filesystem"
-local datalist  = require "datalist"
+
 local fmod
 if world.__EDITOR__ then
 	fmod = require "fmod"
@@ -169,8 +168,7 @@ function ani_sys:component_init()
 		world:pub {"AnimationEvent", "set_time", e.eid, 0}
 	end
 
-	for e in w:select "INIT meshskin:update skeleton:update" do
-		e.skeleton = assetmgr.resource(e.skeleton)
+	for e in w:select "INIT meshskin:update skeleton:in" do
 		local skin = assetmgr.resource(e.meshskin)
 		local count = skin.joint_remap and skin.joint_remap:count() or #e.skeleton._handle
 		if count > 64 then
@@ -199,11 +197,14 @@ local function init_animation(instance)
 			if not skin_eid then
 				skin_eid = eid
 			end
-		elseif e.anim_ctrl then
+		end
+		if e.anim_ctrl then
 			ctrl_eid = eid
-		elseif e.skinning then
+		end
+		if e.skinning then
 			anim_eid[#anim_eid + 1] = eid
-		elseif e.slot then
+		end
+		if e.slot then
 			slot_eid[e.name] = eid
 		end
 	end
@@ -212,8 +213,9 @@ local function init_animation(instance)
 	if skin_eid then
 		local skin <close> = world:entity(skin_eid, "meshskin:in skeleton:in")
 		skeleton = skin.skeleton
-		pose = skin.meshskin.pose
+		pose = iani.create_pose()
 		pose.skeleton = skeleton
+		skin.meshskin.pose = pose
 	elseif ctrl_eid then
 		local ctrl <close> = world:entity(ctrl_eid, "skeleton:in")
 		skeleton = ctrl.skeleton

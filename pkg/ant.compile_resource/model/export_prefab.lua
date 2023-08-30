@@ -260,51 +260,46 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
     })
 end
 
-local function create_skin_entity(status, parent, withanim)
-    if not status.skeleton or #status.skin < 1 then
+local function create_skin_entity(status, parent)
+    if not status.skeleton then
+        return
+    end
+    local has_animation = next(status.animations) ~= nil
+    local has_meshskin = #status.skin > 0
+    if not has_animation and not has_meshskin then
         return
     end
     local policy = {
         "ant.general|name",
-        "ant.scene|scene_object",
-        "ant.animation|meshskin",
-    }
-    local data = {
-        name = "meshskin",
-        skinning = true,
-        scene = {},
-    }
-    data.skeleton = status.skeleton
-    data.meshskin = status.skin[1]
-    return create_entity(status, {
-        policy = policy,
-        data = data,
-        parent = parent,
-    })
-end
-
-local function create_animation_entity(status)
-    local policy = {
-        "ant.general|name",
-        "ant.animation|animation",
     }
     local data = {
         name = "animation",
     }
-    data.skeleton = status.skeleton
-    data.animation = {}
-    local anilst = {}
-    for name, file in pairs(status.animations) do
-        local n = fix_invalid_name(name)
-        anilst[#anilst+1] = n
-        data.animation[n] = file
+    if has_meshskin then
+        policy[#policy+1] = "ant.scene|scene_object"
+        policy[#policy+1] = "ant.animation|meshskin"
+        data.meshskin = status.skin[1]
+        data.skinning = true
+        data.scene = {}
     end
-    table.sort(anilst)
-    data.animation_birth = anilst[1] or ""
-    data.anim_ctrl = {}
-    create_entity(status, {
+    if has_animation then
+        policy[#policy+1] = "ant.animation|animation"
+        data.animation = {}
+        local anilst = {}
+        for name, file in pairs(status.animations) do
+            local n = fix_invalid_name(name)
+            anilst[#anilst+1] = n
+            data.animation[n] = file
+        end
+        table.sort(anilst)
+        data.animation_birth = anilst[1] or ""
+        data.anim_ctrl = {}
+    end
+    data.skeleton = status.skeleton
+    return create_entity(status, {
         policy = policy,
         data = data,
+        parent = parent,
     })
 end
 
@@ -379,7 +374,7 @@ return function (status)
     local meshnodes = {}
     find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
 
-    create_skin_entity(status, rootid, true)
+    create_skin_entity(status, rootid)
 
     local C = {}
     local scenetree = status.scenetree
@@ -411,7 +406,6 @@ return function (status)
         check_create_node_entity(nodeidx)
     end
     if next(status.animations) then
-        create_animation_entity(status)
         -- export animations
         local anilst = {}
         local animation = {}
