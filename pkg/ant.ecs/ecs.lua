@@ -22,17 +22,15 @@ return function (w, package)
     local declaration = w._decl
     local import = w._importor
     local function register(what)
-        local class_set = {}
         ecs[what] = function(name)
             local fullname = name
             if what ~= "component" then
                 fullname = package .. "|" .. name
             end
-            local r = class_set[fullname]
+            local r = w._class[what][fullname]
             if r == nil then
                 log.debug("Register", #what<8 and what.."  " or what, fullname)
                 r = {}
-                class_set[fullname] = r
                 local decl = declaration[what][fullname]
                 if not decl then
                     error(("%s `%s` has no declaration."):format(what, fullname))

@@ -41,11 +41,9 @@ system "debug_system"
 
 component "INIT"
 component "LAST_CREATE"
-
 component "on_ready"
     .type "lua"
 component "on_message"
     .type "lua"
-    
 component "debug"
     .type "lua"
