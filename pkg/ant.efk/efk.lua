@@ -268,6 +268,7 @@ function iefk.set_loop(eid, b)
 end
 
 function iefk.destroy(eid)
+    iefk.stop(eid)
     iefk.set_visible(eid, false)    -- no need to remove play_handle
 end
 
