@@ -202,6 +202,14 @@ function iefk.create(filename, config)
                 speed       = config.speed or 1.0,
                 visible     = config.visible or true,
             },
+            view_visible = config.visible or true,
+            on_ready = function (e)
+                if not config.visible then
+                    w:extend(e, "view_visible?out")
+                    e.view_visible = false
+                    w:submit(e)
+                end
+            end
         },
     }
 end

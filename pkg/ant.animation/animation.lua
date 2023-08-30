@@ -10,7 +10,7 @@ local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
 local iefk          = ecs.require "ant.efk|efk"
 local audio 		= import_package "ant.audio"
-
+local math3d        = require "math3d"
 local fmod
 if world.__EDITOR__ then
 	fmod = require "fmod"
@@ -54,8 +54,9 @@ local function process_keyframe_event(task)
 				elseif event.asset_path ~= "" then
 					event.effect = iefk.create(event.asset_path, {
 						auto_play = true,
-						scene = { parent = task.slot_eid },-- and task.slot_eid[event.link_info.slot_name] or nil},
-						group_id = task.group_id,
+						scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
+						group_id = task.group,
+						visible = not task.hitch,
 					})
 				end
 			elseif event.event_type == "Move" then
@@ -162,15 +163,16 @@ function ani_sys:entity_init()
 	local meshskin
 	local skeleton
 	local pose
+	local anim_ctrl
 	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in name?in eid:in pose_dirty?out boneslot?out" do
 		if e.meshskin and e.anim_ctrl then
 			skeleton = e.skeleton
 			meshskin = e.meshskin
+			anim_ctrl = e.anim_ctrl
 			pose = iani.create_pose()
 			meshskin.pose = pose
 			pose.skeleton = skeleton
 			pose.pose_result = e.anim_ctrl.pose_result
-			e.anim_ctrl.slot_eid = e.eid
 			e.pose_dirty = true
 		elseif e.slot then
 			local slot = e.slot
@@ -181,6 +183,12 @@ function ani_sys:entity_init()
 				end
 			end
 			slot.pose = pose
+			if anim_ctrl then
+				if not anim_ctrl.slot_eid then
+					anim_ctrl.slot_eid = {}
+				end
+				anim_ctrl.slot_eid[e.name] = e.eid
+			end
 		end
 	end
 end
