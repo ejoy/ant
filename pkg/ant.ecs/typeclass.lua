@@ -172,30 +172,8 @@ local function create_context(w)
 	)
 end
 
-local function slove_system(w)
-	for fullname, o in pairs(w._class.system) do
-		local decl = w._decl.system[fullname]
-		if decl and decl.method then
-			for _, name in ipairs(decl.method) do
-				if not o[name] then
-					error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-				end
-			end
-		end
-	end
-end
 
 local function slove_component(w)
-	for fullname, o in pairs(w._class.component) do
-		local decl = w._decl.component[fullname]
-		if decl and decl.method then
-			for _, name in ipairs(decl.method) do
-				if not o[name] then
-					error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-				end
-			end
-		end
-	end
     w._component_decl = {}
     local function register_component(decl)
         w._component_decl[decl.name] = decl
@@ -287,7 +265,6 @@ local function init(w, config)
 		end
 	end
 
-	slove_system(w)
 	slove_component(w)
 	create_context(w)
 	w._initializing = false
