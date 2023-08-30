@@ -69,8 +69,6 @@ function m:create_hitch(slot)
         }
     }
     if slot then
-        -- template.policy[#template.policy + 1] = "ant.general|tag"
-        -- template.data.tag = { auto_name }
         template.policy[#template.policy + 1] = "ant.animation|slot"
         template.data.slot = {
             joint_name = "None",
@@ -715,11 +713,9 @@ function m:add_effect(filename)
             "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
-            -- "ant.general|tag"
 		},
 		data = {
             name = fs.path(filename):stem():string(),
-            -- tag = {"effect"},
             scene = {parent = parent},
             efk = {
                 path = filename,

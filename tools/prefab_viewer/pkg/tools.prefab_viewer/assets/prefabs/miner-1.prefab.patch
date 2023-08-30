@@ -8,11 +8,8 @@ data:
   slot:
     follow_flag: 1
     joint_name: None
-  tag:
-    effect
 policy:
   ant.general|name
-  ant.general|tag
   ant.animation|slot
 ---
 data:
@@ -24,9 +21,6 @@ data:
   slot:
     follow_flag: 1
     joint_name: None
-  tag:
-    hitch1
 policy:
   ant.general|name
-  ant.general|tag
   ant.animation|slot

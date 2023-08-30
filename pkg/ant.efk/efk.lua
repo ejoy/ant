@@ -235,11 +235,9 @@ function iefk.create(filename, config)
             "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
-            "ant.general|tag"
         },
         data = {
             name = "root",
-            tag = {"effect"},
             scene = cfg.scene,
             efk = {
                 path = filename,

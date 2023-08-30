@@ -39,11 +39,9 @@ function is:init()
             "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
-            "ant.general|tag"
         },
         data = {
             name = "root",
-            tag = {"effect"},
             scene = {},
             efk = {
                 path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
