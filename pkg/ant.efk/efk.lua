@@ -259,7 +259,8 @@ function iefk.create(filename, config)
         visible = config.visible or true,
         hitchs = config.hitchs
     }
-    local template = {
+    return world:create_entity {
+        group = config.group_id,
         policy = {
             "ant.general|name",
             "ant.scene|scene_object",
@@ -286,7 +287,6 @@ function iefk.create(filename, config)
             -- end
         },
     }
-    return world:create_entity(template, config.group_id)
 end
 
 function iefk.preload(textures)

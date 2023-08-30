@@ -130,7 +130,7 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
                 e.road.srt_info = srt_info
                 e.draw_indirect_update = true
             else
-                local eid = world:create_entity({
+                local eid = world:create_entity {
                     policy = {
                         "ant.scene|scene_object",
                         "ant.render|simplerender",
@@ -152,7 +152,7 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
                             imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
                         end
                     },
-                })
+                }
                 indirect_table[srt_idx] = eid
             end
         end

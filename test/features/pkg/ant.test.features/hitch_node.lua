@@ -61,7 +61,8 @@ local function create_simple_test_group()
     }
 
     --standalone sub tree
-    local p1 = world:create_entity({
+    local p1 = world:create_entity {
+        group = hitch_test_group_id,
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -77,9 +78,10 @@ local function create_simple_test_group()
             end,
             name = "virtual_node_p1",
         },
-    }, hitch_test_group_id)
+    }
 
-    world:create_entity({
+    world:create_entity {
+        group = hitch_test_group_id,
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -96,7 +98,7 @@ local function create_simple_test_group()
             end,
             name = "virtual_node",
         },
-    }, hitch_test_group_id)
+    }
 end
 
 local change_hitch_eid

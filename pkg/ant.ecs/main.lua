@@ -46,7 +46,7 @@ local function create_entity_by_template(w, group, name, template)
     return eid, initargs
 end
 
-function world:create_entity(v, group)
+function world:create_entity(v)
     local policy_info = policy.create(self, v.policy)
     local data = v.data
     for c, def in pairs(policy_info.component_opt) do
@@ -60,7 +60,7 @@ function world:create_entity(v, group)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return create_entity_by_data(self, group or 0, data)
+    return create_entity_by_data(self, v.group or 0, data)
 end
 
 function world:remove_entity(e)

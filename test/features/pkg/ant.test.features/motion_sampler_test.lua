@@ -10,7 +10,8 @@ local itimer        = ecs.require "ant.timer|timer_system"
 
 local function motion_sampler_test()
     local sampler_group = ims.sampler_group()
-    local eid = world:create_entity({
+    local eid = world:create_entity {
+        group = sampler_group,
         policy = {
             "ant.scene|scene_object",
             "ant.motion_sampler|motion_sampler",
@@ -29,7 +30,7 @@ local function motion_sampler_test()
                 }
             }
         }
-    }, sampler_group)
+    }
 
     world:group_enable_tag("view_visible", sampler_group)
     world:group_flush "view_visible"

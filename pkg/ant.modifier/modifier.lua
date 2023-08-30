@@ -201,6 +201,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
     end
     
 	local template = {
+        group = group_id,
 		policy = {
             "ant.general|name",
             "ant.scene|scene_object",
@@ -237,7 +238,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
 		},
     }
     return {
-        eid = world:create_entity(template, group_id),
+        eid = world:create_entity(template),
         anim_eid = anim_eid
     }
 end
