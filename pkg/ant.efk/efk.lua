@@ -258,11 +258,6 @@ function iefk.set_visible(eid, b)
     end
 end
 
-function iefk.destroy(eid)
-    iefk.stop(eid)
-    iefk.set_visible(eid, false)    -- no need to remove play_handle
-end
-
 local function do_stop(eid, delay)
     local e <close> = world:entity(eid, "efk?in")
     local efk = e.efk
