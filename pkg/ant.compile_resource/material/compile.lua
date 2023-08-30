@@ -228,13 +228,17 @@ local function generate_properties(properties)
                     v.sampler or "SAMPLER2D",
                     name, v.stage)
         elseif name:find("u_") == 1 then
-            assert(not is_array_uniform(v), "Need implement array uniforms")
-
-            --EX: uniform mediump vec4 name;
             -- precision(default mediump) type(default vec4)
             local precision = v.precsion or "mediump"
             local type = v.type or "vec4"
-            result = ("uniform %s %s %s;"):format(precision, type, name)
+            if is_array_uniform(v) then
+                --EX: uniform mediump vec4 name[array_num];
+                local array_num = #v
+                result = ("uniform %s %s %s[%d];"):format(precision, type, name, array_num)
+            else
+                --EX: uniform mediump vec4 name;
+                result = ("uniform %s %s %s;"):format(precision, type, name)
+            end
         elseif name:find("b_") == 1 then
             -- access stage type(default vec4)
             local access = assert(v.access, "buffer property need define 'access' field")
