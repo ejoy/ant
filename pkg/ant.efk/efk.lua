@@ -11,6 +11,8 @@ local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
 
+
+
 local hwi       = import_package "ant.hwi"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
@@ -198,7 +200,6 @@ function iefk.create(filename, config)
             efk = {
                 path        = filename,
                 auto_play   = config.auto_play or false,
-                loop        = config.loop or false,
                 speed       = config.speed or 1.0,
                 visible     = config.visible or true,
             },
@@ -254,16 +255,6 @@ function iefk.set_visible(eid, b)
     if efk then
         efk.visible = b
         efk.play_handle:set_visible(b)
-    end
-end
-
-function iefk.set_loop(eid, b)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if efk then
-        efk.loop = b
-        w:extend(e, "efk_loop?out")
-        e.efk_loop = b
     end
 end
 
