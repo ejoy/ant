@@ -100,7 +100,7 @@ local function create_simple_entity(name, parent)
     return world:create_entity(utils.deep_copy(template)), template
 end
 
-function m:add_entity(new_entity, parent, tpl)
+function m:add_entity(new_entity, parent, tpl, filename)
     self.entities[#self.entities+1] = new_entity
     if self.scene ~= new_entity then
         self.prefab_template[#self.prefab_template + 1] = tpl
@@ -109,7 +109,7 @@ function m:add_entity(new_entity, parent, tpl)
         end
         self:pacth_add(tpl)
     end
-    hierarchy:add(new_entity, {template = tpl}, parent)
+    hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil}, parent)
 end
 
 local function create_default_light(lt, parent)
@@ -475,7 +475,7 @@ function m:choose_prefab()
         local prefab_set = {}
         for _, patch in ipairs(patch_template) do
             local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.value or nil)
-            if k then
+            if k and string.sub(k, -7, 7) == ".prefab" then
                 prefab_set[k] = true
             end
         end
@@ -744,26 +744,34 @@ function m:add_prefab(path)
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):filename()), parent)
     -- local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
-    self.entities[#self.entities+1] = v_root
+    
     world:create_instance {
         prefab = prefab_filename,
         parent = v_root,
         on_ready = function(inst)
             local children = inst.tag["*"]
-            if #children == 1 then
-                local child = children[1]
-                local e <close> = world:entity(child, "camera?in")
-                if e.camera then
-                    local tpl = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
-                    hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
-                    return
-                end
+            if #children > 0 then
                 set_select_adapter(children, v_root)
+                if #children == 1 then
+                    local child = children[1]
+                    local e <close> = world:entity(child, "camera?in")
+                    if e.camera then
+                        local tpl = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
+                        hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
+                    end
+                end
             end
-            set_select_adapter(children, v_root)
         end
     }
-    hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
+    -- self.entities[#self.entities+1] = v_root
+    -- self.prefab_template[#self.prefab_template + 1] = temp
+    -- if self.glb_filename then
+    --     temp.index = #self.prefab_template
+        
+    -- end
+    -- self:pacth_add(temp)
+    -- hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
+    self:add_entity(v_root, parent, temp, prefab_filename)
 end
 
 function m:save(path)
@@ -1032,18 +1040,26 @@ function m:pacth_modify(pidx, p, v)
     end
 end
 
-function m:on_patch_name(eid, v)
+function m:do_patch(eid, path, v)
     local tpl = hierarchy:get_template(eid)
-    self:pacth_modify(tpl.template.index, "/data/name", v)
+    self:pacth_modify(tpl.template.index, path, v)
+end
+
+function m:on_patch_name(eid, v)
+    -- local tpl = hierarchy:get_template(eid)
+    -- self:pacth_modify(tpl.template.index, "/data/name", v)
+    self:do_patch(eid, "/data/name", v)
 end
 
 function m:on_patch_tranform(eid, n, v)
-    local tpl = hierarchy:get_template(eid)
-    self:pacth_modify(tpl.template.index, "/data/scene/"..n, v)
+    -- local tpl = hierarchy:get_template(eid)
+    -- self:pacth_modify(tpl.template.index, "/data/scene/"..n, v)
+    self:do_patch(eid, "/data/scene/"..n, v)
 end
 
 function m:on_patch_animation(eid, name, path)
-    local tpl = hierarchy:get_template(eid)
-    self:pacth_modify(tpl.template.index, "/data/animation/"..name, path)
+    -- local tpl = hierarchy:get_template(eid)
+    -- self:pacth_modify(tpl.template.index, "/data/animation/"..name, path)
+    self:do_patch(eid, "/data/animation/"..name, path)
 end
 return m

@@ -50,41 +50,14 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Effect" then
 				if event.effect then
-					if task.hitchs then
-						if next(task.hitchs) then
-							-- world:pub {"AnimationKeyevent", task.name, event.name, task.hitchs}
-							iefk.play(event.effect)
-						end
-					else
-						iefk.play(event.effect)
-					end
+					iefk.play(event.effect)
 				elseif event.asset_path ~= "" then
-					local auto_play = true
-					if task.hitchs then
-						auto_play = (next(task.hitchs) ~= nil)
-					end
 					event.effect = iefk.create(event.asset_path, {
-						auto_play = auto_play,
+						auto_play = true,
 						scene = {parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
 						group_id = task.group_id,
-						hitchs = task.hitchs
 					})
 				end
-				-- if task.hitchs then
-				-- 	if next(task.hitchs)then
-				-- 		world:pub {"AnimationKeyevent", task.name, event.name, task.hitchs}
-				-- 	end
-				-- else
-				-- 	if not event.effect and event.asset_path ~= "" then
-				-- 		event.effect = iefk.create(event.asset_path, {
-				-- 			auto_play = true,
-				-- 			scene = {parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
-				-- 			group_id = task.group_id,
-				-- 		})
-				-- 	elseif event.effect then
-				-- 		iefk.play(event.effect)
-				-- 	end
-				-- end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do
 					local e0 <close> = world:entity(eid, "scene:in")

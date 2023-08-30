@@ -211,31 +211,6 @@ function iani.is_playing(eid)
 	return e.anim_ctrl.play_state.play
 end
 
-local function set_attach(eid, heid, attach)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
-	local events = e.anim_ctrl.keyframe_events
-	if not events or not next(events) then
-		return
-	end
-	if not e.anim_ctrl.hitchs then
-		e.anim_ctrl.hitchs = {}
-	end
-	if attach then
-		e.anim_ctrl.hitchs[heid] = true
-	else
-		e.anim_ctrl.hitchs[heid] = nil
-	end
-end
-
-function iani.attach_hitch(eid, heid)
-	set_attach(eid, heid, true)
-end
-
-function iani.detach_hitch(eid, heid)
-	set_attach(eid, heid, false)
-end
-
 function iani.get_collider(e, anim, time)
 	local events = e.anim_ctrl.keyframe_events[anim]
 	if not events then return end
