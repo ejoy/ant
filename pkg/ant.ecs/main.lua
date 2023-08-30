@@ -259,7 +259,9 @@ function world:create_instance(args)
             on_message(instance, ...)
         end
     end
-    instance.proxy = create_entity_by_data(w, args.group, proxy_entity)
+    if next(proxy_entity) then
+        instance.proxy = create_entity_by_data(w, args.group, proxy_entity)
+    end
     return instance
 end
 
