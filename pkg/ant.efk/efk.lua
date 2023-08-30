@@ -7,8 +7,6 @@ local EFK_SERVER
 
 
 local math3d    = require "math3d"
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
@@ -18,7 +16,7 @@ local hwi       = import_package "ant.hwi"
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
 local itimer    = ecs.require "ant.timer|timer_system"
-
+local qm        = ecs.require "ant.render|queue_mgr"
 local PH
 
 local efk_sys = ecs.system "efk_system"
@@ -52,22 +50,18 @@ function efk_sys:exit()
 end
 
 function efk_sys:component_init()
-    for e in w:select "INIT efk:in eid:in" do
+    for e in w:select "INIT efk:in" do
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
-        efk.loop = efk.loop or false
-        efk.visible = efk.visible or true
-        if efk.auto_play then
-            world:pub {"playeffect", e.eid}
+        efk.play_handle = PH.create(efk.handle, efk.speed)
+        if nil == efk.visible then
+            efk.visible = true
         end
-    end
-end
 
-local playevent = world:sub {"playeffect"}
-function efk_sys:entity_ready()
-    for _, eid in playevent:unpack() do
-        iefk.play(eid)
+        --TODO: need remove auto_play, visible will determine this efk can be seen or not
+        efk.visible = efk.visible or efk.auto_play
+        efk.play_handle:set_visible(efk.visible)
     end
 end
 
@@ -160,15 +154,11 @@ function efk_sys:camera_usage()
     ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
-local qm = ecs.require "ant.render|queue_mgr"
-
 function efk_sys:render_submit()
     for e in w:select "view_visible efk:in scene:in" do
-        local ph = e.efk.play_handle
-        if ph then
-            ph:update_transform(e.scene.worldmat)
-        end
+        e.efk.play_handle:update_tranform(e.scene.worldmat)
     end
+
     local mq_mask = qm.queue_mask "main_queue"
     local groups = setmetatable({}, {__index=function (tt, idx) local t = {}; tt[idx] = t;return t end})
     for e in w:select "view_visible hitch:in scene:in" do
@@ -187,48 +177,13 @@ function efk_sys:render_submit()
         world:group_flush "hitch_tag"
 
         for e in w:select "hitch_tag efk:in scene:in" do
-            local ph = e.efk.play_handle
-            if ph then
-                ph:update_hitch_transforms(mats, e.scene.worldmat)
-            end
-        end
-    end
-end
-
-function efk_sys:follow_transform_updated()
-    for v in w:select "efk:in scene:in scene_changed?in" do
-        local efk = v.efk
-        if efk.play_handle then
-            if not efk.play_handle:is_alive() then
-                efk.play_handle = efk.loop and PH.create(efk.handle, v.scene.worldmat, efk.speed) or nil
-            elseif v.scene_changed then
-                efk.play_handle:update_transform(v.scene.worldmat)
-            end
-        else
-            if efk.visible then
-                if efk.do_play or efk.do_settime then
-                    efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
-                end
-                if efk.do_play then
-                    efk.do_play = nil
-                elseif efk.do_settime then
-                    efk.play_handle:set_time(efk.do_settime)
-                    efk.do_settime = nil
-                end
-            end
+            e.efk.play_handle:update_hitch_transforms(mats, e.scene.worldmat)
         end
     end
 end
 
 function iefk.create(filename, config)
     config = config or {}
-    local cfg = {
-        scene = config.scene or {},
-        auto_play = config.auto_play or false,
-        loop = config.loop or false,
-        speed = config.speed or 1.0,
-        visible = config.visible or true,
-    }
     return world:create_entity {
         group = config.group_id,
         policy = {
@@ -238,20 +193,15 @@ function iefk.create(filename, config)
         },
         data = {
             name = "root",
-            scene = cfg.scene,
+            tag = {"effect"},
+            scene = config.scene or {},
             efk = {
-                path = filename,
-                auto_play = cfg.auto_play,
-                loop = cfg.loop,
-                speed = cfg.speed,
-                visible = cfg.visible,
+                path        = filename,
+                auto_play   = config.auto_play or false,
+                loop        = config.loop or false,
+                speed       = config.speed or 1.0,
+                visible     = config.visible or true,
             },
-            -- on_ready = function (e)
-            --     w:extend(e, "efk:in")
-            --     if cfg.auto_play then
-            --         iefk.play(e)
-            --     end
-            -- end
         },
     }
 end
@@ -262,78 +212,70 @@ function iefk.preload(textures)
     end
 end
 
-local function do_play(eid)
-    local e <close> = world:entity(eid, "efk?in")
-    if not e.efk then return end
-    iefk.stop(eid)
-    e.efk.do_play = true
-end
-
+--TODO: need remove all the code checking 'efk' component is valid or not
 function iefk.play(efk)
     if type(efk) == "table" then
 		local entitys = efk.tag["*"]
 		for _, eid in ipairs(entitys) do
-			do_play(eid)
+			iefk.set_visible(eid, true)
 		end
     else
-        do_play(efk)
+        iefk.set_visible(efk, true)
     end
 end
 
 function iefk.pause(eid, b)
     local e <close> = world:entity(eid, "efk?in")
-    if e.efk and e.efk.play_handle then
-        e.efk.play_handle:set_pause(b)
+    local efk = e.efk
+    if efk then
+        efk.play_handle:set_pause(b)
     end
 end
 
 function iefk.set_time(eid, t)
     local e <close> = world:entity(eid, "efk?in")
-    if not e.efk then return end
-    if e.efk.do_settime then
-        return
-    end
-    if e.efk.play_handle then
-        e.efk.play_handle:set_time(t)
-    else
-        e.efk.do_settime = t
+    local efk = e.efk
+    if e.efk then
+        efk.play_handle:set_time(t)
     end
 end
 
 function iefk.set_speed(eid, s)
-    local e <close> = world:entity(eid, "efk:in")
-    e.efk.speed = s
-    if e.efk.play_handle then
-        e.efk.play_handle:set_speed(s)
+    local e <close> = world:entity(eid, "efk?in")
+    local efk = e.efk
+    if efk then
+        efk.play_handle:set_speed(s)
     end
 end
 
 function iefk.set_visible(eid, b)
     local e <close> = world:entity(eid, "efk?in")
-    if not e.efk then return end
-    e.efk.visible = b
-    if e.efk.play_handle then
-        e.efk.play_handle:set_visible(b)
+    local efk = e.efk
+    if efk then
+        efk.visible = b
+        efk.play_handle:set_visible(b)
     end
 end
 
 function iefk.set_loop(eid, b)
     local e <close> = world:entity(eid, "efk?in")
-    if not e.efk then return end
-    e.efk.loop = b
+    local efk = e.efk
+    if efk then
+        efk.loop = b
+        w:extend(e, "efk_loop?out")
+        e.efk_loop = b
+    end
 end
 
 function iefk.destroy(eid)
-    local e <close> = world:entity(eid, "efk?in")
-    if not e.efk then return end
-    e.efk.play_handle = nil
+    iefk.set_visible(eid, false)    -- no need to remove play_handle
 end
 
 local function do_stop(eid, delay)
     local e <close> = world:entity(eid, "efk?in")
-    if e.efk and e.efk.play_handle then
-        e.efk.play_handle:set_stop(delay)
-        e.efk.play_handle = nil
+    local efk = e.efk
+    if efk then
+        efk.play_handle:set_stop(delay)
     end
 end
 
@@ -350,7 +292,10 @@ end
 
 function iefk.is_playing(eid)
     local e <close> = world:entity(eid, "efk?in")
-    return e.efk and e.efk.play_handle ~= nil
+    local efk = e.efk
+    if efk then
+        return efk.play_handle:is_alive()
+    end
 end
 
 return iefk

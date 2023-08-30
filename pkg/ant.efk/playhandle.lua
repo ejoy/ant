@@ -5,6 +5,11 @@ local math3d    = require "math3d"
 local EFK_SERVER<const> = ltask.queryservice "ant.efk|efk"
 
 local handle_mt = {
+    realive = function (self, speed)
+        if not self.alive then
+            ltask.call(EFK_SERVER, "play", self.handle, speed)
+        end
+    end,
     is_alive = function(self)
         ltask.fork(function ()
             self.alive = ltask.call(EFK_SERVER, "is_alive", self.handle)
@@ -45,13 +50,15 @@ local handle_mt = {
     end
 }
 
-local function create(efk_handle, worldmat, speed)
+local function create(efk_handle, speed, worldmat)
     ltask.call(EFK_SERVER, "play", efk_handle, speed)
     local h = setmetatable({
         alive       = true,
         handle      = efk_handle,
     }, {__index = handle_mt})
-    h:update_transform(worldmat)
+    if worldmat then
+        h:update_transform(worldmat)
+    end
     return h
 end
 

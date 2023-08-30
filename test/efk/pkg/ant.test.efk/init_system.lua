@@ -10,6 +10,7 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local is = ecs.system "init_system"
 
 local test_gid<const> = 1000001
+local efkeid
 function is:init()
     iefk.preload{
         "/pkg/ant.test.efk/assets/miner_efk/a1.texture",
@@ -17,24 +18,8 @@ function is:init()
         "/pkg/ant.test.efk/assets/miner_efk/a3.texture",
     }
 
-    world:create_entity{
-        policy = {
-            "ant.general|name",
-            "ant.render|hitch_object",
-        },
-        data = {
-            name = "test_efk_hitch",
-            hitch = {
-                group = test_gid,
-            },
-            visible_state = "main_view",
-            scene = {
-                t = {5, 2, 0, 1}
-            }
-        }
-    }
-
-    world:create_entity({
+    efkeid = world:create_entity{
+        group = test_gid,
         policy = {
             "ant.general|name",
             "ant.scene|scene_object",
@@ -57,11 +42,30 @@ function is:init()
                     w:submit(e)
                 end
             end
-        },
-    }, test_gid)
+        }
+    }
 
-    world:group_enable_tag("view_visible", test_gid)
-    world:group_flush "view_visible"
+    if nil ~= test_gid then
+        world:create_entity{
+            policy = {
+                "ant.general|name",
+                "ant.render|hitch_object",
+            },
+            data = {
+                name = "test_efk_hitch",
+                hitch = {
+                    group = test_gid,
+                },
+                visible_state = "main_view",
+                scene = {
+                    t = {5, 2, 0, 1}
+                }
+            }
+        }
+
+        world:group_enable_tag("view_visible", test_gid)
+        world:group_flush "view_visible"
+    end
 end
 
 function is:init_world()
@@ -72,6 +76,11 @@ function is:init_world()
     iom.set_direction(ce, math3d.vector(0.0, 0.0, -1.0))
 end
 
+local kb_mb = world:sub{"keyboard"}
 function is:data_changed()
-
+    for _, key, press in kb_mb:unpack() do
+        if press == 0 and key == "T" then
+            iefk.stop(efkeid)
+        end
+    end
 end
