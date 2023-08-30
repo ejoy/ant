@@ -191,6 +191,7 @@ function ani_sys:entity_init()
 	local pose
 	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in name?in eid:in pose_dirty?out boneslot?out" do
 		if e.meshskin and e.anim_ctrl then
+			skeleton = e.skeleton
 			meshskin = e.meshskin
 			pose = iani.create_pose()
 			meshskin.pose = pose
