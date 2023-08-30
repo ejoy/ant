@@ -249,10 +249,6 @@ function world:create_instance(args)
     local on_ready = args.on_ready
     local on_message = args.on_message
     local proxy_entity = {}
-    function proxy_entity.on_init(_, ...)
-        local m = w._ecs["ant.animation"].require "animation"
-        m.init_animation(instance)
-    end
     if on_ready then
         function proxy_entity.on_ready()
             on_ready(instance)

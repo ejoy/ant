@@ -185,61 +185,29 @@ end
 
 local event_animation = world:sub{"AnimationEvent"}
 
-local function init_animation(instance)
-	local entitys = instance.tag["*"]
-	local anim_eid = {}
-	local slot_eid = {}
-	local skin_eid
-	local ctrl_eid
-	for _, eid in ipairs(entitys) do
-		local e <close> = world:entity(eid, "meshskin?in anim_ctrl?in skinning?in slot?in name?in")
-		if e.meshskin then
-			if not skin_eid then
-				skin_eid = eid
-			end
-		end
-		if e.anim_ctrl then
-			ctrl_eid = eid
-		end
-		if e.skinning then
-			anim_eid[#anim_eid + 1] = eid
-		end
-		if e.slot then
-			slot_eid[e.name] = eid
-		end
-	end
+function ani_sys:entity_init()
+	local meshskin
 	local skeleton
 	local pose
-	if skin_eid then
-		local skin <close> = world:entity(skin_eid, "meshskin:in skeleton:in")
-		skeleton = skin.skeleton
-		pose = iani.create_pose()
-		pose.skeleton = skeleton
-		skin.meshskin.pose = pose
-	elseif ctrl_eid then
-		local ctrl <close> = world:entity(ctrl_eid, "skeleton:in")
-		skeleton = ctrl.skeleton
-		pose = iani.create_pose()
-		pose.skeleton = skeleton
-	end
-	for _, eid in pairs(slot_eid) do
-		local slot_e <close> = world:entity(eid, "slot:in")
-		local slot = slot_e.slot
-		if slot.joint_name and skeleton then
-			slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
-			if slot.joint_index then
-				w:extend(slot_e, "boneslot?out")
-				slot_e.boneslot = true
+	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in name?in eid:in pose_dirty?out boneslot?out" do
+		if e.meshskin and e.anim_ctrl then
+			meshskin = e.meshskin
+			pose = iani.create_pose()
+			meshskin.pose = pose
+			pose.skeleton = skeleton
+			pose.pose_result = e.anim_ctrl.pose_result
+			e.anim_ctrl.slot_eid = e.eid
+			e.pose_dirty = true
+		elseif e.slot then
+			local slot = e.slot
+			if slot.joint_name and skeleton then
+				slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
+				if slot.joint_index then
+					e.boneslot = true
+				end
 			end
+			slot.pose = pose
 		end
-		slot.pose = pose
-	end
-	if ctrl_eid then
-		local ctrl_e <close> = world:entity(ctrl_eid, "anim_ctrl:in pose_dirty?out")
-		local ctrl = ctrl_e.anim_ctrl
-		pose.pose_result = ctrl.pose_result
-		ctrl.slot_eid = slot_eid
-		ctrl_e.pose_dirty = true
 	end
 end
 
@@ -267,7 +235,3 @@ if not mt.adapter then
 	mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
 	animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
 end
-
-return {
-	init_animation = init_animation,
-}
