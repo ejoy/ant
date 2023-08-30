@@ -196,15 +196,12 @@ function efk_sys:render_submit()
 end
 
 function efk_sys:follow_transform_updated()
-    for v in w:select "view_visible efk:in scene:in scene_changed?in" do
+    for v in w:select "efk:in scene:in scene_changed?in" do
         local efk = v.efk
         if efk.play_handle then
-            -- if not efk.play_handle:is_alive() then
-            --     efk.play_handle = efk.loop and PH.create(efk.handle, v.scene.worldmat, efk.speed) or nil
-            -- elseif v.scene_changed then
-            --     efk.play_handle:update_transform(v.scene.worldmat)
-            -- end
-            if v.scene_changed then
+            if not efk.play_handle:is_alive() then
+                efk.play_handle = efk.loop and PH.create(efk.handle, v.scene.worldmat, efk.speed) or nil
+            elseif v.scene_changed then
                 efk.play_handle:update_transform(v.scene.worldmat)
             end
         else
