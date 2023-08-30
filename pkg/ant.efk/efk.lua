@@ -195,7 +195,6 @@ function iefk.create(filename, config)
         },
         data = {
             name = "root",
-            tag = {"effect"},
             scene = config.scene or {},
             efk = {
                 path        = filename,
