@@ -1,8 +1,4 @@
-component "name".type "lua"
+component "name"
+    .type "lua"
 policy "name"
     .component "name"
-
-component "transform".type "lua"
-
-policy "transform_policy"
-    .component "transform"
