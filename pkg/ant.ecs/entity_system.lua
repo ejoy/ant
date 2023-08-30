@@ -40,8 +40,7 @@ local function create_prefab()
     end
     world._create_prefab_queue = {}
     for i = 1, #queue do
-        local q = queue[i]
-        world:_prefab_instance(q.instance, q.args)
+        world:_prefab_instance(queue[i])
     end
 end
 

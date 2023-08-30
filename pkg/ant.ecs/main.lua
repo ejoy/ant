@@ -13,12 +13,10 @@ local world_metatable = {}
 local world = {}
 world_metatable.__index = world
 
-local function create_entity_by_data(w, group, data)
+local function create_entity_by_data(w, group, data, debuginfo)
     local queue = w._create_entity_queue
     local eid = w.w:new {
-        debug = {
-            traceback = debug.traceback(),
-        }
+        debug = debuginfo
     }
     local initargs = {
         eid = eid,
@@ -29,13 +27,10 @@ local function create_entity_by_data(w, group, data)
     return eid
 end
 
-local function create_entity_by_template(w, group, name, template)
+local function create_entity_by_template(w, group, template, debuginfo)
     local queue = w._create_entity_queue
     local eid = w.w:new {
-        debug = {
-            prefab = name,
-            traceback = debug.traceback(),
-        }
+        debug = debuginfo,
     }
     local initargs = {
         eid = eid,
@@ -60,7 +55,7 @@ function world:create_entity(v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return create_entity_by_data(self, v.group or 0, data)
+    return create_entity_by_data(self, v.group or 0, data, debug.traceback())
 end
 
 function world:remove_entity(e)
@@ -73,7 +68,7 @@ local function table_append(t, a)
 end
 local table_insert = table.insert
 
-local function create_instance(w, group, prefab, data)
+local function create_instance(w, group, data, debuginfo)
     local entities = {}
     local mounts = {}
     local noparent = {}
@@ -81,9 +76,9 @@ local function create_instance(w, group, prefab, data)
         local v = data[i]
         local np
         if v.prefab then
-            entities[i], np = create_instance(w, group, v.prefab, v.template)
+            entities[i], np = create_instance(w, group, v.template, debuginfo)
         else
-            local e, initargs = create_entity_by_template(w, group, prefab, v.template)
+            local e, initargs = create_entity_by_template(w, group, v.template, debuginfo)
             entities[i], np = e, initargs
         end
         if v.mount then
@@ -212,14 +207,14 @@ local function each_prefab(entities, template, f)
     end
 end
 
-function world:_prefab_instance(instance, args)
+function world:_prefab_instance(v)
     local w = self
-    local template = create_template(w, args.prefab)
-    local prefab, noparent = create_instance(w, args.group, args.prefab, template)
+    local template = create_template(w, v.args.prefab)
+    local prefab, noparent = create_instance(w, v.args.group, template, v.debuginfo)
     for _, m in ipairs(noparent) do
-        m.parent = args.parent
+        m.parent = v.args.parent
     end
-    local tags = instance.tag
+    local tags = v.instance.tag
     each_prefab(prefab, template, function (e, tag)
         if tag then
             if type(tag) == "table" then
@@ -241,10 +236,12 @@ function world:create_instance(args)
         group = args.group,
         tag = {['*']={}}
     }
+    local debuginfo = debug.traceback(args.prefab)
     local q = self._create_prefab_queue
     q[#q+1] = {
         instance = instance,
         args = args,
+        debuginfo = debuginfo,
     }
     local on_ready = args.on_ready
     local on_message = args.on_message
@@ -260,7 +257,7 @@ function world:create_instance(args)
         end
     end
     if next(proxy_entity) then
-        instance.proxy = create_entity_by_data(w, args.group, proxy_entity)
+        instance.proxy = create_entity_by_data(w, args.group, proxy_entity, debuginfo)
     end
     return instance
 end
