@@ -54,7 +54,7 @@ local function process_keyframe_event(task)
 				elseif event.asset_path ~= "" then
 					event.effect = iefk.create(event.asset_path, {
 						auto_play = true,
-						scene = {parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
+						scene = { parent = task.slot_eid },-- and task.slot_eid[event.link_info.slot_name] or nil},
 						group_id = task.group_id,
 					})
 				end
