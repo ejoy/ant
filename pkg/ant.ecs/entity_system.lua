@@ -6,6 +6,8 @@ local math3d = require "math3d"
 local m = ecs.system "entity_system"
 
 local evOnMessage = world:sub {"EntityMessage"}
+local evOnRemoveInstance1 = world:sub {"OnRemoveInstance1"}
+local evOnRemoveInstance2 = world:sub {"OnRemoveInstance2"}
 
 local function update_group_tag(groupid, data)
     for tag, t in pairs(world._group_tags) do
@@ -29,6 +31,20 @@ function m:data_changed()
         if v then
             v:on_message(table.unpack(msg, 3))
             w:submit(v)
+        end
+    end
+    for _, instance in evOnRemoveInstance1:unpack() do
+        world:pub {"OnRemoveInstance2", instance}
+    end
+end
+
+function m:prefab_remove()
+    for _, instance in evOnRemoveInstance2:unpack() do
+        if instance.proxy then
+            w:remove(instance.proxy)
+        end
+        for _, entity in ipairs(instance.tag["*"]) do
+            w:remove(entity)
         end
     end
 end

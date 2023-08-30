@@ -264,7 +264,7 @@ end
 
 function world:remove_instance(instance)
     assert(instance.tag)
-    world:pub {"RemoveInstance1", instance}
+    world:pub {"OnRemoveInstance1", instance}
 end
 
 function world:reset_prefab_cache(filename)
@@ -461,7 +461,6 @@ function m.new_world(config)
             table.insert(cfg.import, "@ant.ecs")
             cfg.system = cfg.system or {}
             table.insert(cfg.system, "ant.ecs|entity_system")
-            table.insert(cfg.system, "ant.ecs|prefab_system")
             table.insert(cfg.system, "ant.ecs|debug_system")
         end
 	end
