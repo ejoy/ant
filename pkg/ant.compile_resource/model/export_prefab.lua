@@ -405,35 +405,6 @@ return function (status)
     for _, nodeidx in ipairs(meshnodes) do
         check_create_node_entity(nodeidx)
     end
-    if next(status.animations) then
-        -- export animations
-        local anilst = {}
-        local animation = {}
-        for name, file in pairs(status.animations) do
-            local n = fix_invalid_name(name)
-            anilst[#anilst+1] = n
-            animation[n] = file
-        end
-        table.sort(anilst)
-        local anim_prefab = {
-            {
-                policy = {
-                    "ant.general|name",
-                    "ant.animation|animation",
-                },
-                data = {
-                    name = "animation",
-                    skeleton = status.skeleton,
-                    animation = animation,
-                    animation_birth = anilst[1],
-                    anim_ctrl = {},
-                },
-            }
-        }
-        utility.save_txt_file(status, "animation.prefab", anim_prefab, function (data)
-            return serialize_prefab(status, data)
-        end)
-    end
     utility.save_txt_file(status, "mesh.prefab", status.prefab, function (data)
         return serialize_prefab(status, data)
     end)
