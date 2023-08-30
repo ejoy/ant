@@ -266,6 +266,7 @@ function world:create_instance(args)
 end
 
 function world:remove_instance(instance)
+    assert(instance.tag)
     world:pub {"RemoveInstance1", instance}
 end
 
