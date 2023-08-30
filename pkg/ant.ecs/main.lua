@@ -68,25 +68,25 @@ local function table_append(t, a)
 end
 local table_insert = table.insert
 
-local function create_instance(w, group, prefab)
+local function create_instance(w, group, prefab, data)
     local entities = {}
     local mounts = {}
     local noparent = {}
-    for i = 1, #prefab do
-        local v = prefab[i]
+    for i = 1, #data do
+        local v = data[i]
         local np
         if v.prefab then
-            entities[i], np = create_instance(w, group, v.prefab)
+            entities[i], np = create_instance(w, group, v.prefab, v.template)
         else
-            local e, initargs = create_entity_by_template(w, group, v.template)
+            local e, initargs = create_entity_by_template(w, group, prefab, v.template)
             entities[i], np = e, initargs
         end
         if v.mount then
             assert(
                 math.type(v.mount) == "integer"
                 and v.mount >= 1
-                and v.mount <= #prefab
-                and not prefab[v.mount].prefab
+                and v.mount <= #data
+                and not data[v.mount].prefab
             )
             assert(v.mount < i)
             mounts[i] = np
@@ -98,8 +98,8 @@ local function create_instance(w, group, prefab)
             end
         end
     end
-    for i = 1, #prefab do
-        local v = prefab[i]
+    for i = 1, #data do
+        local v = data[i]
         if v.mount then
             if v.prefab then
                 for _, m in ipairs(mounts[i]) do
@@ -166,8 +166,9 @@ local function create_template_(w, t)
         end
         if v.prefab then
             prefab[#prefab+1] = {
-                prefab = create_template(w, v.prefab),
-                mount = v.mount
+                prefab = v.prefab,
+                mount = v.mount,
+                template = create_template(w, v.prefab),
             }
         else
             prefab[#prefab+1] = create_entity_template(w, v)
