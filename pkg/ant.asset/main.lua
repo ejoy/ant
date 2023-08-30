@@ -1,5 +1,6 @@
-local texture_mgr = require "texture_mgr"
-local async       = require "async"
+local texture_mgr	= require "texture_mgr"
+local async			= require "async"
+local sa			= require "system_attribs"	-- must require after 'texture_mgr.init()', system_attribs need default texture id
 
 local assetmgr = {}
 
@@ -14,8 +15,8 @@ function assetmgr.init()
 	texture_mgr.init()
 
 	local MA	  = import_package "ant.material".arena
-	local sa	  = require "system_attribs"	-- must require after 'texture_mgr.init()', system_attribs need default texture id
-	MA.init(sa)
+	
+	sa.init(texture_mgr, MA)
 end
 
 function assetmgr.load(fullpath)

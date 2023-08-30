@@ -5,10 +5,8 @@ local cr = import_package "ant.compile_resource"
 local fs        = require "filesystem"
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
-local MC        = require "material.core"
 local RM        = require "material"    --ant.material/material
 local RA        = require "arena"       --ant.material/arena
-local SA        = require "system_attribs"
 
 local function build_ecs_worldobj()
     local ecs_worldobj = {

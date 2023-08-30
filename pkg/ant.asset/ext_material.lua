@@ -72,7 +72,7 @@ local function generate_properties(fx, properties)
 		for _, u in ipairs(uniforms) do
 			local n = u.name
 			if not n:match "@data" then
-				if sa[n] then
+				if sa.get(n) then
 					system[#system+1] = n
 				else
 					attrib[n] = to_v(assert(properties[n]), u.handle)
