@@ -6,9 +6,7 @@ local EFK_SERVER<const> = ltask.queryservice "ant.efk|efk"
 
 local handle_mt = {
     realive = function (self, speed)
-        if not self.alive then
-            ltask.call(EFK_SERVER, "play", self.handle, speed)
-        end
+        ltask.call(EFK_SERVER, "play", self.handle, speed)
     end,
     is_alive = function(self)
         ltask.fork(function ()

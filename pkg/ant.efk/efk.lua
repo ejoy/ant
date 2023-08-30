@@ -214,12 +214,21 @@ end
 
 --TODO: need remove all the code checking 'efk' component is valid or not
 function iefk.play(efk)
+    local function realive(eid)
+        local e <close> = world:entity(eid, "efk?in")
+        local eefk = e.efk
+        if eefk then
+            eefk.play_handle:realive(eefk.speed)
+        end
+    end
     if type(efk) == "table" then
 		local entitys = efk.tag["*"]
 		for _, eid in ipairs(entitys) do
+            realive(eid)
 			iefk.set_visible(eid, true)
 		end
     else
+        realive(efk)
         iefk.set_visible(efk, true)
     end
 end
