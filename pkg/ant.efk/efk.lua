@@ -158,7 +158,7 @@ end
 
 function efk_sys:render_submit()
     for e in w:select "view_visible efk:in scene:in" do
-        e.efk.play_handle:update_tranform(e.scene.worldmat)
+        e.efk.play_handle:update_transform(e.scene.worldmat)
     end
 
     local mq_mask = qm.queue_mask "main_queue"
