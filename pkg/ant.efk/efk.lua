@@ -7,6 +7,8 @@ local EFK_SERVER
 
 
 local math3d    = require "math3d"
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
@@ -196,47 +198,19 @@ end
 function efk_sys:follow_transform_updated()
     for v in w:select "view_visible efk:in scene:in scene_changed?in" do
         local efk = v.efk
-        if efk.play_handle_hitchs then
-            local new_handles = {}
-            local del_handles = {}
-            for eid, handle in pairs(efk.play_handle_hitchs) do
-                if not handle:is_alive() then
-                    if efk.loop then
-                        local e <close> = world:entity(eid, "scene:in")
-                        new_handles[eid] = PH.create(efk.handle, math3d.mul(v.scene.worldmat, e.scene.worldmat), efk.speed)
-                    else
-                        del_handles[#del_handles + 1] = eid
-                    end
-                end
-            end
-            for eid, handle in pairs(new_handles) do
-                efk.play_handle_hitchs[eid] = handle
-            end
-            for _, eid in ipairs(del_handles) do
-                efk.play_handle_hitchs[eid] = nil
-            end
-        end
-        
         if efk.play_handle then
-            if not efk.play_handle:is_alive() then
-                efk.play_handle = efk.loop and PH.create(efk.handle, v.scene.worldmat, efk.speed) or nil
-            elseif v.scene_changed then
+            -- if not efk.play_handle:is_alive() then
+            --     efk.play_handle = efk.loop and PH.create(efk.handle, v.scene.worldmat, efk.speed) or nil
+            -- elseif v.scene_changed then
+            --     efk.play_handle:update_transform(v.scene.worldmat)
+            -- end
+            if v.scene_changed then
                 efk.play_handle:update_transform(v.scene.worldmat)
             end
         else
             if efk.visible then
                 if efk.do_play or efk.do_settime then
-                    if efk.hitchs and next(efk.hitchs) then
-                        if not efk.play_handle_hitchs then
-                            efk.play_handle_hitchs = {}
-                        end
-                        for eid, _ in pairs(efk.hitchs) do
-                            local e <close> = world:entity(eid, "scene:in")
-                            efk.play_handle_hitchs[eid] = PH.create(efk.handle, math3d.mul(e.scene.worldmat, v.scene.worldmat), efk.speed)
-                        end
-                    else
-                        efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
-                    end
+                    efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
                 end
                 if efk.do_play then
                     efk.do_play = nil
@@ -257,7 +231,6 @@ function iefk.create(filename, config)
         loop = config.loop or false,
         speed = config.speed or 1.0,
         visible = config.visible or true,
-        hitchs = config.hitchs
     }
     return world:create_entity {
         group = config.group_id,
@@ -277,7 +250,6 @@ function iefk.create(filename, config)
                 loop = cfg.loop,
                 speed = cfg.speed,
                 visible = cfg.visible,
-                hitchs = config.hitchs
             },
             -- on_ready = function (e)
             --     w:extend(e, "efk:in")
