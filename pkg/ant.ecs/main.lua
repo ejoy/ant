@@ -16,7 +16,9 @@ world_metatable.__index = world
 local function create_entity_by_data(w, group, data)
     local queue = w._create_entity_queue
     local eid = w.w:new {
-        debug = debug.traceback()
+        debug = {
+            traceback = debug.traceback(),
+        }
     }
     local initargs = {
         eid = eid,
@@ -27,10 +29,13 @@ local function create_entity_by_data(w, group, data)
     return eid
 end
 
-local function create_entity_by_template(w, group, template)
+local function create_entity_by_template(w, group, name, template)
     local queue = w._create_entity_queue
     local eid = w.w:new {
-        debug = debug.traceback()
+        debug = {
+            prefab = name,
+            traceback = debug.traceback(),
+        }
     }
     local initargs = {
         eid = eid,
@@ -210,7 +215,7 @@ end
 function world:_prefab_instance(instance, args)
     local w = self
     local template = create_template(w, args.prefab)
-    local prefab, noparent = create_instance(w, args.group, template)
+    local prefab, noparent = create_instance(w, args.group, args.prefab, template)
     for _, m in ipairs(noparent) do
         m.parent = args.parent
     end
