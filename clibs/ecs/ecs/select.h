@@ -12,14 +12,17 @@ namespace ecs_api {
     namespace flags {
         struct absent {};
     }
-    constexpr int InvalidID = 0x80000000;
-    constexpr int EntityID = 0xFFFFFFFF;
+    namespace COMPONENT {
+        constexpr int INVALID = 0x80000000;
+        constexpr int EID = 0xFFFFFFFF;
+        constexpr int REMOVED = 0x00000000;
+    }
 
     template <typename T>
-    constexpr inline int component_id = InvalidID;
+    constexpr inline int component_id = COMPONENT::INVALID;
 
     template <typename T>
-    constexpr bool is_tag = (component_id<T> != InvalidID) && std::is_empty_v<T>;
+    constexpr bool is_tag = (component_id<T> != COMPONENT::INVALID) && std::is_empty_v<T>;
 
     namespace impl {
         template <typename Component, typename...Components>
@@ -150,7 +153,7 @@ namespace ecs_api {
             requires (
                 !std::is_function_v<T>
                 && impl::has_element_v<T, Components...>
-                && component_id<T> != EntityID
+                && component_id<T> != COMPONENT::EID
             )
         int component_index(ecs_token token, [[maybe_unused]] int i) noexcept {
             return entity_cache_fetch_index(ctx(), c, i, component_id<T>);
@@ -159,7 +162,7 @@ namespace ecs_api {
             requires (
                 !std::is_function_v<T>
                 && impl::has_element_v<T, Components...>
-                && component_id<T> != EntityID
+                && component_id<T> != COMPONENT::EID
                 && is_tag<T>
             )
         bool component([[maybe_unused]] ecs_token token, int i) noexcept {
@@ -169,7 +172,7 @@ namespace ecs_api {
             requires (
                 !std::is_function_v<T>
                 && impl::has_element_v<T, Components...>
-                && component_id<T> != EntityID
+                && component_id<T> != COMPONENT::EID
                 && !is_tag<T>
             )
         T* component([[maybe_unused]] ecs_token token, int i) noexcept {
@@ -178,11 +181,11 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !std::is_function_v<T>
-                && component_id<T> == EntityID
+                && component_id<T> == COMPONENT::EID
                 && impl::has_element_v<T, Components...>
             )
         T* component(ecs_token token, [[maybe_unused]] int i) noexcept {
-            return (T*)entity_component(ctx(), token, EntityID);
+            return (T*)entity_component(ctx(), token, COMPONENT::EID);
         }
         void disable_tag(int tagid, int i) noexcept {
             entity_disable_tag(ctx(), tagid, i);
@@ -229,8 +232,8 @@ namespace ecs_api {
         { }
         template <typename Component>
             requires (
-                component_id<Component> == EntityID
-                && component_id<MainKey> == EntityID
+                component_id<Component> == COMPONENT::EID
+                && component_id<MainKey> == COMPONENT::EID
                 && sizeof...(SubKey) == 0
             )
         basic_entity(find_t, ecs_context* ctx, Component eid) noexcept
@@ -338,12 +341,12 @@ namespace ecs_api {
             return index == kInvalidIndex;
         }
         template <typename T>
-            requires (component_id<T> == EntityID)
+            requires (component_id<T> == COMPONENT::EID)
         T get() noexcept {
             return (T)std::get<T*>(c);
         }
         template <typename T>
-            requires (component_id<T> != EntityID && !is_tag<T>)
+            requires (component_id<T> != COMPONENT::EID && !is_tag<T>)
         T& get() noexcept {
             return *std::get<T*>(c);
         }
@@ -357,7 +360,7 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !impl::has_element_v<T, MainKey, SubKey...>
-                && component_id<T> == EntityID
+                && component_id<T> == COMPONENT::EID
             )
         T component() const noexcept {
             return (T)ctx.template component<T>(token, index);
@@ -373,7 +376,7 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !impl::has_element_v<T, MainKey, SubKey...>
-                && component_id<T> != EntityID
+                && component_id<T> != COMPONENT::EID
                 && !is_tag<T>
             )
         T* component() const noexcept {
@@ -393,6 +396,9 @@ namespace ecs_api {
             else {
                 ctx.disable_tag(token, index, component_id<T>);
             }
+        }
+        void remove() noexcept {
+            entity_enable_tag(ctx.ctx(), token, COMPONENT::REMOVED);
         }
     private:
         template <std::size_t Is, typename T>
@@ -528,7 +534,7 @@ namespace ecs_api {
     }
 
     template <typename Component>
-        requires (component_id<Component> == EntityID)
+        requires (component_id<Component> == COMPONENT::EID)
     auto find_entity(ecs_context* ctx, Component eid) noexcept {
         return entity<Component>(find_t {}, ctx, eid);
     }
