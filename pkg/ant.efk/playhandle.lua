@@ -32,7 +32,6 @@ local handle_mt = {
     end,
     
     set_visible = function(self, v)
-        assert(v ~= nil)
         ltask.send(EFK_SERVER, "set_visible", self.handle, v)
     end,
 
