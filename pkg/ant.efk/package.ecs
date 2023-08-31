@@ -13,20 +13,18 @@ component "efk_object"
 component "efk_hitch"
     .type "c"
     .field "handle:int"
-    .field "worldmat:userdata|math_t"
     .field "hitchmat:userdata|math_t"
     .implement "efk_object.lua"
 
 policy "efk_hitch"
     .component "efk_hitch"
+    
+component "efk_hitch_tag"
 
 component "efk_hitch_counter"
     .type "c"
     .field "count:int"
     .implement "efk_object.lua"
-
-policy "efk_hitch_counter"
-    .component "efk_hitch_counter"
 
 policy "efk_queue"
     .include_policy "ant.render|render_target"

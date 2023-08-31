@@ -226,16 +226,14 @@ find_render_args(struct ecs_world *w, submit_cache &cc) {
 //TODO: maybe move to another c module
 static constexpr uint16_t MAX_EFK_HITCH = 256;
 static inline void
-submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, const matrix_array& mats, std::span<ecs::efk_hitch>& a_eh, int32_t &count){
+submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, const matrix_array& mats){
 	for (auto m : mats){
-		if (count >= MAX_EFK_HITCH){
-			luaL_error(L, "Too many hitch for efk object");
+		if (entity_count(w->ecs, ecs_api::component_id<ecs::efk_hitch>) >= MAX_EFK_HITCH){
+			luaL_error(L, "Too many 'efk_hitch' object");
 		}
-		
-		auto& eh = a_eh[count++];
-		eh.handle 	= eo->handle;
-		eh.hitchmat = m;
-		eh.worldmat	= eo->worldmat;
+		auto *eh = (ecs::efk_hitch*)entity_component_temp(w->ecs, ecs_api::component_id<ecs::efk_hitch_tag>, ecs_api::component_id<ecs::efk_hitch>);
+		eh->handle		= eo->handle;
+		eh->hitchmat	= math3d_mul_matrix(w->math3d->M, m, eo->worldmat);
 	}
 }
 
@@ -272,9 +270,7 @@ lsubmit(lua_State *L) {
 		}
 	}
 
-	auto e = ecs_api::first_entity<ecs::efk_hitch_counter>(w->ecs);
-	auto& ehc = e.get<ecs::efk_hitch_counter>();
-
+	ecs_api::clear_type<ecs::efk_hitch>(w->ecs);
 	for (auto const& [groupid, g] : cc.groups) {
 		int gids[] = {groupid};
 		ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
@@ -289,10 +285,8 @@ lsubmit(lua_State *L) {
 					}
 
 					const auto eo = e.component<ecs::efk_object>();
-					
 					if (eo && obj_queue_visible(*eo, ra.a->queue_mask)){
-						auto a_eh = ecs_api::array<ecs::efk_hitch>(w->ecs);
-						submit_efk_obj(L, w, eo, mats, a_eh, ehc.count);
+						submit_efk_obj(L, w, eo, mats);
 					}
 				}
 			}

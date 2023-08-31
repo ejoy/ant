@@ -30,7 +30,6 @@ function eh.init()
     return {
         handle = 0,
         hitchmat = mu.NULL,
-        worldmat = mu.NULL,
     }
 end
 

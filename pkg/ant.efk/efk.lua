@@ -11,8 +11,6 @@ local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
 
-
-
 local hwi       = import_package "ant.hwi"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
@@ -31,25 +29,9 @@ function efk_sys:init()
     ltask.call(EFK_SERVER, "init")
     PH = ecs.require "playhandle"
 
-    for i=1, MAX_EFK_HITCH do
-        world:create_entity{
-            policy = {
-                "ant.efk|efk_hitch",
-            },
-            data = {
-                efk_hitch = true,
-            }
-        }
+    for _=1, MAX_EFK_HITCH do
+        w:temporary("efk_hitch_tag", "efk_hitch")
     end
-
-    world:create_entity{
-        policy = {
-            "ant.efk|efk_hitch_counter",
-        },
-        data = {
-            efk_hitch_counter = true
-        }
-    }
 end
 
 local function cleanup_efk(efk)
@@ -71,11 +53,6 @@ function efk_sys:exit()
         cleanup_efk(e.efk)
     end
 
-    for e in w:select "efk_hitch" do
-        w:remove(e)
-    end
-
-    w:remove(w:first "efk_hitch_counter")
     ltask.call(EFK_SERVER, "exit")
 end
 
@@ -221,23 +198,15 @@ end
 
 local function update_hitch_efk()
     --iter_group_hitch_DEBUG_ONLY()
-    local ec = w:first "efk_hitch_counter:update"
-    local counter = ec.efk_hitch_counter
-    local c = counter.count
-    if c > 0 then
-        for e in w:select "efk_hitch:in" do
-            c = c - 1
-            local eh = e.efk_hitch
-            local m = math3d.serialize(math3d.mul(eh.hitchmat, eh.worldmat))
-            ltask.send(EFK_SERVER, "update_transform", eh.handle, m)
+    local handles, mats = {}, {}
+    for e in w:select "efk_hitch:in" do
+        local eh = e.efk_hitch
+        handles[#handles+1] = eh.handle
+        mats[#mats+1] = math3d.serialize(eh.hitchmat)
+    end
 
-            if c == 0 then
-                break
-            end
-        end
-
-        counter.count = c
-        w:submit(ec)
+    if #handles > 0 then
+        ltask.send(EFK_SERVER, "update_hitch_transforms", handles, table.concat(mats, ""))
     end
 end
 
