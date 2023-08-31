@@ -1,3 +1,2 @@
 system "shadow_debug_system"
     .implement "shadow/shadow_debug.lua"
-    .method "camera_usage"

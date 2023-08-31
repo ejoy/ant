@@ -1,4 +1,2 @@
 system "time_system"
     .implement "timer_system.lua"
-    .method "init"
-    .method "timer"

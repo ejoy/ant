@@ -3,13 +3,6 @@ import "@ant.general"
 
 system "animation_system"
     .implement "animation.lua"
-    .method "component_init"
-    .method "data_changed"
-    .method "do_refine"
-    .method "end_animation"
-    .method "sample_animation_pose"
-    .method "entity_init"
-    .method "entity_ready"
 
 pipeline "animation"
     .stage "animation_state"
@@ -43,8 +36,6 @@ component "pose_dirty"
 
 system "keyframe_system"
     .implement "keyframe.lua"
-    .method "component_init"
-    .method "data_changed"
 
 component "keyframe".type "lua"
 

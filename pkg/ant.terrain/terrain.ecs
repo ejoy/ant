@@ -8,30 +8,23 @@ import "water.ecs"
 component "st".type "lua"
 system "terrain_system"
     .implement "terrain_system.lua"
-    .method "init"
-    .method "data_changed"
 ]]
 
 -- system "terrain_system"
 --     .implement "terrain_system.lua"
---     .method "data_changed"
 
 -- transform "build_terrain"
 --     .implement "terrain_system.lua"
 --     .input "terrain"
 --     .output "_terrain"
---     .method "process_prefab"
 
 -- transform "terrain_mesh"
 --     .implement "terrain_system.lua"
 --     .input "_terrain"
 --     .output "mesh"
---     .method "process_prefab"
 
 -- component "terrain"
 --     .implement "terrain_system.lua"
---     .method "init"
 
 -- action "section_mount"
 --     .implement "terrain_system.lua"
---     .method "init"

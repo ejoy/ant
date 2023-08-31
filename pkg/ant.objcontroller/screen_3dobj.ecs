@@ -1,6 +1,5 @@
 system "screen_3dobj_system"
     .implement "screen_3dobj.lua"
-    .method "camera_usage"
 
 
 component "screen_3dobj".type "lua"

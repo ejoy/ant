@@ -1,4 +1,2 @@
 system "debug_system"
     .implement "debug.lua"
-    .method "init"
-    .method "data_changed"

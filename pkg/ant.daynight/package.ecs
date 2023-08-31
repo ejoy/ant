@@ -1,7 +1,5 @@
 system "daynight_system"
     .implement "daynight.lua"
-    .method "entity_init"
-    .method "entity_remove"
 
 component "daynight".type "lua"
 

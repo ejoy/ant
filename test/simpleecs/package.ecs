@@ -12,11 +12,6 @@ pipeline "update"
 
 system "init_system"
     .implement "simpleecs.lua"
-    .method "init"
-    .method "data_changed"
-    .method "simpleecs"
-    .method "update"
-    .method "exit"
 
 component "testtab"
 

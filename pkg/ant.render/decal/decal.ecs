@@ -10,7 +10,4 @@ policy "decal"
 
 system "decal_system"
     .implement "decal/decal.lua"
-    .method "entity_init"
-    .method "data_changed"
-    .method "follow_transform_updated"
 

@@ -5,11 +5,6 @@ import "pickup/pickup_debug.ecs"
 
 system "pickup_system"
     .implement "pickup/pickup_system.lua"
-    .method "init"
-    .method "entity_init"
-    .method "update_camera_depend"
-    .method "update_filter"
-    .method "pickup"
 
 pipeline "select"
     .stage "pickup"

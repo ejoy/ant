@@ -2,19 +2,15 @@ import "@ant.general"
 
 system "physic_bounding_system"
     .implement "widget_system.lua"
-    .method "widget"
 
 system "render_mesh_bounding_system"
     .implement "widget_system.lua"
     .require_system "ant.render|widget_drawer_system"
-    .method "follow_transform_updated"
 
 system "widget_drawer_system"
     .implement "widget_system.lua"
     .require_policy "ant.render|simplerender"
     .require_policy "ant.render|bounding_draw"
-    .method "end_frame"
-    .method "init"
 
 policy "bounding_draw"
     .component "widget_drawer"

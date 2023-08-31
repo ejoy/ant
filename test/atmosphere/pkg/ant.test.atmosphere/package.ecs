@@ -18,9 +18,6 @@ system "init_system"
     .require_policy "ant.render|skinrender"
     .require_policy "ant.animation|animation"   --TODO: need remove animation dependent
     .require_policy "ant.efk|efk"
-    .method "init"
-    .method "init_world"
-    .method "camera_usage"
 
 pipeline "init"
     .stage "init"

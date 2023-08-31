@@ -50,7 +50,6 @@ local attribute = {
 		"implement",
 		"require_system",
 		"require_policy",
-		"method",
 	},
 	policy = {
 		"require_system",
@@ -64,7 +63,6 @@ local attribute = {
 		"type",
 		"size",
 		"field",
-		"method",
 	},
 }
 

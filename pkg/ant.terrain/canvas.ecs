@@ -1,7 +1,5 @@
 system "canvas_system"
     .implement "canvas.lua"
-    .method "component_init"
-    .method "entity_remove"
 
 component "canvas".type "lua"
 component "canvas_drawer".type "lua"

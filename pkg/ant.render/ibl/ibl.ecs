@@ -1,7 +1,5 @@
 system "ibl_system"
     .implement "ibl/ibl.lua"
-    .method "data_changed"
-    .method "render_preprocess"
 
 component "irradiance_builder"
 component "prefilter_builder"

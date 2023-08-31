@@ -2,10 +2,7 @@ import "@ant.scene"
 
 system "window_resize_system"
     .implement "viewport/window_resize.lua"
-    .method "start_frame"
 
 system "viewport_detect_system"
     .require_system "ant.render|window_resize_system"
     .implement "viewport/viewport_detect_system.lua"
-    .method "data_changed"
-    .method "post_init"

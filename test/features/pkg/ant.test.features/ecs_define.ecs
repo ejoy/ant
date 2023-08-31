@@ -59,74 +59,49 @@ system "init_loader_system"
     .require_policy "ant.render|heap_mesh"
     .require_policy "ant.daynight|daynight"
     .require_policy "ant.render|outline_info"
-    .method "init"
-    .method "init_world"
-    .method "ui_update"
-    .method "data_changed"
-    .method "camera_usage"
 
 system "animation_test_system"
     .implement "animation_test.lua"
-    .method "init"
 
 system "character_ik_test_system"
     .implement "character_ik_test.lua"
-    .method "init"
 
 system "pbr_test_system"
     .implement "pbr_test.lua"
-    .method "init"
 
 system "scenespace_test_system"
     .implement "scenespace_test.lua"
-    .method "init"
 
 
 system "shadow_test_system"
     .implement "shadow_test.lua"
-    .method "init"
-    .method "entity_init"
 
 
 system "decal_test_system"
     .implement "decal_test.lua"
-    .method "init"
 
 system "camera_recorder_test_system"
     .implement "camera_recorder_test.lua"
     .require_system "ant.camera|camera_recorder_system"
-    .method "data_changed"
 
 system "font_test_system"
     .implement "font_test.lua"
-    .method "init"
 
 system "water_test_system"
     .implement "water_test.lua"
     .require_policy "ant.terrain|water"
-    .method "init"
 
 system "terrain_entity_test_system"
     .implement "terrain_entity_test.lua"
-    .method "init"
-    .method "init_world"
-    .method "data_changed"
-    .method "camera_usage"
 
 system "hitch_node_test_system"
     .implement "hitch_node.lua"
-    .method "init"
-    .method "data_changed"
 
 system "motion_sampler_test_system"
     .implement "motion_sampler_test.lua"
-    .method "init"
-    .method "data_changed"
 
 
 -- system "dynamic_texture_test_system"
 --     .require_system "ant.render|billboard_system"
 --     .require_policy "ant.render|billboard"
 --     .implement "texture_test.lua"
---     .method "init"
---     .method "data_changed"

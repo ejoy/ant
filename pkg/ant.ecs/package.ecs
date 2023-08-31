@@ -26,18 +26,9 @@ pipeline "_update"
 
 system "entity_system"
     .implement "entity_system.lua"
-    .method "init"
-    .method "entity_ready"
-    .method "entity_create"
-    .method "prefab_remove"
-    .method "entity_destory"
-    .method "update_world"
-    .method "data_changed"
 
 system "debug_system"
     .implement "debug_system.lua"
-    .method "init"
-    .method "update_world"
 
 component "INIT"
 component "LAST_CREATE"

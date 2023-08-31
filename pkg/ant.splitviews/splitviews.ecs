@@ -1,9 +1,5 @@
 system "splitviews_system"
     .implement "splitviews.lua"
-    .method "init"
-    .method "entity_init"
-    .method "data_changed"
-    .method "update_camera"
 
 component "ortho_right_queue"
 component "ortho_left_queue"

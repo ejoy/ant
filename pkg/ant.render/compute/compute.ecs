@@ -1,6 +1,5 @@
 system "compute_system"
     .implement "compute/compute.lua"
-    .method "entity_init"
 
 component "compute"
 component "dispatch".type "lua"

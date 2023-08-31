@@ -1,21 +1,11 @@
 system "camera_system"
     .implement "camera/camera_system.lua"
-    .method "init_world"
-    .method "entity_ready"
-    .method "handle_input"
 
 system "second_view_camera_system"
     .implement "camera/second_view.lua"
-    .method "init_world"
-    .method "entity_init"
-    .method "data_changed"
-    .method "update_camera"
-    .method "entity_remove"
 
 system "second_view_frustum_system"
     .implement "camera/second_view.lua"
-    .method "camera_usage"
-    .method "entity_remove"
 
 component "second_view"
 component "second_view_visible"

@@ -4,8 +4,6 @@ import "@ant.render"
 
 system "procedural_sky_system"
     .implement "procedural_sky_system.lua"
-    .method "data_changed"
-    .method "entity_init"
 
 policy "procedural_sky"
     .require_system "procedural_sky_system"
@@ -31,8 +29,6 @@ component "skybox_changed"
 
 system "skybox_system"
     .implement "skybox.lua"
-    .method "component_init"
-    .method "entity_ready"
 
 pipeline "sky"
     .stage "convert_sky"

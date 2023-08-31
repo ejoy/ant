@@ -1,6 +1,5 @@
 system "water_system"
     .implement "water_system.lua"
-    .method "component_init"
 
 component "water".type "lua"
 

@@ -11,8 +11,6 @@ component "motion_sampler"
     .field "stop:byte"
     .field "is_tick:byte"
     .implement "motion_sampler.lua"
-    .method "init"
-    .method "remove"
 
 policy "motion_sampler"
     .require_system "ant.motion_sampler|motion_sampler_system"
@@ -20,8 +18,6 @@ policy "motion_sampler"
 
 system "motion_sampler_system"
     .implement "motion_sampler.lua"
-    .method "init"
-    .method "do_motion_sample"
 
 pipeline "motion_sample"
     .stage "do_motion_sample"

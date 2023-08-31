@@ -2,4 +2,3 @@
 component "render_layer".type "lua"
 system "render_layer_system"
     .implement "render_layer.lua"
-    .method "start_frame"

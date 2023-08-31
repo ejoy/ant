@@ -1,8 +1,5 @@
 system "camera_view_system"
     .implement "camera.lua"
-    .method "start_frame"
-    .method "entity_init"
-    .method "update_camera"
 
 component "camera_depend"
 component "exposure".type "lua"
@@ -12,8 +9,6 @@ policy "exposure"
 
 system "camera_recorder_system"
     .implement "camera_recorder.lua"
-    .method "component_init"
-    .method "data_changed"
 
 component "camera_recorder".type "lua"
 policy "camera_recorder"

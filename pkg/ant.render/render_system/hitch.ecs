@@ -7,12 +7,9 @@ component "hitch"
     .field "visible_masks:int64"
     .field "cull_masks:int64"
     .implement "render_system/hitch.lua"
-    .method "init"
 
 system "hitch_system"
     .implement "render_system/hitch.lua"
-    .method "entity_init"
-    .method "entity_ready"
 
 policy "hitch_object"
     .require_policy "ant.scene|scene_object"

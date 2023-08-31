@@ -1,6 +1,5 @@
 --[[ system "plane_terrain_system"
     .implement "plane_terrain.lua"
-    .method "init"
 
 component "plane_terrain".type "lua"
 component "section_index".type "lua"
@@ -9,7 +8,6 @@ component "section_index".type "lua"
 
 system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
-    .method "entity_init"
 
 --component "shape_terrain".type "lua"
 
@@ -18,7 +16,6 @@ component "shape_terrain_edge_drawer"
 
 system "mesh_terrain_system"
     .implement "mesh_terrain.lua"
-    .method "entity_init"
 
 
 --[[ policy "shape_terrain"
@@ -30,7 +27,6 @@ system "mesh_terrain_system"
 component "quad_strip".type "lua"
 system "quad_strip_system"
     .implement "quad_strip.lua"
-    .method "entity_init"
 
 policy "quad_strip"
     .require_system "ant.terrain|quad_strip_system"
@@ -39,6 +35,5 @@ policy "quad_strip"
 --indicator
 system "indicator_system"
     .implement "indicator.lua"
-    .method "data_changed"
 
 import "canvas.ecs"

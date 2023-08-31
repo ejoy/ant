@@ -1,5 +1,2 @@
 system "default_camera_controller"
     .implement "camera_controller.lua"
-    --.method "data_changed"
-    --.method "init_world"
-    .method "camera_usage"

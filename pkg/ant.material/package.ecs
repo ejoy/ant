@@ -1,3 +1,2 @@
 system "material_init_system"
     .implement "material.lua"
-    .method "preinit"

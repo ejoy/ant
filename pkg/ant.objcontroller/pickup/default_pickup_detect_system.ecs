@@ -1,4 +1,2 @@
 system "default_pickup_detect_system"
     .implement "pickup/default_pickup_detect_system.lua"
-    .method "init"
-    .method "data_changed"
