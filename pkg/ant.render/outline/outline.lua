@@ -8,7 +8,7 @@ local assetmgr  = import_package "ant.asset"
 
 local hwi       = import_package "ant.hwi"
 local queuemgr  = ecs.require "queue_mgr"
-local R         = ecs.clibs "render.render_material"
+local R         = world:clibs "render.render_material"
 local RM        = ecs.require "ant.material|material"
 
 local outline_material

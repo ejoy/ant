@@ -7,7 +7,7 @@ local queuemgr				= ecs.require "queue_mgr"
 local setting				= import_package "ant.settings"
 local disable_cull<const>	= setting:get "graphic/disable_cull"
 
-local cullcore = ecs.clibs "cull.core"
+local cullcore = world:clibs "cull.core"
 
 local CULL_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {

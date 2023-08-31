@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local mu 		= import_package "ant.math".util
-local R         = ecs.clibs "render.render_material"
+local R         = world:clibs "render.render_material"
 local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
 local idrawindirect = ecs.require "ant.render|draw_indirect_system"

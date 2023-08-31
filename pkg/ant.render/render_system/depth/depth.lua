@@ -17,7 +17,7 @@ local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local queuemgr      = ecs.require "queue_mgr"
 
 local math3d        = require "math3d"
-local R             = ecs.clibs "render.render_material"
+local R             = world:clibs "render.render_material"
 local RM            = ecs.require "ant.material|material"
 
 local irq           = ecs.require "ant.render|render_system.renderqueue"

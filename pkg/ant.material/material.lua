@@ -1,7 +1,8 @@
 local ecs = ...
+local world = ecs.world
 
 local arena = require "arena"
-local core = ecs.clibs "render.material.core"
+local core = world:clibs "render.material.core"
 
 local M = {}
 

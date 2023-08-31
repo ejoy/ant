@@ -9,7 +9,7 @@ require "bake_mathadapter"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
-local R         = ecs.clibs "render.render_material"
+local R         = world:clibs "render.render_material"
 
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 

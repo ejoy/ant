@@ -17,7 +17,7 @@ local RM        = ecs.require "ant.material|material"
 
 local render_sys= ecs.system "render_system"
 
-local R			= ecs.clibs "render.render_material"
+local R			= world:clibs "render.render_material"
 
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"

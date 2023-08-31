@@ -18,7 +18,7 @@ local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ui_rt_group_id = 110000
 
-local R             = ecs.clibs "render.render_material"
+local R             = world:clibs "render.render_material"
 local queuemgr      = ecs.require "ant.render|queue_mgr"
 
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"

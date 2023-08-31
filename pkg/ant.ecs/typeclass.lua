@@ -1,7 +1,6 @@
 local interface = require "interface"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
-local create_ecs = require "ecs"
 
 local check_map = {
 	require_system = "system",
@@ -248,6 +247,40 @@ local function import_ecs(w, importor, ecs)
 			importor.component(k)
 		end
 	end
+end
+
+local function create_ecs(w, importor, package)
+    local ecs = { world = w }
+    function ecs.system(name)
+        local fullname = package .. "|" .. name
+        local r = w._class.system[fullname]
+        if r == nil then
+            log.debug("Register system   ", fullname)
+            r = {}
+            w._class.system[fullname] = r
+            importor.system(fullname)
+        end
+        return r
+    end
+    function ecs.component(fullname)
+        local r = w._class.component[fullname]
+        if r == nil then
+            log.debug("Register component", fullname)
+            r = {}
+            w._class.component[fullname] = r
+            importor.component(fullname)
+        end
+        return r
+    end
+    function ecs.require(fullname)
+        local pkg, file = fullname:match "^([^|]*)|(.*)$"
+        if not pkg then
+            pkg = package
+            file = fullname
+        end
+        return w:_package_require(pkg, file)
+    end
+    return ecs
 end
 
 local function init(w, config)

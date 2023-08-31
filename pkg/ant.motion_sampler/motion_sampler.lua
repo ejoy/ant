@@ -1,11 +1,10 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local mathpkg=import_package "ant.math"
-local mc    = mathpkg.constant
+
 local math3d= require "math3d"
 
-local lms   = ecs.clibs "motion.sampler"
+local lms   = world:clibs "motion.sampler"
 local ltween = require "motion.tween"
 
 local itimer= ecs.require "ant.timer|timer_system"
