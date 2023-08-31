@@ -32,10 +32,3 @@ function eh.init()
         hitchmat = mu.NULL,
     }
 end
-
-local ehc = ecs.component "efk_hitch_counter"
-function ehc.init()
-    return {
-        count = 0
-    }
-end
