@@ -336,11 +336,6 @@ local function update_visible(node, visible)
     return rv
 end
 
--- local test1
--- local test2
--- local test_prefab1
--- local test_prefab2
--- local iani      = ecs.require "ant.animation|controller.state_machine"
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -360,16 +355,13 @@ function m:handle_event()
         if what == "move" then
             gizmo:set_position(v2)
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
-            -- prefab_mgr:on_patch_tranform(target, "t", v2)
         elseif what == "rotate" then
             local rot = math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])}
             gizmo:set_rotation(rot)
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
-            -- prefab_mgr:on_patch_tranform(target, "r", math3d.tovalue(rot))
         elseif what == "scale" then
             gizmo:set_scale(v2)
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
-            -- prefab_mgr:on_patch_tranform(target, "s", v2)
         elseif what == "name" or what == "tag" then
             transform_dirty = false
             if what == "name" then
@@ -468,140 +460,6 @@ function m:handle_event()
             on_open_proj()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
-        elseif state.CTRL and key == "T" and press == 1 then
-            -- prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effects/chimney_smoke.efk")
-            
-            -- local test_gid<const> = 1000001
-            -- world:create_entity{
-            --     policy = {
-            --         "ant.general|name",
-            --         "ant.render|hitch_object",
-            --     },
-            --     data = {
-            --         name = "test_efk_hitch",
-            --         hitch = {
-            --             group = test_gid,
-            --         },
-            --         visible_state = "main_view",
-            --         scene = {
-            --             t = {5, 2, 0, 1}
-            --         }
-            --     }
-            -- }
-        
-            -- world:create_entity({
-            --     policy = {
-            --         "ant.general|name",
-            --         "ant.scene|scene_object",
-            --         "ant.efk|efk",
-            --         "ant.general|tag"
-            --     },
-            --     data = {
-            --         name = "root",
-            --         tag = {"effect"},
-            --         scene = {},
-            --         efk = {
-            --             path = "/pkg/vaststars.resources/effects/miner_dust.efk",
-            --             auto_play = true,
-            --             loop = true,
-            --             visible = false,
-            --         },
-            --         view_visible = false,
-            --         on_ready = function (e)
-            --             if nil ~= test_gid then
-            --                 w:extend(e, "view_visible?out")
-            --                 e.view_visible = false
-            --                 w:submit(e)
-            --             end
-            --         end
-            --     },
-            -- }, test_gid)
-        
-            -- world:group_enable_tag("view_visible", test_gid)
-            -- world:group_flush "view_visible"
-
-            -- local hitch_test_group_id<const> = 1000
-            -- world:create_entity {
-            --     policy = {
-            --         "ant.general|name",
-            --         "ant.render|hitch_object"
-            --     },
-            --     data = {
-            --         name = "test2",
-            --         scene = { t = math3d.vector(50, 0, 0) },
-            --         hitch = {
-            --             group = hitch_test_group_id,
-            --             hitch_bounding = true
-            --         },
-            --         visible_state = "main_view|cast_shadow|selectable",
-            --         scene_needchange = true,
-            --     }
-            -- }
-
-            -- world:create_instance {
-            --     prefab = "/pkg/vaststars.resources/glbs/chimney-1.glb|mesh.prefab",
-            --     parent = nil,
-            --     on_ready = function(instance)
-            --         -- for _, eid in ipairs(instance.tag["*"]) do
-            --         --     local e <close> = world:entity(eid, "view_visible?out")
-            --         --     e.view_visible = false
-            --         --     w:submit(e)
-            --         -- end
-            --     end,
-            --     group = hitch_test_group_id}
-            -- world:group_enable_tag("view_visible", hitch_test_group_id)
-            -- world:group_flush "view_visible"
-
-            -- local hitch_test_group_id<const> = 1000
-            -- world:create_entity {
-            --     policy = {
-            --         "ant.general|name",
-            --         "ant.render|hitch_object"
-            --     },
-            --     data = {
-            --         name = "test1",
-            --         scene = { t = math3d.vector(-50, 0, 0) },
-            --         hitch = {
-            --             group = hitch_test_group_id,
-            --             hitch_bounding = true
-            --         },
-            --         visible_state = "main_view|cast_shadow|selectable",
-            --         scene_needchange = true,
-            --     }
-            -- }
-            -- world:create_entity {
-            --     policy = {
-            --         "ant.general|name",
-            --         "ant.render|hitch_object"
-            --     },
-            --     data = {
-            --         name = "test2",
-            --         scene = { t = math3d.vector(50, 0, 0) },
-            --         hitch = {
-            --             group = hitch_test_group_id,
-            --             hitch_bounding = true
-            --         },
-            --         visible_state = "main_view|cast_shadow|selectable",
-            --         scene_needchange = true,
-            --     }
-            -- }
-            -- world:create_instance {
-            --     prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|mesh.prefab",
-            --     on_ready = function(instance)
-            --         for _, eid in ipairs(instance.tag["*"]) do
-            --             local e <close> = world:entity(eid, "tag?in anim_ctrl?in")
-            --             if e.anim_ctrl then
-            --                 iani.load_events(eid, "/pkg/vaststars.resources/animations/miner-1.event")
-            --                 -- e.anim_ctrl.group_id = hitch_test_group_id
-            --             end
-            --         end
-            --         iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
-            --     end,
-            --     parent = nil,
-            --     group = hitch_test_group_id
-            -- }
-            -- world:group_enable_tag("view_visible", hitch_test_group_id)
-            -- world:group_flush "view_visible"
         end
     end
     for _, what, type in event_create:unpack() do

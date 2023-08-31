@@ -54,35 +54,28 @@ local function get_group_id()
     return group_id
 end
 
-local hitch_id = 1
-function m:create_hitch(slot)
-    local auto_name = (slot and "slot" or "hitch") .. hitch_id
-    hitch_id = hitch_id + 1
+local slot_id = 1
+function m:create_slot()
+    local auto_name = "slot" .. slot_id
+    slot_id = slot_id + 1
     local parent_eid = gizmo.target_eid or (self.scene and self.scene or self.root)
     local template = {
         policy = {
-            "ant.general|name"
+            "ant.general|name",
+            "ant.animation|slot"
         },
         data = {
             name = auto_name,
-            scene = { parent = parent_eid }
+            scene = { parent = parent_eid },
+            slot = {
+                joint_name = "None",
+                follow_flag = 1,
+            },
+            on_ready = function (e) hierarchy:update_slot_list(world) end
         }
     }
-    if slot then
-        template.policy[#template.policy + 1] = "ant.animation|slot"
-        template.data.slot = {
-            joint_name = "None",
-            follow_flag = 1,
-        }
-    else
-        template.policy[#template.policy + 1] = "ant.render|hitch_object"
-        template.data.hitch = { group = 0 }
-    end
-    local tpl = utils.deep_copy(template)
-    if slot then
-        tpl.data.on_ready = function (e) hierarchy:update_slot_list(world) end
-    end
-    self:add_entity(world:create_entity(tpl), parent_eid, template)
+    local tpl = 
+    self:add_entity(world:create_entity(utils.deep_copy(template)), parent_eid, template)
 end
 
 local function create_simple_entity(name, parent)
@@ -204,10 +197,8 @@ function m:create(what, config)
     if not self.root then
         self:reset_prefab()
     end
-    if what == "hitch" then
-        self:create_hitch()
-    elseif what == "slot" then
-        self:create_hitch(true)
+    if what == "slot" then
+        self:create_slot(true)
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
         hierarchy:add(new_camera, {template = template}, self.root)

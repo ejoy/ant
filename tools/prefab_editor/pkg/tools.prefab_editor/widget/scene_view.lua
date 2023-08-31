@@ -294,9 +294,6 @@ function m.show()
             if imgui.widget.MenuItem("Camera") then
                 world:pub { "Create", "camera"}
             end
-            if imgui.widget.MenuItem("Hitch") then
-                world:pub { "Create", "hitch"}
-            end
             if imgui.widget.MenuItem("Slot") then
                 world:pub { "Create", "slot"}
             end
@@ -316,14 +313,14 @@ function m.show()
             imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
             imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
             imgui.table.HeadersRow()
-            for i, child in ipairs(hierarchy.root.children) do
+            for _, child in ipairs(hierarchy.root.children) do
                 target_e = nil
                 show_scene_node(child)
                 if source_e and target_e then
                     world:pub {"EntityEvent", "parent", source_e, target_e}
                 end
             end
-            imgui.table.End() 
+            imgui.table.End()
         end
     end
     imgui.windows.End()
