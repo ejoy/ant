@@ -160,7 +160,7 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 			submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
 		}
-		t = update_transform(w, obj, (*mats)[mats->size()-1], trans);
+		t = update_transform(w, obj, mats->back(), trans);
 	} else {
 		t = update_transform(w, obj, MATH_NULL, trans);
 	}
@@ -223,6 +223,22 @@ find_render_args(struct ecs_world *w, submit_cache &cc) {
 	}
 }
 
+//TODO: maybe move to another c module
+static constexpr uint16_t MAX_EFK_HITCH = 256;
+static inline void
+submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, const matrix_array& mats, std::span<ecs::efk_hitch>& a_eh, int32_t &count){
+	for (auto m : mats){
+		if (count >= MAX_EFK_HITCH){
+			luaL_error(L, "Too many hitch for efk object");
+		}
+		
+		auto& eh = a_eh[count++];
+		eh.handle 	= eo->handle;
+		eh.hitchmat = m;
+		eh.worldmat	= eo->worldmat;
+	}
+}
+
 static int
 lsubmit(lua_State *L) {
 	auto w = getworld(L);
@@ -256,17 +272,27 @@ lsubmit(lua_State *L) {
 		}
 	}
 
+	auto e = ecs_api::first_entity<ecs::efk_hitch_counter>(w->ecs);
+	auto& ehc = e.get<ecs::efk_hitch_counter>();
+
 	for (auto const& [groupid, g] : cc.groups) {
 		int gids[] = {groupid};
 		ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
-		for (auto& e : ecs_api::select<ecs::hitch_tag, ecs::render_object>(w->ecs)) {
+		for (auto& e : ecs_api::select<ecs::hitch_tag>(w->ecs)) {
 			for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 				const auto& ra = cc.ra[ii];
 				const auto &mats = g[ra.queue_idx];
 				if (!mats.empty()){
-					const auto& obj = e.get<ecs::render_object>();
-					if (obj_queue_visible(obj, ra.a->queue_mask)){
-						draw_obj(L, w, ra.a, &obj, &mats, cc.transforms);
+					auto ro = e.component<ecs::render_object>();
+					if (ro && obj_queue_visible(*ro, ra.a->queue_mask)){
+						draw_obj(L, w, ra.a, ro, &mats, cc.transforms);
+					}
+
+					const auto eo = e.component<ecs::efk_object>();
+					
+					if (eo && obj_queue_visible(*eo, ra.a->queue_mask)){
+						auto a_eh = ecs_api::array<ecs::efk_hitch>(w->ecs);
+						submit_efk_obj(L, w, eo, mats, a_eh, ehc.count);
 					}
 				}
 			}
@@ -337,10 +363,31 @@ luaopen_render_material(lua_State *L) {
 	return 1;
 }
 
+static void
+init_efk(struct ecs_world* w){
+	for (uint16_t ii=0; ii<MAX_EFK_HITCH; ++ii){
+		ecs_api::create_entity<ecs::efk_hitch>(w->ecs);
+	}
+
+	ecs_api::create_entity<ecs::efk_hitch_counter>(w->ecs, 0);
+}
+
+static void
+remove_efk(struct ecs_world* w){
+	for (auto &e : ecs_api::select<ecs::efk_hitch>(w->ecs)){
+		e.enable_tag<ecs::REMOVED>();
+	}
+
+	auto e = ecs_api::first_entity<ecs::efk_hitch_counter>(w->ecs);
+	e.enable_tag<ecs::REMOVED>();
+}
+
 static int
 linit(lua_State *L){
 	auto w = getworld(L);
 	w->R = render_material_create();
+
+	init_efk(w);
 	return 1;
 }
 
@@ -349,6 +396,8 @@ lexit(lua_State *L){
 	auto w = getworld(L);
 	render_material_release(w->R);
 	w->R = nullptr;
+
+	remove_efk(w);
 	return 0;
 }
 

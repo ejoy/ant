@@ -3,6 +3,7 @@ pipeline "render_process"
     .stage "commit_system_properties"
     .stage "render_preprocess"
     .stage "render_submit"
+    .stage "render_postprocess"
 
 system "forward_render_system"
     .implement "render_system/forward_render.lua"

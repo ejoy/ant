@@ -67,6 +67,16 @@ function efk_sys:component_init()
     end
 end
 
+function efk_sys:entity_init()
+    for e in w:select "INIT scene:in efk:in efk_object:update" do
+        local eo = e.efk_object
+
+        eo.handle = e.efk.handle
+        eo.worldmat = e.scene.worldmat
+        eo.visible_masks = qm.queue_mask "main_queue"
+    end
+end
+
 function efk_sys:entity_remove()
     for e in w:select "REMOVED efk:in" do
         cleanup_efk(e.efk)
@@ -156,11 +166,13 @@ function efk_sys:camera_usage()
     ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
-function efk_sys:render_submit()
-    for e in w:select "view_visible efk:in scene:in" do
-        e.efk.play_handle:update_transform(e.scene.worldmat)
-    end
+function efk_sys:scene_update()
+	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
+		e.efk_object.worldmat = e.scene.worldmat
+	end
+end
 
+local function iter_group_hitch_DEBUG_ONLY()
     local mq_mask = qm.queue_mask "main_queue"
     local groups = setmetatable({}, {__index=function (tt, idx) local t = {}; tt[idx] = t;return t end})
     for e in w:select "view_visible hitch:in scene:in" do
@@ -182,6 +194,36 @@ function efk_sys:render_submit()
             e.efk.play_handle:update_hitch_transforms(mats, e.scene.worldmat)
         end
     end
+end
+
+local function update_hitch_efk()
+    --iter_group_hitch_DEBUG_ONLY()
+    local ec = w:first "efk_hitch_counter:update"
+    local counter = ec.efk_hitch_counter
+    local c = counter.count
+    if c > 0 then
+        for e in w:select "efk_hitch:in" do
+            c = c - 1
+            local eh = e.efk_hitch
+            local m = math3d.serialize(math3d.mul(eh.hitchmat, eh.worldmat))
+            ltask.send(EFK_SERVER, "update_transform", eh.handle, m)
+
+            if c == 0 then
+                break
+            end
+        end
+
+        counter.count = c
+        w:submit(ec)
+    end
+end
+
+function efk_sys:render_postprocess()
+    for e in w:select "view_visible efk:in scene:in" do
+        e.efk.play_handle:update_transform(e.scene.worldmat)
+    end
+
+    update_hitch_efk()
 end
 
 function iefk.create(filename, config)
