@@ -363,31 +363,10 @@ luaopen_render_material(lua_State *L) {
 	return 1;
 }
 
-static void
-init_efk(struct ecs_world* w){
-	for (uint16_t ii=0; ii<MAX_EFK_HITCH; ++ii){
-		ecs_api::create_entity<ecs::efk_hitch>(w->ecs);
-	}
-
-	ecs_api::create_entity<ecs::efk_hitch_counter>(w->ecs, 0);
-}
-
-static void
-remove_efk(struct ecs_world* w){
-	for (auto &e : ecs_api::select<ecs::efk_hitch>(w->ecs)){
-		e.enable_tag<ecs::REMOVED>();
-	}
-
-	auto e = ecs_api::first_entity<ecs::efk_hitch_counter>(w->ecs);
-	e.enable_tag<ecs::REMOVED>();
-}
-
 static int
 linit(lua_State *L){
 	auto w = getworld(L);
 	w->R = render_material_create();
-
-	init_efk(w);
 	return 1;
 }
 
@@ -397,7 +376,6 @@ lexit(lua_State *L){
 	render_material_release(w->R);
 	w->R = nullptr;
 
-	remove_efk(w);
 	return 0;
 }
 

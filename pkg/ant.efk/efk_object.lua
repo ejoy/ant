@@ -24,3 +24,19 @@ end
 function eo.unmarshal()
     return init_eo()
 end
+
+local eh = ecs.component "efk_hitch"
+function eh.init()
+    return {
+        handle = 0,
+        hitchmat = mu.NULL,
+        worldmat = mu.NULL,
+    }
+end
+
+local ehc = ecs.component "efk_hitch_counter"
+function ehc.init()
+    return {
+        count = 0
+    }
+end

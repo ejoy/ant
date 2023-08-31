@@ -24,10 +24,32 @@ local PH
 local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
+local MAX_EFK_HITCH<const> = 256
+
 function efk_sys:init()
     EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
     ltask.call(EFK_SERVER, "init")
     PH = ecs.require "playhandle"
+
+    for i=1, MAX_EFK_HITCH do
+        world:create_entity{
+            policy = {
+                "ant.efk|efk_hitch",
+            },
+            data = {
+                efk_hitch = true,
+            }
+        }
+    end
+
+    world:create_entity{
+        policy = {
+            "ant.efk|efk_hitch_counter",
+        },
+        data = {
+            efk_hitch_counter = true
+        }
+    }
 end
 
 local function cleanup_efk(efk)
@@ -48,6 +70,12 @@ function efk_sys:exit()
         log.warn(("'efk_system' is exiting, but efk entity:%d, %s is not REMOVED"):format(e.eid, e.name or ""))
         cleanup_efk(e.efk)
     end
+
+    for e in w:select "efk_hitch" do
+        w:remove(e)
+    end
+
+    w:remove(w:first "efk_hitch_counter")
     ltask.call(EFK_SERVER, "exit")
 end
 
