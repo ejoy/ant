@@ -4,7 +4,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-return function (w, package)
+return function (w, importor, package)
     local ecs = { world = w }
     function ecs.system(name)
         local fullname = package .. "|" .. name
@@ -13,7 +13,7 @@ return function (w, package)
             log.debug("Register system   ", fullname)
             r = {}
             w._class.system[fullname] = r
-            w._importor.system(fullname)
+            importor.system(fullname)
         end
         return r
     end
@@ -23,7 +23,7 @@ return function (w, package)
             log.debug("Register component", fullname)
             r = {}
             w._class.component[fullname] = r
-            w._importor.component(fullname)
+            importor.component(fullname)
         end
         return r
     end

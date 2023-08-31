@@ -20,7 +20,7 @@ local function create_entity_by_data(w, group, data, debuginfo)
     }
     local initargs = {
         eid = eid,
-        group = group or 0,
+        group = group,
         data = data,
     }
     queue[#queue+1] = initargs
@@ -34,7 +34,7 @@ local function create_entity_by_template(w, group, template, debuginfo)
     }
     local initargs = {
         eid = eid,
-        group = group or 0,
+        group = group,
         template = template,
     }
     queue[#queue+1] = initargs
@@ -137,7 +137,6 @@ local function create_entity_template(w, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-
     return setmetatable({
         _world = w,
         mount = v.mount,

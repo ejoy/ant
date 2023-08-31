@@ -227,6 +227,29 @@ local function slove_component(w)
     end
 end
 
+local function import_ecs(w, importor, ecs)
+	if ecs.import then
+		for _, k in ipairs(ecs.import) do
+			import_decl(w, k)
+		end
+	end
+	if ecs.system then
+		for _, k in ipairs(ecs.system) do
+			importor.system(k)
+		end
+	end
+	if ecs.policy then
+		for _, k in ipairs(ecs.policy) do
+			importor.policy(k)
+		end
+	end
+	if ecs.component then
+		for _, k in ipairs(ecs.component) do
+			importor.component(k)
+		end
+	end
+end
+
 local function init(w, config)
 	w._initializing = true
 	w._class = {
@@ -238,36 +261,14 @@ local function init(w, config)
 		log.debug(("Import decl %q"):format(file))
 		return assert(pm.loadenv(packname).loadfile(file))
 	end)
-	local import = create_importor(w)
-	w._importor = import
+	local importor = create_importor(w)
 	setmetatable(w._ecs, {__index = function (_, package)
-		return create_ecs(w, package)
+		return create_ecs(w, importor, package)
 	end})
-	config.ecs = config.ecs or {}
-	if config.ecs.import then
-		for _, k in ipairs(config.ecs.import) do
-			import_decl(w, k)
-		end
-	end
-	if config.ecs.system then
-		for _, k in ipairs(config.ecs.system) do
-			import.system(k)
-		end
-	end
-	if config.ecs.policy then
-		for _, k in ipairs(config.ecs.policy) do
-			import.policy(k)
-		end
-	end
-	if config.ecs.component then
-		for _, k in ipairs(config.ecs.component) do
-			import.component(k)
-		end
-	end
-
+	import_ecs(w, importor, config.ecs)
 	slove_component(w)
 	create_context(w)
-	w._initializing = false
+	w._initializing = nil
 end
 
 return {
