@@ -53,7 +53,7 @@ local attribute = {
 	},
 	policy = {
 		"require_system",
-		"require_policy",
+		"include_policy",
 		"component",
 		"component_opt",
 	},
@@ -75,6 +75,7 @@ local no_packspace = {
 local check_map = {
 	require_system = "system",
 	require_policy = "policy",
+	include_policy = "policy",
 	component = "component",
 	component_opt = "component",
 	pipeline = "none",

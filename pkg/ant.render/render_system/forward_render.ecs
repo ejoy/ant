@@ -9,6 +9,6 @@ system "forward_render_system"
     .implement "render_system/forward_render.lua"
 
 policy "forward_render"
-    .require_policy  "ant.render|render_queue"
+    .include_policy  "ant.render|render_queue"
     .require_system  "ant.render|forward_render_system"
     .require_system  "ant.render|pre_depth_system"

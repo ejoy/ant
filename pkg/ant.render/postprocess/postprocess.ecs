@@ -41,7 +41,7 @@ policy "postprocess_object"
     .component "postprocess_input"
 
 policy "postprocess_queue"
-    .require_policy "render_target"
+    .include_policy "render_target"
     .component "queue_name"
 
 system "postprocess_obj_system"

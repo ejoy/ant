@@ -21,7 +21,7 @@ system "scenespace_system"
 
 
 policy "scene_object"
-    .require_policy "ant.scene|bounding"
+    .include_policy "ant.scene|bounding"
     .require_system "ant.scene|scenespace_system"
     .component "scene"
     .component_opt "bounding"

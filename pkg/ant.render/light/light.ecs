@@ -7,7 +7,7 @@ system "light_system"
     .implement "light/light.lua"
 
 policy "light"
-    .require_policy "ant.scene|scene_object"
+    .include_policy "ant.scene|scene_object"
     .component "light"
     .component "visible"
 

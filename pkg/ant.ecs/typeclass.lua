@@ -22,6 +22,7 @@ end
 local check_map = {
 	require_system = "system",
 	require_policy = "policy",
+	include_policy = "policy",
 	component = "component",
 	component_opt = "component",
 }

@@ -3,6 +3,6 @@ system "velocity_system"
 
 component "velocity_queue"
 policy "velocity_queue"
-    .require_policy "ant.render|render_queue"
+    .include_policy "ant.render|render_queue"
     .require_system  "ant.render|velocity_system"
     .component   "velocity_queue"

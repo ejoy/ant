@@ -8,6 +8,6 @@ policy "outline_info"
 
 component "outline_queue"
 policy "outline_queue"
-    .require_policy "ant.render|render_queue"
+    .include_policy "ant.render|render_queue"
     .require_system  "ant.render|outline_system"
     .component   "outline_queue"

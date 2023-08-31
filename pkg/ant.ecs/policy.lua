@@ -15,7 +15,7 @@ local function create(w, policies)
         if not decl then
             error(("policy `%s` is not defined."):format(name))
         end
-        for _, v in ipairs(decl.require_policy) do
+        for _, v in ipairs(decl.include_policy) do
             import_policy(v)
         end
         for _, v in ipairs(decl.component) do

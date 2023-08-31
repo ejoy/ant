@@ -6,7 +6,7 @@ system "cluster_forward_system"
     .implement "render_system/cluster_render.lua"
 
 policy "cluster_render"
-    .require_policy "ant.render|forward_render"
+    .include_policy "ant.render|forward_render"
     .require_system "ant.render|cluster_forward_system"
 
 

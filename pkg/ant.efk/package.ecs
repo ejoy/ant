@@ -22,7 +22,7 @@ component "efk_hitch_counter"
 
 
 policy "efk_queue"
-    .require_policy "ant.render|render_target"
+    .include_policy "ant.render|render_target"
     .component "queue_name"
 component "efk".type "lua"
 policy "efk"
