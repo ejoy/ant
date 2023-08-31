@@ -2,6 +2,23 @@ local interface = require "interface"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local check_map = {
 	require_system = "system",
 	require_policy = "policy",
@@ -310,7 +327,7 @@ local function init(w, config)
 	slove_component(w)
 	create_context(w)
 	for _, what in ipairs {"system", "component"} do
-		for name, v in pairs(w._decl[what]) do
+		for name, v in sortpairs(w._decl[what]) do
 			if v.implement[1] and not v.imported then
 				log.warn(string.format("%s %s is not imported.", what, name))
 			end
