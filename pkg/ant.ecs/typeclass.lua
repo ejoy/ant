@@ -309,6 +309,13 @@ local function init(w, config)
 	import_ecs(w, tasks)
 	slove_component(w)
 	create_context(w)
+	for _, what in ipairs {"system", "component"} do
+		for name, v in pairs(w._decl[what]) do
+			if v.implement[1] and not v.imported then
+				log.warn(string.format("%s %s is not imported.", what, name))
+			end
+		end
+	end
 	w._initializing = nil
 end
 
