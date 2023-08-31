@@ -52,18 +52,13 @@ function efk_sys:exit()
 end
 
 function efk_sys:component_init()
-    for e in w:select "INIT efk:in" do
+    for e in w:select "INIT efk:in view_visible?in" do
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
         efk.play_handle = PH.create(efk.handle, efk.speed)
-        if nil == efk.visible then
-            efk.visible = true
-        end
 
-        --TODO: need remove auto_play, visible will determine this efk can be seen or not
-        efk.visible = efk.visible or efk.auto_play
-        efk.play_handle:set_visible(efk.visible)
+        efk.play_handle:set_visible(e.view_visible or efk.auto_play)
     end
 end
 
@@ -71,9 +66,9 @@ function efk_sys:entity_init()
     for e in w:select "INIT scene:in efk:in efk_object:update" do
         local eo = e.efk_object
 
-        eo.handle = e.efk.handle
-        eo.worldmat = e.scene.worldmat
-        eo.visible_masks = qm.queue_mask "main_queue"
+        eo.handle           = e.efk.handle
+        eo.worldmat         = e.scene.worldmat
+        eo.visible_masks    = qm.queue_mask "main_queue"
     end
 end
 
@@ -220,6 +215,7 @@ end
 
 function efk_sys:render_postprocess()
     for e in w:select "view_visible efk:in scene:in" do
+        --update_transform will check efk is alive and visible or not
         e.efk.play_handle:update_transform(e.scene.worldmat)
     end
 
@@ -228,6 +224,7 @@ end
 
 function iefk.create(filename, config)
     config = config or {}
+    assert(config.visible ~= nil, "Need define visible in 'config' filed")
     return world:create_entity {
         group = config.group,
         policy = {
@@ -242,16 +239,8 @@ function iefk.create(filename, config)
                 path        = filename,
                 auto_play   = config.auto_play or false,
                 speed       = config.speed or 1.0,
-                visible     = config.visible or true,
             },
-            view_visible = config.visible or true,
-            on_ready = function (e)
-                if not config.visible then
-                    w:extend(e, "view_visible?out")
-                    e.view_visible = false
-                    w:submit(e)
-                end
-            end
+            view_visible    = config.visible,
         },
     }
 end
@@ -311,8 +300,11 @@ function iefk.set_visible(eid, b)
     local e <close> = world:entity(eid, "efk?in")
     local efk = e.efk
     if efk then
-        efk.visible = b
         efk.play_handle:set_visible(b)
+
+        -- no need to submit
+        w:extend(e, "view_visible?out")
+        e.view_visible = b
     end
 end
 
