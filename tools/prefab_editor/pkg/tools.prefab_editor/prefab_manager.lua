@@ -74,7 +74,6 @@ function m:create_slot()
             on_ready = function (e) hierarchy:update_slot_list(world) end
         }
     }
-    local tpl = 
     self:add_entity(world:create_entity(utils.deep_copy(template)), parent_eid, template)
 end
 
@@ -711,10 +710,9 @@ function m:add_effect(filename)
             efk = {
                 path = filename,
                 auto_play = false,
-                loop = false,
                 speed = 1.0,
-                visible = true
-            }
+            },
+            view_visible = true
 		},
     }
     local tpl = utils.deep_copy(template)
@@ -731,7 +729,6 @@ function m:add_prefab(path)
     if not self.root then
         self:reset_prefab()
     end
-    local prefab
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):filename()), parent)
     -- local v_root, temp = create_simple_entity(gen_prefab_name(), parent)

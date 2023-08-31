@@ -45,7 +45,7 @@ local anim_state = {
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local event_type = {
-    "Effect", "Sound", "Collision", "Message", "Move"
+    "Effect", "Sound", "Message"
 }
 
 local current_event
@@ -62,7 +62,6 @@ end
 local function do_to_runtime_event(evs)
     local list = {}
     for _, ev in ipairs(evs) do
-        local col_eid = ev.collision and ev.collision.col_eid or -1
         list[#list + 1] = {
             event_type = ev.event_type,
             name = ev.name,
@@ -73,15 +72,6 @@ local function do_to_runtime_event(evs)
             move = ev.move,
             msg_content = ev.msg_content,
             link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
-            collision = (col_eid ~= -1) and {
-                col_eid = col_eid,
-                name = world[col_eid].name,
-                shape_type = ev.collision.shape_type,
-                position = ev.collision.position,
-                size = ev.collision.size,
-                enable = ev.collision.enable,
-                tid = ev.collision.tid,
-            } or nil
         }
     end
     return list
@@ -128,14 +118,6 @@ local default_collider_define = {
     ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
 }
 
-local collider_list = {}
-
-local function get_collider(shape_type, def)
-    collider_list[#collider_list + 1] = prefab_mgr:create("collider",
-        {type = shape_type, define = def or utils.deep_copy(default_collider_define[shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-    return #collider_list
-end
-
 local function from_runtime_event(runtime_event)
     local ke = {}
     for _, ev in ipairs(runtime_event) do
@@ -153,14 +135,6 @@ local function from_runtime_event(runtime_event)
                     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
                     prefab_mgr.check_effect_preload(e.asset_path)
                 end
-            elseif e.event_type == "Move" then
-                e.move = e.move or {0.0, 0.0, 0.0}
-                e.move_ui = e.move and {e.move[1], e.move[2], e.move[3]} or {0.0, 0.0, 0.0}
-            elseif e.event_type == "Collision" then
-                e.collision.tid = e.collision.tid or -1
-                e.collision.tid_ui = {e.collision.tid}
-                e.collision.enable_ui = {e.collision.enable}
-                e.collision.shape_type = e.collision.shape_type
             elseif e.event_type == "Message" then
                 e.msg_content = e.msg_content or ""
                 e.msg_content_ui = {text = e.msg_content}
@@ -250,15 +224,7 @@ local function add_event(et)
         name_ui = {text = event_name},
         msg_content = (et == "Message") and "" or nil,
         msg_content_ui = (et == "Message") and {text = ""} or nil,
-        asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
-        collision = (et == "Collision") and {
-            tid = -1,
-            tid_ui = {-1},
-            col_eid = -1,
-            shape_type = "None",
-            enable = true,
-            enable_ui = {true}
-        } or nil
+        asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil
     }
     current_event = new_event
     local key = tostring(anim_state.selected_frame)
@@ -343,10 +309,6 @@ local function show_events()
         for idx, ke in ipairs(anim_state.current_event_list) do
             if imgui.widget.Selectable(ke.name, current_event and (current_event.name == ke.name)) then
                 current_event = ke
-                if current_event.collision and current_event.collision.col_eid and current_event.collision.col_eid ~= -1 then
-                    gizmo:set_target(current_event.collision.col_eid)
-                    world:pub {"UpdateAABB", current_event.collision.col_eid}
-                end
             end
             if current_event and (current_event.name == ke.name) then
                 if imgui.windows.BeginPopupContextItem(ke.name) then
@@ -361,17 +323,6 @@ local function show_events()
     end
 end
 
-local function do_record(collision, eid)
-    local e <close> = world:entity(eid, "collider?in")
-    if not e.collider then
-        return
-    end
-    local tp = math3d.totable(iom.get_position(e))
-    collision.position = {tp[1], tp[2], tp[3]}
-    local scale = math3d.totable(iom.get_scale(e))
-    local factor = e.collider.sphere and 100 or 200
-    collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
-end
 local sound_event_name_list = {}
 local sound_event_list = {}
 local bank_path
@@ -387,43 +338,7 @@ local function show_current_event()
         dirty = true
     end
     
-    if current_event.event_type == "Collision" then
-        local collision = current_event.collision
-        local collider_list = hierarchy.collider_list
-        if collider_list and collision then
-            imgui.widget.PropertyLabel("Collider")
-            local col_name = "None"
-            if collision.col_eid and collision.col_eid ~= -1 and world[collision.col_eid] then
-                col_name = world[collision.col_eid].name
-            end
-            if imgui.widget.BeginCombo("##Collider", {col_name, flags = imgui.flags.Combo {}}) then
-                for name, eid in pairs(collider_list) do
-                    if imgui.widget.Selectable(name, col_name == name) then
-                        collision.col_eid = eid
-                        if eid == -1 then
-                            collision.shape_type = "None"
-                        else
-                            local e <close> = world:entity(eid, "collider:in")
-                            collision.shape_type = e.collider.sphere and "sphere" or "box"
-                            do_record(collision, eid)
-                        end
-                        dirty = true
-                    end
-                end
-                imgui.widget.EndCombo()
-            end
-        end
-        imgui.widget.PropertyLabel("Enable")
-        if imgui.widget.Checkbox("##Enable", collision.enable_ui) then
-            collision.enable = collision.enable_ui[1]
-            dirty = true
-        end
-        imgui.widget.PropertyLabel("TID")
-        if imgui.widget.DragInt("##TID", collision.tid_ui) then
-            collision.tid = collision.tid_ui[1]
-            dirty = true
-        end
-    elseif current_event.event_type == "Sound" then
+    if current_event.event_type == "Sound" then
         if not bank_path and imgui.widget.Button("SelectBankPath") then
             local filename = uiutils.get_open_file_path("Bank", "bank")
             if filename then
@@ -554,30 +469,6 @@ function m.on_remove_entity(eid)
     end
 end
 
-function m.record_collision(eid)
-    for idx, ke in ipairs(anim_state.current_event_list) do
-        if ke.collision and ke.collision.col_eid == eid then
-            do_record(ke.collision, eid)
-        end
-    end
-end
-
-local function update_collision()
-    for idx, ke in ipairs(anim_state.current_event_list) do
-        if ke.collision and ke.collision.col_eid and ke.collision.col_eid ~= -1 then
-            local eid = ke.collision.col_eid
-            local e <close> = world:entity(eid)
-            iom.set_position(e, ke.collision.position)
-            local factor = e.collider.sphere and 100 or 200
-            iom.set_scale(e, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
-            if eid == gizmo.target_eid then
-                gizmo:update()
-                world:pub {"UpdateAABB", eid}
-            end
-        end
-    end
-end
-
 local function on_move_keyframe(frame_idx, move_type)
     if not frame_idx or anim_state.selected_frame == frame_idx then return end
     local old_selected_frame = anim_state.selected_frame
@@ -595,7 +486,6 @@ local function on_move_keyframe(frame_idx, move_type)
             anim_key_event[newkey] = {}
         end
         anim_state.current_event_list = anim_key_event[newkey]
-        update_collision()
         current_event = nil
     end
     set_event_dirty(-1)

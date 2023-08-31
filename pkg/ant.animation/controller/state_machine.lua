@@ -213,24 +213,6 @@ function iani.is_playing(eid)
 	return e.anim_ctrl.play_state.play
 end
 
-function iani.get_collider(e, anim, time)
-	local events = e.anim_ctrl.keyframe_events[anim]
-	if not events then return end
-	local colliders
-	for _, event in ipairs(events.event) do
-		if math.abs(time - event.time) < 0.0001 then
-			colliders = {}
-			for _, ev in ipairs(event.event_list) do
-				if ev.event_type == "Collision" then
-					colliders[#colliders + 1] = ev.collision
-				end
-			end
-			break
-		end
-	end
-	return colliders
-end
-
 function iani.set_pose_to_prefab(instance, pose)
 	local entitys = instance.tag["*"]
 	for _, eid in ipairs(entitys) do

@@ -40,14 +40,6 @@ local function process_keyframe_event(task)
 				else
 					audio.play(event.sound_event)
 				end
-			elseif event.event_type == "Collision" then
-				local collision = event.collision
-				if collision and collision.col_eid and collision.col_eid ~= -1 then
-					local eid = collision.col_eid
-            		iom.set_position(eid, collision.position)
-            		local factor = (collision.shape_type == "sphere") and 100 or 200
-            		iom.set_scale(eid, {collision.size[1] * factor, collision.size[2] * factor, collision.size[3] * factor})
-				end
 			elseif event.event_type == "Effect" then
 				if event.effect then
 					iefk.play(event.effect)
@@ -58,13 +50,6 @@ local function process_keyframe_event(task)
 						group = task.group,
 						visible = not task.group,
 					})
-				end
-			elseif event.event_type == "Move" then
-				for _, eid in ipairs(task.eid) do
-					local e0 <close> = world:entity(eid, "scene:in")
-					local e1 <close> = world:entity(e0.scene.parent, "scene:in")
-					local e2 <close> = world:entity(e1.scene.parent, "scene:in")
-					iom.set_position(e2, event.move)
 				end
 			end
 		end
