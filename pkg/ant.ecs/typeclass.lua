@@ -42,7 +42,7 @@ local function create_importor(w)
 			else
 				local pkg = v.packname
 				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-				w:_package_include(pkg, file)
+				w:_package_require(pkg, file)
 			end
 		end
 	end
@@ -67,7 +67,7 @@ local function create_importor(w)
 			local impl = v.implement[1]
 			local pkg = v.packname
 			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-			w:_package_include(pkg, file)
+			w:_package_require(pkg, file)
 		end
 	end
 	function import.policy(name)
@@ -226,7 +226,8 @@ local function slove_component(w)
     end
 end
 
-local function import_ecs(w, importor, ecs)
+local function import_ecs(w, ecs)
+	local importor = create_importor(w)
 	if ecs.import then
 		for _, k in ipairs(ecs.import) do
 			import_decl(w, k)
@@ -249,7 +250,7 @@ local function import_ecs(w, importor, ecs)
 	end
 end
 
-local function create_ecs(w, importor, package)
+local function create_ecs(w, package, tasks)
     local ecs = { world = w }
     function ecs.system(name)
         local fullname = package .. "|" .. name
@@ -258,7 +259,7 @@ local function create_ecs(w, importor, package)
             log.debug("Register system   ", fullname)
             r = {}
             w._class.system[fullname] = r
-            importor.system(fullname)
+            table.insert(tasks.system, fullname)
         end
         return r
     end
@@ -268,7 +269,7 @@ local function create_ecs(w, importor, package)
             log.debug("Register component", fullname)
             r = {}
             w._class.component[fullname] = r
-            importor.component(fullname)
+            table.insert(tasks.component, fullname)
         end
         return r
     end
@@ -294,17 +295,18 @@ local function init(w, config)
 		log.debug(("Import decl %q"):format(file))
 		return assert(pm.loadenv(packname).loadfile(file))
 	end)
-	local importor = create_importor(w)
+	local tasks = config.ecs
+	tasks.system = tasks.system or {}
+	tasks.component = tasks.component or {}
 	setmetatable(w._packages, {__index = function (self, package)
 		local v = {
 			_LOADED = {},
-			_LOADING = {},
-			ecs = create_ecs(w, importor, package)
+			ecs = create_ecs(w, package, tasks)
 		}
 		self[package] = v
 		return v
 	end})
-	import_ecs(w, importor, config.ecs)
+	import_ecs(w, tasks)
 	slove_component(w)
 	create_context(w)
 	w._initializing = nil
