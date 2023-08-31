@@ -157,7 +157,7 @@ function render_sys:scene_update()
 	w:clear "visible_state_changed"
 end
 
-function render_sys:render_preprocess()
+function render_sys:update_render_args()
 	for qe in w:select "visible camera_ref:in render_target:in" do
 		local viewid = qe.render_target.viewid
 		local camera <close> = world:entity(qe.camera_ref, "scene_changed?in camera_changed?in")

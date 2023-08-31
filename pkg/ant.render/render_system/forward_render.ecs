@@ -1,8 +1,10 @@
 pipeline "render_process"
     .stage "update_system_properties"
     .stage "commit_system_properties"
+    .stage "update_render_args"
     .stage "render_preprocess"
     .stage "render_submit"
+    .stage "render_hitch_submit"
     .stage "render_postprocess"
 
 system "forward_render_system"

@@ -237,25 +237,10 @@ submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, con
 	}
 }
 
-static int
-lsubmit(lua_State *L) {
-	auto w = getworld(L);
+static submit_cache cc;
 
-	static submit_cache cc;
-	find_render_args(w, cc);
-
-	// draw simple objects
-	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
-		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-			const auto& ra = cc.ra[ii];
-			const auto& obj = e.get<ecs::render_object>();
-			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
-				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
-			}
-		}
-	}
-
-	// draw object which hanging on hitch node
+static inline void
+build_hitch_info(struct ecs_world*w){
 	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)) {
 		const auto &h = e.get<ecs::hitch>();
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
@@ -269,7 +254,36 @@ lsubmit(lua_State *L) {
 			}
 		}
 	}
+}
 
+static int
+lrender_preprocess(lua_State *L){
+	auto w = getworld(L);
+	find_render_args(w, cc);
+	build_hitch_info(w);
+	return 0;
+}
+
+static int
+lrender_submit(lua_State *L) {
+	auto w = getworld(L);
+	// draw simple objects
+	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
+		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+			const auto& ra = cc.ra[ii];
+			const auto& obj = e.get<ecs::render_object>();
+			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
+				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
+			}
+		}
+	}
+	return 0;
+}
+
+static int
+lrender_hitch_submit(lua_State *L){
+	auto w = getworld(L);
+	// draw object which hanging on hitch node
 	ecs_api::clear_type<ecs::efk_hitch>(w->ecs);
 	for (auto const& [groupid, g] : cc.groups) {
 		int gids[] = {groupid};
@@ -293,6 +307,11 @@ lsubmit(lua_State *L) {
 		}
 	}
 
+	return 0;
+}
+
+static int
+lrender_postprocess(lua_State *L){
 	cc.clear();
 	return 0;
 }
@@ -377,9 +396,12 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init",			linit},
-		{ "exit",			lexit},
-		{ "render_submit", 	lsubmit},
+		{ "init",				linit},
+		{ "exit",				lexit},
+		{ "render_preprocess",	lrender_preprocess},
+		{ "render_submit", 		lrender_submit},
+		{ "render_hitch_submit",lrender_hitch_submit},
+		{ "render_postprocess", lrender_postprocess},
 		{ nullptr, 			nullptr },
 	};
 	luaL_newlibtable(L,l);
