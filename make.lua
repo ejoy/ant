@@ -43,6 +43,16 @@ lm.msvc = {
     }
 }
 
+lm:config "engine_config" {
+    msvc = {
+        flags = "/utf-8",
+    },
+}
+
+lm.configs = {
+    "engine_config",
+}
+
 if lm.mode == "release" then
     lm.msvc.ldflags = {
         "/DEBUG:FASTLINK"
