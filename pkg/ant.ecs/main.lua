@@ -8,6 +8,7 @@ local policy = require "policy"
 local typeclass = require "typeclass"
 local system = require "system"
 local event = require "event"
+local pm = require "packagemanager"
 
 local world_metatable = {}
 local world = {}
@@ -445,6 +446,66 @@ function world:instance_message(instance, ...)
     self:pub {"EntityMessage", instance.proxy, ...}
 end
 
+local function require_load(env, name)
+    local searcher_lua = env.package.searchers[2]
+    local f = searcher_lua(name)
+    if type(f) == 'function' then
+        return f
+    end
+    error(("module '%s' not found:\n\t%s"):format(name, f))
+end
+
+function world:_package_require(package, file)
+    local w = self
+    local _PACKAGE = w._packages[package]
+    local _LOADED = _PACKAGE._LOADED
+    local _LOADING = _PACKAGE._LOADING
+    assert(type(file) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(file)))
+    local p = _LOADED[file]
+    if p ~= nil then
+        return p
+    end
+    if _LOADING[file] then
+        error(("Recursive load module '%s'"):format(file))
+    end
+    _LOADING[file] = true
+    local env = pm.loadenv(package)
+    local initfunc = require_load(env, file)
+    debug.setupvalue(initfunc, 1, env)
+    local r = initfunc(_PACKAGE.ecs)
+    if r == nil then
+        r = true
+    end
+    _LOADED[file] = r
+    _LOADING[file] = nil
+    return r
+end
+
+function world:_package_include(package, file)
+    local w = self
+    local _PACKAGE = w._packages[package]
+    local _LOADED = _PACKAGE._LOADED
+    local _LOADING = _PACKAGE._LOADING
+    assert(type(file) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
+    local p = _LOADED[file]
+    if p ~= nil then
+        return
+    end
+    if _LOADING[file] then
+        return
+    end
+    _LOADING[file] = true
+    local env = pm.loadenv(package)
+    local initfunc = require_load(env, file)
+    debug.setupvalue(initfunc, 1, env)
+    local r = initfunc(_PACKAGE.ecs)
+    if r == nil then
+        r = true
+    end
+    _LOADED[file] = r
+    _LOADING[file] = nil
+end
+
 event.init(world)
 
 local m = {}
@@ -469,13 +530,13 @@ function m.new_world(config)
     local ecs = luaecs.world()
 	local w; w = setmetatable({
 		args = config,
-		_ecs = {},
 		_group_tags = {},
 		_create_entity_queue = {},
 		_create_prefab_queue = {},
 		_destruct = {},
 		_clibs_loaded = {},
 		_templates = {},
+		_packages = {},
 		w = ecs,
 	}, world_metatable)
 

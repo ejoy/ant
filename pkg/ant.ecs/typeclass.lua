@@ -43,7 +43,7 @@ local function create_importor(w)
 			else
 				local pkg = v.packname
 				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-				w._ecs[pkg].include_ecs(file)
+				w:_package_include(pkg, file)
 			end
 		end
 	end
@@ -68,7 +68,7 @@ local function create_importor(w)
 			local impl = v.implement[1]
 			local pkg = v.packname
 			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-			w._ecs[pkg].include_ecs(file)
+			w:_package_include(pkg, file)
 		end
 	end
 	function import.policy(name)
@@ -262,8 +262,14 @@ local function init(w, config)
 		return assert(pm.loadenv(packname).loadfile(file))
 	end)
 	local importor = create_importor(w)
-	setmetatable(w._ecs, {__index = function (_, package)
-		return create_ecs(w, importor, package)
+	setmetatable(w._packages, {__index = function (self, package)
+		local v = {
+			_LOADED = {},
+			_LOADING = {},
+			ecs = create_ecs(w, importor, package)
+		}
+		self[package] = v
+		return v
 	end})
 	import_ecs(w, importor, config.ecs)
 	slove_component(w)
