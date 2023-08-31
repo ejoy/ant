@@ -187,7 +187,7 @@ end
 function iefk.create(filename, config)
     config = config or {}
     return world:create_entity {
-        group = config.group_id,
+        group = config.group,
         policy = {
             "ant.general|name",
             "ant.scene|scene_object",

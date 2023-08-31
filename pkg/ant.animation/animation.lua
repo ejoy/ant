@@ -55,8 +55,8 @@ local function process_keyframe_event(task)
 					event.effect = iefk.create(event.asset_path, {
 						auto_play = true,
 						scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
-						group_id = task.group,
-						visible = not task.hitch,
+						group = task.group,
+						visible = not task.group,
 					})
 				end
 			elseif event.event_type == "Move" then
