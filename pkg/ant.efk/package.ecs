@@ -19,6 +19,8 @@ component "efk_object"
     .field "worldmat:userdata|math_t"
     .implement "efk_object.lua"
     .method "init"
+    .method "marshal"
+    .method "unmarshal"
 
 component "efk_hitch"
     .type "c"
