@@ -9,7 +9,6 @@ properties:
   u_ssct_param:   {0, 0, 0, 0}
   u_ssct_param2:  {0, 0, 0, 0}
   u_ssct_param3:  {0, 0, 0, 0}
-  u_ssct_param4:  {0, 0, 0, 0}
   u_ssct_screen_from_view_mat: {1.0, 0.0, 0.0, 0.0,   0.0, 1.0, 0.0, 0.0,   0.0, 0.0, 1.0, 0.0,   0.0, 0.0, 0.0, 1.0}
 
   s_depth:

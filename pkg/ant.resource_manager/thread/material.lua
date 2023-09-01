@@ -124,38 +124,36 @@ local function create_fx(cfg)
 end
 
 local function material_create(filename)
-    local material = serialize.parse(filename, readall(filename .. "|main.cfg"))
+    local material  = serialize.parse(filename, readall(filename .. "|main.cfg"))
+    local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
-    if material.properties then
-        for _, v in pairs(material.properties) do
+    if material.attrib then
+        for _, v in pairs(material.attrib) do
             if v.texture then
-                v.type = 't'
                 local texturename = absolute_path(v.texture, filename)
                 v.value = S.texture_create_fast(texturename)
             elseif v.image then
-                v.type = 'i'
                 local texturename = absolute_path(v.image, filename)
                 v.value = S.texture_create_fast(texturename)
-            elseif v.buffer then
-                v.type = 'b'
             end
         end
     end
 
     material.fx.prog = from_handle(material.fx.prog)
-    return material, fxcfg
+    return material, fxcfg, attribute
 end
 
 function S.material_create(filename)
-    local material, fxcfg = material_create(filename)
+    local material, fxcfg, attribute = material_create(filename)
     local pid = material.fx.prog
     MATERIALS[pid] = {
         filename = filename,
         material = material,
         cfg      = fxcfg,
+        attr     = attribute
     }
-    return material
+    return material, attribute
 end
 
 function S.material_mark(pid)

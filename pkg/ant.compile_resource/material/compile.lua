@@ -7,9 +7,8 @@ local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local depends       = require "depends"
 local parallel_task = require "parallel_task"
-
+local sa            = import_package "ant.asset".system_attribs
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
-
 local function DEF_FUNC() end
 
 local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
@@ -204,11 +203,15 @@ local DEF_PBR_UNIFORM<const> = {
     u_pbr_factor       = "uniform mediump vec4 u_pbr_factor;"
 }
 
+local DEF_PROPERTIES<const> = {}
+
 local ACCESS_NAMES<const> = {
     r = "BUFFER_RO",
     w = "BUFFER_WR",
     rw= "BUFFER_RW",
 }
+local PRICISION_NAMES = {lowp = true, mediump = true, highp = true}
+local SAMPLER_NAMES = {SAMPLER2D = true, SAMPLER2DARRAY = true}
 
 local function is_array_uniform(p)
     if not p.stage then
@@ -229,7 +232,7 @@ local function generate_properties(properties)
                     name, v.stage)
         elseif name:find("u_") == 1 then
             -- precision(default mediump) type(default vec4)
-            local precision = v.precsion or "mediump"
+            local precision = v.precision or "mediump"
             local type = v.type or "vec4"
             if is_array_uniform(v) then
                 --EX: uniform mediump vec4 name[array_num];
@@ -241,14 +244,10 @@ local function generate_properties(properties)
             end
         elseif name:find("b_") == 1 then
             -- access stage type(default vec4)
-            local access = assert(v.access, "buffer property need define 'access' field")
-            local stage = assert(v.stage, "buffer property need define 'stage' field")
+            local access = v.access
+            local stage = v.stage
             local type = v.type or "vec4"
-    
-            local ba = assert(ACCESS_NAMES[access], "wrong access type, access should be read/write! \n")
-            result = ("%s(%s, %s, %d);"):format(ba, name, type, stage)
-        else
-            error(("wrong property name:%s, property should be sampler/uniform/buffer!"):format(name))
+            result = ("%s(%s, %s, %d);"):format(access, name, type, stage)
         end
         content[#content+1] = result
     end
@@ -340,6 +339,55 @@ local BgfxOS <const> = {
     macos = "osx",
 }
 
+local function check_get_attribute(mat)
+    local fx, properties = mat.fx, mat.properties
+    local system, attrib = {}, {}
+	properties = properties or DEF_PROPERTIES
+    for n, v in pairs(properties) do
+        if sa.get(n) then error(("Invalid property name:%s, same as system attribute"):format(n)) end
+        local is_uniform, is_sampler, is_buffer = n:find("u_") == 1, n:find("s_") == 1, n:find("b_") == 1
+        if is_uniform then
+            attrib[n]   = v
+            v.precision = v.precision or "mediump"
+            v.type      = v.type or "vec4"
+            assert(PRICISION_NAMES[v.precision], "uniform's precision type error ! \n") 
+        elseif is_sampler then
+            v.precision = v.precision or "mediump"
+            v.sampler   = v.sampler or "SAMPLER2D"
+            assert(v.stage and v.stage < 16 and v.stage >= 0, "sampler's stage miss or overstep the boundary! \n")
+            assert(PRICISION_NAMES[v.precision],              "sampler's precision type error ! \n")
+            assert(v.sampler and SAMPLER_NAMES[v.sampler],    "sampler's type error! \n")
+            if v.image then
+                assert(v.access and ACCESS_NAMES[v.access], "image's access miss or type error! \n")
+                assert(v.mip, "image's mip miss! \n")
+                attrib[n]   = {stage = v.stage, access = v.access, mip = v.mip, type = 'i', image = v.image or "/pkg/ant.resources/textures/black.texture"}
+            else
+                attrib[n]   = {stage = v.stage, access = v.access, mip = v.mip, type = 't', texture = v.texture or "/pkg/ant.resources/textures/black.texture"}
+            end              
+        elseif is_buffer then
+            assert(v.stage and v.stage < 16 and v.stage >= 0,  "buffer's stage miss or overstep the boundary! \n")
+            assert(v.access and ACCESS_NAMES[v.access],        "buffer's access miss or type error! \n")
+            v.type      = v.type or "vec4"
+            attrib[n]   = {stage = v.stage, access = v.access, buffer = v.buffer or n, type = 'b'} --@data should be fix
+        else
+            error(("Invalid property type:%s, property should be sampler/uniform/buffer!"):format(n))
+        end    
+    end
+    if fx.shader_type == "PBR" then
+        for n, _ in pairs(DEF_PBR_UNIFORM) do
+            if not attrib[n] then attrib[n] = {0, 0, 0, 0} end
+        end
+    end
+	if fx.setting.lighting == "on" then
+		system[#system+1] = "b_light_info"
+		if enable_cs then
+			system[#system+1] = "b_light_grids"
+			system[#system+1] = "b_light_index_lists"
+		end
+	end
+    return {system = system, attrib = attrib}
+end
+
 local function compile(tasks, deps, mat, input, output, setting, localpath)
     local include_path = lfs.path(input):parent_path()
     lfs.remove_all(output)
@@ -347,12 +395,11 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
     local fx = mat.fx
     merge_cfg_setting(fx, localpath)
     check_update_fx(fx)
-
+    local attr = check_get_attribute(mat)
     setmetatable(fx, CHECK_MT)
     setmetatable(fx.setting, CHECK_MT)
-
-    writefile(output / "main.cfg", mat)
-
+    writefile(output / "main.cfg",  mat)
+    writefile(output / "main.attr", attr)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local inputpath = fx[stage]
@@ -363,7 +410,6 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
             else
                 inputpath = localpath(inputpath)
             end
-        
             if not lfs.exists(inputpath) then
                 error(("shader path not exists: %s"):format(inputpath:string()))
             end
