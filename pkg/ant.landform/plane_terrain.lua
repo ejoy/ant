@@ -18,7 +18,7 @@ local default_quad_ib<const> = {
     0, 1, 2,
     2, 3, 0,
 }
-
+local border_material = "/pkg/ant.landform/assets/materials/border.material"
 
 local function noise(x, y, freq, exp, lb ,ub)
     local a = ub - lb
@@ -176,11 +176,100 @@ local function build_mesh(sectionsize, sectionidx, cterrainfileds, width)
     end
 end
 
-local function is_power_of_2(n)
-	if n ~= 0 then
-		local l = math.log(n, 2)
-		return math.ceil(l) == math.floor(l)
-	end
+
+local function create_border(pid, bsize, render_layer)
+    local border_mesh = {}
+    local border_num = terrain_width // bsize
+    local function to_mesh_buffer(vb, ib_handle)
+        local vbbin = table.concat(vb, "")
+        local numv = 4
+        local numi = 6
+
+        return {
+            bounding = nil,
+            vb = {
+                start = 0,
+                num = numv,
+                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layoutmgr.get "p3|t20".handle),
+            },
+            ib = {
+                start = 0,
+                num = numi,
+                handle = ib_handle,
+            }
+        }
+    end
+
+    local function build_ib(num_quad)
+        local b = {}
+        for ii=1, num_quad do
+            local offset = (ii-1) * 4
+            b[#b+1] = offset + 0
+            b[#b+1] = offset + 1
+            b[#b+1] = offset + 2
+
+            b[#b+1] = offset + 2
+            b[#b+1] = offset + 3
+            b[#b+1] = offset + 0
+        end
+        return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
+    end
+    local function build_mesh(origin, extent)
+        local packfmt<const> = "fffff"
+        local ox, oz = origin[1], origin[2]
+        local nx, nz = ox + extent[1], oz + extent[2]
+        local vb = {
+            packfmt:pack(ox, 0, oz, 0, 1),
+            packfmt:pack(ox, 0, nz, 0, 0),
+            packfmt:pack(nx, 0, nz, 1, 0),
+            packfmt:pack(nx, 0, oz, 1, 1),        
+        }
+        local ib_handle = build_ib(1)
+        return to_mesh_buffer(vb, ib_handle)
+    end
+    local function create_border_mesh(o, bw, bh)
+        for z = 1, bh do
+            for x = 1, bw do
+                local origin = {((x - 1) * bsize + o[1]) * unit, ((z - 1) * bsize + o[2]) * unit}
+                local extent = {bsize * unit, bsize * unit}
+                border_mesh[#border_mesh+1] = build_mesh(origin, extent)
+            end
+        end
+    end
+    local function create_border_edge()
+        create_border_mesh({0, 0 - bsize}, border_num, 1) -- bottom
+        create_border_mesh({0, 0 + terrain_height, 0}, border_num, 1) -- top
+        create_border_mesh({0 - bsize, 0}, 1, border_num) -- left
+        create_border_mesh({0 + terrain_width, 0}, 1, border_num) -- left
+    end
+    local function create_border_corner()
+        create_border_mesh({0 - bsize, 0 - bsize}, 1, 1) -- left bottom
+        create_border_mesh({0 - bsize, 0 + terrain_height}, 1, 1) -- left top
+        create_border_mesh({0 + terrain_width, 0 - bsize}, 1, 1) -- right bottom
+        create_border_mesh({0 + terrain_width, 0 + terrain_height}, 1, 1) -- bottom
+    end
+    create_border_edge()
+    create_border_corner()
+    for idx, mesh in pairs(border_mesh) do
+        world:create_entity {
+            policy = {
+                "ant.scene|scene_object",
+                "ant.render|simplerender",
+                "ant.general|name",
+            },
+            data = {
+                scene = {
+                    parent = pid,
+                },
+                simplemesh  = mesh,
+                material    = border_material,
+                visible_state= "main_view|selectable",
+                name        = "border" .. idx,
+                render_layer = render_layer,
+
+            }
+        }
+    end
 end
 
 function iplane_terrain.set_wh(w, h, offset_x, offset_z)
@@ -247,16 +336,14 @@ function iplane_terrain.init_plane_terrain(st, render_layer)
                             material    = shapematerial,
                             visible_state= "main_view|selectable",
                             name        = "section" .. sectionidx,
-                            plane_terrain = true,
                             render_layer = render_layer,
-                            on_ready = function()
-                                world:pub {"shape_terrain", "on_ready", eid, e.eid}
-                            end,
                         },
                     }
                 end
             end
         end
+        local border_size = ss // 4
+        create_border(e.eid, border_size, render_layer)
         iom.set_position(e, math3d.vector(-origin_offset_width * unit, 0, -origin_offset_height * unit))
     end   
 end
