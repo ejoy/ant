@@ -237,11 +237,11 @@ submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, con
 	}
 }
 
-static submit_cache cc;
+
 
 static inline void
-build_hitch_info(struct ecs_world*w){
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)) {
+build_hitch_info(struct ecs_world*w, submit_cache &cc){
+	for (auto e : ecs_api::select<ecs::hitch, ecs::view_visible, ecs::scene>(w->ecs)) {
 		const auto &h = e.get<ecs::hitch>();
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto &ra = cc.ra[ii];
@@ -256,33 +256,8 @@ build_hitch_info(struct ecs_world*w){
 	}
 }
 
-static int
-lrender_preprocess(lua_State *L){
-	auto w = getworld(L);
-	find_render_args(w, cc);
-	build_hitch_info(w);
-	return 0;
-}
-
-static int
-lrender_submit(lua_State *L) {
-	auto w = getworld(L);
-	// draw simple objects
-	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
-		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-			const auto& ra = cc.ra[ii];
-			const auto& obj = e.get<ecs::render_object>();
-			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
-				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
-			}
-		}
-	}
-	return 0;
-}
-
-static int
-lrender_hitch_submit(lua_State *L){
-	auto w = getworld(L);
+static inline void
+render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 	// draw object which hanging on hitch node
 	ecs_api::clear_type<ecs::efk_hitch>(w->ecs);
 	for (auto const& [groupid, g] : cc.groups) {
@@ -306,15 +281,50 @@ lrender_hitch_submit(lua_State *L){
 			}
 		}
 	}
-
-	return 0;
 }
 
+static inline void
+render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
+	// draw simple objects
+	for (auto& e : ecs_api::select<ecs::render_object, ecs::view_visible>(w->ecs)) {
+		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+			const auto& ra = cc.ra[ii];
+			const auto& obj = e.get<ecs::render_object>();
+			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
+				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
+			}
+		}
+	}
+}
+
+
 static int
-lrender_postprocess(lua_State *L){
+lrender_submit(lua_State *L) {
+	auto w = getworld(L);
+
+	static submit_cache cc;
+	find_render_args(w, cc);
+	build_hitch_info(w, cc);
+	render_submit(L, w, cc);
+	render_hitch_submit(L, w, cc);
 	cc.clear();
 	return 0;
 }
+
+// static int
+// lrender_preprocess(lua_State *L){
+// 	return 0;
+// }
+
+// static int
+// lrender_hitch_submit(lua_State *L){
+// 	return 0;
+// }
+
+// static int
+// lrender_postprocess(lua_State *L){
+// 	return 0;
+// }
 
 static int
 lnull(lua_State *L){
@@ -398,10 +408,10 @@ luaopen_system_render(lua_State *L){
 	luaL_Reg l[] = {
 		{ "init",				linit},
 		{ "exit",				lexit},
-		{ "render_preprocess",	lrender_preprocess},
+		//{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
-		{ "render_hitch_submit",lrender_hitch_submit},
-		{ "render_postprocess", lrender_postprocess},
+		// { "render_hitch_submit",lrender_hitch_submit},
+		// { "render_postprocess", lrender_postprocess},
 		{ nullptr, 			nullptr },
 	};
 	luaL_newlibtable(L,l);

@@ -196,7 +196,15 @@ local function iter_group_hitch_DEBUG_ONLY()
     end
 end
 
-local function update_hitch_efk()
+function efk_sys:render_submit()
+    for e in w:select "efk:in view_visible scene:in" do
+        --update_transform will check efk is alive and visible or not
+        local ph = e.efk.play_handle
+        ph:update_transform(e.scene.worldmat)
+    end
+end
+
+function efk_sys:render_postprocess()
     --iter_group_hitch_DEBUG_ONLY()
     local handles, mats = {}, {}
     for e in w:select "efk_hitch:in" do
@@ -208,15 +216,6 @@ local function update_hitch_efk()
     if #handles > 0 then
         ltask.send(EFK_SERVER, "update_hitch_transforms", handles, table.concat(mats, ""))
     end
-end
-
-function efk_sys:render_postprocess()
-    for e in w:select "view_visible efk:in scene:in" do
-        --update_transform will check efk is alive and visible or not
-        e.efk.play_handle:update_transform(e.scene.worldmat)
-    end
-
-    update_hitch_efk()
 end
 
 function iefk.create(filename, config)
