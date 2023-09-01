@@ -61,58 +61,42 @@ local function to_v(t, h)
 	return v
 end
 
-local DEF_PROPERTIES<const> = {}
-
-local function generate_properties(fx, properties)
-	local uniforms = fx.uniforms
-	properties = properties or DEF_PROPERTIES
-
-	local system, attrib = {}, {}
+local function update_attribs(attr, uniforms)
+	local attrib, system, opt_mat_uniforms_samplers = attr.attrib, attr.system, {}
 	if uniforms and #uniforms > 0 then
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			if not n:match "@data" then
-				if sa.get(n) then
-					system[#system+1] = n
-				else
-					attrib[n] = to_v(assert(properties[n]), u.handle)
+			local is_uniform, is_sampler, is_sa = n:find("u_") == 1, n:find("s_") == 1, sa.get(n)
+			if (not is_sa) then 
+				-- set handle to material's uniform and sampler attribs
+				if is_uniform or is_sampler then
+					attrib[n] = to_v(assert(attrib[n], u.handle))
+					opt_mat_uniforms_samplers[n] = true
 				end
+			else 
+				-- save system attribs from compiled shader file except existed system attribs
+				system[#system+1] = n
 			end
 		end
 	end
-
-	for k, v in pairs(properties) do
-		if sa[k] then
-			error(("Invalid property name:%s, same as System attribute"):format(k))
-		end
-
-		if (not attrib[k]) and (v.image or v.buffer) then
-			assert(v.access and v.stage, "image or buffer property need define 'access' and 'stage'")
-			if v.image then
-				assert(v.mip, "image property need define 'mip'")
+	-- some material's attribs(uniform and sampler with texture type) will be hidden by shader optizimation
+		-- EX of uniform : u_pbr_factor
+		-- EX of sampler : s_avg_luminance
+	-- but material's buffer and sampler with image type should be saved
+		-- EX of sampler : s_ssao_result
+	for n, v in pairs(attrib) do
+		local is_uniform, is_sampler = n:find("u_") == 1, n:find("s_") == 1
+		if not opt_mat_uniforms_samplers[n] then
+			if is_uniform or (is_sampler and v.texture) then
+				attrib[n] = nil
 			end
-			attrib[k] = v
 		end
 	end
-
-	if fx.setting.lighting == "on" then
-		system[#system+1] = "b_light_info"
-		if use_cluster_shading then
-			system[#system+1] = "b_light_grids"
-			system[#system+1] = "b_light_index_lists"
-		end
-	end
-
-	if cs_skinning and fx.setting.skinning == "on" then
-		assert(attrib["b_skinning_matrices_vb"]).type	= 'b'
-		assert(attrib["b_skinning_in_dynamic_vb"]).type	= 'b'
-		assert(attrib["b_skinning_out_dynamic_vb"]).type= 'b'
-	end
-	return system, attrib
+	return attrib, system
 end
 
 local function loader(filename)
-    local material = async.material_create(filename)
+    local material, attribute = async.material_create(filename)
 
     if material.state then
 		material.state = bgfx.make_state(load(material.state))
@@ -121,7 +105,7 @@ local function loader(filename)
     if material.stencil then
         material.stencil = bgfx.make_stencil(load(material.stencil))
     end
-    material.system, material.attrib = generate_properties(material.fx, material.properties)
+    material.attrib, material.system = update_attribs(attribute, material.fx.uniforms)
     material.object = MA.material_load(filename, material.state, material.stencil, material.fx.prog, material.system, material.attrib)
     return material
 end
