@@ -128,8 +128,8 @@ local function material_create(filename)
     local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
-    if material.attrib then
-        for _, v in pairs(material.attrib) do
+    if attribute.attrib then
+        for _, v in pairs(attribute.attrib) do
             if v.texture then
                 local texturename = absolute_path(v.texture, filename)
                 v.value = S.texture_create_fast(texturename)

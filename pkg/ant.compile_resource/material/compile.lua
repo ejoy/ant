@@ -339,6 +339,27 @@ local BgfxOS <const> = {
     macos = "osx",
 }
 
+local function check_stage(attrib, system, shader_type)
+    local has_staged = {}
+    if shader_type == "PBR" then
+        has_staged = {[sa.get("s_prefilter").stage] = true, [sa.get("s_shadowmap").stage] = true, [sa.get("s_ssao").stage] = true, 
+        [sa.get("b_light_grids").stage] = true, [sa.get("b_light_index_lists").stage] = true, [sa.get("b_light_info").stage] = true}
+    end
+    for _, n in pairs(system) do
+        local stage = assert(sa.get(n).stage, "Doesn't exist this system attrib! \n")
+        has_staged[stage] = true
+    end
+    for _, v in pairs(attrib) do
+        if v.stage then
+            if has_staged[v.stage] then
+                error(("Stage %d has been occupied! \n"):format(v.stage))
+            else
+                has_staged[v.stage] = true
+            end
+        end
+    end
+end
+
 local function check_get_attribute(mat)
     local fx, properties = mat.fx, mat.properties
     local system, attrib = {}, {}
@@ -385,6 +406,7 @@ local function check_get_attribute(mat)
 			system[#system+1] = "b_light_index_lists"
 		end
 	end
+    check_stage(attrib, system, fx.shader_type)
     return {system = system, attrib = attrib}
 end
 

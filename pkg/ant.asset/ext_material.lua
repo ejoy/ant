@@ -61,26 +61,6 @@ local function to_v(t, h)
 	return v
 end
 
-local function check_stage(attrib, system)
-	local stage_table = {}
-	local function is_stage_occupied(stage)
-		if stage then
-			if stage_table[stage] then
-				error(("Stage %d has been occupied! \n"):format(stage))
-			else
-				stage_table[stage] = true
-			end
-		end
-	end
-	for _, v in pairs(attrib) do
-		is_stage_occupied(v.stage)
-	end
-	for _, n in pairs(system) do
-		local stage = sa.get(n).stage
-		is_stage_occupied(stage)
-	end
-end
-
 local function update_attribs(attr, uniforms)
 	local attrib, system, opt_mat_uniforms_samplers = attr.attrib, attr.system, {}
 	if uniforms and #uniforms > 0 then
@@ -112,7 +92,6 @@ local function update_attribs(attr, uniforms)
 			end
 		end
 	end
-	check_stage(attrib, system)
 	return attrib, system
 end
 
