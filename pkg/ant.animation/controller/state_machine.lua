@@ -12,21 +12,23 @@ function iani.set_edit_mode(b)
 	EditMode = b
 end
 
-local function get_anim_e(eid)
-	if type(eid) == "table" then
-		local entitys = eid.tag["*"]
+local function get_anim_eid(anim_e)
+	if not anim_e then
+		return
+	end
+	if type(anim_e) == "table" then
+		local entitys = anim_e.tag["*"]
 		for _, eid in ipairs(entitys) do
-			local e = world:entity(eid, "anim_ctrl?in")
+			local e <close> = world:entity(eid, "anim_ctrl?in")
 			if e.anim_ctrl then
-				w:extend(e, "anim_ctrl:in animation:in skeleton:in")
-				return e
+				return eid
 			end
 		end
-		if eid.tag["*"] then
-			return world:entity(eid.tag["*"][2], "anim_ctrl:in animation:in skeleton:in")
-		end
 	else
-		return world:entity(eid, "anim_ctrl:in animation:in skeleton:in")
+		local e <close> = world:entity(anim_e, "anim_ctrl?in")
+		if e.anim_ctrl then
+			return anim_e
+		end
 	end
 end
 
@@ -60,13 +62,20 @@ function iani.load_events(anim_e, filename)
     local data = f:read "a"
     f:close()
 	local events = datalist.parse(data)
-	local e <close> = get_anim_e(anim_e)
+	local anim_eid = get_anim_eid(anim_e)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	e.anim_ctrl.keyframe_events = events
 end
 
 function iani.play(eid, anim_state)
-	local e <close> = get_anim_e(eid)
-	w:extend(e, "playing?out")
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in playing?out")
 	local anim_name = anim_state.name
 	local anim = e.animation[anim_name]
 	assert(anim)
@@ -119,7 +128,11 @@ function iani.play(eid, anim_state)
 end
 
 function iani.get_duration(eid, anim_name)
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in")
 	if not anim_name then
 		return e.anim_ctrl.animation._handle:duration()
 	else
@@ -158,9 +171,11 @@ function iani.step(anim_e, s_delta, absolute)
 end
 
 function iani.set_time(eid, second)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
-	w:extend(e, "pose_dirty?out")
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in pose_dirty?out")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
@@ -177,39 +192,57 @@ function iani.set_time(eid, second)
 end
 
 function iani.stop_effect(eid)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 end
 
 function iani.get_time(eid)
-	if not eid then return 0 end
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return 0
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	if not e.anim_ctrl.animation then return 0 end
 	return e.anim_ctrl.play_state.ratio * e.anim_ctrl.animation._handle:duration()
 end
 
 function iani.set_speed(eid, speed)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	e.anim_ctrl.play_state.speed = speed
 end
 
 function iani.set_loop(eid, loop)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	e.anim_ctrl.play_state.loop = loop
 end
 
 function iani.pause(eid, pause)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	e.anim_ctrl.play_state.play = not pause
 end
 
 function iani.is_playing(eid)
-	if not eid then return end
-	local e <close> = get_anim_e(eid)
+	local anim_eid = get_anim_eid(eid)
+	if not anim_eid then
+		return
+	end
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	return e.anim_ctrl.play_state.play
 end
 
