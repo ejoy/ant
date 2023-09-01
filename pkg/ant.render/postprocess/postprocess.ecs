@@ -34,9 +34,10 @@ policy "postprocess"
     --.require_system "ant.render|blit_system"
 
 component "postprocess"
-component "postprocess_input".type "lua"
-    .require_system "ant.render|postprocess_system"
+component "postprocess_input"
+    .type "lua"
 policy "postprocess_object"
+    .require_system "ant.render|postprocess_system"
     .component "postprocess"
     .component "postprocess_input"
 

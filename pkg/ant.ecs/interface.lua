@@ -59,7 +59,6 @@ local attribute = {
 	},
 	component = {
 		"implement",
-		"require_system",
 		"type",
 		"size",
 		"field",

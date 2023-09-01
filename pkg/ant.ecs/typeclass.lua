@@ -261,9 +261,9 @@ local function import_ecs(w, ecs)
 			importor.policy(k)
 		end
 	end
-	if ecs.component then
-		for _, k in ipairs(ecs.component) do
-			importor.component(k)
+	for name, v in pairs(w._decl.component) do
+		if v.implement[1] then
+			importor.component(name)
 		end
 	end
 end
@@ -274,6 +274,9 @@ local function create_ecs(w, package, tasks)
         local fullname = package .. "|" .. name
         local r = w._class.system[fullname]
         if r == nil then
+            if not w._decl.system[fullname] then
+                error(("system `%s` has no declaration."):format(fullname))
+            end
             log.debug("Register system   ", fullname)
             r = {}
             w._class.system[fullname] = r
@@ -284,10 +287,12 @@ local function create_ecs(w, package, tasks)
     function ecs.component(fullname)
         local r = w._class.component[fullname]
         if r == nil then
+            if not w._decl.component[fullname] then
+                error(("component `%s` has no declaration."):format(fullname))
+            end
             log.debug("Register component", fullname)
             r = {}
             w._class.component[fullname] = r
-            table.insert(tasks.component, fullname)
         end
         return r
     end
@@ -315,7 +320,6 @@ local function init(w, config)
 	end)
 	local tasks = config.ecs
 	tasks.system = tasks.system or {}
-	tasks.component = tasks.component or {}
 	setmetatable(w._packages, {__index = function (self, package)
 		local v = {
 			_LOADED = {},
@@ -327,11 +331,9 @@ local function init(w, config)
 	import_ecs(w, tasks)
 	slove_component(w)
 	create_context(w)
-	for _, what in ipairs {"system", "component"} do
-		for name, v in sortpairs(w._decl[what]) do
-			if v.implement[1] and not v.imported then
-				log.warn(string.format("%s %s is not imported.", what, name))
-			end
+	for name, v in sortpairs(w._decl.system) do
+		if v.implement[1] and not v.imported then
+			log.warn(string.format("system `%s` is not imported.", name))
 		end
 	end
 	w._initializing = nil

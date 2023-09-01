@@ -3,6 +3,5 @@ system "visible_state_system"
 
 component "visible_state"
     .type "lua"
-    .require_system "visible_state_system"
 
 component "visible_state_changed"
