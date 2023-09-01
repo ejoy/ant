@@ -43,7 +43,6 @@ local function create_importor(w)
 		if not w._initializing then
 			error(("system `%s` can only be imported during initialization."):format(name))
 		end
-		log.debug("Import  system", name)
 		v.imported = true
 		for _, tuple in ipairs(v.value) do
 			local what, k = tuple[1], tuple[2]
@@ -53,6 +52,7 @@ local function create_importor(w)
 			end
 		end
 		if v.implement and v.implement[1] then
+			log.debug("Import  system", name)
 			local impl = v.implement[1]
 			if impl:sub(1,1) == ":" then
 				v.c = true
@@ -72,16 +72,9 @@ local function create_importor(w)
 		if v.imported then
 			return
 		end
-		log.debug("Import  component", name)
 		v.imported = true
-		for _, tuple in ipairs(v.value) do
-			local what, k = tuple[1], tuple[2]
-			local attrib = check_map[what]
-			if attrib then
-				import[attrib](k)
-			end
-		end
 		if v.implement and v.implement[1] then
+			log.debug("Import  component", name)
 			local impl = v.implement[1]
 			local pkg = v.packname
 			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
