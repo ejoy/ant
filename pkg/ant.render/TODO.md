@@ -67,6 +67,8 @@
 19. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
 20. 摄像机的fov需要根据聚焦的距离来定义fov；
 21. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
+22. 使用draw indirect的时候，在cull的阶段，获取一个粗糙的z-buffer（可以在cpu端生成http://twvideo01.ubm-us.net/o1/vault/gdcchina14/presentations/833779_MiloYip_ADataOrientedCN.pdf，也可以在gpu端生成），用以判断这个物体就算在视锥体内，也是可以被剔除的；
+23. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；
 
 #### 新功能/探索
 ##### 已经完成
