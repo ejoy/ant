@@ -233,7 +233,10 @@ local function delete_rt_prefab(rt_name)
 end
 
 function iUiRt.get_group_id(rt_name)
-    return ig.groupid(OBJNAMES[rt_name])
+    local on = OBJNAMES[rt_name]
+    if ig.has(on) then
+        return ig.groupid(on)
+    end
 end
 
 function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_color, on_message)
