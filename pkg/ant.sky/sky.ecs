@@ -17,14 +17,12 @@ component "procedural_sky_changed"
 
 policy "skybox"
     .include_policy "ant.render|simplerender"
-    .include_policy "ant.render|ibl"
     .require_system "ant.sky|skybox_system"
     --.require_system "ant.sky|cs2cm_system"
     --.require_system "ant.sky|render2cm_system"
     .component "skybox"
 
 component "skybox"
-    .type "lua"
 component "skybox_changed"
 
 system "skybox_system"
@@ -32,4 +30,3 @@ system "skybox_system"
 
 pipeline "sky"
     .stage "convert_sky"
-    .stage "filter_ibl"

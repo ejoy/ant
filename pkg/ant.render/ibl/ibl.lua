@@ -316,11 +316,15 @@ local function update_ibl_texture_info()
     update_ibl_param()
 end
 
-function iibl.filter_all(ibl)
-    build_ibl_textures(ibl)
-    create_ibl_entities()
 
-    update_ibl_texture_info()
+function ibl_sys.entity_init()
+	for e in w:select "INIT ibl:in" do
+		local ibl = e.ibl
+        ibl.source.value = assetmgr.load_texture(ibl.source.tex_name)
+        build_ibl_textures(e.ibl)
+        create_ibl_entities()
+        update_ibl_texture_info()
+	end
 end
 
 return iibl

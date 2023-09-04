@@ -3,14 +3,12 @@ local world 	= ecs.world
 local w 		= world.w
 
 local setting   = import_package "ant.settings"
-local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local assetmgr	= import_package "ant.asset"
 
 local geopkg 	= import_package "ant.geometry"
 local geo 		= geopkg.geometry
 
-local iibl      = ecs.require "ant.render|ibl.ibl"
 local imesh		= ecs.require "ant.asset|mesh"
 local imaterial	= ecs.require "ant.asset|material"
 
@@ -45,9 +43,7 @@ local function res_tex_name(e)
 end
 
 function skybox_sys:entity_ready()
-	for e in w:select "skybox_changed:update render_object filter_material:in skybox:in ibl:in" do
-		local se_ibl = e.ibl
-        local sb = e.skybox
+	for e in w:select "skybox_changed:update render_object filter_material:in skybox:in" do
 		local tn = res_tex_name(e)
 		local tex = assetmgr.resource(tn)
 		local texid = tex.id
@@ -56,16 +52,6 @@ function skybox_sys:entity_ready()
 			if not tex.texinfo.cubeMap then
 				error(("Invalid cubemap texture file:%s, it need to convert to cubemap texture file(add 'equirect: true' in *.texture file to convert it into cubemap texture)"):format(tn))
 			end
-            iibl.filter_all{
-                source 		= {value=texid, facesize=sb.facesize, tex_name = tn},
-				--TODO: need remove, only use irradianceSH
-                irradiance 	= se_ibl.irradiance,
-                irradianceSH= se_ibl.irradianceSH,
-                prefilter 	= se_ibl.prefilter,
-                LUT			= se_ibl.LUT,
-                intensity	= se_ibl.intensity,
-            }
-            world:pub{"ibl_updated", e}
         end
 	end
 end
