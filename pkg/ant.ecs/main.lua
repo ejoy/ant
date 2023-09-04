@@ -146,47 +146,27 @@ local function create_entity_template(w, v)
     }, template_mt)
 end
 
-local create_template
-
-local function create_template_(w, t)
-	local prefab = {}
-	for _, v in ipairs(t) do
-        if not w.__EDITOR__ and v.editor then
-            if v.prefab then
-                v = {
-                    prefab = "/pkg/ant.ecs/dummy.prefab"
-                }
-            else
-                --TODO
-                v = {
-                    policy = {},
-                    data = {},
-                }
-            end
-        end
-        if v.prefab then
-            prefab[#prefab+1] = {
-                prefab = v.prefab,
-                mount = v.mount,
-                template = create_template(w, v.prefab),
-            }
-        else
-            prefab[#prefab+1] = create_entity_template(w, v)
-        end
-    end
-    return prefab
-end
-
-function create_template(w, filename)
-    local v = w._templates[filename]
-    if not v then
+local function create_template(w, filename)
+    local prefab = w._templates[filename]
+    if not prefab then
+        prefab = {}
+        w._templates[filename] = prefab
         local realpath = assetmgr.compile(filename)
         local data = fastio.readall(realpath, filename)
         local t = serialize.parse(filename, data)
-        v = create_template_(w, t)
-        w._templates[filename] = v
+        for _, v in ipairs(t) do
+            if v.prefab then
+                prefab[#prefab+1] = {
+                    prefab = v.prefab,
+                    mount = v.mount,
+                    template = create_template(w, v.prefab),
+                }
+            else
+                prefab[#prefab+1] = create_entity_template(w, v)
+            end
+        end
     end
-    return v
+    return prefab
 end
 
 local function add_tag(dict, tag, eid)
