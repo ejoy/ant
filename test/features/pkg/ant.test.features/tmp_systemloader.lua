@@ -397,10 +397,10 @@ function init_loader_sys:ui_update()
 
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
             
-            ig.enable(1, "view_visible", enable == 1)
-            ig.enable(0, "view_visible", enable == 1)
+            local go <close> = ig.obj "view_visible"
+            go:enable(1, enable == 1)
+            go:enable(0, enable == 1)
             enable = enable == 1 and 0 or 1
-            world:group_flush "view_visible"
 
         elseif key == "LEFT" and press == 0 then
             local d = w:first("directional_light scene:in eid:in")

@@ -33,8 +33,7 @@ local function hitch_cull_test()
                 gg.hitch_tag = gg.hitch_tag + 1
             end
             group_culled, group_no_culled, group_sum = group_culled + gg.hitch_tag * culled, group_no_culled + gg.hitch_tag * no_culled, group_sum + gg.hitch_tag * hitch_sum
-            world:group_disable_tag("hitch_tag", gid)
-            world:group_flush "hitch_tag"
+            ig.enable(gid, "hitch_tag", false)
         end
     
         print("hitch object group_culled:", group_culled)

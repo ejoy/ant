@@ -526,7 +526,7 @@ function sm:camera_usage()
 				end
 			end
         end
-        world:group_disable_tag("hitch_tag", gid)
+		ig.enable(gid, "hitch_tag", false)
 	end ]]
 end
 
