@@ -1,0 +1,8 @@
+system "rotator_system"
+    .implement "rotator/rotator.lua"
+
+component "rotator".type "lua"
+
+policy "rotator"
+    .require_system "ant.render|rotator_system"
+    .component "rotator"
