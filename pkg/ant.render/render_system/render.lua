@@ -15,6 +15,8 @@ local layoutmgr		= require "vertexlayout_mgr"
 local hwi			= import_package "ant.hwi"
 local sampler		= import_package "ant.general".sampler
 
+local ig 			= ecs.require "ant.group|group"
+
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
 local irender		= {}
@@ -311,6 +313,10 @@ end
 
 function irender.get_framebuffer_ratio(which)
 	return assert(world.args.framebuffer[which], "Invalid ratio type:" .. which)
+end
+
+function irender.mark_group_visible(gid, enable)
+	ig.filter_group_tag(gid, enable, "render_object_visible", "view_visible", "render_object")
 end
 
 return irender

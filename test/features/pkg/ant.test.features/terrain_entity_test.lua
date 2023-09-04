@@ -54,19 +54,15 @@ function tet_sys:init_world()
 end
 
 local mq_cc_mb = world:sub{"main_queue", "camera_changed"}
-
+local ig            = ecs.require "ant.group|group"
 local group_aabbs = {dirty=true}
 local function update_group(ce)
     local frustum_planes = math3d.frustum_planes(ce.camera.viewprojmat)
+    local go<close> = ig.obj "view_visible"
     for gid, aabb in pairs(group_aabbs) do
         local culled = math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0
-        if culled then
-            world:group_disable_tag("view_visible", gid)
-        else
-            world:group_enable_tag("view_visible", gid)
-        end
+        go:enable(gid, culled)
     end
-    world:group_flush "view_visible"
 end
 
 function tet_sys:data_changed()

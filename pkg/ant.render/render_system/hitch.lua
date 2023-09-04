@@ -4,6 +4,7 @@ local w     = world.w
 
 local math3d    = require "math3d"
 local mc        = import_package "ant.math".constant
+local ig        = ecs.require "ant.group|group"
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -36,8 +37,7 @@ function hitch_sys:entity_ready()
     end
 
     for gid, hitchs in pairs(groups) do
-        world:group_enable_tag("hitch_tag", gid)
-        world:group_flush "hitch_tag"
+        ig.enable(gid, "hitch_tag", true)
 
         local h_aabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in" do

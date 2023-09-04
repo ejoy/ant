@@ -7,6 +7,7 @@ local ms_test_sys   = ecs.system "motion_sampler_test_system"
 
 local ims           = ecs.require "ant.motion_sampler|motion_sampler"
 local itimer        = ecs.require "ant.timer|timer_system"
+local ig            = ecs.require "ant.group|group"
 
 local function motion_sampler_test()
     local sampler_group = ims.sampler_group()
@@ -32,8 +33,7 @@ local function motion_sampler_test()
         }
     }
 
-    world:group_enable_tag("view_visible", sampler_group)
-    world:group_flush "view_visible"
+    ig.enable(sampler_group, "view_visible", true)
 
     world:create_instance {
         prefab = "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab",

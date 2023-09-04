@@ -8,8 +8,7 @@ local lms   = world:clibs "motion.sampler"
 local ltween = require "motion.tween"
 
 local itimer= ecs.require "ant.timer|timer_system"
-
-local motion_sampler_group<const> = 101010
+local ig    = ecs.require "ant.group|group"
 
 local mss = ecs.system "motion_sampler_system"
 
@@ -53,8 +52,8 @@ function msc.remove(v)
 end
 
 function mss:init()
-    world:group_enable_tag("motion_sampler_tag", motion_sampler_group)
-    world:group_flush "motion_sampler_tag"
+    local gid = ig.register "motion_sampler"
+    ig.enable(gid, "motion_sampler_tag", true)
 end
 
 local STOP_SYSTEM
@@ -63,13 +62,13 @@ function mss:do_motion_sample()
     if STOP_SYSTEM then
         return
     end
-    lms.sample(motion_sampler_group, itimer.delta())
+    lms.sample(ig.groupname "motion_sampler", itimer.delta())
 end
 
 local ims = {}
 
 function ims.sampler_group()
-    return motion_sampler_group
+    return ig.groupname "motion_sampler"
 end
 
 

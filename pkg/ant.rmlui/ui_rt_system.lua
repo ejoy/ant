@@ -16,7 +16,7 @@ local hwi       = import_package "ant.hwi"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
-local ui_rt_group_id = 110000
+local ig        = ecs.require "ant.group|group"
 
 local R             = world:clibs "render.render_material"
 local queuemgr      = ecs.require "ant.render|queue_mgr"
@@ -27,6 +27,8 @@ local iUiRt = {}
 local fb_cache, rb_cache = {}, {}
 local rt_table = {}
 
+local OBJNAMES      = setmetatable({}, {__index=function(tt, k) local o = k .. "_obj"; tt[k] = o; return o end})
+local QUEUENAMES    = setmetatable({}, {__index=function(tt, k) local o = k .. "_queue"; tt[k] = o; return o end})
 local S = ltask.dispatch()
 
 local rb_flags = sampler{
@@ -38,16 +40,12 @@ local rb_flags = sampler{
 }
 
 local function gen_group_id(rt_name)
-    if not rt_table[rt_name].gid then
-        local queuename = rt_name.."_queue"
-        local gid = ui_rt_group_id + 1
-        ui_rt_group_id = gid
-        local objname = rt_name.."_obj"
+    if not rt_table[rt_name] then
+        local objname = OBJNAMES[rt_name]
         w:register{ name = objname }
-        w:register{ name = queuename }
-        rt_table[rt_name].gid = gid
-        world:group_enable_tag(objname, gid)
-        world:group_flush(objname)
+        w:register{ name = QUEUENAMES[rt_name] }
+        local gid = ig.register(objname)
+        ig.enable(gid, objname, true)
     end
 end
 
@@ -82,7 +80,7 @@ end
 local lastname = "fxaa"
 
 local function create_rt_queue(width, height, name, fbidx)
-    local queuename = name .. "_queue"
+    local queuename = QUEUENAMES[name]
     local viewid = hwi.viewid_generate(name, lastname)
     lastname = name
     gen_group_id(name)
@@ -179,8 +177,7 @@ function S.render_target_create(width, height, rt_name)
     local fbidx
     if rt then --exist rt from set_rt_prefab
         rt.w, rt.h = width, height
-        local queuename = rt_name .. "_queue"
-        fbidx = update_fb(rt.w, rt.h, queuename)
+        fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
     else -- first create rt
         fbidx = create_fbidx(width, height)
         rt = {}
@@ -196,8 +193,7 @@ function S.render_target_create(width, height, rt_name)
 end
 
 function S.render_target_adjust(width, height, rt_name)
-    local queuename = rt_name .. "_queue"
-    local fbidx = update_fb(width, height, queuename)
+    local fbidx = update_fb(width, height, QUEUENAMES[rt_name])
     local rt_handle = fbmgr.get_rb(fbidx, 1).handle
     local rt = rt_table[rt_name]
     rt.rt_handle = rt_handle
@@ -228,25 +224,20 @@ local function calc_camera_t(queuename, aabb, scene, distance)
 end
 
 local function delete_rt_prefab(rt_name)
-    local gid = rt_table[rt_name].gid
-    if gid then
-        local obj_name = rt_name .. "_obj"
-        local select_tag = obj_name .. " eid:in"
-        for e in w:select(select_tag) do
-            w:remove(e.eid)
-        end
-    end 
+    local obj_name = OBJNAMES[rt_name]
+    ig.check(obj_name)
+    local select_tag = obj_name .. " eid:in"
+    for e in w:select(select_tag) do
+        w:remove(e.eid)
+    end
 end
 
 function iUiRt.get_group_id(rt_name)
-    if rt_table[rt_name] then
-        return rt_table[rt_name].gid 
-    end
+    return ig.groupid(OBJNAMES[rt_name])
 end
 
 function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_color, on_message)
     local rt = rt_table[rt_name]
-    local queuename = rt_name .. "_queue"
     if not rt then
         rt = {}
         rt_table[rt_name] = rt
@@ -254,7 +245,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
         create_rt_queue(1, 1, rt_name, fbidx)
         rt.rt_id = ltask.call(ServiceResource, "texture_register_id")
     elseif not rt.rt_handle then
-        local fbidx = update_fb(rt.w, rt.h, queuename)
+        local fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
         local rt_handle = fbmgr.get_rb(fbidx, 1).handle
         rt.rt_handle = rt_handle
         ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)
@@ -269,16 +260,15 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     end
     
     local srt = focus_srt
-    local gid = rt_table[rt_name].gid
     rt.distance = distance
     local focus_instance = world:create_instance {
         prefab = focus_path,
-        group = gid,
+        group = ig.groupid(OBJNAMES[rt_name]),
         on_message = on_message,
         on_ready = function (inst)
             local alleid = inst.tag['*']
             if clear_color then
-                irq.set_view_clear_color(queuename, clear_color)  
+                irq.set_view_clear_color(QUEUENAMES[rt_name], clear_color)  
             end
             local re <close> = world:entity(alleid[1])
             if srt.s then
@@ -295,15 +285,14 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
                 if ee.mesh then
                     if ee.visible_state then
                         ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                        ivs.set_state(ee, queuename, true)
+                        ivs.set_state(ee, QUEUENAMES[rt_name], true)
                         ee.focus_obj = true
                     end 
                 end
             end
         end
     }
-    world:group_enable_tag("view_visible", gid)
-    world:group_flush "view_visible"
+    ig.enable_from_name(OBJNAMES[rt_name], "view_visible", true)
     rt.prefab = focus_instance 
     rt.prefab_path = focus_path
     return rt.prefab
@@ -364,8 +353,7 @@ function ui_rt_sys:data_changed()
                 end
             end) 
         elseif rt.timestamp and rt.timestamp < reload_timestamp and (not rt.rt_handle) then
-            local queuename = rt_name .. "_queue"
-            local fbidx = update_fb(rt.w, rt.h, queuename)
+            local fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
             local rt_handle = fbmgr.get_rb(fbidx, 1).handle
             rt.rt_handle = rt_handle
             ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)                
@@ -375,11 +363,9 @@ end
 
 function ui_rt_sys:update_filter()
     for rt_name, rt in pairs(rt_table) do
-        local gid = rt.gid
         local distance = rt_table[rt_name].distance
-        local queuename = rt_name .. "_queue"
-        local obj_name = rt_name .. "_obj"
-        local select_tag = "filter_result " .. obj_name .. " visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"
+        local queuename = QUEUENAMES[rt_name]
+        local select_tag = ("filter_result %s visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"):format(OBJNAMES[rt_name])
         for e in w:select(select_tag) do
             if e.visible_state[queuename] then
                 local fm = e.filter_material

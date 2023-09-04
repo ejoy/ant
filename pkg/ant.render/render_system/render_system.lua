@@ -13,17 +13,16 @@ local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer"
+local ig		= ecs.require "ant.group|group"
 local RM        = ecs.require "ant.material|material"
 
 local render_sys= ecs.system "render_system"
 
 local R			= world:clibs "render.render_material"
 
-local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
 function vg_sys:init()
-    world:group_enable_tag("view_visible", def_group_id)
-	world:group_flush "view_visible"
+	ig.enable_from_name("DEFAULT", "view_visible", true)
 end
 
 function render_sys:start_frame()
@@ -157,6 +156,15 @@ function render_sys:scene_update()
 end
 
 function render_sys:update_render_args()
+	do
+		print("with view_visible tag:", w:count "view_visible")
+		print("with render_object tag:", w:count "render_object")
+		print("with scene tag:", w:count "scene")
+		print("both view_visible scene tag:", w:count "view_visible scene")
+		print("both view_visible and render_object tag:", w:count "view_visible render_object")
+	end
+
+
 	for qe in w:select "visible camera_ref:in render_target:in" do
 		local viewid = qe.render_target.viewid
 		local camera <close> = world:entity(qe.camera_ref, "scene_changed?in camera_changed?in")

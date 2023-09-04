@@ -10,6 +10,7 @@ local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irl           = ecs.require "ant.render|render_layer"
 local idn           = ecs.require "ant.daynight|daynight"
 local itimer        = ecs.require "ant.timer|timer_system"
+local ig            = ecs.require "ant.group|group"
 local assetmgr      = import_package "ant.asset"
 local mathpkg       = import_package"ant.math"
 local mc, mu        = mathpkg.constant, mathpkg.util
@@ -396,13 +397,8 @@ function init_loader_sys:ui_update()
 
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
             
-            if enable == 1 then
-                world:group_enable_tag ("view_visible", 1)
-                world:group_disable_tag("view_visible", 0)
-            else
-                world:group_enable_tag ("view_visible", 0)
-                world:group_disable_tag("view_visible", 1)
-            end
+            ig.enable(1, "view_visible", enable == 1)
+            ig.enable(0, "view_visible", enable == 1)
             enable = enable == 1 and 0 or 1
             world:group_flush "view_visible"
 

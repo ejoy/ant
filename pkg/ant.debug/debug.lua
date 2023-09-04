@@ -4,6 +4,8 @@ local w = world.w
 
 local debug_sys = ecs.system "debug_system"
 
+local ig        = ecs.require "ant.group|group"
+
 local tick = 30
 
 local function hitch_cull_test()
@@ -25,8 +27,7 @@ local function hitch_cull_test()
         end
     
         for gid, gg in pairs(groups) do
-            world:group_enable_tag("hitch_tag", gid)
-            world:group_flush "hitch_tag"
+            ig.enable(gid, "hitch_tag", true)
             local culled, no_culled, hitch_sum = gg.culled, gg.no_culled, gg.hitch_sum
             for e in w:select "hitch_tag:in render_object:in" do
                 gg.hitch_tag = gg.hitch_tag + 1

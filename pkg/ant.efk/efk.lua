@@ -17,6 +17,7 @@ local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
 local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"
+local ig        = ecs.require "ant.group|group"
 local qm        = ecs.require "ant.render|queue_mgr"
 local PH
 
@@ -200,8 +201,7 @@ local function iter_group_hitch_DEBUG_ONLY()
 	end
 
     for gid, mats in pairs(groups) do
-        world:group_enable_tag("hitch_tag", gid)
-        world:group_flush "hitch_tag"
+        ig.enable(gid, "hitch_tag", true)
 
         for e in w:select "hitch_tag efk:in scene:in" do
             e.efk.play_handle:update_hitch_transforms(mats, e.scene.worldmat)
