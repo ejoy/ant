@@ -1,22 +1,12 @@
-local lfs     = require "bee.filesystem"
 local sha1    = require "hash".sha1
 local config  = require "config"
 local depends = require "depends"
-local vfs   = require "vfs"
 local ltask   = require "ltask"
 
 local function get_filename(pathname)
     pathname = pathname:lower()
     local filename = pathname:match "[/]?([^/]*)$"
     return filename.."_"..sha1(pathname)
-end
-
-local function absolute_path(base, path)
-    if path:sub(1,1) == "/" then
-        assert(not path:find("|", 1, true))
-        return lfs.path(vfs.realpath(path))
-    end
-    return lfs.absolute(lfs.path(base):parent_path() / (path:match "^%./(.+)$" or path))
 end
 
 local compiling = {}
