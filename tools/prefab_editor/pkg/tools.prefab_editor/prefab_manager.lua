@@ -1004,10 +1004,18 @@ function m:pacth_modify(pidx, p, v)
             if current_value then
                 last_value = current_value
                 key = str
+            elseif str == "aabb" then
+                last_value[key] = {}
+                last_value = last_value[key]
+                key = str
             end
             current_value = last_value[str]
         end
-        last_value[key] = v
+        if not v and key == "aabb" then
+            patch_node.value["data"]["bounding"] = nil
+        else
+            last_value[key] = v
+        end
     else
         local path = "/"..pidx..p
         index, patch_node = self:get_patch_node(path)
