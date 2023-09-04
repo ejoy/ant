@@ -1,0 +1,8 @@
+system "starsky_system"
+    .implement "starsky.lua"
+
+component "starsky".type "lua"
+
+policy "starsky"
+    .require_system "ant.starsky|starsky_system"
+    .component "starsky"
