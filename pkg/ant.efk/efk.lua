@@ -16,6 +16,7 @@ local hwi       = import_package "ant.hwi"
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
 local itimer    = ecs.require "ant.timer|timer_system"
+local ivs       = ecs.require "ant.render|visible_state"
 local qm        = ecs.require "ant.render|queue_mgr"
 local PH
 
@@ -69,11 +70,9 @@ end
 
 function efk_sys:entity_init()
     for e in w:select "INIT scene:in efk:in efk_object:update" do
-        local eo = e.efk_object
-
+        local eo            = e.efk_object
         eo.handle           = e.efk.handle
         eo.worldmat         = e.scene.worldmat
-        eo.visible_masks    = qm.queue_mask "main_queue"
     end
 end
 
@@ -170,6 +169,20 @@ function efk_sys:scene_update()
 	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
 		e.efk_object.worldmat = e.scene.worldmat
 	end
+
+    for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
+        local vs = e.visible_state
+        local eo = e.efk_object
+
+        local ph = e.efk.play_handle
+        if vs["main_queue"] then
+            eo.visible_masks =  qm.queue_mask "main_queue"
+            ph:set_visible(true)
+        else
+            eo.visible_masks = 0
+            ph:set_visible(false)
+        end
+    end
 end
 
 local function iter_group_hitch_DEBUG_ONLY()
@@ -219,8 +232,6 @@ function efk_sys:render_postprocess()
 end
 
 function iefk.create(filename, config)
-    config = config or {}
-    assert(config.visible ~= nil, "Need define visible in 'config' filed")
     return world:create_entity {
         group = config.group,
         policy = {
@@ -236,7 +247,7 @@ function iefk.create(filename, config)
                 auto_play   = config.auto_play or false,
                 speed       = config.speed or 1.0,
             },
-            view_visible    = config.visible,
+            visible_state = config.visible_state,
         },
     }
 end
@@ -248,23 +259,24 @@ function iefk.preload(textures)
 end
 
 --TODO: need remove all the code checking 'efk' component is valid or not
-function iefk.play(efk)
-    local function realive(eid)
-        local e <close> = world:entity(eid, "efk?in")
-        local eefk = e.efk
-        if eefk then
-            eefk.play_handle:realive(eefk.speed)
-        end
+local function realive(eid)
+    local e <close> = world:entity(eid, "efk?in")
+    local efk = e.efk
+    if efk then
+        local ph = efk.play_handle
+        ph:realive(efk.speed)
+        ph:set_visible(true)
     end
+end
+
+function iefk.play(efk)
     if type(efk) == "table" then
 		local entitys = efk.tag["*"]
 		for _, eid in ipairs(entitys) do
             realive(eid)
-			iefk.set_visible(eid, true)
 		end
     else
         realive(efk)
-        iefk.set_visible(efk, true)
     end
 end
 
@@ -297,10 +309,7 @@ function iefk.set_visible(eid, b)
     local efk = e.efk
     if efk then
         efk.play_handle:set_visible(b)
-
-        -- no need to submit
-        w:extend(e, "view_visible?out")
-        e.view_visible = b
+        ivs.set_state(e, "main_queue", b)
     end
 end
 

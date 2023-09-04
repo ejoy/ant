@@ -134,12 +134,6 @@ function S.exit()
     shutdown()
 end
 
-function S.update_hitch_transforms(handle, hitch_mats)
-    for _, m in ipairs(hitch_mats) do
-        EFKCTX:update_transform(handle, m)
-    end
-end
-
 function S.update_cb_data(background_handle, depth)
     efk_cb_handle.background = background_handle
     efk_cb_handle.depth = depth
