@@ -94,6 +94,7 @@ function BaseView:set_eid(eid)
         if template.template and template.template.data.bounding then
             self.base.aabbmin:set_visible(true)
             self.base.aabbmax:set_visible(true)
+            self.base.delete_aabb:set_visible(true)
         else
             self.base.create_aabb:set_visible(true)
         end
@@ -231,18 +232,19 @@ function BaseView:on_set_aabbmin(value)
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             template.template.data.bounding.aabb[1] = tv
-            local e <close> = world:entity(self.eid, "bounding:update")
+            local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
             local bounding = e.bounding
             if bounding then
-                local aabbmax = {0,0,0}
+                local aabbmax = template.template.data.bounding.aabb[2]
                 if bounding.aabb and bounding.aabb ~= mc.NULL then
-                    aabbmax = math3d.tovalue(math3d.array_index(bounding.aabb, 2)) or {}
+                    local rmax = math3d.tovalue(math3d.array_index(bounding.aabb, 2)) or {}
+                    aabbmax = {rmax[1], rmax[2], rmax[3]}
                     math3d.unmark(bounding.aabb)
                 end
                 bounding.aabb = math3d.mark(math3d.aabb(math3d.vector(tv), math3d.vector(aabbmax)))
-                w:extend(e, "scene_needchange?out")
                 e.scene_needchange = true
-                world:pub {"UpdateAABB", self.eid}
+                world:pub { "UpdateAABB", self.eid}
+                world:pub { "PatchEvent", self.eid, "/data/bounding/aabb", {tv, aabbmax} }
             end
         end
     end
@@ -265,18 +267,19 @@ function BaseView:on_set_aabbmax(value)
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             template.template.data.bounding.aabb[2] = tv
-            local e <close> = world:entity(self.eid, "bounding:update")
+            local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
             local bounding = e.bounding
             if bounding then
-                local aabbmin = {0,0,0}
+                local aabbmin = template.template.data.bounding.aabb[1]
                 if bounding.aabb and bounding.aabb ~= mc.NULL then
-                    aabbmin = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
+                    local rmin = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
+                    aabbmin = {rmin[1], rmin[2], rmin[3]}
                     math3d.unmark(bounding.aabb)
                 end
                 bounding.aabb = math3d.mark(math3d.aabb(math3d.vector(aabbmin), math3d.vector(tv)))
-                w:extend(e, "scene_needchange?out")
                 e.scene_needchange = true
-                world:pub {"UpdateAABB", self.eid}
+                world:pub { "UpdateAABB", self.eid}
+                world:pub { "PatchEvent", self.eid, "/data/bounding/aabb", {aabbmin, tv} }
             end
         end
     end
@@ -307,21 +310,25 @@ end
 function BaseView:create_aabb()
     local tpl = hierarchy:get_template(self.eid)
     if tpl.template then
-        local e <close> = world:entity(self.eid, "bounding?in")
-        local bounding = e.bounding
+        local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
+        e.scene_needchange = true
         local min = {-1, -1, -1}
         local max = {1, 1, 1}
+        local bounding = e.bounding
         if bounding and bounding.aabb ~= mc.NULL then
             min = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
             max = math3d.tovalue(math3d.array_index(bounding.aabb, 2))
         end
         tpl.template.data.bounding = {aabb ={ {min[1], min[2], min[3]}, {max[1], max[2], max[3]} }}
+        bounding.aabb = math3d.mark(math3d.aabb(math3d.vector(min), math3d.vector(max)))
         self.base.create_aabb:set_visible(false)
         self.base.delete_aabb:set_visible(true)
         self.base.aabbmin:set_visible(true)
         self.base.aabbmax:set_visible(true)
         self.base.aabbmin:update()
         self.base.aabbmax:update()
+        world:pub { "UpdateAABB", self.eid }
+        world:pub { "PatchEvent", self.eid, "/data/bounding/aabb", {min, max} }
     end
 end
 
@@ -333,14 +340,16 @@ function BaseView:delete_aabb()
         self.base.delete_aabb:set_visible(false)
         self.base.aabbmin:set_visible(false)
         self.base.aabbmax:set_visible(false)
-        local e <close> = world:entity(self.eid, "bounding?in")
+        local e <close> = world:entity(self.eid, "bounding?in scene_needchange?out")
+        e.scene_needchange = true
         local bounding = e.bounding
         if bounding.aabb and bounding.aabb ~= mc.NULL then
             bounding.aabb = mc.NULL
-        else
-            math3d.unmark(bounding.aabb)
+        -- else
+        --     math3d.unmark(bounding.aabb)
         end
-        world:pub {"UpdateAABB", self.eid}
+        world:pub { "UpdateAABB", self.eid }
+        world:pub { "PatchEvent", self.eid, "/data/bounding/aabb" }
     end
 end
 
