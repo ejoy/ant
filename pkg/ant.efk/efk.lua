@@ -76,22 +76,6 @@ function efk_sys:entity_init()
     end
 end
 
-function efk_sys:scene_update()
-    for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
-        local vs = e.visible_state
-        local eo = e.efk_object
-
-        local ph = e.efk.play_handle
-        if vs["main_queue"] then
-            eo.visible_masks =  qm.queue_mask "main_queue"
-            ph:set_visible(true)
-        else
-            eo.visible_masks = 0
-            ph:set_visible(false)
-        end
-    end
-end
-
 function efk_sys:entity_remove()
     for e in w:select "REMOVED efk:in" do
         cleanup_efk(e.efk)
@@ -185,6 +169,20 @@ function efk_sys:scene_update()
 	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
 		e.efk_object.worldmat = e.scene.worldmat
 	end
+
+    for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
+        local vs = e.visible_state
+        local eo = e.efk_object
+
+        local ph = e.efk.play_handle
+        if vs["main_queue"] then
+            eo.visible_masks =  qm.queue_mask "main_queue"
+            ph:set_visible(true)
+        else
+            eo.visible_masks = 0
+            ph:set_visible(false)
+        end
+    end
 end
 
 local function iter_group_hitch_DEBUG_ONLY()

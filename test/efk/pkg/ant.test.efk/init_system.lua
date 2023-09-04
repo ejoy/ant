@@ -60,8 +60,6 @@ function is:init()
                 end
             }
         }
-
-        world:group_disable_tag("view_visible", 0)
     end
 end
 
