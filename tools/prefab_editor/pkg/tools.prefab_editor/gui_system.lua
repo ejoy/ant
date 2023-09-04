@@ -337,9 +337,9 @@ local function update_visible(node, visible)
 end
 local iani      = ecs.require "ant.animation|controller.state_machine"
 function m:handle_event()
-    -- for _, e in event_update_aabb:unpack() do
-    --     update_highlight_aabb(e)
-    -- end
+    for _, e in event_update_aabb:unpack() do
+        update_highlight_aabb(e)
+    end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui()

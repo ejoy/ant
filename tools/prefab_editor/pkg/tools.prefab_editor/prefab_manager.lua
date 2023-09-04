@@ -712,7 +712,7 @@ function m:add_effect(filename)
                 auto_play = false,
                 speed = 1.0,
             },
-            view_visible = true
+            visible_state = "main_queue"
 		},
     }
     local tpl = utils.deep_copy(template)
