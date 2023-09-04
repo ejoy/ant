@@ -5,13 +5,15 @@ local w     = world.w
 local math3d    = require "math3d"
 
 local iefk      = ecs.require "ant.efk|efk"
+local ig        = ecs.require "ant.group|group"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local is = ecs.system "init_system"
 
-local test_gid<const> = 1000001
+
 local efkeid
 function is:init()
+    local test_gid<const> = ig.register "group_test"
     iefk.preload{
         "/pkg/ant.test.efk/assets/miner_efk/a1.texture",
         "/pkg/ant.test.efk/assets/miner_efk/a2.texture",

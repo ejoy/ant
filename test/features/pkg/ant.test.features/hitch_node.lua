@@ -5,12 +5,12 @@ local w     = world.w
 local math3d= require "math3d"
 
 local iom   = ecs.require "ant.objcontroller|obj_motion"
-
+local ig    = ecs.require "ant.group|group"
 local hn_test_sys = ecs.system "hitch_node_test_system"
-local hitch_test_group_id<const> = 1000
-local skeleton_test_group_id<const> = 1001
 
 local function create_simple_test_group()
+    local hitch_test_group_id<const>    = ig.register "hitch_test"
+    local skeleton_test_group_id<const> = ig.register "hitch_ske_test"
     world:create_entity {
         policy = {
             "ant.render|hitch_object",
