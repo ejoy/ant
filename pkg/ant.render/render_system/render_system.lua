@@ -156,15 +156,6 @@ function render_sys:scene_update()
 end
 
 function render_sys:update_render_args()
-	do
-		print("with view_visible tag:", w:count "view_visible")
-		print("with render_object tag:", w:count "render_object")
-		print("with scene tag:", w:count "scene")
-		print("both view_visible scene tag:", w:count "view_visible scene")
-		print("both view_visible and render_object tag:", w:count "view_visible render_object")
-	end
-
-
 	for qe in w:select "visible camera_ref:in render_target:in" do
 		local viewid = qe.render_target.viewid
 		local camera <close> = world:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
