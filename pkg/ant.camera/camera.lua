@@ -163,7 +163,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 
 function cameraview_sys:start_frame()
     for ce in w:select "camera_changed?out" do
-        ce.camerac_hanged = nil
+        ce.camera_changed = nil
     end
 end
 
