@@ -34,14 +34,7 @@ function is:init()
                 loop = true,
                 visible = false,
             },
-            view_visible = false,
-            on_ready = function (e)
-                if nil ~= test_gid then
-                    w:extend(e, "view_visible?out")
-                    e.view_visible = false
-                    w:submit(e)
-                end
-            end
+            visible_state = "main_queue",
         }
     }
 
@@ -59,12 +52,16 @@ function is:init()
                 visible_state = "main_view",
                 scene = {
                     t = {5, 2, 0, 1}
-                }
+                },
+                view_visible = true,
+                on_ready = function (e)
+                    w:extend(e, "view_visible?in")
+                    print(e.view_visible)
+                end
             }
         }
 
-        world:group_enable_tag("view_visible", test_gid)
-        world:group_flush "view_visible"
+        world:group_disable_tag("view_visible", 0)
     end
 end
 
@@ -81,6 +78,9 @@ function is:data_changed()
     for _, key, press in kb_mb:unpack() do
         if press == 0 and key == "T" then
             iefk.stop(efkeid)
+        elseif press == 0 and key == "R" then
+            print(w:count "hitch")
+            print(w:count "hitch view_visible")
         end
     end
 end

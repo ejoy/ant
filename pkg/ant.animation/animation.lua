@@ -48,7 +48,7 @@ local function process_keyframe_event(task)
 						auto_play = true,
 						scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
 						group = task.group,
-						visible = not task.group,
+						visible_state = "main_queue",
 					})
 				end
 			end

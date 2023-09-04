@@ -10,6 +10,7 @@ pipeline "scene"
     .stage "refine_entity_transform"
     .stage "scene_changed"
     .stage "scene_update"
+    .stage "after_scene_update"
     .stage "bounding_update"
     .stage "follow_transform_updated"
 

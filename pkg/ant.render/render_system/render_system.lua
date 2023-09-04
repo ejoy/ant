@@ -129,7 +129,7 @@ function render_sys:entity_init()
 		e.filter_result = true
 	end
 
-	for e in w:select "INIT visible_state bounding visible_state_changed?out" do
+	for e in w:select "INIT visible_state visible_state_changed?out" do
 		e.visible_state_changed = true
 	end
 end
@@ -154,7 +154,6 @@ function render_sys:scene_update()
 	for e in w:select "visible_state_changed visible_state:in render_object?update hitch?update" do
 		update_visible_masks(e)
 	end
-	w:clear "visible_state_changed"
 end
 
 function render_sys:update_render_args()

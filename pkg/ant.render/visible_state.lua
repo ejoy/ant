@@ -56,4 +56,8 @@ function m:component_init()
     end
 end
 
+function m:after_scene_update()
+	w:clear "visible_state_changed"
+end
+
 return ivs
