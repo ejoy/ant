@@ -42,17 +42,20 @@ local function enable_group(gid, tag, enable)
     else
         world:group_disable_tag(tag, gid)
     end
+end
 
+local function enable_group_and_flush(gid, tag, enable)
+    enable_group(gid, tag, enable)
     world:group_flush(tag)
 end
 
 function ig.enable_from_name(gn, tag, enable)
-    enable_group(ig.groupid(gn), tag, enable)
+    enable_group_and_flush(ig.groupid(gn), tag, enable)
 end
 
 function ig.enable(gid, tag, enable)
     check_group(gid)
-    enable_group(gid, tag, enable)
+    enable_group_and_flush(gid, tag, enable)
 end
 
 function ig.filter(gid, enable, maintag, vicetag, filtertag)
@@ -63,7 +66,7 @@ end
 local OBJMT =  {
     __index = {
         enable = function (self, gid, enable)
-            ig.enable(gid, self.tag, enable)
+            enable_group(gid, self.tag, enable)
         end,
         filter = function (self, gid, enable, vicetag, filtertag)
             ig.filter(gid, enable, self.tag, vicetag, filtertag)
