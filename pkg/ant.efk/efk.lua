@@ -309,6 +309,7 @@ function iefk.set_visible(eid, b)
     local efk = e.efk
     if efk then
         efk.play_handle:set_visible(b)
+        ivs.set_state(e, "main_queue", b)
     end
 end
 
