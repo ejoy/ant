@@ -1,9 +1,7 @@
 local convert_image = require "texture.util"
 
-return function (content, output, setting, localpath)
-	if content.path then
-		content.local_texpath = localpath(assert(content.path))
-	else
+return function (content, output, setting)
+	if not content.path then
 		assert(content.value, "memory texture should define the texture memory")
 	
 		if content.format ~= "RGBA8" then

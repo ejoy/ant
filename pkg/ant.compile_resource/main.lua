@@ -11,26 +11,17 @@ local function get_filename(pathname)
     return filename.."_"..sha1(pathname)
 end
 
-local compile_file
-
 local function absolute_path(base, path)
     if path:sub(1,1) == "/" then
-        --assert(not path:find("|", 1, true))
-        --return lfs.path(vfs.realpath(path))
-        local pos = path:find("|", 1, true)
-        if pos then
-            local resource = vfs.realpath(path:sub(1,pos-1))
-            return lfs.path(compile_file(resource).."/"..path:sub(pos+1):gsub("|", "/"))
-        else
-            return lfs.path(vfs.realpath(path))
-        end
+        assert(not path:find("|", 1, true))
+        return lfs.path(vfs.realpath(path))
     end
     return lfs.absolute(lfs.path(base):parent_path() / (path:match "^%./(.+)$" or path))
 end
 
 local compiling = {}
 
-function compile_file(input)
+local function compile_file(input)
     assert(input:sub(1,1) ~= ".")
     if compiling[input] then
         return ltask.multi_wait(compiling[input])
@@ -41,9 +32,7 @@ function compile_file(input)
     local output = cfg.binpath / get_filename(input)
     local changed = depends.dirty(output / ".dep")
     if changed then
-        local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
-            return absolute_path(input, path)
-        end, changed)
+        local ok, deps = cfg.compiler(input, output, cfg.setting, changed)
         if not ok then
             local err = deps
             error("compile failed: " .. input .. "\n" .. err)

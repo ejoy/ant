@@ -142,7 +142,7 @@ return function (output, setting, param)
     if param.colorspace == "sRGB" then
         config.flag = config.flag .. 'Sg'
     end
-	local imgpath = param.local_texpath
+	local imgpath = param.path
 
 	config.build_irradianceSH = param.build_irradianceSH
 

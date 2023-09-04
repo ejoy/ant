@@ -150,9 +150,7 @@ do
                 filename = "materials/"..name..".material",
                 material = build_material(material, cfg),
             }
-            material_compile(status.tasks, status.depfiles, c.material, status.input, status.output / c.filename, status.setting, function (path)
-                return fs.path(path):localpath()
-            end)
+            material_compile(status.tasks, status.depfiles, c.material, status.input, status.output / c.filename, status.setting)
             status.material_cache[name] = c
         end
         return c

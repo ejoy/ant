@@ -10,13 +10,13 @@ local function readdatalist(filepath)
 	end)
 end
 
-return function(input, output, setting, localpath)
+return function (input, output, setting)
     local mat = readdatalist(input)
     local depfiles = {}
     local tasks = parallel_task.new()
-    compile(tasks, depfiles, mat, input, output, setting, localpath)
+    compile(tasks, depfiles, mat, input, output, setting)
     assert(#tasks > 0)
     parallel_task.wait(tasks)
-    depends.make_depend_graphic_settings(depfiles, localpath)
+    depends.make_depend_graphic_settings(depfiles)
     return true, depfiles
 end

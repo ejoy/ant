@@ -159,11 +159,11 @@ local function writefile(filename, data)
 	f:write(serialize.stringify(data))
 end
 
-local function merge_cfg_setting(fx, localpath)
+local function merge_cfg_setting(fx)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
-        fx.setting = serialize.parse(fx.setting, fastio.readall(localpath(fx.setting):string()))
+        fx.setting = serialize.parse(fx.setting, fastio.readall(fs.path(fx.setting):localpath():string()))
     else
         assert(type(fx.setting) == "table")
     end
@@ -315,9 +315,9 @@ local function check_update_fx(fx)
     end
 end
 
-local function find_varying_path(fx, stage, localpath)
+local function find_varying_path(fx, stage)
     if fx.varying_path then
-        return localpath(fx.varying_path)
+        return fs.path(fx.varying_path):localpath()
     end
 
     local st = fx.shader_type
@@ -410,12 +410,12 @@ local function check_get_attribute(mat)
     return {system = system, attrib = attrib}
 end
 
-local function compile(tasks, deps, mat, input, output, setting, localpath)
+local function compile(tasks, deps, mat, input, output, setting)
     local include_path = lfs.path(input):parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
-    merge_cfg_setting(fx, localpath)
+    merge_cfg_setting(fx)
     check_update_fx(fx)
     local attr = check_get_attribute(mat)
     setmetatable(fx, CHECK_MT)
@@ -425,12 +425,12 @@ local function compile(tasks, deps, mat, input, output, setting, localpath)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local inputpath = fx[stage]
-            local varying_path = find_varying_path(fx, stage, localpath)
+            local varying_path = find_varying_path(fx, stage)
             if fx.shader_type == "PBR" then
                 inputpath = output / inputpath
                 create_PBR_shader(inputpath, fx, stage, mat.properties)
             else
-                inputpath = localpath(inputpath)
+                inputpath = fs.path(inputpath):localpath()
             end
             if not lfs.exists(inputpath) then
                 error(("shader path not exists: %s"):format(inputpath:string()))

@@ -22,8 +22,8 @@ end
 
 function m.apply_patch(status, path, data, func)
     local retval = {}
-    data = patch.apply(status, path, data, retval)
-    func(path, data)
+    local patch_data = patch.apply(status, path, data, retval)
+    func(path, patch_data)
     for name, v in pairs(retval) do
         m.apply_patch(status, name, v, func)
     end

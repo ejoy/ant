@@ -8,7 +8,6 @@ local patch             = require "model.patch"
 local depends           = require "depends"
 local parallel_task     = require "parallel_task"
 local lfs               = require "bee.filesystem"
-local fs                = require "filesystem"
 local datalist          = require "datalist"
 local fastio            = require "fastio"
 local material_compile  = require "material.compile"
@@ -38,16 +37,14 @@ local function recompile_materials(input, output, setting)
     local tasks = parallel_task.new()
     for material_path in lfs.pairs(output / "materials") do
         local mat = readdatalist(material_path / "main.cfg")
-        material_compile(tasks, depfiles, mat, input, material_path, setting, function (path)
-            return fs.path(path):localpath()
-        end)
+        material_compile(tasks, depfiles, mat, input, material_path, setting)
     end
     parallel_task.wait(tasks)
     
     return true, depfiles
 end
 
-return function (input, output, setting, localpath, changed)
+return function (input, output, setting, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
         return recompile_materials(input, output, setting)
     end
@@ -57,11 +54,10 @@ return function (input, output, setting, localpath, changed)
         input = input,
         output = output,
         setting = setting,
-        localpath = localpath,
         tasks = parallel_task.new(),
         depfiles = {},
     }
-    depends.make_depend_graphic_settings(status.depfiles, localpath)
+    depends.make_depend_graphic_settings(status.depfiles)
 
     status.math3d = math3d_pool.alloc(status.setting)
     status.patch = patch.init(input, status.depfiles)

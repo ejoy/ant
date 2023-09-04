@@ -1,4 +1,5 @@
 local lfs = require "bee.filesystem"
+local fs = require "filesystem"
 local utility = require "model.utility"
 local datalist = require "datalist"
 local fastio = require "fastio"
@@ -117,7 +118,7 @@ local STATE_FILES = {}
 local function read_state_file(statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        s = datalist.parse(fastio.readall(statefile:string()))
+        s = datalist.parse(fastio.readall(fs.path(statefile):localpath():string(), statefile))
     end
 
     return s
@@ -127,7 +128,6 @@ return function (status)
     local output = status.output
     local glbdata = status.glbdata
     local setting = status.setting
-    local localpath = status.localpath
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
     if not materials then
@@ -201,8 +201,9 @@ return function (status)
                 if not lfs.exists(imgpath) then
                     error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(name, imgpath:string()))
                 end
+                desc.path = imgpath
                 parallel_task.add(status.tasks, function ()
-                    local ok, err = texture_compile(desc, output / name, TextureSetting, cvt_img_path)
+                    local ok, err = texture_compile(desc, output / name, TextureSetting)
                     if not ok then
                         error("compile failed: " .. name .. "\n" .. err)
                     end
@@ -283,7 +284,7 @@ return function (status)
         local name = isopaque and 
             "/pkg/ant.resources/materials/states/default.state" or
             "/pkg/ant.resources/materials/states/translucent.state"
-        return read_state_file(localpath(name))
+        return read_state_file(name)
     end
 
 
