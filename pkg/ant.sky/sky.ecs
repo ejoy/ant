@@ -23,7 +23,6 @@ policy "skybox"
     .component "skybox"
 
 component "skybox"
-component "skybox_changed"
 
 system "skybox_system"
     .implement "skybox.lua"
