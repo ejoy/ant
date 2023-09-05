@@ -635,7 +635,7 @@ function m:reset_prefab(noscene)
     world:pub {"UpdateAABB"}
     hierarchy:set_root(self.root)
     if self.prefab_filename then
-        world:reset_prefab_cache(self.prefab_filename)
+        world:remove_template(self.prefab_filename)
     end
     -- for _, value in ipairs(assetmgr.textures) do
     --     -- value:unload()
@@ -794,7 +794,7 @@ function m:save(path)
         world:pub {"WindowTitle", filename}
     end
     if prefab_filename then
-        world:reset_prefab_cache(prefab_filename)
+        world:remove_template(prefab_filename)
     end
     anim_view.save_keyevent()
     world:pub {"ResourceBrowser", "dirty"}

@@ -223,7 +223,7 @@ function world:remove_instance(instance)
     world:pub {"OnRemoveInstance1", instance}
 end
 
-function world:reset_prefab_cache(filename)
+function world:remove_template(filename)
     self._templates[filename] = nil
 end
 
