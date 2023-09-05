@@ -11,7 +11,7 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local is = ecs.system "init_system"
 
 
-local efkeid
+local efkeid_group
 function is:init()
     local test_gid<const> = ig.register "group_test"
     iefk.preload{
@@ -20,7 +20,26 @@ function is:init()
         "/pkg/ant.test.efk/assets/miner_efk/a3.texture",
     }
 
-    efkeid = world:create_entity{
+    world:create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.scene|scene_object",
+            "ant.efk|efk",
+        },
+        data = {
+            name = "root",
+            scene = {},
+            efk = {
+                path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
+                auto_play = true,
+                loop = true,
+                visible = false,
+            },
+            visible_state = "main_queue",
+        }
+    }
+
+    efkeid_group = world:create_entity{
         group = test_gid,
         policy = {
             "ant.general|name",
@@ -74,7 +93,7 @@ local kb_mb = world:sub{"keyboard"}
 function is:data_changed()
     for _, key, press in kb_mb:unpack() do
         if press == 0 and key == "T" then
-            iefk.stop(efkeid)
+            iefk.stop(efkeid_group)
         elseif press == 0 and key == "R" then
             print(w:count "hitch")
             print(w:count "hitch view_visible")

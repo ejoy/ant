@@ -25,8 +25,8 @@ struct cullinfo{
 
 struct cull_cached {
 	cull_cached(struct ecs_context* ctx) : render_obj(ctx), hitch_obj(ctx){}
-	ecs_api::cached_context<ecs::render_object, ecs::bounding, ecs::view_visible> render_obj;
-	ecs_api::cached_context<ecs::hitch, ecs::bounding, ecs::view_visible> hitch_obj;
+	ecs_api::cached_context<ecs::render_object_visible, ecs::render_object, ecs::bounding> render_obj;
+	ecs_api::cached_context<ecs::hitch_visible, ecs::hitch, ecs::bounding> hitch_obj;
 }; 
 
 static inline void

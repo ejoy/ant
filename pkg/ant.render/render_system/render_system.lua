@@ -31,9 +31,10 @@ function render_sys:start_frame()
 end
 
 function render_sys:component_init()
-	for e in w:select "INIT render_object:update filter_material:update" do
+	for e in w:select "INIT render_object:update filter_material:update render_object_visible?out" do
 		e.render_object.rm_idx 	= R.alloc()
 		e.filter_material 		= e.filter_material or {}
+		e.render_object_visible = true
 	end
 end
 
@@ -182,6 +183,12 @@ function render_sys:scene_update()
 end
 
 function render_sys:update_render_args()
+	do
+		print("view_visible:", w:count "view_visible")
+		print("render_object:", w:count "render_object")
+		print("render_object_visible:", w:count "render_object_visible")
+		print("render_object view_visible:", w:count "render_object view_visible")
+	end
 	w:clear "render_args"
 	if irender.stop_draw() then
 		return

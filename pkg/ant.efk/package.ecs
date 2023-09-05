@@ -10,6 +10,8 @@ component "efk_object"
     .field "worldmat:userdata|math_t"
     .implement "efk_object.lua"
 
+component "efk_visible" -- view_visible & efk
+
 component "efk_hitch"
     .type "c"
     .field "handle:int"

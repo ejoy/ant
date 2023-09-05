@@ -17,8 +17,9 @@ end
 local hitch_sys = ecs.system "hitch_system"
 
 function hitch_sys:entity_init()
-    for e in w:select "INIT hitch hitch_bounding?out" do
+    for e in w:select "INIT hitch hitch_bounding?out hitch_visible?out" do
         e.hitch_bounding = true
+        e.hitch_visible = true
     end
 end
 

@@ -24,6 +24,8 @@ component "render_args"
     .field "queue_mask:int64"
     .field "material_index:byte"
 
+component "render_object_visible"   -- view_visible & render_object
+
 component "render_object"
     .type "c"
     .field "worldmat:userdata|math_t"

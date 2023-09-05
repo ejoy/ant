@@ -8,6 +8,8 @@ component "hitch"
     .field "cull_masks:int64"
     .implement "render_system/hitch.lua"
 
+component "hitch_visible" -- view_visible & hitch
+
 system "hitch_system"
     .implement "render_system/hitch.lua"
 

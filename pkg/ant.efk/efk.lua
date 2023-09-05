@@ -59,11 +59,13 @@ function efk_sys:exit()
 end
 
 function efk_sys:component_init()
-    for e in w:select "INIT efk:in" do
+    for e in w:select "INIT efk:in efk_visible?out" do
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
         efk.play_handle = PH.create(efk.handle, efk.speed)
+
+        e.efk_visible       = true
     end
 end
 
@@ -208,7 +210,7 @@ local function iter_group_hitch_DEBUG_ONLY()
 end
 
 function efk_sys:render_submit()
-    for e in w:select "efk:in view_visible scene:in" do
+    for e in w:select "efk_visible efk:in scene:in" do
         --update_transform will check efk is alive and visible or not
         local ph = e.efk.play_handle
         ph:update_transform(e.scene.worldmat)

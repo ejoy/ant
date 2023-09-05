@@ -58,8 +58,7 @@ function ig.enable(gid, tag, enable)
     enable_group_and_flush(gid, tag, enable)
 end
 
-function ig.filter(gid, enable, maintag, vicetag, filtertag)
-	ig.enable(gid, maintag, enable)
+function ig.filter(filtertag, maintag, vicetag)
 	w:filter(filtertag, ("%s %s"):format(maintag, vicetag))
 end
 
@@ -68,8 +67,8 @@ local OBJMT =  {
         enable = function (self, gid, enable)
             enable_group(gid, self.tag, enable)
         end,
-        filter = function (self, gid, enable, vicetag, filtertag)
-            ig.filter(gid, enable, self.tag, vicetag, filtertag)
+        filter = function (self, filtertag, vicetag)
+            ig.filter(filtertag, self.tag, vicetag)
         end,
     },
     __close = function (t)

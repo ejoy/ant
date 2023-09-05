@@ -241,7 +241,7 @@ submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, con
 
 static inline void
 build_hitch_info(struct ecs_world*w, submit_cache &cc){
-	for (auto e : ecs_api::select<ecs::hitch, ecs::view_visible, ecs::scene>(w->ecs)) {
+	for (auto e : ecs_api::select<ecs::hitch_visible, ecs::hitch, ecs::scene>(w->ecs)) {
 		const auto &h = e.get<ecs::hitch>();
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto &ra = cc.ra[ii];
@@ -286,7 +286,7 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 static inline void
 render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 	// draw simple objects
-	for (auto& e : ecs_api::select<ecs::render_object, ecs::view_visible>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::render_object_visible, ecs::render_object>(w->ecs)) {
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto& ra = cc.ra[ii];
 			const auto& obj = e.get<ecs::render_object>();
