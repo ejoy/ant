@@ -49,7 +49,7 @@ end
 
 function iobj_motion.get_position(e)
     w:extend(e, "scene:in")
-    return e.scene and e.scene.t
+    return e.scene.t
 end
 
 function iobj_motion.set_position(e, pos)
