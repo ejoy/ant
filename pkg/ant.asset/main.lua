@@ -63,5 +63,4 @@ assetmgr.material_isvalid	= async.material_isvalid
 assetmgr.textures 			= texture_mgr.textures
 assetmgr.invalid_texture 	= texture_mgr.invalid
 assetmgr.load_texture 		= async.texture_create_fast
-assetmgr.system_attribs 	= sa
 return assetmgr

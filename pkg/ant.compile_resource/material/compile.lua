@@ -7,7 +7,7 @@ local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local depends       = require "depends"
 local parallel_task = require "parallel_task"
-local sa            = import_package "ant.asset".system_attribs
+local sa            = require "material.system_attribs"
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 local function DEF_FUNC() end
 
@@ -342,11 +342,17 @@ local BgfxOS <const> = {
 local function check_stage(attrib, system, shader_type)
     local has_staged = {}
     if shader_type == "PBR" then
-        has_staged = {[sa.get("s_prefilter").stage] = true, [sa.get("s_shadowmap").stage] = true, [sa.get("s_ssao").stage] = true, 
-        [sa.get("b_light_grids").stage] = true, [sa.get("b_light_index_lists").stage] = true, [sa.get("b_light_info").stage] = true}
+        has_staged = {
+            [sa["s_prefilter"].stage] = true,
+            [sa["s_shadowmap"].stage] = true,
+            [sa["s_ssao"].stage] = true, 
+            [sa["b_light_grids"].stage] = true,
+            [sa["b_light_index_lists"].stage] = true,
+            [sa["b_light_info"].stage] = true
+        }
     end
     for _, n in pairs(system) do
-        local stage = assert(sa.get(n).stage, "Doesn't exist this system attrib! \n")
+        local stage = assert(sa[n].stage, "Doesn't exist this system attrib! \n")
         has_staged[stage] = true
     end
     for _, v in pairs(attrib) do
@@ -365,7 +371,7 @@ local function check_get_attribute(mat)
     local system, attrib = {}, {}
 	properties = properties or DEF_PROPERTIES
     for n, v in pairs(properties) do
-        if sa.get(n) then error(("Invalid property name:%s, same as system attribute"):format(n)) end
+        if sa[n] then error(("Invalid property name:%s, same as system attribute"):format(n)) end
         local is_uniform, is_sampler, is_buffer = n:find("u_") == 1, n:find("s_") == 1, n:find("b_") == 1
         if is_uniform then
             attrib[n]   = v

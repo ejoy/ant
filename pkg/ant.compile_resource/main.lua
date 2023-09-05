@@ -39,4 +39,5 @@ return {
     init_setting = config.init,
     set_setting  = config.set,
     compile_file = compile_file,
+    system_attribs = require "material.system_attribs",
 }
