@@ -41,7 +41,7 @@ local RM        = ecs.require "ant.material|material"
 local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
 
-local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
+local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 --[[ local scene_aabb = math3d.ref(math3d.aabb())
 local aabb_tick = 0 ]]
@@ -57,7 +57,7 @@ local function set_worldmat(srt, mat)
 end
 
 local function calc_csm_matrix_attrib(csmidx, vp)
-	return math3d.mul(ishadow.crop_matrix(csmidx), vp)
+	return math3d.ref(math3d.mul(ishadow.crop_matrix(csmidx), vp))
 end
 
 -- bgfx method
