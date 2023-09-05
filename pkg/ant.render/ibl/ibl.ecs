@@ -27,9 +27,12 @@ policy "prefilter"
 policy "ibl"
     .require_system "ant.render|ibl_system"
     .component "ibl"
+    .component "ibl_changed"
 
 component "ibl"
     .type "lua"
+
+component "ibl_changed"
 
 component "gen_mipmap".type "lua"
 policy "gen_mipmap"

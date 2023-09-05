@@ -317,13 +317,17 @@ local function update_ibl_texture_info()
 end
 
 
-function ibl_sys.entity_init()
-	for e in w:select "INIT ibl:in" do
-		local ibl = e.ibl
-        ibl.source.value = assetmgr.load_texture(ibl.source.tex_name)
-        build_ibl_textures(e.ibl)
-        create_ibl_entities()
-        update_ibl_texture_info()
+function ibl_sys.entity_ready()
+	for e in w:select "ibl:in ibl_changed:update" do
+        local texid = assetmgr.resource(e.ibl.source.tex_name).id
+        local ibl = e.ibl
+        if not assetmgr.invalid_texture(texid) then
+            e.ibl_changed = false
+            ibl.source.value = assetmgr.load_texture(ibl.source.tex_name)
+            build_ibl_textures(e.ibl)
+            create_ibl_entities()
+            update_ibl_texture_info()
+        end
 	end
 end
 

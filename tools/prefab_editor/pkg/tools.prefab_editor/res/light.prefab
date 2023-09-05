@@ -41,6 +41,7 @@ data:
       tex_name: /pkg/ant.resources/textures/sky/aerodynamics_workshop_2k.texture
       facesize: 512
       value: 0
+  ibl_changed: true
   name: ibl_test
 policy:
   ant.render|ibl
