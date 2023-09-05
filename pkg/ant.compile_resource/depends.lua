@@ -96,9 +96,4 @@ function m.read_if_not_dirty(path)
     return deps
 end
 
-function m.make_depend_graphic_settings(depfiles)
-    m.add(depfiles, fs.path "/pkg/ant.settings/default/graphic.settings":localpath())
-    m.add(depfiles, fs.path "/":localpath() / "graphic.settings")
-end
-
 return m

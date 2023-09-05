@@ -1,5 +1,4 @@
 local compile = require "material.compile"
-local depends = require "depends"
 local datalist = require "datalist"
 local fastio = require "fastio"
 local parallel_task = require "parallel_task"
@@ -17,6 +16,5 @@ return function (input, output, setting)
     compile(tasks, depfiles, mat, input, output, setting)
     assert(#tasks > 0)
     parallel_task.wait(tasks)
-    depends.make_depend_graphic_settings(depfiles)
     return true, depfiles
 end

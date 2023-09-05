@@ -203,7 +203,7 @@ return function (status)
                 end
                 desc.path = imgpath
                 parallel_task.add(status.tasks, function ()
-                    local ok, err = texture_compile(desc, output / name, TextureSetting)
+                    local ok, err = texture_compile(desc, output / name, TextureSetting, status.depfiles)
                     if not ok then
                         error("compile failed: " .. name .. "\n" .. err)
                     end

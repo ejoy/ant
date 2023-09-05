@@ -23,11 +23,11 @@ return function (input, output, setting)
 	if param.path then
 		param.path = absolute_path(input, param.path)
 	end
-	local ok, err = compile(param, output, setting)
+	local depfiles = {}
+	local ok, err = compile(param, output, setting, depfiles)
 	if not ok then
 		return nil, err
 	end
-	local depfiles = {}
 	if param.path then
 		depends.add(depfiles, param.path)
 	end

@@ -417,6 +417,10 @@ local function check_get_attribute(mat)
 end
 
 local function compile(tasks, deps, mat, input, output, setting)
+    depends.add(deps, fs.path "/pkg/ant.compile_resource/material/version.lua":localpath())
+    depends.add(deps, fs.path "/pkg/ant.settings/default/graphic.settings":localpath())
+    depends.add(deps, fs.path "/":localpath() / "graphic.settings")
+
     local include_path = lfs.path(input):parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)

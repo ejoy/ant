@@ -1,6 +1,8 @@
 local convert_image = require "texture.util"
+local depends = require "depends"
+local fs = require "filesystem"
 
-return function (content, output, setting)
+return function (content, output, setting, depfiles)
 	if not content.path then
 		assert(content.value, "memory texture should define the texture memory")
 	
@@ -16,6 +18,7 @@ return function (content, output, setting)
 		end
 	end
 
+	depends.add(depfiles, fs.path "/pkg/ant.compile_resource/texture/version.lua":localpath())
 	local ok, err = convert_image(output, setting, content)
 	if not ok then
 		return ok, err
