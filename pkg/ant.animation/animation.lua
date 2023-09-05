@@ -45,7 +45,6 @@ local function process_keyframe_event(task)
 					iefk.play(event.effect)
 				elseif event.asset_path ~= "" then
 					event.effect = iefk.create(event.asset_path, {
-						auto_play = true,
 						scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
 						group = task.group,
 						visible_state = "main_queue",

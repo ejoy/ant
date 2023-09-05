@@ -709,14 +709,12 @@ function m:add_effect(filename)
             scene = {parent = parent},
             efk = {
                 path = filename,
-                auto_play = false,
                 speed = 1.0,
             },
             visible_state = "main_queue"
 		},
     }
     local tpl = utils.deep_copy(template)
-    tpl.data.efk.auto_play = true
     self:add_entity(world:create_entity(tpl), parent, template)
 end
 

@@ -92,13 +92,13 @@ end
 
 function EffectView:on_get_auto_play()
     local template = hierarchy:get_template(self.eid)
-    return template.template.data.efk.auto_play
+    return template.template.data.visible_state == "main_queue"
 end
 
 function EffectView:on_set_auto_play(value)
     local template = hierarchy:get_template(self.eid)
-    template.template.data.efk.auto_play = value
-    world:pub { "PatchEvent", self.eid, "/data/efk/auto_play", value }
+    template.template.data.visible_state = value and "main_queue" or ""
+    world:pub { "PatchEvent", self.eid, "/data/visible_state", value and "main_queue" or "" }
 end
 
 return function ()

@@ -319,7 +319,7 @@ function BaseView:create_aabb()
             min = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
             max = math3d.tovalue(math3d.array_index(bounding.aabb, 2))
         end
-        tpl.template.data.bounding = {aabb ={ {min[1], min[2], min[3]}, {max[1], max[2], max[3]} }}
+        tpl.template.data.bounding = {aabb = {{min[1], min[2], min[3]}, {max[1], max[2], max[3]}}}
         bounding.aabb = math3d.mark(math3d.aabb(math3d.vector(min), math3d.vector(max)))
         self.base.create_aabb:set_visible(false)
         self.base.delete_aabb:set_visible(true)
@@ -345,8 +345,6 @@ function BaseView:delete_aabb()
         local bounding = e.bounding
         if bounding.aabb and bounding.aabb ~= mc.NULL then
             bounding.aabb = mc.NULL
-        -- else
-        --     math3d.unmark(bounding.aabb)
         end
         world:pub { "UpdateAABB", self.eid }
         world:pub { "PatchEvent", self.eid, "/data/bounding/aabb" }

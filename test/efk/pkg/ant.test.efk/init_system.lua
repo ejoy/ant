@@ -32,9 +32,6 @@ function is:init()
             scene = {},
             efk = {
                 path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
-                auto_play = true,
-                loop = true,
-                visible = false,
             },
             visible_state = "main_queue",
         }

@@ -3,15 +3,12 @@ local world = ecs.world
 local w     = world.w
 local iani      = ecs.require "ant.animation|controller.state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
-local iom       = ecs.require "ant.objcontroller|obj_motion"
 local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"
-local gizmo     = ecs.require "gizmo.gizmo"
 local assetmgr = import_package "ant.asset"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
 local imgui     = require "imgui"
-local math3d    = require "math3d"
 local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -530,7 +527,6 @@ local function on_move_clip(move_type, current_clip_index, move_delta)
             clip.range_ui[2] = clip.range[2]
         end
     end
-    set_clips_dirty(true)
 end
 
 local function get_clips_filename()

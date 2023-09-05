@@ -64,8 +64,6 @@ function efk_sys:component_init()
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
         efk.play_handle = PH.create(efk.handle, efk.speed)
-
-        efk.play_handle:set_visible(e.view_visible or efk.auto_play)
     end
 end
 
@@ -244,7 +242,6 @@ function iefk.create(filename, config)
             scene = config.scene or {},
             efk = {
                 path        = filename,
-                auto_play   = config.auto_play or false,
                 speed       = config.speed or 1.0,
             },
             visible_state = config.visible_state,
