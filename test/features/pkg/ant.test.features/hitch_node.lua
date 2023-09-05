@@ -10,7 +10,6 @@ local hn_test_sys = ecs.system "hitch_node_test_system"
 
 local function create_simple_test_group()
     local hitch_test_group_id<const>    = ig.register "hitch_test"
-    local skeleton_test_group_id<const> = ig.register "hitch_ske_test"
     world:create_entity {
         policy = {
             "ant.render|hitch_object",
@@ -104,6 +103,7 @@ end
 local change_hitch_eid
 
 local function create_skeleton_test_group()
+    local skeleton_test_group_id<const> = ig.register "hitch_ske_test"
     --dynamic
     world:create_entity {
         policy = {
@@ -174,7 +174,10 @@ function hn_test_sys:data_changed()
     for _, key, press in key_mb:unpack() do
         if key == "Y" and press == 0 then
             local e <close> = w:entity(change_hitch_eid, "hitch:update hitch_bounding?out")
-            e.hitch.group = skeleton_test_group_id+1
+            if not ig.has "hitch_ske_test1" then
+                ig.register "hitch_ske_test1"
+            end
+            e.hitch.group = ig.groupid "hitch_ske_test1"
             e.hitch_bounding = true
         end
     end
