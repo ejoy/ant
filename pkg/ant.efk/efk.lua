@@ -59,7 +59,7 @@ function efk_sys:exit()
 end
 
 function efk_sys:component_init()
-    for e in w:select "INIT efk:in view_visible?in" do
+    for e in w:select "INIT efk:in" do
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
