@@ -6,11 +6,10 @@ local geopkg 	= import_package "ant.geometry"
 local geo 		= geopkg.geometry
 
 local imesh		= ecs.require "ant.asset|mesh"
-
 local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:component_init()
-	for e in w:select "INIT skybox:in simplemesh:out owned_mesh_buffer?out skybox_changed?out" do
+	for e in w:select "INIT skybox:in simplemesh:out owned_mesh_buffer?out" do
 		local vb, ib = geo.box(1, true, false)
 		local m = imesh.init_mesh{
 			vb = {
@@ -29,6 +28,5 @@ function skybox_sys:component_init()
 		}
 		e.simplemesh = m
 		e.owned_mesh_buffer = true
-		e.skybox_changed = true
 	end
 end
