@@ -7,7 +7,7 @@ local mathpkg   = import_package "ant.math"
 local mc    = mathpkg.constant
 
 local defcomp 	= import_package "ant.general".default
-local imaterial = ecs.require "ant.asset|material"
+local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local INV_Z<const> = true
 
@@ -136,7 +136,6 @@ function ic.update_frustum(ce, ww, hh)
     end
 end
 
-local iom = ecs.require "ant.objcontroller|obj_motion"
 function ic.lookto(ce, ...)
     iom.lookto(ce, ...)
 end
@@ -162,9 +161,7 @@ end
 local cameraview_sys = ecs.system "camera_view_system"
 
 function cameraview_sys:start_frame()
-    for ce in w:select "camera_changed?out" do
-        ce.camera_changed = nil
-    end
+    w:clear "camera_changed"
 end
 
 function cameraview_sys:entity_init()
@@ -185,24 +182,10 @@ local function update_camera(e)
     camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function update_camera_info(e)
-    local camerapos = iom.get_position(e)
-	local f = ic.get_frustum(e)
-	imaterial.system_attrib_update("u_eyepos", camerapos)
-    local nn, ff = f.n, f.f
-    local inv_nn, inv_ff = 1.0/nn, 1.0/ff
-	imaterial.system_attrib_update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
-end
-
 function cameraview_sys:update_camera()
-    for v in w:select "visible queue_name:in camera_depend:absent camera_ref:in" do
-        local e <close> = world:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
-        if e.scene_changed or e.camera_changed then
-            update_camera(e)
-            if v.queue_name == "main_queue" then
-                update_camera_info(e) 
-            end
-        end
+    w:filter("camera_changed", "scene_changed camera")
+    for e in w:select "camera_changed camera:in scene:in" do
+        update_camera(e)
     end
 end
 

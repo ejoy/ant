@@ -10,6 +10,7 @@ local math3d 	= require "math3d"
 local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render_system.render"
+local iom		= ecs.require "ant.objcontroller|obj_motion"
 local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer"
@@ -135,14 +136,39 @@ end
 
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
 local timepassed = 0.0
-local function update_timer_param()
+local function update_timer_properties()
 	timepassed = timepassed + itimer.delta()
 	time_param.v = math3d.set_index(time_param, 1, timepassed*0.001, itimer.delta()*0.001)
 	imaterial.system_attrib_update("u_time", time_param)
 end
 
+local function update_camera_properties()
+	if not w:first "camera_changed camera" then
+		return
+	end
+
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in" do
+		local ce = world:entity(qe.camera_ref, "camera_changed?in camera:in")
+		if ce.camera_changed then
+			local camera = ce.camera
+			bgfx.set_view_transform(qe.render_target.viewid, camera.viewmat, camera.projmat)
+			if qe.queue_name == "main_queue" then
+				w:extend(ce, "scene:in")
+				local camerapos = math3d.index(ce.scene.worldmat, 4)
+				imaterial.system_attrib_update("u_eyepos", camerapos)
+
+				local f = camera.frustum
+				local nn, ff = f.n, f.f
+				local inv_nn, inv_ff = 1.0/nn, 1.0/ff
+				imaterial.system_attrib_update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
+			end
+		end
+	end
+end
+
 function render_sys:commit_system_properties()
-	update_timer_param()
+	update_timer_properties()
+	update_camera_properties()
 end
 
 function render_sys:scene_update()
@@ -156,15 +182,6 @@ function render_sys:scene_update()
 end
 
 function render_sys:update_render_args()
-	for qe in w:select "visible camera_ref:in render_target:in" do
-		local viewid = qe.render_target.viewid
-		local camera <close> = world:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
-		if camera.scene_changed or camera.camera_changed then
-			w:extend(camera, "camera:in")
-			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
-		end
-	end
-
 	w:clear "render_args"
 	if irender.stop_draw() then
 		return
