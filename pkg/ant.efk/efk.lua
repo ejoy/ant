@@ -264,6 +264,7 @@ local function realive(eid)
         ph:realive(efk.speed)
         ph:set_visible(true)
     end
+    iefk.set_visible(eid, true)
 end
 
 function iefk.play(efk)
