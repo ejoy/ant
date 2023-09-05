@@ -8,13 +8,16 @@ data:
       size: 32
     prefilter:
       size: 128
+    source:
+      tex_name: /pkg/ant.test.features/assets/textures/aerodynamics_workshop_2k.texture
+      facesize: 512
+      value: 0
   material: $path ../skybox.material
   name: skybox_test
   render_layer: background
   scene: {}
   simplemesh: false
-  skybox:
-    facesize: 512
+  skybox: true
   visible_state: main_view
 policy:
   ant.sky|skybox

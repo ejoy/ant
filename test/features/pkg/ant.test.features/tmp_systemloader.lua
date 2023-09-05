@@ -224,7 +224,7 @@ local sampler_eid
 local heap_eid
 local sm_id
 local function drawindirect_test()
-    sm_id = world:create_entity {
+--[[     sm_id = world:create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -237,7 +237,7 @@ local function drawindirect_test()
             visible_state = "main_view",
             name = "test",
         }
-    }
+    } ]]
 --[[     world:create_entity {
         policy = {
             "ant.render|render",
