@@ -208,12 +208,15 @@ function render_sys:update_filter()
 		--we should check 'filter_result' here and change the default material
 		--because render entity will change it's visible state after it created
 		--but not create this new material instance in entity_init stage
-		for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in" do
+		for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in material:in" do
 			if e.visible_state["main_queue"] and irl.is_opacity_layer(e.render_layer) then
 				local ro = e.render_object
 				local fm = e.filter_material
-
-				local state = check_set_depth_state_as_equal(fm.main_queue:get_state())
+				local matres = assetmgr.resource(e.material)
+				local state = fm.main_queue:get_state()
+				if not matres.fx.setting.no_predepth then
+					state = check_set_depth_state_as_equal(fm.main_queue:get_state())
+				end
 				fm.main_queue:set_state(state)
 
 				R.set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())
