@@ -1,6 +1,6 @@
 local SHADERC    = require "tool_exe_path"("shaderc")
 local subprocess = require "subprocess"
-local sha1       = require "hash".sha1
+local sha1       = require "sha1"
 local lfs        = require "bee.filesystem"
 local vfs        = require "vfs"
 local ltask      = require "ltask"

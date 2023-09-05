@@ -1,5 +1,5 @@
 local lfs = require "bee.filesystem"
-local sha1 = require "hash".sha1
+local sha1 = require "sha1"
 local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
 local shader = require "material.shader"
@@ -9,11 +9,7 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local config = {
-    glb      = {setting={},arguments=""},
-    texture  = {setting={},arguments=""},
-    material = {setting={},arguments=""},
-}
+local config = {}
 
 local ResourceCompiler <const> = {
     glb     = "model.glb",
@@ -34,16 +30,17 @@ local function init()
 end
 
 local function set(ext, arguments)
-    local cfg = config[ext]
-    if not cfg then
+    if not ResourceCompiler[ext] then
         error("invalid type: " .. ext)
     end
+    local cfg = {}
     local hash = sha1(arguments):sub(1,7)
     cfg.setting = parse(arguments)
     cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext / hash
     cfg.compiler = require(assert(ResourceCompiler[ext]))
     lfs.create_directories(cfg.binpath)
     writefile(cfg.binpath / ".setting", serialize.stringify(cfg.setting))
+    config[ext] = cfg
 end
 
 local function get(ext)

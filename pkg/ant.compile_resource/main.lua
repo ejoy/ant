@@ -1,4 +1,4 @@
-local sha1    = require "hash".sha1
+local sha1    = require "sha1"
 local config  = require "config"
 local depends = require "depends"
 local ltask   = require "ltask"
