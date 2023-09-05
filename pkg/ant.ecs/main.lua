@@ -43,20 +43,8 @@ local function create_entity_by_template(w, group, template, debuginfo)
 end
 
 function world:create_entity(v)
-    local policy_info = policy.create(self, v.policy)
-    local data = v.data
-    for c, def in pairs(policy_info.component_opt) do
-        if data[c] == nil then
-            data[c] = def
-        end
-    end
-    for _, c in ipairs(policy_info.component) do
-        local d = data[c]
-        if d == nil then
-            error(("component `%s` must exists"):format(c))
-        end
-    end
-    return create_entity_by_data(self, v.group or 0, data, debug.traceback())
+    policy.verify(self, v.policy, v.data)
+    return create_entity_by_data(self, v.group or 0, v.data, debug.traceback())
 end
 
 function world:remove_entity(e)
@@ -125,23 +113,11 @@ function template_mt:__gc()
 end
 
 local function create_entity_template(w, v)
-    local res = policy.create(w, v.policy)
-    local data = v.data
-    for c, def in pairs(res.component_opt) do
-        if data[c] == nil then
-            data[c] = def
-        end
-    end
-    for _, c in ipairs(res.component) do
-        local d = data[c]
-        if d == nil then
-            error(("component `%s` must exists"):format(c))
-        end
-    end
+    policy.verify(w, v.policy, v.data)
     return setmetatable({
         _world = w,
         mount = v.mount,
-        template = w.w:template(data),
+        template = w.w:template(v.data),
         tag = v.tag,
     }, template_mt)
 end
