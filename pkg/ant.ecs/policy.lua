@@ -1,10 +1,22 @@
-local function create(w, policies)
+local function component_def(w, c)
+    local component_type =  w._decl.component[c].type[1]
+    if component_type == nil then
+        return true
+    elseif component_type == "lua" then
+        return false
+    elseif component_type == "c" then
+        return false
+    elseif component_type == "raw" then
+        return ("\0"):rep(assert(math.tointeger(w._decl.component[c].size[1])))
+    else
+        return 0
+    end
+end
+
+local function verify(w, policies, data)
     assert(type(policies) == "table")
-    local res = {
-        component = {},
-        component_opt = {},
-    }
-    local componentset = {}
+    local component = {}
+    local component_opt = {}
     local policyset = {}
     local function import_policy(name)
         if policyset[name] then
@@ -19,35 +31,27 @@ local function create(w, policies)
             import_policy(v)
         end
         for _, v in ipairs(decl.component) do
-            if not componentset[v] then
-                componentset[v] = true
-                res.component[#res.component+1] = v
-            end
+            component[v] = true
         end
         for _, v in ipairs(decl.component_opt) do
-            if res.component_opt[v] == nil then
-                local component_class = w._decl.component
-                local component_type =  component_class[v].type[1]
-                if component_type == nil then
-                    res.component_opt[v] = true
-                elseif component_type == "lua" then
-                    res.component_opt[v] = false
-                elseif component_type == "c" then
-                    res.component_opt[v] = false
-                elseif component_type == "raw" then
-                    res.component_opt[v] = ("\0"):rep(assert(math.tointeger(component_class[v].size[1])))
-                else
-                    res.component_opt[v] = 0
-                end
-            end
+            component_opt[v] = true
         end
     end
     for _, name in ipairs(policies) do
         import_policy(name)
     end
-    return res
+    for c in pairs(component_opt) do
+        if data[c] == nil then
+            data[c] = component_def(w, c)
+        end
+    end
+    for c in pairs(component) do
+        if data[c] == nil then
+            error(("component `%s` must exists"):format(c))
+        end
+    end
 end
 
 return {
-    create = create,
+    verify = verify,
 }
