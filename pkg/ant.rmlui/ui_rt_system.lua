@@ -27,8 +27,11 @@ local iUiRt = {}
 local fb_cache, rb_cache = {}, {}
 local rt_table = {}
 
-local OBJNAMES      = setmetatable({}, {__index=function(tt, k) local o = k .. "_obj"; tt[k] = o; return o end})
-local QUEUENAMES    = setmetatable({}, {__index=function(tt, k) local o = k .. "_queue"; tt[k] = o; return o end})
+--[[ local OBJNAMES      = setmetatable({}, {__index=function(tt, k) local o = k .. "_obj"; tt[k] = o; return o end})
+local QUEUENAMES    = setmetatable({}, {__index=function(tt, k) local o = k .. "_queue"; tt[k] = o; return o end}) ]]
+-- gen_group_id is async, obj/queue should be checked whether has existed.
+local OBJNAMES      = {}
+local QUEUENAMES    = {}
 local S = ltask.dispatch()
 
 local rb_flags = sampler{
@@ -40,13 +43,14 @@ local rb_flags = sampler{
 }
 
 local function gen_group_id(rt_name)
-    if not rt_table[rt_name] then
-        local objname = OBJNAMES[rt_name]
-        w:register{ name = objname }
-        w:register{ name = QUEUENAMES[rt_name] }
-        local gid = ig.register(objname)
-        ig.enable(gid, objname, true)
-    end
+    local objname = rt_name .. "_obj"
+    local queuename = rt_name .. "_queue"
+    OBJNAMES[rt_name] = objname
+    QUEUENAMES[rt_name] = queuename
+    w:register{ name = objname }
+    w:register{ name = queuename }
+    local gid = ig.register(objname)
+    ig.enable(gid, objname, true)
 end
 
 --local lastname = "blit_shadowmap"
@@ -80,10 +84,10 @@ end
 local lastname = "fxaa"
 
 local function create_rt_queue(width, height, name, fbidx)
-    local queuename = QUEUENAMES[name]
     local viewid = hwi.viewid_generate(name, lastname)
-    lastname = name
     gen_group_id(name)
+    local queuename = QUEUENAMES[name]
+    lastname = name
     local ui_rt_material_idx = queuemgr.material_index("main_queue")
     queuemgr.register_queue(queuename, ui_rt_material_idx)
     world:create_entity {
@@ -368,19 +372,22 @@ function ui_rt_sys:update_filter()
     for rt_name, rt in pairs(rt_table) do
         local distance = rt_table[rt_name].distance
         local queuename = QUEUENAMES[rt_name]
-        local select_tag = ("filter_result %s visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"):format(OBJNAMES[rt_name])
-        for e in w:select(select_tag) do
-            if e.visible_state[queuename] then
-                local fm = e.filter_material
-                local mi = fm["main_queue"]
-                fm[queuename] = mi
-                --fm[queuename]:set_state(bgfx.make_state(DEFAULT_STATE))
-                R.set(e.render_object.rm_idx, queuemgr.material_index(queuename), mi:ptr())
-                if e.bounding and e.focus_obj then
-                    calc_camera_t(queuename, e.bounding.scene_aabb, e.scene, distance) 
+        local objname = OBJNAMES[rt_name]
+        if objname then
+            local select_tag = ("filter_result %s visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"):format(OBJNAMES[rt_name])
+            for e in w:select(select_tag) do
+                if e.visible_state[queuename] then
+                    local fm = e.filter_material
+                    local mi = fm["main_queue"]
+                    fm[queuename] = mi
+                    --fm[queuename]:set_state(bgfx.make_state(DEFAULT_STATE))
+                    R.set(e.render_object.rm_idx, queuemgr.material_index(queuename), mi:ptr())
+                    if e.bounding and e.focus_obj then
+                        calc_camera_t(queuename, e.bounding.scene_aabb, e.scene, distance) 
+                    end
                 end
-            end
-            rt.timestamp = 0
+                rt.timestamp = 0
+            end 
         end
     end
 end
