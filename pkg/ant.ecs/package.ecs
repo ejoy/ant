@@ -31,7 +31,6 @@ system "debug_system"
     .implement "debug_system.lua"
 
 component "INIT"
-component "LAST_CREATE"
 component "on_ready"
     .type "lua"
 component "on_message"

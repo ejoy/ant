@@ -18,7 +18,7 @@ local function equal_quat(a, b)
 	end
 end
 
-local function init_scene(scene)
+function m.init(scene)
 	local s, r, t = scene.s, scene.r, scene.t
 	if type(s) == "number" then
 		s = {s, s, s}
@@ -47,10 +47,6 @@ local function init_scene(scene)
 	return scene
 end
 
-function m.init(v)
-    return init_scene(v)
-end
-
 function m.remove(v)
     math3d.unmark(v.s)
     math3d.unmark(v.r)
@@ -61,7 +57,7 @@ function m.remove(v)
 end
 
 function m.marshal(scene)
-	return serialization.packstring(init_scene(scene))
+	return serialization.packstring(scene)
 end
 
 function m.demarshal(s)
@@ -83,7 +79,7 @@ end
 
 local b = ecs.component "bounding"
 
-local function init_bounding(v)
+function b.init(v)
 	if not v then
 		v = {}
 	end
@@ -96,9 +92,6 @@ local function init_bounding(v)
 	end
 	return v
 end
-function b.init(v)
-	return init_bounding(v)
-end
 
 function b.remove(v)
     math3d.unmark(v.aabb)
@@ -106,7 +99,7 @@ function b.remove(v)
 end
 
 function b.marshal(v)
-	return serialization.packstring(init_bounding(v))
+	return serialization.packstring(v)
 end
 
 function b.demarshal(s)

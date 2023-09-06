@@ -43,7 +43,7 @@ local function cleanup_efk(efk)
     end
 
     if efk.handle then
-        ltask.send(EFK_SERVER, "destroy", efk.handle)
+        ltask.send(EFK_SERVER, "destroy", efk.path, efk.handle)
         efk.path = nil
         efk.handle = nil
     end
@@ -64,8 +64,6 @@ function efk_sys:component_init()
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
         efk.play_handle = PH.create(efk.handle, efk.speed)
-
-        
     end
 end
 

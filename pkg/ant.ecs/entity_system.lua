@@ -75,21 +75,12 @@ local function create_entity()
             goto continue
         end
         local groupid = initargs.group
-        local data = initargs.data or {}
+        local data = initargs.data
         local template = initargs.template
         data.INIT = true
         update_group_tag(groupid, data)
         if template then
-            if initargs.parent then
-                data.LAST_CREATE = true
-            end
             w:template_instance(eid, template, data)
-            if initargs.parent then
-                for e in w:select "LAST_CREATE scene:update" do
-                    e.scene.parent = initargs.parent
-                end
-                w:clear "LAST_CREATE"
-            end
         else
             w:import(eid, data)
         end

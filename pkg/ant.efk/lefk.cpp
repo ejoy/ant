@@ -106,16 +106,45 @@ lefkctx_render(lua_State *L){
     return 0;
 }
 
+struct efk_box {
+	Effekseer::EffectRef eptr;
+};
+
 static int
-lefkctx_create(lua_State *L) {
+lefk_release(lua_State *L) {
+	struct efk_box *box = (struct efk_box *)luaL_checkudata(L, 1, "EFK_INSTANCE");
+	box->eptr = nullptr;
+	return 0;
+}
+
+static int
+lefkctx_new(lua_State *L) {
     auto ctx = EC(L);
     auto filename = luaL_checkstring(L, 2);
     const float mag = (float)luaL_optnumber(L, 3, 1.f);
     char16_t u16_filename[1024];
     Effekseer::ConvertUtf8ToUtf16(u16_filename, 1024, filename);
-    auto eff = Effekseer::Effect::Create(ctx->manager, u16_filename, mag);
-    if (eff == nullptr){
-        return luaL_error(L, "create effect failed, filename:%s", filename);
+
+	struct efk_box *box = (struct efk_box *)lua_newuserdatauv(L, sizeof(*box), 0);
+	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, u16_filename, mag));
+	if (luaL_newmetatable(L, "EFK_INSTANCE")) {
+		lua_pushcfunction(L, lefk_release);
+		lua_setfield(L, -2, "__gc");
+		lua_pushcfunction(L, lefk_release);
+		lua_setfield(L, -2, "release");
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lefkctx_create(lua_State *L) {
+    auto ctx = EC(L);
+	struct efk_box *box = (struct efk_box *)luaL_checkudata(L, 2, "EFK_INSTANCE");
+    if (box->eptr == nullptr) {
+        return luaL_error(L, "Released effect");
     }
 
 	int handle;
@@ -131,7 +160,7 @@ lefkctx_create(lua_State *L) {
 
 
 	struct efk_instance * slot = &ctx->effects[handle];
-	slot->eptr = eff;
+	slot->eptr = box->eptr;
 	slot->inst = -1;
 	slot->n = 0;
 	slot->shown = true;
@@ -383,6 +412,7 @@ lefk_startup(lua_State *L){
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
             {"render",          lefkctx_render},
+			{"new",				lefkctx_new},
             {"create",          lefkctx_create},
             {"destroy",         lefkctx_destroy},
             {"play",            lefkctx_play},
