@@ -10,28 +10,19 @@ local bgfx 		= require "bgfx"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
-
-local hwi       = import_package "ant.hwi"
-
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ig        = ecs.require "ant.group|group"
-
 local R             = world:clibs "render.render_material"
 local queuemgr      = ecs.require "ant.render|queue_mgr"
-
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
-
+local VIEWIDS = require "ui_rt_global"
+local OBJNAMES, QUEUENAMES = {}, {}
 local iUiRt = {}
 local fb_cache, rb_cache = {}, {}
 local rt_table = {}
 
---[[ local OBJNAMES      = setmetatable({}, {__index=function(tt, k) local o = k .. "_obj"; tt[k] = o; return o end})
-local QUEUENAMES    = setmetatable({}, {__index=function(tt, k) local o = k .. "_queue"; tt[k] = o; return o end}) ]]
--- gen_group_id is async, obj/queue should be checked whether has existed.
-local OBJNAMES      = {}
-local QUEUENAMES    = {}
 local S = ltask.dispatch()
 
 local rb_flags = sampler{
@@ -53,7 +44,6 @@ local function gen_group_id(rt_name)
     ig.enable(gid, objname, true)
 end
 
---local lastname = "blit_shadowmap"
 local function resize_framebuffer(w, h, fbidx)
 	if fbidx == nil or fb_cache[fbidx] then
 		return 
@@ -81,19 +71,15 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 end
 
-local lastname = "fxaa"
-
 local function create_rt_queue(width, height, name, fbidx)
-    local viewid = hwi.viewid_generate(name, lastname)
+    local viewid = VIEWIDS[name]
     gen_group_id(name)
     local queuename = QUEUENAMES[name]
-    lastname = name
     local ui_rt_material_idx = queuemgr.material_index("main_queue")
     queuemgr.register_queue(queuename, ui_rt_material_idx)
-    world:create_entity {
+    return world:create_entity {
 		policy = {
 			"ant.render|render_queue",
-			--"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -176,33 +162,27 @@ local function update_fb(width, height, queuename)
     return fbidx
 end
 
-function S.render_target_create(width, height, rt_name)
-    local rt = rt_table[rt_name]
-    local fbidx
-    if rt then --exist rt from set_rt_prefab
-        rt.w, rt.h = width, height
-        fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
-    else -- first create rt
-        fbidx = create_fbidx(width, height)
-        rt = {}
-        rt_table[rt_name] = rt
-        rt.w, rt.h = width, height
-        create_rt_queue(width, height, rt_name, fbidx)
-        rt.rt_id = ltask.call(ServiceResource, "texture_register_id")
-    end
-    local rt_handle = fbmgr.get_rb(fbidx, 1).handle
-    rt.rt_handle = rt_handle
-    ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)
-    return rt.rt_id
+local function create_render_target_instance(width, height, rt_name, rt)
+    rt.fbidx, rt.w, rt.h = create_fbidx(width, height), width, height
+    rt.rt_id = create_rt_queue(width, height, rt_name, rt.fbidx)
+    rt.rt_texture_id = ltask.call(ServiceResource, "texture_register_id")
+    rt.rt_handle = fbmgr.get_rb(rt.fbidx, 1).handle
+    ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle)
 end
 
-function S.render_target_adjust(width, height, rt_name)
-    local fbidx = update_fb(width, height, QUEUENAMES[rt_name])
-    local rt_handle = fbmgr.get_rb(fbidx, 1).handle
+function S.render_target_update(width, height, rt_name)
     local rt = rt_table[rt_name]
-    rt.rt_handle = rt_handle
-    ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)
-    return rt.rt_id
+    if rt then -- adjust width/height
+        if width ~= rt.w or height ~= rt.h then
+            rt.fbidx = update_fb(width, height, QUEUENAMES[rt_name]) 
+        end
+        rt.w, rt.h = width, height
+    else -- first create rt
+        rt = {}
+        rt_table[rt_name] = rt
+        create_render_target_instance(width, height, rt_name, rt)
+    end
+    return rt.rt_texture_id
 end
 
 local function calc_camera_t(queuename, aabb, scene, distance)
@@ -248,14 +228,13 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     if not rt then
         rt = {}
         rt_table[rt_name] = rt
-        local fbidx = create_fbidx(1, 1)
-        create_rt_queue(1, 1, rt_name, fbidx)
-        rt.rt_id = ltask.call(ServiceResource, "texture_register_id")
+        create_render_target_instance(1, 1, rt_name, rt)
     elseif not rt.rt_handle then
         local fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
-        local rt_handle = fbmgr.get_rb(fbidx, 1).handle
-        rt.rt_handle = rt_handle
-        ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)
+        if fbidx then
+            rt.rt_handle = fbmgr.get_rb(fbidx, 1).handle
+            ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle) 
+        end
     end
     
     if rt.prefab_path then
@@ -312,25 +291,25 @@ local reload_timestamp = 1
 
 function ui_rt_sys:data_changed()
     frame_tick = frame_tick + 1
-    local function get_rt_id_table()
+    local function get_rt_texture_id_table()
         local rtid_table = {}
         local rtid_rt_table = {}
         for _, rt in pairs(rt_table) do
             if rt.timestamp then
-                rtid_table[#rtid_table+1] = rt.rt_id
-                rtid_rt_table[rt.rt_id] = rt
+                rtid_table[#rtid_table+1] = rt.rt_texture_id
+                rtid_rt_table[rt.rt_texture_id] = rt
             end
         end
         return rtid_table, rtid_rt_table
     end
 
     if frame_tick % dead_timestamp == 0 then
-        local rtid_table, rtid_rt_table = get_rt_id_table()
+        local rtid_table, rtid_rt_table = get_rt_texture_id_table()
         if #rtid_table > 0 then
             ltask.fork(function ()
                 local rtid_timestamp_table = ltask.call(ServiceResource, "texture_timestamp", rtid_table) 
-                for rt_id, rt_timestamp in pairs(rtid_timestamp_table) do
-                    local rt = rtid_rt_table[rt_id]
+                for rt_texture_id, rt_timestamp in pairs(rtid_timestamp_table) do
+                    local rt = rtid_rt_table[rt_texture_id]
                     rt.timestamp = rt_timestamp
                 end
             end)   
@@ -338,12 +317,12 @@ function ui_rt_sys:data_changed()
     end
 
     if frame_tick % reload_timestamp == 0 then
-        local rtid_table, rtid_rt_table = get_rt_id_table()
+        local rtid_table, rtid_rt_table = get_rt_texture_id_table()
         if #rtid_table > 0 then
             ltask.fork(function ()
                 local rtid_timestamp_table = ltask.call(ServiceResource, "texture_timestamp", rtid_table) 
-                for rt_id, rt_timestamp in pairs(rtid_timestamp_table) do
-                    local rt = rtid_rt_table[rt_id]
+                for rt_texture_id, rt_timestamp in pairs(rtid_timestamp_table) do
+                    local rt = rtid_rt_table[rt_texture_id]
                     rt.timestamp = rt_timestamp
                 end
             end)   
@@ -353,7 +332,7 @@ function ui_rt_sys:data_changed()
     for rt_name, rt in pairs(rt_table) do
         if rt.timestamp and rt.timestamp > dead_timestamp and rt.rt_handle then
             ltask.fork(function ()
-                local already_dead = ltask.call(ServiceResource, "texture_destroy_handle", rt. rt_id)
+                local already_dead = ltask.call(ServiceResource, "texture_destroy_handle", rt. rt_texture_id)
                 if already_dead then
                     bgfx.destroy(rt.rt_handle)
                     rt.rt_handle = nil
@@ -363,7 +342,7 @@ function ui_rt_sys:data_changed()
             local fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
             local rt_handle = fbmgr.get_rb(fbidx, 1).handle
             rt.rt_handle = rt_handle
-            ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)                
+            ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle)                
         end
     end
 end
@@ -387,6 +366,8 @@ function ui_rt_sys:update_filter()
                     end
                 end
                 rt.timestamp = 0
+                print(objname)
+                print("end")
             end 
         end
     end

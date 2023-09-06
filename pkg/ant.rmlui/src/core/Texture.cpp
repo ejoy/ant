@@ -25,18 +25,23 @@ const TextureData& Fetch(Element* e, const std::string& path) {
 
 const TextureData& Fetch(Element* e, const std::string& path, Size size) {
 	auto iterator = textures.find(path);
+	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
 	if (iterator != textures.end()) {
-		if (iterator->second.dimensions != size) {
-			Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
-		}
 		return iterator->second;
 	}
-	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
-	return InvalidTexture;
+	else{
+		return InvalidTexture;
+	}
 }
 
 void Set(const std::string& path, TextureData&& data) {
-	textures.emplace(path, std::move(data));
+	auto iterator = textures.find(path);
+	if (iterator != textures.end()) {
+		iterator->second = data;
+	}
+	else{
+		textures.emplace(path, std::move(data));
+	}
 }
 
 }
