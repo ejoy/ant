@@ -37,6 +37,7 @@ local function create_entity_by_template(w, group, template, debuginfo)
         eid = eid,
         group = group,
         template = template,
+        data = {},
     }
     queue[#queue+1] = initargs
     return eid, initargs
@@ -92,10 +93,10 @@ local function create_instance(w, group, data, debuginfo)
         if v.mount then
             if v.prefab then
                 for _, m in ipairs(mounts[i]) do
-                    m.parent = entities[v.mount]
+                    m.data.scene_parent = entities[v.mount]
                 end
             else
-                mounts[i].parent = entities[v.mount]
+                mounts[i].data.scene_parent = entities[v.mount]
             end
         end
     end
@@ -168,7 +169,7 @@ function world:_prefab_instance(v)
     local template = create_template(w, v.args.prefab)
     local prefab, noparent = create_instance(w, v.args.group, template, v.debuginfo)
     for _, m in ipairs(noparent) do
-        m.parent = v.args.parent
+        m.data.scene_parent = v.args.parent
     end
     local tags = v.instance.tag
     each_prefab(prefab, template, function (e, tag)
