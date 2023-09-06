@@ -336,11 +336,9 @@ function world:pipeline_func(what)
 		return function() end
 	end
 	local CPU_STAT <const> = true
-	if what == "_init" or what == "_update" then
-		if CPU_STAT then
-			return update_cpu_stat(w, funcs, symbols)
-		end
-	end
+    if CPU_STAT then
+        return update_cpu_stat(w, funcs, symbols)
+    end
 	local ecs_world = w._ecs_world
 	return function()
 		for i = 1, #funcs do
