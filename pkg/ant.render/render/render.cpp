@@ -184,6 +184,17 @@ struct submit_cache{
 	render_args ra[MAX_VISIBLE_QUEUE] = {0};
 	uint8_t ra_count = 0;
 
+#ifdef _DEBUG
+	ecs::draw_stat_info *stat = nullptr;
+	void clear_stat(){
+		assert(stat);
+		stat->hitch_submit = 0;
+		stat->simple_submit = 0;
+		stat->efk_hitch_submit = 0;
+		stat->hitch_count = 0;
+	}
+#endif //_DEBUG
+
 	void clear(){
 		transforms.clear();
 		groups.clear();
@@ -237,8 +248,6 @@ submit_efk_obj(lua_State* L, struct ecs_world* w, const ecs::efk_object *eo, con
 	}
 }
 
-
-
 static inline void
 build_hitch_info(struct ecs_world*w, submit_cache &cc){
 	for (auto e : ecs_api::select<ecs::hitch_visible, ecs::hitch, ecs::scene>(w->ecs)) {
@@ -250,6 +259,9 @@ build_hitch_info(struct ecs_world*w, submit_cache &cc){
 				const auto &s = e.get<ecs::scene>();
 				if (h.group != 0){
 					cc.groups[h.group][ra.queue_idx].push_back(s.worldmat);
+					#ifdef _DEBUG
+					++cc.stat->hitch_count;
+					#endif //_DEBUG
 				}
 			}
 		}
@@ -271,11 +283,17 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 					auto ro = e.component<ecs::render_object>();
 					if (ro && obj_queue_visible(*ro, ra.a->queue_mask)){
 						draw_obj(L, w, ra.a, ro, &mats, cc.transforms);
+						#ifdef _DEBUG
+						cc.stat->hitch_count += (uint32_t)mats.size();
+						#endif //_DEBUG
 					}
 
 					const auto eo = e.component<ecs::efk_object>();
 					if (eo && obj_queue_visible(*eo, ra.a->queue_mask)){
 						submit_efk_obj(L, w, eo, mats);
+						#ifdef _DEBUG
+						cc.stat->efk_hitch_submit += (uint32_t)mats.size();
+						#endif //_DEBUG
 					}
 				}
 			}
@@ -292,6 +310,9 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 			const auto& obj = e.get<ecs::render_object>();
 			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
 				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
+				#ifdef _DEBUG
+				++cc.stat->simple_submit;
+				#endif //_DEBUG
 			}
 		}
 	}
@@ -303,6 +324,13 @@ lrender_submit(lua_State *L) {
 	auto w = getworld(L);
 
 	static submit_cache cc;
+
+#ifdef _DEBUG
+	auto e = ecs_api::first_entity<ecs::draw_stat_info>(w->ecs);
+	cc.stat = &e.get<ecs::draw_stat_info>();
+	cc.clear_stat();
+#endif //_DBUEG
+
 	find_render_args(w, cc);
 	build_hitch_info(w, cc);
 	render_submit(L, w, cc);

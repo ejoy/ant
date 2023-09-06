@@ -30,6 +30,23 @@ function render_sys:start_frame()
 	assetmgr.material_check()
 end
 
+local dsi = ecs.component "draw_stat_info"
+function dsi.init()
+	return {
+		hitch_submit = 0,
+		simple_submit = 0,
+		efk_hitch_submit = 0,
+		hitch_count = 0,
+	}
+end
+
+function render_sys:init()
+	world:create_entity{
+		policy = {"ant.render|draw_stat_info",},
+		data = {draw_stat_info = true}
+	}
+end
+
 function render_sys:component_init()
 	for e in w:select "INIT render_object:update filter_material:update" do
 		e.render_object.rm_idx 	= R.alloc()
