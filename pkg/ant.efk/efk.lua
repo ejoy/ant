@@ -59,21 +59,22 @@ function efk_sys:exit()
 end
 
 function efk_sys:component_init()
-    for e in w:select "INIT efk:in efk_visible?out" do
+    for e in w:select "INIT efk:in" do
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
         efk.play_handle = PH.create(efk.handle, efk.speed)
 
-        e.efk_visible       = true
+        
     end
 end
 
 function efk_sys:entity_init()
-    for e in w:select "INIT scene:in efk:in efk_object:update" do
+    for e in w:select "INIT scene:in efk:in efk_object:update view_visible?in efk_visible?out" do
         local eo            = e.efk_object
         eo.handle           = e.efk.handle
         eo.worldmat         = e.scene.worldmat
+        e.efk_visible       = e.view_visible
     end
 end
 

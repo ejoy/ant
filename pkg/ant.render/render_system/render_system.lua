@@ -31,10 +31,9 @@ function render_sys:start_frame()
 end
 
 function render_sys:component_init()
-	for e in w:select "INIT render_object:update filter_material:update render_object_visible?out" do
+	for e in w:select "INIT render_object:update filter_material:update" do
 		e.render_object.rm_idx 	= R.alloc()
 		e.filter_material 		= e.filter_material or {}
-		e.render_object_visible = true
 	end
 end
 
@@ -95,13 +94,15 @@ local function update_visible_masks(e)
 end
 
 function render_sys:entity_init()
-	for e in w:select "INIT material_result:in render_object:in filter_material:in" do
+	for e in w:select "INIT material_result:in render_object:in filter_material:in view_visible?in render_object_visible?out" do
 		local mr = e.material_result
 		local fm = e.filter_material
 		local mi = RM.create_instance(mr.object)
 		fm["main_queue"] = mi
 		local ro = e.render_object
 		R.set(ro.rm_idx, queuemgr.material_index "main_queue", mi:ptr())
+
+		e.render_object_visible = e.view_visible
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do

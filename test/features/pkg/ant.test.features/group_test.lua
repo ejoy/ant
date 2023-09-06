@@ -93,11 +93,11 @@ function group_test_sys:data_changed()
     end
 end
 
-function group_test_sys:render_submit()
-    -- do
-	-- 	print("view_visible:", w:count "view_visible")
-	-- 	print("render_object:", w:count "render_object")
-	-- 	print("render_object_visible:", w:count "render_object_visible")
-	-- 	print("render_object view_visible:", w:count "render_object view_visible")
-	-- end
-end
+-- function group_test_sys:render_submit()
+--     do
+-- 		print("view_visible:", w:count "view_visible")
+-- 		print("render_object:", w:count "render_object")
+-- 		print("render_object_visible:", w:count "render_object_visible")
+-- 		print("render_object view_visible:", w:count "render_object view_visible")
+-- 	end
+-- end
