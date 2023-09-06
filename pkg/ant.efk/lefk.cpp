@@ -412,6 +412,7 @@ lefk_startup(lua_State *L){
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
             {"render",          lefkctx_render},
+			{"new",				lefkctx_new},
             {"create",          lefkctx_create},
             {"destroy",         lefkctx_destroy},
             {"play",            lefkctx_play},
