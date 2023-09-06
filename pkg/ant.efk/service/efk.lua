@@ -100,10 +100,16 @@ local efk_cb_handle = efk_cb.callback{
 }
 
 local EFKCTX
+local EFKFILES = {}
+
 local function shutdown()
     if EFKCTX then
         efk.shutdown(EFKCTX)
         EFKCTX = nil
+    end
+
+    if next(EFKFILES) then
+        error("efk file is not removed before 'shutdown'")
     end
 end
 
@@ -124,6 +130,7 @@ function S.init()
 end
 
 function S.exit()
+    assert(not next(EFKFILES), "efk files should cleanup after shutdown")
     shutdown()
 end
 
@@ -133,11 +140,29 @@ function S.update_cb_data(background_handle, depth)
 end
 
 function S.create(filename)
-    return EFKCTX:create(filename)  -- efk module will ref efk
+    local info = EFKFILES[filename]
+    if not info then
+        log.info("Create efk file:", filename)
+        info = {
+            handle = EFKCTX:create(filename),
+            count = 0,
+        }
+        EFKFILES[filename] = info
+    end
+
+    info.count = info.count + 1
+    return info.handle
 end
 
-function S.destroy(handle)
-    EFKCTX:destroy(handle)
+function S.destroy(filename)
+    local info = assert(EFKFILES[filename], "Invalid efk file: " .. filename)
+    info.count = info.count - 1
+    if 0 == info.count then
+        log.info("Destroy efk file:", filename)
+        
+        EFKCTX:destroy(info.handle)
+        EFKFILES[filename] = nil
+    end
 end
 
 function S.preload_texture(texture, id)
