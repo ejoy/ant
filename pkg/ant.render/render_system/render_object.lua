@@ -3,7 +3,8 @@ local ecs = ...
 local mc = import_package "ant.math".constant
 
 local ro = ecs.component "render_object"
-local function init_ro()
+
+function ro.init()
     return {
         worldmat    = mc.NULL,
         prog        = 0xffffffff,
@@ -27,21 +28,4 @@ local function init_ro()
         render_layer= 0,
         discard_flags=0xff,
     }
-end
-
-function ro.init(r)
-    assert(not r)
-    return init_ro()
-end
-
-function ro.remove(r)
-    
-end
-
-function ro.marshal(v)
-    return ""
-end
-
-function ro.unmarshal(s)
-    return init_ro()
 end
