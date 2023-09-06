@@ -183,12 +183,6 @@ function render_sys:scene_update()
 end
 
 function render_sys:update_render_args()
-	do
-		print("view_visible:", w:count "view_visible")
-		print("render_object:", w:count "render_object")
-		print("render_object_visible:", w:count "render_object_visible")
-		print("render_object view_visible:", w:count "render_object view_visible")
-	end
 	w:clear "render_args"
 	if irender.stop_draw() then
 		return
