@@ -54,7 +54,7 @@ function world:remove_entity(e)
 end
 
 local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
+    table.move(a, 1, #a, #t+1, t)
 end
 local table_insert = table.insert
 
@@ -147,11 +147,11 @@ local function create_template(w, filename)
 end
 
 local function add_tag(dict, tag, eid)
-	if dict[tag] then
-		table.insert(dict[tag], eid)
-	else
-		dict[tag] = {eid}
-	end
+    if dict[tag] then
+        table.insert(dict[tag], eid)
+    else
+        dict[tag] = {eid}
+    end
 end
 
 local function each_prefab(entities, template, f)
@@ -281,83 +281,93 @@ function world:group_flush(tag)
     end
 end
 
-local function update_cpu_stat(w, funcs, symbols)
-	local ecs_world = w._ecs_world
-	local get_time = ltask.counter
-	local MaxFrame <const> = 30
-	local MaxText <const> = math.min(10, #funcs)
-	local MaxName <const> = 48
-	local CurFrame = 0
-	local dbg_print = bgfx.dbg_text_print
-	local printtext = {}
-	local stat = {}
-	for i = 1, #funcs do
-		stat[i] = 0
-	end
-	for i = 1, MaxText do
-		printtext[i] = ""
-	end
-	return function()
-		for i = 1, #funcs do
-			local f = funcs[i]
-			local now = get_time()
-			f(ecs_world)
-			stat[i] = stat[i] + (get_time() - now)
-		end
-		if CurFrame ~= MaxFrame then
-			CurFrame = CurFrame + 1
-		else
-			CurFrame = 1
-			local t = {}
-			for i = 1, #funcs do
-				t[i] = {stat[i], i}
-				stat[i] = 0
-			end
-			table.sort(t, function (a, b)
-				return a[1] > b[1]
-			end)
-			for i = 1, MaxText do
-				local m = t[i]
-				local v, idx = m[1], m[2]
-				local name = symbols[idx]
-				printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame * 1000)
-			end
-		end
-		dbg_print(0, 2, 0x02, "--- system")
-		for i = 1, MaxText do
-			dbg_print(2, 2+i, 0x02, printtext[i])
-		end
-	end
+local function cpustat_update(w, funcs, symbols)
+    local ecs_world = w._ecs_world
+    local get_time = ltask.counter
+    return function()
+        local stat = w._cpu_stat
+        for i = 1, #funcs do
+            local f = funcs[i]
+            local now = get_time()
+            f(ecs_world)
+            local time = get_time() - now
+            local name = symbols[i]
+            if stat[name] then
+                stat[name] = stat[name] + time
+            else
+                stat[name] = time
+                stat[#stat+1] = name
+            end
+        end
+    end
+end
+
+local function cpustat_update_then_print(w, funcs, symbols)
+    local update_func = cpustat_update(w, funcs, symbols)
+    local MaxFrame <const> = 30
+    local MaxText <const> = math.min(10, #funcs)
+    local MaxName <const> = 48
+    local CurFrame = 0
+    local dbg_print = bgfx.dbg_text_print
+    local printtext = {}
+    for i = 1, MaxText do
+        printtext[i] = ""
+    end
+    return function()
+        update_func()
+        if CurFrame ~= MaxFrame then
+            CurFrame = CurFrame + 1
+        else
+            CurFrame = 1
+            local stat = w._cpu_stat
+            table.sort(stat, function (a, b)
+                return stat[a] > stat[b]
+            end)
+            for i = 1, MaxText do
+                local name = stat[i]
+                local v = stat[name]
+                printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame * 1000)
+            end
+            w._cpu_stat = {}
+        end
+        dbg_print(0, 2, 0x02, "--- system")
+        for i = 1, MaxText do
+            dbg_print(2, 2+i, 0x02, printtext[i])
+        end
+    end
 end
 
 function world:pipeline_func(what)
-	local w = self
-	local funcs, symbols = system.lists(w, what)
-	if not funcs or #funcs == 0 then
-		return function() end
-	end
-	local CPU_STAT <const> = true
-    if CPU_STAT then
-        return update_cpu_stat(w, funcs, symbols)
+    local w = self
+    local funcs, symbols = system.lists(w, what)
+    if not funcs or #funcs == 0 then
+        return function() end
     end
-	local ecs_world = w._ecs_world
-	return function()
-		for i = 1, #funcs do
-			local f = funcs[i]
-			f(ecs_world)
-		end
-	end
+    local CPU_STAT <const> = true
+    if CPU_STAT then
+        if what == "_update" then
+            return cpustat_update_then_print(w, funcs, symbols)
+        end
+        return cpustat_update(w, funcs, symbols)
+    end
+    local ecs_world = w._ecs_world
+    return function()
+        for i = 1, #funcs do
+            local f = funcs[i]
+            f(ecs_world)
+        end
+    end
 end
 
 function world:pipeline_init()
-	self.pipeline_entity_init = self:pipeline_func "_entity_init"
-	self.pipeline_entity_remove = self:pipeline_func "_entity_remove"
-	self.pipeline_update = self:pipeline_func "_update"
-	self:pipeline_func "_init" ()
+    self.pipeline_entity_init = self:pipeline_func "_entity_init"
+    self.pipeline_entity_remove = self:pipeline_func "_entity_remove"
+    self.pipeline_update = self:pipeline_func "_update"
+    self:pipeline_func "_init" ()
 end
 
 function world:pipeline_exit()
-	self:pipeline_func "exit" ()
+    self:pipeline_func "exit" ()
 end
 
 function world:clibs(name)
@@ -429,8 +439,8 @@ event.init(world)
 local m = {}
 
 function m.new_world(config)
-	do
-		local cfg = config.ecs
+    do
+        local cfg = config.ecs
         if cfg then
             cfg.pipeline = {
                 "_init", "_update", "exit"
@@ -441,26 +451,27 @@ function m.new_world(config)
             table.insert(cfg.system, "ant.ecs|entity_system")
             table.insert(cfg.system, "ant.ecs|debug_system")
         end
-	end
+    end
     if config.DEBUG then
         luaecs.check_select(true)
     end
     local ecs = luaecs.world()
-	local w; w = setmetatable({
-		args = config,
-		_group_tags = {},
-		_create_entity_queue = {},
-		_create_prefab_queue = {},
-		_destruct = {},
-		_clibs_loaded = {},
-		_templates = {},
-		_packages = {},
-		w = ecs,
-	}, world_metatable)
+    local w; w = setmetatable({
+        args = config,
+        _group_tags = {},
+        _create_entity_queue = {},
+        _create_prefab_queue = {},
+        _destruct = {},
+        _clibs_loaded = {},
+        _templates = {},
+        _packages = {},
+        _cpu_stat = {},
+        w = ecs,
+    }, world_metatable)
 
-	-- load systems and components from modules
-	typeclass.init(w, config)
-	system.solve(w)
+    -- load systems and components from modules
+    typeclass.init(w, config)
+    system.solve(w)
 
     for _, funcs in pairs(w._clibs_loaded) do
         for _, f in pairs(funcs) do
