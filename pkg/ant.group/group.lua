@@ -58,6 +58,12 @@ function ig.enable(gid, tag, enable)
     enable_group_and_flush(gid, tag, enable)
 end
 
+ig.enable_no_flush = enable_group
+
+function ig.flush(tag)
+    world:group_flush(tag)
+end
+
 function ig.filter(filtertag, maintag, vicetag)
 	w:filter(filtertag, ("%s %s"):format(maintag, vicetag))
 end
