@@ -28,7 +28,7 @@ local function create_entity_by_data(w, group, data, debuginfo)
     return eid
 end
 
-local function create_entity_by_template(w, group, template, debuginfo)
+local function create_entity_by_template(w, group, template, has_scene, debuginfo)
     local queue = w._create_entity_queue
     local eid = w.w:new {
         debug = debuginfo,
@@ -37,6 +37,7 @@ local function create_entity_by_template(w, group, template, debuginfo)
         eid = eid,
         group = group,
         template = template,
+        has_scene = has_scene,
         data = {},
     }
     queue[#queue+1] = initargs
@@ -68,7 +69,7 @@ local function create_instance(w, group, data, debuginfo)
         if v.prefab then
             entities[i], np = create_instance(w, group, v.template, debuginfo)
         else
-            local e, initargs = create_entity_by_template(w, group, v.template, debuginfo)
+            local e, initargs = create_entity_by_template(w, group, v.template, v.has_scene, debuginfo)
             entities[i], np = e, initargs
         end
         if v.mount then
@@ -93,9 +94,12 @@ local function create_instance(w, group, data, debuginfo)
         if v.mount then
             if v.prefab then
                 for _, m in ipairs(mounts[i]) do
-                    m.data.scene_parent = entities[v.mount]
+                    if m.has_scene then
+                        m.data.scene_parent = entities[v.mount]
+                    end
                 end
             else
+                assert(mounts[i].has_scene)
                 mounts[i].data.scene_parent = entities[v.mount]
             end
         end
@@ -120,6 +124,7 @@ local function create_entity_template(w, v)
         mount = v.mount,
         template = w.w:template(v.data),
         tag = v.tag,
+        has_scene = v.data.scene ~= nil,
     }, template_mt)
 end
 
@@ -169,7 +174,9 @@ function world:_prefab_instance(v)
     local template = create_template(w, v.args.prefab)
     local prefab, noparent = create_instance(w, v.args.group, template, v.debuginfo)
     for _, m in ipairs(noparent) do
-        m.data.scene_parent = v.args.parent
+        if m.has_scene then
+            m.data.scene_parent = v.args.parent
+        end
     end
     local tags = v.instance.tag
     each_prefab(prefab, template, function (e, tag)
