@@ -71,7 +71,7 @@ function m.show()
                         local ff = f:match "([^|]+)|mesh.prefab"
                         ff = ff or f
                         if fs.exists(fs.path(ff)) and imgui.widget.MenuItem(ff) then
-                            world:pub{"OpenFile", f}
+                            world:pub{"OpenFile", ff}
                         end
                     end
                 end
