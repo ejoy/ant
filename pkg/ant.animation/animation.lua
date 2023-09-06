@@ -42,7 +42,8 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Effect" then
 				if event.effect then
-					iefk.play(event.effect)
+					local e <close> = world:entity(event.effect, "efk:in")
+					iefk.play(e)
 				elseif event.asset_path ~= "" then
 					event.effect = iefk.create(event.asset_path, {
 						scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},

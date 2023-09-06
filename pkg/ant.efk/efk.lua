@@ -258,87 +258,39 @@ function iefk.preload(textures)
     end
 end
 
---TODO: need remove all the code checking 'efk' component is valid or not
-local function realive(eid)
-    local e <close> = world:entity(eid, "efk?in")
+function iefk.play(e)
     local efk = e.efk
     if efk then
         local ph = efk.play_handle
         ph:realive(efk.speed)
         ph:set_visible(true)
     end
-    iefk.set_visible(eid, true)
+    iefk.set_visible(e, true)
 end
 
-function iefk.play(efk)
-    if type(efk) == "table" then
-		local entitys = efk.tag["*"]
-		for _, eid in ipairs(entitys) do
-            realive(eid)
-		end
-    else
-        realive(efk)
-    end
+function iefk.pause(e, b)
+    e.efk.play_handle:set_pause(b)
 end
 
-function iefk.pause(eid, b)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if efk then
-        efk.play_handle:set_pause(b)
-    end
+function iefk.set_time(e, t)
+    e.efk.play_handle:set_time(t)
 end
 
-function iefk.set_time(eid, t)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if e.efk then
-        efk.play_handle:set_time(t)
-    end
+function iefk.set_speed(e, s)
+    e.efk.play_handle:set_speed(s)
 end
 
-function iefk.set_speed(eid, s)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if efk then
-        efk.play_handle:set_speed(s)
-    end
+function iefk.set_visible(e, b)
+    e.efk.play_handle:set_visible(b)
+    ivs.set_state(e, "main_queue", b)
 end
 
-function iefk.set_visible(eid, b)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if efk then
-        efk.play_handle:set_visible(b)
-        ivs.set_state(e, "main_queue", b)
-    end
+function iefk.stop(e, delay)
+    e.efk.play_handle:set_stop(delay)
 end
 
-local function do_stop(eid, delay)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if efk then
-        efk.play_handle:set_stop(delay)
-    end
-end
-
-function iefk.stop(efk, delay)
-    if type(efk) == "table" then
-		local entitys = efk.tag["*"]
-		for _, eid in ipairs(entitys) do
-			do_stop(eid, delay)
-		end
-    else
-        do_stop(efk, delay)
-    end
-end
-
-function iefk.is_playing(eid)
-    local e <close> = world:entity(eid, "efk?in")
-    local efk = e.efk
-    if efk then
-        return efk.play_handle:is_alive()
-    end
+function iefk.is_playing(e)
+    return e.efk.play_handle:is_alive()
 end
 
 return iefk

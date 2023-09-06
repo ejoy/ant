@@ -66,11 +66,13 @@ function EffectView:show()
 end
 
 function EffectView:on_play()
-    iefk.play(self.eid)
+    local e <close> = world:entity(self.eid, "efk:in")
+    iefk.play(e)
 end
 
 function EffectView:on_stop()
-    iefk.stop(self.eid)
+    local e <close> = world:entity(self.eid, "efk:in")
+    iefk.stop(e)
 end
 
 function EffectView:on_get_speed()
@@ -86,7 +88,8 @@ end
 function EffectView:on_set_speed(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.efk.speed = value
-    iefk.set_speed(self.eid, value)
+    local e <close> = world:entity(self.eid, "efk:in")
+    iefk.set_speed(e, value)
     world:pub { "PatchEvent", self.eid, "/data/efk/speed", value }
 end
 

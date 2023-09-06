@@ -39,7 +39,8 @@ local function stop_all_effect(all_events, delay)
 	for _, events in ipairs(all_events) do
 		for _, ev in ipairs(events.event_list) do
 			if ev.event_type == "Effect" and ev.effect then
-				iefk.stop(ev.effect, delay)
+				local e <close> = world:entity(ev.effect, "efk:in")
+				iefk.stop(e, delay)
 			end
 		end
 	end
@@ -184,7 +185,8 @@ function iani.set_time(eid, second)
 		for _, events in ipairs(all_events) do
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" and ev.effect then
-					iefk.set_time(ev.effect, (current_time - events.time) * 60)
+					local ee <close> = world:entity(ev.effect, "efk:in")
+					iefk.set_time(ee, (current_time - events.time) * 60)
 				end
 			end
 		end

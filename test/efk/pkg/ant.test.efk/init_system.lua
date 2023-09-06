@@ -93,7 +93,8 @@ local kb_mb = world:sub{"keyboard"}
 function is:data_changed()
     for _, key, press in kb_mb:unpack() do
         if press == 0 and key == "T" then
-            iefk.stop(efkeid_group)
+            local e <close> = world:entity(efkeid_group, "efk:in")
+            iefk.stop(e)
         elseif press == 0 and key == "R" then
             print(w:count "hitch")
             print(w:count "hitch view_visible")

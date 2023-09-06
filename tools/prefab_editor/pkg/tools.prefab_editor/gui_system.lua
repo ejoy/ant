@@ -385,7 +385,7 @@ function m:handle_event()
             local e <close> = world:entity(target.eid, "efk?in light?in")
             hierarchy:set_visible(target, value, true)
             if e.efk then
-                iefk.set_visible(target.eid, value)
+                iefk.set_visible(e, value)
             elseif e.light then
                 world:pub{"component_changed", "light", target.eid, "visible", value}
             else
@@ -462,6 +462,57 @@ function m:handle_event()
             prefab_mgr:save()
         elseif state.CTRL and key == "T" and press == 1 then
             prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effects/miner-dust.efk")
+            -- local hitch_test_group_id<const> = 1000
+            -- world:create_entity {
+            --     policy = {
+            --         "ant.general|name",
+            --         "ant.render|hitch_object"
+            --     },
+            --     data = {
+            --         name = "test1",
+            --         scene = { t = math3d.vector(-50, 0, 0) },
+            --         hitch = {
+            --             group = hitch_test_group_id,
+            --             hitch_bounding = true
+            --         },
+            --         visible_state = "main_view|cast_shadow|selectable",
+            --         scene_needchange = true,
+            --     }
+            -- }
+            -- world:create_entity {
+            --     policy = {
+            --         "ant.general|name",
+            --         "ant.render|hitch_object"
+            --     },
+            --     data = {
+            --         name = "test2",
+            --         scene = { t = math3d.vector(50, 0, 0) },
+            --         hitch = {
+            --             group = hitch_test_group_id,
+            --             hitch_bounding = true
+            --         },
+            --         visible_state = "main_view|cast_shadow|selectable",
+            --         scene_needchange = true,
+            --     }
+            -- }
+            world:create_instance {
+                prefab = "/pkg/vaststars.resources/glbs/mars-outfall.glb|mesh.prefab",
+                on_ready = function(instance)
+                    -- for _, eid in ipairs(instance.tag["*"]) do
+                    --     local e <close> = world:entity(eid, "anim_ctrl?in view_visible?out")
+                    --     if e.anim_ctrl then
+                    --         iani.load_events(eid, "/pkg/vaststars.resources/animations/miner-1.event")
+                    --     end
+                    --     e.view_visible = false
+                    --     w:submit(e)
+                    -- end
+                    -- iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false, group = hitch_test_group_id})
+                end,
+                parent = nil,
+                -- group = hitch_test_group_id
+            }
+            -- world:group_enable_tag("view_visible", hitch_test_group_id)
+            -- world:group_flush "view_visible"
         end
     end
     for _, what, type in event_create:unpack() do
