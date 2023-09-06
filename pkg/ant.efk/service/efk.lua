@@ -144,24 +144,24 @@ function S.create(filename)
     if not info then
         log.info("Create efk file:", filename)
         info = {
-            handle = EFKCTX:create(filename),
+            obj = EFKCTX:new(filename),
             count = 0,
         }
         EFKFILES[filename] = info
     end
-
     info.count = info.count + 1
-    return info.handle
+    return EFKCTX:create(info.obj)
 end
 
-function S.destroy(filename)
+function S.destroy(filename, handle)
     local info = assert(EFKFILES[filename], "Invalid efk file: " .. filename)
     info.count = info.count - 1
+    EFKCTX:destroy(handle)
     if 0 == info.count then
         log.info("Destroy efk file:", filename)
-        
-        EFKCTX:destroy(info.handle)
         EFKFILES[filename] = nil
+        info.obj:release()
+        info.obj = nil
     end
 end
 

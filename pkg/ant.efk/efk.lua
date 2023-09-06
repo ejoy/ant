@@ -43,7 +43,7 @@ local function cleanup_efk(efk)
     end
 
     if efk.handle then
-        ltask.send(EFK_SERVER, "destroy", efk.path)
+        ltask.send(EFK_SERVER, "destroy", efk.path, efk.handle)
         efk.path = nil
         efk.handle = nil
     end

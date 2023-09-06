@@ -142,7 +142,7 @@ lefkctx_new(lua_State *L) {
 static int
 lefkctx_create(lua_State *L) {
     auto ctx = EC(L);
-	struct efk_box *box = (struct efk_box *)luaL_checkudata(L, 1, "EFK_INSTANCE");
+	struct efk_box *box = (struct efk_box *)luaL_checkudata(L, 2, "EFK_INSTANCE");
     if (box->eptr == nullptr) {
         return luaL_error(L, "Released effect");
     }
