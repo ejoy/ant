@@ -24,17 +24,10 @@ local PH
 local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
-local MAX_EFK_HITCH<const> = 256
-
 function efk_sys:init()
     EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
     ltask.call(EFK_SERVER, "init")
     PH = ecs.require "playhandle"
-
-    for _=1, MAX_EFK_HITCH do
-        w:temporary("efk_hitch_tag", "efk_hitch")
-        w:temporary("efk_hitch_tag", "efk_hitch_backbuffer")
-    end
 end
 
 local function cleanup_efk(efk)
@@ -187,6 +180,7 @@ function efk_sys:scene_update()
 end
 
 function efk_sys:render_submit()
+    
     for e in w:select "efk_visible efk:in scene:in" do
         --update_transform will check efk is alive and visible or not
         local ph = e.efk.play_handle
@@ -196,8 +190,10 @@ end
 
 function efk_sys:render_postprocess()
     local num = w:count "efk_hitch"
-    local data = w:swap("efk_hitch", "efk_hitch_backbuffer")
-    ltask.send(EFK_SERVER, "update_transforms", num, data)
+    if num > 0 then
+        local data = w:swap("efk_hitch", "efk_hitch_backbuffer")
+        ltask.send(EFK_SERVER, "update_transforms", num, data)
+    end
 end
 
 function iefk.create(filename, config)
