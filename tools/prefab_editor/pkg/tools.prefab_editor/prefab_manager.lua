@@ -458,7 +458,7 @@ function m:choose_prefab()
         patch_template = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
         local prefab_set = {}
         for _, patch in ipairs(patch_template) do
-            local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.value or nil)
+            local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
             if k and string.sub(k, -7, 7) == ".prefab" then
                 prefab_set[k] = true
             end
@@ -495,7 +495,7 @@ function m:choose_prefab()
                     table.insert(patch_template, 1, {
                         file = "mesh.prefab",
                         op = "copyfile",
-                        value = prefab_list[#prefab_list]
+                        path = prefab_list[#prefab_list]
                     })
                     utils.write_file(gd.glb_filename..".patch", stringify(patch_template))
                 end

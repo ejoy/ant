@@ -2,7 +2,7 @@
 ---
 file: mesh.prefab
 op: copyfile
-value: geothermal.prefab
+path: geothermal.prefab
 ---
 file: geothermal.prefab
 op: replace
