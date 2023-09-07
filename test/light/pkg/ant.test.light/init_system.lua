@@ -101,20 +101,6 @@ function S.init_world()
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(ce, dir)
-    world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-        },
-        data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-            material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
-            --material = "/pkg/ant.test.features/assets/pbr_test.material",
-            visible_state = "main_view",
-            name = "test",
-            scene = {}
-        }
-    }
     -- create_simple_triangles()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
@@ -123,19 +109,19 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
---[[     create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
-        peids = e.tag['*']
-        local leid = e.tag['*'][1]
-        -- local le<close> = world:entity(leid, "scene:update")
-        -- iom.set_scale(le, 0.1)
-    end) ]]
-
-    -- create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
+    -- create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
     --     peids = e.tag['*']
     --     local leid = e.tag['*'][1]
-    --     local le<close> = world:entity(leid, "scene:update")
-    --     iom.set_scale(le, 0.1)
+    --     -- local le<close> = world:entity(leid, "scene:update")
+    --     -- iom.set_scale(le, 0.1)
     -- end)
+
+    create_instance("/pkg/ant.test.light/assets/t3.glb|mesh.prefab", function (e)
+        peids = e.tag['*']
+        local leid = e.tag['*'][1]
+        local le<close> = world:entity(leid, "scene:update")
+        iom.set_scale(le, 0.1)
+    end)
 
     -- create_instance("/pkg/ant.test.light/assets/plane.glb|mesh.prefab", function (e)
     --     local normaltex = assetmgr.resource "/pkg/ant.test.light/assets/normal.texture"
