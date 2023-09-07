@@ -69,12 +69,16 @@ local function profile_print()
             return a[2] > b[2]
         end)
 
+        local function append_text(name, value)
+            return ("  %s%s%s"):format(name, (" "):rep(MaxName-#name), value)
+        end
+
         profile_printtext[1] = "--- encoder"
         for i = 1, #r do
             local who, time = r[i][1], r[i][2]
             local m = time / MaxFrame * 1000
             local name = ("%s(%d)"):format(profile_label[who], who)
-            profile_printtext[i+1] = "  "..name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
+            profile_printtext[i+1] = append_text(name, (" | %.02fms   "):format(m))
             profile[who] = 0
         end
         local stats = bgfx.get_stats "v"
@@ -87,7 +91,7 @@ local function profile_print()
             local view = stats.view[i]
             if view then
                 local name = view.name
-                profile_printtext[n+i] = "  "..name .. (" "):rep(MaxName-#name) .. (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu)
+                profile_printtext[n+i] = append_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu))
             else
                 break
             end
@@ -100,7 +104,7 @@ local function profile_print()
         local ss = rs.submit_stat()
         for k, v in pairs(ss) do
             n = n + 1
-            profile_printtext[n] = ("%s | %d"):format(k, v)
+            profile_printtext[n] = append_text(k, (" | %d"):format(v))
         end
     end
     for i = 1, #profile_printtext do
