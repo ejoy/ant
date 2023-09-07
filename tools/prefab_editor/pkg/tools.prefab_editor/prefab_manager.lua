@@ -191,7 +191,7 @@ function m:create(what, config)
         self:reset_prefab()
     end
     if what == "slot" then
-        self:create_slot(true)
+        self:create_slot()
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
         hierarchy:add(new_camera, {template = template}, self.root)
