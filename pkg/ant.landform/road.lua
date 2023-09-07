@@ -180,7 +180,7 @@ function road_system:entity_init()
                     max_num = max_num,
                     srt_table = e.road.srt_info,
                     indirect_params_table = {math3d.vector(0, 0, 6, 0)},
-                    aabb_table = {math3d.ref(math3d.aabb(math3d.vector(-10, 0, -10), math3d.vector(10, 0, 10)))},
+                    aabb_table = {math3d.ref(math3d.aabb(math3d.vector(0, 0, 0), math3d.vector(20, 0, 20)))},
                     indirect_type = "road"
                 },
                 on_ready = function()
