@@ -50,7 +50,7 @@ local profile_n = 0
 local MaxFrame <const> = 30
 local MaxText <const> = 10
 local MaxName <const> = 48
-local profile_printtext = {}
+local profile_printtext = {n=0}
 
 local function profile_print()
     if not profile_enable then
@@ -69,45 +69,46 @@ local function profile_print()
             return a[2] > b[2]
         end)
 
-        local function append_text(name, value)
+        local function format_text(name, value)
             return ("  %s%s%s"):format(name, (" "):rep(MaxName-#name), value)
         end
 
-        profile_printtext[1] = "--- encoder"
+        profile_printtext.n = 0
+        local function add_text(t)
+            profile_printtext.n = profile_printtext.n + 1
+            profile_printtext[profile_printtext.n] = t
+        end
+
+        add_text "--- encoder"
         for i = 1, #r do
             local who, time = r[i][1], r[i][2]
             local m = time / MaxFrame * 1000
             local name = ("%s(%d)"):format(profile_label[who], who)
-            profile_printtext[i+1] = append_text(name, (" | %.02fms   "):format(m))
+            add_text(format_text(name, (" | %.02fms   "):format(m)))
             profile[who] = 0
         end
+
         local stats = bgfx.get_stats "v"
-        table.sort(stats.view, function (a, b)
-            return a.gpu > b.gpu
-        end)
-        local n = #r + 2
-        profile_printtext[n] = "--- view"
+        table.sort(stats.view, function (a, b) return a.gpu > b.gpu end)
+        add_text "--- view"
         for i = 1, 5 do
             local view = stats.view[i]
             if view then
                 local name = view.name
-                n = n + 1
-                profile_printtext[n] = append_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu))
+                add_text(format_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu)))
             else
                 break
             end
         end
 
-        n = n + 1
-        profile_printtext[n] = "--- submit"
+        add_text "--- submit"
         local rs = require "render.stat"
         local ss = rs.submit_stat()
         for k, v in pairs(ss) do
-            n = n + 1
-            profile_printtext[n] = append_text(k, (" | %d"):format(v))
+            add_text(format_text(k, (" | %d"):format(v)))
         end
     end
-    for i = 1, #profile_printtext do
+    for i = 1, profile_printtext.n do
         S.dbg_text_print(0, 2+MaxText+i, 0x02, profile_printtext[i])
     end
 end
