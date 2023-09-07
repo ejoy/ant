@@ -456,6 +456,18 @@ function m:choose_prefab()
     if #prefab_list < 1 then
         local patchfile = gd.glb_filename .. ".patch"
         patch_template = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
+        local hitch_index
+        for i, patch in ipairs(patch_template) do
+            if patch.path == "hitch.prefab" then
+                hitch_index = i
+                break
+            end
+        end
+        if hitch_index then
+            table.remove(patch_template, hitch_index)
+            self.save_hitch = true
+        end
+
         local prefab_set = {}
         for _, patch in ipairs(patch_template) do
             local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
@@ -463,6 +475,7 @@ function m:choose_prefab()
                 prefab_set[k] = true
             end
         end
+        
         prefab_list = {"mesh.prefab"}
         for key, _ in pairs(prefab_set) do
             prefab_list[#prefab_list + 1] = key
@@ -643,6 +656,7 @@ function m:reset_prefab(noscene)
     self.prefab_filename = nil
     self.glb_filename = nil
     self.scene = nil
+    self.save_hitch = false
     if not noscene then
         local parent = self.root
         local new_entity, temp = create_simple_entity("Scene", parent)
@@ -754,11 +768,79 @@ function m:add_prefab(path)
     self:add_entity(v_root, parent, temp, prefab_filename)
 end
 
+function m:set_save_hitch(b)
+    self.save_hitch = b
+end
+
+function m:get_hitch_content()
+    local content
+    for _, tpl in ipairs(self.patch_template) do
+        if tpl.op == "add" and tpl.value.data and tpl.value.data.slot then
+            -- if not content[tpl.file]  then
+            --     content[tpl.file] = {
+            --         policy = {
+            --             "ant.general|name",
+            --             "ant.render|hitch_object",
+            --         },
+            --         data = {
+            --             name = "hitch",
+            --             scene = {},
+            --             hitch = {
+            --                 group = 0,
+            --                 hitch_bounding = true,
+            --             },
+            --             visible_state = "main_view|cast_shadow|selectable",
+            --             scene_needchange = true,
+            --         }
+            --     }
+            -- end
+            -- local slots = content[tpl.file]
+            -- slots[#slots + 1] = tpl.value
+
+            -- only one hitch file per glb file
+            if not content then
+                content = {
+                    {
+                        policy = {
+                            "ant.general|name",
+                            "ant.render|hitch_object",
+                        },
+                        data = {
+                            name = "hitch",
+                            scene = {},
+                            hitch = {
+                                group = 0,
+                                hitch_bounding = true,
+                            },
+                            visible_state = "main_view|cast_shadow|selectable",
+                            scene_needchange = true,
+                        }
+                    }
+                }
+            end
+            content[#content + 1] = tpl.value
+        end
+    end
+    return content
+end
+
 function m:save(path)
     -- patch glb file
     if self.glb_filename then
         if self.patch_template then
-            utils.write_file(self.glb_filename..".patch", stringify(self.patch_template))
+            local final_template = self.patch_template
+            if self.save_hitch then
+                local hitch = self:get_hitch_content()
+                if #hitch > 0 then
+                    final_template[#final_template + 1] = {
+                        file = "mesh.prefab",
+                        op = "createfile",
+                        path = "hitch.prefab",
+                        value = hitch
+                    }
+                end
+            end
+            utils.write_file(self.glb_filename..".patch", stringify(final_template))
             assetmgr.unload(self.glb_filename..".patch")
             assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
             anim_view.save_keyevent()

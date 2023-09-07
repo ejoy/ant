@@ -210,6 +210,7 @@ local event_create          = world:sub {"Create"}
 local event_light           = world:sub {"UpdateDefaultLight"}
 local event_showground      = world:sub {"ShowGround"}
 local event_showterrain     = world:sub {"ShowTerrain"}
+local event_savehitch       = world:sub {"SaveHitch"}
 local event_gizmo           = world:sub {"Gizmo"}
 local create_animation_event = world:sub {"CreateAnimation"}
 local light_gizmo           = ecs.require "gizmo.light"
@@ -526,6 +527,9 @@ function m:handle_event()
     end
     for _, enable in event_showterrain:unpack() do
         prefab_mgr:show_terrain(enable)
+    end
+    for _, enable in event_savehitch:unpack() do
+        prefab_mgr:set_save_hitch(enable)
     end
     for _, at, target in create_animation_event:unpack() do
         keyframe_view.create_target_animation(at, target)
