@@ -4,7 +4,6 @@ local vfs = require "vfs"
 local constructor = require "core.DOM.constructor"
 
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
-local ServiceWorld    = ltask.queryservice "ant.window|world"
 local m = {}
 
 function m.is_file(path)
