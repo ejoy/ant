@@ -14,7 +14,6 @@ local idrawindirect = {}
 local type_table = {
     ["ROAD"] = {1, 0, 0, 0},
     ["STONE_MOUNTAIN"] = {2, 0, 0, 0},
-    ["HEAP_MESH"] = {3, 0, 0, 0}
 }
 
 local function get_sm_worldmat(srt)

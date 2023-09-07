@@ -14,7 +14,6 @@
 	#define DRAW_INDIRECT_TYPE     u_draw_indirect_type.x
 	#define DRAW_INDIRECT_ROAD     1
 	#define DRAW_INDIRECT_MOUNTAIN 2
-	#define DRAW_INDIRECT_HEAPMESH 3
 
 mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 {

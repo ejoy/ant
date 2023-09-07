@@ -18,7 +18,6 @@ local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
 
 local init_loader_sys   = ecs.system 'init_loader_system'
-local iheapmesh = ecs.require "ant.render|render_system.heap_mesh"
 local printer_eid
 local printer_percent = 0
 local function point_light_test()
@@ -264,68 +263,7 @@ local function drawindirect_test()
             name = "test",
         }
     } ]]
---[[     heap_eid = world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.render|heap_mesh",
-            "ant.render|indirect"
-         },
-        data = {
-            scene  = {s = 0.2, t = {0, 0, 0}},
-            material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
-            visible_state = "main_view",
-            mesh        = "/pkg/ant.resources.binary/meshes/iron-ore.glb|meshes/Cube.001_P1.meshbin",
-            heapmesh = {
-                curSideSize = {4, 4, 4}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
-                curHeapNum = 20, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
-                glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
-                interval = {0.5, 0.5, 0.5}
-            },
-            indirect = "HEAP_MESH",
-            render_layer = "background"
-        },
-    }   ]]
-    
---[[     world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.render|heap_mesh",
-         },
-        data = {
-            scene  = {s = 0.2, t = {20, 0, 0}},
-            material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
-            visible_state = "main_view",
-            mesh        = "/pkg/ant.resources.binary/meshes/iron-ore.glb|meshes/Cube.001_P1.meshbin",
-            heapmesh = {
-                curSideSize = {3, 3, 3}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
-                curHeapNum = 15, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
-                glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
-                interval = {0.5, 0.5, 0.5}
-            },
-            indirect = "HEAP_MESH"
-        },
-    }   ]]
 
-   local t = 1  
---[[      world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-            "ant.render|heap_mesh",
-         },
-        data = {
-            name        = "heap_mesh_test",
-            scene  = {s = 0.2, t = {0, 3, 0}},
-            material    = "/pkg/ant.resources/materials/heap_test.material",
-            visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/iron-ingot.glb|meshes/Cube.252_P2.meshbin",
-            heapmesh = {
-                curSideSize = 3,
-                curHeapNum = 10,
-                glbName = "iron-ingot"
-            }
-        },
-    }    ]] 
 end
 
 local canvas_eid
@@ -442,11 +380,8 @@ function init_loader_sys:ui_update()
             local e = assert(world:entity(sampler_eid))
             print(math3d.tostring(iom.get_position(e)))
         elseif key == "J" and press == 0 then
-            iheapmesh.update_heap_mesh_number(heap_eid, heap_num) -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的eid
-            heap_num = heap_num + 1
+
         elseif key == "K" and press == 0 then
-            --iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
-            render_layer_test()
         elseif key == "L" and press == 0 then
             local ee <close> = world:entity(outline_eid, "outline_remove?update")
             ee.outline_remove = true

@@ -73,18 +73,6 @@ policy "render"
     .component "mesh"
     .component "visible_state"
 
-system "heap_mesh"
-    .require_policy "ant.render|draw_indirect"
-    .require_system "ant.render|draw_indirect_system"
-    .implement "render_system/heap_mesh.lua"
-
-component "heapmesh".type "lua"
-component "heapmesh_changed"
-component "heapmesh_ready"
-
-policy "heap_mesh"
-    .require_system "ant.render|heap_mesh"
-    .component "heapmesh"
 
 system "skinning_system"
     .implement "render_system/skinning_system.lua"
@@ -209,7 +197,6 @@ import "render_system/cluster_render.ecs"
 
 pipeline "render"
     .stage "skin_mesh"
-    .stage "heap_mesh"
     .stage "refine_filter"
     .stage "cull"
     .stage "refine_camera"
