@@ -233,7 +233,12 @@ function op:test(data)
 end
 
 function op:copyfile(data, retval)
-    retval[self.value] = deepcopy(data)
+    retval[self.path] = deepcopy(data)
+    return true, data
+end
+
+function op:createfile(data, retval)
+    retval[self.path] = self.value
     return true, data
 end
 
