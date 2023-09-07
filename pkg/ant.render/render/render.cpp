@@ -185,14 +185,14 @@ struct submit_cache{
 	uint8_t ra_count = 0;
 
 #ifdef _DEBUG
-	ecs::draw_stat_info *stat = nullptr;
-	void clear_stat(){
-		assert(stat);
-		stat->hitch_submit = 0;
-		stat->simple_submit = 0;
-		stat->efk_hitch_submit = 0;
-		stat->hitch_count = 0;
-	}
+	struct submit_stat{
+		uint32_t hitch_submit = 0;
+		uint32_t simple_submit = 0;
+		uint32_t efk_hitch_submit = 0;
+		uint32_t hitch_count = 0;
+	};
+
+	submit_stat stat;
 #endif //_DEBUG
 
 	void clear(){
@@ -203,6 +203,7 @@ struct submit_cache{
 
 #ifdef _DEBUG
 		memset(ra, 0xdeaddead, sizeof(ra));
+		memset(&stat, 0, sizeof(stat));
 #endif //_DEBUG
 	}
 };
@@ -260,7 +261,7 @@ build_hitch_info(struct ecs_world*w, submit_cache &cc){
 				if (h.group != 0){
 					cc.groups[h.group][ra.queue_idx].push_back(s.worldmat);
 					#ifdef _DEBUG
-					++cc.stat->hitch_count;
+					++cc.stat.hitch_count;
 					#endif //_DEBUG
 				}
 			}
@@ -284,7 +285,7 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 					if (ro && obj_queue_visible(*ro, ra.a->queue_mask)){
 						draw_obj(L, w, ra.a, ro, &mats, cc.transforms);
 						#ifdef _DEBUG
-						cc.stat->hitch_count += (uint32_t)mats.size();
+						cc.stat.hitch_submit += (uint32_t)mats.size();
 						#endif //_DEBUG
 					}
 
@@ -292,7 +293,7 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 					if (eo && obj_queue_visible(*eo, ra.a->queue_mask)){
 						submit_efk_obj(L, w, eo, mats);
 						#ifdef _DEBUG
-						cc.stat->efk_hitch_submit += (uint32_t)mats.size();
+						cc.stat.efk_hitch_submit += (uint32_t)mats.size();
 						#endif //_DEBUG
 					}
 				}
@@ -311,31 +312,26 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
 				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
 				#ifdef _DEBUG
-				++cc.stat->simple_submit;
+				++cc.stat.simple_submit;
 				#endif //_DEBUG
 			}
 		}
 	}
 }
 
+static submit_cache cc;
 
 static int
 lrender_submit(lua_State *L) {
 	auto w = getworld(L);
 
-	static submit_cache cc;
-
-#ifdef _DEBUG
-	auto e = ecs_api::first_entity<ecs::draw_stat_info>(w->ecs);
-	cc.stat = &e.get<ecs::draw_stat_info>();
-	cc.clear_stat();
-#endif //_DBUEG
+	cc.clear();
 
 	find_render_args(w, cc);
 	build_hitch_info(w, cc);
 	render_submit(L, w, cc);
 	render_hitch_submit(L, w, cc);
-	cc.clear();
+	
 	return 0;
 }
 
@@ -428,6 +424,37 @@ lexit(lua_State *L){
 	w->R = nullptr;
 
 	return 0;
+}
+
+static int
+lsubmit_stat(lua_State *L){
+	lua_createtable(L, 0, 4);
+#ifdef _DEBUG
+	lua_pushinteger(L, cc.stat.hitch_submit);
+	lua_setfield(L, -2, "hitch_submit");
+
+	lua_pushinteger(L, cc.stat.simple_submit);
+	lua_setfield(L, -2, "simple_submit");
+
+	lua_pushinteger(L, cc.stat.efk_hitch_submit);
+	lua_setfield(L, -2, "efk_hitch_submit");
+
+	lua_pushinteger(L, cc.stat.hitch_count);
+	lua_setfield(L, -2, "hitch_count");
+#endif //_DEBUG
+	return 1;
+}
+
+extern "C" int
+luaopen_render_stat(lua_State *L){
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "submit_stat",	lsubmit_stat},
+		{ nullptr, 			nullptr},
+	};
+	luaL_newlibtable(L,l);
+	luaL_setfuncs(L,l,0);
+	return 1;
 }
 
 extern "C" int

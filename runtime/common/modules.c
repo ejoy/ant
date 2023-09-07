@@ -47,6 +47,7 @@ int luaopen_material_arena(lua_State *L);
 int luaopen_material_core(lua_State *L);
 int luaopen_render_material(lua_State *L);
 int luaopen_system_render(lua_State *L);
+int luaopen_render_stat(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
 int luaopen_motion_tween(lua_State *L);
 int luaopen_image(lua_State* L);
@@ -112,6 +113,7 @@ void ant_loadmodules(lua_State* L) {
 	{ "render.material.core",   luaopen_material_core},
         { "render.render_material", luaopen_render_material},
         { "system.render",      luaopen_system_render},
+        { "render.stat",        luaopen_render_stat},
         { "motion.sampler",     luaopen_motion_sampler},
         { "motion.tween",       luaopen_motion_tween},
         { "image", luaopen_image },

@@ -92,6 +92,16 @@ local function profile_print()
                 break
             end
         end
+
+        n = n + 6
+
+        profile_printtext[n] = "--- submit"
+        local rs = require "render.stat"
+        local ss = rs.submit_stat()
+        for k, v in pairs(ss) do
+            n = n + 1
+            profile_printtext[n] = ("%s | %d"):format(k, v)
+        end
     end
     for i = 1, #profile_printtext do
         S.dbg_text_print(0, 2+MaxText+i, 0x02, profile_printtext[i])
