@@ -88,7 +88,7 @@ local function profile_print()
             profile[who] = 0
         end
 
-        local stats = bgfx.get_stats "v"
+        local stats = bgfx.get_stats "vc"
         table.sort(stats.view, function (a, b) return a.gpu > b.gpu end)
         add_text "--- view"
         for i = 1, 5 do
@@ -102,11 +102,11 @@ local function profile_print()
         end
 
         add_text "--- submit"
+        add_text(format_text("draw|blit|compute|gpuLatency", (" | %d %d %d %dms"):format(stats.numDraw, stats.numBlit, stats.numCompute, stats.maxGpuLatency)))
         local rs = require "render.stat"
         local ss = rs.submit_stat()
-        for k, v in pairs(ss) do
-            add_text(format_text(k, (" | %d"):format(v)))
-        end
+        add_text(format_text("simple|hitch|efk", (" | %d %d %d"):format(ss.simple_submit, ss.hitch_submit, ss.efk_hitch_submit)))
+        add_text(format_text("hitch_count", (" | %d"):format(ss.hitch_count)))
     end
     for i = 1, profile_printtext.n do
         S.dbg_text_print(0, 2+MaxText+i, 0x02, profile_printtext[i])
