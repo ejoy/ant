@@ -213,8 +213,8 @@ lefkctx_destroy(lua_State *L) {
     return 0;
 }
 
-static void ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst)
-{
+static inline void
+ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst) {
     for (int m = 0; m < 4; m++) {
         for (int n = 0; n < 3; n++) {
             dst.Value[m][n] = src.Values[m][n];
@@ -233,15 +233,11 @@ clone_effect(efk_ctx *ctx, struct efk_instance *slot, const Effekseer::Matrix43 
 	++slot->n;
 }
 
-static int
-lefkctx_update_transform(lua_State* L) {
-	auto ctx = EC(L);
-    auto slot = get_instance(L, ctx, 2);
-    if (ctx->manager->Exists(slot->inst)) {
+static inline void 
+update_transform(efk_ctx* ctx, struct efk_instance * slot, const Effekseer::Matrix44* effekMat44){
+	if (ctx->manager->Exists(slot->inst)) {
 		if (slot->shown) {
-			Effekseer::Matrix43 effekMat;
-			auto effekMat44 = TOM(L, 3);
-			ToMatrix43(*effekMat44, effekMat);
+			Effekseer::Matrix43 effekMat; ToMatrix43(*effekMat44, effekMat);
 			if (slot->n == 0) {
 				ctx->manager->SetMatrix(slot->inst, effekMat);
 				ctx->manager->SetShown(slot->inst, true);
@@ -256,10 +252,45 @@ lefkctx_update_transform(lua_State* L) {
 					clone_effect(ctx, slot, effekMat);
 				}
 			}
+		} else {
+			stop_all(ctx, slot, false);
 		}
-    } else {
-		stop_all(ctx, slot, false);
 	}
+}
+
+static int
+lefkctx_update_transform(lua_State* L) {
+	auto ctx = EC(L);
+    auto slot = get_instance(L, ctx, 2);
+    update_transform(ctx, slot, TOM(L, 3));
+	return 0;
+}
+
+static int
+lefkctx_update_transforms(lua_State *L){
+	auto ctx = EC(L);
+	const uint32_t num = (uint32_t)luaL_checkinteger(L, 2);
+	constexpr uint32_t MAX_EFK_HITCH = 256;
+	if (num == 0 || num >= MAX_EFK_HITCH){
+		return luaL_error(L, "Max hitch transform should lower than %d, %d provided", MAX_EFK_HITCH, num);
+	}
+	struct transform_data {
+		uint32_t handle;
+		float* data;
+	};
+
+	const transform_data* td = (const transform_data*)lua_touserdata(L, 3);
+	if (td == nullptr){
+		return luaL_error(L, "Invalid transform data");
+	}
+
+	for (uint32_t ii=0; ii<num; ++ii){
+		const auto& t = td[ii];
+		check_effect_valid(L, ctx, t.handle);
+		auto& slot = ctx->effects[t.handle];
+		update_transform(ctx, &slot, reinterpret_cast<const Effekseer::Matrix44*>(t.data));
+	}
+
 	return 0;
 }
 
@@ -422,6 +453,7 @@ lefk_startup(lua_State *L){
 		    {"set_time",        lefkctx_set_time},
 			{"set_speed",       lefkctx_set_speed},
 			{"update_transform", lefkctx_update_transform},
+			{"update_transforms",lefkctx_update_transforms},
             {"is_alive",        lefkctx_is_alive},
             {nullptr, nullptr},
         };

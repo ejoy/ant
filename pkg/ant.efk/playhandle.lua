@@ -38,13 +38,6 @@ local handle_mt = {
     update_transform = function(self, mat)
         ltask.send(EFK_SERVER, "update_transform", self.handle, math3d.serialize(mat))
     end,
-    update_hitch_transforms = function (self, hitchmats, localmat)
-        local mats = {}
-        for _, hm in ipairs(hitchmats) do
-            mats[#mats+1] = math3d.serialize(math3d.mul(hm, localmat))
-        end
-        ltask.send(EFK_SERVER, "update_hitch_transforms", self.handle, mats)
-    end
 }
 
 local function create(efk_handle, speed, worldmat)

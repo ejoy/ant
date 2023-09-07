@@ -33,6 +33,7 @@ function efk_sys:init()
 
     for _=1, MAX_EFK_HITCH do
         w:temporary("efk_hitch_tag", "efk_hitch")
+        w:temporary("efk_hitch_tag", "efk_hitch_backbuffer")
     end
 end
 
@@ -185,29 +186,6 @@ function efk_sys:scene_update()
     end
 end
 
-local function iter_group_hitch_DEBUG_ONLY()
-    local mq_mask = qm.queue_mask "main_queue"
-    local groups = setmetatable({}, {__index=function (tt, idx) local t = {}; tt[idx] = t;return t end})
-    for e in w:select "view_visible hitch:in scene:in" do
-        local h = e.hitch
-        if 0 == (h.cull_masks & mq_mask) then
-            local s = e.scene
-            if h.group ~= 0 then
-                local mats = groups[h.group]
-                mats[#mats+1] = s.worldmat
-            end
-        end
-	end
-
-    for gid, mats in pairs(groups) do
-        ig.enable(gid, "hitch_tag", true)
-
-        for e in w:select "hitch_tag efk:in scene:in" do
-            e.efk.play_handle:update_hitch_transforms(mats, e.scene.worldmat)
-        end
-    end
-end
-
 function efk_sys:render_submit()
     for e in w:select "efk_visible efk:in scene:in" do
         --update_transform will check efk is alive and visible or not
@@ -217,17 +195,9 @@ function efk_sys:render_submit()
 end
 
 function efk_sys:render_postprocess()
-    --iter_group_hitch_DEBUG_ONLY()
-    local handles, mats = {}, {}
-    for e in w:select "efk_hitch:in" do
-        local eh = e.efk_hitch
-        handles[#handles+1] = eh.handle
-        mats[#mats+1] = math3d.serialize(eh.hitchmat)
-    end
-
-    if #handles > 0 then
-        ltask.send(EFK_SERVER, "update_hitch_transforms", handles, table.concat(mats, ""))
-    end
+    local num = w:count "efk_hitch"
+    local data = w:swap("efk_hitch", "efk_hitch_backbuffer")
+    ltask.send(EFK_SERVER, "update_transforms", num, data)
 end
 
 function iefk.create(filename, config)

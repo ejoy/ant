@@ -15,10 +15,15 @@ function eo.init()
     }
 end
 
-local eh = ecs.component "efk_hitch"
-function eh.init()
-    return {
-        handle = 0,
-        hitchmat = mu.NULL,
-    }
+local function DEFINE_efk_hitch(name)
+    local eh = ecs.component(name)
+    function eh.init()
+        return {
+            handle = 0,
+            hitchmat = mu.NULL,
+        }
+    end
 end
+
+DEFINE_efk_hitch "efk_hitch"
+DEFINE_efk_hitch "efk_hitch_backbuffer"
