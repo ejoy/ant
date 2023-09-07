@@ -98,6 +98,7 @@ local function profile_print()
             end
         end
 
+        n = n + 1
         profile_printtext[n] = "--- submit"
         local rs = require "render.stat"
         local ss = rs.submit_stat()
