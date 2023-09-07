@@ -154,18 +154,12 @@ function m:show_ground(enable)
         self:create_ground()
     end
 end
-
+local iterrain  = ecs.require "ant.landform|terrain_system"
 function m:show_terrain(enable)
     if not enable then
-        -- w:remove(self.plane)
-        -- self.plane = nil
+        iterrain.clear_terrain_field()
     else
-        if not self.terrain then
-            local iterrain  = ecs.require "ant.landform|terrain_system"
-            iterrain.gen_terrain_field(128, 128, 64, 10)
-            self.terrain = true
-        end
-        -- self:create_ground()
+        iterrain.gen_terrain_field(128, 128, 64, 10)
     end
 end
 function m:clone(eid)
