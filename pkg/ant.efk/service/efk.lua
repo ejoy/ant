@@ -191,11 +191,13 @@ function S.update_transform(handle, mat)
     EFKCTX:update_transform(handle, mat)
 end
 
-function S.update_hitch_transforms(handles, mats)
-    for idx, handle in ipairs(handles) do
-        local offset = 1+(idx-1)*64
-        EFKCTX:update_transform(handle, mats:sub(offset, offset+64))
-    end
+function S.update_transforms(num, data)
+    -- for idx, handle in ipairs(handles) do
+    --     local offset = 1+(idx-1)*64
+    --     EFKCTX:update_transform(handle, mats:sub(offset, offset+64))
+    -- end
+
+    EFKCTX:update_transforms(num, data)
 end
 
 function S.set_speed(handle, speed)

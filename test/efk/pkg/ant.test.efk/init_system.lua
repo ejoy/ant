@@ -11,48 +11,48 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local is = ecs.system "init_system"
 local efkeid_group
 function is:init()
-    local test_gid<const> = nil --ig.register "group_test"
+    local test_gid<const> = ig.register "group_test"
     iefk.preload{
         "/pkg/ant.test.efk/assets/miner_efk/a1.texture",
         "/pkg/ant.test.efk/assets/miner_efk/a2.texture",
         "/pkg/ant.test.efk/assets/miner_efk/a3.texture",
     }
 
-    world:create_entity{
-        policy = {
-            "ant.general|name",
-            "ant.scene|scene_object",
-            "ant.efk|efk",
-        },
-        data = {
-            name = "root",
-            scene = {
-                t = {-2, 0, 0, 1}
-            },
-            efk = {
-                path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
-            },
-            visible_state = "main_queue",
-        }
-    }
+    -- world:create_entity{
+    --     policy = {
+    --         "ant.general|name",
+    --         "ant.scene|scene_object",
+    --         "ant.efk|efk",
+    --     },
+    --     data = {
+    --         name = "root",
+    --         scene = {
+    --             t = {-2, 0, 0, 1}
+    --         },
+    --         efk = {
+    --             path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
+    --         },
+    --         visible_state = "main_queue",
+    --     }
+    -- }
 
-    world:create_entity{
-        policy = {
-            "ant.general|name",
-            "ant.scene|scene_object",
-            "ant.efk|efk",
-        },
-        data = {
-            name = "root2",
-            scene = {
-                t = {3, 0, 0, 1}
-            },
-            efk = {
-                path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
-            },
-            visible_state = "main_queue",
-        }
-    }
+    -- world:create_entity{
+    --     policy = {
+    --         "ant.general|name",
+    --         "ant.scene|scene_object",
+    --         "ant.efk|efk",
+    --     },
+    --     data = {
+    --         name = "root2",
+    --         scene = {
+    --             t = {3, 0, 0, 1}
+    --         },
+    --         efk = {
+    --             path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
+    --         },
+    --         visible_state = "main_queue",
+    --     }
+    -- }
 
     if nil ~= test_gid then
         efkeid_group = world:create_entity{

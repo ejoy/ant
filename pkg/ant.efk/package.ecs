@@ -15,9 +15,15 @@ component "efk_visible" -- view_visible & efk
 component "efk_hitch"
     .type "c"
     .field "handle:int"
-    .field "hitchmat:userdata|math_t"
+    .field "hitchmat:userdata"
     .implement "efk_object.lua"
-    
+
+component "efk_hitch_backbuffer"
+    .type "c"
+    .field "handle:int"
+    .field "hitchmat:userdata"
+    .implement "efk_object.lua"
+
 component "efk_hitch_tag"
 
 policy "efk_queue"
@@ -25,7 +31,7 @@ policy "efk_queue"
     .component "queue_name"
 component "efk".type "lua"
 policy "efk"
-    .require_system     "ant.efk|efk_system"
+    .require_system "ant.efk|efk_system"
     .component "efk"
     .component_opt "efk_object"
     .component "visible_state"
