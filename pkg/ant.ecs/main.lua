@@ -162,7 +162,7 @@ end
 local function each_prefab(entities, template, f)
     for i, e in ipairs(template) do
         if e.prefab then
-            each_prefab(entities[i], e.prefab, f)
+            each_prefab(entities[i], e.template, f)
         else
             f(entities[i], e.tag)
         end
