@@ -91,13 +91,12 @@ local function profile_print()
             local view = stats.view[i]
             if view then
                 local name = view.name
-                profile_printtext[n+i] = append_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu))
+                n = n + 1
+                profile_printtext[n] = append_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu))
             else
                 break
             end
         end
-
-        n = n + 6
 
         profile_printtext[n] = "--- submit"
         local rs = require "render.stat"
