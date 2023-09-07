@@ -14,10 +14,7 @@ local layout                = layoutmgr.get(layout_name)
 local noise1 = {}
 local terrain_width, terrain_height, unit, origin_offset_width, origin_offset_height
 local iom = ecs.require "ant.objcontroller|obj_motion"
-local default_quad_ib<const> = {
-    0, 1, 2,
-    2, 3, 0,
-}
+
 local border_material = "/pkg/ant.landform/assets/materials/border.material"
 
 local function noise(x, y, freq, exp, lb ,ub)
@@ -45,8 +42,10 @@ local function build_ib(width, height)
     --local MAX_TERRAIN<const> = 256 * 256
     local MAX_TERRAIN<const> = width * height
     do
-        local terrainib = {}
-        terrainib = default_quad_ib
+        local terrainib = {
+            0, 1, 2,
+            2, 3, 0,
+        }
         local fmt<const> = ('I'):rep(#terrainib)
         local offset<const> = NUM_QUAD_VERTICES
         local s = #fmt * 4
@@ -139,7 +138,7 @@ function cterrain_fields:get_field(sidx, iw, ih)
                     isw * self.section_size + iw
     local y = isw * self.section_size + iw
     local x = (ish * self.section_size+ih)
-    return x, y, offset, self.prev_terrain_fields[offset]
+    return x, y, offset <= self.terrain_field_max
 end
 
 function cterrain_fields:get_offset(sidx)
@@ -152,8 +151,8 @@ local function build_mesh(sectionsize, sectionidx, cterrainfileds, width)
     local vb = {}
     for ih = 1, sectionsize do
         for iw = 1, sectionsize do
-            local xx, yy, offset, field = cterrainfileds:get_field(sectionidx, iw, ih)
-            if field ~= nil then
+            local xx, yy, valid_field = cterrainfileds:get_field(sectionidx, iw, ih)
+            if valid_field then
                 local x, z = cterrainfileds:get_offset(sectionidx)
                 local origin = {(iw - 1 + x) * unit, 0.0, (ih - 1 + z) * unit}
                 local extent = {unit, 0, unit}
@@ -177,7 +176,7 @@ local function build_mesh(sectionsize, sectionidx, cterrainfileds, width)
 end
 
 
-local function create_border(pid, bsize, render_layer)
+local function create_border(pid, bsize, render_layer, border_eids)
     local border_mesh = {}
     local border_num = terrain_width // bsize
     local function to_mesh_buffer(vb, ib_handle)
@@ -251,7 +250,7 @@ local function create_border(pid, bsize, render_layer)
     create_border_edge()
     create_border_corner()
     for idx, mesh in pairs(border_mesh) do
-        world:create_entity {
+        border_eids[#border_eids+1] = world:create_entity {
             policy = {
                 "ant.scene|scene_object",
                 "ant.render|simplerender",
@@ -287,7 +286,6 @@ function iplane_terrain.set_wh(w, h, offset_x, offset_z)
         origin_offset_height = offset_z
     end
 
-    build_ib(terrain_width, terrain_height)
     noise(terrain_width + 1, terrain_height + 1, 4, 2, 0.2, 1)
 end
 
@@ -295,12 +293,10 @@ function iplane_terrain.get_wh()
     return terrain_width, terrain_height, unit, origin_offset_width
 end
 
-function iplane_terrain.init_plane_terrain(st, render_layer)
+function iplane_terrain.init_plane_terrain(render_layer)
+    local plane_eids, border_eids = {}, {}
     for e in ww:select "shape_terrain st:update eid:in" do
-        e.st = st
-        if st.prev_terrain_fields == nil then
-            error "need define terrain_field, it should be file or table"
-        end
+        local st = e.st
 
         local width, height = st.width, st.height
 
@@ -313,7 +309,7 @@ function iplane_terrain.init_plane_terrain(st, render_layer)
         unit = st.unit
         local shapematerial = st.material
         
-        --build_ib(width,height)
+        build_ib(terrain_width, terrain_height)
         local ctf = cterrain_fields.new(st)
         
         for ih = 1, st.section_height do
@@ -322,7 +318,7 @@ function iplane_terrain.init_plane_terrain(st, render_layer)
                 
                 local terrain_mesh = build_mesh(ss, sectionidx, ctf, width)
                 if terrain_mesh then
-                    local eid; eid = world:create_entity {
+                    plane_eids[#plane_eids+1] = world:create_entity {
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -343,8 +339,9 @@ function iplane_terrain.init_plane_terrain(st, render_layer)
             end
         end
         local border_size = ss // 4
-        create_border(e.eid, border_size, render_layer)
+        create_border(e.eid, border_size, render_layer, border_eids)
         iom.set_position(e, math3d.vector(-origin_offset_width * unit, 0, -origin_offset_height * unit))
+        st.plane_eids, st.border_eids = plane_eids, border_eids
     end   
 end
 

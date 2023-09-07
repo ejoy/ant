@@ -94,7 +94,6 @@ function ism.create_sm_entity(group_table)
     for iz = 0, height - 1 do
         for ix = 0, width - 1 do
             local idx = iz * width + ix + 1
-            --local is_sm = string.unpack(("B"), idx_string, idx)
             local sm_group = group_table[idx]
             if sm_group then
                 local sm_idx = (iz << 16) + ix

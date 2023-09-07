@@ -4,36 +4,38 @@ local w		= world.w
 local iterrain = {}
 local terrain_sys = ecs.system "terrain_system"
 local iplane_terrain  = ecs.require "ant.landform|plane_terrain"
-local terrain_width, terrain_height
-local shape_terrain = {}
 
-local function calc_shape_terrain(unit, terrain_field)
-    shape_terrain.width = terrain_width
-    shape_terrain.height = terrain_height
+local function calc_shape_terrain(unit, width, height, shape_terrain)
+    shape_terrain.width = width
+    shape_terrain.height = height
     shape_terrain.unit = unit
-    shape_terrain.prev_terrain_fields = terrain_field
-    shape_terrain.section_size = math.min(math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2), 32)
+    shape_terrain.terrain_field_max = width * height
+    shape_terrain.section_size = math.min(math.max(1, width > 4 and width//4 or width//2), 32)
     shape_terrain.material = "/pkg/ant.landform/assets/materials/plane_terrain.material"
+end
+
+
+function iterrain.clear_terrain_field()
+    local current_shape_terrain = w:first "shape_terrain st:update"
+    local st = current_shape_terrain.st
+    local planes, borders = st.plane_eids, st.border_eids
+    for _, pid in ipairs(planes) do
+        w:remove(pid)
+    end
+    for _, bid in ipairs(borders) do
+        w:remove(bid)
+    end
+    st = {}
 end
 
 function iterrain.gen_terrain_field(width, height, offset, unit, render_layer)
     if not render_layer then render_layer = "opacity" end
-    local terrain_field = {}
-    terrain_width  = width
-    terrain_height = height
-    for ih=1, terrain_height do
-        for iw=1, terrain_width do
-            local idx = (ih - 1) * terrain_width + iw
-            terrain_field[idx] = {}
-        end
-    end
-    if not unit then
-        unit = 10.0
-    end
-    calc_shape_terrain(unit, terrain_field)
+    if not unit then unit = 10.0 end
     iplane_terrain.set_wh(width, height, offset, offset)
-    iplane_terrain.init_plane_terrain(shape_terrain, render_layer)
-    --iroad.set_args(width, height, offset, unit)
+    local current_shape_terrain = w:first "shape_terrain st:update"
+    local st = current_shape_terrain.st
+    calc_shape_terrain(unit, width, height, st)
+    iplane_terrain.init_plane_terrain(render_layer)
 end
 
 function terrain_sys:init()
