@@ -121,13 +121,9 @@ function velocity_system:init_world()
 end
 
 function velocity_system:update_filter()
-     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in name?in" do
+     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in polyline?in" do
         if e.visible_state["velocity_queue"] then
-            local polylinelist
-            if e.name and e.name == "polyline" then
-                polylinelist = true
-            end
-            local mo = assert(which_material(polylinelist, e.skinning))
+            local mo = assert(which_material(e.polyline, e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
             local mi = RM.create_instance(mo)

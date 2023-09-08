@@ -43,13 +43,7 @@ local INV_Z<const> = true
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
---[[ local scene_aabb = math3d.ref(math3d.aabb())
-local aabb_tick = 0 ]]
-local function update_camera_matrices(camera, light_view)
-	camera.viewmat.m = light_view
-	camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
-	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
-end
+local infinite_aabb         = math3d.ref(math3d.aabb(math3d.vector(-10000, -10000, -10000), math3d.vector(10000, 10000, 10000)))
 
 local function set_worldmat(srt, mat)
 	math3d.unmark(srt.worldmat)
@@ -61,18 +55,17 @@ local function calc_csm_matrix_attrib(csmidx, vp)
 end
 
 -- bgfx method
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
+local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera, intersected_aabb)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 	local light_world = shadow_ce.scene.worldmat
 	local light_view = math3d.inverse(light_world)
-	local intersected_aabb = scene_aabb
 	local aabb_points = math3d.aabb_points(intersected_aabb)
 	local light_frustum_min, light_frustum_max = math3d.minmax(aabb_points, light_view)
 	local frustum_ortho = {
 		l = 1, r = -1,
 		t = 1, b = -1,
-		n = -main_camera.camera.frustum.f, f = main_camera.camera.frustum.f,
+		n = -csm_frustum.f, f = csm_frustum.f,
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
@@ -82,14 +75,14 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 
 	local scalex, scaley = 2 / (maxp[1] - minp[1]), 2 / (maxp[2] - minp[2])
 
---[[ 	local quantizer = 64
-	scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley) ]]
+ 	local quantizer = 64
+	scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley) 
 
 	local offsetx, offsety = 0.5 * (maxp[1] + minp[1]) * scalex, 0.5 * (maxp[2] + minp[2]) * scaley
 
---[[ 	local half_size = shadowmap_size * 0.5
+ 	local half_size = shadowmap_size * 0.5
 	offsetx, offsety = math.ceil(offsetx * half_size) / half_size, math.ceil(offsety * half_size) / half_size
- ]]
+ 
 
 	local crop = math3d.matrix{
 	 	scalex, 0, 0, 0,
@@ -103,41 +96,34 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-
-local function cacl_intersected_aabb(main_camera, height)
-  	local world_frustum_points = math3d.frustum_points(main_camera.viewprojmat)
-	local lbf, ltf, rbf, rtf = math3d.array_index(world_frustum_points, 1), math3d.array_index(world_frustum_points, 2), math3d.array_index(world_frustum_points, 3), math3d.array_index(world_frustum_points, 4)
-	local lbn, ltn, rbn, rtn = math3d.array_index(world_frustum_points, 5), math3d.array_index(world_frustum_points, 6), math3d.array_index(world_frustum_points, 7), math3d.array_index(world_frustum_points, 8)
- 	local ratio_lbn = (math3d.index(lbn, 2) - height)	/ (math3d.index(lbn, 2) - math3d.index(lbf, 2))
-	local ratio_lbf = (math3d.index(lbn, 2) - 0) 		/ (math3d.index(lbn, 2) - math3d.index(lbf, 2))
-	local ratio_ltn = (math3d.index(ltn, 2) - height)	/ (math3d.index(ltn, 2) - math3d.index(ltf, 2))
-	local ratio_ltf = (math3d.index(ltn, 2) - 0)		/ (math3d.index(ltn, 2) - math3d.index(ltf, 2))
-	local ratio_rbn = (math3d.index(rbn, 2) - height)	/ (math3d.index(rbn, 2) - math3d.index(rbf, 2))
-	local ratio_rbf = (math3d.index(rbn, 2) - 0)		/ (math3d.index(rbn, 2) - math3d.index(rbf, 2))
-	local ratio_rtn = (math3d.index(rtn, 2) - height)	/ (math3d.index(rtn, 2) - math3d.index(rtf, 2))
-	local ratio_rtf = (math3d.index(rtn, 2) - 0)		/ (math3d.index(rtn, 2) - math3d.index(rtf, 2))
-
-
- 	local lbnn, lbff = math3d.muladd(math3d.sub(lbf, lbn), ratio_lbn, lbn), math3d.muladd(math3d.sub(lbf, lbn), ratio_lbf, lbn)
-	local ltnn, ltff = math3d.muladd(math3d.sub(ltf, ltn), ratio_ltn, ltn), math3d.muladd(math3d.sub(ltf, ltn), ratio_ltf, ltn)
-	local rbnn, rbff = math3d.muladd(math3d.sub(rbf, rbn), ratio_rbn, rbn), math3d.muladd(math3d.sub(rbf, rbn), ratio_rbf, rbn)
-	local rtnn, rtff = math3d.muladd(math3d.sub(rtf, rtn), ratio_rtn, rtn), math3d.muladd(math3d.sub(rtf, rtn), ratio_rtf, rtn)
-
-	local aabb_min, aabb_max = math3d.minmax(math3d.array_vector({lbnn, lbff, ltnn, ltff, rbnn, rbff, rtnn, rtff})) 
-	return math3d.aabb(aabb_min, aabb_max) 
+local function get_intersected_aabb(main_camera)
+	local pack_scene_aabb, pack_camera_aabb = math3d.aabb(), math3d.aabb()
+	local psae, pcae = w:first "pack_scene_aabb:in", w:first "pack_camera_aabb:in"
+	if psae then
+		pack_scene_aabb = psae.pack_scene_aabb
+	else
+		pack_scene_aabb = infinite_aabb
+	end
+	if pcae then
+		pack_camera_aabb = pcae.pack_camera_aabb
+	else
+		local world_frustum_points = math3d.frustum_points(main_camera.camera.viewprojmat)
+		local camera_min, camera_max = math3d.minmax(world_frustum_points)
+		pack_camera_aabb = math3d.aabb(camera_min, camera_max)
+	end
+	return math3d.aabb_intersection(pack_camera_aabb, pack_scene_aabb)
 end
 
 local function update_shadow_frustum(dl, main_camera)
 	local lightdir = iom.get_direction(dl)
 	local shadow_setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(main_camera.camera.frustum)
-	local scene_aabb = cacl_intersected_aabb(main_camera.camera, shadow_setting.height)
-
+	local intersected_aabb = get_intersected_aabb(main_camera)
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
 		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
+		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, intersected_aabb)
 		csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
