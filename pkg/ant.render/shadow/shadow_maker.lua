@@ -276,7 +276,6 @@ local function create_clear_shadowmap_queue(fbidx)
 	world:create_entity{
 		policy = {
 			"ant.render|postprocess_queue",
-			"ant.general|name",
 		},
 		data = {
 			render_target = {
@@ -290,7 +289,6 @@ local function create_clear_shadowmap_queue(fbidx)
 			},
 			clear_sm = true,
 			queue_name = "clear_sm",
-			name = "clear_sm",
 		}
 	}
 end
@@ -313,7 +311,6 @@ local function create_csm_entity(index, vr, fbidx)
 			"ant.render|render_queue",
 			"ant.render|cull",
 			"ant.render|csm_queue",
-			"ant.general|name",
 		},
 		data = {
 			csm = {
@@ -331,7 +328,6 @@ local function create_csm_entity(index, vr, fbidx)
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
-			name = "csm" .. index,
 			camera_depend = true
 		},
 	}

@@ -53,7 +53,6 @@ local function create_outline_queue()
     local vp = world.args.viewport
     world:create_entity{
         policy = {
-            "ant.general|name",
             "ant.render|outline_queue",
             "ant.render|watch_screen_buffer",
         },
@@ -71,7 +70,6 @@ local function create_outline_queue()
             },
             queue_name = "outline_queue",
             watch_screen_buffer = true,
-            name = "outline_queue",
             visible = true
         }
     } 

@@ -59,14 +59,10 @@ local ientity 	= {}
 
 ientity.create_mesh = create_mesh
 
-local nameidx = 0
-local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
-
-local function simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer, queue)
+local function simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer, queue)
 	return {
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
 			scene 		= scene or {},
@@ -74,7 +70,6 @@ local function simple_render_entity_data(name, material, mesh, scene, uniforms, 
 			simplemesh	= imesh.init_mesh(mesh, true),
 			render_layer= render_layer,
 			visible_state= "main_view",
-			name		= name or gen_test_name(),
 			on_ready 	= function(e)
 				if hide or queue then
 					ivs.set_state(e, "main_view", false)
@@ -91,24 +86,22 @@ local function simple_render_entity_data(name, material, mesh, scene, uniforms, 
 	}
 end
 
-local function create_simple_render_entity(name, material, mesh, scene, uniforms, hide, render_layer, queue)
-	return world:create_entity(simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer, queue))
+local function create_simple_render_entity(material, mesh, scene, uniforms, hide, render_layer, queue)
+	return world:create_entity(simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer, queue))
 end
 
 ientity.create_simple_render_entity = create_simple_render_entity
 ientity.simple_render_entity_data = simple_render_entity_data
 
-local function grid_mesh_entity_data(name, materialpath, vb, ib, render_layer)
+local function grid_mesh_entity_data(materialpath, vb, ib, render_layer)
 	return {
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name"
 		},
 		data = {
 			scene 		= {},
 			material 	= materialpath,
 			visible_state= "main_view",
-			name 		= name or "GridMesh",
 			render_layer= render_layer,
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
@@ -118,7 +111,7 @@ local function grid_mesh_entity_data(name, materialpath, vb, ib, render_layer)
 	}
 end
 
-function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath, render_layer)
+function ientity.create_grid_mesh_entity(w, h, size, color, materialpath, render_layer)
 	local vb, ib = {}, {}
 	local gap = size / 20.0
 	local total_width = w * size
@@ -165,19 +158,19 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath, 
 		end
 	end
 
-	return vb, world:create_entity(grid_mesh_entity_data(name, materialpath, vb, ib, render_layer))
+	return vb, world:create_entity(grid_mesh_entity_data(materialpath, vb, ib, render_layer))
 end
 
-function ientity.create_grid_entity_simple(name, w, h, unit, scene)
+function ientity.create_grid_entity_simple(w, h, unit, scene)
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
 	local vb, ib = geolib.grid(w, h, nil, unit)
 	local mesh = create_mesh({"p3|c40niu", vb}, ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, scene, {}, nil, "translucent")
+	return create_simple_render_entity("/pkg/ant.resources/materials/line.material", mesh, scene, {}, nil, "translucent")
 end
 
-function ientity.create_grid_entity(name, width, height, unit, linewidth, srt, material, render_layer)
+function ientity.create_grid_entity(width, height, unit, linewidth, srt, material, render_layer)
 	local ipl = ecs.require "ant.render|polyline.polyline"
 	
 	local hw = width * 0.5
@@ -248,13 +241,11 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
 			scene 		= scene or {},
 			material 	= materialpath,
 			visible_state= "main_view",
-			name 		= "",
 			render_layer= render_layer,
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}), true),
 			on_ready = function (e)
@@ -307,8 +298,8 @@ function ientity.quad_mesh(rect)
 	return quad_mesh(rect)
 end
 
-function ientity.create_quad_entity(rect, material, name, render_layer)
-	return create_simple_render_entity(name, material, quad_mesh(rect), nil, {}, nil, render_layer)
+function ientity.create_quad_entity(rect, material, render_layer)
+	return create_simple_render_entity(material, quad_mesh(rect), {}, nil, render_layer)
 end
 
 local frustum_ib = {
@@ -326,7 +317,7 @@ local frustum_ib = {
 	2, 6, 3, 7,
 }
 
-function ientity.frustum_entity_data(frustum_points, name, color)
+function ientity.frustum_entity_data(frustum_points, color)
 	local vb = {}
 	color = color or {1.0, 1.0, 1.0, 1.0}
 	for i=1, 8 do
@@ -335,11 +326,11 @@ function ientity.frustum_entity_data(frustum_points, name, color)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)
 
-	return simple_render_entity_data(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, {u_color = color}, nil, "translucent")
+	return simple_render_entity_data("/pkg/ant.resources/materials/line_color.material", mesh, {}, {u_color = color}, nil, "translucent")
 end
 
-function ientity.create_frustum_entity(frustum_points, name, color)
-	return world:create_entity(ientity.frustum_entity_data(frustum_points, name, color))
+function ientity.create_frustum_entity(frustum_points, color)
+	return world:create_entity(ientity.frustum_entity_data(frustum_points, color))
 end
 
 local function axis_mesh(color)
@@ -357,22 +348,21 @@ local function axis_mesh(color)
 	return create_mesh{"p3|c4", axis_vb}
 end
 
-function ientity.axis_entity_data(name, scene, color, material)
+function ientity.axis_entity_data(scene, color, material)
 	local mesh = axis_mesh(color)
-	return simple_render_entity_data(name, material or "/pkg/ant.resources/materials/line.material", mesh, scene, {u_color = color}, "translucent")
+	return simple_render_entity_data(material or "/pkg/ant.resources/materials/line.material", mesh, scene, {u_color = color}, "translucent")
 end
 
-function ientity.create_axis_entity(name, scene, color, material)
-	return world:create_entity(ientity.axis_entity_data(name, scene, color, material))
+function ientity.create_axis_entity(scene, color, material)
+	return world:create_entity(ientity.axis_entity_data(scene, color, material))
 end
 
-function ientity.create_screen_axis_entity(name, screen_3dobj, scene, color, material)
+function ientity.create_screen_axis_entity(screen_3dobj, scene, color)
 	local mesh = axis_mesh(color)
 	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 			"ant.objcontroller|screen_3dobj",
-			"ant.general|name",
 		},
 		data = {
 			screen_3dobj = screen_3dobj,
@@ -381,7 +371,6 @@ function ientity.create_screen_axis_entity(name, screen_3dobj, scene, color, mat
 			render_layer= "translucent",
 			simplemesh	= imesh.init_mesh(mesh, true),
 			visible_state= "main_view",
-			name		= name,
 		}
 	}
 end
@@ -393,7 +382,7 @@ function ientity.create_line_entity(p0, p1, scene, color, hide)
 		p1[1], p1[2], p1[3], ic,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity("", "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
+	return create_simple_render_entity("/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 	
 end
 
@@ -420,7 +409,7 @@ function ientity.create_screen_line_list(points, scene, uniforms, dynamic, layer
 		mesh = create_mesh({layout_desc, vb})
 	end
 	
-	return create_simple_render_entity("", "/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, false, layer, queue)
+	return create_simple_render_entity("/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, false, layer, queue)
 end
 
 function ientity.create_circle_entity(radius, slices, scene, color, hide, arc)
@@ -434,7 +423,7 @@ function ientity.create_circle_entity(radius, slices, scene, color, hide, arc)
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity("", "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
+	return create_simple_render_entity("/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 end
 
 function ientity.create_circle_mesh_entity(radius, slices, mtl, scene, color, hide, render_layer)
@@ -460,7 +449,7 @@ function ientity.create_circle_mesh_entity(radius, slices, mtl, scene, color, hi
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity("", mtl, mesh, scene, {u_color = color}, hide, render_layer)
+	return create_simple_render_entity(mtl, mesh, scene, {u_color = color}, hide, render_layer)
 end
 
 local skybox_mesh
@@ -480,7 +469,6 @@ function ientity.create_skybox(material)
 		policy = {
 			"ant.sky|skybox",
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
             scene = {},
@@ -492,7 +480,6 @@ function ientity.create_skybox(material)
 				prefilter = {size=256},
 				LUT = {size=256},
 			},
-			name = "sky_box",
 			skybox = {},
 			owned_mesh_buffer = true,
 			simplemesh = get_skybox_mesh(),
@@ -537,7 +524,6 @@ function ientity.create_procedural_sky(settings)
 		policy = {
 			"ant.render|simplerender",
 			"ant.sky|procedural_sky",
-			"ant.general|name",
 		},
 		data = {
             scene = {},
@@ -564,7 +550,6 @@ function ientity.create_procedural_sky(settings)
 			owned_mesh_buffer = true,
 			render_layer = "background",
 			simplemesh = create_sky_mesh(32, 32),
-			name = "procedural sky",
 		}
 	}
 end
@@ -573,7 +558,6 @@ function ientity.create_gamma_test_entity()
 	world:create_entity {
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             material = "/pkg/ant.resources/materials/gamma_test.material",
@@ -708,14 +692,12 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
 			simplemesh = arrow_mesh(headratio),
 			material = material,
 			visible_state = "main_view",
 			scene = scene or {},
-			name = "arrow",
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -723,7 +705,7 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 	}
 end
 
-function ientity.create_quad_lines_entity(name, scene, material, quadnum, width, hide, render_layer)
+function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide, render_layer)
     assert(quadnum > 0)
     local hw = width * 0.5
     local function create_vertex_buffer()
@@ -763,7 +745,6 @@ function ientity.create_quad_lines_entity(name, scene, material, quadnum, width,
     return world:create_entity {
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
 			scene = scene or {},
@@ -782,7 +763,6 @@ function ientity.create_quad_lines_entity(name, scene, material, quadnum, width,
             },
 			material = material,
 			render_layer = render_layer,
-			name = name,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", not hide)
 			end

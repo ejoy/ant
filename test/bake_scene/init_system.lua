@@ -9,7 +9,7 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local is = ecs.system "init_system"
 
 function is:init()
-    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    ientity.create_grid_entity(64, 64, 1, 5)
     world:create_instance {
         prefab = "/pkg/ant.test.bake_scene/assets/scene/scene.prefab",
     }

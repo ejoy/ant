@@ -139,12 +139,10 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
 
     local template = {
 		policy = {
-            "ant.general|name",
             "ant.scene|scene_object",
             "ant.modifier|modifier",
 		},
 		data = {
-            name = "",
             scene = {
                 parent = target
             },
@@ -203,12 +201,10 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
 	local template = {
         group = group_id,
 		policy = {
-            "ant.general|name",
             "ant.scene|scene_object",
             "ant.modifier|modifier",
 		},
 		data = {
-            name = "",
             scene = {
                 parent = target,
             },

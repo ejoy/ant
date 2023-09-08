@@ -67,7 +67,6 @@ local function create_velocity_queue()
     local vp = world.args.viewport
     world:create_entity{
         policy = {
-            "ant.general|name",
             "ant.render|velocity_queue",
             "ant.render|watch_screen_buffer",
         },
@@ -102,7 +101,6 @@ local function create_velocity_queue()
             },
             queue_name = "velocity_queue",
             watch_screen_buffer = true,
-            name = "velocity_queue",
             visible = true,
         }
     } 

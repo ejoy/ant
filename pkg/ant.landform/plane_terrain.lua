@@ -254,7 +254,6 @@ local function create_border(pid, bsize, render_layer, border_eids)
             policy = {
                 "ant.scene|scene_object",
                 "ant.render|simplerender",
-                "ant.general|name",
             },
             data = {
                 scene = {
@@ -263,7 +262,6 @@ local function create_border(pid, bsize, render_layer, border_eids)
                 simplemesh  = mesh,
                 material    = border_material,
                 visible_state= "main_view|selectable",
-                name        = "border" .. idx,
                 render_layer = render_layer,
 
             }
@@ -322,7 +320,6 @@ function iplane_terrain.init_plane_terrain(render_layer)
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
-                            "ant.general|name",
                         },
                         data = {
                             scene = {
@@ -331,7 +328,6 @@ function iplane_terrain.init_plane_terrain(render_layer)
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
                             visible_state= "main_view|selectable",
-                            name        = "section" .. sectionidx,
                             render_layer = render_layer,
                         },
                     }

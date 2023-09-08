@@ -44,7 +44,6 @@ function widget_drawer_sys:init()
 		policy = {
 			"ant.render|simplerender",
 			"ant.render|bounding_draw",
-			"ant.general|name",
 		},
 		data = {
 			scene = {},
@@ -53,7 +52,6 @@ function widget_drawer_sys:init()
 			render_layer = "translucent",
 			visible_state = "main_view",
 			widget_drawer = wd,
-			name = "bounding_draw"
 		}
 	}
 end

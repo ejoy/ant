@@ -37,10 +37,8 @@ function bloom_sys:init()
         world:create_entity{
             policy = {
                 "ant.render|simplerender",
-                "ant.general|name",
             },
             data = {
-                name              = ds_drawer,
                 simplemesh        = irender.full_quad(),
                 material          = "/pkg/ant.resources/materials/postprocess/downsample.material",
                 visible_state     = ds_queue,
@@ -52,10 +50,8 @@ function bloom_sys:init()
         world:create_entity{
             policy = {
                 "ant.render|simplerender",
-                "ant.general|name",
             },
             data = {
-                name              = us_drawer,
                 simplemesh        = irender.full_quad(),
                 material          = "/pkg/ant.resources/materials/postprocess/upsample.material",
                 visible_state     = us_queue,

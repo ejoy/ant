@@ -154,7 +154,6 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
         policy = {
             "ant.render|simplerender",
             "ant.render|polyline",
-            "ant.general|name",
         },
         data = {
             polyline = {
@@ -165,7 +164,6 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
             simplemesh  = polymesh,
             material    = material,
             visible_state= "main_view|velocity_queue",
-            name        = "polyline",
             render_layer= render_layer or "background",
             on_ready = function (e)
                 w:extend(e, "polyline:in")

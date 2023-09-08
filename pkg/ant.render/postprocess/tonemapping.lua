@@ -49,10 +49,8 @@ function tm_sys:init()
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name            = "tonemapping_drawer",
             simplemesh      = irender.full_quad(),
             material        = drawer_material,
             visible_state   = "tonemapping_queue",

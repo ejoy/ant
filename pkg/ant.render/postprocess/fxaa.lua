@@ -28,10 +28,8 @@ function fxaasys:init()
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name            = "fxaa_drawer",
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/fxaa.material",
             visible_state   = "fxaa_queue",

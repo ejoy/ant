@@ -212,13 +212,10 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
             mesh        = meshfile,
 ---@diagnostic disable-next-line: need-check-nil
             material    = materialfile,
-            name        = node.name or "",
             visible_state= DEFAULT_STATE,
         }
 
-        local policy = {
-            "ant.general|name",
-        }
+        local policy = {}
 
         if hasskin then
             policy[#policy+1] = "ant.render|skinrender"
@@ -241,13 +238,10 @@ end
 local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
-    local nname = node.name and fix_invalid_name(node.name) or ("node" .. nodeidx)
     local policy = {
-        "ant.general|name",
         "ant.scene|scene_object"
     }
     local data = {
-        name = nname,
         scene = {s=srt.s,r=srt.r,t=srt.t}
     }
     --add_animation(gltfscene, status, nodeidx, policy, data)
@@ -267,12 +261,8 @@ local function create_skin_entity(status, parent)
     if not has_animation and not has_meshskin then
         return
     end
-    local policy = {
-        "ant.general|name",
-    }
-    local data = {
-        name = "animation",
-    }
+    local policy = {}
+    local data = {}
     if has_meshskin then
         policy[#policy+1] = "ant.scene|scene_object"
         policy[#policy+1] = "ant.animation|meshskin"
@@ -360,11 +350,9 @@ return function (status)
     status.material_names = {}
     local rootid = create_entity(status, {
         policy = {
-            "ant.general|name",
             "ant.scene|scene_object",
         },
         data = {
-            name = scene.name or "Rootscene",
             scene = {},
         },
     })

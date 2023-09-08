@@ -170,7 +170,6 @@ local function create_pick_entity()
 	local camera_ref = world:create_entity{
 		policy = {
 			"ant.camera|camera",
-			"ant.general|name"
 		},
 		data = {
 			scene = {},
@@ -179,7 +178,6 @@ local function create_pick_entity()
 					type="mat", n=1, f=1000, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 				},
 			},
-			name = "camera.pickup",
 		}
 	}
 
@@ -201,7 +199,6 @@ local function create_pick_entity()
 
 	world:create_entity {
 		policy = {
-			"ant.general|name",
 			"ant.render|render_queue",
 			"ant.render|cull",
 			"ant.objcontroller|pickup",
@@ -227,7 +224,6 @@ local function create_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
 			visible		= false,
@@ -296,16 +292,7 @@ local function select_obj(pc, render_target)
 	local viewrect = render_target.view_rect
 	local eid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if eid then
-		local e <close> = world:entity(eid, "name?in")
-		local n = ""
-		if e then
-			local cb = pc.picked_callback
-			if cb then
-				cb(eid, pc)
-			end
-			n = e.name
-		end
-		log.info("pick entity id: ", eid, n)
+		log.info("pick entity id: ", eid)
 	else
 		log.info("not found any eid")
 	end

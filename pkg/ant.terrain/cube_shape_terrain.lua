@@ -451,7 +451,6 @@ function shape_ts:entity_init()
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
-                            "ant.general|name",
                         },
                         data = {
                             scene = {
@@ -460,7 +459,6 @@ function shape_ts:entity_init()
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
                             visible_state= "main_view|selectable",
-                            name        = "section" .. sectionidx,
                             shape_terrain_drawer = true,
                             on_ready = function()
                                 world:pub {"shape_terrain", "on_ready", eid, e.eid}
@@ -476,7 +474,6 @@ function shape_ts:entity_init()
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
-                            "ant.general|name",
                         },
                         data = {
                             scene = {
@@ -485,7 +482,6 @@ function shape_ts:entity_init()
                             material    = edgematerial,
                             simplemesh  = edge_meshes,
                             visible_state= "main_view|selectable",
-                            name        = "section_edge" .. sectionidx,
                             shape_terrain_edge_drawer = true,
                             on_ready = function()
                                 world:pub {"shape_terrain", "on_ready", eid, e.eid}

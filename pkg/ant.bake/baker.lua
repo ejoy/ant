@@ -125,10 +125,8 @@ local function create_downsample()
         world:create_entity {
             policy = {
                 "ant.render|render",
-                "ant.general|name",
             },
             data = {
-                name = "tag",
                 mesh = ientity.create_mesh{"p1", {0, 0, 0, 0}},
                 material = material,
                 scene = {},
@@ -292,7 +290,6 @@ local function create_lightmap_queue()
         policy = {
             "ant.render|render_queue",
             "ant.render|cull",
-            "ant.general|name",
         },
         data = {
             camera_ref = camera_ref_WONT_USED,
@@ -307,7 +304,6 @@ local function create_lightmap_queue()
                 },
                 fb_idx = fbidx,
             },
-            name = "bake_lightmap_queue",
             bake_lightmap_queue = true,
             visible = true,
             INIT = true,

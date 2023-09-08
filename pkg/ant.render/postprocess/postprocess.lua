@@ -14,12 +14,10 @@ function pp_sys:init()
     world:create_entity {
         policy = {
             "ant.render|postprocess_object",
-            "ant.general|name",
         },
         data = {
             postprocess = true,
             postprocess_input = {},
-            name = "postprocess_obj",
         }
     }
 end

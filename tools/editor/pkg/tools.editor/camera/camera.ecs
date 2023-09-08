@@ -1,0 +1,18 @@
+system "camera_system"
+    .implement "camera/camera_system.lua"
+
+system "second_view_camera_system"
+    .implement "camera/second_view.lua"
+
+system "second_view_frustum_system"
+    .implement "camera/second_view.lua"
+
+component "second_view"
+component "second_view_visible"
+component "second_view_cull"
+component "second_view_renderable"
+component "second_view_frustum"
+
+policy "second_view"
+    .require_system "tools.editor|second_view_camera_system"
+    .require_system "tools.editor|second_view_frustum_system"

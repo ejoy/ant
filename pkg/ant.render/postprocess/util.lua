@@ -10,7 +10,6 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
     local template = {
         policy = {
             "ant.render|postprocess_queue",
-            "ant.general|name",
         },
         data = {
             render_target = {
@@ -22,8 +21,6 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
             },
             [queuename] = true,
             queue_name = queuename,
-            
-            name = queuename,
             visible = true,
         }
     }

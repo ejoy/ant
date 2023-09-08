@@ -52,10 +52,8 @@ local function create_cubemap_entities()
         world:create_entity {
             policy = {
                 "ant.render|compute_policy",
-                "ant.general|name",
             },
             data = {
-                name        = "cubemap_mipmap_builder",
                 material    = "/pkg/ant.resources/materials/postprocess/gen_cubemap_mipmap.material",
                 dispatch    ={
                     size    = dispatchsize,

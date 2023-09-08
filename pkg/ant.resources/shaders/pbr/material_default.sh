@@ -103,7 +103,7 @@ void fetch_normal(in FSInput fsinput, inout material_info mi)
 #endif //HAS_NORMAL_TEXTURE
 
 #ifdef WITH_DOUBLE_SIDE
-    if (fsinput.is_frontfacing){
+    if (!fsinput.is_frontfacing){
 #ifdef HAS_NORMAL_TEXTURE
         mi.T = -mi.T;
         mi.B = -mi.B;

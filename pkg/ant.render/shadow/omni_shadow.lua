@@ -184,13 +184,11 @@ local function add_stencil_entity()
     return world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.general|name",
 		},
 		data = {
 			material	= "/pkg/ant.resources/materials/omni_stencil.material",
 			mesh		= stencil_mesh,
 			visible_state= "main_view|cast_shadow",
-			name		= "stencil_mesh",
 			scene_entity= true,
 		}
 	}
@@ -225,7 +223,6 @@ function ios.create(point_eid)
                 "ant.render|omni_shadow",
                 "ant.render|render_queue",
                 "ant.render|cull",
-                "ant.general|name",
             },
             data = {
                 camera_ref = camera_ref,
@@ -246,7 +243,6 @@ function ios.create(point_eid)
                     stencil_ref = t.stencil_ref,
                 },
                 queue_name = queuename,
-                name = queuename,
                 visible = false,
                 omni_queue = true,
             },

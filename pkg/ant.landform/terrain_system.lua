@@ -42,12 +42,10 @@ function terrain_sys:init()
     world:create_entity {
         policy = {
             "ant.scene|scene_object",
-            "ant.general|name",
         },
         data = {
             scene = {
             },
-            name          = "shape_terrain",
             shape_terrain = true,
             st = {},
             on_ready = function()

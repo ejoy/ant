@@ -10,14 +10,12 @@ function ika.create(frames)
     return world:create_entity{
         policy = {
             "ant.animation|keyframe",
-            "ant.general|name",
         },
         data = {
             keyframe = {
 				frames = frames or {},
 				play_state = {}
             },
-            name = "keyframe"
         }
     }
 end

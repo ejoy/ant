@@ -31,7 +31,6 @@ function sd_sys:post_init()
     world:create_entity {
         policy = {
             "ant.render|scene_depth_queue",
-            "ant.general|name",
         },
         data = {
             camera_ref = 0,
@@ -57,7 +56,6 @@ function sd_sys:post_init()
                 },
             },
             queue_name = "scene_depth_queue",
-            name = "scene_depth_queue",
             visible = false,
             scene_depth_queue = true,
             on_ready = function (e)

@@ -15,13 +15,11 @@ function cr.start(name)
     return world:create_entity{
         policy = {
             "ant.camera|camera_recorder",
-            "ant.general|name",
         },
         data = {
             camera_recorder = {
                 frames = {},
             },
-            name = name or "camera_queue"
         }
     }
 end

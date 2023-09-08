@@ -32,10 +32,8 @@ function hvflip_sys:init()
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name = "hv_flip_drawer",
             hv_flip_drawer = true,
             simplemesh = {
                 vb = {

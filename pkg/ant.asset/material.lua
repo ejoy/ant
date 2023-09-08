@@ -89,16 +89,16 @@ function ms:component_init()
 	for e in w:select "INIT material:in material_result:new" do
 		e.material_result = assetmgr.resource(e.material)
 		if DEBUG_MATERIAL_ATTRIBUTES then
-			w:extend(e, "name?in eid:in")
-			print("created material entity:", e.eid, e.name, e.material)
+			w:extend(e, "eid:in")
+			print("created material entity:", e.eid, e.material)
 		end
 	end
 end
 
 function ms:entity_remove()
 	if DEBUG_MATERIAL_ATTRIBUTES then
-		for e in w:select "REMOVED material:in name?in eid:in" do
-			print("removed material entity:", e.eid, e.name, e.material)
+		for e in w:select "REMOVED material:in eid:in" do
+			print("removed material entity:", e.eid, e.material)
 		end
 	end
 end

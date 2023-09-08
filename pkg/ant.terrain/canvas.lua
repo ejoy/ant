@@ -199,7 +199,6 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
     return world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             simplemesh  = {
@@ -222,7 +221,6 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
             },
             render_layer = render_layer or "ui",
             visible_state= show and "main_view|selectable" or "",
-            name        = "canvas_texture" .. gen_texture_id(),
             canvas_drawer = {
                 type = "texture",
                 items = {},
