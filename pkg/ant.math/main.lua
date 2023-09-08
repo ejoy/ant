@@ -8,6 +8,9 @@ local function init(math3d)
     math3d.ext_constant = constant
 end
 
+--!!DEBUG
+--require 'mathref'
+
 local math3d = require 'math3d'
 init(math3d)
 
