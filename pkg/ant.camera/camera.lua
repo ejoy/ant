@@ -31,7 +31,6 @@ function ic.create(info)
     info = info or {}
     local frustum = def_frustum(info.frustum)
     local policy = {
-        "ant.general|name",
         "ant.camera|camera",
     }
 
@@ -54,7 +53,6 @@ function ic.create(info)
                 clip_range = info.clip_range,
                 dof     = info.dof,
             },
-            name = info.name or "DEFAULT_CAMERA",
         }
     }
 end

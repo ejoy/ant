@@ -36,10 +36,8 @@ function taasys:init()
      world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name            = "taa_drawer",
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa.material",
             visible_state   = "taa_queue",
@@ -57,10 +55,8 @@ function taasys:init()
     taa_first_frame_eid = world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name            = "taa_first_frame_drawer",
             owned_mesh_buffer = true,
             simplemesh      = fullquad,
             material        = "/pkg/ant.resources/materials/postprocess/taa_first_frame.material",
@@ -72,10 +68,8 @@ function taasys:init()
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name            = "taa_copy_drawer",
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
             visible_state   = "taa_copy_queue",
@@ -87,10 +81,8 @@ function taasys:init()
         world:create_entity{
             policy = {
                 "ant.render|simplerender",
-                "ant.general|name",
             },
             data = {
-                name            = "taa_present_drawer",
                 simplemesh      = irender.full_quad(),
                 material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
                 visible_state   = "taa_present_queue",

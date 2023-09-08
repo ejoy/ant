@@ -40,7 +40,7 @@ end
 
 local function do_create_entity(vb, ib, scene, color, hide)
 	local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
-	return ientity.create_simple_render_entity("", "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
+	return ientity.create_simple_render_entity("/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 end
 
 function m.create_dynamic_frustum(frustum_points, color, hide)

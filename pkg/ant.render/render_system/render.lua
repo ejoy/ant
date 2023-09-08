@@ -78,7 +78,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
-			"ant.general|name",
 		},
 		data = {
 			camera_ref = assert(camera_ref),
@@ -89,7 +88,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 				fb_idx		= fbidx,
 			},
 			[view_queuename]	= true,
-			name 				= view_queuename,
 			queue_name			= view_queuename,
 			visible 			= visible or false,
 			watch_screen_buffer	= true,
@@ -123,7 +121,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			"ant.render|pre_depth_queue",
 			"ant.render|watch_screen_buffer",
 			"ant.render|cull",
-			"ant.general|name",
 		},
 		data = {
 			camera_ref = camera_ref,
@@ -138,7 +135,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 				fb_idx = fbidx,
 			},
 			queue_name 		= "pre_depth_queue",
-			name 			= "pre_depth_queue",
 			visible 		= true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
@@ -175,10 +171,8 @@ function irender.create_main_queue(vr, camera_ref)
 			"ant.render|watch_screen_buffer",
 			"ant.render|main_queue",
 			"ant.render|cull",
-			"ant.general|name",
 		},
 		data = {
-			name = "main_queue",
 			camera_ref = camera_ref,
 			render_target = {
 				viewid = hwi.viewid_get "main_view",

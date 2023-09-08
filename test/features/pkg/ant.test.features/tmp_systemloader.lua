@@ -126,7 +126,7 @@ end
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     
-    ientity.create_grid_entity("grid", 128, 128, 1, 3)
+    ientity.create_grid_entity(128, 128, 1, 3)
     create_instance("/pkg/ant.test.features/assets/entities/light.prefab",
     
     function (e)

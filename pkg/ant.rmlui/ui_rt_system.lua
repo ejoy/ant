@@ -80,12 +80,10 @@ local function create_rt_queue(width, height, name, fbidx)
     return world:create_entity {
 		policy = {
 			"ant.render|render_queue",
-			"ant.general|name",
 		},
 		data = {
             camera_ref = world:create_entity{
                 policy = {
-                    "ant.general|name",
                     "ant.camera|camera"
                 },
                 data = {
@@ -108,7 +106,6 @@ local function create_rt_queue(width, height, name, fbidx)
                     shutter_speed = 0.008,
                     ISO           = 20
                   },
-                  name = name .. "_camera",
                 }
             },
 			render_target = {
@@ -123,7 +120,6 @@ local function create_rt_queue(width, height, name, fbidx)
 				fb_idx		= fbidx,
 			},
             [queuename]         = true,
-			name 				= queuename,
 			queue_name			= queuename,
             visible = true,
 		}

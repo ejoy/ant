@@ -23,10 +23,8 @@ function ic.create_compute_entity(name, materialfile, size, onready)
     world:create_entity {
         policy = {
             "ant.render|compute_policy",
-            "ant.general|name",
         },
         data = {
-            name        = name,
             material    = materialfile,
             dispatch    ={
                 size    = size,

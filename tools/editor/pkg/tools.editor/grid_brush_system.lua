@@ -108,7 +108,7 @@ function grid:init(size, row, col)
     self.total_height = size * row
     self.data = {}
     self.visible = true
-    grid_vb, grid_eid = computil.create_grid_mesh_entity("grid mesh", col, row, size, brush_def.color[1], "/pkg/ant.resources/materials/vertexcolor_nocull.material", "translucent")
+    grid_vb, grid_eid = computil.create_grid_mesh_entity(col, row, size, brush_def.color[1], "/pkg/ant.resources/materials/vertexcolor_nocull.material", "translucent")
     for i = 1, row do
         local rowdata = {}
         for j = 1, col do
@@ -139,7 +139,7 @@ function grid:load(path)
         color[#color + 1] = rowdata
     end
     self:clear()
-    grid_vb, grid_eid = computil.create_grid_mesh_entity("grid mesh", source.col, source.row, source.size, color, "/pkg/ant.resources/materials/vertexcolor_nocull.material", "translucent")
+    grid_vb, grid_eid = computil.create_grid_mesh_entity(source.col, source.row, source.size, color, "/pkg/ant.resources/materials/vertexcolor_nocull.material", "translucent")
     self.size = source.size
     self.row = source.row
     self.col = source.col

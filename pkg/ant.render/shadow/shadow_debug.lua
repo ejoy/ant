@@ -62,21 +62,21 @@ local function create_debug_entity()
 		for idx, f in ipairs(ishadow.split_frustums()) do
 			local vp = math3d.mul(math3d.projmat(f, INV_Z), camera.viewmat)
 			debug_entities[#debug_entities+1] = ientity.create_frustum_entity(
-				math3d.frustum_points(vp), "frusutm:main_view", frustum_colors[idx]
+				math3d.frustum_points(vp), frustum_colors[idx]
 			)
 		end
 	end
 	
-	for se in w:select "csm:in camera_ref:in name:in" do
+	for se in w:select "csm:in camera_ref:in" do
 		local idx = se.csm.index
 		local ce <close> = world:entity(se.camera_ref, "camera:in")
 		local c = ce.camera
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
-		debug_entities[#debug_entities+1] = world:create_entity(ientity.frustum_entity_data(frustum_points, "frusutm:" .. se.name, color))
+		debug_entities[#debug_entities+1] = world:create_entity(ientity.frustum_entity_data(frustum_points, color))
 
-		local d = ientity.axis_entity_data("csm_axis:" .. idx, ce.scene, color)
+		local d = ientity.axis_entity_data(ce.scene, color)
 		d.data.on_ready = nil
 		debug_entities[#debug_entities+1] = world:create_entity(d)
 	end
@@ -155,7 +155,7 @@ local function check_shadow_matrix()
 
 		local newvp = math3d.mul(math3d.projmat(frustum_desc, INV_Z), math3d.lookto(center, lightdir))
 		local new_light_frustum_points = math3d.frustum_points(newvp)
-		ientity.create_frustum_entity(new_light_frustum_points, "lua calc view frustum",  0xff0000ff)
+		ientity.create_frustum_entity(new_light_frustum_points, 0xff0000ff)
 		
 		---------------------------------------------------------------------------------------------------------
 		local shadow_camera_ref = se.camera_ref
@@ -173,7 +173,7 @@ local function check_shadow_matrix()
 
 		print("shadow view frustm point")
 		print_points(shadowcamera_frustum_points)
-		ientity.create_frustum_entity(shadowcamera_frustum_points, "view frustum", 0xffffff00)
+		ientity.create_frustum_entity(shadowcamera_frustum_points, 0xffffff00)
 
 		-------------------------------------------------------------------------------------------------
 		-- test shadow matrix

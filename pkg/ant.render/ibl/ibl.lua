@@ -85,12 +85,10 @@ end
 local function create_irradianceSH_entity()
     world:create_entity {
         policy = {
-            "ant.general|name",
             "ant.render|irradianceSH_builder",
         },
         data = {
             irradianceSH_builder = {},
-            name = "irradianceSH_builder",
         }
     }
 end
@@ -108,10 +106,8 @@ local function create_prefilter_entities()
             policy = {
                 "ant.render|compute_policy",
                 "ant.render|prefilter",
-                "ant.general|name",
             },
             data = {
-                name        = "prefilter_builder",
                 material    = "/pkg/ant.resources/materials/ibl/build_prefilter.material",
                 dispatch    ={
                     size    = dispatchsize,

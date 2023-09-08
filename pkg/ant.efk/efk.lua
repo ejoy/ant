@@ -44,8 +44,8 @@ local function cleanup_efk(efk)
 end
 
 function efk_sys:exit()
-    for e in w:select "efk:in eid:in name?in" do
-        log.warn(("'efk_system' is exiting, but efk entity:%d, %s is not REMOVED"):format(e.eid, e.name or ""))
+    for e in w:select "efk:in eid:in" do
+        log.warn(("'efk_system' is exiting, but efk entity:%d is not REMOVED"):format(e.eid))
         cleanup_efk(e.efk)
     end
 
@@ -107,7 +107,6 @@ function efk_sys:init_world()
     local vp = world.args.viewport
     world:create_entity{
         policy = {
-            "ant.general|name",
             "ant.efk|efk_queue",
             "ant.render|watch_screen_buffer",
         },
@@ -124,7 +123,6 @@ function efk_sys:init_world()
             },
             queue_name = "efk_queue",
             watch_screen_buffer = true,
-            name = "efk_queue",
         }
     }
 
@@ -200,12 +198,10 @@ function iefk.create(filename, config)
     return world:create_entity {
         group = config.group,
         policy = {
-            "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
         },
         data = {
-            name = "root",
             scene = config.scene or {},
             efk = {
                 path        = filename,

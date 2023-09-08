@@ -67,10 +67,8 @@ function ilight.create(light)
 	local template = {
 		policy = {
 			"ant.render|light",
-			"ant.general|name",
 		},
 		data = {
-			name		= light.name or "DEFAULT_LIGHT",
 			scene = {
 				s = light.srt.s,
 				r = light.srt.r,

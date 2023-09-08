@@ -9,7 +9,6 @@ op: replace
 path: /2
 value:
   data:
-    name: crack
     scene: {}
     material: materials/Material.001.material
     mesh: meshes/Plane_P1.meshbin
@@ -17,5 +16,4 @@ value:
   policy:
     ant.scene|scene_object
     ant.render|render
-    ant.general|name
 #    material: /pkg/mod.crack/assets/crack.material

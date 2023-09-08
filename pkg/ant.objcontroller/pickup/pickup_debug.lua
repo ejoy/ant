@@ -18,7 +18,7 @@ local function create_frustum_entity()
 	local pq = w:first("pickup_queue camera_ref:in")
 	local camera <close> = world:entity(pq.camera_ref, "camera:in")
 	local points = math3d.frustum_points(camera.camera.viewprojmat)
-	return ientity.create_frustum_entity(points, "pickup_frustum")
+	return ientity.create_frustum_entity(points)
 end
 
 local pickup_debug_sys = ecs.system "pickup_debug_system"
@@ -29,10 +29,8 @@ local function create_view_buffer_entity()
 	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
-			name = "pick_buffer_entity",
 			owned_mesh_buffer = true,
 			simplemesh = m,
 			material = "/pkg/ant.resources/materials/texquad.material",
@@ -55,9 +53,9 @@ end
 local function log_pickup_queue_entities()
 	log.info "pickup queue entities:"
 	local entities = {}
-	for e in w:select "visible_state:in eid:in name?in" do
+	for e in w:select "visible_state:in eid:input" do
 		if e.visible_state["pickup_queue"] then
-			entities[#entities+1] = ("%d-%s"):format(e.eid, e.name or "")
+			entities[#entities+1] = ("%d"):format(e.eid)
 		end
 	end
 

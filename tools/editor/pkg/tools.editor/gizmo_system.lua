@@ -261,7 +261,7 @@ end
 
 local function create_global_axes(scene)
 	local offset = 0.1
-	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {offset, 1 - offset}}, scene)
+	ientity.create_screen_axis_entity({type = "percent", screen_pos = {offset, 1 - offset}}, scene)
 end
 
 function gizmo:update_scale()
@@ -443,7 +443,7 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 	
-    -- ientity.create_grid_entity("", 64, 64, 1, 1)
+    -- ientity.create_grid_entity(64, 64, 1, 1)
 	-- test_bone = ientity.create_bone_mesh("testbone", "/pkg/tools.editor/res/materials/joint.material", {s = 5}, gizmo.rz.color, false)
 end
 local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}

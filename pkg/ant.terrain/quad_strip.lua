@@ -48,7 +48,6 @@ function qs_sys:entity_init()
         world:create_entity{
             policy = {
                 "ant.render|simplerender",
-                "ant.general|name",
             },
             data = {
                 simplemesh = quadstrip_mesh,
@@ -57,7 +56,6 @@ function qs_sys:entity_init()
                 scene = {
                     parent = e.eid,
                 },
-                name = "polyline",
                 on_ready = function (le)
                     imaterial.set_property(le, "u_line_info",   math3d.vector(qs.width, 0.0, 0.0, 0.0))
                     imaterial.set_property(le, "u_color",       math3d.vector(qs.color))

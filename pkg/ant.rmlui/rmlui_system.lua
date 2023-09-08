@@ -13,7 +13,6 @@ function rmlui_sys:init()
     local vp = world.args.viewport
     world:create_entity{
         policy = {
-            "ant.general|name",
             "ant.render|render_target",
             "ant.render|watch_screen_buffer",
         },
@@ -27,7 +26,6 @@ function rmlui_sys:init()
                 },
             },
             watch_screen_buffer = true,
-            name = "rmlui_obj",
         }
     }
 end
