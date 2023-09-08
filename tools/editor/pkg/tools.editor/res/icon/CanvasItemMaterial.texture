@@ -1,0 +1,14 @@
+colorspace: sRGB
+compress:
+    android: ASTC6x6
+    ios: ASTC6x6
+    windows: BC3
+noresize: true
+normalmap: false
+path: ./CanvasItemMaterial.png
+sampler:
+    MAG: LINEAR
+    MIN: LINEAR
+    U: WRAP
+    V: WRAP
+type: texture

@@ -1,0 +1,12 @@
+fx:
+  shader_type: PBR
+  setting:
+    lighting: on
+    shadow_receive: off
+    shadow_cast: off
+    PACK_TANGENT_TO_QUAT: 0
+properties:
+  u_basecolor_factor: {1, 1, 1, 1}
+  u_emissive_factor: {0, 0, 0, 0}
+  u_pbr_factor: {1, 1, 0.5, 1}
+state: /pkg/ant.resources/materials/states/translucent.state

@@ -1,0 +1,52 @@
+name:
+  type: string
+transform:
+  s:
+    type: vec3
+    widget: DragFloat
+  r:
+    type: vec3
+    widget: DragFloat
+  t:
+    type: vec3
+    widget: DragFloat
+lightmap:
+  size:
+    type: int
+    min: 16
+    max: 512
+mesh:
+  type: string
+material:
+  type: string
+state:
+  type: string
+  list: {visible, cast_shadow, selectable}
+  widget: combo
+make_shadow:
+  type: bool
+light:
+  range:
+    type: float
+    widget: DragFloat
+  type:
+    type: string
+    readonly: true
+  color:
+    type: color
+  intensity:
+    type: float
+    widget: DragFloat
+  motion_type:
+    type: string
+    list: {dynamic, station, static}
+    widget: combo
+  inner_cutoff:
+    type: float
+    widget: DragFloat
+  outter_cutoff:
+    type: float
+    widget: DragFloat
+  angular_radius:
+    type: float
+    widget: DragFloat
