@@ -9,6 +9,7 @@ local ltween = require "motion.tween"
 
 local itimer= ecs.require "ant.timer|timer_system"
 local ig    = ecs.require "ant.group|group"
+local iom   = ecs.require "ant.objcontroller|obj_motion"
 
 local mss = ecs.system "motion_sampler_system"
 
@@ -79,6 +80,7 @@ function ims.set_duration(e, duration, start, istick)
         e.motion_sampler.current = start or 0
         e.motion_sampler.is_tick = istick and 1 or 0
     end
+    w:submit(e)
 end
 
 function ims.set_tween(e, tween_in, tween_out)
@@ -88,6 +90,23 @@ function ims.set_tween(e, tween_in, tween_out)
     ms.tween_out = tween_out
 end
 
+local function build_tracks(ms, keyframes)
+    if ms.motion_tracks == lms.null() then
+        ms.motion_tracks = lms.create_tracks(keyframes)
+    else
+        lms.build_tracks(ms.motion_tracks, keyframes)
+    end
+end
+
+local function check_keyframe_step(step)
+    assert(nil ~= step, "Need specify step between [0, 1]")
+    if step < 0 or step > 1.0 then
+        log("Keyframe step will clamp to [0, 1]", step)
+        step = math.max(0.0, math.min(1.0, step))
+    end
+    return step
+end
+
 function ims.set_keyframes(e, ...)
     w:extend(e, "motion_sampler:in")
     local ms = e.motion_sampler
@@ -95,22 +114,29 @@ function ims.set_keyframes(e, ...)
     local c = select("#", ...)
     for i=1, c do
         local kf = select(i, ...)
-        assert(nil ~= kf.step, "Need specify step between [0, 1]")
-        if kf.step < 0 or kf.step > 1.0 then
-            log("Keyframe step will clamp to [0, 1]", kf.step)
-            kf.step = math.max(0.0, math.min(1.0, kf.step))
-        end
+        kf.step = check_keyframe_step(kf.step)
         keyframes[#keyframes+1] = kf
     end
 
     if c > 0 then
-        if ms.motion_tracks == lms.null() then
-            ms.motion_tracks = lms.create_tracks(keyframes)
-        else
-            lms.build_tracks(ms.motion_tracks, keyframes)
-        end
-        
+        build_tracks(ms, keyframes)
     end
+end
+
+function ims.set_target(e, target)
+    w:extend(e, "motion_sampler:in scene:in")
+    local keyframes = {
+        {
+            t=e.scene.t,
+            step = 0,
+        },
+        {
+            t=target,
+            step = 1
+        }
+    }
+
+    build_tracks(e.motion_sampler, keyframes)
 end
 
 function ims.set_ratio(e, ratio)
