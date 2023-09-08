@@ -57,7 +57,7 @@ local function set_worldmat(srt, mat)
 end
 
 local function calc_csm_matrix_attrib(csmidx, vp)
-	return math3d.ref(math3d.mul(ishadow.crop_matrix(csmidx), vp))
+	return math3d.mul(ishadow.crop_matrix(csmidx), vp)
 end
 
 -- bgfx method
@@ -135,7 +135,7 @@ local function update_shadow_frustum(dl, main_camera)
 		local csm_frustum = csm_frustums[csm.index]
 		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
 		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
-		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
+		csm_matrices[csm.index].v = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
 end 
