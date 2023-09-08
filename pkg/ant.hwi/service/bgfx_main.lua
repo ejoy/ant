@@ -105,8 +105,10 @@ local function profile_print()
         add_text(format_text("draw|blit|compute|gpuLatency", (" | %d %d %d %dms"):format(stats.numDraw, stats.numBlit, stats.numCompute, stats.maxGpuLatency)))
         local rs = require "render.stat"
         local ss = rs.submit_stat()
-        add_text(format_text("simple|hitch|efk", (" | %d %d %d"):format(ss.simple_submit, ss.hitch_submit, ss.efk_hitch_submit)))
-        add_text(format_text("hitch_count", (" | %d"):format(ss.hitch_count)))
+        if next(ss) then
+            add_text(format_text("simple|hitch|efk", (" | %d %d %d"):format(ss.simple_submit, ss.hitch_submit, ss.efk_hitch_submit)))
+            add_text(format_text("hitch_count", (" | %d"):format(ss.hitch_count)))
+        end
     end
     for i = 1, profile_printtext.n do
         S.dbg_text_print(0, 2+MaxText+i, 0x02, profile_printtext[i])
