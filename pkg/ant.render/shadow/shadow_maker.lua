@@ -108,18 +108,21 @@ local function cacl_intersected_aabb(main_camera, height)
   	local world_frustum_points = math3d.frustum_points(main_camera.viewprojmat)
 	local lbf, ltf, rbf, rtf = math3d.array_index(world_frustum_points, 1), math3d.array_index(world_frustum_points, 2), math3d.array_index(world_frustum_points, 3), math3d.array_index(world_frustum_points, 4)
 	local lbn, ltn, rbn, rtn = math3d.array_index(world_frustum_points, 5), math3d.array_index(world_frustum_points, 6), math3d.array_index(world_frustum_points, 7), math3d.array_index(world_frustum_points, 8)
- 	local ratio_lbn = (math3d.index(lbn, 2) - height) / (math3d.index(lbn, 2) - math3d.index(lbf, 2))
-	local ratio_lbf = (math3d.index(lbn, 2) - 0) / (math3d.index(lbn, 2) - math3d.index(lbf, 2))
-	local ratio_ltn = (math3d.index(ltn, 2) - height) / (math3d.index(ltn, 2) - math3d.index(ltf, 2))
-	local ratio_ltf = (math3d.index(ltn, 2) - 0) / (math3d.index(ltn, 2) - math3d.index(ltf, 2))
-	local ratio_rbn = (math3d.index(rbn, 2) - height) / (math3d.index(rbn, 2) - math3d.index(rbf, 2))
-	local ratio_rbf = (math3d.index(rbn, 2) - 0) / (math3d.index(rbn, 2) - math3d.index(rbf, 2))
-	local ratio_rtn = (math3d.index(rtn, 2) - height) / (math3d.index(rtn, 2) - math3d.index(rtf, 2))
-	local ratio_rtf = (math3d.index(rtn, 2) - 0) / (math3d.index(rtn, 2) - math3d.index(rtf, 2))
- 	local lbnn, lbff = math3d.add(lbn, math3d.mul(math3d.sub(lbf, lbn), ratio_lbn)), math3d.add(lbn, math3d.mul(math3d.sub(lbf, lbn), ratio_lbf))
-	local ltnn, ltff = math3d.add(ltn, math3d.mul(math3d.sub(ltf, ltn), ratio_ltn)), math3d.add(ltn, math3d.mul(math3d.sub(ltf, ltn), ratio_ltf))
-	local rbnn, rbff = math3d.add(rbn, math3d.mul(math3d.sub(rbf, rbn), ratio_rbn)), math3d.add(rbn, math3d.mul(math3d.sub(rbf, rbn), ratio_rbf))
-	local rtnn, rtff = math3d.add(rtn, math3d.mul(math3d.sub(rtf, rtn), ratio_rtn)), math3d.add(rtn, math3d.mul(math3d.sub(rtf, rtn), ratio_rtf)) 
+ 	local ratio_lbn = (math3d.index(lbn, 2) - height)	/ (math3d.index(lbn, 2) - math3d.index(lbf, 2))
+	local ratio_lbf = (math3d.index(lbn, 2) - 0) 		/ (math3d.index(lbn, 2) - math3d.index(lbf, 2))
+	local ratio_ltn = (math3d.index(ltn, 2) - height)	/ (math3d.index(ltn, 2) - math3d.index(ltf, 2))
+	local ratio_ltf = (math3d.index(ltn, 2) - 0)		/ (math3d.index(ltn, 2) - math3d.index(ltf, 2))
+	local ratio_rbn = (math3d.index(rbn, 2) - height)	/ (math3d.index(rbn, 2) - math3d.index(rbf, 2))
+	local ratio_rbf = (math3d.index(rbn, 2) - 0)		/ (math3d.index(rbn, 2) - math3d.index(rbf, 2))
+	local ratio_rtn = (math3d.index(rtn, 2) - height)	/ (math3d.index(rtn, 2) - math3d.index(rtf, 2))
+	local ratio_rtf = (math3d.index(rtn, 2) - 0)		/ (math3d.index(rtn, 2) - math3d.index(rtf, 2))
+
+
+ 	local lbnn, lbff = math3d.muladd(math3d.sub(lbf, lbn), ratio_lbn, lbn), math3d.muladd(math3d.sub(lbf, lbn), ratio_lbf, lbn)
+	local ltnn, ltff = math3d.muladd(math3d.sub(ltf, ltn), ratio_ltn, ltn), math3d.muladd(math3d.sub(ltf, ltn), ratio_ltf, ltn)
+	local rbnn, rbff = math3d.muladd(math3d.sub(rbf, rbn), ratio_rbn, rbn), math3d.muladd(math3d.sub(rbf, rbn), ratio_rbf, rbn)
+	local rtnn, rtff = math3d.muladd(math3d.sub(rtf, rtn), ratio_rtn, rtn), math3d.muladd(math3d.sub(rtf, rtn), ratio_rtf, rtn)
+
 	local aabb_min, aabb_max = math3d.minmax(math3d.array_vector({lbnn, lbff, ltnn, ltff, rbnn, rbff, rtnn, rtff})) 
 	return math3d.aabb(aabb_min, aabb_max) 
 end
@@ -135,7 +138,7 @@ local function update_shadow_frustum(dl, main_camera)
 		local csm_frustum = csm_frustums[csm.index]
 		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
 		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
-		csm_matrices[csm.index].v = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
+		csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
 end 
