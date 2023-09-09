@@ -556,6 +556,7 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	images.clear();
 	imagemap.clear();
 	imagegeometries.clear();
+	layouts.clear();
 	//richtext
 	Color default_color = GetTextColor();
 	group default_group;
