@@ -10,9 +10,6 @@ component "shape_terrain".type "lua"
 policy "shape_terrain"
     .require_system "ant.landform|plane_terrain_system"
     .component "shape_terrain"
-    .component "st"
-
-component "st".type "lua"
 
 system "terrain_system"
     .implement "terrain_system.lua"

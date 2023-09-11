@@ -291,57 +291,57 @@ function iplane_terrain.get_wh()
     return terrain_width, terrain_height, unit, origin_offset_width
 end
 
-function iplane_terrain.init_plane_terrain(render_layer)
-    local plane_eids, border_eids = {}, {}
-    for e in ww:select "shape_terrain st:update eid:in" do
-        local st = e.st
+function p_ts:data_changed()
+    for e in ww:select "shape_terrain:update eid:in" do
+        if e.shape_terrain.ready == true then
+            local plane_eids, border_eids = {}, {}
+            local st = e.shape_terrain
 
-        local width, height = st.width, st.height
-
-        local ss = st.section_size
-
-
-        st.section_width, st.section_height = width // ss, height // ss
-        st.num_section = st.section_width * st.section_height
-
-        unit = st.unit
-        local shapematerial = st.material
-        
-        build_ib(terrain_width, terrain_height)
-        local ctf = cterrain_fields.new(st)
-        
-        for ih = 1, st.section_height do
-            for iw = 1, st.section_width do
-                local sectionidx = (ih - 1) * st.section_width + iw
-                
-                local terrain_mesh = build_mesh(ss, sectionidx, ctf, width)
-                if terrain_mesh then
-                    plane_eids[#plane_eids+1] = world:create_entity {
-                        policy = {
-                            "ant.scene|scene_object",
-                            "ant.render|simplerender",
-                        },
-                        data = {
-                            scene = {
-                                parent = e.eid,
+            local width, height = st.width, st.height
+    
+            local ss = st.section_size
+    
+    
+            st.section_width, st.section_height = width // ss, height // ss
+            st.num_section = st.section_width * st.section_height
+    
+            unit = st.unit
+            local shapematerial = st.material
+            
+            build_ib(terrain_width, terrain_height)
+            local ctf = cterrain_fields.new(st)
+            
+            for ih = 1, st.section_height do
+                for iw = 1, st.section_width do
+                    local sectionidx = (ih - 1) * st.section_width + iw
+                    
+                    local terrain_mesh = build_mesh(ss, sectionidx, ctf, width)
+                    if terrain_mesh then
+                        plane_eids[#plane_eids+1] = world:create_entity {
+                            policy = {
+                                "ant.scene|scene_object",
+                                "ant.render|simplerender",
                             },
-                            simplemesh  = terrain_mesh,
-                            material    = shapematerial,
-                            visible_state= "main_view|selectable",
-                            render_layer = render_layer,
-                        },
-                    }
+                            data = {
+                                scene = {
+                                    parent = e.eid,
+                                },
+                                simplemesh  = terrain_mesh,
+                                material    = shapematerial,
+                                visible_state= "main_view|selectable",
+                                render_layer = e.render_layer,
+                            },
+                        }
+                    end
                 end
             end
+            local border_size = ss // 4
+            create_border(e.eid, border_size, e.render_layer, border_eids)
+            iom.set_position(e, math3d.vector(-origin_offset_width * unit, 0, -origin_offset_height * unit))
+            st.plane_eids, st.border_eids = plane_eids, border_eids
+            e.shape_terrain.ready = false
         end
-        local border_size = ss // 4
-        create_border(e.eid, border_size, render_layer, border_eids)
-        iom.set_position(e, math3d.vector(-origin_offset_width * unit, 0, -origin_offset_height * unit))
-        st.plane_eids, st.border_eids = plane_eids, border_eids
-    end   
-end
-
-function p_ts:init()
+    end
 end
 
 return iplane_terrain
