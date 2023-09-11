@@ -794,7 +794,6 @@ function m:get_hitch_content()
             --                 hitch_bounding = true,
             --             },
             --             visible_state = "main_view|cast_shadow|selectable",
-            --             scene_needchange = true,
             --         }
             --         tag = {
             --             self.glb_filename
@@ -818,7 +817,6 @@ function m:get_hitch_content()
                                 hitch_bounding = true,
                             },
                             visible_state = "main_view|cast_shadow|selectable",
-                            scene_needchange = true,
                         },
                         tag = {
                             self.glb_filename

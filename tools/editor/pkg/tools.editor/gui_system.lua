@@ -475,7 +475,6 @@ function m:handle_event()
             --             hitch_bounding = true
             --         },
             --         visible_state = "main_view|cast_shadow|selectable",
-            --         scene_needchange = true,
             --     }
             -- }
             -- world:create_entity {
@@ -489,7 +488,6 @@ function m:handle_event()
             --             hitch_bounding = true
             --         },
             --         visible_state = "main_view|cast_shadow|selectable",
-            --         scene_needchange = true,
             --     }
             -- }
             world:create_instance {
