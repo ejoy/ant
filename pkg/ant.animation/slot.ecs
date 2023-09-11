@@ -6,4 +6,5 @@ component "boneslot"
 
 policy "slot"
     .require_system "ant.animation|slot_system"
+    .include_policy "ant.scene|scene_object"
     .component "slot"

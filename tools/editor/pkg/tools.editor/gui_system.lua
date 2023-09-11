@@ -363,15 +363,15 @@ function m:handle_event()
         elseif what == "scale" then
             gizmo:set_scale(v2)
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
-        elseif what == "name" or what == "tag" then
+        elseif what == "tag" then
             transform_dirty = false
-            if what == "name" then
+            if what == "tag" then
                 local e <close> = world:entity(target, "slot?in")
-                hierarchy:update_display_name(target, v1)
+                hierarchy:update_display_name(target, v1[1])
                 if e.slot then
                     hierarchy:update_slot_list(world)
                 end
-                prefab_mgr:on_patch_name(target, v1)
+                prefab_mgr:on_patch_tag(target, v1)
             end
         elseif what == "parent" then
             target = prefab_mgr:set_parent(target, v1)
@@ -466,11 +466,9 @@ function m:handle_event()
             -- local hitch_test_group_id<const> = 1000
             -- world:create_entity {
             --     policy = {
-            --         "ant.general|name",
             --         "ant.render|hitch_object"
             --     },
             --     data = {
-            --         name = "test1",
             --         scene = { t = math3d.vector(-50, 0, 0) },
             --         hitch = {
             --             group = hitch_test_group_id,
@@ -482,11 +480,9 @@ function m:handle_event()
             -- }
             -- world:create_entity {
             --     policy = {
-            --         "ant.general|name",
             --         "ant.render|hitch_object"
             --     },
             --     data = {
-            --         name = "test2",
             --         scene = { t = math3d.vector(50, 0, 0) },
             --         hitch = {
             --             group = hitch_test_group_id,

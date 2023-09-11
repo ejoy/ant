@@ -190,6 +190,7 @@ function draw_indirect_system:entity_init()
         local di_cull_id = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
+                "ant.render|draw_indirect_cull",
             },
             data = {
                 material    = "/pkg/ant.resources/materials/indirect/indirect_cull.material",
@@ -205,6 +206,7 @@ function draw_indirect_system:entity_init()
         local di_shadow_id = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
+                "ant.render|draw_indirect_queue",
             },
             data = {
                 material    = "/pkg/ant.resources/materials/indirect/indirect_queue.material",
@@ -222,6 +224,7 @@ function draw_indirect_system:entity_init()
         local di_main_id = world:create_entity {
             policy = {
                 "ant.render|compute_policy",
+                "ant.render|draw_indirect_queue",
             },
             data = {
                 material    = "/pkg/ant.resources/materials/indirect/indirect_queue.material",
@@ -239,7 +242,7 @@ function draw_indirect_system:entity_init()
         di.di_cull_id   = di_cull_id
         di.di_shadow_id = di_shadow_id
         di.di_main_id   = di_main_id
-        local te <close> = world:entity(di.target_eid, "draw_indirect_ready:update")
+        local te <close> = world:entity(di.target_eid, "draw_indirect_ready?out")
         te.draw_indirect_ready = true
     end
 

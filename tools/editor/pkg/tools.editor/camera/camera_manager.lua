@@ -24,7 +24,6 @@ function camera_mgr.create_camera()
     local srt = mc.scene
     local template = {
         policy = {
-            "ant.general|name",
             "ant.camera|camera",
         },
         data = {
@@ -36,12 +35,14 @@ function camera_mgr.create_camera()
                     fov = main_frustum.fov
                 },
             },
-            name = gen_camera_name(),
             scene = {
                 r = math3d.tovalue(srt.r),
                 t = {math3d.index(srt.t, 1, 2, 3)},
                 updir   = {0, 1, 0, 0},
             },
+        },
+        tag = {
+            gen_camera_name()
         }
     }
     return world:create_entity(utils.deep_copy(template)), template

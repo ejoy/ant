@@ -179,11 +179,17 @@ component "indirect".type "lua"
 policy "draw_indirect"
     .component "draw_indirect"
 
+policy "draw_indirect_cull"
+    .component "draw_indirect_cull"
+
+policy "draw_indirect_queue"
+    .component "draw_indirect_queue"
+
 component "draw_indirect".type "lua"
 component "draw_indirect_cull".type "lua"
 component "draw_indirect_queue".type "lua"
-component "draw_indirect_ready".type "lua"
-component "draw_indirect_update".type "lua"
+component "draw_indirect_ready"
+component "draw_indirect_update"
 
 system "draw_indirect_system"
     .implement "draw_indirect_system.lua"

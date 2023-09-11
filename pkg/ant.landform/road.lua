@@ -126,7 +126,7 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
         for srt_idx = 1, 6 do
             local srt_info = info_table[srt_idx]
             if indirect_table[srt_idx] then
-                local e <close> = world:entity(indirect_table[srt_idx], "road:update draw_indirect_update:update")
+                local e <close> = world:entity(indirect_table[srt_idx], "road:update draw_indirect_update?out")
                 e.road.srt_info = srt_info
                 e.draw_indirect_update = true
             else

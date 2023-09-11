@@ -199,6 +199,7 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
     return world:create_entity{
         policy = {
             "ant.render|simplerender",
+            "ant.terrain|canvas_drawer",
         },
         data = {
             simplemesh  = {

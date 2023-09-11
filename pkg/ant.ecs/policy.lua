@@ -13,6 +13,11 @@ local function component_def(w, c)
     end
 end
 
+local allow <const> = {
+    on_ready = true,
+    on_message = true,
+}
+
 local function verify(w, policies, data)
     assert(type(policies) == "table")
     local component = {}
@@ -48,6 +53,14 @@ local function verify(w, policies, data)
     for c in pairs(component) do
         if data[c] == nil then
             error(("component `%s` must exists"):format(c))
+        end
+    end
+    for c in pairs(data) do
+        if component[c] == nil and component_opt[c] == nil and allow[c] == nil then
+            local decl = w._decl.component[c]
+            if decl and decl.type[1] ~= nil then
+                error(("component `%s` is not included in the policy"):format(c))
+            end
         end
     end
 end

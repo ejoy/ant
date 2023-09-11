@@ -47,7 +47,6 @@ function second_camera_sys:init_world()
     world:create_entity{
         policy = {
             "ant.render|render_queue",
-            "ant.general|name",
         },
         data = {
             camera_ref = DEFAULT_camera,
@@ -60,8 +59,10 @@ function second_camera_sys:init_world()
             },
             queue_name = "second_view",
             second_view = true,
-            name = "second_view",
             visible = true,
+        },
+        tag = {
+            "second_view"
         }
     }
 end
@@ -171,12 +172,13 @@ local function create_frustum_entity(eid)
     local frustum_root = world:create_entity {
         policy = {
             "ant.scene|scene_object",
-            "ant.general|name"
         },
         data = {
             scene = { parent = eid },
-            name = "second_view_frustum_root",
             second_view_frustum = true,
+        },
+        tag = {
+            "second_view_frustum_root"
         }
     }
 
@@ -187,7 +189,6 @@ local function create_frustum_entity(eid)
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             on_ready = onready,
@@ -211,8 +212,10 @@ local function create_frustum_entity(eid)
             render_layer = "translucent",
             scene = { parent = frustum_root },
             visible_state = "main_view",
-            name = "second_view_frustum",
             second_view_frustum = true,
+        },
+        tag = {
+            "second_view_frustum"
         }
     }
 
@@ -224,7 +227,6 @@ local function create_frustum_entity(eid)
     world:create_entity {
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             simplemesh = imesh.init_mesh{
@@ -247,9 +249,11 @@ local function create_frustum_entity(eid)
                 t = tri_bottomcenter,
                 parent = frustum_root
             },
-            name = "second_view_triangle",
             on_ready = onready,
             second_view_frustum = true,
+        },
+        tag = {
+            "second_view_triangle"
         }
     }
 end

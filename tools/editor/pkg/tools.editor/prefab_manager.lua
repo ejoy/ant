@@ -61,33 +61,36 @@ function m:create_slot()
     local parent_eid = gizmo.target_eid or (self.scene and self.scene or self.root)
     local template = {
         policy = {
-            "ant.general|name",
             "ant.animation|slot"
         },
         data = {
-            name = auto_name,
             scene = { parent = parent_eid },
             slot = {
                 joint_name = "None",
                 follow_flag = 1,
             },
-            on_ready = function (e) hierarchy:update_slot_list(world) end
+        },
+        tag = {
+            auto_name
         }
     }
-    self:add_entity(world:create_entity(utils.deep_copy(template)), parent_eid, template)
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e) hierarchy:update_slot_list(world) end
+    self:add_entity(world:create_entity(tpl), parent_eid, template)
 end
 
 local function create_simple_entity(name, parent)
     local template = {
 		policy = {
-            "ant.general|name",
             "ant.scene|scene_object",
 		},
 		data = {
-            name = name,
             scene = {parent = parent},
             -- bounding = {aabb = {{0,0,0}, {1,1,1}}}
 		},
+        tag = {
+            name
+        }
     }
     return world:create_entity(utils.deep_copy(template)), template
 end
@@ -213,15 +216,14 @@ function m:create(what, config)
             local template = {
                 policy = {
                     "ant.render|render",
-                    "ant.general|name",
                 },
                 data = {
                     scene = {t = {0, offsety , 0}},
                     visible_state = "main_view|selectable",
                     material = "/pkg/tools.editor/res/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
-                    name = config.type .. gen_geometry_id(),
-                }
+                },
+                tag = { config.type .. gen_geometry_id() }
             }
             local tmp = utils.deep_copy(template)
             local hitch
@@ -361,7 +363,7 @@ function m:on_prefab_ready(prefab)
     end
 
     local j = 1
-    for _, pt in ipairs(self.prefab_template) do
+    for i, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
         local e <close> = world:entity(eid, "scene?in light?in")
         local scene = e.scene
@@ -375,7 +377,11 @@ function m:on_prefab_ready(prefab)
             target_node.editor = pt.editor or false
         else
             self.entities[#self.entities + 1] = eid
-            node_map[eid] = {template = pt, parent = parent}
+            local name = pt.tag and pt.tag[1]
+            if not name then
+                name = pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or "")
+            end
+            node_map[eid] = {template = pt, parent = parent, name = (i == 1) and "Scene" or name}
             j = j + 1
         end
 
@@ -395,9 +401,9 @@ function m:on_prefab_ready(prefab)
         local tp = node.template
         if children then
             set_select_adapter(children, eid)
-            tp = {template = node.template, filename = node.filename, editor = node.editor}
+            tp = {template = node.template, filename = node.filename, editor = node.editor, name = node.name}
         else
-            tp = {template = node.template}
+            tp = {template = node.template, name = node.name}
         end
         hierarchy:add(eid, tp, node.parent or self.root)
     end
@@ -609,7 +615,6 @@ function m:create_ground()
         self.plane = world:create_entity {
             policy = {
                 "ant.render|render",
-                "ant.general|name",
             },
             data = {
                 scene = {s = {200, 1, 200}},
@@ -617,12 +622,12 @@ function m:create_ground()
                 material    = "/pkg/tools.editor/res/materials/texture_plane.material",
                 render_layer = "background",
                 visible_state= "main_view",
-                name        = "ground",
                 on_ready = function (e)
                     -- ivs.set_state(e, "main_view", false)
                     imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
                 end
             },
+            tag = { "ground" }
         }
     end
 end
@@ -708,12 +713,10 @@ function m:add_effect(filename)
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local template = {
 		policy = {
-            "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
 		},
 		data = {
-            name = fs.path(filename):stem():string(),
             scene = {parent = parent},
             efk = {
                 path = filename,
@@ -721,6 +724,9 @@ function m:add_effect(filename)
             },
             visible_state = "main_queue"
 		},
+        tag = {
+            fs.path(filename):stem():string()
+        }
     }
     local tpl = utils.deep_copy(template)
     self:add_entity(world:create_entity(tpl), parent, template)
@@ -779,11 +785,9 @@ function m:get_hitch_content()
             -- if not content[tpl.file]  then
             --     content[tpl.file] = {
             --         policy = {
-            --             "ant.general|name",
             --             "ant.render|hitch_object",
             --         },
             --         data = {
-            --             name = "hitch",
             --             scene = {},
             --             hitch = {
             --                 group = 0,
@@ -791,6 +795,9 @@ function m:get_hitch_content()
             --             },
             --             visible_state = "main_view|cast_shadow|selectable",
             --             scene_needchange = true,
+            --         }
+            --         tag = {
+            --             self.glb_filename
             --         }
             --     }
             -- end
@@ -802,11 +809,9 @@ function m:get_hitch_content()
                 content = {
                     {
                         policy = {
-                            "ant.general|name",
                             "ant.render|hitch_object",
                         },
                         data = {
-                            name = self.glb_filename,
                             scene = {},
                             hitch = {
                                 group = 0,
@@ -814,6 +819,9 @@ function m:get_hitch_content()
                             },
                             visible_state = "main_view|cast_shadow|selectable",
                             scene_needchange = true,
+                        },
+                        tag = {
+                            self.glb_filename
                         }
                     }
                 }
@@ -988,7 +996,7 @@ function m:get_world_aabb(eid)
         end
     end
     local waabb
-    local e <close> = world:entity(eid, "bounding?in meshskin?in name:in")
+    local e <close> = world:entity(eid, "bounding?in meshskin?in name?in")
     local bbox = e.bounding
     if bbox and bbox.scene_aabb and bbox.scene_aabb ~= mc.NULL then
         waabb = math3d.aabb(math3d.array_index(bbox.scene_aabb, 1), math3d.array_index(bbox.scene_aabb, 2))
@@ -1082,6 +1090,8 @@ function m:pacth_modify(pidx, p, v)
                 last_value[key] = {}
                 last_value = last_value[key]
                 key = str
+            else
+                key = str
             end
             current_value = last_value[str]
         end
@@ -1115,10 +1125,10 @@ function m:do_patch(eid, path, v)
     self:pacth_modify(tpl.template.index, path, v)
 end
 
-function m:on_patch_name(eid, v)
+function m:on_patch_tag(eid, v)
     -- local tpl = hierarchy:get_template(eid)
     -- self:pacth_modify(tpl.template.index, "/data/name", v)
-    self:do_patch(eid, "/data/name", v)
+    self:do_patch(eid, "/tag", v)
 end
 
 function m:on_patch_tranform(eid, n, v)

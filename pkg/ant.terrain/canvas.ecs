@@ -4,6 +4,9 @@ system "canvas_system"
 component "canvas".type "lua"
 component "canvas_drawer".type "lua"
 
+policy "canvas_drawer"
+    .component "canvas_drawer"
+
 policy "canvas"
     .require_system "ant.terrain|canvas_system"
     .component "canvas"

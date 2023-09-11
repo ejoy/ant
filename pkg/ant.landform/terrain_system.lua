@@ -42,6 +42,7 @@ function terrain_sys:init()
     world:create_entity {
         policy = {
             "ant.scene|scene_object",
+            "ant.landform|shape_terrain",
         },
         data = {
             scene = {
