@@ -369,14 +369,11 @@ end
 
 function sm:entity_init()
 	for e in w:select "INIT make_shadow directional_light light:in csm_directional_light?update" do
-		--local csm_dl = w:first("csm_directional_light light:in")
-		if e.csm_dl == nil then
-			e.csm_directional_light = true
-			w:extend(e, "csm_directional_light?out")
-			set_csm_visible(true)
-		else
-			--error("already have 'make_shadow' directional light")
+		if w:count "csm_directional_light" > 0 then
+			log.warn("Multi directional light for csm shaodw")
 		end
+		e.csm_directional_light = true
+		set_csm_visible(true)
 	end
 end
 
@@ -539,15 +536,18 @@ local omni_stencils = {
 	},
 }
 
+--front face is 'CW', when building shadow we need to remove front face, it's 'CW'
+local CULL_REVERSE<const> = {
+	CCW		= "CW",
+	CW		= "CCW",
+	NONE	= "CW",
+}
+
 local function create_depth_state(srcstate, dststate)
 	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
 	d.PT = s.PT
-	-- not s.CULL equals s.CULL == "NONE"
-	if not s.CULL then
-		d.CULL = s.CULL
-	else
-		d.CULL = "CCW"
-	end 
+	local c = s.CULL or "NONE"
+	d.CULL = CULL_REVERSE[c]
 	d.DEPTH_TEST = "GREATER"
 
 	return bgfx.make_state(d)
