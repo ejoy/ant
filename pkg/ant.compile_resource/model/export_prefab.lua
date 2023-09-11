@@ -284,6 +284,9 @@ local function create_skin_entity(status, parent)
         data.anim_ctrl = {}
     end
     data.skeleton = status.skeleton
+    if not has_meshskin then
+        parent = nil
+    end
     return create_entity(status, {
         policy = policy,
         data = data,
