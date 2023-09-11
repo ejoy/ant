@@ -140,12 +140,11 @@ function ims.set_target(e, target)
 end
 
 function ims.set_ratio(e, ratio)
-    w:extend(e, "motion_sampler:update scene_needchange?update")
+    w:extend(e, "motion_sampler:update")
     if e.motion_sampler.duration >= 0 then
         error "set motion_sampler ratio need duration is less than 0"
     end
     e.motion_sampler.ratio = ratio
-    e.scene_needchange = true
     w:submit(e)
 end
 
@@ -154,9 +153,8 @@ function ims.stop_system(stop)
 end
 
 function ims.set_stop(e, stop)
-    w:extend(e, "motion_sampler:update scene_needchange:update")
+    w:extend(e, "motion_sampler:update")
     e.motion_sampler.stop = stop
-    e.scene_needchange = true
     w:submit(e)
 end
 
