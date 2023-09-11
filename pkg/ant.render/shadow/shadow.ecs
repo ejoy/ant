@@ -19,5 +19,5 @@ for i=1, 4 do
 end
 
 component "clear_sm"
-component "pack_camera_aabb".type "lua"
-component "pack_scene_aabb".type "lua"
+component "pack_camera_aabb"
+component "pack_scene_aabb"

@@ -54,8 +54,15 @@ function ic.create(info)
                 clip_range = info.clip_range,
                 dof     = info.dof,
             },
+            pack_camera_aabb = info.pack_camera_aabb
         }
     }
+end
+
+function ic.set_pack_camera_aabb(ce, is_pack)
+    w:extend(ce, "pack_camera_aabb?out")
+    ce.pack_camera_aabb = is_pack
+    w:submit(ce) 
 end
 
 function ic.calc_viewmat(ce)

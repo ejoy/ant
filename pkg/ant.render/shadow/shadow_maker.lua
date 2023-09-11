@@ -42,7 +42,7 @@ local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
-local infinite_aabb         = math3d.ref(math3d.aabb(math3d.vector(-10000, -10000, -10000), math3d.vector(10000, 10000, 10000)))
+local infinite_aabb         = math3d.marked_aabb(math3d.vector(-10000, -10000, -10000), math3d.vector(10000, 10000, 10000))
 
 local function set_worldmat(srt, mat)
 	math3d.unmark(srt.worldmat)
@@ -99,14 +99,14 @@ end
 
 local function get_intersected_aabb(main_camera)
 	local pack_scene_aabb, pack_camera_aabb = math3d.aabb(), math3d.aabb()
-	local psae, pcae = w:first "pack_scene_aabb:in", w:first "pack_camera_aabb:in"
+	local psae, is_packed = w:first "pack_scene_aabb bounding:in", main_camera.pack_camera_aabb
 	if psae then
-		pack_scene_aabb = psae.pack_scene_aabb
+		pack_scene_aabb = psae.bounding.scene_aabb
 	else
 		pack_scene_aabb = infinite_aabb
 	end
-	if pcae then
-		pack_camera_aabb = pcae.pack_camera_aabb
+	if is_packed then
+		pack_camera_aabb = main_camera.bounding.scene_aabb
 	else
 		local world_frustum_points = math3d.frustum_points(main_camera.camera.viewprojmat)
 		local camera_min, camera_max = math3d.minmax(world_frustum_points)
@@ -399,7 +399,7 @@ function sm:update_camera_depend()
 	local dl = w:first "csm_directional_light scene_changed?in scene:in"
 	if dl then
 		local mq = w:first "main_queue camera_ref:in"
-		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in")
+		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in bounding:in pack_camera_aabb?in")
 		if dl.scene_changed or ce.camera_changed then
 			--update_shadow_camera(dl, camera.camera)
 			update_shadow_frustum(dl, ce)
