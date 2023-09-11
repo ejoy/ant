@@ -84,7 +84,8 @@ local function create_rt_queue(width, height, name, fbidx)
 		data = {
             camera_ref = world:create_entity{
                 policy = {
-                    "ant.camera|camera"
+                    "ant.camera|camera",
+                    "ant.camera|exposure"
                 },
                 data = {
                     scene = {
