@@ -200,7 +200,6 @@ local function create_arrow_widget(axis_root, axis_str)
 
 	local cylindereid = world:create_entity{
 		policy = {
-			"ant.general|name",
 			"ant.render|render",
 		},
 		data = {
@@ -214,16 +213,17 @@ local function create_arrow_widget(axis_root, axis_str)
 			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 			render_layer = "translucent",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin',
-			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
+		},
+		tag = {
+			"arrow.cylinder" .. axis_str,
 		}
 	}
 	local coneeid = world:create_entity{
 		policy = {
-			"ant.general|name",
 			"ant.render|render",
 		},
 		data = {
@@ -232,11 +232,13 @@ local function create_arrow_widget(axis_root, axis_str)
 			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 			render_layer = "translucent",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin',
-			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
+		},
+		tag = {
+			"arrow.cone" .. axis_str,
 		}
 	}
 	local axis
@@ -308,37 +310,40 @@ local test_bone
 function gizmo_sys:post_init()
 	local axis_root = world:create_entity {
 		policy = {
-			"ant.general|name",
 			"ant.scene|scene_object",
 		},
 		data = {
-			name = "axis root",
 			scene = {},
 		},
+		tag = {
+			"axis root"
+		}
 	}
 	gizmo.root_eid = axis_root
 	local rot_circle_root = world:create_entity {
 		policy = {
-			"ant.general|name",
 			"ant.scene|scene_object",
 		},
 		data = {
-			name = "rot root",
 			scene = {parent = axis_root},
 		},
+		tag = {
+			"rot root"
+		}
 	}
 
 	gizmo.rot_circle_root_eid = rot_circle_root
 
 	local uniform_rot_root = world:create_entity {
 		policy = {
-			"ant.general|name",
 			"ant.scene|scene_object",
 		},
 		data = {
-			name = "rot root",
 			scene = {},
 		},
+		tag = {
+			"rot root"
+		}
 	}
 	gizmo.uniform_rot_root_eid = uniform_rot_root
 
@@ -411,7 +416,6 @@ function gizmo_sys:post_init()
 		local eid = world:create_entity {
 			policy = {
 				"ant.render|render",
-				"ant.general|name",
 				"ant.scene|scene_object",
 			},
 			data = {
@@ -419,13 +423,15 @@ function gizmo_sys:post_init()
 				scene = scene or {},
 				material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-				name = "scale_cube" .. axis_name,
 				render_layer = "translucent",
 				on_ready = function (e)
 					ivs.set_state(e, "main_view", false)
 					ivs.set_state(e, "selectable", false)
 					imaterial.set_property(e, "u_color", math3d.vector(color))
 				end
+			},
+			tag = {
+				"scale_cube" .. axis_name
 			}
 		}
 		return eid

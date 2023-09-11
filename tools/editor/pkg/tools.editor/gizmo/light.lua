@@ -86,16 +86,17 @@ end
 local function create_gizmo_root(initpos, initrot)
     return world:create_entity{
 		policy = {
-			"ant.general|name",
             "ant.scene|scene_object",
 		},
 		data = {
-			name = "gizmo root",
             scene = {t = initpos or {0, 5, 0}, r = initrot or {math.rad(130), 0, 0, 1}},
             -- on_ready = function (e)
             --     ivs.set_state(e, "visible", false)  
             -- end
 		},
+        tag = {
+            "gizmo root"
+        }
     }
 end
 

@@ -1329,7 +1329,6 @@ local function create_joint_entity(joint_name)
     local template = {
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
             scene = {},
@@ -1337,11 +1336,13 @@ local function create_joint_entity(joint_name)
             material = "/pkg/tools.editor/res/materials/joint.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.editor/res/meshes/joint.meshbin",
             render_layer = "translucent",
-            name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", bone_color)
                 ivs.set_state(e, "main_view", false)
 			end
+        },
+        tag = {
+            joint_name
         }
     }
     return world:create_entity(template)
@@ -1399,7 +1400,6 @@ local function create_bone_entity(joint_name)
     local template = {
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
 			scene 		= {},
@@ -1407,12 +1407,14 @@ local function create_bone_entity(joint_name)
             render_layer = "translucent",
 			simplemesh	= imesh.init_mesh(ientity.create_mesh({"p3|n3|t2", bone_vert}), true),
 			visible_state= "main_view|selectable",
-			name		= joint_name,
 			on_ready 	= function(e)
                 imaterial.set_property(e, "u_basecolor_factor", bone_color)
                 ivs.set_state(e, "main_view", false)
 			end
-		}
+		},
+        tag = {
+            joint_name
+        }
 	}
     return world:create_entity(template)
 end
