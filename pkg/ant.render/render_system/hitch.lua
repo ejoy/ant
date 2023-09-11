@@ -51,6 +51,7 @@ function hitch_sys:entity_ready()
             for _, heid in ipairs(hitchs) do
                 local e<close> = world:entity(heid, "bounding:update scene_needchange?out")
                 math3d.unmark(e.bounding.aabb)
+                e.scene_needchange = true
                 e.bounding.aabb = math3d.mark(h_aabb)
             end
         end
