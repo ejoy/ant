@@ -246,10 +246,7 @@ function sm_sys:entity_init()
     end
 
     
-    for e in w:select "stonemountain:update render_object:update scene:in bounding:update draw_indirect_ready:update" do
-        if e.draw_indirect_ready ~= true then
-            goto continue
-        end
+    for e in w:select "stonemountain:update render_object:update scene:in bounding:update draw_indirect_ready:out" do
         local stonemountain = e.stonemountain
         local draw_num = stonemountain.draw_num
         if draw_num > 0 then
@@ -265,7 +262,6 @@ function sm_sys:entity_init()
         end
 
         e.draw_indirect_ready = false
-        ::continue::
     end
 end
 
