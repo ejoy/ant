@@ -41,16 +41,16 @@ local function process_keyframe_event(task)
 					audio.play(event.sound_event)
 				end
 			elseif event.event_type == "Effect" then
-				if event.effect then
-					local e <close> = world:entity(event.effect, "efk:in")
-					iefk.play(e)
-				elseif event.asset_path ~= "" then
-					event.effect = iefk.create(event.asset_path, {
-						scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
-						group = task.group,
-						visible_state = "main_queue",
-					})
-				end
+				-- if event.effect then
+				-- 	local e <close> = world:entity(event.effect, "efk:in")
+				-- 	iefk.play(e)
+				-- elseif event.asset_path ~= "" then
+				-- 	event.effect = iefk.create(event.asset_path, {
+				-- 		scene = { parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
+				-- 		group = task.group,
+				-- 		visible_state = "main_queue",
+				-- 	})
+				-- end
 			end
 		end
 		event_state.next_index = event_state.next_index + 1
@@ -149,7 +149,7 @@ function ani_sys:entity_init()
 	local skeleton
 	local pose
 	local anim_ctrl
-	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in name?in eid:in pose_dirty?out boneslot?out" do
+	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in eid:in pose_dirty?out boneslot?out" do
 		if e.meshskin and e.anim_ctrl then
 			skeleton = e.skeleton
 			meshskin = e.meshskin
@@ -172,7 +172,7 @@ function ani_sys:entity_init()
 				if not anim_ctrl.slot_eid then
 					anim_ctrl.slot_eid = {}
 				end
-				anim_ctrl.slot_eid[e.name] = e.eid
+				-- anim_ctrl.slot_eid[e.name] = e.eid
 			end
 		end
 	end
