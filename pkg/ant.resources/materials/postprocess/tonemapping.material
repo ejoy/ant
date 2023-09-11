@@ -3,7 +3,7 @@ fx:
   fs: /pkg/ant.resources/shaders/postprocess/fs_tonemapping.sc
   setting:
     lighting: off
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: off
     EXPOSURE_TYPE: 1
 properties:

@@ -562,7 +562,7 @@ function sm:update_filter()
 		local ro = e.render_object
 
 		local mat_ptr
-		if mt.fx.setting.shadow_cast == "on" then
+		if mt.fx.setting.cast_shadow == "on" then
 			local dstres = which_material(e.skinning, e.indirect)
 			local fm = e.filter_material
 			local mi = RM.create_instance(dstres.object)

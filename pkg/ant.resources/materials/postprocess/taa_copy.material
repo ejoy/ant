@@ -3,7 +3,7 @@ fx:
   fs: /pkg/ant.resources/shaders/postprocess/taa/fs_taa_copy.sc
   setting:
     lighting: off
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: off
 properties:
   s_scene_ldr_color:

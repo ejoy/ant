@@ -3,7 +3,7 @@ fx:
   setting:
     ALPHAMODE_OPAQUE: 1
     lighting: on
-    shadow_cast: on
+    cast_shadow: on
     shadow_receive: on
     subsurface: off
 properties:

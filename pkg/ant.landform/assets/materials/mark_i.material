@@ -3,7 +3,7 @@ fx:
   fs_code: "#include \"mark_fs_func.sh\""
   setting:
     lighting: on
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: on
     subsurface: off
     DRAW_INDIRECT: 1

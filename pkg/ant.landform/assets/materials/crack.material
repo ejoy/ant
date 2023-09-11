@@ -3,7 +3,7 @@ fx:
   fs_code: "\n#include \"crack_fs_func.sh\"\n"
   setting:
     lighting: on
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: on
     subsurface: off
     HAS_NORMAL_TEXTURE: 1

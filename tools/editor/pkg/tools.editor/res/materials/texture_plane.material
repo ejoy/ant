@@ -5,7 +5,7 @@ fx:
     UV_MOTION: 1
     lighting: on
     shadow_receive: on
-    shadow_cast: off
+    cast_shadow: off
     subsurface: off
 properties:
   s_basecolor:

@@ -3,7 +3,7 @@ fx:
   setting:
     DRAW_INDIRECT: 1
     lighting: off
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: off
     subsurface: off
     WITHOUT_DEFAULT_UV: 1
