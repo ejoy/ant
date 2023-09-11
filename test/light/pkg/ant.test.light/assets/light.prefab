@@ -1,6 +1,7 @@
 ---
 policy:
     ant.sky|skybox
+    ant.render|ibl
     ant.render|simplerender
     ant.general|name
 data:
