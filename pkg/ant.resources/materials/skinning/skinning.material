@@ -3,7 +3,7 @@ fx:
   setting:
     skinning: on
     lighting: off
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: off
     subsurface: off
     GPU_SKINNING: 1

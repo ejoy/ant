@@ -4,7 +4,7 @@ fx:
     ALPHAMODE_OPAQUE: 1
     WITH_COLOR_ATTRIB: 1
     lighting: on
-    shadow_cast: on
+    cast_shadow: on
     shadow_receive: on
     subsurface: off
     DRAW_INDIRECT: 1

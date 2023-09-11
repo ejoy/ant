@@ -3,7 +3,7 @@ fx:
   fs: /pkg/ant.resources/shaders/postprocess/taa/fs_taa.sc
   setting:
     lighting: off
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: off
     TAA_FIRST_FRAME: 1
 properties:

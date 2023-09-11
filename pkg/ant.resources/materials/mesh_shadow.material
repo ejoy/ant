@@ -1,7 +1,7 @@
 fx:
   shader_type: PBR
   setting:
-    shadow_cast: off
+    cast_shadow: off
     shadow_receive: on
     PACK_TANGENT_TO_QUAT: 0
 properties:
