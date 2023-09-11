@@ -18,7 +18,7 @@ local w = world.w
 ]]
 
 local INV_Z<const> = true
-
+local INF_F<const> = true
 local fbmgr         = require "framebuffer_mgr"
 local sampler       = require "sampler"
 
@@ -201,7 +201,7 @@ function ios.create(point_eid)
     local frustum = {
         fov     = fovy,
         aspect  = aspect,
-        n = 1,  f = range,
+        n = 0.2,  f = range,
     }
 
     add_stencil_entity()
@@ -283,6 +283,7 @@ local function update_camera_matrices(camera)
     camera.viewmat	= math3d.inverse(camera.srt)
     camera.worldmat	= camera.srt
     camera.projmat	= math3d.projmat(camera.frustum, INV_Z)
+    camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 

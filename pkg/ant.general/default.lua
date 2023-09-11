@@ -1,7 +1,7 @@
 local default = {}
 
-local default_far_distance = 300
-local default_near_distance = 1
+local default_far_distance = 1000
+local default_near_distance = 0.2
 function default.frustum(aspect)
 	return {
 		type = "mat",

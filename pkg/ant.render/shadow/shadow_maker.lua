@@ -40,7 +40,6 @@ local iom		= ecs.require "ant.objcontroller|obj_motion"
 local RM        = ecs.require "ant.material|material"
 local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
-
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 local infinite_aabb         = math3d.ref(math3d.aabb(math3d.vector(-10000, -10000, -10000), math3d.vector(10000, 10000, 10000)))
@@ -69,6 +68,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
+	local ortho_proj_inf = ortho_proj
 	local min_proj, max_proj = math3d.transformH(ortho_proj, light_frustum_min, 1), math3d.transformH(ortho_proj, light_frustum_max, 1)
 
 	local minp, maxp = math3d.tovalue(min_proj), math3d.tovalue(max_proj)
@@ -92,7 +92,8 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	}
 	local camera = shadow_ce.camera
  	camera.viewmat.m = light_view
-	camera.projmat.m = math3d.mul(crop, ortho_proj) 
+	camera.projmat.m = math3d.mul(crop, ortho_proj)
+	camera.infprojmat.m = math3d.mul(crop, ortho_proj_inf)
 	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 

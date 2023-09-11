@@ -11,7 +11,7 @@ local irq       = ecs.require "ant.render|render_system.renderqueue"
 local hwi       = import_package "ant.hwi"
 
 local INV_Z<const> = true
-
+local INF_F<const> = true
 local svs = ecs.system "splitviews_system"
 
 local orthoview
@@ -231,6 +231,7 @@ function svs:update_camera()
             local d, p = math3d.index(worldmat, 3, 4)
             camera.viewmat.m = math3d.lookto(p, d, scene.updir)
             camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+            camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
             camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
         end
     end

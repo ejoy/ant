@@ -6,7 +6,7 @@ local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
 
 local INV_Z<const> = true
-
+local INF_F<const> = true
 local hwi		= import_package "ant.hwi"
 
 local math3d    = require "math3d"

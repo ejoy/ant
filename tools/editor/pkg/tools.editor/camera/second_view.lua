@@ -10,7 +10,7 @@ local defaultcomp= import_package "ant.general".default
 local hwi       = import_package "ant.hwi"
 
 local INV_Z<const> = true
-
+local INF_F<const> = true
 local math3d    = require "math3d"
 
 local irq       = ecs.require "ant.render|render_system.renderqueue"
@@ -93,6 +93,7 @@ function second_camera_sys:update_camera()
         local pos, dir = math3d.index(scene.worldmat, 4, 3)
         camera.viewmat.m = math3d.lookto(pos, dir, scene.updir)
         camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+        camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
         camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
     end
 end

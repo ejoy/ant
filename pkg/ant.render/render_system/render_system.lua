@@ -16,7 +16,7 @@ local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer"
 local ig		= ecs.require "ant.group|group"
 local RM        = ecs.require "ant.material|material"
-
+local INF_F<const> = true
 local render_sys= ecs.system "render_system"
 
 local R			= world:clibs "render.render_material"
@@ -153,7 +153,7 @@ local function update_camera_properties()
 		local ce = world:entity(qe.camera_ref, "camera_changed?in camera:in")
 		if ce.camera_changed then
 			local camera = ce.camera
-			bgfx.set_view_transform(qe.render_target.viewid, camera.viewmat, camera.projmat)
+			bgfx.set_view_transform(qe.render_target.viewid, camera.viewmat, camera.infprojmat)
 			if qe.queue_name == "main_queue" then
 				w:extend(ce, "scene:in")
 				local camerapos = math3d.index(ce.scene.worldmat, 4)

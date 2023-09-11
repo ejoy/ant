@@ -10,6 +10,7 @@ local defcomp 	= import_package "ant.general".default
 local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local INV_Z<const> = true
+local INF_F<const> = true
 
 local ic = {}
 
@@ -167,6 +168,7 @@ function cameraview_sys:entity_init()
         local camera = e.camera
         camera.viewmat       = math3d.ref(math3d.matrix())
         camera.projmat       = math3d.ref(math3d.matrix())
+        camera.infprojmat    = math3d.ref(math3d.matrix())
         camera.viewprojmat   = math3d.ref(math3d.matrix())
 
         e.camera_changed    = true
@@ -175,8 +177,9 @@ end
 
 local function update_camera(e)
     local camera = e.camera
-    camera.viewmat.m = math3d.inverse(e.scene.worldmat)
-    camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+    camera.viewmat.m     = math3d.inverse(e.scene.worldmat)
+    camera.projmat.m     = math3d.projmat(camera.frustum, INV_Z)
+    camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
     camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 

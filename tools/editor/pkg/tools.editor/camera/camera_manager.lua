@@ -6,8 +6,8 @@ local utils   = require "common.utils"
 local math3d  = require "math3d"
 
 local camera_mgr = {}
-local default_near_clip = 0.1
-local default_far_clip  = 100
+local default_near_clip = 0.2
+local default_far_clip  = 1000
 
 function camera_mgr.set_second_camera(cameraref, show)
     irq.set_camera("second_view", cameraref)
