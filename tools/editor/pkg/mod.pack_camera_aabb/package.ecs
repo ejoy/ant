@@ -1,0 +1,10 @@
+import "@ant.render"
+
+system "pack_camera_aabb_system"
+    .implement "pack_camera_aabb.lua"
+
+policy "pack_camera_aabb"
+    .require_system "pack_camera_aabb_system"
+    .component "pack_camera_aabb"
+
+component "pack_camera_aabb"
