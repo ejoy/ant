@@ -97,29 +97,20 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function get_intersected_aabb(main_camera)
-	local pack_scene_aabb, pack_camera_aabb = math3d.aabb(), math3d.aabb()
-	local psae, is_packed = w:first "pack_scene_aabb bounding:in", main_camera.pack_camera_aabb
-	if psae then
-		pack_scene_aabb = psae.bounding.scene_aabb
-	else
-		pack_scene_aabb = infinite_aabb
-	end
-	if is_packed then
-		pack_camera_aabb = main_camera.bounding.scene_aabb
-	else
-		local world_frustum_points = math3d.frustum_points(main_camera.camera.viewprojmat)
-		local camera_min, camera_max = math3d.minmax(world_frustum_points)
-		pack_camera_aabb = math3d.aabb(camera_min, camera_max)
-	end
-	return math3d.aabb_intersection(pack_camera_aabb, pack_scene_aabb)
+
+local function get_intersected_aabb()
+	local psae, mcae = w:first("pack_scene_aabb:in"), w:first("main_camera_aabb:in")
+	local pack_scene_aabb, main_camera_aabb = math3d.aabb(), math3d.aabb()
+	if psae and psae.pack_scene_aabb.scene_aabb then pack_scene_aabb = psae.pack_scene_aabb.scene_aabb end
+	if mcae and mcae.main_camera_aabb.scene_aabb then main_camera_aabb = mcae.main_camera_aabb.scene_aabb end
+	return math3d.aabb_intersection(main_camera_aabb, pack_scene_aabb)
 end
 
 local function update_shadow_frustum(dl, main_camera)
 	local lightdir = iom.get_direction(dl)
 	local shadow_setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(main_camera.camera.frustum)
-	local intersected_aabb = get_intersected_aabb(main_camera)
+	local intersected_aabb = get_intersected_aabb()
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
@@ -399,9 +390,8 @@ function sm:update_camera_depend()
 	local dl = w:first "csm_directional_light scene_changed?in scene:in"
 	if dl then
 		local mq = w:first "main_queue camera_ref:in"
-		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in bounding:in pack_camera_aabb?in")
+		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in")
 		if dl.scene_changed or ce.camera_changed then
-			--update_shadow_camera(dl, camera.camera)
 			update_shadow_frustum(dl, ce)
 			commit_csm_matrices_attribs()
 		end

@@ -19,10 +19,8 @@ policy "camera_recorder"
 
 policy "camera"
     .require_system "ant.camera|camera_view_system"
-    .require_system "ant.scene|bounding_system"
     .component "camera"
     .component_opt "scene"
-    .component_opt "bounding"
 
 component "camera".type "lua"
 

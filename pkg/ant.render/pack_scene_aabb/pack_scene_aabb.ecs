@@ -5,4 +5,4 @@ policy "pack_scene_aabb"
     .require_system "pack_scene_aabb_system"
     .component "pack_scene_aabb"
 
-component "pack_scene_aabb"
+component "pack_scene_aabb".type "lua"

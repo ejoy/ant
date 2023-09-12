@@ -4,12 +4,17 @@ hide_engine_resource: true
 lastprojs:
   ---
   name: ""
+  proj_path: "D:/vaststars2/startup"
+  ---
+  name: ""
   proj_path: "D:/Github/ant/tools/prefab_viewer"
   ---
   name: ""
   proj_path: "D:/Github/vaststars2/startup"
 light: /pkg/tools.prefab_viewer/assets/prefabs/light.prefab
 recent_files:
+  /pkg/vaststars.resources/daynight.prefab
+  /pkg/vaststars.resources/sky.prefab
   /pkg/vaststars.resources/glbs/drone-depot.glb|mesh.prefab
   /pkg/vaststars.resources/glbs/air-filter.glb|mesh.prefab
   /pkg/tools.prefab_viewer/assets/prefabs/vaststars2.prefab
@@ -18,5 +23,3 @@ recent_files:
   /pkg/vaststars.resources/glbs/mars-outfall.glb|mesh.prefab
   /pkg/tools.prefab_viewer/assets/glb/air-filter.glb|mesh.prefab
   /pkg/vaststars.resources/glbs/broken-pump-2x2.glb|mesh.prefab
-  /pkg/vaststars.resources/glbs/game-cover.glb|mesh.prefab
-  /pkg/vaststars.resources/glbs/crusher-1.glb|mesh.prefab
