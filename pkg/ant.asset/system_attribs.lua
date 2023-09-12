@@ -1,5 +1,5 @@
 local bgfx = require "bgfx"
-local sa	= import_package "ant.compile_resource".system_attribs
+local sa	= import_package "ant.render.core".system_attribs
 local UNIFORM_TYPES<const> = {
 	v = "v4", m = "m4"
 }

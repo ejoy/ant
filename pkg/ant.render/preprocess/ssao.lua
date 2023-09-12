@@ -18,7 +18,7 @@ end
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
 
-local sampler   = import_package "ant.general".sampler
+local sampler   = import_package "ant.render.core".sampler
 
 local hwi       = import_package "ant.hwi"
 local fbmgr     = require "framebuffer_mgr"

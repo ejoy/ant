@@ -76,16 +76,6 @@ function CMD.FETCH_ADD(session, path)
 	progress.success = progress.success + 1
 end
 
-local S_CMD = {}
-for k, f in pairs(CMD) do
-	S_CMD[k] = function (id, ...)
-		response_id(id, f(...))
-	end
-end
-for k, f in pairs(S_CMD) do
-	CMD["S_"..k] = f
-end
-
 local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		return
