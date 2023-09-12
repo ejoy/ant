@@ -29,6 +29,7 @@ local stdlib = {
 
     console = require "core.sandbox.console",
     audio = require "core.sandbox.audio",
+    json = import_package "ant.json",
 }
 
 return function (path)
