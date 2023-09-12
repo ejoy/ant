@@ -93,31 +93,11 @@ local ltask = require "ltask"
 local vfs = require "vfs"
 local thread = require "bee.thread"
 local ServiceIO = ltask.uniqueservice "io"
-
-local function sync_call(cmd, ...)
-	local r, _ = thread.rpc_create()
-	ltask.send_direct(ServiceIO, "S_"..cmd, r, ...)
-	return thread.rpc_wait(r)
-end
-local function async_call(...)
+local function call(...)
 	return ltask.call(ServiceIO, ...)
 end
-local function sync_send(cmd, ...)
-	local r, _ = thread.rpc_create()
-	ltask.send_direct(ServiceIO, "S_"..cmd, r, ...)
-end
-local function async_send(...)
+local function send(...)
 	return ltask.send(ServiceIO, ...)
-end
-local call = async_call
-local send = async_send
-function vfs.switch_sync()
-	call = sync_call
-	send = sync_send
-end
-function vfs.switch_async()
-	call = async_call
-	send = async_send
 end
 function vfs.realpath(path)
 	return call("GET", path)
@@ -130,12 +110,6 @@ function vfs.type(path)
 end
 function vfs.resource_setting(ext, setting)
 	return call("RESOURCE_SETTING", ext, setting)
-end
-function vfs.call(...)
-	return call(...)
-end
-function vfs.send(...)
-	return send(...)
 end
 local rawsearchpath = package.searchpath
 package.searchpath = function(name, path, sep, dirsep)

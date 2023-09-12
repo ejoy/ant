@@ -54,14 +54,6 @@ function vfs.fetch_end(session)
 	return call("FETCH_END", session)
 end
 
-function vfs.call(...)
-	return call(...)
-end
-
-function vfs.send(...)
-	return send(...)
-end
-
 function vfs.switch()
 	local servicelua = "/engine/task/service/service.lua"
 	send("SWITCH", servicelua, vfs.realpath(servicelua))

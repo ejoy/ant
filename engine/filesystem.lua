@@ -307,13 +307,4 @@ function fs.open(filepath, ...)
     return vfs_open(filepath:string(), ...)
 end
 
-local close_sync = setmetatable({}, {__close=function ()
-    vfs.switch_async()
-end})
-
-function fs.switch_sync()
-    vfs.switch_sync()
-    return close_sync
-end
-
 return fs
