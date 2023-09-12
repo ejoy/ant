@@ -39,6 +39,15 @@ function psa_sys:entity_remove()
     end
 end
 
+local function merge_aabb(mask, visible_masks, cull_masks, entity_scene_aabb, whole_scene_aabb)
+    if (mask & visible_masks) and (mask & cull_masks) then
+        if entity_scene_aabb and entity_scene_aabb ~= mc.NULL then
+            whole_scene_aabb = math3d.aabb_merge(whole_scene_aabb, entity_scene_aabb) 
+        end
+    end
+    return whole_scene_aabb
+end
+
 function psa_sys:after_scene_update()
     if not dirty then
         dirty = w:first "scene_changed scene bounding" 
@@ -48,23 +57,19 @@ function psa_sys:after_scene_update()
         local scene_aabb = math3d.aabb(math3d.vector(0, 0, 0), math3d.vector(0, 0, 0))
         local mask = assert(queuemgr.queue_mask("main_queue"))
         for e in w:select "render_object_visible bounding:in render_object:in" do
-            if (mask & e.render_object.visible_masks) and (mask & e.render_object.cull_masks) then
-                if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
-                    scene_aabb = math3d.aabb_merge(scene_aabb, e.bounding.scene_aabb) 
-                end
-            end
+            merge_aabb(mask, e.render_object.visible_masks, e.render_object.cull_masks, e.bounding.scene_aabb, scene_aabb)
         end
         for e in w:select "hitch_visible bounding:in hitch:in" do
-            if (mask & e.hitch.visible_masks) and (mask & e.hitch.cull_masks) then
-                if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
-                    scene_aabb = math3d.aabb_merge(scene_aabb, e.bounding.scene_aabb) 
-                end
-            end
+            merge_aabb(mask, e.hitch.visible_masks, e.hitch.cull_masks, e.bounding.scene_aabb, scene_aabb)
         end
-        local update_aabb = math3d.mark(scene_aabb)
+
         math3d.unmark(psae.bounding.scene_aabb)
-        psae.bounding.scene_aabb = update_aabb
-        psae.bounding.aabb       = update_aabb
+        math3d.unmark(psae.bounding.aabb)
+
+        local center, extents = math3d.aabb_center_extents(scene_aabb)
+        local aabb_min, aabb_max = math3d.sub(center, extents), math3d.add(center, extents)
+        psae.bounding.scene_aabb = math3d.marked_aabb(aabb_min, aabb_max)
+        psae.bounding.aabb       = math3d.marked_aabb(aabb_min, aabb_max)
         w:submit(psae)
         dirty = false
     end

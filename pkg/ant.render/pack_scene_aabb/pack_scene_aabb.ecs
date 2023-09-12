@@ -1,4 +1,2 @@
-import "@ant.render"
-
 system "pack_scene_aabb_system"
     .implement "pack_scene_aabb/pack_scene_aabb.lua"
