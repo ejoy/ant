@@ -4,7 +4,7 @@ local w     = world.w
 
 local math3d    = require "math3d"
 local fbmgr     = require "framebuffer_mgr"
-local sampler   = import_package "ant.general".sampler
+local sampler   = import_package "ant.render.core".sampler
 local irender   = ecs.require "ant.render|render_system.render"
 local util      = ecs.require "postprocess.util"
 local renderutil= require "util"

@@ -10,7 +10,7 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 
 local fbmgr		= require "framebuffer_mgr"
-local sampler   = import_package "ant.general".sampler
+local sampler   = import_package "ant.render.core".sampler
 
 local shadowcfg = {
 	color = setting:get "graphic/shadow/color",

@@ -1,3 +1,7 @@
+if __ANT_RUNTIME__ then
+    error "Cannot be imported in runtime mode."
+end
+
 local sha1    = require "sha1"
 local config  = require "config"
 local depends = require "depends"
@@ -39,5 +43,4 @@ return {
     init_setting = config.init,
     set_setting  = config.set,
     compile_file = compile_file,
-    system_attribs = require "material.system_attribs",
 }

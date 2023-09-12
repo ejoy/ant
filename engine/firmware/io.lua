@@ -729,11 +729,6 @@ local S = {}; do
 			return ltask.wait(session)
 		end
 	end
-	for v in pairs(CMD) do
-		S["S_"..v] = function (id, ...)
-			dispatch(true, id, v, ...)
-		end
-	end
 	function response_id(id, ...)
 		if id then
 			assert(type(id) ~= "string")

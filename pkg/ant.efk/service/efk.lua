@@ -1,6 +1,5 @@
 local S = {}
 
-local math3d    = require "math3d"
 local ltask     = require "ltask"
 local bgfx      = require "bgfx"
 
@@ -8,8 +7,6 @@ local fs        = require "filesystem"
 
 local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
-
-local FI        = require "fileinterface"
 
 local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
@@ -25,13 +22,6 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 
 bgfx.init()
 assetmgr.init()
-
-local function preopen(filename)
-    local _ <close> = fs.switch_sync()
-    return fs.path(filename):localpath():string()
-end
-
-local filefactory = FI.factory { preopen = preopen }
 
 local function init_fx_files()
     local tasks = {}
@@ -67,7 +57,7 @@ local FxFiles = init_fx_files()
 
 local function shader_load(materialfile, shadername, stagetype)
     assert(materialfile == nil)
-    local fx = assert(FxFiles[shadername], ("unkonw shader name:%s"):format(shadername))
+    local fx = assert(FxFiles[shadername], ("unknown shader name:%s"):format(shadername))
     return fx[stagetype]
 end
 
@@ -124,7 +114,6 @@ function S.init()
         texture_unload  = efk_cb.texture_unload,
         userdata        = {
             callback = efk_cb_handle,
-            filefactory = filefactory,
         }
     }
 end
@@ -143,8 +132,9 @@ function S.create(filename)
     local info = EFKFILES[filename]
     if not info then
         log.info("Create efk file:", filename)
+        local path = fs.path(filename)
         info = {
-            obj = EFKCTX:new(filename),
+            obj = EFKCTX:new(path:localpath():string(), path:parent_path():string()),
             count = 0,
         }
         EFKFILES[filename] = info

@@ -3,7 +3,7 @@ local world = ecs.world
 
 -- local hwi           = import_package "ant.hwi"
 -- local fbmgr         = require "framebuffer_mgr"
--- local sampler       = require "sampler"
+-- local sampler       = import_package "ant.render.core".sampler
 -- local ipp           = ecs.require "ant.render|postprocess"
 -- local iom           = ecs.require "ant.objcontroller|obj_motion"
 -- local imaterial = ecs.require "ant.asset|material"

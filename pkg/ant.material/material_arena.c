@@ -403,7 +403,7 @@ attrib_arena_apply(struct attrib_arena *A, int id, struct attrib_arena_apply_con
 		}	break;
 		case ATTRIB_UNIFORM : {
 			int n = a->u.u.v.elem;
-			#ifdef MATERIAL_DEBUG
+			#if MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
 			assert(n <= info.num);
 			#endif //MATERIAL_DEBUG
@@ -412,7 +412,7 @@ attrib_arena_apply(struct attrib_arena *A, int id, struct attrib_arena_apply_con
 		}
 		case ATTRIB_UNIFORM_INSTANCE: {
 			const int n = ctx->math_size(ctx->math3d, a->u.u.m);
-			#ifdef MATERIAL_DEBUG
+			#if MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
 			assert(n <= info.num);
 			#endif //MATERIAL_DEBUG

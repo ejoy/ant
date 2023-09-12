@@ -4,11 +4,8 @@
 
 #include <bgfx/c99/bgfx.h>
 
-#include "efk_fileinterface.h"
-
 #include "efkbgfx/renderer/bgfxrenderer.h"
 #include "../../clibs/bgfx/bgfx_interface.h"
-#include "../../clibs/fileinterface/fileinterface.h"
 #include <Effekseer/Effekseer.DefaultEffectLoader.h>
 
 extern "C" {
@@ -33,7 +30,6 @@ public:
 
     EffekseerRenderer::RendererRef renderer;
     Effekseer::ManagerRef manager;
-    struct file_interface *fi;
 	
 	int freelist = -1;
     std::vector<efk_instance>   effects;
@@ -121,12 +117,15 @@ static int
 lefkctx_new(lua_State *L) {
     auto ctx = EC(L);
     auto filename = luaL_checkstring(L, 2);
-    const float mag = (float)luaL_optnumber(L, 3, 1.f);
+    auto materialPath = luaL_checkstring(L, 3);
+    const float mag = (float)luaL_optnumber(L, 4, 1.f);
     char16_t u16_filename[1024];
+    char16_t u16_materialPath[1024];
     Effekseer::ConvertUtf8ToUtf16(u16_filename, 1024, filename);
+    Effekseer::ConvertUtf8ToUtf16(u16_materialPath, 1024, materialPath);
 
 	struct efk_box *box = (struct efk_box *)lua_newuserdatauv(L, sizeof(*box), 0);
-	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, u16_filename, mag));
+	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, u16_filename, mag, u16_materialPath));
 	if (luaL_newmetatable(L, "EFK_INSTANCE")) {
 		lua_pushcfunction(L, lefk_release);
 		lua_setfield(L, -2, "__gc");
@@ -430,10 +429,8 @@ lefk_startup(lua_State *L){
     get_field("texture_load",   1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_load = (decltype(efkArgs.texture_load))lua_touserdata(L, -1);});
     get_field("texture_get",    1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_get = (decltype(efkArgs.texture_get))lua_touserdata(L, -1);});
     get_field("texture_unload", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_unload = (decltype(efkArgs.texture_unload))lua_touserdata(L, -1);});
-    struct file_interface *fi = nullptr;
     get_field("userdata", 1, LUA_TTABLE, [&](){
         get_field("callback", -1, LUA_TUSERDATA, [&](){efkArgs.ud = lua_touserdata(L, -1);});
-        get_field("filefactory", -1, LUA_TUSERDATA, [&](){fi = (struct file_interface*)lua_touserdata(L, -1);});
     });
 
     auto ctx = (efk_ctx*)lua_newuserdatauv(L, sizeof(efk_ctx), 0);
@@ -464,8 +461,6 @@ lefk_startup(lua_State *L){
 
     new (ctx) efk_ctx();
 
-    ctx->fi = fi;
-
     ctx->renderer = EffekseerRendererBGFX::CreateRenderer(&efkArgs);
     if (ctx->renderer == nullptr){
         return luaL_error(L, "create efkbgfx renderer failed");
@@ -473,16 +468,12 @@ lefk_startup(lua_State *L){
 	ctx->manager = Effekseer::Manager::Create(efkArgs.squareMaxCount);
 	ctx->manager->GetSetting()->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 
-    auto efk_fi = Effekseer::MakeRefPtr<EfkFileInterface>(fi);
     ctx->manager->SetModelRenderer(CreateModelRenderer(ctx->renderer, &efkArgs));
     ctx->manager->SetSpriteRenderer(ctx->renderer->CreateSpriteRenderer());
     ctx->manager->SetRibbonRenderer(ctx->renderer->CreateRibbonRenderer());
     ctx->manager->SetRingRenderer(ctx->renderer->CreateRingRenderer());
     ctx->manager->SetTrackRenderer(ctx->renderer->CreateTrackRenderer());
-    ctx->manager->SetEffectLoader(Effekseer::MakeRefPtr<Effekseer::DefaultEffectLoader>(efk_fi));
-    ctx->manager->SetTextureLoader(ctx->renderer->CreateTextureLoader(efk_fi));
-    ctx->manager->SetModelLoader(ctx->renderer->CreateModelLoader(efk_fi));
-    ctx->manager->SetMaterialLoader(ctx->renderer->CreateMaterialLoader(efk_fi));
+    ctx->manager->SetTextureLoader(ctx->renderer->CreateTextureLoader());
     ctx->manager->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
 
     return 1;
