@@ -18,7 +18,6 @@ build
 
 output
 
-editor.setting
 editor.user.setting
 editor.user.ini
 script_runner.user.lua
@@ -26,5 +25,5 @@ script_runner.user.lua
 projects/xcode/lua/Build
 projects/xcode/lua/DerivedData
 projects/xcode/lua/lua.xcodeproj/project.xcworkspace/xcuserdata/ejoy.xcuserdatad/UserInterfaceState.xcuserstate
-tools/prefab_editor/pkg/tools.prefab_editor/editor.settings
+tools/editor/pkg/tools.editor/editor.settings
 tools/rmlviewer/mod
