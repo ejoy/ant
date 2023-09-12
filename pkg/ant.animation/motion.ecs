@@ -1,5 +1,4 @@
 import "@ant.timer"
-import "@ant.general"
 
 system "motion_system"
     .implement "motion.lua"

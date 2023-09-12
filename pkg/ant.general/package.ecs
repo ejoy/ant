@@ -1,4 +1,0 @@
-component "name"
-    .type "lua"
-policy "name"
-    .component "name"

@@ -1,5 +1,3 @@
-import "@ant.general"
-
 system "physic_bounding_system"
     .implement "widget_system.lua"
 

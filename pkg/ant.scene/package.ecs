@@ -1,5 +1,4 @@
 import "@ant.objcontroller"
-import "@ant.general"
 
 pipeline "scene"
     .stage "update_slot"

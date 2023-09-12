@@ -1,4 +1,3 @@
-import "@ant.general"
 import "@ant.render"
 import "@ant.sky"
 import "@ant.camera"

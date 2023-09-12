@@ -1,4 +1,3 @@
-import "@ant.general"
 import "@ant.rmlui"
 import "@ant.render"
 import "@ant.animation"
