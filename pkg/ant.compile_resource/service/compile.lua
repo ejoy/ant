@@ -1,13 +1,14 @@
 local repopath = ...
 
 local vfs = require "vfs"
-local cr = require "main"
-cr.init_setting()
 
 if repopath then
     local access = dofile "/engine/vfs/repoaccess.lua"
     dofile "/engine/editor/create_repo.lua" (repopath, access)
 end
+
+local cr = require "main"
+cr.init_setting()
 
 local S = {}
 
