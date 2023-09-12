@@ -2,9 +2,7 @@
 policy:
     ant.sky|skybox
     ant.render|simplerender
-    ant.general|name
 data:
-    name: skybox_test
     visible_state: main_view
     scene: {}
     ibl:

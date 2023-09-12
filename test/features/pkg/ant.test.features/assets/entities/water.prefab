@@ -2,7 +2,6 @@
 policy:
   ant.render|simplerender
   ant.terrain|water
-  ant.general|name
 data:
   water:
     grid_width: 1
@@ -16,4 +15,3 @@ data:
   scene:
     s: 10
     t: {0.0, 0.0, 10.0}
-  name: water_test

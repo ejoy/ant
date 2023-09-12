@@ -1,19 +1,15 @@
 ---
 data:
-  name: Scene
   scene: {}
 policy:
-  ant.general|name
   ant.scene|scene_object
 ---
 data:
   material: /pkg/ant.resources.binary/meshes/base/sphere.glb|materials/Material.001.material
   mesh: /pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin
-  name: Sphere
   scene:
     t: {0, 1, 0, 1}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render

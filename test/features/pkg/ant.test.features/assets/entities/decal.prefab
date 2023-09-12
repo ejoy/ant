@@ -1,7 +1,6 @@
 ---
 policy:
     ant.render|render
-    ant.general|name
 data:
     scene: 
         s: 100
@@ -9,14 +8,11 @@ data:
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view
     scene_entity: true
-    name: cube
 ---
 policy:
     ant.render|decal
     ant.scene|scene_object
-    ant.general|name
 data:
-    name: decal_test
     scene:
         t: {0, 0, 1, 1}
     material: /pkg/ant.resources/materials/decal_test.material

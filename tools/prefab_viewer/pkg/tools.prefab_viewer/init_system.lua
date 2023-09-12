@@ -30,7 +30,6 @@ function S.init_world()
 	-- world:create_entity {
 	-- 	policy = {
 	-- 		"ant.render|render",
-	-- 		"ant.general|name",
 	-- 	},
 	-- 	data = {
 	-- 		scene = {s = {200, 1, 200}},
@@ -38,7 +37,6 @@ function S.init_world()
 	-- 		material    = "/pkg/tools.prefab_viewer/assets/materials/texture_plane.material",
 	-- 		render_layer = "background",
 	-- 		visible_state= "main_view",
-	-- 		name        = "ground",
 	-- 		on_ready = function (e)
 	-- 			imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
 	-- 		end

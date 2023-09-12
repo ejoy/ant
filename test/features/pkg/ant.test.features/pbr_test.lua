@@ -9,16 +9,14 @@ local feature_path = fs.path "/pkg/ant.test.features"
 local imaterial = ecs.require "ant.asset|material"
 local math3d    = require "math3d"
 
-local function create_pbr_entity(name, srt, material,
+local function create_pbr_entity(srt, material,
     color, metallic, roughness)
 
     local eid = world:deprecated_create_entity {
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
-            name        = name,
             transform   = srt,
             material    = material,
             visible_state= "main_view|selectable",
@@ -46,8 +44,8 @@ local function pbr_spheres()
         local z = 0.0
         for col=1, num_samples do
             local roughness = col * roughness_step
-            create_pbr_entity("sphere" .. row .. "x" .. col, 
-            {s = 100, t = {x, 0.0, z, 1.0}}, 
+            create_pbr_entity(
+                {s = 100, t = {x, 0.0, z, 1.0}}, 
             material, basecolor, metallic, roughness)
 
             z = z + movestep

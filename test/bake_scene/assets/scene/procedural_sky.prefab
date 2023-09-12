@@ -2,7 +2,6 @@
 data:
   material: /pkg/ant.resources/materials/sky/procedural/procedural_sky.material
   mesh: $path ./procedural_sky.meshbin
-  name: "procedural sky"
   procedural_sky:
     latitude: 0.8726646259971648
     month: June
@@ -15,6 +14,5 @@ data:
     s: {1, 1, 1, 0}
     t: {0, 0, 0, 1}
 policy:
-  ant.general|name
   ant.render|render
   ant.sky|procedural_sky

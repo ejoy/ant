@@ -13,7 +13,6 @@ local function create_simple_test_group()
     world:create_entity {
         policy = {
             "ant.render|hitch_object",
-            "ant.general|name",
         },
         data = {
             scene = {
@@ -23,13 +22,11 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
-            name = "hitch_static1",
         }
     }
     world:create_entity {
         policy = {
             "ant.render|hitch_object",
-            "ant.general|name",
         },
         data = {
             scene = {
@@ -39,13 +36,11 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
-            name = "hitch_static2",
         }
     }
     world:create_entity {
         policy = {
             "ant.render|hitch_object",
-            "ant.general|name",
         },
         data = {
             scene = {
@@ -55,7 +50,6 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
-            name = "hitch_static2",
         }
     }
 
@@ -64,7 +58,6 @@ local function create_simple_test_group()
         group = hitch_test_group_id,
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
@@ -75,7 +68,6 @@ local function create_simple_test_group()
                 iom.set_position(e, math3d.vector(0, 2, 0))
                 --iom.set_scale(e, 3)
             end,
-            name = "virtual_node_p1",
         },
     }
 
@@ -83,7 +75,6 @@ local function create_simple_test_group()
         group = hitch_test_group_id,
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
             mesh = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
@@ -95,7 +86,6 @@ local function create_simple_test_group()
             on_ready = function (e)
                 iom.set_position(e, math3d.vector(1, 2, 3))
             end,
-            name = "virtual_node",
         },
     }
 end
@@ -108,7 +98,6 @@ local function create_skeleton_test_group()
     world:create_entity {
         policy = {
             "ant.render|hitch_object",
-            "ant.general|name",
         },
         data = {
             scene = {
@@ -119,14 +108,12 @@ local function create_skeleton_test_group()
                 group = skeleton_test_group_id
             },
             visible_state = "main_view",
-            name = "hitch_dynamic1",
         }
     }
 
     change_hitch_eid = world:create_entity {
         policy = {
             "ant.render|hitch_object",
-            "ant.general|name",
         },
         data = {
             scene = {
@@ -138,7 +125,6 @@ local function create_skeleton_test_group()
                 group = skeleton_test_group_id
             },
             visible_state = "main_view",
-            name = "hitch_dynamic2",
         }
     }
 

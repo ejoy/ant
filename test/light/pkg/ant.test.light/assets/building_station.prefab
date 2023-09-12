@@ -1,112 +1,92 @@
 ---
 data:
-  name: Scene
   scene: {}
 policy:
-  ant.general|name
   ant.scene|scene_object
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.003_P1.meshbin
-  name: Cube.003
   scene: {}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cylinder_P1.meshbin
-  name: Cylinder
   scene: {}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.005_P1.meshbin
-  name: Cube.002
   scene: {}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.003_P1.meshbin
-  name: Cube.003_1
   scene:
     r: {0, 0.7071067690849304, 0, 0.7071067690849304}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.003_P1.meshbin
-  name: Cube.003_2
   scene:
     r: {-0, 1, -0, -4.371138828673793e-08}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.003_P1.meshbin
-  name: Cube.003_3
   scene:
     r: {-0, 0.7071067690849304, -0, -0.7071067690849304}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.005_P1.meshbin
-  name: Cube.002_1
   scene:
     r: {0, 0.7071067690849304, 0, 0.7071067690849304}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.005_P1.meshbin
-  name: Cube.002_2
   scene:
     r: {-0, 1, -0, -4.371138828673793e-08}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render
 ---
 data:
   material: /pkg/ant.test.light/assets/building_station.glb|materials/Material.001.material
   mesh: /pkg/ant.test.light/assets/building_station.glb|meshes/Cube.005_P1.meshbin
-  name: Cube.002_3
   scene:
     r: {-0, 0.7071067690849304, -0, -0.7071067690849304}
   visible_state: main_view|selectable|cast_shadow
 mount: 1
 policy:
-  ant.general|name
   ant.render|render

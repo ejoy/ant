@@ -16,11 +16,9 @@ local function motion_sampler_test()
         policy = {
             "ant.scene|scene_object",
             "ant.motion_sampler|motion_sampler",
-            "ant.general|name",
         },
         data = {
             scene = {},
-            name = "motion_sampler",
             motion_sampler = {
                 duration = 10000,
                 current = 0,

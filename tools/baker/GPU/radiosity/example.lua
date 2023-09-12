@@ -347,7 +347,6 @@ end
 local function create_test_entities()
     example_eid = world:deprecated_create_entity {
         policy = {
-            "ant.general|name",
             "ant.render|lightmap",
             "ant.bake|bake_lightmap",
             "ant.render|render",
@@ -361,14 +360,12 @@ local function create_test_entities()
             transform = {},
             material = "/pkg/ant.tool.baker/GPU/radiosity/assets/example/materials/example.material",
             mesh = "/pkg/ant.tool.baker/GPU/radiosity/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
-            name = "lightmap_example",
             visible_state = "main_view",
         }
     }
 
     local cubeeid = world:deprecated_create_entity{
         policy = {
-            "ant.general|name",
             "ant.render|render"
         },
         data = {
@@ -376,7 +373,6 @@ local function create_test_entities()
             transform = {},
             material = "/pkg/ant.tool.baker/GPU/radiosity/assets/face_test.material",
             mesh = face_test(),
-            name = "cube",
             visible_state = "",
         }
     }

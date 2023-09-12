@@ -1,18 +1,15 @@
 ---
 policy:
     ant.render|render
-    ant.general|name
 data:
     scene:
       s: 10
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view|selectable
-    name: light_attach_cube
 ---
 policy:
   ant.render|light
-  ant.general|name
 data:
   scene:
     t: {0, 10, 0, 1}
@@ -23,7 +20,6 @@ data:
     range: 15
     type: point
   point_light: true
-  name: point_light
   visible: true
 action:
     mount: @1

@@ -1,9 +1,7 @@
 ---
 data:
-  name: miner-1.prefab
   scene: {}
 policy:
-  ant.general|name
   ant.scene|scene_object
 ---
 editor: false

@@ -20,10 +20,8 @@ local function raymarch_entity()
     return world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name = "test_raymarch",
             simplemesh = imesh.init_mesh{
                 vb = {
                     start = 0,

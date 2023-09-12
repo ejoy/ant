@@ -54,10 +54,8 @@ end
 local lightmapper_entity = {
 	policy = {
 		"ant.render|lightmap_result",
-		"ant.general|name",
 	},
 	data = {
-		name = "lightmap_result",
 		lightmapper = true,
 	},
 }

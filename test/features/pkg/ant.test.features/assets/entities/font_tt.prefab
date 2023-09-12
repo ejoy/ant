@@ -3,13 +3,11 @@ data:
   visible_state: main_view|cast_shadow
   material: /pkg/ant.resources/materials/singlecolor.material
   mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin
-  name: slot_cube
   scene:
     s: 100
     t: {0, 3, 0, 1}
 policy:
   ant.render|render
-  ant.general|name
 ---
 action:
   show_name: 1
@@ -31,4 +29,3 @@ policy:
   ant.render|render
   ant.render|show_name
   ant.render|fontrender
-  ant.general|name

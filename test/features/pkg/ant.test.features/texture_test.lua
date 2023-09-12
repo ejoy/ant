@@ -26,12 +26,10 @@ function dtt_sys:init()
     test_billboard=world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
             "ant.render|billboard"
         },
         data = {
             billboard=true,
-            name = "test_texture_entity",
             scene = {
                 t = {0, 4.0,-4.0},
             },

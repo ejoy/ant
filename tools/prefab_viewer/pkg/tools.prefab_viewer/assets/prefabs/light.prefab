@@ -1,7 +1,6 @@
 ---
 data:
   material: /pkg/tools.prefab_viewer/assets/materials/sky/skybox.material
-  name: skybox_test
   render_layer: background
   scene: {}
   simplemesh: false
@@ -10,7 +9,6 @@ data:
 policy:
   ant.sky|skybox
   ant.render|simplerender
-  ant.general|name
 ---
 data:
   light:
@@ -19,14 +17,12 @@ data:
     intensity_unit: lux
     type: directional
   make_shadow: true
-  name: directional_light
   scene:
     r: {0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931}
     t: {0, 5, 0, 1}
   visible: true
 policy:
   ant.render|light
-  ant.general|name
 ---
 data:
   ibl:
@@ -42,7 +38,5 @@ data:
       facesize: 512
       value: 0
   ibl_changed: true
-  name: ibl_test
 policy:
   ant.render|ibl
-  ant.general|name

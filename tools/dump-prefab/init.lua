@@ -59,12 +59,10 @@ local lmr_e = w:first("lightmapper lightmap_result:in")
 lm_prefilter.save(lmr_path / "lightmap_result.prefab", {
     policy = {
         "ant.render|lightmap_result",
-        "ant.general|name",
     },
     data = {
         lightmap_result = lmr_e.lightmap_result,
         lightmapper = true,
-        name = "lightmap_result"
     }
 })
 

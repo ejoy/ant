@@ -9,7 +9,6 @@ data:
     prefilter:
       size: 128
   material: $path ../skybox.material
-  name: skybox_test
   render_layer: background
   scene: {}
   simplemesh: false
@@ -19,4 +18,3 @@ data:
 policy:
   ant.sky|skybox
   ant.render|simplerender
-  ant.general|name

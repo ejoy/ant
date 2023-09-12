@@ -33,11 +33,9 @@ function st_sys:init()
 	local root = world:create_entity {
 		policy = {
 			"ant.scene|scene_object",
-			"ant.general|name",
 		},
 		data = {
 			scene =  {t={10, 0, 0}},
-			name = "mesh_root",
 		}
 	}
 
@@ -46,7 +44,6 @@ function st_sys:init()
 	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
 			scene 		= {
@@ -57,7 +54,6 @@ function st_sys:init()
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
-			name 		= "test_shadow_plane",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,
 			on_ready = function (e)
