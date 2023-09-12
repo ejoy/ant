@@ -459,9 +459,6 @@ function m.new_world(config)
             table.insert(cfg.system, "ant.ecs|debug_system")
         end
     end
-    if config.DEBUG then
-        luaecs.check_select(true)
-    end
     local ecs = luaecs.world()
     local w; w = setmetatable({
         args = config,

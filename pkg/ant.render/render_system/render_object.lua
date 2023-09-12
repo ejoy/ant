@@ -7,7 +7,6 @@ local ro = ecs.component "render_object"
 function ro.init()
     return {
         worldmat    = mc.NULL,
-        prog        = 0xffffffff,
         --materials
         rm_idx      = 0xffffffff,
         visible_masks = 0,
