@@ -317,23 +317,25 @@ end
 local function serialize_prefab(status, data)
     for _, v in ipairs(data) do
         local e = v.data
-        if e.animation then
-            for name, file in pairs(e.animation) do
-                e.animation[name] = serialize_path(file)
+        if e then
+            if e.animation then
+                for name, file in pairs(e.animation) do
+                    e.animation[name] = serialize_path(file)
+                end
             end
-        end
-        if e.material then
-            e.material = seri_material(status, e.material, status.material_cfg[e.mesh])
-            e.material = serialize_path(e.material)
-        end
-        if e.mesh then
-            e.mesh = serialize_path(e.mesh)
-        end
-        if e.skeleton then
-            e.skeleton = serialize_path(e.skeleton)
-        end
-        if e.meshskin then
-            e.meshskin = serialize_path(e.meshskin)
+            if e.material then
+                e.material = seri_material(status, e.material, status.material_cfg[e.mesh])
+                e.material = serialize_path(e.material)
+            end
+            if e.mesh then
+                e.mesh = serialize_path(e.mesh)
+            end
+            if e.skeleton then
+                e.skeleton = serialize_path(e.skeleton)
+            end
+            if e.meshskin then
+                e.meshskin = serialize_path(e.meshskin)
+            end
         end
     end
     return data
@@ -401,8 +403,10 @@ return function (status)
     utility.save_txt_file(status, "translucent.prefab", status.prefab, function (data)
         for _, v in ipairs(data) do
             local e = v.data
-            if e.material then
-                e.material = serialize_path "/pkg/ant.resources/materials/translucent.material"
+            if e then
+                if e.material then
+                    e.material = serialize_path "/pkg/ant.resources/materials/translucent.material"
+                end
             end
         end
         return data
