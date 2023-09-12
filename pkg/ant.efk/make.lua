@@ -20,7 +20,6 @@ lm:lua_source "efk" {
         ROOT .. "3rd/bgfx/include",
         ROOT .. "3rd/bx/include",
         ROOT .. "pkg/ant.resource_manager/src",
-        ROOT .. "clibs/fileinterface",
     },
     sources = {
         "lefk.cpp",
