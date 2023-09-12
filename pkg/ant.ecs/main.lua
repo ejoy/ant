@@ -14,6 +14,8 @@ local world_metatable = {}
 local world = {}
 world_metatable.__index = world
 
+local DEBUG <const> = luaecs.DEBUG
+
 local function create_entity_by_data(w, group, data, debuginfo)
     local queue = w._create_entity_queue
     local eid = w.w:new {
@@ -46,7 +48,11 @@ end
 
 function world:create_entity(v)
     policy.verify(self, v.policy, v.data)
-    return create_entity_by_data(self, v.group or 0, v.data, debug.traceback())
+    local debuginfo
+    if DEBUG then
+        debuginfo = debug.traceback()
+    end
+    return create_entity_by_data(self, v.group or 0, v.data, debuginfo)
 end
 
 function world:remove_entity(e)
@@ -200,7 +206,10 @@ function world:create_instance(args)
         group = args.group,
         tag = {['*']={}}
     }
-    local debuginfo = debug.traceback(args.prefab)
+    local debuginfo
+    if DEBUG then
+        debuginfo = debug.traceback(args.prefab)
+    end
     local q = self._create_prefab_queue
     q[#q+1] = {
         instance = instance,
