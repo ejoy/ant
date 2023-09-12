@@ -1,2 +1,0 @@
-system "auto_heightmap_system"
-    .implement "auto_heightmap.lua"
