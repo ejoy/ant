@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 -- local w = world.w
--- local sampler   = require "sampler"
+-- local sampler       = import_package "ant.render.core".sampler
 -- local fbmgr     = require "framebuffer_mgr"
 
 -- local ipp       = ecs.require "ant.render|postprocess"

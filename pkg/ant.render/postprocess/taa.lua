@@ -22,8 +22,9 @@ end
 
 local layoutmgr	= require "vertexlayout_mgr"
 local mu        = import_package "ant.math".util
+local sampler   = import_package "ant.render.core".sampler
+
 local fbmgr     = require "framebuffer_mgr"
-local sampler   = require "sampler"
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.asset|material"

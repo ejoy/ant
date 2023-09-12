@@ -7,7 +7,7 @@ local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local depends       = require "depends"
 local parallel_task = require "parallel_task"
-local sa            = require "material.system_attribs"
+local sa            = import_package "ant.render.core".system_attribs
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 local function DEF_FUNC() end
 

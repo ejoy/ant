@@ -3,7 +3,8 @@ local world = ecs.world
 local w     = world.w
 
 local hwi       = import_package "ant.hwi"
-local sampler   = require "sampler"
+local sampler   = import_package "ant.render.core".sampler
+
 local fbmgr     = require "framebuffer_mgr"
 
 local bgfx      = require "bgfx"

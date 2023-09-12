@@ -13,7 +13,7 @@ local fbmgr			= require "framebuffer_mgr"
 local layoutmgr		= require "vertexlayout_mgr"
 
 local hwi			= import_package "ant.hwi"
-local sampler		= import_package "ant.general".sampler
+local sampler		= import_package "ant.render.core".sampler
 
 local ig 			= ecs.require "ant.group|group"
 

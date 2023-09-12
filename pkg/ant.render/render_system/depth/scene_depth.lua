@@ -21,8 +21,9 @@ local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
 local hwi       = import_package "ant.hwi"
+local sampler   = import_package "ant.render.core".sampler
 local fbmgr     = require "framebuffer_mgr"
-local sampler   = require "sampler"
+
 
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 

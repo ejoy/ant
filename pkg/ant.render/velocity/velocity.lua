@@ -21,7 +21,7 @@ local queuemgr      = ecs.require "queue_mgr"
 local R             = world:clibs "render.render_material"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local fbmgr         = require "framebuffer_mgr"
-local sampler       = import_package "ant.general".sampler
+local sampler       = import_package "ant.render.core".sampler
 local default_comp  = import_package "ant.general".default
 
 local assetmgr      = import_package "ant.asset"

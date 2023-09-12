@@ -399,7 +399,7 @@ function sm:update_camera_depend()
 	local dl = w:first "csm_directional_light scene_changed?in scene:in"
 	if dl then
 		local mq = w:first "main_queue camera_ref:in"
-		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in bounding:in pack_camera_aabb?in")
+		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in bounding:in")
 		if dl.scene_changed or ce.camera_changed then
 			--update_shadow_camera(dl, camera.camera)
 			update_shadow_frustum(dl, ce)
