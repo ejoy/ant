@@ -5,7 +5,6 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
-local platform  = require "bee.platform"
 local bgfx      = require "bgfx"
 
 local ServiceRmlUi
@@ -40,7 +39,6 @@ end
 local function render(nwh, context, width, height, initialized)
 	local config = {
 		ecs = initargs,
-		DEBUG = platform.DEBUG or platform.os ~= "ios"
 	}
 	config.framebuffer = {
 		width = width,

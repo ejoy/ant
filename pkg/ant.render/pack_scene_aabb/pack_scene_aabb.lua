@@ -17,11 +17,10 @@ end
 function psa_sys:init()
     world:create_entity {
         policy = {
-            "ant.general|name",
+            "ant.render|pack_scene_aabb",
             "ant.scene|bounding"
         },
         data = {
-            name = "pack_scene_aabb",
             pack_scene_aabb = true,
         }
     }
