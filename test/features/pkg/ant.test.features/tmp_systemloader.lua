@@ -68,10 +68,8 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
     return world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
-            name = "test_texture_plane",
             simplemesh = m,
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/texture_plane.material",
@@ -92,7 +90,6 @@ local function color_palette_test()
     return world:create_entity {
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             simplemesh = {
@@ -108,7 +105,6 @@ local function color_palette_test()
             material = "/pkg/ant.resources/materials/color_palette_test.material",
             visible_state = "main_view",
             scene = {srt={}},
-            name = "color_pal_test",
         }
     }
 end
@@ -184,7 +180,6 @@ local function render_layer_test()
     world:create_entity {
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             simplemesh = m,
@@ -192,7 +187,6 @@ local function render_layer_test()
             material = "/pkg/ant.test.features/assets/render_layer_test.material",
             render_layer = "translucent_plane",
             visible_state = "main_view",
-            name = "test",
             on_ready = function (e)
                 imaterial.set_state(e, {
                     ALPHA_REF = 0,
@@ -226,7 +220,6 @@ local function drawindirect_test()
 --[[     sm_id = world:create_entity {
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
             mesh = "/pkg/ant.test.features/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
@@ -234,33 +227,28 @@ local function drawindirect_test()
             material = "/pkg/ant.test.features/mountain1.glb|materials/Material_cnup.material",
             --material = "/pkg/ant.test.features/assets/pbr_test.material",
             visible_state = "main_view",
-            name = "test",
         }
     } ]]
 --[[     world:create_entity {
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
             mesh = "/pkg/ant.test.features/assets/t1.glb|meshes/zhuti.025_P1.meshbin",
             scene = {},
             material = "/pkg/ant.test.features/assets/t1.glb|materials/Material.material",
             visible_state = "main_view",
-            name = "test",
         }
     }
     world:create_entity {
         policy = {
             "ant.render|render",
-            "ant.general|name",
         },
         data = {
             mesh = "/pkg/ant.test.features/assets/cube.glb|meshes/Cube_P1.meshbin",
             scene = {t = {-5, 5, 0}},
             material = "/pkg/ant.test.features/assets/cube.glb|materials/Material.001.material",
             visible_state = "main_view",
-            name = "test",
         }
     } ]]
 
@@ -272,10 +260,8 @@ local function canvas_test()
         policy = {
             "ant.scene|scene_object",
             "ant.terrain|canvas",
-            "ant.general|name",
         },
         data = {
-            name = "canvas",
             scene = {
                 t = {0.0, 2, 0.0},
             },

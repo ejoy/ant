@@ -1,10 +1,9 @@
 ---
 policy:
     ant.render|render
-    ant.general|name
 data:
     mesh:"/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     material: "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001_nup.material"
     visible_state: "main_view"
     scene: {}
-    name: "testmesh"
+

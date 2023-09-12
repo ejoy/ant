@@ -3,9 +3,7 @@ policy:
     ant.sky|skybox
     ant.render|ibl
     ant.render|simplerender
-    ant.general|name
 data:
-    name: skybox_test
     visible_state: main_view
     scene: {}
     ibl:
@@ -23,11 +21,9 @@ data:
 ---
 policy:
   ant.render|light
-  ant.general|name
 data:
   scene:
     r: {1.8, 0, 0}
-  name: directional_light
   visible: true
   light:
     color: {0.955104649, 0.827570975, 0.767768800, 1}

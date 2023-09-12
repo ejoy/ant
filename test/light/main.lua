@@ -14,7 +14,6 @@ import_package "ant.window".start {
         "ant.test.light|init_system",
     },
     policy = {
-        "ant.general|name",
         "ant.scene|scene_object",
         "ant.render|render",
         "ant.render|render_queue",

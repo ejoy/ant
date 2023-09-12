@@ -13,8 +13,5 @@ data:
       fov: 60
       n: 1
       type: mat
-    
-  name: bake_scene_camera
 policy:
-  ant.general|name
   ant.camera|camera

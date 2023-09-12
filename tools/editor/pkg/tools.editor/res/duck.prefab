@@ -1,27 +1,21 @@
 ---
 data:
-  name: Rootscene
   scene: {}
 policy:
-  ant.general|name
   ant.scene|scene_object
 ---
 data:
-  name: node0
   scene:
     s: 0.01
 mount: 1
 policy:
-  ant.general|name
   ant.scene|scene_object
 ---
 data:
   visible_state: main_view|selectable|cast_shadow
   material: /pkg/tools.editor/res/Duck.glb|materials/blinn3-fx.material
   mesh: /pkg/tools.editor/res/Duck.glb|meshes/LOD3spShape_P1.meshbin
-  name: ""
   scene: {}
 mount: 2
 policy:
-  ant.general|name
   ant.render|render

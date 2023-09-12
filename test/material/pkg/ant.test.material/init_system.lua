@@ -10,7 +10,6 @@ function is:init()
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             scene = {srt={}},
@@ -32,7 +31,6 @@ function is:init()
             },
             owned_mesh_buffer = true,
             visible_state = "main_view",
-            name = "test_material",
             on_ready = function (e)
                 local math3d = require "math3d"
                 --local aa = e.render_object.material.material:attribs()

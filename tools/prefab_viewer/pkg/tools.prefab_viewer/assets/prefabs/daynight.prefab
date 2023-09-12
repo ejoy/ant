@@ -1,7 +1,6 @@
 ---
 policy:
   ant.daynight|daynight
-  ant.general|name
 data:
   daynight:
     day:
@@ -20,4 +19,3 @@ data:
         direct      : /pkg/tools.prefab_viewer/assets/textures/daynight/night_direct.jpg
         indirect    : /pkg/tools.prefab_viewer/assets/textures/daynight/night_indirect.jpg
         intensity   : /pkg/tools.prefab_viewer/assets/textures/daynight/night_intensity.jpg
-  name: daynight_test 

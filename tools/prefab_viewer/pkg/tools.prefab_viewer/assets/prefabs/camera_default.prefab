@@ -6,7 +6,6 @@ data:
       f: 1200
       fov: 35
       n: 0.2
-  name: camera1
   scene:
     r:{1,0.0,0.0}# {0.7071067690849304,0.0,0.0,0.7071067690849304}
     t: {-50, 350, -200}
@@ -19,5 +18,4 @@ data:
 tag:
   camera
 policy:
-  ant.general|name
   ant.camera|camera

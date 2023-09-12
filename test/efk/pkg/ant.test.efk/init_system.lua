@@ -20,12 +20,10 @@ function is:init()
 
     -- world:create_entity{
     --     policy = {
-    --         "ant.general|name",
     --         "ant.scene|scene_object",
     --         "ant.efk|efk",
     --     },
     --     data = {
-    --         name = "root",
     --         scene = {
     --             t = {-2, 0, 0, 1}
     --         },
@@ -38,12 +36,10 @@ function is:init()
 
     -- world:create_entity{
     --     policy = {
-    --         "ant.general|name",
     --         "ant.scene|scene_object",
     --         "ant.efk|efk",
     --     },
     --     data = {
-    --         name = "root2",
     --         scene = {
     --             t = {3, 0, 0, 1}
     --         },
@@ -58,12 +54,10 @@ function is:init()
         efkeid_group = world:create_entity{
             group = test_gid,
             policy = {
-                "ant.general|name",
                 "ant.scene|scene_object",
                 "ant.efk|efk",
             },
             data = {
-                name = "root",
                 scene = {},
                 efk = {
                     path = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
@@ -74,11 +68,9 @@ function is:init()
 
         world:create_entity{
             policy = {
-                "ant.general|name",
                 "ant.render|hitch_object",
             },
             data = {
-                name = "test_efk_hitch",
                 hitch = {
                     group = test_gid,
                 },

@@ -18,9 +18,7 @@ data:
     aperture      : 16.0
     shutter_speed : 0.008
     ISO           : 100
-  name: DEFAULT_CAMERA
 tag:
   camera
 policy:
-  ant.general|name
   ant.camera|camera

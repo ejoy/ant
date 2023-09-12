@@ -28,8 +28,6 @@ data:
       ---
       time: 1
       value: {0.9406062960624695, -0.19252729415893555, 0.27963149547576904}
-  name: daynight_test
   prefab: /pkg/vaststars.resources/daynight.prefab
 policy:
   ant.daynight|daynight
-  ant.general|name

@@ -1,12 +1,10 @@
 ---
 policy:
   ant.render|light
-  ant.general|name
 data:
   scene:
     r: {0.78, 0.1, 0}
     t: {0, 5, 0, 1}
-  name: directional_light
   visible: true
   light:
     color: {1, 1, 1, 1}

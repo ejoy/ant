@@ -2,7 +2,6 @@
 policy:
     ant.render|render
     ant.scene|scene_object
-    ant.general|name
 data:
     scene:
         s: 100
@@ -10,7 +9,6 @@ data:
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view|selectable
-    name: slot_cube
 ---
 policy:
     ant.render|simplerender
@@ -36,7 +34,6 @@ action:
 policy:
     ant.render|render
     ant.scene|scene_object
-    ant.general|name
 data:
     scene:
         s: 1
@@ -44,7 +41,6 @@ data:
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view|selectable
-    name: slot_cube
 ---
 policy:
     ant.render|simplerender

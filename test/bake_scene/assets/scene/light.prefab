@@ -1,7 +1,6 @@
 ---
 policy:
   ant.render|light
-  ant.general|name
 data:
   scene:
     #r: {0.25,0.25,-0.066987298429012,0.93301266431808}
@@ -14,5 +13,4 @@ data:
     intensity_unit: lux
     angular_radius: 0.0047123889803847  #math.rad(0.27), sun light angular_radius
     motion_type: static
-  name: directional_light
   visible: true

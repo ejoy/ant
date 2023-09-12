@@ -12,7 +12,6 @@ local function create_plane()
     world:create_entity{
 		policy = {
 			"ant.render|simplerender",
-			"ant.general|name",
 		},
 		data = {
 			scene = {
@@ -20,7 +19,6 @@ local function create_plane()
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
-			name 		= "test_shadow_plane",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,
 			on_ready = function (e)

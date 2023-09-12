@@ -45,7 +45,6 @@ local function create_simple_triangles()
     world:create_entity{
         policy = {
             "ant.render|simplerender",
-            "ant.general|name",
         },
         data = {
             simplemesh = {
@@ -65,7 +64,6 @@ local function create_simple_triangles()
             material = "/pkg/ant.test.light/assets/materials/default.material",
             visible_state  = "main_view",
             render_layer = "opacity",
-            name = "test",
             scene = {
                 r = {0.0, 0.0, 0.8}
             },
@@ -141,12 +139,10 @@ function S.init_world()
     -- world:create_entity{
     --     policy = {
     --         "ant.render|render",
-    --         "ant.general|name",
     --     },
     --     data = {
     --         material = "/pkg/ant.test.light/assets/materials/default.material",
     --         mesh = "/pkg/ant.test.light/assets/ground_01.glb|meshes/Plane.007_P1.meshbin",
-    --         name = "ground_01",
     --         scene = {
     --             s = 0.1
     --         },
