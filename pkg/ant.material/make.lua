@@ -10,6 +10,9 @@ lm:lua_source "material_core"{
         ROOT .. "clibs/ecs",
         ROOT .. "pkg/ant.resource_manager/src",
     },
+    defines = {
+        "MATERIAL_DEBUG=0"
+    },
     sources = {
         "material_arena.c",
         "material.c",
