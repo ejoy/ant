@@ -44,14 +44,19 @@ ltexture_get(lua_State *L) {
 	return 1;
 }
 
-bgfx_texture_handle_t
-texture_get(int id) {
+static int
+texture_transform(int id) {
 	bgfx_texture_handle_t handle = BGFX_INVALID_HANDLE;
 	if (id <= 0 || id > g_texture_id)
-		return handle;
+		return handle.idx;
 	uint16_t h = g_texture[id - 1];
 	g_texture_timestamp[id - 1] = g_frame;
-	handle.idx = h;
+	return h;
+}
+
+bgfx_texture_handle_t
+texture_get(int id) {
+	bgfx_texture_handle_t handle = { texture_transform(id) };
 	return handle;
 }
 
@@ -180,6 +185,8 @@ luaopen_textureman_client(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+	lua_pushlightuserdata(L, texture_transform);
+	lua_setfield(L, -2, "texture_get_cfunc");
 	return 1;
 }
 
