@@ -1,3 +1,7 @@
+if __ANT_RUNTIME__ then
+    error "Cannot be imported in runtime mode."
+end
+
 local sha1    = require "sha1"
 local config  = require "config"
 local depends = require "depends"
