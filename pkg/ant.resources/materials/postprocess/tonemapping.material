@@ -7,7 +7,6 @@ fx:
     shadow_receive: off
     EXPOSURE_TYPE: 1
 properties:
-  u_exposure_param: {0.0, 0.0, 0.0, 0.0}
   s_scene_color:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture

@@ -41,6 +41,8 @@ uniform vec4 u_direciontal_light_color;
 #include "pbr/lighting.sh"
 #include "pbr/material_info.sh"
 
+#include "pbr/material_default.sh"
+
 void main()
 {
 	// Calculation of the UV with the UV motion sampler

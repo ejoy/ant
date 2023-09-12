@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 #include <pbr/ibl/common.sh>
 
-IMAGE2D_WR(s_LUT, rg16f, 0);
+IMAGE2D_WR(s_LUT_write, rg16f, 0);
 
 // From the filament docs. Geometric Shadowing function
 // https://google.github.io/filament/Filament.html#toc4.4.2
@@ -60,7 +60,7 @@ vec2 LUT(float NdotV, float roughness)
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    ivec2 isize = imageSize(s_LUT);
+    ivec2 isize = imageSize(s_LUT_write);
     vec2 uv = gl_GlobalInvocationID.xy / vec2(isize);
     float NdotV = uv.x;
     float roughness = max(uv.y, MIN_ROUGHNESS);
@@ -68,5 +68,5 @@ void main()
     vec2 AB = LUT(NdotV, roughness);
 
     // Scale and Bias for F0 (as per Karis 2014)
-    imageStore(s_LUT, ivec2(gl_GlobalInvocationID.xy), vec4(AB, 0.0, 0.0));
+    imageStore(s_LUT_write, ivec2(gl_GlobalInvocationID.xy), vec4(AB, 0.0, 0.0));
 }
