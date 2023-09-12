@@ -18,11 +18,10 @@ function psa_sys:init()
     world:create_entity {
         policy = {
             "ant.render|pack_scene_aabb",
-            "ant.scene|bounding"
         },
         data = {
             pack_scene_aabb = {
-                need_update = false
+                need_update = true
             },
         }
     }
@@ -69,7 +68,9 @@ function psa_sys:after_scene_update()
         end
 
         math3d.unmark(psae.pack_scene_aabb.scene_aabb)
-        psae.pack_scene_aabb.scene_aabb = math3d.marked_aabb(scene_aabb)
+        local center, extent = math3d.aabb_center_extents(scene_aabb)
+        local aabb_min, aabb_max = math3d.sub(center, extent), math3d.add(center, extent)
+        psae.pack_scene_aabb.scene_aabb = math3d.marked_aabb(aabb_min, aabb_max)
         w:submit(psae)
         dirty = false
     end
