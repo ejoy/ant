@@ -28,7 +28,7 @@ local function sandbox_env(packagename)
     local function searcher_preload(name)
         local func = _PRELOAD[name]
         if func then
-            return func, ":preload:"
+            return func
         end
         return ("no field package.preload['%s']"):format(name)
     end
@@ -42,29 +42,29 @@ local function sandbox_env(packagename)
             if not func then
                 error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
             end
-            return func, path
+            return func
         end
         return "no file '"..path.."'"
     end
 
     function env.require(name)
         assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
-        local p = package.loaded[name] or _LOADED[name]
+        local p = _LOADED[name] or package.loaded[name]
         if p ~= nil then
             return p
         end
-        local initfunc, extra = searcher_preload(name)
+        local initfunc = searcher_preload(name)
         if type(initfunc) == "function" then
-            local r = initfunc(name, extra)
+            local r = initfunc()
             if r == nil then
                 r = true
             end
             package.loaded[name] = r
             return r
         end
-        initfunc, extra = searcher_lua(name)
+        initfunc = searcher_lua(name)
         if type(initfunc) == "function" then
-            local r = initfunc(name, extra)
+            local r = initfunc()
             if r == nil then
                 r = true
             end
