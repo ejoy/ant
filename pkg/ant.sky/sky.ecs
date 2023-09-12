@@ -1,5 +1,4 @@
 import "@ant.timer"
-import "@ant.general"
 import "@ant.render"
 
 system "procedural_sky_system"

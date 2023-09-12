@@ -1,4 +1,3 @@
-import "@ant.general"
 import "@ant.animation"
 import "@ant.render"
 import "@ant.sky"

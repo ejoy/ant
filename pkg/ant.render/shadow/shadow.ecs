@@ -1,4 +1,3 @@
-import "@ant.general"
 import "@ant.scene"
 
 import "shadow/shadow_debug.ecs"
