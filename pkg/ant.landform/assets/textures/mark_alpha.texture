@@ -5,7 +5,7 @@ compress:
 maxsize: 512x512
 mipmap: 0
 colorspace: sRGB
-path: /pkg/ant.landform/assets/shapes/mark_alpha.dds
+path: /pkg/ant.resources.binary/terrain/shapes/mark_alpha.dds
 sampler:
   MAG: POINT
   MIN: POINT

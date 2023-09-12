@@ -231,7 +231,7 @@ function ibl_sys:render_preprocess()
         local dis = e.dispatch
         local mi = dis.material
 
-        mi.s_LUT = icompute.create_image_property(IBL_INFO.LUT.value, LUT_stage, 0, "w")
+        mi.s_LUT_write = icompute.create_image_property(IBL_INFO.LUT.value, LUT_stage, 0, "w")
         icompute.dispatch(ibl_viewid, dis)
 
         w:remove(e)
