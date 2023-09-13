@@ -68,7 +68,7 @@ const Rect& LayoutNode::GetBounds() const {
 	return bounds;
 }
 
-void LayoutNode::InsertChild(const LayoutNode* child, uint32_t index) {
+void LayoutNode::InsertChild(const LayoutNode* child, size_t index) {
 	layout.InsertChild(child->layout, index);
 }
 

@@ -89,12 +89,8 @@ void Layout::CalculateLayout(Size const& size) {
 	YGNodeCalculateLayout(node, size.w, size.h, YGDirectionLTR);
 }
 
-void Layout::InsertChild(Layout const& child, uint32_t index) {
+void Layout::InsertChild(Layout const& child, size_t index) {
 	YGNodeInsertChild(node, child.node, index);
-}
-
-void Layout::SwapChild(Layout const& child, uint32_t index) {
-	YGNodeSwapChild(node, child.node, index);
 }
 
 void Layout::RemoveChild(Layout const& child) {
