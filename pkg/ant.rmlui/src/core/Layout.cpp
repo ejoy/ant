@@ -3,6 +3,7 @@
 #include <css/Property.h>
 #include <core/Text.h>
 #include <yoga/Yoga.h>
+#include <bee/nonstd/unreachable.h>
 
 namespace Rml {
 
@@ -19,7 +20,7 @@ struct DefaultConfig {
 	YGConfigRef config;
 };
 
-static YGConfigRef GetDefaultConfig() {
+static YGConfigConstRef GetDefaultConfig() {
 	static DefaultConfig def;
 	return def.config;
 }
@@ -40,6 +41,8 @@ static YGSize MeasureFunc(YGNodeConstRef node, float width, YGMeasureMode widthM
 	case YGMeasureModeAtMost:
 		maxWidth = width;
 		break;
+	default:
+		std::unreachable();
 	}
 	switch (heightMode) {
 	case YGMeasureModeUndefined:
@@ -51,6 +54,8 @@ static YGSize MeasureFunc(YGNodeConstRef node, float width, YGMeasureMode widthM
 	case YGMeasureModeAtMost:
 		maxHeight = height;
 		break;
+	default:
+		std::unreachable();
 	}
 	Size size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
 	return { size.w, size.h };
@@ -80,6 +85,7 @@ Layout::~Layout() {
 
 static float YGValueToFloat(float v) {
 	if (YGFloatIsUndefined(v)) {
+		assert(false);
 		return 0.0f;
 	}
 	return v;
