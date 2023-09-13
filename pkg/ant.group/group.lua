@@ -73,6 +73,9 @@ local OBJMT =  {
         enable = function (self, gid, enable)
             enable_group(gid, self.tag, enable)
         end,
+        flush = function(self)
+            world:group_flush(self.tag)
+        end,
         filter = function (self, filtertag, vicetag)
             ig.filter(filtertag, self.tag, vicetag)
         end,
