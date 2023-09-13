@@ -12,11 +12,6 @@ local is = ecs.system "init_system"
 local efkeid_group
 function is:init()
     local test_gid<const> = ig.register "group_test"
-    iefk.preload{
-        "/pkg/ant.test.efk/assets/miner_efk/a1.texture",
-        "/pkg/ant.test.efk/assets/miner_efk/a2.texture",
-        "/pkg/ant.test.efk/assets/miner_efk/a3.texture",
-    }
 
     -- world:create_entity{
     --     policy = {

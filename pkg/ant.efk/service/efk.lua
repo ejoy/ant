@@ -63,27 +63,34 @@ local function shader_load(materialfile, shadername, stagetype)
 end
 
 local TEXTURES = {}
-local preload_texture = {}
+local TEXTURE_LOAD_QUEUE = {
+    pop = function (self)
+        local e = self[#self]
+        table.remove(self)
+        return e
+    end,
+    empty = function (self)
+        return #self == 0
+    end,
+}
 
 local function texture_load(texname, srgb, id)
     --TODO: need use srgb texture
     assert(texname:match "^/pkg" ~= nil)
 	local filename = fs.path(texname):replace_extension "texture":string()
 	-- TODO : lazy load filename
-	preload_texture[id] = filename
+	TEXTURES[id] = filename
+    TEXTURE_LOAD_QUEUE[#TEXTURE_LOAD_QUEUE+1] = filename
 end
 
 local function texture_map(id)
-	local filename = assert(preload_texture[id])
-	-- TODO: load texture id
+	local filename = assert(TEXTURES[id])
 	local tex = TEXTURES[filename]
     if tex then
-		preload_texture[id] = nil
-		return tex
-	else
-		-- Not ready
-		--TODO: remove it
-        print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use"):format(texname)) )
+        if not assetmgr.invalid_texture(tex) then
+            TEXTURES[id] = nil
+            return tex
+        end
     end
 end
 
@@ -171,12 +178,6 @@ function S.destroy(filename, handle)
     end
 end
 
-function S.preload_texture(texture, id)
-    if not TEXTURES[texture] then
-        TEXTURES[texture] = id
-    end
-end
-
 function S.play(efkhandle, speed)
     EFKCTX:play(efkhandle, speed)
 end
@@ -227,11 +228,19 @@ function S.quit()
     ltask.quit()
 end
 
+local function check_load_textures()
+    while not TEXTURE_LOAD_QUEUE:empty() do
+        local tn = TEXTURE_LOAD_QUEUE:pop()
+        TEXTURES[tn] = assetmgr.load_texture(tn)
+    end
+end
+
 local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
     while true do
         if EFKCTX then
+            check_load_textures()
             local viewmat, projmat, deltatime = ltask.call(bgfxmainS, "fetch_world_camera")
             EFKCTX:render(viewmat, projmat, deltatime)
         end

@@ -689,23 +689,7 @@ end
 local global_data       = require "common.global_data"
 local access            = global_data.repo_access
 
--- preload all textures for effect
-function m.check_effect_preload(filename)
-    local path = filename:match("^(.+/)[%w*?_.%-]*$")
-    local files = access.list_files(global_data.repo, path)
-    local texture_files = {}
-    for _, value in ipairs(files) do
-        if string.sub(value, -8) == ".texture" then
-            texture_files[#texture_files + 1] = path..value
-        end
-    end
-    if #texture_files > 0 then
-        iefk.preload(texture_files)
-    end
-end
-
 function m:add_effect(filename)
-    self.check_effect_preload(filename)
 
     if not self.root then
         self:reset_prefab()
