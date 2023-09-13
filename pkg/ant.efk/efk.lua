@@ -150,11 +150,10 @@ function efk_sys:camera_usage()
     local camera = ce.camera
 
     if need_update_framebuffer then
-        update_framebuffer_texutre(camera.projmat)
+        update_framebuffer_texutre(camera.infprojmat)
         need_update_framebuffer = nil
     end
-
-    ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
+    ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
 function efk_sys:scene_update()
