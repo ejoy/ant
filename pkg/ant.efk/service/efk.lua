@@ -7,6 +7,7 @@ local fs        = require "filesystem"
 
 local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
+local textureman = require "textureman.client"
 
 local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
@@ -62,15 +63,35 @@ local function shader_load(materialfile, shadername, stagetype)
 end
 
 local TEXTURES = {}
+local TEXTURE_LOAD_QUEUE = {
+    pop = function (self)
+        local e = self[#self]
+        table.remove(self)
+        return e
+    end,
+    empty = function (self)
+        return #self == 0
+    end,
+}
 
-local function texture_load(texname, srgb)
+local function texture_load(texname, srgb, id)
     --TODO: need use srgb texture
     assert(texname:match "^/pkg" ~= nil)
-    local tex = TEXTURES[fs.path(texname):replace_extension "texture":string()]
-    if not tex then
-        print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use"):format(texname)) )
+	local filename = fs.path(texname):replace_extension "texture":string()
+	-- TODO : lazy load filename
+	TEXTURES[id] = filename
+    TEXTURE_LOAD_QUEUE[#TEXTURE_LOAD_QUEUE+1] = filename
+end
+
+local function texture_map(id)
+	local filename = assert(TEXTURES[id])
+	local tex = TEXTURES[filename]
+    if tex then
+        if not assetmgr.invalid_texture(tex) then
+            TEXTURES[id] = nil
+            return tex
+        end
     end
-    return tex
 end
 
 local function texture_unload(texhandle)
@@ -85,7 +106,8 @@ local efk_cb_handle = efk_cb.callback{
     shader_load     = shader_load,
     texture_load    = texture_load,
     texture_unload  = texture_unload,
-    texture_map     = {},
+    texture_map     = texture_map,
+	texture_transform = textureman.texture_get_cfunc,
     error           = error_handle,
 }
 
@@ -112,6 +134,7 @@ function S.init()
         texture_load    = efk_cb.texture_load,
         texture_get     = efk_cb.texture_get,
         texture_unload  = efk_cb.texture_unload,
+		texture_handle  = efk_cb.texture_handle,
         userdata        = {
             callback = efk_cb_handle,
         }
@@ -152,12 +175,6 @@ function S.destroy(filename, handle)
         EFKFILES[filename] = nil
         info.obj:release()
         info.obj = nil
-    end
-end
-
-function S.preload_texture(texture, id)
-    if not TEXTURES[texture] then
-        TEXTURES[texture] = id
     end
 end
 
@@ -211,11 +228,19 @@ function S.quit()
     ltask.quit()
 end
 
+local function check_load_textures()
+    while not TEXTURE_LOAD_QUEUE:empty() do
+        local tn = TEXTURE_LOAD_QUEUE:pop()
+        TEXTURES[tn] = assetmgr.load_texture(tn)
+    end
+end
+
 local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
     while true do
         if EFKCTX then
+            check_load_textures()
             local viewmat, projmat, deltatime = ltask.call(bgfxmainS, "fetch_world_camera")
             EFKCTX:render(viewmat, projmat, deltatime)
         end

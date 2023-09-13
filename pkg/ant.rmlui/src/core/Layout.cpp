@@ -3,6 +3,7 @@
 #include <css/Property.h>
 #include <core/Text.h>
 #include <yoga/Yoga.h>
+#include <bee/nonstd/unreachable.h>
 
 namespace Rml {
 
@@ -19,12 +20,12 @@ struct DefaultConfig {
 	YGConfigRef config;
 };
 
-static YGConfigRef GetDefaultConfig() {
+static YGConfigConstRef GetDefaultConfig() {
 	static DefaultConfig def;
 	return def.config;
 }
 
-static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+static YGSize MeasureFunc(YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
 	auto* element = static_cast<Text*>(YGNodeGetContext(node));
 	float minWidth = 0;
 	float maxWidth = std::numeric_limits<float>::max();
@@ -40,6 +41,8 @@ static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, 
 	case YGMeasureModeAtMost:
 		maxWidth = width;
 		break;
+	default:
+		std::unreachable();
 	}
 	switch (heightMode) {
 	case YGMeasureModeUndefined:
@@ -51,12 +54,14 @@ static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, 
 	case YGMeasureModeAtMost:
 		maxHeight = height;
 		break;
+	default:
+		std::unreachable();
 	}
 	Size size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
 	return { size.w, size.h };
 }
 
-static float BaselineFunc(YGNodeRef node, float width, float height) {
+static float BaselineFunc(YGNodeConstRef node, float width, float height) {
 	auto* element = static_cast<Text*>(YGNodeGetContext(node));
 	return element->GetBaseline();
 }
@@ -78,8 +83,9 @@ Layout::~Layout() {
 	YGNodeFree(node);
 }
 
-static float YGValueToFloat(float v) {
+float Layout::YGValueToFloat(float v) const {
 	if (YGFloatIsUndefined(v)) {
+		//Print();
 		return 0.0f;
 	}
 	return v;
@@ -89,12 +95,8 @@ void Layout::CalculateLayout(Size const& size) {
 	YGNodeCalculateLayout(node, size.w, size.h, YGDirectionLTR);
 }
 
-void Layout::InsertChild(Layout const& child, uint32_t index) {
+void Layout::InsertChild(Layout const& child, size_t index) {
 	YGNodeInsertChild(node, child.node, index);
-}
-
-void Layout::SwapChild(Layout const& child, uint32_t index) {
-	YGNodeSwapChild(node, child.node, index);
 }
 
 void Layout::RemoveChild(Layout const& child) {

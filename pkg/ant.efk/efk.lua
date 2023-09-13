@@ -212,12 +212,6 @@ function iefk.create(filename, config)
     }
 end
 
-function iefk.preload(textures)
-    for _, texture in ipairs(textures) do
-        ltask.call(EFK_SERVER, "preload_texture", texture, assetmgr.load_texture(texture))
-    end
-end
-
 function iefk.play(e)
     local efk = e.efk
     if efk then

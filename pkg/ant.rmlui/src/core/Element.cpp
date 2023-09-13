@@ -393,13 +393,13 @@ void Element::NotifyCreated() {
 	GetPlugin()->OnCreateElement(owner_document, this, GetTagName());
 }
 
-void Element::AppendChild(Node* node, uint32_t index) {
+void Element::AppendChild(Node* node, size_t index) {
 	Element* p = node->GetParentNode();
 	if (p) {
 		p->DetachChild(node).release();
 	}
 	if (index > childnodes.size()) {
-		index = (uint32_t)childnodes.size();
+		index = childnodes.size();
 	}
 	childnodes.emplace_back(node);
 	switch (node->GetType()) {
@@ -486,13 +486,13 @@ void Element::InsertBefore(Node* node, Node* adjacent) {
 	switch (node->GetType()) {
 	case Node::Type::Element: {
 		auto e = static_cast<Element*>(node);
-		LayoutNode::InsertChild(e, (uint32_t)index);
+		LayoutNode::InsertChild(e, index);
 		children.emplace_back(e);
 		break;
 	}
 	case Node::Type::Text: {
 		auto e = static_cast<Text*>(node);
-		LayoutNode::InsertChild(e, (uint32_t)index);
+		LayoutNode::InsertChild(e, index);
 		break;
 	}
 	default:

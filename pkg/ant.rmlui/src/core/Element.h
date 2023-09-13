@@ -68,7 +68,7 @@ public:
 
 	bool DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation);
 
-	void   AppendChild(Node* node, uint32_t index = 0xffffffff);
+	void   AppendChild(Node* node, size_t index = size_t(-1));
 	void   RemoveChild(Node* node);
 	std::unique_ptr<Node> DetachChild(Node* node);
 	size_t GetChildNodeIndex(Node* node) const;

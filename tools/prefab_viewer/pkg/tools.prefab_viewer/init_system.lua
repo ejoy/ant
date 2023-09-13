@@ -11,18 +11,7 @@ local font = import_package "ant.font"
 function S.init()
 end
 
-local iefk = ecs.require "ant.efk|efk"
-local fs = require "filesystem"
 function S.init_world()
-    local files = {}
-    for file in fs.pairs(fs.path("/pkg/tools.prefab_viewer/assets/efk")) do
-        local s = file:string()
-        if s:match("%.texture$") then
-            files[#files+1] = s
-        end
-    end
-    iefk.preload(files)
-	--
     world:create_instance {
 		prefab = "/pkg/tools.prefab_viewer/assets/prefabs/light.prefab",
 	}

@@ -44,7 +44,7 @@ namespace Rml {
 		bool IsVisible() const;
 		void SetVisible(bool visible);
 		const Rect& GetBounds() const;
-		void InsertChild(const LayoutNode* child, uint32_t index);
+		void InsertChild(const LayoutNode* child, size_t index);
 		void RemoveChild(const LayoutNode* child);
 		virtual void Render() = 0;
 		virtual float GetZIndex() const = 0;

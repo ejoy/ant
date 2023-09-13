@@ -103,10 +103,12 @@ public:
 	EdgeInsets<float> GetPadding() const;
 	EdgeInsets<float> GetBorder() const;
 
-	void InsertChild(Layout const& child, uint32_t index);
-	void SwapChild(Layout const& child, uint32_t index);
+	void InsertChild(Layout const& child, size_t index);
 	void RemoveChild(Layout const& child);
 	void RemoveAllChildren();
+
+private:
+	float YGValueToFloat(float v) const;
 
 private:
 	YGNodeRef node;
