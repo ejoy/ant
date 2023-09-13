@@ -24,7 +24,7 @@ static YGConfigRef GetDefaultConfig() {
 	return def.config;
 }
 
-static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+static YGSize MeasureFunc(YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
 	auto* element = static_cast<Text*>(YGNodeGetContext(node));
 	float minWidth = 0;
 	float maxWidth = std::numeric_limits<float>::max();
@@ -56,7 +56,7 @@ static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, 
 	return { size.w, size.h };
 }
 
-static float BaselineFunc(YGNodeRef node, float width, float height) {
+static float BaselineFunc(YGNodeConstRef node, float width, float height) {
 	auto* element = static_cast<Text*>(YGNodeGetContext(node));
 	return element->GetBaseline();
 }
