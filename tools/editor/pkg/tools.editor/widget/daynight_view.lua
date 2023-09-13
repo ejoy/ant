@@ -37,7 +37,7 @@ local function save_prefab(eid, path)
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
     end
-    local f<close> = assert(io.open((lpp / path:filename()):string(), "w"))
+    local f<close> = assert(io.open((lpp / path:filename()._value):string(), "w"))
     f:write(serialize.stringify(t))
 end
 
@@ -45,6 +45,7 @@ local function reload()
     prefab_mgr:save()
     prefab_mgr:reload()
 end
+
 
 function DaynightView:on_save()
     local filepath = fs.path(self.prefab)
@@ -212,7 +213,7 @@ function DaynightView:set_eid(eid)
             local template = hierarchy:get_template(eid)
             local property_array = DaynightView:get_daynight_cycles(template, e)
             self.daynight:set_subproperty(property_array)
-            self.prefab = template.template.data.prefab 
+            self.prefab = template.template.name
         end
     else
         self.eid = nil
