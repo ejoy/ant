@@ -8,18 +8,22 @@ local function markObject(t)
     return t
 end
 
-local function isArray(t)
+local TableEmpty <const> = 0
+local TableArray <const> = 1
+local TableObject <const> = 2
+
+local function TableType(t)
     local first_value = next(t)
     if first_value == nil then
         if getmetatable(t) == ObjectMetatable then
-            return false
+            return TableObject
         end
-        return true
+        return TableEmpty
     end
     if type(first_value) == "number" then
-        return true
+        return TableArray
     end
-    return false
+    return TableObject
 end
 
 local function split(s)
@@ -35,8 +39,8 @@ local function query_(data, pathlst, n)
         return
     end
     local k = pathlst[n]
-    local isarray = isArray(data)
-    if isarray then
+    local tableType = TableType(data)
+    if tableType == TableArray then
         if k == "-" then
             k = #data + 1
         else
@@ -50,7 +54,7 @@ local function query_(data, pathlst, n)
         end
     end
     if n == #pathlst then
-        return data, k, isarray
+        return data, k, tableType
     end
     return query_(data[k], pathlst, n + 1)
 end
@@ -86,14 +90,31 @@ local function add(data, path, value)
     if path == '' then
         return true, value
     end
-    local t, k, isarray = query(data, path)
+    local t, k, t_type = query(data, path)
     if not t then
         return false
     end
-    if isarray then
+    if t_type == TableArray then
+        if type(k) ~= "number" then
+            return false
+        end
         table.insert(t, k, value)
-    else
+    elseif t_type == TableObject then
+        if type(k) ~= "string" then
+            return false
+        end
         t[k] = value
+    elseif t_type == TableEmpty then
+        if type(k) == "number" then
+            if k ~= 1 then
+                return false
+            end
+            t[1] = value
+        elseif type(k) == "string" then
+            t[k] = value
+        else
+            return false
+        end
     end
     return true, data
 end
@@ -102,21 +123,29 @@ local function remove(data, path)
     if path == '' then
         return true, nil
     end
-    local t, k, isarray = query(data, path)
+    local t, k, t_type = query(data, path)
     if not t then
         return false
     end
-    if isarray then
+    if t_type == TableArray then
+        if type(k) ~= "number" then
+            return false
+        end
         if k > #t then
             return false
         end
         table.remove(t, k)
-    else
+    elseif t_type == TableObject then
+        if type(k) ~= "string" then
+            return false
+        end
         if t[k] == nil then
             return false
         end
         t[k] = nil
         markObject(t)
+    elseif t_type == TableEmpty then
+        -- nothing to do
     end
     return true, data
 end
@@ -128,9 +157,27 @@ local function replace(data, path, value)
     if path == '' then
         return true, value
     end
-    local t, k = query(data, path)
+    local t, k, t_type = query(data, path)
     if not t then
         return false
+    end
+    if t_type == TableArray then
+        if type(k) ~= "number" then
+            return false
+        end
+    elseif t_type == TableObject then
+        if type(k) ~= "string" then
+            return false
+        end
+    elseif t_type == TableEmpty then
+        if type(k) == "number" then
+            if k ~= 1 then
+                return false
+            end
+        elseif type(k) == "string" then
+        else
+            return false
+        end
     end
     t[k] = value
     return true, data
@@ -140,21 +187,29 @@ local function spin(data, path)
     if path == '' then
         return false
     end
-    local t, k, isarray = query(data, path)
+    local t, k, t_type = query(data, path)
     if not t then
         return false
     end
     if t[k] == nil then
         return false
     end
-    if isarray then
+    if t_type == TableArray then
+        if type(k) ~= "number" then
+            return false
+        end
         local oldvalue = table.remove(t, k)
         return true, oldvalue
-    else
+    elseif t_type == TableObject then
+        if type(k) ~= "string" then
+            return false
+        end
         local oldvalue = t[k]
         t[k] = nil
         markObject(t)
         return true, oldvalue
+    elseif t_type == TableEmpty then
+        return true
     end
 end
 
@@ -185,7 +240,7 @@ local function deepcopy(t)
     for k, v in pairs(t) do
         r[k] = deepcopy(v)
     end
-    if not isArray(t) then
+    if TableType(t) == TableObject then
         markObject(r)
     end
     return r

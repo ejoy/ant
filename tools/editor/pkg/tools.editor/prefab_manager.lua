@@ -101,8 +101,12 @@ function m:add_entity(new_entity, parent, tpl, filename)
         self.prefab_template[#self.prefab_template + 1] = tpl
         if self.glb_filename then
             tpl.index = #self.prefab_template
+            tpl.filename = filename
         end
         self:pacth_add(tpl)
+        if filename then
+            --
+        end
     end
     hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil}, parent)
 end
@@ -423,28 +427,6 @@ local function read_file(fn)
     return f:read "a"
 end
 
-local function check_animation(template)
-    local has_animation = false
-    local anim_template
-    for _, tpl in ipairs(template) do
-        if not anim_template and tpl.data.mesh then
-            local mesh_file = tpl.data.mesh
-            local pos = string.find(mesh_file, ".glb|")
-            local anim_path = string.sub(mesh_file, 1, pos + 4) .. "animation.prefab"
-            if fs.exists(anim_path) then
-                anim_template = serialize.parse(anim_path, read_file(lfs.path(assetmgr.compile(anim_path))))
-            end
-        end
-        if tpl.data.animation then
-            has_animation = true
-            break
-        end
-    end
-    if not has_animation and anim_template then
-        template[#template + 1] = anim_template
-    end
-end
-
 local prefabe_name_ui = {text = ""}
 local prefab_list = {}
 local selected_prefab
@@ -462,22 +444,11 @@ function m:choose_prefab()
     if #prefab_list < 1 then
         local patchfile = gd.glb_filename .. ".patch"
         patch_template = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
-        local hitch_index
-        for i, patch in ipairs(patch_template) do
-            if patch.path == "hitch.prefab" then
-                hitch_index = i
-                break
-            end
-        end
-        if hitch_index then
-            table.remove(patch_template, hitch_index)
-            self.save_hitch = true
-        end
 
         local prefab_set = {}
         for _, patch in ipairs(patch_template) do
             local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
-            if k and string.sub(k, -7, 7) == ".prefab" then
+            if k and string.sub(k, -7) == ".prefab" then
                 prefab_set[k] = true
             end
         end
@@ -558,21 +529,36 @@ function m:open(filename, prefab_name, patch_tpl)
     if #path_list > 1 then
         self.glb_filename = path_list[1]
         self.prefab_name = prefab_name or "mesh.prefab"
-        self.patch_template = patch_tpl or {}
-        for index, value in ipairs(self.patch_template) do
-            if value.file == self.prefab_name and value.op == "add" then
-                self.patch_index_map[#self.patch_index_map + 1] = index
+        patch_tpl = patch_tpl or {}
+        self.origin_patch_template = patch_tpl
+        self.patch_template = {}
+        local last_path
+        for _, patch in ipairs(patch_tpl) do
+            if patch.path == "hitch.prefab" then
+                self.save_hitch = true
+            elseif patch.file == self.prefab_name then
+                if patch.value.prefab then
+                    last_path.is_prefab = true
+                end
+                self.patch_template[#self.patch_template + 1] = patch
+                last_path = patch
             end
         end
-        self.patch_start_index = #self.prefab_template - #self.patch_index_map + 1
+        local path_add_counter = 0
+        for index, patch in ipairs(self.patch_template) do
+            if patch.op == "add" and patch.path == "/-" then
+                patch.index = index
+                path_add_counter = path_add_counter + 1
+            end
+        end
+        self.patch_start_index = #self.prefab_template - path_add_counter + 1
     end
-    
+
     for _, value in ipairs(self.prefab_template) do
         if value.data and value.data.efk then
             self.check_effect_preload(value.data.efk.path)
         end
     end
-    -- check_animation(self.prefab_template)
 
     world:create_instance {
         prefab = filename,
@@ -657,7 +643,6 @@ function m:reset_prefab(noscene)
     self:create_ground()
     self.prefab_template = {}
     self.patch_template = {}
-    self.patch_index_map = {}
     self.prefab_filename = nil
     self.glb_filename = nil
     self.scene = nil
@@ -726,9 +711,7 @@ function m:add_prefab(path)
         self:reset_prefab()
     end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
-    local v_root, temp = create_simple_entity(tostring(fs.path(path):filename()), parent)
-    -- local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
-    
+    local v_root, temp = create_simple_entity(tostring(fs.path(path):stem()), parent)
     world:create_instance {
         prefab = prefab_filename,
         parent = v_root,
@@ -747,14 +730,6 @@ function m:add_prefab(path)
             end
         end
     }
-    -- self.entities[#self.entities+1] = v_root
-    -- self.prefab_template[#self.prefab_template + 1] = temp
-    -- if self.glb_filename then
-    --     temp.index = #self.prefab_template
-        
-    -- end
-    -- self:pacth_add(temp)
-    -- hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
     self:add_entity(v_root, parent, temp, prefab_filename)
 end
 
@@ -798,12 +773,8 @@ function m:get_hitch_content()
                             scene = {},
                             hitch = {
                                 group = 0,
-                                hitch_bounding = true,
                             },
                             visible_state = "main_view|cast_shadow|selectable",
-                        },
-                        tag = {
-                            self.glb_filename
                         }
                     }
                 }
@@ -818,10 +789,41 @@ function m:save(path)
     -- patch glb file
     if self.glb_filename then
         if self.patch_template then
-            local final_template = self.patch_template
+            local final_template = {}
+            local embed_prefab_counter = 0
+            for _, patch in ipairs(self.origin_patch_template) do
+                if patch.file ~= self.prefab_name then
+                    final_template[#final_template + 1] = patch
+                end
+            end
+            local add_counter = self.patch_start_index - 1
+            for _, patch in ipairs(self.patch_template) do
+                local tpl = utils.deep_copy(patch)
+                final_template[#final_template + 1] = tpl
+                if tpl.op == "add" and tpl.path == "/-" then
+                    add_counter = add_counter + 1
+                end
+                if tpl.value.filename then
+                    patch.value.mount = patch.value.mount + embed_prefab_counter
+                    final_template[#final_template + 1] = {
+                        file = self.prefab_name,
+                        op = "add",
+                        path = "/-",
+                        value = {
+                            mount = add_counter + embed_prefab_counter,
+                            prefab = tpl.value.filename
+                        }
+                    }
+                    add_counter = add_counter + 1
+                    embed_prefab_counter = embed_prefab_counter + 1
+                    tpl.value.filename = nil
+                end
+                tpl.index = nil
+                tpl.is_prefab = nil
+            end
             if self.save_hitch then
                 local hitch = self:get_hitch_content()
-                if #hitch > 0 then
+                if hitch and #hitch > 0 then
                     final_template[#final_template + 1] = {
                         file = "mesh.prefab",
                         op = "createfile",
@@ -978,7 +980,7 @@ function m:get_world_aabb(eid)
         end
     end
     local waabb
-    local e <close> = world:entity(eid, "bounding?in meshskin?in name?in")
+    local e <close> = world:entity(eid, "bounding?in meshskin?in")
     local bbox = e.bounding
     if bbox and bbox.scene_aabb and bbox.scene_aabb ~= mc.NULL then
         waabb = math3d.aabb(math3d.array_index(bbox.scene_aabb, 1), math3d.array_index(bbox.scene_aabb, 2))
@@ -995,7 +997,7 @@ function m:get_world_aabb(eid)
         end
     end
     -- TODO: if eid is scene root or meshskin, merge skinning node
-    if e.name == "Scene" or e.meshskin then
+    if (tpl.template.tag and tpl.template.tag[1] == "Scene") or e.meshskin then
         for key, _ in pairs(hierarchy.all_node) do
             local ea <close> = world:entity(key, "bounding?in skinning?in")
             local bounding = ea.bounding
@@ -1024,20 +1026,31 @@ function m:pacth_remove(eid)
         return true
     end
     local tpl = hierarchy:get_template(eid)
-    local pidx = tpl.template.index
-    if pidx < self.patch_start_index then
+    local idx = tpl.template.index
+    if idx < self.patch_start_index then
         return false
     end
-    table.remove(self.prefab_template, pidx)
-    table.remove(self.patch_template, self.patch_index_map[pidx - self.patch_start_index + 1])
-    table.remove(self.patch_index_map, pidx - self.patch_start_index + 1)
+    table.remove(self.prefab_template, idx)
+    for i = idx, #self.prefab_template do
+        local t = self.prefab_template[i]
+        t.index = t.index - 1
+    end
+    local patch_index = idx - self.patch_start_index + 1
+    local is_prefab = self.patch_template[patch_index].is_prefab
+    table.remove(self.patch_template, patch_index)
+    if is_prefab then
+        table.remove(self.patch_template, patch_index)
+    end
+    for i = patch_index, #self.patch_template do
+        local t = self.patch_template[i]
+        t.index = t.index - (is_prefab and 2 or 1)
+    end
     return true
 end
 
 function m:pacth_add(template)
     if not self.glb_filename then return end
     local tpl = utils.deep_copy(template)
-    tpl.index = nil
     local parent = tpl.data.scene.parent
     if parent then
         local parent_tpl = hierarchy:get_template(parent)
@@ -1048,9 +1061,10 @@ function m:pacth_add(template)
         file = self.prefab_name,
         op = "add",
         path = "/-",
-        value = tpl
+        value = tpl,
+        index = tpl.index
     }
-    self.patch_index_map[#self.patch_index_map + 1] = #self.patch_template
+    tpl.index = nil
 end
 
 function m:pacth_modify(pidx, p, v)
@@ -1058,7 +1072,7 @@ function m:pacth_modify(pidx, p, v)
     local index
     local patch_node
     if pidx >= self.patch_start_index then
-        patch_node = self.patch_template[self.patch_index_map[pidx - self.patch_start_index + 1]]
+        patch_node = self.patch_template[pidx - self.patch_start_index + 1]
         assert(patch_node)
         local sep = "/"
         local current_value
@@ -1092,9 +1106,18 @@ function m:pacth_modify(pidx, p, v)
                 patch_node.value = v
             end
         elseif v then
+            local sep = "/"
+            local target
+            for str in string.gmatch(path, "([^"..sep.."]+)") do
+                if not target then
+                    target = self.prefab_template[pidx][str]
+                else
+                    target = target[str]
+                end
+            end
             self.patch_template[#self.patch_template + 1] = {
                 file = self.prefab_name,
-                op = "replace",
+                op = target and "replace" or "add",
                 path = path,
                 value = v,
             }

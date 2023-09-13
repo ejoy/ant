@@ -178,10 +178,10 @@ struct submit_cache{
 	group_collection	groups;
 
 	struct render_args {
-		const ecs::render_args* a;
-		int queue_idx;
+		const ecs::render_args* a = nullptr;
+		int queue_idx = 0;
 	};
-	render_args ra[MAX_VISIBLE_QUEUE] = {0};
+	render_args ra[MAX_VISIBLE_QUEUE];
 	uint8_t ra_count = 0;
 
 #ifdef _DEBUG

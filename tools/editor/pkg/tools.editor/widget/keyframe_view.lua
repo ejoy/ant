@@ -11,6 +11,7 @@ local joint_utils  = require "widget.joint_utils"
 local utils     = require "common.utils"
 local widget_utils  = require "widget.utils"
 local stringify     = import_package "ant.serialize".stringify
+local hierarchy = require "hierarchy_edit"
 local animation = require "hierarchy".animation
 local math3d        = require "math3d"
 local icons     = require "common.icons"
@@ -1420,8 +1421,12 @@ local function create_bone_entity(joint_name)
 end
 
 function m.on_eid_delete(eid)
-    local e <close> = world:entity(eid, "material?in name:in")
-    target_map[e.name] = nil
+    local e <close> = world:entity(eid, "material?in")
+    local tpl = hierarchy:get_template(eid).template
+    local name = tpl.tag and tpl.tag[1]
+    if name then
+        target_map[name] = nil
+    end
     for _, anim in pairs(allanims) do
         for _, subanim in ipairs(anim.target_anims) do
             if subanim.modifier then
