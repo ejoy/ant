@@ -95,9 +95,10 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 
 	-- this camera should not generate the change tag
-	w:extend(shadow_ce, "scene_changed?out camera_changed?out")
-	shadow_ce.scene_changed = true
+	w:extend(shadow_ce, "scene_changed?out scene_needchange?out camera_changed?out")
 	shadow_ce.camera_changed = true
+	shadow_ce.scene_changed = false
+	shadow_ce.scene_needchange = false
 	w:submit(shadow_ce)
 end
 

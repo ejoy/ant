@@ -47,9 +47,8 @@ function st_sys:init()
 		},
 		data = {
 			scene 		= {
-                srt = {
-                    t = {0, 0, 0, 1}, s = {50, 1, 50, 0}
-                },
+                t = {0, 0, 0, 1},
+				s = {50, 1, 50, 0},
 				parent = root,
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",

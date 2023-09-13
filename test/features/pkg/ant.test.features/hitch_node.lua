@@ -171,7 +171,7 @@ function hn_test_sys:data_changed()
     -- if TICK == 20 then
     --     local queuemgr = ecs.require "ant.render|queue_mgr"
     --     local mainmask = queuemgr.queue_mask "main_queue"
-    --     for e in w:select "hitch:in name:in" do
+    --     for e in w:select "hitch:in" do
     --         print("hitch object:", e.name, 0 ~= (e.hitch.cull_masks & mainmask) and "culled" or "not culled")
     --     end
 

@@ -63,7 +63,7 @@ function group_test_sys:init()
 end
 
 function group_test_sys:entity_init()
-    for e in w:select "INIT render_object eid:in name?in" do
+    for e in w:select "INIT render_object eid:in" do
         w:extend(e, "view_visible?in")
         print("render_object INIT:", e.eid, "view_visible:", e.view_visible, e.name)
     end
