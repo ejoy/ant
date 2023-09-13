@@ -248,7 +248,8 @@ filestatus.__index = filestatus
 
 if __ANT_RUNTIME__ then
     function filestatus:is_directory()
-        return self[1].type == "d"
+        local file_type = self[1].type
+        return file_type == "d" or file_type == "r"
     end
 else
     function filestatus:is_directory()
