@@ -33,7 +33,6 @@ local bgfx		= require "bgfx"
 local R         = world:clibs "render.render_material"
 local icamera	= ecs.require "ant.camera|camera"
 local ishadow	= ecs.require "ant.render|shadow.shadow"
-local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
 
@@ -42,7 +41,6 @@ local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
-local infinite_aabb         = math3d.marked_aabb(math3d.vector(-10000, -10000, -10000), math3d.vector(10000, 10000, 10000))
 
 local function set_worldmat(srt, mat)
 	math3d.unmark(srt.worldmat)
@@ -98,8 +96,8 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 
 	-- this camera should not generate the change tag
 	w:extend(shadow_ce, "scene_changed?out camera_changed?out")
-	shadow_ce.scene_changed = false
-	shadow_ce.camera_changed = false
+	shadow_ce.scene_changed = true
+	shadow_ce.camera_changed = true
 	w:submit(shadow_ce)
 end
 
@@ -112,20 +110,37 @@ local function get_intersected_aabb()
 	return math3d.aabb_intersection(main_camera_aabb, pack_scene_aabb)
 end
 
-local function update_shadow_frustum(dl, main_camera)
+local function commit_csm_matrices_attribs()
+	imaterial.system_attrib_update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
+	imaterial.system_attrib_update("u_csm_split_distances",	split_distances_VS)
+end
+
+local function update_shadow_frustum(dl, ce, mc_scene_changed)
 	local lightdir = iom.get_direction(dl)
 	local shadow_setting = ishadow.setting()
-	local csm_frustums = ishadow.calc_split_frustums(main_camera.camera.frustum)
+	local csm_frustums = ishadow.calc_split_frustums(ce.camera.frustum)
 	local intersected_aabb = get_intersected_aabb()
+	local shadow_camera_changed = false
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
-		local shadow_ce <close> = world:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, intersected_aabb)
-		csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
-		split_distances_VS[csm.index] = csm_frustum.f
+		local shadow_ce = world:entity(qe.camera_ref, "camera:in scene:in camera_changed?in")
+		if mc_scene_changed or shadow_ce.camera_changed then
+			shadow_camera_changed = true
+			update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, ce, intersected_aabb)
+			csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
+			split_distances_VS[csm.index] = csm_frustum.f
+		end
 	end
-end 
+	return shadow_camera_changed	
+end
+
+local function update_shadow_attribs(dl, ce, mc_scene_changed)
+	local shadow_camera_changed = update_shadow_frustum(dl, ce, mc_scene_changed)
+	if shadow_camera_changed or mc_scene_changed then
+		commit_csm_matrices_attribs()
+	end
+end
 
 -- microsoft method
 --[[ local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size, world_scene_aabb)
@@ -381,11 +396,6 @@ function sm:entity_remove()
 	end
 end
 
-local function commit_csm_matrices_attribs()
-	imaterial.system_attrib_update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
-	imaterial.system_attrib_update("u_csm_split_distances",	split_distances_VS)
-end
-
 function sm:init_world()
 	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
 	imaterial.system_attrib_update("u_shadow_param1", ishadow.shadow_param())
@@ -397,10 +407,8 @@ function sm:update_camera_depend()
 	if dl then
 		local mq = w:first "main_queue camera_ref:in"
 		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in")
-		if dl.scene_changed or ce.camera_changed then
-			update_shadow_frustum(dl, ce)
-			commit_csm_matrices_attribs()
-		end
+		local mc_scene_changed = dl.scene_changed or ce.camera_changed 
+		update_shadow_attribs(dl, ce, mc_scene_changed)
 	end
 end
 
