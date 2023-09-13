@@ -8,7 +8,6 @@ system "render_mesh_bounding_system"
 system "widget_drawer_system"
     .implement "widget_system.lua"
     .require_policy "ant.render|simplerender"
-    .require_policy "ant.render|bounding_draw"
 
 policy "bounding_draw"
     .component "widget_drawer"

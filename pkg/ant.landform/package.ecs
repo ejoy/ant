@@ -17,7 +17,6 @@ system "terrain_system"
 component "road".type "lua"
 system "road_system"
     .implement "road.lua"
-    .require_policy "ant.render|draw_indirect"
     .require_system "ant.render|draw_indirect_system"
 
 policy "road"

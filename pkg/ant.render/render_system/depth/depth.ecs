@@ -10,7 +10,6 @@ policy "pre_depth_queue"
 
 system "pre_depth_system"
     .implement "render_system/depth/depth.lua"
-    .require_policy "ant.render|indirect"
 
 --import "render_system/depth/scene_depth.ecs"
 
