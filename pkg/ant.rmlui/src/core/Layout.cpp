@@ -83,9 +83,9 @@ Layout::~Layout() {
 	YGNodeFree(node);
 }
 
-static float YGValueToFloat(float v) {
+float Layout::YGValueToFloat(float v) const {
 	if (YGFloatIsUndefined(v)) {
-		assert(false);
+		//Print();
 		return 0.0f;
 	}
 	return v;

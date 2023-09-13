@@ -108,6 +108,9 @@ public:
 	void RemoveAllChildren();
 
 private:
+	float YGValueToFloat(float v) const;
+
+private:
 	YGNodeRef node;
 };
 
