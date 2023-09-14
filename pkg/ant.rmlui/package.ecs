@@ -2,7 +2,6 @@ import "@ant.render"
 
 system "rmlui_system"
     .implement "rmlui_system.lua"
-    .require_system "ant.rmlui|ui_rt_system"
 
 system "ui_rt_system"
     .require_system "ant.render|render_system"
