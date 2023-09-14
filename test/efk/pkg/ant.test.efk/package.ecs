@@ -1,8 +1,6 @@
 import "@ant.render"
-import "@ant.sky"
 import "@ant.camera"
 import "@ant.asset"
-import "@ant.efk"
 import "@ant.animation"
 
 system "init_system"

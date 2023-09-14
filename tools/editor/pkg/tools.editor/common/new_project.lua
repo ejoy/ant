@@ -89,7 +89,6 @@ function m.gen_package_ecs()
 import "@ant.general"
 import "@ant.render"
 import "@ant.animation"
-import "@ant.sky"
 import "@ant.camera"
 import "@ant.asset"
 

@@ -37,8 +37,13 @@ local function import_decl(w, fullname)
 		packname = fullname:sub(2)
 		filename = "package.ecs"
 	end
-	w._decl:load(packname, filename)
-	w._decl:check()
+	if w._decl:load(packname, filename) then
+		w._decl:check()
+	end
+end
+
+local function splitname(fullname)
+    return fullname:match "^([^|]*)|(.*)$"
 end
 
 local function create_importor(w)
@@ -47,14 +52,22 @@ local function create_importor(w)
 	local system_decl = w._decl.system
 	local component_decl = w._decl.component
 	local policy_decl = w._decl.policy
-	function import.feature(name)
-		if not name:find("|",1,true) then
-			local res = w._decl:load(name, "package.ecs")
+	local function import_ecs(packname, filename)
+		local res = w._decl:load(packname, filename)
+		if res then
 			w._decl:check()
 			for k in pairs(res.system) do
 				import.system(k)
 			end
+		end
+	end
+	function import.feature(name)
+		local packname, _ = splitname(name)
+		if not packname then
+			import_ecs(name, "package.ecs")
 			return
+		else
+			import_ecs(packname, "package.ecs")
 		end
 		local v = feature_decl[name]
 		if not v then
@@ -82,11 +95,7 @@ local function create_importor(w)
 					packname = v.packname
 					filename = fullname
 				end
-				local res = w._decl:load(packname, filename)
-				w._decl:check()
-				for k in pairs(res.system) do
-					import.system(k)
-				end
+				import_ecs(packname, filename)
 			end
 		end
 	end

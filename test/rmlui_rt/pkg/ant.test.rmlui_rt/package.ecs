@@ -1,7 +1,5 @@
 import "@ant.render"
 import "@ant.animation"
-import "@ant.efk"
-import "@ant.sky"
 
 system "init_system"
     .implement "init_system.lua"

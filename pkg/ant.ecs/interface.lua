@@ -173,7 +173,7 @@ local load_interface do
 	local genenv
 	load_interface = function (self, current, packname, filename, result)
 		if self.loaded[packname.."/"..filename] then
-			return result
+			return
 		end
 		self.loaded[packname.."/"..filename] = true
 		local f = self.loader(current, packname, filename)
@@ -267,11 +267,12 @@ local function merge_result(self, result)
 end
 
 function interface:load(packname, filename)
-	--TODO
 	local results = load_interface(self, nil, packname, filename, {})
-	local r = merge_all_results(results)
-	merge_result(self, r)
-	return r
+	if results then
+		local r = merge_all_results(results)
+		merge_result(self, r)
+		return r
+	end
 end
 
 local function check(tbl, r)
