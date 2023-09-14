@@ -19,6 +19,7 @@ import_package "ant.imgui".start {
         feature = {
             "ant.animation",
             "ant.efk",
+            "ant.modifier",
             "ant.rmlui",
             "ant.sky|sky",
         },

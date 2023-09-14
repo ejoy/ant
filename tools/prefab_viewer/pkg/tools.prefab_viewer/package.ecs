@@ -4,7 +4,6 @@ import "@ant.camera"
 import "@ant.asset"
 import "@ant.landform"
 --import "@mod.terrain"
---import "@ant.modifier"
 
 system "init_system"
     .implement "init_system.lua"
