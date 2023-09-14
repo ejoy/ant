@@ -541,7 +541,7 @@ function m:open(filename, prefab_name, patch_tpl)
             if patch.path == "hitch.prefab" then
                 self.save_hitch = true
             elseif patch.file == self.prefab_name then
-                if patch.value.prefab then
+                if patch.value and patch.value.prefab then
                     last_path.is_prefab = true
                 end
                 self.patch_template[#self.patch_template + 1] = patch
@@ -1089,14 +1089,13 @@ function m:pacth_modify(pidx, p, v)
     local patch_node
     if pidx >= self.patch_start_index then
         local node_idx = pidx - self.patch_start_index + 1
-        local counter = 0
         local true_idx
         for i = 1, #self.patch_template do
             local tpl = self.patch_template[i]
             if tpl.op == "add" and tpl.path == "/-" then
-                counter = counter + 1
+                node_idx = node_idx - 1
             end
-            if counter == node_idx then
+            if node_idx == 0 then
                 true_idx = i
                 break
             end
