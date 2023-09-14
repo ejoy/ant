@@ -130,7 +130,7 @@ local function from_runtime_event(runtime_event)
                     e.life_time = e.life_time or 2
                     e.breakable_ui = {e.breakable}
                     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
-                    prefab_mgr.check_effect_preload(e.asset_path)
+                    -- prefab_mgr.check_effect_preload(e.asset_path)
                 end
             elseif e.event_type == "Message" then
                 e.msg_content = e.msg_content or ""
@@ -406,7 +406,7 @@ local function show_current_event()
                 assert(pkgpath)
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath
-                prefab_mgr.check_effect_preload(pkgpath)
+                -- prefab_mgr.check_effect_preload(pkgpath)
                 dirty = true
             end
         end

@@ -462,7 +462,7 @@ function m:handle_event()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
         elseif state.CTRL and key == "T" and press == 1 then
-            prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effects/miner-dust.efk")
+            -- prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effects/miner-dust.efk")
             -- local hitch_test_group_id<const> = 1000
             -- world:create_entity {
             --     policy = {

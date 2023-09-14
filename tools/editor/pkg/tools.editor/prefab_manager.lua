@@ -105,7 +105,11 @@ function m:add_entity(new_entity, parent, tpl, filename)
         end
         self:pacth_add(tpl)
         if filename then
-            --
+            self.prefab_template[#self.prefab_template + 1] = {
+                index = #self.prefab_template + 1,
+                mount = #self.prefab_template,
+                prefab = filename
+            }
         end
     end
     hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil}, parent)
@@ -545,20 +549,22 @@ function m:open(filename, prefab_name, patch_tpl)
             end
         end
         local path_add_counter = 0
+        local node_idx = 1
         for index, patch in ipairs(self.patch_template) do
             if patch.op == "add" and patch.path == "/-" then
-                patch.index = index
+                patch.index = node_idx
+                node_idx = node_idx + 1
                 path_add_counter = path_add_counter + 1
             end
         end
         self.patch_start_index = #self.prefab_template - path_add_counter + 1
     end
 
-    for _, value in ipairs(self.prefab_template) do
-        if value.data and value.data.efk then
-            self.check_effect_preload(value.data.efk.path)
-        end
-    end
+    -- for _, value in ipairs(self.prefab_template) do
+    --     if value.data and value.data.efk then
+    --         self.check_effect_preload(value.data.efk.path)
+    --     end
+    -- end
 
     world:create_instance {
         prefab = filename,
@@ -1026,6 +1032,7 @@ function m:pacth_remove(eid)
         return true
     end
     local tpl = hierarchy:get_template(eid)
+    local is_prefab = tpl.filename
     local idx = tpl.template.index
     if idx < self.patch_start_index then
         return false
@@ -1033,17 +1040,26 @@ function m:pacth_remove(eid)
     table.remove(self.prefab_template, idx)
     for i = idx, #self.prefab_template do
         local t = self.prefab_template[i]
-        t.index = t.index - 1
+        t.index = t.index - (is_prefab and 2 or 1)
     end
     local patch_index = idx - self.patch_start_index + 1
-    local is_prefab = self.patch_template[patch_index].is_prefab
+    -- local is_prefab = self.patch_template[patch_index].is_prefab
     table.remove(self.patch_template, patch_index)
     if is_prefab then
         table.remove(self.patch_template, patch_index)
     end
+    local delta = (is_prefab and 2 or 1)
     for i = patch_index, #self.patch_template do
         local t = self.patch_template[i]
-        t.index = t.index - (is_prefab and 2 or 1)
+        if t.index then
+            t.index = t.index - delta
+        end
+        if t.value and t.value.mount then
+            -- TODO: rework this
+            if t.value.mount > 1 then
+                t.value.mount = t.value.mount - delta
+            end
+        end
     end
     return true
 end
@@ -1072,7 +1088,20 @@ function m:pacth_modify(pidx, p, v)
     local index
     local patch_node
     if pidx >= self.patch_start_index then
-        patch_node = self.patch_template[pidx - self.patch_start_index + 1]
+        local node_idx = pidx - self.patch_start_index + 1
+        local counter = 0
+        local true_idx
+        for i = 1, #self.patch_template do
+            local tpl = self.patch_template[i]
+            if tpl.op == "add" and tpl.path == "/-" then
+                counter = counter + 1
+            end
+            if counter == node_idx then
+                true_idx = i
+                break
+            end
+        end
+        patch_node = self.patch_template[true_idx]
         assert(patch_node)
         local sep = "/"
         local current_value
