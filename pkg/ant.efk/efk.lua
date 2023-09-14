@@ -27,6 +27,7 @@ local iefk = {}
 function efk_sys:init()
     EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
     ltask.call(EFK_SERVER, "init")
+    ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "TEX2D")
     PH = ecs.require "playhandle"
 end
 

@@ -61,6 +61,7 @@ assetmgr.material_unmark	= async.material_unmark
 assetmgr.material_isvalid	= async.material_isvalid
 
 assetmgr.textures 			= texture_mgr.textures
+assetmgr.default_textureid	= texture_mgr.default_textureid
 assetmgr.invalid_texture 	= texture_mgr.invalid
 assetmgr.load_texture 		= async.texture_create_fast
 return assetmgr

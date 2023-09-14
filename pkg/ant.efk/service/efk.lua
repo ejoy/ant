@@ -7,7 +7,7 @@ local fs        = require "filesystem"
 
 local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
-local textureman = require "textureman.client"
+local textureman= require "textureman.client"
 
 local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
@@ -144,6 +144,10 @@ end
 function S.exit()
     assert(not next(EFKFILES), "efk files should cleanup after shutdown")
     shutdown()
+end
+
+function S.init_default_tex2d(def_tex2d)
+    efk_cb_handle.default = def_tex2d
 end
 
 function S.update_cb_data(background_handle, depth)
