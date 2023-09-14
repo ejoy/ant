@@ -18,6 +18,7 @@ import_package "ant.imgui".start {
         },
         feature = {
             "ant.animation",
+            "ant.daynight",
             "ant.efk",
             "ant.modifier",
             "ant.motion_sampler",

@@ -4,5 +4,4 @@ system "daynight_system"
 component "daynight".type "lua"
 
 policy "daynight"
-    .require_system "ant.daynight|daynight_system"
     .component "daynight"

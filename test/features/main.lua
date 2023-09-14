@@ -7,6 +7,7 @@ import_package "ant.window".start {
     },
     feature = {
         "ant.animation",
+        "ant.daynight",
         "ant.motion_sampler",
         "ant.sky|sky",
     },
