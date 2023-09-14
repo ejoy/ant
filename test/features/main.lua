@@ -6,6 +6,7 @@ import_package "ant.window".start {
         "@ant.test.features",
     },
     feature = {
+        "ant.animation",
         "ant.sky|sky",
     },
     system = {

@@ -10,6 +10,7 @@ import_package "ant.window".start {
         "exit",
     },
     feature = {
+        "ant.animation",
         "ant.sky|procedural_sky"
     },
     system = {

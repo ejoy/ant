@@ -2,7 +2,6 @@ import "@ant.render"
 import "@ant.camera"
 import "@ant.asset"
 import "@ant.objcontroller"
-import "@ant.animation"
 --import "@ant.effekseer"
 
 system "init_system"

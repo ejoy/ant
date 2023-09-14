@@ -11,6 +11,7 @@ import_package "ant.window".start {
         "exit",
     },
     feature = {
+        "ant.animation",
         "ant.efk",
         "ant.rmlui",
         "ant.sky|sky",

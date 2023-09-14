@@ -1,5 +1,4 @@
 import "@ant.render"
-import "@ant.animation"
 
 system "init_system"
     .implement "init_system.lua"

@@ -1,4 +1,5 @@
 system "animation_system"
+    .require_policy "ant.render|skinrender"
     .implement "animation.lua"
 
 pipeline "animation"

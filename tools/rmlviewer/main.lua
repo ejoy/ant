@@ -22,6 +22,7 @@ import_package "ant.window".start {
         "exit",
     },
     feature = {
+        "ant.animation",
         "ant.rmlui",
     },
     system = {

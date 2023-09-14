@@ -88,15 +88,12 @@ function m.gen_package_ecs()
     local ecs = [[
 import "@ant.general"
 import "@ant.render"
-import "@ant.animation"
 import "@ant.camera"
 import "@ant.asset"
 
 system "init_system"
     .implement "init_system.lua"
     .require_policy "ant.render|light"
-    .require_policy "ant.animation|animation"
-    .require_policy "ant.animation|skinrender"
     .require_policy "ant.render|simplerender"
     .require_policy "ant.render|render"
     .method "init"

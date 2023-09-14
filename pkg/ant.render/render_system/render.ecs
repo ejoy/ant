@@ -75,12 +75,10 @@ policy "render"
 
 system "skinning_system"
     .implement "render_system/skinning_system.lua"
-    .require_system "ant.animation|animation_system"
 
 component "cs_skinning_ready"
 system "cs_skinning_system"
     .implement "render_system/cs_skinning_system.lua"
-    .require_system "ant.animation|animation_system"
 
 component "skinning"
 component "skinning_builder"
