@@ -336,7 +336,7 @@ local function update_visible(node, visible)
     end
     return rv
 end
-local iani      = ecs.require "ant.animation|controller.state_machine"
+local iani      = ecs.require "ant.animation|state_machine"
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)

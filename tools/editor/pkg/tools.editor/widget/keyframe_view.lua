@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local iani      = ecs.require "ant.animation|controller.state_machine"
+local iani      = ecs.require "ant.animation|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local assetmgr 	= import_package "ant.asset"
 local imgui     = require "imgui"

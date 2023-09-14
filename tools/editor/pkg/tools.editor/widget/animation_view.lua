@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w     = world.w
-local iani      = ecs.require "ant.animation|controller.state_machine"
+local iani      = ecs.require "ant.animation|state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
 local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"

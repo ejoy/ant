@@ -6,7 +6,7 @@ local assetmgr  = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
 local modifier_sys = ecs.system "modifier_system"
-local iani      = ecs.require "ant.animation|controller.state_machine"
+local iani      = ecs.require "ant.animation|state_machine"
 local timer     = ecs.require "ant.timer|timer_system"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ika       = ecs.require "ant.animation|keyframe"

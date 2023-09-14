@@ -63,7 +63,7 @@ local function process_keyframe_event(task)
 	end
 end
 
-local iani = ecs.require "ant.animation|controller.state_machine"
+local iani = ecs.require "ant.animation|state_machine"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()

@@ -1,4 +1,4 @@
 import "animation.ecs"
-import "controller/state_machine.ecs"
+import "state_machine.ecs"
 import "slot.ecs"
 import "motion.ecs"
