@@ -1,4 +1,2 @@
-import "@ant.timer"
-
 system "motion_system"
     .implement "motion.lua"

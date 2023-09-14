@@ -1,4 +1,3 @@
-import "@ant.timer"
 import "@ant.render"
 
 pipeline "sky"
