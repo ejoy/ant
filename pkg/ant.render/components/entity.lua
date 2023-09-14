@@ -523,6 +523,7 @@ function ientity.create_procedural_sky(settings)
     return world:create_entity {
 		policy = {
 			"ant.render|simplerender",
+			"ant.render|ibl",
 			"ant.sky|procedural_sky",
 		},
 		data = {

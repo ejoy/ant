@@ -11,6 +11,5 @@ data:
     intensity_unit: lux
     type: directional
   directional_light: true
-  name: directional_light
   make_shadow: true
   visible: true

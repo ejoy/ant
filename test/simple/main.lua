@@ -9,6 +9,9 @@ import_package "ant.window".start {
         "update",
         "exit",
     },
+    feature = {
+        "ant.sky|procedural_sky"
+    },
     system = {
         "ant.test.simple|init_system",
     },

@@ -21,4 +21,5 @@ data:
 tag:
   camera
 policy:
+  ant.camera|exposure
   ant.camera|camera

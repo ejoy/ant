@@ -22,7 +22,6 @@ import_package "ant.window".start {
         "exit",
     },
     feature = {
-        "ant.sky|sky",
     },
     system = {
         "ant.tools.rmlviewer|init_system",
