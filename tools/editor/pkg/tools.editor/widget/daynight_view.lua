@@ -32,7 +32,7 @@ local function save_prefab(eid, path)
     local template = hierarchy:get_template(eid)
     local t = template.template
     t.data.daynight = dn
-
+    dn.path = idn.get_current_path()
     local lpp = path:parent_path():localpath()
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
@@ -189,6 +189,7 @@ function DaynightView:get_daynight_cycles(template, e)
         [1] = self.save,
     }
     local dn = template.template.data.daynight
+    dn.path = nil
     for pn, p in pairs(dn) do
         property_array[#property_array+1] = self[pn]
         local subproperty = DaynightView:get_subproperty(e, pn, p)
@@ -207,14 +208,10 @@ function DaynightView:set_eid(eid)
     end
     local e <close> = world:entity(eid, "daynight?update")
     if e.daynight then
-        if #self.daynight.subproperty > 1 then
-            self.daynight:set_subproperty(self.daynight.subproperty)
-        else
-            local template = hierarchy:get_template(eid)
-            local property_array = DaynightView:get_daynight_cycles(template, e)
-            self.daynight:set_subproperty(property_array)
-            self.prefab = template.template.name
-        end
+        local template = hierarchy:get_template(eid)
+        local property_array = DaynightView:get_daynight_cycles(template, e)
+        self.daynight:set_subproperty(property_array)
+        self.prefab = idn.get_current_path()
     else
         self.eid = nil
         return

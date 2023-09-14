@@ -48,12 +48,14 @@ end
 
 
 
-local function reserve_data()
+local function reserve_data(dn)
     local dl = w:first "directional_light light:in scene:in"
     if dl then
         cached_data_table.directional_color = math3d.mark(math3d.vector(dl.light.color))
         cached_data_table.directional_intensity = dl.light.intensity
     end
+    cached_data_table.path = dn.path
+    dn.path = nil
 end
 
 local function restore_data()
@@ -63,18 +65,19 @@ local function restore_data()
         ilight.set_color_rgb(dl, math3d.index(dl_color, 1, 2, 3))
         ilight.set_intensity(dl, cached_data_table.directional_intensity)
         math3d.unmark(dl_color)
-    end 
+    end
+    cached_data_table.path = nil
 end
 
 function dn_sys:entity_init()
-    for dne in w:select "INIT daynight:in" do
-        reserve_data()
+    for dne in w:select "INIT daynight:update" do
+        reserve_data(dne.daynight)
     end 
 end
 
 function dn_sys:entity_remove()
     for dne in w:select "REMOVED daynight:in" do
-        restore_data()
+        restore_data(dne.daynight)
     end
 end
 
@@ -130,6 +133,10 @@ function idn.delete_property_cycle(e, pn)
 
     table.remove(current_property, current_number)
     return true
+end
+
+function idn.get_current_path()
+    return cached_data_table.path
 end
 
 return idn
