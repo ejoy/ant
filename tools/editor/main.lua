@@ -20,6 +20,7 @@ import_package "ant.imgui".start {
             "ant.animation",
             "ant.efk",
             "ant.modifier",
+            "ant.motion_sampler",
             "ant.rmlui",
             "ant.sky|sky",
         },

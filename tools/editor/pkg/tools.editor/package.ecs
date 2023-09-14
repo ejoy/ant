@@ -26,7 +26,6 @@ system "init_system"
     .require_policy "ant.objcontroller|pickup"
     .require_policy "ant.objcontroller|screen_3dobj"
     .require_policy "tools.editor|second_view"
-    .require_policy "ant.motion_sampler|motion_sampler"
     .require_policy "ant.daynight|daynight"
 
 system "gizmo_system"
