@@ -24,7 +24,7 @@ BUFFER_RO(b_cluster_AABBs,				vec4,	0);
 BUFFER_RW(b_global_index_count,			uint,	1);
 BUFFER_RW(b_light_grids_write,			uint,	2);
 BUFFER_RW(b_light_index_lists_write,	uint,	3);
-BUFFER_RO(b_light_info,					vec4,	12);
+BUFFER_RO(b_light_info_for_cull,		vec4,	4);
 #	endif //defined(CLUSTER_BUILD_AABB)
 
 #else //!(defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL))

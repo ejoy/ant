@@ -95,7 +95,7 @@ local cluster_buffers = {
         name            = "CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE",
     },
     light_info = {
-        cull_stage      = 12,
+        cull_stage      = 4,
         cull_access     = "r",
 
         render_stage    = 12,
@@ -216,6 +216,7 @@ function cfs:init_world()
     cmi.b_global_index_count        = create_buffer_property(cluster_buffers.global_index_count,   "cull")
     cmi.b_light_grids_write         = create_buffer_property(cluster_buffers.light_grids,          "cull")
     cmi.b_light_index_lists_write   = create_buffer_property(cluster_buffers.light_index_lists,    "cull")
+    cmi.b_light_info_for_cull       = create_buffer_property(cluster_buffers.light_info,           "cull")
 end
 
 local function cull_lights(viewid)

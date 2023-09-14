@@ -1,7 +1,6 @@
 #include "bgfx_shader.sh"
 #include "bgfx_compute.sh"
 #include "common/cluster_shading.sh"
-//#include "common/lighting.sh"
 
 float sphere_closest_pt_to_aabb(vec3 center, AABB aabb){
     vec3 closest = max(aabb.minv.xyz, min(center, aabb.maxv.xyz));
@@ -33,7 +32,7 @@ void main(){
     uint offset = cluster_idx * light_count;
     const uint direciontal_light_idx = 0;
     for(uint light_idx=direciontal_light_idx+1; light_idx<light_count; ++light_idx){
-        light_info l; load_light_info(b_light_info, light_idx, l);
+        light_info l; load_light_info(b_light_info_for_cull, light_idx, l);
 
         if(interset_aabb(l, aabb)){
             b_light_index_lists_write[offset+visible_light_count] = light_idx;

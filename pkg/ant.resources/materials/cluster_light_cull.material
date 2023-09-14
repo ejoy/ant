@@ -20,3 +20,7 @@ properties:
         access: w
         stage: 3
         buffer: "light_index_lists"
+    b_light_info_for_cull:
+        access: r
+        stage: 4
+        buffer: "b_light_info_for_cull"
