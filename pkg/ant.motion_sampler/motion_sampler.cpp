@@ -131,7 +131,6 @@ ldestory_tracks(lua_State *L){
 static int lsample(lua_State *L){
 	auto w = getworld(L);
 
-	const int gid = (int)luaL_checkinteger(L, 1);
 	const float delta = (float)luaL_checknumber(L, 2);
 
 	//int gids[] = {gid};ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
