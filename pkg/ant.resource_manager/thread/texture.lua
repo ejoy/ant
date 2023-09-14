@@ -71,6 +71,32 @@ local DefaultTexture = {
         },
         name = "<default2d>"
     },
+    TEX2DARRAY = createTexture {
+        info = {
+            width = 1,
+            height = 1,
+            format = "RGBA8",
+            mipmap = false,
+            depth = 1,
+            numLayers = 2,
+            cubeMap = false,
+            storageSize = 8,    -- 2x4
+            numMips = 1,
+            bitsPerPixel = 64,
+        },
+        value = {
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        },
+        flag = "umwwvm+l*p-l",
+        sampler = {
+            MAG = "LINEAR",
+            MIN = "LINEAR",
+            U = "CLAMP",
+            V = "CLAMP",
+        },
+        name = "<default2d_array>"
+    },
     --TODO: not support 3d texture right now
     -- TEX3D = createTexture {
     --     info = {
@@ -142,7 +168,11 @@ local function which_texture_type(info)
         return "TEXCUBE"
     end
 
-    return info.depth > 1 and "TEX3D" or "TEX2D"
+    if info.depth > 1 then
+        return "TEX3D"
+    end
+
+    return info.numLayers > 1 and "TEX2DARRAY" or "TEX2D"
 end
 
 local function asyncCreateTexture(name, textureData)
