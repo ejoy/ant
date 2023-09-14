@@ -1,2 +1,0 @@
-system "motion_system"
-    .implement "motion.lua"

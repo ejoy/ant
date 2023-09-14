@@ -11,23 +11,11 @@ pipeline "scene"
     .stage "bounding_update"
     .stage "follow_transform_updated"
 
-system "bounding_system"
-    .implement "bounding.lua"
-
-system "scenespace_system"
-    .implement ":system.scene"
-
 policy "scene_object"
-    .include_policy "ant.scene|bounding"
+    .require_system "ant.scene|bounding_system"
     .require_system "ant.scene|scenespace_system"
     .component "scene"
     .component_opt "bounding"
-
-component "bounding"
-    .type "c"
-    .field "aabb:userdata|math_t"
-    .field "scene_aabb:userdata|math_t"
-    .implement "scene_component.lua"
 
 policy "bounding"
     .require_system "ant.scene|bounding_system"
@@ -45,6 +33,18 @@ component "scene"
     .field "movement:int64"
     .implement "scene_component.lua"
 
+component "bounding"
+    .type "c"
+    .field "aabb:userdata|math_t"
+    .field "scene_aabb:userdata|math_t"
+    .implement "scene_component.lua"
+
 component "scene_needchange"
 component "scene_changed"
 component "scene_mutable"
+
+system "bounding_system"
+    .implement "bounding.lua"
+
+system "scenespace_system"
+    .implement ":system.scene"

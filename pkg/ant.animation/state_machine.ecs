@@ -1,3 +1,0 @@
-policy "animation_controller.state_machine"
-    .require_system "animation_system"
-    .component "animation"
