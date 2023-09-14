@@ -143,6 +143,7 @@ lm:lua_source "render_core"{
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        lm.mode == "debug" and "RENDER_DEBUG" or nil,
     },
     objdeps = "compile_ecs",
     sources = {
