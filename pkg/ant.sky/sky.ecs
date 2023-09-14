@@ -5,7 +5,6 @@ pipeline "sky"
 
 policy "skybox"
     .include_policy "ant.render|simplerender"
-    .require_system "ant.sky|skybox_system"
     .component "skybox"
 
 component "skybox"
