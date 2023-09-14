@@ -69,10 +69,17 @@ local attribute = {
 	},
 }
 
-local no_packspace = {
-	pipeline = true,
-	none = true,
-	component = true,
+local ATTRIBUTE_IGNORE_PACKAGE <const> = 0
+local ATTRIBUTE_IGNORE_FILENAME <const> = 1
+local ATTRIBUTE_NO_PACKAGE <const> = 2
+
+local attribute_type = {
+	pipeline = ATTRIBUTE_NO_PACKAGE,
+	none = ATTRIBUTE_NO_PACKAGE,
+	component = ATTRIBUTE_NO_PACKAGE,
+	feature = ATTRIBUTE_IGNORE_FILENAME,
+	system = ATTRIBUTE_IGNORE_PACKAGE,
+	policy = ATTRIBUTE_IGNORE_PACKAGE,
 }
 
 local check_map = {
@@ -95,9 +102,7 @@ do	-- init type_list
 	end
 
 	for what, attrib in pairs(check_map) do
-		if not no_packspace[attrib] then
-			packspace_map[what] = true
-		end
+		packspace_map[what] = attribute_type[attrib]
 	end
 end
 
@@ -131,12 +136,24 @@ local function attribute_setter(attribs, packname, contents)
 	local setter = {}
 
 	for _, a in ipairs(attribs) do
-		if packspace_map[a] then
+		if packspace_map[a] == ATTRIBUTE_IGNORE_PACKAGE then
 			setter[a] = function(what)
 				assert(type(what) == "string")
 				if not what:find("|",1,true) then
 					what = fullname(packname, what)
 				end
+				table.insert(contents, {a, what})
+				return setter
+			end
+		elseif packspace_map[a] == ATTRIBUTE_NO_PACKAGE then
+			setter[a] = function(what)
+				assert(type(what) == "string")
+				table.insert(contents, {a, what})
+				return setter
+			end
+		elseif packspace_map[a] == ATTRIBUTE_IGNORE_FILENAME then
+			setter[a] = function(what)
+				assert(type(what) == "string")
 				table.insert(contents, {a, what})
 				return setter
 			end
@@ -184,7 +201,16 @@ local load_interface do
 			api[attr] = function (name)
 				local contents = {}
 				local setter = attribute_setter(attribute[attr], packname, contents)
-				local fname = no_packspace[attr] and name or fullname(packname, name)
+				local fname
+				if attribute_type[attr] == ATTRIBUTE_NO_PACKAGE then
+					fname = name
+				elseif attribute_type[attr] == ATTRIBUTE_IGNORE_PACKAGE then
+					fname = fullname(packname, name)
+				elseif attribute_type[attr] == ATTRIBUTE_IGNORE_FILENAME then
+					fname = fullname(packname, name)
+				else
+					assert(false, attr)
+				end
 				table.insert(result, { command = attr, packname = packname, name = fname, value = contents })
 				insert_fileinfo(result)
 				return setter
@@ -256,7 +282,9 @@ local function check(tbl, r)
 				-- need check
 				for _, require_name in ipairs(list) do
 					if r[check][require_name] == nil then
-						error(string.format("Not found (%s) : %s",check, require_name))
+						if check ~= "feature" or what:find("|",1,true) then
+							error(string.format("Not found (%s) : %s",check, require_name))
+						end
 					end
 				end
 			end

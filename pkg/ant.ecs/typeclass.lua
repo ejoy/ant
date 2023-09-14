@@ -48,6 +48,14 @@ local function create_importor(w)
 	local component_decl = w._decl.component
 	local policy_decl = w._decl.policy
 	function import.feature(name)
+		if not name:find("|",1,true) then
+			local res = w._decl:load(name, "package.ecs")
+			w._decl:check()
+			for k in pairs(res.system) do
+				import.system(k)
+			end
+			return
+		end
 		local v = feature_decl[name]
 		if not v then
 			error(("invalid feature name: `%s`."):format(name))
@@ -56,12 +64,8 @@ local function create_importor(w)
 			return
 		end
 		v.imported = true
-		for _, tuple in ipairs(v.value) do
-			local what, k = tuple[1], tuple[2]
-			local attrib = check_map[what]
-			if attrib then
-				import[attrib](k)
-			end
+		for _, what in ipairs(v.require_feature) do
+			import.feature(what)
 		end
 		if v.import then
 			log.debug("Import  feature", name)

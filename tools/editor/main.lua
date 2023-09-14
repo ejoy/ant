@@ -18,6 +18,7 @@ import_package "ant.imgui".start {
         },
         feature = {
             "ant.sky|sky",
+            "ant.efk"
         },
         system = {
             "tools.editor|init_system",

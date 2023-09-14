@@ -11,6 +11,7 @@ import_package "ant.window".start {
     },
     feature = {
         "ant.sky|sky",
+        "ant.efk"
     },
     system = {
         "ant.test.atmosphere|init_system",

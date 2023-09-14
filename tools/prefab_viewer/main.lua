@@ -12,6 +12,7 @@ import_package "ant.window".start {
     },
     feature = {
         "ant.sky|sky",
+        "ant.efk"
     },
     system = {
         "tools.prefab_viewer|init_system",
