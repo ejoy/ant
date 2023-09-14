@@ -3,7 +3,6 @@ import "@ant.animation"
 import "@ant.sky"
 import "@ant.camera"
 import "@ant.asset"
-import "@ant.scene"
 import "@ant.objcontroller"
 import "@ant.efk"
 

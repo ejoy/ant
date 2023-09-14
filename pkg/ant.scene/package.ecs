@@ -1,5 +1,3 @@
-import "@ant.objcontroller"
-
 pipeline "scene"
     .stage "update_slot"
     .stage "update_modifier"
@@ -18,7 +16,6 @@ system "bounding_system"
 
 system "scenespace_system"
     .implement ":system.scene"
-
 
 policy "scene_object"
     .include_policy "ant.scene|bounding"
@@ -48,7 +45,6 @@ component "scene"
     .field "movement:int64"
     .implement "scene_component.lua"
 
-component "widget_entity"
 component "scene_needchange"
 component "scene_changed"
 component "scene_mutable"

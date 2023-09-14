@@ -17,8 +17,9 @@ import_package "ant.imgui".start {
             "exit",
         },
         feature = {
+            "ant.efk",
+            "ant.rmlui",
             "ant.sky|sky",
-            "ant.efk"
         },
         system = {
             "tools.editor|init_system",

@@ -1,6 +1,5 @@
-import "@ant.scene"
-
 import "shadow/shadow_debug.ecs"
+
 system "shadow_system"
     .implement "shadow/shadow_maker.lua"
     .require_system "ant.render|render_system"

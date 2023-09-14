@@ -11,8 +11,9 @@ import_package "ant.window".start {
         "exit",
     },
     feature = {
+        "ant.efk",
+        "ant.rmlui",
         "ant.sky|sky",
-        "ant.efk"
     },
     system = {
         "tools.prefab_viewer|init_system",

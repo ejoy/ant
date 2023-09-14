@@ -1,5 +1,3 @@
-import "@ant.scene"
-
 system "window_resize_system"
     .implement "viewport/window_resize.lua"
 
