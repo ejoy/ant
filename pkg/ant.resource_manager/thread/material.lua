@@ -123,19 +123,33 @@ local function create_fx(cfg)
         createRenderProgram(cfg)
 end
 
+local DEFAULT_TEXTURE_TYPE<const> = {
+    SAMPLER2DARRAY = "TEX2DARRAY",
+    SAMPLER2D = "TEX2D",
+    SAMPLERCUBE = "TEXCUBE",
+    SAMPLER3D = "TEX3D"
+}
+
+local function sampler_type(material, name)
+    local properties = assert(material.properties)
+    local p = assert(properties[name])
+    local st = p.sampler or "SAMPLER2D"
+    return assert(DEFAULT_TEXTURE_TYPE[st], ("Invalid sampler type:%s defined in material properties"):format(st))
+end
+
 local function material_create(filename)
     local material  = serialize.parse(filename, readall(filename .. "|main.cfg"))
     local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
     if attribute.attrib then
-        for _, v in pairs(attribute.attrib) do
+        for n, v in pairs(attribute.attrib) do
             if v.texture then
                 local texturename = absolute_path(v.texture, filename)
-                v.value = S.texture_create_fast(texturename)
+                v.value = S.texture_create_fast(texturename, sampler_type(material, n))
             elseif v.image then
                 local texturename = absolute_path(v.image, filename)
-                v.value = S.texture_create_fast(texturename)
+                v.value = S.texture_create_fast(texturename, sampler_type(material, n))
             end
         end
     end
