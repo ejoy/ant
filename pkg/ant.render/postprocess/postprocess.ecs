@@ -31,7 +31,6 @@ policy "postprocess"
     .require_system "ant.render|fxaa_system"
     .require_system "ant.render|taa_system"
     .require_system "ant.render|hv_flip_system"
-    --.require_system "ant.render|blit_system"
 
 component "postprocess"
 component "postprocess_input"
@@ -87,10 +86,6 @@ system "taa_system"
 
 -- system "simpledof_system"
 --     .implement "postprocess/DoF2.lua"
-
-component "blit_obj"
-system "blit_system"
-    .implement "postprocess/blit.lua"
 
 component "hv_flip_drawer"
 component "hv_flip_queue"
