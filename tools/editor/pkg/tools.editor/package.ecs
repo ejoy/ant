@@ -27,7 +27,6 @@ system "init_system"
 
     .require_policy "ant.render|skinrender"
     .require_policy "ant.render|light"
-    .require_policy "ant.sky|procedural_sky"
     
     .require_policy "ant.animation|animation"
     .require_policy "ant.animation|animation_controller.state_machine"
