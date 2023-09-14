@@ -18,6 +18,7 @@ build
 
 output
 
+editor.settings
 editor.user.setting
 editor.user.ini
 script_runner.user.lua
