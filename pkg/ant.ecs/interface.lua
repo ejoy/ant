@@ -63,6 +63,10 @@ local attribute = {
 		"size",
 		"field",
 	},
+	feature = {
+		"require_feature",
+		"import",
+	},
 }
 
 local no_packspace = {
@@ -76,7 +80,8 @@ local check_map = {
 	require_policy = "policy",
 	include_policy = "policy",
 	component = "component",
-	component_opt = "component",
+	require_feature = "feature",
+	import = "none",
 	pipeline = "none",
 	stage = "none",
 }

@@ -16,6 +16,9 @@ import_package "ant.imgui".start {
             "update",
             "exit",
         },
+        feature = {
+            "ant.sky|sky",
+        },
         system = {
             "tools.editor|init_system",
             "tools.editor|gizmo_system",

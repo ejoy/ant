@@ -9,6 +9,9 @@ import_package "ant.window".start {
         "update",
         "exit",
     },
+    feature = {
+        "ant.sky|sky",
+    },
     system = {
         "ant.test.atmosphere|init_system",
     },

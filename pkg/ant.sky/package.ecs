@@ -1,1 +1,5 @@
-import "sky.ecs"
+feature "sky"
+    .import "sky.ecs"
+
+feature "procedural_sky"
+    .import "procedural_sky.ecs"

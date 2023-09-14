@@ -20,6 +20,7 @@ local function sortpairs(t)
 end
 
 local check_map = {
+	require_feature = "feature",
 	require_system = "system",
 	require_policy = "policy",
 	include_policy = "policy",
@@ -27,11 +28,64 @@ local check_map = {
 	component_opt = "component",
 }
 
+local function import_decl(w, fullname)
+	local packname, filename
+	assert(fullname:sub(1,1) == "@")
+	if fullname:find "/" then
+		packname, filename = fullname:match "^@([^/]*)/(.*)$"
+	else
+		packname = fullname:sub(2)
+		filename = "package.ecs"
+	end
+	w._decl:load(packname, filename)
+	w._decl:check()
+end
+
 local function create_importor(w)
 	local import = {}
+	local feature_decl = w._decl.feature
 	local system_decl = w._decl.system
 	local component_decl = w._decl.component
 	local policy_decl = w._decl.policy
+	function import.feature(name)
+		local v = feature_decl[name]
+		if not v then
+			error(("invalid feature name: `%s`."):format(name))
+		end
+		if v.imported then
+			return
+		end
+		v.imported = true
+		for _, tuple in ipairs(v.value) do
+			local what, k = tuple[1], tuple[2]
+			local attrib = check_map[what]
+			if attrib then
+				import[attrib](k)
+			end
+		end
+		if v.import then
+			log.debug("Import  feature", name)
+			for _, fullname in ipairs(v.import) do
+				local packname, filename
+				if fullname:sub(1,1) == "@" then
+					if fullname:find "/" then
+						packname, filename = fullname:match "^@([^/]*)/(.*)$"
+					else
+						packname = fullname:sub(2)
+						filename = "package.ecs"
+					end
+				else
+					packname = v.packname
+					filename = fullname
+				end
+				local res = w._decl:load(packname, filename)
+				w._decl:check()
+				for k in pairs(res.system) do
+					import.system(k)
+				end
+			end
+		end
+	end
 	function import.system(name)
 		local v = system_decl[name]
 		if not v then
@@ -100,19 +154,6 @@ local function create_importor(w)
 		end
 	end
 	return import
-end
-
-local function import_decl(w, fullname)
-	local packname, filename
-	assert(fullname:sub(1,1) == "@")
-	if fullname:find "/" then
-		packname, filename = fullname:match "^@([^/]*)/(.*)$"
-	else
-		packname = fullname:sub(2)
-		filename = "package.ecs"
-	end
-	w._decl:load(packname, filename)
-	w._decl:check()
 end
 
 local function toint(v)
@@ -242,6 +283,11 @@ local function import_ecs(w, ecs)
 	if ecs.import then
 		for _, k in ipairs(ecs.import) do
 			import_decl(w, k)
+		end
+	end
+	if ecs.feature then
+		for _, k in ipairs(ecs.feature) do
+			importor.feature(k)
 		end
 	end
 	if ecs.system then

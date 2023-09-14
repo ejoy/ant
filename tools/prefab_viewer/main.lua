@@ -10,6 +10,9 @@ import_package "ant.window".start {
         "update",
         "exit",
     },
+    feature = {
+        "ant.sky|sky",
+    },
     system = {
         "tools.prefab_viewer|init_system",
     },

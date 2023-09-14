@@ -10,6 +10,9 @@ import_package "ant.window".start {
         "update",
         "exit",
     },
+    feature = {
+        "ant.sky|sky",
+    },
     system = {
         "ant.test.efk|init_system",
     },
