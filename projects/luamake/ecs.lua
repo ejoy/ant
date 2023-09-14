@@ -69,9 +69,11 @@ local function loadComponents()
     end
     for _, pkgs in ipairs(packages) do
         for pkg in fs.pairs(pkgs) do
-            for file in fs.pairs(pkg, "r") do
-                if file:equal_extension "ecs" then
-                    eval(file)
+            if not pkg:string():match "%.DS_Store" then
+                for file in fs.pairs(pkg, "r") do
+                    if file:equal_extension "ecs" then
+                        eval(file)
+                    end
                 end
             end
         end
