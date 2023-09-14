@@ -1,5 +1,4 @@
 import "@ant.render"
-import "@ant.timer"
 
 system "rmlui_system"
     .implement "rmlui_system.lua"

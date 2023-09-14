@@ -1,5 +1,3 @@
-import "@ant.timer"
-
 system "animation_system"
     .implement "animation.lua"
 

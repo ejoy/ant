@@ -318,7 +318,9 @@ local function create_ecs(w, package, tasks)
         local r = w._class.system[fullname]
         if r == nil then
             if not w._decl.system[fullname] then
-                error(("system `%s` has no declaration."):format(fullname))
+                w._decl.system[fullname] = {
+					value = {}
+				}
             end
             log.debug("Register system   ", fullname)
             r = {}
@@ -375,7 +377,7 @@ local function init(w, config)
 	slove_component(w)
 	create_context(w)
 	for name, v in sortpairs(w._decl.system) do
-		if v.implement[1] and not v.imported then
+		if v.implement and v.implement[1] and not v.imported then
 			log.warn(string.format("system `%s` is not imported.", name))
 		end
 	end
