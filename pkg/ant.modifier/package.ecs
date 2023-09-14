@@ -4,5 +4,4 @@ system "modifier_system"
 component "modifier".type "lua"
 
 policy "modifier"
-    .require_system     "ant.modifier|modifier_system"
     .component "modifier"

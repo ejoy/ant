@@ -13,7 +13,6 @@ component "motion_sampler"
     .implement "motion_sampler.lua"
 
 policy "motion_sampler"
-    .require_system "ant.motion_sampler|motion_sampler_system"
     .component "motion_sampler"
 
 system "motion_sampler_system"
