@@ -1,3 +1,5 @@
+local platform = require "bee.platform"
+
 local plist = require "plist"
 
 local USBMUXD_SOCKET_PORT = 27015
@@ -67,7 +69,7 @@ local function plist_package(plist_object, tag)
 end
 
 function usbmuxd.get_address()
-	if package.config:sub(1,1) == "\\" then
+	if platform.os == "windows" then
 		-- Windows
 		return "tcp", "127.0.0.1", USBMUXD_SOCKET_PORT
 	else
