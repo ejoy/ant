@@ -3,15 +3,13 @@ require "bootstrap"
 import_package "ant.window".start {
     enable_mouse = true,
     import = {
-        "@ant.test.light",
+        "@ant.render",
     },
     feature = {
+        "ant.test.light",
         "ant.camera|camera_controller",
         "ant.efk",
         "ant.sky|sky",
-    },
-    system = {
-        "ant.test.light|init_system",
     },
     policy = {
         "ant.render|render",

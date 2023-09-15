@@ -1,5 +1,3 @@
-import "@ant.render"
-
 pipeline "sky"
     .stage "convert_sky"
 

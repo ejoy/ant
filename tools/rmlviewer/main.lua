@@ -14,14 +14,12 @@ end
 import_package "ant.window".start {
     args = arguments,
     import = {
-        "@ant.tools.rmlviewer",
+        "@ant.render",
     },
     feature = {
+        "ant.tools.rmlviewer",
         "ant.animation",
         "ant.rmlui",
-    },
-    system = {
-        "ant.tools.rmlviewer|init_system",
     },
     policy = {
         "ant.render|render",

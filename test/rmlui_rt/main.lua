@@ -16,14 +16,12 @@ end
 import_package "ant.window".start {
     args = arguments,
     import = {
-        "@ant.test.rmlui_rt",
+        "@ant.render",
     },
     feature = {
+        "ant.test.rmlui_rt",
         "ant.rmlui",
         "ant.sky|sky",
-    },
-    system = {
-        "ant.test.rmlui_rt|init_system",
     },
     policy = {
         "ant.render|render",

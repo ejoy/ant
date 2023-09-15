@@ -3,9 +3,10 @@ require "bootstrap"
 import_package "ant.window".start {
     enable_mouse = true,
     import = {
-        "@ant.test.features",
+        "@ant.render",
     },
     feature = {
+        "ant.test.features",
         "ant.animation",
         "ant.camera|camera_controller",
         "ant.camera|camera_recorder",
@@ -18,7 +19,8 @@ import_package "ant.window".start {
         "ant.terrain|canvas",
         "ant.terrain|water",
     },
-    system = {
-        "ant.test.features|init_loader_system",
-    },
+    policy = {
+        "ant.render|render",
+        "ant.render|render_queue",
+    }
 }

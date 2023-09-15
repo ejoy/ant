@@ -1,5 +1,3 @@
-import "@ant.render"
-
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
     -- .require_system "ant.test.features|camera_controller_system"

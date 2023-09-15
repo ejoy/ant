@@ -2,16 +2,14 @@ package.path = "engine/?.lua"
 require "bootstrap"
 import_package "ant.window".start {
     import = {
-        "@ant.test.simple",
+        "@ant.render",
     },
     feature = {
+        "ant.test.simple",
         "ant.animation",
         "ant.camera|camera_controller",
         "ant.objcontroller|pickup",
         "ant.sky|procedural_sky",
-    },
-    system = {
-        "ant.test.simple|init_system",
     },
     policy = {
         "ant.render|render",

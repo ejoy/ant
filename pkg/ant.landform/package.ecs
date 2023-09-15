@@ -1,5 +1,3 @@
-import "@ant.render"
-
 policy "shape_terrain"
     .component "shape_terrain"
 

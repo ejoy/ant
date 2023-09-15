@@ -9,7 +9,8 @@ import_package "ant.imgui".start {
     ecs = {
         enable_mouse = true,
         import = {
-            "@tools.editor"
+            "@tools.editor",
+            "@ant.render",
         },
         feature = {
             "ant.animation",

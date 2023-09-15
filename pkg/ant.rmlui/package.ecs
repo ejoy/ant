@@ -1,5 +1,3 @@
-import "@ant.render"
-
 system "rmlui_system"
     .implement "rmlui_system.lua"
 

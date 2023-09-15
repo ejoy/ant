@@ -1,4 +1,3 @@
-import "@ant.render"
 import_feature "ant.bake"
 
 system "lightmap_example"
