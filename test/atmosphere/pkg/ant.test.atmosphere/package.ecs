@@ -5,7 +5,6 @@ system "init_system"
     .require_policy "ant.render|light"
     .require_policy "ant.render|render"
     .require_policy "ant.render|render_queue"
-    .require_policy "ant.efk|efk"
 
 pipeline "init"
     .stage "init"
