@@ -1,4 +1,4 @@
-import "@ant.asset"
+import_feature "ant.asset"
 
 component "decal".type "lua"
 policy "decal"
@@ -11,4 +11,3 @@ policy "decal"
 
 system "decal_system"
     .implement "decal/decal.lua"
-

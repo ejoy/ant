@@ -1,8 +1,7 @@
-import "@ant.material"
+import_feature "ant.material"
 
 system "material_system"
     .implement "material.lua"
-    .require_system "ant.material|material_init_system"
 
 system "mesh_system"
     .implement "mesh.lua"
@@ -14,8 +13,8 @@ component "material_result"
     .type "lua"
 component "material"
     .type "lua"
+
 policy "material"
-    .require_system "ant.asset|material_system"
     .component "material"
 
 component "mesh"

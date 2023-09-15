@@ -1,5 +1,4 @@
 import "@ant.render"
-import "@ant.asset"
 import "@ant.bake"
 
 system "lightmap_example"

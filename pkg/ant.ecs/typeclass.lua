@@ -42,7 +42,6 @@ local function import_decl(w, fullname, import)
 		for k in pairs(res.import_feature) do
 			import.feature(k)
 		end
-		w._decl:check()
 	end
 end
 
@@ -62,7 +61,6 @@ local function create_importor(w)
 			for k in pairs(res.import_feature) do
 				import.feature(k)
 			end
-			w._decl:check()
 			for k in pairs(res.system) do
 				import.system(k)
 			end
@@ -310,6 +308,7 @@ local function import_ecs(w, ecs)
 			importor.feature(k)
 		end
 	end
+	w._decl:check()
 	if ecs.system then
 		for _, k in ipairs(ecs.system) do
 			importor.system(k)
