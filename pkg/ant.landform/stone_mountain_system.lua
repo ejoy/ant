@@ -217,8 +217,6 @@ end
 
 
 function sm_sys:entity_init()
-    --TODO:
-    if true then return end
 
     for e in w:select "INIT stonemountain:update render_object?update eid:in" do
         local stonemountain = e.stonemountain
@@ -269,6 +267,8 @@ function sm_sys:entity_init()
 end
 
 local function create_sm_entity()
+    --TODO
+    if true then return end
     local stonemountain = {draw_num = 0, srt_info = {}}
 
     for _, sms in pairs(sm_table) do
