@@ -70,7 +70,7 @@ local function create_render_program(vs, fs)
 end
 
 local function read_file(filename)
-    local f<close> = fs.open(filename, "rb")
+    local f<close> = io.open(filename:localpath():string(), "rb")
     return f:read "a"
 end
 
