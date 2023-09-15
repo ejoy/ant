@@ -12,13 +12,10 @@ pipeline "scene"
     .stage "follow_transform_updated"
 
 policy "scene_object"
-    .require_system "ant.scene|bounding_system"
-    .require_system "ant.scene|scenespace_system"
     .component "scene"
     .component_opt "bounding"
 
 policy "bounding"
-    .require_system "ant.scene|bounding_system"
     .component_opt "bounding"
 
 component "scene"

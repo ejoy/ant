@@ -1,4 +1,5 @@
-import "@ant.scene"
+import_feature "ant.scene"
+
 system "camera_view_system"
     .implement "camera.lua"
 

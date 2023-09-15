@@ -29,7 +29,6 @@ import_package "ant.window".start {
         "ant.tools.rmlviewer|init_system",
     },
     policy = {
-        "ant.scene|scene_object",
         "ant.render|render",
         "ant.render|render_queue",
     }

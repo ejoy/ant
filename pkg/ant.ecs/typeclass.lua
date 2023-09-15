@@ -20,7 +20,7 @@ local function sortpairs(t)
 end
 
 local check_map = {
-	require_feature = "feature",
+	import_feature = "feature",
 	require_system = "system",
 	require_policy = "policy",
 	include_policy = "policy",
@@ -28,7 +28,7 @@ local check_map = {
 	component_opt = "component",
 }
 
-local function import_decl(w, fullname)
+local function import_decl(w, fullname, import)
 	local packname, filename
 	assert(fullname:sub(1,1) == "@")
 	if fullname:find "/" then
@@ -37,7 +37,11 @@ local function import_decl(w, fullname)
 		packname = fullname:sub(2)
 		filename = "package.ecs"
 	end
-	if w._decl:load(packname, filename) then
+	local res = w._decl:load(packname, filename)
+	if res then
+		for k in pairs(res.import_feature) do
+			import.feature(k)
+		end
 		w._decl:check()
 	end
 end
@@ -55,6 +59,9 @@ local function create_importor(w)
 	local function import_ecs(packname, filename)
 		local res = w._decl:load(packname, filename)
 		if res then
+			for k in pairs(res.import_feature) do
+				import.feature(k)
+			end
 			w._decl:check()
 			for k in pairs(res.system) do
 				import.system(k)
@@ -77,7 +84,7 @@ local function create_importor(w)
 			return
 		end
 		v.imported = true
-		for _, what in ipairs(v.require_feature) do
+		for _, what in ipairs(v.import_feature) do
 			import.feature(what)
 		end
 		if v.import then
@@ -295,7 +302,7 @@ local function import_ecs(w, ecs)
 	local importor = create_importor(w)
 	if ecs.import then
 		for _, k in ipairs(ecs.import) do
-			import_decl(w, k)
+			import_decl(w, k, importor)
 		end
 	end
 	if ecs.feature then

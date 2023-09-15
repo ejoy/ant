@@ -1,7 +1,8 @@
-import "@ant.scene"
 import "@ant.camera"
 import "@ant.asset"
 import "@ant.objcontroller"
+
+import_feature "ant.scene"
 
 import "render_system/depth/depth.ecs"
 import "render_system/hitch.ecs"

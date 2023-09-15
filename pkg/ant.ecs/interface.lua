@@ -64,8 +64,10 @@ local attribute = {
 		"field",
 	},
 	feature = {
-		"require_feature",
+		"import_feature",
 		"import",
+	},
+	import_feature = {
 	},
 }
 
@@ -77,9 +79,10 @@ local attribute_type = {
 	pipeline = ATTRIBUTE_NO_PACKAGE,
 	none = ATTRIBUTE_NO_PACKAGE,
 	component = ATTRIBUTE_NO_PACKAGE,
-	feature = ATTRIBUTE_IGNORE_FILENAME,
+	feature = ATTRIBUTE_IGNORE_PACKAGE,
 	system = ATTRIBUTE_IGNORE_PACKAGE,
 	policy = ATTRIBUTE_IGNORE_PACKAGE,
+	import_feature = ATTRIBUTE_IGNORE_FILENAME,
 }
 
 local check_map = {
@@ -87,7 +90,7 @@ local check_map = {
 	require_policy = "policy",
 	include_policy = "policy",
 	component = "component",
-	require_feature = "feature",
+	import_feature = "import_feature",
 	import = "none",
 	pipeline = "none",
 	stage = "none",
@@ -207,7 +210,7 @@ local load_interface do
 				elseif attribute_type[attr] == ATTRIBUTE_IGNORE_PACKAGE then
 					fname = fullname(packname, name)
 				elseif attribute_type[attr] == ATTRIBUTE_IGNORE_FILENAME then
-					fname = fullname(packname, name)
+					fname = name
 				else
 					assert(false, attr)
 				end
@@ -229,7 +232,7 @@ local function merge_all_results(results)
 	for _, item in ipairs(results) do
 		local m = r[item.command]
 		if item.name then
-			if m[item.name] ~= nil then
+			if item.command ~= "import_feature" and m[item.name] ~= nil then
 				error(string.format("Redfined %s:%s in %s(%d), Already defined at %s(%d)",
 					item.command, item.name, item.source, item.lineno, m[item.name].source, m[item.name].lineno))
 			end
@@ -283,7 +286,7 @@ local function check(tbl, r)
 				-- need check
 				for _, require_name in ipairs(list) do
 					if r[check][require_name] == nil then
-						if check ~= "feature" or what:find("|",1,true) then
+						if check ~= "import_feature" or what:find("|",1,true) then
 							error(string.format("Not found (%s) : %s",check, require_name))
 						end
 					end
