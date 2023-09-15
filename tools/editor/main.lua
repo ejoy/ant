@@ -15,6 +15,7 @@ import_package "ant.imgui".start {
             "ant.animation",
             "ant.daynight",
             "ant.efk",
+            "ant.landform",
             "ant.modifier",
             "ant.motion_sampler",
             "ant.objcontroller|pickup",
