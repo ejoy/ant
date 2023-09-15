@@ -271,6 +271,7 @@ local function create_skin_entity(status, parent)
         data.scene = {}
     end
     if has_animation then
+        policy[#policy+1] = "ant.animation|animation"
         data.animation = {}
         local anilst = {}
         for name, file in pairs(status.animations) do
