@@ -25,5 +25,4 @@ import_package "ant.window".start {
         "update",
         "exit",
     },
-    policy = {},
 }

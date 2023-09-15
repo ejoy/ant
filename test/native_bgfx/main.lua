@@ -11,9 +11,5 @@ import_package "ant.window".start {
     },
     system = {
         "ant.test.native_bgfx|init_system",
-    },
-    interface = {
-    },
-    policy = {
     }
 }
