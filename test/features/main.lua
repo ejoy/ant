@@ -10,6 +10,8 @@ import_package "ant.window".start {
         "ant.daynight",
         "ant.motion_sampler",
         "ant.sky|sky",
+        "ant.terrain|canvas",
+        "ant.terrain|water",
     },
     system = {
         "ant.test.features|init_loader_system",

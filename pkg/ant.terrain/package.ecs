@@ -1,1 +1,8 @@
-import "terrain.ecs"
+feature "canvas"
+    .import "canvas.ecs"
+
+feature "water"
+    .import "water.ecs"
+
+feature "shape_terrain"
+    .import "shape_terrain.ecs"

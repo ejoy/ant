@@ -31,9 +31,3 @@ system "quad_strip_system"
 policy "quad_strip"
     .require_system "ant.terrain|quad_strip_system"
     .component "quad_strip"
-
---indicator
-system "indicator_system"
-    .implement "indicator.lua"
-
-import "canvas.ecs"

@@ -8,5 +8,4 @@ policy "canvas_drawer"
     .component "canvas_drawer"
 
 policy "canvas"
-    .require_system "ant.terrain|canvas_system"
     .component "canvas"
