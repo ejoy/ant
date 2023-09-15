@@ -155,7 +155,7 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 	
 	transform t;
 	if (mats){
-		for (int i=0; i<mats->size()-1; ++i) {
+		for (int i=0; i<(int)mats->size()-1; ++i) {
 			t = update_transform(w, obj, (*mats)[i], trans);
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 			submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
