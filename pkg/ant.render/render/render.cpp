@@ -178,18 +178,18 @@ struct submit_cache{
 	group_collection	groups;
 
 	struct render_args {
-		const ecs::render_args* a = nullptr;
-		int queue_idx = 0;
+		const ecs::render_args* a;
+		int queue_idx;
 	};
 	render_args ra[MAX_VISIBLE_QUEUE];
 	uint8_t ra_count = 0;
 
 #ifdef RENDER_DEBUG
 	struct submit_stat{
-		uint32_t hitch_submit = 0;
-		uint32_t simple_submit = 0;
-		uint32_t efk_hitch_submit = 0;
-		uint32_t hitch_count = 0;
+		uint32_t hitch_submit;
+		uint32_t simple_submit;
+		uint32_t efk_hitch_submit;
+		uint32_t hitch_count;
 	};
 
 	submit_stat stat;
@@ -202,7 +202,7 @@ struct submit_cache{
 		ra_count = 0;
 
 #ifdef RENDER_DEBUG
-		memset(ra, 0xdeaddead, sizeof(ra));
+		memset(ra, 0, sizeof(ra));
 		memset(&stat, 0, sizeof(stat));
 #endif //RENDER_DEBUG
 	}
