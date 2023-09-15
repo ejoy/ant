@@ -11,7 +11,8 @@ import_package "ant.window".start {
     },
     feature = {
         "ant.animation",
-        "ant.sky|procedural_sky"
+        "ant.objcontroller|pickup",
+        "ant.sky|procedural_sky",
     },
     system = {
         "ant.test.simple|init_system",
@@ -19,6 +20,5 @@ import_package "ant.window".start {
     policy = {
         "ant.render|render",
         "ant.render|render_queue",
-        "ant.objcontroller|pickup",
     }
 }

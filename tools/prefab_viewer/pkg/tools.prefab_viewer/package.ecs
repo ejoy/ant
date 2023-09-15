@@ -1,4 +1,3 @@
-import "@ant.objcontroller"
 import "@ant.render"
 import "@ant.camera"
 import "@ant.asset"

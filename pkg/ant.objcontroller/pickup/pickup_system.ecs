@@ -1,9 +1,5 @@
-import "@ant.render"
-
-import "pickup/pickup_debug.ecs"
-
-system "pickup_system"
-    .implement "pickup/pickup_system.lua"
+--import "pickup/pickup_debug.ecs"
+--import "pickup/default_pickup_detect_system.ecs"
 
 pipeline "select"
     .stage "pickup"
@@ -15,8 +11,7 @@ component "pickup"
     .type "lua"
 
 policy "pickup"
-    .require_system "ant.objcontroller|pickup_system"
-    --.require_system "ant.objcontroller|pickup_debug_system"
     .component "pickup"
 
-import "pickup/default_pickup_detect_system.ecs"
+system "pickup_system"
+    .implement "pickup/pickup_system.lua"

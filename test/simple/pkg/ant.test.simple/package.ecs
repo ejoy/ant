@@ -1,7 +1,6 @@
 import "@ant.render"
 import "@ant.camera"
 import "@ant.asset"
-import "@ant.objcontroller"
 
 system "init_system"
     .implement "init_system.lua"

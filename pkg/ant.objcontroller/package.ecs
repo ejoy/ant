@@ -1,2 +1,5 @@
-import "screen_3dobj.ecs"
-import "pickup/pickup_system.ecs"
+feature "pickup"
+    .import "pickup/pickup_system.ecs"
+
+feature "screen_3dobj"
+    .import "screen_3dobj.ecs"

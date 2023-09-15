@@ -22,6 +22,7 @@ import_package "ant.imgui".start {
             "ant.efk",
             "ant.modifier",
             "ant.motion_sampler",
+            "ant.objcontroller|pickup",
             "ant.rmlui",
             "ant.sky|sky",
         },

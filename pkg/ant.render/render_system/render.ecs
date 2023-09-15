@@ -1,6 +1,5 @@
 import "@ant.camera"
 import "@ant.asset"
-import "@ant.objcontroller"
 
 import_feature "ant.scene"
 
