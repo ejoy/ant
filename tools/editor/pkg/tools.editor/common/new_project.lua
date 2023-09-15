@@ -41,11 +41,6 @@ return {
         import = {
             "@$PackageName",
         },
-        pipeline = {
-            "init",
-            "update",
-            "exit",
-        },
         system = {
             "$PackageName|init_system",
         }

@@ -4,11 +4,6 @@ import_package "ant.window".start {
     import = {
         "@ant.test.simple",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
     feature = {
         "ant.animation",
         "ant.camera|camera_controller",

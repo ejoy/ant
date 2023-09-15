@@ -21,9 +21,4 @@ import_package "ant.window".start {
     system = {
         "ant.test.features|init_loader_system",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
 }

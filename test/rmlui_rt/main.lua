@@ -18,11 +18,6 @@ import_package "ant.window".start {
     import = {
         "@ant.test.rmlui_rt",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
     feature = {
         "ant.rmlui",
         "ant.sky|sky",

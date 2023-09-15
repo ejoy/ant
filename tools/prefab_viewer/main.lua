@@ -5,11 +5,6 @@ import_package "ant.window".start {
     import = {
         "@tools.prefab_viewer",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
     feature = {
         "ant.animation",
         "ant.efk",

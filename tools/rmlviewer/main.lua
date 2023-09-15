@@ -16,11 +16,6 @@ import_package "ant.window".start {
     import = {
         "@ant.tools.rmlviewer",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
     feature = {
         "ant.animation",
         "ant.rmlui",

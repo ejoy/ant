@@ -4,11 +4,6 @@ import_package "ant.window".start {
     import = {
         "@ant.test.material",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
     feature = {
         "ant.camera|camera_controller",
         "ant.sky|sky",

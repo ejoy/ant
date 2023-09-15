@@ -4,11 +4,6 @@ import_package "ant.window".start {
     import = {
         "@ant.test.atmosphere",
     },
-    pipeline = {
-        "init",
-        "update",
-        "exit",
-    },
     feature = {
         "ant.camera|camera_controller",
         "ant.efk",

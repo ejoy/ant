@@ -11,11 +11,6 @@ import_package "ant.imgui".start {
         import = {
             "@tools.editor"
         },
-        pipeline = {
-            "init",
-            "update",
-            "exit",
-        },
         feature = {
             "ant.animation",
             "ant.daynight",
