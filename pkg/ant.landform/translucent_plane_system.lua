@@ -138,7 +138,6 @@ local function create_translucent_plane_entity(grids_num, grids, color, alpha, r
                 policy = {
                     "ant.scene|scene_object",
                     "ant.render|simplerender",
-                    "ant.landform|translucent_plane",
                 },
                 data = {
                     scene = {
@@ -167,7 +166,6 @@ local function create_translucent_plane_entity(grids_num, grids, color, alpha, r
                 policy = {
                     "ant.scene|scene_object",
                     "ant.render|simplerender",
-                    "ant.landform|translucent_plane",
                 },
                 data = {
                     scene = {
