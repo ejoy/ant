@@ -458,14 +458,8 @@ function m.new_world(config)
     do
         local cfg = config.ecs
         if cfg then
-            cfg.pipeline = {
-                "_init", "_update", "exit"
-            }
-            cfg.import = cfg.import or {}
-            table.insert(cfg.import, "@ant.ecs")
-            cfg.system = cfg.system or {}
-            table.insert(cfg.system, "ant.ecs|entity_system")
-            table.insert(cfg.system, "ant.ecs|debug_system")
+            cfg.feature = cfg.feature or {}
+            table.insert(cfg.feature, "ant.ecs")
         end
     end
     local ecs = luaecs.world()
