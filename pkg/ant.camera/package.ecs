@@ -10,7 +10,7 @@ policy "exposure"
 
 policy "camera"
     .component "camera"
-    .component_opt "scene"
+    .component "scene"
 
 component "camera_depend"
 component "exposure".type "lua"
