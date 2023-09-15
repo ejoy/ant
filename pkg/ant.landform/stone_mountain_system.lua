@@ -217,6 +217,9 @@ end
 
 
 function sm_sys:entity_init()
+    --TODO:
+    if true then return end
+
     for e in w:select "INIT stonemountain:update render_object?update eid:in" do
         local stonemountain = e.stonemountain
         update_ro(e.render_object)
