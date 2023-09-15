@@ -1,5 +1,4 @@
 import "@ant.render"
-import "@ant.test.features"
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
@@ -34,7 +33,6 @@ system "init_loader_system"
     .require_policy "ant.render|csm_queue"
     .require_policy "ant.render|hitch_object"
     .require_policy "ant.render|postprocess"
-    .require_policy "ant.objcontroller|screen_3dobj"
     .require_policy "ant.render|skinrender"
     .require_policy "ant.render|outline_info"
 

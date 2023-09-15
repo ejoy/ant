@@ -11,6 +11,7 @@ import_package "ant.window".start {
         "ant.camera|camera_recorder",
         "ant.daynight",
         "ant.motion_sampler",
+        "ant.objcontroller|screen_3dobj",
         "ant.sky|sky",
         "ant.sky|procedural_sky",
         "ant.splitviews",
