@@ -3,3 +3,6 @@ feature "pickup"
 
 feature "screen_3dobj"
     .import "screen_3dobj.ecs"
+
+feature "pickup_detect"
+    .import "pickup/default_pickup_detect_system.ecs"

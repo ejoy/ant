@@ -1,15 +1,5 @@
---[[ system "plane_terrain_system"
-    .implement "plane_terrain.lua"
-
-component "plane_terrain".type "lua"
-component "section_index".type "lua"
-
-]]
-
 system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
-
---component "shape_terrain".type "lua"
 
 component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"
@@ -17,17 +7,10 @@ component "shape_terrain_edge_drawer"
 system "mesh_terrain_system"
     .implement "mesh_terrain.lua"
 
-
---[[ policy "shape_terrain"
-    --.require_system "ant.terrain|mesh_terrain_system"
-    .require_system "ant.terrain|plane_terrain_system"
-    .component "shape_terrain" ]]
-
 -- quad_strip
 component "quad_strip".type "lua"
 system "quad_strip_system"
     .implement "quad_strip.lua"
 
 policy "quad_strip"
-    .require_system "ant.terrain|quad_strip_system"
     .component "quad_strip"

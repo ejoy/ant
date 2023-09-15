@@ -14,6 +14,7 @@ import_package "ant.window".start {
         "ant.animation",
         "ant.efk",
         "ant.landform",
+        "ant.objcontroller|pickup_detect",
         "ant.rmlui",
         "ant.sky|sky",
     },

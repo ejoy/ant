@@ -9,5 +9,4 @@ component "bake_lightmap_queue_renderable"
 component "bake_lightmap_queue_visible"
 
 policy "bake_lightmap"
-    .require_system "ant.bake|bake_lightmap_system"
     .include_policy "ant.render|lightmap"

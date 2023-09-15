@@ -1,5 +1,4 @@
 --import "pickup/pickup_debug.ecs"
---import "pickup/default_pickup_detect_system.ecs"
 
 pipeline "select"
     .stage "pickup"
