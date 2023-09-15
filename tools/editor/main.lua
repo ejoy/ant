@@ -33,8 +33,6 @@ import_package "ant.imgui".start {
             "tools.editor|grid_brush_system",
             "tools.editor|gui_system",
             "tools.editor|camera_system",
-            "ant.objcontroller|pickup_system",
-            -- "ant.camera|default_camera_controller",
         }
     }
 }

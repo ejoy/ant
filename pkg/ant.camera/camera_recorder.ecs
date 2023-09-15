@@ -1,0 +1,7 @@
+system "camera_recorder_system"
+    .implement "camera_recorder.lua"
+
+component "camera_recorder".type "lua"
+
+policy "camera_recorder"
+    .component "camera_recorder"

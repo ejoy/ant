@@ -1,5 +1,4 @@
 import "@ant.render"
-import "@ant.camera"
 import "@ant.asset"
 
 system "init_system"

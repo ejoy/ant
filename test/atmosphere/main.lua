@@ -10,8 +10,9 @@ import_package "ant.window".start {
         "exit",
     },
     feature = {
+        "ant.camera|camera_controller",
+        "ant.efk",
         "ant.sky|sky",
-        "ant.efk"
     },
     system = {
         "ant.test.atmosphere|init_system",

@@ -88,7 +88,6 @@ function m.gen_package_ecs()
     local ecs = [[
 import "@ant.general"
 import "@ant.render"
-import "@ant.camera"
 import "@ant.asset"
 
 system "init_system"

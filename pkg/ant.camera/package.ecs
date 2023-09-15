@@ -1,2 +1,26 @@
-import "camera.ecs"
-import "camera_controller.ecs"
+import_feature "ant.scene"
+
+pipeline "camera"
+    .stage "update_camera"
+    .stage "update_camera_depend"
+    .stage "camera_usage"
+
+policy "exposure"
+    .component "exposure"
+
+policy "camera"
+    .component "camera"
+    .component_opt "scene"
+
+component "camera_depend"
+component "exposure".type "lua"
+component "camera".type "lua"
+
+system "camera_view_system"
+    .implement "camera.lua"
+
+feature "camera_recorder"
+    .import "camera_recorder.ecs"
+
+feature "camera_controller"
+    .import "camera_controller.ecs"
