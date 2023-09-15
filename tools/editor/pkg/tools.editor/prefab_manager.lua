@@ -103,7 +103,6 @@ function m:add_entity(new_entity, parent, tpl, filename)
             tpl.index = #self.prefab_template
             tpl.filename = filename
         end
-        self:pacth_add(tpl)
         if filename then
             self.prefab_template[#self.prefab_template + 1] = {
                 index = #self.prefab_template + 1,
@@ -111,6 +110,7 @@ function m:add_entity(new_entity, parent, tpl, filename)
                 prefab = filename
             }
         end
+        self:pacth_add(tpl)
     end
     hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil}, parent)
 end
@@ -369,14 +369,15 @@ function m:on_prefab_ready(prefab)
             value.index = idx
         end
     end
-
     local j = 1
+    local last_tpl
     for i, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
         local e <close> = world:entity(eid, "scene?in light?in")
         local scene = e.scene
         local parent = scene and find_e(entitys, scene.parent)
         if pt.prefab then
+            last_tpl.filename = pt.prefab
             local children = sub_tree(parent, j)
             j = j + #children
             local target_node = node_map[parent]
@@ -392,7 +393,7 @@ function m:on_prefab_ready(prefab)
             node_map[eid] = {template = pt, parent = parent, name = (i == 1) and "Scene" or name}
             j = j + 1
         end
-
+        last_tpl = pt
         if e.light then
             create_light_billboard(eid)
             light_gizmo.bind(eid)
@@ -536,35 +537,22 @@ function m:open(filename, prefab_name, patch_tpl)
         patch_tpl = patch_tpl or {}
         self.origin_patch_template = patch_tpl
         self.patch_template = {}
-        local last_path
         for _, patch in ipairs(patch_tpl) do
             if patch.path == "hitch.prefab" then
                 self.save_hitch = true
             elseif patch.file == self.prefab_name then
-                if patch.value and patch.value.prefab then
-                    last_path.is_prefab = true
-                end
                 self.patch_template[#self.patch_template + 1] = patch
-                last_path = patch
             end
         end
-        local path_add_counter = 0
-        local node_idx = 1
-        for index, patch in ipairs(self.patch_template) do
+        local node_idx = 0
+        for _, patch in ipairs(self.patch_template) do
             if patch.op == "add" and patch.path == "/-" then
-                patch.index = node_idx
                 node_idx = node_idx + 1
-                path_add_counter = path_add_counter + 1
+                -- patch.index = node_idx
             end
         end
-        self.patch_start_index = #self.prefab_template - path_add_counter + 1
+        self.patch_start_index = #self.prefab_template - node_idx + 1
     end
-
-    -- for _, value in ipairs(self.prefab_template) do
-    --     if value.data and value.data.efk then
-    --         self.check_effect_preload(value.data.efk.path)
-    --     end
-    -- end
 
     world:create_instance {
         prefab = filename,
@@ -781,6 +769,9 @@ function m:get_hitch_content()
                                 group = 0,
                             },
                             visible_state = "main_view|cast_shadow|selectable",
+                        },
+                        tag = {
+                            "hitch"
                         }
                     }
                 }
@@ -796,36 +787,13 @@ function m:save(path)
     if self.glb_filename then
         if self.patch_template then
             local final_template = {}
-            local embed_prefab_counter = 0
             for _, patch in ipairs(self.origin_patch_template) do
                 if patch.file ~= self.prefab_name then
                     final_template[#final_template + 1] = patch
                 end
             end
-            local add_counter = self.patch_start_index - 1
             for _, patch in ipairs(self.patch_template) do
-                local tpl = utils.deep_copy(patch)
-                final_template[#final_template + 1] = tpl
-                if tpl.op == "add" and tpl.path == "/-" then
-                    add_counter = add_counter + 1
-                end
-                if tpl.value.filename then
-                    patch.value.mount = patch.value.mount + embed_prefab_counter
-                    final_template[#final_template + 1] = {
-                        file = self.prefab_name,
-                        op = "add",
-                        path = "/-",
-                        value = {
-                            mount = add_counter + embed_prefab_counter,
-                            prefab = tpl.value.filename
-                        }
-                    }
-                    add_counter = add_counter + 1
-                    embed_prefab_counter = embed_prefab_counter + 1
-                    tpl.value.filename = nil
-                end
-                tpl.index = nil
-                tpl.is_prefab = nil
+                final_template[#final_template + 1] = patch
             end
             if self.save_hitch then
                 local hitch = self:get_hitch_content()
@@ -1027,38 +995,51 @@ function m:get_patch_node(path)
     end
 end
 
+function m:find_patch_index(node_idx)
+    local true_idx
+    for i = 1, #self.patch_template do
+        local tpl = self.patch_template[i]
+        if tpl.op == "add" and tpl.path == "/-" then
+            node_idx = node_idx - 1
+        end
+        if node_idx == 0 then
+            true_idx = i
+            break
+        end
+    end
+    return true_idx
+end
+
 function m:pacth_remove(eid)
     if not self.glb_filename then
         return true
     end
     local tpl = hierarchy:get_template(eid)
     local is_prefab = tpl.filename
-    local idx = tpl.template.index
-    if idx < self.patch_start_index then
+    local to_remove = tpl.template.index
+    if to_remove < self.patch_start_index then
         return false
     end
-    table.remove(self.prefab_template, idx)
-    for i = idx, #self.prefab_template do
+    table.remove(self.prefab_template, to_remove)
+    if is_prefab then
+        table.remove(self.prefab_template, to_remove)
+    end
+    for i = to_remove, #self.prefab_template do
         local t = self.prefab_template[i]
         t.index = t.index - (is_prefab and 2 or 1)
+        if t.mount and t.mount > to_remove then
+            t.mount = t.mount - (is_prefab and 2 or 1)
+        end
     end
-    local patch_index = idx - self.patch_start_index + 1
-    -- local is_prefab = self.patch_template[patch_index].is_prefab
+    local patch_index = self:find_patch_index(to_remove - self.patch_start_index + 1)
     table.remove(self.patch_template, patch_index)
     if is_prefab then
         table.remove(self.patch_template, patch_index)
     end
-    local delta = (is_prefab and 2 or 1)
     for i = patch_index, #self.patch_template do
         local t = self.patch_template[i]
-        if t.index then
-            t.index = t.index - delta
-        end
-        if t.value and t.value.mount then
-            -- TODO: rework this
-            if t.value.mount > 1 then
-                t.value.mount = t.value.mount - delta
-            end
+        if t.value and t.value.mount and t.value.mount > to_remove then
+            t.value.mount = t.value.mount - (is_prefab and 2 or 1)
         end
     end
     return true
@@ -1078,8 +1059,19 @@ function m:pacth_add(template)
         op = "add",
         path = "/-",
         value = tpl,
-        index = tpl.index
     }
+    if tpl.filename then
+        self.patch_template[#self.patch_template + 1] = {
+            file = self.prefab_name,
+            op = "add",
+            path = "/-",
+            value = {
+                mount = tpl.index,
+                prefab = tpl.filename
+            },
+        }
+        tpl.filename = nil
+    end
     tpl.index = nil
 end
 
@@ -1088,19 +1080,8 @@ function m:pacth_modify(pidx, p, v)
     local index
     local patch_node
     if pidx >= self.patch_start_index then
-        local node_idx = pidx - self.patch_start_index + 1
-        local true_idx
-        for i = 1, #self.patch_template do
-            local tpl = self.patch_template[i]
-            if tpl.op == "add" and tpl.path == "/-" then
-                node_idx = node_idx - 1
-            end
-            if node_idx == 0 then
-                true_idx = i
-                break
-            end
-        end
-        patch_node = self.patch_template[true_idx]
+        local patch_index = self:find_patch_index(pidx - self.patch_start_index + 1)
+        patch_node = self.patch_template[patch_index]
         assert(patch_node)
         local sep = "/"
         local current_value
