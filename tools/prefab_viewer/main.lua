@@ -13,6 +13,7 @@ import_package "ant.window".start {
     feature = {
         "ant.animation",
         "ant.efk",
+        "ant.landform",
         "ant.rmlui",
         "ant.sky|sky",
     },
