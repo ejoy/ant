@@ -86,7 +86,6 @@ end
 
 function m.gen_package_ecs()
     local ecs = [[
-import "@ant.general"
 import "@ant.render"
 
 system "init_system"

@@ -12,6 +12,7 @@ import_package "ant.window".start {
         "ant.daynight",
         "ant.motion_sampler",
         "ant.sky|sky",
+        "ant.splitviews",
         "ant.terrain|canvas",
         "ant.terrain|water",
     },
