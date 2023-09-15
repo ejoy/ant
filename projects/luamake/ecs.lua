@@ -52,6 +52,7 @@ local function createEnv(class)
     end
     return {
         import = function() end,
+        import_feature = function() end,
         feature = dummy(),
         pipeline = dummy(),
         system = dummy(),
