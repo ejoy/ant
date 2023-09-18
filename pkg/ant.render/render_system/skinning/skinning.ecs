@@ -1,3 +1,5 @@
+import_feature "ant.animation"
+
 system "skinning_system"
     .implement "render_system/skinning/skinning_system.lua"
 
@@ -16,5 +18,5 @@ policy "skinrender"
     .component "visible_state"
 
 -- will not use right now
--- feature "cs_skinning"
---     .import "render_system/skinning/cs_skinning.ecs"
+feature "cs_skinning"
+    .import "render_system/skinning/cs_skinning.ecs"
