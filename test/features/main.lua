@@ -2,9 +2,6 @@ package.path = "engine/?.lua"
 require "bootstrap"
 import_package "ant.window".start {
     enable_mouse = true,
-    import = {
-        "@ant.render",
-    },
     feature = {
         "ant.test.features",
         "ant.animation",
@@ -13,14 +10,11 @@ import_package "ant.window".start {
         "ant.daynight",
         "ant.motion_sampler",
         "ant.objcontroller|screen_3dobj",
+        "ant.render",
         "ant.sky|sky",
         "ant.sky|procedural_sky",
         "ant.splitviews",
         "ant.terrain|canvas",
         "ant.terrain|water",
-    },
-    policy = {
-        "ant.render|render",
-        "ant.render|render_queue",
     }
 }

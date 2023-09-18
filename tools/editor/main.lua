@@ -10,7 +10,6 @@ import_package "ant.imgui".start {
         enable_mouse = true,
         import = {
             "@tools.editor",
-            "@ant.render",
         },
         feature = {
             "ant.animation",
@@ -22,6 +21,7 @@ import_package "ant.imgui".start {
             "ant.objcontroller|pickup",
             "ant.objcontroller|pickup_detect",
             "ant.objcontroller|screen_3dobj",
+            "ant.render",
             "ant.rmlui",
             "ant.sky|sky",
         },

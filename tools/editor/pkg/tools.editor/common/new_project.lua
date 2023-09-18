@@ -83,9 +83,6 @@ function m.gen_package_ecs()
     local ecs = [[
 system "init_system"
     .implement "init_system.lua"
-    .require_policy "ant.render|light"
-    .require_policy "ant.render|simplerender"
-    .require_policy "ant.render|render"
     .method "init"
     .method "post_init"
 

@@ -2,19 +2,10 @@ import_feature "ant.bake"
 
 system "lightmap_example"
     .implement "example.lua"
-    .require_policy "ant.render|light"
-    .require_policy "ant.render|render"
-    .require_policy "ant.render|render_queue"
-    .require_policy "ant.render|lightmap"
 
 
 system "lightmap_baker_system"
     .implement "lm_baker.lua"
-    .require_policy "ant.render|light"
-    .require_policy "ant.render|render"
-    .require_policy "ant.render|render_queue"
-    .require_policy "ant.render|lightmap"
-    .require_policy "ant.render|lightmap_result"
 
 pipeline "init"
     .stage "init"

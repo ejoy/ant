@@ -22,5 +22,4 @@ policy "name"
     .component "name"
 
 policy "testpolicy"
-    .require_system "ant.test.simpleecs|init_system"
     .component "simpleecs"
