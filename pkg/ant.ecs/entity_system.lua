@@ -9,6 +9,11 @@ local evOnMessage = world:sub {"EntityMessage"}
 local evOnRemoveInstance1 = world:sub {"OnRemoveInstance1"}
 local evOnRemoveInstance2 = world:sub {"OnRemoveInstance2"}
 
+local MethodRemove = {}
+
+local PipelineEntityInit
+local PipelineEntityRemove
+
 local function update_group_tag(groupid, data)
     for tag, t in pairs(world._group_tags) do
         if t[groupid] then
@@ -88,7 +93,7 @@ local function create_entity()
         ::continue::
     end
 
-    world:pipeline_entity_init()
+    PipelineEntityInit()
     w:clear "INIT"
 end
 function m:entity_create()
@@ -116,9 +121,9 @@ local function emptyfunc(f)
     end
 end
 
-local MethodRemove = {}
-
 function m:init()
+    PipelineEntityInit = world:pipeline_func "_entity_init"
+    PipelineEntityRemove = world:pipeline_func "_entity_remove"
     for name, func in pairs(world._class.component) do
         local f = func.remove
         if f and not emptyfunc(f) then
@@ -129,7 +134,7 @@ end
 
 function m:entity_destory()
     if w:check "REMOVED" then
-        world:pipeline_entity_remove()
+        PipelineEntityRemove()
         for name, func in pairs(MethodRemove) do
             for v in w:select("REMOVED "..name..":in") do
                 func(v[name])
