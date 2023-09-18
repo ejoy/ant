@@ -383,7 +383,7 @@ function world:pipeline_init()
 end
 
 function world:pipeline_exit()
-    self:pipeline_func "exit" ()
+    self:pipeline_func "_exit" ()
 end
 
 function world:clibs(name)

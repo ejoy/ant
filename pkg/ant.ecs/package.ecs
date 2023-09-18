@@ -24,9 +24,11 @@ pipeline "_update"
     .pipeline "update"
     .pipeline "_frame_finish"
 
+pipeline "_exit"
+    .pipeline "exit"
+
 system "entity_system"
     .implement "entity_system.lua"
-
 system "debug_system"
     .implement "debug_system.lua"
 
