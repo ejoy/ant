@@ -157,9 +157,9 @@ local function import_all(w, ecs)
 	end
 	w._decl:check()
 	for name, v in pairs(w._decl.system) do
-		if v.implement[1] and not v.imported then
+		local impl = v.implement[1]
+		if impl then
 			log.debug("Import  system", name)
-			local impl = v.implement[1]
 			if impl:sub(1,1) == ":" then
 				v.c = true
 				w._class.system[name] = w:clibs(impl:sub(2))
@@ -171,10 +171,9 @@ local function import_all(w, ecs)
 		end
 	end
 	for name, v in pairs(w._decl.component) do
-		if v.implement[1] and not v.imported then
-			v.imported = true
+		local impl = v.implement[1]
+		if impl then
 			log.debug("Import  component", name)
-			local impl = v.implement[1]
 			local pkg = v.packname
 			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
 			w:_package_require(pkg, file)
