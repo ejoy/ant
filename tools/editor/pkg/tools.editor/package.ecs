@@ -3,8 +3,6 @@ import_feature "ant.widget"
 
 system "init_system"
     .implement "init_system.lua"
-    .require_system "tools.editor|daynight_ui_system"
-    .require_policy "tools.editor|second_view"
 
 system "gizmo_system"
     .implement "gizmo_system.lua"
