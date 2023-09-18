@@ -134,8 +134,6 @@ local function import_all(w, ecs)
 		if not packname then
 			w._decl:load(name, "package.ecs", import_feature)
 			return
-		else
-			w._decl:load(packname, "package.ecs", import_feature)
 		end
 		local v = w._decl.feature[name]
 		if not v then
@@ -145,6 +143,7 @@ local function import_all(w, ecs)
 			return
 		end
 		v.imported = true
+		w._decl:load(packname, "package.ecs", import_feature)
 		if v.import then
 			log.debug("Import  feature", name)
 			for _, fullname in ipairs(v.import) do
