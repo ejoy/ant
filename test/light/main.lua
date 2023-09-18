@@ -10,6 +10,7 @@ import_package "ant.window".start {
         "ant.camera|camera_controller",
         "ant.efk",
         "ant.sky|sky",
+        "ant.render",
     },
     policy = {
         "ant.render|render",

@@ -309,7 +309,7 @@ function BaseView:on_get_render_layer()
     return e.render_layer
 end
 
-local irl = ecs.require "ant.render|render_layer"
+local irl		    = ecs.require "ant.render|render_layer.render_layer"
 function BaseView:on_set_render_layer(value)
     local e <close> = world:entity(self.eid)
     irl.set_layer(e, value)

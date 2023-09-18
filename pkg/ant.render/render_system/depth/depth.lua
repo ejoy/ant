@@ -13,7 +13,7 @@ if setting:get "graphic/disable_pre_z" then
 end
 
 local bgfx          = require "bgfx"
-local idrawindirect = ecs.require "ant.render|draw_indirect_system"
+local idrawindirect = ecs.require "ant.render|render_system.draw_indirect.draw_indirect"
 local queuemgr      = ecs.require "queue_mgr"
 
 local math3d        = require "math3d"
@@ -21,7 +21,7 @@ local R             = world:clibs "render.render_material"
 local RM            = ecs.require "ant.material|material"
 
 local irq           = ecs.require "ant.render|render_system.renderqueue"
-local irl           = ecs.require "ant.render|render_layer"
+local irl		    = ecs.require "ant.render|render_layer.render_layer"
 
 local assetmgr      = import_package "ant.asset"
 

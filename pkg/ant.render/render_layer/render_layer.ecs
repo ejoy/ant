@@ -1,4 +1,4 @@
 
 component "render_layer".type "lua"
 system "render_layer_system"
-    .implement "render_layer.lua"
+    .implement "render_layer/render_layer.lua"

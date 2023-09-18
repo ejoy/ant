@@ -1,0 +1,3 @@
+component "view_visible"
+system "viewgroup_system"
+    .implement "view_group/view_group.lua"

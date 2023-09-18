@@ -18,3 +18,4 @@ component "debug_mesh_bounding"
 policy "debug_mesh_bounding"
     .require_system "ant.render|render_mesh_bounding_system"
     .component "debug_mesh_bounding"
+

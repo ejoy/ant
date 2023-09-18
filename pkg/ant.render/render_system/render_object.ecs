@@ -1,0 +1,39 @@
+policy "render_object"
+    .require_system "ant.render|render_system"
+    .component_opt "render_object"
+    .component_opt "filter_material"
+
+component "render_object_visible"   -- view_visible & render_object
+
+component "render_object"
+    .type "c"
+    .field "worldmat:userdata|math_t"
+    --materials
+    .field "rm_idx:dword"
+    --visible
+    .field "visible_masks:int64"  -- determiate which queue can see the render_object(main_view/cast_shadow/selectable, etc ...)
+    .field "cull_masks:int64"
+
+    --mesh
+    .field "vb_start:dword"
+    .field "vb_num:dword"
+    .field "vb_handle:dword"
+
+    .field "vb2_start:dword"
+    .field "vb2_num:dword"
+    .field "vb2_handle:dword"
+
+    .field "ib_start:dword"
+    .field "ib_num:dword"
+    .field "ib_handle:dword"
+
+    .field "idb_handle:dword"
+    .field "itb_handle:dword"
+    .field "draw_num:dword"
+
+    .field "render_layer:dword"
+    .field "discard_flags:byte"
+
+    .implement "render_system/render_object.lua"
+
+component "filter_material".type "lua"

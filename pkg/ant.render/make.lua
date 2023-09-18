@@ -173,7 +173,7 @@ lm:lua_source "render" {
         "GLM_FORCE_QUAT_DATA_XYZW",
     },
     sources = {
-        "cull.cpp",
+        "cull/cull.cpp",
     },
     objdeps = "compile_ecs",
     deps = {

@@ -1,0 +1,20 @@
+system "skinning_system"
+    .implement "render_system/skinning/skinning_system.lua"
+
+component "skinning"
+policy "skinrender"
+    .include_policy "ant.render|render_object"
+    .include_policy "ant.scene|bounding"
+    .require_system "ant.render|render_system"
+    .require_system "ant.render|render_layer_system"
+    .require_system "ant.render|skinning_system"
+    .require_system "ant.render|visible_state_system"
+    .include_policy "ant.asset|material"
+    .component_opt "skinning"
+    .component_opt "render_layer"
+    .component "mesh"
+    .component "visible_state"
+
+-- will not use right now
+-- feature "cs_skinning"
+--     .import "render_system/skinning/cs_skinning.ecs"

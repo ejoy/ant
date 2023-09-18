@@ -1,0 +1,38 @@
+component "render_args"
+    .type "c"
+    .field "viewid:word"
+    .field "queue_mask:int64"
+    .field "material_index:byte"
+
+component "main_queue"
+
+policy "main_queue"
+    .include_policy "ant.render|render_queue"
+    .component "main_queue"
+
+component "visible"
+
+component "filter_result".type "lua"
+component "postprocess_obj"
+
+component "watch_screen_buffer"
+policy "watch_screen_buffer"
+    .include_policy "ant.render|render_target"
+    .component "watch_screen_buffer"
+
+system "render_target_system"
+    .implement "render_system/renderqueue.lua"
+
+component "render_target".type "lua"
+
+policy "render_target"
+    .require_system "ant.render|render_target_system"
+    .component "render_target"
+
+component "queue_name".type "lua"
+policy "render_queue"
+    .include_policy "ant.render|render_pipeline"
+    .include_policy "ant.render|render_target"
+    .component "visible"
+    .component "queue_name"
+    .component "camera_ref"

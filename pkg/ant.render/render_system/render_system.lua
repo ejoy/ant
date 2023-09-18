@@ -10,21 +10,14 @@ local math3d 	= require "math3d"
 local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render_system.render"
-local iom		= ecs.require "ant.objcontroller|obj_motion"
 local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
-local irl		= ecs.require "ant.render|render_layer"
-local ig		= ecs.require "ant.group|group"
+local irl		= ecs.require "ant.render|render_layer.render_layer"
 local RM        = ecs.require "ant.material|material"
 local INF_F<const> = true
 local render_sys= ecs.system "render_system"
 
 local R			= world:clibs "render.render_material"
-
-local vg_sys = ecs.system "viewgroup_system"
-function vg_sys:init()
-	ig.enable_from_name("DEFAULT", "view_visible", true)
-end
 
 function render_sys:start_frame()
 	assetmgr.material_check()

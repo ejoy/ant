@@ -2,7 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local layoutmgr	= require "vertexlayout_mgr"
+local renderpkg	= import_package "ant.render"
+local layoutmgr	= renderpkg.layoutmgr
+
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= ecs.require "ant.objcontroller|obj_motion"

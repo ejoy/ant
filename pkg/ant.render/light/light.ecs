@@ -13,5 +13,4 @@ policy "light"
     .component "light"
     .component "visible"
 
-component "light"
-    .type "lua"
+component "light" .type "lua"
