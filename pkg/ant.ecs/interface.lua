@@ -49,7 +49,6 @@ local attribute = {
 	system = {
 		"implement",
 		"require_system",
-		"require_policy",
 	},
 	policy = {
 		"require_system",
@@ -87,7 +86,6 @@ local attribute_type = {
 
 local check_map = {
 	require_system = "system",
-	require_policy = "policy",
 	include_policy = "policy",
 	component = "component",
 	import_feature = "import_feature",
