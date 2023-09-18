@@ -1,3 +1,5 @@
+import_feature "ant.render"
+
 policy "shape_terrain"
     .component "shape_terrain"
 
@@ -25,7 +27,6 @@ system "terrain_system"
 
 system "road_system"
     .implement "road.lua"
-    .require_system "ant.render|draw_indirect_system"
 
 system "translucent_plane_system"
     .implement "translucent_plane_system.lua"
