@@ -10,6 +10,5 @@ import_package "ant.window".start {
         "ant.objcontroller|pickup_detect",
         "ant.rmlui",
         "ant.sky|sky",
-        "ant.render",
     }
 }

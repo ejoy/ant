@@ -10,7 +10,6 @@ import_package "ant.window".start {
         "ant.daynight",
         "ant.motion_sampler",
         "ant.objcontroller|screen_3dobj",
-        "ant.render",
         "ant.sky|sky",
         "ant.sky|procedural_sky",
         "ant.splitviews",

@@ -5,7 +5,6 @@ import_package "ant.window".start {
     feature = {
         "ant.test.efk",
         "ant.camera|camera_controller",
-        "ant.render",
         "ant.efk",
         "ant.sky|sky",
     }

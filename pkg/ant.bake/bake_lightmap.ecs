@@ -1,3 +1,4 @@
+import_feature "ant.render"
 
 system "bake_lightmap_system"
     .implement "bake_lightmap.lua"

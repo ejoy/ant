@@ -17,7 +17,6 @@ import_package "ant.window".start {
     args = arguments,
     feature = {
         "ant.test.rmlui_rt",
-        "ant.render",
         "ant.rmlui",
         "ant.sky|sky",
     }

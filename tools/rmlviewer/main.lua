@@ -17,6 +17,5 @@ import_package "ant.window".start {
         "ant.tools.rmlviewer",
         "ant.animation",
         "ant.rmlui",
-        "ant.render",
     }
 }
