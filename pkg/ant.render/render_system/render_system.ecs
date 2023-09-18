@@ -21,10 +21,6 @@ policy "simplerender"
     .component_opt "render_layer"
     .component "visible_state"
 
-policy "render_pipeline"
-    .include_policy "ant.render|forward_render"
-    .include_policy "ant.render|cluster_render"
-
 component "need_touch"
 
 system "submit_render_system"

@@ -30,7 +30,6 @@ policy "render_target"
 
 component "queue_name".type "lua"
 policy "render_queue"
-    .include_policy "ant.render|render_pipeline"
     .include_policy "ant.render|render_target"
     .component "visible"
     .component "queue_name"
