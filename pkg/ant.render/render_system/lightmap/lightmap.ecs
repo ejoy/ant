@@ -6,7 +6,6 @@ component "lightmap_result"
     .type "lua"
 
 policy "lightmap_result"
-    .require_system "ant.render|lightmap_system"
     .component "lightmapper"
     .component "lightmap_result"
 
@@ -14,5 +13,4 @@ component "lightmap"
     .type "lua"
 
 policy "lightmap"
-    .require_system "ant.render|lightmap_system"
     .component "lightmap"

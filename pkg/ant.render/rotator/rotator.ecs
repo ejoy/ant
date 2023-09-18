@@ -4,5 +4,4 @@ system "rotator_system"
 component "rotator".type "lua"
 
 policy "rotator"
-    .require_system "ant.render|rotator_system"
     .component "rotator"

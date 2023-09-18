@@ -7,8 +7,6 @@ system "cluster_forward_system"
 
 policy "cluster_render"
     .include_policy "ant.render|forward_render"
-    .require_system "ant.render|cluster_forward_system"
-
 
 component "cluster_build_aabb"
 component "cluster_cull_light"

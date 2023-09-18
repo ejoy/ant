@@ -1,6 +1,3 @@
-policy "preprocess"
-    .require_system "ant.render|ssao_system"
-
 pipeline "ssao"
     .stage "build_ssao"
     .stage "bilateral_filter"
@@ -14,6 +11,3 @@ component "bilateral_filter_dispatcher"
 
 system "ssao_system"
     .implement "preprocess/ssao.lua"
-    --.require_system "ant.render|scene_depth_system"
-    --.require_system "ant.render|depth_resolve_system"
-    --.require_system "ant.render|depth_mipmap_system"

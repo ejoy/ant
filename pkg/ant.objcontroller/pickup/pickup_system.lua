@@ -201,7 +201,6 @@ local function create_pick_entity()
 	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
-			"ant.render|cull",
 			"ant.objcontroller|pickup",
 		},
 		data = {

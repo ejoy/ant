@@ -323,7 +323,6 @@ local function create_csm_entity(index, vr, fbidx)
 	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
-			"ant.render|cull",
 			"ant.render|csm_queue",
 		},
 		data = {
