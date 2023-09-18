@@ -148,19 +148,7 @@ local function import_all(w, ecs)
 		if v.import then
 			log.debug("Import  feature", name)
 			for _, fullname in ipairs(v.import) do
-				local packname, filename
-				if fullname:sub(1,1) == "@" then
-					if fullname:find "/" then
-						packname, filename = fullname:match "^@([^/]*)/(.*)$"
-					else
-						packname = fullname:sub(2)
-						filename = "package.ecs"
-					end
-				else
-					packname = v.packname
-					filename = fullname
-				end
-				w._decl:load(packname, filename, import_feature)
+				w._decl:load(v.packname, fullname, import_feature)
 			end
 		end
 	end
@@ -169,7 +157,7 @@ local function import_all(w, ecs)
 	end
 	w._decl:check()
 	for name, v in pairs(w._decl.system) do
-		if v.implement and v.implement[1] and not v.imported then
+		if v.implement[1] and not v.imported then
 			log.debug("Import  system", name)
 			local impl = v.implement[1]
 			if impl:sub(1,1) == ":" then
@@ -194,7 +182,7 @@ local function import_all(w, ecs)
 	end
 end
 
-local function create_ecs(w, package, tasks)
+local function create_ecs(w, package)
     local ecs = { world = w }
     function ecs.system(name)
         local fullname = package .. "|" .. name
@@ -206,7 +194,6 @@ local function create_ecs(w, package, tasks)
             log.debug("Register system   ", fullname)
             r = {}
             w._class.system[fullname] = r
-            table.insert(tasks.system, fullname)
         end
         return r
     end
@@ -244,17 +231,15 @@ local function init(w, config)
 		log.debug(("Import decl %q"):format(file))
 		return assert(pm.loadenv(packname).loadfile(file))
 	end)
-	local tasks = config.ecs
-	tasks.system = tasks.system or {}
 	setmetatable(w._packages, {__index = function (self, package)
 		local v = {
 			_LOADED = {},
-			ecs = create_ecs(w, package, tasks)
+			ecs = create_ecs(w, package)
 		}
 		self[package] = v
 		return v
 	end})
-	import_all(w, tasks)
+	import_all(w, config.ecs)
 	slove_component(w)
 	create_context(w)
 	w._initializing = nil
