@@ -118,6 +118,7 @@ function S.ROOT()
 			repo:rebuild()
 		end
 		print(REPOPATH, "rebuild finish")
+		rebuild = false
 	end
 	return repo:root()
 end
