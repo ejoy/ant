@@ -21,7 +21,6 @@ end
 
 local check_map = {
 	import_feature = "feature",
-	require_system = "system",
 	include_policy = "policy",
 	component = "component",
 	component_opt = "component",

@@ -1,41 +1,3 @@
---[[
-	ECS interface , written in .ecs file :
-
------ interface.ecs ---
-import "filename.ecs"
-implement "filename.lua"
-
-system "system_name"
-	.require_system "other_system"
-	.require_system "packname|system_in_packname"
-	.stage "stage_a"
-	.stage "stage_b"
-
-policy "policy_name"
-	.require_system "system_name"
-
------------------------
-
-	Usage:
-
-	local interface = require "interface"
-
-	-- should returns a function
-	local function loader(packname, filename)
-		local f = loadfile(packname .. "/" .. filename)
-		return f
-	end
-
-	local parser = interface.new(loader)
-
-	parser:load(packname1, filename)
-	parser:load(packname2, filename)
-	parser:load(packname3, filename)
-	...
-
-	parser:check()
-]]
-
 local interface = {}
 interface.__index = interface
 
@@ -48,10 +10,8 @@ local attribute = {
 	},
 	system = {
 		"implement",
-		"require_system",
 	},
 	policy = {
-		"require_system",
 		"include_policy",
 		"component",
 		"component_opt",
@@ -84,7 +44,6 @@ local attribute_type = {
 }
 
 local check_map = {
-	require_system = "system",
 	include_policy = "policy",
 	component = "component",
 	import_feature = "import_feature",
