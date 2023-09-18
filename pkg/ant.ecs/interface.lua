@@ -225,11 +225,16 @@ local function merge_result(self, result)
 	end
 end
 
-function interface:load(packname, filename)
+function interface:load(packname, filename, import_feature)
 	local results = load_interface(self, nil, packname, filename, {})
 	if results then
 		local r = merge_all_results(results)
 		merge_result(self, r)
+		if import_feature then
+			for k in pairs(r.import_feature) do
+				import_feature(k)
+			end
+		end
 		return r
 	end
 end

@@ -6,85 +6,6 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local function create_importor(w)
-	local import = {}
-	local feature_decl = w._decl.feature
-	local system_decl = w._decl.system
-	local component_decl = w._decl.component
-	local function import_ecs(packname, filename)
-		local res = w._decl:load(packname, filename)
-		if res then
-			for k in pairs(res.import_feature) do
-				import.feature(k)
-			end
-			for k in pairs(res.system) do
-				import.system(k)
-			end
-		end
-	end
-	function import.feature(name)
-		local packname, _ = splitname(name)
-		if not packname then
-			import_ecs(name, "package.ecs")
-			return
-		else
-			import_ecs(packname, "package.ecs")
-		end
-		local v = feature_decl[name]
-		if not v then
-			error(("invalid feature name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		v.imported = true
-		if v.import then
-			log.debug("Import  feature", name)
-			for _, fullname in ipairs(v.import) do
-				local packname, filename
-				if fullname:sub(1,1) == "@" then
-					if fullname:find "/" then
-						packname, filename = fullname:match "^@([^/]*)/(.*)$"
-					else
-						packname = fullname:sub(2)
-						filename = "package.ecs"
-					end
-				else
-					packname = v.packname
-					filename = fullname
-				end
-				import_ecs(packname, filename)
-			end
-		end
-	end
-	function import.system(name)
-		local v = system_decl[name]
-		if not v then
-			error(("invalid system name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		if not w._initializing then
-			error(("system `%s` can only be imported during initialization."):format(name))
-		end
-		v.imported = true
-		if v.implement and v.implement[1] then
-			log.debug("Import  system", name)
-			local impl = v.implement[1]
-			if impl:sub(1,1) == ":" then
-				v.c = true
-				w._class.system[name] = w:clibs(impl:sub(2))
-			else
-				local pkg = v.packname
-				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-				w:_package_require(pkg, file)
-			end
-		end
-	end
-	return import
-end
-
 local function toint(v)
 	local t = type(v)
 	if t == "userdata" then
@@ -208,26 +129,67 @@ local function slove_component(w)
 end
 
 local function import_all(w, ecs)
-	local import = create_importor(w)
+	local function import_feature(name)
+		local packname, _ = splitname(name)
+		if not packname then
+			w._decl:load(name, "package.ecs", import_feature)
+			return
+		else
+			w._decl:load(packname, "package.ecs", import_feature)
+		end
+		local v = w._decl.feature[name]
+		if not v then
+			error(("invalid feature name: `%s`."):format(name))
+		end
+		if v.imported then
+			return
+		end
+		v.imported = true
+		if v.import then
+			log.debug("Import  feature", name)
+			for _, fullname in ipairs(v.import) do
+				local packname, filename
+				if fullname:sub(1,1) == "@" then
+					if fullname:find "/" then
+						packname, filename = fullname:match "^@([^/]*)/(.*)$"
+					else
+						packname = fullname:sub(2)
+						filename = "package.ecs"
+					end
+				else
+					packname = v.packname
+					filename = fullname
+				end
+				w._decl:load(packname, filename, import_feature)
+			end
+		end
+	end
 	for _, k in ipairs(ecs.feature) do
-		import.feature(k)
+		import_feature(k)
 	end
 	w._decl:check()
-	--for name, v in pairs(w._decl.system) do
-	--	if v.implement and v.implement[1] then
-	--		import.system(name)
-	--	end
-	--end
-	for name, v in pairs(w._decl.component) do
-		if v.implement[1] and not v.imported then
-			v.imported = true
-			if v.implement and v.implement[1] then
-				log.debug("Import  component", name)
-				local impl = v.implement[1]
+	for name, v in pairs(w._decl.system) do
+		if v.implement and v.implement[1] and not v.imported then
+			log.debug("Import  system", name)
+			local impl = v.implement[1]
+			if impl:sub(1,1) == ":" then
+				v.c = true
+				w._class.system[name] = w:clibs(impl:sub(2))
+			else
 				local pkg = v.packname
 				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
 				w:_package_require(pkg, file)
 			end
+		end
+	end
+	for name, v in pairs(w._decl.component) do
+		if v.implement[1] and not v.imported then
+			v.imported = true
+			log.debug("Import  component", name)
+			local impl = v.implement[1]
+			local pkg = v.packname
+			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
+			w:_package_require(pkg, file)
 		end
 	end
 end
@@ -238,11 +200,9 @@ local function create_ecs(w, package, tasks)
         local fullname = package .. "|" .. name
         local r = w._class.system[fullname]
         if r == nil then
-            if not w._decl.system[fullname] then
-                w._decl.system[fullname] = {
-					value = {}
-				}
-            end
+			if not w._initializing then
+				error(("system `%s` can only be imported during initialization."):format(name))
+			end
             log.debug("Register system   ", fullname)
             r = {}
             w._class.system[fullname] = r
