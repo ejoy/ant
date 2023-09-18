@@ -1578,12 +1578,12 @@ get_listitem_func(lua_State *L) {
 	return 1;
 }
 
-static bool
-get_listitem(void* data, int idx, const char **out_text) {
+static const char*
+get_listitem(void* data, int idx) {
 	struct lua_args *args = (struct lua_args *)data;
 	lua_State *L = args->L;
 	if (args->err)
-		return 0;
+		return nullptr;
 	lua_pushcfunction(L, get_listitem_func);
 	lua_pushvalue(L, INDEX_ARGS);
 	lua_pushinteger(L, idx + 1);
@@ -1592,12 +1592,10 @@ get_listitem(void* data, int idx, const char **out_text) {
 		return 0;
 	}
 	if (lua_type(L, -1) == LUA_TSTRING) {
-		*out_text = lua_tostring(L, -1);
-		return true;
+		return lua_tostring(L, -1);
 	}
 	lua_pop(L, 1);
-	*out_text = NULL;
-	return false;
+	return nullptr;
 }
 
 static int
