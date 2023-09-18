@@ -2,23 +2,6 @@ local interface = require "interface"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
@@ -28,7 +11,6 @@ local function create_importor(w)
 	local feature_decl = w._decl.feature
 	local system_decl = w._decl.system
 	local component_decl = w._decl.component
-	local policy_decl = w._decl.policy
 	local function import_ecs(packname, filename)
 		local res = w._decl:load(packname, filename)
 		if res then
@@ -97,46 +79,6 @@ local function create_importor(w)
 				local pkg = v.packname
 				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
 				w:_package_require(pkg, file)
-			end
-		end
-	end
-	function import.component(name)
-		local v = component_decl[name]
-		if not v then
-			error(("invalid component name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		v.imported = true
-		if v.implement and v.implement[1] then
-			log.debug("Import  component", name)
-			local impl = v.implement[1]
-			local pkg = v.packname
-			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-			w:_package_require(pkg, file)
-		end
-	end
-	function import.policy(name)
-		local v = policy_decl[name]
-		if not v then
-			error(("invalid policy name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		log.debug("Import  policy", name)
-		v.imported = true
-		local check_map = {
-			include_policy = "policy",
-			component = "component",
-			component_opt = "component",
-		}
-		for _, tuple in ipairs(v.value) do
-			local what, k = tuple[1], tuple[2]
-			local attrib = check_map[what]
-			if attrib then
-				import[attrib](k)
 			end
 		end
 	end
@@ -265,15 +207,27 @@ local function slove_component(w)
     end
 end
 
-local function import_ecs(w, ecs)
+local function import_all(w, ecs)
 	local import = create_importor(w)
 	for _, k in ipairs(ecs.feature) do
 		import.feature(k)
 	end
 	w._decl:check()
+	--for name, v in pairs(w._decl.system) do
+	--	if v.implement and v.implement[1] then
+	--		import.system(name)
+	--	end
+	--end
 	for name, v in pairs(w._decl.component) do
-		if v.implement[1] then
-			import.component(name)
+		if v.implement[1] and not v.imported then
+			v.imported = true
+			if v.implement and v.implement[1] then
+				log.debug("Import  component", name)
+				local impl = v.implement[1]
+				local pkg = v.packname
+				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
+				w:_package_require(pkg, file)
+			end
 		end
 	end
 end
@@ -340,14 +294,9 @@ local function init(w, config)
 		self[package] = v
 		return v
 	end})
-	import_ecs(w, tasks)
+	import_all(w, tasks)
 	slove_component(w)
 	create_context(w)
-	for name, v in sortpairs(w._decl.system) do
-		if v.implement and v.implement[1] and not v.imported then
-			log.warn(string.format("system `%s` is not imported.", name))
-		end
-	end
 	w._initializing = nil
 end
 
