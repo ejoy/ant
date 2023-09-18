@@ -3,7 +3,6 @@ system "physic_bounding_system"
 
 system "render_mesh_bounding_system"
     .implement "widget.lua"
-    .require_system "ant.widget|widget_drawer_system"
 
 system "widget_drawer_system"
     .implement "widget.lua"
@@ -16,6 +15,5 @@ component "widget_drawer"
 
 component "debug_mesh_bounding"
 policy "debug_mesh_bounding"
-    .require_system "ant.widget|render_mesh_bounding_system"
     .component "debug_mesh_bounding"
 

@@ -81,9 +81,6 @@ local function create_importor(w)
 			return
 		end
 		v.imported = true
-		for _, what in ipairs(v.import_feature) do
-			import.feature(what)
-		end
 		if v.import then
 			log.debug("Import  feature", name)
 			for _, fullname in ipairs(v.import) do

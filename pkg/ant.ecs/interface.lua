@@ -63,7 +63,6 @@ local attribute = {
 		"field",
 	},
 	feature = {
-		"import_feature",
 		"import",
 	},
 	import_feature = {
