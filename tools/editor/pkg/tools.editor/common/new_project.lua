@@ -38,11 +38,8 @@ function m.gen_package()
 return {
     name = "$PackageName",
     ecs = {
-        import = {
-            "@$PackageName",
-        },
-        system = {
-            "$PackageName|init_system",
+        feature = {
+            "$PackageName",
         }
     }
 }

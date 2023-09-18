@@ -19,30 +19,6 @@ local function sortpairs(t)
     end
 end
 
-local check_map = {
-	import_feature = "feature",
-	include_policy = "policy",
-	component = "component",
-	component_opt = "component",
-}
-
-local function import_decl(w, fullname, import)
-	local packname, filename
-	assert(fullname:sub(1,1) == "@")
-	if fullname:find "/" then
-		packname, filename = fullname:match "^@([^/]*)/(.*)$"
-	else
-		packname = fullname:sub(2)
-		filename = "package.ecs"
-	end
-	local res = w._decl:load(packname, filename)
-	if res then
-		for k in pairs(res.import_feature) do
-			import.feature(k)
-		end
-	end
-end
-
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
@@ -111,13 +87,6 @@ local function create_importor(w)
 			error(("system `%s` can only be imported during initialization."):format(name))
 		end
 		v.imported = true
-		for _, tuple in ipairs(v.value) do
-			local what, k = tuple[1], tuple[2]
-			local attrib = check_map[what]
-			if attrib then
-				import[attrib](k)
-			end
-		end
 		if v.implement and v.implement[1] then
 			log.debug("Import  system", name)
 			local impl = v.implement[1]
@@ -158,6 +127,11 @@ local function create_importor(w)
 		end
 		log.debug("Import  policy", name)
 		v.imported = true
+		local check_map = {
+			include_policy = "policy",
+			component = "component",
+			component_opt = "component",
+		}
 		for _, tuple in ipairs(v.value) do
 			local what, k = tuple[1], tuple[2]
 			local attrib = check_map[what]
@@ -292,31 +266,14 @@ local function slove_component(w)
 end
 
 local function import_ecs(w, ecs)
-	local importor = create_importor(w)
-	if ecs.import then
-		for _, k in ipairs(ecs.import) do
-			import_decl(w, k, importor)
-		end
-	end
-	if ecs.feature then
-		for _, k in ipairs(ecs.feature) do
-			importor.feature(k)
-		end
+	local import = create_importor(w)
+	for _, k in ipairs(ecs.feature) do
+		import.feature(k)
 	end
 	w._decl:check()
-	if ecs.system then
-		for _, k in ipairs(ecs.system) do
-			importor.system(k)
-		end
-	end
-	if ecs.policy then
-		for _, k in ipairs(ecs.policy) do
-			importor.policy(k)
-		end
-	end
 	for name, v in pairs(w._decl.component) do
 		if v.implement[1] then
-			importor.component(name)
+			import.component(name)
 		end
 	end
 end
