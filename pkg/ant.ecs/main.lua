@@ -437,7 +437,7 @@ function world:_package_require(package, file)
     local searcher_lua = env.package.searchers[2]
     local initfunc = searcher_lua(file)
     if type(initfunc) ~= 'function' then
-        error(("module '%s' not found:\n\t%s"):format(file, f))
+        error(("module '%s' not found:\n\t%s"):format(file, initfunc))
     end
     debug.setupvalue(initfunc, 1, env)
     local r = initfunc(_PACKAGE.ecs)
