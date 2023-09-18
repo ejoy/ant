@@ -6,7 +6,8 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
-local layoutmgr = require "vertexlayout_mgr"
+local renderpkg = import_package "ant.render"
+local layoutmgr = renderpkg.layoutmgr
 
 local ipl       = {}
 
@@ -153,7 +154,7 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
     return world:create_entity {
         policy = {
             "ant.render|simplerender",
-            "ant.render|polyline",
+            "ant.polyline|polyline",
         },
         data = {
             polyline = {

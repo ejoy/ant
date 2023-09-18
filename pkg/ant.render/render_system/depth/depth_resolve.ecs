@@ -1,0 +1,17 @@
+--import "render_system/depth/scene_depth.ecs"
+
+--NOTE: some machine not support sample depth format(D32F, D16, D24xS. etc), so resolve normal depth value from MSAA buffer is not valid.
+-- right now, if we want MSAA and normal depth, redraw the scene to normal depth buffer is the only option
+component "depth_resolve"
+system "depth_resolve_system"
+    .implement "render_system/depth/depth_resolve.lua"
+
+policy "depth_resolve"
+    .require_system "ant.render|depth_resolve_system"
+
+component "depth_mipmap"
+system "depth_mipmap_system"
+    .implement "render_system/depth/depth_resolve.lua"
+
+policy "depth_mipmap"
+    .require_system "ant.render|depth_mipmap_system"

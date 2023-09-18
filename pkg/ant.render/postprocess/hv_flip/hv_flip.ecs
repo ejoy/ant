@@ -1,0 +1,5 @@
+component "hv_flip_drawer"
+component "hv_flip_queue"
+
+system "hv_flip_system"
+    .implement "postprocess/hv_flip/hv_flip.lua"

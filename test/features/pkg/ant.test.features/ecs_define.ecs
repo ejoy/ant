@@ -1,3 +1,5 @@
+import_feature "ant.polyline"
+
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
     -- .require_system "ant.test.features|camera_controller_system"
@@ -25,7 +27,6 @@ system "init_loader_system"
     .require_policy "ant.render|ibl"
     .require_policy "ant.render|outline_info"
     .require_policy "ant.render|light"
-    .require_policy "ant.render|polyline"
     .require_policy "ant.render|render"
     .require_policy "ant.render|render_queue"
     .require_policy "ant.render|csm_queue"

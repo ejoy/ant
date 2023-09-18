@@ -43,7 +43,7 @@ function widget_drawer_sys:init()
 	world:create_entity {
 		policy = {
 			"ant.render|simplerender",
-			"ant.render|bounding_draw",
+			"ant.widget|bounding_draw",
 		},
 		data = {
 			scene = {},
@@ -57,7 +57,7 @@ function widget_drawer_sys:init()
 end
 
 function widget_drawer_sys:end_frame()
-	local e = w:first("widget_drawer render_object:update")
+	local e = w:first "widget_drawer render_object:update"
 	if e then
 		local ro = e.render_object
 		ro.vb_start, ro.vb_num = 0, 0
@@ -83,7 +83,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local e = w:first("widget_drawer render_object:update")
+	local e = w:first "widget_drawer render_object:update"
 	local ro = e.render_object
 	local vbnum, vbhandle = ro.vb_num, ro.vb_handle
 

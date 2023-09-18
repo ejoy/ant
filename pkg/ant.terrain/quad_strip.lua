@@ -10,7 +10,7 @@ local layoutfmt<const> = layoutmgr.correct_layout "p3|c40niu|t20"
 local layout    = layoutmgr.get(layoutfmt)
 local stride<const> = layout.stride
 
-local iql       = ecs.require "ant.render|polyline.polyline"
+local ipl       = ecs.require "ant.polyline|polyline"
 local imaterial = ecs.require "ant.asset|material"
 
 local function add_quad(p0, p1, normal, ww, offset, clr, vertices)
@@ -44,7 +44,7 @@ function qs_sys:entity_init()
         local uvm = e.uv_motion
         local speed = uvm.speed
         local tile = uvm.tile
-        local quadstrip_mesh = iql.create_linestrip_mesh(qs.points, qs.width, qs.color, uvm.rotation, qs.loop)
+        local quadstrip_mesh = ipl.create_linestrip_mesh(qs.points, qs.width, qs.color, uvm.rotation, qs.loop)
         world:create_entity{
             policy = {
                 "ant.render|simplerender",
