@@ -57,7 +57,6 @@ local function createEnv(class)
         pipeline = dummy(),
         system = dummy(),
         policy = dummy(),
-        interface = dummy(),
         component = object "component",
     }
 end
