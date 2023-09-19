@@ -30,9 +30,5 @@ import "shadow/shadow.ecs"
 import "uv_motion/uv_motion.ecs"
 import "velocity/velocity.ecs"
 import "ibl/ibl.ecs"
-<<<<<<< HEAD
 import "pack_scene_aabb/pack_scene_aabb.ecs"
 import "main_camera_aabb/main_camera_aabb.ecs"
-=======
-import "rotator/rotator.ecs"
->>>>>>> 5c76e58159517fd8f7a513c140483602321e471a
