@@ -301,6 +301,7 @@ local function create_clear_shadowmap_queue(fbidx)
 				viewid = hwi.viewid_get "csm_fb",
 				view_rect = {x=0, y=0, w=ww, h=hh},
 			},
+			need_touch = true,
 			clear_sm = true,
 			queue_name = "clear_sm",
 		}
@@ -477,9 +478,9 @@ function sm:refine_camera()
 	-- end
 end
 
-function sm:render_submit()
-	local viewid = hwi.viewid_get "csm_fb"
-	bgfx.touch(viewid)
+local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
+function sm:render_preprocess()
+	bgfx.touch(CLEAR_SM_viewid)
 end
 
 function sm:camera_usage()
