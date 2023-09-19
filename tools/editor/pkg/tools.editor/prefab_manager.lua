@@ -103,14 +103,16 @@ function m:add_entity(new_entity, parent, tpl, filename)
             tpl.index = #self.prefab_template
             tpl.filename = filename
         end
+        local embed
         if filename then
-            self.prefab_template[#self.prefab_template + 1] = {
+            embed = {
                 index = #self.prefab_template + 1,
                 mount = #self.prefab_template,
                 prefab = filename
             }
+            self.prefab_template[#self.prefab_template + 1] = embed
         end
-        self:pacth_add(tpl)
+        self:pacth_add(tpl, embed)
     end
     hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil}, parent)
 end
@@ -793,6 +795,22 @@ function m:save(path)
                 end
             end
             for _, patch in ipairs(self.patch_template) do
+                if patch.op == "add" and patch.path == "/-" then
+                    local tpl = utils.deep_copy(patch.value)
+                    local parent = tpl.data and tpl.data.scene.parent
+                    if parent then
+                        local parent_tpl = hierarchy:get_template(parent)
+                        tpl.data.scene.parent = nil
+                        tpl.mount = parent_tpl.template.index
+                    end
+                    if tpl.index then
+                        tpl.index = nil
+                    end
+                    if tpl.filename then
+                        tpl.filename = nil
+                    end
+                    patch.value = tpl
+                end
                 final_template[#final_template + 1] = patch
             end
             if self.save_hitch then
@@ -1036,43 +1054,25 @@ function m:pacth_remove(eid)
     if is_prefab then
         table.remove(self.patch_template, patch_index)
     end
-    for i = patch_index, #self.patch_template do
-        local t = self.patch_template[i]
-        if t.value and t.value.mount and t.value.mount > to_remove then
-            t.value.mount = t.value.mount - (is_prefab and 2 or 1)
-        end
-    end
     return true
 end
 
-function m:pacth_add(template)
+function m:pacth_add(tpl, embed)
     if not self.glb_filename then return end
-    local tpl = utils.deep_copy(template)
-    local parent = tpl.data.scene.parent
-    if parent then
-        local parent_tpl = hierarchy:get_template(parent)
-        tpl.data.scene.parent = nil
-        tpl.mount = parent_tpl.template.index
-    end
     self.patch_template[#self.patch_template + 1] = {
         file = self.prefab_name,
         op = "add",
         path = "/-",
         value = tpl,
     }
-    if tpl.filename then
+    if embed then
         self.patch_template[#self.patch_template + 1] = {
             file = self.prefab_name,
             op = "add",
             path = "/-",
-            value = {
-                mount = tpl.index,
-                prefab = tpl.filename
-            },
+            value = embed,
         }
-        tpl.filename = nil
     end
-    tpl.index = nil
 end
 
 function m:pacth_modify(pidx, p, v)

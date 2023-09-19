@@ -1,5 +1,4 @@
 policy "render_object"
-    .require_system "ant.render|render_system"
     .component_opt "render_object"
     .component_opt "filter_material"
 

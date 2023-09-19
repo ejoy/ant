@@ -12,7 +12,3 @@ component "second_view_visible"
 component "second_view_cull"
 component "second_view_renderable"
 component "second_view_frustum"
-
-policy "second_view"
-    .require_system "tools.editor|second_view_camera_system"
-    .require_system "tools.editor|second_view_frustum_system"

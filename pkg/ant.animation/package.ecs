@@ -40,7 +40,6 @@ component "slot".type "lua"
 component "boneslot"
 
 system "animation_system"
-    .require_policy "ant.render|skinrender"
     .implement "animation.lua"
 
 system "keyframe_system"

@@ -3,9 +3,5 @@ component "cull_args"
     .field "frustum_planes:userdata|math_t"
     .field "cull_mask:int64"
 
-policy "cull"
-    .require_system "ant.render|cull_system"
-
 system "cull_system"
     .implement "cull/cull_system.lua"
-    .require_system "ant.render|viewgroup_system"

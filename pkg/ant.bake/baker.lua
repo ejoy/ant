@@ -289,7 +289,6 @@ local function create_lightmap_queue()
     world:create_entity {
         policy = {
             "ant.render|render_queue",
-            "ant.render|cull",
         },
         data = {
             camera_ref = camera_ref_WONT_USED,

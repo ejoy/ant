@@ -222,7 +222,6 @@ function ios.create(point_eid)
             policy = {
                 "ant.render|omni_shadow",
                 "ant.render|render_queue",
-                "ant.render|cull",
             },
             data = {
                 camera_ref = camera_ref,

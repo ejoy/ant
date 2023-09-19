@@ -1,16 +1,12 @@
-import "shadow/shadow_debug.ecs"
+import_feature "ant.render|main_camera_aabb"
+import_feature "ant.render|pack_scene_aabb"
 
 system "shadow_system"
     .implement "shadow/shadow_maker.lua"
-    .require_system "ant.render|render_system"
-    .require_system "ant.render|main_camera_aabb_system"
-    .require_system "ant.render|pack_scene_aabb_system"
 
 component "csm_directional_light"
 component "csm".type "lua"
 policy "csm_queue"
-    .require_system "ant.render|shadow_system"
-    --.require_system "ant.render|shadow_debug_system"
     .component "csm"
 
 for i=1, 4 do
@@ -19,3 +15,9 @@ for i=1, 4 do
 end
 
 component "clear_sm"
+
+feature "shadow_debug"
+    .import "shadow/shadow_debug.ecs"
+
+-- feature "omni_shadow"
+--     .import "shadow/omni_shadow.ecs"

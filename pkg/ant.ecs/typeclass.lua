@@ -2,178 +2,6 @@ local interface = require "interface"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
-local check_map = {
-	import_feature = "feature",
-	require_system = "system",
-	require_policy = "policy",
-	include_policy = "policy",
-	component = "component",
-	component_opt = "component",
-}
-
-local function import_decl(w, fullname, import)
-	local packname, filename
-	assert(fullname:sub(1,1) == "@")
-	if fullname:find "/" then
-		packname, filename = fullname:match "^@([^/]*)/(.*)$"
-	else
-		packname = fullname:sub(2)
-		filename = "package.ecs"
-	end
-	local res = w._decl:load(packname, filename)
-	if res then
-		for k in pairs(res.import_feature) do
-			import.feature(k)
-		end
-	end
-end
-
-local function splitname(fullname)
-    return fullname:match "^([^|]*)|(.*)$"
-end
-
-local function create_importor(w)
-	local import = {}
-	local feature_decl = w._decl.feature
-	local system_decl = w._decl.system
-	local component_decl = w._decl.component
-	local policy_decl = w._decl.policy
-	local function import_ecs(packname, filename)
-		local res = w._decl:load(packname, filename)
-		if res then
-			for k in pairs(res.import_feature) do
-				import.feature(k)
-			end
-			for k in pairs(res.system) do
-				import.system(k)
-			end
-		end
-	end
-	function import.feature(name)
-		local packname, _ = splitname(name)
-		if not packname then
-			import_ecs(name, "package.ecs")
-			return
-		else
-			import_ecs(packname, "package.ecs")
-		end
-		local v = feature_decl[name]
-		if not v then
-			error(("invalid feature name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		v.imported = true
-		for _, what in ipairs(v.import_feature) do
-			import.feature(what)
-		end
-		if v.import then
-			log.debug("Import  feature", name)
-			for _, fullname in ipairs(v.import) do
-				local packname, filename
-				if fullname:sub(1,1) == "@" then
-					if fullname:find "/" then
-						packname, filename = fullname:match "^@([^/]*)/(.*)$"
-					else
-						packname = fullname:sub(2)
-						filename = "package.ecs"
-					end
-				else
-					packname = v.packname
-					filename = fullname
-				end
-				import_ecs(packname, filename)
-			end
-		end
-	end
-	function import.system(name)
-		local v = system_decl[name]
-		if not v then
-			error(("invalid system name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		if not w._initializing then
-			error(("system `%s` can only be imported during initialization."):format(name))
-		end
-		v.imported = true
-		for _, tuple in ipairs(v.value) do
-			local what, k = tuple[1], tuple[2]
-			local attrib = check_map[what]
-			if attrib then
-				import[attrib](k)
-			end
-		end
-		if v.implement and v.implement[1] then
-			log.debug("Import  system", name)
-			local impl = v.implement[1]
-			if impl:sub(1,1) == ":" then
-				v.c = true
-				w._class.system[name] = w:clibs(impl:sub(2))
-			else
-				local pkg = v.packname
-				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-				w:_package_require(pkg, file)
-			end
-		end
-	end
-	function import.component(name)
-		local v = component_decl[name]
-		if not v then
-			error(("invalid component name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		v.imported = true
-		if v.implement and v.implement[1] then
-			log.debug("Import  component", name)
-			local impl = v.implement[1]
-			local pkg = v.packname
-			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-			w:_package_require(pkg, file)
-		end
-	end
-	function import.policy(name)
-		local v = policy_decl[name]
-		if not v then
-			error(("invalid policy name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		log.debug("Import  policy", name)
-		v.imported = true
-		for _, tuple in ipairs(v.value) do
-			local what, k = tuple[1], tuple[2]
-			local attrib = check_map[what]
-			if attrib then
-				import[attrib](k)
-			end
-		end
-	end
-	return import
-end
-
 local function toint(v)
 	local t = type(v)
 	if t == "userdata" then
@@ -296,51 +124,56 @@ local function slove_component(w)
     end
 end
 
-local function import_ecs(w, ecs)
-	local importor = create_importor(w)
-	if ecs.import then
-		for _, k in ipairs(ecs.import) do
-			import_decl(w, k, importor)
-		end
+local function import_all(w, ecs)
+	local load_ecs = {
+		envs = {},
+		decl = w._decl,
+		loader = function (packname, filename)
+			local file = "/pkg/"..packname.."/"..filename
+			log.debug(("Import decl %q"):format(file))
+			return assert(pm.loadenv(packname).loadfile(file))
+		end,
+	}
+	for _, k in ipairs(ecs.feature) do
+		interface.import_feature(load_ecs, k)
 	end
-	if ecs.feature then
-		for _, k in ipairs(ecs.feature) do
-			importor.feature(k)
-		end
-	end
-	w._decl:check()
-	if ecs.system then
-		for _, k in ipairs(ecs.system) do
-			importor.system(k)
-		end
-	end
-	if ecs.policy then
-		for _, k in ipairs(ecs.policy) do
-			importor.policy(k)
+	for name, v in pairs(w._decl.system) do
+		local impl = v.implement[1]
+		if impl then
+			log.debug("Import  system", name)
+			if impl:sub(1,1) == ":" then
+				v.c = true
+				w._class.system[name] = w:clibs(impl:sub(2))
+			else
+				local pkg = v.packname
+				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
+				w:_package_require(pkg, file)
+			end
 		end
 	end
 	for name, v in pairs(w._decl.component) do
-		if v.implement[1] then
-			importor.component(name)
+		local impl = v.implement[1]
+		if impl then
+			log.debug("Import  component", name)
+			local pkg = v.packname
+			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
+			w:_package_require(pkg, file)
 		end
 	end
 end
 
-local function create_ecs(w, package, tasks)
+local function create_ecs(w, package)
     local ecs = { world = w }
     function ecs.system(name)
         local fullname = package .. "|" .. name
         local r = w._class.system[fullname]
         if r == nil then
-            if not w._decl.system[fullname] then
-                w._decl.system[fullname] = {
-					value = {}
-				}
-            end
+			if not w._initializing then
+				error(("system `%s` can only be imported during initialization."):format(name))
+			end
             log.debug("Register system   ", fullname)
             r = {}
             w._class.system[fullname] = r
-            table.insert(tasks.system, fullname)
         end
         return r
     end
@@ -368,35 +201,32 @@ local function create_ecs(w, package, tasks)
 end
 
 local function init(w, config)
+	log.info "world initializing"
 	w._initializing = true
 	w._class = {
 		system = {},
 		component = {},
 	}
-	w._decl = interface.new(function(_, packname, filename)
-		local file = "/pkg/"..packname.."/"..filename
-		log.debug(("Import decl %q"):format(file))
-		return assert(pm.loadenv(packname).loadfile(file))
-	end)
-	local tasks = config.ecs
-	tasks.system = tasks.system or {}
+	w._decl = {
+		pipeline = {},
+		component = {},
+		feature = {},
+		system = {},
+		policy = {},
+	}
 	setmetatable(w._packages, {__index = function (self, package)
 		local v = {
 			_LOADED = {},
-			ecs = create_ecs(w, package, tasks)
+			ecs = create_ecs(w, package)
 		}
 		self[package] = v
 		return v
 	end})
-	import_ecs(w, tasks)
+	import_all(w, config.ecs)
 	slove_component(w)
 	create_context(w)
-	for name, v in sortpairs(w._decl.system) do
-		if v.implement and v.implement[1] and not v.imported then
-			log.warn(string.format("system `%s` is not imported.", name))
-		end
-	end
 	w._initializing = nil
+	log.info "world initialized"
 end
 
 return {

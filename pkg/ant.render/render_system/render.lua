@@ -120,7 +120,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 		policy = {
 			"ant.render|pre_depth_queue",
 			"ant.render|watch_screen_buffer",
-			"ant.render|cull",
 		},
 		data = {
 			camera_ref = camera_ref,
@@ -170,7 +169,6 @@ function irender.create_main_queue(vr, camera_ref)
 		policy = {
 			"ant.render|watch_screen_buffer",
 			"ant.render|main_queue",
-			"ant.render|cull",
 		},
 		data = {
 			camera_ref = camera_ref,

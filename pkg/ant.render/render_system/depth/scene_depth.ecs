@@ -2,8 +2,6 @@ component "scene_depth_queue"
 
 policy "scene_depth_queue"
     .include_policy "ant.render|render_queue"
-    .require_system "ant.render|scene_depth_system"
-    .require_system  "ant.render|pre_depth_system"
     .component "scene_depth_queue"
 
 system "scene_depth_system"

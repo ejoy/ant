@@ -26,12 +26,10 @@ system "render_target_system"
 component "render_target".type "lua"
 
 policy "render_target"
-    .require_system "ant.render|render_target_system"
     .component "render_target"
 
 component "queue_name".type "lua"
 policy "render_queue"
-    .include_policy "ant.render|render_pipeline"
     .include_policy "ant.render|render_target"
     .component "visible"
     .component "queue_name"

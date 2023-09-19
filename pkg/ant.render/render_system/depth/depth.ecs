@@ -5,7 +5,6 @@ pipeline "depth"
 component "pre_depth_queue"
 policy "pre_depth_queue"
     .include_policy "ant.render|render_queue"
-    .require_system  "ant.render|pre_depth_system"
     .component   "pre_depth_queue"
 
 system "pre_depth_system"

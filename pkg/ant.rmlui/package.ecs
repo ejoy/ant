@@ -1,8 +1,9 @@
+import_feature "ant.render"
+
 system "rmlui_system"
     .implement "rmlui_system.lua"
 
 system "ui_rt_system"
-    .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
 
 component "rmlui_obj"

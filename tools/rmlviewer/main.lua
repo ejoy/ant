@@ -13,16 +13,9 @@ end
 
 import_package "ant.window".start {
     args = arguments,
-    import = {
-        "@ant.render",
-    },
     feature = {
         "ant.tools.rmlviewer",
         "ant.animation",
         "ant.rmlui",
-    },
-    policy = {
-        "ant.render|render",
-        "ant.render|render_queue",
     }
 }

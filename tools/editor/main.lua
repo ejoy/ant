@@ -8,11 +8,8 @@ import_package "ant.imgui".start {
     h = 1080,
     ecs = {
         enable_mouse = true,
-        import = {
-            "@tools.editor",
-            "@ant.render",
-        },
         feature = {
+            "tools.editor",
             "ant.animation",
             "ant.daynight",
             "ant.efk",
@@ -24,14 +21,6 @@ import_package "ant.imgui".start {
             "ant.objcontroller|screen_3dobj",
             "ant.rmlui",
             "ant.sky|sky",
-        },
-        system = {
-            "tools.editor|init_system",
-            "tools.editor|gizmo_system",
-            "tools.editor|input_system",
-            "tools.editor|grid_brush_system",
-            "tools.editor|gui_system",
-            "tools.editor|camera_system",
         }
     }
 }
