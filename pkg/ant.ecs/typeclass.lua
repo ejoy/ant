@@ -135,6 +135,7 @@ local function import_all(w, ecs)
 			w._decl:load(name, "package.ecs", import_feature)
 			return
 		end
+		w._decl:load(packname, "package.ecs", import_feature)
 		local v = w._decl.feature[name]
 		if not v then
 			error(("invalid feature name: `%s`."):format(name))
@@ -143,7 +144,6 @@ local function import_all(w, ecs)
 			return
 		end
 		v.imported = true
-		w._decl:load(packname, "package.ecs", import_feature)
 		if v.import then
 			log.debug("Import  feature", name)
 			for _, fullname in ipairs(v.import) do
@@ -219,6 +219,7 @@ local function create_ecs(w, package)
 end
 
 local function init(w, config)
+	log.info "world initializing"
 	w._initializing = true
 	w._class = {
 		system = {},
@@ -241,6 +242,7 @@ local function init(w, config)
 	slove_component(w)
 	create_context(w)
 	w._initializing = nil
+	log.info "world initialized"
 end
 
 return {
