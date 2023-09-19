@@ -1,5 +1,7 @@
 import_feature "ant.polyline"
 import_feature "ant.widget"
+import_feature "ant.render|pack_scene_aabb"
+import_feature "ant.render|main_camera_aabb"
 
 system "init_system"
     .implement "init_system.lua"

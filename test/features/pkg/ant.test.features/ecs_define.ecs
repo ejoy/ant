@@ -1,4 +1,5 @@
 import_feature "ant.polyline"
+import_feature "ant.render|pack_scene_aabb"
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
