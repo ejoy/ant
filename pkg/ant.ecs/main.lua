@@ -457,7 +457,7 @@ function m.new_world(config)
         local cfg = config.ecs
         if cfg then
             cfg.feature = cfg.feature or {}
-            table.insert(cfg.feature, "ant.ecs")
+            table.insert(cfg.feature, 1, "ant.ecs")
         end
     end
     local ecs = luaecs.world()

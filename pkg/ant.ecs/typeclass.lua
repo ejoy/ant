@@ -2,10 +2,6 @@ local interface = require "interface"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 
-local function splitname(fullname)
-    return fullname:match "^([^|]*)|(.*)$"
-end
-
 local function toint(v)
 	local t = type(v)
 	if t == "userdata" then
@@ -129,32 +125,18 @@ local function slove_component(w)
 end
 
 local function import_all(w, ecs)
-	local function import_feature(name)
-		local packname, _ = splitname(name)
-		if not packname then
-			w._decl:load(name, "package.ecs", import_feature)
-			return
-		end
-		w._decl:load(packname, "package.ecs", import_feature)
-		local v = w._decl.feature[name]
-		if not v then
-			error(("invalid feature name: `%s`."):format(name))
-		end
-		if v.imported then
-			return
-		end
-		v.imported = true
-		if v.import then
-			log.debug("Import  feature", name)
-			for _, fullname in ipairs(v.import) do
-				w._decl:load(v.packname, fullname, import_feature)
-			end
-		end
-	end
+	local load_ecs = {
+		envs = {},
+		decl = w._decl,
+		loader = function (packname, filename)
+			local file = "/pkg/"..packname.."/"..filename
+			log.debug(("Import decl %q"):format(file))
+			return assert(pm.loadenv(packname).loadfile(file))
+		end,
+	}
 	for _, k in ipairs(ecs.feature) do
-		import_feature(k)
+		interface.import_feature(load_ecs, k)
 	end
-	w._decl:check()
 	for name, v in pairs(w._decl.system) do
 		local impl = v.implement[1]
 		if impl then
@@ -225,11 +207,13 @@ local function init(w, config)
 		system = {},
 		component = {},
 	}
-	w._decl = interface.new(function(_, packname, filename)
-		local file = "/pkg/"..packname.."/"..filename
-		log.debug(("Import decl %q"):format(file))
-		return assert(pm.loadenv(packname).loadfile(file))
-	end)
+	w._decl = {
+		pipeline = {},
+		component = {},
+		feature = {},
+		system = {},
+		policy = {},
+	}
 	setmetatable(w._packages, {__index = function (self, package)
 		local v = {
 			_LOADED = {},

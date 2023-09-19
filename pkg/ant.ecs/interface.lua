@@ -1,13 +1,4 @@
-local interface = {}
-interface.__index = interface
-
-local parser = {}
-
 local attribute = {
-	pipeline = {
-		"pipeline",
-		"stage",
-	},
 	system = {
 		"implement",
 	},
@@ -25,63 +16,7 @@ local attribute = {
 	feature = {
 		"import",
 	},
-	import_feature = {
-	},
 }
-
-local ATTRIBUTE_IGNORE_PACKAGE <const> = 0
-local ATTRIBUTE_IGNORE_FILENAME <const> = 1
-local ATTRIBUTE_NO_PACKAGE <const> = 2
-
-local attribute_type = {
-	pipeline = ATTRIBUTE_NO_PACKAGE,
-	none = ATTRIBUTE_NO_PACKAGE,
-	component = ATTRIBUTE_NO_PACKAGE,
-	feature = ATTRIBUTE_IGNORE_PACKAGE,
-	system = ATTRIBUTE_IGNORE_PACKAGE,
-	policy = ATTRIBUTE_IGNORE_PACKAGE,
-	import_feature = ATTRIBUTE_IGNORE_FILENAME,
-}
-
-local check_map = {
-	include_policy = "policy",
-	component = "component",
-	import_feature = "import_feature",
-	import = "none",
-	pipeline = "none",
-	stage = "none",
-}
-
-local type_list = {}
-local packspace_map = {}
-
-do	-- init type_list
-	for attrib in pairs(attribute) do
-		table.insert(type_list, attrib)
-	end
-
-	for what, attrib in pairs(check_map) do
-		packspace_map[what] = attribute_type[attrib]
-	end
-end
-
-function parser.new(loader)
-	local p = {
-		loaded = {},
-		loader = loader,
-	}
-	for _, type in ipairs(type_list) do
-		p[type] = {}
-	end
-	return setmetatable( p, interface )
-end
-
-local function insert_fileinfo(result)
-	local item = result[#result]
-	local info = debug.getinfo(3, "Sl")
-	item.source = info.source
-	item.lineno = info.currentline
-end
 
 local function readonly()
 	error "_G is readonly"
@@ -91,176 +26,104 @@ local function fullname(packname, name)
 	return packname .. "|" .. name
 end
 
-local function attribute_setter(attribs, packname, contents)
-	local setter = {}
-
-	for _, a in ipairs(attribs) do
-		if packspace_map[a] == ATTRIBUTE_IGNORE_PACKAGE then
-			setter[a] = function(what)
-				assert(type(what) == "string")
-				if not what:find("|",1,true) then
-					what = fullname(packname, what)
-				end
-				table.insert(contents, {a, what})
-				return setter
-			end
-		elseif packspace_map[a] == ATTRIBUTE_NO_PACKAGE then
-			setter[a] = function(what)
-				assert(type(what) == "string")
-				table.insert(contents, {a, what})
-				return setter
-			end
-		elseif packspace_map[a] == ATTRIBUTE_IGNORE_FILENAME then
-			setter[a] = function(what)
-				assert(type(what) == "string")
-				table.insert(contents, {a, what})
-				return setter
-			end
-		else
-			setter[a] = function(what)
-				assert(type(what) == "string")
-				table.insert(contents, {a, what})
-				return setter
-			end
-		end
-	end
-
-	return setter
+local function splitname(fullname)
+    return fullname:match "^([^|]*)|(.*)$"
 end
 
-local load_interface do
-	local genenv
-	load_interface = function (self, current, packname, filename, result)
-		if self.loaded[packname.."/"..filename] then
-			return
+local import_feature
+
+local function genenv(self, packname)
+	local env = self.envs[packname]
+	if env then
+		return env
+	end
+	env = {}
+	self.envs[packname] = env
+	local LOADED = {}
+	function env.import(filename)
+		if LOADED[filename] then
+			return false
 		end
-		self.loaded[packname.."/"..filename] = true
-		local f = self.loader(current, packname, filename)
-		assert(debug.getupvalue(f,1) == "_ENV")
-		debug.setupvalue(f,1,genenv(self, packname, result))
+		LOADED[filename] = true
+		local f = self.loader(packname, filename)
+		assert(debug.getupvalue(f, 1) == "_ENV")
+		debug.setupvalue(f, 1, env)
 		f()
-		return result
+		return true
 	end
-
-	genenv = function (self, packname, result)
-		local api = {}
-		function api.import(filename)
-			local pname, fname = packname, filename
-			if filename:sub(1,1) == "@" then
-				if filename:find "/" then
-					pname, fname = filename:match "^@([^/]*)/(.*)$"
-				else
-					pname = filename:sub(2)
-					fname = "package.ecs"
-				end
-			end
-			load_interface(self, packname, pname, fname, result)
-		end
-		for _, attr in ipairs(type_list) do
-			api[attr] = function (name)
-				local contents = {}
-				local setter = attribute_setter(attribute[attr], packname, contents)
-				local fname
-				if attribute_type[attr] == ATTRIBUTE_NO_PACKAGE then
-					fname = name
-				elseif attribute_type[attr] == ATTRIBUTE_IGNORE_PACKAGE then
-					fname = fullname(packname, name)
-				elseif attribute_type[attr] == ATTRIBUTE_IGNORE_FILENAME then
-					fname = name
-				else
-					assert(false, attr)
-				end
-				table.insert(result, { command = attr, packname = packname, name = fname, value = contents })
-				insert_fileinfo(result)
-				return setter
-			end
-		end
-		return setmetatable( {}, { __index = api , __newindex = readonly } )
+	function env.import_feature(fullname)
+		import_feature(self, fullname)
 	end
-end
-
-local function merge_all_results(results)
-	local r = { implement = {} }
-	for _, what in ipairs(type_list) do
-		r[what] = {}
-	end
-
-	for _, item in ipairs(results) do
-		local m = r[item.command]
-		if item.name then
-			if item.command ~= "import_feature" and m[item.name] ~= nil then
-				error(string.format("Redfined %s:%s in %s(%d), Already defined at %s(%d)",
-					item.command, item.name, item.source, item.lineno, m[item.name].source, m[item.name].lineno))
-			end
-			m[item.name] = item
-		else
-			table.insert(m, item)
-		end
-	end
-	return r
-end
-
-local function merge(output, input, list)
-	for name, item in pairs(input) do
-		local value = {
-			packname = item.packname,
+	function env.pipeline(name)
+		local contents = {
 			value = {},
 		}
-		for _, attrib in ipairs(list) do
-			value[attrib] = {}
+		local setter = {}
+		function setter.pipeline(what)
+			assert(type(what) == "string")
+			table.insert(contents.value, {"pipeline", what})
+			return setter
 		end
-		output[name] = value
-		for _, tuple in ipairs(item.value) do
-			if check_map[tuple[1]] then
-				table.insert(value.value, tuple)
-			end
-			table.insert(value[tuple[1]], tuple[2])
+		function setter.stage(what)
+			assert(type(what) == "string")
+			table.insert(contents.value, {"stage", what})
+			return setter
 		end
-	end
-end
-
-local function merge_result(self, result)
-	for _, what in ipairs(type_list) do
-		merge(self[what], result[what], attribute[what])
-	end
-end
-
-function interface:load(packname, filename, import_feature)
-	local results = load_interface(self, nil, packname, filename, {})
-	if results then
-		local r = merge_all_results(results)
-		merge_result(self, r)
-		if import_feature then
-			for k in pairs(r.import_feature) do
-				import_feature(k)
-			end
+		local fname = name
+		if self.decl.pipeline[fname] then
+			error("Redfined pipeline:%s", fname)
 		end
-		return r
+		self.decl.pipeline[fname] = contents
+		return setter
 	end
-end
-
-local function check(tbl, r)
-	for _, content in pairs(tbl) do
-		for what, list in pairs(content) do
-			local check = check_map[what]
-			if check and check ~= "none" then
-				-- need check
-				for _, require_name in ipairs(list) do
-					if r[check][require_name] == nil then
-						if check ~= "import_feature" or what:find("|",1,true) then
-							error(string.format("Not found (%s) : %s",check, require_name))
-						end
-					end
+	for attr, attribs in pairs(attribute) do
+		env[attr] = function (name)
+			local contents = {
+				packname = packname,
+			}
+			local setter = {}
+			for _, a in ipairs(attribs) do
+				contents[a] = {}
+				setter[a] = function(what)
+					assert(type(what) == "string")
+					table.insert(contents[a], what)
+					return setter
 				end
 			end
+			local fname
+			if attr == "component" then
+				fname = name
+			else
+				fname = fullname(packname, name)
+			end
+			if self.decl[attr][fname] then
+				error(string.format("Redfined %s:%s", attr, fname))
+			end
+			self.decl[attr][fname] = contents
+			return setter
 		end
 	end
+	setmetatable({}, { __index = env , __newindex = readonly })
+	return env
 end
 
-function interface:check()
-	for _, what in ipairs(type_list) do
-		check(self[what], self)
+function import_feature(self, fullname)
+	local pname, _ = splitname(fullname)
+	if not pname then
+		genenv(self, fullname).import "package.ecs"
+		return
+	end
+	local penv = genenv(self, pname)
+	penv.import "package.ecs"
+	local feature = self.decl.feature[fullname]
+	if not feature then
+		error(("invalid feature name: `%s`."):format(fullname))
+	end
+	for _, fname in ipairs(feature.import) do
+		penv.import(fname)
 	end
 end
 
-return parser
+return {
+	import_feature = import_feature,
+}
