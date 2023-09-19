@@ -146,9 +146,7 @@ local function import_all(w, system_class, ecs)
 				v.c = true
 				system_class[name] = w:clibs(impl:sub(2))
 			else
-				local pkg = v.packname
-				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-				w:_package_require(pkg, file)
+				w:_package_require(v.packname, impl)
 			end
 		end
 	end
@@ -156,9 +154,7 @@ local function import_all(w, system_class, ecs)
 		local impl = v.implement[1]
 		if impl then
 			log.debug("Import  component", name)
-			local pkg = v.packname
-			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
-			w:_package_require(pkg, file)
+			w:_package_require(v.packname, impl)
 		end
 	end
 end
@@ -191,11 +187,12 @@ local function create_ecs(w, package, system_class)
         return r
     end
     function ecs.require(fullname)
-        local pkg, file = fullname:match "^([^|]*)|(.*)$"
+        local pkg, name = fullname:match "^([^|]*)|(.*)$"
         if not pkg then
             pkg = package
-            file = fullname
+            name = fullname
         end
+        local file = name:gsub('%.', '/')..".lua"
         return w:_package_require(pkg, file)
     end
     return ecs

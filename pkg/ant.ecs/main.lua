@@ -8,6 +8,7 @@ local policy = require "policy"
 local typeclass = require "typeclass"
 local system = require "system"
 local event = require "event"
+local vfs = require "vfs"
 local pm = require "packagemanager"
 
 local world_metatable = {}
@@ -434,10 +435,14 @@ function world:_package_require(package, file)
         return p
     end
     local env = pm.loadenv(package)
-    local searcher_lua = env.package.searchers[2]
-    local initfunc = searcher_lua(file)
-    if type(initfunc) ~= 'function' then
-        error(("module '%s' not found:\n\t%s"):format(file, initfunc))
+    local path = "/pkg/"..package.."/"..file
+    local realpath = vfs.realpath(path)
+    if not realpath then
+        error(("file '%s' not found"):format(path))
+    end
+    local initfunc, err = fastio.loadfile(realpath, path, env)
+    if not initfunc then
+        error(("error loading file '%s':\n\t%s"):format(path, err))
     end
     debug.setupvalue(initfunc, 1, env)
     local r = initfunc(_PACKAGE.ecs)
