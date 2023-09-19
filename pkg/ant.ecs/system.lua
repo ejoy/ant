@@ -83,7 +83,11 @@ function system.solve(w, system_class)
 		if pl.value then
 			for _, v in ipairs(pl.value) do
 				if v[1] == "stage" then
-					mark[v[2]] = nil
+					local name = v[2]
+					if mark[name] == nil then
+						log.warn(("`%s` is an empty stage"):format(name))
+					end
+					mark[name] = nil
 				end
 			end
 		end
