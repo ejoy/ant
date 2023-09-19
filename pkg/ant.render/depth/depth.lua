@@ -13,7 +13,7 @@ if setting:get "graphic/disable_pre_z" then
 end
 
 local bgfx          = require "bgfx"
-local idrawindirect = ecs.require "ant.render|render_system.draw_indirect.draw_indirect"
+local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr      = ecs.require "queue_mgr"
 
 local math3d        = require "math3d"

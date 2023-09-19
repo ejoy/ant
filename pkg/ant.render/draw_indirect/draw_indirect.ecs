@@ -19,4 +19,4 @@ component "draw_indirect_ready"
 component "draw_indirect_update"
 
 system "draw_indirect_system"
-    .implement "render_system/draw_indirect/draw_indirect.lua"
+    .implement "draw_indirect/draw_indirect.lua"

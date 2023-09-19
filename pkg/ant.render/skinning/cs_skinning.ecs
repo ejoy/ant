@@ -3,7 +3,7 @@ component "skinning_builder"
 
 component "cs_skinning_ready"
 system "cs_skinning_system"
-    .implement "render_system/skinning/cs_skinning_system.lua"
+    .implement "skinning/cs_skinning_system.lua"
 
 policy "cs_skinrender"
     .include_policy "ant.render|render_object"

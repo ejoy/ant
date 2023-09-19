@@ -2,7 +2,7 @@ import_feature "ant.animation"
 import_feature "ant.asset"
 
 system "skinning_system"
-    .implement "render_system/skinning/skinning_system.lua"
+    .implement "skinning/skinning_system.lua"
 
 component "skinning"
 policy "skinrender"
@@ -16,4 +16,4 @@ policy "skinrender"
 
 -- will not use right now
 feature "cs_skinning"
-    .import "render_system/skinning/cs_skinning.ecs"
+    .import "skinning/cs_skinning.ecs"

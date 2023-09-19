@@ -5,4 +5,4 @@ policy "scene_depth_queue"
     .component "scene_depth_queue"
 
 system "scene_depth_system"
-    .implement "render_system/depth/depth.lua"
+    .implement "depth/scene_depth.lua"

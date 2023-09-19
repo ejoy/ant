@@ -31,13 +31,5 @@ system "render_system"
 
 import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"
-import "render_system/depth/depth.ecs"
-import "render_system/renderqueue/renderqueue.ecs"
-import "render_system/skinning/skinning.ecs"
-import "render_system/hitch/hitch.ecs"
-import "render_system/draw_indirect/draw_indirect.ecs"
-
+import "render_system/renderqueue.ecs"
 import "render_system/render_object.ecs"
-
-feature "lightmap"
-    .import "render_system/lightmap/lightmap.ecs"

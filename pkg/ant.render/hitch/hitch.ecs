@@ -8,12 +8,12 @@ component "hitch"
     .field "group:int"
     .field "visible_masks:int64"
     .field "cull_masks:int64"
-    .implement "render_system/hitch/hitch.lua"
+    .implement "hitch/hitch.lua"
 
 component "hitch_visible" -- view_visible & hitch
 
 system "hitch_system"
-    .implement "render_system/hitch/hitch.lua"
+    .implement "hitch/hitch.lua"
 
 policy "hitch_object"
     .include_policy "ant.scene|scene_object"

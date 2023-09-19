@@ -8,10 +8,10 @@ policy "pre_depth_queue"
     .component   "pre_depth_queue"
 
 system "pre_depth_system"
-    .implement "render_system/depth/depth.lua"
-
-feature "depth_resolve"
-    .import "render_system/depth/depth_resolve.ecs"
+    .implement "depth/depth.lua"
 
 feature "scene_depth"
-    .import "render_system/depth/scene_depth.ecs"
+    .import "depth/scene_depth.ecs"
+
+feature "depth_resolve"
+    .import "depth/depth_resolve.ecs"
