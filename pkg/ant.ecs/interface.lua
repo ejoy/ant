@@ -55,25 +55,24 @@ local function genenv(self, packname)
 		import_feature(self, fullname)
 	end
 	function env.pipeline(name)
-		local contents = {
-			value = {},
-		}
+		if self.decl.pipeline[name] then
+			error("Redfined pipeline:%s", name)
+		end
+		local value = {}
 		local setter = {}
 		function setter.pipeline(what)
 			assert(type(what) == "string")
-			table.insert(contents.value, {"pipeline", what})
+			value[#value+1] = {"pipeline", what}
 			return setter
 		end
 		function setter.stage(what)
 			assert(type(what) == "string")
-			table.insert(contents.value, {"stage", what})
+			value[#value+1] = {"stage", what}
 			return setter
 		end
-		local fname = name
-		if self.decl.pipeline[fname] then
-			error("Redfined pipeline:%s", fname)
-		end
-		self.decl.pipeline[fname] = contents
+		self.decl.pipeline[name] = {
+			value = value,
+		}
 		return setter
 	end
 	for attr, attribs in pairs(attribute) do

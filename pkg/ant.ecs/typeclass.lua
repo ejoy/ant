@@ -143,7 +143,6 @@ local function import_all(w, system_class, ecs)
 		if impl then
 			log.debug("Import  system", name)
 			if impl:sub(1,1) == ":" then
-				v.c = true
 				system_class[name] = w:clibs(impl:sub(2))
 			else
 				w:_package_require(v.packname, impl)
