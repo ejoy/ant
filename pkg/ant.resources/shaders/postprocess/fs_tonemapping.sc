@@ -40,6 +40,7 @@ vec3 do_tonemap(vec3 color, float avg_luminance)
     //make logc align to pixel center
     float texelsize = 1.0 / size.x;
     logc = vec3_splat(0.5 * texelsize) + logc * (1.0 - texelsize);
+    logc = max(vec3_splat(0.0), logc);
     return texture3DLod(s_colorgrading_lut, logc, 0.0).rgb;
 #else //!ENABLE_TONEMAP_LUT
     return tonemapping(color.rgb, avg_luminance, 0);
