@@ -429,12 +429,16 @@ function m:handle_event()
             prefab_mgr:open(filename)
         else
             global_data.glb_filename = filename
+            global_data.is_opening = true
         end
     end
 
     for _, filename in event_add_prefab:unpack() do
-        if string.sub(filename, -4) == ".efk" then
+        local ext = string.sub(filename, -4)
+        if ext == ".efk" then
             prefab_mgr:add_effect(filename)
+        elseif ext == ".glb" then
+            global_data.glb_filename = filename
         else
             prefab_mgr:add_prefab(filename)
         end

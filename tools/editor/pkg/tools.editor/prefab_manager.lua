@@ -433,87 +433,89 @@ local function read_file(fn)
     local f<close> = assert(io.open(fn:string()))
     return f:read "a"
 end
-
 local prefabe_name_ui = {text = ""}
 local prefab_list = {}
-local selected_prefab
 local patch_template
 local faicons   = require "common.fa_icons"
 local function reset_open_context()
     gd.glb_filename = nil
+    gd.is_opening = false
     prefab_list = {}
     prefabe_name_ui = {text = ""}
 end
+
+local function get_prefabs_and_patch_template(glbfilename)
+    local patchfile = glbfilename .. ".patch"
+    local patch_tpl = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
+    local prefab_set = {}
+    for _, patch in ipairs(patch_tpl) do
+        local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
+        if k and string.sub(k, -7) == ".prefab" then
+            prefab_set[k] = true
+        end
+    end
+    local prefabs = {"mesh.prefab"}
+    for key, _ in pairs(prefab_set) do
+        prefabs[#prefabs + 1] = key
+    end
+    return prefabs, patch_tpl
+end
+
 function m:choose_prefab()
     if not gd.glb_filename then
         return
     end
     if #prefab_list < 1 then
-        local patchfile = gd.glb_filename .. ".patch"
-        patch_template = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
-
-        local prefab_set = {}
-        for _, patch in ipairs(patch_template) do
-            local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
-            if k and string.sub(k, -7) == ".prefab" then
-                prefab_set[k] = true
-            end
-        end
-        
-        prefab_list = {"mesh.prefab"}
-        for key, _ in pairs(prefab_set) do
-            prefab_list[#prefab_list + 1] = key
-        end
+        prefab_list, patch_template = get_prefabs_and_patch_template(gd.glb_filename)
     end
-
     local title = "Choose prefab"
     if not imgui.windows.IsPopupOpen(title) then
         imgui.windows.OpenPopup(title)
     end
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text("Create new or open existing prefab.")
-        if imgui.widget.InputText("##PrefabName", prefabe_name_ui) then
-        end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
-            local name = tostring(prefabe_name_ui.text)
-            if #name > 0 then
-                local existing = false
-                for _, value in ipairs(prefab_list) do
-                    if value == name..".prefab" then
-                        existing = true
-                        break
+        if gd.is_opening then
+            imgui.widget.Text("Create new or open existing prefab.")
+            if imgui.widget.InputText("##PrefabName", prefabe_name_ui) then
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
+                local name = tostring(prefabe_name_ui.text)
+                if #name > 0 then
+                    local existing = false
+                    for _, value in ipairs(prefab_list) do
+                        if value == name..".prefab" then
+                            existing = true
+                            break
+                        end
+                    end
+                    if not existing then
+                        prefab_list[#prefab_list + 1] = name..".prefab"
+                        prefabe_name_ui.text = ""
+                        table.insert(patch_template, 1, {
+                            file = "mesh.prefab",
+                            op = "copyfile",
+                            path = prefab_list[#prefab_list]
+                        })
+                        utils.write_file(gd.glb_filename..".patch", stringify(patch_template))
                     end
                 end
-                if not existing then
-                    prefab_list[#prefab_list + 1] = name..".prefab"
-                    prefabe_name_ui.text = ""
-                    table.insert(patch_template, 1, {
-                        file = "mesh.prefab",
-                        op = "copyfile",
-                        path = prefab_list[#prefab_list]
-                    })
-                    utils.write_file(gd.glb_filename..".patch", stringify(patch_template))
+            end
+        else
+            imgui.widget.Text("Choose a prefab to continue.")
+        end
+        imgui.cursor.Separator()
+        for _, prefab in ipairs(prefab_list) do
+            if imgui.widget.Selectable(prefab, false, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                if gd.is_opening then
+                    self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
+                else
+                    self:add_prefab(gd.glb_filename.."|"..prefab)
                 end
+                reset_open_context()
             end
         end
         imgui.cursor.Separator()
-        for _, n in ipairs(prefab_list) do
-            if imgui.widget.Selectable(n, selected_prefab and selected_prefab == n, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                selected_prefab = n
-                -- if imgui.util.IsMouseDoubleClicked(0) then
-                    self:open(gd.glb_filename .. "|" .. selected_prefab, selected_prefab, patch_template)
-                -- end
-            end
-        end
-        imgui.cursor.Separator()
-        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Open") then
-            if selected_prefab then
-                self:open(gd.glb_filename .. "|" .. selected_prefab, selected_prefab, patch_template)
-            end
-        end
-        imgui.cursor.SameLine()
         if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
             reset_open_context()
             imgui.windows.CloseCurrentPopup()
@@ -523,7 +525,6 @@ function m:choose_prefab()
 end
 
 function m:open(filename, prefab_name, patch_tpl)
-    reset_open_context()
     self:reset_prefab(true)
     -- if path:equal_extension(".fbx") then
     --     self:open_fbx(tostring(path))
@@ -698,18 +699,13 @@ function m:add_effect(filename)
 end
 
 function m:add_prefab(path)
-    local prefab_filename = path
-    if string.sub(path, -4) == ".glb" then
-        prefab_filename = path .. "|mesh.prefab"
-    end
-    
     if not self.root then
         self:reset_prefab()
     end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):stem()), parent)
     world:create_instance {
-        prefab = prefab_filename,
+        prefab = path,
         parent = v_root,
         on_ready = function(inst)
             local children = inst.tag["*"]
@@ -719,14 +715,14 @@ function m:add_prefab(path)
                     local child = children[1]
                     local e <close> = world:entity(child, "camera?in")
                     if e.camera then
-                        local tpl = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
+                        local tpl = serialize.parse(path, read_file(lfs.path(assetmgr.compile(path))))
                         hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
                     end
                 end
             end
         end
     }
-    self:add_entity(v_root, parent, temp, prefab_filename)
+    self:add_entity(v_root, parent, temp, path)
 end
 
 function m:set_save_hitch(b)
