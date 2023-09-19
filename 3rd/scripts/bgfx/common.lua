@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm.cxx = "c++17"
+lm.cxx = "c++20"
 
 if lm.mode == "debug" then
     lm.defines = {

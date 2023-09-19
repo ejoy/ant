@@ -71,7 +71,6 @@ lm:source_set "glslang" {
 }
 
 lm:source_set "glsl-optimizer" {
-    cxx = "c++14",
     rootdir = lm.BgfxDir / "3rdparty/glsl-optimizer",
     includes = {
         "src",
