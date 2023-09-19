@@ -3825,11 +3825,13 @@ static struct enum_pair eStyleVar[] = {
 	ENUM(ImGuiStyleVar,ItemSpacing),            // ImVec2    ItemSpacing
 	ENUM(ImGuiStyleVar,ItemInnerSpacing),       // ImVec2    ItemInnerSpacing
 	ENUM(ImGuiStyleVar,IndentSpacing),          // float     IndentSpacing
+	ENUM(ImGuiStyleVar,CellPadding),            // ImVec2    CellPadding
 	ENUM(ImGuiStyleVar,ScrollbarSize),          // float     ScrollbarSize
 	ENUM(ImGuiStyleVar,ScrollbarRounding),      // float     ScrollbarRounding
 	ENUM(ImGuiStyleVar,GrabMinSize),            // float     GrabMinSize
 	ENUM(ImGuiStyleVar,GrabRounding),           // float     GrabRounding
 	ENUM(ImGuiStyleVar,TabRounding),            // float     TabRounding
+	ENUM(ImGuiStyleVar,TabBarBorderSize),       // float     TabBarBorderSize
 	ENUM(ImGuiStyleVar,ButtonTextAlign),        // ImVec2    ButtonTextAlign
 	ENUM(ImGuiStyleVar,SelectableTextAlign),    // ImVec2    SelectableTextAlign
 	ENUM(ImGuiStyleVar,SeparatorTextBorderSize),// float     SeparatorTextBorderSize
