@@ -44,7 +44,17 @@ local function solve_depend(funcs, symbols, step, pipeline, what)
 	end
 end
 
-function system.solve(w)
+local function emptyfunc(f)
+	local info = debug.getinfo(f, "SL")
+	if info.what ~= "C" then
+		local lines = info.activelines
+		if next(lines, next(lines)) == nil then
+			return info
+		end
+	end
+end
+
+function system.solve(w, system_class)
 	local mark = {}
 	local res = setmetatable({}, {__index = function(t,k)
 		local obj = {}
@@ -52,13 +62,19 @@ function system.solve(w)
 		mark[k] = true
 		return obj
 	end})
-	for fullname, s in sortpairs(w._class.system) do
+	for fullname, s in sortpairs(system_class) do
 		local packname, name = splitname(fullname)
 		for step_name, func in pairs(s) do
-			table.insert(res[step_name], {
-				func = func,
-				symbol = packname .. "|" .. name .. "." .. step_name,
-			})
+			local symbol = packname .. "|" .. name .. "." .. step_name
+			local info = emptyfunc(func)
+			if info then
+				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbol, info.source:sub(2), info.linedefined))
+			else
+				table.insert(res[step_name], {
+					func = func,
+					symbol = symbol,
+				})
+			end
 		end
 	end
 	setmetatable(res, nil)
@@ -79,30 +95,10 @@ function system.solve(w)
 	w._systems = res
 end
 
-local function emptyfunc(info)
-	local lines = info.activelines
-	return next(lines, next(lines)) == nil
-end
-
 function system.lists(w, what)
 	local funcs = {}
 	local symbols = {}
 	solve_depend(funcs, symbols, w._systems, w._decl.pipeline, what)
-	local i = 1
-	while i <= #funcs do
-		local f = funcs[i]
-		local info = debug.getinfo(f, "SL")
-		if info.what ~= "C" then
-			if emptyfunc(info) then
-				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbols[i], info.source:sub(2), info.linedefined))
-				table.remove(funcs, i)
-				table.remove(symbols, i)
-				goto continue
-			end
-		end
-		i = i + 1
-		::continue::
-	end
 	return funcs, symbols
 end
 

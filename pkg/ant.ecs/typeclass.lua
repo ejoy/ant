@@ -1,6 +1,7 @@
 local interface = require "interface"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
+local system = require "system"
 
 local function toint(v)
 	local t = type(v)
@@ -75,7 +76,7 @@ local function slove_component(w)
     local function register_component(decl)
         w._component_decl[decl.name] = decl
     end
-    local component_class = w._class.component
+    local component_class = w._components
     for name, info in pairs(w._decl.component) do
         local type = info.type[1]
         local class = component_class[name] or {}
@@ -124,7 +125,7 @@ local function slove_component(w)
     end
 end
 
-local function import_all(w, ecs)
+local function import_all(w, system_class, ecs)
 	local load_ecs = {
 		envs = {},
 		decl = w._decl,
@@ -143,7 +144,7 @@ local function import_all(w, ecs)
 			log.debug("Import  system", name)
 			if impl:sub(1,1) == ":" then
 				v.c = true
-				w._class.system[name] = w:clibs(impl:sub(2))
+				system_class[name] = w:clibs(impl:sub(2))
 			else
 				local pkg = v.packname
 				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
@@ -162,30 +163,30 @@ local function import_all(w, ecs)
 	end
 end
 
-local function create_ecs(w, package)
+local function create_ecs(w, package, system_class)
     local ecs = { world = w }
     function ecs.system(name)
         local fullname = package .. "|" .. name
-        local r = w._class.system[fullname]
+        local r = system_class[fullname]
         if r == nil then
 			if not w._initializing then
 				error(("system `%s` can only be imported during initialization."):format(name))
 			end
             log.debug("Register system   ", fullname)
             r = {}
-            w._class.system[fullname] = r
+            system_class[fullname] = r
         end
         return r
     end
     function ecs.component(fullname)
-        local r = w._class.component[fullname]
+        local r = w._components[fullname]
         if r == nil then
             if not w._decl.component[fullname] then
                 error(("component `%s` has no declaration."):format(fullname))
             end
             log.debug("Register component", fullname)
             r = {}
-            w._class.component[fullname] = r
+            w._components[fullname] = r
         end
         return r
     end
@@ -202,11 +203,9 @@ end
 
 local function init(w, config)
 	log.info "world initializing"
+	local system_class = {}
 	w._initializing = true
-	w._class = {
-		system = {},
-		component = {},
-	}
+	w._components = {}
 	w._decl = {
 		pipeline = {},
 		component = {},
@@ -217,14 +216,15 @@ local function init(w, config)
 	setmetatable(w._packages, {__index = function (self, package)
 		local v = {
 			_LOADED = {},
-			ecs = create_ecs(w, package)
+			ecs = create_ecs(w, package, system_class)
 		}
 		self[package] = v
 		return v
 	end})
-	import_all(w, config.ecs)
+	import_all(w, system_class, config.ecs)
 	slove_component(w)
 	create_context(w)
+	system.solve(w, system_class)
 	w._initializing = nil
 	log.info "world initialized"
 end

@@ -476,7 +476,6 @@ function m.new_world(config)
 
     -- load systems and components from modules
     typeclass.init(w, config)
-    system.solve(w)
 
     for _, funcs in pairs(w._clibs_loaded) do
         for _, f in pairs(funcs) do

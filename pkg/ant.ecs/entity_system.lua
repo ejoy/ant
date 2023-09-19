@@ -124,7 +124,7 @@ end
 function m:init()
     PipelineEntityInit = world:pipeline_func "_entity_init"
     PipelineEntityRemove = world:pipeline_func "_entity_remove"
-    for name, func in pairs(world._class.component) do
+    for name, func in pairs(world._components) do
         local f = func.remove
         if f and not emptyfunc(f) then
             MethodRemove[name] = f
