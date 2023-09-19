@@ -413,77 +413,74 @@ function sm:update_camera_depend()
 	end
 end
 
+-- function sm:refine_camera()
+--  	for se in w:select "render_object:in csm1_queue_cull eid:in bounding?in view_visible?in" do
+-- 		local t = 1
+-- 	end
 
+-- 	for se in w:select "render_object:in csm1_queue_cull:absent eid:in bounding?in view_visible?in" do
+-- 		local t = 1
+-- 	end
 
-function sm:refine_camera()
---[[ 	for se in w:select "render_object:in csm1_queue_cull eid:in bounding?in view_visible?in" do
-		local t = 1
-	end
-
-	for se in w:select "render_object:in csm1_queue_cull:absent eid:in bounding?in view_visible?in" do
-		local t = 1
-	end ]]
-
-
-	-- local setting = ishadow.setting()
-	-- for se in w:select "csm primitive_filter:in"
-	-- 	local se = world[eid]
-	-- assert(false && "should move code new ecs")
-	-- 		local filter = se.primitive_filter.result
-	-- 		local sceneaabb = math3d.aabb()
+-- 	local setting = ishadow.setting()
+-- 	for se in w:select "csm primitive_filter:in"
+-- 		local se = world[eid]
+-- 		assert(false and "should move code new ecs")
+-- 			local filter = se.primitive_filter.result
+-- 			local sceneaabb = math3d.aabb()
 	
-	-- 		local function merge_scene_aabb(sceneaabb, filtertarget)
-	-- 			for _, item in ipf.iter_target(filtertarget) do
-	-- 				if item.aabb then
-	-- 					sceneaabb = math3d.aabb_merge(sceneaabb, item.aabb)
-	-- 				end
-	-- 			end
-	-- 			return sceneaabb
-	-- 		end
+-- 			local function merge_scene_aabb(sceneaabb, filtertarget)
+-- 				for _, item in ipf.iter_target(filtertarget) do
+-- 					if item.aabb then
+-- 						sceneaabb = math3d.aabb_merge(sceneaabb, item.aabb)
+-- 					end
+-- 				end
+-- 				return sceneaabb
+-- 			end
 	
-	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.opacity)
-	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
+-- 			sceneaabb = merge_scene_aabb(sceneaabb, filter.opacity)
+-- 			sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
 	
-	-- 		if math3d.aabb_isvalid(sceneaabb) then
-	-- 			local camera_rc = world[se.camera_ref]._rendercache
+-- 			if math3d.aabb_isvalid(sceneaabb) then
+-- 				local camera_rc = world[se.camera_ref]._rendercache
 	
-	-- 			local function calc_refine_frustum_corners(rc)
-	-- 				local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)
-	-- 				local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+-- 				local function calc_refine_frustum_corners(rc)
+-- 					local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)
+-- 					local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
 		
-	-- 				local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
-	-- 				local max_frustum_aabb_WS = math3d.aabb_merge(sceneaabb, frustum_aabb_WS)
-	-- 				local _, extents = math3d.aabb_center_extents(scene_frustum_aabb_WS)
-	-- 				extents = math3d.mul(0.1, extents)
-	-- 				scene_frustum_aabb_WS = math3d.aabb_expand(scene_frustum_aabb_WS, extents)
+-- 					local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
+-- 					local max_frustum_aabb_WS = math3d.aabb_merge(sceneaabb, frustum_aabb_WS)
+-- 					local _, extents = math3d.aabb_center_extents(scene_frustum_aabb_WS)
+-- 					extents = math3d.mul(0.1, extents)
+-- 					scene_frustum_aabb_WS = math3d.aabb_expand(scene_frustum_aabb_WS, extents)
 					
-	-- 				local max_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, max_frustum_aabb_WS)
-	-- 				local max_n, max_f = math3d.index(math3d.array_index(max_frustum_aabb_VS, 1), 3), math3d.index(math3d.array_index(max_frustum_aabb_VS, 2), 3)
+-- 					local max_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, max_frustum_aabb_WS)
+-- 					local max_n, max_f = math3d.index(math3d.array_index(max_frustum_aabb_VS, 1), 3), math3d.index(math3d.array_index(max_frustum_aabb_VS, 2), 3)
 	
-	-- 				local scene_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, scene_frustum_aabb_WS)
+-- 					local scene_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, scene_frustum_aabb_WS)
 	
-	-- 				local minv, maxv = math3d.array_index(scene_frustum_aabb_VS, 1), math3d.array_index(scene_frustum_aabb_VS, 2)
-	-- 				minv, maxv = math3d.set_index(minv, 3, max_n), math3d.set_index(maxv, 3, max_f)
-	-- 				scene_frustum_aabb_VS = math3d.aabb(minv, maxv)
+-- 					local minv, maxv = math3d.array_index(scene_frustum_aabb_VS, 1), math3d.array_index(scene_frustum_aabb_VS, 2)
+-- 					minv, maxv = math3d.set_index(minv, 3, max_n), math3d.set_index(maxv, 3, max_f)
+-- 					scene_frustum_aabb_VS = math3d.aabb(minv, maxv)
 					
-	-- 				scene_frustum_aabb_WS = math3d.aabb_transform(rc.worldmat, scene_frustum_aabb_VS)
-	-- 				return math3d.aabb_points(scene_frustum_aabb_WS)
-	-- 			end
+-- 					scene_frustum_aabb_WS = math3d.aabb_transform(rc.worldmat, scene_frustum_aabb_VS)
+-- 					return math3d.aabb_points(scene_frustum_aabb_WS)
+-- 				end
 	
-	-- 			local aabb_corners_WS = calc_refine_frustum_corners(camera_rc)
+-- 				local aabb_corners_WS = calc_refine_frustum_corners(camera_rc)
 	
-	-- 			local lightdir = math3d.index(camera_rc.worldmat, 3)
-	-- 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
-	-- 		end
-	-- end
-end
+-- 				local lightdir = math3d.index(camera_rc.worldmat, 3)
+-- 				calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
+-- 			end
+-- 	end
+-- end
 
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 function sm:render_preprocess()
 	bgfx.touch(CLEAR_SM_viewid)
 end
 
-function sm:camera_usage()
+--function sm:camera_usage()
 	-- local mq = w:first("main_queue camera_ref:in")
 	-- local camera <close> = world:entity(mq.camera_ref, "camera:in")
 	-- imaterial.system_attrib_update("u_main_camera_matrix",camera.camera.viewmat)	local scene_aabb = math3d.aabb()
@@ -518,7 +515,7 @@ function sm:camera_usage()
         end
 		ig.enable(gid, "hitch_tag", false)
 	end ]]
-end
+--end
 
 local function which_material(skinning, indirect)
 	if indirect then
