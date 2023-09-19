@@ -3880,9 +3880,9 @@ static struct enum_pair eSliderFlags[] = {
 static struct enum_pair eDockNodeFlags[] = {
 	ENUM(ImGuiDockNodeFlags,None),
 	ENUM(ImGuiDockNodeFlags,KeepAliveOnly),
-	ENUM(ImGuiDockNodeFlags,NoDockingInCentralNode),
+	ENUM(ImGuiDockNodeFlags,NoDockingOverCentralNode),
 	ENUM(ImGuiDockNodeFlags,PassthruCentralNode),
-	ENUM(ImGuiDockNodeFlags,NoSplit),
+	ENUM(ImGuiDockNodeFlags,NoDockingSplit),
 	ENUM(ImGuiDockNodeFlags,NoResize),
 	ENUM(ImGuiDockNodeFlags,AutoHideTabBar),
 	{ NULL, 0 },

@@ -69,7 +69,7 @@ function m.show()
         "NoBackground",
     }) then
         imgui.dock.Space("MainViewSpace", imgui.flags.DockNode {
-            "NoDockingInCentralNode",
+            "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })
         --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
