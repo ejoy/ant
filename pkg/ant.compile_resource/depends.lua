@@ -1,5 +1,4 @@
 local lfs       = require "bee.filesystem"
-local fs        = require "filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
 

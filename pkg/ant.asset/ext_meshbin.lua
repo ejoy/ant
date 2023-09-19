@@ -1,9 +1,8 @@
 local setting   = import_package "ant.settings"
 
 local bgfx      = require "bgfx"
-local fastio    = require "fastio"
+local fastio    = import_package "ant.serialize".fastio
 local datalist  = require "datalist"
-local async     = require "async"
 local layoutmgr = import_package "ant.render".layoutmgr
 
 local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
@@ -75,12 +74,11 @@ local function load_mem(m, filename)
     local binname = m[1]
     assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
-    m[1] = fastio.readall(async.compile(parent_path(filename) .. "/" .. binname))
+    m[1] = fastio.readall_compiled(parent_path(filename) .. "/" .. binname)
 end
 
 local function loader(filename)
-    local local_filename = async.compile(filename)
-    local mesh = datalist.parse(fastio.readall(local_filename))
+    local mesh = datalist.parse(fastio.readall_compiled(filename))
 
     local vb = assert(mesh.vb)
     load_mem(vb.memory, filename)

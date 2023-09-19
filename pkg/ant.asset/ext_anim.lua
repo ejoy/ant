@@ -1,8 +1,7 @@
-local fs = require "filesystem"
 local datalist  = require "datalist"
-local fastio = require "fastio"
 local animodule = require "hierarchy".animation
 local assetmgr 	= import_package "ant.asset"
+local fastio 	= import_package "ant.serialize".fastio
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
@@ -30,10 +29,6 @@ local Dir = {
     math3d.ref(math3d.normalize(math3d.vector{1,0,1})),
     math3d.ref(math3d.normalize(math3d.vector{1,1,1})),
 }
-
-local function read_file(filename)
-    return fastio.readall(filename:localpath():string(), filename:string())
-end
 
 local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 	local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat, reverse, sum)
@@ -183,8 +178,7 @@ end
 
 return {
     loader = function (filename)
-        local path = fs.path(filename)
-        local anim_list = datalist.parse(read_file(path))
+        local anim_list = datalist.parse(fastio.readall(filename))
         local ske_anim
         for _, anim in ipairs(anim_list) do
             if anim.type == "ske" then

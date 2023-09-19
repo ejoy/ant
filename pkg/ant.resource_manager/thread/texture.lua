@@ -39,7 +39,8 @@ local function createTexture(c)
 end
 
 local function loadTexture(name)
-    local c = datalist.parse(fastio.readall(cr.compile(name.."|main.cfg")))
+    local path = name.."|main.cfg"
+    local c = datalist.parse(fastio.readall(cr.compile(path), path))
     c.name = name
     if not c.value then
         c.path = cr.compile(name.."|main.bin")

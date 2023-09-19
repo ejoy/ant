@@ -1,8 +1,7 @@
 local serialize = import_package "ant.serialize"
 local bgfx      = require "bgfx"
-local fastio 	= require "fastio"
 local async 	= require "async"
-local fs 	    = require "filesystem"
+local fastio 	= serialize.fastio
 
 local setting   = import_package "ant.settings"
 local use_cluster_shading<const>	= setting:get "graphic/cluster_shading" ~= 0
@@ -13,7 +12,7 @@ local MA, matutil = matpkg.arena, matpkg.util
 local sa		= require "system_attribs"
 
 local function load(filename)
-    return type(filename) == "string" and serialize.parse(filename, fastio.readall(fs.path(filename):localpath():string(), filename)) or filename
+    return type(filename) == "string" and serialize.parse(filename, fastio.readall(filename)) or filename
 end
 
 local function is_vec(v) return #v == 4 end

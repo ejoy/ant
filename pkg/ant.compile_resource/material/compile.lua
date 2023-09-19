@@ -1,21 +1,22 @@
 local lfs           = require "bee.filesystem"
 local fs            = require "filesystem"
-local fastio        = require "fastio"
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
 local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
+local fastio        = serialize.fastio
 local depends       = require "depends"
 local parallel_task = require "parallel_task"
 local sa            = import_package "ant.render.core".system_attribs
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 local function DEF_FUNC() end
 
-local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
+local SHADER_BASE <const> = "/pkg/ant.resources/shaders"
+
 local function shader_includes(include_path)
     local INCLUDE_BASE = lfs.absolute(include_path)
     return {
-        SHADER_BASE,
+        lfs.absolute(fs.path(SHADER_BASE):localpath()),
         INCLUDE_BASE
     }
 end
@@ -163,7 +164,7 @@ local function merge_cfg_setting(fx)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
-        fx.setting = serialize.parse(fx.setting, fastio.readall(fs.path(fx.setting):localpath():string()))
+        fx.setting = serialize.parse(fx.setting, fastio.readall(fx.setting))
     else
         assert(type(fx.setting) == "table")
     end
@@ -175,29 +176,29 @@ local function merge_cfg_setting(fx)
     end
 end
 
-local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
+local DEF_VARYING_FILE <const> = lfs.absolute(fs.path(SHADER_BASE.."/common/varying_def.sh"):localpath())
+
+local DEF_SHADER_INFO <const> = {
+    vs = {
+        CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
+        CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
+        content = fastio.readall_s(SHADER_BASE.."/default/vs_default.sc"),
+    },
+    fs = {
+        CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
+        CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
+        content = fastio.readall_s(SHADER_BASE.."/default/fs_default.sc"),
+    }
+}
 
 local function generate_code(content, replacement_key, replacement_content)
     return content:gsub(replacement_key, replacement_content)
 end
 
-local DEF_SHADER_INFO<const> = {
-    vs = {
-        CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
-        CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
-        content = fastio.readall_s((SHADER_BASE / "default/vs_default.sc"):string()),
-    },
-    fs = {
-        CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
-        CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
-        content = fastio.readall_s((SHADER_BASE / "default/fs_default.sc"):string()),
-    }
-}
-
 DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_FUNC_KEY, [[#include "default/vs_func.sh"]])
 DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "default/fs_func.sh"]])
 
-local DEF_PBR_UNIFORM<const> = {
+local DEF_PBR_UNIFORM <const> = {
     u_basecolor_factor = "uniform mediump vec4 u_basecolor_factor;",
     u_emissive_factor  = "uniform mediump vec4 u_emissive_factor;",
     u_pbr_factor       = "uniform mediump vec4 u_pbr_factor;"

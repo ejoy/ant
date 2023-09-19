@@ -2,7 +2,7 @@ local lfs = require "bee.filesystem"
 local fs = require "filesystem"
 local utility = require "model.utility"
 local datalist = require "datalist"
-local fastio = require "fastio"
+local fastio        = import_package "ant.serialize".fastio
 local texture_compile = require "texture.compile"
 local parallel_task   = require "parallel_task"
 
@@ -118,7 +118,7 @@ local STATE_FILES = {}
 local function read_state_file(statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        s = datalist.parse(fastio.readall(fs.path(statefile):localpath():string(), statefile))
+        s = datalist.parse(fastio.readall(statefile))
     end
 
     return s

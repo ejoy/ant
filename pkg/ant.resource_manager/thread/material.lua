@@ -8,8 +8,9 @@ PM.program_init{
     max = bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
 }
 
-local function readall(filename)
-    return fastio.readall(cr.compile(filename))
+local function readall(path)
+    local realpath = assert(cr.compile(path), path)
+    return fastio.readall(realpath, path)
 end
 
 local function uniform_info(shader, uniforms, mark)

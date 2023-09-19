@@ -1,18 +1,17 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local fastio    = require "fastio"
 local datalist  = require "datalist"
 local math3d 	= require "math3d"
 local bgfx 		= require "bgfx"
 local idrawindirect = ecs.require "ant.render|render_system.draw_indirect.draw_indirect"
 local imaterial     = ecs.require "ant.asset|material"
 local layoutmgr = import_package "ant.render".layoutmgr
-local assetmgr  = import_package "ant.asset"
 local terrain_module = require "terrain"
 local ism = {}
 local sm_sys = ecs.system "stone_mountain_system"
-local mc     = import_package "ant.math".constant
+local fastio = import_package "ant.serialize".fastio
+
 local open_sm = false
 local vb_num, vb_size, vb2_size, ib_num, ib_size = 0, 0, 0, 0, 0
 local vb_handle, vb2_handle, ib_handle
@@ -165,7 +164,7 @@ local function load_mem(m, filename)
     local binname = m[1]
     assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
-    local data, err = fastio.readall_s(assetmgr.compile(parent_path(filename) .. "/" .. binname))
+    local data, err = fastio.readall_compiled_s(parent_path(filename) .. "/" .. binname)
     if not data then
         error(("read file failed:%s, error:%s"):format(binname, err))
     end
@@ -177,8 +176,7 @@ function sm_sys:init()
     local vb_decl, vb2_decl = layoutmgr.get('p30NIf|T40nii').handle, layoutmgr.get('c40niu|t20NIf').handle
     for idx = 1, 4 do
         local mesh = mesh_table[idx]
-        local local_filename = assetmgr.compile(mesh.filename)
-        local mm = datalist.parse(fastio.readall_s(local_filename))
+        local mm = datalist.parse(fastio.readall_compiled_s(mesh.filename))
         load_mem(mm.vb.memory,  mesh.filename)
         load_mem(mm.vb2.memory, mesh.filename)
         load_mem(mm.ib.memory,  mesh.filename)

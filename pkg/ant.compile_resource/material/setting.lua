@@ -1,13 +1,7 @@
-local fs = require "filesystem"
 local datalist = require "datalist"
-local fastio = require "fastio"
+local fastio = import_package "ant.serialize".fastio
 
-local function read_default_setting_from_file()
-    local setting <const> = "/pkg/ant.resources/settings/default.setting"
-    return fastio.readall(fs.path(setting):localpath():string(), setting)
-end
-
-local defaultSetting = datalist.parse(read_default_setting_from_file())
+local defaultSetting = datalist.parse(fastio.readall "/pkg/ant.resources/settings/default.setting")
 
 local function add_default(input)
     local output = {}
