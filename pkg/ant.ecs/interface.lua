@@ -27,7 +27,7 @@ end
 
 local import_feature
 
-local function genenv(envs, decl, packname)
+local function genenv(envs, decl, loader, packname)
 	local env = envs[packname]
 	if env then
 		return env
@@ -37,20 +37,14 @@ local function genenv(envs, decl, packname)
 	local LOADED = {}
 	function env.import(filename)
 		if LOADED[filename] then
-			return false
+			return
 		end
 		LOADED[filename] = true
-		local path = "/pkg/"..packname.."/"..filename
-		log.debug(("Import decl %q"):format(path))
-		local realpath = assert(vfs.realpath(path), path)
-		local f = fastio.loadfile(realpath, path)
-		assert(debug.getupvalue(f, 1) == "_ENV")
-		debug.setupvalue(f, 1, env)
-		f()
-		return true
+		local func = loader(packname, filename, env)
+		func()
 	end
 	function env.import_feature(fullname)
-		import_feature(envs, decl, fullname)
+		import_feature(envs, decl, loader, fullname)
 	end
 	function env.pipeline(name)
 		if decl.pipeline[name] then
@@ -104,13 +98,13 @@ local function genenv(envs, decl, packname)
 	return env
 end
 
-function import_feature(envs, decl, fullname)
+function import_feature(envs, decl, loader, fullname)
 	local pname = fullname:match "^([^|]*)|.*$"
 	if not pname then
-		genenv(envs, decl, fullname).import "package.ecs"
+		genenv(envs, decl, loader, fullname).import "package.ecs"
 		return
 	end
-	local penv = genenv(envs, decl, pname)
+	local penv = genenv(envs, decl, loader, pname)
 	penv.import "package.ecs"
 	local feature = decl.feature[fullname]
 	if not feature then

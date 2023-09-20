@@ -7,8 +7,6 @@ local fastio = require "fastio"
 local policy = require "policy"
 local typeclass = require "typeclass"
 local event = require "event"
-local vfs = require "vfs"
-local pm = require "packagemanager"
 
 local world_metatable = {}
 local world = {}
@@ -451,33 +449,6 @@ function world:instance_message(instance, ...)
     self:pub {"EntityMessage", instance.proxy, ...}
 end
 
-function world:_package_require(package, file)
-    local w = self
-    local _PACKAGE = w._packages[package]
-    local _LOADED = _PACKAGE._LOADED
-    local p = _LOADED[file]
-    if p ~= nil then
-        return p
-    end
-    local env = pm.loadenv(package)
-    local path = "/pkg/"..package.."/"..file
-    local realpath = vfs.realpath(path)
-    if not realpath then
-        error(("file '%s' not found"):format(path))
-    end
-    local initfunc, err = fastio.loadfile(realpath, path, env)
-    if not initfunc then
-        error(("error loading file '%s':\n\t%s"):format(path, err))
-    end
-    debug.setupvalue(initfunc, 1, env)
-    local r = initfunc(_PACKAGE.ecs)
-    if r == nil then
-        r = true
-    end
-    _LOADED[file] = r
-    return r
-end
-
 event.init(world)
 
 local m = {}
@@ -499,7 +470,6 @@ function m.new_world(config)
         _destruct = {},
         _clibs_loaded = {},
         _templates = {},
-        _packages = {},
         _cpu_stat = {},
         w = ecs,
     }, world_metatable)

@@ -1,5 +1,8 @@
 local interface = require "interface"
 local serialization = require "bee.serialization"
+local fastio = require "fastio"
+local vfs = require "vfs"
+local pm = require "packagemanager"
 
 local function sortpairs(t)
     local sort = {}
@@ -196,11 +199,49 @@ local function slove_system(w, system_class)
 	end
 end
 
-local function import_all(w, system_class, ecs)
+local function package_loadfile(packname, file, env)
+    local path = "/pkg/"..packname.."/"..file
+    local realpath = vfs.realpath(path)
+    if not realpath then
+        error(("file '%s' not found"):format(path))
+    end
+    local func, err = fastio.loadfile(realpath, path, env)
+    if not func then
+        error(("error loading file '%s':\n\t%s"):format(path, err))
+    end
+	return func
+end
+
+local create_ecs
+
+local function package_require(w, packages, system_class, packname, file)
+    local _PACKAGE = packages[packname]
+	if not _PACKAGE then
+		_PACKAGE = {
+			_LOADED = {},
+			ecs = create_ecs(w, packname, packages, system_class)
+		}
+		packages[packname] = _PACKAGE
+	end
+    local p = _PACKAGE._LOADED[file]
+    if p ~= nil then
+        return p
+    end
+    local env = pm.loadenv(packname)
+    local initfunc = package_loadfile(packname, file, env)
+    local r = initfunc(_PACKAGE.ecs)
+    if r == nil then
+        r = true
+    end
+    _PACKAGE._LOADED[file] = r
+    return r
+end
+
+local function import_all(w, ecs, packages, system_class)
 	local decl = w._decl
 	local envs = {}
 	for _, k in ipairs(ecs.feature) do
-		interface.import_feature(envs, decl, k)
+		interface.import_feature(envs, decl, package_loadfile, k)
 	end
 	for name, v in pairs(decl.system) do
 		local impl = v.implement[1]
@@ -209,7 +250,7 @@ local function import_all(w, system_class, ecs)
 			if impl:sub(1,1) == ":" then
 				system_class[name] = w:clibs(impl:sub(2))
 			else
-				w:_package_require(v.packname, impl)
+				package_require(w, packages, system_class, v.packname, impl)
 			end
 		end
 	end
@@ -217,15 +258,15 @@ local function import_all(w, system_class, ecs)
 		local impl = v.implement[1]
 		if impl then
 			log.debug("Import  component", name)
-			w:_package_require(v.packname, impl)
+			package_require(w, packages, system_class, v.packname, impl)
 		end
 	end
 end
 
-local function create_ecs(w, package, system_class)
+function create_ecs(w, packname, packages, system_class)
     local ecs = { world = w }
     function ecs.system(name)
-        local fullname = package .. "|" .. name
+        local fullname = packname .. "|" .. name
         local r = system_class[fullname]
         if r == nil then
 			if not w._initializing then
@@ -252,17 +293,18 @@ local function create_ecs(w, package, system_class)
     function ecs.require(fullname)
         local pkg, name = fullname:match "^([^|]*)|(.*)$"
         if not pkg then
-            pkg = package
+            pkg = packname
             name = fullname
         end
         local file = name:gsub('%.', '/')..".lua"
-        return w:_package_require(pkg, file)
+        return package_require(w, packages, system_class, pkg, file)
     end
     return ecs
 end
 
 local function init(w, config)
 	log.info "world initializing"
+	local packages = {}
 	local system_class = {}
 	w._initializing = true
 	w._components = {}
@@ -274,15 +316,7 @@ local function init(w, config)
 		system = {},
 		policy = {},
 	}
-	setmetatable(w._packages, {__index = function (self, package)
-		local v = {
-			_LOADED = {},
-			ecs = create_ecs(w, package, system_class)
-		}
-		self[package] = v
-		return v
-	end})
-	import_all(w, system_class, config.ecs)
+	import_all(w, config.ecs, packages, system_class)
 	slove_component(w)
 	slove_system(w, system_class)
 	create_context(w)
