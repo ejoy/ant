@@ -1,4 +1,3 @@
-# ground-geothermal
 ---
 file: mesh.prefab
 op: copyfile
@@ -6,14 +5,31 @@ path: geothermal.prefab
 ---
 file: geothermal.prefab
 op: replace
-path: /2
+path: "/2"
 value:
   data:
-    scene: {}
     material: materials/Material.001.material
     mesh: meshes/Plane_P1.meshbin
+    scene: {}
     visible_state: main_view|selectable
   policy:
     ant.scene|scene_object
     ant.render|render
-#    material: /pkg/mod.crack/assets/crack.material
+---
+file: geothermal.prefab
+op: add
+path: /-
+value:
+  data:
+    efk:
+      path: /pkg/vaststars.resources/effects/furnace_smoke.efk
+      speed: 1
+    scene:
+      s: {10, 10, 10}
+    visible_state: main_queue
+  mount: 1
+  policy:
+    ant.scene|scene_object
+    ant.efk|efk
+  tag:
+    furnace_smoke
