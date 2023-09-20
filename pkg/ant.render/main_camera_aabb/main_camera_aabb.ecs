@@ -1,7 +1,0 @@
-system "main_camera_aabb_system"
-    .implement "main_camera_aabb/main_camera_aabb.lua"
-
-policy "main_camera_aabb"
-    .component "main_camera_aabb"
-
-component "main_camera_aabb".type "lua"

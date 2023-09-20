@@ -13,7 +13,7 @@ local function init_bounding(bounding, bb)
 		math3d.unmark(bounding.aabb)
         bounding.aabb = math3d.marked_aabb(aabb[1], aabb[2])
 		math3d.unmark(bounding.scene_aabb)
-        bounding.scene_aabb = math3d.marked_aabb(bounding.aabb)
+        bounding.scene_aabb = math3d.marked_aabb(math3d.array_index(bounding.aabb, 1), math3d.array_index(bounding.aabb, 2))
     end
 end
 

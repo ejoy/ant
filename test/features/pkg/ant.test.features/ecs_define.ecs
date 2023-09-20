@@ -1,5 +1,6 @@
 import_feature "ant.polyline"
-import_feature "ant.render|pack_scene_aabb"
+import_feature "ant.shadow_bounding|camera_bounding_pack"
+import_feature "ant.shadow_bounding|scene_bounding_pack"
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"

@@ -104,11 +104,13 @@ end
 
 
 local function get_intersected_aabb()
-	local psae, mcae = w:first("pack_scene_aabb:in"), w:first("main_camera_aabb:in")
-	local pack_scene_aabb, main_camera_aabb = math3d.aabb(), math3d.aabb()
-	if psae and psae.pack_scene_aabb.scene_aabb then pack_scene_aabb = psae.pack_scene_aabb.scene_aabb end
-	if mcae and mcae.main_camera_aabb.scene_aabb then main_camera_aabb = mcae.main_camera_aabb.scene_aabb end
-	return math3d.aabb_intersection(main_camera_aabb, pack_scene_aabb)
+	local sbe = w:first "shadow_bounding:in"
+	if sbe then
+		local scene_aabb, camera_aabb = sbe.shadow_bounding.scene_aabb, sbe.shadow_bounding.camera_aabb
+		return math3d.aabb_intersection(scene_aabb, camera_aabb)
+	else
+		return math3d.aabb()
+	end
 end
 
 local function commit_csm_matrices_attribs()

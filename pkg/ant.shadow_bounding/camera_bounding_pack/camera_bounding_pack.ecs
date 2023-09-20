@@ -1,0 +1,2 @@
+system "camera_bounding_pack_system"
+    .implement "camera_bounding_pack/camera_bounding_pack.lua"

@@ -8,12 +8,6 @@ pipeline "render"
     .pipeline "render_process"
     .pipeline "postprocess"
 
---TODO: need remove
-feature "pack_scene_aabb"
-    .import "pack_scene_aabb/pack_scene_aabb.ecs"
-
-feature "main_camera_aabb"
-    .import "main_camera_aabb/main_camera_aabb.ecs"
 
 feature "lightmap"
     .import "lightmap/lightmap.ecs"
@@ -37,5 +31,3 @@ import "shadow/shadow.ecs"
 import "uv_motion/uv_motion.ecs"
 import "velocity/velocity.ecs"
 import "ibl/ibl.ecs"
-import "pack_scene_aabb/pack_scene_aabb.ecs"
-import "main_camera_aabb/main_camera_aabb.ecs"
