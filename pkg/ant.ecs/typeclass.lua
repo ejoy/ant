@@ -152,12 +152,7 @@ end
 
 local function slove_system(w, system_class)
 	local mark = {}
-	local res = setmetatable({}, {__index = function(t,k)
-		local obj = {}
-		t[k] = obj
-		mark[k] = true
-		return obj
-	end})
+	local systems = w._systems
 	for fullname, s in sortpairs(system_class) do
 		for step_name, func in pairs(s) do
 			local symbol = fullname .. "." .. step_name
@@ -165,14 +160,22 @@ local function slove_system(w, system_class)
 			if info then
 				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbol, info.source:sub(2), info.linedefined))
 			else
-				table.insert(res[step_name], {
-					func = func,
-					symbol = symbol,
-				})
+				local step = systems[step_name]
+				if step then
+					step[#step+1] = {
+						func = func,
+						symbol = symbol,
+					}
+				else
+					mark[step_name] = true
+					systems[step_name] = {{
+						func = func,
+						symbol = symbol,
+					}}
+				end
 			end
 		end
 	end
-	setmetatable(res, nil)
 
 	for _, pl in pairs(w._decl.pipeline) do
 		if pl.value then
@@ -191,7 +194,6 @@ local function slove_system(w, system_class)
 	for name in pairs(mark) do
 		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1].symbol))
 	end
-	w._systems = res
 end
 
 local function import_all(w, system_class, ecs)
@@ -264,6 +266,7 @@ local function init(w, config)
 	local system_class = {}
 	w._initializing = true
 	w._components = {}
+	w._systems = {}
 	w._decl = {
 		pipeline = {},
 		component = {},
