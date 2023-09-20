@@ -45,12 +45,11 @@ local function cstruct(...)
 	return ecs_util.userdata(data, ref)
 end
 
-local function create_context(w)
+local function create_context(w, component_decl)
 	local bgfx       = require "bgfx"
 	local math3d     = require "math3d"
 	local components = require "ecs.components"
 	local ecs = w.w
-	local component_decl = w._component_decl
 	local function register_component(i, decl)
 		local id, size = ecs:register(decl)
 		assert(id == i)
@@ -77,7 +76,6 @@ local function create_context(w)
 	for _, decl in pairs(component_decl) do
 		ecs:register(decl)
 	end
-	w._component_decl = nil
 	local ecs_context = ecs:context()
 	w._ecs_world = cstruct(
 		ecs_context,
@@ -89,10 +87,9 @@ local function create_context(w)
 end
 
 
-local function slove_component(w)
-    w._component_decl = {}
+local function slove_component(w, component_decl)
     local function register_component(decl)
-        w._component_decl[decl.name] = decl
+        component_decl[decl.name] = decl
     end
     local component_class = w._components
     for name, info in pairs(w._decl.component) do
@@ -306,6 +303,7 @@ local function init(w, config)
 	log.info "world initializing"
 	local packages = {}
 	local system_class = {}
+    local component_decl = {}
 	w._initializing = true
 	w._components = {}
 	w._systems = {}
@@ -317,9 +315,9 @@ local function init(w, config)
 		policy = {},
 	}
 	import_all(w, config.ecs, packages, system_class)
-	slove_component(w)
+	slove_component(w, component_decl)
 	slove_system(w, system_class)
-	create_context(w)
+	create_context(w, component_decl)
 	w._initializing = nil
 	log.info "world initialized"
 end
