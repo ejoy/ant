@@ -152,7 +152,7 @@ function gizmo:set_rotation(inrot, gizmoonly)
 			local template = hierarchy:get_template(self.target_eid)
 			local tv = math3d.tovalue(inrot)
 			local r = {tv[1], tv[2], tv[3], tv[4]}
-			template.template.data.scene.r = 
+			template.template.data.scene.r = r
 			prefab_mgr:on_patch_tranform(self.target_eid, "r", r)
 		end
 	else
