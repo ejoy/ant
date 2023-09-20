@@ -1,3 +1,6 @@
+local fastio = require "fastio"
+local vfs = require "vfs"
+
 local attribute = {
 	system = {
 		"implement",
@@ -22,40 +25,35 @@ local function readonly()
 	error "_G is readonly"
 end
 
-local function fullname(packname, name)
-	return packname .. "|" .. name
-end
-
-local function splitname(fullname)
-    return fullname:match "^([^|]*)|(.*)$"
-end
-
 local import_feature
 
-local function genenv(self, packname)
-	local env = self.envs[packname]
+local function genenv(envs, decl, packname)
+	local env = envs[packname]
 	if env then
 		return env
 	end
 	env = {}
-	self.envs[packname] = env
+	envs[packname] = env
 	local LOADED = {}
 	function env.import(filename)
 		if LOADED[filename] then
 			return false
 		end
 		LOADED[filename] = true
-		local f = self.loader(packname, filename)
+		local path = "/pkg/"..packname.."/"..filename
+		log.debug(("Import decl %q"):format(path))
+		local realpath = assert(vfs.realpath(path), path)
+		local f = fastio.loadfile(realpath, path)
 		assert(debug.getupvalue(f, 1) == "_ENV")
 		debug.setupvalue(f, 1, env)
 		f()
 		return true
 	end
 	function env.import_feature(fullname)
-		import_feature(self, fullname)
+		import_feature(envs, decl, fullname)
 	end
 	function env.pipeline(name)
-		if self.decl.pipeline[name] then
+		if decl.pipeline[name] then
 			error("Redfined pipeline:%s", name)
 		end
 		local value = {}
@@ -70,7 +68,7 @@ local function genenv(self, packname)
 			value[#value+1] = {"stage", what}
 			return setter
 		end
-		self.decl.pipeline[name] = {
+		decl.pipeline[name] = {
 			value = value,
 		}
 		return setter
@@ -93,12 +91,12 @@ local function genenv(self, packname)
 			if attr == "component" then
 				fname = name
 			else
-				fname = fullname(packname, name)
+				fname = packname .. "|" .. name
 			end
-			if self.decl[attr][fname] then
+			if decl[attr][fname] then
 				error(string.format("Redfined %s:%s", attr, fname))
 			end
-			self.decl[attr][fname] = contents
+			decl[attr][fname] = contents
 			return setter
 		end
 	end
@@ -106,15 +104,15 @@ local function genenv(self, packname)
 	return env
 end
 
-function import_feature(self, fullname)
-	local pname, _ = splitname(fullname)
+function import_feature(envs, decl, fullname)
+	local pname = fullname:match "^([^|]*)|.*$"
 	if not pname then
-		genenv(self, fullname).import "package.ecs"
+		genenv(envs, decl, fullname).import "package.ecs"
 		return
 	end
-	local penv = genenv(self, pname)
+	local penv = genenv(envs, decl, pname)
 	penv.import "package.ecs"
-	local feature = self.decl.feature[fullname]
+	local feature = decl.feature[fullname]
 	if not feature then
 		error(("invalid feature name: `%s`."):format(fullname))
 	end

@@ -1,5 +1,4 @@
 local interface = require "interface"
-local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 local system = require "system"
 
@@ -126,17 +125,9 @@ local function slove_component(w)
 end
 
 local function import_all(w, system_class, ecs)
-	local load_ecs = {
-		envs = {},
-		decl = w._decl,
-		loader = function (packname, filename)
-			local file = "/pkg/"..packname.."/"..filename
-			log.debug(("Import decl %q"):format(file))
-			return assert(pm.loadenv(packname).loadfile(file))
-		end,
-	}
+	local envs = {}
 	for _, k in ipairs(ecs.feature) do
-		interface.import_feature(load_ecs, k)
+		interface.import_feature(envs, w._decl, k)
 	end
 	for name, v in pairs(w._decl.system) do
 		local impl = v.implement[1]
