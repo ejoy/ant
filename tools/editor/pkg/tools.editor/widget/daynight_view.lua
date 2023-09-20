@@ -29,8 +29,8 @@ local function save_prefab(eid, path)
             dn[tn] = t
         end
     end
-    local template = hierarchy:get_template(eid)
-    local t = template.template
+    local info = hierarchy:get_node_info(eid)
+    local t = info.template
     t.data.daynight = dn
     dn.path = idn.get_current_path()
     local lpp = path:parent_path():localpath()
@@ -184,11 +184,11 @@ function DaynightView:get_subproperty(e, pn, p)
     return subproperty
 end
 
-function DaynightView:get_daynight_cycles(template, e)
+function DaynightView:get_daynight_cycles(info, e)
     local property_array = {
         [1] = self.save,
     }
-    local dn = template.template.data.daynight
+    local dn = info.template.data.daynight
     dn.path = nil
     for pn, p in pairs(dn) do
         property_array[#property_array+1] = self[pn]
@@ -208,8 +208,8 @@ function DaynightView:set_eid(eid)
     end
     local e <close> = world:entity(eid, "daynight?update")
     if e.daynight then
-        local template = hierarchy:get_template(eid)
-        local property_array = DaynightView:get_daynight_cycles(template, e)
+        local info = hierarchy:get_node_info(eid)
+        local property_array = DaynightView:get_daynight_cycles(info, e)
         self.daynight:set_subproperty(property_array)
         self.prefab = idn.get_current_path()
     else

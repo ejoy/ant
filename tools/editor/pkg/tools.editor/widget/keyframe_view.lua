@@ -1422,7 +1422,7 @@ end
 
 function m.on_eid_delete(eid)
     local e <close> = world:entity(eid, "material?in")
-    local tpl = hierarchy:get_template(eid).template
+    local tpl = hierarchy:get_node_info(eid).template
     local name = tpl.tag and tpl.tag[1]
     if name then
         target_map[name] = nil

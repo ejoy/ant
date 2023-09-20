@@ -313,7 +313,7 @@ local function update_visible(node, visible)
     local ne <close> = world:entity(node.eid, "visible_state?in")
     if ne.visible_state then
         set_visible(ne, visible)
-        local template = hierarchy:get_template(node.eid)
+        local info = hierarchy:get_node_info(node.eid)
         local visible_state = ""
         local shadow = false
         for key, value in pairs(ne.visible_state) do
@@ -330,7 +330,7 @@ local function update_visible(node, visible)
         if shadow then
             visible_state = combine_state(visible_state, "cast_shadow")
         end
-        template.template.data.visible_state = visible_state
+        info.template.data.visible_state = visible_state
     elseif rv and rv ~= visible then
         hierarchy:set_visible(node, rv)
     end

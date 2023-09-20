@@ -50,7 +50,7 @@ local function load_material_file(mf)
 end
 
 local function material_template(eid)
-    local prefab = hierarchy:get_template(eid)
+    local prefab = hierarchy:get_node_info(eid)
     return load_material_file(prefab.template.data.material)
 end
 
@@ -105,12 +105,12 @@ local function build_fx_ui(mv)
             }),
             uiproperty.Bool({label = "ShadowCast"}, {
                 getter = function()
-                    local prefab = hierarchy:get_template(mv.eid)
+                    local prefab = hierarchy:get_node_info(mv.eid)
                     local data = prefab.template.data
                     return data.visible_state:match "cast_shadow" ~= nil
                 end,
                 setter = function(value)
-                    local prefab = hierarchy:get_template(mv.eid)
+                    local prefab = hierarchy:get_node_info(mv.eid)
                     local data = prefab.template.data
                 local fstate = data.visible_state
                     if value then
@@ -899,7 +899,7 @@ local function save_material(eid, path)
 end
 
 local function reload(e, mpath)
-    local prefab = hierarchy:get_template(e)
+    local prefab = hierarchy:get_node_info(e)
     prefab.template.data.material = mpath:string()
     prefab_mgr:save()
     prefab_mgr:reload()
@@ -947,7 +947,7 @@ local function to_virtualpath(localpath)
 end
 
 local function refine_material_data(eid, newmaterial_path)
-    local prefab = hierarchy:get_template(eid)
+    local prefab = hierarchy:get_node_info(eid)
     local oldmaterial_path = fs.path(prefab.template.data.material)
     if oldmaterial_path ~= newmaterial_path then
         local basepath = oldmaterial_path:parent_path()
@@ -970,11 +970,11 @@ function MaterialView:_init()
     self.inited = true
     self.mat_file = uiproperty.ResourcePath({label="MaterialFile", extension=".material"}, {
         getter = function()
-            local prefab = hierarchy:get_template(self.eid)
+            local prefab = hierarchy:get_node_info(self.eid)
             return prefab.template.data.material
         end,
         setter = function (value)
-            local prefab = hierarchy:get_template(self.eid)
+            local prefab = hierarchy:get_node_info(self.eid)
             prefab.template.data.material = value
             self.need_reload = true
         end,
@@ -1050,7 +1050,7 @@ function MaterialView:set_eid(eid)
         end
     end
 
-    local readonly_res = is_readonly_resource(hierarchy:get_template(self.eid).template.data.material)
+    local readonly_res = is_readonly_resource(hierarchy:get_node_info(self.eid).template.data.material)
     self.save.disable = readonly_res
     self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil

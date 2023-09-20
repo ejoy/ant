@@ -1,7 +1,7 @@
 local utils = require "common.utils"
 
 local hierarchy = {
-    root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
+    root = {eid = -1, parent = -1, info = {}, children = {}, locked = {false}, visible = {true}},
     all_node = {},
     select_adapter = {},
     select_adaptee = {}
@@ -22,7 +22,7 @@ local function find(t, eid)
 end
 function hierarchy:add(ineid, tp, inpeid)
     if self.all_node[ineid] then return end
-    local node = { eid = ineid, parent = inpeid, template = tp, children = {}, locked = {false}, visible = {true} }
+    local node = { eid = ineid, parent = inpeid, info = tp, children = {}, locked = {false}, visible = {true} }
     if inpeid then
         local parent = self.all_node[inpeid]
         if parent then
@@ -60,7 +60,7 @@ function hierarchy:del(eid)
 end
 
 function hierarchy:clear()
-    self.root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}}
+    self.root = {eid = -1, parent = -1, info = {}, children = {}, locked = {false}, visible = {true}}
     self.all_node = {}
     self.select_adapter = {}
     self.select_adaptee = {}
@@ -95,10 +95,10 @@ function hierarchy:get_prefab_template()
     local new_tpl = {}
     local function construct_entity(eid, tpl)
         local node = self.all_node[eid]
-        if node.template.temporary then
+        if node.info.temporary then
             return
         end
-        local template = node.template.template
+        local template = node.info.template
         if template and template.data then
             if template.data.tag then
                 template.data.tag = nil
@@ -111,13 +111,13 @@ function hierarchy:get_prefab_template()
         table.insert(tpl, template)
 
         local pidx = #tpl > 0 and #tpl or nil
-        local prefab_filename = node.template.filename
+        local prefab_filename = node.info.filename
         if prefab_filename then
-            table.insert(tpl, {mount = pidx, name = node.template.name, editor = node.template.editor, prefab = prefab_filename})
+            table.insert(tpl, {mount = pidx, name = node.info.name, editor = node.info.editor, prefab = prefab_filename})
         end
         for _, child in ipairs(node.children) do
             local nd = self.all_node[child.eid]
-            local tt = nd.template.template
+            local tt = nd.info.template
             if nd.parent ~= self.root.eid and tt then
                 tt.mount = pidx
             end
@@ -164,12 +164,12 @@ function hierarchy:set_visible(nd, b, recursion)
     end
 end
 
-function hierarchy:get_template(e)
-    return self.all_node[e] and self.all_node[e].template or nil
+function hierarchy:get_node_info(e)
+    return self.all_node[e] and self.all_node[e].info or nil
 end
 
 function hierarchy:clear_adapter(e)
-    local ac = self.all_node[e].template.children
+    local ac = self.all_node[e].info.children
     if ac then
         for _, child in ipairs(ac) do
             self.select_adapter[child] = nil
@@ -210,7 +210,7 @@ function hierarchy:update_slot_list(world)
     for _, value in pairs(self.all_node) do
         local e <close> = world:entity(value.eid, "slot?in")
         if e.slot then
-            local tagname = value.template.template.tag[1]--value.template.template.data.tag--
+            local tagname = value.info.template.tag[1]--value.template.template.data.tag--
             local slot_name = tagname--#tagname > 0 and tagname[1] or ""
             slot_list[slot_name] = value.eid
         end

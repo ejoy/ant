@@ -66,8 +66,8 @@ function BaseView:set_eid(eid)
         return
     end
     self.eid = eid
-    local template = hierarchy:get_template(self.eid)
-    self.is_prefab = template and template.filename
+    local info = hierarchy:get_node_info(self.eid)
+    self.is_prefab = info and info.filename
     local property = {}
     -- property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
@@ -91,7 +91,7 @@ function BaseView:set_eid(eid)
         self.base.aabbmax:set_visible(false)
         self.base.create_aabb:set_visible(false)
         self.base.delete_aabb:set_visible(false)
-        if template.template and template.template.data.bounding then
+        if info.template and info.template.data.bounding then
             self.base.aabbmin:set_visible(true)
             self.base.aabbmax:set_visible(true)
             self.base.delete_aabb:set_visible(true)
@@ -104,25 +104,25 @@ function BaseView:set_eid(eid)
 end
 
 function BaseView:on_get_prefab()
-    local template = hierarchy:get_template(self.eid)
-    if template and template.filename then
-        return template.filename
+    local info = hierarchy:get_node_info(self.eid)
+    if info and info.filename then
+        return info.filename
     end
 end
 
 function BaseView:on_set_preview(value)
-    local template = hierarchy:get_template(self.eid)
-    template.editor = value
+    local info = hierarchy:get_node_info(self.eid)
+    info.editor = value
 end
 
 function BaseView:on_get_preview()
-    local template = hierarchy:get_template(self.eid)
-    return template.editor
+    local info = hierarchy:get_node_info(self.eid)
+    return info.editor
 end
 
 -- function BaseView:on_set_name(value)
---     local template = hierarchy:get_template(self.eid)
---     template.template.data.name = value
+--     local info = hierarchy:get_node_info(self.eid)
+--     info.template.data.name = value
 --     local e <close> = world:entity(self.eid, "name:out")
 --     e.name = value
 --     world:pub {"EntityEvent", "name", self.eid, value}
@@ -137,22 +137,22 @@ end
 -- end
 
 function BaseView:on_set_tag(value)
-    local template = hierarchy:get_template(self.eid)
-    if not template.template.tag then
-        template.template.tag = {}
+    local info = hierarchy:get_node_info(self.eid)
+    if not info.template.tag then
+        info.template.tag = {}
     end
-    local tags = template.template.tag
+    local tags = info.template.tag
     tags[1] = value
     -- tags[#tags + 1] = value
     -- value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
-    -- template.template.data.tag = tags
+    -- info.template.data.tag = tags
     world:pub {"EntityEvent", "tag", self.eid, tags}
 end
 
 function BaseView:on_get_tag()
-    local template = hierarchy:get_template(self.eid)
-    if not template or not template.template then return "" end
-    local tags = template.template.tag
+    local info = hierarchy:get_node_info(self.eid)
+    if not info or not info.template then return "" end
+    local tags = info.template.tag
     if tags and #tags > 0 then
         return tags[1]
     end
@@ -164,11 +164,11 @@ function BaseView:on_get_tag()
 end
 
 function BaseView:on_set_position(value)
-    local template = hierarchy:get_template(self.eid)
+    local info = hierarchy:get_node_info(self.eid)
     local t = {value[1], value[2], value[3]}
-    if template.template then
-        world:pub {"EntityEvent", "move", self.eid, template.template.data.scene.t or {0,0,0}, t}
-        template.template.data.scene.t = t
+    if info.template then
+        world:pub {"EntityEvent", "move", self.eid, info.template.data.scene.t or {0,0,0}, t}
+        info.template.data.scene.t = t
     else
         local e <close> = world:entity(self.eid)
         world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(e)), t}
@@ -176,9 +176,9 @@ function BaseView:on_set_position(value)
 end
 
 function BaseView:on_get_position()
-    local template = hierarchy:get_template(self.eid)
-    if template.template then
-        return template.template.data.scene.t or {0,0,0}
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        return info.template.data.scene.t or {0,0,0}
     else
         local e <close> = world:entity(self.eid)
         return math3d.totable(iom.get_position(e))
@@ -186,18 +186,18 @@ function BaseView:on_get_position()
 end
 
 function BaseView:on_set_rotate(value)
-    local template = hierarchy:get_template(self.eid)
+    local info = hierarchy:get_node_info(self.eid)
     world:pub {"EntityEvent", "rotate", self.eid, { math.rad(value[1]), math.rad(value[2]), math.rad(value[3]) }, {value[1], value[2], value[3]}}
-    if template.template then
-        template.template.data.scene.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
+    if info.template then
+        info.template.data.scene.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
     end
 end
 
 function BaseView:on_get_rotate()
-    local template = hierarchy:get_template(self.eid)
+    local info = hierarchy:get_node_info(self.eid)
     local r
-    if template.template then
-        r = template.template.data.scene.r or {0,0,0,1}
+    if info.template then
+        r = info.template.data.scene.r or {0,0,0,1}
     else
         local e <close> = world:entity(self.eid)
         r = iom.get_rotation(e)
@@ -208,11 +208,11 @@ function BaseView:on_get_rotate()
 end
 
 function BaseView:on_set_scale(value)
-    local template = hierarchy:get_template(self.eid)
+    local info = hierarchy:get_node_info(self.eid)
     local s = {value[1], value[2], value[3]}
-    if template.template then
-        world:pub {"EntityEvent", "scale", self.eid, template.template.data.scene.s or {1,1,1}, s}
-        template.template.data.scene.s = s
+    if info.template then
+        world:pub {"EntityEvent", "scale", self.eid, info.template.data.scene.s or {1,1,1}, s}
+        info.template.data.scene.s = s
     else
         local e <close> = world:entity(self.eid)
         world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(e)), s}
@@ -220,9 +220,9 @@ function BaseView:on_set_scale(value)
 end
 
 function BaseView:on_get_scale()
-    local template = hierarchy:get_template(self.eid)
-    if template.template then
-        local s = template.template.data.scene.s
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        local s = info.template.data.scene.s
         if s then
             return type(s) == "table" and s or {s, s, s}
         else
@@ -235,15 +235,15 @@ function BaseView:on_get_scale()
 end
 
 function BaseView:on_set_aabbmin(value)
-    local template = hierarchy:get_template(self.eid)
-    if template.template then
-        if template.template.data.bounding then
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        if info.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
-            template.template.data.bounding.aabb[1] = tv
+            info.template.data.bounding.aabb[1] = tv
             local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
             local bounding = e.bounding
             if bounding then
-                local aabbmax = template.template.data.bounding.aabb[2]
+                local aabbmax = info.template.data.bounding.aabb[2]
                 if bounding.aabb and bounding.aabb ~= mc.NULL then
                     local rmax = math3d.tovalue(math3d.array_index(bounding.aabb, 2)) or {}
                     aabbmax = {rmax[1], rmax[2], rmax[3]}
@@ -259,9 +259,9 @@ function BaseView:on_set_aabbmin(value)
 end
 
 function BaseView:on_get_aabbmin()
-    local template = hierarchy:get_template(self.eid)
-    if template.template then
-        local bounding = template.template.data.bounding
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        local bounding = info.template.data.bounding
         if bounding then
             return bounding.aabb[1]
         end
@@ -270,15 +270,15 @@ function BaseView:on_get_aabbmin()
 end
 
 function BaseView:on_set_aabbmax(value)
-    local template = hierarchy:get_template(self.eid)
-    if template.template then
-        if template.template.data.bounding then
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        if info.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
-            template.template.data.bounding.aabb[2] = tv
+            info.template.data.bounding.aabb[2] = tv
             local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
             local bounding = e.bounding
             if bounding then
-                local aabbmin = template.template.data.bounding.aabb[1]
+                local aabbmin = info.template.data.bounding.aabb[1]
                 if bounding.aabb and bounding.aabb ~= mc.NULL then
                     local rmin = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
                     aabbmin = {rmin[1], rmin[2], rmin[3]}
@@ -294,9 +294,9 @@ function BaseView:on_set_aabbmax(value)
 end
 
 function BaseView:on_get_aabbmax()
-    local template = hierarchy:get_template(self.eid)
-    if template.template then
-        local bounding = template.template.data.bounding
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        local bounding = info.template.data.bounding
         if bounding then
             return bounding.aabb[2]
         end
@@ -316,8 +316,8 @@ function BaseView:on_set_render_layer(value)
 end
 
 function BaseView:create_aabb()
-    local tpl = hierarchy:get_template(self.eid)
-    if tpl.template then
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
         local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
         e.scene_needchange = true
         local min = {-1, -1, -1}
@@ -327,7 +327,7 @@ function BaseView:create_aabb()
             min = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
             max = math3d.tovalue(math3d.array_index(bounding.aabb, 2))
         end
-        tpl.template.data.bounding = {aabb = {{min[1], min[2], min[3]}, {max[1], max[2], max[3]}}}
+        info.template.data.bounding = {aabb = {{min[1], min[2], min[3]}, {max[1], max[2], max[3]}}}
         bounding.aabb = math3d.mark(math3d.aabb(math3d.vector(min), math3d.vector(max)))
         self.base.create_aabb:set_visible(false)
         self.base.delete_aabb:set_visible(true)
@@ -341,9 +341,9 @@ function BaseView:create_aabb()
 end
 
 function BaseView:delete_aabb()
-    local tpl = hierarchy:get_template(self.eid)
-    if tpl.template then
-        tpl.template.data.bounding = nil
+    local info = hierarchy:get_node_info(self.eid)
+    if info.template then
+        info.template.data.bounding = nil
         self.base.create_aabb:set_visible(true)
         self.base.delete_aabb:set_visible(false)
         self.base.aabbmin:set_visible(false)

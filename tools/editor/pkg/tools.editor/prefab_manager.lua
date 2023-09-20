@@ -176,7 +176,7 @@ function m:show_terrain(enable)
     end
 end
 function m:clone(eid)
-    local srctpl = hierarchy:get_template(eid)
+    local srctpl = hierarchy:get_node_info(eid)
     if srctpl.filename then
         return
     end
@@ -551,7 +551,6 @@ function m:open(filename, prefab_name, patch_tpl)
         for _, patch in ipairs(self.patch_template) do
             if patch.op == "add" and patch.path == "/-" then
                 node_idx = node_idx + 1
-                -- patch.index = node_idx
             end
         end
         self.patch_start_index = #self.prefab_template - node_idx + 1
@@ -632,10 +631,6 @@ function m:reset_prefab(noscene)
     if self.prefab_filename then
         world:remove_template(self.prefab_filename)
     end
-    -- for _, value in ipairs(assetmgr.textures) do
-    --     -- value:unload()
-    --     print(value)
-    -- end
     gizmo:set_target()
     self:create_ground()
     self.prefab_template = {}
@@ -672,7 +667,6 @@ local global_data       = require "common.global_data"
 local access            = global_data.repo_access
 
 function m:add_effect(filename)
-
     if not self.root then
         self:reset_prefab()
     end
@@ -795,9 +789,9 @@ function m:save(path)
                     local tpl = utils.deep_copy(patch.value)
                     local parent = tpl.data and tpl.data.scene.parent
                     if parent then
-                        local parent_tpl = hierarchy:get_template(parent)
-                        tpl.data.scene.parent = nil
+                        local parent_tpl = hierarchy:get_node_info(parent)
                         tpl.mount = parent_tpl.template.index
+                        tpl.data.scene.parent = nil
                     end
                     if tpl.index then
                         tpl.index = nil
@@ -858,7 +852,7 @@ function m:set_parent(target, parent)
     local te <close> = world:entity(target, "scene?in")
     if te.scene then
         local function new_entity(te, pe, scene)
-            local template = hierarchy:get_template(te).template
+            local template = hierarchy:get_node_info(te).template
             local tpl = utils.deep_copy(template)
             if scene then
                 tpl.data.scene = scene
@@ -874,7 +868,7 @@ function m:set_parent(target, parent)
             local npe = new_entity(te, pe, scene)
             local tn = hierarchy:get_node(te)
             for _, ce in ipairs(tn.children) do
-                local tpl = hierarchy:get_template(ce.eid).template
+                local tpl = hierarchy:get_node_info(ce.eid).template
                 create_tree(ce.eid, npe, {parent = npe, s = tpl.data.scene.s, r = tpl.data.scene.r, t = tpl.data.scene.t })
             end
             return npe
@@ -956,9 +950,9 @@ function m:get_eid_by_name(name)
     end
 end
 function m:get_world_aabb(eid)
-    local tpl = hierarchy:get_template(eid)
+    local info = hierarchy:get_node_info(eid)
     local children
-    if tpl.filename then
+    if info.filename then
         children = hierarchy:get_select_adaptee(eid)
     else
         local node = hierarchy:get_node(eid)
@@ -985,7 +979,7 @@ function m:get_world_aabb(eid)
         end
     end
     -- TODO: if eid is scene root or meshskin, merge skinning node
-    if (tpl.template.tag and tpl.template.tag[1] == "Scene") or e.meshskin then
+    if (info.template.tag and info.template.tag[1] == "Scene") or e.meshskin then
         for key, _ in pairs(hierarchy.all_node) do
             local ea <close> = world:entity(key, "bounding?in skinning?in")
             local bounding = ea.bounding
@@ -1028,9 +1022,9 @@ function m:pacth_remove(eid)
     if not self.glb_filename then
         return true
     end
-    local tpl = hierarchy:get_template(eid)
-    local is_prefab = tpl.filename
-    local to_remove = tpl.template.index
+    local info = hierarchy:get_node_info(eid)
+    local is_prefab = info.filename
+    local to_remove = info.template.index
     if to_remove < self.patch_start_index then
         return false
     end
@@ -1131,25 +1125,25 @@ function m:pacth_modify(pidx, p, v)
 end
 
 function m:do_patch(eid, path, v)
-    local tpl = hierarchy:get_template(eid)
-    self:pacth_modify(tpl.template.index, path, v)
+    local info = hierarchy:get_node_info(eid)
+    self:pacth_modify(info.template.index, path, v)
 end
 
 function m:on_patch_tag(eid, v)
-    -- local tpl = hierarchy:get_template(eid)
-    -- self:pacth_modify(tpl.template.index, "/data/name", v)
+    -- local info = hierarchy:get_node_info(eid)
+    -- self:pacth_modify(info.template.index, "/data/name", v)
     self:do_patch(eid, "/tag", v)
 end
 
 function m:on_patch_tranform(eid, n, v)
-    -- local tpl = hierarchy:get_template(eid)
-    -- self:pacth_modify(tpl.template.index, "/data/scene/"..n, v)
+    -- local info = hierarchy:get_node_info(eid)
+    -- self:pacth_modify(info.template.index, "/data/scene/"..n, v)
     self:do_patch(eid, "/data/scene/"..n, v)
 end
 
 function m:on_patch_animation(eid, name, path)
-    -- local tpl = hierarchy:get_template(eid)
-    -- self:pacth_modify(tpl.template.index, "/data/animation/"..name, path)
+    -- local info = hierarchy:get_node_info(eid)
+    -- self:pacth_modify(info.template.index, "/data/animation/"..name, path)
     self:do_patch(eid, "/data/animation/"..name, path)
 end
 return m

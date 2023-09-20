@@ -10,8 +10,8 @@ local prefilter_size_str = {"256","512","1024"}
 local iibl = ecs.require "ant.render|ibl.ibl"
 
 local function template_data(eid, comp)
-    local template = hierarchy:get_template(eid)
-    return template.template.data[comp]
+    local info = hierarchy:get_node_info(eid)
+    return info.template.data[comp]
 end
 
 local function iblT(eid)

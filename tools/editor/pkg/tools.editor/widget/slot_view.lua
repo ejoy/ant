@@ -22,13 +22,13 @@ function SlotView:_init()
     self.slot = uiproperty.Group({label="Slot", flags=imgui.flags.TreeNode{"DefaultOpen"}}, {
             uiproperty.Combo({label="FollowJoint", options={}}, {
                 getter = function()
-                    local tp = hierarchy:get_template(self.eid)
-                    return tp.template.data.slot.joint_name or "(NONE)"
+                    local info = hierarchy:get_node_info(self.eid)
+                    return info.template.data.slot.joint_name or "(NONE)"
                 end,
                 setter = function(name)
-                    local tp = hierarchy:get_template(self.eid)
-                    if tp.template.data.slot.joint_name ~= name then
-                        tp.template.data.slot.joint_name = name
+                    local info = hierarchy:get_node_info(self.eid)
+                    if info.template.data.slot.joint_name ~= name then
+                        info.template.data.slot.joint_name = name
                         local e <close> = world:entity(self.eid, "slot:in")
                         e.slot.joint_name = name
                         e.slot.joint_index = nil
@@ -39,8 +39,8 @@ function SlotView:_init()
             }),
             uiproperty.Combo({label="FollowFlag", options={}}, {
                 getter = function()
-                    local tp = hierarchy:get_template(self.eid)
-                    return follow_flag[tp.template.data.slot.follow_flag or 1]
+                    local info = hierarchy:get_node_info(self.eid)
+                    return follow_flag[info.template.data.slot.follow_flag or 1]
                 end,
                 setter = function(flag_name)
                     local flag = 1
@@ -51,8 +51,8 @@ function SlotView:_init()
                     elseif flag_name == follow_flag[3] then
                         flag = 3
                     end
-                    local tp = hierarchy:get_template(self.eid)
-                    tp.template.data.slot.follow_flag = flag
+                    local info = hierarchy:get_node_info(self.eid)
+                    info.template.data.slot.follow_flag = flag
                     local e <close> = world:entity(self.eid, "slot:in")
                     e.slot.follow_flag = flag
                 end,

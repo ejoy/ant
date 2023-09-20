@@ -30,7 +30,7 @@ local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
-        local tpl = hierarchy:get_template(eid)
+        local tpl = hierarchy:get_node_info(eid)
         if not tpl.filename then
             if imgui.widget.MenuItem(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
                 world:pub { "HierarchyEvent", "clone", eid }
@@ -95,7 +95,7 @@ local function node_context_menu(eid)
 end
 
 local function get_icon_by_object_type(node)
-    local template = hierarchy:get_template(node.eid)
+    local template = hierarchy:get_node_info(node.eid)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
@@ -195,7 +195,7 @@ local function show_scene_node(node)
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
-        local name = node.template.template.tag and node.template.template.tag[1] or node.template.name
+        local name = node.info.template.tag and node.info.template.tag[1] or node.info.name
         hierarchy:update_display_name(node.eid, name or "")
     end
 

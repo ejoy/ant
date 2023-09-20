@@ -17,7 +17,7 @@ local irq           = ecs.require "ant.render|render_system.renderqueue"
 local CameraView = {}
 
 local function camera_template(eid)
-    local p = hierarchy:get_template(eid)
+    local p = hierarchy:get_node_info(eid)
     return p.template.data
 end
 
@@ -330,7 +330,7 @@ local function create_exposure_property(cv)
             end,
             setter = function (value)
                 local e <close> = world:entity(cv.eid, "exposure?in")
-                local template = hierarchy:get_template(cv.eid).template
+                local template = hierarchy:get_node_info(cv.eid).template
 
                 local p_idx = find_exposure_policy(template.policy)
                 assert((e.exposure and p_idx) or (e.exposure == nil and (not p_idx)))
@@ -371,12 +371,12 @@ local function create_serialize_ui(cv)
     end
     local save = uiproperty.Button({label="Save"},{
         click = function ()
-            local p = hierarchy:get_template(cv.eid)
+            local p = hierarchy:get_node_info(cv.eid)
             save_prefab(p.filename, p.template)
         end
     })
     function save:is_disable()
-        local p = hierarchy:get_template(cv.eid)
+        local p = hierarchy:get_node_info(cv.eid)
         if p.filename == nil then
             return true
         end
@@ -388,7 +388,7 @@ local function create_serialize_ui(cv)
         uiproperty.Button({label="Save As"},{
             click = function ()
                 local path = uiutils.get_saveas_path("Prefab", "prefab")
-                local p = hierarchy:get_template(cv.eid)
+                local p = hierarchy:get_node_info(cv.eid)
                 save_prefab(path, p.template)
                 p.filename = path
 
