@@ -60,6 +60,14 @@ local ientity 	= {}
 ientity.create_mesh = create_mesh
 
 local function simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer, queue)
+	local visible_state
+	if queue then
+		visible_state = queue
+	elseif hide then
+		visible_state = ""
+	else
+		visible_state = "main_view"
+	end
 	return {
 		policy = {
 			"ant.render|simplerender",
@@ -69,14 +77,8 @@ local function simple_render_entity_data(material, mesh, scene, uniforms, hide, 
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
 			render_layer= render_layer,
-			visible_state= "main_view",
+			visible_state= visible_state,
 			on_ready 	= function(e)
-				if hide or queue then
-					ivs.set_state(e, "main_view", false)
-				end
-				if queue then
-					ivs.set_state(e, queue, true)
-				end
 				for key, value in pairs(uniforms) do
 					imaterial.set_property(e, key, math3d.vector(value))
 					-- imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
@@ -104,9 +106,6 @@ local function grid_mesh_entity_data(materialpath, vb, ib, render_layer)
 			visible_state= "main_view",
 			render_layer= render_layer,
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
-			on_ready = function(e)
-				-- ivs.set_state(e, "auxgeom", true)
-			end
 		},
 	}
 end
@@ -245,11 +244,10 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 		data = {
 			scene 		= scene or {},
 			material 	= materialpath,
-			visible_state= "main_view",
+			visible_state= hide and "" or "main_view",
 			render_layer= render_layer,
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}), true),
 			on_ready = function (e)
-				ivs.set_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
 		},
@@ -749,7 +747,7 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
         },
         data = {
 			scene = scene or {},
-			visible_state = "",
+			visible_state = hide and "" or "main_view",
             simplemesh = {
                 vb = {
                     start = 0,
@@ -764,9 +762,6 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
             },
 			material = material,
 			render_layer = render_layer,
-			on_ready = function (e)
-				ivs.set_state(e, "main_view", not hide)
-			end
         }
     }
 end

@@ -90,9 +90,6 @@ local function create_gizmo_root(initpos, initrot)
 		},
 		data = {
             scene = {t = initpos or {0, 5, 0}, r = initrot or {math.rad(130), 0, 0, 1}},
-            -- on_ready = function (e)
-            --     ivs.set_state(e, "visible", false)  
-            -- end
 		},
         tag = {
             "gizmo root"

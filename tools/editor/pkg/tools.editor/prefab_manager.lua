@@ -605,7 +605,6 @@ function m:create_ground()
                 render_layer = "background",
                 visible_state= "main_view",
                 on_ready = function (e)
-                    -- ivs.set_state(e, "main_view", false)
                     imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
                 end
             },

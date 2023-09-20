@@ -120,8 +120,8 @@ function ani_sys:component_init()
 			ratio = 0.0,
 			previous_ratio = 0.0,
 			speed = 1.0,
-			play = false,
-			loop = false,
+			play = true,
+			loop = true,
 			manual_update = false
 		}
 		world:pub {"AnimationEvent", "set_time", e.eid, 0}
