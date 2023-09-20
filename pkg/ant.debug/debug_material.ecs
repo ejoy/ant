@@ -1,0 +1,4 @@
+import_feature "ant.asset"
+
+system "debug_material_system"
+    .implement "debug_material.lua"
