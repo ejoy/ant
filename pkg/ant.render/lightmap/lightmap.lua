@@ -56,7 +56,7 @@ function lm_sys:update_filter()
 
         local r = lr_e and lr_e.lightmap_cache or {}
         local matpath = e.material
-        local matres = imaterial.resource(e)
+        local matres = assetmgr.resource(e.material)
 
         local lm = e.lightmap
         local lmid = lm.id

@@ -26,11 +26,6 @@ function imaterial.system_attrib_update(...)
 	return RM.system_attrib_update(...)
 end
 
-function imaterial.resource(e)
-	w:extend(e, "material:in")
-	return assetmgr.resource(e.material)
-end
-
 function imaterial.set_state(e, state)
 	w:extend(e, "filter_material:in")
 	local fm = e.filter_material
