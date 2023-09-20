@@ -6,7 +6,6 @@ local bgfx = require "bgfx"
 local fastio = require "fastio"
 local policy = require "policy"
 local typeclass = require "typeclass"
-local system = require "system"
 local event = require "event"
 local vfs = require "vfs"
 local pm = require "packagemanager"
@@ -354,9 +353,35 @@ local function cpustat_update_then_print(w, funcs, symbols)
     end
 end
 
+local function solve_depend(w, what, funcs, symbols)
+	local pl = w._decl.pipeline[what]
+	if not pl or not pl.value then
+		return
+	end
+	local step = w._systems
+	for _, v in ipairs(pl.value) do
+		local type, name = v[1], v[2]
+		if type == "stage" then
+			if step[name] == false then
+				error(("pipeline has duplicate step `%s`"):format(name))
+			elseif step[name] ~= nil then
+				for _, s in ipairs(step[name]) do
+					funcs[#funcs+1] = s.func
+					symbols[#symbols+1] = s.symbol
+				end
+				--step[name] = false
+			end
+		elseif type == "pipeline" then
+			solve_depend(w, name, funcs, symbols)
+		end
+	end
+end
+
 function world:pipeline_func(what)
     local w = self
-    local funcs, symbols = system.lists(w, what)
+    local funcs = {}
+    local symbols = {}
+    solve_depend(w, what, funcs, symbols)
     if not funcs or #funcs == 0 then
         return function() end
     end

@@ -1,6 +1,22 @@
 local interface = require "interface"
 local serialization = require "bee.serialization"
-local system = require "system"
+
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
 
 local function toint(v)
 	local t = type(v)
@@ -124,12 +140,67 @@ local function slove_component(w)
     end
 end
 
+local function emptyfunc(f)
+	local info = debug.getinfo(f, "SL")
+	if info.what ~= "C" then
+		local lines = info.activelines
+		if next(lines, next(lines)) == nil then
+			return info
+		end
+	end
+end
+
+local function slove_system(w, system_class)
+	local mark = {}
+	local res = setmetatable({}, {__index = function(t,k)
+		local obj = {}
+		t[k] = obj
+		mark[k] = true
+		return obj
+	end})
+	for fullname, s in sortpairs(system_class) do
+		for step_name, func in pairs(s) do
+			local symbol = fullname .. "." .. step_name
+			local info = emptyfunc(func)
+			if info then
+				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbol, info.source:sub(2), info.linedefined))
+			else
+				table.insert(res[step_name], {
+					func = func,
+					symbol = symbol,
+				})
+			end
+		end
+	end
+	setmetatable(res, nil)
+
+	for _, pl in pairs(w._decl.pipeline) do
+		if pl.value then
+			for _, v in ipairs(pl.value) do
+				if v[1] == "stage" then
+					local name = v[2]
+					if mark[name] == nil then
+						log.warn(("`%s` is an empty stage"):format(name))
+					end
+					mark[name] = nil
+				end
+			end
+		end
+	end
+
+	for name in pairs(mark) do
+		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1].symbol))
+	end
+	w._systems = res
+end
+
 local function import_all(w, system_class, ecs)
+	local decl = w._decl
 	local envs = {}
 	for _, k in ipairs(ecs.feature) do
-		interface.import_feature(envs, w._decl, k)
+		interface.import_feature(envs, decl, k)
 	end
-	for name, v in pairs(w._decl.system) do
+	for name, v in pairs(decl.system) do
 		local impl = v.implement[1]
 		if impl then
 			log.debug("Import  system", name)
@@ -140,7 +211,7 @@ local function import_all(w, system_class, ecs)
 			end
 		end
 	end
-	for name, v in pairs(w._decl.component) do
+	for name, v in pairs(decl.component) do
 		local impl = v.implement[1]
 		if impl then
 			log.debug("Import  component", name)
@@ -210,8 +281,8 @@ local function init(w, config)
 	end})
 	import_all(w, system_class, config.ecs)
 	slove_component(w)
+	slove_system(w, system_class)
 	create_context(w)
-	system.solve(w, system_class)
 	w._initializing = nil
 	log.info "world initialized"
 end
