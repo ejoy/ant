@@ -98,7 +98,7 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
 - (void)layoutSubviews {
     uint32_t frameW = (uint32_t)(self.contentScaleFactor * self.frame.size.width);
     uint32_t frameH = (uint32_t)(self.contentScaleFactor * self.frame.size.height);
-    window_message_size(g_cb, frameW, frameH, 0);
+    window_message_size(g_cb, frameW, frameH);
 }
 - (void)start {
     if (nil == self.m_displayLink) {

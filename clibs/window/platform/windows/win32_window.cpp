@@ -18,6 +18,8 @@ static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 	*y = pt.y;
 }
 
+static bool minimized = false;
+
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	struct ant_window_callback *cb = NULL;
 	switch (message) {
@@ -126,19 +128,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		int x = LOWORD(lParam);
 		int y = HIWORD(lParam);
-		uint8_t type;
-		switch (wParam) {
-		case SIZE_MINIMIZED:
-			type = 1;
-			break;
-		case SIZE_MAXIMIZED:
-			type = 2;
-			break;
-		default:
-			type = 0;
-			break;
+		if (wParam == SIZE_MINIMIZED) {
+			minimized = true;
+			ant::window::input_message(cb, {ant::window::suspend::will_suspend});
+			ant::window::input_message(cb, {ant::window::suspend::did_suspend});
 		}
-		window_message_size(cb, x, y, type);
+		else if (minimized) {
+			minimized = false;
+			ant::window::input_message(cb, {ant::window::suspend::will_resume});
+			ant::window::input_message(cb, {ant::window::suspend::did_resume});
+		}
+		else {
+			window_message_size(cb, x, y);
+		}
 		break;
 	}
 	default:
