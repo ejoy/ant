@@ -98,14 +98,22 @@ function hierarchy:get_prefab_template()
         if node.info.temporary then
             return
         end
-        local template = node.info.template
-        if template and template.data then
-            if template.data.tag then
-                template.data.tag = nil
+        local template = utils.deep_copy(node.info.template)
+        if template then
+            if template.index then
+                template.index = nil
             end
-            local scene = template.data.scene
-            if scene and scene.parent then
-                scene.parent = nil
+            if template.filename then
+                template.filename = nil
+            end
+            if template.data then
+                if template.data.tag then
+                    template.data.tag = nil
+                end
+                local scene = template.data.scene
+                if scene and scene.parent then
+                    scene.parent = nil
+                end
             end
         end
         table.insert(tpl, template)
@@ -113,7 +121,7 @@ function hierarchy:get_prefab_template()
         local pidx = #tpl > 0 and #tpl or nil
         local prefab_filename = node.info.filename
         if prefab_filename then
-            table.insert(tpl, {mount = pidx, name = node.info.name, editor = node.info.editor, prefab = prefab_filename})
+            table.insert(tpl, {mount = pidx, prefab = prefab_filename})
         end
         for _, child in ipairs(node.children) do
             local nd = self.all_node[child.eid]

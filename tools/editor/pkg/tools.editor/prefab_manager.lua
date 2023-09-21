@@ -773,34 +773,72 @@ function m:get_hitch_content()
     return content
 end
 
+function m:get_origin_patch_list(template_list)
+    for _, patch in ipairs(self.origin_patch_template) do
+        if patch.file ~= self.prefab_name then
+            template_list[#template_list + 1] = patch
+        end
+    end
+end
+
+function m:get_patch_list(template_list)
+    local template = hierarchy:get_prefab_template()
+    for index, tpl in ipairs(template) do
+        if index >= self.patch_start_index then
+            template_list[#template_list + 1] = {
+                file = self.prefab_name,
+                op = "add",
+                path = "/-",
+                value = tpl
+            }
+        end
+    end
+    for _, patch in ipairs(self.patch_template) do
+        local copypatch = utils.deep_copy(patch)
+        local tpl = utils.deep_copy(copypatch.value)
+        if tpl.index then
+            tpl.index = nil
+        end
+        if tpl.filename then
+            tpl.filename = nil
+        end
+        if not (copypatch.op == "add" and copypatch.path == "/-") then
+            template_list[#template_list + 1] = copypatch
+        end
+    end
+    -- for _, patch in ipairs(self.patch_template) do
+    --     if patch.op == "add" and patch.path == "/-" then
+    --         local tpl = utils.deep_copy(patch.value)
+    --         local parent = tpl.data and tpl.data.scene.parent
+    --         if parent then
+    --             local parent_tpl = hierarchy:get_node_info(parent)
+    --             tpl.mount = parent_tpl.template.index
+    --             tpl.data.scene.parent = nil
+    --         end
+    --         if tpl.index then
+    --             tpl.index = nil
+    --         end
+    --         if tpl.filename then
+    --             tpl.filename = nil
+    --         end
+    --         patch.value = tpl
+    --     end
+    --     template_list[#template_list + 1] = patch
+    -- end
+    return template_list
+end
+
 function m:save(path)
     -- patch glb file
     if self.glb_filename then
         if self.patch_template then
             local final_template = {}
-            for _, patch in ipairs(self.origin_patch_template) do
-                if patch.file ~= self.prefab_name then
-                    final_template[#final_template + 1] = patch
-                end
-            end
-            for _, patch in ipairs(self.patch_template) do
-                if patch.op == "add" and patch.path == "/-" then
-                    local tpl = utils.deep_copy(patch.value)
-                    local parent = tpl.data and tpl.data.scene.parent
-                    if parent then
-                        local parent_tpl = hierarchy:get_node_info(parent)
-                        tpl.mount = parent_tpl.template.index
-                        tpl.data.scene.parent = nil
-                    end
-                    if tpl.index then
-                        tpl.index = nil
-                    end
-                    if tpl.filename then
-                        tpl.filename = nil
-                    end
-                    patch.value = tpl
-                end
-                final_template[#final_template + 1] = patch
+            if self.prefab_name == "mesh.prefab" then
+                self:get_patch_list(final_template)
+                self:get_origin_patch_list(final_template)
+            else
+                self:get_origin_patch_list(final_template)
+                self:get_patch_list(final_template)
             end
             if self.save_hitch then
                 local hitch = self:get_hitch_content()
@@ -908,6 +946,9 @@ function m:do_remove_entity(eid)
             self:do_remove_entity(en.children[i])
         end
     end
+    if not self:pacth_remove(eid) then
+        return
+    end
     remove_entity_self(eid)
     local index
     for idx, entity in ipairs(self.entities) do
@@ -921,9 +962,9 @@ function m:do_remove_entity(eid)
     end
 end
 function m:remove_entity(eid)
-    if not self:pacth_remove(eid) then
-        return
-    end
+    -- if not self:pacth_remove(eid) then
+    --     return
+    -- end
     self:do_remove_entity(eid)
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
