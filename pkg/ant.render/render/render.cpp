@@ -69,12 +69,12 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, const math_t
 #define INVALID_BUFFER_TYPE		UINT16_MAX
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
 
-static inline bool is_indirect_draw(const ecs::render_object *ro){
-	return ro->draw_num != 0 && ro->draw_num != UINT32_MAX;
+static inline bool indirect_draw_valid(const ecs::indirect_object *ido){
+	return ido && ido->draw_num != 0 && ido->draw_num != UINT32_MAX;
 }
 static bool
-mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t mat_idx){
-	if (ro->vb_num == 0 || ro->draw_num == 0)
+mesh_submit(struct ecs_world* w, const ecs::render_object* ro,  const ecs::indirect_object *ido, int vid, uint8_t mat_idx){
+	if (ro->vb_num == 0 || (ido && ido->draw_num == 0))
 		return false;
 
 	const uint16_t ibtype = BUFFER_TYPE(ro->ib_handle);
@@ -109,10 +109,10 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t 
 		}
 	}
 
-	if(is_indirect_draw(ro)){
-		const auto itb = bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->itb_handle};
+	if(indirect_draw_valid(ido)){
+		const auto itb = bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ido->itb_handle};
 		assert(BGFX_HANDLE_IS_VALID(itb));
-		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, itb, 0, ro->draw_num);
+		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, itb, 0, ido->draw_num);
 	}
 	return true;
 }
@@ -130,25 +130,25 @@ get_material(struct render_material * R, const ecs::render_object* ro, size_t mi
 using matrix_array = std::vector<math_t>;
 
 static inline void
-submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object *obj, bgfx_program_handle_t prog, uint8_t discardflags){
-	if(is_indirect_draw(obj)){
-		const auto idb = bgfx_indirect_buffer_handle_t{(uint16_t)obj->idb_handle};
+submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object *obj, const ecs::indirect_object *iobj, bgfx_program_handle_t prog, uint8_t discardflags){
+	if(indirect_draw_valid(iobj)){
+		const auto idb = bgfx_indirect_buffer_handle_t{(uint16_t)iobj->idb_handle};
 		assert(BGFX_HANDLE_IS_VALID(idb));
-		w->bgfx->encoder_submit_indirect(w->holder->encoder, viewid, prog, idb, 0, obj->draw_num, obj->render_layer, discardflags);
+		w->bgfx->encoder_submit_indirect(w->holder->encoder, viewid, prog, idb, 0, iobj->draw_num, obj->render_layer, discardflags);
 	}else{
 		w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, obj->render_layer, discardflags);
 	}
 }
 
 static inline void
-draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const matrix_array *mats, obj_transforms &trans){
+draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const ecs::indirect_object *iobj, const matrix_array *mats, obj_transforms &trans){
 	auto mi = get_material(w->R, obj, ra->material_index);
 	
 	if (nullptr == mi)
 		return ;
 	
 	const auto prog = material_prog(L, mi);
-	if (!BGFX_HANDLE_IS_VALID(prog) || !mesh_submit(w, obj, ra->viewid, ra->material_index))
+	if (!BGFX_HANDLE_IS_VALID(prog) || !mesh_submit(w, obj, iobj, ra->viewid, ra->material_index))
 		return ;
 
 	apply_material_instance(L, mi, w);
@@ -158,7 +158,7 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 		for (int i=0; i<(int)mats->size()-1; ++i) {
 			t = update_transform(w, obj, (*mats)[i], trans);
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-			submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
+			submit_draw(w, ra->viewid, obj, iobj, prog, BGFX_DISCARD_TRANSFORM);
 		}
 		t = update_transform(w, obj, mats->back(), trans);
 	} else {
@@ -166,7 +166,7 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 	}
 
 	w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-	submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_ALL);
+	submit_draw(w, ra->viewid, obj, iobj, prog, BGFX_DISCARD_ALL);
 }
 
 using group_queues = std::array<matrix_array, 64>;
@@ -283,7 +283,7 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 				if (!mats.empty()){
 					auto ro = e.component<ecs::render_object>();
 					if (ro && obj_queue_visible(*ro, ra.a->queue_mask)){
-						draw_obj(L, w, ra.a, ro, &mats, cc.transforms);
+						draw_obj(L, w, ra.a, ro, nullptr, &mats, cc.transforms);
 						#ifdef RENDER_DEBUG
 						cc.stat.hitch_submit += (uint32_t)mats.size();
 						#endif //RENDER_DEBUG
@@ -309,8 +309,9 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto& ra = cc.ra[ii];
 			const auto& obj = e.get<ecs::render_object>();
-			if (obj_visible(obj, ra.a->queue_mask) || (is_indirect_draw(&obj) && obj_queue_visible(obj, ra.a->queue_mask))){
-				draw_obj(L, w, ra.a, &obj, nullptr, cc.transforms);
+			const ecs::indirect_object* iobj = e.component<ecs::indirect_object>();
+			if (obj_visible(obj, ra.a->queue_mask) || (indirect_draw_valid(iobj) && obj_queue_visible(obj, ra.a->queue_mask))){
+				draw_obj(L, w, ra.a, &obj, iobj, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
 				++cc.stat.simple_submit;
 				#endif //RENDER_DEBUG

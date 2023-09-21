@@ -216,13 +216,13 @@ end
 
 function sm_sys:entity_init()
 
-    for e in w:select "INIT stonemountain:update render_object?update eid:in" do
+    for e in w:select "INIT stonemountain:update render_object?update indirect_object?update eid:in" do
         local stonemountain = e.stonemountain
         update_ro(e.render_object)
         local max_num = 5000
         local draw_indirect_eid = world:create_entity {
             policy = {
-                "ant.render|draw_indirect"
+                "ant.render|draw_indirect",
             },
             data = {
                 draw_indirect = {
@@ -239,25 +239,25 @@ function sm_sys:entity_init()
             }
         }
         stonemountain.draw_indirect_eid = draw_indirect_eid
-        e.render_object.draw_num = 0
-        e.render_object.idb_handle = 0xffffffff
-        e.render_object.itb_handle = 0xffffffff
+        e.indirect_object.draw_num = 0
+        e.indirect_object.idb_handle = 0xffffffff
+        e.indirect_object.itb_handle = 0xffffffff
     end
 
     
-    for e in w:select "stonemountain:update render_object:update scene:in bounding:update draw_indirect_ready:out" do
+    for e in w:select "stonemountain:update render_object:update indirect_object:update scene:in bounding:update draw_indirect_ready:out" do
         local stonemountain = e.stonemountain
         local draw_num = stonemountain.draw_num
         if draw_num > 0 then
             local de <close> = world:entity(stonemountain.draw_indirect_eid, "draw_indirect:in")
             local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
-            e.render_object.idb_handle = idb_handle
-            e.render_object.itb_handle = itb_handle
-            e.render_object.draw_num = draw_num
+            e.indirect_object.idb_handle = idb_handle
+            e.indirect_object.itb_handle = itb_handle
+            e.indirect_object.draw_num = draw_num
         else
-            e.render_object.idb_handle = 0xffffffff
-            e.render_object.itb_handle = 0xffffffff
-            e.render_object.draw_num = 0
+            e.indirect_object.idb_handle = 0xffffffff
+            e.indirect_object.itb_handle = 0xffffffff
+            e.indirect_object.draw_num = 0
         end
 
         e.draw_indirect_ready = false
@@ -295,7 +295,7 @@ local function create_sm_entity()
             stonemountain = stonemountain,
             draw_indirect_ready = false,
             render_layer = "foreground",
-            indirect = "STONE_MOUNTAIN",
+            indirect_type = "STONE_MOUNTAIN",
             on_ready = function(e)
                 local draw_indirect_type = idrawindirect.get_draw_indirect_type("STONE_MOUNTAIN")
                 imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))

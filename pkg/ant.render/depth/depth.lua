@@ -83,19 +83,19 @@ local function create_depth_state(srcstate, dststate)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result visible_state:in material:in render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
+    for e in w:select "filter_result visible_state:in material:in render_layer:in render_object:update filter_material:in skinning?in indirect_type?in" do
         if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
             local matres = assetmgr.resource(e.material)
             if not matres.fx.setting.no_predepth then
                 local fm = e.filter_material
-                local m = assert(which_material(e.skinning, e.indirect))
+                local m = assert(which_material(e.skinning, e.indirect_type))
                 local newstate = create_depth_state(fm.main_queue:get_state(), m.state)
                 if newstate then
                     local mi = RM.create_instance(m.object)
                     mi:set_state(newstate)
     
-                    if e.indirect then
-                        local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
+                    if e.indirect_type then
+                        local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect_type)
                         mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
                     end
                     fm["pre_depth_queue"] = mi

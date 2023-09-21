@@ -146,7 +146,7 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
                         render_layer = render_layer,
                         draw_indirect_ready = false,
                         draw_indirect_update = false,
-                        indirect = "ROAD",
+                        indirect_type = "ROAD",
                         on_ready = function(e)
                             local draw_indirect_type = idrawindirect.get_draw_indirect_type("ROAD")
                             imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
@@ -164,7 +164,7 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
 end
 
 function road_system:entity_init()
-    for e in w:select "INIT road:update render_object?update indirect?update eid:in" do
+    for e in w:select "INIT road:update render_object?update indirect_object?update eid:in" do
         local road = e.road
         local draw_num = #road.srt_info
         local max_num = 500
@@ -189,9 +189,9 @@ function road_system:entity_init()
             }
         }
         road.draw_indirect_eid = draw_indirect_eid
-        e.render_object.draw_num = 0
-        e.render_object.idb_handle = 0xffffffff
-        e.render_object.itb_handle = 0xffffffff 
+        e.indirect_object.draw_num = 0
+        e.indirect_object.idb_handle = 0xffffffff
+        e.indirect_object.itb_handle = 0xffffffff 
     end
     
 end
@@ -203,7 +203,7 @@ function road_system:entity_remove()
 end
 
 function road_system:data_changed()
-    for e in w:select "road:update render_object:update scene:in draw_indirect_ready:update" do
+    for e in w:select "road:update render_object:update indirect_object:update scene:in draw_indirect_ready:update" do
         if e.draw_indirect_ready ~= true then
             goto continue
         end
@@ -213,18 +213,18 @@ function road_system:data_changed()
         if srt_info then draw_num = #srt_info end
         local de <close> = world:entity(road.draw_indirect_eid, "draw_indirect:in")
         local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
-        e.render_object.idb_handle = idb_handle
-        e.render_object.itb_handle = itb_handle
+        e.indirect_object.idb_handle = idb_handle
+        e.indirect_object.itb_handle = itb_handle
         if draw_num > 0 then
-            e.render_object.draw_num = draw_num
+            e.indirect_object.draw_num = draw_num
         else
-            e.render_object.draw_num = 0
+            e.indirect_object.draw_num = 0
         end
 
         e.draw_indirect_ready = false
         ::continue::
     end
-    for e in w:select "road:update render_object:update draw_indirect_update:update" do
+    for e in w:select "road:update render_object:update indirect_object:update draw_indirect_update:update" do
         if e.draw_indirect_update ~= true then
             goto continue
         end

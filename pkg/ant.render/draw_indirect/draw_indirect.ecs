@@ -1,7 +1,8 @@
 policy "indirect"
-    .component "indirect"
+    .include_policy "ant.render|indirect_object"
+    .component "indirect_type"
 
-component "indirect".type "lua"
+component "indirect_type".type "lua"
 
 policy "draw_indirect"
     .component "draw_indirect"
@@ -20,3 +21,5 @@ component "draw_indirect_update"
 
 system "draw_indirect_system"
     .implement "draw_indirect/draw_indirect.lua"
+
+import "render_system/indirect_object.ecs"

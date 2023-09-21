@@ -298,7 +298,7 @@ function idrawindirect.update_draw_indirect(e, die, srt_table)
     bgfx.update(di.itb_handle, 0, instance_memory_buffer)
     bgfx.update(di.obj_buffer, 0, obj_memory_buffer)
     di.draw_num = #srt_table
-    e.render_object.draw_num = di.draw_num
+    e.indirect_object.draw_num = di.draw_num
 end
 
 return idrawindirect

@@ -26,10 +26,6 @@ component "render_object"
     .field "ib_num:dword"
     .field "ib_handle:dword"
 
-    .field "idb_handle:dword"
-    .field "itb_handle:dword"
-    .field "draw_num:dword"
-
     .field "render_layer:dword"
     .field "discard_flags:byte"
 

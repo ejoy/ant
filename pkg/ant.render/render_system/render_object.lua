@@ -21,9 +21,6 @@ function ro.init()
         ib_start    = 0,
         ib_num      = 0,
         ib_handle   = 0xffffffff,
-        idb_handle  = 0xffffffff,
-        itb_handle  = 0xffffffff,
-        draw_num    = 0xffffffff,
         render_layer= 0,
         discard_flags=0xff,
     }

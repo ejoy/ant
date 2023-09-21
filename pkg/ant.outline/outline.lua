@@ -87,7 +87,7 @@ function outline_system:init_world()
 end
 
 function outline_system:update_filter()
-    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
+    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in" do
         if e.visible_state["outline_queue"] then
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object

@@ -559,7 +559,7 @@ local function create_depth_state(srcstate, dststate)
 end
 
 function sm:update_filter()
-    for e in w:select "filter_result visible_state:in render_object:in filter_material:in material:in skinning?in indirect?in bounding:in" do
+    for e in w:select "filter_result visible_state:in render_object:in filter_material:in material:in skinning?in indirect_type?in bounding:in" do
 		if not e.visible_state["cast_shadow"] then
 			goto continue
 		end
@@ -568,12 +568,12 @@ function sm:update_filter()
 
 		local mat_ptr
 		if mt.fx.setting.cast_shadow == "on" then
-			local dstres = which_material(e.skinning, e.indirect)
+			local dstres = which_material(e.skinning, e.indirect_type)
 			local fm = e.filter_material
 			local mi = RM.create_instance(dstres.object)
 			mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
-			if e.indirect then
-				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
+			if e.indirect_type then
+				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect_type)
 				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
 			end
 			fm["csm1_queue"] = mi
