@@ -1288,7 +1288,7 @@ local function read_file(fn)
     return f:read "a"
 end
 function m.create_target_animation(at, target)
-    local e <close> = world:entity(target, "material?in name:in")
+    local e <close> = world:entity(target, "material?in")
     create_context = {}
     create_context.type = at
     new_anim_widget = true

@@ -131,10 +131,10 @@ local function get_icon_by_object_type(node)
 end
 local imodifier 		= ecs.require "ant.modifier|modifier"
 local function show_scene_node(node)
-    local e <close> = world:entity(node.eid, "animation?in")
-    if e.animation then
-        return
-    end
+    -- local e <close> = world:entity(node.eid, "animation?in")
+    -- if e.animation then
+    --     return
+    -- end
     imgui.table.NextRow();
     imgui.table.NextColumn();
     local function select_or_move(nd)

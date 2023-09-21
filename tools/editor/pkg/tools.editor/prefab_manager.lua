@@ -187,8 +187,8 @@ function m:clone(eid)
         print("can not clone noscene node.")
         return
     end
-    local name = e.name .. "_copy"
-    tmp.data.name = name
+    local name = (tmp.tag and tmp.tag[1] or "") .. "_copy"
+    tmp.tag = {name}
     local pid = e.scene.parent > 0 and e.scene.parent or self.root
     tmp.data.scene.parent = pid
     if e.scene.slot then
