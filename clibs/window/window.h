@@ -19,7 +19,7 @@ void window_mainloop();
 void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_exit(struct ant_window_callback* cb);
-void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type);
+void window_message_size(struct ant_window_callback* cb, int x, int y);
 
 
 namespace ant::window {

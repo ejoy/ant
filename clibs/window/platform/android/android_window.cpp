@@ -74,7 +74,7 @@ static void handle_cmd(android_app* app, int32_t cmd) {
         case APP_CMD_WINDOW_RESIZED: {
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
-            window_message_size(g_cb, w, h, 0);
+            window_message_size(g_cb, w, h);
             break;
         }
         case APP_CMD_LOST_FOCUS:

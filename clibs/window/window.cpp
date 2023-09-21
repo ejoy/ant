@@ -41,13 +41,12 @@ void window_message_exit(struct ant_window_callback* cb) {
 	push_message(L);
 }
 
-void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type) {
+void window_message_size(struct ant_window_callback* cb, int x, int y) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	lua_pushstring(L, "size");
 	lua_pushinteger(L, x);
 	lua_pushinteger(L, y);
-	lua_pushinteger(L, type);
 	push_message(L);
 }
 
