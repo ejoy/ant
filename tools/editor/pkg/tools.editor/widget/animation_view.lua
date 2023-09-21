@@ -456,10 +456,12 @@ end
 
 function m.on_remove_entity(eid)
     local dirty = false
-    local e <close> = world:entity(eid, "slot?in name:in")
+    local e <close> = world:entity(eid, "slot?in")
     if e.slot and anim_eid then
         local ae <close> = world:entity(anim_eid, "anim_ctrl?in")
-        ae.anim_ctrl.slot_eid[e.name] = nil
+        local tpl = hierarchy:get_node_info(eid).template
+        local name = tpl.tag and tpl.tag[1] or ""
+        ae.anim_ctrl.slot_eid[name] = nil
     end
     if dirty then
         set_event_dirty(-1)
