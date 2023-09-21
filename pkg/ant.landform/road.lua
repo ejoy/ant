@@ -100,9 +100,9 @@ local function get_srt_info_table(update_list)
         local type, dir, shape = layer.type, rot_table[layer.dir][sd_info.rot_idx], sd_info.shape
         local current_info_table = info_table[shape+1]
         current_info_table[#current_info_table+1] = {
-            math3d.vector(instance.x, 0.1, instance.y, 0),
-            math3d.vector(dir, type, 0, 0),
-            math3d.vector(0, 0, 0, 0)
+            {instance.x, 0.1, instance.y, 0},
+            {dir, type, 0, 0},
+            {0, 0, 0, 0}
         }
     end
     local mt = {__index=function(t, k) local tt = {}; t[k] = tt; return tt end}

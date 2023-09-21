@@ -17,38 +17,13 @@ local type_table = {
 }
 
 local function get_sm_worldmat(srt)
-    local s, r, tx, tz = table.unpack(math3d.tovalue(srt))
-    local rad = math.rad(r)
-    local cosy, siny = math.cos(rad), math.sin(rad)
-    local sm = math3d.matrix({
-        s, 0, 0, 0,
-        0, s, 0, 0,
-        0, 0, s, 0,
-        0, 0, 0, 1,
-    })
-    local rm = math3d.matrix({
-        cosy, 0, siny, 0,
-        0, 1, 0, 0,
-        -siny, 0, cosy, 0,
-        0, 0, 0, 1,
-    })
-    local tm = math3d.matrix({
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        tx, 0, tz, 1,
-    })
-    return math3d.mul(tm, math3d.mul(rm, sm))
+    local s, r, tx, tz = table.unpack(srt)
+    return math3d.matrix { s = s, r = { axis = {0,1,0}, r = r },  t = { tx, 0, tz } }
 end
 
 local function get_road_worldmat(srt)
-    local tx, ty, tz = math3d.index(srt, 1, 2, 3)
-    return math3d.matrix({
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        tx, ty, tz, 1,
-    })
+    local tx, ty, tz = table.unpack(srt)
+    return math3d.matrix { t = {tx, ty, tz} }
 end
 
 local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_type, max_num)
@@ -78,11 +53,12 @@ local function get_obj_buffer(aabb_table, srt_table, mesh_idx_table, indirect_ty
 end
 
 local function get_instance_buffer(srt_info, max_num)
+    local fmt<const> = "ffff"
     local memory_buffer = bgfx.memory_buffer(3 * 16 * max_num)
     local memory_table = {}
     for _, srt in pairs(srt_info) do
         for data_idx = 1, 3 do
-            memory_table[#memory_table+1] = math3d.serialize(srt[data_idx])
+            memory_table[#memory_table+1] = fmt:pack(table.unpack(srt[data_idx]))
         end
     end
     memory_buffer[1] = table.concat(memory_table)

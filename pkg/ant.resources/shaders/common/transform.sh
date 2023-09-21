@@ -23,7 +23,7 @@ mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 		float r = d1.y;
 		float tx = d1.z;
 		float tz = d1.w;
-		float rad = radians(r);
+		float rad = r;
 		float cosy = cos(rad);
 		float siny = sin(rad);	
 		wm = mat4(

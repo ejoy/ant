@@ -113,7 +113,7 @@ local function get_srt()
                 local r_noise = math.floor(terrain_module.noise(ix, iz, freq, depth, seed, offset_y, offset_x) * 360) + math.random(-360, 360) 
                 local mesh_noise = (sm_idx + math.random(0, 4)) % 4 + 1
                 local tx, tz = (ix + off - offset) * unit, (iz + off - offset) * unit
-                sm_table[sm_idx][sidx] = {s = s_noise, r = r_noise, tx = tx, tz = tz, m = mesh_noise}
+                sm_table[sm_idx][sidx] = {s = s_noise, r = math.rad(r_noise), tx = tx, tz = tz, m = mesh_noise}
             end
         end
     end
@@ -266,7 +266,7 @@ end
 
 local function create_sm_entity()
     --TODO
-    if true then return end
+    --if true then return end
     local stonemountain = {draw_num = 0, srt_info = {}}
 
     for _, sms in pairs(sm_table) do
@@ -275,9 +275,9 @@ local function create_sm_entity()
             mesh_idx_table[#mesh_idx_table+1] = math3d.vector(0, 0, 0, mesh_idx)
             stonemountain.draw_num = stonemountain.draw_num + 1
             stonemountain.srt_info[#stonemountain.srt_info+1] = {
-                math3d.vector(sm.s, sm.r, sm.tx, sm.tz),
-                math3d.vector(0, 0, 0, 0),
-                math3d.vector(0, 0, 0, 0)
+                {sm.s, sm.r, sm.tx, sm.tz},
+                {0, 0, 0, 0},
+                {0, 0, 0, 0}
             } 
         end
     end
@@ -304,7 +304,7 @@ local function create_sm_entity()
     }
 end
 
-function sm_sys:stone_mountain()
+function sm_sys:start_frame()
     if open_sm then
         make_sm_noise()
         create_sm_entity()
@@ -316,10 +316,6 @@ function sm_sys:entity_remove()
     for e in w:select "REMOVED stonemountain:in" do
         w:remove(e.stonemountain.draw_indirect_eid)
     end
-end
-
-function sm_sys:data_changed()
-
 end
 
 return ism
