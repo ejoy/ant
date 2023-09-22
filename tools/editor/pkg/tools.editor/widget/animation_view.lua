@@ -157,6 +157,9 @@ end
 local widget_utils  = require "widget.utils"
 
 local function set_current_anim(anim_name)
+    if anim_name == "" then
+        return
+    end
     local anim = edit_anims[anim_name]
     if not anim then
         local msg = anim_name .. " not exist."
@@ -164,7 +167,7 @@ local function set_current_anim(anim_name)
         widget_utils.message_box({title = "AnimationError", info = msg})
         return false
     end
-    
+
     if current_anim == anim then return false end
 
     if current_anim and current_anim.collider then
@@ -815,7 +818,13 @@ function m.on_prefab_load(entities)
     if #editanims.name_list > 0 then
         edit_anims = editanims
         table.sort(edit_anims.name_list)
-        set_current_anim(edit_anims.birth or editanims.name_list[1])
+        local animname
+        if edit_anims.birth and edit_anims.birth ~="" then
+            animname = edit_anims.birth
+        else
+            animname = editanims.name_list[1]
+        end
+        set_current_anim(animname)
         keyframe_view.init(skeleton)
         joint_map, joint_list = joint_utils:get_joints()
     end

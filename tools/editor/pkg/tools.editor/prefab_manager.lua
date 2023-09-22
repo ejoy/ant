@@ -785,14 +785,15 @@ end
 function m:get_patch_list(template_list)
     local template = hierarchy:get_prefab_template()
     for i = 2, #template do
-        if template[i].mount > 1 then
-            template[i].mount = template[i] + (self.patch_start_index - 1) 
+        local tpl = template[i]
+        if tpl.mount > 1 then
+            tpl.mount = tpl.mount + (self.patch_start_index - 1)
         end
         template_list[#template_list + 1] = {
             file = self.prefab_name,
             op = "add",
             path = "/-",
-            value = template[i]
+            value = tpl
         }
     end
     for _, patch in ipairs(self.patch_template) do
