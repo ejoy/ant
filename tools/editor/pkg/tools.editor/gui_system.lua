@@ -272,9 +272,10 @@ local function on_update(eid)
     world:pub {"UpdateAABB", eid}
     if not eid then return end
     local e <close> = world:entity(eid, "camera?in light?in")
-    if e.camera then
-        camera_mgr.update_frustrum(eid)
-    elseif e.light then
+    -- if e.camera then
+    --     camera_mgr.update_frustrum(eid)
+    -- else
+    if e.light then
         light_gizmo.update()
     end
 end
@@ -495,7 +496,7 @@ function m:handle_event()
             --     }
             -- }
             world:create_instance {
-                prefab = "/pkg/vaststars.resources/glbs/mars-outfall.glb|mesh.prefab",
+                prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|mesh.prefab",
                 on_ready = function(instance)
                     -- for _, eid in ipairs(instance.tag["*"]) do
                     --     local e <close> = world:entity(eid, "anim_ctrl?in view_visible?out")
@@ -505,7 +506,7 @@ function m:handle_event()
                     --     e.view_visible = false
                     --     w:submit(e)
                     -- end
-                    -- iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false, group = hitch_test_group_id})
+                    -- iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
                 end,
                 parent = nil,
                 -- group = hitch_test_group_id

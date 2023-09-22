@@ -95,8 +95,10 @@ function hierarchy:get_prefab_template()
     local new_tpl = {}
     local function construct_entity(eid, tpl)
         local node = self.all_node[eid]
-        if node.info.temporary then
-            return
+        if not (node == self.root or node.info.scene_root) then
+            if node.info.temporary or not node.info.is_patch then
+                return
+            end
         end
         local template = utils.deep_copy(node.info.template)
         if template then
@@ -115,6 +117,9 @@ function hierarchy:get_prefab_template()
                     scene.parent = nil
                 end
             end
+            -- if self.all_node[node.parent] == self.root then
+            --     template.mount = 1
+            -- end
         end
         table.insert(tpl, template)
 

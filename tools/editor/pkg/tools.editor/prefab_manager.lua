@@ -114,7 +114,7 @@ function m:add_entity(new_entity, parent, tpl, filename)
         end
         self:pacth_add(tpl, embed)
     end
-    hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil}, parent)
+    hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil, is_patch = true}, parent)
 end
 
 local function create_default_light(lt, parent)
@@ -392,7 +392,7 @@ function m:on_prefab_ready(prefab)
             if not name then
                 name = pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or "")
             end
-            node_map[eid] = {template = pt, parent = parent, name = (i == 1) and "Scene" or name}
+            node_map[eid] = {template = pt, parent = parent, name = (i == 1) and "Scene" or name, scene_root = (i == 1), is_patch = (i >= self.patch_start_index)}
             j = j + 1
         end
         last_tpl = pt
@@ -412,9 +412,9 @@ function m:on_prefab_ready(prefab)
         local tp = node.template
         if children then
             set_select_adapter(children, eid)
-            tp = {template = node.template, filename = node.filename, editor = node.editor, name = node.name}
+            tp = {template = node.template, filename = node.filename, editor = node.editor, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
         else
-            tp = {template = node.template, name = node.name}
+            tp = {template = node.template, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
         end
         hierarchy:add(eid, tp, node.parent or self.root)
     end
@@ -638,6 +638,7 @@ function m:reset_prefab(noscene)
     self.glb_filename = nil
     self.scene = nil
     self.save_hitch = false
+    self.patch_start_index = 0
     if not noscene then
         local parent = self.root
         local new_entity, temp = create_simple_entity("Scene", parent)
@@ -783,28 +784,19 @@ end
 
 function m:get_patch_list(template_list)
     local template = hierarchy:get_prefab_template()
-    for index, tpl in ipairs(template) do
-        if index >= self.patch_start_index then
-            template_list[#template_list + 1] = {
-                file = self.prefab_name,
-                op = "add",
-                path = "/-",
-                value = tpl
-            }
+    for i = 2, #template do
+        if template[i].mount > 1 then
+            template[i].mount = template[i] + (self.patch_start_index - 1) 
         end
+        template_list[#template_list + 1] = {
+            file = self.prefab_name,
+            op = "add",
+            path = "/-",
+            value = template[i]
+        }
     end
     for _, patch in ipairs(self.patch_template) do
-        -- local copypatch = utils.deep_copy(patch)
         if not (patch.op == "add" and patch.path == "/-") then
-            -- if copypatch.value then
-            --     local tpl = utils.deep_copy(copypatch.value)
-            --     if tpl.index then
-            --         tpl.index = nil
-            --     end
-            --     if tpl.filename then
-            --         tpl.filename = nil
-            --     end
-            -- end
             template_list[#template_list + 1] = patch
         end
     end
