@@ -280,7 +280,7 @@ local function create_skin_entity(status, parent)
             data.animation[n] = file
         end
         table.sort(anilst)
-        data.animation_birth = anilst[1] or ""
+        data.animation_birth = ""
         data.anim_ctrl = {}
     end
     data.skeleton = status.skeleton

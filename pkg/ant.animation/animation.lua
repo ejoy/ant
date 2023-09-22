@@ -120,7 +120,7 @@ function ani_sys:component_init()
 			ratio = 0.0,
 			previous_ratio = 0.0,
 			speed = 1.0,
-			play = true,
+			play = (anim_name ~= ""),
 			loop = true,
 			manual_update = false
 		}
