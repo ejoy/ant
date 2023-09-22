@@ -38,7 +38,7 @@ local anim_state = {
     selected_clip_index = 0,
     current_event_list = {}
 }
-
+local birth_anim = {false}
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local event_type = {
@@ -109,12 +109,6 @@ local function anim_group_delete(anim_name)
     end
 end
 
-local default_collider_define = {
-    ["sphere"]  = {{origin = {0, 0, 0, 1}, radius = 0.1}},
-    ["box"]     = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05}}},
-    ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
-}
-
 local function from_runtime_event(runtime_event)
     local ke = {}
     for _, ev in ipairs(runtime_event) do
@@ -168,7 +162,11 @@ local function set_current_anim(anim_name)
         return false
     end
 
-    if current_anim == anim then return false end
+    if current_anim == anim then
+        return false
+    end
+    local tpl = hierarchy:get_node_info(anim_eid).template
+    birth_anim[1] = (anim_name == tpl.animation_birth)
 
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
@@ -692,6 +690,16 @@ function m.show()
             imgui.widget.EndCombo()
         end
         imgui.cursor.PopItemWidth()
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("default", birth_anim) then
+            local tpl = hierarchy:get_node_info(anim_eid).template
+            if birth_anim[1] then
+                tpl.animation_birth = current_anim.name
+            else
+                tpl.animation_birth = ""
+            end
+            prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.animation_birth)
+        end
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         local imagesize = icon.texinfo.width * icons.scale
