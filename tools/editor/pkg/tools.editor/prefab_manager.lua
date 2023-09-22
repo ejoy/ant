@@ -794,16 +794,18 @@ function m:get_patch_list(template_list)
         end
     end
     for _, patch in ipairs(self.patch_template) do
-        local copypatch = utils.deep_copy(patch)
-        local tpl = utils.deep_copy(copypatch.value)
-        if tpl.index then
-            tpl.index = nil
-        end
-        if tpl.filename then
-            tpl.filename = nil
-        end
-        if not (copypatch.op == "add" and copypatch.path == "/-") then
-            template_list[#template_list + 1] = copypatch
+        -- local copypatch = utils.deep_copy(patch)
+        if not (patch.op == "add" and patch.path == "/-") then
+            -- if copypatch.value then
+            --     local tpl = utils.deep_copy(copypatch.value)
+            --     if tpl.index then
+            --         tpl.index = nil
+            --     end
+            --     if tpl.filename then
+            --         tpl.filename = nil
+            --     end
+            -- end
+            template_list[#template_list + 1] = patch
         end
     end
     -- for _, patch in ipairs(self.patch_template) do
