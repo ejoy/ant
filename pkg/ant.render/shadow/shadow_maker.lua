@@ -545,7 +545,7 @@ local omni_stencils = {
 local CULL_REVERSE<const> = {
 	CCW		= "CW",
 	CW		= "CCW",
-	NONE	= "CW",
+	NONE	= "CCW",
 }
 
 local function create_depth_state(srcstate, dststate)
