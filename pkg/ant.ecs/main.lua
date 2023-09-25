@@ -235,7 +235,7 @@ end
 
 function world:remove_instance(instance)
     assert(instance.tag)
-    world:pub {"OnRemoveInstance1", instance}
+    world:pub {"OnRemoveInstance", instance}
 end
 
 function world:remove_template(filename)

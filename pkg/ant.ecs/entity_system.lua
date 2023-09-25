@@ -6,8 +6,7 @@ local math3d = require "math3d"
 local m = ecs.system "entity_system"
 
 local evOnMessage = world:sub {"EntityMessage"}
-local evOnRemoveInstance1 = world:sub {"OnRemoveInstance1"}
-local evOnRemoveInstance2 = world:sub {"OnRemoveInstance2"}
+local evOnRemoveInstance = world:sub {"OnRemoveInstance"}
 
 local MethodRemove = {}
 
@@ -38,13 +37,10 @@ function m:data_changed()
             w:submit(v)
         end
     end
-    for _, instance in evOnRemoveInstance1:unpack() do
-        world:pub {"OnRemoveInstance2", instance}
-    end
 end
 
 function m:prefab_remove()
-    for _, instance in evOnRemoveInstance2:unpack() do
+    for _, instance in evOnRemoveInstance:unpack() do
         if instance.proxy then
             w:remove(instance.proxy)
         end
