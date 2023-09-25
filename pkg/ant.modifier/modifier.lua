@@ -29,8 +29,15 @@ end
 
 function modifier_sys:update_modifier()
     local delta_time = timer.delta() * 0.001
+    local to_remove = {}
     for e in w:select "modifier:in" do
-        e.modifier:update(delta_time)
+        local rm = e.modifier:update(delta_time)
+        if rm then
+            to_remove[#to_remove + 1] = e.eid
+        end
+    end
+    for _, eid in ipairs(to_remove) do
+        imodifier.delete(eid)
     end
 end
 
@@ -44,6 +51,7 @@ function modifier_sys:entity_ready()
         local mf = e.modifier
         mf.continue = true
         mf.keep = desc.forwards
+        mf.destroy = desc.destroy
         if m.anim_eid then
             if desc.name then
                 iani.play(m.anim_eid, desc)
@@ -229,6 +237,9 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                     local e <close> = world:entity(self.target)
                     iom.set_srt_offset_matrix(e, apply_value)
                     self.continue = running
+                    if not running and self.destroy then
+                        return true
+                    end
                 end
             },
 		},
@@ -244,6 +255,12 @@ function imodifier.start(m, desc)
         return
     end
     world:pub {"modifier", m, desc}
+end
+
+function imodifier.start_bone_modifier(target, group_id, filename, bone_name, desc)
+    local m = imodifier.create_bone_modifier(target, group_id, filename, bone_name)
+    desc.destroy = true
+    imodifier.start(m, desc)
 end
 
 function imodifier.stop(m)
