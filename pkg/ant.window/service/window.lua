@@ -25,7 +25,7 @@ local function create_peek_window()
                     message[i] = nil
                 end
             end
-            exclusive.sleep(0)
+            exclusive.sleep(1)
             ltask.sleep(0)
         until not window.peekmessage()
         if #message > 0 then
