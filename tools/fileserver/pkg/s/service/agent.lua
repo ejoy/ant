@@ -7,7 +7,7 @@ local FD = ...
 
 local message = {}
 local ServiceDebugProxy
-local ServiceVfsMgr = ltask.uniqueservice "s|vfsmgr"
+local ServiceVfsMgr = ltask.queryservice "s|vfsmgr"
 local ServiceLogManager = ltask.uniqueservice "s|log.manager"
 local ServiceEditor = ltask.uniqueservice "s|editor"
 local ServiceArguments = ltask.queryservice "s|arguments"

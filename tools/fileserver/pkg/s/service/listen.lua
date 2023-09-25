@@ -7,6 +7,8 @@ local function post_spawn(name, ...)
 end
 
 ltask.uniqueservice("s|arguments", ...)
+local ServiceVfsMgr = ltask.uniqueservice "s|vfsmgr"
+ltask.send(ServiceVfsMgr, "ROOT")
 
 local fd, err
 while true do
