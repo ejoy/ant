@@ -44,7 +44,8 @@ local function update_watch()
 		if not type then
 			break
 		end
-		if not rebuild and ignore_path(path) then
+		if not ignore_path(path) then
+			print(type, path)
 			rebuild = true
 		end
 	end
