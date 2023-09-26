@@ -103,6 +103,7 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
 - (void)start {
     if (nil == self.m_displayLink) {
         self.m_displayLink = [self.window.screen displayLinkWithTarget:self selector:@selector(renderFrame)];
+        self.m_displayLink.preferredFrameRateRange = CAFrameRateRangeMake(30.f, 30.f, 30.f);
         [self.m_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
 }
