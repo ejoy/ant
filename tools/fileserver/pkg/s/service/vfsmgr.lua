@@ -8,7 +8,6 @@ local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = arg[1]
 
 local repo
-local fswatch = fw.create()
 
 local function split(path)
 	local r = {}
@@ -37,7 +36,7 @@ local function rebuild_repo()
 	print("rebuild finish")
 end
 
-local function update_watch()
+local function update_watch(fswatch)
 	local rebuild = false
 	while true do
 		local type, path = fswatch:select()
@@ -54,13 +53,6 @@ local function update_watch()
 	end
 end
 
-ltask.fork(function ()
-	while true do
-		update_watch()
-		ltask.sleep(10)
-	end
-end)
-
 local S = {}
 
 function S.ROOT()
@@ -69,10 +61,17 @@ function S.ROOT()
 		if repo == nil then
 			error "Create repo failed."
 		end
+		local fswatch = fw.create()
 		for _, lpath in pairs(repo._mountpoint) do
 			fswatch:add(lpath:lexically_normal():string())
 		end
 		rebuild_repo()
+		ltask.fork(function ()
+			while true do
+				update_watch(fswatch)
+				ltask.sleep(10)
+			end
+		end)
 	end
 	return repo:root()
 end
@@ -114,6 +113,5 @@ function S.VIRTUALPATH(path)
 	end
 	return ''
 end
-
 
 return S
