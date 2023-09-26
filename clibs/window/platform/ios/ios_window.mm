@@ -38,7 +38,7 @@ static int writelog(const char* msg) {
 
 id init_gesture();
 
-UIView* global_window = NULL;
+View* global_window = NULL;
 static id<MTLDevice> g_device = NULL;
 struct ant_window_callback* g_cb = NULL;
 id g_gesture;
@@ -103,7 +103,6 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
 - (void)start {
     if (nil == self.m_displayLink) {
         self.m_displayLink = [self.window.screen displayLinkWithTarget:self selector:@selector(renderFrame)];
-        self.m_displayLink.preferredFrameRateRange = CAFrameRateRangeMake(30.f, 30.f, 30.f);
         [self.m_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
 }
@@ -127,6 +126,9 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     push_touch_message(ant::window::TOUCH_CANCELLED, self,  [event allTouches]);
+}
+- (void)maxfps:(float)fps {
+    self.m_displayLink.preferredFrameRateRange = CAFrameRateRangeMake(fps, fps, fps);
 }
 @end
 
@@ -198,4 +200,10 @@ void window_mainloop() {
     int argc = 0;
     char **argv = 0;
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+}
+
+void window_maxfps(float fps) {
+    if (global_window) {
+        [global_window maxfps: fps];
+    }
 }
