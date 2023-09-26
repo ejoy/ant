@@ -1,6 +1,7 @@
 local ltask         = require "ltask"
 local exclusive     = require "ltask.exclusive"
 local bgfx          = require "bgfx"
+local platform      = require "bee.platform"
 local fontmanager
 
 local initialized = false
@@ -320,6 +321,11 @@ end
 function S.maxfps(v)
     if not v or v >= 10 then
         maxfps = v
+    end
+    --TODO: editor does not have "ant.window|window"
+    if platform.os == "ios" then
+        local ServiceWindow = ltask.queryservice "ant.window|window"
+        ltask.call(ServiceWindow, "maxfps", maxfps)
     end
     return maxfps
 end
