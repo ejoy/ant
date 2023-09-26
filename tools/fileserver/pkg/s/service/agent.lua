@@ -130,6 +130,10 @@ end
 function message.MSG(CMD,...)
 end
 
+local ignore_log = {
+	LOG = true,
+}
+
 local function dispatch(fd)
 	local reading_queue = {}
 	local output = {}
@@ -146,6 +150,9 @@ local function dispatch(fd)
 			end
 			local f = message[msg[1]]
 			if f then
+				if not ignore_log[msg[1]] then
+					print(table.unpack(msg))
+				end
 				f(table.unpack(msg, 2))
 			else
 				error(msg[1])
