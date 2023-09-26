@@ -61,6 +61,19 @@ local function watch_add_path(paths, path)
 	paths[#paths+1] = path
 end
 
+local function rebuild_repo()
+	if rebuild then
+		rebuild = false
+		print(REPOPATH, "rebuild")
+		if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
+			repo:index()
+		else
+			repo:rebuild()
+		end
+		print(REPOPATH, "rebuild finish")
+	end
+end
+
 local function update_watch()
 	while true do
 		local type, path = fswatch:select()
@@ -82,6 +95,7 @@ local function update_watch()
 		end
 		::continue::
 	end
+	rebuild_repo()
 end
 
 ltask.fork(function ()
@@ -110,16 +124,7 @@ function S.ROOT()
 		end
 		rebuild = true
 	end
-	if rebuild then
-		print(REPOPATH, "rebuild")
-		if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
-			repo:index()
-		else
-			repo:rebuild()
-		end
-		print(REPOPATH, "rebuild finish")
-		rebuild = false
-	end
+	rebuild_repo()
 	return repo:root()
 end
 
