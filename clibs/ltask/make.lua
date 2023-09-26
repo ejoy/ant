@@ -25,7 +25,7 @@ lm:lua_source "ltask" {
     },
     defines = {
         --"DEBUGLOG",
-        lm.mode=="debug" and "DEBUGTHREADNAME",
+        "DEBUGTHREADNAME",
     },
     windows = {
         links = {
