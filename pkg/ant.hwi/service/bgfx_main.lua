@@ -92,10 +92,22 @@ local function profile_print()
         end
 
         local stats = bgfx.get_stats( "vc", bgfx_stat )
-        table.sort(stats.view, function (a, b) return a.gpu > b.gpu end)
+        local stats_views = stats.view
+        local views = {}
+        for i = 1, #stats_views do
+            local s = stats_views[i]
+            local v = views[s.name]
+            if v then
+                v.cpu = v.cpu + s.cpu
+            else
+                views[#views+1] = s
+                views[s.name] = s
+            end
+        end
+        table.sort(views, function (a, b) return a.gpu > b.gpu end)
         add_text "--- view"
         for i = 1, 5 do
-            local view = stats.view[i]
+            local view = views[i]
             if view then
                 local name = view.name
                 add_text(format_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu)))
