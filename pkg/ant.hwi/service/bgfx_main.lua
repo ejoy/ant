@@ -53,6 +53,7 @@ local MaxText <const> = 10
 local MaxName <const> = 48
 local profile_printtext = {n=0}
 
+local bgfx_stat = {}
 local function profile_print()
     if not profile_enable then
         return
@@ -89,7 +90,7 @@ local function profile_print()
             profile[who] = 0
         end
 
-        local stats = bgfx.get_stats "vc"
+        local stats = bgfx.get_stats( "vc", bgfx_stat )
         table.sort(stats.view, function (a, b) return a.gpu > b.gpu end)
         add_text "--- view"
         for i = 1, 5 do
