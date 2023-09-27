@@ -12,6 +12,17 @@ local function is_cs_skinning_buffer(layoutname)
 end
 
 local proxy_vb = {}
+
+local function mem2str(m)
+    local datatype = type(m[1])
+    if datatype == "userdata" then
+        return fastio.mem2str(m[1], m[3], m[2])
+    end
+
+    assert(datatype == "string")
+    return m[1]:sub(m[2], m[2]+m[3])
+end
+
 function proxy_vb:__index(k)
     if k == "handle" then
         assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
@@ -24,6 +35,10 @@ function proxy_vb:__index(k)
         self.handle = h
         return h
     end
+
+    if k == "str" then
+        return mem2str(self.memory)
+    end
 end
 
 local proxy_ib = {}
@@ -34,6 +49,10 @@ function proxy_ib:__index(k)
         local h = bgfx.create_index_buffer(membuf, self.flag)
         self.handle = h
         return h
+    end
+
+    if k == "str" then
+        return mem2str(self.memory)
     end
 end
 
@@ -70,26 +89,23 @@ local function parent_path(v)
     return v:match("^(.+)/[^/]*$")
 end
 
-local function load_mem(m, filename)
-    local binname = m[1]
-    assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
+local function load_mem(buf, meshfile)
+    if buf then
+        local m = buf.memory
+        local binname = m[1]
+        assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
-    m[1] = fastio.readall_compiled(parent_path(filename) .. "/" .. binname)
+        m[1] = fastio.readall_compiled(parent_path(meshfile) .. "/" .. binname)
+    end
 end
 
 local function loader(filename)
     local mesh = datalist.parse(fastio.readall_compiled(filename))
 
-    local vb = assert(mesh.vb)
-    load_mem(vb.memory, filename)
-    local vb2 = mesh.vb2
-    if vb2 then
-        load_mem(vb2.memory, filename)
-    end 
-    local ib = mesh.ib
-    if ib then
-        load_mem(ib.memory, filename)
-    end
+    load_mem(mesh.vb, filename)
+    load_mem(mesh.vb2, filename)
+    load_mem(mesh.ib, filename)
+
     return init(mesh)
 end
 

@@ -32,4 +32,6 @@ function m.readall_compiled_s(path)
     return fastio.readall_s(realpath, path)
 end
 
+m.mem2str = fastio.mem2str
+
 return m

@@ -177,12 +177,23 @@ static int loadfile(lua_State *L) {
     return 1;
 }
 
+static int
+tostring(lua_State *L){
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    const void * b = lua_touserdata(L, 1);
+    const size_t s = (size_t)luaL_checkinteger(L, 2);
+    const size_t offset = (size_t)luaL_optinteger(L, 3, 1) - 1;
+    lua_pushlstring(L, (const char*)b+offset, s);
+    return 1;
+}
+
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
         {"readall", readall},
         {"readall_s", readall_s},
         {"loadfile", loadfile},
+        {"mem2str", tostring},
         {NULL, NULL},
     };
     luaL_newlib(L, l);
