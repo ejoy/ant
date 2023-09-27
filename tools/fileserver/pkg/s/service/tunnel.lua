@@ -7,6 +7,15 @@ local sessions = {}
 local session_id = 0
 local waiting_request = {}
 
+local function wakeup(s)
+	local waiting = #waiting_request
+	if waiting > 0 then
+		local co = waiting_request[waiting]
+		waiting_request[waiting] = nil
+		ltask.wakeup(co, s)
+	end
+end
+
 local function new_session(client_fd)
 	session_id = session_id + 1
 	local s = {
@@ -27,18 +36,16 @@ local function new_session(client_fd)
 		end
 		msg = msg .. reading
 		s.data = msg
-		local waiting = #waiting_request
-		if waiting > 0 then
-			local co = waiting_request[waiting]
-			waiting_request[waiting] = nil
-			ltask.wakeup(co, s)
-		end
+		wakeup(s)
 	end
 	print("Close client", session_id)
 	s.data = nil
 	s.fd = nil
 	sessions[session_id] = nil
 	socket.close(client_fd)
+	while #waiting_request > 0 do
+		wakeup(s)
+	end
 end
 
 local function main()
@@ -67,8 +74,12 @@ function S.REQUEST()
 		local s = ltask.wait(token)
 		local data = s.data
 		if data ~= "" then
-			s.data = ""
-			return s.session, data
+			if data then
+				s.data = ""
+				return s.session, data
+			else
+				return s.session
+			end
 		end
 		-- retry
 	end

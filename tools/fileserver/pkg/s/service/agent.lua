@@ -57,18 +57,23 @@ local function tunnel_redirect(port, s)
 	port = tostring(port)
 	while true do
 		local session, req = ltask.call(s, "REQUEST")
-		local len = #req
-		local from = 1
 		session = tostring(session)
-		while true do
-			if len <= 0x8000 then
-				response("TUNNEL", port, session, req)
-				break
-			else
-				response("TUNNEL", port, session, req:sub(1, 0x8000))
-				req = req:sub(0x8001)
-				len = len - 0x8000
+		if req then
+			local len = #req
+			local from = 1
+			while true do
+				if len <= 0x8000 then
+					response("TUNNEL", port, session, req)
+					break
+				else
+					response("TUNNEL", port, session, req:sub(1, 0x8000))
+					req = req:sub(0x8001)
+					len = len - 0x8000
+				end
 			end
+		else
+			-- session closed
+			response("TUNNEL", port, session)
 		end
 	end
 end
