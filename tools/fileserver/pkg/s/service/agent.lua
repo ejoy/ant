@@ -40,6 +40,68 @@ end
 
 local roothash = ltask.call(ServiceVfsMgr, "ROOT")
 
+local TUNNEL_SERVICE = {}
+
+local function new_tunnel(port)
+	local TUNNEL_ADDR <const> = "127.0.0.1"
+	print("Listen on", TUNNEL_ADDR , port)
+	local fd, err = socket.bind("tcp", TUNNEL_ADDR, port)
+	if fd then
+		return ltask.spawn("s|tunnel", fd)
+	else
+		print(err)
+	end
+end
+
+local function tunnel_redirect(port, s)
+	port = tostring(port)
+	while true do
+		local session, req = ltask.call(s, "REQUEST")
+		local len = #req
+		local from = 1
+		session = tostring(session)
+		while true do
+			if len <= 0x8000 then
+				response("TUNNEL", port, session, req)
+				break
+			else
+				response("TUNNEL", port, session, req:sub(1, 0x8000))
+				req = req:sub(0x8001)
+				len = len - 0x8000
+			end
+		end
+	end
+end
+
+-- device use TUNNEL_OPEN (through the fileserver) to open a tunnel
+-- fileserver response the request with port and session from client to the device.
+function message.TUNNEL_OPEN(port)
+	port = tonumber(port)
+	assert(TUNNEL_SERVICE[port] == nil)
+	local s = new_tunnel(port)
+	if s then
+		TUNNEL_SERVICE[port] = s
+		ltask.fork(tunnel_redirect, port, s)
+	end
+end
+
+-- device use TUNNEL_RESP to response the REQUEST from client before.
+-- resp == "" means close the session
+function message.TUNNEL_RESP(port, session, resp)
+	port = tonumber(port)
+	session = tonumber(session)
+	local s = TUNNEL_SERVICE[port]
+	if s then
+		if resp == "" then
+			ltask.send(s, "RESPONSE", session)
+		else
+			ltask.send(s, "RESPONSE", session, resp)
+		end
+	else
+		print("No tunnel service for port", port)
+	end
+end
+
 function message.SHAKEHANDS()
 end
 
@@ -132,6 +194,7 @@ end
 
 local ignore_log = {
 	LOG = true,
+	TUNNEL_RESP = true,
 }
 
 local function dispatch(fd)
@@ -165,6 +228,9 @@ local function quit()
 	ltask.call(ServiceLogManager, "CLOSE", LoggerIndex)
 	if ServiceDebugProxy then
 		ltask.send(ServiceDebugProxy, "QUIT")
+	end
+	for _, s in pairs(TUNNEL_SERVICE) do
+		ltask.send(s, "QUIT")
 	end
 end
 
