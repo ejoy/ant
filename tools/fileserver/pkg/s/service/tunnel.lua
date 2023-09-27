@@ -15,6 +15,7 @@ local function new_session(client_fd)
 		session = session_id,
 	}
 	sessions[session_id] = s
+	print("New client", session_id)
 	while true do
 		local reading = socket.recv(client_fd)
 		if reading == nil then
@@ -33,6 +34,7 @@ local function new_session(client_fd)
 			ltask.wakeup(co, s)
 		end
 	end
+	print("Close client", session_id)
 	s.data = nil
 	s.fd = nil
 	sessions[session_id] = nil
