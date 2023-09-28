@@ -4,8 +4,18 @@ policy "indirect"
 
 component "indirect_type".type "lua"
 
+component "indirect_object"
+    .type "c"
+
+    .field "idb_handle:dword"
+    .field "itb_handle:dword"
+    .field "draw_num:dword"
+
+    .implement "render_system/indirect_object.lua"
+
 policy "draw_indirect"
     .component "draw_indirect"
+    .component_opt "indirect_object"
 
 policy "draw_indirect_cull"
     .component "draw_indirect_cull"
@@ -19,7 +29,9 @@ component "draw_indirect_queue".type "lua"
 component "draw_indirect_ready"
 component "draw_indirect_update"
 
-system "draw_indirect_system"
-    .implement "draw_indirect/draw_indirect.lua"
+-- system "draw_indirect_system"
+--     .implement "draw_indirect/draw_indirect.lua"
 
-import "render_system/indirect_object.ecs"
+
+system "draw_indirect_system2"
+    .implement "draw_indirect/draw_indirect2.lua"

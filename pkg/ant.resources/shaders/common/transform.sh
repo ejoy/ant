@@ -14,11 +14,12 @@
 	#define DRAW_INDIRECT_TYPE     u_draw_indirect_type.x
 	#define DRAW_INDIRECT_ROAD     1
 	#define DRAW_INDIRECT_MOUNTAIN 2
+	#define DRAW_INDIRECT_MOUNTAIN2 3
 
 mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 {
-	mat4 wm = u_model[0];
-	if(DRAW_INDIRECT_TYPE == DRAW_INDIRECT_MOUNTAIN){
+	if(DRAW_INDIRECT_TYPE == DRAW_INDIRECT_MOUNTAIN)
+	{
 		float s = d1.x;
 		float r = d1.y;
 		float tx = d1.z;
@@ -26,7 +27,7 @@ mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 		float rad = r;
 		float cosy = cos(rad);
 		float siny = sin(rad);	
-		wm = mat4(
+		mat4 sm = mat4(
 			   s,          0,          0,        0, 
 			   0,          s,          0,        0, 
 			   0,          0,          s,        0, 
@@ -38,16 +39,24 @@ mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 			siny,          0,       cosy,        0, 
 			   0,          0,          0,        1
 		);
-		wm = mul(rm, wm);
-		wm[0][3] = wm[0][3] + tx;
-		wm[2][3] = wm[2][3] + tz;		
-	}
-	else{
-		wm[0][3] = wm[0][3] + d1.x;
-		wm[1][3] = wm[1][3] + d1.y;
-		wm[2][3] = wm[2][3] + d1.z;		
-	}
-	return wm;
+		mat4 m = mul(rm, sm);
+		m[0][3] = m[0][3] + tx;
+		m[2][3] = m[2][3] + tz;
+		return m;
+	} 
+	
+	if (DRAW_INDIRECT_MOUNTAIN2 == DRAW_INDIRECT_TYPE)
+	{
+		mat4 m = mat4(d1, d2, d3, vec4(0.0, 0.0, 0.0, 1.0));
+		m = transpose(m);
+		return m;
+	} 
+
+	mat4 m = u_model[0];
+	m[0][3] = m[0][3] + d1.x;
+	m[1][3] = m[1][3] + d1.y;
+	m[2][3] = m[2][3] + d1.z;
+	return m;
 }
 #endif
 

@@ -3,10 +3,8 @@ import_feature "ant.asset"
 system "compute_system"
     .implement "compute/compute.lua"
 
-component "compute"
 component "dispatch".type "lua"
 
 policy "compute_policy"
     .include_policy "ant.asset|material"
-    .component "compute"
     .component "dispatch"

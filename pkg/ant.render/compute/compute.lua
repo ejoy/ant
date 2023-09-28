@@ -29,7 +29,6 @@ function ic.create_compute_entity(name, materialfile, size, onready)
             dispatch    ={
                 size    = size,
             },
-            compute     = true,
             on_ready    = onready,
             [name]      = true,
         }

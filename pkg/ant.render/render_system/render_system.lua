@@ -31,31 +31,23 @@ function render_sys:component_init()
 end
 
 local function update_ro(ro, m)
---[[ 	ro.vb_start = m.vb.start
-	ro.vb_num = m.vb.num
-	ro.vb_handle = m.vb.handle
+	local vb = m.vb
+ 	ro.vb_start = vb.start
+	ro.vb_num 	= vb.num
+	ro.vb_handle= vb.handle
 
-	local ib = m.ib
-	if ib then
-		ro.ib_start = m.ib.start
-		ro.ib_num = m.ib.num
-		ro.ib_handle = m.ib.handle
-	end ]]
-
- 	ro.vb_start = m.vb.start
-	ro.vb_num = m.vb.num
-	ro.vb_handle = m.vb.handle
-	if m.vb2 then
-		ro.vb2_start = m.vb2.start
-		ro.vb2_num = m.vb2.num
-		ro.vb2_handle = m.vb2.handle
+	local vb2 = m.vb2
+	if vb2 then
+		ro.vb2_start	= vb2.start
+		ro.vb2_num		= vb2.num
+		ro.vb2_handle	= vb2.handle
 	end
 
 	local ib = m.ib
 	if ib then
-		ro.ib_start = m.ib.start
-		ro.ib_num = m.ib.num
-		ro.ib_handle = m.ib.handle
+		ro.ib_start = ib.start
+		ro.ib_num 	= ib.num
+		ro.ib_handle= ib.handle
 	end 
 end
 
@@ -98,7 +90,10 @@ function render_sys:entity_init()
 		e.render_object_visible = e.view_visible
 	end
 
-	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
+	for e in w:select "INIT mesh?in simplemesh?in render_object:update stonemountain?in" do
+		if e.stonemountain then
+			print ""
+		end
 		local m = e.mesh or e.simplemesh
 		if m then
 			update_ro(e.render_object, m)

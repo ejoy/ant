@@ -1,125 +1,62 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local datalist  = require "datalist"
-local math3d 	= require "math3d"
-local bgfx 		= require "bgfx"
-local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
+
+local math3d 	    = require "math3d"
+
 local imaterial     = ecs.require "ant.asset|material"
-local layoutmgr = import_package "ant.render".layoutmgr
+local imesh         = ecs.require "ant.asset|mesh"
+local icompute      = ecs.require "ant.render|compute.compute"
+
+local mc            = import_package "ant.math".constant
+local hwi           = import_package "ant.hwi"
+local bgfx          = require "bgfx"
+
+local main_viewid<const> = hwi.viewid_get "main_view"
+
 local terrain_module = require "terrain"
 local ism = {}
 local sm_sys = ecs.system "stone_mountain_system"
-local fastio = import_package "ant.serialize".fastio
 
-local open_sm = false
-local vb_num, vb_size, vb2_size, ib_num, ib_size = 0, 0, 0, 0, 0
-local vb_handle, vb2_handle, ib_handle
 local sm_table = {}
-local aabb_table = {
-    math3d.ref(math3d.aabb(math3d.vector(-33.2579,-0.0005,-32.6542,0.0), math3d.vector(35.1511,45.1606,31.0777,0.0))),
-    math3d.ref(math3d.aabb(math3d.vector(-26.2541,0.0,-20.8443,0.0), math3d.vector(17.2726,42.8129,21.9373,0.0))),
-    math3d.ref(math3d.aabb(math3d.vector(-24.6474,0.0,-27.0006,0.0), math3d.vector(20.777,41.7251,30.2341,0.0))),
-    math3d.ref(math3d.aabb(math3d.vector(-22.9146,-0.0,-24.5635,0.0), math3d.vector(27.4767,44.5719,28.3179,0.0)))
-}
-local mesh_idx_table = {}
-local ratio, width, height = 0.80, 256, 256
-local ratio_table = {
+local NOISE_RATIOS<const> = {
     0.88, 0.90, 0.92, 0.94
 }
-local freq, depth, unit, offset = 4, 4, 10, 0
-local mesh_table = {
-    {filename = "/pkg/ant.landform/assets/meshes/mountain1.glb|meshes/Cylinder.002_P1.meshbin"},
-    {filename = "/pkg/ant.landform/assets/meshes/mountain2.glb|meshes/Cylinder.004_P1.meshbin"},
-    {filename = "/pkg/ant.landform/assets/meshes/mountain3.glb|meshes/Cylinder_P1.meshbin"},
-    {filename = "/pkg/ant.landform/assets/meshes/mountain4.glb|meshes/Cylinder.021_P1.meshbin"}
+
+local SM_SRT_INFOS = {
+    {scale = {0.064, 0.064}, offset = 0.5}, 
+    {scale = {0.064, 0.200}, offset = 0.1}, 
+    {scale = {0.125, 0.250}, offset = 1.5},
+    {scale = {0.350, 0.250}, offset = 2.0}
 }
 
-local sm_info_table = {
-    {sidx = 1, scale = {lb = 0.064, rb = 0.064}, offset = 0.5}, 
-    {sidx = 2, scale = {lb = 0.064, rb = 0.200}, offset = 0.1}, 
-    {sidx = 3, scale = {lb = 0.125, rb = 0.250}, offset = 1.5},
-    {sidx = 4, scale = {lb = 0.350, rb = 0.250}, offset = 2.0}
-}
-
-
-local function generate_sm_config()
-    local function update_idx_table(x, z, m, n, idx_table)
-        for oz = 0, n - 1 do
-            for ox = 0, m - 1 do
-                local xx, zz = ox + x, oz + z
-                local idx = 1 + zz * width + xx
-                if xx < width and zz < height then
-                    idx_table[idx] = 1
-                end
-            end
-        end        
+local gen_noise; do
+    local noise_freq<const> = 4
+    local noise_depth<const> = 4
+    function gen_noise(x, z, idx)
+        x, z=x-1, z-1   --change to base 0
+        local seed, offset_y, offset_x = z*x+idx, z+idx, x+idx
+        return terrain_module.noise(x, z, noise_freq, noise_depth, seed, offset_y, offset_x)
     end
-    local idx_table = {}
-    for iz = 0, height - 1 do
-        for ix = 0, width - 1 do
-            for ri = 1, 4 do
-                local seed, offset_y, offset_x = iz * ix + ri, iz + ri, ix + ri
-                local noise = terrain_module.noise(ix, iz, freq, depth, seed, offset_y, offset_x)
-                if ri == 1 then -- 1x1
-                    local idx = 1 + iz * width + ix
-                    if noise > ratio_table[ri] then
-                        idx_table[idx] = 1
-                    elseif not idx_table[idx] then
-                        
-                        idx_table[idx] = 0
-                    end
-                else
-                    if noise > ratio_table[ri] then
-                        update_idx_table(ix, iz, ri, ri, idx_table)
-                    end   
-                end
-            end
-        end
-    end
-    return string.pack(("B"):rep(width * height), table.unpack(idx_table))
 end
 
-function ism.create_random_sm(d, ww, hh, off, un)
-    ratio = ratio + (1 - d) / 10
-    width, height =  ww, hh
-    if off then offset = off end
-    if un then unit = un end
-    return generate_sm_config()
-end
+local function get_srt(offset, unit)
+    for sidx, sm_info in ipairs(SM_SRT_INFOS) do
+        local lb, rb, off = sm_info.scale.lb, sm_info.scale.rb, sm_info.offset
+        for sm_idx, sm in pairs(sm_table) do
+            local ix, iz = sm_idx & 0xffff, sm_idx >> 16
 
-function ism.create_sm_entity(group_table)
-    open_sm = true
-    for iz = 0, height - 1 do
-        for ix = 0, width - 1 do
-            local idx = iz * width + ix + 1
-            local sm_group = group_table[idx]
-            if sm_group then
-                local sm_idx = (iz << 16) + ix
-                sm_table[sm_idx] = {}
-            end
+            local s_noise = gen_noise(ix+1, iz+1, sidx) * rb + lb
+            local r_noise = gen_noise(ix+1, iz+1, sidx) * math.pi * 2
+        
+            local mesh_noise = (sm_idx + math.random(0, 4)) % 4 + 1
+            local tx, tz = (ix + off - offset) * unit, (iz + off - offset) * unit
+            sm[sidx] = {s = s_noise, r = r_noise, tx = tx, tz = tz, m = mesh_noise}
         end
     end
 end
 
-local function get_srt()
-    for _, sm_info in pairs(sm_info_table) do
-        local sidx, lb, rb, off = sm_info.sidx, sm_info.scale.lb, sm_info.scale.rb, sm_info.offset
-        for sm_idx, _ in pairs(sm_table) do
-            if sm_table[sm_idx][sidx] then
-                local ix, iz = sm_idx & 65535, sm_idx >> 16
-                local seed, offset_y, offset_x = iz * ix + sidx, iz + sidx, ix + sidx
-                local s_noise = terrain_module.noise(ix, iz, freq, depth, seed, offset_y, offset_x) * rb + lb
-                local r_noise = math.floor(terrain_module.noise(ix, iz, freq, depth, seed, offset_y, offset_x) * 360) + math.random(-360, 360) 
-                local mesh_noise = (sm_idx + math.random(0, 4)) % 4 + 1
-                local tx, tz = (ix + off - offset) * unit, (iz + off - offset) * unit
-                sm_table[sm_idx][sidx] = {s = s_noise, r = math.rad(r_noise), tx = tx, tz = tz, m = mesh_noise}
-            end
-        end
-    end
-end
-
-local function set_sm_property()
+local function set_sm_property(width, height)
     local function has_block(x, z, m, n)
         for oz = 0, n - 1 do
             for ox = 0, m - 1 do
@@ -131,191 +68,210 @@ local function set_sm_property()
                 end
             end
         end
-        return true        
+        return true
     end
 
-    for sm_idx, _ in pairs(sm_table) do
-        local ix, iz = sm_idx & 65535, sm_idx >> 16
-        local near_table = {[1] = true}
-        for _ , sm_info in pairs(sm_info_table) do
-            local sidx = sm_info.sidx
-            if sidx ~= 1 and has_block(ix, iz, sidx, sidx) then
+    for sm_idx in pairs(sm_table) do
+        local ix, iz = sm_idx & 0xffff, sm_idx >> 16
+        local near_table = {true}
+        for sidx=2, #SM_SRT_INFOS do
+            if has_block(ix, iz, sidx, sidx) then
                 near_table[sidx] = true
             end
         end
         if math.random(0, 1) > 0 then
             near_table[1] = nil
-        end 
+        end
         for idx, _ in pairs(near_table) do
             sm_table[sm_idx][idx] = {}
         end
     end
 end
 
-local function make_sm_noise()
-    set_sm_property()
-    get_srt()
+local function make_sm_noise(width, height, offset, unit)
+    set_sm_property(width, height)
+    get_srt(offset, unit)
 end
 
-local function load_mem(m, filename)
-    local function parent_path(v)
-        return v:match("^(.+)/[^/]*$")
-    end
-    local binname = m[1]
-    assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
-
-    local data, err = fastio.readall_compiled_s(parent_path(filename) .. "/" .. binname)
-    if not data then
-        error(("read file failed:%s, error:%s"):format(binname, err))
-    end
-    m[1] = data
-end
+local MERGE_MESH
+local MESH_PARAMS
 
 function sm_sys:init()
-    local vb_memory, vb2_memory, ib_memory = '', '', ''
-    local vb_decl, vb2_decl = layoutmgr.get('p30NIf|T40nii').handle, layoutmgr.get('c40niu|t20NIf').handle
-    for idx = 1, 4 do
-        local mesh = mesh_table[idx]
-        local mm = datalist.parse(fastio.readall_compiled_s(mesh.filename))
-        load_mem(mm.vb.memory,  mesh.filename)
-        load_mem(mm.vb2.memory, mesh.filename)
-        load_mem(mm.ib.memory,  mesh.filename)
-        vb_num, vb_size, vb2_size = vb_num + mm.vb.num, vb_size + mm.vb.memory[3], vb2_size + mm.vb2.memory[3]
-        ib_num, ib_size = ib_num + mm.ib.num, ib_size + mm.ib.memory[3]
-        mesh.vb_num, mesh.vb_size, mesh.vb2_size = mm.vb.num, mm.vb.memory[3], mm.vb2.memory[3]
-        mesh.ib_num, mesh.ib_size = mm.ib.num, mm.ib.memory[3]
-        vb_memory  = vb_memory .. mm.vb.memory[1]
-        vb2_memory = vb2_memory .. mm.vb2.memory[1]
-        ib_memory  = ib_memory .. mm.ib.memory[1]
+    local vbnums, ibnums
+    MERGE_MESH, vbnums, ibnums = imesh.build_meshes{
+        "/pkg/ant.landform/assets/meshes/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
+        "/pkg/ant.landform/assets/meshes/mountain2.glb|meshes/Cylinder.004_P1.meshbin",
+        "/pkg/ant.landform/assets/meshes/mountain3.glb|meshes/Cylinder_P1.meshbin",
+        "/pkg/ant.landform/assets/meshes/mountain4.glb|meshes/Cylinder.021_P1.meshbin",
+    }
+
+    local vboffset, iboffset = 0, 0
+    local mp = {}
+    for i=1, #vbnums do
+        mp[i] = math3d.vector(vboffset, iboffset, ibnums[i], 0)
+        vboffset = vboffset + vbnums[i]
+        iboffset = iboffset + ibnums[i]
     end
-    vb_handle  = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.unpack{vb_memory, 1, vb_size}), vb_decl)
-    vb2_handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.unpack{vb2_memory, 1, vb2_size}), vb2_decl)
-    ib_handle  = bgfx.create_index_buffer(bgfx.memory_buffer(table.unpack{ib_memory, 1, ib_size}), '')
+
+    MESH_PARAMS = math3d.ref(math3d.array_vector(mp))
 end
-
-local function update_ro(ro)
-    ro.vb_handle, ro.vb2_handle, ro.ib_handle = vb_handle, vb2_handle, ib_handle
-    ro.vb_num, ro.vb2_num, ro.ib_num = vb_num, vb_num, ib_num
-end
-
-local function get_indirect_params()
-    local indirect_params_table = {}
-    local vb_offset, ib_offset = 0, 0
-    for mesh_idx = 1, #mesh_table do
-        local ib_num = mesh_table[mesh_idx].ib_num
-        if mesh_idx ~= 1 then
-            local prev_mesh = mesh_table[mesh_idx-1]
-            vb_offset, ib_offset = vb_offset + prev_mesh.vb_num, ib_offset + prev_mesh.ib_num
-        end
-        indirect_params_table[mesh_idx] = math3d.vector(vb_offset, ib_offset, ib_num, 0)
-    end
-    return indirect_params_table
-end
-
-
 
 function sm_sys:entity_init()
 
-    for e in w:select "INIT stonemountain:update render_object?update indirect_object?update eid:in" do
-        local stonemountain = e.stonemountain
-        update_ro(e.render_object)
-        local max_num = 5000
-        local draw_indirect_eid = world:create_entity {
-            policy = {
-                "ant.render|draw_indirect",
-            },
-            data = {
-                draw_indirect = {
-                    target_eid = e.eid,
-                    itb_flag = "r",
-                    aabb_table = aabb_table,
-                    mesh_idx_table = mesh_idx_table,
-                    srt_table = stonemountain.srt_info,
-                    draw_num = stonemountain.draw_num,
-                    max_num = max_num,
-                    indirect_params_table = get_indirect_params(),
-                    indirect_type = "stone_mountain"
-                },
-            }
-        }
-        stonemountain.draw_indirect_eid = draw_indirect_eid
-        e.indirect_object.draw_num = 0
-        e.indirect_object.idb_handle = 0xffffffff
-        e.indirect_object.itb_handle = 0xffffffff
-    end
-
-    
-    for e in w:select "stonemountain:update render_object:update indirect_object:update scene:in bounding:update draw_indirect_ready:out" do
-        local stonemountain = e.stonemountain
-        local draw_num = stonemountain.draw_num
-        if draw_num > 0 then
-            local de <close> = world:entity(stonemountain.draw_indirect_eid, "draw_indirect:in")
-            local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
-            e.indirect_object.idb_handle = idb_handle
-            e.indirect_object.itb_handle = itb_handle
-            e.indirect_object.draw_num = draw_num
-        else
-            e.indirect_object.idb_handle = 0xffffffff
-            e.indirect_object.itb_handle = 0xffffffff
-            e.indirect_object.draw_num = 0
-        end
-
-        e.draw_indirect_ready = false
-    end
 end
 
-local function create_sm_entity()
-    --TODO
-    if true then return end
-    local stonemountain = {draw_num = 0, srt_info = {}}
+local function idx2xz(idx, stride)
+    return (idx % stride)+1, (idx // stride)+1
+end
 
-    for _, sms in pairs(sm_table) do
-        for _, sm in pairs(sms) do
-            local mesh_idx = sm.m
-            mesh_idx_table[#mesh_idx_table+1] = math3d.vector(0, 0, 0, mesh_idx)
-            stonemountain.draw_num = stonemountain.draw_num + 1
-            stonemountain.srt_info[#stonemountain.srt_info+1] = {
-                {sm.s, sm.r, sm.tx, sm.tz},
-                {0, 0, 0, 0},
-                {0, 0, 0, 0}
-            } 
+local QUEUE_MT = {
+    empty = function(self) return 0 == #self end,
+    pop = function (self) return table.remove(self, #self) end,
+    find = function (self, v) for i=1, #self do if self[i] == v then return true end end end,
+}
+
+local function create_sm_entity(gid, indices, width, height, offset, unit)
+    local memory = {}
+    local meshes = {}
+    for _, idx in ipairs(indices) do
+        local ix, iz = idx2xz(idx, width)
+        --TODO: we only consider one mask for one stone
+        local sidx<const> = 1
+        local info = SM_SRT_INFOS[sidx]
+        local function scale_remap(nv, s, o)
+            return nv * s + o
         end
+        local s_noise = scale_remap(gen_noise(ix, iz, sidx), info.scale[2], info.scale[1])
+        local r_noise = gen_noise(ix, iz, 1) * math.pi * 2
+
+        local tx, tz = (ix - offset) * unit, (iz - offset) * unit
+        local m = math3d.matrix{s=s_noise, r=math3d.quaternion{axis=mc.YAXIS, r=r_noise}, t=math3d.vector(tx, 0, tz)}
+        m = math3d.transpose(m)
+        local c1, c2, c3 = math3d.index(m, 1, 2, 3)
+        local mesh_noise = math.random(1, 4)
+        meshes[#meshes+1] = mesh_noise
+        memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
     end
-    world:create_entity {
+
+    local mesh_indices_buffer = bgfx.create_index_buffer(bgfx.memory_buffer("w", meshes))
+
+    local drawnum = #memory
+
+    local di_eid = world:create_entity {
+        group = gid,
         policy = {
-            "ant.render|render",
+            "ant.render|simplerender",
             "ant.landform|stonemountain",
-            "ant.render|indirect"
+            "ant.render|draw_indirect"
          },
         data = {
             scene         = {},
-            mesh =  mesh_table[1].filename,
-            material      ="/pkg/ant.landform/assets/materials/pbr_sm.material", 
+            simplemesh    = MERGE_MESH,
+            material      = "/pkg/ant.landform/assets/materials/pbr_sm.material", 
             visible_state = "main_view|cast_shadow",
-            stonemountain = stonemountain,
-            draw_indirect_ready = false,
-            render_layer = "foreground",
-            indirect_type = "STONE_MOUNTAIN",
+            stonemountain = {
+                mesh_indices_buffer = mesh_indices_buffer,
+            },
+            draw_indirect = {
+                instance_buffer = {
+                    memory  = table.concat(memory, ""),
+                    flag    = "r",
+                    layout  = "t45NIf|t46NIf|t47NIf",
+                    num     = drawnum,
+                },
+            },
+            render_layer  = "foreground",
             on_ready = function(e)
-                local draw_indirect_type = idrawindirect.get_draw_indirect_type("STONE_MOUNTAIN")
-                imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
+                --local draw_indirect_type = idrawindirect.get_draw_indirect_type("STONE_MOUNTAIN")
+                local NEW_MOUNTAIN_TYPE<const> = 3
+                imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(NEW_MOUNTAIN_TYPE, 0, 0, 0))
+            end
+        }
+    }
+
+    world:create_entity {
+        policy = {
+            "ant.render|compute_policy",
+        },
+        data = {
+            material = "/pkg/ant.resources/materials/indirect/mountain.material",
+            dispatch    = {
+                size    = {((drawnum+63)//64), 0, 0},
+            },
+            on_ready = function (e)
+                local die = world:entity(di_eid, "draw_indirect:in")
+                local di = die.draw_indirect
+                w:extend(e, "dispatch:in")
+                local dis = e.dispatch
+                local m = dis.material
+                m.b_mesh_indices = {
+                    type    = "b",
+                    value   = mesh_indices_buffer,
+                    stage   = 0,
+                    access  = "r",
+                }
+                m.b_indirect_buffer = {
+                    type    = "b",
+                    value   = di.handle,
+                    stage   = 1,
+                    access  = "w",
+                }
+
+                m.u_mesh_params = MESH_PARAMS
+                --just do it once
+                icompute.dispatch(main_viewid, e.dispatch)
             end
         }
     }
 end
 
-function sm_sys:start_frame()
-    if open_sm then
-        make_sm_noise()
-        create_sm_entity()
-        open_sm = false
+function ism.create(groups, width, height, offset, unit)
+    for gid, indices in pairs(groups) do
+        --make_sm_noise(width, height, offset, unit)
+        create_sm_entity(gid, indices, width, height, offset, unit)
     end
+    
 end
 
 function sm_sys:entity_remove()
     for e in w:select "REMOVED stonemountain:in" do
-        w:remove(e.stonemountain.draw_indirect_eid)
+        bgfx.destroy(e.stonemountain.mesh_indices_buffer)
     end
+end
+
+function sm_sys:exit()
+    --TODO:
+    log.info("MERGE_MESH need remove")
+end
+
+
+-- this random algorithm should move to other
+local function update_sub_range_masks(width, height, range, ix, iz, masks)
+    local gz, gx = (iz-1)*range, (ix-1)*range
+    local noise = gen_noise(gx, gz, range)
+    for z=1, range do
+        for x=1, range do
+            local zz, xx = gz+z, gx+x
+            if xx <= width and zz <= height then
+                local maskidx = (zz-1)*width+xx
+                masks[maskidx] = noise > NOISE_RATIOS[range] and noise or 0
+            end
+        end
+    end
+end
+
+function ism.create_random_sm(width, height)
+    local masks = {}
+    for ri=1, 4 do
+        local ww, hh = (width+ri-1)//ri, (height+ri-1)//ri
+        for iz=1, ww do
+            for ix=1, hh do
+                update_sub_range_masks(width, height, ri, ix, iz, masks)
+            end
+        end
+    end
+    assert(width * height==#masks)
+    return masks
 end
 
 return ism
