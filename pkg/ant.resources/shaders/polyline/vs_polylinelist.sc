@@ -25,10 +25,10 @@ void main() {
 		v_prev_pos = mul(u_prev_mvp, vec4(a_position, 1.0));
 		dirCS2 = mul(u_prev_mvp, vec4(a_linedir, 0.0));
 
-		float w1 = calc_line_width(posCS.w, a_width);
+		float w1 = calc_line_width(posCS.w, a_width, aspect);
 		vec2 offset1 = calc_offset(dirCS.xy, aspect, w1);
 
-		float w2 = calc_line_width(v_prev_pos.w, a_width);
+		float w2 = calc_line_width(v_prev_pos.w, a_width, aspect);
 		vec2 offset2 = calc_offset(dirCS2.xy, aspect, w2);
 
 		posCS.xy += offset1 * a_side;
