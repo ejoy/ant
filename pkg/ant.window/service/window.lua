@@ -82,4 +82,13 @@ else
     error "window service unimplemented"
 end
 
-return {}
+local S = {}
+
+function S.maxfps(fps)
+    local window = require "window"
+    if window.maxfps then
+        window.maxfps(fps)
+    end
+end
+
+return S

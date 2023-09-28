@@ -16,7 +16,7 @@ local mc	= mathpkg.constant
 local math3d    = require "math3d"
 
 local imodifier = {}
-
+local auto_destroy_map = {}
 function modifier_sys:init()
 
 end
@@ -29,8 +29,16 @@ end
 
 function modifier_sys:update_modifier()
     local delta_time = timer.delta() * 0.001
-    for e in w:select "modifier:in" do
-        e.modifier:update(delta_time)
+    local to_remove = {}
+    for e in w:select "modifier:in eid:in" do
+        local rm = e.modifier:update(delta_time)
+        if rm then
+            to_remove[#to_remove + 1] = e.eid
+        end
+    end
+    for _, eid in ipairs(to_remove) do
+        imodifier.delete(auto_destroy_map[eid])
+        auto_destroy_map[eid] = nil
     end
 end
 
@@ -44,6 +52,7 @@ function modifier_sys:entity_ready()
         local mf = e.modifier
         mf.continue = true
         mf.keep = desc.forwards
+        mf.destroy = desc.destroy
         if m.anim_eid then
             if desc.name then
                 iani.play(m.anim_eid, desc)
@@ -81,6 +90,11 @@ function imodifier.delete(m)
         mf:reset()
     end
     w:remove(m.eid)
+    if type(m.anim_eid) == "table" then
+        world:remove_instance(m.anim_eid)
+    else
+        w:remove(m.anim_eid)
+    end
 end
 
 function imodifier.set_target(m, target)
@@ -98,8 +112,8 @@ function imodifier.set_target(m, target)
         if not target then
             return
         end
-        local e <close> = world:entity(target, "material:in")
-        local filename = e.material
+        local me <close> = world:entity(target, "material:in")
+        local filename = me.material
         if not filename then
             return
         end
@@ -229,6 +243,9 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                     local e <close> = world:entity(self.target)
                     iom.set_srt_offset_matrix(e, apply_value)
                     self.continue = running
+                    if not running and self.destroy then
+                        return true
+                    end
                 end
             },
 		},
@@ -244,6 +261,13 @@ function imodifier.start(m, desc)
         return
     end
     world:pub {"modifier", m, desc}
+end
+
+function imodifier.start_bone_modifier(target, group_id, filename, bone_name, desc)
+    local m = imodifier.create_bone_modifier(target, group_id, filename, bone_name)
+    desc.destroy = true
+    auto_destroy_map[m.eid] = m
+    imodifier.start(m, desc)
 end
 
 function imodifier.stop(m)

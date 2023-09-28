@@ -18,12 +18,8 @@ lm.compile_commands = "build"
 local EnableEditor = true
 if lm.os == "ios" then
     lm.arch = "arm64"
+    lm.sys = "ios15.0"
     EnableEditor = false
-    if lm.mode == "release" then
-        lm.sys = "ios14.1"
-    else
-        lm.sys = "ios14.1"
-    end
 end
 
 if lm.os == "android" then

@@ -15,6 +15,7 @@ int  window_init(struct ant_window_callback* cb);
 void window_close();
 bool window_peekmessage();
 void window_mainloop();
+void window_maxfps(float fps);
 
 void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h);

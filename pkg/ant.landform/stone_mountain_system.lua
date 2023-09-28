@@ -266,7 +266,7 @@ end
 
 local function create_sm_entity()
     --TODO
-    --if true then return end
+    if true then return end
     local stonemountain = {draw_num = 0, srt_info = {}}
 
     for _, sms in pairs(sm_table) do

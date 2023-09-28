@@ -7,34 +7,15 @@ local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = arg[1]
 
-local rebuild = false
 local repo
 local fswatch = fw.create()
 
 local function split(path)
 	local r = {}
-	path:string():gsub("[^/\\]+", function(s)
+	path:gsub("[^/\\]+", function(s)
 		r[#r+1] = s
 	end)
 	return r
-end
-
-local function compare_path_(al, bl)
-	for i = 1, #al do
-		if al[i] ~= bl[i] then
-			return false
-		end
-	end
-	return true
-end
-
-local function compare_path(a, b)
-	local al = split(a)
-	local bl = split(b)
-	if #al > #bl then
-		return compare_path_(bl, al) and 1 or 0
-	end
-	return compare_path_(al, bl) and -1 or 0
 end
 
 local function ignore_path(p)
@@ -46,80 +27,53 @@ local function ignore_path(p)
 	end
 end
 
-local function watch_add_path(paths, path)
-	for i = 1, #paths do
-		local status = compare_path(paths[i], path)
-		if status == -1 then
-			return
-		end
-		if status == 1 then
-			paths[i] = path
-			return
-		end
-		--status == 0
+local function rebuild_repo()
+	print("rebuild start")
+	if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
+		repo:index()
+	else
+		repo:rebuild()
 	end
-	paths[#paths+1] = path
+	print("rebuild finish")
 end
 
 local function update_watch()
+	local rebuild = false
 	while true do
 		local type, path = fswatch:select()
 		if not type then
 			break
 		end
-		--if rebuild then
-		--	goto continue
-		--end
-		path = fs.path(path)
-		if ignore_path(path) then
-			goto continue
-		end
-		local vpath = repo:virtualpath(path)
-		if vpath then
-			print('Modify repo', vpath)
+		if not ignore_path(path) then
+			print(type, path)
 			rebuild = true
-			goto continue
 		end
-		::continue::
+	end
+	if rebuild then
+		rebuild_repo()
 	end
 end
 
-ltask.fork(function ()
-	while true do
-		update_watch()
-		ltask.sleep(10)
+do
+	repo = repo_new(fs.path(REPOPATH))
+	if repo == nil then
+		error "Create repo failed."
 	end
-end)
+	for _, lpath in pairs(repo._mountpoint) do
+		fswatch:add(lpath:lexically_normal():string())
+	end
+	rebuild_repo()
+	ltask.fork(function ()
+		while true do
+			update_watch()
+			ltask.sleep(10)
+		end
+	end)
+end
 
 local S = {}
 
 function S.ROOT()
-	if not repo then
-		repo = repo_new(fs.path(REPOPATH))
-		if repo == nil then
-			error "Create repo failed."
-		end
-		local paths = {}
-		watch_add_path(paths, fs.path(REPOPATH):lexically_normal())
-		for _, lpath in pairs(repo._mountpoint) do
-			watch_add_path(paths, lpath:lexically_normal())
-		end
-		for i = 1, #paths do
-			local path = paths[i]
-			fswatch:add(path:string())
-		end
-		rebuild = true
-	end
-	if rebuild then
-		print(REPOPATH, "rebuild")
-		if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
-			repo:index()
-		else
-			repo:rebuild()
-		end
-		print(REPOPATH, "rebuild finish")
-		rebuild = false
-	end
 	return repo:root()
 end
 
@@ -160,6 +114,5 @@ function S.VIRTUALPATH(path)
 	end
 	return ''
 end
-
 
 return S

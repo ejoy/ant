@@ -1,6 +1,7 @@
 local ltask         = require "ltask"
 local exclusive     = require "ltask.exclusive"
 local bgfx          = require "bgfx"
+local platform      = require "bee.platform"
 local fontmanager
 
 local initialized = false
@@ -53,10 +54,41 @@ local MaxText <const> = 10
 local MaxName <const> = 48
 local profile_printtext = {n=0}
 
+local bgfx_stat = {}
+local views = {}
+
+local function stats_views()
+    local stats = bgfx.get_stats("vc", bgfx_stat)
+    local mark = {}
+    for i = 1, #stats.view do
+        local s = stats.view[i]
+        local name = s.name
+        local v = views[name]
+        if mark[s.name] then
+            v.cpu = v.cpu + s.cpu
+        else
+            mark[name] = true
+            if v then
+                v.gpu = v.gpu + s.gpu
+                v.cpu = v.cpu + s.cpu
+            else
+                v = {
+                    name = name,
+                    gpu = s.gpu,
+                    cpu = s.cpu,
+                }
+                views[#views+1] = v
+                views[name] = v
+            end
+        end
+    end
+end
+
 local function profile_print()
     if not profile_enable then
         return
     end
+    stats_views()
     if profile_n ~= MaxFrame then
         profile_n = profile_n + 1
     else
@@ -89,21 +121,21 @@ local function profile_print()
             profile[who] = 0
         end
 
-        local stats = bgfx.get_stats "vc"
-        table.sort(stats.view, function (a, b) return a.gpu > b.gpu end)
+        table.sort(views, function (a, b) return a.gpu > b.gpu end)
         add_text "--- view"
         for i = 1, 5 do
-            local view = stats.view[i]
+            local view = views[i]
             if view then
                 local name = view.name
-                add_text(format_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu)))
+                add_text(format_text(name, (" | gpu %.02fms cpu %.02fms "):format(view.gpu / MaxFrame, view.cpu / MaxFrame)))
             else
                 break
             end
         end
+        views = {}
 
         add_text "--- submit"
-        add_text(format_text("draw|blit|compute|gpuLatency", (" | %d %d %d %dms"):format(stats.numDraw, stats.numBlit, stats.numCompute, stats.maxGpuLatency)))
+        add_text(format_text("draw|blit|compute|gpuLatency", (" | %d %d %d %dms"):format(bgfx_stat.numDraw, bgfx_stat.numBlit, bgfx_stat.numCompute, bgfx_stat.maxGpuLatency)))
         local rs = require "render.stat"
         local ss = rs.submit_stat()
         if next(ss) then
@@ -320,6 +352,11 @@ end
 function S.maxfps(v)
     if not v or v >= 10 then
         maxfps = v
+    end
+    --TODO: editor does not have "ant.window|window"
+    if platform.os == "ios" then
+        local ServiceWindow = ltask.queryservice "ant.window|window"
+        ltask.call(ServiceWindow, "maxfps", maxfps)
     end
     return maxfps
 end

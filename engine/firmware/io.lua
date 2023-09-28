@@ -718,6 +718,12 @@ end
 local exclusive = require "ltask.exclusive"
 local ltask
 
+function CMD.REDIRECT(_, resp_command, service_id)
+	response[resp_command] = function(...)
+		ltask.send(service_id, resp_command, ...)
+	end
+end
+
 local S = {}; do
 	local session = 0
 	for v in pairs(CMD) do
