@@ -397,11 +397,6 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
 		q = math3d.quaternion(qx*factor, qy*factor, qz*factor, qw)
 	end
 
-	local tw = math3d.index(tangent, 4)
-	if tw < 0 then
-		q = quat_inverse_sign(q)
-	end
-
 	return q
 end
 

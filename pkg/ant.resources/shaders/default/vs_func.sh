@@ -33,7 +33,7 @@ void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 	mediump vec3 tangent = vs_input.tangent.xyz;
 #	endif//PACK_TANGENT_TO_QUAT
 	vs_output.normal	= mul(wm, mediump vec4(normal, 0.0)).xyz;
-	vs_output.tangent	= mul(wm, mediump vec4(tangent, 0.0)).xyz * sign(vs_input.tangent.w);
+	vs_output.tangent	= mul(wm, mediump vec4(tangent, 0.0)).xyz;
 #endif//CALC_TBN
 
 #endif //!MATERIAL_UNLIT

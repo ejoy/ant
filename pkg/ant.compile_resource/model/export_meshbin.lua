@@ -176,6 +176,15 @@ local function r2l_vec_v(v, l)
 	if vv[3] and l:sub(6,6) == 'f' then
 		vv[3] = -vv[3]
 	end
+	if l:sub(1,1) == 'T' then
+		local is_mirror = vv[4] and vv[4] == -1
+		for i=1, #vv do
+			vv[i] = -vv[i]
+		end
+		if is_mirror then
+			vv[1] = -vv[1]
+		end		
+	end
 	return vv, fmt
 end
 
@@ -307,7 +316,12 @@ local function calc_tangents(math3d, ib, vb_num, vertices, layouts, store)
 		tangent	= math3d.normalize(tangent)
 
 		local nxt    	= math3d.cross(normal, tangent)
-		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and -1.0 or 1.0)
+		local is_mirror = math3d.dot(nxt, bitangent) < 0
+		tangent = math3d.mul(tangent, -1)
+		if is_mirror then
+			local flipped_x = math3d.index(tangent, 1) * -1
+			math3d.set_index(tangent, 1, flipped_x)
+		end
 		store(iv, tangent)
 	end
 end
