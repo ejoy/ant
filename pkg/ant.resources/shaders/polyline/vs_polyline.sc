@@ -36,7 +36,7 @@ vec4 calc_line_vertex_in_screen_space(vec3 pos, vec3 prev_pos, vec3 next_pos, fl
 	vec2 prevP_2D	= fix(prevPosCS,aspect);
 	vec2 nextP_2D	= fix(nextPosCS,aspect);
 
-	float w = calc_line_width(posCS.w, segmentwidth) * 0.5;
+	float w = calc_line_width(posCS.w, segmentwidth, aspect) * 0.5;
 
 	vec2 dirCS;
 	if (is_vec2_equal(currentP_2D, prevP_2D)){
