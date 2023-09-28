@@ -36,12 +36,10 @@ void main() {
 		v_cur_pos = posCS;
 		gl_Position = posCS;	
 	#else
-		float w = calc_line_width(posCS.w, a_width);
+		float w = calc_line_width(posCS.w, a_width, aspect);
 		vec2 offset = calc_offset(dirCS.xy, aspect, w);
 
 		posCS.xy += offset * a_side;
-
-		posCS.xy += u_jitter.xy * posCS.w; // Apply Jittering
 		gl_Position = posCS;
 	#endif
 

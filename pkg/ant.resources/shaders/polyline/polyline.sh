@@ -35,7 +35,7 @@ vec2 calc_offset(vec2 dir, float aspect, float w)
 {
 	vec2 normal = normalize(vec2(-dir.y, dir.x));
 	normal.x /= aspect;
-	normal *= 0.5 * w;
+	normal *= w;
 
     return normal;
 }
@@ -57,8 +57,8 @@ float calc_pixel_width(float clipw)
 
 }
 
-float calc_line_width(float clipw, float line_segment_width)
+float calc_line_width(float clipw, float line_segment_width, float aspect)
 {
 	float pixelWidth = calc_pixel_width(clipw);
-	return 1.8 * pixelWidth * u_line_width * line_segment_width;
+	return 1.8 * max(pixelWidth * u_line_width * line_segment_width, u_viewTexel.x * aspect * clipw);
 }
