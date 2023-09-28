@@ -417,7 +417,7 @@ local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
 function CMD.LIST(id, path)
-	print("[request] LIST", path)
+--	print("[request] LIST", path)
 	if path:sub(1,1) == "/" then
 		path = path:sub(2,-1)
 	end
@@ -438,7 +438,7 @@ function CMD.LIST(id, path)
 end
 
 function CMD.FETCH(id, path)
-	print("[request] FETCH", path)
+--	print("[request] FETCH", path)
 	request_start("FETCH", path, {
 		resolve = function ()
 			response_id(id)
@@ -590,7 +590,7 @@ function response.FECTH_RESPONSE(session, hashs, resource_hashs, unsolved_hashs,
 end
 
 function CMD.TYPE(id, fullpath)
-	print("[request] TYPE", fullpath)
+--	print("[request] TYPE", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -625,7 +625,7 @@ function CMD.TYPE(id, fullpath)
 end
 
 function CMD.GET(id, fullpath)
-	print("[request] GET", fullpath)
+--	print("[request] GET", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
@@ -665,7 +665,7 @@ function CMD.GET(id, fullpath)
 end
 
 function CMD.RESOURCE_SETTING(id, ext, setting)
-	print("[request] RESOURCE_SETTING", ext, setting)
+--	print("[request] RESOURCE_SETTING", ext, setting)
 	request_send("RESOURCE_SETTING", ext, setting)
 	response_id(id)
 end
