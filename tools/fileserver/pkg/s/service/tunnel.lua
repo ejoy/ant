@@ -16,6 +16,15 @@ local function wakeup(s)
 	end
 end
 
+local function close_session(s)
+	local fd = s.fd
+	s.fd = nil
+	if fd then
+--		FIXME: trigger socket assert
+--		socket.close(fd)
+	end
+end
+
 local function new_session(client_fd)
 	session_id = session_id + 1
 	local s = {
@@ -40,9 +49,8 @@ local function new_session(client_fd)
 	end
 	print("Close client", session_id)
 	s.data = nil
-	s.fd = nil
+	close_session(s)
 	sessions[session_id] = nil
-	socket.close(client_fd)
 	while #waiting_request > 0 do
 		wakeup(s)
 	end
@@ -92,9 +100,7 @@ function S.RESPONSE(session, resp)
 		return
 	end
 	if resp == nil then
-		if s.fd then
-			socket.close(s.fd)
-		end
+		close_session(s)
 	else
 		if s.fd then
 			socket.send(s.fd, resp)
@@ -104,10 +110,7 @@ end
 
 function S.QUIT()
 	for _, s in pairs(sessions) do
-		if s.fd then
-			socket.close(s.fd)
-			s.fd = nil
-		end
+		close_session(s)
 	end
 	socket.close(fd)
 	ltask.quit()
