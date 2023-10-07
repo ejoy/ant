@@ -20,8 +20,7 @@ local function close_session(s)
 	local fd = s.fd
 	s.fd = nil
 	if fd then
---		FIXME: trigger socket assert
---		socket.close(fd)
+		socket.close(fd)
 	end
 end
 

@@ -76,6 +76,7 @@ local function close_write(s)
     fd_clr_write(s.fd)
     if s.shutdown_r then
         fd_clr_read(s.fd)
+        s.shutdown_w = true
         close(s)
     end
 end
