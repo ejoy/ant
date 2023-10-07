@@ -21,6 +21,10 @@ end
 post_spawn "s|ios.event"
 post_spawn "s|android.event"
 while true do
-    local newfd = socket.listen(fd)
-    post_spawn("s|agent", newfd)
+    local newfd, err = socket.listen(fd)
+    if newfd then
+        post_spawn("s|agent", newfd)
+    else
+        print(err)
+    end
 end
