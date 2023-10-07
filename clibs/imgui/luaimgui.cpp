@@ -3409,6 +3409,7 @@ static struct enum_pair eTreeNodeFlags[] = {
 	ENUM(ImGuiTreeNodeFlags, FramePadding),
 	ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
 	ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
+	ENUM(ImGuiTreeNodeFlags, SpanAllColumns),
 	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
 	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
 	{ NULL, 0 },
