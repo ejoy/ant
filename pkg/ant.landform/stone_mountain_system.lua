@@ -130,6 +130,8 @@ local QUEUE_MT = {
     find = function (self, v) for i=1, #self do if self[i] == v then return true end end end,
 }
 
+local NEW_MOUNTAIN_TYPE<const> = math3d.ref(math3d.vector(3, 0, 0, 0))
+
 local function create_sm_entity(gid, indices, width, height, offset, unit)
     local memory = {}
     local meshes = {}
@@ -149,11 +151,21 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
         m = math3d.transpose(m)
         local c1, c2, c3 = math3d.index(m, 1, 2, 3)
         local mesh_noise = math.random(1, 4)
-        meshes[#meshes+1] = mesh_noise
+        meshes[#meshes+1] = ('H'):pack(mesh_noise)
         memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
     end
 
-    local mesh_indices_buffer = bgfx.create_index_buffer(bgfx.memory_buffer("w", meshes))
+    local function build_mesh_indices_buffer(meshes)
+        local s = table.concat(meshes, "")
+        local MIN_SIZE<const> = 16 --uvec4 = 16 bytes
+        local n = #s % MIN_SIZE
+        if n > 0 then
+            s = s .. ('\0'):rep(n)
+        end
+        return bgfx.create_index_buffer(bgfx.memory_buffer(s))
+    end
+
+    local mesh_indices_buffer = build_mesh_indices_buffer(meshes)
 
     local drawnum = #memory
 
@@ -179,12 +191,12 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
                     layout  = "t45NIf|t46NIf|t47NIf",
                     num     = drawnum,
                 },
+                indirect_type_NEED_REMOVED = NEW_MOUNTAIN_TYPE,
             },
             render_layer  = "foreground",
             on_ready = function(e)
-                --local draw_indirect_type = idrawindirect.get_draw_indirect_type("STONE_MOUNTAIN")
-                local NEW_MOUNTAIN_TYPE<const> = 3
-                imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(NEW_MOUNTAIN_TYPE, 0, 0, 0))
+                --TODO: need removed, srt data should be the same
+                imaterial.set_property(e, "u_draw_indirect_type", NEW_MOUNTAIN_TYPE)
             end
         }
     }
