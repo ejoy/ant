@@ -26,13 +26,14 @@ end
 
 local function new_session(client_fd)
 	session_id = session_id + 1
+	local currrent_session = session_id
 	local s = {
 		fd = client_fd,
 		data = "",
 		session = session_id,
 	}
 	sessions[session_id] = s
-	print("New client", session_id)
+	print("New client", currrent_session)
 	while true do
 		local reading = socket.recv(client_fd)
 		if reading == nil then
@@ -46,10 +47,10 @@ local function new_session(client_fd)
 		s.data = msg
 		wakeup(s)
 	end
-	print("Close client", session_id)
+	print("Close client", currrent_session)
 	s.data = nil
 	close_session(s)
-	sessions[session_id] = nil
+	sessions[currrent_session] = nil
 	while #waiting_request > 0 do
 		wakeup(s)
 	end
@@ -58,7 +59,9 @@ end
 local function main()
 	while true do
 		local newfd = socket.listen(fd)
-		ltask.fork(new_session, newfd)
+		if newfd then
+			ltask.fork(new_session, newfd)
+		end
 	end
 end
 
