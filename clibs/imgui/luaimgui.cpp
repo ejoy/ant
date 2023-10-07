@@ -143,7 +143,7 @@ static int lPairsInputEvents(lua_State* L) {
 			}
 			ImVec2 event_pos(e->MousePos.PosX, e->MousePos.PosY);
 			if (ImGui::IsMousePosValid(&event_pos))
-				event_pos = ImVec2(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
+				event_pos = ImVec2(ImFloor(event_pos.x), ImFloor(event_pos.y));
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "MousePos");
 			lua_pushnumber(L, event_pos.x);
