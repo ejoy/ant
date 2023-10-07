@@ -276,32 +276,8 @@ function fs.pairs(path)
     end
 end
 
-function fs.create_directory()
-    error 'Not implemented'
-end
-
-function fs.create_directories()
-    error 'Not implemented'
-end
-
-function fs.copy_file()
-    error 'Not implemented'
-end
-
-function fs.last_write_time()
-    error 'Not implemented'
-end
-
-function fs.exe_path()
-    error 'Not implemented'
-end
-
-function fs.dll_path()
-    error 'Not implemented'
-end
-
-function fs.filelock()
-    error 'Not implemented'
+function fs.file_size(path)
+    return lfs.file_size(path:localpath())
 end
 
 function fs.open(filepath, ...)
