@@ -113,7 +113,6 @@ local function create_prefilter_entities()
                     size    = dispatchsize,
                 },
                 prefilter = prefilter,
-                compute     = true,
                 on_ready    = function (e)
                     w:extend(e, "dispatch:in")
                     assetmgr.material_mark(e.dispatch.fx.prog)
