@@ -53,7 +53,7 @@ local function new_tunnel(port)
 	end
 end
 
-local function tunnel_redirect(port, s)
+local function tunnel_redirect(port, s, tunnel_name)
 	port = tostring(port)
 	while true do
 		local session, req = ltask.call(s, "REQUEST")
@@ -63,30 +63,30 @@ local function tunnel_redirect(port, s)
 			local from = 1
 			while true do
 				if len <= 0x8000 then
-					response("TUNNEL", port, session, req)
+					response(tunnel_name, port, session, req)
 					break
 				else
-					response("TUNNEL", port, session, req:sub(1, 0x8000))
+					response(tunnel_name, port, session, req:sub(1, 0x8000))
 					req = req:sub(0x8001)
 					len = len - 0x8000
 				end
 			end
 		else
 			-- session closed
-			response("TUNNEL", port, session)
+			response(tunnel_name, port, session)
 		end
 	end
 end
 
 -- device use TUNNEL_OPEN (through the fileserver) to open a tunnel
 -- fileserver response the request with port and session from client to the device.
-function message.TUNNEL_OPEN(port)
+function message.TUNNEL_OPEN(port, tunnel_name)
 	port = tonumber(port)
 	assert(TUNNEL_SERVICE[port] == nil)
 	local s = new_tunnel(port)
 	if s then
 		TUNNEL_SERVICE[port] = s
-		ltask.fork(tunnel_redirect, port, s)
+		ltask.fork(tunnel_redirect, port, s, tunnel_name)
 	end
 end
 
