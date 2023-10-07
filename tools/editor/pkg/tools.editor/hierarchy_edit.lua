@@ -108,6 +108,9 @@ function hierarchy:get_prefab_template()
             if template.filename then
                 template.filename = nil
             end
+            if template.replace_mtl then
+                template.replace_mtl = nil
+            end
             if template.data then
                 if template.data.tag then
                     template.data.tag = nil
