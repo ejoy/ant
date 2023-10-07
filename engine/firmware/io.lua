@@ -590,13 +590,14 @@ function response.FECTH_RESPONSE(session, hashs, resource_hashs, unsolved_hashs,
 end
 
 function CMD.TYPE(id, fullpath)
+	assert(fullpath ~= "")
+	if fullpath == "/" then
+		response_id(id, "dir")
+		return
+	end
 --	print("[request] TYPE", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
-		if fullpath == "" then
-			response_id(id, "dir")
-			return
-		end
 		path = ""
 		name = fullpath
 	end
