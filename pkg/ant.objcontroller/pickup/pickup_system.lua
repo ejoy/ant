@@ -342,19 +342,19 @@ local function create_pickup_state(srcstate, dststate)
 end
 
 function pickup_sys:update_filter()
-	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in skinning?in indirect_type?in" do
+	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in draw_indirect?in" do
 		if e.visible_state["pickup_queue"] then
 			local ro = e.render_object
 			local fm = e.filter_material
 
-			local dstres = which_material(e.skinning, e.indirect_type)
+			local di = e.draw_indirect
+			local dstres = which_material(e.skinning, di)
 
 			local mi = RM.create_instance(dstres.object)
 			mi:set_state(create_pickup_state(fm.main_queue:get_state(), dstres.state))
 			mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
-			if e.indirect_type then
-				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect_type)
-				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
+			if di then
+				mi.u_draw_indirect_type = di.indirect_type_NEED_REMOVED
 			end
 
 			fm["pickup_queue"] = mi

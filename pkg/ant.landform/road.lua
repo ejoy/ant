@@ -135,7 +135,7 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
                         "ant.scene|scene_object",
                         "ant.render|simplerender",
                         "ant.landform|road",
-                        "ant.render|indirect"
+                        "ant.render|draw_indirect"
                     },
                     data = {
                         scene = {},
@@ -144,12 +144,19 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
                         visible_state = "main_view|selectable|pickup",
                         road = {srt_info = srt_info, road_type = srt_idx},
                         render_layer = render_layer,
-                        draw_indirect_ready = false,
-                        draw_indirect_update = false,
-                        indirect_type = "ROAD",
+                        draw_indirect = {
+                            --TODO: fix me
+                            instance_buffer = {
+                                memory  = ('\0'):rep(48),
+                                flag    = "r",
+                                layout  = "t45NIf|t46NIf|t47NIf",
+                                num     = 0,
+                            },
+                            indirect_type_NEED_REMOVED = math3d.ref(math3d.vector(0, 0, 0, 0)),
+                        },
+                        --TODO: fix me
                         on_ready = function(e)
-                            local draw_indirect_type = idrawindirect.get_draw_indirect_type("ROAD")
-                            imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
+                            imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(0, 0, 0, 0))
                         end
                     },
                 }
@@ -181,7 +188,6 @@ function road_system:entity_init()
                     srt_table = e.road.srt_info,
                     indirect_params_table = {math3d.vector(0, 0, 6, 0)},
                     aabb_table = {math3d.ref(math3d.aabb(math3d.vector(0, 0, 0), math3d.vector(20, 0, 20)))},
-                    indirect_type = "road"
                 },
                 on_ready = function()
                     road.ready = true
