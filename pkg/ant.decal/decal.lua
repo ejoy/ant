@@ -50,7 +50,7 @@ local rotateYZ_MAT = math3d.ref(
         0, 0, 0, 1)
     )
 
-function ds:follow_transform_updated()
+function ds:follow_scene_update()
     for e in w:select "decal:in render_object:update" do
         local ro = e.render_object
         local d = e.decal

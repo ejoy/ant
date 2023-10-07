@@ -157,7 +157,7 @@ function efk_sys:camera_usage()
     ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
-function efk_sys:scene_update()
+function efk_sys:follow_scene_update()
 	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
 		e.efk_object.worldmat = e.scene.worldmat
 	end

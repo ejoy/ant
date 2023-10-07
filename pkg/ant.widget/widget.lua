@@ -188,7 +188,7 @@ end
 
 local rmb_sys = ecs.system "render_mesh_bounding_system"
 
-function rmb_sys:follow_transform_updated()
+function rmb_sys:follow_scene_update()
 	if setting:get "debug" and setting:get "debug/show_bounding" then
 		local desc={vb={}, ib={}}
 		for e in w:select "render_object scene bounding:in" do
