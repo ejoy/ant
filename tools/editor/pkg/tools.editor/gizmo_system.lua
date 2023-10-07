@@ -889,11 +889,14 @@ local function rotate_gizmo(x, y)
 	if not isTop then
 		fan_angle = 360 - fan_angle
 	end
-
-	show_rotate_fan(rotate_axis, fan_angle, (rotate_axis == gizmo.ry) and -delta_angle or delta_angle)
-	
+	local ce <close> = world:entity(irq.main_camera(), "camera:in")
+	local hitray = iom.ray(ce.camera.viewprojmat, {x, y})
+	local fan_delta = math3d.dot(hitray.dir, axis_dir) > 0 and -delta_angle or delta_angle
+	if rotate_axis == gizmo.rx then
+		fan_delta = -fan_delta
+	end
+	show_rotate_fan(rotate_axis, fan_angle, fan_delta)
 	local quat = math3d.quaternion { axis = last_rotate_axis, r = math.rad(delta_angle) }
-	
 	gizmo:set_rotation(math3d.mul(last_rotate, quat))
 	if local_space then
 		local e <close> = world:entity(gizmo.rot_circle_root_eid)
