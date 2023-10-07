@@ -532,11 +532,6 @@ local function on_move_clip(move_type, current_clip_index, move_delta)
     end
 end
 
-local function get_clips_filename()
-    local prefab_filename = prefab_mgr:get_current_filename()
-    return string.sub(prefab_filename, 1, -8) .. ".event"
-end
-
 local stringify = import_package "ant.serialize".stringify
 
 function m.save_keyevent(filename)
@@ -630,7 +625,6 @@ function m.show()
             end
             imgui.widget.Text("Path : " .. anim_glb_path)
             imgui.cursor.SameLine()
-            local origin_name
             if imgui.widget.Button("...") then
                 local localpath = uiutils.get_open_file_path("Animation", "anim")
                 if localpath then

@@ -469,10 +469,10 @@ local function build_properties_ui(mv)
                         return get_factor "basecolor"
                     end,
                     setter = function (value)
-                        value = math3d.vector({value[1], value[2], value[3], value[4]})
                         set_factor("basecolor", value)
                         local e <close> = world:entity(mv.eid)
                         imaterial.set_property(e, "u_basecolor_factor", math3d.vector(value))
+                        prefab_mgr:do_material_patch(mv.eid, "/properties/u_basecolor_factor", value)
                     end
                 })
             )
@@ -491,6 +491,7 @@ local function build_properties_ui(mv)
                             pbrfactor[1] = value
                             local e <close> = world:entity(mv.eid)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
+                            prefab_mgr:do_material_patch(mv.eid, "/properties/u_pbr_factor", pbrfactor)
                         end
                     }),
                     uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.01}, {
@@ -503,6 +504,7 @@ local function build_properties_ui(mv)
                             pbrfactor[2] = value
                             local e <close> = world:entity(mv.eid)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
+                            prefab_mgr:do_material_patch(mv.eid, "/properties/u_pbr_factor", pbrfactor)
                         end,
                     })
                 })
@@ -525,6 +527,7 @@ local function build_properties_ui(mv)
                     set_factor("emissive", value)
                     local e <close> = world:entity(mv.eid)
                     imaterial.set_property(e, "u_emissive_factor", math3d.vector(value))
+                    prefab_mgr:do_material_patch(mv.eid, "/properties/u_emissive_factor", value)
                 end
             })
         ))
@@ -677,6 +680,9 @@ local function create_simple_state_ui(t, l, en, mv, def_value)
             local s = state_template(mv.eid)
             s[en] = value
             mv.need_reload = true
+            if en == "CULL" then
+                prefab_mgr:do_material_patch(mv.eid, "/state/CULL", value)
+            end
         end,
     })
 end

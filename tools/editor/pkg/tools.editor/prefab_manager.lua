@@ -107,7 +107,6 @@ function m:add_entity(new_entity, parent, tpl, filename)
         if filename then
             embed = {
                 index = #self.prefab_template + 1,
-                mount = #self.prefab_template,
                 prefab = filename
             }
             self.prefab_template[#self.prefab_template + 1] = embed
@@ -335,9 +334,6 @@ local function split(str)
     return r
 end
 
-local nameidx = 0
-local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
-
 function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
@@ -475,7 +471,10 @@ function m:choose_prefab()
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         if gd.is_opening then
+
             imgui.widget.Text("Create new or open existing prefab.")
+            imgui.widget.Text("prefab name:  ")
+            imgui.cursor.SameLine()
             if imgui.widget.InputText("##PrefabName", prefabe_name_ui) then
             end
             imgui.cursor.SameLine()
@@ -526,11 +525,6 @@ end
 
 function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
-    -- if path:equal_extension(".fbx") then
-    --     self:open_fbx(tostring(path))
-    -- elseif path:equal_extension(".glb") then
-    --     filename = filename .. "|" .. self.prefab_name
-    -- end
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
     local path_list = split(filename)
@@ -632,6 +626,8 @@ function m:reset_prefab(noscene)
     end
     gizmo:set_target()
     self:create_ground()
+    self.materials_names = nil
+    self.patch_copy_material = {}
     self.prefab_template = {}
     self.patch_template = {}
     self.prefab_filename = nil
@@ -724,50 +720,26 @@ function m:set_save_hitch(b)
 end
 
 function m:get_hitch_content()
-    local content
+    local content = {
+        {
+            policy = {
+                "ant.render|hitch_object",
+            },
+            data = {
+                scene = {},
+                hitch = {
+                    group = 0,
+                },
+                visible_state = "main_view|cast_shadow|selectable",
+            },
+            tag = {
+                "hitch"
+            }
+        }
+    }
     for _, tpl in ipairs(self.patch_template) do
         if tpl.op == "add" and tpl.value.data and tpl.value.data.slot then
-            -- if not content[tpl.file]  then
-            --     content[tpl.file] = {
-            --         policy = {
-            --             "ant.render|hitch_object",
-            --         },
-            --         data = {
-            --             scene = {},
-            --             hitch = {
-            --                 group = 0,
-            --                 hitch_bounding = true,
-            --             },
-            --             visible_state = "main_view|cast_shadow|selectable",
-            --         }
-            --         tag = {
-            --             self.glb_filename
-            --         }
-            --     }
-            -- end
-            -- local slots = content[tpl.file]
-            -- slots[#slots + 1] = tpl.value
-
             -- only one hitch file per glb file
-            if not content then
-                content = {
-                    {
-                        policy = {
-                            "ant.render|hitch_object",
-                        },
-                        data = {
-                            scene = {},
-                            hitch = {
-                                group = 0,
-                            },
-                            visible_state = "main_view|cast_shadow|selectable",
-                        },
-                        tag = {
-                            "hitch"
-                        }
-                    }
-                }
-            end
             content[#content + 1] = tpl.value
         end
     end
@@ -777,7 +749,16 @@ end
 function m:get_origin_patch_list(template_list)
     for _, patch in ipairs(self.origin_patch_template) do
         if patch.file ~= self.prefab_name then
-            template_list[#template_list + 1] = patch
+            local find_mtl = false
+            for key, _ in pairs(self.patch_copy_material) do
+                if patch.path == key or patch.value == key or patch.file == key then
+                    find_mtl = true
+                    break
+                end
+            end
+            if not find_mtl then
+                template_list[#template_list + 1] = patch
+            end
         end
     end
 end
@@ -801,25 +782,6 @@ function m:get_patch_list(template_list)
             template_list[#template_list + 1] = patch
         end
     end
-    -- for _, patch in ipairs(self.patch_template) do
-    --     if patch.op == "add" and patch.path == "/-" then
-    --         local tpl = utils.deep_copy(patch.value)
-    --         local parent = tpl.data and tpl.data.scene.parent
-    --         if parent then
-    --             local parent_tpl = hierarchy:get_node_info(parent)
-    --             tpl.mount = parent_tpl.template.index
-    --             tpl.data.scene.parent = nil
-    --         end
-    --         if tpl.index then
-    --             tpl.index = nil
-    --         end
-    --         if tpl.filename then
-    --             tpl.filename = nil
-    --         end
-    --         patch.value = tpl
-    --     end
-    --     template_list[#template_list + 1] = patch
-    -- end
     return template_list
 end
 
@@ -828,6 +790,16 @@ function m:save(path)
     if self.glb_filename then
         if self.patch_template then
             local final_template = {}
+            if self.patch_copy_material then
+                for _, copy_material in pairs(self.patch_copy_material) do
+                    if copy_material.copy then
+                        final_template[#final_template + 1] = copy_material.copy
+                    end
+                    for _, mtlpatch in ipairs(copy_material.modify) do
+                        final_template[#final_template + 1] = mtlpatch
+                    end
+                end
+            end
             if self.prefab_name == "mesh.prefab" then
                 self:get_patch_list(final_template)
                 self:get_origin_patch_list(final_template)
@@ -957,9 +929,6 @@ function m:do_remove_entity(eid)
     end
 end
 function m:remove_entity(eid)
-    -- if not self:pacth_remove(eid) then
-    --     return
-    -- end
     self:do_remove_entity(eid)
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
@@ -1070,9 +1039,6 @@ function m:pacth_remove(eid)
     for i = to_remove, #self.prefab_template do
         local t = self.prefab_template[i]
         t.index = t.index - (is_prefab and 2 or 1)
-        if t.mount and t.mount > to_remove then
-            t.mount = t.mount - (is_prefab and 2 or 1)
-        end
     end
     local patch_index = self:find_patch_index(to_remove - self.patch_start_index + 1)
     table.remove(self.patch_template, patch_index)
@@ -1156,6 +1122,87 @@ function m:pacth_modify(pidx, p, v)
                 value = v,
             }
         end
+    end
+end
+local function get_origin_material_name(namemaps, name)
+    if not namemaps then
+        return
+    end
+    for key, value in pairs(namemaps) do
+        if value == name or key == name then
+            return key
+        end
+    end
+end
+function m:do_material_patch(eid, path, v)
+    local info = hierarchy:get_node_info(eid)
+    local tpl = info.template
+    if not self.materials_names then
+        local ret = split(tpl.data.material)
+        local fn = ret[1] .. "|materials.names"
+        self.materials_names = serialize.parse(fn, read_file(lfs.path(assetmgr.compile(fn))))
+    end
+    local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))
+    if not origin then
+        return
+    end
+    local copy_mtl = (self.prefab_name ~= "mesh.prefab")
+    local mtl_path = "materials/"..origin.."_"..string.sub(self.prefab_name, 1, -8)..".material"
+    origin = "materials/"..origin..".material"
+    if copy_mtl then
+        for _, opt in ipairs(self.origin_patch_template) do
+            if opt.file == origin and opt.op == "copyfile" and opt.path == mtl_path then
+                copy_mtl = false
+                break
+            end
+        end
+    end
+    mtl_path = copy_mtl and mtl_path or origin
+
+    local mtl_node = self.patch_copy_material[origin]
+    if not mtl_node then
+        mtl_node = {
+            modify = {}
+        }
+        if copy_mtl then
+            mtl_node.copy = {
+                file = origin,
+                op = "copyfile",
+                path = mtl_path
+            }
+        end
+        self.patch_copy_material[origin] = mtl_node
+        for _, value in ipairs(self.origin_patch_template) do
+            if value.file == mtl_path and value.op == "replace" then
+                mtl_node.modify[#mtl_node.modify + 1] = value
+            end
+        end
+    end
+    if copy_mtl and not tpl.replace_mtl then
+        self.patch_template[#self.patch_template + 1] = {
+            file = self.prefab_name,
+            op = "replace",
+            path = "/"..tpl.index.."/data/material",
+            value = mtl_path,
+        }
+        tpl.replace_mtl = true
+    end
+    local patch_node
+    for _, patch in ipairs(mtl_node.modify) do
+        if patch.file == mtl_path and patch.path == path then
+            patch_node = patch
+            break
+        end
+    end
+    if patch_node then
+        patch_node.value = v
+    else
+        mtl_node.modify[#mtl_node.modify + 1] = {
+            file = mtl_path,
+            op = "replace",
+            path = path,
+            value = v,
+        }
     end
 end
 
