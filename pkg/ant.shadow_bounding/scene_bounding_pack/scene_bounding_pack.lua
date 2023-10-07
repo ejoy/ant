@@ -23,7 +23,7 @@ local function merge_aabb(mask, visible_masks, cull_masks, entity_scene_aabb, wh
     return whole_scene_aabb
 end
 
-function sbp_sys:after_scene_update()
+function sbp_sys:finish_scene_update()
     if not dirty then
         dirty = w:first "scene_changed scene bounding" 
     end
