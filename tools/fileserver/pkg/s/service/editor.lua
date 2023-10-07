@@ -8,11 +8,13 @@ ltask.fork(function ()
     LISTEN = socket.bind("tcp", "127.0.0.1", 2019)
     while true do
         local newfd = socket.listen(LISTEN)
-        if FD then
-            socket.close(newfd)
-        else
-            FD = newfd
-            print("Editor connected")
+        if newfd then
+            if FD then
+                socket.close(newfd)
+            else
+                FD = newfd
+                print("Editor connected")
+            end
         end
     end
 end)

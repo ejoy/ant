@@ -222,21 +222,26 @@ function S.listen(h)
     s.on_read = ltask.wakeup
     fd_set_read(fd)
     ltask.wait(s)
-    local newfd = fd:accept()
-    if newfd:status() then
-        status[newfd]  = {
-            fd = newfd,
-            readbuf = "",
-            wait_read = {},
-            wait_write = {},
-            shutdown_r = false,
-            shutdown_w = false,
-            on_read = stream_on_read,
-            on_write = stream_on_write,
-        }
-        fd_set_read(newfd)
-        return create_handle(newfd)
+    local newfd, err = fd:accept()
+    if not newfd then
+        return nil, err
     end
+    local ok, err = newfd:status()
+    if not ok then
+        return nil, err
+    end
+    status[newfd]  = {
+        fd = newfd,
+        readbuf = "",
+        wait_read = {},
+        wait_write = {},
+        shutdown_r = false,
+        shutdown_w = false,
+        on_read = stream_on_read,
+        on_write = stream_on_write,
+    }
+    fd_set_read(newfd)
+    return create_handle(newfd)
 end
 
 function S.send(h, data)
