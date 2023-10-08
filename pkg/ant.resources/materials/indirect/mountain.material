@@ -11,8 +11,7 @@ properties:
     stage: 1
     access: w
     buffer: b_indirect_buffer
+  u_buffer_param: {0, 0, 0, 0}
   u_mesh_params:
-    {0, 0, 0, 0}
-    {0, 0, 0, 0}
     {0, 0, 0, 0}
     {0, 0, 0, 0}

@@ -105,15 +105,9 @@ function sm_sys:init()
         "/pkg/ant.landform/assets/meshes/mountain4.glb|meshes/Cylinder.021_P1.meshbin",
     }
 
-    local vboffset, iboffset = 0, 0
-    local mp = {}
-    for i=1, #vbnums do
-        mp[i] = math3d.vector(vboffset, iboffset, ibnums[i], 0)
-        vboffset = vboffset + vbnums[i]
-        iboffset = iboffset + ibnums[i]
-    end
-
-    MESH_PARAMS = math3d.ref(math3d.array_vector(mp))
+    MESH_PARAMS = math3d.ref(math3d.array_vector{
+        math3d.vector(vbnums), math3d.vector(ibnums)
+    })
 end
 
 function sm_sys:entity_init()
@@ -157,15 +151,15 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
 
     local function build_mesh_indices_buffer(meshes)
         local s = table.concat(meshes, "")
-        local MIN_SIZE<const> = 16 --uvec4 = 16 bytes
-        local n = #s % MIN_SIZE
+        local VEC4_SIZE<const> = 16 --uvec4 = 16 bytes
+        local n = #s % VEC4_SIZE
         if n > 0 then
             s = s .. ('\0'):rep(n)
         end
-        return bgfx.create_index_buffer(bgfx.memory_buffer(s))
+        return bgfx.create_index_buffer(bgfx.memory_buffer(s)), #s // VEC4_SIZE
     end
 
-    local mesh_indices_buffer = build_mesh_indices_buffer(meshes)
+    local mesh_indices_buffer, mesh_indices_buffer_size = build_mesh_indices_buffer(meshes)
 
     local drawnum = #memory
 
@@ -230,6 +224,7 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
                 }
 
                 m.u_mesh_params = MESH_PARAMS
+                m.u_buffer_param = math3d.vector(mesh_indices_buffer_size, 0, 0, 0)
                 --just do it once
                 icompute.dispatch(main_viewid, e.dispatch)
             end
