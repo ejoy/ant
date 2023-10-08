@@ -168,10 +168,12 @@ namespace luadebug::debughost {
         const char* name  = luaL_checkstring(hL, 1);
         const char* value = luaL_checkstring(hL, 2);
 #if defined(_WIN32)
+        lua_pushfstring(hL, "%s=%s", name, value);
         // TODO: support MINGW
 #if defined(_MSC_VER)
-        lua_pushfstring(hL, "%s=%s", name, value);
         luadebug::putenv(lua_tostring(hL, -1));
+#else
+        ::putenv(lua_tostring(hL, -1));
 #endif
 #else
         ::setenv(name, value, 1);

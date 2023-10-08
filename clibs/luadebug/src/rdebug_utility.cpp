@@ -23,31 +23,6 @@ namespace luadebug::utility {
         }
         return ok;
     }
-    bool isConsoleExe(const wchar_t* exe) {
-        HANDLE hExe = CreateFileW(exe, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hExe == 0) {
-            return false;
-        }
-        DWORD read;
-        char data[sizeof(IMAGE_NT_HEADERS) + sizeof(IMAGE_DOS_HEADER)];
-        SetFilePointer(hExe, 0, NULL, FILE_BEGIN);
-        if (!ReadFile(hExe, data, sizeof(IMAGE_DOS_HEADER), &read, NULL)) {
-            CloseHandle(hExe);
-            return false;
-        }
-        SetFilePointer(hExe, ((PIMAGE_DOS_HEADER)data)->e_lfanew, NULL, FILE_BEGIN);
-        if (!ReadFile(hExe, data, sizeof(IMAGE_NT_HEADERS), &read, NULL)) {
-            CloseHandle(hExe);
-            return false;
-        }
-        CloseHandle(hExe);
-        return ((PIMAGE_NT_HEADERS)data)->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI;
-    }
-    static bool isConsoleProcess() {
-        wchar_t exe[MAX_PATH] = { 0 };
-        GetModuleFileNameW(NULL, exe, MAX_PATH);
-        return isConsoleExe(exe);
-    }
 #endif
 
     static int closewindow(luadbg_State* L) {

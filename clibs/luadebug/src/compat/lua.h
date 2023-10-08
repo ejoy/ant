@@ -100,7 +100,7 @@ namespace lua {
 #if LUA_VERSION_NUM == 501 && !defined(LUAJIT_VERSION)
     const char* lua_getlocal(lua_State* L, const lua_Debug* ar, int n);
 #else
-    constexpr auto lua_getlocal = ::lua_getlocal;
+    inline constexpr auto lua_getlocal = ::lua_getlocal;
 #endif
 }
 
