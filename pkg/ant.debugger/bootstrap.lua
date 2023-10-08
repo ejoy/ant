@@ -9,8 +9,17 @@ for i = 1, #arg do
         i = i + 1
         local expr = assert(arg[i], "'-e' needs argument")
         assert(load(expr, "=(command line)"))()
+		table.remove(arg, i)
+		table.remove(arg, i - 1)
         break
     end
 end
 
-dofile(root .. "/script/frontend/main.lua")
+for i = #arg, 1, -1 do
+	if arg[i] == '' then
+		table.remove(arg, i)
+	end
+end
+
+local func = assert(loadfile(root .. "/script/frontend/main.lua"))
+func(arg[1])
