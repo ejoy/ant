@@ -4,10 +4,12 @@
 
 #include "luadbg/bee_module.h"
 #include "rdebug_lua.h"
-#include "rdebug_putenv.h"
 
-#if defined(_WIN32) && !defined(LUADBG_DISABLE)
-#    include <bee/platform/win/unicode.h>
+#if defined(_WIN32)
+#   include "rdebug_win32.h"
+#   if !defined(LUADBG_DISABLE)
+#       include <bee/platform/win/unicode.h>
+#   endif
 #endif
 
 static int DEBUG_HOST   = 0;
@@ -169,12 +171,7 @@ namespace luadebug::debughost {
         const char* value = luaL_checkstring(hL, 2);
 #if defined(_WIN32)
         lua_pushfstring(hL, "%s=%s", name, value);
-        // TODO: support MINGW
-#if defined(_MSC_VER)
-        luadebug::putenv(lua_tostring(hL, -1));
-#else
-        ::putenv(lua_tostring(hL, -1));
-#endif
+        luadebug::win32::putenv(lua_tostring(hL, -1));
 #else
         ::setenv(name, value, 1);
 #endif

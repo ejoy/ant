@@ -1,22 +1,10 @@
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 
-#    include "rdebug_delayload.h"
+#    include "rdebug_win32.h"
+#    include <Windows.h>
+#    include <stdint.h>
 
-#    include <lua.hpp>
-#    define DELAYIMP_INSECURE_WRITABLE_HOOKS
-#    include <DelayImp.h>
-
-#    if !defined(LUA_DLL_VERSION)
-#        error "Need LUA_DLL_VERSION"
-#    endif
-// clang-format off
-#    define LUA_STRINGIZE(_x) LUA_STRINGIZE_(_x)
-#    define LUA_STRINGIZE_(_x) #_x
-// clang-format on
-
-#    define LUA_DLL_NAME LUA_STRINGIZE(LUA_DLL_VERSION) ".dll"
-
-namespace luadebug::delayload {
+namespace luadebug::win32 {
     typedef FARPROC (*FindLuaApi)(const char* name);
     static HMODULE luadll    = 0;
     static FindLuaApi luaapi = 0;
@@ -45,6 +33,68 @@ namespace luadebug::delayload {
         }
     }
 
+    static uintptr_t rva_to_addr(HMODULE module, uintptr_t rva) {
+        if (rva == 0) return 0;
+        return (uintptr_t)module + rva;
+    }
+    static uintptr_t find_putenv() {
+        HMODULE module = get_luadll();
+        if (!module) {
+            return 0;
+        }
+        PIMAGE_DOS_HEADER dos_header    = (PIMAGE_DOS_HEADER)(module);
+        PIMAGE_NT_HEADERS nt_headers    = (PIMAGE_NT_HEADERS)((uintptr_t)(dos_header) + dos_header->e_lfanew);
+        PIMAGE_IMPORT_DESCRIPTOR import = (PIMAGE_IMPORT_DESCRIPTOR)rva_to_addr(module, nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+        uint32_t size                   = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
+        if (import == NULL || size < sizeof(IMAGE_IMPORT_DESCRIPTOR)) {
+            return 0;
+        }
+        for (; import->FirstThunk; ++import) {
+            PIMAGE_THUNK_DATA pitd  = (PIMAGE_THUNK_DATA)rva_to_addr(module, import->OriginalFirstThunk);
+            PIMAGE_THUNK_DATA pitd2 = (PIMAGE_THUNK_DATA)rva_to_addr(module, import->FirstThunk);
+            for (; pitd->u1.Function; ++pitd, ++pitd2) {
+                PIMAGE_IMPORT_BY_NAME pi_import_by_name = (PIMAGE_IMPORT_BY_NAME)(rva_to_addr(module, *(uintptr_t*)pitd));
+                if (!IMAGE_SNAP_BY_ORDINAL(pitd->u1.Ordinal)) {
+                    const char* apiname = (const char*)pi_import_by_name->Name;
+                    if (0 == strcmp(apiname, "getenv") || 0 == strcmp(apiname, "_wgetenv")) {
+                        HMODULE crt = GetModuleHandleA((const char*)rva_to_addr(module, import->Name));
+                        if (crt) {
+                            return (uintptr_t)GetProcAddress(crt, "_putenv");
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    void putenv(const char* envstr) {
+        static auto lua_putenv = (int(__cdecl*)(const char*))find_putenv();
+        if (lua_putenv) {
+            lua_putenv(envstr);
+        }
+        else {
+            ::_putenv(envstr);
+        }
+    }
+}
+
+#if defined(_MSC_VER)
+#    include <lua.hpp>
+#    define DELAYIMP_INSECURE_WRITABLE_HOOKS
+#    include <DelayImp.h>
+
+#    if !defined(LUA_DLL_VERSION)
+#        error "Need LUA_DLL_VERSION"
+#    endif
+// clang-format off
+#    define LUA_STRINGIZE(_x) LUA_STRINGIZE_(_x)
+#    define LUA_STRINGIZE_(_x) #_x
+// clang-format on
+
+#    define LUA_DLL_NAME LUA_STRINGIZE(LUA_DLL_VERSION) ".dll"
+
+namespace luadebug::win32 {
     static int (*_lua_pcall)(lua_State* L, int nargs, int nresults, int errfunc);
     static int _lua_pcallk(lua_State* L, int nargs, int nresults, int errfunc, intptr_t ctx, intptr_t k) {
         return _lua_pcall(L, nargs, nresults, errfunc);
@@ -55,7 +105,7 @@ namespace luadebug::delayload {
         return _luaL_loadbuffer(L, buff, size, name);
     }
 
-    static FARPROC WINAPI hook(unsigned dliNotify, PDelayLoadInfo pdli) {
+    static FARPROC WINAPI delayload_hook(unsigned dliNotify, PDelayLoadInfo pdli) {
         switch (dliNotify) {
         case dliNotePreLoadLibrary:
             if (strcmp(LUA_DLL_NAME, pdli->szDll) == 0) {
@@ -103,6 +153,9 @@ namespace luadebug::delayload {
     }
 }
 
-PfnDliHook __pfnDliNotifyHook2 = luadebug::delayload::hook;
+PfnDliHook __pfnDliNotifyHook2 = luadebug::win32::delayload_hook;
+
+
+#endif
 
 #endif
