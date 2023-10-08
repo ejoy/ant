@@ -17,7 +17,9 @@ local levels = {}
 local origin = os.time() - os.clock()
 local function os_date(fmt)
     local ti, tf = math.modf(origin + os.clock())
-    return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
+    local date = os.date(fmt, ti)
+    ---@cast date string
+    return date:gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
 end
 
 local function round(x, increment)
@@ -75,5 +77,8 @@ for i, name in ipairs(modes) do
         fp:close()
     end
 end
+
+log.print = print
+print = log.info
 
 return log
