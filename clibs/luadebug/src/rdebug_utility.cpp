@@ -29,14 +29,14 @@ namespace luadebug::utility {
             return false;
         }
         DWORD read;
-        char data[sizeof IMAGE_NT_HEADERS + sizeof IMAGE_DOS_HEADER];
+        char data[sizeof(IMAGE_NT_HEADERS) + sizeof(IMAGE_DOS_HEADER)];
         SetFilePointer(hExe, 0, NULL, FILE_BEGIN);
-        if (!ReadFile(hExe, data, sizeof IMAGE_DOS_HEADER, &read, NULL)) {
+        if (!ReadFile(hExe, data, sizeof(IMAGE_DOS_HEADER), &read, NULL)) {
             CloseHandle(hExe);
             return false;
         }
         SetFilePointer(hExe, ((PIMAGE_DOS_HEADER)data)->e_lfanew, NULL, FILE_BEGIN);
-        if (!ReadFile(hExe, data, sizeof IMAGE_NT_HEADERS, &read, NULL)) {
+        if (!ReadFile(hExe, data, sizeof(IMAGE_NT_HEADERS), &read, NULL)) {
             CloseHandle(hExe);
             return false;
         }
