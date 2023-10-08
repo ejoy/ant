@@ -1,5 +1,5 @@
-local rdebug = require 'remotedebug.visitor'
-local hookmgr = require 'remotedebug.hookmgr'
+local rdebug = require 'luadebug.visitor'
+local hookmgr = require 'luadebug.hookmgr'
 local source = require 'backend.worker.source'
 local luaver = require 'backend.worker.luaver'
 
@@ -7,7 +7,7 @@ local info = {}
 
 local function shortsrc(source, maxlen)
     maxlen = maxlen or 60
-    local type = source:sub(1,1)
+    local type = source:sub(1, 1)
     if type == '=' then
         if #source <= maxlen then
             return source:sub(2)
@@ -18,7 +18,7 @@ local function shortsrc(source, maxlen)
         if #source <= maxlen then
             return source:sub(2)
         else
-            return '...' .. source:sub(#source - maxlen + 5)
+            return '...'..source:sub(#source - maxlen + 5)
         end
     else
         local nl = source:find '\n'
@@ -40,10 +40,10 @@ end
 
 local function shortpath(path)
     local clientpath = source.clientPath(path)
-    if clientpath:sub(1,2) == "./" and #clientpath > 2 then
+    if clientpath:sub(1, 2) == "./" and #clientpath > 2 then
         clientpath = clientpath:sub(3)
     end
-    return shortsrc('@' .. clientpath)
+    return shortsrc('@'..clientpath)
 end
 
 local function getshortsrc(src)
@@ -54,7 +54,7 @@ local function getshortsrc(src)
         return shortpath(src.path)
     elseif src.skippath then
         return shortpath(src.skippath)
-    elseif info.source:sub(1,1) == '=' then
+    elseif info.source:sub(1, 1) == '=' then
         return shortsrc(info.source)
     else
         -- TODO
@@ -66,9 +66,9 @@ local function findfield(t, f, level)
     if level == 0 then
         return
     end
-    local loct = rdebug.tablehashv(t, 5000)
+    local loct = rdebug.tablehashv(t, 0, 5000)
     for i = 1, #loct, 2 do
-        local key, value = loct[i], loct[i+1]
+        local key, value = loct[i], loct[i + 1]
         if rdebug.type(key) == 'string' then
             local skey = rdebug.value(key)
             if not (level == 2 and skey == '_G') then
@@ -79,7 +79,7 @@ local function findfield(t, f, level)
                 if tvalue == 'table' then
                     local res = findfield(value, f, level - 1)
                     if res then
-                        return skey .. '.' .. res
+                        return skey..'.'..res
                     end
                 end
             end

@@ -153,10 +153,16 @@ function CMD.eventMemory(w, req)
     event.memory(req)
 end
 
-function CMD.setExpression(_, req)
+function CMD.setExpression(w, req)
     if not req.success then
         response.error(req, req.message)
         return
+    end
+    local var = req.body
+    if var.variablesReference then
+        var.variablesReference = (w << 24) | var.variablesReference
+    else
+        var.variablesReference = 0
     end
     response.success(req, req.body)
 end

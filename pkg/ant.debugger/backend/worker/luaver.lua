@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug.visitor'
+local rdebug = require 'luadebug.visitor'
 
 local m = {}
 
@@ -14,7 +14,7 @@ function m.init()
     end
     m.LUAVERSION = ver
     if ver == 51 then
-        m.isjit = rdebug.fieldv(rdebug._G,"jit") ~= nil
+        m.isjit = rdebug.fieldv(rdebug._G, "jit") ~= nil
     end
 end
 
