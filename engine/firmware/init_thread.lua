@@ -22,6 +22,9 @@ local function send(...)
 	fd:send "T"
 end
 
+vfs.call = call
+vfs.send = send
+
 function vfs.realpath(path)
 	return call("GET", path)
 end

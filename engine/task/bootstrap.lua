@@ -99,6 +99,8 @@ end
 local function send(...)
 	return ltask.send(ServiceIO, ...)
 end
+vfs.call = call
+vfs.send = send
 function vfs.realpath(path)
 	return call("GET", path)
 end
