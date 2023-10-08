@@ -1,12 +1,43 @@
---log = require 'debugger.log'
---log.file = 'dbg.log'
-print = nil
+local port = ...
+local fs = require 'bee.filesystem'
+local network = require 'common.network'
+local select = require "common.select"
+local proxy = require 'frontend.proxy'
+local vscode
+WORKDIR = fs.exe_path():parent_path():parent_path()
 
-local proxy = require 'debugger.frontend.proxy'
-local io = require 'debugger.io.stdio' ()
+local function update()
+    while true do
+        local pkg = vscode.recvmsg()
+        if pkg then
+            proxy.send(pkg)
+        else
+            return
+        end
+    end
+end
 
-proxy.initialize(io)
+local function run()
+    if port then
+        vscode = network('127.0.0.1:'..port)
+    else
+        vscode = require 'frontend.stdio'
+        --vscode.debug(true)
+    end
+    proxy.init(vscode)
 
-while true do
-    proxy.update()
+    while true do
+        select.update(0.01)
+        proxy.update()
+        update()
+    end
+end
+
+local log = require 'common.log'
+log.root = (WORKDIR / "script"):string()
+log.file = (WORKDIR / "client.log"):string()
+
+local ok, errmsg = xpcall(run, debug.traceback)
+if not ok then
+    log.error(errmsg)
 end

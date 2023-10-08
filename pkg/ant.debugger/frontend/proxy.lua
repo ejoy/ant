@@ -1,38 +1,43 @@
-local server_factory = require 'debugger.frontend.server'
-local proto = require 'debugger.protocol'
-local socket = require 'debugger.socket'
-local fs = require 'filesystem'
+local network = require 'common.network'
+local debuger_factory = require 'frontend.debuger_factory'
+local fs = require 'bee.filesystem'
+local sp = require 'bee.subprocess'
+local platform_os = require 'frontend.platform_os'
+local process_inject = require 'frontend.process_inject'
 local server
-local client = {}
-local seq = 0
+local client
 local initReq
 local m = {}
-local io
 
-function client.send(pkg)
-    io:send(proto.send(pkg))
+local function getUnixAddress(pid)
+    local path = WORKDIR / "tmp"
+    fs.create_directories(path)
+    return "@"..(path / ("pid_%d"):format(pid)):string()
 end
 
-local function newSeq()
-    seq = seq + 1
-    return seq
+local function ipc_send_latest(pid)
+    fs.create_directories(WORKDIR / "tmp")
+    local ipc = require "common.ipc"
+    local fd = assert(ipc(WORKDIR, pid, "luaVersion", "w"))
+    fd:write("latest")
+    fd:close()
 end
 
 local function response_initialize(req)
-    client.send {
+    client.sendmsg {
         type = 'response',
-        seq = newSeq(),
+        seq = 0,
         command = 'initialize',
         request_seq = req.seq,
         success = true,
-        body = require 'debugger.capabilities',
+        body = require 'common.capabilities',
     }
 end
 
 local function response_error(req, msg)
-    client.send {
+    client.sendmsg {
         type = 'response',
-        seq = newSeq(),
+        seq = 0,
         command = req.command,
         request_seq = req.seq,
         success = false,
@@ -41,61 +46,166 @@ local function response_error(req, msg)
 end
 
 local function request_runinterminal(args)
-    client.send {
+    client.sendmsg {
         type = 'request',
-        --seq = newSeq(),
+        seq = 0,
         command = 'runInTerminal',
         arguments = args
     }
 end
 
-local function create_terminal(args, port)
-    local command = {}
-    if args.runtimeExecutable then
-        command[#command + 1] = args.runtimeExecutable
-        command[#command + 1] = args.runtimeArgs
-    elseif args.luaexe then
-        command[#command + 1] = args.luaexe
+local function attach_process(pkg, pid)
+    local args = pkg.arguments
+    if args.luaVersion == "lua-latest" then
+        ipc_send_latest(pid)
+    end
+    local ok, errmsg = process_inject.inject(pid, "attach", args)
+    if not ok then
+		return false, errmsg
+	end
 
-        if args.path then
-            command[#command + 1] = '-e'
-            command[#command + 1] = ("package.path=[[%s]];"):format(args.path)
+    server = network(getUnixAddress(pid), true)
+    server.sendmsg(initReq)
+    server.sendmsg(pkg)
+    return true
+end
+
+local function attach_tcp(pkg, args)
+    server = network(args.address, args.client)
+    server.sendmsg(initReq)
+    server.sendmsg(pkg)
+end
+
+local function proxy_attach(pkg)
+    local args = pkg.arguments
+    platform_os.init(args)
+    if platform_os() ~= "Windows" and platform_os() ~= "macOS" then
+		attach_tcp(pkg, args)
+		return
+    end
+    if args.processId then
+        local processId = tonumber(args.processId)
+        local ok, errmsg = attach_process(pkg, processId)
+        if not ok then
+            response_error(pkg, ('Cannot attach process `%d`. %s'):format(processId, errmsg))
         end
-        if args.cpath then
-            command[#command + 1] = '-e'
-            command[#command + 1] = ("package.cpath=[[%s]];"):format(args.cpath)
+        return
+    end
+    if args.processName then
+        local pids = require "frontend.query_process"(args.processName)
+        if #pids == 0 then
+            response_error(pkg, ('Cannot found process `%s`.'):format(args.processName))
+            return
+        elseif #pids > 1 then
+            response_error(pkg, ('There are %d processes `%s`.'):format(#pids, args.processName))
+            return
         end
-        if type(args.arg0) == 'string' then
-            command[#command + 1] = args.arg0
-        elseif type(args.arg0) == 'table' then
-            for _, v in ipairs(args.arg0) do
-                command[#command + 1] = v
+        local ok, errmsg = attach_process(pkg, pids[1])
+        if not ok then
+            response_error(pkg, ('Cannot attach process `%s` `%d`. %s'):format(args.processName, pids[1], errmsg))
+        end
+        return
+    end
+    attach_tcp(pkg, args)
+end
+
+local function create_server(args, pid)
+    local s, address
+    if args.address ~= nil then
+        s = network(args.address, args.client)
+        address = (args.client and "s:" or "c:") .. args.address
+    else
+        pid = pid or sp.get_id()
+        s = network(getUnixAddress(pid), true)
+        address = pid
+    end
+    return s, address
+end
+
+local function proxy_launch_terminal(pkg)
+    local args = pkg.arguments
+    if args.runtimeExecutable then
+        if args.inject ~= "none" then
+            --TODO: support inject's integratedTerminal/externalTerminal
+            response_error(pkg, "`inject` is not supported in `"..args.console.."`.")
+            return
+        end
+        server = create_server(args)
+        local arguments, err = debuger_factory.create_process_in_terminal(initReq, args)
+        if not arguments then
+            response_error(pkg, err)
+            return
+        end
+        request_runinterminal(arguments)
+        return true
+    else
+        local address
+        server, address = create_server(args)
+        local arguments, err = debuger_factory.create_luaexe_in_terminal(initReq, args, WORKDIR, address)
+        if not arguments then
+            response_error(pkg, err)
+            return
+        end
+        request_runinterminal(arguments)
+        return true
+    end
+end
+
+local function proxy_launch_console(pkg)
+    local args = pkg.arguments
+    if args.runtimeExecutable then
+        if args.inject == "none" and args.address == nil then
+            response_error(pkg, "`runtimeExecutable` need specify `inject` or `address`.")
+            return
+        end
+        local process, err = debuger_factory.create_process_in_console(args, function (process)
+            local address
+            server, address = create_server(args, process:get_id())
+            if args.luaVersion == "lua-latest" and type(address) == "number" then
+                ipc_send_latest(address)
             end
-        end
-        command[#command + 1] = args.program
-        if type(args.arg) == 'string' then
-            command[#command + 1] = args.arg
-        elseif type(args.arg) == 'table' then
-            for _, v in ipairs(args.arg) do
-                command[#command + 1] = v
-            end
+        end)
+        if not process then
+            response_error(pkg, err)
+            return
         end
     else
-        return false
+        local address
+        server, address = create_server(args)
+        local ok, err = debuger_factory.create_luaexe_in_console(args, WORKDIR, address)
+        if not ok then
+            response_error(pkg, err)
+            return
+        end
     end
-    if not args.env then
-        args.env = {}
-    end
-    args.env._DBG_IOTYPE = 'tcp_client'
-    args.env._DBG_IOPORT = tostring(port)
-    request_runinterminal {
-        kind = args.console == 'integratedTerminal' and 'integrated' or 'external',
-        title = 'Lua Debug',
-        cwd = args.cwd or fs.path(command[1]):remove_filename():string(),
-        env = args.env,
-        args = command,
-    }
     return true
+end
+
+local function proxy_launch(pkg)
+    local args = pkg.arguments
+    platform_os.init(args)
+    if args.runtimeExecutable and args.inject ~= "none" then
+        args.console = "internalConsole"
+    end
+    if args.console == 'integratedTerminal' or args.console == 'externalTerminal' then
+        if not proxy_launch_terminal(pkg) then
+            return
+        end
+    else
+        if not proxy_launch_console(pkg) then
+            return
+        end
+    end
+    server.sendmsg(initReq)
+    server.sendmsg(pkg)
+end
+
+local function proxy_start(pkg)
+    if pkg.arguments.request == 'attach' then
+        proxy_attach(pkg)
+    elseif pkg.arguments.request == 'launch' then
+        proxy_launch(pkg)
+    end
 end
 
 function m.send(pkg)
@@ -103,7 +213,7 @@ function m.send(pkg)
         if pkg.type == 'response' and pkg.command == 'runInTerminal' then
             return
         end
-        server.send(pkg)
+        server.sendmsg(pkg)
     elseif not initReq then
         if pkg.type == 'request' and pkg.command == 'initialize' then
             pkg.__norepl = true
@@ -114,38 +224,8 @@ function m.send(pkg)
         end
     else
         if pkg.type == 'request' then
-            if pkg.command == 'attach' then
-                local args = pkg.arguments
-                if args.processId or args.processName then
-                    response_error(pkg, 'not support')
-                    return
-                end
-                local ip = args.ip
-                local port = args.port
-                if ip == 'localhost' then
-                    ip = '127.0.0.1'
-                end
-                server = server_factory.tcp_client(m, ip, port)
-                server.send(initReq)
-                server.send(pkg)
-            elseif pkg.command == 'launch' then
-                local args = pkg.arguments
-                if args.console == 'integratedTerminal' or args.console == 'externalTerminal' then
-                    local listen, port = server_factory.tcp_server(m, '127.0.0.1')
-                    if not create_terminal(args, port) then
-                        response_error(pkg, 'launch failed')
-                        return
-                    end
-                    server = listen:accept(60)
-                    if not server then
-                        response_error(pkg, 'launch failed')
-                        return
-                    end
-                    server.send(initReq)
-                    server.send(pkg)
-                    return
-                end
-                response_error(pkg, 'not support')
+            if pkg.command == 'attach' or pkg.command == 'launch' then
+                proxy_start(pkg)
             else
                 response_error(pkg, 'error request')
             end
@@ -153,29 +233,24 @@ function m.send(pkg)
     end
 end
 
-function m.recv(pkg)
-    client.send(pkg)
-end
-
 function m.update()
-    socket.update()
-    io:update()
-end
-
-function m.initialize(io_)
-    io = io_
-    local stat = {}
-    io:event_in(function(data)
+    if server then
+        server.event_close(function()
+            os.exit(0, true)
+        end)
         while true do
-            local pkg = proto.recv(data, stat)
+            local pkg = server.recvmsg()
             if pkg then
-                data = ''
-                m.send(pkg)
+                client.sendmsg(pkg)
             else
                 break
             end
         end
-    end)
+    end
+end
+
+function m.init(io)
+    client = io
 end
 
 return m

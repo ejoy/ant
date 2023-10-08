@@ -142,6 +142,7 @@ function m.listen(t)
     if t.protocol == "unix" then
         os.remove(t.address)
     end
+    local ok
     ok, err = fd:bind(t.address, t.port)
     if not ok then
         fd:close()
@@ -162,6 +163,7 @@ function m.connect(t)
     if not fd then
         return nil, err
     end
+    local ok
     ok, err = fd:connect(t.address, t.port)
     if ok == nil then
         fd:close()
