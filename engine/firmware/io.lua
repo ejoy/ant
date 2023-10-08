@@ -725,6 +725,18 @@ function CMD.REDIRECT(_, resp_command, service_id)
 	end
 end
 
+local function patch(code)
+	local f = load(code)
+	f()
+end
+
+function CMD.PATCH(_, code)
+	local ok, err = xpcall(patch, debug.traceback, code)
+	if not ok then
+		print("[ERROR] Patch : ", err)
+	end
+end
+
 local S = {}; do
 	local session = 0
 	for v in pairs(CMD) do
