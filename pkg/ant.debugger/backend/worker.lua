@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug.visitor'
+local rdebug = require 'luadebug.visitor'
 local variables = require 'backend.worker.variables'
 local source = require 'backend.worker.source'
 local breakpoint = require 'backend.worker.breakpoint'
@@ -7,8 +7,8 @@ local traceback = require 'backend.worker.traceback'
 local stdout = require 'backend.worker.stdout'
 local luaver = require 'backend.worker.luaver'
 local ev = require 'backend.event'
-local hookmgr = require 'remotedebug.hookmgr'
-local stdio = require 'remotedebug.stdio'
+local hookmgr = require 'luadebug.hookmgr'
+local stdio = require 'luadebug.stdio'
 local thread = require 'bee.thread'
 local fs = require 'backend.worker.filesystem'
 local log = require 'common.log'
@@ -37,7 +37,7 @@ local WorkerChannel = ('DbgWorker(%s)'):format(WorkerIdent)
 
 thread.newchannel(WorkerChannel)
 local masterThread = thread.channel 'DbgMaster'
-local workerThread = thread.channel (WorkerChannel)
+local workerThread = thread.channel(WorkerChannel)
 
 local function workerThreadUpdate(timeout)
     while true do
@@ -52,13 +52,13 @@ local function workerThreadUpdate(timeout)
             end
         end, debug.traceback)
         if not ok then
-            log.error("ERROR:" .. err)
+            log.error("ERROR:"..err)
         end
     end
 end
 
 local function sendToMaster(cmd)
-    return function (msg)
+    return function(msg)
         masterThread:push(WorkerIdent, cmd, msg)
     end
 end
@@ -75,10 +75,13 @@ ev.on('output', function(body)
 end)
 
 ev.on('loadedSource', function(reason, s)
-    sendToMaster 'eventLoadedSource' {
-        reason = reason,
-        source = source.output(s)
-    }
+    local src = source.output(s)
+    if src then
+        sendToMaster 'eventLoadedSource' {
+            reason = reason,
+            source = src
+        }
+    end
 end)
 
 ev.on('memory', function(memoryReference, offset, count)
@@ -100,8 +103,6 @@ end)
 --        output = table.concat(t, '\t')..'\n',
 --    })
 --end
-
---print = log.info
 
 local function cleanFrame()
     variables.clean()
@@ -153,7 +154,7 @@ local function getFuncName(depth)
             return '(...tail calls...)'
         end
         local previous = {}
-        if rdebug.getinfo(depth+1, "S", previous) then
+        if rdebug.getinfo(depth + 1, "S", previous) then
             if previous.what == "Lua" or previous.what == "main" then
                 return '(anonymous function)'
             end
@@ -227,6 +228,21 @@ local function coroutineFrom(L)
     return coroutineTree[L]
 end
 
+local function nextTotalFrames(finish, n)
+    if finish then
+        return
+    end
+    n = n + 0x10
+    if n >= 0x10000 then
+        return
+    end
+    local p = 64
+    while p < n do
+        p = p * 2
+    end
+    return p
+end
+
 function CMD.stackTrace(pkg)
     local start = pkg.startFrame and pkg.startFrame or 0
     local levels = (pkg.levels and pkg.levels ~= 0) and pkg.levels or 200
@@ -243,13 +259,15 @@ function CMD.stackTrace(pkg)
     start = start + skipFrame
     local L = baseL
     local coroutineId = 0
+    local finish
     repeat
         hookmgr.sethost(L)
         local curL = L
         L = coroutineFrom(curL)
         if stackFrame[curL] == nil then
-            local finsh, n = stackTrace(res, coroutineId, start, levels)
-            if not finsh then
+            local n;
+            finish, n = stackTrace(res, coroutineId, start, levels)
+            if not finish then
                 break
             end
             if not L then
@@ -266,13 +284,14 @@ function CMD.stackTrace(pkg)
     until (not L or levels <= 0)
     hookmgr.sethost(baseL)
 
+    -- TODO 当frames很多时，跳过中间的部分
     sendToMaster 'stackTrace' {
         command = pkg.command,
         seq = pkg.seq,
         success = true,
         body = {
             stackFrames = res,
-            totalFrames = 0x10000,
+            totalFrames = nextTotalFrames(finish, start + levels),
         }
     }
 end
@@ -518,7 +537,7 @@ function CMD.setSearchPath(pkg)
             local path = {}
             for _, v in ipairs(value) do
                 if type(v) == "string" then
-                    path[#path+1] = fs.nativepath(v)
+                    path[#path + 1] = fs.nativepath(v)
                 end
             end
             value = table.concat(path, ";")
@@ -574,7 +593,7 @@ local function event_breakpoint(src, line)
         state = 'stopped'
         runLoop {
             reason = 'breakpoint',
-            hitBreakpointIds = {bp.id}
+            hitBreakpointIds = { bp.id }
         }
         return true
     end
@@ -603,7 +622,7 @@ function event.funcbp(func)
         state = 'stopped'
         runLoop {
             reason = 'function breakpoint',
-            hitBreakpointIds = {bp.id}
+            hitBreakpointIds = { bp.id }
         }
     end
 end
@@ -660,7 +679,7 @@ function event.print(...)
     for i = 1, args.n do
         res[#res + 1] = variables.tostring(args[i])
     end
-    res = table.concat(res, '\t') .. '\n'
+    res = table.concat(res, '\t')..'\n'
     rdebug.getinfo(1, "Sl", info)
     stdout(res, info)
     return true
@@ -668,22 +687,22 @@ end
 
 function event.iowrite(...)
     if not debuggeeReady() then return end
-    local res = {}
+    local t = {}
     local args = table.pack(...)
     for i = 1, args.n do
-        res[#res + 1] = variables.tostring(args[i])
+        t[#t + 1] = variables.tostring(args[i])
     end
-    res = table.concat(res, '\t')
+    local res = table.concat(t, '\t')
     rdebug.getinfo(1, "Sl", info)
     stdout(res, info)
     return true
 end
 
-local ERREVENT_ERRRUN    <const> = 0x02
+local ERREVENT_ERRRUN <const> = 0x02
 local ERREVENT_ERRSYNTAX <const> = 0x03
-local ERREVENT_ERRMEM    <const> = 0x04
-local ERREVENT_ERRERR    <const> = 0x05
-local ERREVENT_PANIC     <const> = 0x10
+local ERREVENT_ERRMEM <const> = 0x04
+local ERREVENT_ERRERR <const> = 0x05
+local ERREVENT_PANIC <const> = 0x10
 
 local function GlobalFunction(name)
     return rdebug.value(rdebug.fieldv(rdebug._G, name))
@@ -766,7 +785,7 @@ local function runException(flags, errobj)
     state = 'stopped'
     runLoop({
         reason = 'exception',
-        hitBreakpointIds = {bp.id},
+        hitBreakpointIds = { bp.id },
         text = message,
     }, level)
 end
@@ -813,7 +832,7 @@ hookmgr.init(function(name, ...)
         end
     end, debug.traceback, ...)
     if not ok then
-        log.error("ERROR:" .. tostring(err))
+        log.error("ERROR:"..tostring(err))
         return
     end
     return err

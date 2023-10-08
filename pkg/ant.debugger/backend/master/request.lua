@@ -2,7 +2,7 @@ local mgr = require 'backend.master.mgr'
 local response = require 'backend.master.response'
 local event = require 'backend.master.event'
 local ev = require 'backend.event'
-local utility = require 'remotedebug.utility'
+local utility = require 'luadebug.utility'
 
 local request = {}
 
@@ -27,7 +27,7 @@ local function checkThreadId(req, threadId)
         return
     end
     if not mgr.hasThread(threadId) then
-        response.error(req, "Not found thread [" .. threadId .. "]")
+        response.error(req, "Not found thread ["..threadId.."]")
         return
     end
     return true
@@ -149,13 +149,13 @@ local function skipBOM(s)
     if not s then
         return
     end
-    if s:sub(1,3) == "\xEF\xBB\xBF" then
+    if s:sub(1, 3) == "\xEF\xBB\xBF" then
         s = s:sub(4)
     end
-    if s:sub(1,1) == "#" then
+    if s:sub(1, 1) == "#" then
         local pos = s:find('\n', 2)
         if pos then
-            s = s:sub(pos+1)
+            s = s:sub(pos + 1)
         end
     end
     return s
@@ -173,8 +173,8 @@ function request.setBreakpoints(req)
         bp.id = genBreakpointID()
         bp.verified = false
         bp.message = invalidPath
-                    and ("Does not support path: `%s`"):format(args.source.path)
-                    or "Wait verify. (The source file is not loaded.)"
+            and ("Does not support path: `%s`"):format(args.source.path)
+            or "Wait verify. (The source file is not loaded.)"
     end
     response.success(req, {
         breakpoints = args.breakpoints
@@ -235,12 +235,12 @@ function request.setExceptionBreakpoints(req)
     local filter = {}
     local function addExceptionBreakpoint(opt)
         local id = genBreakpointID()
-        breakpoints[#breakpoints+1] = {
+        breakpoints[#breakpoints + 1] = {
             id = id,
             verified = false,
             message = "Wait verify."
         }
-        filter[#filter+1] = {
+        filter[#filter + 1] = {
             id = id,
             filterId = opt.filterId,
             condition = opt.condition,
@@ -655,8 +655,5 @@ end
 --        output = table.concat(t, '\t')..'\n',
 --    }
 --end
-
---local log = require 'common.log'
---print = log.info
 
 return request

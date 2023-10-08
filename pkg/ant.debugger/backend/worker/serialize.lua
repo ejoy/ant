@@ -1,8 +1,8 @@
-local rdebug = require 'remotedebug.visitor'
+local rdebug = require 'luadebug.visitor'
 
 local NEWLINE <const> = '\n'
-local INDENT  <const> = '    '
-local DEPTH   <const> = 10
+local INDENT <const> = '    '
+local DEPTH <const> = 10
 
 local level
 local out
@@ -28,11 +28,11 @@ local function floatToString(x)
 end
 
 local function isIdentifier(str)
-    return type(str) == 'string' and str:match( "^[_%a][_%a%d]*$" )
+    return type(str) == 'string' and str:match("^[_%a][_%a%d]*$")
 end
 
 local TypeOrders = {
-    ['number']   = 1, ['boolean']  = 2, ['string'] = 3, ['table'] = 4, ['function'] = 5, ['userdata'] = 6, ['thread'] = 7
+    ['number'] = 1,['boolean'] = 2,['string'] = 3,['table'] = 4,['function'] = 5,['userdata'] = 6,['thread'] = 7
 }
 
 local function sortKeys(a, b)
@@ -40,15 +40,18 @@ local function sortKeys(a, b)
     local ta, tb = type(a), type(b)
     if ta == tb and (ta == 'string' or ta == 'number') then return a < b end
     local dta, dtb = TypeOrders[ta], TypeOrders[tb]
-    if dta and dtb then return TypeOrders[ta] < TypeOrders[tb]
-    elseif dta     then return true
-    elseif dtb     then return false
+    if dta and dtb then
+        return TypeOrders[ta] < TypeOrders[tb]
+    elseif dta then
+        return true
+    elseif dtb then
+        return false
     end
     return ta < tb
 end
 
 local function puts(text)
-    out[#out+1] = text
+    out[#out + 1] = text
 end
 
 local function newline()
@@ -76,23 +79,23 @@ local function putTable(t)
         level = level + 1
 
         local count = 0
-        local asize = rdebug.tablesize(t)
-        for i=1, asize do
+        local arrayt = rdebug.tablearrayv(t)
+        for i = 1, #arrayt do
             if count > 0 then puts(',') end
             puts(' ')
-            putValue(rdebug.index(t, i))
+            putValue(arrayt[i])
             count = count + 1
         end
 
-        local loct = rdebug.tablehashv(t)
+        local hasht = rdebug.tablehashv(t)
         local kvs = {}
-        for i = 1, #loct, 2 do
-            local key, value = loct[i], loct[i+1]
+        for i = 1, #hasht, 2 do
+            local key, value = hasht[i], hasht[i + 1]
             kvs[#kvs + 1] = { key, value }
         end
         table.sort(kvs, sortKeys)
 
-        for i=1, #kvs do
+        for i = 1, #kvs do
             local kv = kvs[i]
             if count > 0 then puts(',') end
             newline()
@@ -113,7 +116,7 @@ local function putTable(t)
         level = level - 1
         if #kvs > 0 or metatable then
             newline()
-        elseif asize > 0 then
+        elseif #arrayt > 0 then
             puts(' ')
         end
         puts('}')
@@ -135,9 +138,9 @@ function putValue(v)
     end
 end
 
-return function (root)
+return function(root)
     level   = 0
-    out  = {}
+    out     = {}
     visited = {}
     putValue(root)
     return table.concat(out)

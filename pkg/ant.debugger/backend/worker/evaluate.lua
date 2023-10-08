@@ -1,28 +1,10 @@
-local rdebug = require 'remotedebug.visitor'
 local variables = require 'backend.worker.variables'
-local luaver = require 'backend.worker.luaver'
-
-local readfile = package.readfile
-if not readfile then
-    function readfile(filename)
-        local fullpath = assert(package.searchpath(filename, package.path))
-        local f = assert(io.open(fullpath))
-        local str = f:read 'a'
-        f:close()
-        return str
-    end
-end
-
-local eval_readwrite = assert(rdebug.load(readfile 'backend.worker.eval.readwrite'))
-local eval_readonly  = assert(rdebug.load(readfile 'backend.worker.eval.readonly'))
-local eval_verify    = assert(rdebug.load(readfile 'backend.worker.eval.verify'))
-local eval_dump      = assert(rdebug.load(readfile 'backend.worker.eval.dump'))
-local compat_dump    = assert(load(readfile 'backend.worker.eval.dump'))
+local eval = require 'backend.worker.eval'
 
 local function run_repl(frameId, expression)
-    local res = table.pack(rdebug.watch(eval_readwrite, 'return ' .. expression, frameId))
+    local res = table.pack(eval.readwrite('return ' .. expression, frameId))
     if not res[1] then
-        res = table.pack(rdebug.watch(eval_readwrite, expression, frameId))
+        res = table.pack(eval.readwrite(expression, frameId))
         if not res[1] then
             return false, res[2]
         end
@@ -38,7 +20,7 @@ local function run_repl(frameId, expression)
 end
 
 local function run_watch(frameId, expression)
-    local res = table.pack(rdebug.watch(eval_readonly, expression, frameId))
+    local res = table.pack(eval.readonly(expression, frameId))
     if not res[1] then
         return false, res[2]
     end
@@ -53,7 +35,7 @@ local function run_watch(frameId, expression)
 end
 
 local function run_hover(frameId, expression)
-    local ok, res = rdebug.watch(eval_readonly, expression, frameId)
+    local ok, res = eval.readonly(expression, frameId)
     if not ok then
         return false, res
     end
@@ -64,7 +46,7 @@ local function run_hover(frameId, expression)
 end
 
 local function run_clipboard(frameId, expression)
-    local res = table.pack(rdebug.watch(eval_readonly, expression, frameId))
+    local res = table.pack(eval.readonly(expression, frameId))
     if not res[1] then
         return false, res[2]
     end
@@ -101,30 +83,12 @@ function m.run(frameId, expression, context)
 end
 
 function m.set(frameId, expression, value)
-    local ok, res = rdebug.watch(eval_readwrite, expression.."="..value, frameId)
+    local ok, res = eval.readwrite(expression.."="..value..";return "..expression, frameId)
     if not ok then
         return false, res
     end
-    return run_watch(frameId, expression)
-end
-
-function m.eval(expression, level, symbol)
-    return rdebug.eval(eval_readonly, expression, level, symbol)
-end
-
-function m.verify(expression)
-    return rdebug.eval(eval_verify, expression, 0)
-end
-
-function m.dump(content)
-    if luaver.LUAVERSION <= 52 then
-        local res, err = compat_dump(content)
-        if res then
-            return true, res
-        end
-        return false, err
-    end
-    return rdebug.eval(eval_dump, content, 0)
+    local var = variables.createRef(res, expression, "variables")
+    return true, var
 end
 
 return m

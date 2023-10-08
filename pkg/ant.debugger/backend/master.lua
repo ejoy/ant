@@ -1,46 +1,16 @@
 local thread = require "bee.thread"
 
-local function createChannel(name)
-    local ok, err = pcall(thread.newchannel, name)
-    if not ok then
-        if err:sub(1,17) ~= "Duplicate channel" then
-            error(err)
-        end
-    end
-    return not ok
-end
-
-local function hasChannel(name)
-    local ok = pcall(thread.channel, name)
+local function hasMaster()
+    local ok = pcall(thread.channel, "DbgMaster")
     return ok
 end
 
-local master_thread
-
-local function createThread(script)
-    return thread.thread(thread.bootstrap_lua .. script, thread.bootstrap_c)
-end
-
-ExitGuard = setmetatable({}, {__gc=function()
-    if master_thread then
-        local mt = master_thread
-        master_thread = nil
-        local c = thread.channel "DbgMaster"
-        c:push(nil, "EXIT")
-        thread.wait(mt)
-    end
-end})
-
-local function hasMaster()
-    return hasChannel "DbgMaster"
-end
-
 local function initMaster(logpath, address)
-    if createChannel "DbgMaster" then
+    if hasMaster() then
         return
     end
-
-    master_thread = createThread(([[
+    thread.newchannel "DbgMaster"
+    local mt = thread.thread(thread.bootstrap_lua .. ([[
         local log = require "common.log"
         log.file = %q..'/master.log'
         local ok, err = xpcall(function()
@@ -52,7 +22,12 @@ local function initMaster(logpath, address)
         if not ok then
             log.error("ERROR:" .. err)
         end
-    ]]):format(logpath, address))
+    ]]):format(logpath, address), thread.bootstrap_c)
+    ExitGuard = setmetatable({}, {__gc=function()
+        local c = thread.channel "DbgMaster"
+        c:push(nil, "EXIT")
+        thread.wait(mt)
+    end})
 end
 
 return {

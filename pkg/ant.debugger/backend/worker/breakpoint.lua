@@ -1,9 +1,9 @@
-local rdebug = require 'remotedebug.visitor'
+local rdebug = require 'luadebug.visitor'
 local fs = require 'backend.worker.filesystem'
 local source = require 'backend.worker.source'
-local evaluate = require 'backend.worker.evaluate'
+local eval = require 'backend.worker.eval'
 local ev = require 'backend.event'
-local hookmgr = require 'remotedebug.hookmgr'
+local hookmgr = require 'luadebug.hookmgr'
 local parser = require 'backend.worker.parser'
 local stdout = require 'backend.worker.stdout'
 
@@ -38,7 +38,43 @@ local function hasActiveBreakpoint(bps, activeline)
     return false
 end
 
-local function updateBreakpoint(bpkey, src, bps)
+local function bpKey(src)
+    if src.sourceReference then
+        return src.sourceReference
+    end
+    local path = fs.path_native(fs.path_normalize(src.path))
+    if src.startline then
+        return path..":"..src.startline
+    end
+    return path
+end
+
+local function bpClientKey(src)
+    if src.sourceReference then
+        return src.sourceReference
+    end
+    return fs.path_native(fs.path_normalize(src.path))
+end
+
+local function updateBreakpoint(src, breakpoints)
+    if not src.lineinfo then
+        return
+    end
+    local bpkey = bpKey(src)
+    local bps
+    if breakpoints == nil then
+        bps = currentactive[bpkey]
+        if not bps then
+            return
+        end
+    else
+        bps = {}
+        for _, bp in ipairs(breakpoints) do
+            if bp.verified == true then
+                bps[bp.line] = bp
+            end
+        end
+    end
     if next(bps) == nil then
         currentactive[bpkey] = nil
         for proto in pairs(src.protos) do
@@ -58,84 +94,44 @@ local function updateBreakpoint(bpkey, src, bps)
     updateHook()
 end
 
-local function bpKey(src)
-    if src.sourceReference then
-        return src.sourceReference
-    end
-    local path = fs.path_native(fs.path_normalize(src.path))
-    if src.startline then
-        return path..":"..src.startline
-    end
-    return path
-end
-
-local function bpClientKey(src)
-    if src.sourceReference then
-        return src.sourceReference
-    end
-    return fs.path_native(fs.path_normalize(src.path))
-end
-
 local function NormalizeErrorMessage(what, err)
     return ("%s: %s."):format(what, err:gsub("^:%d+: %(EVAL%):%d+: (.*)$", "%1"))
 end
 
+local function setBreakPointUnverified(bp, errmsg)
+    bp.unverified = true
+    ev.emit('breakpoint', 'changed', {
+        id = bp.id,
+        message = errmsg,
+        verified = false,
+    })
+end
+
 local function valid(bp)
     if bp.condition then
-        local ok, err = evaluate.verify(bp.condition)
+        local ok, err = eval.verify(bp.condition)
         if not ok then
-            ev.emit('breakpoint', 'changed', {
-                id = bp.id,
-                message = NormalizeErrorMessage("Condition Error", err),
-                verified = false,
-            })
+            setBreakPointUnverified(bp, NormalizeErrorMessage("Condition Error", err))
             return false
         end
     end
     if bp.hitCondition then
-        local ok, err = evaluate.verify('0 ' .. bp.hitCondition)
+        local ok, err = eval.verify('0 '..bp.hitCondition)
         if not ok then
-            ev.emit('breakpoint', 'changed', {
-                id = bp.id,
-                message = NormalizeErrorMessage("HitCondition Error", err),
-                verified = false,
-            })
+            setBreakPointUnverified(bp, NormalizeErrorMessage("HitCondition Error", err))
             return false
         end
     end
     return true
 end
 
-local function verifyBreakpoint(src, breakpoints)
-    local bpkey = bpKey(src)
-    local curbp = currentactive[bpkey]
-    local lineinfo = src.lineinfo
+local function verifyBreakpoint(breakpoints)
     local hits = {}
-    local res = {}
-    if curbp then
-        for _, bp in ipairs(curbp) do
-            hits[bp.realLine] = bp.statHit
-        end
-    end
     for _, bp in ipairs(breakpoints) do
         if not valid(bp) then
             goto continue
         end
-        local activeline = lineinfo[bp.line]
-        if not activeline then
-            if not src.startline then
-                ev.emit('breakpoint', 'changed', {
-                    id = bp.id,
-                    message = "The breakpoint didn't hit a valid line.",
-                    verified = false,
-                })
-            end
-            goto continue
-        end
-        bp.source = src
         bp.realLine = bp.line
-        bp.line = activeline
-        res[bp.line] = bp
         bp.statHit = hits[bp.realLine] or 0
         if bp.logMessage then
             local n = 0
@@ -143,11 +139,34 @@ local function verifyBreakpoint(src, breakpoints)
             bp.statLog[1] = bp.logMessage:gsub('%b{}', function(str)
                 n = n + 1
                 local key = ('{%d}'):format(n)
-                bp.statLog[key] = str:sub(2,-2)
+                bp.statLog[key] = str:sub(2, -2)
                 return key
             end)
-            bp.statLog[1] = bp.statLog[1] .. '\n'
+            bp.statLog[1] = bp.statLog[1]..'\n'
         end
+        ::continue::
+    end
+end
+
+local function verifyBreakpointByLineInfo(src, breakpoints)
+    local lineinfo = src.lineinfo
+    if not lineinfo then
+        return
+    end
+    for _, bp in ipairs(breakpoints) do
+        if bp.unverified ~= nil then
+            goto continue
+        end
+        local activeline = lineinfo[bp.line]
+        if not activeline then
+            if not src.startline then
+                setBreakPointUnverified(bp, "The breakpoint didn't hit a valid line.")
+            end
+            goto continue
+        end
+        bp.source = src
+        bp.line = activeline
+        bp.verified = true
         ev.emit('breakpoint', 'changed', {
             id = bp.id,
             line = bp.line,
@@ -155,7 +174,6 @@ local function verifyBreakpoint(src, breakpoints)
         })
         ::continue::
     end
-    updateBreakpoint(bpkey, src, res)
 end
 
 function m.find(src, currentline)
@@ -169,20 +187,23 @@ end
 
 local function parserInlineLineinfo(src)
     local old = parser(src.content)
+    if not old then
+        return
+    end
     local new = {}
     local diff = src.startline - 1
     for k, v in pairs(old) do
         if type(k) == "number" then
-            new[k+diff] = v+diff
+            new[k + diff] = v + diff
         else
             local newv = {}
-            for l in pairs(v) do newv[l+diff] = true end
+            for l in pairs(v) do newv[l + diff] = true end
             if k == "0-0" then
                 new[k] = newv
             else
                 local s, e = k:match "^(%d+)-(%d+)$"
-                s = tonumber(s)+1
-                e = tonumber(e)+1
+                s = tonumber(s) + 1
+                e = tonumber(e) + 1
                 new[("%d-%d"):format(s, e)] = newv
             end
         end
@@ -205,25 +226,27 @@ end
 
 local function cantVerifyBreakpoints(breakpoints)
     for _, bp in ipairs(breakpoints) do
-        ev.emit('breakpoint', 'changed', {
-            id = bp.id,
-            message = "The source file has no line information.",
-            verified = false,
-        })
+        setBreakPointUnverified(bp, "The source file has no line information.")
     end
 end
 
 function m.set_bp(clientsrc, breakpoints, content)
+    verifyBreakpoint(breakpoints)
+
     local srcarray = source.c2s(clientsrc)
     if srcarray then
         local ok = false
         for _, src in ipairs(srcarray) do
             if calcLineInfo(src, content) then
-                verifyBreakpoint(src, breakpoints)
                 ok = true
             end
         end
-        if not ok then
+        if ok then
+            for _, src in ipairs(srcarray) do
+                verifyBreakpointByLineInfo(src, breakpoints)
+                updateBreakpoint(src, breakpoints)
+            end
+        else
             cantVerifyBreakpoints(breakpoints)
         end
     else
@@ -237,14 +260,14 @@ end
 
 function m.exec(bp)
     if bp.condition then
-        local ok, res = evaluate.eval(bp.condition)
+        local ok, res = eval.eval(bp.condition)
         if not ok or not res then
             return false
         end
     end
     bp.statHit = bp.statHit + 1
     if bp.hitCondition then
-        local ok, res = evaluate.eval(bp.statHit .. ' ' .. bp.hitCondition)
+        local ok, res = eval.eval(bp.statHit..' '..bp.hitCondition)
         if not ok or res ~= true then
             return false
         end
@@ -255,7 +278,7 @@ function m.exec(bp)
             if not info then
                 return key
             end
-            local ok, res = evaluate.eval(info)
+            local ok, res = eval.eval(info)
             if not ok then
                 return '{'..info..'}'
             end
@@ -270,46 +293,36 @@ end
 
 function m.newproto(proto, src, key)
     src.protos[proto] = key
-    do
-        local bpkey = bpClientKey(src)
-        local wv = waitverify[bpkey]
-        if wv then
-            if not src.content then
-                waitverify[bpkey] = nil
-            end
-            if calcLineInfo(src, wv.content) then
-                verifyBreakpoint(src, wv.breakpoints)
-            else
-                cantVerifyBreakpoints(wv.breakpoints)
-            end
+    local bpkey = bpClientKey(src)
+    local wv = waitverify[bpkey]
+    if wv then
+        if not src.content then
+            waitverify[bpkey] = nil
+        end
+        if not calcLineInfo(src, wv.content) then
+            cantVerifyBreakpoints(wv.breakpoints)
             return
         end
-    end
-    local bpkey = bpKey(src)
-    local bps = currentactive[bpkey]
-    if bps and src.lineinfo then
-        updateBreakpoint(bpkey, src, bps)
+        verifyBreakpointByLineInfo(src, wv.breakpoints)
+        updateBreakpoint(src, wv.breakpoints)
         return
     end
+    updateBreakpoint(src)
 end
 
 local funcs = {}
 function m.set_funcbp(breakpoints)
     funcs = {}
     for _, bp in ipairs(breakpoints) do
-        local ok, err = evaluate.verify(bp.name)
+        local ok, err = eval.verify(bp.name)
         if not ok then
-            ev.emit('breakpoint', 'changed', {
-                id = bp.id,
-                message = NormalizeErrorMessage("Error", err),
-                verified = false,
-            })
+            setBreakPointUnverified(bp, NormalizeErrorMessage("Error", err))
             goto continue
         end
         if not valid(bp) then
             goto continue
         end
-        funcs[#funcs+1] = bp
+        funcs[#funcs + 1] = bp
         bp.verified = true
         bp.statHit = 0
         ev.emit('breakpoint', 'changed', bp)
@@ -327,7 +340,7 @@ end
 
 function m.hit_funcbp(func)
     for _, bp in ipairs(funcs) do
-        local ok, res = evaluate.eval(bp.name, 1)
+        local ok, res = eval.eval(bp.name, 1)
         if ok and res == func and m.exec(bp) then
             return bp
         end
@@ -343,7 +356,7 @@ function m.hitExceptionBreakpoint(flags, level, error)
             if not bp.condition then
                 return bp
             end
-            local ok, res = evaluate.eval(bp.condition, level, { error = error })
+            local ok, res = eval.eval(bp.condition, level, { error = error })
             if ok and res then
                 return bp
             end
@@ -364,13 +377,9 @@ function m.setExceptionBreakpoints(breakpoints)
             })
             goto continue
         end
-        local ok, err = evaluate.verify(filter.condition)
+        local ok, err = eval.verify(filter.condition)
         if not ok then
-            ev.emit('breakpoint', 'changed', {
-                id = filter.id,
-                message = NormalizeErrorMessage("Error", err),
-                verified = false,
-            })
+            setBreakPointUnverified(filter, NormalizeErrorMessage("Error", err))
             goto continue
         end
         exceptionFilters[filter.filterId] = {

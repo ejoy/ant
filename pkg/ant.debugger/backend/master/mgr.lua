@@ -1,7 +1,7 @@
 local proto = require 'common.protocol'
 local ev = require 'backend.event'
 local thread = require 'bee.thread'
-local stdio = require 'remotedebug.stdio'
+local stdio = require 'luadebug.stdio'
 
 local redirect = {}
 local mgr = {}
@@ -18,6 +18,8 @@ local threadCatalog = {}
 local threadStatus = {}
 local threadName = {}
 local terminateDebuggeeCallback
+local exitMaster = false
+local quit = false
 
 local function genThreadId()
     maxThreadId = maxThreadId + 1
@@ -142,7 +144,7 @@ function mgr.threads()
             }
         end
     end
-    table.sort(t, function (a, b)
+    table.sort(t, function(a, b)
         return a.name < b.name
     end)
     return t
@@ -193,6 +195,11 @@ function mgr.exitWorker(w)
     end
     threadStatus[w] = nil
     threadName[w] = nil
+    if exitMaster then
+        if next(threadChannel) == nil then
+            quit = true
+        end
+    end
 end
 
 local function update_redirect()
@@ -218,8 +225,6 @@ local function update_redirect()
     end
 end
 
-local quit = false
-
 local function update_once()
     local threadCMD = require 'backend.master.threads'
     while true do
@@ -228,7 +233,11 @@ local function update_once()
             break
         end
         if cmd == "EXIT" then
-            quit = true
+            update_redirect()
+            exitMaster = true
+            if next(threadChannel) == nil then
+                quit = true
+            end
             return
         end
         if threadCMD[cmd] then
@@ -275,6 +284,9 @@ function mgr.update()
             thread.sleep(0.01)
         end
     end
+    local event = require 'backend.master.event'
+    event.terminated()
+    network.closeall()
 end
 
 function mgr.setClient(c)
