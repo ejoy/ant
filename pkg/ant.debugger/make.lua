@@ -1,18 +1,16 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
+local ROOT <const> = "../../"
 
-local LuaInclude <const> = Ant3rd .. "bee.lua/3rd/lua/"
-
-lm:lua_source "luadebug" {
+lm:lua_source "debugger" {
     defines = {
         "DBG_LUA_VERSION=504",
         "LUA_VERSION_LATEST",
     },
     includes = {
-        LuaInclude,
-        Ant3rd .. "bee.lua/",
-        Ant3rd .. "bee.lua/3rd/lua-seri",
+        ROOT .. "3rd/bee.lua/",
+        ROOT .. "3rd/bee.lua/3rd/lua/",
+        ROOT .. "3rd/bee.lua/3rd/lua-seri",
         "src",
     },
     sources = {
