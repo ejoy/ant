@@ -16,10 +16,10 @@ int luaopen_hierarchy(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
 int luaopen_protocol(lua_State* L);
-int luaopen_remotedebug(lua_State* L);
-int luaopen_remotedebug_hookmgr(lua_State* L);
-int luaopen_remotedebug_stdio(lua_State* L);
-int luaopen_remotedebug_visitor(lua_State* L);
+int luaopen_luadebug(lua_State* L);
+int luaopen_luadebug_hookmgr(lua_State* L);
+int luaopen_luadebug_stdio(lua_State* L);
+int luaopen_luadebug_visitor(lua_State* L);
 int luaopen_rmlui(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
@@ -86,10 +86,10 @@ void ant_loadmodules(lua_State* L) {
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },
         { "protocol", luaopen_protocol },
-        //{ "remotedebug", luaopen_remotedebug },
-        //{ "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },
-        //{ "remotedebug.stdio", luaopen_remotedebug_stdio },
-        //{ "remotedebug.visitor", luaopen_remotedebug_visitor },
+        { "luadebug", luaopen_luadebug },
+        { "luadebug.hookmgr", luaopen_luadebug_hookmgr },
+        { "luadebug.stdio", luaopen_luadebug_stdio },
+        { "luadebug.visitor", luaopen_luadebug_visitor },
         { "rmlui", luaopen_rmlui },
         { "window", luaopen_window },
         { "terrain", luaopen_terrain },

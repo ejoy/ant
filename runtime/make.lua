@@ -7,13 +7,11 @@ local RuntimeBacklist <const> = {
     filedialog = true,
     imgui = true,
     effekseer = true,
-    remotedebug = true,
 }
 
 local EditorBacklist <const> = {
     firmware = true,
     effekseer = true,
-    remotedebug = true,
 }
 
 local RuntimeAlias <const> = {
