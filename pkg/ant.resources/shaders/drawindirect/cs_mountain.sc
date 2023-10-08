@@ -20,8 +20,7 @@ uint load_mesh_idx(uint idx){
 	vec4 v = b_mesh_indices[v4_idx];
     uint elem = v[elem_idx];
 
-    //return ((elem >> (uint_idx*16)) & 0xffff);
-	return 0;
+    return ((elem >> (uint_idx*16)) & 0xffff);
 }
 
 NUM_THREADS(64, 1, 1)

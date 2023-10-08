@@ -47,9 +47,8 @@ mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 	
 	if (DRAW_INDIRECT_MOUNTAIN2 == DRAW_INDIRECT_TYPE)
 	{
-		mat4 m = mat4(d1, d2, d3, vec4(0.0, 0.0, 0.0, 1.0));
-		m = transpose(m);
-		return m;
+		// d1, d2, d3 already transposed when pass to instance buffer, see: create_sm_entity
+		return mat4(d1, d2, d3, vec4(0.0, 0.0, 0.0, 1.0));
 	} 
 
 	mat4 m = u_model[0];

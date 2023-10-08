@@ -156,10 +156,10 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
         if n > 0 then
             s = s .. ('\0'):rep(n)
         end
-        return bgfx.create_index_buffer(bgfx.memory_buffer(s)), #s // VEC4_SIZE
+        return bgfx.create_index_buffer(bgfx.memory_buffer(s))
     end
 
-    local mesh_indices_buffer, mesh_indices_buffer_size = build_mesh_indices_buffer(meshes)
+    local mesh_indices_buffer = build_mesh_indices_buffer(meshes)
 
     local drawnum = #memory
 
@@ -202,7 +202,7 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
         data = {
             material = "/pkg/ant.resources/materials/indirect/mountain.material",
             dispatch    = {
-                size    = {((drawnum+63)//64), 0, 0},
+                size    = {((drawnum+63)//64), 1, 1},
             },
             on_ready = function (e)
                 local die = world:entity(di_eid, "draw_indirect:in")
@@ -224,7 +224,7 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
                 }
 
                 m.u_mesh_params = MESH_PARAMS
-                m.u_buffer_param = math3d.vector(mesh_indices_buffer_size, 0, 0, 0)
+                m.u_buffer_param = math3d.vector(drawnum, 0, 0, 0)
                 --just do it once
                 icompute.dispatch(main_viewid, e.dispatch)
             end
