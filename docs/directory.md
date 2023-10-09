@@ -46,11 +46,12 @@
 	* clibs/window 各平台的窗口模块
 * docs 文档
 * engine 引擎中不受包管理的 Lua 代码
-	* engine/editor
-	* engine/firmware
-	* engine/runtime
-	* engine/task
-	* engine/vfs
+	* engine/editor 编辑器模式相关
+	* engine/firmware 游戏客户端的自举部分及基础库
+	* engine/runtime 运行时模式相关
+	* engine/task  游戏客户端的 ltask 启动
+		* engine/task/service 游戏客户端的 ltask 服务
+	* engine/vfs VFS 相关
 * misc 其它（文本编辑器插件）
 * pkg 引擎的包
 	* pkg/ant.animation 动画
@@ -112,9 +113,17 @@
 		* pkg/ant.render/view_group
 		* pkg/ant.render/viewport
 	* pkg/ant.render.core 渲染层中被其它包依赖的部分
-	* pkg/ant.resource_manager
-	* pkg/ant.resources
-	* pkg/ant.resources.binary
+	* pkg/ant.resource_manager 资源管理模块
+		* pkg/ant.resource_manager/service 资源管理 (ltask) 服务
+		* pkg/ant.resource_manager/src 资源管理用到的 C 模块（用于绕过 Lua 层直接用过 C API 获取资源）
+		* pkg/ant.resource_manager/thread 资源管理服务用到的 Lua 模块
+	* pkg/ant.resources 引擎中定义的文本资源
+		* pkg/ant.resources/materials 材质
+		* pkg/ant.resources/settings 材质的配置
+		* pkg/ant.resources/shaders 着色器
+		* pkg/ant.resources/state_machines （？？？）
+		* pkg/ant.resources/textures 默认纹理
+	* pkg/ant.resources.binary 引擎中定义的二进制资源
 	* pkg/ant.rmlui 游戏用 UI （RMLUI）
 	* pkg/ant.scene
 	* pkg/ant.serialize
@@ -132,3 +141,16 @@
 * runtime 引擎运行时的不同平台支持
 * test 测试项目
 * tools 工具
+	* tools/baker
+	* tools/dump-prefab
+	* tools/editor
+	* tools/fbx2glb
+	* tools/fileserver 引擎运行时需要的开发机服务
+		* tools/fileserver/pkg/s  fileserver 用到的模块
+			* tools/fileserver/pkg/s/service fileserver 中的各 ltask 服务
+	* tools/install
+	* tools/material_compile
+	* tools/pdxmesh
+	* tools/prefab_viewer
+	* tools/rmlviewer
+	* tools/texture
