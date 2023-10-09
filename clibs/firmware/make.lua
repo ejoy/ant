@@ -28,12 +28,20 @@ lm:runlua {
     output = "FirmwareInitThread.h",
 }
 
+lm:runlua {
+    script = "embed.lua",
+    args = { "$in", "$out" },
+    input = "../../engine/firmware/debugger.lua",
+    output = "FirmwareDebugger.h",
+}
+
 lm:phony {
     input = {
         "FirmwareBootstrap.h",
         "FirmwareIo.h",
         "FirmwareVfs.h",
-        "FirmwareInitThread.h"
+        "FirmwareInitThread.h",
+        "FirmwareDebugger.h",
     },
     output = "firmware.cpp",
 }
