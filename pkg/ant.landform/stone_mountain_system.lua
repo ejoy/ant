@@ -162,10 +162,8 @@ local function create_sm_entity(gid, indices)
         end
         local s_noise = scale_remap(gen_noise(ix, iz, sidx), info.scale[2], info.scale[1])
         local r_noise = gen_noise(ix, iz, sidx) * math.pi * 2
-
-        local offset = 128
-        local x, z = (ix - offset) * 10, (iz - offset) * 10
-        local m = math3d.matrix{s=s_noise, r=math3d.quaternion{axis=mc.YAXIS, r=r_noise}, t=math3d.vector(index.pos)}
+        local t_noise = info.offset * (math.random(0, 2) - 1) -- random generate 3 value: -info.offset, 0, info.offset
+        local m = math3d.matrix{s=s_noise, r=math3d.quaternion{axis=mc.YAXIS, r=r_noise}, t=math3d.add(math3d.vector(t_noise, 0, t_noise), math3d.vector(index.pos))}
         m = math3d.transpose(m)
         local c1, c2, c3 = math3d.index(m, 1, 2, 3)
         memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
