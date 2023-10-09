@@ -15,13 +15,10 @@ local bgfx          = require "bgfx"
 local main_viewid<const> = hwi.viewid_get "main_view"
 
 local terrain_module = require "terrain"
-local ism = {}
+
 local sm_sys = ecs.system "stone_mountain_system"
 
-local sm_table = {}
-local NOISE_RATIOS<const> = {
-    0.88, 0.90, 0.92, 0.94
-}
+local NOISE_RATIO<const> = 0.88
 
 local SM_SRT_INFOS = {
     {scale = {0.064, 0.064}, offset = 0.5}, 
@@ -34,63 +31,11 @@ local gen_noise; do
     local noise_freq<const> = 4
     local noise_depth<const> = 4
     function gen_noise(x, z, idx)
+        idx = idx or 1
         x, z=x-1, z-1   --change to base 0
         local seed, offset_y, offset_x = z*x+idx, z+idx, x+idx
         return terrain_module.noise(x, z, noise_freq, noise_depth, seed, offset_y, offset_x)
     end
-end
-
-local function get_srt(offset, unit)
-    for sidx, sm_info in ipairs(SM_SRT_INFOS) do
-        local lb, rb, off = sm_info.scale.lb, sm_info.scale.rb, sm_info.offset
-        for sm_idx, sm in pairs(sm_table) do
-            local ix, iz = sm_idx & 0xffff, sm_idx >> 16
-
-            local s_noise = gen_noise(ix+1, iz+1, sidx) * rb + lb
-            local r_noise = gen_noise(ix+1, iz+1, sidx) * math.pi * 2
-        
-            local mesh_noise = (sm_idx + math.random(0, 4)) % 4 + 1
-            local tx, tz = (ix + off - offset) * unit, (iz + off - offset) * unit
-            sm[sidx] = {s = s_noise, r = r_noise, tx = tx, tz = tz, m = mesh_noise}
-        end
-    end
-end
-
-local function set_sm_property(width, height)
-    local function has_block(x, z, m, n)
-        for oz = 0, n - 1 do
-            for ox = 0, m - 1 do
-                local ix, iz = x + ox, z + oz
-                if ix >= width or iz >= height then return nil end
-                local sm_idx = (iz << 16) + ix
-                if (not sm_table[sm_idx])then
-                    return nil
-                end
-            end
-        end
-        return true
-    end
-
-    for sm_idx in pairs(sm_table) do
-        local ix, iz = sm_idx & 0xffff, sm_idx >> 16
-        local near_table = {true}
-        for sidx=2, #SM_SRT_INFOS do
-            if has_block(ix, iz, sidx, sidx) then
-                near_table[sidx] = true
-            end
-        end
-        if math.random(0, 1) > 0 then
-            near_table[1] = nil
-        end
-        for idx, _ in pairs(near_table) do
-            sm_table[sm_idx][idx] = {}
-        end
-    end
-end
-
-local function make_sm_noise(width, height, offset, unit)
-    set_sm_property(width, height)
-    get_srt(offset, unit)
 end
 
 local MERGE_MESH
@@ -140,12 +85,6 @@ if DEBUG_COORD_IDX then
     coord_idx_test(257, 1, 2)
 
 end
-
-local QUEUE_MT = {
-    empty = function(self) return 0 == #self end,
-    pop = function (self) return table.remove(self, #self) end,
-    find = function (self, v) for i=1, #self do if self[i] == v then return true end end end,
-}
 
 local NEW_MOUNTAIN_TYPE<const> = math3d.ref(math3d.vector(3, 0, 0, 0))
 
@@ -266,32 +205,15 @@ function sm_sys:exit()
     log.info("MERGE_MESH need remove")
 end
 
-
--- this random algorithm should move to other
-local function update_sub_range_masks(width, height, range, ix, iz, masks)
-    local gz, gx = (iz-1)*range, (ix-1)*range
-    local noise = gen_noise(ix, iz, range)
-    for z=1, range do
-        for x=1, range do
-            local zz, xx = gz+z, gx+x
-            if xx <= width and zz <= height then
-                local maskidx = (zz-1)*width+xx
-                if not masks[maskidx] then
-                    masks[maskidx] = noise > NOISE_RATIOS[range] and noise or 0
-                end
-            end
-        end
-    end
-end
+local ism = {}
 
 function ism.create_random_sm(width, height)
     local masks = {}
-    for ri=1, 4 do
-        local ww, hh = (width+ri-1)//ri, (height+ri-1)//ri
-        for iz=1, hh do
-            for ix=1, ww do
-                update_sub_range_masks(width, height, ri, ix, iz, masks)
-            end
+    for iz=1, height do
+        for ix=1, width do
+            local noise = gen_noise(ix, iz)
+            local maskidx = (iz-1)*width+ix
+            masks[maskidx] = noise > NOISE_RATIO and noise or 0
         end
     end
     assert(width * height==#masks)
@@ -307,5 +229,30 @@ end
 
 ism.idx2coord = idx2coord
 ism.coord2idx = coord2idx
+
+function ism.merge_indices(indices, width, height, range)
+    local m = {}
+    for iz=1, height, range do
+        for ix=1, width, range do
+            local idx = (iz-1)*width+ix
+
+            local function is_sub_range(baseidx, range)
+                for izz=1, range do
+                    for ixx=1, range do
+                        local sidx = baseidx + (izz-1) * width + ixx
+                        if indices[sidx] == 0 then
+                            return false
+                        end
+                    end
+                end
+            end
+
+            if is_sub_range(idx, range) then
+                m[#m+1] = {sidx=range, baseidx=idx}
+            end
+        end
+    end
+    return m
+end
 
 return ism
