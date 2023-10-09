@@ -90,10 +90,7 @@ function render_sys:entity_init()
 		e.render_object_visible = e.view_visible
 	end
 
-	for e in w:select "INIT mesh?in simplemesh?in render_object:update stonemountain?in" do
-		if e.stonemountain then
-			print ""
-		end
+	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
 		local m = e.mesh or e.simplemesh
 		if m then
 			update_ro(e.render_object, m)
