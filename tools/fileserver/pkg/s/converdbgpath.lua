@@ -1,4 +1,4 @@
-local protocol = import_package "ant.debugger".protocol
+local protocol = import_package "ant.debugger".get_protocol()
 local statSend = {}
 local statRecv = {}
 
