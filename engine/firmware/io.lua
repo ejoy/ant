@@ -725,6 +725,13 @@ function CMD.REDIRECT(_, resp_command, service_id)
 	end
 end
 
+function CMD.REDIRECT_CHANNEL(_, resp_command, channel_name)
+	local channel = thread.channel(channel_name)
+	response[resp_command] = function(...)
+		channel:push(resp_command, ...)
+	end
+end
+
 local function patch(code)
 	local f = load(code)
 	f()
