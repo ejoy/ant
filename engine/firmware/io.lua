@@ -822,11 +822,17 @@ local function init_channelfd()
 		return
 	end
 	event_addr(channelfd, function (fd)
-		if nil == fd:recv() then
-			event_delr(fd)
-			return
-		end
-		while dispatch(io_req:pop()) do
+		while true do
+			local r = fd:recv()
+			if r == nil then
+				event_delr(fd)
+				return
+			end
+			if r == false then
+				return
+			end
+			while dispatch(io_req:pop()) do
+			end
 		end
 	end)
 end
