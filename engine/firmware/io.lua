@@ -728,7 +728,7 @@ end
 function CMD.REDIRECT_CHANNEL(_, resp_command, channel_name)
 	local channel = thread.channel(channel_name)
 	response[resp_command] = function(...)
-		channel:push(resp_command, ...)
+		channel:push(...)
 	end
 end
 
