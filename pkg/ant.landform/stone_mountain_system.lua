@@ -93,8 +93,7 @@ local function create_sm_entity(gid, indices)
     for _, index in ipairs(indices) do
         local coord = index.coord
         local ix, iz = coord[1], coord[2]
-        --TODO: we only consider one mask for one stone
-        local sidx<const> = 1
+        local sidx<const> = index.sidx
         local info = SM_SRT_INFOS[sidx]
         local function scale_remap(nv, s, o)
             return nv * s + o
@@ -229,30 +228,5 @@ end
 
 ism.idx2coord = idx2coord
 ism.coord2idx = coord2idx
-
-function ism.merge_indices(indices, width, height, range)
-    local m = {}
-    for iz=1, height, range do
-        for ix=1, width, range do
-            local idx = (iz-1)*width+ix
-
-            local function is_sub_range(baseidx, range)
-                for izz=1, range do
-                    for ixx=1, range do
-                        local sidx = baseidx + (izz-1) * width + ixx
-                        if indices[sidx] == 0 then
-                            return false
-                        end
-                    end
-                end
-            end
-
-            if is_sub_range(idx, range) then
-                m[#m+1] = {sidx=range, baseidx=idx}
-            end
-        end
-    end
-    return m
-end
 
 return ism
