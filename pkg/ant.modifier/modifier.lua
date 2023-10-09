@@ -157,9 +157,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
             "ant.modifier|modifier",
 		},
 		data = {
-            scene = {
-                parent = target
-            },
+            scene = {},
             modifier = {
                 target = target,
                 continue = false,
@@ -225,9 +223,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
             "ant.modifier|modifier",
 		},
 		data = {
-            scene = {
-                parent = target,
-            },
+            scene = {},
             modifier = {
                 target = target,
                 continue = false,
