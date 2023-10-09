@@ -14,7 +14,7 @@ local function open(port)
         fclose = f
     end
     function m.update()
-        local ok, new_session, data = dbg_net:pop()
+        local ok, _, new_session, data = dbg_net:pop()
         if ok then
             if session ~= new_session then
                 session = new_session
