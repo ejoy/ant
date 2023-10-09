@@ -192,7 +192,7 @@ local function slove_system(w, system_class)
 	end
 
 	for name in pairs(mark) do
-		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1].symbol))
+		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, systems[name][1].symbol))
 	end
 end
 
