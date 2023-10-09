@@ -123,7 +123,8 @@ local function coord2idx(x, y, stride)
     return (y - 1) * stride + x
 end
 
-do
+local DEBUG_COORD_IDX<const> = false
+if DEBUG_COORD_IDX then
     local stride = 256
 
     local function coord_idx_test(idx, checkx, checky)
