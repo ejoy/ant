@@ -1,3 +1,6 @@
+import_feature "ant.objcontroller|pickup"
+import_feature "ant.shadow_bounding"
+
 system "init_system"
     .implement "init_system.lua"
 
