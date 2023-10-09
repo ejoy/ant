@@ -31,7 +31,7 @@ local function start(wait)
         fs.create_directories(logpath)
         local log = require 'common.log'
         log.file = logpath..'/worker.log'
-        require 'backend.master' .init(logpath)
+        require 'backend.master' .init(logpath, "4378")
         require 'backend.worker'
     ]])
     local event = rdebug.event
@@ -41,15 +41,11 @@ local function start(wait)
 end
 
 
-local function protocol()
-    local pkgpath = package.path
-    package.path = "/pkg/ant.debugger/script/?.lua"
-    local proto = require "script.common.protocol"
-    package.path = pkgpath
-    return proto
+local function get_protocol()
+    return dofile "/pkg/ant.debugger/script/common/protocol.lua"
 end
 
 return {
     start = start,
-    protocol = protocol,
+    get_protocol = get_protocol,
 }

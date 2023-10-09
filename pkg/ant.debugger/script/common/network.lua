@@ -1,4 +1,4 @@
-local function open(_, _)
+local function open(port)
     local vfs = require "vfs"
     local thread = require "bee.thread"
     local dbg_net = thread.channel "DdgNet"
@@ -17,9 +17,9 @@ local function open(_, _)
         local ok, new_session, data = dbg_net:pop()
         if ok then
             if session ~= new_session then
-                vfs.send("SEND", "DEBUGGER_RESP", "4378", session, write)
-                write = ""
                 session = new_session
+                vfs.send("SEND", "DEBUGGER_RESP", port, session, write)
+                write = ""
             end
             if data == nil then
                 fclose()
@@ -34,10 +34,10 @@ local function open(_, _)
             write = write .. data
             return
         end
-        vfs.send("SEND", "DEBUGGER_RESP", "4378", session, data)
+        vfs.send("SEND", "DEBUGGER_RESP", port, session, data)
     end
     function m.close()
-        vfs.send("SEND", "DEBUGGER_RESP", "4378", session)
+        vfs.send("SEND", "DEBUGGER_RESP", port, session)
         write = ""
     end
     return m

@@ -14,7 +14,7 @@ local function initMaster(logpath, address)
         local log = require "common.log"
         log.file = %q..'/master.log'
         local ok, err = xpcall(function()
-            local network = require "common.network"(%s)
+            local network = require "common.network"(%q)
             local master = require "backend.master.mgr"
             master.init(network)
             master.update()

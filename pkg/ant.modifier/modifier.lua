@@ -170,6 +170,9 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                 kfeid = kfeid,
                 reset = function (self)
                     local e <close> = world:entity(self.target)
+                    if not e then
+                        return
+                    end
                     imaterial.set_property(e, self.property, self.init_value)
                 end,
                 update = function(self, time)
@@ -182,6 +185,9 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                         apply_value = self.init_value
                     end
                     local e <close> = world:entity(self.target)
+                    if not e then
+                        return
+                    end
                     imaterial.set_property(e, self.property, apply_value)
                     self.continue = running
                 end
@@ -229,6 +235,9 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                 foreupdate = foreupdate,
                 reset = function (self)
                     local e <close> = world:entity(self.target)
+                    if not e then
+                        return
+                    end
                     iom.set_srt_offset_matrix(e, mc.IDENTITY_MAT)
                 end,
                 update = function(self, time)
@@ -241,6 +250,9 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                         apply_value = mc.IDENTITY_MAT
                     end
                     local e <close> = world:entity(self.target)
+                    if not e then
+                        return true
+                    end
                     iom.set_srt_offset_matrix(e, apply_value)
                     self.continue = running
                     if not running and self.destroy then

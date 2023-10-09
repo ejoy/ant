@@ -1,4 +1,4 @@
-local json = require 'common.json'
+local json = dofile "/pkg/ant.json/main.lua"
 
 local m = {}
 
