@@ -18,8 +18,10 @@ local function open(port)
         if ok then
             if session ~= new_session then
                 session = new_session
-                vfs.send("SEND", "DEBUGGER_RESP", port, session, write)
-                write = ""
+                if write ~= "" then
+                    vfs.send("SEND", "DEBUGGER_RESP", port, session, write)
+                    write = ""
+                end
             end
             if data == nil then
                 fclose()
