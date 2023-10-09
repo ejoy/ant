@@ -20,7 +20,7 @@ local sm_sys = ecs.system "stone_mountain_system"
 
 local sm_table = {}
 local NOISE_RATIOS<const> = {
-    0, 0.90, 0.92, 0.94
+    0.88, 0.90, 0.92, 0.94
 }
 
 local SM_SRT_INFOS = {
@@ -271,13 +271,15 @@ end
 -- this random algorithm should move to other
 local function update_sub_range_masks(width, height, range, ix, iz, masks)
     local gz, gx = (iz-1)*range, (ix-1)*range
-    local noise = gen_noise(gx, gz, range)
+    local noise = gen_noise(ix, iz, range)
     for z=1, range do
         for x=1, range do
             local zz, xx = gz+z, gx+x
             if xx <= width and zz <= height then
                 local maskidx = (zz-1)*width+xx
-                masks[maskidx] = noise > NOISE_RATIOS[range] and noise or 0
+                if not masks[maskidx] then
+                    masks[maskidx] = noise > NOISE_RATIOS[range] and noise or 0
+                end
             end
         end
     end
@@ -287,8 +289,8 @@ function ism.create_random_sm(width, height)
     local masks = {}
     for ri=1, 4 do
         local ww, hh = (width+ri-1)//ri, (height+ri-1)//ri
-        for iz=1, ww do
-            for ix=1, hh do
+        for iz=1, hh do
+            for ix=1, ww do
                 update_sub_range_masks(width, height, ri, ix, iz, masks)
             end
         end
