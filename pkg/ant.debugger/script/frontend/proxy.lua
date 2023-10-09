@@ -64,14 +64,14 @@ local function attach_process(pkg, pid)
 		return false, errmsg
 	end
 
-    server = network(getUnixAddress(pid), true)
+    server = network("connect:"..getUnixAddress(pid))
     server.sendmsg(initReq)
     server.sendmsg(pkg)
     return true
 end
 
 local function attach_tcp(pkg, args)
-    server = network(args.address, args.client)
+    server = network((args.client and "connect:" or "listen:") .. args.address)
     server.sendmsg(initReq)
     server.sendmsg(pkg)
 end
@@ -112,11 +112,11 @@ end
 local function create_server(args, pid)
     local s, address
     if args.address ~= nil then
-        s = network(args.address, args.client)
+        s = network((args.client and "connect:" or "listen:") .. args.address)
         address = (args.client and "s:" or "c:") .. args.address
     else
         pid = pid or sp.get_id()
-        s = network(getUnixAddress(pid), true)
+        s = network("connect:"..getUnixAddress(pid))
         address = pid
     end
     return s, address

@@ -19,7 +19,7 @@ end
 
 local function run()
     if port then
-        vscode = network('127.0.0.1:'..port)
+        vscode = network('listen:127.0.0.1:'..port)
     else
         vscode = require 'frontend.stdio'
         --vscode.debug(true)
