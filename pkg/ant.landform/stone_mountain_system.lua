@@ -20,7 +20,7 @@ local sm_sys = ecs.system "stone_mountain_system"
 
 local sm_table = {}
 local NOISE_RATIOS<const> = {
-    0.88, 0.90, 0.92, 0.94
+    0, 0.90, 0.92, 0.94
 }
 
 local SM_SRT_INFOS = {
@@ -110,12 +110,34 @@ function sm_sys:init()
     })
 end
 
-function sm_sys:entity_init()
-
+local function idx2coord(idx, stride)
+    -- base 1
+    assert(idx > 0, "Invalid idx, it's base 1")
+    local idxbase0 = idx - 1
+    return (idxbase0 % stride)+1, (idxbase0 // stride)+1
 end
 
-local function idx2xz(idx, stride)
-    return (idx % stride)+1, (idx // stride)+1
+local function coord2idx(x, y, stride)
+    -- base 1
+    assert(x > 0 and y > 0, "Invalid x or y, it's base 1")
+    return (y - 1) * stride + x
+end
+
+do
+    local stride = 256
+
+    local function coord_idx_test(idx, checkx, checky)
+        local x, y = idx2coord(idx, stride)
+        assert(x == checkx and y == checky)
+
+        local idx1 = coord2idx(x, y, stride)
+        assert(idx1 == idx)
+    end
+
+    coord_idx_test(1, 1, 1)
+    coord_idx_test(256, 256, 1)
+    coord_idx_test(257, 1, 2)
+
 end
 
 local QUEUE_MT = {
@@ -126,11 +148,11 @@ local QUEUE_MT = {
 
 local NEW_MOUNTAIN_TYPE<const> = math3d.ref(math3d.vector(3, 0, 0, 0))
 
-local function create_sm_entity(gid, indices, width, height, offset, unit)
-    local memory = {}
-    local meshes = {}
-    for _, idx in ipairs(indices) do
-        local ix, iz = idx2xz(idx, width)
+local function create_sm_entity(gid, indices)
+    local memory, meshes = {}, {}
+    for _, index in ipairs(indices) do
+        local coord = index.coord
+        local ix, iz = coord[1], coord[2]
         --TODO: we only consider one mask for one stone
         local sidx<const> = 1
         local info = SM_SRT_INFOS[sidx]
@@ -138,15 +160,17 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
             return nv * s + o
         end
         local s_noise = scale_remap(gen_noise(ix, iz, sidx), info.scale[2], info.scale[1])
-        local r_noise = gen_noise(ix, iz, 1) * math.pi * 2
+        local r_noise = gen_noise(ix, iz, sidx) * math.pi * 2
 
-        local tx, tz = (ix - offset) * unit, (iz - offset) * unit
-        local m = math3d.matrix{s=s_noise, r=math3d.quaternion{axis=mc.YAXIS, r=r_noise}, t=math3d.vector(tx, 0, tz)}
+        local offset = 128
+        local x, z = (ix - offset) * 10, (iz - offset) * 10
+        local m = math3d.matrix{s=s_noise, r=math3d.quaternion{axis=mc.YAXIS, r=r_noise}, t=math3d.vector(index.pos)}
         m = math3d.transpose(m)
         local c1, c2, c3 = math3d.index(m, 1, 2, 3)
+        memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
+
         local mesh_noise = math.random(1, 4)
         meshes[#meshes+1] = ('H'):pack(mesh_noise)
-        memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
     end
 
     local function build_mesh_indices_buffer(meshes)
@@ -232,14 +256,6 @@ local function create_sm_entity(gid, indices, width, height, offset, unit)
     }
 end
 
-function ism.create(groups, width, height, offset, unit)
-    for gid, indices in pairs(groups) do
-        --make_sm_noise(width, height, offset, unit)
-        create_sm_entity(gid, indices, width, height, offset, unit)
-    end
-    
-end
-
 function sm_sys:entity_remove()
     for e in w:select "REMOVED stonemountain:in" do
         bgfx.destroy(e.stonemountain.mesh_indices_buffer)
@@ -280,5 +296,15 @@ function ism.create_random_sm(width, height)
     assert(width * height==#masks)
     return masks
 end
+
+function ism.create(groups)
+    for gid, indices in pairs(groups) do
+        --make_sm_noise(width, height, offset, unit)
+        create_sm_entity(gid, indices)
+    end
+end
+
+ism.idx2coord = idx2coord
+ism.coord2idx = coord2idx
 
 return ism
