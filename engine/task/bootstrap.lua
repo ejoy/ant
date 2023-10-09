@@ -71,17 +71,9 @@ local function init(c)
 		initstr = [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")
-local function dbg_dofile(filename, ...)
-    local f = assert(io.open(filename))
-    local str = f:read "a"
-    f:close()
-    return assert(load(str, "=(debugger.lua)"))(...)
-end
-local path = os.getenv "LUA_DEBUG_PATH"
-dbg_dofile(path .. "/script/debugger.lua", path)
-	: attach {}
+assert(loadfile '/engine/debugger.lua')()
 	: event("setThreadName", name)
-	: event "wait"
+	--: event "wait"
 ]]
 	end
 
