@@ -38,6 +38,20 @@ local function response(...)
 	socket.send(FD, protocol.packmessage({...}))
 end
 
+local function response_ex(tunnel_name, port, session, req)
+	local len = #req
+	while true do
+		if len <= 0x8000 then
+			response(tunnel_name, port, session, req)
+			break
+		else
+			response(tunnel_name, port, session, req:sub(1, 0x8000))
+			req = req:sub(0x8001)
+			len = len - 0x8000
+		end
+	end
+end
+
 local roothash = ltask.call(ServiceVfsMgr, "ROOT")
 
 local TUNNEL_SERVICE = {}
@@ -59,18 +73,7 @@ local function tunnel_redirect(port, s, tunnel_name)
 		local session, req = ltask.call(s, "REQUEST")
 		session = tostring(session)
 		if req then
-			local len = #req
-			local from = 1
-			while true do
-				if len <= 0x8000 then
-					response(tunnel_name, port, session, req)
-					break
-				else
-					response(tunnel_name, port, session, req:sub(1, 0x8000))
-					req = req:sub(0x8001)
-					len = len - 0x8000
-				end
-			end
+			response_ex(tunnel_name, port, session, req)
 		else
 			-- session closed
 			response(tunnel_name, port, session)
@@ -101,6 +104,57 @@ function message.TUNNEL_RESP(port, session, resp)
 			ltask.send(s, "RESPONSE", session)
 		else
 			ltask.send(s, "RESPONSE", session, resp)
+		end
+	else
+		print("No tunnel service for port", port)
+	end
+end
+
+local convert = require "converdbgpath"
+local function pathToLocal(path)
+	return ltask.call(ServiceVfsMgr, "REALPATH", path)
+end
+local function pathToDA(path)
+	return ltask.call(ServiceVfsMgr, "VIRTUALPATH", path)
+end
+
+local function dbg_tunnel_redirect(port, s, tunnel_name)
+	port = tostring(port)
+	while true do
+		local session, req = ltask.call(s, "REQUEST")
+		session = tostring(session)
+		if req then
+			local msg = convert.convertRecv(pathToDA, req)
+			while msg do
+				response_ex(tunnel_name, port, session, msg)
+				msg = convert.convertRecv(pathToDA, "")
+			end
+		else
+			-- session closed
+			response(tunnel_name, port, session)
+		end
+	end
+end
+
+function message.DEBUGGER_OPEN(port, tunnel_name)
+	port = tonumber(port)
+	assert(TUNNEL_SERVICE[port] == nil)
+	local s = new_tunnel(port)
+	if s then
+		TUNNEL_SERVICE[port] = s
+		ltask.fork(dbg_tunnel_redirect, port, s, tunnel_name)
+	end
+end
+
+function message.DEBUGGER_RESP(port, session, resp)
+	port = tonumber(port)
+	session = tonumber(session)
+	local s = TUNNEL_SERVICE[port]
+	if s then
+		if resp == "" then
+			ltask.send(s, "RESPONSE", session)
+		else
+			ltask.send(s, "RESPONSE", convert.convertSend(pathToLocal, resp))
 		end
 	else
 		print("No tunnel service for port", port)
@@ -180,13 +234,6 @@ end
 function message.FETCH_DIR(session, hash, path)
 	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_DIR", hash, path)
 	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
-end
-
-function message.DBG(data)
-	--if not ServiceDebugProxy then
-	--	ServiceDebugProxy = ltask.spawn("s|debug.proxy", FD)
-	--end
-	--ltask.send(ServiceDebugProxy, "MESSAGE", data)
 end
 
 function message.LOG(data)
