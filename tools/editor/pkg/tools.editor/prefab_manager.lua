@@ -748,7 +748,7 @@ end
 
 function m:get_origin_patch_list(template_list)
     for _, patch in ipairs(self.origin_patch_template) do
-        if patch.file ~= self.prefab_name then
+        if patch.file ~= self.prefab_name and patch.path ~= "hitch.prefab" then
             local find_mtl = false
             for key, _ in pairs(self.patch_copy_material) do
                 if patch.path == key or patch.value == key or patch.file == key then
