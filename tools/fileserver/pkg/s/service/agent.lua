@@ -100,7 +100,7 @@ function message.TUNNEL_RESP(port, session, resp)
 	session = tonumber(session)
 	local s = TUNNEL_SERVICE[port]
 	if s then
-		if resp == "" then
+		if resp == nil then
 			ltask.send(s, "RESPONSE", session)
 		else
 			ltask.send(s, "RESPONSE", session, resp)
@@ -151,10 +151,10 @@ function message.DEBUGGER_RESP(port, session, resp)
 	session = tonumber(session)
 	local s = TUNNEL_SERVICE[port]
 	if s then
-		if resp == "" then
+		if resp == nil then
 			ltask.send(s, "RESPONSE", session)
 		else
-			ltask.send(s, "RESPONSE", convert.convertSend(pathToLocal, resp))
+			ltask.send(s, "RESPONSE", session, convert.convertSend(pathToLocal, resp))
 		end
 	else
 		print("No tunnel service for port", port)
