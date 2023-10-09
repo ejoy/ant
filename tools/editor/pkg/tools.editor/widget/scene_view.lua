@@ -310,8 +310,9 @@ function m.show()
         if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'ScrollY'}) then
             -- local child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.table.SetupColumn("Entity", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
-            imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
-            imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
+            local fw = 24.0 * icons.scale
+            imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, fw)
+            imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, fw)
             imgui.table.HeadersRow()
             for _, child in ipairs(hierarchy.root.children) do
                 target_e = nil
