@@ -7,7 +7,8 @@ local mc            = mathpkg.constant
 local assetmgr 		= import_package "ant.asset"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
-local iRmlUi        = ecs.require "ant.rmlui|rmlui_system"
+-- local iRmlUi        = ecs.require "ant.rmlui|rmlui_system"
+local rhwi      = import_package "ant.hwi"
 local iani          = ecs.require "ant.animation|state_machine"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
@@ -52,7 +53,7 @@ function m:init()
 
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
 
-    imgui.SetWindowTitle("PrefabEditor")
+    imgui.SetWindowTitle("Editor")
     gd.editor_package_path = "/pkg/tools.editor/"
 
     if editor_setting.setting.camera == nil then
@@ -129,8 +130,8 @@ function m:init()
         font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
     end
 	gd.audio = fmod.init()
-
 	icons:init(assetmgr)
+	-- rhwi.set_profie(true)
 end
 
 local function init_camera()
