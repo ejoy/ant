@@ -175,11 +175,12 @@ function dbg:start(cfg)
         local logpath = %q
         local log = require 'common.log'
         log.file = logpath..'/worker.log'
-        require 'backend.master' .init(logpath, %q)
+        require 'backend.master' .init(logpath, %q..%q)
         require 'backend.worker'
     ]]):format(
-        self.root
-        , ("%q, %s"):format(dbg.address, cfg.client == true and "true" or "false")
+        self.root,
+        cfg.client == true and "connect:" or "listen:",
+        dbg.address
     ))
     return self
 end

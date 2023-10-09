@@ -6,7 +6,6 @@ local function hasMaster()
 end
 
 local function initMaster(logpath, address)
-    io.write("initMaster",address,"\n")
     if hasMaster() then
         return
     end
