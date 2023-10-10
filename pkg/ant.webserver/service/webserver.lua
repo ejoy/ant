@@ -56,8 +56,18 @@ local function iofuncs(port)
 			end
 		end
 
+		-- tunnel don't support large package
 		function io.write(str)
-			ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str)
+			local n = #str
+			local from = 0
+			while n >= 0x8000 do
+				ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str:sub(from + 1, from + 0x8000))
+				from = from + 0x8000
+				n = n - 0x8000
+			end
+			if n > 0 then
+				ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str:sub(from + 1, from + n))
+			end
 		end
 
 		function io.close()
@@ -117,12 +127,17 @@ local function route_vfs(route, cgi)
 				local root, path = fullpath:match "^/([^/]+)/?(.*)"
 				local mod = cgi[root]
 				if mod then
-					local ok, m = xpcall(require, debug.traceback, mod)
+					local ok, m = xpcall(import_package, debug.traceback, mod)
 					if ok then
 						if query then
 							query = urllib.parse_query(query)
 						end
-						local ok, code, data, header = xpcall(m.get, debug.traceback, path, query)
+						local f = m[method:lower()]
+						if f == nil then
+							response(id, s.write, 500, lua_error_temp:format "Unsupport method")
+							return
+						end
+						local ok, code, data, header = xpcall(f, debug.traceback, path, query, body)
 						if ok then
 							response(id, s.write, code, data, header)
 						else
