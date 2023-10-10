@@ -112,15 +112,15 @@ function gizmo:set_position(worldpos, gizmoonly)
 				local pe <close> = world:entity(pid)
 				parent_worldmat = iom.worldmat(pe)
 			end
-			local localPos
+			local localpos
 			if not parent_worldmat then
-				localPos = worldpos
+				localpos = worldpos
 			else
-				localPos = math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1)
+				localpos = math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1)
 			end
-			iom.set_position(target, localPos)
+			iom.set_position(target, localpos)
 			local info = hierarchy:get_node_info(self.target_eid)
-			local tp = (type(localPos) == "table") and localPos or math3d.tovalue(localPos)
+			local tp = (type(localpos) == "table") and localpos or math3d.tovalue(localpos)
 			local t = {tp[1], tp[2], tp[3]}
 			info.template.data.scene.t = t
 			prefab_mgr:on_patch_tranform(self.target_eid, "t", t)
@@ -474,33 +474,33 @@ function gizmo:update_axis_plane()
 	if self.mode ~= gizmo_const.MOVE or not self.target_eid then
 		return
 	end
-	local function do_update_axis_plane(axisPlane, invmat, gizmoPos, eyePos)
-		local axisDir = axisPlane.dir
-		local worldDir = math3d.vector(gizmo_dir_to_world(axisDir))
-		local plane = {n = worldDir, d = -math3d.dot(worldDir, gizmoPos)}
-		local project = math3d.sub(eyePos, math3d.mul(plane.n, math3d.dot(plane.n, eyePos) + plane.d))
+	local function do_update_axis_plane(axis_plane, invmat, gizmo_pos, eye_pos)
+		local axis_dir = axis_plane.dir
+		local world_dir = math3d.vector(gizmo_dir_to_world(axis_dir))
+		local plane = {n = world_dir, d = -math3d.dot(world_dir, gizmo_pos)}
+		local project = math3d.sub(eye_pos, math3d.mul(plane.n, math3d.dot(plane.n, eye_pos) + plane.d))
 		local point = math3d.transform(invmat, project, 1)
-		local e <close> = world:entity(axisPlane.eid[1])
+		local e <close> = world:entity(axis_plane.eid[1])
 		local x, y, z = math3d.index(point, 1), math3d.index(point, 2), math3d.index(point, 3)
-		if axisDir == gizmo_const.DIR_Z then
+		if axis_dir == gizmo_const.DIR_Z then
 			iom.set_position(e, {(x > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET, (y > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET, 0})
-			axisPlane.area = (x > 0) and ((y > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((y > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
-		elseif axisDir == gizmo_const.DIR_Y then
+			axis_plane.area = (x > 0) and ((y > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((y > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
+		elseif axis_dir == gizmo_const.DIR_Y then
 			iom.set_position(e, {(x > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET, 0, (z > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET})
-			axisPlane.area = (x > 0) and ((z > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((z > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
-		elseif axisDir == gizmo_const.DIR_X then
+			axis_plane.area = (x > 0) and ((z > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((z > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
+		elseif axis_dir == gizmo_const.DIR_X then
 			iom.set_position(e, {0, (y > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET, (z > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET})
-			axisPlane.area = z > 0 and ((y > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((y > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
+			axis_plane.area = z > 0 and ((y > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((y > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
 		end
 	end
 	local re <close> = world:entity(gizmo.root_eid)
 	local invmat = math3d.inverse(iom.worldmat(re))
-	local gizmoPos = iom.get_position(re)
+	local gizmo_pos = iom.get_position(re)
 	local ce <close> = world:entity(irq.main_camera())
-	local eyePos = iom.get_position(ce)
-	do_update_axis_plane(self.txy, invmat, gizmoPos, eyePos)
-	do_update_axis_plane(self.tzx, invmat, gizmoPos, eyePos)
-	do_update_axis_plane(self.tyz, invmat, gizmoPos, eyePos)
+	local eye_pos = iom.get_position(ce)
+	do_update_axis_plane(self.txy, invmat, gizmo_pos, eye_pos)
+	do_update_axis_plane(self.tzx, invmat, gizmo_pos, eye_pos)
+	do_update_axis_plane(self.tyz, invmat, gizmo_pos, eye_pos)
 end
 
 local pickup_mb = world:sub {"pickup"}
@@ -509,61 +509,43 @@ local function select_axis_plane(x, y)
 	if gizmo.mode ~= gizmo_const.MOVE then
 		return
 	end
-	local function hit_test_axis_plane(axisPlane)
+	local function hit_test_axis_plane(axis_plane, plane_hit_radius)
 		local e <close> = world:entity(gizmo.root_eid)
-		local gizmoPos = iom.get_position(e)
-		local hitPosVec = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(axisPlane.dir), pos = math3d.totable(gizmoPos)})
-		if hitPosVec then
-			return math3d.totable(math3d.transform(math3d.inverse(iom.get_rotation(e)), math3d.sub(hitPosVec, gizmoPos), 0))
+		local gizmo_pos = iom.get_position(e)
+		local hit_pos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(axis_plane.dir), pos = math3d.totable(gizmo_pos)})
+		if not hit_pos then
+			return
+		end
+		local to_gizmo = math3d.totable(math3d.transform(math3d.inverse(iom.get_rotation(e)), math3d.sub(hit_pos, gizmo_pos), 0))
+		local idx0, idx1
+		if axis_plane == gizmo.tyz then
+			idx0, idx1 = 2, 3
+		elseif axis_plane == gizmo.txy then
+			idx0, idx1 = 2, 1
+		elseif axis_plane == gizmo.tzx then
+			idx0, idx1 = 3, 1
+		end
+		if axis_plane.area == gizmo_const.RIGHT_BOTTOM then
+			to_gizmo[idx0] = -to_gizmo[idx0]
+		elseif axis_plane.area == gizmo_const.LEFT_BOTTOM then
+			to_gizmo[idx0] = -to_gizmo[idx0]
+			to_gizmo[idx1] = -to_gizmo[idx1]
+		elseif axis_plane.area == gizmo_const.LEFT_TOP then
+			to_gizmo[idx1] = -to_gizmo[idx1]
+		end
+		if to_gizmo[idx0] > 0 and to_gizmo[idx0] < plane_hit_radius and to_gizmo[idx1] > 0 and to_gizmo[idx1] < plane_hit_radius then
+			return true
 		end
 	end
-	local planeHitRadius = gizmo.scale * gizmo_const.MOVE_PLANE_HIT_RADIUS * 0.5
-	local axisPlane = gizmo.tyz
-	local posToGizmo = hit_test_axis_plane(axisPlane)
-	if posToGizmo then
-		if axisPlane.area == gizmo_const.RIGHT_BOTTOM then
-			posToGizmo[2] = -posToGizmo[2]
-		elseif axisPlane.area == gizmo_const.LEFT_BOTTOM then
-			posToGizmo[3] = -posToGizmo[3]
-			posToGizmo[2] = -posToGizmo[2]
-		elseif axisPlane.area == gizmo_const.LEFT_TOP then
-			posToGizmo[3] = -posToGizmo[3]
-		end
-		if posToGizmo[2] > 0 and posToGizmo[2] < planeHitRadius and posToGizmo[3] > 0 and posToGizmo[3] < planeHitRadius then
-			return axisPlane
-		end
+	local plane_hit_radius = gizmo.scale * gizmo_const.MOVE_PLANE_HIT_RADIUS * 0.5
+	if hit_test_axis_plane(gizmo.tyz, plane_hit_radius) then
+		return gizmo.tyz
 	end
-
-	axisPlane = gizmo.txy
-	posToGizmo = hit_test_axis_plane(axisPlane)
-	if posToGizmo then
-		if axisPlane.area == gizmo_const.RIGHT_BOTTOM then
-			posToGizmo[2] = -posToGizmo[2]
-		elseif axisPlane.area == gizmo_const.LEFT_BOTTOM then
-			posToGizmo[1] = -posToGizmo[1]
-			posToGizmo[2] = -posToGizmo[2]
-		elseif axisPlane.area == gizmo_const.LEFT_TOP then
-			posToGizmo[1] = -posToGizmo[1]
-		end
-		if posToGizmo[1] > 0 and posToGizmo[1] < planeHitRadius and posToGizmo[2] > 0 and posToGizmo[2] < planeHitRadius then
-			return axisPlane
-		end
+	if hit_test_axis_plane(gizmo.txy, plane_hit_radius) then
+		return gizmo.txy
 	end
-
-	axisPlane = gizmo.tzx
-	posToGizmo = hit_test_axis_plane(axisPlane)
-	if posToGizmo then
-		if axisPlane.area == gizmo_const.RIGHT_BOTTOM then
-			posToGizmo[3] = -posToGizmo[3]
-		elseif axisPlane.area == gizmo_const.LEFT_BOTTOM then
-			posToGizmo[1] = -posToGizmo[1]
-			posToGizmo[3] = -posToGizmo[3]
-		elseif axisPlane.area == gizmo_const.LEFT_TOP then
-			posToGizmo[1] = -posToGizmo[1]
-		end
-		if posToGizmo[1] > 0 and posToGizmo[1] < planeHitRadius and posToGizmo[3] > 0 and posToGizmo[3] < planeHitRadius then
-			return axisPlane
-		end
+	if hit_test_axis_plane(gizmo.tzx, plane_hit_radius) then
+		return gizmo.tzx
 	end
 end
 
@@ -595,9 +577,9 @@ local function select_axis(x, y)
 		gizmo:reset_move_axis_color()
 	end
 	-- by plane
-	local axisPlane = select_axis_plane(x, y)
-	if axisPlane then
-		return axisPlane
+	local axis_plane = select_axis_plane(x, y)
+	if axis_plane then
+		return axis_plane
 	end
 	local re <close> = world:entity(gizmo.root_eid)
 	local gizmo_obj_pos = iom.get_position(re)
@@ -655,13 +637,13 @@ local function select_rotate_axis(x, y)
 
 	local function hit_test_rotate_axis(axis)
 		local re <close> = world:entity(gizmo.root_eid)
-		local gizmoPos = iom.get_position(re)
-		local axisDir = (axis ~= gizmo.rw) and gizmo_dir_to_world(axis.dir) or axis.dir
-		local hitPosVec = mouse_hit_plane({x, y}, {dir = axisDir, pos = math3d.totable(gizmoPos)})
-		if not hitPosVec then
+		local gizmo_pos = iom.get_position(re)
+		local axis_dir = (axis ~= gizmo.rw) and gizmo_dir_to_world(axis.dir) or axis.dir
+		local hit_pos = mouse_hit_plane({x, y}, {dir = axis_dir, pos = math3d.totable(gizmo_pos)})
+		if not hit_pos then
 			return
 		end
-		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
+		local dist = math3d.length(math3d.sub(gizmo_pos, hit_pos))
 		local adjust_axis_len = (axis == gizmo.rw) and gizmo_const.UNIFORM_ROT_AXIS_LEN or gizmo_const.AXIS_LEN
 		local a1 <close> = world:entity(axis.eid[1])
 		local a2 <close> = world:entity(axis.eid[2])
@@ -669,7 +651,7 @@ local function select_rotate_axis(x, y)
 			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
 			set_color(axis.eid[1], hlcolor)
 			set_color(axis.eid[2], hlcolor)
-			return hitPosVec
+			return hit_pos
 		else
 			local cc = math3d.vector(axis.color)
 			set_color(axis.eid[1], cc)
@@ -719,21 +701,21 @@ local function move_gizmo(x, y)
 	if not gizmo.target_eid or not x or not y then
 		return
 	end
-	local worldPos = last_gizmo_pos
+	local world_pos = last_gizmo_pos
 	if move_axis == gizmo.txy or move_axis == gizmo.tyz or move_axis == gizmo.tzx then
 		local re <close> = world:entity(gizmo.root_eid)
-		local gizmoTPos = math3d.totable(iom.get_position(re))
-		local downpos = mouse_hit_plane(last_mouse_pos, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmoTPos})
-		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmoTPos})
+		local gizmo_pos = math3d.totable(iom.get_position(re))
+		local downpos = mouse_hit_plane(last_mouse_pos, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmo_pos})
+		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmo_pos})
 		if downpos and curpos then
-			worldPos = math3d.add(last_gizmo_pos, math3d.sub(curpos, downpos))
+			world_pos = math3d.add(last_gizmo_pos, math3d.sub(curpos, downpos))
 		end
 	else
 		local ce <close> = world:entity(irq.main_camera(), "camera:in")
-		local newOffset = utils.view_to_axis_constraint(iom.ray(ce.camera.viewprojmat, {x, y}), iom.get_position(ce), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
-		worldPos = math3d.add(last_gizmo_pos, math3d.sub(newOffset, init_offset))
+		local new_offset = utils.view_to_axis_constraint(iom.ray(ce.camera.viewprojmat, {x, y}), iom.get_position(ce), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
+		world_pos = math3d.add(last_gizmo_pos, math3d.sub(new_offset, init_offset))
 	end
-	gizmo:set_position(worldPos)
+	gizmo:set_position(world_pos)
 	gizmo:update_scale()
 	is_tran_dirty = true
 	world:pub {"Gizmo", "update"}
@@ -831,27 +813,20 @@ local init_screen_offest = math3d.ref()
 local local_angle = 0
 local revolutions = 0
 local function rotate_gizmo(x, y)
-	if not x or not y then return end
-	local axis_dir = (rotate_axis ~= gizmo.rw) and gizmo_dir_to_world(rotate_axis.dir) or rotate_axis.dir
-	local re <close> = world:entity(gizmo.root_eid)
-	local gizmoPos = iom.get_position(re)
-	local hitPosVec = mouse_hit_plane({x, y}, {dir = axis_dir, pos = math3d.totable(gizmoPos)})
-	if not hitPosVec then
+	if not x or not y then
 		return
 	end
-	local gizmo_to_last_hit = math3d.normalize(math3d.sub(last_hit, gizmoPos))
-	
-	local angleBaseDir = gizmo_dir_to_world(mc.XAXIS)
-	if rotate_axis == gizmo.rx then
-		angleBaseDir = gizmo_dir_to_world(mc.NZAXIS)
-	elseif rotate_axis == gizmo.rw then
-		angleBaseDir = math3d.normalize(math3d.cross(mc.YAXIS, axis_dir))
+	local axis_dir = (rotate_axis ~= gizmo.rw) and gizmo_dir_to_world(rotate_axis.dir) or rotate_axis.dir
+	local re <close> = world:entity(gizmo.root_eid)
+	local gizmo_pos = iom.get_position(re)
+	local hit_pos = mouse_hit_plane({x, y}, {dir = axis_dir, pos = math3d.totable(gizmo_pos)})
+	if not hit_pos then
+		return
 	end
-	
-	local init_point = world_to_screen(gizmoPos)
-	local screen_vec = math3d.vector{x - math3d.index(init_point, 1), y - math3d.index(init_point, 2), 0}
-	local ax = math3d.dot(screen_vec, init_screen_offest)
-	local ay = math3d.dot(screen_vec, math3d.vector{-1.0 * math3d.index(init_screen_offest, 2), math3d.index(init_screen_offest, 1), 0})
+	local init_point = world_to_screen(gizmo_pos)
+	local screen_pos = math3d.vector{x - math3d.index(init_point, 1), y - math3d.index(init_point, 2), 0}
+	local ax = math3d.dot(screen_pos, init_screen_offest)
+	local ay = math3d.dot(screen_pos, math3d.vector{-1.0 * math3d.index(init_screen_offest, 2), math3d.index(init_screen_offest, 1), 0})
 	local prev_local_angle = local_angle
 	local_angle = math.atan(ay, ax)
 	if local_angle * prev_local_angle < 0.0 and (2.0 * math.abs(local_angle) > math.pi) then
@@ -867,18 +842,19 @@ local function rotate_gizmo(x, y)
 	if rotate_axis == gizmo.rz or rotate_axis == gizmo.rw then
 		delta_angle = -1.0 * delta_angle
 	end
-	local tableGizmoToLastHit
+	local gizmo_to_last_hit = math3d.normalize(math3d.sub(last_hit, gizmo_pos))
+	local angle_base_dir = gizmo_dir_to_world(mc.XAXIS)
+	if rotate_axis == gizmo.rx then
+		angle_base_dir = gizmo_dir_to_world(mc.NZAXIS)
+	elseif rotate_axis == gizmo.rw then
+		angle_base_dir = math3d.normalize(math3d.cross(mc.YAXIS, axis_dir))
+	end
+	local fan_angle = math.deg(math.acos(math3d.dot(gizmo_to_last_hit, angle_base_dir)))
 	if local_space and rotate_axis ~= gizmo.rw then
-		tableGizmoToLastHit = math3d.totable(math3d.transform(math3d.inverse(iom.get_rotation(re)), gizmo_to_last_hit, 0))
-	else
-		tableGizmoToLastHit = math3d.totable(gizmo_to_last_hit)
+		gizmo_to_last_hit = math3d.transform(math3d.inverse(iom.get_rotation(re)), gizmo_to_last_hit, 0)
 	end
-	local isTop  = tableGizmoToLastHit[2] > 0
-	if rotate_axis == gizmo.ry then
-		isTop = tableGizmoToLastHit[3] > 0
-	end
-	local fan_angle = math.deg(math.acos(math3d.dot(gizmo_to_last_hit, angleBaseDir)))
-	if not isTop then
+	local is_top = (rotate_axis == gizmo.ry) and (math3d.index(gizmo_to_last_hit, 3) > 0) or (math3d.index(gizmo_to_last_hit, 2) > 0)
+	if not is_top then
 		fan_angle = 360 - fan_angle
 	end
 	local ce <close> = world:entity(irq.main_camera(), "camera:in")
@@ -900,47 +876,41 @@ end
 
 local function scale_gizmo(x, y)
 	if not x or not y then return end
-	local newScale
+	local new_scale
 	if uniform_scale then
 		local delta_x = x - last_mouse_pos[1]
 		local delta_y = last_mouse_pos[2] - y
 		local factor = (delta_x + delta_y) / 60.0
-		local scaleFactor = 1.0
+		local scale_factor = 1.0
 		if factor < 0 then
-			scaleFactor = 1 / (1 + math.abs(factor))
+			scale_factor = 1 / (1 + math.abs(factor))
 		else
-			scaleFactor = 1 + factor
+			scale_factor = 1 + factor
 		end
-		newScale = {last_gizmo_scale[1] * scaleFactor, last_gizmo_scale[2] * scaleFactor, last_gizmo_scale[3] * scaleFactor}
+		new_scale = {last_gizmo_scale[1] * scale_factor, last_gizmo_scale[2] * scale_factor, last_gizmo_scale[3] * scale_factor}
 	else
-		newScale = {last_gizmo_scale[1], last_gizmo_scale[2], last_gizmo_scale[3]}
+		new_scale = {last_gizmo_scale[1], last_gizmo_scale[2], last_gizmo_scale[3]}
 		local ce <close> = world:entity(irq.main_camera(), "camera:in")
-		local newOffset = utils.view_to_axis_constraint(iom.ray(ce.camera.viewprojmat, {x, y}), iom.get_position(ce), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
-		local deltaOffset = math3d.totable(math3d.sub(newOffset, init_offset))
-		local scaleFactor = (1.0 + 3.0 * math3d.length(deltaOffset))
+		local new_offset = utils.view_to_axis_constraint(iom.ray(ce.camera.viewprojmat, {x, y}), iom.get_position(ce), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
+		local delta_offset = math3d.sub(new_offset, init_offset)
+		local scale_factor = (1.0 + 3.0 * math3d.length(delta_offset))
+		local index = 0
 		if move_axis.dir == gizmo_const.DIR_X then
-			if deltaOffset[1] < 0 then
-				newScale[1] = last_gizmo_scale[1] / scaleFactor
-			else
-				newScale[1] = last_gizmo_scale[1] * scaleFactor
-			end
+			index = 1
 		elseif move_axis.dir == gizmo_const.DIR_Y then
-			if deltaOffset[2] < 0 then
-				newScale[2] = last_gizmo_scale[2] / scaleFactor
-			else
-				newScale[2] = last_gizmo_scale[2] * scaleFactor
-			end
-			
+			index = 2
 		elseif move_axis.dir == gizmo_const.DIR_Z then
-			if deltaOffset[3] < 0 then
-				newScale[3] = last_gizmo_scale[3] / scaleFactor
+			index = 3
+		end
+		if index > 0 then
+			if math3d.index(delta_offset, index) < 0 then
+				new_scale[index] = last_gizmo_scale[index] / scale_factor
 			else
-				newScale[3] = last_gizmo_scale[3] * scaleFactor
+				new_scale[index] = last_gizmo_scale[index] * scale_factor
 			end
 		end
-
 	end
-	gizmo:set_scale(newScale)
+	gizmo:set_scale(new_scale)
 	is_tran_dirty = true
 	world:pub {"Gizmo", "update"}
 end
@@ -951,17 +921,17 @@ local function select_light_gizmo(x, y)
 
 	local le <close> = world:entity(light_gizmo.current_light, "light:in")
 	local function hit_test_circle(axis, radius, pos)
-		local gizmoPos = pos or iom.get_position(le)
-		local hitPosVec = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmoPos)})
-		if not hitPosVec then
+		local gizmo_pos = pos or iom.get_position(le)
+		local hit_pos = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmo_pos)})
+		if not hit_pos then
 			return
 		end
-		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
-		local highlight = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 3
-		light_gizmo.highlight(highlight)
-		return highlight
+		local dist = math3d.length(math3d.sub(gizmo_pos, hit_pos))
+		local high_light = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 3
+		light_gizmo.highlight(high_light)
+		return high_light
 	end
-	
+
 	click_dir_point_light = nil
 	click_dir_spot_light = nil
 	local radius = ilight.range(le)
@@ -1148,11 +1118,11 @@ function gizmo_sys:handle_event()
 							local pe <close> = world:entity(parent)
 							pw = parent and iom.worldmat(pe) or nil
 						end
-						local localPos = last_gizmo_pos
+						local localpos = last_gizmo_pos
 						if pw then
-							localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
+							localpos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
 						end
-						cmd_queue:record({action = gizmo_const.MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(te))})
+						cmd_queue:record({action = gizmo_const.MOVE, eid = target, oldvalue = localpos, newvalue = math3d.totable(iom.get_position(te))})
 					end
 				end
 			end
