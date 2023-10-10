@@ -7,8 +7,8 @@ if path then
 	end
 	load_dbg()
 		: attach {}
-        : event("setThreadName", "Thread: IO")
-		: event "wait"
+		: event("setThreadName", "Thread: IO")
+		--: event "wait"
 end
 
 -- C libs only
