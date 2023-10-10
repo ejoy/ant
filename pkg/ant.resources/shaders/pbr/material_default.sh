@@ -93,8 +93,8 @@ void fetch_normal(in FSInput fsinput, inout material_info mi)
     mi.T = tbn[0];
     mi.B = tbb[1];
 #       else //!CALC_TBN
-    mi.T = normalize(fsinput.tangent);
-    mi.B = cross(mi.gN, mi.T);
+    mi.T = normalize(fsinput.tangent.xyz);
+    mi.B = cross(mi.T, mi.gN) * sign(fsinput.tangent.w);
     mat3 tbn = mat3(mi.T, mi.B, mi.gN);
 #       endif //CALC_TBN
     mi.N = normal_from_tangent_frame(tbn, fsinput.uv0);

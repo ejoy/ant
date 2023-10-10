@@ -12,7 +12,7 @@ void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 	vs_output.user0 = vec4(vs_input.user0.zw, 0, 0);
     vs_output.user1 = vec4(vs_input.user0.xy, 0, 0);
 	vs_output.normal	= mul(wm, mediump vec4(0.0, 1.0, 0.0, 0.0)).xyz;
-	vs_output.tangent	= mul(wm, mediump vec4(1.0, 0.0, 0.0, 0.0)).xyz;
+	vs_output.tangent	= vec4(mul(wm, mediump vec4(1.0, 0.0, 0.0, 0.0)).xyz, 1);
 	vs_output.world_pos = posWS;
 	vs_output.world_pos.w = mul(u_view, vs_output.world_pos).z;
 }

@@ -25,7 +25,7 @@ struct VSOutput{
 	highp vec4 world_pos;
 	lowp  vec4 color;
 	mediump vec3 normal;
-	mediump vec3 tangent;
+	mediump vec4 tangent;
 	highp vec2 uv0;
 	highp vec2 uv1;
     mediump vec4 user0;
@@ -41,7 +41,7 @@ struct FSInput{
 	lowp  vec4 emissive;
 
 	mediump vec3 normal;
-	mediump vec3 tangent;
+	mediump vec4 tangent;
 	highp vec2 uv0;
 	highp vec2 uv1;
     mediump vec4 user0;
