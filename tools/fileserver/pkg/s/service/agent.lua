@@ -118,7 +118,7 @@ local function pathToDA(path)
 	return ltask.call(ServiceVfsMgr, "VIRTUALPATH", path)
 end
 
-local function dbg_tunnel_redirect(port, s, tunnel_name)
+local function debugger_redirect(port, s, tunnel_name)
 	port = tostring(port)
 	while true do
 		local session, req = ltask.call(s, "REQUEST")
@@ -142,7 +142,7 @@ function message.DEBUGGER_OPEN(port, tunnel_name)
 	local s = new_tunnel(port)
 	if s then
 		TUNNEL_SERVICE[port] = s
-		ltask.fork(dbg_tunnel_redirect, port, s, tunnel_name)
+		ltask.fork(debugger_redirect, port, s, tunnel_name)
 	end
 end
 
