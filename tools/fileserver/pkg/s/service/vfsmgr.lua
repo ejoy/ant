@@ -110,7 +110,7 @@ end
 function S.VIRTUALPATH(path)
 	local vp = repo:virtualpath(path)
 	if vp then
-		return '/' .. vp
+		return vp
 	end
 	return ''
 end
