@@ -1,14 +1,13 @@
+local fw = require "firmware"
+
 local path = os.getenv "LUA_DEBUG_PATH"
 if path then
-	local function dbg_dofile(filename, ...)
-		local f = assert(io.open(filename))
-		local str = f:read "a"
-		f:close()
-		return assert(load(str, "=(debugger.lua)"))(...)
+	local function load_dbg()
+		return assert(fw.loadfile "debugger.lua", "=(debugger.lua)")()
 	end
-	dbg_dofile(path .. "/script/debugger.lua", path)
+	load_dbg()
 		: attach {}
-		: event("setThreadName", "IO thread")
+        : event("setThreadName", "Thread: IO")
 		: event "wait"
 end
 
@@ -18,7 +17,6 @@ local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
 local protocol = require "protocol"
-local fw = require "firmware"
 
 local io_req = thread.channel "IOreq"
 local config, fddata = io_req:bpop()
