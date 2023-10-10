@@ -60,7 +60,7 @@ do
 		error "Create repo failed."
 	end
 	for _, lpath in pairs(repo._mountpoint) do
-		fswatch:add(lpath:lexically_normal():string())
+		fswatch:add(lpath:string())
 	end
 	rebuild_repo()
 	ltask.fork(function ()
@@ -108,7 +108,7 @@ function S.REALPATH(path)
 end
 
 function S.VIRTUALPATH(path)
-	local vp = repo:virtualpath(fs.relative(fs.path(path)))
+	local vp = repo:virtualpath(path)
 	if vp then
 		return '/' .. vp
 	end

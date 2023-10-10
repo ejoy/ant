@@ -267,8 +267,7 @@ function m.show()
             local postfix = string.sub(path, -4)
             if (postfix == '.png' or postfix == '.dds') and not dirtyflag[path] then
                 dirtyflag[path] = true
-                local p = fs.path(path:gsub('\\', '/'))
-                world:pub {"FileWatch", type, access.virtualpath(global_data.repo, p)}
+                world:pub {"FileWatch", type, access.virtualpath(global_data.repo, path:gsub('\\', '/'))}
             end
         end
     end
