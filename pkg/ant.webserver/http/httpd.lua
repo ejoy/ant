@@ -147,7 +147,7 @@ local function writeall(writefunc, statuscode, bodyfunc, header)
 end
 
 function httpd.write_response(...)
-	return pcall(writeall, ...)
+	return xpcall(writeall, debug.traceback, ...)
 end
 
 return httpd
