@@ -942,7 +942,7 @@ local function is_readonly_resource(p)
 end
 
 local function to_virtualpath(localpath)
-    local vpath = access.virtualpath(global_data.repo, fs.path(localpath))
+    local vpath = access.virtualpath(global_data.repo, localpath)
     if vpath == nil then
         error(("save path:%s, is not valid package"):format(localpath))
     end

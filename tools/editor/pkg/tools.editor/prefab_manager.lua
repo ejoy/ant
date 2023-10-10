@@ -832,7 +832,7 @@ function m:save(path)
             if not lp then
                 return
             end
-            path = tostring(access.virtualpath(gd.repo, lfs.path(lp)))
+            path = tostring(access.virtualpath(gd.repo, lp))
         end
     end
     assert(path or self.prefab_filename)

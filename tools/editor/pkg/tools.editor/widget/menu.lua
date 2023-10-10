@@ -24,7 +24,7 @@ local function show_select_light_dialog()
     if imgui.widget.MenuItem(faicons.ICON_FA_LIGHTBULB.." Light:".. lightprefab) then
         local prefab_filename = uiutils.get_open_file_path("Select Prefab", "prefab")
         if prefab_filename then
-            local filename = access.virtualpath(global_data.repo, fs.path(prefab_filename))
+            local filename = access.virtualpath(global_data.repo, prefab_filename)
             if filename and fs.exists(fs.path(filename)) then
                 editor_setting.setting.light = filename
                 editor_setting.save()
