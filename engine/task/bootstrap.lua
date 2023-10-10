@@ -67,13 +67,13 @@ local function init(c)
 
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
-		dbg:event("setThreadName", "Bootstrap")
+		dbg:event("setThreadName", "Thread: Bootstrap")
 		initstr = [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")
 assert(loadfile '/engine/debugger.lua')()
 	: event("setThreadName", name)
-	--: event "wait"
+	: event "wait"
 ]]
 	end
 
