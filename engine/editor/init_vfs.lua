@@ -22,8 +22,8 @@ vfs.iothread = boot.preinit [[
     -- IO thread
     local dbg = dofile "engine/debugger.lua"
     if dbg then
-        dbg:event("setThreadName", "IO thread")
-        dbg:event "wait"
+        dbg:event("setThreadName", "Thread: IO")
+        --dbg:event "wait"
     end
     local fastio = require "fastio"
     local thread = require "bee.thread"

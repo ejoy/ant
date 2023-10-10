@@ -7,6 +7,7 @@
 #include "FirmwareIo.h"
 #include "FirmwareVfs.h"
 #include "FirmwareInitThread.h"
+#include "FirmwareDebugger.h"
 
 struct bin {
 	const char* data;
@@ -20,6 +21,7 @@ std::map<std::string_view, bin> firmware = {
 	{ "io.lua", INIT_BIN(FirmwareIo) },
 	{ "vfs.lua", INIT_BIN(FirmwareVfs) },
 	{ "init_thread.lua", INIT_BIN(FirmwareInitThread) },
+	{ "debugger.lua", INIT_BIN(FirmwareDebugger) },
 };
 
 static std::string_view luaL_checkstrview(lua_State* L, int idx) {
@@ -28,8 +30,15 @@ static std::string_view luaL_checkstrview(lua_State* L, int idx) {
 	return std::string_view(str, sz);
 }
 
+static std::string_view luaL_optstrview(lua_State* L, int idx, const char* def) {
+	size_t sz = 0;
+	const char* str = luaL_optlstring(L, idx, def, &sz);
+	return std::string_view(str, sz);
+}
+
 static int lloadfile(lua_State* L) {
 	std::string_view filename  = luaL_checkstrview(L, 1);
+	std::string_view chunkname = luaL_optstrview(L, 2, ("@engine/firmware/"+std::string(filename)).c_str());
 	auto it = firmware.find(filename);
 	if (it == firmware.end()) {
 		lua_pushnil(L);
@@ -37,7 +46,7 @@ static int lloadfile(lua_State* L) {
 		return 2;
 	}
 	auto file = it->second;
-	if (LUA_OK != luaL_loadbuffer(L, file.data, file.size, ("@engine/firmware/"+std::string(filename)).c_str()/*file.data*/)) {
+	if (LUA_OK != luaL_loadbuffer(L, file.data, file.size, chunkname.data()/*file.data*/)) {
 		lua_pushnil(L);
 		lua_insert(L, -2);
 		return 2;

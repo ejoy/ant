@@ -256,9 +256,9 @@ function m.show()
     local dirtyflag = {}
     local type, path = global_data.filewatch:select()
     while type do
-        if (not string.find(path, "\\.build\\"))
-            and (not string.find(path, "\\.log\\"))
-            and (not string.find(path, "\\.repo\\"))
+        if (not string.find(path, ".build"))
+            and (not string.find(path, ".log"))
+            and (not string.find(path, ".repo"))
             and (not string.find(path, "log.txt")) then
             m.dirty = true
         end
@@ -267,8 +267,7 @@ function m.show()
             local postfix = string.sub(path, -4)
             if (postfix == '.png' or postfix == '.dds') and not dirtyflag[path] then
                 dirtyflag[path] = true
-                local p = fs.path(path:gsub('\\', '/'))
-                world:pub {"FileWatch", type, access.virtualpath(global_data.repo, p)}
+                world:pub {"FileWatch", type, access.virtualpath(global_data.repo, path:gsub('\\', '/'))}
             end
         end
     end

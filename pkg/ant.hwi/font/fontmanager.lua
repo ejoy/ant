@@ -1,20 +1,13 @@
 local manager = require "font.manager"
 
-local fontvm; do
-    if __ANT_RUNTIME__ then
-        fontvm = [[dofile "/pkg/ant.hwi/font/manager.lua"]]
-    else
-        fontvm = [[
-            local dbg = assert(loadfile '/engine/debugger.lua')()
-            if dbg then
-                dbg:event("setThreadName", "Font thread")
-                dbg:event "wait"
-            end
-            require "vfs"
-            dofile "/pkg/ant.hwi/font/manager.lua"
-        ]]
+local fontvm = [[
+    local dbg = assert(loadfile '/engine/debugger.lua')()
+    if dbg then
+        dbg:event("setThreadName", "Thread: Font")
+        --dbg:event "wait"
     end
-end
+    dofile "/pkg/ant.hwi/font/manager.lua"
+]]
 
 local m = {}
 

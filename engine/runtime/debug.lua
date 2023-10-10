@@ -1,4 +1,6 @@
-local dbg = import_package 'ant.debugger'
+if os.getenv "LUA_DEBUG_PATH" then
+    return
+end
 
 local function stopOnEntry()
     for _, v in ipairs(arg) do
@@ -9,4 +11,9 @@ local function stopOnEntry()
     return false
 end
 
-return dbg.start(stopOnEntry())
+local dbg = dofile "engine/firmware/debugger.lua"
+    : start {}
+
+if stopOnEntry() then
+    dbg:event "wait"
+end

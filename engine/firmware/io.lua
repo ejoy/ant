@@ -1,15 +1,14 @@
+local fw = require "firmware"
+
 local path = os.getenv "LUA_DEBUG_PATH"
 if path then
-	local function dbg_dofile(filename, ...)
-		local f = assert(io.open(filename))
-		local str = f:read "a"
-		f:close()
-		return assert(load(str, "=(debugger.lua)"))(...)
+	local function load_dbg()
+		return assert(fw.loadfile "debugger.lua", "=(debugger.lua)")()
 	end
-	dbg_dofile(path .. "/script/debugger.lua", path)
+	load_dbg()
 		: attach {}
-		: event("setThreadName", "IO thread")
-		: event "wait"
+		: event("setThreadName", "Thread: IO")
+		--: event "wait"
 end
 
 -- C libs only
@@ -18,7 +17,6 @@ local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
 local protocol = require "protocol"
-local fw = require "firmware"
 
 local io_req = thread.channel "IOreq"
 local config, fddata = io_req:bpop()
@@ -46,8 +44,6 @@ local connection = {
 	recvq = {},
 	fd = nil,
 }
-
-local subscibe = {}
 
 local function connection_send(...)
 	local pack = protocol.packmessage({...})
@@ -675,13 +671,6 @@ function CMD.SEND(_, ...)
 	request_send(...)
 end
 
-function CMD.SUBSCIBE(_, channel_name, message)
-	if subscibe[message] then
-		print("[WARNING] Duplicate subscibe", message, channel_name)
-	end
-	subscibe[message] = assert(thread.channel(channel_name))
-end
-
 function CMD.quit(id)
 	QUIT = true
 	response_id(id)
@@ -691,12 +680,7 @@ end
 local function dispatch_net(cmd, ...)
 	local f = response[cmd]
 	if not f then
-		local channel = subscibe[cmd]
-		if channel then
-			channel:push(cmd, ...)
-		else
-			print("[ERROR] Unsupport net command", cmd)
-		end
+		print("[ERROR] Unsupport net command", cmd)
 		return
 	end
 	f(...)

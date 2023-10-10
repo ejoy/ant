@@ -403,7 +403,7 @@ local function show_current_event()
         if imgui.widget.Button("SelectEffect") then
             local rpath = uiutils.get_open_file_path("Effect", "efk")
             if rpath then
-                local pkgpath = access.virtualpath(global_data.repo, fs.path(rpath))
+                local pkgpath = access.virtualpath(global_data.repo, rpath)
                 assert(pkgpath)
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath
@@ -628,7 +628,7 @@ function m.show()
             if imgui.widget.Button("...") then
                 local localpath = uiutils.get_open_file_path("Animation", "anim")
                 if localpath then
-                    anim_path = access.virtualpath(global_data.repo, fs.path(localpath))
+                    anim_path = access.virtualpath(global_data.repo, localpath)
                     assert(anim_path)
                 end
             end

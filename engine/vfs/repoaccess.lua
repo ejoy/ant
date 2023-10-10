@@ -12,7 +12,7 @@ function access.addmount(repo, path)
 			return
 		end
 	end
-	repo._mountpoint[#repo._mountpoint+1] = lfs.path(path)
+	repo._mountpoint[#repo._mountpoint+1] = lfs.absolute(path):lexically_normal()
 end
 
 local MountConfig <const> = [[
@@ -111,7 +111,7 @@ function access.type(repo, pathname)
 end
 
 function access.virtualpath(repo, pathname)
-	pathname = pathname:string()
+	pathname = lfs.absolute(pathname):lexically_normal():string()
 	for _, mpath in ipairs(repo._mountpoint) do
 		mpath = mpath:string()
 		if pathname == mpath then
