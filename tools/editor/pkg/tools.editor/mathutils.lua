@@ -13,9 +13,8 @@ function m.ray_hit_plane(ray, plane_info)
 		local t = -(math3d.dot(planeDirVec, rayOriginVec) + plane.d) / d
 		if t >= 0.0 then
 			return math3d.add(ray.origin, math3d.mul(t, ray.dir))
-		end	
+		end
 	end
-	return nil
 end
 
 function m.view_to_axis_constraint(ray, cameraPos, axis, origin)
