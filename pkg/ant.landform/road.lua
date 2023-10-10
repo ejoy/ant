@@ -247,9 +247,21 @@ end
 
 local road_sys   = ecs.system "road_system"
 
+local function destroy_handle(h)
+    if h then
+        bgfx.destroy(h)
+    end
+end
+
 function road_sys:entity_remove()
     for e in w:select "REMOVED road:in" do
-        
+        e.road.handle = destroy_handle(e.road.handle)
+    end
+end
+
+function road_sys:exit()
+    if ROAD_MESH.vb.handle then
+        ROAD_MESH.vb.handle = destroy_handle(ROAD_MESH.vb.handle)
     end
 end
 
@@ -480,6 +492,17 @@ end
 
 function iroad.get_road_size()
     return ROAD_WIDTH, ROAD_HEIGHT
+end
+
+function iroad.clear(groups, layer)
+    for gid in pairs(groups) do
+        local entities = ROAD_ENTITIES[gid]
+        local o = entities[layer]
+        if o then
+            w:remove(o.drawindirect)
+            w:remove(o.compute)
+        end
+    end
 end
 
 return iroad

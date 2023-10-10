@@ -396,7 +396,10 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
 		local qx, qy, qz = math3d.index(q, 1, 2, 3)
 		q = math3d.quaternion(qx*factor, qy*factor, qz*factor, qw)
 	end
-
+	local tw = math3d.index(tangent, 4)
+	if tw < 0 then
+		q = quat_inverse_sign(q)
+	end
 	return q
 end
 

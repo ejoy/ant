@@ -106,7 +106,7 @@ local function create_sm_entity(gid, indices)
             material      = "/pkg/ant.landform/assets/materials/mountain.material", 
             visible_state = "main_view|cast_shadow",
             stonemountain = {
-                mesh_indices_buffer = mesh_indices_buffer,
+                handle = mesh_indices_buffer,
             },
             draw_indirect = {
                 instance_buffer = {
@@ -161,15 +161,25 @@ local function create_sm_entity(gid, indices)
     }
 end
 
+local function destroy_handle(h)
+    if h then
+        bgfx.destroy(h)
+    end
+end
+
 function sm_sys:entity_remove()
     for e in w:select "REMOVED stonemountain:in" do
-        bgfx.destroy(e.stonemountain.mesh_indices_buffer)
+        e.stonemountain.handle = destroy_handle(e.stonemountain.handle)
     end
 end
 
 function sm_sys:exit()
-    --TODO:
-    log.info("MERGE_MESH need remove")
+    if MERGE_MESH then
+        MERGE_MESH.vb.handle = destroy_handle(MERGE_MESH.vb.handle)
+        if MERGE_MESH.ib then
+            MERGE_MESH.ib.handle = destroy_handle(MERGE_MESH.ib.handle)
+        end
+    end
 end
 
 local ism = {}
