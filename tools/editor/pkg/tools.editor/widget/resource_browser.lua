@@ -256,9 +256,9 @@ function m.show()
     local dirtyflag = {}
     local type, path = global_data.filewatch:select()
     while type do
-        if (not string.find(path, "\\.build\\"))
-            and (not string.find(path, "\\.log\\"))
-            and (not string.find(path, "\\.repo\\"))
+        if (not string.find(path, ".build"))
+            and (not string.find(path, ".log"))
+            and (not string.find(path, ".repo"))
             and (not string.find(path, "log.txt")) then
             m.dirty = true
         end
