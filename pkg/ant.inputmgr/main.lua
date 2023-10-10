@@ -13,6 +13,7 @@ local function create(world, type)
         if ServiceRmlui then
             ltask.call(ServiceRmlui, "touch", ...)
         end
+        world:pub {"touch", ...}
     end
     function ev.gesture(...)
         if ServiceRmlui then
