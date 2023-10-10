@@ -119,25 +119,23 @@ local function route_vfs(route, cgi)
 			if code ~= 200 then
 				response(id, s.write, code)
 			else
-				local tmp = {}
-				if header.host then
-					table.insert(tmp, string.format("host: %s", header.host))
-				end
 				local fullpath, query = urllib.parse(url)
 				local root, path = fullpath:match "^/([^/]+)/?(.*)"
 				local mod = cgi[root]
 				if mod then
-					local ok, m = xpcall(import_package, debug.traceback, mod)
+					local ok, m = xpcall(import_package, debug.traceback, mod.package)
 					if ok then
 						if query then
 							query = urllib.parse_query(query)
 						end
-						local f = m[method:lower()]
+						method = method:lower()
+						local m = m[mod.name] or m
+						local f = m[method]
 						if f == nil then
-							response(id, s.write, 500, lua_error_temp:format "Unsupport method")
+							response(id, s.write, 500, lua_error_temp:format ("Unsupport method : " .. method))
 							return
 						end
-						local ok, code, data, header = xpcall(f, debug.traceback, path, query, body)
+						local ok, code, data, header = xpcall(f, debug.traceback, path, query, header, body)
 						if ok then
 							response(id, s.write, code, data, header)
 						else
@@ -196,7 +194,18 @@ function S.start(conf)
 	if conf.home then
 		conf.route["/"] = conf.home
 	end
-	local http_request = route_vfs(conf.route, conf.cgi)
+	local cgi = {}
+	if conf.cgi then
+		for path, pname in pairs(conf.cgi) do
+			local package, name = pname:match "(.-)|(.*)"
+			if package then
+				cgi[path] = { package = package, name = name }
+			else
+				cgi[path] = { package = pname }
+			end
+		end
+	end
+	local http_request = route_vfs(conf.route, cgi)
 
 	setmetatable(sessions , {
 		__index = function(o, session)

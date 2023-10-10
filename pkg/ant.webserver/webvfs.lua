@@ -101,7 +101,6 @@ end
 -- url : vfs/abc
 -- vfs : web/abc
 function M.get(path, url_path, vfs_path)
-	print("GET===>", path, url_path, vfs_path)
 	local fullpath = path == "" and vfs_path or (vfs_path .. path)
 	local pathname = fs.path(fullpath)
 	local data, header = get_path(pathname, url_path, path)
