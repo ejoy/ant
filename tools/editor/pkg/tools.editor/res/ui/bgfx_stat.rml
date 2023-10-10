@@ -12,7 +12,7 @@
 			bgfx {
 				width: auto;
 				height: auto;
-				font: 120% "宋体";
+				font: 200% "宋体";
 				color: #7FFF7F;
 				text-align: "left";
 			}

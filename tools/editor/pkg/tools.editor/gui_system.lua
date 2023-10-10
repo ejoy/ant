@@ -169,8 +169,8 @@ end
 
 -- local stat_window
 function m:init_world()
-    -- local iRmlUi = ecs.require "ant.rmlui|rmlui_system"
-    -- stat_window = iRmlUi.open "/pkg/tools.editor/res/ui/bgfx_stat.rml"
+    local iRmlUi = ecs.require "ant.rmlui|rmlui_system"
+    stat_window = iRmlUi.open "/pkg/tools.editor/res/ui/bgfx_stat.rml"
 end
 
 function m:ui_update()
@@ -193,9 +193,9 @@ function m:ui_update()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
 
-    -- local bgfxstat = bgfx.get_stats "sdcpnmtv"
-    -- stat_window.postMessage(string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
-    --                         bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
+    local bgfxstat = bgfx.get_stats "sdcpnmtv"
+    stat_window.postMessage(string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
+                            bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
 end
 
 local hierarchy_event       = world:sub {"HierarchyEvent"}
