@@ -1,72 +1,79 @@
 ### 环境
 1. 下载VSCode
 2. 安装插件lua-debug插件，`Ctrl+P`然后输入`ext install actboy168.lua-debug`
-3. 在VSCode里，打开ant目录
-4. 配置调试配置，将下面的配置复制到`.vscode/launch.json`里
+3. 配置调试配置
 
-### 调试编辑器
+### 本地调试（编辑模式）
+``` json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "Debug",
+            "luaexe": "${workspaceFolder}/bin/msvc/debug/vaststars.exe",
+            "console": "integratedTerminal",
+            "stopOnEntry": true,
+            "luaVersion": "lua-latest",
+            "outputCapture": [],
+            "program": "",
+            "arg": [
+            ]
+        },
+    ]
+ }
+```
 
-1. 打开VSCode调试面板，选择`Editor (mingw)`或`Editor (msvc)`，按F5
-
-### 调试windows运行时
-
-1. 启动fileserver, `./clibs/lua.exe tools/fileserver/main.lua`
-2. 启动运行时, `./runtime/windows/ant.exe <需要调试的项目路径>`
-3. 打开VSCode调试面板，选择`Attach`，按F5
-
-### 调试osx运行时
-
-1. 启动fileserver, `./clibs/ant/ant.exe tools/fileserver/main.lua`
-2. 启动运行时, `./runtime/osx/ant.exe <需要调试的项目路径>`
-3. 打开VSCode调试面板，选择`Attach`，按F5
-
-### 调试ios运行时
-
-1. 启动fileserver, `./clibs/ant/ant.exe tools/fileserver/main.lua <需要调试的项目路径>`
-2. 启动ios代理， `./clibs/ant/ant.exe tools/fileserver/mobiledevice/proxy.lua`
-3. 在iOS中，启动运行时APP
-4. 打开VSCode调试面板，选择`Attach`，按F5
-
-### 附上launch.json具体的设置
+### 本地调试（运行时模式）
 
 ``` json
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Editor (msvc)",
             "type": "lua",
             "request": "launch",
-            "luaexe": "${workspaceRoot}/clibs/lua.exe",
-            "program": "${workspaceRoot}/test/imgui/main.lua",
-            "cwd": "${workspaceRoot}",
-            "env": {
-                "PATH": "${workspaceFolder}/clibs/"
-            },
-            "skipFiles": [
-                "engine/antpm/*"
-            ]
+            "name": "Debug",
+            "luaexe": "${workspaceFolder}/bin/msvc/debug/vaststars_rt.exe",
+            "console": "integratedTerminal",
+            "sourceMaps": [
+                [
+                    "/engine/*",
+                    "${workspaceFolder}/3rd/ant/engine/*"
+                ],
+                [
+                    "/pkg/ant.*",
+                    "${workspaceFolder}/3rd/ant/pkg/ant.*"
+                ],
+                [
+                    "/pkg/vaststars.*",
+                    "${workspaceFolder}/startup/pkg/vaststars.*"
+                ],
+                [
+                    "/*",
+                    "${workspaceFolder}/startup/*"
+                ]
+            ],
+            "outputCapture": [],
+            "program": ""
         },
-        {
-            "name": "Editor (mingw)",
-            "type": "lua",
-            "request": "launch",
-            "luaexe": "${workspaceRoot}/clibs/lua.exe",
-            "program": "${workspaceRoot}/test/imgui/main.lua",
-            "cwd": "${workspaceRoot}",
-            "env": {
-                "PATH": "${workspaceFolder}/clibs/"
-            },
-            "skipFiles": [
-                "engine/antpm/*"
-            ]
-        },
+    ]
+ }
+```
+
+### 远程调试（运行时模式）
+
+``` json
+{
+    "version": "0.2.0",
+    "configurations": [
         {
             "type": "lua",
             "request": "attach",
-            "name": "Attach",
-            "stopOnEntry": true,
-            "address": "127.0.0.1:4278",
+            "name": "Debug",
+            "address": "127.0.0.1:4378",
+            "outputCapture": [],
         },
     ]
  }
