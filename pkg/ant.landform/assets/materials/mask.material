@@ -1,6 +1,6 @@
 fx:
   vs_code: "#include \"road_vs_func.sh\""
-  fs_code: "#include \"road_fs_func.sh\""
+  fs_code: "#include \"mark_fs_func.sh\""
   setting:
     lighting: on
     cast_shadow: off
@@ -12,17 +12,14 @@ fx:
     OUTPUT_USER_ATTR_0: 1
     WITH_CUSTOM_TANGENT_ATTRIB: 1
 properties:
-  s_basecolor:
+  s_alpha:
     stage: 0
-    texture: /pkg/ant.landform/assets/textures/rt_color.texture
-  s_metallic_roughness:
-    stage: 1
-    texture: /pkg/ant.landform/assets/textures/rt_metallic_roughness.texture
+    texture: /pkg/ant.resources/textures/black.texture
   u_draw_indirect_type: {0, 0, 0, 0}
 state: 
   ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: GREATER
+  DEPTH_TEST: ALWAYS
   MSAA: true
   WRITE_MASK: RGBAZ
   BLEND_FUNC: "aA"

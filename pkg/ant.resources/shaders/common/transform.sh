@@ -59,39 +59,6 @@ mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
 }
 #endif
 
-static const vec2 s_rotate_texcorrds[] = {
-	vec2(0, 1),
-	vec2(0, 0),
-	vec2(1, 0),
-	vec2(1, 1),
-};
-
-vec2 get_tex(uint idx){
-	return s_rotate_texcorrds[idx];
-}
-
-vec2 get_rotated_texcoord(float r, vec2 tex){
-	uint xmask = uint(tex.x);
-	uint ymask = uint(tex.y);
-	uint idx = xmask|(ymask<<1);
-
-	// if(tex.x == 0 && tex.y == 1){
-	// 	return get_tex((r / 90) % 4);
-	// }
-	// else if(tex.x == 0 && tex.y == 0){
-	// 	return get_tex((r / 90 + 1) % 4);
-	// }
-	// else if(tex.x == 1 && tex.y == 0){
-	// 	return get_tex((r / 90 + 2) % 4);
-	// }
-	// else{
-	// 	return get_tex((r / 90 + 3) % 4);
-	// }
-
-	uint indices[] = {1, 2, 0, 3};
-	return get_tex((r / 90 + indices[idx]) % 4);
-}
-
 highp vec3 quat_to_normal(const highp vec4 q){
     return	vec3( 0.0,  0.0,  1.0 ) + 
         	vec3( 2.0, -2.0, -2.0 ) * q.x * q.zwx +
@@ -145,14 +112,20 @@ mat4 get_world_matrix(VSInput vs_input)
 #endif //DRAW_INDIRECT
 }
 
-vec4 transform_pos(mat4 wm, vec3 posLS, out vec4 posCS)
+vec4 transform2clipspace(vec4 posWS)
 {
-	vec4 posWS = mul(wm, vec4(posLS, 1.0));
-	posCS = mul(u_viewProj, posWS);
+	vec4 posCS = mul(u_viewProj, posWS);
 #ifdef ENABLE_TAA
 	posCS += u_jitter * posCS.w; // Apply Jittering
 #endif //ENABLE_TAA
 	return posWS;
+}
+
+vec4 transform_pos(mat4 wm, vec3 posLS, out vec4 posCS)
+{
+	vec4 posWS = mul(wm, vec4(posLS, 1.0));
+	posCS = transform2clipspace(posWS);
+	return posCS;
 }
 
 vec4 map_screen_coord_to_ndc(vec2 p)
