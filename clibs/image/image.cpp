@@ -811,7 +811,7 @@ lcvt2file(lua_State *L){
     }
     bimg::imageFree(ic);
     lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
-    return 0;
+    return 1;
 }
 
 extern "C" int
