@@ -818,11 +818,13 @@ function m:save(path)
                     }
                 end
             end
-            utils.write_file(self.glb_filename..".patch", stringify(final_template))
-            assetmgr.unload(self.glb_filename..".patch")
-            assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
-            anim_view.save_keyevent()
-            world:pub {"ResourceBrowser", "dirty"}
+            if #final_template > 0 then
+                utils.write_file(self.glb_filename..".patch", stringify(final_template))
+                assetmgr.unload(self.glb_filename..".patch")
+                assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
+                anim_view.save_keyevent()
+                world:pub {"ResourceBrowser", "dirty"}
+            end
         end
         return
     end
