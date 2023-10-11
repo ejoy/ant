@@ -104,7 +104,11 @@ function S.BUILD(lpath)
 end
 
 function S.REALPATH(path)
-	return fs.absolute(repo:realpath(path)):string()
+	local rp = repo:realpath(path)
+	if rp then
+		return fs.absolute(rp):string()
+	end
+	return ''
 end
 
 function S.VIRTUALPATH(path)
