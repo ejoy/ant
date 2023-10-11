@@ -12,10 +12,11 @@
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef MATERIAL_UNLIT
-    v_posWS = vs_output.world_pos;
+    v_posWS  = vs_output.world_pos;
     v_normal = vs_output.normal;
     #if defined(WITH_TANGENT_ATTRIB) || defined(WITH_CUSTOM_TANGENT_ATTRIB)
-        v_tangent = vs_output.tangent;
+        v_tangent   = vs_output.tangent;
+        v_bitangent = vs_output.bitangent;
     #endif
 #endif //!MATERIAL_UNLIT  
 

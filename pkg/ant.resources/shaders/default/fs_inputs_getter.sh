@@ -10,7 +10,8 @@
     fsinput.pos    = v_posWS;
     fsinput.normal = v_normal;
 #   if defined(WITH_TANGENT_ATTRIB) || defined(WITH_CUSTOM_TANGENT_ATTRIB)
-    fsinput.tangent = v_tangent;
+    fsinput.tangent   = v_tangent;
+    fsinput.bitangent = v_bitangent;
 #   endif //TANGENT_VARYING
 
 #endif //MATERIAL_UNLIT

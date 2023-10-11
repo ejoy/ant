@@ -93,8 +93,10 @@
 
 #if defined(WITH_TANGENT_ATTRIB) || defined(WITH_CUSTOM_TANGENT_ATTRIB)
 #   define OUTPUT_TANGENT     v_tangent
+#   define OUTPUT_BITANGENT   v_bitangent
 #   else
 #   define OUTPUT_TANGENT
+#   define OUTPUT_BITANGENT
 #endif
 
 #   define OUTPUT_NORMAL    v_normal
