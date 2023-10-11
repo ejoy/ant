@@ -1,8 +1,7 @@
 local rmlui = require "rmlui"
 local timer = require "core.timer"
 local task = require "core.task"
-local filemanager = require "core.filemanager"
-local windowManager = require "core.windowManager"
+local extern_windows = require "core.extern_windows"
 local document_manager = require "core.document_manager"
 local initRender = require "core.initRender"
 local audio = import_package "ant.audio"
@@ -46,9 +45,18 @@ function S.shutdown()
     bgfx.shutdown()
 end
 
-S.open = windowManager.open
-S.close = windowManager.close
-S.postMessage = windowManager.postMessage
+function S.open(...)
+    extern_windows.push("open", ...)
+end
+
+function S.close(...)
+    extern_windows.push("close", ...)
+end
+
+function S.postMessage(...)
+    extern_windows.push("postMessage", ...)
+end
+
 S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
 S.update_context_size = document_manager.set_dimensions
