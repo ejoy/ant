@@ -57,10 +57,7 @@ void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
 
     vec3 terrain_color = blend_terrain_color(sand_basecolor.rgb, stone_basecolor.rgb, sand_height, sand_alpha);
 
-    fsinput.normal = normalize(fsinput.normal);
-    fsinput.tangent = vec4(normalize(fsinput.tangent.xyz), 1);
-    vec3 bitangent = cross(fsinput.tangent.xyz, fsinput.normal) * sign(fsinput.tangent.w);
-    mat3 tbn = mat3(fsinput.tangent.xyz, bitangent, fsinput.normal);
+    mat3 tbn = mat3(fsinput.tangent, fsinput.bitangent, fsinput.normal);
     vec3 stone_normal = terrain_normal_from_tangent_frame(tbn, terrain_uv, 1);
 
     material_info mi = terrain_material_info_init(fsinput.normal, stone_normal, fsinput.pos, vec4(terrain_color, 1.0), fsinput.frag_coord, u_metallic_factor, u_roughness_factor);
