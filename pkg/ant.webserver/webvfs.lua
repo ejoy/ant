@@ -32,6 +32,9 @@ local content_text_types = {
     [".cfg"] = plaintext,
     [".attr"] = plaintext,
     [".state"] = plaintext,
+	-- shader
+	[".sc"] = plaintext,
+	[".sh"] = plaintext,
 	-- for html
 	[".html"] = "text/html",
 	[".js"] = "text/html",

@@ -399,7 +399,7 @@ function S.texture_png(id)
 		end
 		local content = fastio.readall_s(path)
 	    local nc = image.cvt2file(content, "RGBA8", "PNG")
-		assert(nc, content)
+		assert(nc)
 		return nc
 	end
 end
