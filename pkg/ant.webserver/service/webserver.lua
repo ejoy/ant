@@ -139,7 +139,7 @@ local function route_vfs(route, cgi)
 						if ok then
 							response(id, s.write, code, data, header)
 						else
-							response(id, s.write, 500, lua_error_temp:format(escape_html(code)))
+							response(id, s.write, 500, lua_error_temp:format(escape_html(tostring(code))))
 						end
 					else
 						response(id, s.write, 500, lua_error_temp:format(escape_html(m)))
