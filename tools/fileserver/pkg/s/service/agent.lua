@@ -241,9 +241,6 @@ function message.LOG(data)
     LoggerQueue[#LoggerQueue+1] = data
 end
 
-function message.MSG(CMD,...)
-end
-
 local ignore_log = {
 	LOG = true,
 	TUNNEL_RESP = true,
