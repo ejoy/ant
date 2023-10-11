@@ -1,13 +1,9 @@
 local environment = require "core.environment"
 local document_manager = require "core.document_manager"
-local event = require "core.event"
-local task = require "core.task"
-local ltask = require "ltask"
 
 local m = {}
 
 local documents = {}
-local names = {}
 local messages = {}
 
 local function find_window(name)
@@ -22,10 +18,9 @@ end
 
 function m.open(name, url)
     assert(documents[name] == nil)
-    local doc = document_manager.open(url)
+    local doc = document_manager.open(url, name)
     if doc then
         documents[name] = doc
-        names[doc] = name
         document_manager.onload(doc)
         local msgs = messages[name]
         if msgs then
@@ -62,19 +57,6 @@ function m.postMessage(name, data)
     if window then
         window.postMessage(data)
     end
-end
-
-function m.postExternMessage(document, data)
-    local name = names[document]
-    if name then
-        task.new(function ()
-            ltask.send(ServiceWorld, "rmlui_message", name, data)
-        end)
-    end
-end
-
-function event.OnDocumentDestroy(document)
-    names[document] = nil
 end
 
 return m

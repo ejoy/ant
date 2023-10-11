@@ -1,9 +1,9 @@
 local rmlui = require "rmlui"
+local ltask = require "ltask"
 local event = require "core.event"
 local timer = require "core.timer"
 local task = require "core.task"
 local document_manager = require "core.document_manager"
-local windowManager = require "core.windowManager"
 local datamodel = require "core.datamodel.api"
 local environment = require "core.environment"
 local eventListener = require "core.event.listener"
@@ -75,7 +75,11 @@ local function createWindow(document, source)
     if source == nil then
         window.extern = {
             postMessage = function (data)
-                return windowManager.postExternMessage(document, data)
+                if environment[document]._extern_name then
+                    task.new(function ()
+                        ltask.send(ServiceWorld, "rmlui_message", environment[document]._extern_name, data)
+                    end)
+                end
             end
         }
     end
