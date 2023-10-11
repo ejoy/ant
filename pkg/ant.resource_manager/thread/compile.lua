@@ -5,7 +5,6 @@ local vfs       = require "vfs"
 
 local compile
 local compile_file
-local init_setting
 local set_setting
 
 if __ANT_RUNTIME__ then
@@ -27,8 +26,6 @@ if __ANT_RUNTIME__ then
         if realpath then
             return realpath
         end
-    end
-    init_setting = function ()
     end
     set_setting = vfs.resource_setting
 else
@@ -61,7 +58,6 @@ else
             end
         end
     end
-    init_setting = cr.init_setting
     set_setting = cr.set_setting
 end
 
@@ -106,7 +102,6 @@ local function init()
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
 
-    init_setting()
     set_setting("glb", stringify {
         os = platform.os,
         renderer = renderer,
