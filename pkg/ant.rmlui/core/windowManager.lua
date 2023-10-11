@@ -1,5 +1,5 @@
 local environment = require "core.environment"
-local contextManager = require "core.contextManager"
+local document_manager = require "core.document_manager"
 local event = require "core.event"
 local task = require "core.task"
 local ltask = require "ltask"
@@ -22,11 +22,11 @@ end
 
 function m.open(name, url)
     assert(documents[name] == nil)
-    local doc = contextManager.open(url)
+    local doc = document_manager.open(url)
     if doc then
         documents[name] = doc
         names[doc] = name
-        contextManager.onload(doc)
+        document_manager.onload(doc)
         local msgs = messages[name]
         if msgs then
             messages[name] = nil
