@@ -6,11 +6,7 @@ local vfs        = require "vfs"
 local ltask      = require "ltask"
 local depends    = require "depends"
 
-local ROOT
-
-local function init()
-    ROOT = lfs.path(vfs.repopath()) / ".build" / "shader"
-end
+local ROOT = lfs.path(vfs.repopath()) / ".build" / "shader"
 
 local function cmdtostr(commands)
     return table.concat(commands, " ")
@@ -98,6 +94,5 @@ local function run(commands, input, output)
 end
 
 return {
-    init = init,
     run = run,
 }

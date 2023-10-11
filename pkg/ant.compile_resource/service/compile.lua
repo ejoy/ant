@@ -8,7 +8,6 @@ if repopath then
 end
 
 local cr = require "main"
-cr.init_setting()
 
 local S = {}
 
