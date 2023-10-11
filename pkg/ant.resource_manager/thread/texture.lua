@@ -393,6 +393,10 @@ function S.texture_png(id)
 	local c = textureById[id]
 	if c then
 		local path = cr.compile(c.name.."|main.bin")
+		if not path then
+			-- todo : support internal textures (c.value)
+			return
+		end
 		local content = fastio.readall_s(path)
 	    local nc = image.cvt2file(content, "RGBA8", "PNG")
 		assert(nc, content)
