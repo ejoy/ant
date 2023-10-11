@@ -1,7 +1,10 @@
 local access = {}
 
 local lfs = require "bee.filesystem"
+local platform = require "bee.platform"
 local datalist = require "datalist"
+
+local isWindows <const> = platform.os == "windows"
 
 function access.addmount(repo, path)
 	if not lfs.exists(path) then
@@ -110,15 +113,27 @@ function access.type(repo, pathname)
 	end
 end
 
+local path_eq; do
+	if isWindows then
+		function path_eq(a, b)
+			return a:lower() == b:lower()
+		end
+	else
+		function path_eq(a, b)
+			return a == b
+		end
+	end
+end
+
 function access.virtualpath(repo, pathname)
 	pathname = lfs.absolute(pathname):lexically_normal():string()
 	for _, mpath in ipairs(repo._mountpoint) do
 		mpath = mpath:string()
-		if pathname == mpath then
+		if path_eq(pathname, mpath) then
 			return "/"
 		end
 		local n = #mpath + 1
-		if pathname:sub(1,n) == mpath .. '/' then
+		if path_eq(pathname:sub(1,n), mpath .. '/') then
 			return pathname:sub(n)
 		end
 	end

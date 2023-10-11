@@ -86,9 +86,7 @@ end
 
 -- map path in repo to realpath (replace mountpoint)
 function REPO_MT:realpath(filepath)
-	local rp = access.realpath(self, filepath)
-	assert(rp ~= nil)
-	return rp
+	return access.realpath(self, filepath)
 end
 
 function REPO_MT:virtualpath(pathname)
@@ -122,6 +120,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 				table.insert(hashs, string.format("r %s %s", name, fullname))
 			else
 				local realfullname = self:realpath(fullname)
+				assert(realfullname ~= nil, filepath)
 				local mtime = lfs.last_write_time(realfullname)	-- timestamp
 				local cache_hash = namehashcache[fullname]
 				local hash
