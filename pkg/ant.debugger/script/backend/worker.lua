@@ -708,10 +708,10 @@ local function GlobalFunction(name)
     return rdebug.value(rdebug.fieldv(rdebug._G, name))
 end
 
-local function getExceptionType(errcode)
+local function getExceptionType(errcode, skip)
     errcode = errcode & 0xF
     if errcode == ERREVENT_ERRRUN then
-        if rdebug.getinfo(0, "Slf", info) then
+        if rdebug.getinfo(skip, "Slf", info) then
             if info.what ~= 'C' then
                 return "runtime"
             end
@@ -735,13 +735,13 @@ local function getExceptionType(errcode)
     end
 end
 
-local function getExceptionCaught(errcode)
+local function getExceptionCaught(errcode, skip)
     if errcode & ERREVENT_PANIC ~= 0 then
         return "panic"
     end
     local pcall = GlobalFunction 'pcall'
     local xpcall = GlobalFunction 'xpcall'
-    local level = 0
+    local level = skip
     while true do
         if not rdebug.getinfo(level, "f", info) then
             break
@@ -761,10 +761,10 @@ local function getExceptionCaught(errcode)
     return 'native'
 end
 
-local function getExceptionFlags(errcode)
+local function getExceptionFlags(errcode, skip)
     return {
-        getExceptionType(errcode),
-        getExceptionCaught(errcode),
+        getExceptionType(errcode, skip),
+        getExceptionCaught(errcode, skip),
     }
 end
 
@@ -790,13 +790,14 @@ local function runException(flags, errobj)
     }, level)
 end
 
-function event.exception(errobj, errcode)
+function event.exception(errobj, errcode, level)
     if not debuggeeReady() then return end
     if errcode == nil or errcode == -1 then
         --TODO:暂时兼容旧版本
         errcode = ERREVENT_ERRRUN
     end
-    runException(getExceptionFlags(errcode), errobj)
+    local skip = level or 0
+    runException(getExceptionFlags(errcode, skip), errobj)
 end
 
 function event.thread(co, type)

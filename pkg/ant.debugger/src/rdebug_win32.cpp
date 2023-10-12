@@ -1,6 +1,7 @@
 #if defined(_WIN32)
 
 #    include "rdebug_win32.h"
+
 #    include <Windows.h>
 #    include <stdint.h>
 
@@ -79,20 +80,20 @@ namespace luadebug::win32 {
     }
 }
 
-#if defined(_MSC_VER)
-#    include <lua.hpp>
-#    define DELAYIMP_INSECURE_WRITABLE_HOOKS
-#    include <DelayImp.h>
+#    if defined(_MSC_VER)
+#        include <lua.hpp>
+#        define DELAYIMP_INSECURE_WRITABLE_HOOKS
+#        include <DelayImp.h>
 
-#    if !defined(LUA_DLL_VERSION)
-#        error "Need LUA_DLL_VERSION"
-#    endif
+#        if !defined(LUA_DLL_VERSION)
+#            error "Need LUA_DLL_VERSION"
+#        endif
 // clang-format off
 #    define LUA_STRINGIZE(_x) LUA_STRINGIZE_(_x)
 #    define LUA_STRINGIZE_(_x) #_x
 // clang-format on
 
-#    define LUA_DLL_NAME LUA_STRINGIZE(LUA_DLL_VERSION) ".dll"
+#        define LUA_DLL_NAME LUA_STRINGIZE(LUA_DLL_VERSION) ".dll"
 
 namespace luadebug::win32 {
     static int (*_lua_pcall)(lua_State* L, int nargs, int nresults, int errfunc);
@@ -155,7 +156,6 @@ namespace luadebug::win32 {
 
 PfnDliHook __pfnDliNotifyHook2 = luadebug::win32::delayload_hook;
 
-
-#endif
+#    endif
 
 #endif
