@@ -1,7 +1,6 @@
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
-local fs = require "bee.filesystem"
 local serialization = require "bee.serialization"
 
 local FD = ...
@@ -11,11 +10,7 @@ local ServiceDebugProxy
 local ServiceVfsMgr = ltask.queryservice "s|vfsmgr"
 local ServiceLogManager = ltask.uniqueservice "s|log.manager"
 local ServiceEditor = ltask.uniqueservice "s|editor"
-local ServiceArguments = ltask.queryservice "s|arguments"
-local arg = ltask.call(ServiceArguments, "QUERY")
-local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
-local ServiceCompileMgr = ltask.uniqueservice("s|compilemgr", REPOPATH)
-local ServiceCompile
+local CompileId
 
 local LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE")
 local LoggerQueue = {}
@@ -171,22 +166,18 @@ function message.ROOT()
 end
 
 function message.RESOURCE_SETTING(setting)
-	ServiceCompile = ltask.call(ServiceCompileMgr, "spawn", setting)
+	local s = ltask.call(ServiceVfsMgr, "RESOURCE_SETTING", setting)
+	CompileId = s.id
+	response("RESOURCE_SETTING", s.resource)
 end
 
 function message.RESOURCE(path)
-	local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE", path)
-	if not ok then
-		if type(lpath) == "table" then
-			print(table.concat(lpath, "\n"))
-		else
-			print(lpath)
-		end
+	local hash = ltask.call(ServiceVfsMgr, "RESOURCE", CompileId, path)
+	if hash then
+		response("RESOURCE", path, hash)
+	else
 		response("MISSING", path)
-		return
 	end
-	local hash = ltask.call(ServiceVfsMgr, "BUILD", lpath)
-	response("RESOURCE", path, hash)
 end
 
 function message.GET(hash)
