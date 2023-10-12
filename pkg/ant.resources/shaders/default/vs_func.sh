@@ -34,7 +34,7 @@ void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 #	endif//PACK_TANGENT_TO_QUAT
 	vs_output.normal	= mul(wm, mediump vec4(normal, 0.0)).xyz;
 	vs_output.tangent	= mul(wm, mediump vec4(tangent, 0.0)).xyz;
-	vs_output.bitangent = cross(vs_output.tangent, vs_output.normal) * sign(vs_input.tangent.w);
+	vs_output.bitangent = cross(vs_output.normal, vs_output.tangent) * sign(vs_input.tangent.w);
 #endif//CALC_TBN
 
 #endif //!MATERIAL_UNLIT
