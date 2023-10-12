@@ -66,11 +66,11 @@ local function gen_commands(commands, setting, param, input, output)
 
 	if param.mipmap ~= nil then
 		add_option(commands, "-m")
+		if param.skip_mip then
+			add_option(commands, "--mipskip", tostring(param.skip_mip))
+		end
 	end
 
-	if param.skip_mip then
-		add_option(commands, "--mipskip", tostring(param.skip_mip))
-	end
 end
 
 local function writefile(filename, data)

@@ -255,6 +255,7 @@ return function (status)
             normalmap   = normalmap,
             colorspace  = colorspace,
             type        = "texture",
+            mipmap      = true,
         }
 
         --TODO: check texture if need compress
