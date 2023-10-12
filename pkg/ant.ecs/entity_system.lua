@@ -41,6 +41,7 @@ end
 
 function m:prefab_remove()
     for _, instance in evOnRemoveInstance:unpack() do
+        instance.REMOVED = true
         if instance.proxy then
             w:remove(instance.proxy)
         end
