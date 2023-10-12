@@ -28,3 +28,5 @@ projects/xcode/lua/DerivedData
 projects/xcode/lua/lua.xcodeproj/project.xcworkspace/xcuserdata/ejoy.xcuserdatad/UserInterfaceState.xcuserstate
 tools/editor/pkg/tools.editor/editor.settings
 tools/rmlviewer/mod
+/tools/prefab_editor/imgui.layout
+/tools/prefab_editor/log.txt
