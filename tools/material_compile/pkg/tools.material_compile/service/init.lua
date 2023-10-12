@@ -13,8 +13,6 @@ local arg = select(1, ...)
 local srcfile = arg[1]
 local srcpath = fs.path(srcfile)
 
-cr.init_setting()
-
 local function stringify(t)
     local s = {}
     for k, v in pairs(t) do

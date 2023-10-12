@@ -2,7 +2,6 @@ local lfs = require "bee.filesystem"
 local sha1 = require "sha1"
 local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
-local shader = require "material.shader"
 
 local function writefile(filename, data)
     local f <close> = assert(io.open(filename:string(), "wb"))
@@ -25,10 +24,6 @@ local function parse(arguments)
     return setting
 end
 
-local function init()
-    shader.init()
-end
-
 local function set(ext, arguments)
     if not ResourceCompiler[ext] then
         error("invalid type: " .. ext)
@@ -48,7 +43,6 @@ local function get(ext)
 end
 
 return {
-    init = init,
     set = set,
     get = get,
 }

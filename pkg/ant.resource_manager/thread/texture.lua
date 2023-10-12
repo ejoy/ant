@@ -4,6 +4,7 @@ local datalist   = require "datalist"
 local fastio     = require "fastio"
 local textureman = require "textureman.server"
 local cr         = require "thread.compile"
+local image      = require "image"
 
 local mem_formats <const> = {
     RGBA8 = "bbbb",
@@ -366,7 +367,41 @@ end
 
 function S.texture_destroy_handle(rt_id)
     textureman.texture_set(rt_id, DefaultTexture["TEX2D"])
-    return true 
+    return true
+end
+
+-- for web console
+
+function S.texture_list()
+	local r = {}
+	local n = 1
+	for id, c in pairs(textureById) do
+		r[n] = {
+			id = c.id,
+			name = c.name,
+			type = c.type,
+			info = c.texinfo,
+			flag = c.flag,
+			handle = c.handle,
+		}
+		n = n + 1
+	end
+	return r
+end
+
+function S.texture_png(id)
+	local c = textureById[id]
+	if c then
+		local path = cr.compile(c.name.."|main.bin")
+		if not path then
+			-- todo : support internal textures (c.value)
+			return
+		end
+		local content = fastio.readall_s(path)
+	    local nc = image.cvt2file(content, "RGBA8", "PNG")
+		assert(nc)
+		return nc
+	end
 end
 
 return {

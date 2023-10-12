@@ -222,7 +222,14 @@ lencode_image(lua_State *L){
     } else if (strcmp(image_type, "ktx") == 0){
 
     } else if (strcmp(image_type, "png") == 0){
+        bx::MemoryBlock mb(&allocator);
+        bx::MemoryWriter sw(&mb);
 
+        auto t_ic = new_ic ? new_ic : &ic;
+        if (!bimg::imageWritePng(&sw, t_ic->m_width, t_ic->m_height, t_ic->m_width * getBitsPerPixel(t_ic->m_format)/8, t_ic->m_data, t_ic->m_format, false, &err)){
+            return luaL_error(L, "Save to PNG file failed");
+        }
+        lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
     } else if (strcmp(image_type, "tga") == 0){
 
     } else {
@@ -785,12 +792,35 @@ lequirectangular2cubemap(lua_State *L) {
     return 1;
 }
 
+static int
+lcvt2file(lua_State *L){
+    auto memory = getmemory(L, 1);
+    const char* src_datafmt = luaL_optstring(L, 2, "RGBA8");
+    const char* fmt = luaL_optstring(L, 3, "PNG");
+    bx::DefaultAllocator defaultAllocator;
+
+    bx::Error err;
+
+    auto ic = bimg::imageParse(&defaultAllocator, memory.data(), (uint32_t)memory.size(), bimg::getFormat(src_datafmt), &err);
+    if (!ic){
+        luaL_error(L, "Parse image file failed:%s", err.getMessage());
+    }
+    bx::MemoryBlock mb(&defaultAllocator);
+    if (0 == write2memory(L, mb, ic, fmt)){
+        luaL_error(L, "Save file content to memory failed");
+    }
+    bimg::imageFree(ic);
+    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
+    return 1;
+}
+
 extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
         { "parse",              lparse },
         { "convert",            lconvert},
         { "encode_image",       lencode_image},
+        { "cvt2file",           lcvt2file},
         { "get_bpp",            lget_bits_per_pixel},
         { "get_format_sizebytes",lget_format_sizebytes},
         { "get_format_name",    lget_format_name},

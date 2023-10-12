@@ -39,7 +39,6 @@ local function response(...)
 end
 
 local function response_ex(tunnel_name, port, session, req)
-	print(tunnel_name, port, session, req)
 	local len = #req
 	while true do
 		if len <= 0x8000 then
@@ -240,9 +239,6 @@ end
 function message.LOG(data)
 	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
     LoggerQueue[#LoggerQueue+1] = data
-end
-
-function message.MSG(CMD,...)
 end
 
 local ignore_log = {

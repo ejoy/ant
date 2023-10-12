@@ -24,10 +24,11 @@ local function round(x)
     return math.floor(x*screen_ratio+0.5)
 end
 
-local function notifyDocumentCreate(document, path)
+local function notifyDocumentCreate(document, path, name)
 	local globals = createSandbox(path)
 	event("OnDocumentCreate", document, globals)
 	globals.window.document = globals.document
+	globals._extern_name = name
 	environment[document] = globals
 end
 
@@ -64,13 +65,13 @@ local function OnLoadExternalStyle(document, source_path)
     end
 end
 
-function m.open(path)
+function m.open(path, name)
     local doc = rmlui.DocumentCreate(width, height)
     if not doc then
         return
     end
     documents[#documents+1] = doc
-    notifyDocumentCreate(doc, path)
+    notifyDocumentCreate(doc, path, name)
     local html = rmlui.DocumentParseHtml(path, filemanager.readfile(path), false)
     if not html then
         m.close(doc)

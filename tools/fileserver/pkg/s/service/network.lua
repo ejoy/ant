@@ -145,6 +145,8 @@ local function stream_on_write(s)
             s.shutdown_w = true
             close_write(s)
             return
+        elseif n == false then
+            return
         else
             if n == #data[1] then
                 local token = table.remove(s.wait_write, 1)

@@ -38,7 +38,8 @@ static std::string_view luaL_optstrview(lua_State* L, int idx, const char* def) 
 
 static int lloadfile(lua_State* L) {
 	std::string_view filename  = luaL_checkstrview(L, 1);
-	std::string_view chunkname = luaL_optstrview(L, 2, ("@engine/firmware/"+std::string(filename)).c_str());
+	auto def_chunkname = "@engine/firmware/"+std::string(filename);
+	std::string_view chunkname = luaL_optstrview(L, 2, def_chunkname.c_str());
 	auto it = firmware.find(filename);
 	if (it == firmware.end()) {
 		lua_pushnil(L);

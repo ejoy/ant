@@ -818,11 +818,13 @@ function m:save(path)
                     }
                 end
             end
-            utils.write_file(self.glb_filename..".patch", stringify(final_template))
-            assetmgr.unload(self.glb_filename..".patch")
-            assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
-            anim_view.save_keyevent()
-            world:pub {"ResourceBrowser", "dirty"}
+            if #final_template > 0 then
+                utils.write_file(self.glb_filename..".patch", stringify(final_template))
+                assetmgr.unload(self.glb_filename..".patch")
+                assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
+                anim_view.save_keyevent()
+                world:pub {"ResourceBrowser", "dirty"}
+            end
         end
         return
     end
@@ -855,27 +857,21 @@ end
 function m:set_parent(target, parent)
     local te <close> = world:entity(target, "scene?in")
     if te.scene then
-        local function new_entity(te, pe, scene)
-            local template = hierarchy:get_node_info(te).template
-            local tpl = utils.deep_copy(template)
-            if scene then
-                tpl.data.scene = scene
-                template.data.scene.s = scene.s
-                template.data.scene.r = scene.r
-                template.data.scene.t = scene.t
-            end
-            local e = world:create_entity(tpl)
-            self:add_entity(e, pe, template)
+        local function new_entity(eid, scene)
+            local template = hierarchy:get_node_info(eid).template
+            template.data.scene = scene
+            local e = world:create_entity(utils.deep_copy(template))
+            self:add_entity(e, scene.parent, template)
             return e
         end
-        local function create_tree(te, pe, scene)
-            local npe = new_entity(te, pe, scene)
-            local tn = hierarchy:get_node(te)
+        local function create_tree(eid, scene)
+            local e = new_entity(eid, scene)
+            local tn = hierarchy:get_node(eid)
             for _, ce in ipairs(tn.children) do
                 local tpl = hierarchy:get_node_info(ce.eid).template
-                create_tree(ce.eid, npe, {parent = npe, s = tpl.data.scene.s, r = tpl.data.scene.r, t = tpl.data.scene.t })
+                create_tree(ce.eid, {parent = e, s = tpl.data.scene.s, r = tpl.data.scene.r, t = tpl.data.scene.t})
             end
-            return npe
+            return e
         end
 
         local targetWorldMat = mc.IDENTITY_MAT
@@ -883,18 +879,19 @@ function m:set_parent(target, parent)
             local se <close> = world:entity(parent, "scene?in")
             targetWorldMat = iom.worldmat(se)
         end
-        local ts, tr, tt = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
-        ts = math3d.tovalue(ts)
-        tr = math3d.tovalue(tr)
-        tt = math3d.tovalue(tt)
-        local s, r, t = {ts[1], ts[2], ts[3]}, tr, {tt[1], tt[2], tt[3]}
-        local e = create_tree(target, parent, {parent = parent, s = s, r = r, t = t})
-        local function remove_tree(te)
-            local tn = hierarchy:get_node(te)
+        local s, r, t = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+        local e = create_tree(target, {
+            parent = parent,
+            s = {math3d.index(s, 1), math3d.index(s, 2), math3d.index(s, 3)},
+            r = {math3d.index(r, 1), math3d.index(r, 2), math3d.index(r, 3), math3d.index(r, 4)},
+            t = {math3d.index(t, 1), math3d.index(t, 2), math3d.index(t, 3)}
+        })
+        local function remove_tree(eid)
+            local tn = hierarchy:get_node(eid)
             for _, ce in ipairs(tn.children) do
                 remove_tree(ce.eid)
             end
-            self:remove_entity(te)
+            self:remove_entity(eid)
         end
         remove_tree(target)
         return e

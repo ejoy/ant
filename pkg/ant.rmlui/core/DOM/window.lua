@@ -1,9 +1,9 @@
 local rmlui = require "rmlui"
+local ltask = require "ltask"
 local event = require "core.event"
 local timer = require "core.timer"
 local task = require "core.task"
-local contextManager = require "core.contextManager"
-local windowManager = require "core.windowManager"
+local document_manager = require "core.document_manager"
 local datamodel = require "core.datamodel.api"
 local environment = require "core.environment"
 local eventListener = require "core.event.listener"
@@ -16,29 +16,29 @@ local function createWindow(document, source)
         return datamodel.create(document, view)
     end
     function window.open(url)
-        local newdoc = contextManager.open(url)
+        local newdoc = document_manager.open(url)
         if not newdoc then
             return
         end
-        contextManager.onload(newdoc)
+        document_manager.onload(newdoc)
         return createWindow(newdoc, document)
     end
     function window.close()
         task.new(function ()
-            contextManager.close(document)
+            document_manager.close(document)
             for t in pairs(timer_object) do
                 t:remove()
             end
         end)
     end
     function window.show()
-        contextManager.show(document)
+        document_manager.show(document)
     end
     function window.hide()
-        contextManager.hide(document)
+        document_manager.hide(document)
     end
     function window.flush()
-        contextManager.flush(document)
+        document_manager.flush(document)
     end
     function window.setTimeout(f, delay)
         local t = timer.wait(delay, f)
@@ -75,7 +75,11 @@ local function createWindow(document, source)
     if source == nil then
         window.extern = {
             postMessage = function (data)
-                return windowManager.postExternMessage(document, data)
+                if environment[document]._extern_name then
+                    task.new(function ()
+                        ltask.send(ServiceWorld, "rmlui_message", environment[document]._extern_name, data)
+                    end)
+                end
             end
         }
     end

@@ -158,6 +158,14 @@ return function (output, setting, param)
 		}
 		gen_commands(commands, setting, param, imgpath:string(), binfile:string())
 		print("texture compile:")
+		local function to_command(commands)
+			local t = {}
+			for _, cmd in ipairs(commands) do
+				t[#t+1] = tostring(cmd)	-- make fs.path to string
+			end
+			return table.concat(t, " ")
+		end
+		buildcmd = to_command(commands)
 		local success, msg = subprocess.spawn_process(commands)
 		if success then
 			if msg:upper():find("ERROR:", 1, true) then
@@ -185,7 +193,7 @@ return function (output, setting, param)
 			config.irradiance_SH = build_irradiance_sh(cm)
 		end
 	else
-		buildcmd = ""
+		buildcmd = "<image from memory>"
 		local s = param.size
 		local fmt = param.format
 		local ti = {}
