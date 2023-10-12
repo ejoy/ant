@@ -174,7 +174,7 @@ local function each_prefab(entities, template, f)
 end
 
 function world:_prefab_instance(v)
-    if v.REMOVED then
+    if v.instance.REMOVED then
         return
     end
     local w = self
