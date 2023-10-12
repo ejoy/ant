@@ -25,6 +25,8 @@ local config, fddata = io_req:bpop()
 local QUIT = false
 local OFFLINE = false
 
+local TOKEN_RESOURCE_SETTING <const> = {}
+
 local _print = _G.print
 if platform.os == 'android' then
 	local android = require "android"
@@ -268,20 +270,6 @@ local function event_select(timeout)
 	return true
 end
 
-local function request_start(req, args, promise)
-	if OFFLINE then
-		print("[ERROR] " .. req .. " failed in offline mode.")
-		promise.reject()
-		return
-	end
-	local list = connection.request[args]
-	if list then
-		list[#list+1] = promise
-	else
-		connection.request[args] = { promise }
-		connection_send(req, args)
-	end
-end
 local function request_send(...)
 	if OFFLINE then
 		return
@@ -289,20 +277,44 @@ local function request_send(...)
 	connection_send(...)
 end
 
-local function request_complete(args, ok, err)
+local function request_start_with_token(req, args, token, promise)
+	if OFFLINE then
+		print("[ERROR] " .. req .. " failed in offline mode.")
+		promise.reject()
+		return
+	end
+	local list = connection.request[token]
+	if list then
+		list[#list+1] = promise
+	else
+		connection.request[token] = { promise }
+		connection_send(req, args)
+	end
+end
+
+local function request_start(req, args, promise)
+	request_start_with_token(req, args, args, promise)
+end
+
+local function request_resolve(args, ...)
 	local list = connection.request[args]
 	if not list then
 		return
 	end
 	connection.request[args] = nil
-	if ok then
-		for _, promise in ipairs(list) do
-			promise.resolve(args)
-		end
-	else
-		for _, promise in ipairs(list) do
-			promise.reject(args, err)
-		end
+	for _, promise in ipairs(list) do
+		promise.resolve(args, ...)
+	end
+end
+
+local function request_reject(args, err)
+	local list = connection.request[args]
+	if not list then
+		return
+	end
+	connection.request[args] = nil
+	for _, promise in ipairs(list) do
+		promise.reject(args, err)
 	end
 end
 
@@ -343,7 +355,7 @@ end
 function response.BLOB(hash, data)
 	print("[response] BLOB", hash, #data)
 	if repo:write_blob(hash, data) then
-		request_complete(hash, true)
+		request_resolve(hash)
 	end
 end
 
@@ -354,20 +366,26 @@ end
 
 function response.MISSING(hash)
 	print("[response] MISSING", hash)
-	request_complete(hash, false, "MISSING "..hash)
+	request_reject(hash, "MISSING "..hash)
 end
 
 function response.SLICE(hash, offset, data)
 	print("[response] SLICE", hash, offset, #data)
 	if repo:write_slice(hash, offset, data) then
-		request_complete(hash, true)
+		request_resolve(hash)
 	end
 end
 
 function response.RESOURCE(fullpath, hash)
 	print("[response] RESOURCE", fullpath, hash)
-	repo:set_resource(fullpath, hash)
-	request_complete(fullpath, true)
+	repo:add_resource(fullpath, hash)
+	request_resolve(fullpath)
+end
+
+function response.RESOURCE_SETTING(data)
+	print("[response] RESOURCE_SETTING")
+	repo:set_resource(data)
+	request_resolve(TOKEN_RESOURCE_SETTING)
 end
 
 function response.FETCH(path, hashs)
@@ -381,10 +399,10 @@ function response.FETCH(path, hashs)
 				res[#res+1] = h
 			end
 			if #res == 0 then
-				request_complete(path, true)
+				request_resolve(path)
 			else
 				table.insert(res, 1, "MISSING")
-				request_complete(path, false, table.concat(res))
+				request_reject(path, table.concat(res))
 			end
 		end
 	end
@@ -664,7 +682,14 @@ end
 
 function CMD.RESOURCE_SETTING(id, setting)
 --	print("[request] RESOURCE_SETTING", setting)
-	request_send("RESOURCE_SETTING", setting)
+	request_start_with_token("RESOURCE_SETTING", setting, TOKEN_RESOURCE_SETTING, {
+		resolve = function ()
+			response_id(id)
+		end,
+		reject = function (_, err)
+			response_err(id, err)
+		end
+	})
 	response_id(id)
 end
 
@@ -905,7 +930,7 @@ local function main()
 		table.insert(uncomplete_req, hash)
 	end
 	for _, hash in ipairs(uncomplete_req) do
-		request_complete(hash, false, "UNCOMPLETE "..hash)
+		request_reject(hash, "UNCOMPLETE "..hash)
 	end
 	if QUIT then
 		return

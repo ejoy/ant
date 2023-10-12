@@ -215,11 +215,20 @@ function vfs:get_resource(name)
 	return self.resource[name]
 end
 
-function vfs:set_resource(name, hash)
+function vfs:add_resource(name, hash)
 	self.resource[name] = hash
 	local path = self:hashpath(self.root)..".resource"
 	local f <close> = assert(io.open(path, "ab"))
 	f:write(("%s %s\n"):format(hash, name))
+end
+
+function vfs:set_resource(data)
+	self.resource = data
+	local path = self:hashpath(self.root)..".resource"
+	local f <close> = assert(io.open(path, "wb"))
+	for hash, name in pairs(self.resource) do
+		f:write(("%s %s\n"):format(hash, name))
+	end
 end
 
 function vfs:realpath(path)
