@@ -184,8 +184,8 @@ function message.RESOURCE(path)
 	response("RESOURCE", path, hash)
 end
 
-function message.RESOURCE_SETTING(ext, setting)
-	ltask.call(ServiceCompile, "SETTING", ext, setting)
+function message.RESOURCE_SETTING(setting)
+	ltask.call(ServiceCompile, "SETTING", setting)
 end
 
 function message.GET(hash)

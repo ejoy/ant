@@ -8,34 +8,29 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local config = {}
-
-local ResourceCompiler <const> = {
-    glb     = "model.glb",
-    texture = "texture.convert",
-    material = "material.convert",
+local config = {
+    glb = {
+        compiler = require "model.glb",
+    },
+    texture = {
+        compiler = require "texture.convert",
+    },
+    material = {
+        compiler = require "material.convert",
+    },
 }
 
-local function parse(arguments)
-    local setting = {}
-    arguments:gsub("([^=&]*)=([^=&]*)", function(k ,v)
-        setting[k] = v
-    end)
-    return setting
-end
-
-local function set(ext, arguments)
-    if not ResourceCompiler[ext] then
-        error("invalid type: " .. ext)
+local function set(setting)
+    local setting_str = serialize.stringify(setting)
+    local hash = sha1(setting_str):sub(1,7)
+    local binpath = lfs.path(vfs.repopath()) / ".build" / (setting.os.."_"..hash)
+    lfs.create_directories(binpath)
+    writefile(binpath / ".setting", setting_str)
+    for ext, cfg in pairs(config) do
+        cfg.setting = setting
+        cfg.binpath = binpath / ext
+        lfs.create_directory(cfg.binpath)
     end
-    local cfg = {}
-    local hash = sha1(arguments):sub(1,7)
-    cfg.setting = parse(arguments)
-    cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext / hash
-    cfg.compiler = require(assert(ResourceCompiler[ext]))
-    lfs.create_directories(cfg.binpath)
-    writefile(cfg.binpath / ".setting", serialize.stringify(cfg.setting))
-    config[ext] = cfg
 end
 
 local function get(ext)
