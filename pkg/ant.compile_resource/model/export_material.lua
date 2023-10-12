@@ -1,5 +1,4 @@
 local lfs = require "bee.filesystem"
-local fs = require "filesystem"
 local utility = require "model.utility"
 local datalist = require "datalist"
 local fastio        = import_package "ant.serialize".fastio
@@ -174,19 +173,6 @@ return function (status)
         return name
     end
 
-    local TextureExtensions <const> = {
-        noop       = setting.os == "windows" and "dds" or "ktx",
-        direct3d11 = "dds",
-        direct3d12 = "dds",
-        metal      = "ktx",
-        vulkan     = "ktx",
-        opengl     = "ktx",
-    }
-    local TextureSetting <const> = {
-        os = setting.os,
-        ext = TextureExtensions[setting.renderer],
-    }
-
     local function export_texture(filename, texture_desc)
         if not EXPORTED_FILES[filename] then
             EXPORTED_FILES[filename] = true
@@ -203,7 +189,7 @@ return function (status)
                 end
                 desc.path = imgpath
                 parallel_task.add(status.tasks, function ()
-                    local ok, err = texture_compile(desc, output / name, TextureSetting, status.depfiles)
+                    local ok, err = texture_compile(desc, output / name, setting, status.depfiles)
                     if not ok then
                         error("compile failed: " .. name .. "\n" .. err)
                     end

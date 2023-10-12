@@ -61,31 +61,6 @@ else
     set_setting = cr.set_setting
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
-local function stringify(t)
-    local s = {}
-    for k, v in sortpairs(t) do
-        s[#s+1] = k.."="..tostring(v)
-    end
-    return table.concat(s, "&")
-end
-
 local TextureExtensions <const> = {
     noop       = platform.os == "windows" and "dds" or "ktx",
 	direct3d11 = "dds",
@@ -102,22 +77,13 @@ local function init()
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
 
-    set_setting("glb", stringify {
+    set_setting {
         os = platform.os,
         renderer = renderer,
         hd = hd,
         obl = obl,
-    })
-    set_setting("material", stringify {
-        os = platform.os,
-        renderer = renderer,
-        hd = hd,
-        obl = obl,
-    })
-    set_setting("texture", stringify {
-        os = platform.os,
-        ext = texture,
-    })
+        texture = texture,
+    }
 end
 
 return {

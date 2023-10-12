@@ -148,9 +148,9 @@ return function (output, setting, param)
 
 	local buildcmd
 	if imgpath then
-		local binfile = output / ("main."..setting.ext)
+		local binfile = output / ("main."..setting.texture)
 		if is_png(imgpath) and param.gray2rgb then
-			local tmpfile = output / ("tmp." .. setting.ext)
+			local tmpfile = output / ("tmp." .. setting.texture)
 			imgpath = gray2rgb(imgpath, tmpfile)
 		end
 		local commands = {
