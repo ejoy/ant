@@ -16,6 +16,7 @@ local fastio = require "fastio"
 local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
+local serialization = require "bee.serialization"
 local protocol = require "protocol"
 
 local io_req = thread.channel "IOreq"
@@ -46,7 +47,7 @@ local connection = {
 }
 
 local function connection_send(...)
-	local pack = protocol.packmessage({...})
+	local pack = string.pack("<s2", serialization.packstring(...))
 	table.insert(connection.sendq, 1, pack)
 end
 
@@ -822,10 +823,25 @@ local function init_channelfd()
 end
 
 local function init_event()
-	local result = {}
 	local reqs = {}
 	local reading = connection.recvq
 	local sending = connection.sendq
+	local function dispatch_netmsg(cmd, ...)
+		if reqs then
+			if cmd ~= "ROOT" then
+				table.insert(reqs, {cmd, ...})
+			else
+				dispatch_net(cmd, ...)
+				for _, req in ipairs(reqs) do
+					dispatch_net(table.unpack(req))
+				end
+				reqs = nil
+				init_channelfd()
+			end
+		else
+			dispatch_net(cmd, ...)
+		end
+	end
 	event_addr(connection.fd, function (fd)
 		local data, err = fd:recv()
 		if not data then
@@ -836,21 +852,12 @@ local function init_event()
 			return nil, "Closed by remote"
 		end
 		table.insert(reading, data)
-		while protocol.readmessage(reading, result) do
-			if reqs then
-				if result[1] ~= "ROOT" then
-					table.insert(reqs, result)
-				else
-					dispatch_net(table.unpack(result))
-					for _, req in ipairs(reqs) do
-						dispatch_net(table.unpack(req))
-					end
-					reqs = nil
-					init_channelfd()
-				end
-			else
-				dispatch_net(table.unpack(result))
+		while true do
+			local msg = protocol.readchunk(reading)
+			if not msg then
+				break
 			end
+			dispatch_netmsg(serialization.unpack(msg))
 		end
 		if ltask then
 			ltask.dispatch_wakeup()
