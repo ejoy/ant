@@ -98,7 +98,7 @@ function m:entity_create()
     create_entity()
 end
 
-function m:update_world()
+function m:update_ecs()
     local destruct = world._destruct
     if #destruct > 0 then
         world._destruct = {}
@@ -107,6 +107,9 @@ function m:update_world()
         end
     end
     w:update()
+end
+
+function m:update_world()
     math3d.reset()
 end
 
