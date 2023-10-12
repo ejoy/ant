@@ -134,7 +134,7 @@ local function create_sm_entity(gid, indices)
         data = {
             scene         = {},
             simplemesh    = MERGE_MESH,
-            material      = "/pkg/ant.landform/assets/materials/pbr_sm.material", 
+            material      = "/pkg/ant.landform/assets/materials/mountain.material", 
             visible_state = "main_view|cast_shadow",
             stonemountain = {
                 mesh_indices_buffer = mesh_indices_buffer,
