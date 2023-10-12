@@ -662,9 +662,9 @@ function CMD.GET(id, fullpath)
 	end
 end
 
-function CMD.RESOURCE_SETTING(id, ext, setting)
---	print("[request] RESOURCE_SETTING", ext, setting)
-	request_send("RESOURCE_SETTING", ext, setting)
+function CMD.RESOURCE_SETTING(id, setting)
+--	print("[request] RESOURCE_SETTING", setting)
+	request_send("RESOURCE_SETTING", setting)
 	response_id(id)
 end
 

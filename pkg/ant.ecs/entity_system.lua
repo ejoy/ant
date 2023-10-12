@@ -39,18 +39,6 @@ function m:data_changed()
     end
 end
 
-function m:prefab_remove()
-    for _, instance in evOnRemoveInstance:unpack() do
-        instance.REMOVED = true
-        if instance.proxy then
-            w:remove(instance.proxy)
-        end
-        for _, entity in ipairs(instance.tag["*"]) do
-            w:remove(entity)
-        end
-    end
-end
-
 local function create_prefab()
     local queue = world._create_prefab_queue
     if #queue == 0 then
@@ -93,12 +81,28 @@ local function create_entity()
     PipelineEntityInit()
     w:clear "INIT"
 end
-function m:entity_create()
-    create_prefab()
-    create_entity()
-end
 
-function m:update_world()
+function m:frame_finish()
+    --step1. Remove prefab
+    for _, instance in evOnRemoveInstance:unpack() do
+        instance.REMOVED = true
+        if instance.proxy then
+            w:remove(instance.proxy)
+        end
+        for _, entity in ipairs(instance.tag["*"]) do
+            w:remove(entity)
+        end
+    end
+
+    --step2. Destroy entity
+    if w:check "REMOVED" then
+        PipelineEntityRemove()
+        for name, func in pairs(MethodRemove) do
+            for v in w:select("REMOVED "..name..":in") do
+                func(v[name])
+            end
+        end
+    end
     local destruct = world._destruct
     if #destruct > 0 then
         world._destruct = {}
@@ -106,7 +110,15 @@ function m:update_world()
             f(world)
         end
     end
+
+    --step3. Remove entity
     w:update()
+
+    --step4. Create entity
+    create_prefab()
+    create_entity()
+
+    --step5. reset math3d
     math3d.reset()
 end
 
@@ -125,17 +137,6 @@ function m:init()
         local f = func.remove
         if f and not emptyfunc(f) then
             MethodRemove[name] = f
-        end
-    end
-end
-
-function m:entity_destory()
-    if w:check "REMOVED" then
-        PipelineEntityRemove()
-        for name, func in pairs(MethodRemove) do
-            for v in w:select("REMOVED "..name..":in") do
-                func(v[name])
-            end
         end
     end
 end

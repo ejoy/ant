@@ -14,7 +14,8 @@ local ServiceEditor = ltask.uniqueservice "s|editor"
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
-local ServiceCompile = ltask.uniqueservice("ant.compile_resource|compile", REPOPATH)
+local ServiceCompileMgr = ltask.uniqueservice("s|compilemgr", REPOPATH)
+local ServiceCompile
 
 local LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE")
 local LoggerQueue = {}
@@ -169,6 +170,10 @@ function message.ROOT()
 	response("ROOT", roothash)
 end
 
+function message.RESOURCE_SETTING(setting)
+	ServiceCompile = ltask.call(ServiceCompileMgr, "spawn", setting)
+end
+
 function message.RESOURCE(path)
 	local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE", path)
 	if not ok then
@@ -182,10 +187,6 @@ function message.RESOURCE(path)
 	end
 	local hash = ltask.call(ServiceVfsMgr, "BUILD", lpath)
 	response("RESOURCE", path, hash)
-end
-
-function message.RESOURCE_SETTING(ext, setting)
-	ltask.call(ServiceCompile, "SETTING", ext, setting)
 end
 
 function message.GET(hash)

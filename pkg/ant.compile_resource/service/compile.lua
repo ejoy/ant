@@ -15,8 +15,8 @@ function S.COMPILE(path)
     return cr.compile_file(vfs.realpath(path))
 end
 
-function S.SETTING(ext, setting)
-    cr.set_setting(ext, setting)
+function S.SETTING(setting)
+    cr.set_setting(setting)
 end
 
 return S

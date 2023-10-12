@@ -251,6 +251,8 @@ function m.update(timeout)
             if willclose[fd] then
                 close(fd)
             end
+        elseif n == false then
+            --nothing to do
         else
             write[fd] = write[fd]:sub(n + 1)
             if write[fd] == '' then

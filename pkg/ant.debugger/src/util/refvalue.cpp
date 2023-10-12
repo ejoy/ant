@@ -314,7 +314,7 @@ namespace luadebug::refvalue {
     bool assign(value* v, lua_State* hL) {
         int top = lua_gettop(hL);
         bool ok = visit([hL, v](auto&& arg) { return assign(arg, hL, v + 1); }, *v);
-        lua_settop(hL, top - 1);
+        lua_settop(hL, top - 2);
         return ok;
     }
 
