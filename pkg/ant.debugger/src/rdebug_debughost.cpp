@@ -6,10 +6,10 @@
 #include "rdebug_lua.h"
 
 #if defined(_WIN32)
-#   include "rdebug_win32.h"
-#   if !defined(LUADBG_DISABLE)
-#       include <bee/platform/win/unicode.h>
-#   endif
+#    include "rdebug_win32.h"
+#    if !defined(LUADBG_DISABLE)
+#        include <bee/platform/win/unicode.h>
+#    endif
 #endif
 
 static int DEBUG_HOST   = 0;

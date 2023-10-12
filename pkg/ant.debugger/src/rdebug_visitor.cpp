@@ -466,6 +466,10 @@ namespace luadebug::visitor {
         if (copy_from_dbg(L, hL, area, 1) == LUADBG_TNONE) {
             return 0;
         }
+        if (copy_from_dbg(L, hL, area, 2) == LUADBG_TNONE) {
+            lua_pop(hL, 1);
+            return 0;
+        }
         refvalue::value* ref = (refvalue::value*)luadbg_touserdata(L, 1);
         luadbg_pushboolean(L, refvalue::assign(ref, hL));
         return 1;
