@@ -8,6 +8,7 @@ local lfs       = require "bee.filesystem"
 local hierarchy     = require "hierarchy_edit"
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
+local math3d    = require "math3d"
 local DaynightView = {}
 local function check_relative_path(path, basepath)
     if path:is_relative() then
@@ -23,16 +24,17 @@ end
 
 local function save_prefab(eid, path)
     local e <close> = world:entity(eid, "daynight?in")
-    local dn = {}
-    for tn, t in pairs(e.daynight) do
-        if (not tn:match("direction")) and (not tn:match("rotate_normal")) then
-            dn[tn] = t
+    local dn = {raw = {}, path = e.daynight.path}
+    for tn, t in pairs(e.daynight.rt) do
+        local tt = {}
+        for _, pt in ipairs(t) do
+            tt[#tt+1] = {time = pt.time, value = math3d.tovalue(pt.value)}
         end
+        dn.raw[tn] = tt
     end
     local info = hierarchy:get_node_info(eid)
     local t = info.template
     t.data.daynight = dn
-    dn.path = idn.get_current_path()
     local lpp = path:parent_path():localpath()
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
@@ -81,40 +83,46 @@ function DaynightView:_init()
 end
 
 local pn_label = {
-    direct  = {label_upper = "Direct",  label_add = "Add Color",   label_del = "Del Color",   default_property = {time = 1, value = {1, 1, 1, 1}}},
-    ambient = {label_upper = "Ambient", label_add = "Add Color",   label_del = "Del Color",   default_property = {time = 1, value = {1, 1, 1}}},
-    rotator = {label_upper = "Rotator", label_add = "Add Rotator", label_del = "Del Rotator", default_property = {time = 1, value = {0, 0, 1}}},
+    direct  = {label_upper = "Direct",  label_add = "Add Color",   label_del = "Del Color",   default_property = {time = 1, value = math3d.mark(math3d.vector(1, 1, 1, 1))}},
+    ambient = {label_upper = "Ambient", label_add = "Add Color",   label_del = "Del Color",   default_property = {time = 1, value = math3d.mark(math3d.vector(1, 1, 1))}},
+    rotator = {label_upper = "Rotator", label_add = "Add Rotator", label_del = "Del Rotator", default_property = {time = 1, value = math3d.mark(math3d.torotation(math3d.vector(0, 0, 1)))}},
 }
 
 -- pn: direct ambient rotator
 -- t : time value
 local function get_getter(pn, i, t, e)
     return function()
-        local dn = e.daynight
-        if t:match("color") then
-            return {dn[pn][i]["value"][1], dn[pn][i]["value"][2], dn[pn][i]["value"][3]}
-        elseif t:match("intensity") then
-            return dn[pn][i]["value"][4]
-        elseif t:match("direction") then
-            return dn[pn][i]["value"]
-        elseif t:match("time") then
-            return dn[pn][i]["time"]
+        local dn_rt = e.daynight.rt
+        if t:match "color" then
+            local c1, c2, c3 = math3d.index(dn_rt[pn][i].value, 1, 2, 3)
+            return {c1, c2, c3}
+        elseif t:match "intensity" then
+            return math3d.index(dn_rt[pn][i].value, 4)
+        elseif t:match "direction" then
+            local dx, dy, dz = math3d.index(math3d.todirection(dn_rt[pn][i].value), 1, 2, 3)
+            return {dx, dy, dz}
+        elseif t:match "time" then
+            return dn_rt[pn][i].time
         end
     end
 end
 
 local function get_setter(pn, i, t, e)
     return function (value)
-        local dn = e.daynight
-
+        local dn_rt = e.daynight.rt
         if t:match("color") then
-            dn[pn][i]["value"][1], dn[pn][i]["value"][2], dn[pn][i]["value"][3] = value[1], value[2], value[3]
+            for ii = 1, 3 do
+                math3d.unmark(dn_rt[pn][i].value)
+                dn_rt[pn][i].value = math3d.mark(math3d.set_index(dn_rt[pn][i].value, ii, value[ii]))
+            end
         elseif t:match("intensity") then
-            dn[pn][i]["value"][4] = value
+            math3d.unmark(dn_rt[pn][i].value)
+            dn_rt[pn][i].value = math3d.mark(math3d.set_index(dn_rt[pn][i].value, 4, value))
         elseif t:match("direction") then
-            dn[pn][i]["value"] = value
+            math3d.unmark(dn_rt[pn][i].value)
+            dn_rt[pn][i].value = math3d.mark(math3d.torotation(math3d.vector(value)))
         elseif t:match("time") then
-            dn[pn][i]["time"] = value
+            dn_rt[pn][i].time = value
         end
     end
 end
@@ -156,8 +164,8 @@ function DaynightView:get_add_click(pn, e)
         local default_property = pn_label[pn].default_property
         local update_result = idn.add_property_cycle(e, pn, default_property)
         if not update_result then return end
-        local dn = e.daynight
-        local p = dn[pn]
+        local dn_rt = e.daynight.rt
+        local p = dn_rt[pn]
         local subproperty = self[pn].subproperty
         local i = #p
         DaynightView:add_subsubproperty(subproperty, i, pn, e)
@@ -184,13 +192,11 @@ function DaynightView:get_subproperty(e, pn, p)
     return subproperty
 end
 
-function DaynightView:get_daynight_cycles(info, e)
+function DaynightView:get_daynight_cycles(e)
     local property_array = {
         [1] = self.save,
     }
-    local dn = info.template.data.daynight
-    dn.path = nil
-    for pn, p in pairs(dn) do
+    for pn, p in pairs(e.daynight.rt) do
         property_array[#property_array+1] = self[pn]
         local subproperty = DaynightView:get_subproperty(e, pn, p)
         property_array[#property_array]:set_subproperty(subproperty)
@@ -208,10 +214,9 @@ function DaynightView:set_eid(eid)
     end
     local e <close> = world:entity(eid, "daynight?update")
     if e.daynight then
-        local info = hierarchy:get_node_info(eid)
-        local property_array = DaynightView:get_daynight_cycles(info, e)
+        local property_array = DaynightView:get_daynight_cycles(e)
         self.daynight:set_subproperty(property_array)
-        self.prefab = idn.get_current_path()
+        self.prefab = e.daynight.path
     else
         self.eid = nil
         return

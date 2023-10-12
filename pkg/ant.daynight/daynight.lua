@@ -10,7 +10,6 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local dn_sys = ecs.system "daynight_system"
 local default_intensity = ilight.default_intensity "directional"
-local cached_data_table = {}
 
 local function binary_search(list, t)
     local from, to = 1, #list
@@ -46,60 +45,47 @@ local function lerp(list, tick, lerp_function)
     end
 end
 
-
-
-local function reserve_data(dn)
-    local dl = w:first "directional_light light:in scene:in"
-    if dl then
-        cached_data_table.directional_color = math3d.mark(math3d.vector(dl.light.color))
-        cached_data_table.directional_intensity = dl.light.intensity
+local function build_daynight_runtime(dne)
+    local daynight = dne.daynight
+    local daynight_raw, daynight_rt = daynight.raw, {}
+    for pn, pt in pairs(daynight_raw) do
+        local tt = {}
+        for _, v in ipairs(pt) do
+            if pn:match "rotator" then
+                tt[#tt+1] = {time = v.time, value = math3d.mark(math3d.quaternion(v.value))}
+            else
+                tt[#tt+1] = {time = v.time, value = math3d.mark(math3d.vector(v.value))}
+            end
+        end
+        daynight_rt[pn] = tt
     end
-    cached_data_table.path = dn.path
-    dn.path = nil
-end
-
-local function restore_data()
-    local dl = w:first "directional_light light:in scene:in"
-    if dl then
-        local dl_color = cached_data_table.directional_color
-        ilight.set_color_rgb(dl, math3d.index(dl_color, 1, 2, 3))
-        ilight.set_intensity(dl, cached_data_table.directional_intensity)
-        math3d.unmark(dl_color)
-    end
-    cached_data_table.path = nil
+    daynight.rt = daynight_rt
 end
 
 function dn_sys:entity_init()
-    for dne in w:select "INIT daynight:update" do
-        reserve_data(dne.daynight)
-    end 
+    for dne in w:select "INIT daynight:update daynight_changed?out" do
+        dne.daynight_changed = true
+    end
+
+    for dne in w:select "daynight_changed:update daynight:update" do
+        build_daynight_runtime(dne)
+        dne.daynight_changed = nil
+    end
 end
 
 function dn_sys:entity_remove()
-    for dne in w:select "REMOVED daynight:in" do
-        restore_data(dne.daynight)
-    end
-end
-
-local function get_list(pn, pt)
-    local list = {}
-    for i = 1, #pt do
-        if pn:match("rotator") then
-            list[#list+1] = {time = pt[i].time, value = math3d.torotation(math3d.vector(pt[i].value))}
-        else
-            list[#list+1] = {time = pt[i].time, value = math3d.vector(pt[i].value)}
-        end
-    end
-    return list
 end
 
 local idn = {}
 
 function idn.update_cycle(e, cycle)
     local lerp_table = {}
-    for pn, pt in pairs(e.daynight) do
-        local list = get_list(pn, pt)
-        lerp_table[pn] = lerp(list, cycle, math3d.lerp)
+    for pn, pt in pairs(e.daynight.rt) do
+        if pn:match("rotator") then
+            lerp_table[pn] = lerp(pt, cycle, math3d.slerp)
+        else
+            lerp_table[pn] = lerp(pt, cycle, math3d.lerp) 
+        end
     end
     local direct, ambient, rotator = lerp_table["direct"], lerp_table["ambient"], lerp_table["rotator"]
     local dl = w:first "directional_light light:in scene:in"
@@ -107,7 +93,6 @@ function idn.update_cycle(e, cycle)
         local r, g, b, intensity = math3d.index(direct, 1, 2, 3, 4)
         ilight.set_color_rgb(dl, r, g, b)
         ilight.set_intensity(dl, intensity * default_intensity)
-
         iom.set_direction(dl, math3d.todirection(rotator))
         w:submit(dl)        
     end
@@ -115,8 +100,8 @@ function idn.update_cycle(e, cycle)
 end
 
 function idn.add_property_cycle(e, pn, p)
-    local dn = e.daynight
-    local current_property = dn[pn]
+    local dn_rt = e.daynight.rt
+    local current_property = dn_rt[pn]
     local current_number = #current_property
     if current_number >= 6 then return end -- property_number <= 5
 
@@ -125,18 +110,14 @@ function idn.add_property_cycle(e, pn, p)
 end
 
 function idn.delete_property_cycle(e, pn)
-    local dn = e.daynight
-    local current_property = dn[pn]
+    local dn_rt = e.daynight.rt
+    local current_property = dn_rt[pn]
     local current_number = #current_property
 
     if current_number <= 2 then return end -- property_number >= 2
 
     table.remove(current_property, current_number)
     return true
-end
-
-function idn.get_current_path()
-    return cached_data_table.path
 end
 
 return idn

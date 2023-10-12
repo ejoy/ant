@@ -2,6 +2,7 @@ system "daynight_system"
     .implement "daynight.lua"
 
 component "daynight".type "lua"
+component "daynight_changed"
 
 policy "daynight"
     .component "daynight"
