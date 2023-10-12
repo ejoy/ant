@@ -44,6 +44,7 @@ return function (ev)
         ev.gesture("longpress", {
             x = downX,
             y = downY,
+			state = "begin",
         })
     end
 
@@ -60,6 +61,11 @@ return function (ev)
     end
     local function mouse_move(x, y)
         if inLongPress then
+			ev.gesture("longpress", {
+				x = downX,
+				y = downY,
+				state = "changed",
+			})
             return
         end
         if not lastX then
@@ -119,6 +125,11 @@ return function (ev)
     local function mouse_up(x, y)
         if inLongPress then
             inLongPress = false
+			ev.gesture("longpress", {
+				x = downX,
+				y = downY,
+				state = "ended",
+			})
         elseif alwaysInTapRegion then
             ev.gesture("tap", {
                 x = x,
