@@ -1,6 +1,3 @@
-local fastio = require "fastio"
-local vfs = require "vfs"
-
 local attribute = {
 	system = {
 		"implement",

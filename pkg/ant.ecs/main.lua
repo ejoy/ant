@@ -174,6 +174,9 @@ local function each_prefab(entities, template, f)
 end
 
 function world:_prefab_instance(v)
+    if v.REMOVED then
+        return
+    end
     local w = self
     local template = create_template(w, v.args.prefab)
     local prefab, noparent = create_instance(w, v.args.group, template, v.debuginfo)
