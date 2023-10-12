@@ -1,5 +1,5 @@
 fx:
-  cs: /pkg/ant.resources/shaders/drawindirect/cs_mountain.sc
+  cs: /pkg/ant.landform/assets/materials/shaders/cs_mountain.sc
   setting:
     lighting: off
 properties:
