@@ -1,6 +1,6 @@
 local function createBootstrap()
     return [=[
-        package.path = "/pkg/ant.debugger/script/?.lua;engine/?.lua"
+        package.path = "/pkg/ant.debugger/script/?.lua"
         function package.readfile(filename)
             local vfs = require 'vfs'
             local vpath = assert(package.searchpath(filename, package.path))
@@ -31,7 +31,7 @@ function dbg:start()
     end
     local bootstrap_lua = createBootstrap()
     rdebug.start(("assert(load(%q))(...)"):format(bootstrap_lua) .. [[
-        local directory = require "directory"
+        local directory = dofile "engine/directory.lua"
         local fs = require "bee.filesystem"
         local logpath = directory.log_path():string()
         fs.create_directories(logpath)
@@ -47,7 +47,7 @@ function dbg:attach()
     local bootstrap_lua = createBootstrap()
     rdebug.start(("assert(load(%q))(...)"):format(bootstrap_lua) .. [[
         if require 'backend.master' .has() then
-            local directory = require "directory"
+            local directory = dofile "engine/directory.lua"
             local fs = require "bee.filesystem"
             local logpath = directory.log_path():string()
             local log = require 'common.log'
