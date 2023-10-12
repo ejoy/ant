@@ -2,6 +2,7 @@ local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
 local fs = require "bee.filesystem"
+local serialization = require "bee.serialization"
 
 local FD = ...
 
@@ -35,7 +36,7 @@ end)
 
 
 local function response(...)
-	socket.send(FD, protocol.packmessage({...}))
+	socket.send(FD, string.pack("<s2", serialization.packstring(...)))
 end
 
 local function response_ex(tunnel_name, port, session, req)
@@ -246,9 +247,20 @@ local ignore_log = {
 	TUNNEL_RESP = true,
 }
 
+local function dispatch_netmsg(cmd, ...)
+	local f = message[cmd]
+	if f then
+		if not ignore_log[cmd] then
+			print(cmd, ...)
+		end
+		f(...)
+	else
+		error(cmd)
+	end
+end
+
 local function dispatch(fd)
 	local reading_queue = {}
-	local output = {}
 	while true do
 		local reading = socket.recv(fd)
 		if reading == nil then
@@ -256,19 +268,11 @@ local function dispatch(fd)
 		end
 		table.insert(reading_queue, reading)
 		while true do
-			local msg = protocol.readmessage(reading_queue, output)
+			local msg = protocol.readchunk(reading_queue)
 			if msg == nil then
 				break
 			end
-			local f = message[msg[1]]
-			if f then
-				if not ignore_log[msg[1]] then
-					print(table.unpack(msg))
-				end
-				f(table.unpack(msg, 2))
-			else
-				error(msg[1])
-			end
+			dispatch_netmsg(serialization.unpack(msg))
 		end
 	end
 end
