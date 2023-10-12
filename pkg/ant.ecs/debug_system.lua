@@ -4,10 +4,6 @@ local m = ecs.system "debug_system"
 
 local dbg = debug.getregistry()["lua-debug"]
 if not dbg then
-    function m:init()
-    end
-    function m:update_world()
-    end
     return
 end
 
@@ -98,7 +94,7 @@ local function DiffEntity()
     writefile("./entity_del.txt", diff_del)
 end
 
-function m:update_world()
+function m:end_frame()
     for _, what, press in evKeyboard:unpack() do
         if press == 1 then
             if what == "OEM_4" then
