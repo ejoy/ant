@@ -160,9 +160,8 @@ scene_changed(lua_State *L) {
 	return 0;
 }
 
-// TODO: change stage name
 static int
-prefab_remove(lua_State *L) {
+end_frame(lua_State *L) {
 	auto w = getworld(L);
 	ecs_api::clear_type<ecs::scene_changed>(w->ecs);
 	return 0;
@@ -212,7 +211,7 @@ luaopen_system_scene(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "entity_init", entity_init },
 		{ "scene_changed", scene_changed },
-		{ "prefab_remove", prefab_remove },
+		{ "end_frame", end_frame },
 		{ "scene_remove", scene_remove },
 		{ "bounding_update", bounding_update},
 		{ NULL, NULL },
