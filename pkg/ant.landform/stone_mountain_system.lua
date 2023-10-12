@@ -161,7 +161,7 @@ local function create_sm_entity(gid, indices)
             "ant.render|compute_policy",
         },
         data = {
-            material = "/pkg/ant.landform/assets/materials/mountain.material",
+            material = "/pkg/ant.landform/assets/materials/mountain_compute.material",
             dispatch    = {
                 size    = {((drawnum+63)//64), 1, 1},
             },
