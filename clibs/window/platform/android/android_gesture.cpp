@@ -71,6 +71,7 @@ void android_gesture::onTap(android_app* app, float x, float y) {
 void android_gesture::onLongPress(android_app* app, float x, float y) {
     struct ant::window::msg msg;
     msg.type = ant::window::msg_type::gesture_longpress;
+    msg.state = 0; //TODO
     msg.longpress.x = x;
     msg.longpress.y = y;
     queue_push(msg);
