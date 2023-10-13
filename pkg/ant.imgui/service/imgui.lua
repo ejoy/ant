@@ -214,9 +214,7 @@ function S.wait()
 end
 
 --TODO
-function S.mouse()
-end
-function S.touch()
+function S.msg()
 end
 
 return S

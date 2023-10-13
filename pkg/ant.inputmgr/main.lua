@@ -9,19 +9,47 @@ end
 local function create(world, type)
     local keymap = require(type.."_keymap")
     local ev = {}
+    local active_gesture = {}
+    local function rmlui_sendmsg(...)
+        return ltask.call(ServiceRmlui, ...)
+    end
+    local function world_sendmsg(...)
+        world:pub {...}
+    end
+    function ev.gesture(what, data)
+        local active = active_gesture[what]
+        if active then
+            if active == "world" then
+                world_sendmsg("gesture", what, data)
+            else
+                rmlui_sendmsg("gesture", what, data)
+            end
+            if data.state == "ended" then
+                active_gesture[what] = nil
+            end
+        elseif data.state == "began" then
+            if ServiceRmlui then
+                if rmlui_sendmsg("gesture", what, data) then
+                    active_gesture[what] = "rmlui"
+                    return
+                end
+            end
+            world_sendmsg("gesture", what, data)
+            active_gesture[what] = "world"
+        else
+            assert(data.state == nil)
+            if ServiceRmlui then
+                if rmlui_sendmsg("gesture", what, data) then
+                    return
+                end
+            end
+            world_sendmsg("gesture", what, data)
+        end
+    end
     function ev.touch(...)
         if ServiceRmlui then
             ltask.call(ServiceRmlui, "touch", ...)
         end
-        world:pub {"touch", ...}
-    end
-    function ev.gesture(...)
-        if ServiceRmlui then
-            if ltask.call(ServiceRmlui, "gesture", ...) then
-                return
-            end
-        end
-        world:pub {"gesture", ...}
     end
     function ev.keyboard(key, press, state)
         world:pub {"keyboard", keymap[key], press, {
