@@ -803,7 +803,7 @@ lcvt2file(lua_State *L){
 
     auto ic = bimg::imageParse(&defaultAllocator, memory.data(), (uint32_t)memory.size(), bimg::getFormat(src_datafmt), &err);
     if (!ic){
-        luaL_error(L, "Parse image file failed:%s", err.getMessage());
+        luaL_error(L, "Parse image file failed:%s", err.getMessage().getPtr());
     }
     bx::MemoryBlock mb(&defaultAllocator);
     if (0 == write2memory(L, mb, ic, fmt)){
