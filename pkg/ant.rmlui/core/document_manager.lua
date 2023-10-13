@@ -162,6 +162,7 @@ function gesture.longpress(ev)
     local doc, e = fromPoint(x, y)
     if e then
         eventListener.dispatch(doc, e, "longpress", {
+            state = ev.state,
             x = x,
             y = y,
         })
