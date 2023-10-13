@@ -55,37 +55,6 @@ function sm_sys:init()
     })
 end
 
-local function idx2coord(idx, stride)
-    -- base 1
-    assert(idx > 0, "Invalid idx, it's base 1")
-    local idxbase0 = idx - 1
-    return (idxbase0 % stride)+1, (idxbase0 // stride)+1
-end
-
-local function coord2idx(x, y, stride)
-    -- base 1
-    assert(x > 0 and y > 0, "Invalid x or y, it's base 1")
-    return (y - 1) * stride + x
-end
-
-local DEBUG_COORD_IDX<const> = false
-if DEBUG_COORD_IDX then
-    local stride = 256
-
-    local function coord_idx_test(idx, checkx, checky)
-        local x, y = idx2coord(idx, stride)
-        assert(x == checkx and y == checky)
-
-        local idx1 = coord2idx(x, y, stride)
-        assert(idx1 == idx)
-    end
-
-    coord_idx_test(1, 1, 1)
-    coord_idx_test(256, 256, 1)
-    coord_idx_test(257, 1, 2)
-
-end
-
 local NEW_MOUNTAIN_TYPE<const> = math3d.ref(math3d.vector(3, 0, 0, 0))
 
 local function create_sm_entity(gid, indices)
@@ -225,8 +194,5 @@ function ism.create(groups)
         create_sm_entity(gid, indices)
     end
 end
-
-ism.idx2coord = idx2coord
-ism.coord2idx = coord2idx
 
 return ism
