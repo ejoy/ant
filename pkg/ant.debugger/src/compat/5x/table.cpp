@@ -13,7 +13,7 @@ namespace luadebug::table {
 
     template <typename T>
     StkId& LUA_STKID(T& s) {
-#if defined(LUA_VERSION_LATEST)
+#if LUA_VERSION_NUM >= 504
         return s.p;
 #else
         return s;
