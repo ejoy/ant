@@ -69,8 +69,13 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     ant::window::input_message(g_cb, msg);
 }
 -(void)handleLongPress:(UILongPressGestureRecognizer *)gesture {
+    int state = getState(gesture.state);
+    if (state < 0) {
+        return;
+    }
     auto pt = getLocationInView(gesture);
     struct ant::window::msg_gesture_longpress msg;
+    msg.state = getState(gesture.state);
     msg.x = pt.x;
     msg.y = pt.y;
     ant::window::input_message(g_cb, msg);

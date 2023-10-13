@@ -132,7 +132,12 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress 
 	lua_settop(L, 1);
 	lua_pushstring(L, "gesture");
 	lua_pushstring(L, "longpress");
-	lua_createtable(L, 0, 2);
+	lua_createtable(L, 0, 3);
+	switch (gesture.state) {
+	case 0: lua_pushstring(L, "began"); break;
+	case 1: lua_pushstring(L, "changed"); break;
+	default: case 2: lua_pushstring(L, "ended"); break;
+	}
 	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
 	lua_setfield(L, -2, "x");
 	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));

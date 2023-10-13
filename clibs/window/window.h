@@ -89,6 +89,7 @@ namespace ant::window {
 		float velocity;
 	};
 	struct msg_gesture_longpress {
+		int state;
 		float x;
 		float y;
 	};
