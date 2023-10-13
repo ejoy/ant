@@ -40,12 +40,14 @@ return function (ev)
     local longPressTimeout <const> = 400
 
     local function dispatch_longpress()
+        ltask.call(ltask.self(), "msg", {{
+            "gesture", "longpress", {
+                x = downX,
+                y = downY,
+                state = "began",
+            }
+        }})
         inLongPress = true
-        ev.gesture("longpress", {
-            x = downX,
-            y = downY,
-			state = "began",
-        })
     end
 
     local function mouse_down(x, y)
