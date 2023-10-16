@@ -246,10 +246,12 @@ end
 function world:instance_set_parent(instance, parent)
     local w = self
     for _, eid in ipairs(instance.noparent) do
-        local e <close> = w:entity(eid, "scene:update scene_needchange?out")
+        local e <close> = w:entity(eid, "scene?update scene_needchange?out")
         assert(eid > parent)
-        e.scene.parent = parent
-        e.scene_needchange = true
+        if e.scene then
+            e.scene.parent = parent
+            e.scene_needchange = true
+        end
     end
 end
 
