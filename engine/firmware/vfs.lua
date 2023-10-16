@@ -31,7 +31,7 @@ local function update_history(self, new)
 	return history
 end
 
-local function root_hash(self)
+function vfs:history_root()
 	local f = io.open(self.path .. "root", "rb")
 	if f then
 		local hash = f:read "l"
@@ -40,22 +40,13 @@ local function root_hash(self)
 	end
 end
 
-function vfs.new(repopath, hash)
+function vfs.new(repopath)
 	local repo = {
 		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
 		cache = {},--setmetatable( {} , { __mode = "kv" } ),
 		root = nil,
 	}
 	setmetatable(repo, vfs)
-	if hash then
-		repo:updatehistory(hash)
-		repo:changeroot(hash)
-	else
-		hash = root_hash(repo)
-		if hash then
-			repo:changeroot(hash)
-		end
-	end
 	return repo
 end
 
@@ -196,19 +187,38 @@ function vfs:updatehistory(hash)
 	f:write(table.concat(history, "\n"))
 end
 
-function vfs:changeroot(hash)
-	self.root = hash
-	self.resource = {}
-	local path = self:hashpath(hash)..".resource"
-	local f <close> = io.open(path, "rb")
-	if f then
-		for line in f:lines() do
-			local hash, name = line:match "([%da-f]+) (.*)"
-			if hash then
-				self.resource[name] = hash
+function vfs:load_resource()
+	local rebuild = false
+	local path = self:hashpath(self.root)..".resource"
+	do
+		local f <close> = io.open(path, "rb")
+		if f then
+			for line in f:lines() do
+				local hash, name = line:match "([%da-f]+) (.*)"
+				if hash then
+					if self.resource[name] then
+						if self.resource[name] ~= hash then
+							rebuild = true
+							self.resource[name] = hash
+						end
+					else
+						self.resource[name] = hash
+					end
+				end
 			end
 		end
 	end
+	if rebuild then
+		local f <close> = assert(io.open(path, "wb"))
+		for hash, name in pairs(self.resource) do
+			f:write(("%s %s\n"):format(hash, name))
+		end
+	end
+end
+
+function vfs:changeroot(hash)
+	self.root = hash
+	self.resource = {}
 end
 
 function vfs:get_resource(name)
@@ -216,19 +226,13 @@ function vfs:get_resource(name)
 end
 
 function vfs:add_resource(name, hash)
+	if self.resource[name] == hash then
+		return
+	end
 	self.resource[name] = hash
 	local path = self:hashpath(self.root)..".resource"
 	local f <close> = assert(io.open(path, "ab"))
 	f:write(("%s %s\n"):format(hash, name))
-end
-
-function vfs:set_resource(data)
-	self.resource = data
-	local path = self:hashpath(self.root)..".resource"
-	local f <close> = assert(io.open(path, "wb"))
-	for hash, name in pairs(self.resource) do
-		f:write(("%s %s\n"):format(hash, name))
-	end
 end
 
 function vfs:realpath(path)

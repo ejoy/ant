@@ -103,7 +103,7 @@ function vfs.type(path)
 	return call("TYPE", path)
 end
 function vfs.resource_setting(setting)
-	return call("RESOURCE_SETTING", setting)
+	return send("RESOURCE_SETTING", setting)
 end
 local rawsearchpath = package.searchpath
 package.searchpath = function(name, path, sep, dirsep)

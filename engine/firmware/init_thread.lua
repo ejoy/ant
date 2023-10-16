@@ -74,7 +74,7 @@ function vfs.switch()
 end
 
 function vfs.resource_setting(setting)
-	return call("RESOURCE_SETTING", setting)
+	return send("RESOURCE_SETTING", setting)
 end
 
 if not __ANT_RUNTIME__ then

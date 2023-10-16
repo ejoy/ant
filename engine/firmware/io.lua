@@ -25,8 +25,6 @@ local config, fddata = io_req:bpop()
 local QUIT = false
 local OFFLINE = false
 
-local TOKEN_RESOURCE_SETTING <const> = {}
-
 local _print = _G.print
 if platform.os == 'android' then
 	local android = require "android"
@@ -39,7 +37,8 @@ local channelfd = fddata and socket.fd(fddata) or nil
 
 thread.setname "ant - IO thread"
 
-local repo
+local vfs = assert(fw.loadfile "vfs.lua")()
+local repo = vfs.new(config.repopath)
 
 local connection = {
 	request = {},
@@ -84,25 +83,6 @@ local function init_channels()
 			_print(text)
 		else
 			connection_send("LOG", text)
-		end
-	end
-end
-
-local function init_repo(hash)
-	if hash then
-		if repo then
-			repo:updatehistory(hash)
-			repo:changeroot(hash)
-		else
-			local vfs = assert(fw.loadfile "vfs.lua")()
-			repo = vfs.new(config.repopath, hash)
-		end
-	else
-		if repo then
-			--do nothing
-		else
-			local vfs = assert(fw.loadfile "vfs.lua")()
-			repo = vfs.new(config.repopath)
 		end
 	end
 end
@@ -346,7 +326,8 @@ function response.ROOT(hash)
 		return
 	end
 	print("[response] ROOT", hash)
-	init_repo(hash)
+	repo:updatehistory(hash)
+	repo:changeroot(hash)
 end
 
 -- REMARK: Main thread may reading the file while writing, if file server update file.
@@ -380,12 +361,6 @@ function response.RESOURCE(fullpath, hash)
 	print("[response] RESOURCE", fullpath, hash)
 	repo:add_resource(fullpath, hash)
 	request_resolve(fullpath)
-end
-
-function response.RESOURCE_SETTING(data)
-	print("[response] RESOURCE_SETTING")
-	repo:set_resource(data)
-	request_resolve(TOKEN_RESOURCE_SETTING)
 end
 
 function response.FETCH(path, hashs)
@@ -680,17 +655,9 @@ function CMD.GET(id, fullpath)
 	end
 end
 
-function CMD.RESOURCE_SETTING(id, setting)
+function CMD.RESOURCE_SETTING(_, setting)
 --	print("[request] RESOURCE_SETTING", setting)
-	request_start_with_token("RESOURCE_SETTING", setting, TOKEN_RESOURCE_SETTING, {
-		resolve = function ()
-			response_id(id)
-		end,
-		reject = function (_, err)
-			response_err(id, err)
-		end
-	})
-	response_id(id)
+	request_send("RESOURCE_SETTING", setting)
 end
 
 function CMD.SEND(_, ...)
@@ -923,7 +890,16 @@ local function main()
 		event_delw(connection.fd)
 		-- socket error or closed
 	end
-	init_repo()
+	if repo.root == nil then
+		local hash = repo:history_root()
+		if hash then
+			repo:changeroot(hash)
+			repo:load_resource()
+		else
+			error("No history root")
+			return
+		end
+	end
 	init_channelfd()
 	local uncomplete_req = {}
 	for hash in pairs(connection.request) do
