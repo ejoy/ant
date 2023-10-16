@@ -3,6 +3,12 @@ local fw = require "firmware"
 local path = os.getenv "LUA_DEBUG_PATH"
 if path then
 	local function load_dbg()
+		if path:match "debugger%.lua$" then
+			local f = assert(io.open(path))
+			local str = f:read "a"
+			f:close()
+			return assert(load(str, "=(debugger.lua)"))(path)
+		end
 		return assert(fw.loadfile "debugger.lua", "=(debugger.lua)")()
 	end
 	load_dbg()
