@@ -117,7 +117,7 @@ function S.init_world()
             end
         end
     end
-    iroad.update_roadnet_group(1000, create_list, "translucent")
+    iroad.update_roadnet(1000, create_list, "translucent")
 --[[     create_list = {}
     for _, shape in ipairs({"I", "L", "T", "U", "X", "O"}) do
         y = y + 40
@@ -134,7 +134,7 @@ function S.init_world()
             end
         end
     end
-    iroad.update_roadnet_group(1001, create_list, "translucent")  ]]
+    iroad.update_roadnet(1001, create_list, "translucent")  ]]
     
 --[[     local density = 0.9
     local width, height, offset, UNIT = 256+10, 256+10, 128+10/2, 10
@@ -220,7 +220,7 @@ function S:data_changed()
                     x = 60, y = 0 --leftbottom
                 }
             }
-            iroad.update_roadnet_group(0, create_list, "background")
+            iroad.update_roadnet(0, create_list, "background")
 --[[              local x, y = -5, -5
             for _, shape in ipairs({"I", "L", "T", "U", "X", "O"}) do
                 y = y + 2
@@ -281,7 +281,7 @@ function S:data_changed()
                     x = 20, y = 0 --leftbottom
                 },
             }
-            iroad.update_roadnet_group(0, create_list)
+            iroad.update_roadnet(0, create_list)
         elseif key == "L" and press == 0 then
 
             local rect = {x = 5, z = 5, w = 5, h = 5}

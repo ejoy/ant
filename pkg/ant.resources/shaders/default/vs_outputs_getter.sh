@@ -7,7 +7,7 @@
     v_texcoord1 = vs_output.uv1;
 #endif //USING_LIGHTMAP
 
-#ifdef WITH_COLOR_ATTRIB
+#if defined(WITH_COLOR_ATTRIB) || defined(WITH_CUSTOM_COLOR0_ATTRIB)
     v_color0= vs_output.color;
 #endif //WITH_COLOR_ATTRIB
 

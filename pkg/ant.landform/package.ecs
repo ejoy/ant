@@ -3,21 +3,20 @@ import_feature "ant.render"
 policy "shape_terrain"
     .component "shape_terrain"
 
-policy "road"
-    .component "road"
-
-policy "stonemountain_aabb"
-    .component "stonemountain_aabb"
-
 policy "stonemountain"
     .component "stonemountain"
 
 component "plane_terrain".type "lua"
 component "shape_terrain".type "lua"
-component "road".type "lua"
+
 component "breath".type "lua"
 component "stonemountain".type "lua"
-component "stonemountain_aabb".type "lua"
+
+component "road".type "lua"
+policy "road"
+    .component "road"
+
+component "road_indicator"
 
 system "plane_terrain_system"
     .implement "plane_terrain.lua"
