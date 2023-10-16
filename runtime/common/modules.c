@@ -42,7 +42,6 @@ int luaopen_ecs_core(lua_State* L);
 int luaopen_ecs_components(lua_State* L);
 int luaopen_ecs_util(lua_State* L);
 int luaopen_fastio(lua_State* L);
-int luaopen_fileinterface(lua_State *L);
 int luaopen_material_arena(lua_State *L);
 int luaopen_material_core(lua_State *L);
 int luaopen_render_material(lua_State *L);
@@ -99,7 +98,6 @@ void ant_loadmodules(lua_State* L) {
         { "programan.server", luaopen_programan_server },
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
-        { "fileinterface", luaopen_fileinterface },
         { "fmod", luaopen_fmod},
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
