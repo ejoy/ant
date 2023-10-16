@@ -3,7 +3,6 @@
 namespace Rml {
 
 class Plugin;
-class FileInterface;
 class RenderInterface;
 
 bool Initialise();
