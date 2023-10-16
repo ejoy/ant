@@ -2,9 +2,6 @@ local lm = require "luamake"
 
 local ROOT <const> = "../../"
 
-lm:import(ROOT.."clibs/font/make.lua")
-lm:import(ROOT.."clibs/luabind/build.lua")
-
 --lm.warnings = "error"
 
 lm:source_set "yoga" {
