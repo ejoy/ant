@@ -181,7 +181,7 @@ local function has_skin(gltfscene, status, nodeidx)
     end
 end
 
-local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, status, setting)
+local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local meshidx = node.mesh
@@ -342,10 +342,7 @@ local function serialize_prefab(status, data)
 end
 
 return function (status)
-    local input = status.input
-    local output = status.output
     local glbdata = status.glbdata
-    local setting = status.setting
     local math3d = status.math3d
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
@@ -384,7 +381,7 @@ return function (status)
         local node = gltfscene.nodes[nodeidx+1]
         local e
         if node.mesh then
-            e = create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, status, setting)
+            e = create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status)
         else
             e = create_node_entity(math3d, gltfscene, nodeidx, parent, status)
         end
