@@ -168,7 +168,9 @@ end
 function message.RESOURCE_SETTING(setting)
 	local s = ltask.call(ServiceVfsMgr, "RESOURCE_SETTING", setting)
 	CompileId = s.id
-	response("RESOURCE_SETTING", s.resource)
+	for path, hash in pairs(s.resource) do
+		response("RESOURCE", path, hash)
+	end
 end
 
 function message.RESOURCE(path)
