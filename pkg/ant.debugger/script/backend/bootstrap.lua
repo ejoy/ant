@@ -1,5 +1,7 @@
 local thread = require "bee.thread"
 
+local m = {}
+
 local function hasMaster()
     local ok = pcall(thread.channel, "DbgMaster")
     return ok
@@ -10,7 +12,8 @@ local function initMaster(logpath, address)
         return
     end
     thread.newchannel "DbgMaster"
-    local mt = thread.thread(thread.bootstrap_lua .. ([[
+    local mt = thread.thread(([[
+        package.path = %q
         local log = require "common.log"
         log.file = %q..'/master.log'
         local ok, err = xpcall(function()
@@ -22,7 +25,11 @@ local function initMaster(logpath, address)
         if not ok then
             log.error("ERROR:" .. err)
         end
-    ]]):format(logpath, address), thread.bootstrap_c)
+    ]]):format(
+        package.path,
+        logpath,
+        address
+    ))
     ExitGuard = setmetatable({}, {__gc=function()
         local c = thread.channel "DbgMaster"
         c:push(nil, "EXIT")
@@ -30,7 +37,21 @@ local function initMaster(logpath, address)
     end})
 end
 
-return {
-    init = initMaster,
-    has = hasMaster,
-}
+local function startWorker(logpath)
+    local log = require 'common.log'
+    log.file = logpath..'/worker.log'
+    require 'backend.worker'
+end
+
+function m.start(logpath, address)
+    initMaster(logpath, address)
+    startWorker(logpath)
+end
+
+function m.attach(logpath)
+    if hasMaster() then
+        startWorker(logpath)
+    end
+end
+
+return m
