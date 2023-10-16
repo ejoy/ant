@@ -374,6 +374,7 @@ local function create_road_entities(gid, render_layer, road, indicator)
             simplemesh = ROAD_MESH,
             draw_indirect = {
                 instance_buffer = {
+                    dynamic = true,
                     memory  = table.concat(indicator.instancebuffer, ""),
                     flag    = "r",
                     layout  = "t45NIf",

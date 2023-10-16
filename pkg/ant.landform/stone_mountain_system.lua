@@ -111,7 +111,6 @@ local function create_sm_entity(gid, indices)
             draw_indirect = {
                 instance_buffer = {
                     memory  = table.concat(memory, ""),
-                    flag    = "r",
                     layout  = "t45NIf|t46NIf|t47NIf",
                     num     = drawnum,
                 },

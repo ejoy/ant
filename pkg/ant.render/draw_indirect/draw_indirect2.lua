@@ -7,17 +7,43 @@ local di_sys = ecs.system "draw_indirect_system2"
 
 local layoutmgr = ecs.require "vertexlayout_mgr"
 
-function di_sys.component_init()
-    for e in w:select "INIT draw_indirect:in indirect_object:update" do
-        local di = e.draw_indirect
-        local ib = di.instance_buffer
-        ib.handle = bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
-        di.handle = bgfx.create_indirect_buffer(ib.num)
+local function create_instance_buffer(ib)
+    if ib.dynamic then
+        return bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
+    end
 
-        local io = e.indirect_object
-        io.itb_handle = ib.handle
-        io.idb_handle = di.handle
+    if ib.flag:match "[rw]" then
+        error "Invalid instance buffer flag"
+    end
+
+    return bgfx.create_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
+end
+
+local function check_create_draw_indircet_buffer(io, ib)
+    io.itb_handle = ib.handle
+
+    if io.draw_num ~= ib.num then
         io.draw_num = ib.num
+        io.idb_handle = bgfx.create_indirect_buffer(ib.num)
+    end
+    return io.idb_handle
+end
+
+local function update_instance_buffer(e)
+    local di = e.draw_indirect
+    local ib = di.instance_buffer
+    if ib.handle and ib.dynamic then
+        bgfx.update(ib.handle, 0, ib.memory)
+    else
+        ib.handle = create_instance_buffer(ib)
+    end
+
+    di.handle = check_create_draw_indircet_buffer(e.indirect_object, ib)
+end
+
+function di_sys.component_init()
+    for e in w:select "INIT draw_indirect:update indirect_object:update" do
+        update_instance_buffer(e)
     end
 end
 
@@ -39,3 +65,14 @@ function di_sys:entity_remove()
         io.draw_num = 0
     end
 end
+
+local idi = {}
+
+function idi.update_instance_buffer(e, instancememory, instancenum)
+    w:extend(e, "draw_indirect:update indirect_object:update")
+    local ib = e.draw_indirect.instance_buffer
+    ib.memory, ib.num   = instancememory, instancenum
+    update_instance_buffer(e)
+end
+
+return idi
