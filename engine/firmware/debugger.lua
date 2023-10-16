@@ -1,20 +1,3 @@
-local function createBootstrap()
-    return [=[
-        package.path = "/pkg/ant.debugger/script/?.lua"
-        function package.readfile(filename)
-            local vfs = require 'vfs'
-            local vpath = assert(package.searchpath(filename, package.path))
-            local lpath = assert(vfs.realpath(vpath))
-            local f = assert(io.open(lpath))
-            local str = f:read 'a'
-            f:close()
-            return str
-        end
-        local thread = require "bee.thread"
-        thread.bootstrap_lua = debug.getinfo(1, "S").source
-    ]=]
-end
-
 local rdebug = require "luadebug"
 
 local dbg = {}
@@ -29,32 +12,42 @@ function dbg:start()
         local path = vfs.realpath "/engine/firmware/debugger.lua"
         rdebug.setenv("LUA_DEBUG_PATH", path)
     end
-    local bootstrap_lua = createBootstrap()
-    rdebug.start(("assert(load(%q))(...)"):format(bootstrap_lua) .. [[
+    rdebug.start [[
+        package.path = "/pkg/ant.debugger/script/?.lua"
+        function package.readfile(filename)
+            local vfs = require 'vfs'
+            local vpath = assert(package.searchpath(filename, package.path))
+            local lpath = assert(vfs.realpath(vpath))
+            local f = assert(io.open(lpath))
+            local str = f:read 'a'
+            f:close()
+            return str
+        end
         local directory = dofile "engine/directory.lua"
         local fs = require "bee.filesystem"
         local logpath = directory.log_path():string()
-        fs.create_directories(logpath)
-        local log = require 'common.log'
-        log.file = logpath..'/worker.log'
-        require 'backend.master' .init(logpath, "4378")
-        require 'backend.worker'
-    ]])
+        require 'backend.bootstrap'. start(logpath, "4378")
+    ]]
     return self
 end
 
 function dbg:attach()
-    local bootstrap_lua = createBootstrap()
-    rdebug.start(("assert(load(%q))(...)"):format(bootstrap_lua) .. [[
-        if require 'backend.master' .has() then
-            local directory = dofile "engine/directory.lua"
-            local fs = require "bee.filesystem"
-            local logpath = directory.log_path():string()
-            local log = require 'common.log'
-            log.file = logpath..'/worker.log'
-            require 'backend.worker'
+    rdebug.start [[
+        package.path = "/pkg/ant.debugger/script/?.lua"
+        function package.readfile(filename)
+            local vfs = require 'vfs'
+            local vpath = assert(package.searchpath(filename, package.path))
+            local lpath = assert(vfs.realpath(vpath))
+            local f = assert(io.open(lpath))
+            local str = f:read 'a'
+            f:close()
+            return str
         end
-    ]])
+        local directory = dofile "engine/directory.lua"
+        local fs = require "bee.filesystem"
+        local logpath = directory.log_path():string()
+        require 'backend.bootstrap'. attach(logpath)
+    ]]
     return self
 end
 
