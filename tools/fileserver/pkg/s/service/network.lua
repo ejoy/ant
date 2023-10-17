@@ -139,7 +139,7 @@ local function stream_on_write(s)
         local n = s.fd:send(data[1])
         if n == nil then
             for i, token in ipairs(s.wait_write) do
-                ltask.interrupt(token, "Write close.")
+                ltask.wakeup(token)
                 s.wait_write[i] = nil
             end
             s.shutdown_w = true

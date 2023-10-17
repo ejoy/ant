@@ -5,6 +5,7 @@ local serialization = require "bee.serialization"
 
 local FD = ...
 
+local quit = false
 local message = {}
 local ServiceDebugProxy
 local ServiceVfsMgr = ltask.queryservice "s|vfsmgr"
@@ -32,7 +33,9 @@ end)
 
 
 local function response(...)
-	socket.send(FD, string.pack("<s2", serialization.packstring(...)))
+	if socket.send(FD, string.pack("<s2", serialization.packstring(...))) == nil then
+		quit = true
+	end
 end
 
 local function response_ex(tunnel_name, port, session, req)
@@ -255,7 +258,7 @@ end
 
 local function dispatch(fd)
 	local reading_queue = {}
-	while true do
+	while not quit do
 		local reading = socket.recv(fd)
 		if reading == nil then
 			break
@@ -272,6 +275,7 @@ local function dispatch(fd)
 end
 
 local function quit()
+	socket.close(FD)
 	ltask.call(ServiceLogManager, "CLOSE", LoggerIndex)
 	if ServiceDebugProxy then
 		ltask.send(ServiceDebugProxy, "QUIT")
