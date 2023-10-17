@@ -20,7 +20,7 @@ end
 local function update_instance_buffer(e)
     local di = e.draw_indirect
     local ib = di.instance_buffer
-    if ib.handle and ib.dynamic then
+    if ib.handle then
         bgfx.update(ib.handle, 0, ib.memory)
     else
         --buffer use as instance buffer only should only create from bgfx.create_dynamic_vertex_buffer

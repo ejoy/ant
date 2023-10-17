@@ -46,7 +46,7 @@ local function create_mat2(r)
         c, -s,  --[1, 2] ==> column 1
         s,  c   --[3, 4] ==> column 2
     }
-    return setmetatable(t, MAT2_MT)
+    return setmetatable(t, {__index=MAT2_MT})
 end
 
 local DEBUG_MAT2 = false
@@ -57,7 +57,7 @@ if DEBUG_MAT2 then
 end
 
 local SHAPE_NAMES<const> = {"U", "I", "L", "T", "X", "O",}
-local NUM_SHAPES<const> = SHAPE_NAMES
+local NUM_SHAPES<const> = #SHAPE_NAMES
 
 local DEFAULT_QUAD_UV_SIZE<const> = {1.0 / NUM_SHAPES, 1}
 local DEFAULT_QUAD_TEXCOORD<const> = {
@@ -165,8 +165,10 @@ end
 
 for _, sn in ipairs(SHAPE_NAMES) do
     local s = assert(SHAPE_TYPES[sn], ("Invalid shape name: %s"):format(sn))
-    for n, d in pairs(s.direction) do
-        s.direction[n] = offset_uv(d, s.index)
+    for _, d in pairs(s.direction) do
+        for i=1, #d do
+            d[i] = offset_uv(d[i], s.index)
+        end
     end
 end
 
