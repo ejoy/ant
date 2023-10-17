@@ -10,7 +10,6 @@ local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local stringify     = import_package "ant.serialize".stringify
 local ilight        = ecs.require "ant.render|light.light"
-local iefk          = ecs.require "ant.efk|efk"
 local imodifier     = ecs.require "ant.modifier|modifier"
 local camera_mgr    = ecs.require "camera.camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
@@ -23,7 +22,6 @@ local hierarchy     = require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
--- local subprocess    = import_package "ant.subprocess"
 
 local anim_view
 local m = {
@@ -47,12 +45,6 @@ local geom_mesh_file = {
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/Torus_P1.meshbin",
     ["plane"] = "/pkg/ant.resources.binary/meshes/base/plane.glb|meshes/Plane_P1.meshbin"
 }
-
-local group_id = 0
-local function get_group_id()
-    group_id = group_id + 1
-    return group_id
-end
 
 local slot_id = 1
 function m:create_slot()
@@ -235,22 +227,8 @@ function m:create(what, config)
                 tag = { config.type .. gen_geometry_id() }
             }
             local tmp = utils.deep_copy(template)
-            local hitch
-            if parent_eid then
-                local pe <close> = world:entity(parent_eid, "hitch?in")
-                hitch = pe.hitch
-            end
-            local new_entity
-            if hitch then
-                if hitch.group == 0 then
-                    hitch.group = get_group_id()
-                end
-                new_entity = world:create_entity(tmp, hitch.group)
-            else
-                tmp.data.scene.parent = parent_eid
-                new_entity = world:create_entity(tmp)
-            end
-
+            tmp.data.scene.parent = parent_eid
+            local new_entity = world:create_entity(tmp)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
@@ -584,10 +562,9 @@ local function remove_entity_self(eid)
     w:remove(eid)
 end
 
-local imaterial = ecs.require "ant.asset|material"
-
 function m:create_ground()
     if not self.plane then
+        local imaterial = ecs.require "ant.asset|material"
         self.plane = world:create_entity {
             policy = {
                 "ant.render|render",
@@ -713,10 +690,6 @@ function m:add_prefab(path)
         end
     }
     self:add_entity(v_root, parent, temp, path)
-end
-
-function m:set_save_hitch(b)
-    self.save_hitch = b
 end
 
 function m:get_hitch_content()
@@ -944,8 +917,8 @@ function m.set_anim_view(aview)
 end
 function m:get_eid_by_name(name)
     for _, eid in ipairs(self.entities) do
-        local e <close> = world:entity(eid, "name?in")
-        if e.name == name then
+        local info = hierarchy:get_node_info(eid)
+        if info.name == name then
             return eid
         end
     end

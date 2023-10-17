@@ -82,15 +82,6 @@ function hierarchy:get_parent(eid)
     return self.all_node[eid].parent
 end
 
-local function find_policy(t, policy)
-    for i, v in ipairs(t) do
-        if v == policy then
-            return i
-        end
-    end
-    return nil
-end
-
 function hierarchy:get_prefab_template()
     local new_tpl = {}
     local function construct_entity(eid, tpl)
