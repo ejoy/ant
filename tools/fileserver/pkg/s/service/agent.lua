@@ -215,25 +215,6 @@ function message.GET(hash)
 	f:close()
 end
 
-function message.FETCH(path)
-	local hashs = ltask.call(ServiceVfsMgr, "FETCH", path)
-	if not hashs then
-		response("MISSING", path)
-		return
-	end
-	response("FETCH", path, hashs)
-end
-
-function message.FETCH_PATH(session, hash, path)
-	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_PATH", hash, path)
-	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
-end
-
-function message.FETCH_DIR(session, hash, path)
-	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_DIR", hash, path)
-	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
-end
-
 function message.LOG(data)
 	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
     LoggerQueue[#LoggerQueue+1] = data
