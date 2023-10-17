@@ -90,21 +90,6 @@ function S.GET(hash)
 	end
 end
 
-function S.FETCH(path)
-	local hashs = repo:fetch(path)
-	if hashs then
-		return table.concat(hashs, "|")
-	end
-end
-
-function S.FETCH_PATH(hash, path)
-	return repo:fetch_path(hash, path)
-end
-
-function S.FETCH_DIR(hash)
-	return repo:fetch_dir(hash)
-end
-
 function S.REALPATH(path)
 	local rp = repo:realpath(path)
 	if rp then
