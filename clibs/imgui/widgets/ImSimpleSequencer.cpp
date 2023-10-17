@@ -15,7 +15,7 @@ namespace ImSimpleSequencer
 	int anim_fps = 50;
 	anim_layer* current_layer{ nullptr };
 	bone_anim_s bone_anim;
-	constexpr int ItemHeight = 20;
+	int ItemHeight = 20;
 
 	int GetFrameMin() { return 0; }
 	int GetFrameMax() { return (int)std::ceil(bone_anim.duration * anim_fps) - 1; }
@@ -27,15 +27,25 @@ namespace ImSimpleSequencer
 	void SimpleSequencer(bool& pause, int& selected_layer, int& current_frame, int& selected_frame, int& move_type, int& range_index, int& move_delta)
 	{
 		static int firstFrame = 0;
-		ImGuiIO& io = ImGui::GetIO();
-		int cx = (int)(io.MousePos.x);
-		int cy = (int)(io.MousePos.y);
 		static float framePixelWidth = 10.f;
 		static float framePixelWidthTarget = 10.f;
-
+		static bool inited = false;
+		if (!inited) {
+			inited = true;
+			auto viewport = ImGui::GetMainViewport();
+			auto scale = viewport->DpiScale;
+			ItemHeight *= scale;
+			framePixelWidth *= scale;
+			framePixelWidthTarget *= scale;
+		}
 		static bool movingEntry = false;
 		static int movingPos = -1;
 		static int movingPart = -1;
+
+		ImGuiIO& io = ImGui::GetIO();
+		int cx = (int)(io.MousePos.x);
+		int cy = (int)(io.MousePos.y);
+
 		ImGui::BeginGroup();
 
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
