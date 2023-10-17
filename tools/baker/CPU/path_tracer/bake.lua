@@ -8,6 +8,7 @@ local math3d    = require "math3d"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
 local bgfx      = require "bgfx"
+local fastio    = require "fastio"
 
 local log = print
 local log_detail = log
@@ -45,8 +46,7 @@ log("\toutput file:", scenefile)
 log("\tlightmaps result:", lightmap_path)
 
 local function readfile(filename)
-    local f<close> = fs.open(filename, "rb")
-    return f:read "a"
+    return fastio.readall_s(filename)
 end
 
 local function writefile(filename, c, mode)

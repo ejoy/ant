@@ -4,6 +4,7 @@ local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local filemanager = require "core.filemanager"
 local datalist   = require "datalist"
 local fs = require "filesystem"
+local fastio = require "fastio"
 local config_table, path_table
  local texture_cfg_table = {
 } 
@@ -119,11 +120,9 @@ end
 
 
 for idx, info in pairs(texture_cfg_table) do
-    --local cfg = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
     if filemanager.is_file(info.cfg_path) then
         local bundle_cfg_path = fs.path(info.cfg_path)
-        local file = fs.open(bundle_cfg_path):read "a"
-        local cfg = datalist.parse(file) 
+        local cfg = datalist.parse(fastio.readall(bundle_cfg_path:localpath():string(), bundle_cfg_path:string()))
         if cfg then
             if not config_table then
                 config_table = {}

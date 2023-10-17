@@ -20,6 +20,7 @@ local platform      = require "bee.platform"
 local font          = imgui.font
 local Font          = imgui.font.SystemFont
 local math3d        = require "math3d"
+local fastio        = require "fastio"
 local fmod 			= require "fmod"
 -- local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
 -- function ecs.method.bind_billboard_camera(e, camera_ref)
@@ -64,9 +65,7 @@ function m:init()
     world:pub { "UpdateDefaultLight", true }
 
 	if platform.os == "windows" then
-		local ff = assert(fs.open(fs.path("/pkg/tools.editor/res/fonts/fa-solid-900.ttf"), "rb"))
-		local fafontdata = ff:read "a"
-		ff:close()
+		local fafontdata = fastio.readall_s(fs.path "/pkg/tools.editor/res/fonts/fa-solid-900.ttf":localpath():string(), "/pkg/tools.editor/res/fonts/fa-solid-900.ttf")
         font.Create {
             { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
             { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},

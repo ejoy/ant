@@ -1,45 +1,5 @@
 local lfs = require "bee.filesystem"
 local vfs = require "vfs"
-local nio = io
-
-local function errmsg(err, filename, real_filename)
-    local first, last = err:find(real_filename, 1, true)
-    if not first then
-        return err
-    end
-    return err:sub(1, first-1) .. filename .. err:sub(last+1)
-end
-
-local function vfs_open(filename, mode)
-    if mode ~= nil and mode ~= 'r' and mode ~= 'rb' then
-        return nil, ('%s:Permission denied.'):format(filename)
-    end
-    local real_filename = vfs.realpath(filename)
-    if not real_filename then
-        return nil, ('%s:No such file or directory.'):format(filename)
-    end
-    local f, err, ec = nio.open(real_filename, mode)
-    if not f then
-        err = errmsg(err, filename, real_filename)
-        return nil, err, ec
-    end
-    return f
-end
-
-local function vfs_lines(filename, ...)
-    if type(filename) ~= 'string' then
-        return nio.lines(filename, ...)
-    end
-    local real_filename = vfs.realpath(filename)
-    if not real_filename then
-        error(('%s:No such file or directory.'):format(filename))
-    end
-    local ok, res = pcall(nio.lines, real_filename, ...)
-    if ok then
-        return res
-    end
-    error(errmsg(res, filename, real_filename))
-end
 
 local path_mt = {}
 path_mt.__name = 'vfs-filesystem'
@@ -278,10 +238,6 @@ end
 
 function fs.file_size(path)
     return lfs.file_size(path:localpath())
-end
-
-function fs.open(filepath, ...)
-    return vfs_open(filepath:string(), ...)
 end
 
 return fs

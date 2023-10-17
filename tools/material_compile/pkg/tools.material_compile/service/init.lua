@@ -8,6 +8,7 @@ dofile "/engine/editor/create_repo.lua" ("./tools/material_compile", access)
 
 local fs = require "filesystem"
 local lfs = require "bee.filesystem"
+local fastio = require "fastio"
 
 local arg = select(1, ...)
 local srcfile = arg[1]
@@ -86,14 +87,13 @@ elseif srcpath:equal_extension "lua" then
             }
         end
     end
-    local function readfile(ff) local f<close> = fs.open(ff); return f:read "a" end
     local RES_EXT = {
         [".prefab"]     = function (filename)
             if filename:match "%|animation.prefab" then
                 print("not load animation.prefab file:", filename)
                 return 
             end
-            local r = serialize.parse(filename, readfile(fs.path(filename)))
+            local r = serialize.parse(filename, fastio.readall(filename)))
             for _, e in ipairs(r) do
                 local d = e.data
                 if d.mesh then

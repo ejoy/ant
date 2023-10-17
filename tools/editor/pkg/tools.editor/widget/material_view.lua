@@ -21,6 +21,7 @@ local uiproperty= require "widget.uiproperty"
 local global_data=require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
+local fastio    = require "fastio"
 local access    = global_data.repo_access
 local rb        = ecs.require "widget.resource_browser"
 
@@ -1067,13 +1068,10 @@ function MaterialView:set_eid(eid)
 
     for _, v in pairs(t.properties) do
         if v.texture and not texture_flag[v.texture] then
-            local f<close> = fs.open(fs.path(v.texture))
-            if f then
-                local data = datalist.parse(f:read "a")
-                if data and not image_to_texture[data.path] then
-                    image_to_texture[data.path] = v.texture
-                    texture_flag[v.texture] = true
-                end
+            local data = datalist.parse(fastio.readall(fs.path(v.texture):localpath():string(), v.texture))
+            if data and not image_to_texture[data.path] then
+                image_to_texture[data.path] = v.texture
+                texture_flag[v.texture] = true
             end
         end
     end
