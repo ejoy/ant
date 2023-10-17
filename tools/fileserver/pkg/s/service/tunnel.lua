@@ -105,7 +105,9 @@ function S.RESPONSE(session, resp)
 		close_session(s)
 	else
 		if s.fd then
-			socket.send(s.fd, resp)
+			if socket.send(s.fd, resp) == nil then
+				close_session(s)
+			end
 		end
 	end
 end

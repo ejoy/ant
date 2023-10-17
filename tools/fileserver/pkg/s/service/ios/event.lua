@@ -22,8 +22,12 @@ if not eventfd then
     return
 end
 local a, b = usbmuxd.create_listen_package()
-socket.send(eventfd, a)
-socket.send(eventfd, b)
+if socket.send(eventfd, b) == nil then
+    return
+end
+if socket.send(eventfd, b) == nil then
+    return
+end
 local function recvf(n)
     return socket.recv(eventfd, n)
 end
