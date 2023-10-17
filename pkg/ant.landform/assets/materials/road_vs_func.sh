@@ -11,9 +11,6 @@
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
-    float road_texcoord_r = vs_input.idata0.z;
-	float road_state      = vs_input.idata0.w;
-
 	vec4 idata0 = vs_input.idata0;
 	vec2 xzpos = idata0.xy;
 
@@ -22,7 +19,7 @@ void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 
 	vs_output.clip_pos = transform2clipspace(posWS);
 
-	vs_output.uv0	    = get_rotated_texcoord(road_texcoord_r, vs_input.uv0).xy;
+	vs_output.uv0	    = a_texcoord0;
 	vs_output.color		= vec4(uvec4(color, color>>8, color>>16, color>>24)&0xff) / 255.0;
 	vs_output.normal	= vec3(0.0, 1.0, 0.0);
 	vs_output.tangent	= vec3(1.0, 0.0, 0.0);
