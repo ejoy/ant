@@ -11,10 +11,10 @@ fx:
 properties:
   s_basecolor:
     stage: 0
-    texture: /pkg/ant.resources/textures/black.texture
+    texture: /pkg/ant.landform/assets/materials/road/color.texture
   s_metallic_roughness:
     stage: 1
-    texture: /pkg/ant.resources/textures/black.texture
+    texture: /pkg/ant.landform/assets/materials/road/rm.texture
   u_draw_indirect_type: {0, 0, 0, 0}
 state: 
   ALPHA_REF: 0

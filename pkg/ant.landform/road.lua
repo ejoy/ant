@@ -15,17 +15,14 @@ local layout        = layoutmgr.get "p3|t20|c40niu"
 
 local hwi           = import_package "ant.hwi"
 
-local CONST<const> = require "gameplay.interface.constant"
-local UNIT <const> = CONST.TILE_SIZE
-local ROAD_SIZE<const> = 2
-local ROAD_WIDTH, ROAD_HEIGHT = ROAD_SIZE * UNIT, ROAD_SIZE * UNIT
+local ROAD_WIDTH, ROAD_HEIGHT
 
-local ROT_TABLES = {
-    N = {0,   270, 180, 0},
-    E = {270, 0,   90,  0},
-    S = {180, 90,  0,   0},
-    W = {90,  180, 270, 0},
-}
+-- local ROT_TABLES = {
+--     N = {0,   270, 180, 0},
+--     E = {270, 0,   90,  0},
+--     S = {180, 90,  0,   0},
+--     W = {90,  180, 270, 0},
+-- }
 
 --column matrix
 local MAT2_MT = {
@@ -59,11 +56,15 @@ if DEBUG_MAT2 then
     assert(d1[1] == 0 and d1[2] == -1)
 end
 
+local SHAPE_NAMES<const> = {"U", "I", "L", "T", "X", "O",}
+local NUM_SHAPES<const> = SHAPE_NAMES
+
+local DEFAULT_QUAD_UV_SIZE<const> = {1.0 / NUM_SHAPES, 1}
 local DEFAULT_QUAD_TEXCOORD<const> = {
-    {1, 0}, -- quad vertex index 0
-    {0, 0}, -- quad vertex index 1
-    {1, 0}, -- quad vertex index 2
-    {1, 1}, -- quad vertex index 3
+    {DEFAULT_QUAD_UV_SIZE[1], 0},                       -- quad v0
+    {0, 0},                                             -- quad v1
+    {0, DEFAULT_QUAD_UV_SIZE[2]},                       -- quad v2
+    {DEFAULT_QUAD_UV_SIZE[1], DEFAULT_QUAD_UV_SIZE[2]}, -- quad v3
 }
 
 local function quad_texcoord(degree)
@@ -91,7 +92,6 @@ local SHADPE_DIRECTIONS<const> = {
 }
 
 local SHAPE_TYPES<const> = {
-    "U", "I", "L", "T", "X", "O",
     U = {
         index = 1,
         direction = {
@@ -148,8 +148,30 @@ local SHAPE_TYPES<const> = {
     },
 }
 
+local DEFAULT_TEXTURE_QUAD_SIZE<const> = {128, 128}
+local DEFAULT_TEXTURE_SIZE<const> = {DEFAULT_TEXTURE_QUAD_SIZE[1] * NUM_SHAPES, DEFAULT_TEXTURE_QUAD_SIZE[2]}
+local DEFAULT_TEXEL_SIZE<const> = {1.0/DEFAULT_TEXTURE_SIZE[1], 1.0/DEFAULT_TEXTURE_SIZE[2]}
+local UV_THRESHOLD<const>   = {1e-6, 1e-6}
+
+--the color/alpha/rm texture are packed from NUM_SHAPES images into [NUM_SHAPES * DEFAULT_TEXTURE_QUAD_SIZE[1], DEFAULT_TEXTURE_QUAD_SIZE[2]], so we only refine the texcoord on u direction
+local function refine_combie_uv(uv)
+    return {uv[1] - DEFAULT_TEXEL_SIZE[1] - UV_THRESHOLD[1], uv[2]}
+end
+
+local DELTA_U<const> = 1.0 / DEFAULT_QUAD_UV_SIZE[1]
+local function offset_uv(uv, shapetype)
+    return refine_combie_uv{uv[1] + (shapetype-1)*DELTA_U, uv[2]}
+end
+
+for _, sn in ipairs(SHAPE_NAMES) do
+    local s = assert(SHAPE_TYPES[sn], ("Invalid shape name: %s"):format(sn))
+    for n, d in pairs(s.direction) do
+        s.direction[n] = offset_uv(d, s.index)
+    end
+end
+
 local STATES_MAPPER<const> = {
-    --indicator state
+    --road state
     normal = {
         index = 1,
         color = 0xfffffff,
@@ -163,7 +185,7 @@ local STATES_MAPPER<const> = {
         color = 0xffe4e4e4,
     },
 
-    --road state
+    --indicator state
     invalid = {
         index = 1,
         color = 0xff0000b6,
@@ -275,7 +297,7 @@ local function build_instance_buffers(infos)
 
         local function add_buffer(t, ib, mb)
             ib[#ib+1] = INSTANCEBUFFER_FMT:pack(p[1], p[2], STATES_MAPPER[t.state].color, 0)
-            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index, SHADPE_DIRECTIONS[t.dir])
+            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index-1, SHADPE_DIRECTIONS[t.dir])
         end
 
         local r = i.road
@@ -421,19 +443,19 @@ local ROAD_ENTITIES = {}
 local iroad         = {}
 local function build_road_mesh(rw, rh)
     local road_vb = {}
-    for _, s in ipairs(SHAPE_TYPES) do
+    for _, s in ipairs(SHAPE_NAMES) do
         local st = SHAPE_TYPES[s]
         for _, dn in ipairs(SHADPE_DIRECTIONS) do
-            local texcoords = st.direction[dn]
-            build_vb(0, 0, rw, rh, texcoords, road_vb)
+            build_vb(0, 0, rw, rh, st.direction[dn], road_vb)
         end
     end
 
-    assert(#road_vb == 4 * #SHAPE_TYPES * #SHADPE_DIRECTIONS)
+    assert(#road_vb == 4 * #SHAPE_NAMES * #SHADPE_DIRECTIONS)
     return to_mesh_buffer(road_vb, irender.quad_ib())
 end
 
 function iroad.create(roadwidth, roadheight)
+    ROAD_WIDTH, ROAD_HEIGHT = roadwidth, roadheight
     ROAD_MESH = build_road_mesh(roadwidth, roadheight)
 end
 

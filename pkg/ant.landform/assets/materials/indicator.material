@@ -14,8 +14,7 @@ fx:
 properties:
   s_alpha:
     stage: 0
-    texture: /pkg/ant.resources/textures/black.texture
-  u_draw_indirect_type: {0, 0, 0, 0}
+    texture: /pkg/ant.landform/assets/textures/road/alpha.texture
 state: 
   ALPHA_REF: 0
   CULL: CCW
