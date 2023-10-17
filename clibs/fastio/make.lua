@@ -6,6 +6,7 @@ lm:lua_source "fastio_runtime" {
     },
     sources = {
         "fastio.cpp",
+        "sha1.c",
     },
 }
 
@@ -14,5 +15,6 @@ lm:lua_source "fastio_editor" {
     },
     sources = {
         "fastio.cpp",
+        "sha1.c",
     },
 }

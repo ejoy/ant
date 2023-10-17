@@ -8,31 +8,10 @@ REPO_MT.__index = REPO_MT
 
 local lfs = require "bee.filesystem"
 local access = dofile "/engine/vfs/repoaccess.lua"
-local crypt = require "crypt"
-
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
+local fastio = require "fastio"
 
 local function sha1(str)
-	return crypt.sha1(str):gsub(".", byte2hex)
-end
-
-local sha1_encoder = crypt.sha1_encoder()
-
-local function sha1_from_file(filename)
-	sha1_encoder:init()
-	local ff = assert(io.open(filename:string(), "rb"))
-	while true do
-		local content = ff:read(1024)
-		if content then
-			sha1_encoder:update(content)
-		else
-			break
-		end
-	end
-	ff:close()
-	return sha1_encoder:final():gsub(".", byte2hex)
+	return fastio.str2sha1(str)
 end
 
 local repo_build_dir
@@ -129,7 +108,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					hash = cache_hash.hash
 					if _DEBUG then print("CACHE", hash, fullname) end
 				else
-					hash = sha1_from_file(realfullname)
+					hash = fastio.sha1(realfullname:string())
 					namehashcache[fullname] = { hash = hash, timestamp = mtime }
 					if _DEBUG then print("FILE", hash, fullname, mtime) end
 				end

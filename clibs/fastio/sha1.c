@@ -82,19 +82,12 @@ A million repetitions of "a"
   34AA973C D4C4DAA4	F61EEB2B DBAD2731 6534016F
 */
 
-#define LUA_LIB
-
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
- 
-typedef struct {
-	uint32_t state[5];
-	uint32_t count[2];
-	uint8_t  buffer[64];
-} SHA1_CTX;
- 
-#define SHA1_DIGEST_SIZE 20
+
+#include "sha1.h"
+
 
 static void	SHA1_Transform(uint32_t	state[5], const	uint8_t	buffer[64]);
 
@@ -174,7 +167,7 @@ static void	SHA1_Transform(uint32_t	state[5], const	uint8_t	buffer[64])
 
 
 /* SHA1Init	- Initialize new context */
-static void sat_SHA1_Init(SHA1_CTX* context)
+void sat_SHA1_Init(SHA1_CTX* context)
 {
 	/* SHA1	initialization constants */
 	context->state[0] =	0x67452301;
@@ -187,7 +180,7 @@ static void sat_SHA1_Init(SHA1_CTX* context)
 
 
 /* Run your	data through this. */
-static void sat_SHA1_Update(SHA1_CTX* context,	const uint8_t* data, const size_t len)
+void sat_SHA1_Update(SHA1_CTX* context,	const uint8_t* data, const size_t len)
 {
 	size_t i, j;
 
@@ -216,7 +209,7 @@ static void sat_SHA1_Update(SHA1_CTX* context,	const uint8_t* data, const size_t
 
 
 /* Add padding and return the message digest. */
-static void sat_SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
+void sat_SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
 {
 	uint32_t i;
 	uint8_t	 finalcount[8];
@@ -235,117 +228,3 @@ static void sat_SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
 		 ((context->state[i>>2]	>> ((3-(i &	3))	* 8) ) & 255);
 	}
 }
-
-#include <lua.h>
-#include <lauxlib.h>
-
-int
-lsha1(lua_State *L) {
-	size_t sz = 0;
-	const uint8_t * buffer = (const uint8_t *)luaL_checklstring(L, 1, &sz);
-	uint8_t digest[SHA1_DIGEST_SIZE];
-	SHA1_CTX ctx;
-	sat_SHA1_Init(&ctx);
-	sat_SHA1_Update(&ctx, buffer, sz);
-	sat_SHA1_Final(&ctx, digest);
-	lua_pushlstring(L, (const char *)digest, SHA1_DIGEST_SIZE);
-
-	return 1;
-}
-
-static int
-lsha1_init(lua_State *L) {
-	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
-	sat_SHA1_Init(ctx);
-	lua_settop(L, 1);
-	return 1;
-}
-
-static int
-lsha1_update(lua_State *L) {
-	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
-	size_t sz;
-	const uint8_t * buffer = (const uint8_t *)luaL_checklstring(L, 2, &sz);
-	sat_SHA1_Update(ctx, buffer, sz);
-	lua_settop(L, 1);
-	return 1;
-}
-
-static int
-lsha1_final(lua_State *L) {
-	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
-	uint8_t digest[SHA1_DIGEST_SIZE];
-	sat_SHA1_Final(ctx, digest);
-	lua_pushlstring(L, (const char *)digest, SHA1_DIGEST_SIZE);
-	return 1;
-}
-
-int
-lsha1_encoder(lua_State *L) {
-	SHA1_CTX * ctx = lua_newuserdatauv(L, sizeof(*ctx), 0);
-	if (luaL_newmetatable(L, "SHA1ENCODER")) {
-		lua_pushcfunction(L, lsha1_init);
-		lua_setfield(L, -2, "init");
-		lua_pushcfunction(L, lsha1_update);
-		lua_setfield(L, -2, "update");
-		lua_pushcfunction(L, lsha1_final);
-		lua_setfield(L, -2, "final");
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-	}
-	lua_setmetatable(L, -2);
-	sat_SHA1_Init(ctx);
-	return 1;
-}
-
-#define BLOCKSIZE 64
-
-static inline void
-xor_key(uint8_t key[BLOCKSIZE], uint32_t xor) {
-	int i;
-	for (i=0;i<BLOCKSIZE;i+=sizeof(uint32_t)) {
-		uint32_t * k = (uint32_t *)&key[i];
-		*k ^= xor;
-	}
-}
-
-LUAMOD_API int
-lhmac_sha1(lua_State *L) {
-	size_t key_sz = 0;
-	const uint8_t * key = (const uint8_t *)luaL_checklstring(L, 1, &key_sz);
-	size_t text_sz = 0;
-	const uint8_t * text = (const uint8_t *)luaL_checklstring(L, 2, &text_sz);
-	SHA1_CTX ctx1, ctx2;
-	uint8_t digest1[SHA1_DIGEST_SIZE];
-	uint8_t digest2[SHA1_DIGEST_SIZE];
-	uint8_t rkey[BLOCKSIZE];
-	memset(rkey, 0, BLOCKSIZE);
-
-	if (key_sz > BLOCKSIZE) {
-		SHA1_CTX ctx;
-		sat_SHA1_Init(&ctx);
-		sat_SHA1_Update(&ctx, key, key_sz);
-		sat_SHA1_Final(&ctx, rkey);
-		key_sz = SHA1_DIGEST_SIZE;
-	} else {
-		memcpy(rkey, key, key_sz);
-	}
-
-	xor_key(rkey, 0x5c5c5c5c);
-	sat_SHA1_Init(&ctx1);
-	sat_SHA1_Update(&ctx1, rkey, BLOCKSIZE);
-
-	xor_key(rkey, 0x5c5c5c5c ^ 0x36363636);
-	sat_SHA1_Init(&ctx2);
-	sat_SHA1_Update(&ctx2, rkey, BLOCKSIZE);
-	sat_SHA1_Update(&ctx2, text, text_sz);
-	sat_SHA1_Final(&ctx2, digest2);
-
-	sat_SHA1_Update(&ctx1, digest2, SHA1_DIGEST_SIZE);
-	sat_SHA1_Final(&ctx1, digest1);
-
-	lua_pushlstring(L, (const char *)digest1, SHA1_DIGEST_SIZE);
-
-	return 1;
-}
-

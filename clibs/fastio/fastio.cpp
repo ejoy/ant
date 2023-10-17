@@ -2,6 +2,11 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+#include <array>
+
+extern "C" {
+#include "sha1.h"
+}
 
 #if defined(LUA_USE_POSIX)
 #   include <sys/types.h>
@@ -177,12 +182,71 @@ static int loadfile(lua_State *L) {
     return 1;
 }
 
+static char hex[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+};
+
+static int sha1(lua_State *L) {
+    const char* filename = luaL_checkstring(L, 1);
+#if defined(__ANT_RUNTIME__)
+    const char* symbol = luaL_optstring(L, 2, filename);
+#else
+    const char* symbol = filename;
+#endif
+    file_t f = file_t::open(L, filename);
+    if (!f.suc()) {
+        return push_error(L, "open", symbol);
+    }
+    std::array<uint8_t, 1024> buffer;
+    SHA1_CTX ctx;
+    sat_SHA1_Init(&ctx);
+    for (;;) {
+        size_t n = f.read(buffer.data(), buffer.size());
+        if (n != buffer.size()) {
+            sat_SHA1_Update(&ctx, buffer.data(), n);
+            break;
+        }
+        sat_SHA1_Update(&ctx, buffer.data(), buffer.size());
+    }
+    std::array<uint8_t, SHA1_DIGEST_SIZE> digest;
+    std::array<char, SHA1_DIGEST_SIZE*2> hexdigest;
+    sat_SHA1_Final(&ctx, digest.data());
+    for (size_t i = 0; i < SHA1_DIGEST_SIZE; ++i) {
+        auto u = digest[i];
+        hexdigest[2*i+0] = hex[u / 16];
+        hexdigest[2*i+1] = hex[u % 16];
+    }
+    lua_pushlstring(L, hexdigest.data(), hexdigest.size());
+    return 1;
+}
+
+static int str2sha1(lua_State *L) {
+	size_t sz = 0;
+	const uint8_t * buffer = (const uint8_t *)luaL_checklstring(L, 1, &sz);
+	SHA1_CTX ctx;
+	sat_SHA1_Init(&ctx);
+	sat_SHA1_Update(&ctx, buffer, sz);
+    std::array<uint8_t, SHA1_DIGEST_SIZE> digest;
+    std::array<char, SHA1_DIGEST_SIZE*2> hexdigest;
+    sat_SHA1_Final(&ctx, digest.data());
+    for (size_t i = 0; i < SHA1_DIGEST_SIZE; ++i) {
+        auto u = digest[i];
+        hexdigest[2*i+0] = hex[u / 16];
+        hexdigest[2*i+1] = hex[u % 16];
+    }
+    lua_pushlstring(L, hexdigest.data(), hexdigest.size());
+    return 1;
+}
+
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
         {"readall", readall},
         {"readall_s", readall_s},
         {"loadfile", loadfile},
+        {"sha1", sha1},
+        {"str2sha1", str2sha1},
         {NULL, NULL},
     };
     luaL_newlib(L, l);
