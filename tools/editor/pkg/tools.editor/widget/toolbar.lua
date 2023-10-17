@@ -65,27 +65,27 @@ function m.show()
             world:pub { "GizmoMode", "scale" }
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("LocalSpace", localSpace) then
+        if imgui.widget.Checkbox("LocalSpace ", localSpace) then
             world:pub { "GizmoMode", "localspace", localSpace[1]}
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("DefaultLight", defaultLight) then
+        if imgui.widget.Checkbox("DefaultLight ", defaultLight) then
             world:pub { "UpdateDefaultLight", defaultLight[1] }
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("ShowGround", showground) then
+        if imgui.widget.Checkbox("Ground ", showground) then
             world:pub { "ShowGround", showground[1] }
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("ShowTerrain", showterrain) then
+        if imgui.widget.Checkbox("Terrain ", showterrain) then
             world:pub { "ShowTerrain", showterrain[1] }
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("SaveHitch", savehitch) then
+        if imgui.widget.Checkbox("SaveHitch ", savehitch) then
             world:pub { "SaveHitch", savehitch[1] }
         end
         imgui.cursor.SameLine()
-        imgui.cursor.PushItemWidth(64)
+        imgui.cursor.PushItemWidth(72)
         camera_speed[1] = editor_setting.setting.camera.speed
         if imgui.widget.DragFloat("CameraSpeed", camera_speed) then
             world:pub{"camera_controller", "move_speed", camera_speed[1]}
