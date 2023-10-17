@@ -7,18 +7,6 @@ local di_sys = ecs.system "draw_indirect_system2"
 
 local layoutmgr = ecs.require "vertexlayout_mgr"
 
-local function create_instance_buffer(ib)
-    if ib.dynamic then
-        return bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
-    end
-
-    if ib.flag:match "[rw]" then
-        error "Invalid instance buffer flag"
-    end
-
-    return bgfx.create_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
-end
-
 local function check_create_draw_indircet_buffer(io, ib)
     io.itb_handle = ib.handle
 
@@ -35,7 +23,8 @@ local function update_instance_buffer(e)
     if ib.handle and ib.dynamic then
         bgfx.update(ib.handle, 0, ib.memory)
     else
-        ib.handle = create_instance_buffer(ib)
+        --buffer use as instance buffer only should only create from bgfx.create_dynamic_vertex_buffer
+        ib.handle = bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
     end
 
     di.handle = check_create_draw_indircet_buffer(e.indirect_object, ib)

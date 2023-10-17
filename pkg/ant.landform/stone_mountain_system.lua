@@ -112,6 +112,7 @@ local function create_sm_entity(gid, indices)
                 instance_buffer = {
                     memory  = table.concat(memory, ""),
                     layout  = "t45NIf|t46NIf|t47NIf",
+                    flag    = "r",
                     num     = drawnum,
                 },
                 indirect_type_NEED_REMOVED = NEW_MOUNTAIN_TYPE,
