@@ -7,6 +7,7 @@ local math3d 	    = require "math3d"
 local imaterial     = ecs.require "ant.asset|material"
 local imesh         = ecs.require "ant.asset|mesh"
 local icompute      = ecs.require "ant.render|compute.compute"
+local irender       = ecs.require "ant.render|render_system.render"
 
 local mc            = import_package "ant.math".constant
 local hwi           = import_package "ant.hwi"
@@ -80,13 +81,7 @@ local function create_sm_entity(gid, indices)
     end
 
     local function build_mesh_indices_buffer(meshes)
-        local s = table.concat(meshes, "")
-        local VEC4_SIZE<const> = 16 --uvec4 = 16 bytes
-        local n = #s % VEC4_SIZE
-        if n > 0 then
-            s = s .. ('\0'):rep(n)
-        end
-        return bgfx.create_index_buffer(bgfx.memory_buffer(s))
+        return bgfx.create_index_buffer(irender.align_buffer(table.concat(meshes, "")))
     end
 
     local mesh_indices_buffer = build_mesh_indices_buffer(meshes)
