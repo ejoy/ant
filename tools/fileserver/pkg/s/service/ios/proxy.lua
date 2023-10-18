@@ -21,23 +21,18 @@ local function connectIOS()
     while true do
         local fd = assert(socket.connect(usbmuxd.get_address()))
         local a, b = usbmuxd.create_connect_package(DeviceID, 2018)
-        if socket.send(fd, a) == nil then
-            goto continue
-        end
-        if socket.send(fd, b) == nil then
-            goto continue
-        end
-        local function recvf(n)
-            return socket.recv(fd, n)
-        end
-        local msg = usbmuxd.recv(recvf)
-        if msg then
-            assert(msg.MessageType == 'Result')
-            if msg.Number == 0 then
-                return fd
+        if socket.send(fd, a) ~= nil and socket.send(fd, b) ~= nil then
+            local function recvf(n)
+                return socket.recv(fd, n)
+            end
+            local msg = usbmuxd.recv(recvf)
+            if msg then
+                assert(msg.MessageType == 'Result')
+                if msg.Number == 0 then
+                    return fd
+                end
             end
         end
-        ::continue::
         socket.close(fd)
         ltask.sleep(20)
     end
