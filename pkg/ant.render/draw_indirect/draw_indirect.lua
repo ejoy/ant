@@ -166,7 +166,7 @@
 --         --di.indirect_params_buffer = get_indirect_params_buffer(indirect_params_table)
 --         -- local di_cull_id = world:create_entity {
 --         --     policy = {
---         --         "ant.render|compute_policy",
+--         --         "ant.render|compute",
 --         --         "ant.render|draw_indirect_cull",
 --         --     },
 --         --     data = {
@@ -182,7 +182,7 @@
 --         -- }
 --         -- local di_shadow_id = world:create_entity {
 --         --     policy = {
---         --         "ant.render|compute_policy",
+--         --         "ant.render|compute",
 --         --         "ant.render|draw_indirect_queue",
 --         --     },
 --         --     data = {
@@ -199,7 +199,7 @@
 --         -- }
 --         -- local di_main_id = world:create_entity {
 --         --     policy = {
---         --         "ant.render|compute_policy",
+--         --         "ant.render|compute",
 --         --         "ant.render|draw_indirect_queue",
 --         --     },
 --         --     data = {

@@ -127,7 +127,7 @@ local function create_sm_entity(gid, indices)
 
     world:create_entity {
         policy = {
-            "ant.render|compute_policy",
+            "ant.render|compute",
         },
         data = {
             material = "/pkg/ant.landform/assets/materials/mountain_compute.material",

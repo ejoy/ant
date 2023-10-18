@@ -21,7 +21,7 @@ end
 function ic.create_compute_entity(name, materialfile, size, onready)
     world:create_entity {
         policy = {
-            "ant.render|compute_policy",
+            "ant.render|compute",
         },
         data = {
             material    = materialfile,

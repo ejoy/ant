@@ -51,7 +51,7 @@ local function create_cubemap_entities()
     local function create_cubemap_compute_entity(dispatchsize, cubemap_mipmap)
         world:create_entity {
             policy = {
-                "ant.render|compute_policy",
+                "ant.render|compute",
             },
             data = {
                 material    = "/pkg/ant.resources/materials/postprocess/gen_cubemap_mipmap.material",

@@ -104,7 +104,7 @@ local function create_prefilter_entities()
     local function create_prefilter_compute_entity(dispatchsize, prefilter)
         world:create_entity {
             policy = {
-                "ant.render|compute_policy",
+                "ant.render|compute",
                 "ant.render|prefilter",
             },
             data = {
