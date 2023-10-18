@@ -558,15 +558,16 @@ function m.clear()
     keyframe_view.clear()
 end
 
-local anim_name = ""
-local ui_anim_name = {text = ""}
-local anim_path = ""
-local anim_glb_path = ""
+-- local anim_name = ""
+local anim_name_ui = {text = ""}
+local anim_path_ui = {text = ""}
+-- local anim_glb_path = ""
 
 local function clear_add_animation_cache()
-    anim_name = ""
-    ui_anim_name.text = ""
-    anim_glb_path = ""
+    -- anim_name = ""
+    anim_path_ui.text = ""
+    anim_name_ui.text = ""
+    -- anim_glb_path = ""
 end
 
 local ui_showskeleton = {false}
@@ -613,27 +614,30 @@ function m.show()
         imgui.cursor.SameLine()
         local title = "Add Animation"
         if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
-            anim_path = ""
             imgui.windows.OpenPopup(title)
         end
         local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
         if change then
-            imgui.widget.Text("Name : ")
+            imgui.widget.Text("Anim Name:")
             imgui.cursor.SameLine()
-            if imgui.widget.InputText("##Name", ui_anim_name) then
-                anim_name = tostring(ui_anim_name.text)
+            if imgui.widget.InputText("##Name", anim_name_ui) then
             end
-            imgui.widget.Text("Path : " .. anim_glb_path)
+            imgui.widget.Text("Anim Path:")
+            imgui.cursor.SameLine()
+            if imgui.widget.InputText("##AnimPath", anim_path_ui) then
+            end
             imgui.cursor.SameLine()
             if imgui.widget.Button("...") then
                 local localpath = uiutils.get_open_file_path("Animation", "anim")
                 if localpath then
-                    anim_path = access.virtualpath(global_data.repo, localpath)
-                    assert(anim_path)
+                    anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
+                    assert(anim_path_ui.text ~= "")
                 end
             end
             imgui.cursor.Separator()
             if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
+                local anim_name = tostring(anim_name_ui.text)
+                local anim_path = tostring(anim_path_ui.text)
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
                     local e <close> = world:entity(anim_eid, "animation:in")
