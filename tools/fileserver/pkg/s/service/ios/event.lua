@@ -22,7 +22,7 @@ if not eventfd then
     return
 end
 local a, b = usbmuxd.create_listen_package()
-if socket.send(eventfd, b) == nil then
+if socket.send(eventfd, a) == nil then
     return
 end
 if socket.send(eventfd, b) == nil then

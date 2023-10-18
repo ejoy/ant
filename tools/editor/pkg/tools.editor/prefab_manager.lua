@@ -382,13 +382,12 @@ function m:on_prefab_ready(prefab)
         if node.parent and not hierarchy:get_node(node.parent) then
             add_to_hierarchy(node.parent)
         end
+        local tp = {template = node.template, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
         local children = node.children
-        local tp = node.template
         if children then
             set_select_adapter(children, eid)
-            tp = {template = node.template, filename = node.filename, editor = node.editor, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
-        else
-            tp = {template = node.template, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
+            tp.filename = node.filename
+            tp.editor = node.editor
         end
         hierarchy:add(eid, tp, node.parent or self.root)
     end
@@ -449,7 +448,6 @@ function m:choose_prefab()
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         if gd.is_opening then
-
             imgui.widget.Text("Create new or open existing prefab.")
             imgui.widget.Text("prefab name:  ")
             imgui.cursor.SameLine()
@@ -633,7 +631,8 @@ function m:reload()
     if filename == 'nil' then
         self:save((gd.project_root / "res/__temp__.prefab"):string())
     else
-        self:open(filename, self.prefab_name, self.patch_template)
+        local _, origin_patch_template = get_prefabs_and_patch_template(self.glb_filename)
+        self:open(filename, self.prefab_name, origin_patch_template)
     end
 end
 local global_data       = require "common.global_data"

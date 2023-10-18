@@ -166,7 +166,7 @@ local function set_current_anim(anim_name)
         return false
     end
     local tpl = hierarchy:get_node_info(anim_eid).template
-    birth_anim[1] = (anim_name == tpl.animation_birth)
+    birth_anim[1] = (anim_name == tpl.data.animation_birth)
 
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
@@ -558,17 +558,6 @@ function m.clear()
     keyframe_view.clear()
 end
 
-local anim_name = ""
-local ui_anim_name = {text = ""}
-local anim_path = ""
-local anim_glb_path = ""
-
-local function clear_add_animation_cache()
-    anim_name = ""
-    ui_anim_name.text = ""
-    anim_glb_path = ""
-end
-
 local ui_showskeleton = {false}
 local function show_skeleton(b)
     local _, joints_list = joint_utils:get_joints()
@@ -585,6 +574,8 @@ local function show_skeleton(b)
     end
     joint_utils.show_skeleton = b
 end
+local anim_name_ui = {text = ""}
+local anim_path_ui = {text = ""}
 local update_slot_list = world:sub {"UpdateSlotList"}
 function m.show()
     for _ in update_slot_list:unpack() do
@@ -613,27 +604,31 @@ function m.show()
         imgui.cursor.SameLine()
         local title = "Add Animation"
         if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
-            anim_path = ""
+            anim_name_ui.text = ""
+            anim_path_ui.text = ""
             imgui.windows.OpenPopup(title)
         end
         local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
         if change then
-            imgui.widget.Text("Name : ")
+            imgui.widget.Text("Anim Name:")
             imgui.cursor.SameLine()
-            if imgui.widget.InputText("##Name", ui_anim_name) then
-                anim_name = tostring(ui_anim_name.text)
+            if imgui.widget.InputText("##AnimName", anim_name_ui) then
             end
-            imgui.widget.Text("Path : " .. anim_glb_path)
+            imgui.widget.Text("Anim Path:")
+            imgui.cursor.SameLine()
+            if imgui.widget.InputText("##AnimPath", anim_path_ui) then
+            end
             imgui.cursor.SameLine()
             if imgui.widget.Button("...") then
                 local localpath = uiutils.get_open_file_path("Animation", "anim")
                 if localpath then
-                    anim_path = access.virtualpath(global_data.repo, localpath)
-                    assert(anim_path)
+                    anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
                 end
             end
             imgui.cursor.Separator()
             if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
+                local anim_name = tostring(anim_name_ui.text)
+                local anim_path = tostring(anim_path_ui.text)
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
                     local e <close> = world:entity(anim_eid, "animation:in")
@@ -653,12 +648,10 @@ function m.show()
                         reload = true
                     end
                 end
-                clear_add_animation_cache()
                 imgui.windows.CloseCurrentPopup()
             end
             imgui.cursor.SameLine()
             if imgui.widget.Button(faicons.ICON_FA_XMARK.." Cancel") then
-                clear_add_animation_cache()
                 imgui.windows.CloseCurrentPopup()
             end
             imgui.windows.EndPopup()
@@ -687,12 +680,8 @@ function m.show()
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("default", birth_anim) then
             local tpl = hierarchy:get_node_info(anim_eid).template
-            if birth_anim[1] then
-                tpl.animation_birth = current_anim.name
-            else
-                tpl.animation_birth = ""
-            end
-            prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.animation_birth)
+            tpl.data.animation_birth = birth_anim[1] and current_anim.name or nil
+            prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.data.animation_birth)
         end
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
@@ -727,10 +716,7 @@ function m.show()
         imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
-        -- clear dirty flag
         edit_anims.dirty = false
-        -- set_event_dirty(0)
-        --
         local move_type
         local new_frame_idx
         local move_delta
@@ -777,7 +763,6 @@ function m.show()
             imgui.windows.BeginChild("##show_current_event", child_width, child_height, false)
             show_current_event()
             imgui.windows.EndChild()
-
             imgui.table.End()
         end
     end
