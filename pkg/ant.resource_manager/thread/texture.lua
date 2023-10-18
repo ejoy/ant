@@ -276,7 +276,7 @@ end
 local FrameLoaded = 0
 local MaxFrameLoaded <const> = 64
 local rt_table = {}
-
+local chain_table = {}
 ltask.fork(function ()
     while true do
         ltask.wait(token)
@@ -293,6 +293,7 @@ ltask.fork(function ()
             local c = textureByName[name]
             local handle = createTexture(textureData)
             c.handle = handle
+            c.flag   = textureData.flag
             textureman.texture_set(c.id, handle)
             FrameLoaded = FrameLoaded + 1
             ltask.sleep(0)
@@ -330,7 +331,7 @@ local update; do
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
-                if c and (not rt_table[id]) then
+                if c and (not rt_table[id]) and (not chain_table[id]) then
                     asyncDestroyTexture(c)
                     print("Destroy Texture: " .. c.name)
                 end
@@ -370,6 +371,10 @@ function S.texture_destroy_handle(rt_id)
     return true
 end
 
+function S.texture_register_debug_mipmap_id(chain_id)
+    chain_table[chain_id] = true
+end
+
 -- for web console
 
 function S.texture_list()
@@ -402,6 +407,23 @@ function S.texture_png(id)
 		assert(nc)
 		return nc
 	end
+end
+
+function S.texture_memory(id)
+	local c = textureById[id]
+	if c then
+		local path = cr.compile(c.name.."|main.bin")
+		if not path then
+			return
+		end
+		local content = fastio.readall_s(path)
+		assert(content)
+		return content
+	end
+end
+
+function S.texture_content(id)
+	return textureById[id]
 end
 
 return {

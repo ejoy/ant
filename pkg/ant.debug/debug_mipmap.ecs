@@ -1,0 +1,4 @@
+import_feature "ant.asset"
+
+system "debug_mipmap_system"
+    .implement "debug_mipmap.lua"

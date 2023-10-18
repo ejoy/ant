@@ -3,3 +3,6 @@ system "debug_system"
 
 feature "debug_material"
     .import "debug_material.ecs"
+
+feature "debug_mipmap"
+    .import "debug_mipmap.ecs"

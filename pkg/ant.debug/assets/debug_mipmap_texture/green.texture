@@ -1,0 +1,13 @@
+compress:
+  android: ASTC8X8
+  ios: ASTC8X8
+  windows: BC3
+maxsize: 512x512
+colorspace: sRGB
+path:/pkg/ant.debug/assets/debug_mipmap_color/m_green.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

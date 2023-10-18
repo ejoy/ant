@@ -4,15 +4,16 @@ local w     = world.w
 
 local math3d = require "math3d"
 local bgfx = require "bgfx"
-
+local assetmgr      = import_package "ant.asset"
 local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
-
+local ltask = require "ltask"
+local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
-
+local fastio     = require "fastio"
 local S = ecs.system "init_system"
-
+local image 		= require "image"
 local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local function create_instance(prefab, on_ready)
@@ -91,8 +92,12 @@ function S.init()
 end
 
 local peids
+local debug_mipmap_eid
+local red_bc3
+
 
 function S.init_world()
+    
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
     local eyepos = math3d.vector(0, 10, -10)
@@ -107,9 +112,9 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.test.light/assets/goods-station-1.glb|mesh.prefab", function (e)
+    create_instance("/pkg/ant.test.light/assets/broken-outfall-2x2.glb|mesh.prefab", function (e)
         peids = e.tag['*']
-        local leid = e.tag['*'][1]
+        debug_mipmap_eid = e.tag['*'][2]
         -- local le<close> = world:entity(leid, "scene:update")
         -- iom.set_scale(le, 0.1)
     end)
@@ -159,6 +164,7 @@ end
 
 local kb_mb = world:sub{"keyboard"}
 
+local idm = ecs.require "ant.debug|debug_mipmap"
 function S:data_changed()
     for _, code, press, state in kb_mb:unpack() do
         if code == "T" and press == 0 then
@@ -167,6 +173,19 @@ function S:data_changed()
                 w:remove(e)
             end
         end
+
+        local function writefile(filename, data)
+            local f <close> = assert(io.open(filename, "wb"))
+            f:write(data)
+        end
+        if code == "K" and press == 0 then
+            idm.convert_to_debug_mipmap()
+        end
+
+        if code == "J" and press == 0 then
+            idm.restore_to_origin_mipmap()
+        end
+
     end
 end
 

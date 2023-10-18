@@ -123,6 +123,61 @@ static bimg::ImageContainer* create_nomip_image(bx::AllocatorI &allocator, const
     return nomip_image;
 }
 
+static int32_t
+to_dds_file(bx::MemoryBlock *mb, bimg::ImageContainer *ic){
+    bx::MemoryWriter sw(mb);
+    bx::Error err;
+    return bimg::imageWriteDds(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err);
+}
+
+static void
+push_dds_file(lua_State *L, bx::AllocatorI *allocator, bimg::ImageContainer *ic){
+    bx::MemoryBlock mb(allocator);
+    to_dds_file(&mb, ic);
+    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
+}
+
+static void replace_debug_mipmap_image(const bimg::ImageContainer *srt_image, const bimg::ImageContainer *dst_image, uint32_t src_lod, uint32_t dst_lod){
+    for (uint32_t ilayer = 0; ilayer < dst_image->m_numLayers; ++ilayer){
+        auto copy_mip = [](const auto& image_src, uint32_t side, uint32_t src_lod, uint32_t dst_lod, const auto &dst_image){
+            bimg::ImageMip srcmip;
+            bimg::imageGetRawData(image_src, side, src_lod, image_src.m_data, image_src.m_size, srcmip);
+
+            bimg::ImageMip dstmip;
+            bimg::imageGetRawData(dst_image, side, dst_lod, dst_image.m_data, dst_image.m_size, dstmip);
+
+            const uint32_t pitch = dstmip.m_width * dstmip.m_bpp / 8;
+            bimg::imageCopy((void*)dstmip.m_data, dstmip.m_height, pitch, dstmip.m_depth, srcmip.m_data, pitch);
+        };
+        copy_mip(*srt_image, ilayer, src_lod, dst_lod, *dst_image);
+    }
+}
+
+static int
+lreplace_debug_mipmap(lua_State *L) {
+    auto src_memory = getmemory(L, 1);
+    auto dst_memory = getmemory(L, 2);
+    auto src_lod    = luaL_checkinteger(L, 3);
+    auto dst_lod    = luaL_checkinteger(L, 4);
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
+    auto dst_image = bimg::imageParse(&allocator, (const void*)dst_memory.data(), (uint32_t)dst_memory.size(), bimg::TextureFormat::Count, nullptr);
+    auto srt_image = bimg::imageParse(&allocator, (const void*)src_memory.data(), (uint32_t)src_memory.size(), bimg::TextureFormat::Count, nullptr);
+    if (!srt_image){
+        lua_pushstring(L, "Invalid src image content");
+        return lua_error(L);
+    }
+    if (!dst_image){
+        lua_pushstring(L, "Invalid dst image content");
+        return lua_error(L);
+    }
+    replace_debug_mipmap_image(srt_image, dst_image, (uint32_t)src_lod, (uint32_t)dst_lod);
+    push_dds_file(L, &allocator, dst_image);
+    bimg::imageFree(srt_image);
+    bimg::imageFree(dst_image);
+    return 1;
+}
+
 static int
 lparse(lua_State *L) {
     auto memory = getmemory(L, 1);
@@ -269,19 +324,6 @@ lget_format_name(lua_State *L){
     return 1;
 }
 
-static int32_t
-to_dds_file(bx::MemoryBlock *mb, bimg::ImageContainer *ic){
-    bx::MemoryWriter sw(mb);
-    bx::Error err;
-    return bimg::imageWriteDds(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err);
-}
-
-static void
-push_dds_file(lua_State *L, bx::AllocatorI *allocator, bimg::ImageContainer *ic){
-    bx::MemoryBlock mb(allocator);
-    to_dds_file(&mb, ic);
-    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
-}
 
 static int
 lconvert(lua_State *L){
@@ -827,6 +869,7 @@ luaopen_image(lua_State* L) {
         { "pack2cubemap",       lpack2cubemap},
         { "cubemap2equirectangular", lcubemap2equirectangular},
         { "equirectangular2cubemap", lequirectangular2cubemap},
+        { "replace_debug_mipmap",    lreplace_debug_mipmap},
         { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);

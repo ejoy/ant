@@ -1,0 +1,14 @@
+compress:
+  android: ASTC8X8
+  ios: ASTC8X8
+  windows: BC3
+maxsize: 32x32
+colorspace: sRGB
+path:/pkg/ant.debug/assets/debug_mipmap_color/m_pink.png
+mipmap: 0
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture
