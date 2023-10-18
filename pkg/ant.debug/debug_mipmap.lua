@@ -88,4 +88,13 @@ function idm.restore_to_origin_mipmap()
     end
 end
 
+function idm.reset_mipmap_level(id, first_mip)
+    if not assetmgr.invalid_texture(id) then
+        local texture_content = ltask.call(ServiceResource, "texture_content", id)
+        local texture_memory = ltask.call(ServiceResource, "texture_memory", id)
+        local new_handle = bgfx.create_texture(texture_memory, texture_content.flag, first_mip)
+        ltask.call(ServiceResource, "texture_set_handle", id, new_handle)
+    end
+end
+
 return idm
