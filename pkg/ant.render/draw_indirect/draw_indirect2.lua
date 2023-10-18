@@ -7,19 +7,36 @@ local di_sys = ecs.system "draw_indirect_system2"
 
 local layoutmgr = ecs.require "vertexlayout_mgr"
 
+local INVALID_HANDLE_VALUE<const> = 0xffffffff
+
+local function buffer_destroy(h)
+    bgfx.destroy(h)
+    return INVALID_HANDLE_VALUE
+end
+
 local function check_create_draw_indircet_buffer(io, ib)
     io.itb_handle = ib.handle
-
-    if io.draw_num ~= ib.num then
-        io.draw_num = ib.num
+    -- only recreate draw indirect buffer when we need more buffer than last allocated
+    if ib.num > io.draw_num then
         io.idb_handle = bgfx.create_indirect_buffer(ib.num)
     end
+
+    io.draw_num = ib.num
+    assert(io.idb_handle ~= INVALID_HANDLE_VALUE, "Indirect buffer not update")
     return io.idb_handle
 end
 
-local function update_instance_buffer(e)
+local function update_instance_buffer(e, instancememory, instancenum)
     local di = e.draw_indirect
     local ib = di.instance_buffer
+    if instancenum == 0 then
+        -- not destroy ib.handle or di.handle
+        e.indirect_object.draw_num, ib.num = 0, 0
+        return
+    end
+
+    ib.memory, ib.num = instancememory, instancenum
+
     if ib.handle then
         bgfx.update(ib.handle, 0, ib.memory)
     else
@@ -27,20 +44,17 @@ local function update_instance_buffer(e)
         ib.handle = bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
     end
 
+    if di.handle then
+        bgfx.destroy(di.handle)
+    end
     di.handle = check_create_draw_indircet_buffer(e.indirect_object, ib)
 end
 
 function di_sys.component_init()
     for e in w:select "INIT draw_indirect:update indirect_object:update" do
-        update_instance_buffer(e)
+        local ib = e.draw_indirect.instance_buffer
+        update_instance_buffer(e, ib.memory, ib.num)
     end
-end
-
-local INVALID_HANDLE_VALUE<const> = 0xffffffff
-
-local function buffer_destroy(h)
-    bgfx.destroy(h)
-    return INVALID_HANDLE_VALUE
 end
 
 function di_sys:entity_remove()
@@ -59,9 +73,7 @@ local idi = {}
 
 function idi.update_instance_buffer(e, instancememory, instancenum)
     w:extend(e, "draw_indirect:update indirect_object:update")
-    local ib = e.draw_indirect.instance_buffer
-    ib.memory, ib.num   = instancememory, instancenum
-    update_instance_buffer(e)
+    update_instance_buffer(e, instancememory, instancenum)
 end
 
 return idi
