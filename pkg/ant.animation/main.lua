@@ -1,1 +1,1 @@
-require "skeleton"  --init heirarchy.skeleton module
+import_package "ant.math"

@@ -2,15 +2,13 @@ local ecs 	= ...
 local world = ecs.world
 local w 	= world.w
 
+import_package "ant.math"
 local assetmgr 		= import_package "ant.asset"
-local iom 			= ecs.require "ant.objcontroller|obj_motion"
 local animodule 	= require "hierarchy".animation
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
-local iefk          = ecs.require "ant.efk|efk"
 local audio 		= import_package "ant.audio"
-local math3d        = require "math3d"
 local fmod
 if world.__EDITOR__ then
 	fmod = require "fmod"
@@ -186,19 +184,4 @@ function ani_sys:entity_ready()
 			iani.set_time(e, p0)
 		end
 	end
-end
-
-local mt = animodule.bind_pose_mt()
-if not mt.adapter then
-	mt.adapter = true
-	local math3d_adapter = import_package "ant.math".adapter
-	require "skeleton" -- for mathadapter bind_bgfx_math_adapter
-	mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-	mt = animodule.pose_result_mt()
-	mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-	mt.joint_local_srt = math3d_adapter.format(mt.joint_local_srt, "vqv", 3)
-	mt.fetch_result = math3d_adapter.getter(mt.fetch_result, "m", 2)
-	mt = animodule.raw_animation_mt()
-	mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
-	animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
 end

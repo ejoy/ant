@@ -1,4 +1,5 @@
-require "bind_adapter"	--for bind bgfx api to math adapter
+import_package "ant.math"
+
 return {
     sampler     = import_package "ant.render.core".sampler,
 	fbmgr       = require "framebuffer_mgr",
