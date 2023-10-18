@@ -113,7 +113,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					if _DEBUG then print("FILE", hash, fullname, mtime) end
 				end
 				add_item(hash, {
-					filename = realfullname,
+					filename = realfullname:string(),
 					timestamp = mtime,
 				})
 				table.insert(hashs, string.format("f %s %s", name, hash))
@@ -279,8 +279,8 @@ local function read_ref(self, hash)
 					needupdate = true
 				end
 			else
-				-- remove dir
-				needupdate = true
+				-- It's a dir
+				table.insert(items, line)
 			end
 		end
 	end
