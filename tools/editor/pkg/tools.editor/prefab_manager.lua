@@ -388,9 +388,6 @@ function m:on_prefab_ready(prefab)
             set_select_adapter(children, eid)
             tp.filename = node.filename
             tp.editor = node.editor
-        --     tp = {template = node.template, filename = node.filename, editor = node.editor, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
-        -- else
-        --     tp = {template = node.template, name = node.name, is_patch = node.is_patch, scene_root = node.scene_root}
         end
         hierarchy:add(eid, tp, node.parent or self.root)
     end
@@ -451,7 +448,6 @@ function m:choose_prefab()
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         if gd.is_opening then
-
             imgui.widget.Text("Create new or open existing prefab.")
             imgui.widget.Text("prefab name:  ")
             imgui.cursor.SameLine()
