@@ -4,7 +4,6 @@ local ROOT <const> = "../../"
 
 lm:lua_source "debugger" {
     defines = {
-        "DBG_LUA_VERSION=504",
         "LUA_VERSION_LATEST",
     },
     includes = {
