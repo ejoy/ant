@@ -118,7 +118,7 @@ vec4 transform2clipspace(vec4 posWS)
 #ifdef ENABLE_TAA
 	posCS += u_jitter * posCS.w; // Apply Jittering
 #endif //ENABLE_TAA
-	return posWS;
+	return posCS;
 }
 
 vec4 transform_pos(mat4 wm, vec3 posLS, out vec4 posCS)
