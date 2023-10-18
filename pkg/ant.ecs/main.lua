@@ -66,15 +66,16 @@ local table_insert = table.insert
 local function create_instance(w, group, data, debuginfo)
     local entities = {}
     local mounts = {}
-    local noparent = {}
+    local noparent_eid = {}
+    local noparent_data = {}
     for i = 1, #data do
         local v = data[i]
-        local np
+        local n_eid, n_data
         if v.prefab then
-            entities[i], np = create_instance(w, group, v.template, debuginfo)
+            entities[i], n_eid, n_data = create_instance(w, group, v.template, debuginfo)
         else
             local e, initargs = create_entity_by_template(w, group, v.template, v.has_scene, debuginfo)
-            entities[i], np = e, initargs
+            entities[i], n_eid, n_data = e, e, initargs
         end
         if v.mount then
             assert(
@@ -84,12 +85,14 @@ local function create_instance(w, group, data, debuginfo)
                 and not data[v.mount].prefab
             )
             assert(v.mount < i)
-            mounts[i] = np
+            mounts[i] = n_data
         else
             if v.prefab then
-                table_append(noparent, np)
+                table_append(noparent_eid, n_eid)
+                table_append(noparent_data, n_data)
             else
-                table_insert(noparent, np)
+                table_insert(noparent_eid, n_eid)
+                table_insert(noparent_data, n_data)
             end
         end
     end
@@ -108,7 +111,7 @@ local function create_instance(w, group, data, debuginfo)
             end
         end
     end
-    return entities, noparent
+    return entities, noparent_eid, noparent_data
 end
 
 local template_mt = {}
@@ -179,24 +182,27 @@ function world:_prefab_instance(v)
     end
     local w = self
     local template = create_template(w, v.args.prefab)
-    local prefab, noparent = create_instance(w, v.args.group, template, v.debuginfo)
-    for _, m in ipairs(noparent) do
-        if m.has_scene then
-            m.data.scene_parent = v.args.parent
+    local prefab, noparent_eid, noparent_data = create_instance(w, v.args.group, template, v.debuginfo)
+    v.instance.noparent = noparent_eid
+    if v.args.parent then
+        for _, m in ipairs(noparent_data) do
+            if m.has_scene then
+                m.data.scene_parent = v.args.parent
+            end
         end
     end
     local tags = v.instance.tag
-    each_prefab(prefab, template, function (e, tag)
+    each_prefab(prefab, template, function (eid, tag)
         if tag then
             if type(tag) == "table" then
                 for _, tag_ in ipairs(tag) do
-                    add_tag(tags, tag_, e)
+                    add_tag(tags, tag_, eid)
                 end
             else
-                add_tag(tags, tag, e)
+                add_tag(tags, tag, eid)
             end
         end
-        table.insert(tags['*'], e)
+        table.insert(tags['*'], eid)
     end)
 end
 
@@ -205,6 +211,7 @@ function world:create_instance(args)
     args.group = args.group or 0
     local instance = {
         group = args.group,
+        noparent = {},
         tag = {['*']={}}
     }
     local debuginfo
@@ -234,6 +241,18 @@ function world:create_instance(args)
         instance.proxy = create_entity_by_data(w, args.group, proxy_entity, debuginfo)
     end
     return instance
+end
+
+function world:instance_set_parent(instance, parent)
+    local w = self
+    for _, eid in ipairs(instance.noparent) do
+        local e <close> = w:entity(eid, "scene?update scene_needchange?out")
+        assert(eid > parent)
+        if e.scene then
+            e.scene.parent = parent
+            e.scene_needchange = true
+        end
+    end
 end
 
 function world:remove_instance(instance)

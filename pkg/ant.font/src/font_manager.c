@@ -1,7 +1,7 @@
 #include "font_manager.h"
 #include "truetype.h"
 
-#include "../bgfx/bgfx_interface.h"
+#include "bgfx_interface.h"
 #include "luabgfx.h"
 
 #include <string.h>

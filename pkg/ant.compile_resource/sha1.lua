@@ -1,9 +1,5 @@
-local sha1 = require "crypt".sha1
-
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
+local fastio = require "fastio"
 
 return function (str)
-	return sha1(str):gsub(".", byte2hex)
+	return fastio.str2sha1(str)
 end

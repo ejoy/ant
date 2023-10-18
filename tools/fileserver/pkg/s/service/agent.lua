@@ -5,6 +5,7 @@ local serialization = require "bee.serialization"
 
 local FD = ...
 
+local quit = false
 local message = {}
 local ServiceDebugProxy
 local ServiceVfsMgr = ltask.queryservice "s|vfsmgr"
@@ -32,7 +33,9 @@ end)
 
 
 local function response(...)
-	socket.send(FD, string.pack("<s2", serialization.packstring(...)))
+	if socket.send(FD, string.pack("<s2", serialization.packstring(...))) == nil then
+		quit = true
+	end
 end
 
 local function response_ex(tunnel_name, port, session, req)
@@ -168,7 +171,9 @@ end
 function message.RESOURCE_SETTING(setting)
 	local s = ltask.call(ServiceVfsMgr, "RESOURCE_SETTING", setting)
 	CompileId = s.id
-	response("RESOURCE_SETTING", s.resource)
+	for path, hash in pairs(s.resource) do
+		response("RESOURCE", path, hash)
+	end
 end
 
 function message.RESOURCE(path)
@@ -210,25 +215,6 @@ function message.GET(hash)
 	f:close()
 end
 
-function message.FETCH(path)
-	local hashs = ltask.call(ServiceVfsMgr, "FETCH", path)
-	if not hashs then
-		response("MISSING", path)
-		return
-	end
-	response("FETCH", path, hashs)
-end
-
-function message.FETCH_PATH(session, hash, path)
-	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_PATH", hash, path)
-	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
-end
-
-function message.FETCH_DIR(session, hash, path)
-	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_DIR", hash, path)
-	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
-end
-
 function message.LOG(data)
 	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
     LoggerQueue[#LoggerQueue+1] = data
@@ -253,7 +239,7 @@ end
 
 local function dispatch(fd)
 	local reading_queue = {}
-	while true do
+	while not quit do
 		local reading = socket.recv(fd)
 		if reading == nil then
 			break
@@ -270,6 +256,7 @@ local function dispatch(fd)
 end
 
 local function quit()
+	socket.close(FD)
 	ltask.call(ServiceLogManager, "CLOSE", LoggerIndex)
 	if ServiceDebugProxy then
 		ltask.send(ServiceDebugProxy, "QUIT")

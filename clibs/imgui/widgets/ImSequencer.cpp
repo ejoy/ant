@@ -15,7 +15,7 @@ namespace ImSequencer
 	int anim_fps = 50;
 	anim_detail* current_anim{ nullptr };
 	std::unordered_map<std::string, anim_detail> anim_info;
-	constexpr int ItemHeight = 20;
+	int ItemHeight = 20;
 
 	int GetFrameMin() { return 0; }
 	int GetFrameMax() { return (int)std::ceil(current_anim->duration * anim_fps) - 1; }
@@ -27,24 +27,34 @@ namespace ImSequencer
 	void Sequencer(bool& pause, int& current_frame, int& selected_frame, int& move_type, int& range_index, int& move_delta)
 	{
 		static int firstFrame = 0;
-		ImGuiIO& io = ImGui::GetIO();
-		int cx = (int)(io.MousePos.x);
-		int cy = (int)(io.MousePos.y);
 		static float framePixelWidth = 10.f;
 		static float framePixelWidthTarget = 10.f;
+		static bool inited = false;
+		auto viewport = ImGui::GetMainViewport();
+		auto dpiScale = viewport->DpiScale;
+		if (!inited) {
+			inited = true;
+			ItemHeight *= dpiScale;
+			framePixelWidth *= dpiScale;
+			framePixelWidthTarget *= dpiScale;
+		}
 		constexpr int legendWidth = 150;
-
 		static bool movingEntry = false;
 		static int movingPos = -1;
 		static int movingPart = -1;
 		static int movingKeyFrame = -1;
 		static int sourceKeyFrame = -1;
+
+		ImGuiIO& io = ImGui::GetIO();
+		auto cx = (int)(io.MousePos.x);
+		auto cy = (int)(io.MousePos.y);
+
 		ImGui::BeginGroup();
 
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 		ImVec2 canvas_pos = ImGui::GetCursorScreenPos();            // ImDrawList API uses screen coordinates!
 		ImVec2 canvas_size = ImGui::GetContentRegionAvail();        // Resize canvas to what's available
-		canvas_size.y = 80.0f;
+		canvas_size.y = 70.0f * dpiScale;
 		int firstFrameUsed = firstFrame;
 
 		int frameCount = ImMax(GetFrameMax() - GetFrameMin(), 1);

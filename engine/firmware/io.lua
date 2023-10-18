@@ -3,6 +3,12 @@ local fw = require "firmware"
 local path = os.getenv "LUA_DEBUG_PATH"
 if path then
 	local function load_dbg()
+		if path:match "debugger%.lua$" then
+			local f = assert(io.open(path))
+			local str = f:read "a"
+			f:close()
+			return assert(load(str, "=(debugger.lua)"))(path)
+		end
 		return assert(fw.loadfile "debugger.lua", "=(debugger.lua)")()
 	end
 	load_dbg()
@@ -25,8 +31,6 @@ local config, fddata = io_req:bpop()
 local QUIT = false
 local OFFLINE = false
 
-local TOKEN_RESOURCE_SETTING <const> = {}
-
 local _print = _G.print
 if platform.os == 'android' then
 	local android = require "android"
@@ -39,7 +43,8 @@ local channelfd = fddata and socket.fd(fddata) or nil
 
 thread.setname "ant - IO thread"
 
-local repo
+local vfs = assert(fw.loadfile "vfs.lua")()
+local repo = vfs.new(config.repopath)
 
 local connection = {
 	request = {},
@@ -84,25 +89,6 @@ local function init_channels()
 			_print(text)
 		else
 			connection_send("LOG", text)
-		end
-	end
-end
-
-local function init_repo(hash)
-	if hash then
-		if repo then
-			repo:updatehistory(hash)
-			repo:changeroot(hash)
-		else
-			local vfs = assert(fw.loadfile "vfs.lua")()
-			repo = vfs.new(config.repopath, hash)
-		end
-	else
-		if repo then
-			--do nothing
-		else
-			local vfs = assert(fw.loadfile "vfs.lua")()
-			repo = vfs.new(config.repopath)
 		end
 	end
 end
@@ -346,7 +332,8 @@ function response.ROOT(hash)
 		return
 	end
 	print("[response] ROOT", hash)
-	init_repo(hash)
+	repo:updatehistory(hash)
+	repo:changeroot(hash)
 end
 
 -- REMARK: Main thread may reading the file while writing, if file server update file.
@@ -382,52 +369,6 @@ function response.RESOURCE(fullpath, hash)
 	request_resolve(fullpath)
 end
 
-function response.RESOURCE_SETTING(data)
-	print("[response] RESOURCE_SETTING")
-	repo:set_resource(data)
-	request_resolve(TOKEN_RESOURCE_SETTING)
-end
-
-function response.FETCH(path, hashs)
-	print("[response] FETCH", path, hashs)
-	local waiting = {}
-	local missing = {}
-	local function finish()
-		if next(waiting) == nil then
-			local res = {}
-			for h in pairs(missing) do
-				res[#res+1] = h
-			end
-			if #res == 0 then
-				request_resolve(path)
-			else
-				table.insert(res, 1, "MISSING")
-				request_reject(path, table.concat(res))
-			end
-		end
-	end
-	local promise = {
-		resolve = function (hash)
-			waiting[hash] = nil
-			finish()
-		end,
-		reject = function (hash)
-			missing[hash] = true
-			waiting[hash] = nil
-			finish()
-		end
-	}
-	hashs:gsub("[^|]+", function(hash)
-		local realpath = repo:hashpath(hash)
-		local f <close> = io.open(realpath, "rb")
-		if not f then
-			waiting[hash] = true
-			request_start("GET", hash, promise)
-		end
-	end)
-	finish()
-end
-
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
@@ -450,158 +391,6 @@ function CMD.LIST(id, path)
 		return
 	end
 	response_id(id, nil)
-end
-
-function CMD.FETCH(id, path)
---	print("[request] FETCH", path)
-	request_start("FETCH", path, {
-		resolve = function ()
-			response_id(id)
-		end,
-		reject = function (_, err)
-			response_err(id, err)
-		end
-	})
-end
-
-local fetch_session = {}
-local fetch_seesion_id = 0
-
-local function fetch_request(status, ...)
-	local progress = status.progress
-	progress.waiting = progress.waiting + 1
-	connection_send(...)
-end
-
-local function fetch_hash(status, hash)
-	local realpath = repo:hashpath(hash)
-	local f <close> = io.open(realpath, "rb")
-	if not f then
-		local progress = status.progress
-		progress.waiting = progress.waiting + 1
-		request_start("GET", hash, status.hash_promise)
-	end
-end
-
-local function fetch_resource(status, path)
-	if not repo:get_resource(path) then
-		return
-	end
-	local progress = status.progress
-	progress.waiting = progress.waiting + 1
-	request_start("RESOURCE", path, status.resource_promise)
-end
-
-local function fetch_response(status)
-	local progress = status.progress
-	progress.success = progress.success + 1
-	progress.waiting = progress.waiting - 1
-end
-
-local function fetch_error(status)
-	local progress = status.progress
-	progress.failed = progress.failed + 1
-end
-
-function CMD.FETCH_BEGIN(id, path)
-	fetch_seesion_id = fetch_seesion_id + 1
-	local session = tostring(fetch_seesion_id)
-	local progress = {
-		success = 0,
-		failed = 0,
-		waiting = 0,
-	}
-	fetch_session[session] = {
-		progress = progress,
-		hash_promise = {
-			resolve = function ()
-				progress.success = progress.success + 1
-				progress.waiting = progress.waiting - 1
-			end,
-			reject = function ()
-				progress.failed = progress.failed + 1
-				progress.waiting = progress.waiting - 1
-			end
-		},
-		resource_promise = {
-			resolve = function (path)
-				progress.success = progress.success + 1
-				progress.waiting = progress.waiting - 1
-				local hash = repo:get_resource(path)
-				local status = fetch_session[session]
-				if status then
-					fetch_request(status, "FETCH_DIR", session, hash)
-				end
-			end,
-			reject = function ()
-				progress.failed = progress.failed + 1
-				progress.waiting = progress.waiting - 1
-			end
-		}
-	}
-	CMD.FETCH_ADD(nil, session, path)
-	response_id(id, session)
-end
-
-function CMD.FETCH_UPDATE(id, session)
-	local status = fetch_session[session]
-	if not status then
-		response_id(id, nil)
-		return
-	end
-	response_id(id, status.progress)
-end
-
-function CMD.FETCH_END(id, session)
-	fetch_session[session] = nil
-	response_id(id, nil)
-end
-
-function CMD.FETCH_ADD(_, session, path)
-	local status = fetch_session[session]
-	if not status then
-		return
-	end
-	local retval, errmsg = repo:gethash(path)
-	if retval == nil then
-		fetch_error(status)
-		return
-	end
-	if retval.uncomplete then
-		fetch_request(status, "FETCH_PATH", session, retval.hash, retval.path)
-		return
-	end
-	if retval.type == "f" then
-		fetch_hash(status, retval.hash)
-	elseif retval.type == "d" then
-		fetch_hash(status, retval.hash)
-		fetch_request(status, "FETCH_DIR", session, retval.hash)
-	elseif retval.type == "r" then
-		fetch_resource(status, retval.hash)
-	else
-		fetch_error(status)
-	end
-end
-
-function response.FECTH_RESPONSE(session, hashs, resource_hashs, unsolved_hashs, error_hashs)
-	local status = fetch_session[session]
-	if not status then
-		return
-	end
-	fetch_response(status)
-	hashs:gsub("[^|]+", function(hash)
-		fetch_hash(status, hash)
-	end)
-	resource_hashs:gsub("[^|]+", function(hash)
-		fetch_resource(status, hash)
-	end)
-	unsolved_hashs:gsub("[^|]+", function(hash)
-		fetch_hash(status, hash)
-		fetch_request(status, "FETCH_DIR", session, hash)
-	end)
-	error_hashs:gsub("[^|]+", function()
-		fetch_error(status)
-	end)
 end
 
 function CMD.TYPE(id, fullpath)
@@ -680,17 +469,9 @@ function CMD.GET(id, fullpath)
 	end
 end
 
-function CMD.RESOURCE_SETTING(id, setting)
+function CMD.RESOURCE_SETTING(_, setting)
 --	print("[request] RESOURCE_SETTING", setting)
-	request_start_with_token("RESOURCE_SETTING", setting, TOKEN_RESOURCE_SETTING, {
-		resolve = function ()
-			response_id(id)
-		end,
-		reject = function (_, err)
-			response_err(id, err)
-		end
-	})
-	response_id(id)
+	request_send("RESOURCE_SETTING", setting)
 end
 
 function CMD.SEND(_, ...)
@@ -923,7 +704,16 @@ local function main()
 		event_delw(connection.fd)
 		-- socket error or closed
 	end
-	init_repo()
+	if repo.root == nil then
+		local hash = repo:history_root()
+		if hash then
+			repo:changeroot(hash)
+			repo:load_resource()
+		else
+			error("No history root")
+			return
+		end
+	end
 	init_channelfd()
 	local uncomplete_req = {}
 	for hash in pairs(connection.request) do

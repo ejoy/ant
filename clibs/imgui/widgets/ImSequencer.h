@@ -10,8 +10,7 @@ struct ImDrawList;
 struct ImRect;
 namespace ImSequencer
 {
-   struct clip_range
-   {
+   struct clip_range {
        clip_range(std::string_view nv, int s, int e, const std::vector<bool>& event_flags)
            : name{ nv }
            , start{ s }
@@ -23,15 +22,12 @@ namespace ImSequencer
        int end;
        std::vector<bool> event_flags;
    };
-   struct anim_detail
-   {
+   struct anim_detail {
        float duration{ 0.0f };
        float current_time{ 0.0f };
        bool is_playing{ false };
        float speed{ 1.0f };
        std::vector<bool> event_flags;
-       //std::vector<clip_range>  clip_rangs;
-       //imgui
        bool expand{ false };
    };
    extern bool new_anim;

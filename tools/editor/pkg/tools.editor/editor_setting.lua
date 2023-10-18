@@ -2,14 +2,11 @@ local serialize = import_package "ant.serialize"
 
 local fs        = require "filesystem"
 local datalist  = require "datalist"
+local fastio    = require "fastio"
 
 local settingpath<const> = fs.path "/pkg/tools.editor/editor.settings"
 local function read()
-    local f<close> = fs.open(settingpath)
-    if f then
-        return datalist.parse(f:read "a")
-    end
-    return {}
+    return datalist.parse(fastio.readall(settingpath:localpath():string(), settingpath:string()))
 end
 
 local editor_setting = read()

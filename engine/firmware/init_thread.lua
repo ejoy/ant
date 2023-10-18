@@ -48,33 +48,13 @@ function vfs.type(path)
 	return call("TYPE", path)
 end
 
-function vfs.fetch(path)
-	return call("FETCH", path)
-end
-
-function vfs.fetch_begin(path)
-	return call("FETCH_BEGIN", path)
-end
-
-function vfs.fetch_add(session, path)
-	send("FETCH_ADD", session, path)
-end
-
-function vfs.fetch_update(session)
-	return call("FETCH_UPDATE", session)
-end
-
-function vfs.fetch_end(session)
-	return call("FETCH_END", session)
-end
-
 function vfs.switch()
 	local servicelua = "/engine/task/service/service.lua"
 	send("SWITCH", servicelua, vfs.realpath(servicelua))
 end
 
 function vfs.resource_setting(setting)
-	return call("RESOURCE_SETTING", setting)
+	return send("RESOURCE_SETTING", setting)
 end
 
 if not __ANT_RUNTIME__ then

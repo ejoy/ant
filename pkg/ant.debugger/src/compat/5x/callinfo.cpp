@@ -2,14 +2,11 @@
 
 #include "compat/internal.h"
 
-#if LUA_VERSION_NUM < 504
-#    define s2v(o) (o)
-#endif
-
-#if defined(LUA_VERSION_LATEST)
+#if LUA_VERSION_NUM >= 504
 #    define LUA_STKID(s) s.p
 #else
 #    define LUA_STKID(s) s
+#    define s2v(o) (o)
 #endif
 
 CallInfo* lua_getcallinfo(lua_State* L) {

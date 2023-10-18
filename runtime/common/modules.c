@@ -10,7 +10,6 @@ int luaopen_bee_thread(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
-int luaopen_crypt(lua_State* L);
 int luaopen_datalist(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
 int luaopen_math3d(lua_State* L);
@@ -42,7 +41,6 @@ int luaopen_ecs_core(lua_State* L);
 int luaopen_ecs_components(lua_State* L);
 int luaopen_ecs_util(lua_State* L);
 int luaopen_fastio(lua_State* L);
-int luaopen_fileinterface(lua_State *L);
 int luaopen_material_arena(lua_State *L);
 int luaopen_material_core(lua_State *L);
 int luaopen_render_material(lua_State *L);
@@ -80,7 +78,6 @@ void ant_loadmodules(lua_State* L) {
         { "font", luaopen_font },
         { "font.manager", luaopen_font_manager },
         { "font.truetype", luaopen_font_truetype },
-        { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
         { "hierarchy", luaopen_hierarchy },
         { "math3d", luaopen_math3d },
@@ -99,7 +96,6 @@ void ant_loadmodules(lua_State* L) {
         { "programan.server", luaopen_programan_server },
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
-        { "fileinterface", luaopen_fileinterface },
         { "fmod", luaopen_fmod},
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},

@@ -137,8 +137,8 @@ function toxml.string(v, indent)
 end
 
 function toxml.data(v, indent)
-	local crypt = require "crypt"	-- base64
-	local b64 = crypt.base64encode(tostring(v))
+	local base64 = require "base64"
+	local b64 = base64.encode(tostring(v))
 	local tmp = { indent , "<data>\n" }
 	local data_indent = indent .. "  "
 	for i = 1, #b64, 76 do
@@ -287,9 +287,9 @@ function fromxml.data(node)
 	if str == nil then
 		return plist.data ""
 	end
-	local crypt = require "crypt"	-- base64
+	local base64 = require "base64"
 	local text = str:gsub("%s","")
-	local data = crypt.base64decode(text)
+	local data = base64.decode(text)
 	return plist.data(data)
 end
 

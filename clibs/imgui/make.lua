@@ -1,7 +1,7 @@
 local lm = require "luamake"
 
 dofile "../common.lua"
-lm:import "../luabind/build.lua"
+
 local defines = {
     "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
     "IMGUI_DISABLE_OBSOLETE_KEYIO",

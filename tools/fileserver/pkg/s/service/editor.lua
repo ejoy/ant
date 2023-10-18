@@ -23,7 +23,10 @@ local S = {}
 
 function S.MESSAGE(...)
     if not FD then return end
-    socket.send(FD, protocol.packmessage{...})
+    if socket.send(FD, protocol.packmessage{...}) == nil then
+        socket.close(FD)
+        FD = nil
+    end
 end
 
 function S.QUIT()

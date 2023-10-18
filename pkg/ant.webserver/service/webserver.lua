@@ -158,7 +158,8 @@ local function route_vfs(route, cgi)
 					else
 						root = "/" .. root .. "/"
 					end
-					local ok, code, data, header = xpcall(webvfs.get, debug.traceback, path, root, mapping)
+					local fsname, fspath = mapping:match "(%w+):(.*)"
+					local ok, code, data, header = xpcall(webvfs.get, debug.traceback, fsname, path, root, fspath)
 					if ok then
 						response(id, s.write, code, data, header)
 					else

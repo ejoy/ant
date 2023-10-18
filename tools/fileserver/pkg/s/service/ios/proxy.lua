@@ -21,8 +21,12 @@ local function connectIOS()
     while true do
         local fd = assert(socket.connect(usbmuxd.get_address()))
         local a, b = usbmuxd.create_connect_package(DeviceID, 2018)
-        socket.send(fd, a)
-        socket.send(fd, b)
+        if socket.send(fd, a) == nil then
+            goto continue
+        end
+        if socket.send(fd, b) == nil then
+            goto continue
+        end
         local function recvf(n)
             return socket.recv(fd, n)
         end
@@ -33,6 +37,7 @@ local function connectIOS()
                 return fd
             end
         end
+        ::continue::
         socket.close(fd)
         ltask.sleep(20)
     end

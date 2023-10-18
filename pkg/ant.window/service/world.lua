@@ -16,6 +16,7 @@ local S = ltask.dispatch {}
 
 
 local world
+local event = {}
 local encoderBegin = false
 local quit
 local will_reboot
@@ -27,12 +28,12 @@ local function reboot(initargs)
 	world:pipeline_exit()
 	world = ecs.new_world(config)
 	local ev 		= inputmgr.create(world, "win32")
-	S.keyboard		= ev.keyboard
-	S.mouse 		= ev.mouse
-	S.mousewheel	= ev.mousewheel
-	S.touch			= ev.touch
-	S.gesture		= ev.gesture
-	S.size			= ev.size
+	event.keyboard		= ev.keyboard
+	event.mouse 		= ev.mouse
+	event.mousewheel	= ev.mousewheel
+	event.touch			= ev.touch
+	event.gesture		= ev.gesture
+	event.size			= ev.size
 	world:pipeline_init()
 end
 
@@ -62,14 +63,14 @@ local function render(nwh, context, width, height, initialized)
 
 	local ev 		= inputmgr.create(world, "win32")
 
-	S.keyboard		= ev.keyboard
-	S.mouse 		= ev.mouse
-	S.mousewheel	= ev.mousewheel
-	S.touch			= ev.touch
-	S.gesture		= ev.gesture
-	S.size			= ev.size
+	event.keyboard		= ev.keyboard
+	event.mouse 		= ev.mouse
+	event.mousewheel	= ev.mousewheel
+	event.touch			= ev.touch
+	event.gesture		= ev.gesture
+	event.size			= ev.size
 
-	ev.size(width, height)
+	event.size(width, height)
 	audio.init()
 	world:pipeline_init()
 
@@ -98,25 +99,25 @@ local function render(nwh, context, width, height, initialized)
 	end
 end
 
-function S.init(nwh, context, width, height)
+function event.init(nwh, context, width, height)
 	import_package "ant.hwi".init_bgfx()
 	local initialized = {}
 	ltask.fork(render, nwh, context, width, height, initialized)
 	ltask.wait(initialized)
 end
 
-function S.recreate(nwh, _, width, height)
+function event.recreate(nwh, _, width, height)
 	bgfx.set_platform_data {
 		nwh = nwh
 	}
-	S.size(width, height)
+	event.size(width, height)
 end
 
-function S.suspend(what)
+function event.suspend(what)
 	bgfx.event_suspend(what)
 end
 
-local ms_queue
+local ms_queue = {}
 local ms_quit
 local ms_token = {}
 
@@ -125,38 +126,33 @@ local function table_append(t, a)
 end
 
 local function dispatch(cmd, ...)
-	local f = assert(S[cmd], cmd)
+	local f = assert(event[cmd], cmd)
 	f(...)
-end
-
-local function dispatch_all()
-	local mq = ms_queue
-	ms_queue = nil
-	for i = 1, #mq do
-		local m = mq[i]
-		dispatch(table.unpack(m, 1, m.n))
-	end
 end
 
 ltask.fork(function ()
 	while not ms_quit do
-		if ms_queue == nil then
-			ltask.wait(ms_token)
+		while true do
+			local m = table.remove(ms_queue, 1)
+			if not m then
+				break
+			end
+			dispatch(table.unpack(m, 1, m.n))
 		end
-		dispatch_all()
+		ltask.wait(ms_token)
 	end
 end)
 
 function S.msg(messages)
-	if ms_queue == nil then
-		ms_queue = messages
+	if #ms_queue == 0 then
+		table_append(ms_queue, messages)
 		ltask.wakeup(ms_token)
 	else
 		table_append(ms_queue, messages)
 	end
 end
 
-function S.exit()
+function event.exit()
 	ms_quit = true
 	quit = {}
 	ltask.wait(quit)

@@ -8,31 +8,10 @@ REPO_MT.__index = REPO_MT
 
 local lfs = require "bee.filesystem"
 local access = dofile "/engine/vfs/repoaccess.lua"
-local crypt = require "crypt"
-
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
+local fastio = require "fastio"
 
 local function sha1(str)
-	return crypt.sha1(str):gsub(".", byte2hex)
-end
-
-local sha1_encoder = crypt.sha1_encoder()
-
-local function sha1_from_file(filename)
-	sha1_encoder:init()
-	local ff = assert(io.open(filename:string(), "rb"))
-	while true do
-		local content = ff:read(1024)
-		if content then
-			sha1_encoder:update(content)
-		else
-			break
-		end
-	end
-	ff:close()
-	return sha1_encoder:final():gsub(".", byte2hex)
+	return fastio.str2sha1(str)
 end
 
 local repo_build_dir
@@ -129,7 +108,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					hash = cache_hash.hash
 					if _DEBUG then print("CACHE", hash, fullname) end
 				else
-					hash = sha1_from_file(realfullname)
+					hash = fastio.sha1(realfullname:string())
 					namehashcache[fullname] = { hash = hash, timestamp = mtime }
 					if _DEBUG then print("FILE", hash, fullname, mtime) end
 				end
@@ -404,121 +383,6 @@ function REPO_MT:build_dir(lpath)
 	local roothash = repo_build_dir(r, "/", cache, r._namecache)
 	repo_write_cache(r, cache)
 	return roothash
-end
-
-local function split(path)
-	local r = {}
-	path:gsub("[^/]+", function(s)
-		r[#r+1] = s
-	end)
-	return r
-end
-
-local function fetchall(self, r, hash)
-	local v = self:dir(hash)
-	for _, h in pairs(v.file) do
-		r[#r+1] = h
-	end
-	for _, h in pairs(v.dir) do
-		r[#r+1] = h
-		fetchall(self, r, h)
-	end
-end
-
-function REPO_MT:fetch(path)
-	local r = {}
-	local hash = self:root()
-	for _, name in ipairs(split(path)) do
-		local v = self:dir(hash)
-		r[#r+1] = hash
-		hash = v.dir[name]
-		if not hash then
-			return
-		end
-	end
-	r[#r+1] = hash
-	fetchall(self, r, hash)
-	return r
-end
-
-local function fetch_path(repo, hash, path, hashs, resource_hashs, unsolved_hashs, error_hashs)
-	local pathlst = split(path)
-	local n = #pathlst
-	for i = 1, n-1 do
-		local name = pathlst[i]
-		local v = repo:dir(hash)
-		if not v or not v.dir[name] then
-			error_hashs[#error_hashs+1] = hash
-			return
-		end
-		hashs[#hashs+1] = hash
-		hash = v.dir[name]
-	end
-	local name = pathlst[n]
-	local v = repo:dir(hash)
-	if not v then
-		error_hashs[#error_hashs+1] = hash
-		return
-	end
-	if v.resource[name] then
-		resource_hashs[#resource_hashs+1] = hash
-		return
-	end
-	if v.file[name] then
-		hashs[#hashs+1] = hash
-		return
-	end
-	if v.dir[name] then
-		unsolved_hashs[#unsolved_hashs+1] = hash
-		return
-	end
-	error_hashs[#error_hashs+1] = hash
-end
-
-function REPO_MT:fetch_path(hash, path)
-	local hashs = {}
-	local unsolved_hashs = {}
-	local resource_hashs = {}
-	local error_hashs = {}
-	fetch_path(self, hash, path, hashs, unsolved_hashs, resource_hashs, error_hashs)
-	return table.concat(hashs, "|")
-		, table.concat(resource_hashs, "|")
-		, table.concat(unsolved_hashs, "|")
-		, table.concat(error_hashs, "|")
-end
-
-local function fetch_dir(repo, hash, n, hashs, resource_hashs, unsolved_hashs, error_hashs)
-	local v = repo:dir(hash)
-	if not v then
-		error_hashs[#error_hashs+1] = hash
-		return
-	end
-	for _, h in pairs(v.file) do
-		hashs[#hashs+1] = h
-	end
-	for _, h in pairs(v.resource) do
-		resource_hashs[#resource_hashs+1] = h
-	end
-	for _, h in pairs(v.dir) do
-		if n <= 0 then
-			unsolved_hashs[#unsolved_hashs+1] = hash
-		else
-			hashs[#hashs+1] = h
-			fetch_dir(repo, h, n-1, hashs, resource_hashs, unsolved_hashs, error_hashs)
-		end
-	end
-end
-
-function REPO_MT:fetch_dir(hash)
-	local hashs = {}
-	local resource_hashs = {}
-	local unsolved_hashs = {}
-	local error_hashs = {}
-	fetch_dir(self, hash, 2, hashs, resource_hashs, unsolved_hashs, error_hashs)
-	return table.concat(hashs, "|")
-		, table.concat(resource_hashs, "|")
-		, table.concat(unsolved_hashs, "|")
-		, table.concat(error_hashs, "|")
 end
 
 return REPO_MT

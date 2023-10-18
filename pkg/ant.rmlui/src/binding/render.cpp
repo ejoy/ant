@@ -13,7 +13,7 @@
 extern "C" {
     #include <textureman.h>
     #include <programan.h>
-    #include "../font/font_manager.h"
+    #include <font_manager.h>
 }
 
 #ifdef RMLUI_MATRIX_ROW_MAJOR

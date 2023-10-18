@@ -1,6 +1,6 @@
 -- local bake = require "bake"
 
--- local math3d_adapter = import_package "ant.math.adapter"
+-- local math3d_adapter = import_package "ant.math".adapter
 
 -- local ctx_mt = bake.context_metatable()
 -- if ctx_mt == nil then
