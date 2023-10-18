@@ -857,7 +857,7 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length");
 	
 	RegisterProperty(PropertyId::AlignContent, "align-content")
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
+		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around, space-evenly");
 	RegisterProperty(PropertyId::AlignItems, "align-items")
 		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
 	RegisterProperty(PropertyId::AlignSelf, "align-self")
