@@ -191,7 +191,7 @@ end
 local mt = animodule.bind_pose_mt()
 if not mt.adapter then
 	mt.adapter = true
-	local math3d_adapter = import_package "ant.math.adapter"
+	local math3d_adapter = import_package "ant.math".adapter
 	require "skeleton" -- for mathadapter bind_bgfx_math_adapter
 	mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
 	mt = animodule.pose_result_mt()

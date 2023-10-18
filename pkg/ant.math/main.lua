@@ -18,4 +18,5 @@ return {
     init = init,
     util = math3d.ext_util,
     constant = math3d.ext_constant,
+    adapter = require "adapter",
 }
