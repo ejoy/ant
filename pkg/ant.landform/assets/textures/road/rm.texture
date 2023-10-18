@@ -4,7 +4,7 @@ compress:
   windows: BC1
 mipmap: true
 colorspace: linear
-path: /pkg/ant.landform/assets/texture/road/alpha.png
+path: /pkg/ant.landform/assets/textures/road/rm.png
 sampler:
   MAG: LINEAR
   MIN: LINEAR

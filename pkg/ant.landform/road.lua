@@ -5,17 +5,14 @@ local w     = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
-local imaterial     = ecs.require "ant.asset|material"
-local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
 local irender       = ecs.require "ant.render|render_system.render"
 local icompute      = ecs.require "ant.render|compute.compute"
+local idi           = ecs.require "ant.render|draw_indirect.draw_indirect2"
 local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20|c40niu"
 
 local hwi           = import_package "ant.hwi"
-
-local ROAD_WIDTH, ROAD_HEIGHT
 
 -- local ROT_TABLES = {
 --     N = {0,   270, 180, 0},
@@ -237,7 +234,7 @@ local ROAD_MESH
 --     return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
 -- end
 
-local VBFMT<const> = "fffffI"
+local VBFMT<const> = "fffff"
 local function build_vb(ox, oz, ww, hh, texcoords, vb)
     local nx, nz = ox+ww, oz+hh
     local uv
@@ -276,28 +273,30 @@ local main_viewid<const> = hwi.viewid_get "main_view"
 local function dispath_road_indirect_buffer(e, dieid)
     local die = world:entity(dieid, "draw_indirect:in road:in")
     local di = die.draw_indirect
-    local dis = e.dispatch
-    local m = dis.material
 
     local instancenum = di.instance_buffer.num
-    dis.size[1] = to_dispath_num(instancenum)
+    if instancenum > 0 then
+        local dis = e.dispatch
+        local m = dis.material
+        dis.size[1] = to_dispath_num(instancenum)
 
-    local ibnum<const> = 6
-    m.u_mesh_param = math3d.vector(ibnum, instancenum, 0, 0)
-    m.b_mesh_buffer = {
-        type = "b",
-        access = "r",
-        value = die.road.handle,
-        stage = 0,
-    }
-    m.b_indirect_buffer = {
-        type = "b",
-        access = "w",
-        value = di.handle,
-        stage = 1,
-    }
-
-    icompute.dispatch(main_viewid, dis)
+        local ibnum<const> = 6
+        m.u_mesh_param = math3d.vector(ibnum, instancenum, 0, 0)
+        m.b_mesh_buffer = {
+            type = "b",
+            access = "r",
+            value = die.road.handle,
+            stage = 0,
+        }
+        m.b_indirect_buffer = {
+            type = "b",
+            access = "w",
+            value = di.handle,
+            stage = 1,
+        }
+    
+        icompute.dispatch(main_viewid, dis)
+    end
 end
 
 local INSTANCEBUFFER_FMT<const> = 'ffIf'
@@ -337,23 +336,28 @@ local function build_instance_buffers(infos)
     }
 end
 
-local function update_di_buffers(dieid, buffer)
-    local die = world:entity(dieid, "draw_indirect:update road:update")
-    bgfx.update(die.road.handle, 0, table.concat(buffer.meshbuffer))
-
-    local di = die.draw_indirect
-    di.num = #buffer.instancebuffer
-    bgfx.update(di.instance_buffer.handle, 0, buffer.instancebuffer)
-end
-
 local function create_mesh_buffer(b)
-    return bgfx.create_dynamic_index_buffer(table.concat(b, ""), "dr")  -- d for uint32, r for compute read
+    if #b > 0 then
+        return bgfx.create_dynamic_index_buffer(irender.align_buffer(table.concat(b, "")))  -- d for uint32
+    end
 end
 
-local function create_road_entities(gid, render_layer, road, indicator)
-    --road
-    local road_instancenum = #road.instancebuffer
-    local road_dieid = world:create_entity {
+local function update_di_buffers(dieid, buffer)
+    local die = world:entity(dieid, "road:update")
+    local r = die.road
+
+    if r.handle then
+        bgfx.update(r.handle, 0, irender.align_buffer(table.concat(buffer.meshbuffer)))
+    else
+        die.road.handle = create_mesh_buffer(buffer.meshbuffer)
+    end
+
+    idi.update_instance_buffer(die, table.concat(buffer.instancebuffer, ""), #buffer.instancebuffer)
+end
+
+local function create_road_obj(gid, render_layer, buffer)
+    local instancenum = #buffer.instancebuffer
+    local dieid = world:create_entity {
         group = gid,
         policy = {
             "ant.render|simplerender",
@@ -366,89 +370,46 @@ local function create_road_entities(gid, render_layer, road, indicator)
             material    = "/pkg/ant.landform/assets/materials/road.material",
             visible_state = "main_view|selectable",
             road = {
-                handle = create_mesh_buffer(road.meshbuffer),
+                handle = create_mesh_buffer(buffer.meshbuffer),
             },
             render_layer = render_layer,
             draw_indirect = {
                 instance_buffer = {
-                    memory  = table.concat(road.instancebuffer, ""),
+                    memory  = table.concat(buffer.instancebuffer, ""),
                     flag    = "r",
                     layout  = "t45NIf",
-                    num     = road_instancenum,
+                    num     = instancenum,
                 },
             },
         },
     }
 
-    local road_computeeid = world:create_entity{
+    local computeeid = world:create_entity{
         policy = {
             "ant.render|compute",
         },
         data = {
-            material = "/pkg/ant.landform/materials/road_compute.material",
+            material = "/pkg/ant.landform/assets/materials/road_compute.material",
             dispatch = {
-                size = {0, 1, 1},
+                size = {1, 1, 1},
             },
             on_ready = function (e)
-                dispath_road_indirect_buffer(e, road_dieid)
-            end
-        }
-    }
-
-    -- indicator
-    local indicator_instancenum = #indicator.instancebuffer
-    local indicator_dieid = world:create_entity{
-        group = gid,
-        policy = {
-            "ant.render|simplerender",
-            "ant.render|draw_indirect",
-            "ant.landform|road",
-        },
-        data = {
-            scene = {},
-            render_layer = render_layer,
-            simplemesh = ROAD_MESH,
-            draw_indirect = {
-                instance_buffer = {
-                    dynamic = true,
-                    memory  = table.concat(indicator.instancebuffer, ""),
-                    flag    = "r",
-                    layout  = "t45NIf",
-                    num     = indicator_instancenum,
-                },
-            },
-            road = {
-                handle = create_mesh_buffer(indicator.meshbuffer),
-            },
-            material = "/pkg/ant.landform/assets/materials/indicator.material",
-        }
-    }
-
-    local indicator_computeeid = world:create_entity {
-        group = gid,
-        policy = {
-            "ant.render|compute",
-        },
-        data = {
-            material = "/pkg/ant.landform/materials/road_compute.material",
-            dispatch = {
-                size = {0, 1, 1},
-            },
-            on_ready = function (e)
-                dispath_road_indirect_buffer(e, road_dieid)
+                w:extend(e, "dispatch:update")
+                dispath_road_indirect_buffer(e, dieid)
             end
         }
     }
 
     return {
-        road = {
-            drawindirect = road_dieid,
-            compute = road_computeeid,
-        },
-        indicator = {
-            drawindirect = indicator_dieid,
-            compute = indicator_computeeid,
-        },
+        drawindirect = dieid,
+        compute = computeeid,
+    }
+end
+
+local function create_road_entities(gid, render_layer, road, indicator)
+    return {
+        road        = create_road_obj(gid, render_layer, road),
+        indicator   = create_road_obj(gid, render_layer, indicator),
     }
 end
 
@@ -469,7 +430,6 @@ local function build_road_mesh(rw, rh)
 end
 
 function iroad.create(roadwidth, roadheight)
-    ROAD_WIDTH, ROAD_HEIGHT = roadwidth, roadheight
     ROAD_MESH = build_road_mesh(roadwidth, roadheight)
 end
 
@@ -483,17 +443,13 @@ function iroad.update_roadnet(groups, render_layer)
         else
             local function update_buffer_and_dispatch(buffer, eids)
                 update_di_buffers(buffer, eids.drawindirect)
-                dispath_road_indirect_buffer(world:entity(eids.compute, "dispatch:in"), eids.drawindirect)
+                dispath_road_indirect_buffer(world:entity(eids.compute, "dispatch:update"), eids.drawindirect)
             end
 
             update_buffer_and_dispatch(buffers.road,        entities.road)
             update_buffer_and_dispatch(buffers.indicaotr,   entities.indicaotr)
         end
     end
-end
-
-function iroad.get_road_size()
-    return ROAD_WIDTH, ROAD_HEIGHT
 end
 
 function iroad.clear(groups, layer)
