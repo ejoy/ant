@@ -81,7 +81,7 @@ local function create_sm_entity(gid, indices)
     end
 
     local function build_mesh_indices_buffer(meshes)
-        return bgfx.create_index_buffer(irender.align_buffer(table.concat(meshes, "")), "r")
+        return bgfx.create_index_buffer(irender.align_buffer(table.concat(meshes, "")), "dr")
     end
 
     local mesh_indices_buffer = build_mesh_indices_buffer(meshes)

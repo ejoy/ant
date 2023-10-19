@@ -349,7 +349,7 @@ end
 
 local function create_mesh_buffer(b)
     if #b > 0 then
-        return bgfx.create_dynamic_index_buffer(irender.align_buffer(table.concat(b, "")), "r")
+        return bgfx.create_dynamic_index_buffer(irender.align_buffer(table.concat(b, "")), "dr")
     end
 end
 

@@ -5,22 +5,17 @@
 #define SUB_MESH_COUNT 4
 #endif //SUB_MESH_COUNT
 
-BUFFER_RO(b_mesh_indices,    uvec4, 0);
+BUFFER_RO(b_mesh_indices,    uint, 0);
 BUFFER_WR(b_indirect_buffer, uvec4, 1);
 uniform vec4 u_buffer_param;
 uniform vec4 u_mesh_params[SUB_MESH_COUNT];
 
 uint load_mesh_idx(uint idx){
-    uint v4_idx = idx/(4*2);
-	uint sub_idx = idx%(4*2);
+	uint bufidx = idx / 2;
+	uint uint16_idx = idx % 2;
+	uint v = b_mesh_indices[bufidx];
 
-    uint elem_idx = sub_idx/2;
-	uint uint_idx = sub_idx%2;
-
-	uvec4 v = b_mesh_indices[v4_idx];
-    uint elem = v[elem_idx];
-
-    return ((elem >> (uint_idx*16)) & 0xffff);
+	return ((v >> (uint16_idx*16)) & 0xffff);
 }
 
 NUM_THREADS(64, 1, 1)

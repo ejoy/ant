@@ -1,7 +1,7 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
-BUFFER_RO(b_mesh_buffer, uvec4, 0);
+BUFFER_RO(b_mesh_buffer, uint, 0);
 BUFFER_WR(b_indirect_buffer, uvec4, 1);
 uniform vec4 u_mesh_param;
 
@@ -14,16 +14,11 @@ uint calc_vb_offset(uint shape, uint dir)
 }
 
 uint load_mesh_info(uint idx){
-    uint v4_idx = idx/(4*2);
-	uint sub_idx = idx%(4*2);
+	uint bufidx = idx / 2;
+	uint uint16_idx = idx % 2;
+	uint v = b_mesh_buffer[bufidx];
 
-    uint elem_idx = sub_idx/2;
-	uint uint_idx = sub_idx%2;
-
-	uvec4 v = b_mesh_buffer[v4_idx];
-    uint elem = v[elem_idx];
-
-    return ((elem >> (uint_idx*16)) & 0xffff);
+	return ((v >> (uint16_idx*16)) & 0xffff);
 }
 
 NUM_THREADS(64, 1, 1)
