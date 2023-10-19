@@ -5,6 +5,7 @@ local instance = fmod.init()
 local background = instance:background()
 local event_list = {}
 local loaded = {}
+local instances = {}
 
 local S = {}
 
@@ -49,6 +50,21 @@ end
 
 function cmd.stop_background(fadeout)
     background:stop(fadeout)
+end
+
+function cmd.play_instance(event_name)
+    local bg = instance:background()
+    bg:play(event_list[event_name])
+
+    local n = #instances+1
+    instances[n] = bg
+    return n
+end
+
+function cmd.stop_instance(id, fadeout)
+    local inst = assert(instances[id])
+    inst:stop(fadeout)
+    instances[id] = nil
 end
 
 local function submit(cmdqueue)

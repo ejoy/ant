@@ -353,7 +353,7 @@ local function show_current_event()
                     bank_path .. "Master.strings.bank",
                     bank_path .. "Master.bank"
                 }
-                for _, value in ipairs(files) do
+                for value in pairs(files) do
                     if string.sub(value, -5) == ".bank" and (value ~= "Master.strings.bank") and (value ~= "Master.bank") then
                         bank_files[#bank_files + 1] = bank_path .. value
                     end
