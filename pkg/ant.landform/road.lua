@@ -331,7 +331,7 @@ local function build_instance_buffers(infos)
 
         local indicator = i.indicator
         if indicator then
-            add_buffer(indicator, indicator, indicatormeshbuffer)
+            add_buffer(indicator, indicatorbuffer, indicatormeshbuffer)
         end
     end
 
