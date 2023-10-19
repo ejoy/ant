@@ -11,14 +11,14 @@
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
+	//TODO: the input local position can be vec2, but currently, our material system can not CUSTOM define VS_INPUT/VS_OUTPUT/FS_INPUT/FS_OUTPUT
 	vec4 idata0 = vs_input.idata0;
 	vec2 xzpos = idata0.xy;
 
 	highp vec4 posWS = vec4(vs_input.pos + vec3(xzpos[0], ROAD_OFFSET_Y, xzpos[1]), 1.0);
-	uint color = floatBitsToUint(idata0.z);
-
 	vs_output.clip_pos = transform2clipspace(posWS);
 
+	uint color = floatBitsToUint(idata0.z);
 	vs_output.uv0	    = vs_input.uv0;
 	vs_output.color		= vec4(uvec4(color, color>>8, color>>16, color>>24)&0xff) / 255.0;
 	vs_output.normal	= vec3(0.0, 1.0, 0.0);

@@ -10,7 +10,7 @@ local icompute      = ecs.require "ant.render|compute.compute"
 local idi           = ecs.require "ant.render|draw_indirect.draw_indirect2"
 local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
-local layout        = layoutmgr.get "p3|t20|c40niu"
+local layout        = layoutmgr.get "p3|t20"
 
 local hwi           = import_package "ant.hwi"
 
@@ -53,34 +53,61 @@ if DEBUG_MAT2 then
     assert(d1[1] == 0 and d1[2] == -1)
 end
 
-local SHAPE_NAMES<const> = {"U", "I", "L", "T", "X", "O",}
-local NUM_SHAPES<const> = #SHAPE_NAMES
+-- the color&alpha/rougness&metalness texture are 1024x128
+local DEFAULT_QUAD_TEX_SIZE<const> = 128
+local NUM_QUAD_IN_TEX<const> = 8
+local DEFAULT_TEX_WIDTH<const>, DEFAULT_TEX_HEIGHT<const> = NUM_QUAD_IN_TEX * DEFAULT_QUAD_TEX_SIZE, DEFAULT_QUAD_TEX_SIZE
 
-local DEFAULT_QUAD_UV_SIZE<const> = {1.0 / NUM_SHAPES, 1}
+local DEFAULT_QUAD_UV_SIZE<const> = {DEFAULT_QUAD_TEX_SIZE/DEFAULT_TEX_WIDTH, 1.0}
+local DEFAULT_TEXEL_SIZE<const> = {1.0/DEFAULT_TEX_WIDTH, 1.0/DEFAULT_TEX_HEIGHT}
+local UV_THRESHOLD<const>   = {1e-6, 1e-6}
+
+--see the quad vertex order in render.lua:265-create_quad_ib
 local DEFAULT_QUAD_TEXCOORD<const> = {
-    {DEFAULT_QUAD_UV_SIZE[1], 0},                       -- quad v0
+    {0, DEFAULT_QUAD_UV_SIZE[2]},                       -- quad v0
     {0, 0},                                             -- quad v1
-    {0, DEFAULT_QUAD_UV_SIZE[2]},                       -- quad v2
-    {DEFAULT_QUAD_UV_SIZE[1], DEFAULT_QUAD_UV_SIZE[2]}, -- quad v3
+    {DEFAULT_QUAD_UV_SIZE[1], DEFAULT_QUAD_UV_SIZE[2]}, -- quad v2
+    {DEFAULT_QUAD_UV_SIZE[1], 0},                       -- quad v3
 }
 
-local function quad_texcoord(degree)
-    local m = create_mat2(math.rad(degree))
-    local t = {}
-    for i=1, #DEFAULT_QUAD_TEXCOORD do
-        t[i] = m:transform(DEFAULT_QUAD_TEXCOORD[i])
-    end
-    return t
+--the color/alpha/rm texture are packed from NUM_SHAPES images into [NUM_SHAPES * DEFAULT_TEXTURE_QUAD_SIZE[1], DEFAULT_TEXTURE_QUAD_SIZE[2]], so we only refine the texcoord on u direction
+local function shrink_uv_rect(uv_rect)
+    -- we make left u to step in UV_THRESHOLD[1] value, make right u to step in -UV_THRESHOLD[1]
+    --left u
+    uv_rect[1][1] = uv_rect[1][1] + UV_THRESHOLD[1]
+    uv_rect[2][1] = uv_rect[2][1] + UV_THRESHOLD[1]
+
+    --right u
+    uv_rect[3][1] = uv_rect[3][1] - UV_THRESHOLD[1]
+    uv_rect[4][1] = uv_rect[4][1] - UV_THRESHOLD[1]
+    return uv_rect
 end
+
+shrink_uv_rect(DEFAULT_QUAD_TEXCOORD)
 
 local QUAD_TEXCOORDS<const> = {
     [0]     = DEFAULT_QUAD_TEXCOORD,
-    [90]    = quad_texcoord(90),
-    [180]   = quad_texcoord(180),
-    [270]   = quad_texcoord(270),
+    [90]    = {
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[2],
+        DEFAULT_QUAD_TEXCOORD[3],
+    },
+    [180]   = {
+        DEFAULT_QUAD_TEXCOORD[3],
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[2],
+    },
+    [270]   = {
+        DEFAULT_QUAD_TEXCOORD[2],
+        DEFAULT_QUAD_TEXCOORD[3],
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[1],
+    }
 }
 
-local SHADPE_DIRECTIONS<const> = {
+local SHAPE_DIRECTIONS<const> = {
     "N", "E", "S", "W",
     N = 1,
     E = 2,
@@ -89,6 +116,7 @@ local SHADPE_DIRECTIONS<const> = {
 }
 
 local SHAPE_TYPES<const> = {
+    "U", "I", "L", "T", "X", "O",
     U = {
         index = 1,
         direction = {
@@ -145,27 +173,19 @@ local SHAPE_TYPES<const> = {
     },
 }
 
-local DEFAULT_TEXTURE_QUAD_SIZE<const> = {128, 128}
-local DEFAULT_TEXTURE_SIZE<const> = {DEFAULT_TEXTURE_QUAD_SIZE[1] * NUM_SHAPES, DEFAULT_TEXTURE_QUAD_SIZE[2]}
-local DEFAULT_TEXEL_SIZE<const> = {1.0/DEFAULT_TEXTURE_SIZE[1], 1.0/DEFAULT_TEXTURE_SIZE[2]}
-local UV_THRESHOLD<const>   = {1e-6, 1e-6}
-
---the color/alpha/rm texture are packed from NUM_SHAPES images into [NUM_SHAPES * DEFAULT_TEXTURE_QUAD_SIZE[1], DEFAULT_TEXTURE_QUAD_SIZE[2]], so we only refine the texcoord on u direction
-local function refine_combie_uv(uv)
-    return {uv[1] - DEFAULT_TEXEL_SIZE[1] - UV_THRESHOLD[1], uv[2]}
-end
-
-local DELTA_U<const> = 1.0 / DEFAULT_QUAD_UV_SIZE[1]
 local function offset_uv(uv, shapetype)
-    return refine_combie_uv{uv[1] + (shapetype-1)*DELTA_U, uv[2]}
+    return {uv[1] + (shapetype-1)*DEFAULT_QUAD_UV_SIZE[1], uv[2]}
 end
 
-for _, sn in ipairs(SHAPE_NAMES) do
-    local s = assert(SHAPE_TYPES[sn], ("Invalid shape name: %s"):format(sn))
-    for _, d in pairs(s.direction) do
+for _, sn in ipairs(SHAPE_TYPES) do
+    local s = assert(SHAPE_TYPES[sn])
+    for n, d in pairs(s.direction) do
+        -- create new uv
+        local nd = {}
         for i=1, #d do
-            d[i] = offset_uv(d[i], s.index)
+            nd[i] = offset_uv(d[i], s.index)
         end
+        s.direction[n] = nd
     end
 end
 
@@ -235,13 +255,20 @@ local ROAD_MESH
 -- end
 
 local VBFMT<const> = "fffff"
+local DEBUG_VERTEX<const> = true
+local function pack_vertex(...)
+    if DEBUG_VERTEX then
+        return {...}
+    end
+    return VBFMT:pack(...)
+end
 local function build_vb(ox, oz, ww, hh, texcoords, vb)
     local nx, nz = ox+ww, oz+hh
     local uv
-    uv = texcoords[1]; vb[#vb+1] = VBFMT:pack(ox, 0, oz, uv[1], uv[2])
-    uv = texcoords[2]; vb[#vb+1] = VBFMT:pack(ox, 0, nz, uv[1], uv[2])
-    uv = texcoords[3]; vb[#vb+1] = VBFMT:pack(nx, 0, nz, uv[1], uv[2])
-    uv = texcoords[4]; vb[#vb+1] = VBFMT:pack(nx, 0, oz, uv[1], uv[2])
+    uv = texcoords[1]; vb[#vb+1] = pack_vertex(ox, 0, oz, uv[1], uv[2])
+    uv = texcoords[2]; vb[#vb+1] = pack_vertex(ox, 0, nz, uv[1], uv[2])
+    uv = texcoords[3]; vb[#vb+1] = pack_vertex(nx, 0, oz, uv[1], uv[2])
+    uv = texcoords[4]; vb[#vb+1] = pack_vertex(nx, 0, nz, uv[1], uv[2])
 end
 
 local road_sys   = ecs.system "road_system"
@@ -305,12 +332,12 @@ local MESHBUFFER_FMT<const> = 'HH'
 local function build_instance_buffers(infos)
     local roadbuffer, indicatorbuffer = {}, {}
     local roadmeshbuffer, indicatormeshbuffer = {}, {}
-    for _, i in ipairs(infos) do
+    for _, i in pairs(infos) do
         local p = i.pos
 
         local function add_buffer(t, ib, mb)
             ib[#ib+1] = INSTANCEBUFFER_FMT:pack(p[1], p[2], STATES_MAPPER[t.state].color, 0)
-            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index-1, SHADPE_DIRECTIONS[t.dir])
+            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index-1, SHAPE_DIRECTIONS[t.dir])
         end
 
         local r = i.road
@@ -418,14 +445,20 @@ local ROAD_ENTITIES = {}
 local iroad         = {}
 local function build_road_mesh(rw, rh)
     local road_vb = {}
-    for _, s in ipairs(SHAPE_NAMES) do
+    --we need keep shapes and directions order in SHAPE_TYPES&SHAPE_DIRECTIONS
+    for _, s in ipairs(SHAPE_TYPES) do
         local st = SHAPE_TYPES[s]
-        for _, dn in ipairs(SHADPE_DIRECTIONS) do
+        for _, dn in ipairs(SHAPE_DIRECTIONS) do
             build_vb(0, 0, rw, rh, st.direction[dn], road_vb)
         end
     end
 
-    assert(#road_vb == 4 * #SHAPE_NAMES * #SHADPE_DIRECTIONS)
+    assert(#road_vb == 4 * #SHAPE_TYPES * #SHAPE_DIRECTIONS)
+    if DEBUG_VERTEX then
+        for i=1, #road_vb do
+            road_vb[i] = VBFMT:pack(table.unpack(road_vb[i]))
+        end
+    end
     return to_mesh_buffer(road_vb, irender.quad_ib())
 end
 
@@ -437,6 +470,7 @@ function iroad.update_roadnet(groups, render_layer)
     for gid, infos in pairs(groups) do
         local entities = ROAD_ENTITIES[gid]
         local buffers = build_instance_buffers(infos)
+        print("group:%d, road instance num:%d, indicator instance num:%d", gid, #buffers.road, #buffers.indicaotr)
         if nil == entities then
             entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicaotr)
             ROAD_ENTITIES[gid] = entities
