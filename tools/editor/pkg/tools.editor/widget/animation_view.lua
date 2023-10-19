@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local w     = world.w
 local iani      = ecs.require "ant.animation|state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
 local keyframe_view = ecs.require "widget.keyframe_view"
@@ -41,9 +40,7 @@ local anim_state = {
 local birth_anim = {false}
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
-local event_type = {
-    "Effect", "Sound", "Message"
-}
+local event_type = {"Effect", "Sound", "Message"}
 
 local current_event
 local current_clip
@@ -60,15 +57,15 @@ local function do_to_runtime_event(evs)
     local list = {}
     for _, ev in ipairs(evs) do
         list[#list + 1] = {
-            event_type = ev.event_type,
-            name = ev.name,
-            asset_path = ev.asset_path,
+            event_type  = ev.event_type,
+            name        = ev.name,
+            asset_path  = ev.asset_path,
             sound_event = ev.sound_event,
-            breakable = ev.breakable,
-            life_time = ev.life_time,
-            move = ev.move,
+            breakable   = ev.breakable,
+            life_time   = ev.life_time,
+            move        = ev.move,
             msg_content = ev.msg_content,
-            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
+            link_info   = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
         }
     end
     return list
@@ -83,7 +80,7 @@ local function to_runtime_event(ke)
     end
     table.sort(temp, function(a, b) return a < b end)
     local event = {}
-    for i, frame_idx in ipairs(temp) do
+    for _, frame_idx in ipairs(temp) do
         event[#event + 1] = {
             time = frame_idx / sample_ratio,
             event_list = do_to_runtime_event(ke[tostring(frame_idx)])
@@ -137,7 +134,9 @@ local function from_runtime_event(runtime_event)
 end
 
 local function get_runtime_events()
-    if not current_clip then return end;
+    if not current_clip then
+        return
+    end;
     return current_clip.key_event
 end
 
@@ -205,24 +204,24 @@ local function add_event(et)
     event_id = event_id + 1
     local event_name = et..tostring(event_id)
     local new_event = {
-        event_type = et,
-        name = event_name,
-        asset_path = (et == "Effect" or et == "Sound") and "" or nil,
-        link_info = (et == "Effect") and {
+        event_type      = et,
+        name            = event_name,
+        asset_path      = (et == "Effect" or et == "Sound") and "" or nil,
+        link_info       = (et == "Effect") and {
             slot_name = "",
             slot_eid = nil,
         } or nil,
-        sound_event = (et == "Sound") and "" or nil,
-        breakable = (et == "Effect") and false or nil,
-        breakable_ui = (et == "Effect") and {false} or nil,
-        life_time = (et == "Effect") and 2 or nil,
-        life_time_ui = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
-        move = (et == "Move") and {0.0, 0.0, 0.0} or nil,
-        move_ui = (et == "Move") and {0.0, 0.0, 0.0} or nil,
-        name_ui = {text = event_name},
-        msg_content = (et == "Message") and "" or nil,
-        msg_content_ui = (et == "Message") and {text = ""} or nil,
-        asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil
+        sound_event     = (et == "Sound") and "" or nil,
+        breakable       = (et == "Effect") and false or nil,
+        breakable_ui    = (et == "Effect") and {false} or nil,
+        life_time       = (et == "Effect") and 2 or nil,
+        life_time_ui    = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
+        move            = (et == "Move") and {0.0, 0.0, 0.0} or nil,
+        move_ui         = (et == "Move") and {0.0, 0.0, 0.0} or nil,
+        name_ui         = {text = event_name},
+        msg_content     = (et == "Message") and "" or nil,
+        msg_content_ui  = (et == "Message") and {text = ""} or nil,
+        asset_path_ui   = (et == "Effect" or et == "Sound") and {text = ""} or nil
     }
     current_event = new_event
     local key = tostring(anim_state.selected_frame)
@@ -275,10 +274,6 @@ local function clear_event()
     anim_state.current_event_list = anim_key_event[tostring(anim_state.selected_frame)]
     set_event_dirty(1)
 end
-
-local shape_type = {
-    "sphere","box"
-}
 
 local function show_events()
     if anim_state.selected_frame >= 0 then -- and current_clip then
