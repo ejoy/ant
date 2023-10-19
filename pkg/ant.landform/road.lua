@@ -238,22 +238,6 @@ local function to_mesh_buffer(vb, ib_handle)
 end
 
 local ROAD_MESH
-
--- local function build_ib(num_quad)
---     local b = {}
---     for ii=1, num_quad do
---         local offset = (ii-1) * 4
---         b[#b+1] = offset + 0
---         b[#b+1] = offset + 1
---         b[#b+1] = offset + 2
-
---         b[#b+1] = offset + 2
---         b[#b+1] = offset + 3
---         b[#b+1] = offset + 0
---     end
---     return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
--- end
-
 local VBFMT<const> = "fffff"
 local DEBUG_VERTEX<const> = true
 local function pack_vertex(...)
@@ -365,7 +349,7 @@ end
 
 local function create_mesh_buffer(b)
     if #b > 0 then
-        return bgfx.create_dynamic_index_buffer(irender.align_buffer(table.concat(b, "")))  -- d for uint32
+        return bgfx.create_dynamic_index_buffer(irender.align_buffer(table.concat(b, "")), "r")
     end
 end
 
