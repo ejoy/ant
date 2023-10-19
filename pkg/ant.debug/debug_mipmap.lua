@@ -64,6 +64,12 @@ function idm.convert_to_debug_mipmap()
             assert(chain_info.format == format, "debug mipmap texture format should be same as color texture format!\n")
             cache_texture[id] = assetmgr.textures[id] -- cache handle
             if texinfo.numMips > 1 then
+                if type(texinfo.width) == "string" then
+                    texinfo.width = tonumber(texinfo.width)
+                end
+                if type(texinfo.height) == "string" then
+                    texinfo.height = tonumber(texinfo.height)
+                end
                 local cursize, curmip = math.max(texinfo.width, texinfo.height) / 2, 0
                 assert(cursize <= 1024, "current texture max size greater than 2048!\n")
                 local color_memory = ltask.call(ServiceResource, "texture_memory", id)
