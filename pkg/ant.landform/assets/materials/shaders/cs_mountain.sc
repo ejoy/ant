@@ -17,7 +17,7 @@ uint load_mesh_idx(uint idx){
     uint elem_idx = sub_idx/2;
 	uint uint_idx = sub_idx%2;
 
-	vec4 v = b_mesh_indices[v4_idx];
+	uvec4 v = b_mesh_indices[v4_idx];
     uint elem = v[elem_idx];
 
     return ((elem >> (uint_idx*16)) & 0xffff);
