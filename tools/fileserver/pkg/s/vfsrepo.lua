@@ -192,9 +192,13 @@ local function update_all()
 	root.hash[root.root.hash] = root.root
 end
 
-function repo.init()
+function repo.init(hashs)
 	root.dir = list_files(fs.path "/")
-	update_all()
+	if hashs then
+		local index = make_index(root.dir)
+		import_hash(index, hashs)
+	end
+	update_all(hashs)
 end
 
 function repo.export_hash()
@@ -227,6 +231,13 @@ end
 function repo.localpath(hash)
 	local item = root.hash[hash]
 	return item and item.path
+end
+
+function repo.type(hash)
+	local item = root.hash[hash]
+	if item then
+		return item.dir and "dir" or "file"
+	end
 end
 
 function repo.root()
@@ -268,15 +279,20 @@ local function test()	-- for reference
 	print("ROOT", roothash)
 	local testpath = "/pkg/ant.window"
 	local hash = vfsrepo.filehash(testpath)
+	assert(vfsrepo.type(hash) == "dir")
 	print("HASH", testpath, hash)
 	local content = vfsrepo.dir(hash)
 	print("CONTENT", testpath, content)
 	print("LOCALPATH", vfsrepo.localpath(hash))
 	local filehash = vfsrepo.filehash(testpath .. "/" .. "main.lua")
+	assert(vfsrepo.type(filehash) == "file")
 	local content = vfsrepo.dir(filehash)
 	assert(content == nil)
 	local localpath = vfsrepo.localpath(filehash)
 	print("LOCALPATH", localpath)
+	local cache = vfsrepo.export_hash()
+	print("INIT WITH CACHE")
+	vfsrepo.init(cache)
 end
 
 return repo
