@@ -1181,20 +1181,14 @@ function m:do_patch(eid, path, v)
 end
 
 function m:on_patch_tag(eid, v)
-    -- local info = hierarchy:get_node_info(eid)
-    -- self:pacth_modify(info.template.index, "/data/name", v)
     self:do_patch(eid, "/tag", v)
 end
 
 function m:on_patch_tranform(eid, n, v)
-    -- local info = hierarchy:get_node_info(eid)
-    -- self:pacth_modify(info.template.index, "/data/scene/"..n, v)
     self:do_patch(eid, "/data/scene/"..n, v)
 end
 
 function m:on_patch_animation(eid, name, path)
-    -- local info = hierarchy:get_node_info(eid)
-    -- self:pacth_modify(info.template.index, "/data/animation/"..name, path)
     self:do_patch(eid, "/data/animation/"..name, path)
 end
 return m
