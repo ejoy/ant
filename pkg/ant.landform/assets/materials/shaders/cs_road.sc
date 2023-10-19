@@ -5,19 +5,26 @@ BUFFER_RO(b_mesh_buffer, uvec4, 0);
 BUFFER_WR(b_indirect_buffer, uvec4, 1);
 uniform vec4 u_mesh_param;
 
-uint calc_vb_offset(uint shape, uint dir)
+uint calc_ib_offset(uint shape, uint dir)
 {
-	const uint quadoffset = 4;
-	return (shape + dir) * quadoffset;
+	const uint quadoffset = 6;
+	const uint dir_stride = 4 * quadoffset;
+	const uint shape_stride = 6 * dir_stride;
+	
+	return shape * shape_stride + dir * dir_stride;
 }
 
-uint load_mesh_info(uint tid)
-{
-	uint v4idx = tid / 4;
-	uint v4_subidx = tid % 4;
+uint load_mesh_info(uint idx){
+    uint v4_idx = idx/(4*2);
+	uint sub_idx = idx%(4*2);
 
-	uvec4 e = b_mesh_buffer[v4idx];
-	return e[v4_subidx];
+    uint elem_idx = sub_idx/2;
+	uint uint_idx = sub_idx%2;
+
+	vec4 v = b_mesh_buffer[v4_idx];
+    uint elem = v[elem_idx];
+
+    return ((elem >> (uint_idx*16)) & 0xffff);
 }
 
 NUM_THREADS(64, 1, 1)
@@ -29,10 +36,10 @@ void main()
 		return ;
 	const uint ibnum    = (uint)u_mesh_param[0];
 	uint mi = load_mesh_info(tid);
-	uint shape = mi & 0xffff;
-	uint dir = (mi>>16) & 0xffff;
-    const uint vboffset = calc_vb_offset(shape, dir);
-    const uint iboffset = 0;
+	uint shape = mi & 0xff;
+	uint dir = (mi>>8) & 0xff;
+    const uint vboffset = 0;
+    const uint iboffset = calc_ib_offset(shape, dir);
 
 	const uint instanceoffset = tid;
 	drawIndexedIndirect(

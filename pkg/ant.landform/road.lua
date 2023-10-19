@@ -327,7 +327,7 @@ local function dispath_road_indirect_buffer(e, dieid)
 end
 
 local INSTANCEBUFFER_FMT<const> = 'ffIf'
-local MESHBUFFER_FMT<const> = 'HH'
+local MESHBUFFER_FMT<const> = 'BB'
 
 local function build_instance_buffers(infos)
     local roadbuffer, indicatorbuffer = {}, {}
@@ -337,7 +337,7 @@ local function build_instance_buffers(infos)
 
         local function add_buffer(t, ib, mb)
             ib[#ib+1] = INSTANCEBUFFER_FMT:pack(p[1], p[2], STATES_MAPPER[t.state].color, 0)
-            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index-1, SHAPE_DIRECTIONS[t.dir])
+            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index-1, SHAPE_DIRECTIONS[t.dir]-1)
         end
 
         local r = i.road
