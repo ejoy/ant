@@ -304,7 +304,7 @@ function irender.align_buffer(s, alignsize)
 	alignsize = alignsize or VEC4_SIZE
     local n = #s % alignsize
     if n > 0 then
-        s = s .. ('\0'):rep(n)
+        s = s .. ('\0'):rep(alignsize - n)
     end
     return s
 end
