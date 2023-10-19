@@ -145,7 +145,7 @@ function access.list_files(repo, pathname)
 	if pathname == "/" and not repo._resource then
 		local mountpoint = repo._mountpoint[1]
 		for _, name in ipairs(repo._mountengine) do
-			files[name] = lfs.is_directory(mountpoint / name) and "d" or "f"
+			files[name] = lfs.status(mountpoint / name)
 		end
 		start = 2
 	end
@@ -156,27 +156,12 @@ function access.list_files(repo, pathname)
 			for name, status in lfs.pairs(path) do
 				local filename = name:filename():string()
 				if filename:sub(1,1) ~= "." then
-					if status:is_directory() then
-						files[filename] = "d"
-					else
-						files[filename] = "f"
-					end
+					files[filename] = status
 				end
 			end
 		end
 	end
-
-	local list = {}
-	local n = 1
-	for filename in pairs(files) do
-		list[n] = filename
-		n = n + 1
-	end
-	table.sort(list)
-	for _, name in ipairs(list) do
-		list[name] = files[name]
-	end
-	return list
+	return files
 end
 
 return access

@@ -14,8 +14,6 @@ local function sha1(str)
 	return fastio.str2sha1(str)
 end
 
-local repo_build_dir
-
 local function is_resource(path)
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
 	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" then
@@ -75,7 +73,7 @@ end
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
 -- filepath should be end of / or '' for root
 -- returns hash of dir
-function repo_build_dir(self, filepath, cache, namehashcache)
+local function repo_build_dir(self, filepath, cache, namehashcache)
 	local function add_item(hash, item)
 		item.next = cache[hash]
 		cache[hash] = item
@@ -89,18 +87,17 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	end
 	local hashs = {}
 	local filelist = access.list_files(self, filepath)
-	for _, name in ipairs(filelist) do
+	for name, status in pairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
-		if filelist[name] == "d" then
+		if status:is_directory() then
 			local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
 			table.insert(hashs, string.format("d %s %s", name, hash))
 		else
 			if not self._resource and is_resource(fullname) then
 				table.insert(hashs, string.format("r %s %s", name, fullname))
 			else
-				local realfullname = self:realpath(fullname)
-				assert(realfullname ~= nil, filepath)
-				local mtime = lfs.last_write_time(realfullname)	-- timestamp
+				local realfullname = status:path():string()
+				local mtime = status:last_write_time()	-- timestamp
 				local cache_hash = namehashcache[fullname]
 				local hash
 				if cache_hash and mtime == cache_hash.timestamp then
@@ -108,12 +105,12 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					hash = cache_hash.hash
 					if _DEBUG then print("CACHE", hash, fullname) end
 				else
-					hash = fastio.sha1(realfullname:string())
+					hash = fastio.sha1(realfullname)
 					namehashcache[fullname] = { hash = hash, timestamp = mtime }
 					if _DEBUG then print("FILE", hash, fullname, mtime) end
 				end
 				add_item(hash, {
-					filename = realfullname:string(),
+					filename = realfullname,
 					timestamp = mtime,
 				})
 				table.insert(hashs, string.format("f %s %s", name, hash))

@@ -12,8 +12,8 @@ return function (repopath, access)
     function vfs.list(path)
         local item = {}
         local filelist = access.list_files(repo, path)
-        for _, name in ipairs(filelist) do
-            if filelist[name] == "d" then
+        for name, status in pairs(filelist) do
+            if status:is_directory() then
                 item[name] = true
             else
                 item[name] = false
