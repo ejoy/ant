@@ -62,7 +62,11 @@ local DEFAULT_QUAD_UV_SIZE<const> = {DEFAULT_QUAD_TEX_SIZE/DEFAULT_TEX_WIDTH, 1.
 local DEFAULT_TEXEL_SIZE<const> = {1.0/DEFAULT_TEX_WIDTH, 1.0/DEFAULT_TEX_HEIGHT}
 local UV_THRESHOLD<const>   = {1e-6, 1e-6}
 
---see the quad vertex order in render.lua:265-create_quad_ib
+--[[
+    v1---v3
+    |    |
+    v0---v2
+]]
 local DEFAULT_QUAD_TEXCOORD<const> = {
     {0, DEFAULT_QUAD_UV_SIZE[2]},                       -- quad v0
     {0, 0},                                             -- quad v1
@@ -74,12 +78,13 @@ local DEFAULT_QUAD_TEXCOORD<const> = {
 local function shrink_uv_rect(uv_rect)
     -- we make left u to step in UV_THRESHOLD[1] value, make right u to step in -UV_THRESHOLD[1]
     --left u
-    uv_rect[1][1] = uv_rect[1][1] + UV_THRESHOLD[1]
-    uv_rect[2][1] = uv_rect[2][1] + UV_THRESHOLD[1]
+    local delta = DEFAULT_TEXEL_SIZE[1]
+    uv_rect[1][1] = uv_rect[1][1] + delta
+    uv_rect[2][1] = uv_rect[2][1] + delta
 
     --right u
-    uv_rect[3][1] = uv_rect[3][1] - UV_THRESHOLD[1]
-    uv_rect[4][1] = uv_rect[4][1] - UV_THRESHOLD[1]
+    uv_rect[3][1] = uv_rect[3][1] - delta
+    uv_rect[4][1] = uv_rect[4][1] - delta
     return uv_rect
 end
 
@@ -88,10 +93,10 @@ shrink_uv_rect(DEFAULT_QUAD_TEXCOORD)
 local QUAD_TEXCOORDS<const> = {
     [0]     = DEFAULT_QUAD_TEXCOORD,
     [90]    = {
-        DEFAULT_QUAD_TEXCOORD[4],
-        DEFAULT_QUAD_TEXCOORD[1],
-        DEFAULT_QUAD_TEXCOORD[2],
         DEFAULT_QUAD_TEXCOORD[3],
+        DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[2],
     },
     [180]   = {
         DEFAULT_QUAD_TEXCOORD[3],
@@ -101,9 +106,9 @@ local QUAD_TEXCOORDS<const> = {
     },
     [270]   = {
         DEFAULT_QUAD_TEXCOORD[2],
-        DEFAULT_QUAD_TEXCOORD[3],
         DEFAULT_QUAD_TEXCOORD[4],
         DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[3],
     }
 }
 
