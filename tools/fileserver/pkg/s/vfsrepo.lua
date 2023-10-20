@@ -396,6 +396,18 @@ function repo_meta:dumptree()
 	return dump_dir(self._dir)
 end
 
+function repo_meta:hash_dirs(tbl)
+	for hash, item in pairs(self._hash) do
+		tbl[hash] = item.content
+	end
+end
+
+function repo_meta:hash_files(tbl)
+	for hash, item in pairs(self._hash) do
+		tbl[hash] = item.path
+	end
+end
+
 local function test()	-- for reference
 	local init_config = {
 		{ path = "/ant/test/vfsrepo", mount = "/" },
