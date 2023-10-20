@@ -13,6 +13,6 @@
 
 void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
 {
-    float mark_alpha = 1.0 - texture2D(s_alpha, fsinput.uv0).r;
+    float mark_alpha = texture2D(s_basecolor, fsinput.uv0).a;
     fsoutput.color = vec4(fsinput.color.rgb, mark_alpha);
 }

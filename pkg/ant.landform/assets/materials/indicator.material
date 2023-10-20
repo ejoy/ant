@@ -2,7 +2,7 @@ fx:
   vs_code: "#include \"road_vs_func.sh\""
   fs_code: "#include \"mark_fs_func.sh\""
   setting:
-    lighting: on
+    lighting: off
     cast_shadow: off
     shadow_receive: on
     subsurface: off
@@ -10,7 +10,7 @@ fx:
     WITH_CUSTOM_TANGENT_ATTRIB: 1
     PACK_TANGENT_TO_QUAT: 0
 properties:
-  s_alpha:
+  s_basecolor:
     stage: 0
     texture: /pkg/ant.landform/assets/textures/road/alpha.texture
 state: 
