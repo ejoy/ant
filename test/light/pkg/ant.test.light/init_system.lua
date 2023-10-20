@@ -163,7 +163,7 @@ function S.init_world()
 end
 
 local kb_mb = world:sub{"keyboard"}
-
+local i = 0
 local idm = ecs.require "ant.debug|debug_mipmap"
 function S:data_changed()
     for _, code, press, state in kb_mb:unpack() do
@@ -179,11 +179,16 @@ function S:data_changed()
             f:write(data)
         end
         if code == "K" and press == 0 then
-            idm.convert_to_debug_mipmap()
+            idm.reset_texture_mipmap(true, i)
         end
 
         if code == "J" and press == 0 then
-            idm.reset_mipmap_level(1)
+            idm.reset_texture_mipmap(false, i)
+        end
+
+        
+        if code == "L" and press == 0 then
+            i = i + 1
         end
 
     end

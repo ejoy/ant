@@ -20,7 +20,6 @@ local texture_info = {
     {path = "/pkg/ant.debug/assets/debug_mipmap_texture/pink.texture"},     -- 32x32 ~ 1x1
 }
 local chain_info = {}
-local cache_texture = {}
 
 function dm.init()
     for idx, texture in pairs(texture_info) do
@@ -52,66 +51,56 @@ function dm.init()
     end
 end
 
-
-function idm.convert_to_debug_mipmap()
-    for e in w:select "material?in" do
-        local r = assetmgr.resource(e.material)
-        local color_attrib = r.attrib["s_basecolor"]
-        if color_attrib and (not cache_texture[color_attrib.value]) then
-            local id = color_attrib.value
-            local texture_content = ltask.call(ServiceResource, "texture_content", id)
-            local texinfo, flag, format = texture_content.texinfo, texture_content.flag, texture_content.texinfo.format
-            assert(chain_info.format == format, "debug mipmap texture format should be same as color texture format!\n")
-            cache_texture[id] = assetmgr.textures[id] -- cache handle
-            if texinfo.numMips > 1 then
-                if type(texinfo.width) == "string" then
-                    texinfo.width = tonumber(texinfo.width)
-                end
-                if type(texinfo.height) == "string" then
-                    texinfo.height = tonumber(texinfo.height)
-                end
-                local cursize, curmip = math.max(texinfo.width, texinfo.height) / 2, 0
-                assert(cursize <= 1024, "current texture max size greater than 2048!\n")
-                local color_memory = ltask.call(ServiceResource, "texture_memory", id)
-                while cursize >= 1 do
-                    color_memory = image.replace_debug_mipmap(chain_info.memory, color_memory, curmip, curmip + 1)
-                    cursize = cursize / 2
-                    curmip = curmip + 1
-                end
-                local handle = bgfx.create_texture(color_memory, flag)
-                ltask.call(ServiceResource, "texture_set_handle", id, handle) 
-            end
-        end
+local function reset_texture_normal_mipmap(id, first_mip)
+    local texture_content = ltask.call(ServiceResource, "texture_content", id)
+    if texture_content.texinfo.numMips >= first_mip + 1 then
+        local texture_memory = ltask.call(ServiceResource, "texture_memory", id)
+        local new_handle = bgfx.create_texture(texture_memory, texture_content.flag, first_mip)
+        ltask.call(ServiceResource, "texture_set_handle", id, new_handle)
     end
 end
 
-function idm.restore_to_origin_mipmap()
-    for id, handle in pairs(cache_texture) do
-        if not assetmgr.invalid_texture(id) then
-            ltask.call(ServiceResource, "texture_set_handle", id, handle)
-            cache_texture[id] = nil 
+local function reset_texture_debug_mipmap(id, first_mip)
+    local texture_content = ltask.call(ServiceResource, "texture_content", id)
+    local texinfo, flag, format = texture_content.texinfo, texture_content.flag, texture_content.texinfo.format
+    assert(chain_info.format == format, "debug mipmap texture format should be same as color texture format!\n")
+    if texinfo.numMips > 1 then
+        if type(texinfo.width) == "string" then
+            texinfo.width = tonumber(texinfo.width)
         end
+        if type(texinfo.height) == "string" then
+            texinfo.height = tonumber(texinfo.height)
+        end
+        local max_size = math.max(texinfo.width, texinfo.height) / (2 ^ (first_mip + 1))
+        local debug_mip, color_mip = 0, first_mip
+        assert(max_size <= 1024, "current texture max size greater than 2048!\n")
+        local color_memory = ltask.call(ServiceResource, "texture_memory", id)
+        while max_size >= 1 do
+            color_memory = image.replace_debug_mipmap(chain_info.memory, color_memory, debug_mip, color_mip + 1)
+            debug_mip, color_mip =  debug_mip + 1, color_mip + 1
+            max_size = max_size / 2
+        end
+        local handle = bgfx.create_texture(color_memory, flag, first_mip)
+        ltask.call(ServiceResource, "texture_set_handle", id, handle) 
     end
 end
 
-function idm.reset_mipmap_level(first_mip)
-    local most_detail_mip = first_mip and first_mip or 1
+function idm.reset_texture_mipmap(is_debug, first_mip)
+    local most_detail_mip = first_mip and first_mip or 0
     local reset_cache = {}
-    
     for e in w:select "material?in" do
         local r = assetmgr.resource(e.material)
         local color_attrib = r.attrib["s_basecolor"]
         if color_attrib and (not reset_cache[color_attrib.value]) then
             local id = color_attrib.value
             reset_cache[id] = true
-            local texture_content = ltask.call(ServiceResource, "texture_content", id)
-            if texture_content.texinfo.numMips > 1 then
-                local texture_memory = ltask.call(ServiceResource, "texture_memory", id)
-                local new_handle = bgfx.create_texture(texture_memory, texture_content.flag, most_detail_mip)
-                ltask.call(ServiceResource, "texture_set_handle", id, new_handle)
+            if is_debug then
+                reset_texture_debug_mipmap(id, most_detail_mip)
+            else
+                reset_texture_normal_mipmap(id, most_detail_mip)
             end
         end
-    end
+    end    
 end
 
 return idm
