@@ -3,14 +3,22 @@ local fastio = require "fastio"
 
 local repo = {}
 
-local function list_files(root, dir)
+local function is_resource(path)
+	local ext = path:match "%.(%w+)$"
+	return ext and (ext == "material" or ext == "glb" or ext == "texture")
+end
+
+local function list_files(root, dir, fullpath)
 	local n = 1
 	for path, attr in lfs.pairs(root) do
-		local obj = { name = path:filename():string() }
+		local name = path:filename():string()
 		local pathname = path:string()
-		if attr:is_directory() then
+		local obj = { name = name }
+		if is_resource(name) then
+			obj.resource = fullpath .. "/" .. name
+		elseif attr:is_directory() then
 			local d = {}
-			list_files(pathname, d)
+			list_files(pathname, d, fullpath .. "/" .. name)
 			obj.dir = d
 		else
 			obj.path = pathname
@@ -104,7 +112,9 @@ local function calc_hash(dir)
 	local dir_content = {}
 	for i = 1, n do
 		local item = dir[i]
-		if item.dir then
+		if item.resource then
+			dir_content[i] = "r " .. item.name .. " " .. item.resource .. "\n"
+		elseif item.dir then
 			item.content = calc_hash(item.dir)
 			item.hash = fastio.str2sha1(item.content)
 			dir_content[i] = "d " .. item.name .. " " .. item.hash .. "\n"
@@ -232,10 +242,10 @@ end
 function repo_meta:init(config)
 	local hashs = config.hash
 	self._dir = {}
-	list_files(config[1].path, make_dir(self._dir, config[1].mount))
+	list_files(config[1].path, make_dir(self._dir, config[1].mount), config[1].mount)
 	for i = 2, #config do
 		local tmp = {}
-		list_files(config[i].path, tmp)
+		list_files(config[i].path, tmp, config[i].mount)
 		merge_dir(make_dir(self._dir, config[i].mount), tmp)
 	end
 	sort_dir(self._dir)
@@ -288,7 +298,7 @@ function repo_meta:filehash(pathname)
 		-- root
 		for _, item in ipairs(self._dir) do
 			if item.name == pathname then
-				return item.hash
+				return item.hash, item.resource
 			end
 		end
 	else
@@ -298,7 +308,7 @@ function repo_meta:filehash(pathname)
 		end
 		for _, item in ipairs(dir) do
 			if item.name == name then
-				return item.hash
+				return item.hash, item.resource
 			end
 		end
 	end
@@ -319,19 +329,16 @@ local function test()	-- for reference
 	vfsrepo:init(init_config)
 	local roothash = vfsrepo:root()
 	print("ROOT", roothash)
-	local testpath = "/pkg/ant.window"
+	local testpath = "/pkg/ant.resources/materials"
 	local hash = vfsrepo:filehash(testpath)
 	assert(vfsrepo:type(hash) == "dir")
 	print("HASH", testpath, hash)
 	local content = vfsrepo:dir(hash)
 	print("CONTENT", testpath, content)
-	print("LOCALPATH", vfsrepo:localpath(hash))
-	local filehash = vfsrepo:filehash(testpath .. "/" .. "main.lua")
-	assert(vfsrepo:type(filehash) == "file")
-	local content = vfsrepo:dir(filehash)
-	assert(content == nil)
-	local localpath = vfsrepo:localpath(filehash)
-	print("LOCALPATH", localpath)
+	assert(vfsrepo:localpath(hash) == nil)
+	local filehash, path = vfsrepo:filehash(testpath .. "/line.material")
+	assert(filehash == nil)
+	print("RESOURCEPATH", path)
 	local cache = vfsrepo:export_hash()
 	print("INIT WITH CACHE")
 	init_config.hash = cache
