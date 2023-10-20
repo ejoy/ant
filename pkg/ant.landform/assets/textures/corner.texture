@@ -1,10 +1,10 @@
 compress:
-  android: ASTC4x4
-  ios: ASTC4x4
-  windows: BC3
+  android: ASTC8x8
+  ios: ASTC8X8
+  windows: BC1
 maxsize: 64x64
 mipmap: 0
-colorspace: sRGB
+colorspace: linear
 path:/pkg/ant.landform/assets/shapes/corner.png
 sampler:
   MAG: LINEAR

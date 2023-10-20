@@ -146,7 +146,7 @@ local function create_translucent_plane_entity(grids_num, grids, color, alpha, r
                     simplemesh  = plane_mesh,
                     material    = translucent_plane_material,
                     on_ready = function (e)
-                        imaterial.set_property(e, "u_colorTable", math3d.vector(color[1], color[2], color[3], alpha.min))
+                        imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color[1], color[2], color[3], alpha.min))
                     end,
                     breath = {
                         min = alpha.min,
@@ -174,7 +174,7 @@ local function create_translucent_plane_entity(grids_num, grids, color, alpha, r
                     simplemesh  = plane_mesh,
                     material    = translucent_plane_material,
                     on_ready = function (e)
-                        imaterial.set_property(e, "u_colorTable", math3d.vector(color))
+                        imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
                     end,
                     visible_state = "main_view",
                     --render_layer = "translucent",
@@ -313,7 +313,7 @@ function tp_sys:data_changed()
             end
         end
         e.breath.cur, e.breath.trend = cur, trend
-        imaterial.set_property(e, "u_colorTable", math3d.vector(color[1], color[2], color[3], cur))
+        imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color[1], color[2], color[3], cur))
     end
 
     if tp_update or remove_update then

@@ -3,20 +3,16 @@ fx:
   fs_code: "#include \"tf_fs_func.sh\""
   setting:
     ALPHAMODE_OPAQUE: 1
-    lighting: on
-    cast_shadow: on
-    shadow_receive: on
-    subsurface: off
+    lighting: off
 properties:
   s_basecolor:
     stage: 0
-    texture: /pkg/ant.landform/assets/textures/corner.texture
-  u_colorTable: {0, 0, 0, 0} 
+    texture: /pkg/ant.landform/assets/textures/corner.texture 
 state:
   ALPHA_REF: 1
   CULL: CCW
   DEPTH_TEST: ALWAYS
   MSAA: true
-  WRITE_MASK: RGBAZ
+  WRITE_MASK: RGBA
   BLEND_FUNC: "aA"
   BLEND_ENABLE: "i"

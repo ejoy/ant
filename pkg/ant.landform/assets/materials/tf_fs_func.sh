@@ -7,10 +7,5 @@
 void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
 {
 	float corner_alpha = texture2D(s_basecolor, fsinput.uv0);
-	if(corner_alpha == 1){
-		fsoutput.color = vec4(u_colorTable.xyz, 0);
-	}
-	else{
-		fsoutput.color = u_colorTable;
-	}
+	fsoutput.color = vec4(u_basecolor_factor.xyz, corner_alpha * u_basecolor_factor.a);
 }
