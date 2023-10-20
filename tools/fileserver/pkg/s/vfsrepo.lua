@@ -58,48 +58,19 @@ local function sort_dir(dir)
 	end
 end
 
---[[
-local function update_files(dir_index, pathname)
-	local root = fs.path("/" .. pathname)
-	local dir = assert(dir_index[pathname .. "/"], pathname)
-	local dir_name = {}
-	local n = 1
-	local index = {}
-	for _, item in ipairs(dir) do
-		index[item.name] = item
-	end
-	for path, attr in fs.pairs(root) do
-		local name = path:filename():string()
-		local item = index[name]
-		local inexist = item == nil
-		if inexist then
-			item = { name = name, path = nil }
-			index[name] = item
-		end
-		item.path = path:localpath():string()
-		if attr:is_directory() then
-			if inexist then
-				item.dir = list_files(path)
-			elseif not item.dir then
-				-- old version is not a dir
-				item.hash = nil
-				item.timestamp = nil
-				item.dir = list_files(path)
+local function read_dir(paths)
+	local dir = {}
+	for _, root in ipairs(paths) do
+		for path in lfs.pairs(root) do
+			local name = path:filename():string()
+			local pathname = path:string()
+			if not dir[name] then
+				dir[name] = pathname
 			end
-		else
-			item.dir = nil
 		end
-		dir_name[n] = item.name; n = n + 1
 	end
-	table.sort(dir_name)
-	for i = 1, n-1 do
-		dir[i] = index[ dir_name[i] ]
-	end
-	for i = n, #dir do
-		dir[i] = nil
-	end
+	return dir
 end
-]]
 
 local function dump_dir(dir)
 	local r = {}
@@ -215,19 +186,19 @@ local function import_hash(index, hashs)
 	end
 end
 
-local root = {}
+local repo_meta = {}; repo_meta.__index = repo_meta
 
-local function update_all()
-	local root_content = calc_hash(root.dir)
-	root.root = {
+local function update_all(root)
+	local root_content = calc_hash(root._dir)
+	root._root = {
 		name = "",
 		content = root_content,
 		hash = fastio.str2sha1(root_content),
-		dir = root.dir,
+		dir = root._dir,
 	}
-	root.index = make_index(root.dir)
-	root.hash = make_hash_index(root.dir)
-	root.hash[root.root.hash] = root.root
+	root._index = make_index(root._dir)
+	root._hash = make_hash_index(root._dir)
+	root._hash[root._root.hash] = root._root
 end
 
 
@@ -254,66 +225,60 @@ local function make_dir(dir, path)
 	return dir
 end
 
-function repo.init(config)
+function repo.new()
+	return setmetatable({}, repo_meta)
+end
+
+function repo_meta:init(config)
 	local hashs = config.hash
-	root.dir = {}
-	list_files(config[1].path, make_dir(root.dir, config[1].mount))
+	self._dir = {}
+	list_files(config[1].path, make_dir(self._dir, config[1].mount))
 	for i = 2, #config do
 		local tmp = {}
 		list_files(config[i].path, tmp)
-		merge_dir(make_dir(root.dir, config[i].mount), tmp)
+		merge_dir(make_dir(self._dir, config[i].mount), tmp)
 	end
+	sort_dir(self._dir)
 	if hashs then
-		local index = make_index(root.dir)
+		local index = make_index(self._dir)
 		import_hash(index, hashs)
 	end
-	update_all(hashs)
+	update_all(self)
 end
 
-function repo.export_hash()
-	assert(root.dir)
-	local hashs = export_hash(root.dir)
+function repo_meta:export_hash()
+	assert(self._dir)
+	local hashs = export_hash(self._dir)
 	return hashs
 end
 
-function repo.import_hash(hashs)
-	assert(root.index)
-	import_hash(root.index, hashs)
+function repo_meta:import_hash(hashs)
+	assert(self._index)
+	import_hash(self._index, hashs)
 end
 
-local function trim_pathname(pathname)
-	return (pathname:match "^/?(.-)/?$")
-end
-
-function repo.update(pathname)
-	pathname = trim_pathname(pathname)
-	assert(root.index)
-	update_files(root.index, pathname)
-	update_all()
-end
-
-function repo.dir(hash)
-	local item = root.hash[hash]
+function repo_meta:dir(hash)
+	local item = self._hash[hash]
 	return item and item.content
 end
 
-function repo.localpath(hash)
-	local item = root.hash[hash]
+function repo_meta:localpath(hash)
+	local item = self._hash[hash]
 	return item and item.path
 end
 
-function repo.type(hash)
-	local item = root.hash[hash]
+function repo_meta:type(hash)
+	local item = self._hash[hash]
 	if item then
 		return item.dir and "dir" or "file"
 	end
 end
 
-function repo.root()
-	return root.root.hash
+function repo_meta:root()
+	return self._root.hash
 end
 
-function repo.filehash(pathname)
+function repo_meta:filehash(pathname)
 	local path, name = pathname:match "^/?(.-)/([^/]*)$"
 	if name == "" then
 		pathname = path
@@ -321,13 +286,13 @@ function repo.filehash(pathname)
 	end
 	if path == nil or path == "" then
 		-- root
-		for _, item in ipairs(root.dir) do
+		for _, item in ipairs(self._dir) do
 			if item.name == pathname then
 				return item.hash
 			end
 		end
 	else
-		local dir = root.index[path .. "/"]
+		local dir = self._index[path .. "/"]
 		if dir == nil then
 			return
 		end
@@ -339,8 +304,8 @@ function repo.filehash(pathname)
 	end
 end
 
-function repo.dumptree()
-	return dump_dir(root.dir)
+function repo_meta:dumptree()
+	return dump_dir(self._dir)
 end
 
 local function test()	-- for reference
@@ -348,29 +313,29 @@ local function test()	-- for reference
 		{ path = "/ant/test/vfsrepo", mount = "/" },
 		{ path = "/ant/pkg", mount = "/pkg" },
 	}
+
 	print("INIT")
-	vfsrepo.init(init_config)
-	local roothash = vfsrepo.root()
+	local vfsrepo = repo.new()
+	vfsrepo:init(init_config)
+	local roothash = vfsrepo:root()
 	print("ROOT", roothash)
 	local testpath = "/pkg/ant.window"
-	local hash = vfsrepo.filehash(testpath)
-	assert(vfsrepo.type(hash) == "dir")
+	local hash = vfsrepo:filehash(testpath)
+	assert(vfsrepo:type(hash) == "dir")
 	print("HASH", testpath, hash)
-	local content = vfsrepo.dir(hash)
+	local content = vfsrepo:dir(hash)
 	print("CONTENT", testpath, content)
-	print("LOCALPATH", vfsrepo.localpath(hash))
-	local filehash = vfsrepo.filehash(testpath .. "/" .. "main.lua")
-	assert(vfsrepo.type(filehash) == "file")
-	local content = vfsrepo.dir(filehash)
+	print("LOCALPATH", vfsrepo:localpath(hash))
+	local filehash = vfsrepo:filehash(testpath .. "/" .. "main.lua")
+	assert(vfsrepo:type(filehash) == "file")
+	local content = vfsrepo:dir(filehash)
 	assert(content == nil)
-	local localpath = vfsrepo.localpath(filehash)
+	local localpath = vfsrepo:localpath(filehash)
 	print("LOCALPATH", localpath)
-	local cache = vfsrepo.export_hash()
+	local cache = vfsrepo:export_hash()
 	print("INIT WITH CACHE")
 	init_config.hash = cache
-	vfsrepo.init(init_config)
-
-	--print(repo.dumptree())
+	vfsrepo:init(init_config)
 end
 
 return repo
