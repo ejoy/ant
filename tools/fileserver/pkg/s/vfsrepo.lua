@@ -9,6 +9,7 @@ local function is_resource(path)
 end
 
 local function list_files(root, dir, fullpath)
+	local oldn = #dir
 	local n = 1
 	for path, attr in lfs.pairs(root) do
 		local name = path:filename():string()
@@ -25,7 +26,9 @@ local function list_files(root, dir, fullpath)
 		end
 		dir[n] = obj; n = n + 1
 	end
-	return dir
+	for i = n, oldn do
+		dir[i] = nil
+	end
 end
 
 local function merge_dir(source, patch)
@@ -239,15 +242,109 @@ function repo.new()
 	return setmetatable({}, repo_meta)
 end
 
+local function add_path(self, paths)
+	list_files(paths[1].path, make_dir(self._dir, paths[1].mount), paths[1].mount)
+	for i = 2, #paths do
+		local tmp = {}
+		list_files(paths[i].path, tmp, paths[i].mount)
+		merge_dir(make_dir(self._dir, paths[i].mount), tmp)
+	end
+end
+
+local function get_file(self, pathname)
+	local path, name = pathname:match "^/?(.-)/([^/]*)$"
+	if name == "" then
+		pathname = path
+		path, name = path:match "^(.-)/([^/]*)$"
+	end
+	if path == nil or path == "" then
+		-- root
+		for _, item in ipairs(self._dir) do
+			if item.name == pathname then
+				return item, self._dir
+			end
+		end
+		return nil, self._dir
+	else
+		local dir = self._index[path .. "/"]
+		if dir == nil then
+			return
+		end
+		for _, item in ipairs(dir) do
+			if item.name == name then
+				return item, dir
+			end
+		end
+		return nil, dir
+	end
+end
+
+local function update_file(self, vpath, localpath)
+	if not localpath then
+		-- remove vpath
+		local item, dir = get_file(self, vpath)
+		if item then
+			local n = #dir
+			for i = 1, n do
+				if dir[i] == item then
+					dir[i] = dir[n]
+					dir[n] = nil
+					return
+				end
+			end
+		end
+	elseif type(localpath) == "table" then
+		-- update dir
+		local dir = make_dir(self._dir, vpath)
+		list_files(localpath[1], dir, vpath)
+		for i = 2, #localpath do
+			local tmp = {}
+			list_files(localpath[i], tmp, vpath)
+			merge_dir(dir, tmp)
+		end
+	else
+		-- it's a file
+		local resource = is_resource(vpath) and vpath
+		assert(resource or lfs.is_regular_file(localpath), localpath)
+		local item, dir = get_file(self, vpath)
+		if item then
+			if not item.resource then
+				item.hash = nil
+				item.dir = nil
+				item.resource = resource
+				item.path = resource or localpath
+			end
+		else
+			-- add file
+			local parent, name = vpath:match "(.*)/([^/]+)$"
+			if parent == nil then
+				parent = "/"
+				name = vpath
+			end
+			if not dir then
+				dir = make_dir(self._dir, parent)
+			end
+			dir[#dir+1] = {
+				name = name,
+				resource = resource,
+				path = resource or localpath
+			}
+		end
+	end
+end
+
+function repo_meta:update(list)
+	for vpath, localpath in pairs(list) do
+		update_file(self, vpath, localpath)
+	end
+	sort_dir(self._dir)
+	update_all(self)
+end
+
 function repo_meta:init(config)
 	local hashs = config.hash
 	self._dir = {}
-	list_files(config[1].path, make_dir(self._dir, config[1].mount), config[1].mount)
-	for i = 2, #config do
-		local tmp = {}
-		list_files(config[i].path, tmp, config[i].mount)
-		merge_dir(make_dir(self._dir, config[i].mount), tmp)
-	end
+	add_path(self, config)
 	sort_dir(self._dir)
 	if hashs then
 		local index = make_index(self._dir)
@@ -289,28 +386,9 @@ function repo_meta:root()
 end
 
 function repo_meta:filehash(pathname)
-	local path, name = pathname:match "^/?(.-)/([^/]*)$"
-	if name == "" then
-		pathname = path
-		path, name = path:match "^(.-)/([^/]*)$"
-	end
-	if path == nil or path == "" then
-		-- root
-		for _, item in ipairs(self._dir) do
-			if item.name == pathname then
-				return item.hash, item.resource
-			end
-		end
-	else
-		local dir = self._index[path .. "/"]
-		if dir == nil then
-			return
-		end
-		for _, item in ipairs(dir) do
-			if item.name == name then
-				return item.hash, item.resource
-			end
-		end
+	local item = get_file(self, pathname)
+	if item then
+		return item.hash, item.resource
 	end
 end
 
@@ -343,6 +421,12 @@ local function test()	-- for reference
 	print("INIT WITH CACHE")
 	init_config.hash = cache
 	vfsrepo:init(init_config)
+	print("UPDATE")
+	vfsrepo:update {
+		pkg = false,
+		main = "/ant/test/vfsrepo/main.lua",
+		vpath = { "/ant/pkg" },
+	}
 end
 
 return repo
