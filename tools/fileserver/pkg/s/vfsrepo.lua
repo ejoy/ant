@@ -1,27 +1,64 @@
-local fs = require "filesystem"
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
 
 local repo = {}
 
+local function list_files(root, dir)
+	local n = 1
+	for path, attr in lfs.pairs(root) do
+		local obj = { name = path:filename():string() }
+		local pathname = path:string()
+		if attr:is_directory() then
+			local d = {}
+			list_files(pathname, d)
+			obj.dir = d
+		else
+			obj.path = pathname
+		end
+		dir[n] = obj; n = n + 1
+	end
+	return dir
+end
+
+local function merge_dir(source, patch)
+	local dir = {}
+	local n = #source
+	for i = 1, n do
+		local item = source[i]
+		dir[item.name] = item
+	end
+	for _, item in ipairs(patch) do
+		local s = dir[item.name]
+		if s and s.dir and item.dir then
+			merge_dir(s.dir, item.dir)
+		else
+			dir[item.name] = item
+		end
+	end
+	local nn = 1
+	for _ , item in pairs(dir) do
+		source[nn] = item; nn = nn + 1
+	end
+	for i = nn, n do
+		source[i] = nil
+	end
+end
+
 local function sort_name(a,b)
 	return a.name < b.name
 end
 
-local function list_files(root)
-	local dir = {}
-	local n = 1
-	for path, attr in fs.pairs(root) do
-		local obj = { name = path:filename():string(), path = path:localpath():string() }
-		if attr:is_directory() then
-			obj.dir = list_files(path)
-		end
-		dir[n] = obj; n = n + 1
-	end
+local function sort_dir(dir)
 	table.sort(dir, sort_name)
-	return dir
+	for i = 1, #dir do
+		local item = dir[i]
+		if item.dir then
+			sort_dir(item.dir)
+		end
+	end
 end
 
+--[[
 local function update_files(dir_index, pathname)
 	local root = fs.path("/" .. pathname)
 	local dir = assert(dir_index[pathname .. "/"], pathname)
@@ -56,12 +93,13 @@ local function update_files(dir_index, pathname)
 	end
 	table.sort(dir_name)
 	for i = 1, n-1 do
-		dir[i] = index[dir_name[i]]
+		dir[i] = index[ dir_name[i] ]
 	end
 	for i = n, #dir do
 		dir[i] = nil
 	end
 end
+]]
 
 local function dump_dir(dir)
 	local r = {}
@@ -192,8 +230,39 @@ local function update_all()
 	root.hash[root.root.hash] = root.root
 end
 
-function repo.init(hashs)
-	root.dir = list_files(fs.path "/")
+
+local function change_dir_(dir, name)
+	local n = #dir
+	for i = 1, n do
+		local item = dir[i]
+		if item.name == name then
+			if item.dir == nil then
+				error ("Can't create dir " .. name)
+			end
+			return item.dir
+		end
+	end
+	local r = { name = name, dir = {} }
+	dir[n+1] = r
+	return r.dir
+end
+
+local function make_dir(dir, path)
+	for name in path:gmatch "[^/]+" do
+		dir = change_dir_(dir, name)
+	end
+	return dir
+end
+
+function repo.init(config)
+	local hashs = config.hash
+	root.dir = {}
+	list_files(config[1].path, make_dir(root.dir, config[1].mount))
+	for i = 2, #config do
+		local tmp = {}
+		list_files(config[i].path, tmp)
+		merge_dir(make_dir(root.dir, config[i].mount), tmp)
+	end
 	if hashs then
 		local index = make_index(root.dir)
 		import_hash(index, hashs)
@@ -270,11 +339,17 @@ function repo.filehash(pathname)
 	end
 end
 
+function repo.dumptree()
+	return dump_dir(root.dir)
+end
+
 local function test()	-- for reference
-	local fs = require "filesystem"
-	local vfsrepo = require "vfsrepo"
-	vfsrepo.init()
-	vfsrepo.update("/pkg")
+	local init_config = {
+		{ path = "/ant/test/vfsrepo", mount = "/" },
+		{ path = "/ant/pkg", mount = "/pkg" },
+	}
+	print("INIT")
+	vfsrepo.init(init_config)
 	local roothash = vfsrepo.root()
 	print("ROOT", roothash)
 	local testpath = "/pkg/ant.window"
@@ -292,7 +367,10 @@ local function test()	-- for reference
 	print("LOCALPATH", localpath)
 	local cache = vfsrepo.export_hash()
 	print("INIT WITH CACHE")
-	vfsrepo.init(cache)
+	init_config.hash = cache
+	vfsrepo.init(init_config)
+
+	--print(repo.dumptree())
 end
 
 return repo
