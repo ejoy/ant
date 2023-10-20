@@ -21,38 +21,6 @@ local hwi           = import_package "ant.hwi"
 --     W = {90,  180, 270, 0},
 -- }
 
---column matrix
-local MAT2_MT = {
-    row = function (self, idx)
-        assert(1<=idx and idx<=2)
-        return {self[idx], self[idx+2]}
-    end,
-    transform = function (self, pt)
-        local function dot2(v1, v2)
-            return v1[1] * v2[1] + v1[2] * v2[2]
-        end
-        return {
-            dot2(self:row(1), pt), dot2(self:row(2), pt)
-        }
-    end
-}
-
-local function create_mat2(r)
-    local c, s = math.cos(r), math.sin(r)
-    local t = {
-        c, -s,  --[1, 2] ==> column 1
-        s,  c   --[3, 4] ==> column 2
-    }
-    return setmetatable(t, {__index=MAT2_MT})
-end
-
-local DEBUG_MAT2 = false
-if DEBUG_MAT2 then
-    local m1 = create_mat2(math.pi*0.5)
-    local d1 = m1:transform({1, 0})
-    assert(d1[1] == 0 and d1[2] == -1)
-end
-
 -- the color&alpha/rougness&metalness texture are 1024x128
 local DEFAULT_QUAD_TEX_SIZE<const> = 128
 local NUM_QUAD_IN_TEX<const> = 8
@@ -275,7 +243,7 @@ function road_sys:entity_remove()
 end
 
 function road_sys:exit()
-    if ROAD_MESH.vb.handle then
+    if ROAD_MESH and ROAD_MESH.vb.handle then
         ROAD_MESH.vb.handle = destroy_handle(ROAD_MESH.vb.handle)
     end
 end

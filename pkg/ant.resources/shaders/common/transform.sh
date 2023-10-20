@@ -10,55 +10,6 @@
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
 
-#ifdef DRAW_INDIRECT
-	#define DRAW_INDIRECT_TYPE     u_draw_indirect_type.x
-	#define DRAW_INDIRECT_ROAD     1
-	#define DRAW_INDIRECT_MOUNTAIN 2
-	#define DRAW_INDIRECT_MOUNTAIN2 3
-
-mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
-{
-	if(DRAW_INDIRECT_TYPE == DRAW_INDIRECT_MOUNTAIN)
-	{
-		float s = d1.x;
-		float r = d1.y;
-		float tx = d1.z;
-		float tz = d1.w;
-		float rad = r;
-		float cosy = cos(rad);
-		float siny = sin(rad);	
-		mat4 sm = mat4(
-			   s,          0,          0,        0, 
-			   0,          s,          0,        0, 
-			   0,          0,          s,        0, 
-			   0,          0,          0,        1
-		);
-		mat4 rm = mat4(
-			cosy,          0,      -siny,        0, 
-			   0,          1,          0,        0, 
-			siny,          0,       cosy,        0, 
-			   0,          0,          0,        1
-		);
-		mat4 m = mul(rm, sm);
-		m[0][3] = m[0][3] + tx;
-		m[2][3] = m[2][3] + tz;
-		return m;
-	} 
-	
-	if (DRAW_INDIRECT_MOUNTAIN2 == DRAW_INDIRECT_TYPE)
-	{
-		// d1, d2, d3 already transposed when pass to instance buffer, see: create_sm_entity
-		return mat4(d1, d2, d3, vec4(0.0, 0.0, 0.0, 1.0));
-	} 
-
-	mat4 m = u_model[0];
-	m[0][3] = m[0][3] + d1.x;
-	m[1][3] = m[1][3] + d1.y;
-	m[2][3] = m[2][3] + d1.z;
-	return m;
-}
-#endif
-
 highp vec3 quat_to_normal(const highp vec4 q){
     return	vec3( 0.0,  0.0,  1.0 ) + 
         	vec3( 2.0, -2.0, -2.0 ) * q.x * q.zwx +
@@ -90,26 +41,13 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
-mat4 get_world_matrix_default(VSInput vs_input)
+mat4 get_world_matrix(VSInput vs_input)
 {
 #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
  	return calc_bone_transform(vs_input.index, vs_input.weight);
 #else
  	return	u_model[0];
 #endif
-}
-
-mat4 get_world_matrix(VSInput vs_input)
-{
-#ifdef DRAW_INDIRECT
-	return get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2);
-#else//!DRAW_INDIRECT
-#	if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
-	return calc_bone_transform(vs_input.index, vs_input.weight);
-#	else	//NO SKINNING and NOT LIGHTMAP
-	return u_model[0];
-#	endif	//!SKINNING and LIGHTMAP
-#endif //DRAW_INDIRECT
 }
 
 vec4 transform2clipspace(vec4 posWS)
@@ -121,7 +59,7 @@ vec4 transform2clipspace(vec4 posWS)
 	return posCS;
 }
 
-vec4 transform_pos(mat4 wm, vec3 posLS, out vec4 posCS)
+vec4 transform_worldpos(mat4 wm, vec3 posLS, out vec4 posCS)
 {
 	vec4 posWS = mul(wm, vec4(posLS, 1.0));
 	posCS = transform2clipspace(posWS);

@@ -7,6 +7,7 @@ fx:
     shadow_receive: on
     subsurface: off
     DRAW_INDIRECT: 1
+    DI_ROAD: 1
     WITH_CUSTOM_COLOR0_ATTRIB: 1
     WITH_CUSTOM_TANGENT_ATTRIB: 1
     PACK_TANGENT_TO_QUAT: 0
@@ -17,7 +18,6 @@ properties:
   s_metallic_roughness:
     stage: 1
     texture: /pkg/ant.landform/assets/textures/road/rm.texture
-  u_draw_indirect_type: {0, 0, 0, 0}
 state: 
   ALPHA_REF: 0
   CULL: CCW

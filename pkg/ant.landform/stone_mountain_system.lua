@@ -109,10 +109,6 @@ local function create_sm_entity(gid, indices)
                 indirect_type_NEED_REMOVED = NEW_MOUNTAIN_TYPE,
             },
             render_layer  = "foreground",
-            on_ready = function(e)
-                --TODO: need removed, srt data should be the same
-                imaterial.set_property(e, "u_draw_indirect_type", NEW_MOUNTAIN_TYPE)
-            end
         }
     }
 

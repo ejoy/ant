@@ -27,7 +27,7 @@ local queuemgr	= ecs.require "queue_mgr"
 local hwi		= import_package "ant.hwi"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
-local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
+local idi 		= ecs.require "ant.render|draw_indirect.draw_indirect2"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local R         = world:clibs "render.render_material"
@@ -351,14 +351,17 @@ end
 
 local shadow_material
 local gpu_skinning_material
-local shadow_indirect_material
+local shadow_indirect_materials
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-	shadow_indirect_material 	= assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect.material"
+	shadow_indirect_materials 	= {
+		mountain = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_mountain.material",
+		road	 = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_road.material",
+	}
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -519,15 +522,19 @@ end
 	end ]]
 --end
 
-local function which_material(skinning, indirect)
-	if indirect then
-		return shadow_indirect_material
-	end
-	if skinning then
-		return gpu_skinning_material
-	end
-	
-	return shadow_material
+--TODO: need remove
+local function which_material(e)
+    local idt = idi.indirect_type(e)
+    if idt then
+        return assert(shadow_indirect_materials[idt], ("Invalid 'indirect type': %s"):format(idt))
+    end
+
+    w:extend(e, "skinning?in")
+    if e.skinning then
+        return gpu_skinning_material
+    end
+
+    return shadow_material
 end
 
 local omni_stencils = {
@@ -568,15 +575,11 @@ function sm:update_filter()
 
 		local mat_ptr
 		if mt.fx.setting.cast_shadow == "on" then
-			w:extend(e, "filter_material:in skinning?in draw_indirect?in")
-			local di = e.draw_indirect
-			local dstres = which_material(e.skinning, di)
+			w:extend(e, "filter_material:in")
+			local dstres = which_material(e)
 			local fm = e.filter_material
 			local mi = RM.create_instance(dstres.object)
 			mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
-			if di then
-				mi.u_draw_indirect_type = di.indirect_type_NEED_REMOVED
-			end
 			fm["csm1_queue"] = mi
 			fm["csm2_queue"] = mi
 			fm["csm3_queue"] = mi

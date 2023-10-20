@@ -13,10 +13,9 @@ if setting:get "graphic/disable_pre_z" then
 end
 
 local bgfx          = require "bgfx"
-local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
+local idi           = ecs.require "ant.render|draw_indirect.draw_indirect2"
 local queuemgr      = ecs.require "queue_mgr"
 
-local math3d        = require "math3d"
 local R             = world:clibs "render.render_material"
 local RM            = ecs.require "ant.material|material"
 
@@ -27,14 +26,16 @@ local assetmgr      = import_package "ant.asset"
 
 local pre_depth_material
 local pre_depth_skinning_material
-local pre_depth_indirect_material
+local pre_depth_indirect_materials
 
-local function which_material(skinning, indirect)
-    if indirect then
-       return pre_depth_indirect_material
-
+local function which_material(e)
+    local idt = idi.indirect_type(e)
+    if idt then
+        return assert(pre_depth_indirect_materials[idt], ("Invalid 'indirect type': %s"):format(idt))
     end
-    if skinning then
+
+    w:extend(e, "skinning?in")
+    if e.skinning then
         return pre_depth_skinning_material
     end
 
@@ -42,9 +43,13 @@ local function which_material(skinning, indirect)
 end
 
 function s:init()
-    pre_depth_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_indirect_material = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect.material"
-    pre_depth_skinning_material = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+    pre_depth_material 			        = assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
+    --TODO: will remove this mountain/road material
+    pre_depth_indirect_materials = {
+        mountain = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_mountain.material",
+        road     = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_road.material",
+    }
+    pre_depth_skinning_material          = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -85,20 +90,16 @@ end
 function s:update_filter()
     for e in w:select "filter_result visible_state:in render_layer:in" do
         if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
-            w:extend(e, "material:in render_object:update filter_material:in skinning?in draw_indirect?in")
+            w:extend(e, "material:in render_object:update filter_material:in")
             local matres = assetmgr.resource(e.material)
             if not matres.fx.setting.no_predepth then
                 local fm = e.filter_material
-                local di = e.draw_indirect
-                local m = assert(which_material(e.skinning, di))
+                local m = which_material(e)
                 local newstate = create_depth_state(fm.main_queue:get_state(), m.state)
                 if newstate then
                     local mi = RM.create_instance(m.object)
                     mi:set_state(newstate)
     
-                    if di then
-                        mi.u_draw_indirect_type = di.indirect_type_NEED_REMOVED
-                    end
                     fm["pre_depth_queue"] = mi
                     R.set(e.render_object.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
                 end

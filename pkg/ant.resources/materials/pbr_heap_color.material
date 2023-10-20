@@ -20,7 +20,6 @@ properties:
   u_basecolor_factor: {1, 1, 1, 1}
   u_emissive_factor: {1, 1, 1, 0}
   u_pbr_factor: {1, 1, 1, 1}
-  u_draw_indirect_type: {0, 0, 0, 0}
 state:
   ALPHA_REF: 0
   CULL: NONE

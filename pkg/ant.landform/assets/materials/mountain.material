@@ -1,20 +1,20 @@
 fx:
-  shader_type: "PBR"
+  vs_code: "#include \"mountain_vs_func.sh\""
   setting:
-    ALPHAMODE_OPAQUE: 1
-    DRAW_INDIRECT: 1
     lighting: on
     cast_shadow: on
     shadow_receive: on
     subsurface: off
+    ALPHAMODE_OPAQUE: 1
+    DRAW_INDIRECT: 1
+    DI_MOUNTAIN: 1
     WITH_COLOR_ATTRIB: 1
     WITH_TANGENT_ATTRIB: 1
     PACK_TANGENT_TO_QUAT: 1
 properties:
-  u_basecolor_factor:   {1, 1, 1, 1}
-  u_emissive_factor:    {0, 0, 0, 0}
+  u_basecolor_factor:   {1, 1,  1,  1}
+  u_emissive_factor:    {0, 0,  0,  0}
   u_pbr_factor:         {0, 1, 0.5, 1}
-  u_draw_indirect_type: {0, 0, 0, 0}
 state:
   ALPHA_REF: 0
   CULL: CCW

@@ -7,6 +7,8 @@ fx:
     shadow_receive: on
     subsurface: off
     DRAW_INDIRECT: 1
+    DI_ROAD: 1
+    WITH_CUSTOM_COLOR0_ATTRIB: 1
     WITH_CUSTOM_TANGENT_ATTRIB: 1
     PACK_TANGENT_TO_QUAT: 0
 properties:
