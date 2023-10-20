@@ -1019,6 +1019,17 @@ end
 local texture_flag = {}
 local image_to_texture = {}
 local datalist   = require "datalist"
+local function split(str)
+    local r = {}
+    str:gsub('[^|]*', function (wd) r[#r+1] = wd end)
+    return r
+end
+local function absolute_path(path, base)
+    if path:sub(1,1) == "/" then
+        return path
+    end
+    return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+end
 function MaterialView:set_eid(eid)
     if self.eid == eid then
         return
@@ -1068,8 +1079,9 @@ function MaterialView:set_eid(eid)
 
     for _, v in pairs(t.properties) do
         if v.texture and not texture_flag[v.texture] then
-            local data = datalist.parse(fastio.readall(fs.path(v.texture):localpath():string(), v.texture))
-            if data and not image_to_texture[data.path] then
+            local imagepath = absolute_path(v.texture, self.mat_file.path) .. "|main.cfg"
+            local data = datalist.parse(fastio.readall(assetmgr.compile(imagepath), imagepath))
+            if data and data.path and not image_to_texture[data.path] then
                 image_to_texture[data.path] = v.texture
                 texture_flag[v.texture] = true
             end
