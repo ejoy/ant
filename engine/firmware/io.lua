@@ -25,6 +25,11 @@ local platform = require "bee.platform"
 local serialization = require "bee.serialization"
 local protocol = require "protocol"
 
+local bee_select = require "bee.select"
+local selector = bee_select.create()
+local SELECT_READ <const> = bee_select.SELECT_READ
+local SELECT_WRITE <const> = bee_select.SELECT_WRITE
+
 local io_req = thread.channel "IOreq"
 local config, fddata = io_req:bpop()
 
@@ -39,7 +44,8 @@ if platform.os == 'android' then
 	end
 end
 
-local channelfd = fddata and socket.fd(fddata) or nil
+local channelfd = socket.fd(fddata)
+local channelfd_init = false
 
 thread.setname "ant - IO thread"
 
@@ -51,6 +57,7 @@ local connection = {
 	sendq = {},
 	recvq = {},
 	fd = nil,
+	flags = 0,
 }
 
 local function connection_send(...)
@@ -108,12 +115,9 @@ local function connect_server(address, port)
 		return
 	end
 	if ok == false then
-		local rd,wt = socket.select(nil, {fd})
-		if not rd then
-			_print("[ERROR]: "..wt)	-- select error
-			fd:close()
-			return
-		end
+		selector:event_init(fd, fd, SELECT_WRITE)
+		selector:wait()
+		selector:event_close(fd)
 	end
 	local ok, err = fd:status()
 	if not ok then
@@ -144,25 +148,21 @@ local function listen_server(address, port)
 		_print("[ERROR] listen: "..err)
 		return
 	end
-	local rd,wt = socket.select({fd}, nil, 2)
-	if rd == nil then
-		_print("[ERROR] select: "..wt)	-- select error
-		fd:close()
-		return
+	selector:event_init(fd, fd, SELECT_READ)
+	for _ in selector:wait(2) do
+		local newfd, err = fd:accept()
+		if not newfd then
+			fd:close()
+			_print("[ERROR] accept: "..err)
+			return
+		end
+		print("Accepted")
+		selector:event_close(fd)
+		return newfd
 	end
-	if rd[1] == nil then
-		_print("[ERROR] select: timeout")
-		fd:close()
-		return
-	end
-	local newfd, err = fd:accept()
-	if not newfd then
-		fd:close()
-		_print("[ERROR] accept: "..err)
-		return
-	end
-	print("Accepted")
-	return newfd
+	_print("[ERROR] select: timeout")
+	selector:event_close(fd)
+	fd:close()
 end
 
 local function wait_server()
@@ -192,68 +192,16 @@ end
 
 local CMD = {}
 
-local rdset = {}
-local wtset = {}
-local rdfunc = {}
-local wtfunc = {}
-local function event_addr(fd, func)
-	if fd then
-		rdset[#rdset+1] = fd
-		rdfunc[fd] = func
-	end
-end
-local function event_addw(fd, func)
-	if fd then
-		wtset[#wtset+1] = fd
-		wtfunc[fd] = func
-	end
-end
-local function event_delr(fd)
-	if fd then
-		rdfunc[fd] = nil
-		for i, h in ipairs(rdset) do
-			if h == fd then
-				table.remove(rdset, i)
-				break
-			end
-		end
-	end
-end
-local function event_delw(fd)
-	if fd then
-		wtfunc[fd] = nil
-		for i, h in ipairs(wtset) do
-			if h == fd then
-				table.remove(wtset, i)
-				break
-			end
-		end
-	end
-end
-
 local function event_select(timeout)
 	local sending = connection.sendq
-	local rd, wt
 	if #sending > 0  then
-		rd, wt = socket.select(rdset, wtset, timeout)
+		selector:event_mod(connection.fd, connection.flags)
 	else
-		rd, wt = socket.select(rdset, nil, timeout)
+		selector:event_mod(connection.fd, connection.flags & (~SELECT_WRITE))
 	end
-	if not rd then
-		if rd == false then
-			-- timeout
-			return false
-		end
-		-- select error
-		return nil, wt
+	for func, event in selector:wait(timeout) do
+		func(event)
 	end
-	for _, fd in ipairs(wt) do
-		wtfunc[fd](fd)
-	end
-	for _, fd in ipairs(rd) do
-		rdfunc[fd](fd)
-	end
-	return true
 end
 
 local function request_send(...)
@@ -568,7 +516,7 @@ local function ltask_init(path, realpath)
 	ltask.dispatch(S)
 	local waitfunc, fd = exclusive.eventinit()
 	local ltaskfd = socket.fd(fd)
-	event_addr(ltaskfd, function ()
+	local function read_ltaskfd()
 		waitfunc()
 		local SCHEDULE_IDLE <const> = 1
 		while true do
@@ -578,7 +526,8 @@ local function ltask_init(path, realpath)
 			end
 			coroutine.yield()
 		end
-	end)
+	end
+	selector:event_init(ltaskfd, read_ltaskfd, SELECT_READ)
 end
 
 function CMD.SWITCH(_, path, realpath)
@@ -600,23 +549,21 @@ local function work_online()
 	request_send("SHAKEHANDS")
 	request_send("ROOT")
 	while not QUIT do
-		local ok, err = event_select()
-		if ok == nil then
-			_print("[ERROR] Connection Error: "..err)
-			break
-		end
+		event_select()
 	end
 end
 
+
 local function init_channelfd()
-	if rdfunc[channelfd] then
+	if channelfd_init then
 		return
 	end
-	event_addr(channelfd, function (fd)
+	channelfd_init = true
+	local function read_channelfd()
 		while true do
-			local r = fd:recv()
+			local r = channelfd:recv()
 			if r == nil then
-				event_delr(fd)
+				selector:event_del(channelfd)
 				return
 			end
 			if r == false then
@@ -625,7 +572,8 @@ local function init_channelfd()
 			while dispatch(io_req:pop()) do
 			end
 		end
-	end)
+	end
+	selector:event_init(channelfd, read_channelfd, SELECT_READ)
 end
 
 local function init_event()
@@ -648,7 +596,7 @@ local function init_event()
 			dispatch_net(cmd, ...)
 		end
 	end
-	event_addr(connection.fd, function (fd)
+	local function read_fd(fd)
 		local data, err = fd:recv()
 		if not data then
 			if err then
@@ -669,8 +617,9 @@ local function init_event()
 			ltask.dispatch_wakeup()
 			coroutine.yield()
 		end
-	end)
-	event_addw(connection.fd, function (fd)
+		return true
+	end
+	local function write_fd(fd)
 		while true do
 			local data = table.remove(sending)
 			if data == nil then
@@ -691,7 +640,30 @@ local function init_event()
 				break
 			end
 		end
-	end)
+		return true
+	end
+	local function update_fd(event)
+		if event & SELECT_READ ~= 0 then
+			if not read_fd(connection.fd) then
+				connection.flags = connection.flags & (~SELECT_READ)
+				if connection.flags == 0 then
+					selector:event_del(connection.fd)
+					QUIT = true
+				end
+			end
+		end
+		if event & SELECT_WRITE ~= 0 then
+			if not write_fd(connection.fd) then
+				connection.flags = connection.flags & (~SELECT_WRITE)
+				if connection.flags == 0 then
+					selector:event_del(connection.fd)
+					QUIT = true
+				end
+			end
+		end
+	end
+	connection.flags = SELECT_READ | SELECT_WRITE
+	selector:event_init(connection.fd, update_fd, SELECT_READ | SELECT_WRITE)
 end
 
 local function main()
@@ -700,8 +672,6 @@ local function main()
 	if connection.fd then
 		init_event()
 		work_online()
-		event_delr(connection.fd)
-		event_delw(connection.fd)
 		-- socket error or closed
 	end
 	if repo.root == nil then

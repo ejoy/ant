@@ -10,6 +10,11 @@ local socket = require "bee.socket"
 local io_req = thread.channel "IOreq"
 thread.setname "ant - IO thread"
 
+local select = require "bee.select"
+local selector = select.create()
+local SELECT_READ <const> = select.SELECT_READ
+local SELECT_WRITE <const> = select.SELECT_WRITE
+
 local quit = false
 local channelfd = socket.fd(fddata)
 
@@ -51,36 +56,23 @@ local function dispatch(ok, id, cmd, ...)
 	return true
 end
 
-local event = {channelfd}
-local eventfunc = {}
+local exclusive = require "ltask.exclusive"
+local ltask
 
-local function event_del(fd)
-	if fd then
-		eventfunc[fd] = nil
-		for i, h in ipairs(event) do
-			if h == fd then
-				table.remove(event, i)
-				if next(event) == nil then
-					quit = true
-				end
-				break
-			end
-		end
-	end
-end
-
-eventfunc[channelfd] = function ()
+local function read_channelfd()
 	channelfd:recv()
 	if nil == channelfd:recv() then
-		event_del(channelfd)
+		selector:event_del(channelfd)
+		if not ltask then
+			quit = true
+		end
 		return
 	end
 	while dispatch(io_req:pop()) do
 	end
 end
 
-local exclusive = require "ltask.exclusive"
-local ltask
+selector:event_init(channelfd, read_channelfd, SELECT_READ)
 
 local function ltask_ready()
 	return coroutine.yield() == nil
@@ -92,8 +84,7 @@ local function ltask_init()
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()
 	local ltaskfd = socket.fd(fd)
-	event[#event+1] = ltaskfd
-	eventfunc[ltaskfd] = function ()
+	local function read_ltaskfd()
 		waitfunc()
 		local SCHEDULE_IDLE <const> = 1
 		while true do
@@ -104,6 +95,7 @@ local function ltask_init()
 			coroutine.yield()
 		end
 	end
+	selector:event_init(ltaskfd, read_ltaskfd, SELECT_READ)
 end
 
 function CMD.SWITCH()
@@ -119,11 +111,8 @@ end
 
 local function work()
 	while not quit do
-		local rds = socket.select(event)
-		if rds then
-			for _, rd in ipairs(rds) do
-				eventfunc[rd]()
-			end
+		for func in selector:wait() do
+			func()
 		end
 	end
 end

@@ -1,46 +1,45 @@
 local ltask = require "ltask"
 local socket = require "bee.socket"
 
+local select = require "bee.select"
+local selector = select.create()
+local SELECT_READ <const> = select.SELECT_READ
+local SELECT_WRITE <const> = select.SELECT_WRITE
+
 local kMaxReadBufSize <const> = 4 * 1024
 
-local readfds = {}
-local writefds = {}
 local status = {}
 local handle = {}
 
-local function FD_SET(set, fd)
-    for i = 1, #set do
-        if fd == set[i] then
-            return
-        end
+local function fd_update(s)
+    local flags = 0
+    if s.r then
+        flags = flags | SELECT_READ
     end
-    set[#set+1] = fd
-end
-
-local function FD_CLR(set, fd)
-    for i = 1, #set do
-        if fd == set[i] then
-            set[i] = set[#set]
-            set[#set] = nil
-            return
-        end
+    if s.w then
+        flags = flags | SELECT_WRITE
     end
+    selector:event_mod(s.fd, flags)
 end
 
-local function fd_set_read(fd)
-    FD_SET(readfds, fd)
+local function fd_set_read(s)
+    s.r = true
+    fd_update(s)
 end
 
-local function fd_clr_read(fd)
-    FD_CLR(readfds, fd)
+local function fd_clr_read(s)
+    s.r = nil
+    fd_update(s)
 end
 
-local function fd_set_write(fd)
-    FD_SET(writefds, fd)
+local function fd_set_write(s)
+    s.w = true
+    fd_update(s)
 end
 
-local function fd_clr_write(fd)
-    FD_CLR(writefds, fd)
+local function fd_clr_write(s)
+    s.w = nil
+    fd_update(s)
 end
 
 local function create_handle(fd)
@@ -55,6 +54,7 @@ local function create_handle(fd)
 end
 
 local function close(s)
+    selector:event_close(s.fd)
     local fd = s.fd
     fd:close()
     assert(s.shutdown_r)
@@ -73,9 +73,9 @@ local function close(s)
 end
 
 local function close_write(s)
-    fd_clr_write(s.fd)
+    fd_clr_write(s)
     if s.shutdown_r then
-        fd_clr_read(s.fd)
+        fd_clr_read(s)
         s.shutdown_w = true
         close(s)
     end
@@ -84,7 +84,7 @@ end
 local function close_read(s)
     if not s.shutdown_r then
         s.shutdown_r = true
-        fd_clr_read(s.fd)
+        fd_clr_read(s)
         if s.wait_read then
             for i, token in ipairs(s.wait_read) do
                 ltask.wakeup(token)
@@ -100,7 +100,7 @@ local function stream_on_read(s)
         close_read(s)
         if s.shutdown_w or #s.wait_write == 0 then
             s.shutdown_w = true
-            fd_clr_write(s.fd)
+            fd_clr_write(s)
             close(s)
         end
     elseif data == false then
@@ -128,7 +128,7 @@ local function stream_on_read(s)
         end
 
         if #s.readbuf > kMaxReadBufSize then
-            fd_clr_read(s.fd)
+            fd_clr_read(s)
         end
     end
 end
@@ -177,6 +177,7 @@ function S.bind(protocol, ...)
         shutdown_r = false,
         shutdown_w = true,
     }
+    selector:event_init(fd, fd)
     return create_handle(fd)
 end
 
@@ -193,8 +194,9 @@ function S.connect(protocol, ...)
         shutdown_w = false,
         on_write = ltask.wakeup,
     }
+    selector:event_init(fd, fd)
     status[fd] = s
-    fd_set_write(fd)
+    fd_set_write(s)
     ltask.wait(s)
     local ok, err = fd:status()
     if ok then
@@ -203,16 +205,16 @@ function S.connect(protocol, ...)
         s.shutdown_r = false
         s.on_read = stream_on_read
         s.on_write = stream_on_write
-        fd_set_read(s.fd)
+        fd_set_read(s)
         if #s.wait_write > 0 then
             s:on_write()
         else
-            fd_clr_write(s.fd)
+            fd_clr_write(s)
         end
         return create_handle(s.fd)
     else
         s.shutdown_w = true
-        fd_clr_write(s.fd)
+        fd_clr_write(s)
         close(s)
         return nil, err
     end
@@ -222,7 +224,7 @@ function S.listen(h)
     local fd = assert(handle[h], "Invalid fd.")
     local s = status[fd]
     s.on_read = ltask.wakeup
-    fd_set_read(fd)
+    fd_set_read(s)
     ltask.wait(s)
     local newfd, err = fd:accept()
     if not newfd then
@@ -242,7 +244,8 @@ function S.listen(h)
         on_read = stream_on_read,
         on_write = stream_on_write,
     }
-    fd_set_read(newfd)
+    selector:event_init(newfd, newfd)
+    fd_set_read(status[newfd])
     return create_handle(newfd)
 end
 
@@ -260,7 +263,7 @@ function S.send(h, data)
         return 0
     end
     if #s.wait_write == 0 then
-        fd_set_write(fd)
+        fd_set_write(s)
     end
 
     local token = {
@@ -301,7 +304,7 @@ function S.recv(h, n)
         end
         local ret = s.readbuf
         if sz > kMaxReadBufSize then
-            fd_set_read(s.fd)
+            fd_set_read(s)
         end
         s.readbuf = ""
         return ret
@@ -312,7 +315,7 @@ function S.recv(h, n)
         if n <= sz then
             local ret = s.readbuf:sub(1, n)
             if sz > kMaxReadBufSize and sz - n <= kMaxReadBufSize then
-                fd_set_read(s.fd)
+                fd_set_read(s)
             end
             s.readbuf = s.readbuf:sub(n+1)
             return ret
@@ -333,7 +336,7 @@ function S.close(h)
         close_read(s)
         if s.shutdown_w or not s.wait_write or #s.wait_write == 0 then
             s.shutdown_w = true
-            fd_clr_write(fd)
+            fd_clr_write(s)
             close(s)
         else
             local token = {}
@@ -352,15 +355,12 @@ end
 
 ltask.fork(function()
     while true do
-        local rd, wr = socket.select(readfds, writefds, 0.001)
-        if rd then
-            for i = 1, #rd do
-                local fd = rd[i]
+        for fd, event in selector:wait(0.001) do
+            if event & SELECT_READ ~= 0 then
                 local s = status[fd]
                 s:on_read()
             end
-            for i = 1, #wr do
-                local fd = wr[i]
+            if event & SELECT_WRITE ~= 0 then
                 local s = status[fd]
                 s:on_write()
             end
