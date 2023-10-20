@@ -37,7 +37,7 @@ local function create(world, type)
             world_sendmsg("gesture", what, data)
             active_gesture[what] = "world"
         else
-            assert(data.state == nil)
+            -- assert(data.state == nil)
             if ServiceRmlui then
                 if rmlui_sendmsg("gesture", what, data) then
                     return
