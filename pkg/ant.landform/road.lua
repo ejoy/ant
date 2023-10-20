@@ -371,7 +371,7 @@ local function update_di_buffers(dieid, buffer)
     idi.update_instance_buffer(die, table.concat(buffer.instancebuffer, ""), #buffer.instancebuffer)
 end
 
-local function create_road_obj(gid, render_layer, buffer)
+local function create_road_obj(gid, render_layer, buffer, dimaterial)
     local instancenum = #buffer.instancebuffer
     local dieid = world:create_entity {
         group = gid,
@@ -383,7 +383,7 @@ local function create_road_obj(gid, render_layer, buffer)
         data = {
             scene = {},
             simplemesh  = assert(ROAD_MESH),
-            material    = "/pkg/ant.landform/assets/materials/road.material",
+            material    = dimaterial,
             visible_state = "main_view|selectable",
             road = {
                 handle = create_mesh_buffer(buffer.meshbuffer),
@@ -424,8 +424,8 @@ end
 
 local function create_road_entities(gid, render_layer, road, indicator)
     return {
-        road        = create_road_obj(gid, render_layer, road),
-        indicator   = create_road_obj(gid, render_layer, indicator),
+        road        = create_road_obj(gid, render_layer, road,      "/pkg/ant.landform/assets/materials/road.material"),
+        indicator   = create_road_obj(gid, render_layer, indicator, "/pkg/ant.landform/assets/materials/indicator.material"),
     }
 end
 
