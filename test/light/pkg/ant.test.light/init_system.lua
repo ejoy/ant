@@ -183,7 +183,7 @@ function S:data_changed()
         end
 
         if code == "J" and press == 0 then
-            idm.restore_to_origin_mipmap()
+            idm.reset_mipmap_level(1)
         end
 
     end

@@ -94,12 +94,23 @@ function idm.restore_to_origin_mipmap()
     end
 end
 
-function idm.reset_mipmap_level(id, first_mip)
-    if not assetmgr.invalid_texture(id) then
-        local texture_content = ltask.call(ServiceResource, "texture_content", id)
-        local texture_memory = ltask.call(ServiceResource, "texture_memory", id)
-        local new_handle = bgfx.create_texture(texture_memory, texture_content.flag, first_mip)
-        ltask.call(ServiceResource, "texture_set_handle", id, new_handle)
+function idm.reset_mipmap_level(first_mip)
+    local most_detail_mip = first_mip and first_mip or 1
+    local reset_cache = {}
+    
+    for e in w:select "material?in" do
+        local r = assetmgr.resource(e.material)
+        local color_attrib = r.attrib["s_basecolor"]
+        if color_attrib and (not reset_cache[color_attrib.value]) then
+            local id = color_attrib.value
+            reset_cache[id] = true
+            local texture_content = ltask.call(ServiceResource, "texture_content", id)
+            if texture_content.texinfo.numMips > 1 then
+                local texture_memory = ltask.call(ServiceResource, "texture_memory", id)
+                local new_handle = bgfx.create_texture(texture_memory, texture_content.flag, most_detail_mip)
+                ltask.call(ServiceResource, "texture_set_handle", id, new_handle)
+            end
+        end
     end
 end
 
