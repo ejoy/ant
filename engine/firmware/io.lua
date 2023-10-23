@@ -193,11 +193,13 @@ end
 local CMD = {}
 
 local function event_select(timeout)
-	local sending = connection.sendq
-	if #sending > 0  then
-		selector:event_mod(connection.fd, connection.flags)
-	else
-		selector:event_mod(connection.fd, connection.flags & (~SELECT_WRITE))
+	if connection.fd then
+		local sending = connection.sendq
+		if #sending > 0  then
+			selector:event_mod(connection.fd, connection.flags)
+		else
+			selector:event_mod(connection.fd, connection.flags & (~SELECT_WRITE))
+		end
 	end
 	for func, event in selector:wait(timeout) do
 		func(event)
