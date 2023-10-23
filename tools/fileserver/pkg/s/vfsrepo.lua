@@ -26,6 +26,7 @@ local function list_files(root, dir, fullpath)
 				obj.resource = fullpath .. "/" .. name
 			else
 				obj.path = pathname
+				obj.timestamp_new = attr:last_write_time()
 			end
 			dir[n] = obj; n = n + 1
 		end
@@ -69,7 +70,8 @@ local function patch_list_files(root, dir, fullpath)
 			else
 				obj = {
 					name = name,
-					path = pathname
+					path = pathname,
+					timestamp_new = attr:last_write_time(),
 				}
 			end
 			dir[n] = obj; n = n + 1
@@ -149,7 +151,8 @@ local function dump_dir(dir)
 end
 
 local function calc_file_hash(item)
-	local timestamp = lfs.last_write_time(item.path)
+	local timestamp = assert(item.timestamp_new)
+	item.timestamp_new = nil
 	if item.timestamp == timestamp then
 		if item.hash then
 			return
