@@ -35,6 +35,51 @@ local function list_files(root, dir, fullpath)
 	end
 end
 
+local function patch_list_files(root, dir, fullpath)
+	local tmp = {}
+	local oldn = #dir
+	local n = 1
+	for i = 1, oldn do
+		local item = dir[i]
+		if item.dir then
+			tmp[item.name] = item
+		end
+	end
+	for path, attr in lfs.pairs(root) do
+		local name = path:filename():string()
+		local obj
+		if name:byte() ~= DOT then
+			local pathname = path:string()
+			if attr:is_directory() then
+				obj = tmp[name]
+				if not obj then
+					-- new dir
+					local d = {}
+					list_files(pathname, d, fullpath .. "/" .. name)
+					obj = {
+						dir = d,
+						name = name,
+					}
+				end
+			elseif is_resource(name) then
+				obj = {
+					name = name,
+					resource = fullpath .. "/" .. name
+				}
+			else
+				obj = {
+					name = name,
+					path = pathname
+				}
+			end
+			dir[n] = obj; n = n + 1
+		end
+	end
+	for i = n, oldn do
+		dir[i] = nil
+	end
+end
+
 local function merge_dir(source, patch)
 	local dir = {}
 	local n = #source
@@ -309,11 +354,6 @@ local function get_file(self, pathname)
 	end
 end
 
-local function update_file(root, vpath, localpath)
-	local d = make_dir(root, vpath)
-	list_files(localpath, d, vpath)
-end
-
 local function update_localpath(self, localpath)
 	if localpath:sub(-1) ~= '/' then
 		localpath = localpath .. "/"
@@ -322,12 +362,12 @@ local function update_localpath(self, localpath)
 		if localpath == sub.path then
 			-- full root update
 			local root = {}
-			list_files(sub.path, root, sub.mount)
+			patch_list_files(sub.path, root, sub.mount)
 			sub.root = root
 		elseif localpath:sub(1, #sub.path) == sub.path then
 			-- sub path update
 			local path = localpath:sub(#sub.path+1)
-			list_files(localpath, make_dir(sub.root, path), path)
+			patch_list_files(localpath, make_dir(sub.root, path), path)
 		end
 	end
 	-- ignore localpath
