@@ -18,12 +18,12 @@ local function list_files(root, dir, fullpath)
 		if name:byte() ~= DOT then
 			local pathname = path:string()
 			local obj = { name = name }
-			if is_resource(name) then
-				obj.resource = fullpath .. "/" .. name
-			elseif attr:is_directory() then
+			if attr:is_directory() then
 				local d = {}
 				list_files(pathname, d, fullpath .. "/" .. name)
 				obj.dir = d
+			elseif is_resource(name) then
+				obj.resource = fullpath .. "/" .. name
 			else
 				obj.path = pathname
 			end
