@@ -602,6 +602,7 @@ function m:reset_prefab(noscene)
     gizmo:set_target()
     self:create_ground()
     self.materials_names = nil
+    self.image_patch = {}
     self.patch_copy_material = {}
     self.prefab_template = {}
     self.patch_template = {}
@@ -717,9 +718,23 @@ function m:get_hitch_content()
     end
     return content
 end
-
+function m:is_image_patch_node(patch)
+    if not next(self.image_patch) then
+        return
+    end
+    for _, v in pairs(self.image_patch) do
+        for _, vv in pairs(v) do
+            if patch.file == vv.file and patch.path == vv.path then
+                return true
+            end
+        end
+    end
+end
 function m:get_origin_patch_list(template_list)
     for _, patch in ipairs(self.origin_patch_template) do
+        if self:is_image_patch_node(patch) then
+            goto continue
+        end
         if patch.file ~= self.prefab_name and patch.path ~= "hitch.prefab" then
             local find_mtl = false
             for key, _ in pairs(self.patch_copy_material) do
@@ -732,6 +747,7 @@ function m:get_origin_patch_list(template_list)
                 template_list[#template_list + 1] = patch
             end
         end
+        ::continue::
     end
 end
 
@@ -762,6 +778,13 @@ function m:save(path)
     if self.glb_filename then
         if self.patch_template then
             local final_template = {}
+            if next(self.image_patch) then
+                for _, v in pairs(self.image_patch) do
+                    for _, vv in pairs(v) do
+                        final_template[#final_template + 1] = vv
+                    end
+                end
+            end
             if self.patch_copy_material then
                 for _, copy_material in pairs(self.patch_copy_material) do
                     if copy_material.copy then
@@ -1102,6 +1125,22 @@ local function get_origin_material_name(namemaps, name)
             return key
         end
     end
+end
+function m:do_image_patch(image, path, v)
+    local s, _ = string.find(image,"images/")
+    if not s then
+        return
+    end
+    local imgpath = string.sub(image, s)
+    if not self.image_patch[imgpath] then
+        self.image_patch[imgpath] = {}
+    end
+    self.image_patch[imgpath][path] = {
+        file = imgpath,
+        op = "add",
+        path = path,
+        value = v
+    }
 end
 function m:do_material_patch(eid, path, v)
     local info = hierarchy:get_node_info(eid)
