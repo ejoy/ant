@@ -252,12 +252,33 @@ function repo.new()
 end
 
 local function add_path(self, paths)
-	list_files(paths[1].path, make_dir(self._dir, paths[1].mount), paths[1].mount)
-	for i = 2, #paths do
-		local tmp = {}
-		list_files(paths[i].path, tmp, paths[i].mount)
-		merge_dir(make_dir(self._dir, paths[i].mount), tmp)
+	local subroot = {}
+	for i, p in ipairs(paths) do
+		local root = {}
+		local path = p.path
+		if path:sub(-1) ~= '/' then
+			path = path .. '/'
+		end
+		subroot[i] = {
+			path = path,
+			mount = p.mount,
+			root = root,
+		}
+		list_files(path, root, p.mount)
 	end
+	self._subroot = subroot
+end
+
+local function merge_all(self)
+	local result = {}
+	local sub = self._subroot[1]
+	table.move(sub, 1, #sub, 1, result)
+	for i = 2, #self._subroot do
+		local sub = self._subroot[i]
+		merge_dir(make_dir(result, sub.mount), sub.root)
+	end
+	sort_dir(result)
+	self._dir = result
 end
 
 local function get_file(self, pathname)
@@ -288,73 +309,44 @@ local function get_file(self, pathname)
 	end
 end
 
-local function update_file(self, vpath, localpath)
-	if not localpath then
-		-- remove vpath
-		local item, dir = get_file(self, vpath)
-		if item then
-			local n = #dir
-			for i = 1, n do
-				if dir[i] == item then
-					dir[i] = dir[n]
-					dir[n] = nil
-					return
-				end
-			end
-		end
-	elseif type(localpath) == "table" then
-		-- update dir
-		local dir = make_dir(self._dir, vpath)
-		list_files(localpath[1], dir, vpath)
-		for i = 2, #localpath do
-			local tmp = {}
-			list_files(localpath[i], tmp, vpath)
-			merge_dir(dir, tmp)
-		end
-	else
-		-- it's a file
-		local resource = is_resource(vpath) and vpath
-		assert(resource or lfs.is_regular_file(localpath), localpath)
-		local item, dir = get_file(self, vpath)
-		if item then
-			if not item.resource then
-				item.hash = nil
-				item.dir = nil
-				item.resource = resource
-				item.path = resource or localpath
-			end
-		else
-			-- add file
-			local parent, name = vpath:match "(.*)/([^/]+)$"
-			if parent == nil then
-				parent = "/"
-				name = vpath
-			end
-			if not dir then
-				dir = make_dir(self._dir, parent)
-			end
-			dir[#dir+1] = {
-				name = name,
-				resource = resource,
-				path = resource or localpath
-			}
+local function update_file(root, vpath, localpath)
+	local d = make_dir(root, vpath)
+	list_files(localpath, d, vpath)
+end
+
+local function update_localpath(self, localpath)
+	if localpath:sub(-1) ~= '/' then
+		localpath = localpath .. "/"
+	end
+	for _, sub in ipairs(self._subroot) do
+		if localpath == sub.path then
+			-- full root update
+			local root = {}
+			list_files(sub.path, root, sub.mount)
+			sub.root = root
+		elseif localpath:sub(1, #sub.path) == sub.path then
+			-- sub path update
+			local path = localpath:sub(#sub.path+1)
+			list_files(localpath, make_dir(sub.root, path), path)
 		end
 	end
+	-- ignore localpath
 end
 
 function repo_meta:update(list)
-	for vpath, localpath in pairs(list) do
-		update_file(self, vpath, localpath)
+	for _, path in ipairs(list) do
+		update_localpath(self, path)
 	end
-	sort_dir(self._dir)
+	merge_all(self)
 	update_all(self)
 end
 
 function repo_meta:init(config)
 	local hashs = config.hash
 	self._dir = {}
+	self._subroot = {}
 	add_path(self, config)
-	sort_dir(self._dir)
+	merge_all(self)
 	if hashs then
 		local index = make_index(self._dir)
 		import_hash(index, hashs)
@@ -427,9 +419,7 @@ local function test()	-- for reference
 	vfsrepo:init(init_config)
 	print("UPDATE")
 	vfsrepo:update {
-		pkg = false,
-		main = "e:/project/vaststars2/3rd/ant/test/vfsrepo/main.lua",
-		vpath = { "e:/project/vaststars2/3rd/ant/pkg" }
+		"e:/project/vaststars2/3rd/ant/pkg/ant.window",
 	}
 end
 
