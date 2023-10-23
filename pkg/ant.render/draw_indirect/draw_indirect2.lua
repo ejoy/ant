@@ -14,40 +14,36 @@ local function buffer_destroy(h)
     return INVALID_HANDLE_VALUE
 end
 
-local function check_create_draw_indircet_buffer(io, ib)
-    io.itb_handle = ib.handle
-    -- only recreate draw indirect buffer when we need more buffer than last allocated
-    if ib.num > io.draw_num then
-        io.idb_handle = bgfx.create_indirect_buffer(ib.num)
-    end
-
-    io.draw_num = ib.num
-    assert(io.idb_handle ~= INVALID_HANDLE_VALUE, "Indirect buffer not update")
-    return io.idb_handle
-end
-
 local function update_instance_buffer(e, instancememory, instancenum)
     local di = e.draw_indirect
     local ib = di.instance_buffer
+    local iobj = e.indirect_object
     if instancenum == 0 then
         -- not destroy ib.handle or di.handle
-        e.indirect_object.draw_num, ib.num = 0, 0
-        return
-    end
-
-    ib.memory, ib.num = instancememory, instancenum
-
-    if ib.handle then
-        bgfx.update(ib.handle, 0, ib.memory)
+        iobj.draw_num, ib.num = 0, 0
     else
-        --buffer use as instance buffer only should only create from bgfx.create_dynamic_vertex_buffer
-        ib.handle = bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
-    end
+        --this memory can be release?
+        ib.memory, ib.num = instancememory, instancenum
 
-    if di.handle then
-        bgfx.destroy(di.handle)
+        if ib.handle then
+            assert(iobj.itb_handle == ib.handle, "Invalid indirect_object")
+            bgfx.update(ib.handle, 0, ib.memory)
+        else
+            --buffer use as instance buffer only should only create from bgfx.create_dynamic_vertex_buffer
+            ib.handle = bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
+            iobj.itb_handle = ib.handle
+        end
+
+        -- only recreate draw indirect buffer when we need more buffer than last allocated
+        if ib.num > iobj.draw_num then
+            di.handle = bgfx.create_indirect_buffer(ib.num)
+            iobj.idb_handle = di.handle
+        end
+    
+        iobj.draw_num = ib.num
+        assert(iobj.idb_handle ~= INVALID_HANDLE_VALUE, "Indirect buffer not update")
+        return true
     end
-    di.handle = check_create_draw_indircet_buffer(e.indirect_object, ib)
 end
 
 function di_sys.component_init()
@@ -73,7 +69,9 @@ local idi = {}
 
 function idi.update_instance_buffer(e, instancememory, instancenum)
     w:extend(e, "draw_indirect:update indirect_object:update")
-    update_instance_buffer(e, instancememory, instancenum)
+    if update_instance_buffer(e, instancememory, instancenum) then
+        w:submit(e)
+    end
 end
 
 --TODO: need remove

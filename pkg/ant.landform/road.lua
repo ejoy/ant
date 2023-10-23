@@ -313,7 +313,7 @@ local function build_instance_buffers(infos)
             instancebuffer = roadbuffer,
             meshbuffer = roadmeshbuffer,
         },
-        indicaotr = {
+        indicator = {
             instancebuffer = indicatorbuffer,
             meshbuffer = indicatormeshbuffer,
         }
@@ -427,18 +427,18 @@ function iroad.update_roadnet(groups, render_layer)
     for gid, infos in pairs(groups) do
         local entities = ROAD_ENTITIES[gid]
         local buffers = build_instance_buffers(infos)
-        print("group:%d, road instance num:%d, indicator instance num:%d", gid, #buffers.road, #buffers.indicaotr)
+        print(("group:%d, road instance num:%d, indicator instance num:%d"):format(gid, #buffers.road, #buffers.indicator))
         if nil == entities then
-            entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicaotr)
+            entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicator)
             ROAD_ENTITIES[gid] = entities
         else
             local function update_buffer_and_dispatch(buffer, eids)
-                update_di_buffers(buffer, eids.drawindirect)
+                update_di_buffers(eids.drawindirect, buffer)
                 dispath_road_indirect_buffer(world:entity(eids.compute, "dispatch:update"), eids.drawindirect)
             end
 
             update_buffer_and_dispatch(buffers.road,        entities.road)
-            update_buffer_and_dispatch(buffers.indicaotr,   entities.indicaotr)
+            update_buffer_and_dispatch(buffers.indicator,   entities.indicator)
         end
     end
 end
