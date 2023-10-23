@@ -18,10 +18,8 @@ mat4 calc_rotator_transform(float rad)
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
-#define rotate_angle_per_second 30
-#define rotate_rate_y_axis u_rotator_rate.x
-    float rad = radians(u_current_time * rotate_angle_per_second * rotate_rate_y_axis);
-	mat4 wm = calc_rotator_transform(rad);
+#define rotator_rad u_rotator_rate.x
+	mat4 wm = calc_rotator_transform(rotator_rad);
 	vec4 posWS = transform_pos(wm, vs_input.pos, vs_output.clip_pos);
 	vs_output.uv0	= vs_input.uv0;
 #ifdef USING_LIGHTMAP

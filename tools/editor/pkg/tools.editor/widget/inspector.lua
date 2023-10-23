@@ -54,7 +54,11 @@ local function update_eid()
     daynight_panel:set_eid(current_eid)
 end
 
+local event_reset = world:sub {"ResetEditor"}
 function m.show()
+    for _ in event_reset:unpack() do
+        material_panel:clear()
+    end
     update_eid()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')

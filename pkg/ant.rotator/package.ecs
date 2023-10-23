@@ -1,0 +1,2 @@
+system "rotator_system"
+    .implement "rotator.lua"
