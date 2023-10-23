@@ -752,7 +752,7 @@ function m:get_origin_patch_list(template_list)
 end
 
 function m:get_patch_list(template_list)
-    local template = hierarchy:get_prefab_template()
+    local template = hierarchy:get_prefab_template(true)
     for i = 2, #template do
         local tpl = template[i]
         if tpl.mount > 1 then

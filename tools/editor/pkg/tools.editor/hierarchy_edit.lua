@@ -82,9 +82,9 @@ function hierarchy:get_parent(eid)
     return self.all_node[eid].parent
 end
 
-function hierarchy:get_prefab_template()
+function hierarchy:get_prefab_template(ispatch)
     local new_tpl = {}
-    local function construct_entity(eid, tpl)
+    local function construct_entity(eid, tpl, patch)
         local node = self.all_node[eid]
         if not (node == self.root or node.info.scene_root) then
             if node.info.temporary or not node.info.is_patch then
@@ -120,7 +120,7 @@ function hierarchy:get_prefab_template()
         local pidx = #tpl > 0 and #tpl or nil
         local prefab_filename = node.info.filename
         if prefab_filename then
-            table.insert(tpl, {mount = pidx - 1, prefab = prefab_filename})
+            table.insert(tpl, {mount = patch and pidx - 1 or pidx, prefab = prefab_filename})
         end
         for _, child in ipairs(node.children) do
             local nd = self.all_node[child.eid]
@@ -128,10 +128,10 @@ function hierarchy:get_prefab_template()
             if nd.parent ~= self.root.eid and tt then
                 tt.mount = pidx
             end
-            construct_entity(child.eid, tpl)
+            construct_entity(child.eid, tpl, patch)
         end
     end
-    construct_entity(self.root.eid, new_tpl)
+    construct_entity(self.root.eid, new_tpl, ispatch)
     return new_tpl
 end
 
