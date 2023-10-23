@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 
 local math3d = require "math3d"
 local imaterial = ecs.require "ant.asset|material"
@@ -305,6 +304,8 @@ local function get_pbr_factor(t)
     return pbrfactor
 end
 
+local image_info = {}
+
 local function build_properties_ui(mv)
     local t = material_template(assert(mv.eid))
     local properties = {}
@@ -391,7 +392,19 @@ local function build_properties_ui(mv)
                     end
                 })
             }
-
+            if property_texture(field) then
+                tt[#tt + 1] = uiproperty.Int({label="MaxSize"}, {
+                    getter = function ()
+                        local tp = property_texture(field)
+                        return image_info[tp].height
+                    end,
+                    setter = function (value)
+                        local tp = property_texture(field)
+                        image_info[tp].height = value
+                        prefab_mgr:do_image_patch(tp, "/maxsize", value)
+                    end
+                })
+            end
             for i=1, select('#', ...) do
                 local a = select(i, ...)
                 tt[#tt+1] = a
@@ -1017,7 +1030,6 @@ function MaterialView:_init()
     })
 end
 local texture_flag = {}
-local image_to_texture = {}
 local datalist   = require "datalist"
 local function split(str)
     local r = {}
@@ -1051,6 +1063,18 @@ function MaterialView:set_eid(eid)
         cs.visible = false
     end
 
+    local mtlpath = hierarchy:get_node_info(self.eid).template.data.material
+    for _, v in pairs(t.properties) do
+        if v.texture and not texture_flag[v.texture] then
+            local imagepath = absolute_path(v.texture, mtlpath) .. "|main.cfg"
+            local data = datalist.parse(fastio.readall(assetmgr.compile(imagepath), imagepath))
+            if data and not image_info[v.texture] then
+                image_info[v.texture] = {width = data.info.width, height = data.info.height}
+                texture_flag[v.texture] = true
+            end
+        end
+    end
+
     do
         local idx
         for i, p in ipairs(self.material.subproperty) do
@@ -1068,25 +1092,17 @@ function MaterialView:set_eid(eid)
         end
     end
 
-    local readonly_res = is_readonly_resource(hierarchy:get_node_info(self.eid).template.data.material)
+    local readonly_res = is_readonly_resource(mtlpath)
     self.save.disable = readonly_res
     self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil
-    
     self:enable_properties_ui()
-    
     self:update()
+end
 
-    for _, v in pairs(t.properties) do
-        if v.texture and not texture_flag[v.texture] then
-            local imagepath = absolute_path(v.texture, self.mat_file.path) .. "|main.cfg"
-            local data = datalist.parse(fastio.readall(assetmgr.compile(imagepath), imagepath))
-            if data and data.path and not image_to_texture[data.path] then
-                image_to_texture[data.path] = v.texture
-                texture_flag[v.texture] = true
-            end
-        end
-    end
+function MaterialView:clear()
+    image_info = {}
+    texture_flag = {}
 end
 
 function MaterialView:update()
@@ -1132,19 +1148,18 @@ function MaterialView:enable_properties_ui()
     end
 end
 local filewatch_event = world:sub {"FileWatch"}
-
 function MaterialView:show()
     if not self.eid then
         return
     end
     -- check_disable_file_fetch_ui(self.mat_file)
-    for _, _, filename in filewatch_event:unpack() do
-        local texture = image_to_texture[filename]
-        if texture then
-            assetmgr.reload(texture)
-        end
-        break
-    end
+    -- for _, _, filename in filewatch_event:unpack() do
+    --     local texture = image_to_texture[filename]
+    --     if texture then
+    --         assetmgr.reload(texture)
+    --     end
+    --     break
+    -- end
     self.material:show()
 end
 
