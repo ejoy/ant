@@ -196,7 +196,7 @@ static int sha1(lua_State *L) {
 #endif
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return push_error(L, "open", symbol);
+        return raise_error(L, "open", symbol);
     }
     std::array<uint8_t, 1024> buffer;
     SHA1_CTX ctx;
