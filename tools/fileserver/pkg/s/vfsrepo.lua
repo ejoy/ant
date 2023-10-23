@@ -26,7 +26,11 @@ local function list_files(root, dir, fullpath)
 				obj.resource = fullpath .. "/" .. name
 			else
 				obj.path = pathname
-				obj.timestamp_new = attr:last_write_time()
+				local timestamp = attr:last_write_time()
+				if timestamp ~= obj.timestamp then
+					obj.timestamp = timestamp
+					obj.hash = nil
+				end
 			end
 			dir[n] = obj; n = n + 1
 		end
@@ -71,7 +75,7 @@ local function patch_list_files(root, dir, fullpath)
 				obj = {
 					name = name,
 					path = pathname,
-					timestamp_new = attr:last_write_time(),
+					timestamp = attr:last_write_time(),
 				}
 			end
 			dir[n] = obj; n = n + 1
@@ -150,18 +154,6 @@ local function dump_dir(dir)
 	return table.concat(r, "\n")
 end
 
-local function calc_file_hash(item)
-	local timestamp = assert(item.timestamp_new)
-	item.timestamp_new = nil
-	if item.timestamp == timestamp then
-		if item.hash then
-			return
-		end
-	end
-	item.timestamp = timestamp
-	item.hash = fastio.sha1(item.path)
-end
-
 local function calc_hash(dir)
 	local n = #dir
 	local dir_content = {}
@@ -174,7 +166,9 @@ local function calc_hash(dir)
 			item.hash = fastio.str2sha1(item.content)
 			dir_content[i] = "d " .. item.name .. " " .. item.hash .. "\n"
 		else
-			calc_file_hash(item)
+			if not item.hash then
+				item.hash = fastio.sha1(item.path)
+			end
 			dir_content[i] = "f " .. item.name .. " " .. item.hash .. "\n"
 		end
 	end
