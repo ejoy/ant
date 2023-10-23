@@ -161,11 +161,16 @@ local function make_index(root)
 end
 
 local function make_hash_index(root)
-	local hashs = {}
+	local dir_hashs = {}
+	local file_hashs = {}
 	local function make_index_(dir)
 		for _, item in ipairs(dir) do
 			if item.hash then
-				hashs[item.hash] = item
+				if item.content then
+					dir_hashs[item.hash] = item.content
+				else
+					file_hashs[item.hash] = item.path
+				end
 			end
 			if item.dir then
 				make_index_(item.dir)
@@ -173,7 +178,7 @@ local function make_hash_index(root)
 		end
 	end
 	make_index_(root)
-	return hashs
+	return dir_hashs, file_hashs
 end
 
 local function import_hash(index, hashs)
@@ -210,8 +215,8 @@ local function update_all(root)
 		dir = root._dir,
 	}
 	root._index = make_index(root._dir)
-	root._hash = make_hash_index(root._dir)
-	root._hash[root._root.hash] = root._root
+	root._dhash, root._fhash = make_hash_index(root._dir)
+	root._dhash[root._root.hash] = assert(root._root.content)
 end
 
 
@@ -364,23 +369,6 @@ function repo_meta:import_hash(hashs)
 	import_hash(self._index, hashs)
 end
 
-function repo_meta:dir(hash)
-	local item = self._hash[hash]
-	return item and item.content
-end
-
-function repo_meta:localpath(hash)
-	local item = self._hash[hash]
-	return item and item.path
-end
-
-function repo_meta:type(hash)
-	local item = self._hash[hash]
-	if item then
-		return item.dir and "dir" or "file"
-	end
-end
-
 function repo_meta:root()
 	return self._root.hash
 end
@@ -397,14 +385,14 @@ function repo_meta:dumptree()
 end
 
 function repo_meta:hash_dirs(tbl)
-	for hash, item in pairs(self._hash) do
-		tbl[hash] = item.content
+	for hash, content in pairs(self._dhash) do
+		tbl[hash] = content
 	end
 end
 
 function repo_meta:hash_files(tbl)
-	for hash, item in pairs(self._hash) do
-		tbl[hash] = item.path
+	for hash, path in pairs(self._fhash) do
+		tbl[hash] = path
 	end
 end
 
@@ -421,11 +409,11 @@ local function test()	-- for reference
 	print("ROOT", roothash)
 	local testpath = "/pkg/ant.resources/materials"
 	local hash = vfsrepo:filehash(testpath)
-	assert(vfsrepo:type(hash) == "dir")
+	assert(vfsrepo._dhash[hash])
 	print("HASH", testpath, hash)
-	local content = vfsrepo:dir(hash)
+	local content = vfsrepo._dhash[hash]
 	print("CONTENT", testpath, content)
-	assert(vfsrepo:localpath(hash) == nil)
+	assert(vfsrepo._fhash[hash] == nil)
 	local filehash, path = vfsrepo:filehash(testpath .. "/line.material")
 	assert(filehash == nil)
 	print("RESOURCEPATH", path)
@@ -436,8 +424,8 @@ local function test()	-- for reference
 	print("UPDATE")
 	vfsrepo:update {
 		pkg = false,
-		main = "/ant/test/vfsrepo/main.lua",
-		vpath = { "/ant/pkg" },
+		main = "e:/project/vaststars2/3rd/ant/test/vfsrepo/main.lua",
+		vpath = { "e:/project/vaststars2/3rd/ant/pkg" }
 	}
 end
 
