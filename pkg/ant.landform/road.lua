@@ -112,18 +112,18 @@ local SHAPE_TYPES<const> = {
         index = 3,
         direction = {
             N = QUAD_TEXCOORDS[180],
-            E = QUAD_TEXCOORDS[90],
+            E = QUAD_TEXCOORDS[270],
             S = QUAD_TEXCOORDS[0],
-            W = QUAD_TEXCOORDS[270],
+            W = QUAD_TEXCOORDS[90],
         }
     },
     T = {
         index = 4,
         direction = {
             N = QUAD_TEXCOORDS[0],
-            E = QUAD_TEXCOORDS[270],
+            E = QUAD_TEXCOORDS[90],
             S = QUAD_TEXCOORDS[180],
-            W = QUAD_TEXCOORDS[90],
+            W = QUAD_TEXCOORDS[270],
         },
     },
     X = {
