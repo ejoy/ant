@@ -8,23 +8,27 @@ local function is_resource(path)
 	return ext and (ext == "material" or ext == "glb" or ext == "texture")
 end
 
+local DOT <const> = string.byte "."
+
 local function list_files(root, dir, fullpath)
 	local oldn = #dir
 	local n = 1
 	for path, attr in lfs.pairs(root) do
 		local name = path:filename():string()
-		local pathname = path:string()
-		local obj = { name = name }
-		if is_resource(name) then
-			obj.resource = fullpath .. "/" .. name
-		elseif attr:is_directory() then
-			local d = {}
-			list_files(pathname, d, fullpath .. "/" .. name)
-			obj.dir = d
-		else
-			obj.path = pathname
+		if name:byte() ~= DOT then
+			local pathname = path:string()
+			local obj = { name = name }
+			if is_resource(name) then
+				obj.resource = fullpath .. "/" .. name
+			elseif attr:is_directory() then
+				local d = {}
+				list_files(pathname, d, fullpath .. "/" .. name)
+				obj.dir = d
+			else
+				obj.path = pathname
+			end
+			dir[n] = obj; n = n + 1
 		end
-		dir[n] = obj; n = n + 1
 	end
 	for i = n, oldn do
 		dir[i] = nil
