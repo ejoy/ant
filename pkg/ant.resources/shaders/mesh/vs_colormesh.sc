@@ -19,7 +19,8 @@ void main()
 	VSInput vs_input = (VSInput)0;
 	#include "default/vs_inputs_getter.sh"
 
-    calc_worldpos(vs_input, gl_Position);
+    mat4 wm = get_world_matrix(vs_input);
+    transform_worldpos(wm, vs_input.pos, gl_Position);
 #endif //SCREEN_SPACE
 
 #ifdef WITH_COLOR_ATTRIB
