@@ -3,7 +3,7 @@ local platform  = require "bee.platform"
 local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
-local access = dofile "/engine/vfs/repoaccess.lua"
+local access = dofile "/engine/editor/vfs_access.lua"
 dofile "/engine/editor/create_repo.lua" ("./tools/material_compile", access)
 
 local fs = require "filesystem"

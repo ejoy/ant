@@ -1,24 +1,10 @@
 local access = {}
 
-local lfs = require "bee.filesystem"
 local platform = require "bee.platform"
+local lfs = require "bee.filesystem"
 local datalist = require "datalist"
 
 local isWindows <const> = platform.os == "windows"
-
-function access.addmount(repo, vpath, lpath)
-	if not lfs.exists(lpath) then
-		return
-	end
-	assert(vpath:sub(1,1) == "/")
-	for _, value in ipairs(repo._mountlpath) do
-		if value:string() == lpath then
-			return
-		end
-	end
-	repo._mountvpath[#repo._mountvpath+1] = vpath
-	repo._mountlpath[#repo._mountlpath+1] = lfs.absolute(lpath):lexically_normal()
-end
 
 local MountConfig <const> = [[
 mount:
@@ -37,6 +23,20 @@ local function loadmount(repo)
 		end
 	end
 	return datalist.parse(MountConfig)
+end
+
+function access.addmount(repo, vpath, lpath)
+	if not lfs.exists(lpath) then
+		return
+	end
+	assert(vpath:sub(1,1) == "/")
+	for _, value in ipairs(repo._mountlpath) do
+		if value:string() == lpath then
+			return
+		end
+	end
+	repo._mountvpath[#repo._mountvpath+1] = vpath
+	repo._mountlpath[#repo._mountlpath+1] = lfs.absolute(lpath):lexically_normal()
 end
 
 function access.readmount(repo)
