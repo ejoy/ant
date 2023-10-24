@@ -293,20 +293,26 @@ function repo.new()
 	return setmetatable({}, repo_meta)
 end
 
+local function append_slash(path)
+	if path:sub(-1) ~= '/' then
+		return path .. '/'
+	else
+		return path
+	end
+end
+
 local function add_path(self, paths)
 	local subroot = {}
 	for i, p in ipairs(paths) do
 		local root = {}
-		local path = p.path
-		if path:sub(-1) ~= '/' then
-			path = path .. '/'
-		end
+		local path = append_slash(p.path)
+		local mount = append_slash(p.mount)
 		subroot[i] = {
 			path = path,
-			mount = p.mount,
+			mount = mount,
 			root = root,
 		}
-		list_files(path, root, p.mount)
+		list_files(path, root, mount:sub(1, -2))
 	end
 	self._subroot = subroot
 end
@@ -323,7 +329,7 @@ local function merge_all(self)
 	self._dir = result
 end
 
-local function get_file(self, pathname)
+function repo_meta:file(pathname)
 	local path, name = pathname:match "^/?(.-)/([^/]*)$"
 	if name == "" then
 		pathname = path
@@ -351,23 +357,41 @@ local function get_file(self, pathname)
 	end
 end
 
-local function update_localpath(self, localpath)
+local function find_subroot(self, localpath)
 	if localpath:sub(-1) ~= '/' then
 		localpath = localpath .. "/"
 	end
 	for _, sub in ipairs(self._subroot) do
 		if localpath == sub.path then
 			-- full root update
-			local root = {}
-			patch_list_files(sub.path, root, sub.mount)
-			sub.root = root
+			return "", sub
 		elseif localpath:sub(1, #sub.path) == sub.path then
 			-- sub path update
 			local path = localpath:sub(#sub.path+1)
-			patch_list_files(localpath, make_dir(sub.root, path), path)
+			return path, sub
 		end
 	end
 	-- ignore localpath
+end
+
+local function update_localpath(self, localpath)
+	local path, sub = find_subroot(self, localpath)
+	if path then
+		patch_list_files(localpath, make_dir(sub.root, path), path)
+	end
+end
+
+function repo_meta:vpath(localpath)
+	local path, sub = find_subroot(self, localpath)
+	if path == nil then
+		return
+	end
+	if localpath:sub(-1) ~= '/' then
+		path = path:sub(1, -2)
+	end
+	local vpath = sub.mount .. path
+	local f = self:file(vpath)
+	return f.path == localpath, vpath
 end
 
 function repo_meta:update(list)
@@ -404,13 +428,6 @@ end
 
 function repo_meta:root()
 	return self._root.hash
-end
-
-function repo_meta:filehash(pathname)
-	local item = get_file(self, pathname)
-	if item then
-		return item.hash, item.resource
-	end
 end
 
 function repo_meta:dumptree()
@@ -456,8 +473,9 @@ local function test()	-- for reference
 	vfsrepo:init(init_config)
 	print("UPDATE")
 	vfsrepo:update {
-		"e:/project/vaststars2/3rd/ant/pkg/ant.window",
+		"/ant/pkg/ant.window",
 	}
+	print(vfsrepo:vpath("/ant/pkg/ant.window/main.lua"))
 end
 
 return repo
