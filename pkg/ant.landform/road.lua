@@ -211,7 +211,7 @@ local function to_mesh_buffer(vb, ib_handle)
 end
 
 local ROAD_MESH
-local VBFMT<const> = "fffff"
+local VBFMT<const> = ("fffff"):rep(4)
 -- local DEBUG_VERTEX<const> = true
 -- local function pack_vertex(...)
 --     if DEBUG_VERTEX then
@@ -221,11 +221,11 @@ local VBFMT<const> = "fffff"
 -- end
 local function build_vb(ox, oz, ww, hh, texcoords, vb)
     local nx, nz = ox+ww, oz+hh
-    local uv
-    uv = texcoords[1]; vb[#vb+1] = VBFMT:pack(ox, 0, oz, uv[1], uv[2])
-    uv = texcoords[2]; vb[#vb+1] = VBFMT:pack(ox, 0, nz, uv[1], uv[2])
-    uv = texcoords[3]; vb[#vb+1] = VBFMT:pack(nx, 0, oz, uv[1], uv[2])
-    uv = texcoords[4]; vb[#vb+1] = VBFMT:pack(nx, 0, nz, uv[1], uv[2])
+    vb[#vb+1] = VBFMT:pack(
+        ox, 0, oz, texcoords[1][1], texcoords[1][2],
+        ox, 0, nz, texcoords[2][1], texcoords[2][2],
+        nx, 0, oz, texcoords[3][1], texcoords[3][2],
+        nx, 0, nz, texcoords[4][1], texcoords[4][2])
 end
 
 local road_sys   = ecs.system "road_system"
@@ -410,7 +410,7 @@ local function build_road_mesh(rw, rh)
         end
     end
 
-    assert(#road_vb == 4 * #SHAPE_TYPES * #SHAPE_DIRECTIONS)
+    assert(#road_vb == #SHAPE_TYPES * #SHAPE_DIRECTIONS)
     -- if DEBUG_VERTEX then
     --     for i=1, #road_vb do
     --         road_vb[i] = VBFMT:pack(table.unpack(road_vb[i]))
