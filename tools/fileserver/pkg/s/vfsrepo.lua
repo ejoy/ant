@@ -336,9 +336,7 @@ end
 
 local function merge_all(self)
 	local result = {}
-	local sub = self._subroot[1]
-	table.move(sub, 1, #sub, 1, result)
-	for i = 2, #self._subroot do
+	for i = 1, #self._subroot do
 		local sub = self._subroot[i]
 		merge_dir(make_dir(result, sub.mount), sub.root)
 	end
