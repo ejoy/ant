@@ -86,6 +86,23 @@ local function patch_list_files(root, dir, fullpath)
 	end
 end
 
+local function deep_copy(dir)
+	local subdir = dir.dir
+	if subdir == nil then
+		return dir
+	end
+	local clone = {}
+	for k,v in pairs(dir) do
+		clone[k] = v
+	end
+	local clonedir = {}
+	for i = 1, #subdir do
+		clonedir[i] = deep_copy(subdir[i])
+	end
+	clone.dir = clonedir
+	return clone
+end
+
 local function merge_dir(source, patch)
 	local dir = {}
 	local n = #source
@@ -98,18 +115,7 @@ local function merge_dir(source, patch)
 		if s and s.dir and item.dir then
 			merge_dir(s.dir, item.dir)
 		else
-			local subdir = item.dir
-			if subdir then
-				-- clone item, because the patch is constant
-				local clone = {}
-				for k,v in pairs(item) do
-					clone[k] = v
-				end
-				clone.dir = table.move(subdir, 1, #subdir, 1, {})
-				item = clone
-			end
-			-- file or resource
-			dir[item.name] = item
+			dir[item.name] = deep_copy(item)
 		end
 	end
 	local nn = 1
