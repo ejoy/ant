@@ -185,7 +185,9 @@ local function update_camera(e)
 end
 
 function cameraview_sys:update_camera()
-    w:filter("camera_changed", "scene_changed camera")
+    
+    w:filter("camera_changed", "scene_changed") -- camera_changed or scene_changed
+    w:filter("camera_changed", "camera scene_changed:absent") -- (camera_changed or scene_changed) and camera
     for e in w:select "camera_changed camera:in scene:in" do
         update_camera(e)
     end
