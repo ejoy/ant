@@ -133,9 +133,9 @@ end
 local function get_directory(what)
 	local directory = require "directory"
 	if what == "log" then
-		return directory.log_path():string()
+		return directory.app_path():string()
 	elseif what == "app" then
-		return directory.app_path("ant"):string()
+		return directory.app_path():string()
 	end
 end
 

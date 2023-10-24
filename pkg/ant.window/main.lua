@@ -5,7 +5,7 @@ local function start(initargs)
         exclusive[#exclusive+1] = "subprocess"
     end
 	local directory = require "directory"
-	local log_path = directory.log_path()
+	local log_path = directory.app_path()
     task {
         bootstrap = { "ant.window|boot", initargs },
         logger = { "logger" },
