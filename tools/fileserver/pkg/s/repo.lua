@@ -17,14 +17,22 @@ local function import_hash(self)
 	if not lfs.exists(hashspath) then
 		return
 	end
-	return fastio.readall_s(hashspath:string())
+	local hashs = {}
+	for line in fastio.readall_s(hashspath:string()):gmatch "(.-)\n+" do
+		local sha1, timestamp, path = line:match "(%S+) (%S+) (.+)"
+		hashs[path] = {sha1, tonumber(timestamp, 16)}
+	end
+	return hashs
 end
 
 local function export_hash(self, vfsrepo, mode)
 	local hashspath = self._cachepath / "hashs"
 	local hashs = vfsrepo:export_hash()
 	local f <close> = assert(io.open(hashspath:string(), mode))
-	f:write(hashs)
+	for path, v in pairs(hashs) do
+		f:write(string.format("%s %09x %s\n", v[1], v[2], path))
+	end
+	self._hashs = hashs
 end
 
 function REPO_MT:rebuild(changed)
@@ -71,6 +79,7 @@ end
 function REPO_MT:build_resource(path)
 	local vfsrepo = new_vfsrepo()
 	vfsrepo:init {
+		hash = self._hashs,
 		{ path = path, mount = "" },
 	}
 	vfsrepo:hash_dirs(self._dirhash)
