@@ -57,7 +57,7 @@ function di_sys:entity_remove()
     for e in w:select "REMOVED draw_indirect:in indirect_object:update" do
         local io = e.indirect_object
         local di = e.draw_indirect
-        di.ib.handle = buffer_destroy(di.ib.handle)
+        di.instance_buffer.handle = buffer_destroy(di.instance_buffer.handle)
         di.handle = buffer_destroy(di.handle)
 
         io.itb_handle, io.idb_handle = INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE
