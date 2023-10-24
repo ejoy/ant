@@ -6,48 +6,26 @@ local datalist = require "datalist"
 
 local isWindows <const> = platform.os == "windows"
 
-function access.addmount(repo, path)
-	if not lfs.exists(path) then
+function access.addmount(repo, vpath, lpath)
+	if not lfs.exists(lpath) then
 		return
 	end
-	for _, value in ipairs(repo._mountpoint) do
-		if value:string() == path then
+	assert(vpath:sub(1,1) == "/")
+	for _, value in ipairs(repo._mountlpath) do
+		if value:string() == lpath then
 			return
 		end
 	end
-	repo._mountpoint[#repo._mountpoint+1] = lfs.absolute(path):lexically_normal()
+	repo._mountvpath[#repo._mountvpath+1] = vpath
+	repo._mountlpath[#repo._mountlpath+1] = lfs.absolute(lpath):lexically_normal()
 end
 
 local MountConfig <const> = [[
 mount:
-    %engine%
-    %project%
-    %project%/mod
-engine:
-    engine
-    pkg
-extension:
-    .settings
-    .prefab
-    .ecs
-    .lua
-    .rcss
-    .rml
-    .efk
-    .ttf
-    .otf
-    .ttc
-    .bank
-    .event
-    .anim
-    .bin
-    .cfg
-    .ozz
-    .vbbin
-    .vb2bin
-    .ibbin
-    .meshbin
-    .skinbin
+    /engine/ %engine%/engine
+    /pkg/    %engine%/pkg
+    /        %project%
+    /        %project%/mod
 ]]
 
 local function loadmount(repo)
@@ -63,11 +41,11 @@ end
 
 function access.readmount(repo)
 	local cfg = loadmount(repo)
-	repo._mountengine = cfg.engine
-	repo._mountextension = cfg.extension
-	repo._mountpoint = {}
-	for _, line in ipairs(cfg.mount) do
-		access.addmount(repo, line:gsub("%%([^%%]*)%%", {
+	repo._mountvpath = {}
+	repo._mountlpath = {}
+	for i = 1, #cfg.mount, 2 do
+		local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
+		access.addmount(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
 			engine = lfs.current_path():string(),
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1"),
 		}))
@@ -75,11 +53,14 @@ function access.readmount(repo)
 end
 
 function access.realpath(repo, pathname)
-	local mountpoint = repo._mountpoint
-	for i = #mountpoint, 1, -1 do
-		local path = #pathname > 1 and mountpoint[i] / pathname:sub(2) or mountpoint[i]
-		if lfs.exists(path) then
-			return path
+	local mountvpath = repo._mountvpath
+	local mountlpath = repo._mountlpath
+	for i = #mountlpath, 1, -1 do
+		if pathname:sub(1, #mountvpath[i]) == mountvpath[i] then
+			local path = mountlpath[i] / pathname:sub(1 + #mountvpath[i])
+			if lfs.exists(path) then
+				return path
+			end
 		end
 	end
 end
@@ -127,36 +108,33 @@ end
 
 function access.virtualpath(repo, pathname)
 	pathname = lfs.absolute(pathname):lexically_normal():string()
-	for _, mpath in ipairs(repo._mountpoint) do
-		mpath = mpath:string()
+	local mountvpath = repo._mountvpath
+	local mountlpath = repo._mountlpath
+	for i = #mountlpath, 1, -1 do
+		local mpath = mountlpath[i]:string()
 		if path_eq(pathname, mpath) then
-			return "/"
+			return mountvpath[i]
 		end
 		local n = #mpath + 1
 		if path_eq(pathname:sub(1,n), mpath .. '/') then
-			return pathname:sub(n)
+			return mountvpath[i] .. pathname:sub(n)
 		end
 	end
 end
 
 function access.list_files(repo, pathname)
 	local files = {}
-	local start = 1
-	if pathname == "/" and not repo._resource then
-		local mountpoint = repo._mountpoint[1]
-		for _, name in ipairs(repo._mountengine) do
-			files[name] = lfs.status(mountpoint / name)
-		end
-		start = 2
-	end
-	for i = start, #repo._mountpoint do
-		local mountpoint = repo._mountpoint[i]
-		local path = mountpoint / pathname:sub(2)
-		if lfs.is_directory(path) then
-			for name, status in lfs.pairs(path) do
-				local filename = name:filename():string()
-				if filename:sub(1,1) ~= "." then
-					files[filename] = status
+	local mountvpath = repo._mountvpath
+	local mountlpath = repo._mountlpath
+	for i = #mountlpath, 1, -1 do
+		if pathname:sub(1, #mountvpath[i]) == mountvpath[i] then
+			local path = mountlpath[i] / pathname:sub(1 + #mountvpath[i])
+			if lfs.is_directory(path) then
+				for name, status in lfs.pairs(path) do
+					local filename = name:filename():string()
+					if filename:sub(1,1) ~= "." then
+						files[filename] = status
+					end
 				end
 			end
 		end

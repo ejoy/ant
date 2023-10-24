@@ -28,7 +28,7 @@ return function (repopath, access)
         return repopath
     end
     function vfs.mount(path)
-        access.addmount(repo, path)
+        access.addmount(repo, "/", path)
     end
     local path = lfs.path(repopath)
     if not lfs.is_directory(path) then

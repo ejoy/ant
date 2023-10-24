@@ -186,33 +186,50 @@ function message.RESOURCE(path)
 end
 
 function message.GET(hash)
-	local filename = ltask.call(ServiceVfsMgr, "GET", hash)
-	if filename == nil then
-		response("MISSING", hash)
-		return
-	end
-	local f = io.open(filename, "rb")
-	if not f then
-		response("MISSING", hash)
-		return
-	end
-	local sz = f:seek "end"
-	f:seek("set", 0)
-	if sz < 0x8000 then
-		response("BLOB", hash, f:read "a")
-	else
-		response("FILE", hash, tostring(sz))
-		local offset = 0
-		while true do
-			local data = f:read(0x8000)
-			response("SLICE", hash, tostring(offset), data)
-			offset = offset + #data
-			if offset >= sz then
-				break
+	local type, filename = ltask.call(ServiceVfsMgr, "GET", hash)
+	if type == "dir" then
+		local content = filename
+		local sz = #content
+		if sz < 0x8000 then
+			response("BLOB", hash, content)
+		else
+			response("FILE", hash, tostring(sz))
+			local offset = 0
+			while true do
+				local data = content:sub(offset+1, offset+0x8000)
+				response("SLICE", hash, tostring(offset), data)
+				offset = offset + #data
+				if offset >= sz then
+					break
+				end
 			end
 		end
+	elseif type == "file" then
+		local f = io.open(filename, "rb")
+		if not f then
+			response("MISSING", hash)
+			return
+		end
+		local sz = f:seek "end"
+		f:seek("set", 0)
+		if sz < 0x8000 then
+			response("BLOB", hash, f:read "a")
+		else
+			response("FILE", hash, tostring(sz))
+			local offset = 0
+			while true do
+				local data = f:read(0x8000)
+				response("SLICE", hash, tostring(offset), data)
+				offset = offset + #data
+				if offset >= sz then
+					break
+				end
+			end
+		end
+		f:close()
+	else
+		response("MISSING", hash)
 	end
-	f:close()
 end
 
 function message.LOG(data)
