@@ -14,22 +14,20 @@ function ic.dispatch(viewid, ds)
 	ds.material()
 
 	local s = ds.size
-    if assetmgr.material_isvalid(ds.fx.prog) then
-        bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
-    end
+    assert(assetmgr.material_isvalid(ds.fx.prog), "Invalid compute program")
+    bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
 end
 
 function ic.create_compute_entity(name, materialfile, size, onready)
     world:create_entity {
         policy = {
-            "ant.render|compute_policy",
+            "ant.render|compute",
         },
         data = {
             material    = materialfile,
             dispatch    ={
                 size    = size,
             },
-            compute     = true,
             on_ready    = onready,
             [name]      = true,
         }

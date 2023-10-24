@@ -10,80 +10,6 @@
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
 
-#ifdef DRAW_INDIRECT
-	#define DRAW_INDIRECT_TYPE     u_draw_indirect_type.x
-	#define DRAW_INDIRECT_ROAD     1
-	#define DRAW_INDIRECT_MOUNTAIN 2
-
-mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3)
-{
-	mat4 wm = u_model[0];
-	if(DRAW_INDIRECT_TYPE == DRAW_INDIRECT_MOUNTAIN){
-		float s = d1.x;
-		float r = d1.y;
-		float tx = d1.z;
-		float tz = d1.w;
-		float rad = r;
-		float cosy = cos(rad);
-		float siny = sin(rad);	
-		wm = mat4(
-			   s,          0,          0,        0, 
-			   0,          s,          0,        0, 
-			   0,          0,          s,        0, 
-			   0,          0,          0,        1
-		);
-		mat4 rm = mat4(
-			cosy,          0,      -siny,        0, 
-			   0,          1,          0,        0, 
-			siny,          0,       cosy,        0, 
-			   0,          0,          0,        1
-		);
-		wm = mul(rm, wm);
-		wm[0][3] = wm[0][3] + tx;
-		wm[2][3] = wm[2][3] + tz;		
-	}
-	else{
-		wm[0][3] = wm[0][3] + d1.x;
-		wm[1][3] = wm[1][3] + d1.y;
-		wm[2][3] = wm[2][3] + d1.z;		
-	}
-	return wm;
-}
-#endif
-
-static const vec2 s_rotate_texcorrds[] = {
-	vec2(0, 1),
-	vec2(0, 0),
-	vec2(1, 0),
-	vec2(1, 1),
-};
-
-vec2 get_tex(uint idx){
-	return s_rotate_texcorrds[idx];
-}
-
-vec2 get_rotated_texcoord(float r, vec2 tex){
-	uint xmask = uint(tex.x);
-	uint ymask = uint(tex.y);
-	uint idx = xmask|(ymask<<1);
-
-	// if(tex.x == 0 && tex.y == 1){
-	// 	return get_tex((r / 90) % 4);
-	// }
-	// else if(tex.x == 0 && tex.y == 0){
-	// 	return get_tex((r / 90 + 1) % 4);
-	// }
-	// else if(tex.x == 1 && tex.y == 0){
-	// 	return get_tex((r / 90 + 2) % 4);
-	// }
-	// else{
-	// 	return get_tex((r / 90 + 3) % 4);
-	// }
-
-	uint indices[] = {1, 2, 0, 3};
-	return get_tex((r / 90 + indices[idx]) % 4);
-}
-
 highp vec3 quat_to_normal(const highp vec4 q){
     return	vec3( 0.0,  0.0,  1.0 ) + 
         	vec3( 2.0, -2.0, -2.0 ) * q.x * q.zwx +
@@ -115,7 +41,7 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
-mat4 get_world_matrix_default(VSInput vs_input)
+mat4 get_world_matrix(VSInput vs_input)
 {
 #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
  	return calc_bone_transform(vs_input.index, vs_input.weight);
@@ -124,27 +50,20 @@ mat4 get_world_matrix_default(VSInput vs_input)
 #endif
 }
 
-mat4 get_world_matrix(VSInput vs_input)
+vec4 transform2clipspace(vec4 posWS)
 {
-#ifdef DRAW_INDIRECT
-	return get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2);
-#else//!DRAW_INDIRECT
-#	if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
-	return calc_bone_transform(vs_input.index, vs_input.weight);
-#	else	//NO SKINNING and NOT LIGHTMAP
-	return u_model[0];
-#	endif	//!SKINNING and LIGHTMAP
-#endif //DRAW_INDIRECT
-}
-
-vec4 transform_pos(mat4 wm, vec3 posLS, out vec4 posCS)
-{
-	vec4 posWS = mul(wm, vec4(posLS, 1.0));
-	posCS = mul(u_viewProj, posWS);
+	vec4 posCS = mul(u_viewProj, posWS);
 #ifdef ENABLE_TAA
 	posCS += u_jitter * posCS.w; // Apply Jittering
 #endif //ENABLE_TAA
-	return posWS;
+	return posCS;
+}
+
+vec4 transform_worldpos(mat4 wm, vec3 posLS, out vec4 posCS)
+{
+	vec4 posWS = mul(wm, vec4(posLS, 1.0));
+	posCS = transform2clipspace(posWS);
+	return posCS;
 }
 
 vec4 map_screen_coord_to_ndc(vec2 p)

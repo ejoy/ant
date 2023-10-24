@@ -112,7 +112,7 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.test.light/assets/broken-outfall-2x2.glb|mesh.prefab", function (e)
+    create_instance("/pkg/ant.test.light/assets/goods-station-1.glb|mesh.prefab", function (e)
         peids = e.tag['*']
         debug_mipmap_eid = e.tag['*'][2]
         -- local le<close> = world:entity(leid, "scene:update")

@@ -16,7 +16,7 @@
 
 #endif //MATERIAL_UNLIT
 
-#ifdef WITH_COLOR_ATTRIB
+#if defined(WITH_COLOR_ATTRIB) || defined(WITH_CUSTOM_COLOR0_ATTRIB)
     fsinput.color = v_color0;
 #else //!WITH_COLOR_ATTRIB
     fsinput.color = vec4_splat(1.0);

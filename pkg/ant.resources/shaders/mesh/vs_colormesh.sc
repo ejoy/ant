@@ -18,9 +18,11 @@ void main()
 #else //!SCREEN_SPACE
 	VSInput vs_input = (VSInput)0;
 	#include "default/vs_inputs_getter.sh"
+
     mat4 wm = get_world_matrix(vs_input);
-    transform_pos(wm, a_position, gl_Position);
+    transform_worldpos(wm, vs_input.pos, gl_Position);
 #endif //SCREEN_SPACE
+
 #ifdef WITH_COLOR_ATTRIB
     v_color0 = a_color0;
 #endif //WITH_COLOR_ATTRIB

@@ -1,0 +1,16 @@
+fx:
+  fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  setting:
+    DRAW_INDIRECT: 1
+    DI_ROAD: 1
+    WITHOUT_DEFAULT_UV: 1
+    lighting: off
+properties:
+  u_id: {0, 0, 0, 0}
+state:
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: GREATER
+    MSAA: true
+    WRITE_MASK: RGBAZ
