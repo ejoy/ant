@@ -427,7 +427,7 @@ function iroad.update_roadnet(groups, render_layer)
     for gid, infos in pairs(groups) do
         local entities = ROAD_ENTITIES[gid]
         local buffers = build_instance_buffers(infos)
-        print(("group:%d, road instance num:%d, indicator instance num:%d"):format(gid, #buffers.road, #buffers.indicator))
+        --print(("group:%d, road instance num:%d, indicator instance num:%d"):format(gid, #buffers.road, #buffers.indicator))
         if nil == entities then
             entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicator)
             ROAD_ENTITIES[gid] = entities
