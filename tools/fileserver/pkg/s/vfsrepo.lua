@@ -258,8 +258,9 @@ local function import_hash(index, hashs)
 		if d then
 			for _, item in ipairs(d) do
 				if item.name == name then
-					item.timestamp = timestamp
-					item.hash = sha1
+					if item.timestamp == timestamp then
+						item.hash = sha1
+					end
 					break
 				end
 			end
