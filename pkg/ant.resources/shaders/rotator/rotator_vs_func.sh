@@ -20,7 +20,7 @@ void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
 #define rotator_rad u_rotator_rate.x
 	mat4 wm = calc_rotator_transform(rotator_rad);
-	vec4 posWS = transform_pos(wm, vs_input.pos, vs_output.clip_pos);
+	vec4 posWS = transform_worldpos(wm, vs_input.pos, vs_output.clip_pos);
 	vs_output.uv0	= vs_input.uv0;
 #ifdef USING_LIGHTMAP
 	vs_output.uv1 = vs_input.uv1;
