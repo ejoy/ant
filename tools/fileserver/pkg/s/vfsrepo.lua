@@ -98,6 +98,17 @@ local function merge_dir(source, patch)
 		if s and s.dir and item.dir then
 			merge_dir(s.dir, item.dir)
 		else
+			local subdir = item.dir
+			if subdir then
+				-- clone item, because the patch is constant
+				local clone = {}
+				for k,v in pairs(item) do
+					clone[k] = v
+				end
+				clone.dir = table.move(subdir, 1, #subdir, 1, {})
+				item = clone
+			end
+			-- file or resource
 			dir[item.name] = item
 		end
 	end
