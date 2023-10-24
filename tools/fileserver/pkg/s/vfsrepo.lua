@@ -194,18 +194,17 @@ end
 
 local function export_hash(root)
 	local result = {}
-	local n = 1
 	local function export_(dir, prefix)
 		for _, item in ipairs(dir) do
 			if item.dir then
 				export_(item.dir, prefix .. item.name .. "/")
 			elseif item.hash then
-				result[n] = string.format("%s%s %s %d\n", prefix, item.name, item.hash, item.timestamp) ; n = n + 1
+				result[prefix..item.name] = { item.hash, item.timestamp }
 			end
 		end
 	end
 	export_(root, "")
-	return table.concat(result)
+	return result
 end
 
 local function make_index(root)
@@ -245,23 +244,14 @@ local function make_hash_index(root)
 end
 
 local function import_hash(index, hashs)
-	local root = assert(index["/"])
-	for line in hashs:gmatch "(.-)\n+" do
-		local path, sha1, timestamp = line:match "(%S+) (%S+) (%S+)"
-		timestamp = tonumber(timestamp)
-		local prefix, name = path:match "(.*/)([^/]+)$"
-		if not prefix then
-			prefix = ""
-			name = path
-		end
-		local d = index[prefix]
-		if d then
-			for _, item in ipairs(d) do
-				if item.name == name then
-					if item.timestamp == timestamp then
-						item.hash = sha1
-					end
-					break
+	for path, dir in pairs(index) do
+		for _, item in ipairs(dir) do
+			if item.path then
+				local fullpath = path .. item.name
+				print(fullpath)
+				local h = hashs[fullpath]
+				if h and item.timestamp == h[2] then
+					item.hash = h[1]
 				end
 			end
 		end
