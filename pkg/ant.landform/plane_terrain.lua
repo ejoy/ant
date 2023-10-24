@@ -179,13 +179,13 @@ end
 local function create_border(pid, bsize, render_layer, border_eids)
     local border_mesh = {}
     local border_num = terrain_width // bsize
-    local function to_mesh_buffer(vb, ib_handle)
+    local function to_mesh_buffer(vb, ib_handle, aabb)
         local vbbin = table.concat(vb, "")
         local numv = 4
         local numi = 6
 
         return {
-            bounding = nil,
+            bounding = {aabb = aabb},
             vb = {
                 start = 0,
                 num = numv,
@@ -224,7 +224,7 @@ local function create_border(pid, bsize, render_layer, border_eids)
             packfmt:pack(nx, 0, oz, 1, 1),        
         }
         local ib_handle = build_ib(1)
-        return to_mesh_buffer(vb, ib_handle)
+        return to_mesh_buffer(vb, ib_handle, {{ox, 0, oz}, {nx, 0 ,nz}})
     end
     local function create_border_mesh(o, bw, bh)
         for z = 1, bh do

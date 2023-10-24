@@ -3,7 +3,7 @@ local EnginePath, ProjectPath = ...
 local lfs = require "bee.filesystem"
 lfs.current_path(EnginePath)
 
-local access = dofile((lfs.current_path() / "engine" / "vfs" / "repoaccess.lua"):string())
+local access = dofile((lfs.current_path() / "engine" / "editor" / "vfs_access.lua"):string())
 
 local path = lfs.path(ProjectPath)
 if not lfs.is_directory(path) then

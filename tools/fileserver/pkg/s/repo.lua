@@ -1,6 +1,6 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
-local access = dofile "/engine/vfs/repoaccess.lua"
+local access = dofile "/engine/editor/vfs_access.lua"
 local new_vfsrepo = require "vfsrepo".new
 
 local REPO_MT = {}
