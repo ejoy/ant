@@ -1,6 +1,6 @@
 fx:
   fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
-  vs: /pkg/ant.objcontroller/pickup/assets/vs_picking.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   setting:
     lighting: off
     WITHOUT_DEFAULT_UV: 1

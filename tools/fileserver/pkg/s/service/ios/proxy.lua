@@ -33,6 +33,7 @@ local function connectIOS()
                 end
             end
         end
+        ::continue::
         socket.close(fd)
         ltask.sleep(20)
     end

@@ -4,42 +4,189 @@ local w     = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local road_system   = ecs.system "road_system"
-local imaterial     = ecs.require "ant.asset|material"
-local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
+
+local irender       = ecs.require "ant.render|render_system.render"
+local icompute      = ecs.require "ant.render|compute.compute"
+local idi           = ecs.require "ant.render|draw_indirect.draw_indirect2"
 local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"
-local hwi                   = import_package "ant.hwi"
-local iroad         = {}
-local width, height = 20, 20
 
-local road_material_table = {
-    "/pkg/ant.landform/assets/materials/road_u.material",
-    "/pkg/ant.landform/assets/materials/road_i.material",
-    "/pkg/ant.landform/assets/materials/road_l.material",
-    "/pkg/ant.landform/assets/materials/road_t.material",
-    "/pkg/ant.landform/assets/materials/road_x.material",
-    "/pkg/ant.landform/assets/materials/road_o.material",
+local hwi           = import_package "ant.hwi"
+
+-- local ROT_TABLES = {
+--     N = {0,   270, 180, 0},
+--     E = {270, 0,   90,  0},
+--     S = {180, 90,  0,   0},
+--     W = {90,  180, 270, 0},
+-- }
+
+-- the color&alpha/rougness&metalness texture are 1024x128
+local DEFAULT_QUAD_TEX_SIZE<const> = 128
+local NUM_QUAD_IN_TEX<const> = 8
+local DEFAULT_TEX_WIDTH<const>, DEFAULT_TEX_HEIGHT<const> = NUM_QUAD_IN_TEX * DEFAULT_QUAD_TEX_SIZE, DEFAULT_QUAD_TEX_SIZE
+
+local DEFAULT_QUAD_UV_SIZE<const> = {DEFAULT_QUAD_TEX_SIZE/DEFAULT_TEX_WIDTH, 1.0}
+local DEFAULT_TEXEL_SIZE<const> = {1.0/DEFAULT_TEX_WIDTH, 1.0/DEFAULT_TEX_HEIGHT}
+local UV_THRESHOLD<const>   = {1e-6, 1e-6}
+
+--[[
+    v1---v3
+    |    |
+    v0---v2
+]]
+local DEFAULT_QUAD_TEXCOORD<const> = {
+    {0, DEFAULT_QUAD_UV_SIZE[2]},                       -- quad v0
+    {0, 0},                                             -- quad v1
+    {DEFAULT_QUAD_UV_SIZE[1], DEFAULT_QUAD_UV_SIZE[2]}, -- quad v2
+    {DEFAULT_QUAD_UV_SIZE[1], 0},                       -- quad v3
 }
 
-local mark_material_table = {
-    "/pkg/ant.landform/assets/materials/mark_u.material",
-    "/pkg/ant.landform/assets/materials/mark_i.material",
-    "/pkg/ant.landform/assets/materials/mark_l.material",
-    "/pkg/ant.landform/assets/materials/mark_t.material",
-    "/pkg/ant.landform/assets/materials/mark_x.material",
-    "/pkg/ant.landform/assets/materials/mark_o.material",
+--the color/alpha/rm texture are packed from NUM_SHAPES images into [NUM_SHAPES * DEFAULT_TEXTURE_QUAD_SIZE[1], DEFAULT_TEXTURE_QUAD_SIZE[2]], so we only refine the texcoord on u direction
+local function shrink_uv_rect(uv_rect)
+    -- we make left u to step in UV_THRESHOLD[1] value, make right u to step in -UV_THRESHOLD[1]
+    --left u
+    local delta = DEFAULT_TEXEL_SIZE[1]
+    uv_rect[1][1] = uv_rect[1][1] + delta
+    uv_rect[2][1] = uv_rect[2][1] + delta
+
+    --right u
+    uv_rect[3][1] = uv_rect[3][1] - delta
+    uv_rect[4][1] = uv_rect[4][1] - delta
+    return uv_rect
+end
+
+shrink_uv_rect(DEFAULT_QUAD_TEXCOORD)
+
+local QUAD_TEXCOORDS<const> = {
+    [0]     = DEFAULT_QUAD_TEXCOORD,
+    [90]    = {
+        DEFAULT_QUAD_TEXCOORD[3],
+        DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[2],
+    },
+    [180]   = {
+        DEFAULT_QUAD_TEXCOORD[3],
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[2],
+    },
+    [270]   = {
+        DEFAULT_QUAD_TEXCOORD[2],
+        DEFAULT_QUAD_TEXCOORD[4],
+        DEFAULT_QUAD_TEXCOORD[1],
+        DEFAULT_QUAD_TEXCOORD[3],
+    }
 }
 
-local rot_table = {['N'] = {0, 270, 180, 0}, ['E'] = {270, 0, 90, 0}, ['S'] = {180, 90, 0, 0}, ['W'] = {90, 80, 270, 0}}
-local shape_dir_table = {
-    ['U'] = {shape = 0, rot_idx = 1}, ['I'] = {shape = 1, rot_idx = 2}, ['L'] = {shape = 2, rot_idx = 3}, 
-    ['T'] = {shape = 3, rot_idx = 1}, ['X'] = {shape = 4, rot_idx = 4}, ['O'] = {shape = 5, rot_idx = 4}
+local SHAPE_DIRECTIONS<const> = {
+    "N", "E", "S", "W",
+    N = 1,
+    E = 2,
+    S = 3,
+    W = 4,
 }
 
-local road_indirect_table = {}
-local mark_indirect_table = {}
+local SHAPE_TYPES<const> = {
+    "U", "I", "L", "T", "X", "O",
+    U = {
+        index = 1,
+        direction = {
+            N = QUAD_TEXCOORDS[0],
+            E = QUAD_TEXCOORDS[270],
+            S = QUAD_TEXCOORDS[180],
+            W = QUAD_TEXCOORDS[90],
+        }
+    },
+    I = {
+        index = 2,
+        direction = {
+            N = QUAD_TEXCOORDS[270],
+            E = QUAD_TEXCOORDS[0],
+            S = QUAD_TEXCOORDS[90],
+            W = QUAD_TEXCOORDS[180],
+        }
+    },
+    L = {
+        index = 3,
+        direction = {
+            N = QUAD_TEXCOORDS[180],
+            E = QUAD_TEXCOORDS[270],
+            S = QUAD_TEXCOORDS[0],
+            W = QUAD_TEXCOORDS[90],
+        }
+    },
+    T = {
+        index = 4,
+        direction = {
+            N = QUAD_TEXCOORDS[0],
+            E = QUAD_TEXCOORDS[90],
+            S = QUAD_TEXCOORDS[180],
+            W = QUAD_TEXCOORDS[270],
+        },
+    },
+    X = {
+        index = 5,
+        direction = {
+            N = QUAD_TEXCOORDS[0],
+            E = QUAD_TEXCOORDS[0],
+            S = QUAD_TEXCOORDS[0],
+            W = QUAD_TEXCOORDS[0],
+        }
+    },
+    O = {
+        index = 6,
+        direction = {
+            N = QUAD_TEXCOORDS[0],
+            E = QUAD_TEXCOORDS[0],
+            S = QUAD_TEXCOORDS[0],
+            W = QUAD_TEXCOORDS[0],
+        }
+    },
+}
+
+local function offset_uv(uv, shapetype)
+    return {uv[1] + (shapetype-1)*DEFAULT_QUAD_UV_SIZE[1], uv[2]}
+end
+
+for _, sn in ipairs(SHAPE_TYPES) do
+    local s = assert(SHAPE_TYPES[sn])
+    for n, d in pairs(s.direction) do
+        -- create new uv
+        local nd = {}
+        for i=1, #d do
+            nd[i] = offset_uv(d[i], s.index)
+        end
+        s.direction[n] = nd
+    end
+end
+
+local STATES_MAPPER<const> = {
+    --road state
+    normal = {
+        index = 1,
+        color = 0xfffffff,
+    },
+    remove = {
+        index = 2,
+        color = 0xff2020ff,
+    },
+    modify = {
+        index = 3,
+        color = 0xffe4e4e4,
+    },
+
+    --indicator state
+    invalid = {
+        index = 1,
+        color = 0xff0000b6,
+    },
+    valid   = {
+        index = 2,
+        color = 0xffffffff,
+    }
+}
 
 local NUM_QUAD_VERTICES<const> = 4
 
@@ -63,175 +210,247 @@ local function to_mesh_buffer(vb, ib_handle)
     }
 end
 
-local function build_ib(num_quad)
-    local b = {}
-    for ii=1, num_quad do
-        local offset = (ii-1) * 4
-        b[#b+1] = offset + 0
-        b[#b+1] = offset + 1
-        b[#b+1] = offset + 2
+local ROAD_MESH
+local VBFMT<const> = "fffff"
+-- local DEBUG_VERTEX<const> = true
+-- local function pack_vertex(...)
+--     if DEBUG_VERTEX then
+--         return {...}
+--     end
+--     return VBFMT:pack(...)
+-- end
+local function build_vb(ox, oz, ww, hh, texcoords, vb)
+    local nx, nz = ox+ww, oz+hh
+    local uv
+    uv = texcoords[1]; vb[#vb+1] = VBFMT:pack(ox, 0, oz, uv[1], uv[2])
+    uv = texcoords[2]; vb[#vb+1] = VBFMT:pack(ox, 0, nz, uv[1], uv[2])
+    uv = texcoords[3]; vb[#vb+1] = VBFMT:pack(nx, 0, oz, uv[1], uv[2])
+    uv = texcoords[4]; vb[#vb+1] = VBFMT:pack(nx, 0, nz, uv[1], uv[2])
+end
 
-        b[#b+1] = offset + 2
-        b[#b+1] = offset + 3
-        b[#b+1] = offset + 0
+local road_sys   = ecs.system "road_system"
+
+local function destroy_handle(h)
+    if h then
+        bgfx.destroy(h)
     end
-    return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
 end
 
-local function build_mesh()
-    local packfmt<const> = "fffff"
-    local ox, oz = 0, 0
-    local nx, nz = width, height
-    local vb = {
-        packfmt:pack(ox, 0, oz, 0, 1),
-        packfmt:pack(ox, 0, nz, 0, 0),
-        packfmt:pack(nx, 0, nz, 1, 0),
-        packfmt:pack(nx, 0, oz, 1, 1),        
-    }
-    local ib_handle = build_ib(1)
-    return to_mesh_buffer(vb, ib_handle)
-end
-
-local mesh = build_mesh()
-
-local function get_srt_info_table(update_list)
-    local function get_layer_info(instance, layer, info_table)
-        local sd_info = shape_dir_table[layer.shape]
-        local type, dir, shape = layer.type, rot_table[layer.dir][sd_info.rot_idx], sd_info.shape
-        local current_info_table = info_table[shape+1]
-        current_info_table[#current_info_table+1] = {
-            {instance.x, 0.1, instance.y, 0},
-            {dir, type, 0, 0},
-            {0, 0, 0, 0}
-        }
-    end
-    local mt = {__index=function(t, k) local tt = {}; t[k] = tt; return tt end}
-    local road_info_table = setmetatable({}, mt)
-    local mark_info_table = setmetatable({}, mt)
-    for ii = 1, #update_list do
-        local road_instance = update_list[ii]
-        local road_layer, mark_layer = road_instance.layers.road, road_instance.layers.mark
-        if road_layer then get_layer_info(road_instance, road_layer, road_info_table) end
-        if mark_layer then get_layer_info(road_instance, mark_layer, mark_info_table) end
-    end
-    return road_info_table, mark_info_table
-end
-
-function iroad.set_args(ww, hh)
-    width, height = ww, hh
-end
-
-function iroad.update_roadnet_group(gid, update_list, render_layer)
-    local function update_layer_entity(info_table, material_table, indirect_table)
-        for srt_idx = 1, 6 do
-            local srt_info = info_table[srt_idx]
-            if indirect_table[srt_idx] then
-                local e <close> = world:entity(indirect_table[srt_idx], "road:update draw_indirect_update?out")
-                e.road.srt_info = srt_info
-                e.draw_indirect_update = true
-            else
-                local eid = world:create_entity {
-                    policy = {
-                        "ant.scene|scene_object",
-                        "ant.render|simplerender",
-                        "ant.landform|road",
-                        "ant.render|indirect"
-                    },
-                    data = {
-                        scene = {},
-                        simplemesh  = mesh,
-                        material    = material_table[srt_idx],
-                        visible_state = "main_view|selectable|pickup",
-                        road = {srt_info = srt_info, road_type = srt_idx},
-                        render_layer = render_layer,
-                        draw_indirect_ready = false,
-                        draw_indirect_update = false,
-                        indirect_type = "ROAD",
-                        on_ready = function(e)
-                            local draw_indirect_type = idrawindirect.get_draw_indirect_type("ROAD")
-                            imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
-                        end
-                    },
-                }
-                indirect_table[srt_idx] = eid
-            end
-        end
-    end
-    if not render_layer then render_layer = "background" end
-    local road_info_table, mark_info_table = get_srt_info_table(update_list)
-    update_layer_entity(road_info_table, road_material_table, road_indirect_table)
-    update_layer_entity(mark_info_table, mark_material_table, mark_indirect_table)
-end
-
-function road_system:entity_init()
-    for e in w:select "INIT road:update render_object?update indirect_object?update eid:in" do
-        local road = e.road
-        local draw_num = #road.srt_info
-        local max_num = 500
-        local draw_indirect_eid = world:create_entity {
-            policy = {
-                "ant.render|draw_indirect"
-            },
-            data = {
-                draw_indirect = {
-                    target_eid = e.eid,
-                    itb_flag = "r",
-                    draw_num = draw_num,
-                    max_num = max_num,
-                    srt_table = e.road.srt_info,
-                    indirect_params_table = {math3d.vector(0, 0, 6, 0)},
-                    aabb_table = {math3d.ref(math3d.aabb(math3d.vector(0, 0, 0), math3d.vector(20, 0, 20)))},
-                    indirect_type = "road"
-                },
-                on_ready = function()
-                    road.ready = true
-                end 
-            }
-        }
-        road.draw_indirect_eid = draw_indirect_eid
-        e.indirect_object.draw_num = 0
-        e.indirect_object.idb_handle = 0xffffffff
-        e.indirect_object.itb_handle = 0xffffffff 
-    end
-    
-end
-
-function road_system:entity_remove()
+function road_sys:entity_remove()
     for e in w:select "REMOVED road:in" do
-        w:remove(e.road.draw_indirect_eid)
+        e.road.handle = destroy_handle(e.road.handle)
     end
 end
 
-function road_system:data_changed()
-    for e in w:select "road:update render_object:update indirect_object:update scene:in draw_indirect_ready:update" do
-        if e.draw_indirect_ready ~= true then
-            goto continue
-        end
-        local road = e.road
-        local srt_info = road.srt_info
-        local draw_num = 0
-        if srt_info then draw_num = #srt_info end
-        local de <close> = world:entity(road.draw_indirect_eid, "draw_indirect:in")
-        local idb_handle, itb_handle = de.draw_indirect.idb_handle, de.draw_indirect.itb_handle
-        e.indirect_object.idb_handle = idb_handle
-        e.indirect_object.itb_handle = itb_handle
-        if draw_num > 0 then
-            e.indirect_object.draw_num = draw_num
-        else
-            e.indirect_object.draw_num = 0
+function road_sys:exit()
+    if ROAD_MESH and ROAD_MESH.vb.handle then
+        ROAD_MESH.vb.handle = destroy_handle(ROAD_MESH.vb.handle)
+    end
+end
+
+local function to_dispath_num(indirectnum)
+    return (indirectnum+63) // 64
+end
+
+local main_viewid<const> = hwi.viewid_get "main_view"
+
+local function dispath_road_indirect_buffer(e, dieid)
+    local die = world:entity(dieid, "draw_indirect:in road:in")
+    local di = die.draw_indirect
+
+    local instancenum = di.instance_buffer.num
+    if instancenum > 0 then
+        local dis = e.dispatch
+        local m = dis.material
+        dis.size[1] = to_dispath_num(instancenum)
+
+        local ibnum<const> = 6
+        m.u_mesh_param = math3d.vector(ibnum, instancenum, 0, 0)
+        m.b_mesh_buffer = {
+            type = "b",
+            access = "r",
+            value = die.road.handle,
+            stage = 0,
+        }
+        m.b_indirect_buffer = {
+            type = "b",
+            access = "w",
+            value = di.handle,
+            stage = 1,
+        }
+    
+        icompute.dispatch(main_viewid, dis)
+    end
+end
+
+local INSTANCEBUFFER_FMT<const> = 'ffIf'
+local MESHBUFFER_FMT<const> = 'BB'
+
+local function build_instance_buffers(infos)
+    local roadbuffer, indicatorbuffer = {}, {}
+    local roadmeshbuffer, indicatormeshbuffer = {}, {}
+    for _, i in pairs(infos) do
+        local p = i.pos
+
+        local function add_buffer(t, ib, mb)
+            ib[#ib+1] = INSTANCEBUFFER_FMT:pack(p[1], p[2], STATES_MAPPER[t.state].color, 0)
+            mb[#mb+1] = MESHBUFFER_FMT:pack(SHAPE_TYPES[t.shape].index-1, SHAPE_DIRECTIONS[t.dir]-1)
         end
 
-        e.draw_indirect_ready = false
-        ::continue::
-    end
-    for e in w:select "road:update render_object:update indirect_object:update draw_indirect_update:update" do
-        if e.draw_indirect_update ~= true then
-            goto continue
+        local r = i.road
+        if r then
+            add_buffer(r, roadbuffer, roadmeshbuffer)
         end
-        local die <close> = world:entity(e.road.draw_indirect_eid, "draw_indirect:update")
-        idrawindirect.update_draw_indirect(e, die, e.road.srt_info)
-        e.draw_indirect_update = false
-        ::continue::
+
+        local indicator = i.indicator
+        if indicator then
+            add_buffer(indicator, indicatorbuffer, indicatormeshbuffer)
+        end
+    end
+
+    return {
+        road = {
+            instancebuffer = roadbuffer,
+            meshbuffer = roadmeshbuffer,
+        },
+        indicator = {
+            instancebuffer = indicatorbuffer,
+            meshbuffer = indicatormeshbuffer,
+        }
+    }
+end
+
+local function create_mesh_buffer(b)
+    if #b > 0 then
+        return bgfx.create_dynamic_index_buffer(irender.align_buffer(table.concat(b, "")), "dr")
+    end
+end
+
+local function update_di_buffers(dieid, buffer)
+    local die = world:entity(dieid, "road:update")
+    local r = die.road
+
+    if r.handle then
+        bgfx.update(r.handle, 0, irender.align_buffer(table.concat(buffer.meshbuffer)))
+    else
+        die.road.handle = create_mesh_buffer(buffer.meshbuffer)
+    end
+
+    idi.update_instance_buffer(die, table.concat(buffer.instancebuffer, ""), #buffer.instancebuffer)
+end
+
+local function create_road_obj(gid, render_layer, buffer, dimaterial)
+    local instancenum = #buffer.instancebuffer
+    local dieid = world:create_entity {
+        group = gid,
+        policy = {
+            "ant.render|simplerender",
+            "ant.render|draw_indirect",
+            "ant.landform|road",
+        },
+        data = {
+            scene = {},
+            simplemesh  = assert(ROAD_MESH),
+            material    = dimaterial,
+            visible_state = "main_view|selectable",
+            road = {
+                handle = create_mesh_buffer(buffer.meshbuffer),
+            },
+            render_layer = render_layer,
+            draw_indirect = {
+                instance_buffer = {
+                    memory  = table.concat(buffer.instancebuffer, ""),
+                    flag    = "r",
+                    layout  = "t45NIf",
+                    num     = instancenum,
+                },
+            },
+        },
+    }
+
+    local computeeid = world:create_entity{
+        policy = {
+            "ant.render|compute",
+        },
+        data = {
+            material = "/pkg/ant.landform/assets/materials/road_compute.material",
+            dispatch = {
+                size = {1, 1, 1},
+            },
+            on_ready = function (e)
+                w:extend(e, "dispatch:update")
+                dispath_road_indirect_buffer(e, dieid)
+            end
+        }
+    }
+
+    return {
+        drawindirect = dieid,
+        compute = computeeid,
+    }
+end
+
+local function create_road_entities(gid, render_layer, road, indicator)
+    return {
+        road        = create_road_obj(gid, render_layer, road,      "/pkg/ant.landform/assets/materials/road.material"),
+        indicator   = create_road_obj(gid, render_layer, indicator, "/pkg/ant.landform/assets/materials/indicator.material"),
+    }
+end
+
+local ROAD_ENTITIES = {}
+
+local iroad         = {}
+local function build_road_mesh(rw, rh)
+    local road_vb = {}
+    --we need keep shapes and directions order in SHAPE_TYPES&SHAPE_DIRECTIONS
+    for _, s in ipairs(SHAPE_TYPES) do
+        local st = SHAPE_TYPES[s]
+        for _, dn in ipairs(SHAPE_DIRECTIONS) do
+            build_vb(0, 0, rw, rh, st.direction[dn], road_vb)
+        end
+    end
+
+    assert(#road_vb == 4 * #SHAPE_TYPES * #SHAPE_DIRECTIONS)
+    -- if DEBUG_VERTEX then
+    --     for i=1, #road_vb do
+    --         road_vb[i] = VBFMT:pack(table.unpack(road_vb[i]))
+    --     end
+    -- end
+    return to_mesh_buffer(road_vb, irender.quad_ib())
+end
+
+function iroad.create(roadwidth, roadheight)
+    ROAD_MESH = build_road_mesh(roadwidth, roadheight)
+end
+
+function iroad.update_roadnet(groups, render_layer)
+    for gid, infos in pairs(groups) do
+        local entities = ROAD_ENTITIES[gid]
+        local buffers = build_instance_buffers(infos)
+        print(("group:%d, road instance num:%d, indicator instance num:%d"):format(gid, #buffers.road, #buffers.indicator))
+        if nil == entities then
+            entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicator)
+            ROAD_ENTITIES[gid] = entities
+        else
+            local function update_buffer_and_dispatch(buffer, eids)
+                update_di_buffers(eids.drawindirect, buffer)
+                dispath_road_indirect_buffer(world:entity(eids.compute, "dispatch:update"), eids.drawindirect)
+            end
+
+            update_buffer_and_dispatch(buffers.road,        entities.road)
+            update_buffer_and_dispatch(buffers.indicator,   entities.indicator)
+        end
+    end
+end
+
+function iroad.clear(groups, layer)
+    for gid in pairs(groups) do
+        local entities = ROAD_ENTITIES[gid]
+        local o = entities[layer]
+        if o then
+            w:remove(o.drawindirect)
+            w:remove(o.compute)
+        end
     end
 end
 

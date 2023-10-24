@@ -69,7 +69,7 @@ local function update_attribs(attr, uniforms)
 			if (not is_sa) then 
 				-- set handle to material's uniform and sampler attribs
 				if is_uniform or is_sampler then
-					attrib[n] = to_v(assert(attrib[n], u.handle))
+					attrib[n] = to_v(assert(attrib[n]), u.handle)
 					opt_mat_uniforms_samplers[n] = true
 				end
 			else 

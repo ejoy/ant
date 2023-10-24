@@ -38,8 +38,15 @@
 #   define INPUT_COLOR0    a_color0
 #   define OUTPUT_COLOR0   v_color0
 #else //!WITH_COLOR_ATTRIB
+
 #   define INPUT_COLOR0
+
+#   ifdef WITH_CUSTOM_COLOR0_ATTRIB
+#   define OUTPUT_COLOR0 v_color0
+#   else //!WITH_CUSTOM_COLOR0_ATTRIB
 #   define OUTPUT_COLOR0
+#   endif //WITH_CUSTOM_COLOR0_ATTRIB
+
 #endif //WITH_COLOR_ATTRIB
 
 

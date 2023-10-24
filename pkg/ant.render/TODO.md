@@ -69,8 +69,10 @@
 21. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
 22. 使用draw indirect的时候，在cull的阶段，获取一个粗糙的z-buffer（可以在cpu端生成http://twvideo01.ubm-us.net/o1/vault/gdcchina14/presentations/833779_MiloYip_ADataOrientedCN.pdf，也可以在gpu端生成），用以判断这个物体就算在视锥体内，也是可以被剔除的；
 23. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；
-24. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
-
+24. 修改贴图的mipmap颜色为某种纯色，用来检测场景中的贴图是否过大（看到蓝色意味着原来做的图就是过大的）；
+25. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；
+26. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
+27. 动态材质应该允许VS_INPUT/VS_OUTPUT/FS_INPUT/FS_OUTPUT数据结构的自定义，而不是通过现在定义宏来决定vs/fs的输入输出是什么（数据结构的名字不能改）；
 #### 新功能/探索
 ##### 已经完成
 1. 阴影的VSM；  //2022.09.29已经完成，使用的是ESM。

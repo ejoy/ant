@@ -14,12 +14,10 @@
 
 void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
 {
-    int road_type  = (int)fsinput.user0.x;
     const vec2 uv  = fsinput.uv0;
 
     vec4 road_basecolor = texture2D(s_basecolor, uv); 
-
-    vec3 basecolor = calc_road_basecolor(road_basecolor.rgb, road_type);
+    vec3 basecolor = road_basecolor.rgb * fsinput.color.rgb;
 
     mediump vec4 mrSample = texture2D(s_metallic_roughness, uv);
     float roughness = mrSample.g;

@@ -448,6 +448,7 @@ function m:choose_prefab()
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         if gd.is_opening then
+
             imgui.widget.Text("Create new or open existing prefab.")
             imgui.widget.Text("prefab name:  ")
             imgui.cursor.SameLine()

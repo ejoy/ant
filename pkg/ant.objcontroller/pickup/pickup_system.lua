@@ -6,7 +6,7 @@ local mu 		= import_package "ant.math".util
 local R         = world:clibs "render.render_material"
 local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
-local idrawindirect = ecs.require "ant.render|draw_indirect.draw_indirect"
+local idi       = ecs.require "ant.render|draw_indirect.draw_indirect2"
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
@@ -25,7 +25,7 @@ local imaterial = ecs.require "ant.asset|material"
 local INV_Z<const> = true
 local INF_F<const> = true
 local pickup_material, pickup_skin_material
-local pickup_indirect_material
+local pickup_indirect_materials
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -236,7 +236,10 @@ function pickup_sys:init()
 	create_pick_entity()
 	pickup_material			= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity.material'
 	pickup_skin_material	= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_skin.material'
-	pickup_indirect_material= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect.material'
+	pickup_indirect_materials = {
+		mountain = assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect_mountain.material',
+		road 	 = assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect_road.material',
+	}
 end
 
 function pickup_sys:entity_init()
@@ -324,11 +327,13 @@ function pickup_sys:pickup()
 	end
 end
 
-local function which_material(skinning, indirect)
-    if indirect then
-        return pickup_indirect_material
+local function which_material(e)
+	local idt = idi.indirect_type(e)
+    if idt then
+        return assert(pickup_indirect_materials[idt], ("Invalid 'indirect type': %s"):format(idt))
     end
-    if skinning then
+	w:extend(e, "skinning?in")
+    if e.skinning then
         return pickup_skin_material
     end
 
@@ -342,21 +347,16 @@ local function create_pickup_state(srcstate, dststate)
 end
 
 function pickup_sys:update_filter()
-	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in skinning?in indirect_type?in" do
+	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in" do
 		if e.visible_state["pickup_queue"] then
 			local ro = e.render_object
 			local fm = e.filter_material
 
-			local dstres = which_material(e.skinning, e.indirect_type)
+			local dstres = which_material(e)
 
 			local mi = RM.create_instance(dstres.object)
 			mi:set_state(create_pickup_state(fm.main_queue:get_state(), dstres.state))
 			mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
-			if e.indirect_type then
-				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect_type)
-				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
-			end
-
 			fm["pickup_queue"] = mi
 
 			R.set(ro.rm_idx, queuemgr.material_index "pickup_queue", mi:ptr())

@@ -299,6 +299,16 @@ function irender.full_quad()
 	return fullquad
 end
 
+local VEC4_SIZE<const> = 16 --uvec4/vec4 = 16 bytes
+function irender.align_buffer(s, alignsize)
+	alignsize = alignsize or VEC4_SIZE
+    local n = #s % alignsize
+    if n > 0 then
+        s = s .. ('\0'):rep(alignsize - n)
+    end
+    return s
+end
+
 function irender.set_framebuffer_ratio(which, ratio)
 	world:pub{"framebuffer_ratio_changed", which, ratio}
 end
