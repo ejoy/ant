@@ -1,7 +1,7 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
-local repo_new = require "repo".new
+local new_repo = require "repo"
 
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
@@ -30,45 +30,55 @@ local function ignore_path(p)
 	end
 end
 
-local function rebuild_repo()
-	print("rebuild start")
-	if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
-		repo:index()
-	else
-		repo:rebuild()
-	end
-	for _, s in pairs(CacheCompileS) do
-		s.resource = {}
-	end
-	print("rebuild finish")
-end
-
 local function update_watch()
-	local rebuild = false
+	local changed = {}
+	local mark = {}
+	local function add_changed(type, lpath)
+		local originpath = lpath:string()
+		local path = lpath:remove_filename():string()
+		if mark[path] then
+			return
+		end
+		print(type, originpath)
+		mark[path] = true
+		changed[#changed+1] = path
+	end
 	while true do
 		local type, path = fswatch:select()
 		if not type then
 			break
 		end
 		if not ignore_path(path) then
-			print(type, path)
-			rebuild = true
+			local lpath = fs.path(path):lexically_normal()
+			if type == "modify" then
+				if not fs.is_directory(lpath) then
+					add_changed(type, lpath)
+				end
+			else
+				add_changed(type, lpath)
+			end
 		end
 	end
-	if rebuild then
-		rebuild_repo()
+	if #changed > 0 then
+		print("repo rebuild ...")
+		repo:rebuild(changed)
+		for _, s in pairs(CacheCompileS) do
+			s.resource = {}
+		end
+		print("repo rebuild ok..")
 	end
 end
 
 do
-	repo = repo_new(fs.path(REPOPATH))
+	print("repo init ...")
+	repo = new_repo(fs.path(REPOPATH))
 	if repo == nil then
 		error "Create repo failed."
 	end
-	for _, lpath in pairs(repo._mountpoint) do
+	for _, lpath in ipairs(repo:mountlapth()) do
 		fswatch:add(lpath:string())
 	end
-	rebuild_repo()
+	print("repo init ok.")
 	ltask.fork(function ()
 		while true do
 			update_watch()
@@ -84,10 +94,7 @@ function S.ROOT()
 end
 
 function S.GET(hash)
-	local path = repo:hash(hash)
-	if path then
-		return path
-	end
+	return repo:hash(hash)
 end
 
 function S.REALPATH(path)
@@ -165,7 +172,7 @@ function S.RESOURCE(CompileId, path)
         s.resource[path] = nil
         return
     end
-    local hash = repo:build_dir(lpath)
+    local hash = repo:build_resource(lpath)
     s.resource[path] = hash
     return hash
 end

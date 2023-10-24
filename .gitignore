@@ -9,6 +9,7 @@
 .vscode
 .vs
 .repo
+.fileserver
 .build
 .log
 *.log

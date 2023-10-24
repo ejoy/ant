@@ -3,7 +3,7 @@ local repopath = ...
 local vfs = require "vfs"
 
 if repopath then
-    local access = dofile "/engine/vfs/repoaccess.lua"
+    local access = dofile "/engine/editor/vfs_access.lua"
     dofile "/engine/editor/create_repo.lua" (repopath, access)
 end
 
