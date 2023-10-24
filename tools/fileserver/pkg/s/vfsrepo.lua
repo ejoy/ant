@@ -248,7 +248,6 @@ local function import_hash(index, hashs)
 		for _, item in ipairs(dir) do
 			if item.path then
 				local fullpath = path .. item.name
-				print(fullpath)
 				local h = hashs[fullpath]
 				if h and item.timestamp == h[2] then
 					item.hash = h[1]
