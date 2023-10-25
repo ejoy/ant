@@ -17,7 +17,6 @@ policy "simplerender"
     .include_policy "ant.scene|bounding"
     .include_policy "ant.asset|material"
     .component "simplemesh"
-    .component_opt "owned_mesh_buffer"
     .component_opt "render_layer"
     .component "visible_state"
 
