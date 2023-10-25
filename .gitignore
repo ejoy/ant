@@ -8,11 +8,10 @@
 .cache
 .vscode
 .vs
-.repo
+.app
 .fileserver
 .build
 .log
-*.log
 build
 
 /bin

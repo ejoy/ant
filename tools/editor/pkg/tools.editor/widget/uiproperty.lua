@@ -227,7 +227,7 @@ function ResourcePath:show()
     if imgui.widget.BeginDragDropTarget() then
         local payload = imgui.widget.AcceptDragDropPayload("DragFile")
         if payload then
-            local relative_path = lfs.path(payload)--lfs.relative(lfs.path(payload), fs.path "":localpath())
+            local relative_path = lfs.path(payload)--lfs.relative(lfs.path(payload), fs.path "/":localpath())
             local extension = tostring(relative_path:extension())
             if extension == self.extension then
                 local path_str = tostring(payload)
@@ -352,7 +352,7 @@ function TextureResource:show()
         if imgui.widget.Button("Save As") then
             local path = uiutils.get_saveas_path("Texture", "texture")
             if path then
-                --path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
+                --path = tostring(lfs.relative(lfs.path(path), fs.path "/":localpath()))
                 utils.write_file(path, stringify(self.metadata))
             end
         end

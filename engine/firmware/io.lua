@@ -115,9 +115,9 @@ local function connect_server(address, port)
 		return
 	end
 	if ok == false then
-		selector:event_init(fd, fd, SELECT_WRITE)
+		selector:event_add(fd, SELECT_WRITE)
 		selector:wait()
-		selector:event_close(fd)
+		selector:event_del(fd)
 	end
 	local ok, err = fd:status()
 	if not ok then
@@ -148,7 +148,7 @@ local function listen_server(address, port)
 		_print("[ERROR] listen: "..err)
 		return
 	end
-	selector:event_init(fd, fd, SELECT_READ)
+	selector:event_add(fd, SELECT_READ)
 	for _ in selector:wait(2) do
 		local newfd, err = fd:accept()
 		if not newfd then
@@ -157,11 +157,11 @@ local function listen_server(address, port)
 			return
 		end
 		print("Accepted")
-		selector:event_close(fd)
+		selector:event_del(fd)
 		return newfd
 	end
 	_print("[ERROR] select: timeout")
-	selector:event_close(fd)
+	selector:event_del(fd)
 	fd:close()
 end
 
@@ -529,7 +529,7 @@ local function ltask_init(path, realpath)
 			coroutine.yield()
 		end
 	end
-	selector:event_init(ltaskfd, read_ltaskfd, SELECT_READ)
+	selector:event_add(ltaskfd, SELECT_READ, read_ltaskfd)
 end
 
 function CMD.SWITCH(_, path, realpath)
@@ -575,7 +575,7 @@ local function init_channelfd()
 			end
 		end
 	end
-	selector:event_init(channelfd, read_channelfd, SELECT_READ)
+	selector:event_add(channelfd, SELECT_READ, read_channelfd)
 end
 
 local function init_event()
@@ -665,7 +665,7 @@ local function init_event()
 		end
 	end
 	connection.flags = SELECT_READ | SELECT_WRITE
-	selector:event_init(connection.fd, update_fd, SELECT_READ | SELECT_WRITE)
+	selector:event_add(connection.fd, SELECT_READ | SELECT_WRITE, update_fd)
 end
 
 local function main()

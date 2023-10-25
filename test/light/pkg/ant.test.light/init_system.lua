@@ -91,19 +91,7 @@ function S.init()
 
 end
 
-local peids
-local debug_mipmap_eid
-local red_bc3
-
-
 function S.init_world()
-    
-    local mq = w:first "main_queue camera_ref:in"
-    local ce<close> = world:entity(mq.camera_ref, "camera:in")
-    local eyepos = math3d.vector(0, 10, -10)
-    iom.set_position(ce, eyepos)
-    local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
-    iom.set_direction(ce, dir)
     -- create_simple_triangles()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
@@ -112,9 +100,7 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.test.light/assets/goods-station-1.glb|mesh.prefab", function (e)
-        peids = e.tag['*']
-        debug_mipmap_eid = e.tag['*'][2]
+    create_instance("/pkg/ant.test.light/assets/cube.glb|mesh.prefab", function (e)
         -- local le<close> = world:entity(leid, "scene:update")
         -- iom.set_scale(le, 0.1)
     end)
@@ -160,40 +146,4 @@ function S.init_world()
     --create_simple_triangles()
     -- iom.set_position(camera_ref, math3d.vector(0, 2, -5))
     -- iom.set_direction(camera_ref, math3d.vector(0.0, 0.0, 1.0))
-end
-
-local kb_mb = world:sub{"keyboard"}
-local i = 0
-local idm = ecs.require "ant.debug|debug_mipmap"
-function S:data_changed()
-    for _, code, press, state in kb_mb:unpack() do
-        if code == "T" and press == 0 then
-            for _, eid in ipairs(peids) do
-                local e<close> = world:entity(eid)
-                w:remove(e)
-            end
-        end
-
-        local function writefile(filename, data)
-            local f <close> = assert(io.open(filename, "wb"))
-            f:write(data)
-        end
-        if code == "K" and press == 0 then
-            idm.reset_texture_mipmap(true, i)
-        end
-
-        if code == "J" and press == 0 then
-            idm.reset_texture_mipmap(false, i)
-        end
-
-        
-        if code == "L" and press == 0 then
-            i = i + 1
-        end
-
-    end
-end
-
-function S:camera_usage()
- 
 end

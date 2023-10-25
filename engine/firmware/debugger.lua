@@ -25,7 +25,7 @@ function dbg:start()
         end
         local directory = dofile "engine/directory.lua"
         local fs = require "bee.filesystem"
-        local logpath = directory.log_path():string()
+        local logpath = directory.app_path():string()
         require 'backend.bootstrap'. start(logpath, "4378")
     ]]
     return self
@@ -45,7 +45,7 @@ function dbg:attach()
         end
         local directory = dofile "engine/directory.lua"
         local fs = require "bee.filesystem"
-        local logpath = directory.log_path():string()
+        local logpath = directory.app_path():string()
         require 'backend.bootstrap'. attach(logpath)
     ]]
     return self

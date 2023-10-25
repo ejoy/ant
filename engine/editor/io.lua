@@ -72,7 +72,7 @@ local function read_channelfd()
 	end
 end
 
-selector:event_init(channelfd, read_channelfd, SELECT_READ)
+selector:event_add(channelfd, SELECT_READ, read_channelfd)
 
 local function ltask_ready()
 	return coroutine.yield() == nil
@@ -95,7 +95,7 @@ local function ltask_init()
 			coroutine.yield()
 		end
 	end
-	selector:event_init(ltaskfd, read_ltaskfd, SELECT_READ)
+	selector:event_add(ltaskfd, SELECT_READ, read_ltaskfd)
 end
 
 function CMD.SWITCH()
