@@ -184,10 +184,14 @@ local function update_camera(e)
     camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
+local function merge_camera_changed()
+    --w:filter("camera_changed", "camera scene_changed")
+    for e in w:select "scene_changed camera camera_changed?out" do
+        e.camera_changed = true
+    end
+end
 function cameraview_sys:update_camera()
-    
-    w:filter("camera_changed", "scene_changed") -- camera_changed or scene_changed
-    w:filter("camera_changed", "camera scene_changed:absent") -- (camera_changed or scene_changed) and camera
+    merge_camera_changed()
     for e in w:select "camera_changed camera:in scene:in" do
         update_camera(e)
     end
