@@ -54,7 +54,7 @@ local function create_handle(fd)
 end
 
 local function close(s)
-    selector:event_close(s.fd)
+    selector:event_del(s.fd)
     local fd = s.fd
     fd:close()
     assert(s.shutdown_r)
@@ -177,7 +177,7 @@ function S.bind(protocol, ...)
         shutdown_r = false,
         shutdown_w = true,
     }
-    selector:event_init(fd, fd)
+    selector:event_add(fd, 0)
     return create_handle(fd)
 end
 
@@ -193,10 +193,10 @@ function S.connect(protocol, ...)
         shutdown_r = true,
         shutdown_w = false,
         on_write = ltask.wakeup,
+        w = true,
     }
-    selector:event_init(fd, fd)
+    selector:event_add(fd, SELECT_WRITE)
     status[fd] = s
-    fd_set_write(s)
     ltask.wait(s)
     local ok, err = fd:status()
     if ok then
@@ -243,9 +243,9 @@ function S.listen(h)
         shutdown_w = false,
         on_read = stream_on_read,
         on_write = stream_on_write,
+        r = true,
     }
-    selector:event_init(newfd, newfd)
-    fd_set_read(status[newfd])
+    selector:event_add(newfd, SELECT_READ)
     return create_handle(newfd)
 end
 
@@ -361,6 +361,11 @@ ltask.fork(function()
                 s:on_read()
             end
             if event & SELECT_WRITE ~= 0 then
+                if not status[fd] then
+                    for k, v in pairs(fd) do
+                        print(k, v)
+                    end
+                end
                 local s = status[fd]
                 s:on_write()
             end
