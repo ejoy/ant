@@ -361,11 +361,6 @@ ltask.fork(function()
                 s:on_read()
             end
             if event & SELECT_WRITE ~= 0 then
-                if not status[fd] then
-                    for k, v in pairs(fd) do
-                        print(k, v)
-                    end
-                end
                 local s = status[fd]
                 s:on_write()
             end
