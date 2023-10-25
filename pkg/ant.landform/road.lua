@@ -453,6 +453,7 @@ function iroad.clear(groups, layer)
                 w:remove(o.compute)
             end
         end
+        ROAD_ENTITIES[gid] = nil
     end
 end
 
