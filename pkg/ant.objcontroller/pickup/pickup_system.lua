@@ -53,7 +53,7 @@ end
 local function update_camera(pu_camera_ref, clickpt)
 	local mq = w:first "main_queue camera_ref:in render_target:in"
 	local main_vr = mq.render_target.view_rect
-	
+
 	local ndc2D = mu.pt2D_to_NDC(cvt_clickpt(clickpt, main_vr.ratio), main_vr)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
@@ -330,7 +330,7 @@ end
 local function which_material(e)
 	local idt = idi.indirect_type(e)
     if idt then
-        return assert(pickup_indirect_materials[idt], ("Invalid 'indirect type': %s"):format(idt))
+        return pickup_indirect_materials[idt] or error (("Invalid 'indirect type': %s"):format(idt))
     end
 	w:extend(e, "skinning?in")
     if e.skinning then

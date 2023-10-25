@@ -91,7 +91,7 @@ local function add_item(texsize, tex, rect)
     local u1, v1 = (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih
 
     local   u0v1, u0v0,
-            u1v1, u1v0 = 
+            u1v1, u1v0 =
             math3d.vector(u0, v1, 0.0), math3d.vector(u0, v0, 0.0),
             math3d.vector(u1, v1, 0.0), math3d.vector(u1, v0, 0.0)
     if tm then
@@ -111,7 +111,7 @@ local function add_item(texsize, tex, rect)
     local pm = posmat(rect.srt)
     if pm then
         vv1, vv2, vv3, vv4 = trans_positions(pm, vv1, vv2, vv3, vv4)
-        vvt1, vvt2, vvt3, vvt4 = 
+        vvt1, vvt2, vvt3, vvt4 =
             math3d.transform(pm, vvt1, 0), math3d.transform(pm, vvt2, 0),
             math3d.transform(pm, vvt3, 0), math3d.transform(pm, vvt4, 0)
     end
@@ -120,12 +120,12 @@ local function add_item(texsize, tex, rect)
     mu.pack_tangent_frame(mc.YAXIS, vvt1), mu.pack_tangent_frame(mc.YAXIS, vvt2),
     mu.pack_tangent_frame(mc.YAXIS, vvt3), mu.pack_tangent_frame(mc.YAXIS, vvt4)
 
-    u0v1, u0v0, u1v1, u1v0 = 
-    math3d.serialize(u0v1), math3d.serialize(u0v0), 
+    u0v1, u0v0, u1v1, u1v0 =
+    math3d.serialize(u0v1), math3d.serialize(u0v0),
     math3d.serialize(u1v1), math3d.serialize(u1v0)
 
-    vv1, vv2, vv3, vv4 = 
-    math3d.serialize(vv1), math3d.serialize(vv2), 
+    vv1, vv2, vv3, vv4 =
+    math3d.serialize(vv1), math3d.serialize(vv2),
     math3d.serialize(vv3), math3d.serialize(vv4)
 
     vvt1, vvt2, vvt3, vvt4 =
@@ -160,7 +160,7 @@ local function update_drawer_items(de)
             buffers[#buffers+1] = add_item(texsize, v.texture, v)
         end
         math3d.recover(cp)
-    
+
         local objbuffer = table.concat(buffers, "")
         local vbnum = #objbuffer//layout.stride
         ro.vb_start, ro.vb_num = 0, vbnum
@@ -250,7 +250,7 @@ local item_cache = {}
 function icanvas.add_items(e, key, ...)
     local newitem_count = select("#", ...)
     if newitem_count == 0 then
-        return 
+        return
     end
 
     w:extend(e, "canvas:in eid:in")
@@ -258,7 +258,7 @@ function icanvas.add_items(e, key, ...)
     local materials = canvas.materials
 
     local item_ids = {}
-    local de = assert(world:entity(materials[key], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(key))
+    local de = world:entity(materials[key], "canvas_drawer:in") or error (("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(key))
     local items = de.canvas_drawer.items
 
     for i=1, newitem_count do

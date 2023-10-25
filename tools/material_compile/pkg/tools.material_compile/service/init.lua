@@ -40,7 +40,7 @@ local RENDERERS<const> = {
     windows = "direct3d11",
 }
 
-local renderer<const> = assert(RENDERERS[platform.os], ("not support os for compile shader:%s"):format(platform.os))
+local renderer<const> = RENDERERS[platform.os] or error (("not support os for compile shader:%s"):format(platform.os))
 
 cr.set_setting("material", stringify {
     os = BgfxOS[platform.os] or platform.os,
@@ -91,7 +91,7 @@ elseif srcpath:equal_extension "lua" then
         [".prefab"]     = function (filename)
             if filename:match "%|animation.prefab" then
                 print("not load animation.prefab file:", filename)
-                return 
+                return
             end
             local r = serialize.parse(filename, fastio.readall(filename)))
             for _, e in ipairs(r) do
@@ -108,7 +108,7 @@ elseif srcpath:equal_extension "lua" then
         [".material"]   = add_compile_file,
         [".glb"]        = add_compile_file,
     }
-    
+
     for _, f in ipairs(files) do
         local ext = fs.path(f):extension():string():lower()
         local op = RES_EXT[ext]
@@ -129,7 +129,7 @@ else
             [stage] = srcfile,
         }
     }
-    
+
     local tmpfile = lfs.path "./tools/material_compile/tmp.material"
 
     local f = assert(io.open(tmpfile:string(), "wb"))

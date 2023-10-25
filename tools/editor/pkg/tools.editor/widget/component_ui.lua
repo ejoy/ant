@@ -36,7 +36,7 @@ end
 local function int_widget(name, comp, desc, updatevalue)
     PropertyLabel(name)
     BeginDisabled(desc.readonly)
-    
+
     local ll = desc.list
     if ll then
         list_combo(name, comp, ll, updatevalue)
@@ -53,7 +53,7 @@ end
 local function float_widget(name, comp, desc, updatevalue)
     PropertyLabel(name)
     BeginDisabled(desc.readonly)
-    
+
     local ll = desc.list
     if ll then
         list_combo(name, comp, ll, updatevalue)
@@ -122,7 +122,7 @@ local component_type_registers = {
         if Checkbox("##" .. name, value) then
             updatevalue[name] = value[1]
         end
-        
+
         imgui.windows.EndDisabled()
     end,
     vec2 = function (name, comp, desc,  updatevalue)
@@ -167,8 +167,8 @@ local function build_entity_ui(name, comp, cdesc, updatevalue)
         if imgui.widget.TreeNode(name, imgui.flags.TreeNode { "DefaultOpen" }) then
             local vv = {}
             for k, v in compdefines.sort_pairs(comp) do
-                local dd = d[k]
-                assert(dd, ("component is not define in desc file:%s"):format(k))
+                local dd = d[k] or error (
+					("component is not define in desc file:%s"):format(k))
                 build_entity_ui(k, v, dd, vv)
             end
             if next(vv) then
@@ -185,7 +185,7 @@ end
 return {
     build = build_entity_ui,
     register = function (comptype, widget_creator)
-        assert(component_type_registers[comptype], ("duplicate component type:%s"):format(comptype))
+        local _ = component_type_registers[comptype] or error (("duplicate component type:%s"):format(comptype))
         component_type_registers[comptype] = widget_creator
     end
 }

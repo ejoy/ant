@@ -48,7 +48,7 @@ local function sandbox_env(packagename)
     end
 
     function env.require(name)
-        assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
+        local _ = type(name) == "string" or error (("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
         local p = _LOADED[name] or package.loaded[name]
         if p ~= nil then
             return p

@@ -24,7 +24,7 @@ do
 	end
 	--qidx&midx is base 0
 	local function register_queue(qn, midx)
-		assert(QUEUE_INDICES[qn] == nil, qn .. " already register")
+		local _ = QUEUE_INDICES[qn] == nil or error (qn .. " already register")
 		local qidx = NEXT_QUEUE_IDX
 		if qidx >= 64 then
 			error(("Max queue index is 64, %d is provided"):format(qidx))
@@ -35,7 +35,7 @@ do
 		QUEUE_INDICES[qn] = qidx
 		QUEUE_MASKS[qn] = (1 << qidx)
 
-		assert(QUEUE_MATERIALS[qn] == nil, qn .. " material index already register")
+		local _ = QUEUE_MATERIALS[qn] == nil or error (qn .. " material index already register")
 
 		if midx >= 64 then
 			error(("Max material index is 64, %d is provided"):format(midx))

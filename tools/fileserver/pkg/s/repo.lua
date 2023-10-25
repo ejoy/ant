@@ -9,7 +9,7 @@ REPO_MT.__index = REPO_MT
 local function filelock(filepath)
 	filepath = filepath / "vfs.lock"
 	local f = lfs.filelock(filepath)
-	return assert(f, "repo is locking. (" .. filepath:string() .. ")")
+	return f or error ("repo is locking. (" .. filepath:string() .. ")")
 end
 
 local function import_hash(self)

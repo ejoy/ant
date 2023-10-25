@@ -58,7 +58,7 @@ local FxFiles = init_fx_files()
 
 local function shader_load(materialfile, shadername, stagetype)
     assert(materialfile == nil)
-    local fx = assert(FxFiles[shadername], ("unknown shader name:%s"):format(shadername))
+    local fx = FxFiles[shadername] or error (("unknown shader name:%s"):format(shadername))
     return fx[stagetype]
 end
 
@@ -171,7 +171,7 @@ function S.create(filename)
 end
 
 function S.destroy(filename, handle)
-    local info = assert(EFKFILES[filename], "Invalid efk file: " .. filename)
+    local info = EFKFILES[filename] or error ("Invalid efk file: " .. filename)
     info.count = info.count - 1
     EFKCTX:destroy(handle)
     if 0 == info.count then

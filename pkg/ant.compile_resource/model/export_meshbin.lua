@@ -95,7 +95,7 @@ end
 	indexbin = table.concat(buffer, "")
 
 	return to_ib(indexbin, elemsize == 4 and 'd' or '', index_accessor.count)
-end 
+end
 
 local function create_prim_bounding(math3d, meshscene, prim)
 	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
@@ -150,10 +150,7 @@ local typemapper<const> = {
 
 local function unpack_vec(v, l)
 	local t = l:sub(6, 6)
-	t = typemapper[t]
-	if t == nil then
-		assert(("not support layout:%s, type:%s must be 'float'"):format(l, t))
-	end
+	t = typemapper[t] or error(("not support layout:%s, type:%s must be 'float'"):format(l, t))
 
 	local n = tonumber(l:sub(2, 2))
 	local fmt = t:rep(n)
@@ -163,7 +160,7 @@ local function unpack_vec(v, l)
 end
 
 -- change from right hand to left hand
--- left hand define as: 
+-- left hand define as:
 -- 		x: -left, +right
 -- 		y: +up, -down
 --		z: -point2user, +point2screen
@@ -528,7 +525,7 @@ end
 -- 		return fmt:unpack(d, offset)
 -- 	end
 
-	
+
 -- 	local i1, i2, i3
 -- 	if ib then
 -- 		local fmt = ib.flag == '' and "HHH" or "III"
@@ -539,7 +536,7 @@ end
 
 -- 	assert(#vb == 1 and vb[1].declname:match "p")
 -- 	local b = vb[1]
-	
+
 
 -- 	local stride_offset = 0
 -- 	local fmt
@@ -652,7 +649,7 @@ end
 
 	--calculate tangent info will use too many math3d resource, we need to reset here
 	math3d.reset()
-end 
+end
 
 --[[ local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}

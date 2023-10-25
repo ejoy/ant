@@ -14,7 +14,7 @@ function ig.register(name)
     if GROUPS[name] then
         error("duplicate group")
     end
-    
+
     local gid = NEXT_GROUP
     NEXT_GROUP = NEXT_GROUP + 1
 
@@ -26,7 +26,7 @@ end
 
 local function check_group(k)
     -- k can be group name or gorup id
-    return assert(GROUPS[k], "Invalid group:" .. k)
+    return GROUPS[k] or error ("Invalid group:" .. k)
 end
 
 ig.groupid      = check_group

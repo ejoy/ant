@@ -36,7 +36,7 @@ end
 local function dir2uvface(v)
     local x, y, z = math3d.index(v, 1, 2, 3)
     local ax, ay, az = math3d.index(math3d.vec_abs(x), 1, 2, 3)
-    
+
     if ax > ay then
         if ax > az then
             if x > 0 then
@@ -160,7 +160,7 @@ function tu.create_cubemap(cm, sampler)
     assert(cm.w and cm.h)
     cm.facenum = cm.w * cm.h
     cm.max_index = cm.facenum * 6
-    
+
     cm.sampler = sampler or DEFAULT_SAMPLER
     return setmetatable(cm, {__index=cm_mt})
 end
@@ -173,7 +173,7 @@ local FACE_INDEX<const> = {
     ["+Z"]=5, ["-Z"]=6,
 }
 function tu.face_index(n)
-    return assert(FACE_INDEX[n], ("Invalid face name:%s"):format(n))
+    return FACE_INDEX[n] or error (("Invalid face name:%s"):format(n))
 end
 
 function tu.face_name(idx)
@@ -201,19 +201,19 @@ if ENABLE_TEST then
         0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, -- Green, Red
         1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, -- Red, Green
         -- -X
-        1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 
-        1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 
+        1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0,
+        1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0,
         -- +Y
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         -- -Y
-        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 
-        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
         -- +Z
-        0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 
-        0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 
+        0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+        0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
         -- -Z
-        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 
+        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
         1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0)
     local cmobj = tu.create_cubemap{w=w, h=h, texelsize=16, data=cm_data}
 
@@ -256,7 +256,7 @@ if ENABLE_TEST then
             local r, g, b = math3d.index(fxy_r1, 1, 2, 3)
             assert(fequal(r, 0.0) and fequal(g, 1.0) and fequal(b, 0.0))
         end
-        
+
         local x2, y2 = 1, 2
         local fxy_r2 = cmobj:load_fxy(f, x2, y2)
         print("Use load_fxy:", tu.face_name(f), x2, y2, math3d.tostring(fxy_r2))
@@ -283,7 +283,7 @@ if ENABLE_TEST then
             print("Use normal:", math3d.tostring(N), "to sample, result is:", math3d.tostring(r))
 
             local tr = math3d.lerp(fxy_r1, fxy_r2, 0.5)
-            assert(math3d.isequal(r, tr), ("fuv result:%s, is not equal fxy1, fxy2 with 0.5: %s"):format(math3d.tostring(r), math3d.tostring(tr)))
+            local _ = math3d.isequal(r, tr) or error (("fuv result:%s, is not equal fxy1, fxy2 with 0.5: %s"):format(math3d.tostring(r), math3d.tostring(tr)))
         end
 
     end

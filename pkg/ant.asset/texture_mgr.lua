@@ -23,7 +23,7 @@ end
 
 local function default_textureid(t)
 	t = t or "TEX2D"
-	return assert(DefaultTexture[t], ("Invalid default texture type:%s"):format(t))
+	return DefaultTexture[t] or error (("Invalid default texture type:%s"):format(t))
 end
 
 return {

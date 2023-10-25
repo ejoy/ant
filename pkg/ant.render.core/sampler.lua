@@ -1,5 +1,5 @@
 local sample_types = {
-	U="u", V="v", W="w", 
+	U="u", V="v", W="w",
 	MIN="-", MAG="+", MIP="*",
 	COMPARE="c",
 	BOARD_COLOR="c",
@@ -51,7 +51,7 @@ return function (sampler)
 		flag[#flag+1] = v
 	end
 	for k, v in pairs(sampler) do
-		local t = assert(sample_types[k], ("Invalid sample type:%s"):format(k))
+		local t = sample_types[k] or error (("Invalid sample type:%s"):format(k))
 		if k == "BOARD_COLOR" then
 			add_cfg(t, v)
 		else
