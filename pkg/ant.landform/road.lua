@@ -446,10 +446,12 @@ end
 function iroad.clear(groups, layer)
     for gid in pairs(groups) do
         local entities = ROAD_ENTITIES[gid]
-        local o = entities[layer]
-        if o then
-            w:remove(o.drawindirect)
-            w:remove(o.compute)
+        if entities then
+            local o = entities[layer]
+            if o then
+                w:remove(o.drawindirect)
+                w:remove(o.compute)
+            end
         end
     end
 end
