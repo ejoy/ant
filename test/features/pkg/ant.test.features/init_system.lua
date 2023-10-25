@@ -17,7 +17,7 @@ local mc, mu        = mathpkg.constant, mathpkg.util
 local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
 
-local init_loader_sys   = ecs.system 'init_loader_system'
+local init_loader_sys   = ecs.system 'init_system'
 local printer_eid
 local printer_percent = 0
 local function point_light_test()

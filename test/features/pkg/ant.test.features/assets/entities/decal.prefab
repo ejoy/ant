@@ -7,10 +7,10 @@ data:
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view
-    scene_entity: true
+    render_layer: opacity
 ---
 policy:
-    ant.render|decal
+    ant.decal|decal
     ant.scene|scene_object
 data:
     scene:
@@ -21,5 +21,3 @@ data:
     decal:
         w: 2.5
         h: 2.5
-action:
-    decal_mount: 1

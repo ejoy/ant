@@ -189,7 +189,6 @@ local function add_stencil_entity()
 			material	= "/pkg/ant.resources/materials/omni_stencil.material",
 			mesh		= stencil_mesh,
 			visible_state= "main_view|cast_shadow",
-			scene_entity= true,
 		}
 	}
 end
