@@ -18,8 +18,8 @@ mat4 calc_rotator_transform(float rad)
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
-#define rotator_rad u_rotator_rate.x
-	mat4 wm = calc_rotator_transform(rotator_rad);
+#define delta_radian PI * 0.1
+	mat4 wm = calc_rotator_transform(delta_radian * u_current_time);
 	vec4 posWS = transform_worldpos(wm, vs_input.pos, vs_output.clip_pos);
 	vs_output.uv0	= vs_input.uv0;
 #ifdef USING_LIGHTMAP
