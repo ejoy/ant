@@ -92,6 +92,13 @@ function S.init()
 end
 
 function S.init_world()
+    local mq = w:first "main_queue camera_ref:in"
+    local ce<close> = world:entity(mq.camera_ref, "camera:in")
+    local eyepos = math3d.vector(0, 10, -10)
+    iom.set_position(ce, eyepos)
+    local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
+    iom.set_direction(ce, dir)
+
     -- create_simple_triangles()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
@@ -100,7 +107,7 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.test.light/assets/cube.glb|mesh.prefab", function (e)
+    create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
         -- local le<close> = world:entity(leid, "scene:update")
         -- iom.set_scale(le, 0.1)
     end)
