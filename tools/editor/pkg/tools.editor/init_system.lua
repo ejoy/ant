@@ -52,7 +52,7 @@ function m:init()
     world.__EDITOR__ = true
     iani.set_edit_mode(true)
 
-    LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
+    LoadImguiLayout(fs.path "/":localpath() .. "/" .. "imgui.layout")
 
     imgui.SetWindowTitle("Editor")
     gd.editor_package_path = "/pkg/tools.editor/"

@@ -139,7 +139,7 @@ local function choose_project()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
-            global_data:update_root(fs.path "":localpath())
+            global_data:update_root(fs.path "/":localpath())
         end
 
         imgui.cursor.Separator()

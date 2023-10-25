@@ -43,7 +43,7 @@ local logfile
 local function log_to_file(msg)
     do return end
     if not logfile then
-        logfile = fs.path "":localpath() / "log.txt"--('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+        logfile = fs.path "/":localpath() / "log.txt"--('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
     end
     --local fp = assert(io.open(logfile:string(), 'a'))
     local fp = assert(io.open(logfile:string(), 'w+'))

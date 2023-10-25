@@ -5,7 +5,7 @@ local vfs               = require "vfs"
 local access            = dofile "/engine/editor/vfs_access.lua"
 m.repo_access = access
 
-m.editor_root           = lfs.path(fs.path "":localpath())
+m.editor_root           = lfs.path(fs.path "/":localpath())
 
 local function find_package_name(proj_path, packages)
     for _, pkg in ipairs(packages) do
@@ -15,50 +15,28 @@ local function find_package_name(proj_path, packages)
     end
 end
 
-local NOT_skip_packages = {
-    "ant.resources",
-    "ant.resources.binary",
-    "ant.test.feature",
-}
-
-local function skip_package(pkgpath)
-    for _, n in ipairs(NOT_skip_packages) do
-        if pkgpath:match(n) then
-            return false
-        end
-    end
-    return true
-end
-
-local function has_pkg(path)
-    for item in lfs.pairs(path) do
-        if string.sub(tostring(item), -4) == '/pkg' then
-            return true
-        end
-    end
-    return false
-end
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
     if readmount then
         access.readmount(repo)
     end
     local packages = {}
-    for _, value in ipairs(repo._mountpoint) do
-        if not has_pkg(value) then
+    for _, value in ipairs(repo._mountlpath) do
+        if string.sub(tostring(value), -7) == '/engine' then
             goto continue
         end
-        local pkgpath = value / "pkg"
-        if value:string() == "./" then
-            for item in lfs.pairs(pkgpath) do
-                local _, pkgname = item:string():match'(.*/)(.*)'
-                if pkgname == "ant.resources" or pkgname == "ant.resources.binary" then
-                    packages[#packages + 1] = {name = pkgname, path = item}
+        if string.sub(tostring(value), -4) ~= '/pkg' then
+            value = value / 'pkg'
+        end
+        for item in lfs.pairs(value) do
+            local _, pkgname = item:string():match'(.*/)(.*)'
+            local skip = false
+            if string.sub(pkgname, 1, 4) == "ant." then
+                if not (pkgname == "ant.resources" or pkgname == "ant.resources.binary") then
+                    skip = true
                 end
             end
-        else
-            for item in lfs.pairs(pkgpath) do
-                local _, pkgname = item:string():match'(.*/)(.*)'
+            if not skip then
                 packages[#packages + 1] = {name = pkgname, path = item}
             end
         end
