@@ -65,8 +65,7 @@ local function create_simple_triangles()
                         np, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0), layoutmgr.get "p3|n3|T4|t2".handle)
                 },
             },
-            --material = "/pkg/ant.landform/assets/materials/plane_terrain.material",
-            material = "/pkg/ant.landform/assets/materials/default.material",
+            material = "/pkg/ant.test.light/assets/materials/default.material",
 
             visible_state  = "main_view",
             render_layer = "opacity",
