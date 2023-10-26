@@ -172,7 +172,7 @@ function S.RESOURCE(CompileId, path)
         s.resource[path] = nil
         return
     end
-    local hash = repo:build_resource(lpath)
+    local hash = repo:build_resource(lpath, path)
     s.resource[path] = hash
     return hash
 end
