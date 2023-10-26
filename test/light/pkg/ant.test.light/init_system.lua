@@ -42,7 +42,11 @@ local function create_simple_triangles()
     -- add_v(vertices, math3d.vector(0.0, 0.0, 0.0), n, t)
     -- add_v(vertices, math3d.vector(0.0, 0.0, 1.0), n, t)
     -- add_v(vertices, math3d.vector(1.0, 0.0, 0.0), n, t)
-    local nx, ny, nz = math3d.index(math3d.normalize(math3d.vector(1, 10, 0.0)), 1, 2, 3, 4)
+    local nx, ny, nz = math3d.index(math3d.normalize(math3d.vector(0, 1, 0.0)), 1, 2, 3, 4)
+    local pp, np = 0.5, -0.5
+
+    local py = 0
+
     world:create_entity{
         policy = {
             "ant.render|simplerender",
@@ -52,21 +56,24 @@ local function create_simple_triangles()
                 vb = {
                     start = 0,
                     num = 6,
-                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fffffffffff", {
-                        0.0, 0.0, 0.0, nx, ny, nz, 1.0, 0.0, 0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0, nx, ny, nz, 1.0, 0.0, 0.0, 0.0, 0.0,
-                        1.0, 0.0, 1.0, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0,
-                        1.0, 0.0, 1.0, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0,
-                        1.0, 0.0, 0.0, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0,
-                        0.0, 0.0, 0.0, nx, ny, nz, 1.0, 0.0, 0.0, 0.0, 1.0,
-                    }), layoutmgr.get "p3|n3|T3|t2".handle)
+                    handle = bgfx.create_vertex_buffer(("ffffffffffff"):rep(6):pack(
+                        np, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
+                        np, py, pp, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                        pp, py, pp, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+                        pp, py, pp, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+                        pp, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+                        np, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0), layoutmgr.get "p3|n3|T4|t2".handle)
                 },
             },
-            material = "/pkg/ant.test.light/assets/materials/default.material",
+            --material = "/pkg/ant.landform/assets/materials/plane_terrain.material",
+            material = "/pkg/ant.landform/assets/materials/default.material",
+
             visible_state  = "main_view",
             render_layer = "opacity",
             scene = {
-                r = {0.0, 0.0, 0.8}
+                --r = {0.0, 0.0, 0.8},
+                s = 1000,
+                --t = {0.0, 1.0, 0.0}
             },
         }
     }
@@ -78,6 +85,7 @@ local function create_simple_triangles()
     -- local n = math3d.normalize(math3d.cross(math3d.sub(p2, p1), math3d.sub(p3, p1)))
     -- print(math3d.tostring(n))
 end
+
 
 function S.init()
     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
