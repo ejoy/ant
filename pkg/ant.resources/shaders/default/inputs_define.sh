@@ -104,65 +104,50 @@
 
 #endif //MATERIAL_UNLIT
 
-#ifdef USER_ATTR
-
-    #ifdef INPUT_USER_ATTR_0
-        #define INPUT_USER0 a_texcoord2
-    #else //!INPUT_USER_ATTR_0
-        #define INPUT_USER0
-    #endif //INPUT_USER_ATTR_0
-
-    #ifdef INPUT_USER_ATTR_1
-        #define INPUT_USER1 a_texcoord3
-    #else //!INPUT_USER_ATTR_1
-        #define INPUT_USER1
-    #endif //INPUT_USER_ATTR_1
-
-    #ifdef INPUT_USER_ATTR_2
-        #define INPUT_USER2 a_texcoord4
-    #else //!INPUT_USER_ATTR_2
-        #define INPUT_USER2
-    #endif //INPUT_USER_ATTR_2
-
-    #ifdef OUTPUT_USER_ATTR_0
-        #define OUTPUT_USER0 v_texcoord2
-    #else //!OUTPUT_USER_ATTR_0
-        #define OUTPUT_USER0
-    #endif //OUTPUT_USER_ATTR_0
-
-    #ifdef OUTPUT_USER_ATTR_1
-        #define OUTPUT_USER1 v_texcoord3
-    #else //!OUTPUT_USER_ATTR_1
-        #define OUTPUT_USER1
-    #endif //OUTPUT_USER_ATTR_1
-
-    #ifdef OUTPUT_USER_ATTR_2
-        #define OUTPUT_USER2 v_texcoord4
-    #else //!OUTPUT_USER_ATTR_2
-        #define OUTPUT_USER2
-    #endif //OUTPUT_USER_ATTR_2
-
-    #ifdef OUTPUT_USER_ATTR_3
-        #define OUTPUT_USER3 v_texcoord5
-    #else //!OUTPUT_USER_ATTR_3
-        #define OUTPUT_USER3
-    #endif //OUTPUT_USER_ATTR_3
-
-    #ifdef OUTPUT_USER_ATTR_4
-        #define OUTPUT_USER4 v_texcoord6
-    #else //!OUTPUT_USER_ATTR_4
-        #define OUTPUT_USER4
-    #endif //OUTPUT_USER_ATTR_4
-
-#else //!USER_ATTR
-
+#ifdef INPUT_USER_ATTR_0
+    #define INPUT_USER0 a_texcoord2
+#else //!INPUT_USER_ATTR_0
     #define INPUT_USER0
-    #define INPUT_USER1
-    #define INPUT_USER2
-    #define OUTPUT_USER0
-    #define OUTPUT_USER1
-    #define OUTPUT_USER2
-    #define OUTPUT_USER3
-    #define OUTPUT_USER4
+#endif //INPUT_USER_ATTR_0
 
-#endif //USER_ATTR
+#ifdef INPUT_USER_ATTR_1
+    #define INPUT_USER1 a_texcoord3
+#else //!INPUT_USER_ATTR_1
+    #define INPUT_USER1
+#endif //INPUT_USER_ATTR_1
+
+#ifdef INPUT_USER_ATTR_2
+    #define INPUT_USER2 a_texcoord4
+#else //!INPUT_USER_ATTR_2
+    #define INPUT_USER2
+#endif //INPUT_USER_ATTR_2
+
+#ifdef OUTPUT_USER_ATTR_0
+    #define OUTPUT_USER0 v_texcoord2
+#else //!OUTPUT_USER_ATTR_0
+    #define OUTPUT_USER0
+#endif //OUTPUT_USER_ATTR_0
+
+#ifdef OUTPUT_USER_ATTR_1
+    #define OUTPUT_USER1 v_texcoord3
+#else //!OUTPUT_USER_ATTR_1
+    #define OUTPUT_USER1
+#endif //OUTPUT_USER_ATTR_1
+
+#ifdef OUTPUT_USER_ATTR_2
+    #define OUTPUT_USER2 v_texcoord4
+#else //!OUTPUT_USER_ATTR_2
+    #define OUTPUT_USER2
+#endif //OUTPUT_USER_ATTR_2
+
+#ifdef OUTPUT_USER_ATTR_3
+    #define OUTPUT_USER3 v_texcoord5
+#else //!OUTPUT_USER_ATTR_3
+    #define OUTPUT_USER3
+#endif //OUTPUT_USER_ATTR_3
+
+#ifdef OUTPUT_USER_ATTR_4
+    #define OUTPUT_USER4 v_texcoord6
+#else //!OUTPUT_USER_ATTR_4
+    #define OUTPUT_USER4
+#endif //OUTPUT_USER_ATTR_4
