@@ -62,49 +62,15 @@ local QUAD_TEXCOORDS = {
     [0] = DEFAULT_QUAD_TEXCOORD,
 }
 
-QUAD_TEXCOORDS[90] = {
-    QUAD_TEXCOORDS[0][3],
-    QUAD_TEXCOORDS[0][1],
-    QUAD_TEXCOORDS[0][4],
-    QUAD_TEXCOORDS[0][2],
-}
-
-QUAD_TEXCOORDS[180] = {
-    QUAD_TEXCOORDS[90][3],
-    QUAD_TEXCOORDS[90][1],
-    QUAD_TEXCOORDS[90][4],
-    QUAD_TEXCOORDS[90][2],
-}
-
-QUAD_TEXCOORDS[270] = {
-    QUAD_TEXCOORDS[180][3],
-    QUAD_TEXCOORDS[180][1],
-    QUAD_TEXCOORDS[180][4],
-    QUAD_TEXCOORDS[180][2],
-}
-
--- local QUAD_TEXCOORDS<const> = {
---     [0]     = DEFAULT_QUAD_TEXCOORD,
---     [90]    = {
---         DEFAULT_QUAD_TEXCOORD[3],
---         DEFAULT_QUAD_TEXCOORD[1],
---         DEFAULT_QUAD_TEXCOORD[4],
---         DEFAULT_QUAD_TEXCOORD[2],
---     },
---     [180]   = {
---         DEFAULT_QUAD_TEXCOORD[3],
---         DEFAULT_QUAD_TEXCOORD[4],
---         DEFAULT_QUAD_TEXCOORD[1],
---         DEFAULT_QUAD_TEXCOORD[2],
---     },
---     [270]   = {
---         DEFAULT_QUAD_TEXCOORD[2],
---         DEFAULT_QUAD_TEXCOORD[1],
---         DEFAULT_QUAD_TEXCOORD[4],
---         DEFAULT_QUAD_TEXCOORD[3],
-        
---     }
--- }
+for i=90, 270, 90 do
+    local l = QUAD_TEXCOORDS[i-90]
+    QUAD_TEXCOORDS[i] = {
+        l[3],
+        l[1],
+        l[4],
+        l[2],
+    }
+end
 
 local SHAPE_DIRECTIONS<const> = {
     "N", "E", "S", "W",
