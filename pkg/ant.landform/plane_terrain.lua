@@ -9,7 +9,7 @@ local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local terrain_module = require "terrain"
-local layout_name<const>    = layoutmgr.correct_layout "p3|t20|t42"
+local layout_name<const>    = layoutmgr.correct_layout "p3|t42"
 local layout                = layoutmgr.get(layout_name)
 local noise1 = {}
 local terrain_width, terrain_height, unit, origin_offset_width, origin_offset_height
@@ -90,7 +90,7 @@ function cterrain_fields.new(st)
     return setmetatable(st, {__index=cterrain_fields})
 end
 
-local packfmt<const> = "fffffffff"
+local packfmt<const> = "fffffff"
 
 local function get_terrain_uv(size, sectionx, sectiony)
     local uv_segment0 = {}
@@ -121,10 +121,10 @@ local function add_quad(vb, origin, extent, xx, yy, sand_color_idx, stone_color_
     -- t21 sand_alpha 32x32
     -- t22 v_sand_color_idx v_stone_color_idx(flat)
     local v = {
-        packfmt:pack(ox, oy, oz, u00, v00, u10, v10, sand_color_idx, stone_color_idx),
-        packfmt:pack(ox, oy, nz, u00, v01, u10, v11, sand_color_idx, stone_color_idx),
-        packfmt:pack(nx, ny, nz, u01, v01, u11, v11, sand_color_idx, stone_color_idx),
-        packfmt:pack(nx, ny, oz, u01, v00, u11, v10, sand_color_idx, stone_color_idx)            
+        packfmt:pack(ox, oy, oz, u00, v00, u10, v10),
+        packfmt:pack(ox, oy, nz, u00, v01, u10, v11),
+        packfmt:pack(nx, ny, nz, u01, v01, u11, v11),
+        packfmt:pack(nx, ny, oz, u01, v00, u11, v10)            
     }  
     vb[#vb+1] = table.concat(v, "")
     
