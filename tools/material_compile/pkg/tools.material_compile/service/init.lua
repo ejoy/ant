@@ -42,19 +42,14 @@ local RENDERERS<const> = {
 
 local renderer<const> = RENDERERS[platform.os] or error (("not support os for compile shader:%s"):format(platform.os))
 
-cr.set_setting("material", stringify {
-    os = BgfxOS[platform.os] or platform.os,
-    renderer = renderer,
+cr.set_setting({
+    --os = BgfxOS[platform.os] or platform.os,
+    os = "ios",
+    renderer = "metal",
+    texture = "ktx",
     hd = nil,
     obl = nil,
 })
-
-cr.set_setting("glb", stringify {
-})
-
-local texture = assert(texture_extensions[renderer])
-
-cr.set_setting("texture", stringify {os=platform.os, ext=texture})
 
 local output = lfs.path "./tools/material_compile/output"
 
@@ -121,6 +116,13 @@ elseif srcpath:equal_extension "lua" then
     end
 
     print("compiled finished, totals compiled:", #compile_files)
+elseif srcpath:equal_extension "glb" then
+    -- local f = srcpath:string()
+    -- local pos = f:find("|", 1, true)
+    -- if pos then
+    --     f = f:sub(1, pos-1)
+    -- end
+    cr.compile_file(srcpath:localpath():string())
 else
     local stage = srcpath:filename():string():match "([vfc]s)_%w+"
 
