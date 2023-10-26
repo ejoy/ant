@@ -119,7 +119,7 @@ local function build_fxcfg(filename, fx)
 end
 
 local function create_fx(cfg)
-    return is_compute_material(cfg) and 
+    return is_compute_material(cfg) and
         createComputeProgram(cfg) or
         createRenderProgram(cfg)
 end
@@ -133,9 +133,9 @@ local DEFAULT_TEXTURE_TYPE<const> = {
 
 local function sampler_type(material, name)
     local properties = assert(material.properties)
-    local p = assert(properties[name])
+    local p = properties[name] or error (("properties[%s] is nil"):format(name))
     local st = p.sampler or "SAMPLER2D"
-    return assert(DEFAULT_TEXTURE_TYPE[st], ("Invalid sampler type:%s defined in material properties"):format(st))
+    return DEFAULT_TEXTURE_TYPE[st] or error (("Invalid sampler type:%s defined in material properties"):format(st))
 end
 
 local function material_create(filename)
@@ -240,7 +240,7 @@ function S.material_check()
                 local newfx = create_fx(mi.cfg)
                 PM.program_set(requestid, newfx.prog)
                 newfx.prog = requestid
-        
+
                 mi.material.fx = newfx
             else
                 log.info(("Can not create prog:%d, it have been fully remove by 'S.material_destroy'"):format(requestid))

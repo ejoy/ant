@@ -20,10 +20,7 @@ end
 
 local function unpack_vec(v, l)
 	local t = l:sub(6, 6)
-	t = typemapper[t]
-	if t == nil then
-		assert(("not support layout:%s, type:%s must be 'float'"):format(l, t))
-	end
+	t = typemapper[t] or error(("not support layout:%s, type:%s must be 'float'"):format(l, t))
 
 	local n = tonumber(l:sub(2, 2))
 	local fmt = t:rep(n)
@@ -81,7 +78,7 @@ return {
 		local function pack_tangent_frame(v)
 			local normal = load_attrib_math3dvec(math3d, normal_attrib_idx, v, layouts[normal_attrib_idx].layout)
 			local tangent = load_attrib_math3dvec(math3d, tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
-			
+
 			local q = math3d.ext_util.pack_tangent_frame(normal, tangent)
 			v[tangent_attrib_idx] = math3d.serialize(q)
 		end

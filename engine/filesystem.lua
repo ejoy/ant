@@ -134,8 +134,7 @@ end
 
 
 function path_mt:localpath()
-    local localpath = vfs.realpath(normalize(self._value))
-    assert(localpath, "could not be find local path: "..self._value)
+    local localpath = vfs.realpath(normalize(self._value)) or error ("could not be find local path: ".. self._value)
     return lfs.path(localpath)
 end
 

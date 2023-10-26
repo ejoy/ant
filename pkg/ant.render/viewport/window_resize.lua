@@ -64,7 +64,7 @@ else
 				world.args.framebuffer.ratio = ratio
 				winsize_update(mu.calc_viewrect(world.args.framebuffer, 1.0/oldratio), ratio)
 			else
-				assert(which == "scene_ratio", "Invalid ratio type:" .. which)
+				local _ = which == "scene_ratio" or error ("Invalid ratio type:" .. which)
 				world:pub{"scene_viewport_ratio_changed", ratio}
 			end
 		end

@@ -106,7 +106,7 @@ local function parse(content, pos, list)
 		list.depth = depth
 		list[depth] = child
 	else
-		assert(c == "", "Unknown tag " .. c)
+		local _ = c == "" or error ("Unknown tag " .. c)
 		return
 	end
 	return pos

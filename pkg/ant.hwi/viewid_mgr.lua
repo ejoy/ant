@@ -17,7 +17,7 @@ local function add_view(name, afterview_idx)
 
 	BINDINGS[name] = id
 	VIEWID_NAMES[id] = name
-	
+
 	assert(#REMAPPING_LIST == id)
 	table.insert(REMAPPING_LIST, real_id+1, id)
 	return id
@@ -76,7 +76,7 @@ add_view "uiruntime"
 local remapping_need_update = true
 
 function mgr.generate(name, afterwho, count)
-	assert(nil == mgr.get(name), ("%s already defined"):format(name))
+	local _ = nil == mgr.get(name) or error (("%s already defined"):format(name))
 
 	count = count or 1
 	local viewid = add_view(name, mgr.get(afterwho))

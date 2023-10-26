@@ -73,7 +73,7 @@ end
 
 function irl.set_layer(e, layername)
     w:extend(e, "render_layer:update render_object:update")
-    local lidx = assert(irl.layeridx(layername), ("Invalid layer name:%s"):format(layername))
+    local lidx = irl.layeridx(layername) or error (("Invalid layer name:%s"):format(layername))
     e.render_layer = layername
     e.render_object.render_layer = lidx
     w:submit(e)

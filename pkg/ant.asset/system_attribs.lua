@@ -19,7 +19,7 @@ local function init_attrib(n, a, tm)
 			c = assert(tonumber(sn), "Invalid number")
 		else
 			ut = "s"
-			a.value = assert(tm.default_textureid(a.stype), ("Invalid sampler type:%s"):format(a.stype))
+			a.value = tm.default_textureid(a.stype) or error (("Invalid sampler type:%s"):format(a.stype))
 		end
 		a.handle = bgfx.create_uniform(n, ut, c)
 	end

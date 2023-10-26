@@ -74,13 +74,13 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local scalex, scaley = 2 / (maxp[1] - minp[1]), 2 / (maxp[2] - minp[2])
 
  	local quantizer = 64
-	scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley) 
+	scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley)
 
 	local offsetx, offsety = 0.5 * (maxp[1] + minp[1]) * scalex, 0.5 * (maxp[2] + minp[2]) * scaley
 
  	local half_size = shadowmap_size * 0.5
 	offsetx, offsety = math.ceil(offsetx * half_size) / half_size, math.ceil(offsety * half_size) / half_size
- 
+
 
 	local crop = math3d.matrix{
 	 	scalex, 0, 0, 0,
@@ -135,7 +135,7 @@ local function update_shadow_frustum(dl, ce, mc_scene_changed)
 			split_distances_VS[csm.index] = csm_frustum.f
 		end
 	end
-	return shadow_camera_changed	
+	return shadow_camera_changed
 end
 
 local function update_shadow_attribs(dl, ce, mc_scene_changed)
@@ -170,7 +170,7 @@ end
 	light_ortho_max = math3d.mul(light_ortho_max, math3d.reciprocal(vworld_unit_per_texel))
 	light_ortho_max = math3d.floor(light_ortho_max)
 	light_ortho_max = math3d.mul(light_ortho_max, vworld_unit_per_texel)
-	
+
 	return light_ortho_min, light_ortho_max, near, far
 end
 
@@ -188,11 +188,11 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local camera = shadow_ce.camera
 	local f = camera.frustum
 	local minx, miny = math3d.index(light_ortho_min, 1, 2)
-	local maxx, maxy = math3d.index(light_ortho_max, 1, 2) 
+	local maxx, maxy = math3d.index(light_ortho_max, 1, 2)
 	f.l, f.b, f.n = minx, miny, near
 	f.r, f.t, f.f = maxx, maxy, far
 	update_camera_matrices(camera, light_view)
-end 
+end
 
 local function update_shadow_frustum(dl, main_camera)
 
@@ -221,7 +221,7 @@ local function update_shadow_frustum(dl, main_camera)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
-end 
+end
  ]]
 -- MJP method
 --[[ local function update_shadow_frustum(dl, main_camera)
@@ -245,14 +245,14 @@ end
 			local far_corner_ray = math3d.mul(corner_ray, split_dist)
 			frustum_corners_table[idx + 4] = math3d.add(math3d.array_index(frustum_corners_world, idx + 4), near_corner_ray)
 			frustum_corners_table[idx] = math3d.add(math3d.array_index(frustum_corners_world, idx + 4), far_corner_ray)
-		end 
+		end
 
 		local frustum_center = math3d.vector(0, 0, 0)
 
 		for idx = 1, 8 do
 			frustum_center = math3d.add(frustum_center, frustum_corners_table[idx])
 		end
-		
+
 		frustum_center = math3d.mul(frustum_center, 0.125)
 		pos = frustum_center
 		dir = math3d.sub(frustum_center, lightdir)
@@ -413,7 +413,7 @@ function sm:update_camera_depend()
 	if dl then
 		local mq = w:first "main_queue camera_ref:in"
 		local ce <close> = world:entity(mq.camera_ref, "camera_changed?in camera:in scene:in")
-		local mc_scene_changed = dl.scene_changed or ce.camera_changed 
+		local mc_scene_changed = dl.scene_changed or ce.camera_changed
 		update_shadow_attribs(dl, ce, mc_scene_changed)
 	end
 end
@@ -433,7 +433,7 @@ end
 -- 		assert(false and "should move code new ecs")
 -- 			local filter = se.primitive_filter.result
 -- 			local sceneaabb = math3d.aabb()
-	
+
 -- 			local function merge_scene_aabb(sceneaabb, filtertarget)
 -- 				for _, item in ipf.iter_target(filtertarget) do
 -- 					if item.aabb then
@@ -442,38 +442,38 @@ end
 -- 				end
 -- 				return sceneaabb
 -- 			end
-	
+
 -- 			sceneaabb = merge_scene_aabb(sceneaabb, filter.opacity)
 -- 			sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
-	
+
 -- 			if math3d.aabb_isvalid(sceneaabb) then
 -- 				local camera_rc = world[se.camera_ref]._rendercache
-	
+
 -- 				local function calc_refine_frustum_corners(rc)
 -- 					local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)
 -- 					local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
-		
+
 -- 					local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
 -- 					local max_frustum_aabb_WS = math3d.aabb_merge(sceneaabb, frustum_aabb_WS)
 -- 					local _, extents = math3d.aabb_center_extents(scene_frustum_aabb_WS)
 -- 					extents = math3d.mul(0.1, extents)
 -- 					scene_frustum_aabb_WS = math3d.aabb_expand(scene_frustum_aabb_WS, extents)
-					
+
 -- 					local max_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, max_frustum_aabb_WS)
 -- 					local max_n, max_f = math3d.index(math3d.array_index(max_frustum_aabb_VS, 1), 3), math3d.index(math3d.array_index(max_frustum_aabb_VS, 2), 3)
-	
+
 -- 					local scene_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, scene_frustum_aabb_WS)
-	
+
 -- 					local minv, maxv = math3d.array_index(scene_frustum_aabb_VS, 1), math3d.array_index(scene_frustum_aabb_VS, 2)
 -- 					minv, maxv = math3d.set_index(minv, 3, max_n), math3d.set_index(maxv, 3, max_f)
 -- 					scene_frustum_aabb_VS = math3d.aabb(minv, maxv)
-					
+
 -- 					scene_frustum_aabb_WS = math3d.aabb_transform(rc.worldmat, scene_frustum_aabb_VS)
 -- 					return math3d.aabb_points(scene_frustum_aabb_WS)
 -- 				end
-	
+
 -- 				local aabb_corners_WS = calc_refine_frustum_corners(camera_rc)
-	
+
 -- 				local lightdir = math3d.index(camera_rc.worldmat, 3)
 -- 				calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 -- 			end
@@ -526,7 +526,7 @@ end
 local function which_material(e)
     local idt = idi.indirect_type(e)
     if idt then
-        return assert(shadow_indirect_materials[idt], ("Invalid 'indirect type': %s"):format(idt))
+        return shadow_indirect_materials[idt] or error (("Invalid 'indirect type': %s"):format(idt))
     end
 
     w:extend(e, "skinning?in")

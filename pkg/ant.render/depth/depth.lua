@@ -9,7 +9,7 @@ local renderutil    = require "util"
 local s             = ecs.system "pre_depth_system"
 if setting:get "graphic/disable_pre_z" then
     renderutil.default_system(s, "init", "data_changed", "update_filter")
-    return 
+    return
 end
 
 local bgfx          = require "bgfx"
@@ -31,7 +31,7 @@ local pre_depth_indirect_materials
 local function which_material(e)
     local idt = idi.indirect_type(e)
     if idt then
-        return assert(pre_depth_indirect_materials[idt], ("Invalid 'indirect type': %s"):format(idt))
+        return pre_depth_indirect_materials[idt] or error (("Invalid 'indirect type': %s"):format(idt))
     end
 
     w:extend(e, "skinning?in")
@@ -99,7 +99,7 @@ function s:update_filter()
                 if newstate then
                     local mi = RM.create_instance(m.object)
                     mi:set_state(newstate)
-    
+
                     fm["pre_depth_queue"] = mi
                     R.set(e.render_object.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
                 end

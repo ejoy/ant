@@ -25,7 +25,7 @@ local SHb; do
     local L3_f1<const> = sq15*inv_sqrtpi*0.5   --math.sqrt(15.0/( 4.0*pi))
     local L3_f2<const> = sq5 *inv_sqrtpi*0.25  --math.sqrt( 5.0/(16.0*pi))
     local L3_f3<const> = sq15*inv_sqrtpi*0.25  --math.sqrt(15.0/(16.0*pi))
-    
+
     SHb = {
          L1_f,
 
@@ -94,7 +94,7 @@ if ENABLE_TEST then
     end
 
     for i=1, #A do
-        assert(isequal(A[i], sh_rt.A[i]), "One of 'cos(theta): A' is not equal:" ..i)
+        local _ = isequal(A[i], sh_rt.A[i]) or error ("One of 'cos(theta): A' is not equal:" ..i)
     end
 end
 
@@ -155,7 +155,7 @@ local lSHindex0 = shutil.lSHindex0
     Kml = K(m, l) = sqrt(A/B), where:
             A = (2l+1)*(l-|m|)! = (2l+1) * factorial(l-abs(m))
             B =   4*pi*(l+|m|)! =   4*pi * factorial(l+abs(m))
-    
+
     Yml(theta, phi) = Kml * e^(i*m*phi) * P|m|l(cos(theta)), where:
         m > 0, sqrt(2) * Kml * cos(m*phi)   * Pml(cos(theta))
         m < 0, sqrt(2) * Kml * sin(|m|*phi) * P-ml(cos(theta))
@@ -183,8 +183,8 @@ local lSHindex0 = shutil.lSHindex0
         E = integral[omega](Li * cos(theta) * domega)
             the E is the irradiance at some point, cos(theta) is the normal dot soild angle direction
             and BRDF is miss here, bacause the reflection and visibility are ignore here, so only Li and cos(theta) will affect the result
-        
-        so, we need to use SH basics function Yml to weight Li and cos(theta), which is Lml and Al: 
+
+        so, we need to use SH basics function Yml to weight Li and cos(theta), which is Lml and Al:
             L = integral[omega](Li(theta, phi) * Yml(theta, phi) * domega) ==> Lml = Sum(Li(theta, phi) * Yml(theta, phi) * SolidAngle(theta, phi))
 
             (we use '==>' here, not '=', because L is not equal to Lml)
@@ -199,7 +199,7 @@ local lSHindex0 = shutil.lSHindex0
                     l = 1: Al* = 2*math.pi/3
                     l > 1, odd: Al* = 0
                           even: Al* = (2*math.pi)*(-1)^(l/2-1)/(l+2)(l+1)*((l!/(2^l*((l/2)!)^2)))
-            
+
         then, we get what we need, so:
             Eml = Sum(Lml * Al*)
                 Bml = albedo * Eml, where albedo is the material color, i.e. from base color texture
@@ -208,7 +208,7 @@ local lSHindex0 = shutil.lSHindex0
                 if bandnum = 2/3, Eml is 4/9 coefficients with RGB values
 
     the render part of SH:
-        here is come to the magic of SH base functions. 
+        here is come to the magic of SH base functions.
         multiply the compress value with the base function Yml, we can get the approximation of E, which is Eml.
             (of cause, if we get l to inifinte value, E is equal to Eml)
         we need to use Eml to recover E, so:
@@ -341,9 +341,9 @@ end
 --             ('ffff'):pack(1, 1, 0, 0), -- +Z / fr - yellow
 --             ('ffff'):pack(1, 0, 1, 0), -- -Z / bk - magenta
 --         };
-    
+
 --         local R, L, T, B, FR, BK = 1, 2, 3, 4, 5, 6
-    
+
 --         local content = {}
 --         local dim = 32
 --         for f=1, 6 do
@@ -353,44 +353,44 @@ end
 --                 end
 --             end
 --         end
-    
+
 --         local data = ("c16"):rep(dim*dim*6):pack(table.unpack(content))
-    
-    
+
+
 --         -- -- 2x2x6
 --         -- local data = ("c16"):rep(4 * 6):pack(
 --         --     -- black, colors[R],
 --         --     -- colors[R], black,
-    
+
 --         --     -- black, colors[L],
 --         --     -- colors[L], black,
-    
+
 --         --     -- black, colors[T],
 --         --     -- colors[T], black,
-    
+
 --         --     -- black, colors[B],
 --         --     -- colors[B], black,
-    
+
 --         --     -- black, colors[FR],
 --         --     -- colors[FR], black,
-    
+
 --         --     -- black, colors[BK],
 --         --     -- colors[BK], black)
 --         --     colors[R], colors[R],
 --         --     colors[R], colors[R],
-    
+
 --         --     colors[L], colors[L],
 --         --     colors[L], colors[L],
-    
+
 --         --     colors[T], colors[T],
 --         --     colors[T], colors[T],
-    
+
 --         --     colors[B], colors[B],
 --         --     colors[B], colors[B],
-    
+
 --         --     colors[FR], colors[FR],
 --         --     colors[FR], colors[FR],
-    
+
 --         --     colors[BK], colors[BK],
 --         --     colors[BK], colors[BK])
 --         return texutil.create_cubemap{w=dim,h=dim, texelsize=16,data=data}

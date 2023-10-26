@@ -9,7 +9,7 @@ local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 if not USE_CS_SKINNING then
     local renderutil= require "util"
     renderutil.default_system(cs_skinning_sys, "init", "entity_init", "entity_ready", "entity_remove", "skin_mesh")
-    return 
+    return
 end
 
 local mathpkg	= import_package "ant.math"
@@ -68,7 +68,7 @@ local function pack_attrib_indices(layout)
 	local other_attrib_idx = 6
 	local idx = 0
 	for l in layout:gmatch "%w+" do
-		assert(idx <= 12, ("Too many attirbute in the layout:%s"):format(layout))
+		local _ = idx <= 12 or error (("Too many attirbute in the layout:%s"):format(layout))
 		assert(l:sub(2, 2) == '4' and l:sub(6, 6) == 'f')
 		local t = l:sub(1, 1)
 		local aidx = ATTRIB_INDEX_MAPPER[t]
@@ -142,7 +142,7 @@ function cs_skinning_sys:entity_init()
 
             local sm = meshskin.skinning_matrices
             local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
-            
+
             e.skininfo = {
                 skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, layoutmgr.get("p4").handle, "r"),
                 skinning_in_dynamic_vb 	= nil,
@@ -211,7 +211,7 @@ function cs_skinning_sys:entity_remove()
         local skininfo = e.skininfo
         bgfx.destroy(skininfo.skinning_matrices_vb)
         --skinning_in_dynamic_vb shoule be released by mesh manager
-        --bgfx.destroy(skininfo.skinning_in_dynamic_vb) 
+        --bgfx.destroy(skininfo.skinning_in_dynamic_vb)
         bgfx.destroy(skininfo.skinning_out_dynamic_vb)
     end
 end
