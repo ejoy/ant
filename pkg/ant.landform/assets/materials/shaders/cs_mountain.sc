@@ -23,7 +23,7 @@ void main()
 {
 	const uint buffersize = uint(u_buffer_param.x);
 	const uint tid = uint(gl_GlobalInvocationID.x);
-	if (tid > buffersize)
+	if (tid >= buffersize)
 		return ;
 	const uint meshidx = load_mesh_idx(tid);
 

@@ -26,7 +26,7 @@ void main()
 {
 	uint buffersize = uint(u_mesh_param[1]);
 	uint tid = uint(gl_GlobalInvocationID.x);
-	if (tid > buffersize)
+	if (tid >= buffersize)
 		return ;
 	const uint ibnum    = (uint)u_mesh_param[0];
 	uint mi = load_mesh_info(tid);
