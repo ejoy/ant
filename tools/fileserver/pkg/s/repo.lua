@@ -79,7 +79,8 @@ end
 function REPO_MT:build_resource(path, name)
 	local vfsrepo = new_vfsrepo()
 	vfsrepo:init {
-		name = name,
+-- name is vfs path, unused
+--		name = name,
 		hash = self._hashs,
 		{ path = path, mount = "" },
 	}
