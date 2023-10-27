@@ -130,7 +130,7 @@ local function route_vfs(route, cgi)
 						end
 						method = method:lower()
 						local m = m[mod.name] or m
-						local f = m[method]
+						local f = m and m[method]
 						if f == nil then
 							response(id, s.write, 500, lua_error_temp:format ("Unsupport method : " .. method))
 							return
