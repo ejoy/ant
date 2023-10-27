@@ -20,7 +20,7 @@ mediump vec3 v_normal     : TEXCOORD3;
 mediump vec3 v_tangent    : TEXCOORD4;
 mediump vec3 v_bitangent  : TEXCOORD5;
 mediump vec4 v_color0     : TEXCOORD6;
-flat    vec4 v_texcoord2  : TEXCOORD7 = vec4(0.0, 0.0, 0.0, 0.0);
+mediump vec4 v_texcoord2  : TEXCOORD7;
 mediump vec4 v_texcoord3  : TEXCOORD8;
 mediump vec4 v_texcoord4  : TEXCOORD9;
 mediump vec4 v_texcoord5  : TEXCOORD10;

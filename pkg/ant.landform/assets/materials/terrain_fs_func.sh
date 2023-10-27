@@ -33,13 +33,11 @@ material_info terrain_material_info_init(vec3 gnormal, vec3 normal, vec4 posWS, 
 
 void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
 {
-    float sand_color_idx  = fsinput.user0.x;
-    float stone_color_idx = fsinput.user0.y;
-    vec2 terrain_uv    = fsinput.uv0;
-    vec2 alpha_uv      = fsinput.user1.xy;
+    vec2 terrain_uv    = fsinput.user0.xy;
+    vec2 alpha_uv      = fsinput.user0.zw;
 
-    vec4 stone_basecolor   = texture2DArray(s_basecolor_array, vec3(terrain_uv, stone_color_idx));
-    vec4 sand_basecolor    = texture2DArray(s_basecolor_array, vec3(terrain_uv, sand_color_idx));
+    vec4 sand_basecolor    = texture2DArray(s_basecolor_array, vec3(terrain_uv, 0));
+    vec4 stone_basecolor   = texture2DArray(s_basecolor_array, vec3(terrain_uv, 1));
     float sand_height   = texture2DArray(s_height, vec3(terrain_uv, 0.0) );
     float stone_height  = texture2DArray(s_height, vec3(terrain_uv, 1.0) );
     float sand_alpha = texture2DArray(s_height, vec3(alpha_uv, 2.0) );
