@@ -33,7 +33,6 @@ local gen_noise; do
     local noise_depth<const> = 4
     function gen_noise(x, z, idx)
         idx = idx or 1
-        x, z=x-1, z-1   --change to base 0
         local seed, offset_y, offset_x = z*x+idx, z+idx, x+idx
         return terrain_module.noise(x, z, noise_freq, noise_depth, seed, offset_y, offset_x)
     end
@@ -64,6 +63,7 @@ local function create_sm_entity(gid, indices)
         local coord = index.coord
         local ix, iz = coord[1], coord[2]
         local sidx<const> = index.sidx
+        assert(1 <= sidx and sidx <= 4)
         local info = SM_SRT_INFOS[sidx]
         local function scale_remap(nv, s, o)
             return nv * s + o
@@ -172,16 +172,16 @@ end
 
 local ism = {}
 
+-- masks is base0
 function ism.create_random_sm(width, height)
     local masks = {}
-    for iz=1, height do
-        for ix=1, width do
+    for iz=0, height-1 do
+        for ix=0, width-1 do
             local noise = gen_noise(ix, iz)
-            local maskidx = (iz-1)*width+ix
+            local maskidx = iz*width+ix
             masks[maskidx] = noise > NOISE_RATIO and noise or 0
         end
     end
-    assert(width * height==#masks)
     return masks
 end
 
