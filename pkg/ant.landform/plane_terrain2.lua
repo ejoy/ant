@@ -1,0 +1,131 @@
+local ecs   = ...
+local world = ecs.world
+local w     = world.w
+
+local iplane_terrain  = {}
+local renderpkg = import_package "ant.render"
+local layoutmgr = renderpkg.layoutmgr
+local bgfx      = require "bgfx"
+local irender       = ecs.require "ant.render|render_system.render"
+
+local border_material = "/pkg/ant.landform/assets/materials/border.material"
+local plane_terrain_material = "/pkg/ant.landform/assets/materials/plane_terrain.material"
+
+local ENTITIES = {}
+
+local COLOR_TEX_SIZE <const> = 4
+local ALPHA_TEX_SIZE <const> = 1
+
+--[[
+    v1---v3
+    |    |
+    v0---v2
+]]
+
+local function get_quad_tex(width, height)
+    return {
+    {0, height},                  -- quad v0
+    {0, 0},                       -- quad v1
+    {width, height},              -- quad v2
+    {width, 0},                   -- quad v3
+}
+end
+
+local function to_mesh_buffer(vb, vblayout, ib_handle)
+    local numv = 4
+    local numi = 6
+
+    return {
+        bounding = nil,
+        vb = {
+            start = 0,
+            num = numv,
+            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vb), vblayout.handle),
+        },
+        ib = {
+            start = 0,
+            num = numi,
+            handle = ib_handle,
+        }
+    }
+end
+
+local function get_border_mesh(border_chunk)
+
+    local function get_border_vb(texcoords, vbfmt)
+        local ox, oz, nx, nz = 0, 0, border_chunk, border_chunk
+        return vbfmt:pack(
+            ox, 0, oz, texcoords[1][1], texcoords[1][2],
+            ox, 0, nz, texcoords[2][1], texcoords[2][2],
+            nx, 0, oz, texcoords[3][1], texcoords[3][2],
+            nx, 0, nz, texcoords[4][1], texcoords[4][2]
+        )       
+    end
+
+    local texcoords = get_quad_tex(1, 1)
+    local vbfmt = ("fffff"):rep(4)
+    local layout_name    = layoutmgr.correct_layout "p3|t20"
+    local layout         = layoutmgr.get(layout_name)
+    return to_mesh_buffer(get_border_vb(texcoords, vbfmt), layout, irender.quad_ib())
+end
+
+local function get_terrain_mesh(terrain_chunk)
+
+    local function get_terrain_vb(color_texcoords, alpha_texcoords, vbfmt)
+        local ox, oz, nx, nz = 0, 0, terrain_chunk, terrain_chunk 
+        return vbfmt:pack(
+            ox, 0, oz, color_texcoords[1][1], color_texcoords[1][2], alpha_texcoords[1][1], alpha_texcoords[1][2],
+            ox, 0, nz, color_texcoords[2][1], color_texcoords[2][2], alpha_texcoords[2][1], alpha_texcoords[2][2],
+            nx, 0, oz, color_texcoords[3][1], color_texcoords[3][2], alpha_texcoords[3][1], alpha_texcoords[3][2],
+            nx, 0, nz, color_texcoords[4][1], color_texcoords[4][2], alpha_texcoords[4][1], alpha_texcoords[4][2]
+        )       
+    end
+
+    local color_texcoords = get_quad_tex(COLOR_TEX_SIZE, COLOR_TEX_SIZE)
+    local alpha_texcoords = get_quad_tex(ALPHA_TEX_SIZE, ALPHA_TEX_SIZE)
+    local vbfmt = ("fffffff"):rep(4)
+    local layout_name    = layoutmgr.correct_layout "p3|t42"
+    local layout         = layoutmgr.get(layout_name)
+    return to_mesh_buffer(get_terrain_vb(color_texcoords, alpha_texcoords, vbfmt), layout, irender.quad_ib())
+end
+
+
+local function create_plane_terrain_entity(gid, info, render_layer, terrain_chunk, border_chunk)
+    local TERRAIN_MESH, BORDER_MESH = get_terrain_mesh(terrain_chunk), get_border_mesh(border_chunk)
+    local mesh, material
+    if info.type:match "terrain" then 
+        mesh, material = TERRAIN_MESH, plane_terrain_material
+    elseif info.type:match "border" then 
+        mesh, material = BORDER_MESH, border_material 
+    end
+
+    ENTITIES[#ENTITIES+1] = world:create_entity {
+        group = gid,
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            scene = {t = {info.x, 0, info.y}},
+            simplemesh  = assert(mesh),
+            material    = material,
+            visible_state = "main_view|selectable",
+            render_layer = render_layer,
+        },
+    }
+end
+
+function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, border_chunk)
+    for gid, infos in pairs(groups) do
+        for _, info in ipairs(infos) do
+            create_plane_terrain_entity(gid, info, render_layer, terrain_chunk, border_chunk)
+        end
+    end
+end
+
+function iplane_terrain.clear_plane_terrain()
+    for _, eid in ipairs(ENTITIES) do
+        w:remove(eid)
+    end
+end
+
+return iplane_terrain
