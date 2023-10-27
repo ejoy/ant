@@ -55,8 +55,6 @@ function sm_sys:init()
     })
 end
 
-local NEW_MOUNTAIN_TYPE<const> = math3d.ref(math3d.vector(3, 0, 0, 0))
-
 local function create_sm_entity(gid, indices)
     local memory, meshes = {}, {}
     for _, index in ipairs(indices) do
@@ -82,6 +80,7 @@ local function create_sm_entity(gid, indices)
 
     local mesh_indices_buffer = bgfx.create_index_buffer(irender.align_buffer(table.concat(meshes, "")), "dr")
 
+    assert(#memory == #indices)
     local drawnum = #memory
 
     local di_eid = world:create_entity {
@@ -106,7 +105,6 @@ local function create_sm_entity(gid, indices)
                     flag    = "r",
                     num     = drawnum,
                 },
-                indirect_type_NEED_REMOVED = NEW_MOUNTAIN_TYPE,
             },
             render_layer  = "foreground",
         }

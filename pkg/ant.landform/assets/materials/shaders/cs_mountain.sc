@@ -21,23 +21,22 @@ uint load_mesh_idx(uint idx){
 NUM_THREADS(64, 1, 1)
 void main()
 {
-	uint buffersize = uint(u_buffer_param.x);
-	uint tid = uint(gl_GlobalInvocationID.x);
+	const uint buffersize = uint(u_buffer_param.x);
+	const uint tid = uint(gl_GlobalInvocationID.x);
 	if (tid > buffersize)
 		return ;
-	uint meshidx = load_mesh_idx(tid);
+	const uint meshidx = load_mesh_idx(tid);
 
-	vec4 vbnums = u_mesh_params[0];
-	vec4 ibnums = u_mesh_params[1];
-	uvec4 vboffsets = uvec4(0, uvec3(vbnums.xyz));
-	uvec4 iboffsets = uvec4(0, uvec3(ibnums.xyz));
+	const vec4 vbnums = u_mesh_params[0];
+	const vec4 ibnums = u_mesh_params[1];
+	const uvec4 vboffsets = uvec4(0, uvec3(vbnums.xyz));
+	const uvec4 iboffsets = uvec4(0, uvec3(ibnums.xyz));
 
-	float vb_offset = vboffsets[meshidx];
-	float ib_offset = iboffsets[meshidx];
-	float ib_num    = ibnums[meshidx];
+	const uint vb_offset = (uint)vboffsets[meshidx];
+	const uint ib_offset = (uint)iboffsets[meshidx];
+	const uint ib_num    = (uint)ibnums[meshidx];
 
-	uint srtoffset_invec4 = 3; // 3 * vec4
-	uint instanceoffset = tid * srtoffset_invec4;
+	const uint instanceoffset = tid;
 	drawIndexedIndirect(
 		b_indirect_buffer,					// target buffer
 		tid,								// index in buffer
