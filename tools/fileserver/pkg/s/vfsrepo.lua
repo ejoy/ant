@@ -459,6 +459,23 @@ function repo_meta:hash_files(tbl)
 	end
 end
 
+function repo_meta:resources()
+	local r = {}
+	local n = 1
+	local function get_resource_(dir, prefix)
+		for _, item in ipairs(dir) do
+			if item.dir then
+				local path = prefix .. item.name .. "/"
+				get_resource_(item.dir, path)
+			elseif item.resource then
+				r[n] = item.resource;  n = n + 1
+			end
+		end
+	end
+	get_resource_(self._dir, "")
+	return r
+end
+
 local function test()	-- for reference
 	local init_config = {
 		{ path = "/ant/test/vfsrepo", mount = "/" },
