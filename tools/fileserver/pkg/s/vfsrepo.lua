@@ -198,12 +198,12 @@ local function export_hash(root, name)
 		for _, item in ipairs(dir) do
 			if item.dir then
 				export_(item.dir, prefix .. item.name .. "/")
-			elseif item.hash then
-				local key = prefix..item.name
+			elseif item.hash and item.path then
+				local path = item.path
 				if name then
-					key = key .. name
+					path = path .. name
 				end
-				result[key] = { item.hash, item.timestamp }
+				result[path] = { item.hash, item.timestamp }
 			end
 		end
 	end
@@ -251,7 +251,7 @@ local function import_hash(index, hashs, name)
 	for path, dir in pairs(index) do
 		for _, item in ipairs(dir) do
 			if item.path then
-				local fullpath = path .. item.name
+				local fullpath = item.path
 				if name then
 					fullpath = fullpath .. name
 				end
