@@ -5,7 +5,7 @@ local new_repo = require "repo"
 
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
-local REPOPATH = arg[1]
+local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 
 local repo
 local fswatch = fw.create()
