@@ -65,7 +65,23 @@ local function compile_file(config, input)
     return output:string()
 end
 
+local function verify_file(config, input)
+    assert(input:sub(1,1) ~= ".")
+    if config.compiling[input] then
+        return ltask.multi_wait(config.compiling[input])
+    end
+    local ext = input:match "[^/]%.([%w*?_%-]*)$"
+    local output = config.binpath / ext / get_filename(input)
+    local changed = depends.dirty(output / ".dep")
+    if changed then
+        lfs.remove_all(output)
+        return false
+    end
+    return output:string()
+end
+
 return {
     init_config  = init_config,
     compile_file = compile_file,
+    verify_file = verify_file,
 }

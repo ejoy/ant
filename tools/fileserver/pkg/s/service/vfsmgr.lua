@@ -11,7 +11,6 @@ local ServiceCompile = ltask.spawn("ant.compile_resource|compile", REPOPATH)
 local repo
 local fswatch = fw.create()
 
-local CacheCompileId = {}
 local CacheCompileS = {}
 
 local function split(path)
@@ -115,21 +114,42 @@ function S.VIRTUALPATH(path)
 end
 
 function S.RESOURCE_SETTING(setting)
-    local CompileId = ltask.call(ServiceCompile, "SETTING", setting)
-    local s = CacheCompileS[CompileId]
-	if s then
-		return s
+	local CompileId = ltask.call(ServiceCompile, "SETTING", setting)
+	local s = CacheCompileS[CompileId]
+	if not s then
+		s = {
+			id = CompileId,
+			resource = {},
+		}
+		CacheCompileS[CompileId] = s
 	end
-	s = {
-		id = CompileId,
-		resource = {},
-	}
-	CacheCompileS[CompileId] = s
-	return s
+	return s.id
+end
+
+function S.RESOURCE_VERIFY(CompileId)
+	local s = CacheCompileS[CompileId]
+	if next(s.resource) ~= nil then
+		return s.resource
+	end
+	local paths = repo:export_resources()
+	local lpaths = ltask.call(ServiceCompile, "VERIFY", CompileId, paths)
+	for i = 1, #lpaths do
+		local path = paths[i]
+		local lpath = lpaths[i]
+		if lpath == false then
+			s.resource[path] = nil
+		else
+			s.resource[path] = repo:build_resource(lpath, path)
+		end
+	end
+	return s.resource
 end
 
 function S.RESOURCE(CompileId, path)
     local s = CacheCompileS[CompileId]
+    if s.resource[path] then
+        return s.resource[path]
+    end
     local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE",  s.id, path)
     if not ok then
         if type(lpath) == "table" then

@@ -169,11 +169,15 @@ function message.ROOT()
 end
 
 function message.RESOURCE_SETTING(setting)
-	local s = ltask.call(ServiceVfsMgr, "RESOURCE_SETTING", setting)
-	CompileId = s.id
-	for path, hash in pairs(s.resource) do
-		response("RESOURCE", path, hash)
-	end
+	CompileId = ltask.call(ServiceVfsMgr, "RESOURCE_SETTING", setting)
+	ltask.fork(function ()
+		print("RESOURCE SYNC BEGIN")
+		local resource = ltask.call(ServiceVfsMgr, "RESOURCE_VERIFY", CompileId)
+		for path, hash in pairs(resource) do
+			response("RESOURCE", path, hash)
+		end
+		print("RESOURCE SYNC DONE")
+	end)
 end
 
 function message.RESOURCE(path)
