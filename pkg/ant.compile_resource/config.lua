@@ -8,36 +8,21 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local config = {
-    glb = {
-        compiler = require "model.glb",
-    },
-    texture = {
-        compiler = require "texture.convert",
-    },
-    material = {
-        compiler = require "material.convert",
-    },
-}
-
-local function set(setting)
+local function init(setting)
     local setting_str = serialize.stringify(setting)
     local hash = sha1(setting_str):sub(1,7)
     local binpath = lfs.path(vfs.repopath()) / ".build" / (setting.os.."_"..hash)
     lfs.create_directories(binpath)
     writefile(binpath / ".setting", setting_str)
-    for ext, cfg in pairs(config) do
-        cfg.setting = setting
-        cfg.binpath = binpath / ext
-        lfs.create_directory(cfg.binpath)
+    for _, ext in ipairs {"glb", "texture", "material"} do
+        lfs.create_directory(binpath / ext)
     end
-end
-
-local function get(ext)
-    return assert(config[ext])
+    return {
+        binpath = binpath,
+        setting = setting,
+    }
 end
 
 return {
-    set = set,
-    get = get,
+    init = init,
 }

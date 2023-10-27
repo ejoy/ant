@@ -3,7 +3,6 @@ if __ANT_RUNTIME__ then
 end
 
 local sha1    = require "sha1"
-local config  = require "config"
 local depends = require "depends"
 local ltask   = require "ltask"
 
@@ -13,20 +12,25 @@ local function get_filename(pathname)
     return filename.."_"..sha1(pathname)
 end
 
+local COMPILER <const> = {
+    glb = require "model.glb",
+    texture = require "texture.convert",
+    material = require "material.convert",
+}
+
 local compiling = {}
 
-local function compile_file(input)
+local function compile_file(config, input)
     assert(input:sub(1,1) ~= ".")
     if compiling[input] then
         return ltask.multi_wait(compiling[input])
     end
     compiling[input] = {}
     local ext = input:match "[^/]%.([%w*?_%-]*)$"
-    local cfg = config.get(ext)
-    local output = cfg.binpath / get_filename(input)
+    local output = config.binpath / ext / get_filename(input)
     local changed = depends.dirty(output / ".dep")
     if changed then
-        local ok, deps = cfg.compiler(input, output, cfg.setting, changed)
+        local ok, deps = COMPILER[ext](input, output, config.setting, changed)
         if not ok then
             local err = deps
             error("compile failed: " .. input .. "\n" .. err)
@@ -40,6 +44,6 @@ local function compile_file(input)
 end
 
 return {
-    set_setting  = config.set,
+    init_config  = require "config".init,
     compile_file = compile_file,
 }

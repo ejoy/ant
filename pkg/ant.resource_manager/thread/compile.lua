@@ -3,9 +3,10 @@ local bgfx      = require "bgfx"
 local platform  = require "bee.platform"
 local vfs       = require "vfs"
 
+local config
 local compile
 local compile_file
-local set_setting
+local init_config
 
 if __ANT_RUNTIME__ then
     local function normalize(p)
@@ -27,18 +28,20 @@ if __ANT_RUNTIME__ then
             return realpath
         end
     end
-    set_setting = vfs.resource_setting
+    init_config = vfs.resource_setting
 else
     local cr = import_package "ant.compile_resource"
     if __ANT_EDITOR__ then
-        compile_file = cr.compile_file
+        function compile_file(input)
+            return cr.compile_file(config, input)
+        end
     else
         local compiled = {}
         function compile_file(input)
             if compiled[input] then
                 return compiled[input]
             end
-            local output = cr.compile_file(input)
+            local output = cr.compile_file(config, input)
             compiled[input] = output
             return output
         end
@@ -58,7 +61,7 @@ else
             end
         end
     end
-    set_setting = cr.set_setting
+    init_config = cr.init_config
 end
 
 local TextureExtensions <const> = {
@@ -77,7 +80,7 @@ local function init()
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
 
-    set_setting {
+    config = init_config {
         os = platform.os,
         renderer = renderer,
         hd = hd,
