@@ -1,8 +1,9 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 
-local arg = ltask.call(ltask.queryservice "s|arguments", "QUERY")
-local REPOPATH = arg[1]
+local ServiceArguments = ltask.queryservice "s|arguments"
+local arg = ltask.call(ServiceArguments, "QUERY")
+local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 
 local LOGDIR = fs.path(REPOPATH) / ".log"
 local repo = {}

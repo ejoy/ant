@@ -3,13 +3,15 @@ fx:
   setting:
     ALPHAMODE_OPAQUE: 1
     PACK_TANGENT_TO_QUAT: 0
+    WITH_TANGENT_ATTRIB: 1
+    WITH_NORMAL_ATTRIB: 1
 properties:
-  u_basecolor_factor: {1, 1, 1, 1}
+  u_basecolor_factor: {0.5, 0.5, 0.5, 1}
   u_emissive_factor: {0, 0, 0, 0}
-  u_pbr_factor: {0, 0.8999999761581421, 0.5, 1}
-  s_basecolor:
-    stage: 0
-    texture: /pkg/ant.test.light/assets/ground_01.glb|images/floor_color.texture
+  u_pbr_factor: {0.1, 0.6, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  # s_basecolor:
+  #   stage: 0
+  #   texture: /pkg/ant.test.light/assets/ground_01.glb|images/floor_color.texture
 state:
   ALPHA_REF: 0
   CULL: CCW

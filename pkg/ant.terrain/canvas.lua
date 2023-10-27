@@ -19,12 +19,6 @@ local layout<const> = layoutmgr.get(decl)
 
 local canvas_sys = ecs.system "canvas_system"
 
-function canvas_sys:component_init()
-    for e in w:select "INIT canvas:in" do
-        e.canvas.materials = {}
-    end
-end
-
 --[[
     fff-> position
     ffff->pack tangent frame
@@ -173,14 +167,6 @@ local function update_drawer_items(de)
     w:submit(de)
 end
 
-function canvas_sys:entity_remove()
-    for e in w:select "REMOVED canvas:in" do
-        for _, eid in pairs(e.canvas.materials) do
-            w:remove(world:entity(eid))
-        end
-    end
-end
-
 local icanvas = {}
 
 local function id_generator()
@@ -230,20 +216,14 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
     }
 end
 
-function icanvas.build(e, show, render_layer, ...)
-    w:extend(e, "canvas:in eid:in")
-    local materials = e.canvas.materials
-    local keys = {}
+function icanvas.build(materials, canvas_eid, show, render_layer, ...)
     for i=1, select("#", ...) do
         local mp = select(i, ...)
         local key = ("%s|%s"):format(mp, render_layer)
-        keys[#keys+1] = key
         if nil == materials[key] then
-            materials[key] = create_texture_item_entity(e.eid, show, mp, render_layer)
+            materials[key] = create_texture_item_entity(canvas_eid, show, mp, render_layer)
         end
     end
-
-    return keys
 end
 
 local item_cache = {}

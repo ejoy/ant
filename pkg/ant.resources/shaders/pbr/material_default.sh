@@ -8,11 +8,6 @@
 #include "pbr/common.sh"
 #include "pbr/ibl.sh"
 
-#define u_metallic_factor    u_pbr_factor.x
-#define u_roughness_factor   u_pbr_factor.y
-#define u_alpha_mask_cutoff  u_pbr_factor.z
-#define u_occlusion_strength u_pbr_factor.w
-
 vec4 get_basecolor(mediump vec2 texcoord, mediump vec4 basecolor)
 {
     basecolor *= u_basecolor_factor;

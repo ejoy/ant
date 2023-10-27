@@ -192,14 +192,18 @@ local function calc_hash(dir)
 	return table.concat(dir_content)
 end
 
-local function export_hash(root)
+local function export_hash(root, name)
 	local result = {}
 	local function export_(dir, prefix)
 		for _, item in ipairs(dir) do
 			if item.dir then
 				export_(item.dir, prefix .. item.name .. "/")
 			elseif item.hash then
-				result[prefix..item.name] = { item.hash, item.timestamp }
+				local key = prefix..item.name
+				if name then
+					key = key .. name
+				end
+				result[key] = { item.hash, item.timestamp }
 			end
 		end
 	end
@@ -243,11 +247,14 @@ local function make_hash_index(root)
 	return dir_hashs, file_hashs
 end
 
-local function import_hash(index, hashs)
+local function import_hash(index, hashs, name)
 	for path, dir in pairs(index) do
 		for _, item in ipairs(dir) do
 			if item.path then
 				local fullpath = path .. item.name
+				if name then
+					fullpath = fullpath .. name
+				end
 				local h = hashs[fullpath]
 				if h and item.timestamp == h[2] then
 					item.hash = h[1]
@@ -409,26 +416,27 @@ end
 
 function repo_meta:init(config)
 	local hashs = config.hash
+	self._name = config.name and ("@" .. config.name)
 	self._dir = {}
 	self._subroot = {}
 	add_path(self, config)
 	merge_all(self)
 	if hashs then
 		local index = make_index(self._dir)
-		import_hash(index, hashs)
+		import_hash(index, hashs, self._name)
 	end
 	update_all(self)
 end
 
 function repo_meta:export_hash()
 	assert(self._dir)
-	local hashs = export_hash(self._dir)
+	local hashs = export_hash(self._dir, self._name)
 	return hashs
 end
 
 function repo_meta:import_hash(hashs)
 	assert(self._index)
-	import_hash(self._index, hashs)
+	import_hash(self._index, hashs, self._name)
 end
 
 function repo_meta:root()

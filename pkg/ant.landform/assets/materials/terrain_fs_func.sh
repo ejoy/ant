@@ -7,22 +7,11 @@
 #include "common/cluster_shading.sh"
 #include "common/constants.sh"
 #include "common/uvmotion.sh"
+#include "pbr/common.sh"
 #include "pbr/lighting.sh"
 #include "pbr/material_info.sh"
 #include "default/inputs_structure.sh"
 #include "terrain.sh"
-
-#ifdef u_roughness_factor
-#error already define 'u_roughness_factor'
-#else
-#define u_roughness_factor  u_pbr_factor.y
-#endif 
-
-#ifdef u_metallic_factor
-#error already define 'u_metallic_factor'
-#else
-#define u_metallic_factor  u_pbr_factor.x
-#endif 
 
 material_info terrain_material_info_init(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord, vec4 metallic, vec4 roughness)
 {
@@ -35,7 +24,7 @@ material_info terrain_material_info_init(vec3 gnormal, vec3 normal, vec4 posWS, 
     mi.N                 = normal;
 
     mi.perceptual_roughness  = roughness;
-    mi.metallic              = metallic;
+    mi.metallic          = metallic;
     mi.occlusion         = 1.0;
 
     mi.screen_uv         = calc_normalize_fragcoord(fragcoord.xy);

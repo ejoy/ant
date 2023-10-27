@@ -63,7 +63,7 @@ vec4 transform_worldpos(mat4 wm, vec3 posLS, out vec4 posCS)
 {
 	vec4 posWS = mul(wm, vec4(posLS, 1.0));
 	posCS = transform2clipspace(posWS);
-	return posCS;
+	return posWS;
 }
 
 vec4 map_screen_coord_to_ndc(vec2 p)
