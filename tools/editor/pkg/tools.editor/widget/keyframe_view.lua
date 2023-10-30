@@ -1101,7 +1101,10 @@ function m.show()
                     local vpath = access.virtualpath(global_data.repo, file_path)
                     assetmgr.unload(vpath)
                     local mq = w:first("main_queue camera_ref:in")
-                    imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0"})
+                    local ce<close> = world:entity(mq.camera_ref, "scene:update")
+                    local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
+                    local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
+                    imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0", init_srt = {r = {q1, q2, q3, q4}, t = {t1, t2, t3}}})
                 end
                 imgui.cursor.SameLine()
             end

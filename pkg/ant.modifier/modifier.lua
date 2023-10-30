@@ -53,6 +53,7 @@ function modifier_sys:entity_ready()
         mf.continue = true
         mf.keep = desc.forwards
         mf.destroy = desc.destroy
+        mf.init_srt = desc.init_srt
         if m.anim_eid then
             if desc.name then
                 iani.play(m.anim_eid, desc)
@@ -234,7 +235,12 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                     if not e then
                         return
                     end
-                    iom.set_srt_offset_matrix(e, mc.IDENTITY_MAT)
+                    if not self.init_srt then
+                        iom.set_srt_offset_matrix(e, mc.IDENTITY_MAT)
+                    else
+                        iom.set_rotation(e, math3d.quaternion(self.init_srt.r))
+                        iom.set_position(e, math3d.vector(self.init_srt.t))
+                    end
                 end,
                 update = function(self, time)
                     if not self.target or (not self.foreupdate and not self.continue) then
@@ -249,7 +255,11 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
                     if not e then
                         return true
                     end
-                    iom.set_srt_offset_matrix(e, apply_value)
+                    if not self.init_srt then
+                        iom.set_srt_offset_matrix(e, apply_value)
+                    else
+                        iom.set_srt_matrix(e, apply_value)
+                    end
                     self.continue = running
                     if not running and self.destroy then
                         return true
