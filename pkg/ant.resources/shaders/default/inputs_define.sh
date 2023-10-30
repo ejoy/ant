@@ -10,10 +10,14 @@
     #if DRAW_INDIRECT > 0
         #undef INPUT_INSTANCE1
         #define INPUT_INSTANCE1 i_data0
-    #elif DRAW_INDIRECT > 1
+    #endif
+
+    #if DRAW_INDIRECT > 1
         #undef INPUT_INSTANCE2
         #define INPUT_INSTANCE2 i_data1
-    #elif DRAW_INDIRECT > 2
+    #endif
+
+    #if DRAW_INDIRECT > 2
         #undef INPUT_INSTANCE3
         #define INPUT_INSTANCE3 i_data2
     #endif // CHECK DRAW_INDIRECT NUM
