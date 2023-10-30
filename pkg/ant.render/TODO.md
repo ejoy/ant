@@ -37,12 +37,17 @@
 11. 关于ibl：
   - 使用sh(Spherical Harmonic)来表示irradiance中的数据；
   - 使用多项式直接计算LUT，而不使用一张额外的贴图（节省带宽和采样器）：https://knarkowicz.wordpress.com/2014/12/27/analytical-dfg-term-for-ibl/；（2023.06.27已经完成）
+12. 使用无穷远的far plane构建透视投影矩阵，并将near plane的位置设定为0.1，而不是现在1，1的距离有时候会导致近处能够看到的物体，但被裁剪掉的问题；(2023.06已经完成，目前在camera component上会保存: infviewprojmat和viewprojmat)；
+13. 修改贴图的mipmap颜色为某种纯色，用来检测场景中的贴图是否过大（看到蓝色意味着原来做的图就是过大的）；（2023.10已经完成，debug_mipmap_system）
+
 ##### 未完成
 1. 优化PBR的计算量：
   - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
 2. 关于ibl:
   - 离线计算ibl相关的数据，将目前的compute shader中计算的内容转移到cpu端，并离线计算；
-3. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
+3. 使用更优质的line渲染：
+  - 优化目前使用的polyline的效果。尤其是不在使用MSAA，换用FXAA之后，polyline的线会丢失（https://mattdesl.svbtle.com/drawing-lines-is-hard，参考的库：https://github.com/spite/THREE.MeshLine）；
+  - 需要一个更优质的网格：https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 4. 使用延迟渲染。目前的predepth系统、FXAA（以及将要实现的TAA）实际上是延迟渲染的一部分，实现延迟渲染能够减少目前的drawcall（目前的draw call由predepth，shadow，render和pickup 4部分组成）；
 5. 修复pre-depth/csm/pickup等队列中的cullstate的状态。对于metal/vulkan/d3d12等api，pipeline都是一个整体，会导致pipeline数据不停的切换；
 6. 针对Vulkan上的subpass对渲染的render进行相应的优化；
@@ -55,24 +60,28 @@
 8. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）；
 9. 水渲染；
 10. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
-11. 使用Hi-Z的方式进行剔除；
-12. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
-13. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
-14. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
-15. 优化bgfx的draw viewid和compute shader viewid；
-16. 解决动态材质的问题；
+11. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
+12. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
+13. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
+14. 优化bgfx的draw viewid和compute shader viewid；
+15. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
+16. 摄像机的fov需要根据聚焦的距离来定义fov；
+17. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
+18. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；
+19. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
+20. 解决动态材质的问题；
   - 需要把vs_pbr.sc里面的VS_Input和VS_Ouput拆分出来。目前已经定义好了，还需要后续的跟进；
-17. 充分理解ASTC压缩，修复6x6的贴图无法正确压缩的bug。https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC https://github.com/ARM-software/astc-encoder/blob/main/Docs/FormatOverview.md；
-18. 使用无穷远的far plane构建透视投影矩阵，并将near plane的位置设定为0.1，而不是现在1，1的距离有时候会导致近处能够看到的物体，但被裁剪掉的问题；
-19. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
-20. 摄像机的fov需要根据聚焦的距离来定义fov；
-21. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
-22. 使用draw indirect的时候，在cull的阶段，获取一个粗糙的z-buffer（可以在cpu端生成http://twvideo01.ubm-us.net/o1/vault/gdcchina14/presentations/833779_MiloYip_ADataOrientedCN.pdf，也可以在gpu端生成），用以判断这个物体就算在视锥体内，也是可以被剔除的；
-23. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；
-24. 修改贴图的mipmap颜色为某种纯色，用来检测场景中的贴图是否过大（看到蓝色意味着原来做的图就是过大的）；
-25. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；
-26. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
-27. 动态材质应该允许VS_INPUT/VS_OUTPUT/FS_INPUT/FS_OUTPUT数据结构的自定义，而不是通过现在定义宏来决定vs/fs的输入输出是什么（数据结构的名字不能改）；
+  - 重新思考动态材质的实现。需要从模型->顶点着色器输入->像素着色器输入的链条思考如何有效、简单便捷和兼顾一致性的情况定义材质；
+21. 顶点着色器与vb绑定的时候，需要确保顶点着色器需要的数据，vb的layout上面是有所提供的；
+
+##### 暂缓进行
+1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；
+2. 使用draw indirect的时候，在cull的阶段，获取一个粗糙的z-buffer（可以在cpu端生成http://twvideo01.ubm-us.net/o1/vault/gdcchina14/presentations/833779_MiloYip_ADataOrientedCN.pdf，也可以在gpu端生成），用以判断这个物体就算在视锥体内，也是可以被剔除的；
+3. 使用Hi-Z的方式进行剔除；
+
+##### 已知问题但不修复
+1. 充分理解ASTC压缩，修复6x6的贴图无法正确压缩的bug。https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC https://github.com/ARM-software/astc-encoder/blob/main/Docs/FormatOverview.md；（不修复原因：目前使用的纹理工具是bgfx内的texturec工具，texturec工具内部对于ASTC这种异形format的支持都是有问题的，具体看提过的issue和pr就知道）；
+
 #### 新功能/探索
 ##### 已经完成
 1. 阴影的VSM；  //2022.09.29已经完成，使用的是ESM。
