@@ -117,7 +117,7 @@ function access.virtualpath(repo, pathname)
 		end
 		local n = #mpath + 1
 		if path_eq(pathname:sub(1,n), mpath .. '/') then
-			return mountvpath[i] .. pathname:sub(n)
+			return mountvpath[i] .. pathname:sub(n + 1)
 		end
 	end
 end

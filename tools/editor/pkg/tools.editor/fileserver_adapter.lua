@@ -1,5 +1,9 @@
 local subprocess = require "bee.subprocess"
 local socket = require "bee.socket"
+local select = require "bee.select"
+local selector = select.create()
+local SELECT_READ <const> = select.SELECT_READ
+local SELECT_WRITE <const> = select.SELECT_WRITE
 local protocol = require "protocol"
 local lfs = require "bee.filesystem"
 local cthread = require "bee.thread"
@@ -83,38 +87,41 @@ end
 
 local function connectFileServer()
     local fd = assert(socket "tcp")
+    selector:event_add(fd, SELECT_WRITE)
     assert(fd:connect("127.0.0.1", 2019) ~= nil)
-    local _, wr = socket.select(nil, {fd})
-    if wr and wr[1] == fd and fd:status() then
-        return fd
+    for f, ev in selector:wait() do
+        if fd:status() then
+            return fd
+        end
     end
 end
 
-local function handleNetworkEvent(fd)
+local function handleNetworkEvent(exfd)
     local reading_queue = {}
     local output = {}
+    selector:event_mod(exfd, SELECT_READ)
     while true do
-        if not socket.select({fd}) then
-            fd:close()
-            break
-        end
-        local reading = fd:recv()
-        if reading == nil then
-            fd:close()
-            break
-        elseif reading == false then
-        else
-            table.insert(reading_queue, reading)
-            while true do
-                local msg = protocol.readmessage(reading_queue, output)
-                if msg == nil then
+        for fd, ev in selector:wait(0.001) do
+            if ev & SELECT_READ ~= 0 then
+                local reading = fd:recv()
+                if reading == nil then
+                    fd:close()
                     break
-                end
-                local f = message[msg[1]]
-                if f then
-                    f(table.unpack(msg, 2))
+                elseif reading == false then
                 else
-                    error(msg[1])
+                    table.insert(reading_queue, reading)
+                    while true do
+                        local msg = protocol.readmessage(reading_queue, output)
+                        if msg == nil then
+                            break
+                        end
+                        local f = message[msg[1]]
+                        if f then
+                            f(table.unpack(msg, 2))
+                        else
+                            error(msg[1])
+                        end
+                    end
                 end
             end
         end

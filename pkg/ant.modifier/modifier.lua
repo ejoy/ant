@@ -291,9 +291,12 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
 		prefab = filename,
 	}
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
-            local anim <close> = world:entity(anim_prefab.tag["*"][1], "anim_ctrl:in skeleton:in")
-            local pr = anim.anim_ctrl.pose_result
-            return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
+            for _, e in ipairs(anim_prefab.tag["*"]) do
+                local anim <close> = world:entity(e, "anim_ctrl?in skeleton?in")
+                if anim.anim_ctrl and anim.skeleton then
+                    return anim.anim_ctrl.pose_result:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
+                end
+            end
         end)
     modifier.anim_eid = anim_prefab
     return modifier

@@ -21,6 +21,8 @@ local imodifier = ecs.require "ant.modifier|modifier"
 local ika       = ecs.require "ant.animation|keyframe"
 local faicons   = require "common.fa_icons"
 local prefab_mgr = ecs.require "prefab_manager"
+local global_data = require "common.global_data"
+local access    = global_data.repo_access
 local m = {}
 local current_mtl
 local current_target
@@ -1091,6 +1093,15 @@ function m.show()
                 anim_set_speed(ui_speed[1])
             end
             imgui.cursor.PopItemWidth()
+            imgui.cursor.SameLine()
+            if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
+                --TODO: Temp code for camera animation 
+                m.save(file_path)
+                local vpath = access.virtualpath(global_data.repo, file_path)
+                assetmgr.unload(vpath)
+                local mq = w:first("main_queue camera_ref:in")
+                imodifier.start_bone_modifier(mq.camera_ref, 0, "/pkg/vaststars.resources/glbs/animation/camera.glb|mesh.prefab", "Bone", {name = "anim0"})
+            end
             imgui.cursor.SameLine()
             local current_time = 0
             if current_anim.type == "ske" then
