@@ -66,6 +66,7 @@ int luaopen_imgui(lua_State* L);
 #endif
 int luaopen_system_scene(lua_State* L);
 int luaopen_system_cull(lua_State* L);
+int luaopen_zip(lua_State* L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -108,7 +109,7 @@ void ant_loadmodules(lua_State* L) {
         { "ecs.util", luaopen_ecs_util},
         { "fastio", luaopen_fastio},
         { "render.material.arena",  luaopen_material_arena},
-	{ "render.material.core",   luaopen_material_core},
+		{ "render.material.core",   luaopen_material_core},
         { "render.render_material", luaopen_render_material},
         { "system.render",      luaopen_system_render},
         { "render.stat",        luaopen_render_stat},
@@ -131,6 +132,7 @@ void ant_loadmodules(lua_State* L) {
 #endif
         { "system.scene", luaopen_system_scene },
         { "cull.core", luaopen_system_cull},
+		{ "zip", luaopen_zip },
         { NULL, NULL },
     };
 

@@ -49,3 +49,6 @@
 [submodule "3rd/MoltenVK"]
 	path = 3rd/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK.git
+[submodule "3rd/zlib"]
+	path = 3rd/zlib
+	url = https://github.com/madler/zlib.git
