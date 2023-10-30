@@ -6,7 +6,7 @@ fx:
     shadow_receive: on
     subsurface: off
     ALPHAMODE_OPAQUE: 1
-    DRAW_INDIRECT: 1
+    DRAW_INDIRECT: 3
     DI_MOUNTAIN: 1
     WITH_TANGENT_ATTRIB: 1
     PACK_TANGENT_TO_QUAT: 1

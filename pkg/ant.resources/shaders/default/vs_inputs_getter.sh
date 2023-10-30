@@ -29,9 +29,11 @@ vs_input.pos = a_position;
 #endif //!WITHOUT_DEFAULT_UV
 
 
-#ifdef DRAW_INDIRECT
+#if DRAW_INDIRECT > 0
     vs_input.idata0 = i_data0;
+#elif DRAW_INDIRECT > 1
     vs_input.idata1 = i_data1;
+#elif DRAW_INDIRECT > 2
     vs_input.idata2 = i_data2;
 #endif
 
