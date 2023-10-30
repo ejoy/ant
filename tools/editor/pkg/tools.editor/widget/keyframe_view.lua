@@ -1094,15 +1094,17 @@ function m.show()
             end
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
-            if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
-                --TODO: Temp code for camera animation 
-                m.save(file_path)
-                local vpath = access.virtualpath(global_data.repo, file_path)
-                assetmgr.unload(vpath)
-                local mq = w:first("main_queue camera_ref:in")
-                imodifier.start_bone_modifier(mq.camera_ref, 0, "/pkg/vaststars.resources/glbs/animation/camera.glb|mesh.prefab", "Bone", {name = "anim0"})
+            if string.sub(prefab_mgr.glb_filename, -10) == "camera.glb" then
+                --TODO: remove this code, Temp code for camera animation
+                if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
+                    m.save(file_path)
+                    local vpath = access.virtualpath(global_data.repo, file_path)
+                    assetmgr.unload(vpath)
+                    local mq = w:first("main_queue camera_ref:in")
+                    imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0"})
+                end
+                imgui.cursor.SameLine()
             end
-            imgui.cursor.SameLine()
             local current_time = 0
             if current_anim.type == "ske" then
                 current_time = anim_eid and iani.get_time(anim_eid) or 0
