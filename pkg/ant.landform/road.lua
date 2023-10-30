@@ -81,14 +81,14 @@ local SHAPE_DIRECTIONS<const> = {
 }
 
 local SHAPE_TYPES<const> = {
-    "U", "I", "L", "T", "X", "O",
+    "U", "I", "L", "T", "O", "X",
     U = {
         index = 1,
         direction = {
             N = QUAD_TEXCOORDS[0],
-            E = QUAD_TEXCOORDS[270],
+            E = QUAD_TEXCOORDS[90],
             S = QUAD_TEXCOORDS[180],
-            W = QUAD_TEXCOORDS[90],
+            W = QUAD_TEXCOORDS[270],
         }
     },
     I = {
@@ -118,7 +118,7 @@ local SHAPE_TYPES<const> = {
             W = QUAD_TEXCOORDS[270],
         },
     },
-    X = {
+    O = {
         index = 5,
         direction = {
             N = QUAD_TEXCOORDS[0],
@@ -127,7 +127,7 @@ local SHAPE_TYPES<const> = {
             W = QUAD_TEXCOORDS[0],
         }
     },
-    O = {
+    X = {
         index = 6,
         direction = {
             N = QUAD_TEXCOORDS[0],

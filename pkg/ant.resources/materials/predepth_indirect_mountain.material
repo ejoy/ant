@@ -5,7 +5,7 @@ fx:
     cast_shadow: off
     shadow_receive: off
     subsurface: off
-    DRAW_INDIRECT: 1
+    DRAW_INDIRECT: 3
     WITHOUT_DEFAULT_UV: 1
     DI_MOUNTAIN: 1
 state:

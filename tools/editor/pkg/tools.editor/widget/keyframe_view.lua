@@ -21,6 +21,8 @@ local imodifier = ecs.require "ant.modifier|modifier"
 local ika       = ecs.require "ant.animation|keyframe"
 local faicons   = require "common.fa_icons"
 local prefab_mgr = ecs.require "prefab_manager"
+local global_data = require "common.global_data"
+local access    = global_data.repo_access
 local m = {}
 local current_mtl
 local current_target
@@ -1092,6 +1094,20 @@ function m.show()
             end
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
+            if string.sub(prefab_mgr.glb_filename, -10) == "camera.glb" then
+                --TODO: remove this code, Temp code for camera animation
+                if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
+                    m.save(file_path)
+                    local vpath = access.virtualpath(global_data.repo, file_path)
+                    assetmgr.unload(vpath)
+                    local mq = w:first("main_queue camera_ref:in")
+                    local ce<close> = world:entity(mq.camera_ref, "scene:update")
+                    local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
+                    local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
+                    imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0", init_srt = {r = {q1, q2, q3, q4}, t = {t1, t2, t3}}})
+                end
+                imgui.cursor.SameLine()
+            end
             local current_time = 0
             if current_anim.type == "ske" then
                 current_time = anim_eid and iani.get_time(anim_eid) or 0
