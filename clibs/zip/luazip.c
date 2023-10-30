@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #define ZLIB_UTF8_FLAG (1<<11)
+#define FILECHUNK (4096 * 4)
 
 static int
 lcompress(lua_State *L) {
@@ -181,8 +182,6 @@ zipwrite_add(lua_State *L) {
 	close_inzip(L, zf);
 	return 0;
 }
-
-#define FILECHUNK (4096 * 4)
 
 static int
 zipwrite_addfile(lua_State *L) {
@@ -377,6 +376,30 @@ zipread_readfile(lua_State *L) {
 }
 
 static int
+zipread_extract(lua_State *L) {
+	unzFile zf = open_file(L);
+	const char * filename = luaL_checkstring(L, 3);
+	struct filename_convert tmp;
+	FILE *f = file_open(L, filename, "wb", &tmp);
+	if (f == NULL)
+		return luaL_error(L, "Error: open %s", filename);
+	char buf[FILECHUNK];
+	int bytes = 0;
+	do {
+		bytes = unzReadCurrentFile(zf, buf, sizeof(buf));
+		if (bytes < 0) {
+			return luaL_error(L, "Error: read %s", lua_tostring(L, 2));
+		}
+		if (bytes > 0 && fwrite(buf, 1, bytes, f) != bytes) {
+			return luaL_error(L, "Error: write %s", filename);
+		}
+	} while (bytes == sizeof(buf));
+	fclose(f);
+	close_file(L, zf);
+	return 0;
+}
+
+static int
 zipread_openfile(lua_State *L) {
 	open_file(L);
 	return 0;
@@ -425,6 +448,7 @@ unzip(lua_State *L, const char *filename) {
 			{ "__gc", zipread_closezip },
 			{ "close", zipread_closezip },
 			{ "list", zipread_list },
+			{ "extract", zipread_extract },
 			{ "readfile", zipread_readfile },
 			{ "openfile", zipread_openfile },
 			{ "closefile", zipread_closefile },

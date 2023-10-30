@@ -38,6 +38,8 @@ end
 local c = f:readfile "test.txt"
 print(#c)
 
+f:extract("test.txt", "test.txt")
+
 f:openfile "测试.txt"
 local c = f:read(6)
 print(c)
