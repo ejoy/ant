@@ -2,15 +2,22 @@
 #error "'default_inputs_define.sh' file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
+#define INPUT_INSTANCE1
+#define INPUT_INSTANCE2
+#define INPUT_INSTANCE3
+
 #ifdef DRAW_INDIRECT
-    #define INPUT_INSTANCE1 i_data0
-    #define INPUT_INSTANCE2 i_data1
-    #define INPUT_INSTANCE3 i_data2
-#else
-    #define INPUT_INSTANCE1
-    #define INPUT_INSTANCE2
-    #define INPUT_INSTANCE3
-#endif
+    #if DRAW_INDIRECT > 0
+        #undef INPUT_INSTANCE1
+        #define INPUT_INSTANCE1 i_data0
+    #elif DRAW_INDIRECT > 1
+        #undef INPUT_INSTANCE2
+        #define INPUT_INSTANCE2 i_data1
+    #elif DRAW_INDIRECT > 2
+        #undef INPUT_INSTANCE3
+        #define INPUT_INSTANCE3 i_data2
+    #endif // CHECK DRAW_INDIRECT NUM
+#endif //DRAW_INDIRECT
 
 #ifdef CS_SKINNING
 
