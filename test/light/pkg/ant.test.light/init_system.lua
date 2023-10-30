@@ -15,7 +15,7 @@ local fastio     = require "fastio"
 local S = ecs.system "init_system"
 local image 		= require "image"
 local iom = ecs.require "ant.objcontroller|obj_motion"
-
+local igrid = ecs.require "ant.grid|grid"
 local function create_instance(prefab, on_ready)
     local p = world:create_instance {
         prefab = prefab,
@@ -87,24 +87,30 @@ end
 
 
 function S.init()
-    create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
+--[[     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
         local leid = e.tag['*'][2]
         local le<close> = world:entity(leid, "directional_light scene:update")
 
         local r2l_mat<const> = mc.R2L_MAT
         local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
         iom.set_direction(le, v)
-    end)
+    end) ]]
 
 end
 
 function S.init_world()
+
+    igrid.create_grid(100, 100, 0.1, 0.1, {s = math3d.vector(100, 1, 100)}, {1.0, 0.0, 0.0, 1.0})
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
     local eyepos = math3d.vector(0, 10, -10)
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(ce, dir)
+
+
+
+    --ientity.create_grid_entity_simple1(100, 100, 1)
 
     -- create_simple_triangles()
 
@@ -114,10 +120,10 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
+--[[     create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
         -- local le<close> = world:entity(leid, "scene:update")
         -- iom.set_scale(le, 0.1)
-    end)
+    end) ]]
 
     -- create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
     --     peids = e.tag['*']
