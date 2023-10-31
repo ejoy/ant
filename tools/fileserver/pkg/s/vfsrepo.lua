@@ -46,6 +46,10 @@ local function list_files(root, dir, fullpath, filter)
 		if attr:is_directory() then
 			local d = {}
 			list_files(pathname, d, fullpath_name, filter)
+			if d[1] == nil then
+				-- empty dir
+				goto continue
+			end
 			obj.dir = d
 		elseif filter and filter.resource[ext] then
 			obj.resource = fullpath .. "/" .. name
@@ -98,6 +102,9 @@ local function patch_list_files(root, dir, fullpath, filter)
 				-- new dir
 				local d = {}
 				list_files(pathname, d, fullpath_name, filter)
+				if d[1] == nil then
+					goto continue
+				end
 				obj = {
 					dir = d,
 					name = name,
@@ -365,12 +372,15 @@ local function add_path(self, paths)
 		if not filter.block[vfspath] then
 			local root = {}
 			local path = append_slash(p.path)
-			subroot[i] = {
-				path = path,
-				mount = mount,
-				root = root,
-			} ; i = i + 1
 			list_files(path, root, vfspath, filter)
+			if root[1] then
+				-- at least one file
+				subroot[i] = {
+					path = path,
+					mount = mount,
+					root = root,
+				} ; i = i + 1
+			end
 		end
 	end
 	self._subroot = subroot
