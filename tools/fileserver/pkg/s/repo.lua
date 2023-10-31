@@ -1,5 +1,6 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
+local datalist = require "datalist"
 local access = dofile "/engine/editor/vfs_access.lua"
 local new_vfsrepo = require "vfsrepo".new
 
@@ -81,18 +82,71 @@ function REPO_MT:export_resources()
 	return vfsrepo:resources()
 end
 
+local resource_filter <const> = {
+	resource = { },
+	whitelist = {
+		"prefab",
+		"bin",
+		"cfg",
+		"ozz",
+		"vbbin",
+		"vb2bin",
+		"ibbin",
+		"meshbin",
+		"skinbin",
+		"attr",
+	},
+}
+
+local root_filter <const> = {
+	resource = { "material" , "glb" , "texture" },
+	whitelist = {
+		"settings",
+		"cfg",
+		-- ecs
+		"prefab",
+		"ecs",
+		-- script
+		"lua",
+		-- ui
+		"rcss",
+		"rml",
+		-- effect
+		"efk",
+		-- font
+		"ttf",
+		"otf", --TODO: remove it?
+		"ttc", --TODO: remove it?
+		-- sound
+		"bank",
+		-- animation
+		"event",
+		"anim",
+		-- material
+		"state",
+	},
+}
+
 function REPO_MT:build_resource(path, name)
 	local vfsrepo = new_vfsrepo()
 	vfsrepo:init {
+		{ path = path, mount = "" },
 -- name is vfs path, unused
 --		name = name,
 		hash = self._hashs,
-		{ path = path, mount = "" },
+		filter = resource_filter
 	}
 	vfsrepo:hash_dirs(self._dirhash)
 	vfsrepo:hash_files(self._filehash)
 	export_hash(self, vfsrepo, "ab")
 	return vfsrepo:root()
+end
+
+local function read_vfsignore(rootpath)
+	if not lfs.exists(rootpath / ".vfsignore") then
+		return {}
+	end
+	return datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
 end
 
 return function (rootpath)
@@ -115,8 +169,15 @@ return function (rootpath)
 		_filehash = {},
 		_lock = filelock(cachepath),	-- lock repo
 	}
+	local vfsignore = read_vfsignore(rootpath)
 	local config = {
 		hash = import_hash(self),
+		filter = {
+			resource = root_filter.resource,
+			whitelist = root_filter.whitelist,
+			block = vfsignore.block,
+			ignore = vfsignore.ignore,
+		},
 	}
 	for i = 1, #repo._mountlpath do
 		config[#config+1] = {
