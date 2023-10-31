@@ -45,4 +45,11 @@ local c = f:read(6)
 print(c)
 f:closefile()
 
+
+local copy = assert(zip.open("test3.zip", "w"))
+copy:copyfrom("test.txt", f)
+
 f:close()
+copy:close()
+
+
