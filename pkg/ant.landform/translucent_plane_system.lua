@@ -4,17 +4,16 @@ local w         = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local irender       = ecs.require "ant.render|render_system.render"
+local irender   = ecs.require "ant.render|render_system.render"
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 local layout    = layoutmgr.get "p3|t20"
 local imaterial = ecs.require "ant.asset|material"
-local tp_sys  = ecs.system 'translucent_plane_system'
-local translucent_plane_material
+local tp_sys    = ecs.system 'translucent_plane_system'
 
-function tp_sys:init_world()
-    translucent_plane_material = "/pkg/ant.landform/assets/materials/translucent_plane.material"
-end
+local DEFAULT_TP_RENDER_LAYER <const> = "translucent"
+local DEFAULT_TP_MATERIAL <const> = "/pkg/ant.landform/assets/materials/translucent_plane.material"
+local DEFAULT_TILE_SIZE <const> = 10
 
 local ENTITIES = {}
 
@@ -22,24 +21,23 @@ local MAX_EDGE<const> = 9
 
 local MESH_CACHE = setmetatable({}, {__index=function (t, k) local tt = {}; t[k] = tt; return tt end})
 
---[[
-    v1---v3
-    |    |
-    v0---v2
-]]
-
-local function get_quad_tex(width, height)
-    return {
-    {0, height},                  -- quad v0
-    {0, 0},                       -- quad v1
-    {width, height},              -- quad v2
-    {width, 0},                   -- quad v3
-}
-end
-
 local VBFMT<const> = ("fffff"):rep(4)
 
 local function get_mesh(width, height)
+    --[[
+        v1---v3
+        |    |
+        v0---v2
+    ]]
+
+    local function get_quad_tex(width, height)
+        return {
+        {0, height},                  -- quad v0
+        {0, 0},                       -- quad v1
+        {width, height},              -- quad v2
+        {width, 0},                   -- quad v3
+    }
+    end
 
     local function to_mesh_buffer(vb, ib_handle)
         local numv = 4
@@ -73,14 +71,6 @@ local function get_mesh(width, height)
     return to_mesh_buffer(get_vb(), irender.quad_ib())
 end
 
-for i = 1, MAX_EDGE do
-    for j = 1, MAX_EDGE do
-        MESH_CACHE[i][j] = get_mesh(i, j)
-    end
-end
-
-local itp = {}
-
 local function create_tp_entity(info, render_layer, tile_size)
     local gid, color = info.gid, info.color
     local meshidx = {info.w / tile_size, info.h / tile_size}
@@ -93,20 +83,49 @@ local function create_tp_entity(info, render_layer, tile_size)
         },
         data = {
             scene = {s = {info.w, 1, info.h}, t = {info.x, 0, info.y}},
-            simplemesh  = mesh,
-            material    = translucent_plane_material,
+            simplemesh  = assert(mesh, "translucent_plane mesh doesn't exist!\n"),
+            material    = DEFAULT_TP_MATERIAL,
             visible_state = "main_view|selectable",
             render_layer = render_layer,
             on_ready = function (e)
-                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color[1], color[2], color[3], color[4]))
+                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
             end,
         },
     }
 end
 
+local function destroy_handle(h)
+    if h then
+        bgfx.destroy(h)
+    end
+end
+
+function tp_sys:exit()
+    for i = 1, MAX_EDGE do
+        for j = 1, MAX_EDGE do
+            if MESH_CACHE[i][j] and MESH_CACHE[i][j].vb.handle then
+                MESH_CACHE[i][j].vb.handle= destroy_handle(MESH_CACHE[i][j].vb.handle)
+            end
+        end
+    end    
+end
+
+local itp = {}
+
+function itp.create_tp_mesh()
+    assert(not MESH_CACHE, "translucent_plane mesh has been created!\n")
+    for i = 1, MAX_EDGE do
+        for j = 1, MAX_EDGE do
+            MESH_CACHE[i][j] = get_mesh(i, j)
+        end
+    end
+end
+
 function itp.update_tp(infos, render_layer, tile_size)
+    local tp_render_layer = render_layer and render_layer or DEFAULT_TP_RENDER_LAYER
+    local tp_tile_size    = tile_size and tile_size or DEFAULT_TILE_SIZE
     for _, info in ipairs(infos) do
-        create_tp_entity(info, render_layer, tile_size) 
+        create_tp_entity(info, tp_render_layer, tp_tile_size) 
     end
 end
 

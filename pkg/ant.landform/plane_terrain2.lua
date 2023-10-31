@@ -8,8 +8,12 @@ local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
 local irender       = ecs.require "ant.render|render_system.render"
 
-local border_material = "/pkg/ant.landform/assets/materials/border.material"
-local plane_terrain_material = "/pkg/ant.landform/assets/materials/plane_terrain.material"
+local DEFAULT_TERRAIN_RENDER_LAYER <const> = "opacity"
+local DEFAULT_BORDER_MATERIAL <const> = "/pkg/ant.landform/assets/materials/border.material"
+local DEFAULT_PLANE_TERRAIN_MATERIAL <const> = "/pkg/ant.landform/assets/materials/plane_terrain.material"
+local DEFAULT_TILE_SIZE <const> = 10
+local DEFAULT_TERRAIN_CHUNK_SIZE <const> = DEFAULT_TILE_SIZE * 32
+local DEFAULT_BORDER_CHUNK_SIZE <const> = DEFAULT_TILE_SIZE * 16
 
 local ENTITIES = {}
 
@@ -52,21 +56,20 @@ end
 
 local function get_border_mesh(border_chunk)
 
-    local function get_border_vb(texcoords, vbfmt)
+    local function get_border_vb(vbfmt)
         local ox, oz, nx, nz = 0, 0, border_chunk, border_chunk
         return vbfmt:pack(
-            ox, 0, oz, texcoords[1][1], texcoords[1][2],
-            ox, 0, nz, texcoords[2][1], texcoords[2][2],
-            nx, 0, oz, texcoords[3][1], texcoords[3][2],
-            nx, 0, nz, texcoords[4][1], texcoords[4][2]
-        )       
+            ox, 0, oz, 0, 1,
+            ox, 0, nz, 0, 0,
+            nx, 0, oz, 1, 1,
+            nx, 0, nz, 1, 0
+        )  
     end
 
-    local texcoords = get_quad_tex(1, 1)
     local vbfmt = ("fffff"):rep(4)
     local layout_name    = layoutmgr.correct_layout "p3|t20"
     local layout         = layoutmgr.get(layout_name)
-    return to_mesh_buffer(get_border_vb(texcoords, vbfmt), layout, irender.quad_ib())
+    return to_mesh_buffer(get_border_vb(vbfmt), layout, irender.quad_ib())
 end
 
 local function get_terrain_mesh(terrain_chunk)
@@ -94,9 +97,9 @@ local function create_plane_terrain_entity(gid, info, render_layer, terrain_chun
     local TERRAIN_MESH, BORDER_MESH = get_terrain_mesh(terrain_chunk), get_border_mesh(border_chunk)
     local mesh, material
     if info.type:match "terrain" then 
-        mesh, material = TERRAIN_MESH, plane_terrain_material
+        mesh, material = TERRAIN_MESH, DEFAULT_PLANE_TERRAIN_MATERIAL
     elseif info.type:match "border" then 
-        mesh, material = BORDER_MESH, border_material 
+        mesh, material = BORDER_MESH, DEFAULT_BORDER_MATERIAL 
     end
 
     ENTITIES[#ENTITIES+1] = world:create_entity {
@@ -115,9 +118,12 @@ local function create_plane_terrain_entity(gid, info, render_layer, terrain_chun
 end
 
 function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, border_chunk)
+    local terrain_render_layer = render_layer and render_layer or DEFAULT_TERRAIN_RENDER_LAYER
+    local terrain_chunk_size = terrain_chunk and terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
+    local border_chunk_size  = border_chunk and border_chunk or DEFAULT_BORDER_CHUNK_SIZE
     for gid, infos in pairs(groups) do
         for _, info in ipairs(infos) do
-            create_plane_terrain_entity(gid, info, render_layer, terrain_chunk, border_chunk)
+            create_plane_terrain_entity(gid, info, terrain_render_layer, terrain_chunk_size, border_chunk_size)
         end
     end
 end
