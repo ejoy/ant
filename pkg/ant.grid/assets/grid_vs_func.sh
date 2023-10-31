@@ -7,11 +7,10 @@
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
-    vec3 worldPos = mul(u_model[0], vec4(vs_input.pos, 1.0)).xyz;
-    vs_output.clip_pos = mul(u_viewProj, vec4(worldPos, 1.0));
-    
+    vec4 worldPos = transform_worldpos(u_model[0], vs_input.pos, vs_output.clip_pos);
+
     vec3 gridScale = vec3(u_grid_width, 1.0, u_grid_height);
     float3 cameraCenteringOffset = floor(u_eyepos.xyz * gridScale);
 
-	vs_output.uv0 = (worldPos * gridScale - cameraCenteringOffset).xz;
+	vs_output.uv0 = (worldPos.xyz * gridScale - cameraCenteringOffset).xz;
 }
