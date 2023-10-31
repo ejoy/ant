@@ -3,7 +3,6 @@ fx:
   fs_code: "#include \"grid_fs_func.sh\""
   setting:
     lighting: off
-    WITHOUT_DEFAULT_UV: 1
 properties:
   u_basecolor_factor: {1.0, 1.0, 1.0, 1.0}
   u_grid_params: {1.0, 1.0, 0.01, 0.01} # grid_width grid_height line_width_x light_width_z
