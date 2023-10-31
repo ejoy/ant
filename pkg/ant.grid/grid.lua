@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local igrid  = {}
-local grid_sys   = ecs.system "road_system"
+local grid_sys   = ecs.system "grid_system"
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
@@ -29,6 +29,43 @@ function grid_sys:exit()
     end
 end
 
+local function to_mesh_buffer(vb, vblayout, ib_handle)
+    local numv = 4
+    local numi = 6
+
+    return {
+        bounding = nil,
+        vb = {
+            start = 0,
+            num = numv,
+            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vb), vblayout.handle),
+        },
+        ib = {
+            start = 0,
+            num = numi,
+            handle = ib_handle,
+        }
+    }
+end
+
+local function get_quad_mesh()
+    local vbfmt = ("fffff"):rep(4)
+    local layout_name    = layoutmgr.correct_layout "p3|t20"
+    local layout         = layoutmgr.get(layout_name)
+
+    local function get_vb()
+        local ox, oz, nx, nz = 0, 0, 1, 1
+        return vbfmt:pack(
+            ox, 0, oz, 0, 1,
+            ox, 0, nz, 0, 0,
+            nx, 0, oz, 1, 1,
+            nx, 0, nz, 1, 0
+        )       
+    end
+    DEFAULT_GRID_MESH = to_mesh_buffer(get_vb(), layout, irender.quad_ib())
+    return DEFAULT_GRID_MESH
+end
+
 local function create_grid_entity(grid_params, grid_color, grid_render_layer, grid_srt)
     return world:create_entity {
         policy = {
@@ -36,7 +73,7 @@ local function create_grid_entity(grid_params, grid_color, grid_render_layer, gr
         },
         data = {
             scene = grid_srt,
-            simplemesh  = assert(DEFAULT_GRID_MESH, "default grid mesh doesn't existed!\n"),
+            simplemesh  = DEFAULT_GRID_MESH and DEFAULT_GRID_MESH or get_quad_mesh(),
             material    = DEFAULT_GRID_MATERIAL,
             visible_state = "main_view|selectable",
             render_layer = grid_render_layer,
@@ -65,54 +102,11 @@ local function get_grid_params(grid_width, grid_height, line_scale_x, line_scale
     return math3d.vector(grid_width, grid_height, line_scale_x, line_scale_z)
 end
 
-function igrid.create_grid_mesh()
-
-    local function to_mesh_buffer(vb, vblayout, ib_handle)
-        local numv = 4
-        local numi = 6
-    
-        return {
-            bounding = nil,
-            vb = {
-                start = 0,
-                num = numv,
-                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vb), vblayout.handle),
-            },
-            ib = {
-                start = 0,
-                num = numi,
-                handle = ib_handle,
-            }
-        }
-    end
-
-    local function get_quad_mesh()
-    
-        local vbfmt = ("fffff"):rep(4)
-        local layout_name    = layoutmgr.correct_layout "p3|t20"
-        local layout         = layoutmgr.get(layout_name)
-    
-        local function get_vb()
-            local ox, oz, nx, nz = 0, 0, 1, 1
-            return vbfmt:pack(
-                ox, 0, oz, 0, 1,
-                ox, 0, nz, 0, 0,
-                nx, 0, oz, 1, 1,
-                nx, 0, nz, 1, 0
-            )       
-        end
-    
-        return to_mesh_buffer(get_vb(), layout, irender.quad_ib())
-    end
-
-    assert(not DEFAULT_GRID_MESH, "default grid mesh has been created!\n")
-    DEFAULT_GRID_MESH = get_quad_mesh()
-end
-
 function igrid.create_grid_entity(grid_width, grid_height, line_scale_x, line_scale_z, srt, color, render_layer)
-    local scale_width, scale_height = get_grid_scale(srt)
     local grid_render_layer = render_layer and render_layer or DEFAULT_GRID_RENDER_LAYER
-    local grid_color = color and math3d.vector(color) or DEFAULT_GRID_COLOR.v
+    local grid_color = color and math3d.vector(color) or DEFAULT_GRID_COLOR
+
+    local scale_width, scale_height = get_grid_scale(srt)
     local grid_params = get_grid_params(grid_width, grid_height, line_scale_x, line_scale_z, scale_width, scale_height)
     return create_grid_entity(grid_params, grid_color, grid_render_layer, srt)
 end

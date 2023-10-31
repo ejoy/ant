@@ -73,8 +73,8 @@ end
 
 local function create_tp_entity(info, render_layer, tile_size)
     local gid, color = info.gid, info.color
-    local meshidx = {info.w / tile_size, info.h / tile_size}
-    local mesh = MESH_CACHE[meshidx[1]][meshidx[2]]
+    local mi, mj = info.w / tile_size, info.h / tile_size
+    local mesh = MESH_CACHE[mi][mj] and MESH_CACHE[mi][mj] or get_mesh(mi, mj)
 
     ENTITIES[#ENTITIES+1] = world:create_entity {
         group = gid,
@@ -83,7 +83,7 @@ local function create_tp_entity(info, render_layer, tile_size)
         },
         data = {
             scene = {s = {info.w, 1, info.h}, t = {info.x, 0, info.y}},
-            simplemesh  = assert(mesh, "translucent_plane mesh doesn't exist!\n"),
+            simplemesh  = mesh,
             material    = DEFAULT_TP_MATERIAL,
             visible_state = "main_view|selectable",
             render_layer = render_layer,
@@ -111,15 +111,6 @@ function tp_sys:exit()
 end
 
 local itp = {}
-
-function itp.create_tp_mesh()
-    assert(not MESH_CACHE, "translucent_plane mesh has been created!\n")
-    for i = 1, MAX_EDGE do
-        for j = 1, MAX_EDGE do
-            MESH_CACHE[i][j] = get_mesh(i, j)
-        end
-    end
-end
 
 function itp.update_tp(infos, render_layer, tile_size)
     local tp_render_layer = render_layer and render_layer or DEFAULT_TP_RENDER_LAYER

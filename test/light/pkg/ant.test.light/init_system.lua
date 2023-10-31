@@ -15,7 +15,6 @@ local fastio     = require "fastio"
 local S = ecs.system "init_system"
 local image 		= require "image"
 local iom = ecs.require "ant.objcontroller|obj_motion"
-local igrid = ecs.require "ant.grid|grid"
 local function create_instance(prefab, on_ready)
     local p = world:create_instance {
         prefab = prefab,
@@ -98,16 +97,6 @@ function S.init()
 
 end
 
-local function create_grid_entity()
-    local grid_width, grid_height = 10, 10 -- [1, ...] 100 x 100
-    local line_width_scale, line_height_scale = 0.1, 0.1 -- [0, 1] 0 empty 1 filled
-    local srt = {
-        s = math3d.vector(10, 1, 10) -- whole grid scale, grid scale x / grid_width = per grid width, grid scale z / grid_height = per grid height
-    }
-    local color = {1.0, 0.0, 0.0, 1.0} -- default {1.0, 1.0, 1.0, 1.0}
-    local render_layer = "translucent" -- default "translucent"
-    igrid.create_grid_entity(grid_width, grid_height, line_width_scale, line_height_scale, srt, color, render_layer)
-end
 
 function S.init_world()
 
@@ -118,8 +107,6 @@ function S.init_world()
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(ce, dir)
-    igrid.create_grid_mesh()
-    create_grid_entity()
 
     -- create_simple_triangles()
 
