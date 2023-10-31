@@ -9,13 +9,13 @@ local math3d    = require "math3d"
 
 local function create_pbr_entity(pos, color, metallic, roughness)
     return world:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/sphere.glb",
+        prefab = "/pkg/ant.resources.binary/meshes/base/sphere.glb|mesh.prefab",
         on_ready = function (e)
             local root<close> = world:entity(e.tag['*'][1], "scene:update")
             iom.set_position(root, pos)
 
             local sphere<close> = world:entity(e.tag['*'][2])
-            imaterial.set_property(sphere, "u_basecolor_factor",    color)
+            imaterial.set_property(sphere, "u_basecolor_factor",    math3d.vector(color))
             imaterial.set_property(sphere, "u_pbr_factor",          math3d.vector(metallic, roughness, 0.0, 0.0))
         end
     }

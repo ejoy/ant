@@ -12,8 +12,8 @@ system "init_system"
 system "grid_test_system"
     .implement "grid_test.lua"
 
--- system "pbr_test_system"
---     .implement "pbr_test.lua"
+system "pbr_test_system"
+    .implement "pbr_test.lua"
 
 system "shadow_test_system"
     .implement "shadow_test.lua"
