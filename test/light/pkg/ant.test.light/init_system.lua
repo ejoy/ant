@@ -86,21 +86,19 @@ end
 
 
 function S.init()
---[[     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
+    create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
         local leid = e.tag['*'][2]
         local le<close> = world:entity(leid, "directional_light scene:update")
 
         local r2l_mat<const> = mc.R2L_MAT
         local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
         iom.set_direction(le, v)
-    end) ]]
+    end)
 
 end
 
 
 function S.init_world()
-
-    
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
     local eyepos = math3d.vector(0, 10, -10)
