@@ -106,6 +106,7 @@ file_open(lua_State *L, const char *filename, const char *mode, struct filename_
 			luaL_error(L, "Invalid mode %s", mode);
 		m[i] = mode[i];
 	}
+	m[i] = 0;
 	return _wfopen(tmp->tmp, m);
 }
 
@@ -134,8 +135,13 @@ struct ziphandle {
 	zipFile h;
 };
 
+struct zipraw {
+	int method;
+	int level;
+};
+
 static zipFile
-open_new(lua_State *L, int index) {
+open_new(lua_State *L, int index, const struct zipraw *raw) {
 	const char *filename = luaL_checkstring(L, index);
 	struct ziphandle *z = (struct ziphandle *)luaL_checkudata(L, 1, "ZIP_WRITE");
 	if (z->h == NULL)
@@ -147,8 +153,10 @@ open_new(lua_State *L, int index) {
 	if (lua_rawget(L, cache) != LUA_TNIL) {
 		luaL_error(L, "Error: %s exist", filename);
 	}
-	int err = zipOpenNewFileInZip4(z->h, filename, NULL, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION,
-		0,	// raw := false
+	int err = zipOpenNewFileInZip4(z->h, filename, NULL, NULL, 0, NULL, 0, NULL,
+		raw ? raw->method : Z_DEFLATED,
+		raw ? raw->level : Z_DEFAULT_COMPRESSION,
+		raw != NULL,
 		-MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY,
 		NULL, 0, 0,
 		ZLIB_UTF8_FLAG
@@ -172,7 +180,7 @@ close_inzip(lua_State *L, zipFile zf) {
 
 static int
 zipwrite_add(lua_State *L) {
-	zipFile zf = open_new(L, 2);
+	zipFile zf = open_new(L, 2, NULL);
 	size_t sz;
 	const char * content = luaL_checklstring(L, 3, &sz);
 	int err = zipWriteInFileInZip(zf, content, sz);
@@ -185,7 +193,7 @@ zipwrite_add(lua_State *L) {
 
 static int
 zipwrite_addfile(lua_State *L) {
-	zipFile zf = open_new(L, 2);
+	zipFile zf = open_new(L, 2, NULL);
 	const char * addfile = luaL_checkstring(L, 3);
 	struct filename_convert tmp;
 	FILE *f = file_open(L, addfile, "rb", &tmp);
@@ -214,7 +222,7 @@ zipwrite_addfile(lua_State *L) {
 
 static int
 zipwrite_open(lua_State *L) {
-	open_new(L, 2);
+	open_new(L, 2, NULL);
 	return 0;
 }
 
@@ -323,23 +331,31 @@ locate_file(lua_State *L, unzFile zf, int n) {
 }
 
 static unzFile
-open_file(lua_State *L) {
-	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
+open_file(lua_State *L, int rzip, int filename, struct zipraw *raw) {
+	if (lua_getiuservalue(L, rzip, 1) != LUA_TTABLE) {
 		luaL_error(L, "Invalid zip userdata");
 	}
-	lua_pushvalue(L, 2);	// filename
+	lua_pushvalue(L, filename);	// filename
 	if (lua_rawget(L, -2) != LUA_TNUMBER) {
-		return 0;
+		lua_pop(L, 1);
+		return NULL;
 	}
 	int n = luaL_checkinteger(L, -1);
+	lua_pop(L, 2);
 
-	struct unzhandle *z = (struct unzhandle *)luaL_checkudata(L, 1, "ZIP_READ");
+	struct unzhandle *z = (struct unzhandle *)luaL_checkudata(L, rzip, "ZIP_READ");
 	if (z->h == NULL)
 		luaL_error(L, "Error: closed");
 
 	locate_file(L, z->h, n);
-	if (unzOpenCurrentFile(z->h))
-		luaL_error(L, "Error: open file %s", lua_tostring(L, 2));
+	int err;
+	if (raw) {
+		err = unzOpenCurrentFile2(z->h, &raw->method, &raw->level, 1);
+	} else {
+		err = unzOpenCurrentFile(z->h);
+	}
+	if (err != UNZ_OK)
+		luaL_error(L, "Error: open file %s", lua_tostring(L, filename));
 	return z->h;
 }
 
@@ -356,7 +372,9 @@ close_file(lua_State *L, unzFile zf) {
 
 static int
 zipread_readfile(lua_State *L) {
-	unzFile zf = open_file(L);
+	unzFile zf = open_file(L, 1, 2, NULL);
+	if (zf == NULL)
+		return 0;
 	unz_file_info info;
 	int err = unzGetCurrentFileInfo(zf, &info, NULL, 0, NULL, 0, NULL, 0);
 	if (err != UNZ_OK)
@@ -377,7 +395,9 @@ zipread_readfile(lua_State *L) {
 
 static int
 zipread_extract(lua_State *L) {
-	unzFile zf = open_file(L);
+	unzFile zf = open_file(L, 1, 2, NULL);
+	if (zf == NULL)
+		return luaL_error(L, "Error: no file %s", lua_tostring(L, 2));
 	const char * filename = luaL_checkstring(L, 3);
 	struct filename_convert tmp;
 	FILE *f = file_open(L, filename, "wb", &tmp);
@@ -401,7 +421,7 @@ zipread_extract(lua_State *L) {
 
 static int
 zipread_openfile(lua_State *L) {
-	open_file(L);
+	open_file(L, 1, 2, NULL);
 	return 0;
 }
 
@@ -431,6 +451,46 @@ zipread_read(lua_State *L) {
 	}
 	lua_pushlstring(L, (const char *)buf, bytes);
 	return 1;
+}
+
+// 2: filename
+// 3: readzip (userdata)
+// 4: opt: altername
+static int
+zipwrite_copyfrom(lua_State *L) {
+	int filename = lua_isnoneornil(L, 4) ? 2 : 4;
+	struct zipraw raw;
+	unzFile rd = open_file(L, 3, filename, &raw);
+	if (rd == NULL)
+		return luaL_error(L, "Error: open %s", lua_tostring(L, filename));
+	zipFile zf = open_new(L, 2, &raw);
+	if (zf == NULL)
+		return luaL_error(L, "Error: open %s", lua_tostring(L, 2));
+
+	// copy file from rd to zf
+
+	unz_file_info info;
+	int err = unzGetCurrentFileInfo(rd, &info, NULL, 0, NULL, 0, NULL, 0);
+	if (err != UNZ_OK)
+		luaL_error(L, "Error: get file info %s", lua_tostring(L, filename));
+
+	char buf[FILECHUNK];
+	int bytes;
+	do {
+		bytes = unzReadCurrentFile(rd, buf, sizeof(buf));
+		if (bytes < 0) {
+			return luaL_error(L, "Error: read %s", lua_tostring(L, filename));
+		}
+		if (bytes > 0 && zipWriteInFileInZip(zf, buf, bytes) != ZIP_OK) {
+			return luaL_error(L, "Error: write %s", lua_tostring(L, 2));
+		}
+	} while (bytes == sizeof(buf));
+	close_file(L, rd);
+
+	if (zipCloseFileInZipRaw(zf, info.uncompressed_size, info.crc) != ZIP_OK)
+		return luaL_error(L, "Error: close %s", 2);
+
+	return 0;
 }
 
 static int
@@ -485,6 +545,7 @@ zip(lua_State *L, const char *filename, int append) {
 		luaL_Reg l[] = {
 			{ "__index", NULL },
 			{ "__gc", zipwrite_closezip },
+			{ "copyfrom", zipwrite_copyfrom },
 			{ "addfile", zipwrite_addfile },
 			{ "add", zipwrite_add },
 			{ "openfile", zipwrite_open },
