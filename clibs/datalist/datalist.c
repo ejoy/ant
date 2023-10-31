@@ -46,6 +46,11 @@ struct lex_state {
 	int aslist;
 };
 
+static inline int
+inset(const char *set, char c) {
+	return c != '\0' && strchr(set, c) != NULL;
+}
+
 static const char *
 skip_line_comment(struct lex_state *LS) {
 	const char * ptr = LS->source + LS->position;
@@ -113,7 +118,7 @@ parse_atom(struct lex_state *LS) {
 	char head = *ptr;
 	LS->n.from = LS->position;
 	while (ptr < endptr) {
-		if (strchr(separator, *ptr)) {
+		if (inset(separator, *ptr)) {
 			break;
 		}
 		++ptr;
@@ -217,7 +222,7 @@ next_token(struct lex_state *LS) {
 			return 1;
 		case '-':
 			do ++ptr; while (ptr < endptr && *ptr == '-');
-			if (ptr >= endptr || strchr(" \t\r\n", *ptr)) {
+			if (ptr >= endptr || inset(" \t\r\n", *ptr)) {
 				LS->n.type = TOKEN_LIST;
 				LS->n.from = LS->position;
 				LS->n.to = ptr - LS->source;
@@ -407,7 +412,7 @@ push_token(lua_State *L, struct lex_state *LS, struct token *t) {
 		return;
 	}
 
-	if (strchr("0123456789+-.", ptr[0])) {
+	if (inset("0123456789+-.", ptr[0])) {
 		if (sz == 1) {
 			char c = *ptr;
 			if (c >= '0' && c <='9') {
