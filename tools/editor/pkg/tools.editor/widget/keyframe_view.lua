@@ -1205,8 +1205,10 @@ function m.show()
                 for k, v in pairs(imgui_message) do
                     if k == "pause" then
                         anim_pause(true)
-                        current_anim.current_frame = v
-                        anim_set_time(v / sample_ratio)
+                        if current_anim.current_frame ~= v then
+                            current_anim.current_frame = v
+                            anim_set_time(v / sample_ratio)
+                        end
                     elseif k == "selected_frame" then
                         current_anim.selected_frame = v
                     elseif k == "selected_clip_index" then
