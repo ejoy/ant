@@ -799,9 +799,13 @@ local function anim_set_speed(speed)
     end
 end
 
+local ui_bindcamera = {false}
 local function anim_set_time(t)
     if current_anim.type == "ske" then
         iani.set_time(anim_eid, t)
+        if ui_bindcamera[1] then
+            world:pub {"UpdateCamera"}
+        end
     else
         for _, anim in ipairs(current_anim.target_anims) do
             if anim.modifier then
@@ -867,6 +871,29 @@ local function create_animation(animtype, name, duration, target_anims)
                 get_or_create_target_anim(create_context.desc[1].name)
             end
             create_context = nil
+        end
+    end
+end
+local update_camera_mb  	= world:sub {"UpdateCamera"}
+function m.end_animation()
+    if not ui_bindcamera[1] or camera_updated then
+        return
+    end
+    local update_camera = false
+    if current_anim.is_playing then
+        update_camera = true
+    else
+        for _ in update_camera_mb:unpack() do
+            update_camera = true
+            break
+        end
+    end
+    if update_camera then
+        local anim <close> = world:entity(anim_eid, "anim_ctrl?in skeleton?in")
+        if anim.anim_ctrl and anim.skeleton then
+            local mq = w:first("main_queue camera_ref:in")
+            local ce<close> = world:entity(mq.camera_ref, "scene:update")
+            iom.set_srt_matrix(ce, anim.anim_ctrl.pose_result:joint(anim.skeleton._handle:joint_index("Bone")))
         end
     end
 end
@@ -998,6 +1025,7 @@ local function play_animation(current)
         end
     end
 end
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
@@ -1095,17 +1123,28 @@ function m.show()
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
             if string.sub(prefab_mgr.glb_filename, -10) == "camera.glb" then
-                --TODO: remove this code, Temp code for camera animation
-                if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
-                    m.save(file_path)
-                    local vpath = access.virtualpath(global_data.repo, file_path)
-                    assetmgr.unload(vpath)
-                    local mq = w:first("main_queue camera_ref:in")
-                    local ce<close> = world:entity(mq.camera_ref, "scene:update")
-                    local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
-                    local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
-                    imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0", init_srt = {r = {q1, q2, q3, q4}, t = {t1, t2, t3}}})
+                if imgui.widget.Checkbox("camera", ui_bindcamera) then
+                    local srt
+                    if ui_bindcamera[1] then
+                        local mq = w:first("main_queue camera_ref:in")
+                        local ce<close> = world:entity(mq.camera_ref, "scene:update")
+                        local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
+                        local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
+                        srt = {r={q1, q2, q3, q4}, t={t1, t2, t3}}
+                    end
+                    world:pub {"LockCamera", srt}
                 end
+                --TODO: remove this code, Temp code for camera animation
+                -- if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
+                --     m.save(file_path)
+                --     local vpath = access.virtualpath(global_data.repo, file_path)
+                --     assetmgr.unload(vpath)
+                --     local mq = w:first("main_queue camera_ref:in")
+                --     local ce<close> = world:entity(mq.camera_ref, "scene:update")
+                --     local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
+                --     local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
+                --     imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0", init_srt = {r = {q1, q2, q3, q4}, t = {t1, t2, t3}}})
+                -- end
                 imgui.cursor.SameLine()
             end
             local current_time = 0
