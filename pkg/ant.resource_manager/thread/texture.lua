@@ -41,7 +41,7 @@ end
 
 local function loadTexture(name)
     local path = name.."|main.cfg"
-    local c = datalist.parse(fastio.readall(cr.compile(path) or error ("Compile %s fail"):format(path), path))
+    local c = datalist.parse(fastio.readall(cr.compile(path) or error(("Compile %s fail"):format(path)), path))
     c.name = name
     if not c.value then
         c.path = cr.compile(name.."|main.bin")
