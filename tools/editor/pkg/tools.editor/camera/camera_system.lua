@@ -129,9 +129,11 @@ end
 local key_mb			= world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
 local mouse_wheel_mb    = world:sub {"mousewheel"}
+local event_gesture 	= world:sub { "gesture", "pinch"}
 local smooth_lookat_mb  = world:sub {"SmoothLookAt"}
 local event_camera_speed = world:sub{"camera_controller", "move_speed"}
-local event_gesture 	= world:sub { "gesture", "pinch"}
+local lock_camera_mb  	= world:sub {"LockCamera"}
+local restore_srt
 local function do_animation()
 	if not animation.running then
 		return true
@@ -164,7 +166,16 @@ local function do_animation()
 end
 
 function camera_sys:handle_input()
-	if not do_animation() then
+	for _, srt in lock_camera_mb:unpack() do
+		if not srt and restore_srt then
+			local mq = w:first("main_queue camera_ref:in")
+			local ce<close> = world:entity(mq.camera_ref, "scene:update")
+			iom.set_rotation(ce, math3d.quaternion(restore_srt.r))
+			iom.set_position(ce, math3d.vector(restore_srt.t))
+		end
+		restore_srt = srt
+	end
+	if not do_animation() or restore_srt then
 		return
 	end
 

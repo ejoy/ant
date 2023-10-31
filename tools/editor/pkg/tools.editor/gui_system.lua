@@ -551,4 +551,5 @@ end
 local joint_utils = require "widget.joint_utils"
 function m.end_animation()
     joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
+    keyframe_view.end_animation()
 end
