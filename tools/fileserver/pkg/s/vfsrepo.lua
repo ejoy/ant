@@ -3,44 +3,73 @@ local fastio = require "fastio"
 
 local repo = {}
 
-local function is_resource(path)
-	local ext = path:match "%.(%w+)$"
-	return ext and (ext == "material" or ext == "glb" or ext == "texture")
-end
-
 local DOT <const> = string.byte "."
 
-local function list_files(root, dir, fullpath)
+local function gen_set(s)
+	local r = {}
+	if not s then
+		return r
+	end
+	for _, name in ipairs(s) do
+		r[name] = true
+	end
+	return r
+end
+
+local function init_filter(f)
+	return {
+		block = gen_set(f.block),
+		ignore = gen_set(f.ignore),
+		resource = gen_set(f.resource),
+		whitelist = gen_set(f.whitelist),
+	}
+end
+
+local function list_files(root, dir, fullpath, filter)
+	if filter and filter.ignore[fullpath] then
+		filter = nil
+	end
 	local oldn = #dir
 	local n = 1
 	for path, attr in lfs.pairs(root) do
 		local name = path:filename():string()
-		if name:byte() ~= DOT then
-			local pathname = path:string()
-			local obj = { name = name }
-			if attr:is_directory() then
-				local d = {}
-				list_files(pathname, d, fullpath .. "/" .. name)
-				obj.dir = d
-			elseif is_resource(name) then
-				obj.resource = fullpath .. "/" .. name
-			else
-				obj.path = pathname
-				local timestamp = attr:last_write_time()
-				if timestamp ~= obj.timestamp then
-					obj.timestamp = timestamp
-					obj.hash = nil
-				end
-			end
-			dir[n] = obj; n = n + 1
+		if name:byte() == DOT then
+			goto continue
 		end
+		local fullpath_name = fullpath .. "/" .. name
+		if filter and filter.block[fullpath_name] then
+			goto continue
+		end
+		local pathname = path:string()
+		local ext = name:match "%.([^./]+)$"
+		local obj = { name = name }
+		if attr:is_directory() then
+			local d = {}
+			list_files(pathname, d, fullpath_name, filter)
+			obj.dir = d
+		elseif filter and filter.resource[ext] then
+			obj.resource = fullpath .. "/" .. name
+		else
+			if filter and ext and not filter.whitelist[ext] then
+				goto continue
+			end
+			obj.path = pathname
+			local timestamp = attr:last_write_time()
+			if timestamp ~= obj.timestamp then
+				obj.timestamp = timestamp
+				obj.hash = nil
+			end
+		end
+
+		dir[n] = obj; n = n + 1
+		::continue::
 	end
 	for i = n, oldn do
 		dir[i] = nil
 	end
 end
 
-local function patch_list_files(root, dir, fullpath)
+local function patch_list_files(root, dir, fullpath, filter)
 	local tmp = {}
 	local oldn = #dir
 	local n = 1
@@ -53,33 +82,44 @@ local function patch_list_files(root, dir, fullpath)
 	for path, attr in lfs.pairs(root) do
 		local name = path:filename():string()
 		local obj
-		if name:byte() ~= DOT then
-			local pathname = path:string()
-			if attr:is_directory() then
-				obj = tmp[name]
-				if not obj then
-					-- new dir
-					local d = {}
-					list_files(pathname, d, fullpath .. "/" .. name)
-					obj = {
-						dir = d,
-						name = name,
-					}
-				end
-			elseif is_resource(name) then
+		if name:byte() == DOT then
+			goto continue
+		end
+		local fullpath_name = fullpath .. "/" .. name
+		if filter.block[fullpath_name] then
+			goto continue
+		end
+		local pathname = path:string()
+		local ext = name:match "%.([^./]+)$"
+
+		if attr:is_directory() then
+			obj = tmp[name]
+			if not obj then
+				-- new dir
+				local d = {}
+				list_files(pathname, d, fullpath_name, filter)
 				obj = {
+					dir = d,
 					name = name,
-					resource = fullpath .. "/" .. name
-				}
-			else
-				obj = {
-					name = name,
-					path = pathname,
-					timestamp = attr:last_write_time(),
 				}
 			end
-			dir[n] = obj; n = n + 1
+		elseif filter.resource[ext] then
+			obj = {
+				name = name,
+				resource = fullpath .. "/" .. name
+			}
+		else
+			if ext and not filter.whitelist[ext] then
+				goto continue
+			end
+			obj = {
+				name = name,
+				path = pathname,
+				timestamp = attr:last_write_time(),
+			}
 		end
+		dir[n] = obj; n = n + 1
+		::continue::
 	end
 	for i = n, oldn do
 		dir[i] = nil
@@ -317,16 +357,21 @@ end
 
 local function add_path(self, paths)
 	local subroot = {}
-	for i, p in ipairs(paths) do
-		local root = {}
-		local path = append_slash(p.path)
+	local i = 1
+	local filter = self._filter
+	for _, p in ipairs(paths) do
 		local mount = append_slash(p.mount)
-		subroot[i] = {
-			path = path,
-			mount = mount,
-			root = root,
-		}
-		list_files(path, root, mount:sub(1, -2))
+		local vfspath = mount:sub(1, -2)
+		if not filter.block[vfspath] then
+			local root = {}
+			local path = append_slash(p.path)
+			subroot[i] = {
+				path = path,
+				mount = mount,
+				root = root,
+			} ; i = i + 1
+			list_files(path, root, vfspath, filter)
+		end
 	end
 	self._subroot = subroot
 end
@@ -387,9 +432,10 @@ local function find_subroot(self, localpath)
 end
 
 local function update_localpath(self, localpath)
+	local filter = self._filter
 	local path, sub = find_subroot(self, localpath)
-	if path then
-		patch_list_files(localpath, make_dir(sub.root, path), path)
+	if path and not filter.block[path] then
+		patch_list_files(localpath, make_dir(sub.root, path), path, filter)
 	end
 end
 
@@ -419,6 +465,7 @@ function repo_meta:init(config)
 	self._name = config.name and ("@" .. config.name)
 	self._dir = {}
 	self._subroot = {}
+	self._filter = init_filter(config.filter)
 	add_path(self, config)
 	merge_all(self)
 	if hashs then
@@ -480,6 +527,12 @@ local function test()	-- for reference
 	local init_config = {
 		{ path = "/ant/test/vfsrepo", mount = "/" },
 		{ path = "/ant/pkg", mount = "/pkg" },
+		filter = {
+			whitelist = { "lua" },
+			resource = { "material" , "glb" , "texture" },
+			ignore = { "/web" },
+	--		block = { "/pkg/ant.render" },
+		}
 	}
 
 	print("INIT")
