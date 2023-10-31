@@ -41,7 +41,7 @@ local function list_files(root, dir, fullpath, filter)
 			goto continue
 		end
 		local pathname = path:string()
-		local ext = name:match "%.([^./]+)$"
+		local ext = name:match "%.([^./]+)$" or ""
 		local obj = { name = name }
 		if attr:is_directory() then
 			local d = {}
@@ -50,7 +50,7 @@ local function list_files(root, dir, fullpath, filter)
 		elseif filter and filter.resource[ext] then
 			obj.resource = fullpath .. "/" .. name
 		else
-			if filter and ext and not filter.whitelist[ext] then
+			if filter and not filter.whitelist[ext] then
 				goto continue
 			end
 			obj.path = pathname
@@ -90,7 +90,7 @@ local function patch_list_files(root, dir, fullpath, filter)
 			goto continue
 		end
 		local pathname = path:string()
-		local ext = name:match "%.([^./]+)$"
+		local ext = name:match "%.([^./]+)$" or ""
 
 		if attr:is_directory() then
 			obj = tmp[name]
@@ -109,7 +109,7 @@ local function patch_list_files(root, dir, fullpath, filter)
 				resource = fullpath .. "/" .. name
 			}
 		else
-			if ext and not filter.whitelist[ext] then
+			if not filter.whitelist[ext] then
 				goto continue
 			end
 			obj = {
