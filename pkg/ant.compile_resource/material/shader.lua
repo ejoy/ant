@@ -37,7 +37,6 @@ local function wait_start(pathkey)
 end
 
 local function run(commands, input, output)
-    table.insert(commands, 1, SHADERC:string())
     local cmdstring = cmdtostr(commands)
     local path = ROOT / get_filename(cmdstring, input)
     local pathkey = path:string()
@@ -52,6 +51,7 @@ local function run(commands, input, output)
     lfs.remove_all(path)
     lfs.create_directories(path)
     local C = {
+        SHADERC:string(),
         commands,
         "-o", (path / "bin"):string(),
         "--depends",
