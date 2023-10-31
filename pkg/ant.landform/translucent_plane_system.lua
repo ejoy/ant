@@ -68,7 +68,8 @@ local function get_mesh(width, height)
             nx, 0, nz, texcoords[4][1], texcoords[4][2]
         )       
     end
-    return to_mesh_buffer(get_vb(), irender.quad_ib())
+    MESH_CACHE[width][height] = to_mesh_buffer(get_vb(), irender.quad_ib())
+    return MESH_CACHE[width][height]
 end
 
 local function create_tp_entity(info, render_layer, tile_size)
