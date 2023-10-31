@@ -91,8 +91,12 @@ local function create_grid_object(grid_params, grid_color, grid_render_layer, gr
 end
 
 local function get_grid_params(grid_width, grid_height, line_scale_x, line_scale_z, srt)
+    local function normalize_grid_size(gw, gh, sw, wh)
+        return gw / sw, gh / wh
+    end
     local sx, sz = srt[1], srt[3]
-    return math3d.mark(math3d.vector(grid_width / sx, grid_height / sz, line_scale_x, line_scale_z))
+    grid_width, grid_height = normalize_grid_size(grid_width, grid_height, sx, sz)
+    return math3d.mark(math3d.vector(grid_width, grid_height, line_scale_x, line_scale_z))
 end
 
 function igrid.create_grid(grid_width, grid_height, line_scale_x, line_scale_z, srt, color, render_layer)
