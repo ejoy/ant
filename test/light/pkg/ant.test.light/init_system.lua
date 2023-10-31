@@ -98,9 +98,20 @@ function S.init()
 
 end
 
+local function create_grid()
+    local grid_width, grid_height = 100, 100 -- [1, ...] 100 x 100
+    local line_width_scale, line_height_scale = 0.01, 0.01 -- [0, 1] 0 empty 1 filled
+    local srt = {
+        s = math3d.vector(100, 1, 100) -- whole grid scale, grid scale x / grid_width = per grid width, grid scale z / grid_height = per grid height
+    }
+    local color = {1.0, 0.0, 0.0, 1.0} -- default {1.0, 1.0, 1.0, 1.0}
+    local render_layer = "translucent" -- default "translucent"
+    igrid.create_grid(grid_width, grid_height, line_width_scale, line_height_scale, srt, color, render_layer)
+end
+
 function S.init_world()
 
-    igrid.create_grid(100, 100, 0.1, 0.1, {s = math3d.vector(100, 1, 100)}, {1.0, 0.0, 0.0, 1.0})
+    
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
     local eyepos = math3d.vector(0, 10, -10)
@@ -108,9 +119,7 @@ function S.init_world()
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(ce, dir)
 
-
-
-    --ientity.create_grid_entity_simple1(100, 100, 1)
+    create_grid()
 
     -- create_simple_triangles()
 
