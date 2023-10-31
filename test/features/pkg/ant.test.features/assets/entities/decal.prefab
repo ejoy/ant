@@ -15,7 +15,7 @@ policy:
 data:
     scene:
         t: {0, 0, 1, 1}
-    material: /pkg/ant.resources/materials/decal_test.material
+    material: /pkg/ant.test.features/assets/decal_test.material
     visible_state: main_view|selectable
     render_layer: decal
     decal:
