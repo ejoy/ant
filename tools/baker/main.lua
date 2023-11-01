@@ -1,4 +1,4 @@
-package.path = "engine/?.lua"
+package.path = "/engine/?.lua"
 
 if arg[1] then
     _VFS_ROOT_ = arg[1]

@@ -27,6 +27,9 @@ if __ANT_RUNTIME__ then
     end
 else
     function vfs.realpath(path)
+        if path:sub(1,8) == "/engine/" then
+            return path:sub(2)
+        end
         return path
     end
 end

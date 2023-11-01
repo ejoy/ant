@@ -35,10 +35,3 @@ vfs.initfunc("engine/firmware/init_thread.lua", {
 	fd = c:detach(),
 	editor = __ANT_EDITOR__,
 })
-
-package.path = package.path:gsub("[^;]+", function (s)
-    if s:sub(1,1) ~= "/" then
-        s = "/" .. s
-    end
-    return s
-end)

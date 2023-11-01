@@ -73,7 +73,7 @@ local function start_fileserver(luaexe, path)
     produce:push(luaexe, path)
 
     return cthread.thread [[
-        package.path = "engine/?.lua"
+        package.path = "/engine/?.lua"
         package.cpath = ""
         local fileserver = dofile "/pkg/tools.editor/fileserver_adapter.lua"()
         fileserver.run()

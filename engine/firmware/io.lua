@@ -324,9 +324,6 @@ local ListNeedResource <const> = 4
 
 function CMD.LIST(id, path)
 --	print("[request] LIST", path)
-	if path:sub(1,1) == "/" then
-		path = path:sub(2,-1)
-	end
 	local dir, r, hash = repo:list(path)
 	if dir then
 		response_id(id, dir)
@@ -344,17 +341,12 @@ function CMD.LIST(id, path)
 end
 
 function CMD.TYPE(id, fullpath)
-	assert(fullpath ~= "")
+	--	print("[request] TYPE", fullpath)
 	if fullpath == "/" then
 		response_id(id, "dir")
 		return
 	end
---	print("[request] TYPE", fullpath)
-	local path, name = fullpath:match "(.*)/(.-)$"
-	if path == nil then
-		path = ""
-		name = fullpath
-	end
+	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir, r, hash = repo:list(path)
 	if dir then
 		local v = dir[name]
@@ -381,11 +373,7 @@ end
 
 function CMD.GET(id, fullpath)
 --	print("[request] GET", fullpath)
-	local path, name = fullpath:match "(.*)/(.-)$"
-	if path == nil then
-		path = ""
-		name = fullpath
-	end
+	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir, r, hash = repo:list(path)
 	if not dir then
 		if r == ListNeedGet then
