@@ -2,80 +2,105 @@ local ltask = require "ltask"
 local httpd = require "http.httpd"
 local urllib = require "http.url"
 
-local ServiceIO = ltask.queryservice "io"
-local WEB_TUNNEL <const> = "WEBTUN"
-
 local socket_error = setmetatable({} , { __tostring = function() return "[Socket Error]" end })
 
-local function iofuncs(port)
-	return function (session)
-		session = tostring(session)
-		local io = {}
-		local msg = {}
-		local waiting
+-- todo: direct mode : use socket api
 
-		function io.append(str)
-			msg[#msg+1] = str
-			if waiting then
-				ltask.wakeup(waiting)
-				waiting = nil
+local function redirect(conf)
+	local ServiceIO = ltask.queryservice "io"
+	local WEB_TUNNEL <const> = "WEBTUN"
+	local port = tostring(conf.port)
+
+	local function iofuncs()
+		return function (session)
+			session = tostring(session)
+			local io = {}
+			local msg = {}
+			local waiting
+
+			function io.append(str)
+				msg[#msg+1] = str
+				if waiting then
+					ltask.wakeup(waiting)
+					waiting = nil
+				end
 			end
-		end
 
-		function io.read(size)
-			if msg[1] == nil then
-				waiting = coroutine.running()
-				ltask.wait(waiting)
+			function io.read(size)
 				if msg[1] == nil then
-					error(socket_error)
-				end
-			end
-			if size == nil then
-				return table.remove(msg, 1)
-			else
-				local r = msg[1]
-				while true do
-					local len = #r
-					if len > size then
-						msg[1] = r:sub(size+1)
-						return r:sub(1, size)
-					end
-					table.remove(msg, 1)
-					if len == size then
-						return r
-					end
+					waiting = coroutine.running()
+					ltask.wait(waiting)
 					if msg[1] == nil then
-						waiting = coroutine.running()
-						ltask.wait(waiting)
-						if msg[1] == nil then
-							error(socket_error)
-						end
+						error(socket_error)
 					end
-					r = r .. msg[1]
+				end
+				if size == nil then
+					return table.remove(msg, 1)
+				else
+					local r = msg[1]
+					while true do
+						local len = #r
+						if len > size then
+							msg[1] = r:sub(size+1)
+							return r:sub(1, size)
+						end
+						table.remove(msg, 1)
+						if len == size then
+							return r
+						end
+						if msg[1] == nil then
+							waiting = coroutine.running()
+							ltask.wait(waiting)
+							if msg[1] == nil then
+								error(socket_error)
+							end
+						end
+						r = r .. msg[1]
+					end
 				end
 			end
-		end
 
-		-- tunnel don't support large package
-		function io.write(str)
-			local n = #str
-			local from = 0
-			while n >= 0x8000 do
-				ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str:sub(from + 1, from + 0x8000))
-				from = from + 0x8000
-				n = n - 0x8000
+			-- tunnel don't support large package
+			function io.write(str)
+				local n = #str
+				local from = 0
+				while n >= 0x8000 do
+					ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str:sub(from + 1, from + 0x8000))
+					from = from + 0x8000
+					n = n - 0x8000
+				end
+				if n > 0 then
+					ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str:sub(from + 1, from + n))
+				end
 			end
-			if n > 0 then
-				ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session, str:sub(from + 1, from + n))
+
+			function io.close()
+				ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session)
 			end
-		end
 
-		function io.close()
-			ltask.send(ServiceIO, "SEND", "TUNNEL_RESP", port, session)
+			return io
 		end
-
-		return io
 	end
+
+	local function init(sessions)
+		local S = ltask.dispatch()
+		-- todo: support multiple port
+		assert(S[WEB_TUNNEL] == nil, "webserver already start")
+		print ("Webserver start at", port)
+
+		S[WEB_TUNNEL] = function (port, session, req)
+			local s = sessions[session]
+			s.append(req)
+		end
+
+		ltask.send(ServiceIO, "REDIRECT", WEB_TUNNEL, ltask.self())
+		ltask.send(ServiceIO, "SEND", "TUNNEL_OPEN", port, WEB_TUNNEL)
+	end
+
+	return {
+		iofuncs = iofuncs,
+		init = init,
+	}
 end
 
 local sessions = {}
@@ -111,6 +136,8 @@ local lua_error_temp = [[
 ]]
 
 local webvfs = require "webvfs"
+
+local S = {}
 
 local function route_vfs(route, cgi)
 	return function (s)
@@ -150,7 +177,7 @@ local function route_vfs(route, cgi)
 					if not mapping then
 						mapping = route["/"]
 						if not mapping then
-							response(id, s.write, 403, "ERROR 403 : " ..  fullpath .. " not found")
+							response(id, s.write, 403, "ERROR 403 : No web root")
 							return
 						end
 						root = "/"
@@ -181,17 +208,9 @@ local function route_vfs(route, cgi)
 	end
 end
 
-local S = {}
-
 function S.start(conf)
-	local S = ltask.dispatch()
-	local port = tostring(conf.port)
-
-	-- todo: support multiple port
-	assert(S[WEB_TUNNEL] == nil, "webserver already start")
-	print ("Webserver start at", port)
-
-	local iof = iofuncs(port)
+	local interface = redirect(conf)
+	local iof = interface.iofuncs()
 	if conf.home then
 		conf.route["/"] = conf.home
 	end
@@ -217,13 +236,7 @@ function S.start(conf)
 		end
 	})
 
-	S[WEB_TUNNEL] = function (port, session, req)
-		local s = sessions[session]
-		s.append(req)
-	end
-
-	ltask.send(ServiceIO, "REDIRECT", WEB_TUNNEL, ltask.self())
-	ltask.send(ServiceIO, "SEND", "TUNNEL_OPEN", port, WEB_TUNNEL)
+	interface.init(sessions)
 end
 
 return S

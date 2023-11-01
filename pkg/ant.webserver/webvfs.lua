@@ -151,14 +151,13 @@ function M.get(fsname, path, url_path, vfs_path)
 		fullpath = assert(get_directory(fsname)) .. fullpath
 		fsname = "localfs"
 		fs = FS.localfs
-		print("GET", fullpath)
 	end
 	local pathname = FS[fsname].path(fullpath)
 	local data, header = get_path[fsname](pathname, url_path, path)
 	if data then
 		return 200, data, header
 	else
-		return 403, "ERROR 403 : " ..  path .. " not found"
+		return 403, ("ERROR 403 : %s not found"):format(url_path)
 	end
 end
 
