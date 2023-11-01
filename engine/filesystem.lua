@@ -16,6 +16,9 @@ local function constructor(str)
 end
 
 local function normalize(fullname)
+    if fullname == "/" then
+        return "/"
+    end
     local first = (fullname:sub(1, 1) == "/") and "/" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
