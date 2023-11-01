@@ -1,6 +1,6 @@
 if arg[1] then
     _VFS_ROOT_ = arg[1]
-    package.path = "engine/?.lua"
+    package.path = "/engine/?.lua"
     require "editor.init_vfs"
     local lfs = require "bee.filesystem"
     local vfs = require "vfs"
@@ -8,6 +8,6 @@ if arg[1] then
     vfs.mount("/pkg/tools.dump-prefab", workdir:string())
 end
 
-package.path = "engine/?.lua"
+package.path = "/engine/?.lua"
 require "bootstrap"
 import_package "tools.dump-prefab"

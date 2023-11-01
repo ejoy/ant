@@ -1,6 +1,6 @@
 local repopath, fddata = ...
 
-package.path = "engine/?.lua"
+package.path = "/engine/?.lua"
 package.cpath = ""
 
 local fastio = require "fastio"

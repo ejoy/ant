@@ -1,7 +1,5 @@
-if __ANT_RUNTIME__ then
-    require "packagemanager"
-    --require "runtime.debug"
-else
+if not __ANT_RUNTIME__ then
     require "editor.init_vfs"
-    require "packagemanager"
 end
+
+require "packagemanager"

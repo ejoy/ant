@@ -85,7 +85,7 @@ local function fetch_file(self, hash, fullpath)
 		return ListNeedGet, hash
 	end
 
-	local path, name = fullpath:match "/?([^/]+)/?(.*)"
+	local path, name = fullpath:match "^([^/]+)/?(.*)$"
 	local subpath = dir[path]
 	if subpath then
 		if name == "" then
@@ -116,8 +116,8 @@ end
 
 function vfs:list(path)
 	local hash = self.root
-	if path ~= "" then
-		local r, h = fetch_file(self, hash, path)
+	if path ~= "/" then
+		local r, h = fetch_file(self, hash, path:sub(2))
 		if r ~= ListSuccess then
 			return nil, r, h
 		end
