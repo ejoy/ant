@@ -1,0 +1,3 @@
+os: windows
+renderer: direct3d11
+texture: dds

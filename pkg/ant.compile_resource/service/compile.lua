@@ -69,4 +69,8 @@ function S.VERIFY(id, paths)
     return lpaths
 end
 
+function S.QUIT()
+    ltask.quit()
+end
+
 return S
