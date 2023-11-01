@@ -1,7 +1,7 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
-local new_repo = require "repo"
+local new_repo = import_package "ant.vfs"
 
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
