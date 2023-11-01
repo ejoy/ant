@@ -33,7 +33,8 @@ if #data >= 16380 then
     writeline(f)
     writeline(f, [[};]])
 else
-    writeline(f, ([[const char g%sData[] = R"firmware(]]):format(name))
-    writeline(f, data)
-    writeline(f, [[)firmware";]])
+    f:write(([[const char g%sData[] = R"firmware(]]):format(name))
+    f:write(data)
+    f:write([[)firmware";]])
+    f:write "\r\n"
 end

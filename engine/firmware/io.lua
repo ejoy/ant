@@ -14,7 +14,7 @@ if path then
 	load_dbg()
 		: attach {}
 		: event("setThreadName", "Thread: IO")
-		--: event "wait"
+		: event "wait"
 end
 
 -- C libs only
