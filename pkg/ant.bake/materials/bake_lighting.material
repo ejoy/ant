@@ -4,5 +4,4 @@ fx:
     setting:
         LIGHTING:on
 properties:
-
-state: /pkg/ant.resources/materials/states/default.state
+    state: /pkg/ant.resources/materials/states/default.state
