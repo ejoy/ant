@@ -2,19 +2,19 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local math3d = require "math3d"
-local bgfx = require "bgfx"
-local assetmgr      = import_package "ant.asset"
-local mathpkg = import_package "ant.math"
-local mu, mc = mathpkg.util, mathpkg.constant
-local ltask = require "ltask"
-local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
+local math3d    = require "math3d"
+local bgfx      = require "bgfx"
+
+local irender   = ecs.require "ant.render|render_system.render"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
+
+local mathpkg   = import_package "ant.math"
+local mu, mc    = mathpkg.util, mathpkg.constant
+
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
-local fastio     = require "fastio"
-local S = ecs.system "init_system"
-local image 		= require "image"
-local iom = ecs.require "ant.objcontroller|obj_motion"
+local S         = ecs.system "init_system"
+
 local function create_instance(prefab, on_ready)
     local p = world:create_instance {
         prefab = prefab,
@@ -97,6 +97,34 @@ function S.init()
 
 end
 
+local function test_lines()
+    local pw, nw = 0.5, -0.5
+    local ld = 100
+    world:create_entity{
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            simplemesh = {
+                vb = {
+                    start = 0,
+                    num = 4,
+                    handle = bgfx.create_vertex_buffer(("fffff"):rep(4):pack(
+                        nw, 0.0, 0.0, 0.0, 1.0,
+                        nw, 0.0, ld,  0.0, 0.0,
+                        pw, 0.0, 0.0, 1.0, 0.0,
+                        pw, 0.0, ld,  1.0, 1.0), layoutmgr.get "p3|t2".handle)
+                },
+                ib = irender.quad_ibobj(6)
+            },
+            material = "/pkg/ant.test.light/assets/materials/line_test.material",
+            visible_state  = "main_view",
+            render_layer = "translucent",
+            scene = {},
+        }
+    }
+end
+
 
 function S.init_world()
     local mq = w:first "main_queue camera_ref:in"
@@ -106,6 +134,7 @@ function S.init_world()
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(ce, dir)
 
+    test_lines()
     -- create_simple_triangles()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
