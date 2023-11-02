@@ -4,6 +4,7 @@ local fastio = require "fastio"
 local repo = {}
 
 local DOT <const> = string.byte "."
+local SLASH <const> = string.byte "/"
 
 local function gen_set(s)
 	local r = {}
@@ -260,7 +261,7 @@ local function export_hash(root, name)
 end
 
 local function make_index(root)
-	local index = { ["/"] = root }
+	local index = { [""] = root }
 	local function make_index_(dir, prefix)
 		for _, item in ipairs(dir) do
 			if item.dir then
@@ -275,7 +276,7 @@ local function make_index(root)
 end
 
 local function import_hash(index, hashs, name)
-	for path, dir in pairs(index) do
+	for _, dir in pairs(index) do
 		for _, item in ipairs(dir) do
 			if item.path then
 				local fullpath = item.path
@@ -373,31 +374,43 @@ local function merge_all(self)
 	self._dir = result
 end
 
-function repo_meta:file(pathname)
-	local path, name = pathname:match "^/?(.-)/([^/]*)$"
-	if name == "" then
-		pathname = path
-		path, name = path:match "^(.-)/([^/]*)$"
+local function split_path(path)
+	local from, to = path:find "([^/]+)/?$"
+	if not from then
+		return ""
 	end
-	if path == nil or path == "" then
-		-- root
-		for _, item in ipairs(self._dir) do
-			if item.name == pathname then
-				return item, self._dir
-			end
-		end
-		return nil, self._dir
+	local name = path:sub(from, to)
+	if path:byte() == SLASH then
+		path = path:sub(2, from - 1)
 	else
-		local dir = self._index[path .. "/"]
-		if dir == nil then
-			return
+		path = path:sub(1, from - 1)
+	end
+	return path, name
+end
+
+function repo_meta:file(pathname)
+	local path, name = split_path(pathname)
+	if name == nil then
+		return self._root
+	end
+	local dir = self._index[path]
+	if dir == nil then
+		return
+	end
+	for _, item in ipairs(dir) do
+		if item.name == name then
+			return item
 		end
-		for _, item in ipairs(dir) do
-			if item.name == name then
-				return item, dir
-			end
+	end
+end
+
+function repo_meta:valid_path(path)
+	local index = self._index
+	while true do
+		path = split_path(path)
+		if index[path] then
+			return "/" .. path
 		end
-		return nil, dir
 	end
 end
 
