@@ -141,7 +141,7 @@ struct zipraw {
 };
 
 static zipFile
-open_new(lua_State *L, int index, const struct zipraw *raw) {
+open_new(lua_State *L, int index, const struct zipraw *raw, int level) {
 	const char *filename = luaL_checkstring(L, index);
 	struct ziphandle *z = (struct ziphandle *)luaL_checkudata(L, 1, "ZIP_WRITE");
 	if (z->h == NULL)
@@ -155,7 +155,7 @@ open_new(lua_State *L, int index, const struct zipraw *raw) {
 	}
 	int err = zipOpenNewFileInZip4(z->h, filename, NULL, NULL, 0, NULL, 0, NULL,
 		raw ? raw->method : Z_DEFLATED,
-		raw ? raw->level : Z_DEFAULT_COMPRESSION,
+		raw ? raw->level : level,
 		raw != NULL,
 		-MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY,
 		NULL, 0, 0,
@@ -180,7 +180,8 @@ close_inzip(lua_State *L, zipFile zf) {
 
 static int
 zipwrite_add(lua_State *L) {
-	zipFile zf = open_new(L, 2, NULL);
+	int level = luaL_optinteger(L, 4, Z_DEFAULT_COMPRESSION);
+	zipFile zf = open_new(L, 2, NULL, level);
 	size_t sz;
 	const char * content = luaL_checklstring(L, 3, &sz);
 	int err = zipWriteInFileInZip(zf, content, sz);
@@ -193,7 +194,8 @@ zipwrite_add(lua_State *L) {
 
 static int
 zipwrite_addfile(lua_State *L) {
-	zipFile zf = open_new(L, 2, NULL);
+	int level = luaL_optinteger(L, 4, Z_DEFAULT_COMPRESSION);
+	zipFile zf = open_new(L, 2, NULL, level);
 	const char * addfile = luaL_checkstring(L, 3);
 	struct filename_convert tmp;
 	FILE *f = file_open(L, addfile, "rb", &tmp);
@@ -222,7 +224,8 @@ zipwrite_addfile(lua_State *L) {
 
 static int
 zipwrite_open(lua_State *L) {
-	open_new(L, 2, NULL);
+	int level = luaL_optinteger(L, 3, Z_DEFAULT_COMPRESSION);
+	open_new(L, 2, NULL, level);
 	return 0;
 }
 
@@ -463,7 +466,7 @@ zipwrite_copyfrom(lua_State *L) {
 	unzFile rd = open_file(L, 3, filename, &raw);
 	if (rd == NULL)
 		return luaL_error(L, "Error: open %s", lua_tostring(L, filename));
-	zipFile zf = open_new(L, 2, &raw);
+	zipFile zf = open_new(L, 2, &raw, raw.level);
 	if (zf == NULL)
 		return luaL_error(L, "Error: open %s", lua_tostring(L, 2));
 
