@@ -57,11 +57,15 @@ function vfs.resource_setting(setting)
 	return send("RESOURCE_SETTING", setting)
 end
 
-if not __ANT_RUNTIME__ then
+if __ANT_EDITOR__ then
 	function vfs.repopath()
 		return call("REPOPATH")
 	end
 	function vfs.mount(path)
 		return call("MOUNT", path)
+	end
+elseif not __ANT_RUNTIME__ then
+	function vfs.repopath()
+		return call("REPOPATH")
 	end
 end

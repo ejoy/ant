@@ -128,6 +128,9 @@ local root_filter <const> = {
 		"anim",
 		-- material
 		"state",
+		-- todo
+		"sc",
+		"sh",
 	},
 }
 
@@ -152,7 +155,8 @@ local function read_vfsignore(rootpath)
 end
 
 return function (rootpath)
-	local cachepath = rootpath / ".fileserver"
+	rootpath = lfs.path(rootpath)
+	local cachepath = lfs.path(rootpath) / ".fileserver"
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end
