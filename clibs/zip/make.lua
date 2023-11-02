@@ -3,15 +3,18 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:lua_source "minizip" {
-	rootdir = Ant3rd .. "zlib/contrib/minizip",
+	rootdir = Ant3rd .. "zlib/",
 	windows = {
 		sources = "contrib/minizip/iowin32.c",
 	},
-	includes = "contrib/minizip",
+	includes = {
+		".",
+		"contrib/minizip",
+	},
 	sources = {
-		"ioapi.c",
-		"unzip.c",
-		"zip.c",
+		"contrib/minizip/ioapi.c",
+		"contrib/minizip/unzip.c",
+		"contrib/minizip/zip.c",
 	},
 }
 
