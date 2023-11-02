@@ -134,7 +134,11 @@ local function create_fbidx(width, height)
     )
 end
 
-local function update_fb(width, height, queuename)
+local function update_fb(old_fbidx, width, height, queuename)
+    if width == 0 or height == 0 then return end
+    if old_fbidx then
+        fbmgr.destroy(old_fbidx)
+    end
     local select_tag = queuename .. " render_target:in camera_ref:in"
     local qe = w:first(select_tag)
     if not qe then
@@ -171,7 +175,7 @@ function S.render_target_update(width, height, rt_name)
     local rt = rt_table[rt_name]
     if rt then -- adjust width/height
         if width ~= rt.w or height ~= rt.h then
-            rt.fbidx = update_fb(width, height, QUEUENAMES[rt_name]) 
+            rt.fb_idx = update_fb(rt.fb_idx, width, height, QUEUENAMES[rt_name]) 
         end
         rt.w, rt.h = width, height
     else -- first create rt
@@ -227,7 +231,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
         rt_table[rt_name] = rt
         create_render_target_instance(1, 1, rt_name, rt)
     elseif not rt.rt_handle then
-        local fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
+        local fbidx = update_fb(rt.fb_idx, rt.w, rt.h, QUEUENAMES[rt_name])
         if fbidx then
             rt.rt_handle = fbmgr.get_rb(fbidx, 1).handle
             ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle) 
@@ -336,7 +340,7 @@ function ui_rt_sys:data_changed()
                 end
             end) 
         elseif rt.timestamp and rt.timestamp < reload_timestamp and (not rt.rt_handle) then
-            local fbidx = update_fb(rt.w, rt.h, QUEUENAMES[rt_name])
+            local fbidx = update_fb(rt.fb_idx, rt.w, rt.h, QUEUENAMES[rt_name])
             local rt_handle = fbmgr.get_rb(fbidx, 1).handle
             rt.rt_handle = rt_handle
             ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle)                
