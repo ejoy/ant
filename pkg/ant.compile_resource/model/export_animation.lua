@@ -1,4 +1,4 @@
-local fs = require "bee.filesystem"
+local lfs = require "bee.filesystem"
 local GLTF2OZZ = require "tool_exe_path"("gltf2ozz")
 local subprocess = require "subprocess"
 
@@ -6,7 +6,7 @@ return function (status)
     local input = status.input
     local output = status.output
     local folder = output / "animations"
-    fs.create_directories(folder)
+    lfs.create_directories(folder)
     -- we can specify config file to determine what skeleton file name and animaiton name
     -- it json file:
     --[[
@@ -20,7 +20,7 @@ return function (status)
             ]
         }
     ]]
-    local cwd = fs.current_path()
+    local cwd = lfs.current_path()
     print("animation compile:")
     local success, msg = subprocess.spawn_process {
         GLTF2OZZ,
@@ -32,14 +32,14 @@ return function (status)
         print(msg)
     end
     local skefile = folder / "skeleton.ozz"
-    if not fs.exists(skefile) then
+    if not lfs.exists(skefile) then
         print("NO SKELETON export!")
     else
         status.skeleton = "animations/skeleton.ozz"
     end
 
     status.animations = {}
-    for path in fs.pairs(folder) do
+    for path in lfs.pairs(folder) do
         if path:equal_extension ".ozz" then
             local filename = path:filename():string()
             if filename ~= "skeleton.ozz" then
