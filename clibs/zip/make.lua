@@ -2,23 +2,39 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-local MINIZ = Ant3rd .. "zlib/contrib/minizip/"
+lm:lua_source "minizip" {
+	rootdir = Ant3rd .. "zlib/contrib/minizip",
+	windows = {
+		sources = "contrib/minizip/iowin32.c",
+	},
+	includes = "contrib/minizip",
+	sources = {
+		"ioapi.c",
+		"unzip.c",
+		"zip.c",
+	},
+}
 
-lm:lua_source "zip" {
-    windows = {
-        sources = {
-			MINIZ .. "iowin32.c",
-        },
-    },
+lm:lua_source "zlib" {
+	rootdir = Ant3rd .. "zlib",
+	sources = {
+		"*.c",
+		"!gz*.c",
+	},
+}
+
+lm:lua_source "zip-binding" {
 	includes = {
 		Ant3rd .. "zlib",
-		MINIZ,
-    },
-	sources = {
-		Ant3rd .. "zlib/*.c",
-		MINIZ .. "ioapi.c",
-		MINIZ .. "unzip.c",
-		MINIZ .. "zip.c",
-		"*.c",
+		Ant3rd .. "zlib/contrib/minizip",
 	},
+	sources = "*.c",
+}
+
+lm:lua_source "zip" {
+	deps = {
+		"zlib",
+		"minizip",
+		"zip-binding",
+	}
 }
