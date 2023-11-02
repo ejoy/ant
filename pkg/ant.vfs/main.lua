@@ -27,6 +27,22 @@ local function import_hash(self)
 end
 
 local function export_hash(self, vfsrepo, mode)
+	local filehash = self._filehash
+	local list = vfsrepo:export()
+	for i = 1, #list do
+		local v = list[i]
+		local n = filehash[v.hash]
+		if not n then
+			filehash[v.hash] = {
+				path = v.path,
+				dir = v.dir,
+			}
+		elseif n.dir then
+			assert(v.dir == n.dir)
+		elseif v.path ~= n.path then
+			assert(fastio.readall_s(v.path) == fastio.readall_s(n.path))
+		end
+	end
 	local hashspath = self._cachepath / "hashs"
 	local hashs = vfsrepo:export_hash()
 	local f <close> = assert(io.open(hashspath:string(), mode))
@@ -39,8 +55,6 @@ end
 function REPO_MT:rebuild(changed)
 	local vfsrepo = self._vfsrepo
 	vfsrepo:update(changed)
-	vfsrepo:hash_dirs(self._dirhash)
-	vfsrepo:hash_files(self._filehash)
 	export_hash(self, vfsrepo, "wb")
 end
 
@@ -67,14 +81,7 @@ function REPO_MT:virtualpath(pathname)
 end
 
 function REPO_MT:hash(hash)
-	local dir = self._dirhash[hash]
-	if dir then
-		return "dir", dir
-	end
-	local file = self._filehash[hash]
-	if file then
-		return "file", file
-	end
+	return self._filehash[hash]
 end
 
 function REPO_MT:export_resources()
@@ -136,8 +143,6 @@ function REPO_MT:build_resource(path, name)
 		hash = self._hashs,
 		filter = resource_filter
 	}
-	vfsrepo:hash_dirs(self._dirhash)
-	vfsrepo:hash_files(self._filehash)
 	export_hash(self, vfsrepo, "ab")
 	return vfsrepo:root()
 end
@@ -165,7 +170,6 @@ return function (rootpath)
 		_vfsrepo = vfsrepo,
 		_cachepath = cachepath,
 		_mountlpath = repo._mountlpath,
-		_dirhash = {},
 		_filehash = {},
 		_lock = filelock(cachepath),	-- lock repo
 	}
@@ -186,8 +190,6 @@ return function (rootpath)
 		}
 	end
 	vfsrepo:init(config)
-	vfsrepo:hash_dirs(self._dirhash)
-	vfsrepo:hash_files(self._filehash)
 	export_hash(self, vfsrepo, "wb")
 	return setmetatable(self, REPO_MT)
 end

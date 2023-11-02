@@ -50,19 +50,17 @@ do print "step3. pack resource"
     zipfile:add(hashpath(repo:root())..".resource", table.concat(resource))
 end
 
-do print "step4. pack dir"
-    for hash, dir in pairs(repo._dirhash) do
-        zipfile:add(hashpath(hash), dir)
+do print "step4. pack file and dir"
+    for hash, v in pairs(repo._filehash) do
+        if v.dir then
+            zipfile:add(hashpath(hash), v.dir)
+        else
+            zipfile:addfile(hashpath(hash), v.path)
+        end
     end
 end
 
-do print "step5. pack file"
-    for hash, file in pairs(repo._filehash) do
-        zipfile:addfile(hashpath(hash), file)
-    end
-end
-
-do print "step6. finish"
+do print "step5. finish"
     zipfile:close()
     ltask.call(ServiceCompile, "QUIT")
 end

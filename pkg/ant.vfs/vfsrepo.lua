@@ -507,7 +507,7 @@ function repo_meta:export()
 			local fullpath = path .. item.name
 			if item.hash then
 				if item.content then
-					r[n] = { vpath = fullpath, hash = item.hash, dir = item.name }
+					r[n] = { vpath = fullpath, hash = item.hash, dir = item.content }
 				else
 					r[n] = { vpath = fullpath, hash = item.hash, path = item.path }
 				end

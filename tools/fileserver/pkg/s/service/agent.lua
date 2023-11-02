@@ -190,9 +190,11 @@ function message.RESOURCE(path)
 end
 
 function message.GET(hash)
-	local type, filename = ltask.call(ServiceVfsMgr, "GET", hash)
-	if type == "dir" then
-		local content = filename
+	local v = ltask.call(ServiceVfsMgr, "GET", hash)
+	if not v then
+		response("MISSING", hash)
+	elseif v.dir then
+		local content = v.dir
 		local sz = #content
 		if sz < 0x8000 then
 			response("BLOB", hash, content)
@@ -208,8 +210,8 @@ function message.GET(hash)
 				end
 			end
 		end
-	elseif type == "file" then
-		local f = io.open(filename, "rb")
+	else
+		local f = io.open(v.path, "rb")
 		if not f then
 			response("MISSING", hash)
 			return
@@ -231,8 +233,6 @@ function message.GET(hash)
 			end
 		end
 		f:close()
-	else
-		response("MISSING", hash)
 	end
 end
 
