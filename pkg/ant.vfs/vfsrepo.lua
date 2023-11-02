@@ -266,7 +266,7 @@ local function make_index(root)
 		for _, item in ipairs(dir) do
 			if item.dir then
 				local path = prefix .. item.name .. "/"
-				index[path] = item.dir
+				index[path] = item
 				make_index_(item.dir, path)
 			end
 		end
@@ -375,11 +375,10 @@ local function merge_all(self)
 end
 
 local function split_path(path)
-	local from, to = path:find "([^/]+)/?$"
+	local from, to, name = path:find "([^/]+)/?$"
 	if not from then
 		return ""
 	end
-	local name = path:sub(from, to)
 	if path:byte() == SLASH then
 		path = path:sub(2, from - 1)
 	else
@@ -397,7 +396,7 @@ function repo_meta:file(pathname)
 	if dir == nil then
 		return
 	end
-	for _, item in ipairs(dir) do
+	for _, item in ipairs(dir.dir) do
 		if item.name == name then
 			return item
 		end
@@ -407,9 +406,15 @@ end
 function repo_meta:valid_path(path)
 	local index = self._index
 	while true do
-		path = split_path(path)
-		if index[path] then
-			return "/" .. path
+		path, name = split_path(path)
+		local dir = index[path]
+		if dir then
+			for _, item in ipairs(dir.dir) do
+				if item.name == name then
+					return "/" .. path .. name, item
+				end
+			end
+			return "/" .. path, dir
 		end
 	end
 end
