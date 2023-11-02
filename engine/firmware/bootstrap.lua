@@ -40,9 +40,6 @@ do
 		fs.remove_all(repo)
 	end
 	fs.create_directories(repo)
-	for i = 0, 255 do
-		fs.create_directory(root / ".repo" / ("%02x"):format(i))
-	end
 	fs.current_path(root)
 end
 

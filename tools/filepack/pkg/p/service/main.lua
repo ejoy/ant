@@ -6,10 +6,6 @@ local fastio = require "fastio"
 local zip = require "zip"
 local new_repo = import_package "ant.vfs"
 
-local function hashpath(hash)
-	return hash:sub(1,2) .. "/" .. hash
-end
-
 local arg = ...
 local zipfile
 local repo
@@ -47,15 +43,15 @@ do print "step3. pack resource"
     end
     for _ in ltask.parallel(tasks) do
     end
-    zipfile:add(hashpath(repo:root())..".resource", table.concat(resource))
+    zipfile:add(repo:root()..".resource", table.concat(resource))
 end
 
 do print "step4. pack file and dir"
     for hash, v in pairs(repo._filehash) do
         if v.dir then
-            zipfile:add(hashpath(hash), v.dir)
+            zipfile:add(hash, v.dir)
         else
-            zipfile:addfile(hashpath(hash), v.path)
+            zipfile:addfile(hash, v.path)
         end
     end
 end
