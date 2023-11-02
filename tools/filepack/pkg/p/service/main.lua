@@ -6,10 +6,6 @@ local fastio = require "fastio"
 local zip = require "zip"
 local new_repo = import_package "ant.vfs"
 
-local function hashpath(hash)
-	return hash:sub(1,2) .. "/" .. hash
-end
-
 local arg = ...
 local zipfile
 local repo
@@ -34,35 +30,33 @@ end
 do print "step3. pack resource"
     local CompileId = ltask.call(ServiceCompile, "SETTING", setting)
     local resource = {}
-    local function compile_resource(i, path)
+    local function compile_resource(i, name, path)
         local lpath = ltask.call(ServiceCompile, "COMPILE",  CompileId, path)
         local hash = repo:build_resource(lpath)
-        resource[i] = ("%s %s\n"):format(hash, path)
+        resource[i] = ("%s %s\n"):format(hash, name)
     end
 
-    local paths = repo:export_resources()
+    local names, paths = repo:export_resources()
     local tasks = {}
-    for i, path in ipairs(paths) do
-        tasks[i] = {compile_resource, i, path}
+    for i = 1, #names do
+        tasks[i] = {compile_resource, i, names[i], paths[i]}
     end
     for _ in ltask.parallel(tasks) do
     end
-    zipfile:add(hashpath(repo:root())..".resource", table.concat(resource))
+    zipfile:add(repo:root()..".resource", table.concat(resource))
 end
 
-do print "step4. pack dir"
-    for hash, dir in pairs(repo._dirhash) do
-        zipfile:add(hashpath(hash), dir)
+do print "step4. pack file and dir"
+    for hash, v in pairs(repo._filehash) do
+        if v.dir then
+            zipfile:add(hash, v.dir)
+        else
+            zipfile:addfile(hash, v.path)
+        end
     end
 end
 
-do print "step5. pack file"
-    for hash, file in pairs(repo._filehash) do
-        zipfile:addfile(hashpath(hash), file)
-    end
-end
-
-do print "step6. finish"
+do print "step5. finish"
     zipfile:close()
     ltask.call(ServiceCompile, "QUIT")
 end

@@ -53,6 +53,7 @@ local function list_files(root, dir, fullpath, filter)
 			obj.dir = d
 		elseif filter and filter.resource[ext] then
 			obj.resource = fullpath .. "/" .. name
+			obj.resource_path = pathname
 		else
 			if filter and not filter.whitelist[ext] then
 				goto continue
@@ -273,27 +274,6 @@ local function make_index(root)
 	return index
 end
 
-local function make_hash_index(root)
-	local dir_hashs = {}
-	local file_hashs = {}
-	local function make_index_(dir)
-		for _, item in ipairs(dir) do
-			if item.hash then
-				if item.content then
-					dir_hashs[item.hash] = item.content
-				else
-					file_hashs[item.hash] = item.path
-				end
-			end
-			if item.dir then
-				make_index_(item.dir)
-			end
-		end
-	end
-	make_index_(root)
-	return dir_hashs, file_hashs
-end
-
 local function import_hash(index, hashs, name)
 	for path, dir in pairs(index) do
 		for _, item in ipairs(dir) do
@@ -322,10 +302,7 @@ local function update_all(root)
 		dir = root._dir,
 	}
 	root._index = make_index(root._dir)
-	root._dhash, root._fhash = make_hash_index(root._dir)
-	root._dhash[root._root.hash] = assert(root._root.content)
 end
-
 
 local function change_dir_(dir, name)
 	local n = #dir
@@ -504,20 +481,9 @@ function repo_meta:dumptree()
 	return dump_dir(self._dir)
 end
 
-function repo_meta:hash_dirs(tbl)
-	for hash, content in pairs(self._dhash) do
-		tbl[hash] = content
-	end
-end
-
-function repo_meta:hash_files(tbl)
-	for hash, path in pairs(self._fhash) do
-		tbl[hash] = path
-	end
-end
-
 function repo_meta:resources()
-	local r = {}
+	local names = {}
+	local paths = {}
 	local n = 1
 	local function get_resource_(dir, prefix)
 		for _, item in ipairs(dir) do
@@ -525,50 +491,39 @@ function repo_meta:resources()
 				local path = prefix .. item.name .. "/"
 				get_resource_(item.dir, path)
 			elseif item.resource then
-				r[n] = item.resource;  n = n + 1
+				names[n] = item.resource
+				paths[n] = item.resource_path
+				n = n + 1
 			end
 		end
 	end
 	get_resource_(self._dir, "")
-	return r
+	return names, paths
 end
 
-local function test()	-- for reference
-	local init_config = {
-		{ path = "/ant/test/vfsrepo", mount = "/" },
-		{ path = "/ant/pkg", mount = "/pkg" },
-		filter = {
-			whitelist = { "lua" },
-			resource = { "material" , "glb" , "texture" },
-			ignore = { "/web" },
-	--		block = { "/pkg/ant.render" },
-		}
+function repo_meta:export()
+	local r = {
+		{ vpath = "/" , hash = self._root.hash, dir = self._root.content },
 	}
-
-	print("INIT")
-	local vfsrepo = repo.new()
-	vfsrepo:init(init_config)
-	local roothash = vfsrepo:root()
-	print("ROOT", roothash)
-	local testpath = "/pkg/ant.resources/materials"
-	local hash = vfsrepo:filehash(testpath)
-	assert(vfsrepo._dhash[hash])
-	print("HASH", testpath, hash)
-	local content = vfsrepo._dhash[hash]
-	print("CONTENT", testpath, content)
-	assert(vfsrepo._fhash[hash] == nil)
-	local filehash, path = vfsrepo:filehash(testpath .. "/line.material")
-	assert(filehash == nil)
-	print("RESOURCEPATH", path)
-	local cache = vfsrepo:export_hash()
-	print("INIT WITH CACHE")
-	init_config.hash = cache
-	vfsrepo:init(init_config)
-	print("UPDATE")
-	vfsrepo:update {
-		"/ant/pkg/ant.window",
-	}
-	print(vfsrepo:vpath("/ant/pkg/ant.window/main.lua"))
+	local n = 2
+	local function make_index_(dir, path)
+		for _, item in ipairs(dir) do
+			local fullpath = path .. item.name
+			if item.hash then
+				if item.content then
+					r[n] = { vpath = fullpath, hash = item.hash, dir = item.content }
+				else
+					r[n] = { vpath = fullpath, hash = item.hash, path = item.path }
+				end
+				n = n + 1
+			end
+			if item.dir then
+				make_index_(item.dir, fullpath .. "/" )
+			end
+		end
+	end
+	make_index_(self._root.dir, "/")
+	return r
 end
 
 return repo

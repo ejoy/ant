@@ -55,7 +55,7 @@ local function dir_object(self, hash)
 	if dir then
 		return dir
 	end
-	local realname = self.path .. hash:sub(1,2) .. "/" .. hash
+	local realname = self.path .. hash
 	local df = io.open(realname, "rb")
 	if df then
 		local dir = {}
@@ -247,7 +247,7 @@ function vfs:realpath(path)
 end
 
 function vfs:hashpath(hash)
-	return self.path .. hash:sub(1,2) .. "/" .. hash
+	return self.path .. hash
 end
 
 local function writefile(filename, data)
