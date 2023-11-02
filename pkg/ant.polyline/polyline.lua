@@ -150,7 +150,7 @@ local function generate_stripline_vertices(points, uv_rotation, loop)
     return vertices
 end
 
-local function add_polylines(polymesh, line_width, color, material, srt, render_layer)
+local function add_polylines(polymesh, line_width, color, material, srt, render_layer, hide)
     return world:create_entity {
         policy = {
             "ant.render|simplerender",
@@ -161,10 +161,10 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
                 width = line_width,
                 color = math3d.ref(math3d.vector(color)),
             },
-            scene = {s = srt.s, r = srt.r, t = srt.t},
+            scene = {s = srt.s, r = srt.r, t = srt.t, parent = srt.parent},
             simplemesh  = polymesh,
             material    = material,
-            visible_state= "main_view|velocity_queue",
+            visible_state= hide and "" or "main_view|velocity_queue",
             render_layer= render_layer or "background",
             on_ready = function (e)
                 w:extend(e, "polyline:in")
@@ -209,9 +209,9 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
 end
 
 
-function ipl.add_strip_lines(points, line_width, color, material, loop)
+function ipl.add_strip_lines(points, line_width, color, material, loop, srt, render_layer, hide)
     local polymesh = ipl.create_linestrip_mesh(points, line_width, color, loop)
-    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material", "background")
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material", srt or {}, render_layer, hide)
 end
 
 local function generate_linelist_vertices(points)

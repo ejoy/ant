@@ -161,7 +161,7 @@ return function (output, setting, param)
 		local function to_command(commands)
 			local t = {}
 			for _, cmd in ipairs(commands) do
-				t[#t+1] = tostring(cmd)	-- make fs.path to string
+				t[#t+1] = tostring(cmd)	-- make lfs.path to string
 			end
 			return table.concat(t, " ")
 		end

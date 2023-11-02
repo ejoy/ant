@@ -338,6 +338,7 @@ local function update_visible(node, visible)
     return rv
 end
 local iani      = ecs.require "ant.animation|state_machine"
+local ipl = ecs.require "ant.polyline|polyline"
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -467,6 +468,7 @@ function m:handle_event()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
         elseif state.CTRL and key == "T" and press == 1 then
+            ipl.add_linelist({{0,0,0},{0, 10, 0}}, 70, {0.0, 1.0, 0.0, 0.4}, "/pkg/tools.editor/res/materials/polylinelist.material", nil, "translucent")
             -- prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effects/miner-dust.efk")
             -- local hitch_test_group_id<const> = 1000
             -- world:create_entity {
@@ -495,22 +497,22 @@ function m:handle_event()
             --         visible_state = "main_view|cast_shadow|selectable",
             --     }
             -- }
-            world:create_instance {
-                prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|mesh.prefab",
-                on_ready = function(instance)
-                    -- for _, eid in ipairs(instance.tag["*"]) do
-                    --     local e <close> = world:entity(eid, "anim_ctrl?in view_visible?out")
-                    --     if e.anim_ctrl then
-                    --         iani.load_events(eid, "/pkg/vaststars.resources/animations/miner-1.event")
-                    --     end
-                    --     e.view_visible = false
-                    --     w:submit(e)
-                    -- end
-                    -- iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
-                end,
-                parent = nil,
-                -- group = hitch_test_group_id
-            }
+            -- world:create_instance {
+            --     prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|mesh.prefab",
+            --     on_ready = function(instance)
+            --         -- for _, eid in ipairs(instance.tag["*"]) do
+            --         --     local e <close> = world:entity(eid, "anim_ctrl?in view_visible?out")
+            --         --     if e.anim_ctrl then
+            --         --         iani.load_events(eid, "/pkg/vaststars.resources/animations/miner-1.event")
+            --         --     end
+            --         --     e.view_visible = false
+            --         --     w:submit(e)
+            --         -- end
+            --         -- iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
+            --     end,
+            --     parent = nil,
+            --     -- group = hitch_test_group_id
+            -- }
             -- world:group_enable_tag("view_visible", hitch_test_group_id)
             -- world:group_flush "view_visible"
         end

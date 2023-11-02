@@ -1,7 +1,7 @@
 local datalist = require "datalist"
 local fastio = import_package "ant.serialize".fastio
 
-local defaultSetting = datalist.parse(fastio.readall "/pkg/ant.resources/settings/default.setting")
+local defaultSetting = datalist.parse(fastio.readall "/pkg/ant.resources/settings/default.settings")
 
 local function add_default(input)
     local output = {}

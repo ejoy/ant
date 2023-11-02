@@ -1,5 +1,5 @@
 local serialize = import_package "ant.serialize"
-local fs        = require "bee.filesystem"
+local lfs       = require "bee.filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
 local depends   = require "depends"
@@ -32,7 +32,7 @@ end
 
 function m.init(input, depfiles)
     local path = input..".patch"
-    if not fs.exists(path) then
+    if not lfs.exists(path) then
         depends.add(depfiles, path)
         return {}
     end
