@@ -53,6 +53,7 @@ local function list_files(root, dir, fullpath, filter)
 			obj.dir = d
 		elseif filter and filter.resource[ext] then
 			obj.resource = fullpath .. "/" .. name
+			obj.resource_path = pathname
 		else
 			if filter and not filter.whitelist[ext] then
 				goto continue
@@ -481,7 +482,8 @@ function repo_meta:dumptree()
 end
 
 function repo_meta:resources()
-	local r = {}
+	local names = {}
+	local paths = {}
 	local n = 1
 	local function get_resource_(dir, prefix)
 		for _, item in ipairs(dir) do
@@ -489,12 +491,14 @@ function repo_meta:resources()
 				local path = prefix .. item.name .. "/"
 				get_resource_(item.dir, path)
 			elseif item.resource then
-				r[n] = item.resource;  n = n + 1
+				names[n] = item.resource
+				paths[n] = item.resource_path
+				n = n + 1
 			end
 		end
 	end
 	get_resource_(self._dir, "")
-	return r
+	return names, paths
 end
 
 function repo_meta:export()

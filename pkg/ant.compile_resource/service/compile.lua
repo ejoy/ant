@@ -1,6 +1,5 @@
 local repopath = ...
 
-local vfs = require "vfs"
 local ltask = require "ltask"
 
 if repopath then
@@ -58,13 +57,13 @@ function S.SETTING(setting)
 end
 
 function S.COMPILE(id, path)
-    return cr.compile_file(CacheConfig[id], vfs.realpath(path))
+    return cr.compile_file(CacheConfig[id], path)
 end
 
 function S.VERIFY(id, paths)
     local lpaths = {}
     for i = 1, #paths do
-        lpaths[i] = cr.verify_file(CacheConfig[id], vfs.realpath(paths[i]))
+        lpaths[i] = cr.verify_file(CacheConfig[id], paths[i])
     end
     return lpaths
 end

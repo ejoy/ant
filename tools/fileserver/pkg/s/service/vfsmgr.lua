@@ -98,9 +98,9 @@ function S.GET(hash)
 end
 
 function S.REALPATH(path)
-	local rp = repo:realpath(path)
-	if rp then
-		return fs.absolute(rp):string()
+	local file = repo:file(path)
+	if file and file.path then
+		return fs.absolute(file.path):string()
 	end
 	return ''
 end
@@ -131,15 +131,15 @@ function S.RESOURCE_VERIFY(CompileId)
 	if next(s.resource) ~= nil then
 		return s.resource
 	end
-	local paths = repo:export_resources()
+	local names, paths = repo:export_resources()
 	local lpaths = ltask.call(ServiceCompile, "VERIFY", CompileId, paths)
 	for i = 1, #lpaths do
-		local path = paths[i]
+		local name = names[i]
 		local lpath = lpaths[i]
 		if lpath == false then
-			s.resource[path] = nil
+			s.resource[name] = nil
 		else
-			s.resource[path] = repo:build_resource(lpath, path)
+			s.resource[name] = repo:build_resource(lpath)
 		end
 	end
 	return s.resource
@@ -150,7 +150,12 @@ function S.RESOURCE(CompileId, path)
     if s.resource[path] then
         return s.resource[path]
     end
-    local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE",  s.id, path)
+    local file = repo:file(path)
+    if not file or not file.resource_path then
+        s.resource[path] = nil
+        return
+    end
+    local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE",  s.id, file.resource_path)
     if not ok then
         if type(lpath) == "table" then
             print(table.concat(lpath, "\n"))

@@ -66,12 +66,9 @@ function REPO_MT:mountlapth()
 	return self._mountlpath
 end
 
-function REPO_MT:realpath(pathname)
+function REPO_MT:file(pathname)
 	local vfsrepo = self._vfsrepo
-	local file = vfsrepo:file(pathname)
-	if file then
-		return file.path
-	end
+	return vfsrepo:file(pathname)
 end
 
 function REPO_MT:virtualpath(pathname)

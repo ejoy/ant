@@ -30,16 +30,16 @@ end
 do print "step3. pack resource"
     local CompileId = ltask.call(ServiceCompile, "SETTING", setting)
     local resource = {}
-    local function compile_resource(i, path)
+    local function compile_resource(i, name, path)
         local lpath = ltask.call(ServiceCompile, "COMPILE",  CompileId, path)
         local hash = repo:build_resource(lpath)
-        resource[i] = ("%s %s\n"):format(hash, path)
+        resource[i] = ("%s %s\n"):format(hash, name)
     end
 
-    local paths = repo:export_resources()
+    local names, paths = repo:export_resources()
     local tasks = {}
-    for i, path in ipairs(paths) do
-        tasks[i] = {compile_resource, i, path}
+    for i = 1, #names do
+        tasks[i] = {compile_resource, i, names[i], paths[i]}
     end
     for _ in ltask.parallel(tasks) do
     end
