@@ -208,15 +208,9 @@ end
 local filestatus = {}
 filestatus.__index = filestatus
 
-if __ANT_RUNTIME__ then
-    function filestatus:is_directory()
-        local file_type = self[1].type
-        return file_type == "d" or file_type == "r"
-    end
-else
-    function filestatus:is_directory()
-        return self[1] == true
-    end
+function filestatus:is_directory()
+    local file_type = self[1].type
+    return file_type == "d" or file_type == "r"
 end
 
 function fs.pairs(path)

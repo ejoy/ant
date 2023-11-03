@@ -23,8 +23,13 @@ end
 
 dofile "engine/log.lua"
 package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
-local new_repo = dofile "pkg/ant.vfs/main.lua"
-local repo = new_repo(repopath)
+local vfsrepo = dofile "pkg/ant.vfs/main.lua"
+
+local resources = {}
+
+local function COMPILE(_)
+	error "resource is not ready."
+end
 
 local function response_id(id, ...)
 	if id then
@@ -33,60 +38,152 @@ local function response_id(id, ...)
 	end
 end
 
-local CMD = {}
-
-function CMD.GET(pathname)
-	local file = repo:file(pathname)
-	if not file then
-		return nil, "Not exist<1> " .. pathname
-	end
-	if not file.path then
-		if file.resource_path then
-			return file.resource_path
+do
+	local vfs = require "vfs"
+	local repo = vfsrepo.new_tiny(repopath)
+	function vfs.realpath(pathname)
+		local file = repo:file(pathname)
+		if not file then
+			return
 		end
-		return nil, "Not exist<2> " .. pathname
+		if file.path then
+			return file.path
+		end
 	end
-	return file.path
-end
-
-function CMD.LIST(pathname)
-	local file = repo:file(pathname)
-	if file and file.dir then
-		local dir = {}
-		for _, c in ipairs(file.dir) do
-			if c.dir then
-				dir[c.name] = {
-					type = "d",
-					hash = c.hash,
-				}
-			elseif c.path then
-				dir[c.name] = {
-					type = "f",
-					hash = c.hash,
-				}
-			elseif c.resource then
-				dir[c.name] = {
-					type = "r",
-				}
+	function vfs.list(pathname)
+		local file = repo:file(pathname)
+		if not file then
+			return
+		end
+		if file.dir then
+			local dir = {}
+			for _, c in ipairs(file.dir) do
+				if c.dir then
+					dir[c.name] = {
+						type = "d",
+						hash = c.hash,
+					}
+				elseif c.path then
+					dir[c.name] = {
+						type = "f",
+						hash = c.hash,
+					}
+				end
+			end
+			return dir
+		end
+	end
+	function vfs.type(pathname)
+		local file = repo:file(pathname)
+		if file then
+			if file.dir then
+				return "dir"
+			elseif file.path then
+				return "file"
 			end
 		end
-		return dir
+	end
+	function vfs.repopath()
+		return repopath
 	end
 end
 
-function CMD.TYPE(pathname)
-	local file = repo:file(pathname)
-	if file then
-		if file.dir then
-			return "dir"
-		elseif file.path then
-			return "file"
+local CMD = {}
+
+do
+	local repo = vfsrepo.new_std(repopath)
+	local function getfile(pathname)
+		local file = repo:file(pathname)
+		if file then
+			return file
+		end
+		local path, v = repo:valid_path(pathname)
+		if not v or not v.resource then
+			return
+		end
+		local subrepo = resources[v.resource]
+		if not subrepo then
+			local lpath = COMPILE(v.resource_path)
+			if not lpath then
+				return
+			end
+			subrepo = repo:build_resource(lpath)
+			resources[v.resource] = subrepo
+		end
+		local subpath = pathname:sub(#path+1)
+		return subrepo:file(subpath)
+	end
+	function CMD.GET(pathname)
+		local file = getfile(pathname)
+		if not file then
+			return
+		end
+		if file.path then
+			return file.path
 		end
 	end
-end
-
-function CMD.REPOPATH()
-	return repopath
+	function CMD.LIST(pathname)
+		local file = getfile(pathname)
+		if not file then
+			return
+		end
+		if file.resource then
+			local subrepo = resources[file.resource]
+			if not subrepo then
+				local lpath = COMPILE(file.resource_path)
+				if not lpath then
+					return
+				end
+				subrepo = repo:build_resource(lpath)
+				resources[file.resource] = subrepo
+			end
+			file = subrepo:file "/"
+		end
+		if file.dir then
+			local dir = {}
+			for _, c in ipairs(file.dir) do
+				if c.dir then
+					dir[c.name] = {
+						type = "d",
+						hash = c.hash,
+					}
+				elseif c.path then
+					dir[c.name] = {
+						type = "f",
+						hash = c.hash,
+					}
+				elseif c.resource then
+					dir[c.name] = {
+						type = "r",
+					}
+				end
+			end
+			return dir
+		end
+	end
+	function CMD.TYPE(pathname)
+		local file = getfile(pathname)
+		if file then
+			if file.dir then
+				return "dir"
+			elseif file.path then
+				return "file"
+			elseif file.resource then
+				return "dir"
+			end
+		end
+	end
+	function CMD.REPOPATH()
+		return repopath
+	end
+	function CMD.RESOURCE_SETTING(setting)
+		require "packagemanager"
+		local cr = import_package "ant.compile_resource"
+		local config = cr.init_config(setting)
+		function COMPILE(path)
+			return cr.compile_file(config, path)
+		end
+	end
 end
 
 local function dispatch(ok, id, cmd, ...)
