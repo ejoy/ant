@@ -241,7 +241,7 @@ end
 
 local function which_type(v)
     assert(type(v) == "table")
-    if type(v[1] == "table") then
+    if type(v[1]) == "table" then
         return #v[1] == 4 and "vec4" or "mat4"
     end
     return #v == 4 and "vec4" or "mat4"
