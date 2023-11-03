@@ -295,6 +295,7 @@ function init_loader_sys:init_world()
     drawindirect_test()
 end
 
+
 local kb_mb = world:sub{"keyboard"}
 
 local mouse_mb = world:sub{"mouse", "LEFT"}
@@ -302,10 +303,15 @@ local mouse_mb = world:sub{"mouse", "LEFT"}
 local enable = 1
 local sm_test = false
 local itemsids
-
+local bse, output_handle
 function init_loader_sys:ui_update()
+
     for _, key, press in kb_mb:unpack() do
-        if key == "T" and press == 0 then
+        if key == "A" and press == 0 then
+            bse, output_handle = ibs.blur_scene()
+        elseif key == "B" and press == 0 then
+            w:remove(bse)
+        elseif key == "T" and press == 0 then
             -- local e<close> = world:entity(quad_eid)
             -- ivs.set_visible(e, "main_view", true)
 
@@ -377,8 +383,6 @@ function init_loader_sys:ui_update()
             local whichratio = "scene_ratio"    -- "ratio"
             local r = irender.get_framebuffer_ratio(whichratio)
             irender.set_framebuffer_ratio(whichratio, r - 0.1)
-        elseif key == "A" and press == 0 then
-            w:remove(bse)
         end
     end
 

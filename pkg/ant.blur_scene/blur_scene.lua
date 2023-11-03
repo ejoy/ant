@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local renderutil= require "util"
+local renderutil= ecs.require "ant.render|util"
 local setting   = import_package "ant.settings"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
