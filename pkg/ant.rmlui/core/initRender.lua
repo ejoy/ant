@@ -11,8 +11,7 @@ local function create_shaders()
         return ltask.call(ServiceResource, "material_create", filename)
     end
     local function push_uniforms(a, b)
-        for _, u in ipairs(b) do
-            local name = u.name
+        for name, u in pairs(b) do
             local handle = u.handle & 0xFFFF
             assert(a[name] == handle or a[name] == nil)
             a[name] = handle
