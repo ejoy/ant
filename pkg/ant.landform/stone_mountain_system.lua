@@ -41,7 +41,7 @@ end
 local MERGE_MESH
 local MESH_PARAMS
 
-function sm_sys:init()
+local function init_mountain_mesh()
     local vbnums, ibnums
     MERGE_MESH, vbnums, ibnums = imesh.build_meshes{
         "/pkg/ant.landform/assets/meshes/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
@@ -56,6 +56,9 @@ function sm_sys:init()
 end
 
 local function create_sm_entity(gid, indices)
+    if MERGE_MESH == nil then
+        init_mountain_mesh()
+    end
     local memory, meshes = {}, {}
     for _, index in ipairs(indices) do
         local coord = index.coord
