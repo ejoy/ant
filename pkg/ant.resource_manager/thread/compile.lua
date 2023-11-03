@@ -55,14 +55,9 @@ end
 local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
-    local hd = caps.homogeneousDepth and true or nil
-    local obl = caps.originBottomLeft and true or nil
-
     config = init_config {
         os = platform.os,
         renderer = renderer,
-        hd = hd,
-        obl = obl,
     }
 end
 
