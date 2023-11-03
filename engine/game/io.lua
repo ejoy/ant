@@ -27,10 +27,6 @@ local vfsrepo = dofile "pkg/ant.vfs/main.lua"
 
 local resources = {}
 
-local function COMPILE(_)
-	error "resource is not ready."
-end
-
 local function response_id(id, ...)
 	if id then
 		assert(type(id) == "userdata")
@@ -91,6 +87,9 @@ end
 local CMD = {}
 
 do
+	local function COMPILE(_)
+		error "resource is not ready."
+	end
 	local repo = vfsrepo.new_std(repopath, true)
 	local function getfile(pathname)
 		local file = repo:file(pathname)
