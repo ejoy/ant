@@ -811,6 +811,12 @@ local function anim_set_time(t)
             if anim.modifier then
                 local kfa <close> = world:entity(anim.modifier.anim_eid)
                 ika.set_time(kfa, t)
+                if not current_target then
+                    current_target = prefab_mgr:get_eid_by_name(anim.target_name)
+                end
+                if ui_bindcamera[1] then
+                    world:pub {"UpdateCamera"}
+                end
             end
         end
     end
@@ -876,7 +882,7 @@ local function create_animation(animtype, name, duration, target_anims)
 end
 local update_camera_mb  	= world:sub {"UpdateCamera"}
 function m.end_animation()
-    if not ui_bindcamera[1] or camera_updated then
+    if not ui_bindcamera[1] then
         return
     end
     local update_camera = false
@@ -889,12 +895,21 @@ function m.end_animation()
         end
     end
     if update_camera then
-        local anim <close> = world:entity(anim_eid, "anim_ctrl?in skeleton?in")
-        if anim.anim_ctrl and anim.skeleton then
-            local mq = w:first("main_queue camera_ref:in")
-            local ce<close> = world:entity(mq.camera_ref, "scene:update")
-            iom.set_srt_matrix(ce, anim.anim_ctrl.pose_result:joint(anim.skeleton._handle:joint_index("Bone")))
-        end
+        -- if anim_eid then
+        --     local anim <close> = world:entity(anim_eid, "anim_ctrl?in skeleton?in")
+        --     if anim.anim_ctrl and anim.skeleton then
+        --         local mq = w:first("main_queue camera_ref:in")
+        --         local ce<close> = world:entity(mq.camera_ref, "scene:update")
+        --         iom.set_srt_matrix(ce, anim.anim_ctrl.pose_result:joint(anim.skeleton._handle:joint_index("Bone")))
+        --     end
+        -- else
+            if current_target then
+                local e<close> = world:entity(current_target)
+                local mq = w:first("main_queue camera_ref:in")
+                local ce<close> = world:entity(mq.camera_ref, "scene:update")
+                iom.set_srt_matrix(ce, iom.worldmat(e))
+            end
+        -- end
     end
 end
 
@@ -1014,10 +1029,13 @@ local function play_animation(current)
     else
         for _, anim in ipairs(current.target_anims) do
             if anim.modifier then
-                if anim.type == "srt"  then
-                    target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name)
-                    imodifier.set_target(anim.modifier, target_map[anim.target_name])
-                elseif anim.type == "mtl" then
+                if current_anim.type == "srt"  then
+                    if not target_map[anim.target_name] then
+                        target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name) 
+                    end
+                    current_target = target_map[anim.target_name]
+                    imodifier.set_target(anim.modifier, current_target)
+                elseif current_anim.type == "mtl" then
                     imodifier.set_target(anim.modifier, current_target)
                 end
                 imodifier.start(anim.modifier, {loop = ui_loop[1]})
@@ -1350,8 +1368,11 @@ function m.create_target_animation(at, target)
     create_context.type = at
     new_anim_widget = true
     if at == "srt" then
-        create_context.desc = {{name = e.name}}
-        target_map[e.name] = target
+        -- local tpl = hierarchy:get_node_info(target).template
+        -- local name = tpl.tag and tpl.tag[1]
+        local name = hierarchy:get_node_info(target).name
+        create_context.desc = {{name = name}}
+        target_map[name] = target
     elseif at == "mtl" then
         local mtlpath = e.material
         if mtlpath then
