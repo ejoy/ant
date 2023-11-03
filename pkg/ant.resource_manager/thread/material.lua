@@ -129,16 +129,11 @@ local function create_fx(cfg)
 end
 
 local DEFAULT_TEXTURE_TYPE<const> = {
-    SAMPLER2DARRAY  = "TEX2DARRAY",
-    SAMPLER2D       = "TEX2D",
-    SAMPLERCUBE     = "TEXCUBE",
+    SAMPLER2DARRAY  = "SAMPLER2DARRAY",
+    SAMPLER2D       = "SAMPLER2D",
+    SAMPLERCUBE     = "SAMPLERCUBE",
     SAMPLER3D       = "TEX3D"
 }
-
-local function sampler_type(p)
-    local st = p.sampler or "SAMPLER2D"
-    return DEFAULT_TEXTURE_TYPE[st] or error (("Invalid sampler type:%s defined in material properties"):format(st))
-end
 
 local function is_uniform_obj(t)
     return nil ~= ('ut'):match(t)
@@ -157,7 +152,8 @@ local function material_create(filename)
         local tex = v.texture or v.image
         if tex then
             local texturename = absolute_path(tex, filename)
-            v.value = S.texture_create_fast(texturename, sampler_type(v))
+            local sampler = v.sampler or "SAMPLER2D"
+            v.value = S.texture_create_fast(texturename, sampler)
         end
     end
 

@@ -64,9 +64,9 @@ local SYS_ATTRIBS = {
 	--IBL
 	u_ibl_param				= uniform_value(ZERO),
 	u_irradianceSH			= uniform_value(default_irradiance_SH_value(), default_irradiance_SH_utype()),
-	s_irradiance			= texture_value(5, "TEXCUBE"),
-	s_prefilter				= texture_value(6, "TEXCUBE"),
-	s_LUT					= texture_value(7, "TEX2D"),
+	s_irradiance			= texture_value(5, "SAMPLERCUBE"),
+	s_prefilter				= texture_value(6, "SAMPLERCUBE"),
+	s_LUT					= texture_value(7, "SAMPLER2D"),
 
 	-- shadow
 	--   csm
@@ -81,7 +81,7 @@ local SYS_ATTRIBS = {
 	u_shadow_param1		 = uniform_value(ZERO),
 	u_shadow_param2		 = uniform_value(ZERO),
 
-	s_shadowmap			 = texture_value(8, "TEX2D"),
+	s_shadowmap			 = texture_value(8, "SAMPLER2D"),
 	--u_main_camera_matrix = uniform_value(mc.IDENTITY_MAT),
 	--   omni
 	u_omni_matrix = uniform_value(matutil.append_values(
@@ -97,7 +97,7 @@ local SYS_ATTRIBS = {
 
 	--s_omni_shadowmap	= texture_value(9),
 
-	s_ssao				= texture_value(9, "TEX2D"),
+	s_ssao				= texture_value(9, "SAMPLER2D"),
 	--postprocess
 	u_reverse_pos_param	= uniform_value(ZERO),
 	u_jitter            = uniform_value(ZERO)

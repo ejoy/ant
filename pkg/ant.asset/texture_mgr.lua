@@ -18,11 +18,11 @@ setmetatable(textures, mt)
 
 local function invalid(id)
 	local tid = textureman.texture_get(id)
-	return tid == DefaultTexture.TEX2D or tid == DefaultTexture.TEXCUBE
+	return tid == DefaultTexture.SAMPLER2D or tid == DefaultTexture.SAMPLERCUBE or tid == DefaultTexture.SAMPLER2DARRAY
 end
 
 local function default_textureid(t)
-	t = t or "TEX2D"
+	t = t or "SAMPLER2D"
 	return DefaultTexture[t] or error (("Invalid default texture type:%s"):format(t))
 end
 

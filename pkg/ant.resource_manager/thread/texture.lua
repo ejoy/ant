@@ -50,7 +50,7 @@ local function loadTexture(name)
 end
 
 local DefaultTexture = {
-    TEX2D = createTexture {
+    SAMPLER2D = createTexture {
         info = {
             width = 1,
             height = 1,
@@ -73,7 +73,7 @@ local DefaultTexture = {
         },
         name = "<default2d>"
     },
-    TEX2DARRAY = createTexture {
+    SAMPLER2DARRAY = createTexture {
         info = {
             width = 1,
             height = 1,
@@ -126,7 +126,7 @@ local DefaultTexture = {
     --     },
     --     name = "<default3d>"
     -- },
-    TEXCUBE = createTexture {
+    SAMPLERCUBE = createTexture {
         info = {
             width = 1,
             height = 1,
@@ -167,14 +167,14 @@ local token = {}
 
 local function which_texture_type(info)
     if info.cubemap then
-        return "TEXCUBE"
+        return "SAMPLERCUBE"
     end
 
     if info.depth > 1 then
-        return "TEX3D"
+        return "SAMPLER3D"
     end
 
-    return info.numLayers > 1 and "TEX2DARRAY" or "TEX2D"
+    return info.numLayers > 1 and "SAMPLER2DARRAY" or "SAMPLER2D"
 end
 
 local function asyncCreateTexture(name, textureData)
@@ -233,7 +233,7 @@ function S.texture_create(name, type)
             }
         end
     else
-        type = type or "TEX2D"
+        type = type or "SAMPLER2D"
         local id = textureman.texture_create(assert(DefaultTexture[type]))
         c = {
             name = name,
@@ -254,7 +254,7 @@ end
 function S.texture_create_fast(name, type)
     local c = textureByName[name]
     if not c then
-        type = type or "TEX2D"
+        type = type or "SAMPLER2D"
         local id = textureman.texture_create(assert(DefaultTexture[type]))
         c = {
             name = name,
@@ -307,7 +307,7 @@ local update; do
     local results = {}
     local UpdateNewInterval <const> = 30 *  1 --  1s
     local UpdateOldInterval <const> = 30 * 60 -- 60s
-    local InvalidTexture <const> = ("HH"):pack(DefaultTexture.TEX2D & 0xffff, DefaultTexture.TEXCUBE & 0xffff)
+    local InvalidTexture <const> = ("HHH"):pack(DefaultTexture.SAMPLER2D & 0xffff, DefaultTexture.SAMPLERCUBE & 0xffff, DefaultTexture.SAMPLER2DARRAY)
     function update()
         for i = 1, #destroyQueue do
             bgfx.destroy(destroyQueue[i])
@@ -357,7 +357,7 @@ function S.texture_timestamp(rtid_table)
 end
 
 function S.texture_register_id()
-    local rt_id = textureman.texture_create(DefaultTexture["TEX2D"])
+    local rt_id = textureman.texture_create(DefaultTexture["SAMPLER2D"])
     rt_table[rt_id] = true
     return rt_id
 end
@@ -367,7 +367,7 @@ function S.texture_set_handle(rt_id, rt_handle)
 end
 
 function S.texture_destroy_handle(rt_id)
-    textureman.texture_set(rt_id, DefaultTexture["TEX2D"])
+    textureman.texture_set(rt_id, DefaultTexture["SAMPLER2D"])
     return true
 end
 
