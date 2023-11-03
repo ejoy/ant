@@ -556,26 +556,29 @@ function repo.newroot()
 end
 
 function root_meta:update(m)
-	local _map = self._map
-	for name, item in pairs(m) do
-		if item then
-			local newitem = {}
-			for k,v in pairs(item) do
-				newitem[k] = v
+	if m then
+		local _map = self._map
+		for name, item in pairs(m) do
+			if item then
+				local newitem = {}
+				for k,v in pairs(item) do
+					newitem[k] = v
+				end
+				newitem.name = name
+				_map[name] = newitem
+			else
+				_map[name] = nil
 			end
-			newitem.name = name
-			_map[name] = newitem
-		else
-			_map[name] = nil
 		end
+		local root = {}
+		local n = 1
+		for _, item in pairs(_map) do
+			root[n] = item; n = n + 1
+		end
+		table.sort(root, sort_name)
+		self._root = root
 	end
-	local root = {}
-	local n = 1
-	for _, item in pairs(_map) do
-		root[n] = item; n = n + 1
-	end
-	table.sort(root, sort_name)
-	self._root = root
+	local root = self._root
 	root.content = calc_hash(root)
 	root.hash = fastio.str2sha1(root.content)
 end
