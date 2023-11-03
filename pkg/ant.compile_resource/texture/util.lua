@@ -133,6 +133,21 @@ local function build_irradiance_sh(cm)
 	return serialize_results(Eml)
 end
 
+local TextureExtensions <const> = {
+	direct3d11 = "dds",
+	direct3d12 = "dds",
+	metal      = "ktx",
+	vulkan     = "ktx",
+	opengl     = "ktx",
+}
+
+local function getExtensions(setting)
+	if setting.renderer == "noop" then
+		return setting.os == "windows" and "dds" or "ktx"
+	end
+	return assert(TextureExtensions[setting.renderer])
+end
+
 return function (output, setting, param)
     lfs.remove_all(output)
     lfs.create_directories(output)
@@ -148,9 +163,10 @@ return function (output, setting, param)
 
 	local buildcmd
 	if imgpath then
-		local binfile = output / ("main."..setting.texture)
+		local ext = getExtensions(setting)
+		local binfile = output / ("main."..ext)
 		if is_png(imgpath) and param.gray2rgb then
-			local tmpfile = output / ("tmp." .. setting.texture)
+			local tmpfile = output / ("tmp." .. ext)
 			imgpath = gray2rgb(imgpath, tmpfile)
 		end
 		local commands = {

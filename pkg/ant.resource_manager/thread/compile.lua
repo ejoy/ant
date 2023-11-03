@@ -52,19 +52,9 @@ else
     init_config = vfs.resource_setting
 end
 
-local TextureExtensions <const> = {
-    noop       = platform.os == "windows" and "dds" or "ktx",
-	direct3d11 = "dds",
-	direct3d12 = "dds",
-	metal      = "ktx",
-	vulkan     = "ktx",
-	opengl     = "ktx",
-}
-
 local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
-    local texture = assert(TextureExtensions[renderer])
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
 
@@ -73,7 +63,6 @@ local function init()
         renderer = renderer,
         hd = hd,
         obl = obl,
-        texture = texture,
     }
 end
 
