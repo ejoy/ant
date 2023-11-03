@@ -3,6 +3,7 @@ local repopath, fddata = ...
 package.path = "/engine/?.lua"
 package.cpath = ""
 
+local vfs = require "vfs"
 local fastio = require "fastio"
 local thread = require "bee.thread"
 local socket = require "bee.socket"
@@ -26,6 +27,12 @@ package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
 local new_repo = dofile "pkg/ant.vfs/main.lua"
 local repo = new_repo(repopath)
 
+local resources = {}
+
+local function COMPILE(_)
+	error "resource is not ready."
+end
+
 local function response_id(id, ...)
 	if id then
 		assert(type(id) == "userdata")
@@ -33,23 +40,31 @@ local function response_id(id, ...)
 	end
 end
 
-local CMD = {}
-
-function CMD.GET(pathname)
+function vfs.realpath(pathname)
 	local file = repo:file(pathname)
 	if not file then
-		return nil, "Not exist<1> " .. pathname
-	end
-	if not file.path then
-		if file.resource_path then
-			return file.resource_path
+		local path, v = repo:valid_path(pathname)
+		if not v or not v.resource then
+			return
 		end
-		return nil, "Not exist<2> " .. pathname
+		local subrepo = resources[v.resource]
+		if not subrepo then
+			local lpath = COMPILE(v.resource_path)
+			if not lpath then
+				return
+			end
+			subrepo = repo:build_resource(lpath)
+			resources[v.resource] = subrepo
+		end
+		local subpath = pathname:sub(#path+1)
+		file = subrepo:file(subpath)
 	end
-	return file.path
+	if file.path then
+		return file.path
+	end
 end
 
-function CMD.LIST(pathname)
+function vfs.list(pathname)
 	local file = repo:file(pathname)
 	if file and file.dir then
 		local dir = {}
@@ -74,7 +89,7 @@ function CMD.LIST(pathname)
 	end
 end
 
-function CMD.TYPE(pathname)
+function vfs.type(pathname)
 	local file = repo:file(pathname)
 	if file then
 		if file.dir then
@@ -85,8 +100,24 @@ function CMD.TYPE(pathname)
 	end
 end
 
-function CMD.REPOPATH()
+function vfs.repopath()
 	return repopath
+end
+
+local CMD = {
+	GET = vfs.realpath,
+	LIST = vfs.list,
+	TYPE = vfs.type,
+	REPOPATH = vfs.repopath,
+}
+
+function CMD.RESOURCE_SETTING(setting)
+	require "packagemanager"
+	local cr = import_package "ant.compile_resource"
+	local config = cr.init_config(setting)
+	function COMPILE(path)
+		return cr.compile_file(config, path)
+	end
 end
 
 local function dispatch(ok, id, cmd, ...)

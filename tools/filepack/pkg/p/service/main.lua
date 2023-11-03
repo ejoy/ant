@@ -32,7 +32,7 @@ do print "step3. pack resource"
     local resource = {}
     local function compile_resource(i, name, path)
         local lpath = ltask.call(ServiceCompile, "COMPILE",  CompileId, path)
-        local hash = repo:build_resource(lpath)
+        local hash = repo:build_resource(lpath):root()
         resource[i] = ("%s %s\n"):format(hash, name)
     end
 
