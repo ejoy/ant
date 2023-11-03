@@ -14,6 +14,9 @@ local function filelock(filepath)
 end
 
 local function import_hash(self)
+	if self._nohash then
+		return false
+	end
 	local hashspath = self._cachepath / "hashs"
 	if not lfs.exists(hashspath) then
 		return
@@ -158,7 +161,9 @@ function REPO_MT:build_resource(path)
 		hash = self._hashs,
 		filter = resource_filter
 	}
-	export_filehash(self, vfsrepo)
+	if self._nohash then
+		export_filehash(self, vfsrepo)
+	end
 	export_hash(self, vfsrepo, "ab")
 	return vfsrepo
 end
@@ -170,7 +175,7 @@ local function read_vfsignore(rootpath)
 	return datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
 end
 
-local function new_std(rootpath)
+local function new_std(rootpath, nohash)
 	rootpath = lfs.path(rootpath)
 	local cachepath = lfs.path(rootpath) / ".fileserver"
 	if not lfs.is_directory(rootpath) then
@@ -184,6 +189,7 @@ local function new_std(rootpath)
 	access.readmount(repo)
 	local vfsrepo = new_vfsrepo()
 	local self = {
+		_nohash = nohash,
 		_vfsrepo = vfsrepo,
 		_cachepath = cachepath,
 		_mountlpath = repo._mountlpath,
@@ -210,8 +216,10 @@ local function new_std(rootpath)
 		}
 	end
 	vfsrepo:init(config)
-	export_filehash(self, vfsrepo)
-	export_hash(self, vfsrepo, "wb")
+	if not nohash then
+		export_filehash(self, vfsrepo)
+		export_hash(self, vfsrepo, "wb")
+	end
 	return setmetatable(self, REPO_MT)
 end
 
@@ -229,13 +237,14 @@ local function new_tiny(rootpath)
 	access.readmount(repo)
 	local vfsrepo = new_vfsrepo()
 	local self = {
+		_nohash = false,
 		_vfsrepo = vfsrepo,
 		_cachepath = cachepath,
 		_mountlpath = repo._mountlpath,
 	}
 	local vfsignore = read_vfsignore(rootpath)
 	local config = {
-		hash = import_hash(self),
+		hash = false,
 		filter = {
 			resource = resource,
 			whitelist = compile_whitelist,

@@ -1,4 +1,0 @@
-component "vblur_builder"
-component "hblur_builder"
-system "blur_system"
-    .implement "postprocess/blur/blur.lua"

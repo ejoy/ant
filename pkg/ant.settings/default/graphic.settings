@@ -16,6 +16,8 @@ graphic:
   lighting:
     cluster_shading: 1
   postprocess:
+    blur:
+      enable: true
     bloom:
       enable: true
       inv_highlight: 0.2

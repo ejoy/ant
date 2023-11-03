@@ -3,6 +3,7 @@ local world         = ecs.world
 local w             = world.w
 local math3d        = require "math3d"
 
+local ibs           = ecs.require "ant.blur_scene|blur_scene"
 local ientity       = ecs.require "ant.render|components.entity"
 local imaterial     = ecs.require "ant.asset|material"
 local imesh         = ecs.require "ant.asset|mesh"
@@ -81,30 +82,6 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
                 local texobj = assetmgr.resource(tex)
                 imaterial.set_property(e, "s_basecolor", texobj.handle)
             end
-        }
-    }
-end
-
-local function color_palette_test()
-    local bgfx = require "bgfx"
-    return world:create_entity {
-        policy = {
-            "ant.render|simplerender",
-        },
-        data = {
-            simplemesh = {
-                vb = {
-                    start = 0, num = 3,
-                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
-                        0.0, 0.0, 0.0, 
-                        0.0, 0.0, 1.0,
-                        1.0, 0.0, 0.0,
-                    }), layoutmgr.get "p3".handle)
-                }
-            },
-            material = "/pkg/ant.resources/materials/color_palette_test.material",
-            visible_state = "main_view",
-            scene = {srt={}},
         }
     }
 end
@@ -275,7 +252,6 @@ end
 local heap_num = 1
 
 function init_loader_sys:init_world()
-
     for msg in after_init_mb:each() do
         local e = msg[2]
         local s = iom.get_scale(e)
@@ -302,6 +278,7 @@ local mouse_mb = world:sub{"mouse", "LEFT"}
 local enable = 1
 local sm_test = false
 local itemsids
+
 function init_loader_sys:ui_update()
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
@@ -376,6 +353,8 @@ function init_loader_sys:ui_update()
             local whichratio = "scene_ratio"    -- "ratio"
             local r = irender.get_framebuffer_ratio(whichratio)
             irender.set_framebuffer_ratio(whichratio, r - 0.1)
+        elseif key == "A" and press == 0 then
+            w:remove(bse)
         end
     end
 

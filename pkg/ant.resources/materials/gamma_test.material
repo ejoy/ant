@@ -2,6 +2,7 @@ fx:
     vs: /pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc
     fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
     setting:
+        lighting: off
         POS_IN_RECT: 1
 properties:
     u_color: {1.0, 1.0, 1.0, 1.0}

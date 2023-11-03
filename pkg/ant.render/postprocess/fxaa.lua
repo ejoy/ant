@@ -7,7 +7,7 @@ local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
 local renderutil = require "util"
 local fxaasys = ecs.system "fxaa_system"
-
+local sampler   = import_package "ant.render.core".sampler
 if not ENABLE_FXAA then
     renderutil.default_system(fxaasys, "init", "init_world", "fxaa", "data_changed")
     return
@@ -39,10 +39,29 @@ function fxaasys:init()
     }
 end
 
+local function create_fb(vr)
+    local minmag_flag<const> = ENABLE_TAA and "POINT" or "LINEAR"
+    return fbmgr.create{
+        rbidx = fbmgr.create_rb{
+            w = vr.w, h = vr.h, layers = 1,
+            format = "RGBA8",
+            flags = sampler{
+                U = "CLAMP",
+                V = "CLAMP",
+                MIN=minmag_flag,
+                MAG=minmag_flag,
+                RT="RT_ON",
+                BLIT="BLIT_COMPUTEWRITE"
+            },
+        }
+    }
+end
+
 local fxaa_viewid<const> = hwi.viewid_get "fxaa"
 
 function fxaasys:init_world()
-    util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), nil, "fxaa_queue", "fxaa_queue")
+    local vr = mu.copy_viewrect(world.args.viewport)
+    util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), create_fb(vr), "fxaa_queue", "fxaa_queue")
 end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}

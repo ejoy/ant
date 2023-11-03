@@ -3,5 +3,9 @@ fx:
   vs: /pkg/ant.resources/shaders/ui/vs_image.sc
   setting:
     lighting: off
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/textures/default.texture
 
 state: /pkg/ant.resources/materials/states/default.state

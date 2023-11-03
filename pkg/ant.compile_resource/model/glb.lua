@@ -36,11 +36,13 @@ local function recompile_materials(input, output, setting)
     local depfiles = depends.new()
     depends.add_lpath(depfiles, input .. ".patch")
     local tasks = parallel_task.new()
+    local post_tasks = parallel_task.new()
     for material_path in lfs.pairs(output / "materials") do
         local mat = readdatalist(material_path / "main.cfg")
-        material_compile(tasks, depfiles, mat, input, material_path, setting)
+        material_compile(tasks, post_tasks, depfiles, mat, input, material_path, setting)
     end
     parallel_task.wait(tasks)
+    parallel_task.wait(post_tasks)
     return true, depfiles
 end
 
@@ -56,6 +58,7 @@ return function (input, output, setting, changed)
         setting = setting,
         tasks = parallel_task.new(),
         depfiles = depends.new(),
+        post_tasks = parallel_task.new(),
     }
     depends.add_lpath(status.depfiles, input)
     depends.add_vpath(status.depfiles, "/pkg/ant.compile_resource/model/version.lua")
@@ -69,6 +72,7 @@ return function (input, output, setting, changed)
     export_animation(status)
     export_prefab(status)
     parallel_task.wait(status.tasks)
+    parallel_task.wait(status.post_tasks)
     math3d_pool.free(status.math3d)
     return true, status.depfiles
 end
