@@ -86,30 +86,6 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
     }
 end
 
-local function color_palette_test()
-    local bgfx = require "bgfx"
-    return world:create_entity {
-        policy = {
-            "ant.render|simplerender",
-        },
-        data = {
-            simplemesh = {
-                vb = {
-                    start = 0, num = 3,
-                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
-                        0.0, 0.0, 0.0, 
-                        0.0, 0.0, 1.0,
-                        1.0, 0.0, 0.0,
-                    }), layoutmgr.get "p3".handle)
-                }
-            },
-            material = "/pkg/ant.resources/materials/color_palette_test.material",
-            visible_state = "main_view",
-            scene = {srt={}},
-        }
-    }
-end
-
 local cp_eid, quad_eid
 local testprefab
 
