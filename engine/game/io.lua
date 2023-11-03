@@ -91,7 +91,7 @@ end
 local CMD = {}
 
 do
-	local repo = vfsrepo.new_std(repopath)
+	local repo = vfsrepo.new_std(repopath, true)
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then
