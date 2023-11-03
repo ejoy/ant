@@ -1,6 +1,5 @@
 pipeline "postprocess"
     .stage "pre_postprocess"
-    .stage "blur"
     .stage "dof"
     .stage "bloom"
     .stage "tonemapping"
@@ -8,11 +7,30 @@ pipeline "postprocess"
     .stage "taa_copy"
     .stage "taa_present"
     .stage "fxaa"
+    .stage "swapchain"
     .stage "blit"
     .stage "flip"
 
-feature "blur"
-    .import "postprocess/blur/blur.ecs"
+component "blur_queue"
+component "blur"
+
+policy "blur"
+    .component "blur"
+
+system "blur_system"
+    .implement "postprocess/blur.lua"
+
+
+system "pyramid_sample_system"
+    .implement "postprocess/pyramid_sample.lua"
+
+component "pyramid_sample"
+    .type "lua"
+
+component "pyramid_sample_ready"
+
+policy "pyramid_sample"
+    .component "pyramid_sample"
 
 system "postprocess_system"
     .implement "postprocess/postprocess.lua"
@@ -40,6 +58,10 @@ system "tonemapping_system"
     .implement "postprocess/tonemapping.lua"
 
 component "bloom_queue"
+component "bloom"
+
+policy "bloom"
+    .component "bloom"
 
 system "bloom_system"
     .implement "postprocess/bloom.lua"
@@ -61,7 +83,13 @@ component "taa_present_drawer"
 
 system "taa_system"
     .implement "postprocess/taa.lua"
-    
+
+component "swapchain_queue"
+component "swapchain_drawer"
+
+system "swapchain_system"
+    .implement "postprocess/swapchain.lua"
+
 -- system "dof_system"
 --     .implement "postprocess/DoF.lua"
 
