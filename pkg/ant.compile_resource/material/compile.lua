@@ -1,8 +1,12 @@
 local lfs           = require "bee.filesystem"
 local fs            = require "filesystem"
+local vfs           = require "vfs"
+
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
 local shaderparse   = require "material.shaderparse"
+local sha1          = require "sha1"
+
 local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local fastio        = serialize.fastio
@@ -13,6 +17,12 @@ local matutil       = import_package "ant.material".util
 local sa            = import_package "ant.render.core".system_attribs
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 local function DEF_FUNC() end
+
+local SC_ROOT = lfs.path(vfs.repopath()) / ".build" / "sc"
+
+if not lfs.exists(SC_ROOT) then
+    lfs.create_directories(SC_ROOT)
+end
 
 local SHADER_BASE <const> = "/pkg/ant.resources/shaders"
 
@@ -186,11 +196,13 @@ local DEF_SHADER_INFO <const> = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
         content = fastio.readall_s(SHADER_BASE.."/default/vs_default.sc"),
+        filename = "vs_%s.sc",
     },
     fs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
         content = fastio.readall_s(SHADER_BASE.."/default/fs_default.sc"),
+        filename = "fs_%s.sc",
     }
 }
 
@@ -298,12 +310,18 @@ local function generate_shader(shader, code, properties)
     return properties and generate_code(updated_shader, shader.CUSTOM_PROP_KEY, generate_properties(properties)) or updated_shader
 end
 
-local function create_PBR_shader(inputpath, fx, stage, properties)
+local function create_PBR_shader(fx, stage, properties)
     local si = assert(DEF_SHADER_INFO[stage])
     local nc = generate_shader(si, fx[stage .. "_code"], properties)
+    local filename = SC_ROOT / si.filename:format(sha1(nc))
 
-    local fw <close> = assert(io.open(inputpath:string(), "wb"))
-    fw:write(nc)
+    if not lfs.exists(filename) then
+        local fw <close> = assert(io.open(filename:string(), "wb"))
+        fw:write(nc)
+    end
+
+    fx[stage] = filename
+    return filename
 end
 
 --[[
@@ -604,13 +622,9 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     writefile(output / "main.cfg",  mat)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
-            local inputpath
-            if fx.shader_type == "PBR" then
-                inputpath = output / fx[stage]
-                create_PBR_shader(inputpath, fx, stage, mat.properties)
-            else
-                inputpath = fs.path(fx[stage]):localpath()
-            end
+            local inputpath = fx.shader_type == "PBR" and
+                create_PBR_shader(fx, stage, mat.properties) or
+                fs.path(fx[stage]):localpath()
 
             if not lfs.exists(inputpath) then
                 error(("shader path not exists: %s"):format(inputpath:string()))
@@ -634,7 +648,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         end)
     end
 
-    local function create_attribs(stages)
+    local function create_shader_cfg(stages)
         parallel_task.add(post_tasks, function ()
             local attribs, systems = {}, {}
             for _, stage in ipairs(stages) do
@@ -652,7 +666,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
 
     if fx.shader_type == "COMPUTE" then
         compile_shader "cs"
-        create_attribs {"cs"}
+        create_shader_cfg {"cs"}
     else
         local stages = {"vs"}
         compile_shader "vs"
@@ -661,7 +675,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
             stages[#stages+1] = "fs"
         end
 
-        create_attribs(stages)
+        create_shader_cfg(stages)
     end
 end
 
