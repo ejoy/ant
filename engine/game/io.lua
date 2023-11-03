@@ -40,24 +40,32 @@ local function response_id(id, ...)
 	end
 end
 
-function vfs.realpath(pathname)
+local function getfile(pathname)
 	local file = repo:file(pathname)
-	if not file then
-		local path, v = repo:valid_path(pathname)
-		if not v or not v.resource then
+	if file then
+		return file
+	end
+	local path, v = repo:valid_path(pathname)
+	if not v or not v.resource then
+		return
+	end
+	local subrepo = resources[v.resource]
+	if not subrepo then
+		local lpath = COMPILE(v.resource_path)
+		if not lpath then
 			return
 		end
-		local subrepo = resources[v.resource]
-		if not subrepo then
-			local lpath = COMPILE(v.resource_path)
-			if not lpath then
-				return
-			end
-			subrepo = repo:build_resource(lpath)
-			resources[v.resource] = subrepo
-		end
-		local subpath = pathname:sub(#path+1)
-		file = subrepo:file(subpath)
+		subrepo = repo:build_resource(lpath)
+		resources[v.resource] = subrepo
+	end
+	local subpath = pathname:sub(#path+1)
+	return subrepo:file(subpath)
+end
+
+function vfs.realpath(pathname)
+	local file = getfile(pathname)
+	if not file then
+		return
 	end
 	if file.path then
 		return file.path
@@ -65,8 +73,23 @@ function vfs.realpath(pathname)
 end
 
 function vfs.list(pathname)
-	local file = repo:file(pathname)
-	if file and file.dir then
+	local file = getfile(pathname)
+	if not file then
+		return
+	end
+	if file.resource then
+		local subrepo = resources[file.resource]
+		if not subrepo then
+			local lpath = COMPILE(file.resource_path)
+			if not lpath then
+				return
+			end
+			subrepo = repo:build_resource(lpath)
+			resources[file.resource] = subrepo
+		end
+		file = subrepo:file "/"
+	end
+	if file.dir then
 		local dir = {}
 		for _, c in ipairs(file.dir) do
 			if c.dir then
@@ -90,12 +113,14 @@ function vfs.list(pathname)
 end
 
 function vfs.type(pathname)
-	local file = repo:file(pathname)
+	local file = getfile(pathname)
 	if file then
 		if file.dir then
 			return "dir"
 		elseif file.path then
 			return "file"
+		elseif file.resource then
+			return "dir"
 		end
 	end
 end

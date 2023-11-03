@@ -136,6 +136,9 @@ local root_filter <const> = {
 		-- todo
 		"sc",
 		"sh",
+		"png",
+		"hdr",
+		"dds",
 	},
 }
 

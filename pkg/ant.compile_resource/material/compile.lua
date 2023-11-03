@@ -16,7 +16,7 @@ local SHADER_BASE <const> = "/pkg/ant.resources/shaders"
 local function shader_includes(include_path)
     local INCLUDE_BASE = lfs.absolute(include_path)
     return {
-        lfs.absolute(fs.path(SHADER_BASE):localpath()),
+        lfs.current_path() / SHADER_BASE:sub(2),
         INCLUDE_BASE
     }
 end
@@ -418,9 +418,9 @@ local function check_get_attribute(mat)
 end
 
 local function compile(tasks, deps, mat, input, output, setting)
-    depends.add(deps, fs.path "/pkg/ant.compile_resource/material/version.lua":localpath())
-    depends.add(deps, fs.path "/pkg/ant.settings/default/graphic.settings":localpath())
-    depends.add(deps, fs.path "/":localpath() / "graphic.settings")
+    depends.add_vpath(deps, "/pkg/ant.compile_resource/material/version.lua")
+    depends.add_vpath(deps, "/pkg/ant.settings/default/graphic.settings")
+    depends.add_vpath(deps, "/graphic.settings")
 
     local include_path = lfs.path(input):parent_path()
     lfs.remove_all(output)

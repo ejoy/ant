@@ -33,15 +33,14 @@ end
 
 local function recompile_materials(input, output, setting)
     assert(lfs.exists(output))
-    local depfiles = {}
-    depends.add(depfiles, input .. ".patch")
+    local depfiles = depends.new()
+    depends.add_lpath(depfiles, input .. ".patch")
     local tasks = parallel_task.new()
     for material_path in lfs.pairs(output / "materials") do
         local mat = readdatalist(material_path / "main.cfg")
         material_compile(tasks, depfiles, mat, input, material_path, setting)
     end
     parallel_task.wait(tasks)
-    
     return true, depfiles
 end
 
@@ -56,9 +55,10 @@ return function (input, output, setting, changed)
         output = output,
         setting = setting,
         tasks = parallel_task.new(),
-        depfiles = {},
+        depfiles = depends.new(),
     }
-    depends.add(status.depfiles, fs.path "/pkg/ant.compile_resource/model/version.lua":localpath())
+    depends.add_lpath(status.depfiles, input)
+    depends.add_vpath(status.depfiles, "/pkg/ant.compile_resource/model/version.lua")
     status.math3d = math3d_pool.alloc(status.setting)
     status.patch = patch.init(input, status.depfiles)
     status.glbdata = glbloader.decode(input)
