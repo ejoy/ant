@@ -262,12 +262,12 @@ end
 
 local function make_index(root)
 	local index = { [""] = root }
-	local function make_index_(dir, prefix)
-		for _, item in ipairs(dir) do
+	local function make_index_(r, prefix)
+		for _, item in ipairs(r.dir) do
 			if item.dir then
 				local path = prefix .. item.name .. "/"
 				index[path] = item
-				make_index_(item.dir, path)
+				make_index_(item, path)
 			end
 		end
 	end
@@ -276,8 +276,8 @@ local function make_index(root)
 end
 
 local function import_hash(index, hashs, name)
-	for _, dir in pairs(index) do
-		for _, item in ipairs(dir) do
+	for _, r in pairs(index) do
+		for _, item in ipairs(r.dir) do
 			if item.path then
 				local fullpath = item.path
 				if name then
@@ -302,7 +302,7 @@ local function update_all(root)
 		hash = fastio.str2sha1(root_content),
 		dir = root._dir,
 	}
-	root._index = make_index(root._dir)
+	root._index = make_index(root._root)
 end
 
 local function change_dir_(dir, name)
@@ -474,7 +474,7 @@ function repo_meta:init(config)
 	add_path(self, config)
 	merge_all(self)
 	if hashs then
-		local index = make_index(self._dir)
+		local index = make_index { dir = self._dir }
 		import_hash(index, hashs, self._name)
 	end
 	update_all(self)
