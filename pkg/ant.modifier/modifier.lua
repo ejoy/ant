@@ -27,23 +27,8 @@ function modifier_sys:component_init()
     end
 end
 
-function modifier_sys:update_modifier()
-    local delta_time = timer.delta() * 0.001
-    local to_remove = {}
-    for e in w:select "modifier:in eid:in" do
-        local rm = e.modifier:update(delta_time)
-        if rm then
-            to_remove[#to_remove + 1] = e.eid
-        end
-    end
-    for _, eid in ipairs(to_remove) do
-        imodifier.delete(auto_destroy_map[eid])
-        auto_destroy_map[eid] = nil
-    end
-end
-
 local modifierevent = world:sub {"modifier"}
-function modifier_sys:entity_ready()
+function modifier_sys:update_modifier()
     for _, m, desc in modifierevent:unpack() do
         local e <close> = world:entity(m.eid, "modifier:in")
         if not e then
@@ -64,6 +49,23 @@ function modifier_sys:entity_ready()
         end
         ::continue::
     end
+    local delta_time = timer.delta() * 0.001
+    local to_remove = {}
+    for e in w:select "modifier:in eid:in" do
+        local rm = e.modifier:update(delta_time)
+        if rm then
+            to_remove[#to_remove + 1] = e.eid
+        end
+    end
+    for _, eid in ipairs(to_remove) do
+        imodifier.delete(auto_destroy_map[eid])
+        auto_destroy_map[eid] = nil
+    end
+end
+
+
+function modifier_sys:entity_ready()
+
 end
 function modifier_sys:exit()
 

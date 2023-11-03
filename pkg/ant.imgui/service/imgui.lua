@@ -176,13 +176,13 @@ ltask.fork(function ()
 	assetmgr.material_mark(imgui_font.fx.prog)
     imgui.SetFontProgram(
         PM.program_get(imgui_font.fx.prog),
-        imgui_font.fx.uniforms[1].handle
+        imgui_font.fx.uniforms.s_tex.handle
     )
     local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_image.fx.prog)
     imgui.SetImageProgram(
         PM.program_get(imgui_image.fx.prog),
-        imgui_image.fx.uniforms[1].handle
+        imgui_image.fx.uniforms.s_tex.handle
     )
 
 	cb.init(init_width, init_height, initargs)
