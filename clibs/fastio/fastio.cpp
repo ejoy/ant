@@ -88,15 +88,32 @@ static int raise_error(lua_State *L, const char* what, const char *filename) {
     return luaL_error(L, "cannot %s %s: %s", what, filename, strerror(errno));
 }
 
+static const char* getfile(lua_State *L) {
+    if (lua_type(L, 1) != LUA_TSTRING) {
+        if (lua_type(L, 2) == LUA_TSTRING) {
+            luaL_error(L, "unable to decode filename: %s", lua_tostring(L, 2));
+        }
+        else {
+            luaL_error(L, "unable to decode filename: type(%s)", luaL_typename(L, 1));
+        }
+        return nullptr;
+    }
+    return lua_tostring(L, 1);
+}
+
+static const char* getsymbol(lua_State *L, const char* filename) {
+#if defined(__ANT_RUNTIME__)
+    return luaL_optstring(L, 2, filename);
+#else
+    return filename;
+#endif
+}
+
 static int readall(lua_State *L) {
-    const char* filename = luaL_checkstring(L, 1);
+    const char* filename = getfile(L);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-#if defined(__ANT_RUNTIME__)
-        return raise_error(L, "open", luaL_optstring(L, 2, filename));
-#else
-        return raise_error(L, "open", filename);
-#endif
+        return raise_error(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
     void* data = create_memory(L, size);
@@ -112,14 +129,10 @@ static int readall(lua_State *L) {
 }
 
 static int readall_s(lua_State *L) {
-    const char* filename = luaL_checkstring(L, 1);
+    const char* filename = getfile(L);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-#if defined(__ANT_RUNTIME__)
-        return raise_error(L, "open", luaL_optstring(L, 2, filename));
-#else
-        return raise_error(L, "open", filename);
-#endif
+        return raise_error(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
     void* data = create_memory(L, size);
@@ -149,12 +162,8 @@ static const char* getF(lua_State *L, void *ud, size_t *size) {
 }
 
 static int loadfile(lua_State *L) {
-    const char* filename = luaL_checkstring(L, 1);
-#if defined(__ANT_RUNTIME__)
-    const char* symbol = luaL_optstring(L, 2, filename);
-#else
-    const char* symbol = filename;
-#endif
+    const char* filename = getfile(L);
+    const char* symbol = getsymbol(L, filename);
     lua_settop(L, 3);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
@@ -188,12 +197,8 @@ static char hex[] = {
 };
 
 static int sha1(lua_State *L) {
-    const char* filename = luaL_checkstring(L, 1);
-#if defined(__ANT_RUNTIME__)
-    const char* symbol = luaL_optstring(L, 2, filename);
-#else
-    const char* symbol = filename;
-#endif
+    const char* filename = getfile(L);
+    const char* symbol = getsymbol(L, filename);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
         return raise_error(L, "open", symbol);
