@@ -319,8 +319,6 @@ local function create_PBR_shader(fx, stage, properties)
         local fw <close> = assert(io.open(filename:string(), "wb"))
         fw:write(nc)
     end
-
-    fx[stage] = filename
     return filename
 end
 
