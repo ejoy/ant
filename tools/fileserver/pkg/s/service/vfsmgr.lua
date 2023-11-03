@@ -1,7 +1,7 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
-local new_repo = import_package "ant.vfs"
+local vfsrepo = import_package "ant.vfs"
 
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
@@ -71,7 +71,7 @@ end
 
 do
 	print("repo init ...")
-	repo = new_repo(fs.path(REPOPATH))
+	repo = vfsrepo.new_std(fs.path(REPOPATH))
 	if repo == nil then
 		error "Create repo failed."
 	end
