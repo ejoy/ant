@@ -294,12 +294,12 @@ end
 
 local repo_meta = {}; repo_meta.__index = repo_meta
 
-local function update_all(root)
-	local root_content = calc_hash(root._dir)
+local function update_all(root, hashs)
+	local root_content = hashs ~= false and calc_hash(root._dir)
 	root._root = {
 		name = "",
 		content = root_content,
-		hash = fastio.str2sha1(root_content),
+		hash = root_content and fastio.str2sha1(root_content),
 		dir = root._dir,
 	}
 	root._index = make_index(root._root)
@@ -477,7 +477,7 @@ function repo_meta:init(config)
 		local index = make_index { dir = self._dir }
 		import_hash(index, hashs, self._name)
 	end
-	update_all(self)
+	update_all(self, hashs)
 end
 
 function repo_meta:export_hash()
