@@ -164,10 +164,10 @@ local function update_fb(old_fbidx, width, height, queuename)
 end
 
 local function create_render_target_instance(width, height, rt_name, rt)
-    rt.fbidx, rt.w, rt.h = create_fbidx(width, height), width, height
-    rt.rt_id = create_rt_queue(width, height, rt_name, rt.fbidx)
+    rt.fb_idx, rt.w, rt.h = create_fbidx(width, height), width, height
+    rt.rt_id = create_rt_queue(width, height, rt_name, rt.fb_idx)
     rt.rt_texture_id = ltask.call(ServiceResource, "texture_register_id")
-    rt.rt_handle = fbmgr.get_rb(rt.fbidx, 1).handle
+    rt.rt_handle = fbmgr.get_rb(rt.fb_idx, 1).handle
     ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle)
 end
 
@@ -232,6 +232,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
         create_render_target_instance(1, 1, rt_name, rt)
     elseif not rt.rt_handle then
         local fbidx = update_fb(rt.fb_idx, rt.w, rt.h, QUEUENAMES[rt_name])
+        rt.fb_idx = fbidx
         if fbidx then
             rt.rt_handle = fbmgr.get_rb(fbidx, 1).handle
             ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle) 
@@ -287,7 +288,7 @@ end
 
 
 local frame_tick = 0
-local dead_timestamp = 600
+local dead_timestamp = 60
 local reload_timestamp = 1
 
 function ui_rt_sys:data_changed()
@@ -341,6 +342,7 @@ function ui_rt_sys:data_changed()
             end) 
         elseif rt.timestamp and rt.timestamp < reload_timestamp and (not rt.rt_handle) then
             local fbidx = update_fb(rt.fb_idx, rt.w, rt.h, QUEUENAMES[rt_name])
+            rt.fb_idx = fbidx
             local rt_handle = fbmgr.get_rb(fbidx, 1).handle
             rt.rt_handle = rt_handle
             ltask.call(ServiceResource, "texture_set_handle", rt.rt_texture_id, rt.rt_handle)                
