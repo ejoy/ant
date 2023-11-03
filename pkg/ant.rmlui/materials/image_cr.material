@@ -1,8 +1,15 @@
 fx:
-    fs: /pkg/ant.resources/shaders/ui/fs_image.sc
-    vs: /pkg/ant.resources/shaders/ui/vs_image.sc
-    setting:
-        lighting: off
-        ENABLE_CLIP_RECT: 1
+  fs: /pkg/ant.resources/shaders/ui/fs_image.sc
+  vs: /pkg/ant.resources/shaders/ui/vs_image.sc
+  setting:
+    lighting: off
+    ENABLE_CLIP_RECT: 1
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/textures/default.texture
+  u_clip_rect:
+    {0, 0, 0, 0}
+    {0, 0, 0, 0}
 
 state: /pkg/ant.resources/materials/states/default.state

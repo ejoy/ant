@@ -42,21 +42,21 @@ local RENDERERS<const> = {
 
 local renderer<const> = RENDERERS[platform.os] or error (("not support os for compile shader:%s"):format(platform.os))
 
-cr.set_setting({
-    --os = BgfxOS[platform.os] or platform.os,
-    os = "ios",
-    renderer = "metal",
+local cfg = cr.init_config{
+    os = BgfxOS[platform.os] or platform.os,
+    --os = "ios",
+    renderer = renderer, --"metal",
     texture = "ktx",
     hd = nil,
     obl = nil,
-})
+}
 
 local output = lfs.path "./tools/material_compile/output"
 
 local ltask = require "ltask"
 
 if srcpath:equal_extension "material" then
-    cr.compile_file(srcpath:localpath():string())
+    cr.compile_file(cfg, srcpath:localpath():string())
 elseif srcpath:equal_extension "lua" then
     local files, err = dofile(srcpath:localpath():string())
     if files == nil then

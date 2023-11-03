@@ -4,7 +4,7 @@ local vfs = require "vfs"
 local datalist = require "datalist"
 local fastio = require "fastio"
 local zip = require "zip"
-local new_repo = import_package "ant.vfs"
+local vfsrepo = import_package "ant.vfs"
 
 local arg = ...
 local zipfile
@@ -18,7 +18,7 @@ do print "step1. init"
     fs.remove_all(zippath)
     zipfile = assert(zip.open(zippath, "w"))
     ServiceCompile = ltask.spawn("ant.compile_resource|compile", repopath:string())
-    repo = new_repo(repopath)
+    repo = vfsrepo.new_std(repopath)
     setting = datalist.parse(fastio.readall(vfs.realpath "/compile.settings"))
 end
 

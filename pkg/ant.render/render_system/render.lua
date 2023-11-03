@@ -279,13 +279,32 @@ local function create_quad_ib(num_quad)
 end
 
 local quad_ib_num<const> = 2048
-local ibhandle = create_quad_ib(quad_ib_num)
+local ibhandle<const> = create_quad_ib(quad_ib_num)
 function irender.quad_ib()
 	return ibhandle
 end
 
 function irender.quad_ib_num()
 	return quad_ib_num
+end
+
+function irender.quad_ibobj(start, num)
+	if nil == num then
+		assert(start > 0, "Invalid quad num, should be > 0")
+		start, num = 0, start
+	end
+
+	if start then
+		assert(nil ~= num, "Need provided 'num' value")
+	else
+		error("Need provided ('start' and 'num') or 'num', like: quad_ibobj(10) mean start=0, num=10, or quad_ibobj(1, 10) mean start=1, num=10")
+	end
+
+	return {
+		start = start,
+		num = num,
+		handle = ibhandle,
+	}
 end
 
 local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), layoutmgr.get "p10NIu".handle)
