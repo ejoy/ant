@@ -128,13 +128,6 @@ local function create_fx(cfg)
         createRenderProgram(cfg)
 end
 
-local DEFAULT_TEXTURE_TYPE<const> = {
-    SAMPLER2DARRAY  = "SAMPLER2DARRAY",
-    SAMPLER2D       = "SAMPLER2D",
-    SAMPLERCUBE     = "SAMPLERCUBE",
-    SAMPLER3D       = "TEX3D"
-}
-
 local function is_uniform_obj(t)
     return nil ~= ('ut'):match(t)
 end

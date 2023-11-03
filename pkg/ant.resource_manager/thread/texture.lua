@@ -307,7 +307,7 @@ local update; do
     local results = {}
     local UpdateNewInterval <const> = 30 *  1 --  1s
     local UpdateOldInterval <const> = 30 * 60 -- 60s
-    local InvalidTexture <const> = ("HHH"):pack(DefaultTexture.SAMPLER2D & 0xffff, DefaultTexture.SAMPLERCUBE & 0xffff, DefaultTexture.SAMPLER2DARRAY)
+    local InvalidTexture <const> = ("HHH"):pack(DefaultTexture.SAMPLER2D & 0xffff, DefaultTexture.SAMPLERCUBE & 0xffff, DefaultTexture.SAMPLER2DARRAY & 0xffff)
     function update()
         for i = 1, #destroyQueue do
             bgfx.destroy(destroyQueue[i])
