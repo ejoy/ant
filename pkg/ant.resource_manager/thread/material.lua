@@ -13,14 +13,18 @@ local function readall(path)
     return fastio.readall(realpath, path)
 end
 
-local function uniform_info(shader, uniforms, mark)
+local function uniform_info(shader, uniforms)
     local shader_uniforms = bgfx.get_shader_uniforms(shader)
     if shader_uniforms then
         for _, h in ipairs(shader_uniforms) do
             local name, type, num = bgfx.get_uniform_info(h)
-            if not mark[name] then
-                mark[name] = true
-                uniforms[#uniforms + 1] = { handle = h, name = name, type = type, num = num }
+            local u = uniforms[name]
+            if u then
+                if u.handle ~= h or u.type ~= type or u.num ~= num then
+                    error(("same uniform name, but with different field: handle:%d, %d, type:%d, %d, num: %d, %d"):format(u.handle, h, u.type, type, u.num, num))
+                end
+            else
+                uniforms[name] = { handle = h, name = name, type = type, num = num }
             end
         end
     end
@@ -35,10 +39,10 @@ local function loadShader(shaderfile)
 end
 
 local function fetch_uniforms(h, ...)
-    local uniforms, mark = {}, {}
+    local uniforms = {}
     local function fetch_uniforms_(h, ...)
         if h then
-            uniform_info(h, uniforms, mark)
+            uniform_info(h, uniforms)
             return fetch_uniforms_(...)
         end
     end
@@ -125,17 +129,19 @@ local function create_fx(cfg)
 end
 
 local DEFAULT_TEXTURE_TYPE<const> = {
-    SAMPLER2DARRAY = "TEX2DARRAY",
-    SAMPLER2D = "TEX2D",
-    SAMPLERCUBE = "TEXCUBE",
-    SAMPLER3D = "TEX3D"
+    SAMPLER2DARRAY  = "TEX2DARRAY",
+    SAMPLER2D       = "TEX2D",
+    SAMPLERCUBE     = "TEXCUBE",
+    SAMPLER3D       = "TEX3D"
 }
 
-local function sampler_type(material, name)
-    local properties = assert(material.properties)
-    local p = properties[name] or error (("properties[%s] is nil"):format(name))
+local function sampler_type(p)
     local st = p.sampler or "SAMPLER2D"
     return DEFAULT_TEXTURE_TYPE[st] or error (("Invalid sampler type:%s defined in material properties"):format(st))
+end
+
+local function is_uniform_obj(t)
+    return nil ~= ('ut'):match(t)
 end
 
 local function material_create(filename)
@@ -143,15 +149,15 @@ local function material_create(filename)
     local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
-    if attribute.attrib then
-        for n, v in pairs(attribute.attrib) do
-            if v.texture then
-                local texturename = absolute_path(v.texture, filename)
-                v.value = S.texture_create_fast(texturename, sampler_type(material, n))
-            elseif v.image then
-                local texturename = absolute_path(v.image, filename)
-                v.value = S.texture_create_fast(texturename, sampler_type(material, n))
-            end
+    local uniforms = material.fx.uniforms
+    for n, v in pairs(attribute.attrib) do
+        if is_uniform_obj(v.type) then
+            v.handle = assert(uniforms[n]).handle
+        end
+        local tex = v.texture or v.image
+        if tex then
+            local texturename = absolute_path(tex, filename)
+            v.value = S.texture_create_fast(texturename, sampler_type(v))
         end
     end
 
