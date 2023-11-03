@@ -71,6 +71,11 @@ function REPO_MT:file(pathname)
 	return vfsrepo:file(pathname)
 end
 
+function REPO_MT:valid_path(pathname)
+	local vfsrepo = self._vfsrepo
+	return vfsrepo:valid_path(pathname)
+end
+
 function REPO_MT:virtualpath(pathname)
 	local vfsrepo = self._vfsrepo
 	local _, vpath = vfsrepo:vpath(pathname)
@@ -128,20 +133,24 @@ local root_filter <const> = {
 		"anim",
 		-- material
 		"state",
+		-- todo
+		"sc",
+		"sh",
+		"png",
+		"hdr",
+		"dds",
 	},
 }
 
-function REPO_MT:build_resource(path, name)
+function REPO_MT:build_resource(path)
 	local vfsrepo = new_vfsrepo()
 	vfsrepo:init {
 		{ path = path, mount = "" },
--- name is vfs path, unused
---		name = name,
 		hash = self._hashs,
 		filter = resource_filter
 	}
 	export_hash(self, vfsrepo, "ab")
-	return vfsrepo:root()
+	return vfsrepo
 end
 
 local function read_vfsignore(rootpath)
@@ -152,7 +161,8 @@ local function read_vfsignore(rootpath)
 end
 
 return function (rootpath)
-	local cachepath = rootpath / ".fileserver"
+	rootpath = lfs.path(rootpath)
+	local cachepath = lfs.path(rootpath) / ".fileserver"
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end

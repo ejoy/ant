@@ -14,9 +14,9 @@ return function (repopath, access)
         local filelist = access.list_files(repo, path)
         for name, status in pairs(filelist) do
             if status:is_directory() then
-                item[name] = true
+                item[name] = {type="d"}
             else
-                item[name] = false
+                item[name] = {type="f"}
             end
         end
         return item

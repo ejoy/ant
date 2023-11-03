@@ -74,15 +74,15 @@ local function run(commands, input, output)
     if not ok then
         return false, msg
     end
-    local deps = {}
-    depends.add(deps, input:string())
+    local deps = depends.new()
+    depends.add_lpath(deps, input:string())
     local f = io.open((path / "bin.d"):string())
     if f then
         f:read "l"
         for line in f:lines() do
             local path = line:match "^%s*(.-)%s*\\?$"
             if path then
-                depends.add(deps, path)
+                depends.add_lpath(deps, path)
             end
         end
         f:close()

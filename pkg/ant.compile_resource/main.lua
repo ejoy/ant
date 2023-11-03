@@ -57,7 +57,6 @@ local function compile_file(config, input)
             local err = deps
             error("compile failed: " .. input .. "\n" .. err)
         end
-        depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
     ltask.multi_wakeup(config.compiling[input], output:string())

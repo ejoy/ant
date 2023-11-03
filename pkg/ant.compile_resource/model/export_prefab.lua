@@ -1,7 +1,6 @@
 local utility = require "model.utility"
 local serialize = import_package "ant.serialize"
 local lfs = require "bee.filesystem"
-local fs = require "filesystem"
 local material_compile = require "material.compile"
 
 local invalid_chars<const> = {
@@ -159,7 +158,7 @@ end
 
 local function seri_material(status, filename, cfg)
     local material_names = status.material_names
-    local stem = fs.path(filename):stem():string()
+    local stem = lfs.path(filename):stem():string()
 
     if filename:sub(1, 1) == "/" then
         material_names[stem] = stem
@@ -167,7 +166,7 @@ local function seri_material(status, filename, cfg)
     else
         local material = assert(status.material[filename])
         local info = check_update_material_info(status, filename, material, cfg)
-        material_names[stem] = fs.path(info.filename):stem():string()
+        material_names[stem] = lfs.path(info.filename):stem():string()
         return info.filename
     end
 end

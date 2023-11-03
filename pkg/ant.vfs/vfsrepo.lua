@@ -4,6 +4,7 @@ local fastio = require "fastio"
 local repo = {}
 
 local DOT <const> = string.byte "."
+local SLASH <const> = string.byte "/"
 
 local function gen_set(s)
 	local r = {}
@@ -260,13 +261,13 @@ local function export_hash(root, name)
 end
 
 local function make_index(root)
-	local index = { ["/"] = root }
-	local function make_index_(dir, prefix)
-		for _, item in ipairs(dir) do
+	local index = { [""] = root }
+	local function make_index_(r, prefix)
+		for _, item in ipairs(r.dir) do
 			if item.dir then
 				local path = prefix .. item.name .. "/"
-				index[path] = item.dir
-				make_index_(item.dir, path)
+				index[path] = item
+				make_index_(item, path)
 			end
 		end
 	end
@@ -275,8 +276,8 @@ local function make_index(root)
 end
 
 local function import_hash(index, hashs, name)
-	for path, dir in pairs(index) do
-		for _, item in ipairs(dir) do
+	for _, r in pairs(index) do
+		for _, item in ipairs(r.dir) do
 			if item.path then
 				local fullpath = item.path
 				if name then
@@ -301,7 +302,7 @@ local function update_all(root)
 		hash = fastio.str2sha1(root_content),
 		dir = root._dir,
 	}
-	root._index = make_index(root._dir)
+	root._index = make_index(root._root)
 end
 
 local function change_dir_(dir, name)
@@ -373,31 +374,48 @@ local function merge_all(self)
 	self._dir = result
 end
 
-function repo_meta:file(pathname)
-	local path, name = pathname:match "^/?(.-)/([^/]*)$"
-	if name == "" then
-		pathname = path
-		path, name = path:match "^(.-)/([^/]*)$"
+local function split_path(path)
+	local from, to, name = path:find "([^/]+)/?$"
+	if not from then
+		return ""
 	end
-	if path == nil or path == "" then
-		-- root
-		for _, item in ipairs(self._dir) do
-			if item.name == pathname then
-				return item, self._dir
-			end
-		end
-		return nil, self._dir
+	if path:byte() == SLASH then
+		path = path:sub(2, from - 1)
 	else
-		local dir = self._index[path .. "/"]
-		if dir == nil then
-			return
+		path = path:sub(1, from - 1)
+	end
+	return path, name
+end
+
+function repo_meta:file(pathname)
+	local path, name = split_path(pathname)
+	if name == nil then
+		return self._root
+	end
+	local dir = self._index[path]
+	if dir == nil then
+		return
+	end
+	for _, item in ipairs(dir.dir) do
+		if item.name == name then
+			return item
 		end
-		for _, item in ipairs(dir) do
-			if item.name == name then
-				return item, dir
+	end
+end
+
+function repo_meta:valid_path(path)
+	local index = self._index
+	while true do
+		path, name = split_path(path)
+		local dir = index[path]
+		if dir then
+			for _, item in ipairs(dir.dir) do
+				if item.name == name then
+					return "/" .. path .. name, item
+				end
 			end
+			return "/" .. path, dir
 		end
-		return nil, dir
 	end
 end
 
@@ -456,7 +474,7 @@ function repo_meta:init(config)
 	add_path(self, config)
 	merge_all(self)
 	if hashs then
-		local index = make_index(self._dir)
+		local index = make_index { dir = self._dir }
 		import_hash(index, hashs, self._name)
 	end
 	update_all(self)

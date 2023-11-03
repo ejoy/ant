@@ -1,0 +1,20 @@
+fx:
+    vs: /pkg/ant.resources/shaders/polyline/vs_polylinelist.sc
+    fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
+    setting:
+        FIX_WIDTH: 1
+        cast_shadow: off
+properties:
+    s_tex:
+        stage: 0
+        texture: /pkg/ant.resources/textures/default.texture
+    u_color:     {0.8, 0.8, 0.8, 1.0}
+    u_line_info: {5.0, 1.0, 0.08, 0.0}  #xyz: linewidth, visible, 0, 0
+    u_tex_param: {1.0, 1.0, 0.0, 0.0}   #xy: repeat, z: enable texture
+    u_dash_info: {0.0, 0.05, 0.035, 0.0} #xyz: dash enable, dash round, dash ratio
+state:
+    CULL: NONE
+    DEPTH_TEST: ALWAYS
+    MSAA: true
+    WRITE_MASK: RGBA
+    BLEND: ALPHA

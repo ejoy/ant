@@ -305,6 +305,9 @@ function gizmo:update_scale()
 end
 
 local test_bone
+local ipl = ecs.require "ant.polyline|polyline"
+local geopkg = import_package "ant.geometry"
+local geolib = geopkg.geometry
 function gizmo_sys:post_init()
 	local axis_root = world:create_entity {
 		policy = {
@@ -386,7 +389,18 @@ function gizmo_sys:post_init()
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
-	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {parent = uniform_rot_root}, gizmo_const.COLOR.GRAY, true)
+	local function get_points(vertices)
+		local points = {}
+		for i = 1, #vertices, 3 do
+			points[#points + 1] = {vertices[i], vertices[i+1], vertices[i+2]}
+		end
+		return points
+	end
+	local function create_polyline(points, color, srt)
+		return ipl.add_strip_lines(points, 5, color, "/pkg/tools.editor/res/materials/polyline.material", false, srt, "translucent", true)
+	end
+	local vertices, _ = geolib.circle(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES)
+	local uniform_rot_eid = create_polyline(get_points(vertices), gizmo_const.COLOR.GRAY, {parent = uniform_rot_root})
 	local function create_rotate_fan(radius, scene)
 		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, "/pkg/ant.resources/materials/singlecolor_nocull.material", scene, gizmo_const.COLOR.Z_ALPHA, true, "translucent")
 		return mesh_eid
@@ -398,9 +412,10 @@ function gizmo_sys:post_init()
 	gizmo.rw.eid = {uniform_rot_eid, uniform_rot_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 
 	local function create_rotate_axis(axis, line_end, scene)
-		local line_eid = ientity.create_line_entity({0, 0, 0}, line_end, {parent = rot_circle_root}, axis.color, true)
+		local line_eid = create_polyline({{0, 0, 0},line_end}, axis.color, {parent = rot_circle_root})
 		local arc = (axis == gizmo.ry) and {start_deg = math.rad(180), end_deg = math.rad(360) } or {start_deg = math.rad(-90), end_deg = math.rad(90) }
-		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, axis.color, true, arc)
+		vertices, _ = geolib.circle(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, arc)
+		local rot_eid = create_polyline(get_points(vertices), axis.color, {})
 		local ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = rot_circle_root, s = scene.s, r = scene.r, t = scene.t})
 		local cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = rot_circle_root, s = scene.s, r = scene.r, t = scene.t})
 		axis.eid = {rot_eid, line_eid, ccw_mesh_eid, cw_mesh_eid}
@@ -408,7 +423,6 @@ function gizmo_sys:post_init()
 	create_rotate_axis(gizmo.rx, {gizmo_const.AXIS_LEN * 0.5, 0, 0}, {r = math3d.quaternion{0, math.rad(90), 0}})
 	create_rotate_axis(gizmo.ry, {0, gizmo_const.AXIS_LEN * 0.5, 0}, {r = math3d.quaternion{math.rad(90), 0, 0}})
 	create_rotate_axis(gizmo.rz, {0, 0, gizmo_const.AXIS_LEN * 0.5}, {})
-	
 	-- scale axis
 	local function create_scale_cube(axis_name, scene, color)
 		local eid = world:create_entity {
@@ -438,7 +452,7 @@ function gizmo_sys:post_init()
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube("scale axis", {t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE, parent = axis_root}, axis.color)
-		local line_eid = ientity.create_line_entity({0, 0, 0}, axis_end, {parent = axis_root}, axis.color, true)
+		local line_eid = create_polyline({{0, 0, 0}, axis_end}, axis.color, {parent = axis_root})
 		axis.eid = {cube_eid, line_eid}
 	end
 	create_scale_axis(gizmo.sx, {gizmo_const.AXIS_LEN, 0, 0})

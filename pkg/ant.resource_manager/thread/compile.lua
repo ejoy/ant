@@ -8,7 +8,28 @@ local compile
 local compile_file
 local init_config
 
-if __ANT_RUNTIME__ then
+if __ANT_EDITOR__ then
+    local cr = import_package "ant.compile_resource"
+    function compile_file(input)
+        return cr.compile_file(config, input)
+    end
+    function compile(pathstring)
+        local pos = pathstring:find("|", 1, true)
+        if pos then
+            local resource = assert(vfs.realpath(pathstring:sub(1,pos-1)))
+            local realpath = compile_file(resource).."/"..pathstring:sub(pos+1):gsub("|", "/")
+            if lfs.exists(realpath) then
+                return realpath
+            end
+        else
+            local realpath = vfs.realpath(pathstring)
+            if realpath then
+                return realpath
+            end
+        end
+    end
+    init_config = cr.init_config
+else
     local function normalize(p)
         local stack = {}
         p:gsub('[^/|]*', function (w)
@@ -29,39 +50,6 @@ if __ANT_RUNTIME__ then
         end
     end
     init_config = vfs.resource_setting
-else
-    local cr = import_package "ant.compile_resource"
-    if __ANT_EDITOR__ then
-        function compile_file(input)
-            return cr.compile_file(config, input)
-        end
-    else
-        local compiled = {}
-        function compile_file(input)
-            if compiled[input] then
-                return compiled[input]
-            end
-            local output = cr.compile_file(config, input)
-            compiled[input] = output
-            return output
-        end
-    end
-    function compile(pathstring)
-        local pos = pathstring:find("|", 1, true)
-        if pos then
-            local resource = assert(vfs.realpath(pathstring:sub(1,pos-1)))
-            local realpath = compile_file(resource).."/"..pathstring:sub(pos+1):gsub("|", "/")
-            if lfs.exists(realpath) then
-                return realpath
-            end
-        else
-            local realpath = vfs.realpath(pathstring)
-            if realpath then
-                return realpath
-            end
-        end
-    end
-    init_config = cr.init_config
 end
 
 local TextureExtensions <const> = {

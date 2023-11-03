@@ -18,7 +18,7 @@ return function (content, output, setting, depfiles)
 		end
 	end
 
-	depends.add(depfiles, fs.path "/pkg/ant.compile_resource/texture/version.lua":localpath())
+	depends.add_vpath(depfiles, "/pkg/ant.compile_resource/texture/version.lua")
 	local ok, err = convert_image(output, setting, content)
 	if not ok then
 		return ok, err

@@ -1,11 +1,11 @@
 local serialize     = import_package "ant.serialize"
-local fs            = require "bee.filesystem"
+local lfs            = require "bee.filesystem"
 local serialization = require "bee.serialization"
 local patch         = require "model.patch"
 
 local function writeFile(status, path, data)
     path = status.output / path
-    fs.create_directories(path:parent_path())
+    lfs.create_directories(path:parent_path())
     local f <close> = assert(io.open(path:string(), "wb"))
     f:write(data)
 end
@@ -42,7 +42,7 @@ end
 function m.rename(src, dst)
     -- try 10 times
     for _= 1, 10 do
-        if pcall(fs.rename, src, dst) then
+        if pcall(lfs.rename, src, dst) then
             return
         end
     end

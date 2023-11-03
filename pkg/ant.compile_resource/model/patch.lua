@@ -1,5 +1,5 @@
 local serialize = import_package "ant.serialize"
-local fs        = require "bee.filesystem"
+local lfs       = require "bee.filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
 local depends   = require "depends"
@@ -14,7 +14,7 @@ local function absolute_path(path, base)
 end
 
 local function load_patch(patchLst, depfiles, path)
-    depends.add(depfiles, path)
+    depends.add_lpath(depfiles, path)
     for _, patch in ipairs(assert(datalist.parse(fastio.readall(path)))) do
         if patch.include then
             load_patch(patchLst, depfiles, absolute_path(patch.include, path))
@@ -32,8 +32,8 @@ end
 
 function m.init(input, depfiles)
     local path = input..".patch"
-    if not fs.exists(path) then
-        depends.add(depfiles, path)
+    if not lfs.exists(path) then
+        depends.add_lpath(depfiles, path)
         return {}
     end
     local patchLst = {}

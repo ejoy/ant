@@ -139,7 +139,7 @@ function S.RESOURCE_VERIFY(CompileId)
 		if lpath == false then
 			s.resource[name] = nil
 		else
-			s.resource[name] = repo:build_resource(lpath)
+			s.resource[name] = repo:build_resource(lpath):root()
 		end
 	end
 	return s.resource
@@ -165,7 +165,7 @@ function S.RESOURCE(CompileId, path)
         s.resource[path] = nil
         return
     end
-    local hash = repo:build_resource(lpath, path)
+    local hash = repo:build_resource(lpath, path):root()
     s.resource[path] = hash
     return hash
 end
