@@ -292,6 +292,7 @@ static int
 push_token_string(lua_State *L, const char *ptr, size_t sz) {
 	char tmp[SHORT_STRING];
 	char *buffer = tmp;
+	tmp[0] = '\0';
 	assert(sz > 0);
 	if (sz > SHORT_STRING) {
 		buffer = lua_newuserdatauv(L, sz, 0);
@@ -306,7 +307,9 @@ push_token_string(lua_State *L, const char *ptr, size_t sz) {
 			++i;
 			assert(i < sz);
 			char c = *ptr;
-			if (c >= '0' && c <= '9') {
+			if (c == '0') {
+				buffer[n] = '\0';
+			} else if (c >= '1' && c <= '9') {
 				// escape dec ascii
 				int dec = c - '0';
 				if (i+1 < sz) {
