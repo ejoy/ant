@@ -1,5 +1,6 @@
+local SHADER_VERSION<const> = 11
 local SHADER_TYPES<const> = {
-    C = 10, F = 10, V = 10
+    C = SHADER_VERSION, F = SHADER_VERSION, V = SHADER_VERSION
 }
 
 local BGFX_PREDEFINED_NAMES<const> = {
@@ -24,7 +25,7 @@ end
 
 local function isShaderVersionValid(magic)
     local t, v = magic:sub(1, 1), magic:sub(4, 4)
-    return v:byte() >= SHADER_TYPES[t]
+    return v:byte() == SHADER_TYPES[t]
 end
 
 local function create_reader(c)
