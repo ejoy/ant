@@ -56,6 +56,8 @@ end
 
 local function get_border_mesh()
 
+    if BORDER_MESH then return BORDER_MESH end
+
     local function get_border_vb(vbfmt)
         local ox, oz, nx, nz = 0, 0, 1, 1
         return vbfmt:pack(
@@ -73,6 +75,8 @@ local function get_border_mesh()
 end
 
 local function get_terrain_mesh()
+
+    if TERRAIN_MESH then return TERRAIN_MESH end
 
     local function get_terrain_vb(color_texcoords, alpha_texcoords, vbfmt)
         local ox, oz, nx, nz = 0, 0, 1, 1
@@ -139,9 +143,11 @@ function pt_sys:exit()
     end
     if TERRAIN_MESH and TERRAIN_MESH.vb.handle then
         TERRAIN_MESH.vb.handle= destroy_handle(TERRAIN_MESH.vb.handle)
+        TERRAIN_MESH = nil
     end
     if BORDER_MESH and BORDER_MESH.vb.handle then
         BORDER_MESH.vb.handle= destroy_handle(BORDER_MESH.vb.handle)
+        BORDER_MESH = nil
     end
     for e in w:select "plane_terrain eid:in" do
         w:remove(e.eid)
