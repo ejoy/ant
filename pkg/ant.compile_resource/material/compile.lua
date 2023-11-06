@@ -313,12 +313,17 @@ end
 local function create_PBR_shader(fx, stage, properties)
     local si = assert(DEF_SHADER_INFO[stage])
     local nc = generate_shader(si, fx[stage .. "_code"], properties)
-    local filename = SC_ROOT / si.filename:format(sha1(nc))
+    local fn = si.filename:format(sha1(nc))
+    local filename = SC_ROOT / fn
 
     if not lfs.exists(filename) then
         local fw <close> = assert(io.open(filename:string(), "wb"))
         fw:write(nc)
     end
+    if fx[stage] then
+        error "vs/fs should not define when use genertaed shader"
+    end
+    fx[stage] = fn
     return filename
 end
 
@@ -353,15 +358,15 @@ local function check_update_fx(fx)
     check_update_shader_type(fx)
     local st = assert(fx.shader_type, "Invalid fx, could not find valid 'shader_type' or 'shader_type' not defined")
     if st == "PBR" then
-        local function generate_shader_filename(stage)
-            local codename = stage .. "_code"
-            if fx[codename] or nil == fx[stage] then
-                fx[stage] = stage..".sc"
-            end
-        end
+        -- local function generate_shader_filename(stage)
+        --     local codename = stage .. "_code"
+        --     if fx[codename] or nil == fx[stage] then
+        --         fx[stage] = stage..".sc"
+        --     end
+        -- end
 
-        generate_shader_filename "vs"
-        generate_shader_filename "fs"
+        -- generate_shader_filename "vs"
+        -- generate_shader_filename "fs"
     end
 end
 
@@ -617,7 +622,6 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     check_update_fx(fx)
     -- setmetatable(fx, CHECK_MT)
     -- setmetatable(fx.setting, CHECK_MT)
-    writefile(output / "main.cfg",  mat)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local inputpath = fx.shader_type == "PBR" and
@@ -660,6 +664,11 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
             local outfile = output / "main.attr"
             writefile(outfile, {attrib = attribs, system=systems})
         end)
+
+        --some info write to 'mat' in tasks, we should write 'main.cfg' here
+        parallel_task.add(post_tasks, function ()
+            writefile(output / "main.cfg",  mat)
+        end)
     end
 
     if fx.shader_type == "COMPUTE" then
@@ -668,7 +677,10 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     else
         local stages = {"vs"}
         compile_shader "vs"
-        if fx.fs then
+        local function has_fs()
+            return fx.fs or fx.shader_type == "PBR"
+        end
+        if has_fs() then
             compile_shader "fs"
             stages[#stages+1] = "fs"
         end
