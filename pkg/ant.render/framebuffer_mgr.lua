@@ -231,12 +231,20 @@ function mgr.get_depth(fbidx)
 end
 
 function mgr.clear()
-end
+	for _, rb in pairs(RENDER_BUFFERS) do
+		bgfx.destroy(rb.handle)
+	end
+	RENDER_BUFFERS = {}
 
-function mgr.check()
-	assert(not next(VIEWID_BINDINGS), "Need clear viewid bind with framebuffer correctly")
-	assert(not next(FRAMEBUFFERS), "Need clear framebuffer objects")
-	assert(not next(RENDER_BUFFERS), "Need clear renderbuffer objects")
+	for _, fb in pairs(FRAMEBUFFERS) do
+		bgfx.destroy(fb.handle)
+	end
+
+	FRAMEBUFFERS = {}
+
+	for viewid in pairs(VIEWID_BINDINGS) do
+		log.info(("viewid:%d binded framebuffer already remove, need clear"):format(viewid))
+	end
 end
 
 return mgr

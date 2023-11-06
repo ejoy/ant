@@ -14,7 +14,7 @@ local imaterial = ecs.require "ant.asset|material"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer.render_layer"
 local RM        = ecs.require "ant.material|material"
-local INF_F<const> = true
+
 local render_sys= ecs.system "render_system"
 
 local R			= world:clibs "render.render_material"
@@ -231,10 +231,4 @@ end
 
 function render_sys:end_filter()
 	w:clear "filter_result"
-end
-
-
-local fbmgr = require "framebuffer_mgr"
-function render_sys:exit()
-	--fbmgr.check()
 end

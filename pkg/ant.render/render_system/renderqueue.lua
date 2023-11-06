@@ -179,9 +179,6 @@ function rt_sys:entity_init()
 	w:clear "need_touch"
 end
 
-function rt_sys:entity_ready()
-end
-
 local function check_need_remove_fbidx(fbidx)
 	local ref = 0
 	for e in w:select "render_target:in" do
@@ -195,15 +192,26 @@ local function check_need_remove_fbidx(fbidx)
 	return true
 end
 
-function rt_sys:entity_remove()
-	for v in w:select "REMOVED render_target:in" do
-		local fbidx = v.render_target.fb_idx
-		local ref = 0
-		if check_need_remove_fbidx(fbidx) then
-			fbmgr.destroy(fbidx)
-		end
-		fbmgr.unbind(v.render_target.viewid)
+local function remve_rt(rt)
+	local fbidx = rt.fb_idx
+	if check_need_remove_fbidx(fbidx) then
+		fbmgr.destroy(fbidx)
 	end
+	fbmgr.unbind(rt.viewid)
+end
+
+function rt_sys:entity_remove()
+	for q in w:select "REMOVED render_target:in" do
+		remve_rt(q.render_target)
+	end
+end
+
+function rt_sys:exit()
+	for q in w:select "queue_name render_target:in" do
+		remve_rt(q.render_target)
+	end
+
+	fbmgr.clear()
 end
 
 return irq
