@@ -25,8 +25,6 @@ dofile "engine/log.lua"
 package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
 local vfsrepo = dofile "pkg/ant.vfs/main.lua"
 
-local resources = {}
-
 local function response_id(id, ...)
 	if id then
 		assert(type(id) == "userdata")
@@ -55,15 +53,9 @@ do
 			local dir = {}
 			for _, c in ipairs(file.dir) do
 				if c.dir then
-					dir[c.name] = {
-						type = "d",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "d" }
 				elseif c.path then
-					dir[c.name] = {
-						type = "f",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "f" }
 				end
 			end
 			return dir
@@ -87,6 +79,7 @@ end
 local CMD = {}
 
 do
+	local resources = {}
 	local function COMPILE(_)
 		error "resource is not ready."
 	end
@@ -142,19 +135,11 @@ do
 			local dir = {}
 			for _, c in ipairs(file.dir) do
 				if c.dir then
-					dir[c.name] = {
-						type = "d",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "d" }
 				elseif c.path then
-					dir[c.name] = {
-						type = "f",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "f" }
 				elseif c.resource then
-					dir[c.name] = {
-						type = "r",
-					}
+					dir[c.name] = { type = "r" }
 				end
 			end
 			return dir
