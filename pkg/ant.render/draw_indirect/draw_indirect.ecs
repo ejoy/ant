@@ -28,4 +28,4 @@ component "draw_indirect_update"
 
 
 system "draw_indirect_system2"
-    .implement "draw_indirect/draw_indirect2.lua"
+    .implement "draw_indirect/draw_indirect.lua"

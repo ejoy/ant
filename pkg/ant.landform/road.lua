@@ -7,7 +7,7 @@ local math3d    = require "math3d"
 
 local irender       = ecs.require "ant.render|render_system.render"
 local icompute      = ecs.require "ant.render|compute.compute"
-local idi           = ecs.require "ant.render|draw_indirect.draw_indirect2"
+local idi           = ecs.require "ant.render|draw_indirect.draw_indirect"
 local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"

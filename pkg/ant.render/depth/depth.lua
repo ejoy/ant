@@ -13,7 +13,7 @@ if setting:get "graphic/disable_pre_z" then
 end
 
 local bgfx          = require "bgfx"
-local idi           = ecs.require "ant.render|draw_indirect.draw_indirect2"
+local idi           = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr      = ecs.require "queue_mgr"
 
 local R             = world:clibs "render.render_material"
