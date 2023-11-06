@@ -17,6 +17,11 @@ local function find_bindir()
     assert("debug" == mode:lower())
 
     local release_path = exepath:parent_path() / "release"
+    if lfs.exists(release_path) then
+        return release_path
+    end
+
+    log.info("release tools is not build, release tools are mush faster than debug tools, try to build release tools: luamake tools -mode release")
     return lfs.exists(release_path) and release_path or exepath
 end
 
