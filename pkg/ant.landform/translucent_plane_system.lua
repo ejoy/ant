@@ -125,6 +125,7 @@ function itp.clear_tp()
     for _, eid in ipairs(ENTITIES) do
         w:remove(eid)
     end
+    ENTITIES = {}
 end
 
 return itp
