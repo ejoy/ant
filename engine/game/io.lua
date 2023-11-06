@@ -25,13 +25,6 @@ dofile "engine/log.lua"
 package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
 local vfsrepo = dofile "pkg/ant.vfs/main.lua"
 
-local function response_id(id, ...)
-	if id then
-		assert(type(id) == "userdata")
-		thread.rpc_return(id, ...)
-	end
-end
-
 do
 	local vfs = require "vfs"
 	local repo = vfsrepo.new_tiny(repopath)
@@ -174,13 +167,20 @@ local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		return
 	end
-    local f = CMD[cmd]
-    if not f then
-        print("Unsupported command : ", cmd)
-        response_id(id)
-    else
-        response_id(id, f(...))
-    end
+	local f = CMD[cmd]
+	if not id then
+		if not f then
+			print("Unsupported command : ", cmd)
+		end
+		return true
+	end
+	assert(type(id) == "userdata")
+	if not f then
+		print("Unsupported command : ", cmd)
+		thread.rpc_return(id)
+		return true
+	end
+	thread.rpc_return(id, f(...))
 	return true
 end
 
