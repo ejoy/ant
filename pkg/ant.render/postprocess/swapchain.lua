@@ -38,11 +38,11 @@ function sc_sys:init_world()
     util.create_queue(swapchain_viewid, mu.copy_viewrect(world.args.viewport), nil, "swapchain_queue", "swapchain_queue")
 end
 
-local vr_mb = world:sub{"view_rect_changed", "main_queue"}
+local vp_changed_mb = world:sub{"world_viewport_changed"}
 
 function sc_sys:data_changed()
-    for _, _, vr in vr_mb:unpack() do
-        irq.set_view_rect("swapchain_queue", vr)
+    for _, vp in vp_changed_mb:unpack() do
+        irq.set_view_rect("swapchain_queue", vp)
         break
     end
 end
