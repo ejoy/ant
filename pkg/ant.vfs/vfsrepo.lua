@@ -544,47 +544,20 @@ function repo_meta:export()
 	return r
 end
 
-local root_meta = {} ; root_meta.__index = root_meta
-
-function repo.newroot()
-	local root = {}
-	local obj = {
-		_root = root,
-		_map = {},
-	}
-	return setmetatable(obj, root_meta)
-end
-
-function root_meta:update(m)
-	if m then
-		local _map = self._map
-		for name, item in pairs(m) do
-			if item then
-				local newitem = {}
-				for k,v in pairs(item) do
-					newitem[k] = v
-				end
-				newitem.name = name
-				_map[name] = newitem
-			else
-				_map[name] = nil
-			end
+function repo.calc_hash(list)
+	local dir_content = {}
+	for i = 1, #list do
+		local item = list[i]
+		if item.type == "dir" then
+			dir_content[i] = "d " .. item.name .. " " .. item.hash .. "\n"
+		else
+			assert(item.type == "file")
+			dir_content[i] = "f " .. item.name .. " " .. item.hash .. "\n"
 		end
-		local root = {}
-		local n = 1
-		for _, item in pairs(_map) do
-			root[n] = item; n = n + 1
-		end
-		table.sort(root, sort_name)
-		self._root = root
 	end
-	local root = self._root
-	root.content = calc_hash(root)
-	root.hash = fastio.str2sha1(root.content)
-end
-
-function root_meta:root()
-	return self._root
+	local c = table.concat(dir_content)
+	local h = fastio.str2sha1(c)
+	return { content = c, hash = h }
 end
 
 return repo
