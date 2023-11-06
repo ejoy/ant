@@ -87,13 +87,12 @@ function tm_sys:init_world()
     util.create_queue(tm_viewid, vr, check_create_fb(vr), "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA or ENABLE_TAA)
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
+local vr_mb = world:sub{"view_rect_changed", "main_queue"}
+
 function tm_sys:data_changed()
-    if (not ENABLE_FXAA) and (not ENABLE_TAA) then
-        for _, vp in vp_changed_mb:unpack() do
-            irq.set_view_rect("tonemapping_queue", vp)
-            break
-        end
+    for _, _, vr in vr_mb:unpack() do
+        irq.set_view_rect("tonemapping_queue", vr)
+        break
     end
 end
 

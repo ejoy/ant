@@ -64,11 +64,11 @@ function fxaasys:init_world()
     util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), create_fb(vr), "fxaa_queue", "fxaa_queue")
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
+local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
 function fxaasys:data_changed()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("fxaa_queue", vp)
+    for _, _, vr in vr_mb:unpack() do
+        irq.set_view_rect("fxaa_queue", vr)
         break
     end
 end
