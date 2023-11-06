@@ -22,7 +22,7 @@ local hierarchy     = require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
-
+local iterrain           = ecs.require "ant.landform|plane_terrain"
 local anim_view
 local m = {
     entities = {}
@@ -158,11 +158,12 @@ function m:show_ground(enable)
         self:create_ground()
     end
 end
+
 function m:show_terrain(enable)
     if not enable then
-        --iterrain.clear_terrain_field()
+        iterrain.clear_plane_terrain()
     else
-        --iterrain.gen_terrain_field(128, 128, 64, 10)
+        iterrain.create_plane_terrain({[0] = {{x = -500, y = -500, type = "terrain"}}}, "opacity", 1000, 0)
     end
 end
 function m:clone(eid)

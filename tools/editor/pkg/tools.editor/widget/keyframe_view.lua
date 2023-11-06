@@ -341,8 +341,8 @@ local function on_move_clip(move_type, current_clip_index, move_delta)
     local min_value, max_value = min_max_range_value(clips, current_clip_index)
     if move_type == 1 then
         local new_value = clip.range[1] + move_delta
-        if new_value < 0 then
-            new_value = 0
+        if new_value < min_value then
+            new_value = min_value
         end
         if new_value >= clip.range[2] then
             new_value = clip.range[2] - 1
@@ -699,7 +699,7 @@ local function show_current_detail()
             dirty = true
         end
     else
-        if anim_type == "ske" then
+        if anim_type == "ske" or anim_type == "srt" then
             imgui.widget.PropertyLabel("AnimationType")
             if imgui.widget.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = imgui.flags.Combo {}}) then
                 for i, type in ipairs(anim_type_name) do
@@ -1327,7 +1327,7 @@ function m.load(path)
             else
                 for _, clip in ipairs(subanim.clips) do
                     clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
-                    if anim.type == "ske" then
+                    if anim.type == "ske" or anim.type == 'srt' then
                         clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = max_repeat}
                         clip.random_amplitude_ui = {clip.random_amplitude}
                     end
