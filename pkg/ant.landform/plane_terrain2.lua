@@ -15,8 +15,6 @@ local DEFAULT_TILE_SIZE <const> = 10
 local DEFAULT_TERRAIN_CHUNK_SIZE <const> = DEFAULT_TILE_SIZE * 32
 local DEFAULT_BORDER_CHUNK_SIZE <const> = DEFAULT_TILE_SIZE * 16
 
-local ENTITIES = {}
-
 local COLOR_TEX_SIZE <const> = 4
 local ALPHA_TEX_SIZE <const> = 1
 
@@ -45,6 +43,7 @@ local function to_mesh_buffer(vb, vblayout, ib_handle)
             start = 0,
             num = numv,
             handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vb), vblayout.handle),
+            owned = true,   --
         },
         ib = {
             start = 0,
@@ -102,7 +101,7 @@ local function create_plane_terrain_entity(gid, info, render_layer, terrain_chun
         mesh, material = BORDER_MESH, DEFAULT_BORDER_MATERIAL 
     end
 
-    ENTITIES[#ENTITIES+1] = world:create_entity {
+    return world:create_entity {
         group = gid,
         policy = {
             "ant.render|simplerender",
@@ -113,6 +112,7 @@ local function create_plane_terrain_entity(gid, info, render_layer, terrain_chun
             material    = material,
             visible_state = "main_view|selectable",
             render_layer = render_layer,
+            owned_mesh_buffer = true,
         },
     }
 end
@@ -121,17 +121,13 @@ function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk
     local terrain_render_layer = render_layer and render_layer or DEFAULT_TERRAIN_RENDER_LAYER
     local terrain_chunk_size = terrain_chunk and terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
     local border_chunk_size  = border_chunk and border_chunk or DEFAULT_BORDER_CHUNK_SIZE
+    local entities = {}
     for gid, infos in pairs(groups) do
         for _, info in ipairs(infos) do
-            create_plane_terrain_entity(gid, info, terrain_render_layer, terrain_chunk_size, border_chunk_size)
+            entities[#entities+1] = create_plane_terrain_entity(gid, info, terrain_render_layer, terrain_chunk_size, border_chunk_size)
         end
     end
-end
-
-function iplane_terrain.clear_plane_terrain()
-    for _, eid in ipairs(ENTITIES) do
-        w:remove(eid)
-    end
+    return entities
 end
 
 return iplane_terrain
