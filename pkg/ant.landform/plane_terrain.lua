@@ -134,6 +134,12 @@ function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk
     end
 end
 
+function iplane_terrain.clear_plane_terrain()
+    for e in w:select "plane_terrain eid:in" do
+        w:remove(e.eid)
+    end
+end
+
 function pt_sys:exit()
 
     local function destroy_handle(h)
