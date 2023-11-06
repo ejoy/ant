@@ -12,7 +12,20 @@ local parallel_task = require "parallel_task"
 
 local matutil       = import_package "ant.material".util
 local sa            = import_package "ant.render.core".system_attribs
-local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
+
+local ENABLE_SHADOW<const>          = setting:get "graphic/shadow/enable"
+local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local ENABLE_IBL_LUT<const>         = setting:get "graphic/ibl/enable_lut"
+local USE_CS_SKINNING<const>        = setting:get "graphic/skinning/use_cs"
+
+local ENABLE_CS<const>              = setting:get "graphic/lighting/cluster_shading" ~= 0
+local ENABLE_BLOOM<const>           = setting:get "graphic/postprocess/bloom/enable"
+local ENABLE_FXAA<const>            = setting:get "graphic/postprocess/fxaa/enable"
+local FXAA_USE_GREEN_AS_LUMA<const> = setting:get "graphic/postprocess/fxaa/use_green_as_luma"
+local ENABLE_AO<const>              = setting:get "graphic/ao/enable"
+local ENABLE_AO_BENT_NORMAL<const>  = setting:get "graphic/ao/bent_normal"
+local AO_QULITY<const>              = ENABLE_AO and setting:get "graphic/ao/qulity" or ""
+
 local function DEF_FUNC() end
 
 local SHADER_BASE <const> = "/pkg/ant.resources/shaders"
@@ -45,74 +58,66 @@ local SETTING_MAPPING = {
     no_predepth = DEF_FUNC,
 }
 
-local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"
-local ENABLE_IBL_LUT<const>         = setting:get "graphic/ibl/enable_lut"
-local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
-
-local enable_cs<const>      = setting:get "graphic/lighting/cluster_shading" ~= 0
-local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
-local fxaa_enable<const>   = setting:get "graphic/postprocess/fxaa/enable"
-local fxaa_use_green_as_luma<const> = setting:get "graphic/postprocess/fxaa/use_green_as_luma"
-local enable_ao<const>      = setting:get "graphic/ao/enable"
-local enable_ao_bentnormal<const> = setting:get "graphic/ao/bent_normal"
-local ao_qulity<const>      = enable_ao and setting:get "graphic/ao/qulity" or ""
-
-local function default_macros(setting)
-    local m = {
+local DEFAULT_MACROS; do
+    DEFAULT_MACROS = {
         "ENABLE_SRGB_TEXTURE=1",
         "ENABLE_SRGB_FB=1",
         "ENABLE_IBL=1",
         "ENABLE_TEXTURE_GATHER=1",
     }
 
-    if enable_cs then
-        m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
-        m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
-        m[#m+1] = "CLUSTER_SHADING=1"
+    if ENABLE_CS then
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "CLUSTER_SHADING=1"
     end
 
-    if enable_bloom then
-        m[#m+1] = "BLOOM_ENABLE=1"
+    if ENABLE_BLOOM then
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "BLOOM_ENABLE=1"
     end
 
-    if enable_ao then
-        m[#m+1] = "ENABLE_SSAO=1"
-        if enable_ao_bentnormal then
-            m[#m+1] = "ENABLE_BENT_NORMAL=1"
+    if ENABLE_AO then
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "ENABLE_SSAO=1"
+        if ENABLE_AO_BENT_NORMAL then
+            DEFAULT_MACROS[#DEFAULT_MACROS+1] = "ENABLE_BENT_NORMAL=1"
         end
 
-        if ao_qulity == "high" then
-            m[#m+1] = "HIGH_QULITY_SPECULAR_AO=1"
-            m[#m+1] = "HIGH_QULITY_NORMAL_RECONSTRUCT=1"
+        if AO_QULITY == "high" then
+            DEFAULT_MACROS[#DEFAULT_MACROS+1] = "HIGH_QULITY_SPECULAR_AO=1"
+            DEFAULT_MACROS[#DEFAULT_MACROS+1] = "HIGH_QULITY_NORMAL_RECONSTRUCT=1"
         end
     end
 
-    if fxaa_enable and not fxaa_use_green_as_luma then
-        m[#m+1] = "COMPUTE_LUMINANCE_TO_ALPHA=1"
+    if ENABLE_FXAA and not FXAA_USE_GREEN_AS_LUMA then
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "COMPUTE_LUMINANCE_TO_ALPHA=1"
     end
 
     if IRRADIANCE_SH_BAND_NUM then
-        m[#m+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
-        m[#m+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
     end
 
     if USE_CS_SKINNING then
-        m[#m+1] = "CS_SKINNING=1"
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "CS_SKINNING=1"
     end
 
     if ENABLE_IBL_LUT then
-        m[#m+1] = "ENABLE_IBL_LUT=1"
+        DEFAULT_MACROS[#DEFAULT_MACROS+1] = "ENABLE_IBL_LUT=1"
     end
+end
 
+local function default_macros(setting)
+    local m = {
+        "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
+        "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
+    }
+    table.move(DEFAULT_MACROS, 1, #DEFAULT_MACROS, #m+1, m)
     return m
 end
 
 local PBR_TEXTURE_MACROS<const> = {
     s_basecolor             = "HAS_BASECOLOR_TEXTURE=1",
     s_normal                = "HAS_NORMAL_TEXTURE=1",
-    s_metallic_roughness    ="HAS_METALLIC_ROUGHNESS_TEXTURE=1",
-    s_emissive              ="HAS_EMISSIVE_TEXTURE=1",
-    s_occlusion             ="HAS_OCCLUSION_TEXTURE=1",
+    s_metallic_roughness    = "HAS_METALLIC_ROUGHNESS_TEXTURE=1",
+    s_emissive              = "HAS_EMISSIVE_TEXTURE=1",
+    s_occlusion             = "HAS_OCCLUSION_TEXTURE=1",
 }
 
 local function get_macros(setting, mat)
@@ -635,7 +640,7 @@ end
 local function add_lighting_sv(systems, lighting)
     if lighting == "on" then
         systems[#systems+1] = "b_light_info"
-        if enable_cs then
+        if ENABLE_CS then
             systems[#systems+1] = "b_light_grids"
             systems[#systems+1] = "b_light_index_lists"
         end
