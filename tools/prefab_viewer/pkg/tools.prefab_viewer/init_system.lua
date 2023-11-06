@@ -5,7 +5,6 @@ local w     = world.w
 local math3d = require "math3d"
 local iom = ecs.require "ant.objcontroller|obj_motion"
 local irmlui = ecs.require "ant.rmlui|rmlui_system"
-local iterrain  = ecs.require "ant.landform|terrain_system"
 local S = ecs.system "init_system"
 local font = import_package "ant.font"
 
@@ -34,7 +33,6 @@ function S.init_world()
 	-- }
 
 	-- terrain
-	iterrain.gen_terrain_field(128, 128, 64, 10)
 	
 	-- test prefab
 	world:create_instance {

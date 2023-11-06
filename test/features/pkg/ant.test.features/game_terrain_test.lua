@@ -7,7 +7,6 @@ local math3d = require "math3d"
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
-local iterrain      = ecs.require "ant.landform|terrain_system"
 local istonemountain= ecs.require "ant.landform|stone_mountain_system"
 local itp           = ecs.require "ant.landform|translucent_plane_system"
 local iroad         = ecs.require "ant.landform|road"
@@ -38,7 +37,6 @@ function S.init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
-    iterrain.gen_terrain_field(256, 256, 128)
 
 
 --[[       world:create_entity {

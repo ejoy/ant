@@ -13,7 +13,7 @@ function cb.init(width, height, cfg)
             ratio = 1,
             scene_ratio = 1,
         },
-        viewport = {x=0, y=0, w=1, h=1},
+        viewport = {x=0, y=0, w=1920, h=1080},
         ecs = ecs,
     }
     local oldmouse = m.mouse

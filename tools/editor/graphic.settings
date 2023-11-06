@@ -27,8 +27,10 @@ graphic:
     clear_stencil: 0
     clear: CDS
   postprocess:
+    blur:
+      enable: nil
     bloom:
-      enable: false
+      enable: nil
       inv_highlight: 0.2
       threshold: 2
     fxaa:
