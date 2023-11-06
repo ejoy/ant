@@ -796,7 +796,20 @@ function m:save(path)
                 end
             end
             if self.prefab_name == "mesh.prefab" then
-                self:get_patch_list(final_template)
+                local origin_template = {}
+                self:get_patch_list(origin_template)
+                local copy_file = {}
+                for _, value in ipairs(origin_template) do
+                    if value.op == 'copyfile' then
+                        copy_file[#copy_file + 1] = value
+                    else
+                        final_template[#final_template + 1] = value
+                    end
+                end
+                for _, value in ipairs(copy_file) do
+                    final_template[#final_template + 1] = value
+                end
+                
                 self:get_origin_patch_list(final_template)
             else
                 self:get_origin_patch_list(final_template)
