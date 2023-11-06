@@ -6,6 +6,9 @@ local fastio    = require "fastio"
 
 local settingpath<const> = fs.path "/pkg/tools.editor/editor.settings"
 local function read()
+    if not fs.exists(settingpath) then
+        return {}
+    end
     return datalist.parse(fastio.readall(settingpath:localpath():string(), settingpath:string()))
 end
 
