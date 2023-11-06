@@ -7,10 +7,20 @@ local function find_bindir()
         return lfs.path(antdir) / "bin/msvc/debug"
     end
 
-    return lfs.exe_path():parent_path()
+    local exepath = lfs.exe_path():parent_path()
+
+    local mode = exepath:stem():string()
+    if "release" == mode then
+        return exepath
+    end
+
+    assert("debug" == mode:lower())
+
+    local release_path = exepath:parent_path() / "release"
+    return lfs.exists(release_path) and release_path or exepath
 end
 
-local BINDIR<const> = find_bindir()--lfs.exe_path():parent_path()
+local BINDIR<const>     = find_bindir()--lfs.exe_path():parent_path()
 local TOOLSUFFIX<const> = platform.os == "macos" and "" or ".exe"
 
 return function (toolname)
