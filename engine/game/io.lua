@@ -25,15 +25,6 @@ dofile "engine/log.lua"
 package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
 local vfsrepo = dofile "pkg/ant.vfs/main.lua"
 
-local resources = {}
-
-local function response_id(id, ...)
-	if id then
-		assert(type(id) == "userdata")
-		thread.rpc_return(id, ...)
-	end
-end
-
 do
 	local vfs = require "vfs"
 	local repo = vfsrepo.new_tiny(repopath)
@@ -55,15 +46,9 @@ do
 			local dir = {}
 			for _, c in ipairs(file.dir) do
 				if c.dir then
-					dir[c.name] = {
-						type = "d",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "d" }
 				elseif c.path then
-					dir[c.name] = {
-						type = "f",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "f" }
 				end
 			end
 			return dir
@@ -87,6 +72,7 @@ end
 local CMD = {}
 
 do
+	local resources = {}
 	local function COMPILE(_)
 		error "resource is not ready."
 	end
@@ -142,19 +128,11 @@ do
 			local dir = {}
 			for _, c in ipairs(file.dir) do
 				if c.dir then
-					dir[c.name] = {
-						type = "d",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "d" }
 				elseif c.path then
-					dir[c.name] = {
-						type = "f",
-						hash = c.hash,
-					}
+					dir[c.name] = { type = "f" }
 				elseif c.resource then
-					dir[c.name] = {
-						type = "r",
-					}
+					dir[c.name] = { type = "r" }
 				end
 			end
 			return dir
@@ -189,13 +167,20 @@ local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		return
 	end
-    local f = CMD[cmd]
-    if not f then
-        print("Unsupported command : ", cmd)
-        response_id(id)
-    else
-        response_id(id, f(...))
-    end
+	local f = CMD[cmd]
+	if not id then
+		if not f then
+			print("Unsupported command : ", cmd)
+		end
+		return true
+	end
+	assert(type(id) == "userdata")
+	if not f then
+		print("Unsupported command : ", cmd)
+		thread.rpc_return(id)
+		return true
+	end
+	thread.rpc_return(id, f(...))
 	return true
 end
 
