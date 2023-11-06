@@ -6,6 +6,9 @@ policy "shape_terrain"
 policy "stonemountain"
     .component "stonemountain"
 
+policy "plane_terrain"
+    .component "plane_terrain"
+
 component "plane_terrain".type "lua"
 component "shape_terrain".type "lua"
 
@@ -18,11 +21,9 @@ policy "road"
 
 component "road_indicator"
 
+
 system "plane_terrain_system"
     .implement "plane_terrain.lua"
-
-system "terrain_system"
-    .implement "terrain_system.lua"
 
 system "road_system"
     .implement "road.lua"
