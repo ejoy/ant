@@ -284,7 +284,14 @@ function init_loader_sys:ui_update()
 
     for _, key, press in kb_mb:unpack() do
         if key == "A" and press == 0 then
-            bse, output_handle = ibs.blur_scene()
+            bse = world:create_entity {
+                policy = {
+                    "ant.blur_scene|blur_scene",
+                },
+                data = {
+                    blur_scene = true
+                },
+            }
         elseif key == "B" and press == 0 then
             w:remove(bse)
         elseif key == "T" and press == 0 then

@@ -153,6 +153,14 @@ local function update_camera_properties()
 	end
 end
 
+local function add_render_arg(qe)
+	local rt = qe.render_target
+	local viewid = rt.viewid
+
+	bgfx.touch(viewid)
+	qe.render_args = RENDER_ARGS[qe.queue_name]
+end
+
 function render_sys:commit_system_properties()
 	update_timer_properties()
 	update_camera_properties()
@@ -171,14 +179,13 @@ end
 function render_sys:update_render_args()
 	w:clear "render_args"
 	if irender.stop_draw() then
+		for qe in w:select "swapchain_queue queue_name:in render_target:in render_args:new" do
+			add_render_arg(qe)
+		end
 		return
 	end
 	for qe in w:select "visible queue_name:in render_target:in render_args:new" do
-		local rt = qe.render_target
-		local viewid = rt.viewid
-
-		bgfx.touch(viewid)
-		qe.render_args = RENDER_ARGS[qe.queue_name]
+		add_render_arg(qe)
 	end
 end
 

@@ -16,17 +16,6 @@ if not setting:get "graphic/postprocess/blur/enable" then
     return
 end
 
-local function create_blur_scene_entity()
-    return world:create_entity {
-        policy = {
-            "ant.blur_scene|blur_scene",
-        },
-        data = {
-            blur_scene = {}
-        },
-    }
-end
-
 local function create_stop_scene_entity()
     return world:create_entity {
         policy = {
@@ -39,13 +28,14 @@ local function create_stop_scene_entity()
 end
 
 function bs_sys:entity_init()
-    local bse = w:first "INIT blur_scene:update stop_scene?out"
+    local bse = w:first "INIT blur_scene"
     if bse then
         local tqe = w:first "tonemapping_queue render_target:in"
         local be  = w:first "blur pyramid_sample:update"
+        assert(be, "pyramid_sample should create before blur scene!\n")
         local input_handle = fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
         ips.do_pyramid_sample(be, input_handle)
-        bse.blur_scene.stop_scene_eid = create_stop_scene_entity()
+        create_stop_scene_entity()
         ips.set_pyramid_visible(be, true)
     end
 
@@ -56,20 +46,15 @@ function bs_sys:entity_init()
 end
 
 function bs_sys:entity_remove()
-    for bse in w:select "REMOVED blur_scene:in" do
+    local bse = w:first "REMOVED blur_scene"
+    if bse then
         local be  = w:first "blur pyramid_sample:update"
         ips.set_pyramid_visible(be, false)
         irender.stop_draw(false)
-        w:remove(bse.blur_scene.stop_scene_eid)
-    end
-end
-
-function ibs.blur_scene()
-    local be = w:first "blur pyramid_sample:in"
-    if be then
-        local bse = create_blur_scene_entity()
-        local output_handle = be.pyramid_sample.scene_color_property.value
-        return bse, output_handle
+        local sse = w:first "stop_scene eid:in"
+        if sse then
+            w:remove(sse.eid) 
+        end
     end
 end
 

@@ -58,6 +58,12 @@ function sc_sys:swapchain()
     end
 
     local fd = w:first "swapchain_drawer filter_material:in"
-    imaterial.set_property(fd, "s_scene_color", sceneldr_handle)
+    local se = w:first "stop_scene"
+    if se then
+        local be = w:first "blur pyramid_sample:in"
+        imaterial.set_property(fd, "s_scene_color", be.pyramid_sample.scene_color_property.value)
+    else
+        imaterial.set_property(fd, "s_scene_color", sceneldr_handle)
+    end
 end
 

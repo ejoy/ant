@@ -1,7 +1,6 @@
 import_feature "ant.render"
 
 component "blur_scene"
-    .type "lua"
 component "stop_scene"
 
 policy "blur_scene"

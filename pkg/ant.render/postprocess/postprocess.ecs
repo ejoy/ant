@@ -1,6 +1,7 @@
 pipeline "postprocess"
     .stage "pre_postprocess"
     .stage "dof"
+    .stage "blur"
     .stage "bloom"
     .stage "tonemapping"
     .stage "taa"
