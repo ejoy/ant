@@ -86,6 +86,7 @@ local function update_vfs()
 	for _, s in pairs(CacheCompileS) do
 		s.resource = {}
 	end
+	ltask.multi_wakeup "CHANGEROOT"
 	print("repo rebuild ok..")
 end
 
@@ -111,6 +112,13 @@ end
 local S = {}
 
 function S.ROOT()
+	return repo:root()
+end
+
+function S.CHANGEROOT(oldroot)
+	while oldroot == repo:root() do
+		ltask.multi_wait "CHANGEROOT"
+	end
 	return repo:root()
 end
 

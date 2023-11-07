@@ -668,7 +668,6 @@ local function main()
 		local hash = repo:history_root()
 		if hash then
 			repo:changeroot(hash)
-			repo:load_resource()
 		else
 			error("No history root")
 			return

@@ -1,3 +1,9 @@
+local fastio = require "fastio"
+
+local function sha1(str)
+	return fastio.str2sha1(str)
+end
+
 local vfs = {} ; vfs.__index = vfs
 
 local uncomplete = {}
@@ -74,6 +80,13 @@ local function dir_object(self, hash)
 	end
 end
 
+local function get_cachepath(name)
+	local filename = name:match "[/]?([^/]*)$"
+	local ext = filename:match "[^/]%.([%w*?_%-]*)$"
+	local hash = sha1(name)
+	return ("res/%s/%s_%s"):format(ext, filename, hash)
+end
+
 local ListSuccess <const> = 1
 local ListFailed <const> = 2
 local ListNeedGet <const> = 3
@@ -93,6 +106,13 @@ local function fetch_file(self, hash, fullpath)
 				local h = self.resource[subpath.hash]
 				if h then
 					return ListSuccess, h
+				end
+				local cachepath = get_cachepath(subpath.hash)
+				if cachepath then
+					local r, h = fetch_file(self, hash, cachepath)
+					if r ~= ListFailed then
+						return r, h
+					end
 				end
 				return ListNeedResource, subpath.hash
 			else
@@ -187,52 +207,13 @@ function vfs:updatehistory(hash)
 	f:write(table.concat(history, "\n"))
 end
 
-function vfs:load_resource()
-	local rebuild = false
-	local path = self:hashpath(self.root)..".resource"
-	do
-		local f <close> = io.open(path, "rb")
-		if f then
-			for line in f:lines() do
-				local hash, name = line:match "([%da-f]+) (.*)"
-				if hash then
-					if self.resource[name] then
-						if self.resource[name] ~= hash then
-							rebuild = true
-							self.resource[name] = hash
-						end
-					else
-						self.resource[name] = hash
-					end
-				end
-			end
-		end
-	end
-	if rebuild then
-		local f <close> = assert(io.open(path, "wb"))
-		for hash, name in pairs(self.resource) do
-			f:write(("%s %s\n"):format(hash, name))
-		end
-	end
-end
-
 function vfs:changeroot(hash)
 	self.root = hash
 	self.resource = {}
 end
 
-function vfs:get_resource(name)
-	return self.resource[name]
-end
-
 function vfs:add_resource(name, hash)
-	if self.resource[name] == hash then
-		return
-	end
 	self.resource[name] = hash
-	local path = self:hashpath(self.root)..".resource"
-	local f <close> = assert(io.open(path, "ab"))
-	f:write(("%s %s\n"):format(hash, name))
 end
 
 function vfs:realpath(path)

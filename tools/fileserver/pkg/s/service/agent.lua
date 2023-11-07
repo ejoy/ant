@@ -164,6 +164,13 @@ end
 function message.SHAKEHANDS()
 end
 
+ltask.fork(function ()
+	while not quit do
+		roothash = ltask.call(ServiceVfsMgr, "CHANGEROOT", roothash)
+		response("ROOT", roothash)
+	end
+end)
+
 function message.ROOT()
 	response("ROOT", roothash)
 end

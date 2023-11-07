@@ -29,6 +29,16 @@ local function import_hash(self)
 	return hashs
 end
 
+local function read_content(v)
+	if v.dir then
+		return v.dir
+	end
+	if v.path then
+		return fastio.readall_s(v.path)
+	end
+	assert(false)
+end
+
 local function export_filehash(self, vfsrepo)
 	local filehash = self._filehash
 	local list = vfsrepo:export()
@@ -40,10 +50,8 @@ local function export_filehash(self, vfsrepo)
 				path = v.path,
 				dir = v.dir,
 			}
-		elseif n.dir then
-			assert(v.dir == n.dir)
-		elseif v.path ~= n.path then
-			assert(fastio.readall_s(v.path) == fastio.readall_s(n.path))
+		else
+			assert(read_content(v) == read_content(n))
 		end
 	end
 end
