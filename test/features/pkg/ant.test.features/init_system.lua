@@ -284,16 +284,9 @@ function init_loader_sys:ui_update()
 
     for _, key, press in kb_mb:unpack() do
         if key == "A" and press == 0 then
-            bse = world:create_entity {
-                policy = {
-                    "ant.blur_scene|blur_scene",
-                },
-                data = {
-                    blur_scene = true
-                },
-            }
+            ibs.blur_scene()
         elseif key == "B" and press == 0 then
-            w:remove(bse)
+            ibs.restore_scene()
         elseif key == "T" and press == 0 then
             -- local e<close> = world:entity(quad_eid)
             -- ivs.set_visible(e, "main_view", true)

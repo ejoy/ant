@@ -27,6 +27,17 @@ local function create_stop_scene_entity()
     }
 end
 
+local function create_blur_scene_entity()
+    world:create_entity {
+        policy = {
+            "ant.blur_scene|blur_scene",
+        },
+        data = {
+            blur_scene = true
+        },
+    }
+end
+
 function bs_sys:entity_init()
     local bse = w:first "INIT blur_scene"
     if bse then
@@ -53,8 +64,22 @@ function bs_sys:entity_remove()
         irender.stop_draw(false)
         local sse = w:first "stop_scene eid:in"
         if sse then
-            w:remove(sse.eid) 
+            w:remove(sse.eid)
         end
+    end
+end
+
+function ibs.blur_scene()
+    local bse = w:first "blur_scene"
+    if not bse then
+        create_blur_scene_entity() 
+    end
+end
+
+function ibs.restore_scene()
+    local bse = w:first "blur_scene eid:in"
+    if bse then
+        w:remove(bse.eid)
     end
 end
 
