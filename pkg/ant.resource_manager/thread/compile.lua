@@ -55,10 +55,7 @@ end
 local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
-    config = init_config {
-        os = platform.os,
-        renderer = renderer,
-    }
+    config = init_config(("%s-%s"):format(platform.os, renderer))
 end
 
 return {

@@ -29,9 +29,9 @@ end
 
 local modifierevent = world:sub {"modifier"}
 function modifier_sys:update_modifier()
---[[     for _, m, desc in modifierevent:unpack() do
+    for _, m, desc in modifierevent:unpack() do
         local e <close> = world:entity(m.eid, "modifier?in")
-        if not e then
+        if not e or not e.modifier then
             goto continue
         end
         local mf = e.modifier
