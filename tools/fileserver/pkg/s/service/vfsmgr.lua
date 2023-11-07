@@ -30,19 +30,28 @@ local function ignore_path(p)
 	end
 end
 
-local function update_watch()
-	local changed = {}
-	local mark = {}
-	local function add_changed(type, lpath)
-		local originpath = lpath:string()
-		local path = lpath:remove_filename():string()
-		if mark[path] then
-			return
-		end
-		print(type, originpath)
-		mark[path] = true
-		changed[#changed+1] = path
+local changed = {}
+local changed_mark = {}
+local changed_time
+
+local function now()
+	local _, t = ltask.now()
+	return t * 10
+end
+
+local function add_changed(type, lpath)
+	local originpath = lpath:string()
+	local path = lpath:remove_filename():string()
+	if changed_mark[path] then
+		return
 	end
+	print(type, originpath)
+	changed_mark[path] = true
+	changed[#changed+1] = path
+	changed_time = now()
+end
+
+local function update_watch()
 	while true do
 		local type, path = fswatch:select()
 		if not type then
@@ -59,14 +68,22 @@ local function update_watch()
 			end
 		end
 	end
-	if #changed > 0 then
-		print("repo rebuild ...")
-		repo:rebuild(changed)
-		for _, s in pairs(CacheCompileS) do
-			s.resource = {}
-		end
-		print("repo rebuild ok..")
+end
+
+local function update_vfs()
+	if #changed == 0 or now() - changed_time <= 1000 then
+		return
 	end
+	print("repo rebuild ...")
+	local c = changed
+	changed = {}
+	changed_mark = {}
+	changed_time = nil
+	repo:rebuild(c)
+	for _, s in pairs(CacheCompileS) do
+		s.resource = {}
+	end
+	print("repo rebuild ok..")
 end
 
 do
@@ -82,6 +99,7 @@ do
 	ltask.fork(function ()
 		while true do
 			update_watch()
+			update_vfs()
 			ltask.sleep(10)
 		end
 	end)
