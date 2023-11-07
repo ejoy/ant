@@ -3,7 +3,6 @@ local datalist = require "datalist"
 local fastio = require "fastio"
 local depends = require "depends"
 local lfs = require "bee.filesystem"
-local fs = require "filesystem"
 
 local function readdatalist(filepath)
 	return datalist.parse(fastio.readall(filepath), function(args)
@@ -11,9 +10,9 @@ local function readdatalist(filepath)
 	end)
 end
 
-local function absolute_path(base, path)
+local function absolute_path(setting, base, path)
     if path:sub(1,1) == "/" then
-        return fs.path(path):localpath()
+        return lfs.path(setting.vfs.realpath(path))
     end
     return lfs.absolute(lfs.path(base):parent_path() / (path:match "^%./(.+)$" or path))
 end
@@ -21,7 +20,7 @@ end
 return function (input, output, setting)
 	local param = readdatalist(input)
 	if param.path then
-		param.path = absolute_path(input, param.path)
+		param.path = absolute_path(setting, input, param.path)
 	end
 	local depfiles = depends.new()
     depends.add_lpath(depfiles, input)

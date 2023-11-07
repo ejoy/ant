@@ -23,7 +23,7 @@ function S.SETTING(setting)
         return CompileId
     end
     CacheCompileId[setting] = true
-    local config = cr.init_config(setting)
+    local config = cr.init_setting(require "vfs", setting)
     CompileId = #CacheConfig + 1
     CacheConfig[CompileId] = config
     CacheCompileId[setting] = CompileId

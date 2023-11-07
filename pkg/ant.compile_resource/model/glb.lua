@@ -8,7 +8,6 @@ local patch             = require "model.patch"
 local depends           = require "depends"
 local parallel_task     = require "parallel_task"
 local lfs               = require "bee.filesystem"
-local fs                = require "filesystem"
 local datalist          = require "datalist"
 local fastio            = require "fastio"
 local material_compile  = require "material.compile"
@@ -61,7 +60,7 @@ return function (input, output, setting, changed)
         post_tasks = parallel_task.new(),
     }
     depends.add_lpath(status.depfiles, input)
-    depends.add_vpath(status.depfiles, "/pkg/ant.compile_resource/model/version.lua")
+    depends.add_vpath(status.depfiles, setting, "/pkg/ant.compile_resource/model/version.lua")
     status.math3d = math3d_pool.alloc(status.setting)
     status.patch = patch.init(input, status.depfiles)
     status.glbdata = glbloader.decode(input)

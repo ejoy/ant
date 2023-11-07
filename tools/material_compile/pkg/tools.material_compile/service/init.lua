@@ -21,7 +21,7 @@ local RENDERERS<const> = {
 
 local renderer<const> = RENDERERS[platform.os] or error (("not support os for compile shader:%s"):format(platform.os))
 
-local cfg = cr.init_config(("%s-%s"):format(platform.os, renderer))
+local cfg = cr.init_setting(require "vfs", ("%s-%s"):format(platform.os, renderer))
 
 local output = lfs.path "./tools/material_compile/output"
 

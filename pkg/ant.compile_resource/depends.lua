@@ -1,8 +1,6 @@
 local lfs       = require "bee.filesystem"
-local fs        = require "filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
-local vfs       = require "vfs"
 
 local m = {}
 
@@ -28,8 +26,8 @@ function m.add_lpath(t, lpath)
     end
 end
 
-function m.add_vpath(t, vpath)
-    local lpath = vfs.realpath(vpath)
+function m.add_vpath(t, setting, vpath)
+    local lpath = setting.vfs.realpath(vpath)
     if lpath then
         m.add_lpath(t, lpath)
         return
@@ -67,16 +65,16 @@ function m.writefile(filename, t)
     writefile(filename, table.concat(w, "\n"))
 end
 
-function m.dirty(path)
+function m.dirty(setting, path)
     if not lfs.exists(path) then
         return true
     end
     for _, dep in ipairs(readconfig(path)) do
         local timestamp, filename = dep[1], dep[2]
         if timestamp == 0 then
-            local fpath = fs.path(filename)
-            if fs.exists(fpath) then
-                return fpath:localpath():string()
+            local rp = setting.vfs.realpath(filename)
+            if rp then
+                return rp
             end
         elseif timestamp == 1 then
             if lfs.exists(filename) then
@@ -90,7 +88,7 @@ function m.dirty(path)
     end
 end
 
-function m.read_if_not_dirty(path)
+function m.read_if_not_dirty(setting, path)
     if not lfs.exists(path) then
         return
     end
@@ -99,9 +97,9 @@ function m.read_if_not_dirty(path)
     for _, dep in ipairs(readconfig(path)) do
         local timestamp, filename = dep[1], dep[2]
         if timestamp == 0 then
-            local fpath = fs.path(filename)
-            if fs.exists(fpath) then
-                return fpath:localpath():string()
+            local rp = setting.vfs.realpath(filename)
+            if rp then
+                return rp
             end
         elseif timestamp == 1 then
             if lfs.exists(filename) then

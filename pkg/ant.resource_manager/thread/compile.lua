@@ -3,15 +3,15 @@ local bgfx      = require "bgfx"
 local platform  = require "bee.platform"
 local vfs       = require "vfs"
 
-local config
 local compile
 local compile_file
-local init_config
+local setting
+local init_setting
 
 if __ANT_EDITOR__ then
     local cr = import_package "ant.compile_resource"
     function compile_file(input)
-        return cr.compile_file(config, input)
+        return cr.compile_file(setting, input)
     end
     function compile(pathstring)
         local pos = pathstring:find("|", 1, true)
@@ -28,7 +28,9 @@ if __ANT_EDITOR__ then
             end
         end
     end
-    init_config = cr.init_config
+    function init_setting(setting)
+        return cr.init_setting(vfs, setting)
+    end
 else
     local function normalize(p)
         local stack = {}
@@ -49,13 +51,13 @@ else
             return realpath
         end
     end
-    init_config = vfs.resource_setting
+    init_setting = vfs.resource_setting
 end
 
 local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
-    config = init_config(("%s-%s"):format(platform.os, renderer))
+    setting = init_setting(("%s-%s"):format(platform.os, renderer))
 end
 
 return {
