@@ -54,8 +54,8 @@ local function export_hash(self, vfsrepo, mode)
 	local f <close> = assert(io.open(hashspath:string(), mode))
 	for path, v in pairs(hashs) do
 		f:write(string.format("%s %09x %s\n", v[1], v[2], path))
+		self._hashs[path] = v
 	end
-	self._hashs = hashs
 end
 
 function REPO_MT:rebuild(changed)
@@ -66,7 +66,8 @@ function REPO_MT:rebuild(changed)
 end
 
 function REPO_MT:root()
-	return self._vfsrepo:root()
+	local vfsrepo = self._vfsrepo
+	return vfsrepo:root()
 end
 
 function REPO_MT:mountlapth()
@@ -157,25 +158,34 @@ table_append(compile_whitelist, game_whitelist)
 function REPO_MT:build_resource(path)
 	local vfsrepo = new_vfsrepo()
 	vfsrepo:init {
-		{ path = path, mount = "" },
+		{
+			path = path,
+			mount = "/",
+			filter = resource_filter
+		},
 		hash = self._hashs,
-		filter = resource_filter
 	}
-	if self._nohash then
+	if not self._nohash then
 		export_filehash(self, vfsrepo)
 	end
 	export_hash(self, vfsrepo, "ab")
 	return vfsrepo
 end
 
-local function read_vfsignore(rootpath)
+local function read_vfsignore(rootpath, prefix)
 	if not lfs.exists(rootpath / ".vfsignore") then
 		return {}
 	end
-	return datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
+	local r = datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
+	for _, t in ipairs(r) do
+		for i, v in ipairs(t) do
+			t[i] = prefix..v
+		end
+	end
+	return r
 end
 
-local function new_std(rootpath, nohash)
+local function new_std(rootpath, prefix, nohash)
 	rootpath = lfs.path(rootpath)
 	local cachepath = lfs.path(rootpath) / ".fileserver"
 	if not lfs.is_directory(rootpath) then
@@ -194,25 +204,26 @@ local function new_std(rootpath, nohash)
 		_cachepath = cachepath,
 		_mountlpath = repo._mountlpath,
 		_filehash = {},
+		_hashs = {},
 		_lock = filelock(cachepath),	-- lock repo
 	}
-	local vfsignore = read_vfsignore(rootpath)
+	local vfsignore = read_vfsignore(rootpath, prefix)
 	if vfsignore.block and vfsignore.game_block then
 		table_append(vfsignore.block, vfsignore.game_block)
 	end
 	local config = {
 		hash = import_hash(self),
-		filter = {
-			resource = resource,
-			whitelist = game_whitelist,
-			block = vfsignore.block,
-			ignore = vfsignore.ignore,
-		},
 	}
 	for i = 1, #repo._mountlpath do
 		config[#config+1] = {
-			mount = repo._mountvpath[i]:sub(1,-2),
+			mount = prefix..repo._mountvpath[i]:sub(1,-2),
 			path = repo._mountlpath[i]:string(),
+			filter = {
+				resource = resource,
+				whitelist = game_whitelist,
+				block = vfsignore.block,
+				ignore = vfsignore.ignore,
+			},
 		}
 	end
 	vfsrepo:init(config)
@@ -237,12 +248,12 @@ local function new_tiny(rootpath)
 	access.readmount(repo)
 	local vfsrepo = new_vfsrepo()
 	local self = {
-		_nohash = false,
+		_nohash = true,
 		_vfsrepo = vfsrepo,
 		_cachepath = cachepath,
 		_mountlpath = repo._mountlpath,
 	}
-	local vfsignore = read_vfsignore(rootpath)
+	local vfsignore = read_vfsignore(rootpath, "")
 	local config = {
 		hash = false,
 		filter = {

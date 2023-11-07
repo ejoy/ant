@@ -18,13 +18,12 @@ do print "step1. init"
     fs.remove_all(zippath)
     zipfile = assert(zip.open(zippath, "w"))
     ServiceCompile = ltask.spawn("ant.compile_resource|compile", repopath:string())
-    repo = vfsrepo.new_std(repopath)
+    repo = vfsrepo.new_std(repopath, "/vfs")
     setting = datalist.parse(fastio.readall(vfs.realpath "/compile.settings"))
 end
 
 do print "step2. pack root"
-    local root = repo:root()
-    zipfile:add("root", root)
+    zipfile:add("root", repo:root())
 end
 
 do print "step3. pack resource"

@@ -76,7 +76,7 @@ do
 	local function COMPILE(_)
 		error "resource is not ready."
 	end
-	local repo = vfsrepo.new_std(repopath, true)
+	local repo = vfsrepo.new_std(repopath, "/vfs", true)
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then

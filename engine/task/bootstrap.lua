@@ -94,13 +94,13 @@ end
 vfs.call = call
 vfs.send = send
 function vfs.realpath(path)
-	return call("GET", path)
+	return call("GET", "/vfs"..path)
 end
 function vfs.list(path)
-	return call("LIST", path)
+	return call("LIST", "/vfs"..path)
 end
 function vfs.type(path)
-	return call("TYPE", path)
+	return call("TYPE", "/vfs"..path)
 end
 function vfs.resource_setting(setting)
 	return send("RESOURCE_SETTING", setting)

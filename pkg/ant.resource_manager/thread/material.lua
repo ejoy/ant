@@ -9,7 +9,7 @@ PM.program_init{
 }
 
 local function readall(path)
-    local realpath = assert(cr.compile(path), path)
+    local realpath = cr.compile(path) or error(("`%s` cannot compile."):format(path))
     return fastio.readall(realpath, path)
 end
 
