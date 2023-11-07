@@ -6,11 +6,13 @@ local repo = {}
 local DOT <const> = string.byte "."
 local SLASH <const> = string.byte "/"
 
+local EMPTY = {}
+
 local function gen_set(s)
-	local r = {}
 	if not s then
-		return r
+		return EMPTY
 	end
+	local r = {}
 	for _, name in ipairs(s) do
 		r[name] = true
 	end
@@ -343,8 +345,13 @@ end
 local function add_path(self, paths)
 	local subroot = {}
 	local i = 1
-	local filter = self._filter
 	for _, p in ipairs(paths) do
+		local filter
+		if p.filter then
+			filter = init_filter(p.filter)
+		else
+			filter = self._filter or error "Need filter"
+		end
 		local mount = append_slash(p.mount)
 		local vfspath = mount:sub(1, -2)
 		if not filter.block[vfspath] then
@@ -357,6 +364,7 @@ local function add_path(self, paths)
 					path = path,
 					mount = mount,
 					root = root,
+					filter = filter,
 				} ; i = i + 1
 			end
 		end
@@ -437,10 +445,9 @@ local function find_subroot(self, localpath)
 end
 
 local function update_localpath(self, localpath)
-	local filter = self._filter
 	local path, sub = find_subroot(self, localpath)
-	if path and not filter.block[path] then
-		patch_list_files(localpath, make_dir(sub.root, path), path, filter)
+	if path and not sub.filter.block[path] then
+		patch_list_files(localpath, make_dir(sub.root, path), path, sub.filter)
 	end
 end
 
@@ -470,7 +477,9 @@ function repo_meta:init(config)
 	self._name = config.name and ("@" .. config.name)
 	self._dir = {}
 	self._subroot = {}
-	self._filter = init_filter(config.filter)
+	if config.filter then
+		self._filter = init_filter(config.filter)
+	end
 	add_path(self, config)
 	merge_all(self)
 	if hashs then
