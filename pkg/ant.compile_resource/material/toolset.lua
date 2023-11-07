@@ -113,12 +113,12 @@ end
 function toolset.compile(config)
 	if true then
 		local commands = gen_commands(config)
-		return shader.run(commands, config.input, config.output)
+		return shader.run(config.setting, commands, config.input, config.output)
 	else
 		local prerocessfile = lfs.path(config.output:string() .. ".prerocess")
 		local commands = gen_commands(config)
 		commands[#commands+1] = "--preprocess"
-		local ok, err = shader.run(commands, config.input, prerocessfile)
+		local ok, err = shader.run(config.setting, commands, config.input, prerocessfile)
 		if not ok then
 			return ok, err
 		end

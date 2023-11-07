@@ -1,7 +1,4 @@
 local lfs           = require "bee.filesystem"
-local fs            = require "filesystem"
-local vfs           = require "vfs"
-
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
 local shaderparse   = require "material.shaderparse"
@@ -17,12 +14,6 @@ local matutil       = import_package "ant.material".util
 local sa            = import_package "ant.render.core".system_attribs
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 local function DEF_FUNC() end
-
-local SC_ROOT = lfs.path(vfs.repopath()) / ".build" / "sc"
-
-if not lfs.exists(SC_ROOT) then
-    lfs.create_directories(SC_ROOT)
-end
 
 local SHADER_BASE <const> = "/pkg/ant.resources/shaders"
 
@@ -189,8 +180,6 @@ local function merge_cfg_setting(fx)
     end
 end
 
-local DEF_VARYING_FILE <const> = lfs.absolute(fs.path(SHADER_BASE.."/common/varying_def.sh"):localpath())
-
 local DEF_SHADER_INFO <const> = {
     vs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
@@ -310,11 +299,11 @@ local function generate_shader(shader, code, properties)
     return properties and generate_code(updated_shader, shader.CUSTOM_PROP_KEY, generate_properties(properties)) or updated_shader
 end
 
-local function create_PBR_shader(fx, stage, properties)
+local function create_PBR_shader(setting, fx, stage, properties)
     local si = assert(DEF_SHADER_INFO[stage])
     local nc = generate_shader(si, fx[stage .. "_code"], properties)
     local fn = si.filename:format(sha1(nc))
-    local filename = SC_ROOT / fn
+    local filename = setting.scpath / fn
 
     if not lfs.exists(filename) then
         local fw <close> = assert(io.open(filename:string(), "wb"))
@@ -370,20 +359,23 @@ local function check_update_fx(fx)
     end
 end
 
-local function find_varying_path(fx, stage)
+local function parent_path(path)
+    return path:match "^(.+)/[^/]*$"
+end
+
+local function find_varying_path(setting, fx, stage)
     if fx.varying_path then
-        return fs.path(fx.varying_path):localpath()
+        return lfs.path(setting.vfs.realpath(fx.varying_path))
     end
 
     local st = fx.shader_type
     if st == "PBR" then
-        return DEF_VARYING_FILE
+        return lfs.path(setting.vfs.realpath(SHADER_BASE.."/common/varying_def.sh"))
     end
 
     if st == "CUSTOM" then
-        local filepath = fs.path(fx[stage])
-        if not fs.exists(filepath:parent_path() / "varying.def.sc") then
-            return DEF_VARYING_FILE
+        if setting.vfs.type(parent_path(fx[stage]).."varying.def.sc") ~= nil then
+            return lfs.path(setting.vfs.realpath(SHADER_BASE.."/common/varying_def.sh"))
         end
     end
 end
@@ -610,9 +602,9 @@ local function add_lighting_sv(systems, lighting)
 end
 
 local function compile(tasks, post_tasks, deps, mat, input, output, setting)
-    depends.add_vpath(deps, "/pkg/ant.compile_resource/material/version.lua")
-    depends.add_vpath(deps, "/pkg/ant.settings/default/graphic.settings")
-    depends.add_vpath(deps, "/graphic.settings")
+    depends.add_vpath(deps, setting, "/pkg/ant.compile_resource/material/version.lua")
+    depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic.settings")
+    depends.add_vpath(deps, setting, "/graphic.settings")
 
     local include_path = lfs.path(input):parent_path()
     lfs.remove_all(output)
@@ -625,8 +617,8 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local inputpath = fx.shader_type == "PBR" and
-                create_PBR_shader(fx, stage, mat.properties) or
-                fs.path(fx[stage]):localpath()
+                create_PBR_shader(setting, fx, stage, mat.properties) or
+                lfs.path(setting.vfs.realpath(fx[stage]))
 
             if not lfs.exists(inputpath) then
                 error(("shader path not exists: %s"):format(inputpath:string()))
@@ -639,9 +631,10 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
                 output      = output / (stage..".bin"),
                 includes    = shader_includes(include_path),
                 stage       = stage,
-                varying_path= find_varying_path(fx, stage),
+                varying_path= find_varying_path(setting, fx, stage),
                 macros      = get_macros(setting, mat),
                 debug       = compile_debug_shader(setting.os, setting.renderer),
+                setting     = setting,
             }
             if not ok then
                 error("compile failed: " .. output:string() .. "\n" .. res)

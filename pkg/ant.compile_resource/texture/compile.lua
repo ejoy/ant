@@ -1,6 +1,5 @@
 local convert_image = require "texture.util"
 local depends = require "depends"
-local fs = require "filesystem"
 
 return function (content, output, setting, depfiles)
 	if not content.path then
@@ -18,7 +17,7 @@ return function (content, output, setting, depfiles)
 		end
 	end
 
-	depends.add_vpath(depfiles, "/pkg/ant.compile_resource/texture/version.lua")
+	depends.add_vpath(depfiles, setting, "/pkg/ant.compile_resource/texture/version.lua")
 	local ok, err = convert_image(output, setting, content)
 	if not ok then
 		return ok, err

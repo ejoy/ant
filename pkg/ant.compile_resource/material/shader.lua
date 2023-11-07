@@ -2,11 +2,8 @@ local SHADERC    = require "tool_exe_path"("shaderc")
 local subprocess = require "subprocess"
 local sha1       = require "sha1"
 local lfs        = require "bee.filesystem"
-local vfs        = require "vfs"
 local ltask      = require "ltask"
 local depends    = require "depends"
-
-local ROOT = lfs.path(vfs.repopath()) / ".build" / "shader"
 
 local function cmdtostr(commands)
     return table.concat(commands, " ")
@@ -58,13 +55,13 @@ local copyfile; do
     end
 end
 
-local function run(commands, input, output)
+local function run(setting, commands, input, output)
     local cmdstring = cmdtostr(commands)
-    local path = ROOT / get_filename(cmdstring, input)
+    local path = setting.shaderpath / get_filename(cmdstring, input)
     local pathkey = path:string()
     local _ <close> = wait_start(pathkey)
     if lfs.exists(path / "bin") then
-        local deps = depends.read_if_not_dirty(path / ".dep")
+        local deps = depends.read_if_not_dirty(setting.vfs, path / ".dep")
         if deps then
             copyfile(path / "bin", output)
             return true, deps

@@ -23,8 +23,7 @@ do print "step1. init"
 end
 
 do print "step2. pack root"
-    local root = repo:root()
-    zipfile:add("root", root)
+    zipfile:add("root", repo:root())
 end
 
 do print "step3. pack resource"

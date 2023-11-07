@@ -14,45 +14,19 @@ local S = {}
 local CacheCompileId = {}
 local CacheConfig = {}
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
-local function stringify(t)
-    local s = {}
-    for k, v in sortpairs(t) do
-        s[#s+1] = k.."="..tostring(v)
-    end
-    return table.concat(s, "&")
-end
-
 function S.SETTING(setting)
-    local key = stringify(setting)
-    local CompileId = CacheCompileId[key]
+    local CompileId = CacheCompileId[setting]
     if CompileId == true then
-        ltask.wait(key)
-        return CacheCompileId[key]
+        ltask.wait(setting)
+        return CacheCompileId[setting]
     elseif CompileId ~= nil then
         return CompileId
     end
-    CacheCompileId[key] = true
-    local config = cr.init_config(setting)
+    CacheCompileId[setting] = true
+    local config = cr.init_setting(require "vfs", setting)
     CompileId = #CacheConfig + 1
     CacheConfig[CompileId] = config
-    CacheCompileId[key] = CompileId
+    CacheCompileId[setting] = CompileId
     return CompileId
 end
 

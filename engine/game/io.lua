@@ -156,7 +156,8 @@ do
 	function CMD.RESOURCE_SETTING(setting)
 		require "packagemanager"
 		local cr = import_package "ant.compile_resource"
-		local config = cr.init_config(setting)
+		local vfs = require "vfs"
+		local config = cr.init_setting(vfs, setting)
 		function COMPILE(path)
 			return cr.compile_file(config, path)
 		end

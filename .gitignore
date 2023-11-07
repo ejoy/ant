@@ -5,15 +5,14 @@
 *.dll
 *.exe
 
-.cache
 .vscode
 .vs
 .app
 .fileserver
 .build
 .log
-build
-
+res
+/build
 /bin
 
 output
