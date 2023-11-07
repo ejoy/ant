@@ -166,7 +166,8 @@ local function seri_material(status, filename, cfg)
     else
         local material = assert(status.material[filename])
         local info = check_update_material_info(status, filename, material, cfg)
-        material_names[stem] = lfs.path(info.filename):stem():string()
+        local newstem = lfs.path(info.filename):stem():string()
+        material_names[newstem] = stem
         return info.filename
     end
 end

@@ -1134,11 +1134,7 @@ local function get_origin_material_name(namemaps, name)
     if not namemaps then
         return
     end
-    for key, value in pairs(namemaps) do
-        if value == name or key == name then
-            return key
-        end
-    end
+    return namemaps[name]
 end
 function m:do_image_patch(image, path, v)
     local s, _ = string.find(image,"images/")
