@@ -1,11 +1,7 @@
 local repopath = ...
 
 local ltask = require "ltask"
-
-if repopath then
-    local access = dofile "/engine/editor/vfs_access.lua"
-    dofile "/engine/editor/create_repo.lua" (repopath, access)
-end
+local new_tiny = import_package "ant.vfs".new_tiny
 
 local cr = require "main"
 
@@ -23,7 +19,8 @@ function S.SETTING(setting)
         return CompileId
     end
     CacheCompileId[setting] = true
-    local config = cr.init_setting(require "vfs", setting)
+    local tiny_vfs = new_tiny(repopath)
+    local config = cr.init_setting(tiny_vfs, setting)
     CompileId = #CacheConfig + 1
     CacheConfig[CompileId] = config
     CacheCompileId[setting] = CompileId

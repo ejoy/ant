@@ -1,9 +1,9 @@
 local lfs = require "bee.filesystem"
 local utility = require "model.utility"
 local datalist = require "datalist"
-local fastio        = import_package "ant.serialize".fastio
+local vfs_fastio = require "vfs_fastio"
 local texture_compile = require "texture.compile"
-local parallel_task   = require "parallel_task"
+local parallel_task = require "parallel_task"
 
 local image_extension = {
     ["image/jpeg"] = ".jpg",
@@ -114,10 +114,10 @@ local UV_map = {
 }
 
 local STATE_FILES = {}
-local function read_state_file(statefile)
+local function read_state_file(setting, statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        s = datalist.parse(fastio.readall(statefile))
+        s = datalist.parse(vfs_fastio.readall(setting.vfs, statefile))
     end
 
     return s
@@ -271,7 +271,7 @@ return function (status)
         local name = isopaque and 
             "/pkg/ant.resources/materials/states/default.state" or
             "/pkg/ant.resources/materials/states/translucent.state"
-        return read_state_file(name)
+        return read_state_file(setting, name)
     end
 
 

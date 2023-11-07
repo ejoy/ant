@@ -6,7 +6,7 @@ local sha1          = require "sha1"
 
 local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
-local fastio        = serialize.fastio
+local vfs_fastio    = require "vfs_fastio"
 local depends       = require "depends"
 local parallel_task = require "parallel_task"
 
@@ -164,16 +164,16 @@ local function writefile(filename, data)
 	f:write(serialize.stringify(data))
 end
 
-local function merge_cfg_setting(fx)
+local function merge_cfg_setting(setting, fx)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
-        fx.setting = serialize.parse(fx.setting, fastio.readall(fx.setting))
+        fx.setting = serialize.parse(fx.setting, vfs_fastio.readall(setting.vfs, fx.setting))
     else
         assert(type(fx.setting) == "table")
     end
 
-    fx.setting = fxsetting.adddef(fx.setting)
+    fx.setting = fxsetting.adddef(setting, fx.setting)
     if fx.cs then
         fx.setting["lighting"]          = 'off'
         fx.setting["shadow_receive"]    = 'off'
@@ -184,13 +184,54 @@ local DEF_SHADER_INFO <const> = {
     vs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
-        content = fastio.readall_s(SHADER_BASE.."/default/vs_default.sc"),
+        content = [[
+#include "default/inputs_define.sh"
+
+$input a_position a_texcoord0 INPUT_COLOR0 INPUT_NORMAL INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT INPUT_LIGHTMAP_TEXCOORD INPUT_INSTANCE1 INPUT_INSTANCE2 INPUT_INSTANCE3 INPUT_USER0 INPUT_USER1 INPUT_USER2
+$output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_USER0 OUTPUT_USER1 OUTPUT_USER2 OUTPUT_USER3 OUTPUT_USER4
+
+#include "default/inputs_structure.sh"
+
+$$CUSTOM_VS_PROP$$
+
+$$CUSTOM_VS_FUNC$$ 
+
+void main()
+{
+	VSInput vs_input = (VSInput)0;
+	#include "default/vs_inputs_getter.sh"
+
+    VSOutput vs_output = (VSOutput)0;
+    CUSTOM_VS_FUNC(vs_input, vs_output);
+
+    #include "default/vs_outputs_getter.sh"
+}]],
         filename = "vs_%s.sc",
     },
     fs = {
         CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
         CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
-        content = fastio.readall_s(SHADER_BASE.."/default/fs_default.sc"),
+        content = [[
+#include "default/inputs_define.sh"
+
+$input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_USER0 OUTPUT_USER1 OUTPUT_USER2 OUTPUT_USER3 OUTPUT_USER4
+
+#include "default/inputs_structure.sh"
+
+$$CUSTOM_FS_PROP$$
+
+$$CUSTOM_FS_FUNC$$
+
+void main()
+{
+    FSInput fsinput = (FSInput)0;
+    #include "default/fs_inputs_getter.sh"
+
+    FSOutput fsoutput = (FSOutput)0;
+    CUSTOM_FS_FUNC(fsinput, fsoutput);
+
+    #include "default/fs_outputs_getter.sh"
+}]],
         filename = "fs_%s.sc",
     }
 }
@@ -610,7 +651,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
-    merge_cfg_setting(fx)
+    merge_cfg_setting(setting, fx)
     check_update_fx(fx)
     -- setmetatable(fx, CHECK_MT)
     -- setmetatable(fx.setting, CHECK_MT)

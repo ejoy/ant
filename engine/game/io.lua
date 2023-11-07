@@ -23,49 +23,12 @@ end
 
 dofile "engine/log.lua"
 package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
-local vfsrepo = dofile "pkg/ant.vfs/main.lua"
 
 do
 	local vfs = require "vfs"
-	local repo = vfsrepo.new_tiny(repopath)
-	function vfs.realpath(pathname)
-		local file = repo:file(pathname)
-		if not file then
-			return
-		end
-		if file.path then
-			return file.path
-		end
-	end
-	function vfs.list(pathname)
-		local file = repo:file(pathname)
-		if not file then
-			return
-		end
-		if file.dir then
-			local dir = {}
-			for _, c in ipairs(file.dir) do
-				if c.dir then
-					dir[c.name] = { type = "d" }
-				elseif c.path then
-					dir[c.name] = { type = "f" }
-				end
-			end
-			return dir
-		end
-	end
-	function vfs.type(pathname)
-		local file = repo:file(pathname)
-		if file then
-			if file.dir then
-				return "dir"
-			elseif file.path then
-				return "file"
-			end
-		end
-	end
-	function vfs.repopath()
-		return repopath
+	local new_tiny = dofile "pkg/ant.vfs/tiny.lua"
+	for k, v in pairs(new_tiny(repopath)) do
+		vfs[k] = v
 	end
 end
 
@@ -76,7 +39,8 @@ do
 	local function COMPILE(_)
 		error "resource is not ready."
 	end
-	local repo = vfsrepo.new_std(repopath, true)
+	local new_std = dofile "pkg/ant.vfs/std.lua"
+	local repo = new_std(repopath, true)
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then
