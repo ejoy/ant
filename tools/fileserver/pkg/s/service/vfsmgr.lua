@@ -2,16 +2,19 @@ local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
 local vfsrepo = import_package "ant.vfs"
+local cr = import_package "ant.compile_resource"
 
 local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
-local ServiceCompile = ltask.spawn("ant.compile_resource|compile", REPOPATH)
+
+local new_tiny = import_package "ant.vfs".new_tiny
+local tiny_vfs = new_tiny(REPOPATH)
 
 local repo
 local fswatch = fw.create()
-
 local CacheCompileS = {}
+local CacheCompileId = {}
 
 local function split(path)
 	local r = {}
@@ -132,16 +135,23 @@ function S.VIRTUALPATH(path)
 end
 
 function S.RESOURCE_SETTING(setting)
-	local CompileId = ltask.call(ServiceCompile, "SETTING", setting)
-	local s = CacheCompileS[CompileId]
-	if not s then
-		s = {
-			id = CompileId,
-			resource = {},
-		}
-		CacheCompileS[CompileId] = s
+	local CompileId = CacheCompileId[setting]
+	if CompileId == true then
+		ltask.wait(setting)
+		return CacheCompileId[setting]
+	elseif CompileId ~= nil then
+		return CompileId
 	end
-	return s.id
+	CacheCompileId[setting] = true
+	local config = cr.init_setting(tiny_vfs, setting)
+	CompileId = #CacheCompileS + 1
+	CacheCompileS[CompileId] = {
+		id = CompileId,
+		config = config,
+		resource = {},
+	}
+	CacheCompileId[setting] = CompileId
+	return CompileId
 end
 
 function S.RESOURCE_VERIFY(CompileId)
@@ -150,10 +160,9 @@ function S.RESOURCE_VERIFY(CompileId)
 		return s.resource
 	end
 	local names, paths = repo:export_resources()
-	local lpaths = ltask.call(ServiceCompile, "VERIFY", CompileId, paths)
-	for i = 1, #lpaths do
+	for i = 1, #paths do
 		local name = names[i]
-		local lpath = lpaths[i]
+		local lpath = cr.verify_file(s.config, paths[i])
 		if lpath == false then
 			s.resource[name] = nil
 		else
@@ -173,7 +182,7 @@ function S.RESOURCE(CompileId, path)
         s.resource[path] = nil
         return
     end
-    local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE",  s.id, file.resource_path)
+    local ok, lpath = pcall(cr.compile_file, s.config, file.resource_path)
     if not ok then
         if type(lpath) == "table" then
             print(table.concat(lpath, "\n"))
