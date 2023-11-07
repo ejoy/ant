@@ -29,8 +29,8 @@ end
 
 local modifierevent = world:sub {"modifier"}
 function modifier_sys:update_modifier()
-    for _, m, desc in modifierevent:unpack() do
-        local e <close> = world:entity(m.eid, "modifier:in")
+--[[     for _, m, desc in modifierevent:unpack() do
+        local e <close> = world:entity(m.eid, "modifier?in")
         if not e then
             goto continue
         end
@@ -48,7 +48,7 @@ function modifier_sys:update_modifier()
             end
         end
         ::continue::
-    end
+    end ]]
     local delta_time = timer.delta() * 0.001
     local to_remove = {}
     for e in w:select "modifier:in eid:in" do

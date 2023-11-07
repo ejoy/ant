@@ -225,6 +225,7 @@ function iUiRt.get_group_id(rt_name)
 end
 
 function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_color, on_message)
+    if not iUiRt.get_group_id(rt_name) then return end
     local rt = rt_table[rt_name]
     if not rt then
         rt = {}
