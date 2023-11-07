@@ -18,7 +18,7 @@ do print "step1. init"
     fs.remove_all(zippath)
     zipfile = assert(zip.open(zippath, "w"))
     ServiceCompile = ltask.spawn("ant.compile_resource|compile", repopath:string())
-    repo = vfsrepo.new_std(repopath, "/vfs")
+    repo = vfsrepo.new_std(repopath)
     setting = datalist.parse(fastio.readall(vfs.realpath "/compile.settings"))
 end
 

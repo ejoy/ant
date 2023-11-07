@@ -10,7 +10,7 @@ local vfs = require "vfs"
 
 local function init_config(setting)
     local os, renderer = setting:match "^(%w+)-(%w+)$"
-    local binpath = lfs.path(vfs.repopath()) / ".build" / "res" / setting
+    local binpath = lfs.path(vfs.repopath()) / "res" / setting
     lfs.create_directories(binpath)
     for _, ext in ipairs {"glb", "texture", "material"} do
         lfs.create_directory(binpath / ext)

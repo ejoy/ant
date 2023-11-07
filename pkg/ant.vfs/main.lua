@@ -70,8 +70,8 @@ function REPO_MT:root()
 	return vfsrepo:root()
 end
 
-function REPO_MT:mountlapth()
-	return self._mountlpath
+function REPO_MT:initconfig()
+	return self._config
 end
 
 function REPO_MT:file(pathname)
@@ -172,20 +172,20 @@ function REPO_MT:build_resource(path)
 	return vfsrepo
 end
 
-local function read_vfsignore(rootpath, prefix)
+local function read_vfsignore(rootpath)
 	if not lfs.exists(rootpath / ".vfsignore") then
 		return {}
 	end
 	local r = datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
-	for _, t in ipairs(r) do
-		for i, v in ipairs(t) do
-			t[i] = prefix..v
-		end
+	if r.block then
+		table.insert(r.block, 1, "/res")
+	else
+		r.block = { "/res" }
 	end
 	return r
 end
 
-local function new_std(rootpath, prefix, nohash)
+local function new_std(rootpath, nohash)
 	rootpath = lfs.path(rootpath)
 	local cachepath = lfs.path(rootpath) / ".fileserver"
 	if not lfs.is_directory(rootpath) then
@@ -202,12 +202,11 @@ local function new_std(rootpath, prefix, nohash)
 		_nohash = nohash,
 		_vfsrepo = vfsrepo,
 		_cachepath = cachepath,
-		_mountlpath = repo._mountlpath,
 		_filehash = {},
 		_hashs = {},
 		_lock = filelock(cachepath),	-- lock repo
 	}
-	local vfsignore = read_vfsignore(rootpath, prefix)
+	local vfsignore = read_vfsignore(rootpath)
 	if vfsignore.block and vfsignore.game_block then
 		table_append(vfsignore.block, vfsignore.game_block)
 	end
@@ -216,7 +215,7 @@ local function new_std(rootpath, prefix, nohash)
 	}
 	for i = 1, #repo._mountlpath do
 		config[#config+1] = {
-			mount = prefix..repo._mountvpath[i]:sub(1,-2),
+			mount = repo._mountvpath[i]:sub(1,-2),
 			path = repo._mountlpath[i]:string(),
 			filter = {
 				resource = resource,
@@ -226,6 +225,14 @@ local function new_std(rootpath, prefix, nohash)
 			},
 		}
 	end
+	if not nohash then
+		config[#config+1] = {
+			mount = "/res",
+			path = (repo._root / "res"):string(),
+			filter = resource_filter,
+		}
+	end
+	self._config = config
 	vfsrepo:init(config)
 	if not nohash then
 		export_filehash(self, vfsrepo)
@@ -253,7 +260,7 @@ local function new_tiny(rootpath)
 		_cachepath = cachepath,
 		_mountlpath = repo._mountlpath,
 	}
-	local vfsignore = read_vfsignore(rootpath, "")
+	local vfsignore = read_vfsignore(rootpath)
 	local config = {
 		hash = false,
 		filter = {

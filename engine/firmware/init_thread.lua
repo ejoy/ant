@@ -37,15 +37,15 @@ vfs.call = call
 vfs.send = send
 
 function vfs.realpath(path)
-	return call("GET", "/vfs"..path)
+	return call("GET", path)
 end
 
 function vfs.list(path)
-	return call("LIST", "/vfs"..path)
+	return call("LIST", path)
 end
 
 function vfs.type(path)
-	return call("TYPE", "/vfs"..path)
+	return call("TYPE", path)
 end
 
 function vfs.switch()

@@ -71,12 +71,12 @@ end
 
 do
 	print("repo init ...")
-	repo = vfsrepo.new_std(fs.path(REPOPATH), "/vfs")
+	repo = vfsrepo.new_std(fs.path(REPOPATH))
 	if repo == nil then
 		error "Create repo failed."
 	end
-	for _, lpath in ipairs(repo:mountlapth()) do
-		fswatch:add(lpath:string())
+	for _, mount in ipairs(repo:initconfig()) do
+		fswatch:add(mount.path)
 	end
 	print("repo init ok.")
 	ltask.fork(function ()
