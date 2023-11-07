@@ -48,7 +48,7 @@ function modifier_sys:update_modifier()
             end
         end
         ::continue::
-    end ]]
+    end
     local delta_time = timer.delta() * 0.001
     local to_remove = {}
     for e in w:select "modifier:in eid:in" do
