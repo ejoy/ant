@@ -13,7 +13,7 @@ local ibs  = {}
 local bs_sys = ecs.system "bs_system"
 
 if not setting:get "graphic/postprocess/blur/enable" then
-    renderutil.default_system(bs_sys, "entity_init, entity_remove, blur")
+    renderutil.default_system(bs_sys, "entity_init, blur")
     return
 end
 
@@ -29,7 +29,7 @@ local function create_stop_scene_entity()
 end
 
 local function create_blur_scene_entity(count)
-    local max_count = count and count or 10
+    local max_count = count and count or 3
     world:create_entity {
         policy = {
             "ant.blur_scene|blur_scene",
@@ -61,18 +61,6 @@ function bs_sys:entity_init()
     end
 end
 
-function bs_sys:entity_remove()
-    local bse = w:first "REMOVED blur_scene"
-    if bse then
-        irender.stop_draw(false)
-
-        local sse = w:first "stop_scene eid:in"
-        if sse then
-            w:remove(sse.eid)
-        end
-    end
-end
-
 function bs_sys:blur()
     local bse = w:first "blur_scene:in"
     if bse then
@@ -94,9 +82,14 @@ function ibs.blur_scene(count)
 end
 
 function ibs.restore_scene()
+    irender.stop_draw(false)
     local bse = w:first "blur_scene eid:in"
+    local sse = w:first "stop_scene eid:in"
     if bse then
         w:remove(bse.eid)
+    end
+    if sse then
+        w:remove(sse.eid)
     end
 end
 
