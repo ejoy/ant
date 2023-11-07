@@ -14,27 +14,6 @@ local arg = select(1, ...)
 local srcfile = arg[1]
 local srcpath = fs.path(srcfile)
 
-local function stringify(t)
-    local s = {}
-    for k, v in pairs(t) do
-        s[#s+1] = k.."="..tostring(v)
-    end
-    return table.concat(s, "&")
-end
-
-local texture_extensions <const> = {
-    noop        = platform.os == "windows" and "dds" or "ktx",
-	direct3d11 	= "dds",
-	direct3d12 	= "dds",
-	metal 		= "ktx",
-	vulkan 		= "ktx",
-	opengl 		= "ktx",
-}
-
-local BgfxOS <const> = {
-    macos = "osx",
-}
-
 local RENDERERS<const> = {
     macos   = "metal",
     windows = "direct3d11",
@@ -42,14 +21,7 @@ local RENDERERS<const> = {
 
 local renderer<const> = RENDERERS[platform.os] or error (("not support os for compile shader:%s"):format(platform.os))
 
-local cfg = cr.init_config{
-    os = BgfxOS[platform.os] or platform.os,
-    --os = "ios",
-    renderer = renderer, --"metal",
-    texture = "ktx",
-    hd = nil,
-    obl = nil,
-}
+local cfg = cr.init_config(("%s-%s"):format(platform.os, renderer))
 
 local output = lfs.path "./tools/material_compile/output"
 

@@ -6,27 +6,22 @@ local sha1    = require "sha1"
 local depends = require "depends"
 local ltask   = require "ltask"
 local lfs = require "bee.filesystem"
-local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
 
-local function writefile(filename, data)
-    local f <close> = assert(io.open(filename:string(), "wb"))
-    f:write(data)
-end
-
 local function init_config(setting)
-    local setting_str = serialize.stringify(setting)
-    local hash = sha1(setting_str):sub(1,7)
-    local binpath = lfs.path(vfs.repopath()) / ".build" / (setting.os.."_"..hash)
+    local os, renderer = setting:match "^(%w+)-(%w+)$"
+    local binpath = lfs.path(vfs.repopath()) / ".build" / "res" / setting
     lfs.create_directories(binpath)
-    writefile(binpath / ".setting", setting_str)
     for _, ext in ipairs {"glb", "texture", "material"} do
         lfs.create_directory(binpath / ext)
     end
     return {
         binpath = binpath,
-        setting = setting,
         compiling = {},
+        setting = {
+            os = os,
+            renderer = renderer,
+        },
     }
 end
 
