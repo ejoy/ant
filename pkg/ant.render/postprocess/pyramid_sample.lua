@@ -26,6 +26,7 @@ local RB_FLAGS = sampler {
     MAG="LINEAR",
     U="CLAMP",
     V="CLAMP",
+    BLIT="BLIT_COMPUTEWRITE"
 }
 
 local function create_pyramid_sample_queue(e, mqvr)
@@ -232,23 +233,6 @@ end
 
 function ips.get_pyramid_mipcount()
     return PYRAMID_MIPCOUNT
-end
-
-function ips.set_pyramid_visible(e, is_visible)
-    
-    local function set_queue_visible(queue_name, drawers)
-        for i = 1, PYRAMID_MIPCOUNT do
-            local qn = queue_name .. i
-            local qe = world:entity(drawers[i], "visible_state:in")
-            ivs.set_state(qe, qn, is_visible)
-        end
-    end
-
-    local ps = e.pyramid_sample
-    local ds_queue, us_queue = ps.downsample_queue, ps.upsample_queue
-    local ds_drawers, us_drawers = ps.downsample_drawers, ps.upsample_drawers
-    set_queue_visible(ds_queue, ds_drawers)
-    set_queue_visible(us_queue, us_drawers)
 end
 
 return ips

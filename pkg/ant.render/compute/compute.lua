@@ -19,7 +19,7 @@ function ic.dispatch(viewid, ds)
 end
 
 function ic.create_compute_entity(name, materialfile, size, onready)
-    world:create_entity {
+    return world:create_entity {
         policy = {
             "ant.render|compute",
         },

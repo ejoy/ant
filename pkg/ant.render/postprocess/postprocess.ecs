@@ -14,9 +14,14 @@ pipeline "postprocess"
 
 component "blur_queue"
 component "blur"
+component "gaussian_blur"
+    .type "lua"
+component "vblur_drawer"
+component "hblur_drawer"
 
 policy "blur"
     .component "blur"
+    .component "gaussian_blur"
 
 system "blur_system"
     .implement "postprocess/blur.lua"
