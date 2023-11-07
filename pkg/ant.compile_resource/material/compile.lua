@@ -458,7 +458,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic.settings")
     depends.add_vpath(deps, setting, "/graphic.settings")
 
-    local include_path = lfs.path(input):parent_path()
+    local inputfolder = lfs.path(input):parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
@@ -466,23 +466,27 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     check_update_shader_type(fx)
     -- setmetatable(fx, CHECK_MT)
     -- setmetatable(fx.setting, CHECK_MT)
+    local fxdefined
+    if fx.shader_type == "PBR" then
+        fxdefined = genshader.gen_fx(inputfolder, output, fx)
+    end
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
-            local inputpath = fx.shader_type == "PBR" and
-                genshader.gen(fx, stage, mat.properties) or
+            local inputfile = fx.shader_type == "PBR" and
+                genshader.gen_shader(fx, stage, fxdefined) or
                 fs.path(fx[stage]):localpath()
 
-            if not lfs.exists(inputpath) then
-                error(("shader path not exists: %s"):format(inputpath:string()))
+            if not lfs.exists(inputfile) then
+                error(("shader path not exists: %s"):format(inputfile:string()))
             end
 
 
             local ok, res = toolset.compile {
                 platform    = BgfxOS[setting.os] or setting.os,
                 renderer    = setting.renderer,
-                input       = inputpath,
+                input       = inputfile,
                 output      = output / (stage..".bin"),
-                includes    = shader_includes(include_path),
+                includes    = shader_includes(inputfolder),
                 stage       = stage,
                 varying_path= find_varying_path(setting, fx, stage),
                 macros      = get_macros(setting, mat),

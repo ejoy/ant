@@ -1,20 +1,20 @@
-#include "default/inputs_define.sh"
+@FSINPUT_VARYINGS_DEFINE
+@FSINPUTOUTPUT_STRUCT
 
-$input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_USER0 OUTPUT_USER1 OUTPUT_USER2 OUTPUT_USER3 OUTPUT_USER4
+#include <bgfx_shader.sh>
+#include <shaderlib.sh>
 
-#include "default/inputs_structure.sh"
-
-$$CUSTOM_FS_PROP$$
-
-$$CUSTOM_FS_FUNC$$
+@FS_PROPERTY_DEFINE
+@FS_FUNC_DEFINE
 
 void main()
 {
     FSInput fsinput = (FSInput)0;
-    #include "default/fs_inputs_getter.sh"
-
     FSOutput fsoutput = (FSOutput)0;
+
+    @FSINPUT_INIT
+
     CUSTOM_FS_FUNC(fsinput, fsoutput);
 
-    #include "default/fs_outputs_getter.sh"
+    gl_FragColor = fsoutput.color;
 }
