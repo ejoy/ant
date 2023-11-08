@@ -49,6 +49,7 @@ end
 function vfs.new(repopath)
 	local repo = {
 		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
+		resource = {},
 		cache = {},--setmetatable( {} , { __mode = "kv" } ),
 		root = nil,
 	}
@@ -93,7 +94,24 @@ local ListFailed <const> = 2
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-local function fetch_file(self, hash, fullpath)
+local fetch_file
+
+local function fetch_resource(self, fullpath)
+	local h = self.resource[fullpath]
+	if h then
+		return ListSuccess, h
+	end
+	local cachepath = get_cachepath(self.setting, fullpath)
+	if cachepath then
+		local r, h = fetch_file(self, self.root, cachepath)
+		if r ~= ListFailed then
+			return r, h
+		end
+	end
+	return ListNeedResource, fullpath
+end
+
+function fetch_file(self, hash, fullpath)
 	local dir = dir_object(self, hash)
 	if not dir then
 		return ListNeedGet, hash
@@ -104,18 +122,7 @@ local function fetch_file(self, hash, fullpath)
 	if subpath then
 		if name == "" then
 			if subpath.type == 'r' then
-				local h = self.resource[subpath.hash]
-				if h then
-					return ListSuccess, h
-				end
-				local cachepath = get_cachepath(self.setting, subpath.hash)
-				if cachepath then
-					local r, h = fetch_file(self, self.root, cachepath)
-					if r ~= ListFailed then
-						return r, h
-					end
-				end
-				return ListNeedResource, subpath.hash
+				return fetch_resource(self, subpath.hash)
 			else
 				return ListSuccess, subpath.hash
 			end
@@ -123,11 +130,11 @@ local function fetch_file(self, hash, fullpath)
 			if subpath.type == 'd' then
 				return fetch_file(self, subpath.hash, name)
 			elseif subpath.type == 'r' then
-				local h = self.resource[subpath.hash]
-				if h then
-					return fetch_file(self, h, name)
+				local r, h = fetch_resource(self, subpath.hash)
+				if r ~= ListSuccess then
+					return r, h
 				end
-				return ListNeedResource, subpath.hash
+				return fetch_file(self, h, name)
 			end
 		end
 	end
@@ -209,8 +216,10 @@ function vfs:updatehistory(hash)
 end
 
 function vfs:changeroot(hash)
+	local res = self.resource
 	self.root = hash
 	self.resource = {}
+	return res
 end
 
 function vfs:resource_setting(setting)

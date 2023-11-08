@@ -166,7 +166,7 @@ end
 function S.RESOURCE_VERIFY(CompileId)
 	local s = CacheCompileS[CompileId]
 	if next(s.resource) ~= nil then
-		return s.resource
+		return
 	end
 	local names, paths = repo:export_resources()
 	for i = 1, #paths do
@@ -178,7 +178,6 @@ function S.RESOURCE_VERIFY(CompileId)
 			s.resource[name] = repo:build_resource(lpath):root()
 		end
 	end
-	return s.resource
 end
 
 function S.RESOURCE(CompileId, path)
