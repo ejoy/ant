@@ -40,7 +40,10 @@ do
 		error "resource is not ready."
 	end
 	local new_std = dofile "pkg/ant.vfs/std.lua"
-	local repo = new_std(repopath, true)
+	local repo = new_std {
+		rootpath = repopath,
+		nohash = true,
+	}
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then
