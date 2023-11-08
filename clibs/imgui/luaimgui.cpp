@@ -3433,7 +3433,6 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoBringToFrontOnFocus),
 	ENUM(ImGuiWindowFlags, AlwaysVerticalScrollbar),
 	ENUM(ImGuiWindowFlags, AlwaysHorizontalScrollbar),
-	ENUM(ImGuiWindowFlags, AlwaysUseWindowPadding),
 	ENUM(ImGuiWindowFlags, NoNavInputs),
 	ENUM(ImGuiWindowFlags, NoNavFocus),
 	ENUM(ImGuiWindowFlags, UnsavedDocument),
