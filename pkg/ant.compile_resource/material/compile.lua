@@ -415,7 +415,7 @@ local function find_varying_path(setting, fx, stage)
     end
 
     if st == "CUSTOM" then
-        if setting.vfs.type(parent_path(fx[stage]).."varying.def.sc") == nil then
+        if setting.vfs.type(parent_path(fx[stage]).."/varying.def.sc") == nil then
             return lfs.path(setting.vfs.realpath(SHADER_BASE.."/common/varying_def.sh"))
         end
     end
