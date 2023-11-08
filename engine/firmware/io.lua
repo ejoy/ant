@@ -152,12 +152,14 @@ local function listen_server(address, port)
 	for _ in selector:wait(2) do
 		local newfd, err = fd:accept()
 		if not newfd then
+			selector:event_del(fd)
 			fd:close()
 			_print("[ERROR] accept: "..err)
 			return
 		end
 		print("Accepted")
 		selector:event_del(fd)
+		fd:close()
 		return newfd
 	end
 	_print("[ERROR] select: timeout")
