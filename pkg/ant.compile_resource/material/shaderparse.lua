@@ -54,6 +54,7 @@ local function create_reader(c)
 end
 
 local kUniformMask<const> = 0xf0
+local reservedType<const> = 1 --bgfx_ph.h Line 4219
 
 local function parse_shaderbin(c)
     local reader = create_reader(c)
@@ -88,7 +89,7 @@ local function parse_shaderbin(c)
         local texInfo = reader:readUint16()
         local texFormat = reader:readUint16()
 
-        if not BGFX_PREDEFINED_NAMES[name] then
+        if not BGFX_PREDEFINED_NAMES[name] and (type ~= reservedType) then
             local u = uniforms[name]
             local nu = {
                 name = name,

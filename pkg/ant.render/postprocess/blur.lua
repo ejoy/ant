@@ -48,7 +48,7 @@ local function build_gaussian_blur()
         V="CLAMP",
         BLIT="BLIT_COMPUTEWRITE",
     }
-    local dispatchsize = {BLUR_WIDTH / THREAD_GROUP_SIZE, BLUR_HEIGHT / THREAD_GROUP_SIZE, 1}
+    local dispatchsize = {math.floor(BLUR_WIDTH / THREAD_GROUP_SIZE), math.floor(BLUR_HEIGHT // THREAD_GROUP_SIZE), 1}
     gb.vblur = icompute.create_compute_entity("vblur_drawer", "/pkg/ant.resources/materials/vblur.material", dispatchsize)
     gb.hblur = icompute.create_compute_entity("hblur_drawer", "/pkg/ant.resources/materials/hblur.material", dispatchsize)
     gb.tmp_texture = bgfx.create_texture2d(BLUR_WIDTH, BLUR_HEIGHT, false, 1, "RGBA8", flags)
