@@ -74,14 +74,14 @@ local function create_pyramid_sample_queue(e, mqvr)
     --downsample
     for i=1, PYRAMID_MIPCOUNT do
         local vr = downscale_vr(chain_vr)
-        util.create_queue(ds_viewid, vr, fbpyramids[i+1], ds_queue..i, queue_name) -- 2 3 4 5 
+        util.create_queue(ds_viewid, vr, fbpyramids[i+1], ds_queue..i, queue_name, true) -- 2 3 4 5 
         ds_viewid = ds_viewid + 1
     end
 
     --upsample
     for i=1, PYRAMID_MIPCOUNT do
         local vr = chain_vr[PYRAMID_MIPCOUNT-i+1]
-        util.create_queue(us_viewid, vr, fbpyramids[PYRAMID_MIPCOUNT-i+1], us_queue..i, queue_name) -- 4 3 2 1
+        util.create_queue(us_viewid, vr, fbpyramids[PYRAMID_MIPCOUNT-i+1], us_queue..i, queue_name, true) -- 4 3 2 1
         us_viewid = us_viewid + 1
     end
     ps.scene_color_property = {

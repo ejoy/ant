@@ -61,7 +61,7 @@ local fxaa_viewid<const> = hwi.viewid_get "fxaa"
 
 function fxaasys:init_world()
     local vr = mu.copy_viewrect(world.args.viewport)
-    util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), create_fb(vr), "fxaa_queue", "fxaa_queue")
+    util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), create_fb(vr), "fxaa_queue", "fxaa_queue", true)
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
