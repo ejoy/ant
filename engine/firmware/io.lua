@@ -465,21 +465,6 @@ function CMD.REDIRECT_CHANNEL(_, resp_command, channel_name)
 	end
 end
 
-local function patch(code, data)
-	local f = load(code)
-	f(data)
-end
-
-function CMD.PATCH(id, code, data)
-	local ok, err = xpcall(patch, debug.traceback, code, data)
-	if not ok then
-		err = tostring(err)
-		response_err(id, err)
-	else
-		response_id(id, nil)
-	end
-end
-
 local S = {}; do
 	local session = 0
 	for v in pairs(CMD) do
@@ -510,7 +495,13 @@ end
 local function ltask_init(path, realpath)
 	assert(fastio.loadfile(realpath, path))(true)
 	ltask = require "ltask"
-	ltask.dispatch(S)
+	local SS = ltask.dispatch(S)
+
+	function SS.PATCH(code, data)
+		local f = load(code)
+		f(data)
+	end
+
 	local waitfunc, fd = exclusive.eventinit()
 	local ltaskfd = socket.fd(fd)
 	local function read_ltaskfd()

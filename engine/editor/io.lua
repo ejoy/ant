@@ -109,16 +109,9 @@ function CMD.quit()
 	quit = true
 end
 
-local function patch(code, data)
+function CMD.PATCH(code, data)
 	local f = load(code)
 	f(data)
-end
-
-function CMD.PATCH(code, data)
-	local ok, err = xpcall(patch, debug.traceback, code, data)
-	if not ok then
-		print("[ERROR] Patch : ", err)
-	end
 end
 
 local function work()
