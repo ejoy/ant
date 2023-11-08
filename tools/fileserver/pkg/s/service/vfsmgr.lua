@@ -12,6 +12,7 @@ local new_tiny = import_package "ant.vfs".new_tiny
 local tiny_vfs = new_tiny(REPOPATH)
 
 local repo
+local compiling = 0
 local fswatch = fw.create()
 local CacheCompileS = {}
 local CacheCompileId = {}
@@ -74,7 +75,7 @@ local function update_watch()
 end
 
 local function update_vfs()
-	if #changed == 0 or now() - changed_time <= 1000 then
+	if #changed == 0 or compiling > 0 or now() - changed_time <= 1000 then
 		return
 	end
 	print("repo rebuild ...")
@@ -190,6 +191,7 @@ function S.RESOURCE(CompileId, path)
         s.resource[path] = nil
         return
     end
+	compiling = compiling + 1
     local ok, lpath = pcall(cr.compile_file, s.config, file.resource_path)
     if not ok then
         if type(lpath) == "table" then
@@ -198,10 +200,12 @@ function S.RESOURCE(CompileId, path)
             print(lpath)
         end
         s.resource[path] = nil
+		compiling = compiling - 1
         return
     end
     local hash = repo:build_resource(lpath, path):root()
     s.resource[path] = hash
+	compiling = compiling - 1
     return hash
 end
 
