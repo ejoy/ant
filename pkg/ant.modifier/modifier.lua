@@ -203,6 +203,65 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
     }
 end
 
+function imodifier.create_srt_modifier_from_file(target, group_id, path, keep, foreupdate)
+    local get_keyframe_value = function (clip)
+        local value = {1, 0, 0, 0, 0, 0, 0}
+        value[clip.rot_axis + 1] = clip.amplitude_rot
+        if clip.direction < 4 then
+            value[clip.direction + 4] = clip.amplitude_pos
+        elseif clip.direction == 4 then--XY
+            value[5] = clip.amplitude_pos
+            value[6] = clip.amplitude_pos
+        elseif clip.direction == 5 then--YZ
+            value[6] = clip.amplitude_pos
+            value[7] = clip.amplitude_pos
+        elseif clip.direction == 6 then--XZ
+            value[5] = clip.amplitude_pos
+            value[7] = clip.amplitude_pos
+        elseif clip.direction == 7 then--XYZ
+            value[5] = clip.amplitude_pos
+            value[6] = clip.amplitude_pos
+            value[7] = clip.amplitude_pos
+        end
+        return value
+    end
+    local anims = serialize.parse(path, read_file(path))
+    local ani = anims[1]
+    local sample_ratio = ani.sample_ratio
+    local frame_count = ani.sample_ratio * ani.duration
+    local target_anim = ani.target_anims[1]
+    local keyframes = {}
+    local init_value = {1, 0, 0, 0, 0, 0, 0}
+    local from = init_value
+    local last_clip = target_anim.clips[1]
+    for _, clip in ipairs(target_anim.clips) do
+        if clip.range[1] == last_clip.range[2] + 1 then
+            from = get_keyframe_value(last_clip)
+        else
+            if clip.range[1] > 0 then
+                keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
+            end
+            from = init_value
+        end
+        local fromvalue = {}
+        for _, value in ipairs(from) do
+            fromvalue[#fromvalue + 1] = value
+        end
+        keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
+        local tovalue = get_keyframe_value(clip)
+        keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
+        last_clip = clip
+    end
+    local endclip = target_anim.clips[#target_anim.clips]
+    if endclip and endclip.range[2] < frame_count - 1 then
+        keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
+        if frame_count > endclip.range[2] + 1 then
+            keyframes[#keyframes + 1] = {time = frame_count / sample_ratio, value = init_value}
+        end
+    end
+    return imodifier.create_srt_modifier(target, group_id, keyframes, keep, foreupdate)
+end
+
 function imodifier.create_srt_modifier(target, group_id, generator, keep, foreupdate)
     local anim_eid
     if type(generator) == "table" then
