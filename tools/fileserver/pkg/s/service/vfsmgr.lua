@@ -85,7 +85,7 @@ local function update_vfs()
 	changed_time = nil
 	repo:rebuild(c)
 	for _, s in pairs(CacheCompileS) do
-		s.resource = {}
+		s.resource_verify = true
 	end
 	ltask.multi_wakeup "CHANGEROOT"
 	print("repo rebuild ok..")
@@ -157,7 +157,7 @@ function S.RESOURCE_SETTING(setting)
 	CacheCompileS[CompileId] = {
 		id = CompileId,
 		config = config,
-		resource = {},
+		resource_verify = true,
 	}
 	CacheCompileId[setting] = CompileId
 	return CompileId
@@ -165,30 +165,21 @@ end
 
 function S.RESOURCE_VERIFY(CompileId)
 	local s = CacheCompileS[CompileId]
-	if next(s.resource) ~= nil then
-		return s.resource
+	if not s.resource_verify then
+		return
 	end
+	s.resource_verify = false
 	local names, paths = repo:export_resources()
 	for i = 1, #paths do
 		local name = names[i]
-		local lpath = cr.verify_file(s.config, name, paths[i])
-		if lpath == false then
-			s.resource[name] = nil
-		else
-			s.resource[name] = repo:build_resource(lpath):root()
-		end
+		cr.verify_file(s.config, name, paths[i])
 	end
-	return s.resource
 end
 
 function S.RESOURCE(CompileId, path)
     local s = CacheCompileS[CompileId]
-    if s.resource[path] then
-        return s.resource[path]
-    end
     local file = repo:file(path)
     if not file or not file.resource_path then
-        s.resource[path] = nil
         return
     end
 	compiling = compiling + 1
@@ -199,12 +190,10 @@ function S.RESOURCE(CompileId, path)
         else
             print(lpath)
         end
-        s.resource[path] = nil
 		compiling = compiling - 1
         return
     end
     local hash = repo:build_resource(lpath, path):root()
-    s.resource[path] = hash
 	compiling = compiling - 1
     return hash
 end

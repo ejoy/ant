@@ -283,7 +283,10 @@ function response.ROOT(hash)
 	end
 	print("[response] ROOT", hash)
 	repo:updatehistory(hash)
-	repo:changeroot(hash)
+	local resources = repo:changeroot(hash)
+	for path in pairs(resources) do
+		CMD.LIST(nil, path)
+	end
 end
 
 -- REMARK: Main thread may reading the file while writing, if file server update file.
