@@ -409,6 +409,7 @@ end
 
 function CMD.RESOURCE_SETTING(_, setting)
 --	print("[request] RESOURCE_SETTING", setting)
+	repo:resource_setting(setting)
 	request_send("RESOURCE_SETTING", setting)
 end
 

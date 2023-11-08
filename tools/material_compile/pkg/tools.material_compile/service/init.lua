@@ -28,7 +28,7 @@ local output = lfs.path "./tools/material_compile/output"
 local ltask = require "ltask"
 
 if srcpath:equal_extension "material" then
-    cr.compile_file(cfg, srcpath:localpath():string())
+    cr.compile_file(cfg, srcpath:string(), srcpath:localpath():string())
 elseif srcpath:equal_extension "lua" then
     local files, err = dofile(srcpath:localpath():string())
     if files == nil then
@@ -46,7 +46,7 @@ elseif srcpath:equal_extension "lua" then
             mark_files[f] = true
             compile_files[#compile_files+1] = {
                 function ()
-                    local r, eee = pcall(cr.compile_file, fs.path(f):localpath())
+                    local r, eee = pcall(cr.compile_file, cfg, f, fs.path(f):localpath())
                     if not r then
                         print("compile error:", f, "error:", eee)
                     end
@@ -94,7 +94,7 @@ elseif srcpath:equal_extension "glb" then
     -- if pos then
     --     f = f:sub(1, pos-1)
     -- end
-    cr.compile_file(srcpath:localpath():string())
+    cr.compile_file(cfg, srcpath:string(), srcpath:localpath():string())
 else
     local stage = srcpath:filename():string():match "([vfc]s)_%w+"
 
