@@ -256,7 +256,7 @@ function m.showLog(name)
     local current_log = log_items[current_tag]
     local total_virtual_count = #current_log
     if total_virtual_count <= 0 then return end
-    imgui.windows.BeginChild(name, 0, 0, false, imgui.flags.Window { "HorizontalScrollbar" })
+    imgui.windows.BeginChild(name, 0, 0, imgui.flags.Child { "None" }, imgui.flags.Window { "HorizontalScrollbar" })
     local textStart = 0
     for _, item in ipairs(current_log) do
         local textEnd = textStart + #item.message
@@ -296,7 +296,7 @@ function m.showLog(name)
     imgui.cursor.SetCursorPos(cpx, cpy + 1)
     imgui.cursor.Dummy(0, 0)
     -- imgui.windows.SetNextWindowContentSize(0, current_log.height)
-    -- imgui.windows.BeginChild(name, 0, 0, false, imgui.flags.Window { "HorizontalScrollbar" })
+    -- imgui.windows.BeginChild(name, 0, 0, imgui.flags.Child { "None" }, imgui.flags.Window { "HorizontalScrollbar" })
     -- if m.to_bottom then
     --     imgui.windows.SetScrollY(imgui.windows.GetScrollMaxY())
     --     m.to_bottom = false

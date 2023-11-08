@@ -75,9 +75,10 @@ local function createWindow(document, source)
     if source == nil then
         window.extern = {
             postMessage = function (data)
-                if environment[document]._extern_name then
+                local name = environment[document]._extern_name
+                if name then
                     task.new(function ()
-                        ltask.send(ServiceWorld, "rmlui_message", environment[document]._extern_name, data)
+                        ltask.send(ServiceWorld, "rmlui_message", name, data)
                     end)
                 end
             end

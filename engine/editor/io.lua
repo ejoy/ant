@@ -109,6 +109,11 @@ function CMD.quit()
 	quit = true
 end
 
+function CMD.PATCH(code, data)
+	local f = load(code)
+	f(data)
+end
+
 local function work()
 	while not quit do
 		for func in selector:wait() do

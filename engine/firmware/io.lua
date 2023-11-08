@@ -152,12 +152,14 @@ local function listen_server(address, port)
 	for _ in selector:wait(2) do
 		local newfd, err = fd:accept()
 		if not newfd then
+			selector:event_del(fd)
 			fd:close()
 			_print("[ERROR] accept: "..err)
 			return
 		end
 		print("Accepted")
 		selector:event_del(fd)
+		fd:close()
 		return newfd
 	end
 	_print("[ERROR] select: timeout")
@@ -465,18 +467,6 @@ function CMD.REDIRECT_CHANNEL(_, resp_command, channel_name)
 	end
 end
 
-local function patch(code)
-	local f = load(code)
-	f()
-end
-
-function CMD.PATCH(_, code)
-	local ok, err = xpcall(patch, debug.traceback, code)
-	if not ok then
-		print("[ERROR] Patch : ", err)
-	end
-end
-
 local S = {}; do
 	local session = 0
 	for v in pairs(CMD) do
@@ -507,7 +497,13 @@ end
 local function ltask_init(path, realpath)
 	assert(fastio.loadfile(realpath, path))(true)
 	ltask = require "ltask"
-	ltask.dispatch(S)
+	local SS = ltask.dispatch(S)
+
+	function SS.PATCH(code, data)
+		local f = load(code)
+		f(data)
+	end
+
 	local waitfunc, fd = exclusive.eventinit()
 	local ltaskfd = socket.fd(fd)
 	local function read_ltaskfd()
@@ -592,12 +588,14 @@ local function init_event()
 	end
 	local function read_fd(fd)
 		local data, err = fd:recv()
-		if not data then
+		if data == nil then
 			if err then
 				-- socket error
 				return nil, err
 			end
 			return nil, "Closed by remote"
+		elseif data == false then
+			return true
 		end
 		table.insert(reading, data)
 		while true do

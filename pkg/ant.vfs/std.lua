@@ -7,6 +7,10 @@ local new_vfsrepo = require "vfsrepo".new
 local REPO_MT = {}
 REPO_MT.__index = REPO_MT
 
+function REPO_MT:__close()
+	self._lock:close()
+end
+
 local function filelock(filepath)
 	filepath = filepath / "vfs.lock"
 	local f = lfs.filelock(filepath)
@@ -185,9 +189,9 @@ local function read_vfsignore(rootpath)
 	return r
 end
 
-local function new_std(rootpath, nohash)
-	rootpath = lfs.path(rootpath)
-	local cachepath = lfs.path(rootpath) / ".fileserver"
+local function new_std(t)
+	local rootpath = lfs.path(t.rootpath)
+	local cachepath = rootpath / ".fileserver"
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end
@@ -199,7 +203,7 @@ local function new_std(rootpath, nohash)
 	access.readmount(repo)
 	local vfsrepo = new_vfsrepo()
 	local self = {
-		_nohash = nohash,
+		_nohash = t.nohash,
 		_vfsrepo = vfsrepo,
 		_cachepath = cachepath,
 		_filehash = {},
@@ -225,16 +229,26 @@ local function new_std(rootpath, nohash)
 			},
 		}
 	end
-	if not nohash then
-		config[#config+1] = {
-			mount = "/res",
-			path = (repo._root / "res"):string(),
-			filter = resource_filter,
-		}
+	if not t.nohash then
+		if t.resource_settings then
+			for _, setting in ipairs(t.resource_settings) do
+				config[#config+1] = {
+					mount = "/res/" .. setting,
+					path = (repo._root / "res" / setting):string(),
+					filter = resource_filter,
+				}
+			end
+		else
+			config[#config+1] = {
+				mount = "/res",
+				path = (repo._root / "res"):string(),
+				filter = resource_filter,
+			}
+		end
 	end
 	self._config = config
 	vfsrepo:init(config)
-	if not nohash then
+	if not t.nohash then
 		export_filehash(self, vfsrepo)
 		export_hash(self, vfsrepo, "wb")
 	end

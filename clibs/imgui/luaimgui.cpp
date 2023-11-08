@@ -2205,9 +2205,9 @@ winBeginChild(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
 	float width = (float)luaL_optnumber(L, 2, 0);
 	float height = (float)luaL_optnumber(L, 3, 0);
-	bool border = lua_toboolean(L, 4);
-	auto flags = lua_getflags<ImGuiWindowFlags>(L, 5, ImGuiWindowFlags_None);
-	bool change = ImGui::BeginChild(id, ImVec2(width, height), border, flags);
+	auto child_flags = lua_getflags<ImGuiChildFlags>(L, 4, ImGuiChildFlags_None);
+	auto window_flags = lua_getflags<ImGuiWindowFlags>(L, 5, ImGuiWindowFlags_None);
+	bool change = ImGui::BeginChild(id, ImVec2(width, height), child_flags, window_flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
@@ -3433,7 +3433,6 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoBringToFrontOnFocus),
 	ENUM(ImGuiWindowFlags, AlwaysVerticalScrollbar),
 	ENUM(ImGuiWindowFlags, AlwaysHorizontalScrollbar),
-	ENUM(ImGuiWindowFlags, AlwaysUseWindowPadding),
 	ENUM(ImGuiWindowFlags, NoNavInputs),
 	ENUM(ImGuiWindowFlags, NoNavFocus),
 	ENUM(ImGuiWindowFlags, UnsavedDocument),
@@ -3442,6 +3441,21 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
 	{ "NoClosed", (lua_Integer)1 << 32 },
+	{ NULL, 0 },
+};
+
+
+static struct enum_pair eChildFlags[] = {
+	ENUM(ImGuiChildFlags, None),
+	ENUM(ImGuiChildFlags, Border),
+	ENUM(ImGuiChildFlags, AlwaysUseWindowPadding),
+	ENUM(ImGuiChildFlags, ResizeX),
+	ENUM(ImGuiChildFlags, ResizeY),
+	ENUM(ImGuiChildFlags, AutoResizeX),
+	ENUM(ImGuiChildFlags, AutoResizeY),
+	ENUM(ImGuiChildFlags, AlwaysAutoResize),
+	ENUM(ImGuiChildFlags, AlwaysAutoResize),
+	ENUM(ImGuiChildFlags, FrameStyle),
 	{ NULL, 0 },
 };
 
@@ -4277,6 +4291,7 @@ luaopen_imgui(lua_State *L) {
 	flag_gen(L, "Selectable", eSelectableFlags);
 	flag_gen(L, "TreeNode", eTreeNodeFlags);
 	flag_gen(L, "Window", eWindowFlags);
+	flag_gen(L, "Child", eChildFlags);
 	flag_gen(L, "Focused", eFocusedFlags);
 	flag_gen(L, "Hovered", eHoveredFlags);
 	flag_gen(L, "TabBar", eTabBarFlags);

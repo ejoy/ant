@@ -108,7 +108,7 @@ namespace ImSequencer
 		ImVec2 childFramePos = ImGui::GetCursorScreenPos();
 		ImVec2 childFrameSize(canvas_size.x, canvas_size.y - 8.f - headerSize.y - (hasScrollBar ? scrollBarSize.y : 0));
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
-		ImGui::BeginChildFrame(889, childFrameSize);
+		ImGui::BeginChild(889, childFrameSize, ImGuiChildFlags_FrameStyle);
 		//focused = ImGui::IsWindowFocused();
 		ImGui::InvisibleButton("contentBar", ImVec2(canvas_size.x, float(ItemHeight)));
 		const ImVec2 contentMin = ImGui::GetItemRectMin();
@@ -274,7 +274,7 @@ namespace ImSequencer
 		draw_list->PopClipRect();
 		draw_list->PopClipRect();
 
-		ImGui::EndChildFrame();
+		ImGui::EndChild();
 		ImGui::PopStyleColor();
 		if (hasScrollBar) {
 			ImGui::InvisibleButton("scrollBar", scrollBarSize);

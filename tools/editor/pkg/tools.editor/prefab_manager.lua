@@ -260,52 +260,6 @@ local function set_select_adapter(entity_set, mount_root)
     end
 end
 
-local FBXTOGLB
-function m:open_fbx(filename)
-    if not FBXTOGLB then
-        local blenderpath = editor_setting.setting.blender_path
-        if blenderpath then
-            if lfs.exists(lfs.path(blenderpath .. "/blender.exe")) then
-                FBXTOGLB = subprocess.tool_exe_path(blenderpath .. "/blender")
-            end
-        end
-
-        if not FBXTOGLB then
-            log.warn "Can not find blender."
-            return
-        end
-    end
-
-    local fullpath = tostring(lfs.current_path() / fs.path(filename):localpath())
-    local scriptpath = tostring(lfs.current_path()) .. "/tools/editor/Export.GLB.py"
-    local commands = {
-		FBXTOGLB,
-        "--background",
-        "--python",
-        scriptpath,
-        "--",
-        fullpath
-	}
-    local ok, msg = subprocess.spawn_process(commands)
-	if ok then
-		local INFO = msg:upper()
-		for _, term in ipairs {
-			"ERROR",
-			"FAILED TO CONVERT FBX FILE"
-		} do
-			if INFO:find(term, 1, true) then
-				ok = false
-				break
-			end
-		end
-	end
-	if not ok then
-		return false, msg
-	end
-    local prefabFilename = string.sub(filename, 1, string.find(filename, ".fbx")) .. "glb"
-    self:open(prefabFilename)
-end
-
 local function split(str)
     local r = {}
     str:gsub('[^|]*', function (w) r[#r+1] = w end)
@@ -867,10 +821,12 @@ function m:set_parent(target, parent)
     local te <close> = world:entity(target, "scene?in")
     if te.scene then
         local function new_entity(eid, scene)
-            local template = hierarchy:get_node_info(eid).template
-            template.data.scene = scene
-            local e = world:create_entity(utils.deep_copy(template))
-            self:add_entity(e, scene.parent, template)
+            local ni = hierarchy:get_node_info(eid)
+            local tpl = ni.template
+            tpl.data.scene = scene
+            local e = world:create_entity(utils.deep_copy(tpl))
+            self:add_entity(e, scene.parent, tpl)
+            hierarchy:get_node_info(e).name = ni.name
             return e
         end
         local function create_tree(eid, scene)

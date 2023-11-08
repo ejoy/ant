@@ -1140,31 +1140,18 @@ function m.show()
             end
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
-            if string.sub(prefab_mgr.glb_filename, -10) == "camera.glb" then
-                if imgui.widget.Checkbox("camera", ui_bindcamera) then
-                    local srt
-                    if ui_bindcamera[1] then
-                        local mq = w:first("main_queue camera_ref:in")
-                        local ce<close> = world:entity(mq.camera_ref, "scene:update")
-                        local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
-                        local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
-                        srt = {r={q1, q2, q3, q4}, t={t1, t2, t3}}
-                    end
-                    world:pub {"LockCamera", srt}
+            if imgui.widget.Checkbox("camera", ui_bindcamera) then
+                local srt
+                if ui_bindcamera[1] then
+                    local mq = w:first("main_queue camera_ref:in")
+                    local ce<close> = world:entity(mq.camera_ref, "scene:update")
+                    local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
+                    local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
+                    srt = {r={q1, q2, q3, q4}, t={t1, t2, t3}}
                 end
-                --TODO: remove this code, Temp code for camera animation
-                -- if imgui.widget.ImageButton("AttachToCamera", assetmgr.textures[icon.id], imagesize, imagesize) then
-                --     m.save(file_path)
-                --     local vpath = access.virtualpath(global_data.repo, file_path)
-                --     assetmgr.unload(vpath)
-                --     local mq = w:first("main_queue camera_ref:in")
-                --     local ce<close> = world:entity(mq.camera_ref, "scene:update")
-                --     local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
-                --     local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
-                --     imodifier.start_bone_modifier(mq.camera_ref, 0, prefab_mgr.glb_filename .. "|mesh.prefab", "Bone", {name = "anim0", init_srt = {r = {q1, q2, q3, q4}, t = {t1, t2, t3}}})
-                -- end
-                imgui.cursor.SameLine()
+                world:pub {"LockCamera", srt}
             end
+            imgui.cursor.SameLine()
             local current_time = 0
             if current_anim.type == "ske" then
                 current_time = anim_eid and iani.get_time(anim_eid) or 0
@@ -1192,7 +1179,7 @@ function m.show()
 
             imgui.table.NextColumn()
             local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_target", child_width, child_height, false)
+            imgui.windows.BeginChild("##show_target", child_width, child_height)
             if current_anim then
                 if current_anim.type == "mtl" then
                     show_uniforms()
@@ -1204,13 +1191,13 @@ function m.show()
 
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_detail", child_width, child_height, false)
+            imgui.windows.BeginChild("##show_detail", child_width, child_height)
             show_current_detail()
             imgui.windows.EndChild()
 
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_layers", child_width, child_height, false)
+            imgui.windows.BeginChild("##show_layers", child_width, child_height)
 
             if current_anim then
                 local imgui_message = {}

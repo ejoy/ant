@@ -40,7 +40,10 @@ do
 		error "resource is not ready."
 	end
 	local new_std = dofile "pkg/ant.vfs/std.lua"
-	local repo = new_std(repopath, true)
+	local repo = new_std {
+		rootpath = repopath,
+		nohash = true,
+	}
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then
@@ -200,6 +203,11 @@ end
 
 function CMD.quit()
 	quit = true
+end
+
+function CMD.PATCH(code, data)
+	local f = load(code)
+	f(data)
 end
 
 local function work()

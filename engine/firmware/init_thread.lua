@@ -48,11 +48,6 @@ function vfs.type(path)
 	return call("TYPE", path)
 end
 
-function vfs.switch()
-	local servicelua = "/engine/task/service/service.lua"
-	send("SWITCH", servicelua, vfs.realpath(servicelua))
-end
-
 function vfs.resource_setting(setting)
 	return send("RESOURCE_SETTING", setting)
 end

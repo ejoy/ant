@@ -93,7 +93,9 @@ end
 
 do
 	print("repo init ...")
-	repo = vfsrepo.new_std(fs.path(REPOPATH))
+	repo = vfsrepo.new_std {
+		rootpath = fs.path(REPOPATH),
+	}
 	if repo == nil then
 		error "Create repo failed."
 	end
