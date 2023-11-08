@@ -134,6 +134,11 @@ end
 ]]
 end
 
+local function io_switch()
+	local servicelua = "/engine/task/service/service.lua"
+	vfs.send("SWITCH", servicelua, vfs.realpath(servicelua))
+end
+
 return function (c)
 	init(c)
 	boot.init(config)
@@ -146,7 +151,7 @@ return function (c)
 	end
 	config.preinit = { "io" }
 	root_thread()
-	vfs.switch()
+	io_switch()
 	io_thread("io", 2 + #config.exclusive)
 	boot.run()
 end
