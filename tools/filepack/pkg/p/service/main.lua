@@ -1,61 +1,76 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local vfs = require "vfs"
-local datalist = require "datalist"
 local fastio = require "fastio"
 local zip = require "zip"
 local vfsrepo = import_package "ant.vfs"
+local cr = import_package "ant.compile_resource"
 
 local arg = ...
-local zipfile
-local repo
-local ServiceCompile
-local setting
+local repopath = fs.absolute(arg[1]):lexically_normal()
+local resource_settings = {}
+local resource_cache = {}
 
-do print "step1. init"
-    local repopath = fs.absolute(arg[1]):lexically_normal()
-    local zippath = vfs.repopath() .. ".repo.zip"
-    fs.remove_all(zippath)
-    zipfile = assert(zip.open(zippath, "w"))
-    ServiceCompile = ltask.spawn("ant.compile_resource|compile", repopath:string())
-    repo = vfsrepo.new_std(repopath)
-    setting = datalist.parse(fastio.readall(vfs.realpath "/compile.settings"))
-end
-
-do print "step2. pack root"
-    zipfile:add("root", repo:root())
-end
-
-do print "step3. pack resource"
-    local CompileId = ltask.call(ServiceCompile, "SETTING", setting)
-    local resource = {}
-    local function compile_resource(i, name, path)
-        local lpath = ltask.call(ServiceCompile, "COMPILE",  CompileId, path)
-        local hash = repo:build_resource(lpath):root()
-        resource[i] = ("%s %s\n"):format(hash, name)
+do print "step1. check resource cache"
+    for line in fastio.readall_s(vfs.realpath "/resource.settings"):gmatch "(.-)\n+" do
+        resource_settings[#resource_settings+1] = line:match "(%S+)"
     end
+    for _, setting in ipairs(resource_settings) do
+        for path, status in fs.pairs(repopath / "res" / setting) do
+            if status:is_directory() then
+                for res in fs.pairs(path) do
+                    resource_cache[res:string()] = true
+                end
+            end
+        end
+    end
+end
 
-    local names, paths = repo:export_resources()
+do print "step2. compile resource"
+    local std_vfs <close> = vfsrepo.new_std {
+        rootpath = repopath,
+        nohash = true,
+    }
+    local tiny_vfs = vfsrepo.new_tiny(repopath)
+    local names, paths = std_vfs:export_resources()
     local tasks = {}
-    for i = 1, #names do
-        tasks[i] = {compile_resource, i, names[i], paths[i]}
+    local function compile_resource(config, name, path)
+        local lpath = cr.compile_file(config, name, path)
+        resource_cache[lpath] = nil
+    end
+    for _, setting in ipairs(resource_settings) do
+        local config = cr.init_setting(tiny_vfs, setting)
+        for i = 1, #names do
+            tasks[#tasks+1] = { compile_resource, config, names[i], paths[i] }
+        end
     end
     for _ in ltask.parallel(tasks) do
     end
-    zipfile:add(repo:root()..".resource", table.concat(resource))
+end
+
+do print "step3. clean resource"
+    for path in pairs(resource_cache) do
+        fs.remove_all(path)
+    end
 end
 
 do print "step4. pack file and dir"
-    for hash, v in pairs(repo._filehash) do
+    local zippath = vfs.repopath() .. ".repo.zip"
+    fs.remove_all(zippath)
+    local zipfile = assert(zip.open(zippath, "w"))
+    local std_vfs <close> = vfsrepo.new_std {
+        rootpath = repopath,
+        resource_settings = resource_settings,
+    }
+    zipfile:add("root", std_vfs:root())
+    for hash, v in pairs(std_vfs._filehash) do
         if v.dir then
             zipfile:add(hash, v.dir)
         else
             zipfile:addfile(hash, v.path)
         end
     end
+    zipfile:close()
 end
 
-do print "step5. finish"
-    zipfile:close()
-    ltask.call(ServiceCompile, "QUIT")
-end
+print "step3 done."
