@@ -1,16 +1,9 @@
 local sha1          = require "sha1"
 local lfs           = require "bee.filesystem"
-local fs            = require "filesystem"
-local vfs           = require "vfs"
 local datalist      = require "datalist"
 
 local serialize     = import_package "ant.serialize"
 local fastio        = serialize.fastio
-
-local SC_ROOT       = lfs.path(vfs.repopath()) / ".build" / "sc"
-if not lfs.exists(SC_ROOT) then
-    lfs.create_directories(SC_ROOT)
-end
 
 local SHADER_BASE <const>           = "/pkg/ant.resources/shaders"
 
@@ -153,20 +146,32 @@ local function parse_varyings_input(varyings)
     return t
 end
 
-local function read_varyings_input(inputfolder, fx)
+local function vfs_exists(vfs, path)
+    return vfs.type(path) ~= nil
+end
+
+local function append_path(pp, p)
+    local lc = pp:sub(#pp, #pp)
+    if lc == "/" or lc == "\\" then
+        return pp .. p
+    end
+
+    return ("%s/%s"):format(pp, p)
+end
+
+local function read_varyings_input(setting, inputfolder, fx)
     local varyings = assert(fx.varyings, "Need varyings defined")
 
     if type(varyings) == "string" then
-        local vi = fs.path(varyings)
-        if not fs.exists(vi) then
-            local p = inputfolder / vi
-            if fs.exists(p) then
-                vi = p
+        if not vfs_exists(setting.vfs, varyings) then
+            local p = append_path(inputfolder, varyings)
+            if vfs_exists(setting.vfs, p) then
+                varyings = p
             else
                 error(("invalid varyings file:%s"):format(fx.varyings))
             end
         end
-        varyings = datalist.parse(fastio.readall_s(vi))
+        varyings = datalist.parse(fastio.readall_s(varyings))
     else
         assert(type(varyings) == "table")
     end
@@ -291,7 +296,7 @@ local function build_shader_content(fx, varyings, results)
     return vs, fs
 end
 
-local function gen_fx(input, output, fx)
+local function gen_fx(setting, input, output, fx)
     local varyings = parse_varyings_input(read_varyings_input(input, fx))
 
     local results = build_input_var(varyings)
@@ -303,7 +308,7 @@ local function gen_fx(input, output, fx)
     return build_shader_content(fx, results)
 end
 
-local function gen_shader(fx, stage, shaderdefined)
+local function gen_shader(setting, fx, stage, shaderdefined)
     local si = assert(DEF_SHADER_INFO[stage])
 
     local function generate_shader(template, content)
@@ -313,7 +318,7 @@ local function gen_shader(fx, stage, shaderdefined)
     local shader = generate_shader(si.template, shaderdefined[stage])
 
     local fn = si.filename:format(sha1(shader))
-    local filename = SC_ROOT / fn
+    local filename = setting.scpath / fn
 
     if not lfs.exists(filename) then
         write_file(filename, shader)
