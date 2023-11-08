@@ -110,7 +110,7 @@ local function fetch_file(self, hash, fullpath)
 				end
 				local cachepath = get_cachepath(self.setting, subpath.hash)
 				if cachepath then
-					local r, h = fetch_file(self, hash, cachepath)
+					local r, h = fetch_file(self, self.root, cachepath)
 					if r ~= ListFailed then
 						return r, h
 					end

@@ -36,7 +36,7 @@ local CMD = {}
 
 do
 	local resources = {}
-	local function COMPILE(_)
+	local function COMPILE(_,_)
 		error "resource is not ready."
 	end
 	local new_std = dofile "pkg/ant.vfs/std.lua"
@@ -52,7 +52,7 @@ do
 		end
 		local subrepo = resources[v.resource]
 		if not subrepo then
-			local lpath = COMPILE(v.resource_path)
+			local lpath = COMPILE(v.resource, v.resource_path)
 			if not lpath then
 				return
 			end
@@ -79,7 +79,7 @@ do
 		if file.resource then
 			local subrepo = resources[file.resource]
 			if not subrepo then
-				local lpath = COMPILE(file.resource_path)
+				local lpath = COMPILE(file.resource, file.resource_path)
 				if not lpath then
 					return
 				end
@@ -122,8 +122,8 @@ do
 		local cr = import_package "ant.compile_resource"
 		local vfs = require "vfs"
 		local config = cr.init_setting(vfs, setting)
-		function COMPILE(path)
-			return cr.compile_file(config, path)
+		function COMPILE(vpath, lpath)
+			return cr.compile_file(config, vpath, lpath)
 		end
 	end
 end

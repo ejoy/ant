@@ -171,7 +171,7 @@ function S.RESOURCE_VERIFY(CompileId)
 	local names, paths = repo:export_resources()
 	for i = 1, #paths do
 		local name = names[i]
-		local lpath = cr.verify_file(s.config, paths[i])
+		local lpath = cr.verify_file(s.config, name, paths[i])
 		if lpath == false then
 			s.resource[name] = nil
 		else
@@ -192,7 +192,7 @@ function S.RESOURCE(CompileId, path)
         return
     end
 	compiling = compiling + 1
-    local ok, lpath = pcall(cr.compile_file, s.config, file.resource_path)
+    local ok, lpath = pcall(cr.compile_file, s.config, file.resource, file.resource_path)
     if not ok then
         if type(lpath) == "table" then
             print(table.concat(lpath, "\n"))

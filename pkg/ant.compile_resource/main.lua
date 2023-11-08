@@ -42,35 +42,35 @@ local COMPILER <const> = {
     material = require "material.convert",
 }
 
-local function compile_file(setting, input)
-    assert(input:sub(1,1) ~= ".")
-    if setting.compiling[input] then
-        return ltask.multi_wait(setting.compiling[input])
+local function compile_file(setting, vpath, lpath)
+    assert(lpath:sub(1,1) ~= ".")
+    if setting.compiling[lpath] then
+        return ltask.multi_wait(setting.compiling[lpath])
     end
-    setting.compiling[input] = {}
-    local ext = input:match "[^/]%.([%w*?_%-]*)$"
-    local output = setting.respath / ext / get_filename(input)
+    setting.compiling[lpath] = {}
+    local ext = vpath:match "[^/]%.([%w*?_%-]*)$"
+    local output = setting.respath / ext / get_filename(vpath)
     local changed = depends.dirty(setting, output / ".dep")
     if changed then
-        local ok, deps = COMPILER[ext](input, output, setting, changed)
+        local ok, deps = COMPILER[ext](lpath, output, setting, changed)
         if not ok then
             local err = deps
-            error("compile failed: " .. input .. "\n" .. err)
+            error("compile failed: " .. lpath .. "\n" .. err)
         end
         depends.writefile(output / ".dep", deps)
     end
-    ltask.multi_wakeup(setting.compiling[input], output:string())
-    setting.compiling[input] = nil
+    ltask.multi_wakeup(setting.compiling[lpath], output:string())
+    setting.compiling[lpath] = nil
     return output:string()
 end
 
-local function verify_file(setting, input)
-    assert(input:sub(1,1) ~= ".")
-    if setting.compiling[input] then
-        return ltask.multi_wait(setting.compiling[input])
+local function verify_file(setting, vpath, lpath)
+    assert(lpath:sub(1,1) ~= ".")
+    if setting.compiling[lpath] then
+        return ltask.multi_wait(setting.compiling[lpath])
     end
-    local ext = input:match "[^/]%.([%w*?_%-]*)$"
-    local output = setting.respath / ext / get_filename(input)
+    local ext = vpath:match "[^/]%.([%w*?_%-]*)$"
+    local output = setting.respath / ext / get_filename(vpath)
     local changed = depends.dirty(setting, output / ".dep")
     if changed then
         lfs.remove_all(output)

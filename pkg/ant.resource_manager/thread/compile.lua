@@ -10,14 +10,13 @@ local init_setting
 
 if __ANT_EDITOR__ then
     local cr = import_package "ant.compile_resource"
-    function compile_file(input)
-        return cr.compile_file(setting, input)
+    function compile_file(path)
+        return cr.compile_file(setting, path, vfs.realpath(path))
     end
     function compile(pathstring)
         local pos = pathstring:find("|", 1, true)
         if pos then
-            local resource = assert(vfs.realpath(pathstring:sub(1,pos-1)))
-            local realpath = compile_file(resource).."/"..pathstring:sub(pos+1):gsub("|", "/")
+            local realpath = compile_file(pathstring:sub(1,pos-1)).."/"..pathstring:sub(pos+1):gsub("|", "/")
             if lfs.exists(realpath) then
                 return realpath
             end
