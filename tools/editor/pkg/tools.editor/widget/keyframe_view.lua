@@ -1192,7 +1192,7 @@ function m.show()
 
             imgui.table.NextColumn()
             local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_target", child_width, child_height, false)
+            imgui.windows.BeginChild("##show_target", child_width, child_height)
             if current_anim then
                 if current_anim.type == "mtl" then
                     show_uniforms()
@@ -1204,13 +1204,13 @@ function m.show()
 
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_detail", child_width, child_height, false)
+            imgui.windows.BeginChild("##show_detail", child_width, child_height)
             show_current_detail()
             imgui.windows.EndChild()
 
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_layers", child_width, child_height, false)
+            imgui.windows.BeginChild("##show_layers", child_width, child_height)
 
             if current_anim then
                 local imgui_message = {}

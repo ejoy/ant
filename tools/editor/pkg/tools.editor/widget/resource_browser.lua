@@ -334,7 +334,7 @@ function m.show()
         if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
             imgui.table.NextColumn()
             local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height, false)
+            imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height)
             filter_focus1 = imgui.windows.IsWindowFocused()
             do_show_browser(resource_tree)
             imgui.windows.EndChild()
@@ -342,7 +342,7 @@ function m.show()
             imgui.cursor.SameLine()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
+            imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height);
             
             local folder = selected_folder[2]
             if folder then
@@ -470,7 +470,7 @@ function m.show()
             imgui.cursor.SameLine()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height, false);
+            imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height);
             if fs.path(selected_file):equal_extension(".png") or fs.path(selected_file):equal_extension(".texture") then
                 local preview = preview_images[selected_file]
                 if preview then
