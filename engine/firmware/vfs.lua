@@ -80,11 +80,12 @@ local function dir_object(self, hash)
 	end
 end
 
-local function get_cachepath(name)
+local function get_cachepath(setting, name)
+	name = name:lower()
 	local filename = name:match "[/]?([^/]*)$"
 	local ext = filename:match "[^/]%.([%w*?_%-]*)$"
 	local hash = sha1(name)
-	return ("res/%s/%s_%s"):format(ext, filename, hash)
+	return ("res/%s/%s/%s_%s"):format(setting, ext, filename, hash)
 end
 
 local ListSuccess <const> = 1
@@ -107,7 +108,7 @@ local function fetch_file(self, hash, fullpath)
 				if h then
 					return ListSuccess, h
 				end
-				local cachepath = get_cachepath(subpath.hash)
+				local cachepath = get_cachepath(self.setting, subpath.hash)
 				if cachepath then
 					local r, h = fetch_file(self, hash, cachepath)
 					if r ~= ListFailed then
@@ -210,6 +211,10 @@ end
 function vfs:changeroot(hash)
 	self.root = hash
 	self.resource = {}
+end
+
+function vfs:resource_setting(setting)
+	self.setting = setting
 end
 
 function vfs:add_resource(name, hash)
