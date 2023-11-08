@@ -465,15 +465,18 @@ function CMD.REDIRECT_CHANNEL(_, resp_command, channel_name)
 	end
 end
 
-local function patch(code)
+local function patch(code, data)
 	local f = load(code)
-	f()
+	f(data)
 end
 
-function CMD.PATCH(_, code)
-	local ok, err = xpcall(patch, debug.traceback, code)
+function CMD.PATCH(id, code, data)
+	local ok, err = xpcall(patch, debug.traceback, code, data)
 	if not ok then
-		print("[ERROR] Patch : ", err)
+		err = tostring(err)
+		response_err(id, err)
+	else
+		response_id(id, nil)
 	end
 end
 
