@@ -588,12 +588,14 @@ local function init_event()
 	end
 	local function read_fd(fd)
 		local data, err = fd:recv()
-		if not data then
+		if data == nil then
 			if err then
 				-- socket error
 				return nil, err
 			end
 			return nil, "Closed by remote"
+		elseif data == false then
+			return true
 		end
 		table.insert(reading, data)
 		while true do
