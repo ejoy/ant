@@ -3,7 +3,7 @@ local world         = ecs.world
 local w             = world.w
 local math3d        = require "math3d"
 
-local ibs           = ecs.require "ant.blur_scene|blur_scene"
+local ibs           = ecs.require "ant.render|blur_scene.blur_scene"
 local ientity       = ecs.require "ant.render|components.entity"
 local imaterial     = ecs.require "ant.asset|material"
 local imesh         = ecs.require "ant.asset|mesh"

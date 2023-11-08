@@ -11,4 +11,4 @@ policy "stop_scene"
     .component "stop_scene"
 
 system "blur_scene_system"
-    .implement "blur_scene.lua"
+    .implement "blur_scene/blur_scene.lua"

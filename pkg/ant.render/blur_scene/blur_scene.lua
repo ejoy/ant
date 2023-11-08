@@ -20,7 +20,7 @@ end
 local function create_stop_scene_entity()
     return world:create_entity {
         policy = {
-            "ant.blur_scene|stop_scene",
+            "ant.render|stop_scene",
         },
         data = {
             stop_scene = true
@@ -32,7 +32,7 @@ local function create_blur_scene_entity(count)
     local max_count = count and count or 3
     world:create_entity {
         policy = {
-            "ant.blur_scene|blur_scene",
+            "ant.render|blur_scene",
         },
         data = {
             blur_scene = {
