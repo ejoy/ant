@@ -85,17 +85,25 @@ function writer.loc()
         end
     end
     local rootpath = app_path "ant" / ".repo"
-    fs.remove_all(rootpath)
     fs.create_directories(rootpath)
+    local cache = {}
+    for file in fs.pairs(rootpath) do
+        cache[file:filename():string()] = true
+    end
     local m = {}
     function m.writefile(path, content)
         local f <close> = assert(io.open((rootpath / path):string(), "wb"))
         f:write(content)
+        cache[path] = nil
     end
     function m.copyfile(path, localpath)
         fs.copy_file(localpath, rootpath / path, fs.copy_options.overwrite_existing)
+        cache[path] = nil
     end
     function m.close()
+        for file in pairs(cache) do
+            fs.remove(rootpath / file)
+        end
     end
     return m
 end
