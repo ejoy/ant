@@ -194,6 +194,18 @@ end
 
 local CMD = {}
 
+
+local function schedule_message()
+	local SCHEDULE_IDLE <const> = 1
+	while true do
+		local s = ltask.schedule_message()
+		if s == SCHEDULE_IDLE then
+			break
+		end
+		coroutine.yield()
+	end
+end
+
 local function event_select(timeout)
 	if connection.fd then
 		local sending = connection.sendq
@@ -205,6 +217,9 @@ local function event_select(timeout)
 	end
 	for func, event in selector:wait(timeout) do
 		func(event)
+	end
+	if ltask then
+		schedule_message()
 	end
 end
 

@@ -174,14 +174,16 @@ local function ltask_ready()
 	return coroutine.yield() == nil
 end
 
+local function schedule_message() end
+
 local function ltask_init()
 	assert(fastio.loadfile "engine/task/service/service.lua")(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()
 	local ltaskfd = socket.fd(fd)
-	local function read_ltaskfd()
-		waitfunc()
+	-- replace schedule_message
+	function schedule_message()
 		local SCHEDULE_IDLE <const> = 1
 		while true do
 			local s = ltask.schedule_message()
@@ -190,6 +192,11 @@ local function ltask_init()
 			end
 			coroutine.yield()
 		end
+	end
+
+	local function read_ltaskfd()
+		waitfunc()
+		schedule_message()
 	end
 	selector:event_add(ltaskfd, SELECT_READ, read_ltaskfd)
 end
@@ -212,9 +219,10 @@ end
 
 local function work()
 	while not quit do
-		for func in selector:wait() do
-			func()
+		for func, event in selector:wait() do
+			func(event)
 		end
+		schedule_message()
 	end
 end
 
