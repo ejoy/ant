@@ -8,7 +8,6 @@ local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local irender   = ecs.require "ant.render|render_system.render"
 local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
-local iblur     = ecs.require "ant.render|postprocess.blur"
 local ibs  = {}
 local bs_sys = ecs.system "bs_system"
 
@@ -29,7 +28,7 @@ local function create_stop_scene_entity()
 end
 
 local function create_blur_scene_entity(count)
-    local max_count = count and count or 3
+    local max_count = count and count or 5
     world:create_entity {
         policy = {
             "ant.render|blur_scene",
@@ -44,17 +43,6 @@ local function create_blur_scene_entity(count)
 end
 
 function bs_sys:entity_init()
-    local bse = w:first "INIT blur_scene"
-    if bse then
-        create_stop_scene_entity()
-        local tqe = w:first "tonemapping_queue render_target:in"
-        local be  = w:first "blur pyramid_sample:update gaussian_blur:in"
-        assert(be, "pyramid_sample should create before blur scene!\n")
-
-        local input_handle = fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
-        ips.do_pyramid_sample(be, input_handle) -- only do once
-    end
-
     local sse = w:first "INIT stop_scene"
     if sse then
         irender.stop_draw(true)
@@ -64,13 +52,20 @@ end
 function bs_sys:blur()
     local bse = w:first "blur_scene:in"
     if bse then
-        local cur_count, max_count = bse.blur_scene.cur_count, bse.blur_scene.max_count
-        if cur_count < max_count then
-            cur_count = cur_count + 1
+        local input_handle
+        bse.blur_scene.cur_count = bse.blur_scene.cur_count + 1
+        if bse.blur_scene.cur_count < bse.blur_scene.max_count then
             local be  = w:first "blur pyramid_sample:update gaussian_blur:in"
-            iblur.do_gaussian_blur(be)
-            bse.blur_scene.cur_count = cur_count
-        end        
+            if bse.blur_scene.cur_count == 1 then
+                local tqe = w:first "tonemapping_queue render_target:in"
+                input_handle = fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
+            else
+                input_handle = be.pyramid_sample.scene_color_property.value
+            end
+            ips.do_pyramid_sample(be, input_handle)
+        elseif bse.blur_scene.cur_count == bse.blur_scene.max_count then
+            create_stop_scene_entity()
+        end
     end  
 end
 

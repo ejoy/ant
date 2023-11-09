@@ -281,14 +281,19 @@ local sm_test = false
 local itemsids
 local bse, output_handle
 local count = 1
-function init_loader_sys:ui_update()
---[[     count = count + 1
+
+local function blur_scene_with_start_begin()
+    count = count + 1
     if count == 3 then
-        ibs.blur_scene()
-    end ]]
+        ibs.blur_scene(5)
+    end 
+end
+
+function init_loader_sys:ui_update()
+    --blur_scene_with_start_begin()
     for _, key, press in kb_mb:unpack() do
         if key == "A" and press == 0 then
-            ibs.blur_scene(5)
+            ibs.blur_scene()
         elseif key == "B" and press == 0 then
             ibs.restore_scene()
         elseif key == "T" and press == 0 then
