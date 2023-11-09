@@ -170,12 +170,14 @@ function S.RESOURCE_VERIFY(CompileId)
 	if not s.resource_verify then
 		return
 	end
+	compiling = compiling + 1
 	s.resource_verify = false
 	local names, paths = repo:export_resources()
 	for i = 1, #paths do
 		local name = names[i]
 		cr.verify_file(s.config, name, paths[i])
 	end
+	compiling = compiling - 1
 end
 
 function S.RESOURCE(CompileId, path)
