@@ -137,7 +137,7 @@ do
         end
 
         if not cfg.pack_tangent_frame then
-            add_setting("PACK_TANGENT_TO_QUAT", 0)
+            add_setting("TANGENT_PACK_FROM_QUAT", 0)
         end
         return nm
     end

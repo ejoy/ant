@@ -217,28 +217,91 @@ local function is_output_varying(n, v)
     return nt == 'v'
 end
 
-local VS_INPUT_SEMANTICS_NAMES<const> = {
-	a_position  = "POSITION",
-    a_color0    = "COLOR0",
-    a_color1    = "COLOR1",
-	a_normal    = "NORMAL",
-	a_tangent   = "TANGENT",
-    a_bitanget  = "BITANGENT",
-    a_indices   = "INDICES",
-    a_weight    = "WEIGHT",
-	a_texcoord0 = "TEXCOORD0",
-	a_texcoord1 = "TEXCOORD1",
-	a_texcoord2 = "TEXCOORD2",
-	a_texcoord3 = "TEXCOORD3",
-	a_texcoord4 = "TEXCOORD4",
-	a_texcoord5 = "TEXCOORD5",
-	a_texcoord6 = "TEXCOORD6",
-    a_texcoord7 = "TEXCOORD7",
-    i_data0     = "TEXCOORD7",
-    i_data1     = "TEXCOORD6",
-    i_data2     = "TEXCOORD5",
-    i_data3     = "TEXCOORD4",
-    i_data4     = "TEXCOORD3",
+local SEMANTICS_INFOS<const> = {
+	a_position	= {
+		bind = "POSITION",
+        macro = "WITH_POSITION_ATTRIB=1",
+	},
+    a_color0	= {
+		bind = "COLOR0",
+        macro = "WITH_COLOR0_ATTRIB=1",
+	},
+    a_color1	= {
+		bind = "COLOR1",
+        macro = "WITH_COLOR1_ATTRIB=1",
+	},
+	a_normal	= {
+		bind = "NORMAL",
+        macro = "WITH_NORMAL_ATTRIB=1",
+	},
+	a_tangent	= {
+		bind = "TANGENT",
+        macro = "WITH_TANGENT_ATTRIB=1",
+	},
+    a_bitanget	= {
+		bind = "BITANGENT",
+        macro = "WITH_BITANGENT_ATTRIB=1",
+	},
+    a_indices	= {
+		bind = "INDICES",
+        macro = "WITH_INDICES_ATTRIB=1",
+	},
+    a_weight	= {
+		bind = "WEIGHT",
+        macro = "WITH_WEIGHT_ATTRIB=1",
+	},
+	a_texcoord0	= {
+		bind = "TEXCOORD0",
+        macro = "WITH_TEXCOORD0_ATTRIB=1",
+	},
+	a_texcoord1	= {
+		bind = "TEXCOORD1",
+        macro = "WITH_TEXCOORD1_ATTRIB=1",
+	},
+	a_texcoord2	= {
+		bind = "TEXCOORD2",
+        macro = "WITH_TEXCOORD2_ATTRIB=1",
+	},
+	a_texcoord3	= {
+		bind = "TEXCOORD3",
+        macro = "WITH_TEXCOORD3_ATTRIB=1",
+	},
+	a_texcoord4	= {
+		bind = "TEXCOORD4",
+        macro = "WITH_TEXCOORD4_ATTRIB=1",
+	},
+	a_texcoord5	= {
+		bind = "TEXCOORD5",
+        macro = "WITH_TEXCOORD5_ATTRIB=1",
+	},
+	a_texcoord6	= {
+		bind = "TEXCOORD6",
+        macro = "WITH_TEXCOORD6_ATTRIB=1",
+	},
+    a_texcoord7	= {
+		bind = "TEXCOORD7",
+        macro = "WITH_TEXCOORD7_ATTRIB=1",
+	},
+    i_data0	= {
+		bind = "TEXCOORD7",
+        macro = "WITH_INSTANCE_DATA0_ATTRIB=1",
+	},
+    i_data1	= {
+		bind = "TEXCOORD6",
+        macro = "WITH_INSTANCE_DATA1_ATTRIB=1",
+	},
+    i_data2	= {
+		bind = "TEXCOORD5",
+        macro = "WITH_INSTANCE_DATA2_ATTRIB=1",
+	},
+    i_data3	= {
+		bind = "TEXCOORD4",
+        macro = "WITH_INSTANCE_DATA3_ATTRIB=1",
+	},
+    i_data4	= {
+		bind = "TEXCOORD3",
+        macro = "WITH_INSTANCE_DATA4_ATTRIB=1",
+	},
 }
 
 local function gen_append_code(d, tabnum)
@@ -278,7 +341,7 @@ local function build_input_var(varyingcontent)
 
     local shaderfmt = "\t%s %s;"
     for k, v in sortpairs(varyingcontent) do
-        vdd_ac0(("%s %s : %s;\n"):format(v.type, k, v.bind or VS_INPUT_SEMANTICS_NAMES[k]))
+        vdd_ac0(("%s %s : %s;\n"):format(v.type, k, v.bind or SEMANTICS_INFOS[k].bind))
 
         if is_input_varying(k, v) then
             iac1(shaderfmt:format(v.type, k))
@@ -571,6 +634,48 @@ local function write_varying_def_sc(output, varying_def)
     return varying_path:string()
 end
 
+local function build_fx_macros(mat, varyings)
+    local m = {}
+    for k in pairs(varyings) do
+        local v = SEMANTICS_INFOS[k]
+        if v then
+            m[#m+1] = v.macro
+        end
+    end
+
+    if varyings.a_tangent.pack_from_quat then
+        m[#m+1] = "TANGENT_PACK_FROM_QUAT=1"
+    end
+
+    local state = mat.state
+    if state.CULL == "NONE" then
+        m[#m+1] = "WITH_DOUBLE_SIDE=1"
+    end
+
+    local properties = mat.properties
+    if properties.s_basecolor then
+        m[#m+1] = "HAS_BASECOLOR_TEXTURE=1"
+    end
+
+    if properties.s_normal then
+        m[#m+1] = "HAS_NORMAL_TEXTURE=1"
+    end
+
+    if properties.s_metallic_roughness then
+        m[#m+1] = "HAS_METALLIC_ROUGHNESS_TEXTURE=1"
+    end
+
+    if properties.s_emissive then
+        m[#m+1] = "HAS_EMISSIVE_TEXTURE=1"
+    end
+
+    if properties.s_occlusion then
+        m[#m+1] = "HAS_OCCLUSION_TEXTURE=1"
+    end
+
+    return m
+end
+
 local function gen_fx(setting, input, output, mat)
     local fx = mat.fx
     local varyings = read_varyings_input(setting, input, fx)
@@ -578,7 +683,7 @@ local function gen_fx(setting, input, output, mat)
 
     fx.varying_path = write_varying_def_sc(output, results.varying_def)
 
-    return build_fx_content(mat, varyings, results)
+    return build_fx_content(mat, varyings, results), build_fx_macros(mat, varyings)
 end
 
 local function gen_shader(setting, fx, stage, shaderdefined)

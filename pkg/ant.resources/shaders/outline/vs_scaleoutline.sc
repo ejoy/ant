@@ -37,11 +37,11 @@ vec2 calc_offset(vec2 dir, float aspect, float w)
 
 void main()
 {
-#	if PACK_TANGENT_TO_QUAT
+#	if TANGENT_PACK_FROM_QUAT
 	mediump vec3 normal = quat_to_normal(a_tangent);
-#	else //!PACK_TANGENT_TO_QUAT
+#	else //!TANGENT_PACK_FROM_QUAT
 	mediump vec3 normal = a_normal;
-#	endif//PACK_TANGENT_TO_QUAT
+#	endif//TANGENT_PACK_FROM_QUAT
 
     VSInput vs_input = (VSInput)0;
     #include "default/vs_inputs_getter.sh"

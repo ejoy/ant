@@ -38,14 +38,14 @@ void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 #ifdef CALC_TBN
 	vs_output.normal	= mul(wm, vec4(vs_input.normal, 0.0)).xyz;
 #else //!CALC_TBN
-#	if PACK_TANGENT_TO_QUAT
+#	if TANGENT_PACK_FROM_QUAT
 	const mediump vec4 quat = vs_input.tangent;
 	mediump vec3 normal = quat_to_normal(quat);
 	mediump vec3 tangent = quat_to_tangent(quat);
-#	else //!PACK_TANGENT_TO_QUAT
+#	else //!TANGENT_PACK_FROM_QUAT
 	mediump vec3 normal = vs_input.normal;
 	mediump vec3 tangent = vs_input.tangent.xyz;
-#	endif//PACK_TANGENT_TO_QUAT
+#	endif//TANGENT_PACK_FROM_QUAT
 	vs_output.normal	= mul(wm, mediump vec4(normal, 0.0)).xyz;
 	vs_output.tangent	= mul(wm, mediump vec4(tangent, 0.0)).xyz;
 	vs_output.bitangent = cross(vs_output.tangent, vs_output.normal) * sign(vs_input.tangent.w);

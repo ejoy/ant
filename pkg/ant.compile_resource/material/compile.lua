@@ -114,15 +114,7 @@ local function default_macros(setting)
     return m
 end
 
-local PBR_TEXTURE_MACROS<const> = {
-    s_basecolor             = "HAS_BASECOLOR_TEXTURE=1",
-    s_normal                = "HAS_NORMAL_TEXTURE=1",
-    s_metallic_roughness    = "HAS_METALLIC_ROUGHNESS_TEXTURE=1",
-    s_emissive              = "HAS_EMISSIVE_TEXTURE=1",
-    s_occlusion             = "HAS_OCCLUSION_TEXTURE=1",
-}
-
-local function get_macros(setting, mat)
+local function get_macros(setting, mat, others)
     local macros = default_macros(setting)
     for k, v in pairs(mat.fx.setting) do
         local f = SETTING_MAPPING[k]
@@ -142,21 +134,8 @@ local function get_macros(setting, mat)
             end
         end
     end
-
-    local state = mat.state
-    if state and state.CULL == "NONE" then
-        macros[#macros+1] = "WITH_DOUBLE_SIDE=1"
-    end
-    local st = assert(mat.fx.shader_type)
-    if st == "PBR" then
-        local properties = mat.properties
-        if properties then
-            for texname, m in pairs(PBR_TEXTURE_MACROS) do
-                if properties[texname] then
-                    macros[#macros+1] = m
-                end
-            end
-        end
+    if others then
+        table.move(others, 1, #others, #macros+1, macros)
     end
     table.sort(macros)
 	return macros
@@ -465,14 +444,14 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     check_update_shader_type(fx)
     -- setmetatable(fx, CHECK_MT)
     -- setmetatable(fx.setting, CHECK_MT)
-    local fxdefined
+    local pbrfx, pbrmacros
     if fx.shader_type == "PBR" then
-        fxdefined = genshader.gen_fx(setting, inputfolder, output, mat)
+        pbrfx, pbrmacros = genshader.gen_fx(setting, inputfolder, output, mat)
     end
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local inputfile = fx.shader_type == "PBR" and
-                genshader.gen_shader(setting, fx, stage, fxdefined) or
+                genshader.gen_shader(setting, fx, stage, pbrfx) or
                 lfs.path(setting.vfs.realpath(fx[stage]))
 
             if not lfs.exists(inputfile) then
@@ -488,7 +467,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
                 includes    = shader_includes(inputfolder),
                 stage       = stage,
                 varying_path= find_varying_path(setting, fx, stage),
-                macros      = get_macros(setting, mat),
+                macros      = get_macros(setting, mat, pbrmacros),
                 debug       = compile_debug_shader(setting.os, setting.renderer),
                 setting     = setting,
             }
