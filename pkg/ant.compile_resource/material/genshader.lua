@@ -714,6 +714,10 @@ local function build_fx_macros(mat, varyings)
         m[#m+1] = "HAS_OCCLUSION_TEXTURE=1"
     end
 
+    if varyings.a_indices or varyings.a_weight then
+        m[#m+1] = "GPU_SKINNING=1"
+    end
+
     return m
 end
 
