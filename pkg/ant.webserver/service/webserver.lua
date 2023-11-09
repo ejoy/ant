@@ -4,9 +4,66 @@ local urllib = require "http.url"
 
 local socket_error = setmetatable({} , { __tostring = function() return "[Socket Error]" end })
 
--- todo: direct mode : use socket api
+local mod = {}
 
-local function redirect(conf)
+function mod.direct(conf, http_request)
+	local net = import_package "ant.net"
+	local addr = conf.addr or "127.0.0.1"
+	local port = assert(conf.port)
+	local listen_fd = assert(net.listen(addr, port))
+
+	local function net_api(fd)
+		local obj = {}
+		local buf = ""
+		function obj.read(size)
+			if size == nil then
+				if buf == "" then
+					return net.recv(fd)
+				else
+					local r = buf
+					buf = ""
+					return r
+				end
+			end
+			while size > #buf do
+				local c, err = net.recv(fd)
+				if not c then
+					error(socket_error)
+				end
+				buf = buf .. c
+			end
+
+			local r = buf:sub(1, size)
+			buf = buf:sub(size + 1)
+			return r
+		end
+
+		function obj.write(content)
+			local err = net.send(fd, content)
+			if err then
+				error(socket_error)
+			end
+		end
+
+		function obj.close()
+			net.close(fd)
+		end
+
+		return obj
+	end
+
+	ltask.fork(function()
+		while true do
+			local fd = net.accept(listen_fd)
+			print("Accept", fd)
+			if fd then
+				ltask.fork(http_request, net_api(fd))
+			end
+		end
+	end)
+end
+
+function mod.redirect(conf, http_request)
 	local ServiceIO = ltask.queryservice "io"
 	local WEB_TUNNEL <const> = "WEBTUN"
 	local port = tostring(conf.port)
@@ -82,7 +139,21 @@ local function redirect(conf)
 		end
 	end
 
-	local function init(sessions)
+	local function init()
+		local iof = iofuncs()
+		local sessions = {}
+		setmetatable(sessions , {
+			__index = function(o, session)
+				local s = iof(session)
+				o[session] = s
+				ltask.fork(function()
+					http_request(s)
+					sessions[s] = nil
+				end)
+				return s
+			end
+		})
+
 		local S = ltask.dispatch()
 		-- todo: support multiple port
 		assert(S[WEB_TUNNEL] == nil, "webserver already start")
@@ -97,13 +168,8 @@ local function redirect(conf)
 		ltask.send(ServiceIO, "SEND", "TUNNEL_OPEN", port, WEB_TUNNEL)
 	end
 
-	return {
-		iofuncs = iofuncs,
-		init = init,
-	}
+	init()
 end
-
-local sessions = {}
 
 local function response(session, write, ...)
 	local ok, err = httpd.write_response(write, ...)
@@ -203,14 +269,10 @@ local function route_vfs(route, cgi)
 		end
 
 		s.close()
-
-		sessions[s] = nil
 	end
 end
 
 function S.start(conf)
-	local interface = redirect(conf)
-	local iof = interface.iofuncs()
 	if conf.home then
 		conf.route["/"] = conf.home
 	end
@@ -225,18 +287,11 @@ function S.start(conf)
 			end
 		end
 	end
+
 	local http_request = route_vfs(conf.route, cgi)
 
-	setmetatable(sessions , {
-		__index = function(o, session)
-			local s = iof(session)
-			o[session] = s
-			ltask.fork(http_request,s)
-			return s
-		end
-	})
-
-	interface.init(sessions)
+	local init = mod[conf.mode] or error "Invalid webserver mode " .. conf.mode
+	init(conf, http_request)
 end
 
 return S
