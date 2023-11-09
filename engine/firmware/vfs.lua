@@ -87,7 +87,7 @@ local function get_cachepath(setting, name)
 	local filename = name:match "[/]?([^/]*)$"
 	local ext = filename:match "[^/]%.([%w*?_%-]*)$"
 	local hash = sha1(name)
-	return ("/res/%s/%s/%s_%s"):format(setting, ext, filename, hash)
+	return ("/res/%s/%s/%s_%s/"):format(setting, ext, filename, hash)
 end
 
 local ListSuccess <const> = 1
