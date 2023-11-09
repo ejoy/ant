@@ -50,7 +50,8 @@ function vfs.new(repopath)
 	local repo = {
 		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
 		resource = {},
-		cache = {},--setmetatable( {} , { __mode = "kv" } ),
+		cache_hash = {},
+		cache_path = {},
 		root = nil,
 	}
 	setmetatable(repo, vfs)
@@ -58,7 +59,7 @@ function vfs.new(repopath)
 end
 
 local function dir_object(self, hash)
-	local dir = self.cache[hash]
+	local dir = self.cache_hash[hash]
 	if dir then
 		return dir
 	end
@@ -76,7 +77,7 @@ local function dir_object(self, hash)
 			end
 		end
 		df:close()
-		self.cache[hash] = dir
+		self.cache_hash[hash] = dir
 		return dir
 	end
 end
@@ -117,10 +118,10 @@ function fetch_file(self, hash, fullpath)
 		return ListNeedGet, hash
 	end
 
-	local path, name = fullpath:match "^([^/]+)/?(.*)$"
+	local path, name = fullpath:match "^/([^/]+)(/.*)$"
 	local subpath = dir[path]
 	if subpath then
-		if name == "" then
+		if name == "/" then
 			if subpath.type == 'r' then
 				return fetch_resource(self, subpath.hash)
 			else
@@ -143,70 +144,20 @@ function fetch_file(self, hash, fullpath)
 end
 
 function vfs:list(path)
-	local hash = self.root
-	if path ~= "/" then
-		local r, h = fetch_file(self, hash, path:sub(2))
+	local hash = self.cache_path[path]
+	if not hash then
+		local r
+		r, hash = fetch_file(self, self.root, path)
 		if r ~= ListSuccess then
-			return nil, r, h
+			return nil, r, hash
 		end
-		hash = h
+		self.cache_path[path] = hash
 	end
 	local dir = dir_object(self, hash)
 	if not dir then
 		return nil, ListNeedGet, hash
 	end
 	return dir
-end
-
-local function split_path(path)
-	local r = {}
-	path:gsub("[^/]+", function(s)
-		r[#r+1] = s
-	end)
-	return r
-end
-
-function vfs:gethash(path)
-	local hash = self.root
-	local pathlst = split_path(path)
-	local n = #pathlst
-	for i = 1, n-1 do
-		local v = dir_object(self, hash)
-		if not v then
-			return {
-				uncomplete = true,
-				hash = hash,
-				path = table.concat(pathlst, "/", i, n)
-			}
-		end
-		local name = pathlst[i]
-		local info = v[name]
-		if not info or info.type ~= 'd' then
-			local errorpath = table.concat(pathlst, "/", 1, i)
-			return nil, "Not exist: "..errorpath.." (when get "..path..")"
-		end
-		hash = info.hash
-	end
-	local v = dir_object(self, hash)
-	if not v then
-		return {
-			uncomplete = true,
-			hash = hash,
-			path = "",
-		}
-	end
-	if n == 0 then
-		return {
-			hash = hash,
-			type = "d"
-		}
-	end
-	local name = pathlst[n]
-	local info = v[name]
-	if not info then
-		return nil, "Not exist path: "..path
-	end
-	return info
 end
 
 function vfs:updatehistory(hash)
@@ -219,6 +170,7 @@ function vfs:changeroot(hash)
 	local res = self.resource
 	self.root = hash
 	self.resource = {}
+	self.cache_path = { ["/"] = hash }
 	return res
 end
 
@@ -228,17 +180,6 @@ end
 
 function vfs:add_resource(name, hash)
 	self.resource[name] = hash
-end
-
-function vfs:realpath(path)
-	if not self.root then
-		return
-	end
-	local r, hash = fetch_file(self, self.root, path)
-	if r ~= ListSuccess then
-		return
-	end
-	return self:hashpath(hash)
 end
 
 function vfs:hashpath(hash)
