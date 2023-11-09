@@ -14,10 +14,12 @@ local resource_cache = {}
 
 do print "step1. check resource cache."
     for _, setting in ipairs(config.resource) do
-        for path, status in fs.pairs(repopath / "res" / setting) do
-            if status:is_directory() then
-                for res in fs.pairs(path) do
-                    resource_cache[res:string()] = true
+        if fs.exists(repopath / "res" / setting) then
+            for path, status in fs.pairs(repopath / "res" / setting) do
+                if status:is_directory() then
+                    for res in fs.pairs(path) do
+                        resource_cache[res:string()] = true
+                    end
                 end
             end
         end
