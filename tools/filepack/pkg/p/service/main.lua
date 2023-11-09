@@ -94,12 +94,16 @@ function writer.loc()
     end
     local m = {}
     function m.writefile(path, content)
-        local f <close> = assert(io.open((rootpath / path):string(), "wb"))
+        local pathobj = rootpath / path
+        if path ~= "root" and fs.exists(pathobj) then
+            return
+        end
+        local f <close> = assert(io.open(pathobj:string(), "wb"))
         f:write(content)
         cache[path] = nil
     end
     function m.copyfile(path, localpath)
-        fs.copy_file(localpath, rootpath / path, fs.copy_options.overwrite_existing)
+        fs.copy_file(localpath, rootpath / path, fs.copy_options.skip_existing)
         cache[path] = nil
     end
     function m.close()
