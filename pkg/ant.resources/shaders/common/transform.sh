@@ -1,8 +1,10 @@
 #ifndef __SHADER_TRANSFORMS_SH__
 #define __SHADER_TRANSFORMS_SH__
 
-#include <bgfx_shader.sh>
-#include <shaderlib.sh>
+#ifndef BGFX_SHADER_H_HEADER_GUARD
+#error "Need include bgfx_shader.sh"
+#endif //BGFX_SHADER_H_HEADER_GUARD
+
 #include "common/constants.sh"
 #include "common/camera.sh"
 #ifdef ENABLE_CURVE_WORLD
@@ -38,15 +40,6 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	}
 
 	return wolrdMat;
-}
-
-mat4 get_world_matrix(uvec4 indices, vec4 weights)
-{
-#if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
- 	return calc_bone_transform(indices, weights);
-#else
- 	return	u_model[0];
-#endif
 }
 
 vec4 transform2clipspace(vec4 posWS)

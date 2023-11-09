@@ -393,18 +393,22 @@ local function build_input_var(varyingcontent)
     }
 end
 
-local function build_vs_code(varyings)
+local function build_vs_code(mat, varyings)
+    local fx = mat.fx
     local d = {}
     local ac0 = gen_append_code(d, 0)
     local ac1 = gen_append_code(d, 1)
-    ac0 [[
-vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){
-worldmat = u_model[0];
-vec4 posCS;
-varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);
-return posCS;
-}
-]]
+    ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
+    if varyings.a_indices and varyings.a_weight then
+        ac1 "worldmat = calc_bone_transform(vsinput.indices, vsinput.weight);"
+    else
+        ac1 "worldmat = u_model[0];"
+    end
+
+    ac1 "vec4 posCS;"
+    ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
+    ac1 "return posCS;"
+    ac0 "}"
 
     ac0 "void CUSTOM_VS(mat4 worldmat, VSInput vsinput, inout Varyings varyings) {"
 
@@ -651,7 +655,7 @@ local function build_fx_content(mat, varyings, results)
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
             ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results),
             ["@VS_PROPERTY_DEFINE"]     = generate_properties("vs", properties),
-            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(varyings),
+            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(mat, varyings),
             ["@VSINPUT_INIT"]           = table.concat(results.input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
