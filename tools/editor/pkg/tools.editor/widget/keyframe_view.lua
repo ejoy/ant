@@ -880,7 +880,7 @@ local function create_animation(animtype, name, duration, target_anims)
         end
     end
 end
-local update_camera_mb  	= world:sub {"UpdateCamera"}
+local update_camera_mb = world:sub {"UpdateCamera"}
 function m.end_animation()
     if not ui_bindcamera[1] then
         return
@@ -895,21 +895,12 @@ function m.end_animation()
         end
     end
     if update_camera then
-        -- if anim_eid then
-        --     local anim <close> = world:entity(anim_eid, "anim_ctrl?in skeleton?in")
-        --     if anim.anim_ctrl and anim.skeleton then
-        --         local mq = w:first("main_queue camera_ref:in")
-        --         local ce<close> = world:entity(mq.camera_ref, "scene:update")
-        --         iom.set_srt_matrix(ce, anim.anim_ctrl.pose_result:joint(anim.skeleton._handle:joint_index("Bone")))
-        --     end
-        -- else
-            if current_target then
-                local e<close> = world:entity(current_target)
-                local mq = w:first("main_queue camera_ref:in")
-                local ce<close> = world:entity(mq.camera_ref, "scene:update")
-                iom.set_srt_matrix(ce, iom.worldmat(e))
-            end
-        -- end
+        if current_target then
+            local e<close> = world:entity(current_target)
+            local mq = w:first("main_queue camera_ref:in")
+            local ce<close> = world:entity(mq.camera_ref, "scene:update")
+            iom.set_srt_matrix(ce, iom.worldmat(e))
+        end
     end
 end
 
@@ -1141,15 +1132,14 @@ function m.show()
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
             if imgui.widget.Checkbox("camera", ui_bindcamera) then
-                local srt
-                if ui_bindcamera[1] then
+                if not ui_bindcamera[1] then
                     local mq = w:first("main_queue camera_ref:in")
                     local ce<close> = world:entity(mq.camera_ref, "scene:update")
-                    local q1, q2, q3, q4 = math3d.index(iom.get_rotation(ce), 1, 2, 3, 4)
-                    local t1, t2, t3 = math3d.index(iom.get_position(ce), 1, 2, 3)
-                    srt = {r={q1, q2, q3, q4}, t={t1, t2, t3}}
+                    local eye, at = math3d.vector(0, 5, -10), mc.ZERO_PT
+                    iom.set_position(ce, eye)
+                    iom.set_direction(ce, math3d.normalize(math3d.sub(at, eye)))
                 end
-                world:pub {"LockCamera", srt}
+                world:pub {"LockCamera", ui_bindcamera[1]}
             end
             imgui.cursor.SameLine()
             local current_time = 0
