@@ -195,7 +195,11 @@ end
 
 local function find_varying_path(fx, stage)
     if fx.varying_path then
-        return lfs.path(setting.vfs.realpath(fx.varying_path))
+        local p = lfs.path(setting.vfs.realpath(fx.varying_path) or fx.varying_path)
+        if not lfs.exists(p) then
+            error(("Invalid varying path:%s"):format(fx.varying_path))
+        end
+        return p
     end
 
     local st = fx.shader_type

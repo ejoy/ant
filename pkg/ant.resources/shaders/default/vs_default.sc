@@ -14,13 +14,13 @@ void main()
     VSInput vsinput = (VSInput)0;
     Varyings varyings = (Varyings)0;
 
-    @VSINPUT_INIT
+@VSINPUT_INIT
 
     mat4 worldmat = (mat4)0;
     gl_Position = CUSTOM_VS_POSITION(vsinput, varyings, worldmat);
 #ifndef DEPTH_ONLY
-    CUSTOM_VS(vsinput, varyings);
+    CUSTOM_VS(worldmat, vsinput, varyings);
 #endif //DEPTH_ONLY
 
-    @OUTPUT_VARYINGS
+@OUTPUT_VARYINGS
 }

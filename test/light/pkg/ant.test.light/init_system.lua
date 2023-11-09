@@ -41,12 +41,9 @@ local function create_simple_triangles()
     -- add_v(vertices, math3d.vector(0.0, 0.0, 0.0), n, t)
     -- add_v(vertices, math3d.vector(0.0, 0.0, 1.0), n, t)
     -- add_v(vertices, math3d.vector(1.0, 0.0, 0.0), n, t)
-    local nx, ny, nz = math3d.index(math3d.normalize(math3d.vector(0, 1, 0.0)), 1, 2, 3, 4)
-    local pp, np = 0.5, -0.5
+    local pp, py, np = 0.5, 0.0, -0.5
 
     local qt = math3d.tovalue(mu.pack_tangent_frame(math3d.vector(0.0, 1.0, 0.0), math3d.vector(1.0, 0.0, 0.0)))
-
-    local py = 0
 
     world:create_entity{
         policy = {
@@ -72,7 +69,7 @@ local function create_simple_triangles()
             render_layer = "opacity",
             scene = {
                 --r = {0.0, 0.0, 0.8},
-                s = 1000,
+                s = 10,
                 --t = {0.0, 1.0, 0.0}
             },
         }

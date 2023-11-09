@@ -219,86 +219,107 @@ end
 
 local SEMANTICS_INFOS<const> = {
 	a_position	= {
+        shadername = "position",
 		bind = "POSITION",
         macro = "WITH_POSITION_ATTRIB=1",
 	},
     a_color0	= {
+        shadername = "color0",
 		bind = "COLOR0",
         macro = "WITH_COLOR0_ATTRIB=1",
 	},
     a_color1	= {
+        shadername = "color1",
 		bind = "COLOR1",
         macro = "WITH_COLOR1_ATTRIB=1",
 	},
 	a_normal	= {
+        shadername = "normal",
 		bind = "NORMAL",
         macro = "WITH_NORMAL_ATTRIB=1",
 	},
 	a_tangent	= {
+        shadername = "tangent",
 		bind = "TANGENT",
         macro = "WITH_TANGENT_ATTRIB=1",
 	},
     a_bitanget	= {
+        shadername = "bitangent",
 		bind = "BITANGENT",
         macro = "WITH_BITANGENT_ATTRIB=1",
 	},
     a_indices	= {
+        shadername = "indices",
 		bind = "INDICES",
         macro = "WITH_INDICES_ATTRIB=1",
 	},
     a_weight	= {
+        shadername = "weight",
 		bind = "WEIGHT",
         macro = "WITH_WEIGHT_ATTRIB=1",
 	},
 	a_texcoord0	= {
+        shadername = "texcoord0",
 		bind = "TEXCOORD0",
         macro = "WITH_TEXCOORD0_ATTRIB=1",
 	},
 	a_texcoord1	= {
+        shadername = "texcoord1",
 		bind = "TEXCOORD1",
         macro = "WITH_TEXCOORD1_ATTRIB=1",
 	},
 	a_texcoord2	= {
+        shadername = "texcoord2",
 		bind = "TEXCOORD2",
         macro = "WITH_TEXCOORD2_ATTRIB=1",
 	},
 	a_texcoord3	= {
+        shadername = "texcoord3",
 		bind = "TEXCOORD3",
         macro = "WITH_TEXCOORD3_ATTRIB=1",
 	},
 	a_texcoord4	= {
+        shadername = "texcoord4",
 		bind = "TEXCOORD4",
         macro = "WITH_TEXCOORD4_ATTRIB=1",
 	},
 	a_texcoord5	= {
+        shadername = "texcoord5",
 		bind = "TEXCOORD5",
         macro = "WITH_TEXCOORD5_ATTRIB=1",
 	},
 	a_texcoord6	= {
+        shadername = "texcoord6",
 		bind = "TEXCOORD6",
         macro = "WITH_TEXCOORD6_ATTRIB=1",
 	},
     a_texcoord7	= {
+        shadername = "texcoord7",
 		bind = "TEXCOORD7",
         macro = "WITH_TEXCOORD7_ATTRIB=1",
 	},
     i_data0	= {
+        shadername = "data0",
 		bind = "TEXCOORD7",
         macro = "WITH_INSTANCE_DATA0_ATTRIB=1",
 	},
     i_data1	= {
+        shadername = "data1",
 		bind = "TEXCOORD6",
         macro = "WITH_INSTANCE_DATA1_ATTRIB=1",
 	},
     i_data2	= {
+        shadername = "data2",
 		bind = "TEXCOORD5",
         macro = "WITH_INSTANCE_DATA2_ATTRIB=1",
 	},
     i_data3	= {
+        shadername = "data3",
 		bind = "TEXCOORD4",
         macro = "WITH_INSTANCE_DATA3_ATTRIB=1",
 	},
     i_data4	= {
+        shadername = "data4",
 		bind = "TEXCOORD3",
         macro = "WITH_INSTANCE_DATA4_ATTRIB=1",
 	},
@@ -339,26 +360,27 @@ local function build_input_var(varyingcontent)
     iac0 "struct VSInput {"
     vac0 "struct Varyings {"
 
-    local shaderfmt = "\t%s %s;"
+    local shaderfmt = "%s %s;"
     for k, v in sortpairs(varyingcontent) do
-        vdd_ac0(("%s %s : %s;\n"):format(v.type, k, v.bind or SEMANTICS_INFOS[k].bind))
+        vdd_ac0(("%s %s : %s;"):format(v.type, k, v.bind or SEMANTICS_INFOS[k].bind))
 
+        local member_name = k:match "[av]_(%w+)"
         if is_input_varying(k, v) then
-            iac1(shaderfmt:format(v.type, k))
-            ia_ac1(("vsinput.%s = %s;"):format(k, k))
+            iac1(shaderfmt:format(v.type, member_name))
+            ia_ac1(("vsinput.%s = %s;"):format(member_name, k))
 
             input_decls[#input_decls+1] = k
         else
             assert(is_output_varying(k, v))
-            vac1(shaderfmt:format(v.type, k))
-            va_ac1(("%s = vsoutput.%s;"):format(k, k))
+            vac1(shaderfmt:format(v.type, member_name))
+            va_ac1(("%s = varyings.%s;"):format(k, member_name))
 
             varying_decls[#varying_decls+1] = k
         end
     end
 
     iac0 "};"
-    vac1 "};"
+    vac0 "};"
     
     return {
         varying_def         = varying_def_decls,
@@ -371,266 +393,281 @@ local function build_input_var(varyingcontent)
     }
 end
 
-local function build_fx_content(mat, varyings, results)
-    local fx, properties, state = mat.fx, mat.properties, mat.state
-
-    local inputdecl         = table.concat(results.input_decls, " ")
-    local varyingdecl       = table.concat(results.varying_decls, " ")
-    local inputassignment   = table.concat(results.input_assignments, "\n")
-    local varyingassignment = table.concat(results.varying_assignments, "\n")
-
-    local fsinput_assignments = {}
-    for _, v in ipairs(results.varying_assignments) do
-        local lhs, rhs = v:match "([%w_]+)%s*=%s*varyings%.([%w_]+)"
-        assert(lhs and rhs and lhs == rhs)
-        fsinput_assignments[#fsinput_assignments+1] = ("varyings.%s = %s;"):format(rhs, lhs)
-    end
-
-    fsinput_assignments[#fsinput_assignments+1] = "varyings.frag_coord = gl_FragCoord;"
-    local isdoublesize = state.CULL == "NONE"
-    if isdoublesize then
-        fsinput_assignments[#fsinput_assignments+1] = "varyings.is_frontfacing = gl_FrontFacing;"
-    end
-
-    local function build_vs_code()
-        local d = {}
-        local ac0 = gen_append_code(d, 0)
-        local ac1 = gen_append_code(d, 1)
-        ac0 [[
-#include "common/transform.sh"
-vec4 CUSTOM_VS_POSITION(VSInput vsinput, out Varyings varyings, out mat4 worldmat){
-    worldmat = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
-    vec4 posCS;
-	varyings.v_posWS = transform_worldpos(worldmat, vsinput.a_position, posCS);
-    return posCS;
+local function build_vs_code(varyings)
+    local d = {}
+    local ac0 = gen_append_code(d, 0)
+    local ac1 = gen_append_code(d, 1)
+    ac0 [[
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){
+worldmat = u_model[0];
+vec4 posCS;
+varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);
+return posCS;
 }
 ]]
 
-        ac0 "void CUSTOM_VS(mat4 worldmat, VSInput vsinput, out Varyings varyings) {"
+    ac0 "void CUSTOM_VS(mat4 worldmat, VSInput vsinput, inout Varyings varyings) {"
 
-        --v_posWS
-        local assign_fmt = "varyings.%s = vsinput.%s;"
-        --a_texcoord[0-7]
-        for i=0, 7 do
-            local a_texcoord = "a_texcoord" .. i
-            if varyings[a_texcoord] then
-                ac1(assign_fmt:format("v_texcoord" .. i, a_texcoord))
-            end
+    --v_posWS
+    --TODO: build with or without GPU_SKINNING macro code
+
+    local assign_fmt = "varyings.%s = vsinput.%s;"
+    --a_texcoord[0-7]
+    for i=0, 7 do
+        local texcoord = "texcoord" .. i
+        if varyings["a_texcoord" .. i] then
+            ac1(assign_fmt:format(texcoord, texcoord))
         end
-
-        --a_color0
-        if varyings.a_color0 then
-            ac1(assign_fmt:format("v_color0", "a_color0"))
-        end
-
-        --normal/tangent/bitangent
-        if varyings.a_tangent or varyings.a_normal or varyings.a_bitangent then
-            if (varyings.a_tangent or varyings.a_bitangent) and not varyings.a_texcoord0 then
-                error "shader need tbn, but 'a_texcoord0' is not provided"
-            end
-
-            ac1 "mat3 wm3 = (mat3)worldmat;"
-            if varyings.a_tangent and varyings.a_tangent.pack_from_quat then
-                if varyings.a_normal then
-                    error "tangent is pack from quaternion, 'a_normal' should not define"
-                end
-
-                if varyings.a_tangent.type ~= "vec4" then
-                    error "'a_tangent' pack from quaternion, need vec4 type"
-                end
-
-                
-                ac1 "const mediump vec4 quat = vsinput.a_tangent;"
-                ac1 "mediump vec3 normal 	= quat_to_normal(quat);"
-                ac1 "mediump vec3 tangent 	= quat_to_tangent(quat);"
-                ac1 "varyings.v_normal		= mul(wm3, normal);"
-                ac1 "varyings.v_tangent	    = mul(wm3, tangent);"
-                ac1 "varyings.v_bitangent	= cross(varyings.v_normal, varyings.v_tangent);"
-    
-            else
-                if varyings.a_normal then
-                    assert(varyings.v_normal, "No 'v_normal' defined")
-                    ac1 "varyings.v_normal		= mul(wm3, vsinput.a_normal);"
-                end
-
-                if varyings.v_tangent then
-                    assert(varyings.a_normal)
-                    assert(varyings.v_tangent, "No 'v_tangent' defined")
-                    assert(varyings.v_bitangent, "'v_tangent' already defined, it need 'v_bitangent' defined the meantime")
-
-                    ac1 "varyings.v_tangent		= mul(wm3, vsinput.a_tangent);"
-                    if varyings.a_bitangent then
-                        ac1 "varyings.v_bitangent	= mul(wm3, vsinput.a_bitangent);"
-                    else
-                        ac1 "varyings.v_bitangent	= cross(varyings.v_normal, varyings.v_tangent);"
-                    end
-                end
-            end
-        end
-        ac0 "}"
-        return d
     end
 
-    local function build_fs_code()
-        local d = {}
-        local ac0 = gen_append_code(d, 0)
-        local ac1 = gen_append_code(d, 1)
-        ac0 [[
+    --a_color0
+    if varyings.a_color0 then
+        ac1(assign_fmt:format("color0", "color0"))
+    end
+
+    --normal/tangent/bitangent
+    if varyings.a_tangent or varyings.a_normal or varyings.a_bitangent then
+        if (varyings.a_tangent or varyings.a_bitangent) and not varyings.a_texcoord0 then
+            error "shader need tbn, but 'a_texcoord0' is not provided"
+        end
+
+        ac1 "mat3 wm3 = (mat3)worldmat;"
+        if varyings.a_tangent and varyings.a_tangent.pack_from_quat then
+            if varyings.a_normal then
+                error "tangent is pack from quaternion, 'a_normal' should not define"
+            end
+
+            if varyings.a_tangent.type ~= "vec4" then
+                error "'a_tangent' pack from quaternion, need vec4 type"
+            end
+
+            ac1 "const vec4 quat        = vsinput.tangent;"
+            ac1 "const vec3 normal      = quat_to_normal(quat);"
+            ac1 "const vec3 tangent 	= quat_to_tangent(quat);"
+            ac1 "varyings.normal		= mul(wm3, normal);"
+            ac1 "varyings.tangent	    = mul(wm3, tangent);"
+            ac1 "varyings.bitangent	= cross(varyings.normal, varyings.tangent);"
+
+        else
+            if varyings.a_normal then
+                assert(varyings.v_normal, "No 'v_normal' defined")
+                ac1 "varyings.normal  = mul(wm3, vsinput.normal);"
+            end
+
+            if varyings.v_tangent then
+                assert(varyings.a_normal)
+                assert(varyings.v_tangent, "No 'v_tangent' defined")
+                assert(varyings.v_bitangent, "'v_tangent' already defined, it need 'v_bitangent' defined the meantime")
+
+                ac1 "varyings.tangent = mul(wm3, vsinput.tangent);"
+                if varyings.a_bitangent then
+                    ac1 "varyings.bitangent = mul(wm3, vsinput.bitangent);"
+                else
+                    ac1 "varyings.bitangent = cross(varyings.normal, varyings.tangent);"
+                end
+            end
+        end
+    end
+    ac0 "}"
+    return table.concat(d, "\n")
+end
+
+local function build_fs_code(mat, varyings)
+    local fx, properties, state = mat.fx, mat.properties, mat.state
+    local d = {}
+    local ac0 = gen_append_code(d, 0)
+    local ac1 = gen_append_code(d, 1)
+    ac0 [[
 void CUSTOM_FS(in Varyings varyings, inout FSOutput fsoutput) {
-    material_info mi = (material_info)0;
+material_info mi = (material_info)0;
 ]]
 
-        if varyings.v_texcoord0 then
-            ac1 "mi.uv0 = uv_motion(varyings.v_texcoord0);";
-        end
+    ac1 "mi.V = normalize(u_eyepos.xyz - varyings.posWS.xyz);"
+    ac1 "mi.screen_uv = calc_normalize_fragcoord(varyings.frag_coord.xy);"
 
-        ac1 "mi.V = normalize(u_eyepos.xyz - varyings.pos.xyz);"
-        ac1 "mi.screen_uv = calc_normalize_fragcoord(varyings.frag_coord.xy);"
-
-        if fx.setting.USING_LIGHTMAP then
-            ac1 "mi.lightmap_uv  = varyings.v_texcoord1;"
-        end
-
-        ac0 "\n"
-
-        assert(properties.u_pbr_factor)
-
-        if varyings.v_posWS then
-            ac1 "mi.posWS        = varyings.pos.xyz;"
-            ac1 "mi.distanceVS   = varyings.pos.w;"
-        end
-        ac0 "\n"
-
-        --basecolor
-        assert(properties.u_basecolor_factor)
-        if varyings.v_color0 then
-            ac1 "mi.basecolor = varyings.v_color0;"
-        else
-            ac1 "mi.basecolor = vec4_splat(1.0);"
-        end
-        ac1 "mi.basecolor *= u_basecolor_factor;"
-        if varyings.v_texcoord0 and properties.s_basecolor then
-            ac1 "mi.basecolor *= texture2D(s_basecolor, texcoord);"
-        end
-        if fx.setting.ALPHAMODE_OPAQUE then
-            ac1 "mi.basecolor.a = u_alpha_mask_cutoff;"
-        end
-        ac0 "\n"
-
-        --emissive
-        assert(properties.u_emissive_factor)
-        ac1 "mi.emissivecolor = u_emissive_factor;"
-        if varyings.v_texcoord0 and properties.s_emissive then
-            ac1 "mi.emissivecolor *= texture2D(s_emissive, texcoord);"
-        end
-        ac0 "\n"
-        
-        --roughness&matellic
-        ac1 "mi.metallic = u_metallic_factor;"
-        ac1 "mi.perceptual_roughness = u_roughness_factor;"
-        if varyings.v_texcoord0 and properties.s_metallic_roughness then
-            ac1 "//Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel."
-            ac1 "//This layout intentionally reserves the 'r' channel for (optional) occlusion map data"
-            ac1 "vec4 mrSample = texture2D(s_metallic_roughness, varyings.v_texcoord0);"
-            ac1 "mi.perceptual_roughness *= mrSample.g;"
-            ac1 "mi.metallic *= mrSample.b;"
-        end
-
-        ac1 "mi.perceptual_roughness  = clamp(mi.perceptual_roughness, 1e-6, 1.0);"
-        ac1 "mi.metallic              = clamp(mi.metallic, 1e-6, 1.0);"
-
-        ac0 "\n"
-        --occlusion
-        ac1 "mi.occlusion = u_occlusion_strength"
-        if varyings.v_texcoord0 and properties.s_occlusion then
-            ac1 "mi.occlusion *= texture2D(s_occlusion,  varyings.v_texcoord0).r;"
-        end
-
-        --normal
-        if varyings.v_normal then
-            ac1 "mi.gN = normalize(varyings.v_normal);"
-            if properties.s_normal and varyings.v_texcoord0 then
-                if varyings.v_tangent and varyings.v_bitangent then
-                    ac1 "mi.T = normalize(varyings.v_tangent);"
-                    ac1 "mi.B = normalize(varyings.v_bitangent);"
-                    ac1 "mat3 tbn = mat3(mi.T, mi.B, mi.gN);"
-                else
-                    ac1 "mat3 tbn = cotangent_frame(mi.gN, varyings.v_posWS, varyings.v_texcoord0);"
-                    ac1 "mi.T = tbn[0];"
-                    ac1 "mi.B = tbb[1];"
-                end
-                ac0 "\n"
-                ac1 "mediump vec3 normalTS = fetch_normal_from_tex(s_normal, varyings.v_texcoord0);"
-                ac1 "mi.N = normalize(mul(normalTS, tbn));// same as: mul(transpose(tbn), normalTS)"
-            end
-
-            if isdoublesize then
-                if varyings.v_tangent then
-                    ac1 "mi.T = -mi.T;"
-                    ac1 "mi.B = -mi.B;"
-                end
-                ac1 "mi.N  = -mi.N;"
-                ac1 "mi.gN = -mi.gN;"
-            end
-        end
-
-        --bend normal
-        if fx.ENABLE_BENT_NORMAL then
-            ac1 "const vec3 bent_normalTS = vec3(0.0, 1.0, 0.0); //TODO: need bent_normal should come from ssao or other place"
-            ac1 "mi.bent_normal = bent_normalTS;"
-        end
-        ac0 "}\n"
-        return d
+    if fx.setting.USING_LIGHTMAP then
+        ac1 "mi.lightmap_uv  = varyings.texcoord1;"
     end
 
-    local function build_vsinputoutput()
-        local input = table.concat(results.inputs, "\n")
-        local varying = table.concat(results.varyings, "\n")
+    ac0 "\n"
 
-        return ("%s\n\n%s"):format(input, varying)
+    assert(properties.u_pbr_factor)
+
+    if varyings.v_posWS then
+        ac1 "mi.posWS        = varyings.posWS.xyz;"
+        ac1 "mi.distanceVS   = varyings.posWS.w;"
+    end
+    ac0 "\n"
+
+    --basecolor
+    assert(properties.u_basecolor_factor)
+    if varyings.v_color0 then
+        ac1 "mi.basecolor = varyings.color0;"
+    else
+        ac1 "mi.basecolor = vec4_splat(1.0);"
+    end
+    ac1 "mi.basecolor *= u_basecolor_factor;"
+    if varyings.v_texcoord0 and properties.s_basecolor then
+        ac1 "mi.basecolor *= texture2D(s_basecolor, varyings.texcoord0);"
+    end
+    if fx.setting.ALPHAMODE_OPAQUE then
+        ac1 "mi.basecolor.a = u_alpha_mask_cutoff;"
+    end
+    ac0 "\n"
+
+    --emissive
+    assert(properties.u_emissive_factor)
+    ac1 "mi.emissive = u_emissive_factor;"
+    if varyings.v_texcoord0 and properties.s_emissive then
+        ac1 "mi.emissive *= texture2D(s_emissive, texcoord);"
+    end
+    ac0 "\n"
+    
+    --roughness&matellic
+    ac1 "mi.metallic = u_metallic_factor;"
+    ac1 "mi.perceptual_roughness = u_roughness_factor;"
+    if varyings.v_texcoord0 and properties.s_metallic_roughness then
+        ac1 "//Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel."
+        ac1 "//This layout intentionally reserves the 'r' channel for (optional) occlusion map data"
+        ac1 "vec4 mrSample = texture2D(s_metallic_roughness, varyings.texcoord0);"
+        ac1 "mi.perceptual_roughness *= mrSample.g;"
+        ac1 "mi.metallic *= mrSample.b;"
     end
 
-    local function build_fsinputoutput()
-        local fsoutput = {}
-        for i=1, #results.varyings-1 do
-            fsoutput[i] = results.varyings[i]
+    ac1 "mi.perceptual_roughness  = clamp(mi.perceptual_roughness, 1e-6, 1.0);"
+    ac1 "mi.metallic              = clamp(mi.metallic, 1e-6, 1.0);"
+
+    ac0 "\n"
+    --occlusion
+    ac1 "mi.occlusion = u_occlusion_strength;"
+    if varyings.v_texcoord0 and properties.s_occlusion then
+        ac1 "mi.occlusion *= texture2D(s_occlusion,  varyings.texcoord0).r;"
+    end
+
+    local isdoublesize = state.CULL == "NONE"
+
+    --normal
+    if varyings.v_normal then
+        ac1 "mi.gN = normalize(varyings.normal);"
+        if properties.s_normal and varyings.v_texcoord0 then
+            if varyings.v_tangent and varyings.v_bitangent then
+                ac1 "mi.T = normalize(varyings.tangent);"
+                ac1 "mi.B = normalize(varyings.bitangent);"
+                ac1 "mat3 tbn = mat3(mi.T, mi.B, mi.gN);"
+            else
+                ac1 "mat3 tbn = cotangent_frame(mi.gN, varyings.posWS, varyings.texcoord0);"
+                ac1 "mi.T = tbn[0];"
+                ac1 "mi.B = tbb[1];"
+            end
+            ac0 "\n"
+            ac1 "mediump vec3 normalTS = fetch_normal_from_tex(s_normal, varyings.texcoord0);"
+            ac1 "mi.N = normalize(mul(normalTS, tbn));// same as: mul(transpose(tbn), normalTS)"
         end
 
-        assert(results.varyings[#results.varyings] == "};")
+        if isdoublesize then
+            if varyings.v_tangent then
+                ac1 "mi.T = -mi.T;"
+                ac1 "mi.B = -mi.B;"
+            end
+            ac1 "mi.N  = -mi.N;"
+            ac1 "mi.gN = -mi.gN;"
+        end
+    end
 
-        fsoutput[#fsoutput+1] = "\tvec4 frag_coord;"
-        fsoutput[#fsoutput+1] = "\tbool is_frontfacing;"
+    --bend normal
+    if fx.ENABLE_BENT_NORMAL then
+        ac1 "const vec3 bent_normalTS = vec3(0.0, 1.0, 0.0); //TODO: need bent_normal should come from ssao or other place"
+        ac1 "mi.bent_normal = bent_normalTS;"
+    end
 
-        fsoutput[#fsoutput+1] = [[};
+    if fx.setting.lighting == "on" then
+        ac1 "build_material_info(mi);"
+        ac1 "fsoutput.color = compute_lighting(mi);"
+    else
+        ac1 "fsoutput.color = mul_inverse_tonemap(mi.basecolor + mi.emissive);"
+    end
+
+    ac0 "}\n"   --end CUSTOM_FS
+    return table.concat(d, "\n")
+end
+
+local function build_vsinputoutput(results)
+    local input = table.concat(results.inputs, "\n")
+    local varying = table.concat(results.varyings, "\n")
+
+    return ("%s\n\n%s"):format(input, varying)
+end
+
+local function build_fsinputoutput(results)
+    local fsoutput = {}
+    for i=1, #results.varyings-1 do
+        fsoutput[i] = results.varyings[i]
+    end
+
+    assert(results.varyings[#results.varyings]:match "};$")
+
+    fsoutput[#fsoutput+1] = "\tvec4 frag_coord;"
+    fsoutput[#fsoutput+1] = "\tbool is_frontfacing;"
+
+    fsoutput[#fsoutput+1] = [[};
 struct FSOutput{
     vec4 color;
 };
 ]]
-        return table.concat(fsoutput, "\n")
+    return table.concat(fsoutput, "\n")
+end
+
+local function build_fs_assignments(mat, varyings, varying_assignments)
+    local assignments = {}
+    local fsac1 = gen_append_code(assignments, 1)
+
+    for _, v in ipairs(varying_assignments) do
+        local lhs, rhs = v:match "([%w_]+)%s*=%s*varyings%.([%w_]+)"
+        assert(lhs and rhs and lhs:match "v_([%w_]+)" == rhs)
+        fsac1(("varyings.%s = %s;"):format(rhs, lhs))
     end
+
+    if varyings.v_texcoord0 then
+        fsac1 "varyings.texcoord0 = uv_motion(varyings.texcoord0);";
+    end
+
+    fsac1 "varyings.frag_coord = gl_FragCoord;"
+    local isdoublesize = mat.state.CULL == "NONE"
+    if isdoublesize then
+        fsac1 "varyings.is_frontfacing = gl_FrontFacing;"
+    end
+
+    return assignments
+end
+
+local function build_fx_content(mat, varyings, results)
+    local fx, properties = mat.fx, mat.properties
+
+    local inputdecl         = table.concat(results.input_decls, " ")
+    local varyingdecl       = table.concat(results.varying_decls, " ")
 
     return {
         vs = {
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
-            ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(),
+            ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results),
             ["@VS_PROPERTY_DEFINE"]     = generate_properties("vs", properties),
-            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(),
-            ["@VSINPUT_INIT"]           = inputassignment,
-            ["@OUTPUT_VARYINGS"]        = varyingassignment,
+            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(varyings),
+            ["@VSINPUT_INIT"]           = table.concat(results.input_assignments, "\n"),
+            ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
         fs = {
             ["@FSINPUT_VARYINGS_DEFINE"]= "$input " .. varyingdecl,
-            ["@FSINPUTOUTPUT_STRUCT"]   = build_fsinputoutput(),
+            ["@FSINPUTOUTPUT_STRUCT"]   = build_fsinputoutput(results),
             ["@FS_PROPERTY_DEFINE"]     = generate_properties("fs", properties),
-            ["@FS_FUNC_DEFINE"]         = fx.fs_code or build_fs_code(),
-            ["@FSINPUT_FROM_VARYING"]   = table.concat(fsinput_assignments, "\n"),
+            ["@FS_FUNC_DEFINE"]         = fx.fs_code or build_fs_code(mat, varyings),
+            ["@FSINPUT_FROM_VARYING"]   = table.concat(build_fs_assignments(mat, varyings, results.varying_assignments), "\n"),
         }
     }
 end
 
 local function write_varying_def_sc(output, varying_def)
     local varying_path = output / "varying.def.sc"
-    write_file(varying_path, table.concat(varying_def, ""))
+    write_file(varying_path, table.concat(varying_def, "\n"))
     return varying_path:string()
 end
 

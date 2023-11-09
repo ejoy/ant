@@ -25,7 +25,7 @@ void main()
     Varyings varyings = (Varyings)0;
     FSOutput fsoutput = (FSOutput)0;
 
-    @FSINPUT_INIT
+@FSINPUT_FROM_VARYING
 
     CUSTOM_FS(varyings, fsoutput);
 
