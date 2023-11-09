@@ -55,7 +55,8 @@ function bs_sys:blur()
         local input_handle
         bse.blur_scene.cur_count = bse.blur_scene.cur_count + 1
         if bse.blur_scene.cur_count < bse.blur_scene.max_count then
-            local be  = w:first "blur pyramid_sample:update gaussian_blur:in"
+            --local be  = w:first "blur pyramid_sample:update gaussian_blur:in"
+            local be  = w:first "blur pyramid_sample:update"
             if bse.blur_scene.cur_count == 1 then
                 local tqe = w:first "tonemapping_queue render_target:in"
                 input_handle = fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle

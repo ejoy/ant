@@ -21,7 +21,7 @@ component "hblur_drawer"
 
 policy "blur"
     .component "blur"
-    .component "gaussian_blur"
+    --.component "gaussian_blur"
 
 system "blur_system"
     .implement "postprocess/blur.lua"
