@@ -39,7 +39,7 @@ local function register_blur_queue()
     end
 end
 
-local function build_gaussian_blur()
+--[[ local function build_gaussian_blur()
     local gb = {}
     local flags<const> = sampler {
         MIN="LINEAR",
@@ -53,7 +53,7 @@ local function build_gaussian_blur()
     gb.hblur = icompute.create_compute_entity("hblur_drawer", "/pkg/ant.resources/materials/hblur.material", dispatchsize)
     gb.tmp_texture = bgfx.create_texture2d(BLUR_WIDTH, BLUR_HEIGHT, false, 1, "RGBA8", flags)
     return gb
-end
+end ]]
 
 local function create_blur_entity()
     world:create_entity{
@@ -71,7 +71,7 @@ local function create_blur_entity()
                 queue_name = "blur_queue",
                 sample_params = BLUR_PARAM,
             },
-            gaussian_blur = build_gaussian_blur()
+            --gaussian_blur = build_gaussian_blur()
         }
     }
 end
@@ -87,7 +87,7 @@ function blur_sys:init_world()
     create_blur_entity()
 end
 
-function iblur.do_gaussian_blur(be)
+--[[ function iblur.do_gaussian_blur(be)
 
     local function set_gaussian_blur_params(e, input, output, viewid)
         local dis = e.dispatch
@@ -109,4 +109,4 @@ function iblur.do_gaussian_blur(be)
   
 end
 
-return iblur
+return iblur ]]
