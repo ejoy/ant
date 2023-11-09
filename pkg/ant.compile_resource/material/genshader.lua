@@ -481,6 +481,7 @@ local function build_fs_code(mat, varyings)
     local d = {}
     local ac0 = gen_append_code(d, 0)
     local ac1 = gen_append_code(d, 1)
+    local ac2 = gen_append_code(d, 2)
     ac0 [[
 void CUSTOM_FS(in Varyings varyings, inout FSOutput fsoutput) {
 material_info mi = (material_info)0;
@@ -569,12 +570,14 @@ material_info mi = (material_info)0;
         end
 
         if isdoublesize then
+            ac1 "if (varyings.is_frontfacing){"
             if varyings.v_tangent then
-                ac1 "mi.T = -mi.T;"
-                ac1 "mi.B = -mi.B;"
+                ac2 "mi.T = -mi.T;"
+                ac2 "mi.B = -mi.B;"
             end
-            ac1 "mi.N  = -mi.N;"
-            ac1 "mi.gN = -mi.gN;"
+            ac2 "mi.N  = -mi.N;"
+            ac2 "mi.gN = -mi.gN;"
+            ac1 "}" -- is_frontfacing
         end
     end
 
@@ -718,7 +721,25 @@ local function build_fx_macros(mat, varyings)
         m[#m+1] = "GPU_SKINNING=1"
     end
 
+    if mat.fx.setting.lighting == "off" then
+        m[#m+1] = "MATERIAL_UNLIT=1"
+    end
+
     return m
+end
+
+local function check_fx_content(fxcontent)
+    local vsfunc_define = fxcontent.vs["@VS_FUNC_DEFINE"]
+    if nil == vsfunc_define:match "CUSTOM_VS_POSITION" then
+        error "Need define 'CUSTOM_VS_POSITION'"
+    end
+
+    local fsfunc_define = fxcontent.fs["@FS_FUNC_DEFINE"]
+    if nil == fsfunc_define:match "CUSTOM_FS" then
+        error "Need define 'CUSTOM_FS'"
+    end
+
+    return fxcontent
 end
 
 local function gen_fx(setting, input, output, mat)
@@ -728,7 +749,8 @@ local function gen_fx(setting, input, output, mat)
 
     fx.varying_path = write_varying_def_sc(output, results.varying_def)
 
-    return build_fx_content(mat, varyings, results), build_fx_macros(mat, varyings)
+    local fxcontent, fxmacros = build_fx_content(mat, varyings, results), build_fx_macros(mat, varyings)
+    return check_fx_content(fxcontent), fxmacros
 end
 
 local function gen_shader(setting, fx, stage, shaderdefined)
