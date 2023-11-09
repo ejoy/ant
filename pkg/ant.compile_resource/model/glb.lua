@@ -8,9 +8,6 @@ local patch             = require "model.patch"
 local depends           = require "depends"
 local parallel_task     = require "parallel_task"
 local lfs               = require "bee.filesystem"
-local datalist          = require "datalist"
-local fastio            = require "fastio"
-local material_compile  = require "material.compile"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -24,31 +21,7 @@ local function build_scene_tree(gltfscene)
     return scenetree
 end
 
-local function readdatalist(filepath)
-	return datalist.parse(fastio.readall(filepath:string()), function(args)
-		return args[2]
-	end)
-end
-
-local function recompile_materials(input, output, setting)
-    assert(lfs.exists(output))
-    local depfiles = depends.new()
-    depends.add_lpath(depfiles, input .. ".patch")
-    local tasks = parallel_task.new()
-    local post_tasks = parallel_task.new()
-    for material_path in lfs.pairs(output / "materials") do
-        local mat = readdatalist(material_path / "main.cfg")
-        material_compile(tasks, post_tasks, depfiles, mat, input, material_path, setting)
-    end
-    parallel_task.wait(tasks)
-    parallel_task.wait(post_tasks)
-    return true, depfiles
-end
-
 return function (input, output, setting, changed)
-    if changed ~= true and changed:match "%.s[ch]$" then
-        return recompile_materials(input, output, setting)
-    end
     lfs.remove_all(output)
     lfs.create_directories(output)
     local status = {
