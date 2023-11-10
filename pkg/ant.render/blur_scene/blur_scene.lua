@@ -14,7 +14,7 @@ local ibs  = {}
 local bs_sys = ecs.system "bs_system"
 
 if not setting:get "graphic/postprocess/blur/enable" then
-    renderutil.default_system(bs_sys, "entity_init, blur, entity_remove")
+    renderutil.default_system(bs_sys, "entity_init, blur")
     return
 end
 
@@ -49,6 +49,23 @@ local function create_blend_scene_entity(material)
         },
     }
 end
+
+local function create_blur_scene_entity(count)
+    local max_count = count and count or 5
+    world:create_entity {
+        policy = {
+            "ant.render|blur_scene",
+        },
+        data = {
+            blur_scene = {
+                cur_count = 0,
+                max_count = 5,
+                material  = "/pkg/vaststars.resources/materials/blend_scene.material"
+            }
+        },
+    }
+end
+
 
 function bs_sys:entity_init()
     local bdse = w:first "INIT blend_scene"
@@ -94,22 +111,27 @@ function bs_sys:blur()
     end  
 end
 
-function bs_sys:entity_remove()
-    local brse  = w:first "REMOVED blur_scene eid:in"
-    if brse then
-        irender.stop_draw(false)
-        local bdse = w:first "blend_scene eid:in"
-        local sse  = w:first "stop_scene eid:in"
-        if brse then
-            w:remove(brse.eid)
-        end
-        if bdse then
-            w:remove(bdse.eid)
-        end
-        if sse then
-            w:remove(sse.eid)
-        end
+function ibs.blur_scene(count)
+    local bse = w:first "blur_scene:in"
+    if not bse then
+        create_blur_scene_entity(count)
     end
+end
+
+function ibs.restore_scene()
+    irender.stop_draw(false)
+    local brse = w:first "blur_scene eid:in"
+    local bdse = w:first "blend_scene eid:in"
+    local sse  = w:first "stop_scene eid:in"
+    if brse then
+        w:remove(brse.eid)
+    end
+    if bdse then
+        w:remove(bdse.eid)
+    end
+    if sse then
+        w:remove(sse.eid)
+    end    
 end
 
 return ibs
