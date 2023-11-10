@@ -48,22 +48,25 @@ function sc_sys:data_changed()
 end
 
 function sc_sys:swapchain()
-    local sceneldr_handle
-    if not ENABLE_FXAA then
-        local tqe = w:first "tonemapping_queue render_target:in"
-        sceneldr_handle = fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
-    else
-        local fqe = w:first "fxaa_queue render_target:in"
-        sceneldr_handle = fbmgr.get_rb(fqe.render_target.fb_idx, 1).handle
+
+    local function get_scene_handle()
+        local se = w:first "stop_scene"
+        if se then
+            local be = w:first "blur pyramid_sample:in"
+            return be.pyramid_sample.scene_color_property.value
+        else
+            if not ENABLE_FXAA then
+                local tqe = w:first "tonemapping_queue render_target:in"
+                return fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
+            else
+                local fqe = w:first "fxaa_queue render_target:in"
+                return fbmgr.get_rb(fqe.render_target.fb_idx, 1).handle
+            end
+        end
     end
 
     local fd = w:first "swapchain_drawer filter_material:in"
-    local se = w:first "stop_scene"
-    if se then
-        local be = w:first "blur pyramid_sample:in"
-        imaterial.set_property(fd, "s_scene_color", be.pyramid_sample.scene_color_property.value)
-    else
-        imaterial.set_property(fd, "s_scene_color", sceneldr_handle)
-    end
+    imaterial.set_property(fd, "s_scene_color", get_scene_handle())
+
 end
 

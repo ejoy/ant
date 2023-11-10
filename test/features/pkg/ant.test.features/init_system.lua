@@ -285,12 +285,12 @@ local count = 1
 local function blur_scene_with_start_begin()
     count = count + 1
     if count == 3 then
-        ibs.blur_scene(5)
+        ibs.blur_scene(2)
     end 
 end
 
 function init_loader_sys:ui_update()
-    --blur_scene_with_start_begin()
+    blur_scene_with_start_begin()
     for _, key, press in kb_mb:unpack() do
         if key == "A" and press == 0 then
             ibs.blur_scene()
