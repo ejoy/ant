@@ -27,10 +27,9 @@ void main()
 		return ;
 	const uint meshidx = load_mesh_idx(tid);
 
-	const vec4 vbnums = u_mesh_params[0];
-	const vec4 ibnums = u_mesh_params[1];
-	const uvec4 vboffsets = uvec4(0, uvec3(vbnums.xyz));
-	const uvec4 iboffsets = uvec4(0, uvec3(ibnums.xyz));
+	const vec4 vboffsets = u_mesh_params[0];
+	const vec4 iboffsets = u_mesh_params[1];
+	const vec4 ibnums    = u_mesh_params[2];
 
 	const uint vb_offset = (uint)vboffsets[meshidx];
 	const uint ib_offset = (uint)iboffsets[meshidx];

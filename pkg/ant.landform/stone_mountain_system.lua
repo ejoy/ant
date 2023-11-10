@@ -42,6 +42,11 @@ local MERGE_MESH
 local MESH_PARAMS
 
 local function init_mountain_mesh()
+
+    local function overlay_offset(v)
+		return {0, v[1], v[1] + v[2], v[1] + v[2] + v[3]}
+	end
+
     local vbnums, ibnums
     MERGE_MESH, vbnums, ibnums = imesh.build_meshes{
         "/pkg/ant.landform/assets/meshes/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
@@ -50,8 +55,10 @@ local function init_mountain_mesh()
         "/pkg/ant.landform/assets/meshes/mountain4.glb|meshes/Cylinder.021_P1.meshbin",
     }
 
+    local vboffsets, iboffsets = overlay_offset(vbnums), overlay_offset(ibnums)
+
     MESH_PARAMS = math3d.ref(math3d.array_vector{
-        math3d.vector(vbnums), math3d.vector(ibnums)
+        math3d.vector(vboffsets), math3d.vector(iboffsets), math3d.vector(ibnums)
     })
 end
 
