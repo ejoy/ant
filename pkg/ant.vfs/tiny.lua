@@ -8,14 +8,15 @@ local function read_vfsignore(rootpath)
     if not lfs.exists(rootpath / ".vfsignore") then
         return {}
     end
-    local r = datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
-    if r.block then
-        table.insert(r.block, 1, "/res")
-    else
-        r.block = { "/res" }
-    end
-    return r
+    return datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
 end
+
+local block <const> = {
+    "/res",
+    "/pkg/ant.bake",
+    "/pkg/ant.resources.binary/meshes",
+    "/pkg/ant.resources.binary/test",
+}
 
 local resource <const> = { "material" , "glb" , "texture" }
 
@@ -68,7 +69,7 @@ local function new_tiny(rootpath)
         filter = {
             resource = resource,
             whitelist = compile_whitelist,
-            block = vfsignore.block,
+            block = block,
             ignore = vfsignore.ignore,
         },
     }

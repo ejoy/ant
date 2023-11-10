@@ -127,6 +127,13 @@ local resource_filter <const> = {
 	},
 }
 
+local block <const> = {
+    "/res",
+    "/pkg/ant.bake",
+    "/pkg/ant.resources.binary/meshes",
+    "/pkg/ant.resources.binary/test",
+}
+
 local resource <const> = { "material" , "glb" , "texture" }
 
 local game_whitelist <const> = {
@@ -178,13 +185,15 @@ end
 
 local function read_vfsignore(rootpath)
 	if not lfs.exists(rootpath / ".vfsignore") then
-		return {}
+		return {
+			block = block,
+		}
 	end
 	local r = datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
 	if r.block then
-		table.insert(r.block, 1, "/res")
+		table_append(r.block, block)
 	else
-		r.block = { "/res" }
+		r.block = block
 	end
 	return r
 end
@@ -211,9 +220,6 @@ local function new_std(t)
 		_lock = filelock(cachepath),	-- lock repo
 	}
 	local vfsignore = read_vfsignore(rootpath)
-	if vfsignore.block and vfsignore.game_block then
-		table_append(vfsignore.block, vfsignore.game_block)
-	end
 	local config = {
 		hash = import_hash(self),
 	}
