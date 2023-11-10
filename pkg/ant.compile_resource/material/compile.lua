@@ -114,11 +114,12 @@ local function default_macros(setting)
     return m
 end
 
-local function get_macros(setting, mat, others)
+local function get_macros(setting, mat)
     local macros = default_macros(setting)
     for k, v in pairs(mat.fx.setting) do
         local f = SETTING_MAPPING[k]
         if f == nil then
+            --TODO: remove add macro directly from setting, use fx.macros instead
             macros[#macros+1] = k .. '=' .. v
         else
             local t = type(f)
@@ -134,8 +135,8 @@ local function get_macros(setting, mat, others)
             end
         end
     end
-    if others then
-        table.move(others, 1, #others, #macros+1, macros)
+    if mat.fx.macros then
+        table.move(mat.fx.macros, 1, #mat.fx.macros, #macros+1, macros)
     end
     table.sort(macros)
 	return macros
@@ -202,12 +203,7 @@ local function find_varying_path(fx, stage)
         return p
     end
 
-    local st = fx.shader_type
-    if st == "PBR" then
-        return VARYING_DEFAULT_PATH
-    end
-
-    if st == "CUSTOM" then
+    if fx.shader_type == "CUSTOM" then
         if setting.vfs.type(parent_path(fx[stage]).."/varying.def.sc") == nil then
             return VARYING_DEFAULT_PATH
         end
@@ -443,22 +439,19 @@ local STAGES<const> = {
     depth = "vs",
 }
 
-local function find_stage_file(setting, fx, stage, pbrfx)
-    if fx[stage] then
-        local inputfile =  lfs.path(setting.vfs.realpath(fx[stage]))
-        if lfs.exists(inputfile) then
-            return inputfile
-        end
+local function find_stage_file(setting, fx, stage)
+    local inputfile
+    local stagefile = fx[stage]
+    if stagefile then
+        -- stage file can be local path
+        inputfile = lfs.path(setting.vfs.realpath(stagefile) or stagefile)
     end
 
-    if fx.shader_type == "PBR" then
-        local inputfile = genshader.gen_shader(setting, fx, stage, pbrfx)
-        if lfs.exists(inputfile) then
-            return inputfile
-        end
+    if (not inputfile) or not lfs.exists(inputfile) then
+        error(("shader path not exists: %s, stage:%s"):format(fx[stage], stage))
     end
 
-    error(("shader path not exists: %s, stage:%s"):format(fx[stage], stage))
+    return inputfile
 end
 
 local function compile(tasks, post_tasks, deps, mat, input, output, setting)
@@ -474,21 +467,18 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     check_update_shader_type(fx)
     -- setmetatable(fx, CHECK_MT)
     -- setmetatable(fx.setting, CHECK_MT)
-    local pbrfx, pbrmacros
-    if fx.shader_type == "PBR" then
-        pbrfx, pbrmacros = genshader.gen_fx(setting, inputfolder, output, mat)
-    end
+    local stages = genshader.gen_fx(setting, inputfolder, output, mat)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local ok, res = toolset.compile {
                 platform    = BgfxOS[setting.os] or setting.os,
                 renderer    = setting.renderer,
-                input       = find_stage_file(setting, fx, stage, pbrfx),
+                input       = find_stage_file(setting, fx, stage),
                 output      = output / (stage..".bin"),
                 includes    = shader_includes(inputfolder),
                 stage       = assert(STAGES[stage]),
                 varying_path= find_varying_path(setting, fx, stage),
-                macros      = get_macros(setting, mat, pbrmacros),
+                macros      = get_macros(setting, mat),
                 debug       = compile_debug_shader(setting.os, setting.renderer),
                 setting     = setting,
             }
@@ -537,27 +527,8 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         end)
     end
 
-    local stages = {}
-    if fx.shader_type == "COMPUTE" then
-        stages.cs = assert(fx.cs)
-        compile_shader "cs"
-    else
-        if fx.shader_type ~= "PBR" and (not (fx.vs or fx.depth)) then
-            error "At least define 'vs' or 'depth' stage"
-        end
-        if fx.vs or fx.shader_type == "PBR" then
-            stages.vs = true
-        end
-        if fx.fs or fx.shader_type == "PBR" then
-            stages.fs = true
-        end
-        if fx.depth then
-            stages.depth = true
-        end
-
-        for stage in pairs(stages) do
-            compile_shader(stage)
-        end
+    for stage in pairs(stages) do
+        compile_shader(stage)
     end
 
     create_shader_cfg(stages)

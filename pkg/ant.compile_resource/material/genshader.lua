@@ -149,7 +149,10 @@ local function vfs_exists(vfs, path)
 end
 
 local function read_varyings_input(setting, inputfolder, fx)
-    local varyings = assert(fx.varyings, "Need varyings defined")
+    local varyings = fx.varyings
+    if varyings == nil then
+        return
+    end
     if type(varyings) == "string" then
         if varyings:sub(1, 1) == "/" then
             if vfs_exists(setting.vfs, varyings) then
@@ -679,7 +682,8 @@ local function write_varying_def_sc(output, varying_def)
 end
 
 local function build_fx_macros(mat, varyings)
-    local m = {}
+    mat.fx.macros = mat.fx.macros or {}
+    local m = mat.fx.macros
     for k in pairs(varyings) do
         local v = SEMANTICS_INFOS[k]
         if v then
@@ -724,8 +728,6 @@ local function build_fx_macros(mat, varyings)
     if mat.fx.setting.lighting == "off" then
         m[#m+1] = "MATERIAL_UNLIT=1"
     end
-
-    return m
 end
 
 local function check_fx_content(fxcontent)
@@ -742,23 +744,15 @@ local function check_fx_content(fxcontent)
     return fxcontent
 end
 
-local function gen_fx(setting, input, output, mat)
-    local fx = mat.fx
-    local varyings = read_varyings_input(setting, input, fx)
-    local results = build_input_var(varyings)
-
-    fx.varying_path = write_varying_def_sc(output, results.varying_def)
-
-    local fxcontent, fxmacros = build_fx_content(mat, varyings, results), build_fx_macros(mat, varyings)
-    return check_fx_content(fxcontent), fxmacros
-end
-
 local function gen_shader(setting, fx, stage, shaderdefined)
-    local si = assert(DEF_SHADER_INFO[stage])
+    local si = DEF_SHADER_INFO[stage]
+    if not si then
+        --TODO: can 'depth' stage to generated shader??
+        assert(fx[stage] and stage == "depth")
+        return
+    end
     local shader = si.template:gsub("@[%w_]+", shaderdefined[stage])
-
-    local fn = si.filename:format(sha1(shader))
-    local filename = setting.scpath / fn
+    local filename = setting.scpath / si.filename:format(sha1(shader))
 
     if not lfs.exists(filename) then
         write_file(filename, shader)
@@ -766,13 +760,52 @@ local function gen_shader(setting, fx, stage, shaderdefined)
     if fx[stage] then
         error "vs/fs should not define when use genertaed shader"
     end
-    fx[stage] = fn
-    return filename
+    fx[stage] = filename:string()
+end
+
+local function find_stages(fx)
+    if fx.shader_type == "COMPUTE" then
+        return {cs = true}
+    end
+
+    if fx.shader_type ~= "PBR" and (not (fx.vs or fx.depth)) then
+        error "At least define 'vs' or 'depth' stage"
+    end
+
+    local stages = {}
+    if fx.vs or fx.shader_type == "PBR" then
+        stages.vs = true
+    end
+    if fx.fs or fx.shader_type == "PBR" then
+        stages.fs = true
+    end
+    if fx.depth then
+        stages.depth = true
+    end
+
+    return stages
+end
+
+local function gen_fx(setting, input, output, mat)
+    local fx = mat.fx
+    local stages = find_stages(fx)
+
+    local varyings = read_varyings_input(setting, input, fx)
+    if varyings and fx.shader_type == "PBR" then
+        local results = build_input_var(varyings)
+        fx.varying_path = write_varying_def_sc(output, results.varying_def)
+        local fxcontent = check_fx_content(build_fx_content(mat, varyings, results))
+        build_fx_macros(mat, varyings)
+        for stage in pairs(stages) do
+            gen_shader(setting, fx, stage, fxcontent)
+        end
+    end
+
+    return stages
 end
 
 return {
     gen_fx              = gen_fx,
-    gen_shader          = gen_shader,
     DEF_PBR_UNIFORM     = DEF_PBR_UNIFORM,
     LOCAL_SHADER_BASE   = LOCAL_SHADER_BASE
 }
