@@ -435,6 +435,13 @@ local function add_lighting_sv(systems, lighting)
     end
 end
 
+local STAGES<const> = {
+    vs = "vs",
+    fs = "fs",
+    cs = "cs",
+    depth = "vs",
+}
+
 local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     depends.add_vpath(deps, setting, "/pkg/ant.compile_resource/material/version.lua")
     depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic.settings")
@@ -469,7 +476,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
                 input       = inputfile,
                 output      = output / (stage..".bin"),
                 includes    = shader_includes(inputfolder),
-                stage       = stage,
+                stage       = assert(STAGES[stage]),
                 varying_path= find_varying_path(setting, fx, stage),
                 macros      = get_macros(setting, mat, pbrmacros),
                 debug       = compile_debug_shader(setting.os, setting.renderer),
@@ -517,6 +524,14 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         if has_fs() then
             compile_shader "fs"
             stages[#stages+1] = "fs"
+        end
+
+        local function has_depth()
+            return fx.depth
+        end
+
+        if has_depth() then
+            compile_shader "depth"
         end
     end
 
