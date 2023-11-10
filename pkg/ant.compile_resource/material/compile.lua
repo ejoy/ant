@@ -657,13 +657,18 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     -- setmetatable(fx.setting, CHECK_MT)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
-            local inputpath = fx.shader_type == "PBR" and
-                create_PBR_shader(setting, fx, stage, mat.properties) or
-                lfs.path(setting.vfs.realpath(fx[stage]))
-
-            if not lfs.exists(inputpath) then
-                error(("shader path not exists: %s"):format(inputpath:string()))
+            local inputpath; do
+                if fx.shader_type == "PBR" then
+                    inputpath = create_PBR_shader(setting, fx, stage, mat.properties)
+                else
+                    local lpath = setting.vfs.realpath(fx[stage])
+                    if lpath == nil then
+                        error(("shader path not exists: %s"):format(fx[stage]))
+                    end
+                    inputpath = lfs.path(lpath)
+                end
             end
+
 
             local ok, res = toolset.compile {
                 platform    = BgfxOS[setting.os] or setting.os,
