@@ -4,6 +4,7 @@ local sha1       = require "sha1"
 local lfs        = require "bee.filesystem"
 local ltask      = require "ltask"
 local depends    = require "depends"
+local clonefile  = require "clonefile"
 
 local function cmdtostr(commands)
     return table.concat(commands, " ")
@@ -33,27 +34,6 @@ local function wait_start(pathkey)
     return setmetatable({_=pathkey}, wait_closeable)
 end
 
-local support_symlink; do
-    local platform = require "bee.platform"
-    if platform.os ~= "windows" and platform.os ~= "emscripten" then
-        support_symlink = true
-    else
-        support_symlink = pcall(lfs.create_symlink, ".test.symlink", ".test.symlink")
-        lfs.remove_all ".test.symlink"
-    end
-end
-
-local copyfile; do
-    if support_symlink then
-        function copyfile(a, b)
-            lfs.create_symlink(a, b)
-        end
-    else
-        function copyfile(a, b)
-            lfs.copy_file(a, b, lfs.copy_options.overwrite_existing)
-        end
-    end
-end
 
 local function run(setting, commands, input, output)
     local cmdstring = cmdtostr(commands)
@@ -63,7 +43,7 @@ local function run(setting, commands, input, output)
     if lfs.exists(path / "bin") then
         local deps = depends.read_if_not_dirty(setting.vfs, path / ".dep")
         if deps then
-            copyfile(path / "bin", output)
+            clonefile(path / "bin", output)
             return true, deps
         end
     end
@@ -108,7 +88,7 @@ local function run(setting, commands, input, output)
     end
     depends.writefile(path / ".dep", deps)
     writefile(path / ".arguments", cmdstring)
-    copyfile(path / "bin", output)
+    clonefile(path / "bin", output)
     return true, deps
 end
 
