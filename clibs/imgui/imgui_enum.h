@@ -442,7 +442,7 @@ static struct enum_pair eKey[] = {
 
 //ImGuiBackendFlags
 
-static struct enum_pair eStyleCol[] = {
+static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, Text),
 	ENUM(ImGuiCol, TextDisabled),
 	ENUM(ImGuiCol, WindowBg),              // Background of normal windows
@@ -609,32 +609,32 @@ static struct enum_pair eMouseCursor[] = {
 
 void imgui_enum_init(lua_State* L) {
 	lua_newtable(L);
-	flag_gen(L, "ColorEdit", eColorEditFlags);
-	flag_gen(L, "InputText", eInputTextFlags);
-	flag_gen(L, "Combo", eComboFlags);
-	flag_gen(L, "Selectable", eSelectableFlags);
-	flag_gen(L, "TreeNode", eTreeNodeFlags);
 	flag_gen(L, "Window", eWindowFlags);
 	flag_gen(L, "Child", eChildFlags);
+	flag_gen(L, "InputText", eInputTextFlags);
+	flag_gen(L, "TreeNode", eTreeNodeFlags);
+	flag_gen(L, "Popup", ePopupFlags);
+	flag_gen(L, "Selectable", eSelectableFlags);
+	flag_gen(L, "Combo", eComboFlags);
+	flag_gen(L, "TabBar", eTabBarFlags);
+	flag_gen(L, "Table", eTableFlags);
+	flag_gen(L, "TableColumn", eTableColumnFlags);
+	flag_gen(L, "TableRow", eTableRowFlags);
 	flag_gen(L, "Focused", eFocusedFlags);
 	flag_gen(L, "Hovered", eHoveredFlags);
-	flag_gen(L, "TabBar", eTabBarFlags);
-	flag_gen(L, "DragDrop", eDragDropFlags);
-	flag_gen(L, "Popup", ePopupFlags);
-	flag_gen(L, "Slider", eSliderFlags);
 	flag_gen(L, "DockNode", eDockNodeFlags);
-	flag_gen(L, "Table", eTableFlags);
-	flag_gen(L, "TableRow", eTableRowFlags);
-	flag_gen(L, "TableColumn", eTableColumnFlags);
+	flag_gen(L, "DragDrop", eDragDropFlags);
+	flag_gen(L, "ColorEdit", eColorEditFlags);
+	flag_gen(L, "Slider", eSliderFlags);
 	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);
-	enum_gen(L, "StyleCol", eStyleCol);
-	enum_gen(L, "StyleVar", eStyleVar);
-	enum_gen(L, "MouseCursor", eMouseCursor);
 	enum_gen(L, "TableBgTarget", eTableBgTarget);
 	enum_gen(L, "SortDirection", eSortDirection);
 	enum_gen(L, "Key", eKey);
+	enum_gen(L, "Col", eCol);
+	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseButton", eMouseButton);
-	lua_setfield(L, -2, "enum");
+	enum_gen(L, "MouseCursor", eMouseCursor);
+	lua_setfield(L, -2, "enums");
 }

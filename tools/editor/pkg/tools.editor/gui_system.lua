@@ -175,8 +175,8 @@ end
 
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
+    imgui.windows.PushStyleColor(imgui.enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
+    imgui.windows.PushStyleColor(imgui.enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()

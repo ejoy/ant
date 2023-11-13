@@ -382,11 +382,11 @@ function m.show()
                 end
                 rename_file(selected_file)
                 local function pre_selectable(icon, noselected)
-                    imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderActive, 0.0, 0.0, 0.0, 0.0)
+                    imgui.windows.PushStyleColor(imgui.enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
                     if noselected then
-                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
+                        imgui.windows.PushStyleColor(imgui.enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
                     else
-                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                        imgui.windows.PushStyleColor(imgui.enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
                     local imagesize = icon.texinfo.width * icons.scale
                     imgui.widget.Image(assetmgr.textures[icon.id], imagesize, imagesize)
