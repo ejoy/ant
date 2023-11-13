@@ -304,14 +304,10 @@ return function (status)
             },
         }
 
-        local setting = {}
-        if isopaque then
-            setting["ALPHAMODE_OPAQUE"] = 1
-        else
-            setting["MATERIAL_UNLIT"] = 1
-        end
+        local macros = {}
+        macros[#macros+1] = isopaque and "ALPHAMODE_OPAQUE=1" or "MATERIAL_UNLIT=1"
         if mat.alphaCutoff then
-            setting["ALPHAMODE_MASK"] = 1
+            macros[#macros+1] = "ALPHAMODE_MASK=1"
         end
 
         --Blender will always export glb with 'doubleSided' as true
@@ -329,7 +325,7 @@ return function (status)
             material.state.CULL = "NONE"
         end
 
-        material.fx.setting = setting
+        material.fx.macros = macros
         local function refine_name(name)
             local newname = name:gsub("['\\/:*?\"<>|]", "_")
             return newname

@@ -65,16 +65,15 @@ local function duplicate_table(m)
     return t
 end
 
-local check_update_material_info;
-local function declname_shortnames(declname)
-    local n = {}
-    for dn in declname:match "%w+" do
-        n[#n+1] = dn:sub(1, 1)
+local check_update_material_info; do
+    local function declname_shortnames(declname)
+        local n = {}
+        for dn in declname:gmatch "%w+" do
+            n[#n+1] = dn:sub(1, 1)
+        end
+        return table.concat(n, "")
     end
-    return table.concat(n, "")
-end
 
-do
     local function build_cfg_name(basename, cfg)
         return ("%s_%s%s"):format(basename, cfg.pack_tangent_frame, declname_shortnames(cfg.binded_declname))
     end
@@ -85,17 +84,21 @@ do
     end
 
     local build_varyings; do
-        local attirb_fmt<const> = "vec%s %s%s"
-        local function def_attrib(d)
+        
+        local SEMANTICS_WITH_INDICES<const> = {
+            c = true, t = true
+        }
+        local function format_varying(d)
             local n = d:sub(2, 2)
             local w = d:sub(1, 1)
             local s = assert(meshutil.SHORT_NAMES[w])
             local i = d:sub(3, 3)
             local t = d:sub(6, 6)
-            if t ~= 'f' or (w == 'i' and (t ~= 'u' or t ~= "i")) then
+            local o = d:sub(4, 4)
+            if o ~= 'n' and (t ~= 'f' or (w == 'i' and (t ~= 'u' or t ~= "i"))) then
                 error(("Invalid attrib type:%s %s"):format(d, t))
             end
-            return attirb_fmt:format(n, s, i)
+            return SEMANTICS_WITH_INDICES[w] and ("vec%s %s%s"):format(n, s, i) or ("vec%s %s"):format(n, s)
         end
 
         local INPUTNAMES<const> = {
@@ -103,35 +106,18 @@ do
             t = "a_texcoord",
         }
     
-        local D2V<const> = {
-            c = function (d)
-                --c40niu
-                local t = d:sub(6, 6)
-                if t == 'u' or t == 'f' then
-                    if t == 'u' then
-                        local n = d:sub(4, 4)
-                        assert(n == 'n', "color attribute must be set to 'normalize'")
-                    end
-    
-                    return def_attrib(d)
-                end
-                error(("not support attribute format:%s, %s"):format(d, t))
-            end,
-        }
-    
-        function build_varyings(cfg)
+        function build_varyings(cfg, mat)
             local varyings = {}
-            for dn in cfg.binded_declname:match "%w+" do
+
+            --input
+            for dn in cfg.binded_declname:gmatch "%w+" do
                 local t = dn:sub(1, 1)
-                local i = dn:sub(3, 3)
-                local f = D2V[t] or def_attrib
-    
-                local vn = INPUTNAMES[t] .. i
-                varyings[vn] = f[dn]
+                local vn = SEMANTICS_WITH_INDICES[t] and (INPUTNAMES[t] .. dn:sub(3, 3)) or INPUTNAMES[t]
+                varyings[vn] = format_varying(dn)
             end
     
             if cfg.pack_tangent_frame and varyings.a_tangent then
-                assert(varyings.a_normal)
+                assert(not varyings.a_normal, "Normal should pack to Tangent attirb")
                 local v = {}
                 for n in varyings.a_tangent:gmatch "%w+" do
                     v[#v+1] = n
@@ -140,10 +126,21 @@ do
                 varyings.a_tangent = {
                     type = v[1],
                     bind = v[2],
-                    pack_tangent_frame = true,
+                    pack_from_quat = true,
                 }
             end
-    
+
+            --varying
+            varyings.v_texcoord0= varyings.a_texcoord0
+            varyings.v_color0   = varyings.a_color0
+            varyings.v_color1   = varyings.a_color1
+
+            if not mat.fx.macros["MATERIAL_UNLIT"] then
+                varyings.v_posWS    = "vec4 TEXCOORD1"
+                varyings.v_tangent  = "vec3 TANGENT"
+                varyings.v_normal   = "vec3 NORMAL"
+                varyings.v_bitangent= "vec3 BITANGENT"
+            end
             return varyings
         end
     end
@@ -151,7 +148,7 @@ do
 
     local function build_material(material, cfg)
         local nm = duplicate_table(material)
-        nm.varyings = build_varyings(cfg)
+        nm.fx.varyings = build_varyings(cfg, nm)
         return nm
     end
     function check_update_material_info(status, filename, material, cfg)
@@ -167,7 +164,7 @@ do
         local cc = c[name]
         if nil == cc then
             -- check next(c) to let the first material file use basename, because most materials with the same basic name have only one
-            local fn = ("materials/%s.material"):format(next(c) and basename or name)
+            local fn = ("materials/%s.material"):format(next(c) and name or basename)
             local mi = build_material(material, cfg)
             cc = {
                 filename = fn,
@@ -236,7 +233,7 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         end
 
         status.material_cfg[meshfile] = {
-            pack_tangent_frame      = em.pack_tangent_frame and "pT" or "",
+            pack_tangent_frame      = em.pack_tangent_frame and "P" or "",
             binded_declname         = mesh_declname(em),
         }
 
