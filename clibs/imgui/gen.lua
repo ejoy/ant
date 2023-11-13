@@ -77,5 +77,5 @@ writeln("\tlua_newtable(L);")
 for _, name in ipairs(init.enums) do
     writeln("\tenum_gen(L, \"%s\", e%s);", name, name)
 end
-writeln("\tlua_setfield(L, -2, \"enums\");")
+writeln("\tlua_setfield(L, -2, \"enum\");")
 writeln("}")

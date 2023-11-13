@@ -654,5 +654,5 @@ void imgui_enum_init(lua_State* L) {
 	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseButton", eMouseButton);
 	enum_gen(L, "MouseCursor", eMouseCursor);
-	lua_setfield(L, -2, "enums");
+	lua_setfield(L, -2, "enum");
 }
