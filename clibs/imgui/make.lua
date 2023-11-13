@@ -100,3 +100,7 @@ lm:lua_source "imgui" {
         }
     }
 }
+
+lm:runlua "imgui-gen" {
+    script = "gen.lua"
+}
