@@ -215,10 +215,10 @@ static struct enum_pair eTableRowFlags[] = {
 };
 
 static struct enum_pair eTableBgTarget[] = {
-	ENUM(ImGuiTableBgTarget,None),
-	ENUM(ImGuiTableBgTarget,RowBg0),
-	ENUM(ImGuiTableBgTarget,RowBg1),
-	ENUM(ImGuiTableBgTarget,CellBg),
+	ENUM(ImGuiTableBgTarget, None),
+	ENUM(ImGuiTableBgTarget, RowBg0),
+	ENUM(ImGuiTableBgTarget, RowBg1),
+	ENUM(ImGuiTableBgTarget, CellBg),
 	{ NULL, 0 },
 };
 
@@ -259,13 +259,13 @@ static struct enum_pair eHoveredFlags[] = {
 };
 
 static struct enum_pair eDockNodeFlags[] = {
-	ENUM(ImGuiDockNodeFlags,None),
-	ENUM(ImGuiDockNodeFlags,KeepAliveOnly),
-	ENUM(ImGuiDockNodeFlags,NoDockingOverCentralNode),
-	ENUM(ImGuiDockNodeFlags,PassthruCentralNode),
-	ENUM(ImGuiDockNodeFlags,NoDockingSplit),
-	ENUM(ImGuiDockNodeFlags,NoResize),
-	ENUM(ImGuiDockNodeFlags,AutoHideTabBar),
+	ENUM(ImGuiDockNodeFlags, None),
+	ENUM(ImGuiDockNodeFlags, KeepAliveOnly),
+	ENUM(ImGuiDockNodeFlags, NoDockingOverCentralNode),
+	ENUM(ImGuiDockNodeFlags, PassthruCentralNode),
+	ENUM(ImGuiDockNodeFlags, NoDockingSplit),
+	ENUM(ImGuiDockNodeFlags, NoResize),
+	ENUM(ImGuiDockNodeFlags, AutoHideTabBar),
 	{ NULL, 0 },
 };
 
@@ -285,12 +285,13 @@ static struct enum_pair eDragDropFlags[] = {
 };
 
 //ImGuiDataType
+
 //ImGuiDir
 
 static struct enum_pair eSortDirection[] = {
-	ENUM(ImGuiSortDirection,None),
-	ENUM(ImGuiSortDirection,Ascending),
-	ENUM(ImGuiSortDirection,Descending),
+	ENUM(ImGuiSortDirection, None),
+	ENUM(ImGuiSortDirection, Ascending),
+	ENUM(ImGuiSortDirection, Descending),
 	{ NULL, 0 },
 };
 
@@ -436,7 +437,9 @@ static struct enum_pair eKey[] = {
 };
 
 //ImGuiNavInput
+
 //ImGuiConfigFlags
+
 //ImGuiBackendFlags
 
 static struct enum_pair eStyleCol[] = {
@@ -497,36 +500,36 @@ static struct enum_pair eStyleCol[] = {
 };
 
 static struct enum_pair eStyleVar[] = {
-	ENUM(ImGuiStyleVar,Alpha),                  // float     Alpha
-	ENUM(ImGuiStyleVar,DisabledAlpha),          // float     DisabledAlpha
-	ENUM(ImGuiStyleVar,WindowPadding),          // ImVec2    WindowPadding
-	ENUM(ImGuiStyleVar,WindowRounding),         // float     WindowRounding
-	ENUM(ImGuiStyleVar,WindowBorderSize),       // float     WindowBorderSize
-	ENUM(ImGuiStyleVar,WindowMinSize),          // ImVec2    WindowMinSize
-	ENUM(ImGuiStyleVar,WindowTitleAlign),       // ImVec2    WindowTitleAlign
-	ENUM(ImGuiStyleVar,ChildRounding),          // float     ChildRounding
-	ENUM(ImGuiStyleVar,ChildBorderSize),        // float     ChildBorderSize
-	ENUM(ImGuiStyleVar,PopupRounding),          // float     PopupRounding
-	ENUM(ImGuiStyleVar,PopupBorderSize),        // float     PopupBorderSize
-	ENUM(ImGuiStyleVar,FramePadding),           // ImVec2    FramePadding
-	ENUM(ImGuiStyleVar,FrameRounding),          // float     FrameRounding
-	ENUM(ImGuiStyleVar,FrameBorderSize),        // float     FrameBorderSize
-	ENUM(ImGuiStyleVar,ItemSpacing),            // ImVec2    ItemSpacing
-	ENUM(ImGuiStyleVar,ItemInnerSpacing),       // ImVec2    ItemInnerSpacing
-	ENUM(ImGuiStyleVar,IndentSpacing),          // float     IndentSpacing
-	ENUM(ImGuiStyleVar,CellPadding),            // ImVec2    CellPadding
-	ENUM(ImGuiStyleVar,ScrollbarSize),          // float     ScrollbarSize
-	ENUM(ImGuiStyleVar,ScrollbarRounding),      // float     ScrollbarRounding
-	ENUM(ImGuiStyleVar,GrabMinSize),            // float     GrabMinSize
-	ENUM(ImGuiStyleVar,GrabRounding),           // float     GrabRounding
-	ENUM(ImGuiStyleVar,TabRounding),            // float     TabRounding
-	ENUM(ImGuiStyleVar,TabBarBorderSize),       // float     TabBarBorderSize
-	ENUM(ImGuiStyleVar,ButtonTextAlign),        // ImVec2    ButtonTextAlign
-	ENUM(ImGuiStyleVar,SelectableTextAlign),    // ImVec2    SelectableTextAlign
-	ENUM(ImGuiStyleVar,SeparatorTextBorderSize),// float     SeparatorTextBorderSize
-	ENUM(ImGuiStyleVar,SeparatorTextAlign),     // ImVec2    SeparatorTextAlign
-	ENUM(ImGuiStyleVar,SeparatorTextPadding),   // ImVec2    SeparatorTextPadding
-	ENUM(ImGuiStyleVar,COUNT),
+	ENUM(ImGuiStyleVar, Alpha),                  // float     Alpha
+	ENUM(ImGuiStyleVar, DisabledAlpha),          // float     DisabledAlpha
+	ENUM(ImGuiStyleVar, WindowPadding),          // ImVec2    WindowPadding
+	ENUM(ImGuiStyleVar, WindowRounding),         // float     WindowRounding
+	ENUM(ImGuiStyleVar, WindowBorderSize),       // float     WindowBorderSize
+	ENUM(ImGuiStyleVar, WindowMinSize),          // ImVec2    WindowMinSize
+	ENUM(ImGuiStyleVar, WindowTitleAlign),       // ImVec2    WindowTitleAlign
+	ENUM(ImGuiStyleVar, ChildRounding),          // float     ChildRounding
+	ENUM(ImGuiStyleVar, ChildBorderSize),        // float     ChildBorderSize
+	ENUM(ImGuiStyleVar, PopupRounding),          // float     PopupRounding
+	ENUM(ImGuiStyleVar, PopupBorderSize),        // float     PopupBorderSize
+	ENUM(ImGuiStyleVar, FramePadding),           // ImVec2    FramePadding
+	ENUM(ImGuiStyleVar, FrameRounding),          // float     FrameRounding
+	ENUM(ImGuiStyleVar, FrameBorderSize),        // float     FrameBorderSize
+	ENUM(ImGuiStyleVar, ItemSpacing),            // ImVec2    ItemSpacing
+	ENUM(ImGuiStyleVar, ItemInnerSpacing),       // ImVec2    ItemInnerSpacing
+	ENUM(ImGuiStyleVar, IndentSpacing),          // float     IndentSpacing
+	ENUM(ImGuiStyleVar, CellPadding),            // ImVec2    CellPadding
+	ENUM(ImGuiStyleVar, ScrollbarSize),          // float     ScrollbarSize
+	ENUM(ImGuiStyleVar, ScrollbarRounding),      // float     ScrollbarRounding
+	ENUM(ImGuiStyleVar, GrabMinSize),            // float     GrabMinSize
+	ENUM(ImGuiStyleVar, GrabRounding),           // float     GrabRounding
+	ENUM(ImGuiStyleVar, TabRounding),            // float     TabRounding
+	ENUM(ImGuiStyleVar, TabBarBorderSize),       // float     TabBarBorderSize
+	ENUM(ImGuiStyleVar, ButtonTextAlign),        // ImVec2    ButtonTextAlign
+	ENUM(ImGuiStyleVar, SelectableTextAlign),    // ImVec2    SelectableTextAlign
+	ENUM(ImGuiStyleVar, SeparatorTextBorderSize),// float     SeparatorTextBorderSize
+	ENUM(ImGuiStyleVar, SeparatorTextAlign),     // ImVec2    SeparatorTextAlign
+	ENUM(ImGuiStyleVar, SeparatorTextPadding),   // ImVec2    SeparatorTextPadding
+	ENUM(ImGuiStyleVar, COUNT),
 	{ NULL, 0 },
 };
 
@@ -560,11 +563,11 @@ static struct enum_pair eColorEditFlags[] = {
 };
 
 static struct enum_pair eSliderFlags[] = {
-	ENUM(ImGuiSliderFlags,None),
-	ENUM(ImGuiSliderFlags,AlwaysClamp),
-	ENUM(ImGuiSliderFlags,Logarithmic),
-	ENUM(ImGuiSliderFlags,NoRoundToFormat),
-	ENUM(ImGuiSliderFlags,NoInput),
+	ENUM(ImGuiSliderFlags, None),
+	ENUM(ImGuiSliderFlags, AlwaysClamp),
+	ENUM(ImGuiSliderFlags, Logarithmic),
+	ENUM(ImGuiSliderFlags, NoRoundToFormat),
+	ENUM(ImGuiSliderFlags, NoInput),
 	{ NULL, 0 },
 };
 
@@ -577,25 +580,31 @@ static struct enum_pair eMouseButton[] = {
 
 
 static struct enum_pair eMouseCursor[] = {
-	ENUM(ImGuiMouseCursor,None),
-	ENUM(ImGuiMouseCursor,Arrow),
-	ENUM(ImGuiMouseCursor,TextInput),
-	ENUM(ImGuiMouseCursor,ResizeAll),
-	ENUM(ImGuiMouseCursor,ResizeNS),
-	ENUM(ImGuiMouseCursor,ResizeEW),
-	ENUM(ImGuiMouseCursor,ResizeNESW),
-	ENUM(ImGuiMouseCursor,ResizeNWSE),
-	ENUM(ImGuiMouseCursor,Hand),
-	ENUM(ImGuiMouseCursor,COUNT),
+	ENUM(ImGuiMouseCursor, None),
+	ENUM(ImGuiMouseCursor, Arrow),
+	ENUM(ImGuiMouseCursor, TextInput),
+	ENUM(ImGuiMouseCursor, ResizeAll),
+	ENUM(ImGuiMouseCursor, ResizeNS),
+	ENUM(ImGuiMouseCursor, ResizeEW),
+	ENUM(ImGuiMouseCursor, ResizeNESW),
+	ENUM(ImGuiMouseCursor, ResizeNWSE),
+	ENUM(ImGuiMouseCursor, Hand),
+	ENUM(ImGuiMouseCursor, COUNT),
 	{ NULL, 0 },
 };
 
 //ImGuiMouseSource
+
 //ImGuiCond
+
 //ImDrawFlags
+
 //ImDrawListFlags
+
 //ImFontAtlasFlags
+
 //ImGuiViewportFlags
+
 //ImGuiModFlags
 
 void imgui_enum_init(lua_State* L) {
