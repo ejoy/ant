@@ -1,4 +1,3 @@
-
 static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, None),
 	ENUM(ImGuiWindowFlags, NoTitleBar),
@@ -369,17 +368,17 @@ static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, F10),
 	ENUM(ImGuiKey, F11),
 	ENUM(ImGuiKey, F12),
-	ENUM(ImGuiKey, Apostrophe),    // '
-	ENUM(ImGuiKey, Comma),         // ,
-	ENUM(ImGuiKey, Minus),         // -
-	ENUM(ImGuiKey, Period),        // .
-	ENUM(ImGuiKey, Slash),         // /
-	ENUM(ImGuiKey, Semicolon),     // ;
-	ENUM(ImGuiKey, Equal),         // =
-	ENUM(ImGuiKey, LeftBracket),   // [
-	ENUM(ImGuiKey, Backslash),     // \ (this text inhibit multiline comment caused by backlash)
-	ENUM(ImGuiKey, RightBracket),  // ]
-	ENUM(ImGuiKey, GraveAccent),   // `
+	ENUM(ImGuiKey, Apostrophe),
+	ENUM(ImGuiKey, Comma),
+	ENUM(ImGuiKey, Minus),
+	ENUM(ImGuiKey, Period),
+	ENUM(ImGuiKey, Slash),
+	ENUM(ImGuiKey, Semicolon),
+	ENUM(ImGuiKey, Equal),
+	ENUM(ImGuiKey, LeftBracket),
+	ENUM(ImGuiKey, Backslash),
+	ENUM(ImGuiKey, RightBracket),
+	ENUM(ImGuiKey, GraveAccent),
 	ENUM(ImGuiKey, CapsLock),
 	ENUM(ImGuiKey, ScrollLock),
 	ENUM(ImGuiKey, NumLock),
@@ -445,12 +444,12 @@ static struct enum_pair eKey[] = {
 static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, Text),
 	ENUM(ImGuiCol, TextDisabled),
-	ENUM(ImGuiCol, WindowBg),              // Background of normal windows
-	ENUM(ImGuiCol, ChildBg),               // Background of child windows
-	ENUM(ImGuiCol, PopupBg),               // Background of popups, menus, tooltips windows
+	ENUM(ImGuiCol, WindowBg),
+	ENUM(ImGuiCol, ChildBg),
+	ENUM(ImGuiCol, PopupBg),
 	ENUM(ImGuiCol, Border),
 	ENUM(ImGuiCol, BorderShadow),
-	ENUM(ImGuiCol, FrameBg),               // Background of checkbox, radio button, plot, slider, text input
+	ENUM(ImGuiCol, FrameBg),
 	ENUM(ImGuiCol, FrameBgHovered),
 	ENUM(ImGuiCol, FrameBgActive),
 	ENUM(ImGuiCol, TitleBg),
@@ -483,7 +482,7 @@ static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, TabUnfocusedActive),
 #ifdef IMGUI_HAS_DOCK
 	ENUM(ImGuiCol, DockingPreview),
-	ENUM(ImGuiCol, DockingEmptyBg),        // Background color for empty node (e.g. CentralNode with no window docked into it)
+	ENUM(ImGuiCol, DockingEmptyBg),
 #endif
 	ENUM(ImGuiCol, PlotLines),
 	ENUM(ImGuiCol, PlotLinesHovered),
@@ -491,44 +490,44 @@ static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, PlotHistogramHovered),
 	ENUM(ImGuiCol, TextSelectedBg),
 	ENUM(ImGuiCol, DragDropTarget),
-	ENUM(ImGuiCol, NavHighlight),          // Gamepad/keyboard: current highlighted item
-	ENUM(ImGuiCol, NavWindowingHighlight), // Highlight window when using CTRL+TAB
-	ENUM(ImGuiCol, NavWindowingDimBg),     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
-	ENUM(ImGuiCol, ModalWindowDimBg),      // Darken/colorize entire screen behind a modal window, when one is active
+	ENUM(ImGuiCol, NavHighlight),
+	ENUM(ImGuiCol, NavWindowingHighlight),
+	ENUM(ImGuiCol, NavWindowingDimBg),
+	ENUM(ImGuiCol, ModalWindowDimBg),
 	ENUM(ImGuiCol, COUNT),
 	{ NULL, 0 },
 };
 
 static struct enum_pair eStyleVar[] = {
-	ENUM(ImGuiStyleVar, Alpha),                  // float     Alpha
-	ENUM(ImGuiStyleVar, DisabledAlpha),          // float     DisabledAlpha
-	ENUM(ImGuiStyleVar, WindowPadding),          // ImVec2    WindowPadding
-	ENUM(ImGuiStyleVar, WindowRounding),         // float     WindowRounding
-	ENUM(ImGuiStyleVar, WindowBorderSize),       // float     WindowBorderSize
-	ENUM(ImGuiStyleVar, WindowMinSize),          // ImVec2    WindowMinSize
-	ENUM(ImGuiStyleVar, WindowTitleAlign),       // ImVec2    WindowTitleAlign
-	ENUM(ImGuiStyleVar, ChildRounding),          // float     ChildRounding
-	ENUM(ImGuiStyleVar, ChildBorderSize),        // float     ChildBorderSize
-	ENUM(ImGuiStyleVar, PopupRounding),          // float     PopupRounding
-	ENUM(ImGuiStyleVar, PopupBorderSize),        // float     PopupBorderSize
-	ENUM(ImGuiStyleVar, FramePadding),           // ImVec2    FramePadding
-	ENUM(ImGuiStyleVar, FrameRounding),          // float     FrameRounding
-	ENUM(ImGuiStyleVar, FrameBorderSize),        // float     FrameBorderSize
-	ENUM(ImGuiStyleVar, ItemSpacing),            // ImVec2    ItemSpacing
-	ENUM(ImGuiStyleVar, ItemInnerSpacing),       // ImVec2    ItemInnerSpacing
-	ENUM(ImGuiStyleVar, IndentSpacing),          // float     IndentSpacing
-	ENUM(ImGuiStyleVar, CellPadding),            // ImVec2    CellPadding
-	ENUM(ImGuiStyleVar, ScrollbarSize),          // float     ScrollbarSize
-	ENUM(ImGuiStyleVar, ScrollbarRounding),      // float     ScrollbarRounding
-	ENUM(ImGuiStyleVar, GrabMinSize),            // float     GrabMinSize
-	ENUM(ImGuiStyleVar, GrabRounding),           // float     GrabRounding
-	ENUM(ImGuiStyleVar, TabRounding),            // float     TabRounding
-	ENUM(ImGuiStyleVar, TabBarBorderSize),       // float     TabBarBorderSize
-	ENUM(ImGuiStyleVar, ButtonTextAlign),        // ImVec2    ButtonTextAlign
-	ENUM(ImGuiStyleVar, SelectableTextAlign),    // ImVec2    SelectableTextAlign
-	ENUM(ImGuiStyleVar, SeparatorTextBorderSize),// float     SeparatorTextBorderSize
-	ENUM(ImGuiStyleVar, SeparatorTextAlign),     // ImVec2    SeparatorTextAlign
-	ENUM(ImGuiStyleVar, SeparatorTextPadding),   // ImVec2    SeparatorTextPadding
+	ENUM(ImGuiStyleVar, Alpha),
+	ENUM(ImGuiStyleVar, DisabledAlpha),
+	ENUM(ImGuiStyleVar, WindowPadding),
+	ENUM(ImGuiStyleVar, WindowRounding),
+	ENUM(ImGuiStyleVar, WindowBorderSize),
+	ENUM(ImGuiStyleVar, WindowMinSize),
+	ENUM(ImGuiStyleVar, WindowTitleAlign),
+	ENUM(ImGuiStyleVar, ChildRounding),
+	ENUM(ImGuiStyleVar, ChildBorderSize),
+	ENUM(ImGuiStyleVar, PopupRounding),
+	ENUM(ImGuiStyleVar, PopupBorderSize),
+	ENUM(ImGuiStyleVar, FramePadding),
+	ENUM(ImGuiStyleVar, FrameRounding),
+	ENUM(ImGuiStyleVar, FrameBorderSize),
+	ENUM(ImGuiStyleVar, ItemSpacing),
+	ENUM(ImGuiStyleVar, ItemInnerSpacing),
+	ENUM(ImGuiStyleVar, IndentSpacing),
+	ENUM(ImGuiStyleVar, CellPadding),
+	ENUM(ImGuiStyleVar, ScrollbarSize),
+	ENUM(ImGuiStyleVar, ScrollbarRounding),
+	ENUM(ImGuiStyleVar, GrabMinSize),
+	ENUM(ImGuiStyleVar, GrabRounding),
+	ENUM(ImGuiStyleVar, TabRounding),
+	ENUM(ImGuiStyleVar, TabBarBorderSize),
+	ENUM(ImGuiStyleVar, ButtonTextAlign),
+	ENUM(ImGuiStyleVar, SelectableTextAlign),
+	ENUM(ImGuiStyleVar, SeparatorTextBorderSize),
+	ENUM(ImGuiStyleVar, SeparatorTextAlign),
+	ENUM(ImGuiStyleVar, SeparatorTextPadding),
 	ENUM(ImGuiStyleVar, COUNT),
 	{ NULL, 0 },
 };
