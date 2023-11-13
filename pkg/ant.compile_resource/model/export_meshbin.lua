@@ -1,39 +1,12 @@
 local gltfutil  = require "model.glTF.util"
 local utility   = require "model.utility"
-local packer = require "model.pack_vertex_data"
+local meshutil	= require "model.meshutil"
+local packer 	= require "model.pack_vertex_data"
 local pack_vertex_data = packer.pack
-
-local LAYOUT_NAMES<const> = {
-	"POSITION",
-	"NORMAL",
-	"TANGENT",
-	"BITANGENT",
-	"COLOR_0",
-	"COLOR_1",
-	"COLOR_2",
-	"COLOR_3",
-	"TEXCOORD_0",
-	"TEXCOORD_1",
-	"TEXCOORD_2",
-	"TEXCOORD_3",
-	"TEXCOORD_4",
-	"TEXCOORD_5",
-	"TEXCOORD_6",
-	"TEXCOORD_7",
-	"JOINTS_0",
-	"WEIGHTS_0",
-}
-
--- ant.render/vertexdecl_mgr.lua has defined this mapper, but we won't want to dependent ant.render in this package
-local SHORT_NAMES<const> = {
-	POSITION = 'p', NORMAL = 'n', COLOR = 'c',
-	TANGENT = 'T', BITANGENT = 't',	TEXCOORD = 't',
-	JOINTS = 'i', WEIGHTS = 'w'	-- that is special defines
-}
 
 local function get_layout(name, accessor)
 	local attribname, channel = name:match"(%w+)_(%d+)"
-	local shortname = SHORT_NAMES[attribname or name]
+	local shortname = meshutil.SHORT_NAMES[attribname or name]
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
 	local shorttype = gltfutil.decl_comptype_mapper[comptype_name]
 	local asInt = shorttype ~= 'f' and 'i' or 'I'
@@ -322,13 +295,11 @@ local function need_calc_tangent(layouts1, layouts2)
 	return find_layout(layouts1, "TANGENT") == nil and find_layout(layouts1, "NORMAL") and find_layout(layouts2, "TEXCOORD_0")
 end
 
-
-
 local function generate_layouts(gltfscene, attributes)
 	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
 	local layouts1 = {}
 	local layouts2 = {}
-	for _, attribname in ipairs(LAYOUT_NAMES) do
+	for _, attribname in ipairs(meshutil.LAYOUT_NAMES) do
 		local accidx = attributes[attribname]
 		if accidx then
 			local acc = accessors[accidx+1]
@@ -416,21 +387,10 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 	-- normal and tangent info only valid in layouts1
 	meshexport.pack_tangent_frame = packer.is_pack2tangentframe(layouts1)
 
-	local function with_attrib(declname, n)
-		for d in declname:gmatch "%w+" do
-			if d:sub(1, 1) == n then
-				return true
-			end
-		end
-	end
-	meshexport.with_normal_attrib  = with_attrib(vb.declname, 'n')
-	meshexport.with_tangent_attrib = with_attrib(vb.declname, 'T')
-
 	local vb2
 	if #layouts2 ~= 0 then
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
 		vb2 = get_vb(layouts2, vertices2)
-		meshexport.with_color_attrib = with_attrib(vb2.declname, "c")
 	end
 	return vb, vb2
 end
@@ -613,14 +573,11 @@ end
 	end
 	for meshidx, mesh in ipairs(meshes) do
 		local meshname = get_obj_name(mesh, meshidx, "mesh")
-		--local meshaabb = math3d.aabb()
 		status.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local ib_table = {}
 			local group = {}
 			local indices_accidx = prim.indices
-
-			--TODO: if no index buffer, just switch vb order, not create a new index buffer
 			if indices_accidx then
 				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
@@ -632,7 +589,6 @@ end
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
 				if math3d.aabb_isvalid(aabb) then
 					group.bounding = bb
-					--meshaabb = math3d.aabb_merge(meshaabb, aabb)
 				end
 			end
 

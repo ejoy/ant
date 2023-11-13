@@ -3,6 +3,8 @@ local serialize = import_package "ant.serialize"
 local lfs = require "bee.filesystem"
 local material_compile = require "material.compile"
 
+local meshutil = require "model.meshutil"
+
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
 }
@@ -63,42 +65,18 @@ local function duplicate_table(m)
     return t
 end
 
-local PRIMITIVE_MODES<const> = {
-    "POINTS",
-    "LINES",
-    false, --LINELOOP, not support
-    "LINESTRIP",
-    "",         --TRIANGLES
-    "TRISTRIP", --TRIANGLE_STRIP
-    false, --TRIANGLE_FAN not support
-}
-
 local check_update_material_info;
+local function declname_shortnames(declname)
+    local n = {}
+    for dn in declname:match "%w+" do
+        n[#n+1] = dn:sub(1, 1)
+    end
+    return table.concat(n, "")
+end
+
 do
     local function build_cfg_name(basename, cfg)
-        local t = {}
-        if cfg.with_color_attrib then
-            t[#t+1] = "c"
-        end
-        if cfg.with_normal_attrib then
-            t[#t+1] = "n"
-        end
-        if not cfg.with_tangent_attrib then
-            t[#t+1] = "uT"
-        end
-        if cfg.hasskin then
-            t[#t+1] = "s"
-        end
-        if not cfg.pack_tangent_frame then
-            t[#t+1] = "up"
-        end
-        if cfg.modename ~= "" then
-            t[#t+1] = cfg.modename
-        end
-        if #t == 0 then
-            return basename
-        end
-        return ("%s_%s"):format(basename, table.concat(t))
+        return ("%s_%s%s"):format(basename, cfg.pack_tangent_frame, declname_shortnames(cfg.binded_declname))
     end
 
     local function build_name(filename, cfg)
@@ -106,53 +84,100 @@ do
         return build_cfg_name(basename, cfg)
     end
 
+    local build_varyings; do
+        local attirb_fmt<const> = "vec%s %s%s"
+        local function def_attrib(d)
+            local n = d:sub(2, 2)
+            local w = d:sub(1, 1)
+            local s = assert(meshutil.SHORT_NAMES[w])
+            local i = d:sub(3, 3)
+            local t = d:sub(6, 6)
+            if t ~= 'f' or (w == 'i' and (t ~= 'u' or t ~= "i")) then
+                error(("Invalid attrib type:%s %s"):format(d, t))
+            end
+            return attirb_fmt:format(n, s, i)
+        end
+
+        local INPUTNAMES<const> = {
+            p = "a_position", c = "a_color", n = "a_normal", T = "a_tangent", b = "a_bitangent",
+            t = "a_texcoord",
+        }
+    
+        local D2V<const> = {
+            c = function (d)
+                --c40niu
+                local t = d:sub(6, 6)
+                if t == 'u' or t == 'f' then
+                    if t == 'u' then
+                        local n = d:sub(4, 4)
+                        assert(n == 'n', "color attribute must be set to 'normalize'")
+                    end
+    
+                    return def_attrib(d)
+                end
+                error(("not support attribute format:%s, %s"):format(d, t))
+            end,
+        }
+    
+        function build_varyings(cfg)
+            local varyings = {}
+            for dn in cfg.binded_declname:match "%w+" do
+                local t = dn:sub(1, 1)
+                local i = dn:sub(3, 3)
+                local f = D2V[t] or def_attrib
+    
+                local vn = INPUTNAMES[t] .. i
+                varyings[vn] = f[dn]
+            end
+    
+            if cfg.pack_tangent_frame and varyings.a_tangent then
+                assert(varyings.a_normal)
+                local v = {}
+                for n in varyings.a_tangent:gmatch "%w+" do
+                    v[#v+1] = n
+                end
+    
+                varyings.a_tangent = {
+                    type = v[1],
+                    bind = v[2],
+                    pack_tangent_frame = true,
+                }
+            end
+    
+            return varyings
+        end
+    end
+
+
     local function build_material(material, cfg)
         local nm = duplicate_table(material)
-        local function add_setting(n, v)
-            if nil == nm.fx.setting then
-                nm.fx.setting = {}
-            end
-
-            nm.fx.setting[n] = v
-        end
-
-        if cfg.modename ~= "" then
-            nm.state.PT = cfg.modename
-        end
-
-        if cfg.with_color_attrib then
-            add_setting("WITH_COLOR_ATTRIB", 1)
-        end
-
-        if cfg.with_normal_attrib then
-            add_setting("WITH_NORMAL_ATTRIB", 1)
-        end
-
-        if cfg.with_tangent_attrib then
-            add_setting("WITH_TANGENT_ATTRIB", 1)
-        end
-
-        if cfg.hasskin then
-            add_setting("GPU_SKINNING", 1)
-        end
-
-        if not cfg.pack_tangent_frame then
-            add_setting("TANGENT_PACK_FROM_QUAT", 0)
-        end
+        nm.varyings = build_varyings(cfg)
         return nm
     end
     function check_update_material_info(status, filename, material, cfg)
-        local name = build_name(filename, cfg)
-        local c = status.material_cache[name]
+        local basename = lfs.path(filename):stem()
+        local c = status.material_cache[basename]
         if c == nil then
-            c = {
-                filename = "materials/"..name..".material",
-                material = build_material(material, cfg),
-            }
-            material_compile(status.tasks, status.post_tasks, status.depfiles, c.material, status.input, status.output / c.filename, status.setting)
-            status.material_cache[name] = c
+            c = {}
+            status.material_cache[basename] = c
         end
-        return c
+
+        local name = build_name(filename, cfg)
+
+        local cc = c[name]
+        if nil == cc then
+            -- check next(c) to let the first material file use basename, because most materials with the same basic name have only one
+            local fn = ("materials/%s.material"):format(next(c) and basename or name)
+            local mi = build_material(material, cfg)
+            cc = {
+                filename = fn,
+                material = mi,
+            }
+
+            c[name] = cc
+            material_compile(status.tasks, status.post_tasks, status.depfiles, cc.material, status.input, status.output / cc.filename, status.setting)
+        end
+        return cc
     end
 end
 
@@ -187,11 +212,22 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
 
-    local entity
-    for primidx, prim in ipairs(mesh.primitives) do
-        local em = status.mesh[meshidx+1][primidx]
-        local hasskin = has_skin(gltfscene, status, nodeidx)
-        local mode = prim.mode or 4
+    --TODO: need build mesh.primitives into one vertex buffer, and create entity to reference this share vertex buffer/index buffer
+    assert(#mesh.primitives == 1, "We assume 'primitives' field only have one mesh primitive")
+
+    local function mesh_declname(em)
+        local declname = em.declname
+        if #declname == 2 then
+            return ("%s|%s"):format(declname[1], declname[2])
+        end
+
+        return declname[1]
+    end
+
+    local primidx, prim = 1, mesh.primitives[1]; do
+        local em        = status.mesh[meshidx+1][primidx]
+        local mode      = prim.mode or 4
+        assert(mode == 4, "Only 'TRIANGLES' primitive mode is supported")
 
         local materialfile = status.material_idx[prim.material+1]
         local meshfile = em.meshbinfile
@@ -200,12 +236,8 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         end
 
         status.material_cfg[meshfile] = {
-            hasskin                 = hasskin,                  --NOT define by default
-            with_color_attrib       = em.with_color_attrib,     --NOT define by default
-            pack_tangent_frame      = em.pack_tangent_frame,    --define by default, as 1
-            with_normal_attrib      = em.with_normal_attrib,    --NOT define by default
-            with_tangent_attrib     = em.with_tangent_attrib,   --define by default
-            modename                = assert(PRIMITIVE_MODES[mode+1], "Invalid primitive mode"),
+            pack_tangent_frame      = em.pack_tangent_frame and "pT" or "",
+            binded_declname         = mesh_declname(em),
         }
 
         local data = {
@@ -217,6 +249,7 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
 
         local policy = {}
 
+        local hasskin   = has_skin(gltfscene, status, nodeidx)
         if hasskin then
             policy[#policy+1] = "ant.render|skinrender"
             data.skinning = true
@@ -225,14 +258,12 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
         end
 
-        --TODO: need a mesh node to reference all mesh.primitives, we assume primitives only have one right now
-        entity = create_entity(status, {
-            policy = policy,
-            data = data,
-            parent = (not hasskin) and parent,
+        return create_entity(status, {
+            policy  = policy,
+            data    = data,
+            parent  = (not hasskin) and parent,
         })
     end
-    return entity
 end
 
 local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
