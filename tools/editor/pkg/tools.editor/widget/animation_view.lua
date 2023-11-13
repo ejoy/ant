@@ -8,6 +8,7 @@ local assetmgr = import_package "ant.asset"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
 local imgui     = require "imgui"
+local imguiWidgets = require "imgui.widgets"
 local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -710,7 +711,7 @@ function m.show()
         local current_time = iani.get_time(anim_eid)
         imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
-        imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
+        imguiWidgets.Sequencer(edit_anims, anim_state, imgui_message)
         edit_anims.dirty = false
         local move_type
         local new_frame_idx

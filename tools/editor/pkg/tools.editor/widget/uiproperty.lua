@@ -1,4 +1,5 @@
 local imgui     = require "imgui"
+local imguiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
 local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
@@ -97,7 +98,7 @@ end
 
 local DirectionalArrow = class("DirectionalArrow", PropertyBase)
 function DirectionalArrow:widget()
-    return imgui.zmo.DirectionalArrow(self:get_label(), self.uidata)
+    return imguiWidgets.DirectionalArrow(self:get_label(), self.uidata)
 end
 
 local Int = class("Int", PropertyBase)

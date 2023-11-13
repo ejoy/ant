@@ -63,6 +63,7 @@ int luaopen_bee_filewatch(lua_State* L);
 int luaopen_bee_subprocess(lua_State* L);
 int luaopen_filedialog(lua_State* L);
 int luaopen_imgui(lua_State* L);
+int luaopen_imgui_widgets(lua_State* L);
 #endif
 int luaopen_system_scene(lua_State* L);
 int luaopen_system_cull(lua_State* L);
@@ -129,6 +130,7 @@ void ant_loadmodules(lua_State* L) {
         { "bee.subprocess", luaopen_bee_subprocess },
         { "filedialog", luaopen_filedialog },
         { "imgui", luaopen_imgui },
+        { "imgui.widgets", luaopen_imgui_widgets },
 #endif
         { "system.scene", luaopen_system_scene },
         { "cull.core", luaopen_system_cull},

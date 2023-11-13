@@ -58,32 +58,6 @@ lm:source_set "imgui" {
     defines = defines,
 }
 
-lm:source_set "imgui" {
-    includes = {
-        ".",
-        Ant3rd .. "imgui",
-    },
-    sources = {
-        "widgets/*.cpp",
-    },
-    defines = defines,
-}
-
-lm:source_set "imgui" {
-    includes = {
-        ".",
-        Ant3rd .. "glm",
-        Ant3rd .. "imgui",
-    },
-    sources = {
-        "zmo/*.cpp",
-    },
-    defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
-        defines,
-    },
-}
-
 lm:lua_source "imgui" {
     deps = "luabind",
     includes = {
