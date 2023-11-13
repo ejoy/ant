@@ -12,31 +12,27 @@ local arg = ...
 local repopath = fs.absolute(arg[1]):lexically_normal()
 local resource_cache = {}
 
-local config_target
+local config_os
 local config_resource
 do
     local lpath = vfs.realpath "/resource.settings"
     if lpath then
         local config = datalist.parse(fastio.readall(lpath, "/resource.settings"))
-        config_target = config.target or "loc"
+        config_os = config.target or platform.os
         config_resource = config.resource
     else
-        config_target = "loc"
+        config_os = platform.os
     end
-    if config_target == "loc" then
-        if not config_resource then
-            local platform_relates <const> = {
-                windows = "direct3d11",
-                macos = "metal",
-                ios = "metal",
-                android = "vulken",
-            }
-            config_resource = {
-                ("%s-%s"):format(platform.os, platform_relates[platform.os]),
-            }
-        end
-    else
-         assert(config_resource)
+    if not config_resource then
+        local platform_relates <const> = {
+            windows = "direct3d11",
+            macos = "metal",
+            ios = "metal",
+            android = "vulken",
+        }
+        config_resource = {
+            ("%s-%s"):format(config_os, platform_relates[config_os]),
+        }
     end
 end
 
@@ -45,7 +41,7 @@ do print "step1. check resource cache."
         if fs.exists(repopath / "res" / setting) then
             for path, status in fs.pairs(repopath / "res" / setting) do
                 if status:is_directory() then
-                    for res, status in fs.pairs(path) do
+                    for res in fs.pairs(path) do
                         resource_cache[res:string()] = true
                     end
                 end
@@ -101,19 +97,7 @@ function writer.zip()
     return m
 end
 
-function writer.loc()
-    local function app_path(name)
-        if platform.os == 'windows' then
-            return fs.path(os.getenv "LOCALAPPDATA") / name
-        elseif platform.os == 'linux' then
-            return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
-        elseif platform.os == 'macos' then
-            return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
-        else
-            error "unknown os"
-        end
-    end
-    local rootpath = app_path "ant" / ".repo"
+function writer.dir(rootpath)
     fs.create_directories(rootpath)
     local cache = {}
     for file, status in fs.pairs(rootpath) do
@@ -146,22 +130,38 @@ function writer.loc()
 end
 
 do print "step4. pack file and dir."
-    if config_target ~= "none" then
-        local std_vfs <close> = vfsrepo.new_std {
-            rootpath = repopath,
-            resource_settings = config_resource,
-        }
-        local w = writer[config_target]()
-        w.writefile("root", std_vfs:root())
-        for hash, v in pairs(std_vfs._filehash) do
-            if v.dir then
-                w.writefile(hash, v.dir)
-            else
-                w.copyfile(hash, v.path)
-            end
+    local std_vfs <close> = vfsrepo.new_std {
+        rootpath = repopath,
+        resource_settings = config_resource,
+    }
+    local function app_path()
+        if config_os == "windows" then
+            return fs.path(os.getenv "LOCALAPPDATA")
+        elseif config_os == "linux" then
+            return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share"))
+        elseif config_os == "macos" then
+            return fs.path(os.getenv "HOME" .. "/Library/Caches")
+        else
+            error "unknown os"
         end
-        w.close()
     end
+    local function target_path()
+        if config_os == "ios" or config_os == "android" then
+            return repopath / ("."..config_os)
+        else
+            return app_path() / "ant" / ".repo"
+        end
+    end
+    local w = writer.dir(target_path())
+    w.writefile("root", std_vfs:root())
+    for hash, v in pairs(std_vfs._filehash) do
+        if v.dir then
+            w.writefile(hash, v.dir)
+        else
+            w.copyfile(hash, v.path)
+        end
+    end
+    w.close()
 end
 
 print "step5. done."

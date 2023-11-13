@@ -8,6 +8,7 @@
 .vscode
 .vs
 .app
+.ios
 .fileserver
 .build
 .log
