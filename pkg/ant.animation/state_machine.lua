@@ -230,7 +230,8 @@ function iani.pause(eid, pause)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in playing?out")
+	e.playing = not pause
 	e.anim_ctrl.play_state.play = not pause
 end
 
