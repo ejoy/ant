@@ -1,5 +1,7 @@
 $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 
+#error "NEED FIX"
+
 #include <bgfx_shader.sh>
 
 // Surface settings:

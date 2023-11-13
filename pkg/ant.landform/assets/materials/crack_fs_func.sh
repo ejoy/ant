@@ -5,15 +5,15 @@
 
 #include "common/transform.sh"
 #include "common/utils.sh"
+#error "NEED FIX"
+
 #include "common/cluster_shading.sh"
 #include "common/constants.sh"
 #include "common/uvmotion.sh"
 #include "pbr/lighting.sh"
 #include "pbr/indirect_lighting.sh"
 #include "postprocess/tonemapping.sh"
-#include "default/inputs_structure.sh"
 #include "pbr/material_info.sh"
-#include "pbr/material_default.sh"
 
 vec2 parallax_mapping(vec2 uv, vec3 view_dir, float num_layers)
 {

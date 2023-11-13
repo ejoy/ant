@@ -305,7 +305,13 @@ return function (status)
         }
 
         local macros = {}
-        macros[#macros+1] = isopaque and "ALPHAMODE_OPAQUE=1" or "MATERIAL_UNLIT=1"
+        local setting = {}
+        if isopaque then
+            macros[#macros+1] = "ALPHAMODE_OPAQUE=1"
+        else
+            setting.lighting = "off"
+        end
+
         if mat.alphaCutoff then
             macros[#macros+1] = "ALPHAMODE_MASK=1"
         end
@@ -326,6 +332,7 @@ return function (status)
         end
 
         material.fx.macros = macros
+        material.fx.setting = setting
         local function refine_name(name)
             local newname = name:gsub("['\\/:*?\"<>|]", "_")
             return newname

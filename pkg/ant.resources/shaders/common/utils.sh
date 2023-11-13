@@ -21,6 +21,15 @@ vec3 remap_normal(vec2 normalTSXY)
     return mediump vec3(normalXY, z);
 }
 
+vec3 fetch_normal_from_tex(sampler2D normaltex, vec2 texcoord)
+{
+    #if BX_PLATFORM_OSX || BX_PLATFORM_IOS || BX_PLATFORM_ANDROID
+        return remap_normal(texture2DAstc(normaltex, texcoord));
+    #else
+        return remap_normal(texture2DBc5(normaltex, texcoord));
+    #endif
+}
+
 vec2 id2uv(ivec2 uvidx, ivec2 size)
 {
     const vec2 texeloffset = vec2(0.5, 0.5);

@@ -91,15 +91,28 @@ local check_update_material_info; do
             local i = d:sub(3, 3)
             local t = d:sub(6, 6)
             local o = d:sub(4, 4)
-            if o ~= 'n' and (t ~= 'f' or (w == 'i' and (t ~= 'u' or t ~= "i"))) then
-                error(("Invalid attrib type:%s %s"):format(d, t))
+
+            local datatype
+            if w == 'i' then
+                if o ~= 'N' then
+                    error(("'INDICES/JOINTS' attribute:%s should not defined as normalize"):format(d))
+                end
+                if t ~= 'u' and t ~= 'i' then
+                    error(("Invalid INDICES/JOINTS type:%s, it data element must be 'u'/'i' for uint8 or uint16"):format(d))
+                end
+                datatype = "ivec"
+            else
+                datatype = "vec"
+                if o ~= 'n' and t ~= 'f' then
+                    error(("Invalid attribute:%s, not nomalize data should only be 'float'"):format(d))
+                end
             end
-            return SEMANTICS_WITH_INDICES[w] and ("vec%s %s%s"):format(n, s, i) or ("vec%s %s"):format(n, s)
+            return SEMANTICS_WITH_INDICES[w] and ("%s%s %s%s"):format(datatype, n, s, i) or ("%s%s %s"):format(datatype, n, s)
         end
 
         local INPUTNAMES<const> = {
             p = "a_position", c = "a_color", n = "a_normal", T = "a_tangent", b = "a_bitangent",
-            t = "a_texcoord",
+            t = "a_texcoord", i = "a_indices", w = "a_weight",
         }
     
         function build_varyings(cfg, mat)
@@ -127,15 +140,34 @@ local check_update_material_info; do
             end
 
             --varying
-            varyings.v_texcoord0= varyings.a_texcoord0
-            varyings.v_color0   = varyings.a_color0
-            varyings.v_color1   = varyings.a_color1
+            local num_varying = 0
+            local function gen_varying(a, v, n)
+                assert(n > 1)
+                for i=0, n-1 do
+                    local aa = a .. i
+                    if not varyings[aa] then
+                        return i
+                    end
+                    local vv = v .. i
+                    varyings[vv] = varyings[aa]
+                end
+            end
 
-            if not mat.fx.macros["MATERIAL_UNLIT"] then
-                varyings.v_posWS    = "vec4 TEXCOORD1"
+            local vtex_idx = gen_varying("a_texcoord", "v_texcoord", 8)
+            num_varying = num_varying + vtex_idx
+            num_varying = num_varying + gen_varying("a_color", "v_color", 4)
+
+            if mat.fx.setting.lighting == "on" then
+                varyings.v_posWS    = "vec4 TEXCOORD" .. vtex_idx
                 varyings.v_tangent  = "vec3 TANGENT"
                 varyings.v_normal   = "vec3 NORMAL"
                 varyings.v_bitangent= "vec3 BITANGENT"
+
+                num_varying = num_varying + 4
+            end
+
+            if num_varying > 16 then
+                error(("Too many varying attribute:%d, max number is: 16"):format(num_varying))
             end
             return varyings
         end
@@ -148,7 +180,7 @@ local check_update_material_info; do
         return nm
     end
     function check_update_material_info(status, filename, material, cfg)
-        local basename = lfs.path(filename):stem()
+        local basename = lfs.path(filename):stem():string()
         local c = status.material_cache[basename]
         if c == nil then
             c = {}

@@ -527,7 +527,7 @@ material_info mi = (material_info)0;
     assert(properties.u_emissive_factor)
     ac1 "mi.emissive = u_emissive_factor;"
     if varyings.v_texcoord0 and properties.s_emissive then
-        ac1 "mi.emissive *= texture2D(s_emissive, texcoord);"
+        ac1 "mi.emissive *= texture2D(s_emissive, varyings.texcoord0);"
     end
     ac0 "\n"
     
