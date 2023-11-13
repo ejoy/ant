@@ -1,100 +1,3 @@
-static struct enum_pair eColorEditFlags[] = {
-	ENUM(ImGuiColorEditFlags, None),
-	ENUM(ImGuiColorEditFlags, NoAlpha),
-	ENUM(ImGuiColorEditFlags, NoPicker),
-	ENUM(ImGuiColorEditFlags, NoOptions),
-	ENUM(ImGuiColorEditFlags, NoSmallPreview),
-	ENUM(ImGuiColorEditFlags, NoInputs),
-	ENUM(ImGuiColorEditFlags, NoTooltip),
-	ENUM(ImGuiColorEditFlags, NoLabel),
-	ENUM(ImGuiColorEditFlags, NoSidePreview),
-	ENUM(ImGuiColorEditFlags, NoDragDrop),
-	ENUM(ImGuiColorEditFlags, AlphaBar),
-	ENUM(ImGuiColorEditFlags, AlphaPreview),
-	ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
-	ENUM(ImGuiColorEditFlags, HDR),
-	ENUM(ImGuiColorEditFlags, DisplayRGB),
-	ENUM(ImGuiColorEditFlags, DisplayHSV),
-	ENUM(ImGuiColorEditFlags, DisplayHex),
-	ENUM(ImGuiColorEditFlags, Uint8),
-	ENUM(ImGuiColorEditFlags, Float),
-	ENUM(ImGuiColorEditFlags, PickerHueBar),
-	ENUM(ImGuiColorEditFlags, PickerHueWheel),
-	ENUM(ImGuiColorEditFlags, InputRGB),
-	ENUM(ImGuiColorEditFlags, InputHSV),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eInputTextFlags[] = {
-	ENUM(ImGuiInputTextFlags, None),
-	ENUM(ImGuiInputTextFlags, CharsDecimal),
-	ENUM(ImGuiInputTextFlags, CharsHexadecimal),
-	ENUM(ImGuiInputTextFlags, CharsUppercase),
-	ENUM(ImGuiInputTextFlags, CharsNoBlank),
-	ENUM(ImGuiInputTextFlags, AutoSelectAll),
-	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
-	ENUM(ImGuiInputTextFlags, CallbackCompletion),
-	ENUM(ImGuiInputTextFlags, CallbackHistory),
-	// Todo : support CallbackAlways
-	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
-	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
-	ENUM(ImGuiInputTextFlags, AllowTabInput),
-	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
-	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
-	ENUM(ImGuiInputTextFlags, AlwaysOverwrite),
-	ENUM(ImGuiInputTextFlags, ReadOnly),
-	ENUM(ImGuiInputTextFlags, Password),
-	ENUM(ImGuiInputTextFlags, NoUndoRedo),
-	ENUM(ImGuiInputTextFlags, CharsScientific),
-	ENUM(ImGuiInputTextFlags, CallbackResize),
-	ENUM(ImGuiInputTextFlags, CallbackEdit),
-	ENUM(ImGuiInputTextFlags, EscapeClearsAll),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eComboFlags[] = {
-	ENUM(ImGuiComboFlags, None),
-	ENUM(ImGuiComboFlags, PopupAlignLeft),
-	ENUM(ImGuiComboFlags, HeightSmall),
-	ENUM(ImGuiComboFlags, HeightRegular),
-	ENUM(ImGuiComboFlags, HeightLarge),
-	ENUM(ImGuiComboFlags, HeightLargest),
-	ENUM(ImGuiComboFlags, NoArrowButton),
-	ENUM(ImGuiComboFlags, NoPreview),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eSelectableFlags[] = {
-	ENUM(ImGuiSelectableFlags, None),
-	ENUM(ImGuiSelectableFlags, DontClosePopups),
-	ENUM(ImGuiSelectableFlags, SpanAllColumns),
-	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
-	ENUM(ImGuiSelectableFlags, AllowOverlap),
-	// Use boolean(disabled) in Selectable(_,_, disabled)
-	//	ENUM(ImGuiSelectableFlags, Disabled),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eTreeNodeFlags[] = {
-	ENUM(ImGuiTreeNodeFlags, None),
-	ENUM(ImGuiTreeNodeFlags, Selected),
-	ENUM(ImGuiTreeNodeFlags, Framed),
-	ENUM(ImGuiTreeNodeFlags, AllowOverlap),
-	ENUM(ImGuiTreeNodeFlags, NoTreePushOnOpen),
-	ENUM(ImGuiTreeNodeFlags, NoAutoOpenOnLog),
-	ENUM(ImGuiTreeNodeFlags, DefaultOpen),
-	ENUM(ImGuiTreeNodeFlags, OpenOnDoubleClick),
-	ENUM(ImGuiTreeNodeFlags, OpenOnArrow),
-	ENUM(ImGuiTreeNodeFlags, Leaf),
-	ENUM(ImGuiTreeNodeFlags, Bullet),
-	ENUM(ImGuiTreeNodeFlags, FramePadding),
-	ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
-	ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
-	ENUM(ImGuiTreeNodeFlags, SpanAllColumns),
-	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
-	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
-	{ NULL, 0 },
-};
 
 static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, None),
@@ -125,7 +28,6 @@ static struct enum_pair eWindowFlags[] = {
 	{ NULL, 0 },
 };
 
-
 static struct enum_pair eChildFlags[] = {
 	ENUM(ImGuiChildFlags, None),
 	ENUM(ImGuiChildFlags, Border),
@@ -140,39 +42,87 @@ static struct enum_pair eChildFlags[] = {
 	{ NULL, 0 },
 };
 
-static struct enum_pair eFocusedFlags[] = {
-	ENUM(ImGuiFocusedFlags, None),
-	ENUM(ImGuiFocusedFlags, ChildWindows),
-	ENUM(ImGuiFocusedFlags, RootWindow),
-	ENUM(ImGuiFocusedFlags, AnyWindow),
-	ENUM(ImGuiFocusedFlags, NoPopupHierarchy),
-	ENUM(ImGuiFocusedFlags, DockHierarchy),
-	ENUM(ImGuiFocusedFlags, RootAndChildWindows),
+static struct enum_pair eInputTextFlags[] = {
+	ENUM(ImGuiInputTextFlags, None),
+	ENUM(ImGuiInputTextFlags, CharsDecimal),
+	ENUM(ImGuiInputTextFlags, CharsHexadecimal),
+	ENUM(ImGuiInputTextFlags, CharsUppercase),
+	ENUM(ImGuiInputTextFlags, CharsNoBlank),
+	ENUM(ImGuiInputTextFlags, AutoSelectAll),
+	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
+	ENUM(ImGuiInputTextFlags, CallbackCompletion),
+	ENUM(ImGuiInputTextFlags, CallbackHistory),
+	// Todo : support CallbackAlways
+	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
+	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
+	ENUM(ImGuiInputTextFlags, AllowTabInput),
+	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+	ENUM(ImGuiInputTextFlags, AlwaysOverwrite),
+	ENUM(ImGuiInputTextFlags, ReadOnly),
+	ENUM(ImGuiInputTextFlags, Password),
+	ENUM(ImGuiInputTextFlags, NoUndoRedo),
+	ENUM(ImGuiInputTextFlags, CharsScientific),
+	ENUM(ImGuiInputTextFlags, CallbackResize),
+	ENUM(ImGuiInputTextFlags, CallbackEdit),
+	ENUM(ImGuiInputTextFlags, EscapeClearsAll),
 	{ NULL, 0 },
 };
 
-static struct enum_pair eHoveredFlags[] = {
-	ENUM(ImGuiHoveredFlags, None),
-	ENUM(ImGuiHoveredFlags, ChildWindows),
-	ENUM(ImGuiHoveredFlags, RootWindow),
-	ENUM(ImGuiHoveredFlags, AnyWindow),
-	ENUM(ImGuiHoveredFlags, NoPopupHierarchy),
-	ENUM(ImGuiHoveredFlags, DockHierarchy),
-	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
-	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
-	ENUM(ImGuiHoveredFlags, AllowWhenOverlappedByItem),
-	ENUM(ImGuiHoveredFlags, AllowWhenOverlappedByWindow),
-	ENUM(ImGuiHoveredFlags, AllowWhenDisabled),
-	ENUM(ImGuiHoveredFlags, NoNavOverride),
-	ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
-	ENUM(ImGuiHoveredFlags, RectOnly),
-	ENUM(ImGuiHoveredFlags, RootAndChildWindows),
-	ENUM(ImGuiHoveredFlags, ForTooltip),
-	ENUM(ImGuiHoveredFlags, Stationary),
-	ENUM(ImGuiHoveredFlags, DelayNone),
-	ENUM(ImGuiHoveredFlags, DelayNormal),
-	ENUM(ImGuiHoveredFlags, DelayShort),
-	ENUM(ImGuiHoveredFlags, NoSharedDelay),
+static struct enum_pair eTreeNodeFlags[] = {
+	ENUM(ImGuiTreeNodeFlags, None),
+	ENUM(ImGuiTreeNodeFlags, Selected),
+	ENUM(ImGuiTreeNodeFlags, Framed),
+	ENUM(ImGuiTreeNodeFlags, AllowOverlap),
+	ENUM(ImGuiTreeNodeFlags, NoTreePushOnOpen),
+	ENUM(ImGuiTreeNodeFlags, NoAutoOpenOnLog),
+	ENUM(ImGuiTreeNodeFlags, DefaultOpen),
+	ENUM(ImGuiTreeNodeFlags, OpenOnDoubleClick),
+	ENUM(ImGuiTreeNodeFlags, OpenOnArrow),
+	ENUM(ImGuiTreeNodeFlags, Leaf),
+	ENUM(ImGuiTreeNodeFlags, Bullet),
+	ENUM(ImGuiTreeNodeFlags, FramePadding),
+	ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
+	ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
+	ENUM(ImGuiTreeNodeFlags, SpanAllColumns),
+	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
+	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
+	{ NULL, 0 },
+};
+
+static struct enum_pair ePopupFlags[] = {
+	ENUM(ImGuiPopupFlags, None),
+	ENUM(ImGuiPopupFlags, MouseButtonLeft),
+	ENUM(ImGuiPopupFlags, MouseButtonRight),
+	ENUM(ImGuiPopupFlags, MouseButtonMiddle),
+	ENUM(ImGuiPopupFlags, NoOpenOverExistingPopup),
+	ENUM(ImGuiPopupFlags, NoOpenOverItems),
+	ENUM(ImGuiPopupFlags, AnyPopupId),
+	ENUM(ImGuiPopupFlags, AnyPopupLevel),
+	ENUM(ImGuiPopupFlags, AnyPopup),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eSelectableFlags[] = {
+	ENUM(ImGuiSelectableFlags, None),
+	ENUM(ImGuiSelectableFlags, DontClosePopups),
+	ENUM(ImGuiSelectableFlags, SpanAllColumns),
+	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+	ENUM(ImGuiSelectableFlags, AllowOverlap),
+	// Use boolean(disabled) in Selectable(_,_, disabled)
+	//	ENUM(ImGuiSelectableFlags, Disabled),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eComboFlags[] = {
+	ENUM(ImGuiComboFlags, None),
+	ENUM(ImGuiComboFlags, PopupAlignLeft),
+	ENUM(ImGuiComboFlags, HeightSmall),
+	ENUM(ImGuiComboFlags, HeightRegular),
+	ENUM(ImGuiComboFlags, HeightLarge),
+	ENUM(ImGuiComboFlags, HeightLargest),
+	ENUM(ImGuiComboFlags, NoArrowButton),
+	ENUM(ImGuiComboFlags, NoPreview),
 	{ NULL, 0 },
 };
 
@@ -190,33 +140,7 @@ static struct enum_pair eTabBarFlags[] = {
 	{ NULL, 0 },
 };
 
-static struct enum_pair eDragDropFlags[] = {
-	ENUM(ImGuiDragDropFlags, None),
-	ENUM(ImGuiDragDropFlags, SourceNoPreviewTooltip),
-	ENUM(ImGuiDragDropFlags, SourceNoDisableHover),
-	ENUM(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
-	ENUM(ImGuiDragDropFlags, SourceAllowNullID),
-	ENUM(ImGuiDragDropFlags, SourceExtern),
-	ENUM(ImGuiDragDropFlags, SourceAutoExpirePayload),
-	ENUM(ImGuiDragDropFlags, AcceptBeforeDelivery),
-	ENUM(ImGuiDragDropFlags, AcceptNoDrawDefaultRect),
-	ENUM(ImGuiDragDropFlags, AcceptNoPreviewTooltip),
-	ENUM(ImGuiDragDropFlags, AcceptPeekOnly),
-	{ NULL, 0 },
-};
-
-static struct enum_pair ePopupFlags[] = {
-	ENUM(ImGuiPopupFlags, None),
-	ENUM(ImGuiPopupFlags, MouseButtonLeft),
-	ENUM(ImGuiPopupFlags, MouseButtonRight),
-	ENUM(ImGuiPopupFlags, MouseButtonMiddle),
-	ENUM(ImGuiPopupFlags, NoOpenOverExistingPopup),
-	ENUM(ImGuiPopupFlags, NoOpenOverItems),
-	ENUM(ImGuiPopupFlags, AnyPopupId),
-	ENUM(ImGuiPopupFlags, AnyPopupLevel),
-	ENUM(ImGuiPopupFlags, AnyPopup),
-	{ NULL, 0 },
-};
+//ImGuiTabItemFlags
 
 static struct enum_pair eTableFlags[] = {
 	ENUM(ImGuiTableFlags, None),
@@ -257,12 +181,6 @@ static struct enum_pair eTableFlags[] = {
 	{ NULL, 0 },
 };
 
-static struct enum_pair eTableRowFlags[] = {
-	ENUM(ImGuiTableRowFlags, None),
-	ENUM(ImGuiTableRowFlags, Headers),
-	{ NULL, 0 },
-};
-
 static struct enum_pair eTableColumnFlags[] = {
 	ENUM(ImGuiTableColumnFlags, None),
 	ENUM(ImGuiTableColumnFlags, Disabled),
@@ -290,10 +208,89 @@ static struct enum_pair eTableColumnFlags[] = {
 	{ NULL, 0 },
 };
 
-static struct enum_pair eMouseButton[] = {
-	ENUM(ImGuiMouseButton, Left),
-	ENUM(ImGuiMouseButton, Right),
-	ENUM(ImGuiMouseButton, Middle),
+static struct enum_pair eTableRowFlags[] = {
+	ENUM(ImGuiTableRowFlags, None),
+	ENUM(ImGuiTableRowFlags, Headers),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableBgTarget[] = {
+	ENUM(ImGuiTableBgTarget,None),
+	ENUM(ImGuiTableBgTarget,RowBg0),
+	ENUM(ImGuiTableBgTarget,RowBg1),
+	ENUM(ImGuiTableBgTarget,CellBg),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eFocusedFlags[] = {
+	ENUM(ImGuiFocusedFlags, None),
+	ENUM(ImGuiFocusedFlags, ChildWindows),
+	ENUM(ImGuiFocusedFlags, RootWindow),
+	ENUM(ImGuiFocusedFlags, AnyWindow),
+	ENUM(ImGuiFocusedFlags, NoPopupHierarchy),
+	ENUM(ImGuiFocusedFlags, DockHierarchy),
+	ENUM(ImGuiFocusedFlags, RootAndChildWindows),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eHoveredFlags[] = {
+	ENUM(ImGuiHoveredFlags, None),
+	ENUM(ImGuiHoveredFlags, ChildWindows),
+	ENUM(ImGuiHoveredFlags, RootWindow),
+	ENUM(ImGuiHoveredFlags, AnyWindow),
+	ENUM(ImGuiHoveredFlags, NoPopupHierarchy),
+	ENUM(ImGuiHoveredFlags, DockHierarchy),
+	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
+	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
+	ENUM(ImGuiHoveredFlags, AllowWhenOverlappedByItem),
+	ENUM(ImGuiHoveredFlags, AllowWhenOverlappedByWindow),
+	ENUM(ImGuiHoveredFlags, AllowWhenDisabled),
+	ENUM(ImGuiHoveredFlags, NoNavOverride),
+	ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
+	ENUM(ImGuiHoveredFlags, RectOnly),
+	ENUM(ImGuiHoveredFlags, RootAndChildWindows),
+	ENUM(ImGuiHoveredFlags, ForTooltip),
+	ENUM(ImGuiHoveredFlags, Stationary),
+	ENUM(ImGuiHoveredFlags, DelayNone),
+	ENUM(ImGuiHoveredFlags, DelayNormal),
+	ENUM(ImGuiHoveredFlags, DelayShort),
+	ENUM(ImGuiHoveredFlags, NoSharedDelay),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eDockNodeFlags[] = {
+	ENUM(ImGuiDockNodeFlags,None),
+	ENUM(ImGuiDockNodeFlags,KeepAliveOnly),
+	ENUM(ImGuiDockNodeFlags,NoDockingOverCentralNode),
+	ENUM(ImGuiDockNodeFlags,PassthruCentralNode),
+	ENUM(ImGuiDockNodeFlags,NoDockingSplit),
+	ENUM(ImGuiDockNodeFlags,NoResize),
+	ENUM(ImGuiDockNodeFlags,AutoHideTabBar),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eDragDropFlags[] = {
+	ENUM(ImGuiDragDropFlags, None),
+	ENUM(ImGuiDragDropFlags, SourceNoPreviewTooltip),
+	ENUM(ImGuiDragDropFlags, SourceNoDisableHover),
+	ENUM(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
+	ENUM(ImGuiDragDropFlags, SourceAllowNullID),
+	ENUM(ImGuiDragDropFlags, SourceExtern),
+	ENUM(ImGuiDragDropFlags, SourceAutoExpirePayload),
+	ENUM(ImGuiDragDropFlags, AcceptBeforeDelivery),
+	ENUM(ImGuiDragDropFlags, AcceptNoDrawDefaultRect),
+	ENUM(ImGuiDragDropFlags, AcceptNoPreviewTooltip),
+	ENUM(ImGuiDragDropFlags, AcceptPeekOnly),
+	{ NULL, 0 },
+};
+
+//ImGuiDataType
+//ImGuiDir
+
+static struct enum_pair eSortDirection[] = {
+	ENUM(ImGuiSortDirection,None),
+	ENUM(ImGuiSortDirection,Ascending),
+	ENUM(ImGuiSortDirection,Descending),
 	{ NULL, 0 },
 };
 
@@ -438,6 +435,10 @@ static struct enum_pair eKey[] = {
 	{ NULL, 0 },
 };
 
+//ImGuiNavInput
+//ImGuiConfigFlags
+//ImGuiBackendFlags
+
 static struct enum_pair eStyleCol[] = {
 	ENUM(ImGuiCol, Text),
 	ENUM(ImGuiCol, TextDisabled),
@@ -529,6 +530,52 @@ static struct enum_pair eStyleVar[] = {
 	{ NULL, 0 },
 };
 
+//ImGuiButtonFlags
+
+static struct enum_pair eColorEditFlags[] = {
+	ENUM(ImGuiColorEditFlags, None),
+	ENUM(ImGuiColorEditFlags, NoAlpha),
+	ENUM(ImGuiColorEditFlags, NoPicker),
+	ENUM(ImGuiColorEditFlags, NoOptions),
+	ENUM(ImGuiColorEditFlags, NoSmallPreview),
+	ENUM(ImGuiColorEditFlags, NoInputs),
+	ENUM(ImGuiColorEditFlags, NoTooltip),
+	ENUM(ImGuiColorEditFlags, NoLabel),
+	ENUM(ImGuiColorEditFlags, NoSidePreview),
+	ENUM(ImGuiColorEditFlags, NoDragDrop),
+	ENUM(ImGuiColorEditFlags, AlphaBar),
+	ENUM(ImGuiColorEditFlags, AlphaPreview),
+	ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
+	ENUM(ImGuiColorEditFlags, HDR),
+	ENUM(ImGuiColorEditFlags, DisplayRGB),
+	ENUM(ImGuiColorEditFlags, DisplayHSV),
+	ENUM(ImGuiColorEditFlags, DisplayHex),
+	ENUM(ImGuiColorEditFlags, Uint8),
+	ENUM(ImGuiColorEditFlags, Float),
+	ENUM(ImGuiColorEditFlags, PickerHueBar),
+	ENUM(ImGuiColorEditFlags, PickerHueWheel),
+	ENUM(ImGuiColorEditFlags, InputRGB),
+	ENUM(ImGuiColorEditFlags, InputHSV),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eSliderFlags[] = {
+	ENUM(ImGuiSliderFlags,None),
+	ENUM(ImGuiSliderFlags,AlwaysClamp),
+	ENUM(ImGuiSliderFlags,Logarithmic),
+	ENUM(ImGuiSliderFlags,NoRoundToFormat),
+	ENUM(ImGuiSliderFlags,NoInput),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eMouseButton[] = {
+	ENUM(ImGuiMouseButton, Left),
+	ENUM(ImGuiMouseButton, Right),
+	ENUM(ImGuiMouseButton, Middle),
+	{ NULL, 0 },
+};
+
+
 static struct enum_pair eMouseCursor[] = {
 	ENUM(ImGuiMouseCursor,None),
 	ENUM(ImGuiMouseCursor,Arrow),
@@ -543,40 +590,13 @@ static struct enum_pair eMouseCursor[] = {
 	{ NULL, 0 },
 };
 
-static struct enum_pair eTableBgTarget[] = {
-	ENUM(ImGuiTableBgTarget,None),
-	ENUM(ImGuiTableBgTarget,RowBg0),
-	ENUM(ImGuiTableBgTarget,RowBg1),
-	ENUM(ImGuiTableBgTarget,CellBg),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eSortDirection[] = {
-	ENUM(ImGuiSortDirection,None),
-	ENUM(ImGuiSortDirection,Ascending),
-	ENUM(ImGuiSortDirection,Descending),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eSliderFlags[] = {
-	ENUM(ImGuiSliderFlags,None),
-	ENUM(ImGuiSliderFlags,AlwaysClamp),
-	ENUM(ImGuiSliderFlags,Logarithmic),
-	ENUM(ImGuiSliderFlags,NoRoundToFormat),
-	ENUM(ImGuiSliderFlags,NoInput),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eDockNodeFlags[] = {
-	ENUM(ImGuiDockNodeFlags,None),
-	ENUM(ImGuiDockNodeFlags,KeepAliveOnly),
-	ENUM(ImGuiDockNodeFlags,NoDockingOverCentralNode),
-	ENUM(ImGuiDockNodeFlags,PassthruCentralNode),
-	ENUM(ImGuiDockNodeFlags,NoDockingSplit),
-	ENUM(ImGuiDockNodeFlags,NoResize),
-	ENUM(ImGuiDockNodeFlags,AutoHideTabBar),
-	{ NULL, 0 },
-};
+//ImGuiMouseSource
+//ImGuiCond
+//ImDrawFlags
+//ImDrawListFlags
+//ImFontAtlasFlags
+//ImGuiViewportFlags
+//ImGuiModFlags
 
 void imgui_enum_init(lua_State* L) {
 	lua_newtable(L);
