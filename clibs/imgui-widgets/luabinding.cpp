@@ -385,13 +385,12 @@ __declspec(dllexport)
 #endif
 int
 luaopen_imgui_widgets(lua_State *L) {
-    luaL_Reg zmo[] = {
+    luaL_Reg lib[] = {
         { "Sequencer", wSequencer },
         { "SimpleSequencer", wSimpleSequencer },
         { "DirectionalArrow", zDirectionalArrow },
         { NULL, NULL },
     };
-    luaL_newlib(L, zmo);
-    lua_setfield(L, -2, "zmo");
+    luaL_newlib(L, lib);
     return 1;
 }
