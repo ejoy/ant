@@ -1,19 +1,15 @@
-local utility = require "model.utility"
-local serialize = import_package "ant.serialize"
-local lfs = require "bee.filesystem"
-local material_compile = require "material.compile"
+local utility           = require "model.utility"
+local serialize         = import_package "ant.serialize"
+local lfs               = require "bee.filesystem"
+local material_compile  = require "material.compile"
 
 local meshutil = require "model.meshutil"
 
-local invalid_chars<const> = {
-    '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
-}
-
-local pattern_fmt<const> = ("[%s]"):format(table.concat(invalid_chars, ""))
+local invalid_chars<const> = "<>:/\\|?%s%[%]%(%)"
 local replace_char<const> = '_'
 
 local function fix_invalid_name(name)
-    return name:gsub(pattern_fmt, replace_char)
+    return name:gsub(invalid_chars, replace_char)
 end
 
 local function create_entity(status, t)
