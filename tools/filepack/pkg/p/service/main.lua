@@ -1,5 +1,6 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
+local platform = require "bee.platform"
 local vfs = require "vfs"
 local fastio = require "fastio"
 local datalist = require "datalist"
@@ -12,12 +13,30 @@ local repopath = fs.absolute(arg[1]):lexically_normal()
 local config = datalist.parse(fastio.readall(vfs.realpath "/resource.settings"))
 local resource_cache = {}
 
+local config_target = config.target or "loc"
+local config_resource = config.resource
+if config_target == "loc" then
+    if not config_resource then
+        local platform_relates <const> = {
+            windows = "direct3d11",
+            macos = "metal",
+            ios = "metal",
+            android = "vulken",
+        }
+        config_resource = {
+            ("%s-%s"):format(platform.os, platform_relates[platform.os]),
+        }
+    end
+else
+     assert(config_resource)
+end
+
 do print "step1. check resource cache."
-    for _, setting in ipairs(config.resource) do
+    for _, setting in ipairs(config_resource) do
         if fs.exists(repopath / "res" / setting) then
             for path, status in fs.pairs(repopath / "res" / setting) do
                 if status:is_directory() then
-                    for res in fs.pairs(path) do
+                    for res, status in fs.pairs(path) do
                         resource_cache[res:string()] = true
                     end
                 end
@@ -38,7 +57,7 @@ do print "step2. compile resource."
         local lpath = cr.compile_file(cfg, name, path)
         resource_cache[lpath] = nil
     end
-    for _, setting in ipairs(config.resource) do
+    for _, setting in ipairs(config_resource) do
         local cfg = cr.init_setting(tiny_vfs, setting)
         for i = 1, #names do
             tasks[#tasks+1] = { compile_resource, cfg, names[i], paths[i] }
@@ -75,7 +94,6 @@ end
 
 function writer.loc()
     local function app_path(name)
-        local platform = require "bee.platform"
         if platform.os == 'windows' then
             return fs.path(os.getenv "LOCALAPPDATA") / name
         elseif platform.os == 'linux' then
@@ -89,8 +107,12 @@ function writer.loc()
     local rootpath = app_path "ant" / ".repo"
     fs.create_directories(rootpath)
     local cache = {}
-    for file in fs.pairs(rootpath) do
-        cache[file:filename():string()] = true
+    for file, status in fs.pairs(rootpath) do
+        if status:is_directory() then
+            fs.remove_all(file)
+        else
+            cache[file:filename():string()] = true
+        end
     end
     local m = {}
     function m.writefile(path, content)
@@ -117,10 +139,9 @@ end
 do print "step4. pack file and dir."
     local std_vfs <close> = vfsrepo.new_std {
         rootpath = repopath,
-        resource_settings = config.resource,
+        resource_settings = config_resource,
     }
-    local target = config.target or "loc"
-    local w = writer[target]()
+    local w = writer[config_target]()
     w.writefile("root", std_vfs:root())
     for hash, v in pairs(std_vfs._filehash) do
         if v.dir then
