@@ -205,7 +205,6 @@ local function new_std(t)
 		return nil, "Not a dir"
 	end
 	if not lfs.is_directory(cachepath) then
-		-- already has .repo
 		assert(lfs.create_directories(cachepath))
 	end
 	local repo = { _root = rootpath }

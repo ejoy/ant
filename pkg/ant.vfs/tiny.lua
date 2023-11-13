@@ -57,7 +57,6 @@ local function new_tiny(rootpath)
     local cachepath = lfs.path(rootpath) / ".fileserver"
     assert(lfs.is_directory(rootpath))
     if not lfs.is_directory(cachepath) then
-        -- already has .repo
         assert(lfs.create_directories(cachepath))
     end
     local repo = { _root = rootpath }

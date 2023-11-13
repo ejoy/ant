@@ -50,7 +50,7 @@ local channelfd_init = false
 thread.setname "ant - IO thread"
 
 local vfs = assert(fw.loadfile "vfs.lua")()
-local repo = vfs.new(config.repopath)
+local repo = vfs.new(config.vfs)
 
 local connection = {
 	request = {},
@@ -417,13 +417,12 @@ function CMD.GET(id, fullpath)
 		response_id(id, false, v.hash)
 		return
 	end
-	local realpath = repo:hashpath(v.hash)
-	local f = io.open(realpath,"rb")
-	if not f then
-		request_file(id, "GET", v.hash, "GET", fullpath)
-	else
+	local f, realpath = repo:readfile(v.hash)
+	if f then
 		f:close()
 		response_id(id, realpath)
+	else
+		request_file(id, "GET", v.hash, "GET", fullpath)
 	end
 end
 

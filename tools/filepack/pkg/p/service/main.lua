@@ -81,7 +81,7 @@ end
 local writer = {}
 
 function writer.zip()
-    local zippath = vfs.repopath() .. ".repo.zip"
+    local zippath = vfs.repopath() .. ".vfs.zip"
     fs.remove_all(zippath)
     local zipfile = assert(zip.open(zippath, "w"))
     local m = {}
@@ -149,7 +149,7 @@ do print "step4. pack file and dir."
         if config_os == "ios" or config_os == "android" then
             return repopath / ("."..config_os)
         else
-            return app_path() / "ant" / ".repo"
+            return app_path() / "ant" / ".vfs"
         end
     end
     local w = writer.dir(target_path())

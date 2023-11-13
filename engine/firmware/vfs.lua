@@ -13,7 +13,7 @@ local uncomplete = {}
 
 local function read_history(self)
 	local history = {}
-	local f = io.open(self.path .. "root", "rb")
+	local f = self:readfile("root")
 	if f then
 		for hash in f:lines() do
 			history[#history+1] = hash:match "[%da-f]+"
@@ -38,7 +38,7 @@ local function update_history(self, new)
 end
 
 function vfs:history_root()
-	local f = io.open(self.path .. "root", "rb")
+	local f = self:readfile("root")
 	if f then
 		local hash = f:read "l"
 		f:close()
@@ -46,12 +46,14 @@ function vfs:history_root()
 	end
 end
 
-function vfs.new(repopath)
+function vfs.new(config)
 	local repo = {
-		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
+		bundle_path = config.bundle_path,
+		sandbox_path = config.sandbox_path,
 		resource = {},
 		cache_hash = {},
-		cache_path = {},
+		cache_dir = {},
+		cache_file = {},
 		root = nil,
 	}
 	setmetatable(repo, vfs)
@@ -63,11 +65,10 @@ local function dir_object(self, hash)
 	if dir then
 		return dir
 	end
-	local realname = self.path .. hash
-	local df = io.open(realname, "rb")
-	if df then
-		local dir = {}
-		for line in df:lines() do
+	local f = self:readfile(hash)
+	if f then
+		dir = {}
+		for line in f:lines() do
 			local type, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
 			if type then
 				dir[name] = {
@@ -76,7 +77,7 @@ local function dir_object(self, hash)
 				}
 			end
 		end
-		df:close()
+		f:close()
 		self.cache_hash[hash] = dir
 		return dir
 	end
@@ -144,14 +145,14 @@ function fetch_file(self, hash, fullpath)
 end
 
 function vfs:list(path)
-	local hash = self.cache_path[path]
+	local hash = self.cache_dir[path]
 	if not hash then
 		local r
 		r, hash = fetch_file(self, self.root, path)
 		if r ~= ListSuccess then
 			return nil, r, hash
 		end
-		self.cache_path[path] = hash
+		self.cache_dir[path] = hash
 	end
 	local dir = dir_object(self, hash)
 	if not dir then
@@ -162,7 +163,7 @@ end
 
 function vfs:updatehistory(hash)
 	local history = update_history(self, hash)
-	local f <close> = assert(io.open(self.path .. "root", "wb"))
+	local f <close> = assert(io.open(self.sandbox_path .. "root", "wb"))
 	f:write(table.concat(history, "\n"))
 end
 
@@ -170,7 +171,8 @@ function vfs:changeroot(hash)
 	local res = self.resource
 	self.root = hash
 	self.resource = {}
-	self.cache_path = { ["/"] = hash }
+	self.cache_dir = { ["/"] = hash }
+	self.cache_file = {}
 	return res
 end
 
@@ -182,8 +184,30 @@ function vfs:add_resource(name, hash)
 	self.resource[name] = hash
 end
 
-function vfs:hashpath(hash)
-	return self.path .. hash
+function vfs:readfile(name)
+	do
+		local realpath = self.cache_file[name]
+		if realpath then
+			local f = assert(io.open(realpath, "rb"))
+			return f, realpath
+		end
+	end
+	do
+		local realpath = self.sandbox_path .. name
+		local f = io.open(realpath, "rb")
+		if f then
+			self.cache_file[name] = realpath
+			return f, realpath
+		end
+	end
+	do
+		local realpath = self.bundle_path .. name
+		local f = io.open(realpath, "rb")
+		if f then
+			self.cache_file[name] = realpath
+			return f, realpath
+		end
+	end
 end
 
 local function writefile(filename, data)
@@ -209,7 +233,7 @@ end
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
 function vfs:write_blob(hash, data)
-	local hashpath = self:hashpath(hash)
+	local hashpath = self.sandbox_path .. hash
 	if writefile(hashpath, data) then
 		return true
 	end
@@ -221,7 +245,7 @@ end
 
 function vfs:write_slice(hash, offset, data)
 	offset = tonumber(offset)
-	local hashpath = self:hashpath(hash)
+	local hashpath = self.sandbox_path .. hash
 	local tempname = hashpath .. ".download"
 	local f = io.open(tempname, "ab")
 	if not f then

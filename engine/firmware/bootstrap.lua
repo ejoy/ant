@@ -1,6 +1,7 @@
 __ANT_RUNTIME__ = true
 
 local platform = require "bee.platform"
+local fs = require "bee.filesystem"
 
 local needcleanup, type, address
 
@@ -15,41 +16,55 @@ if platform.os == "ios" then
 	address = ios.setting "server_address"
 end
 
-do
-	local fs = require "bee.filesystem"
-	local function app_path(name)
-		if platform.os == "ios" then
-			local ios = require "ios"
-			return fs.path(ios.directory(ios.NSDocumentDirectory))
-		elseif platform.os == 'android' then
-			local android = require "android"
-			return fs.path(android.directory(android.ExternalDataPath))
-		elseif platform.os == 'windows' then
-			return fs.path(os.getenv "LOCALAPPDATA") / name
-		elseif platform.os == 'linux' then
-			return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
-		elseif platform.os == 'macos' then
-			return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
-		else
-			error "unknown os"
-		end
+local function sandbox_path()
+	if platform.os == "ios" then
+		local ios = require "ios"
+		return fs.path(ios.directory(ios.NSDocumentDirectory))
+	elseif platform.os == 'android' then
+		local android = require "android"
+		return fs.path(android.directory(android.ExternalDataPath))
+	elseif platform.os == 'windows' then
+		return fs.path(os.getenv "LOCALAPPDATA") / "ant"
+	elseif platform.os == 'linux' then
+		return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / "ant"
+	elseif platform.os == 'macos' then
+		return fs.path(os.getenv "HOME" .. "/Library/Caches") / "ant"
+	else
+		error "unknown os"
 	end
-	local root = app_path "ant"
-	local repo = root / ".repo"
-	if needcleanup then
-		fs.remove_all(repo)
-	end
-	fs.create_directories(repo)
-	fs.current_path(root)
 end
 
+local function bundle_path()
+	if platform.os == "ios" then
+		local ios = require "ios"
+		return ios.bundle()
+	elseif platform.os == 'android' then
+		local android = require "android"
+		return android.directory(android.InternalDataPath)
+	else
+		return sandbox_path()
+	end
+end
+
+
 local config = {
-	repopath = "./",
+	vfs = {
+		bundle_path = (bundle_path() / ".vfs"):string():gsub("/?$", "/"),
+		sandbox_path = (sandbox_path() / ".vfs"):string():gsub("/?$", "/"),
+	},
 	socket = nil,
 	nettype = nil,
 	address = nil,
 	port = nil,
 }
+
+do
+	fs.current_path(sandbox_path())
+	if needcleanup then
+		fs.remove_all(config.vfs.sandbox_path)
+	end
+	fs.create_directories(config.vfs.sandbox_path)
+end
 
 if type == nil then
 	if platform.os == "ios" or platform.os == "android" then

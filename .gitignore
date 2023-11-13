@@ -12,6 +12,7 @@
 .fileserver
 .build
 .log
+.vfs
 res
 /build
 /bin
