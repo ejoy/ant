@@ -66,6 +66,11 @@ int lsetting(lua_State* L) {
     return set(L);
 }
 
+static int lbundle(lua_State* L) {
+    lua_pushstring(L, [[[NSBundle mainBundle] bundlePath] fileSystemRepresentation]);
+    return 1;
+}
+
 static int ldirectory(lua_State* L) {
     auto dir = (NSSearchPathDirectory)(NSUInteger)luaL_checkinteger(L, 1);
     NSArray* array = NSSearchPathForDirectoriesInDomains(dir, NSUserDomainMask, YES);
@@ -80,6 +85,7 @@ extern "C"
 int luaopen_ios(lua_State* L) {
     luaL_checkversion(L);
     luaL_Reg l[] = {
+        { "bundle", lbundle },
         { "directory", ldirectory },
         { "setting", lsetting },
         { NULL, NULL },
