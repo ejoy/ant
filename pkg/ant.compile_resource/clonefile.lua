@@ -15,15 +15,6 @@ if platform.os == "windows" then
     end
 end
 
-if platform.os == "macos" then
-    --TODO:
-    -- Packaged ios ipa cannot contain symbolic links.
-    -- Maybe use clonefile to improve speed.
-    return function (a, b)
-        lfs.copy_file(a, b, lfs.copy_options.overwrite_existing)
-    end
-end
-
 return function (a, b)
     lfs.create_symlink(a, b)
 end

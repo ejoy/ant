@@ -18,7 +18,7 @@ do
     local lpath = vfs.realpath "/resource.settings"
     if lpath then
         local config = datalist.parse(fastio.readall(lpath, "/resource.settings"))
-        config_os = config.target or platform.os
+        config_os = config.os or platform.os
         config_resource = config.resource
     else
         config_os = platform.os
