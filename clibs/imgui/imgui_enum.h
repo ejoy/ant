@@ -435,8 +435,6 @@ static struct enum_pair eKey[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiNavInput
-
 //ImGuiConfigFlags
 
 //ImGuiBackendFlags
@@ -600,8 +598,6 @@ static struct enum_pair eMouseCursor[] = {
 //ImFontAtlasFlags
 
 //ImGuiViewportFlags
-
-//ImGuiModFlags
 
 void imgui_enum_init(lua_State* L) {
 	lua_newtable(L);
