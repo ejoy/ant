@@ -36,7 +36,6 @@ static struct enum_pair eChildFlags[] = {
 	ENUM(ImGuiChildFlags, AutoResizeX),
 	ENUM(ImGuiChildFlags, AutoResizeY),
 	ENUM(ImGuiChildFlags, AlwaysAutoResize),
-	ENUM(ImGuiChildFlags, AlwaysAutoResize),
 	ENUM(ImGuiChildFlags, FrameStyle),
 	{ NULL, 0 },
 };
@@ -122,6 +121,7 @@ static struct enum_pair eComboFlags[] = {
 	ENUM(ImGuiComboFlags, HeightLargest),
 	ENUM(ImGuiComboFlags, NoArrowButton),
 	ENUM(ImGuiComboFlags, NoPreview),
+	ENUM(ImGuiComboFlags, WidthFitPreview),
 	{ NULL, 0 },
 };
 
@@ -177,6 +177,7 @@ static struct enum_pair eTableFlags[] = {
 	ENUM(ImGuiTableFlags, ScrollY),
 	ENUM(ImGuiTableFlags, SortMulti),
 	ENUM(ImGuiTableFlags, SortTristate),
+	ENUM(ImGuiTableFlags, HighlightHoveredColumn),
 	{ NULL, 0 },
 };
 
@@ -200,6 +201,7 @@ static struct enum_pair eTableColumnFlags[] = {
 	ENUM(ImGuiTableColumnFlags, PreferSortDescending),
 	ENUM(ImGuiTableColumnFlags, IndentEnable),
 	ENUM(ImGuiTableColumnFlags, IndentDisable),
+	ENUM(ImGuiTableColumnFlags, AngledHeader),
 	ENUM(ImGuiTableColumnFlags, IsEnabled),
 	ENUM(ImGuiTableColumnFlags, IsVisible),
 	ENUM(ImGuiTableColumnFlags, IsSorted),
@@ -265,6 +267,7 @@ static struct enum_pair eDockNodeFlags[] = {
 	ENUM(ImGuiDockNodeFlags, NoDockingSplit),
 	ENUM(ImGuiDockNodeFlags, NoResize),
 	ENUM(ImGuiDockNodeFlags, AutoHideTabBar),
+	ENUM(ImGuiDockNodeFlags, NoUndocking),
 	{ NULL, 0 },
 };
 
@@ -368,6 +371,18 @@ static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, F10),
 	ENUM(ImGuiKey, F11),
 	ENUM(ImGuiKey, F12),
+	ENUM(ImGuiKey, F13),
+	ENUM(ImGuiKey, F14),
+	ENUM(ImGuiKey, F15),
+	ENUM(ImGuiKey, F16),
+	ENUM(ImGuiKey, F17),
+	ENUM(ImGuiKey, F18),
+	ENUM(ImGuiKey, F19),
+	ENUM(ImGuiKey, F20),
+	ENUM(ImGuiKey, F21),
+	ENUM(ImGuiKey, F22),
+	ENUM(ImGuiKey, F23),
+	ENUM(ImGuiKey, F24),
 	ENUM(ImGuiKey, Apostrophe),
 	ENUM(ImGuiKey, Comma),
 	ENUM(ImGuiKey, Minus),
@@ -401,6 +416,8 @@ static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, KeypadAdd),
 	ENUM(ImGuiKey, KeypadEnter),
 	ENUM(ImGuiKey, KeypadEqual),
+	ENUM(ImGuiKey, AppBack),
+	ENUM(ImGuiKey, AppForward),
 	ENUM(ImGuiKey, GamepadStart),
 	ENUM(ImGuiKey, GamepadBack),
 	ENUM(ImGuiKey, GamepadFaceLeft),
@@ -484,6 +501,11 @@ static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, PlotLinesHovered),
 	ENUM(ImGuiCol, PlotHistogram),
 	ENUM(ImGuiCol, PlotHistogramHovered),
+	ENUM(ImGuiCol, TableHeaderBg),
+	ENUM(ImGuiCol, TableBorderStrong),
+	ENUM(ImGuiCol, TableBorderLight),
+	ENUM(ImGuiCol, TableRowBg),
+	ENUM(ImGuiCol, TableRowBgAlt),
 	ENUM(ImGuiCol, TextSelectedBg),
 	ENUM(ImGuiCol, DragDropTarget),
 	ENUM(ImGuiCol, NavHighlight),
@@ -524,6 +546,7 @@ static struct enum_pair eStyleVar[] = {
 	ENUM(ImGuiStyleVar, SeparatorTextBorderSize),
 	ENUM(ImGuiStyleVar, SeparatorTextAlign),
 	ENUM(ImGuiStyleVar, SeparatorTextPadding),
+	ENUM(ImGuiStyleVar, DockingSeparatorSize),
 	ENUM(ImGuiStyleVar, COUNT),
 	{ NULL, 0 },
 };
@@ -541,6 +564,7 @@ static struct enum_pair eColorEditFlags[] = {
 	ENUM(ImGuiColorEditFlags, NoLabel),
 	ENUM(ImGuiColorEditFlags, NoSidePreview),
 	ENUM(ImGuiColorEditFlags, NoDragDrop),
+	ENUM(ImGuiColorEditFlags, NoBorder),
 	ENUM(ImGuiColorEditFlags, AlphaBar),
 	ENUM(ImGuiColorEditFlags, AlphaPreview),
 	ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
@@ -570,6 +594,7 @@ static struct enum_pair eMouseButton[] = {
 	ENUM(ImGuiMouseButton, Left),
 	ENUM(ImGuiMouseButton, Right),
 	ENUM(ImGuiMouseButton, Middle),
+	ENUM(ImGuiMouseButton, COUNT),
 	{ NULL, 0 },
 };
 
@@ -583,6 +608,7 @@ static struct enum_pair eMouseCursor[] = {
 	ENUM(ImGuiMouseCursor, ResizeNESW),
 	ENUM(ImGuiMouseCursor, ResizeNWSE),
 	ENUM(ImGuiMouseCursor, Hand),
+	ENUM(ImGuiMouseCursor, NotAllowed),
 	ENUM(ImGuiMouseCursor, COUNT),
 	{ NULL, 0 },
 };
