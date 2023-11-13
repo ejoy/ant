@@ -10,25 +10,34 @@ local cr = import_package "ant.compile_resource"
 
 local arg = ...
 local repopath = fs.absolute(arg[1]):lexically_normal()
-local config = datalist.parse(fastio.readall(vfs.realpath "/resource.settings"))
 local resource_cache = {}
 
-local config_target = config.target or "loc"
-local config_resource = config.resource
-if config_target == "loc" then
-    if not config_resource then
-        local platform_relates <const> = {
-            windows = "direct3d11",
-            macos = "metal",
-            ios = "metal",
-            android = "vulken",
-        }
-        config_resource = {
-            ("%s-%s"):format(platform.os, platform_relates[platform.os]),
-        }
+local config_target
+local config_resource
+do
+    local lpath = vfs.realpath "/resource.settings"
+    if lpath then
+        local config = datalist.parse(fastio.readall(lpath, "/resource.settings"))
+        config_target = config.target or "loc"
+        config_resource = config.resource
+    else
+        config_target = "loc"
     end
-else
-     assert(config_resource)
+    if config_target == "loc" then
+        if not config_resource then
+            local platform_relates <const> = {
+                windows = "direct3d11",
+                macos = "metal",
+                ios = "metal",
+                android = "vulken",
+            }
+            config_resource = {
+                ("%s-%s"):format(platform.os, platform_relates[platform.os]),
+            }
+        end
+    else
+         assert(config_resource)
+    end
 end
 
 do print "step1. check resource cache."
@@ -137,20 +146,22 @@ function writer.loc()
 end
 
 do print "step4. pack file and dir."
-    local std_vfs <close> = vfsrepo.new_std {
-        rootpath = repopath,
-        resource_settings = config_resource,
-    }
-    local w = writer[config_target]()
-    w.writefile("root", std_vfs:root())
-    for hash, v in pairs(std_vfs._filehash) do
-        if v.dir then
-            w.writefile(hash, v.dir)
-        else
-            w.copyfile(hash, v.path)
+    if config_target ~= "none" then
+        local std_vfs <close> = vfsrepo.new_std {
+            rootpath = repopath,
+            resource_settings = config_resource,
+        }
+        local w = writer[config_target]()
+        w.writefile("root", std_vfs:root())
+        for hash, v in pairs(std_vfs._filehash) do
+            if v.dir then
+                w.writefile(hash, v.dir)
+            else
+                w.copyfile(hash, v.path)
+            end
         end
+        w.close()
     end
-    w.close()
 end
 
 print "step5. done."
