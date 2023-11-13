@@ -42,7 +42,7 @@ function m.show()
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.25, 0.25, 0.25, 1)
+    imgui.windows.PushStyleColor(imgui.enum.Col.WindowBg, 0.25, 0.25, 0.25, 1)
     if imgui.windows.Begin("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) then
         uiutils.imguiBeginToolbar()
         if uiutils.imguiToolbar(icons.ICON_SELECT, "Select", status.GizmoMode == "select") then

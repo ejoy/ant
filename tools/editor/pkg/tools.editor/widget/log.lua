@@ -278,7 +278,7 @@ function m.showLog(name)
         end
         imgui.cursor.SameLine()
         if color then
-            imgui.windows.PushStyleColor(imgui.enum.StyleCol.Text, color[1], color[2], color[3], color[4])
+            imgui.windows.PushStyleColor(imgui.enum.Col.Text, color[1], color[2], color[3], color[4])
         end
         imgui.widget.Text(item.message)
         if color then
@@ -345,7 +345,7 @@ function m.showLog(name)
     --     end
     --     imgui.cursor.SameLine()
     --     if color then
-    --         imgui.windows.PushStyleColor(imgui.enum.StyleCol.Text, color[1], color[2], color[3], color[4])
+    --         imgui.windows.PushStyleColor(imgui.enum.Col.Text, color[1], color[2], color[3], color[4])
     --     end
     --     if imgui.widget.Selectable(item.message, current_select == i) then
     --         current_select = i

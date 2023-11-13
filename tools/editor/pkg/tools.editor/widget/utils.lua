@@ -16,9 +16,9 @@ function m.imgui_windows(...)
 end
 
 function m.imguiBeginToolbar()
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.Button, 0, 0, 0, 0)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.ButtonActive, 0, 0, 0, 0)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.ButtonHovered, 0.5, 0.5, 0.5, 0)
+    imgui.windows.PushStyleColor(imgui.enum.Col.Button, 0, 0, 0, 0)
+    imgui.windows.PushStyleColor(imgui.enum.Col.ButtonActive, 0, 0, 0, 0)
+    imgui.windows.PushStyleColor(imgui.enum.Col.ButtonHovered, 0.5, 0.5, 0.5, 0)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 4, 0)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 0, 0)
 end
