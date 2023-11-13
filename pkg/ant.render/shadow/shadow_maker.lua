@@ -564,7 +564,7 @@ function sm:update_filter()
 		local mat_ptr
 		if mt.fx.setting.cast_shadow == "on" then
 			w:extend(e, "filter_material:in")
-			local dstres = which_material(e)
+			local dstres = which_material(e, mt)
 			local fm = e.filter_material
 			local mi = RM.create_instance(dstres.depth.object)
 			mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
