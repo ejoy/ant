@@ -90,6 +90,8 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     msg.state = getState(gesture.state);
     msg.x = pt.x;
     msg.y = pt.y;
+    velocity.x *= global_window.contentScaleFactor;
+    velocity.y *= global_window.contentScaleFactor;
     msg.velocity_x = velocity.x;
     msg.velocity_y = velocity.y;
     ant::window::input_message(g_cb, msg);

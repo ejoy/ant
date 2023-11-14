@@ -27,6 +27,11 @@ local function stop_timer(t)
     t.stop = true
 end
 
+local function get_time()
+    local _, now = ltask.now()
+    return now / 100
+end
+
 return function (ev)
     local lastX
     local lastY
@@ -56,7 +61,7 @@ return function (ev)
         downX = x
         downY = y
         inLongPress = false
-        inScrolling = false
+        inScrolling = nil
         alwaysInTapRegion = true
         stop_timer(longPressTimer)
         longPressTimer = start_timer(longPressTimeout, dispatch_longpress)
@@ -81,21 +86,21 @@ return function (ev)
             local distance = (deltaX * deltaX) + (deltaY * deltaY)
             if distance > touchSlopSquare then
                 if not inScrolling then
-                    inScrolling = true
+                    inScrolling = get_time()
                     ev.gesture("pan", {
                         state = "began",
                         x = x,
                         y = y,
-                        --velocity_x = 0,
-                        --velocity_y = 0,
+                        velocity_x = 0,
+                        velocity_y = 0,
                     })
                 end
                 ev.gesture("pan", {
                     state = "changed",
                     x = x,
                     y = y,
-                    --velocity_x = scrollX,
-                    --velocity_y = scrollY,
+                    velocity_x = scrollX / inScrolling,
+                    velocity_y = scrollY / inScrolling,
                 })
                 lastX = x
                 lastY = y
@@ -104,21 +109,21 @@ return function (ev)
             end
         elseif math.abs(scrollX) >= 1 or math.abs(scrollY) >= 1 then
             if not inScrolling then
-                inScrolling = true
+                inScrolling = get_time()
                 ev.gesture("pan", {
                     state = "began",
                     x = x,
                     y = y,
-                    --velocity_x = 0,
-                    --velocity_y = 0,
+                    velocity_x = 0,
+                    velocity_y = 0,
                 })
             end
             ev.gesture("pan", {
                 state = "changed",
                 x = x,
                 y = y,
-                --velocity_x = scrollX,
-                --velocity_y = scrollY,
+                velocity_x = scrollX / inScrolling,
+                velocity_y = scrollY / inScrolling,
             })
             lastX = x
             lastY = y
@@ -138,16 +143,16 @@ return function (ev)
                 y = y,
             })
         elseif inScrolling then
-            inScrolling = false
             local scrollX = x - lastX
             local scrollY = y - lastY
             ev.gesture("pan", {
                 state = "ended",
                 x = x,
                 y = y,
-                --velocity_x = scrollX,
-                --velocity_y = scrollY,
+                velocity_x = scrollX / inScrolling,
+                velocity_y = scrollY / inScrolling,
             })
+            inScrolling = nil
         end
         lastX = nil
         lastY = nil
