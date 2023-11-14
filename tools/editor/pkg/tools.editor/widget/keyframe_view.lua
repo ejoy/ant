@@ -5,6 +5,7 @@ local iani      = ecs.require "ant.animation|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local assetmgr 	= import_package "ant.asset"
 local imgui     = require "imgui"
+local imguiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils  = require "widget.joint_utils"
@@ -1191,7 +1192,7 @@ function m.show()
 
             if current_anim then
                 local imgui_message = {}
-                imgui.widget.SimpleSequencer(current_anim, imgui_message)
+                imguiWidgets.SimpleSequencer(current_anim, imgui_message)
                 current_anim.dirty = false
                 current_anim.clip_range_dirty = 0
                 current_anim.dirty_layer = 0
