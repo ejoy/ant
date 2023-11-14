@@ -47,6 +47,12 @@ namespace ant::window {
 		MOUSE_MOVE = 2,
 		MOUSE_UP = 3,
 	};
+	enum DIRECTION : uint8_t {
+		DIRECTION_RIGHT = 1 << 0,
+		DIRECTION_LEFT = 1 << 1,
+		DIRECTION_UP = 1 << 2,
+		DIRECTION_DOWN = 1 << 3,
+	};
 	inline uint8_t get_keystate(bool kb_ctrl, bool kb_shift, bool kb_alt, bool kb_sys, bool kb_capslock) {
 		return 0
 			| (kb_ctrl ? (uint8_t)(1 << KB_CTRL) : 0)
@@ -97,8 +103,14 @@ namespace ant::window {
 		int state;
 		float x;
 		float y;
-		float dx;
-		float dy;
+		float velocity_x;
+		float velocity_y;
+	};
+	struct msg_gesture_swipe {
+		int state;
+		float x;
+		float y;
+		DIRECTION direction;
 	};
 	enum class suspend {
 		will_suspend,
@@ -120,6 +132,7 @@ namespace ant::window {
 		gesture_pinch,
 		gesture_longpress,
 		gesture_pan,
+		gesture_swipe,
 		suspend,
 	};
 	struct msg {
@@ -133,6 +146,7 @@ namespace ant::window {
 			struct msg_gesture_pinch pinch;
 			struct msg_gesture_longpress longpress;
 			struct msg_gesture_pan pan;
+			struct msg_gesture_swipe swipe;
 			struct msg_suspend suspend;
 		};
 	};
@@ -145,6 +159,7 @@ namespace ant::window {
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture);
+	void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend);
 	void input_message(struct ant_window_callback* cb, struct msg const& m);
 }

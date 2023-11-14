@@ -162,10 +162,31 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const&
 	lua_setfield(L, -2, "x");
 	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
 	lua_setfield(L, -2, "y");
-	lua_pushnumber(L, static_cast<lua_Number>(gesture.dx));
-	lua_setfield(L, -2, "dx");
-	lua_pushnumber(L, static_cast<lua_Number>(gesture.dy));
-	lua_setfield(L, -2, "dy");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.velocity_x));
+	lua_setfield(L, -2, "velocity_x");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.velocity_y));
+	lua_setfield(L, -2, "velocity_y");
+	push_message(L);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe const& gesture) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "gesture");
+	lua_pushstring(L, "swipe");
+	lua_createtable(L, 0, 4);
+	switch (gesture.state) {
+	case 0: lua_pushstring(L, "began"); break;
+	case 1: lua_pushstring(L, "changed"); break;
+	default: case 2: lua_pushstring(L, "ended"); break;
+	}
+	lua_setfield(L, -2, "state");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
+	lua_setfield(L, -2, "y");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.direction));
+	lua_setfield(L, -2, "direction");
 	push_message(L);
 }
 

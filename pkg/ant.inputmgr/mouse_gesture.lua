@@ -86,16 +86,16 @@ return function (ev)
                         state = "began",
                         x = x,
                         y = y,
-                        dx = 0,
-                        dy = 0,
+                        --velocity_x = 0,
+                        --velocity_y = 0,
                     })
                 end
                 ev.gesture("pan", {
                     state = "changed",
                     x = x,
                     y = y,
-                    dx = scrollX,
-                    dy = scrollY,
+                    --velocity_x = scrollX,
+                    --velocity_y = scrollY,
                 })
                 lastX = x
                 lastY = y
@@ -109,16 +109,16 @@ return function (ev)
                     state = "began",
                     x = x,
                     y = y,
-                    dx = 0,
-                    dy = 0,
+                    --velocity_x = 0,
+                    --velocity_y = 0,
                 })
             end
             ev.gesture("pan", {
                 state = "changed",
                 x = x,
                 y = y,
-                dx = scrollX,
-                dy = scrollY,
+                --velocity_x = scrollX,
+                --velocity_y = scrollY,
             })
             lastX = x
             lastY = y
@@ -145,8 +145,8 @@ return function (ev)
                 state = "ended",
                 x = x,
                 y = y,
-                dx = scrollX,
-                dy = scrollY,
+                --velocity_x = scrollX,
+                --velocity_y = scrollY,
             })
         end
         lastX = nil

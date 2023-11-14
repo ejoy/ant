@@ -44,7 +44,6 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
 }
 
 @interface LuaGestureHandler : NSObject {
-    CGPoint pan_last;
 }
 @end
 @implementation LuaGestureHandler
@@ -85,21 +84,28 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     if (state < 0) {
         return;
     }
-    auto pt = getLocationInView(gesture);
     struct ant::window::msg_gesture_pan msg;
+    auto pt = getLocationInView(gesture);
+    CGPoint velocity = [gesture velocityInView:global_window];
     msg.state = getState(gesture.state);
     msg.x = pt.x;
     msg.y = pt.y;
-    if (state == 0) {
-        msg.dx = 0;
-        msg.dy = 0;
-    }
-    else {
-        msg.dx = pt.x - pan_last.x;
-        msg.dy = pt.y - pan_last.y;
-    }
+    msg.velocity_x = velocity.x;
+    msg.velocity_y = velocity.y;
     ant::window::input_message(g_cb, msg);
-    pan_last = pt;
+}
+-(void)handleSwipe:(UISwipeGestureRecognizer *)gesture {
+    int state = getState(gesture.state);
+    if (state < 0) {
+        return;
+    }
+    struct ant::window::msg_gesture_swipe msg;
+    auto pt = getLocationInView(gesture);
+    msg.state = getState(gesture.state);
+    msg.x = pt.x;
+    msg.y = pt.y;
+    msg.direction = (ant::window::DIRECTION)gesture.direction;
+    ant::window::input_message(g_cb, msg);
 }
 @end
 
