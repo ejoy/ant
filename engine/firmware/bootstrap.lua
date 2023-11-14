@@ -16,6 +16,18 @@ if platform.os == "ios" then
 	address = ios.setting "server_address"
 end
 
+local function app_path(name)
+	if platform.os == 'windows' then
+		return fs.path(os.getenv "LOCALAPPDATA") / name
+	elseif platform.os == 'linux' then
+		return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
+	elseif platform.os == 'macos' then
+		return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
+	else
+		error "unknown os"
+	end
+end
+
 local function sandbox_path()
 	if platform.os == "ios" then
 		local ios = require "ios"
@@ -23,14 +35,8 @@ local function sandbox_path()
 	elseif platform.os == 'android' then
 		local android = require "android"
 		return fs.path(android.directory(android.ExternalDataPath))
-	elseif platform.os == 'windows' then
-		return fs.path(os.getenv "LOCALAPPDATA") / "ant"
-	elseif platform.os == 'linux' then
-		return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / "ant"
-	elseif platform.os == 'macos' then
-		return fs.path(os.getenv "HOME" .. "/Library/Caches") / "ant"
 	else
-		error "unknown os"
+		return app_path "ant" / "sandbox"
 	end
 end
 
@@ -42,7 +48,7 @@ local function bundle_path()
 		local android = require "android"
 		return android.directory(android.InternalDataPath)
 	else
-		return sandbox_path()
+		return app_path "ant" / "bundle"
 	end
 end
 
@@ -59,7 +65,9 @@ local config = {
 }
 
 do
-	fs.current_path(sandbox_path())
+	local path = sandbox_path()
+	fs.create_directories(path)
+	fs.current_path(path)
 	if needcleanup then
 		fs.remove_all(config.vfs.sandbox_path)
 	end

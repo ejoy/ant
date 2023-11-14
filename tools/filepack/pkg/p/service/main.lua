@@ -134,22 +134,22 @@ do print "step4. pack file and dir."
         rootpath = repopath,
         resource_settings = config_resource,
     }
-    local function app_path()
+    local function app_path(name)
         if config_os == "windows" then
-            return fs.path(os.getenv "LOCALAPPDATA")
+            return fs.path(os.getenv "LOCALAPPDATA") / name
         elseif config_os == "linux" then
-            return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share"))
+            return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
         elseif config_os == "macos" then
-            return fs.path(os.getenv "HOME" .. "/Library/Caches")
+            return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
         else
             error "unknown os"
         end
     end
     local function target_path()
         if config_os == "ios" or config_os == "android" then
-            return repopath / ("."..config_os)
+            return repopath / ".vfs"
         else
-            return app_path() / "ant" / ".vfs"
+            return app_path "ant" / "bundle" / ".vfs"
         end
     end
     local w = writer.dir(target_path())
