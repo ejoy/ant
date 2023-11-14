@@ -43,10 +43,10 @@ end
 local function bundle_path()
 	if platform.os == "ios" then
 		local ios = require "ios"
-		return ios.bundle()
+		return fs.path(ios.bundle())
 	elseif platform.os == 'android' then
 		local android = require "android"
-		return android.directory(android.InternalDataPath)
+		return fs.path(android.directory(android.InternalDataPath))
 	else
 		return app_path "ant" / "bundle"
 	end
