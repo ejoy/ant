@@ -25,12 +25,12 @@ local SHORT_NAMES<const> = {
 	POSITION= 'p', NORMAL   = 'n', COLOR = 'c',
 	TANGENT = 'T', BITANGENT= 'b', TEXCOORD = 't',
 	JOINTS  = 'i', WEIGHTS  = 'w',	-- that is special defines
-    INDICES = 'i', WEIGHT   = 'w',
+    BLENDINDICES = 'i', BLENDWEIGHT   = 'w',
 
     --Same with bgfx defined
     p = "POSITION", n = "NORMAL",   c = "COLOR",
     T = "TANGENT",  b = "BITANGENT",t = "TEXCOORD",
-    i = "INDICES",  w = "WEIGHT",
+    i = "BLENDINDICES",  w = "BLENDWEIGHT",
 }
 
 local PRIMITIVE_MODES<const> = {

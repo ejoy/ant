@@ -4,7 +4,7 @@ local declmapper = {}
 
 local name_mapper = {
 	p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
-	i = "INDICES",	w = "WEIGHT",
+	i = "BLENDINDICES",	w = "BLENDWEIGHT",
 	c = "COLOR", t = "TEXCOORD",
 }
 

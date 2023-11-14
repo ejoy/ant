@@ -232,12 +232,12 @@ local SEMANTICS_INFOS<const> = {
 	},
     a_indices	= {
         shadername = "indices",
-		bind = "INDICES",
+		bind = "BLENDINDICES",
         macro = "WITH_INDICES_ATTRIB=1",
 	},
     a_weight	= {
         shadername = "weight",
-		bind = "WEIGHT",
+		bind = "BLENDWEIGHT",
         macro = "WITH_WEIGHT_ATTRIB=1",
 	},
 	a_texcoord0	= {

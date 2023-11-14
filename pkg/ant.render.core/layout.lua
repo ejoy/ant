@@ -8,8 +8,8 @@ local NAME_MAPPER<const> = {
 	c = "COLOR",		COLOR = "c",
 	t = "TEXCOORD",		TEXCOORD = "t",
 	
-	i = "INDICES",		INDICES = "i",	JOINTS = "i",
-	w = "WEIGHT",		WEIGHT = "w",	WEIGHTS = "w",
+	i = "BLENDINDICES",	BLENDINDICES = "i",	JOINTS = "i",
+	w = "BLENDWEIGHT",	BLENDWEIGHT = "w",	WEIGHTS = "w",
 }
 
 L.NAME_MAPPER = NAME_MAPPER
@@ -131,7 +131,7 @@ local function format_varying(d)
         if t ~= 'u' and t ~= 'i' then
             error(("Invalid INDICES/JOINTS type:%s, it data element must be 'u'/'i' for uint8 or uint16"):format(d))
         end
-        datatype = "ivec"
+        datatype = "uvec"
     else
         datatype = "vec"
         if o ~= 'n' and t ~= 'f' then
