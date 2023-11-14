@@ -66,6 +66,7 @@ local check_update_material_info; do
         for dn in declname:gmatch "%w+" do
             n[#n+1] = dn:sub(1, 1)
         end
+        table.sort(n)
         return table.concat(n, "")
     end
 
