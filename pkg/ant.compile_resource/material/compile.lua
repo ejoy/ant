@@ -454,6 +454,42 @@ local function find_stage_file(setting, fx, stage)
     return inputfile
 end
 
+local function create_shader_cfg(post_tasks, output, mat, stages)
+    local lighting<const>   = mat.fx.setting.lighting
+    local shadertype<const> = mat.fx.shader_type
+    local properties<const> = mat.properties
+    local function attrib_obj()
+        return {attribs={}, systems={}}
+    end
+
+    parallel_task.add(post_tasks, function ()
+        local ao = attrib_obj()
+        if stages.cs then
+            assert(stages.vs == nil and stages.fs == nil and stages.depth == nil)
+            load_shader_uniforms(output, "cs", ao)
+        else
+            if stages.vs then
+                load_shader_uniforms(output, "vs", ao)
+            end
+            if stages.fs then
+                load_shader_uniforms(output, "fs", ao)
+            end
+        end
+
+        add_lighting_sv(ao.systems, lighting)
+        local newproperties = build_properties(properties, shadertype)
+        check_material_properties(newproperties, ao.attribs)
+        if stages.depth then
+            ao.depth = attrib_obj()
+            load_shader_uniforms(output, "depth", ao.depth)
+            check_material_properties(newproperties, ao.depth.attribs)
+        end
+
+        local outfile = output / "main.attr"
+        writefile(outfile, ao)
+    end)
+end
+
 local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     depends.add_vpath(deps, setting, "/pkg/ant.compile_resource/material/version.lua")
     depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic.settings")
@@ -462,12 +498,13 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     local inputfolder = lfs.path(input):parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)
+
     local fx = mat.fx
     merge_cfg_setting(setting, fx)
     check_update_shader_type(fx)
-    -- setmetatable(fx, CHECK_MT)
-    -- setmetatable(fx.setting, CHECK_MT)
+
     local stages = genshader.gen_fx(setting, inputfolder, output, mat)
+    writefile(output / "main.cfg",  mat)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local ok, res = toolset.compile {
@@ -489,49 +526,11 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         end)
     end
 
-    local function create_shader_cfg(stages)
-        local function attrib_obj()
-            return {attribs={}, systems={}}
-        end
-
-        parallel_task.add(post_tasks, function ()
-            local ao = attrib_obj()
-            if stages.cs then
-                assert(stages.vs == nil and stages.fs == nil and stages.depth == nil)
-                load_shader_uniforms(output, "cs", ao)
-            else
-                if stages.vs then
-                    load_shader_uniforms(output, "vs", ao)
-                end
-                if stages.fs then
-                    load_shader_uniforms(output, "fs", ao)
-                end
-            end
-
-            add_lighting_sv(ao.systems, fx.setting.lighting)
-            local properties = build_properties(mat.properties, fx.shader_type)
-            check_material_properties(properties, ao.attribs)
-            if stages.depth then
-                ao.depth = attrib_obj()
-                load_shader_uniforms(output, "depth", ao.depth)
-                check_material_properties(properties, ao.depth.attribs)
-            end
-
-            local outfile = output / "main.attr"
-            writefile(outfile, ao)
-        end)
-
-        --some info write to 'mat' in tasks, we should write 'main.cfg' here
-        parallel_task.add(post_tasks, function ()
-            writefile(output / "main.cfg",  mat)
-        end)
-    end
-
     for stage in pairs(stages) do
         compile_shader(stage)
     end
 
-    create_shader_cfg(stages)
+    create_shader_cfg(post_tasks, output, mat, stages)
 end
 
 return compile
