@@ -45,6 +45,11 @@ local function msg_push(message, lst)
                 local tail = mb[TAIL] + 1
                 mb[TAIL] = tail
                 mb[tail] = message
+				local c = message.__count
+				if c then
+					message.__count = c + 1
+					print("MSG COUNT", c + 1)
+				end
             end
         end
     end
@@ -57,6 +62,14 @@ local function next_each(mb)
     local h = mb[HEAD]
     local msg = mb[h]
     if msg then
+		local c = msg.__count
+		if c then
+			if c == 1 then
+				msg.close(msg)
+			else
+				msg.__count = c - 1
+			end
+		end
         mb[h] = nil
         mb[HEAD] = h + 1
         return msg
@@ -73,6 +86,14 @@ local function next_unpack(mb)
     local h = mb[HEAD]
     local msg = mb[h]
     if msg then
+		local c = msg.__count
+		if c then
+			if c == 1 then
+				msg.close(msg)
+			else
+				msg.__count = c - 1
+			end
+		end
         mb[h] = nil
         mb[HEAD] = h + 1
         return table_unpack(msg)
@@ -86,9 +107,23 @@ function mailbox:unpack()
 end
 
 function mailbox:clear()
+	local i = self[HEAD]
+	while true do
+		local m = self[i]
+		if m then
+			if m.close then
+				m.close(m)
+			end
+		else
+			break
+		end
+		i = i + 1
+	end
     self[HEAD] = HEAD_INIT
     self[TAIL] = TAIL_INIT
 end
+
+mailbox.__gc = mailbox.clear
 
 local world = {}
 
@@ -148,6 +183,9 @@ end
 
 function world:pub(message)
     local lookup = self._event_lookup
+	if message.close then
+		message.__count = 0
+	end
     pubmessage(lookup, message, 1)
 end
 
