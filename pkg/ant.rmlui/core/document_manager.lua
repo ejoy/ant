@@ -162,9 +162,9 @@ function gesture.longpress(ev)
     local doc, e = fromPoint(x, y)
     if e then
         eventListener.dispatch(doc, e, "longpress", {
-            state = ev.state,
             x = x,
             y = y,
+            state = ev.state,
         })
         return true
     end
@@ -175,11 +175,11 @@ function gesture.pan(ev)
     local doc, e = fromPoint(x, y)
     if e then
         eventListener.dispatch(doc, e, "pan", {
-            state = ev.state,
             x = x,
             y = y,
-            dx = round(ev.dx),
-            dy = round(ev.dy),
+            state = ev.state,
+            velocity_x = round(ev.velocity_x),
+            velocity_y = round(ev.velocity_y),
         })
         return true
     end
@@ -193,7 +193,7 @@ function gesture.pinch(ev)
             x = x,
             y = y,
             state = ev.state,
-            velocity = ev.velocity,
+            velocity = round(ev.velocity),
         })
         return true
     end
