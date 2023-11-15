@@ -5,19 +5,19 @@
 extern UIView* global_window;
 extern struct ant_window_callback* g_cb;
 
-static int getState(UIGestureRecognizerState v) {
+static  ant::window::GESTURE_STATE getState(UIGestureRecognizerState v) {
     switch (v) {
     case UIGestureRecognizerStateBegan:
-        return 0;
+        return ant::window::GESTURE_BEGAN;
     case UIGestureRecognizerStateChanged:
-        return 1;
+        return ant::window::GESTURE_CHANGED;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
-        return 2;
+        return ant::window::GESTURE_ENDED;
     case UIGestureRecognizerStatePossible:
     case UIGestureRecognizerStateFailed:
     default:
-        return -1;
+        return ant::window::GESTURE_UNKNOWN;
     }
 }
 
@@ -55,39 +55,39 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     ant::window::input_message(g_cb, msg);
 }
 -(void)handlePinch:(UIPinchGestureRecognizer *)gesture {
-    int state = getState(gesture.state);
-    if (state < 0) {
+    auto state = getState(gesture.state);
+    if (state == ant::window::GESTURE_UNKNOWN) {
         return;
     }
     auto pt = getLocationOfTouch(gesture);
     struct ant::window::msg_gesture_pinch msg;
-    msg.state = getState(gesture.state);
+    msg.state = state;
     msg.x = pt.x;
     msg.y = pt.y;
     msg.velocity = gesture.velocity;
     ant::window::input_message(g_cb, msg);
 }
 -(void)handleLongPress:(UILongPressGestureRecognizer *)gesture {
-    int state = getState(gesture.state);
-    if (state < 0) {
+    auto state = getState(gesture.state);
+    if (state == ant::window::GESTURE_UNKNOWN) {
         return;
     }
     auto pt = getLocationInView(gesture);
     struct ant::window::msg_gesture_longpress msg;
-    msg.state = getState(gesture.state);
+    msg.state = state;
     msg.x = pt.x;
     msg.y = pt.y;
     ant::window::input_message(g_cb, msg);
 }
 -(void)handlePan:(UIPanGestureRecognizer *)gesture {
-    int state = getState(gesture.state);
-    if (state < 0) {
+    auto state = getState(gesture.state);
+    if (state == ant::window::GESTURE_UNKNOWN) {
         return;
     }
     struct ant::window::msg_gesture_pan msg;
     auto pt = getLocationInView(gesture);
     CGPoint velocity = [gesture velocityInView:global_window];
-    msg.state = getState(gesture.state);
+    msg.state = state;
     msg.x = pt.x;
     msg.y = pt.y;
     velocity.x *= global_window.contentScaleFactor;
@@ -97,13 +97,13 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     ant::window::input_message(g_cb, msg);
 }
 -(void)handleSwipe:(UISwipeGestureRecognizer *)gesture {
-    int state = getState(gesture.state);
-    if (state < 0) {
+    auto state = getState(gesture.state);
+    if (state == ant::window::GESTURE_UNKNOWN) {
         return;
     }
     struct ant::window::msg_gesture_swipe msg;
     auto pt = getLocationInView(gesture);
-    msg.state = getState(gesture.state);
+    msg.state = state;
     msg.x = pt.x;
     msg.y = pt.y;
     msg.direction = (ant::window::DIRECTION)gesture.direction;
