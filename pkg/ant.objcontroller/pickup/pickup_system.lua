@@ -341,8 +341,15 @@ local function which_material(e)
 end
 
 local function create_pickup_state(srcstate, dststate)
+
+	local CULL_REVERSE<const> = {
+		CCW		= "CW",
+		CW		= "CCW",
+		NONE	= "CCW",
+	}
+
 	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
-	d.PT, d.CULL = s.PT, s.CULL
+	d.PT, d.CULL = s.PT, CULL_REVERSE[s.CULL]
 	return bgfx.make_state(d)
 end
 
