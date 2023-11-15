@@ -1,12 +1,11 @@
 #include "common/transform.sh"
 #include "common/common.sh"
-#include "common/drawindirect.sh"
+#include "shaders/road.sh"
 
 vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat)
 {
 	worldmat = (mat4)0;
-	vec4 posCS; varyings.posWS = transform_drawindirect_worldpos(vsinput, posWS);
-	return posCS;
+	return transform_road(vsinput, varyings);
 }
 
 void CUSTOM_VS(mat4 worldmat, in VSInput vsinput, inout Varyings varyings)

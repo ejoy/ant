@@ -1,6 +1,7 @@
 fx:
   vs_code: "#include \"road_vs_func.sh\""
   fs_code: "#include \"road_fs_func.sh\""
+  depth: /pkg/ant.landform/materials/shaders/vs_road_depth.sc
   setting:
     lighting: on
     cast_shadow: off
@@ -13,7 +14,6 @@ fx:
     v_texcoord0: vec2
     v_color0: vec4
     v_posWS: vec4
-
 properties:
   s_basecolor:
     stage: 0

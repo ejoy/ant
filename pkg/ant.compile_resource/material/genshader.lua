@@ -180,18 +180,18 @@ end
 local function is_input_varying(n, v)
     local nt = n:sub(1, 1)
     if v.input then
-        if nt == "v" then
+        if nt == 'v' then
             log.warn(("%s defined as input vs varying, but use 'a_' prefix, try to use 'v_' prefix"):format(n))
         end
     end
 
-    return nt == 'a'
+    return nt == 'a' or nt == 'i'
 end
 
 local function is_output_varying(n, v)
     local nt = n:sub(1, 1)
     if v.output then
-        if nt == "a" then
+        if nt == 'a' or nt == 'i' then
             log.warn(("%s defined as input vs varying, but use 'a_' prefix, try to use 'v_' prefix"):format(n))
         end
     end
