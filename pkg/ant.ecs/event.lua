@@ -48,7 +48,6 @@ local function msg_push(message, lst)
 				local c = message.__count
 				if c then
 					message.__count = c + 1
-					print("MSG COUNT", c + 1)
 				end
             end
         end
@@ -111,9 +110,14 @@ function mailbox:clear()
 	while true do
 		local m = self[i]
 		if m then
-			if m.close then
-				m.close(m)
+			local c = msg.__count
+			if c then
+				m.__count = c - 1
+				if c == 1 then
+					m.close(m)
+				end
 			end
+			self[i] = nil
 		else
 			break
 		end
@@ -185,8 +189,13 @@ function world:pub(message)
     local lookup = self._event_lookup
 	if message.close then
 		message.__count = 0
+	    pubmessage(lookup, message, 1)
+		if message.__count == 0 then
+			message.close(message)
+		end
+	else
+	    pubmessage(lookup, message, 1)
 	end
-    pubmessage(lookup, message, 1)
 end
 
 return world
