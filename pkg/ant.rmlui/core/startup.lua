@@ -1,12 +1,13 @@
 local rmlui = require "rmlui"
+local ltask = require "ltask"
+local bgfx = require "bgfx"
 local timer = require "core.timer"
 local task = require "core.task"
 local extern_windows = require "core.extern_windows"
 local document_manager = require "core.document_manager"
-local initRender = require "core.initRender"
+local init_shader = require "core.init_shader"
 local audio = import_package "ant.audio"
-local ltask = require "ltask"
-local bgfx = require "bgfx"
+local hwi = import_package "ant.hwi"
 
 require "core.DOM.constructor":init()
 
@@ -61,9 +62,15 @@ S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
 S.update_context_size = document_manager.set_dimensions
 
+hwi.init_bgfx()
 bgfx.init()
 audio.init()
-initRender()
+rmlui.RmlInitialise {
+    viewid = hwi.viewid_get "uiruntime",
+    shader = init_shader(),
+    callback = require "core.callback",
+    font_mgr = bgfx.fontmanager(),
+}
 ltask.fork(Render)
 
 return S
