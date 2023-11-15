@@ -1,12 +1,15 @@
-#include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
-#include "default/inputs_structure.sh"
 
-void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat worldmat)
 {
-	mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
-	transform_worldpos(wm, vs_input.pos, vs_output.clip_pos);
+	worldmat = u_model[0];
+	vec4 posCS; varyings.posWS = transform_worldpos(wm, vsinput.position, posCS);
+	return posCS;
+}
 
-	vs_output.uv0 = vs_input.uv0;
+void CUSTOM_VS(VSInput vsinput, inout Varyings varyings)
+{
+	varyings.texcoord0	= vsinput.texcoord0;
+	varyings.posWS.w 	= mul(u_view, varyings.posWS).z;
 }

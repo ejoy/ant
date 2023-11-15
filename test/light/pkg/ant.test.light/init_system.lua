@@ -147,12 +147,12 @@ function S.init_world()
         -- iom.set_scale(le, 0.1)
     end)
 
-    -- create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
-    --     peids = e.tag['*']
-    --     local leid = e.tag['*'][1]
-    --     local le<close> = world:entity(leid, "scene:update")
-    --     iom.set_scale(le, 0.1)
-    -- end)
+    create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
+        peids = e.tag['*']
+        local leid = e.tag['*'][1]
+        local le<close> = world:entity(leid, "scene:update")
+        iom.set_scale(le, 0.1)
+    end)
 
     -- create_instance("/pkg/ant.test.light/assets/plane.glb|mesh.prefab", function (e)
     --     local normaltex = assetmgr.resource "/pkg/ant.test.light/assets/normal.texture"

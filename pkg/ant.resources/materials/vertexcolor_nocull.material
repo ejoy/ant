@@ -1,9 +1,11 @@
 fx:
-  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
-  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  shader_type: PBR
+  fs_code: "void CUSTOM_FS(Varyings v, out FSOutput o){o.color=u_color;}"
   setting:
     lighting: off
-    WITHOUT_DEFAULT_UV: 1
+    position_only: true
+  varyings:
+    a_position: vec3
 properties:
   u_color: {1, 1, 1, 1}
 state:

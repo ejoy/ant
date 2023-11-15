@@ -1,17 +1,18 @@
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
-#include "default/inputs_structure.sh"
+#include "default/utils.sh"
 
-void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){
+	return custom_vs_position(vsinput, varyings, worldmat);
+}
+
+void CUSTOM_VS(mat4 wm, VSInput vsinput, inout Varyings varyings)
 {
-	mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
-	highp vec4 posWS = transform_worldpos(wm, vs_input.pos, vs_output.clip_pos);
-
-	vs_output.uv0	    = vs_input.uv0;
-	vs_output.normal	= mul(wm, mediump vec4(0.0, 1.0, 0.0, 0.0)).xyz;
-	vs_output.tangent	= mul(wm, mediump vec4(1.0, 0.0, 0.0, 0.0)).xyz;
-	vs_output.bitangent = mul(wm, mediump vec4(0.0, 0.0,-1.0, 0.0)).xyz;
-	vs_output.world_pos = posWS;
-	vs_output.world_pos.w = mul(u_view, vs_output.world_pos).z;
+	varyings.texcoord0	= vsinput.texcoord0;
+	mat3 wm3 = (mat3)wm;
+	varyings.normal		= mul(wm3, vec3(0.0, 1.0, 0.0));
+	varyings.tangent	= mul(wm3, vec3(1.0, 0.0, 0.0));
+	varyings.bitangent	= mul(wm3, vec3(0.0, 0.0,-1.0));
+	varyings.posWS.w 	= mul(u_view, varyings.posWS).z;
 }

@@ -3,10 +3,14 @@ fx:
   fs_code: "#include \"terrain_fs_func.sh\""
   setting:
     lighting: on
-    USER_ATTR: 1
-    INPUT_USER_ATTR_0: 1
-    OUTPUT_USER_ATTR_0: 1
-    WITH_CUSTOM_TANGENT_ATTRIB: 1
+  varyings:
+    a_position: vec3
+    a_texcoord0: vec2
+    v_texcoord0:  vec4 TEXCOORD0
+    v_posWS:      vec4 TEXCOORD1
+    v_normal:     vec3 NORMAL
+    v_tangent:    vec3 TANGENT
+    v_bitangent:  vec3 BITANGENT
 properties:
   u_pbr_factor: {0.1, 0.6, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0, 0, 0, 0}

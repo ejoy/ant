@@ -1,9 +1,12 @@
 fx:
-  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
-  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  shader_type: PBR
+  vs_code: "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 wm){ return vec4((vsinput.pos / u_canvas_size.xy) * 2.0 - 1.0, 0.5, 1.0);}"
+  fs_code: "void CUSTOM_FS(Varyings v, FSOutput o){o.color = u_color;}"
   setting:
     lighting: off
-    SCREEN_SPACE: 1
+    position_only: true
+  varyings:
+    a_position: vec2
 properties:
   u_color: {1, 1, 1, 1}
   u_canvas_size: {512, 512, 0, 0}

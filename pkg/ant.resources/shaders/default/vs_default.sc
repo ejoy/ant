@@ -18,9 +18,9 @@ void main()
 
     mat4 worldmat = (mat4)0;
     gl_Position = CUSTOM_VS_POSITION(vsinput, varyings, worldmat);
-#ifndef DEPTH_ONLY
+#ifndef POSITION_ONLY
     CUSTOM_VS(worldmat, vsinput, varyings);
-#endif //DEPTH_ONLY
+#endif //POSITION_ONLY
 
 @OUTPUT_VARYINGS
 }

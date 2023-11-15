@@ -1,9 +1,7 @@
 fx:
-  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
-  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  shader_type: PBR
   setting:
-    NO_CURVE_WORLD: 1
-    WITHOUT_DEFAULT_UV: 1
+    lighting: on
 properties:
-  u_color: {1, 1, 1, 1}
+  u_basecolor_factor: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

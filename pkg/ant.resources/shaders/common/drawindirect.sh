@@ -10,11 +10,7 @@
 #ifdef DRAW_INDIRECT
 
 #ifdef DI_MOUNTAIN
-mat4 mountain_worldmat(VSInput vs_input)
-{
-    //idata0, idata1, idata2 already transpose before set to instance buffer
-    return mat4(vs_input.idata0, vs_input.idata1, vs_input.idata2, vec4(0.0, 0.0, 0.0, 1.0));
-}
+
 #endif //DI_MOUNTAIN
 
 vec4 transform_drawindirect_worldpos(VSInput vs_input, out vec4 posCS)

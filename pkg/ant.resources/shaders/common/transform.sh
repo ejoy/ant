@@ -23,6 +23,21 @@ highp vec3 quat_to_tangent(const highp vec4 q){
         	vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
 }
 
+void to_tbn(mat3 wm, float s, inout vec3 normal, inout vec3 tangent, out vec3 bitangent)
+{
+    normal		= mul(wm3, normal);
+    tangent		= mul(wm3, tangent);
+    bitangent	= cross(normal, tangent) * s;
+}
+
+void unpack_tbn_from_quat(mat3 wm3, vec4 quat, out vec3 normal, out vec3 tangent, out vec3 bitangent)
+{
+    normal 	= quat_to_normal(quat);
+    tangent	= quat_to_tangent(quat);
+
+	to_tbn(wm3, sign(quat.w), normal, tangent, bitangent);
+}
+
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 {
 	mat4 wolrdMat = mat4(

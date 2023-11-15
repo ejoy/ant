@@ -2,9 +2,13 @@ fx:
   fs: /pkg/ant.resources/shaders/velocity/fs_velocity.sc
   vs: /pkg/ant.resources/shaders/velocity/vs_velocity.sc
   setting:
-    GPU_SKINNING: 1
-    PACK_TANGENT_TO_QUAT: 0
-    WITHOUT_DEFAULT_UV: 1
+    lighting: off
+  varyings:
+    a_position: vec3
+    a_indices: uvec4
+    a_weight: vec4
+    v_cur_pos: vec4   TEXCOORD0
+    v_prev_pos: vec4  TEXCOORD1
 properties:
   u_prev_vp: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
 state:

@@ -1,10 +1,12 @@
 fx:
-  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
-  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  shader_type: PBR
   setting:
     lighting: off
-    WITH_COLOR_ATTRIB: 1
-    WITHOUT_DEFAULT_UV: 1
+  varyings:
+    a_position: vec3
+    a_color0: vec4
+    v_color0: vec4
+    v_posWS: vec4
 state:
   ALPHA_REF: 1
   CULL: CCW

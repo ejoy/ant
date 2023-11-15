@@ -2,21 +2,24 @@
 #include "common/transform.sh"
 #include "common/drawindirect.sh"
 
-#include "default/inputs_structure.sh"
-#include "default/output_vs_attrib.sh"
-#ifndef DRAW_INDIRECT
-#error "mountain need DRAW_INDIRECT"
-#endif //!DRAW_INDIRECT
-
-vec4 CUSTOM_TRANSFORM_VS_WORLDPOS(VSInput vs_input, inout VSOutput vs_output, out mat4 worldmat)
+mat4 mountain_worldmat(VSInput vsinput)
 {
-    worldmat = mountain_worldmat(vs_input);
-    return transform_worldpos(worldmat, vs_input.pos, vs_output.clip_pos);
+    //idata0, idata1, idata2 already transpose before set to instance buffer
+    return mat4(vsinput.data0, vsinput.data1, vsinput.data2, vec4(0.0, 0.0, 0.0, 1.0));
 }
 
-void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat)
 {
-    mat4 wm;
-    vec4 posWS = CUSTOM_TRANSFORM_VS_WORLDPOS(vs_input, vs_output, wm);
-	output_vs_attrib(posWS, wm, vs_input, vs_output);
+    worldmat = mountain_worldmat(vsinput);
+    vec4 posCS; varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);
+    return posCS;
+}
+
+void CUSTOM_VS(mat4 wm, VSInput vsinput, inout Varyings varyings)
+{
+    varyings.posWS.w = mul(u_view, varyings.posWS).z;
+    varyings.texcoord0 = vsinput.texcoord0;
+
+    // normal
+    unpack_tbn_from_quat(wm, vsinput, varyings);
 }

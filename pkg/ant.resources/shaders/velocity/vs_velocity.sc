@@ -1,12 +1,12 @@
-#include "default/inputs_define.sh"
-
-$input 	a_position INPUT_INDICES INPUT_WEIGHT
-$output v_prev_pos v_cur_pos
+#ifdef GPU_SKINNING
+$input a_position a_indices a_weight
+#else //!GPU_SKINNING
+$input a_position
+#endif //GPU_SKINNING
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
-#include "default/inputs_structure.sh"
 
 #ifdef GPU_SKINNING
 	//TODO: put view projection matrix into 'u_prev_model' struct in CPU, and remove u_prev_vp
@@ -34,13 +34,13 @@ $output v_prev_pos v_cur_pos
 	uniform mat4 u_prev_mvp;
 #endif
 
-
 void main()
 {
-	VSInput vs_input = (VSInput)0;
-	#include "default/vs_inputs_getter.sh"
-
-    mediump mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
+#ifdef GPU_SKINNING
+    mat4 wm = calc_bone_transform(a_indices, a_weight);
+#else
+	mat4 wm = u_model[0];
+#endif //
 	highp vec4 posWS = mul(wm, vec4(a_position, 1.0));
 	v_cur_pos = mul(u_viewProj, posWS);
 	gl_Position = v_cur_pos;

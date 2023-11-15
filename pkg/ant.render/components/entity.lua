@@ -160,15 +160,6 @@ function ientity.create_grid_mesh_entity(w, h, size, color, materialpath, render
 	return vb, world:create_entity(grid_mesh_entity_data(materialpath, vb, ib, render_layer))
 end
 
-function ientity.create_grid_entity_simple(w, h, unit, scene)
-	w = w or 64
-	h = h or 64
-	unit = unit or 1
-	local vb, ib = geolib.grid(w, h, nil, unit)
-	local mesh = create_mesh({"p3|c40niu", vb}, ib)
-	return create_simple_render_entity("/pkg/ant.resources/materials/line.material", mesh, scene, {}, nil, "translucent")
-end
-
 function ientity.create_grid_entity(width, height, unit, linewidth, srt, material, render_layer)
 	local ipl = ecs.require "ant.polyline|polyline"
 	
@@ -346,13 +337,13 @@ local function axis_mesh(color)
 	return create_mesh{"p3|c4", axis_vb}
 end
 
-function ientity.axis_entity_data(scene, color, material)
+function ientity.axis_entity_data(scene, color)
 	local mesh = axis_mesh(color)
-	return simple_render_entity_data(material or "/pkg/ant.resources/materials/line.material", mesh, scene, {u_color = color}, "translucent")
+	return simple_render_entity_data("/pkg/ant.resources/materials/line.material", mesh, scene, "translucent")
 end
 
-function ientity.create_axis_entity(scene, color, material)
-	return world:create_entity(ientity.axis_entity_data(scene, color, material))
+function ientity.create_axis_entity()
+	return world:create_entity(ientity.axis_entity_data())
 end
 
 function ientity.create_screen_axis_entity(screen_3dobj, scene, color)

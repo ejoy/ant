@@ -305,24 +305,87 @@ local SEMANTICS_INFOS<const> = {
 		bind = "TEXCOORD3",
         macro = "WITH_INSTANCE_DATA4_ATTRIB=1",
 	},
+
+    v_texcoord0 = {
+        shadername = "texcoord0_out",
+        bind = "TEXCOORD0",
+    },
+    v_texcoord1 = {
+        shadername = "texcoord1_out",
+        bind = "TEXCOORD1",
+    },
+    v_texcoord2 = {
+        shadername = "texcoord2_out",
+        bind = "TEXCOORD2",
+    },
+    v_texcoord3 = {
+        shadername = "texcoord3_out",
+        bind = "TEXCOORD3",
+    },
+    v_posWS = {
+        shadername = "texcoord3_out",
+        bind = "TEXCOORD4",
+    },
+    v_normal = {
+        shadername = "normal_out",
+        bind = "TEXCOORD5",
+    },
+    v_tangent = {
+        shadername = "tangent_out",
+        bind = "TEXCOORD6",
+    },
+    v_bitangent = {
+        shadername = "bitangent_out",
+        bind = "TEXCOORD7",
+    },
+    v_color0 = {
+        shadername = "color0_out",
+        bind = "COLOR0",
+    },
+    v_color1 = {
+        shadername = "color1_out",
+        bind = "COLOR1",
+    },
+    v_color2 = {
+        shadername = "color2_out",
+        bind = "COLOR2",
+    },
+    v_color3 = {
+        shadername = "color3_out",
+        bind = "COLOR3",
+    },
 }
 
-local function gen_append_code(d, tabnum)
-    tabnum = tabnum or 1
-    local tab
-    if tabnum > 0 then
-        tab = ('\t'):rep(tabnum)
+local function code_gen(d, tab0, tab1, tab2)
+    local function code_gen_(tabnum)
+        tabnum = tabnum or 1
+        local tab
+        if tabnum > 0 then
+            tab = ('\t'):rep(tabnum)
+        end
+    
+        if tab then
+            return function (c)
+                d[#d+1] = tab .. c
+            end
+        else
+            return function (c)
+                d[#d+1] = c
+            end
+        end
     end
 
-    if tab then
-        return function (c)
-            d[#d+1] = tab .. c
-        end
-    else
-        return function (c)
-            d[#d+1] = c
-        end
+    local g0, g1, g2
+    if tab0 then
+        g0 = code_gen_(tab0)
     end
+    if tab1 then
+        g1 = code_gen_(tab1)
+    end
+    if tab2 then
+        g2 = code_gen_(tab2)
+    end
+    return g0, g1, g2
 end
 
 local function build_input_var(varyingcontent)
@@ -330,14 +393,14 @@ local function build_input_var(varyingcontent)
     local input_decls, varying_decls = {}, {}
     local input_assignments, varying_assignments = {}, {}
 
-    local vdd_ac0 = gen_append_code(varying_def_decls, 0)
+    local vdd_ac0 = code_gen(varying_def_decls, 0)
 
-    local ia_ac1 = gen_append_code(input_assignments, 1)
-    local va_ac1 = gen_append_code(varying_assignments, 1)
+    local ia_ac1 = code_gen(input_assignments, 1)
+    local va_ac1 = code_gen(varying_assignments, 1)
 
     local inputs, varyings = {}, {}
-    local iac0, iac1 = gen_append_code(inputs, 0), gen_append_code(inputs, 1)
-    local vac0, vac1 = gen_append_code(varyings, 0), gen_append_code(varyings, 1)
+    local iac0, iac1 = code_gen(inputs, 0, 1)
+    local vac0, vac1 = code_gen(varyings, 0, 1)
     
     iac0 "struct VSInput {"
     vac0 "struct Varyings {"
@@ -375,11 +438,8 @@ local function build_input_var(varyingcontent)
     }
 end
 
-local function build_vs_code(mat, varyings)
-    local fx = mat.fx
-    local d = {}
-    local ac0 = gen_append_code(d, 0)
-    local ac1 = gen_append_code(d, 1)
+local function build_custom_vs_position_func(d, varyings)
+    local ac0, ac1 = code_gen(d, 0, 1)
     ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
     if varyings.a_indices and varyings.a_weight then
         ac1 "worldmat = calc_bone_transform(vsinput.indices, vsinput.weight);"
@@ -391,24 +451,27 @@ local function build_vs_code(mat, varyings)
     ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
     ac1 "return posCS;"
     ac0 "}"
+end
 
+local function build_custom_vs_func(d, varyings)
+    local ac0, ac1 = code_gen(d, 0, 1)
     ac0 "void CUSTOM_VS(mat4 worldmat, VSInput vsinput, inout Varyings varyings) {"
-
-    --v_posWS
-    --TODO: build with or without GPU_SKINNING macro code
-
+    ac1 "varyings.posWS.w = mul(u_view, varyings.posWS).z;"
     local assign_fmt = "varyings.%s = vsinput.%s;"
     --a_texcoord[0-7]
     for i=0, 7 do
-        local texcoord = "texcoord" .. i
         if varyings["a_texcoord" .. i] then
+            local texcoord = "texcoord" .. i
             ac1(assign_fmt:format(texcoord, texcoord))
         end
     end
 
     --a_color0
-    if varyings.a_color0 then
-        ac1(assign_fmt:format("color0", "color0"))
+    for i=0, 3 do
+        if varyings["a_color"..i] then
+            local color = "color" .. i
+            ac1(assign_fmt:format(color, color))
+        end
     end
 
     --normal/tangent/bitangent
@@ -429,10 +492,10 @@ local function build_vs_code(mat, varyings)
 
             ac1 "const vec4 quat        = vsinput.tangent;"
             ac1 "const vec3 normal      = quat_to_normal(quat);"
-            ac1 "const vec3 tangent 	= quat_to_tangent(quat);"
-            ac1 "varyings.normal		= mul(wm3, normal);"
-            ac1 "varyings.tangent	    = mul(wm3, tangent);"
-            ac1 "varyings.bitangent	= cross(varyings.normal, varyings.tangent);"
+            ac1 "const vec3 tangent     = quat_to_tangent(quat);"
+            ac1 "varyings.normal        = mul(wm3, normal);"
+            ac1 "varyings.tangent       = mul(wm3, tangent);"
+            ac1 "varyings.bitangent     = cross(varyings.normal, varyings.tangent) * sign(quat.w);"
 
         else
             if varyings.a_normal then
@@ -449,24 +512,29 @@ local function build_vs_code(mat, varyings)
                 if varyings.a_bitangent then
                     ac1 "varyings.bitangent = mul(wm3, vsinput.bitangent);"
                 else
-                    ac1 "varyings.bitangent = cross(varyings.normal, varyings.tangent);"
+                    ac1 "varyings.bitangent = cross(varyings.normal, varyings.tangent) * sign(vsinput.tangent.w);"
                 end
             end
         end
     end
     ac0 "}"
+end
+
+local function build_vs_code(mat, varyings)
+    local d = {}
+    build_custom_vs_position_func(d, varyings)
+    build_custom_vs_func(d, varyings)
+
     return table.concat(d, "\n")
 end
 
 local function build_fs_code(mat, varyings)
     local fx, properties, state = mat.fx, mat.properties, mat.state
     local d = {}
-    local ac0 = gen_append_code(d, 0)
-    local ac1 = gen_append_code(d, 1)
-    local ac2 = gen_append_code(d, 2)
+    local ac0, ac1, ac2 = code_gen(d, 0, 1, 2)
     ac0 [[
-void CUSTOM_FS(in Varyings varyings, inout FSOutput fsoutput) {
-material_info mi = (material_info)0;
+void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
+    material_info mi = (material_info)0;
 ]]
 
     ac1 "mi.V = normalize(u_eyepos.xyz - varyings.posWS.xyz);"
@@ -608,7 +676,7 @@ end
 
 local function build_fs_assignments(mat, varyings, varying_assignments)
     local assignments = {}
-    local fsac1 = gen_append_code(assignments, 1)
+    local fsac1 = code_gen(assignments, 1)
 
     for _, v in ipairs(varying_assignments) do
         local lhs, rhs = v:match "([%w_]+)%s*=%s*varyings%.([%w_]+)"
@@ -706,6 +774,10 @@ local function build_fx_macros(mat, varyings)
 
     if mat.fx.setting.lighting == "off" then
         m[#m+1] = "MATERIAL_UNLIT=1"
+    end
+
+    if mat.fx.setting.position_only then
+        m[#m+1] = "POSITION_ONLY=1"
     end
 end
 
