@@ -161,5 +161,4 @@ namespace ant::window {
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend);
-	void input_message(struct ant_window_callback* cb, struct msg const& m);
 }
