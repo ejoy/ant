@@ -31,13 +31,13 @@ namespace ant::window {
 		KB_SYS,
 		KB_CAPSLOCK,
 	};
-	enum TOUCH_TYPE : uint8_t {
+	enum TOUCH_STATE : uint8_t {
 		TOUCH_BEGAN = 1,
 		TOUCH_MOVED = 2,
 		TOUCH_ENDED = 3,
 		TOUCH_CANCELLED = 4,
 	};
-	enum MOUSE_TYPE : uint8_t {
+	enum MOUSE_BUTTON : uint8_t {
 		MOUSE_LEFT = 1,
 		MOUSE_MIDDLE = 2,
 		MOUSE_RIGHT = 3,
@@ -52,6 +52,11 @@ namespace ant::window {
 		DIRECTION_LEFT = 1 << 1,
 		DIRECTION_UP = 1 << 2,
 		DIRECTION_DOWN = 1 << 3,
+	};
+	enum GESTURE_STATE : uint8_t {
+		GESTURE_BEGAN = 0,
+		GESTURE_CHANGED = 1,
+		GESTURE_ENDED = 2,
 	};
 	inline uint8_t get_keystate(bool kb_ctrl, bool kb_shift, bool kb_alt, bool kb_sys, bool kb_capslock) {
 		return 0
@@ -70,7 +75,7 @@ namespace ant::window {
 	struct msg_mouse {
 		int x;
 		int y;
-		MOUSE_TYPE type;
+		MOUSE_BUTTON what;
 		MOUSE_STATE state;
 	};
 	struct msg_mousewheel {
@@ -80,7 +85,7 @@ namespace ant::window {
 	};
 	struct msg_touch {
 		uintptr_t id;
-		TOUCH_TYPE type;
+		TOUCH_STATE state;
 		float x;
 		float y;
 	};
@@ -89,25 +94,25 @@ namespace ant::window {
 		float y;
 	};
 	struct msg_gesture_pinch {
-		int state;
+		GESTURE_STATE state;
 		float x;
 		float y;
 		float velocity;
 	};
 	struct msg_gesture_longpress {
-		int state;
+		GESTURE_STATE state;
 		float x;
 		float y;
 	};
 	struct msg_gesture_pan {
-		int state;
+		GESTURE_STATE state;
 		float x;
 		float y;
 		float velocity_x;
 		float velocity_y;
 	};
 	struct msg_gesture_swipe {
-		int state;
+		GESTURE_STATE state;
 		float x;
 		float y;
 		DIRECTION direction;

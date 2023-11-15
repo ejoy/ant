@@ -1,4 +1,5 @@
 local ltask = require "ltask"
+local time = require "bee.time"
 
 local MOUSE_LEFT <const> = 1
 local MOUSE_MIDDLE <const> = 2
@@ -46,153 +47,194 @@ return function (ev)
     local longPressTimeout <const> = 400
 
     local function dispatch_longpress()
-        ltask.call(ltask.self(), "msg", {{
-            "gesture", "longpress", {
-                x = downX,
-                y = downY,
-                state = "began",
-            }
-        }})
+        ltask.call(ltask.self(), "msg", {
+            type = "gesture",
+            what = "longpress",
+            x = downX,
+            y = downY,
+            state = "began",
+            timestamp = time.monotonic(),
+        })
         inLongPress = true
     end
 
-    local function mouse_down(x, y)
-        lastX = x
-        lastY = y
-        downX = x
-        downY = y
+    local function mouse_down(m)
+        lastX = m.x
+        lastY = m.y
+        downX = m.x
+        downY = m.y
         inLongPress = false
         inScrolling = nil
         alwaysInTapRegion = true
         stop_timer(longPressTimer)
         longPressTimer = start_timer(longPressTimeout, dispatch_longpress)
     end
-    local function mouse_move(x, y)
+    local function mouse_move(m)
         if inLongPress then
-			ev.gesture("longpress", {
-				x = x,
-				y = y,
-				state = "changed",
-			})
+            ev.gesture {
+                type = "gesture",
+                what = "longpress",
+                x = m.x,
+                y = m.y,
+                state = "changed",
+                timestamp = m.timestamp,
+            }
             return
         end
         if not lastX then
             return
         end
-        local scrollX = x - lastX
-        local scrollY = y - lastY
-        local deltaX = x - downX
-        local deltaY = y - downY
+        local scrollX = m.x - lastX
+        local scrollY = m.y - lastY
+        local deltaX = m.x - downX
+        local deltaY = m.y - downY
         if alwaysInTapRegion then
             local distance = (deltaX * deltaX) + (deltaY * deltaY)
             if distance > touchSlopSquare then
                 if not inScrolling then
                     inScrolling = get_time()
-                    ev.gesture("pan", {
+                    ev.gesture {
+                        type = "gesture",
+                        what = "pan",
                         state = "began",
-                        x = x,
-                        y = y,
+                        x = m.x,
+                        y = m.y,
                         velocity_x = 0,
                         velocity_y = 0,
-                        timestamp = currentTime,
-                    })
+                        timestamp = m.timestamp,
+                    }
                 end
-                ev.gesture("pan", {
+                ev.gesture {
+                    type = "gesture",
+                    what = "pan",
                     state = "changed",
-                    x = x,
-                    y = y,
+                    x = m.x,
+                    y = m.y,
                     velocity_x = scrollX / inScrolling,
                     velocity_y = scrollY / inScrolling,
-                    timestamp = currentTime,
-                })
-                lastX = x
-                lastY = y
+                    timestamp = m.timestamp,
+                }
+                lastX = m.x
+                lastY = m.y
                 alwaysInTapRegion = false
                 stop_timer(longPressTimer)
             end
         elseif math.abs(scrollX) >= 1 or math.abs(scrollY) >= 1 then
             if not inScrolling then
                 inScrolling = get_time()
-                ev.gesture("pan", {
+                ev.gesture {
+                    type = "gesture",
+                    what = "pan",
                     state = "began",
-                    x = x,
-                    y = y,
+                    x = m.x,
+                    y = m.y,
                     velocity_x = 0,
                     velocity_y = 0,
-                    timestamp = currentTime,
-                })
+                    timestamp = m.timestamp,
+                }
             end
-            ev.gesture("pan", {
+            ev.gesture {
+                type = "gesture",
+                what = "pan",
                 state = "changed",
-                x = x,
-                y = y,
+                x = m.x,
+                y = m.y,
                 velocity_x = scrollX / inScrolling,
                 velocity_y = scrollY / inScrolling,
-                timestamp = currentTime,
-            })
-            lastX = x
-            lastY = y
+                timestamp = m.timestamp,
+            }
+            lastX = m.x
+            lastY = m.y
         end
     end
-    local function mouse_up(x, y)
+    local function mouse_up(m)
         if inLongPress then
             inLongPress = false
-			ev.gesture("longpress", {
-				x = x,
-				y = y,
-				state = "ended",
-			})
-        elseif alwaysInTapRegion then
-            ev.gesture("tap", {
-                x = x,
-                y = y,
-            })
-        elseif inScrolling then
-            local scrollX = x - lastX
-            local scrollY = y - lastY
-            ev.gesture("pan", {
+            ev.gesture {
+                type = "gesture",
+                what = "longpress",
+                x = m.x,
+                y = m.y,
                 state = "ended",
-                x = x,
-                y = y,
+                timestamp = m.timestamp,
+            }
+        elseif alwaysInTapRegion then
+            ev.gesture {
+                type = "gesture",
+                what = "tap",
+                x = m.x,
+                y = m.y,
+                timestamp = m.timestamp,
+            }
+        elseif inScrolling then
+            local scrollX = m.x - lastX
+            local scrollY = m.y - lastY
+            ev.gesture {
+                type = "gesture",
+                what = "pan",
+                state = "ended",
+                x = m.x,
+                y = m.y,
                 velocity_x = scrollX / inScrolling,
                 velocity_y = scrollY / inScrolling,
-                timestamp = currentTime,
-            })
+                timestamp = m.timestamp,
+            }
             inScrolling = nil
         end
         lastX = nil
         lastY = nil
         stop_timer(longPressTimer)
     end
-    function ev.mousewheel(x, y, delta)
-        ev.gesture("pinch", {
-            x = x,
-            y = y,
-            velocity = delta,
-        })
+    function ev.mousewheel(m)
+        ev.gesture {
+            type = "gesture",
+            what = "pinch",
+            x = m.x,
+            y = m.y,
+            velocity = m.delta,
+            timestamp = m.timestamp,
+        }
     end
-    function ev.mouse(x, y, what, state)
-        ev.mouse_event(x, y, what, state)
-        if what ~= MOUSE_LEFT then
+    function ev.mouse(m)
+        ev.mouse_event(m)
+        if m.what ~= MOUSE_LEFT then
             return
         end
-        if state == MOUSE_DOWN then
-            ev.touch(what, TOUCH_BEGAN, x, y)
-            mouse_down(x, y)
+        if m.state == MOUSE_DOWN then
+            ev.touch {
+                type = "touch",
+                id = 1,
+                state = TOUCH_BEGAN,
+                x = m.x,
+                y = m.y,
+                timestamp = m.timestamp,
+            }
+            mouse_down(m)
             return
         end
-        if state == MOUSE_MOVE then
-            ev.touch(what, TOUCH_MOVED, x, y)
-            mouse_move(x, y)
+        if m.state == MOUSE_MOVE then
+            ev.touch {
+                type = "touch",
+                id = 1,
+                state = TOUCH_MOVED,
+                x = m.x,
+                y = m.y,
+                timestamp = m.timestamp,
+            }
+            mouse_move(m)
             return
         end
-        if state == MOUSE_UP then
-            mouse_up(x, y)
-            ev.touch(what, TOUCH_ENDED, x, y)
+        if m.state == MOUSE_UP then
+            mouse_up(m)
+            ev.touch {
+                type = "touch",
+                id = 1,
+                state = TOUCH_ENDED,
+                x = m.x,
+                y = m.y,
+                timestamp = m.timestamp,
+            }
             return
         end
     end
-	function ev.time(timestamp)
-		currentTime = timestamp
-	end
 end

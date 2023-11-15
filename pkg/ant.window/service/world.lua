@@ -14,13 +14,21 @@ end)
 
 local S = ltask.dispatch {}
 
-
-local function dummy_time() end
 local world
-local event = { time = dummy_time }
+local event = {}
 local encoderBegin = false
 local quit
 local will_reboot
+
+local function init_inputmgr()
+	local ev = inputmgr.create(world, "win32")
+	event.keyboard = ev.keyboard
+	event.mouse = ev.mouse
+	event.mousewheel = ev.mousewheel
+	event.touch = ev.touch
+	event.gesture = ev.gesture
+	event.size = ev.size
+end
 
 local function reboot(initargs)
 	local config = world.args
@@ -28,14 +36,7 @@ local function reboot(initargs)
 	config.ecs = initargs
 	world:pipeline_exit()
 	world = ecs.new_world(config)
-	local ev 		= inputmgr.create(world, "win32")
-	event.keyboard		= ev.keyboard
-	event.mouse 		= ev.mouse
-	event.mousewheel	= ev.mousewheel
-	event.touch			= ev.touch
-	event.gesture		= ev.gesture
-	event.size			= ev.size
-	event.time			= ev.time or dummy_time
+	init_inputmgr()
 	world:pipeline_init()
 end
 
@@ -48,7 +49,10 @@ local function render(nwh, context, width, height, initialized)
 		height = height,
 	}
 	config.viewport = {
-		x=0, y=0, w=width, h=height
+		x = 0,
+		y = 0,
+		w = width,
+		h = height
 	}
 	rhwi.init {
 		nwh			= nwh,
@@ -62,18 +66,12 @@ local function render(nwh, context, width, height, initialized)
 	bgfx.encoder_begin()
 	encoderBegin = true
 	world = ecs.new_world(config)
+	init_inputmgr()
 
-	local ev 		= inputmgr.create(world, "win32")
-
-	event.keyboard		= ev.keyboard
-	event.mouse 		= ev.mouse
-	event.mousewheel	= ev.mousewheel
-	event.touch			= ev.touch
-	event.gesture		= ev.gesture
-	event.size			= ev.size
-	event.time			= ev.time or dummy_time
-
-	event.size(width, height)
+	event.size {
+		w = width,
+		h = height,
+	}
 	audio.init()
 	world:pipeline_init()
 
@@ -102,22 +100,25 @@ local function render(nwh, context, width, height, initialized)
 	end
 end
 
-function event.init(nwh, context, width, height)
+function event.init(m)
 	import_package "ant.hwi".init_bgfx()
 	local initialized = {}
-	ltask.fork(render, nwh, context, width, height, initialized)
+	ltask.fork(render, m.nwh, m.context, m.w, m.h, initialized)
 	ltask.wait(initialized)
 end
 
-function event.recreate(nwh, _, width, height)
+function event.recreate(m)
 	bgfx.set_platform_data {
-		nwh = nwh
+		nwh = m.nwh
 	}
-	event.size(width, height)
+	event.size {
+		w = m.w,
+		h = m.h,
+	}
 end
 
-function event.suspend(what)
-	bgfx.event_suspend(what)
+function event.suspend(m)
+	bgfx.event_suspend(m.what)
 end
 
 local ms_queue = {}
@@ -128,12 +129,6 @@ local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
 end
 
-local function dispatch(timestamp, cmd, ...)
-	local f = assert(event[cmd], cmd)
-	event.time(timestamp)
-	f(...)
-end
-
 ltask.fork(function ()
 	while not ms_quit do
 		while true do
@@ -141,7 +136,8 @@ ltask.fork(function ()
 			if not m then
 				break
 			end
-			dispatch(m.t, table.unpack(m, 1, m.n))
+			local f = assert(event[m.type], m.type)
+			f(m)
 		end
 		ltask.wait(ms_token)
 	end

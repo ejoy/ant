@@ -168,8 +168,8 @@ function gesture.swipe(doc, e, ev)
     eventListener.dispatch(doc, e, "swipe", ev)
 end
 
-function m.process_gesture(name, ev)
-    local f =  gesture[name]
+function m.process_gesture(ev)
+    local f =  gesture[ev.what]
     if not f then
         return
     end
@@ -221,20 +221,20 @@ local function setActive(doc, e, id)
     end
 end
 
-function m.process_touch(id, state, x, y)
+function m.process_touch(ev)
     local TOUCH_BEGAN <const> = 1
     local TOUCH_MOVED <const> = 2
     local TOUCH_ENDED <const> = 3
     local TOUCH_CANCELLED <const> = 4
-    if state == TOUCH_BEGAN then
-        x, y = round(x), round(y)
+    if ev.state == TOUCH_BEGAN then
+        local x, y = round(ev.x), round(ev.y)
         local doc, e = fromPoint(x, y)
         if e then
-            setActive(doc, e, id)
+            setActive(doc, e, ev.id)
         end
-    elseif state == TOUCH_ENDED or state == TOUCH_CANCELLED then
-        cancelActive(id)
-    elseif state == TOUCH_MOVED then
+    elseif ev.state == TOUCH_ENDED or ev.state == TOUCH_CANCELLED then
+        cancelActive(ev.id)
+    elseif ev.state == TOUCH_MOVED then
         return
     end
 end

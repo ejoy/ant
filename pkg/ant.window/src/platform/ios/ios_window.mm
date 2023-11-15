@@ -43,9 +43,9 @@ static id<MTLDevice> g_device = NULL;
 struct ant_window_callback* g_cb = NULL;
 id g_gesture;
 
-static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet* touches) {
+static void push_touch_message(ant::window::TOUCH_STATE state, UIView* view, NSSet* touches) {
     struct ant::window::msg_touch msg;
-    msg.type = type;
+    msg.state = state;
     for (UITouch *touch in touches) {
         CGPoint pt = [touch locationInView:view];
         pt.x *= view.contentScaleFactor;

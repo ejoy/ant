@@ -9,6 +9,7 @@ int luaopen_bee_serialization(lua_State* L);
 int luaopen_bee_socket(lua_State* L);
 int luaopen_bee_thread(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
+int luaopen_bee_time(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_datalist(lua_State* L);
@@ -77,6 +78,7 @@ void ant_loadmodules(lua_State* L) {
         { "bee.socket", luaopen_bee_socket },
         { "bee.thread", luaopen_bee_thread },
         { "bee.platform", luaopen_bee_platform },
+        { "bee.time", luaopen_bee_time },
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
         { "font", luaopen_font },

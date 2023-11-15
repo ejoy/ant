@@ -49,24 +49,45 @@ function cb.mousewheel(x, y, delta)
     local mvp = imgui.GetMainViewport()
     x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
     for _, w in ipairs(worlds) do
-        w.mousewheel(x, y, delta)
+        w.mousewheel {
+            type = "mousewheel",
+            x = x,
+            y = y,
+            delta = delta,
+        }
     end
 end
 function cb.mouse(x, y, what, state)
     local mvp = imgui.GetMainViewport()
     x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
     for _, w in ipairs(worlds) do
-        w.mouse(x, y, what, state)
+        w.mouse {
+            type = "mouse",
+            x = x,
+            y = y,
+            what = what,
+            state = state,
+            timestamp = 0,
+        }
     end
 end
-function cb.keyboard(...)
+function cb.keyboard(key, press, state)
     for _, w in ipairs(worlds) do
-        w.keyboard(...)
+        w.keyboard {
+            type = "keyboard",
+            key = key,
+            press = press,
+            state = state,
+        }
     end
 end
-function cb.size(...)
+function cb.size(width, height)
     for _, w in ipairs(worlds) do
-        w.size(...)
+        w.size {
+            type = "size",
+            w = width,
+            h = height,
+        }
     end
 end
 function cb.dropfiles(filelst)

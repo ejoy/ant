@@ -16,58 +16,58 @@ local function create(world, type)
     local function world_sendmsg(...)
         world:pub {...}
     end
-    function ev.gesture(what, data)
-        local active = active_gesture[what]
+    function ev.gesture(m)
+        local active = active_gesture[m.what]
         if active then
             if active == "world" then
-                world_sendmsg("gesture", what, data)
+                world_sendmsg("gesture", m.what, m)
             else
-                rmlui_sendmsg("gesture", what, data)
+                rmlui_sendmsg("gesture", m)
             end
-            if data.state == "ended" then
-                active_gesture[what] = nil
+            if m.state == "ended" then
+                active_gesture[m.what] = nil
             end
-        elseif data.state == "began" then
+        elseif m.state == "began" then
             if ServiceRmlui then
-                if rmlui_sendmsg("gesture", what, data) then
-                    active_gesture[what] = "rmlui"
+                if rmlui_sendmsg("gesture", m) then
+                    active_gesture[m.what] = "rmlui"
                     return
                 end
             end
-            world_sendmsg("gesture", what, data)
-            active_gesture[what] = "world"
+            world_sendmsg("gesture", m.what, m)
+            active_gesture[m.what] = "world"
         else
-            -- assert(data.state == nil)
+            -- assert(m.state == nil)
             if ServiceRmlui then
-                if rmlui_sendmsg("gesture", what, data) then
+                if rmlui_sendmsg("gesture", m) then
                     return
                 end
             end
-            world_sendmsg("gesture", what, data)
+            world_sendmsg("gesture", m.what, m)
         end
     end
-    function ev.touch(...)
+    function ev.touch(m)
         if ServiceRmlui then
-            ltask.call(ServiceRmlui, "touch", ...)
+            ltask.call(ServiceRmlui, "touch", m)
         end
     end
-    function ev.keyboard(key, press, state)
-        world:pub {"keyboard", keymap[key], press, {
-            CTRL	= (state & 0x01) ~= 0,
-            SHIFT	= (state & 0x02) ~= 0,
-            ALT		= (state & 0x04) ~= 0,
-            SYS		= (state & 0x08) ~= 0,
+    function ev.keyboard(m)
+        world:pub {"keyboard", keymap[m.key], m.press, {
+            CTRL	= (m.state & 0x01) ~= 0,
+            SHIFT	= (m.state & 0x02) ~= 0,
+            ALT		= (m.state & 0x04) ~= 0,
+            SYS		= (m.state & 0x08) ~= 0,
         }}
     end
-    function ev.size(w, h)
-        world:pub {"resize", w, h}
+    function ev.size(m)
+        world:pub {"resize", m.w, m.h}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         if world.args.ecs.enable_mouse then
             local mouse_what  = { 'LEFT', 'MIDDLE', 'RIGHT' }
             local mouse_state = { 'DOWN', 'MOVE', 'UP' }
-            function ev.mouse_event(x, y, what, state)
-                world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x, y}
+            function ev.mouse_event(m)
+                world:pub {"mouse", mouse_what[m.what] or "UNKNOWN", mouse_state[m.state] or "UNKNOWN", m.x, m.y}
             end
         else
             function ev.mouse_event()
