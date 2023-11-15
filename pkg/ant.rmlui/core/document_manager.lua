@@ -145,66 +145,42 @@ end
 
 local gesture = {}
 
-function gesture.tap(ev)
-    local x, y = round(ev.x), round(ev.y)
-    local doc, e = fromPoint(x, y)
-    if e then
-        eventListener.dispatch(doc, e, "click", {
-            x = x,
-            y = y,
-        })
-        return true
-    end
+function gesture.tap(doc, e, ev)
+    eventListener.dispatch(doc, e, "click", ev)
 end
 
-function gesture.longpress(ev)
-    local x, y = round(ev.x), round(ev.y)
-    local doc, e = fromPoint(x, y)
-    if e then
-        eventListener.dispatch(doc, e, "longpress", {
-            x = x,
-            y = y,
-            state = ev.state,
-        })
-        return true
-    end
+function gesture.longpress(doc, e, ev)
+    eventListener.dispatch(doc, e, "longpress", ev)
 end
 
-function gesture.pan(ev)
-    local x, y = round(ev.x), round(ev.y)
-    local doc, e = fromPoint(x, y)
-    if e then
-        eventListener.dispatch(doc, e, "pan", {
-            x = x,
-            y = y,
-            state = ev.state,
-            velocity_x = round(ev.velocity_x),
-            velocity_y = round(ev.velocity_y),
-        })
-        return true
-    end
+function gesture.pan(doc, e, ev)
+    ev.velocity_x = round(ev.velocity_x)
+    ev.velocity_y = round(ev.velocity_y)
+    eventListener.dispatch(doc, e, "pan", ev)
 end
 
-function gesture.pinch(ev)
-    local x, y = round(ev.x), round(ev.y)
-    local doc, e = fromPoint(x, y)
-    if e then
-        eventListener.dispatch(doc, e, "pinch", {
-            x = x,
-            y = y,
-            state = ev.state,
-            velocity = round(ev.velocity),
-        })
-        return true
-    end
+function gesture.pinch(doc, e, ev)
+    ev.velocity = round(ev.velocity)
+    eventListener.dispatch(doc, e, "pinch", ev)
 end
 
-function m.process_gesture(name, ...)
+function gesture.swipe(doc, e, ev)
+    eventListener.dispatch(doc, e, "swipe", ev)
+end
+
+function m.process_gesture(name, ev)
     local f =  gesture[name]
     if not f then
         return
     end
-    return f(...)
+    local x, y = round(ev.x), round(ev.y)
+    local doc, e = fromPoint(x, y)
+    if e then
+        ev.x = x
+        ev.y = y
+        f(doc, e, ev)
+        return true
+    end
 end
 
 local function walkElement(doc, e)

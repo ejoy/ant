@@ -33,6 +33,7 @@ local function get_time()
 end
 
 return function (ev)
+    local currentTime = 0
     local lastX
     local lastY
     local downX
@@ -93,6 +94,7 @@ return function (ev)
                         y = y,
                         velocity_x = 0,
                         velocity_y = 0,
+                        timestamp = currentTime,
                     })
                 end
                 ev.gesture("pan", {
@@ -101,6 +103,7 @@ return function (ev)
                     y = y,
                     velocity_x = scrollX / inScrolling,
                     velocity_y = scrollY / inScrolling,
+                    timestamp = currentTime,
                 })
                 lastX = x
                 lastY = y
@@ -116,6 +119,7 @@ return function (ev)
                     y = y,
                     velocity_x = 0,
                     velocity_y = 0,
+                    timestamp = currentTime,
                 })
             end
             ev.gesture("pan", {
@@ -124,6 +128,7 @@ return function (ev)
                 y = y,
                 velocity_x = scrollX / inScrolling,
                 velocity_y = scrollY / inScrolling,
+                timestamp = currentTime,
             })
             lastX = x
             lastY = y
@@ -151,6 +156,7 @@ return function (ev)
                 y = y,
                 velocity_x = scrollX / inScrolling,
                 velocity_y = scrollY / inScrolling,
+                timestamp = currentTime,
             })
             inScrolling = nil
         end
@@ -186,4 +192,7 @@ return function (ev)
             return
         end
     end
+	function ev.time(timestamp)
+		currentTime = timestamp
+	end
 end

@@ -1,14 +1,32 @@
 #include <lua.hpp>
 #include "window.h"
 
+#if defined(_WIN32)
+
+#include <windows.h>
+
+static uint64_t get_timestamp() {
+	return GetTickCount64();
+}
+
+#else
+
+static uint64_t get_timestamp() {
+	return 0;
+}
+
+#endif
+
 static void push_message(lua_State* L) {
 	int n = lua_gettop(L) - 1;
-	lua_createtable(L, n, 1);
+	lua_createtable(L, n, 2);
 	lua_insert(L, 2);
 	for (int i = n; i >= 1; i--)
 		lua_seti(L, 2, i);
 	lua_pushinteger(L, n);
 	lua_setfield(L, 2, "n");
+	lua_pushinteger(L, get_timestamp());
+	lua_setfield(L, 2, "t");
 	lua_seti(L, 1, luaL_len(L, 1)+1);
 }
 
@@ -201,36 +219,5 @@ void input_message(struct ant_window_callback* cb, struct msg_suspend const& sus
 	case suspend::did_resume: lua_pushstring(L, "did_resume"); break;
 	}
 	push_message(L);
-}
-
-void input_message(struct ant_window_callback* cb, struct msg const& m) {
-	switch (m.type) {
-	case msg_type::keyboard:
-		input_message(cb, m.keyboard);
-		break;
-	case msg_type::mouse:
-		input_message(cb, m.mouse);
-		break;
-	case msg_type::mousewheel:
-		input_message(cb, m.mousewheel);
-		break;
-	case msg_type::touch:
-		input_message(cb, m.touch);
-		break;
-	case msg_type::gesture_tap:
-		input_message(cb, m.tap);
-		break;
-	case msg_type::gesture_pinch:
-		input_message(cb, m.pinch);
-		break;
-	case msg_type::gesture_longpress:
-		input_message(cb, m.longpress);
-		break;
-	case msg_type::suspend:
-		input_message(cb, m.suspend);
-		break;
-	default:
-		break;
-	}
 }
 }
