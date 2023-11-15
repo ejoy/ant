@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
@@ -934,8 +933,9 @@ local function select_light_gizmo(x, y)
 	if not light_gizmo.current_light then return light_gizmo_mode end
 
 	local le <close> = world:entity(light_gizmo.current_light, "light:in")
+	local light_pos = iom.get_position(le)
 	local function hit_test_circle(axis, radius, pos)
-		local gizmo_pos = pos or iom.get_position(le)
+		local gizmo_pos = pos
 		local hit_pos = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmo_pos)})
 		if not hit_pos then
 			return
@@ -950,13 +950,13 @@ local function select_light_gizmo(x, y)
 	click_dir_spot_light = nil
 	local radius = ilight.range(le)
 	if le.light.type == "point" then
-		if hit_test_circle({1, 0, 0}, radius) then
+		if hit_test_circle({1, 0, 0}, radius, light_pos) then
 			click_dir_point_light = {1, 0, 0}
 			light_gizmo_mode = 1
-		elseif hit_test_circle({0, 1, 0}, radius) then
+		elseif hit_test_circle({0, 1, 0}, radius, light_pos) then
 			click_dir_point_light = {0, 1, 0}
 			light_gizmo_mode = 2
-		elseif hit_test_circle({0, 0, 1}, radius) then
+		elseif hit_test_circle({0, 0, 1}, radius, light_pos) then
 			click_dir_point_light = {0, 0, 1}
 			light_gizmo_mode = 3
 		end
@@ -968,7 +968,7 @@ local function select_light_gizmo(x, y)
 			click_dir_spot_light = dir
 			light_gizmo_mode = 4
 		else
-			if mu.pt2d_line_distance(world_to_screen(iom.get_position(le)), world_to_screen(centre), math3d.vector(x, y, 0.0)) < 5.0 then
+			if mu.pt2d_line_distance(world_to_screen(light_pos), world_to_screen(centre), math3d.vector(x, y, 0.0)) < 5.0 then
 				light_gizmo_mode = 5
 				light_gizmo.highlight(true)
 			else

@@ -1,10 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
-
-local widget_utils      = require "widget.utils"
 local prefab_mgr        = ecs.require "prefab_manager"
-
 local projsetting_view  = require "widget.project_setting_view"
 local camerasetting_view= ecs.require "widget.camera_setting_view"
 local rhwi              = import_package "ant.hwi"
@@ -99,10 +95,7 @@ function m.show()
             end
             imgui.cursor.Separator()
             if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then
-                local setting = imgui.util.SaveIniSettings()
-                local wf = assert(io.open(tostring(global_data.editor_root) .. "/" .. "imgui.layout", "wb"))
-                wf:write(setting)
-                wf:close()
+                prefab_mgr:save_ui_layout()
             end
             show_select_light_dialog()
             show_select_blender_dialog()

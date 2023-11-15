@@ -7,8 +7,6 @@ local mc            = mathpkg.constant
 local assetmgr 		= import_package "ant.asset"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
--- local iRmlUi        = ecs.require "ant.rmlui|rmlui_system"
-local rhwi      = import_package "ant.hwi"
 local iani          = ecs.require "ant.animation|state_machine"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
@@ -22,11 +20,6 @@ local Font          = imgui.font.SystemFont
 local math3d        = require "math3d"
 local fastio        = require "fastio"
 local fmod 			= require "fmod"
--- local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
--- function ecs.method.bind_billboard_camera(e, camera_ref)
---     world:pub{"bind_billboard_camera", e, camera_ref}
--- end
-
 local m = ecs.system 'init_system'
 
 local function LoadImguiLayout(filename)
@@ -130,7 +123,6 @@ function m:init()
     end
 	gd.audio = fmod.init()
 	icons:init(assetmgr)
-	-- rhwi.set_profie(true)
 end
 
 local function init_camera()
@@ -147,7 +139,7 @@ end
 local light_gizmo = ecs.require "gizmo.light"
 local prefab_mgr = ecs.require "prefab_manager"
 function m:init_world()
-    irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
+    irq.set_view_clear_color("main_queue", 0x353535ff)
     init_camera()
     light_gizmo.init()
     prefab_mgr:reset_prefab()
@@ -159,13 +151,10 @@ function m:post_init()
 end
 
 function m:data_changed()
-    -- for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
-    --     w:extend(e, "render_object?in")
-    --     e.render_object.camera_ref = camera_ref or w:first("main_queue camera_ref:in").camera_ref
-    -- end
 	gd.audio:update()
 end
 
 function m:exit()
+	prefab_mgr:save_ui_layout()
 	gd.audio:shutdown()
 end

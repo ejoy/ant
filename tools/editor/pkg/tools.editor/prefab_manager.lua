@@ -22,7 +22,10 @@ local hierarchy     = require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
-local iterrain           = ecs.require "ant.landform|plane_terrain"
+local iterrain      = ecs.require "ant.landform|plane_terrain"
+local layoutmgr     = import_package "ant.render".layoutmgr
+local bgfx          = require "bgfx"
+
 local anim_view
 local m = {
     entities = {}
@@ -34,7 +37,36 @@ local function gen_light_id() lightidx = lightidx + 1 return lightidx end
 local geometricidx = 0
 local function gen_geometry_id() geometricidx = geometricidx + 1 return geometricidx end
 
-local function create_light_billboard(light_eid)
+local function create_light_billboard(light_eid, lighttype)
+    local vbdata = {
+        -1, -1, 0, 0, 1,
+        -1,  1, 0, 0, 0,
+         1, -1, 0, 1, 1,
+         1,  1, 0, 1, 0,
+    }
+    local layout = layoutmgr.get "p3|t2"
+    return world:create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.render|billboard"
+        },
+        data = {
+            billboard = true,
+            render_layer = "translucent",
+            scene = {
+                parent = light_eid
+            },
+            visible_state = "main_view",
+            material = "/pkg/tools.editor/res/materials/billboard_"..lighttype..".material",
+            simplemesh = {
+                vb = {
+                    start = 0,
+                    num = 4,
+                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fffff", vbdata), layout.handle)
+                },
+            }
+        }
+    }
 end
 
 local geom_mesh_file = {
@@ -108,20 +140,22 @@ function m:add_entity(new_entity, parent, tpl, filename)
     hierarchy:add(new_entity, {template = tpl, filename = filename, editor = filename and false or nil, is_patch = true}, parent)
 end
 
-local function create_default_light(lt, parent)
-    return ilight.create{
+local function create_default_light(type, parent)
+    local light, tpl = ilight.create {
         srt = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}, parent = parent},
-        name            = lt .. gen_light_id(),
-        type            = lt,
+        name            = type .. gen_light_id(),
+        type            = type,
         color           = {1, 1, 1, 1},
         make_shadow     = false,
         intensity       = 130000,--ilight.default_intensity(lt),
-        intensity_unit  = ilight.default_intensity_unit(lt),
+        intensity_unit  = ilight.default_intensity_unit(type),
         range           = 1,
         motion_type     = "dynamic",
         inner_radian    = math.rad(45),
         outter_radian   = math.rad(45)
     }
+    create_light_billboard(light, type)
+    return light, utils.deep_copy(tpl)
 end
 
 function m:clear_light()
@@ -249,7 +283,6 @@ function m:create(what, config)
             local newlight, tpl = create_default_light(config.type, self.root)
             self:add_entity(newlight, self.root, tpl)
             light_gizmo.init()
-            --create_light_billboard(newlight)
         end
     end
 end
@@ -325,7 +358,7 @@ function m:on_prefab_ready(prefab)
         end
         last_tpl = pt
         if e.light then
-            create_light_billboard(eid)
+            create_light_billboard(eid, e.light.type)
             light_gizmo.bind(eid)
             light_gizmo.show(false)
         end
@@ -726,6 +759,13 @@ function m:get_patch_list(template_list)
         end
     end
     return template_list
+end
+
+function m:save_ui_layout()
+    local setting = imgui.util.SaveIniSettings()
+    local wf = assert(io.open(tostring(global_data.editor_root) .. "/" .. "imgui.layout", "wb"))
+    wf:write(setting)
+    wf:close()
 end
 
 function m:save(path)

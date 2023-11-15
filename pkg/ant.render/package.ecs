@@ -25,6 +25,7 @@ import "depth/depth.ecs"
 import "skinning/skinning.ecs"
 import "hitch/hitch.ecs"
 import "draw_indirect/draw_indirect.ecs"
+import "billboard/billboard.ecs"
 
 import "shadow/shadow.ecs"
 import "uv_motion/uv_motion.ecs"

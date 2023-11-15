@@ -1,5 +1,4 @@
 local math3d = require "math3d"
-local imgui = require "imgui"
 local m = {}
 function m.ray_hit_plane(ray, plane_info)
 	local plane = {n = plane_info.dir, d = -math3d.dot(math3d.vector(plane_info.dir), math3d.vector(plane_info.pos))}

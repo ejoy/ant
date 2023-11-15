@@ -89,7 +89,8 @@ function ilight.create(light)
 				angular_radius=light.angular_radius,
 			},
 			visible = true,
-		}
+		},
+		tag = {light.name}
 	}
 	return world:create_entity(template), template
 end

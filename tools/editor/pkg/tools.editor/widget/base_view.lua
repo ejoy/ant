@@ -21,7 +21,6 @@ function BaseView:_init()
         script   = uiproperty.ResourcePath({label = "Script", extension = ".lua"}),
         prefab   = uiproperty.EditText({label = "Prefabe", readonly = true}),
         preview  = uiproperty.Bool({label = "OnlyPreview"}),
-        -- name     = uiproperty.EditText({label = "Name"}),
         tag      = uiproperty.EditText({label = "Tag"}),
         position = uiproperty.Float({label = "Position", dim = 3, speed = 0.1}),
         rotate   = uiproperty.Float({label = "Rotate", dim = 3}),
@@ -37,8 +36,6 @@ function BaseView:_init()
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.preview:set_setter(function(value) self:on_set_preview(value) end)      
     self.base.preview:set_getter(function() return self:on_get_preview() end)
-    -- self.base.name:set_setter(function(value) self:on_set_name(value) end)      
-    -- self.base.name:set_getter(function() return self:on_get_name() end)
     self.base.tag:set_setter(function(value) self:on_set_tag(value) end)      
     self.base.tag:set_getter(function() return self:on_get_tag() end)
     self.base.position:set_setter(function(value) self:on_set_position(value) end)

@@ -883,7 +883,7 @@ local function create_animation(animtype, name, duration, target_anims)
 end
 local update_camera_mb = world:sub {"UpdateCamera"}
 function m.end_animation()
-    if not ui_bindcamera[1] then
+    if not ui_bindcamera[1] or not current_anim then
         return
     end
     local update_camera = false

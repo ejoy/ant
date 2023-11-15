@@ -96,17 +96,29 @@ local function create_gizmo_root(initpos, initrot)
         }
     }
 end
-
+local ipl = ecs.require "ant.polyline|polyline"
+local geopkg = import_package "ant.geometry"
+local geolib = geopkg.geometry
+local function get_points(vertices)
+    local points = {}
+    for i = 1, #vertices, 3 do
+        points[#points + 1] = {vertices[i], vertices[i+1], vertices[i+2]}
+    end
+    return points
+end
 local function create_directional_gizmo(initpos, initrot)
     local root = create_gizmo_root(initpos, initrot)
-    local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
+    local vertices, _ = geolib.circle(RADIUS, SLICES)
+    -- local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
+    local circle_eid = ipl.add_strip_lines(get_points(vertices), 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root}, "translucent", true)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
     local radian_step = 2 * math.pi / SLICES
     for s=0, SLICES-1 do
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
-        local line_eid = computil.create_line_entity({x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line_eid = ipl.add_strip_lines({{x, y, 0}, {x, y, LENGTH}}, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root}, "translucent", true)
+        -- local line_eid = computil.create_line_entity({x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
         alleid[#alleid + 1] = line_eid
     end
     m.directional.root = root
