@@ -14,24 +14,23 @@ local shaders <const> = {
     debug_draw      = "/pkg/ant.rmlui/materials/debug_draw.material",
 }
 
-return function ()
-    local ServiceResource = ltask.uniqueservice "ant.resource_manager|resource"
-    local progs = {}
-    local uniforms = {}
-    local tasks = {}
-    for k, v in pairs(shaders) do
-        tasks[#tasks+1] = {function ()
-            local shader = ltask.call(ServiceResource, "material_create", v)
-            for name, u in pairs(shader.fx.uniforms) do
-                local handle = u.handle & 0xFFFF
-                assert(uniforms[name] == handle or uniforms[name] == nil)
-                uniforms[name] = handle
-            end
-            progs[k] = shader.fx.prog
-        end}
-    end
-    for _ in ltask.parallel(tasks) do
-    end
-    progs.uniforms = uniforms
-    return progs
+local ServiceResource = ltask.uniqueservice "ant.resource_manager|resource"
+local progs = {}
+local uniforms = {}
+local tasks = {}
+
+for k, v in pairs(shaders) do
+    tasks[#tasks+1] = {function ()
+        local shader = ltask.call(ServiceResource, "material_create", v)
+        for name, u in pairs(shader.fx.uniforms) do
+            local handle = u.handle & 0xFFFF
+            assert(uniforms[name] == handle or uniforms[name] == nil)
+            uniforms[name] = handle
+        end
+        progs[k] = shader.fx.prog
+    end}
 end
+for _ in ltask.parallel(tasks) do
+end
+progs.uniforms = uniforms
+return progs

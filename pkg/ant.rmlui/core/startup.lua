@@ -5,7 +5,6 @@ local timer = require "core.timer"
 local task = require "core.task"
 local extern_windows = require "core.extern_windows"
 local document_manager = require "core.document_manager"
-local init_shader = require "core.init_shader"
 local audio = import_package "ant.audio"
 local hwi = import_package "ant.hwi"
 
@@ -67,7 +66,7 @@ bgfx.init()
 audio.init()
 rmlui.RmlInitialise {
     viewid = hwi.viewid_get "uiruntime",
-    shader = init_shader(),
+    shader = require "core.init_shader",
     callback = require "core.callback",
     font_mgr = bgfx.fontmanager(),
 }
