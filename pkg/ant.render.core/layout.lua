@@ -1,16 +1,42 @@
 local L = {}
 
 local NAME_MAPPER<const> = {
-	p = "POSITION", 	POSITION = "p",
-	n = "NORMAL",		NORMAL = "n",
-	T = "TANGENT",		TANGENT = "T",
-	b = "BITANGENT",	BITANGENT = "b",
-	c = "COLOR",		COLOR = "c",
-	t = "TEXCOORD",		TEXCOORD = "t",
+	p = "POSITION", 	POSITION 	= "p",
+	n = "NORMAL",		NORMAL 		= "n",
+	T = "TANGENT",		TANGENT 	= "T",
+	b = "BITANGENT",	BITANGENT	= "b",
+	c = "COLOR",		COLOR 		= "c",
+	t = "TEXCOORD",		TEXCOORD	= "t",
 	
-	i = "BLENDINDICES",	BLENDINDICES = "i",	JOINTS = "i",
-	w = "BLENDWEIGHT",	BLENDWEIGHT = "w",	WEIGHTS = "w",
+	i = "BLENDINDICES",	BLENDINDICES= "i",	JOINTS	= "i",
+	w = "BLENDWEIGHT",	BLENDWEIGHT = "w",	WEIGHTS	= "w",
 }
+
+--bgfx::Attrib id
+local ATTRIB_NAMES = {
+	"a_position",
+	"a_normal",
+	"a_tangent",
+	"a_bitangent",
+	"a_color0",
+	"a_color1",
+	"a_color2",
+	"a_color3",
+	"a_indices",
+	"a_weight",
+	"a_texcoord0",
+	"a_texcoord1",
+	"a_texcoord2",
+	"a_texcoord3",
+	"a_texcoord4",
+	"a_texcoord5",
+	"a_texcoord6",
+	"a_texcoord7",
+}
+
+for id, name in pairs(ATTRIB_NAMES) do
+	ATTRIB_NAMES[name] = id
+end
 
 L.NAME_MAPPER = NAME_MAPPER
 
@@ -180,5 +206,18 @@ function L.parse_varyings(varyings)
 end
 
 L.SEMANTICS_WITH_INDICES = SEMANTICS_WITH_INDICES
+L.ATTRIB_NAMES = ATTRIB_NAMES
+
+function L.attribid2name(id)
+	local nid = id+1
+	assert(1<=nid and nid<=#ATTRIB_NAMES)
+	return ATTRIB_NAMES[nid]
+end
+
+function L.name2attribid(name)
+	local id = assert(ATTRIB_NAMES[name])-1
+	assert(0 <= id and id < #ATTRIB_NAMES)
+	return id
+end
 
 return L

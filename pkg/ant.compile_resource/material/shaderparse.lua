@@ -1,21 +1,23 @@
+local L = import_package "ant.render.core".layout
+
 local SHADER_VERSION<const> = 11
 local SHADER_TYPES<const> = {
     C = SHADER_VERSION, F = SHADER_VERSION, V = SHADER_VERSION
 }
 
 local BGFX_PREDEFINED_NAMES<const> = {
-    u_viewRect = true,
-    u_viewTexel = true,
-    u_view = true,
-    u_invView = true,
-    u_proj = true,
-    u_invProj = true,
-    u_viewProj = true,
-    u_invViewProj = true,
-    u_model = true,
-    u_modelView = true,
+    u_viewRect      = true,
+    u_viewTexel     = true,
+    u_view          = true,
+    u_invView       = true,
+    u_proj          = true,
+    u_invProj       = true,
+    u_viewProj      = true,
+    u_invViewProj   = true,
+    u_model         = true,
+    u_modelView     = true,
     u_modelViewProj = true,
-    u_alphaRef4 = true,
+    u_alphaRef4     = true,
 }
 
 local function isShaderBin(magic)
@@ -49,6 +51,13 @@ local function create_reader(c)
         end,
         readUint16 = function (self)
             return ("H"):unpack(self:read(2))
+        end,
+        skip = function (self, s)
+            local o = self.offset + s
+            if o > #self.content then
+                log.info(("skip distance:%d, over the content:%d, current offset:%d"):format(o, self.content, self.offset))
+            end
+            self.offset = o
         end
     }
 end
@@ -116,11 +125,24 @@ local function parse_shaderbin(c)
         end
     end
 
+    local shadersize = reader:readUint32()
+    reader:skip(shadersize+1)   -- +1 for skip file's eol
+
+    --read layout input attribs
+    local attribnum = reader:readUint8()
+    local inputs = {}
+    for i=1, attribnum do
+        local function cvt2attribid(id) return id-1 end
+        local id = cvt2attribid(reader:readUint16())
+        inputs[i] = L.attribid2name(id)
+    end
+
     return {
-        magic = magic,
-        hashIn = hashIn,
+        magic   = magic,
+        hashIn  = hashIn,
         hashOut = hashOut,
-        uniforms = uniforms,
+        inputs  = inputs,
+        uniforms= uniforms,
     }
 end
 

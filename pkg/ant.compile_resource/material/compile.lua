@@ -320,6 +320,8 @@ local function load_shader_uniforms(output, stage, ao)
             attribs[n] = v
         end
     end
+
+    return s
 end
 
 local UNIFORM_PROPERTY_TYPES<const> = {
@@ -469,7 +471,15 @@ local function create_shader_cfg(post_tasks, output, mat, stages)
             load_shader_uniforms(output, "cs", ao)
         else
             if stages.vs then
-                load_shader_uniforms(output, "vs", ao)
+                local s = load_shader_uniforms(output, "vs", ao)
+                local varyings = mat.fx.varyings
+                if varyings and s.inputs then
+                    for _, input in ipairs(s.inputs) do
+                        if not varyings[input] then
+                            error(("Shader need input%s, but material varyings not provided"):format(input))
+                        end
+                    end
+                end
             end
             if stages.fs then
                 load_shader_uniforms(output, "fs", ao)
