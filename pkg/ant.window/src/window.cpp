@@ -1,14 +1,24 @@
 #include <lua.hpp>
 #include "window.h"
 
+// todo: don't use windows api directly
+#include <windows.h>
+
+static uint64_t
+get_timestamp() {
+	return GetTickCount64();
+}
+
 static void push_message(lua_State* L) {
 	int n = lua_gettop(L) - 1;
-	lua_createtable(L, n, 1);
+	lua_createtable(L, n, 2);
 	lua_insert(L, 2);
 	for (int i = n; i >= 1; i--)
 		lua_seti(L, 2, i);
 	lua_pushinteger(L, n);
 	lua_setfield(L, 2, "n");
+	lua_pushinteger(L, get_timestamp());
+	lua_setfield(L, 2, "t");
 	lua_seti(L, 1, luaL_len(L, 1)+1);
 }
 

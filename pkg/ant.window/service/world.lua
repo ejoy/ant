@@ -15,8 +15,9 @@ end)
 local S = ltask.dispatch {}
 
 
+local function dummy_time() end
 local world
-local event = {}
+local event = { time = dummy_time }
 local encoderBegin = false
 local quit
 local will_reboot
@@ -34,6 +35,7 @@ local function reboot(initargs)
 	event.touch			= ev.touch
 	event.gesture		= ev.gesture
 	event.size			= ev.size
+	event.time			= ev.time or dummy_time
 	world:pipeline_init()
 end
 
@@ -69,6 +71,7 @@ local function render(nwh, context, width, height, initialized)
 	event.touch			= ev.touch
 	event.gesture		= ev.gesture
 	event.size			= ev.size
+	event.time			= ev.time or dummy_time
 
 	event.size(width, height)
 	audio.init()
@@ -125,8 +128,9 @@ local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
 end
 
-local function dispatch(cmd, ...)
+local function dispatch(timestamp, cmd, ...)
 	local f = assert(event[cmd], cmd)
+	event.time(timestamp)
 	f(...)
 end
 
@@ -137,7 +141,7 @@ ltask.fork(function ()
 			if not m then
 				break
 			end
-			dispatch(table.unpack(m, 1, m.n))
+			dispatch(m.t, table.unpack(m, 1, m.n))
 		end
 		ltask.wait(ms_token)
 	end
