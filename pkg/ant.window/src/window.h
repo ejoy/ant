@@ -57,6 +57,7 @@ namespace ant::window {
 		GESTURE_BEGAN = 0,
 		GESTURE_CHANGED = 1,
 		GESTURE_ENDED = 2,
+		GESTURE_UNKNOWN = 3,
 	};
 	inline uint8_t get_keystate(bool kb_ctrl, bool kb_shift, bool kb_alt, bool kb_sys, bool kb_capslock) {
 		return 0
