@@ -6,6 +6,7 @@ local uiproperty    = require "widget.uiproperty"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
 local hierarchy     = require "hierarchy_edit"
+local daynightui    = ecs.require "daynight_ui"
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
 local math3d    = require "math3d"
@@ -75,6 +76,7 @@ function DaynightView:_init()
     self.direct  = uiproperty.Group({label = "Direct"},  self.base.add_color,  self.base.del_color)
     self.ambient = uiproperty.Group({label = "Ambient"}, self.base.add_color,  self.base.del_color)
     self.rotator = uiproperty.Group({label = "Rotator"}, self.base.add_direction, self.base.del_direction)
+--[[     self.cycle   = uiproperty.Float({label = "Cycle",   dim = 1}) ]]
 
     self.save = uiproperty.Button({label = "Save"})
     self.save:set_click(function() self:on_save() end)
@@ -183,8 +185,8 @@ end
 
 function DaynightView:get_subproperty(e, pn, p)
     local subproperty = {
-        [1] = uiproperty.Button({label = pn_label[pn].label_add},{click = DaynightView:get_add_click(pn, e)}),
-        [2] = uiproperty.Button({label = pn_label[pn].label_del},{click = DaynightView:get_del_click(pn, e)}),
+        uiproperty.Button({label = pn_label[pn].label_add},{click = DaynightView:get_add_click(pn, e)}),
+        uiproperty.Button({label = pn_label[pn].label_del},{click = DaynightView:get_del_click(pn, e)}),
     }
     for i = 1, #p do
         DaynightView:add_subsubproperty(subproperty, i, pn, e)
@@ -193,8 +195,25 @@ function DaynightView:get_subproperty(e, pn, p)
 end
 
 function DaynightView:get_daynight_cycles(e)
+    
+    local function cycle_getter()
+        return function()
+            return daynightui.get_daynight_cycle()
+        end
+    end
+
+    local function cycle_setter()
+        return function(value)
+            daynightui.set_daynight_cycle(value)
+        end
+    end
+
     local property_array = {
-        [1] = self.save,
+        self.save,
+        uiproperty.Float(
+            {label = "Cycle",   dim = 1, min = 1.00, max = 1000.00, speed = 0.02},
+            {getter = cycle_getter(), setter = cycle_setter()}
+        )
     }
     for pn, p in pairs(e.daynight.rt) do
         property_array[#property_array+1] = self[pn]
