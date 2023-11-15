@@ -23,7 +23,7 @@ highp vec3 quat_to_tangent(const highp vec4 q){
         	vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
 }
 
-void to_tbn(mat3 wm, float s, inout vec3 normal, inout vec3 tangent, out vec3 bitangent)
+void to_tbn(mat3 wm3, float s, inout vec3 normal, inout vec3 tangent, out vec3 bitangent)
 {
     normal		= mul(wm3, normal);
     tangent		= mul(wm3, tangent);

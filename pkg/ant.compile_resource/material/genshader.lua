@@ -858,5 +858,6 @@ end
 return {
     gen_fx              = gen_fx,
     DEF_PBR_UNIFORM     = DEF_PBR_UNIFORM,
-    LOCAL_SHADER_BASE   = LOCAL_SHADER_BASE
+    LOCAL_SHADER_BASE   = LOCAL_SHADER_BASE,
+    read_varyings       = read_varyings_input,
 }

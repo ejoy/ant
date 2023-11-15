@@ -456,7 +456,7 @@ local function find_stage_file(setting, fx, stage)
     return inputfile
 end
 
-local function create_shader_cfg(post_tasks, output, mat, stages)
+local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
     local lighting<const>   = mat.fx.setting.lighting
     local shadertype<const> = mat.fx.shader_type
     local properties<const> = mat.properties
@@ -472,11 +472,11 @@ local function create_shader_cfg(post_tasks, output, mat, stages)
         else
             if stages.vs then
                 local s = load_shader_uniforms(output, "vs", ao)
-                local varyings = mat.fx.varyings
+                local varyings = genshader.read_varyings(setting, inputfolder, mat.fx)
                 if varyings and s.inputs then
                     for _, input in ipairs(s.inputs) do
                         if not varyings[input] then
-                            error(("Shader need input%s, but material varyings not provided"):format(input))
+                            error(("Shader need input: %s, but material varyings not provided"):format(input))
                         end
                     end
                 end
@@ -540,7 +540,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         compile_shader(stage)
     end
 
-    create_shader_cfg(post_tasks, output, mat, stages)
+    create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
 end
 
 return compile

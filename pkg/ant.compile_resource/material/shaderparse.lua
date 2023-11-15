@@ -65,6 +65,27 @@ end
 local kUniformMask<const> = 0xf0
 local reservedType<const> = 1 --bgfx_ph.h Line 4219
 
+local ID2INPUTNAMES<const> = {
+    [0x0001] = "a_position",
+    [0x0002] = "a_normal",
+    [0x0003] = "a_tangent",
+    [0x0004] = "a_bitangent",
+    [0x0005] = "a_color0",
+    [0x0006] = "a_color1",
+    [0x0018] = "a_color2",
+    [0x0019] = "a_color3",
+    [0x000e] = "a_indices",
+    [0x000f] = "a_weight",
+    [0x0010] = "a_texcoord0",
+    [0x0011] = "a_texcoord1",
+    [0x0012] = "a_texcoord2",
+    [0x0013] = "a_texcoord3",
+    [0x0014] = "a_texcoord4",
+    [0x0015] = "a_texcoord5",
+    [0x0016] = "a_texcoord6",
+    [0x0017] = "a_texcoord7",
+}
+
 local function parse_shaderbin(c)
     local reader = create_reader(c)
     local magic = reader:read(4)
@@ -132,9 +153,8 @@ local function parse_shaderbin(c)
     local attribnum = reader:readUint8()
     local inputs = {}
     for i=1, attribnum do
-        local function cvt2attribid(id) return id-1 end
-        local id = cvt2attribid(reader:readUint16())
-        inputs[i] = L.attribid2name(id)
+        local id = reader:readUint16()
+        inputs[i] = ID2INPUTNAMES[id]
     end
 
     return {
