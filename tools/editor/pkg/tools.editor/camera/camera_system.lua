@@ -126,13 +126,12 @@ local function on_wheel(delta)
 	world:pub {"camera", "zoom"}
 end
 
-local key_mb			= world:sub {"keyboard"}
-local mouse_mb          = world:sub {"mouse"}
-local mouse_wheel_mb    = world:sub {"mousewheel"}
-local event_gesture 	= world:sub { "gesture", "pinch"}
-local smooth_lookat_mb  = world:sub {"SmoothLookAt"}
-local event_camera_speed = world:sub{"camera_controller", "move_speed"}
-local lock_camera_mb  	= world:sub {"LockCamera"}
+local key_mb             = world:sub {"keyboard"}
+local mouse_mb           = world:sub {"mouse"}
+local event_gesture      = world:sub {"gesture", "pinch"}
+local smooth_lookat_mb   = world:sub {"SmoothLookAt"}
+local event_camera_speed = world:sub {"camera_controller", "move_speed"}
+local lock_camera_mb     = world:sub {"LockCamera"}
 local lock_camera
 local function do_animation()
 	if not animation.running then
@@ -211,10 +210,6 @@ function camera_sys:handle_input()
 			rotate_mode = false
 			move_mode = false
 		end
-	end
-
-	for _, delta in mouse_wheel_mb:unpack() do
-		on_wheel(delta)
 	end
 
 	for _, key, press, status in key_mb:unpack() do

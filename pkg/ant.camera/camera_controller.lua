@@ -10,7 +10,6 @@ local cc_sys = ecs.system "default_camera_controller"
 
 local kb_mb             = world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
-local EventMouseWheel   = world:sub {"mousewheel"}
 local EventGesturePinch = world:sub {"gesture", "pinch"}
 local EventGesturePan   = world:sub {"gesture", "pan"}
 
@@ -152,9 +151,6 @@ function cc_sys:camera_usage()
 
     check_update_control()
 
-    for _, delta in EventMouseWheel:unpack() do
-        action.scale(5 * delta)
-    end
     for _, _, e in EventGesturePinch:unpack() do
         action.scale(5 * e.velocity)
     end
