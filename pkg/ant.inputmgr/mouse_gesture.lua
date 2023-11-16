@@ -39,14 +39,14 @@ return function (ev)
     local longPressTimeout <const> = 400
 
     local function dispatch_longpress()
-        ltask.call(ltask.self(), "msg", {
+        ltask.call(ltask.self(), "msg", {{
             type = "gesture",
             what = "longpress",
             x = downX,
             y = downY,
             state = "began",
             timestamp = time.monotonic(),
-        })
+        }})
         inLongPress = true
     end
 
