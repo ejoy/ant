@@ -1,6 +1,6 @@
 #include <lua.hpp>
 #include "window.h"
-#include <type_traits>
+#include <utility>
 #include <bee/nonstd/unreachable.h>
 
 #if defined(_WIN32)
