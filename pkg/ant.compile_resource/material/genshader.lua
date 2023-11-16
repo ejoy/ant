@@ -47,7 +47,7 @@ local DEF_PBR_UNIFORM <const> = {
     },
     u_pbr_factor       ={
         shader = "uniform mediump vec4 u_pbr_factor;",
-        attrib = {0, 1, 0, 0} --metalic, roughness, alpha mask, occlusion
+        attrib = {0, 1, 0, 1} --metalic, roughness, alpha mask, occlusion
     }
 }
 
