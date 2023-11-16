@@ -2,8 +2,7 @@ local utility           = require "model.utility"
 local serialize         = import_package "ant.serialize"
 local lfs               = require "bee.filesystem"
 local material_compile  = require "material.compile"
-
-local meshutil = require "model.meshutil"
+local L                 = import_package "ant.render.core".layout
 
 local invalid_chars<const> = "<>:/\\|?%s%[%]%(%)"
 local replace_char<const> = '_'
@@ -80,51 +79,9 @@ local check_update_material_info; do
     end
 
     local build_varyings; do
-        
-        local SEMANTICS_WITH_INDICES<const> = {
-            c = true, t = true
-        }
-        local function format_varying(d)
-            local n = d:sub(2, 2)
-            local w = d:sub(1, 1)
-            local s = assert(meshutil.SHORT_NAMES[w])
-            local i = d:sub(3, 3)
-            local t = d:sub(6, 6)
-            local o = d:sub(4, 4)
-
-            local datatype
-            if w == 'i' then
-                if o ~= 'N' then
-                    error(("'INDICES/JOINTS' attribute:%s should not defined as normalize"):format(d))
-                end
-                if t ~= 'u' and t ~= 'i' then
-                    error(("Invalid INDICES/JOINTS type:%s, it data element must be 'u'/'i' for uint8 or uint16"):format(d))
-                end
-                datatype = "ivec"
-            else
-                datatype = "vec"
-                if o ~= 'n' and t ~= 'f' then
-                    error(("Invalid attribute:%s, not nomalize data should only be 'float'"):format(d))
-                end
-            end
-            return SEMANTICS_WITH_INDICES[w] and ("%s%s %s%s"):format(datatype, n, s, i) or ("%s%s %s"):format(datatype, n, s)
-        end
-
-        local INPUTNAMES<const> = {
-            p = "a_position", c = "a_color", n = "a_normal", T = "a_tangent", b = "a_bitangent",
-            t = "a_texcoord", i = "a_indices", w = "a_weight",
-        }
-    
         function build_varyings(cfg, mat)
-            local varyings = {}
+            local varyings = L.varying_inputs(cfg.binded_declname)
 
-            --input
-            for dn in cfg.binded_declname:gmatch "%w+" do
-                local t = dn:sub(1, 1)
-                local vn = SEMANTICS_WITH_INDICES[t] and (INPUTNAMES[t] .. dn:sub(3, 3)) or INPUTNAMES[t]
-                varyings[vn] = format_varying(dn)
-            end
-    
             if cfg.pack_tangent_frame and varyings.a_tangent then
                 assert(not varyings.a_normal, "Normal should pack to Tangent attirb")
                 local v = {}

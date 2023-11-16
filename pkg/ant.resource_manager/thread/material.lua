@@ -89,6 +89,7 @@ local function createRenderProgram(fxcfg)
         fs              = fh,
         prog            = prog,
         uniforms        = uniforms,
+        varyings        = fxcfg.varyings,
     }
 
     if depth_prog then
@@ -96,6 +97,7 @@ local function createRenderProgram(fxcfg)
             handle  = dh,
             prog    = depth_prog,
             uniforms= depth_uniforms,
+            varyings= fxcfg.depth_varyings,
         }
     end
 
@@ -143,11 +145,13 @@ local function build_fxcfg(filename, fx)
     end
     return {
         shader_type = fx.shader_type,
-        setting = fx.setting,
-        vs = stage_filename "vs",
-        fs = stage_filename "fs",
-        cs = stage_filename "cs",
-        depth = stage_filename "depth",
+        setting     = fx.setting,
+        vs          = stage_filename "vs",
+        fs          = stage_filename "fs",
+        cs          = stage_filename "cs",
+        depth       = stage_filename "depth",
+        varyings    = fx.varyings,
+        depth_varyings=fx.depth and fx.depth.varyings or nil,
     }
 end
 

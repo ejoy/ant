@@ -2,6 +2,7 @@ local sha1          = require "sha1"
 local lfs           = require "bee.filesystem"
 local datalist      = require "datalist"
 local lfastio       = require "fastio"
+local L             = import_package "ant.render.core".layout
 
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
@@ -122,28 +123,6 @@ local function generate_properties(stage, properties)
     return table.concat(content, "\n")
 end
 
-local function parse_varyings_input(varyings)
-    local t = {}
-    for k, v in pairs(varyings) do
-        if type(v) == "string" then
-            local dd = {}
-            for e in v:gmatch "%w+" do
-                dd[#dd+1] = e
-            end
-            t[k] = {
-                type = dd[1],
-                bind = dd[2],
-            }
-        else
-            assert(v.bind)
-            assert(v.type)
-            t[k] = v
-        end
-    end
-
-    return t
-end
-
 local function vfs_exists(vfs, path)
     return vfs.type(path) ~= nil
 end
@@ -173,7 +152,7 @@ local function read_varyings_input(setting, inputfolder, fx)
         assert(type(varyings) == "table")
     end
 
-    return parse_varyings_input(varyings)
+    return L.parse_varyings(varyings)
 end
 
 local function write_file(filename, c)

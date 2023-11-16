@@ -16,7 +16,6 @@ local irl		= ecs.require "ant.render|render_layer.render_layer"
 local RM        = ecs.require "ant.material|material"
 
 local render_sys= ecs.system "render_system"
-
 local R			= world:clibs "render.render_material"
 
 function render_sys:start_frame()

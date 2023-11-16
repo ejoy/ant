@@ -308,6 +308,9 @@ return function (status)
         local setting = {}
         if isopaque then
             macros[#macros+1] = "ALPHAMODE_OPAQUE=1"
+            setting.lighting = "on"
+            setting.cast_shadow = "on"
+            setting.shadow_receive = "on"
         else
             setting.lighting = "off"
         end

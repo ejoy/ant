@@ -2,10 +2,11 @@ local ecs	= ...
 local world = ecs.world
 local w		= world.w
 
-local assetmgr		= require "main"
-local bgfx			= require "bgfx"
+local assetmgr	= require "main"
+local bgfx		= require "bgfx"
 
-local RM			= ecs.require "ant.material|material"
+local RM		= ecs.require "ant.material|material"
+local L			= import_package "ant.render.core".layout
 
 local imaterial = {}
 
@@ -38,6 +39,33 @@ function ms:component_init()
 
 	for e in w:select "INIT material:in material_result:new" do
 		e.material_result = assetmgr.resource(e.material)
+	end
+end
+
+function ms:entity_init()
+	for e in w:select "INIT mesh:in material:in" do
+		local declname = e.mesh.vb.declname
+		if e.mesh.vb2 then
+			declname = ("%s|%s"):format(declname, e.mesh.vb2.declname)
+		end
+
+		local matres = assetmgr.resource(e.material)
+		local varyings = matres.fx.varyings
+
+		if varyings then
+			varyings = L.parse_varyings(varyings)
+			local inputs = L.parse_varyings(L.varying_inputs(declname))
+			for k, v in pairs(varyings) do
+				if k:match "a_" then
+					local function is_input_equal(lhs, rhs)
+						return lhs.type == rhs.type and lhs.bind == rhs.bind
+					end
+					if not (inputs[k] and is_input_equal(inputs[k], v)) then
+						error(("Layout:%s decal is not equal"):format(k))
+					end
+				end
+			end
+		end
 	end
 end
 
