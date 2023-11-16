@@ -1,0 +1,9 @@
+import_feature "ant.scene"
+
+component "billboard"
+
+policy "billboard"
+    .include_policy "ant.scene|scene_object"
+
+system "billboard_system"
+    .implement "billboard/billboard.lua"
