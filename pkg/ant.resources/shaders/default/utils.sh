@@ -2,13 +2,16 @@
 #define __DEFAULT_UTILS_SH__
 
 #include "common/transform.sh"
+#ifdef WITH_POSITION_ATTRIB
 vec4 custom_vs_position(VSInput vsinput, inout Varyings varyings, out mat4 worldmat)
 {
     worldmat = u_model[0];
-	vec4 posCS; varyings.posWS = transform_worldpos(wm, vsinput.position, posCS);
+	vec4 posCS; varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);
 	return posCS;
 }
+#endif //WITH_POSITION_ATTRIB
 
+#ifdef WITH_TANGENT_ATTRIB
 void unpack_tbn_from_quat(mat4 mat, VSInput vsinput, inout Varyings varyings){
     unpack_tbn_from_quat((mat3)mat, vsinput.tangent, varyings.normal, varyings.tangent, varyings.bitangent);
 }
@@ -19,5 +22,6 @@ void update_tbn(mat4 wm, VSInput vsinput, Varyings varyings)
 	varyings.tangent = vsinput.tangent.xyz;
 	to_tbn((mat3)wm, sign(vsinput.tangent.w), varyings.normal, varyings.tangent, varyings.bitangent);
 }
+#endif //WITH_TANGENT_ATTRIB
 
 #endif //__DEFAULT_UTILS_SH__

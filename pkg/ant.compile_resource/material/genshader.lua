@@ -118,6 +118,7 @@ local function generate_properties(stage, properties)
     for k,v in pairs(DEF_PBR_UNIFORM) do
         if not properties[k] then
             content[#content+1] = v.shader
+            properties[k] = v.attrib
         end
     end
     return table.concat(content, "\n")
@@ -199,163 +200,6 @@ local function is_output_varying(n, v)
     return nt == 'v'
 end
 
-local SEMANTICS_INFOS<const> = {
-	a_position	= {
-        shadername = "position",
-		bind = "POSITION",
-        macro = "WITH_POSITION_ATTRIB=1",
-	},
-    a_color0	= {
-        shadername = "color0",
-		bind = "COLOR0",
-        macro = "WITH_COLOR0_ATTRIB=1",
-	},
-    a_color1	= {
-        shadername = "color1",
-		bind = "COLOR1",
-        macro = "WITH_COLOR1_ATTRIB=1",
-	},
-	a_normal	= {
-        shadername = "normal",
-		bind = "NORMAL",
-        macro = "WITH_NORMAL_ATTRIB=1",
-	},
-	a_tangent	= {
-        shadername = "tangent",
-		bind = "TANGENT",
-        macro = "WITH_TANGENT_ATTRIB=1",
-	},
-    a_bitanget	= {
-        shadername = "bitangent",
-		bind = "BITANGENT",
-        macro = "WITH_BITANGENT_ATTRIB=1",
-	},
-    a_indices	= {
-        shadername = "indices",
-		bind = "BLENDINDICES",
-        macro = "WITH_INDICES_ATTRIB=1",
-	},
-    a_weight	= {
-        shadername = "weight",
-		bind = "BLENDWEIGHT",
-        macro = "WITH_WEIGHT_ATTRIB=1",
-	},
-	a_texcoord0	= {
-        shadername = "texcoord0",
-		bind = "TEXCOORD0",
-        macro = "WITH_TEXCOORD0_ATTRIB=1",
-	},
-	a_texcoord1	= {
-        shadername = "texcoord1",
-		bind = "TEXCOORD1",
-        macro = "WITH_TEXCOORD1_ATTRIB=1",
-	},
-	a_texcoord2	= {
-        shadername = "texcoord2",
-		bind = "TEXCOORD2",
-        macro = "WITH_TEXCOORD2_ATTRIB=1",
-	},
-	a_texcoord3	= {
-        shadername = "texcoord3",
-		bind = "TEXCOORD3",
-        macro = "WITH_TEXCOORD3_ATTRIB=1",
-	},
-	a_texcoord4	= {
-        shadername = "texcoord4",
-		bind = "TEXCOORD4",
-        macro = "WITH_TEXCOORD4_ATTRIB=1",
-	},
-	a_texcoord5	= {
-        shadername = "texcoord5",
-		bind = "TEXCOORD5",
-        macro = "WITH_TEXCOORD5_ATTRIB=1",
-	},
-	a_texcoord6	= {
-        shadername = "texcoord6",
-		bind = "TEXCOORD6",
-        macro = "WITH_TEXCOORD6_ATTRIB=1",
-	},
-    a_texcoord7	= {
-        shadername = "texcoord7",
-		bind = "TEXCOORD7",
-        macro = "WITH_TEXCOORD7_ATTRIB=1",
-	},
-    i_data0	= {
-        shadername = "data0",
-		bind = "TEXCOORD7",
-        macro = "WITH_INSTANCE_DATA0_ATTRIB=1",
-	},
-    i_data1	= {
-        shadername = "data1",
-		bind = "TEXCOORD6",
-        macro = "WITH_INSTANCE_DATA1_ATTRIB=1",
-	},
-    i_data2	= {
-        shadername = "data2",
-		bind = "TEXCOORD5",
-        macro = "WITH_INSTANCE_DATA2_ATTRIB=1",
-	},
-    i_data3	= {
-        shadername = "data3",
-		bind = "TEXCOORD4",
-        macro = "WITH_INSTANCE_DATA3_ATTRIB=1",
-	},
-    i_data4	= {
-        shadername = "data4",
-		bind = "TEXCOORD3",
-        macro = "WITH_INSTANCE_DATA4_ATTRIB=1",
-	},
-
-    v_texcoord0 = {
-        shadername = "texcoord0_out",
-        bind = "TEXCOORD0",
-    },
-    v_texcoord1 = {
-        shadername = "texcoord1_out",
-        bind = "TEXCOORD1",
-    },
-    v_texcoord2 = {
-        shadername = "texcoord2_out",
-        bind = "TEXCOORD2",
-    },
-    v_texcoord3 = {
-        shadername = "texcoord3_out",
-        bind = "TEXCOORD3",
-    },
-    v_posWS = {
-        shadername = "texcoord3_out",
-        bind = "TEXCOORD4",
-    },
-    v_normal = {
-        shadername = "normal_out",
-        bind = "TEXCOORD5",
-    },
-    v_tangent = {
-        shadername = "tangent_out",
-        bind = "TEXCOORD6",
-    },
-    v_bitangent = {
-        shadername = "bitangent_out",
-        bind = "TEXCOORD7",
-    },
-    v_color0 = {
-        shadername = "color0_out",
-        bind = "COLOR0",
-    },
-    v_color1 = {
-        shadername = "color1_out",
-        bind = "COLOR1",
-    },
-    v_color2 = {
-        shadername = "color2_out",
-        bind = "COLOR2",
-    },
-    v_color3 = {
-        shadername = "color3_out",
-        bind = "COLOR3",
-    },
-}
-
 local function code_gen(d, tab0, tab1, tab2)
     local function code_gen_(tabnum)
         tabnum = tabnum or 1
@@ -407,7 +251,7 @@ local function build_input_var(varyingcontent)
 
     local shaderfmt = "%s %s;"
     for k, v in sortpairs(varyingcontent) do
-        vdd_ac0(("%s %s : %s;"):format(v.type, k, v.bind or SEMANTICS_INFOS[k].bind))
+        vdd_ac0(("%s %s : %s;"):format(v.type, k, v.bind or L.SEMANTICS_INFOS[k].bind))
 
         local member_name = k:match "[av]_(%w+)"
         if is_input_varying(k, v) then
@@ -743,7 +587,7 @@ local function build_fx_macros(mat, varyings)
     mat.fx.macros = mat.fx.macros or {}
     local m = mat.fx.macros
     for k in pairs(varyings) do
-        local v = SEMANTICS_INFOS[k]
+        local v = L.SEMANTICS_INFOS[k]
         if v then
             m[#m+1] = v.macro
         end
@@ -792,18 +636,18 @@ local function build_fx_macros(mat, varyings)
     end
 end
 
-local function check_fx_content(fxcontent)
-    local vsfunc_define = fxcontent.vs["@VS_FUNC_DEFINE"]
-    if nil == vsfunc_define:match "CUSTOM_VS_POSITION" then
-        error "Need define 'CUSTOM_VS_POSITION'"
+local function check_shader(shader, stage)
+    if stage == "vs" then
+        if not shader:match "CUSTOM_VS_POSITION" then
+            error "Need define 'CUSTOM_VS_POSITION'"
+        end
+    elseif stage == "fs" then
+        if not shader:match "CUSTOM_FS" then
+            error "Need define 'CUSTOM_FS'"
+        end
     end
 
-    local fsfunc_define = fxcontent.fs["@FS_FUNC_DEFINE"]
-    if nil == fsfunc_define:match "CUSTOM_FS" then
-        error "Need define 'CUSTOM_FS'"
-    end
-
-    return fxcontent
+    return shader
 end
 
 local function gen_shader(setting, fx, stage, shaderdefined)
@@ -813,7 +657,8 @@ local function gen_shader(setting, fx, stage, shaderdefined)
         assert(fx[stage] and stage == "depth")
         return
     end
-    local shader = si.template:gsub("@[%w_]+", shaderdefined[stage])
+    local shader = check_shader(si.template:gsub("@[%w_]+", shaderdefined[stage]), stage)
+
     local filename = setting.scpath / si.filename:format(sha1(shader))
 
     if not lfs.exists(filename) then
@@ -849,14 +694,22 @@ local function find_stages(fx)
 end
 
 local function gen_fx(setting, input, output, mat)
+    local inputfolder = lfs.path(input):parent_path()
     local fx = mat.fx
     local stages = find_stages(fx)
 
-    local varyings = read_varyings_input(setting, input, fx)
-    if varyings and fx.shader_type == "PBR" then
-        local results = build_input_var(varyings)
+    local varyings = read_varyings_input(setting, inputfolder, fx)
+    local results
+    if varyings then
+        results = build_input_var(varyings)
         fx.varying_path = write_varying_def_sc(output, results.varying_def)
-        local fxcontent = check_fx_content(build_fx_content(mat, varyings, results))
+    end
+
+    if fx.shader_type == "PBR" then
+        if not varyings then
+            error(("Material file:%s, shader_type == 'PBR' should define 'varyings' in material file"):format(input))
+        end
+        local fxcontent = build_fx_content(mat, varyings, results)
         build_fx_macros(mat, varyings)
         for stage in pairs(stages) do
             gen_shader(setting, fx, stage, fxcontent)

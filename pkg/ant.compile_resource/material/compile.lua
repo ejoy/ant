@@ -513,7 +513,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     merge_cfg_setting(setting, fx)
     check_update_shader_type(fx)
 
-    local stages = genshader.gen_fx(setting, inputfolder, output, mat)
+    local stages = genshader.gen_fx(setting, input, output, mat)
     writefile(output / "main.cfg",  mat)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()

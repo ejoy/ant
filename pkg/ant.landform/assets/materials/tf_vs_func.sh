@@ -1,11 +1,10 @@
 #include "common/transform.sh"
 #include "common/common.sh"
+#include "default/utils.sh"
 
-vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat worldmat)
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out4 mat worldmat)
 {
-	worldmat = u_model[0];
-	vec4 posCS; varyings.posWS = transform_worldpos(wm, vsinput.position, posCS);
-	return posCS;
+	return custom_vs_position(vsinput, varyings, worldmat);
 }
 
 void CUSTOM_VS(VSInput vsinput, inout Varyings varyings)

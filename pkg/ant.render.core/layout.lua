@@ -137,6 +137,163 @@ end
 
 --layout to inputs/varyings
 
+local SEMANTICS_INFOS<const> = {
+	a_position	= {
+        shadername = "position",
+		bind = "POSITION",
+        macro = "WITH_POSITION_ATTRIB=1",
+	},
+    a_color0	= {
+        shadername = "color0",
+		bind = "COLOR0",
+        macro = "WITH_COLOR0_ATTRIB=1",
+	},
+    a_color1	= {
+        shadername = "color1",
+		bind = "COLOR1",
+        macro = "WITH_COLOR1_ATTRIB=1",
+	},
+	a_normal	= {
+        shadername = "normal",
+		bind = "NORMAL",
+        macro = "WITH_NORMAL_ATTRIB=1",
+	},
+	a_tangent	= {
+        shadername = "tangent",
+		bind = "TANGENT",
+        macro = "WITH_TANGENT_ATTRIB=1",
+	},
+    a_bitanget	= {
+        shadername = "bitangent",
+		bind = "BITANGENT",
+        macro = "WITH_BITANGENT_ATTRIB=1",
+	},
+    a_indices	= {
+        shadername = "indices",
+		bind = "BLENDINDICES",
+        macro = "WITH_INDICES_ATTRIB=1",
+	},
+    a_weight	= {
+        shadername = "weight",
+		bind = "BLENDWEIGHT",
+        macro = "WITH_WEIGHT_ATTRIB=1",
+	},
+	a_texcoord0	= {
+        shadername = "texcoord0",
+		bind = "TEXCOORD0",
+        macro = "WITH_TEXCOORD0_ATTRIB=1",
+	},
+	a_texcoord1	= {
+        shadername = "texcoord1",
+		bind = "TEXCOORD1",
+        macro = "WITH_TEXCOORD1_ATTRIB=1",
+	},
+	a_texcoord2	= {
+        shadername = "texcoord2",
+		bind = "TEXCOORD2",
+        macro = "WITH_TEXCOORD2_ATTRIB=1",
+	},
+	a_texcoord3	= {
+        shadername = "texcoord3",
+		bind = "TEXCOORD3",
+        macro = "WITH_TEXCOORD3_ATTRIB=1",
+	},
+	a_texcoord4	= {
+        shadername = "texcoord4",
+		bind = "TEXCOORD4",
+        macro = "WITH_TEXCOORD4_ATTRIB=1",
+	},
+	a_texcoord5	= {
+        shadername = "texcoord5",
+		bind = "TEXCOORD5",
+        macro = "WITH_TEXCOORD5_ATTRIB=1",
+	},
+	a_texcoord6	= {
+        shadername = "texcoord6",
+		bind = "TEXCOORD6",
+        macro = "WITH_TEXCOORD6_ATTRIB=1",
+	},
+    a_texcoord7	= {
+        shadername = "texcoord7",
+		bind = "TEXCOORD7",
+        macro = "WITH_TEXCOORD7_ATTRIB=1",
+	},
+    i_data0	= {
+        shadername = "data0",
+		bind = "TEXCOORD7",
+        macro = "WITH_INSTANCE_DATA0_ATTRIB=1",
+	},
+    i_data1	= {
+        shadername = "data1",
+		bind = "TEXCOORD6",
+        macro = "WITH_INSTANCE_DATA1_ATTRIB=1",
+	},
+    i_data2	= {
+        shadername = "data2",
+		bind = "TEXCOORD5",
+        macro = "WITH_INSTANCE_DATA2_ATTRIB=1",
+	},
+    i_data3	= {
+        shadername = "data3",
+		bind = "TEXCOORD4",
+        macro = "WITH_INSTANCE_DATA3_ATTRIB=1",
+	},
+    i_data4	= {
+        shadername = "data4",
+		bind = "TEXCOORD3",
+        macro = "WITH_INSTANCE_DATA4_ATTRIB=1",
+	},
+
+    v_texcoord0 = {
+        shadername = "texcoord0_out",
+        bind = "TEXCOORD0",
+    },
+    v_texcoord1 = {
+        shadername = "texcoord1_out",
+        bind = "TEXCOORD1",
+    },
+    v_texcoord2 = {
+        shadername = "texcoord2_out",
+        bind = "TEXCOORD2",
+    },
+    v_texcoord3 = {
+        shadername = "texcoord3_out",
+        bind = "TEXCOORD3",
+    },
+    v_posWS = {
+        shadername = "texcoord3_out",
+        bind = "TEXCOORD4",
+    },
+    v_normal = {
+        shadername = "normal_out",
+        bind = "TEXCOORD5",
+    },
+    v_tangent = {
+        shadername = "tangent_out",
+        bind = "TEXCOORD6",
+    },
+    v_bitangent = {
+        shadername = "bitangent_out",
+        bind = "TEXCOORD7",
+    },
+    v_color0 = {
+        shadername = "color0_out",
+        bind = "COLOR0",
+    },
+    v_color1 = {
+        shadername = "color1_out",
+        bind = "COLOR1",
+    },
+    v_color2 = {
+        shadername = "color2_out",
+        bind = "COLOR2",
+    },
+    v_color3 = {
+        shadername = "color3_out",
+        bind = "COLOR3",
+    },
+}
+
 local SEMANTICS_WITH_INDICES<const> = {
     c = true, t = true
 }
@@ -193,7 +350,7 @@ function L.parse_varyings(varyings)
             end
             t[k] = {
                 type = dd[1],
-                bind = dd[2],
+                bind = dd[2] or SEMANTICS_INFOS[k].bind,
             }
         else
             assert(v.bind)
@@ -207,6 +364,7 @@ end
 
 L.SEMANTICS_WITH_INDICES = SEMANTICS_WITH_INDICES
 L.ATTRIB_NAMES = ATTRIB_NAMES
+L.SEMANTICS_INFOS = SEMANTICS_INFOS
 
 function L.attribid2name(id)
 	local nid = id+1

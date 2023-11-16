@@ -61,7 +61,7 @@ function ms:entity_init()
 						return lhs.type == rhs.type and lhs.bind == rhs.bind
 					end
 					if not (inputs[k] and is_input_equal(inputs[k], v)) then
-						error(("Layout:%s decal is not equal"):format(k))
+						error(("Layout: %s, is not declared or not equal to varyings defined"):format(k))
 					end
 				end
 			end

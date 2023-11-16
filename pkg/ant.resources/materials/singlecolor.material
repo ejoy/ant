@@ -2,6 +2,19 @@ fx:
   shader_type: PBR
   setting:
     lighting: on
+  varyings:
+    a_position: vec3
+    a_tangent:
+      type: vec4
+      bind: TANGENT
+      pack_from_quat: true
+    a_texcoord0: vec2
+    v_texcoord0:  "vec2 TEXCOORD0"
+    v_posWS:      "vec4 TEXCOORD1"
+    v_normal:     "vec3 TEXCOORD2"
+    v_tangent:    "vec3 TEXCOORD3"
+    v_bitangent:  "vec3 TEXCOORD4"
 properties:
+  u_pbr_factor: {0, 1, 0, 0}
   u_basecolor_factor: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state
