@@ -52,22 +52,15 @@ local function create(world, type)
         end
     end
     function ev.keyboard(m)
-        world:pub {"keyboard", keymap[m.key], m.press, {
-            CTRL	= (m.state & 0x01) ~= 0,
-            SHIFT	= (m.state & 0x02) ~= 0,
-            ALT		= (m.state & 0x04) ~= 0,
-            SYS		= (m.state & 0x08) ~= 0,
-        }}
+        world:pub {"keyboard", keymap[m.key], m.press, m.state}
     end
     function ev.size(m)
         world:pub {"resize", m.w, m.h}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         if world.args.ecs.enable_mouse then
-            local mouse_what  = { 'LEFT', 'MIDDLE', 'RIGHT' }
-            local mouse_state = { 'DOWN', 'MOVE', 'UP' }
             function ev.mouse_event(m)
-                world:pub {"mouse", mouse_what[m.what] or "UNKNOWN", mouse_state[m.state] or "UNKNOWN", m.x, m.y}
+                world:pub {"mouse", m.what, m.state, m.x, m.y}
             end
         else
             function ev.mouse_event()

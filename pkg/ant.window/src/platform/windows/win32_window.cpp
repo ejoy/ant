@@ -49,24 +49,24 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		if (wParam & MK_LBUTTON) {
 			cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 			struct ant::window::msg_mouse msg;
-			msg.what = ant::window::MOUSE_LEFT;
-			msg.state = ant::window::MOUSE_MOVE;
+			msg.what = ant::window::mouse_button::left;
+			msg.state = ant::window::mouse_state::move;
 			get_xy(lParam, &msg.x, &msg.y);
 			ant::window::input_message(cb, msg);
 		}
 		if (wParam & MK_MBUTTON) {
 			cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 			struct ant::window::msg_mouse msg;
-			msg.what = ant::window::MOUSE_MIDDLE;
-			msg.state = ant::window::MOUSE_MOVE;
+			msg.what = ant::window::mouse_button::middle;
+			msg.state = ant::window::mouse_state::move;
 			get_xy(lParam, &msg.x, &msg.y);
 			ant::window::input_message(cb, msg);
 		}
 		if (wParam & MK_RBUTTON) {
 			cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 			struct ant::window::msg_mouse msg;
-			msg.what = ant::window::MOUSE_RIGHT;
-			msg.state = ant::window::MOUSE_MOVE;
+			msg.what = ant::window::mouse_button::right;
+			msg.state = ant::window::mouse_state::move;
 			get_xy(lParam, &msg.x, &msg.y);
 			ant::window::input_message(cb, msg);
 		}
@@ -75,8 +75,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	case WM_LBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouse msg;
-		msg.what = ant::window::MOUSE_LEFT;
-		msg.state = (message == WM_LBUTTONDOWN) ? ant::window::MOUSE_DOWN : ant::window::MOUSE_UP;
+		msg.what = ant::window::mouse_button::left;
+		msg.state = (message == WM_LBUTTONDOWN) ? ant::window::mouse_state::down : ant::window::mouse_state::up;
 		get_xy(lParam, &msg.x, &msg.y);
 		ant::window::input_message(cb, msg);
 		break;
@@ -85,8 +85,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	case WM_MBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouse msg;
-		msg.what = ant::window::MOUSE_MIDDLE;
-		msg.state = (message == WM_MBUTTONDOWN) ? ant::window::MOUSE_DOWN : ant::window::MOUSE_UP;
+		msg.what = ant::window::mouse_button::middle;
+		msg.state = (message == WM_MBUTTONDOWN) ? ant::window::mouse_state::down : ant::window::mouse_state::up;
 		get_xy(lParam, &msg.x, &msg.y);
 		ant::window::input_message(cb, msg);
 		break;
@@ -95,8 +95,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	case WM_RBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouse msg;
-		msg.what = ant::window::MOUSE_RIGHT;
-		msg.state = (message == WM_RBUTTONDOWN) ? ant::window::MOUSE_DOWN : ant::window::MOUSE_UP;
+		msg.what = ant::window::mouse_button::right;
+		msg.state = (message == WM_RBUTTONDOWN) ? ant::window::mouse_state::down : ant::window::mouse_state::up;
 		get_xy(lParam, &msg.x, &msg.y);
 		ant::window::input_message(cb, msg);
 		break;

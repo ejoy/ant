@@ -284,9 +284,9 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
-        case NSEventTypeLeftMouseDragged:  msg.what = ant::window::MOUSE_LEFT; break;
-        case NSEventTypeRightMouseDragged: msg.what = ant::window::MOUSE_MIDDLE; break;
-        case NSEventTypeOtherMouseDragged: msg.what = ant::window::MOUSE_RIGHT; break;
+        case NSEventTypeLeftMouseDragged:  msg.what = ant::window::mouse_button::left; break;
+        case NSEventTypeRightMouseDragged: msg.what = ant::window::mouse_button::middle; break;
+        case NSEventTypeOtherMouseDragged: msg.what = ant::window::mouse_button::right; break;
         default: break;
         }
         ant::window::input_message(cb, msg);
@@ -300,9 +300,9 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
-        case NSEventTypeLeftMouseDown:  msg.what = ant::window::MOUSE_LEFT; break;
-        case NSEventTypeRightMouseDown: msg.what = ant::window::MOUSE_MIDDLE; break;
-        case NSEventTypeOtherMouseDown: msg.what = ant::window::MOUSE_RIGHT; break;
+        case NSEventTypeLeftMouseDown:  msg.what = ant::window::mouse_button::left; break;
+        case NSEventTypeRightMouseDown: msg.what = ant::window::mouse_button::middle; break;
+        case NSEventTypeOtherMouseDown: msg.what = ant::window::mouse_button::right; break;
         default: break;
         }
         ant::window::input_message(cb, msg);
@@ -316,9 +316,9 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
-        case NSEventTypeLeftMouseUp:  msg.what = ant::window::MOUSE_LEFT; break;
-        case NSEventTypeRightMouseUp: msg.what = ant::window::MOUSE_MIDDLE; break;
-        case NSEventTypeOtherMouseUp: msg.what = ant::window::MOUSE_RIGHT; break;
+        case NSEventTypeLeftMouseUp:  msg.what = ant::window::mouse_button::left; break;
+        case NSEventTypeRightMouseUp: msg.what = ant::window::mouse_button::middle; break;
+        case NSEventTypeOtherMouseUp: msg.what = ant::window::mouse_button::right; break;
         default: break;
         }
         ant::window::input_message(cb, msg);

@@ -43,7 +43,7 @@ static id<MTLDevice> g_device = NULL;
 struct ant_window_callback* g_cb = NULL;
 id g_gesture;
 
-static void push_touch_message(ant::window::TOUCH_STATE state, UIView* view, NSSet* touches) {
+static void push_touch_message(ant::window::touch_state state, UIView* view, NSSet* touches) {
     struct ant::window::msg_touch msg;
     msg.state = state;
     for (UITouch *touch in touches) {
@@ -116,16 +116,16 @@ static void push_touch_message(ant::window::TOUCH_STATE state, UIView* view, NSS
     g_cb->update(g_cb);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(ant::window::TOUCH_BEGAN, self, [event allTouches]);
+    push_touch_message(ant::window::touch_state::began, self, [event allTouches]);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(ant::window::TOUCH_MOVED, self,  [event allTouches]);
+    push_touch_message(ant::window::touch_state::moved, self,  [event allTouches]);
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(ant::window::TOUCH_ENDED, self,  [event allTouches]);
+    push_touch_message(ant::window::touch_state::ended, self,  [event allTouches]);
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(ant::window::TOUCH_CANCELLED, self,  [event allTouches]);
+    push_touch_message(ant::window::touch_state::cancelled, self,  [event allTouches]);
 }
 - (void)maxfps:(float)fps {
     self.m_displayLink.preferredFrameRateRange = CAFrameRateRangeMake(fps, fps, fps);

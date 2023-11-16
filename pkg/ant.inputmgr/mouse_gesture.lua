@@ -197,14 +197,14 @@ return function (ev)
     end
     function ev.mouse(m)
         ev.mouse_event(m)
-        if m.what ~= MOUSE_LEFT then
+        if m.what ~= "LEFT" then
             return
         end
-        if m.state == MOUSE_DOWN then
+        if m.state == "DOWN" then
             ev.touch {
                 type = "touch",
                 id = 1,
-                state = TOUCH_BEGAN,
+                state = "began",
                 x = m.x,
                 y = m.y,
                 timestamp = m.timestamp,
@@ -212,11 +212,11 @@ return function (ev)
             mouse_down(m)
             return
         end
-        if m.state == MOUSE_MOVE then
+        if m.state == "MOVE" then
             ev.touch {
                 type = "touch",
                 id = 1,
-                state = TOUCH_MOVED,
+                state = "moved",
                 x = m.x,
                 y = m.y,
                 timestamp = m.timestamp,
@@ -224,12 +224,12 @@ return function (ev)
             mouse_move(m)
             return
         end
-        if m.state == MOUSE_UP then
+        if m.state == "UP" then
             mouse_up(m)
             ev.touch {
                 type = "touch",
                 id = 1,
-                state = TOUCH_ENDED,
+                state = "ended",
                 x = m.x,
                 y = m.y,
                 timestamp = m.timestamp,

@@ -222,19 +222,15 @@ local function setActive(doc, e, id)
 end
 
 function m.process_touch(ev)
-    local TOUCH_BEGAN <const> = 1
-    local TOUCH_MOVED <const> = 2
-    local TOUCH_ENDED <const> = 3
-    local TOUCH_CANCELLED <const> = 4
-    if ev.state == TOUCH_BEGAN then
+    if ev.state == "began" then
         local x, y = round(ev.x), round(ev.y)
         local doc, e = fromPoint(x, y)
         if e then
             setActive(doc, e, ev.id)
         end
-    elseif ev.state == TOUCH_ENDED or ev.state == TOUCH_CANCELLED then
+    elseif ev.state == "ended" or ev.state == "cancelled" then
         cancelActive(ev.id)
-    elseif ev.state == TOUCH_MOVED then
+    elseif ev.state == "moved" then
         return
     end
 end

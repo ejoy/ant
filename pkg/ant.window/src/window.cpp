@@ -1,6 +1,7 @@
 #include <lua.hpp>
 #include "window.h"
 #include <type_traits>
+#include <bee/nonstd/unreachable.h>
 
 #if defined(_WIN32)
 
@@ -22,56 +23,109 @@ static uint64_t get_timestamp() {
 
 #endif
 
-static void push_message_arg(lua_State*L, const char* v) {
+static void push_message_arg(lua_State* L, const char* v) {
 	lua_pushstring(L, v);
 }
 
-static void push_message_arg(lua_State*L, int v) {
+static void push_message_arg(lua_State* L, int v) {
 	lua_pushinteger(L, static_cast<lua_Integer>(v));
 }
 
-static void push_message_arg(lua_State*L, uint8_t v) {
+static void push_message_arg(lua_State* L, uint8_t v) {
 	lua_pushinteger(L, static_cast<lua_Integer>(v));
 }
 
-static void push_message_arg(lua_State*L, uintptr_t v) {
+static void push_message_arg(lua_State* L, uintptr_t v) {
 	lua_pushinteger(L, static_cast<lua_Integer>(v));
 }
 
-static void push_message_arg(lua_State*L, float v) {
+static void push_message_arg(lua_State* L, float v) {
 	lua_pushnumber(L, static_cast<lua_Number>(v));
 }
 
-static void push_message_arg(lua_State*L, void* v) {
+static void push_message_arg(lua_State* L, void* v) {
 	lua_pushlightuserdata(L, v);
 }
 
-static void push_message_arg(lua_State*L, ant::window::TOUCH_STATE v) {
-	lua_pushinteger(L, static_cast<lua_Integer>(v));
+static void push_message_arg(lua_State* L, ant::window::touch_state v) {
+	switch (v) {
+	case ant::window::touch_state::began: lua_pushstring(L, "began"); break;
+	case ant::window::touch_state::moved: lua_pushstring(L, "moved"); break;
+	case ant::window::touch_state::ended: lua_pushstring(L, "ended"); break;
+	case ant::window::touch_state::cancelled: lua_pushstring(L, "cancelled"); break;
+	default: std::unreachable(); break;
+	}
 }
 
-static void push_message_arg(lua_State*L, ant::window::GESTURE_STATE v) {
+static void push_message_arg(lua_State* L, ant::window::gesture_state v) {
 	switch (v) {
-	case ant::window::GESTURE_BEGAN:
+	case ant::window::gesture_state::began:
 		lua_pushstring(L, "began");
 		break;
-	case ant::window::GESTURE_CHANGED:
+	case ant::window::gesture_state::changed:
 		lua_pushstring(L, "changed");
 		break;
-	default:
-	case ant::window::GESTURE_ENDED:
+	case ant::window::gesture_state::ended:
 		lua_pushstring(L, "ended");
+		break;
+	case ant::window::gesture_state::unknown:
+		lua_pushstring(L, "ended");
+		break;
+	default:
+		std::unreachable();
 		break;
 	}
 }
 
-static void push_message_arg(lua_State*L, ant::window::suspend v) {
+static void push_message_arg(lua_State* L, ant::window::suspend v) {
 	switch (v) {
 	case ant::window::suspend::will_suspend: lua_pushstring(L, "will_suspend"); break;
 	case ant::window::suspend::did_suspend: lua_pushstring(L, "did_suspend"); break;
 	case ant::window::suspend::will_resume: lua_pushstring(L, "will_resume"); break;
 	case ant::window::suspend::did_resume: lua_pushstring(L, "did_resume"); break;
-	default: lua_pushnil(L); break;
+	default: std::unreachable(); break;
+	}
+}
+
+static void push_message_arg(lua_State* L, ant::window::mouse_button v) {
+	switch (v) {
+	case ant::window::mouse_button::left: lua_pushstring(L, "LEFT"); break;
+	case ant::window::mouse_button::middle: lua_pushstring(L, "MIDDLE"); break;
+	case ant::window::mouse_button::right: lua_pushstring(L, "RIGHT"); break;
+	default: std::unreachable(); break;
+	}
+}
+
+static void push_message_arg(lua_State* L, ant::window::mouse_state v) {
+	switch (v) {
+	case ant::window::mouse_state::up: lua_pushstring(L, "UP"); break;
+	case ant::window::mouse_state::move: lua_pushstring(L, "MOVE"); break;
+	case ant::window::mouse_state::down: lua_pushstring(L, "DOWN"); break;
+	default: std::unreachable(); break;
+	}
+}
+
+static void push_message_arg(lua_State* L, ant::window::keyboard_state v) {
+	lua_newtable(L);
+	if (v.kb_ctrl) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "CTRL");
+	}
+	if (v.kb_shift) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "SHIFT");
+	}
+	if (v.kb_alt) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "ALT");
+	}
+	if (v.kb_sys) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "SYS");
+	}
+	if (v.kb_capslock) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "CAPSLOCK");
 	}
 }
 
