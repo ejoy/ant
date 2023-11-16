@@ -60,26 +60,26 @@ local function update_size()
 end
 
 local Keyboard = {}
-local KeyMods = 0
+local KeyMods = {}
 local Mouse = {}
 local MousePosX, MousePosY = 0, 0
 local DOWN <const> = {true}
 
-local KeyModifiers = {
-	[imgui.enum.Key.LeftCtrl]   = 0x00,
-	[imgui.enum.Key.LeftShift]  = 0x01,
-	[imgui.enum.Key.LeftAlt]    = 0x02,
-	[imgui.enum.Key.LeftSuper]  = 0x04,
-	[imgui.enum.Key.RightCtrl]  = 0x00,
-	[imgui.enum.Key.RightShift] = 0x10,
-	[imgui.enum.Key.RightAlt]   = 0x20,
-	[imgui.enum.Key.RightSuper] = 0x40,
+local KeyModifiers <const> = {
+	[imgui.enum.Key.LeftCtrl]   = "CTRL",
+	[imgui.enum.Key.LeftShift]  = "SHIFT",
+	[imgui.enum.Key.LeftAlt]    = "ALT",
+	[imgui.enum.Key.LeftSuper]  = "SYS",
+	[imgui.enum.Key.RightCtrl]  = "CTRL",
+	[imgui.enum.Key.RightShift] = "SHIFT",
+	[imgui.enum.Key.RightAlt]   = "ALT",
+	[imgui.enum.Key.RightSuper] = "SYS",
 }
 
 local function updateIO()
 	local MouseChanged = {}
 	local KeyboardChanged = {}
-	for _, what,x, y in imgui.InputEvents() do
+	for _, what, x, y in imgui.InputEvents() do
 		if what == "MousePos" then
 			MousePosX, MousePosY = x, y
 			cb.mouse(MousePosX, MousePosY, 4, 2)
@@ -87,19 +87,21 @@ local function updateIO()
 			cb.mousewheel(MousePosX, MousePosY, y)
 		elseif what == "MouseButton" then
 			local down = DOWN[y]
-			local button = x
+			local button
 			if x == 0 then
-				button = 1
+				button = "LEFT"
 			elseif x == 1 then
-				button = 3
+				button = "RIGHT"
+			else
+				button = "MIDDLE"
 			end
 			local cur = Mouse[button]
 			if cur ~= down then
 				Mouse[button] = down
 				if down then
-					cb.mouse(MousePosX, MousePosY, button, 1)
+					cb.mouse(MousePosX, MousePosY, button, "UP")
 				else
-					cb.mouse(MousePosX, MousePosY, button, 3)
+					cb.mouse(MousePosX, MousePosY, button, "DOWN")
 				end
 				MouseChanged[button] = true
 			end
@@ -109,16 +111,16 @@ local function updateIO()
 			if cur ~= down then
 				if KeyModifiers[code] then
 					if down then
-						KeyMods = KeyMods | (1<<KeyModifiers[code])
+						KeyMods[KeyModifiers[code]] = true
 					else
-						KeyMods = KeyMods & (~(1<<KeyModifiers[code]))
+						KeyMods[KeyModifiers[code]] = nil
 					end
 				end
 				Keyboard[code] = down
 				if down then
-					cb.keyboard(code, 1, ((KeyMods & 0x0F) | (KeyMods >> 8)))
+					cb.keyboard(code, 1, KeyMods)
 				else
-					cb.keyboard(code, 0, ((KeyMods & 0x0F) | (KeyMods >> 8)))
+					cb.keyboard(code, 0, KeyMods)
 				end
 				KeyboardChanged[code] = true
 			end
@@ -126,7 +128,7 @@ local function updateIO()
 	end
 	for button in pairs(Mouse) do
 		if not MouseChanged[button] then
-			cb.mouse(MousePosX, MousePosY, button, 2)
+			cb.mouse(MousePosX, MousePosY, button, "MOVE")
 		end
 	end
 	for code in pairs(Keyboard) do
