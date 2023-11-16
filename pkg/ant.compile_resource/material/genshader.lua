@@ -503,16 +503,27 @@ local function build_custom_vs_func(d, varyings)
                 ac1 "varyings.normal  = mul(wm3, vsinput.normal);"
             end
 
-            if varyings.v_tangent then
+            if varyings.a_tangent then
+                assert(varyings.a_tangent.type == "vec3" or varyings.a_tangent.type == "vec4")
+
                 assert(varyings.a_normal)
                 assert(varyings.v_tangent, "No 'v_tangent' defined")
-                assert(varyings.v_bitangent, "'v_tangent' already defined, it need 'v_bitangent' defined the meantime")
+                assert(varyings.v_tangent.type == "vec3", "v_tangent type should only be 'vec3'")
 
-                ac1 "varyings.tangent = mul(wm3, vsinput.tangent);"
+                assert(varyings.v_bitangent, "'v_tangent' already defined, it need 'v_bitangent' defined the meantime")
+                assert(varyings.v_bitangent.type == "vec3", "v_bitangent should only be 'vec3'")
+
+                ac1 "varyings.tangent = mul(wm3, vsinput.tangent.xyz);"
+
                 if varyings.a_bitangent then
+                    assert(varyings.a_bitangent.type == "vec3")
                     ac1 "varyings.bitangent = mul(wm3, vsinput.bitangent);"
                 else
-                    ac1 "varyings.bitangent = cross(varyings.normal, varyings.tangent) * sign(vsinput.tangent.w);"
+                    if varyings.a_bitangent.type == "vec3" then
+                        ac1 "varyings.bitangent = cross(varyings.normal, varyings.tangent);"
+                    else
+                        ac1 "varyings.bitangent = cross(varyings.normal, varyings.tangent) * sign(vsinput.tangent.w);"
+                    end
                 end
             end
         end
@@ -738,7 +749,7 @@ local function build_fx_macros(mat, varyings)
         end
     end
 
-    if varyings.a_tangent.pack_from_quat then
+    if varyings.a_tangent and varyings.a_tangent.pack_from_quat then
         m[#m+1] = "TANGENT_PACK_FROM_QUAT=1"
     end
 
