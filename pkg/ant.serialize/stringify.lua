@@ -51,13 +51,10 @@ local function stringify_basetype(v)
         if v == "" or v == "true" or v == "false" or v == "nil" then
             return datalist.quote(v)
         end
-        if v:match "[\0-\31#:=$-,\"\\{}%[%]]" then
+        if tonumber(v) then
             return datalist.quote(v)
         end
-        if v:match "^%d+$" then
-            return datalist.quote(v)
-        end
-        if v:match "^%d*.%d*$" then
+        if v:match "[\0-\31\x80-\xFF#:=$-,\"\\{}%[%]]" then
             return datalist.quote(v)
         end
         return v

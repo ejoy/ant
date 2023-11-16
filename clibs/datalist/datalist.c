@@ -1101,6 +1101,47 @@ ltoken(lua_State *L) {
 	return 1;
 }
 
+static inline int
+utf8_trail(unsigned char c) {
+	return c >= 0x80 && c <= 0xbf;
+}
+
+static size_t
+valid_utf8(const char *str, size_t sz) {
+	unsigned char c = *str;
+	if (c >= 0xc0 && c <= 0xdf) {
+		// 110xxxxx  10zzzzzz (0x80 - 0xbf)
+		if (sz < 2)
+			return 0;
+		if (!utf8_trail(str[1]))
+			return 0;
+		return 2;
+	} else if (c >= 0xe0 && c <= 0xef) {
+		// 1110xxxx  10zzzzzz 10zzzzzz
+		if (sz < 3)
+			return 0;
+		if (!utf8_trail(str[1]) || !utf8_trail(str[2]))
+			return 0;
+		return 3;
+	} else if (c >= 0xf0 && c <= 0xf7) {
+		// 11110xxx  10zzzzzz 10zzzzzz 10zzzzzz
+		if (sz < 4)
+			return 0;
+		if (!utf8_trail(str[1]) || !utf8_trail(str[2]) || !utf8_trail(str[3]))
+			return 0;
+		return 4;
+	} else if (c < 128)
+		return 1;
+	return 0;
+}
+
+static void
+add_hex(luaL_Buffer *b, unsigned char c) {
+	char tmp[5];
+	snprintf(tmp, sizeof(tmp), "\\x%02X", c);
+	luaL_addstring(b, tmp);
+}
+
 static int
 lquote(lua_State *L) {
 	luaL_Buffer b;
@@ -1109,8 +1150,9 @@ lquote(lua_State *L) {
 	size_t sz,i;
 	const char * str = luaL_checklstring(L, 1, &sz);
 	for (i=0;i<sz;i++) {
-		if ((unsigned char)str[i] < 32) {
-			switch (str[i]) {
+		unsigned char c = (unsigned char)str[i];
+		if (c < 32) {
+			switch (c) {
 			case 0:
 				luaL_addchar(&b, '\\');
 				luaL_addchar(&b, '0');
@@ -1128,20 +1170,26 @@ lquote(lua_State *L) {
 				luaL_addchar(&b, 'r');
 				break;
 			default:
-				luaL_addchar(&b, '\\');
-				luaL_addchar(&b, 'x');
-				luaL_addchar(&b, str[i] / 16 + '0');
-				luaL_addchar(&b, str[i] % 16 + '0');
+				add_hex(&b, c);
 				break;
 			}
-		} else if (str[i] == '"') {
+		} else if (c == '"') {
 			luaL_addchar(&b, '\\');
 			luaL_addchar(&b, '"');
-		} else if (str[i] == '\\') {
+		} else if (c == '\\') {
 			luaL_addchar(&b, '\\');
 			luaL_addchar(&b, '\\');
+		} else if (c >= 128) {
+			// check utf-8
+			int n = valid_utf8(str+i, sz-i);
+			if (n == 0) {
+				add_hex(&b, c);
+			} else {
+				luaL_addlstring(&b,str+i,n);
+				i += n-1;
+			}
 		} else {
-			luaL_addchar(&b, str[i]);
+			luaL_addchar(&b, c);
 		}
 	}
 	luaL_addchar(&b, '"');
