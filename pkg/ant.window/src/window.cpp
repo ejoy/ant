@@ -53,7 +53,7 @@ static void push_message_arg(lua_State* L, ant::window::touch_state v) {
 	case ant::window::touch_state::moved: lua_pushstring(L, "moved"); break;
 	case ant::window::touch_state::ended: lua_pushstring(L, "ended"); break;
 	case ant::window::touch_state::cancelled: lua_pushstring(L, "cancelled"); break;
-	default: std::unreachable(); break;
+	default: std::unreachable();
 	}
 }
 
@@ -73,7 +73,6 @@ static void push_message_arg(lua_State* L, ant::window::gesture_state v) {
 		break;
 	default:
 		std::unreachable();
-		break;
 	}
 }
 
@@ -83,7 +82,7 @@ static void push_message_arg(lua_State* L, ant::window::suspend v) {
 	case ant::window::suspend::did_suspend: lua_pushstring(L, "did_suspend"); break;
 	case ant::window::suspend::will_resume: lua_pushstring(L, "will_resume"); break;
 	case ant::window::suspend::did_resume: lua_pushstring(L, "did_resume"); break;
-	default: std::unreachable(); break;
+	default: std::unreachable();
 	}
 }
 
@@ -92,7 +91,7 @@ static void push_message_arg(lua_State* L, ant::window::mouse_button v) {
 	case ant::window::mouse_button::left: lua_pushstring(L, "LEFT"); break;
 	case ant::window::mouse_button::middle: lua_pushstring(L, "MIDDLE"); break;
 	case ant::window::mouse_button::right: lua_pushstring(L, "RIGHT"); break;
-	default: std::unreachable(); break;
+	default: std::unreachable();
 	}
 }
 
@@ -101,7 +100,7 @@ static void push_message_arg(lua_State* L, ant::window::mouse_state v) {
 	case ant::window::mouse_state::up: lua_pushstring(L, "UP"); break;
 	case ant::window::mouse_state::move: lua_pushstring(L, "MOVE"); break;
 	case ant::window::mouse_state::down: lua_pushstring(L, "DOWN"); break;
-	default: std::unreachable(); break;
+	default: std::unreachable();
 	}
 }
 
