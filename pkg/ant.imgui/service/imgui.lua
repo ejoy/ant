@@ -99,9 +99,9 @@ local function updateIO()
 			if cur ~= down then
 				Mouse[button] = down
 				if down then
-					cb.mouse(MousePosX, MousePosY, button, "UP")
-				else
 					cb.mouse(MousePosX, MousePosY, button, "DOWN")
+				else
+					cb.mouse(MousePosX, MousePosY, button, "UP")
 				end
 				MouseChanged[button] = true
 			end
