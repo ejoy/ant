@@ -182,7 +182,7 @@ local function check_update_shader_type(fx)
         end
     else
         if fx.shader_type == nil then
-            if fx.vs or fx.fs then
+            if (fx.depth and fx.vs == nil and fx.fs == nil) or (fx.vs or fx.fs) then
                 fx.shader_type = "CUSTOM"
             else
                 fx.shader_type = "PBR"
@@ -308,7 +308,8 @@ local function check_add(systems, name)
     end
 end
 
-local function load_shader_uniforms(output, stage, attribs, systems)
+local function load_shader_uniforms(output, stage, ao)
+    local attribs, systems = ao.attribs, ao.systems
     local binfile = output / stage .. ".bin"
     if not lfs.exists(binfile) then
         error(("shader:%s, could not correct build"):format(stage))
@@ -442,6 +443,24 @@ local STAGES<const> = {
     depth = "vs",
 }
 
+local function find_stage_file(setting, fx, stage, pbrfx)
+    if fx[stage] then
+        local inputfile =  lfs.path(setting.vfs.realpath(fx[stage]))
+        if lfs.exists(inputfile) then
+            return inputfile
+        end
+    end
+
+    if fx.shader_type == "PBR" then
+        local inputfile = genshader.gen_shader(setting, fx, stage, pbrfx)
+        if lfs.exists(inputfile) then
+            return inputfile
+        end
+    end
+
+    error(("shader path not exists: %s, stage:%s"):format(fx[stage], stage))
+end
+
 local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     depends.add_vpath(deps, setting, "/pkg/ant.compile_resource/material/version.lua")
     depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic.settings")
@@ -461,19 +480,10 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     end
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
-            local inputfile = fx.shader_type == "PBR" and
-                genshader.gen_shader(setting, fx, stage, pbrfx) or
-                lfs.path(setting.vfs.realpath(fx[stage]))
-
-            if not lfs.exists(inputfile) then
-                error(("shader path not exists: %s"):format(inputfile:string()))
-            end
-
-
             local ok, res = toolset.compile {
                 platform    = BgfxOS[setting.os] or setting.os,
                 renderer    = setting.renderer,
-                input       = inputfile,
+                input       = find_stage_file(setting, fx, stage, pbrfx),
                 output      = output / (stage..".bin"),
                 includes    = shader_includes(inputfolder),
                 stage       = assert(STAGES[stage]),
@@ -490,18 +500,35 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     end
 
     local function create_shader_cfg(stages)
-        parallel_task.add(post_tasks, function ()
-            local attribs, systems = {}, {}
-            for _, stage in ipairs(stages) do
-                load_shader_uniforms(output, stage, attribs, systems)
-            end
-            add_lighting_sv(systems, fx.setting.lighting)
+        local function attrib_obj()
+            return {attribs={}, systems={}}
+        end
 
+        parallel_task.add(post_tasks, function ()
+            local ao = attrib_obj()
+            if stages.cs then
+                assert(stages.vs == nil and stages.fs == nil and stages.depth == nil)
+                load_shader_uniforms(output, "cs", ao)
+            else
+                if stages.vs then
+                    load_shader_uniforms(output, "vs", ao)
+                end
+                if stages.fs then
+                    load_shader_uniforms(output, "fs", ao)
+                end
+            end
+
+            add_lighting_sv(ao.systems, fx.setting.lighting)
             local properties = build_properties(mat.properties, fx.shader_type)
-            check_material_properties(properties, attribs)
+            check_material_properties(properties, ao.attribs)
+            if stages.depth then
+                ao.depth = attrib_obj()
+                load_shader_uniforms(output, "depth", ao.depth)
+                check_material_properties(properties, ao.depth.attribs)
+            end
 
             local outfile = output / "main.attr"
-            writefile(outfile, {attrib = attribs, system=systems})
+            writefile(outfile, ao)
         end)
 
         --some info write to 'mat' in tasks, we should write 'main.cfg' here
@@ -512,26 +539,24 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
 
     local stages = {}
     if fx.shader_type == "COMPUTE" then
+        stages.cs = assert(fx.cs)
         compile_shader "cs"
-        stages[#stages+1] = "cs"
     else
-        compile_shader "vs"
-        stages[#stages+1] = "vs"
-
-        local function has_fs()
-            return fx.fs or fx.shader_type == "PBR"
+        if fx.shader_type ~= "PBR" and (not (fx.vs or fx.depth)) then
+            error "At least define 'vs' or 'depth' stage"
         end
-        if has_fs() then
-            compile_shader "fs"
-            stages[#stages+1] = "fs"
+        if fx.vs or fx.shader_type == "PBR" then
+            stages.vs = true
         end
-
-        local function has_depth()
-            return fx.depth
+        if fx.fs or fx.shader_type == "PBR" then
+            stages.fs = true
+        end
+        if fx.depth then
+            stages.depth = true
         end
 
-        if has_depth() then
-            compile_shader "depth"
+        for stage in pairs(stages) do
+            compile_shader(stage)
         end
     end
 

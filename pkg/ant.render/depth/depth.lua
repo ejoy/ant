@@ -26,30 +26,18 @@ local assetmgr      = import_package "ant.asset"
 
 local pre_depth_material
 local pre_depth_skinning_material
-local pre_depth_indirect_materials
 
-local function which_material(e)
-    local idt = idi.indirect_type(e)
-    if idt then
-        return pre_depth_indirect_materials[idt] or error (("Invalid 'indirect type': %s"):format(idt))
+local function which_material(e, matres)
+    if matres.fx.depth then
+        return matres
     end
-
     w:extend(e, "skinning?in")
-    if e.skinning then
-        return pre_depth_skinning_material
-    end
-
-    return pre_depth_material
+    return e.skinning and pre_depth_skinning_material or pre_depth_material
 end
 
 function s:init()
-    pre_depth_material 			        = assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
-    --TODO: will remove this mountain/road material
-    pre_depth_indirect_materials = {
-        mountain = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_mountain.material",
-        road     = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_road.material",
-    }
-    pre_depth_skinning_material          = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+    pre_depth_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
+    pre_depth_skinning_material = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -77,10 +65,19 @@ local function has_depth_test(dt)
     return false
 end
 
-local function create_depth_state(srcstate, dststate)
-    local s = bgfx.parse_state(srcstate)
+local function get_depth_state()
+    return {
+        ALPHA_REF   = 0,
+        CULL        = "CCW",
+        MSAA        = true,
+        WRITE_MASK  = "Z",
+    }
+end
+
+local function create_depth_state(originstate)
+    local s = bgfx.parse_state(originstate)
     if has_depth_test(s.DEPTH_TEST) then
-        local d = bgfx.parse_state(dststate)
+        local d = get_depth_state()
         d.PT, d.CULL = s.PT, s.CULL
         d.DEPTH_TEST = "GREATER"
         return bgfx.make_state(d)
@@ -94,10 +91,10 @@ function s:update_filter()
             local matres = assetmgr.resource(e.material)
             if not matres.fx.setting.no_predepth then
                 local fm = e.filter_material
-                local m = which_material(e)
-                local newstate = create_depth_state(fm.main_queue:get_state(), m.state)
+                local m = which_material(e, matres)
+                local newstate = create_depth_state(fm.main_queue:get_state())
                 if newstate then
-                    local mi = RM.create_instance(m.object)
+                    local mi = RM.create_instance(m.depth.object)
                     mi:set_state(newstate)
 
                     fm["pre_depth_queue"] = mi

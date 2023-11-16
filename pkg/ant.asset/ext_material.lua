@@ -3,10 +3,6 @@ local bgfx      = require "bgfx"
 local async 	= require "async"
 local fastio 	= serialize.fastio
 
-local setting   = import_package "ant.settings"
-local use_cluster_shading<const>	= setting:get "graphic/cluster_shading" ~= 0
-local cs_skinning<const>			= setting:get "graphic/skinning/use_cs"
-
 local matpkg	= import_package "ant.material"
 local MA 		= matpkg.arena
 
@@ -24,8 +20,19 @@ local function loader(filename)
     if material.stencil then
         material.stencil = bgfx.make_stencil(load(material.stencil))
     end
-    material.attrib, material.system = attribute.attrib, attribute.system
-    material.object = MA.material_load(filename, material.state, material.stencil, material.fx.prog, material.system, material.attrib)
+
+	if material.fx.prog then
+		material.attribs, material.systems = attribute.attribs, attribute.systems
+    	material.object = MA.material_load(filename, material.state, material.stencil, material.fx.prog, material.systems, material.attribs)
+	end
+	if material.fx.depth then
+		local ad = attribute.depth
+		material.depth = {
+			attribs = ad.attribs,
+			systems = ad.systems,
+			object = MA.material_load(filename .. "|depth", material.state, material.stencil, material.fx.depth.prog, ad.attribs, ad.systems)
+		}
+	end
     return material
 end
 

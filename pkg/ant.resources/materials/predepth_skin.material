@@ -1,12 +1,13 @@
 fx:
-  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  depth: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  varyings:
+    a_position: vec3
+    a_indices:  ivec4
+    a_weight:   vec4
   setting:
-    lighting: off
-    cast_shadow: off
+    lighting:       off
+    cast_shadow:    off
     shadow_receive: off
-    subsurface: off
-    GPU_SKINNING: 1
-    WITHOUT_DEFAULT_UV: 1
 state:
   ALPHA_REF: 0
   CULL: CCW

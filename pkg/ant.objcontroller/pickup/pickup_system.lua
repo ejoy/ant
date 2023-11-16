@@ -19,13 +19,9 @@ local hwi		= import_package "ant.hwi"
 
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 
-local irender   = ecs.require "ant.render|render_system.render"
-local imaterial = ecs.require "ant.asset|material"
-
 local INV_Z<const> = true
 local INF_F<const> = true
 local pickup_material, pickup_skin_material
-local pickup_indirect_materials
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -236,10 +232,6 @@ function pickup_sys:init()
 	create_pick_entity()
 	pickup_material			= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity.material'
 	pickup_skin_material	= assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_skin.material'
-	pickup_indirect_materials = {
-		mountain = assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect_mountain.material',
-		road 	 = assetmgr.resource '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect_road.material',
-	}
 end
 
 function pickup_sys:entity_init()
@@ -328,16 +320,9 @@ function pickup_sys:pickup()
 end
 
 local function which_material(e)
-	local idt = idi.indirect_type(e)
-    if idt then
-        return pickup_indirect_materials[idt] or error (("Invalid 'indirect type': %s"):format(idt))
-    end
+	--NOTE: pickup system not supprt draw indirect, or we need pickup program generate from material compile??
 	w:extend(e, "skinning?in")
-    if e.skinning then
-        return pickup_skin_material
-    end
-
-    return pickup_material
+    return e.skinning and pickup_skin_material or pickup_material
 end
 
 local function create_pickup_state(srcstate, dststate)

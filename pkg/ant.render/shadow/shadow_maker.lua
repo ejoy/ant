@@ -351,17 +351,12 @@ end
 
 local shadow_material
 local gpu_skinning_material
-local shadow_indirect_materials
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-	shadow_indirect_materials 	= {
-		mountain = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_mountain.material",
-		road	 = assetmgr.resource "/pkg/ant.resources/materials/predepth_indirect_road.material",
-	}
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -522,19 +517,12 @@ end
 	end ]]
 --end
 
---TODO: need remove
-local function which_material(e)
-    local idt = idi.indirect_type(e)
-    if idt then
-        return shadow_indirect_materials[idt] or error (("Invalid 'indirect type': %s"):format(idt))
-    end
-
+local function which_material(e, matres)
+	if matres.fx.depth then
+		return matres
+	end
     w:extend(e, "skinning?in")
-    if e.skinning then
-        return gpu_skinning_material
-    end
-
-    return shadow_material
+    return e.skinning and gpu_skinning_material or shadow_material
 end
 
 local omni_stencils = {
@@ -578,7 +566,7 @@ function sm:update_filter()
 			w:extend(e, "filter_material:in")
 			local dstres = which_material(e)
 			local fm = e.filter_material
-			local mi = RM.create_instance(dstres.object)
+			local mi = RM.create_instance(dstres.depth.object)
 			mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
 			fm["csm1_queue"] = mi
 			fm["csm2_queue"] = mi

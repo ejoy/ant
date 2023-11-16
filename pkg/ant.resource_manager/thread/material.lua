@@ -51,27 +51,55 @@ local function fetch_uniforms(h, ...)
 end
 
 local function from_handle(handle)
-    local pid = PM.program_new()
-    PM.program_set(pid, handle)
-    return pid
+    if handle then
+        local pid = PM.program_new()
+        PM.program_set(pid, handle)
+        return pid
+    end
 end
 
 local function createRenderProgram(fxcfg)
-    local vh = loadShader(fxcfg.vs)
-    local fh = loadShader(fxcfg.fs)
-    local prog = bgfx.create_program(vh, fh, false)
-    if prog then
-        return {
-            shader_type = fxcfg.shader_type,
-            setting     = fxcfg.setting or {},
-            vs          = vh,
-            fs          = fh,
-            prog        = prog,
-            uniforms    = fetch_uniforms(vh, fh),
-        }
-    else
+    local dh, depth_prog, depth_uniforms
+    if fxcfg.depth then
+        dh = loadShader(fxcfg.depth)
+        depth_prog = bgfx.create_program(dh, false)
+        if nil == depth_prog then
+            error "Depth shader provided, but create depth program faield"
+        end
+
+        depth_uniforms = fetch_uniforms(dh)
+    end
+
+    local prog, uniforms, vh, fh
+    if fxcfg.vs or fxcfg.fs then
+        vh = loadShader(fxcfg.vs)
+        fh = loadShader(fxcfg.fs)
+        prog = bgfx.create_program(vh, fh, false)
+        uniforms = fetch_uniforms(vh, fh)
+    end
+
+    if not (prog or depth_prog) then
         error(("create program failed, filename:%s"):format(fxcfg.vs))
     end
+
+    local fx = {
+        shader_type     = fxcfg.shader_type,
+        setting         = fxcfg.setting or {},
+        vs              = vh,
+        fs              = fh,
+        prog            = prog,
+        uniforms        = uniforms,
+    }
+
+    if depth_prog then
+        fx.depth = {
+            handle  = dh,
+            prog    = depth_prog,
+            uniforms= depth_uniforms,
+        }
+    end
+
+    return fx
 end
 
 local function createComputeProgram(fxcfg)
@@ -119,6 +147,7 @@ local function build_fxcfg(filename, fx)
         vs = stage_filename "vs",
         fs = stage_filename "fs",
         cs = stage_filename "cs",
+        depth = stage_filename "depth",
     }
 end
 
@@ -132,13 +161,8 @@ local function is_uniform_obj(t)
     return nil ~= ('ut'):match(t)
 end
 
-local function material_create(filename)
-    local material  = serialize.parse(filename, readall(filename .. "|main.cfg"))
-    local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
-    local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
-    material.fx = create_fx(fxcfg)
-    local uniforms = material.fx.uniforms
-    for n, v in pairs(attribute.attrib) do
+local function update_uniforms_handle(attrib, uniforms, filename)
+    for n, v in pairs(attrib) do
         if is_uniform_obj(v.type) then
             v.handle = assert(uniforms[n]).handle
         end
@@ -149,20 +173,48 @@ local function material_create(filename)
             v.value = S.texture_create_fast(texturename, sampler)
         end
     end
+end
+
+local function material_create(filename)
+    local material  = serialize.parse(filename, readall(filename .. "|main.cfg"))
+    local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
+    local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
+    material.fx = create_fx(fxcfg)
+    update_uniforms_handle(attribute.attribs, material.fx.uniforms, filename)
+
+    if attribute.depth then
+        update_uniforms_handle(attribute.depth.attribs, material.fx.depth.uniforms, filename)
+    end
 
     material.fx.prog = from_handle(material.fx.prog)
+    if material.fx.depth then
+        material.fx.depth.prog = from_handle(material.fx.depth.prog)
+    end
     return material, fxcfg, attribute
 end
 
 function S.material_create(filename)
     local material, fxcfg, attribute = material_create(filename)
     local pid = material.fx.prog
-    MATERIALS[pid] = {
-        filename = filename,
-        material = material,
-        cfg      = fxcfg,
-        attr     = attribute
-    }
+    if pid then
+        MATERIALS[pid] = {
+            filename = filename,
+            material = material,
+            cfg      = fxcfg,
+            attr     = attribute
+        }
+    end
+
+    if material.fx.depth then
+        local dpid = material.fx.depth.prog
+        MATERIALS[dpid] = {
+            filename = filename,
+            material = material,
+            cfg      = fxcfg,
+            attr     = attribute
+        }
+    end
+
     return material, attribute
 end
 

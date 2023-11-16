@@ -1,5 +1,6 @@
 fx:
   shader_type: PBR
+  depth: /pkg/ant.resources/shaders/depth/vs_depth.sc
   varyings: /pkg/ant.test.light/assets/materials/default.varyings
   setting:
     ALPHAMODE_OPAQUE: 1
