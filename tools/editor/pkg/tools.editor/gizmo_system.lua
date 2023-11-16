@@ -393,6 +393,7 @@ function gizmo_sys:post_init()
 		for i = 1, #vertices, 3 do
 			points[#points + 1] = {vertices[i], vertices[i+1], vertices[i+2]}
 		end
+		points[#points + 1] = {vertices[1], vertices[2], vertices[3]}
 		return points
 	end
 	local function create_polyline(points, color, srt)
@@ -941,7 +942,7 @@ local function select_light_gizmo(x, y)
 			return
 		end
 		local dist = math3d.length(math3d.sub(gizmo_pos, hit_pos))
-		local high_light = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 3
+		local high_light = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 4
 		light_gizmo.highlight(high_light)
 		return high_light
 	end

@@ -142,17 +142,17 @@ end
 
 local function create_default_light(type, parent)
     local light, tpl = ilight.create {
-        srt = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}, parent = parent},
+        srt = {t = {0, 5, 0}, r = type == "directional" and {math.rad(130), 0, 0} or nil, parent = parent},
         name            = type .. gen_light_id(),
         type            = type,
         color           = {1, 1, 1, 1},
         make_shadow     = false,
         intensity       = 130000,--ilight.default_intensity(lt),
         intensity_unit  = ilight.default_intensity_unit(type),
-        range           = 1,
+        range           = 10,
         motion_type     = "dynamic",
-        inner_radian    = math.rad(45),
-        outter_radian   = math.rad(45)
+        inner_radian    = math.rad(10),
+        outter_radian   = math.rad(30)
     }
     create_light_billboard(light, type)
     return light, utils.deep_copy(tpl)

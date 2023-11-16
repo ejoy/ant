@@ -89,7 +89,8 @@ local function create_gizmo_root(initpos, initrot)
             "ant.scene|scene_object",
 		},
 		data = {
-            scene = {t = initpos or {0, 5, 0}, r = initrot or {math.rad(130), 0, 0, 1}},
+            -- scene = {t = initpos or {0, 5, 0}, r = initrot or {math.rad(130), 0, 0, 1}},
+            scene = {t = initpos, r = initrot},
 		},
         tag = {
             "gizmo root"
@@ -104,12 +105,12 @@ local function get_points(vertices)
     for i = 1, #vertices, 3 do
         points[#points + 1] = {vertices[i], vertices[i+1], vertices[i+2]}
     end
+    points[#points + 1] = {vertices[1], vertices[2], vertices[3]}
     return points
 end
 local function create_directional_gizmo(initpos, initrot)
     local root = create_gizmo_root(initpos, initrot)
     local vertices, _ = geolib.circle(RADIUS, SLICES)
-    -- local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
     local circle_eid = ipl.add_strip_lines(get_points(vertices), 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root}, "translucent", true)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
@@ -118,18 +119,10 @@ local function create_directional_gizmo(initpos, initrot)
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
         local line_eid = ipl.add_strip_lines({{x, y, 0}, {x, y, LENGTH}}, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root}, "translucent", true)
-        -- local line_eid = computil.create_line_entity({x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
         alleid[#alleid + 1] = line_eid
     end
     m.directional.root = root
     m.directional.eid = alleid
-end
-
-local function update_circle_vb(eid, radian)
-    local e <close> = world:entity(eid, "simplemesh:in")
-    local mesh = e.simplemesh
-    local vb, _ = geo_utils.get_circle_vb_ib(radian, gizmo_const.ROTATE_SLICES)
-    bgfx.update(mesh.vb.handle, 0, bgfx.memory_buffer("fffd", vb));
 end
 
 local function update_point_gizmo()
@@ -139,54 +132,70 @@ local function update_point_gizmo()
         local e <close> = world:entity(m.current_light, "light:in")
         range = ilight.range(e)
     end
-    
     local radius = range
-    
     if #m.point.eid == 0 then
-        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local c1 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, gizmo_const.COLOR.GRAY, true)
-        local c2 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, gizmo_const.COLOR.GRAY, true)
+        local vertices, _ = geolib.circle(1, gizmo_const.ROTATE_SLICES)
+        local points = get_points(vertices)
+        local c0 = ipl.add_strip_lines(points, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius}, "translucent", true)
+        local c1 = ipl.add_strip_lines(points, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "translucent", true)
+        local c2 = ipl.add_strip_lines(points, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "translucent", true)
         m.point.eid = {c0, c1, c2}
     else
-        update_circle_vb(m.point.eid[1], radius)
-        update_circle_vb(m.point.eid[2], radius)
-        update_circle_vb(m.point.eid[3], radius)
+        local e0 <close> = world:entity(m.point.eid[1])
+        iom.set_scale(e0, radius)
+        local e1 <close> = world:entity(m.point.eid[2])
+        iom.set_scale(e1, radius)
+        local e2 <close> = world:entity(m.point.eid[3])
+        iom.set_scale(e2, radius)
     end
 end
 
 local function update_spot_gizmo()
     local range = 1.0
-    local radian = 10
+    local radian = math.rad(30)
     if m.current_light then
         local e <close> = world:entity(m.current_light, "light:in")
         range = ilight.range(e)
-        radian = ilight.outter_radian(e) or 10
+        radian = ilight.outter_radian(e) or math.rad(30)
     end
-    local radius = range * math.tan(radian * 0.5)
+    local halfAngle = radian * 0.5
+    local radius = range * math.tan(halfAngle)
+    local scale = range / math.cos(halfAngle)
+    local q1 = math3d.quaternion{halfAngle, 0, 0}
+    local q2 = math3d.quaternion{-halfAngle, 0, 0}
+    local q3 = math3d.quaternion{0, halfAngle, 0}
+    local q4 = math3d.quaternion{0, -halfAngle, 0}
     if #m.spot.eid == 0 then
+        local vertices, _ = geolib.circle(1, gizmo_const.ROTATE_SLICES)
+        local points = get_points(vertices)
+        local linesPoints = {{0, 0, 0}, {0, 0, 1}}
         local root = m.spot.root
-        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root, t = {0, 0, range}}, gizmo_const.COLOR.GRAY, true)
-        local line0 = geo_utils.create_dynamic_line({0, 0, 0}, {0, radius, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line1 = geo_utils.create_dynamic_line({0, 0, 0}, {radius, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line2 = geo_utils.create_dynamic_line({0, 0, 0}, {0, -radius, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line3 = geo_utils.create_dynamic_line({0, 0, 0}, {-radius, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line4 = geo_utils.create_dynamic_line({0, 0, 0}, {0, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        m.spot.eid = {line0, line1, line2, line3, line4, c0}
+        m.spot.eid = {
+            ipl.add_strip_lines(linesPoints, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q1)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q2)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q3)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q4)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = range}, "translucent", true),
+            ipl.add_strip_lines(points, 6, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, t = {0, 0, range}}, "translucent", true)
+        }
     else
-        update_circle_vb(m.spot.eid[6], radius)
-        local spot_e <close> = world:entity(m.spot.eid[6])
-        iom.set_position(spot_e, {0, 0, range})
-
-        local function update_vb(eid, tp2)
-            local e <close> = world:entity(eid, "simplemesh:in")
-            local vb = e.simplemesh.vb
-            bgfx.update(vb.handle, 0, bgfx.memory_buffer("fffd", {0, 0, 0, 0xffffffff, tp2[1], tp2[2], tp2[3], 0xffffffff}));
-        end
-        update_vb(m.spot.eid[1], {0, radius, range})
-        update_vb(m.spot.eid[2], {radius, 0, range})
-        update_vb(m.spot.eid[3], {0, -radius, range})
-        update_vb(m.spot.eid[4], {-radius, 0, range})
-        update_vb(m.spot.eid[5], {0, 0, range})
+        local e1 <close> = world:entity(m.spot.eid[1])
+        iom.set_scale(e1, scale)
+        iom.set_rotation(e1, q1)
+        local e2 <close> = world:entity(m.spot.eid[2])
+        iom.set_scale(e2, scale)
+        iom.set_rotation(e2, q2)
+        local e3 <close> = world:entity(m.spot.eid[3])
+        iom.set_scale(e3, scale)
+        iom.set_rotation(e3, q3)
+        local e4 <close> = world:entity(m.spot.eid[4])
+        iom.set_scale(e4, scale)
+        iom.set_rotation(e4, q4)
+        local e5 <close> = world:entity(m.spot.eid[5])
+        iom.set_scale(e5, range)
+        local e6 <close> = world:entity(m.spot.eid[6])
+        iom.set_position(e6, math3d.vector(0, 0, range))
+        iom.set_scale(e6, radius)
     end
 end
 
