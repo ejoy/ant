@@ -1,9 +1,11 @@
 fx:
   shader_type: PBR
   vs_code: "#include \"border_vs_func.sh\""
+  macros:
+    "ALPHAMODE_OPAQUE=1"
   setting:
-    ALPHAMODE_OPAQUE: 1
-    WITH_CUSTOM_TANGENT_ATTRIB: 1
+    lighting: on
+  varyings: /pkg/ant.resources/materials/lighting.varyings
 properties:
   u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0, 0, 0, 0}

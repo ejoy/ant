@@ -9,6 +9,8 @@ fx:
   varyings:
     a_position: vec3
     a_texcoord0: vec2
+    i_data0: vec4
+
     v_texcoord0: vec2
 properties:
   s_basecolor:

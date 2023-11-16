@@ -194,7 +194,11 @@ local function check_update_shader_type(fx)
     end
 end
 
-local function find_varying_path(fx, stage)
+local function parent_path(path)
+    return path:match "^(.+)/[^/]*$"
+end
+
+local function find_varying_path(setting, fx, stage)
     if fx.varying_path then
         local p = lfs.path(setting.vfs.realpath(fx.varying_path) or fx.varying_path)
         if not lfs.exists(p) then

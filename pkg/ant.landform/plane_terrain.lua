@@ -91,7 +91,7 @@ local function get_terrain_mesh()
     local color_texcoords = get_quad_tex(COLOR_TEX_SIZE, COLOR_TEX_SIZE)
     local alpha_texcoords = get_quad_tex(ALPHA_TEX_SIZE, ALPHA_TEX_SIZE)
     local vbfmt = ("fffffff"):rep(4)
-    local layout_name    = layoutmgr.correct_layout "p3|t42"
+    local layout_name    = layoutmgr.correct_layout "p3|t40"
     local layout         = layoutmgr.get(layout_name)
     return to_mesh_buffer(get_terrain_vb(color_texcoords, alpha_texcoords, vbfmt), layout, irender.quad_ib())
 end

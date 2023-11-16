@@ -1,7 +1,7 @@
 fx:
   shader_type: PBR
   setting:
-    UV_MOTION: 2
+    uv_moition: true
 properties:
   u_basecolor_factor: {0.02973043918609619, 0.04004301503300667, 0.04747956991195679, 1}
   u_emissive_factor: {0, 0, 0, 0}

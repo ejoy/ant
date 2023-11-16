@@ -451,22 +451,22 @@ local function build_properties_ui(mv)
                     end,
                 })
             })
-            uvmotion.disable = fx_setting "UV_MOTION" == nil
+            uvmotion.disable = fx_setting "uv_motion" == true
             return uiproperty.SameLineContainer({id="uv_motion"}, {
                 uiproperty.Bool({mode="label_right", label="##", id="uvm_check"},{
                     getter = function ()
-                        return fx_setting "UV_MOTION" ~= nil
+                        return fx_setting "uv_motion" == true
                     end,
                     setter = function (value)
                         uvmotion.disable = not value
                         if value then
-                            fx_setting("UV_MOTION", 1)
+                            fx_setting("uv_motion", true)
                             local p = get_properties()
                             if p.u_uvmotion == nil then
                                 p.u_uvmotion = {0.0, 0.0, 1.0, 1.0}
                             end
                         else
-                            fx_setting("UV_MOTION", nil)
+                            fx_setting("uv_motion", nil)
                         end
                     end,
                 }),

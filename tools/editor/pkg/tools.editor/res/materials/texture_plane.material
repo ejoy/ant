@@ -1,12 +1,13 @@
 fx:
   shader_type: PBR
+  macros:
+    "ALPHAMODE_OPAQUE=1"
   setting:
-    ALPHAMODE_OPAQUE: 1
-    UV_MOTION: 1
     lighting: on
     shadow_receive: on
     cast_shadow: off
     subsurface: off
+    uv_motion: true
 properties:
   s_basecolor:
     stage: 0
