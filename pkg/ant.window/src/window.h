@@ -92,24 +92,24 @@ namespace ant::window {
 	};
 	struct msg_touch {
 		uintptr_t id;
-		touch_state state;
 		float x;
 		float y;
+		touch_state state;
 	};
 	struct msg_gesture_tap {
 		float x;
 		float y;
 	};
 	struct msg_gesture_pinch {
-		gesture_state state;
 		float x;
 		float y;
 		float velocity;
+		gesture_state state;
 	};
 	struct msg_gesture_longpress {
-		gesture_state state;
 		float x;
 		float y;
+		gesture_state state;
 	};
 	struct msg_gesture_pan {
 		gesture_state state;
@@ -119,9 +119,9 @@ namespace ant::window {
 		float velocity_y;
 	};
 	struct msg_gesture_swipe {
-		gesture_state state;
 		float x;
 		float y;
+		gesture_state state;
 		DIRECTION direction;
 	};
 	struct msg_suspend {
