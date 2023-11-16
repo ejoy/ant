@@ -19,7 +19,7 @@ void main()
 	VSInput vs_input = (VSInput)0;
 	#include "default/vs_inputs_getter.sh"
 
-    mat4 wm = get_world_matrix(vs_input);
+    mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
     transform_worldpos(wm, vs_input.pos, gl_Position);
 #endif //SCREEN_SPACE
 

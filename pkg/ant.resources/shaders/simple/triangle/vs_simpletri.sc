@@ -11,7 +11,7 @@ void main()
 #ifdef CS_SKINNING
     mat4 wm = u_model[0];
 #else //!CS_SKINNING
-    mat4 wm = get_world_matrix();
+    mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
 #endif //CS_SKINNING
 
     vec4 posWS = mul(wm, vec4(a_position, 1.0));

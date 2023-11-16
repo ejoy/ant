@@ -40,7 +40,7 @@ void main()
 	VSInput vs_input = (VSInput)0;
 	#include "default/vs_inputs_getter.sh"
 
-    mediump mat4 wm = get_world_matrix(vs_input);
+    mediump mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
 	highp vec4 posWS = mul(wm, vec4(a_position, 1.0));
 	v_cur_pos = mul(u_viewProj, posWS);
 	gl_Position = v_cur_pos;

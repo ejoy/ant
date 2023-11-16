@@ -18,7 +18,7 @@ void main()
 #ifdef DRAW_INDIRECT
 	transform_drawindirect_worldpos(vs_input, gl_Position);
 #else //!DRAW_INDIRECT
-	mat4 wm = get_world_matrix(vs_input);
+	mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
 	transform_worldpos(wm, vs_input.pos, gl_Position);
 #endif //DRAW_INDIRECT
 }

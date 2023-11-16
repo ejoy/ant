@@ -1,11 +1,9 @@
 local sha1          = require "sha1"
 local lfs           = require "bee.filesystem"
 local datalist      = require "datalist"
+local lfastio       = require "fastio"
 
-local serialize     = import_package "ant.serialize"
-local fastio        = serialize.fastio
-
-local SHADER_BASE <const>           = "/pkg/ant.resources/shaders"
+local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
 local DEF_SHADER_INFO <const> = {
     vs = {
@@ -19,7 +17,7 @@ local DEF_SHADER_INFO <const> = {
             INPUT_INIT          = "@VSINPUT_INIT",
             OUTPUT_VARYINGS     = "@OUTPUT_VARYINGS",
         },
-        template                = fastio.readall_s(SHADER_BASE.."/default/vs_default.sc"),
+        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
         filename                = "vs_%s.sc",
     },
     fs = {
@@ -32,7 +30,7 @@ local DEF_SHADER_INFO <const> = {
     
             INPUT_INIT          = "@FSINPUT_INIT",
         },
-        template                = fastio.readall_s(SHADER_BASE.."/default/fs_default.sc"),
+        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/fs_default.sc"):string()),
         filename                = "fs_%s.sc",
     }
 }
@@ -150,28 +148,24 @@ local function vfs_exists(vfs, path)
     return vfs.type(path) ~= nil
 end
 
-local function append_path(pp, p)
-    local lc = pp:sub(#pp, #pp)
-    if lc == "/" or lc == "\\" then
-        return pp .. p
-    end
-
-    return ("%s/%s"):format(pp, p)
-end
-
 local function read_varyings_input(setting, inputfolder, fx)
     local varyings = assert(fx.varyings, "Need varyings defined")
-
     if type(varyings) == "string" then
-        if not vfs_exists(setting.vfs, varyings) then
-            local p = append_path(inputfolder, varyings)
-            if vfs_exists(setting.vfs, p) then
-                varyings = p
+        if varyings:sub(1, 1) == "/" then
+            if vfs_exists(setting.vfs, varyings) then
+                varyings = setting.vfs.realpath(varyings)
             else
-                error(("invalid varyings file:%s"):format(fx.varyings))
+                error(("Invalid varyings path:%s"):format(varyings))
+            end
+        else
+            local p = inputfolder / varyings
+            if lfs.exists(p) then
+                varyings = p:string()
+            else
+                error(("Invalid varyings path:%s, not in resource folder:%s"):format(varyings, inputfolder:string()))
             end
         end
-        varyings = datalist.parse(fastio.readall_s(varyings))
+        varyings = datalist.parse(lfastio.readall_s(varyings))
     else
         assert(type(varyings) == "table")
     end
@@ -180,7 +174,7 @@ local function read_varyings_input(setting, inputfolder, fx)
 end
 
 local function write_file(filename, c)
-    local f<close> = io.open(filename, "wb") or error(("Failed to open filename:%s"):format(filename))
+    local f<close> = io.open(filename:string(), "wb") or error(("Failed to open filename:%s"):format(filename))
     f:write(c)
 end
 
@@ -223,99 +217,373 @@ local function is_output_varying(n, v)
     return nt == 'v'
 end
 
+local VS_INPUT_SEMANTICS_NAMES<const> = {
+	a_position  = "POSITION",
+    a_color0    = "COLOR0",
+    a_color1    = "COLOR1",
+	a_normal    = "NORMAL",
+	a_tangent   = "TANGENT",
+    a_bitanget  = "BITANGENT",
+    a_indices   = "INDICES",
+    a_weight    = "WEIGHT",
+	a_texcoord0 = "TEXCOORD0",
+	a_texcoord1 = "TEXCOORD1",
+	a_texcoord2 = "TEXCOORD2",
+	a_texcoord3 = "TEXCOORD3",
+	a_texcoord4 = "TEXCOORD4",
+	a_texcoord5 = "TEXCOORD5",
+	a_texcoord6 = "TEXCOORD6",
+    a_texcoord7 = "TEXCOORD7",
+    i_data0     = "TEXCOORD7",
+    i_data1     = "TEXCOORD6",
+    i_data2     = "TEXCOORD5",
+    i_data3     = "TEXCOORD4",
+    i_data4     = "TEXCOORD3",
+}
+
+local function gen_append_code(d, tabnum)
+    tabnum = tabnum or 1
+    local tab
+    if tabnum > 0 then
+        tab = ('\t'):rep(tabnum)
+    end
+
+    if tab then
+        return function (c)
+            d[#d+1] = tab .. c
+        end
+    else
+        return function (c)
+            d[#d+1] = c
+        end
+    end
+end
+
 local function build_input_var(varyingcontent)
     local varying_def_decls = {}
     local input_decls, varying_decls = {}, {}
     local input_assignments, varying_assignments = {}, {}
-    local inputs = {
-        "struct VSInput {",
-    }
 
-    local varyings = {
-        "struct Varyings {",
-    }
+    local vdd_ac0 = gen_append_code(varying_def_decls, 0)
 
-    local shaderfmt = "%s %s;"
+    local ia_ac1 = gen_append_code(input_assignments, 1)
+    local va_ac1 = gen_append_code(varying_assignments, 1)
+
+    local inputs, varyings = {}, {}
+    local iac0, iac1 = gen_append_code(inputs, 0), gen_append_code(inputs, 1)
+    local vac0, vac1 = gen_append_code(varyings, 0), gen_append_code(varyings, 1)
+    
+    iac0 "struct VSInput {"
+    vac0 "struct Varyings {"
+
+    local shaderfmt = "\t%s %s;"
     for k, v in sortpairs(varyingcontent) do
-        varying_def_decls[#varying_def_decls+1] = ("%s %s : %s;"):format(v.type, k, v.bind)
-        if is_input_varying(k) then
-            inputs[#inputs+1]           = shaderfmt:format(v.type, k)
+        vdd_ac0(("%s %s : %s;\n"):format(v.type, k, v.bind or VS_INPUT_SEMANTICS_NAMES[k]))
+
+        if is_input_varying(k, v) then
+            iac1(shaderfmt:format(v.type, k))
+            ia_ac1(("vsinput.%s = %s;"):format(k, k))
+
             input_decls[#input_decls+1] = k
-            input_assignments[#input_assignments+1] = ("vsinput.%s = %s;"):format(k, k)
         else
             assert(is_output_varying(k, v))
-            varyings[#varyings+1]           = shaderfmt:format(v.type, k)
+            vac1(shaderfmt:format(v.type, k))
+            va_ac1(("%s = vsoutput.%s;"):format(k, k))
+
             varying_decls[#varying_decls+1] = k
-            varying_assignments[#varying_assignments+1] = ("%s = vsoutput.%s;"):format(k, k)
         end
     end
 
-    inputs[#inputs+1]       = "};"
-    varyings[#varyings+1]   = "};"
+    iac0 "};"
+    vac1 "};"
     
     return {
-        varying_def     = varying_def_decls,
-        inputs          = inputs,
-        varyings        = varyings,
-        input_decls     = input_decls,
-        varying_decls   = varying_decls,
-        input_assignments = input_assignments,
+        varying_def         = varying_def_decls,
+        inputs              = inputs,
+        varyings            = varyings,
+        input_decls         = input_decls,
+        varying_decls       = varying_decls,
+        input_assignments   = input_assignments,
         varying_assignments = varying_assignments,
     }
 end
 
-local function build_shader_content(fx, varyings, results)
-    local inputdecl     = table.concat(results.input_decls, " ")
-    local varyingdecl   = table.concat(results.varying_decls, " ")
-    local inputassignment = table.concat(results.input_assignments, "\n")
+local function build_fx_content(mat, varyings, results)
+    local fx, properties, state = mat.fx, mat.properties, mat.state
+
+    local inputdecl         = table.concat(results.input_decls, " ")
+    local varyingdecl       = table.concat(results.varying_decls, " ")
+    local inputassignment   = table.concat(results.input_assignments, "\n")
     local varyingassignment = table.concat(results.varying_assignments, "\n")
-    local vs = {
-        ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
-        ["@VSINPUTOUTPUT_STRUCT"]   = table.concat(results.inputs, "\n"),
-        ["@VS_PROPERTY_DEFINE"]     = generate_properties("vs", fx.properties),
-        ["@VS_FUNC_DEFINE"]         = fx.vs_code,
-        ["@VSINPUT_INIT"]           = inputassignment,
-        ["@OUTPUT_VARYINGS"]        = varyingassignment,
-    }
 
     local fsinput_assignments = {}
     for _, v in ipairs(results.varying_assignments) do
-        local lhs, rhs = v:match "(%w+)%s*=%s*vsoutput%.(%w+)"
+        local lhs, rhs = v:match "([%w_]+)%s*=%s*varyings%.([%w_]+)"
         assert(lhs and rhs and lhs == rhs)
-        fsinput_assignments[#fsinput_assignments+1] = ("fsinput.%s = %s;"):format(rhs, lhs)
+        fsinput_assignments[#fsinput_assignments+1] = ("varyings.%s = %s;"):format(rhs, lhs)
     end
 
-    local fs = {
-        ["@FSINPUT_VARYINGS_DEFINE"]= "$input " .. varyingdecl,
-        ["@FSINPUTOUTPUT_STRUCT"]   = table.concat(results.varyings, "\n"),
-        ["@FS_PROPERTY_DEFINE"]     = generate_properties("fs", fx.properties),
-        ["@FS_FUNC_DEFINE"]         = fx.fs_code,
-        ["@FSINPUT_FROM_VARYING"]   = table.concat(fsinput_assignments, "\n"),
-    }
+    fsinput_assignments[#fsinput_assignments+1] = "varyings.frag_coord = gl_FragCoord;"
+    local isdoublesize = state.CULL == "NONE"
+    if isdoublesize then
+        fsinput_assignments[#fsinput_assignments+1] = "varyings.is_frontfacing = gl_FrontFacing;"
+    end
 
-    return vs, fs
+    local function build_vs_code()
+        local d = {}
+        local ac0 = gen_append_code(d, 0)
+        local ac1 = gen_append_code(d, 1)
+        ac0 [[
+#include "common/transform.sh"
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, out Varyings varyings, out mat4 worldmat){
+    worldmat = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
+    vec4 posCS;
+	varyings.v_posWS = transform_worldpos(worldmat, vsinput.a_position, posCS);
+    return posCS;
+}
+]]
+
+        ac0 "void CUSTOM_VS(mat4 worldmat, VSInput vsinput, out Varyings varyings) {"
+
+        --v_posWS
+        local assign_fmt = "varyings.%s = vsinput.%s;"
+        --a_texcoord[0-7]
+        for i=0, 7 do
+            local a_texcoord = "a_texcoord" .. i
+            if varyings[a_texcoord] then
+                ac1(assign_fmt:format("v_texcoord" .. i, a_texcoord))
+            end
+        end
+
+        --a_color0
+        if varyings.a_color0 then
+            ac1(assign_fmt:format("v_color0", "a_color0"))
+        end
+
+        --normal/tangent/bitangent
+        if varyings.a_tangent or varyings.a_normal or varyings.a_bitangent then
+            if (varyings.a_tangent or varyings.a_bitangent) and not varyings.a_texcoord0 then
+                error "shader need tbn, but 'a_texcoord0' is not provided"
+            end
+
+            ac1 "mat3 wm3 = (mat3)worldmat;"
+            if varyings.a_tangent and varyings.a_tangent.pack_from_quat then
+                if varyings.a_normal then
+                    error "tangent is pack from quaternion, 'a_normal' should not define"
+                end
+
+                if varyings.a_tangent.type ~= "vec4" then
+                    error "'a_tangent' pack from quaternion, need vec4 type"
+                end
+
+                
+                ac1 "const mediump vec4 quat = vsinput.a_tangent;"
+                ac1 "mediump vec3 normal 	= quat_to_normal(quat);"
+                ac1 "mediump vec3 tangent 	= quat_to_tangent(quat);"
+                ac1 "varyings.v_normal		= mul(wm3, normal);"
+                ac1 "varyings.v_tangent	    = mul(wm3, tangent);"
+                ac1 "varyings.v_bitangent	= cross(varyings.v_normal, varyings.v_tangent);"
+    
+            else
+                if varyings.a_normal then
+                    assert(varyings.v_normal, "No 'v_normal' defined")
+                    ac1 "varyings.v_normal		= mul(wm3, vsinput.a_normal);"
+                end
+
+                if varyings.v_tangent then
+                    assert(varyings.a_normal)
+                    assert(varyings.v_tangent, "No 'v_tangent' defined")
+                    assert(varyings.v_bitangent, "'v_tangent' already defined, it need 'v_bitangent' defined the meantime")
+
+                    ac1 "varyings.v_tangent		= mul(wm3, vsinput.a_tangent);"
+                    if varyings.a_bitangent then
+                        ac1 "varyings.v_bitangent	= mul(wm3, vsinput.a_bitangent);"
+                    else
+                        ac1 "varyings.v_bitangent	= cross(varyings.v_normal, varyings.v_tangent);"
+                    end
+                end
+            end
+        end
+        ac0 "}"
+        return d
+    end
+
+    local function build_fs_code()
+        local d = {}
+        local ac0 = gen_append_code(d, 0)
+        local ac1 = gen_append_code(d, 1)
+        ac0 [[
+void CUSTOM_FS(in Varyings varyings, inout FSOutput fsoutput) {
+    material_info mi = (material_info)0;
+]]
+
+        if varyings.v_texcoord0 then
+            ac1 "mi.uv0 = uv_motion(varyings.v_texcoord0);";
+        end
+
+        ac1 "mi.V = normalize(u_eyepos.xyz - varyings.pos.xyz);"
+        ac1 "mi.screen_uv = calc_normalize_fragcoord(varyings.frag_coord.xy);"
+
+        if fx.setting.USING_LIGHTMAP then
+            ac1 "mi.lightmap_uv  = varyings.v_texcoord1;"
+        end
+
+        ac0 "\n"
+
+        assert(properties.u_pbr_factor)
+
+        if varyings.v_posWS then
+            ac1 "mi.posWS        = varyings.pos.xyz;"
+            ac1 "mi.distanceVS   = varyings.pos.w;"
+        end
+        ac0 "\n"
+
+        --basecolor
+        assert(properties.u_basecolor_factor)
+        if varyings.v_color0 then
+            ac1 "mi.basecolor = varyings.v_color0;"
+        else
+            ac1 "mi.basecolor = vec4_splat(1.0);"
+        end
+        ac1 "mi.basecolor *= u_basecolor_factor;"
+        if varyings.v_texcoord0 and properties.s_basecolor then
+            ac1 "mi.basecolor *= texture2D(s_basecolor, texcoord);"
+        end
+        if fx.setting.ALPHAMODE_OPAQUE then
+            ac1 "mi.basecolor.a = u_alpha_mask_cutoff;"
+        end
+        ac0 "\n"
+
+        --emissive
+        assert(properties.u_emissive_factor)
+        ac1 "mi.emissivecolor = u_emissive_factor;"
+        if varyings.v_texcoord0 and properties.s_emissive then
+            ac1 "mi.emissivecolor *= texture2D(s_emissive, texcoord);"
+        end
+        ac0 "\n"
+        
+        --roughness&matellic
+        ac1 "mi.metallic = u_metallic_factor;"
+        ac1 "mi.perceptual_roughness = u_roughness_factor;"
+        if varyings.v_texcoord0 and properties.s_metallic_roughness then
+            ac1 "//Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel."
+            ac1 "//This layout intentionally reserves the 'r' channel for (optional) occlusion map data"
+            ac1 "vec4 mrSample = texture2D(s_metallic_roughness, varyings.v_texcoord0);"
+            ac1 "mi.perceptual_roughness *= mrSample.g;"
+            ac1 "mi.metallic *= mrSample.b;"
+        end
+
+        ac1 "mi.perceptual_roughness  = clamp(mi.perceptual_roughness, 1e-6, 1.0);"
+        ac1 "mi.metallic              = clamp(mi.metallic, 1e-6, 1.0);"
+
+        ac0 "\n"
+        --occlusion
+        ac1 "mi.occlusion = u_occlusion_strength"
+        if varyings.v_texcoord0 and properties.s_occlusion then
+            ac1 "mi.occlusion *= texture2D(s_occlusion,  varyings.v_texcoord0).r;"
+        end
+
+        --normal
+        if varyings.v_normal then
+            ac1 "mi.gN = normalize(varyings.v_normal);"
+            if properties.s_normal and varyings.v_texcoord0 then
+                if varyings.v_tangent and varyings.v_bitangent then
+                    ac1 "mi.T = normalize(varyings.v_tangent);"
+                    ac1 "mi.B = normalize(varyings.v_bitangent);"
+                    ac1 "mat3 tbn = mat3(mi.T, mi.B, mi.gN);"
+                else
+                    ac1 "mat3 tbn = cotangent_frame(mi.gN, varyings.v_posWS, varyings.v_texcoord0);"
+                    ac1 "mi.T = tbn[0];"
+                    ac1 "mi.B = tbb[1];"
+                end
+                ac0 "\n"
+                ac1 "mediump vec3 normalTS = fetch_normal_from_tex(s_normal, varyings.v_texcoord0);"
+                ac1 "mi.N = normalize(mul(normalTS, tbn));// same as: mul(transpose(tbn), normalTS)"
+            end
+
+            if isdoublesize then
+                if varyings.v_tangent then
+                    ac1 "mi.T = -mi.T;"
+                    ac1 "mi.B = -mi.B;"
+                end
+                ac1 "mi.N  = -mi.N;"
+                ac1 "mi.gN = -mi.gN;"
+            end
+        end
+
+        --bend normal
+        if fx.ENABLE_BENT_NORMAL then
+            ac1 "const vec3 bent_normalTS = vec3(0.0, 1.0, 0.0); //TODO: need bent_normal should come from ssao or other place"
+            ac1 "mi.bent_normal = bent_normalTS;"
+        end
+        ac0 "}\n"
+        return d
+    end
+
+    local function build_vsinputoutput()
+        local input = table.concat(results.inputs, "\n")
+        local varying = table.concat(results.varyings, "\n")
+
+        return ("%s\n\n%s"):format(input, varying)
+    end
+
+    local function build_fsinputoutput()
+        local fsoutput = {}
+        for i=1, #results.varyings-1 do
+            fsoutput[i] = results.varyings[i]
+        end
+
+        assert(results.varyings[#results.varyings] == "};")
+
+        fsoutput[#fsoutput+1] = "\tvec4 frag_coord;"
+        fsoutput[#fsoutput+1] = "\tbool is_frontfacing;"
+
+        fsoutput[#fsoutput+1] = [[};
+struct FSOutput{
+    vec4 color;
+};
+]]
+        return table.concat(fsoutput, "\n")
+    end
+
+    return {
+        vs = {
+            ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
+            ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(),
+            ["@VS_PROPERTY_DEFINE"]     = generate_properties("vs", properties),
+            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(),
+            ["@VSINPUT_INIT"]           = inputassignment,
+            ["@OUTPUT_VARYINGS"]        = varyingassignment,
+        },
+        fs = {
+            ["@FSINPUT_VARYINGS_DEFINE"]= "$input " .. varyingdecl,
+            ["@FSINPUTOUTPUT_STRUCT"]   = build_fsinputoutput(),
+            ["@FS_PROPERTY_DEFINE"]     = generate_properties("fs", properties),
+            ["@FS_FUNC_DEFINE"]         = fx.fs_code or build_fs_code(),
+            ["@FSINPUT_FROM_VARYING"]   = table.concat(fsinput_assignments, "\n"),
+        }
+    }
 end
 
-local function gen_fx(setting, input, output, fx)
-    local varyings = parse_varyings_input(read_varyings_input(input, fx))
+local function write_varying_def_sc(output, varying_def)
+    local varying_path = output / "varying.def.sc"
+    write_file(varying_path, table.concat(varying_def, ""))
+    return varying_path:string()
+end
 
+local function gen_fx(setting, input, output, mat)
+    local fx = mat.fx
+    local varyings = read_varyings_input(setting, input, fx)
     local results = build_input_var(varyings)
 
-    local varying_path = output / "varying.def.sc"
-    write_file(varying_path, table.concat(results.varying_def, ""))
-    fx.varying_path = varying_path:string()
+    fx.varying_path = write_varying_def_sc(output, results.varying_def)
 
-    return build_shader_content(fx, results)
+    return build_fx_content(mat, varyings, results)
 end
 
 local function gen_shader(setting, fx, stage, shaderdefined)
     local si = assert(DEF_SHADER_INFO[stage])
-
-    local function generate_shader(template, content)
-        return template:gsub("@%w+", content)
-    end
-
-    local shader = generate_shader(si.template, shaderdefined[stage])
+    local shader = si.template:gsub("@[%w_]+", shaderdefined[stage])
 
     local fn = si.filename:format(sha1(shader))
     local filename = setting.scpath / fn
@@ -331,8 +599,8 @@ local function gen_shader(setting, fx, stage, shaderdefined)
 end
 
 return {
-    gen_fx          = gen_fx,
-    gen_shader      = gen_shader,
-    DEF_PBR_UNIFORM = DEF_PBR_UNIFORM,
-    SHADER_BASE     = SHADER_BASE,
+    gen_fx              = gen_fx,
+    gen_shader          = gen_shader,
+    DEF_PBR_UNIFORM     = DEF_PBR_UNIFORM,
+    LOCAL_SHADER_BASE   = LOCAL_SHADER_BASE
 }

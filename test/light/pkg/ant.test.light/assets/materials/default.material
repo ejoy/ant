@@ -1,5 +1,6 @@
 fx:
   shader_type: PBR
+  varyings: /pkg/ant.test.light/assets/materials/default.varyings
   setting:
     ALPHAMODE_OPAQUE: 1
     PACK_TANGENT_TO_QUAT: 0

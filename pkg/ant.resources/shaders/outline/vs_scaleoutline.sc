@@ -45,7 +45,7 @@ void main()
 
     VSInput vs_input = (VSInput)0;
     #include "default/vs_inputs_getter.sh"
-    mediump mat4 wm = get_world_matrix(vs_input);
+    mediump mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
 
 #ifdef VIEW_SPACE
     mat4 modelView = mul(u_view, wm);

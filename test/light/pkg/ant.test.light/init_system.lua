@@ -44,6 +44,8 @@ local function create_simple_triangles()
     local nx, ny, nz = math3d.index(math3d.normalize(math3d.vector(0, 1, 0.0)), 1, 2, 3, 4)
     local pp, np = 0.5, -0.5
 
+    local qt = math3d.tovalue(mu.pack_tangent_frame(math3d.vector(0.0, 1.0, 0.0), math3d.vector(1.0, 0.0, 0.0)))
+
     local py = 0
 
     world:create_entity{
@@ -55,13 +57,13 @@ local function create_simple_triangles()
                 vb = {
                     start = 0,
                     num = 6,
-                    handle = bgfx.create_vertex_buffer(("ffffffffffff"):rep(6):pack(
-                        np, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
-                        np, py, pp, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-                        pp, py, pp, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
-                        pp, py, pp, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
-                        pp, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0,
-                        np, py, np, nx, ny, nz, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0), layoutmgr.get "p3|n3|T4|t2".handle)
+                    handle = bgfx.create_vertex_buffer(("fffffffff"):rep(6):pack(
+                        np, py, np, qt[1], qt[2], qt[3], qt[4], 0.0, 1.0,
+                        np, py, pp, qt[1], qt[2], qt[3], qt[4], 0.0, 0.0,
+                        pp, py, pp, qt[1], qt[2], qt[3], qt[4], 1.0, 1.0,
+                        pp, py, pp, qt[1], qt[2], qt[3], qt[4], 1.0, 1.0,
+                        pp, py, np, qt[1], qt[2], qt[3], qt[4], 1.0, 0.0,
+                        np, py, np, qt[1], qt[2], qt[3], qt[4], 0.0, 1.0), layoutmgr.get "p3|T4|t2".handle)
                 },
             },
             material = "/pkg/ant.test.light/assets/materials/default.material",
@@ -135,7 +137,7 @@ function S.init_world()
     iom.set_direction(ce, dir)
 
     -- test_lines()
-    -- create_simple_triangles()
+    create_simple_triangles()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
     --     local leid = e.tag['*'][1]
@@ -143,10 +145,10 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
-        -- local le<close> = world:entity(leid, "scene:update")
-        -- iom.set_scale(le, 0.1)
-    end)
+    -- create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
+    --     -- local le<close> = world:entity(leid, "scene:update")
+    --     -- iom.set_scale(le, 0.1)
+    -- end)
 
     -- create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
     --     peids = e.tag['*']

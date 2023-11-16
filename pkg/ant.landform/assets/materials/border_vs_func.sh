@@ -5,7 +5,7 @@
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
-	mat4 wm = get_world_matrix(vs_input);
+	mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
 	highp vec4 posWS = transform_worldpos(wm, vs_input.pos, vs_output.clip_pos);
 
 	vs_output.uv0	    = vs_input.uv0;

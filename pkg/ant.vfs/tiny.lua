@@ -50,6 +50,7 @@ local compile_whitelist <const> = {
     "png",
     "hdr",
     "dds",
+    "varyings"
 }
 
 local function new_tiny(rootpath)

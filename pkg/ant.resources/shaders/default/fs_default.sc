@@ -4,17 +4,30 @@
 #include <bgfx_shader.sh>
 #include <shaderlib.sh>
 
+#include "common/camera.sh"
+
+#include "common/transform.sh"
+#include "common/utils.sh"
+#include "common/cluster_shading.sh"
+#include "common/constants.sh"
+#include "common/uvmotion.sh"
+#include "pbr/lighting.sh"
+#include "pbr/indirect_lighting.sh"
+#include "postprocess/tonemapping.sh"
+
+#include "pbr/material_info.sh"
+
 @FS_PROPERTY_DEFINE
 @FS_FUNC_DEFINE
 
 void main()
 {
-    FSInput fsinput = (FSInput)0;
+    Varyings varyings = (Varyings)0;
     FSOutput fsoutput = (FSOutput)0;
 
     @FSINPUT_INIT
 
-    CUSTOM_FS_FUNC(fsinput, fsoutput);
+    CUSTOM_FS(varyings, fsoutput);
 
     gl_FragColor = fsoutput.color;
 }

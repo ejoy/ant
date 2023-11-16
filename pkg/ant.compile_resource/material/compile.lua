@@ -6,7 +6,7 @@ local fxsetting     = require "material.setting"
 local shaderparse   = require "material.shaderparse"
 local genshader     = require "material.genshader"
 
-local setting       = import_package "ant.settings"
+local settings      = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local vfs_fastio    = require "vfs_fastio"
 local depends       = require "depends"
@@ -15,24 +15,23 @@ local parallel_task = require "parallel_task"
 local matutil       = import_package "ant.material".util
 local sa            = import_package "ant.render.core".system_attribs
 
-local ENABLE_SHADOW<const>          = setting:get "graphic/shadow/enable"
-local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"
-local ENABLE_IBL_LUT<const>         = setting:get "graphic/ibl/enable_lut"
-local USE_CS_SKINNING<const>        = setting:get "graphic/skinning/use_cs"
+local ENABLE_SHADOW<const>          = settings:get "graphic/shadow/enable"
+local IRRADIANCE_SH_BAND_NUM<const> = settings:get "graphic/ibl/irradiance_bandnum"
+local ENABLE_IBL_LUT<const>         = settings:get "graphic/ibl/enable_lut"
+local USE_CS_SKINNING<const>        = settings:get "graphic/skinning/use_cs"
 
-local ENABLE_CS<const>              = setting:get "graphic/lighting/cluster_shading" ~= 0
-local ENABLE_BLOOM<const>           = setting:get "graphic/postprocess/bloom/enable"
-local ENABLE_FXAA<const>            = setting:get "graphic/postprocess/fxaa/enable"
-local FXAA_USE_GREEN_AS_LUMA<const> = setting:get "graphic/postprocess/fxaa/use_green_as_luma"
-local ENABLE_AO<const>              = setting:get "graphic/ao/enable"
-local ENABLE_AO_BENT_NORMAL<const>  = setting:get "graphic/ao/bent_normal"
-local AO_QULITY<const>              = ENABLE_AO and setting:get "graphic/ao/qulity" or ""
+local ENABLE_CS<const>              = settings:get "graphic/lighting/cluster_shading" ~= 0
+local ENABLE_BLOOM<const>           = settings:get "graphic/postprocess/bloom/enable"
+local ENABLE_FXAA<const>            = settings:get "graphic/postprocess/fxaa/enable"
+local FXAA_USE_GREEN_AS_LUMA<const> = settings:get "graphic/postprocess/fxaa/use_green_as_luma"
+local ENABLE_AO<const>              = settings:get "graphic/ao/enable"
+local ENABLE_AO_BENT_NORMAL<const>  = settings:get "graphic/ao/bent_normal"
+local AO_QULITY<const>              = ENABLE_AO and settings:get "graphic/ao/qulity" or ""
 
 local function DEF_FUNC() end
 
-local SHADER_BASE <const>           = genshader.SHADER_BASE
-local LOCAL_SHADER_BASE<const>      = lfs.current_path() / SHADER_BASE:sub(2)
-local DEF_VARYING_FILE <const>      = lfs.absolute(fs.path(SHADER_BASE.."/common/varying_def.sh"):localpath())
+local LOCAL_SHADER_BASE<const>      = genshader.LOCAL_SHADER_BASE
+local VARYING_DEFAULT_PATH<const>   = LOCAL_SHADER_BASE / "common/varying_def.sh"
 
 local function shader_includes(include_path)
     return {
@@ -222,12 +221,12 @@ local function find_varying_path(fx, stage)
 
     local st = fx.shader_type
     if st == "PBR" then
-        return lfs.path(setting.vfs.realpath(SHADER_BASE.."/common/varying_def.sh"))
+        return VARYING_DEFAULT_PATH
     end
 
     if st == "CUSTOM" then
         if setting.vfs.type(parent_path(fx[stage]).."/varying.def.sc") == nil then
-            return lfs.path(setting.vfs.realpath(SHADER_BASE.."/common/varying_def.sh"))
+            return VARYING_DEFAULT_PATH
         end
     end
 end
@@ -468,13 +467,13 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     -- setmetatable(fx.setting, CHECK_MT)
     local fxdefined
     if fx.shader_type == "PBR" then
-        fxdefined = genshader.gen_fx(inputfolder, output, fx)
+        fxdefined = genshader.gen_fx(setting, inputfolder, output, mat)
     end
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local inputfile = fx.shader_type == "PBR" and
-                genshader.gen_shader(fx, stage, fxdefined) or
-                fs.path(fx[stage]):localpath()
+                genshader.gen_shader(setting, fx, stage, fxdefined) or
+                lfs.path(setting.vfs.realpath(fx[stage]))
 
             if not lfs.exists(inputfile) then
                 error(("shader path not exists: %s"):format(inputfile:string()))
