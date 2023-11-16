@@ -16,7 +16,7 @@ local function create_pbr_entity(pos, color, metallic, roughness)
 
             local sphere<close> = world:entity(e.tag['*'][2])
             imaterial.set_property(sphere, "u_basecolor_factor",    math3d.vector(color))
-            imaterial.set_property(sphere, "u_pbr_factor",          math3d.vector(metallic, roughness, 0.0, 0.0))
+            imaterial.set_property(sphere, "u_pbr_factor",          math3d.vector(metallic, roughness, 0.0, 1.0))
         end
     }
 end
