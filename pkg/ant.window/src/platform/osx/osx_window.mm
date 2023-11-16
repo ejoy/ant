@@ -2,7 +2,7 @@
 #include "../../window.h"
 #include "../../virtual_keys.h"
 
-static uint8_t keyboard_state(NSEvent* event) {
+static ant::window::keyboard_state get_keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
     return ant::window::get_keystate(
         0 != (flags & NSEventModifierFlagShift  ),
@@ -280,7 +280,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeOtherMouseDragged: {
         [g_wd getMouseX:&g_mx getMouseY:&g_my];
         struct ant::window::msg_mouse msg;
-        msg.state = ant::window::MOUSE_MOVE;
+        msg.state = ant::window::mouse_state::move;
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
@@ -296,7 +296,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeRightMouseDown:
     case NSEventTypeOtherMouseDown: {
         struct ant::window::msg_mouse msg;
-        msg.state = ant::window::MOUSE_DOWN;
+        msg.state = ant::window::mouse_state::down;
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
@@ -312,7 +312,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeRightMouseUp:
     case NSEventTypeOtherMouseUp: {
         struct ant::window::msg_mouse msg;
-        msg.state = ant::window::MOUSE_UP;
+        msg.state = ant::window::mouse_state::up;
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
@@ -328,7 +328,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeKeyUp: {
         struct ant::window::msg_keyboard msg;
         msg.key = keyboard_key(event);
-        msg.state = keyboard_state(event);
+        msg.state = get_keyboard_state(event);
         msg.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
         ant::window::input_message(cb, msg);
         break;
