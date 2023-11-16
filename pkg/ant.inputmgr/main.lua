@@ -13,14 +13,11 @@ local function create(world, type)
     local function rmlui_sendmsg(...)
         return ltask.call(ServiceRmlui, ...)
     end
-    local function world_sendmsg(...)
-        world:pub {...}
-    end
     function ev.gesture(m)
         local active = active_gesture[m.what]
         if active then
             if active == "world" then
-                world_sendmsg("gesture", m.what, m)
+                world:pub { "gesture", m.what, m }
             else
                 rmlui_sendmsg("gesture", m)
             end
@@ -34,7 +31,7 @@ local function create(world, type)
                     return
                 end
             end
-            world_sendmsg("gesture", m.what, m)
+            world:pub { "gesture", m.what, m }
             active_gesture[m.what] = "world"
         else
             -- assert(m.state == nil)
@@ -43,13 +40,16 @@ local function create(world, type)
                     return
                 end
             end
-            world_sendmsg("gesture", m.what, m)
+            world:pub { "gesture", m.what, m }
         end
     end
     function ev.touch(m)
         if ServiceRmlui then
-            ltask.call(ServiceRmlui, "touch", m)
+            if rmlui_sendmsg("touch", m) then
+                return
+            end
         end
+        world:pub { "touch", m }
     end
     function ev.keyboard(m)
         world:pub {"keyboard", keymap[m.key], m.press, m.state}

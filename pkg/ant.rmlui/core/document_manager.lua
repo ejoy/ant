@@ -210,6 +210,7 @@ local function cancelActive(id)
         end
     end
     activeElement[id] = nil
+    return true
 end
 
 local function setActive(doc, e, id)
@@ -227,11 +228,16 @@ function m.process_touch(ev)
         local doc, e = fromPoint(x, y)
         if e then
             setActive(doc, e, ev.id)
+            return true
         end
     elseif ev.state == "ended" or ev.state == "cancelled" then
-        cancelActive(ev.id)
+        if cancelActive(ev.id) then
+            return true
+        end
     elseif ev.state == "moved" then
-        return
+        if activeElement[ev.id] then
+            return true
+        end
     end
 end
 

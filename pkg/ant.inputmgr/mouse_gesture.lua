@@ -1,18 +1,11 @@
 local ltask = require "ltask"
 local time = require "bee.time"
 
-local MOUSE_LEFT <const> = 1
-local MOUSE_MIDDLE <const> = 2
-local MOUSE_RIGHT <const> = 3
-
-local MOUSE_DOWN <const> = 1
-local MOUSE_MOVE <const> = 2
-local MOUSE_UP <const> = 3
-
-local TOUCH_BEGAN <const> = 1
-local TOUCH_MOVED <const> = 2
-local TOUCH_ENDED <const> = 3
-local TOUCH_CANCELLED <const> = 4
+local Mouse2Touch <const> = {
+    LEFT = 1,
+    MIDDLE = 2,
+    RIGHT = 3,
+}
 
 local function start_timer(timeout, f)
     local t = {}
@@ -34,7 +27,6 @@ local function get_time()
 end
 
 return function (ev)
-    local currentTime = 0
     local lastX
     local lastY
     local downX
@@ -197,44 +189,42 @@ return function (ev)
     end
     function ev.mouse(m)
         ev.mouse_event(m)
-        if m.what ~= "LEFT" then
-            return
-        end
         if m.state == "DOWN" then
             ev.touch {
                 type = "touch",
-                id = 1,
                 state = "began",
+                id = Mouse2Touch[m.what],
                 x = m.x,
                 y = m.y,
                 timestamp = m.timestamp,
             }
-            mouse_down(m)
-            return
-        end
-        if m.state == "MOVE" then
+        elseif m.state == "MOVE" then
             ev.touch {
                 type = "touch",
-                id = 1,
                 state = "moved",
+                id = Mouse2Touch[m.what],
                 x = m.x,
                 y = m.y,
                 timestamp = m.timestamp,
             }
-            mouse_move(m)
-            return
-        end
-        if m.state == "UP" then
-            mouse_up(m)
+        elseif m.state == "UP" then
             ev.touch {
                 type = "touch",
-                id = 1,
                 state = "ended",
+                id = Mouse2Touch[m.what],
                 x = m.x,
                 y = m.y,
                 timestamp = m.timestamp,
             }
-            return
+        end
+        if m.what == "LEFT" then
+            if m.state == "DOWN" then
+                mouse_down(m)
+            elseif m.state == "MOVE" then
+                mouse_move(m)
+            elseif m.state == "UP" then
+                mouse_up(m)
+            end
         end
     end
 end
