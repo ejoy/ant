@@ -1,8 +1,10 @@
 local lfs           = require "bee.filesystem"
+local fs            = require "filesystem"
+
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
 local shaderparse   = require "material.shaderparse"
-local sha1          = require "sha1"
+local genshader     = require "material.genshader"
 
 local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
@@ -28,13 +30,14 @@ local AO_QULITY<const>              = ENABLE_AO and setting:get "graphic/ao/quli
 
 local function DEF_FUNC() end
 
-local SHADER_BASE <const> = "/pkg/ant.resources/shaders"
+local SHADER_BASE <const>           = genshader.SHADER_BASE
+local LOCAL_SHADER_BASE<const>      = lfs.current_path() / SHADER_BASE:sub(2)
+local DEF_VARYING_FILE <const>      = lfs.absolute(fs.path(SHADER_BASE.."/common/varying_def.sh"):localpath())
 
 local function shader_includes(include_path)
-    local INCLUDE_BASE = lfs.absolute(include_path)
     return {
-        lfs.current_path() / SHADER_BASE:sub(2),
-        INCLUDE_BASE
+        LOCAL_SHADER_BASE,
+        lfs.absolute(include_path),
     }
 end
 
@@ -105,8 +108,8 @@ end
 
 local function default_macros(setting)
     local m = {
-        "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
-        "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
+        "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0"),
+        "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0"),
     }
     table.move(DEFAULT_MACROS, 1, #DEFAULT_MACROS, #m+1, m)
     return m
@@ -185,183 +188,6 @@ local function merge_cfg_setting(setting, fx)
     end
 end
 
-local DEF_SHADER_INFO <const> = {
-    vs = {
-        CUSTOM_PROP_KEY = "%$%$CUSTOM_VS_PROP%$%$",
-        CUSTOM_FUNC_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
-        content = [[
-#include "default/inputs_define.sh"
-
-$input a_position a_texcoord0 INPUT_COLOR0 INPUT_NORMAL INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT INPUT_LIGHTMAP_TEXCOORD INPUT_INSTANCE1 INPUT_INSTANCE2 INPUT_INSTANCE3 INPUT_USER0 INPUT_USER1 INPUT_USER2
-$output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_USER0 OUTPUT_USER1 OUTPUT_USER2 OUTPUT_USER3 OUTPUT_USER4
-
-#include "default/inputs_structure.sh"
-
-$$CUSTOM_VS_PROP$$
-
-$$CUSTOM_VS_FUNC$$ 
-
-void main()
-{
-	VSInput vs_input = (VSInput)0;
-	#include "default/vs_inputs_getter.sh"
-
-    VSOutput vs_output = (VSOutput)0;
-    CUSTOM_VS_FUNC(vs_input, vs_output);
-
-    #include "default/vs_outputs_getter.sh"
-}]],
-        filename = "vs_%s.sc",
-    },
-    fs = {
-        CUSTOM_PROP_KEY = "%$%$CUSTOM_FS_PROP%$%$",
-        CUSTOM_FUNC_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
-        content = [[
-#include "default/inputs_define.sh"
-
-$input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_USER0 OUTPUT_USER1 OUTPUT_USER2 OUTPUT_USER3 OUTPUT_USER4
-
-#include "default/inputs_structure.sh"
-
-$$CUSTOM_FS_PROP$$
-
-$$CUSTOM_FS_FUNC$$
-
-void main()
-{
-    FSInput fsinput = (FSInput)0;
-    #include "default/fs_inputs_getter.sh"
-
-    FSOutput fsoutput = (FSOutput)0;
-    CUSTOM_FS_FUNC(fsinput, fsoutput);
-
-    #include "default/fs_outputs_getter.sh"
-}]],
-        filename = "fs_%s.sc",
-    }
-}
-
-local function generate_code(content, replacement_key, replacement_content)
-    return content:gsub(replacement_key, replacement_content)
-end
-
-DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_FUNC_KEY, [[#include "default/vs_func.sh"]])
-DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_FUNC_KEY, [[#include "default/fs_func.sh"]])
-
-local DEF_PBR_UNIFORM <const> = {
-    u_basecolor_factor = {
-        shader = "uniform mediump vec4 u_basecolor_factor;",
-        attrib = {1, 1, 1, 1},
-    },
-    u_emissive_factor  = {
-        shader = "uniform mediump vec4 u_emissive_factor;",
-        attrib = {0, 0, 0, 0},
-    },
-    u_pbr_factor       ={
-        shader = "uniform mediump vec4 u_pbr_factor;",
-        attrib = {0, 1, 0, 0} --metalic, roughness, alpha mask, occlusion
-    }
-}
-
-local ACCESS_NAMES<const> = {
-    r = "BUFFER_RO",
-    w = "BUFFER_WR",
-    rw= "BUFFER_RW",
-}
-
-local function which_property_type(n, v)
-    if v.stage then
-        if v.image or v.texture then
-            return "sampler", 1
-        end
-
-        assert(v.buffer, "'stage' defined, but not 'image'/'texture'/'buffer'")
-        return "buffer", 1
-    end
-
-    assert(type(v) == "table")
-    if (type(v[1]) == "table") then
-        return "uniform", #v
-    end
-    return "uniform", 1
-end
-
-local function which_type(v)
-    assert(type(v) == "table")
-    if type(v[1]) == "table" then
-        return #v[1] == 4 and "vec4" or "mat4"
-    end
-    return #v == 4 and "vec4" or "mat4"
-end
-
-local PROPERTY_TYPES<const> = {
-    uniform = {
-        shader = function (n, v, num)
-            local type = which_type(v)
-            -- we cannot set the precision type in our material uniform
-            if num > 1 then
-                --EX: uniform vec4 name[array_num];
-                return ("uniform %s %s[%d];"):format(type, n, num)
-            else
-                --EX: uniform vec4 name;
-                return ("uniform %s %s;"):format(type, n)
-            end
-        end,
-    },
-    sampler = {
-        shader = function (n, v, num)
-            --EX: mediump SAMPLER2D(name, stage)
-            return ("%s %s(%s, %d);"):format(
-                v.precision or "mediump",
-                v.sampler or "SAMPLER2D",
-                n, v.stage)
-        end,
-    },
-    buffer = {
-        shader = function (n, v, num)
-            -- access stage type(default vec4)
-            return ("%s(%s, %s, %d);"):format(ACCESS_NAMES[assert(v.access)], n, assert(v.elemtype), assert(v.stage))
-        end,
-    }
-}
-
-
-local function generate_properties(properties)
-    local content = {}
-    for name, v in pairs(properties) do
-        local st, num = which_property_type(name, v)
-        content[#content+1] = assert(PROPERTY_TYPES[st]).shader(name, v, num)
-    end
-    for k,v in pairs(DEF_PBR_UNIFORM) do
-        if not properties[k] then
-            content[#content+1] = v.shader
-        end
-    end
-    return table.concat(content, "\n")
-end
-
-local function generate_shader(shader, code, properties)
-    local updated_shader = code and generate_code(shader.content, shader.CUSTOM_FUNC_KEY, code) or shader.default
-    return properties and generate_code(updated_shader, shader.CUSTOM_PROP_KEY, generate_properties(properties)) or updated_shader
-end
-
-local function create_PBR_shader(setting, fx, stage, properties)
-    local si = assert(DEF_SHADER_INFO[stage])
-    local nc = generate_shader(si, fx[stage .. "_code"], properties)
-    local fn = si.filename:format(sha1(nc))
-    local filename = setting.scpath / fn
-
-    if not lfs.exists(filename) then
-        local fw <close> = assert(io.open(filename:string(), "wb"))
-        fw:write(nc)
-    end
-    if fx[stage] then
-        error "vs/fs should not define when use genertaed shader"
-    end
-    fx[stage] = fn
-    return filename
-end
-
 --[[
     shader_type:
     COMPUTE:    only for compute shader, fx.cs must define
@@ -389,27 +215,7 @@ local function check_update_shader_type(fx)
     end
 end
 
-local function check_update_fx(fx)
-    check_update_shader_type(fx)
-    local st = assert(fx.shader_type, "Invalid fx, could not find valid 'shader_type' or 'shader_type' not defined")
-    if st == "PBR" then
-        -- local function generate_shader_filename(stage)
-        --     local codename = stage .. "_code"
-        --     if fx[codename] or nil == fx[stage] then
-        --         fx[stage] = stage..".sc"
-        --     end
-        -- end
-
-        -- generate_shader_filename "vs"
-        -- generate_shader_filename "fs"
-    end
-end
-
-local function parent_path(path)
-    return path:match "^(.+)/[^/]*$"
-end
-
-local function find_varying_path(setting, fx, stage)
+local function find_varying_path(fx, stage)
     if fx.varying_path then
         return lfs.path(setting.vfs.realpath(fx.varying_path))
     end
@@ -628,7 +434,7 @@ local function build_properties(matproperties, shadertype)
         end
     end
     if shadertype == "PBR" then
-        for n, v in pairs(DEF_PBR_UNIFORM) do
+        for n, v in pairs(genshader.DEF_PBR_UNIFORM) do
             if not properties[n] then
                 properties[n] = v.attrib
             end
@@ -657,21 +463,17 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     lfs.create_directories(output)
     local fx = mat.fx
     merge_cfg_setting(setting, fx)
-    check_update_fx(fx)
+    check_update_shader_type(fx)
     -- setmetatable(fx, CHECK_MT)
     -- setmetatable(fx.setting, CHECK_MT)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
-            local inputpath; do
-                if fx.shader_type == "PBR" then
-                    inputpath = create_PBR_shader(setting, fx, stage, mat.properties)
-                else
-                    local lpath = setting.vfs.realpath(fx[stage])
-                    if lpath == nil then
-                        error(("shader path not exists: %s"):format(fx[stage]))
-                    end
-                    inputpath = lfs.path(lpath)
-                end
+            local inputpath = fx.shader_type == "PBR" and
+                genshader.gen(fx, stage, mat.properties) or
+                fs.path(fx[stage]):localpath()
+
+            if not lfs.exists(inputpath) then
+                error(("shader path not exists: %s"):format(inputpath:string()))
             end
 
 
@@ -715,12 +517,14 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         end)
     end
 
+    local stages = {}
     if fx.shader_type == "COMPUTE" then
         compile_shader "cs"
-        create_shader_cfg {"cs"}
+        stages[#stages+1] = "cs"
     else
-        local stages = {"vs"}
         compile_shader "vs"
+        stages[#stages+1] = "vs"
+
         local function has_fs()
             return fx.fs or fx.shader_type == "PBR"
         end
@@ -728,9 +532,9 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
             compile_shader "fs"
             stages[#stages+1] = "fs"
         end
-
-        create_shader_cfg(stages)
     end
+
+    create_shader_cfg(stages)
 end
 
 return compile
