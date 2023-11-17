@@ -72,7 +72,7 @@ if type == nil then
 	if platform.os == "ios" or platform.os == "android" then
 		type = "usb"
 	else
-		type = "remote"
+		type = "tcp"
 		address = "127.0.0.1:2018"
 	end
 end
@@ -81,7 +81,7 @@ if type == "usb" then
 	config.nettype = "listen"
 	config.address = "127.0.0.1"
 	config.port = 2018
-elseif type == "remote" then
+elseif type == "tcp" then
 	config.nettype = "connect"
 	local ip, port = address:match "^([^:]+):(%d+)"
 	if ip and port then
@@ -91,7 +91,7 @@ elseif type == "remote" then
 		config.address = "127.0.0.1"
 		config.port = '2018'
 	end
-elseif type == "offline" then
+elseif type == "none" then
 end
 
 local _dofile = dofile
