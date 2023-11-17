@@ -511,6 +511,27 @@ local function find_stage_file(setting, fx, stage)
     return inputfile
 end
 
+local function check_vs_inputs(setting, inputfolder, mat, inputs)
+    local varyings = genshader.read_varyings(setting, inputfolder, mat.fx)
+    if varyings and inputs then
+        for _, input in ipairs(inputs) do
+            local function check_is_instance_data()
+                for i=0, 4 do
+                    local idata = "i_data" .. i
+                    if varyings[idata] and L.SEMANTICS_INFOS[idata].bind == L.SEMANTICS_INFOS[input].bind then
+                        return true
+                    end
+                end
+            end
+
+            if (not varyings[input]) and (not check_is_instance_data()) then
+
+                error(("Shader need input: %s, but material varyings not provided"):format(input))
+            end
+        end
+    end
+end
+
 local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
     local lighting<const>   = mat.fx.setting.lighting
     local properties<const> = mat.properties
@@ -526,24 +547,7 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
         else
             if stages.vs then
                 local s = load_shader_uniforms(output, "vs", ao)
-                local varyings = genshader.read_varyings(setting, inputfolder, mat.fx)
-                if varyings and s.inputs then
-                    for _, input in ipairs(s.inputs) do
-                        local function check_is_instance_data()
-                            for i=0, 4 do
-                                local idata = "i_data" .. i
-                                if varyings[idata] and L.SEMANTICS_INFOS[idata].bind == L.SEMANTICS_INFOS[input].bind then
-                                    return true
-                                end
-                            end
-                        end
-
-                        if (not varyings[input]) and (not check_is_instance_data()) then
-
-                            error(("Shader need input: %s, but material varyings not provided"):format(input))
-                        end
-                    end
-                end
+                check_vs_inputs(setting, inputfolder, mat, s.inputs)
             end
             if stages.fs then
                 load_shader_uniforms(output, "fs", ao)
