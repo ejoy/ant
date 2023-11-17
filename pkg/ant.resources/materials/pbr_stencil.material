@@ -1,7 +1,7 @@
 fx:
   shader_type: PBR
   macros:
-    ALPHAMODE_OPAQUE: 1
+    "ALPHAMODE_OPAQUE=1"
   varyings: /pkg/ant.resources/materials/lighting.varyings
   setting:
     lighting: on

@@ -1,7 +1,8 @@
 fx:
   shader_type: PBR
-  setting:
-    ALPHAMODE_OPAQUE: 1
+  macros:
+    "ALPHAMODE_OPAQUE=1"
+    
 properties:
   s_basecolor:
     stage: 0

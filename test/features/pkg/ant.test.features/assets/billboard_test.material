@@ -1,8 +1,10 @@
 fx:
   fs: /pkg/ant.test.features/assets/fs_billboard.sc
   vs: /pkg/ant.test.features/assets/vs_billboard.sc
+  macros:
+    "ALPHAMODE_OPAQUE=1"
   setting:
-    ALPHAMODE_OPAQUE: 1
+    lighting:off
 properties:
   s_basecolor:
     stage: 0
