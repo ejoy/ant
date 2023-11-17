@@ -513,7 +513,6 @@ end
 
 local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
     local lighting<const>   = mat.fx.setting.lighting
-    local shadertype<const> = mat.fx.shader_type
     local properties<const> = mat.properties
     local function attrib_obj()
         return {attribs={}, systems={}}
@@ -552,7 +551,11 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
         end
 
         add_lighting_sv(ao.systems, lighting)
-        local np = {}; for k, v in pairs(properties) do np[k] = v end -- copy prperties
+        -- copy prperties
+        local np = {};
+        if properties then 
+            for k, v in pairs(properties) do np[k] = v end
+        end
         check_material_properties(np, ao.attribs)
         if stages.depth then
             ao.depth = attrib_obj()
