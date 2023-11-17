@@ -34,31 +34,6 @@ local function wait_start(pathkey)
     return setmetatable({_=pathkey}, wait_closeable)
 end
 
-local support_symlink; do
-    local platform = require "bee.platform"
-    if platform.os ~= "windows" and platform.os ~= "emscripten" then
-        support_symlink = true
-    else
-        support_symlink = pcall(lfs.create_symlink, ".test.symlink", ".test.symlink")
-        lfs.remove_all ".test.symlink"
-    end
-end
-
-local copyfile; do
-    if support_symlink then
-        function copyfile(a, b)
-            local s, err = pcall(lfs.create_symlink, a, b)
-            if not s then
-                error(err)
-            end
-        end
-    else
-        function copyfile(a, b)
-            lfs.copy_file(a, b, lfs.copy_options.overwrite_existing)
-        end
-    end
-end
-
 local function run(setting, commands, input, output)
     local cmdstring = cmdtostr(commands)
     local path = setting.shaderpath / get_filename(cmdstring, input)
