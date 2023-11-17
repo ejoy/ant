@@ -435,6 +435,10 @@ function CMD.SEND(_, ...)
 	request_send(...)
 end
 
+function CMD.VERSION(id)
+	response_id(id, repo.root or "RUNTIME")
+end
+
 function CMD.quit(id)
 	QUIT = true
 	response_id(id)
@@ -538,10 +542,6 @@ function CMD.SWITCH(_, path, realpath)
 		exclusive.sleep(1)
 	end
 	ltask_init(path, realpath)
-end
-
-function CMD.VERSION(id)
-	response_id(id, repo.root or "RUNTIME")
 end
 
 local function work_offline()
