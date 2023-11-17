@@ -1,7 +1,9 @@
 fx:
   cs: /pkg/ant.resources/shaders/postprocess/ssao/cs_bilateral.sc
+  macros:
+    "ENABLE_BENT_NORMAL=1"
   setting:
-    ENABLE_BENT_NORMAL: 1
+    lighting: off
 properties:
   s_ssao_result:
     stage: 0

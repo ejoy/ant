@@ -1,11 +1,12 @@
 fx:
   vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
   fs: /pkg/ant.resources/shaders/postprocess/fs_tonemapping.sc
+  macros:
+    "EXPOSURE_TYPE=1"
   setting:
     lighting: off
     cast_shadow: off
     shadow_receive: off
-    EXPOSURE_TYPE: 1
 properties:
   s_scene_color:
     stage: 0

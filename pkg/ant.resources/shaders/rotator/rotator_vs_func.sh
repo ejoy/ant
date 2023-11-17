@@ -1,5 +1,6 @@
 #include "common/transform.sh"
 #include "common/common.sh"
+#include "default/utils.sh"
 
 mat4 calc_rotator_transform(float rad)
 {
@@ -17,7 +18,7 @@ mat4 calc_rotator_transform(float rad)
 vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 wm)
 {
 #define DELTA_RADIAN (PI*0.1)
-	mat4 wm = calc_rotator_transform(DELTA_RADIAN * u_current_time);
+	wm = calc_rotator_transform(DELTA_RADIAN * u_current_time);
 	vec4 posCS; varyings.posWS = transform_worldpos(wm, vsinput.position, posCS);
 	return posCS;
 #undef DELTA_RADIAN

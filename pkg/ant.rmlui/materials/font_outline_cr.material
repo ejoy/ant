@@ -1,11 +1,13 @@
 fx:
   fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
   vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
+  macros:
+    "ENABLE_CLIP_RECT=1"
+    "OUTLINE_EFFECT=1"
   setting:
     lighting: off
-    OUTLINE_EFFECT: 1
-    ENABLE_CLIP_RECT: 1
-properties:        
+
+properties:
   s_tex:
     stage: 0
     texture: /pkg/ant.resources/textures/default.texture

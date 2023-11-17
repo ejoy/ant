@@ -1,10 +1,11 @@
 fx:
   fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  macros:
+    "GPU_SKINNING=1"
   setting:
     lighting: off
-    GPU_SKINNING: 1
-    WITHOUT_DEFAULT_UV: 1
+
 properties:
   u_id: {0, 0, 0, 0}
 state: /pkg/ant.resources/materials/states/default.state

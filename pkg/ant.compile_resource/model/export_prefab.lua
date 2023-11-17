@@ -195,9 +195,6 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
 
-    --TODO: need build mesh.primitives into one vertex buffer, and create entity to reference this share vertex buffer/index buffer
-    assert(#mesh.primitives == 1, "We assume 'primitives' field only have one mesh primitive")
-
     local function mesh_declname(em)
         local declname = em.declname
         if #declname == 2 then
@@ -207,7 +204,8 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         return declname[1]
     end
 
-    local primidx, prim = 1, mesh.primitives[1]; do
+    local entity
+    for primidx, prim in ipairs(mesh.primitives) do
         local em        = status.mesh[meshidx+1][primidx]
         local mode      = prim.mode or 4
         assert(mode == 4, "Only 'TRIANGLES' primitive mode is supported")
@@ -241,12 +239,13 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
         end
 
-        return create_entity(status, {
+        entity = create_entity(status, {
             policy  = policy,
             data    = data,
             parent  = (not hasskin) and parent,
         })
     end
+    return entity
 end
 
 local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)

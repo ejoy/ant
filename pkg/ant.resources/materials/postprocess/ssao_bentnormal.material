@@ -1,7 +1,9 @@
 fx:
   cs: /pkg/ant.resources/shaders/postprocess/ssao/cs_ssao.sc
+  macros:
+    "ENABLE_BENT_NORMAL=1"
   setting:
-    ENABLE_BENT_NORMAL: 1
+    lighting: off
 properties:
   u_ssao_param:   {0, 0, 0, 0}  #which chain level, inverse highlight value, threshold
   u_ssao_param2:  {0, 0, 0, 0}

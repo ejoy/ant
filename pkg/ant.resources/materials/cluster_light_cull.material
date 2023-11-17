@@ -1,7 +1,8 @@
 fx:
     cs: "/pkg/ant.resources/shaders/compute/cs_lightcull.sc"
+    macros:
+        "CLUSTER_LIGHT_CULL=1"
     setting:
-        CLUSTER_LIGHT_CULL: 1
         lighting: off
 properties:
     b_cluster_AABBs:

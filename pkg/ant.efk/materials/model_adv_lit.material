@@ -2,7 +2,9 @@ fx:
     vs: /pkg/ant.efk/efkbgfx/shaders/ad_model_lit_vs.fx.sc
     fs: /pkg/ant.efk/efkbgfx/shaders/ad_model_lit_ps.fx.sc
     varying_path: /pkg/ant.efk/efkbgfx/shaders/model_AdvancedLit_varying.def.sc
+    macros:
+        "LINEAR_INPUT_COLOR=1"
     setting:
-        LINEAR_INPUT_COLOR: 1
+        lighting: off
 
 state: /pkg/ant.resources/materials/states/default.state

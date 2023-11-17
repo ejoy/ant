@@ -1,8 +1,10 @@
 fx:
     fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
     vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
+    macros:
+        "OUTLINE_EFFECT=1"
     setting:
-        OUTLINE_EFFECT: 1
+        lighting: off
 properties:  
   s_tex:
     stage: 0

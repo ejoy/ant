@@ -1,9 +1,10 @@
 fx:
   fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
   vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
+  macros:
+    "ENABLE_CLIP_RECT=1"
   setting:
     lighting: off
-    ENABLE_CLIP_RECT: 1
 properties:
   s_tex:
     stage: 0

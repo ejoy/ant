@@ -1,7 +1,9 @@
 fx:
   shader_type: PBR
-  setting:
+  macros:
     ALPHAMODE_OPAQUE: 1
+  varyings: /pkg/ant.resources/materials/lighting.varyings
+  setting:
     lighting: on
     cast_shadow: on
     shadow_receive: on
@@ -17,9 +19,9 @@ state:
   MSAA: true
   WRITE_MASK: RGBAZ
 stencil:
-    TEST: ALWAYS
-    FUNC_REF: 1
-    FUNC_RMASK: 0xff
-    OP_FAIL_S: REPLACE
-    OP_FAIL_Z: REPLACE
-    OP_PASS_Z: REPLACE
+  TEST: ALWAYS
+  FUNC_REF: 1
+  FUNC_RMASK: 0xff
+  OP_FAIL_S: REPLACE
+  OP_FAIL_Z: REPLACE
+  OP_PASS_Z: REPLACE

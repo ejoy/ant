@@ -3,7 +3,6 @@ fx:
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   setting:
     lighting: off
-    WITHOUT_DEFAULT_UV: 1
 properties:
   u_id: {0, 0, 0, 0}
 state:

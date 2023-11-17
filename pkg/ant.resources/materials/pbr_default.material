@@ -1,7 +1,8 @@
 fx:
   shader_type: PBR
-  setting:
-    ALPHAMODE_OPAQUE: 1
+  macros:
+    "ALPHAMODE_OPAQUE=1"
+  varyings: /pkg/ant.resources/materials/lighting.varyings
 properties:
   u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0, 0, 0, 0}
