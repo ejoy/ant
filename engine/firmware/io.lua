@@ -541,7 +541,7 @@ function CMD.SWITCH(_, path, realpath)
 end
 
 function CMD.VERSION(id)
-	response_id(id, repo.root)
+	response_id(id, repo.root or "RUNTIME")
 end
 
 local function work_offline()
