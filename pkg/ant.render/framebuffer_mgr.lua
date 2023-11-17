@@ -119,6 +119,9 @@ end
 mgr.destroy_rb = destroy_rb
 
 function mgr.destroy(fbidx, keep_rbs)
+	if nil == fbidx then
+		return
+	end
 	local oldfb = FRAMEBUFFERS[fbidx]
 	if not keep_rbs then
 		for i=1, #oldfb do
