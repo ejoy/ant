@@ -1,9 +1,12 @@
 fx:
     vs: /pkg/ant.resources/shaders/polyline/vs_polylinelist.sc
     fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
+    macros:
+        "ENABLE_TAA=1"
+        "FIX_WIDTH=1"
     setting:
-        ENABLE_TAA: 1
-        FIX_WIDTH: 1
+        lighting: off
+        shadow_receive: off
         cast_shadow: off
 properties:
     s_tex:

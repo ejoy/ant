@@ -1,12 +1,13 @@
 fx:
   shader_type: PBR
-  vs_code: "vec4 CUSTOM_VS_POSITION(VSInput i, inout Varyings v, out mat4 m){return custom_vs_position(i, v, m);}"
+  vs_code: "#include \"default/utils.sh\"\nvec4 CUSTOM_VS_POSITION(VSInput i, inout Varyings v, out mat4 m){return custom_vs_position(i, v, m);}"
   fs_code: "void CUSTOM_FS(Varyings v, FSOutput o){o.color = u_color;}"
   setting:
     lighting: off
     position_only: true
   varyings:
     a_position: vec3
+    v_posWS: "vec4 TEXCOORD0"
 properties:
   u_color: {1, 1, 1, 1}
 state:

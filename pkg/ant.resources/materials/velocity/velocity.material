@@ -3,10 +3,6 @@ fx:
   vs: /pkg/ant.resources/shaders/velocity/vs_velocity.sc
   setting:
     lighting: off
-  varyings:
-    a_position: vec3
-    v_cur_pos: vec4   TEXCOORD0
-    v_prev_pos: vec4  TEXCOORD1
 properties:
   u_prev_map: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
 state:

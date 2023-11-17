@@ -1,6 +1,20 @@
-#include "default/inputs_define.sh"
+#if TANGENT_PACK_FROM_QUAT
+#define INPUT_NORMAL
+#define INPUT_TANGENT a_tangent
+#else
+#define INPUT_NORMAL a_normal
+#define INPUT_TANGENT
+#endif 
 
-$input 	a_position INPUT_NORMAL INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT
+#ifdef GPU_SKINNING
+#define INPUT_INDICES a_indices
+#define INPUT_WEIGHT a_weight
+#else
+#define INPUT_INDICES
+#define INPUT_WEIGHT
+#endif 
+
+$input 	a_position INPUT_TANGENT INPUT_NORMAL INPUT_INDICES INPUT_WEIGHT
 
 #include <bgfx_shader.sh>
 
@@ -43,9 +57,11 @@ void main()
 	mediump vec3 normal = a_normal;
 #	endif//TANGENT_PACK_FROM_QUAT
 
-    VSInput vs_input = (VSInput)0;
-    #include "default/vs_inputs_getter.sh"
-    mediump mat4 wm = get_world_matrix(vsinput.a_indices, vsinput.a_weight);
+#ifdef GPU_SKINNING
+    mat4 wm = calc_bone_transform(a_indices, a_weight);
+#else //!GPU_SKINNING
+    mat4 wm = u_model[0];
+#endif //GPU_SKINNING
 
 #ifdef VIEW_SPACE
     mat4 modelView = mul(u_view, wm);

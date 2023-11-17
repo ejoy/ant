@@ -126,6 +126,7 @@ do
         subsurface      = true,
         uv_motion       = true,
         position_only   = true,
+        no_predepth     = true,
     }
 
     function CHECK_SETTING(mat, macros)
@@ -475,13 +476,6 @@ local function build_properties(matproperties, shadertype)
             properties[k] = v
         end
     end
-    if shadertype == "PBR" then
-        for n, v in pairs(genshader.DEF_PBR_UNIFORM) do
-            if not properties[n] then
-                properties[n] = v.attrib
-            end
-        end
-    end
     return properties
 end
 
@@ -558,12 +552,12 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
         end
 
         add_lighting_sv(ao.systems, lighting)
-        local newproperties = build_properties(properties, shadertype)
-        check_material_properties(newproperties, ao.attribs)
+        local np = {}; for k, v in pairs(properties) do np[k] = v end -- copy prperties
+        check_material_properties(np, ao.attribs)
         if stages.depth then
             ao.depth = attrib_obj()
             load_shader_uniforms(output, "depth", ao.depth)
-            check_material_properties(newproperties, ao.depth.attribs)
+            check_material_properties(np, ao.depth.attribs)
         end
 
         local outfile = output / "main.attr"

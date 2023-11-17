@@ -2,8 +2,8 @@ fx:
   fs: /pkg/ant.resources/shaders/ui/fs_image.sc
   vs: /pkg/ant.resources/shaders/ui/vs_image.sc
   macros:
-  "ENABLE_CLIP_RECT=1"
-  "ENABLE_IMAGE_GRAY=1"
+    "ENABLE_CLIP_RECT=1"
+    "ENABLE_IMAGE_GRAY=1"
   setting:
     lighting: off
 properties:

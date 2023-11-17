@@ -1,12 +1,12 @@
 fx:
   cs: /pkg/ant.resources/shaders/skinning/cs_skinning.sc
+  macros:
+    "GPU_SKINNING=1"
   setting:
-    skinning: on
     lighting: off
     cast_shadow: off
     shadow_receive: off
     subsurface: off
-    GPU_SKINNING: 1
 properties:
     b_skinning_matrices_vb:
         stage: 0

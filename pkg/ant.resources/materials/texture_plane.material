@@ -2,6 +2,7 @@ fx:
   shader_type: PBR
   setting:
     lighting: off
+  varyings: /pkg/ant.resources/materials/nolighting.varyings
 properties:
   s_basecolor:
     stage: 0

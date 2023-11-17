@@ -1,7 +1,5 @@
 $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 
-#error "NEED FIX"
-
 #include <bgfx_shader.sh>
 
 // Surface settings:
@@ -42,8 +40,6 @@ uniform vec4 u_direciontal_light_color;
 
 #include "pbr/lighting.sh"
 #include "pbr/material_info.sh"
-
-#include "pbr/material_default.sh"
 
 void main()
 {

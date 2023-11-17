@@ -38,15 +38,12 @@ local DEF_SHADER_INFO <const> = {
 
 local DEF_PBR_UNIFORM <const> = {
     u_basecolor_factor = {
-        shader = "uniform mediump vec4 u_basecolor_factor;",
         attrib = {1, 1, 1, 1},
     },
     u_emissive_factor  = {
-        shader = "uniform mediump vec4 u_emissive_factor;",
         attrib = {0, 0, 0, 0},
     },
     u_pbr_factor       ={
-        shader = "uniform mediump vec4 u_pbr_factor;",
         attrib = {0, 1, 0, 1} --metalic, roughness, alpha mask, occlusion
     }
 }
@@ -113,19 +110,22 @@ local function generate_properties(mat)
         common = {}, vs = {}, fs = {}
     }
 
-    local function add_property(n, shader, attrib)
+    local function add_property(n, attrib)
+        if nil == properties then
+            properties = {}
+            mat.properties = properties
+        end
         if not properties[n] then
-            content.common[#content.common+1] = shader
             properties[n] = attrib
         end
     end
 
     for k,v in pairs(DEF_PBR_UNIFORM) do
-        add_property(k, v.shader, v.attrib)
+        add_property(k, v.attrib)
     end
 
     if mat.fx.setting.uv_motion then
-        add_property("u_uvmotion", "uniform vec4 u_uvmotion;", {0, 0, 0, 0})
+        add_property("u_uvmotion", {0, 0, 0, 0})
     end
 
     for name, v in pairs(properties) do

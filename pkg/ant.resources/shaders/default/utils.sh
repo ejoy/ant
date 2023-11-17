@@ -1,7 +1,6 @@
 #ifndef __DEFAULT_UTILS_SH__
 #define __DEFAULT_UTILS_SH__
 
-#ifndef MATERIAL_UNLIT
 #include "common/transform.sh"
 
 #ifdef WITH_POSITION_ATTRIB
@@ -29,7 +28,5 @@ void update_tbn(mat4 wm, VSInput vsinput, Varyings varyings)
 #endif //TANGENT_PACK_FROM_QUAT
 
 #endif //WITH_TANGENT_ATTRIB
-
-#endif //MATERIAL_UNLIT
 
 #endif //__DEFAULT_UTILS_SH__

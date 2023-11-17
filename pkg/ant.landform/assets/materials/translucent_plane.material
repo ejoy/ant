@@ -1,9 +1,15 @@
 fx:
   vs_code: "#include \"tf_vs_func.sh\""
   fs_code: "#include \"tf_fs_func.sh\""
+  macros:
+    "ALPHAMODE_OPAQUE=1"
   setting:
-    ALPHAMODE_OPAQUE: 1
     lighting: off
+  varyings:
+    a_position: vec3
+    a_texcoord0: vec2
+    v_texcoord0: "vec2 TEXCOORD0"
+    v_posWS: "vec4 TEXCOORD1"
 properties:
   s_basecolor:
     stage: 0

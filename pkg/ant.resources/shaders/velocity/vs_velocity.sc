@@ -1,7 +1,7 @@
 #ifdef GPU_SKINNING
-$input a_position a_indices a_weight
+$input a_position a_indices a_weight v_cur_pos v_prev_pos
 #else //!GPU_SKINNING
-$input a_position
+$input a_position v_cur_pos v_prev_pos
 #endif //GPU_SKINNING
 
 #include <bgfx_shader.sh>
