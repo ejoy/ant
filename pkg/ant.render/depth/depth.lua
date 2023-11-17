@@ -92,6 +92,7 @@ function s:update_filter()
             if not matres.fx.setting.no_predepth then
                 local fm = e.filter_material
                 local m = which_material(e, matres)
+                assert(not fm.main_queue:isnull())
                 local newstate = create_depth_state(fm.main_queue:get_state())
                 if newstate then
                     local mi = RM.create_instance(m.depth.object)

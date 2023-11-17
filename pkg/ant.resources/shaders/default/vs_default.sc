@@ -3,10 +3,12 @@
 
 #include <bgfx_shader.sh>
 #include <shaderlib.sh>
+
+@VS_PROPERTY_DEFINE
+
 #include "common/transform.sh"
 #include "common/common.sh"
 
-@VS_PROPERTY_DEFINE
 @VS_FUNC_DEFINE
 
 void main()

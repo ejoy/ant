@@ -1,5 +1,5 @@
-#include <bgfx_shader.sh>
 #include "common/transform.sh"
+#include "default/utils.sh"
 
 mat4 mountain_worldmat(VSInput vsinput)
 {

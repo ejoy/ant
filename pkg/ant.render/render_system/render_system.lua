@@ -223,6 +223,7 @@ function render_sys:update_filter()
 				local ro = e.render_object
 				local fm = e.filter_material
 				local matres = assetmgr.resource(e.material)
+				assert(not fm.main_queue:isnull())
 				local state = fm.main_queue:get_state()
 				if not matres.fx.setting.no_predepth then
 					state = check_set_depth_state_as_equal(fm.main_queue:get_state())

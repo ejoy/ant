@@ -19,8 +19,8 @@ fx:
     i_data1: vec4
     i_data2: vec4
 
-    v_texcoord0:  vec2 TEXCOORD0
-    v_posWS:      vec4 TEXCOORD1
+    v_texcoord0:  "vec2 TEXCOORD0"
+    v_posWS:      "vec4 TEXCOORD1"
     v_normal:     vec3
     v_tangent:    vec3
     v_bitangent:  vec3

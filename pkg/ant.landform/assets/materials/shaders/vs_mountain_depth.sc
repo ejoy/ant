@@ -1,6 +1,7 @@
 $input a_position i_data0 i_data1 i_data2
 
 #include <bgfx_shader.sh>
+#include "common/transform.sh"
 
 void main()
 {

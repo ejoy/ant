@@ -1,14 +1,11 @@
 fx:
-  vs_code: "\n#include \"default/vs_func.sh\"\n"
-  fs_code: "\n#include \"crack_fs_func.sh\"\n"
+  fs_code: "#include \"crack_fs_func.sh\""
   setting:
     lighting: on
     cast_shadow: off
     shadow_receive: on
     subsurface: off
-    HAS_NORMAL_TEXTURE: 1
-    HAS_BASECOLOR_TEXTURE: 1
-    HAS_CRACK_HEIGHT_TEXTURE: 1
+  varyings: /pkg/ant.resources/materials/lighting.varyings
 properties:
   u_pbr_factor: {0.1, 0.8, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0.0, 0.0, 0.0, 0.0}

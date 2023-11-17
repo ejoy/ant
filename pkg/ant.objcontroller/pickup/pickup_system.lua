@@ -347,6 +347,7 @@ function pickup_sys:update_filter()
 			local dstres = which_material(e)
 
 			local mi = RM.create_instance(dstres.object)
+			assert(not fm.main_queue:isnull())
 			mi:set_state(create_pickup_state(fm.main_queue:get_state(), dstres.state))
 			mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 			fm["pickup_queue"] = mi

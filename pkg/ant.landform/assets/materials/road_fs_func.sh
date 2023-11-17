@@ -12,7 +12,7 @@
 // }
 
 
-material_info road_material_info_init(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord, vec4 metallic, vec4 roughness)
+material_info road_material_info_init(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord, float metallic, float roughness)
 {
     material_info mi  = (material_info)0;
     mi.basecolor         = basecolor;
@@ -35,7 +35,7 @@ void CUSTOM_FS(in Varyings varyings, out FSOutput fsoutput)
     const vec2 uv  = varyings.texcoord0;
 
     const vec4 road_basecolor = texture2D(s_basecolor, uv); 
-    const vec3 basecolor = road_basecolor.rgb * varyings.color.rgb;
+    const vec3 basecolor = road_basecolor.rgb * varyings.color0.rgb;
 
     const vec4 mrSample = texture2D(s_metallic_roughness, uv);
     const float roughness = mrSample.g;

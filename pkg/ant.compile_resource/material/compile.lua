@@ -15,6 +15,8 @@ local parallel_task = require "parallel_task"
 local matutil       = import_package "ant.material".util
 local sa            = import_package "ant.render.core".system_attribs
 
+local L             = import_package "ant.render.core".layout
+
 local ENABLE_SHADOW<const>          = settings:get "graphic/shadow/enable"
 local IRRADIANCE_SH_BAND_NUM<const> = settings:get "graphic/ibl/irradiance_bandnum"
 local ENABLE_IBL_LUT<const>         = settings:get "graphic/ibl/enable_lut"
@@ -114,32 +116,84 @@ local function default_macros(setting)
     return m
 end
 
-local function get_macros(setting, mat)
-    local macros = default_macros(setting)
-    for k, v in pairs(mat.fx.setting) do
-        local f = SETTING_MAPPING[k]
-        if f == nil then
-            --TODO: remove add macro directly from setting, use fx.macros instead
-            macros[#macros+1] = k .. '=' .. v
-        else
-            local t = type(f)
-            if t == "function" then
-                local tt = f(v)
-                if tt then
-                    macros[#macros+1] = tt
-                end
-            elseif t == "string" then
-                macros[#macros+1] = f
-            else
-                error("invalid type")
+
+local CHECK_SETTING
+do
+    local VALID_SETTINGS<const> = {
+        lighting        = true,
+        cast_shadow     = true,
+        shadow_receive  = true,
+        subsurface      = true,
+        uv_motion       = true,
+        position_only   = true,
+    }
+
+    function CHECK_SETTING(mat, macros)
+        local s = mat.fx.setting
+        for k in pairs(s) do
+            if not VALID_SETTINGS[k] then
+                error(("Field: %s in fx.setting is not allow"):format(k))
+            end
+        end
+
+        if mat.fx.shader_type ~= "PBR" then
+            if s.lighting == "off" then
+                macros[#macros+1] = "MATERIAL_UNLIT=1"
+            end
+
+            if s.uv_motion then
+                macros[#macros+1] = "UV_MOTION=1"
             end
         end
     end
+end
+
+local function remove_duplicate_macros(macros)
+    local marks = {}
+    for _, m in ipairs(macros) do
+        local n, v = m:match "([%w_]+)=([%dx]+)"
+        if not n or not v then
+            error(("Invalid macro define:%s, it should be 'name'='value'"):format(m))
+        end
+        if marks[n] then
+            log.warn(("Multi define macro, use the latest one, name:%s, value%d, last value:%d"):format(n, v, marks[n]))
+        end
+        marks[n] = v
+    end
+
+    local function sortpairs(t)
+        local sort = {}
+        for k in pairs(t) do
+            sort[#sort+1] = k
+        end
+        table.sort(sort)
+        local n = 1
+        return function ()
+            local k = sort[n]
+            if k == nil then
+                return
+            end
+            n = n + 1
+            return k, t[k]
+        end
+    end
+
+    local mm = {}
+    for n, v in sortpairs(marks) do
+        mm[#mm+1] = ("%s=%s"):format(n, v)
+    end
+
+    return mm
+end
+
+local function get_macros(setting, mat)
+    local macros = default_macros(setting)
+    CHECK_SETTING(mat, macros)
     if mat.fx.macros then
         table.move(mat.fx.macros, 1, #mat.fx.macros, #macros+1, macros)
     end
-    table.sort(macros)
-	return macros
+
+    return remove_duplicate_macros(macros)
 end
 
 local function compile_debug_shader(platform, renderer)
@@ -183,12 +237,15 @@ local function check_update_shader_type(fx)
         end
     else
         if fx.shader_type == nil then
-            if (fx.depth and fx.vs == nil and fx.fs == nil) or (fx.vs or fx.fs) then
-                fx.shader_type = "CUSTOM"
-            else
+            if fx.vs_code or fx.fs_code then
                 fx.shader_type = "PBR"
+            else
+                fx.shader_type = "CUSTOM"
             end
         else
+            if fx.shader_type == "CUSTOM" and (fx.vs_code or fs.fs_code) then
+                error "Define shader_type as 'CUSTOM', 'vs_code' or 'fs_code' should not define"
+            end
             assert(fx.shader_type == "PBR" or fx.shader_type == "CUSTOM", "render shader 'shader_type' should only be 'PBR' or 'CUSTOM'")
         end
     end
@@ -479,7 +536,17 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
                 local varyings = genshader.read_varyings(setting, inputfolder, mat.fx)
                 if varyings and s.inputs then
                     for _, input in ipairs(s.inputs) do
-                        if not varyings[input] then
+                        local function check_is_instance_data()
+                            for i=0, 4 do
+                                local idata = "i_data" .. i
+                                if varyings[idata] and L.SEMANTICS_INFOS[idata].bind == L.SEMANTICS_INFOS[input].bind then
+                                    return true
+                                end
+                            end
+                        end
+
+                        if (not varyings[input]) and (not check_is_instance_data()) then
+
                             error(("Shader need input: %s, but material varyings not provided"):format(input))
                         end
                     end

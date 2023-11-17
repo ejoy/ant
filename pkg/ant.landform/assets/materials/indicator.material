@@ -12,6 +12,7 @@ fx:
     i_data0: vec4
 
     v_texcoord0: vec2
+    v_color0: vec4
 properties:
   s_basecolor:
     stage: 0

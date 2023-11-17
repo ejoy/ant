@@ -1,19 +1,7 @@
-#include <bgfx_shader.sh>
-#include <bgfx_compute.sh>
-#include <shaderlib.sh>
 #include "common/camera.sh"
 
 #include "common/transform.sh"
 #include "common/utils.sh"
-#error "NEED FIX"
-
-#include "common/cluster_shading.sh"
-#include "common/constants.sh"
-#include "common/uvmotion.sh"
-#include "pbr/lighting.sh"
-#include "pbr/indirect_lighting.sh"
-#include "postprocess/tonemapping.sh"
-#include "pbr/material_info.sh"
 
 vec2 parallax_mapping(vec2 uv, vec3 view_dir, float num_layers)
 {
@@ -45,24 +33,66 @@ vec2 parallax_mapping(vec2 uv, vec3 view_dir, float num_layers)
     return uv - p; */
 }
 
-void CUSTOM_FS_FUNC(in FSInput fsinput, inout FSOutput fsoutput)
+void init_material_info(Varyings varyings, inout material_info mi)
+{
+    mi.V = normalize(u_eyepos.xyz - varyings.posWS.xyz);
+    mi.screen_uv = calc_normalize_fragcoord(varyings.frag_coord.xy);
+
+    mi.posWS        = varyings.posWS.xyz;
+    mi.distanceVS   = varyings.posWS.w;
+
+    mi.metallic = u_metallic_factor;
+    mi.perceptual_roughness = u_roughness_factor;
+
+    mi.perceptual_roughness  = clamp(mi.perceptual_roughness, 1e-6, 1.0);
+    mi.metallic              = clamp(mi.metallic, 1e-6, 1.0);
+
+    mi.occlusion = u_occlusion_strength;
+
+    mi.gN = normalize(varyings.normal);
+
+    mi.T = normalize(varyings.tangent);
+    mi.B = normalize(varyings.bitangent);
+    mat3 tbn = mat3(mi.T, mi.B, mi.gN);
+
+    mediump vec3 normalTS = fetch_normal_from_tex(s_normal, varyings.texcoord0);
+    mi.N = normalize(mul(normalTS, tbn));// same as: mul(transpose(tbn), normalTS)
+
+#ifdef WITH_DOUBLE_SIDE
+    if (varyings.is_frontfacing){
+        mi.T = -mi.T;
+        mi.B = -mi.B;
+    
+        mi.N  = -mi.N;
+        mi.gN = -mi.gN;
+    }
+#endif //WITH_DOUBLE_SIDE
+
+    #ifdef ENABLE_BENT_NORMAL
+    const vec3 bent_normalTS = vec3(0.0, 1.0, 0.0); //TODO: need bent_normal should come from ssao or other place
+    mi.bent_normal = bent_normalTS;
+    #endif //ENABLE_BENT_NORMAL
+}
+
+void CUSTOM_FS(Varyings varyings, out FSOutput fsoutput)
 {
     material_info mi = (material_info)0;
-    default_init_material_info(fsinput, mi);
+
+    init_material_info(varyings, mi);
 
     // remember that, this tbn is transposed, so, all the transform: mul(tbn, v), should convert to: mul(v, tbn), same with mul(transpose(tbn), v)
     mat3 tbn = mat3(mi.T, mi.B, mi.gN);
 
     //view_dir is same with: mul(mi.V, tbn)
     vec3 tangent_view = mul(u_eyepos.xyz, tbn);
-    vec3 tangent_pos  = mul(fsinput.pos.xyz, tbn);
+    vec3 tangent_pos  = mul(varyings.posWS.xyz, tbn);
     vec3 view_dir = normalize(tangent_view - tangent_pos);
     float min_layers = 8.0;
     float max_layers = 32.0;
 
     //TODO: transform tangent space vec3(0, 0, 1) to worldspace Z can simplify 'num_layers' calculation, and Z is inverse tbn's three column, mean's: Z = transpose(tbn)[2]
     float num_layers = mix(max_layers, min_layers, max(dot(vec3(0, 0, 1), view_dir), 0));
-    vec2 uv = parallax_mapping(fsinput.uv0, view_dir, num_layers);
+    vec2 uv = parallax_mapping(varyings.texcoord0, view_dir, num_layers);
     if(uv.x > 1.0 || uv.y > 1.0 || uv.x < 0.0 || uv.y < 0.0){
         discard;
     }

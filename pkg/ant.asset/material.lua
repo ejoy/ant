@@ -8,6 +8,8 @@ local bgfx		= require "bgfx"
 local RM		= ecs.require "ant.material|material"
 local L			= import_package "ant.render.core".layout
 
+local fs		= require "filesystem"
+
 local imaterial = {}
 
 function imaterial.set_property(e, who, what, mattype)
@@ -42,6 +44,22 @@ function ms:component_init()
 	end
 end
 
+local function read_mat_varyings(varyings)
+	if varyings then
+		if type(varyings) == "string" then
+			assert(varyings:sub(1, 1) == "/", "Only support full vfs path")
+			local function read_file(fn)
+				local p = fs.path(fn):localpath()
+				local f<close> = assert(io.open(p:string()), p:string());
+				return f:read "a"
+			end
+			local datalist = require "datalist"
+			varyings = datalist.parse(read_file(varyings))
+		end
+		return L.parse_varyings(varyings)
+	end
+end
+
 function ms:entity_init()
 	for e in w:select "INIT mesh:in material:in" do
 		local declname = e.mesh.vb.declname
@@ -50,10 +68,8 @@ function ms:entity_init()
 		end
 
 		local matres = assetmgr.resource(e.material)
-		local varyings = matres.fx.varyings
-
+		local varyings = read_mat_varyings(matres.fx.varyings)
 		if varyings then
-			varyings = L.parse_varyings(varyings)
 			local inputs = L.parse_varyings(L.varying_inputs(declname))
 			for k, v in pairs(varyings) do
 				if k:match "a_" then

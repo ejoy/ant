@@ -679,6 +679,13 @@ linstance_set_stencil(lua_State *L) {
 }
 
 static int
+linstance_isnull(lua_State *L){
+	struct material_instance *mi = to_instance(L, 1);
+	lua_pushboolean(L, mi == NULL || mi->m == NULL);
+	return 1;
+}
+
+static int
 linstance_ptr(lua_State *L) {
 	lua_pushlightuserdata(L, to_instance(L, 1));
 	return 1;
@@ -692,6 +699,9 @@ lmaterial_instance(lua_State *L) {
 	mi->patch_state.stencil = 0;
 	mi->patch_state.rgba = 0;
 	mi->m = MO(L, 1);
+	if (mi->m == NULL){
+		luaL_error(L, "material object is NULL");
+	}
 
 	lua_pushvalue(L, lua_upvalueindex(1));
 	lua_setmetatable(L, -2);
@@ -716,6 +726,7 @@ lmaterial_instance_init(lua_State *L) {
 		{ "get_stencil",	linstance_get_stencil},
 		{ "set_stencil",	linstance_set_stencil},
 
+		{ "isnull",			linstance_isnull},
 		{ "ptr",			linstance_ptr},
 		{ NULL, 			NULL },
 	};

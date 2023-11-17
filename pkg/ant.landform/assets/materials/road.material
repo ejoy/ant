@@ -1,4 +1,5 @@
 fx:
+  shader_type: PBR
   vs_code: "#include \"road_vs_func.sh\""
   fs_code: "#include \"road_fs_func.sh\""
   depth: /pkg/ant.landform/assets/materials/shaders/vs_road_depth.sc

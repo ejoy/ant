@@ -567,6 +567,7 @@ function sm:update_filter()
 			local dstres = which_material(e, mt)
 			local fm = e.filter_material
 			local mi = RM.create_instance(dstres.depth.object)
+			assert(not fm.main_queue:isnull())
 			mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
 			fm["csm1_queue"] = mi
 			fm["csm2_queue"] = mi

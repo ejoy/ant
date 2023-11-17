@@ -4,6 +4,8 @@
 #include <bgfx_shader.sh>
 #include <shaderlib.sh>
 
+@FS_PROPERTY_DEFINE
+
 #include "common/camera.sh"
 
 #include "common/transform.sh"
@@ -17,7 +19,6 @@
 
 #include "pbr/material_info.sh"
 
-@FS_PROPERTY_DEFINE
 @FS_FUNC_DEFINE
 
 void main()

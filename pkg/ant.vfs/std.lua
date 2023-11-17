@@ -160,6 +160,7 @@ local game_whitelist <const> = {
 	"anim",
 	-- material
 	"state",
+	"varyings",
 }
 
 local function table_append(t, a)

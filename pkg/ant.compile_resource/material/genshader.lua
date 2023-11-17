@@ -107,21 +107,41 @@ local PROPERTY_CREATORS<const> = {
     end,
 }
 
-local function generate_properties(stage, properties)
-    local content = {}
+local function generate_properties(mat)
+    local properties = mat.properties
+    local content = {
+        common = {}, vs = {}, fs = {}
+    }
+
+    local function add_property(n, shader, attrib)
+        if not properties[n] then
+            content.common[#content.common+1] = shader
+            properties[n] = attrib
+        end
+    end
+
+    for k,v in pairs(DEF_PBR_UNIFORM) do
+        add_property(k, v.shader, v.attrib)
+    end
+
+    if mat.fx.setting.uv_motion then
+        add_property("u_uvmotion", "uniform vec4 u_uvmotion;", {0, 0, 0, 0})
+    end
+
     for name, v in pairs(properties) do
         local st, num = which_property_type(name, v)
-        if ((st == "sampler" or st == "buffer") and stage == "fs") or st == "uniform" then
-            content[#content+1] = assert(PROPERTY_CREATORS[st])(name, v, num)
+        if st == "uniform" then
+            content.common[#content.common+1] = assert(PROPERTY_CREATORS[st])(name, v, num)
+        end
+
+        if st == "sampler" or st == "buffer" then
+            content.fs[#content.fs+1] = assert(PROPERTY_CREATORS[st])(name, v, num)
         end
     end
-    for k,v in pairs(DEF_PBR_UNIFORM) do
-        if not properties[k] then
-            content[#content+1] = v.shader
-            properties[k] = v.attrib
-        end
-    end
-    return table.concat(content, "\n")
+
+    local cc = table.concat(content.common, "\n")
+    local fmt = "%s\n%s"
+    return fmt:format(cc, table.concat(content.vs, "\n")), fmt:format(cc, table.concat(content.fs, "\n"))
 end
 
 local function vfs_exists(vfs, path)
@@ -253,7 +273,7 @@ local function build_input_var(varyingcontent)
     for k, v in sortpairs(varyingcontent) do
         vdd_ac0(("%s %s : %s;"):format(v.type, k, v.bind or L.SEMANTICS_INFOS[k].bind))
 
-        local member_name = k:match "[av]_(%w+)"
+        local member_name = k:match "[avi]_(%w+)"
         if is_input_varying(k, v) then
             iac1(shaderfmt:format(v.type, member_name))
             ia_ac1(("vsinput.%s = %s;"):format(member_name, k))
@@ -566,16 +586,17 @@ local function build_fs_assignments(mat, varyings, varying_assignments)
 end
 
 local function build_fx_content(mat, varyings, results)
-    local fx, properties = mat.fx, mat.properties
+    local fx = mat.fx
 
     local inputdecl         = table.concat(results.input_decls, " ")
     local varyingdecl       = table.concat(results.varying_decls, " ")
 
+    local vs_properties_content, fs_properties_content = generate_properties(mat)
     return {
         vs = {
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
             ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results),
-            ["@VS_PROPERTY_DEFINE"]     = generate_properties("vs", properties),
+            ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
             ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(mat, varyings),
             ["@VSINPUT_INIT"]           = table.concat(results.input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
@@ -583,7 +604,7 @@ local function build_fx_content(mat, varyings, results)
         fs = {
             ["@FSINPUT_VARYINGS_DEFINE"]= "$input " .. varyingdecl,
             ["@FSINPUTOUTPUT_STRUCT"]   = build_fsinputoutput(results),
-            ["@FS_PROPERTY_DEFINE"]     = generate_properties("fs", properties),
+            ["@FS_PROPERTY_DEFINE"]     = fs_properties_content,
             ["@FS_FUNC_DEFINE"]         = fx.fs_code or build_fs_code(mat, varyings),
             ["@FSINPUT_FROM_VARYING"]   = table.concat(build_fs_assignments(mat, varyings, results.varying_assignments), "\n"),
         }
