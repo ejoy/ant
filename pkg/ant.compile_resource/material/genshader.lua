@@ -502,6 +502,8 @@ void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
                 ac0 "\n"
                 ac1 "mediump vec3 normalTS = fetch_normal_from_tex(s_normal, varyings.texcoord0);"
                 ac1 "mi.N = normalize(mul(normalTS, tbn));// same as: mul(transpose(tbn), normalTS)"
+            else
+                ac1 "mi.N = mi.gN;"
             end
 
             if isdoublesize then
