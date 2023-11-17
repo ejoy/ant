@@ -10,7 +10,7 @@ local uncomplete = {}
 
 local function readroot(self)
 	do
-		local f <close> = io.open(self.sandbox_path .. "root_" .. self.slot, "rb")
+		local f <close> = io.open(self.sandbox_path .. "root" .. self.slot, "rb")
 		if f then
 			return f:read "a"
 		end
@@ -24,7 +24,7 @@ local function readroot(self)
 end
 
 local function updateroot(self, hash)
-	local f <close> = assert(io.open(self.sandbox_path .. "root_" .. self.slot, "wb"))
+	local f <close> = assert(io.open(self.sandbox_path .. "root" .. self.slot, "wb"))
 	f:write(hash)
 end
 

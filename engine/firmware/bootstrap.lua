@@ -5,7 +5,7 @@ local fs = require "bee.filesystem"
 
 local config = {
 	vfs = {
-		slot = 0,
+		slot = "",
 	}
 }
 
@@ -20,6 +20,7 @@ if platform.os == "ios" then
 	end
 	type = ios.setting "server_type"
 	address = ios.setting "server_address"
+	config.vfs.slot = ios.setting "root_slot" or ""
 end
 
 local function app_path(name)
