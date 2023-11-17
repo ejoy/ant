@@ -208,6 +208,10 @@ function CMD.SWITCH()
 	ltask_init()
 end
 
+function CMD.VERSION()
+	return "GAME"
+end
+
 function CMD.quit()
 	quit = true
 end

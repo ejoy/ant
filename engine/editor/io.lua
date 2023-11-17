@@ -110,6 +110,10 @@ function CMD.SWITCH()
 	ltask_init()
 end
 
+function CMD.VERSION()
+	return "EDITOR"
+end
+
 function CMD.quit()
 	quit = true
 end

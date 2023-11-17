@@ -541,6 +541,10 @@ function CMD.SWITCH(_, path, realpath)
 	ltask_init(path, realpath)
 end
 
+function CMD.VERSION(id)
+	response_id(id, repo.root)
+end
+
 local function work_offline()
 	OFFLINE = true
 
