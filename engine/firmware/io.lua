@@ -299,8 +299,7 @@ function response.ROOT(hash)
 		return
 	end
 	print("[response] ROOT", hash)
-	repo:updatehistory(hash)
-	local resources = repo:changeroot(hash)
+	local resources = repo:init(hash)
 	for path in pairs(resources) do
 		CMD.LIST(nil, path)
 	end
@@ -680,15 +679,7 @@ local function main()
 		work_online()
 		-- socket error or closed
 	end
-	if repo.root == nil then
-		local hash = repo:history_root()
-		if hash then
-			repo:changeroot(hash)
-		else
-			error("No history root")
-			return
-		end
-	end
+	repo:init()
 	init_channelfd()
 	local uncomplete_req = {}
 	for hash in pairs(connection.request) do

@@ -8,46 +8,47 @@ local vfs = {} ; vfs.__index = vfs
 
 local uncomplete = {}
 
--- dir object example :
--- f vfs.txt 90a5c279259fd4e105c4eb8378e9a21694e1e3c4 1533871795
-
-local function read_history(self)
-	local history = {}
-	local f = self:readfile("root")
-	if f then
-		for hash in f:lines() do
-			history[#history+1] = hash:match "[%da-f]+"
-		end
-		f:close()
-	end
-	return history
-end
-
-local function update_history(self, new)
-	local history = read_history(self)
-	for i, h in ipairs(history) do
-		if h == new then
-			table.remove(history, i)
-			table.insert(history, 1, h)
-			return history
+local function readroot(self)
+	do
+		local f <close> = io.open(self.sandbox_path .. "root_" .. self.slot, "rb")
+		if f then
+			return f:read "a"
 		end
 	end
-	table.insert(history, 1, new)
-	history[11] = nil
-	return history
+	do
+		local f <close> = io.open(self.bundle_path .. "root", "rb")
+		if f then
+			return f:read "a"
+		end
+	end
 end
 
-function vfs:history_root()
-	local f = self:readfile("root")
-	if f then
-		local hash = f:read "l"
-		f:close()
-		return (hash:match "[%da-f]+")
+local function updateroot(self, hash)
+	local f <close> = assert(io.open(self.sandbox_path .. "root_" .. self.slot, "wb"))
+	f:write(hash)
+end
+
+function vfs:init(hash)
+	if hash then
+		updateroot(self, hash)
+		local res = self.resource
+		self:changeroot(hash)
+		return res
+	end
+	if self.root ~= nil then
+		return
+	end
+	hash = readroot(self)
+	if hash then
+		self:changeroot(hash)
+	else
+		error("No history root")
 	end
 end
 
 function vfs.new(config)
 	local repo = {
+		slot = config.slot,
 		bundle_path = config.bundle_path,
 		sandbox_path = config.sandbox_path,
 		resource = {},
@@ -161,19 +162,11 @@ function vfs:list(path)
 	return dir
 end
 
-function vfs:updatehistory(hash)
-	local history = update_history(self, hash)
-	local f <close> = assert(io.open(self.sandbox_path .. "root", "wb"))
-	f:write(table.concat(history, "\n"))
-end
-
 function vfs:changeroot(hash)
-	local res = self.resource
 	self.root = hash
 	self.resource = {}
 	self.cache_dir = { ["/"] = hash }
 	self.cache_file = {}
-	return res
 end
 
 function vfs:resource_setting(setting)
