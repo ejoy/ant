@@ -105,6 +105,9 @@ end
 function vfs.resource_setting(setting)
 	return send("RESOURCE_SETTING", setting)
 end
+function vfs.version()
+	return call("VERSION")
+end
 local rawsearchpath = package.searchpath
 package.searchpath = function(name, path, sep, dirsep)
 	local package, file = name:match "^([^|]*)|(.*)$"

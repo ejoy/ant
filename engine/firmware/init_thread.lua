@@ -52,6 +52,10 @@ function vfs.resource_setting(setting)
 	return send("RESOURCE_SETTING", setting)
 end
 
+function vfs.version()
+	return call("VERSION")
+end
+
 if __ANT_EDITOR__ then
 	function vfs.repopath()
 		return call("REPOPATH")
