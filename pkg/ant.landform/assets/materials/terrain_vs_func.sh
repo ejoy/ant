@@ -2,7 +2,7 @@
 #include "common/common.sh"
 #include "default/utils.sh"
 
-vec4 CUSTOM_VS_POSITION(VSInput vsinput, Varyings varyings, out mat4 worldmat){
+vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){
 	return custom_vs_position(vsinput, varyings, worldmat);
 }
 
