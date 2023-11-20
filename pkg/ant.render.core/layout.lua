@@ -314,7 +314,7 @@ local function format_varying(d)
         if t ~= 'u' and t ~= 'i' then
             error(("Invalid INDICES/JOINTS type:%s, it data element must be 'u'/'i' for uint8 or uint16"):format(d))
         end
-        datatype = "uvec"
+        datatype = "ivec"
     else
         datatype = "vec"
         if o ~= 'n' and t ~= 'f' then
