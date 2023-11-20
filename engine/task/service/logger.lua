@@ -54,6 +54,26 @@ end
 
 local LOG
 
+local LOG_ERROR; do
+	local platform = require "bee.platform"
+	if platform.os == 'ios' then
+		function LOG_ERROR(data)
+			io.write(data)
+			io.write("\n")
+			io.flush()
+		end
+	elseif platform.os == 'android' then
+		local android = require "android"
+		function LOG_ERROR(data)
+			android.rawlog("error", "", data)
+		end
+	else
+		function LOG_ERROR(_)
+		end
+	end
+end
+
+
 if __ANT_RUNTIME__ then
 	local ServiceIO = ltask.queryservice "io"
 	local directory = require "directory"
@@ -64,20 +84,23 @@ if __ANT_RUNTIME__ then
 	if fs.exists(logfile) then
 		fs.rename(logfile, logpath .. "/game_1.log")
 	end
-	function LOG(data)
+	function LOG(level, data)
 		ltask.send(ServiceIO, "SEND", "LOG", data)
 		local f <close> = io.open(logfile, "a+")
 		if f then
 			f:write(data)
 			f:write("\n")
 		end
+		if level == "error" then
+			LOG_ERROR(data)
+		end
 	end
 else
-    function LOG(data)
-        io.write(data)
-        io.write("\n")
-        io.flush()
-    end
+	function LOG(level, data)
+		io.write(data)
+		io.write("\n")
+		io.flush()
+	end
 end
 
 local function writelog()
@@ -92,7 +115,7 @@ local function writelog()
 		message = string.gsub(message, "%$%{([^}]*)%}", function (s)
 			return parse(id, s)
 		end)
-		LOG(string.format("[%s.%02d : %-10s][%-5s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, querylabel(id), level:upper(), message))
+		LOG(level, string.format("[%s.%02d : %-10s][%-5s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, querylabel(id), level:upper(), message))
 	end
 end
 
