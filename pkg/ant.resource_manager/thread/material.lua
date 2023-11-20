@@ -181,7 +181,7 @@ end
 
 local function material_create(filename)
     local material  = serialize.parse(filename, readall(filename .. "|main.cfg"))
-    local attribute = serialize.parse(filename, readall(filename .. "|main.attr"))
+    local attribute = serialize.parse(filename, readall(filename .. "|attr.cfg"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
     update_uniforms_handle(attribute.attribs, material.fx.uniforms, filename)

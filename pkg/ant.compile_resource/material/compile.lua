@@ -551,7 +551,7 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
             check_material_properties(np, ao.depth.attribs)
         end
 
-        local outfile = output / "main.attr"
+        local outfile = output / "attr.cfg"
         writefile(outfile, ao)
     end)
 end
