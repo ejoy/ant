@@ -129,7 +129,7 @@ local resource_filter <const> = {
 local block <const> = {
     "/res",
     "/pkg/ant.bake",
-    "/pkg/ant.resources.binary/meshes",
+    "/pkg/ant.resources.binary/meshes/test",
     "/pkg/ant.resources.binary/test",
 }
 
