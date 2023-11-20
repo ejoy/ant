@@ -96,7 +96,7 @@ if __ANT_RUNTIME__ then
 		end
 	end
 else
-	function LOG(level, data)
+	function LOG(_, data)
 		io.write(data)
 		io.write("\n")
 		io.flush()
@@ -115,7 +115,7 @@ local function writelog()
 		message = string.gsub(message, "%$%{([^}]*)%}", function (s)
 			return parse(id, s)
 		end)
-		LOG(level, string.format("[%s.%02d : %-10s][%-5s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, querylabel(id), level:upper(), message))
+		LOG(level, string.format("[%s.%02d][%-5s]( %s )%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, level:upper(), querylabel(id), message))
 	end
 end
 
