@@ -1,5 +1,7 @@
 fx:
   depth: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  macros:
+    "GPU_SKINNING=1"
   varyings:
     a_position: vec3
     a_indices:  ivec4
