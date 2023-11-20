@@ -23,15 +23,6 @@ extern "C" {
 #   define l_seeknum		long
 #endif
 
-static void* create_memory(lua_State* L, size_t sz) {
-    void* memory = lua_newuserdatauv(L, sz, 0);
-    if (!memory) {
-        luaL_error(L, "not enough memory");
-        return NULL;
-    }
-    return memory;
-}
-
 #if defined(_WIN32)
 #include <Windows.h>
 static wchar_t* u2w(lua_State* L, const char *str) {
@@ -40,7 +31,11 @@ static wchar_t* u2w(lua_State* L, const char *str) {
         luaL_error(L, "MultiByteToWideChar Failed: %d", GetLastError());
         return NULL;
     }
-    wchar_t* buf = (wchar_t*)create_memory(L, len * sizeof(wchar_t));
+    wchar_t* buf = (wchar_t*)lua_newuserdatauv(L, len * sizeof(wchar_t), 0);
+    if (!buf) {
+        luaL_error(L, "not enough memory");
+        return NULL;
+    }
     int out_len = MultiByteToWideChar(CP_UTF8, 0, str, -1, buf, len);
     if (!out_len) {
         luaL_error(L, "MultiByteToWideChar Failed: %d", GetLastError());
@@ -60,6 +55,12 @@ struct file_t {
     }
     ~file_t() {
         if (f) fclose(f);
+    }
+    void close() {
+        if (f) {
+            fclose(f);
+            f = NULL;
+        }
     }
     bool suc() const {
         return !!f;
@@ -116,7 +117,12 @@ static int readall(lua_State *L) {
         return raise_error(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
-    void* data = create_memory(L, size);
+    void* data = lua_newuserdatauv(L, size, 0);
+    if (!data) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
     size_t nr = f.read(data, size);
     assert(nr == size);
     if (nr != size) {
@@ -135,7 +141,12 @@ static int readall_s(lua_State *L) {
         return raise_error(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
-    void* data = create_memory(L, size);
+    void* data = lua_newuserdatauv(L, size, 0);
+    if (!data) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
     size_t nr = f.read(data, size);
     lua_pushlstring(L, (const char*)data, nr);
     return 1;
