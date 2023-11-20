@@ -1,0 +1,22 @@
+fx:
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  fs: /pkg/ant.resources/shaders/postprocess/fs_blend_scene.sc
+  macros:
+    ALPHAMODE_OPAQUE=1
+  setting: /pkg/ant.resources/settings/nolighting.settings
+  varyings: /pkg/ant.resources/materials/nolighting.varyings
+properties:
+  s_scene_color:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+  s_scene_depth:
+    stage: 1
+    texture: /pkg/ant.resources/textures/blur_alpha.texture 
+state:
+  ALPHA_REF: 1
+  CULL: NONE
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBA
+  BLEND_FUNC: "aA"
+  BLEND_ENABLE: "i"

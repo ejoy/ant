@@ -1,0 +1,15 @@
+compress:
+  android: ASTC8x8
+  ios: ASTC8x8
+  windows: BC1
+mipmap: true
+colorspace: linear
+maxsize: 128
+path: /pkg/ant.resources/textures/blur_alpha.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture

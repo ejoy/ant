@@ -60,7 +60,7 @@ local function create_blur_scene_entity(count)
             blur_scene = {
                 cur_count = 0,
                 max_count = 5,
-                material  = "/pkg/vaststars.resources/materials/blend_scene.material"
+                material  = "/pkg/ant.resources/materials/blend_scene.material"
             }
         },
     }
