@@ -86,7 +86,7 @@ local ID2INPUTNAMES<const> = {
     [0x0017] = "a_texcoord7",
 }
 
-local function parse_shaderbin(c, loadinputs)
+local function parse_shaderbin(c, renderer)
     local reader = create_reader(c)
     local magic = reader:read(4)
     if not isShaderBin(magic) then
@@ -147,17 +147,28 @@ local function parse_shaderbin(c, loadinputs)
     end
 
     local inputs = {}
-    if loadinputs then
-        local shadersize = reader:readUint32()
-        reader:skip(shadersize+1)   -- +1 for skip file's eol
-    
-        --read layout input attribs
-        local attribnum = reader:readUint8()
-        
-        for i=1, attribnum do
-            local id = reader:readUint16()
-            inputs[i] = ID2INPUTNAMES[id]
+    if renderer == "metal" then
+        if magic:sub(1, 1) == 'C' then
+            --see: bgfx/renderer_mtl.mm:void ShaderMtl::create(const Memory* _mem)
+            for i=1, 3 do
+                reader:readUint16()
+            end
         end
+    elseif renderer == "direct3d11" or renderer == "direct3d12" or renderer == "vulkan" then
+        --pass through
+    else
+        error(("Not support renderer: %s to pasre shader"):format(renderer))
+    end
+
+    local shadersize = reader:readUint32()
+    reader:skip(shadersize+1)   -- +1 for skip file's eol
+
+    --read layout input attribs
+    local attribnum = reader:readUint8()
+    
+    for i=1, attribnum do
+        local id = reader:readUint16()
+        inputs[i] = ID2INPUTNAMES[id]
     end
 
     return {

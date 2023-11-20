@@ -346,7 +346,7 @@ local function load_shader_uniforms(setting, output, stage, ao)
     end
 
     local c = read_file(binfile)
-    local s = shaderparse.parse(c, setting.os == "windows")
+    local s = shaderparse.parse(c, setting.renderer)
     for n, v in pairs(s.uniforms) do
         if sa[n] then
             check_add(systems, n)
