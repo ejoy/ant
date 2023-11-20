@@ -1,23 +1,43 @@
 local ltask = require "ltask"
-local LOG
-if not debug.getregistry().LTASK_ID then
-    --TODO
-    function LOG(...)
-        io.write(...)
-        io.write "\n"
-    end
-else
-    function LOG(...)
-        ltask.pushlog(ltask.pack(...))
-    end
-end
 
-local modes = {
+local LEVELS <const> = {
     'debug',
     'info',
     'warn',
     'error'
 }
+
+local LOG = {}
+
+if not debug.getregistry().LTASK_ID then
+    --TODO
+    for _, level in ipairs(LEVELS) do
+        LOG[level] = function (...)
+            local t = table.pack(...)
+            local str = {}
+            for i = 1, t.n do
+                str[#str+1] = tostring(t[i])
+            end
+            local message = table.concat(str, "\t")
+            io.write(string.format("[%-5s]", level:upper()))
+            io.write(message)
+            io.write "\n"
+        end
+    end
+else
+    for _, level in ipairs(LEVELS) do
+        LOG[level] = function (...)
+            local t = table.pack(...)
+            local str = {}
+            for i = 1, t.n do
+                str[#str+1] = tostring(t[i])
+            end
+            local message = table.concat(str, "\t")
+            ltask.pushlog(ltask.pack(level, message))
+        end
+    end
+end
+
 local color = {
     debug = nil,
     info = nil,
@@ -47,19 +67,19 @@ end
 local m = {}
 m.level = __ANT_RUNTIME__ and 'debug' or 'info'
 m.skip = nil
-for i, name in ipairs(modes) do
-    levels[name] = i
-    m[name] = function(...)
+for i, level in ipairs(LEVELS) do
+    levels[level] = i
+    m[level] = function(...)
         if i < levels[m.level] then
             return
         end
         local info = debug.getinfo(m.skip or 2, 'Sl')
         m.skip = nil
-        local text = ('[%-5s](%s:%d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...))
-        if not __ANT_RUNTIME__ and color[name] then
-            text = color[name]..text.."\x1b[0m"
+        local text = ('(%s:%d) %s'):format(info.short_src, info.currentline, packstring(...))
+        if not __ANT_RUNTIME__ and color[level] then
+            text = color[level]..text.."\x1b[0m"
         end
-        LOG(text)
+        LOG[level](text)
     end
 end
 
