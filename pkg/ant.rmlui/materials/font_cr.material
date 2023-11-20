@@ -3,8 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
   macros:
     "ENABLE_CLIP_RECT=1"
-  setting:
-    lighting: off
+  setting: /pkg/ant.resources/settings/nolighting.settings
 properties:
   s_tex:
     stage: 0

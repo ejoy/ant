@@ -1,7 +1,6 @@
 fx:
   shader_type: PBR
-  setting:
-    lighting: off
+  setting: /pkg/ant.resources/settings/nolighting.settings
   varyings:
     a_position: vec3
     a_color0: vec4

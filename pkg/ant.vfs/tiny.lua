@@ -44,6 +44,7 @@ local compile_whitelist <const> = {
     "anim",
     -- material
     "state",
+    "setting",
     --compile
     "sc",
     "sh",

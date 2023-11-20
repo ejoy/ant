@@ -3,8 +3,7 @@ fx:
     vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
     macros:
         "OUTLINE_EFFECT=1"
-    setting:
-        lighting: off
+    setting: /pkg/ant.resources/settings/nolighting.settings
 properties:  
   s_tex:
     stage: 0

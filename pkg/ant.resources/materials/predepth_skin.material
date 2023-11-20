@@ -6,10 +6,7 @@ fx:
     a_position: vec3
     a_indices:  ivec4
     a_weight:   vec4
-  setting:
-    lighting:       off
-    cast_shadow:    off
-    shadow_receive: off
+  setting: /pkg/ant.resources/settings/nolighting.settings
 state:
   ALPHA_REF: 0
   CULL: CCW

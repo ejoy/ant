@@ -4,8 +4,7 @@ fx:
   macros:
     "ENABLE_CLIP_RECT=1"
     "ENABLE_IMAGE_GRAY=1"
-  setting:
-    lighting: off
+  setting: /pkg/ant.resources/settings/nolighting.settings
 properties:
   s_tex:
     stage: 0

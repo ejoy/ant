@@ -30,8 +30,6 @@ local ENABLE_AO<const>              = settings:get "graphic/ao/enable"
 local ENABLE_AO_BENT_NORMAL<const>  = settings:get "graphic/ao/bent_normal"
 local AO_QULITY<const>              = ENABLE_AO and settings:get "graphic/ao/qulity" or ""
 
-local function DEF_FUNC() end
-
 local LOCAL_SHADER_BASE<const>      = genshader.LOCAL_SHADER_BASE
 local VARYING_DEFAULT_PATH<const>   = LOCAL_SHADER_BASE / "common/varying_def.sh"
 

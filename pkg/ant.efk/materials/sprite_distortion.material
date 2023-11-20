@@ -4,7 +4,6 @@ fx:
     varying_path: /pkg/ant.efk/efkbgfx/shaders/sprite_BackDistortion_varying.def.sc
     macros:
         "LINEAR_INPUT_COLOR=1"
-    setting:
-        lighting: off
+    setting: /pkg/ant.resources/settings/nolighting.settings
 
 state: /pkg/ant.resources/materials/states/default.state

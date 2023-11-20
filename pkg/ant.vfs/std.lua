@@ -123,7 +123,6 @@ local resource_filter <const> = {
 		"ibbin",
 		"meshbin",
 		"skinbin",
-		"attr",
 	},
 }
 
