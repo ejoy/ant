@@ -58,9 +58,16 @@ do print "step2. compile resource."
     local tiny_vfs = vfsrepo.new_tiny(repopath)
     local names, paths = std_vfs:export_resources()
     local tasks = {}
+    local function msgh(errmsg)
+        return debug.traceback(errmsg)
+    end
     local function compile_resource(cfg, name, path)
-        local lpath = cr.compile_file(cfg, name, path)
-        resource_cache[lpath] = nil
+        local ok, lpath = xpcall(cr.compile_file, msgh, cfg, name, path)
+        if ok then
+            resource_cache[lpath] = nil
+            return
+        end
+        print(string.format("compile failed:\n\tvpath: %s\n\tlpath: %s\n%s", name, path, lpath))
     end
     for _, setting in ipairs(config_resource) do
         local cfg = cr.init_setting(tiny_vfs, setting)
