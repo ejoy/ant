@@ -4,9 +4,11 @@ local w     = world.w
 
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
-
+local ltask     = require "ltask"
 local irender   = ecs.require "ant.render|render_system.render"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
+
+local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
@@ -124,7 +126,6 @@ local function test_lines()
     }
 end
 
-
 function S.init_world()
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
@@ -134,7 +135,7 @@ function S.init_world()
     iom.set_direction(ce, dir)
 
     -- test_lines()
-    create_simple_triangles()
+    --create_simple_triangles()
 
     -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
     --     local leid = e.tag['*'][1]
@@ -142,10 +143,10 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
-        -- local le<close> = world:entity(leid, "scene:update")
-        -- iom.set_scale(le, 0.1)
-    end)
+    -- create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
+    --     -- local le<close> = world:entity(leid, "scene:update")
+    --     -- iom.set_scale(le, 0.1)
+    -- end)
 
     create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
         peids = e.tag['*']
@@ -188,4 +189,15 @@ function S.init_world()
     --create_simple_triangles()
     -- iom.set_position(camera_ref, math3d.vector(0, 2, -5))
     -- iom.set_direction(camera_ref, math3d.vector(0.0, 0.0, 1.0))
+end
+
+local kb_mb = world:sub{"keyboard"}
+
+function S.data_changed()
+    for _, key, press in kb_mb:unpack() do
+        if key == "P" and press == 0 then
+            ltask.call(bgfxmainS, "show_profile", "view|encoder", false)
+        end
+    end
+    
 end

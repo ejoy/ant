@@ -21,7 +21,7 @@ local CALL = {
     "encoder_frame",
     "maxfps",
     "fontmanager",
-    "enable_system_profile",
+    "show_profile",
     "event_suspend",
 
     "fetch_world_camera",
@@ -44,7 +44,6 @@ function S.SEND()
     return SEND
 end
 
-local profile_enable = true
 local profile = {}
 local profile_label = {}
 local profile_time = 0
@@ -56,6 +55,14 @@ local profile_printtext = {n=0}
 
 local bgfx_stat = {}
 local views = {}
+
+local PROFILE_SHOW_STATE = {
+    fps = true,
+    time = true,
+    system = true,
+    view = true,
+    encoder = true,
+}
 
 local function stats_views()
     local stats = bgfx.get_stats("vc", bgfx_stat)
@@ -85,15 +92,18 @@ local function stats_views()
 end
 
 local function profile_print()
-    if not profile_enable then
+    if PROFILE_SHOW_STATE.view then
+        stats_views()
+    end
+
+    if not PROFILE_SHOW_STATE.encoder then
         return
     end
-    stats_views()
+
     if profile_n ~= MaxFrame then
         profile_n = profile_n + 1
     else
         profile_n = 1
-
         local r = {}
         for who, time in pairs(profile) do
             r[#r+1] = {who, time}
@@ -270,6 +280,20 @@ function S.frame()
     return bgfx.frame()
 end
 
+function S.show_profile(what, show)
+    if show == nil then
+        show = false
+    end
+
+    for ww in what:gmatch "%w+" do
+        if not PROFILE_SHOW_STATE[ww] then
+            log.warn(("Invalid profile name: %s, fps|time|encoder is valid"):format(ww))
+        end
+
+        PROFILE_SHOW_STATE[ww] = show
+    end
+end
+
 local maxfps = 30
 local frame_control; do
     local MaxTimeCachedFrame <const> = 1 --*1s
@@ -291,6 +315,9 @@ local frame_control; do
         end
     end
     local function print_fps()
+        if not PROFILE_SHOW_STATE.fps then
+            return
+        end
         if frame_first == 1 then
             if frame_last == 1 then
                 fps = 0
@@ -311,6 +338,9 @@ local frame_control; do
         S.dbg_text_print(0, 0, 0x02, printtext)
     end
     local function print_time()
+        if not PROFILE_SHOW_STATE.time then
+            return
+        end
         local avg = 0
         local max = -math.huge
         local min = math.huge
@@ -359,10 +389,6 @@ function S.maxfps(v)
         ltask.call(ServiceWindow, "maxfps", maxfps)
     end
     return maxfps
-end
-
-function S.enable_system_profile(v)
-    profile_enable = v
 end
 
 function S.dbg_text_print(x, y, ...)
