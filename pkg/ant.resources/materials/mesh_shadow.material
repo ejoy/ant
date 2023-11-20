@@ -1,6 +1,7 @@
 fx:
   shader_type: PBR
   setting:
+    lighting: on
     cast_shadow: off
     shadow_receive: on
   varyings:

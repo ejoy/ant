@@ -622,6 +622,24 @@ local function write_varying_def_sc(output, varying_def)
     return varying_path:string()
 end
 
+local function macros_from_setting(setting, m)
+    if setting.lighting == "off" then
+        m[#m+1] = "MATERIAL_UNLIT=1"
+    end
+
+    if ENABLE_SHADOW and setting.shadow_receive == "on" then
+        m[#m+1] = "ENABLE_SHADOW=1"
+    end
+
+    if setting.position_only then
+        m[#m+1] = "POSITION_ONLY=1"
+    end
+
+    if setting.uv_motion then
+        m[#m+1] = "UV_MOTION=1"
+    end
+end
+
 local function build_fx_macros(mat, varyings)
     mat.fx.macros = mat.fx.macros or {}
     local m = mat.fx.macros
@@ -666,21 +684,7 @@ local function build_fx_macros(mat, varyings)
         m[#m+1] = "GPU_SKINNING=1"
     end
 
-    if mat.fx.setting.lighting == "off" then
-        m[#m+1] = "MATERIAL_UNLIT=1"
-    end
-
-    if ENABLE_SHADOW and mat.fx.shadow_receive == "on" then
-        m[#m+1] = "ENABLE_SHADOW=1"
-    end
-
-    if mat.fx.setting.position_only then
-        m[#m+1] = "POSITION_ONLY=1"
-    end
-
-    if mat.fx.setting.uv_motion then
-        m[#m+1] = "UV_MOTION=1"
-    end
+    macros_from_setting(mat.fx.setting, m)
 end
 
 local function check_shader(shader, stage)
@@ -771,4 +775,5 @@ return {
     DEF_PBR_UNIFORM     = DEF_PBR_UNIFORM,
     LOCAL_SHADER_BASE   = LOCAL_SHADER_BASE,
     read_varyings       = read_varyings_input,
+    macros_from_setting = macros_from_setting,
 }

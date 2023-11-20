@@ -116,17 +116,7 @@ do
         end
 
         if mat.fx.shader_type ~= "PBR" then
-            if s.lighting == "off" then
-                macros[#macros+1] = "MATERIAL_UNLIT=1"
-            end
-
-            if ENABLE_SHADOW and s.shadow_receive == "on" then
-                macros[#macros+1] = "ENABLE_SHADOW=1"
-            end
-
-            if s.uv_motion then
-                macros[#macros+1] = "UV_MOTION=1"
-            end
+            genshader.macros_from_setting(mat.fx.setting, macros)
         end
     end
 end
