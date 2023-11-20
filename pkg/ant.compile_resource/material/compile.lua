@@ -338,7 +338,7 @@ local function check_add(systems, name)
     end
 end
 
-local function load_shader_uniforms(output, stage, ao)
+local function load_shader_uniforms(setting, output, stage, ao)
     local attribs, systems = ao.attribs, ao.systems
     local binfile = output / stage .. ".bin"
     if not lfs.exists(binfile) then
@@ -346,7 +346,7 @@ local function load_shader_uniforms(output, stage, ao)
     end
 
     local c = read_file(binfile)
-    local s = shaderparse.parse(c)
+    local s = shaderparse.parse(c, setting.os == "windows")
     for n, v in pairs(s.uniforms) do
         if sa[n] then
             check_add(systems, n)
@@ -515,14 +515,14 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
         local ao = attrib_obj()
         if stages.cs then
             assert(stages.vs == nil and stages.fs == nil and stages.depth == nil)
-            load_shader_uniforms(output, "cs", ao)
+            load_shader_uniforms(setting, output, "cs", ao)
         else
             if stages.vs then
-                local s = load_shader_uniforms(output, "vs", ao)
+                local s = load_shader_uniforms(setting, output, "vs", ao)
                 check_vs_inputs(setting, inputfolder, mat, s.inputs)
             end
             if stages.fs then
-                load_shader_uniforms(output, "fs", ao)
+                load_shader_uniforms(setting, output, "fs", ao)
             end
         end
 
@@ -535,7 +535,7 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
         check_material_properties(np, ao.attribs)
         if stages.depth then
             ao.depth = attrib_obj()
-            load_shader_uniforms(output, "depth", ao.depth)
+            load_shader_uniforms(setting, output, "depth", ao.depth)
             check_material_properties(np, ao.depth.attribs)
         end
 

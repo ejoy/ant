@@ -86,7 +86,7 @@ local ID2INPUTNAMES<const> = {
     [0x0017] = "a_texcoord7",
 }
 
-local function parse_shaderbin(c)
+local function parse_shaderbin(c, loadinputs)
     local reader = create_reader(c)
     local magic = reader:read(4)
     if not isShaderBin(magic) then
@@ -146,15 +146,18 @@ local function parse_shaderbin(c)
         end
     end
 
-    local shadersize = reader:readUint32()
-    reader:skip(shadersize+1)   -- +1 for skip file's eol
-
-    --read layout input attribs
-    local attribnum = reader:readUint8()
     local inputs = {}
-    for i=1, attribnum do
-        local id = reader:readUint16()
-        inputs[i] = ID2INPUTNAMES[id]
+    if loadinputs then
+        local shadersize = reader:readUint32()
+        reader:skip(shadersize+1)   -- +1 for skip file's eol
+    
+        --read layout input attribs
+        local attribnum = reader:readUint8()
+        
+        for i=1, attribnum do
+            local id = reader:readUint16()
+            inputs[i] = ID2INPUTNAMES[id]
+        end
     end
 
     return {
