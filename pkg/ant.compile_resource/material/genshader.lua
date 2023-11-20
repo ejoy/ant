@@ -4,6 +4,9 @@ local datalist      = require "datalist"
 local lfastio       = require "fastio"
 local L             = import_package "ant.render.core".layout
 
+local settings      = import_package "ant.settings"
+local ENABLE_SHADOW<const>      = settings:get "graphic/shadow/enable"
+
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
 local DEF_SHADER_INFO <const> = {
@@ -665,6 +668,10 @@ local function build_fx_macros(mat, varyings)
 
     if mat.fx.setting.lighting == "off" then
         m[#m+1] = "MATERIAL_UNLIT=1"
+    end
+
+    if ENABLE_SHADOW and mat.fx.shadow_receive == "on" then
+        m[#m+1] = "ENABLE_SHADOW=1"
     end
 
     if mat.fx.setting.position_only then

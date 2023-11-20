@@ -42,26 +42,6 @@ local function shader_includes(include_path)
     }
 end
 
-local SETTING_MAPPING = {
-    lighting = function (v)
-        if v == "off" then
-            return "MATERIAL_UNLIT=1"
-        end
-    end,
-    shadow_receive = function (v)
-        if ENABLE_SHADOW and v == "on" then
-            return "ENABLE_SHADOW=1"
-        end
-    end,
-    os          = DEF_FUNC,
-    renderer    = DEF_FUNC,
-    stage       = DEF_FUNC,
-    varying_path= DEF_FUNC,
-    subsurface  = DEF_FUNC,
-    cast_shadow = DEF_FUNC,
-    no_predepth = DEF_FUNC,
-}
-
 local DEFAULT_MACROS; do
     DEFAULT_MACROS = {
         "ENABLE_SRGB_TEXTURE=1",
@@ -140,6 +120,10 @@ do
         if mat.fx.shader_type ~= "PBR" then
             if s.lighting == "off" then
                 macros[#macros+1] = "MATERIAL_UNLIT=1"
+            end
+
+            if ENABLE_SHADOW and s.shadow_receive == "on" then
+                macros[#macros+1] = "ENABLE_SHADOW=1"
             end
 
             if s.uv_motion then
