@@ -1,0 +1,9 @@
+fx:
+  shader_type: PBR
+  setting: /pkg/ant.resources/settings/nolighting.settings
+  varyings: /pkg/ant.resources/material/nolighting.varyings
+properties:
+  u_basecolor_factor: {0, 50.0, 0, 0.8}
+  u_emissive_factor: {0, 0, 0, 0}
+  u_pbr_factor: {1, 1, 0, 0}
+state: /pkg/ant.resources/materials/states/translucent.state
