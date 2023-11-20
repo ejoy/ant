@@ -21,6 +21,11 @@ vec3 remap_normal(vec2 normalTSXY)
     return mediump vec3(normalXY, z);
 }
 
+vec2 texture2DAstc(sampler2D _sampler, vec2 _uv)
+{
+	return texture2D(_sampler, _uv).ga;
+}
+
 vec3 fetch_normal_from_tex(sampler2D normaltex, vec2 texcoord)
 {
     #if BX_PLATFORM_OSX || BX_PLATFORM_IOS || BX_PLATFORM_ANDROID
@@ -127,11 +132,6 @@ gather_result3 texture_gather3(sampler2DArray tex, vec3 uv)
     #endif //ENABLE_TEXTURE_GATHER
 
     return r;
-}
-
-vec2 texture2DAstc(sampler2D _sampler, vec2 _uv)
-{
-	return texture2D(_sampler, _uv).ga;
 }
 
 #endif //__SHADER_UTILS_SH__
