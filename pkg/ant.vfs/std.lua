@@ -237,18 +237,24 @@ local function new_std(t)
 	if not t.nohash then
 		if t.resource_settings then
 			for _, setting in ipairs(t.resource_settings) do
+				local path = repo._root / "res" / setting
+				if lfs.is_directory(path) then
+					config[#config+1] = {
+						mount = "/res/" .. setting,
+						path = path:string(),
+						filter = resource_filter,
+					}
+				end
+			end
+		else
+			local path = repo._root / "res"
+			if lfs.is_directory(path) then
 				config[#config+1] = {
-					mount = "/res/" .. setting,
-					path = (repo._root / "res" / setting):string(),
+					mount = "/res",
+					path = path:string(),
 					filter = resource_filter,
 				}
 			end
-		else
-			config[#config+1] = {
-				mount = "/res",
-				path = (repo._root / "res"):string(),
-				filter = resource_filter,
-			}
 		end
 	end
 	self._config = config
