@@ -68,6 +68,7 @@ local function update()
             table.remove(progs, i)
             local errmsg = finish_output(prog)
             local errcode = prog:wait()
+            prog:detach()
             ltask.wakeup(prog, errcode, errmsg)
         end
     end
