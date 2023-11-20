@@ -394,7 +394,6 @@ function gizmo_sys:post_init()
 		for i = 1, #vertices, 3 do
 			points[#points + 1] = {vertices[i], vertices[i+1], vertices[i+2]}
 		end
-		points[#points + 1] = {vertices[1], vertices[2], vertices[3]}
 		return points
 	end
 	local function create_polyline(points, color, srt)
