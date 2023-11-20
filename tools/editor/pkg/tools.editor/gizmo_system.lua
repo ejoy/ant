@@ -307,6 +307,7 @@ local test_bone
 local ipl = ecs.require "ant.polyline|polyline"
 local geopkg = import_package "ant.geometry"
 local geolib = geopkg.geometry
+local LINEWIDTH = 3
 function gizmo_sys:post_init()
 	local axis_root = world:create_entity {
 		policy = {
@@ -397,7 +398,7 @@ function gizmo_sys:post_init()
 		return points
 	end
 	local function create_polyline(points, color, srt)
-		return ipl.add_strip_lines(points, 5, color, "/pkg/tools.editor/res/materials/polyline.material", false, srt, "translucent", true)
+		return ipl.add_strip_lines(points, LINEWIDTH, color, "/pkg/tools.editor/res/materials/polyline.material", false, srt, "translucent", true)
 	end
 	local vertices, _ = geolib.circle(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES)
 	local uniform_rot_eid = create_polyline(get_points(vertices), gizmo_const.COLOR.GRAY, {parent = uniform_rot_root})
@@ -567,6 +568,8 @@ local function world_to_screen(wpos)
 	local ce <close> = world:entity(irq.main_camera())
 	local vpmat = icamera.calc_viewproj(ce)
 	local mqvr = irq.view_rect "main_queue"
+	-- local ndcPos = math3d.transformH(vpmat, wpos, 1)
+	-- return math3d.vector{(math3d.index(ndcPos, 1) * 0.5 + 0.5) * mqvr.w, (1.0 - (math3d.index(ndcPos, 2) * 0.5 + 0.5)) * mqvr.h, 0}
 	return mu.world_to_screen(vpmat, mqvr, wpos)
 end
 
@@ -757,7 +760,7 @@ local function move_light_gizmo(x, y)
 	local lightPos = iom.get_position(le)
 	if light_gizmo_mode == 4 then
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_spot_light), pos = math3d.totable(circle_centre)})
-		ilight.set_inner_radian(le, math3d.length(math3d.sub(curpos, circle_centre)))
+		ilight.set_outter_radian(le, 2.0 * math.atan(math3d.length(math3d.sub(curpos, circle_centre)), ilight.range(le)))
 	elseif light_gizmo_mode == 5 then
 		local move_dir = math3d.sub(circle_centre, lightPos)
 		local ce <close> = world:entity(irq.main_camera(), "camera:in")
@@ -936,13 +939,12 @@ local function select_light_gizmo(x, y)
 	local le <close> = world:entity(light_gizmo.current_light, "light:in")
 	local light_pos = iom.get_position(le)
 	local function hit_test_circle(axis, radius, pos)
-		local gizmo_pos = pos
-		local hit_pos = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmo_pos)})
+		local hit_pos = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(pos)})
 		if not hit_pos then
 			return
 		end
-		local dist = math3d.length(math3d.sub(gizmo_pos, hit_pos))
-		local high_light = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 4
+		local dist = math3d.length(math3d.sub(pos, hit_pos))
+		local high_light = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * gizmo.scale * 2.5
 		light_gizmo.highlight(high_light)
 		return high_light
 	end
@@ -965,11 +967,13 @@ local function select_light_gizmo(x, y)
 		local dir = math3d.totable(math3d.transform(iom.get_rotation(le), mc.ZAXIS, 0))
 		local mat = iom.worldmat(le)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(le)}, 1)
-		if hit_test_circle(dir, ilight.inner_radian(le), centre) then
+		radius = radius * math.tan(ilight.outter_radian(le) * 0.5)
+		if hit_test_circle(dir, radius, centre) then
 			click_dir_spot_light = dir
 			light_gizmo_mode = 4
 		else
-			if mu.pt2d_line_distance(world_to_screen(light_pos), world_to_screen(centre), math3d.vector(x, y, 0.0)) < 5.0 then
+			local dist = mu.pt2d_line_distance(world_to_screen(light_pos), world_to_screen(centre), math3d.vector(x, y, 0.0))
+			if math.abs(dist) < 9.0 then
 				light_gizmo_mode = 5
 				light_gizmo.highlight(true)
 			else
