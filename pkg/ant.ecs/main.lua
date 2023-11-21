@@ -421,6 +421,55 @@ function world:pipeline_func(what, step)
     end
 end
 
+local function sortpairs(t)
+	local sort = {}
+	for k in pairs(t) do
+		sort[#sort+1] = k
+	end
+	table.sort(sort)
+	local n = 1
+	return function ()
+		local k = sort[n]
+		if k == nil then
+			return
+		end
+		n = n + 1
+		return k, t[k]
+	end
+end
+
+local function emptyfunc(f)
+	local info = debug.getinfo(f, "SL")
+	if info.what ~= "C" then
+		local lines = info.activelines
+		if next(lines, next(lines)) == nil then
+			return info
+		end
+	end
+end
+
+local function slove_system(systems)
+	local system_step = {}
+	for fullname, s in sortpairs(systems) do
+		for step_name, func in pairs(s) do
+			local symbol = fullname .. "." .. step_name
+			local info = emptyfunc(func)
+			if info then
+				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbol, info.source:sub(2), info.linedefined))
+			else
+				local v = { func = func, symbol = symbol }
+				local step = system_step[step_name]
+				if step then
+					step[#step+1] = v
+				else
+					system_step[step_name] = {v}
+				end
+			end
+		end
+	end
+	return system_step
+end
+
 local function system_changed(w)
     if not w._system_changed then
         return
@@ -431,14 +480,14 @@ local function system_changed(w)
     w._system_changed = nil
     w._initsystems = {}
     w._exitsystems = {}
-    w._system_step = feature.slove_system(w, systems)
+    w._system_step = slove_system(systems)
     w:pipeline_func "_pipeline" ()
     if next(exitsystems) ~= nil then
-        local func = w:pipeline_func("_exit", feature.slove_system(w, exitsystems))
+        local func = w:pipeline_func("_exit", slove_system(exitsystems))
         func()
     end
     if next(initsystems) ~= nil then
-        local func = w:pipeline_func("_init", feature.slove_system(w, initsystems))
+        local func = w:pipeline_func("_init", slove_system(initsystems))
         func()
     end
     w._pipeline_update = w:pipeline_func "_update"
