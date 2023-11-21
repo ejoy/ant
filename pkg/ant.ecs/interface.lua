@@ -24,7 +24,7 @@ end
 
 local import_feature
 
-local function genenv(envs, decl, loader, packname)
+local function genenv(envs, decl, newdecl, loader, packname)
 	local env = envs[packname]
 	if env then
 		return env
@@ -41,7 +41,7 @@ local function genenv(envs, decl, loader, packname)
 		func()
 	end
 	function env.import_feature(fullname)
-		import_feature(envs, decl, loader, fullname)
+		import_feature(envs, decl, newdecl, loader, fullname)
 	end
 	function env.pipeline(name)
 		if decl.pipeline[name] then
@@ -59,9 +59,7 @@ local function genenv(envs, decl, loader, packname)
 			value[#value+1] = {"stage", what}
 			return setter
 		end
-		decl.pipeline[name] = {
-			value = value,
-		}
+		decl.pipeline[name] = value
 		return setter
 	end
 	for attr, attribs in pairs(attribute) do
@@ -88,6 +86,9 @@ local function genenv(envs, decl, loader, packname)
 				error(string.format("Redfined %s:%s", attr, fname))
 			end
 			decl[attr][fname] = contents
+			if newdecl[attr] then
+				newdecl[attr][fname] = contents
+			end
 			return setter
 		end
 	end
@@ -95,13 +96,13 @@ local function genenv(envs, decl, loader, packname)
 	return env
 end
 
-function import_feature(envs, decl, loader, fullname)
+function import_feature(envs, decl, newdecl, loader, fullname)
 	local pname = fullname:match "^([^|]*)|.*$"
 	if not pname then
-		genenv(envs, decl, loader, fullname).import "package.ecs"
+		genenv(envs, decl, newdecl, loader, fullname).import "package.ecs"
 		return
 	end
-	local penv = genenv(envs, decl, loader, pname)
+	local penv = genenv(envs, decl, newdecl, loader, pname)
 	penv.import "package.ecs"
 	local feature = decl.feature[fullname]
 	if not feature then

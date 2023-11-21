@@ -21,6 +21,9 @@ pipeline "_update"
 pipeline "_exit"
     .pipeline "exit"
 
+pipeline "_pipeline"
+    .stage "pipeline"
+
 system "entity_system"
     .implement "entity_system.lua"
 system "debug_system"

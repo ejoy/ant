@@ -5,8 +5,9 @@ local ltask = require "ltask"
 local bgfx = require "bgfx"
 local fastio = require "fastio"
 local policy = require "policy"
-local typeclass = require "typeclass"
 local event = require "event"
+local feature = require "feature"
+local cworld = require "cworld"
 
 local world_metatable = {}
 local world = {}
@@ -373,13 +374,12 @@ local function cpustat_update_then_print(w, funcs, symbols)
     end
 end
 
-local function solve_depend(w, what, funcs, symbols)
+local function solve_depend(w, step, what, funcs, symbols)
 	local pl = w._decl.pipeline[what]
-	if not pl or not pl.value then
+	if not pl then
 		return
 	end
-	local step = w._systems
-	for _, v in ipairs(pl.value) do
+	for _, v in ipairs(pl) do
 		local type, name = v[1], v[2]
 		if type == "stage" then
 			if step[name] == false then
@@ -392,7 +392,7 @@ local function solve_depend(w, what, funcs, symbols)
 				--step[name] = false
 			end
 		elseif type == "pipeline" then
-			solve_depend(w, name, funcs, symbols)
+			solve_depend(w, step, name, funcs, symbols)
 		end
 	end
 end
@@ -401,7 +401,8 @@ function world:pipeline_func(what)
     local w = self
     local funcs = {}
     local symbols = {}
-    solve_depend(w, what, funcs, symbols)
+    local step = what == "_init" and w._initsystem_step or w._system_step
+    solve_depend(w, step, what, funcs, symbols)
     if not funcs or #funcs == 0 then
         return function() end
     end
@@ -422,12 +423,24 @@ function world:pipeline_func(what)
 end
 
 function world:pipeline_init()
-    self.pipeline_update = self:pipeline_func "_update"
-    self:pipeline_func "_init" ()
+    local w = self
+    if w._initsystem_step then
+        w:pipeline_func "_pipeline" ()
+        local pipeline_init = w:pipeline_func "_init"
+        w._pipeline_update = w:pipeline_func "_update"
+        w._pipeline_exit = w:pipeline_func "_exit"
+        w._initsystem_step = nil
+        pipeline_init()
+    end
+end
+
+function world:pipeline_update()
+    self:pipeline_init()
+    self._pipeline_update()
 end
 
 function world:pipeline_exit()
-    self:pipeline_func "_exit" ()
+    self._pipeline_exit()
 end
 
 function world:clibs(name)
@@ -439,7 +452,7 @@ function world:clibs(name)
     local initfunc = assert(package.preload[name])
     local funcs = initfunc()
     loaded[name] = funcs
-    if not w._initializing then
+    if w._ecs_world then
         for _, f in pairs(funcs) do
             debug.setupvalue(f, 1, w._ecs_world)
         end
@@ -471,6 +484,10 @@ function world:instance_message(instance, ...)
     self:pub {"EntityMessage", instance.proxy, ...}
 end
 
+function world:import_feature(name)
+    feature.import(self, { name })
+end
+
 event.init(world)
 
 local m = {}
@@ -493,17 +510,36 @@ function m.new_world(config)
         _clibs_loaded = {},
         _templates = {},
         _cpu_stat = {},
+        _envs = {},
+        _packages = {},
+        _components = {},
+        _systems = {},
+        _initsystems = {},
+        _system_step = {},
+        _initsystem_step = nil,
+        _decl = {
+            pipeline = {},
+            component = {},
+            feature = {},
+            system = {},
+            policy = {},
+        },
+        _newdecl = {
+            component = {},
+            system = {},
+        },
         w = ecs,
     }, world_metatable)
 
-    -- load systems and components from modules
-    typeclass.init(w, config)
-
+    log.info "world initializing"
+    feature.import(w, config.ecs.feature)
+    cworld.init(w)
     for _, funcs in pairs(w._clibs_loaded) do
         for _, f in pairs(funcs) do
             debug.setupvalue(f, 1, w._ecs_world)
         end
     end
+    log.info "world initialized"
     return w
 end
 
