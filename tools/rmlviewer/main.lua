@@ -15,7 +15,6 @@ import_package "ant.window".start {
     args = arguments,
     feature = {
         "ant.tools.rmlviewer",
-        "ant.animation",
         "ant.rmlui",
     }
 }
