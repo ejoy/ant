@@ -397,12 +397,11 @@ local function solve_depend(w, step, what, funcs, symbols)
 	end
 end
 
-function world:pipeline_func(what)
+function world:pipeline_func(what, step)
     local w = self
     local funcs = {}
     local symbols = {}
-    local step = what == "_init" and w._initsystem_step or w._system_step
-    solve_depend(w, step, what, funcs, symbols)
+    solve_depend(w, step or w._system_step, what, funcs, symbols)
     if not funcs or #funcs == 0 then
         return function() end
     end
@@ -422,25 +421,46 @@ function world:pipeline_func(what)
     end
 end
 
-function world:pipeline_init()
-    local w = self
-    if w._initsystem_step then
-        w:pipeline_func "_pipeline" ()
-        local pipeline_init = w:pipeline_func "_init"
-        w._pipeline_update = w:pipeline_func "_update"
-        w._pipeline_exit = w:pipeline_func "_exit"
-        w._initsystem_step = nil
-        pipeline_init()
+local function system_changed(w)
+    if not w._system_changed then
+        return
     end
+    local systems = w._systems
+    local initsystems = w._initsystems
+    local exitsystems = w._exitsystems
+    w._system_changed = nil
+    w._initsystems = {}
+    w._exitsystems = {}
+    w._system_step = feature.slove_system(w, systems)
+    w:pipeline_func "_pipeline" ()
+    if next(exitsystems) ~= nil then
+        local func = w:pipeline_func("_exit", feature.slove_system(w, exitsystems))
+        func()
+    end
+    if next(initsystems) ~= nil then
+        local func = w:pipeline_func("_init", feature.slove_system(w, initsystems))
+        func()
+    end
+    w._pipeline_update = w:pipeline_func "_update"
+end
+
+function world:pipeline_init()
+    system_changed(self)
 end
 
 function world:pipeline_update()
-    self:pipeline_init()
-    self._pipeline_update()
+    local w = self
+    system_changed(w)
+    w._pipeline_update()
 end
 
 function world:pipeline_exit()
-    self._pipeline_exit()
+    local w = self
+    w._system_changed = true
+    w._exitsystems = w._systems
+    w._initsystems = {}
+    w._systems = {}
+    system_changed(self)
 end
 
 function world:clibs(name)
@@ -488,6 +508,12 @@ function world:import_feature(name)
     feature.import(self, { name })
 end
 
+function world:exit_system(name)
+    self._exitsystems[name] = self._systems[name]
+    self._systems[name] = nil
+    self._system_changed = true
+end
+
 event.init(world)
 
 local m = {}
@@ -515,8 +541,9 @@ function m.new_world(config)
         _components = {},
         _systems = {},
         _initsystems = {},
+        _exitsystems = {},
         _system_step = {},
-        _initsystem_step = nil,
+        _system_changed = nil,
         _decl = {
             pipeline = {},
             component = {},

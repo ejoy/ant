@@ -30,18 +30,9 @@ local function emptyfunc(f)
 	end
 end
 
-local function slove_system(w)
-	local initsystems = w._initsystems
-	if next(initsystems) == nil then
-		return
-	end
-	w._initsystems = {}
-	if w._initsystem_step == nil then
-		w._initsystem_step = {}
-	end
-	local initsystem_step = w._initsystem_step
-	local system_step = w._system_step
-	for fullname, s in sortpairs(initsystems) do
+local function slove_system(w, systems)
+	local system_step = {}
+	for fullname, s in sortpairs(systems) do
 		for step_name, func in pairs(s) do
 			local symbol = fullname .. "." .. step_name
 			local info = emptyfunc(func)
@@ -55,15 +46,10 @@ local function slove_system(w)
 				else
 					system_step[step_name] = {v}
 				end
-				step = initsystem_step[step_name]
-				if step then
-					step[#step+1] = v
-				else
-					initsystem_step[step_name] = {v}
-				end
 			end
 		end
 	end
+	return system_step
 end
 
 local function package_loadfile(packname, file, env)
@@ -115,6 +101,7 @@ function create_ecs(w, packname)
 			r = {}
 			w._systems[fullname] = r
 			w._initsystems[fullname] = r
+			w._system_changed = true
 		end
 		return r
 	end
@@ -155,6 +142,7 @@ local function import(w, features)
 				local s = w:clibs(impl:sub(2))
 				w._systems[name] = s
 				w._initsystems[name] = s
+				w._system_changed = true
 			else
 				package_require(w, v.packname, impl)
 			end
@@ -169,9 +157,9 @@ local function import(w, features)
 	end
 	newdecl.system = {}
 	newdecl.component = {}
-	slove_system(w)
 end
 
 return {
 	import = import,
+	slove_system = slove_system,
 }
