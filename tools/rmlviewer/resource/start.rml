@@ -21,7 +21,6 @@
                 
                 transition: color background-color transform 2s elastic-out;
                 background-color: #f22222;
-                background-image: "correct.png";
                 background-size: contain;
                 color: yellow;
                 transform: scale(1.0);
