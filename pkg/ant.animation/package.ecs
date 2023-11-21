@@ -1,4 +1,5 @@
 import_feature "ant.scene"
+import_feature "ant.efk"
 
 pipeline "animation"
     .stage "animation_state"
