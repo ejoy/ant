@@ -108,16 +108,14 @@ local PROPERTY_CREATORS<const> = {
 }
 
 local function generate_properties(mat)
-    local properties = mat.properties
+    local properties = mat.properties or {}
+    mat.properties = properties
+
     local content = {
         common = {}, vs = {}, fs = {}
     }
 
     local function add_property(n, attrib)
-        if nil == properties then
-            properties = {}
-            mat.properties = properties
-        end
         if not properties[n] then
             properties[n] = attrib
         end
