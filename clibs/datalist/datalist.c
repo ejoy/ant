@@ -349,7 +349,7 @@ push_token_string(lua_State *L, const char *ptr, size_t sz) {
 					++ptr;
 					++i;
 					int hex2 = to_hex(*ptr);
-					if (hex2 > 0) {
+					if (hex2 >= 0) {
 						hex = hex * 16 + hex2;
 					}
 					buffer[n] = hex;
