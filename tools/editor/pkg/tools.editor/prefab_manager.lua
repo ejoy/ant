@@ -255,7 +255,7 @@ function m:create(what, config)
                 data = {
                     scene = {t = {0, offsety , 0}},
                     visible_state = "main_view|selectable",
-                    material = "/pkg/tools.editor/res/materials/pbr_default.material",
+                    material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                 },
                 tag = { config.type .. gen_geometry_id() }
