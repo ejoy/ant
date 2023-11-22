@@ -24,9 +24,10 @@ local function cstruct(...)
 	return ecs_util.userdata(data, ref)
 end
 
-local function slove_component(w, component_decl)
+local function slove_component(w)
+	local ecs = w.w
 	local function register_component(decl)
-		component_decl[decl.name] = decl
+		ecs:register(decl)
 	end
 	local component_class = w._components
 	for name, info in pairs(w._decl.component) do
@@ -77,40 +78,12 @@ local function slove_component(w, component_decl)
 	end
 end
 
-local function create_context(w, component_decl)
-	local bgfx       = require "bgfx"
-	local math3d     = require "math3d"
-	local components = require "ecs.components"
+local function create_context(w)
+	local bgfx = require "bgfx"
+	local math3d = require "math3d"
 	local ecs = w.w
-	local function register_component(i, decl)
-		local id, size = ecs:register(decl)
-		assert(id == i)
-		assert(size == components[decl.name] or 0)
-	end
-	for i, name in ipairs(components) do
-		local decl = component_decl[name]
-		if decl then
-			component_decl[name] = nil
-			register_component(i, decl)
-		else
-			local csize = components[name]
-			if csize then
-				register_component(i, {
-					name = name,
-					type = "raw",
-					size = csize
-				})
-			else
-				register_component(i, { name = name })
-			end
-		end
-	end
-	for _, decl in pairs(component_decl) do
-		ecs:register(decl)
-	end
-	local ecs_context = ecs:context()
 	w._ecs_world = cstruct(
-		ecs_context,
+		ecs:context(),
 		bgfx.CINTERFACE,
 		math3d.CINTERFACE,
 		bgfx.encoder_get(),
@@ -119,11 +92,10 @@ local function create_context(w, component_decl)
 end
 
 local function init(w)
-	local component_decl = {}
-	slove_component(w, component_decl)
-	create_context(w, component_decl)
+	slove_component(w)
+	create_context(w)
 end
 
 return {
-    init = init,
+	init = init,
 }

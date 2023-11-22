@@ -8,6 +8,7 @@ local policy = require "policy"
 local event = require "event"
 local feature = require "feature"
 local cworld = require "cworld"
+local components = require "ecs.components"
 
 local world_metatable = {}
 local world = {}
@@ -575,7 +576,7 @@ function m.new_world(config)
             table.insert(cfg.feature, 1, "ant.ecs")
         end
     end
-    local ecs = luaecs.world()
+    local ecs = luaecs.world(components)
     local w; w = setmetatable({
         args = config,
         _group_tags = {},
