@@ -15,9 +15,6 @@ policy "scene_object"
     .component "scene"
     .component_opt "bounding"
 
-policy "bounding"
-    .component_opt "bounding"
-
 component "scene"
     .type "c"
     .field "parent:int64|eid"
@@ -28,12 +25,6 @@ component "scene"
     .field "worldmat:userdata|math_t"
     .field "updir:userdata|math_t"
     .field "movement:int64"
-    .implement "scene_component.lua"
-
-component "bounding"
-    .type "c"
-    .field "aabb:userdata|math_t"
-    .field "scene_aabb:userdata|math_t"
     .implement "scene_component.lua"
 
 component "scene_needchange"

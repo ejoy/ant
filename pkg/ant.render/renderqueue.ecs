@@ -34,3 +34,5 @@ policy "render_queue"
     .component "visible"
     .component "queue_name"
     .component "camera_ref"
+
+component "need_touch"
