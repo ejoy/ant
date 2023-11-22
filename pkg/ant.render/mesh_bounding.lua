@@ -5,7 +5,7 @@ local w = world.w
 local math3d = require "math3d"
 local mc = import_package "ant.math".constant
 
-local b = ecs.system "bounding_system"
+local b = ecs.system "mesh_bounding_system"
 
 local function init_bounding(bounding, bb)
     if bb and bb.aabb ~= mc.NULL then

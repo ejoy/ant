@@ -40,8 +40,5 @@ component "scene_needchange"
 component "scene_changed"
 component "scene_mutable"
 
-system "bounding_system"
-    .implement "bounding.lua"
-
 system "scenespace_system"
     .implement ":system.scene"
