@@ -8,18 +8,7 @@ local m = ecs.system "entity_system"
 local evOnMessage = world:sub {"EntityMessage"}
 local evOnRemoveInstance = world:sub {"OnRemoveInstance"}
 
-local MethodRemove = {}
-
-local PipelineEntityInit
 local PipelineEntityRemove
-
-local function update_group_tag(groupid, data)
-    for tag, t in pairs(world._group_tags) do
-        if t[groupid] then
-            data[tag] = true
-        end
-    end
-end
 
 function m:entity_ready()
     for v in w:select "on_ready:in" do
@@ -39,49 +28,6 @@ function m:data_changed()
     end
 end
 
-local function create_prefab()
-    local queue = world._create_prefab_queue
-    if #queue == 0 then
-        return
-    end
-    world._create_prefab_queue = {}
-    for i = 1, #queue do
-        world:_prefab_instance(queue[i])
-    end
-end
-
-local function create_entity()
-    local queue = world._create_entity_queue
-    if #queue == 0 then
-        return
-    end
-    world._create_entity_queue = {}
-
-    for i = 1, #queue do
-        local initargs = queue[i]
-        local eid = initargs.eid
-        if not w:exist(eid) then
-            log.warn(("entity `%d` has been removed."):format(eid))
-            goto continue
-        end
-        local groupid = initargs.group
-        local data = initargs.data
-        local template = initargs.template
-        data.INIT = true
-        update_group_tag(groupid, data)
-        if template then
-            w:template_instance(eid, template, data)
-        else
-            w:import(eid, data)
-        end
-        w:group_add(groupid, eid)
-        ::continue::
-    end
-
-    PipelineEntityInit()
-    w:clear "INIT"
-end
-
 function m:frame_finish()
     --step1. Remove prefab
     for _, instance in evOnRemoveInstance:unpack() do
@@ -97,7 +43,7 @@ function m:frame_finish()
     --step2. Destroy entity
     if w:check "REMOVED" then
         PipelineEntityRemove()
-        for name, func in pairs(MethodRemove) do
+        for name, func in pairs(world._component_remove) do
             for v in w:select("REMOVED "..name..":in") do
                 func(v[name])
             end
@@ -115,31 +61,13 @@ function m:frame_finish()
     w:update()
 
     --step4. Create entity
-    create_prefab()
-    create_entity()
+    world:_flush_instance_queue()
+    world:_flush_entity_queue()
 
     --step5. reset math3d
     math3d.reset()
 end
 
-local function emptyfunc(f)
-    local info = debug.getinfo(f, "SL")
-    if info.what ~= "C" then
-        local lines = info.activelines
-        return next(lines, next(lines)) == nil
-    end
-end
-
 function m:pipeline()
-    PipelineEntityInit = world:pipeline_func "_entity_init"
     PipelineEntityRemove = world:pipeline_func "_entity_remove"
-end
-
-function m:init()
-    for name, func in pairs(world._components) do
-        local f = func.remove
-        if f and not emptyfunc(f) then
-            MethodRemove[name] = f
-        end
-    end
 end

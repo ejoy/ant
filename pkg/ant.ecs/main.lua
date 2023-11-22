@@ -10,11 +10,54 @@ local feature = require "feature"
 local cworld = require "cworld"
 local components = require "ecs.components"
 
+local math3d = require "math3d"
+
 local world_metatable = {}
 local world = {}
 world_metatable.__index = world
 
 local DEBUG <const> = luaecs.DEBUG
+
+local function update_group_tag(w, groupid, data)
+    for tag, t in pairs(w._group_tags) do
+        if t[groupid] then
+            data[tag] = true
+        end
+    end
+end
+
+function world:_flush_entity_queue()
+    local queue = self._create_entity_queue
+    if #queue == 0 then
+        return
+    end
+    self._create_entity_queue = {}
+    local ecs = self.w
+
+    for i = 1, #queue do
+        local initargs = queue[i]
+        local eid = initargs.eid
+        if not ecs:exist(eid) then
+            log.warn(("entity `%d` has been removed."):format(eid))
+            goto continue
+        end
+        local groupid = initargs.group
+        local data = initargs.data
+        local template = initargs.template
+        data.INIT = true
+        update_group_tag(self, groupid, data)
+        if template then
+            ecs:template_instance(eid, template, data)
+        else
+            ecs:import(eid, data)
+        end
+        ecs:group_add(groupid, eid)
+        ::continue::
+    end
+
+    self._pipeline_entity_init()
+    ecs:clear "INIT"
+end
 
 local function create_entity_by_data(w, group, data, debuginfo)
     local queue = w._create_entity_queue
@@ -52,7 +95,8 @@ function world:create_entity(v)
     if DEBUG then
         debuginfo = debug.traceback()
     end
-    return create_entity_by_data(self, v.group or 0, v.data, debuginfo)
+    local eid = create_entity_by_data(self, v.group or 0, v.data, debuginfo)
+    return eid
 end
 
 function world:remove_entity(e)
@@ -178,11 +222,10 @@ local function each_prefab(entities, template, f)
     end
 end
 
-function world:_prefab_instance(v)
+local function prefab_instance(w, v)
     if v.instance.REMOVED then
         return
     end
-    local w = self
     local template = create_template(w, v.args.prefab)
     local prefab, noparent_eid, noparent_data = create_instance(w, v.args.group, template, v.debuginfo)
     v.instance.noparent = noparent_eid
@@ -206,6 +249,17 @@ function world:_prefab_instance(v)
         end
         table.insert(tags['*'], eid)
     end)
+end
+
+function world:_flush_instance_queue()
+    local queue = self._create_prefab_queue
+    if #queue == 0 then
+        return
+    end
+    self._create_prefab_queue = {}
+    for i = 1, #queue do
+        prefab_instance(self, queue[i])
+    end
 end
 
 function world:create_instance(args)
@@ -484,15 +538,22 @@ local function system_changed(w)
     w._exitsystems = {}
     w._system_step = slove_system(systems)
     w:pipeline_func "_pipeline" ()
+    w._pipeline_entity_init = w:pipeline_func "_entity_init"
+    w._pipeline_update = w:pipeline_func "_update"
     if next(exitsystems) ~= nil then
         local func = w:pipeline_func("_exit", slove_system(exitsystems))
         func()
     end
     if next(initsystems) ~= nil then
-        local func = w:pipeline_func("_init", slove_system(initsystems))
-        func()
+        local step = slove_system(initsystems)
+        w:pipeline_func("_init", step)()
+        w:_flush_instance_queue()
+        w:_flush_entity_queue()
+        w:pipeline_func("_init_world", step)()
+        w:_flush_instance_queue()
+        w:_flush_entity_queue()
+        math3d.reset()
     end
-    w._pipeline_update = w:pipeline_func "_update"
 end
 
 function world:pipeline_init()
@@ -584,6 +645,7 @@ function m.new_world(config)
         _create_entity_queue = {},
         _create_prefab_queue = {},
         _destruct = {},
+        _component_remove = {},
         _clibs_loaded = {},
         _templates = {},
         _cpu_stat = {},

@@ -81,6 +81,14 @@ function create_ecs(w, packname)
 	return ecs
 end
 
+local function emptyfunc(f)
+    local info = debug.getinfo(f, "SL")
+    if info.what ~= "C" then
+        local lines = info.activelines
+        return next(lines, next(lines)) == nil
+    end
+end
+
 local function slove_component(w, name, info)
 	local function register_component(decl)
 		local ecs = w.w
@@ -130,6 +138,11 @@ local function slove_component(w, name, info)
 			name = name,
 			type = type,
 		}
+	end
+
+	local func = class.remove
+	if func and not emptyfunc(func) then
+		w._component_remove[name] = func
 	end
 end
 

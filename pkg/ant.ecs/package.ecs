@@ -8,9 +8,12 @@ pipeline "_entity_remove"
     .stage "entity_remove"
 
 pipeline "_init"
+    .stage "init_system"
     .stage "preinit"
     .pipeline "init"
     .stage "frame_finish"
+
+pipeline "_init_world"
     .stage "init_world"
     .stage "frame_finish"
 
