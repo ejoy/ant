@@ -32,16 +32,24 @@
   - 使用多项式直接计算LUT，而不使用一张额外的贴图（节省带宽和采样器）：https://knarkowicz.wordpress.com/2014/12/27/analytical-dfg-term-for-ibl/；（2023.06.27已经完成）
 13. 使用无穷远的far plane构建透视投影矩阵，并将near plane的位置设定为0.1，而不是现在1，1的距离有时候会导致近处能够看到的物体，但被裁剪掉的问题；(2023.06已经完成，目前在camera component上会保存: infviewprojmat和viewprojmat)；
 14. 修改贴图的mipmap颜色为某种纯色，用来检测场景中的贴图是否过大（看到蓝色意味着原来做的图就是过大的）；（2023.10已经完成，debug_mipmap_system）
-
+15. 解决动态材质的问题；(2023.11.19已经完成)
+  - 重新思考动态材质的实现。需要从模型->顶点着色器输入->像素着色器输入的链条思考如何有效、简单便捷和兼顾一致性的情况定义材质；
+  需要实现：
+  1) 自定义数据输入。如a_position是vec2/vec3/vec4/uvec2等。通过bgfx的varying.def.sc的文件能够很好的实现这个输入和输出的自定义，还能够与bgfx的编译过程进行结合；
+  2) 顶点变换的单独定义，即gl_Position值的计算应该在单独的一个函数里面实现，并且能够返回足够多的中间结果；
+  3) 自定义顶点着色的输出。这往往与具体的模型数据与着色实现相关，例如法线究竟来源于法线贴图还是几何体、几何法线是否压缩到一个四元数中等等；
+  4) 自定义像素着色的输入。有时候，顶点着色器的数据并不重要，需要能够在像素着色器阶段自定义着色相关的数据，如法线、tangent、instance数据等；
+  5) 能够在runtime的时候，对绑定的vb layout与顶点着色的输入进行检查；
+16. 使用更优质的line渲染：（2023.11.10已经完成）
+  - 优化目前使用的polyline的效果。尤其是不在使用MSAA，换用FXAA之后，polyline的线会丢失（https://mattdesl.svbtle.com/drawing-lines-is-hard，参考的库：https://github.com/spite/THREE.MeshLine）；
+  - 需要一个更优质的网格：https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 
 ##### 未完成
 1. 优化PBR的计算量：
   - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
-2. 关于ibl:
+2. 优化阴影。结合CSM和LiPSM（无法做成稳定的阴影），提高阴影精度；
+3. 关于ibl:
   - 离线计算ibl相关的数据，将目前的compute shader中计算的内容转移到cpu端，并离线计算；
-3. 使用更优质的line渲染：
-  - 优化目前使用的polyline的效果。尤其是不在使用MSAA，换用FXAA之后，polyline的线会丢失（https://mattdesl.svbtle.com/drawing-lines-is-hard，参考的库：https://github.com/spite/THREE.MeshLine）；
-  - 需要一个更优质的网格：https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 4. 后处理优化
   - 充分利用全屏/半屏的render_target，而不是每个后处理的draw都用一个新的target；
   - 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
@@ -57,15 +65,6 @@
 11. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
 12. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；
 13. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
-14. 解决动态材质的问题；
-  - 重新思考动态材质的实现。需要从模型->顶点着色器输入->像素着色器输入的链条思考如何有效、简单便捷和兼顾一致性的情况定义材质；
-  需要实现：
-  1) 自定义数据输入。如a_position是vec2/vec3/vec4/uvec2等。通过bgfx的varying.def.sc的文件能够很好的实现这个输入和输出的自定义，还能够与bgfx的编译过程进行结合；
-  2) 顶点变换的单独定义，即gl_Position值的计算应该在单独的一个函数里面实现，并且能够返回足够多的中间结果；
-  3) 自定义顶点着色的输出。这往往与具体的模型数据与着色实现相关，例如法线究竟来源于法线贴图还是几何体、几何法线是否压缩到一个四元数中等等；
-  4) 自定义像素着色的输入。有时候，顶点着色器的数据并不重要，需要能够在像素着色器阶段自定义着色相关的数据，如法线、tangent、instance数据等；
-  5) 能够在runtime的时候，对绑定的vb layout与顶点着色的输入进行检查；
-15. 顶点着色器与vb绑定的时候，需要确保顶点着色器需要的数据，vb的layout上面是有所提供的；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
