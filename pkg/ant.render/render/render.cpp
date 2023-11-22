@@ -412,7 +412,7 @@ luaopen_render_material(lua_State *L) {
 }
 
 static int
-linit(lua_State *L){
+linit_system(lua_State *L){
 	auto w = getworld(L);
 	w->R = render_material_create();
 	return 1;
@@ -462,7 +462,7 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init",				linit},
+		{ "init_system", linit_system},
 		{ "exit",				lexit},
 		//{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
