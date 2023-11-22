@@ -440,17 +440,6 @@ local function check_material_properties(properties, shaderuniforms)
     end
 end
 
-local function build_properties(matproperties, shadertype)
-    local properties = {}
-    --copy properties
-    if matproperties then
-        for k, v in pairs(matproperties) do
-            properties[k] = v
-        end
-    end
-    return properties
-end
-
 local function add_lighting_sv(systems, lighting)
     if lighting == "on" then
         systems[#systems+1] = "b_light_info"
@@ -506,7 +495,7 @@ end
 
 local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
     local lighting<const>   = mat.fx.setting.lighting
-    local properties<const> = mat.properties
+    local properties<const> = mat.properties or {}
     local function attrib_obj()
         return {attribs={}, systems={}}
     end
@@ -527,16 +516,11 @@ local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, 
         end
 
         add_lighting_sv(ao.systems, lighting)
-        -- copy prperties
-        local np = {};
-        if properties then 
-            for k, v in pairs(properties) do np[k] = v end
-        end
-        check_material_properties(np, ao.attribs)
+        check_material_properties(properties, ao.attribs)
         if stages.depth then
             ao.depth = attrib_obj()
             load_shader_uniforms(setting, output, "depth", ao.depth)
-            check_material_properties(np, ao.depth.attribs)
+            check_material_properties(properties, ao.depth.attribs)
         end
 
         local outfile = output / "attr.cfg"
