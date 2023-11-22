@@ -81,7 +81,7 @@ local function update_render_target(newsize, sceneratio)
 end
 
 function vp_detect_sys:post_init()
-	update_render_target()
+	update_render_target(world.args.viewport, world.args.framebuffer.scene_ratio)
 end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}
