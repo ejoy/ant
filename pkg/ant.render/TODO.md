@@ -43,6 +43,9 @@
 16. 使用更优质的line渲染：（2023.11.10已经完成）
   - 优化目前使用的polyline的效果。尤其是不在使用MSAA，换用FXAA之后，polyline的线会丢失（https://mattdesl.svbtle.com/drawing-lines-is-hard，参考的库：https://github.com/spite/THREE.MeshLine）；
   - 需要一个更优质的网格：https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
+17. 预烘培Tonemapping计算到3D贴图中：（2023.09，10已经完成）
+  - - tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
+18. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；（2023.10.30已经完成）
 
 ##### 未完成
 1. 优化PBR的计算量：
@@ -54,17 +57,15 @@
   - 充分利用全屏/半屏的render_target，而不是每个后处理的draw都用一个新的target；
   - 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
   - Color Grading需要用于调整颜色；
-  - tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
   - AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
-5. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
-6. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
-7. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
-8. 优化bgfx的draw viewid和compute shader viewid；
-9. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
-10. 摄像机的fov需要根据聚焦的距离来定义fov；
-11. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
-12. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；
-13. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
+5. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
+6. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
+7. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
+8. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
+9. 优化bgfx的draw viewid和compute shader viewid；
+10. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
+11. 摄像机的fov需要根据聚焦的距离来定义fov；
+12. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
