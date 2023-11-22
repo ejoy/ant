@@ -493,7 +493,7 @@ local function check_vs_inputs(setting, inputfolder, mat, inputs)
     end
 end
 
-local function create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
+local function create_shader_cfg(setting, post_tasks, inputfolder, output, mat, stages)
     local lighting<const>   = mat.fx.setting.lighting
     local properties<const> = mat.properties or {}
     local function attrib_obj()
@@ -568,7 +568,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
         compile_shader(stage)
     end
 
-    create_shader_cfg(setting, inputfolder, post_tasks, output, mat, stages)
+    create_shader_cfg(setting, post_tasks, inputfolder, output, mat, stages)
 end
 
 return compile
