@@ -475,6 +475,7 @@ local function system_changed(w)
     if not w._system_changed then
         return
     end
+    log.info("System changed.")
     local systems = w._systems
     local initsystems = w._initsystems
     local exitsystems = w._exitsystems
