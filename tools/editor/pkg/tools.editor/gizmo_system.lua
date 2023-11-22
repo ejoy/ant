@@ -790,11 +790,12 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 		if total_angle > 360 then
 			local extra_angle = (total_angle - 360)
 			delta_angle = delta_angle - extra_angle
-			
+			if extra_angle > start_angle then
+				extra_angle = start_angle
+			end
 			local e4num = math.floor(extra_angle * step_angle) * 3
 			ro4.ib_num = e4num
 			ivs.set_state(e4, "main_view", e4num > 0)
-			ivs.set_state(e4, "selectable", e4num > 0)
 		end
 		e3_num = math.floor(delta_angle * step_angle + 1) * 3
 	else
@@ -802,11 +803,15 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 		if extra_angle < 0 then
 			e3_start = 0
 			e3_num = math.floor(start_angle * step_angle) * 3
-
+			if extra_angle < start_angle - 360 then
+				extra_angle = start_angle - 360
+			end
 			local e4start, e4num = math.floor((360 + extra_angle) * step_angle) * 3, math.floor(-extra_angle * step_angle + 1) * 3
+			if e4start < 0 then
+				e4start = 0
+			end
 			ro4.ib_start, ro4.ib_num = e4start, e4num
 			ivs.set_state(e4, "main_view", e4num > 0)
-			ivs.set_state(e4, "selectable", e4num > 0)
 		else
 			e3_num = math.floor(-delta_angle * step_angle + 1) * 3
 			e3_start = math.floor(start_angle * step_angle) * 3 - e3_num
@@ -822,7 +827,6 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 
 	local e3_visible = e3_num > 0
 	ivs.set_state(e3, "main_view", e3_visible)
-	ivs.set_state(e3, "selectable", e3_visible)
 end
 
 local init_screen_offest = math3d.ref()

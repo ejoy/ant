@@ -71,12 +71,12 @@ function m.highlight(b)
     if not m.current_gizmo then return end
 
     if b then
-        for _, eid in ipairs(m.current_gizmo.eid) do
+        for _, eid in ipairs(m.current_gizmo.highlight_eid) do
             local e <close> = world:entity(eid)
             imaterial.set_property(e, "u_color", gizmo_const.COLOR.HIGHLIGHT)
         end
     else
-        for _, eid in ipairs(m.current_gizmo.eid) do
+        for _, eid in ipairs(m.current_gizmo.highlight_eid) do
             local e <close> = world:entity(eid)
             imaterial.set_property(e, "u_color", math3d.vector(gizmo_const.COLOR.GRAY))
         end
@@ -124,6 +124,7 @@ local function create_directional_gizmo(initpos, initrot)
     end
     m.directional.root = root
     m.directional.eid = alleid
+    m.directional.highlight_eid = alleid
 end
 
 local function update_point_gizmo()
@@ -141,6 +142,7 @@ local function update_point_gizmo()
         local c1 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "translucent", true)
         local c2 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "translucent", true)
         m.point.eid = {c0, c1, c2}
+        m.point.highlight_eid = m.point.eid
     else
         local e0 <close> = world:entity(m.point.eid[1])
         iom.set_scale(e0, radius)
@@ -179,6 +181,7 @@ local function update_spot_gizmo()
             ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = range}, "translucent", true),
             ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, t = {0, 0, range}}, "translucent", true)
         }
+        m.spot.highlight_eid = {m.spot.eid[5], m.spot.eid[6]}
     else
         local e1 <close> = world:entity(m.spot.eid[1])
         iom.set_scale(e1, scale)
