@@ -50,7 +50,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
                 height = height,
             }
             pendQueue[path] = nil
-        end) 
+        end)
     else
         ltask.fork(function ()
             local info = ltask.call(ServiceResource, "texture_create", path)
