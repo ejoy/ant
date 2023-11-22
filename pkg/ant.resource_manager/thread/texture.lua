@@ -6,6 +6,8 @@ local textureman = require "textureman.server"
 local cr         = require "thread.compile"
 local image      = require "image"
 
+local ext_service = {}
+
 local mem_formats <const> = {
     RGBA8 = "bbbb",
     RGBA32F = "ffff",
@@ -39,7 +41,23 @@ local function createTexture(c)
     return h
 end
 
+local function loadExt(name)
+	local protocol, path = name:match "@(%w+)://(.*)"
+	local service_id = (protocol and ext_service[protocol]) or error ("Unknown protocol " .. name)
+	local c = ltask.call(service_id, "load", path)
+	c.name = name
+	if c.handle then
+	    bgfx.set_name(c.handle, c.name)
+	end
+	return c
+end
+
+local ext_prefix <const> = ('@'):byte()
+
 local function loadTexture(name)
+	if name:byte() == ext_prefix then
+		return loadExt(name)
+	end
     local path = name.."|main.cfg"
     local c = datalist.parse(fastio.readall(cr.compile(path) or error(("Compile %s fail"):format(path)), path))
     c.name = name
@@ -291,7 +309,7 @@ ltask.fork(function ()
             local textureData = createQueue[name]
             createQueue[name] = nil
             local c = textureByName[name]
-            local handle = createTexture(textureData)
+            local handle = textureData.handle or createTexture(textureData)
             c.handle = handle
             c.flag   = textureData.flag
             textureman.texture_set(c.id, handle)
@@ -373,6 +391,14 @@ end
 
 function S.texture_register_debug_mipmap_id(chain_id)
     chain_table[chain_id] = true
+end
+
+-- external service
+
+function S.register(protocol, service_id)
+	assert(ext_service[protocol] == nil)
+	assert(protocol:match "%W" == nil, "Invalid protocol name : " .. protocol)
+	ext_service[protocol] = service_id
 end
 
 -- for web console
