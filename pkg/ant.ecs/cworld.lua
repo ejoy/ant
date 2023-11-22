@@ -1,5 +1,3 @@
-local serialization = require "bee.serialization"
-
 local function toint(v)
 	local t = type(v)
 	if t == "userdata" then
@@ -24,61 +22,7 @@ local function cstruct(...)
 	return ecs_util.userdata(data, ref)
 end
 
-local function slove_component(w)
-	local ecs = w.w
-	local function register_component(decl)
-		ecs:register(decl)
-	end
-	local component_class = w._components
-	for name, info in pairs(w._decl.component) do
-		local type = info.type[1]
-		local class = component_class[name] or {}
-		if type == "lua" then
-			register_component {
-				name = name,
-				type = "lua",
-				init = class.init,
-				marshal = class.marshal or serialization.packstring,
-				demarshal = class.demarshal or nil,
-				unmarshal = class.unmarshal or serialization.unpack,
-			}
-		elseif type == "c" then
-			local t = {
-				name = name,
-				init = class.init,
-				marshal = class.marshal,
-				demarshal = class.demarshal,
-				unmarshal = class.unmarshal,
-			}
-			for i, v in ipairs(info.field) do
-				t[i] = v:match "^(.*)|.*$" or v
-			end
-			register_component(t)
-		elseif type == "raw" then
-			local t = {
-				name = name,
-				type = "raw",
-				size = assert(math.tointeger(info.size[1])),
-				init = class.init,
-				marshal = class.marshal,
-				demarshal = class.demarshal,
-				unmarshal = class.unmarshal,
-			}
-			register_component(t)
-		elseif type == nil then
-			register_component {
-				name = name
-			}
-		else
-			register_component {
-				name = name,
-				type = type,
-			}
-		end
-	end
-end
-
-local function create_context(w)
+local function create(w)
 	local bgfx = require "bgfx"
 	local math3d = require "math3d"
 	local ecs = w.w
@@ -91,11 +35,6 @@ local function create_context(w)
 	)
 end
 
-local function init(w)
-	slove_component(w)
-	create_context(w)
-end
-
 return {
-	init = init,
+	create = create,
 }

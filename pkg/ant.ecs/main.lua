@@ -610,7 +610,7 @@ function m.new_world(config)
 
     log.info "world initializing"
     feature.import(w, config.ecs.feature)
-    cworld.init(w)
+    cworld.create(w)
     for _, funcs in pairs(w._clibs_loaded) do
         for _, f in pairs(funcs) do
             debug.setupvalue(f, 1, w._ecs_world)

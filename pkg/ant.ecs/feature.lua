@@ -2,6 +2,7 @@ local interface = require "interface"
 local fastio = require "fastio"
 local vfs = require "vfs"
 local pm = require "packagemanager"
+local serialization = require "bee.serialization"
 
 local function package_loadfile(packname, file, env)
 	local path = "/pkg/"..packname.."/"..file
@@ -80,6 +81,58 @@ function create_ecs(w, packname)
 	return ecs
 end
 
+local function slove_component(w, name, info)
+	local function register_component(decl)
+		local ecs = w.w
+		ecs:register(decl)
+	end
+	local component_class = w._components
+	local type = info.type[1]
+	local class = component_class[name] or {}
+	if type == "lua" then
+		register_component {
+			name = name,
+			type = "lua",
+			init = class.init,
+			marshal = class.marshal or serialization.packstring,
+			demarshal = class.demarshal or nil,
+			unmarshal = class.unmarshal or serialization.unpack,
+		}
+	elseif type == "c" then
+		local t = {
+			name = name,
+			init = class.init,
+			marshal = class.marshal,
+			demarshal = class.demarshal,
+			unmarshal = class.unmarshal,
+		}
+		for i, v in ipairs(info.field) do
+			t[i] = v:match "^(.*)|.*$" or v
+		end
+		register_component(t)
+	elseif type == "raw" then
+		local t = {
+			name = name,
+			type = "raw",
+			size = assert(math.tointeger(info.size[1])),
+			init = class.init,
+			marshal = class.marshal,
+			demarshal = class.demarshal,
+			unmarshal = class.unmarshal,
+		}
+		register_component(t)
+	elseif type == nil then
+		register_component {
+			name = name
+		}
+	else
+		register_component {
+			name = name,
+			type = type,
+		}
+	end
+end
+
 local function import(w, features)
 	local newdecl = w._newdecl
 	for _, k in ipairs(features) do
@@ -105,6 +158,7 @@ local function import(w, features)
 			log.debug("Import  component", name)
 			package_require(w, v.packname, impl)
 		end
+		slove_component(w, name, v)
 	end
 	newdecl.system = {}
 	newdecl.component = {}
