@@ -5,6 +5,7 @@ local environment = require "core.environment"
 local event = require "core.event"
 local parsetext = require "core.parsetext"
 local eventListener = require "core.event.listener"
+local document_manager = require "core.document_manager"
 
 local m = {}
 
@@ -31,6 +32,7 @@ function m.OnDispatchEvent(document, element, type, eventData)
 end
 
 function m.OnLoadTexture(doc, e, path, width, height, isRT)
+	document_manager.update_pending_texture(doc, 1)
 	filemanager.loadTexture(doc, e, path, width, height, isRT)
 end
 

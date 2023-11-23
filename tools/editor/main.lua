@@ -9,6 +9,7 @@ import_package "ant.imgui".start {
     ecs = {
         enable_mouse = true,
         feature = {
+            "ant.render|render",
             "tools.editor",
             "ant.animation",
             "ant.daynight",

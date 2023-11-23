@@ -9,13 +9,6 @@ local rhwi      = import_package "ant.hwi"
 
 local ENABLE_HVFILP<const> 	= setting:get "graphic/postprocess/hv_flip/enable"
 
-local SCENE_RATIO<const> 	= setting:get "framebuffer/scene_ratio" or 1.0
-local RATIO<const> 			= setting:get "framebuffer/ratio" 		or 1.0
-
-world.args.framebuffer.ratio 		= RATIO
-world.args.framebuffer.scene_ratio 	= SCENE_RATIO
-log.info(("framebuffer ratio:%2f, scene:%2f"):format(RATIO, SCENE_RATIO))
-
 local function update_config(args, ww, hh)
 	local fb = args.framebuffer
 	fb.w, fb.h = ww, hh

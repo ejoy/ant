@@ -342,7 +342,7 @@ function m:on_prefab_ready(prefab)
         if pt.prefab then
             last_tpl.filename = pt.prefab
             local children = sub_tree(parent, j)
-            j = j + #children
+            j = j + #children - 1
             local target_node = node_map[parent]
             target_node.children = children
             target_node.filename = pt.prefab

@@ -19,6 +19,7 @@ local width, height = 1, 1
 local screen_ratio = 1.0
 local documents = {}
 local hidden = {}
+local pending = {}
 
 local function round(x)
     return math.floor(x*screen_ratio+0.5)
@@ -253,6 +254,23 @@ function m.set_dimensions(w, h, ratio)
     end
 end
 
+function m.update_pending_texture(doc, v)
+    if not doc then
+        return
+    end
+    if pending[doc] then
+        local newv = pending[doc] + v
+        if newv == 0 then
+            pending[doc] = nil
+            eventListener.dispatch(doc, getBody(doc), "texture_loaded", {})
+        else
+            pending[doc] = newv
+        end
+    else
+        pending[doc] = v
+    end
+end
+
 local function updateTexture()
     local q = filemanager.updateTexture()
     if not q then
@@ -266,6 +284,7 @@ local function updateTexture()
                 if e._handle then
                     rmlui.ElementDirtyImage(e._handle)
                 end
+                m.update_pending_texture(e._document, -1)
             end
         else
             rmlui.RenderSetTexture(v.path)
