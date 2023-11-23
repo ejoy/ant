@@ -255,6 +255,9 @@ function m.set_dimensions(w, h, ratio)
 end
 
 function m.update_pending_texture(doc, v)
+    if not doc then
+        return
+    end
     if pending[doc] then
         local newv = pending[doc] + v
         if newv == 0 then
