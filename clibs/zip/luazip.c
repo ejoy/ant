@@ -7,6 +7,7 @@
 #include "unzip.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #define ZLIB_UTF8_FLAG (1<<11)
 #define FILECHUNK (4096 * 4)
@@ -280,25 +281,40 @@ zipread_closezip(lua_State *L) {
 	return 0;
 }
 
+static inline lua_Integer
+file_pos_to_luaint(const unz_file_pos *pos) {
+	uint64_t p = pos->pos_in_zip_directory;
+	uint64_t n = pos->num_of_file;
+	return (lua_Integer)(p << 32 | n);
+}
+
+static inline unz_file_pos *
+luaint_to_file_pos(lua_Integer v, unz_file_pos *pos) {
+	pos->pos_in_zip_directory = (uint64_t)v >> 32;
+	pos->num_of_file = v & 0xffffffff;
+	return pos;
+}
+
 static void
 get_filelist(lua_State *L, unzFile zf) {
 	lua_newtable(L);
 	int err = unzGoToFirstFile(zf);
 	if (err != UNZ_OK)
 		luaL_error(L, "Error: goto first file");
-	int n = 0;
 	char filename[4096];
 	for (;;) {
+		unz_file_pos pos;
+		unzGetFilePos(zf, &pos);
 		int err = unzGetCurrentFileInfo(zf, NULL, filename, sizeof(filename), NULL, 0, NULL, 0);
 		if (err != UNZ_OK)
-			luaL_error(L, "Error: get file info %d", n);
-		lua_pushinteger(L, n++);
+			luaL_error(L, "Error: get file info %d", pos.num_of_file);
+		lua_pushinteger(L, file_pos_to_luaint(&pos));
 		lua_setfield(L, -2, filename);
 		err = unzGoToNextFile(zf);
 		if (err != UNZ_OK) {
 			if (err == UNZ_END_OF_LIST_OF_FILE)
 				break;
-			luaL_error(L, "Error: goto next file %d", n);
+			luaL_error(L, "Error: goto next file %d", pos.num_of_file);
 		}
 	}
 }
@@ -321,16 +337,11 @@ zipread_list(lua_State *L) {
 }
 
 static void
-locate_file(lua_State *L, unzFile zf, int n) {
-	int err = unzGoToFirstFile(zf);
+locate_file(lua_State *L, unzFile zf, lua_Integer pos) {
+	unz_file_pos tmp;
+	int err = unzGoToFilePos(zf, luaint_to_file_pos(pos, &tmp));
 	if (err != UNZ_OK)
 		luaL_error(L, "Error: goto first file");
-	int i;
-	for (i=0;i<n;i++) {
-		if (unzGoToNextFile(zf) != UNZ_OK) {
-			luaL_error(L, "Error: goto next file");
-		}
-	}
 }
 
 static unzFile
@@ -343,14 +354,14 @@ open_file(lua_State *L, int rzip, int filename, struct zipraw *raw) {
 		lua_pop(L, 1);
 		return NULL;
 	}
-	int n = luaL_checkinteger(L, -1);
+	lua_Integer pos = luaL_checkinteger(L, -1);
 	lua_pop(L, 2);
 
 	struct unzhandle *z = (struct unzhandle *)luaL_checkudata(L, rzip, "ZIP_READ");
 	if (z->h == NULL)
 		luaL_error(L, "Error: closed");
 
-	locate_file(L, z->h, n);
+	locate_file(L, z->h, pos);
 	int err;
 	if (raw) {
 		err = unzOpenCurrentFile2(z->h, &raw->method, &raw->level, 1);
