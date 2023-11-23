@@ -696,12 +696,18 @@ find_cache(lua_State *L, struct zip_reader_cache *C, struct zip_reader_cache *en
 	return C;
 }
 
+static size_t
+need_size(size_t sz) {
+	sz += sizeof(*C) - sizeof(C->buffer);
+	sz = (sz + 7) & ~7;	// align to size_t
+	return sz;
+}
+
 static struct zip_reader_cache *
 alloc_cache(lua_State *L, size_t sz) {
 	lua_getiuservalue(L, 1, 2);	// cache ptr
 	struct zip_reader_cache *C = (struct zip_reader_cache *)lua_touserdata(L, -1);
-	sz += sizeof(*C) - sizeof(C->buffer);
-	sz = (sz + 7) & ~7;	// align to size_t
+	sz = need_size(sz);
 	if (!C->active && C->size >= sz) {
 		split_cache(L, C, sz);
 	} else {
@@ -736,7 +742,7 @@ zipreader_handle(lua_State *L) {
 	if (C == NULL) {
 		close_file(L, zf);
 		lua_pushboolean(L, 0);
-		lua_pushinteger(L, sz);
+		lua_pushinteger(L, need_size(sz));
 		return 2;
 	}
 	int bytes = unzReadCurrentFile(zf, C->buffer, sz);
@@ -810,7 +816,7 @@ lreader_dump(lua_State *L) {
 struct zip_reader_cache *
 luazip_new(size_t sz) {
 	struct zip_reader_cache *C;
-	size_t size = sz + sizeof(*C) - sizeof(C->buffer);
+	size_t size = need_size(sz);
 	C = (struct zip_reader_cache *)malloc(size);
 	C->size = 0;
 	C->length = sz;
@@ -874,6 +880,17 @@ luazip_seek(struct zip_reader_cache *f, long offset, int whence) {
 		f->offset = offset;
 }
 
+static void
+lreader_new(lua_State *L) {
+	size_t sz;
+	const char *buf = luaL_checklstring(L, 1, &sz);
+	struct zip_reader_cache * c = luazip_new(sz);
+	void * data = luazip_data(c, NULL);
+	memcpy(data, buf, sz);
+	lua_pushlightuserdata(L, c);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_zip(lua_State *L) {
 	luaL_checkversion(L);
@@ -882,6 +899,7 @@ luaopen_zip(lua_State *L) {
 		{ "uncompress", luncompress },
 		{ "open", lzip },
 		{ "reader", lreader },
+		{ "reader_new", lreader_new },
 		{ "reader_consume", lreader_consume },
 		{ "reader_dump", lreader_dump },
 		{ NULL, NULL },

@@ -27,7 +27,7 @@ function zipvfs:ziproot()
 	return zf and zf:readfile "root"
 end
 
-local function dir_object(self, hash)
+function zipvfs:dir(hash)
 	local dir = self.cache_hash[hash]
 	if dir then
 		return dir
@@ -57,10 +57,6 @@ local function dir_object(self, hash)
 	end
 	self.cache_hash[hash] = dir
 	return dir
-end
-
-function zipvfs:changeroot(roothash)
-	self.root = roothash
 end
 
 local function read_backup(self, hash)
@@ -115,29 +111,6 @@ function zipvfs:open(hash)
 		f:close()
 	end
 	return c
-end
-
-local function fetch_file(self, hash, fullpath)
-	local dir = dir_object(self, hash)
-	if not dir then
-		return "m", hash
-	end
-	if fullpath == "/" then
-		return "d", hash
-	end
-	local path, name = fullpath:match "^/([^/]+)(.*)$"
-	local subpath = dir[path]
-	if not subpath then
-		return
-	end
-	if name == "" then
-		return subpath.type, subpath.hash
-	end
-	return fetch_file(self, subpath.hash, name)
-end
-
-function zipvfs:zipfetch(path)
-	return fetch_file(self, self.root, path)
 end
 
 return zipvfs
