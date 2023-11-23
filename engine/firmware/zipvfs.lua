@@ -113,4 +113,19 @@ function zipvfs:open(hash)
 	return c
 end
 
+function zipvfs:localfile(hash)
+	local fullpath = self.localpath .. "/" .. hash
+	-- todo: use filesystem
+	local f = io.open(fullpath)
+	if f then
+		f:close()
+		return fullpath
+	end
+	local zf = self.zipfile
+	if zf then
+		zf:extract(hash, fullpath)
+		return fullpath
+	end
+end
+
 return zipvfs
