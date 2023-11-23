@@ -40,6 +40,9 @@ local function createWindow(document, source)
     function window.flush()
         document_manager.flush(document)
     end
+    function window.requestAnimationFrame(f)
+        task.new(f)
+    end
     function window.setTimeout(f, delay)
         local t = timer.wait(delay, f)
         timer_object[t] = true
@@ -55,6 +58,9 @@ local function createWindow(document, source)
     end
     function window.clearInterval(t)
         t:remove()
+    end
+    function window.getPendingTexture()
+        return document_manager.getPendingTexture(document)
     end
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)

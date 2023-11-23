@@ -254,7 +254,7 @@ function m.set_dimensions(w, h, ratio)
     end
 end
 
-function m.update_pending_texture(doc, v)
+function m.updatePendingTexture(doc, v)
     if not doc then
         return
     end
@@ -262,13 +262,16 @@ function m.update_pending_texture(doc, v)
         local newv = pending[doc] + v
         if newv == 0 then
             pending[doc] = nil
-            eventListener.dispatch(doc, getBody(doc), "texture_loaded", {})
         else
             pending[doc] = newv
         end
     else
         pending[doc] = v
     end
+end
+
+function m.getPendingTexture(doc)
+    return pending[doc] or 0
 end
 
 local function updateTexture()
@@ -284,7 +287,7 @@ local function updateTexture()
                 if e._handle then
                     rmlui.ElementDirtyImage(e._handle)
                 end
-                m.update_pending_texture(e._document, -1)
+                m.updatePendingTexture(e._document, -1)
             end
         else
             rmlui.RenderSetTexture(v.path)
