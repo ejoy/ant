@@ -154,7 +154,7 @@ end
 	    sample_params 
 ]]
 
-function ps_sys:entity_init()
+--[[ function ps_sys:entity_init()
     local mq = w:first("main_queue render_target:in")
     local mqvr = mq.render_target.view_rect
     for e in w:select "INIT pyramid_sample:update pyramid_sample_ready?out" do
@@ -162,7 +162,7 @@ function ps_sys:entity_init()
         create_pyramid_sample_drawer(e)
         e.pyramid_sample_ready = true
     end
-end
+end ]]
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
@@ -188,6 +188,11 @@ function ps_sys:data_changed()
             end
         end
     end
+end
+
+function ips.set_pyramid_sample_components(e, mqvr)
+    create_pyramid_sample_queue(e, mqvr)
+    create_pyramid_sample_drawer(e)
 end
 
 function ips.do_pyramid_sample(e, input_handle)

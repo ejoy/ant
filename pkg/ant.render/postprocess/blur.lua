@@ -55,7 +55,7 @@ end
     return gb
 end ]]
 
-local function create_blur_entity()
+local function create_blur_entity(mqvr)
     world:create_entity{
         policy = {
             "ant.render|pyramid_sample",
@@ -71,6 +71,10 @@ local function create_blur_entity()
                 queue_name = "blur_queue",
                 sample_params = BLUR_PARAM,
             },
+            on_ready = function (e)
+                w:extend(e, "pyramid_sample:update")
+                ips.set_pyramid_sample_components(e, mqvr)
+            end
             --gaussian_blur = build_gaussian_blur()
         }
     }
@@ -84,7 +88,7 @@ function blur_sys:init_world()
     local mq = w:first("main_queue render_target:in")
     local mqvr = mq.render_target.view_rect
     BLUR_WIDTH, BLUR_HEIGHT = mqvr.w, mqvr.h
-    create_blur_entity()
+    create_blur_entity(mqvr)
 end
 
 --[[ function iblur.do_gaussian_blur(be)

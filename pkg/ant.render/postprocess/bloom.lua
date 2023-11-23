@@ -45,6 +45,13 @@ local function create_blur_entity()
                 queue_name = "bloom_queue",
                 sample_params = BLOOM_PARAM,
             },
+            on_ready = function (e)
+                w:extend(e, "pyramid_sample:update pyramid_sample_ready?out")
+                local mq = w:first("main_queue render_target:in")
+                local mqvr = mq.render_target.view_rect
+                ips.set_pyramid_sample_components(e, mqvr)
+                e.pyramid_sample_ready = true
+            end
         }
     }
 end
