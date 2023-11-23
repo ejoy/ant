@@ -1,0 +1,2 @@
+system "framebuffer_init"
+    .implement "framebuffer_init.lua"
