@@ -53,3 +53,20 @@ f:close()
 copy:close()
 
 
+local f = assert(zip.open("test.zip", "r"))
+local reader = zip.reader(f, 1024* 1024)
+local h = {}
+for i = 1, 100 do
+	h[i] = reader "test.txt"
+end
+print(zip.reader_dump(reader))
+for i = 1, 100 do
+	if h[i] then
+		print(i, #zip.reader_consume(h[i]))
+	end
+end
+for i = 1, 10 do
+	h[i] = reader "test.txt"
+end
+print(zip.reader_dump(reader))
+f:close()
