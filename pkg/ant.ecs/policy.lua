@@ -1,5 +1,6 @@
 local function component_def(w, c)
-    local component_type =  w._decl.component[c].type[1]
+    local component_decl = w._decl.component[c] or error(string.format("unknown component `%s`", c))
+    local component_type = component_decl.type[1]
     if component_type == nil then
         return true
     elseif component_type == "lua" then
