@@ -7,6 +7,7 @@ int luaopen_zip(lua_State *L);
 
 struct zip_reader_cache;
 
+struct zip_reader_cache * luazip_new(size_t sz);
 void luazip_close(struct zip_reader_cache *f);
 void* luazip_data(struct zip_reader_cache *f, size_t *sz);
 size_t luazip_read(struct zip_reader_cache *f, void *buf, size_t sz);

@@ -807,9 +807,23 @@ lreader_dump(lua_State *L) {
 	return 1;
 }
 
+struct zip_reader_cache *
+luazip_new(size_t sz) {
+	struct zip_reader_cache *C;
+	size_t size = sz + sizeof(*C) - sizeof(C->buffer);
+	C = (struct zip_reader_cache *)malloc(size);
+	C->size = 0;
+	C->length = sz;
+	C->active = 1;
+	return C;
+}
+
 void
 luazip_close(struct zip_reader_cache *f) {
 	f->active = 0;
+	if (f->size == 0) {
+		free(f);
+	}
 }
 
 void *
