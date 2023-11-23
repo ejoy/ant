@@ -554,6 +554,7 @@ local function system_changed(w)
         w:_flush_entity_queue()
         math3d.reset()
     end
+    log.info("System refreshed.")
 end
 
 function world:pipeline_init()
