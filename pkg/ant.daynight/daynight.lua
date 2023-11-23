@@ -93,10 +93,12 @@ function idn.update_cycle(e, cycle)
         local r, g, b, intensity = math3d.index(direct, 1, 2, 3, 4)
         ilight.set_color_rgb(dl, r, g, b)
         ilight.set_intensity(dl, intensity * default_intensity)
-        iom.set_direction(dl, math3d.todirection(rotator))
+        iom.set_direction(dl, math3d.normalize(math3d.todirection(rotator)))
         w:submit(dl)        
     end
-    imaterial.system_attrib_update("u_indirect_modulate_color", ambient)
+    local ar, ag, ab, ai = math3d.index(ambient, 1, 2, 3, 4)
+    local ambient_rgb = math3d.vector(ar*ai, ag*ai, ab*ai)
+    imaterial.system_attrib_update("u_indirect_modulate_color", ambient_rgb)
 end
 
 function idn.add_property_cycle(e, pn, p)

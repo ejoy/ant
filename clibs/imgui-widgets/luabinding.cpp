@@ -375,8 +375,11 @@ zDirectionalArrow(lua_State *L) {
 		}			
 			lua_seti(L, INDEX_ARGS, i + 1);
 		}
+		return 1;
 	}
-	return 1;
+	else{
+		return 0;
+	}
 }
 
 extern "C"

@@ -66,7 +66,8 @@ function DaynightView:_init()
     self.base = {
         time       = uiproperty.Float({label = "Time",   dim = 1}),
         color      = uiproperty.Color({label = "Color",  dim = 3}),
-        direction  = uiproperty.DirectionalArrow({label  = "Direction", dim = 3}),
+        arrow  = uiproperty.DirectionalArrow({label  = "Arrow", dim = 3}),
+        direction = uiproperty.Float({label = "Direction",   dim = 3}),
         add_color  = uiproperty.Button({label = "Add Color"}),
         del_color  = uiproperty.Button({label = "Del Color"}),
         add_direction  = uiproperty.Button({label = "Add Direction"}),
@@ -100,6 +101,9 @@ local function get_getter(pn, i, t, e)
             return {c1, c2, c3}
         elseif t:match "intensity" then
             return math3d.index(dn_rt[pn][i].value, 4)
+        elseif t:match "arrow" then
+            local dx, dy, dz = math3d.index(math3d.todirection(dn_rt[pn][i].value), 1, 2, 3)
+            return {dx, dy, dz}
         elseif t:match "direction" then
             local dx, dy, dz = math3d.index(math3d.todirection(dn_rt[pn][i].value), 1, 2, 3)
             return {dx, dy, dz}
@@ -120,9 +124,12 @@ local function get_setter(pn, i, t, e)
         elseif t:match("intensity") then
             math3d.unmark(dn_rt[pn][i].value)
             dn_rt[pn][i].value = math3d.mark(math3d.set_index(dn_rt[pn][i].value, 4, value))
-        elseif t:match("direction") then
+        elseif t:match("arrow") then
             math3d.unmark(dn_rt[pn][i].value)
             dn_rt[pn][i].value = math3d.mark(math3d.torotation(math3d.vector(value)))
+        elseif t:match("direction") then
+            math3d.unmark(dn_rt[pn][i].value)
+            dn_rt[pn][i].value = math3d.mark(math3d.torotation(math3d.normalize(math3d.vector(value))))
         elseif t:match("time") then
             dn_rt[pn][i].time = value
         end
@@ -152,11 +159,19 @@ function DaynightView:add_subsubproperty(subproperty, i, pn, e)
             {label = "Color" .. i,   dim = 3},
             {getter = get_getter(pn, i, "color", e), setter = get_setter(pn, i, "color", e)}
         )
+        subsubproperty[#subsubproperty+1] = uiproperty.Float(
+            {label = "Intensity" .. i,   dim = 1, min = 0.00, max = 5.00, speed = 0.04},
+            {getter = get_getter(pn, i, "intensity", e), setter = get_setter(pn, i, "intensity", e)}
+        )  
     else 
         subsubproperty[#subsubproperty+1] = uiproperty.DirectionalArrow(
-            {label = "direction" .. i,   dim = 3},
+            {label = "Arrow" .. i,   dim = 3},
+            {getter = get_getter(pn, i, "arrow", e), setter = get_setter(pn, i, "arrow", e)}
+        )
+        subsubproperty[#subsubproperty+1] = uiproperty.Float(
+            {label = "Direction" .. i,   dim = 3, min = -5.00, max = 5.00, speed = 0.04},
             {getter = get_getter(pn, i, "direction", e), setter = get_setter(pn, i, "direction", e)}
-        )        
+        )       
     end
     subproperty[#subproperty]:set_subproperty(subsubproperty)
 end
