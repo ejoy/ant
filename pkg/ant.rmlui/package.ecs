@@ -1,10 +1,9 @@
 import_feature "ant.render"
 
+feature "rt"
+    .import "rt.ecs"
+
 system "rmlui_system"
     .implement "rmlui_system.lua"
 
-system "ui_rt_system"
-    .implement "ui_rt_system.lua"
-
 component "rmlui_obj"
-component "focus_obj"
