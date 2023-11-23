@@ -63,7 +63,6 @@ S.update_context_size = document_manager.set_dimensions
 
 hwi.init_bgfx()
 bgfx.init()
-audio.init()
 rmlui.RmlInitialise {
     viewid = hwi.viewid_get "uiruntime",
     shader = require "core.init_shader",

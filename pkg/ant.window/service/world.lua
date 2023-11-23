@@ -72,7 +72,6 @@ local function render(nwh, context, width, height, initialized)
 		w = width,
 		h = height,
 	}
-	audio.init()
 	world:pipeline_init()
 
 	ltask.wakeup(initialized)
