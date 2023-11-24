@@ -356,7 +356,7 @@ local function show_current_event()
                 end
                 local audio = global_data.audio
                 for _, file in ipairs(bank_files) do
-                    audio:load_bank(fs.path(file):localpath():string(), sound_event_list)
+                    audio:load_bank(file, sound_event_list)
                 end
                 for key, _ in pairs(sound_event_list) do
                     sound_event_name_list[#sound_event_name_list + 1] = key

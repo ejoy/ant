@@ -1,5 +1,7 @@
 local ltask = require "ltask"
-local fmod = require "fmod"
+local fmod  = require "fmod"
+
+local fastio 	= import_package "ant.serialize".fastio
 
 local instance = fmod.init()
 local background = instance:background()
@@ -13,7 +15,7 @@ function S.load(banks)
     for _, f in ipairs(banks) do
         if not loaded[f] then
             loaded[f] = true
-            instance:load_bank(f, event_list)
+            instance:load_bank(fastio.readall(f), event_list)
         end
     end
 end

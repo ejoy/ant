@@ -36,12 +36,28 @@ laudio_shutdown(lua_State *L) {
 	return 0;
 }
 
+static const void*
+load_content(lua_State *L, int index, size_t *s){
+	switch(lua_type(L, index)){
+		case LUA_TSTRING:
+		return luaL_checklstring(L, index, s);
+		case LUA_TUSERDATA:{
+			*s = lua_rawlen(L, index);
+			return lua_touserdata(L, index);
+		}
+		default:
+		luaL_error(L, "Invalid type:%d", lua_type(L, index));
+		return NULL;
+	}
+}
+
 static int
 laudio_load_bank(lua_State *L) {
 	struct audio *a = get_audio(L);
-	const char *filename = luaL_checkstring(L, 2);
+	size_t size = 0;
+	const void* content = load_content(L, 2, &size);
 	FMOD_STUDIO_BANK *bank = NULL;
-	ERRCHECK(L, FMOD_Studio_System_LoadBankFile(a->system, filename, FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
+	ERRCHECK(L, FMOD_Studio_System_LoadBankMemory(a->system, (const char*)content, (int)size, FMOD_STUDIO_LOAD_MEMORY, FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
 	char name[1024];
 	int retrieved;
 	if (lua_istable(L, 3)) {

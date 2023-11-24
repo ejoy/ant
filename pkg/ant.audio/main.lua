@@ -9,9 +9,6 @@ function m.load(banks)
 		ServiceAudio = ltask.uniqueservice "ant.audio|audio"
 		ltask.send(ServiceAudio, "worker_init")
 	end
-	for i, f in ipairs(banks) do
-		banks[i] = fs.path(f):localpath():string()
-	end
 	ltask.send(ServiceAudio, "load", banks)
 end
 
