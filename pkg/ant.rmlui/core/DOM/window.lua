@@ -24,12 +24,10 @@ local function createWindow(document, source)
         return createWindow(newdoc, document)
     end
     function window.close()
-        task.new(function ()
-            document_manager.close(document)
-            for t in pairs(timer_object) do
-                t:remove()
-            end
-        end)
+        document_manager.close(document)
+        for t in pairs(timer_object) do
+            t:remove()
+        end
     end
     function window.show()
         document_manager.show(document)
