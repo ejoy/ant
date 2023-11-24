@@ -3,7 +3,9 @@ local datalist = require "datalist"
 local function keys(a)
 	local key = {}
 	for k in pairs(a) do
-		key[#key + 1] = k
+		if k ~= 0 then
+			key[#key + 1] = k
+		end
 	end
 	return key
 end
@@ -16,8 +18,10 @@ local function compare_table(a,b)
 		local k = keys(a)
 		assert(#k == #keys(b))
 		for k,v in pairs(a) do
-			local v2 = b[k]
-			compare_table(v, v2)
+			if k ~= 0 then
+				local v2 = b[k]
+				compare_table(v, v2)
+			end
 		end
 	end
 end
@@ -163,6 +167,18 @@ local mt = { __newindex = function (t,k,v)
 	print("SET", k, v)
 end }
 
+C [[
+multi : { x = 1 }
+multi : { x = 2 }
+multi : { x = 3 }
+]] {
+	multi = {
+		x = 1,
+		[1] = { x = 2 },
+		[2] = { x = 3 },
+	}
+}
+
 datalist.parse("x=1,y=2", setmetatable({}, mt))
 
 local token = datalist.token [[
@@ -190,19 +206,35 @@ end)
 
 print(v[1])
 
----- userdata
 
-local s = "Hello"
-local ptr, sz = datalist.string2ud(s)
+local v = datalist.parse([[
+transform:
+	s = {1,1,1,0}
+	r = {0,0.92388,0,0.382683}
+	t= {0,0,0,1}
+]], function(v)
+	v[2].type = v[1]
+	return v[2]
+end)
 
-local function close(ptr, sz)
-	print("CLOSE", ptr, sz)
-end
+assert(v.transform.type == "transform")
+assert(v.transform.s.type == "vector")
 
-local function userdata()
-	return ptr, sz, close
-end
+local v = datalist.parse([[
+--- $obj
+x = 1
+y = $subobj
+	z = 2
+---
+z = 3
+---
+]], function (v)
+	v[2].type = v[1]
+	return v[2]
+end)
 
-local v = datalist.parse(userdata)
-
-print(v[1])
+assert(v[1].type == "obj")
+assert(v[1].x == 1)
+assert(v[1].y.type == "subobj")
+assert(v[1].y.z == 2)
+assert(v[2].z == 3)
