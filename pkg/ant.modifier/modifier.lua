@@ -359,9 +359,28 @@ function imodifier.stop(m)
     e.modifier.continue = false
 end
 
+local ivs = ecs.require "ant.render|visible_state"
 function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local anim_prefab = world:create_instance {
 		prefab = filename,
+        on_ready = function (instance)
+            for _, eid in ipairs(instance.tag["*"]) do
+                local e <close> = world:entity(eid, "anim_ctrl?in mesh?in")
+                if e.anim_ctrl then
+                    local path_list = {}
+                    filename:gsub('[^|]*', function (wd) path_list[#path_list+1] = wd end)
+                    if path_list[1] then
+                        --xxx.glb
+                        iani.load_events(eid, string.sub(path_list[1], 1, -5) .. ".event")
+                    else
+                        ---xxx.prefab
+                        iani.load_events(eid, string.sub(filename, 1, -8) .. ".event")
+                    end
+                elseif e.mesh then
+                    ivs.set_state(e, "main_view", false)
+                end
+            end
+        end
 	}
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             for _, e in ipairs(anim_prefab.tag["*"]) do

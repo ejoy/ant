@@ -226,17 +226,6 @@ function hierarchy:update_slot_list(world)
     world:pub {"UpdateSlotList"}
 end
 
-function hierarchy:update_collider_list(world)
-    -- local collider_list = {["None"] = -1}
-    -- for _, value in pairs(self.all_node) do
-    --     local e <close> = world:entity(value.eid, "collider?in")
-    --     if e.collider then
-    --         collider_list[world[value.eid].name] = value.eid
-    --     end
-    -- end
-    -- self.collider_list = collider_list
-end
-
 local function find_table(eid)
     local p = hierarchy.all_node[eid].parent
     local t = hierarchy.all_node[p].children

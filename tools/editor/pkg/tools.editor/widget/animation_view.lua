@@ -529,8 +529,8 @@ local function on_move_clip(move_type, current_clip_index, move_delta)
 end
 
 local stringify = import_package "ant.serialize".stringify
-
-function m.save_keyevent(filename)
+local event_filename
+function m.save_keyevent()
     if not edit_anims then return end
     local revent = {}
     for _, name in ipairs(edit_anims.name_list) do
@@ -540,8 +540,13 @@ function m.save_keyevent(filename)
         end
     end
     if next(revent) then
-        local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
-        utils.write_file(prefab_filename, stringify(revent))
+        --local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
+        if not event_filename then
+            event_filename = widget_utils.get_saveas_path("Save AnimationEvent", "event")
+        end
+        if event_filename then
+            utils.write_file(event_filename, stringify(revent))
+        end
     end
 end
 
@@ -573,6 +578,9 @@ end
 local anim_name_ui = {text = ""}
 local anim_path_ui = {text = ""}
 local update_slot_list = world:sub {"UpdateSlotList"}
+local event_keyframe = world:sub{"keyframe_event"}
+local iefk = ecs.require "ant.efk|efk"
+local effect_map = {}
 function m.show()
     for _ in update_slot_list:unpack() do
         if anim_eid then
@@ -583,6 +591,19 @@ function m.show()
             local e <close> = world:entity(anim_eid, "anim_ctrl:in")
             e.anim_ctrl.slot_eid = slotlist
             break
+        end
+    end
+    for _, action, path in event_keyframe:unpack() do
+        if action == "effect" then
+            if not effect_map[path] then
+                effect_map[path] = iefk.create(path, {
+                    scene = {},
+                    visible_state = "main_queue",
+                })
+            else
+                local e <close> = world:entity(effect_map[path], "efk:in")
+                iefk.play(e)
+            end
         end
     end
     if not current_anim or not anim_eid then return end
@@ -777,7 +798,15 @@ function m.on_prefab_load(entities)
         if e.anim_ctrl then
             anim_eid = eid
             local prefab_filename = prefab_mgr:get_current_filename()
-            iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
+            local path_list = utils.split_ant_path(prefab_filename)
+            if path_list[1] then
+                --xxx.glb
+                iani.load_events(eid, string.sub(path_list[1], 1, -5) .. ".event")
+            else
+                ---xxx.prefab
+                iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
+            end
+            
             local animations = e.animation
             if animations then
                 editanims.birth = e.animation_birth
