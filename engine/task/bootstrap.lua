@@ -93,6 +93,9 @@ local function send(...)
 end
 vfs.call = call
 vfs.send = send
+function vfs.read(path)
+	return call("READ", path)
+end
 function vfs.realpath(path)
 	return call("GET", path)
 end
