@@ -65,6 +65,16 @@ do
 		local subpath = pathname:sub(#path+1)
 		return subrepo:file(subpath)
 	end
+	function CMD.READ(pathname)
+		local file = getfile(pathname)
+		if not file then
+			return
+		end
+		if not file.path then
+			return
+		end
+		return fastio.readall_mem(file.path, pathname)
+	end
 	function CMD.GET(pathname)
 		local file = getfile(pathname)
 		if not file then

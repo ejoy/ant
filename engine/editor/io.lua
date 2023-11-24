@@ -42,6 +42,10 @@ local CMD = {
 	MOUNT = vfs.mount,
 }
 
+function CMD.READ(path)
+	return fastio.readall_mem(vfs.realpath(path), path)
+end
+
 local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		return

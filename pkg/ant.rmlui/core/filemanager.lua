@@ -22,8 +22,8 @@ function m.loadstring(content, source_path, source_line, env)
 end
 
 function m.loadfile(source_path, env)
-    local realpath = vfs.realpath(source_path)
-    return fastio.loadfile(realpath, source_path, env)
+    local mem = vfs.read(source_path)
+    return fastio.mem_loadlua(mem, source_path, env)
 end
 
 local pendQueue = {}

@@ -23,9 +23,12 @@ if lm.os == "windows" then
 end
 
 lm:lua_source "audio" {
+    includes = {
+        ROOT .. "3rd/bee.lua",
+    },
     windows = {
         deps = "copy_fmod",
-        sources = "src/luafmod.c",
+        sources = "src/luafmod.cpp",
         includes = {
             fmodDir.."/windows/core/inc",
             fmodDir.."/windows/studio/inc",
@@ -51,7 +54,7 @@ lm:lua_source "audio" {
         sources = "src/empty_luafmod.c",
     },
     ios = {
-        sources = "src/luafmod.c",
+        sources = "src/luafmod.cpp",
         includes = {
             fmodDir.."/ios/core/inc",
             fmodDir.."/ios/studio/inc",

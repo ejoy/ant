@@ -87,6 +87,16 @@ end
 return function (repopath)
     local repo = new_tiny(repopath)
     local vfs = {}
+    function vfs.read(pathname)
+        local file = repo:file(pathname)
+        if not file then
+            return
+        end
+        if not file.path then
+            return
+        end
+        return fastio.readall_mem(file.path, pathname)
+    end
     function vfs.realpath(pathname)
         local file = repo:file(pathname)
         if not file then

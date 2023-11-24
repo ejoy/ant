@@ -1,12 +1,12 @@
-#define LUA_LIB
-
 #include <assert.h>
-#include <lua.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 #include <stdio.h>
 #include "fmod.h"
 #include "fmod_studio.h"
 #include "fmod_errors.h"
+
+#include <string_view>
+#include <bee/nonstd/unreachable.h>
 
 static void
 ERRCHECK_fn(lua_State *L, FMOD_RESULT result, const char* file, int line) {
@@ -36,28 +36,40 @@ laudio_shutdown(lua_State *L) {
 	return 0;
 }
 
-static const void*
-load_content(lua_State *L, int index, size_t *s){
-	switch(lua_type(L, index)){
-		case LUA_TSTRING:
-		return luaL_checklstring(L, index, s);
-		case LUA_TUSERDATA:{
-			*s = lua_rawlen(L, index);
-			return lua_touserdata(L, index);
-		}
-		default:
-		luaL_error(L, "Invalid type:%d", lua_type(L, index));
-		return NULL;
+static std::string_view getmemory(lua_State* L, int idx) {
+	switch (lua_type(L, idx)) {
+	case LUA_TSTRING: {
+		size_t sz;
+		const char* data = lua_tolstring(L, idx, &sz);
+		return { data, sz };
+	}
+	case LUA_TUSERDATA: {
+		const char* data = (const char*)lua_touserdata(L, idx);
+		size_t sz = lua_rawlen(L, idx);
+		return { data, sz };
+	}
+	case LUA_TFUNCTION: {
+		lua_pushvalue(L, idx);
+		lua_call(L, 0, 3);
+		const char* data = (const char*)lua_touserdata(L, -3);
+		size_t sz = (size_t)luaL_checkinteger(L, -2);
+		lua_copy(L, -1, idx);
+		lua_toclose(L, idx);
+		lua_pop(L, 3);
+		return { data, sz };
+	}
+	default:
+		luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, idx)));
+		std::unreachable();
 	}
 }
 
 static int
 laudio_load_bank(lua_State *L) {
 	struct audio *a = get_audio(L);
-	size_t size = 0;
-	const void* content = load_content(L, 2, &size);
+	auto mem = getmemory(L, 2);
 	FMOD_STUDIO_BANK *bank = NULL;
-	ERRCHECK(L, FMOD_Studio_System_LoadBankMemory(a->system, (const char*)content, (int)size, FMOD_STUDIO_LOAD_MEMORY, FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
+	ERRCHECK(L, FMOD_Studio_System_LoadBankMemory(a->system, mem.data(), (int)mem.size(), FMOD_STUDIO_LOAD_MEMORY, FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
 	char name[1024];
 	int retrieved;
 	if (lua_istable(L, 3)) {
@@ -120,7 +132,7 @@ laudio_event_get(lua_State *L) {
 
 static int
 laudio_event_play(lua_State *L) {
-	FMOD_STUDIO_EVENTDESCRIPTION *event = lua_touserdata(L, 1);
+	FMOD_STUDIO_EVENTDESCRIPTION* event = (FMOD_STUDIO_EVENTDESCRIPTION*)lua_touserdata(L, 1);
 	if (event == NULL)
 		return luaL_error(L, "Invalid event");
 	FMOD_STUDIO_EVENTINSTANCE *inst = NULL;
@@ -150,7 +162,7 @@ lbackground_play(lua_State *L) {
 		ERRCHECK(L, FMOD_Studio_EventInstance_Stop(b->inst, FMOD_STUDIO_STOP_IMMEDIATE));
 		b->inst = NULL;
 	}
-	FMOD_STUDIO_EVENTDESCRIPTION *event = lua_touserdata(L, 2);
+	FMOD_STUDIO_EVENTDESCRIPTION *event = (FMOD_STUDIO_EVENTDESCRIPTION *)lua_touserdata(L, 2);
 	if (event == NULL)
 		return luaL_error(L, "Invalid event");
 	ERRCHECK(L, FMOD_Studio_EventDescription_CreateInstance(event, &b->inst));
@@ -196,7 +208,7 @@ laudio_background(lua_State *L) {
 
 static int
 laudio_init(lua_State *L) {
-	int maxchannel = luaL_optinteger(L, 1, 1024);
+	int maxchannel = (int)luaL_optinteger(L, 1, 1024);
 	struct audio * a = (struct audio *)lua_newuserdatauv(L, sizeof(*a), 0);
 	ERRCHECK(L, FMOD_Studio_System_Create(&a->system, FMOD_VERSION));
 	FMOD_SYSTEM * sys = NULL;
@@ -224,7 +236,7 @@ laudio_init(lua_State *L) {
 	return 1;
 }
 
-LUAMOD_API int
+extern "C" int
 luaopen_fmod(lua_State * L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {

@@ -6,11 +6,11 @@ local serialization = require "bee.serialization"
 
 local function package_loadfile(packname, file, env)
 	local path = "/pkg/"..packname.."/"..file
-	local realpath = vfs.realpath(path)
-	if not realpath then
+	local mem = vfs.read(path)
+	if not mem then
 		error(("file '%s' not found"):format(path))
 	end
-	local func, err = fastio.loadfile(realpath, path, env)
+	local func, err = fastio.mem_loadlua(mem, path, env)
 	if not func then
 		error(("error loading file '%s':\n\t%s"):format(path, err))
 	end
