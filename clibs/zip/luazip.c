@@ -814,10 +814,10 @@ lreader_dump(lua_State *L) {
 }
 
 struct zip_reader_cache *
-luazip_new(size_t sz) {
+luazip_new(size_t sz, struct zip_reader_cache *old) {
 	struct zip_reader_cache *C;
 	size_t size = need_size(sz);
-	C = (struct zip_reader_cache *)malloc(size);
+	C = (struct zip_reader_cache *)realloc(old, size);
 	C->size = 0;
 	C->length = sz;
 	C->active = 1;
@@ -884,7 +884,7 @@ static int
 lreader_new(lua_State *L) {
 	size_t sz;
 	const char *buf = luaL_checklstring(L, 1, &sz);
-	struct zip_reader_cache * c = luazip_new(sz);
+	struct zip_reader_cache * c = luazip_new(sz, NULL);
 	void * data = luazip_data(c, NULL);
 	memcpy(data, buf, sz);
 	lua_pushlightuserdata(L, c);
