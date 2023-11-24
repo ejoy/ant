@@ -133,7 +133,7 @@ lefkctx_new(lua_State *L) {
 	const float mag = (float)luaL_optnumber(L, 4, 1.f);
 
 	struct efk_box *box = (struct efk_box *)lua_newuserdatauv(L, sizeof(*box), 0);
-	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, content, contentsize, mag, u16_materialPath));
+	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, content, (int)contentsize, mag, u16_materialPath));
 	if (luaL_newmetatable(L, "EFK_INSTANCE")) {
 		lua_pushcfunction(L, lefk_release);
 		lua_setfield(L, -2, "__gc");
@@ -175,9 +175,14 @@ lefkctx_create(lua_State *L) {
     return 1;
 }
 
+static inline bool
+handl_is_valid(efk_ctx *ctx, int handle){
+	return (0<= handle && handle < (int)ctx->effects.size()) && (ctx->effects[handle].eptr != nullptr);
+}
+
 static void
 check_effect_valid(lua_State *L, efk_ctx *ctx, int handle){
-     if (0 > handle || handle >= (int)ctx->effects.size() || ctx->effects[handle].eptr == nullptr) {
+     if (!handl_is_valid(ctx, handle)){
         luaL_error(L, "invalid handle: %d", handle);
     }
 }
@@ -304,8 +309,11 @@ lefkctx_update_transforms(lua_State *L){
 static int
 lefkctx_is_alive(lua_State* L) {
     auto ctx = EC(L);
-    auto slot = get_instance(L, ctx, 2);
-    lua_pushboolean(L, ctx->manager->Exists(slot->inst));
+	const int handle = (int)luaL_checkinteger(L, 2);
+
+	lua_pushboolean(L, 
+		handl_is_valid(ctx, handle) && 
+		ctx->manager->Exists(ctx->effects[handle].inst));
     return 1;
 }
 
