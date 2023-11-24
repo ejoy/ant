@@ -1017,6 +1017,16 @@ init_lex(lua_State *L, int index, struct lex_state *LS) {
 		LS->source = (const char*)lua_touserdata(L, 1);
 		LS->sz = lua_rawlen(L, 1);
 		break;
+	case LUA_TFUNCTION: {
+		lua_pushvalue(L, 1);
+		lua_call(L, 0, 3);
+		LS->source = (const char*)lua_touserdata(L, -3);
+		LS->sz = (size_t)luaL_checkinteger(L, -2);
+		lua_copy(L, -1, 1);
+		lua_toclose(L, 1);
+		lua_pop(L, 3);
+		break;
+	}
 	default:
 	case LUA_TSTRING:
 		LS->source = luaL_checklstring(L, 1, &LS->sz);

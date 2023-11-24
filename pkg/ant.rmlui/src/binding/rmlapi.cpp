@@ -13,6 +13,7 @@
 #include <bee/nonstd/unreachable.h>
 
 #include <string.h>
+#include "fastio.h"
 
 struct RmlWrapper {
 	RmlContext m_context;
@@ -57,24 +58,6 @@ lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
 	lua_pushlightuserdata(L, const_cast<Rml::Node*>(node));
 	lua_pushinteger(L, (lua_Integer)node->GetType());
 	return 2;
-}
-
-static std::string_view getmemory(lua_State* L, int idx) {
-    switch (lua_type(L, idx)) {
-    case LUA_TSTRING: {
-        size_t sz;
-        const char* data = lua_tolstring(L, idx, &sz);
-        return { data, sz };
-    }
-    case LUA_TUSERDATA: {
-        const char* data = (const char*)lua_touserdata(L, idx);
-        size_t sz = lua_rawlen(L, idx);
-        return { data, sz };
-    }
-    default:
-        luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, idx)));
-        std::unreachable();
-    }
 }
 
 namespace {

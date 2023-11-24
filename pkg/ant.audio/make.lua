@@ -25,6 +25,7 @@ end
 lm:lua_source "audio" {
     includes = {
         ROOT .. "3rd/bee.lua",
+        ROOT .. "clibs/luabind",
     },
     windows = {
         deps = "copy_fmod",

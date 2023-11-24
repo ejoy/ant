@@ -8,6 +8,7 @@
 #include "../../clibs/bgfx/bgfx_interface.h"
 #include <Effekseer/Effekseer.DefaultEffectLoader.h>
 
+#include "fastio.h"
 extern "C" {
     #include <textureman.h>
 }
@@ -116,16 +117,7 @@ lefk_release(lua_State *L) {
 static int
 lefkctx_new(lua_State *L) {
     auto ctx = EC(L);
-	const int a2type = lua_type(L, 2);
-	const void* content;
-	size_t contentsize;
-	if (a2type == LUA_TSTRING){
-		content = luaL_checklstring(L, 2, &contentsize);
-	} else if (a2type == LUA_TUSERDATA) {
-		contentsize = lua_rawlen(L, 2);
-		content = lua_touserdata(L, 2);
-	}
-
+	auto content = getmemory(L, 2);
 	char16_t u16_materialPath[1024];
 	auto materialPath = luaL_checkstring(L, 3);
 	Effekseer::ConvertUtf8ToUtf16(u16_materialPath, 1024, materialPath);
@@ -133,7 +125,7 @@ lefkctx_new(lua_State *L) {
 	const float mag = (float)luaL_optnumber(L, 4, 1.f);
 
 	struct efk_box *box = (struct efk_box *)lua_newuserdatauv(L, sizeof(*box), 0);
-	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, content, (int)contentsize, mag, u16_materialPath));
+	new (&box->eptr) Effekseer::EffectRef(Effekseer::Effect::Create(ctx->manager, content.data(), (int)content.size(), mag, u16_materialPath));
 	if (luaL_newmetatable(L, "EFK_INSTANCE")) {
 		lua_pushcfunction(L, lefk_release);
 		lua_setfield(L, -2, "__gc");
