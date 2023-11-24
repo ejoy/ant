@@ -41,8 +41,7 @@ local function createTexture(c)
     return h
 end
 
-local function loadExt(name)
-	local protocol, path = name:match "@(%w+)://(.*)"
+local function loadExt(protocol, path)
 	local service_id = (protocol and ext_service[protocol]) or error ("Unknown protocol " .. name)
 	local c = ltask.call(service_id, "load", path)
 	c.name = name
@@ -52,11 +51,10 @@ local function loadExt(name)
 	return c
 end
 
-local ext_prefix <const> = ('@'):byte()
-
 local function loadTexture(name)
-	if name:byte() == ext_prefix then
-		return loadExt(name)
+	local protocol, path = name:match "(%w+)://(.*)"
+	if protocol then
+		return loadExt(protocol, path)
 	end
     local path = name.."|main.cfg"
     local c = datalist.parse(fastio.readall(cr.compile(path) or error(("Compile %s fail"):format(path)), path))
