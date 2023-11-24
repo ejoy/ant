@@ -698,7 +698,7 @@ find_cache(lua_State *L, struct zip_reader_cache *C, struct zip_reader_cache *en
 
 static size_t
 need_size(size_t sz) {
-	sz += sizeof(*C) - sizeof(C->buffer);
+	sz += offsetof(struct zip_reader_cache, buffer);
 	sz = (sz + 7) & ~7;	// align to size_t
 	return sz;
 }
@@ -880,7 +880,7 @@ luazip_seek(struct zip_reader_cache *f, long offset, int whence) {
 		f->offset = offset;
 }
 
-static void
+static int
 lreader_new(lua_State *L) {
 	size_t sz;
 	const char *buf = luaL_checklstring(L, 1, &sz);
