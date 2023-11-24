@@ -7,6 +7,7 @@ local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
 local console = require "core.sandbox.console"
 local datamodel = require "core.datamodel.api"
+local task = require "core.task"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -20,6 +21,7 @@ local screen_ratio = 1.0
 local documents = {}
 local hidden = {}
 local pending = {}
+local update
 
 local function round(x)
     return math.floor(x*screen_ratio+0.5)
@@ -120,6 +122,12 @@ function m.flush(doc)
 end
 
 function m.close(doc)
+    if update then
+        task.new(function ()
+            m.close(doc)
+        end)
+        return
+    end
     eventListener.dispatch(doc, getBody(doc), "unload", {})
     notifyDocumentDestroy(doc)
     rmlui.DocumentDestroy(doc)
@@ -254,7 +262,7 @@ function m.set_dimensions(w, h, ratio)
     end
 end
 
-function m.update_pending_texture(doc, v)
+function m.updatePendingTexture(doc, v)
     if not doc then
         return
     end
@@ -262,13 +270,16 @@ function m.update_pending_texture(doc, v)
         local newv = pending[doc] + v
         if newv == 0 then
             pending[doc] = nil
-            eventListener.dispatch(doc, getBody(doc), "texture_loaded", {})
         else
             pending[doc] = newv
         end
     else
         pending[doc] = v
     end
+end
+
+function m.getPendingTexture(doc)
+    return pending[doc] or 0
 end
 
 local function updateTexture()
@@ -284,7 +295,7 @@ local function updateTexture()
                 if e._handle then
                     rmlui.ElementDirtyImage(e._handle)
                 end
-                m.update_pending_texture(e._document, -1)
+                m.updatePendingTexture(e._document, -1)
             end
         else
             rmlui.RenderSetTexture(v.path)
@@ -294,6 +305,7 @@ end
 
 function m.update(delta)
     updateTexture()
+    update = true
     rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         if not hidden[doc] then
@@ -302,6 +314,7 @@ function m.update(delta)
         end
     end
     rmlui.RenderFrame()
+    update = nil
 end
 
 return m

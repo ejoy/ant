@@ -4,12 +4,11 @@ local ServiceAudio
 
 local m = {}
 
-function m.init()
-	ServiceAudio = ltask.uniqueservice "ant.audio|audio"
-	ltask.send(ServiceAudio, "worker_init")
-end
-
 function m.load(banks)
+	if not ServiceAudio then
+		ServiceAudio = ltask.uniqueservice "ant.audio|audio"
+		ltask.send(ServiceAudio, "worker_init")
+	end
 	for i, f in ipairs(banks) do
 		banks[i] = fs.path(f):localpath():string()
 	end
@@ -32,9 +31,16 @@ end
 
 function m.frame()
 	if #cmdqueue > 0 then
+		if not ServiceAudio then
+			ServiceAudio = ltask.queryservice "ant.audio|audio"
+			ltask.send(ServiceAudio, "worker_init")
+		end
 		ltask.send(ServiceAudio, "worker_frame", cmdqueue)
 		cmdqueue = {}
 	else
+		if not ServiceAudio then
+			return
+		end
 		ltask.send(ServiceAudio, "worker_frame")
 	end
 end

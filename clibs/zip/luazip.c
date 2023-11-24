@@ -5,8 +5,11 @@
 #include "zlib.h"
 #include "zip.h"
 #include "unzip.h"
+#include "luazip.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 
 #define ZLIB_UTF8_FLAG (1<<11)
 #define FILECHUNK (4096 * 4)
@@ -280,25 +283,40 @@ zipread_closezip(lua_State *L) {
 	return 0;
 }
 
+static inline lua_Integer
+file_pos_to_luaint(const unz_file_pos *pos) {
+	uint64_t p = pos->pos_in_zip_directory;
+	uint64_t n = pos->num_of_file;
+	return (lua_Integer)(p << 32 | n);
+}
+
+static inline unz_file_pos *
+luaint_to_file_pos(lua_Integer v, unz_file_pos *pos) {
+	pos->pos_in_zip_directory = (uint64_t)v >> 32;
+	pos->num_of_file = v & 0xffffffff;
+	return pos;
+}
+
 static void
 get_filelist(lua_State *L, unzFile zf) {
 	lua_newtable(L);
 	int err = unzGoToFirstFile(zf);
 	if (err != UNZ_OK)
 		luaL_error(L, "Error: goto first file");
-	int n = 0;
 	char filename[4096];
 	for (;;) {
+		unz_file_pos pos;
+		unzGetFilePos(zf, &pos);
 		int err = unzGetCurrentFileInfo(zf, NULL, filename, sizeof(filename), NULL, 0, NULL, 0);
 		if (err != UNZ_OK)
-			luaL_error(L, "Error: get file info %d", n);
-		lua_pushinteger(L, n++);
+			luaL_error(L, "Error: get file info %d", pos.num_of_file);
+		lua_pushinteger(L, file_pos_to_luaint(&pos));
 		lua_setfield(L, -2, filename);
 		err = unzGoToNextFile(zf);
 		if (err != UNZ_OK) {
 			if (err == UNZ_END_OF_LIST_OF_FILE)
 				break;
-			luaL_error(L, "Error: goto next file %d", n);
+			luaL_error(L, "Error: goto next file %d", pos.num_of_file);
 		}
 	}
 }
@@ -321,16 +339,11 @@ zipread_list(lua_State *L) {
 }
 
 static void
-locate_file(lua_State *L, unzFile zf, int n) {
-	int err = unzGoToFirstFile(zf);
+locate_file(lua_State *L, unzFile zf, lua_Integer pos) {
+	unz_file_pos tmp;
+	int err = unzGoToFilePos(zf, luaint_to_file_pos(pos, &tmp));
 	if (err != UNZ_OK)
 		luaL_error(L, "Error: goto first file");
-	int i;
-	for (i=0;i<n;i++) {
-		if (unzGoToNextFile(zf) != UNZ_OK) {
-			luaL_error(L, "Error: goto next file");
-		}
-	}
 }
 
 static unzFile
@@ -343,14 +356,14 @@ open_file(lua_State *L, int rzip, int filename, struct zipraw *raw) {
 		lua_pop(L, 1);
 		return NULL;
 	}
-	int n = luaL_checkinteger(L, -1);
+	lua_Integer pos = luaL_checkinteger(L, -1);
 	lua_pop(L, 2);
 
 	struct unzhandle *z = (struct unzhandle *)luaL_checkudata(L, rzip, "ZIP_READ");
 	if (z->h == NULL)
 		luaL_error(L, "Error: closed");
 
-	locate_file(L, z->h, n);
+	locate_file(L, z->h, pos);
 	int err;
 	if (raw) {
 		err = unzOpenCurrentFile2(z->h, &raw->method, &raw->level, 1);
@@ -380,19 +393,37 @@ zipread_readfile(lua_State *L) {
 		return 0;
 	unz_file_info info;
 	int err = unzGetCurrentFileInfo(zf, &info, NULL, 0, NULL, 0, NULL, 0);
-	if (err != UNZ_OK)
+	if (err != UNZ_OK) {
+		close_file(L, zf);
 		luaL_error(L, "Error: get file info %s", lua_tostring(L, 2));
+	}
 	void *buf = malloc(info.uncompressed_size);
-	if (buf == NULL)
+	if (buf == NULL) {
+		close_file(L, zf);
 		luaL_error(L, "Error: out of memory");
+	}
 	int bytes = unzReadCurrentFile(zf, buf, info.uncompressed_size);
 	if (bytes != info.uncompressed_size) {
 		free(buf);
+		close_file(L, zf);
 		luaL_error(L, "Error: read file %s", lua_tostring(L, 2));
 	}
 	lua_pushlstring(L, buf, bytes);
 	free(buf);
 	close_file(L, zf);
+	return 1;
+}
+
+static int
+zipread_size(lua_State *L) {
+	unzFile zf = open_file(L, 1, 2, NULL);
+	if (zf == NULL)
+		return 0;
+	unz_file_info info;
+	int err = unzGetCurrentFileInfo(zf, &info, NULL, 0, NULL, 0, NULL, 0);
+	if (err != UNZ_OK)
+		luaL_error(L, "Error: get file info %s", lua_tostring(L, 2));
+	lua_pushinteger(L, info.uncompressed_size);
 	return 1;
 }
 
@@ -404,16 +435,20 @@ zipread_extract(lua_State *L) {
 	const char * filename = luaL_checkstring(L, 3);
 	struct filename_convert tmp;
 	FILE *f = file_open(L, filename, "wb", &tmp);
-	if (f == NULL)
+	if (f == NULL) {
+		close_file(L, zf);
 		return luaL_error(L, "Error: open %s", filename);
+	}
 	char buf[FILECHUNK];
 	int bytes = 0;
 	do {
 		bytes = unzReadCurrentFile(zf, buf, sizeof(buf));
 		if (bytes < 0) {
+			close_file(L, zf);
 			return luaL_error(L, "Error: read %s", lua_tostring(L, 2));
 		}
 		if (bytes > 0 && fwrite(buf, 1, bytes, f) != bytes) {
+			close_file(L, zf);
 			return luaL_error(L, "Error: write %s", filename);
 		}
 	} while (bytes == sizeof(buf));
@@ -467,24 +502,31 @@ zipwrite_copyfrom(lua_State *L) {
 	if (rd == NULL)
 		return luaL_error(L, "Error: open %s", lua_tostring(L, filename));
 	zipFile zf = open_new(L, 2, &raw, raw.level);
-	if (zf == NULL)
+	if (zf == NULL) {
+		close_file(L, rd);
 		return luaL_error(L, "Error: open %s", lua_tostring(L, 2));
+	}
 
 	// copy file from rd to zf
+	// todo : zipCloseFileInZipRaw on error
 
 	unz_file_info info;
 	int err = unzGetCurrentFileInfo(rd, &info, NULL, 0, NULL, 0, NULL, 0);
-	if (err != UNZ_OK)
+	if (err != UNZ_OK) {
+		close_file(L, rd);
 		luaL_error(L, "Error: get file info %s", lua_tostring(L, filename));
+	}
 
 	char buf[FILECHUNK];
 	int bytes;
 	do {
 		bytes = unzReadCurrentFile(rd, buf, sizeof(buf));
 		if (bytes < 0) {
+			close_file(L, rd);
 			return luaL_error(L, "Error: read %s", lua_tostring(L, filename));
 		}
 		if (bytes > 0 && zipWriteInFileInZip(zf, buf, bytes) != ZIP_OK) {
+			close_file(L, rd);
 			return luaL_error(L, "Error: write %s", lua_tostring(L, 2));
 		}
 	} while (bytes == sizeof(buf));
@@ -516,6 +558,7 @@ unzip(lua_State *L, const char *filename) {
 			{ "openfile", zipread_openfile },
 			{ "closefile", zipread_closefile },
 			{ "read", zipread_read },
+			{ "size", zipread_size },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -581,6 +624,273 @@ lzip(lua_State *L) {
 	}
 }
 
+// 4M
+#define READER_DEFAULT_CACHESIZE (1024 * 1024 * 4)
+#define READER_MIN_CACHESIZE 4096
+
+struct zip_reader_cache {
+	size_t size;
+	size_t length;
+	size_t offset;
+	uint8_t active;
+	char buffer[7];
+};
+
+static inline struct zip_reader_cache *
+advance_ptr(struct zip_reader_cache *C, size_t sz) {
+	return (struct zip_reader_cache*)((char *)C + sz);
+}
+
+static void
+split_cache(lua_State *L, struct zip_reader_cache *C, size_t sz) {
+	struct zip_reader_cache *next = advance_ptr(C, sz);
+	size_t next_sz = C->size - sz;
+	if (next_sz >= sizeof(*C)) {
+		next->size = C->size - sz;
+		next->length = 0;
+		next->offset = 0;
+		next->active = 0;
+		C->size = sz;
+	} else {
+		next = advance_ptr(C, sz);
+		size_t len = lua_rawlen(L, 1);
+		struct zip_reader_cache * beginptr = (struct zip_reader_cache *)lua_touserdata(L, 1);
+		struct zip_reader_cache * endptr = advance_ptr(beginptr, len);
+		if (next >= endptr)
+			next = beginptr; // rewind ring buffer
+	}
+	lua_pushlightuserdata(L, next);
+	lua_setiuservalue(L, 1, 2);
+}
+
+static void
+merge_cache(lua_State *L, struct zip_reader_cache *C, struct zip_reader_cache *endptr) {
+	struct zip_reader_cache *next = advance_ptr(C, C->size);
+	while (next < endptr) {
+		if (!next->active)
+			break;
+		next = advance_ptr(next, next->size);
+	}
+	C->size = (size_t)((char *)next - (char *)C);
+}
+
+static struct zip_reader_cache *
+find_cache(lua_State *L, struct zip_reader_cache *C, struct zip_reader_cache *endptr, size_t sz) {
+	while (C < endptr) {
+		if (!C->active)
+			break;
+		C = advance_ptr(C, C->size);
+	}
+	if (advance_ptr(C, sz) > endptr)
+		return NULL;
+	if (sz <= C->size) {
+		split_cache(L, C, sz);
+	} else {
+		merge_cache(L, C, endptr);
+		if (sz <= C->size) {
+			split_cache(L, C, sz);
+		} else {
+			return find_cache(L, advance_ptr(C, C->size), endptr, sz);
+		}
+	}
+	return C;
+}
+
+static size_t
+need_size(size_t sz) {
+	sz += offsetof(struct zip_reader_cache, buffer);
+	sz = (sz + 7) & ~7;	// align to size_t
+	return sz;
+}
+
+static struct zip_reader_cache *
+alloc_cache(lua_State *L, size_t sz) {
+	lua_getiuservalue(L, 1, 2);	// cache ptr
+	struct zip_reader_cache *C = (struct zip_reader_cache *)lua_touserdata(L, -1);
+	sz = need_size(sz);
+	if (!C->active && C->size >= sz) {
+		split_cache(L, C, sz);
+	} else {
+		size_t len = lua_rawlen(L, 1);
+		struct zip_reader_cache * beginptr = (struct zip_reader_cache *)lua_touserdata(L, 1);
+		struct zip_reader_cache * endptr = advance_ptr(beginptr, len);
+		C = find_cache(L, C, endptr, sz);
+		if (C == NULL) {
+			C = find_cache(L, beginptr, endptr, sz);
+			if (C == NULL) {
+				return C;
+			}
+		}
+		split_cache(L, C, sz);
+	}
+	return C;
+}
+
+static int
+zipreader_handle(lua_State *L) {
+	lua_settop(L, 2);
+	lua_getiuservalue(L, 1, 1);	// zip read
+	unzFile zf = open_file(L, 3, 2, NULL);
+	if (zf == NULL)
+		return 0;
+	unz_file_info info;
+	int err = unzGetCurrentFileInfo(zf, &info, NULL, 0, NULL, 0, NULL, 0);
+	if (err != UNZ_OK)
+		luaL_error(L, "Error: get file info %s", lua_tostring(L, 2));
+	size_t sz = info.uncompressed_size;
+	struct zip_reader_cache *C = alloc_cache(L, sz);
+	if (C == NULL) {
+		close_file(L, zf);
+		lua_pushboolean(L, 0);
+		lua_pushinteger(L, need_size(sz));
+		return 2;
+	}
+	int bytes = unzReadCurrentFile(zf, C->buffer, sz);
+	if (bytes != sz) {
+		close_file(L, zf);
+		luaL_error(L, "Error: read file %s", lua_tostring(L, 2));
+	}
+	C->length = sz;
+	C->offset = 0;
+	C->active = 1;
+	close_file(L, zf);
+	lua_pushlightuserdata(L, C);
+	return 1;
+}
+
+static int
+lreader(lua_State *L) {
+	luaL_checkudata(L, 1, "ZIP_READ");
+	lua_Integer sz = luaL_optinteger(L, 2, READER_DEFAULT_CACHESIZE);
+	if (sz < READER_MIN_CACHESIZE)
+		sz = READER_MIN_CACHESIZE;
+	struct zip_reader_cache *C = (struct zip_reader_cache *)lua_newuserdatauv(L, sz, 2);
+	C->size = sz;
+	C->length = 0;
+	C->offset = 0;
+	C->active = 0;
+	lua_pushvalue(L, 1);
+	lua_setiuservalue(L, -2, 1);
+	lua_pushlightuserdata(L, C);
+	lua_setiuservalue(L, -2, 2);
+	if (luaL_newmetatable(L, "ZIP_READER")) {
+		luaL_Reg l[] = {
+			{ "__call", zipreader_handle },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+	}
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lreader_consume(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	struct zip_reader_cache *C = (struct zip_reader_cache *)lua_touserdata(L, 1);
+	if (C->active == 0)
+		return luaL_error(L, "Inactive reader handle");
+	lua_pushlstring(L, C->buffer, C->length);
+	C->active = 0;
+	return 1;
+}
+
+static int
+lreader_dump(lua_State *L) {
+	luaL_Buffer b;
+	luaL_buffinit(L, &b);
+	struct zip_reader_cache *C = (struct zip_reader_cache *)luaL_checkudata(L, 1, "ZIP_READER");
+	lua_getiuservalue(L, 1, 2);
+	struct zip_reader_cache *head = (struct zip_reader_cache *)lua_touserdata(L, -1);
+	size_t len = lua_rawlen(L, 1);
+	struct zip_reader_cache * endptr = advance_ptr(C, len);
+	while (C < endptr) {
+		lua_pushfstring(L, "%p (size = %I length = %I%s) %s\n", C, C->size, C->length, C->active ? " *" : "", (C == head) ? "<=" : "");
+		luaL_addvalue(&b);
+		C = advance_ptr(C, C->size);
+	}
+	luaL_pushresult(&b);
+	return 1;
+}
+
+struct zip_reader_cache *
+luazip_new(size_t sz, struct zip_reader_cache *old) {
+	struct zip_reader_cache *C;
+	size_t size = need_size(sz);
+	C = (struct zip_reader_cache *)realloc(old, size);
+	C->size = 0;
+	C->length = sz;
+	C->active = 1;
+	return C;
+}
+
+void
+luazip_close(struct zip_reader_cache *f) {
+	f->active = 0;
+	if (f->size == 0) {
+		free(f);
+	}
+}
+
+void *
+luazip_data(struct zip_reader_cache *f, size_t *sz) {
+	if (sz) {
+		*sz = f->length;
+	}
+	return f->buffer;
+}
+
+size_t
+luazip_read(struct zip_reader_cache *f, void *buf, size_t sz) {
+	void * src = f->buffer + f->offset;
+	size_t len = f->length - f->offset;
+	if (len >= sz) {
+		memcpy(buf, src, sz);
+		f->offset += sz;
+		return sz;
+	} else {
+		memcpy(buf, src, len);
+		f->offset = f->length;
+		return len;
+	}
+}
+
+size_t
+luazip_tell(struct zip_reader_cache *f) {
+	return f->offset;
+}
+
+void
+luazip_seek(struct zip_reader_cache *f, long offset, int whence) {
+	switch (whence) {
+	case SEEK_SET:
+		break;
+	case SEEK_END:
+		offset = f->length + offset;
+		break;
+	case SEEK_CUR:
+		offset = f->offset + offset;
+		break;
+	}
+	if (offset <= 0)
+		f->offset = 0;
+	else if (offset > f->length)
+		f->offset = f->length;
+	else
+		f->offset = offset;
+}
+
+static int
+lreader_new(lua_State *L) {
+	size_t sz;
+	const char *buf = luaL_checklstring(L, 1, &sz);
+	struct zip_reader_cache * c = luazip_new(sz, NULL);
+	void * data = luazip_data(c, NULL);
+	memcpy(data, buf, sz);
+	lua_pushlightuserdata(L, c);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_zip(lua_State *L) {
 	luaL_checkversion(L);
@@ -588,6 +898,10 @@ luaopen_zip(lua_State *L) {
 		{ "compress", lcompress },
 		{ "uncompress", luncompress },
 		{ "open", lzip },
+		{ "reader", lreader },
+		{ "reader_new", lreader_new },
+		{ "reader_consume", lreader_consume },
+		{ "reader_dump", lreader_dump },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

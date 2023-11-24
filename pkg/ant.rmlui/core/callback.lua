@@ -32,7 +32,7 @@ function m.OnDispatchEvent(document, element, type, eventData)
 end
 
 function m.OnLoadTexture(doc, e, path, width, height, isRT)
-	document_manager.update_pending_texture(doc, 1)
+	document_manager.updatePendingTexture(doc, 1)
 	filemanager.loadTexture(doc, e, path, width, height, isRT)
 end
 

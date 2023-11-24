@@ -24,12 +24,10 @@ local function createWindow(document, source)
         return createWindow(newdoc, document)
     end
     function window.close()
-        task.new(function ()
-            document_manager.close(document)
-            for t in pairs(timer_object) do
-                t:remove()
-            end
-        end)
+        document_manager.close(document)
+        for t in pairs(timer_object) do
+            t:remove()
+        end
     end
     function window.show()
         document_manager.show(document)
@@ -39,6 +37,9 @@ local function createWindow(document, source)
     end
     function window.flush()
         document_manager.flush(document)
+    end
+    function window.requestAnimationFrame(f)
+        task.new(f)
     end
     function window.setTimeout(f, delay)
         local t = timer.wait(delay, f)
@@ -55,6 +56,9 @@ local function createWindow(document, source)
     end
     function window.clearInterval(t)
         t:remove()
+    end
+    function window.getPendingTexture()
+        return document_manager.getPendingTexture(document)
     end
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)

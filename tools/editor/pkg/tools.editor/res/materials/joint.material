@@ -1,10 +1,8 @@
 fx:
   shader_type: PBR
-  setting:
-    lighting: on
-    shadow_receive: off
-    cast_shadow: off
-    PACK_TANGENT_TO_QUAT: 0
+  macros:
+    "ALPHAMODE_OPAQUE=1"
+  varyings: /pkg/ant.resources/materials/nolighting.varyings
 properties:
   u_basecolor_factor: {1, 1, 1, 1}
   u_emissive_factor: {0, 0, 0, 0}

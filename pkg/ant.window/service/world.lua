@@ -59,7 +59,7 @@ local function render(nwh, context, width, height, initialized)
 		context		= context,
 		framebuffer = config.framebuffer,
 	}
-	rhwi.set_profie(true)
+	rhwi.set_profie(false)
 	bgfx.encoder_create "world"
 	bgfx.encoder_init()
 	import_package "ant.asset".init()
@@ -72,7 +72,6 @@ local function render(nwh, context, width, height, initialized)
 		w = width,
 		h = height,
 	}
-	audio.init()
 	world:pipeline_init()
 
 	ltask.wakeup(initialized)

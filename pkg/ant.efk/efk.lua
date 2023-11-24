@@ -19,16 +19,62 @@ local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"
 local ig        = ecs.require "ant.group|group"
 local qm        = ecs.require "ant.render|queue_mgr"
-local PH
 
 local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
+local handle_mt = {
+    realive = function (self, speed)
+        ltask.call(EFK_SERVER, "play", self.handle, speed)
+    end,
+    is_alive = function(self)
+        ltask.fork(function ()
+            self.alive = ltask.call(EFK_SERVER, "is_alive", self.handle)
+        end)
+        return self.alive
+    end,
+    set_stop = function(self, delay)
+        ltask.send(EFK_SERVER, "set_stop", self.handle, delay)
+    end,
+
+    set_time = function(self, time)
+        ltask.send(EFK_SERVER, "set_time", self.handle, time)
+    end,
+    set_pause = function(self, p)
+        assert(p ~= nil)
+        ltask.send(EFK_SERVER, "set_pause", self.handle, p)
+    end,
+    
+    set_speed = function(self, speed)
+        assert(speed ~= nil)
+        ltask.send(EFK_SERVER, "set_speed", self.handle, speed)
+    end,
+    
+    set_visible = function(self, v)
+        ltask.send(EFK_SERVER, "set_visible", self.handle, v)
+    end,
+
+    update_transform = function(self, mat)
+        ltask.send(EFK_SERVER, "update_transform", self.handle, math3d.serialize(mat))
+    end,
+}
+
+local function createPlayHandle(efk_handle, speed, worldmat)
+    ltask.call(EFK_SERVER, "play", efk_handle, speed)
+    local h = setmetatable({
+        alive       = true,
+        handle      = efk_handle,
+    }, {__index = handle_mt})
+    if worldmat then
+        h:update_transform(worldmat)
+    end
+    return h
+end
+
 function efk_sys:init()
-    EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
+    EFK_SERVER = ltask.spawn "ant.efk|efk"
     ltask.call(EFK_SERVER, "init")
     ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "SAMPLER2D")
-    PH = ecs.require "playhandle"
 end
 
 local function cleanup_efk(efk)
@@ -51,6 +97,7 @@ function efk_sys:exit()
     end
 
     ltask.call(EFK_SERVER, "exit")
+    ltask.call(EFK_SERVER, "quit")
 end
 
 function efk_sys:component_init()
@@ -58,7 +105,7 @@ function efk_sys:component_init()
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
-        efk.play_handle = PH.create(efk.handle, efk.speed)
+        efk.play_handle = createPlayHandle(efk.handle, efk.speed)
     end
 end
 

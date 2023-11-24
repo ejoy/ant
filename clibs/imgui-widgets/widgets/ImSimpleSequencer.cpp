@@ -202,7 +202,7 @@ namespace ImSimpleSequencer
 					continue;
 				}
 				ImVec2 pos = ImVec2(contentMin.x - firstFrameUsed * framePixelWidth, contentMin.y + 1 + offset_y);
-				pos.x -= 0.5 * framePixelWidth;
+				pos.x -= 0.25 * framePixelWidth;
 				ImVec2 slotP1(pos.x + start * framePixelWidth, pos.y + 2);
 				ImVec2 slotP2(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
 				ImVec2 slotP3(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
