@@ -1010,6 +1010,33 @@ parse_section(lua_State *L, struct lex_state *LS, int layer) {
 	parse_section_sequence(L, LS, ident, layer);
 }
 
+static int
+close_ptr(lua_State *L) {
+	lua_rawgeti(L, 1, 1);
+	lua_rawgeti(L, 1, 2);
+	lua_rawgeti(L, 1, 3);
+	lua_call(L, 2, 0);
+	return 0;
+}
+
+static void
+set_close(lua_State *L, int index) {
+	int stack = lua_gettop(L);
+	lua_createtable(L, 3, 1);
+	lua_pushvalue(L, stack);	// close function
+	lua_rawseti(L, -2, 1);
+	lua_pushvalue(L, stack - 2);	// ptr
+	lua_rawseti(L, -2, 2);
+	lua_pushvalue(L, stack - 1);	// size
+	lua_rawseti(L, -2, 3);
+	lua_pushcfunction(L, close_ptr);
+	lua_setfield(L, -2, "__close");
+	lua_pushvalue(L, -1);
+	lua_setmetatable(L, -2);
+	lua_replace(L, index);
+	lua_toclose(L, index);
+}
+
 static void
 init_lex(lua_State *L, int index, struct lex_state *LS) {
 	switch (lua_type(L, 1)) {
@@ -1017,16 +1044,18 @@ init_lex(lua_State *L, int index, struct lex_state *LS) {
 		LS->source = (const char*)lua_touserdata(L, 1);
 		LS->sz = lua_rawlen(L, 1);
 		break;
-	case LUA_TFUNCTION: {
+	case LUA_TFUNCTION:
 		lua_pushvalue(L, 1);
 		lua_call(L, 0, 3);
 		LS->source = (const char*)lua_touserdata(L, -3);
-		LS->sz = (size_t)luaL_checkinteger(L, -2);
-		lua_copy(L, -1, 1);
-		lua_toclose(L, 1);
-		lua_pop(L, 3);
+		LS->sz = lua_tointeger(L, -2);
+		if (lua_type(L, -1) == LUA_TFUNCTION) {
+			set_close(L, 1);
+		} else {
+			lua_replace(L, 1);
+		}
+		lua_pop(L, 2);
 		break;
-	}
 	default:
 	case LUA_TSTRING:
 		LS->source = luaL_checklstring(L, 1, &LS->sz);
@@ -1207,6 +1236,15 @@ lquote(lua_State *L) {
 	return 1;
 }
 
+static int
+lstring2ud(lua_State *L) {
+	size_t sz;
+	const char * str = luaL_checklstring(L, 1, &sz);
+	lua_pushlightuserdata(L, (void *)str);
+	lua_pushinteger(L, sz);
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_datalist(lua_State *L) {
 	luaL_checkversion(L);
@@ -1215,6 +1253,7 @@ luaopen_datalist(lua_State *L) {
 		{ "parse_list", lparse_list },
 		{ "token", ltoken },
 		{ "quote", lquote },
+		{ "string2ud", lstring2ud },	// only for test
 		{ NULL, NULL },
 	};
 
