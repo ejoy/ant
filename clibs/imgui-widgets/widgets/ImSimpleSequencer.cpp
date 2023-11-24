@@ -34,7 +34,7 @@ namespace ImSimpleSequencer
 			inited = true;
 			auto viewport = ImGui::GetMainViewport();
 			auto scale = viewport->DpiScale;
-			ItemHeight *= scale;
+			ItemHeight = (int)(ItemHeight * scale);
 			framePixelWidth *= scale;
 			framePixelWidthTarget *= scale;
 		}
@@ -202,7 +202,7 @@ namespace ImSimpleSequencer
 					continue;
 				}
 				ImVec2 pos = ImVec2(contentMin.x - firstFrameUsed * framePixelWidth, contentMin.y + 1 + offset_y);
-				pos.x -= 0.25 * framePixelWidth;
+				pos.x -= 0.25f * framePixelWidth;
 				ImVec2 slotP1(pos.x + start * framePixelWidth, pos.y + 2);
 				ImVec2 slotP2(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
 				ImVec2 slotP3(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
@@ -325,7 +325,7 @@ namespace ImSimpleSequencer
 		}
 
 
-		const int anim_layer_count = bone_anim.anim_layers.size();
+		const int anim_layer_count = (int)bone_anim.anim_layers.size();
 		// cursor
 		if (!bone_anim.anim_layers.empty() && current_frame >= firstFrame && current_frame <= GetFrameMax()) {
 			static const float cursorWidth = 2.f;
