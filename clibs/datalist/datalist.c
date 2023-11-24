@@ -1023,7 +1023,9 @@ init_lex(lua_State *L, int index, struct lex_state *LS) {
 		LS->source = (const char*)lua_touserdata(L, -3);
 		LS->sz = (size_t)luaL_checkinteger(L, -2);
 		lua_copy(L, -1, 1);
-		lua_toclose(L, 1);
+		int t = lua_type(L, 1);
+		if (t == LUA_TUSERDATA || t == LUA_TTABLE)
+			lua_toclose(L, 1);
 		lua_pop(L, 3);
 		break;
 	}
