@@ -7,6 +7,7 @@ local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
 local console = require "core.sandbox.console"
 local datamodel = require "core.datamodel.api"
+local task = require "core.task"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -20,6 +21,7 @@ local screen_ratio = 1.0
 local documents = {}
 local hidden = {}
 local pending = {}
+local update
 
 local function round(x)
     return math.floor(x*screen_ratio+0.5)
@@ -120,6 +122,12 @@ function m.flush(doc)
 end
 
 function m.close(doc)
+    if update then
+        task.new(function ()
+            m.close(doc)
+        end)
+        return
+    end
     eventListener.dispatch(doc, getBody(doc), "unload", {})
     notifyDocumentDestroy(doc)
     rmlui.DocumentDestroy(doc)
@@ -297,6 +305,7 @@ end
 
 function m.update(delta)
     updateTexture()
+    update = true
     rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         if not hidden[doc] then
@@ -305,6 +314,7 @@ function m.update(delta)
         end
     end
     rmlui.RenderFrame()
+    update = nil
 end
 
 return m
