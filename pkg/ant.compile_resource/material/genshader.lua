@@ -508,7 +508,7 @@ void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
             end
 
             if isdoublesize then
-                ac1 "if (varyings.is_frontfacing){"
+                ac1 "if (!varyings.is_frontfacing){"
                 if varyings.v_tangent then
                     ac2 "mi.T = -mi.T;"
                     ac2 "mi.B = -mi.B;"
