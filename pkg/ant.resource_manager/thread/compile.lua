@@ -1,51 +1,19 @@
-local lfs       = require "bee.filesystem"
 local bgfx      = require "bgfx"
 local platform  = require "bee.platform"
 local vfs       = require "vfs"
 
-local compile
-local compile_file
-local setting
-local init_setting
-
-if __ANT_EDITOR__ then
-    local cr = import_package "ant.compile_resource"
-    function compile_file(path)
-        return cr.compile_file(setting, path, vfs.realpath(path))
-    end
-    function compile(pathstring)
-        local pos = pathstring:find("|", 1, true)
-        if pos then
-            local realpath = compile_file(pathstring:sub(1,pos-1)).."/"..pathstring:sub(pos+1):gsub("|", "/")
-            if lfs.exists(realpath) then
-                return realpath
-            end
-        else
-            local realpath = vfs.realpath(pathstring)
-            if realpath then
-                return realpath
-            end
-        end
-    end
-    function init_setting(setting)
-        return cr.init_setting(vfs, setting)
-    end
-else
-    function compile(pathstring)
-        pathstring = pathstring:gsub("|", "/")
-        return vfs.realpath(pathstring)
-    end
-    init_setting = vfs.resource_setting
-end
-
 local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
-    setting = init_setting(("%s-%s"):format(platform.os, renderer))
+    vfs.resource_setting(("%s-%s"):format(platform.os, renderer))
+end
+
+local function compile(pathstring)
+    pathstring = pathstring:gsub("|", "/")
+    return vfs.realpath(pathstring)
 end
 
 return {
     init = init,
     compile = compile,
-    compile_file = compile_file,
 }
