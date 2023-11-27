@@ -1,15 +1,14 @@
 local ttf = require "font.truetype"
+local fastio = require "fastio"
 
 local MAXFONT <const> = 64
 
-local function loader(filename)
-	local f = assert(io.open(filename, "rb"))
-	local data = f:read "a"
-	f:close()
-	return data
-end
-
 local namelist = {}
+
+--	id -> filename:index
+--	filename -> content
+--	filename:index -> { filename: index: id: }
+local CACHE = {}
 
 local function utf16toutf8(s)
 	local surrogate
@@ -64,8 +63,9 @@ local ids = {
 	},
 }
 
-local function import(filename)
-	local data = loader(filename)
+local function import(fontpath, fontdata)
+	local data = fastio.tostring(fontdata)
+	CACHE[fontpath] = data
 	local index = 0
 	local cache = {}
 	while true do
@@ -80,9 +80,9 @@ local function import(filename)
 						if not cache[full] then
 							cache[full] = true
 							table.insert(namelist, {
-								filename = filename,
+								filename = fontpath,
 								index = index,
-								key = filename .. ":" .. index,
+								key = fontpath .. ":" .. index,
 								family = string.lower(fname),
 								sfamily = string.lower(sname),	-- sub family name
 								name = fname .. " " .. sname,
@@ -95,25 +95,6 @@ local function import(filename)
 			end
 		end
 		index = index + 1
-	end
-end
-
---	id -> filename:index
---	filename -> content
---	filename:index -> { filename: index: id: }
-local CACHE = {}
-
-local function unload(filename)
-	local c = CACHE[filename]
-	if c then
-		CACHE[filename] = nil
-		for _, obj in pairs(CACHE) do
-			if type(obj) == "table" then
-				if obj.filename == filename then
-					ttf.unload(obj.id)
-				end
-			end
-		end
 	end
 end
 
@@ -161,10 +142,6 @@ local function fetch_id(_, id)
 	local key = assert(CACHE[id])
 	local obj = CACHE[key]
 	local c = CACHE[obj.filename]
-	if c == nil then
-		c = loader(obj.filename)
-		CACHE[obj.filename] = c
-	end
 	return ttf.update(id, c, obj.index)
 end
 
