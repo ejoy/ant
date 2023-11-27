@@ -31,24 +31,9 @@ if __ANT_EDITOR__ then
         return cr.init_setting(vfs, setting)
     end
 else
-    local function normalize(p)
-        local stack = {}
-        p:gsub('[^/|]*', function (w)
-            if #w == 0 and #stack ~= 0 then
-            elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
-                stack[#stack] = nil
-            elseif w ~= '.' then
-                stack[#stack + 1] = w
-            end
-        end)
-        return table.concat(stack, "/")
-    end
     function compile(pathstring)
-        pathstring = normalize(pathstring)
-        local realpath = vfs.realpath(pathstring)
-        if realpath then
-            return realpath
-        end
+        pathstring = pathstring:gsub("|", "/")
+        return vfs.realpath(pathstring)
     end
     init_setting = vfs.resource_setting
 end
