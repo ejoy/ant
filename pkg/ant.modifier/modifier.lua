@@ -377,7 +377,8 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
                         iani.load_events(eid, string.sub(filename, 1, -8) .. ".event")
                     end
                 elseif e.mesh then
-                    ivs.set_state(e, "main_view", false)
+                    -- ivs.set_state(e, "main_view", false)
+                    w:remove(eid)
                 end
             end
         end
