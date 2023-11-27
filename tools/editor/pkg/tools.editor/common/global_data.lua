@@ -5,7 +5,7 @@ local vfs               = require "vfs"
 local access            = dofile "/engine/editor/vfs_access.lua"
 m.repo_access = access
 
-m.editor_root           = lfs.path(fs.path "/":localpath())
+m.editor_root           = lfs.path(vfs.repopath())
 
 local function find_package_name(proj_path, packages)
     for _, pkg in ipairs(packages) do
@@ -43,7 +43,7 @@ local function get_package(entry_path, readmount)
         ::continue::
     end
     m.repo = repo
-    vfs.mount(entry_path:string())
+    --vfs.mount(entry_path:string())
     return packages
 end
 

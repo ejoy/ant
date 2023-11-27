@@ -65,9 +65,3 @@ if not __ANT_RUNTIME__ then
 		return call("REPOPATH")
 	end
 end
-
-if __ANT_EDITOR__ then
-	function vfs.mount(path)
-		return call("MOUNT", path)
-	end
-end

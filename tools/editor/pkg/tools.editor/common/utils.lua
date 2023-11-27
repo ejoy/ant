@@ -1,3 +1,5 @@
+local aio = import_package "ant.io"
+
 local utils = {}
 local function do_deep_copy(orig)
     local orig_type = type(orig)
@@ -41,11 +43,7 @@ end
 
 local datalist  = require "datalist"
 function utils.readtable(filename)
-    local path = fs.path(filename):localpath()
-    local f = assert(io.open(path:string()))
-	local data = f:read "a"
-	f:close()
-    return datalist.parse(data)
+    return datalist.parse(aio.readall(filename))
 end
 
 function utils.class(classname, ...)

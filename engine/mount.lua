@@ -1,7 +1,8 @@
 local mount = {}
 
-local lfs = require "bee.filesystem"
+local fs = require "bee.filesystem"
 local datalist = require "datalist"
+local fastio = require "fastio"
 
 local MountConfig <const> = [[
 mount:
@@ -11,10 +12,10 @@ mount:
     /        %project%/mod
 ]]
 
-local function loadmount(repo)
-	local f <close> = io.open((repo._root / ".mount"):string(), "rb")
-	if f then
-		local cfg = datalist.parse(f:read "a")
+local function loadmount(rootpath)
+	local path = rootpath / ".mount"
+	if fs.exists(path) then
+		local cfg = datalist.parse(fastio.readall(path:string()))
 		if cfg then
 			return cfg
 		end
@@ -23,7 +24,7 @@ local function loadmount(repo)
 end
 
 function mount.add(repo, vpath, lpath)
-	if not lfs.exists(lpath) then
+	if not fs.exists(lpath) then
 		return
 	end
 	assert(vpath:sub(1,1) == "/")
@@ -33,19 +34,34 @@ function mount.add(repo, vpath, lpath)
 		end
 	end
 	repo._mountvpath[#repo._mountvpath+1] = vpath
-	repo._mountlpath[#repo._mountlpath+1] = lfs.absolute(lpath):lexically_normal()
+	repo._mountlpath[#repo._mountlpath+1] = fs.absolute(lpath):lexically_normal()
 end
 
 function mount.read(repo)
-	local cfg = loadmount(repo)
 	repo._mountvpath = {}
 	repo._mountlpath = {}
-	for i = 1, #cfg.mount, 2 do
-		local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
-		mount.add(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
-			engine = lfs.current_path():string(),
-			project = repo._root:string():gsub("(.-)[/\\]?$", "%1"),
-		}))
+	do
+		local rootpath = repo._root
+		local cfg = loadmount(rootpath)
+		for i = 1, #cfg.mount, 2 do
+			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
+			mount.add(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
+				engine = fs.current_path():string(),
+				project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
+			}))
+		end
+	end
+	if __ANT_EDITOR__ then
+		local rootpath = fs.path(__ANT_EDITOR__)
+		local cfg = loadmount(rootpath)
+		for i = 1, #cfg.mount, 2 do
+			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
+			if not lpath:match "%%engine%%" then
+				mount.add(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
+					project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
+				}))
+			end
+		end
 	end
 end
 

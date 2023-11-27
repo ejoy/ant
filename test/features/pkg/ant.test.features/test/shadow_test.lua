@@ -8,11 +8,12 @@ local imesh		= ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
 
+local util		= ecs.require "util"
 local function create_instance(pfile, s, r, t)
 	s = s or {0.1, 0.1, 0.1}
-	world:create_instance {
-        prefab = pfile,
-		on_ready = function (p)
+	util.create_instance(
+        pfile,
+		function (p)
 			local ee<close> = world:entity(p.tag["*"][1])
 			iom.set_scale(ee, s)
 	
@@ -23,12 +24,16 @@ local function create_instance(pfile, s, r, t)
 			if t then
 				iom.set_position(ee, t)
 			end
-		end
-    }
+		end)
 end
 
 local st_sys	= ecs.system "shadow_test_system"
 function st_sys:init()
+	util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+        local root<close> = world:entity(e.tag['*'][1])
+        iom.set_position(root, math3d.vector(3, 1, 0))
+    end) 
+
 	create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {10, 0.1, 10}, nil, {10, 0, 0, 1})
 	local root = world:create_entity {
 		policy = {
@@ -38,8 +43,6 @@ function st_sys:init()
 			scene =  {t={10, 0, 0}},
 		}
 	}
-
-	create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
 
 	world:create_entity{
 		policy = {
