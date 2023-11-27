@@ -33,10 +33,9 @@ return function (status)
     for path in lfs.pairs(folder) do
         if path:equal_extension ".ozz" then
             local filename = path:filename():string()
-            if filename:lower() == "skeleton.ozz" then
-                error "Ivalid animation name, 'skeleton.ozz' already occupied, cann't be used this name"
+            if filename:lower() ~= "skeleton.ozz" then
+                status.animations[path:stem():string()] = "animations/"..filename
             end
-            status.animations[path:stem():string()] = "animations/"..filename
         end
     end
 end
