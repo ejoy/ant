@@ -41,9 +41,9 @@ local function createTexture(c)
     return h
 end
 
-local function loadExt(protocol, path)
+local function loadExt(protocol, path, config, name)
 	local service_id = (protocol and ext_service[protocol]) or error ("Unknown protocol " .. name)
-	local c = ltask.call(service_id, "load", path)
+	local c = ltask.call(service_id, "load", path, config)
 	c.name = name
 	if c.handle then
 	    bgfx.set_name(c.handle, c.name)
@@ -52,9 +52,9 @@ local function loadExt(protocol, path)
 end
 
 local function loadTexture(name)
-	local protocol, path = name:match "(%w+)://(.*)"
+	local protocol, path, config = name:match "(%w+):(.*);(.*)"
 	if protocol then
-		return loadExt(protocol, path)
+		return loadExt(protocol, path, config, name)
 	end
     local path = name.."|main.cfg"
     local c = datalist.parse(fastio.readall(cr.compile(path) or error(("Compile %s fail"):format(path)), path))

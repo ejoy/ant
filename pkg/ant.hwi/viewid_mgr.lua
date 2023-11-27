@@ -83,6 +83,7 @@ add_view "swapchain"
 add_view "lightmap_storage"
 add_view "pickup"
 add_view "pickup_blit"			--25
+add_view "mem_texture"
 add_view "uiruntime"
 
 local remapping_need_update = true

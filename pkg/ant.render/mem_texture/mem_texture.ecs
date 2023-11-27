@@ -1,0 +1,7 @@
+system "mem_texture_system"
+    .implement "mem_texture/mem_texture.lua"
+
+component "clear_mt_prefab"
+
+policy "clear_mt_prefab"
+    .component "clear_mt_prefab"
