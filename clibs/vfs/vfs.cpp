@@ -15,33 +15,36 @@ local vfs = {}
 local io_open = io.open
 local fastio = require "fastio"
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
-if __ANT_RUNTIME__ then
-    local fw = require "firmware"
-    local rawvfs = assert(fw.loadfile "vfs.lua")()
-    local repo = rawvfs.new "./"
-    local function realpath(path)
-        local r = repo:realpath(path)
-        if not r then
-            error("Not exists "..path)
+local realpath; do
+    if __ANT_RUNTIME__ then
+        local fw = require "firmware"
+        local rawvfs = assert(fw.loadfile "vfs.lua")()
+        local repo = rawvfs.new "./"
+        function realpath(path)
+            local r = repo:realpath(path)
+            if not r then
+                error("Not exists "..path)
+            end
+            return r
         end
-        return r
-    end
-    function vfs.read(path)
-        return fastio.readall_mem(realpath(path), path)
-    end
-    vfs.realpath = realpath
-else
-    local function realpath(path)
-        if path:sub(1,8) == "/engine/" then
-            return path:sub(2)
+    else
+        function realpath(path)
+            if path:sub(1,8) == "/engine/" then
+                return path:sub(2)
+            end
+            return path
         end
-        return path
     end
-    function vfs.read(path)
-        return fastio.readall_mem(realpath(path), path)
-    end
-    vfs.realpath = realpath
 end
+function vfs.read(path)
+    return fastio.readall_mem(realpath(path), path)
+end
+function vfs.readg(path)
+    local lpath = realpath(path)
+    local data = fastio.readall_mem(lpath, path)
+    return data, lpath
+end
+vfs.realpath = realpath
 local function errmsg(err, filename, real_filename)
     local first, last = err:find(real_filename, 1, true)
     if not first then

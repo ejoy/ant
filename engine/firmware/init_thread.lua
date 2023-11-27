@@ -2,12 +2,12 @@ local thread = require "bee.thread"
 local socket = require "bee.socket"
 local io_req = thread.channel "IOreq"
 
-local vfs, global = ...
+local vfs, initargs = ...
 
 __ANT_RUNTIME__ = package.preload.firmware ~= nil
-__ANT_EDITOR__ = global.editor
+__ANT_EDITOR__ = initargs.editor
 
-local fd = socket.fd(global.fd, true)
+local fd = socket.fd(initargs.fd, true)
 
 local function notify()
 	local n, err = fd:send "T"

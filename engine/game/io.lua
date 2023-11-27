@@ -1,4 +1,4 @@
-local repopath, fddata = ...
+local initargs = ...
 
 package.path = "/engine/?.lua"
 package.cpath = ""
@@ -15,7 +15,7 @@ local SELECT_READ <const> = select.SELECT_READ
 local SELECT_WRITE <const> = select.SELECT_WRITE
 
 local quit = false
-local channelfd = socket.fd(fddata)
+local channelfd = socket.fd(initargs.fd)
 
 local function dofile(path)
 	return assert(fastio.loadfile(path))()
@@ -27,7 +27,7 @@ package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
 do
 	local vfs = require "vfs"
 	local new_tiny = dofile "pkg/ant.vfs/tiny.lua"
-	for k, v in pairs(new_tiny(repopath)) do
+	for k, v in pairs(new_tiny(initargs.repopath)) do
 		vfs[k] = v
 	end
 end
@@ -37,7 +37,7 @@ local CMD = {}
 do
 	local new_std = dofile "pkg/ant.vfs/std.lua"
 	local repo = new_std {
-		rootpath = repopath,
+		rootpath = initargs.repopath,
 		nohash = true,
 	}
 	local resources = {}
@@ -141,7 +141,7 @@ do
 		end
 	end
 	function CMD.REPOPATH()
-		return repopath
+		return initargs.repopath
 	end
 	function CMD.RESOURCE_SETTING(setting)
 		require "packagemanager"
