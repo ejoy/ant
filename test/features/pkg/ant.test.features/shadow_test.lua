@@ -39,8 +39,6 @@ function st_sys:init()
 		}
 	}
 
-	create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
-
 	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
