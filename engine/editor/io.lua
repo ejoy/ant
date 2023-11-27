@@ -39,6 +39,12 @@ function CMD.READ(path)
 	return fastio.readall_mem(vfs.realpath(path), path)
 end
 
+function CMD.READG(path)
+	local lpath = vfs.realpath(path)
+	local data = fastio.readall_mem(lpath, path)
+	return data, lpath
+end
+
 local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		return

@@ -82,6 +82,17 @@ do
 		end
 		return fastio.readall_mem(file.path, pathname)
 	end
+	function CMD.READG(pathname)
+		local file = getfile(pathname)
+		if not file then
+			return
+		end
+		if not file.path then
+			return
+		end
+		local data = fastio.readall_mem(file.path, pathname)
+		return data, file.path
+	end
 	function CMD.GET(pathname)
 		local file = getfile(pathname)
 		if not file then
