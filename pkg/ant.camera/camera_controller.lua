@@ -31,6 +31,7 @@ local distance = 1
 local baseDistance = 1
 local zoomExponent = 2
 local zoomFactor = 0.1
+local pan_lastx, pan_lasty
 
 local lookat = math3d.ref(math3d.vector(0, 0, 1))
 --right up偏移
@@ -155,8 +156,9 @@ function cc_sys:camera_usage()
         action.scale(5 * e.velocity)
     end
     for _, _, e in EventGesturePan:unpack() do
-        action.pan_reset(e.x - e.dx, e.y - e.dy)
+        action.pan_reset(pan_lastx, pan_lasty)
         action.pan(e.x, e.y)
+        pan_lastx, pan_lasty = e.x, e.y
     end
 
     local rotatetype="rotate_point"
