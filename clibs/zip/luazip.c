@@ -81,8 +81,11 @@ struct filename_convert {
 static zipFile
 zip_open(lua_State *L, const char *filename, int append) {
 	struct filename_convert tmp;
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp.tmp, sizeof(tmp)) == 0)
+	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp.tmp, sizeof(tmp)) == 0) {
+		if (L == NULL)
+			return NULL;
 		luaL_error(L, "Can't convert %s to utf16", filename);
+	}
 	zlib_filefunc64_def ffunc;
 	fill_win32_filefunc64W(&ffunc);
 	return zipOpen2_64((const char *)tmp.tmp, append ? APPEND_STATUS_ADDINZIP : 0, NULL, &ffunc);
@@ -91,8 +94,11 @@ zip_open(lua_State *L, const char *filename, int append) {
 static unzFile
 unzip_open(lua_State *L, const char *filename) {
 	struct filename_convert tmp;
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp.tmp, sizeof(tmp)) == 0)
+	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp.tmp, sizeof(tmp)) == 0) {
+		if (L == NULL)
+			return NULL;
 		luaL_error(L, "Can't convert %s to utf16", filename);
+	}
 	zlib_filefunc64_def ffunc;
 	fill_win32_filefunc64W(&ffunc);
 	return unzOpen2_64((const char *)tmp.tmp, &ffunc);
@@ -100,13 +106,19 @@ unzip_open(lua_State *L, const char *filename) {
 
 static FILE *
 file_open(lua_State *L, const char *filename, const char *mode, struct filename_convert *tmp) {
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp->tmp, sizeof(*tmp)) == 0)
+	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp->tmp, sizeof(*tmp)) == 0) {
+		if (L == NULL)
+			return NULL;
 		luaL_error(L, "Can't convert %s to utf16", filename);
+	}
 	WCHAR m[32];
 	int i;
 	for (i=0; mode[i]; i++) {
-		if (i == 31)
+		if (i == 31) {
+			if (L == NULL)
+				return NULL;
 			luaL_error(L, "Invalid mode %s", mode);
+		}
 		m[i] = mode[i];
 	}
 	m[i] = 0;
@@ -330,10 +342,15 @@ zipread_list(lua_State *L) {
 	int r = t+1;
 	lua_pushnil(L);
 	while (lua_next(L, t) != 0) {
-		int n = luaL_checkinteger(L, -1);
-		lua_pop(L, 1);
-		lua_pushvalue(L, -1);
-		lua_rawseti(L, r, n+1);
+		if (lua_type(L, -1) == LUA_TNUMBER) {
+			int n = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+			lua_pushvalue(L, -1);
+			lua_rawseti(L, r, n+1);
+		} else {
+			// filename
+			lua_pop(L, 1);
+		}
 	}
 	return 1;
 }
@@ -539,12 +556,36 @@ zipwrite_copyfrom(lua_State *L) {
 }
 
 static int
+zipread_filename(lua_State *L) {
+	const int rzip = 1;
+	const int filename = 2;
+	if (lua_getiuservalue(L, rzip, 1) != LUA_TTABLE) {
+		luaL_error(L, "Invalid zip userdata");
+	}
+	lua_pushvalue(L, filename);	// filename
+	if (lua_rawget(L, -2) != LUA_TNUMBER) {
+		return 0;
+	}
+	lua_Integer v = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	unz_file_pos pos;
+	luaint_to_file_pos(v, &pos);
+	if (lua_rawgeti(L, -1, 0) != LUA_TSTRING) {
+		return luaL_error(L, "No zip filename");
+	}
+	lua_pushfstring(L, "%s|%d", lua_tostring(L, -1), pos.num_of_file);
+	return 1;
+}
+
+static int
 unzip(lua_State *L, const char *filename) {
 	unzFile zf = unzip_open(L, filename);
 	if (zf == NULL)
 		return 0;
 	struct unzhandle *z = (struct unzhandle *)lua_newuserdatauv(L, sizeof(*z), 1);
 	get_filelist(L, zf);
+	lua_pushstring(L, filename);
+	lua_rawseti(L, -2, 0);
 	lua_setiuservalue(L, -2, 1);
 	z->h = zf;
 	if (luaL_newmetatable(L, "ZIP_READ")) {
@@ -559,6 +600,7 @@ unzip(lua_State *L, const char *filename) {
 			{ "closefile", zipread_closefile },
 			{ "read", zipread_read },
 			{ "size", zipread_size },
+			{ "filename", zipread_filename },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -891,6 +933,100 @@ lreader_new(lua_State *L) {
 	return 1;
 }
 
+static int
+goto_file(unzFile zf, int n) {
+	if (n < 0)
+		return UNZ_END_OF_LIST_OF_FILE;
+	int err = unzGoToFirstFile(zf);
+	if (err != UNZ_OK)
+		return err;
+	int i;
+	for (i=0; i < n; i++) {
+		err = unzGoToNextFile(zf);
+		if (err != UNZ_OK)
+			return err;
+	}
+
+	return UNZ_OK;
+}
+
+struct zip_reader_cache *
+luazip_open(const char *filename) {
+	int i;
+	for (i=0;filename[i];i++) {
+		if (filename[i] == '|') {
+			// zip file
+			char *endptr;
+			long idx = strtol(filename+i+1, &endptr, 10);
+			if (*endptr != '\0')
+				return NULL;	// invalid id
+			char tmp[4096];
+			if (i >= 4096)
+				return NULL;
+			memcpy(tmp, filename, i);
+			tmp[i] = '\0';
+			unzFile uzf = unzip_open(NULL, tmp);
+			if (uzf == NULL)
+				return NULL;
+			if (goto_file(uzf, idx) != UNZ_OK) {
+				unzClose(uzf);
+				return NULL;
+			}
+			unz_file_info info;
+			int err = unzGetCurrentFileInfo(uzf, &info, NULL, 0, NULL, 0, NULL, 0);
+			if (err != UNZ_OK) {
+				unzClose(uzf);
+				return NULL;
+			}
+			err = unzOpenCurrentFile(uzf);
+			if (err != UNZ_OK) {
+				unzClose(uzf);
+				return NULL;
+			}
+			struct zip_reader_cache * c = luazip_new(info.uncompressed_size, NULL);
+			void * data = luazip_data(c, NULL);
+			int bytes = unzReadCurrentFile(uzf, data, info.uncompressed_size);
+			if (bytes != info.uncompressed_size) {
+				luazip_close(c);
+				unzClose(uzf);
+				return NULL;
+			}
+			unzClose(uzf);
+			return c;
+		}
+	}
+	// regular file
+	struct filename_convert tmp;
+	FILE *f = file_open(NULL, filename, "rb", &tmp);
+	if (f == NULL)
+		return NULL;
+	fseek(f, 0, SEEK_END);
+	long len = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	struct zip_reader_cache * c = luazip_new(len, NULL);
+	void * data = luazip_data(c, NULL);
+	clearerr(f);
+	size_t sz = fread(data, 1, len, f);
+	if (sz != len) {
+		if (ferror(f)) {
+			luazip_close(c);
+			return NULL;
+		}
+		c = luazip_new(sz, c);
+	}
+	return c;
+}
+
+static int
+lreader_open(lua_State *L) {
+	const char * filename = luaL_checkstring(L, 1);
+	struct zip_reader_cache *c = luazip_open(filename);
+	if (c == NULL)
+		return luaL_error(L, "Read file %s error", filename);
+	lua_pushlightuserdata(L, c);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_zip(lua_State *L) {
 	luaL_checkversion(L);
@@ -902,6 +1038,7 @@ luaopen_zip(lua_State *L) {
 		{ "reader_new", lreader_new },
 		{ "reader_consume", lreader_consume },
 		{ "reader_dump", lreader_dump },
+		{ "reader_open", lreader_open },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

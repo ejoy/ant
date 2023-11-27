@@ -70,3 +70,12 @@ for i = 1, 10 do
 end
 print(zip.reader_dump(reader))
 f:close()
+
+local f = assert(zip.open("test.zip", "r"))
+local filename = f:filename "test.txt"
+print(filename)
+local s1 = f:readfile "test.txt"
+local h = zip.reader_open(filename)
+local s2 = zip.reader_consume(h)
+assert(s1 == s2)
+f:close()
