@@ -17,7 +17,6 @@ end
 lm.msvc = {
     defines = {
         "_CRT_SECURE_NO_WARNINGS",
-        lm.mode == "debug" and "_DISABLE_STRING_ANNOTATION",
     },
     includes = lm.BxDir / "include/compat/msvc",
 }

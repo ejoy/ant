@@ -14,8 +14,6 @@ local function find_bindir()
         return exepath
     end
 
-    assert("debug" == mode:lower())
-
     local release_path = exepath:parent_path() / "release"
     if lfs.exists(release_path) then
         return release_path

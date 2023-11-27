@@ -32,7 +32,6 @@ lm.msvc = {
     defines = {
         "_CRT_SECURE_NO_WARNINGS",
         "_WIN32_WINNT=0x0601",
-        lm.mode == "debug" and "_DISABLE_STRING_ANNOTATION",
     },
     flags = {
         "-wd5105"
@@ -47,6 +46,7 @@ lm:config "engine_config" {
 
 lm.configs = {
     "engine_config",
+    --"sanitize"
 }
 
 if lm.mode == "release" then
