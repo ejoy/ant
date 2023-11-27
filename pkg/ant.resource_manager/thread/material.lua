@@ -26,7 +26,7 @@ end
 
 local function loadShader(shaderfile)
     if shaderfile then
-        local h = bgfx.create_shader(bgfx.memory_buffer(aio.readall_s(shaderfile)))
+        local h = bgfx.create_shader(bgfx.memory_buffer(aio.readall(shaderfile)))
         bgfx.set_name(h, shaderfile)
         return h
     end

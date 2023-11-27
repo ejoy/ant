@@ -30,7 +30,7 @@ local function createTexture(c)
             h = bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
         end
     else
-        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall_s(c.name.."|main.bin")), c.flag)
+        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall(c.name.."|main.bin")), c.flag)
     end
     bgfx.set_name(h, c.name)
     return h

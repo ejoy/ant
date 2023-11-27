@@ -305,7 +305,6 @@ static int wrap_closure(lua_State* L) {
     wrap.cache = cache;
     if (luaL_newmetatable(L, "fastio::wrap")) {
         luaL_Reg lib[] = {
-            { "__gc", wrap_close },
             { "__close", wrap_close },
             { NULL, NULL },
         };
