@@ -52,7 +52,6 @@ end
 assetmgr.resource = assetmgr.load
 
 assetmgr.compile 			= async.compile
-assetmgr.compile_file 		= async.compile_file
 assetmgr.load_material		= async.material_create
 assetmgr.unload_material	= async.material_destroy
 assetmgr.material_check		= async.material_check

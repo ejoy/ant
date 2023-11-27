@@ -439,6 +439,13 @@ local function init_args(args)
     end
 end
 
+local function init_resource()
+    local vfs = require "vfs"
+    local caps = bgfx.get_caps()
+    local renderer = caps.rendererType:lower()
+    vfs.resource_setting(("%s-%s"):format(platform.os, renderer))
+end
+
 function S.init(args)
     if init_token == nil then
     elseif args == nil then
@@ -446,6 +453,7 @@ function S.init(args)
     else
         init_args(args)
         bgfx.init(args)
+        init_resource()
         fontmanager = require "font.fontmanager"
         initialized = true
         ltask.fork(mainloop)

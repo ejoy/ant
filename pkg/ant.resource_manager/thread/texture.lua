@@ -1,10 +1,9 @@
 local ltask      = require "ltask"
 local bgfx       = require "bgfx"
 local datalist   = require "datalist"
-local fastio     = require "fastio"
 local textureman = require "textureman.server"
-local cr         = require "thread.compile"
 local image      = require "image"
+local aio        = import_package "ant.io"
 
 local ext_service = {}
 
@@ -12,10 +11,6 @@ local mem_formats <const> = {
     RGBA8 = "bbbb",
     RGBA32F = "ffff",
 }
-
-local function readall(filename)
-    return bgfx.memory_buffer(fastio.readall(filename))
-end
 
 local function createTexture(c)
     local h
@@ -35,7 +30,7 @@ local function createTexture(c)
             h = bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
         end
     else
-        h = bgfx.create_texture(readall(c.path), c.flag)
+        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall_s(c.name.."|main.bin")), c.flag)
     end
     bgfx.set_name(h, c.name)
     return h
@@ -60,11 +55,8 @@ local function loadTexture(name)
 		return loadExt(protocol, path, config, name)
 	end
     local path = name.."|main.cfg"
-    local c = datalist.parse(fastio.readall(cr.compile(path) or error(("Compile %s fail"):format(path)), path))
+    local c = datalist.parse(aio.readall(path))
     c.name = name
-    if not c.value then
-        c.path = cr.compile(name.."|main.bin")
-    end
     return c
 end
 
@@ -441,13 +433,7 @@ end
 function S.texture_png(id)
 	local c = textureById[id]
 	if c then
-		local path = cr.compile(c.name.."|main.bin")
-		if not path then
-			-- todo : support internal textures (c.value)
-			return
-		end
-		local content = fastio.readall_s(path)
-	    local nc = image.cvt2file(content, "RGBA8", "PNG")
+	    local nc = image.cvt2file(aio.readall(c.name.."|main.bin"), "RGBA8", "PNG")
 		assert(nc)
 		return nc
 	end
@@ -456,13 +442,7 @@ end
 function S.texture_memory(id)
 	local c = textureById[id]
 	if c then
-		local path = cr.compile(c.name.."|main.bin")
-		if not path then
-			return
-		end
-		local content = fastio.readall_s(path)
-		assert(content)
-		return content
+		return aio.readall_s(c.name.."|main.bin")
 	end
 end
 
