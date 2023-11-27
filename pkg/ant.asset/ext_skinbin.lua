@@ -1,8 +1,8 @@
 local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
 local serialization = require "bee.serialization"
-local fastio    = import_package "ant.serialize".fastio
-local mc        = mathpkg.constant
+local aio = import_package "ant.io"
+local mc = mathpkg.constant
 
 local animodule = require "hierarchy".animation
 
@@ -10,7 +10,7 @@ local r2l_mat<const> = mc.R2L_MAT
 
 return {
     loader = function (filename)
-        local c = fastio.readall_compiled(filename)
+        local c = aio.readall(filename)
         local data = serialization.unpack(c)
         local ibm = data.inverse_bind_matrices
 
