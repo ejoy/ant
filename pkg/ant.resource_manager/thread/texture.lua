@@ -55,7 +55,7 @@ local function loadExt(protocol, path, config, name)
 end
 
 local function loadTexture(name)
-	local protocol, path, config = name:match "(%w+):(.*);(.*)"
+	local protocol, path, config = name:match "(%w+):(.*)%s(.*)"
 	if protocol then
 		return loadExt(protocol, path, config, name)
 	end
