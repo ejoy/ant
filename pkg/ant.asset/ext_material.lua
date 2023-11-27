@@ -1,13 +1,12 @@
 local serialize = import_package "ant.serialize"
 local bgfx      = require "bgfx"
 local async 	= require "async"
-local fastio 	= serialize.fastio
-
+local aio       = import_package "ant.io"
 local matpkg	= import_package "ant.material"
 local MA 		= matpkg.arena
 
 local function load(filename)
-    return type(filename) == "string" and serialize.parse(filename, fastio.readall(filename)) or filename
+    return type(filename) == "string" and serialize.parse(filename, aio.readall(filename)) or filename
 end
 
 local function loader(filename)

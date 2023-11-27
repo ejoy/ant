@@ -36,7 +36,7 @@ local function sandbox_env(packagename)
     local function searcher_lua(name)
         local filename = name:gsub('%.', '/')
         local path = PATH:gsub('%?', filename)
-        local mem, symbol = vfs.readg(path)
+        local mem, symbol = vfs.read(path)
         if mem then
             local func, err = fastio.mem_loadlua(mem, symbol, env)
             if not func then

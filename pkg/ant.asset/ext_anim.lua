@@ -1,7 +1,7 @@
 local datalist  = require "datalist"
 local animodule = require "hierarchy".animation
 local assetmgr 	= import_package "ant.asset"
-local fastio 	= import_package "ant.serialize".fastio
+local aio = import_package "ant.io"
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
@@ -178,7 +178,7 @@ end
 
 return {
     loader = function (filename)
-        local anim_list = datalist.parse(fastio.readall(filename))
+        local anim_list = datalist.parse(aio.readall(filename))
         local ske_anim
         for _, anim in ipairs(anim_list) do
             if anim.type == "ske" then

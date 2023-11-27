@@ -418,59 +418,24 @@ function CMD.READ(id, fullpath)
 	local f, realpath = repo:readfile(v.hash)
 	if f then
 		f:close()
-		local m = fastio.readall_mem(realpath, fullpath)
-		response_id(id, m)
+		local data = fastio.readall_mem(realpath, fullpath)
+		response_id(id, data, fullpath)
 	else
 		request_file(id, "GET", v.hash, "READ", fullpath)
 	end
 end
 
-function CMD.READG(id, fullpath)
+function CMD.REALPATH(id, fullpath)
+--	print("[request] REALPATH", fullpath)
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir, r, hash = repo:list(path)
 	if not dir then
 		if r == ListNeedGet then
-			request_file(id, "GET", hash, "READG", fullpath)
+			request_file(id, "GET", hash, "REALPATH", fullpath)
 			return
 		end
 		if r == ListNeedResource then
-			request_file(id, "RESOURCE", hash, "READG", fullpath)
-			return
-		end
-		response_err(id, "Not exist<1> " .. path)
-		return
-	end
-
-	local v = dir[name]
-	if not v then
-		response_err(id, "Not exist<2> " .. fullpath)
-		return
-	end
-	if v.type ~= 'f' then
-		response_id(id, false, v.hash)
-		return
-	end
-	local f, realpath = repo:readfile(v.hash)
-	if f then
-		f:close()
-		local data = fastio.readall_mem(realpath, fullpath)
-		response_id(id, data, fullpath)
-	else
-		request_file(id, "GET", v.hash, "READG", fullpath)
-	end
-end
-
-function CMD.GET(id, fullpath)
---	print("[request] GET", fullpath)
-	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	local dir, r, hash = repo:list(path)
-	if not dir then
-		if r == ListNeedGet then
-			request_file(id, "GET", hash, "GET", fullpath)
-			return
-		end
-		if r == ListNeedResource then
-			request_file(id, "RESOURCE", hash, "GET", fullpath)
+			request_file(id, "RESOURCE", hash, "REALPATH", fullpath)
 			return
 		end
 		response_err(id, "Not exist<1> " .. path)
@@ -491,7 +456,7 @@ function CMD.GET(id, fullpath)
 		f:close()
 		response_id(id, realpath)
 	else
-		request_file(id, "GET", v.hash, "GET", fullpath)
+		request_file(id, "GET", v.hash, "REALPATH", fullpath)
 	end
 end
 

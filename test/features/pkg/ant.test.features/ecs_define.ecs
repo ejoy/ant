@@ -5,36 +5,32 @@ import_feature "ant.shadow_bounding|scene_bounding_pack"
 import_feature "ant.decal"
 import_feature "ant.efk"
 import_feature "ant.landform"
+import_feature "ant.widget"
 
 system "init_system"
     .implement "init_system.lua"
 
-system "grid_test_system"
-    .implement "grid_test.lua"
+local function DEFINE_TEST(n)
+    system(n .. "_test_system").implement(("test/%s_test.lua"):format(n))
+end
 
-system "pbr_test_system"
-    .implement "pbr_test.lua"
+DEFINE_TEST "grid"
+DEFINE_TEST "pbr"
+DEFINE_TEST "shadow"
+DEFINE_TEST "decal"
+DEFINE_TEST "hitch_node"
+DEFINE_TEST "motion_sampler"
+DEFINE_TEST "group"
+DEFINE_TEST "render_layer"
 
-system "shadow_test_system"
-    .implement "shadow_test.lua"
+DEFINE_TEST "draw_indirect"
+DEFINE_TEST "canvas"
+--DEFINE_TEST "blur_scene"
+DEFINE_TEST "framebuffer_ratio"
 
-system "decal_test_system"
-    .implement "decal_test.lua"
+--DEFINE_TEST "point_light"
+--DEFINE_TEST "velocity"
 
-system "hitch_node_test_system"
-    .implement "hitch_node.lua"
-
-system "motion_sampler_test_system"
-    .implement "motion_sampler_test.lua"
-
-system "group_test_system"
-    .implement "group_test.lua"
-
--- system "camera_recorder_test_system"
---     .implement "camera_recorder_test.lua"
-
--- system "water_test_system"
---     .implement "water_test.lua"
-
--- system "infinite_far_plane_system"
---     .implement "infinite_far_plane_test.lua"
+--DEFINE_TEST "camera_recorder"
+--DEFINE_TEST "water"
+--DEFINE_TEST "infinite_far_plane"

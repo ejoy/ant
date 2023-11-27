@@ -11,7 +11,7 @@ local mu, mc = mathpkg.util, mathpkg.constant
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 
-local S = ecs.system "infinite_far_plane_system"
+local S = ecs.system "infinite_far_plane_test_system"
 
 local function compare_camera(inv_z, n, f, ortho)
     local p, infp

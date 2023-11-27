@@ -27,12 +27,11 @@ local queuemgr	= ecs.require "queue_mgr"
 local hwi		= import_package "ant.hwi"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
-local idi 		= ecs.require "ant.render|draw_indirect.draw_indirect"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local R         = world:clibs "render.render_material"
 local icamera	= ecs.require "ant.camera|camera"
-local ishadow	= ecs.require "ant.render|shadow.shadow"
+local ishadow	= ecs.require "ant.render|shadow.shadowcfg"
 local imaterial = ecs.require "ant.asset|material"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
 

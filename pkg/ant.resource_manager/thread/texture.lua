@@ -43,10 +43,13 @@ end
 
 local function loadExt(protocol, path, config, name)
 	local service_id = (protocol and ext_service[protocol]) or error ("Unknown protocol " .. name)
-	local c = ltask.call(service_id, "load", path, config)
+	local c, lifespan = ltask.call(service_id, "load", path, config)
 	c.name = name
 	if c.handle then
 	    bgfx.set_name(c.handle, c.name)
+	end
+	if lifespan then
+		c.lifespan = service_id
 	end
 	return c
 end
@@ -179,6 +182,7 @@ local textureById = {}
 local loadQueue = {}
 local createQueue = {}
 local destroyQueue = {}
+local unloadQueue = {}
 local token = {}
 
 local function which_texture_type(info)
@@ -216,6 +220,7 @@ local function asyncLoadTexture(c)
         assert(c.type == which_texture_type(textureData.info))
         c.texinfo = textureData.info
         c.sampler = textureData.sampler
+        c.lifespan = textureData.lifespan
         asyncCreateTexture(c.name, textureData)
         loadQueue[c.id] = nil
         ltask.wakeup(Token)
@@ -227,7 +232,13 @@ local function asyncDestroyTexture(c)
     if createQueue[c.name] then
         return
     end
-    destroyQueue[#destroyQueue+1] = c.handle
+	if c.lifespan then
+		local n = #unloadQueue
+		unloadQueue[n+1] = c.lifespan
+		unloadQueue[n+2] = c.handle
+	else
+	    destroyQueue[#destroyQueue+1] = c.handle
+	end
     textureman.texture_set(c.id, DefaultTexture[c.type])
     c.handle = nil
 end
@@ -329,6 +340,15 @@ local update; do
             bgfx.destroy(destroyQueue[i])
             destroyQueue[i] = nil
         end
+		if unloadQueue[1] then
+			local tmp = unloadQueue
+			unloadQueue = {}
+			for i = 1, #tmp, 2 do
+				local service_id = tmp[i]
+				local handle = tmp[i+1]
+				ltask.send(service_id, "unload", handle)
+			end
+		end
         if FrameCur % UpdateNewInterval == 0 then
             if #createQueue == 0 then
                 textureman.frame_new(FrameCur - FrameNew + 1, InvalidTexture, results)

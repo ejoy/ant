@@ -12,50 +12,44 @@ local bgfx		= require "bgfx"
 local fbmgr		= require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 
-local shadowcfg = {
-	color = setting:get "graphic/shadow/color",
-	depth_multiplier = setting:get "graphic/shadow/depth_multiplier",
-	enable = setting:get "graphic/shadow/enable",
-	far_offset = setting:get "graphic/shadow/far_offset",
-	min_variance = setting:get "graphic/shadow/min_variance",
-	normal_offset = setting:get "graphic/shadow/normal_offset",
-	size = setting:get "graphic/shadow/size",
-	split_lamada = setting:get "graphic/shadow/split_lamada",
-	split_num = setting:get "graphic/shadow/split_num",
-	height = setting:get "graphic/shadow/height",
-	split_ratios = setting:get "graphic/shadow/split_ratios",
-	type = setting:get "graphic/shadow/type",
+local SHADOW_CFG = {
+	color				= setting:get "graphic/shadow/color",
+	depth_multiplier	= setting:get "graphic/shadow/depth_multiplier" or 1000,
+	enable				= setting:get "graphic/shadow/enable",
+	far_offset			= setting:get "graphic/shadow/far_offset"		or 0,
+	min_variance		= setting:get "graphic/shadow/min_variance"		or 0.012,
+	normal_offset		= setting:get "graphic/shadow/normal_offset"	or 0.012,
+	shadowmap_size		= setting:get "graphic/shadow/size",
+	split_lamada		= setting:get "graphic/shadow/split_lamada",
+	split_num			= setting:get "graphic/shadow/split_num",
+	height				= setting:get "graphic/shadow/height",
+	split_ratios		= setting:get "graphic/shadow/split_ratios",
+	type				= setting:get "graphic/shadow/type",
 }
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 
-shadowcfg.shadowmap_size	= shadowcfg.size
-shadowcfg.shadow_param		= math3d.ref(math3d.vector(0, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0))
-shadowcfg.shadow_param2		= math3d.ref(math3d.vector(shadowcfg.color[1], shadowcfg.color[2], shadowcfg.color[3], shadowcfg.normal_offset))
-shadowcfg.split_frustums	= {nil, nil, nil, nil}
+SHADOW_CFG.shadow_param		= math3d.ref(math3d.vector(0, SHADOW_CFG.min_variance, 1/SHADOW_CFG.shadowmap_size, SHADOW_CFG.depth_multiplier or 1.0))
+SHADOW_CFG.shadow_param2	= math3d.ref(math3d.vector(SHADOW_CFG.color[1], SHADOW_CFG.color[2], SHADOW_CFG.color[3], SHADOW_CFG.normal_offset))
+SHADOW_CFG.split_frustums	= {nil, nil, nil, nil}
 
-if not shadowcfg.height then shadowcfg.height = 5 end
-if not shadowcfg.min_variance then shadowcfg.min_variance = 0.012 end
-if not shadowcfg.depth_multiplier then shadowcfg.depth_multiplier = 1000 end
-if not shadowcfg.normal_offset then shadowcfg.normal_offset = 0.012 end
-if not shadowcfg.far_offset then shadowcfg.far_offset = 0 end
-if shadowcfg.split_ratios then
-	if shadowcfg.split_num then
-		if #shadowcfg.split_ratios ~= (shadowcfg.split_num)  then
-			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, shadowcfg.split_num))
+if SHADOW_CFG.split_ratios then
+	if SHADOW_CFG.split_num then
+		if #SHADOW_CFG.split_ratios ~= (SHADOW_CFG.split_num)  then
+			error(("#split_ratios == split_num - 1: %d, %d"):format(#SHADOW_CFG.split_ratios, SHADOW_CFG.split_num))
 		end
 	else
-		shadowcfg.split_num = #shadowcfg.split_ratios
+		SHADOW_CFG.split_num = #SHADOW_CFG.split_ratios
 	end
-	shadowcfg.split_ratios = shadowcfg.split_ratios
+	SHADOW_CFG.split_ratios = SHADOW_CFG.split_ratios
 else
-	shadowcfg.cross_delta	= shadowcfg.cross_delta or 0.00
-	if shadowcfg.split_weight then
-		shadowcfg.split_num	= shadowcfg.split_num
-		shadowcfg.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
+	SHADOW_CFG.cross_delta	= SHADOW_CFG.cross_delta or 0.00
+	if SHADOW_CFG.split_weight then
+		SHADOW_CFG.split_num	= SHADOW_CFG.split_num
+		SHADOW_CFG.split_weight= math.max(0, math.min(1, SHADOW_CFG.split_weight))
 	else
-		shadowcfg.split_num = 4
- 		shadowcfg.split_ratios = {
+		SHADOW_CFG.split_num = 4
+ 		SHADOW_CFG.split_ratios = {
  			{0.00,0.1},
 			{0.1,0.30},
 			{0.3,0.40},
@@ -65,14 +59,14 @@ else
 end
 
 
-assert(shadowcfg.split_num ~= nil)
+assert(SHADOW_CFG.split_num ~= nil)
 
-shadowcfg.fb_index = fbmgr.create(
+SHADOW_CFG.fb_index = fbmgr.create(
 	{
 		rbidx=fbmgr.create_rb{
 			format = "D32F",
-			w=shadowcfg.shadowmap_size * shadowcfg.split_num,
-			h=shadowcfg.shadowmap_size,
+			w=SHADOW_CFG.shadowmap_size * SHADOW_CFG.split_num,
+			h=SHADOW_CFG.shadowmap_size,
 			layers=1,
 			flags=sampler{
 				RT="RT_ON",
@@ -87,11 +81,11 @@ shadowcfg.fb_index = fbmgr.create(
 	}
 )
 
---[[ shadowcfg.sqfb_index = fbmgr.create{
+--[[ SHADOW_CFG.sqfb_index = fbmgr.create{
 	sqrbidx = fbmgr.create_rb{
 		format = "R16F",
-		w=shadowcfg.shadowmap_size * shadowcfg.split_num,
-		h=shadowcfg.shadowmap_size,
+		w=SHADOW_CFG.shadowmap_size * SHADOW_CFG.split_num,
+		h=SHADOW_CFG.shadowmap_size,
 		layers=1,
 		flags=sampler{
 			MIN="POINT",
@@ -109,13 +103,13 @@ shadowcfg.fb_index = fbmgr.create(
 local ishadow = {}
 
 function ishadow.setting()
-	return shadowcfg
+	return SHADOW_CFG
 end
 
 local crop_matrices = {}
 
 do
-	local spiltunit = 1 / shadowcfg.split_num
+	local spiltunit = 1 / SHADOW_CFG.split_num
 	local function calc_crop_matrix(csm_idx)
 		local offset = spiltunit * (csm_idx - 1)
 		return math3d.matrix(
@@ -126,7 +120,7 @@ do
 	end
 
 	local sm_bias_matrix = mu.calc_texture_matrix()
-	for csm_idx=1, shadowcfg.split_num do
+	for csm_idx=1, SHADOW_CFG.split_num do
 		local vp_crop = calc_crop_matrix(csm_idx)
 		crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_bias_matrix))
 	end
@@ -137,19 +131,19 @@ function ishadow.crop_matrix(csm_index)
 end
 
 function ishadow.fb_index()
-	return shadowcfg.fb_index
+	return SHADOW_CFG.fb_index
 end
 
 --[[ function ishadow.sqfb_index()
-	return shadowcfg.sqfb_index
+	return SHADOW_CFG.sqfb_index
 end ]]
 
 function ishadow.shadow_param()
-	return shadowcfg.shadow_param
+	return SHADOW_CFG.shadow_param
 end
 
 function ishadow.shadow_param2()
-	return shadowcfg.shadow_param2
+	return SHADOW_CFG.shadow_param2
 end
 
 local function split_new_frustum(view_frustum, n, f)
@@ -163,26 +157,26 @@ local function split_new_frustum(view_frustum, n, f)
 end
 
 function ishadow.split_frustums()
-	return shadowcfg.split_frustums
+	return SHADOW_CFG.split_frustums
 end
 
 function ishadow.shadowmap_size()
-	return shadowcfg.shadowmap_size
+	return SHADOW_CFG.shadowmap_size
 end
 
 function ishadow.calc_split_frustums(view_frustum)
-	local split_weight = shadowcfg.split_weight
-	local frustums = shadowcfg.split_frustums
+	local split_weight = SHADOW_CFG.split_weight
+	local frustums = SHADOW_CFG.split_frustums
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
 	local clip_range = view_farclip - view_nearclip
-	local split_num = shadowcfg.split_num
+	local split_num = SHADOW_CFG.split_num
 
 	if split_weight then
  		local ratio = view_farclip/view_nearclip
 		local num_sclies = split_num*2
 		local nearclip = view_nearclip
 		local farclip
-		local cross_multipler = (1.0+shadowcfg.cross_delta)
+		local cross_multipler = (1.0+SHADOW_CFG.cross_delta)
 		local nn=2
 		local ff=1
 --[[ 		for i=1, split_num do
@@ -209,7 +203,7 @@ function ishadow.calc_split_frustums(view_frustum)
 		end
 
 		for i=1, split_num do
-			local ratio = shadowcfg.split_ratios[i]
+			local ratio = SHADOW_CFG.split_ratios[i]
 			local near_clip, far_clip = calc_clip(ratio[1]), calc_clip(ratio[2])
 			frustums[i] = split_new_frustum(view_frustum, near_clip, far_clip)
 		end
@@ -218,7 +212,7 @@ function ishadow.calc_split_frustums(view_frustum)
 end
 
 function ishadow.split_num()
-	return shadowcfg.split_num
+	return SHADOW_CFG.split_num
 end
 
 return ishadow

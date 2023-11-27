@@ -40,21 +40,33 @@ do
 		rootpath = initargs.repopath,
 		nohash = true,
 	}
-	local resources = {}
 	local function COMPILE(_,_)
 		error "resource is not ready."
 	end
-	local function getresource(resource, resource_path)
-		local subrepo = resources[resource]
-		if not subrepo then
-			local lpath = COMPILE(resource, resource_path)
-			if not lpath then
-				return
+	local getresource; do
+		if initargs.editor then
+			function getresource(resource, resource_path)
+				local lpath = COMPILE(resource, resource_path)
+				if not lpath then
+					return
+				end
+				return repo:build_resource(lpath)
 			end
-			subrepo = repo:build_resource(lpath)
-			resources[resource] = subrepo
+		else
+			local resources = {}
+			function getresource(resource, resource_path)
+				local subrepo = resources[resource]
+				if not subrepo then
+					local lpath = COMPILE(resource, resource_path)
+					if not lpath then
+						return
+					end
+					subrepo = repo:build_resource(lpath)
+					resources[resource] = subrepo
+				end
+				return subrepo
+			end
 		end
-		return subrepo
 	end
 	local function getfile(pathname)
 		local file = repo:file(pathname)
@@ -77,23 +89,16 @@ do
 		if not file then
 			return
 		end
-		if not file.path then
-			return
+		if file.path then
+			local data = fastio.readall_mem(file.path, pathname)
+			return data, file.path
 		end
-		return fastio.readall_mem(file.path, pathname)
+		if initargs.editor and file.resource_path then
+			local data = fastio.readall_mem(file.resource_path, pathname)
+			return data, file.resource_path
+		end
 	end
-	function CMD.READG(pathname)
-		local file = getfile(pathname)
-		if not file then
-			return
-		end
-		if not file.path then
-			return
-		end
-		local data = fastio.readall_mem(file.path, pathname)
-		return data, file.path
-	end
-	function CMD.GET(pathname)
+	function CMD.REALPATH(pathname)
 		local file = getfile(pathname)
 		if not file then
 			return

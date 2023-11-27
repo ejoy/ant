@@ -1,4 +1,4 @@
-__ANT_EDITOR__ = true
+__ANT_EDITOR__ = "../../startup"
 
 package.path = "/engine/?.lua"
 require "bootstrap"

@@ -96,11 +96,8 @@ vfs.send = send
 function vfs.read(path)
 	return call("READ", path)
 end
-function vfs.readg(path)
-	return call("READG", path)
-end
 function vfs.realpath(path)
-	return call("GET", path)
+	return call("REALPATH", path)
 end
 function vfs.list(path)
 	return call("LIST", path)

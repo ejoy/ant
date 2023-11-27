@@ -21,7 +21,8 @@ local io_initargs = {
 }
 
 local vfs_initargs = {
-    fd = c:detach()
+    fd = c:detach(),
+    editor = __ANT_EDITOR__,
 }
 
 io_req:push(io_initargs)
