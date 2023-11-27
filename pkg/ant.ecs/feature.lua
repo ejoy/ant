@@ -6,7 +6,7 @@ local serialization = require "bee.serialization"
 
 local function package_loadfile(packname, file, env)
 	local path = "/pkg/"..packname.."/"..file
-	local mem, symbol = vfs.readg(path)
+	local mem, symbol = vfs.read(path)
 	if not mem then
 		error(("file '%s' not found"):format(path))
 	end

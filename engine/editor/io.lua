@@ -28,7 +28,7 @@ local access = dofile "engine/editor/vfs_access.lua"
 dofile "engine/editor/create_repo.lua" (repopath, access)
 
 local CMD = {
-	GET = vfs.realpath,
+	REALPATH = vfs.realpath,
 	LIST = vfs.list,
 	TYPE = vfs.type,
 	REPOPATH = vfs.repopath,
@@ -36,10 +36,6 @@ local CMD = {
 }
 
 function CMD.READ(path)
-	return fastio.readall_mem(vfs.realpath(path), path)
-end
-
-function CMD.READG(path)
 	local lpath = vfs.realpath(path)
 	local data = fastio.readall_mem(lpath, path)
 	return data, lpath

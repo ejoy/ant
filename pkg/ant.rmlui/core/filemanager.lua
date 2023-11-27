@@ -22,7 +22,7 @@ function m.loadstring(content, source_path, source_line, env)
 end
 
 function m.loadfile(source_path, env)
-    local mem, symbol = vfs.readg(source_path)
+    local mem, symbol = vfs.read(source_path)
     return fastio.mem_loadlua(mem, symbol, env)
 end
 
