@@ -8,7 +8,7 @@ local layoutmgr = renderpkg.layoutmgr
 local datalist  = require "datalist"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local fastio    = import_package "ant.serialize".fastio
+local aio       = import_package "ant.io"
 
 local shape_types<const> = {
     "none", "grass", "dust",
@@ -19,7 +19,7 @@ local shape_ts = ecs.system "cube_shape_terrain_system"
 
 local function read_terrain_field(tf)
     if type(tf) == "string" then
-        return datalist.parse(fastio.readall(tf))
+        return datalist.parse(aio.readall(tf))
     end
     return tf
 end

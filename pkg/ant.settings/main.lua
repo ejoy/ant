@@ -1,6 +1,6 @@
 local fs = require "filesystem"
 local datalist = require "datalist"
-local fastio = import_package "ant.serialize".fastio
+local aio = import_package "ant.io"
 
 local function split(s)
     local r = {}
@@ -23,7 +23,7 @@ local function create(paths)
     local lst = {}
     for _, path in ipairs(paths) do
         if fs.exists(fs.path(path)) then
-            lst[#lst+1] = assert(datalist.parse(fastio.readall(path)))
+            lst[#lst+1] = assert(datalist.parse(aio.readall(path)))
         end
     end
     local obj = {}

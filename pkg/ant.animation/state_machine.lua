@@ -4,7 +4,7 @@ local w = world.w
 local iefk	= ecs.require "ant.efk|efk"
 local fs 	= require "filesystem"
 local datalist  = require "datalist"
-local fastio  = require "fastio"
+local aio = import_package "ant.io"
 
 local iani = {}
 
@@ -57,7 +57,7 @@ function iani.load_events(anim_e, filename)
 	if not fs.exists(fs.path(filename)) then
 		return
 	end
-	local events = datalist.parse(fastio.readall(fs.path(filename):localpath():string(), filename))
+	local events = datalist.parse(aio.readall(filename))
 	local anim_eid = get_anim_eid(anim_e)
 	if not anim_eid then
 		return
