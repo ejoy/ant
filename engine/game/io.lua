@@ -54,6 +54,7 @@ do
 			subrepo = repo:build_resource(lpath)
 			resources[resource] = subrepo
 		end
+		return subrepo
 	end
 	local function getfile(pathname)
 		local file = repo:file(pathname)
