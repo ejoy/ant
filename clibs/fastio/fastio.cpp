@@ -273,7 +273,7 @@ static int str2sha1(lua_State *L) {
 }
 
 static int
-tostring(lua_State *L){
+mem2str(lua_State *L){
     luaL_checktype(L, 1, LUA_TUSERDATA);
     const void * b = lua_touserdata(L, 1);
     const size_t s = (size_t)luaL_checkinteger(L, 2);
@@ -282,12 +282,15 @@ tostring(lua_State *L){
     return 1;
 }
 
+struct wrap {
+    zip_reader_cache* cache;
+};
+
 static int wrap_close(lua_State* L) {
-    bool& alive = *(bool*)lua_touserdata(L, 1);
-    if (alive) {
-        alive = false;
-        zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
-        luazip_close(cache);
+    struct wrap& wrap = *(struct wrap*)lua_touserdata(L, 1);
+    if (wrap.cache) {
+        luazip_close(wrap.cache);
+        wrap.cache = nullptr;
     }
     return 0;
 }
@@ -298,16 +301,15 @@ static int wrap_closure(lua_State* L) {
     void* buf = luazip_data(cache, &len);
     lua_pushlightuserdata(L, buf);
     lua_pushinteger(L, len);
-    bool& alive = *(bool*)lua_newuserdatauv(L, sizeof(bool), 0);
-    alive = true;
+    struct wrap& wrap = *(struct wrap*)lua_newuserdatauv(L, sizeof(struct wrap), 0);
+    wrap.cache = cache;
     if (luaL_newmetatable(L, "fastio::wrap")) {
         luaL_Reg lib[] = {
             { "__gc", wrap_close },
             { "__close", wrap_close },
             { NULL, NULL },
         };
-        lua_pushvalue(L, lua_upvalueindex(1));
-        luaL_setfuncs(L, lib, 1);
+        luaL_setfuncs(L, lib, 0);
     }
     lua_setmetatable(L, -2);
     return 3;
@@ -317,6 +319,16 @@ static int wrap(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     lua_settop(L, 1);
     lua_pushcclosure(L, wrap_closure, 1);
+    return 1;
+}
+
+static int tostring(lua_State *L) {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
+    size_t len = 0;
+    void* buf = luazip_data(cache, &len);
+    lua_pushlstring(L, (const char*)buf, len);
+    luazip_close(cache);
     return 1;
 }
 
@@ -370,16 +382,6 @@ static int mem_loadlua(lua_State* L) {
     return 1;
 }
 
-static int mem_tostring(lua_State *L) {
-    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
-    size_t len = 0;
-    void* buf = luazip_data(cache, &len);
-    lua_pushlstring(L, (const char*)buf, len);
-    luazip_close(cache);
-    return 1;
-}
-
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
@@ -388,12 +390,12 @@ luaopen_fastio(lua_State* L) {
         {"loadfile", loadfile},
         {"sha1", sha1},
         {"str2sha1", str2sha1},
-        {"mem2str", tostring},
+        {"mem2str", mem2str},
 
         {"wrap", wrap},
+        {"tostring", tostring},
         {"readall_mem", readall_mem},
         {"mem_loadlua", mem_loadlua},
-        {"mem_tostring", mem_tostring},
         {NULL, NULL},
     };
     luaL_newlib(L, l);
