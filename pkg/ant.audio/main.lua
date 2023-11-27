@@ -1,5 +1,4 @@
 local ltask = require "ltask"
-local fs = require "filesystem"
 local ServiceAudio
 
 local m = {}
@@ -8,9 +7,6 @@ function m.load(banks)
 	if not ServiceAudio then
 		ServiceAudio = ltask.uniqueservice "ant.audio|audio"
 		ltask.send(ServiceAudio, "worker_init")
-	end
-	for i, f in ipairs(banks) do
-		banks[i] = fs.path(f):localpath():string()
 	end
 	ltask.send(ServiceAudio, "load", banks)
 end

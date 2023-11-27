@@ -118,4 +118,11 @@ function utils.table_to_string(obj, cnt)
     return str
 end
 
+
+function utils.split_ant_path(path)
+    local r = {}
+    path:gsub('[^|]*', function (w) r[#r+1] = w end)
+    return r
+end
+
 return utils

@@ -2,55 +2,12 @@ local access = {}
 
 local platform = require "bee.platform"
 local lfs = require "bee.filesystem"
-local datalist = require "datalist"
+local mount = dofile "/engine/mount.lua"
 
 local isWindows <const> = platform.os == "windows"
 
-local MountConfig <const> = [[
-mount:
-    /engine/ %engine%/engine
-    /pkg/    %engine%/pkg
-    /        %project%
-    /        %project%/mod
-]]
-
-local function loadmount(repo)
-	local f <close> = io.open((repo._root / ".mount"):string(), "rb")
-	if f then
-		local cfg = datalist.parse(f:read "a")
-		if cfg then
-			return cfg
-		end
-	end
-	return datalist.parse(MountConfig)
-end
-
-function access.addmount(repo, vpath, lpath)
-	if not lfs.exists(lpath) then
-		return
-	end
-	assert(vpath:sub(1,1) == "/")
-	for _, value in ipairs(repo._mountlpath) do
-		if value:string() == lpath then
-			return
-		end
-	end
-	repo._mountvpath[#repo._mountvpath+1] = vpath
-	repo._mountlpath[#repo._mountlpath+1] = lfs.absolute(lpath):lexically_normal()
-end
-
-function access.readmount(repo)
-	local cfg = loadmount(repo)
-	repo._mountvpath = {}
-	repo._mountlpath = {}
-	for i = 1, #cfg.mount, 2 do
-		local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
-		access.addmount(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
-			engine = lfs.current_path():string(),
-			project = repo._root:string():gsub("(.-)[/\\]?$", "%1"),
-		}))
-	end
-end
+access.addmount = mount.add
+access.readmount = mount.read
 
 function access.realpath(repo, pathname)
 	local mountvpath = repo._mountvpath

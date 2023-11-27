@@ -19,6 +19,8 @@ lm:lua_source "efk" {
         ROOT .. "3rd/Effekseer/Dev/Cpp/Effekseer",
         ROOT .. "3rd/bgfx/include",
         ROOT .. "3rd/bx/include",
+        ROOT .. "3rd/bee.lua",
+        ROOT .. "clibs/luabind",
         ROOT .. "pkg/ant.resource_manager/src",
     },
     sources = {

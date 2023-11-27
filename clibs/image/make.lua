@@ -13,6 +13,7 @@ lm:lua_source "image" {
         BgfxInclude,
         Ant3rd .. "bimg/include",
         Ant3rd .. "glm",
+        Ant3rd .. "bee.lua",
         "../bgfx",
         "../luabind",
     },

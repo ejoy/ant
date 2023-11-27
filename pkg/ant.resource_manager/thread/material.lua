@@ -126,11 +126,27 @@ local function is_compute_material(fxcfg)
     return fxcfg.shader_type == "COMPUTE"
 end
 
+local function normalize_path(fullname)
+	local first = (fullname:sub(1, 1) == "/") and "/" or ""
+	local last = (fullname:sub(-1, -1) == "/") and "/" or ""
+	local t = {}
+	for m, seq in fullname:gmatch("([^/|]+)([/|]?)") do
+		if m == ".." and next(t) then
+			table.remove(t, #t)
+			table.remove(t, #t)
+		elseif m ~= "." then
+			table.insert(t, m)
+			table.insert(t, seq)
+		end
+	end
+	return first .. table.concat(t) .. last
+end
+
 local function absolute_path(path, base)
     if path:sub(1,1) == "/" then
         return path
     end
-    return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+    return normalize_path(base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path))
 end
 
 local MATERIALS = {}

@@ -49,6 +49,7 @@ local function process_keyframe_event(task)
 				-- 		visible_state = "main_queue",
 				-- 	})
 				-- end
+				world:pub {"keyframe_event", "effect", event.asset_path, task.context}
 			end
 		end
 		event_state.next_index = event_state.next_index + 1
@@ -122,7 +123,7 @@ function ani_sys:component_init()
 			loop = true,
 			manual_update = false
 		}
-		world:pub {"AnimationEvent", "set_time", e.eid, 0}
+		world:pub {"animation_event", "set_time", e.eid, 0}
 	end
 
 	for e in w:select "INIT meshskin:update skeleton:in" do
@@ -140,7 +141,7 @@ function ani_sys:component_init()
 	end
 end
 
-local event_animation = world:sub{"AnimationEvent"}
+local event_animation = world:sub{"animation_event"}
 
 function ani_sys:entity_init()
 	local meshskin

@@ -14,7 +14,17 @@ thread.newchannel "IOreq"
 
 local s, c = socket.pair()
 local io_req = thread.channel "IOreq"
-io_req:push(repopath, s:detach())
+
+local io_initargs = {
+    repopath = repopath,
+    fd = s:detach(),
+}
+
+local vfs_initargs = {
+    fd = c:detach()
+}
+
+io_req:push(io_initargs)
 
 vfs.iothread = boot.preinit [[
     -- IO thread
@@ -29,6 +39,4 @@ vfs.iothread = boot.preinit [[
     assert(fastio.loadfile "engine/game/io.lua")(io_req:bpop())
 ]]
 
-vfs.initfunc("engine/firmware/init_thread.lua", {
-	fd = c:detach()
-})
+vfs.initfunc("engine/firmware/init_thread.lua", vfs_initargs)

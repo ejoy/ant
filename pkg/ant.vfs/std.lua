@@ -1,7 +1,7 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
 local datalist = require "datalist"
-local access = dofile "/engine/editor/vfs_access.lua"
+local mount = dofile "/engine/mount.lua"
 local new_vfsrepo = require "vfsrepo".new
 
 local REPO_MT = {}
@@ -208,7 +208,7 @@ local function new_std(t)
 		assert(lfs.create_directories(cachepath))
 	end
 	local repo = { _root = rootpath }
-	access.readmount(repo)
+	mount.read(repo)
 	local vfsrepo = new_vfsrepo()
 	local self = {
 		_nohash = t.nohash,

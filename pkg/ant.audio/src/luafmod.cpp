@@ -1,12 +1,11 @@
-#define LUA_LIB
-
 #include <assert.h>
-#include <lua.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 #include <stdio.h>
 #include "fmod.h"
 #include "fmod_studio.h"
 #include "fmod_errors.h"
+
+#include "fastio.h"
 
 static void
 ERRCHECK_fn(lua_State *L, FMOD_RESULT result, const char* file, int line) {
@@ -39,9 +38,9 @@ laudio_shutdown(lua_State *L) {
 static int
 laudio_load_bank(lua_State *L) {
 	struct audio *a = get_audio(L);
-	const char *filename = luaL_checkstring(L, 2);
+	auto mem = getmemory(L, 2);
 	FMOD_STUDIO_BANK *bank = NULL;
-	ERRCHECK(L, FMOD_Studio_System_LoadBankFile(a->system, filename, FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
+	ERRCHECK(L, FMOD_Studio_System_LoadBankMemory(a->system, mem.data(), (int)mem.size(), FMOD_STUDIO_LOAD_MEMORY, FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
 	char name[1024];
 	int retrieved;
 	if (lua_istable(L, 3)) {
@@ -104,7 +103,7 @@ laudio_event_get(lua_State *L) {
 
 static int
 laudio_event_play(lua_State *L) {
-	FMOD_STUDIO_EVENTDESCRIPTION *event = lua_touserdata(L, 1);
+	FMOD_STUDIO_EVENTDESCRIPTION* event = (FMOD_STUDIO_EVENTDESCRIPTION*)lua_touserdata(L, 1);
 	if (event == NULL)
 		return luaL_error(L, "Invalid event");
 	FMOD_STUDIO_EVENTINSTANCE *inst = NULL;
@@ -134,7 +133,7 @@ lbackground_play(lua_State *L) {
 		ERRCHECK(L, FMOD_Studio_EventInstance_Stop(b->inst, FMOD_STUDIO_STOP_IMMEDIATE));
 		b->inst = NULL;
 	}
-	FMOD_STUDIO_EVENTDESCRIPTION *event = lua_touserdata(L, 2);
+	FMOD_STUDIO_EVENTDESCRIPTION *event = (FMOD_STUDIO_EVENTDESCRIPTION *)lua_touserdata(L, 2);
 	if (event == NULL)
 		return luaL_error(L, "Invalid event");
 	ERRCHECK(L, FMOD_Studio_EventDescription_CreateInstance(event, &b->inst));
@@ -180,7 +179,7 @@ laudio_background(lua_State *L) {
 
 static int
 laudio_init(lua_State *L) {
-	int maxchannel = luaL_optinteger(L, 1, 1024);
+	int maxchannel = (int)luaL_optinteger(L, 1, 1024);
 	struct audio * a = (struct audio *)lua_newuserdatauv(L, sizeof(*a), 0);
 	ERRCHECK(L, FMOD_Studio_System_Create(&a->system, FMOD_VERSION));
 	FMOD_SYSTEM * sys = NULL;
@@ -208,7 +207,7 @@ laudio_init(lua_State *L) {
 	return 1;
 }
 
-LUAMOD_API int
+extern "C" int
 luaopen_fmod(lua_State * L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {

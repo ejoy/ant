@@ -3,6 +3,9 @@
 #include <string.h>
 #include <assert.h>
 #include <array>
+extern "C" {
+#include "../zip/luazip.h"
+}
 
 extern "C" {
 #include "sha1.h"
@@ -172,6 +175,20 @@ static const char* getF(lua_State *L, void *ud, size_t *size) {
     return lf->buff;
 }
 
+struct LoadS {
+    const char *s;
+    size_t size;
+};
+
+static const char* getS(lua_State *L, void *ud, size_t *size) {
+    LoadS *ls = (LoadS *)ud;
+    (void)L;
+    if (ls->size == 0) return NULL;
+    *size = ls->size;
+    ls->size = 0;
+    return ls->s;
+}
+
 static int loadfile(lua_State *L) {
     const char* filename = getfile(L);
     const char* symbol = getsymbol(L, filename);
@@ -265,6 +282,104 @@ tostring(lua_State *L){
     return 1;
 }
 
+static int wrap_close(lua_State* L) {
+    bool& alive = *(bool*)lua_touserdata(L, 1);
+    if (alive) {
+        alive = false;
+        zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
+        luazip_close(cache);
+    }
+    return 0;
+}
+
+static int wrap_closure(lua_State* L) {
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
+    size_t len = 0;
+    void* buf = luazip_data(cache, &len);
+    lua_pushlightuserdata(L, buf);
+    lua_pushinteger(L, len);
+    bool& alive = *(bool*)lua_newuserdatauv(L, sizeof(bool), 0);
+    alive = true;
+    if (luaL_newmetatable(L, "fastio::wrap")) {
+        luaL_Reg lib[] = {
+            { "__gc", wrap_close },
+            { "__close", wrap_close },
+            { NULL, NULL },
+        };
+        lua_pushvalue(L, lua_upvalueindex(1));
+        luaL_setfuncs(L, lib, 1);
+    }
+    lua_setmetatable(L, -2);
+    return 3;
+}
+
+static int wrap(lua_State* L) {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    lua_settop(L, 1);
+    lua_pushcclosure(L, wrap_closure, 1);
+    return 1;
+}
+
+static int readall_mem(lua_State *L) {
+    const char* filename = getfile(L);
+    file_t f = file_t::open(L, filename);
+    if (!f.suc()) {
+        return raise_error(L, "open", getsymbol(L, filename));
+    }
+    size_t size = f.size();
+    auto cache = luazip_new(size, NULL);
+    if (!cache) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
+    auto buf = luazip_data(cache, nullptr);
+    size_t nr = f.read(buf, size);
+    if (nr != size) {
+        luazip_close(cache);
+        luaL_error(L, "unknown read error");
+        return 0;
+    }
+    lua_pushlightuserdata(L, cache);
+    return 1;
+}
+
+static int mem_loadlua(lua_State* L) {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
+    const char* symbol = luaL_checkstring(L, 2);
+    size_t len = 0;
+    void* buf = luazip_data(cache, &len);
+    LoadS ls;
+    ls.s = (const char*)buf;
+    ls.size = len;
+    lua_pushfstring(L, "@%s", symbol);
+    int status = lua_load(L, getS, &ls, lua_tostring(L, -1), "t");
+    luazip_close(cache);
+    if (status != LUA_OK) {
+        luaL_pushfail(L);
+        lua_insert(L, -2);
+        return 2;
+    }
+    if (!lua_isnoneornil(L, 3)) {
+        lua_pushvalue(L, 3);
+        if (!lua_setupvalue(L, -2, 1)) {
+            lua_pop(L, 1);
+        }
+    }
+    return 1;
+}
+
+static int mem_tostring(lua_State *L) {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
+    size_t len = 0;
+    void* buf = luazip_data(cache, &len);
+    lua_pushlstring(L, (const char*)buf, len);
+    luazip_close(cache);
+    return 1;
+}
+
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
@@ -274,6 +389,11 @@ luaopen_fastio(lua_State* L) {
         {"sha1", sha1},
         {"str2sha1", str2sha1},
         {"mem2str", tostring},
+
+        {"wrap", wrap},
+        {"readall_mem", readall_mem},
+        {"mem_loadlua", mem_loadlua},
+        {"mem_tostring", mem_tostring},
         {NULL, NULL},
     };
     luaL_newlib(L, l);

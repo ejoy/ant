@@ -16,25 +16,7 @@
 #include <vector>
 
 #include "lua2struct.h"
-
-static std::string_view getmemory(lua_State* L, int idx) {
-    switch (lua_type(L, idx)) {
-    case LUA_TSTRING: {
-        size_t sz;
-        const char* data = lua_tolstring(L, idx, &sz);
-        return { data, sz };
-    }
-    case LUA_TUSERDATA: {
-        const char* data = (const char*)lua_touserdata(L, idx);
-        size_t sz = lua_rawlen(L, idx);
-        return { data, sz };
-    }
-    default:
-        luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, idx)));
-        //std::unreachable();
-        return {};
-    }
-}
+#include "fastio.h"
 
 LUA2STRUCT(bimg::TextureInfo, format, storageSize, width, height, depth, numLayers, numMips, bitsPerPixel, cubeMap);
 

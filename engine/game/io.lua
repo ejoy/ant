@@ -1,4 +1,4 @@
-local repopath, fddata = ...
+local initargs = ...
 
 package.path = "/engine/?.lua"
 package.cpath = ""
@@ -15,7 +15,7 @@ local SELECT_READ <const> = select.SELECT_READ
 local SELECT_WRITE <const> = select.SELECT_WRITE
 
 local quit = false
-local channelfd = socket.fd(fddata)
+local channelfd = socket.fd(initargs.fd)
 
 local function dofile(path)
 	return assert(fastio.loadfile(path))()
@@ -27,7 +27,7 @@ package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
 do
 	local vfs = require "vfs"
 	local new_tiny = dofile "pkg/ant.vfs/tiny.lua"
-	for k, v in pairs(new_tiny(repopath)) do
+	for k, v in pairs(new_tiny(initargs.repopath)) do
 		vfs[k] = v
 	end
 end
@@ -35,15 +35,27 @@ end
 local CMD = {}
 
 do
+	local new_std = dofile "pkg/ant.vfs/std.lua"
+	local repo = new_std {
+		rootpath = initargs.repopath,
+		nohash = true,
+	}
 	local resources = {}
 	local function COMPILE(_,_)
 		error "resource is not ready."
 	end
-	local new_std = dofile "pkg/ant.vfs/std.lua"
-	local repo = new_std {
-		rootpath = repopath,
-		nohash = true,
-	}
+	local function getresource(resource, resource_path)
+		local subrepo = resources[resource]
+		if not subrepo then
+			local lpath = COMPILE(resource, resource_path)
+			if not lpath then
+				return
+			end
+			subrepo = repo:build_resource(lpath)
+			resources[resource] = subrepo
+		end
+		return subrepo
+	end
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then
@@ -53,17 +65,33 @@ do
 		if not v or not v.resource then
 			return
 		end
-		local subrepo = resources[v.resource]
+		local subrepo = getresource(v.resource, v.resource_path)
 		if not subrepo then
-			local lpath = COMPILE(v.resource, v.resource_path)
-			if not lpath then
-				return
-			end
-			subrepo = repo:build_resource(lpath)
-			resources[v.resource] = subrepo
+			return
 		end
 		local subpath = pathname:sub(#path+1)
 		return subrepo:file(subpath)
+	end
+	function CMD.READ(pathname)
+		local file = getfile(pathname)
+		if not file then
+			return
+		end
+		if not file.path then
+			return
+		end
+		return fastio.readall_mem(file.path, pathname)
+	end
+	function CMD.READG(pathname)
+		local file = getfile(pathname)
+		if not file then
+			return
+		end
+		if not file.path then
+			return
+		end
+		local data = fastio.readall_mem(file.path, pathname)
+		return data, file.path
 	end
 	function CMD.GET(pathname)
 		local file = getfile(pathname)
@@ -80,14 +108,9 @@ do
 			return
 		end
 		if file.resource then
-			local subrepo = resources[file.resource]
+			local subrepo = getresource(file.resource, file.resource_path)
 			if not subrepo then
-				local lpath = COMPILE(file.resource, file.resource_path)
-				if not lpath then
-					return
-				end
-				subrepo = repo:build_resource(lpath)
-				resources[file.resource] = subrepo
+				return
 			end
 			file = subrepo:file "/"
 		end
@@ -118,7 +141,7 @@ do
 		end
 	end
 	function CMD.REPOPATH()
-		return repopath
+		return initargs.repopath
 	end
 	function CMD.RESOURCE_SETTING(setting)
 		require "packagemanager"

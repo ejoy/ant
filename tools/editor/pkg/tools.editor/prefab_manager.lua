@@ -293,12 +293,6 @@ local function set_select_adapter(entity_set, mount_root)
     end
 end
 
-local function split(str)
-    local r = {}
-    str:gsub('[^|]*', function (w) r[#r+1] = w end)
-    return r
-end
-
 function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
@@ -491,7 +485,7 @@ function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
-    local path_list = split(filename)
+    local path_list = utils.split_ant_path(filename)
     if #path_list > 1 then
         self.glb_filename = path_list[1]
         self.prefab_name = prefab_name or "mesh.prefab"
@@ -933,7 +927,6 @@ end
 function m:remove_entity(eid)
     self:do_remove_entity(eid)
     hierarchy:update_slot_list(world)
-    hierarchy:update_collider_list(world)
     gizmo:set_target(nil)
     world:pub {"UpdateAABB"}
 end
@@ -1152,7 +1145,7 @@ function m:do_material_patch(eid, path, v)
     local info = hierarchy:get_node_info(eid)
     local tpl = info.template
     if not self.materials_names then
-        local ret = split(tpl.data.material)
+        local ret = utils.split_ant_path(tpl.data.material)
         local fn = ret[1] .. "|materials.names"
         self.materials_names = serialize.parse(fn, read_file(lfs.path(assetmgr.compile(fn))))
     end

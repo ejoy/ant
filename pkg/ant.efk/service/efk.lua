@@ -9,6 +9,8 @@ local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
 local textureman= require "textureman.client"
 
+local fastio 	= import_package "ant.serialize".fastio
+
 local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
 
@@ -159,9 +161,9 @@ function S.create(filename)
     local info = EFKFILES[filename]
     if not info then
         log.info("Create efk file:", filename)
-        local path = fs.path(filename)
+        local c = fastio.readall(filename)
         info = {
-            obj = EFKCTX:new(path:localpath():string(), path:parent_path():string()),
+            obj = EFKCTX:new(c, fs.path(filename):parent_path():string()),
             count = 0,
         }
         EFKFILES[filename] = info
@@ -182,8 +184,8 @@ function S.destroy(filename, handle)
     end
 end
 
-function S.play(efkhandle, speed)
-    EFKCTX:play(efkhandle, speed)
+function S.play(handle, speed)
+    EFKCTX:play(handle, speed)
 end
 
 function S.is_alive(handle)

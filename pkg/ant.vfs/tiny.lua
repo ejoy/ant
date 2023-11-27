@@ -1,7 +1,7 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
 local datalist = require "datalist"
-local access = dofile "/engine/editor/vfs_access.lua"
+local mount = dofile "/engine/mount.lua"
 local new_vfsrepo = require "vfsrepo".new
 
 local function read_vfsignore(rootpath)
@@ -62,7 +62,7 @@ local function new_tiny(rootpath)
         assert(lfs.create_directories(cachepath))
     end
     local repo = { _root = rootpath }
-    access.readmount(repo)
+    mount.read(repo)
     local vfsrepo = new_vfsrepo()
     local vfsignore = read_vfsignore(rootpath)
     local config = {
@@ -87,6 +87,27 @@ end
 return function (repopath)
     local repo = new_tiny(repopath)
     local vfs = {}
+    function vfs.read(pathname)
+        local file = repo:file(pathname)
+        if not file then
+            return
+        end
+        if not file.path then
+            return
+        end
+        return fastio.readall_mem(file.path, pathname)
+    end
+    function vfs.readg(pathname)
+        local file = repo:file(pathname)
+        if not file then
+            return
+        end
+        if not file.path then
+            return
+        end
+        local data = fastio.readall_mem(file.path, pathname)
+        return data, file.path
+    end
     function vfs.realpath(pathname)
         local file = repo:file(pathname)
         if not file then
