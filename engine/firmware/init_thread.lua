@@ -64,15 +64,14 @@ function vfs.version()
 	return call("VERSION")
 end
 
-if __ANT_EDITOR__ then
+if not __ANT_RUNTIME__ then
 	function vfs.repopath()
 		return call("REPOPATH")
 	end
+end
+
+if __ANT_EDITOR__ then
 	function vfs.mount(path)
 		return call("MOUNT", path)
-	end
-elseif not __ANT_RUNTIME__ then
-	function vfs.repopath()
-		return call("REPOPATH")
 	end
 end
