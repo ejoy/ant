@@ -35,15 +35,26 @@ end
 local CMD = {}
 
 do
-	local resources = {}
-	local function COMPILE(_,_)
-		error "resource is not ready."
-	end
 	local new_std = dofile "pkg/ant.vfs/std.lua"
 	local repo = new_std {
 		rootpath = repopath,
 		nohash = true,
 	}
+	local resources = {}
+	local function COMPILE(_,_)
+		error "resource is not ready."
+	end
+	local function getresource(resource, resource_path)
+		local subrepo = resources[resource]
+		if not subrepo then
+			local lpath = COMPILE(resource, resource_path)
+			if not lpath then
+				return
+			end
+			subrepo = repo:build_resource(lpath)
+			resources[resource] = subrepo
+		end
+	end
 	local function getfile(pathname)
 		local file = repo:file(pathname)
 		if file then
@@ -53,14 +64,9 @@ do
 		if not v or not v.resource then
 			return
 		end
-		local subrepo = resources[v.resource]
+		local subrepo = getresource(v.resource, v.resource_path)
 		if not subrepo then
-			local lpath = COMPILE(v.resource, v.resource_path)
-			if not lpath then
-				return
-			end
-			subrepo = repo:build_resource(lpath)
-			resources[v.resource] = subrepo
+			return
 		end
 		local subpath = pathname:sub(#path+1)
 		return subrepo:file(subpath)
@@ -90,14 +96,9 @@ do
 			return
 		end
 		if file.resource then
-			local subrepo = resources[file.resource]
+			local subrepo = getresource(file.resource, file.resource_path)
 			if not subrepo then
-				local lpath = COMPILE(file.resource, file.resource_path)
-				if not lpath then
-					return
-				end
-				subrepo = repo:build_resource(lpath)
-				resources[file.resource] = subrepo
+				return
 			end
 			file = subrepo:file "/"
 		end
