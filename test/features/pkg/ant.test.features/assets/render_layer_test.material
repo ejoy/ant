@@ -2,6 +2,7 @@ fx:
   shader_type: PBR
   setting:
     lighting: off
+  varyings: /pkg/ant.resources/materials/nolighting.varyings
 properties:
   u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0, 0, 0, 0}

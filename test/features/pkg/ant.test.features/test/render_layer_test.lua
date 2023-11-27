@@ -1,0 +1,65 @@
+local ecs   = ...
+local world = ecs.world
+local w     = world.w
+
+local irl       = ecs.require "ant.render|render_layer.render_layer"
+local ientity   = ecs.require "ant.render|components.entity"
+local imesh     = ecs.require "ant.asset|mesh"
+local imaterial = ecs.require "ant.asset|material"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
+
+local util      = ecs.require "util"
+
+local math3d    = require "math3d"
+
+local rlt_sys = ecs.system "render_layer_test_system"
+
+function rlt_sys.init_world()
+    irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
+    local m = imesh.init_mesh(ientity.plane_mesh())
+    util.create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
+        local ee <close> = world:entity(e.tag['*'][1])
+        iom.set_position(ee, math3d.vector(-10, -2, 0))
+        iom.set_scale(ee, 3)
+        for _, eid in ipairs(e.tag['*']) do
+            local ee <close> = world:entity(eid, "render_layer?update render_object?update")
+            if ee.render_layer and ee.render_object then
+                irl.set_layer(ee, "mineral")
+            end
+        end
+    end)
+
+    world:create_entity {
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            simplemesh = m,
+            scene = {t = {-10, 0, 0}, s = 10},
+            material = "/pkg/ant.test.features/assets/render_layer_test.material",
+            render_layer = "translucent_plane",
+            visible_state = "main_view",
+            on_ready = function (e)
+                imaterial.set_state(e, {
+                    ALPHA_REF = 0,
+                    CULL = "CCW",
+                    DEPTH_TEST = "GREATER",
+                    MSAA = true,
+                    WRITE_MASK = "RGBAZ"
+                })
+            end
+        }
+    }
+
+    util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+        local ee <close> = world:entity(e.tag['*'][1])
+        iom.set_position(ee, math3d.vector(-10, 0, -1))
+
+        for _, eid in ipairs(e.tag['*']) do
+            local ee <close> = world:entity(eid, "render_layer?update render_object?update")
+            if ee.render_layer and ee.render_object then
+                irl.set_layer(ee, "translucent_plane1")
+            end
+        end
+    end)
+end
