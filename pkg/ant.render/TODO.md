@@ -66,6 +66,12 @@
 10. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
 11. 摄像机的fov需要根据聚焦的距离来定义fov；
 12. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
+13. 优化阴影:
+  1) 优化shadowmap精度，通过确定PSR/PSC的物体，结合Scene和Camera Frustum的bounding，算出修正的F矩阵；
+  2) 添加wraping（LiSPSM的方式），拥挤计算更紧凑的lighting Frustum，并与CSM结合；
+  3) 优化VSM；
+  4) 使用texture array，而不是一张拼接的2D贴图；
+  5) 完成point light shadow；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
