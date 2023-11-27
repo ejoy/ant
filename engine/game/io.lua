@@ -85,6 +85,7 @@ do
 		return subrepo:file(subpath)
 	end
 	function CMD.READ(pathname)
+		pathname = pathname:gsub("|", "/")
 		local file = getfile(pathname)
 		if not file then
 			return
@@ -99,6 +100,7 @@ do
 		end
 	end
 	function CMD.REALPATH(pathname)
+		pathname = pathname:gsub("|", "/")
 		local file = getfile(pathname)
 		if not file then
 			return
@@ -108,6 +110,7 @@ do
 		end
 	end
 	function CMD.LIST(pathname)
+		pathname = pathname:gsub("|", "/")
 		local file = getfile(pathname)
 		if not file then
 			return
@@ -134,6 +137,7 @@ do
 		end
 	end
 	function CMD.TYPE(pathname)
+		pathname = pathname:gsub("|", "/")
 		local file = getfile(pathname)
 		if file then
 			if file.dir then

@@ -9,7 +9,6 @@ local function init()
 end
 
 local function compile(pathstring)
-    pathstring = pathstring:gsub("|", "/")
     return vfs.realpath(pathstring)
 end
 
