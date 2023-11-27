@@ -27,13 +27,6 @@ dofile "engine/log.lua"
 local access = dofile "engine/editor/vfs_access.lua"
 dofile "engine/editor/create_repo.lua" (repopath, access)
 
-local function response_id(id, ...)
-	if id then
-		assert(type(id) == "userdata")
-		thread.rpc_return(id, ...)
-	end
-end
-
 local CMD = {
 	GET = vfs.realpath,
 	LIST = vfs.list,
@@ -50,13 +43,20 @@ local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		return
 	end
-    local f = CMD[cmd]
-    if not f then
-        print("Unsupported command : ", cmd)
-        response_id(id)
-    else
-        response_id(id, f(...))
-    end
+	local f = CMD[cmd]
+	if not id then
+		if not f then
+			print("Unsupported command : ", cmd)
+		end
+		return true
+	end
+	assert(type(id) == "userdata")
+	if not f then
+		print("Unsupported command : ", cmd)
+		thread.rpc_return(id)
+		return true
+	end
+	thread.rpc_return(id, f(...))
 	return true
 end
 
@@ -90,6 +90,7 @@ local function ltask_init()
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()
 	local ltaskfd = socket.fd(fd)
+	-- replace schedule_message
 	function schedule_message()
 		local SCHEDULE_IDLE <const> = 1
 		while true do
@@ -100,6 +101,7 @@ local function ltask_init()
 			coroutine.yield()
 		end
 	end
+
 	local function read_ltaskfd()
 		waitfunc()
 		schedule_message()
