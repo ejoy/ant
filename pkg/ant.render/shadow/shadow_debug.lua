@@ -12,7 +12,7 @@ local hwi		= import_package "ant.hwi"
 local math3d    = require "math3d"
 
 local ientity   = ecs.require "ant.render|components.entity"
-local ishadow	= ecs.require "ant.render|shadow.shadow"
+local ishadow	= ecs.require "ant.render|shadow.shadowcfg"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local icamera	= ecs.require "ant.camera|camera"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
