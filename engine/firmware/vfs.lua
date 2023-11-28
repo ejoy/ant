@@ -136,6 +136,7 @@ local function open_inzip(self, hash)
 	if needsize > CACHESIZE then
 		c = zip.reader(self.zipfile, needsize)
 		self.backup[#self.backup + 1] = c
+		return c(hash) or error ("Can't read file " .. needsize)
 	else
 		read_backup(self, hash)
 	end
