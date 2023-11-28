@@ -56,10 +56,14 @@ function vfs.version()
 	return call("VERSION")
 end
 
-if not __ANT_RUNTIME__ then
+if __ANT_EDITOR__ then
+	--TODO: remove it
 	function vfs.realpath(path)
 		return call("REALPATH", path)
 	end
+end
+
+if not __ANT_RUNTIME__ then
 	function vfs.repopath()
 		return call("REPOPATH")
 	end
