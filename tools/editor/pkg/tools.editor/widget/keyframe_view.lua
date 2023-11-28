@@ -1335,10 +1335,7 @@ function m.load(path)
     end
     file_path = path:string()
 end
-local function read_file(fn)
-    local f <close> = assert(io.open(fn:string()))
-    return f:read "a"
-end
+
 function m.create_target_animation(at, target)
     local e <close> = world:entity(target, "material?in")
     create_context = {}
