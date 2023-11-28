@@ -19,11 +19,10 @@ function imesh.build_meshes(files)
 
 		local function update_buffer(b, ob)
 			if b then
-				local m 	= b.memory
 				local om 	= ob.memory
-
-				om.list[#om.list+1] 	= b.str
-				om[3]		= om[3] + m[3]
+				local str 	= b.str
+				om.list[#om.list+1] = str
+				om[3]		= om[3] + #str
 
 				ob.num 		= ob.num + b.num
 				ob.declname = b.declname
