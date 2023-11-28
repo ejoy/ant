@@ -709,7 +709,7 @@ static void
 merge_cache(lua_State *L, struct zip_reader_cache *C, struct zip_reader_cache *endptr) {
 	struct zip_reader_cache *next = advance_ptr(C, C->size);
 	while (next < endptr) {
-		if (!next->active)
+		if (next->active)
 			break;
 		next = advance_ptr(next, next->size);
 	}
