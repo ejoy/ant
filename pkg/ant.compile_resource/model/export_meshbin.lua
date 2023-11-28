@@ -277,7 +277,7 @@ local function calc_tangents(math3d, ib, vb_num, vertices, layouts, store)
 		tangent	= math3d.normalize(tangent)
 
 		local nxt    	= math3d.cross(normal, tangent)
-		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and -1.0 or 1.0)
+		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and 1.0 or -1.0)
 		store(iv, tangent)
 	end
 end
