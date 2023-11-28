@@ -179,7 +179,7 @@ return function (status)
             utility.apply_patch(status, filename, texture_desc, function (name, desc)
                 local function cvt_img_path(path)
                     if path:sub(1,1) == "/" then
-                        return lfs.path(path):localpath()
+                        return lfs.path(setting.vfs.realpath(path))
                     end
                     return lfs.absolute((output / filename):parent_path() / (path:match "^%./(.+)$" or path))
                 end
