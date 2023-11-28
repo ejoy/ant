@@ -108,7 +108,7 @@ local function register_new_rt()
                     },
                     data = {
                         scene = {
-                            r = {1, 0, 0},
+                            r = {1.0, 0, 0},
                             t = {0, 80, -50, 0},
                             updir = {0.0, 1.0, 0.0}
                     },

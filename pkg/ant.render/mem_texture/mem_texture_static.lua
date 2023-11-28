@@ -65,7 +65,7 @@ local function create_mem_texture_queue(view_id, queue_name)
                 },
                 data = {
                     scene = {
-                        r = {1, 0, 0},
+                        r = {0.6, 0, 0},
                         t = {0, 80, -50, 0},
                         updir = {0.0, 1.0, 0.0}
                 },
