@@ -1,30 +1,25 @@
 local fastio = require "fastio"
+local zip = require "zip"
 
 local function sha1(str)
 	return fastio.str2sha1(str)
 end
 
 local vfs = {} ; vfs.__index = vfs
+local CACHESIZE <const> = 8 * 1024 * 1024
 
 local uncomplete = {}
 
 local function readroot(self)
-	do
-		local f <close> = io.open(self.sandbox_path .. "root" .. self.slot, "rb")
-		if f then
-			return f:read "a"
-		end
+	local f <close> = io.open(self.localpath .. "root" .. self.slot, "rb")
+	if f then
+		return f:read "a"
 	end
-	do
-		local f <close> = io.open(self.bundle_path .. "root", "rb")
-		if f then
-			return f:read "a"
-		end
-	end
+	return self:ziproot()
 end
 
 local function updateroot(self, hash)
-	local f <close> = assert(io.open(self.sandbox_path .. "root" .. self.slot, "wb"))
+	local f <close> = assert(io.open(self.localpath .. "root" .. self.slot, "wb"))
 	f:write(hash)
 end
 
@@ -49,39 +44,109 @@ end
 function vfs.new(config)
 	local repo = {
 		slot = config.slot,
-		bundle_path = config.bundle_path,
-		sandbox_path = config.sandbox_path,
+		localpath = config.localpath,
+		cachesize = config.cachesize or CACHESIZE,
 		resource = {},
 		cache_hash = {},
 		cache_dir = {},
 		cache_file = {},
 		root = nil,
 	}
+	if config.zipbundle then
+		repo.zipfile = zip.open(config.zipbundle, "r")
+		if not repo.zipfile then
+			print("Can't open " .. config.zipbundle)
+		else
+			repo.cache = zip.reader(repo.zipfile, repo.cachesize)
+			repo.backup = {}
+		end
+	end
 	setmetatable(repo, vfs)
 	return repo
 end
 
-local function dir_object(self, hash)
+function vfs:ziproot()
+	local zf = self.zipfile
+	return zf and zf:readfile "root"
+end
+
+function vfs:dir(hash)
 	local dir = self.cache_hash[hash]
 	if dir then
 		return dir
 	end
-	local f = self:readfile(hash)
-	if f then
-		dir = {}
-		for line in f:lines() do
-			local type, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
-			if type then
-				dir[name] = {
-					type = type,
-					hash = hash,
-				}
-			end
+	local zf = self.zipfile
+	local data = zf and zf:readfile(hash)
+	if not data then
+		-- todo: use fastio
+		local f = io.open(self.localpath .. "/" .. hash, "rb")
+		if f then
+			data = f:read "a"
+			f:close()
 		end
-		f:close()
-		self.cache_hash[hash] = dir
-		return dir
 	end
+	if not data then
+		return
+	end
+	dir = {}
+	for line in data:gmatch "[^\r\n]*" do
+		local type, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
+		if type then
+			dir[name] = {
+				type = type,
+				hash = hash,
+			}
+		end
+	end
+	self.cache_hash[hash] = dir
+	return dir
+end
+
+local function read_backup(self, hash)
+	local backup = self.backup
+	local n = #backup
+	for i = 1, n do
+		local c = backup[i]
+		local handle = c(hash)
+		if handle then
+			backup[i] = self.cache
+			self.cache = c
+			return handle
+		end
+	end
+	local c = zip.reader(self.zipfile, self.cachesize)
+	local handle = assert(c(hash))
+	backup[n+1] = self.cache
+	self.cache = c
+	return handle
+end
+
+local function open_inzip(self, hash)
+	local c = self.cache
+	if not c then
+		return
+	end
+	local handle, needsize = c(hash)
+	if handle then
+		return handle
+	end
+	if not needsize then
+		return
+	end
+	if needsize > CACHESIZE then
+		c = zip.reader(self.zipfile, needsize)
+		self.backup[#self.backup + 1] = c
+	else
+		read_backup(self, hash)
+	end
+end
+
+function vfs:open(hash)
+	local c = open_inzip(self, hash)
+	if not c then
+		return fastio.readall_mem(self.localpath .. "/" .. hash)
+	end
+	return c
 end
 
 local function get_cachepath(setting, name)
@@ -115,7 +180,7 @@ local function fetch_resource(self, fullpath)
 end
 
 function fetch_file(self, hash, fullpath)
-	local dir = dir_object(self, hash)
+	local dir = self:dir(hash)
 	if not dir then
 		return ListNeedGet, hash
 	end
@@ -155,7 +220,7 @@ function vfs:list(path)
 		end
 		self.cache_dir[path] = hash
 	end
-	local dir = dir_object(self, hash)
+	local dir = self:dir(hash)
 	if not dir then
 		return nil, ListNeedGet, hash
 	end
@@ -175,32 +240,6 @@ end
 
 function vfs:add_resource(name, hash)
 	self.resource[name] = hash
-end
-
-function vfs:readfile(name)
-	do
-		local realpath = self.cache_file[name]
-		if realpath then
-			local f = assert(io.open(realpath, "rb"))
-			return f, realpath
-		end
-	end
-	do
-		local realpath = self.sandbox_path .. name
-		local f = io.open(realpath, "rb")
-		if f then
-			self.cache_file[name] = realpath
-			return f, realpath
-		end
-	end
-	do
-		local realpath = self.bundle_path .. name
-		local f = io.open(realpath, "rb")
-		if f then
-			self.cache_file[name] = realpath
-			return f, realpath
-		end
-	end
 end
 
 local function writefile(filename, data)
@@ -226,7 +265,7 @@ end
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
 function vfs:write_blob(hash, data)
-	local hashpath = self.sandbox_path .. hash
+	local hashpath = self.localpath .. hash
 	if writefile(hashpath, data) then
 		return true
 	end
@@ -238,7 +277,7 @@ end
 
 function vfs:write_slice(hash, offset, data)
 	offset = tonumber(offset)
-	local hashpath = self.sandbox_path .. hash
+	local hashpath = self.localpath .. hash
 	local tempname = hashpath .. ".download"
 	local f = io.open(tempname, "ab")
 	if not f then

@@ -40,10 +40,6 @@ function vfs.read(path)
 	return call("READ", path)
 end
 
-function vfs.realpath(path)
-	return call("REALPATH", path)
-end
-
 function vfs.list(path)
 	return call("LIST", path)
 end
@@ -58,6 +54,13 @@ end
 
 function vfs.version()
 	return call("VERSION")
+end
+
+if __ANT_EDITOR__ then
+	--TODO: remove it
+	function vfs.realpath(path)
+		return call("REALPATH", path)
+	end
 end
 
 if not __ANT_RUNTIME__ then

@@ -135,10 +135,12 @@ function path_mt:remove_permissions()
     error 'Not implemented'
 end
 
-
-function path_mt:localpath()
-    local localpath = vfs.realpath(normalize(self._value)) or error ("could not be find local path: ".. self._value)
-    return lfs.path(localpath)
+if __ANT_EDITOR__ then
+    --TODO: remove it
+    function path_mt:localpath()
+        local localpath = vfs.realpath(normalize(self._value)) or error ("could not be find local path: ".. self._value)
+        return lfs.path(localpath)
+    end
 end
 
 local fs = {}

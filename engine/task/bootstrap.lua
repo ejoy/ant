@@ -51,8 +51,8 @@ end
 
 local function readall(path)
 	local fastio = require "fastio"
-	local realpath = vfs.realpath(path)
-	return fastio.readall_s(realpath, path)
+	local mem = vfs.read(path)
+	return fastio.tostring(mem)
 end
 
 local function init(c)
@@ -95,9 +95,6 @@ vfs.call = call
 vfs.send = send
 function vfs.read(path)
 	return call("READ", path)
-end
-function vfs.realpath(path)
-	return call("REALPATH", path)
 end
 function vfs.list(path)
 	return call("LIST", path)
@@ -142,7 +139,8 @@ end
 
 local function io_switch()
 	local servicelua = "/engine/task/service/service.lua"
-	vfs.send("SWITCH", servicelua, vfs.realpath(servicelua))
+	local mem = vfs.read(servicelua)
+	vfs.send("SWITCH", servicelua, mem)
 end
 
 return function (c)
