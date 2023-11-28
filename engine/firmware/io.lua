@@ -550,8 +550,8 @@ local function ltask_ready()
 	return coroutine.yield() == nil
 end
 
-local function ltask_init(path, realpath)
-	assert(fastio.loadfile(realpath, path))(true)
+local function ltask_init(path, mem)
+	assert(fastio.mem_loadlua(mem, path))(true)
 	ltask = require "ltask"
 	local SS = ltask.dispatch(S)
 
@@ -576,11 +576,11 @@ local function ltask_init(path, realpath)
 	selector:event_add(ltaskfd, SELECT_READ, read_ltaskfd)
 end
 
-function CMD.SWITCH(_, path, realpath)
+function CMD.SWITCH(_, path, mem)
 	while not ltask_ready() do
 		exclusive.sleep(1)
 	end
-	ltask_init(path, realpath)
+	ltask_init(path, mem)
 end
 
 local function work_offline()

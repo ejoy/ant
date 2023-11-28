@@ -355,6 +355,7 @@ static int mem_loadlua(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
     const char* symbol = luaL_checkstring(L, 2);
+    lua_settop(L, 3);
     size_t len = 0;
     void* buf = luazip_data(cache, &len);
     LoadS ls;

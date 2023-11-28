@@ -210,8 +210,8 @@ end
 
 local function schedule_message() end
 
-local function ltask_init()
-	assert(fastio.loadfile "engine/task/service/service.lua")(true)
+local function ltask_init(path, mem)
+	assert(fastio.mem_loadlua(mem, path))(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()
@@ -235,11 +235,11 @@ local function ltask_init()
 	selector:event_add(ltaskfd, SELECT_READ, read_ltaskfd)
 end
 
-function CMD.SWITCH()
+function CMD.SWITCH(path, mem)
 	while not ltask_ready() do
 		exclusive.sleep(1)
 	end
-	ltask_init()
+	ltask_init(path, mem)
 end
 
 function CMD.VERSION()

@@ -142,7 +142,8 @@ end
 
 local function io_switch()
 	local servicelua = "/engine/task/service/service.lua"
-	vfs.send("SWITCH", servicelua, vfs.realpath(servicelua))
+	local mem = vfs.read(servicelua)
+	vfs.send("SWITCH", servicelua, mem)
 end
 
 return function (c)
