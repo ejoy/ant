@@ -18,6 +18,7 @@ lm:lua_source "hierarchy" {
     },
     sources = {
         "hierarchy.cpp",
+        "hierarchy_node.cpp",
         "animation.cpp",
         "ik.cpp",
         Ant3rd .. "ozz-animation/samples/framework/mesh.cc"
