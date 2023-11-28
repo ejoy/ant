@@ -1,55 +1,23 @@
-local loaders = {}
-
-loaders["ozz-animation"] = function (fn)
-	local animodule = require "hierarchy".animation
-	local handle = animodule.new_animation(fn)
-	local scale = 1     -- TODO
-	local looptimes = 0 -- TODO
-	return {
-		_handle = handle,
-		_sampling_context = animodule.new_sampling_context(),
-		_duration = handle:duration() * 1000. / scale,
-		_max_ratio = looptimes > 0 and looptimes or math.maxinteger,
-	}
-end
-
-loaders["ozz-raw_skeleton"] = function (fn)
-	local hiemodule = require "hierarchy".skeleton
-	local handle = hiemodule.new()
-	handle:load(fn)
-	return {
-		_handle = handle
-	}
-end
-
-loaders["ozz-skeleton"] = function(fn)
-	local hiemodule = require "hierarchy".skeleton
-	local handle = hiemodule.build(fn)
-	return {
-		_handle = handle
-	}
-end
-
-local function find_loader(localfilepath)
-	local f <close> = assert(io.open(localfilepath, "rb"))
-	f:seek("set", 1)
-	local tag = ("z"):unpack(f:read(16))
-	return loaders[tag]
-end
+local aio = import_package "ant.io"
+local ozz = require "hierarchy"
 
 local function loader(filename)
-	--TODO
-	local vfs = require "vfs"
-	local _, localfilename = vfs.read(filename)
-	local fn = find_loader(localfilename)
-	if not fn then
-		error "not support type"
-		return
+	local h, t = ozz.load(aio.readall(filename))
+	local r = {
+		_handle		= h,
+		type		= t,
+		filename	= filename,
+	}
+
+	--TODO: need remove
+	if t == "ozz-animation" then
+		local scale = 1     -- TODO
+		local looptimes = 0 -- TODO
+		r._sampling_context = ozz.animation.new_sampling_context()
+ 		r._duration 		= r._handle:duration() * 1000. / scale
+ 		r._max_ratio 		= looptimes > 0 and looptimes or math.maxinteger
 	end
-	local ozz_res = fn(localfilename)
-	-- filename for Editor
-	ozz_res.filename = filename
-	return ozz_res
+	return r
 end
 
 local function unloader()

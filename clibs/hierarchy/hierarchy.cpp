@@ -1,4 +1,5 @@
 #include "hierarchy.h"
+#include "../luabind/fastio.h"
 
 extern "C" {
 #define LUA_LIB
@@ -15,6 +16,7 @@ extern "C" {
 #include <ozz/base/maths/soa_transform.h>
 #include <ozz/base/maths/soa_float4x4.h>
 #include <ozz/base/io/archive.h>
+#include <ozz/base/io/archive_traits.h>
 #include <ozz/base/io/stream.h>
 
 
@@ -103,33 +105,20 @@ lbuilddata_len(lua_State *L){
 
 using serialize_skeop = std::function<void(const char*, ozz::animation::Skeleton*)>;
 
-static inline int
-serialize_skeleton(lua_State *L, serialize_skeop op) {
+static int
+lbuilddata_serialize(lua_State *L) {
 	auto ske = get_ske(L);
-	const char* filepath = luaL_checkstring(L, 2);
-	op(filepath, ske);
-	return 0;
-}
 
+	//TODO: implement a custom stream can remove one more memory copy
+	ozz::io::MemoryStream ms;
+	ozz::io::OArchive oa(&ms);
+	oa << *ske;
 
-static int
-lbuilddata_save(lua_State *L) {
-	return serialize_skeleton(L, [](auto filepath, auto ske) {
-		ozz::io::File ff(filepath, "wb");
-		assert(ff.Exist(filepath));
-		ozz::io::OArchive oa(&ff);
-		oa << *ske;
-	});
-}
-
-static int
-lbuilddata_load(lua_State *L) {
-	return serialize_skeleton(L, [](auto filepath, auto ske) {
-		ozz::io::File ff(filepath, "rb");
-		assert(ff.opened());
-		ozz::io::IArchive ia(&ff);
-		ia >> *ske;
-	});
+	ozz::io::IArchive ia(&ms);
+	std::string s; s.resize(ms.Size());
+	ia.LoadBinary(s.data(), s.size());
+	lua_pushlstring(L, s.data(), s.size());
+	return 1;
 }
 
 static int lbuilddata_isleaf(lua_State *L) {
@@ -314,20 +303,6 @@ lbuild(lua_State *L){
 
 		ozz::animation::offline::SkeletonBuilder builder;
 		builddata->skeleton = builder(rawskeleton).release();
-		return 1;
-	}
-
-	if (type == LUA_TSTRING) {
-		const char* filepath = lua_tostring(L, 1);
-		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
-		builddata->skeleton = ozz::New<ozz::animation::Skeleton>();
-		ozz::io::File ff(filepath, "rb");
-		if (!ff.opened()) {
-			luaL_error(L, "could not open file : %s", filepath);
-		}
-		ozz::io::IArchive ia(&ff);
-		ia >> *builddata->skeleton;
-
 		return 1;
 	}
 
@@ -684,19 +659,18 @@ register_hierarchy_builddata(lua_State *L) {
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 		luaL_Reg l[] = {
-			{"__gc", lbuilddata_del},
-			{"__len", lbuilddata_len},
-			{"save", lbuilddata_save},
-			{"load", lbuilddata_load},
-			{"isleaf", lbuilddata_isleaf},
-			{"parent", lbuilddata_parent},
-			{"isroot", lbuilddata_isroot},
+			{"__gc",		lbuilddata_del},
+			{"__len",		lbuilddata_len},
+			{"serialize",	lbuilddata_serialize},
+			{"isleaf",		lbuilddata_isleaf},
+			{"parent",		lbuilddata_parent},
+			{"isroot",		lbuilddata_isroot},
 			{"joint_index", lbuilddata_jointindex},
-			{"joint", lbuilddata_joint},
-			{"joint_name", lbuilddata_jointname},
-			{"bind_pose", lbuilddata_bindpose},
-			{"size", lbuilddata_size},
-			{nullptr, nullptr},
+			{"joint", 		lbuilddata_joint},
+			{"joint_name", 	lbuilddata_jointname},
+			{"bind_pose", 	lbuilddata_bindpose},
+			{"size", 		lbuilddata_size},
+			{nullptr, 		nullptr},
 		};
 
 		luaL_setfuncs(L, l, 0);
@@ -743,11 +717,11 @@ int init_skeleton(lua_State *L) {
 	register_hierarchy_node(L);
 	register_hierarchy_builddata(L);
 	luaL_Reg l[] = {
-		{ "new", lnewhierarchy },
-		{ "invalid", linvalidnode },
-		{ "build", lbuild},
-		{ "node_metatable", lhnode_metatable},
-		{ "builddata_metatable", lbuilddata_metatable},
+		{ "new", 				lnewhierarchy },
+		{ "invalid", 			linvalidnode },
+		{ "build", 				lbuild},
+		{ "node_metatable", 	lhnode_metatable},
+		{ "builddata_metatable",lbuilddata_metatable},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
@@ -799,6 +773,97 @@ lmemory(lua_State* L) {
 	return 1;
 }
 
+class MemoryPtrStream : public ozz::io::Stream {
+public:
+	MemoryPtrStream(const std::string_view &s) : ms(s){}
+	bool opened() const override { return !ms.empty(); }
+	size_t Read(void* _buffer, size_t _size) override{
+		if (moffset + _size > ms.size()){
+			return 0;
+		}
+		memcpy(_buffer, ms.data() + moffset, _size);
+		moffset += (int)_size;
+		return _size;
+	}
+
+	int Seek(int _offset, Origin _origin) override {
+		int origin = 0;
+		switch (_origin) {
+			case kCurrent: 	origin = moffset; 		break;
+			case kEnd: 		origin = (int)ms.size();break;
+			case kSet:		origin = 0;				break;
+			default:								return -1;
+		}
+
+		int r = (int)origin + _offset;
+		if (r < 0 || r > ms.size()){
+			return -1;
+		}
+		moffset = r;
+		return 0;
+	}
+
+	int Tell() const override{ return moffset; }
+	size_t Size() const override { return ms.size();}
+
+public:
+	size_t Write(const void* _buffer, size_t _size) override { assert(false && "Not support"); return 0; }
+private:
+	const std::string_view ms;
+	int moffset = 0;
+};
+
+static const char*
+check_read_skeleton(lua_State *L, ozz::io::IArchive& ia){
+	if (ia.TestTag<ozz::animation::Skeleton>()){
+		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
+		builddata->skeleton = ozz::New<ozz::animation::Skeleton>();
+		ia >> *builddata->skeleton;
+		return ozz::io::internal::Tag<const ozz::animation::Skeleton>::Get();
+	}
+	return nullptr;
+}
+
+static const char*
+check_read_raw_skeleton(lua_State *L, ozz::io::IArchive& ia){
+	if (ia.TestTag<ozz::animation::offline::RawSkeleton>()){
+		lnewhierarchy(L);
+		auto tree = get_tree(L, 1);
+		ia >> *(tree->skl);
+		
+		return ozz::io::internal::Tag<const ozz::animation::offline::RawSkeleton>::Get();
+	}
+	return nullptr;
+}
+
+extern const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia);
+
+static int
+lload(lua_State *L){
+	auto m = getmemory(L, 1);
+	MemoryPtrStream ms(m);
+
+	std::function<decltype(check_read_animation)> check_funcs[] = {
+		check_read_animation, check_read_skeleton, check_read_raw_skeleton
+	};
+	
+	const char* type = nullptr;
+	for (auto f : check_funcs){
+		ozz::io::IArchive ia(&ms);
+		type = f(L, ia);
+		if (type){
+			break;
+		}
+		ms.Seek(0, ozz::io::Stream::kSet);
+	}
+
+	if (nullptr == type){
+		return luaL_error(L, "Can not read ozz data");
+	}
+	lua_pushstring(L, type);
+	return 2;
+}
+
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy(lua_State *L) {
@@ -812,6 +877,9 @@ luaopen_hierarchy(lua_State *L) {
 	lua_setfield(L, -2, "animation");
 	lua_pushcfunction(L, lmemory);
 	lua_setfield(L, -2, "memory");
+
+	lua_pushcfunction(L, lload);
+	lua_setfield(L, -2, "load");
 	return 1;
 }
 

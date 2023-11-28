@@ -8,12 +8,13 @@ lm:lua_source "hierarchy" {
         "ozz-animation-runtime",
         "ozz-animation-offline",
         "ozz-animation-geometry",
-        "bx"
+        "bx",
     },
     includes = {
         BgfxInclude,
         Ant3rd .. "ozz-animation/include",
         Ant3rd .. "glm",
+        Ant3rd .. "bee.lua",
     },
     sources = {
         "hierarchy.cpp",
