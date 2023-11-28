@@ -59,8 +59,8 @@ local bundle_path = (function ()
 	end
 end)()
 
-config.vfs.bundle_path = (bundle_path / ".vfs"):string():gsub("/?$", "/")
-config.vfs.sandbox_path = (sandbox_path / ".vfs"):string():gsub("/?$", "/")
+config.vfs.zipbundle = (bundle_path / "vfs.zip"):string():gsub("/?$", "/")
+config.vfs.localpath = (sandbox_path / "vfs"):string():gsub("/?$", "/")
 fs.create_directories(sandbox_path)
 fs.current_path(sandbox_path)
 if needcleanup then

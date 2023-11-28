@@ -40,10 +40,6 @@ function vfs.read(path)
 	return call("READ", path)
 end
 
-function vfs.realpath(path)
-	return call("REALPATH", path)
-end
-
 function vfs.list(path)
 	return call("LIST", path)
 end
@@ -61,6 +57,9 @@ function vfs.version()
 end
 
 if not __ANT_RUNTIME__ then
+	function vfs.realpath(path)
+		return call("REALPATH", path)
+	end
 	function vfs.repopath()
 		return call("REPOPATH")
 	end
