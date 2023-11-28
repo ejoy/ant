@@ -51,8 +51,8 @@ end
 
 local function readall(path)
 	local fastio = require "fastio"
-	local realpath = vfs.realpath(path)
-	return fastio.readall_s(realpath, path)
+	local mem = vfs.read(path)
+	return fastio.tostring(mem)
 end
 
 local function init(c)
