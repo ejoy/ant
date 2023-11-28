@@ -59,14 +59,14 @@ local bundle_path = (function ()
 	end
 end)()
 
-config.vfs.zipbundle = (bundle_path / "vfs.zip"):string():gsub("/?$", "/")
+config.vfs.zipbundle = (bundle_path / "vfs.zip"):string()
 config.vfs.localpath = (sandbox_path / "vfs"):string():gsub("/?$", "/")
 fs.create_directories(sandbox_path)
 fs.current_path(sandbox_path)
 if needcleanup then
-	fs.remove_all(config.vfs.sandbox_path)
+	fs.remove_all(config.vfs.localpath)
 end
-fs.create_directories(config.vfs.sandbox_path)
+fs.create_directories(config.vfs.localpath)
 
 if type == nil then
 	if platform.os == "ios" or platform.os == "android" then
