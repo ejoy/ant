@@ -760,7 +760,7 @@ alloc_cache(lua_State *L, size_t sz) {
 		if (C == NULL) {
 			C = find_cache(L, beginptr, endptr, sz);
 			if (C == NULL) {
-				return C;
+				return NULL;
 			}
 		}
 		split_cache(L, C, sz);
