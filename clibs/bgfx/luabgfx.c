@@ -2661,6 +2661,33 @@ lvertexConvert(lua_State *L) {
 	return 1;
 }
 
+// 2 : offset
+// 3 : size
+static void *
+get_offset_size(lua_State *L, void *str_, size_t *sz) {
+	const char *str = (const char *)str_;
+	int offset = luaL_optinteger(L, 2, 0);
+	int size = (int)*sz;
+	if (offset > 0) {
+		if (offset > size) {
+			offset = size;
+		}
+		--offset;
+		str += offset;
+		*sz -= offset;
+	} else if (offset < 0) {
+		offset = -offset;
+		if (offset > size) {
+			offset = size;
+		}
+		offset = size - offset;
+		str += offset;
+		sz -= offset;
+	}
+	*sz = luaL_optinteger(L, 3, size);
+	return (void *)str;
+}
+
 /*
 	type 1 :
 		string layout
@@ -2679,8 +2706,12 @@ lvertexConvert(lua_State *L) {
 		integer size
 	type 5 :
 		userdata data
+		integer offset (opt)
+		integer size (opt)
 	type 6 :
-		function() returns lightuserdata, size, lifetime(opt)
+		function() returns lightuserdata, size, closeobj_or_closefunc(opt)
+		integer offset (opt)
+		integer size (opt)
  */
 static int
 lmemoryBuffer(lua_State *L) {
@@ -2708,32 +2739,39 @@ lmemoryBuffer(lua_State *L) {
 		// type 5
 		void * data = lua_touserdata(L, 1);
 		size_t sz = lua_rawlen(L, 1);
+		data = get_offset_size(L, data, &sz);
 		lua_settop(L, 1);
 		newMemory(L, data, sz);
 		return 1;
 	} else if (t == LUA_TFUNCTION) {
 		// type 6
-		lua_settop(L, 1);
+		lua_settop(L, 3);
+		lua_pushvalue(L, 1);
 		lua_call(L, 0, 3);
-		void * data = lua_touserdata(L, 1);
-		size_t sz = luaL_checkinteger(L, 2);
-		int t = lua_type(L, 3);
-		if (t == LUA_TNIL) {
-			// no lifetime object
-			void * buffer = newMemory(L, NULL, sz);
-			memcpy(buffer, data, sz);
-			return 1;
+		// 1 : func
+		// 2 : offset (opt)
+		// 3 : size (opt)
+		// 4 : data
+		// 5 : sz
+		// 6 : close
+		void * data = lua_touserdata(L, 4);
+		size_t sz = luaL_checkinteger(L, 5);
+		data = get_offset_size(L, data, &sz);
+		void * buffer = newMemory(L, NULL, sz);
+		memcpy(buffer, data, sz);
+		int t = lua_type(L, 6);
+		if (t == LUA_TUSERDATA || t == LUA_TTABLE) {
+			if (luaL_getmetafield(L, 6, "__close") == LUA_TFUNCTION) {
+				lua_pushvalue(L, 6);
+				lua_call(L, 1, 0);
+			}
 		} else if (t == LUA_TFUNCTION) {
-			// close function
-			void * buffer = newMemory(L, NULL, sz);
-			memcpy(buffer, data, sz);
-			lua_insert(L, 1);
-			lua_call(L, 2, 0);	// close ptr with ptr and sz
-		} else {
-			// with lifetime object
-			newMemory(L, data, sz);
-			return 1;
+			lua_pushvalue(L, 6);
+			lua_pushvalue(L, 4);
+			lua_pushvalue(L, 5);
+			lua_call(L, 2, 0);
 		}
+		return 1;
 	}
 	const char * str = luaL_checklstring(L, 1, &sz);
 	if (lua_gettop(L) == 1) {
@@ -2752,24 +2790,7 @@ lmemoryBuffer(lua_State *L) {
 		return 1;
 	}
 	// type 2
-	int offset = luaL_checkinteger(L, 2);
-	if (offset > 0) {
-		if (offset > sz) {
-			offset = sz;
-		}
-		--offset;
-		str += offset;
-		sz -= offset;
-	} else if (offset < 0) {
-		offset = -offset;
-		if (offset > sz) {
-			offset = sz;
-		}
-		offset = sz - offset;
-		str += offset;
-		sz -= offset;
-	}
-	sz = luaL_optinteger(L, 3, sz);
+	str = (const char *)get_offset_size(L, (void *)str, &sz);
 	lua_settop(L, 1);
 	newMemory(L, (void *)str, sz);
 	return 1;

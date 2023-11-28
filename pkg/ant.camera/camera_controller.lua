@@ -31,6 +31,7 @@ local distance = 1
 local baseDistance = 1
 local zoomExponent = 2
 local zoomFactor = 0.1
+local pan_lastx, pan_lasty
 
 local lookat = math3d.ref(math3d.vector(0, 0, 1))
 --right up偏移
@@ -155,7 +156,15 @@ function cc_sys:camera_usage()
         action.scale(5 * e.velocity)
     end
     for _, _, e in EventGesturePan:unpack() do
-        action.pan_reset(e.x - e.dx, e.y - e.dy)
+        if e.state == "began" then
+            pan_lastx, pan_lasty = e.x, e.y
+            action.pan_reset(pan_lastx, pan_lasty)
+        elseif e.state == "ended" then
+            pan_lastx, pan_lasty = nil, nil
+        else
+            action.pan_reset(pan_lastx, pan_lasty)
+            pan_lastx, pan_lasty = e.x, e.y
+        end
         action.pan(e.x, e.y)
     end
 

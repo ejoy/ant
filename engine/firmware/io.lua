@@ -341,25 +341,27 @@ end
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-function CMD.LIST(id, path)
+function CMD.LIST(id, fullpath)
+	fullpath = fullpath:gsub("|", "/")
 --	print("[request] LIST", path)
-	local dir, r, hash = repo:list(path)
+	local dir, r, hash = repo:list(fullpath)
 	if dir then
 		response_id(id, dir)
 		return
 	end
 	if r == ListNeedGet then
-		request_file(id, "GET", hash, "LIST", path)
+		request_file(id, "GET", hash, "LIST", fullpath)
 		return
 	end
 	if r == ListNeedResource then
-		request_file(id, "RESOURCE", hash, "LIST", path)
+		request_file(id, "RESOURCE", hash, "LIST", fullpath)
 		return
 	end
 	response_id(id, nil)
 end
 
 function CMD.TYPE(id, fullpath)
+	fullpath = fullpath:gsub("|", "/")
 	--	print("[request] TYPE", fullpath)
 	if fullpath == "/" then
 		response_id(id, "dir")
@@ -391,6 +393,7 @@ function CMD.TYPE(id, fullpath)
 end
 
 function CMD.READ(id, fullpath)
+	fullpath = fullpath:gsub("|", "/")
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir, r, hash = repo:list(path)
 	if not dir then
@@ -426,6 +429,7 @@ function CMD.READ(id, fullpath)
 end
 
 function CMD.REALPATH(id, fullpath)
+	fullpath = fullpath:gsub("|", "/")
 --	print("[request] REALPATH", fullpath)
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir, r, hash = repo:list(path)

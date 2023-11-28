@@ -1,11 +1,11 @@
-local setting   = import_package "ant.settings"
-
 local bgfx      = require "bgfx"
-local fastio    = import_package "ant.serialize".fastio
 local datalist  = require "datalist"
+local fastio    = require "fastio"
+local setting   = import_package "ant.settings"
+local aio       = import_package "ant.io"
 local layoutmgr = import_package "ant.render".layoutmgr
 
-local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
+local USE_CS_SKINNING <const> = setting:get "graphic/skinning/use_cs"
 
 local function is_cs_skinning_buffer(layoutname)
     return USE_CS_SKINNING and ("iw"):match(layoutname:sub(1, 1))
@@ -13,20 +13,37 @@ end
 
 local proxy_vb = {}
 
-local function mem2str(m)
-    local datatype = type(m[1])
+local function mem2str(obj)
+    local m = obj.memory
+    obj.memory = nil
+    local data = m[1]
+    local offset = m[2]
+    local size = m[3]
+    local datatype = type(data)
     if datatype == "userdata" then
-        return fastio.mem2str(m[1], m[3], m[2])
+        return fastio.tostring(data, offset, size)
     end
-
     assert(datatype == "string")
-    return m[1]:sub(m[2], m[2]+m[3])
+    return data:sub(offset, offset+size)
+end
+
+local function mem2bgfx(obj)
+    local m = obj.memory
+    obj.memory = nil
+    local data = m[1]
+    local offset = m[2]
+    local size = m[3]
+    local datatype = type(data)
+    if datatype == "userdata" then
+        return bgfx.memory_buffer(fastio.wrap(data), offset, size)
+    end
+    assert(datatype == "string")
+    return bgfx.memory_buffer(data, offset, size)
 end
 
 function proxy_vb:__index(k)
     if k == "handle" then
-        assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
-        local membuf = bgfx.memory_buffer(table.unpack(self.memory))
+        local membuf = mem2bgfx(self)
         local layoutname = self.declname
         local layouthandle = layoutmgr.get(layoutname).handle
         local h = is_cs_skinning_buffer(layoutname) and
@@ -37,22 +54,25 @@ function proxy_vb:__index(k)
     end
 
     if k == "str" then
-        return mem2str(self.memory)
+        local str = mem2str(self)
+        self.str = str
+        return str
     end
 end
 
 local proxy_ib = {}
 function proxy_ib:__index(k)
     if k == "handle" then
-        assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
-        local membuf = bgfx.memory_buffer(table.unpack(self.memory))
+        local membuf = mem2bgfx(self)
         local h = bgfx.create_index_buffer(membuf, self.flag)
         self.handle = h
         return h
     end
 
     if k == "str" then
-        return mem2str(self.memory)
+        local str = mem2str(self)
+        self.str = str
+        return str
     end
 end
 
@@ -95,12 +115,12 @@ local function load_mem(buf, meshfile)
         local binname = m[1]
         assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
-        m[1] = fastio.readall_compiled(parent_path(meshfile) .. "/" .. binname)
+        m[1] = aio.readall_v(parent_path(meshfile) .. "/" .. binname)
     end
 end
 
 local function loader(filename)
-    local mesh = datalist.parse(fastio.readall_compiled(filename))
+    local mesh = datalist.parse(aio.readall(filename))
 
     load_mem(mesh.vb, filename)
     load_mem(mesh.vb2, filename)

@@ -2,7 +2,6 @@ local ecs 	= ...
 local world = ecs.world
 local w 	= world.w
 
-local assetmgr  = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
 local modifier_sys = ecs.system "modifier_system"
@@ -12,6 +11,7 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ika       = ecs.require "ant.animation|keyframe"
 local imaterial = ecs.require "ant.asset|material"
 local mathpkg	= import_package "ant.math"
+local aio = import_package "ant.io"
 local mc	= mathpkg.constant
 local math3d    = require "math3d"
 
@@ -73,18 +73,6 @@ function modifier_sys:exit()
 
 end
 
-local function read_file(filename)
-    local f
-    if string.sub(filename, 1, 1) == "/" then
-        f = assert(io.open(assetmgr.compile(filename), "rb"))
-    else
-        f = assert(io.open(filename, "rb"))
-    end
-    local c = f:read "a"
-    f:close()
-    return c
-end
-
 function imodifier.delete(m)
     if not m then
         return
@@ -122,7 +110,7 @@ function imodifier.set_target(m, target)
         if not filename then
             return
         end
-        local mtl = serialize.parse(filename, read_file(filename))
+        local mtl = serialize.parse(filename, aio.readall(filename))
         if not mtl.properties[mf.property] then
             return
         end
@@ -149,7 +137,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
         if string.find(filename, ".glb|") then
             filename = filename .. "/main.cfg"
         end
-        local mtl = serialize.parse(filename, read_file(filename))
+        local mtl = serialize.parse(filename, aio.readall(filename))
         assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))
     end
@@ -225,7 +213,7 @@ function imodifier.create_srt_modifier_from_file(target, group_id, path, keep, f
         end
         return value
     end
-    local anims = serialize.parse(path, read_file(path))
+    local anims = serialize.parse(path, aio.readall(path))
     local ani = anims[1]
     local sample_ratio = ani.sample_ratio
     local frame_count = ani.sample_ratio * ani.duration

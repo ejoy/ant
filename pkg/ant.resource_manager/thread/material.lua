@@ -1,17 +1,11 @@
-local cr = require "thread.compile"
-local serialize = import_package "ant.serialize"
 local bgfx = require "bgfx"
-local fastio = require "fastio"
+local serialize = import_package "ant.serialize"
+local aio = import_package "ant.io"
 
 local PM = require "programan.server"
 PM.program_init{
     max = bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
 }
-
-local function readall(path)
-    local realpath = cr.compile(path) or error(("`%s` cannot compile."):format(path))
-    return fastio.readall(realpath, path)
-end
 
 local function uniform_info(shader, uniforms)
     local shader_uniforms = bgfx.get_shader_uniforms(shader)
@@ -32,7 +26,7 @@ end
 
 local function loadShader(shaderfile)
     if shaderfile then
-        local h = bgfx.create_shader(bgfx.memory_buffer(readall(shaderfile)))
+        local h = bgfx.create_shader(bgfx.memory_buffer(aio.readall(shaderfile)))
         bgfx.set_name(h, shaderfile)
         return h
     end
@@ -196,8 +190,8 @@ local function update_uniforms_handle(attrib, uniforms, filename)
 end
 
 local function material_create(filename)
-    local material  = serialize.parse(filename, readall(filename .. "|main.cfg"))
-    local attribute = serialize.parse(filename, readall(filename .. "|attr.cfg"))
+    local material  = serialize.parse(filename, aio.readall(filename .. "|main.cfg"))
+    local attribute = serialize.parse(filename, aio.readall(filename .. "|attr.cfg"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
     update_uniforms_handle(attribute.attribs, material.fx.uniforms, filename)

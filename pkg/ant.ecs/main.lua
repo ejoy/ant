@@ -1,9 +1,8 @@
 local luaecs = import_package "ant.luaecs"
-local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
+local aio = import_package "ant.io"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
-local fastio = require "fastio"
 local policy = require "policy"
 local event = require "event"
 local feature = require "feature"
@@ -186,9 +185,7 @@ local function create_template(w, filename)
     if not prefab then
         prefab = {}
         w._templates[filename] = prefab
-        local realpath = assetmgr.compile(filename)
-        local data = fastio.readall(realpath, filename)
-        local t = serialize.parse(filename, data)
+        local t = serialize.parse(filename, aio.readall(filename))
         for _, v in ipairs(t) do
             if v.prefab then
                 prefab[#prefab+1] = {

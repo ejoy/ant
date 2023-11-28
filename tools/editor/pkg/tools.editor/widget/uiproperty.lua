@@ -1,6 +1,7 @@
 local imgui     = require "imgui"
 local imguiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
+local aio  = import_package "ant.io"
 local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
@@ -256,16 +257,13 @@ function TextureResource:_init(config, modifier)
     self.extension = ".texture"
 end
 local serialize = import_package "ant.serialize"
-local function read_file(fn)
-    local f <close> = assert(io.open(fn:string()))
-    return f:read "a"
-end
+
 function TextureResource:do_update()
     if #self.path <= 0 then return end
     local r = {}
     self.path:gsub('[^|]*', function (w) r[#r+1] = w end)
     if #r > 1 then
-        self.metadata = serialize.parse(self.path, read_file(lfs.path(assetmgr.compile(self.path))))
+        self.metadata = serialize.parse(self.path, aio.readall(self.path))
         if self.metadata.path[1] ~= '/' then
             self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
         end

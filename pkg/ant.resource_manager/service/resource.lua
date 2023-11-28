@@ -4,16 +4,15 @@ import_package "ant.hwi".init_bgfx()
 local bgfx = require "bgfx"
 bgfx.init()
 
-local cr = require "thread.compile"
-cr.init()
-
 local texture = require "thread.texture"
 require "thread.material"
 
 local S = require "thread.main"
 
-S.compile = cr.compile
-S.compile_file = cr.compile_file
+function S.compile(pathstring)
+    local vfs = require "vfs"
+    return vfs.realpath(pathstring)
+end
 
 local quit
 
