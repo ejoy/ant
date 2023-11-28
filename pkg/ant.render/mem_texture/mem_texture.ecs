@@ -1,7 +1,15 @@
-system "mem_texture_system"
-    .implement "mem_texture/mem_texture.lua"
+system "mem_texture_static_system"
+    .implement "mem_texture/mem_texture_static.lua"
 
-component "clear_mt_prefab"
+system "mem_texture_dynamic_system"
+    .implement "mem_texture/mem_texture_dynamic.lua"
 
-policy "clear_mt_prefab"
-    .component "clear_mt_prefab"
+component "clear_smt_prefab"
+component "clear_dmt_prefab"
+component "mem_texture_dynamic"
+
+policy "clear_smt_prefab"
+    .component "clear_smt_prefab"
+
+policy "clear_dmt_prefab"
+    .component "clear_dmt_prefab"
