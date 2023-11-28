@@ -15,9 +15,9 @@ local resource_cache = {}
 local config_os
 local config_resource
 do
-    local lpath = vfs.realpath "/resource.settings"
-    if lpath then
-        local config = datalist.parse(fastio.readall(lpath, "/resource.settings"))
+    local mem = vfs.read "/resource.settings"
+    if mem then
+        local config = datalist.parse(fastio.wrap(mem))
         config_os = config.os or platform.os
         config_resource = config.resource
     else
@@ -87,10 +87,9 @@ end
 
 local writer = {}
 
-function writer.zip()
-    local zippath = vfs.repopath() .. ".vfs.zip"
+function writer.zip(zippath)
     fs.remove_all(zippath)
-    local zipfile = assert(zip.open(zippath, "w"))
+    local zipfile = assert(zip.open(zippath:string(), "w"))
     local m = {}
     function m.writefile(path, content)
         zipfile:add(path, content)
@@ -154,12 +153,12 @@ do print "step4. pack file and dir."
     end
     local function target_path()
         if config_os == "ios" or config_os == "android" then
-            return repopath / ".vfs"
+            return repopath / "vfs.zip"
         else
-            return app_path "ant" / "bundle" / ".vfs"
+            return app_path "ant" / "bundle" / "vfs.zip"
         end
     end
-    local w = writer.dir(target_path())
+    local w = writer.zip(target_path())
     w.writefile("root", std_vfs:root())
     for hash, v in pairs(std_vfs._filehash) do
         if v.dir then
