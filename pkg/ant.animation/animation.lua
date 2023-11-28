@@ -49,7 +49,9 @@ local function process_keyframe_event(task)
 				-- 		visible_state = "main_queue",
 				-- 	})
 				-- end
-				world:pub {"keyframe_event", "effect", event.asset_path, task.context}
+				-- world:pub {"keyframe_event", "effect", event.asset_path, task.context}
+			elseif event.event_type == "Message" then
+				world:pub {"keyframe_event", "message", task.context}
 			end
 		end
 		event_state.next_index = event_state.next_index + 1
