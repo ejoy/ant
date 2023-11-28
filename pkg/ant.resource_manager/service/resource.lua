@@ -9,11 +9,6 @@ require "thread.material"
 
 local S = require "thread.main"
 
-function S.compile(pathstring)
-    local vfs = require "vfs"
-    return vfs.realpath(pathstring)
-end
-
 local quit
 
 ltask.fork(function ()

@@ -1,4 +1,3 @@
-local async = require "async"
 local loaders = {}
 
 loaders["ozz-animation"] = function (fn)
@@ -39,7 +38,9 @@ local function find_loader(localfilepath)
 end
 
 local function loader(filename)
-	local localfilename = async.compile(filename)
+	--TODO
+	local vfs = require "vfs"
+	local _, localfilename = vfs.read(filename)
 	local fn = find_loader(localfilename)
 	if not fn then
 		error "not support type"
