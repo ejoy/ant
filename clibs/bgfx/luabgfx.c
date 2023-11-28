@@ -2666,7 +2666,7 @@ lvertexConvert(lua_State *L) {
 static void *
 get_offset_size(lua_State *L, void *str_, size_t *sz) {
 	const char *str = (const char *)str_;
-	int offset = luaL_checkinteger(L, 2);
+	int offset = luaL_optinteger(L, 2, 0);
 	int size = (int)*sz;
 	if (offset > 0) {
 		if (offset > size) {
