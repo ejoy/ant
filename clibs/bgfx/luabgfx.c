@@ -2745,22 +2745,30 @@ lmemoryBuffer(lua_State *L) {
 		return 1;
 	} else if (t == LUA_TFUNCTION) {
 		// type 6
+		lua_settop(L, 3);
 		lua_pushvalue(L, 1);
 		lua_call(L, 0, 3);
-		int top = lua_gettop(L);
-		void * data = lua_touserdata(L, top-2);
-		size_t sz = luaL_checkinteger(L, top-1);
+		// 1 : func
+		// 2 : offset (opt)
+		// 3 : size (opt)
+		// 4 : data
+		// 5 : sz
+		// 6 : close
+		void * data = lua_touserdata(L, 4);
+		size_t sz = luaL_checkinteger(L, 5);
 		data = get_offset_size(L, data, &sz);
 		void * buffer = newMemory(L, NULL, sz);
 		memcpy(buffer, data, sz);
-		int t = lua_type(L, top);
+		int t = lua_type(L, 6);
 		if (t == LUA_TUSERDATA || t == LUA_TTABLE) {
-			if (luaL_getmetafield(L, 3, "__close") == LUA_TFUNCTION) {
-				lua_pushvalue(L, top);
+			if (luaL_getmetafield(L, 6, "__close") == LUA_TFUNCTION) {
+				lua_pushvalue(L, 6);
 				lua_call(L, 1, 0);
 			}
 		} else if (t == LUA_TFUNCTION) {
-			lua_insert(L, top-2);
+			lua_pushvalue(L, 6);
+			lua_pushvalue(L, 4);
+			lua_pushvalue(L, 5);
 			lua_call(L, 2, 0);
 		}
 		return 1;
