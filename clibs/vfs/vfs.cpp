@@ -37,41 +37,17 @@ local realpath; do
     end
 end
 function vfs.read(path)
-    return fastio.readall_mem(realpath(path), path)
-end
-function vfs.readg(path)
     local lpath = realpath(path)
     local data = fastio.readall_mem(lpath, path)
     return data, lpath
 end
 vfs.realpath = realpath
-local function errmsg(err, filename, real_filename)
-    local first, last = err:find(real_filename, 1, true)
-    if not first then
-        return err
-    end
-    return err:sub(1, first-1) .. filename .. err:sub(last+1)
-end
-local function vfs_loadrealfile(path, realpath, ...)
-    local f, err, ec = io_open(realpath, 'rb')
-    if not f then
-        err = errmsg(err, path, realpath)
-        return nil, err, ec
-    end
-    local str = f:read 'a'
-    f:close()
-    if __ANT_RUNTIME__ then
-        return load(str, '@' .. path, ...)
-    else
-        return load(str, '@' .. realpath, ...)
-    end
-end
-local function vfs_loadfile(path, ...)
-    local realpath = vfs.realpath(path)
-    if not realpath then
+local function vfs_loadfile(path, _, env)
+    local mem, symbol = vfs.read(path)
+    if not mem then
         return nil, ('%s:No such file or directory.'):format(path)
     end
-    return vfs_loadrealfile(path, realpath, ...)
+    return fastio.mem_loadlua(mem, symbol, env)
 end
 function vfs_dofile(path)
     local f, err = vfs_loadfile(path)
@@ -80,31 +56,18 @@ function vfs_dofile(path)
     end
     return f()
 end
-local function searchpath(name, path)
-    local err = ''
-    name = string.gsub(name, '%.', '/')
-    for c in string.gmatch(path, '[^;]+') do
-        local filename = string.gsub(c, '%?', name)
-        local realpath = vfs.realpath(filename)
-        if realpath then
-            return filename, realpath
-        end
-        err = err .. ("\n\tno file '%s'"):format(filename)
-    end
-    return nil, err
-end
 local function searcher_lua(name)
-    assert(type(package.path) == "string", "'package.path' must be a string")
-    local path, realpath = searchpath(name, package.path)
-    if not path then
-        local err = realpath
-        return err
+    local filename = name:gsub('%.', '/')
+    local path = package.path:gsub('%?', filename)
+    local mem, symbol = vfs.read(path)
+    if mem then
+        local func, err = fastio.mem_loadlua(mem, symbol, env)
+        if not func then
+            error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
+        end
+        return func
     end
-    local func, err = vfs_loadrealfile(path, realpath)
-    if not func then
-        error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
-    end
-    return func, path
+    return "no file '"..path.."'"
 end
 if initfunc then
     if __ANT_RUNTIME__ then
@@ -119,7 +82,18 @@ package.searchers = {
     searcher_preload,
     searcher_lua,
 }
-package.searchpath = searchpath
+function package.searchpath(name, path)
+    local err = ''
+    name = string.gsub(name, '%.', '/')
+    for c in string.gmatch(path, '[^;]+') do
+        local filename = string.gsub(c, '%?', name)
+        if vfs.type(filename) ~= nil then
+            return filename
+        end
+        err = err .. ("\n\tno file '%s'"):format(filename)
+    end
+    return nil, err
+end
 loadfile = vfs_loadfile
 dofile = vfs_dofile
 return vfs
