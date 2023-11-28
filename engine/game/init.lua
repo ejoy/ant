@@ -18,6 +18,7 @@ local io_req = thread.channel "IOreq"
 local io_initargs = {
     repopath = repopath,
     fd = s:detach(),
+    editor = __ANT_EDITOR__,
 }
 
 local vfs_initargs = {

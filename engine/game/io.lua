@@ -1,5 +1,7 @@
 local initargs = ...
 
+__ANT_EDITOR__ = initargs.editor
+
 package.path = "/engine/?.lua"
 package.cpath = ""
 
