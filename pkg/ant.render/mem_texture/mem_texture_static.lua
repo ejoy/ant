@@ -65,7 +65,7 @@ local function create_mem_texture_queue(view_id, queue_name)
                 },
                 data = {
                     scene = {
-                        r = {0.6, 0, 0},
+                        r = {1, 0, 0},
                         t = {0, 80, -50, 0},
                         updir = {0.0, 1.0, 0.0}
                 },
@@ -167,16 +167,15 @@ function mts_sys:update_filter()
         local view_dir = math3d.todirection(camera.scene.r)
         local view_len = math3d.length(math3d.mul(2, extents))
         local camera_pos = math3d.sub(world_center, math3d.mul(view_dir, view_len))
-        camera_pos = math3d.sub(camera_pos, math3d.vector(0, 10, 0))
         iom.set_position(camera, camera_pos) 
 
-        local worldmat = math3d.matrix(camera.scene)
+--[[         local worldmat = math3d.matrix(camera.scene)
         local viewmat = math3d.inverse(worldmat)
         local view_min, view_max = math3d.minmax(world_points, viewmat)
         local view_center = math3d.mul(0.5, math3d.add(view_max, view_min))
         local delta_y, delta_z = math3d.index(math3d.sub(view_max, view_center), 2), math3d.index(view_max, 3)
         local fovy = math.deg(math.atan(delta_y / delta_z)) * 2
-        icamera.set_frustum_fov(camera, fovy)
+        icamera.set_frustum_fov(camera, fovy) ]]
     end
 
     local function update_filter_prefab(obj_name, queue_name)
