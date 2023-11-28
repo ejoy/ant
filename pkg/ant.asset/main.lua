@@ -51,7 +51,6 @@ end
 
 assetmgr.resource = assetmgr.load
 
-assetmgr.compile 			= async.compile
 assetmgr.load_material		= async.material_create
 assetmgr.unload_material	= async.material_destroy
 assetmgr.material_check		= async.material_check
@@ -63,4 +62,5 @@ assetmgr.textures 			= texture_mgr.textures
 assetmgr.default_textureid	= texture_mgr.default_textureid
 assetmgr.invalid_texture 	= texture_mgr.invalid
 assetmgr.load_texture 		= async.texture_create_fast
+
 return assetmgr

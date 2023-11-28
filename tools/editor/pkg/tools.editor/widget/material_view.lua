@@ -12,28 +12,24 @@ local imaterial = ecs.require "ant.asset|material"
 ]]
 
 local prefab_mgr  = ecs.require "prefab_manager"
-local assetmgr  = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
+local aio       = import_package "ant.io"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
 local uiproperty= require "widget.uiproperty"
 local global_data=require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
-local fastio    = require "fastio"
 local access    = global_data.repo_access
 local rb        = ecs.require "widget.resource_browser"
 
 local MaterialView = {}
 local file_cache = {}
-local function read_file(fn)
-    local f <close> = assert(io.open(fn:string()))
-    return f:read "a"
-end
+
 local function read_datalist_file(p)
     local c = file_cache[p]
     if c == nil then
-        c = serialize.parse(p, read_file(lfs.path(assetmgr.compile(p))))
+        c = serialize.parse(p, aio.readall(p))
         file_cache[p] = c
     end
     return c
@@ -1067,7 +1063,7 @@ function MaterialView:set_eid(eid)
     for _, v in pairs(t.properties) do
         if v.texture and not texture_flag[v.texture] then
             local imagepath = absolute_path(v.texture, mtlpath) .. "|main.cfg"
-            local data = datalist.parse(fastio.readall(assetmgr.compile(imagepath), imagepath))
+            local data = datalist.parse(aio.readall(imagepath))
             if data and not image_info[v.texture] then
                 image_info[v.texture] = {width = data.info.width, height = data.info.height}
                 texture_flag[v.texture] = true
