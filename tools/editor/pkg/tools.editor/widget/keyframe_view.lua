@@ -3,7 +3,8 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.require "ant.animation|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local assetmgr 	= import_package "ant.asset"
+local assetmgr  = import_package "ant.asset"
+local aio       = import_package "ant.io"
 local imgui     = require "imgui"
 local imguiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
@@ -22,8 +23,6 @@ local imodifier = ecs.require "ant.modifier|modifier"
 local ika       = ecs.require "ant.animation|keyframe"
 local faicons   = require "common.fa_icons"
 local prefab_mgr = ecs.require "prefab_manager"
-local global_data = require "common.global_data"
-local access    = global_data.repo_access
 local m = {}
 local current_mtl
 local current_target
@@ -1336,10 +1335,7 @@ function m.load(path)
     end
     file_path = path:string()
 end
-local function read_file(fn)
-    local f <close> = assert(io.open(fn:string()))
-    return f:read "a"
-end
+
 function m.create_target_animation(at, target)
     local e <close> = world:entity(target, "material?in")
     create_context = {}
@@ -1358,7 +1354,7 @@ function m.create_target_animation(at, target)
                 mtlpath = mtlpath .. "/main.cfg"
             end
             local desc = {}
-            local mtl = serialize.parse(mtlpath, read_file(lfs.path(assetmgr.compile(mtlpath))))
+            local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
             local keys = {}
             for k, v in pairs(mtl.properties) do
                 if not v.stage then

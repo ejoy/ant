@@ -5,6 +5,7 @@ local imgui         = require "imgui"
 local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
+local aio           = import_package "ant.io"
 local mc            = mathpkg.constant
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
@@ -383,10 +384,6 @@ function m:on_prefab_ready(prefab)
     end
 end
 
-local function read_file(fn)
-    local f<close> = assert(io.open(fn:string()))
-    return f:read "a"
-end
 local prefabe_name_ui = {text = ""}
 local prefab_list = {}
 local patch_template
@@ -400,7 +397,7 @@ end
 
 local function get_prefabs_and_patch_template(glbfilename)
     local patchfile = glbfilename .. ".patch"
-    local patch_tpl = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile)))) or {}
+    local patch_tpl = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, aio.readall(patchfile)) or {}
     local prefab_set = {}
     for _, patch in ipairs(patch_tpl) do
         local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
@@ -484,7 +481,7 @@ end
 function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
-    self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
+    self.prefab_template = serialize.parse(filename, aio.readall(filename))
     local path_list = utils.split_ant_path(filename)
     if #path_list > 1 then
         self.glb_filename = path_list[1]
@@ -664,7 +661,7 @@ function m:add_prefab(path)
                     local child = children[1]
                     local e <close> = world:entity(child, "camera?in")
                     if e.camera then
-                        local tpl = serialize.parse(path, read_file(lfs.path(assetmgr.compile(path))))
+                        local tpl = serialize.parse(path, aio.readall(path))
                         hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
                     end
                 end
@@ -1147,7 +1144,7 @@ function m:do_material_patch(eid, path, v)
     if not self.materials_names then
         local ret = utils.split_ant_path(tpl.data.material)
         local fn = ret[1] .. "|materials.names"
-        self.materials_names = serialize.parse(fn, read_file(lfs.path(assetmgr.compile(fn))))
+        self.materials_names = serialize.parse(fn, aio.readall(fn))
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))
     if not origin then
