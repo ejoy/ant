@@ -8,7 +8,7 @@ local bgfx		= require "bgfx"
 local RM		= ecs.require "ant.material|material"
 local L			= import_package "ant.render.core".layout
 
-local fs		= require "filesystem"
+local aio		= import_package "ant.io"
 
 local imaterial = {}
 
@@ -48,13 +48,8 @@ local function read_mat_varyings(varyings)
 	if varyings then
 		if type(varyings) == "string" then
 			assert(varyings:sub(1, 1) == "/", "Only support full vfs path")
-			local function read_file(fn)
-				local p = fs.path(fn):localpath()
-				local f<close> = assert(io.open(p:string()), p:string());
-				return f:read "a"
-			end
 			local datalist = require "datalist"
-			varyings = datalist.parse(read_file(varyings))
+			varyings = datalist.parse(aio.readall(varyings))
 		end
 		return L.parse_varyings(varyings)
 	end

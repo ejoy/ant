@@ -2,6 +2,7 @@ local ltask = require "ltask"
 local fastio = require "fastio"
 local vfs = require "vfs"
 local constructor = require "core.DOM.constructor"
+local aio = import_package "ant.io"
 
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local m = {}
@@ -11,13 +12,11 @@ function m.is_file(path)
 end
 
 function m.readfile(source_path)
-    local realpath = vfs.realpath(source_path)
-    return fastio.readall(realpath, source_path)
+    return aio.readall(source_path)
 end
 
 function m.loadstring(content, source_path, source_line, env)
-    local realpath = vfs.realpath(source_path)
-    local source = "--@"..realpath..":"..source_line.."\n "..content
+    local source = "--@"..source_path..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
