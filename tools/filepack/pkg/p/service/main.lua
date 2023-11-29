@@ -89,6 +89,7 @@ local writer = {}
 
 function writer.zip(zippath)
     fs.remove_all(zippath)
+    fs.create_directories(zippath:parent_path())
     local zipfile = assert(zip.open(zippath:string(), "w"))
     local m = {}
     function m.writefile(path, content)
