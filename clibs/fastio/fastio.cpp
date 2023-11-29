@@ -115,6 +115,7 @@ static const char* getsymbol(lua_State *L, const char* filename) {
 
 static int readall(lua_State *L) {
     const char* filename = getfile(L);
+    lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
         return raise_error(L, "open", getsymbol(L, filename));
@@ -139,6 +140,7 @@ static int readall(lua_State *L) {
 
 static int readall_s(lua_State *L) {
     const char* filename = getfile(L);
+    lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
         return raise_error(L, "open", getsymbol(L, filename));
@@ -226,10 +228,10 @@ static char hex[] = {
 
 static int sha1(lua_State *L) {
     const char* filename = getfile(L);
-    const char* symbol = getsymbol(L, filename);
+    lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return raise_error(L, "open", symbol);
+        return raise_error(L, "open", getsymbol(L, filename));
     }
     std::array<uint8_t, 1024> buffer;
     SHA1_CTX ctx;
@@ -329,6 +331,7 @@ static int tostring(lua_State *L) {
 
 static int readall_mem(lua_State *L) {
     const char* filename = getfile(L);
+    lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
         return raise_error(L, "open", getsymbol(L, filename));
