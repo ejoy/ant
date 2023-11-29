@@ -770,11 +770,12 @@ alloc_cache(lua_State *L, size_t sz) {
 
 static int
 zipreader_handle(lua_State *L) {
-	lua_settop(L, 2);
+	lua_settop(L, 3);
 	lua_getiuservalue(L, 1, 1);	// zip read
-	unzFile zf = open_file(L, 3, 2, NULL);
+	unzFile zf = open_file(L, 4, 2, NULL);
 	if (zf == NULL)
 		return 0;
+	int no_extra_buffer = lua_toboolean(L, 3);
 	unz_file_info info;
 	int err = unzGetCurrentFileInfo(zf, &info, NULL, 0, NULL, 0, NULL, 0);
 	if (err != UNZ_OK)
@@ -782,10 +783,17 @@ zipreader_handle(lua_State *L) {
 	size_t sz = info.uncompressed_size;
 	struct zip_reader_cache *C = alloc_cache(L, sz);
 	if (C == NULL) {
-		close_file(L, zf);
-		lua_pushboolean(L, 0);
-		lua_pushinteger(L, need_size(sz));
-		return 2;
+		if (!no_extra_buffer) {
+			C = luazip_new(sz, NULL);
+			if (C == NULL) {
+				return luaL_error(L, "Out of memory for file %s", lua_tostring(L, 2));
+			}
+		} else {
+			close_file(L, zf);
+			lua_pushboolean(L, 0);
+			lua_pushinteger(L, need_size(sz));
+			return 2;
+		}
 	}
 	int bytes = unzReadCurrentFile(zf, C->buffer, sz);
 	if (bytes != sz) {
@@ -860,6 +868,10 @@ luazip_new(size_t sz, struct zip_reader_cache *old) {
 	struct zip_reader_cache *C;
 	size_t size = need_size(sz);
 	C = (struct zip_reader_cache *)realloc(old, size);
+	if (C == NULL) {
+		free(old);
+		return NULL;
+	}
 	C->size = 0;
 	C->length = sz;
 	C->active = 1;
