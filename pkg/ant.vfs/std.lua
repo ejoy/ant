@@ -168,15 +168,17 @@ end
 
 function REPO_MT:build_resource(path)
 	local vfsrepo = new_vfsrepo()
-	vfsrepo:init {
-		{
-			path = path,
-			mount = "/",
-			filter = resource_filter
-		},
-		hash = self._hashs,
-	}
-	if not self._nohash then
+	local config = {{
+		path = path,
+		mount = "/",
+		filter = resource_filter
+	}}
+	if self._nohash then
+		config.hash = false
+		vfsrepo:init(config)
+	else
+		config.hash = self._hashs
+		vfsrepo:init(config)
 		export_filehash(self, vfsrepo)
 	end
 	export_hash(self, vfsrepo, "ab")

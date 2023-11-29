@@ -15,7 +15,8 @@ local function readroot(self)
 	if f then
 		return f:read "a"
 	end
-	return self:ziproot()
+	local zf = self.zipfile
+	return zf and zf:readfile "root"
 end
 
 local function updateroot(self, hash)
@@ -64,11 +65,6 @@ function vfs.new(config)
 	return repo
 end
 
-function vfs:ziproot()
-	local zf = self.zipfile
-	return zf and zf:readfile "root"
-end
-
 function vfs:dir(hash)
 	local dir = self.cache_hash[hash]
 	if dir then
@@ -102,11 +98,13 @@ function vfs:dir(hash)
 end
 
 function vfs:open(hash)
-	local c = self.zipreader(hash)
-	if not c then
-		return fastio.readall_mem(self.localpath .. "/" .. hash)
+	if self.zipreader then
+		local c = self.zipreader(hash)
+		if c then
+			return c
+		end
 	end
-	return c
+	return fastio.readall_mem(self.localpath .. "/" .. hash)
 end
 
 local function get_cachepath(setting, name)
