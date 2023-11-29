@@ -120,7 +120,7 @@ function idn.update_cycle(e, cycle)
         local r, g, b, intensity = math3d.index(direct, 1, 2, 3, 4)
         ilight.set_color_rgb(dl, r, g, b)
         ilight.set_intensity(dl, intensity * default_intensity)
-        iom.set_direction(dl, math3d.normalize(math3d.todirection(rotator, hdir)))
+        iom.set_direction(dl, math3d.normalize(math3d.transform(rotator, hdir, 1)))
         w:submit(dl)        
     end
     local ar, ag, ab, ai = math3d.index(ambient, 1, 2, 3, 4)
