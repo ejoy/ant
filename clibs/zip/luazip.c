@@ -694,7 +694,7 @@ split_cache(lua_State *L, struct zip_reader_cache *C, size_t sz) {
 		next->active = 0;
 		C->size = sz;
 	} else {
-		next = advance_ptr(C, sz);
+		next = advance_ptr(C, C->size);
 		size_t len = lua_rawlen(L, 1);
 		struct zip_reader_cache * beginptr = (struct zip_reader_cache *)lua_touserdata(L, 1);
 		struct zip_reader_cache * endptr = advance_ptr(beginptr, len);
@@ -773,8 +773,9 @@ zipreader_handle(lua_State *L) {
 	lua_settop(L, 3);
 	lua_getiuservalue(L, 1, 1);	// zip read
 	unzFile zf = open_file(L, 4, 2, NULL);
-	if (zf == NULL)
+	if (zf == NULL) {
 		return 0;
+	}
 	int no_extra_buffer = lua_toboolean(L, 3);
 	unz_file_info info;
 	int err = unzGetCurrentFileInfo(zf, &info, NULL, 0, NULL, 0, NULL, 0);

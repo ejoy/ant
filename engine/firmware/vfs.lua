@@ -102,7 +102,7 @@ function vfs:dir(hash)
 end
 
 function vfs:open(hash)
-	local c = self:zipreader(hash)
+	local c = self.zipreader(hash)
 	if not c then
 		return fastio.readall_mem(self.localpath .. "/" .. hash)
 	end
