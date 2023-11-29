@@ -15,6 +15,7 @@ local ig        = ecs.require "ant.group|group"
 local R             = world:clibs "render.render_material"
 local queuemgr      = ecs.require "ant.render|queue_mgr"
 local hwi       = import_package "ant.hwi"
+local mc = import_package "ant.math".constant
 
 local MEM_TEXTURE_STATIC_VIEWID <const> = hwi.viewid_get "mem_texture_static"
 local STATIC_OBJ_NAME <const> =  "mem_texture_static_obj"
@@ -27,6 +28,9 @@ local RB_FLAGS <const> = sampler{
     V   =   "CLAMP",
     RT  =   "RT_ON",
 }
+local DEFAULT_EXTENTS <const> = math3d.mark(math3d.vector(50, 50, 50))
+local DEFAULT_LENGTH <const> = math3d.length(math3d.mul(1.6, DEFAULT_EXTENTS))
+local DISTANCE = {}
 
 local function register_mem_texture_group()
     w:register{name = STATIC_OBJ_NAME}
@@ -65,13 +69,13 @@ local function create_mem_texture_queue(view_id, queue_name)
                 },
                 data = {
                     scene = {
-                        r = {1, 0, 0},
+                        r = {0.785, 0.785, 0},
                         t = {0, 80, -50, 0},
                         updir = {0.0, 1.0, 0.0}
                 },
                   camera = {
                     frustum = {
-                        aspect = 4/3,
+                        aspect = 0.95,
                         f = 1000,
                         fov = 45,
                         n = 1,
@@ -155,50 +159,17 @@ end
 
 function mts_sys:update_filter()
 
-    local function adjust_camera_pos(camera, aabb)
-        if not math3d.aabb_isvalid(aabb) then return end
-        -- 1.get aabb_center/extents in world space
-        -- 2.get camera srt in world space
-        -- 3.transform aabb to view space
-        -- 4.get fov
-        local world_points = math3d.aabb_points(aabb)
-        local world_min, world_max = math3d.minmax(world_points)
-        local world_center, extents = math3d.mul(0.5, math3d.add(world_max, world_min)), math3d.mul(0.5, math3d.sub(world_max, world_min))
-        local view_dir = math3d.todirection(camera.scene.r)
-        local view_len = math3d.length(math3d.mul(2, extents))
-        local camera_pos = math3d.sub(world_center, math3d.mul(view_dir, view_len))
-        iom.set_position(camera, camera_pos) 
-
---[[         local worldmat = math3d.matrix(camera.scene)
-        local viewmat = math3d.inverse(worldmat)
-        local view_min, view_max = math3d.minmax(world_points, viewmat)
-        local view_center = math3d.mul(0.5, math3d.add(view_max, view_min))
-        local delta_y, delta_z = math3d.index(math3d.sub(view_max, view_center), 2), math3d.index(view_max, 3)
-        local fovy = math.deg(math.atan(delta_y / delta_z)) * 2
-        icamera.set_frustum_fov(camera, fovy) ]]
-    end
-
     local function update_filter_prefab(obj_name, queue_name)
         if exist_prefab(obj_name) then
-            local scene_aabb = math3d.aabb()
-            local select_tag = ("filter_result %s visible_state:in render_object:in material:in bounding?in filter_material:in scene:in"):format(obj_name)
+            local select_tag = ("filter_result %s visible_state:in render_object:in filter_material:in"):format(obj_name)
             for e in w:select(select_tag) do
                 if e.visible_state[queue_name] then
                     local fm = e.filter_material
                     local mi = fm["main_queue"]
                     fm[queue_name] = mi
                     R.set(e.render_object.rm_idx, queuemgr.material_index(queue_name), mi:ptr())
-                    local worldmat = math3d.matrix(e.scene)
-                    local current_scene_aabb = math3d.aabb_transform(worldmat, e.bounding.aabb)
-                    scene_aabb = math3d.aabb_merge(scene_aabb, current_scene_aabb)
                 end
             end
-    
-            select_tag = ("%s camera_ref:in"):format(queue_name)
-            local mtq = w:first(select_tag)
-            local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
-            adjust_camera_pos(camera, scene_aabb)
-            create_clear_static_prefab_entity()
         end
     end
 
@@ -206,12 +177,53 @@ function mts_sys:update_filter()
 end
 
 function mts_sys:entity_init()
-
-    for e in w:select "INIT clear_smt_prefab eid:in" do
-        w:remove(e.eid) 
+    local function adjust_camera_pos(camera, aabb)
+        if not math3d.aabb_isvalid(aabb) then return end
+        local _, world_extents = math3d.aabb_center_extents(aabb)
+        local view_dir = math3d.todirection(camera.scene.r)
+        local view_len = DEFAULT_LENGTH * DISTANCE[STATIC_OBJ_NAME]
+        local camera_pos = math3d.sub(math3d.vector(0, 0, 0), math3d.mul(view_dir, view_len))
+        iom.set_position(camera, camera_pos)
+        local ex, ey, ez = math3d.index(world_extents, 1, 2, 3)
+        local emax = math.max(ex, math.max(ey, ez))
+        local scale = math3d.vector(emax, emax, emax)
+        scale = math3d.reciprocal(scale)
+        scale = math3d.mul(DEFAULT_EXTENTS, scale)
+        aabb = math3d.aabb_transform(math3d.matrix{s = scale}, aabb)
+        local world_center, _ = math3d.aabb_center_extents(aabb)
+        return scale, math3d.mul(-1, world_center)
     end
 
-    for e in w:select "INIT clear_dmt_prefab eid:in" do
+    local function adjust_prefab(obj_name, queue_name)
+        if exist_prefab(obj_name) then
+            local select_tag = ("%s bounding:in"):format(obj_name)
+            local scene_aabb = math3d.aabb()
+            local is_valid = false
+            for e in w:select(select_tag) do
+                if e.bounding.scene_aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.scene_aabb) then
+                    scene_aabb = math3d.aabb_merge(scene_aabb, e.bounding.scene_aabb)
+                    is_valid = true
+                end
+            end
+            if is_valid then
+                select_tag = ("%s scene:in"):format(obj_name)
+                for e in w:select(select_tag) do
+                    if e.scene and e.scene.parent == 0  then
+                        select_tag = ("%s camera_ref:in"):format(queue_name)
+                        local mtq = w:first(select_tag)
+                        local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+                        local s, t = adjust_camera_pos(camera, scene_aabb)
+                        iom.set_position(e, math3d.add(t, e.scene.t))
+                        iom.set_scale(e, math3d.mul(s, e.scene.s))
+                    end
+                end 
+                create_clear_static_prefab_entity() 
+            end
+        end
+    end
+
+    adjust_prefab(STATIC_OBJ_NAME, STATIC_QUEUE_NAME)
+    for e in w:select "INIT clear_smt_prefab eid:in" do
         w:remove(e.eid) 
     end
 end
@@ -224,7 +236,7 @@ end
 
 local S = ltask.dispatch()
 
-function S.create_mem_texture_static_prefab(prefab_path, width, height, rotation)
+function S.create_mem_texture_static_prefab(prefab_path, width, height, rotation, distance)
 
     local function create_mem_texture_prefab(obj_name ,queue_name)
 
@@ -234,13 +246,10 @@ function S.create_mem_texture_static_prefab(prefab_path, width, height, rotation
             on_ready = function (inst)
                 local alleid = inst.tag['*']
                 for _, eid in ipairs(alleid) do
-                    local ee <close> = world:entity(eid, "visible_state?in mesh?in scene?in")
+                    local ee <close> = world:entity(eid, "visible_state?in mesh?in scene?in mem_texture_ready?out")
                     if ee.mesh and ee.visible_state then
                         ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
                         ivs.set_state(ee, queue_name, true)
-                    end
-                    if ee.scene and ee.scene.parent == 0 then
-                        iom.set_rotation(ee, math3d.quaternion(rotation))
                     end
                 end
             end
@@ -262,6 +271,14 @@ function S.create_mem_texture_static_prefab(prefab_path, width, height, rotation
         end
     end
 
+    local function adjust_camera_rotation(queue_name)
+        local select_tag = ("%s camera_ref:in"):format(queue_name)
+        local mtq = w:first(select_tag)
+        local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+        iom.set_rotation(camera, math3d.quaternion(rotation))
+    end
+
+
     local function get_current_rt_handle(queue_name)
         local select_tag = ("%s render_target:update"):format(queue_name)
         local mtq = w:first(select_tag)
@@ -271,7 +288,9 @@ function S.create_mem_texture_static_prefab(prefab_path, width, height, rotation
         return fbmgr.get_rb(fbidx, 1).handle
     end
 
+    DISTANCE[STATIC_OBJ_NAME] = distance
     create_mem_texture_prefab(STATIC_OBJ_NAME ,STATIC_QUEUE_NAME)
+    adjust_camera_rotation(STATIC_QUEUE_NAME)
     return get_current_rt_handle(STATIC_QUEUE_NAME)
 end
 
