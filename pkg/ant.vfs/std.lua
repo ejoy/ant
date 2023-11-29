@@ -200,7 +200,7 @@ end
 
 local function new_std(t)
 	local rootpath = lfs.path(t.rootpath)
-	local cachepath = rootpath / ".fileserver"
+	local cachepath = rootpath / ".app"
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end

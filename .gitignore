@@ -9,10 +9,6 @@
 .vs
 .app
 .ios
-.fileserver
-.build
-.log
-.vfs
 res
 /build
 /bin
