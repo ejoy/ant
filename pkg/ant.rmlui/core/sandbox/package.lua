@@ -1,4 +1,5 @@
-local filemanager = require "core.filemanager"
+local fastio = require "fastio"
+local vfs = require "vfs"
 
 return function (env, path)
     local package = {
@@ -6,27 +7,22 @@ return function (env, path)
         loaded = {},
         path = path:match("^(.+/)[^/]*$")..'?.lua'
     }
-    local function searchpath(name, path)
+    local function searcher_lua(name)
+        local packagepath = package.path
+        assert(type(packagepath) == "string", "'package.path' must be a string")
         name = string.gsub(name, '%.', '/')
-        for c in string.gmatch(path, '[^;]+') do
+        for c in string.gmatch(packagepath, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            if filemanager.is_file(filename) then
-                return filename
+            local mem, symbol = vfs.read(filename)
+            if mem then
+                local func, err = fastio.mem_loadlua(mem, symbol, env)
+                if not func then
+                    error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
+                end
+                return func, path
             end
         end
-        return nil, "no file '"..path:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
-    end
-    local function searcher_lua(name)
-        assert(type(package.path) == "string", "'package.path' must be a string")
-        local path, err1 = searchpath(name, package.path)
-        if not path then
-            return err1
-        end
-        local func, err2 = filemanager.loadfile(path, env)
-        if not func then
-            error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
-        end
-        return func, path
+        return nil, "no file '"..packagepath:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
     end
     local function findloader(name)
         local msg = ''
@@ -54,7 +50,7 @@ return function (env, path)
         package.loaded[name] = r
         return r
     end
-    package.searchpath = searchpath
+    package.searchpath = nil
     package.searchers = { searcher_lua }
     env.package = package
     env.require = require
