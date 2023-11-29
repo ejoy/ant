@@ -542,14 +542,9 @@ local function system_changed(w)
         func()
     end
     if next(initsystems) ~= nil then
+        initsystems["ant.ecs|entity_init_system"] = w._systems["ant.ecs|entity_init_system"]
         local step = slove_system(initsystems)
         w:pipeline_func("_init", step)()
-        w:_flush_instance_queue()
-        w:_flush_entity_queue()
-        w:pipeline_func("_init_world", step)()
-        w:_flush_instance_queue()
-        w:_flush_entity_queue()
-        math3d.reset()
     end
     log.info("System refreshed.")
 end

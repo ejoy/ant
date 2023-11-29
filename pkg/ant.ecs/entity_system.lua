@@ -3,21 +3,22 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
-local m = ecs.system "entity_system"
+local update_sys = ecs.system "entity_update_system"
+local init_sys = ecs.system "entity_init_system"
 
 local evOnMessage = world:sub {"EntityMessage"}
 local evOnRemoveInstance = world:sub {"OnRemoveInstance"}
 
 local PipelineEntityRemove
 
-function m:entity_ready()
+function update_sys:entity_ready()
     for v in w:select "on_ready:in" do
         v:on_ready()
     end
     w:clear "on_ready"
 end
 
-function m:data_changed()
+function update_sys:data_changed()
     for msg in evOnMessage:each() do
         local eid = msg[2]
         local v = w:fetch(eid, "on_message:in")
@@ -28,7 +29,11 @@ function m:data_changed()
     end
 end
 
-function m:frame_finish()
+function update_sys:pipeline()
+    PipelineEntityRemove = world:pipeline_func "_entity_remove"
+end
+
+function update_sys:frame_remove()
     --step1. Remove prefab
     for _, instance in evOnRemoveInstance:unpack() do
         instance.REMOVED = true
@@ -59,15 +64,13 @@ function m:frame_finish()
 
     --step3. Remove entity
     w:update()
+end
 
+function init_sys:frame_create()
     --step4. Create entity
     world:_flush_instance_queue()
     world:_flush_entity_queue()
 
     --step5. reset math3d
     math3d.reset()
-end
-
-function m:pipeline()
-    PipelineEntityRemove = world:pipeline_func "_entity_remove"
 end
