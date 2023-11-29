@@ -25,7 +25,7 @@ end
 
 local function save_prefab(eid, path)
     local e <close> = world:entity(eid, "daynight?in")
-    local dn = {raw = {}, path = e.daynight.path}
+    local dn = {raw = {}, path = e.daynight.path, type = e.daynight.type}
     for tn, t in pairs(e.daynight.rt) do
         local tt = {}
         for _, pt in ipairs(t) do
@@ -36,17 +36,14 @@ local function save_prefab(eid, path)
     local info = hierarchy:get_node_info(eid)
     local t = info.template
     t.data.daynight = dn
-    local lpp = path:parent_path():localpath() lfs.path(path:parent_path())
-    if not lfs.exists(lpp) then
-        lfs.create_directories(lpp)
-    end
-    local f<close> = assert(io.open((lpp / path:filename()._value):string(), "w"))
+    local file_path = fs.path(path):localpath():string()
+    local f<close> = assert(io.open(file_path, "w"))
     f:write(serialize.stringify(t))
 end
 
 local function reload()
     prefab_mgr:save()
-    prefab_mgr:reload()
+    --prefab_mgr:reload()
 end
 
 
@@ -251,6 +248,7 @@ function DaynightView:set_eid(eid)
         local property_array = DaynightView:get_daynight_cycles(e)
         self.daynight:set_subproperty(property_array)
         self.prefab = e.daynight.path
+        self.type = e.daynight.type
     else
         self.eid = nil
         return
