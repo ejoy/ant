@@ -7,7 +7,7 @@ fx:
 properties:
     s_skybox:
         stage: 0
-        texture: /pkg/ant.test.features/assets/textures/aerodynamics_workshop_2k.texture
+        texture: /pkg/ant.resources.test/sky/aerodynamics_workshop_2k.texture
     u_skybox_param: {1.0, 0.0, 0.0, 0.0}    #intensity, NOTUSE, NOTUSE, NOTUSE
 state:
     ALPHA_REF: 0
