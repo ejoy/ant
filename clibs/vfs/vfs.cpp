@@ -12,7 +12,6 @@ std::mutex mutex;
 static const std::string_view initscript = R"(
 local initfunc, initargs = ...
 local vfs = {}
-local io_open = io.open
 local fastio = require "fastio"
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
 local realpath; do
@@ -42,15 +41,15 @@ function vfs.read(path)
     return data, lpath
 end
 vfs.realpath = realpath
-local function vfs_loadfile(path, _, env)
+function loadfile(path, _, env)
     local mem, symbol = vfs.read(path)
     if not mem then
         return nil, ('%s:No such file or directory.'):format(path)
     end
     return fastio.mem_loadlua(mem, symbol, env)
 end
-function vfs_dofile(path)
-    local f, err = vfs_loadfile(path)
+function dofile(path)
+    local f, err = loadfile(path)
     if not f then
         error(err)
     end
@@ -74,7 +73,7 @@ if initfunc then
         local fw = require "firmware"
         assert(fw.loadfile(initfunc))(vfs, initargs)
     else
-        assert(vfs_loadfile(initfunc))(vfs, initargs)
+        assert(loadfile(initfunc))(vfs, initargs)
     end
 end
 local searcher_preload = package.searchers[1]
@@ -94,8 +93,6 @@ function package.searchpath(name, path)
     end
     return nil, err
 end
-loadfile = vfs_loadfile
-dofile = vfs_dofile
 return vfs
 )";
 
