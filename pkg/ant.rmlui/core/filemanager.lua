@@ -7,10 +7,6 @@ local aio = import_package "ant.io"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local m = {}
 
-function m.is_file(path)
-    return vfs.type(path) == "file"
-end
-
 function m.readfile(source_path)
     return aio.readall(source_path)
 end

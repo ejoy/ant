@@ -120,8 +120,8 @@ end
 
 
 for idx, info in pairs(texture_cfg_table) do
-    if filemanager.is_file(info.cfg_path) then
-        local bundle_cfg_path = fs.path(info.cfg_path)
+    local bundle_cfg_path = fs.path(info.cfg_path)
+    if fs.exists(bundle_cfg_path) then
         local cfg = datalist.parse(aio.readall(bundle_cfg_path:string()))
         if cfg then
             if not config_table then

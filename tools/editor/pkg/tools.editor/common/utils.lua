@@ -28,15 +28,8 @@ end
 local fs = require "filesystem"
 
 function utils.write_file(filename, data)
-    local f
-    if string.sub(filename, 1, 1) == "/" then
-        local filepath = fs.path(filename)
-        local name = filepath:filename()
-        local path = filepath:remove_filename()
-        f = assert(io.open((path:localpath() / name:string()):string(), "wb"))
-    else
-        f = assert(io.open(filename, "wb"))
-    end
+    local localpath = (string.sub(filename, 1, 1) == "/") and fs.path(filename):localpath():string() or filename
+    local f = assert(io.open(localpath, "wb"))
     f:write(data)
     f:close()
 end
