@@ -34,19 +34,18 @@ local function binary_search(list, t)
     return math.max(from, 1), math.min(to, #list)
 end
 
-local function slerp(list, tick)
+local function slerp(list, tick, hdir)
     local l, r = binary_search(list, tick)
     local deno = (list[r].time - list[l].time)
     local ldir = math3d.todirection(list[l].value)
     local rdir = math3d.todirection(list[r].value)
-    local hdir = math3d.normalize(math3d.add(ldir, rdir))
     if deno < 10 ^ (-6) then
-        return list[l].value, hdir
+        return list[l].value
     else
         local lerp_t = (tick - list[l].time) / deno
         local lrot = math3d.quaternion(hdir, ldir)
         local rrot = math3d.quaternion(hdir, rdir)
-        return math3d.slerp(lrot, rrot, lerp_t), hdir
+        return math3d.slerp(lrot, rrot, lerp_t)
     end
 end
 
@@ -95,11 +94,22 @@ end
 local idn = {}
 
 function idn.update_cycle(e, cycle)
+
+    local function get_hdir(list)
+        local hdir = math3d.normalize(math3d.add(math3d.todirection(list[1].value), math3d.todirection(list[#list].value)))
+        if math3d.dot(hdir, math3d.vector(0, 0, 1)) >=0 then
+            return math3d.vector(0, 0, 1)
+        else
+            return math3d.vector(0, 0, -1)
+        end
+    end
+
     local lerp_table = {}
     local hdir
     for pn, pt in pairs(e.daynight.rt) do
         if pn:match("rotator") then
-            lerp_table[pn], hdir = slerp(pt, cycle)
+            hdir = get_hdir(pt)
+            lerp_table[pn] = slerp(pt, cycle, hdir)
         else
             lerp_table[pn] = lerp(pt, cycle) 
         end
@@ -122,7 +132,7 @@ function idn.add_property_cycle(e, pn, p)
     local dn_rt = e.daynight.rt
     local current_property = dn_rt[pn]
     local current_number = #current_property
-    if current_number >= 6 then return end -- property_number <= 5
+    if current_number >= 10 then return end -- property_number <= 9
 
     current_property[#current_property+1] = p
     return true

@@ -36,7 +36,7 @@ local function save_prefab(eid, path)
     local info = hierarchy:get_node_info(eid)
     local t = info.template
     t.data.daynight = dn
-    local lpp = path:parent_path():localpath()
+    local lpp = path:parent_path():localpath() lfs.path(path:parent_path())
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
     end
