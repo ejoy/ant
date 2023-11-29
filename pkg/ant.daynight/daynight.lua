@@ -34,23 +34,30 @@ local function binary_search(list, t)
     return math.max(from, 1), math.min(to, #list)
 end
 
-local function lerp(list, tick, lerp_function, is_slerp)
+local function slerp(list, tick)
+    local l, r = binary_search(list, tick)
+    local deno = (list[r].time - list[l].time)
+    local ldir = math3d.todirection(list[l].value)
+    local rdir = math3d.todirection(list[r].value)
+    local hdir = math3d.normalize(math3d.add(ldir, rdir))
+    if deno < 10 ^ (-6) then
+        return list[l].value, hdir
+    else
+        local lerp_t = (tick - list[l].time) / deno
+        local lrot = math3d.quaternion(hdir, ldir)
+        local rrot = math3d.quaternion(hdir, rdir)
+        return math3d.slerp(lrot, rrot, lerp_t), hdir
+    end
+end
+
+local function lerp(list, tick)
     local l, r = binary_search(list, tick)
     local deno = (list[r].time - list[l].time)
     if deno < 10 ^ (-6) then
         return list[l].value
     else
         local lerp_t = (tick - list[l].time) / deno
-        if is_slerp then
-            local ldir = math3d.todirection(list[l].value)
-            local rdir = math3d.todirection(list[r].value)
-            local hdir = math3d.normalize(math3d.vector(0, 0, -1, 0))
-            local lrot = math3d.quaternion(hdir, ldir)
-            local rrot = math3d.quaternion(hdir, rdir)
-            return lerp_function(lrot, rrot, lerp_t)
-        else
-            return lerp_function(list[l].value, list[r].value, lerp_t)
-        end
+        return math3d.lerp(list[l].value, list[r].value, lerp_t)
     end
 end
 
@@ -89,11 +96,12 @@ local idn = {}
 
 function idn.update_cycle(e, cycle)
     local lerp_table = {}
+    local hdir
     for pn, pt in pairs(e.daynight.rt) do
         if pn:match("rotator") then
-            lerp_table[pn] = lerp(pt, cycle, math3d.slerp, true)
+            lerp_table[pn], hdir = slerp(pt, cycle)
         else
-            lerp_table[pn] = lerp(pt, cycle, math3d.lerp) 
+            lerp_table[pn] = lerp(pt, cycle) 
         end
     end
     local direct, ambient, rotator = lerp_table["direct"], lerp_table["ambient"], lerp_table["rotator"]
@@ -102,7 +110,7 @@ function idn.update_cycle(e, cycle)
         local r, g, b, intensity = math3d.index(direct, 1, 2, 3, 4)
         ilight.set_color_rgb(dl, r, g, b)
         ilight.set_intensity(dl, intensity * default_intensity)
-        iom.set_direction(dl, math3d.normalize(math3d.todirection(rotator, math3d.vector(0, 0, -1, 0))))
+        iom.set_direction(dl, math3d.normalize(math3d.todirection(rotator, hdir)))
         w:submit(dl)        
     end
     local ar, ag, ab, ai = math3d.index(ambient, 1, 2, 3, 4)
