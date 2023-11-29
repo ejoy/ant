@@ -57,8 +57,7 @@ function vfs.new(config)
 		if not repo.zipfile then
 			print("Can't open " .. config.zipbundle)
 		else
-			repo.cache = zip.reader(repo.zipfile, repo.cachesize)
-			repo.backup = {}
+			repo.zipreader = zip.reader(repo.zipfile, repo.cachesize)
 		end
 	end
 	setmetatable(repo, vfs)
@@ -102,47 +101,8 @@ function vfs:dir(hash)
 	return dir
 end
 
-local function read_backup(self, hash)
-	local backup = self.backup
-	local n = #backup
-	for i = 1, n do
-		local c = backup[i]
-		local handle = c(hash)
-		if handle then
-			backup[i] = self.cache
-			self.cache = c
-			return handle
-		end
-	end
-	local c = zip.reader(self.zipfile, self.cachesize)
-	local handle = assert(c(hash))
-	backup[n+1] = self.cache
-	self.cache = c
-	return handle
-end
-
-local function open_inzip(self, hash)
-	local c = self.cache
-	if not c then
-		return
-	end
-	local handle, needsize = c(hash)
-	if handle then
-		return handle
-	end
-	if not needsize then
-		return
-	end
-	if needsize > CACHESIZE then
-		c = zip.reader(self.zipfile, needsize)
-		self.backup[#self.backup + 1] = c
-	else
-		read_backup(self, hash)
-	end
-end
-
 function vfs:open(hash)
-	local c = open_inzip(self, hash)
+	local c = self.zipreader(hash)
 	if not c then
 		return fastio.readall_mem(self.localpath .. "/" .. hash)
 	end

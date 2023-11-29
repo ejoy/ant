@@ -58,15 +58,13 @@ function group_test_sys:init()
 
     for k, v in pairs(group_states) do
         ig.enable_from_name(k, "view_visible", v)
-        ig.enable_from_name(k, "view_visible", v)
     end
 end
 
 function group_test_sys:entity_init()
-    for e in w:select "INIT render_object eid:in" do
-        w:extend(e, "view_visible?in")
-        print("render_object INIT:", e.eid, "view_visible:", e.view_visible, e.name)
-    end
+    -- for e in w:select "INIT render_object eid:in view_visible?in" do
+    --     print("render_object INIT:", e.eid, "view_visible:", e.view_visible)
+    -- end
 end
 
 local kb_mb = world:sub{"keyboard"}

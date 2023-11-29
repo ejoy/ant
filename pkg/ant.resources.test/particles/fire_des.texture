@@ -1,0 +1,13 @@
+colorspace: sRGB
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC3
+path: /pkg/ant.resources.binary/textures/fire03_des.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

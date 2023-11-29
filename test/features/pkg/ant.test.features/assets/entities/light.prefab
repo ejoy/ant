@@ -9,7 +9,7 @@ data:
     prefilter:
       size: 128
     source:
-      tex_name: /pkg/ant.test.features/assets/textures/aerodynamics_workshop_2k.texture
+      tex_name: /pkg/ant.resources.test/sky/aerodynamics_workshop_2k.texture
       facesize: 512
       value: 0
   ibl_changed: true

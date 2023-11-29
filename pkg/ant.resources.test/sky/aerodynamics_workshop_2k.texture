@@ -1,0 +1,14 @@
+colorspace: linear
+normalmap: false
+equirect: true
+path: /pkg/ant.resources.binary/textures/cubemap/aerodynamics_workshop_2k.hdr
+mipmap: 0
+build_irradianceSH: true
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture

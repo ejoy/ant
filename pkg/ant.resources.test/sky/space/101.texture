@@ -1,0 +1,15 @@
+colorspace: sRGB
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC3
+maxsize: 2048x2048
+normalmap: false
+path: /pkg/ant.resources.binary/textures/cubemap/101.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture

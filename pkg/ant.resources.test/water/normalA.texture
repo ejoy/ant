@@ -1,0 +1,14 @@
+colorspace: linear
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC5
+normalmap: true
+path: /pkg/ant.resources.binary/textures/water/Water_N_A.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

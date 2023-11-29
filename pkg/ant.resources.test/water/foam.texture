@@ -1,0 +1,14 @@
+colorspace: sRGB
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC1
+normalmap: false
+path: /pkg/ant.resources.binary/textures/water/Foam.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

@@ -362,8 +362,11 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		return 1;
 	}
 
-	static int create(lua_State* L) {
-		const char* path = luaL_checkstring(L, 1);
+	static const char* create(lua_State* L, ozz::io::IArchive &ia) {
+		if (!ia.TestTag<ozz::animation::Animation>()) {		
+			return nullptr;
+		}
+
 		ozzAnimation* self = base_type::constructor(L);
 		luaL_Reg l[] = {		
 			{"duration", lduration},
@@ -373,17 +376,9 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 			{nullptr, nullptr},
 		};
 		base_type::set_method(L, l);
-
-		ozz::io::File file(path, "rb");
-		if (!file.opened()) {
-			luaL_error(L, "file could not open : %s", path);
-		}
-		ozz::io::IArchive archive(&file);
-		if (!archive.TestTag<ozz::animation::Animation>()) {		
-			luaL_error(L, "file is not ozz::animation, file : %s", path);
-		}
-		archive >> *(self->v);
-		return 1;
+		ia >> *(self->v);
+		auto type = ozz::io::internal::Tag<const ozz::animation::Animation>::Get();
+		return type;
 	}
 
 	static int instance(lua_State *L, ozz::animation::Animation *animation) {
@@ -892,6 +887,10 @@ lmesh_skinning(lua_State *L){
 	return 0;
 }
 
+const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia){
+	return ozzAnimation::create(L, ia);
+}
+
 int init_animation(lua_State *L) {
 	ozzJointRemap::registerMetatable(L);
 	ozzBindpose::registerMetatable(L);
@@ -902,7 +901,6 @@ int init_animation(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
-		{ "new_animation",				ozzAnimation::create},
 		{ "new_raw_animation", 			ozzRawAnimation::create},
 		{ "raw_animation_mt",           ozzRawAnimation::getMT},
 		{ "new_bind_pose",				ozzBindpose::create},

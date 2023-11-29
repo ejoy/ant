@@ -1,0 +1,15 @@
+colorspace: Linear
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC1
+normalmap: false
+path: /pkg/ant.resources.binary/textures/cubemap/doge2_cube.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture

@@ -461,7 +461,7 @@ function ientity.create_skybox(material)
 		},
 		data = {
             scene = {},
-			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
+			material = assert(material, "material must provided"),
 			render_layer = "background",
 			visible_state = "main_view",
 			ibl = {

@@ -3,26 +3,6 @@ __ANT_RUNTIME__ = true
 local platform = require "bee.platform"
 local fs = require "bee.filesystem"
 
-local config = {
-	vfs = {
-		slot = "",
-	}
-}
-
-local needcleanup, type, address
-
-if platform.os == "ios" then
-	local ios = require "ios"
-	local clean_up_next_time = ios.setting "clean_up_next_time"
-	if clean_up_next_time == true then
-		ios.setting("clean_up_next_time", false)
-		needcleanup = true
-	end
-	type = ios.setting "server_type"
-	address = ios.setting "server_address"
-	config.vfs.slot = ios.setting "root_slot" or ""
-end
-
 local function app_path(name)
 	if platform.os == "windows" then
 		return fs.path(os.getenv "LOCALAPPDATA") / name
@@ -51,7 +31,7 @@ local bundle_path = (function ()
 	if platform.os == "ios" then
 		local ios = require "ios"
 		return fs.path(ios.bundle())
-	elseif platform.os == 'android' then
+	elseif platform.os == "android" then
 		local android = require "android"
 		return fs.path(android.directory(android.InternalDataPath))
 	else
@@ -59,40 +39,66 @@ local bundle_path = (function ()
 	end
 end)()
 
-config.vfs.zipbundle = (bundle_path / "vfs.zip"):string():gsub("/?$", "/")
+local config = {
+	vfs = { slot = "" }
+}
+
+local needcleanup
+
+if platform.os == "ios" then
+	local ios = require "ios"
+	local clean_up_next_time = ios.setting "clean_up_next_time"
+	if clean_up_next_time == true then
+		ios.setting("clean_up_next_time", false)
+		needcleanup = true
+	end
+	config.vfs.slot = ios.setting "root_slot" or ""
+	local server_type = ios.setting "server_type"
+	if server_type == nil or server_type == "usb" then
+		config.nettype = "listen"
+		config.address = "127.0.0.1"
+		config.port = 2018
+	elseif server_type == "tcp" then
+		config.nettype = "connect"
+		local server_address = ios.setting "server_address"
+		local ip, port = server_address:match "^([^:]+):(%d+)"
+		if ip and port then
+			config.address = ip
+			config.port = port
+		else
+			config.address = "127.0.0.1"
+			config.port = "2018"
+		end
+	elseif server_type == "none" then
+	end
+elseif platform.os == "android" then
+	-- usb
+	config.nettype = "listen"
+	config.address = "127.0.0.1"
+	config.port = 2018
+else
+	local datalist = require "datalist"
+	local f <close> = io.open((sandbox_path / "boot.settings"):string(), "rb")
+	if f then
+		local setting = datalist.parse(f:read "a")
+		config.nettype = setting.nettype
+		config.address = setting.address
+		config.port = setting.port
+	else
+		config.nettype = "connect"
+		config.address = "127.0.0.1"
+		config.port = "2018"
+	end
+end
+
+config.vfs.zipbundle = (bundle_path / "vfs.zip"):string()
 config.vfs.localpath = (sandbox_path / "vfs"):string():gsub("/?$", "/")
 fs.create_directories(sandbox_path)
 fs.current_path(sandbox_path)
 if needcleanup then
-	fs.remove_all(config.vfs.sandbox_path)
+	fs.remove_all(config.vfs.localpath)
 end
-fs.create_directories(config.vfs.sandbox_path)
-
-if type == nil then
-	if platform.os == "ios" or platform.os == "android" then
-		type = "usb"
-	else
-		type = "tcp"
-		address = "127.0.0.1:2018"
-	end
-end
-
-if type == "usb" then
-	config.nettype = "listen"
-	config.address = "127.0.0.1"
-	config.port = 2018
-elseif type == "tcp" then
-	config.nettype = "connect"
-	local ip, port = address:match "^([^:]+):(%d+)"
-	if ip and port then
-		config.address = ip
-		config.port = port
-	else
-		config.address = "127.0.0.1"
-		config.port = '2018'
-	end
-elseif type == "none" then
-end
+fs.create_directories(config.vfs.localpath)
 
 local _dofile = dofile
 function dofile(path)

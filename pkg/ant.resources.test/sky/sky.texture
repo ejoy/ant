@@ -1,0 +1,13 @@
+colorspace: linear
+normalmap: false
+path: /pkg/ant.resources.binary/textures/cubemap/sky.dds
+mipmap: true
+build_irradianceSH: true
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture
