@@ -56,7 +56,7 @@ local compile_whitelist <const> = {
 
 local function new_tiny(rootpath)
     rootpath = lfs.path(rootpath)
-    local cachepath = lfs.path(rootpath) / ".fileserver"
+    local cachepath = lfs.path(rootpath)
     assert(lfs.is_directory(rootpath))
     if not lfs.is_directory(cachepath) then
         assert(lfs.create_directories(cachepath))

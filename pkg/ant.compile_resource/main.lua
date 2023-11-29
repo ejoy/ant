@@ -5,14 +5,14 @@ end
 local sha1    = require "sha1"
 local depends = require "depends"
 local ltask   = require "ltask"
-local lfs = require "bee.filesystem"
+local lfs     = require "bee.filesystem"
 
 local function init_setting(vfs, setting)
     local os, renderer = setting:match "^(%w+)-(%w+)$"
     local rootpath = lfs.path(vfs.repopath())
     local respath = rootpath / "res" / setting
-    local scpath = rootpath / ".build" / "sc"
-    local shaderpath = rootpath / ".build" / "shader"
+    local scpath = rootpath / ".app" / "build" / "sc"
+    local shaderpath = rootpath / ".app" / "build" / "shader"
     lfs.create_directories(respath)
     lfs.create_directories(scpath)
     lfs.create_directories(shaderpath)

@@ -5,7 +5,7 @@ local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 
-local LOGDIR = fs.path(REPOPATH) / ".log"
+local LOGDIR = fs.path(REPOPATH) / ".app" / "log"
 local repo = {}
 
 local _origin = os.time() - os.clock()
