@@ -64,6 +64,7 @@ lm:lua_source "imgui" {
         ".",
         Ant3rd .. "imgui",
         Ant3rd .. "glm",
+        Ant3rd .. "bee.lua",
         BgfxInclude,
         "../bgfx",
         "../luabind"

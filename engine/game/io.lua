@@ -20,7 +20,7 @@ local quit = false
 local channelfd = socket.fd(initargs.fd)
 
 local function dofile(path)
-	return assert(fastio.loadfile(path))()
+	return fastio.loadfile(path)()
 end
 
 dofile "engine/log.lua"
@@ -93,11 +93,11 @@ do
 			return
 		end
 		if file.path then
-			local data = assert(fastio.readfile(file.path, pathname))
+			local data = fastio.readall_v(file.path, pathname)
 			return data, file.path
 		end
 		if initargs.editor and file.resource_path then
-			local data = assert(fastio.readfile(file.resource_path, pathname))
+			local data = fastio.readall_v(file.resource_path, pathname)
 			return data, file.resource_path
 		end
 	end

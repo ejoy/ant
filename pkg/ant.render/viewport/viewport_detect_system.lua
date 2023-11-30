@@ -66,17 +66,20 @@ local function update_render_queue(q, newsize, sceneratio)
 	irq.update_rendertarget(q.queue_name, rt)
 end
 
+local function rebind_rt(rt)
+	local viewid = rt.viewid
+	local fbidx = rt.fb_idx
+	fbmgr.bind(viewid, fbidx)
+end
+
 local function update_render_target(newsize, sceneratio)
 	clear_cache()
-	for qe in w:select "watch_screen_buffer render_target:in queue_name:in camera_ref?in" do
-		update_render_queue(qe, newsize, sceneratio)
-	end
-
-	for qe in w:select "render_target:in watch_screen_buffer:absent" do
-		local rt = qe.render_target
-		local viewid = rt.viewid
-		local fbidx = rt.fb_idx
-		fbmgr.bind(viewid, fbidx)
+	for qe in w:select "render_target:in queue_name:in camera_ref?in watch_screen_buffer?in" do
+		if qe.watch_screen_buffer then
+			update_render_queue(qe, newsize, sceneratio)
+		else
+			rebind_rt(qe.render_target)
+		end
 	end
 end
 

@@ -15,7 +15,7 @@ mount:
 local function loadmount(rootpath)
 	local path = rootpath / ".mount"
 	if fs.exists(path) then
-		local cfg = datalist.parse(fastio.readall(path:string()))
+		local cfg = datalist.parse(fastio.readall_f(path:string()))
 		if cfg then
 			return cfg
 		end

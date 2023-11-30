@@ -8,7 +8,7 @@ local function read_vfsignore(rootpath)
     if not lfs.exists(rootpath / ".vfsignore") then
         return {}
     end
-    return datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
+    return datalist.parse(fastio.readall_f((rootpath / ".vfsignore"):string()))
 end
 
 local block <const> = {
@@ -95,7 +95,7 @@ return function (repopath)
         if not file.path then
             return
         end
-        local data = assert(fastio.readfile(file.path, pathname))
+        local data = fastio.readall_v(file.path, pathname)
         return data, file.path
     end
     function vfs.realpath(pathname)

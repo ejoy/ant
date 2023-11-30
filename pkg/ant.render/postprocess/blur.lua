@@ -2,21 +2,16 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local math3d    = require "math3d"
-local renderutil= require "util"
+
 local setting   = import_package "ant.settings"
 local blur_sys  = ecs.system "blur_system"
-local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
-local icompute  = ecs.require "ant.render|compute.compute"
-local renderpkg = import_package "ant.render"
-local sampler = renderpkg.sampler
-local bgfx = require "bgfx"
 
 if not setting:get "graphic/postprocess/blur/enable" then
-    renderutil.default_system(blur_sys, "init, init_world")
     return
 end
 
+local math3d    = require "math3d"
+local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local hwi       = import_package "ant.hwi"
 
 local BLUR_DS_VIEWID <const> = hwi.viewid_get "blur_ds1"

@@ -80,16 +80,18 @@ struct file_t {
     FILE* f;
 };
 
-static int push_error(lua_State *L, const char* what, const char *filename) {
-    int en = errno;
-    luaL_pushfail(L);
-    lua_pushfstring(L, "cannot %s %s: %s", what, filename, strerror(en));
-    lua_pushinteger(L, en);
-    return 3;
-}
-
+template <bool RAISE>
 static int raise_error(lua_State *L, const char* what, const char *filename) {
-    return luaL_error(L, "cannot %s %s: %s", what, filename, strerror(errno));
+    int en = errno;
+    if constexpr (RAISE) {
+        return luaL_error(L, "cannot %s %s: %s", what, filename, strerror(en));
+    }
+    else {
+        luaL_pushfail(L);
+        lua_pushfstring(L, "cannot %s %s: %s", what, filename, strerror(en));
+        lua_pushinteger(L, en);
+        return 3;
+    }
 }
 
 static const char* getfile(lua_State *L) {
@@ -113,12 +115,98 @@ static const char* getsymbol(lua_State *L, const char* filename) {
 #endif
 }
 
-static int readall(lua_State *L) {
+struct wrap {
+    zip_reader_cache* cache;
+};
+
+static int wrap_close(lua_State* L) {
+    struct wrap& wrap = *(struct wrap*)lua_touserdata(L, 1);
+    if (wrap.cache) {
+        luazip_close(wrap.cache);
+        wrap.cache = nullptr;
+    }
+    return 0;
+}
+
+static int wrap_closure(lua_State* L) {
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
+    size_t len = 0;
+    void* buf = luazip_data(cache, &len);
+    lua_pushlightuserdata(L, buf);
+    lua_pushinteger(L, len);
+    struct wrap& wrap = *(struct wrap*)lua_newuserdatauv(L, sizeof(struct wrap), 0);
+    wrap.cache = cache;
+    if (luaL_newmetatable(L, "fastio::wrap")) {
+        luaL_Reg lib[] = {
+            { "__close", wrap_close },
+            { NULL, NULL },
+        };
+        luaL_setfuncs(L, lib, 0);
+    }
+    lua_setmetatable(L, -2);
+    return 3;
+}
+
+template <bool RAISE>
+static int readall_v(lua_State *L) {
     const char* filename = getfile(L);
     lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return raise_error(L, "open", getsymbol(L, filename));
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
+    }
+    size_t size = f.size();
+    auto cache = luazip_new(size, NULL);
+    if (!cache) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
+    auto buf = luazip_data(cache, nullptr);
+    size_t nr = f.read(buf, size);
+    if (nr != size) {
+        luazip_close(cache);
+        luaL_error(L, "unknown read error");
+        return 0;
+    }
+    lua_pushlightuserdata(L, cache);
+    return 1;
+}
+
+template <bool RAISE>
+static int readall_f(lua_State *L) {
+    const char* filename = getfile(L);
+    lua_settop(L, 2);
+    file_t f = file_t::open(L, filename);
+    if (!f.suc()) {
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
+    }
+    size_t size = f.size();
+    auto cache = luazip_new(size, NULL);
+    if (!cache) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
+    auto buf = luazip_data(cache, nullptr);
+    size_t nr = f.read(buf, size);
+    if (nr != size) {
+        luazip_close(cache);
+        luaL_error(L, "unknown read error");
+        return 0;
+    }
+    lua_pushlightuserdata(L, cache);
+    lua_pushcclosure(L, wrap_closure, 1);
+    return 1;
+}
+
+template <bool RAISE>
+static int readall_u(lua_State *L) {
+    const char* filename = getfile(L);
+    lua_settop(L, 2);
+    file_t f = file_t::open(L, filename);
+    if (!f.suc()) {
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
     void* data = lua_newuserdatauv(L, size, 0);
@@ -138,12 +226,13 @@ static int readall(lua_State *L) {
     return 1;
 }
 
+template <bool RAISE>
 static int readall_s(lua_State *L) {
     const char* filename = getfile(L);
     lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return raise_error(L, "open", getsymbol(L, filename));
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
     void* data = lua_newuserdatauv(L, size, 0);
@@ -191,13 +280,14 @@ static const char* getS(lua_State *L, void *ud, size_t *size) {
     return ls->s;
 }
 
+template <bool RAISE>
 static int loadfile(lua_State *L) {
     const char* filename = getfile(L);
     const char* symbol = getsymbol(L, filename);
     lua_settop(L, 3);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return push_error(L, "open", symbol);
+        return raise_error<RAISE>(L, "open", symbol);
     }
     LoadF lf;
     lf.f = f.f;
@@ -205,7 +295,7 @@ static int loadfile(lua_State *L) {
     lua_pushfstring(L, "@%s", symbol);
     int status = lua_load(L, getF, &lf, lua_tostring(L, -1), "t");
     if (ferror(lf.f)) {
-        return push_error(L, "read", symbol);
+        return raise_error<RAISE>(L, "read", symbol);
     }
     if (status != LUA_OK) {
         luaL_pushfail(L);
@@ -226,12 +316,13 @@ static char hex[] = {
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 };
 
+template <bool RAISE>
 static int sha1(lua_State *L) {
     const char* filename = getfile(L);
     lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return raise_error(L, "open", getsymbol(L, filename));
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
     }
     std::array<uint8_t, 1024> buffer;
     SHA1_CTX ctx;
@@ -274,38 +365,6 @@ static int str2sha1(lua_State *L) {
     return 1;
 }
 
-struct wrap {
-    zip_reader_cache* cache;
-};
-
-static int wrap_close(lua_State* L) {
-    struct wrap& wrap = *(struct wrap*)lua_touserdata(L, 1);
-    if (wrap.cache) {
-        luazip_close(wrap.cache);
-        wrap.cache = nullptr;
-    }
-    return 0;
-}
-
-static int wrap_closure(lua_State* L) {
-    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
-    size_t len = 0;
-    void* buf = luazip_data(cache, &len);
-    lua_pushlightuserdata(L, buf);
-    lua_pushinteger(L, len);
-    struct wrap& wrap = *(struct wrap*)lua_newuserdatauv(L, sizeof(struct wrap), 0);
-    wrap.cache = cache;
-    if (luaL_newmetatable(L, "fastio::wrap")) {
-        luaL_Reg lib[] = {
-            { "__close", wrap_close },
-            { NULL, NULL },
-        };
-        luaL_setfuncs(L, lib, 0);
-    }
-    lua_setmetatable(L, -2);
-    return 3;
-}
-
 static int wrap(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     lua_settop(L, 1);
@@ -326,31 +385,6 @@ static int tostring(lua_State *L) {
     const size_t offset = (size_t)luaL_optinteger(L, 2, 1) - 1;
     const size_t size = (size_t)luaL_checkinteger(L, 3);
     lua_pushlstring(L, (const char*)buf+offset, size);
-    return 1;
-}
-
-static int readfile(lua_State *L) {
-    const char* filename = getfile(L);
-    lua_settop(L, 2);
-    file_t f = file_t::open(L, filename);
-    if (!f.suc()) {
-        return push_error(L, "open", getsymbol(L, filename));
-    }
-    size_t size = f.size();
-    auto cache = luazip_new(size, NULL);
-    if (!cache) {
-        f.close();
-        luaL_error(L, "not enough memory");
-        return 0;
-    }
-    auto buf = luazip_data(cache, nullptr);
-    size_t nr = f.read(buf, size);
-    if (nr != size) {
-        luazip_close(cache);
-        luaL_error(L, "unknown read error");
-        return 0;
-    }
-    lua_pushlightuserdata(L, cache);
     return 1;
 }
 
@@ -384,15 +418,17 @@ static int loadlua(lua_State* L) {
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
-        {"readall", readall},
-        {"readall_s", readall_s},
-        {"loadfile", loadfile},
-        {"sha1", sha1},
+        {"readall_v", readall_v<true>},
+        {"readall_v_noerr", readall_v<false>},
+        {"readall_f", readall_f<true>},
+        {"readall_u", readall_u<true>},
+        {"readall_s", readall_s<true>},
+        {"readall_s_noerr", readall_s<false>},
+        {"loadfile", loadfile<true>},
+        {"sha1", sha1<true>},
         {"str2sha1", str2sha1},
-
         {"wrap", wrap},
         {"tostring", tostring},
-        {"readfile", readfile},
         {"loadlua", loadlua},
         {NULL, NULL},
     };

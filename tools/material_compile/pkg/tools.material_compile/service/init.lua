@@ -60,7 +60,7 @@ elseif srcpath:equal_extension "lua" then
                 print("not load animation.prefab file:", filename)
                 return
             end
-            local r = serialize.parse(filename, fastio.readall(filename))
+            local r = serialize.parse(filename, fastio.readall_f(filename))
             for _, e in ipairs(r) do
                 local d = e.data
                 if d.mesh then

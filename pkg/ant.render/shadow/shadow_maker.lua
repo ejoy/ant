@@ -4,19 +4,8 @@ local w     = world.w
 
 local setting	= import_package "ant.settings"
 local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
-local renderutil= require "util"
 local sm = ecs.system "shadow_system"
 if not ENABLE_SHADOW then
-	renderutil.default_system(sm, 	"init",
-									"init_world",
-									"entity_init",
-									"entity_remove",
-									"update_camera",
-									--"refine_filter",
-									"refine_camera",
-									"render_submit",
-									"camera_usage",
-									"update_filter")
 	return
 end
 

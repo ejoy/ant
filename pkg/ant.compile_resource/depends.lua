@@ -54,7 +54,7 @@ local function writefile(filename, data)
 end
 
 local function readconfig(filename)
-    return datalist.parse(fastio.readall(filename:string()))
+    return datalist.parse(fastio.readall_f(filename:string()))
 end
 
 function m.writefile(filename, t)

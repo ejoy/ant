@@ -7,8 +7,6 @@ local cs_skinning_sys = ecs.system "cs_skinning_system"
 
 local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 if not USE_CS_SKINNING then
-    local renderutil= require "util"
-    renderutil.default_system(cs_skinning_sys, "init", "entity_init", "entity_ready", "entity_remove", "skin_mesh")
     return
 end
 

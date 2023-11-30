@@ -68,10 +68,6 @@ local function render(nwh, context, width, height, initialized)
 	world = ecs.new_world(config)
 	init_inputmgr()
 
-	event.size {
-		w = width,
-		h = height,
-	}
 	world:pipeline_init()
 
 	ltask.wakeup(initialized)

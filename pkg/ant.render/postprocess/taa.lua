@@ -1,19 +1,19 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local bgfx      = require "bgfx"
+
 local setting = import_package "ant.settings"
-local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
-local renderutil = require "util"
 local taasys = ecs.system "taa_system"
 
 if not ENABLE_TAA then
-    renderutil.default_system(taasys, "init", "init_world", "taa", "taa_copy", "taa_present", "data_changed", "end_frame")
     return
 end
 
 local hwi       = import_package "ant.hwi"
+
+local bgfx      = require "bgfx"
+local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 
 local taa_present_viewid
 if not ENABLE_FXAA then

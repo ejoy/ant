@@ -182,7 +182,7 @@ local function merge_cfg_setting(setting, fx)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
-        fx.setting = serialize.parse(fx.setting, vfs_fastio.readall(setting.vfs, fx.setting))
+        fx.setting = serialize.parse(fx.setting, vfs_fastio.readall_f(setting.vfs, fx.setting))
     else
         assert(type(fx.setting) == "table")
     end

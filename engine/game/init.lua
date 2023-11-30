@@ -38,7 +38,7 @@ vfs.iothread = boot.preinit [[
     local fastio = require "fastio"
     local thread = require "bee.thread"
     local io_req = thread.channel "IOreq"
-    assert(fastio.loadfile "engine/game/io.lua")(io_req:bpop())
+    fastio.loadfile "engine/game/io.lua" (io_req:bpop())
 ]]
 
 vfs.initfunc("engine/firmware/init_thread.lua", vfs_initargs)

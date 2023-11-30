@@ -4,7 +4,8 @@ local w = world.w
 
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
-local assetmgr 		= import_package "ant.asset"
+local assetmgr      = import_package "ant.asset"
+local aio           = import_package "ant.io"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
 local iani          = ecs.require "ant.animation|state_machine"
@@ -58,7 +59,7 @@ function m:init()
     world:pub { "UpdateDefaultLight", true }
 
 	if platform.os == "windows" then
-		local fafontdata = fastio.readall_s(fs.path "/pkg/tools.editor/res/fonts/fa-solid-900.ttf":localpath():string(), "/pkg/tools.editor/res/fonts/fa-solid-900.ttf")
+		local fafontdata = aio.readall("/pkg/tools.editor/res/fonts/fa-solid-900.ttf")
         font.Create {
             { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
             { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},

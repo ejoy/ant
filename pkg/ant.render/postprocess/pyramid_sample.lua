@@ -2,19 +2,18 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local fbmgr     = require "framebuffer_mgr"
-local sampler   = import_package "ant.render.core".sampler
-local irender   = ecs.require "ant.render|render_system.render"
-local ivs       = ecs.require "ant.render|visible_state"
-local util      = ecs.require "postprocess.util"
-local renderutil= require "util"
 local setting   = import_package "ant.settings"
 local ps_sys = ecs.system "pyramid_sample_system"
 
 if (not setting:get "graphic/postprocess/blur/enable") and (not setting:get "graphic/postprocess/bloom/enable") then
-    renderutil.default_system(ps_sys, "init", "entity_init", "data_changed")
     return
 end
+
+local fbmgr     = require "framebuffer_mgr"
+local sampler   = import_package "ant.render.core".sampler
+local irender   = ecs.require "ant.render|render_system.render"
+
+local util      = ecs.require "postprocess.util"
 
 local ips = {}
 
