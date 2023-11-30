@@ -1,3 +1,21 @@
+local _dofile = dofile
+function dofile(path)
+	local fastio = require "fastio"
+    return assert(fastio.loadfile(path))()
+end
+local i = 1
+while true do
+    if arg[i] == '-e' then
+        i = i + 1
+        assert(arg[i], "'-e' needs argument")
+        load(arg[i], "=(expr)")()
+    elseif arg[i] == nil then
+        break
+    end
+    i = i + 1
+end
+dofile = _dofile
+
 __ANT_RUNTIME__ = true
 
 local platform = require "bee.platform"
@@ -99,24 +117,6 @@ if needcleanup then
 	fs.remove_all(config.vfs.localpath)
 end
 fs.create_directories(config.vfs.localpath)
-
-local _dofile = dofile
-function dofile(path)
-	local fastio = require "fastio"
-    return assert(fastio.loadfile(path))()
-end
-local i = 1
-while true do
-    if arg[i] == '-e' then
-        i = i + 1
-        assert(arg[i], "'-e' needs argument")
-        load(arg[i], "=(expr)")()
-    elseif arg[i] == nil then
-        break
-    end
-    i = i + 1
-end
-dofile = _dofile
 
 local boot = require "ltask.bootstrap"
 local vfs = require "vfs"
