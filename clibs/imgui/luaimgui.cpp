@@ -18,6 +18,7 @@ extern "C" {
 #include "imgui_renderer.h"
 #include "imgui_platform.h"
 #include "imgui_window.h"
+#include "fastio.h"
 
 namespace imgui::table { void init(lua_State* L); }
 
@@ -2773,33 +2774,19 @@ GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
 }
 
 static void
-fCreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
+fCreateFont(lua_State *L, int idx, ImFontAtlas* atlas, ImFontConfig* config) {
 	size_t ttf_len = 0;
 	const char* ttf_buf = 0;
-	switch (lua_rawgeti(L, -1, 1)) {
-	case LUA_TSTRING:
-		ttf_buf = luaL_checklstring(L, -1, &ttf_len);
-		break;
-	case LUA_TUSERDATA:
-		ttf_buf = (const char*)lua_touserdata(L, -1);
-		ttf_len = (size_t)lua_rawlen(L, -1);
-		break;
-	default:
-		luaL_checktype(L, -1, LUA_TSTRING);
-		break;
-	}
-	lua_pop(L, 1);
-
-	lua_rawgeti(L, -1, 2);
+	lua_rawgeti(L, idx, 1);
+	lua_rawgeti(L, idx, 2);
+	auto ttf = getmemory(L, lua_absindex(L, -2));
 	lua_Number size = luaL_checknumber(L, -1);
-	lua_pop(L, 1);
-
 	const ImWchar* glyphranges = 0;
-	if (LUA_TSTRING == lua_rawgeti(L, -1, 3)) {
+	if (LUA_TSTRING == lua_rawgeti(L, idx, 3)) {
 		glyphranges = GetGlyphRanges(atlas, luaL_checkstring(L, -1));
 	}
-	lua_pop(L, 1);
-	atlas->AddFontFromMemoryTTF((void*)ttf_buf, (int)ttf_len, (float)size, config, glyphranges);
+	atlas->AddFontFromMemoryTTF((void*)ttf.data(), (int)ttf.size(), (float)size, config, glyphranges);
+	lua_pop(L, 3);
 }
 
 static int
@@ -2816,7 +2803,7 @@ fCreate(lua_State *L) {
 		lua_rawgeti(L, 1, i);
 		luaL_checktype(L, -1, LUA_TTABLE);
 		config.MergeMode = (i != 1);
-		fCreateFont(L, atlas, &config);
+		fCreateFont(L, lua_absindex(L, -1), atlas, &config);
 		lua_pop(L, 1);
 	}
 
