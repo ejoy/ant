@@ -357,7 +357,7 @@ function S.create_mem_texture_dynamic_prefab(prefab_path, width, height, rotatio
     expand_active_rt()
 
     local obj_name, queue_name = DYNAMIC_OBJ_NAME .. rt_idx, DYNAMIC_QUEUE_NAME .. rt_idx
-    
+    DISTANCE[obj_name] = distance
     create_mem_texture_prefab(obj_name ,queue_name)
     adjust_camera_rotation(queue_name)
     return get_current_rt_handle(queue_name), rt_idx
