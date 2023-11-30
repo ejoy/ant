@@ -215,8 +215,10 @@ int32_t g_mx = 0;
 int32_t g_my = 0;
 
 int window_init(struct ant_window_callback* cb) {
-	int w = 1334;
-	int h = 750;
+    NSScreen *screen = [NSScreen mainScreen];
+    NSRect visibleFrame = screen.visibleFrame;
+	int w = (int)(visibleFrame.size.width * 0.7f);
+	int h = (int)(w / 16.f * 9.f);
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
 		| NSWindowStyleMaskTitled
