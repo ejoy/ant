@@ -54,11 +54,12 @@ function vfs.new(config)
 		root = nil,
 	}
 	if config.zipbundle then
-		repo.zipfile = zip.open(config.zipbundle, "r")
-		if not repo.zipfile then
+		local zipfile = zip.open(config.zipbundle, "r")
+		if not zipfile then
 			print("Can't open " .. config.zipbundle)
 		else
-			repo.zipreader = zip.reader(repo.zipfile, repo.cachesize)
+			repo.zipfile = zipfile
+			repo.zipreader = zip.reader(zipfile, repo.cachesize)
 		end
 	end
 	setmetatable(repo, vfs)

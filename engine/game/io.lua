@@ -110,6 +110,9 @@ do
 		if file.path then
 			return file.path
 		end
+		if initargs.editor and file.resource_path then
+			return file.resource_path
+		end
 	end
 	function CMD.LIST(pathname)
 		pathname = pathname:gsub("|", "/")
@@ -211,7 +214,7 @@ end
 local function schedule_message() end
 
 local function ltask_init(path, mem)
-	assert(fastio.mem_loadlua(mem, path))(true)
+	assert(fastio.loadlua(mem, path))(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()

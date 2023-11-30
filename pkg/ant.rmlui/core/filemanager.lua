@@ -18,7 +18,7 @@ end
 
 function m.loadfile(source_path, env)
     local mem, symbol = vfs.read(source_path)
-    return fastio.mem_loadlua(mem, symbol, env)
+    return fastio.loadlua(mem, symbol, env)
 end
 
 local pendQueue = {}

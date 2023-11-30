@@ -38,7 +38,7 @@ local function sandbox_env(packagename)
         local path = PATH:gsub('%?', filename)
         local mem, symbol = vfs.read(path)
         if mem then
-            local func, err = fastio.mem_loadlua(mem, symbol, env)
+            local func, err = fastio.loadlua(mem, symbol, env)
             if not func then
                 error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
             end

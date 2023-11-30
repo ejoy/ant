@@ -15,7 +15,7 @@ return function (env, path)
             local filename = string.gsub(c, '%?', name)
             local mem, symbol = vfs.read(filename)
             if mem then
-                local func, err = fastio.mem_loadlua(mem, symbol, env)
+                local func, err = fastio.loadlua(mem, symbol, env)
                 if not func then
                     error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
                 end
