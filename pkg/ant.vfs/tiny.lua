@@ -95,7 +95,7 @@ return function (repopath)
         if not file.path then
             return
         end
-        local data = fastio.readall_mem(file.path, pathname)
+        local data = assert(fastio.readfile(file.path, pathname))
         return data, file.path
     end
     function vfs.realpath(pathname)

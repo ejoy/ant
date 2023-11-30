@@ -93,11 +93,11 @@ do
 			return
 		end
 		if file.path then
-			local data = fastio.readall_mem(file.path, pathname)
+			local data = assert(fastio.readfile(file.path, pathname))
 			return data, file.path
 		end
 		if initargs.editor and file.resource_path then
-			local data = fastio.readall_mem(file.resource_path, pathname)
+			local data = assert(fastio.readfile(file.resource_path, pathname))
 			return data, file.resource_path
 		end
 	end

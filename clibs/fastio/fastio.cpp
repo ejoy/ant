@@ -329,12 +329,12 @@ static int tostring(lua_State *L) {
     return 1;
 }
 
-static int readall_mem(lua_State *L) {
+static int readfile(lua_State *L) {
     const char* filename = getfile(L);
     lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        return raise_error(L, "open", getsymbol(L, filename));
+        return push_error(L, "open", getsymbol(L, filename));
     }
     size_t size = f.size();
     auto cache = luazip_new(size, NULL);
@@ -392,7 +392,7 @@ luaopen_fastio(lua_State* L) {
 
         {"wrap", wrap},
         {"tostring", tostring},
-        {"readall_mem", readall_mem},
+        {"readfile", readfile},
         {"loadlua", loadlua},
         {NULL, NULL},
     };

@@ -105,7 +105,7 @@ function vfs:open(hash)
 			return c
 		end
 	end
-	return fastio.readall_mem(self.localpath .. "/" .. hash)
+	return fastio.readfile(self.localpath .. "/" .. hash)
 end
 
 local function get_cachepath(setting, name)
