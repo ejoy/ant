@@ -14,6 +14,7 @@ local imaterial = ecs.require "ant.asset|material"
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
 local aio       = import_package "ant.io"
+local utils     = require "common.utils"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
 local uiproperty= require "widget.uiproperty"
@@ -1062,8 +1063,9 @@ function MaterialView:set_eid(eid)
     local mtlpath = hierarchy:get_node_info(self.eid).template.data.material
     for _, v in pairs(t.properties) do
         if v.texture and not texture_flag[v.texture] then
-            local imagepath = absolute_path(v.texture, mtlpath) .. "|main.cfg"
-            local data = datalist.parse(aio.readall(imagepath))
+            local imagepath = absolute_path(v.texture, mtlpath)
+            local pl = utils.split_ant_path(imagepath)
+            local data = datalist.parse(aio.readall(pl[1].."|"..fs.path(pl[2]):normalize():string().. "|main.cfg"))
             if data and not image_info[v.texture] then
                 image_info[v.texture] = {width = data.info.width, height = data.info.height}
                 texture_flag[v.texture] = true
