@@ -214,7 +214,7 @@ end
 local function schedule_message() end
 
 local function ltask_init(path, mem)
-	assert(fastio.mem_loadlua(mem, path))(true)
+	assert(fastio.loadlua(mem, path))(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()

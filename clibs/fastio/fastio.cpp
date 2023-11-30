@@ -354,7 +354,7 @@ static int readall_mem(lua_State *L) {
     return 1;
 }
 
-static int mem_loadlua(lua_State* L) {
+static int loadlua(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
     const char* symbol = luaL_checkstring(L, 2);
@@ -393,7 +393,7 @@ luaopen_fastio(lua_State* L) {
         {"wrap", wrap},
         {"tostring", tostring},
         {"readall_mem", readall_mem},
-        {"mem_loadlua", mem_loadlua},
+        {"loadlua", loadlua},
         {NULL, NULL},
     };
     luaL_newlib(L, l);
