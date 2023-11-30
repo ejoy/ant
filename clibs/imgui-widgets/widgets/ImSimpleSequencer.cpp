@@ -43,8 +43,7 @@ namespace ImSimpleSequencer
 		static int movingPart = -1;
 
 		ImGuiIO& io = ImGui::GetIO();
-		int cx = (int)(io.MousePos.x);
-		int cy = (int)(io.MousePos.y);
+		const int cx = (int)(io.MousePos.x);
 
 		ImGui::BeginGroup();
 
@@ -156,7 +155,7 @@ namespace ImSimpleSequencer
 
 			if (baseIndex && px > canvas_pos.x) {
 				char tmps[512];
-				sprintf(tmps, "%d", i);
+				snprintf(tmps, 512, "%d", i);
 				draw_list->AddText(ImVec2((float)px + 3.f, canvas_pos.y), 0xFFBBBBBB, tmps);
 			}
 		};
@@ -332,7 +331,7 @@ namespace ImSimpleSequencer
 			float cursorOffset = contentMin.x + (current_frame - firstFrameUsed) * framePixelWidth + framePixelWidth / 2 - cursorWidth * 0.5f;
 			draw_list->AddLine(ImVec2(cursorOffset - 3, canvas_pos.y), ImVec2(cursorOffset - 3, contentMax.y + (anim_layer_count - 1) * ItemHeight), 0x502A2AFF, cursorWidth);
 			char tmps[512];
-			sprintf(tmps, "%d", current_frame);
+			snprintf(tmps, 512, "%d", current_frame);
 			draw_list->AddText(ImVec2(cursorOffset + 10, canvas_pos.y + 2), 0xFF2A2AFF, tmps);
 			draw_list->AddRectFilled(ImVec2(cursorOffset - 0.75f * framePixelWidth + 1, canvas_pos.y), ImVec2(cursorOffset + 0.25f * framePixelWidth + 1, canvas_pos.y + ItemHeight), 0x502A2AFF);
 		}
@@ -361,7 +360,7 @@ namespace ImSimpleSequencer
 			ImVec2 scrollBarD(scrollBarMin.x + barWidthInPixels + startFrameOffset, scrollBarMax.y - 2);
 			draw_list->AddRectFilled(scrollBarC, scrollBarD, (inScrollBar || MovingScrollBar) ? 0xFF606060 : 0xFF505050, 6);
 
-			float handleRadius = (scrollBarMax.y - scrollBarMin.y) / 2;
+			//float handleRadius = (scrollBarMax.y - scrollBarMin.y) / 2;
 			ImRect barHandleLeft(scrollBarC, ImVec2(scrollBarC.x + 14, scrollBarD.y));
 			ImRect barHandleRight(ImVec2(scrollBarD.x - 14, scrollBarC.y), scrollBarD);
 
