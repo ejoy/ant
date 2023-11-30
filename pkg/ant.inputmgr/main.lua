@@ -55,6 +55,9 @@ local function create(world, type)
         world:pub {"keyboard", keymap[m.key], m.press, m.state}
     end
     function ev.size(m)
+        local fb = world.args.framebuffer
+        fb.width, fb.height = m.w, m.h
+        log.info("resize:", fb.width, fb.height)
         world:pub {"resize", m.w, m.h}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then

@@ -32,18 +32,19 @@ local ratio_change_mb	= world:sub {"framebuffer_ratio_changed"}
 
 local winresize_sys = ecs.system "window_resize_system"
 
-if __ANT_EDITOR__ then
-	function winresize_sys:start_frame()
-	end
-else
+if not __ANT_EDITOR__ then
 	local function winsize_update(s, ratio)
 		local ns = mu.calc_viewrect(s, ratio)
-		log.info("resize framebuffer from:", s.w, s.h, ", to:", ns.w, ns.h)
 		update_config(world.args, ns.w, ns.h)
 		rhwi.reset(nil, ns.w, ns.h)
 		local vp = world.args.viewport
 		log.info("main viewport:", vp.x, vp.y, vp.w, vp.h, vp.ratio or "(viewport ratio is nil)")
 		world:pub{"world_viewport_changed", vp}
+	end
+
+	function winresize_sys:init_world()
+		local fb = world.args.framebuffer
+		winsize_update({w=fb.width, h=fb.height}, fb.ratio)
 	end
 
 	function winresize_sys:start_frame()
