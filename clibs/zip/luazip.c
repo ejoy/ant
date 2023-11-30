@@ -2,9 +2,8 @@
 
 #include "lua.h"
 #include "lauxlib.h"
-#include "zlib.h"
-#include "zip.h"
-#include "unzip.h"
+#include "zlib-ng.h"
+#include "mz_compat.h"
 #include "luazip.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,12 +17,12 @@ static int
 lcompress(lua_State *L) {
 	size_t sz;
 	const char * src = luaL_checklstring(L, 1, &sz);
-	uLongf len = compressBound(sz);
+	size_t len = zng_compressBound(sz);
 	char * buf = (char *) malloc(len + 1);
 	if (buf == NULL) {
 		return luaL_error(L, "Compress OOM");
 	}
-	if (compress((void *)(buf + 1), &len, (void *)src, sz) != Z_OK) {
+	if (zng_compress((void *)(buf + 1), &len, (void *)src, sz) != Z_OK) {
 		free(buf);
 		return luaL_error(L, "Compress error");
 	}
@@ -47,11 +46,11 @@ luncompress(lua_State *L) {
 	size_t sz;
 	const char *src = luaL_checklstring(L, 1, &sz);
 	int idx = src[0];
-	uLongf dsz = (1ull << idx) * (sz - 1);
+	size_t dsz = (1ull << idx) * (sz - 1);
 	void *buf = malloc(dsz);
 	if (buf == NULL)
 		return luaL_error(L, "Uncompress OOM");
-	int r = uncompress(buf, &dsz, (void *)(src + 1), sz - 1);
+	int r = zng_uncompress(buf, &dsz, (void *)(src + 1), sz - 1);
 	if (r == Z_OK) {
 		lua_pushlstring(L, buf, dsz);
 		free(buf);
@@ -69,40 +68,23 @@ luncompress(lua_State *L) {
 	return 0;
 }
 
-#ifdef _WIN32
-
-#include <windows.h>
-#include "iowin32.h"
-
-struct filename_convert {
-	WCHAR tmp[4096];
-};
-
 static zipFile
 zip_open(lua_State *L, const char *filename, int append) {
-	struct filename_convert tmp;
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp.tmp, sizeof(tmp)) == 0) {
-		if (L == NULL)
-			return NULL;
-		luaL_error(L, "Can't convert %s to utf16", filename);
-	}
-	zlib_filefunc64_def ffunc;
-	fill_win32_filefunc64W(&ffunc);
-	return zipOpen2_64((const char *)tmp.tmp, append ? APPEND_STATUS_ADDINZIP : 0, NULL, &ffunc);
+	return zipOpen(filename, append ? APPEND_STATUS_ADDINZIP : 0);
 }
 
 static unzFile
 unzip_open(lua_State *L, const char *filename) {
-	struct filename_convert tmp;
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp.tmp, sizeof(tmp)) == 0) {
-		if (L == NULL)
-			return NULL;
-		luaL_error(L, "Can't convert %s to utf16", filename);
-	}
-	zlib_filefunc64_def ffunc;
-	fill_win32_filefunc64W(&ffunc);
-	return unzOpen2_64((const char *)tmp.tmp, &ffunc);
+	return unzOpen2(filename, 0);
 }
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+struct filename_convert {
+	WCHAR tmp[4096];
+};
 
 static FILE *
 file_open(lua_State *L, const char *filename, const char *mode, struct filename_convert *tmp) {
@@ -128,16 +110,6 @@ file_open(lua_State *L, const char *filename, const char *mode, struct filename_
 #else
 
 struct filename_convert {};
-
-static zipFile
-zip_open(lua_State *L, const char *filename, int append) {
-	return zipOpen(filename, append ? APPEND_STATUS_ADDINZIP : 0);
-}
-
-static unzFile
-unzip_open(lua_State *L, const char *filename) {
-	return unzOpen2(filename, 0);
-}
 
 static FILE *
 file_open(lua_State *L, const char *filename, const char *mode, struct filename_convert *tmp) {
@@ -360,7 +332,7 @@ locate_file(lua_State *L, unzFile zf, lua_Integer pos) {
 	unz_file_pos tmp;
 	int err = unzGoToFilePos(zf, luaint_to_file_pos(pos, &tmp));
 	if (err != UNZ_OK)
-		luaL_error(L, "Error: goto first file");
+		luaL_error(L, "Error: unzGoToFilePos");
 }
 
 static unzFile
@@ -388,7 +360,7 @@ open_file(lua_State *L, int rzip, int filename, struct zipraw *raw) {
 		err = unzOpenCurrentFile(z->h);
 	}
 	if (err != UNZ_OK)
-		luaL_error(L, "Error: open file %s", lua_tostring(L, filename));
+		luaL_error(L, "Error: open file %s (%d)", lua_tostring(L, filename), err);
 	return z->h;
 }
 
@@ -419,13 +391,15 @@ zipread_readfile(lua_State *L) {
 		close_file(L, zf);
 		luaL_error(L, "Error: out of memory");
 	}
-	int bytes = unzReadCurrentFile(zf, buf, info.uncompressed_size);
-	if (bytes != info.uncompressed_size) {
-		free(buf);
-		close_file(L, zf);
-		luaL_error(L, "Error: read file %s", lua_tostring(L, 2));
+	if (info.uncompressed_size != 0) {
+		int bytes = unzReadCurrentFile(zf, buf, info.uncompressed_size);
+		if (bytes != info.uncompressed_size) {
+			free(buf);
+			close_file(L, zf);
+			luaL_error(L, "Error: read file %s (%d != %d)", lua_tostring(L, 2), bytes, (int)info.uncompressed_size);
+		}
 	}
-	lua_pushlstring(L, buf, bytes);
+	lua_pushlstring(L, buf, info.uncompressed_size);
 	free(buf);
 	close_file(L, zf);
 	return 1;
@@ -495,16 +469,20 @@ zipread_read(lua_State *L) {
 	if (z->h == NULL)
 		luaL_error(L, "Error: closed");
 	int n = luaL_checkinteger(L, 2);
+	if (n <= 0)
+		return luaL_error(L, "Error: read size = %d", n);
 	void *buf = malloc(n);
 	if (buf == NULL)
 		return luaL_error(L, "Error: out of memory");
 	int bytes = unzReadCurrentFile(z->h, buf, n);
 	if (bytes <= 0) {
+		free(buf);
 		if (bytes == 0)
 			return 0;
 		luaL_error(L, "Error: read file");
 	}
 	lua_pushlstring(L, (const char *)buf, bytes);
+	free(buf);
 	return 1;
 }
 
@@ -796,10 +774,12 @@ zipreader_handle(lua_State *L) {
 			return 2;
 		}
 	}
-	int bytes = unzReadCurrentFile(zf, C->buffer, sz);
-	if (bytes != sz) {
-		close_file(L, zf);
-		luaL_error(L, "Error: read file %s", lua_tostring(L, 2));
+	if (sz != 0) {
+		int bytes = unzReadCurrentFile(zf, C->buffer, sz);
+		if (bytes != sz) {
+			close_file(L, zf);
+			luaL_error(L, "Error: read file %s (%d != %d)", lua_tostring(L, 2), bytes, (int)sz);
+		}
 	}
 	C->length = sz;
 	C->offset = 0;
@@ -998,11 +978,13 @@ luazip_open(const char *filename) {
 			}
 			struct zip_reader_cache * c = luazip_new(info.uncompressed_size, NULL);
 			void * data = luazip_data(c, NULL);
-			int bytes = unzReadCurrentFile(uzf, data, info.uncompressed_size);
-			if (bytes != info.uncompressed_size) {
-				luazip_close(c);
-				unzClose(uzf);
-				return NULL;
+			if (info.uncompressed_size != 0) {
+				int bytes = unzReadCurrentFile(uzf, data, info.uncompressed_size);
+				if (bytes != info.uncompressed_size) {
+					luazip_close(c);
+					unzClose(uzf);
+					return NULL;
+				}
 			}
 			unzClose(uzf);
 			return c;

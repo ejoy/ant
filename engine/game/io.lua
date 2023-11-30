@@ -93,11 +93,11 @@ do
 			return
 		end
 		if file.path then
-			local data = fastio.readall_mem(file.path, pathname)
+			local data = assert(fastio.readfile(file.path, pathname))
 			return data, file.path
 		end
 		if initargs.editor and file.resource_path then
-			local data = fastio.readall_mem(file.resource_path, pathname)
+			local data = assert(fastio.readfile(file.resource_path, pathname))
 			return data, file.resource_path
 		end
 	end
@@ -109,6 +109,9 @@ do
 		end
 		if file.path then
 			return file.path
+		end
+		if initargs.editor and file.resource_path then
+			return file.resource_path
 		end
 	end
 	function CMD.LIST(pathname)
@@ -211,7 +214,7 @@ end
 local function schedule_message() end
 
 local function ltask_init(path, mem)
-	assert(fastio.mem_loadlua(mem, path))(true)
+	assert(fastio.loadlua(mem, path))(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()

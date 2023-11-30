@@ -30,8 +30,23 @@ lm:source_set "bimg" {
     }
 }
 
+lm:source_set "bimg-miniz" {
+    rootdir = lm.BimgDir,
+    includes = {
+        "3rdparty/tinyexr/deps/miniz"
+    },
+    defines = {
+        "MINIZ_NO_ARCHIVE_APIS",
+        "MINIZ_NO_STDIO",
+    },
+    sources = {
+        "3rdparty/tinyexr/deps/miniz/miniz.c",
+    }
+}
+
 lm:source_set "bimg-decode" {
     rootdir = lm.BimgDir,
+    deps = "bimg-miniz",
     includes = {
         lm.BxDir / "include",
         "include",
@@ -40,7 +55,6 @@ lm:source_set "bimg-decode" {
     },
     sources = {
         "src/image_decode.cpp",
-        "3rdparty/tinyexr/deps/miniz/miniz.c",
     }
 }
 

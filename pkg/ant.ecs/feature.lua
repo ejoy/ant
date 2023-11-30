@@ -10,7 +10,7 @@ local function package_loadfile(packname, file, env)
 	if not mem then
 		error(("file '%s' not found"):format(path))
 	end
-	local func, err = fastio.mem_loadlua(mem, symbol, env)
+	local func, err = fastio.loadlua(mem, symbol, env)
 	if not func then
 		error(("error loading file '%s':\n\t%s"):format(path, err))
 	end

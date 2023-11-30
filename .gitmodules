@@ -52,3 +52,9 @@
 [submodule "3rd/zlib"]
 	path = 3rd/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "3rd/zlib-ng"]
+	path = 3rd/zlib-ng
+	url = https://github.com/zlib-ng/zlib-ng.git
+[submodule "3rd/minizip-ng"]
+	path = 3rd/minizip-ng
+	url = https://github.com/zlib-ng/minizip-ng.git

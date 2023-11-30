@@ -1,6 +1,3 @@
-package.path = "engine/?.lua;?.lua"
-require "bootstrap"
-
 local zip = require "zip"
 
 local c = zip.compress (("Hello World"):rep(10))
