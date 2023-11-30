@@ -333,9 +333,6 @@ REGISTER_LUA_CLASS(ozzSamplingContext)
 
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
-	ozzAnimation()
-		: v(ozz::New<ozz::animation::Animation>()) {
-	}
 	ozzAnimation(ozz::animation::Animation* p)
 		: v(p) {
 	}
@@ -362,25 +359,6 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		return 1;
 	}
 
-	static const char* create(lua_State* L, ozz::io::IArchive &ia) {
-		if (!ia.TestTag<ozz::animation::Animation>()) {		
-			return nullptr;
-		}
-
-		ozzAnimation* self = base_type::constructor(L);
-		luaL_Reg l[] = {		
-			{"duration", lduration},
-			{"num_tracks", lnum_tracks},
-			{"name", lname},
-			{"size", lsize},
-			{nullptr, nullptr},
-		};
-		base_type::set_method(L, l);
-		ia >> *(self->v);
-		auto type = ozz::io::internal::Tag<const ozz::animation::Animation>::Get();
-		return type;
-	}
-
 	static int instance(lua_State *L, ozz::animation::Animation *animation) {
 		base_type::constructor(L, animation);
 		luaL_Reg l[] = {
@@ -392,6 +370,17 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		};
 		base_type::set_method(L, l);
 		return 1;
+	}
+
+	static const char* create(lua_State* L, ozz::io::IArchive &ia) {
+		if (!ia.TestTag<ozz::animation::Animation>()) {		
+			return nullptr;
+		}
+
+		auto ani = ozz::New<ozz::animation::Animation>();
+		ia >> *ani;
+		instance(L, ani);
+		return ozz::io::internal::Tag<const ozz::animation::Animation>::Get();
 	}
 };
 REGISTER_LUA_CLASS(ozzAnimation)
