@@ -132,7 +132,7 @@ function idn.add_property_cycle(e, pn, p)
     local dn_rt = e.daynight.rt
     local current_property = dn_rt[pn]
     local current_number = #current_property
-    if current_number >= 10 then return end -- property_number <= 9
+    if current_number >= 25 then return end -- property_number <= 9
 
     current_property[#current_property+1] = p
     return true
