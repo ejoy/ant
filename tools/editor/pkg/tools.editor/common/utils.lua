@@ -28,7 +28,15 @@ end
 local fs = require "filesystem"
 
 function utils.write_file(filename, data)
-    local localpath = (string.sub(filename, 1, 1) == "/") and fs.path(filename):localpath():string() or filename
+    local localpath = filename
+    if string.sub(filename, 1, 1) == "/" then
+        local glbpos = string.find(filename, "%.glb")
+        if glbpos then
+            localpath = fs.path(string.sub(filename, 1, glbpos + 3)):localpath():string().. string.sub(filename, glbpos + 4)
+        else
+            localpath = fs.path(filename):localpath():string()
+        end
+    end
     local f = assert(io.open(localpath, "wb"))
     f:write(data)
     f:close()
