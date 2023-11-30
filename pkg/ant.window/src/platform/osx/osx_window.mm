@@ -179,10 +179,11 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 	NSRect  originalFrame = [m_window frame];
 	NSPoint location      = [m_window mouseLocationOutsideOfEventStream];
 	NSRect  adjustFrame   = [m_window contentRectForFrameRect: originalFrame];
+    float scale = [[NSScreen mainScreen] backingScaleFactor];
 	int32_t x = location.x;
 	int32_t y = (int32_t)adjustFrame.size.height - (int32_t)location.y;
-	*outx = clamp(x, 0, (int32_t)adjustFrame.size.width);
-	*outy = clamp(y, 0, (int32_t)adjustFrame.size.height);
+	*outx = scale * clamp(x, 0, (int32_t)adjustFrame.size.width);
+	*outy = scale * clamp(y, 0, (int32_t)adjustFrame.size.height);
 }
 - (void)windowCreated:(NSWindow*)window initCallback:(struct ant_window_callback*)callback {
 	assert(window);
@@ -243,7 +244,8 @@ int window_init(struct ant_window_callback* cb) {
     [NSApp finishLaunching];
     g_cb = cb;
 
-    window_message_init(cb, win, 0, w, h);
+    float scale = [[NSScreen mainScreen] backingScaleFactor];
+    window_message_init(cb, win, 0, w * scale, h * scale);
     return 0;
 }
 
