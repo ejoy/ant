@@ -123,6 +123,11 @@ function path_mt:is_relative()
     return self._value:sub(1,1) ~= '/'
 end
 
+function path_mt:normalize()
+    self._value = normalize(self._value)
+    return self
+end
+
 function path_mt:permissions()
     error 'Not implemented'
 end

@@ -41,4 +41,5 @@ end
 
 return {
     update_lastproj = update_lastproj,
+    setting = editor_setting,
 }

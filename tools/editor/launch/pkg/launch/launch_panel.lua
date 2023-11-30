@@ -70,7 +70,6 @@ local function do_open_proj(proj_path)
         detached = true
     })
     editor_setting.update_lastproj("", proj_path)
-    editor_setting.save()
 end
 
 local ICON_FA_FOLDER_PLUS = "\xef\x99\x9e"
