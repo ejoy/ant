@@ -174,8 +174,17 @@ function DaynightView:add_subsubproperty(subproperty, i, pn, e)
 end
 
 function DaynightView:get_add_click(pn, e)
+    local function get_default_property()
+        if pn:match "direct" then
+            return {time = 1, value = math3d.mark(math3d.vector(1, 1, 1, 1))}
+        elseif pn:match "ambient" then
+            return {time = 1, value = math3d.mark(math3d.vector(1, 1, 1))}
+        elseif pn:match "rotator" then
+            return {time = 1, value = math3d.mark(math3d.torotation(math3d.vector(0, 0, 1)))}
+        end
+    end
     return function()
-        local default_property = pn_label[pn].default_property
+        local default_property = get_default_property()
         local update_result = idn.add_property_cycle(e, pn, default_property)
         if not update_result then return end
         local dn_rt = e.daynight.rt
