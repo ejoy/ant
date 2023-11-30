@@ -382,6 +382,7 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 	}
 
 	static int instance(lua_State *L, ozz::animation::Animation *animation) {
+		base_type::constructor(L, animation);
 		luaL_Reg l[] = {
 			{"duration",	lduration},
 			{"num_tracks",	lnum_tracks},
