@@ -1,0 +1,22 @@
+[Window][MainView]
+Pos=0,0
+Size=720,450
+Collapsed=0
+
+[Window][##Choose project]
+Pos=0,0
+Size=720,416
+Collapsed=0
+DockId=0x00000001,0
+
+[Window][Debug##Default]
+ViewportPos=1033,658
+ViewportId=0x9F5F46A1
+Size=400,400
+Collapsed=0
+
+[Docking][Data]
+DockSpace   ID=0x6949B3C7 Window=0x8C090316 Pos=1580,823 Size=720,450 Split=Y
+  DockNode  ID=0x00000001 Parent=0x6949B3C7 SizeRef=720,416 HiddenTabBar=1 Selected=0xFB03FE26
+  DockNode  ID=0x00000002 Parent=0x6949B3C7 SizeRef=720,32 CentralNode=1
+
