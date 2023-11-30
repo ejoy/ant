@@ -9,7 +9,7 @@ local function read()
     if not fs.exists(settingpath) then
         return {}
     end
-    return datalist.parse(fastio.readall(settingpath:localpath():string(), settingpath:string()))
+    return datalist.parse(fastio.readall_f(settingpath:localpath():string(), settingpath:string()))
 end
 
 local editor_setting = read()

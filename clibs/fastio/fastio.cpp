@@ -115,8 +115,93 @@ static const char* getsymbol(lua_State *L, const char* filename) {
 #endif
 }
 
+struct wrap {
+    zip_reader_cache* cache;
+};
+
+static int wrap_close(lua_State* L) {
+    struct wrap& wrap = *(struct wrap*)lua_touserdata(L, 1);
+    if (wrap.cache) {
+        luazip_close(wrap.cache);
+        wrap.cache = nullptr;
+    }
+    return 0;
+}
+
+static int wrap_closure(lua_State* L) {
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
+    size_t len = 0;
+    void* buf = luazip_data(cache, &len);
+    lua_pushlightuserdata(L, buf);
+    lua_pushinteger(L, len);
+    struct wrap& wrap = *(struct wrap*)lua_newuserdatauv(L, sizeof(struct wrap), 0);
+    wrap.cache = cache;
+    if (luaL_newmetatable(L, "fastio::wrap")) {
+        luaL_Reg lib[] = {
+            { "__close", wrap_close },
+            { NULL, NULL },
+        };
+        luaL_setfuncs(L, lib, 0);
+    }
+    lua_setmetatable(L, -2);
+    return 3;
+}
+
 template <bool RAISE>
-static int readall(lua_State *L) {
+static int readall_v(lua_State *L) {
+    const char* filename = getfile(L);
+    lua_settop(L, 2);
+    file_t f = file_t::open(L, filename);
+    if (!f.suc()) {
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
+    }
+    size_t size = f.size();
+    auto cache = luazip_new(size, NULL);
+    if (!cache) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
+    auto buf = luazip_data(cache, nullptr);
+    size_t nr = f.read(buf, size);
+    if (nr != size) {
+        luazip_close(cache);
+        luaL_error(L, "unknown read error");
+        return 0;
+    }
+    lua_pushlightuserdata(L, cache);
+    return 1;
+}
+
+template <bool RAISE>
+static int readall_f(lua_State *L) {
+    const char* filename = getfile(L);
+    lua_settop(L, 2);
+    file_t f = file_t::open(L, filename);
+    if (!f.suc()) {
+        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
+    }
+    size_t size = f.size();
+    auto cache = luazip_new(size, NULL);
+    if (!cache) {
+        f.close();
+        luaL_error(L, "not enough memory");
+        return 0;
+    }
+    auto buf = luazip_data(cache, nullptr);
+    size_t nr = f.read(buf, size);
+    if (nr != size) {
+        luazip_close(cache);
+        luaL_error(L, "unknown read error");
+        return 0;
+    }
+    lua_pushlightuserdata(L, cache);
+    lua_pushcclosure(L, wrap_closure, 1);
+    return 1;
+}
+
+template <bool RAISE>
+static int readall_u(lua_State *L) {
     const char* filename = getfile(L);
     lua_settop(L, 2);
     file_t f = file_t::open(L, filename);
@@ -280,64 +365,6 @@ static int str2sha1(lua_State *L) {
     return 1;
 }
 
-template <bool RAISE>
-static int readfile(lua_State *L) {
-    const char* filename = getfile(L);
-    lua_settop(L, 2);
-    file_t f = file_t::open(L, filename);
-    if (!f.suc()) {
-        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
-    }
-    size_t size = f.size();
-    auto cache = luazip_new(size, NULL);
-    if (!cache) {
-        f.close();
-        luaL_error(L, "not enough memory");
-        return 0;
-    }
-    auto buf = luazip_data(cache, nullptr);
-    size_t nr = f.read(buf, size);
-    if (nr != size) {
-        luazip_close(cache);
-        luaL_error(L, "unknown read error");
-        return 0;
-    }
-    lua_pushlightuserdata(L, cache);
-    return 1;
-}
-
-struct wrap {
-    zip_reader_cache* cache;
-};
-
-static int wrap_close(lua_State* L) {
-    struct wrap& wrap = *(struct wrap*)lua_touserdata(L, 1);
-    if (wrap.cache) {
-        luazip_close(wrap.cache);
-        wrap.cache = nullptr;
-    }
-    return 0;
-}
-
-static int wrap_closure(lua_State* L) {
-    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, lua_upvalueindex(1));
-    size_t len = 0;
-    void* buf = luazip_data(cache, &len);
-    lua_pushlightuserdata(L, buf);
-    lua_pushinteger(L, len);
-    struct wrap& wrap = *(struct wrap*)lua_newuserdatauv(L, sizeof(struct wrap), 0);
-    wrap.cache = cache;
-    if (luaL_newmetatable(L, "fastio::wrap")) {
-        luaL_Reg lib[] = {
-            { "__close", wrap_close },
-            { NULL, NULL },
-        };
-        luaL_setfuncs(L, lib, 0);
-    }
-    lua_setmetatable(L, -2);
-    return 3;
-}
-
 static int wrap(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     lua_settop(L, 1);
@@ -391,13 +418,15 @@ static int loadlua(lua_State* L) {
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
-        {"readall", readall<true>},
+        {"readall_v", readall_v<true>},
+        {"readall_v_noerr", readall_v<false>},
+        {"readall_f", readall_f<true>},
+        {"readall_u", readall_u<true>},
         {"readall_s", readall_s<true>},
-        {"loadfile", loadfile<false>},
+        {"readall_s_noerr", readall_s<false>},
+        {"loadfile", loadfile<true>},
         {"sha1", sha1<true>},
         {"str2sha1", str2sha1},
-
-        {"readfile", readfile<false>},
         {"wrap", wrap},
         {"tostring", tostring},
         {"loadlua", loadlua},

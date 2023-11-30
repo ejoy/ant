@@ -191,7 +191,7 @@ local function read_vfsignore(rootpath)
 			block = block,
 		}
 	end
-	local r = datalist.parse(fastio.readall((rootpath / ".vfsignore"):string()))
+	local r = datalist.parse(fastio.readall_f((rootpath / ".vfsignore"):string()))
 	if r.block then
 		table_append(r.block, block)
 	else

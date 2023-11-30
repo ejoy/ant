@@ -11,7 +11,7 @@ local function read()
     if not io.open(settingpath, "r") then
         return {}
     end
-    return datalist.parse(fastio.readall(settingpath))
+    return datalist.parse(fastio.readall_f(settingpath))
 end
 
 local editor_setting = read()

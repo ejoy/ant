@@ -117,7 +117,7 @@ local STATE_FILES = {}
 local function read_state_file(setting, statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        s = datalist.parse(vfs_fastio.readall(setting.vfs, statefile))
+        s = datalist.parse(vfs_fastio.readall_f(setting.vfs, statefile))
     end
 
     return s

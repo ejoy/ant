@@ -74,12 +74,7 @@ function vfs:dir(hash)
 	local zf = self.zipfile
 	local data = zf and zf:readfile(hash)
 	if not data then
-		-- todo: use fastio
-		local f = io.open(self.localpath .. "/" .. hash, "rb")
-		if f then
-			data = f:read "a"
-			f:close()
-		end
+		data = fastio.readall_s_noerr(self.localpath .. "/" .. hash)
 	end
 	if not data then
 		return
@@ -105,7 +100,7 @@ function vfs:open(hash)
 			return c
 		end
 	end
-	return fastio.readfile(self.localpath .. "/" .. hash)
+	return fastio.readall_v_noerr(self.localpath .. "/" .. hash)
 end
 
 local function get_cachepath(setting, name)

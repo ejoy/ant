@@ -5,7 +5,7 @@ local parallel_task = require "parallel_task"
 local depends = require "depends"
 
 local function readdatalist(filepath)
-	return datalist.parse(fastio.readall(filepath), function(args)
+	return datalist.parse(fastio.readall_f(filepath), function(args)
 		return args[2]
 	end)
 end

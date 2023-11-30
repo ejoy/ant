@@ -1,7 +1,7 @@
 local _dofile = dofile
 function dofile(path)
 	local fastio = require "fastio"
-    return assert(fastio.loadfile(path))()
+    return fastio.loadfile(path)()
 end
 local i = 1
 while true do

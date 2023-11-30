@@ -37,7 +37,7 @@ local realpath; do
 end
 function vfs.read(path)
     local lpath = realpath(path)
-    local data = assert(fastio.readfile(lpath, path))
+    local data = fastio.readall_v(lpath, path)
     return data, lpath
 end
 vfs.realpath = realpath
