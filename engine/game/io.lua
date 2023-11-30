@@ -110,6 +110,9 @@ do
 		if file.path then
 			return file.path
 		end
+		if initargs.editor and file.resource_path then
+			return file.resource_path
+		end
 	end
 	function CMD.LIST(pathname)
 		pathname = pathname:gsub("|", "/")
