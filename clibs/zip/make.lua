@@ -26,6 +26,45 @@ lm:runlua "gen-zlib_name_mangling" {
     output = "$builddir/gen-zlib/zlib_name_mangling-ng.h",
 }
 
+lm:source_set "zlib-ng-x86" {
+    objdeps = {
+        "gen-zconf",
+        "gen-zlib",
+        "gen-zlib_name_mangling",
+    },
+    includes = {
+        ZLIBDIR,
+        ZLIBDIR.."arch/x86/",
+        "$builddir/gen-zlib",
+    },
+    sources = {
+        ZLIBDIR.."functable.c",
+        ZLIBDIR.."cpu_features.c",
+        ZLIBDIR.."arch/x86/*.c",
+    },
+    defines = {
+        "X86_FEATURES",
+        "X86_AVX2",
+        "X86_AVX512VNNI",
+        "X86_AVX512",
+        "X86_SSE42",
+        "X86_SSSE3",
+        "X86_SSE2",
+        "X86_PCLMULQDQ_CRC",
+        "X86_VPCLMULQDQ_CRC",
+    },
+    gcc = {
+        defines = {
+            "HAVE_BUILTIN_CTZ",
+        },
+    },
+    clang = {
+        defines = {
+            "HAVE_BUILTIN_CTZ",
+        },
+    },
+}
+
 lm:source_set "zlib-ng" {
     objdeps = {
         "gen-zconf",
@@ -39,6 +78,11 @@ lm:source_set "zlib-ng" {
     sources = {
         ZLIBDIR.."*.c",
         "!"..ZLIBDIR.."gz*.c",
+        "!"..ZLIBDIR.."functable.c",
+        "!"..ZLIBDIR.."cpu_features.c",
+    },
+    windows = {
+        deps = "zlib-ng-x86",
     },
     msvc = {
         defines = {
