@@ -2,8 +2,12 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local renderutil= ecs.require "ant.render|util"
 local setting   = import_package "ant.settings"
+local bs_sys = ecs.system "bs_system"
+if not setting:get "graphic/postprocess/blur/enable" then
+    return
+end
+
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
@@ -11,12 +15,6 @@ local irender   = ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
 local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local ibs  = {}
-local bs_sys = ecs.system "bs_system"
-
-if not setting:get "graphic/postprocess/blur/enable" then
-    renderutil.default_system(bs_sys, "entity_init, blur")
-    return
-end
 
 local function create_stop_scene_entity()
     return world:create_entity {

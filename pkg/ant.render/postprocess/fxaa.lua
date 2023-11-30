@@ -4,14 +4,13 @@ local w     = world.w
 
 local setting = import_package "ant.settings"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
-local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
-local renderutil = require "util"
 local fxaasys = ecs.system "fxaa_system"
-local sampler   = import_package "ant.render.core".sampler
 if not ENABLE_FXAA then
-    renderutil.default_system(fxaasys, "init", "init_world", "fxaa", "data_changed")
     return
 end
+
+local sampler   = import_package "ant.render.core".sampler
+local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
 
 local hwi       = import_package "ant.hwi"
 

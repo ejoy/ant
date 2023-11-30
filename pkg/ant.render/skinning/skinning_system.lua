@@ -4,15 +4,14 @@ local w 		= world.w
 
 local setting	= import_package "ant.settings"
 local USE_CS_SKINNING<const>	= setting:get "graphic/skinning/use_cs"
-local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa"
-local imaterial = ecs.require "ant.asset|material"
-local skinning_sys = ecs.system "skinning_system"
-
 if USE_CS_SKINNING then
-	local renderutil= require "util"
-	renderutil.default_system(skinning_sys, "skin_mesh")
 	return
 end
+
+local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa"
+
+local imaterial = ecs.require "ant.asset|material"
+local skinning_sys = ecs.system "skinning_system"
 
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant

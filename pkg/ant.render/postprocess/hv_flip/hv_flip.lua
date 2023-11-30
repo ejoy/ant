@@ -3,14 +3,9 @@ local world = ecs.world
 local w     = world.w
 
 local setting = import_package "ant.settings"
-
-local ru = require "util"
 local hvflip_sys = ecs.system "hv_flip_system"
-
 local ENABLE_HV_FLIP<const> = setting:get "graphic/postprocess/hv_flip/enable"
-
 if not ENABLE_HV_FLIP then
-    ru.default_system(hvflip_sys, "init", "init_world", "flip")
     return
 end
 

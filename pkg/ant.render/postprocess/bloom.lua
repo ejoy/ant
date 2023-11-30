@@ -2,16 +2,15 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local math3d    = require "math3d"
-local renderutil= require "util"
 local setting   = import_package "ant.settings"
 local bloom_sys = ecs.system "bloom_system"
-local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
+
 if not setting:get "graphic/postprocess/bloom/enable" then
-    renderutil.default_system(bloom_sys, "init", "init_world", "entity_ready", "bloom")
     return
 end
 
+local math3d    = require "math3d"
+local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local hwi       = import_package "ant.hwi"
 
 local BLOOM_DS_VIEWID <const> = hwi.viewid_get "bloom_ds1"

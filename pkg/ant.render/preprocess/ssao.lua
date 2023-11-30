@@ -3,15 +3,8 @@ local world = ecs.world
 local w     = world.w
 
 local setting = import_package "ant.settings"
-
 local ssao_sys  = ecs.system "ssao_system"
-
-local renderutil= require "util"
-
-local ENABLE_SSAO<const> = setting:get "graphic/ao/enable"
-
-if not ENABLE_SSAO then
-    renderutil.default_system(ssao_sys, "init", "init_world", "data_changed", "build_ssao", "bilateral_filter")
+if not setting:get "graphic/ao/enable" then
     return
 end
 
