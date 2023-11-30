@@ -382,13 +382,12 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 	}
 
 	static int instance(lua_State *L, ozz::animation::Animation *animation) {
-		ozzAnimation* self = base_type::constructor(L, animation);
 		luaL_Reg l[] = {
-			{"duration", lduration},
-			{"num_tracks", lnum_tracks},
-			{"name", lname},
-			{"size", lsize},
-			{nullptr, nullptr},
+			{"duration",	lduration},
+			{"num_tracks",	lnum_tracks},
+			{"name",		lname},
+			{"size",		lsize},
+			{nullptr, 		nullptr},
 		};
 		base_type::set_method(L, l);
 		return 1;
@@ -496,7 +495,6 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 	}
 
 	static int lbuild(lua_State *L) {
-		auto base = base_type::get(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
 
 		ozz::animation::offline::AnimationBuilder builder;
@@ -714,9 +712,9 @@ template<typename DataType>
 struct vertex_data {
 	struct data_stride {
 		typedef DataType Type;
-		DataType* data;
-		uint32_t offset;
-		uint32_t stride;
+		DataType* data = nullptr;
+		uint32_t offset = 0;
+		uint32_t stride = 0;
 	};
 
 	data_stride positions;
@@ -836,11 +834,11 @@ lmesh_skinning(lua_State *L){
 	auto skinning_matrices = ozzPoseResult::getBP(L, 1);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
-	in_vertex_data vd = {0};
+	in_vertex_data vd;
 	read_in_vertex_data(L, 2, vd);
 
 	luaL_checktype(L, 3, LUA_TTABLE);
-	out_vertex_data ovd = {0};
+	out_vertex_data ovd;
 	read_vertex_data(L, 3, ovd);
 
 	const uint32_t num_vertices = (uint32_t)luaL_checkinteger(L, 4);
