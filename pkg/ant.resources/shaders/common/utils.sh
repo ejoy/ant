@@ -26,13 +26,41 @@ vec2 texture2DAstc(sampler2D _sampler, vec2 _uv)
 	return texture2D(_sampler, _uv).ga;
 }
 
-vec3 fetch_normal_from_tex(sampler2D normaltex, vec2 texcoord)
+vec2 texture2DArrayBc5(sampler2DArray _sampler, vec3 _uv)
 {
-    #if BX_PLATFORM_OSX || BX_PLATFORM_IOS || BX_PLATFORM_ANDROID
+#if BGFX_SHADER_LANGUAGE_HLSL && BGFX_SHADER_LANGUAGE_HLSL <= 300
+	return texture2DArray(_sampler, _uv).yx;
+#else
+	return texture2DArray(_sampler, _uv).xy;
+#endif
+}
+
+vec2 texture2DArrayAstc(sampler2DArray _sampler, vec3 _uv)
+{
+	return texture2DArray(_sampler, _uv).ga;
+}
+
+mediump vec3 fetch_normal_from_tex(sampler2D normaltex, vec2 texcoord)
+{
+    #if BGFX_SHADER_LANGUAGE_METAL || BGFX_SHADER_LANGUAGE_SPIRV
         return remap_normal(texture2DAstc(normaltex, texcoord));
     #else
         return remap_normal(texture2DBc5(normaltex, texcoord));
     #endif
+}
+
+mediump vec3 fetch_normal_from_tex_array(sampler2DArray normalarray, vec3 texcoord)
+{
+#if BGFX_SHADER_LANGUAGE_METAL || BGFX_SHADER_LANGUAGE_SPIRV
+	return remap_normal(texture2DArrayAstc(normalarray, texcoord));
+#else
+	return remap_normal(texture2DArrayBc5(normalarray, texcoord));
+#endif
+}
+
+vec3 transform_normal_from_tbn(mat3 tbn, vec3 normalTS)
+{
+    return normalize(mul(normalTS, tbn));   // same as: mul(transpose(tbn), normalTS)
 }
 
 vec2 id2uv(ivec2 uvidx, ivec2 size)

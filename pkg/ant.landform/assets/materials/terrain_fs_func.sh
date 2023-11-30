@@ -29,20 +29,6 @@ material_info terrain_material_info_init(vec3 gnormal, vec3 normal, vec4 posWS, 
     return mi;
 }
 
-vec2 texture2DArrayBc5(sampler2DArray _sampler, vec3 _uv)
-{
-#if BGFX_SHADER_LANGUAGE_HLSL && BGFX_SHADER_LANGUAGE_HLSL <= 300
-	return texture2DArray(_sampler, _uv).yx;
-#else
-	return texture2DArray(_sampler, _uv).xy;
-#endif
-}
-
-vec2 texture2DArrayAstc(sampler2DArray _sampler, vec3 _uv)
-{
-	return texture2DArray(_sampler, _uv).ga;
-}
-
 vec3 blend_terrain_color(vec3 sand_basecolor, vec3 stone_basecolor, float sand_height, float sand_alpha)
 {
     float sand_weight = min(1.0, 2.5 * abs(sand_height - sand_alpha));
@@ -51,13 +37,8 @@ vec3 blend_terrain_color(vec3 sand_basecolor, vec3 stone_basecolor, float sand_h
 
 mediump vec3 terrain_normal_from_tangent_frame(mat3 tbn, vec3 texcoord)
 {
-#if BGFX_SHADER_LANGUAGE_METAL
-	mediump vec3 normalTS = remap_normal(texture2DArrayAstc(s_normal_array, texcoord));
-#else
-	mediump vec3 normalTS = remap_normal(texture2DArrayBc5(s_normal_array, texcoord));
-#endif
-	// same as: mul(transpose(tbn), normalTS)
-    return normalize(mul(normalTS, tbn));
+    vec3 normalTS = fetch_normal_from_tex_array(s_normal_array, texcoord);
+    return transform_normal_from_tbn(normalTS);
 }
 
 

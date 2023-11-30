@@ -56,7 +56,7 @@ void init_material_info(Varyings varyings, inout material_info mi)
     mat3 tbn = mat3(mi.T, mi.B, mi.gN);
 
     mediump vec3 normalTS = fetch_normal_from_tex(s_normal, varyings.texcoord0);
-    mi.N = normalize(mul(normalTS, tbn));// same as: mul(transpose(tbn), normalTS)
+    mi.N = transform_normal_from_tbn(tbn, normalTS);
 
 #ifdef WITH_DOUBLE_SIDE
     if (varyings.is_frontfacing){
