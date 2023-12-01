@@ -17,6 +17,6 @@ system "hitch_system"
 
 policy "hitch_object"
     .include_policy "ant.scene|scene_object"
-    .include_policy "ant.render|bounding"
+    .include_policy "ant.scene|bounding"
     .component "hitch"
     .component "visible_state"

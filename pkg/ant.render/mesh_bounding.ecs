@@ -1,11 +1,2 @@
-policy "bounding"
-    .component_opt "bounding"
-
-component "bounding"
-    .type "c"
-    .field "aabb:userdata|math_t"
-    .field "scene_aabb:userdata|math_t"
-    .implement "mesh_bounding.lua"
-
 system "mesh_bounding_system"
     .implement "mesh_bounding.lua"

@@ -66,7 +66,6 @@ local function create(world, type)
         end
         local fb = world.args.framebuffer
         fb.width, fb.height = m.w, m.h
-        log.info("resize:", fb.width, fb.height)
         world:pub {"resize", m.w, m.h}
     end
     function ev.set_viewport(vp)

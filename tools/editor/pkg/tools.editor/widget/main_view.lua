@@ -20,7 +20,7 @@ local function cvt2scenept(x, y)
 end
 
 local function in_view(x, y)
-    return mu.pt2d_in_rect(x, y, irq.view_rect "tonemapping_queue")
+    return mu.pt2d_in_rect(x, y, irq.view_rect "main_queue")
 end
 
 function m.show()
