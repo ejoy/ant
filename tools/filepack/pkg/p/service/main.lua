@@ -101,16 +101,15 @@ function writer.zip(bundlepath)
         local oldzip = zip.open(oldzippath:string(), "r")
         if oldzip then
             local newzip = assert(zip.open(zippath:string(), "w"))
-            local ziplist = debug.getuservalue(oldzip, 1)
             function m.writefile(path, content)
-                if ziplist[path] then
+                if oldzip:exist(path) then
                     newzip:copyfrom(path, oldzip)
                 else
                     newzip:add(path, content)
                 end
             end
             function m.copyfile(path, localpath)
-                if ziplist[path] then
+                if oldzip:exist(path) then
                     newzip:copyfrom(path, oldzip)
                 else
                     newzip:addfile(path, localpath)
