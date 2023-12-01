@@ -9,6 +9,7 @@ local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local imgui = require "imgui"
 local irq   = ecs.require "ant.render|render_system.renderqueue"
+local event = require "editor.callback"
 
 local drag_file
 
@@ -79,7 +80,7 @@ function m.show()
         local vp = world.args.viewport
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
             vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
-            world:pub{"world_viewport_changed", vp}
+            event.set_viewport(vp)
             world:pub{"resize", ww, hh}
         end
     end

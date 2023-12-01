@@ -1,5 +1,3 @@
-import_feature "ant.render"
-
 feature "rt"
     .import "rt.ecs"
 

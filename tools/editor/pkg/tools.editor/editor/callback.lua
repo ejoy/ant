@@ -90,6 +90,11 @@ function cb.size(width, height)
         }
     end
 end
+function cb.set_viewport(vp)
+    for _, w in ipairs(worlds) do
+        w.set_viewport(vp)
+    end
+end
 function cb.dropfiles(filelst)
     event("dropfiles", filelst)
 end

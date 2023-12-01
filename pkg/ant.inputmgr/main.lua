@@ -55,10 +55,29 @@ local function create(world, type)
         world:pub {"keyboard", keymap[m.key], m.press, m.state}
     end
     function ev.size(m)
+        if not __ANT_EDITOR__ then
+            rmlui_sendmsg("set_viewport", {
+                x = 0,
+                y = 0,
+                w = m.w,
+                h = m.h,
+                ratio = world.args.framebuffer.ratio,
+            })
+        end
         local fb = world.args.framebuffer
         fb.width, fb.height = m.w, m.h
         log.info("resize:", fb.width, fb.height)
         world:pub {"resize", m.w, m.h}
+    end
+    function ev.set_viewport(vp)
+        rmlui_sendmsg("set_viewport", {
+            x = vp.x,
+            y = vp.y,
+            w = vp.w,
+            h = vp.h,
+            ratio = world.args.framebuffer.ratio,
+        })
+        world:pub{"world_viewport_changed", vp}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         if world.args.ecs.enable_mouse then

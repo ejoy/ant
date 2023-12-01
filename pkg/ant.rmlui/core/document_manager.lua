@@ -250,7 +250,10 @@ function m.process_touch(ev)
     end
 end
 
-function m.set_dimensions(w, h, ratio)
+function m.set_viewport(vp)
+    local w = vp.w
+    local h = vp.h
+    local ratio = vp.ratio
     screen_ratio = ratio
     if w == width and h == height then
         return
