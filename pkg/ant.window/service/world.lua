@@ -5,6 +5,7 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
+local setting   = import_package "ant.settings"
 local bgfx      = require "bgfx"
 
 local ServiceRmlUi
@@ -40,6 +41,9 @@ local function reboot(initargs)
 	world:pipeline_init()
 end
 
+local SCENE_RATIO <const> = setting:get "framebuffer/scene_ratio" or 1.0
+local RATIO <const>       = setting:get "framebuffer/ratio" or 1.0
+
 local function render(nwh, context, width, height, initialized)
 	local config = {
 		ecs = initargs,
@@ -47,7 +51,10 @@ local function render(nwh, context, width, height, initialized)
 	config.framebuffer = {
 		width = width,
 		height = height,
+		ratio = RATIO,
+		scene_ratio = SCENE_RATIO,
 	}
+	log.info(("framebuffer ratio:%2f, scene:%2f"):format(RATIO, SCENE_RATIO))
 	config.viewport = {
 		x = 0,
 		y = 0,
