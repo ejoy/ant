@@ -15,9 +15,10 @@ local function create_world(config)
         world:pipeline_exit()
     end
     m.mousewheel   = ev.mousewheel
-    m.mouse         = ev.mouse
-    m.keyboard      = ev.keyboard
-    m.size          = ev.size
+    m.mouse        = ev.mouse
+    m.keyboard     = ev.keyboard
+    m.size         = ev.size
+    m.set_viewport = ev.set_viewport
     return m, world
 end
 

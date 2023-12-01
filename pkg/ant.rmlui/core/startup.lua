@@ -59,12 +59,18 @@ end
 
 S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
-S.update_context_size = document_manager.set_dimensions
 
+local viewid = hwi.viewid_get "uiruntime"
 hwi.init_bgfx()
 bgfx.init()
+
+function S.set_viewport(vp)
+    bgfx.set_view_rect(viewid, vp.x, vp.y, vp.w, vp.h)
+    document_manager.set_viewport(vp)
+end
+
 rmlui.RmlInitialise {
-    viewid = hwi.viewid_get "uiruntime",
+    viewid = viewid,
     shader = require "core.init_shader",
     callback = require "core.callback",
     font_mgr = bgfx.fontmanager(),
