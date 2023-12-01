@@ -12,8 +12,8 @@ local iani          = ecs.require "ant.animation|state_machine"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
 local imgui         = require "imgui"
-local fs            = require "filesystem"
-local gd            = require "common.global_data"
+local bfs 			= require "bee.filesystem"
+local global_data	= require "common.global_data"
 local icons         = require "common.icons"
 local platform      = require "bee.platform"
 local font          = imgui.font
@@ -21,6 +21,9 @@ local Font          = imgui.font.SystemFont
 local math3d        = require "math3d"
 local fastio        = require "fastio"
 local fmod 			= require "fmod"
+local log_widget        = require "widget.log"
+local console_widget    = require "widget.console"
+
 local m = ecs.system 'init_system'
 
 local function LoadImguiLayout(filename)
@@ -42,22 +45,23 @@ local function glyphRanges(t)
 	return table.concat(s)
 end
 
-function m:init()
-    world.__EDITOR__ = true
-    iani.set_edit_mode(true)
+local function start_fileserver(luaexe, path)
+    local cthread = require "bee.thread"
+    cthread.newchannel "log_channel"
+    cthread.newchannel "fileserver_channel"
+    cthread.newchannel "console_channel"
+    local produce = cthread.channel "fileserver_channel"
+    produce:push(luaexe, path)
 
-    LoadImguiLayout(gd.editor_root / "imgui.layout")
+    return cthread.thread [[
+        package.path = "/engine/?.lua"
+        package.cpath = ""
+        local fileserver = dofile "/pkg/tools.editor/fileserver_adapter.lua"()
+        fileserver.run()
+    ]]
+end
 
-    imgui.SetWindowTitle("Editor")
-    gd.editor_package_path = "/pkg/tools.editor/"
-
-    if editor_setting.setting.camera == nil then
-        editor_setting.update_camera_setting(0.1)
-    end
-    world:pub { "camera_controller", "move_speed", editor_setting.setting.camera.speed }
-    world:pub { "camera_controller", "stop", true}
-    world:pub { "UpdateDefaultLight", true }
-
+local function init_font()
 	if platform.os == "windows" then
 		local fafontdata = aio.readall("/pkg/tools.editor/res/fonts/fa-solid-900.ttf")
         font.Create {
@@ -122,8 +126,34 @@ function m:init()
     else -- iOS
         font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
     end
-	gd.audio = fmod.init()
+end
+
+function m:init()
+    world.__EDITOR__ = true
+    iani.set_edit_mode(true)
+    LoadImguiLayout(global_data.editor_root / "imgui.layout")
+    imgui.SetWindowTitle("Editor")
+	--
+	global_data:update_project_root(__ANT_EDITOR__)
+    start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
+    log_widget.init_log_receiver()
+    console_widget.init_console_sender()
+	--filewatch
+	local bfw = require "bee.filewatch"
+	local fw = bfw.create()
+	fw:add(global_data.project_root:string())
+	global_data.filewatch = fw
+	global_data.audio = fmod.init()
+	
+	init_font();
+
 	icons:init(assetmgr)
+	if editor_setting.setting.camera == nil then
+        editor_setting.update_camera_setting(0.1)
+    end
+    world:pub { "camera_controller", "move_speed", editor_setting.setting.camera.speed }
+    world:pub { "camera_controller", "stop", true}
+    world:pub { "UpdateDefaultLight", true }
 end
 
 local function init_camera()
@@ -152,10 +182,10 @@ function m:post_init()
 end
 
 function m:data_changed()
-	gd.audio:update()
+	global_data.audio:update()
 end
 
 function m:exit()
 	prefab_mgr:save_ui_layout()
-	gd.audio:shutdown()
+	global_data.audio:shutdown()
 end

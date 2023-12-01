@@ -52,122 +52,11 @@ local function on_new_project(path)
     new_project.gen_prebuild()
 end
 
-local function choose_project_dir()
-    local filedialog = require 'filedialog'
-    local dialog_info = {
-        Owner = rhwi.native_window(),
-        Title = "Choose project folder"
-    }
-    local ok, path = filedialog.open(dialog_info)
-    if ok then
-        return path[1]
-    end
-end
-
-local function start_fileserver(luaexe, path)
-    local cthread = require "bee.thread"
-    cthread.newchannel "log_channel"
-    cthread.newchannel "fileserver_channel"
-    cthread.newchannel "console_channel"
-    local produce = cthread.channel "fileserver_channel"
-    produce:push(luaexe, path)
-
-    return cthread.thread [[
-        package.path = "/engine/?.lua"
-        package.cpath = ""
-        local fileserver = dofile "/pkg/tools.editor/fileserver_adapter.lua"()
-        fileserver.run()
-    ]]
-end
-
-local function do_open_proj(path)
-    local lpath = lfs.path(path)
-    local topname = global_data:update_root(lpath)
-    local bfs = require "bee.filesystem"
-    start_fileserver(tostring(bfs.exe_path()), path)
-    log_widget.init_log_receiver()
-    console_widget.init_console_sender()
-    world:pub { "UpdateDefaultLight", true }
-    if topname then
-        log.warn("need handle effect file")
-        return topname
-    else
-        print("Can not add effekseer resource seacher path.")
-    end
-end
-
-local function on_open_proj()
-    local path = choose_project_dir()
-    if path then
-        local projname = do_open_proj(path)
-        editor_setting.update_lastproj(projname:string():gsub("/pkg/", ""), path)
-        editor_setting.save()
-        prefab_mgr:reset_prefab()
-        world:pub {"ResourceBrowser", "dirty"}
-    end
-end
-
-local function choose_project()
-    local selected_proj
-    if global_data.project_root then return end
-    local lastprojs = editor_setting.setting.lastprojs
-    local title = "Choose project"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
-    end
-
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
-    if change then
-        imgui.widget.Text("Create new or open existing project.")
-        if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
-            local path = choose_project_dir()
-            if path then
-                local lpath = lfs.path(path)
-                local n = fs.pairs(lpath)
-                if not n() then
-                    log_widget.error({tag = "Editor", message = "folder not empty!"})
-                else
-                    on_new_project(path)
-                    global_data:update_root(lpath)
-                    editor_setting.update_lastproj("", path)
-                end
-            end
-        end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Open") then
-            on_open_proj()
-        end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
-            global_data:update_root(fs.path "/":localpath())
-        end
-
-        imgui.cursor.Separator()
-        if lastprojs then
-            for i, proj in ipairs(lastprojs) do
-                if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                    selected_proj = lastprojs[i]
-                    do_open_proj(proj.proj_path)
-                end
-            end
-        end
-        if global_data.project_root then
-            local bfw = require "bee.filewatch"
-            local fw = bfw.create()
-            fw:add(global_data.project_root:string())
-            global_data.filewatch = fw
-            log.warn "need handle effect file"
-            imgui.windows.CloseCurrentPopup()
-        end
-        imgui.windows.EndPopup()
-    end
-end
-
 function m:start_frame()
     global_data.camera_lock = false
 end
 
--- local stat_window
+local stat_window
 function m:init_world()
     local iRmlUi = ecs.require "ant.rmlui|rmlui_system"
     stat_window = iRmlUi.open "/pkg/tools.editor/res/ui/bgfx_stat.rml"
@@ -188,7 +77,7 @@ function m:ui_update()
     keyframe_view.show()
     console_widget.show()
     log_widget.show()
-    choose_project()
+    -- choose_project()
     prefab_mgr:choose_prefab()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
@@ -337,8 +226,6 @@ local function update_visible(node, visible)
     end
     return rv
 end
-local iani      = ecs.require "ant.animation|state_machine"
-local ipl = ecs.require "ant.polyline|polyline"
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -422,9 +309,9 @@ function m:handle_event()
         end
     end
 
-    for _ in event_open_proj:unpack() do
-        on_open_proj()
-    end
+    -- for _ in event_open_proj:unpack() do
+    --     on_open_proj()
+    -- end
 
     for _, filename, isprefab in event_open_file:unpack() do
         if isprefab then
@@ -463,58 +350,11 @@ function m:handle_event()
             if gizmo.target_eid then
                 world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
             end
-        elseif state.CTRL and key == "O" and press == 1 then
-            on_open_proj()
+        -- elseif state.CTRL and key == "O" and press == 1 then
+        --     on_open_proj()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
         elseif state.CTRL and key == "T" and press == 1 then
-            ipl.add_linelist({{0,0,0},{0, 10, 0}}, 70, {0.0, 1.0, 0.0, 0.4}, "/pkg/tools.editor/res/materials/polylinelist.material", nil, "translucent")
-            -- prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effects/miner-dust.efk")
-            -- local hitch_test_group_id<const> = 1000
-            -- world:create_entity {
-            --     policy = {
-            --         "ant.render|hitch_object"
-            --     },
-            --     data = {
-            --         scene = { t = math3d.vector(-50, 0, 0) },
-            --         hitch = {
-            --             group = hitch_test_group_id,
-            --             hitch_bounding = true
-            --         },
-            --         visible_state = "main_view|cast_shadow|selectable",
-            --     }
-            -- }
-            -- world:create_entity {
-            --     policy = {
-            --         "ant.render|hitch_object"
-            --     },
-            --     data = {
-            --         scene = { t = math3d.vector(50, 0, 0) },
-            --         hitch = {
-            --             group = hitch_test_group_id,
-            --             hitch_bounding = true
-            --         },
-            --         visible_state = "main_view|cast_shadow|selectable",
-            --     }
-            -- }
-            -- world:create_instance {
-            --     prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|mesh.prefab",
-            --     on_ready = function(instance)
-            --         -- for _, eid in ipairs(instance.tag["*"]) do
-            --         --     local e <close> = world:entity(eid, "anim_ctrl?in view_visible?out")
-            --         --     if e.anim_ctrl then
-            --         --         iani.load_events(eid, "/pkg/vaststars.resources/animations/miner-1.event")
-            --         --     end
-            --         --     e.view_visible = false
-            --         --     w:submit(e)
-            --         -- end
-            --         -- iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
-            --     end,
-            --     parent = nil,
-            --     -- group = hitch_test_group_id
-            -- }
-            -- world:group_enable_tag("view_visible", hitch_test_group_id)
-            -- world:group_flush "view_visible"
         end
     end
     for _, what, type in event_create:unpack() do

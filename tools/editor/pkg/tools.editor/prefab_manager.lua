@@ -268,17 +268,17 @@ function m:create(what, config)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
+            m:add_prefab("/pkg/tools.editor/res/cube.prefab")
         elseif config.type == "cone(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/cone.prefab")
+            m:add_prefab("/pkg/tools.editor/res/cone.prefab")
         elseif config.type == "cylinder(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/cylinder.prefab")
+            m:add_prefab("/pkg/tools.editor/res/cylinder.prefab")
         elseif config.type == "sphere(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
+            m:add_prefab("/pkg/tools.editor/res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
+            m:add_prefab("/pkg/tools.editor/res/torus.prefab")
         elseif config.type == "plane(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/plane.prefab")
+            m:add_prefab("/pkg/tools.editor/res/plane.prefab")
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
