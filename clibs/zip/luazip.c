@@ -335,6 +335,17 @@ locate_file(lua_State *L, unzFile zf, lua_Integer pos) {
 		luaL_error(L, "Error: unzGoToFilePos");
 }
 
+static int
+zipread_exist(lua_State *L) {
+	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
+		luaL_error(L, "Invalid zip userdata");
+	}
+	lua_pushvalue(L, 2);	// filename
+	int exist = (lua_rawget(L, -2) == LUA_TNUMBER);
+	lua_pushboolean(L, exist);
+	return 1;
+}
+
 static unzFile
 open_file(lua_State *L, int rzip, int filename, struct zipraw *raw) {
 	if (lua_getiuservalue(L, rzip, 1) != LUA_TTABLE) {
@@ -574,6 +585,7 @@ unzip(lua_State *L, const char *filename) {
 			{ "list", zipread_list },
 			{ "extract", zipread_extract },
 			{ "readfile", zipread_readfile },
+			{ "exist", zipread_exist },
 			{ "openfile", zipread_openfile },
 			{ "closefile", zipread_closefile },
 			{ "read", zipread_read },

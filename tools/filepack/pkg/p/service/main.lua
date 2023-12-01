@@ -90,14 +90,41 @@ local writer = {}
 function writer.zip(bundlepath)
     local zippath = bundlepath / "vfs.zip"
     local rootpath = bundlepath / "vfs_root"
-    fs.remove(zippath)
-    fs.create_directories(bundlepath)
-    local zipfile = assert(zip.open(zippath:string(), "w"))
     local m = {}
     function m.root(content)
         local f <close> = assert(io.open(rootpath:string(), "wb"))
         f:write(content)
     end
+    if fs.exists(zippath) then
+        local oldzippath = bundlepath / "vfs.old.zip"
+        fs.rename(zippath, oldzippath)
+        local oldzip = zip.open(oldzippath:string(), "r")
+        if oldzip then
+            local newzip = assert(zip.open(zippath:string(), "w"))
+            function m.writefile(path, content)
+                if oldzip:exist(path) then
+                    newzip:copyfrom(path, oldzip)
+                else
+                    newzip:add(path, content)
+                end
+            end
+            function m.copyfile(path, localpath)
+                if oldzip:exist(path) then
+                    newzip:copyfrom(path, oldzip)
+                else
+                    newzip:addfile(path, localpath)
+                end
+            end
+            function m.close()
+                oldzip:close()
+                newzip:close()
+                fs.remove(oldzippath)
+            end
+            return m
+        end
+    end
+    fs.create_directories(bundlepath)
+    local zipfile = assert(zip.open(zippath:string(), "w"))
     function m.writefile(path, content)
         zipfile:add(path, content)
     end
