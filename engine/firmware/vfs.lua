@@ -11,17 +11,24 @@ local CACHESIZE <const> = 8 * 1024 * 1024
 local uncomplete = {}
 
 local function readroot(self)
-	local f <close> = io.open(self.localpath .. "root" .. self.slot, "rb")
+	local f = io.open(self.localpath .. "root" .. self.slot, "rb")
 	if f then
-		return f:read "a"
+		local root = f:read "l"
+		local ziproot = f:read "l"
+		f:close()
+		if ziproot == self.ziproot then
+			return root
+		end
+		os.remove(self.localpath .. "root" .. self.slot)
 	end
-	local zf = self.zipfile
-	return zf and zf:readfile "root"
+	return self.ziproot
 end
 
 local function updateroot(self, hash)
 	local f <close> = assert(io.open(self.localpath .. "root" .. self.slot, "wb"))
 	f:write(hash)
+	f:write "\n"
+	f:write(self.ziproot)
 end
 
 function vfs:init(hash)
@@ -45,6 +52,7 @@ end
 function vfs.new(config)
 	local repo = {
 		slot = config.slot,
+		bundlepath = config.bundlepath,
 		localpath = config.localpath,
 		cachesize = config.cachesize or CACHESIZE,
 		resource = {},
@@ -52,15 +60,15 @@ function vfs.new(config)
 		cache_dir = {},
 		cache_file = {},
 		root = nil,
+		ziproot = "",
 	}
-	if config.zipbundle then
-		local zipfile = zip.open(config.zipbundle, "r")
-		if not zipfile then
-			print("Can't open " .. config.zipbundle)
-		else
-			repo.zipfile = zipfile
-			repo.zipreader = zip.reader(zipfile, repo.cachesize)
-		end
+	local zipfile = zip.open(repo.bundlepath.."vfs.zip", "r")
+	if not zipfile then
+		print("Can't open " .. repo.bundlepath .. "vfs.zip")
+	else
+		repo.zipfile = zipfile
+		repo.zipreader = zip.reader(zipfile, repo.cachesize)
+		repo.ziproot = fastio.readall_s(repo.bundlepath .. "vfs_root")
 	end
 	setmetatable(repo, vfs)
 	return repo
