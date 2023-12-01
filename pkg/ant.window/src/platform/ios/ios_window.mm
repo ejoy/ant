@@ -90,6 +90,11 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 
     int w = (int)(self.contentScaleFactor * self.frame.size.width);
     int h = (int)(self.contentScaleFactor * self.frame.size.height);
+    if (w < h) {
+        int tmp = w;
+        w = h;
+        h = tmp;
+    }
     window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
 
     g_gesture = init_gesture();
