@@ -234,6 +234,18 @@ function S.quit()
     ltask.quit()
 end
 
+function S.set_light_direction(direction)
+    EFKCTX:set_light_direction(direction)
+end
+
+function S.set_light_color(color)
+    EFKCTX:set_light_color(color)
+end
+
+function S.set_ambient_color(ambient)
+    EFKCTX:set_ambient_color(ambient)
+end
+
 local function check_load_textures()
     while not TEXTURE_LOAD_QUEUE:empty() do
         local tn = TEXTURE_LOAD_QUEUE:pop()

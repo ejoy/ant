@@ -19,7 +19,8 @@ local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"
 local ig        = ecs.require "ant.group|group"
 local qm        = ecs.require "ant.render|queue_mgr"
-
+local ilight    = ecs.require "ant.render|light.light"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
 local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
@@ -224,8 +225,23 @@ function efk_sys:follow_scene_update()
     end
 end
 
+local function get_light_color(dl)
+    local r, g, b, a = table.unpack(ilight.color(dl))
+    r, g, b, a = math.floor(255*r), math.floor(255*g), math.floor(255*b), math.floor(255*a)
+    return string.pack("<BBBB", r, g, b, a)
+end
+
+local function get_light_direction(dl)
+    return math3d.serialize(iom.get_direction(dl))
+end
+
 function efk_sys:render_submit()
-    
+    local dl        = w:first "directional_light light:in scene:in"
+    if dl then
+        local direction, color = get_light_direction(dl), get_light_color(dl)
+        ltask.send(EFK_SERVER, "set_light_direction", direction)
+        ltask.send(EFK_SERVER, "set_light_color", color) 
+    end
     for e in w:select "efk_visible efk:in scene:in" do
         --update_transform will check efk is alive and visible or not
         local ph = e.efk.play_handle

@@ -57,6 +57,39 @@ TOM(lua_State *L, int index){
     return nullptr;
 }
 
+
+static inline Effekseer::Vector3D*
+TOV(lua_State *L, int index){
+    const int t = lua_type(L, index);
+    if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA){
+        return (Effekseer::Vector3D*)lua_touserdata(L, index);
+    }
+
+    if (t == LUA_TSTRING){
+        return (Effekseer::Vector3D*)lua_tostring(L, index);
+    }
+
+    luaL_error(L, "Invalid data:%d, type:%s", index, lua_typename(L, index));
+
+    return nullptr;
+}
+
+static inline Effekseer::Color*
+TOC(lua_State *L, int index){
+    const int t = lua_type(L, index);
+    if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA){
+        return (Effekseer::Color*)lua_touserdata(L, index);
+    }
+
+    if (t == LUA_TSTRING){
+        return (Effekseer::Color*)lua_tostring(L, index);
+    }
+
+    luaL_error(L, "Invalid data:%d, type:%s", index, lua_typename(L, index));
+
+    return nullptr;
+}
+
 static int
 lefkctx_render(lua_State *L){
     auto ctx = EC(L);
@@ -406,6 +439,48 @@ lefkctx_set_speed(lua_State* L) {
 }
 
 static int
+lefkctx_set_light_direction(lua_State* L) {
+    auto ctx = EC(L);
+    auto direction = TOV(L, 2);
+	ctx->renderer->SetLightDirection(*direction);
+	return 0;
+}
+
+static int
+lefkctx_get_light_direction(lua_State* L) {
+
+	return 0;
+}
+
+static int
+lefkctx_set_light_color(lua_State* L) {
+    auto ctx = EC(L);
+    auto color = TOC(L, 2);
+	ctx->renderer->SetLightColor(*color);
+	return 0;
+}
+
+static int
+lefkctx_get_light_color(lua_State* L) {
+
+	return 0;
+}
+
+static int
+lefkctx_set_ambient_color(lua_State* L) {
+    auto ctx = EC(L);
+    auto ambient = TOC(L, 2);
+	ctx->renderer->SetLightAmbientColor(*ambient);
+	return 0;
+}
+
+static int
+lefkctx_get_ambient_color(lua_State* L) {
+
+	return 0;
+}
+
+static int
 lefk_startup(lua_State *L){
     luaL_checktype(L, 1, LUA_TTABLE);
 
@@ -442,19 +517,25 @@ lefk_startup(lua_State *L){
         lua_pushvalue(L, -1);
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
-            {"render",          lefkctx_render},
-			{"new",				lefkctx_new},
-            {"create",          lefkctx_create},
-            {"destroy",         lefkctx_destroy},
-            {"play",            lefkctx_play},
-            {"stop",            lefkctx_stop},
-            {"set_visible",     lefkctx_set_visible},
-			{"pause",           lefkctx_pause},
-		    {"set_time",        lefkctx_set_time},
-			{"set_speed",       lefkctx_set_speed},
-			{"update_transform", lefkctx_update_transform},
-			{"update_transforms",lefkctx_update_transforms},
-            {"is_alive",        lefkctx_is_alive},
+            {"render",          	lefkctx_render},
+			{"new",					lefkctx_new},
+            {"create",          	lefkctx_create},
+            {"destroy",         	lefkctx_destroy},
+            {"play",            	lefkctx_play},
+            {"stop",            	lefkctx_stop},
+            {"set_visible",     	lefkctx_set_visible},
+			{"pause",           	lefkctx_pause},
+		    {"set_time",        	lefkctx_set_time},
+			{"set_speed",       	lefkctx_set_speed},
+			{"update_transform", 	lefkctx_update_transform},
+			{"update_transforms",	lefkctx_update_transforms},
+            {"is_alive",        	lefkctx_is_alive},
+			{"set_light_direction", lefkctx_set_light_direction},
+			{"get_light_direction", lefkctx_get_light_direction},
+			{"set_light_color", 	lefkctx_set_light_color},
+			{"get_light_color", 	lefkctx_get_light_color},
+			{"set_ambient_color", 	lefkctx_set_ambient_color},
+			{"get_ambient_color", 	lefkctx_get_ambient_color},			
             {nullptr, nullptr},
         };
 
