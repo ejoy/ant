@@ -109,7 +109,7 @@ else
 	end
 end
 
-config.vfs.zipbundle = (bundle_path / "vfs.zip"):string()
+config.vfs.bundlepath = bundle_path:string():gsub("/?$", "/")
 config.vfs.localpath = (sandbox_path / "vfs"):string():gsub("/?$", "/")
 fs.create_directories(sandbox_path)
 fs.current_path(sandbox_path)

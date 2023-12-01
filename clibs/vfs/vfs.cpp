@@ -14,33 +14,20 @@ local initfunc, initargs = ...
 local vfs = {}
 local fastio = require "fastio"
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
-local realpath; do
-    if __ANT_RUNTIME__ then
-        local fw = require "firmware"
-        local rawvfs = assert(fw.loadfile "vfs.lua")()
-        local repo = rawvfs.new "./"
-        function realpath(path)
-            local r = repo:realpath(path)
-            if not r then
-                error("Not exists "..path)
-            end
-            return r
+if not __ANT_RUNTIME__ then
+    local function realpath(path)
+        if path:sub(1,8) == "/engine/" then
+            return path:sub(2)
         end
-    else
-        function realpath(path)
-            if path:sub(1,8) == "/engine/" then
-                return path:sub(2)
-            end
-            return path
-        end
+        return path
     end
+    function vfs.read(path)
+        local lpath = realpath(path)
+        local data = fastio.readall_v(lpath, path)
+        return data, lpath
+    end
+    vfs.realpath = realpath
 end
-function vfs.read(path)
-    local lpath = realpath(path)
-    local data = fastio.readall_v(lpath, path)
-    return data, lpath
-end
-vfs.realpath = realpath
 function loadfile(path, _, env)
     local mem, symbol = vfs.read(path)
     if not mem then

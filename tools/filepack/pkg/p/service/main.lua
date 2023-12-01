@@ -87,11 +87,17 @@ end
 
 local writer = {}
 
-function writer.zip(zippath)
-    fs.remove_all(zippath)
-    fs.create_directories(zippath:parent_path())
+function writer.zip(bundlepath)
+    local zippath = bundlepath / "vfs.zip"
+    local rootpath = bundlepath / "vfs_root"
+    fs.remove(zippath)
+    fs.create_directories(bundlepath)
     local zipfile = assert(zip.open(zippath:string(), "w"))
     local m = {}
+    function m.root(content)
+        local f <close> = assert(io.open(rootpath:string(), "wb"))
+        f:write(content)
+    end
     function m.writefile(path, content)
         zipfile:add(path, content)
     end
@@ -104,10 +110,10 @@ function writer.zip(zippath)
     return m
 end
 
-function writer.dir(rootpath)
-    fs.create_directories(rootpath)
+function writer.dir(bundlepath)
+    fs.create_directories(bundlepath)
     local cache = {}
-    for file, status in fs.pairs(rootpath) do
+    for file, status in fs.pairs(bundlepath) do
         if status:is_directory() then
             fs.remove_all(file)
         else
@@ -115,10 +121,16 @@ function writer.dir(rootpath)
         end
     end
     local m = {}
+    function m.root(content)
+        cache["root"] = nil
+        local pathobj = bundlepath / "root"
+        local f <close> = assert(io.open(pathobj:string(), "wb"))
+        f:write(content)
+    end
     function m.writefile(path, content)
         cache[path] = nil
-        local pathobj = rootpath / path
-        if path ~= "root" and fs.exists(pathobj) then
+        local pathobj = bundlepath / path
+        if fs.exists(pathobj) then
             return
         end
         local f <close> = assert(io.open(pathobj:string(), "wb"))
@@ -126,11 +138,11 @@ function writer.dir(rootpath)
     end
     function m.copyfile(path, localpath)
         cache[path] = nil
-        fs.copy_file(localpath, rootpath / path, fs.copy_options.skip_existing)
+        fs.copy_file(localpath, bundlepath / path, fs.copy_options.skip_existing)
     end
     function m.close()
         for file in pairs(cache) do
-            fs.remove(rootpath / file)
+            fs.remove(bundlepath / file)
         end
     end
     return m
@@ -152,15 +164,15 @@ do print "step4. pack file and dir."
             error "unknown os"
         end
     end
-    local function target_path()
+    local function bundle_path()
         if config_os == "ios" or config_os == "android" then
-            return repopath / "vfs.zip"
+            return repopath
         else
-            return app_path "ant" / "bundle" / "vfs.zip"
+            return app_path "ant" / "bundle"
         end
     end
-    local w = writer.zip(target_path())
-    w.writefile("root", std_vfs:root())
+    local w = writer.zip(bundle_path())
+    w.root(std_vfs:root())
     for hash, v in pairs(std_vfs._filehash) do
         if v.dir then
             w.writefile(hash, v.dir)

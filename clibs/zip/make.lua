@@ -54,6 +54,16 @@ lm:source_set "zlib-ng-x86" {
         "X86_VPCLMULQDQ_CRC",
     },
     gcc = {
+        flags = {
+            "-mavx512vnni",
+            "-mavx512vl",
+            "-mavx512bw",
+            "-msse4.2",
+            "-mssse3",
+            "-msse2",
+            "-mpclmul",
+            "-mvpclmulqdq",
+        },
         defines = {
             "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",

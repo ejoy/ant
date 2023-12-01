@@ -120,7 +120,8 @@ function hierarchy:get_prefab_template(ispatch)
         local pidx = #tpl > 0 and #tpl or nil
         local prefab_filename = node.info.filename
         if prefab_filename then
-            table.insert(tpl, {mount = patch and pidx - 1 or pidx, prefab = prefab_filename})
+            -- table.insert(tpl, {mount = patch and pidx - 1 or pidx, prefab = prefab_filename})
+            table.insert(tpl, {mount = pidx, prefab = prefab_filename})
         end
         for _, child in ipairs(node.children) do
             local nd = self.all_node[child.eid]

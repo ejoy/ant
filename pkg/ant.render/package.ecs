@@ -14,7 +14,6 @@ feature "lightmap"
     .import "lightmap/lightmap.ecs"
 
 import "renderqueue.ecs"
-import "framebuffer.ecs"
 
 feature "render"
     .import "render.ecs"

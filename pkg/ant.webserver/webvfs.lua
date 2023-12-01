@@ -7,16 +7,40 @@ local function copy_fs(fsname)
 	return fs
 end
 
+local function local_reader(pathname)
+	local f = assert(io.open(pathname, "rb"))
+	local function reader()
+		local bytes = f:read(4096)
+		if bytes then
+			return bytes
+		else
+			f:close()
+		end
+	end
+	return reader
+end
+
+local vfs = require "vfs"
+local fastio = require "fastio"
+
+local function vfs_reader(pathname)
+	local content = assert(vfs.read(pathname))
+	local function reader()
+		if content then
+			local r = fastio.tostring(content)
+			content = nil
+			return r
+		end
+	end
+	return reader
+end
+
 local FS = {
 	vfs = copy_fs "filesystem",
 	localfs = copy_fs "bee.filesystem",
 } ; do
-	FS.vfs.localpath = function (path)
-		return path:localpath()
-	end
-	FS.localfs.localpath = function (path)
-		return path
-	end
+	FS.vfs.reader = vfs_reader
+	FS.localfs.reader = local_reader
 end
 
 local M = {}
@@ -68,21 +92,10 @@ local content_text_types = {
 local function gen_get(fs)
 	local function get_file(path)
 		local ext = path:extension():string():lower()
-		local localpath = fs.localpath(path):string()
 		local header = {
 			["Content-Type"] = content_text_types[ext] or "application/octet-stream"
 		}
-		-- todo: use func for large file
-		local f = assert(io.open(localpath, "rb"))
-		local function reader()
-			local bytes = f:read(4096)
-			if bytes then
-				return bytes
-			else
-				f:close()
-			end
-		end
-		return reader, header
+		return fs.reader(path:string()), header
 	end
 
 	local function get_dir(path, url, name)

@@ -268,17 +268,17 @@ function m:create(what, config)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
+            m:add_prefab("/pkg/tools.editor/res/cube.prefab")
         elseif config.type == "cone(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/cone.prefab")
+            m:add_prefab("/pkg/tools.editor/res/cone.prefab")
         elseif config.type == "cylinder(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/cylinder.prefab")
+            m:add_prefab("/pkg/tools.editor/res/cylinder.prefab")
         elseif config.type == "sphere(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
+            m:add_prefab("/pkg/tools.editor/res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
+            m:add_prefab("/pkg/tools.editor/res/torus.prefab")
         elseif config.type == "plane(prefab)" then
-            m:add_prefab(gd.editor_package_path .. "res/plane.prefab")
+            m:add_prefab("/pkg/tools.editor/res/plane.prefab")
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
@@ -338,7 +338,7 @@ function m:on_prefab_ready(prefab)
         if pt.prefab then
             last_tpl.filename = pt.prefab
             local children = sub_tree(parent, j)
-            j = j + #children - 1
+            j = j + #children
             local target_node = node_map[parent]
             target_node.children = children
             target_node.filename = pt.prefab
@@ -736,7 +736,7 @@ function m:get_patch_list(template_list)
     for i = 2, #template do
         local tpl = template[i]
         if tpl.mount > 1 then
-            tpl.mount = tpl.mount + (self.patch_start_index - 1)
+            tpl.mount = tpl.mount + (self.patch_start_index - 2)
         end
         template_list[#template_list + 1] = {
             file = self.prefab_name,
