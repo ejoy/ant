@@ -338,7 +338,7 @@ function m:on_prefab_ready(prefab)
         if pt.prefab then
             last_tpl.filename = pt.prefab
             local children = sub_tree(parent, j)
-            j = j + #children - 1
+            j = j + #children
             local target_node = node_map[parent]
             target_node.children = children
             target_node.filename = pt.prefab
@@ -736,7 +736,7 @@ function m:get_patch_list(template_list)
     for i = 2, #template do
         local tpl = template[i]
         if tpl.mount > 1 then
-            tpl.mount = tpl.mount + (self.patch_start_index - 1)
+            tpl.mount = tpl.mount + (self.patch_start_index - 2)
         end
         template_list[#template_list + 1] = {
             file = self.prefab_name,
