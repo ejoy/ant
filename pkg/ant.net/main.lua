@@ -1,6 +1,6 @@
 local ltask = require "ltask"
-local patch = require "patchcode"
 local network = require "network"
+local patch = import_package "ant.general".patch
 
 local function foo(n)
 	if n <= 0 then
