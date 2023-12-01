@@ -1,7 +1,7 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
-local mts_sys = ecs.system "mem_texture_static_system"
+local ecs       = ...
+local world     = ecs.world
+local w         = world.w
+local mts_sys   = ecs.system "mem_texture_static_system"
 local ivs		= ecs.require "ant.render|visible_state"
 local math3d    = require "math3d"
 local ltask     = require "ltask"
@@ -12,46 +12,32 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ig        = ecs.require "ant.group|group"
-local R             = world:clibs "render.render_material"
-local queuemgr      = ecs.require "ant.render|queue_mgr"
+local R         = world:clibs "render.render_material"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 local hwi       = import_package "ant.hwi"
-local mc = import_package "ant.math".constant
-
-local MEM_TEXTURE_STATIC_VIEWID <const> = hwi.viewid_get "mem_texture_static"
-local STATIC_OBJ_NAME <const> =  "mem_texture_static_obj"
-local STATIC_QUEUE_NAME <const> = "mem_texture_static_queue"
-local DEFAULT_RT_WIDTH, DEFAULT_RT_HEIGHT <const> = 512, 512
-local RB_FLAGS <const> = sampler{
-    MIN =   "LINEAR",
-    MAG =   "LINEAR",
-    U   =   "CLAMP",
-    V   =   "CLAMP",
-    RT  =   "RT_ON",
-}
-local DEFAULT_EXTENTS <const> = math3d.mark(math3d.vector(50, 50, 50))
-local DEFAULT_LENGTH <const> = math3d.length(math3d.mul(1.6, DEFAULT_EXTENTS))
-local DISTANCE = {}
+local mc        = import_package "ant.math".constant
+local mtc       = ecs.require "ant.render|mem_texture.mem_texture_common"
 
 local function register_mem_texture_group()
-    w:register{name = STATIC_OBJ_NAME}
-    local gid = ig.register(STATIC_OBJ_NAME)
-    ig.enable(gid, STATIC_OBJ_NAME, true)
+    w:register{name = mtc.STATIC_OBJ_NAME}
+    local gid = ig.register(mtc.STATIC_OBJ_NAME)
+    ig.enable(gid, mtc.STATIC_OBJ_NAME, true)
 end
 
 local function register_mem_texture_render_queue()
-    w:register{name = STATIC_QUEUE_NAME}
+    w:register{name = mtc.STATIC_QUEUE_NAME}
 end
 
 local function register_mem_texture_material_queue()
     local mem_texture_material_idx = queuemgr.material_index("main_queue")
-    queuemgr.register_queue(STATIC_QUEUE_NAME, mem_texture_material_idx)
+    queuemgr.register_queue(mtc.STATIC_QUEUE_NAME, mem_texture_material_idx)
 end
 
 local function create_mem_texture_queue(view_id, queue_name)
 
     local fbidx = fbmgr.create(
-        {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = RB_FLAGS}},
-        {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = RB_FLAGS}}
+        {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = mtc.RB_FLAGS}},
+        {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = mtc.RB_FLAGS}}
     )
 
     local mq = w:first("main_queue render_target:in")
@@ -128,15 +114,15 @@ local function update_current_rt_handle(queue_name)
     fbmgr.unmark_rb(fbidx, 1)
     fbmgr.unmark_rb(fbidx, 1)
     fb = {
-        {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = RB_FLAGS}},
-        {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = RB_FLAGS}}
+        {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = mtc.RB_FLAGS}},
+        {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = mtc.RB_FLAGS}}
     }
     fbmgr.recreate(fbidx, fb)
     irq.update_rendertarget(queue_name, mtq.render_target)
 end
 
 local function create_clear_static_prefab_entity()
-    remove_prefab(STATIC_OBJ_NAME)
+    remove_prefab(mtc.STATIC_OBJ_NAME)
     world:create_entity {
         policy = {
             "ant.render|clear_smt_prefab"
@@ -154,7 +140,7 @@ function mts_sys:init()
 end
 
 function mts_sys:init_world()
-    create_mem_texture_queue(MEM_TEXTURE_STATIC_VIEWID, STATIC_QUEUE_NAME)
+    create_mem_texture_queue(mtc.MEM_TEXTURE_STATIC_VIEWID, mtc.STATIC_QUEUE_NAME)
 end
 
 function mts_sys:update_filter()
@@ -173,7 +159,7 @@ function mts_sys:update_filter()
         end
     end
 
-    update_filter_prefab(STATIC_OBJ_NAME, STATIC_QUEUE_NAME)
+    update_filter_prefab(mtc.STATIC_OBJ_NAME, mtc.STATIC_QUEUE_NAME)
 end
 
 function mts_sys:entity_init()
@@ -181,14 +167,14 @@ function mts_sys:entity_init()
         if not math3d.aabb_isvalid(aabb) then return end
         local _, world_extents = math3d.aabb_center_extents(aabb)
         local view_dir = math3d.todirection(camera.scene.r)
-        local view_len = DEFAULT_LENGTH * DISTANCE[STATIC_OBJ_NAME]
+        local view_len = mtc.DEFAULT_LENGTH * mtc.DISTANCE[mtc.STATIC_OBJ_NAME]
         local camera_pos = math3d.sub(math3d.vector(0, 0, 0), math3d.mul(view_dir, view_len))
         iom.set_position(camera, camera_pos)
         local ex, ey, ez = math3d.index(world_extents, 1, 2, 3)
         local emax = math.max(ex, math.max(ey, ez))
         local scale = math3d.vector(emax, emax, emax)
         scale = math3d.reciprocal(scale)
-        scale = math3d.mul(DEFAULT_EXTENTS, scale)
+        scale = math3d.mul(mtc.DEFAULT_EXTENTS, scale)
         aabb = math3d.aabb_transform(math3d.matrix{s = scale}, aabb)
         local world_center, _ = math3d.aabb_center_extents(aabb)
         return scale, math3d.mul(-1, world_center)
@@ -222,7 +208,7 @@ function mts_sys:entity_init()
         end
     end
 
-    adjust_prefab(STATIC_OBJ_NAME, STATIC_QUEUE_NAME)
+    adjust_prefab(mtc.STATIC_OBJ_NAME, mtc.STATIC_QUEUE_NAME)
     for e in w:select "INIT clear_smt_prefab eid:in" do
         w:remove(e.eid) 
     end
@@ -230,7 +216,7 @@ end
 
 function mts_sys:entity_remove()
     for e in w:select "REMOVED clear_smt_prefab" do
-        update_current_rt_handle(STATIC_QUEUE_NAME)
+        update_current_rt_handle(mtc.STATIC_QUEUE_NAME)
     end
 end
 
@@ -288,9 +274,9 @@ function S.create_mem_texture_static_prefab(prefab_path, width, height, rotation
         return fbmgr.get_rb(fbidx, 1).handle
     end
 
-    DISTANCE[STATIC_OBJ_NAME] = distance
-    create_mem_texture_prefab(STATIC_OBJ_NAME ,STATIC_QUEUE_NAME)
-    adjust_camera_rotation(STATIC_QUEUE_NAME)
-    return get_current_rt_handle(STATIC_QUEUE_NAME)
+    mtc.DISTANCE[mtc.STATIC_OBJ_NAME] = distance
+    create_mem_texture_prefab(mtc.STATIC_OBJ_NAME, mtc.STATIC_QUEUE_NAME)
+    adjust_camera_rotation(mtc.STATIC_QUEUE_NAME)
+    return get_current_rt_handle(mtc.STATIC_QUEUE_NAME)
 end
 

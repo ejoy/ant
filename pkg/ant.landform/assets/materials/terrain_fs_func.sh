@@ -38,7 +38,7 @@ vec3 blend_terrain_color(vec3 sand_basecolor, vec3 stone_basecolor, float sand_h
 mediump vec3 terrain_normal_from_tangent_frame(mat3 tbn, vec3 texcoord)
 {
     vec3 normalTS = fetch_normal_from_tex_array(s_normal_array, texcoord);
-    return transform_normal_from_tbn(normalTS);
+    return transform_normal_from_tbn(tbn, normalTS);
 }
 
 

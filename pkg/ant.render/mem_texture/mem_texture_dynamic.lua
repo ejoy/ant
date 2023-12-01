@@ -1,7 +1,7 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
-local mtd_sys = ecs.system "mem_texture_dynamic_system"
+local ecs       = ...
+local world     = ecs.world
+local w         = world.w
+local mtd_sys   = ecs.system "mem_texture_dynamic_system"
 local ivs		= ecs.require "ant.render|visible_state"
 local math3d    = require "math3d"
 local ltask     = require "ltask"
@@ -12,42 +12,12 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ig        = ecs.require "ant.group|group"
-local R             = world:clibs "render.render_material"
-local queuemgr      = ecs.require "ant.render|queue_mgr"
+local R         = world:clibs "render.render_material"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 local hwi       = import_package "ant.hwi"
 local itimer	= ecs.require "ant.timer|timer_system"
-local mc = import_package "ant.math".constant
-
-local lastname = "mem_texture_static"
-local VIEWIDS = setmetatable({}, {
-    __index = function(t,name)
-        local viewid = hwi.viewid_get(name)
-        if viewid then
-            t[name] = viewid
-        else
-            t[name] = hwi.viewid_generate(name, lastname) 
-        end
-        return t[name] 
-    end
-})
-
-local DYNAMIC_OBJ_NAME <const> =  "mem_texture_dynamic_obj"
-local DYNAMIC_OBJS = {}
-local DYNAMIC_QUEUE_NAME <const> = "mem_texture_dynamic_queue"
-local DYNAMIC_QUEUES = {}
-local ACTIVE_MASKS = {}
-
-local DEFAULT_RT_WIDTH, DEFAULT_RT_HEIGHT <const> = 512, 512
-local RB_FLAGS <const> = sampler{
-    MIN =   "LINEAR",
-    MAG =   "LINEAR",
-    U   =   "CLAMP",
-    V   =   "CLAMP",
-    RT  =   "RT_ON",
-}
-local DEFAULT_EXTENTS <const> = math3d.mark(math3d.vector(50, 50, 50))
-local DEFAULT_LENGTH <const> = math3d.length(math3d.mul(1.6, DEFAULT_EXTENTS))
-local DISTANCE = {}
+local mc        = import_package "ant.math".constant
+local mtc       = ecs.require "ant.render|mem_texture.mem_texture_common"
 
 local function exist_prefab(obj_name)
     local select_tag = ("%s"):format(obj_name)
@@ -70,8 +40,8 @@ local function update_current_rt_handle(queue_name)
     fbmgr.unmark_rb(fbidx, 1)
     fbmgr.unmark_rb(fbidx, 1)
     fb = {
-        {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = RB_FLAGS}},
-        {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = RB_FLAGS}}
+        {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = mtc.RB_FLAGS}},
+        {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = mtc.RB_FLAGS}}
     }
     fbmgr.recreate(fbidx, fb)
     irq.update_rendertarget(queue_name, mtq.render_target)
@@ -96,8 +66,8 @@ local function register_new_rt()
     local function create_mem_texture_queue(view_id, queue_name)
 
         local fbidx = fbmgr.create(
-            {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = RB_FLAGS}},
-            {rbidx = fbmgr.create_rb{w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = RB_FLAGS}}
+            {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = mtc.RB_FLAGS}},
+            {rbidx = fbmgr.create_rb{w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = mtc.RB_FLAGS}}
         )
     
         world:create_entity {
@@ -140,7 +110,7 @@ local function register_new_rt()
                         depth = 0.0,
                         clear = "CD",
                     },
-                    view_rect	= {x = 0, y = 0, w = DEFAULT_RT_WIDTH, h = DEFAULT_RT_HEIGHT},
+                    view_rect	= {x = 0, y = 0, w = mtc.DEFAULT_RT_WIDTH, h = mtc.DEFAULT_RT_HEIGHT},
                     fb_idx		= fbidx,
                 },
                 [queue_name]         = true,
@@ -150,12 +120,12 @@ local function register_new_rt()
         }
     end
 
-    local new_idx = #ACTIVE_MASKS + 1
-    local obj_name, queue_name = DYNAMIC_OBJ_NAME .. new_idx, DYNAMIC_QUEUE_NAME .. new_idx
-    local view_id = VIEWIDS[queue_name]
-    DYNAMIC_OBJS[#DYNAMIC_OBJS+1] = obj_name
-    DYNAMIC_QUEUES[#DYNAMIC_QUEUES+1] = queue_name
-    ACTIVE_MASKS[#ACTIVE_MASKS+1] = false
+    local new_idx = #mtc.ACTIVE_MASKS + 1
+    local obj_name, queue_name = mtc.DYNAMIC_OBJ_NAME .. new_idx, mtc.DYNAMIC_QUEUE_NAME .. new_idx
+    local view_id = mtc.MEM_TEXTURE_DYNAMIC_VIEWIDS[queue_name]
+    mtc.DYNAMIC_OBJS[#mtc.DYNAMIC_OBJS+1] = obj_name
+    mtc.DYNAMIC_QUEUES[#mtc.DYNAMIC_QUEUES+1] = queue_name
+    mtc.ACTIVE_MASKS[#mtc.ACTIVE_MASKS+1] = false
     register_mem_texture_group(obj_name)
     register_mem_texture_render_queue(queue_name)
     register_mem_texture_material_queue(queue_name)
@@ -163,7 +133,7 @@ local function register_new_rt()
 end
 
 local function get_active_rt()
-    for idx, is_active in ipairs(ACTIVE_MASKS) do
+    for idx, is_active in ipairs(mtc.ACTIVE_MASKS) do
         if not is_active then
             return idx
         end
@@ -172,13 +142,13 @@ local function get_active_rt()
 end
 
 local function set_rt_active(idx, is_active)
-    ACTIVE_MASKS[idx] = is_active
+    mtc.ACTIVE_MASKS[idx] = is_active
 end
 
 local function expand_active_rt()
-    local queue_num = #ACTIVE_MASKS
+    local queue_num = #mtc.ACTIVE_MASKS
     local active_size = 0
-    for _, is_active in ipairs(ACTIVE_MASKS) do
+    for _, is_active in ipairs(mtc.ACTIVE_MASKS) do
         if is_active then
             active_size = active_size + 1
         end
@@ -210,9 +180,9 @@ function mtd_sys:update_filter()
             end
         end
     end
-    for rt_idx, is_active in ipairs(ACTIVE_MASKS) do
+    for rt_idx, is_active in ipairs(mtc.ACTIVE_MASKS) do
         if is_active then
-            local obj_name, queue_name = DYNAMIC_OBJS[rt_idx], DYNAMIC_QUEUES[rt_idx]
+            local obj_name, queue_name = mtc.DYNAMIC_OBJS[rt_idx], mtc.DYNAMIC_QUEUES[rt_idx]
             update_filter_prefab(obj_name, queue_name)
         end
     end
@@ -223,14 +193,14 @@ function mtd_sys:entity_init()
         if not math3d.aabb_isvalid(aabb) then return end
         local _, world_extents = math3d.aabb_center_extents(aabb)
         local view_dir = math3d.todirection(camera.scene.r)
-        local view_len = DEFAULT_LENGTH * DISTANCE[obj_name]
+        local view_len =mtc. DEFAULT_LENGTH * mtc.DISTANCE[obj_name]
         local camera_pos = math3d.sub(math3d.vector(0, 0, 0), math3d.mul(view_dir, view_len))
         iom.set_position(camera, camera_pos)
         local ex, ey, ez = math3d.index(world_extents, 1, 2, 3)
         local emax = math.max(ex, math.max(ey, ez))
         local scale = math3d.vector(emax, emax, emax)
         scale = math3d.reciprocal(scale)
-        scale = math3d.mul(DEFAULT_EXTENTS, scale)
+        scale = math3d.mul(mtc.DEFAULT_EXTENTS, scale)
         aabb = math3d.aabb_transform(math3d.matrix{s = scale}, aabb)
         local world_center, _ = math3d.aabb_center_extents(aabb)
         return scale, math3d.mul(-1, world_center)
@@ -263,9 +233,9 @@ function mtd_sys:entity_init()
             end
         end
     end
-    for rt_idx, is_active in ipairs(ACTIVE_MASKS) do
+    for rt_idx, is_active in ipairs(mtc.ACTIVE_MASKS) do
         if is_active then
-            local obj_name, queue_name = DYNAMIC_OBJS[rt_idx], DYNAMIC_QUEUES[rt_idx]
+            local obj_name, queue_name = mtc.DYNAMIC_OBJS[rt_idx], mtc.DYNAMIC_QUEUES[rt_idx]
             adjust_prefab(obj_name, queue_name)
         end
     end   
@@ -279,9 +249,9 @@ function mtd_sys:data_changed()
     local cur_time = timepassed * 0.001
     local cur_radian = delta_radian * cur_time
 
-    for rt_idx, is_active in ipairs(ACTIVE_MASKS) do
+    for rt_idx, is_active in ipairs(mtc.ACTIVE_MASKS) do
         if is_active then
-            local obj_name = DYNAMIC_OBJS[rt_idx]
+            local obj_name = mtc.DYNAMIC_OBJS[rt_idx]
             local select_tag = ("%s scene:in"):format(obj_name)
             for e in w:select(select_tag) do
                 if e.scene.parent == 0 then
@@ -312,9 +282,6 @@ function S.create_mem_texture_dynamic_prefab(prefab_path, width, height, rotatio
                         ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
                         ivs.set_state(ee, queue_name, true)
                     end
---[[                     if ee.scene and ee.scene.parent == 0 then
-                        iom.set_rotation(ee, math3d.quaternion(rotation))
-                    end ]]
                 end
             end
         }
@@ -356,15 +323,15 @@ function S.create_mem_texture_dynamic_prefab(prefab_path, width, height, rotatio
     set_rt_active(rt_idx, true)
     expand_active_rt()
 
-    local obj_name, queue_name = DYNAMIC_OBJ_NAME .. rt_idx, DYNAMIC_QUEUE_NAME .. rt_idx
-    DISTANCE[obj_name] = distance
+    local obj_name, queue_name = mtc.DYNAMIC_OBJ_NAME .. rt_idx, mtc.DYNAMIC_QUEUE_NAME .. rt_idx
+    mtc.DISTANCE[obj_name] = distance
     create_mem_texture_prefab(obj_name ,queue_name)
     adjust_camera_rotation(queue_name)
     return get_current_rt_handle(queue_name), rt_idx
 end
 
 function S.destroy_mem_texture_dynamic_prefab(rt_idx)
-    local obj_name, queue_name = DYNAMIC_OBJ_NAME .. rt_idx, DYNAMIC_QUEUE_NAME .. rt_idx
+    local obj_name, queue_name = mtc.DYNAMIC_OBJ_NAME .. rt_idx, mtc.DYNAMIC_QUEUE_NAME .. rt_idx
     remove_prefab(obj_name)
     update_current_rt_handle(queue_name)
     set_rt_active(rt_idx, false)

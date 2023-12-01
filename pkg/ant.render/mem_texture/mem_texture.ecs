@@ -4,6 +4,9 @@ system "mem_texture_static_system"
 system "mem_texture_dynamic_system"
     .implement "mem_texture/mem_texture_dynamic.lua"
 
+system "mem_texture_common_system"
+    .implement "mem_texture/mem_texture_common.lua"
+
 component "clear_smt_prefab"
 component "clear_dmt_prefab"
 component "mem_texture_ready"
