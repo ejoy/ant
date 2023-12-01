@@ -6,6 +6,7 @@ local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
 local aio           = import_package "ant.io"
+local fastio        = require "fastio"
 local mc            = mathpkg.constant
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
@@ -396,8 +397,8 @@ local function reset_open_context()
 end
 
 local function get_prefabs_and_patch_template(glbfilename)
-    local patchfile = glbfilename .. ".patch"
-    local patch_tpl = fs.exists(fs.path(patchfile)) and serialize.parse(patchfile, aio.readall(patchfile)) or {}
+    local localPatchfile = fs.path(glbfilename):localpath():string() .. ".patch"
+    local patch_tpl = lfs.exists(lfs.path(localPatchfile)) and serialize.parse(localPatchfile, fastio.readall_s(localPatchfile)) or {}
     local prefab_set = {}
     for _, patch in ipairs(patch_tpl) do
         local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
