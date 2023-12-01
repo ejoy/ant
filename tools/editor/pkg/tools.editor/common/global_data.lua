@@ -47,7 +47,7 @@ local function get_package(entry_path, readmount)
     return packages
 end
 
-function m:update_root(rootpath)
+function m:update_project_root(rootpath)
     self.project_root   = lfs.path(rootpath)
     self.packages       = get_package(lfs.absolute(self.project_root:string()), true)
     self.package_path   = fs.path(find_package_name(rootpath, self.packages))
