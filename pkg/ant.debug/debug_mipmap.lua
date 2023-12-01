@@ -63,7 +63,9 @@ end
 local function reset_texture_debug_mipmap(id, first_mip)
     local texture_content = ltask.call(ServiceResource, "texture_content", id)
     local texinfo, flag, format = texture_content.texinfo, texture_content.flag, texture_content.texinfo.format
-    assert(chain_info.format == format, "debug mipmap texture format should be same as color texture format!\n")
+    if chain_info.format ~= format then
+        return
+    end
     if texinfo.numMips > 1 then
         if type(texinfo.width) == "string" then
             texinfo.width = tonumber(texinfo.width)
@@ -90,7 +92,7 @@ function idm.reset_texture_mipmap(is_debug, first_mip)
     local reset_cache = {}
     for e in w:select "material?in" do
         local r = assetmgr.resource(e.material)
-        local color_attrib = r.attrib["s_basecolor"]
+        local color_attrib = r.attribs["s_basecolor"]
         if color_attrib and (not reset_cache[color_attrib.value]) then
             local id = color_attrib.value
             reset_cache[id] = true
