@@ -165,8 +165,10 @@ do print "step4. pack file and dir."
         end
     end
     local function bundle_path()
-        if config_os == "ios" or config_os == "android" then
-            return repopath
+        if config_os == "ios" then
+            return repopath / ".ios"
+        elseif config_os == "android" then
+            return repopath / ".android"
         else
             return app_path "ant" / "bundle"
         end
