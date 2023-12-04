@@ -1,4 +1,5 @@
 pipeline "postprocess"
+    .stage "shadow_blur"
     .stage "pre_postprocess"
     .stage "dof"
     .stage "blur"
@@ -18,10 +19,15 @@ component "gaussian_blur"
     .type "lua"
 component "vblur_drawer"
 component "hblur_drawer"
+component "vblur_builder"
+component "hblur_builder"
 
 policy "blur"
     .component "blur"
     --.component "gaussian_blur"
+
+--system "shadow_blur_system"
+    --.implement "postprocess/shadow_blur/shadow_blur.lua"
 
 system "blur_system"
     .implement "postprocess/blur.lua"

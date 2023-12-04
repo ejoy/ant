@@ -124,18 +124,20 @@ float VSM(
 	if (outside)
 	{
 		return 1.0;
-	}	
+	}
+
 	float receiver = (_shadowCoord.z) / _shadowCoord.w * _depthMultiplier;
-	float depth = texture2D(_sampler, texCoord).x * _depthMultiplier;
-	float depthSq = texture2D(_sampler, texCoord).y * _depthMultiplier;
+	vec2  occluder = texture2D(_sampler, texCoord);
+	float depth    = occluder.x * _depthMultiplier;
+	float depthSq  = occluder.y * _depthMultiplier;
 	if (receiver > depth)
 	{
 		return 1.0;
 	}	
-	float variance = max(depthSq - depth * depth, _minVariance);
-	float d = receiver - depth;
+	float variance = max(depth * depth - depthSq, _minVariance);
+	float d = depth - receiver;
 	float visibility = variance / (variance + d * d);
-	return pow(visibility, 10);
+	return visibility;
 }
 #endif //SM_VSM
 
@@ -154,9 +156,9 @@ float ESM(
 	{
 		return 1.0;
 	}	
-	float receiver = (_shadowCoord.z) / _shadowCoord.w;
+	float receiver = (_shadowCoord.z + 0.005) / _shadowCoord.w;
 
-	float occluder = texture2D(_sampler, texCoord).x;	
+	float occluder = texture2D(_sampler, texCoord);	
 
 	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
 	return visibility;

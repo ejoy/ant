@@ -3,8 +3,8 @@
 #include "common/camera.sh"
 #include "common/shadow.sh"
 
-IMAGE2D_RO(s_image_input,  rgba8, 0);
-IMAGE2D_WR(s_image_output, rgba8, 1);
+IMAGE2D_RO(s_image_input,  r32f, 0);
+IMAGE2D_WR(s_image_output, r32f, 1);
 
 #define _BLUR9_WEIGHT_0 1.0
 #define _BLUR9_WEIGHT_1 0.9
@@ -21,8 +21,9 @@ void main()
 {
 	vec2 size = imageSize(s_image_input);
 	vec2 pixel_coord = vec2(gl_GlobalInvocationID.xy);
+	vec2 offset = u_viewTexel.xy * u_blur_offset.xy;
 	if (all(pixel_coord < size)){
-		vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);
+		float sum = 0.0;
 		vec2 tex0 = pixel_coord;
 		vec4 tex1 = vec4(tex0.xy - 1.0 * u_blur_offset.xy, tex0.xy + 1.0 * u_blur_offset.xy) ;
 		vec4 tex2 = vec4(tex0.xy - 2.0 * u_blur_offset.xy, tex0.xy + 2.0 * u_blur_offset.xy) ;

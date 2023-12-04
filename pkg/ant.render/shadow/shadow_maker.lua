@@ -48,11 +48,13 @@ end
 -- bgfx method
 local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, intersected_aabb)
 
-	local function update_shadow_camera_matrix(light_view, light_proj)
-	   iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
-	   math3d.unmark(shadow_ce.scene.worldmat)
-	   shadow_ce.scene.worldmat = math3d.marked_matrix(shadow_ce.scene)
+	local function update_shadow_camera_srt()
+		iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
+		math3d.unmark(shadow_ce.scene.worldmat)
+		shadow_ce.scene.worldmat = math3d.marked_matrix(shadow_ce.scene)
+	end
 
+	local function update_shadow_camera_matrix(light_view, light_proj)
 	   local camera = shadow_ce.camera
 	   camera.viewmat.m = light_view
 	   camera.projmat.m = light_proj
@@ -97,6 +99,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 		return light_view, ortho_proj
 	end
 
+	update_shadow_camera_srt()
 	local light_view, light_proj = get_light_view_proj_matrix()
 	update_shadow_camera_matrix(light_view, light_proj)
 end
@@ -117,7 +120,7 @@ local function update_shadow_frustum(dl, ce, mc_scene_changed)
 		local shadow_ce = world:entity(qe.camera_ref, "camera:in scene:in camera_changed?in")
 		if mc_scene_changed or shadow_ce.camera_changed then
 			shadow_camera_changed = true
-			update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, intersected_aabb)
+			update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, intersected_aabb, ce.camera.viewmat)
 			csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 			split_distances_VS[csm.index] = csm_frustum.f
 		end

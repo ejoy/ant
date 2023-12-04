@@ -49,6 +49,8 @@ add_view "ssao"
 add_view "main_view"
 add_view "outline"
 add_view "velocity"
+add_view "svblur"
+add_view "shblur"
 --start postprocess
 add_view "postprocess_obj"
 --add_view "blur"
