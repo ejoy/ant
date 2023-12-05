@@ -315,6 +315,26 @@ function util.calc_texture_matrix()
 	return math3d.ref(math3d.matrix(m))
 end
 
+function util.create_ray(s0, s1)
+	return {o=s0, d=math3d.sub(s1, s0)}
+end
+
+function util.ray_point(ray, t)
+	return math3d.muladd(ray.d, t, ray.o)
+end
+
+function util.ray_plane_point(ray, plane)
+	local t = math3d.plane_ray(ray.o, ray.d, plane)
+	return math3d.muladd(ray.d, t, ray.o)
+end
+
+function util.ray_triangle(ray, v0, v1, v2)
+	local success, t = math3d.ray_triangle(ray.o, ray.d, v0, v1, v2)
+	if success then
+		return util.ray_point(ray, t)
+	end
+end
+
 --polar coordinate
 function util.polar2xyz(theta, phi, r)
 	if r then
