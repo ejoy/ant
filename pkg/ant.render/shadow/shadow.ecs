@@ -12,6 +12,9 @@ for i=1, 4 do
     component(cn)
 end
 
+component "cast_shadow"
+component "receive_shadow"
+
 component "clear_sm"
 
 feature "shadow_debug"
