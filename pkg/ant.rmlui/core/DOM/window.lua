@@ -2,12 +2,14 @@ local rmlui = require "rmlui"
 local ltask = require "ltask"
 local timer = require "core.timer"
 local task = require "core.task"
+local event = require "core.event"
 local document_manager = require "core.document_manager"
 local datamodel = require "core.datamodel.api"
 local eventListener = require "core.event.listener"
 
+local createWindowByPool
+
 local function createWindow(document, name)
-    --TODO: pool
     local window = {}
     local timer_object = setmetatable({}, {__mode = "k"})
     function window.createModel(view)
@@ -19,7 +21,7 @@ local function createWindow(document, name)
             return
         end
         document_manager.onload(newdoc)
-        return createWindow(newdoc)
+        return createWindowByPool(newdoc)
     end
     function window.close()
         document_manager.close(document)
@@ -96,4 +98,20 @@ local function createWindow(document, name)
     return setmetatable(window, mt)
 end
 
-return createWindow
+local pool = {}
+
+function event.OnDocumentDestroy(handle)
+    pool[handle] = nil
+end
+
+function createWindowByPool(document, name)
+    local o = pool[document]
+    if o then
+        return o
+    end
+    o = createWindow(document, name)
+    pool[document] = o
+    return o
+end
+
+return createWindowByPool
