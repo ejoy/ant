@@ -65,9 +65,7 @@ local function createWindow(document, name)
     end
     function window.postMessage(data)
         if name then
-            task.new(function ()
-                ltask.send(ServiceWorld, "rmlui_message", name, data)
-            end)
+            ltask.send(ServiceWorld, "rmlui_message", name, data)
         end
     end
     local ctors = {}
