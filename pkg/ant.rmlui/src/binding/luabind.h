@@ -37,9 +37,6 @@ namespace luabind {
 		global<lua_State*>::v = lua_newthread(L);
 		lua_setfield(L, LUA_REGISTRYINDEX, "LUABIND_THREAD");
 	}
-	inline lua_State* thread() {
-		return global<lua_State*>::v;
-	}
 	inline bool invoke(call_t f) {
 		lua_State* L = global<lua_State*>::v;
 		if (!lua_checkstack(L, 3)) {
