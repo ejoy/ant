@@ -1,6 +1,5 @@
 local rmlui = require "rmlui"
 local ltask = require "ltask"
-local event = require "core.event"
 local timer = require "core.timer"
 local task = require "core.task"
 local document_manager = require "core.document_manager"
@@ -8,7 +7,7 @@ local datamodel = require "core.datamodel.api"
 local environment = require "core.environment"
 local eventListener = require "core.event.listener"
 
-local function createWindow(document, source)
+local function createWindow(document)
     --TODO: pool
     local window = {}
     local timer_object = setmetatable({}, {__mode = "k"})
@@ -21,7 +20,7 @@ local function createWindow(document, source)
             return
         end
         document_manager.onload(newdoc)
-        return createWindow(newdoc, document)
+        return createWindow(newdoc)
     end
     function window.close()
         document_manager.close(document)
@@ -63,30 +62,16 @@ local function createWindow(document, source)
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
     end
-    function window.postMessage(data)
-        local eventData = {
-            data = data,
-        }
-        if source == nil then
-            eventData.source = environment[document].window
-        elseif source == "extern" then
-            eventData.source = environment[document].window.extern
-        else
-            eventData.source = createWindow(source, document)
-        end
-        eventListener.dispatch(document, rmlui.DocumentGetBody(document), "message", eventData)
+    function window.dispatchMessage(data)
+        eventListener.dispatch(document, rmlui.DocumentGetBody(document), "message", data)
     end
-    if source == nil then
-        window.extern = {
-            postMessage = function (data)
-                local name = environment[document]._extern_name
-                if name then
-                    task.new(function ()
-                        ltask.send(ServiceWorld, "rmlui_message", name, data)
-                    end)
-                end
-            end
-        }
+    function window.postMessage(data)
+        local name = environment[document]._extern_name
+        if name then
+            task.new(function ()
+                ltask.send(ServiceWorld, "rmlui_message", name, data)
+            end)
+        end
     end
     local ctors = {}
     local customElements = {}

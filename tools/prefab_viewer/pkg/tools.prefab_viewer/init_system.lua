@@ -60,7 +60,7 @@ function S.init_world()
     -- rmlui
     font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
     local window = irmlui.open "/pkg/tools.prefab_viewer/assets/ui/joystick.rml"
-	window.addEventListener("message", function(event) world:pub {"joystick", event.data} end)
+	window.addEventListener("message", function(data) world:pub {"joystick", data} end)
 end
 
 local last_mousex

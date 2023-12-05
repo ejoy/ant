@@ -30,10 +30,7 @@ function rmlui_sys:ui_update()
         local window = windows[name]
         local event = events[name]
         if window and event and event.message then
-            event.message {
-                source = window,
-                data = data,
-            }
+            event.message(data)
         end
     end
 end

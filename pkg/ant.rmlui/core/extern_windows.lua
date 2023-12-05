@@ -30,7 +30,7 @@ function CMD.postMessage(extern_window, data)
         local globals = environment[document]
         if globals then
             local window = globals.window
-            window.postMessage(data)
+            window.dispatchMessage(data)
         end
     end
 end

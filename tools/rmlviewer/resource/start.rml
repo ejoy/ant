@@ -62,8 +62,8 @@
             end
             function start.exit()
             end
-            window.addEventListener('message', function(event)
-                event.source.postMessage(event.data)
+            window.addEventListener("message", function(data)
+                window.postMessage(data)
             end)
             window.addEventListener('mousemove', function(event)
                 if event.button then
