@@ -56,14 +56,8 @@ local function createPackage(env, path)
     env.require = require
 end
 
-
-local audio = import_package "ant.audio"
-local json = import_package "ant.json"
-
 return function (path)
     local env = {}
     createPackage(env, path)
-    env.audio = audio
-    env.json = json
     return setmetatable(env, {__index = _G})
 end
