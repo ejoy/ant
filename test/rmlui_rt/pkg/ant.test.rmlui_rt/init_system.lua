@@ -17,8 +17,8 @@ end
 function init_sys:post_init()
     local args = getArguments()
     local window = iRmlUi.open(args[1])
-    window.addEventListener("message", function (event)
-        print("Message: " .. event.data)
+    window.addEventListener("message", function (data)
+        print("Message: " .. data)
     end)
 end
 

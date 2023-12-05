@@ -136,9 +136,9 @@
                 start.page:on_item_click(id, row, top)
             end
 
-            window.addEventListener('message', function(event)
-                print("event.source.postMessage")
-                event.source.postMessage(event.data)
+            window.addEventListener("message", function(data)
+                print("window.postMessage")
+                window.postMessage(data)
             end)
             window.addEventListener('mousemove', function(event)
             end)

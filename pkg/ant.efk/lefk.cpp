@@ -349,7 +349,8 @@ lefkctx_play(lua_State *L) {
     if (ctx->manager->Exists(slot->inst)) {
 		stop_all(ctx, slot, false);
 	}
-	slot->inst = ctx->manager->Play(slot->eptr, 0, 0, 0);
+	int32_t startFrame = (int32_t)luaL_checkinteger(L, 4);
+	slot->inst = ctx->manager->Play(slot->eptr, Effekseer::Vector3D(0, 0, 0), startFrame);
 	
 	float speed = (float)luaL_checknumber(L, 3);
 	ctx->manager->SetSpeed(slot->inst, speed);

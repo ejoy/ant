@@ -1,5 +1,6 @@
 local environment = require "core.environment"
 local document_manager = require "core.document_manager"
+local message = require "core.message"
 
 local CMD = {}
 
@@ -24,13 +25,12 @@ function CMD.close(extern_window)
     end
 end
 
-function CMD.postMessage(extern_window, data)
+function CMD.postMessage(extern_window, ...)
     local document = extern_window.document
     if document then
         local globals = environment[document]
         if globals then
-            local window = globals.window
-            window.postMessage(data)
+            message.dispatch(document, ...)
         end
     end
 end

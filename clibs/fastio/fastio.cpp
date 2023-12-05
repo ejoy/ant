@@ -388,6 +388,13 @@ static int tostring(lua_State *L) {
     return 1;
 }
 
+static int free(lua_State *L) {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
+    luazip_close(cache);
+    return 0;
+}
+
 static int loadlua(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     zip_reader_cache* cache = (zip_reader_cache*)lua_touserdata(L, 1);
@@ -429,6 +436,7 @@ luaopen_fastio(lua_State* L) {
         {"str2sha1", str2sha1},
         {"wrap", wrap},
         {"tostring", tostring},
+        {"free", free},
         {"loadlua", loadlua},
         {NULL, NULL},
     };

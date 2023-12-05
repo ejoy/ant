@@ -1,12 +1,13 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
 local environment = require "core.environment"
-local createSandbox = require "core.sandbox.create"
-local filemanager = require "core.filemanager"
+local textureloader = require "core.textureloader"
 local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
 local datamodel = require "core.datamodel.api"
 local task = require "core.task"
+local fastio = require "fastio"
+local vfs = require "vfs"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -26,12 +27,19 @@ local function round(x)
     return math.floor(x*screen_ratio+0.5)
 end
 
-local function notifyDocumentCreate(document, path, name)
-	local globals = createSandbox(path)
-	event("OnDocumentCreate", document, globals)
-	globals.window.document = globals.document
-	globals._extern_name = name
-	environment[document] = globals
+local function createSandbox(document, name)
+    local env = {
+        package = false,
+        require = false,
+        window = constructor.Window(document, name),
+        document = constructor.Document(document),
+    }
+    return setmetatable(env, {__index = _G})
+end
+
+local function notifyDocumentCreate(document, name)
+    event("OnDocumentCreate", document)
+    environment[document] = createSandbox(document, name)
 end
 
 local function notifyDocumentDestroy(document)
@@ -39,22 +47,34 @@ local function notifyDocumentDestroy(document)
 	environment[document] = nil
 end
 
+local function readfile(path)
+    local mem, symbol = vfs.read(path)
+    if not mem then
+        error(("`read `%s` failed."):format(path))
+    end
+    return mem, symbol
+end
+
 local function OnLoadInlineScript(document, source_path, content, source_line)
-	local f, err = filemanager.loadstring(content, source_path, source_line, environment[document])
-	if not f then
-		log.warn(err)
-		return
-	end
-	f()
+    local env = environment[document]
+    local source = "--@"..source_path..":"..source_line.."\n "..content
+    local f, err = load(source, source, "t", env)
+    if not f then
+        log.warn(err)
+        return
+    end
+    f()
 end
 
 local function OnLoadExternalScript(document, source_path)
-	local f, err = filemanager.loadfile(source_path, environment[document])
-	if not f then
-		log.warn(("file '%s' load failed: %s."):format(source_path, err))
-		return
-	end
-	f()
+    local env = environment[document]
+    local mem, symbol = readfile(source_path)
+    local f, err = fastio.loadlua(mem, symbol, env)
+    if not f then
+        log.warn(("file '%s' load failed: %s."):format(source_path, err))
+        return
+    end
+    f()
 end
 
 local function OnLoadInlineStyle(document, source_path, content, source_line)
@@ -63,7 +83,8 @@ end
 
 local function OnLoadExternalStyle(document, source_path)
     if not rmlui.DocumentLoadStyleSheet(document, source_path) then
-        rmlui.DocumentLoadStyleSheet(document, source_path, filemanager.readfile(source_path))
+        local mem = readfile(source_path)
+        rmlui.DocumentLoadStyleSheet(document, source_path, fastio.wrap(mem))
     end
 end
 
@@ -73,8 +94,9 @@ function m.open(path, name)
         return
     end
     documents[#documents+1] = doc
-    notifyDocumentCreate(doc, path, name)
-    local html = rmlui.DocumentParseHtml(path, filemanager.readfile(path), false)
+    notifyDocumentCreate(doc, name)
+    local mem, symbol = readfile(path)
+    local html = rmlui.DocumentParseHtml(path, fastio.wrap(mem), false)
     if not html then
         m.close(doc)
         return
@@ -84,13 +106,13 @@ function m.open(path, name)
         local type, str, line = load[1], load[2], load[3]
         if type == "script" then
             if line then
-                OnLoadInlineScript(doc, path, str, line)
+                OnLoadInlineScript(doc, symbol, str, line)
             else
                 OnLoadExternalScript(doc, str)
             end
         elseif type == "style" then
             if line then
-                OnLoadInlineStyle(doc, path, str, line)
+                OnLoadInlineStyle(doc, symbol, str, line)
             else
                 OnLoadExternalStyle(doc, str)
             end
@@ -285,7 +307,7 @@ function m.getPendingTexture(doc)
 end
 
 local function updateTexture()
-    local q = filemanager.updateTexture()
+    local q = textureloader.updateTexture()
     if not q then
         return
     end

@@ -13,8 +13,8 @@ function init_sys:post_init()
 	iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
     local window = iRmlUi.open "construct.rml"
     window.postMessage("hello")
-    window.addEventListener("message", function(event)
-        print(event.data)
+    window.addEventListener("message", function(data)
+        print(data)
     end)
 end
 

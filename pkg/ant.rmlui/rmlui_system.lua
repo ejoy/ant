@@ -29,11 +29,8 @@ function rmlui_sys:ui_update()
         local name, data = msg[1], msg[2]
         local window = windows[name]
         local event = events[name]
-        if window and event and event.message then
-            event.message {
-                source = window,
-                data = data,
-            }
+        if window and event then
+            event(data)
         end
     end
 end
@@ -50,19 +47,17 @@ function iRmlUi.open(name, url)
     url = url or name
     ltask.send(ServiceRmlUi, "open", name, url)
     local window = {}
-    local event = {}
     windows[name] = window
-    events[name] = event
     function window.close()
         ltask.send(ServiceRmlUi, "close", name)
         windows[name] = nil
         events[name] = nil
     end
-    function window.postMessage(data)
-        ltask.send(ServiceRmlUi, "postMessage", name, data)
+    function window.postMessage(...)
+        ltask.send(ServiceRmlUi, "postMessage", name, ...)
     end
-    function window.addEventListener(type, listener)
-        event[type] = listener
+    function window.onMessage(listener)
+        events[name] = listener
     end
     return window
 end

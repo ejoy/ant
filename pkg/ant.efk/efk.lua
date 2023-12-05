@@ -25,8 +25,8 @@ local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
 local handle_mt = {
-    realive = function (self, speed)
-        ltask.call(EFK_SERVER, "play", self.handle, speed)
+    realive = function (self, speed, startframe)
+        ltask.call(EFK_SERVER, "play", self.handle, speed, startframe)
     end,
     is_alive = function(self)
         ltask.fork(function ()
@@ -60,8 +60,8 @@ local handle_mt = {
     end,
 }
 
-local function createPlayHandle(efk_handle, speed, worldmat)
-    ltask.call(EFK_SERVER, "play", efk_handle, speed)
+local function createPlayHandle(efk_handle, speed, startframe, worldmat)
+    ltask.call(EFK_SERVER, "play", efk_handle, speed, startframe)
     local h = setmetatable({
         alive       = true,
         handle      = efk_handle,
@@ -106,7 +106,8 @@ function efk_sys:component_init()
         local efk = e.efk
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
-        efk.play_handle = createPlayHandle(efk.handle, efk.speed)
+        efk.startframe = efk.startframe or 0
+        efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe)
     end
 end
 
@@ -269,6 +270,8 @@ function iefk.create(filename, config)
             efk = {
                 path        = filename,
                 speed       = config.speed or 1.0,
+                time        = config.time or 0.0,
+                startframe  = config.startframe or 0,
             },
             visible_state = config.visible_state,
         },
@@ -279,7 +282,7 @@ function iefk.play(e)
     local efk = e.efk
     if efk then
         local ph = efk.play_handle
-        ph:realive(efk.speed)
+        ph:realive(efk.speed, efk.startframe)
         ph:set_visible(true)
     end
     iefk.set_visible(e, true)

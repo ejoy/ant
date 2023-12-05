@@ -1,5 +1,5 @@
 require "core.event.dom"
-local filemanager = require "core.filemanager"
+local textureloader = require "core.textureloader"
 local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local event = require "core.event"
@@ -33,7 +33,7 @@ end
 
 function m.OnLoadTexture(doc, e, path, width, height, isRT)
 	document_manager.updatePendingTexture(doc, 1)
-	filemanager.loadTexture(doc, e, path, width, height, isRT)
+	textureloader.loadTexture(doc, e, path, width, height, isRT)
 end
 
 function m.OnParseText(str)

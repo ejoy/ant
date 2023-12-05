@@ -40,7 +40,7 @@
                             if start.dx ~= x or start.dy ~= y then
                                 start.dx = dx
                                 start.dy = dy
-                                window.extern.postMessage({moving = true, dx = x, dy = y})
+                                window.postMessage({moving = true, dx = x, dy = y})
                             end
                         end
                     elseif ev.state == 'ended' then
@@ -48,7 +48,7 @@
                             start.joystick.style.left = start.joystick_left .. 'px'
                             start.joystick.style.top = start.joystick_top .. 'px'
                             start.move_camera = false
-                            window.extern.postMessage({moving = false})
+                            window.postMessage({moving = false})
                             start.dx = 0
                             start.dy = 0
                         end

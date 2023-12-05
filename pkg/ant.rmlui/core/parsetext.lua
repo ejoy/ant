@@ -1,7 +1,6 @@
 local m={}
 local ltask = require "ltask"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
-local filemanager = require "core.filemanager"
 local datalist   = require "datalist"
 local fs = require "filesystem"
 local aio = import_package "ant.io"
