@@ -63,9 +63,9 @@ local function createWindow(document, name)
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
     end
-    function window.postMessage(data)
+    function window.postMessage(...)
         if name then
-            ltask.send(ServiceWorld, "rmlui_message", name, data)
+            ltask.send(ServiceWorld, "rmlui_message", name, ...)
         end
     end
     local ctors = {}

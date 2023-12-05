@@ -55,8 +55,8 @@ function iRmlUi.open(name, url)
         windows[name] = nil
         events[name] = nil
     end
-    function window.postMessage(data)
-        ltask.send(ServiceRmlUi, "postMessage", name, data)
+    function window.postMessage(...)
+        ltask.send(ServiceRmlUi, "postMessage", name, ...)
     end
     function window.addEventListener(type, listener)
         event[type] = listener

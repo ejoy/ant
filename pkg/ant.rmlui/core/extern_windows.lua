@@ -26,12 +26,12 @@ function CMD.close(extern_window)
     end
 end
 
-function CMD.postMessage(extern_window, data)
+function CMD.postMessage(extern_window, ...)
     local document = extern_window.document
     if document then
         local globals = environment[document]
         if globals then
-            eventListener.dispatch(document, rmlui.DocumentGetBody(document), "message", data)
+            eventListener.dispatchMessage(document, rmlui.DocumentGetBody(document), ...)
         end
     end
 end
