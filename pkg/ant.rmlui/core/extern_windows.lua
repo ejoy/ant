@@ -1,7 +1,6 @@
-local rmlui = require "rmlui"
 local environment = require "core.environment"
 local document_manager = require "core.document_manager"
-local eventListener = require "core.event.listener"
+local message = require "core.message"
 
 local CMD = {}
 
@@ -31,7 +30,7 @@ function CMD.postMessage(extern_window, ...)
     if document then
         local globals = environment[document]
         if globals then
-            eventListener.dispatchMessage(document, rmlui.DocumentGetBody(document), ...)
+            message.dispatch(document, ...)
         end
     end
 end

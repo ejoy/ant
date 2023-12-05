@@ -76,32 +76,6 @@ function m.dispatch(document, element, type, eventData)
     end
 end
 
-function m.dispatchMessage(document, element, ...)
-    local D = E[document]
-    local listeners = {}
-    local elements = {}
-    local walk_element = element
-    while walk_element do
-        local M = D[walk_element]
-        if M then
-            local L = M["message"]
-            if L then
-                table_append(listeners, L)
-                local start = #elements
-                local elementObject = constructor.Element(document, false, walk_element)
-                for i = 1, #L do
-                    elements[start+i] = elementObject
-                end
-            end
-        end
-        walk_element = rmlui.NodeGetParent(walk_element)
-    end
-    for i = 1, #listeners do
-        local listener = listeners[i]
-        listener(...)
-    end
-end
-
 function event.OnDestroyNode(document, node)
     local D = E[document]
     if D then

@@ -6,6 +6,7 @@ local event = require "core.event"
 local document_manager = require "core.document_manager"
 local datamodel = require "core.datamodel.api"
 local eventListener = require "core.event.listener"
+local message = require "core.message"
 
 local createWindowByPool
 
@@ -62,6 +63,9 @@ local function createWindow(document, name)
     end
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
+    end
+    function window.onMessage(func)
+        message.add(document, func)
     end
     function window.postMessage(...)
         if name then
