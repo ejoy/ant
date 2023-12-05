@@ -14,12 +14,12 @@ local queuemgr  = ecs.require "ant.render|queue_mgr"
 local hwi       = import_package "ant.hwi"
 local mc        = import_package "ant.math".constant
 
-local lastname = "mem_texture_static"
+local lastname = "mem_texture"
 local params = {
-    MEM_TEXTURE_STATIC_VIEWID       = hwi.viewid_get "mem_texture_static",
-    STATIC_OBJ_NAME                 = "mem_texture_static_obj",
-    STATIC_QUEUE_NAME               = "mem_texture_static_queue",
-    MEM_TEXTURE_DYNAMIC_VIEWIDS     = setmetatable({}, {
+    VIEWID                   = hwi.viewid_get "mem_texture",
+    OBJ_NAME                 = "mem_texture_obj",
+    QUEUE_NAME               = "mem_texture_queue",
+    VIEWIDS                  = setmetatable({}, {
         __index = function(t,name)
             local viewid = hwi.viewid_get(name)
             if viewid then
@@ -30,13 +30,12 @@ local params = {
             return t[name] 
         end
     }),
-    DYNAMIC_OBJ_NAME                = "mem_texture_dynamic_obj",
-    DYNAMIC_OBJS                    = {},
-    DYNAMIC_QUEUE_NAME              = "mem_texture_dynamic_queue",
-    DYNAMIC_QUEUES                  = {},
-    ACTIVE_MASKS                    = {},
-    DEFAULT_RT_WIDTH                = 512,
-    DEFAULT_RT_HEIGHT               = 512,
+    OBJS                     = {},
+    QUEUES                   = {},
+    ACTIVE_MASKS             = {},
+    DISTANCE                 = {},
+    DEFAULT_RT_WIDTH         = 512,
+    DEFAULT_RT_HEIGHT        = 512,
     RB_FLAGS  = sampler{
         MIN =   "LINEAR",
         MAG =   "LINEAR",
@@ -44,33 +43,13 @@ local params = {
         V   =   "CLAMP",
         RT  =   "RT_ON",
     },
-    DEFAULT_EXTENTS                 = math3d.mark(math3d.vector(50, 50, 50)),
-    DEFAULT_LENGTH                  = math3d.length(math3d.mul(1.6, math3d.vector(50, 50, 50))),
-    DISTANCE                        = {},
+    DEFAULT_EXTENTS         = math3d.mark(math3d.vector(50, 50, 50)),
+    DEFAULT_LENGTH          = math3d.length(math3d.mul(1.6, math3d.vector(50, 50, 50)))
 }
 
 local function exist_prefab(obj_name)
     local select_tag = ("%s"):format(obj_name)
     return w:first(select_tag)
-end
-
-local function create_clear_static_prefab_entity(obj_name)
-
-    local function remove_prefab()
-        local select_tag = ("%s eid:in"):format(obj_name)
-        for e in w:select(select_tag) do
-            w:remove(e.eid)
-        end
-    end
-    remove_prefab()
-    world:create_entity {
-        policy = {
-            "ant.render|clear_smt_prefab"
-        },
-        data = {
-            clear_smt_prefab = true
-        },
-    }
 end
 
 local m = {
@@ -152,7 +131,7 @@ local m = {
         register_mem_texture_material_queue(queue_name)
         create_mem_texture_queue(view_id, queue_name)
     end,
-    create_prefab        = function(prefab_path, width, height, rotation, distance, obj_name, queue_name)
+    create_prefab        = function(prefab_path, width, height, rotation, distance, obj_name, queue_name, is_dynamic)
 
         local function create_mem_texture_prefab()
             world:create_instance {
@@ -161,11 +140,14 @@ local m = {
                 on_ready = function (inst)
                     local alleid = inst.tag['*']
                     for _, eid in ipairs(alleid) do
-                        local ee <close> = world:entity(eid, "visible_state?in mesh?in scene?in mem_texture_ready?out")
+                        local ee <close> = world:entity(eid, "visible_state?in mesh?in scene?in mem_texture_ready?out mem_texture_dynamic?out")
                         if ee.mesh and ee.visible_state then
                             ee.mem_texture_ready = true
                             ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
                             ivs.set_state(ee, queue_name, true)
+                        end
+                        if is_dynamic then
+                            ee.mem_texture_dynamic = true
                         end
                     end
                 end
@@ -212,7 +194,7 @@ local m = {
         adjust_camera_rotation()
         return get_current_rt_handle()
     end,
-    adjust_camera_srt    = function(obj_name, queue_name, is_static)
+    adjust_camera_srt    = function(obj_name, queue_name)
 
         local function adjust_camera_pos(camera, aabb)
             if not math3d.aabb_isvalid(aabb) then return end
@@ -253,9 +235,6 @@ local m = {
                         iom.set_scale(e, math3d.mul(s, e.scene.s))
                     end
                 end
-                if is_static then
-                    create_clear_static_prefab_entity(params.STATIC_OBJ_NAME)
-                end 
             end
         end
     end,
@@ -276,15 +255,25 @@ local m = {
         local select_tag = ("%s render_target:update"):format(queue_name)
         local mtq = w:first(select_tag)
         local fbidx = mtq.render_target.fb_idx
-        local fb = fbmgr.get(fbidx)
         fbmgr.unmark_rb(fbidx, 1)
         fbmgr.unmark_rb(fbidx, 1)
-        fb = {
+        local fb = {
             {rbidx = fbmgr.create_rb{w = params.DEFAULT_RT_WIDTH, h = params.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = params.RB_FLAGS}},
             {rbidx = fbmgr.create_rb{w = params.DEFAULT_RT_WIDTH, h = params.DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = params.RB_FLAGS}}
         }
         fbmgr.recreate(fbidx, fb)
         irq.update_rendertarget(queue_name, mtq.render_target)
+    end,
+    adjust_prefab_rot    = function(obj_name, cur_radian)
+        local select_tag = ("%s mem_texture_dynamic scene:in"):format(obj_name)
+        for e in w:select(select_tag) do
+            if e.scene.parent == 0 then
+                local cur_rot = e.scene.r
+                local prefab_radian = math3d.quat2euler(cur_rot)
+                prefab_radian = math3d.set_index(prefab_radian, 2, cur_radian)
+                iom.set_rotation(e, math3d.quaternion(prefab_radian)) 
+            end
+        end
     end
 }
 

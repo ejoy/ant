@@ -1,10 +1,8 @@
 local ecs       = ...
 local world     = ecs.world
 local w         = world.w
-local mtd_sys   = ecs.system "mem_texture_dynamic_system"
-local math3d    = require "math3d"
+local mt_sys   = ecs.system "mem_texture_system"
 local ltask     = require "ltask"
-local iom       = ecs.require "ant.objcontroller|obj_motion"
 local itimer	= ecs.require "ant.timer|timer_system"
 local mtc       = ecs.require "ant.render|mem_texture.mem_texture_common"
 local params    = mtc.params
@@ -16,12 +14,12 @@ local function remove_prefab(obj_name)
     end
 end
 
-local function register_new_dynamic_rt()
+local function register_new_rt()
     local new_idx = #params.ACTIVE_MASKS + 1
-    local obj_name, queue_name = params.DYNAMIC_OBJ_NAME .. new_idx, params.DYNAMIC_QUEUE_NAME .. new_idx
-    local view_id = params.MEM_TEXTURE_DYNAMIC_VIEWIDS[queue_name]
-    params.DYNAMIC_OBJS[#params.DYNAMIC_OBJS+1] = obj_name
-    params.DYNAMIC_QUEUES[#params.DYNAMIC_QUEUES+1] = queue_name
+    local obj_name, queue_name = params.OBJ_NAME .. new_idx, params.QUEUE_NAME .. new_idx
+    local view_id = params.VIEWIDS[queue_name]
+    params.OBJS[#params.OBJS+1] = obj_name
+    params.QUEUES[#params.QUEUES+1] = queue_name
     params.ACTIVE_MASKS[#params.ACTIVE_MASKS+1] = false
     mtc.register_new_rt(view_id, obj_name, queue_name)
 end
@@ -48,27 +46,27 @@ local function expand_active_rt()
         end
     end
     if active_size >= queue_num then
-        register_new_dynamic_rt()
+        register_new_rt()
     end
 end
 
-function mtd_sys:init()
-    register_new_dynamic_rt()
+function mt_sys:init()
+    register_new_rt()
 end
 
-function mtd_sys:update_filter()
+function mt_sys:update_filter()
     for rt_idx, is_active in ipairs(params.ACTIVE_MASKS) do
         if is_active then
-            local obj_name, queue_name = params.DYNAMIC_OBJS[rt_idx], params.DYNAMIC_QUEUES[rt_idx]
+            local obj_name, queue_name = params.OBJS[rt_idx], params.QUEUES[rt_idx]
             mtc.copy_main_material(obj_name, queue_name)
         end
     end
 end
 
-function mtd_sys:entity_init()
+function mt_sys:entity_init()
     for rt_idx, is_active in ipairs(params.ACTIVE_MASKS) do
         if is_active then
-            local obj_name, queue_name = params.DYNAMIC_OBJS[rt_idx], params.DYNAMIC_QUEUES[rt_idx]
+            local obj_name, queue_name = params.OBJS[rt_idx], params.QUEUES[rt_idx]
             mtc.adjust_camera_srt(obj_name, queue_name)
         end
     end   
@@ -77,42 +75,31 @@ end
 local timepassed = 0.0
 local delta_radian = math.pi * 0.1
 
-function mtd_sys:data_changed()
+function mt_sys:data_changed()
     timepassed = timepassed + itimer.delta()
     local cur_time = timepassed * 0.001
     local cur_radian = delta_radian * cur_time
 
     for rt_idx, is_active in ipairs(params.ACTIVE_MASKS) do
         if is_active then
-            local obj_name = params.DYNAMIC_OBJS[rt_idx]
-            local select_tag = ("%s scene:in"):format(obj_name)
-            for e in w:select(select_tag) do
-                if e.scene.parent == 0 then
-                    local cur_rot = e.scene.r
-                    local prefab_radian = math3d.quat2euler(cur_rot)
-                    prefab_radian = math3d.set_index(prefab_radian, 2, cur_radian)
-                    iom.set_rotation(e, math3d.quaternion(prefab_radian)) 
-                end
-            end
+            local obj_name = params.OBJS[rt_idx]
+            mtc.adjust_prefab_rot(obj_name, cur_radian)
         end
     end
 end
 
 local S = ltask.dispatch()
 
-function S.create_mem_texture_dynamic_prefab(prefab_path, width, height, rotation, distance)
+function S.create_mem_texture_prefab(prefab_path, width, height, rotation, distance, is_dynamic)
     local rt_idx = get_active_rt()
-    assert(rt_idx > 0, "active rt isn't enough!\n")
     set_rt_active(rt_idx, true)
     expand_active_rt()
-
-    local obj_name, queue_name = params.DYNAMIC_OBJ_NAME .. rt_idx, params.DYNAMIC_QUEUE_NAME .. rt_idx
-
-    return mtc.create_prefab(prefab_path, width, height, rotation, distance, obj_name, queue_name), rt_idx
+    local obj_name, queue_name = params.OBJ_NAME .. rt_idx, params.QUEUE_NAME .. rt_idx
+    return mtc.create_prefab(prefab_path, width, height, rotation, distance, obj_name, queue_name, is_dynamic), rt_idx
 end
 
-function S.destroy_mem_texture_dynamic_prefab(rt_idx)
-    local obj_name, queue_name = params.DYNAMIC_OBJ_NAME .. rt_idx, params.DYNAMIC_QUEUE_NAME .. rt_idx
+function S.destroy_mem_texture_prefab(rt_idx)
+    local obj_name, queue_name = params.OBJ_NAME .. rt_idx, params.QUEUE_NAME .. rt_idx
     remove_prefab(obj_name)
     mtc.recreate_framebuffer(queue_name)
     set_rt_active(rt_idx, false)
