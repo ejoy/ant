@@ -1,30 +1,8 @@
 local ltask = require "ltask"
-local fastio = require "fastio"
-local vfs = require "vfs"
 local constructor = require "core.DOM.constructor"
-local aio = import_package "ant.io"
 
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local m = {}
-
-function m.readfile(source_path)
-    return aio.readall(source_path)
-end
-
-function m.loadstring(content, source_path, source_line, env)
-    if not __ANT_RUNTIME__ then
-        local mem, symbol = vfs.read(source_path)
-        fastio.free(mem)
-        source_path = symbol
-    end
-    local source = "--@"..source_path..":"..source_line.."\n "..content
-    return load(source, source, "t", env)
-end
-
-function m.loadfile(source_path, env)
-    local mem, symbol = vfs.read(source_path)
-    return fastio.loadlua(mem, symbol, env)
-end
 
 local pendQueue = {}
 local readyQueue = {}
