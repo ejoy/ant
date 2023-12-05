@@ -27,11 +27,12 @@ local function round(x)
 end
 
 local function notifyDocumentCreate(document, path, name)
-	local globals = createSandbox(path)
-	event("OnDocumentCreate", document, globals)
-	globals.window.document = globals.document
-	globals._extern_name = name
-	environment[document] = globals
+    local globals = createSandbox(path)
+    globals.window = constructor.Window(document)
+    globals.document = constructor.Document(document)
+    globals._extern_name = name
+    event("OnDocumentCreate", document)
+    environment[document] = globals
 end
 
 local function notifyDocumentDestroy(document)

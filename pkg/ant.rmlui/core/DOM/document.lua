@@ -31,12 +31,6 @@ end
 
 local pool = {}
 
-function event.OnDocumentCreate(document, globals)
-    local o = constructorDocument(document)
-    globals.document = o
-    pool[document] = o
-end
-
 function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
@@ -45,5 +39,11 @@ return function (handle)
     if handle == nil then
         return
     end
-    return pool[handle]
+    local o = pool[handle]
+    if o then
+        return o
+    end
+    o = constructorDocument(handle)
+    pool[handle] = o
+    return o
 end

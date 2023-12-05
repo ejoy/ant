@@ -116,8 +116,4 @@ local function createWindow(document, source)
     return setmetatable(window, mt)
 end
 
-function event.OnDocumentCreate(document, globals)
-    globals.window = createWindow(document)
-end
-
 return createWindow
