@@ -28,9 +28,8 @@ end
 
 local function notifyDocumentCreate(document, path, name)
     local globals = createSandbox(path)
-    globals.window = constructor.Window(document)
+    globals.window = constructor.Window(document, name)
     globals.document = constructor.Document(document)
-    globals._extern_name = name
     event("OnDocumentCreate", document)
     environment[document] = globals
 end

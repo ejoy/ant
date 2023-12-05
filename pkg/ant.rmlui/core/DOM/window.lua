@@ -4,10 +4,9 @@ local timer = require "core.timer"
 local task = require "core.task"
 local document_manager = require "core.document_manager"
 local datamodel = require "core.datamodel.api"
-local environment = require "core.environment"
 local eventListener = require "core.event.listener"
 
-local function createWindow(document)
+local function createWindow(document, name)
     --TODO: pool
     local window = {}
     local timer_object = setmetatable({}, {__mode = "k"})
@@ -62,11 +61,7 @@ local function createWindow(document)
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
     end
-    function window.dispatchMessage(data)
-        eventListener.dispatch(document, rmlui.DocumentGetBody(document), "message", data)
-    end
     function window.postMessage(data)
-        local name = environment[document]._extern_name
         if name then
             task.new(function ()
                 ltask.send(ServiceWorld, "rmlui_message", name, data)
