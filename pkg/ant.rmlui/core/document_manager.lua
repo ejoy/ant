@@ -1,7 +1,6 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
 local environment = require "core.environment"
-local createSandbox = require "core.sandbox.create"
 local textureloader = require "core.textureloader"
 local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
@@ -28,12 +27,19 @@ local function round(x)
     return math.floor(x*screen_ratio+0.5)
 end
 
-local function notifyDocumentCreate(document, path, name)
-    local globals = createSandbox(path)
-    globals.window = constructor.Window(document, name)
-    globals.document = constructor.Document(document)
+local function createSandbox(document, name)
+    local env = {
+        package = false,
+        require = false,
+        window = constructor.Window(document, name),
+        document = constructor.Document(document),
+    }
+    return setmetatable(env, {__index = _G})
+end
+
+local function notifyDocumentCreate(document, name)
     event("OnDocumentCreate", document)
-    environment[document] = globals
+    environment[document] = createSandbox(document, name)
 end
 
 local function notifyDocumentDestroy(document)
@@ -88,7 +94,7 @@ function m.open(path, name)
         return
     end
     documents[#documents+1] = doc
-    notifyDocumentCreate(doc, path, name)
+    notifyDocumentCreate(doc, name)
     local mem, symbol = readfile(path)
     local html = rmlui.DocumentParseHtml(path, fastio.wrap(mem), false)
     if not html then
