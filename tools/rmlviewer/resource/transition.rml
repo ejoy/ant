@@ -24,7 +24,7 @@
             }
         </style>
         <script type="text/x-lua" >
-            console.log("before createModel")
+            print("before createModel")
             local start = window.createModel "start" {
                 scale_flag = false,
                 event_state = 'none'
@@ -47,7 +47,7 @@
             end
 
             function start.mousedown2(event)
-                console.log("---mousedown2---")
+                print("---mousedown2---")
             end
         </script>
     </head>

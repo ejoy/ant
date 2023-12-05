@@ -41,7 +41,7 @@
         </style>
         <style path = "listpage_style.rcss"/>
         <script type="text/x-lua" >
-            console.log("before createModel")
+            print("before createModel")
             --local image_path = "image/road/car.png"
             local image_path = "correct.png"
             local start = window.createModel "start" {
@@ -137,7 +137,7 @@
             end
 
             window.addEventListener('message', function(event)
-                console.log("event.source.postMessage")
+                print("event.source.postMessage")
                 event.source.postMessage(event.data)
             end)
             window.addEventListener('mousemove', function(event)
@@ -147,7 +147,7 @@
                 e.style.display = "none"
             end)
             start.click_page_item = function(event)
-                console.log("click page item")
+                print("click page item")
                 local item = event.target
                 local last_selected = start.page.last_selected
                 if last_selected then
@@ -215,7 +215,7 @@
             end)
             
             start.click_list_item = function(event, index)
-                console.log("click list item ", index)
+                print("click list item ", index)
                 local item = event.target
                 if start.list.selected_index then
                     if start.list.selected_index ~= index then

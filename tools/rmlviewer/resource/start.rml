@@ -42,7 +42,7 @@
                 label = "新游戏"
             }
             function start.new(event)
-                console.log(event.target.id)
+                print(event.target.id)
                 window.open("script.rml")
             end
             function start.load(event)
@@ -67,7 +67,7 @@
             end)
             window.addEventListener('mousemove', function(event)
                 if event.button then
-                    console.log("darg", event.x, event.y)
+                    print("darg", event.x, event.y)
                 end
             end)
         </script>

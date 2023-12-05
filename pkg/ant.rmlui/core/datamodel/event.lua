@@ -1,5 +1,3 @@
-local console = require "core.sandbox.console"
-local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
 
 local m = {}
@@ -9,7 +7,7 @@ local function invoke(f, ...)
 		return debug.traceback(msg)
 	end, ...)
 	if not ok then
-		console.warn(err)
+		log.warn(err)
 	end
 	return ok, err
 end
@@ -45,7 +43,7 @@ end
 local function refresh(datamodel, data)
     local compiled, err = load(data.script, data.script, "t", datamodel.model)
     if not compiled then
-        console.warn(err)
+        log.warn(err)
         return
     end
     local f = compiled()

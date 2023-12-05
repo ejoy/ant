@@ -5,7 +5,6 @@ local createSandbox = require "core.sandbox.create"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
 local eventListener = require "core.event.listener"
-local console = require "core.sandbox.console"
 local datamodel = require "core.datamodel.api"
 local task = require "core.task"
 
@@ -43,7 +42,7 @@ end
 local function OnLoadInlineScript(document, source_path, content, source_line)
 	local f, err = filemanager.loadstring(content, source_path, source_line, environment[document])
 	if not f then
-		console.warn(err)
+		log.warn(err)
 		return
 	end
 	f()
@@ -52,7 +51,7 @@ end
 local function OnLoadExternalScript(document, source_path)
 	local f, err = filemanager.loadfile(source_path, environment[document])
 	if not f then
-		console.warn(("file '%s' load failed: %s."):format(source_path, err))
+		log.warn(("file '%s' load failed: %s."):format(source_path, err))
 		return
 	end
 	f()

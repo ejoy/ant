@@ -80,7 +80,7 @@ function page_meta:update_footer(page_count)
 end
 
 function page_meta:on_dirty(index)
-    console.log("--------page_meta:on_dirty--------")
+    print("--------page_meta:on_dirty--------")
     if self.data_for then
         return
     end
@@ -101,7 +101,7 @@ function page_meta:on_dirty(index)
 end
 
 function page_meta:init(item_count)
-    console.log("--------page_meta:init--------")
+    print("--------page_meta:init--------")
     if self.data_for then
         return
     end
@@ -171,7 +171,7 @@ function page_meta:init(item_count)
 end
 
 function page_meta:on_dirty_all(item_count)
-    console.log("--------page_meta:on_dirty_all--------")
+    print("--------page_meta:on_dirty_all--------")
     if not self.inited then
         self:init(item_count)
     end
@@ -248,7 +248,7 @@ function page_meta:show_detail(item_index, show)
 end
 
 function page_meta:on_pan(event)
-    -- console.log("--------page_meta:on_pan--------")
+    -- print("--------page_meta:on_pan--------")
     if self.page_count < 2 then
         return
     end

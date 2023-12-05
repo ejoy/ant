@@ -1,5 +1,4 @@
 local rmlui = require "rmlui"
-local console = require "core.sandbox.console"
 
 local m = {}
 
@@ -41,7 +40,7 @@ end
 function m.refresh(datamodel, element, view)
     local compiled, err = load(view.script, view.script, "t", datamodel.model)
     if not compiled then
-        console.warn(err)
+        log.warn(err)
         return
     end
     local t = compiled()

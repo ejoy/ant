@@ -1,12 +1,11 @@
 local rmlui = require "rmlui"
-local console = require "core.sandbox.console"
 
 local m = {}
 
 local function refresh(datamodel, data, element)
     local compiled, err = load(data.script, data.script, "t", datamodel.model)
     if not compiled then
-        console.warn(err)
+        log.warn(err)
         return
     end
     rmlui.ElementSetVisible(element, compiled())

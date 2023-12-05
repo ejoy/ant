@@ -1,5 +1,4 @@
 local rmlui = require "rmlui"
-local console = require "core.sandbox.console"
 
 local m = {}
 
@@ -29,7 +28,7 @@ function m.create(datamodel, node)
         local script = variables.."\nreturn "..str:sub(3, -3)
         local compiled, err = load(script, script, "t", datamodel.model)
         if not compiled then
-            console.warn(err)
+            log.warn(err)
             return str
         end
         code[key] = compiled

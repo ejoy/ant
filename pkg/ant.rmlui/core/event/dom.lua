@@ -1,5 +1,4 @@
 local rmlui = require "rmlui"
-local console = require "core.sandbox.console"
 local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local event = require "core.event"
@@ -10,7 +9,7 @@ local function invoke(f, ...)
         return debug.traceback(msg)
     end, ...)
     if not ok then
-        console.warn(err)
+        log.warn(err)
     end
     return ok, err
 end
@@ -23,7 +22,7 @@ local function OnEventAttach(document, element, source)
     local code = ("local event;local this=...;return function()%s;end"):format(source)
     local payload, err = load(code, source, "t", globals)
     if not payload then
-        console.warn(err)
+        log.warn(err)
         return
     end
     local ok, f = invoke(payload, constructor.Element(document, false, element))

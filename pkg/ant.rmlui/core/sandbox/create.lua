@@ -26,8 +26,8 @@ local stdlib = {
     type = type,
     xpcall = xpcall,
     _VERSION = _VERSION,
+    print = print,
 
-    console = require "core.sandbox.console",
     audio = require "core.sandbox.audio",
     json = import_package "ant.json",
 }
