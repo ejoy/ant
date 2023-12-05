@@ -12,6 +12,11 @@ function m.readfile(source_path)
 end
 
 function m.loadstring(content, source_path, source_line, env)
+    if not __ANT_RUNTIME__ then
+        local mem, symbol = vfs.read(source_path)
+        fastio.free(mem)
+        source_path = symbol
+    end
     local source = "--@"..source_path..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
