@@ -280,6 +280,18 @@ local function create_depth_state(srcstate, dststate)
 	return bgfx.make_state(d)
 end
 
+function sm:follow_scene_update()
+	for e in w:select "visible_state_changed visible_state:in material:in cast_shadow?out" do
+		local castshadow
+		if e.visible_state["cast_shadow"] then
+			local mt = assetmgr.resource(e.material)
+			castshadow = mt.fx.setting.cast_shadow == "on"
+		end
+
+		e.cast_shadow		= castshadow
+	end
+end
+
 function sm:update_filter()
     for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
