@@ -47,11 +47,8 @@ local function expand_active_rt()
             active_size = active_size + 1
         end
     end
-    if active_size > queue_num / 2 then
-        local new_size = queue_num + 1
-        for i = queue_num + 1, new_size do
-            register_new_dynamic_rt()
-        end
+    if active_size >= queue_num then
+        register_new_dynamic_rt()
     end
 end
 
