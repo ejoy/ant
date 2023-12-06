@@ -3,36 +3,16 @@ local world = ecs.world
 local w = world.w
 
 local ltask = require "ltask"
+local message = require "core.message"
 local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local S = ltask.dispatch()
-
-local msgqueue = {}
-
-function S.rmlui_message(...)
-	msgqueue[#msgqueue+1] = {...}
-end
-
 local windows = {}
-local events = {}
+
 
 function rmlui_sys:ui_update()
-    if #msgqueue == 0 then
-        return
-    end
-    local mq = msgqueue
-    msgqueue = {}
-    for i = 1, #mq do
-        local msg = mq[i]
-        local name, data = msg[1], msg[2]
-        local window = windows[name]
-        local event = events[name]
-        if window and event then
-            event(data)
-        end
-    end
+    message.dispatch()
 end
 
 function rmlui_sys:exit()
@@ -51,15 +31,18 @@ function iRmlUi.open(name, url)
     function window.close()
         ltask.send(ServiceRmlUi, "close", name)
         windows[name] = nil
-        events[name] = nil
-    end
-    function window.postMessage(...)
-        ltask.send(ServiceRmlUi, "postMessage", name, ...)
-    end
-    function window.onMessage(listener)
-        events[name] = listener
     end
     return window
+end
+
+iRmlUi.onMessage = message.on
+
+function iRmlUi.callMessage(...)
+    return message.call(ServiceRmlUi, ...)
+end
+
+function iRmlUi.sendMessage(...)
+    message.send(ServiceRmlUi, ...)
 end
 
 return iRmlUi

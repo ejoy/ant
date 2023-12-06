@@ -21,6 +21,7 @@ local CALL = {
     "encoder_frame",
     "maxfps",
     "fontmanager",
+    "fontimport",
     "show_profile",
     "event_suspend",
 
@@ -397,6 +398,10 @@ end
 
 function S.fontmanager()
     return fontmanager.instance()
+end
+
+function S.fontimport(path)
+    return fontmanager.import(path)
 end
 
 local viewidmgr = require "viewid_mgr"

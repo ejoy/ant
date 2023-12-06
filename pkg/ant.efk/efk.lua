@@ -13,7 +13,7 @@ local assetmgr  = import_package "ant.asset"
 
 local hwi       = import_package "ant.hwi"
 
-local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
+local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
 
 local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"

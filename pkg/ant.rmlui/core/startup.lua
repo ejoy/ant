@@ -3,6 +3,7 @@ local ltask = require "ltask"
 local bgfx = require "bgfx"
 local timer = require "core.timer"
 local task = require "core.task"
+local message = require "core.message"
 local extern_windows = require "core.extern_windows"
 local document_manager = require "core.document_manager"
 local audio = import_package "ant.audio"
@@ -27,6 +28,7 @@ local function Render()
         if delta > 0 then
             timer.update(delta)
         end
+        message.dispatch()
         document_manager.update(delta)
         task.update()
         audio.frame()
@@ -51,10 +53,6 @@ end
 
 function S.close(...)
     extern_windows.push("close", ...)
-end
-
-function S.postMessage(...)
-    extern_windows.push("postMessage", ...)
 end
 
 S.gesture = document_manager.process_gesture

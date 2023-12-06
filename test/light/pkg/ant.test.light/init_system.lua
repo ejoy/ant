@@ -8,7 +8,7 @@ local ltask     = require "ltask"
 local irender   = ecs.require "ant.render|render_system.render"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
-local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
+local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
 
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant

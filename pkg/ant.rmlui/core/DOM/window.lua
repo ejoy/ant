@@ -1,5 +1,4 @@
 local rmlui = require "rmlui"
-local ltask = require "ltask"
 local timer = require "core.timer"
 local task = require "core.task"
 local event = require "core.event"
@@ -64,13 +63,17 @@ local function createWindow(document, name)
     function window.addEventListener(type, func)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
     end
-    function window.onMessage(func)
-        message.add(document, func)
+    function window.onMessage(what, func)
+        message.on(what, func)
     end
-    function window.postMessage(...)
-        if name then
-            ltask.send(ServiceWorld, "rmlui_message", name, ...)
-        end
+    function window.getName()
+        return name
+    end
+    function window.callMessage(...)
+        return message.call(ServiceWorld, ...)
+    end
+    function window.sendMessage(...)
+        message.send(ServiceWorld, ...)
     end
     local ctors = {}
     local customElements = {}

@@ -180,7 +180,7 @@ function bake_lm_sys:end_frame()
     for msg in bake_mb:each() do
         local id = msg[2]
         ltask.fork(function ()
-            local ServiceBgfxMain = ltask.queryservice "ant.hwi|bgfx_main"
+            local ServiceBgfxMain = ltask.queryservice "ant.hwi|bgfx"
             ltask.call(ServiceBgfxMain, "pause")
             bgfx.encoder_begin()
             _bake(id)
