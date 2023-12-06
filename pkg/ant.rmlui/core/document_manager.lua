@@ -29,8 +29,6 @@ end
 
 local function createSandbox(document, name)
     local env = {
-        package = false,
-        require = false,
         window = constructor.Window(document, name),
         document = constructor.Document(document),
     }
