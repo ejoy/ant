@@ -290,7 +290,7 @@ update_transform(efk_ctx* ctx, struct efk_instance * slot, const Effekseer::Matr
 				}
 			}
 		} else {
-			stop_all(ctx, slot, false);
+			stop_all(ctx, slot, true);
 		}
 	}
 }
