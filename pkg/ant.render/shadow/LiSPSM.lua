@@ -3,12 +3,12 @@ local L = {}
 local math3d    = require "math3d"
 local mc        = import_package "ant.math".constant
 
-function L.roataion_matrix(viewdirLS)
+function L.rotation_matrix(viewdirLS)
     -- Orient the shadow map in the direction of the view vector by constructing a
     -- rotation matrix in light space around the z-axis, that aligns the y-axis with the camerainfo's
     -- forward vector (V) -- this gives the wrap direction, vp, for LiSPSM.
 	local zLS = math3d.index(viewdirLS, 3)
-    if math.abs(zLS) < 1e-5 then    -- dot(mc.ZAXIS, viewdirLS) 
+    if math.abs(zLS) < 0.9995 then    -- dot(mc.ZAXIS, viewdirLS) 
 		local x, y      = math3d.index(viewdirLS, 1, 2)
         local vp        = math3d.normalize(math3d.vector(x, y, 0)) -- wrap direction in light-space
         local right     = math3d.cross(vp, mc.ZAXIS)
@@ -21,7 +21,7 @@ end
 local function calc_near_far(M, points)
     local n, f = math.maxinteger, -math.maxinteger
     for _, v in ipairs(points) do
-        local vv = math3d.transform(M, v)
+        local vv = math3d.transform(M, v, 1)
         local z = math3d.index(vv, 3)
         n = math.min(n, z)
         f = math.max(f, z)
@@ -63,8 +63,8 @@ function L.warp_matrix(camerainfo, lsShadowVolume)
 
     -- math3d.inverse(Lv) to transform point in light space to worldspace
     -- camerainfo.cameraviewmat to tranfrom point from worldspace to camera view space
-    -- ptCVS = CVS * inverse(L) * ptLS
-    local Lv2Cv = math3d.mul(camerainfo.cameraviewmat, math3d.inverse(Lv)) --matrix for transform light view space to camera view space
+    -- ptCv = Cv * inverse(L) * ptLS
+    local Lv2Cv = math3d.mul(camerainfo.Cv, math3d.inverse(Lv)) --matrix for transform light view space to camera view space
     local zn, zf = calc_near_far(Lv2Cv, lsShadowVolume)
 
     zn = math.max(camerainfo.zn, zn) -- near plane distance from the eye
@@ -105,11 +105,11 @@ function L.warp_matrix(camerainfo, lsShadowVolume)
         -- We simply use the max of the two expressions
         local nopt = math.max(nopt0, nopt1)
 
-        local cameraposLS = math3d.transformH(Lrpv, camerainfo.position);
+        local cameraposLS = math3d.transformH(Lrpv, camerainfo.cameraposWS);
         local p = math3d.vector(
                 -- Another option here is to use lsShadowReceiversCenter.x, which skews less the
                 -- x-axis. Doesn't seem to make a big difference in the end.
-                cameraposLS.x,
+                math3d.index(cameraposLS, 1),
                 n_WS - nopt,
                 -- Note: various papers suggest using the shadow receiver's center z coordinate in light
                 -- space, i.e. to center "vertically" on the shadow receiver volume.

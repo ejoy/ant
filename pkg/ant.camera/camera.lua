@@ -28,7 +28,7 @@ local function def_frustum(f)
     return f
 end
 
-function ic.create(info)
+function ic.create(info, onready)
     info = info or {}
     local frustum = def_frustum(info.frustum)
     local policy = {
@@ -54,7 +54,8 @@ function ic.create(info)
                 clip_range = info.clip_range,
                 dof     = info.dof,
             },
-        }
+            on_ready = onready,
+        },
     }
 end
 
@@ -167,10 +168,10 @@ end
 function cameraview_sys:entity_init()
     for e in w:select "INIT camera:in camera_changed?out" do
         local camera = e.camera
-        camera.viewmat       = math3d.ref(math3d.matrix())
-        camera.projmat       = math3d.ref(math3d.matrix())
-        camera.infprojmat    = math3d.ref(math3d.matrix())
-        camera.viewprojmat   = math3d.ref(math3d.matrix())
+        camera.viewmat       = math3d.ref()
+        camera.projmat       = math3d.ref()
+        camera.infprojmat    = math3d.ref()
+        camera.viewprojmat   = math3d.ref()
 
         e.camera_changed    = true
     end
@@ -192,7 +193,7 @@ local function merge_camera_changed()
 end
 function cameraview_sys:update_camera()
     merge_camera_changed()
-    for e in w:select "camera_changed camera:in scene:in" do
+    for e in w:select "camera_changed camera_depend:absent camera:in scene:in" do
         update_camera(e)
     end
 end

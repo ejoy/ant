@@ -25,7 +25,7 @@ local queuemgr  = require "queue_mgr"
 
 local ishadowcfg= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
-local irq       = ecs.require "render_system.render_queue"
+local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
 
 local LiSPSM	= require "shadow.LiSPSM"
@@ -60,7 +60,7 @@ end
 local function create_csm_entity(index, vr, fbidx)
 	local csmname = "csm" .. index
 	local queuename = csmname .. "_queue"
-	local camera_ref = icamera.create {
+	local camera_ref = icamera.create({
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
 			eyepos 	= mc.ZERO_PT,
@@ -69,7 +69,20 @@ local function create_csm_entity(index, vr, fbidx)
 				n = 1, f = 100, ortho = true,
 			},
 			name = csmname
-		}
+		}, function (e)
+			w:extend(e, "camera:update")
+			local c = e.camera
+			c.Lr	= math3d.ref()
+			c.Wv	= math3d.ref()
+			c.Wp	= math3d.ref()
+			c.Wpv	= math3d.ref()
+			c.Wpvl	= math3d.ref()
+			c.W		= math3d.ref()
+
+			c.F		= math3d.ref()
+			c.FinalMat=	math3d.ref()
+			w:submit(e)
+		end)
 	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -115,35 +128,56 @@ function shadow_sys:init()
 	imaterial.system_attrib_update("u_shadow_param2", ishadowcfg.shadow_param2())
 end
 
+local function set_csm_visible(enable)
+	for v in w:select "csm visible?out" do
+		v.visible = enable
+	end
+end
+
+function shadow_sys:entity_init()
+	for e in w:select "INIT make_shadow directional_light light:in csm_directional_light?update" do
+		if w:count "csm_directional_light" > 0 then
+			log.warn("Multi directional light for csm shaodw")
+		end
+		e.csm_directional_light = true
+		set_csm_visible(true)
+	end
+end
+
+function shadow_sys:entity_remove()
+	for _ in w:select "REMOVED csm_directional_light" do
+		set_csm_visible(false)
+	end
+end
+
 local function merge_visible_bounding(M, aabb, e, queuemask)
 	local ro = e.render_object
-	if 0 == (queuemask & ro.cull_masks) and
-		0 ~= (queuemask & ro.visible_masks) then
-		aabb = math3d.merge(aabb, math3d.aabb_transform(M, e.bounding.aabb))
+	if 0 ~= (queuemask & ro.visible_masks) then
+		aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.aabb))
 	end
 
+	return aabb
+end
+
+local function build_aabb(Lv, queuemask, tag)
+	local aabb = math3d.aabb()
+	for e in w:select(("%s render_object:in bounding:in"):format(tag)) do
+		aabb = merge_visible_bounding(Lv, aabb, e, queuemask)
+	end
 	return aabb
 end
 
 local function build_PSR(Lv, queuemask)
-	local aabb = math3d.aabb()
-	for e in w:select "receive_shadow render_object:in" do
-		merge_visible_bounding(Lv, aabb, e, queuemask)
-	end
-	return aabb
+	return build_aabb(Lv, queuemask, "receive_shadow")
 end
 
 local function build_PSC(Lv, queuemask)
-	local aabb = math3d.aabb()
-	for e in w:select "cast_shadow render_object:in bounding:in" do
-		merge_visible_bounding(Lv, aabb, e, queuemask)
-	end
-
-	return aabb
+	return build_aabb(Lv, queuemask, "cast_shadow")
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
-	local minv, maxv = math3d.array_index(math3d.aabb_merge(PSC, PSR), 1, 2)
+	local aabb = math3d.aabb_merge(PSC, PSR)
+	local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
 	local PSC_minz = math3d.index(math3d.array_index(PSC, 1), 3)
 	local PSR_maxz = math3d.index(math3d.array_index(PSR, 2), 3)
 	--because PSR_minz/PSC_maxz is no meanning, caster is far than receive, it's shadow can not be test by any visible object
@@ -154,14 +188,14 @@ end
 
 local function frustum_points(M, n, f)
 	return {
-		math3d.tranform(M, math3d.vector(-1.0,-1.0, n, 1.0), 1),	-- 1
-		math3d.tranform(M, math3d.vector(-1.0, 1.0, n, 1.0), 1),	-- 2
-		math3d.tranform(M, math3d.vector( 1.0,-1.0, n, 1.0), 1),	-- 3
-		math3d.tranform(M, math3d.vector( 1.0, 1.0, n, 1.0), 1),	-- 4
-		math3d.tranform(M, math3d.vector(-1.0,-1.0, f, 1.0), 1),	-- 5
-		math3d.tranform(M, math3d.vector(-1.0, 1.0, f, 1.0), 1),	-- 6
-		math3d.tranform(M, math3d.vector( 1.0 -1.0, f, 1.0), 1),	-- 7
-		math3d.tranform(M, math3d.vector( 1.0, 1.0, f, 1.0), 1),	-- 8
+		math3d.transform(M, math3d.vector(-1.0,-1.0, n, 1.0), 1),	-- 1
+		math3d.transform(M, math3d.vector(-1.0, 1.0, n, 1.0), 1),	-- 2
+		math3d.transform(M, math3d.vector( 1.0,-1.0, n, 1.0), 1),	-- 3
+		math3d.transform(M, math3d.vector( 1.0, 1.0, n, 1.0), 1),	-- 4
+		math3d.transform(M, math3d.vector(-1.0,-1.0, f, 1.0), 1),	-- 5
+		math3d.transform(M, math3d.vector(-1.0, 1.0, f, 1.0), 1),	-- 6
+		math3d.transform(M, math3d.vector( 1.0 -1.0, f, 1.0), 1),	-- 7
+		math3d.transform(M, math3d.vector( 1.0, 1.0, f, 1.0), 1),	-- 8
 	}
 end
 
@@ -179,39 +213,16 @@ quad2tri(BOX_TRIANGLES_INDICES, 3, 7, 1, 5) -- bottom
 quad2tri(BOX_TRIANGLES_INDICES, 1, 2, 3, 4) -- near
 quad2tri(BOX_TRIANGLES_INDICES, 5, 6, 7, 8) -- far
 
-local BOX_RAYS_INDICES<const> = {
+assert(#BOX_TRIANGLES_INDICES == 6*2)
+
+local BOX_SEGMENT_INDICES<const> = {
 	{1, 2}, {2, 3}, {3, 4}, {4, 1},
 	{5, 6}, {6, 7}, {7, 8}, {8, 5},
 
 	{1, 5}, {2, 6}, {3, 7}, {4, 8},
 }
 
-local function segment_iter(points)
-	local i = 0
-	return function (t)
-		i = i+1
-		if i <= #BOX_RAYS_INDICES then
-			local s = BOX_RAYS_INDICES[i]
-			local i0, i1 = s[1], s[2]
-			return t[s[1]], t[i1]
-		end
-	end, points
-end
-
-local function tri_iter(points)
-	local i = 0
-	local len<const> = #BOX_TRIANGLES_INDICES*2
-	return function (t)
-		i = i + 1
-		if i <= len then
-			local ii = i // 2
-			local si = i % 2
-			local tri = BOX_TRIANGLES_INDICES[ii][si]
-			local t0, t1, t2 = tri[1], tri[2], tri[3]
-			return points[t0], points[t1], points[t2]
-		end
-	end, points
-end
+assert(#BOX_SEGMENT_INDICES == 4*3)
 
 local function frustum_interset_aabb(M, aabbLS, nearCS, farCS)
 	local nearLS, farLS = math.maxinteger, -math.maxinteger
@@ -219,28 +230,22 @@ local function frustum_interset_aabb(M, aabbLS, nearCS, farCS)
 	local function update_nearfar(p)
 		local z = math3d.index(p, 3)
 		nearLS = math.min(nearLS, z)
-		farLS = math.min(farLS, z)
+		farLS = math.max(farLS, z)
 		return p
 	end
 
 	local cornersLS = frustum_points(M, nearCS, farCS)
 	local verticesLS = {}
 	for _, corner in ipairs(cornersLS) do
-		if math3d.aabb_test_point(corner, aabbLS) >= 0 then
+		if math3d.aabb_test_point(aabbLS, corner) >= 0 then
 			verticesLS[#verticesLS+1] = update_nearfar(corner)
 		end
 	end
-
-	local triangles = {}
-	for v0, v1, v2 in tri_iter(cornersLS) do
-		triangles[#triangles+1] = v0
-		triangles[#triangles+1] = v1
-		triangles[#triangles+1] = v2
-	end
-
-	for s0, s1 in segment_iter(math3d.aabb_points(aabbLS)) do
-		for i=1, #triangles, 3 do
-			local p = mu.segment_triangle(s0, s1, triangles[i], triangles[i+1], triangles[i+2])
+	local aabbpoints = math3d.aabb_points(aabbLS)
+	for _, l in ipairs(BOX_SEGMENT_INDICES) do
+		local s0, s1 = aabbpoints[l[1]], aabbpoints[l[2]]
+		for _, t in ipairs(BOX_TRIANGLES_INDICES) do
+			local p = mu.segment_triangle(s0, s1, cornersLS[t[1]], cornersLS[t[2]], cornersLS[t[3]])
 			if p then
 				verticesLS[#verticesLS+1] = update_nearfar(p)
 			end
@@ -260,13 +265,10 @@ local function mark_camera_changed(e)
 end
 
 local function calc_focus_matrix(M, verticesLS)
-	local sx, sy = 1, 1
-	local tx, ty = 0, 0
-
 	local aabb = math3d.aabb()
 	for _, v in ipairs(verticesLS) do
 		local p = math3d.transform(M, v, 1)
-		aabb = math3d.aabb_append(p)
+		aabb = math3d.aabb_append(aabb, p)
 	end
 
 	-- extents = maxv - minv
@@ -274,8 +276,9 @@ local function calc_focus_matrix(M, verticesLS)
 	local center, extents = math3d.aabb_center_extents(aabb)
 
 	local ex, ey = math3d.index(extents, 1, 2)
-	sx, sy = 2.0 / ex, 2.0 / ey
-	tx, ty = math3d.index(center, 1, 2)
+	local sx, sy = 2.0/ex, 2.0/ey
+
+	local tx, ty = math3d.index(center, 1, 2)
 	-- inverse scale to translation
 	tx, ty = -sx * tx, -sy * ty
 
@@ -287,25 +290,20 @@ local function calc_focus_matrix(M, verticesLS)
 end
 
 local function update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
-	local function M(which, n)
-		math3d.unmark(c[which])
-		c[which] = math3d.mark(n)
-	end
+	c.viewmat.m		= Lv
+	c.projmat.m		= Lp
+	c.viewprojmat.m	= math3d.mul(Lv, Lp)
 
-	M("viewmat", 	Lv)
-	M("porjmat", 	Lp)
-	M("viewprojmat",math3d.mul(Lv, Lp))
-
-	M("Lr", 		Lr)
-	M("Wv", 		Wv)
-	M("Wp", 		Wp)
-	M("Wpv", 		math3d.mul(Wp, Wv))
-	M("Wpvl", 		math3d.mul(c.Wpv, Lr))
-	M("W", 			math3d.mul(c.Wpvl, c.viewprojgmat))
+	c.Lr.m	= Lr
+	c.Wv.m	= Wv
+	c.Wp.m	= Wp
+	c.Wpv.m	= math3d.mul(Wp, Wv)
+	c.Wpvl.m= math3d.mul(c.Wpv, Lr)
+	c.W.m	= math3d.mul(c.Wpvl, c.viewprojmat)
 
 	local F = calc_focus_matrix(c.W, verticesLS)
-	M("F",			F)
-	M("FinalMat",	math3d.mul(c.F, c.W))
+	c.F.m		= F
+	c.FinalMat.m= math3d.mul(c.F, c.W)
 end
 
 local function commit_csm_matrices_attribs()
@@ -329,24 +327,28 @@ function shadow_sys:refine_camera()
     if not C then
         return
     end
+
+	local D = w:first "make_shadow directional_light scene:in"
+	if not D then
+		return 
+	end
+
     w:extend(C, "eid:in")
     if C.eid ~= irq.main_camera() then
         return 
     end
 
-    w:extend(C, "camera:in")
+    w:extend(C, "scene:in camera:in")
+	local lightdirWS = math3d.index(D.scene.worldmat, 3)
 
-	local dl = w:first "make_shadow directional_light scene:in"
-	local lightdirWS = math3d.index(dl.scene.worldmat, 3)
-
-	local rightdir, viewdir = math3d.index(C.worldmat, 1, 3)
+	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
 
 	local queuemask = queuemgr.queue_mask "csm1_queue" | queuemgr.queue_mask "csm2_queue" | queuemgr.queue_mask "csm3_queue" | queuemgr.queue_mask "csm4_queue"
 	local PSR, PSC = build_PSR(Lv, queuemask), build_PSC(Lv, queuemask)
-	local sceneaabb = merge_PSC_and_PSR(PSC, PSR)
+	local sceneaabbLS = merge_PSC_and_PSR(PSC, PSR)
 
-	local M = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
+	local Ndc2Lv = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
 
 	local viewdirLS = math3d.transform(Lv, viewdir, 0)
 	local Lr = LiSPSM.rotation_matrix(viewdirLS)
@@ -369,24 +371,25 @@ function shadow_sys:refine_camera()
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "camera:in")
         local c = ce.camera
-        local csm = ce.csm
+        local csm = e.csm
 
 		local sr	= split_ratio[csm.index]
-		local verticesLS, nearLS, farLS	= frustum_interset_aabb(M, sceneaabb, sr[1], sr[2])
+		local verticesLS, nearLS, farLS	= frustum_interset_aabb(Ndc2Lv, sceneaabbLS, sr[1], sr[2])
 
 		local Lp	= math3d.projmat{l=-1, r=1, t=1, b=-1, n=nearLS, f=farLS, ortho=true}
 		local Lrp	= math3d.mul(Lr, Lp)
 		local camerainfo = {
-			Lv				= Lv,
-			Lrp				= Lrp,
-			Lrpv			= math3d.mul(Lrp, Lv),
-			Cv				= Cv,
-			viewdirWS		= viewdir,
-			lightdirWS		= lightdirWS,
-			zn				= zn,
-			zf				= zf,
-			nearHit			= nearHit,
-			farHit			= farHit,
+			Lv			= Lv,
+			Lrp			= Lrp,
+			Lrpv		= math3d.mul(Lrp, Lv),
+			Cv			= Cv,
+			viewdirWS	= viewdir,
+			lightdirWS	= lightdirWS,
+			cameraposWS	= posWS,
+			zn			= zn,
+			zf			= zf,
+			nearHit		= nearHit,
+			farHit		= farHit,
 		}
 		local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
 		update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
@@ -460,7 +463,7 @@ function shadow_sys:update_filter()
 				fm["csm4_queue"] = mi
 	
 				mat_ptr = mi:ptr()
-				e.cast_shadow = true
+				castshadow = true
 			end
 	
 			R.set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)

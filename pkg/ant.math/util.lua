@@ -329,7 +329,7 @@ function util.ray_plane_point(ray, plane)
 end
 
 function util.ray_triangle(ray, v0, v1, v2)
-	local success, t = math3d.ray_triangle(ray.o, ray.d, v0, v1, v2)
+	local success, t = math3d.triangle_ray(ray.o, ray.d, v0, v1, v2)
 	if success then
 		return util.ray_point(ray, t)
 	end
@@ -337,7 +337,7 @@ end
 
 function util.segment_triangle(s0, s1, v0, v1, v2)
 	local r = util.create_ray(s0, s1)
-	local success, t = math3d.ray_triangle(r.o, r.d, v0, v1, v2)
+	local success, t = math3d.triangle_ray(r.o, r.d, v0, v1, v2)
 	if success and 0 <= t and t <= 1.0 then
 		return util.ray_point(r, t)
 	end

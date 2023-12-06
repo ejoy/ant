@@ -315,7 +315,7 @@ function sm:update_filter()
 				fm["csm4_queue"] = mi
 	
 				mat_ptr = mi:ptr()
-				e.cast_shadow = true
+				castshadow = true
 			end
 	
 			R.set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)
