@@ -14,7 +14,7 @@ local aio = import_package "ant.io"
 local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
 
-local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
+local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
 
 local hwi       = import_package "ant.hwi"
 hwi.init_bgfx()
