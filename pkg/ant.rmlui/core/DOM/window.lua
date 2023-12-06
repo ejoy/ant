@@ -1,5 +1,4 @@
 local rmlui = require "rmlui"
-local ltask = require "ltask"
 local timer = require "core.timer"
 local task = require "core.task"
 local event = require "core.event"
