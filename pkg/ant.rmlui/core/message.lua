@@ -8,8 +8,16 @@ local msghandler = {}
 local MESSAGE_SEND <const> = 0
 local MESSAGE_CALL <const> = 1
 
-function m.set(what, func)
+function m.on(what, func)
     msghandler[what] = func
+end
+
+function m.send(id, ...)
+    ltask.send(id, "sendMessage", ...)
+end
+
+function m.call(id, ...)
+    return ltask.call(id, "callMessage", ...)
 end
 
 function m.dispatch()
@@ -38,11 +46,13 @@ function m.dispatch()
     end
 end
 
-function m.send(...)
+local S = ltask.dispatch {}
+
+function S.sendMessage(...)
     msgqueue[#msgqueue+1] = {MESSAGE_SEND, ...}
 end
 
-function m.call(...)
+function S.callMessage(...)
     local msg = {MESSAGE_CALL, ...}
     msgqueue[#msgqueue+1] = msg
     return ltask.wait(msg)

@@ -8,10 +8,6 @@ local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local S = ltask.dispatch()
-S.sendMessage = message.send
-S.callMessage = message.call
-
 local windows = {}
 
 
@@ -39,14 +35,14 @@ function iRmlUi.open(name, url)
     return window
 end
 
-iRmlUi.onMessage = message.set
+iRmlUi.onMessage = message.on
 
 function iRmlUi.callMessage(...)
-    return ltask.call(ServiceRmlUi, "callMessage", ...)
+    return message.call(ServiceRmlUi, ...)
 end
 
 function iRmlUi.sendMessage(...)
-    ltask.send(ServiceRmlUi, "sendMessage", ...)
+    message.send(ServiceRmlUi, ...)
 end
 
 return iRmlUi

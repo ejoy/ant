@@ -57,8 +57,6 @@ end
 
 S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
-S.sendMessage = message.send
-S.callMessage = message.call
 
 local viewid = hwi.viewid_get "uiruntime"
 hwi.init_bgfx()

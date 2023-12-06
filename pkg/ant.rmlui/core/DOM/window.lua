@@ -65,16 +65,16 @@ local function createWindow(document, name)
         eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
     end
     function window.onMessage(what, func)
-        message.set(what, func)
+        message.on(what, func)
     end
     function window.getName()
         return name
     end
     function window.callMessage(...)
-        return ltask.send(ServiceWorld, "sendMessage", ...)
+        return message.call(ServiceWorld, ...)
     end
     function window.sendMessage(...)
-        ltask.send(ServiceWorld, "callMessage", ...)
+        message.send(ServiceWorld, ...)
     end
     local ctors = {}
     local customElements = {}
