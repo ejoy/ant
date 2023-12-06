@@ -12,16 +12,6 @@ function m.set(what, func)
     msghandler[what] = func
 end
 
-function m.send(...)
-    msgqueue[#msgqueue+1] = {MESSAGE_SEND, ...}
-end
-
-function m.call(...)
-    local msg = {MESSAGE_CALL, ...}
-    msgqueue[#msgqueue+1] = msg
-    return ltask.wait(msg)
-end
-
 function m.dispatch()
     if #msgqueue == 0 then
         return
@@ -46,6 +36,16 @@ function m.dispatch()
             ltask.wakeup(msg)
         end
     end
+end
+
+function m.send(...)
+    msgqueue[#msgqueue+1] = {MESSAGE_SEND, ...}
+end
+
+function m.call(...)
+    local msg = {MESSAGE_CALL, ...}
+    msgqueue[#msgqueue+1] = msg
+    return ltask.wait(msg)
 end
 
 return m

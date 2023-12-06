@@ -55,10 +55,6 @@ function S.close(...)
     extern_windows.push("close", ...)
 end
 
-function S.postMessage(...)
-    extern_windows.push("postMessage", ...)
-end
-
 S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
 S.sendMessage = message.send

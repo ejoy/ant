@@ -71,10 +71,10 @@ local function createWindow(document, name)
         return name
     end
     function window.callMessage(...)
-        return ltask.send(ServiceWorld, "rmlui_send", ...)
+        return ltask.send(ServiceWorld, "sendMessage", ...)
     end
     function window.sendMessage(...)
-        ltask.send(ServiceWorld, "rmlui_call", ...)
+        ltask.send(ServiceWorld, "callMessage", ...)
     end
     local ctors = {}
     local customElements = {}
