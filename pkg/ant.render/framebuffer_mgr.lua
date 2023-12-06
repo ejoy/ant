@@ -250,12 +250,4 @@ function mgr.clear()
 	end
 end
 
-function mgr.unmark_rb(fbidx, who)
-	local fb = FRAMEBUFFERS[fbidx]
-	local rbidx = fb[who].rbidx
-	destroy_rb(rbidx, true)
-	table.remove(fb, who)
-	RENDER_BUFFERS[rbidx] = nil
-end
-
 return mgr
