@@ -63,7 +63,7 @@ static const std::unordered_map<std::string, Keyword> keywords = {
 
 std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& value) const {
 	std::vector<std::string> animation_values;
-	StringUtilities::ExpandString(animation_values, StringUtilities::ToLower(value), ',');
+	StringUtilities::ExpandString(animation_values, value, ',');
 
 	AnimationList animation_list;
 
@@ -172,7 +172,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 
 std::optional<Property> PropertyParserTransition::ParseValue(const std::string& value) const {
 	std::vector<std::string> transition_values;
-	StringUtilities::ExpandString(transition_values, StringUtilities::ToLower(value), ',');
+	StringUtilities::ExpandString(transition_values, value, ',');
 
 	TransitionList transition_list;
 

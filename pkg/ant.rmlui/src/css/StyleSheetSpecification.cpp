@@ -131,7 +131,7 @@ PropertyParser* PropertyRegister::GetKeywordParser(const std::string& parser_par
 	}
 	PropertyParserKeyword* new_parser = new PropertyParserKeyword();
 	std::vector<std::string> parameter_list;
-	StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters), ',');
+	StringUtilities::ExpandString(parameter_list, parser_parameters, ',');
 	for (size_t i = 0; i < parameter_list.size(); i++) {
 		new_parser->parameters[parameter_list[i]] = (int) i;
 	}
@@ -248,7 +248,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 	MapAdd(shorthand_map, shorthand_name, id);
 
 	std::vector<std::string> property_list;
-	StringUtilities::ExpandString(property_list, StringUtilities::ToLower(property_names), ',');
+	StringUtilities::ExpandString(property_list, property_names, ',');
 
 	auto& property_shorthand = shorthands[(size_t)id];
 

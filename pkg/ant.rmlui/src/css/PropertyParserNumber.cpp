@@ -52,7 +52,7 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 	}
 
 	std::string str_number = value.substr(0, unit_pos);
-	std::string str_unit = StringUtilities::ToLower(value.substr(unit_pos));
+	std::string str_unit = value.substr(unit_pos);
 
 	char* str_end = nullptr;
 	float float_value = strtof(str_number.c_str(), &str_end);
