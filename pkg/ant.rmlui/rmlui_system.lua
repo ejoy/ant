@@ -10,13 +10,21 @@ local rmlui_sys = ecs.system "rmlui_system"
 local S = ltask.dispatch()
 
 local msgqueue = {}
+local msghandler = {}
+local windows = {}
 
-function S.rmlui_message(...)
-	msgqueue[#msgqueue+1] = {...}
+local MESSAGE_SEND <const> = 0
+local MESSAGE_CALL <const> = 1
+
+function S.rmlui_send(...)
+    msgqueue[#msgqueue+1] = {MESSAGE_SEND, ...}
 end
 
-local windows = {}
-local events = {}
+function S.rmlui_call(...)
+    local msg = {MESSAGE_CALL, ...}
+    msgqueue[#msgqueue+1] = msg
+    return ltask.wait(msg)
+end
 
 function rmlui_sys:ui_update()
     if #msgqueue == 0 then
@@ -26,11 +34,20 @@ function rmlui_sys:ui_update()
     msgqueue = {}
     for i = 1, #mq do
         local msg = mq[i]
-        local name, data = msg[1], msg[2]
-        local window = windows[name]
-        local event = events[name]
-        if window and event then
-            event(data)
+        local type = msg[1]
+        if type == MESSAGE_SEND then
+            local what = msg[2]
+            local func = msghandler[what]
+            if func then
+                func(table.unpack(msg, 3))
+            end
+        elseif type == MESSAGE_CALL then
+            local what = msg[2]
+            local func = msghandler[what]
+            if func then
+                func(table.unpack(msg, 3))
+            end
+            ltask.wakeup(msg)
         end
     end
 end
@@ -51,15 +68,23 @@ function iRmlUi.open(name, url)
     function window.close()
         ltask.send(ServiceRmlUi, "close", name)
         windows[name] = nil
-        events[name] = nil
     end
     function window.postMessage(...)
         ltask.send(ServiceRmlUi, "postMessage", name, ...)
     end
-    function window.onMessage(listener)
-        events[name] = listener
-    end
     return window
+end
+
+function iRmlUi.onMessage(what, func)
+    msghandler[what] = func
+end
+
+function iRmlUi.callMessage(...)
+    return ltask.call(ServiceRmlUi, "callMessage", ...)
+end
+
+function iRmlUi.sendMessage(...)
+    ltask.send(ServiceRmlUi, "sendMessage", ...)
 end
 
 return iRmlUi

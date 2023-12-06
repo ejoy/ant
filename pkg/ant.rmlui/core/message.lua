@@ -1,45 +1,51 @@
-local event = require "core.event"
+local ltask = require "ltask"
 
 local m = {}
 
-local E = {}
+local msgqueue = {}
+local msghandler = {}
 
-function m.add(document, func)
-    local L = E[document]
-    L[#L+1] = func
-    return {func}
+local MESSAGE_SEND <const> = 0
+local MESSAGE_CALL <const> = 1
+
+function m.set(what, func)
+    msghandler[what] = func
 end
 
-function m.remove(document, id)
-    local L = E[document]
-    if not L then
+function m.send(...)
+    msgqueue[#msgqueue+1] = {MESSAGE_SEND, ...}
+end
+
+function m.call(...)
+    local msg = {MESSAGE_CALL, ...}
+    msgqueue[#msgqueue+1] = msg
+    return ltask.wait(msg)
+end
+
+function m.dispatch()
+    if #msgqueue == 0 then
         return
     end
-    local func = id[1]
-    for i = 1, #L do
-        if L[i] == func then
-            table.remove(L, i)
-            break
+    local mq = msgqueue
+    msgqueue = {}
+    for i = 1, #mq do
+        local msg = mq[i]
+        local type = msg[1]
+        if type == MESSAGE_SEND then
+            local what = msg[2]
+            local func = msghandler[what]
+            if func then
+                func(table.unpack(msg, 3))
+            end
+        elseif type == MESSAGE_CALL then
+            local what = msg[2]
+            local func = msghandler[what]
+            if func then
+                func(table.unpack(msg, 3))
+            end
+            ltask.wakeup(msg)
         end
     end
-end
-
-function m.dispatch(document, ...)
-    local L = E[document]
-    local funcs = {}
-    table.move(L, 1, #L, 1, funcs)
-    for i = 1, #funcs do
-        local func = funcs[i]
-        func(...)
-    end
-end
-
-function event.OnDocumentCreate(document)
-    E[document] = {}
-end
-
-function event.OnDocumentDestroy(document)
-    E[document] = nil
 end
 
 return m
