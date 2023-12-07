@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:lua_source "hierarchy" {
+lm:lua_source "ozz" {
     deps = {
         "ozz-animation-base",
         "ozz-animation-runtime",
@@ -15,12 +15,13 @@ lm:lua_source "hierarchy" {
         Ant3rd .. "ozz-animation/include",
         Ant3rd .. "glm",
         Ant3rd .. "bee.lua",
+        "../luabind",
     },
     sources = {
         "hierarchy.cpp",
         "hierarchy_node.cpp",
         "animation.cpp",
-        "ik.cpp",
+        "ozz.cpp",
         Ant3rd .. "ozz-animation/samples/framework/mesh.cc"
     },
     defines = {

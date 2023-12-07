@@ -4,7 +4,7 @@ local w 	= world.w
 
 import_package "ant.math"
 local assetmgr 		= import_package "ant.asset"
-local animodule 	= require "hierarchy".animation
+local ozz 	= require "ozz"
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
@@ -105,7 +105,7 @@ function ani_sys:component_init()
 		end
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skehandle = e.skeleton._handle
-		local pose_result = animodule.new_pose_result(#skehandle)
+		local pose_result = ozz.new_pose_result(#skehandle)
 		pose_result:setup(skehandle)
 		e.anim_ctrl.pose_result = pose_result
 		e.anim_ctrl.keyframe_events = {}
@@ -137,8 +137,8 @@ function ani_sys:component_init()
 		e.meshskin = {
 			skin = skin,
 			pose = iani.create_pose(),
-			skinning_matrices = animodule.new_bind_pose(count),
-			prev_skinning_matrices = animodule.new_bind_pose(count)
+			skinning_matrices = ozz.new_bind_pose(count),
+			prev_skinning_matrices = ozz.new_bind_pose(count)
 		}
 	end
 end

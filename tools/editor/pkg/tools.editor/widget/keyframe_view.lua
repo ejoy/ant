@@ -14,7 +14,7 @@ local utils     = require "common.utils"
 local widget_utils  = require "widget.utils"
 local stringify     = import_package "ant.serialize".stringify
 local hierarchy = require "hierarchy_edit"
-local animation = require "hierarchy".animation
+local ozz = require "ozz"
 local math3d        = require "math3d"
 local icons     = require "common.icons"
 local mathpkg	= import_package "ant.math"
@@ -839,9 +839,9 @@ local function create_animation(animtype, name, duration, target_anims)
             new_anim = {}
         else
             new_anim = {
-                raw_animation = animation.new_raw_animation(),
+                raw_animation = ozz.new_raw_animation(),
                 _duration = td,
-                _sampling_context = animation.new_sampling_context(1)
+                _sampling_context = ozz.new_sampling_context(1)
             }
             new_anim.raw_animation:setup(current_skeleton._handle, td)
             local e <close> = world:entity(anim_eid, "animation:in")

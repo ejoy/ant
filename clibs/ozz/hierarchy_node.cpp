@@ -423,5 +423,6 @@ register_hierarchy_node(lua_State *L) {
 		{nullptr, 			nullptr},
 	};
 
-	luaL_setfuncs(L, l, 0);	
+	luaL_setfuncs(L, l, 0);
+	lua_pop(L, 1);
 }

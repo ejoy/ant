@@ -9,7 +9,6 @@ pipeline "animation"
 
 pipeline "refine_animation_pose"
     .stage "do_refine"
-    .stage "do_ik"
 
 policy "animation"
     .component "skeleton"

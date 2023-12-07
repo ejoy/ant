@@ -20,9 +20,6 @@
 #include <ozz/base/maths/soa_float4x4.h>
 #include <ozz/base/maths/simd_quaternion.h>
 
-#include <ozz/animation/runtime/ik_two_bone_job.h>
-#include <ozz/animation/runtime/ik_aim_job.h>
-
 #include <ozz/base/memory/allocator.h>
 #include <ozz/base/io/stream.h>
 #include <ozz/base/io/archive.h>
@@ -273,12 +270,6 @@ struct alignas(8) ozzBindpose : public ozzBindposeT<ozzBindpose>{
 	ozzBindpose(size_t numjoints, const float *data):ozzBindposeT<ozzBindpose>(numjoints, data){}
 };
 REGISTER_LUA_CLASS(ozzBindpose)
-
-extern bool
-do_ik(lua_State* L,
-	const ozz::animation::Skeleton *ske,
-	bindpose_soa &bp_soa, 
-	bindpose &result_pose);
 
 struct ozzAllocator : public luaClass<ozzAllocator> {
 	void* v;
@@ -595,13 +586,6 @@ private:
 		return 0;
 	}
 
-	int do_ik(lua_State* L) {
-		if (!::do_ik(L, m_ske, m_results.back(), *this)){
-			luaL_error(L, "do_ik failed!");
-		}
-		return 0;
-	}
-
 	int fetch_result(lua_State* L) {
 		if (m_ske == nullptr)
 			return luaL_error(L, "invalid skeleton!");
@@ -669,7 +653,6 @@ private:
 	STATIC_MEM_FUNC(setup);
 	STATIC_MEM_FUNC(do_sample);
 	STATIC_MEM_FUNC(fetch_result);
-	STATIC_MEM_FUNC(do_ik);
 	STATIC_MEM_FUNC(clear);
 	STATIC_MEM_FUNC(fix_root_XZ);
 	STATIC_MEM_FUNC(joint_local_srt);
@@ -681,7 +664,6 @@ public:
 			{ "setup",		  	lsetup},
 			{ "do_sample",	  	ldo_sample},
 			{ "fetch_result", 	lfetch_result},
-			{ "do_ik",		  	ldo_ik},
 			{ "end_animation",	lclear},
 			{ "clear",			lclear},
 			{ "fix_root_XZ", 	lfix_root_XZ},
@@ -879,13 +861,12 @@ const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia){
 	return ozzAnimation::create(L, ia);
 }
 
-int init_animation(lua_State *L) {
+void init_animation(lua_State *L) {
 	ozzJointRemap::registerMetatable(L);
 	ozzBindpose::registerMetatable(L);
 	ozzPoseResult::registerMetatable(L);
 	ozzRawAnimation::registerMetatable(L);
 
-	lua_newtable(L);
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
@@ -901,6 +882,5 @@ int init_animation(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L,l,0);
-	return 1;
 }
 

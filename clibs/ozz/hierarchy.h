@@ -19,22 +19,3 @@ struct hierarchy_build_data {
 
 using bindpose_soa = ozz::vector<ozz::math::SoaTransform>;
 using bindpose = ozz::vector<ozz::math::Float4x4>;
-
-struct ik_data{
-	std::string 				type;
-	ozz::math::SimdFloat4		target;
-	ozz::math::SimdFloat4		pole_vector;
-	union{
-		ozz::math::SimdFloat4	up_axis;
-		ozz::math::SimdFloat4	mid_axis;
-	};
-	
-	
-	ozz::math::SimdFloat4		forward;
-	ozz::math::SimdFloat4		offset;
-	
-	float 						weight;
-	float 						twist_angle;
-	float 						soften;
-	uint16_t					joints[3];
-};
