@@ -1615,11 +1615,17 @@ wListBox(lua_State *L) {
 	return 1;
 }
 
-
+static ImTextureID getTextureId(lua_State* L, int idx) {
+	int lua_handle = (int)luaL_checkinteger(L, idx);
+	if (auto id = rendererGetTextureID(lua_handle)) {
+		return *id;
+	}
+	luaL_error(L, "Invalid handle type TEXTURE");
+	std::unreachable();
+}
 
 static int wImage(lua_State *L) {
-	int lua_handle = (int)luaL_checkinteger(L, 1);
-	ImTextureID tex_id = rendererGetTextureID(L, lua_handle);
+	ImTextureID tex_id = getTextureId(L, 1);
 	float size_x = (float)luaL_checknumber(L, 2);
 	float size_y = (float)luaL_checknumber(L, 3);
 	ImVec2 size = { size_x, size_y };
@@ -1643,8 +1649,7 @@ static int wImage(lua_State *L) {
 static int
 wImageButton(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	int lua_handle = (int)luaL_checkinteger(L, 2);
-	ImTextureID tex_id = rendererGetTextureID(L, lua_handle);
+	ImTextureID tex_id = getTextureId(L, 2);
 	float size_x = (float)luaL_checknumber(L, 3);
 	float size_y = (float)luaL_checknumber(L, 4);
 	ImVec2 size = { size_x, size_y };
@@ -2809,7 +2814,7 @@ fCreate(lua_State *L) {
 		luaL_error(L, "Create font failed.");
 		return 0;
 	}
-	rendererBuildFont(L);
+	rendererBuildFont();
 	return 0;
 }
 
@@ -3014,6 +3019,19 @@ lEndFrame(lua_State* L){
 }
 
 static int
+lInitRender(lua_State* L) {
+	RendererInitArgs initargs;
+	initargs.font_prog = (int)luaL_checkinteger(L, 1);
+	initargs.image_prog = (int)luaL_checkinteger(L, 2);
+	initargs.font_uniform = (int)luaL_checkinteger(L, 3);
+	initargs.image_uniform = (int)luaL_checkinteger(L, 4);
+	if (rendererInit(initargs)) {
+		return 0;
+	}
+	return luaL_error(L, "Invalid handle type");
+}
+
+static int
 lRender(lua_State* L) {
 	ImGui::Render();
 	rendererDrawData(ImGui::GetMainViewport());
@@ -3090,7 +3108,6 @@ __declspec(dllexport)
 int
 luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
-	rendererInit(L);
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
@@ -3098,11 +3115,10 @@ luaopen_imgui(lua_State *L) {
 		{ "Destroy", lDestroy },
 		{ "NewFrame", lNewFrame },
 		{ "EndFrame", lEndFrame},
+		{ "InitRender", lInitRender },
 		{ "Render", lRender },
 		{ "SetWindowPos", lSetWindowPos },
 		{ "SetWindowTitle", lSetWindowTitle },
-		{ "SetFontProgram", rendererSetFontProgram },
-		{ "SetImageProgram", rendererSetImageProgram },
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InputEvents", lInputEvents },
 		{ "memory", lmemory },

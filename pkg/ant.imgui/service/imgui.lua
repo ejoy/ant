@@ -174,18 +174,16 @@ ltask.fork(function ()
 	assetmgr.init()
     bgfx.encoder_begin()
 
-    local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
+	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
+	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_font.fx.prog)
-    imgui.SetFontProgram(
-        PM.program_get(imgui_font.fx.prog),
-        imgui_font.fx.uniforms.s_tex.handle
-    )
-    local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_image.fx.prog)
-    imgui.SetImageProgram(
-        PM.program_get(imgui_image.fx.prog),
-        imgui_image.fx.uniforms.s_tex.handle
-    )
+	imgui.InitRender(
+		PM.program_get(imgui_font.fx.prog),
+		PM.program_get(imgui_image.fx.prog),
+		imgui_font.fx.uniforms.s_tex.handle,
+		imgui_image.fx.uniforms.s_tex.handle
+	)
 
 	cb.init(init_width, init_height, initargs)
     initialized = true

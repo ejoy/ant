@@ -1,13 +1,17 @@
 #pragma once
 
 #include <imgui.h>
-#include <lua.hpp>
+#include <optional>
 
-void rendererInit(lua_State* L);
+struct RendererInitArgs {
+    int font_prog;
+    int image_prog;
+    int font_uniform;
+    int image_uniform;
+};
+bool rendererInit(RendererInitArgs const& args);
 bool rendererCreate();
 void rendererDestroy();
 void rendererDrawData(ImGuiViewport* viewport);
-int  rendererSetFontProgram(lua_State* L);
-int  rendererSetImageProgram(lua_State* L);
-void rendererBuildFont(lua_State* L);
-ImTextureID rendererGetTextureID(lua_State* L, int lua_handle);
+void rendererBuildFont();
+std::optional<ImTextureID> rendererGetTextureID(int bgfx_handle);

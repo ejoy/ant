@@ -11,6 +11,7 @@
 #include "luabgfx.h"
 #include "imgui_window.h"
 #include "imgui_platform.h"
+#include "imgui_renderer.h"
 
 struct RendererViewport {
 	int viewid = -1;
@@ -38,6 +39,13 @@ bgfx_program_handle_t g_imageProgram;
 bgfx_uniform_handle_t g_fontTex;
 bgfx_uniform_handle_t g_imageTex;
 
+static BGFX_HANDLE bgfxGetHandleType(int id) {
+	return (BGFX_HANDLE)((id >> 16) & 0x0f);
+}
+
+static uint16_t bgfxGetHandle(int id) {
+	return (uint16_t)(id & 0xffff);
+}
 
 void rendererDrawData(ImGuiViewport* viewport) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
@@ -250,27 +258,28 @@ void rendererDestroy() {
 	viewport->RendererUserData = nullptr;
 }
 
-void rendererInit(lua_State* L) {
+bool rendererInit(RendererInitArgs const& args) {
+	if (0
+		|| bgfxGetHandleType(args.font_prog) != BGFX_HANDLE_PROGRAM
+		|| bgfxGetHandleType(args.image_prog) != BGFX_HANDLE_PROGRAM
+		|| bgfxGetHandleType(args.font_uniform) != BGFX_HANDLE_UNIFORM
+		|| bgfxGetHandleType(args.image_uniform) != BGFX_HANDLE_UNIFORM
+	) {
+		return false;
+	}
+	g_fontProgram = bgfx_program_handle_t { bgfxGetHandle(args.font_prog) };
+	g_imageProgram = bgfx_program_handle_t { bgfxGetHandle(args.image_prog) };
+	g_fontTex = bgfx_uniform_handle_t { bgfxGetHandle(args.font_uniform) };
+	g_imageTex = bgfx_uniform_handle_t { bgfxGetHandle(args.image_uniform) };
 	BGFX(vertex_layout_begin)(&g_layout, BGFX_RENDERER_TYPE_NOOP);
 	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
 	BGFX(vertex_layout_end)(&g_layout);
+	return true;
 }
 
-int rendererSetFontProgram(lua_State* L) {
-	g_fontProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
-	g_fontTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
-	return 0;
-}
-
-int rendererSetImageProgram(lua_State* L) {
-	g_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
-	g_imageTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
-	return 0;
-}
-
-void rendererBuildFont(lua_State* L) {
+void rendererBuildFont() {
 	rendererDestroyFont();
 
 	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
@@ -295,8 +304,11 @@ void rendererBuildFont(lua_State* L) {
 	atlas->ClearTexData();
 }
 
-ImTextureID rendererGetTextureID(lua_State* L, int lua_handle) {
-	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
+std::optional<ImTextureID> rendererGetTextureID(int tex) {
+	if (bgfxGetHandleType(tex) == BGFX_HANDLE_TEXTURE) {
+		return std::nullopt;
+	}
+	bgfx_texture_handle_t th = { bgfxGetHandle(tex) };
 	RendererTexture texture;
 	texture.s.handle = th;
 	texture.s.type = RendererTextureType::Image;

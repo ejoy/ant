@@ -65,13 +65,11 @@ local function load_material(path)
 end
 
 local imgui_font = load_material "/pkg/ant.imgui/materials/font.material"
-imgui.SetFontProgram(
-    imgui_font.prog,
-    imgui_font.uniforms.s_tex
-)
 local imgui_image = load_material "/pkg/ant.imgui/materials/image.material"
-imgui.SetImageProgram(
+imgui.InitRender(
+    imgui_font.prog,
     imgui_image.prog,
+    imgui_font.uniforms.s_tex,
     imgui_image.uniforms.s_tex
 )
 
