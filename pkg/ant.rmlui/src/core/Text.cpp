@@ -4,7 +4,6 @@
 #include <core/Interface.h>
 #include <util/Log.h>
 #include <css/Property.h>
-#include <util/StringUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <binding/utf8.h>
 #include <iostream>
@@ -383,7 +382,7 @@ FontFaceHandle Text::GetFontFaceHandle() {
 		return font_handle;
 	}
 	dirty.erase(Dirty::Font);
-	std::string family = StringUtilities::ToLower(GetProperty<std::string>(PropertyId::FontFamily));
+	std::string family = GetProperty<std::string>(PropertyId::FontFamily);
 	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
 	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
 	int size = (int)GetParentNode()->GetFontSize();

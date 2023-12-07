@@ -1,5 +1,4 @@
 #include <css/PropertyParserNumber.h>
-#include <util/StringUtilities.h>
 #include <unordered_map>
 #include <stdlib.h>
 
@@ -45,14 +44,14 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 	size_t unit_pos = 0;
 	for (size_t i = value.size(); i--;) {
 		const char c = value[i];
-		if ((c >= '0' && c <= '9') || StringUtilities::IsWhitespace(c)) {
+		if (c >= '0' && c <= '9') {
 			unit_pos = i + 1;
 			break;
 		}
 	}
 
 	std::string str_number = value.substr(0, unit_pos);
-	std::string str_unit = StringUtilities::ToLower(value.substr(unit_pos));
+	std::string str_unit = value.substr(unit_pos);
 
 	char* str_end = nullptr;
 	float float_value = strtof(str_number.c_str(), &str_end);

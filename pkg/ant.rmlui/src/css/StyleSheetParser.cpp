@@ -116,7 +116,6 @@ bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::st
 	for (auto rule : rule_list) {
 		float value = 0.0f;
 		int count = 0;
-		rule = StringUtilities::ToLower(rule);
 		if (rule == "from")
 			rule_values.push_back(0.0f);
 		else if (rule == "to")

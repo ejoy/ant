@@ -48,7 +48,6 @@ Element::Element(Document* owner, const std::string& tag)
 	, owner_document(owner)
 {
 	dirty.insert(Dirty::Definition);
-	assert(tag == StringUtilities::ToLower(tag));
 	assert(owner);
 }
 

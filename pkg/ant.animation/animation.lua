@@ -117,7 +117,7 @@ function ani_sys:component_init()
 		local anim_name = e.animation_birth
 		e.anim_ctrl.animation = e.animation[anim_name]
 		e.anim_ctrl.event_state = { next_index = 1, keyframe_events = events[anim_name] }
-		e.anim_ctrl.play_state = {
+		e.anim_ctrl.play_state = e.anim_ctrl.play_state or {
 			ratio = 0.0,
 			previous_ratio = 0.0,
 			speed = 1.0,

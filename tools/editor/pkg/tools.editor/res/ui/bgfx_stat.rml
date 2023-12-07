@@ -2,10 +2,10 @@
 	<head>
 		<script type="text/x-lua">
 			local bgfx_model = window.createModel {
-				content = "bgfx stat"
+				content = ""
 			}
-			window.addEventListener("message", function(event)
-				bgfx_model.content = event.data
+			window.onMessage("stat", function(data)
+				bgfx_model.content = data
 			end)
 		</script>
 		<style>
@@ -19,6 +19,6 @@
 		</style>
 	</head>
 	<body style = "pointer-events: none;">
-		<bgfx>{{content}}</bgfx>
+		<bgfx data-if = "content ~= ''">{{content}}</bgfx>
 	</body>
 </rml>

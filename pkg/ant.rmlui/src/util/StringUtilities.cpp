@@ -9,12 +9,6 @@ static inline char CharToLower(char c) {
 	return c;
 }
 
-std::string ToLower(const std::string& string) {
-	std::string str_lower = string;
-	std::transform(str_lower.begin(), str_lower.end(), str_lower.begin(), &CharToLower);
-	return str_lower;
-}
-
 void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter) {
 	char quote = 0;
 	bool last_char_delimiter = true;

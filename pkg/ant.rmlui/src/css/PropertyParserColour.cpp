@@ -257,7 +257,7 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 	else
 	{
 		// Check for the specification of an HTML color.
-		auto iterator = html_colours.find(StringUtilities::ToLower(value));
+		auto iterator = html_colours.find(value);
 		if (iterator == html_colours.end())
 			return std::nullopt;
 		else
