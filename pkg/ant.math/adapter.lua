@@ -20,7 +20,7 @@ if not ozz.adapter then
     --local bd_mt = ozz.skeleton.builddata_metatable()
     --bd_mt.joint = math3d_adapter.getter(bd_mt.joint, "m", 3)
 
-    local mt = ozz.bind_pose_mt()
+    local mt = ozz.bind_pose_mt().__index
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
     mt = ozz.pose_result_mt()
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
