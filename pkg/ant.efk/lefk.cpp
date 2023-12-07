@@ -353,13 +353,15 @@ static int
 lefkctx_play(lua_State *L) {
 	auto ctx = EC(L);
 	auto slot = get_instance(L, ctx, 2);
+	slot->fadeout = false;
 	if (ctx->manager->Exists(slot->inst)) {
-		stop_all(ctx, slot, false);
+		bool fadeout = lua_toboolean(L, 5);
+		stop_all(ctx, slot, fadeout);
 	}
-	int32_t startFrame = (int32_t)luaL_checkinteger(L, 4);
+	int32_t startFrame = (int32_t)luaL_optinteger(L, 4, 0);
 	slot->inst = ctx->manager->Play(slot->eptr, Effekseer::Vector3D(0, 0, 0), startFrame);
 	
-	float speed = (float)luaL_checknumber(L, 3);
+	float speed = (float)luaL_optnumber(L, 3, 1.0f);
 	ctx->manager->SetSpeed(slot->inst, speed);
 
 	return 0;
