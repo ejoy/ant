@@ -516,7 +516,7 @@ local shadowdebug_viewid = hwi.viewid_generate("shadowdebug", "ssao")
 function shadowdebug_sys:init_world()
 	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
 	queuemgr.register_queue("shadow_debug_queue", queuemgr.material_index "main_queue", queuemgr.queue_mask "main_queue")
-	local fbw, fbh = 256, 256
+	local fbw, fbh = 512, 512
 	local fbidx = fbmgr.create(
 					{rbidx = fbmgr.create_rb{
 						format = "RGBA16F", w=fbw, h=fbh, layers=1,
@@ -562,15 +562,18 @@ function shadowdebug_sys:init_world()
 		},
 	}
 
+	local rectNDC = mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")
+	rectNDC.y = rectNDC.y - rectNDC.h
 	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
 		data = {
-			simplemesh = imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=fbw, h=fbh}, true),
+			simplemesh = imesh.init_mesh(ientity.quad_mesh(rectNDC), true),
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_queue",
 			scene = {},
+			render_layer = "translucent",
 			on_ready = function (e)
 				imaterial.set_property(e, "s_tex", fbmgr.get_rb(fbidx, 1).handle)
 			end,
@@ -582,14 +585,9 @@ function shadowdebug_sys:data_changed()
 	for _, key, press in kbmb:unpack() do
 		if key == "B" and press == 0 then
 			local q<close> = world:entity(shadowdebug_queue, "visible?out")
-			q.visible = false
-			--w:submit(q)
-
-
-			local qq = w:first "main_queue visible?in"
-			print(qq.visible)
+			q.visible = true
 		elseif key == "SPACE" and press == 0 then
-			for k, v in pairs(DEBUG_ENTITIES.frustums) do
+			for k, v in pairs(DEBUG_ENTITIES) do
 				w:remove(v)
 			end
 
