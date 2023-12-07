@@ -229,18 +229,18 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
     end
     return raw_animation:build()
 end
-
+local inherit_for_srt = false
 local function update_animation()
     local animtype = current_anim.type
     local runtime_anim = current_anim.runtime_anim
     if animtype == "ske" then
         runtime_anim._handle = build_animation(current_skeleton._handle, runtime_anim.raw_animation, current_anim.target_anims, sample_ratio)
     else
-        local get_keyframe_value = function (type, clip)
+        local get_keyframe_value = function (type, clip, init_value)
             if type == "mtl" then
                 return clip.value
             elseif type == "srt" then
-                local value = {1, 0, 0, 0, 0, 0, 0}
+                local value = init_value or {1, 0, 0, 0, 0, 0, 0}
                 value[clip.rot_axis + 1] = clip.amplitude_rot
                 if clip.direction < 4 then
                     value[clip.direction + 4] = clip.amplitude_pos
@@ -288,7 +288,7 @@ local function update_animation()
                     fromvalue[#fromvalue + 1] = value
                 end
                 keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
-                local tovalue = get_keyframe_value(animtype, clip)
+                local tovalue = get_keyframe_value(animtype, clip, inherit_for_srt and from or nil)
                 if animtype == "mtl" then
                     local tv = {}
                     for _, value in ipairs(tovalue) do
@@ -594,6 +594,7 @@ local function show_current_detail()
     imgui.cursor.SameLine()
     if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[3]) then
         anim_layer.inherit[3] = anim_layer.inherit_ui[3][1]
+        inherit_for_srt = anim_layer.inherit[3]
         update_animation()
     end
 
