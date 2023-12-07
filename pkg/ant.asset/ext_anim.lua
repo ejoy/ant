@@ -1,5 +1,5 @@
 local datalist  = require "datalist"
-local animodule = require "hierarchy".animation
+local ozz = require "ozz"
 local assetmgr 	= import_package "ant.asset"
 local aio = import_package "ant.io"
 local math3d = require "math3d"
@@ -187,11 +187,11 @@ return {
             end
         end
         local ske = assetmgr.resource(absolute_path(ske_anim.skeleton, filename))
-        local raw_animation = animodule.new_raw_animation()
+        local raw_animation = ozz.new_raw_animation()
         raw_animation:setup(ske._handle, ske_anim.duration)
         return {
             _duration = ske_anim.duration,
-            _sampling_context = animodule.new_sampling_context(1),
+            _sampling_context = ozz.new_sampling_context(1),
             _handle = build_animation(ske._handle, raw_animation, ske_anim.target_anims, ske_anim.sample_ratio),
         }
     end,

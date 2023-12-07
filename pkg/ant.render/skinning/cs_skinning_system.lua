@@ -23,7 +23,7 @@ local sk_viewid = hwi.viewid_get "skinning"
 
 local assetmgr  = import_package "ant.asset"
 
-local animodule = require "hierarchy".animation
+local ozz = require "ozz"
 local math3d 	= require "math3d"
 local bgfx 		= require "bgfx"
 
@@ -177,7 +177,7 @@ function cs_skinning_sys:skin_mesh()
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, r2l_mat)
+			ozz.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, r2l_mat)
 		end
 	end
 

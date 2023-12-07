@@ -16,7 +16,7 @@ local skinning_sys = ecs.system "skinning_system"
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
 
-local animodule = require "hierarchy".animation
+local ozz = require "ozz"
 local math3d 	= require "math3d"
 
 -- skinning system
@@ -59,19 +59,19 @@ local build_skinning_matrices = ENABLE_TAA and
 		if e.meshskin.sm_matrix_ref == mc.NULL then
 			sm = e.meshskin.skinning_matrices
 			prev_sm = e.meshskin.prev_skinning_matrices
-			animodule.build_skinning_matrices(prev_sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+			ozz.build_skinning_matrices(prev_sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
 		else
 			sm = e.meshskin.prev_skinning_matrices
 			prev_sm = e.meshskin.skinning_matrices
 		end
-		animodule.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+		ozz.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
 		e.meshskin.sm_matrix_ref = sm2m3darray(sm, e.meshskin.sm_matrix_ref)
 		e.meshskin.prev_sm_matrix_ref = sm2m3darray(prev_sm, e.meshskin.prev_sm_matrix_ref)
 	end or
 	function (e, pr, skin)
 		local m = math3d.mul(e.scene.worldmat, r2l_mat)
 		local sm = e.meshskin.skinning_matrices
-		animodule.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+		ozz.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
 		e.meshskin.sm_matrix_ref = sm2m3darray(sm, e.meshskin.sm_matrix_ref)
 	end
 

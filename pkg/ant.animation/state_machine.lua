@@ -79,7 +79,7 @@ function iani.play(eid, anim_state)
 	-- if not anim then
 	-- 	local ext = anim_name:match "[^.]*$"
 	-- 	if ext == "anim" then
-	-- 		local animodule = require "hierarchy".animation
+	-- 		local ozz = require "ozz"
 	-- 		local path = fs.path(anim_name):localpath()
 	-- 		local f = assert(fs.open(path))
 	-- 		local data = f:read "a"
@@ -90,10 +90,10 @@ function iani.play(eid, anim_state)
 	-- 				local duration = anim_data.duration
 	-- 				anim = {
 	-- 					_duration = duration,
-	-- 					_sampling_context = animodule.new_sampling_context(1)
+	-- 					_sampling_context = ozz.new_sampling_context(1)
 	-- 				}
 	-- 				local ske = e.skeleton._handle
-	-- 				local raw_animation = animodule.new_raw_animation()
+	-- 				local raw_animation = ozz.new_raw_animation()
 	-- 				raw_animation:setup(ske, duration)
 	-- 				anim._handle = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
 	-- 				break

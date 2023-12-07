@@ -13,7 +13,7 @@ int luaopen_bee_time(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_datalist(lua_State* L);
-int luaopen_hierarchy(lua_State* L);
+int luaopen_ozz(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
 int luaopen_protocol(lua_State* L);
@@ -85,7 +85,7 @@ void ant_loadmodules(lua_State* L) {
         { "font.manager", luaopen_font_manager },
         { "font.truetype", luaopen_font_truetype },
         { "datalist", luaopen_datalist },
-        { "hierarchy", luaopen_hierarchy },
+        { "ozz", luaopen_ozz },
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },
         { "protocol", luaopen_protocol },
