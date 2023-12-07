@@ -279,6 +279,8 @@ lbuild(lua_State *L){
 void init_skeleton(lua_State *L) {
 	register_hierarchy_node(L);
 	register_hierarchy_builddata(L);
+	lua_pushcfunction(L, lbuilddata_metatable);
+	lua_setfield(L, -2, "builddata_metatable");
 }
 
 const char* check_read_skeleton(lua_State *L, ozz::io::IArchive& ia){
