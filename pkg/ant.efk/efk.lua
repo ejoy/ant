@@ -10,7 +10,7 @@ local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
-
+local iexposure = ecs.require "ant.camera|exposure"
 local hwi       = import_package "ant.hwi"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
@@ -227,7 +227,14 @@ function efk_sys:follow_scene_update()
 end
 
 local function get_light_color(dl)
-    local r, g, b, a = table.unpack(ilight.color(dl))
+    local mq = w:first("main_queue camera_ref:in")
+    local camera <close> = world:entity(mq.camera_ref)
+    local ev = iexposure.exposure(camera)
+    local intensity = ilight.intensity(dl) * ev
+    intensity = math.min(intensity, 1.0)
+    local color = math3d.mul(intensity, math3d.vector(ilight.color(dl)))
+
+    local r, g, b, a = math3d.index(color, 1, 2, 3, 4)
     r, g, b, a = math.floor(255*r), math.floor(255*g), math.floor(255*b), math.floor(255*a)
     return string.pack("<BBBB", r, g, b, a)
 end
