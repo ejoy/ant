@@ -72,7 +72,7 @@ local function parse_config(config)
     return type, size, rot, dis
 end
 
-local function destroy_prefab_cache(handle)
+local function destroy_prefab_cache(handle, destroy_rb)
     local function destroy_prefab(objects)
         for _, eid in ipairs(objects) do
            w:remove(eid) 
@@ -89,7 +89,7 @@ local function destroy_prefab_cache(handle)
         math3d.unmark(camera_srt.r)
         math3d.unmark(camera_srt.t) 
     end
-    if fb and fb[1] and fb[2] then
+    if fb and fb[1] and fb[2] and destroy_rb then
         fbmgr.destroy_rb(fb[1].rbidx, true)
         fbmgr.destroy_rb(fb[2].rbidx, true) 
     end
@@ -104,6 +104,7 @@ function m.clear_prefab_cache()
     fbmgr.destroy_rb(params.DEFAULT_FB[2].rbidx, true)
     for handle, _ in pairs(params.HANDLE_CACHE) do
         destroy_prefab_cache(handle)
+        params.HANDLE_CACHE[handle] = nil
     end
 end
 
@@ -113,7 +114,8 @@ function m.add_wait_queue(name, prefab_rotation)
 end
 
 function m.destroy_portrait_prefab(handle)
-    destroy_prefab_cache(handle)
+    destroy_prefab_cache(handle, true)
+    params.HANDLE_CACHE[handle] = nil
 end
 
 function m.parse_prefab_config(config)
@@ -229,8 +231,8 @@ end
 
 function m.get_portrait_handle(name, width, height)
     local fb = {
-        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = params.RB_FLAGS}},
-        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16",   flags = params.RB_FLAGS}}
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = params.RB_FLAGS, unmark = true}},
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16",   flags = params.RB_FLAGS, unmark = true}}
     }
     params.PREFABS[name] = {fb = fb}
     local portrait_handle = fbmgr.get_rb(fb[1].rbidx).handle

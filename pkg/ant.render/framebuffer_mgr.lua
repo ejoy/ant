@@ -237,7 +237,9 @@ end
 
 function mgr.clear()
 	for _, rb in pairs(RENDER_BUFFERS) do
-		bgfx.destroy(rb.handle)
+		if not rb.unmark then
+			bgfx.destroy(rb.handle)
+		end
 	end
 	RENDER_BUFFERS = {}
 
