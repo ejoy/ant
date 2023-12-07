@@ -17,23 +17,27 @@ struct RendererViewport {
 	bgfx_frame_buffer_handle_t fb = BGFX_INVALID_HANDLE;
 };
 
-std::stack<int> viewIdPool;
+enum class RendererTextureType: uint16_t {
+	Font,
+	Image,
+};
 
+union RendererTexture {
+	ImTextureID id;
+	struct {
+		bgfx_texture_handle_t handle;
+		RendererTextureType type;
+	} s;
+};
+static_assert(sizeof(ImTextureID) == sizeof(RendererTexture));
+
+std::stack<int> g_viewIdPool;
 bgfx_vertex_layout_t  g_layout;
 bgfx_program_handle_t g_fontProgram;
 bgfx_program_handle_t g_imageProgram;
 bgfx_uniform_handle_t g_fontTex;
 bgfx_uniform_handle_t g_imageTex;
 
-constexpr uint16_t IMGUI_FLAGS_NONE = 0x00;
-constexpr uint16_t IMGUI_FLAGS_FONT = 0x01;
-union ImGuiTexture {
-	ImTextureID ptr;
-	struct {
-		bgfx_texture_handle_t handle;
-		uint16_t flags;
-	} s;
-};
 
 void rendererDrawData(ImGuiViewport* viewport) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
@@ -88,7 +92,8 @@ void rendererDrawData(ImGuiViewport* viewport) {
 			}
 			ImTextureID texid = cmd.GetTexID();
 			assert(NULL != texid);
-			ImGuiTexture texture = { texid };
+			RendererTexture texture;
+			texture.id = texid;
 
 			const float x = (cmd.ClipRect.x - clip_offset.x) * clip_scale.x;
 			const float y = (cmd.ClipRect.y - clip_offset.y) * clip_scale.y;
@@ -112,7 +117,7 @@ void rendererDrawData(ImGuiViewport* viewport) {
 
 			BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, cmd.VtxOffset, numVertices);
 			BGFX(encoder_set_transient_index_buffer)(encoder, &tib, cmd.IdxOffset, cmd.ElemCount);
-			if (IMGUI_FLAGS_FONT == texture.s.flags) {
+			if (texture.s.type == RendererTextureType::Font) {
 				BGFX(encoder_set_texture)(encoder, 0, g_fontTex, texture.s.handle, UINT32_MAX);
 				BGFX(encoder_submit)(encoder, ud->viewid, g_fontProgram, 0, BGFX_DISCARD_STATE);
 			}
@@ -131,15 +136,15 @@ static int rendererGetViewId() {
 }
  
 static void rendererFreeViewId(int viewid) {
-	viewIdPool.push(viewid);
+	g_viewIdPool.push(viewid);
 }
 
 static int rendererAllocViewId() {
-	if (viewIdPool.empty()) {
+	if (g_viewIdPool.empty()) {
 		return rendererGetViewId();
 	}
-	int viewid = viewIdPool.top();
-	viewIdPool.pop();
+	int viewid = g_viewIdPool.top();
+	g_viewIdPool.pop();
 	return viewid;
 }
 
@@ -231,7 +236,8 @@ static void rendererDestroyFont() {
 	ImTextureID texid = atlas->TexID;
 	if (NULL != texid) {
 		atlas->SetTexID(0);
-		ImGuiTexture texture = { texid };
+		RendererTexture texture;
+		texture.id = texid;
 		BGFX(destroy_texture)(texture.s.handle);
 	}
 }
@@ -273,7 +279,7 @@ void rendererBuildFont(lua_State* L) {
 	int32_t height;
 	atlas->GetTexDataAsAlpha8(&data, &width, &height);
 
-	ImGuiTexture texture;
+	RendererTexture texture;
 	texture.s.handle = BGFX(create_texture_2d)(
 		(uint16_t)width
 		, (uint16_t)height
@@ -283,16 +289,16 @@ void rendererBuildFont(lua_State* L) {
 		, 0
 		, BGFX(copy)(data, width * height)
 		);
-	texture.s.flags = IMGUI_FLAGS_FONT;
-	atlas->SetTexID(texture.ptr);
+	texture.s.type = RendererTextureType::Font;
+	atlas->SetTexID(texture.id);
 	atlas->ClearInputData();
 	atlas->ClearTexData();
 }
 
 ImTextureID rendererGetTextureID(lua_State* L, int lua_handle) {
 	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
-	ImGuiTexture texture;
+	RendererTexture texture;
 	texture.s.handle = th;
-	texture.s.flags = IMGUI_FLAGS_NONE;
-	return texture.ptr;
+	texture.s.type = RendererTextureType::Image;
+	return texture.id;
 }
