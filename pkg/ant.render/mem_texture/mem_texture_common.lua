@@ -8,30 +8,17 @@ local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
-local ig        = ecs.require "ant.group|group"
-local R         = world:clibs "render.render_material"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
+local R         = world:clibs "render.render_material"
 local hwi       = import_package "ant.hwi"
 local mc        = import_package "ant.math".constant
 
 local params = {
-    FBS = {},
-    PORTRAITS = {
-        ["static"] = {
-            obj = "mem_texture_static_obj",
-            queue = "mem_texture_static_queue",
-            viewid = hwi.viewid_get "mem_texture_static",
-            fb = {},
-            distance = 1
-        },
-        ["dynamic"] = {
-            obj = "mem_texture_dynamic_obj",
-            queue = "mem_texture_dynamic_queue",
-            viewid = hwi.viewid_get "mem_texture_dynamic",
-            fb = {},
-            distance = 1
-        }
-    },
+    WAIT_QUEUE = {},
+    PREFABS = {},
+    HANDLE_CACHE = {},
+    VIEWID = hwi.viewid_get "mem_texture",
+    QUEUE_NAME = "mem_texture_queue",
     DEFAULT_RT_WIDTH         = 512,
     DEFAULT_RT_HEIGHT        = 512,
     RB_FLAGS  = sampler{
@@ -41,8 +28,9 @@ local params = {
         V   =   "CLAMP",
         RT  =   "RT_ON",
     },
+    DEFAULT_FB = {},
     DEFAULT_EXTENTS         = math3d.mark(math3d.vector(50, 50, 50)),
-    DEFAULT_LENGTH          = math3d.length(math3d.mul(1.6, math3d.vector(50, 50, 50))),
+    DEFAULT_LENGTH          = math3d.length(math3d.mul(1.8, math3d.vector(50, 50, 50))),
     DEFAULT_SIZE_CONFIGS    = {
         {
             width  = 512,
@@ -66,6 +54,10 @@ local params = {
 
 local m = {params = params}
 
+local function add_wait_queue(name)
+    params.WAIT_QUEUE[#params.WAIT_QUEUE+1] = name
+end
+
 local function parse_config(config)
     local portrait_tag, size_tag, rot_tag, dis = config:match "%w+:(%a),(%d),(%d),?([%d%.]*)"
     size_tag, rot_tag, dis = tonumber(size_tag), tonumber(rot_tag), tonumber(dis)
@@ -80,11 +72,48 @@ local function parse_config(config)
     return type, size, rot, dis
 end
 
-local function destroy_prefab(obj_name)
-    local select_tag = ("%s eid:in"):format(obj_name)
-    for e in w:select(select_tag) do
-        w:remove(e.eid)
+local function destroy_prefab_cache(handle)
+    local function destroy_prefab(objects)
+        for _, eid in ipairs(objects) do
+           w:remove(eid) 
+        end
     end
+    
+    local name = params.HANDLE_CACHE[handle]
+    local prefab = params.PREFABS[name]
+    local objects, fb, camera_srt, prefab_rotation = prefab.objects, prefab.fb, prefab.camera_srt, prefab.prefab_rotaton
+    if objects then
+        destroy_prefab(objects)
+    end
+    if camera_srt and camera_srt.r and camera_srt.t then
+        math3d.unmark(camera_srt.r)
+        math3d.unmark(camera_srt.t) 
+    end
+    if fb and fb[1] and fb[2] then
+        fbmgr.destroy_rb(fb[1].rbidx, true)
+        fbmgr.destroy_rb(fb[2].rbidx, true) 
+    end
+    if prefab_rotation then
+        math3d.unmark(prefab_rotation)
+    end
+    params.PREFABS[name] = {}
+end
+
+function m.clear_prefab_cache()
+    fbmgr.destroy_rb(params.DEFAULT_FB[1].rbidx, true)
+    fbmgr.destroy_rb(params.DEFAULT_FB[2].rbidx, true)
+    for handle, _ in pairs(params.HANDLE_CACHE) do
+        destroy_prefab_cache(handle)
+    end
+end
+
+function m.add_wait_queue(name, prefab_rotation)
+    add_wait_queue(name)
+    params.PREFABS[name].prefab_rotation = math3d.mark(prefab_rotation)
+end
+
+function m.destroy_portrait_prefab(handle)
+    destroy_prefab_cache(handle)
 end
 
 function m.parse_prefab_config(config)
@@ -96,18 +125,8 @@ function m.parse_prefab_name(name)
     return path, parse_config(config)
 end
 
-function m.set_camera_distance_factor(type, distance)
-    local portrait = params.PORTRAITS[type]
-    portrait.distance = distance
-end
-
 function m.register_new_rt()
-    local function register_mem_texture_group(obj_name)
-        w:register{name = obj_name}
-        local gid = ig.register(obj_name)
-        ig.enable(gid, obj_name, true)
-    end
-    
+
     local function register_mem_texture_render_queue(queue_name)
         w:register{name = queue_name}
     end
@@ -117,14 +136,18 @@ function m.register_new_rt()
         queuemgr.register_queue(queue_name, mem_texture_material_idx)
     end
 
-    local function create_mem_texture_queue(view_id, queue_name, portrait)
+    local function create_mem_texture_queue(view_id, queue_name)
 
-        local fbidx = fbmgr.create(
+        local fb = {
             {rbidx = fbmgr.create_rb{w = params.DEFAULT_RT_WIDTH, h = params.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = params.RB_FLAGS}},
             {rbidx = fbmgr.create_rb{w = params.DEFAULT_RT_WIDTH, h = params.DEFAULT_RT_HEIGHT, layers = 1, format = "D16",   flags = params.RB_FLAGS}}
-        )
+        }
     
-        portrait.queueid = world:create_entity {
+        params.DEFAULT_FB = fb
+
+        local fbidx = fbmgr.create(fb[1], fb[2])
+    
+        world:create_entity {
             policy = {
                 "ant.render|render_queue",
             },
@@ -174,117 +197,96 @@ function m.register_new_rt()
         }
     end
 
-    for _, portrait in pairs(params.PORTRAITS) do
-        local obj_name, queue_name, view_id = portrait.obj, portrait.queue, portrait.viewid
-        register_mem_texture_group(obj_name)
-        register_mem_texture_render_queue(queue_name)
-        register_mem_texture_material_queue(queue_name)
-        create_mem_texture_queue(view_id, queue_name, portrait)
-    end
+    local queue_name, view_id = params.QUEUE_NAME, params.VIEWID
+    register_mem_texture_render_queue(queue_name)
+    register_mem_texture_material_queue(queue_name)
+    create_mem_texture_queue(view_id, queue_name)
 end
 
-function m.set_prefab(type, path)
+function m.create_prefab_entity(name, path, rotation, distance, type)
 
-    local portrait = params.PORTRAITS[type]
-    local obj_name, queue_name = portrait.obj, portrait.queue
+    local function set_prefab_params()
+        local prefab = params.PREFABS[name]
+        prefab.rotation, prefab.distance, prefab.type = rotation, distance, type
+    end
 
-    local function create_prefab()
-        world:create_instance {
-            prefab = path,
-            group  = ig.groupid(obj_name),
-            on_ready = function (inst)
-                local alleid = inst.tag['*']
-                for _, eid in ipairs(alleid) do
-                    local ee <close> = world:entity(eid, "visible_state?in mesh?in scene?in mem_texture_ready?out")
-                    if ee.mesh and ee.visible_state then
-                        ee.mem_texture_ready = true
-                        ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                        ivs.set_state(ee, queue_name, true)
-                    end
+    world:create_instance {
+        prefab = path,
+        on_ready = function (inst)
+            local alleid = inst.tag['*']
+            params.PREFABS[name].objects = alleid
+            for _, eid in ipairs(alleid) do
+                local ee <close> = world:entity(eid, "visible_state?in mesh?in scene?in mem_texture_ready?out")
+                if ee.mesh and ee.visible_state then
+                    ee.mem_texture_ready = true
+                    ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
                 end
             end
-        }
-        ig.enable_from_name(obj_name, "view_visible", true)
-    end
-
-    destroy_prefab(obj_name)
-    create_prefab()
+        end
+    }
+    set_prefab_params()
 end
 
-function m.resize_framebuffer(type, width, height)
-    local portrait = params.PORTRAITS[type]
-    local viewid = portrait.viewid
-    local fbidx = fbmgr.get_fb_idx(viewid)
-    local fb = fbmgr.get(fbidx)
-    local changed = false
-    for _, attachment in ipairs(fb)do
-        local rbidx = attachment.rbidx
-        changed = fbmgr.resize_rb(rbidx, width, height)
-    end
-    if changed then
-        fbmgr.recreate(fbidx, fb)
-        local queue_name, queue_id = portrait.queue, portrait.queueid
-        local mtq <close> = world:entity(queue_id, "render_target:update")
-        irq.update_rendertarget(queue_name, mtq.render_target)
-    end
+function m.get_portrait_handle(name, width, height)
+    local fb = {
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = params.RB_FLAGS}},
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16",   flags = params.RB_FLAGS}}
+    }
+    params.PREFABS[name] = {fb = fb}
+    local portrait_handle = fbmgr.get_rb(fb[1].rbidx).handle
+    params.HANDLE_CACHE[portrait_handle] = name
+    return portrait_handle
 end
 
-function m.get_portrait_handle(type)
-    local portrait = params.PORTRAITS[type]
-    local viewid = portrait.viewid
-    local fbidx = fbmgr.get_fb_idx(viewid)
-    local fb = fbmgr.get(fbidx)
-    return fbmgr.get_rb(fb[1].rbidx).handle
-end
+function m.get_camera_srt()
 
-function m.adjust_camera_rotation(type, rotation)
-    local portrait = params.PORTRAITS[type]
-    local queue_name = portrait.queue
-    local select_tag = ("%s camera_ref:in"):format(queue_name)
-    local mtq = w:first(select_tag)
-    local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
-    iom.set_rotation(camera, math3d.quaternion(rotation))
-end
-
-function m.adjust_camera_srt()
-    local function adjust_camera_pos(camera, aabb, distance)
+    local function calc_srt(camera_rot, aabb, distance)
         if not math3d.aabb_isvalid(aabb) then return end
-        local _, world_extents = math3d.aabb_center_extents(aabb)
-        local view_dir = math3d.todirection(camera.scene.r)
+        local origin_world_center, world_extents = math3d.aabb_center_extents(aabb)
+        local view_dir = math3d.todirection(camera_rot)
         local view_len = params.DEFAULT_LENGTH * distance
         local camera_pos = math3d.sub(math3d.vector(0, 0, 0), math3d.mul(view_dir, view_len))
-        iom.set_position(camera, camera_pos)
         local ex, ey, ez = math3d.index(world_extents, 1, 2, 3)
         local emax = math.max(ex, math.max(ey, ez))
-        local scale = math3d.vector(emax, emax, emax)
-        scale = math3d.reciprocal(scale)
-        scale = math3d.mul(params.DEFAULT_EXTENTS, scale)
-        aabb = math3d.aabb_transform(math3d.matrix{s = scale}, aabb)
+        local scale_factor = math3d.vector(emax, emax, emax)
+        scale_factor = math3d.reciprocal(scale_factor)
+        scale_factor = math3d.mul(params.DEFAULT_EXTENTS, scale_factor)
+        aabb = math3d.aabb_transform(math3d.matrix{s = scale_factor}, aabb)
         local world_center, _ = math3d.aabb_center_extents(aabb)
-        return scale, math3d.mul(-1, world_center)
-    end   
-    for _, portrait in pairs(params.PORTRAITS) do
-        local obj_name, queue_name, distance = portrait.obj, portrait.queue, portrait.distance
-        local select_tag = ("%s bounding:in mem_texture_ready:update"):format(obj_name)
-        local scene_aabb = math3d.aabb()
-        local is_valid = false
-        for e in w:select(select_tag) do
-            if e.bounding.scene_aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.scene_aabb) then
-                scene_aabb = math3d.aabb_merge(scene_aabb, e.bounding.scene_aabb)
-                is_valid = true
-                e.mem_texture_ready = false
+        local translation_offset = math3d.sub(world_center, origin_world_center)
+        translation_offset = math3d.mul(-1, translation_offset)
+        return camera_pos, scale_factor, translation_offset
+    end
+
+    local queue_name = params.QUEUE_NAME
+    for name, prefab in pairs(params.PREFABS) do
+        local objects, camera_srt, rotation, distance = prefab.objects, prefab.camera_srt, prefab.rotation, prefab.distance
+        if (not camera_srt) and objects then
+            local scene_aabb = math3d.aabb()
+            local is_valid = false
+            for _, eid in ipairs(objects) do
+                local e = world:entity(eid, "bounding?in mem_texture_ready?update")
+                if e.bounding and e.bounding.scene_aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.scene_aabb) then
+                    scene_aabb = math3d.aabb_merge(scene_aabb, e.bounding.scene_aabb)
+                    is_valid = true
+                    e.mem_texture_ready = false
+                end
             end
-        end
-        if is_valid then
-            select_tag = ("%s scene:in"):format(obj_name)
-            for e in w:select(select_tag) do
-                if e.scene and e.scene.parent == 0  then
-                    select_tag = ("%s camera_ref:in"):format(queue_name)
-                    local mtq = w:first(select_tag)
-                    local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
-                    local s, t = adjust_camera_pos(camera, scene_aabb, distance)
-                    iom.set_position(e, math3d.add(t, e.scene.t))
-                    iom.set_scale(e, math3d.mul(s, e.scene.s))
+            if is_valid then
+                for _, eid in ipairs(objects) do
+                    local e <close> = world:entity(eid, "scene?update")
+                    if e.scene and e.scene.parent == 0  then
+                        local select_tag = ("%s camera_ref:in"):format(queue_name)
+                        local mtq = w:first(select_tag)
+                        local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+                        local camera_rot = math3d.quaternion(rotation)
+                        local camera_pos, scale_factor, translation_offset = calc_srt(camera_rot, scene_aabb, distance)
+                        prefab.camera_srt = {r = math3d.mark(camera_rot), t = math3d.mark(camera_pos)}
+                        local s, t = math3d.mul(scale_factor, e.scene.s), math3d.add(translation_offset, e.scene.t)
+                        iom.set_srt(e, s, e.scene.r, t)
+                        add_wait_queue(name)
+                        break
+                    end
                 end
             end
         end
@@ -292,36 +294,82 @@ function m.adjust_camera_srt()
 end
 
 function m.copy_main_material()
-    for _, portrait in pairs(params.PORTRAITS) do
-        local obj_name, queue_name = portrait.obj, portrait.queue
-        local select_tag = ("filter_result %s visible_state:in render_object:in filter_material:in"):format(obj_name)
-        for e in w:select(select_tag) do
-            if e.visible_state[queue_name] then
-                local fm = e.filter_material
-                local mi = fm["main_queue"]
-                fm[queue_name] = mi
-                R.set(e.render_object.rm_idx, queuemgr.material_index(queue_name), mi:ptr())
+    local queue_name = params.QUEUE_NAME
+    for _, prefab in pairs(params.PREFABS) do
+        if prefab.objects then
+            for _, eid in ipairs(prefab.objects) do
+                local e = world:entity(eid, "filter_result visible_state?in render_object?in filter_material?in")
+                if e.filter_material and e.render_object then
+                    local fm = e.filter_material
+                    local mi = fm["main_queue"]
+                    fm[queue_name] = mi
+                    R.set(e.render_object.rm_idx, queuemgr.material_index(queue_name), mi:ptr()) 
+                end
+            end 
+        end
+    end
+end
+
+function m.process_wait_queue()
+
+    local function update_fb(new_fb)
+        local viewid = params.VIEWID
+        local fbidx = fbmgr.get_fb_idx(viewid)
+        fbmgr.recreate(fbidx, new_fb)
+        local select_tag = ("%s render_target:update"):format(params.QUEUE_NAME)
+        local mtq = w:first(select_tag)
+        irq.update_rendertarget(params.QUEUE_NAME, mtq.render_target)
+    end
+
+    local function set_camera_srt(camera_srt)
+        local select_tag = ("%s camera_ref:in"):format(params.QUEUE_NAME)
+        local mtq = w:first(select_tag)
+        local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+        iom.set_position(camera, camera_srt.t)
+        iom.set_rotation(camera, camera_srt.r)
+    end
+
+    local function set_objects_visible_state(prefab, state)
+        if prefab and prefab.objects then
+            for _, eid in ipairs(prefab.objects) do
+                local ee <close> = world:entity(eid, "visible_state?in mesh?in")
+                if ee.mesh and ee.visible_state then
+                    ivs.set_state(ee, params.QUEUE_NAME, state)
+                end
             end
         end
     end
-end
-
-function m.adjust_prefab_rot(type, cur_radian)
-    local portrait = params.PORTRAITS[type]
-    local obj_name = portrait.obj
-    local select_tag = ("%s scene:in"):format(obj_name)
-    for e in w:select(select_tag) do
-        if e.scene.parent == 0 then
-            local yquat = math3d.quaternion { axis = {0,1,0}, r = cur_radian }
-            iom.set_rotation(e, yquat)
+    
+    local function adjust_prefab_rot(prefab)
+        local objects, prefab_rotation = prefab.objects, prefab.prefab_rotation
+        if objects and prefab_rotation then
+            for _, eid in ipairs(objects) do
+                local e <close> = world:entity(eid, "scene?in")
+                if e.scene and e.scene.parent == 0 then
+                    iom.set_rotation(e, prefab_rotation)
+                end
+            end 
         end
     end
-end
 
-function m.remove_portrait_queue()
-    for _, portrait in pairs(params.PORTRAITS) do
-        local obj_name = portrait.obj
-        destroy_prefab(obj_name)
+    local last_name = params.LAST_PREFAB
+    local last_prefab = params.PREFABS[last_name]
+    set_objects_visible_state(last_prefab, false)
+
+    local wait_queue = params.WAIT_QUEUE
+    if #wait_queue >= 1 then
+        local cur_name = wait_queue[1]
+        table.remove(wait_queue, 1)
+        local cur_prefab = params.PREFABS[cur_name]
+        local fb, camera_srt = cur_prefab.fb, cur_prefab.camera_srt
+        update_fb(fb)
+        set_camera_srt(camera_srt)
+        set_objects_visible_state(cur_prefab, true)
+        adjust_prefab_rot(cur_prefab)
+        params.LAST_PREFAB = cur_name
+    elseif last_name then
+        update_fb(params.DEFAULT_FB)
+        params.LAST_PREFAB = nil
     end
 end
 

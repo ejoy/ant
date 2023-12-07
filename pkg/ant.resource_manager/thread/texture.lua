@@ -38,7 +38,7 @@ end
 
 local function loadExt(protocol, path, config, name)
 	local service_id = (protocol and ext_service[protocol]) or error ("Unknown protocol " .. name)
-	local c, lifespan = ltask.call(service_id, "load", path, config)
+	local c, lifespan = ltask.call(service_id, "load", name, path, config)
 	c.name = name
 	if c.handle then
 	    bgfx.set_name(c.handle, c.name)
@@ -325,7 +325,7 @@ local update; do
     local FrameCur = 1
     local results = {}
     local UpdateNewInterval <const> = 30 *  1 --  1s
-    local UpdateOldInterval <const> = 30 * 60 -- 60s
+    local UpdateOldInterval <const> = 30 * 10 -- 60s
     local InvalidTexture <const> = ("HHH"):pack(DefaultTexture.SAMPLER2D & 0xffff, DefaultTexture.SAMPLERCUBE & 0xffff, DefaultTexture.SAMPLER2DARRAY & 0xffff)
     function update()
         for i = 1, #destroyQueue do
