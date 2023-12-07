@@ -184,8 +184,8 @@ function S.destroy(filename, handle)
     end
 end
 
-function S.play(handle, speed, startframe)
-    EFKCTX:play(handle, speed, startframe)
+function S.play(handle, speed, startframe, fadeout)
+    EFKCTX:play(handle, speed, startframe, fadeout)
 end
 
 function S.is_alive(handle)

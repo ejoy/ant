@@ -25,8 +25,8 @@ local efk_sys = ecs.system "efk_system"
 local iefk = {}
 
 local handle_mt = {
-    realive = function (self, speed, startframe)
-        ltask.call(EFK_SERVER, "play", self.handle, speed, startframe)
+    realive = function (self, speed, startframe, fadeout)
+        ltask.call(EFK_SERVER, "play", self.handle, speed, startframe, fadeout)
     end,
     is_alive = function(self)
         ltask.fork(function ()
@@ -60,8 +60,8 @@ local handle_mt = {
     end,
 }
 
-local function createPlayHandle(efk_handle, speed, startframe, worldmat)
-    ltask.call(EFK_SERVER, "play", efk_handle, speed, startframe)
+local function createPlayHandle(efk_handle, speed, startframe, fadeout, worldmat)
+    ltask.call(EFK_SERVER, "play", efk_handle, speed, startframe, fadeout)
     local h = setmetatable({
         alive       = true,
         handle      = efk_handle,
@@ -107,7 +107,8 @@ function efk_sys:component_init()
         efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
         efk.speed = efk.speed or 1.0
         efk.startframe = efk.startframe or 0
-        efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe)
+        efk.fadeout = efk.fadeout or false
+        efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe, efk.fadeout)
     end
 end
 
@@ -289,7 +290,7 @@ function iefk.play(e)
     local efk = e.efk
     if efk then
         local ph = efk.play_handle
-        ph:realive(efk.speed, efk.startframe)
+        ph:realive(efk.speed, efk.startframe, efk.fadeout)
         ph:set_visible(true)
     end
     iefk.set_visible(e, true)
