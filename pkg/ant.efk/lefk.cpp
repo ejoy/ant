@@ -456,11 +456,6 @@ lefkctx_set_light_direction(lua_State *L) {
 }
 
 static int
-lefkctx_get_light_direction(lua_State *L) {
-	return 0;
-}
-
-static int
 lefkctx_set_light_color(lua_State *L) {
 	auto ctx = EC(L);
 	auto color = TOC(L,	2);
@@ -469,20 +464,10 @@ lefkctx_set_light_color(lua_State *L) {
 }
 
 static int
-lefkctx_get_light_color(lua_State *L) {
-	return 0;
-}
-
-static int
 lefkctx_set_ambient_color(lua_State *L) {
 	auto ctx = EC(L);
 	auto ambient = TOC(L, 2);
 	ctx->renderer->SetLightAmbientColor(*ambient);
-	return 0;
-}
-
-static int
-lefkctx_get_ambient_color(lua_State *L) {
 	return 0;
 }
 
@@ -537,11 +522,8 @@ lefk_startup(lua_State *L){
 			{"update_transforms",	lefkctx_update_transforms},
 			{"is_alive",			lefkctx_is_alive},
 			{"set_light_direction",	lefkctx_set_light_direction},
-			{"get_light_direction",	lefkctx_get_light_direction},
 			{"set_light_color",		lefkctx_set_light_color},
-			{"get_light_color",		lefkctx_get_light_color},
 			{"set_ambient_color",	lefkctx_set_ambient_color},
-			{"get_ambient_color",	lefkctx_get_ambient_color},
 			{nullptr, nullptr},
 		};
 
