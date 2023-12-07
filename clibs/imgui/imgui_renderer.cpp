@@ -305,7 +305,7 @@ void rendererBuildFont() {
 }
 
 std::optional<ImTextureID> rendererGetTextureID(int tex) {
-	if (bgfxGetHandleType(tex) == BGFX_HANDLE_TEXTURE) {
+	if (bgfxGetHandleType(tex) != BGFX_HANDLE_TEXTURE) {
 		return std::nullopt;
 	}
 	bgfx_texture_handle_t th = { bgfxGetHandle(tex) };
