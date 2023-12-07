@@ -222,8 +222,10 @@ get_instance(lua_State *L, efk_ctx *ctx, int index)	{
 }
 
 static void
-stop_all(efk_ctx* ctx, struct efk_instance *slot, int delay) {
-	if (delay) {
+stop_all(efk_ctx* ctx, struct efk_instance *slot, int fadeout) {
+	if (slot->inst < 0)
+		return;
+	if (fadeout) {
 		ctx->manager->SetSpawnDisabled(slot->inst, true);
 		for (auto handle : slot->clone) {
 			ctx->manager->SetSpawnDisabled(handle, true);
@@ -291,8 +293,11 @@ update_transform(efk_ctx* ctx, struct efk_instance * slot, const Effekseer::Matr
 					clone_effect(ctx, slot, effekMat);
 				}
 			}
+			if (slot->fadeout) {
+				stop_all(ctx, slot, true);
+			}
 		} else {
-			stop_all(ctx, slot, true);
+			stop_all(ctx, slot, false);
 		}
 	}
 }
@@ -364,11 +369,12 @@ static int
 lefkctx_stop(lua_State *L){
 	auto ctx = EC(L);
 	auto slot = get_instance(L, ctx, 2);
-	bool delay = false;
-	if (lua_type(L, 3) == LUA_TBOOLEAN) {
-		delay = lua_toboolean(L, 3);
+	bool fadeout = lua_toboolean(L, 3);
+	if (fadeout) {
+		slot->fadeout = true;
+	} else {
+		stop_all(ctx, slot, false);
 	}
-	stop_all(ctx, slot, delay);
 	return 0;
 }
 
