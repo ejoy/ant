@@ -14,6 +14,7 @@ local assetmgr  = import_package "ant.asset"
 local hwi       = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
+local sampler	= import_package "ant.render.core".sampler
 
 local RM        = ecs.require "ant.material|material"
 local R         = world:clibs "render.render_material"
@@ -27,6 +28,7 @@ local ishadowcfg= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
+local ivs		= ecs.require "ant.render|visible_state"
 
 local LiSPSM	= require "shadow.LiSPSM"
 
@@ -475,3 +477,144 @@ function shadow_sys:update_filter()
 		e.receive_shadow	= receiveshadow
 	end
 end
+
+
+
+----
+local COLORS<const> = {
+	{1.0, 0.0, 0.0, 1.0},
+	{0.0, 1.0, 0.0, 1.0},
+	{0.0, 0.0, 1.0, 1.0},
+	{0.0, 0.0, 0.0, 1.0},
+	{1.0, 1.0, 0.0, 1.0},
+	{1.0, 0.0, 1.0, 1.0},
+	{0.0, 1.0, 1.0, 1.0},
+	{0.5, 0.5, 0.5, 1.0},
+	{0.8, 0.8, 0.1, 1.0},
+	{0.1, 0.8, 0.1, 1.0},
+	{0.1, 0.5, 1.0, 1.0},
+	{0.5, 1.0, 0.5, 1.0},
+}
+
+local unique_color; do
+	local idx = 0
+	function unique_color()
+		idx = idx % #COLORS
+		idx = idx + 1
+		return COLORS[idx]
+	end
+end
+
+local DEBUG_ENTITIES = {}
+local ientity = ecs.require "components.entity"
+local imesh = ecs.require "ant.asset|mesh"
+local kbmb = world:sub{"keyboard"}
+local shadowdebug_sys = ecs.system "shadow_debug_system2"
+local shadowdebug_queue
+local shadowdebug_viewid = hwi.viewid_generate("shadowdebug", "ssao")
+
+function shadowdebug_sys:init_world()
+	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
+	queuemgr.register_queue("shadow_debug_queue", queuemgr.material_index "main_queue", queuemgr.queue_mask "main_queue")
+	local fbw, fbh = 256, 256
+	local fbidx = fbmgr.create(
+					{rbidx = fbmgr.create_rb{
+						format = "RGBA16F", w=fbw, h=fbh, layers=1,
+						flags=sampler{
+							RT="RT_ON",
+							MIN="LINEAR",
+							MAG="LINEAR",
+							U="CLAMP",
+							V="CLAMP",
+						}
+					}},
+					{rbidx = fbmgr.create_rb{
+						format="D32F", w=fbw, h=fbh, layers=1,
+						flags = sampler {
+							RT = "RT_ON",
+							MIN="POINT",
+							MAG="POINT",
+							U="CLAMP",
+							V="CLAMP",
+						},
+					}}
+				)
+
+	
+	shadowdebug_queue = world:create_entity{
+		policy = {
+			"ant.render|render_queue",
+		},
+		data = {
+			render_target = {
+				viewid = shadowdebug_viewid,
+				view_rect = {x=0, y=0, w=fbw, h=fbh},
+				clear_state = {
+					clear = "CD",
+					color = 0,
+					depth = 0,
+				},
+				fb_idx = fbidx,
+			},
+			visible = false,
+			camera_ref = irq.main_camera(),
+			queue_name = "shadow_debug_queue",
+		},
+	}
+
+	world:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			simplemesh = imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=fbw, h=fbh}, true),
+			material = "/pkg/ant.resources/materials/texquad.material",
+			visible_state = "main_queue",
+			scene = {},
+			on_ready = function (e)
+				imaterial.set_property(e, "s_tex", fbmgr.get_rb(fbidx, 1).handle)
+			end,
+		}
+	}
+end
+
+function shadowdebug_sys:data_changed()
+	for _, key, press in kbmb:unpack() do
+		if key == "B" and press == 0 then
+			local q<close> = world:entity(shadowdebug_queue, "visible?out")
+			q.visible = false
+			--w:submit(q)
+
+
+			local qq = w:first "main_queue visible?in"
+			print(qq.visible)
+		elseif key == "SPACE" and press == 0 then
+			for k, v in pairs(DEBUG_ENTITIES.frustums) do
+				w:remove(v)
+			end
+
+			local frustums = {}
+			local function add_frustum(n, m)
+				frustums[#frustums+1] = n
+				frustums[n] = {m = m, c = unique_color()}
+			end
+			add_frustum("camera_viewprojmat", world:entity(irq.main_camera(), "camera:in").camera.viewprojmat)
+
+			do
+				for e in w:select "csm:in camera_ref:in" do
+					local ce = world:entity(e.camera_ref, "camera:in scene:in")
+					local prefixname = "csm" .. e.csm.index
+					add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
+					add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
+					add_frustum(prefixname .. "_W", 			math3d.mul(ce.camera.W))
+					add_frustum(prefixname .. "_FinalMat", 		ce.camera.FinalMat)
+				end
+			end
+
+			for k, f in pairs(frustums) do
+				DEBUG_ENTITIES[k] = ientity.create_frustum_entity(math3d.frustum_points(f.m), f.c)
+			end
+		end
+	end
+end
+

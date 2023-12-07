@@ -23,17 +23,32 @@ do
 		return idx
 	end
 	--qidx&midx is base 0
-	local function register_queue(qn, midx)
+	local function register_queue(qn, midx, qmask)
 		local _ = QUEUE_INDICES[qn] == nil or error (qn .. " already register")
-		local qidx = NEXT_QUEUE_IDX
-		if qidx >= 64 then
-			error(("Max queue index is 64, %d is provided"):format(qidx))
+
+		local qidx
+		if qmask then
+			for i=0, 63 do
+				local testmask = i << 1
+				if testmask == qmask&testmask then
+					qidx = i
+				end
+			end
+			if nil == qidx then
+				error("Invalid queue mask: " .. qmask)
+			end
+		else
+			qidx = NEXT_QUEUE_IDX
+			if qidx >= 64 then
+				error(("Max queue index is 64, %d is provided"):format(qidx))
+			end
+	
+			NEXT_QUEUE_IDX = NEXT_QUEUE_IDX + 1
+			qmask = (1 << qidx)
 		end
 
-		NEXT_QUEUE_IDX = NEXT_QUEUE_IDX + 1
-
 		QUEUE_INDICES[qn] = qidx
-		QUEUE_MASKS[qn] = (1 << qidx)
+		QUEUE_MASKS[qn] = qmask
 
 		local _ = QUEUE_MATERIALS[qn] == nil or error (qn .. " material index already register")
 
