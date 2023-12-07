@@ -11,6 +11,7 @@ local mc        = mathpkg.constant
 local ivs       = ecs.require "ant.render|visible_state"
 local iwd       = ecs.require "ant.widget|widget"
 local iefk      = ecs.require "ant.efk|efk"
+local iRmlUi    = ecs.require "ant.rmlui|rmlui_system"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local keyframe_view     = ecs.require "widget.keyframe_view"
@@ -56,10 +57,8 @@ function m:start_frame()
     global_data.camera_lock = false
 end
 
-local stat_window
 function m:init_world()
-    local iRmlUi = ecs.require "ant.rmlui|rmlui_system"
-    stat_window = iRmlUi.open "/pkg/tools.editor/res/ui/bgfx_stat.rml"
+    iRmlUi.open "/pkg/tools.editor/res/ui/bgfx_stat.rml"
 end
 
 function m:ui_update()
@@ -83,7 +82,7 @@ function m:ui_update()
     imgui.windows.PopStyleVar()
 
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
-    stat_window.postMessage(string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
+    iRmlUi.sendMessage("stat", string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
 end
 
