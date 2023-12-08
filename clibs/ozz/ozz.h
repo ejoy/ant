@@ -10,9 +10,6 @@
 #include <ozz/animation/runtime/skeleton.h>
 #include <ozz/animation/offline/raw_animation.h>
 
-using bindpose_soa = ozz::vector<ozz::math::SoaTransform>;
-using bindpose = ozz::vector<ozz::math::Float4x4>;
-
 struct ozzJointRemap {
 	ozz::vector<uint16_t> joints;
 };
@@ -38,7 +35,7 @@ struct ozzBindpose: public ozz::vector<ozz::math::Float4x4> {
 };
 
 struct ozzPoseResult: public ozzBindpose {
-	ozz::vector<bindpose_soa> m_results;
+	ozz::vector<ozz::vector<ozz::math::SoaTransform>> m_results;
 	ozz::vector<ozz::animation::BlendingJob::Layer> m_layers;
 	ozz::animation::Skeleton* m_ske = nullptr;
 	ozzPoseResult(size_t numjoints)

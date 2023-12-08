@@ -78,9 +78,9 @@ fill_skinning_job_field(uint32_t num_vertices, const DataT &d, ozz::span<T> &r, 
 }
 
 static void
-build_skinning_matrices(bindpose* skinning_matrices,
-	const bindpose* current_pose,
-	const bindpose* inverse_bind_matrices,
+build_skinning_matrices(ozz::vector<ozz::math::Float4x4>* skinning_matrices,
+	const ozz::vector<ozz::math::Float4x4>* current_pose,
+	const ozz::vector<ozz::math::Float4x4>* inverse_bind_matrices,
 	const ozzJointRemap *jarray,
 	const ozz::math::Float4x4 *worldmat){
 	if (jarray){

@@ -196,7 +196,7 @@ namespace ozzlua::PoseResult {
 		if (pr.m_ske->num_joints() > sc.v->max_tracks()){
 			sc.v->Resize(pr.m_ske->num_joints());
 		}
-		bindpose_soa bp_soa(pr.m_ske->num_soa_joints());
+		ozz::vector<ozz::math::SoaTransform> bp_soa(pr.m_ske->num_soa_joints());
 		ozz::animation::SamplingJob job;
 		job.animation = animation.v;
 		job.context = sc.v;
