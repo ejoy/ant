@@ -315,20 +315,24 @@ end
 function m.process_wait_queue()
 
     local function update_fb(new_fb)
-        local viewid = params.VIEWID
-        local fbidx = fbmgr.get_fb_idx(viewid)
-        fbmgr.recreate(fbidx, new_fb)
-        local select_tag = ("%s render_target:update"):format(params.QUEUE_NAME)
-        local mtq = w:first(select_tag)
-        irq.update_rendertarget(params.QUEUE_NAME, mtq.render_target)
+        if new_fb then
+            local viewid = params.VIEWID
+            local fbidx = fbmgr.get_fb_idx(viewid)
+            fbmgr.recreate(fbidx, new_fb)
+            local select_tag = ("%s render_target:update"):format(params.QUEUE_NAME)
+            local mtq = w:first(select_tag)
+            irq.update_rendertarget(params.QUEUE_NAME, mtq.render_target) 
+        end
     end
 
     local function set_camera_srt(camera_srt)
-        local select_tag = ("%s camera_ref:in"):format(params.QUEUE_NAME)
-        local mtq = w:first(select_tag)
-        local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
-        iom.set_position(camera, camera_srt.t)
-        iom.set_rotation(camera, camera_srt.r)
+        if camera_srt then
+            local select_tag = ("%s camera_ref:in"):format(params.QUEUE_NAME)
+            local mtq = w:first(select_tag)
+            local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+            iom.set_position(camera, camera_srt.t)
+            iom.set_rotation(camera, camera_srt.r) 
+        end
     end
 
     local function set_objects_visible_state(prefab, state)
