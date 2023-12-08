@@ -305,10 +305,14 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 static inline void
 render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 	// draw simple objects
-	for (auto& e : ecs_api::select<ecs::render_object_visible, ecs::render_object, ecs::eid>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::render_object_visible, ecs::render_object>(w->ecs)) {
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto& ra = cc.ra[ii];
 			const auto& obj = e.get<ecs::render_object>();
+#ifdef RENDER_DEBUG
+			auto eid = e.component<ecs::eid>();eid;
+#endif //RENDER_DEBUG
+
 			const ecs::indirect_object* iobj = e.component<ecs::indirect_object>();
 			if (obj_visible(obj, ra.a->queue_mask) || (indirect_draw_valid(iobj) && obj_queue_visible(obj, ra.a->queue_mask))){
 				draw_obj(L, w, ra.a, &obj, iobj, nullptr, cc.transforms);
@@ -462,8 +466,8 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init_system", linit_system},
-		{ "exit",				lexit},
+		{ "init_system",	linit_system},
+		{ "exit",			lexit},
 		//{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
 		// { "render_hitch_submit",lrender_hitch_submit},

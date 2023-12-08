@@ -22,7 +22,7 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
 local fbmgr     = require "framebuffer_mgr"
-local queuemgr  = require "queue_mgr"
+local queuemgr  = ecs.require "queue_mgr"
 
 local ishadowcfg= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
@@ -506,16 +506,16 @@ local unique_color; do
 end
 
 local DEBUG_ENTITIES = {}
-local ientity = ecs.require "components.entity"
-local imesh = ecs.require "ant.asset|mesh"
-local kbmb = world:sub{"keyboard"}
+local ientity 		= ecs.require "components.entity"
+local imesh 		= ecs.require "ant.asset|mesh"
+local kbmb 			= world:sub{"keyboard"}
+
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
 local shadowdebug_queue
 local shadowdebug_viewid = hwi.viewid_generate("shadowdebug", "ssao")
 
 function shadowdebug_sys:init_world()
 	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
-	queuemgr.register_queue("shadow_debug_queue", queuemgr.material_index "main_queue", queuemgr.queue_mask "main_queue")
 	local fbw, fbh = 512, 512
 	local fbidx = fbmgr.create(
 					{rbidx = fbmgr.create_rb{
@@ -556,7 +556,7 @@ function shadowdebug_sys:init_world()
 				},
 				fb_idx = fbidx,
 			},
-			visible = false,
+			visible = true,
 			camera_ref = irq.main_camera(),
 			queue_name = "shadow_debug_queue",
 		},
@@ -579,6 +579,20 @@ function shadowdebug_sys:init_world()
 			end,
 		}
 	}
+
+	for e in w:select "render_object visible_state:in" do
+		if e.visible_state["main_queue"] then
+			ivs.set_state(e, "shadow_debug_queue", true)
+		end
+	end
+end
+
+function shadowdebug_sys:entity_init()
+	for e in w:select "INIT render_object visible_state:in" do
+		if e.visible_state["main_queue"] then
+			ivs.set_state(e, "shadow_debug_queue", true)
+		end
+	end
 end
 
 function shadowdebug_sys:data_changed()
