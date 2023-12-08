@@ -10,6 +10,8 @@
 #include <ozz/animation/runtime/local_to_model_job.h>
 #include <ozz/animation/runtime/skeleton_utils.h>
 
+#include <cstring>
+
 #define REGISTER_LUA_NAME(C) namespace bee::lua { template <> struct udata<C> { static inline auto name = #C; }; }
 REGISTER_LUA_NAME(ozzSkeleton)
 #undef REGISTER_LUA_NAME
