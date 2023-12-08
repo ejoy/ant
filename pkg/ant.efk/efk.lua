@@ -155,6 +155,7 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")
+    local main_fb = fbmgr.get(mq.render_target.fb_idx)
     local vp = world.args.viewport
     world:create_entity{
         policy = {
@@ -166,7 +167,7 @@ function efk_sys:init_world()
             render_target = {
                 view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
                 viewid = effect_viewid,
-                fb_idx = mq.render_target.fb_idx,
+                fb_idx = fbmgr.create(table.unpack(main_fb)),
                 view_mode = "s",
                 clear_state = {
                     clear = "",
@@ -174,6 +175,17 @@ function efk_sys:init_world()
             },
             queue_name = "efk_queue",
             watch_screen_buffer = true,
+            on_ready = function(e)
+                local tmq = w:first "tonemapping_queue render_target:in"
+                w:extend(e, "render_target:update")
+                local fbidx = e.render_target.fb_idx
+                local fb = {
+                    {rbidx = fbmgr.get(tmq.render_target.fb_idx)[1].rbidx},
+                    {rbidx = fbmgr.get(mq.render_target.fb_idx)[2].rbidx}
+                }
+                fbmgr.recreate(fbidx, fb)
+                need_update_framebuffer = true
+            end
         }
     }
 
