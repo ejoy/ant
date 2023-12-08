@@ -106,6 +106,9 @@ function m.clear_prefab_cache()
 end
 
 function m.add_wait_queue(name, prefab_rotation)
+    if not params.PREFABS[name] then
+        return
+    end
     add_wait_queue(name)
     params.PREFABS[name].prefab_rotation = prefab_rotation
 end
