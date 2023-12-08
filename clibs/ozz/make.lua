@@ -22,6 +22,7 @@ lm:lua_source "ozz" {
         "hierarchy_node.cpp",
         "animation.cpp",
         "ozz.cpp",
+        "skinning.cpp",
         Ant3rd .. "ozz-animation/samples/framework/mesh.cc"
     },
     defines = {

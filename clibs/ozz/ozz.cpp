@@ -120,8 +120,9 @@ lload(lua_State *L){
 	return 2;
 }
 
-extern void init_animation(lua_State *L);
-extern void init_skeleton(lua_State *L);
+extern void init_animation(lua_State* L);
+extern void init_skeleton(lua_State* L);
+extern void init_skinning(lua_State* L);
 
 extern "C" int
 luaopen_ozz(lua_State *L) {
@@ -130,6 +131,7 @@ luaopen_ozz(lua_State *L) {
 	lua_newtable(L);
 	init_animation(L);
 	init_skeleton(L);
+	init_skinning(L);
 	lua_pushcfunction(L, lmemory);
 	lua_setfield(L, -2, "memory");
 	lua_pushcfunction(L, lload);

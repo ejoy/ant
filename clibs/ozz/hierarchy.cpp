@@ -1,4 +1,4 @@
-#include "hierarchy.h"
+#include "ozz.h"
 
 extern "C" {
 #define LUA_LIB
