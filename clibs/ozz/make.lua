@@ -18,12 +18,10 @@ lm:lua_source "ozz" {
         "../luabind",
     },
     sources = {
-        "hierarchy.cpp",
-        "hierarchy_node.cpp",
         "animation.cpp",
         "ozz.cpp",
+        "skeleton.cpp",
         "skinning.cpp",
-        Ant3rd .. "ozz-animation/samples/framework/mesh.cc"
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",

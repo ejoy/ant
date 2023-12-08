@@ -10,10 +10,6 @@
 #include <ozz/animation/runtime/skeleton.h>
 #include <ozz/animation/offline/raw_animation.h>
 
-struct hierarchy_build_data {
-	ozz::animation::Skeleton *skeleton;
-};
-
 using bindpose_soa = ozz::vector<ozz::math::SoaTransform>;
 using bindpose = ozz::vector<ozz::math::Float4x4>;
 
@@ -71,6 +67,16 @@ struct ozzRawAnimation {
 		, m_skeleton(nullptr)
 	{}
 	~ozzRawAnimation() {
+		ozz::Delete(v);
+	}
+};
+
+struct ozzSkeleton {
+	ozz::animation::Skeleton* v;
+	ozzSkeleton(ozz::animation::Skeleton* p)
+		: v(p) {
+	}
+	~ozzSkeleton() {
 		ozz::Delete(v);
 	}
 };

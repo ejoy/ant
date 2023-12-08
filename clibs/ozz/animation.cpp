@@ -1,6 +1,4 @@
-#define LUA_LIB
 #include <lua.hpp>
-
 #include <binding/binding.h>
 
 #include "ozz.h"
@@ -202,13 +200,13 @@ namespace ozzlua::Bindpose {
 namespace ozzlua::PoseResult {
 	static int setup(lua_State* L) {
 		auto& pr = bee::lua::checkudata<ozzPoseResult>(L, 1);
-		const auto hie = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
+		auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 2);
 		if (pr.m_ske) {
-			if (pr.m_ske != hie->skeleton) {
+			if (pr.m_ske != ske.v) {
 				return luaL_error(L, "using sample pose_result but different skeleton");
 			}
 		} else {
-			pr.m_ske = hie->skeleton;
+			pr.m_ske = ske.v;
 		}
 		return 0;
 	}
@@ -442,14 +440,13 @@ namespace ozzlua::Animation {
 		return 1;
 	}
 
-	static const char* load(lua_State* L, ozz::io::IArchive &ia) {
-		if (!ia.TestTag<ozz::animation::Animation>()) {		
+	static const char* load(lua_State* L, ozz::io::IArchive& ia) {
+		if (!ia.TestTag<ozz::animation::Animation>()) {
 			return nullptr;
 		}
-
-		auto ani = ozz::New<ozz::animation::Animation>();
-		ia >> *ani;
-		create(L, ani);
+		auto v = ozz::New<ozz::animation::Animation>();
+		ia >> *v;
+		create(L, v);
 		return ozz::io::internal::Tag<const ozz::animation::Animation>::Get();
 	}
 }
@@ -457,9 +454,9 @@ namespace ozzlua::Animation {
 namespace ozzlua::RawAnimation {
 	static int setup(lua_State *L) {
 		auto& base = bee::lua::checkudata<ozzRawAnimation>(L, 1);
+		auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 2);
 		ozz::animation::offline::RawAnimation* pv = base.v;
-		const auto ske = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
-		base.m_skeleton = ske->skeleton;
+		base.m_skeleton = ske.v;
 		pv->duration = (float)lua_tonumber(L, 3);
 		pv->tracks.resize(base.m_skeleton->num_joints());
 		return 0;
@@ -468,7 +465,7 @@ namespace ozzlua::RawAnimation {
 	static int push_prekey(lua_State *L) {
 		auto& base = bee::lua::checkudata<ozzRawAnimation>(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base.v;
-		if(!base.m_skeleton) {
+		if (!base.m_skeleton) {
 			luaL_error(L, "setup must be called first");
 			return 0;
 		}

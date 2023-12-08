@@ -92,7 +92,6 @@ private:
 
 extern const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia);
 extern const char* check_read_skeleton(lua_State *L, ozz::io::IArchive &ia);
-extern const char* check_read_raw_skeleton(lua_State *L, ozz::io::IArchive& ia);
 
 static int
 lload(lua_State *L){
@@ -100,7 +99,7 @@ lload(lua_State *L){
 	MemoryPtrStream ms(m);
 
 	std::function<decltype(check_read_animation)> check_funcs[] = {
-		check_read_animation, check_read_skeleton, check_read_raw_skeleton
+		check_read_animation, check_read_skeleton
 	};
 	
 	const char* type = nullptr;
