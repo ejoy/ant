@@ -179,9 +179,14 @@ function efk_sys:init_world()
                 local tmq = w:first "tonemapping_queue render_target:in"
                 w:extend(e, "render_target:update")
                 local fbidx = e.render_target.fb_idx
+                local tm_rb = fbmgr.get(tmq.render_target.fb_idx)[1]
+                local depth_rb = fbmgr.get(mq.render_target.fb_idx)[2]
+                local depth_rb_table = fbmgr.get_rb(depth_rb.rbidx)
+                local ww, hh = depth_rb_table.w, depth_rb_table.h
+                fbmgr.resize_rb(tm_rb.rbidx, ww, hh)
                 local fb = {
-                    {rbidx = fbmgr.get(tmq.render_target.fb_idx)[1].rbidx},
-                    {rbidx = fbmgr.get(mq.render_target.fb_idx)[2].rbidx}
+                    {rbidx = tm_rb.rbidx},
+                    {rbidx = depth_rb.rbidx}
                 }
                 fbmgr.recreate(fbidx, fb)
                 need_update_framebuffer = true
