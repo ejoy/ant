@@ -24,6 +24,7 @@ local function find_bindir()
 end
 
 local BINDIR<const>     = find_bindir()--lfs.exe_path():parent_path()
+log.info(("Use tools path:"):format(BINDIR))
 local TOOLSUFFIX<const> = platform.os == "macos" and "" or ".exe"
 
 return function (toolname)
