@@ -11,7 +11,10 @@ struct DefaultConfig {
 	DefaultConfig()
 		: config(YGConfigNew()) {
 		YGConfigSetPointScaleFactor(config, 0);
-		YGConfigSetErrata(config, YGErrataStartingEndingEdgeFromFlexDirection);
+		YGConfigSetErrata(config, YGErrataNone
+			| YGErrataStartingEndingEdgeFromFlexDirection
+			| YGErrataAbsolutePositioning
+			);
 		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
 	}
 	~DefaultConfig() {
