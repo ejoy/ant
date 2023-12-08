@@ -108,6 +108,9 @@ function render_sys:entity_init()
 
 	for qe in w:select "INIT queue_name:in render_target:in" do
 		local qn = qe.queue_name
+		if not queuemgr.has(qn) then
+			queuemgr.register_queue(qn)
+		end
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
