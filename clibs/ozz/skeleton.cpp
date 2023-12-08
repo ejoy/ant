@@ -3,13 +3,11 @@
 
 #include "ozz.h"
 
-#include <ozz/base/maths/soa_float4x4.h>
 #include <ozz/base/io/archive.h>
-#include <ozz/base/io/archive_traits.h>
 #include <ozz/base/io/stream.h>
+#include <ozz/base/maths/soa_float4x4.h>
 
 #include <ozz/animation/runtime/local_to_model_job.h>
-#include <ozz/animation/runtime/skeleton.h>
 #include <ozz/animation/runtime/skeleton_utils.h>
 
 #define REGISTER_LUA_NAME(C) namespace bee::lua { template <> struct udata<C> { static inline auto name = #C; }; }

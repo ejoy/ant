@@ -3,42 +3,17 @@
 
 #include "ozz.h"
 
-//#include "meshbase/meshbase.h"
-#include <ozz/animation/offline/raw_animation.h>
-#include <ozz/animation/offline/animation_builder.h>
-
-#include <ozz/animation/runtime/animation.h>
-#include <ozz/animation/runtime/sampling_job.h>
-#include <ozz/animation/runtime/local_to_model_job.h>
-#include <ozz/animation/runtime/blending_job.h>
-#include <ozz/animation/runtime/skeleton.h>
-#include <ozz/animation/runtime/skeleton_utils.h>
-
-#include <ozz/geometry/runtime/skinning_job.h>
-#include <ozz/base/platform.h>
-
-#include <ozz/base/maths/soa_transform.h>
-#include <ozz/base/maths/soa_float4x4.h>
-#include <ozz/base/maths/simd_quaternion.h>
-
-#include <ozz/base/memory/allocator.h>
 #include <ozz/base/io/stream.h>
 #include <ozz/base/io/archive.h>
-#include <ozz/base/containers/vector.h>
-#include <ozz/base/containers/map.h>
-#include <ozz/base/maths/math_ex.h>
 
-#include <../samples/framework/mesh.h>
-// glm
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <ozz/animation/offline/animation_builder.h>
+#include <ozz/animation/runtime/local_to_model_job.h>
+#include <ozz/animation/runtime/skeleton_utils.h>
 
-// stl
 #include <string>
 #include <cstring>
 #include <algorithm>
 #include <sstream>
-
 
 #define REGISTER_LUA_NAME(C) namespace bee::lua { template <> struct udata<C> { static inline auto name = #C; }; }
 REGISTER_LUA_NAME(ozzJointRemap)

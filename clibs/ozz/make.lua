@@ -13,7 +13,6 @@ lm:lua_source "ozz" {
     includes = {
         BgfxInclude,
         Ant3rd .. "ozz-animation/include",
-        Ant3rd .. "glm",
         Ant3rd .. "bee.lua",
         "../luabind",
     },
@@ -24,7 +23,6 @@ lm:lua_source "ozz" {
         "skinning.cpp",
     },
     defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
         "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     },
 }
