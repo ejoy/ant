@@ -183,7 +183,7 @@ namespace ozzlua::Skeleton {
         bee::lua::newudata<ozzSkeleton>(L, metatable, v);
         return 1;
     }
-    static const char* load(lua_State* L, ozz::io::IArchive& ia) {
+    const char* load(lua_State* L, ozz::io::IArchive& ia) {
         if (!ia.TestTag<ozz::animation::Skeleton>()) {
             return nullptr;
         }
@@ -194,13 +194,9 @@ namespace ozzlua::Skeleton {
     }
 }
 
-const char* check_read_skeleton(lua_State* L, ozz::io::IArchive& ia) {
-    return ozzlua::Skeleton::load(L, ia);
-}
-
 void init_skeleton(lua_State* L) {
     luaL_Reg l[] = {
-        { "builddata_metatable", ozzlua::Skeleton::getmetatable},
+        { "skeleton_mt", ozzlua::Skeleton::getmetatable},
         { NULL, NULL },
     };
     luaL_setfuncs(L,l,0);

@@ -440,7 +440,7 @@ namespace ozzlua::Animation {
 		return 1;
 	}
 
-	static const char* load(lua_State* L, ozz::io::IArchive& ia) {
+	const char* load(lua_State* L, ozz::io::IArchive& ia) {
 		if (!ia.TestTag<ozz::animation::Animation>()) {
 			return nullptr;
 		}
@@ -571,10 +571,6 @@ namespace ozzlua::RawAnimation {
 		bee::lua::newudata<ozzRawAnimation>(L, metatable);
 		return 1;
 	}
-}
-
-const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia){
-	return ozzlua::Animation::load(L, ia);
 }
 
 void init_animation(lua_State *L) {

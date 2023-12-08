@@ -2,8 +2,6 @@
 #include <bx/allocator.h>
 #include "fastio.h"
 
-#include <functional>
-
 #include <ozz/base/memory/allocator.h>
 #include <ozz/base/io/archive.h>
 #include <ozz/base/io/archive_traits.h>
@@ -93,17 +91,21 @@ private:
 extern const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia);
 extern const char* check_read_skeleton(lua_State *L, ozz::io::IArchive &ia);
 
-static int
-lload(lua_State *L){
+namespace ozzlua {
+	namespace Animation {
+		const char* load(lua_State* L, ozz::io::IArchive& ia);
+	}
+	namespace Skeleton {
+		const char* load(lua_State* L, ozz::io::IArchive& ia);
+	}
+}
+
+static int lload(lua_State* L) {
 	auto m = getmemory(L, 1);
 	MemoryPtrStream ms(m);
 
-	std::function<decltype(check_read_animation)> check_funcs[] = {
-		check_read_animation, check_read_skeleton
-	};
-	
 	const char* type = nullptr;
-	for (auto f : check_funcs){
+	for (auto f : { ozzlua::Animation::load, ozzlua::Skeleton::load }) {
 		ozz::io::IArchive ia(&ms);
 		type = f(L, ia);
 		if (type){
