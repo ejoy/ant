@@ -17,16 +17,15 @@ local ozz = require "ozz"
 if not ozz.adapter then
     ozz.adapter = true
 
-    local bd_mt = ozz.builddata_metatable()
-    bd_mt.joint = math3d_adapter.getter(bd_mt.joint, "m", 3)
-
-    local mt = ozz.bind_pose_mt().__index
+    local mt = ozz.skeleton_mt().__index
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-    mt = ozz.pose_result_mt()
+    mt = ozz.bind_pose_mt().__index
+    mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
+    mt = ozz.pose_result_mt().__index
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
     mt.joint_local_srt = math3d_adapter.format(mt.joint_local_srt, "vqv", 3)
     mt.fetch_result = math3d_adapter.getter(mt.fetch_result, "m", 2)
-    mt = ozz.raw_animation_mt()
+    mt = ozz.raw_animation_mt().__index
     mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
     ozz.build_skinning_matrices = math3d_adapter.matrix(ozz.build_skinning_matrices, 5)
 end
