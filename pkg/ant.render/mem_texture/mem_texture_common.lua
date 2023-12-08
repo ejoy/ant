@@ -93,9 +93,6 @@ local function destroy_prefab_cache(handle, destroy_rb)
         fbmgr.destroy_rb(fb[1].rbidx, true)
         fbmgr.destroy_rb(fb[2].rbidx, true) 
     end
-    if prefab_rotation then
-        math3d.unmark(prefab_rotation)
-    end
     params.PREFABS[name] = {}
 end
 
@@ -110,7 +107,7 @@ end
 
 function m.add_wait_queue(name, prefab_rotation)
     add_wait_queue(name)
-    params.PREFABS[name].prefab_rotation = math3d.mark(prefab_rotation)
+    params.PREFABS[name].prefab_rotation = prefab_rotation
 end
 
 function m.destroy_portrait_prefab(handle)
@@ -352,7 +349,7 @@ function m.process_wait_queue()
             for _, eid in ipairs(objects) do
                 local e <close> = world:entity(eid, "scene?in")
                 if e.scene and e.scene.parent == 0 then
-                    iom.set_rotation(e, prefab_rotation)
+                    iom.set_rotation(e, math3d.quaternion(prefab_rotation))
                 end
             end 
         end
