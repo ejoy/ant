@@ -3,12 +3,6 @@
 
 namespace Rml::StringUtilities {
 
-static inline char CharToLower(char c) {
-	if (c >= 'A' && c <= 'Z')
-		c += char('a' - 'A');
-	return c;
-}
-
 void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter) {
 	char quote = 0;
 	bool last_char_delimiter = true;
