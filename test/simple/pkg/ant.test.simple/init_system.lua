@@ -33,7 +33,7 @@ function m:init_world()
     create_plane()
     irq.set_view_clear_color("main_queue", 0xff0000ff)
     world:create_instance {
-		prefab = "/res/scenes.prefab"
+		prefab = "/pkg/ant.test.simple/resource/scenes.prefab"
 	}
 end
 
