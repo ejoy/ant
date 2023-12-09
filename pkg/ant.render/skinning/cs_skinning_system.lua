@@ -177,7 +177,7 @@ function cs_skinning_sys:skin_mesh()
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			ozz.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, r2l_mat)
+			ozz.BuildSkinningMatrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, r2l_mat)
 		end
 	end
 

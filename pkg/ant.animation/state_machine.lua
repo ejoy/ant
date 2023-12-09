@@ -5,6 +5,7 @@ local iefk	= ecs.require "ant.efk|efk"
 local fs 	= require "filesystem"
 local datalist  = require "datalist"
 local aio = import_package "ant.io"
+local ozz = require "ozz"
 
 local iani = {}
 
@@ -92,10 +93,10 @@ function iani.play(eid, anim_state)
 	-- 					_duration = duration,
 	-- 					_sampling_context = ozz.new_sampling_context(1)
 	-- 				}
-	-- 				local ske = e.skeleton._handle
-	-- 				local raw_animation = ozz.new_raw_animation()
+	-- 				local ske = e.skeleton
+	-- 				local raw_animation = ozz.RawAnimation()
 	-- 				raw_animation:setup(ske, duration)
-	-- 				anim._handle = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
+	-- 				anim = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
 	-- 				break
 	-- 			elseif anim_data.type == "srt" then --TODO: srt and mtl animation
 	-- 			elseif anim_data.type == "mtl" then
@@ -131,9 +132,9 @@ function iani.get_duration(eid, anim_name)
 	end
 	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in")
 	if not anim_name then
-		return e.anim_ctrl.animation._handle:duration()
+		return e.anim_ctrl.animation:duration()
 	else
-		return e.animation[anim_name]._handle:duration()
+		return e.animation[anim_name]:duration()
 	end
 end
 
@@ -146,7 +147,7 @@ function iani.step(anim_e, s_delta, absolute)
 	local play_state = ctrl.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
-	local duration = ani._handle:duration()
+	local duration = ani:duration()
 	local next_time = absolute and adjust_delta or (play_state.ratio * duration + adjust_delta)
 	if next_time > duration then
 		if not play_state.loop then
@@ -161,8 +162,10 @@ function iani.step(anim_e, s_delta, absolute)
 		play_state.ratio = next_time / duration
 	end
 	local pr = ctrl.pose_result
-	pr:setup(anim_e.skeleton._handle)
-	pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
+	if not pr.locals then
+		pr.locals = ozz.SoaTransformVector(anim_e.skeleton:num_soa_joints())
+	end
+	ozz.SamplingJob(ani, pr.locals, play_state.ratio)
 	ctrl.dirty = true
 	anim_e.pose_dirty = true
 end
@@ -205,7 +208,7 @@ function iani.get_time(eid)
 	end
 	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	if not e.anim_ctrl.animation then return 0 end
-	return e.anim_ctrl.play_state.ratio * e.anim_ctrl.animation._handle:duration()
+	return e.anim_ctrl.play_state.ratio * e.anim_ctrl.animation:duration()
 end
 
 function iani.set_speed(eid, speed)

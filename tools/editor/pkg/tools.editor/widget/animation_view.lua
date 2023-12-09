@@ -816,7 +816,7 @@ function m.on_prefab_load(entities)
                         local events = e.anim_ctrl.keyframe_events[key]
                         editanims[key] = {
                             name = key,
-                            duration = anim._handle:duration(),
+                            duration = anim:duration(),
                             key_event = events and from_runtime_event(events) or {},
                         }
                         editanims.name_list[#editanims.name_list + 1] = key

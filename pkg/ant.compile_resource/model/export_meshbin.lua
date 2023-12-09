@@ -94,16 +94,16 @@ local function fetch_skininfo(gltfscene, skin, bindata)
 	local ibm_idx 	= skin.inverseBindMatrices
 	local ibm 		= gltfscene.accessors[ibm_idx+1]
 	local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
-
 	local start_offset = ibm_bv.byteOffset + 1
 	local end_offset = start_offset + ibm_bv.byteLength
-
+	local joints = skin.joints
+	local jointsbin = {}
+	for i = 1, #joints do
+		jointsbin[i] = string.pack("<I2", joints[i])
+	end
 	return {
-		inverse_bind_matrices = {
-			num		= ibm.count,
-			value 	= bindata:sub(start_offset, end_offset-1),
-		},
-		joints 	= skin.joints,
+		inverse_bind_matrices = bindata:sub(start_offset, end_offset-1),
+		joints = table.concat(jointsbin),
 	}
 end
 

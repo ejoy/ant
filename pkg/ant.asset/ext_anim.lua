@@ -55,7 +55,7 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
                 t = math3d.add(start_pos, target_pos)
             }
             local tween_to_s, tween_to_r, tween_to_t = math3d.srt(math3d.mul(poseMat, tween_local_mat))
-            raw_anim:push_prekey(joint_name, time + j * tween_step * duration, tween_to_s, tween_to_r, tween_to_t)
+            raw_anim:push_prekey(ske, joint_name, time + j * tween_step * duration, tween_to_s, tween_to_r, tween_to_t)
         end
     end
     local function push_anim_key(raw_anim, joint_name, clips, inherit)
@@ -65,7 +65,7 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
         local from_s, from_r, from_t = math3d.srt(math3d.mul(poseMat, localMat))
 		local sum = {pos = mc.ZERO, rot = {0, 0, 0}}
 		if not clips or #clips < 1 then
-			raw_anim:push_prekey(joint_name, 0, from_s, from_r, from_t)
+			raw_anim:push_prekey(ske, joint_name, 0, from_s, from_r, from_t)
 		else
 			for _, clip in ipairs(clips) do
 				if clip.range[1] >= 0 and clip.range[2] >= 0 then
@@ -79,7 +79,7 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 					local step = (duration / subdiv) * frame_to_time
 					local start_time = clip.range[1] * frame_to_time
 					if duration < subdiv or step <= frame_to_time then
-						raw_anim:push_prekey(joint_name, start_time, from_s, from_r, from_t)
+						raw_anim:push_prekey(ske, joint_name, start_time, from_s, from_r, from_t)
 						goto continue
 					end
 					local to_rot = {0,clip.amplitude_rot,0}
@@ -106,10 +106,10 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 					local endtime = clip.range[2] * frame_to_time
 					if clip.type == TYPE_LINEAR then
 						for i = 1, clip.repeat_count, 1 do
-							raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
+							raw_anim:push_prekey(ske, joint_name, time, from_s, from_r, from_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
 							time = start_time + i * step - frame_to_time
-							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
+							raw_anim:push_prekey(ske, joint_name, time, to_s, to_r, to_t)
 							time = time + frame_to_time
 							if time >= endtime then
 								break;
@@ -118,20 +118,20 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 					else
 						localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(-target_rot[1]), math.rad(-target_rot[2]), math.rad(-target_rot[3])}, t = math3d.mul(target_pos, math3d.vector(-1,-1,-1))}
 						local to_s2, to_r2, to_t2 = math3d.srt(math3d.mul(poseMat, localMat))
-						raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
+						raw_anim:push_prekey(ske, joint_name, time, from_s, from_r, from_t)
 						for i = 1, clip.repeat_count, 1 do
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
 							time = time + step
-							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
+							raw_anim:push_prekey(ske, joint_name, time, to_s, to_r, to_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, true, inherit and sum)
 							if clip.type == TYPE_REBOUND then
 								time = (i == clip.repeat_count) and (clip.range[2] * frame_to_time) or (time + step)
-								raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
+								raw_anim:push_prekey(ske, joint_name, time, from_s, from_r, from_t)
 							elseif clip.type == TYPE_SHAKE then
 								time = time + step
 								tween_push_anim_key(raw_anim, joint_name, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, false, inherit and sum)
 								time = time + step
-								raw_anim:push_prekey(joint_name, time, to_s2, to_r2, to_t2)
+								raw_anim:push_prekey(ske, joint_name, time, to_s2, to_r2, to_t2)
 								tween_push_anim_key(raw_anim, joint_name, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, true, inherit and sum)
 								time = time + step
 							end
@@ -140,7 +140,7 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 							end
 						end
 						if clip.type == TYPE_SHAKE then
-							raw_anim:push_prekey(joint_name, clip.range[2] * frame_to_time, from_s, from_r, from_t)
+							raw_anim:push_prekey(ske, joint_name, clip.range[2] * frame_to_time, from_s, from_r, from_t)
 						end
 					end
 					if inherit then
@@ -155,14 +155,14 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 	local flags = {}
     for _, anim in ipairs(joint_anims) do
 		flags[ske:joint_index(anim.target_name)] = true
-        raw_animation:clear_prekey(anim.target_name)
+        raw_animation:clear_prekey(ske, anim.target_name)
         push_anim_key(raw_animation, anim.target_name, anim.clips, anim.inherit and anim.inherit[3])
     end
-	local ske_count = #ske
+	local ske_count = ske:num_joints()
 	for i=1, ske_count do
 		if not flags[i] then
 			local joint_name = ske:joint_name(i)
-			raw_animation:clear_prekey(joint_name)
+			raw_animation:clear_prekey(ske, joint_name)
         	push_anim_key(raw_animation, joint_name)
 		end
     end
@@ -187,13 +187,9 @@ return {
             end
         end
         local ske = assetmgr.resource(absolute_path(ske_anim.skeleton, filename))
-        local raw_animation = ozz.new_raw_animation()
-        raw_animation:setup(ske._handle, ske_anim.duration)
-        return {
-            _duration = ske_anim.duration,
-            _sampling_context = ozz.new_sampling_context(1),
-            _handle = build_animation(ske._handle, raw_animation, ske_anim.target_anims, ske_anim.sample_ratio),
-        }
+        local raw_animation = ozz.RawAnimation()
+        raw_animation:setup(ske, ske_anim.duration)
+        return build_animation(ske, raw_animation, ske_anim.target_anims, ske_anim.sample_ratio)
     end,
     unloader = function (res)
     end

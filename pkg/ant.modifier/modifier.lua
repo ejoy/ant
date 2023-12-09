@@ -375,7 +375,7 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
             for _, e in ipairs(anim_prefab.tag["*"]) do
                 local anim <close> = world:entity(e, "anim_ctrl?in skeleton?in")
                 if anim.anim_ctrl and anim.skeleton then
-                    return anim.anim_ctrl.pose_result:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
+                    return anim.anim_ctrl.pose_result.models:joint(anim.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
                 end
             end
         end)

@@ -1,5 +1,4 @@
 #include <lua.hpp>
-#include <bx/allocator.h>
 #include "fastio.h"
 
 #include <ozz/base/memory/allocator.h>
@@ -88,42 +87,33 @@ private:
 	int moffset = 0;
 };
 
-extern const char* check_read_animation(lua_State *L, ozz::io::IArchive &ia);
-extern const char* check_read_skeleton(lua_State *L, ozz::io::IArchive &ia);
-
 namespace ozzlua {
 	namespace Animation {
-		const char* load(lua_State* L, ozz::io::IArchive& ia);
+		bool load(lua_State* L, ozz::io::IArchive& ia);
 	}
 	namespace Skeleton {
-		const char* load(lua_State* L, ozz::io::IArchive& ia);
+		bool load(lua_State* L, ozz::io::IArchive& ia);
 	}
 }
 
 static int lload(lua_State* L) {
 	auto m = getmemory(L, 1);
 	MemoryPtrStream ms(m);
-
-	const char* type = nullptr;
 	for (auto f : { ozzlua::Animation::load, ozzlua::Skeleton::load }) {
 		ozz::io::IArchive ia(&ms);
-		type = f(L, ia);
-		if (type){
-			break;
+		if (f(L, ia)) {
+			return 1;
 		}
 		ms.Seek(0, ozz::io::Stream::kSet);
 	}
-
-	if (nullptr == type){
-		return luaL_error(L, "Can not read ozz data");
-	}
-	lua_pushstring(L, type);
-	return 2;
+	return 0;
 }
 
 extern void init_animation(lua_State* L);
 extern void init_skeleton(lua_State* L);
 extern void init_skinning(lua_State* L);
+extern void init_job(lua_State* L);
+extern void init_offline(lua_State* L);
 
 extern "C" int
 luaopen_ozz(lua_State *L) {
@@ -133,6 +123,8 @@ luaopen_ozz(lua_State *L) {
 	init_animation(L);
 	init_skeleton(L);
 	init_skinning(L);
+	init_job(L);
+	init_offline(L);
 	lua_pushcfunction(L, lmemory);
 	lua_setfield(L, -2, "memory");
 	lua_pushcfunction(L, lload);

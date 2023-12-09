@@ -20,12 +20,12 @@ function sys:entity_init()
         local slot = e.slot
         local jn = slot.joint_name
         local ske = e.skeleton
-        slot.joint_index = assert(ske._handle:joint_index(jn))
+        slot.joint_index = assert(ske:joint_index(jn))
     end
 end
 
 local function calc_pose_mat(pose_result, slot)
-    local adjust_mat = math3d.mul(r2l_mat, pose_result:joint(slot.joint_index)) --pose_result:joint(slot.joint_index) --
+    local adjust_mat = math3d.mul(r2l_mat, pose_result.models:joint(slot.joint_index)) --pose_result.models:joint(slot.joint_index) --
     -- if slot.offset_srt then
     --     local offset_mat = math3d.matrix(slot.offset_srt)
     --     adjust_mat = math3d.mul(adjust_mat, offset_mat)
@@ -39,7 +39,7 @@ function sys:update_slot()
         local pose_result = slot.pose and slot.pose.pose_result
         if pose_result then
             if not slot.joint_index and slot.joint_name then
-                slot.joint_index = slot.pose.skeleton._handle:joint_index(slot.joint_name)
+                slot.joint_index = slot.pose.skeleton:joint_index(slot.joint_name)
             end
             local slot_matrix
             local follow_flag = assert(slot.follow_flag)

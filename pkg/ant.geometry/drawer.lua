@@ -77,7 +77,7 @@ end
 
 local function generate_bones(ske)
 	local bones = {}
-	for i=1, #ske do
+	for i=1, ske:num_joints() do
 		if not ske:isroot(i) then
 			table.insert(bones, {ske:parent(i), i})
 		end
@@ -139,7 +139,7 @@ end
 
 local function generate_joints_worldpos(ske)
 	local worldpos = {}
-	for i=1, #ske do
+	for i=1, ske:num_joints() do
 		load_world_trans(ske, i, worldpos)
 	end	
 

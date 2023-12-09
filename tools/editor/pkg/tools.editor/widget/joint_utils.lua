@@ -12,7 +12,7 @@ end
 
 function m:init(skeleton)
     self.skeleton = skeleton
-    local ske = self.skeleton._handle
+    local ske = self.skeleton
     local new_list = {}
     local new_map = {root = nil, joint_map = {}}
     local function construct(current_joints, skeleton, joint_idx)
