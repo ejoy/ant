@@ -1,10 +1,12 @@
-import_feature "ant.animation"
 import_feature "ant.asset"
 
 system "skinning_system"
     .implement "skinning/skinning_system.lua"
 
+component "meshskin".type "lua"
+
 component "skinning"
+
 policy "skinrender"
     .include_policy "ant.render|render_object"
     .include_policy "ant.scene|bounding"

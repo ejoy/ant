@@ -30,7 +30,6 @@ policy "slot"
 
 component "animation".type "lua"
 component "skeleton".type "lua"
-component "meshskin".type "lua"
 component "anim_ctrl".type "lua"
 component "animation_birth".type "lua"
 component "playing"
