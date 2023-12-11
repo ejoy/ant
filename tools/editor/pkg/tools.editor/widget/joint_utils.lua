@@ -35,7 +35,8 @@ function m:init(skeleton)
             end
         end 
     end
-    for i=1, #ske do
+    local num = ske:num_joints()
+    for i=1, num do
         construct(new_map, ske, i)
     end
     local real_bone_index = {}
@@ -50,7 +51,7 @@ function m:init(skeleton)
         end
     end
     get_real_bones(new_map.root, real_bone_index)
-    for i=1, #ske do
+    for i=1, num do
         if not real_bone_index[i] then
             new_map.joint_map[i] = nil
         end
