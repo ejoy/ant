@@ -92,10 +92,17 @@ local content_text_types = {
 local function gen_get(fs)
 	local function get_file(path)
 		local ext = path:extension():string():lower()
+		local content = fs.reader(path:string())
+		local ctype = content_text_types[ext]
+		if not ctype then
+			if not ext:find("\0", 1, true) then
+				ctype = plaintext
+			end
+		end
 		local header = {
-			["Content-Type"] = content_text_types[ext] or "application/octet-stream"
+			["Content-Type"] = ctype or "application/octet-stream"
 		}
-		return fs.reader(path:string()), header
+		return content , header
 	end
 
 	local function get_dir(path, url, name)
