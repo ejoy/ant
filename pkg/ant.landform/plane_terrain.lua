@@ -9,8 +9,6 @@ local bgfx      = require "bgfx"
 local irender       = ecs.require "ant.render|render_system.render"
 
 local DEFAULT_TERRAIN_RENDER_LAYER <const> = "opacity"
-local DEFAULT_BORDER_MATERIAL <const> = "/pkg/ant.landform/assets/materials/border.material"
-local DEFAULT_PLANE_TERRAIN_MATERIAL <const> = "/pkg/ant.landform/assets/materials/plane_terrain.material"
 local DEFAULT_TILE_SIZE <const> = 10
 local DEFAULT_TERRAIN_CHUNK_SIZE <const> = DEFAULT_TILE_SIZE * 32
 local DEFAULT_BORDER_CHUNK_SIZE <const> = DEFAULT_TILE_SIZE * 16
@@ -97,12 +95,12 @@ local function get_terrain_mesh()
 end
 
 
-local function create_plane_terrain_entity(gid, info, render_layer, terrain_chunk, border_chunk)
+local function create_plane_terrain_entity(gid, info, render_layer, terrain_chunk, border_chunk, terrain_material, border_material)
     local mesh, material, size
     if info.type:match "terrain" then 
-        mesh, material, size = TERRAIN_MESH, DEFAULT_PLANE_TERRAIN_MATERIAL, terrain_chunk
+        mesh, material, size = TERRAIN_MESH, terrain_material, terrain_chunk
     elseif info.type:match "border" then 
-        mesh, material, size = BORDER_MESH, DEFAULT_BORDER_MATERIAL, border_chunk
+        mesh, material, size = BORDER_MESH, border_material, border_chunk
     end
 
     return world:create_entity {
@@ -122,14 +120,14 @@ local function create_plane_terrain_entity(gid, info, render_layer, terrain_chun
     }
 end
 
-function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, border_chunk)
+function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, border_chunk, terrain_material, border_material)
     local terrain_render_layer = render_layer and render_layer or DEFAULT_TERRAIN_RENDER_LAYER
     local terrain_chunk_size = terrain_chunk and terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
     local border_chunk_size  = border_chunk and border_chunk or DEFAULT_BORDER_CHUNK_SIZE
     TERRAIN_MESH, BORDER_MESH = get_terrain_mesh(), get_border_mesh()
     for gid, infos in pairs(groups) do
         for _, info in ipairs(infos) do
-            create_plane_terrain_entity(gid, info, terrain_render_layer, terrain_chunk_size, border_chunk_size)
+            create_plane_terrain_entity(gid, info, terrain_render_layer, terrain_chunk_size, border_chunk_size, terrain_material, border_material)
         end
     end
 end

@@ -331,7 +331,7 @@ local function update_di_buffers(dieid, buffer)
     idi.update_instance_buffer(die, table.concat(buffer.instancebuffer, ""), #buffer.instancebuffer)
 end
 
-local function create_road_obj(gid, render_layer, buffer, dimaterial)
+local function create_road_obj(gid, render_layer, buffer, dimaterial, cs_material)
     local instancenum = #buffer.instancebuffer
     local dieid = world:create_entity {
         group = gid,
@@ -365,7 +365,7 @@ local function create_road_obj(gid, render_layer, buffer, dimaterial)
             "ant.render|compute",
         },
         data = {
-            material = "/pkg/ant.landform/assets/materials/road_compute.material",
+            material = cs_material,
             dispatch = {
                 size = {1, 1, 1},
             },
@@ -382,10 +382,10 @@ local function create_road_obj(gid, render_layer, buffer, dimaterial)
     }
 end
 
-local function create_road_entities(gid, render_layer, road, indicator, road_material, indicator_material)
+local function create_road_entities(gid, render_layer, road, indicator, road_material, indicator_material, cs_material)
     return {
-        road        = create_road_obj(gid, render_layer, road,      road_material),
-        indicator   = create_road_obj(gid, render_layer, indicator, indicator_material),
+        road        = create_road_obj(gid, render_layer, road,      road_material, cs_material),
+        indicator   = create_road_obj(gid, render_layer, indicator, indicator_material, cs_material),
     }
 end
 
@@ -415,13 +415,13 @@ function iroad.create(roadwidth, roadheight)
     ROAD_MESH = build_road_mesh(roadwidth, roadheight)
 end
 
-function iroad.update_roadnet(groups, render_layer, road_material, indicator_material)
+function iroad.update_roadnet(groups, render_layer, road_material, indicator_material, cs_material)
     for gid, infos in pairs(groups) do
         local entities = ROAD_ENTITIES[gid]
         local buffers = build_instance_buffers(infos)
         --print(("group:%d, road instance num:%d, indicator instance num:%d"):format(gid, #buffers.road, #buffers.indicator))
         if nil == entities then
-            entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicator, road_material, indicator_material)
+            entities = create_road_entities(gid, render_layer, buffers.road, buffers.indicator, road_material, indicator_material, cs_material)
             ROAD_ENTITIES[gid] = entities
         else
             local function update_buffer_and_dispatch(buffer, eids)

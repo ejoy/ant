@@ -41,20 +41,14 @@ end
 local MERGE_MESH
 local MESH_PARAMS
 
-local function init_mountain_mesh()
+local function init_mountain_mesh(meshbins)
 
     local function overlay_offset(v)
 		return {0, v[1], v[1] + v[2], v[1] + v[2] + v[3]}
 	end
 
     local vbnums, ibnums
-    MERGE_MESH, vbnums, ibnums = imesh.build_meshes{
-        "/pkg/ant.landform/assets/meshes/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
-        "/pkg/ant.landform/assets/meshes/mountain2.glb|meshes/Cylinder.004_P1.meshbin",
-        "/pkg/ant.landform/assets/meshes/mountain3.glb|meshes/Cylinder_P1.meshbin",
-        "/pkg/ant.landform/assets/meshes/mountain4.glb|meshes/Cylinder.021_P1.meshbin",
-    }
-
+    MERGE_MESH, vbnums, ibnums = imesh.build_meshes(meshbins)
     local vboffsets, iboffsets = overlay_offset(vbnums), overlay_offset(ibnums)
 
     MESH_PARAMS = math3d.ref(math3d.array_vector{
@@ -62,9 +56,9 @@ local function init_mountain_mesh()
     })
 end
 
-local function create_sm_entity(gid, indices)
+local function create_sm_entity(gid, indices, mountain_material, cs_material, meshbins)
     if MERGE_MESH == nil then
-        init_mountain_mesh()
+        init_mountain_mesh(meshbins)
     end
     local memory, meshes = {}, {}
     for _, index in ipairs(indices) do
@@ -103,7 +97,7 @@ local function create_sm_entity(gid, indices)
         data = {
             scene         = {},
             simplemesh    = MERGE_MESH,
-            material      = "/pkg/ant.landform/assets/materials/mountain.material", 
+            material      = mountain_material, 
             visible_state = "main_view|cast_shadow",
             stonemountain = {
                 handle = mesh_indices_buffer,
@@ -125,7 +119,7 @@ local function create_sm_entity(gid, indices)
             "ant.render|compute",
         },
         data = {
-            material = "/pkg/ant.landform/assets/materials/mountain_compute.material",
+            material = cs_material,
             dispatch    = {
                 size    = {((drawnum+63)//64), 1, 1},
             },
@@ -193,10 +187,11 @@ function ism.create_random_sm(width, height)
     return masks
 end
 
-function ism.create(groups)
+function ism.create(groups, mountain_material, cs_material, meshbins)
+
     for gid, indices in pairs(groups) do
         --make_sm_noise(width, height, offset, unit)
-        create_sm_entity(gid, indices)
+        create_sm_entity(gid, indices, mountain_material, cs_material, meshbins)
     end
 end
 
