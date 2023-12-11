@@ -157,31 +157,31 @@ namespace ozzlua::SoaTransformVector {
 namespace ozzlua::Animation {
 	static int duration(lua_State* L) {
 		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
-		lua_pushnumber(L, animation.v->duration());
+		lua_pushnumber(L, animation.animation.duration());
 		return 1;
 	}
 
 	static int num_tracks(lua_State* L) {
 		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
-		lua_pushinteger(L, animation.v->num_tracks());
+		lua_pushinteger(L, animation.animation.num_tracks());
 		return 1;
 	}
 
 	static int num_soa_tracks(lua_State* L) {
 		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
-		lua_pushinteger(L, animation.v->num_soa_tracks());
+		lua_pushinteger(L, animation.animation.num_soa_tracks());
 		return 1;
 	}
 
 	static int name(lua_State* L) {
 		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
-		lua_pushstring(L, animation.v->name());
+		lua_pushstring(L, animation.animation.name());
 		return 1;
 	}
 
 	static int size(lua_State* L) {
 		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
-		lua_pushinteger(L, animation.v->size());
+		lua_pushinteger(L, animation.animation.size());
 		return 1;
 	}
 
@@ -199,8 +199,8 @@ namespace ozzlua::Animation {
 		lua_setfield(L, -2, "__index");
 	}
 
-	int create(lua_State* L, ozz::animation::Animation* v) {
-		bee::lua::newudata<ozzAnimation>(L, v);
+	int create(lua_State* L, ozz::animation::Animation&& v) {
+		bee::lua::newudata<ozzAnimation>(L, std::forward<ozz::animation::Animation>(v));
 		return 1;
 	}
 
@@ -209,8 +209,8 @@ namespace ozzlua::Animation {
 			return false;
 		}
 		auto& o = bee::lua::newudata<ozzAnimation>(L);
-		ia >> *o.v;
-		o.createSamplingContext();
+		ia >> o.animation;
+		o.ResizeSamplingContext();
 		return true;
 	}
 }

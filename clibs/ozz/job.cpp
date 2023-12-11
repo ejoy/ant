@@ -12,8 +12,8 @@ static int SamplingJob(lua_State* L) {
     auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 2);
     float ratio = (float)luaL_checknumber(L, 3);
     ozz::animation::SamplingJob job;
-    job.animation = animation.v;
-    job.context = animation.sampling_context;
+    job.animation = &animation.animation;
+    job.context = &animation.sampling_context;
     job.ratio = ratio;
     job.output = ozz::make_span(locals);
     if (!job.Run()) {
@@ -25,9 +25,9 @@ static int SamplingJob(lua_State* L) {
 static int LocalToModelJob(lua_State* L) {
     ozz::animation::LocalToModelJob job;
     auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
-    job.skeleton = ske.v;
+    job.skeleton = &ske;
     if (lua_type(L, 2) == LUA_TNIL) {
-        job.input = ske.v->joint_rest_poses();
+        job.input = ske.joint_rest_poses();
     }
     else {
         job.input = ozz::make_span(bee::lua::checkudata<ozzSoaTransformVector>(L, 2));
