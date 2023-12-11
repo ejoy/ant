@@ -27,7 +27,8 @@ local utils         = require "common.utils"
 local iterrain      = ecs.require "ant.landform|plane_terrain"
 local layoutmgr     = import_package "ant.render".layoutmgr
 local bgfx          = require "bgfx"
-
+local TERRAIN_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/plane_terrain.material"
+local BORDER_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/border.material"
 local anim_view
 local m = {
     entities = {}
@@ -199,7 +200,7 @@ function m:show_terrain(enable)
     if not enable then
         iterrain.clear_plane_terrain()
     else
-        iterrain.create_plane_terrain({[0] = {{x = -500, y = -500, type = "terrain"}}}, "opacity", 1000, 0)
+        iterrain.create_plane_terrain({[0] = {{x = -500, y = -500, type = "terrain"}}}, "opacity", 1000, 0, TERRAIN_MATERIAL, BORDER_MATERIAL)
     end
 end
 function m:clone(eid)
