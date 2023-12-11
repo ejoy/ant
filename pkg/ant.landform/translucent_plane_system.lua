@@ -12,7 +12,6 @@ local imaterial = ecs.require "ant.asset|material"
 local tp_sys    = ecs.system 'translucent_plane_system'
 
 local DEFAULT_TP_RENDER_LAYER <const> = "translucent"
-local DEFAULT_TP_MATERIAL <const> = "/pkg/ant.landform/assets/materials/translucent_plane.material"
 local DEFAULT_TILE_SIZE <const> = 10
 
 local ENTITIES = {}
@@ -72,7 +71,7 @@ local function get_mesh(width, height)
     return MESH_CACHE[width][height]
 end
 
-local function create_tp_entity(info, render_layer, tile_size)
+local function create_tp_entity(info, render_layer, tile_size, material)
     local gid, color = info.gid, info.color
     local mi, mj = info.w / tile_size, info.h / tile_size
     local mesh = MESH_CACHE[mi][mj] and MESH_CACHE[mi][mj] or get_mesh(mi, mj)
@@ -85,7 +84,7 @@ local function create_tp_entity(info, render_layer, tile_size)
         data = {
             scene = {s = {info.w, 1, info.h}, t = {info.x, 0, info.y}},
             simplemesh  = mesh,
-            material    = DEFAULT_TP_MATERIAL,
+            material    = material,
             visible_state = "main_view|selectable",
             render_layer = render_layer,
             on_ready = function (e)
@@ -113,11 +112,11 @@ end
 
 local itp = {}
 
-function itp.update_tp(infos, render_layer, tile_size)
+function itp.update_tp(infos, render_layer, tile_size, material)
     local tp_render_layer = render_layer and render_layer or DEFAULT_TP_RENDER_LAYER
     local tp_tile_size    = tile_size and tile_size or DEFAULT_TILE_SIZE
     for _, info in ipairs(infos) do
-        create_tp_entity(info, tp_render_layer, tp_tile_size) 
+        create_tp_entity(info, tp_render_layer, tp_tile_size, material) 
     end
 end
 
