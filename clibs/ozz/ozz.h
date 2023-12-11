@@ -43,48 +43,23 @@ struct ozzSoaTransformVector: public ozz::vector<ozz::math::SoaTransform> {
 };
 
 struct ozzAnimation {
-	ozz::animation::Animation* v;
-	ozz::animation::SamplingJob::Context* sampling_context;
+	ozz::animation::Animation animation;
+	ozz::animation::SamplingJob::Context sampling_context;
 	ozzAnimation()
-		: v(ozz::New<ozz::animation::Animation>())
-		, sampling_context(nullptr) {
+		: animation()
+		, sampling_context() {
 	}
-	ozzAnimation(ozz::animation::Animation* p)
-		: v(p)
-		, sampling_context(nullptr) {
-		createSamplingContext();
+	ozzAnimation(ozz::animation::Animation&& v)
+		: animation(std::move(v))
+		, sampling_context(animation.num_tracks()) {
 	}
-	~ozzAnimation() {
-		ozz::Delete(v);
-		if (sampling_context) {
-			ozz::Delete(sampling_context);
-		}
-	}
-	void createSamplingContext() {
-		assert(v && !sampling_context);
-		sampling_context = ozz::New<ozz::animation::SamplingJob::Context>(v->num_tracks());
+	void ResizeSamplingContext() {
+		sampling_context.Resize(animation.num_tracks());
 	}
 };
 
-struct ozzRawAnimation {
-	ozz::animation::offline::RawAnimation* v;
-	ozzRawAnimation()
-		: v(ozz::New<ozz::animation::offline::RawAnimation>())
-	{}
-	~ozzRawAnimation() {
-		ozz::Delete(v);
-	}
+struct ozzRawAnimation: public ozz::animation::offline::RawAnimation {
 };
 
-struct ozzSkeleton {
-	ozz::animation::Skeleton* v;
-	ozzSkeleton(ozz::animation::Skeleton* p)
-		: v(p) {
-	}
-	ozzSkeleton()
-		: v(ozz::New<ozz::animation::Skeleton>()) {
-	}
-	~ozzSkeleton() {
-		ozz::Delete(v);
-	}
+struct ozzSkeleton : public ozz::animation::Skeleton {
 };
