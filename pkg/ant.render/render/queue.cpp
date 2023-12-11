@@ -4,22 +4,26 @@
 #include <vector>
 #include <forward_list>
 
+#include <cassert>
+
 #include "ecs/world.h"
 
 struct queue_node {
-	static constexpr uint8_t NUM_MASK = 4;
+	static constexpr uint8_t NUM_MASK = 1;
 	static constexpr uint16_t QUEUE_NUM = NUM_MASK * 64;
 	uint64_t masks[NUM_MASK] = {0};
 
     bool check(uint8_t queue) const {
-        const uint8_t eidx = queue / 4;
+        const uint8_t eidx = queue / 64;
         const uint8_t sidx = queue % 64;
+        assert(eidx < NUM_MASK && "Max queue is 64");
 
         return 0 != (masks[eidx] & (1ull << sidx));
     }
 
     void set(uint8_t queue, bool value){
-        const uint8_t eidx = queue / 4;
+        const uint8_t eidx = queue / 64;
+        assert(eidx < NUM_MASK && "Max queue is 64");
         const uint8_t sidx = queue % 64;
 
         if (value){

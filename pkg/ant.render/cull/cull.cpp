@@ -47,8 +47,8 @@ struct cull_operation{
 			auto &o = e.template get<ObjType>();
 			for (uint8_t ii=0; ii<c; ++ii){
 				const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
-				for (uint8_t i=0; i<ci[ii].n; ++ii){
-					queue_set(w->Q, o.cull_idx, ci[ii].queue_indices[ii], isculled);
+				for (uint8_t iq=0; iq<ci[ii].n; ++iq){
+					queue_set(w->Q, o.cull_idx, ci[ii].queue_indices[iq], isculled);
 				}
 				//set_mark(o.cull_masks, ci[ii].masks, isculled);
 			}
