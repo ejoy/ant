@@ -8,7 +8,7 @@ if USE_CS_SKINNING then
 	return
 end
 
-local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa"
+local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa/enable"
 
 local imaterial = ecs.require "ant.asset|material"
 local skinning_sys = ecs.system "skinning_system"
