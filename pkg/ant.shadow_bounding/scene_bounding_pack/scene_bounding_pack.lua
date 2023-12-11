@@ -6,6 +6,8 @@ local sbp_sys = ecs.system "scene_bounding_pack_system"
 local math3d    = require "math3d"
 local mc = import_package "ant.math".constant
 
+local Q         = world:clibs "render.queue"
+
 local dirty
 
 function sbp_sys:entity_remove()
@@ -14,8 +16,8 @@ function sbp_sys:entity_remove()
     end
 end
 
-local function merge_aabb(mask, visible_masks, cull_masks, entity_scene_aabb, whole_scene_aabb)
-    if (mask & visible_masks) and (mask & cull_masks) then
+local function merge_aabb(queue_index, visble_idx, cull_idx, entity_scene_aabb, whole_scene_aabb)
+    if Q.check(visble_idx, queue_index) and not Q.check(cull_idx, queue_index) then
         if entity_scene_aabb and entity_scene_aabb ~= mc.NULL then
             whole_scene_aabb = math3d.aabb_merge(whole_scene_aabb, entity_scene_aabb) 
         end
@@ -32,10 +34,10 @@ function sbp_sys:finish_scene_update()
         local scene_aabb = math3d.aabb()
         local mask = assert(queuemgr.queue_mask("main_queue"))
         for e in w:select "render_object_visible bounding:in render_object:in" do
-            scene_aabb = merge_aabb(mask, e.render_object.visible_masks, e.render_object.cull_masks, e.bounding.scene_aabb, scene_aabb)
+            scene_aabb = merge_aabb(mask, e.render_object.visible_idx, e.render_object.cull_idx, e.bounding.scene_aabb, scene_aabb)
         end
         for e in w:select "hitch_visible bounding:in hitch:in" do
-            scene_aabb = merge_aabb(mask, e.hitch.visible_masks, e.hitch.cull_masks, e.bounding.scene_aabb, scene_aabb)
+            scene_aabb = merge_aabb(mask, e.hitch.visible_idx, e.hitch.cull_idx, e.bounding.scene_aabb, scene_aabb)
         end
         
         math3d.unmark(sbe.shadow_bounding.scene_aabb)

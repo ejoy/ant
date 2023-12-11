@@ -148,6 +148,7 @@ lm:lua_source "render_core"{
     objdeps = "compile_ecs",
     sources = {
         "render/render.cpp",
+        "render/queue.cpp",
     },
     -- macos = {
     --     deps = {

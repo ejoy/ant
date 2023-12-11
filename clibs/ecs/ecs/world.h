@@ -15,13 +15,13 @@ struct bgfx_interface_vtbl;
 struct bgfx_encoder_s;
 struct math3d_api;
 struct render_material;
+struct queue_container;
 
 struct bgfx_encoder_holder {
 	struct bgfx_encoder_s* encoder;
 };
 
 struct cull_cached;
-struct render_material;
 
 struct ecs_world {
 	struct ecs_context*           ecs;
@@ -31,7 +31,7 @@ struct ecs_world {
 	struct cull_cached*           cull_cached;
 	struct render_material*       R;
 	uint64_t                      frame;
-	uintptr_t                     unused_0;
+	struct queue_container*       Q;
 };
 
 static inline struct ecs_world* getworld(lua_State* L) {

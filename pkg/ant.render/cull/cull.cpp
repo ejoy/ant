@@ -7,6 +7,8 @@ extern "C"{
 	#include "math3dfunc.h"
 }
 
+#include "../render/queue.h"
+
 #include <cassert>
 #include <cstring>
 #include <memory>
@@ -19,8 +21,9 @@ using tags = std::vector<int>;
 using cull_infos = std::unordered_map<uint64_t, tags>;
 
 struct cullinfo{
-	math_t		mid;
-	uint64_t	masks;
+	math_t	mid;
+	uint8_t n;
+	uint8_t	queue_indices[256];
 };
 
 struct cull_cached {
@@ -44,7 +47,10 @@ struct cull_operation{
 			auto &o = e.template get<ObjType>();
 			for (uint8_t ii=0; ii<c; ++ii){
 				const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
-				set_mark(o.cull_masks, ci[ii].masks, isculled);
+				for (uint8_t i=0; i<ci[ii].n; ++ii){
+					queue_set(w->Q, o.cull_idx, ci[ii].queue_indices[ii], isculled);
+				}
+				//set_mark(o.cull_masks, ci[ii].masks, isculled);
 			}
 		}
 	}
@@ -73,7 +79,7 @@ lcull(lua_State *L) {
 	uint8_t c = 0;
 	struct cullinfo ci[MAX_QUEUE_COUNT];
 
-	auto add_cull_info = [&ci, &c](math_t mid, uint64_t mask){
+	auto add_cull_info = [&ci, &c](math_t mid, uint8_t queue_index){
 		uint8_t idx = MAX_QUEUE_COUNT;
 		for (; idx<c; ++idx){
 			if (ci[idx].mid.idx == mid.idx)
@@ -81,14 +87,20 @@ lcull(lua_State *L) {
 		}
 		if (idx == MAX_QUEUE_COUNT){
 			assert(c < MAX_QUEUE_COUNT);
-			ci[c++] = {mid, mask};
+			struct cullinfo i;
+			i.mid = mid;
+			i.queue_indices[0] = queue_index;
+			i.n = 1;
+			ci[c++] = i;
+
 		} else {
-			ci[idx].masks |= mask;
+			auto &i = ci[idx];
+			i.queue_indices[i.n++] = queue_index;
 		}
 	};
 
 	for (auto& i : ecs_api::array<ecs::cull_args>(w->ecs)){
-		add_cull_info(i.frustum_planes, i.cull_mask);
+		add_cull_info(i.frustum_planes, i.queue_index);
 	}
 
 	if (0 == c)

@@ -11,7 +11,7 @@ local cullcore = world:clibs "cull.core"
 
 local CULL_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {
-		cull_mask		= queuemgr.queue_mask(k),
+		queue_index		= queuemgr.queue_index(k),
 		frustum_planes	= nil,
 	}
 	t[k] = v

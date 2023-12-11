@@ -7,7 +7,7 @@ component "efk_queue"
 
 component "efk_object"
     .type "c"
-    .field "visible_masks:int64"
+    .field "visible_idx:int"
     .field "handle:int"
     .field "worldmat:userdata|math_t"
     .implement "efk_object.lua"

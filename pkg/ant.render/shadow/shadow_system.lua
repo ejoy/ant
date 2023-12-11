@@ -18,6 +18,7 @@ local sampler	= import_package "ant.render.core".sampler
 
 local RM        = ecs.require "ant.material|material"
 local R         = world:clibs "render.render_material"
+local Q			= world:clibs "render.queue"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
@@ -152,29 +153,29 @@ function shadow_sys:entity_remove()
 	end
 end
 
-local function merge_visible_bounding(M, aabb, e, queuemask)
+local function merge_visible_bounding(M, aabb, e, queue_index)
 	local ro = e.render_object
-	if 0 ~= (queuemask & ro.visible_masks) then
+	if Q.check(ro.visible_idx, queue_index) then
 		aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.aabb))
 	end
 
 	return aabb
 end
 
-local function build_aabb(Lv, queuemask, tag)
+local function build_aabb(Lv, queue_index, tag)
 	local aabb = math3d.aabb()
 	for e in w:select(("%s render_object:in bounding:in"):format(tag)) do
-		aabb = merge_visible_bounding(Lv, aabb, e, queuemask)
+		aabb = merge_visible_bounding(Lv, aabb, e, queue_index)
 	end
 	return aabb
 end
 
-local function build_PSR(Lv, queuemask)
-	return build_aabb(Lv, queuemask, "receive_shadow")
+local function build_PSR(Lv, queue_index)
+	return build_aabb(Lv, queue_index, "receive_shadow")
 end
 
-local function build_PSC(Lv, queuemask)
-	return build_aabb(Lv, queuemask, "cast_shadow")
+local function build_PSC(Lv, queue_index)
+	return build_aabb(Lv, queue_index, "cast_shadow")
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
@@ -346,8 +347,8 @@ function shadow_sys:refine_camera()
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
 
-	local queuemask = queuemgr.queue_mask "csm1_queue" | queuemgr.queue_mask "csm2_queue" | queuemgr.queue_mask "csm3_queue" | queuemgr.queue_mask "csm4_queue"
-	local PSR, PSC = build_PSR(Lv, queuemask), build_PSC(Lv, queuemask)
+	local queue_index = queuemgr.queue_index "csm1_queue"
+	local PSR, PSC = build_PSR(Lv, queue_index), build_PSC(Lv, queue_index)
 	local sceneaabbLS = merge_PSC_and_PSR(PSC, PSR)
 
 	local Ndc2Lv = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
