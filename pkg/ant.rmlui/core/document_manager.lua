@@ -53,7 +53,7 @@ local function readfile(path)
     return mem, symbol
 end
 
-local function OnLoadInlineScript(document, source_path, content, source_line)
+local function OnLoadInlineScript(document, source_path, content, source_line, ...)
     local env = environment[document]
     local source = "--@"..source_path..":"..source_line.."\n "..content
     local f, err = load(source, source, "t", env)
@@ -61,10 +61,10 @@ local function OnLoadInlineScript(document, source_path, content, source_line)
         log.warn(err)
         return
     end
-    f()
+    f(...)
 end
 
-local function OnLoadExternalScript(document, source_path)
+local function OnLoadExternalScript(document, source_path, ...)
     local env = environment[document]
     local mem, symbol = readfile(source_path)
     local f, err = fastio.loadlua(mem, symbol, env)
@@ -72,7 +72,7 @@ local function OnLoadExternalScript(document, source_path)
         log.warn(("file '%s' load failed: %s."):format(source_path, err))
         return
     end
-    f()
+    f(...)
 end
 
 local function OnLoadInlineStyle(document, source_path, content, source_line)
@@ -86,7 +86,7 @@ local function OnLoadExternalStyle(document, source_path)
     end
 end
 
-function m.open(path, name)
+function m.open(path, name, ...)
     local doc = rmlui.DocumentCreate(width, height)
     if not doc then
         return
@@ -104,9 +104,9 @@ function m.open(path, name)
         local type, str, line = load[1], load[2], load[3]
         if type == "script" then
             if line then
-                OnLoadInlineScript(doc, symbol, str, line)
+                OnLoadInlineScript(doc, symbol, str, line, ...)
             else
-                OnLoadExternalScript(doc, str)
+                OnLoadExternalScript(doc, str, ...)
             end
         elseif type == "style" then
             if line then

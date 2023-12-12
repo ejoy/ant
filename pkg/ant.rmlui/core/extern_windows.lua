@@ -3,9 +3,9 @@ local document_manager = require "core.document_manager"
 
 local CMD = {}
 
-function CMD.open(extern_window, url)
+function CMD.open(extern_window, url, ...)
     assert(extern_window.document == nil)
-    local doc = document_manager.open(url, extern_window.name)
+    local doc = document_manager.open(url, extern_window.name, ...)
     if doc then
         extern_window.document = doc
         document_manager.onload(doc)

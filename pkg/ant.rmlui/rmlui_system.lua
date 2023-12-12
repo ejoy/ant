@@ -10,27 +10,26 @@ local rmlui_sys = ecs.system "rmlui_system"
 
 local windows = {}
 
-
 function rmlui_sys:ui_update()
     message.dispatch()
 end
 
 function rmlui_sys:exit()
-    for _, window in pairs(windows) do
+    for window in pairs(windows) do
         window.close()
     end
 end
 
 local iRmlUi = {}
 
-function iRmlUi.open(name, url)
+function iRmlUi.open(name, url, ...)
     url = url or name
-    ltask.send(ServiceRmlUi, "open", name, url)
+    ltask.send(ServiceRmlUi, "open", name, url, ...)
     local window = {}
-    windows[name] = window
+    windows[window] = true
     function window.close()
         ltask.send(ServiceRmlUi, "close", name)
-        windows[name] = nil
+        windows[window] = nil
     end
     return window
 end
