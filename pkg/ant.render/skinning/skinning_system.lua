@@ -22,31 +22,31 @@ local math3d 	= require "math3d"
 local r2l_mat <const> = mc.R2L_MAT
 
 local build_skinning_matrices = ENABLE_TAA and
-	function (e, pr, skin)
-		local m = math3d.mul(e.scene.worldmat, r2l_mat)
-		if e.meshskin.sm_matrix_ref == nil then
-			local sm = e.meshskin.skinning_matrices
-			ozz.BuildSkinningMatrices(sm, pr.models, skin.inverse_bind_pose, skin.joint_remap, m)
-			e.meshskin.prev_sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
-			e.meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
+	function (meshskin, worldmat)
+		local m = math3d.mul(worldmat, r2l_mat)
+		if meshskin.sm_matrix_ref == nil then
+			local sm = meshskin.skinning_matrices
+			ozz.BuildSkinningMatrices(sm, meshskin.models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
+			meshskin.prev_sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
+			meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		else
 			do
-				local tmp = e.meshskin.prev_skinning_matrices
-				e.meshskin.prev_skinning_matrices = e.meshskin.skinning_matrices
-				e.meshskin.skinning_matrices = tmp
+				local tmp = meshskin.prev_skinning_matrices
+				meshskin.prev_skinning_matrices = meshskin.skinning_matrices
+				meshskin.skinning_matrices = tmp
 			end
-			local prev_sm = e.meshskin.prev_skinning_matrices
-			local sm = e.meshskin.skinning_matrices
-			ozz.BuildSkinningMatrices(sm, pr.models, skin.inverse_bind_pose, skin.joint_remap, m)
-			e.meshskin.prev_sm_matrix_ref = math3d.array_matrix_ref(prev_sm:pointer(), prev_sm:count())
-			e.meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
+			local prev_sm = meshskin.prev_skinning_matrices
+			local sm = meshskin.skinning_matrices
+			ozz.BuildSkinningMatrices(sm, meshskin.models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
+			meshskin.prev_sm_matrix_ref = math3d.array_matrix_ref(prev_sm:pointer(), prev_sm:count())
+			meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		end
 	end or
-	function (e, pr, skin)
-		local m = math3d.mul(e.scene.worldmat, r2l_mat)
-		local sm = e.meshskin.skinning_matrices
-		ozz.BuildSkinningMatrices(sm, pr.models, skin.inverse_bind_pose, skin.joint_remap, m)
-		e.meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
+	function (meshskin, worldmat)
+		local m = math3d.mul(worldmat, r2l_mat)
+		local sm = meshskin.skinning_matrices
+		ozz.BuildSkinningMatrices(sm, meshskin.models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
+		meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 	end
 
 local function update_aabb(e, meshskin, worldmat)
@@ -70,10 +70,8 @@ end or update_aabb
 
 function skinning_sys:skin_mesh()
 	for e in w:select "meshskin:in scene:update" do
-		local skin = e.meshskin.skin
-		local pr = e.meshskin.pose.pose_result
-		if pr then
-			build_skinning_matrices(e, pr, skin)
+		if e.meshskin.models then
+			build_skinning_matrices(e.meshskin, e.scene.worldmat)
 		end
 	end
 

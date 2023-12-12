@@ -161,11 +161,10 @@ function iani.step(anim_e, s_delta, absolute)
 	else
 		play_state.ratio = next_time / duration
 	end
-	local pr = ctrl.pose_result
-	if not pr.locals then
-		pr.locals = ozz.SoaTransformVector(anim_e.skeleton:num_soa_joints())
+	if not anim_e.meshskin.locals then
+		anim_e.meshskin.locals = ozz.SoaTransformVector(anim_e.skeleton:num_soa_joints())
 	end
-	ozz.SamplingJob(ani, pr.locals, play_state.ratio)
+	ozz.SamplingJob(ani, anim_e.meshskin.locals, play_state.ratio)
 	ctrl.dirty = true
 	anim_e.pose_dirty = true
 end
@@ -175,7 +174,7 @@ function iani.set_time(eid, second)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in pose_dirty?out")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in meshskin:in skeleton:in pose_dirty?out")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
@@ -246,43 +245,6 @@ function iani.is_playing(eid)
 	end
 	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	return e.anim_ctrl.play_state.play
-end
-
-function iani.set_pose_to_prefab(instance, pose)
-	local entitys = instance.tag["*"]
-	for _, eid in ipairs(entitys) do
-		local e <close> = world:entity(eid, "meshskin?in slot?in animation?in")
-		if e.meshskin then
-			w:extend(e, "skeleton:in")
-			pose.skeleton = e.skeleton
-			e.meshskin.pose = pose
-		elseif e.slot then
-			e.slot.pose = pose
-			if e.slot.joint_name and e.slot.joint_name ~= "None" then
-				w:extend(e, "boneslot?out")
-				e.boneslot = true
-			end
-		elseif e.animation then
-			w:extend(e, "anim_ctrl:in skeleton:in")
-			pose.pose_result = e.anim_ctrl.pose_result
-			pose.skeleton = e.skeleton
-			pose.anim_eid = eid
-		end
-	end
-end
-
-local anim_pose_mgr = {}
-
-function iani.create_pose()
-	local pose = {}
-	anim_pose_mgr[#anim_pose_mgr + 1] = pose
-	return pose
-end
-
-function iani.release_pose(pose)
-	if pose.pose then
-		pose.pose = nil
-	end
 end
 
 return iani

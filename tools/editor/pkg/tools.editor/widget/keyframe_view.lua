@@ -1528,28 +1528,28 @@ function m.init(skeleton)
         if not jlist then
             return
         end
-        local pose_result
-        for ee in w:select "skeleton:in anim_ctrl:in" do
+        local meshskin
+        for ee in w:select "skeleton:in meshskin:in" do
             if current_skeleton == ee.skeleton then
-                pose_result = ee.anim_ctrl.pose_result
+                meshskin = ee.meshskin
                 break
             end
         end
-        if pose_result then
+        if meshskin then
             for _, joint in ipairs(jlist) do
                 if joint.mesh then
                     local mesh_e <close> = world:entity(joint.mesh, "scene?in")
                     if mesh_e.scene then
                         -- joint
-                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result.models:joint(joint.index), math3d.matrix{s=joint_scale}))))
+                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(meshskin.models:joint(joint.index), math3d.matrix{s=joint_scale}))))
                         -- bone
                         local bone_mesh_e <close> = world:entity(joint.bone_mesh, "scene?in")
                         local parent_idx = skeleton:parent(joint.index)
                         local show = false
                         if parent_idx > 0 then
                             local bone_mat
-                            local mat_parent = pose_result.models:joint(parent_idx)
-                            local mat_current = pose_result.models:joint(joint.index)
+                            local mat_parent = meshskin.models:joint(parent_idx)
+                            local mat_current = meshskin.models:joint(joint.index)
                             local bone_dir = math3d.sub(math3d.index(mat_current, 4), math3d.index(mat_parent, 4))
                             
                             local zdir = math3d.index(mat_parent, 3)
