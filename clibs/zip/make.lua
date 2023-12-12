@@ -40,41 +40,31 @@ lm:source_set "zlib-ng-x86" {
     sources = {
         ZLIBDIR.."functable.c",
         ZLIBDIR.."cpu_features.c",
-        ZLIBDIR.."arch/x86/*.c",
     },
-    defines = {
-        "X86_FEATURES",
-        "X86_AVX2",
-        "X86_AVX512VNNI",
-        "X86_AVX512",
-        "X86_SSE42",
-        "X86_SSSE3",
-        "X86_SSE2",
-        "X86_PCLMULQDQ_CRC",
-        "X86_VPCLMULQDQ_CRC",
+    msvc = {
+        sources = {
+            ZLIBDIR.."arch/x86/*.c",
+        },
+        defines = {
+            "X86_FEATURES",
+            "X86_AVX2",
+            "X86_AVX512VNNI",
+            "X86_AVX512",
+            "X86_SSE42",
+            "X86_SSSE3",
+            "X86_SSE2",
+            "X86_PCLMULQDQ_CRC",
+            "X86_VPCLMULQDQ_CRC",
+        }
     },
     gcc = {
-        flags = {
-            "-mavx512vnni",
-            "-mavx512vl",
-            "-mavx512bw",
-            "-msse4.2",
-            "-mssse3",
-            "-msse2",
-            "-mpclmul",
-            "-mvpclmulqdq",
+        sources = {
+            ZLIBDIR.."arch/x86/x86_features.c",
         },
         defines = {
+            "X86_FEATURES",
             "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
-            "HAVE_BUILTIN_CTZ",
-        },
-    },
-    clang = {
-        defines = {
-            "HAVE_THREAD_LOCAL",
-            "HAVE_ATTRIBUTE_ALIGNED",
-            "HAVE_BUILTIN_CTZ",
         },
     },
 }
