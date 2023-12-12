@@ -212,7 +212,7 @@ function svs:data_changed()
         for _, _, camera_refs in svcc_mb:unpack() do
             local vq = viewqueue[viewidx]
             for idx, n in ipairs(vq) do
-                irq.set_camera(orthoview[n].name, camera_refs[idx])
+                irq.set_camera_from_queuename(orthoview[n].name, camera_refs[idx])
             end
         end
     end

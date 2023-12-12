@@ -512,7 +512,7 @@ local imesh 		= ecs.require "ant.asset|mesh"
 local kbmb 			= world:sub{"keyboard"}
 
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
-local shadowdebug_queue
+local shadowdebug_depthqueue, shadowdebug_queue
 local shadowdebug_depthviewid, shadowdebug_viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"), hwi.viewid_generate("shadowdebug", "ssao")
 
 local function update_visible_state(e)
@@ -561,7 +561,7 @@ function shadowdebug_sys:init_world()
 					{rbidx = depth_rbidx}
 				)
 
-	world:create_entity{
+	shadowdebug_depthqueue = world:create_entity{
 		policy = {"ant.render|render_queue"},
 		data = {
 			render_target = {
@@ -574,7 +574,7 @@ function shadowdebug_sys:init_world()
 				fb_idx = depthfbidx,
 			},
 			visible = true,
-			camera_ref = irq.main_camera(),
+			camera_ref = irq.camera "csm1_queue",
 			queue_name = "shadow_debug_depth_queue",
 		}
 	}
@@ -594,7 +594,7 @@ function shadowdebug_sys:init_world()
 				fb_idx = fbidx,
 			},
 			visible = true,
-			camera_ref = irq.main_camera(),
+			camera_ref = irq.camera "csm1_queue",
 			queue_name = "shadow_debug_queue",
 		},
 	}
@@ -624,6 +624,14 @@ function shadowdebug_sys:entity_init()
 	for e in w:select "INIT render_object visible_state:in" do
 		update_visible_state(e)
 	end
+
+	-- if w:first "INIT csm1_queue" then
+	-- 	local qe = w:first "csm1_queue camera_ref:in"
+	-- 	local sddq<close> = world:entity(shadowdebug_depthqueue)
+	-- 	local sdq<close> = world:entity(shadowdebug_queue)
+	-- 	irq.set_camera(sddq, qe.camera_ref)
+	-- 	irq.set_camera(sdq, qe.camera_ref)
+	-- end
 end
 
 function shadowdebug_sys:data_changed()

@@ -351,7 +351,7 @@ local function create_exposure_property(cv)
                     w:extend(ee, "eid:in")
                     for q in w:select "queue_name:in camera_ref:in" do
                         if cv.eid == q.camera_ref then
-                            irq.set_camera(q.queue_name, ee.eid)
+                            irq.set_camera_from_queuename(q.queue_name, ee.eid)
                         end
                     end
                     cv.eid = ee.eid

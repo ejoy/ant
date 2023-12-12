@@ -10,7 +10,7 @@ local default_near_clip = 0.2
 local default_far_clip  = 1000
 
 function camera_mgr.set_second_camera(cameraref, show)
-    irq.set_camera("second_view", cameraref)
+    irq.set_camera_from_queuename("second_view", cameraref)
     irq.set_visible("second_view", show)
 end
 

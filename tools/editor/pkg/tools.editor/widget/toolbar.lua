@@ -104,10 +104,10 @@ function m.show()
             local as_mc = {sv_camera == mq_camera}
             if imgui.widget.Checkbox("As Main Camera", as_mc) then
                 if as_mc[1] then
-                    irq.set_camera("main_queue", sv_camera)
+                    irq.set_camera_from_queuename("main_queue", sv_camera)
                     irq.set_visible("second_view", false)
                 else
-                    irq.set_camera("main_queue", LAST_main_camera)
+                    irq.set_camera_from_queuename("main_queue", LAST_main_camera)
                     LAST_main_camera = nil
                     irq.set_visible("second_view", true)
                 end

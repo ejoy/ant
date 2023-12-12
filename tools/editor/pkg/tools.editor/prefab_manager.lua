@@ -603,7 +603,7 @@ function m:reset_prefab(noscene)
     end
     local mq_camera = irq.camera "main_queue"
     if mq_camera ~= self.main_camera then
-        irq.set_camera("main_queue", self.main_camera)
+        irq.set_camera_from_queuename("main_queue", self.main_camera)
         irq.set_visible("second_view", false)
     end
 end
