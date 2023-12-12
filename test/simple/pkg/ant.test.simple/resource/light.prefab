@@ -1,0 +1,34 @@
+---
+policy:
+    ant.sky|skybox
+    ant.render|ibl
+    ant.render|simplerender
+data:
+    visible_state: main_queue
+    scene: {}
+    ibl:
+      intensity: 30000
+      prefilter:
+        size: 128
+      source:
+        tex_name: /pkg/ant.resources.test/sky/aerodynamics_workshop_2k.texture
+        facesize: 512
+    material: /pkg/ant.resources.test/sky/skybox.material
+    render_layer: "background"
+    simplemesh: false
+    skybox:
+        facesize: 512
+---
+policy:
+  ant.render|light
+data:
+  scene:
+    r: {0.5, 0.0, 0.0, 0.8660253}
+    t: {0, 10, 0, 1}
+  light:
+    color: {1, 1, 1, 1}
+    intensity: 120000
+    intensity_unit: lux
+    type: directional
+  make_shadow: true
+  visible: true
