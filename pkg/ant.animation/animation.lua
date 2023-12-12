@@ -74,7 +74,7 @@ local iani = ecs.require "ant.animation|state_machine"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "playing pose_dirty?out meshskin:in skeleton:in anim_ctrl:in" do
+	for e in w:select "playing pose_dirty?out animation:in anim_ctrl:in" do
 		--w:readall(eid)
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
@@ -87,8 +87,8 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "pose_dirty:out meshskin:in skeleton:in playing?out anim_ctrl:in" do
-		ozz.LocalToModelJob(e.skeleton, e.meshskin.locals, e.meshskin.models)
+	for e in w:select "pose_dirty:out animation:in playing?out anim_ctrl:in" do
+		ozz.LocalToModelJob(e.animation.ozz.skeleton, e.animation.locals, e.animation.models)
 		e.playing = e.anim_ctrl.play_state.play
 		e.pose_dirty = false
 	end
@@ -101,26 +101,44 @@ function ani_sys:data_changed()
 end
 
 function ani_sys:component_init()
-	for e in w:select "INIT ozz_animation:update animation:update skeleton:update" do
-		local data = assetmgr.resource(e.ozz_animation)
-		e.ozz_animation = {
+	for e in w:select "INIT animation:update" do
+		local data = assetmgr.resource(e.animation)
+		local skeleton = data.skeleton
+		local n = skeleton:num_joints()
+		e.animation = {
 			ozz = data,
+			locals = nil,
+			models = ozz.MatrixVector(n),
 		}
-		e.skeleton = data.skeleton
-		for k, v in pairs(data.animations) do
-			e.animation[k] = v
+	end
+
+	for e in w:select "INIT animation:in meshskin:update" do
+		local skin = assetmgr.resource(e.meshskin)
+		local n = e.animation.ozz.skeleton:num_joints()
+		local count = n
+		if skin.joint_remap and #skin.joint_remap ~= n then
+			--error(("joint_remap length: %d, skeleton length: %d"):format(#skin.joint_remap, n))
+			count = #skin.joint_remap
 		end
+		if count > 64 then
+			error(("skinning matrices are too large, max is 128, %d needed"):format(n))
+		end
+		e.meshskin = {
+			skin = skin,
+			skinning_matrices = ozz.MatrixVector(count),
+			prev_skinning_matrices = ozz.MatrixVector(count)
+		}
 	end
 
 	for e in w:select "INIT anim_ctrl:in animation:in animation_birth:in eid:in" do
 		e.anim_ctrl.keyframe_events = {}
 		local events = e.anim_ctrl.keyframe_events
-		for key, value in pairs(e.animation) do
+		for key, value in pairs(e.animation.ozz.animations) do
 			--TODO: auto load event
 			events[key] = {}--load_events(tostring(value))
 		end
 		local anim_name = e.animation_birth
-		e.anim_ctrl.animation = e.animation[anim_name]
+		e.anim_ctrl.animation = e.animation.ozz.animations[anim_name]
 		e.anim_ctrl.event_state = { next_index = 1, keyframe_events = events[anim_name] }
 		e.anim_ctrl.play_state = e.anim_ctrl.play_state or {
 			ratio = 0.0,
@@ -132,50 +150,27 @@ function ani_sys:component_init()
 		}
 		world:pub {"animation_event", "set_time", e.eid, 0}
 	end
-
-	for e in w:select "INIT meshskin:update skeleton:in" do
-		local skin = assetmgr.resource(e.meshskin)
-		local n = e.skeleton:num_joints()
-		local count = n
-		if skin.joint_remap and #skin.joint_remap ~= n then
-			--error(("joint_remap length: %d, skeleton length: %d"):format(#skin.joint_remap, n))
-			count = #skin.joint_remap
-		end
-		if count > 64 then
-			error(("skinning matrices are too large, max is 128, %d needed"):format(n))
-		end
-		e.meshskin = {
-			skin = skin,
-			locals = nil,
-			models = ozz.MatrixVector(n),
-			skinning_matrices = ozz.MatrixVector(count),
-			prev_skinning_matrices = ozz.MatrixVector(count)
-		}
-	end
 end
 
 local event_animation = world:sub{"animation_event"}
 
 function ani_sys:entity_init()
-	local meshskin
-	local skeleton
+	local animation
 	local anim_ctrl
-	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in eid:in pose_dirty?out boneslot?out" do
-		if e.meshskin and e.anim_ctrl then
-			skeleton = e.skeleton
-			meshskin = e.meshskin
+	for e in w:select "INIT animation?in anim_ctrl?in slot?in eid:in pose_dirty?out boneslot?out" do
+		if e.animation and e.anim_ctrl then
+			animation = e.animation
 			anim_ctrl = e.anim_ctrl
 			e.pose_dirty = true
 		elseif e.slot then
 			local slot = e.slot
-			if slot.joint_name and skeleton then
-				slot.joint_index = skeleton:joint_index(slot.joint_name)
+			if slot.joint_name and animation and animation.ozz.skeleton then
+				slot.joint_index = animation.ozz.skeleton:joint_index(slot.joint_name)
 				if slot.joint_index then
 					e.boneslot = true
 				end
 			end
-			slot.meshskin = meshskin
-			slot.skeleton = skeleton
+			slot.animation = animation
 			if anim_ctrl then
 				if not anim_ctrl.slot_eid then
 					anim_ctrl.slot_eid = {}

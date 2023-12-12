@@ -175,7 +175,7 @@ end
 
 local function has_skin(gltfscene, status, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
-    if node.skin and status.ozz_animation then
+    if node.skin and status.animation then
         if node.skin then
             return true
         end
@@ -259,7 +259,7 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
 end
 
 local function create_skin_entity(status, parent)
-    if not status.ozz_animation then
+    if not status.animation then
         return
     end
     local policy = {
@@ -270,12 +270,10 @@ local function create_skin_entity(status, parent)
     local data = {
         animation_birth = "",
         anim_ctrl = {},
-        skeleton = {},
-        animation = {},
         meshskin = status.skin[1],
         skinning = true,
         scene = {},
-        ozz_animation = status.ozz_animation,
+        animation = status.animation,
     }
     return create_entity(status, {
         policy = policy,
@@ -318,8 +316,8 @@ local function serialize_prefab(status, data)
             if e.meshskin then
                 e.meshskin = serialize_path(e.meshskin)
             end
-            if e.ozz_animation then
-                e.ozz_animation = serialize_path(e.ozz_animation)
+            if e.animation then
+                e.animation = serialize_path(e.animation)
             end
         end
     end

@@ -96,7 +96,7 @@ local function anim_group_delete(anim_name)
     local animation_map = tdata.animation
     animation_map[anim_name] = nil
     local e <close> = world:entity(anim_eid, "animation:in")
-    e.animation[anim_name] = nil
+    e.animation.ozz.animations[anim_name] = nil
     prefab_mgr:on_patch_animation(anim_eid, anim_name)
     if tdata.animation_birth == anim_name then
         tdata.animation_birth = next(animation_map) or ""
@@ -649,7 +649,7 @@ function m.show()
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
                     local e <close> = world:entity(anim_eid, "animation:in")
-                    if e.animation[anim_name] then
+                    if e.animation.ozz.animations[anim_name] then
                         local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                         uiutils.confirm_dialog(confirm)
                         if confirm.answer and confirm.answer == 0 then
@@ -660,7 +660,7 @@ function m.show()
                         local info = hierarchy:get_node_info(anim_eid)
                         info.template.data.animation[anim_name] = anim_path
                         prefab_mgr:on_patch_animation(anim_eid, anim_name, anim_path)
-                        e.animation[anim_name] = anim_path
+                        e.animation.ozz.animations[anim_name] = anim_path
                         --TODO:reload
                         reload = true
                     end
@@ -794,7 +794,7 @@ function m.on_prefab_load(entities)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
     for _, eid in ipairs(entities) do
-        local e <close> = world:entity(eid, "anim_ctrl?in animation?in skeleton?in animation_birth?in")
+        local e <close> = world:entity(eid, "anim_ctrl?in animation?in animation_birth?in")
         if e.anim_ctrl then
             anim_eid = eid
             local prefab_filename = prefab_mgr:get_current_filename()
@@ -807,10 +807,10 @@ function m.on_prefab_load(entities)
                 iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
             end
             
-            local animations = e.animation
+            local animations = e.animation.ozz.animations
             if animations then
                 editanims.birth = e.animation_birth
-                skeleton = e.skeleton
+                skeleton = e.animation.ozz.skeleton
                 for key, anim in pairs(animations) do
                     if not editanims[key] then
                         local events = e.anim_ctrl.keyframe_events[key]

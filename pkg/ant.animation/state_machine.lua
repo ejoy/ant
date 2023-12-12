@@ -73,47 +73,10 @@ function iani.play(eid, anim_state)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in playing?out")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in playing?out")
 	local anim_name = anim_state.name
-	local anim = e.animation[anim_name]
+	local anim = e.animation.ozz.animations[anim_name]
 	assert(anim)
-	-- TODO remove this
-	-- if not anim then
-	-- 	local ext = anim_name:match "[^.]*$"
-	-- 	if ext == "anim" then
-	-- 		local ozz = require "ozz"
-	-- 		local path = fs.path(anim_name):localpath()
-	-- 		local f = assert(fs.open(path))
-	-- 		local data = f:read "a"
-	-- 		f:close()
-	-- 		local anim_list = datalist.parse(data)
-	-- 		for _, anim_data in ipairs(anim_list) do
-	-- 			if anim_data.type == "ske" then
-	-- 				local duration = anim_data.duration
-	-- 				anim = {
-	-- 					_duration = duration,
-	-- 					_sampling_context = ozz.new_sampling_context(1)
-	-- 				}
-	-- 				local ske = e.skeleton
-	-- 				local raw_animation = ozz.RawAnimation()
-	-- 				raw_animation:setup(ske, duration)
-	-- 				anim = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
-	-- 				break
-	-- 			elseif anim_data.type == "srt" then --TODO: srt and mtl animation
-	-- 			elseif anim_data.type == "mtl" then
-	-- 			end
-	-- 		end
-	-- 	else
-	-- 		print("animation:", anim_name, "not exist")
-	-- 		return
-	-- 	end
-	-- 	e.animation[anim_name] = anim
-	-- end
-	-- if not anim then
-	-- 	print("animation:", anim_name, "not exist")
-	-- 	return
-	-- end
-	
 	e.anim_ctrl.name = anim_name
 	e.anim_ctrl.animation = anim
 	e.anim_ctrl.owner = anim_state.owner
@@ -131,11 +94,11 @@ function iani.get_duration(eid, anim_name)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in skeleton:in")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in")
 	if not anim_name then
 		return e.anim_ctrl.animation:duration()
 	else
-		return e.animation[anim_name]:duration()
+		return e.animation.ozz.animations[anim_name]:duration()
 	end
 end
 
@@ -162,10 +125,10 @@ function iani.step(anim_e, s_delta, absolute)
 	else
 		play_state.ratio = next_time / duration
 	end
-	if not anim_e.meshskin.locals then
-		anim_e.meshskin.locals = ozz.SoaTransformVector(anim_e.skeleton:num_soa_joints())
+	if not anim_e.animation.locals then
+		anim_e.animation.locals = ozz.SoaTransformVector(anim_e.animation.ozz.skeleton:num_soa_joints())
 	end
-	ozz.SamplingJob(ani, anim_e.meshskin.locals, play_state.ratio)
+	ozz.SamplingJob(ani, anim_e.animation.locals, play_state.ratio)
 	ctrl.dirty = true
 	anim_e.pose_dirty = true
 end
@@ -175,7 +138,7 @@ function iani.set_time(eid, second)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in meshskin:in skeleton:in pose_dirty?out")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in pose_dirty?out")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);

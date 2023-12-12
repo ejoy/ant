@@ -22,11 +22,11 @@ local math3d 	= require "math3d"
 local r2l_mat <const> = mc.R2L_MAT
 
 local build_skinning_matrices = ENABLE_TAA and
-	function (meshskin, worldmat)
+	function (models, meshskin, worldmat)
 		local m = math3d.mul(worldmat, r2l_mat)
 		if meshskin.sm_matrix_ref == nil then
 			local sm = meshskin.skinning_matrices
-			ozz.BuildSkinningMatrices(sm, meshskin.models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
+			ozz.BuildSkinningMatrices(sm, models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
 			meshskin.prev_sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 			meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		else
@@ -37,15 +37,15 @@ local build_skinning_matrices = ENABLE_TAA and
 			end
 			local prev_sm = meshskin.prev_skinning_matrices
 			local sm = meshskin.skinning_matrices
-			ozz.BuildSkinningMatrices(sm, meshskin.models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
+			ozz.BuildSkinningMatrices(sm, models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
 			meshskin.prev_sm_matrix_ref = math3d.array_matrix_ref(prev_sm:pointer(), prev_sm:count())
 			meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		end
 	end or
-	function (meshskin, worldmat)
+	function (models, meshskin, worldmat)
 		local m = math3d.mul(worldmat, r2l_mat)
 		local sm = meshskin.skinning_matrices
-		ozz.BuildSkinningMatrices(sm, meshskin.models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
+		ozz.BuildSkinningMatrices(sm, models, meshskin.skin.inverse_bind_pose, meshskin.skin.joint_remap, m)
 		meshskin.sm_matrix_ref = math3d.array_matrix_ref(sm:pointer(), sm:count())
 	end
 
@@ -69,9 +69,9 @@ local update_skin_entity_uniforms = ENABLE_TAA and function (e, meshskin, worldm
 end or update_aabb
 
 function skinning_sys:skin_mesh()
-	for e in w:select "meshskin:in scene:update" do
-		if e.meshskin.models then
-			build_skinning_matrices(e.meshskin, e.scene.worldmat)
+	for e in w:select "animation:in meshskin:in scene:update" do
+		if e.animation.models then
+			build_skinning_matrices(e.animation.models, e.meshskin, e.scene.worldmat)
 		end
 	end
 

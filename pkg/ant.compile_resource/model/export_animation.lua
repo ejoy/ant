@@ -47,7 +47,7 @@ return function (status)
             end
         end
     end
-    status.ozz_animation = "animations/animation.ozz"
+    status.animation = "animations/animation.ozz"
     utility.save_txt_file(status, "animations/animation.ozz", {
         skeleton = "skeleton.bin",
         animations = animations,
