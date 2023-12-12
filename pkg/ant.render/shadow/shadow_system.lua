@@ -513,9 +513,14 @@ local kbmb 			= world:sub{"keyboard"}
 
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
 local shadowdebug_depthqueue, shadowdebug_queue
+local drawereid
 local shadowdebug_depthviewid, shadowdebug_viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"), hwi.viewid_generate("shadowdebug", "ssao")
 
 local function update_visible_state(e)
+	w:extend(e, "eid:in")
+	if e.eid == drawereid then
+		return
+	end
 	if e.visible_state["pre_depth_queue"] then
 		ivs.set_state(e, "shadow_debug_depth_queue", true)
 		w:extend(e, "filter_material:update")
@@ -599,7 +604,7 @@ function shadowdebug_sys:init_world()
 		},
 	}
 
-	world:create_entity{
+	drawereid = world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
@@ -637,9 +642,6 @@ end
 function shadowdebug_sys:data_changed()
 	for _, key, press in kbmb:unpack() do
 		if key == "B" and press == 0 then
-			local q<close> = world:entity(shadowdebug_queue, "visible?out")
-			q.visible = true
-		elseif key == "SPACE" and press == 0 then
 			for k, v in pairs(DEBUG_ENTITIES) do
 				w:remove(v)
 			end
