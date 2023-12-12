@@ -41,8 +41,8 @@ local function create(paths)
 end
 
 return create {
-    "/graphic.settings",
-    "/pkg/ant.settings/default/graphic.settings",
-    "/general.settings",
-    "/pkg/ant.settings/default/general.settings",
+    "/graphic_settings.ant",
+    "/pkg/ant.settings/default/graphic_settings.ant",
+    "/general_settings.ant",
+    "/pkg/ant.settings/default/general_settings.ant",
 }

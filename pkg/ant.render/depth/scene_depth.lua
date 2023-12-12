@@ -61,7 +61,7 @@ function sd_sys:post_init()
             scene_depth_queue = true,
             on_ready = function (e)
                 local mq = w:first "main_queue camera_ref:in"
-                irq.set_camera("scene_depth_queue", mq.camera_ref)
+                irq.set_camera_from_queuename("scene_depth_queue", mq.camera_ref)
             end
         }
     }

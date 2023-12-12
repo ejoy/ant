@@ -15,6 +15,8 @@ local hwi       = import_package "ant.hwi"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
 
+local Q         = world:clibs "render.queue"
+
 local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"
 local ig        = ecs.require "ant.group|group"
@@ -101,14 +103,22 @@ function efk_sys:exit()
     ltask.call(EFK_SERVER, "quit")
 end
 
+local function init_efk(efk)
+    efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
+    efk.speed = efk.speed or 1.0
+    efk.startframe = efk.startframe or 0
+    efk.fadeout = efk.fadeout or false
+    efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe, efk.fadeout)
+end
+
+local function init_efk_object(eo)
+    eo.visible_idx = Q.alloc()
+end
+
 function efk_sys:component_init()
-    for e in w:select "INIT efk:in" do
-        local efk = e.efk
-        efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
-        efk.speed = efk.speed or 1.0
-        efk.startframe = efk.startframe or 0
-        efk.fadeout = efk.fadeout or false
-        efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe, efk.fadeout)
+    for e in w:select "INIT efk_object:update efk:in" do
+        init_efk(e.efk)
+        init_efk_object(e.efk_object)
     end
 end
 
@@ -121,9 +131,14 @@ function efk_sys:entity_init()
     end
 end
 
+local function cleanup_efk_object(eo)
+    Q.dealloc(eo.visible_idx)
+end
+
 function efk_sys:entity_remove()
-    for e in w:select "REMOVED efk:in" do
+    for e in w:select "REMOVED efk:in efk_object:in" do
         cleanup_efk(e.efk)
+        cleanup_efk_object(e.efk_object)
     end
 end
 
@@ -235,10 +250,10 @@ function efk_sys:follow_scene_update()
 
         local ph = e.efk.play_handle
         if vs["main_queue"] then
-            eo.visible_masks =  qm.queue_mask "main_queue"
+            Q.set(eo.visible_idx, qm.queue_index "main_queue", true)
             ph:set_visible(true)
         else
-            eo.visible_masks = 0
+            Q.set(eo.visible_idx, qm.queue_index "main_queue", false)
             ph:set_visible(false)
         end
     end

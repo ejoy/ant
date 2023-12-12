@@ -9,9 +9,9 @@ local eo = ecs.component "efk_object"
 
 function eo.init()
     return {
-        visible_masks = 0,
-        handle = 0,
-        worldmat = mu.NULL,
+        visible_idx = 0xffffffff,
+        handle      = 0,
+        worldmat    = mu.NULL,
     }
 end
 

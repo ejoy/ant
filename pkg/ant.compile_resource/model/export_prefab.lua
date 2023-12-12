@@ -4,13 +4,6 @@ local lfs               = require "bee.filesystem"
 local material_compile  = require "material.compile"
 local L                 = import_package "ant.render.core".layout
 
-local invalid_chars<const> = "<>:/\\|?%s%[%]%(%)"
-local replace_char<const> = '_'
-
-local function fix_invalid_name(name)
-    return name:gsub(invalid_chars, replace_char)
-end
-
 local function create_entity(status, t)
     if t.parent then
         t.mount = t.parent
@@ -271,33 +264,26 @@ local function create_skin_entity(status, parent)
     end
     local has_animation = next(status.animations) ~= nil
     local has_meshskin = #status.skin > 0
-    if not has_animation and not has_meshskin then
+    if not has_animation then
+        assert(not has_meshskin)
         return
     end
-    local policy = {}
-    local data = {}
+    local policy = {
+        "ant.animation|animation"
+    }
+    local data = {
+        animation_birth = "",
+        anim_ctrl = {},
+        skeleton = status.skeleton,
+        animation = status.animations,
+    }
     if has_meshskin then
         policy[#policy+1] = "ant.scene|scene_object"
         policy[#policy+1] = "ant.animation|meshskin"
         data.meshskin = status.skin[1]
         data.skinning = true
         data.scene = {}
-    end
-    if has_animation then
-        policy[#policy+1] = "ant.animation|animation"
-        data.animation = {}
-        local anilst = {}
-        for name, file in pairs(status.animations) do
-            local n = fix_invalid_name(name)
-            anilst[#anilst+1] = n
-            data.animation[n] = file
-        end
-        table.sort(anilst)
-        data.animation_birth = ""
-        data.anim_ctrl = {}
-    end
-    data.skeleton = status.skeleton
-    if not has_meshskin then
+    else
         parent = nil
     end
     return create_entity(status, {

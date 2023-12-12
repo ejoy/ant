@@ -1,7 +1,7 @@
 component "cull_args"
     .type "c"
     .field "frustum_planes:userdata|math_t"
-    .field "cull_mask:int64"
+    .field "queue_index:byte"
 
 system "cull_system"
     .implement "cull/cull_system.lua"

@@ -46,6 +46,7 @@ int luaopen_fastio(lua_State* L);
 int luaopen_material_arena(lua_State *L);
 int luaopen_material_core(lua_State *L);
 int luaopen_render_material(lua_State *L);
+int luaopen_render_queue(lua_State *L);
 int luaopen_system_render(lua_State *L);
 int luaopen_render_stat(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
@@ -69,6 +70,7 @@ int luaopen_imgui_widgets(lua_State* L);
 int luaopen_system_scene(lua_State* L);
 int luaopen_system_cull(lua_State* L);
 int luaopen_zip(lua_State* L);
+int luaopen_download(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -114,6 +116,7 @@ void ant_loadmodules(lua_State* L) {
         { "render.material.arena",  luaopen_material_arena},
 		{ "render.material.core",   luaopen_material_core},
         { "render.render_material", luaopen_render_material},
+        { "render.queue",           luaopen_render_queue},
         { "system.render",      luaopen_system_render},
         { "render.stat",        luaopen_render_stat},
         { "motion.sampler",     luaopen_motion_sampler},
@@ -137,6 +140,7 @@ void ant_loadmodules(lua_State* L) {
         { "system.scene", luaopen_system_scene },
         { "cull.core", luaopen_system_cull},
 		{ "zip", luaopen_zip },
+		{ "download", luaopen_download },
         { NULL, NULL },
     };
 

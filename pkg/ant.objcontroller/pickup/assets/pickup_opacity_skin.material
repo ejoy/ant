@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   macros:
     "GPU_SKINNING=1"
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
 
 properties:
   u_id: {0, 0, 0, 0}

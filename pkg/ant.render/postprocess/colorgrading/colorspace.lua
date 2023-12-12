@@ -68,14 +68,14 @@ local cs = {
     LUMINANCE_HK_Rec709     = cv3(0.13913043, 0.73043478, 0.13043478),
 }
 
-cs.LMS_CAT16_to_Rec2020     = math3d.constant("mat", math3d.tovalue(math3d.mul(cs.XYZ_to_Rec2020, cs.CIECAT16_to_XYZ)))
-cs.Rec2020_to_LMS_CAT16     = math3d.constant("mat", math3d.tovalue(math3d.mul(cs.XYZ_to_CIECAT16, cs.Rec2020_to_XYZ)))
+cs.LMS_CAT16_to_Rec2020     = math3d.constant("mat",math3d.mul(cs.XYZ_to_Rec2020, cs.CIECAT16_to_XYZ))
+cs.Rec2020_to_LMS_CAT16     = math3d.constant("mat",math3d.mul(cs.XYZ_to_CIECAT16, cs.Rec2020_to_XYZ))
 
-cs.sRGB_to_Rec2020          = math3d.constant("mat", math3d.tovalue(math3d.mul(cs.XYZ_to_Rec2020, cs.sRGB_to_XYZ)))
-cs.Rec2020_to_sRGB          = math3d.constant("mat", math3d.tovalue(math3d.mul(cs.XYZ_to_sRGB, cs.Rec2020_to_XYZ)))
+cs.sRGB_to_Rec2020          = math3d.constant("mat", math3d.mul(cs.XYZ_to_Rec2020, cs.sRGB_to_XYZ))
+cs.Rec2020_to_sRGB          = math3d.constant("mat", math3d.mul(cs.XYZ_to_sRGB, cs.Rec2020_to_XYZ))
 
-cs.Rec2020_to_AP0           = math3d.constant("mat", math3d.tovalue(math3d.mul(math3d.mul(cs.AP1_to_AP0, cs.XYZ_to_AP1), cs.Rec2020_to_XYZ)))
-cs.AP1_to_Rec2020           = math3d.constant("mat", math3d.tovalue(math3d.mul(cs.XYZ_to_Rec2020, cs.AP1_to_XYZ)))
+cs.Rec2020_to_AP0           = math3d.constant("mat", math3d.mul(math3d.mul(cs.AP1_to_AP0, cs.XYZ_to_AP1), cs.Rec2020_to_XYZ))
+cs.AP1_to_Rec2020           = math3d.constant("mat", math3d.mul(cs.XYZ_to_Rec2020, cs.AP1_to_XYZ))
 
 function cs.EOTF_sRGB(x)
     local a <const> = 0.055

@@ -17,6 +17,7 @@ return function (status)
     local success, msg = subprocess.spawn_process {
         GLTF2OZZ,
         "--file=" .. (cwd / input):string(),
+        "--config_file=" .. (cwd / "pkg/ant.compile_resource/model/gltf2ozz.json"):string(),
         cwd = folder:string(),
     }
 
@@ -34,7 +35,9 @@ return function (status)
         if path:equal_extension ".ozz" then
             local filename = path:filename():string()
             if filename:lower() ~= "skeleton.ozz" then
-                status.animations[path:stem():string()] = "animations/"..filename
+                local name = path:stem():string()
+                assert(not name:match "[<>:/\\|?%s%[%]%(%)]")
+                status.animations[name] = "animations/"..filename
             end
         end
     end

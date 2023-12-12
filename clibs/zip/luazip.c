@@ -88,7 +88,7 @@ struct filename_convert {
 
 static FILE *
 file_open(lua_State *L, const char *filename, const char *mode, struct filename_convert *tmp) {
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp->tmp, sizeof(*tmp)) == 0) {
+	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp->tmp, sizeof(*tmp) / sizeof(tmp->tmp[0])) == 0) {
 		if (L == NULL)
 			return NULL;
 		luaL_error(L, "Can't convert %s to utf16", filename);

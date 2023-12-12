@@ -194,7 +194,7 @@ function ibl_sys:render_preprocess()
 
     for e in w:select "irradianceSH_builder" do
         local function load_Eml()
-            local c = datalist.parse(aio.readall(source_tex.tex_name .. "|main.cfg"))
+            local c = datalist.parse(aio.readall(source_tex.tex_name .. "|source.ant"))
 
             if nil == c.irradiance_SH then
                 error(("source texture:%s, did not build irradiance SH, 'build_irradiance_sh' should add to cubemap texture"):format(source_tex.tex_name))

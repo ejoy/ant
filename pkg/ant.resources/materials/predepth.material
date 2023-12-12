@@ -2,7 +2,7 @@ fx:
   depth: /pkg/ant.resources/shaders/depth/vs_depth.sc
   varyings:
     a_position: vec3
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
 state:
   ALPHA_REF: 0
   CULL: CCW

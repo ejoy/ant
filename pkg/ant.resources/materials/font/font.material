@@ -4,7 +4,7 @@ fx:
   macros:
     "SHADOW_EFFECT=1"
     "OUTLINE_EFFECT=1"
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
 properties:
   s_tex:
     stage: 0

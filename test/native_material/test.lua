@@ -70,7 +70,7 @@ end
 local function material_init()
     --TODO: need copy code from ext_material if we do not want to depend ant.asset
     local mfn = "/pkg/ant.native_material/simplequad.material"
-    local mf = cr.compile_file(fs.path(mfn .. "|main.cfg"))
+    local mf = cr.compile_file(fs.path(mfn .. "|source.ant"))
     local c; do
         local f<close> = assert(io.open(mf:string(), "r"))
         c = f:read "a"

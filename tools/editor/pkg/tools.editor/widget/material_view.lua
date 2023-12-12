@@ -40,7 +40,7 @@ local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.
 
 local function load_material_file(mf)
     if string.find(mf, ".glb|") then
-        mf = mf .. "/main.cfg"
+        mf = mf .. "/source.ant"
     end
 
     return read_datalist_file(mf)
@@ -1065,7 +1065,7 @@ function MaterialView:set_eid(eid)
         if v.texture and not texture_flag[v.texture] then
             local imagepath = absolute_path(v.texture, mtlpath)
             local pl = utils.split_ant_path(imagepath)
-            local data = datalist.parse(aio.readall(pl[1].."|"..fs.path(pl[2]):normalize():string().. "|main.cfg"))
+            local data = datalist.parse(aio.readall(pl[1].."|"..fs.path(pl[2]):normalize():string().. "|source.ant"))
             if data and not image_info[v.texture] then
                 image_info[v.texture] = {width = data.info.width, height = data.info.height}
                 texture_flag[v.texture] = true

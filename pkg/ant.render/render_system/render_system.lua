@@ -7,6 +7,8 @@ local assetmgr  = import_package "ant.asset"
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 
+local Q			= world:clibs "render.queue"
+
 local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render_system.render"
@@ -24,8 +26,13 @@ end
 
 function render_sys:component_init()
 	for e in w:select "INIT render_object:update filter_material:update" do
-		e.render_object.rm_idx 	= R.alloc()
-		e.filter_material 		= e.filter_material or {}
+		local ro = e.render_object
+		ro.rm_idx = R.alloc()
+
+		ro.visible_idx	= Q.alloc()
+		ro.cull_idx		= Q.alloc()
+
+		e.filter_material	= e.filter_material or {}
 	end
 end
 
@@ -52,8 +59,8 @@ end
 
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {
-		queue_mask			= queuemgr.queue_mask(k),
-		material_index		= queuemgr.material_index(k),
+		queue_index		= queuemgr.queue_index(k),
+		material_index	= queuemgr.material_index(k),
 	}
 	t[k] = v
 	return v
@@ -64,11 +71,11 @@ local function update_visible_masks(e)
 	for qe in w:select "queue_name:in" do
 		local qn = qe.queue_name
 		
-		local mask = assert(queuemgr.queue_mask(qn))
+		local index = assert(queuemgr.queue_index(qn))
 
 		local function update_masks(o)
 			if o then
-				o.visible_masks = vs[qn] and (o.visible_masks | mask) or (o.visible_masks & (~mask))
+				Q.set(o.visible_idx, index, vs[qn])
 			end
 		end
 
@@ -108,6 +115,9 @@ function render_sys:entity_init()
 
 	for qe in w:select "INIT queue_name:in render_target:in" do
 		local qn = qe.queue_name
+		if not queuemgr.has(qn) then
+			queuemgr.register_queue(qn)
+		end
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
@@ -188,20 +198,29 @@ function render_sys:update_render_args()
 	end
 end
 
-function render_sys:entity_remove()
-	for e in w:select "REMOVED render_object:in filter_material:in" do
-		local fm = e.filter_material
-		local ro = e.render_object
-		local mm = {}
-		for k, m in pairs(fm) do
-			if mm[m] == nil then
-				mm[m] = true
-				m:release()
-			end
-			fm[k] = nil
+local function clear_filter_material(fm)
+	local mm = {}
+	for k, m in pairs(fm) do
+		if mm[m] == nil then
+			mm[m] = true
+			m:release()
 		end
+		fm[k] = nil
+	end
+end
 
-		R.dealloc(ro.rm_idx)
+local function clear_render_object(ro)
+	R.dealloc(ro.rm_idx)
+
+	Q.dealloc(ro.visible_idx)
+	Q.dealloc(ro.cull_idx)
+end
+
+function render_sys:entity_remove()
+	for e in w:select "REMOVED render_object:update filter_material:in" do
+		clear_filter_material(e.filter_material)
+
+		clear_render_object(e.render_object)
 	end
 end
 

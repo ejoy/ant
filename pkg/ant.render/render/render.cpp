@@ -10,6 +10,8 @@ extern "C"{
 	#include "render_material.h"
 }
 
+#include "queue.h"
+
 #include "lua.hpp"
 #include "luabgfx.h"
 #include <bgfx/c99/bgfx.h>
@@ -177,11 +179,7 @@ struct submit_cache{
 	//TODO: need more fine control of the cache
 	group_collection	groups;
 
-	struct render_args {
-		const ecs::render_args* a;
-		int queue_idx;
-	};
-	render_args ra[MAX_VISIBLE_QUEUE];
+	const ecs::render_args* ra[MAX_VISIBLE_QUEUE];
 	uint8_t ra_count = 0;
 
 #ifdef RENDER_DEBUG
@@ -209,29 +207,20 @@ struct submit_cache{
 };
 
 template<typename ObjType>
-static bool obj_visible(const ObjType &o, uint64_t mask){
-	return	(0 != (o.visible_masks & mask)) && 
-			(0 == (o.cull_masks & mask));
+static bool obj_visible(struct queue_container* Q, const ObjType &o, uint8_t qidx){
+	return	queue_check(Q, o.visible_idx, qidx) &&
+			!queue_check(Q, o.cull_idx, qidx);
 }
 
 template<typename ObjType>
-static bool obj_queue_visible(const ObjType &o, uint64_t mask){
-	return	(0 != (o.visible_masks & mask));
-}
-
-static inline int queue_idx(uint64_t mask){
-	for (int ii=0; ii<64; ++ii){
-		if (((UINT64_C(1) << ii) & mask) != 0){
-			return ii;
-		}
-	}
-	return -1;
+static bool obj_queue_visible(struct queue_container* Q, const ObjType &o, uint8_t qidx){
+	return	queue_check(Q, o.visible_idx, qidx);
 }
 
 static inline void
 find_render_args(struct ecs_world *w, submit_cache &cc) {
 	for (auto& r : ecs_api::array<ecs::render_args>(w->ecs)) {
-		cc.ra[cc.ra_count++] = {&r, queue_idx(r.queue_mask)};
+		cc.ra[cc.ra_count++] = &r;
 	}
 }
 
@@ -254,12 +243,11 @@ build_hitch_info(struct ecs_world*w, submit_cache &cc){
 	for (auto e : ecs_api::select<ecs::hitch_visible, ecs::hitch, ecs::scene>(w->ecs)) {
 		const auto &h = e.get<ecs::hitch>();
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-			const auto &ra = cc.ra[ii];
-			const auto queue_mask = ra.a->queue_mask;
-			if (obj_visible(h, queue_mask)){
+			auto ra = cc.ra[ii];
+			if (obj_visible(w->Q, h, ra->queue_index)){
 				const auto &s = e.get<ecs::scene>();
 				if (h.group != 0){
-					cc.groups[h.group][ra.queue_idx].push_back(s.worldmat);
+					cc.groups[h.group][ra->queue_index].push_back(s.worldmat);
 					#ifdef RENDER_DEBUG
 					++cc.stat.hitch_count;
 					#endif //RENDER_DEBUG
@@ -278,19 +266,19 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 		ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
 		for (auto& e : ecs_api::select<ecs::hitch_tag>(w->ecs)) {
 			for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-				const auto& ra = cc.ra[ii];
-				const auto &mats = g[ra.queue_idx];
+				auto ra = cc.ra[ii];
+				const auto &mats = g[ra->queue_index];
 				if (!mats.empty()){
 					auto ro = e.component<ecs::render_object>();
-					if (ro && obj_queue_visible(*ro, ra.a->queue_mask)){
-						draw_obj(L, w, ra.a, ro, nullptr, &mats, cc.transforms);
+					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index)){
+						draw_obj(L, w, ra, ro, nullptr, &mats, cc.transforms);
 						#ifdef RENDER_DEBUG
 						cc.stat.hitch_submit += (uint32_t)mats.size();
 						#endif //RENDER_DEBUG
 					}
 
 					const auto eo = e.component<ecs::efk_object>();
-					if (eo && obj_queue_visible(*eo, ra.a->queue_mask)){
+					if (eo && obj_queue_visible(w->Q, *eo, ra->queue_index)){
 						submit_efk_obj(L, w, eo, mats);
 						#ifdef RENDER_DEBUG
 						cc.stat.efk_hitch_submit += (uint32_t)mats.size();
@@ -305,13 +293,17 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 static inline void
 render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 	// draw simple objects
-	for (auto& e : ecs_api::select<ecs::render_object_visible, ecs::render_object, ecs::eid>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::render_object_visible, ecs::render_object>(w->ecs)) {
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-			const auto& ra = cc.ra[ii];
+			auto ra = cc.ra[ii];
 			const auto& obj = e.get<ecs::render_object>();
+#ifdef RENDER_DEBUG
+			auto eid = e.component<ecs::eid>();eid;
+#endif //RENDER_DEBUG
+
 			const ecs::indirect_object* iobj = e.component<ecs::indirect_object>();
-			if (obj_visible(obj, ra.a->queue_mask) || (indirect_draw_valid(iobj) && obj_queue_visible(obj, ra.a->queue_mask))){
-				draw_obj(L, w, ra.a, &obj, iobj, nullptr, cc.transforms);
+			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(iobj) && obj_queue_visible(w->Q, obj, ra->queue_index))){
+				draw_obj(L, w, ra, &obj, iobj, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
 				++cc.stat.simple_submit;
 				#endif //RENDER_DEBUG
@@ -415,6 +407,7 @@ static int
 linit_system(lua_State *L){
 	auto w = getworld(L);
 	w->R = render_material_create();
+	w->Q = queue_create();
 	return 1;
 }
 
@@ -423,6 +416,9 @@ lexit(lua_State *L){
 	auto w = getworld(L);
 	render_material_release(w->R);
 	w->R = nullptr;
+
+	queue_destroy(w->Q);
+	w->Q = nullptr;
 
 	return 0;
 }
@@ -462,8 +458,8 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init_system", linit_system},
-		{ "exit",				lexit},
+		{ "init_system",	linit_system},
+		{ "exit",			lexit},
 		//{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
 		// { "render_hitch_submit",lrender_hitch_submit},

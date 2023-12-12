@@ -1,30 +1,50 @@
 local lfs = require "bee.filesystem"
 local platform = require "bee.platform"
 
+local BASETOOLS<const> = {
+    "shaderc", "texturec", "gltf2ozz"
+}
+
+local TOOLSUFFIX<const> = platform.os == "macos" and "" or ".exe"
+
+local function check_tool_path_valid(path)
+    if not lfs.exists(path) then
+        return false
+    end
+    for _, n in ipairs(BASETOOLS) do
+        if not lfs.exists(path / (n .. TOOLSUFFIX)) then
+            return false
+        end
+    end
+
+    return true
+end
+
 local function find_bindir()
     local antdir = os.getenv "antdir"
+    local rootpath
     if antdir then
-        return lfs.path(antdir) / "bin/msvc/debug"
+        rootpath = lfs.path(antdir) / "bin" / platform.os
+    else
+        rootpath = lfs.exe_path():parent_path():parent_path()
     end
 
-    local exepath = lfs.exe_path():parent_path()
-
-    local mode = exepath:stem():string()
-    if "release" == mode then
-        return exepath
+    local releasepath = rootpath / "release"
+    if check_tool_path_valid(releasepath) then
+        return releasepath
     end
 
-    local release_path = exepath:parent_path() / "release"
-    if lfs.exists(release_path) then
-        return release_path
+    local debugpath = rootpath / "debug"
+    if check_tool_path_valid(debugpath) then
+        log.info("Use the debug tools path, but release path can greatly improve resource compilation efficiency, make sure build the release tool path: luamake tools -mode release")
+        return debugpath
     end
 
-    log.info("release tools is not build, release tools are mush faster than debug tools, try to build release tools: luamake tools -mode release")
-    return lfs.exists(release_path) and release_path or exepath
+    error(("No valid tool paths, make sure [release/debug] sub path contain tools: shaderc, texturec, gltf2ozz"):format(rootpath))
 end
 
 local BINDIR<const>     = find_bindir()--lfs.exe_path():parent_path()
-local TOOLSUFFIX<const> = platform.os == "macos" and "" or ".exe"
+log.info(("Use tools path:"):format(BINDIR))
 
 return function (toolname)
     local exepath = BINDIR / (toolname .. TOOLSUFFIX)

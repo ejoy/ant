@@ -6,15 +6,33 @@ local math3d    = require "math3d"
 local mc        = import_package "ant.math".constant
 local ig        = ecs.require "ant.group|group"
 
+local Q         = world:clibs "render.queue"
+
 local h = ecs.component "hitch"
 function h.init(hh)
     assert(hh.group ~= nil)
-    hh.visible_masks = 0
-    hh.cull_masks = 0
+    hh.visible_idx  = 0xffffffff
+    hh.cull_idx     = 0xffffffff
     return hh
 end
 
 local hitch_sys = ecs.system "hitch_system"
+
+function hitch_sys:component_init()
+    for e in w:select "INIT hitch:update" do
+        local ho = e.hitch
+        ho.visible_idx = Q.alloc()
+        ho.cull_idx = Q.alloc()
+    end
+end
+
+function hitch_sys:entity_remove()
+    for e in w:select "REMOVED hitch:in" do
+        local ho = e.hitch
+        Q.dealloc(ho.visible_idx)
+        Q.dealloc(ho.cull_idx)
+    end
+end
 
 function hitch_sys:entity_init()
     for e in w:select "INIT hitch hitch_bounding?out view_visible?in hitch_visible?out" do

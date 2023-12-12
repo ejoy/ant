@@ -235,6 +235,7 @@ render_material_dealloc(struct render_material *R, int index) {
 	while (index >= 0) {
 		struct material_tuple *node = &R->arena[index];
 		int next = node->next;
+		assert(next != index);
 		node->next = R->freelist;
 		R->freelist = index;
 		index = next;

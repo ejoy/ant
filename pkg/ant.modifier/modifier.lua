@@ -135,7 +135,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
         local e <close> = world:entity(target, "material:in")
         local filename = e.material
         if string.find(filename, ".glb|") then
-            filename = filename .. "/main.cfg"
+            filename = filename .. "/source.ant"
         end
         local mtl = serialize.parse(filename, aio.readall(filename))
         assert(mtl.properties[property])
@@ -373,9 +373,9 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
 	}
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             for _, e in ipairs(anim_prefab.tag["*"]) do
-                local anim <close> = world:entity(e, "anim_ctrl?in skeleton?in")
-                if anim.anim_ctrl and anim.skeleton then
-                    return anim.anim_ctrl.pose_result.models:joint(anim.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
+                local anim <close> = world:entity(e, "meshskin?in anim_ctrl?in skeleton?in")
+                if anim.meshskin and anim.skeleton and anim.anim_ctrl then
+                    return anim.meshskin.models:joint(anim.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
                 end
             end
         end)

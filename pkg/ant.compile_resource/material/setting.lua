@@ -3,7 +3,7 @@ local vfs_fastio = require "vfs_fastio"
 
 local function default_fx_setting(setting)
     if not setting.default_fx_setting then
-        setting.default_fx_setting = datalist.parse(vfs_fastio.readall_f(setting.vfs, "/pkg/ant.resources/settings/default.settings"))
+        setting.default_fx_setting = datalist.parse(vfs_fastio.readall_f(setting.vfs, "/pkg/ant.resources/settings/default.ant"))
     end
     return setting.default_fx_setting
 end

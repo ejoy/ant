@@ -119,16 +119,26 @@ function irq.set_view_rect(queuename, rect)
 	set_view_rect(rt.viewid, vr, queuename)
 end
 
-function irq.set_camera(queuename, camera_ref)
+local function set_camera(qe, camera_ref)
+	qe.camera_ref = camera_ref
+	local rt = qe.render_target
+	local vr = rt.view_rect
+	local camera <close> = world:entity(camera_ref)
+	icamera.set_frustum_aspect(camera, vr.w / vr.h)
+end
+
+function irq.set_camera(qe, camera_ref)
+	set_camera(qe, camera_ref)
+	w:extend(qe, "eid:in")
+	world:pub{qe.eid, "camera_changed", camera_ref}
+end
+
+function irq.set_camera_from_queuename(queuename, camera_ref)
 	local changed
 	for q in w:select(queuename .. " camera_ref:out render_target:in") do
-		q.camera_ref = camera_ref
-		local rt = q.render_target
-		local vr = rt.view_rect
-		local camera <close> = world:entity(camera_ref)
-		icamera.set_frustum_aspect(camera, vr.w / vr.h)
-		changed = true
+		set_camera(q, camera_ref)
 		world:pub{queuename, "camera_changed", camera_ref}
+		changed = true
 	end
 
 	if not changed then
@@ -170,7 +180,7 @@ local rt_sys = ecs.system "render_target_system"
 function rt_sys:entity_init()
 	for msg in bc_mb:each() do
 		local qn, c = msg[2], msg[3]
-		irq.set_camera(qn, c)
+		irq.set_camera_from_queuename(qn, c)
 	end
 
 	for e in w:select "INIT render_target:in queue_name:in need_touch?in" do

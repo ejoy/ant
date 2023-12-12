@@ -236,11 +236,11 @@ local function update_animation()
     if animtype == "ske" then
         runtime_anim._handle = build_animation(current_skeleton, runtime_anim.raw_animation, current_anim.target_anims, sample_ratio)
     else
-        local get_keyframe_value = function (type, clip, init_value)
+        local get_keyframe_value = function (type, clip, init)
             if type == "mtl" then
                 return clip.value
             elseif type == "srt" then
-                local value = init_value or {1, 0, 0, 0, 0, 0, 0}
+                local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
                 value[clip.rot_axis + 1] = clip.amplitude_rot
                 if clip.direction < 4 then
                     value[clip.direction + 4] = clip.amplitude_pos
@@ -276,7 +276,7 @@ local function update_animation()
             local last_clip = anim.clips[1]
             for _, clip in ipairs(anim.clips) do
                 if clip.range[1] == last_clip.range[2] + 1 then
-                    from = get_keyframe_value(animtype, last_clip)
+                    from = get_keyframe_value(animtype, last_clip, inherit_for_srt and keyframes[#keyframes].value or nil)
                 else
                     if clip.range[1] > 0 then
                         keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
@@ -1343,16 +1343,17 @@ function m.create_target_animation(at, target)
     create_context.type = at
     new_anim_widget = true
     if at == "srt" then
-        -- local tpl = hierarchy:get_node_info(target).template
-        -- local name = tpl.tag and tpl.tag[1]
-        local name = hierarchy:get_node_info(target).name
+        local tpl = hierarchy:get_node_info(target).template
+        local name = tpl.tag and tpl.tag[1] or ""
+        -- local info = hierarchy:get_node_info(target)
+        -- local name = info.template.tag[1]
         create_context.desc = {{name = name}}
         target_map[name] = target
     elseif at == "mtl" then
         local mtlpath = e.material
         if mtlpath then
             if string.find(e.material, ".glb|") then
-                mtlpath = mtlpath .. "/main.cfg"
+                mtlpath = mtlpath .. "/source.ant"
             end
             local desc = {}
             local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
@@ -1528,28 +1529,28 @@ function m.init(skeleton)
         if not jlist then
             return
         end
-        local pose_result
-        for ee in w:select "skeleton:in anim_ctrl:in" do
+        local meshskin
+        for ee in w:select "skeleton:in meshskin:in" do
             if current_skeleton == ee.skeleton then
-                pose_result = ee.anim_ctrl.pose_result
+                meshskin = ee.meshskin
                 break
             end
         end
-        if pose_result then
+        if meshskin then
             for _, joint in ipairs(jlist) do
                 if joint.mesh then
                     local mesh_e <close> = world:entity(joint.mesh, "scene?in")
                     if mesh_e.scene then
                         -- joint
-                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result.models:joint(joint.index), math3d.matrix{s=joint_scale}))))
+                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(meshskin.models:joint(joint.index), math3d.matrix{s=joint_scale}))))
                         -- bone
                         local bone_mesh_e <close> = world:entity(joint.bone_mesh, "scene?in")
                         local parent_idx = skeleton:parent(joint.index)
                         local show = false
                         if parent_idx > 0 then
                             local bone_mat
-                            local mat_parent = pose_result.models:joint(parent_idx)
-                            local mat_current = pose_result.models:joint(joint.index)
+                            local mat_parent = meshskin.models:joint(parent_idx)
+                            local mat_current = meshskin.models:joint(joint.index)
                             local bone_dir = math3d.sub(math3d.index(mat_current, 4), math3d.index(mat_parent, 4))
                             
                             local zdir = math3d.index(mat_parent, 3)

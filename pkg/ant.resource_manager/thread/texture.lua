@@ -54,7 +54,7 @@ local function loadTexture(name)
 	if protocol then
 		return loadExt(protocol, path, config, name)
 	end
-    local path = name.."|main.cfg"
+    local path = name.."|source.ant"
     local c = datalist.parse(aio.readall(path))
     c.name = name
     return c

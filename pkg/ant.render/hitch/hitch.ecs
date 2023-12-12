@@ -6,8 +6,8 @@ component "hitch_bounding"
 component "hitch"
     .type "c"
     .field "group:int"
-    .field "visible_masks:int64"
-    .field "cull_masks:int64"
+    .field "visible_idx:int"
+    .field "cull_idx:int"
     .implement "hitch/hitch.lua"
 
 component "hitch_visible" -- view_visible & hitch

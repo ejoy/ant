@@ -3,7 +3,7 @@ fx:
   fs: /pkg/ant.resources/shaders/postprocess/fs_blend_scene.sc
   macros:
     ALPHAMODE_OPAQUE=1
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
   varyings: /pkg/ant.resources/materials/nolighting.varyings
 properties:
   s_scene_color:

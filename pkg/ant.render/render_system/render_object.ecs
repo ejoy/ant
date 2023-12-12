@@ -10,8 +10,10 @@ component "render_object"
     --materials
     .field "rm_idx:dword"
     --visible
-    .field "visible_masks:int64"  -- determiate which queue can see the render_object(main_view/cast_shadow/selectable, etc ...)
-    .field "cull_masks:int64"
+    -- .field "visible_masks:int64"  -- determiate which queue can see the render_object(main_view/cast_shadow/selectable, etc ...)
+    -- .field "cull_masks:int64"
+    .field "visible_idx:int"
+    .field "cull_idx:int"
 
     --mesh
     .field "vb_start:dword"

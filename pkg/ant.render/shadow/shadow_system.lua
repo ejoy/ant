@@ -18,11 +18,12 @@ local sampler	= import_package "ant.render.core".sampler
 
 local RM        = ecs.require "ant.material|material"
 local R         = world:clibs "render.render_material"
+local Q			= world:clibs "render.queue"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
 local fbmgr     = require "framebuffer_mgr"
-local queuemgr  = require "queue_mgr"
+local queuemgr  = ecs.require "queue_mgr"
 
 local ishadowcfg= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
@@ -152,29 +153,29 @@ function shadow_sys:entity_remove()
 	end
 end
 
-local function merge_visible_bounding(M, aabb, e, queuemask)
+local function merge_visible_bounding(M, aabb, e, queue_index)
 	local ro = e.render_object
-	if 0 ~= (queuemask & ro.visible_masks) then
+	if Q.check(ro.visible_idx, queue_index) then
 		aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.aabb))
 	end
 
 	return aabb
 end
 
-local function build_aabb(Lv, queuemask, tag)
+local function build_aabb(Lv, queue_index, tag)
 	local aabb = math3d.aabb()
 	for e in w:select(("%s render_object:in bounding:in"):format(tag)) do
-		aabb = merge_visible_bounding(Lv, aabb, e, queuemask)
+		aabb = merge_visible_bounding(Lv, aabb, e, queue_index)
 	end
 	return aabb
 end
 
-local function build_PSR(Lv, queuemask)
-	return build_aabb(Lv, queuemask, "receive_shadow")
+local function build_PSR(Lv, queue_index)
+	return build_aabb(Lv, queue_index, "receive_shadow")
 end
 
-local function build_PSC(Lv, queuemask)
-	return build_aabb(Lv, queuemask, "cast_shadow")
+local function build_PSC(Lv, queue_index)
+	return build_aabb(Lv, queue_index, "cast_shadow")
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
@@ -346,8 +347,8 @@ function shadow_sys:refine_camera()
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
 
-	local queuemask = queuemgr.queue_mask "csm1_queue" | queuemgr.queue_mask "csm2_queue" | queuemgr.queue_mask "csm3_queue" | queuemgr.queue_mask "csm4_queue"
-	local PSR, PSC = build_PSR(Lv, queuemask), build_PSC(Lv, queuemask)
+	local queue_index = queuemgr.queue_index "csm1_queue"
+	local PSR, PSC = build_PSR(Lv, queue_index), build_PSC(Lv, queue_index)
 	local sceneaabbLS = merge_PSC_and_PSR(PSC, PSR)
 
 	local Ndc2Lv = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
@@ -506,17 +507,51 @@ local unique_color; do
 end
 
 local DEBUG_ENTITIES = {}
-local ientity = ecs.require "components.entity"
-local imesh = ecs.require "ant.asset|mesh"
-local kbmb = world:sub{"keyboard"}
+local ientity 		= ecs.require "components.entity"
+local imesh 		= ecs.require "ant.asset|mesh"
+local kbmb 			= world:sub{"keyboard"}
+
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
-local shadowdebug_queue
-local shadowdebug_viewid = hwi.viewid_generate("shadowdebug", "ssao")
+local shadowdebug_depthqueue, shadowdebug_queue
+local drawereid
+local shadowdebug_depthviewid, shadowdebug_viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"), hwi.viewid_generate("shadowdebug", "ssao")
+
+local function update_visible_state(e)
+	w:extend(e, "eid:in")
+	if e.eid == drawereid then
+		return
+	end
+	if e.visible_state["pre_depth_queue"] then
+		ivs.set_state(e, "shadow_debug_depth_queue", true)
+		w:extend(e, "filter_material:update")
+		e.filter_material["shadow_debug_depth_queue"] = e.filter_material["pre_depth_queue"]
+	end
+
+	if e.visible_state["main_queue"] then
+		ivs.set_state(e, "shadow_debug_queue", true)
+		w:extend(e, "filter_material:update")
+		e.filter_material["shadow_debug_queue"] = e.filter_material["main_queue"]
+	end
+end
 
 function shadowdebug_sys:init_world()
 	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
-	queuemgr.register_queue("shadow_debug_queue", queuemgr.material_index "main_queue", queuemgr.queue_mask "main_queue")
-	local fbw, fbh = 256, 256
+	queuemgr.register_queue("shadow_debug_depth_queue",	queuemgr.material_index "pre_depth_queue")
+	queuemgr.register_queue("shadow_debug_queue", 		queuemgr.material_index "main_queue")
+	local fbw, fbh = 512, 512
+	local depth_rbidx = fbmgr.create_rb{
+		format="D32F", w=fbw, h=fbh, layers=1,
+		flags = sampler {
+			RT = "RT_ON",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		},
+	}
+
+	local depthfbidx = fbmgr.create{rbidx=depth_rbidx}
+
 	local fbidx = fbmgr.create(
 					{rbidx = fbmgr.create_rb{
 						format = "RGBA16F", w=fbw, h=fbh, layers=1,
@@ -528,18 +563,26 @@ function shadowdebug_sys:init_world()
 							V="CLAMP",
 						}
 					}},
-					{rbidx = fbmgr.create_rb{
-						format="D32F", w=fbw, h=fbh, layers=1,
-						flags = sampler {
-							RT = "RT_ON",
-							MIN="POINT",
-							MAG="POINT",
-							U="CLAMP",
-							V="CLAMP",
-						},
-					}}
+					{rbidx = depth_rbidx}
 				)
 
+	shadowdebug_depthqueue = world:create_entity{
+		policy = {"ant.render|render_queue"},
+		data = {
+			render_target = {
+				viewid = shadowdebug_depthviewid,
+				view_rect = {x=0, y=0, w=fbw, h=fbh},
+				clear_state = {
+					clear = "D",
+					depth = 0,
+				},
+				fb_idx = depthfbidx,
+			},
+			visible = true,
+			camera_ref = irq.camera "csm1_queue",
+			queue_name = "shadow_debug_depth_queue",
+		}
+	}
 	
 	shadowdebug_queue = world:create_entity{
 		policy = {
@@ -550,46 +593,56 @@ function shadowdebug_sys:init_world()
 				viewid = shadowdebug_viewid,
 				view_rect = {x=0, y=0, w=fbw, h=fbh},
 				clear_state = {
-					clear = "CD",
+					clear = "C",
 					color = 0,
-					depth = 0,
 				},
 				fb_idx = fbidx,
 			},
-			visible = false,
-			camera_ref = irq.main_camera(),
+			visible = true,
+			camera_ref = irq.camera "csm1_queue",
 			queue_name = "shadow_debug_queue",
 		},
 	}
 
-	world:create_entity{
+	drawereid = world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
 		data = {
-			simplemesh = imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=fbw, h=fbh}, true),
+			simplemesh = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_queue",
 			scene = {},
+			render_layer = "translucent",
 			on_ready = function (e)
 				imaterial.set_property(e, "s_tex", fbmgr.get_rb(fbidx, 1).handle)
 			end,
 		}
 	}
+
+	for e in w:select "render_object visible_state:in" do
+		update_visible_state(e)
+	end
+end
+
+function shadowdebug_sys:entity_init()
+	for e in w:select "INIT render_object visible_state:in" do
+		update_visible_state(e)
+	end
+
+	-- if w:first "INIT csm1_queue" then
+	-- 	local qe = w:first "csm1_queue camera_ref:in"
+	-- 	local sddq<close> = world:entity(shadowdebug_depthqueue)
+	-- 	local sdq<close> = world:entity(shadowdebug_queue)
+	-- 	irq.set_camera(sddq, qe.camera_ref)
+	-- 	irq.set_camera(sdq, qe.camera_ref)
+	-- end
 end
 
 function shadowdebug_sys:data_changed()
 	for _, key, press in kbmb:unpack() do
 		if key == "B" and press == 0 then
-			local q<close> = world:entity(shadowdebug_queue, "visible?out")
-			q.visible = false
-			--w:submit(q)
-
-
-			local qq = w:first "main_queue visible?in"
-			print(qq.visible)
-		elseif key == "SPACE" and press == 0 then
-			for k, v in pairs(DEBUG_ENTITIES.frustums) do
+			for k, v in pairs(DEBUG_ENTITIES) do
 				w:remove(v)
 			end
 
@@ -617,4 +670,3 @@ function shadowdebug_sys:data_changed()
 		end
 	end
 end
-

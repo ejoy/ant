@@ -58,6 +58,7 @@ do print "step2. compile resource."
     local tiny_vfs = vfsrepo.new_tiny(repopath)
     local names, paths = std_vfs:export_resources()
     local tasks = {}
+    local has_error
     local function msgh(errmsg)
         return debug.traceback(errmsg)
     end
@@ -67,6 +68,7 @@ do print "step2. compile resource."
             resource_cache[lpath] = nil
             return
         end
+        has_error = true
         print(string.format("compile failed:\n\tvpath: %s\n\tlpath: %s\n%s", name, path, lpath))
     end
     for _, setting in ipairs(config_resource) do
@@ -76,6 +78,9 @@ do print "step2. compile resource."
         end
     end
     for _ in ltask.parallel(tasks) do
+    end
+    if has_error then
+        return
     end
 end
 

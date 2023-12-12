@@ -279,6 +279,30 @@ function util.copy2viewrect(srcvr, dstvr)
 	dstvr.ratio = srcvr.ratio
 end
 
+local function remap_NO(x)
+	return x * 2.0 - 1.0
+end
+
+function util.rect2ndc(rect, viewrect)
+	local nx, ny = rect.x/viewrect.w, rect.y/viewrect.h
+	local nw, nh = rect.w/viewrect.w, rect.h/viewrect.h
+	ny = 1.0 - ny
+	nx, ny = remap_NO(nx), remap_NO(ny)
+
+	local ww, hh = 2*nw, 2*nh
+	return {x=nx, y=ny-hh, w=ww, h=hh,}	--ny-hh: to move (x, y) to bottom left
+end
+
+function util.rectpoints(rect)
+	local x, y, w, h = rect.x, rect.y, rect.w, rect.h
+	return {
+		x, 		y,
+		x,		y + h,
+		x + w, 	y,
+		x + w, 	y + h,
+	}
+end
+
 local function isnan(v, ...)
 	if v then
 		if v ~= v then

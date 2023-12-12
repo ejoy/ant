@@ -1,7 +1,7 @@
 fx:
   shader_type: PBR
   fs_code: "void CUSTOM_FS(Varyings varyings, out FSOutput fsoutput){ fsoutput.color = u_color; }"
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
   varyings:
     a_position: vec3
 properties:

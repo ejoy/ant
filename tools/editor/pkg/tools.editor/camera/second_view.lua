@@ -103,7 +103,7 @@ function second_camera_sys:entity_remove()
     for e in w:select "REMOVED camera:in eid:in" do
         local sc = w:first("second_view camera_ref:in")
         if e.eid == sc.camera_ref then
-            irq.set_camera("second_view", DEFAULT_camera)
+            irq.set_camera_from_queuename("second_view", DEFAULT_camera)
         end
     end
 end
