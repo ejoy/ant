@@ -13,7 +13,7 @@ struct queue_node {
 	static constexpr uint16_t QUEUE_NUM = NUM_MASK * 64;
 	uint64_t masks[NUM_MASK] = {0};
 
-    void clear() {
+    constexpr void clear() {
         for (uint32_t ii=0; ii<NUM_MASK; ++ii){
             masks[ii] = 0;
         }
