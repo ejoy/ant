@@ -3,7 +3,7 @@ policy:
     ant.sky|skybox
     ant.render|simplerender
 data:
-    visible_state: main_view
+    visible_state: main_queue
     scene: {}
     ibl:
         intensity: 120000

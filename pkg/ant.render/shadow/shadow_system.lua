@@ -513,11 +513,40 @@ local kbmb 			= world:sub{"keyboard"}
 
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
 local shadowdebug_queue
-local shadowdebug_viewid = hwi.viewid_generate("shadowdebug", "ssao")
+local shadowdebug_depthviewid, shadowdebug_viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"), hwi.viewid_generate("shadowdebug", "ssao")
+
+local function update_visible_state(e)
+	if e.visible_state["pre_depth_queue"] then
+		ivs.set_state(e, "shadow_debug_depth_queue", true)
+		w:extend(e, "filter_material:update")
+		e.filter_material["shadow_debug_depth_queue"] = e.filter_material["pre_depth_queue"]
+	end
+
+	if e.visible_state["main_queue"] then
+		ivs.set_state(e, "shadow_debug_queue", true)
+		w:extend(e, "filter_material:update")
+		e.filter_material["shadow_debug_queue"] = e.filter_material["main_queue"]
+	end
+end
 
 function shadowdebug_sys:init_world()
 	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
+	queuemgr.register_queue("shadow_debug_depth_queue",	queuemgr.material_index "pre_depth_queue")
+	queuemgr.register_queue("shadow_debug_queue", 		queuemgr.material_index "main_queue")
 	local fbw, fbh = 512, 512
+	local depth_rbidx = fbmgr.create_rb{
+		format="D32F", w=fbw, h=fbh, layers=1,
+		flags = sampler {
+			RT = "RT_ON",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		},
+	}
+
+	local depthfbidx = fbmgr.create{rbidx=depth_rbidx}
+
 	local fbidx = fbmgr.create(
 					{rbidx = fbmgr.create_rb{
 						format = "RGBA16F", w=fbw, h=fbh, layers=1,
@@ -529,18 +558,26 @@ function shadowdebug_sys:init_world()
 							V="CLAMP",
 						}
 					}},
-					{rbidx = fbmgr.create_rb{
-						format="D32F", w=fbw, h=fbh, layers=1,
-						flags = sampler {
-							RT = "RT_ON",
-							MIN="POINT",
-							MAG="POINT",
-							U="CLAMP",
-							V="CLAMP",
-						},
-					}}
+					{rbidx = depth_rbidx}
 				)
 
+	world:create_entity{
+		policy = {"ant.render|render_queue"},
+		data = {
+			render_target = {
+				viewid = shadowdebug_depthviewid,
+				view_rect = {x=0, y=0, w=fbw, h=fbh},
+				clear_state = {
+					clear = "D",
+					depth = 0,
+				},
+				fb_idx = depthfbidx,
+			},
+			visible = true,
+			camera_ref = irq.main_camera(),
+			queue_name = "shadow_debug_depth_queue",
+		}
+	}
 	
 	shadowdebug_queue = world:create_entity{
 		policy = {
@@ -551,9 +588,8 @@ function shadowdebug_sys:init_world()
 				viewid = shadowdebug_viewid,
 				view_rect = {x=0, y=0, w=fbw, h=fbh},
 				clear_state = {
-					clear = "CD",
+					clear = "C",
 					color = 0,
-					depth = 0,
 				},
 				fb_idx = fbidx,
 			},
@@ -582,17 +618,13 @@ function shadowdebug_sys:init_world()
 	}
 
 	for e in w:select "render_object visible_state:in" do
-		if e.visible_state["main_queue"] then
-			ivs.set_state(e, "shadow_debug_queue", true)
-		end
+		update_visible_state(e)
 	end
 end
 
 function shadowdebug_sys:entity_init()
 	for e in w:select "INIT render_object visible_state:in" do
-		if e.visible_state["main_queue"] then
-			ivs.set_state(e, "shadow_debug_queue", true)
-		end
+		update_visible_state(e)
 	end
 end
 
@@ -630,4 +662,3 @@ function shadowdebug_sys:data_changed()
 		end
 	end
 end
-
