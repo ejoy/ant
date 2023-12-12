@@ -1,0 +1,11 @@
+{
+    "skeleton": {
+        "filename": "skeleton.ozz"
+    },
+    "animations": [
+        {
+            "clip": "*",
+            "filename": "*.ozz"
+        }
+    ]
+}
