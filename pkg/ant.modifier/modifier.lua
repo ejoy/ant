@@ -135,7 +135,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
         local e <close> = world:entity(target, "material:in")
         local filename = e.material
         if string.find(filename, ".glb|") then
-            filename = filename .. "/main.cfg"
+            filename = filename .. "/source.ant"
         end
         local mtl = serialize.parse(filename, aio.readall(filename))
         assert(mtl.properties[property])

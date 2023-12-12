@@ -1353,7 +1353,7 @@ function m.create_target_animation(at, target)
         local mtlpath = e.material
         if mtlpath then
             if string.find(e.material, ".glb|") then
-                mtlpath = mtlpath .. "/main.cfg"
+                mtlpath = mtlpath .. "/source.ant"
             end
             local desc = {}
             local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))

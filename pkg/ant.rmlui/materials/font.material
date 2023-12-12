@@ -1,7 +1,7 @@
 fx:
   fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
   vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
 properties:  
   s_tex:
     stage: 0

@@ -59,7 +59,6 @@ local html_footer = [[
 local plaintext = "text/plain;charset=utf-8"
 
 local content_text_types = {
-    [".settings"] = plaintext,
     -- ecs
     [".prefab"] = plaintext,
     [".ecs"] = plaintext,
@@ -72,8 +71,7 @@ local content_text_types = {
     [".event"] = plaintext,
     [".anim"] = plaintext,
     -- compiled resource
-    [".cfg"] = plaintext,
-    [".attr"] = plaintext,
+    [".ant"] = plaintext,
     [".state"] = plaintext,
 	-- shader
 	[".sc"] = plaintext,

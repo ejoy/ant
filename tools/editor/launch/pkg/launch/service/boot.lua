@@ -44,7 +44,7 @@ local function readall(path)
 end
 
 local function load_material(path)
-    local material = datalist.parse(readall(path .. "|main.cfg"))
+    local material = datalist.parse(readall(path .. "|source.ant"))
     local vsh = bgfx.create_shader(bgfx.memory_buffer(readall(path .. "|vs.bin")))
     local fsh = bgfx.create_shader(bgfx.memory_buffer(readall(path .. "|fs.bin")))
     bgfx.set_name(vsh, material.fx.vs)

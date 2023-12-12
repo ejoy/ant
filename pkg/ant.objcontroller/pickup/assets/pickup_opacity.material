@@ -1,7 +1,7 @@
 fx:
   fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
     
 properties:
   u_id: {0, 0, 0, 0}

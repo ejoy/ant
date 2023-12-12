@@ -116,7 +116,7 @@ local resource_filter <const> = {
 	whitelist = {
 		"prefab",
 		"bin",
-		"cfg",
+		"ant",
 		"ozz",
 		"vbbin",
 		"vb2bin",
@@ -136,8 +136,7 @@ local block <const> = {
 local resource <const> = { "material" , "glb" , "texture" }
 
 local game_whitelist <const> = {
-	"settings",
-	"cfg",
+	"ant",
 	-- ecs
 	"prefab",
 	"ecs",

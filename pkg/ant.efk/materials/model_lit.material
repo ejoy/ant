@@ -4,6 +4,6 @@ fx:
     varying_path: /pkg/ant.efk/efkbgfx/shaders/model_Lit_varying.def.sc
     macros:
         "LINEAR_INPUT_COLOR=1"
-    setting: /pkg/ant.resources/settings/nolighting.settings
+    setting: /pkg/ant.resources/settings/nolighting.ant
 
 state: /pkg/ant.resources/materials/states/default.state

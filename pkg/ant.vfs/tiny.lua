@@ -21,8 +21,7 @@ local block <const> = {
 local resource <const> = { "material" , "glb" , "texture" }
 
 local compile_whitelist <const> = {
-    "settings",
-    "cfg",
+    "ant",
     -- ecs
     "prefab",
     "ecs",

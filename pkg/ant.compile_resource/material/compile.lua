@@ -523,15 +523,15 @@ local function create_shader_cfg(setting, post_tasks, inputfolder, output, mat, 
             check_material_properties(properties, ao.depth.attribs)
         end
 
-        local outfile = output / "attr.cfg"
+        local outfile = output / "attribute.ant"
         writefile(outfile, ao)
     end)
 end
 
 local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     depends.add_vpath(deps, setting, "/pkg/ant.compile_resource/material/version.lua")
-    depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic.settings")
-    depends.add_vpath(deps, setting, "/graphic.settings")
+    depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic_settings.ant")
+    depends.add_vpath(deps, setting, "/graphic_settings.ant")
 
     local inputfolder = lfs.path(input):parent_path()
     lfs.remove_all(output)
@@ -542,7 +542,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
     check_update_shader_type(fx)
 
     local stages = genshader.gen_fx(setting, input, output, mat)
-    writefile(output / "main.cfg",  mat)
+    writefile(output / "source.ant",  mat)
     local function compile_shader(stage)
         parallel_task.add(tasks, function ()
             local ok, res = toolset.compile {

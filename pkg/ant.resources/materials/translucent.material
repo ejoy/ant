@@ -1,6 +1,6 @@
 fx:
   shader_type: PBR
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
   varyings: /pkg/ant.resources/materials/nolighting.varyings
 properties:
   u_basecolor_factor: {0, 50.0, 0, 0.8}

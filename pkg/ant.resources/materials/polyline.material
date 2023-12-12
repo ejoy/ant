@@ -1,7 +1,7 @@
 fx:
     vs: /pkg/ant.resources/shaders/polyline/vs_polyline.sc
     fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
-    setting: /pkg/ant.resources/settings/nolighting.settings
+    setting: /pkg/ant.resources/settings/nolighting.ant
 properties:
     s_tex:
         stage: 0

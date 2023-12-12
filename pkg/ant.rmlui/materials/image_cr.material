@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/ui/vs_image.sc
   macros:
     "ENABLE_CLIP_RECT=1"
-  setting: /pkg/ant.resources/settings/nolighting.settings
+  setting: /pkg/ant.resources/settings/nolighting.ant
 
 properties:
   s_tex:

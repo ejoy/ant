@@ -228,6 +228,6 @@ return function (output, setting, param)
 	end
 
 	local content = ("#%s\n%s"):format(buildcmd, stringify(config))
-    writefile(output / "main.cfg", content)
+    writefile(output / "source.ant", content)
     return true
 end
