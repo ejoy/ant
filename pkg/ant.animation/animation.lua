@@ -4,6 +4,8 @@ local w 	= world.w
 
 import_package "ant.math"
 local assetmgr 		= import_package "ant.asset"
+local serialize = import_package "ant.serialize"
+local aio       = import_package "ant.io"
 local ozz 	= require "ozz"
 
 local ani_sys 		= ecs.system "animation_system"
@@ -99,13 +101,18 @@ function ani_sys:data_changed()
 end
 
 function ani_sys:component_init()
-	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in eid:in" do
-		local ani = e.animation
-		for k, v in pairs(ani) do
-			ani[k] = assetmgr.resource(v, world)
+	for e in w:select "INIT ozz_animation:update animation:update skeleton:update" do
+		local data = assetmgr.resource(e.ozz_animation)
+		e.ozz_animation = {
+			ozz = data,
+		}
+		e.skeleton = data.skeleton
+		for k, v in pairs(data.animations) do
+			e.animation[k] = v
 		end
-		e.skeleton = assetmgr.resource(e.skeleton)
-		local skehandle = e.skeleton
+	end
+
+	for e in w:select "INIT anim_ctrl:in animation:in animation_birth:in eid:in" do
 		e.anim_ctrl.keyframe_events = {}
 		local events = e.anim_ctrl.keyframe_events
 		for key, value in pairs(e.animation) do

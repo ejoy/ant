@@ -175,7 +175,7 @@ end
 
 local function has_skin(gltfscene, status, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
-    if node.skin and next(status.animations) and status.skeleton then
+    if node.skin and status.ozz_animation then
         if node.skin then
             return true
         end
@@ -259,33 +259,24 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
 end
 
 local function create_skin_entity(status, parent)
-    if not status.skeleton then
-        return
-    end
-    local has_animation = next(status.animations) ~= nil
-    local has_meshskin = #status.skin > 0
-    if not has_animation then
-        assert(not has_meshskin)
+    if not status.ozz_animation then
         return
     end
     local policy = {
-        "ant.animation|animation"
+        "ant.animation|animation",
+        "ant.animation|meshskin",
+        "ant.scene|scene_object",
     }
     local data = {
         animation_birth = "",
         anim_ctrl = {},
-        skeleton = status.skeleton,
-        animation = status.animations,
+        skeleton = {},
+        animation = {},
+        meshskin = status.skin[1],
+        skinning = true,
+        scene = {},
+        ozz_animation = status.ozz_animation,
     }
-    if has_meshskin then
-        policy[#policy+1] = "ant.scene|scene_object"
-        policy[#policy+1] = "ant.animation|meshskin"
-        data.meshskin = status.skin[1]
-        data.skinning = true
-        data.scene = {}
-    else
-        parent = nil
-    end
     return create_entity(status, {
         policy = policy,
         data = data,
@@ -317,11 +308,6 @@ local function serialize_prefab(status, data)
     for _, v in ipairs(data) do
         local e = v.data
         if e then
-            if e.animation then
-                for name, file in pairs(e.animation) do
-                    e.animation[name] = serialize_path(file)
-                end
-            end
             if e.material then
                 e.material = seri_material(status, e.material, status.material_cfg[e.mesh])
                 e.material = serialize_path(e.material)
@@ -329,11 +315,11 @@ local function serialize_prefab(status, data)
             if e.mesh then
                 e.mesh = serialize_path(e.mesh)
             end
-            if e.skeleton then
-                e.skeleton = serialize_path(e.skeleton)
-            end
             if e.meshskin then
                 e.meshskin = serialize_path(e.meshskin)
+            end
+            if e.ozz_animation then
+                e.ozz_animation = serialize_path(e.ozz_animation)
             end
         end
     end

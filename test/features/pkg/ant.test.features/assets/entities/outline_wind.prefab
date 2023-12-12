@@ -12,7 +12,7 @@ data:
 data:
   meshskin: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Armature.skinbin
   scene: {}
-  skeleton: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb|animations/skeleton.ozz
+  skeleton: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb|animations/skeleton.bin
   skinning: true
 policy:
   ant.animation|meshskin

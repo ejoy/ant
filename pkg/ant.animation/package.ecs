@@ -15,6 +15,7 @@ policy "animation"
     .component "animation"
     .component "animation_birth"
     .component "anim_ctrl"
+    .component "ozz_animation"
 
 policy "meshskin"
     .component "meshskin"
@@ -27,7 +28,8 @@ policy "keyframe"
 policy "slot"
     .include_policy "ant.scene|scene_object"
     .component "slot"
-
+    
+component "ozz_animation".type "lua"
 component "animation".type "lua"
 component "skeleton".type "lua"
 component "anim_ctrl".type "lua"

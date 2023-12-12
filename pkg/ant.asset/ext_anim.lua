@@ -1,6 +1,5 @@
 local datalist  = require "datalist"
 local ozz = require "ozz"
-local assetmgr 	= import_package "ant.asset"
 local aio = import_package "ant.io"
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
@@ -186,7 +185,7 @@ return {
                 break
             end
         end
-        local ske = assetmgr.resource(absolute_path(ske_anim.skeleton, filename))
+        local ske = ozz.load(aio.readall(absolute_path(ske_anim.skeleton, filename)))
         local raw_animation = ozz.RawAnimation()
         raw_animation:setup(ske, ske_anim.duration)
         return build_animation(ske, raw_animation, ske_anim.target_anims, ske_anim.sample_ratio)
