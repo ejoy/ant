@@ -13,6 +13,12 @@ struct queue_node {
 	static constexpr uint16_t QUEUE_NUM = NUM_MASK * 64;
 	uint64_t masks[NUM_MASK] = {0};
 
+    void clear() {
+        for (uint32_t ii=0; ii<NUM_MASK; ++ii){
+            masks[ii] = 0;
+        }
+    }
+
     bool check(uint8_t queue) const {
         const uint8_t eidx = queue / 64;
         const uint8_t sidx = queue % 64;
@@ -40,6 +46,7 @@ struct queue_container {
         if (!freelist.empty()){
             const int Qidx = freelist.front();
             freelist.pop_front();
+            nodes[Qidx].clear();
             return Qidx;
         }
 
@@ -102,9 +109,7 @@ lqueue_dealloc(lua_State *L){
 static int
 lqueue_alloc(lua_State *L){
     auto w = getworld(L);
-    int Qidx = w->Q->alloc();
-    auto &q = w->Q->nodes[Qidx];
-    lua_pushinteger(L, Qidx);
+    lua_pushinteger(L, w->Q->alloc());
     return 1;
 }
 
