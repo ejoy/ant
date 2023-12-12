@@ -1,6 +1,7 @@
 $input v_texcoord0
 
 #include <bgfx_shader.sh>
+#include <shaderlib.sh>
 #include "tonemapping.sh"
 
 SAMPLER2D(s_avg_luminance,  1);
@@ -41,7 +42,12 @@ vec3 do_tonemap(vec3 color, float avg_luminance)
     float texelsize = 1.0 / size.x;
     logc = vec3_splat(0.5 * texelsize) + logc * (1.0 - texelsize);
     logc = max(vec3_splat(0.0), logc);
-    return texture3DLod(s_colorgrading_lut, logc, 0.0).rgb;
+    #ifdef ENABLE_RGBE_FORMAT
+        vec4 rgbe = texture3DLod(s_colorgrading_lut, logc, 0.0);
+        return decodeRGBE8(rgbe);
+    #else//!ENABLE_RGBE_FORMAT
+        return texture3DLod(s_colorgrading_lut, logc, 0.0).rgb;
+    #endif//ENABLE_RGBE_FORMAT
 #else //!ENABLE_TONEMAP_LUT
     return tonemapping(color.rgb, avg_luminance, 0);
 #endif //ENABLE_TONEMAP_LUT

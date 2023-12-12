@@ -838,6 +838,95 @@ lcvt2file(lua_State *L){
     return 1;
 }
 
+uint32_t cvt2rgbe(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bx::Error* _err){
+    uint32_t filesize = 0;
+    bimg::UnpackFn unpack = bimg::getUnpack(_format);
+	const uint32_t bpp  = bimg::getBitsPerPixel(_format);
+	const uint8_t* data = (const uint8_t*)_src;
+    for (uint32_t zz = 0; zz < _depth; ++zz)
+    {
+        for (uint32_t yy = 0; yy < _height; ++yy)
+        {
+            for (uint32_t xx = 0; xx < _width; ++xx)
+            {
+                float rgba[4];
+                unpack(rgba, &data[xx*bpp/8]);
+                const float maxVal = bx::max(rgba[0], rgba[1], rgba[2]);
+                const float exp    = bx::ceil(bx::log2(maxVal) );
+                const float toRgb8 = 255.0f * 1.0f/bx::ldexp(1.0f, int(exp) );
+                uint8_t rgbe[4];
+                rgbe[0] = uint8_t(rgba[0] * toRgb8);
+                rgbe[1] = uint8_t(rgba[1] * toRgb8);
+                rgbe[2] = uint8_t(rgba[2] * toRgb8);
+                rgbe[3] = uint8_t(exp+128.0f);
+                filesize += bx::write(_writer, rgbe, 4, _err);
+            }
+            data += _srcPitch;
+        }
+    }
+    return filesize;
+}
+
+uint32_t cvt2rgb10A2(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bx::Error* _err){
+    uint32_t filesize = 0;
+    bimg::UnpackFn unpack = bimg::getUnpack(_format);
+    bimg::PackFn pack = bimg::getPack(bimg::getFormat("RGB10A2"));
+	const uint32_t bpp  = bimg::getBitsPerPixel(_format);
+	const uint8_t* data = (const uint8_t*)_src;
+    for (uint32_t zz = 0; zz < _depth; ++zz)
+    {
+        for (uint32_t yy = 0; yy < _height; ++yy)
+        {
+            for (uint32_t xx = 0; xx < _width; ++xx)
+            {
+                float rgba[4];
+                uint32_t rgb10a2;
+                unpack(rgba, &data[xx*bpp/8]);
+                pack(&rgb10a2, rgba);
+                filesize += bx::write(_writer, &rgb10a2, 4, _err);
+            }
+            data += _srcPitch;
+        }
+    }
+    return filesize;
+}
+
+static int
+lcvt2hdr(lua_State *L){
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
+    uint32_t dim = luaL_checkinteger(L, 1);
+    struct memory *m = (struct memory *)luaL_checkudata(L, 2, "BGFX_MEMORY");
+    const char* src_fmt = luaL_optstring(L, 3, "RGBA32F");
+    const char* dst_fmt = luaL_optstring(L, 4, "RGB10A2");
+    bimg::ImageContainer ic;
+    ic.m_width      = dim;
+    ic.m_height     = dim;
+    ic.m_format     = bimg::getFormat(src_fmt);
+    ic.m_size       = getBitsPerPixel(ic.m_format) / 8 * dim * dim;
+    ic.m_numLayers  = 1;
+    ic.m_numMips    = 1;
+    ic.m_offset     = 0;
+    ic.m_depth      = dim;
+    ic.m_cubeMap    = false;
+    ic.m_data       = m->data;
+    ic.m_allocator  = nullptr;
+    bx::MemoryBlock mb(&allocator);
+    bx::MemoryWriter sw(&mb);
+    bx::Error err;
+    uint32_t filesize = 0;
+    uint32_t pitch = ic.m_width * getBitsPerPixel(ic.m_format)/8;
+    if (strcmp(dst_fmt, "RGBE") == 0){
+        filesize = cvt2rgbe(&sw, ic.m_width, ic.m_height, ic.m_depth, pitch, ic.m_data, ic.m_format, &err);
+        lua_pushlstring(L, (const char*)mb.more(), filesize);
+    }
+    else if (strcmp(dst_fmt, "RGB10A2") == 0){
+        filesize = cvt2rgb10A2(&sw, ic.m_width, ic.m_height, ic.m_depth, pitch, ic.m_data, ic.m_format, &err);
+        lua_pushlstring(L, (const char*)mb.more(), filesize);
+    }
+    return 1;
+}
+
 extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
@@ -852,6 +941,7 @@ luaopen_image(lua_State* L) {
         { "cubemap2equirectangular", lcubemap2equirectangular},
         { "equirectangular2cubemap", lequirectangular2cubemap},
         { "replace_debug_mipmap",    lreplace_debug_mipmap},
+        { "cvt2hdr",            lcvt2hdr},
         { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);

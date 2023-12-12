@@ -17,7 +17,7 @@ local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 local bgfx      = require "bgfx"
 local setting   = import_package "ant.settings"
-
+local image     = require "image"
 local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
@@ -26,12 +26,10 @@ local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_d
 local tm_viewid<const>      = hwi.viewid_get "tonemapping"
 
 local lut_handle
-
 if ENABLE_TM_LUT then
     local colorgrading   = require "postprocess.colorgrading.color_grading"
     if colorgrading.lut_handle == nil then
         local r = colorgrading.bake(assert(LUT_DIM))
-        --TODO: format should be R10G10B10A2
         local flags<const> = sampler{
             U = "CLAMP",
             V = "CLAMP",
@@ -39,7 +37,9 @@ if ENABLE_TM_LUT then
             MIN="LINEAR",
             MAG="LINEAR",
         }
-        colorgrading.lut_handle = bgfx.create_texture3d(LUT_DIM, LUT_DIM, LUT_DIM, false, "RGBA32F", flags, r)
+        local src_fmt, dst_fmt = "RGBA32F", "RGB10A2"
+        r = image.cvt2hdr(LUT_DIM, bgfx.memory_buffer(r), src_fmt, dst_fmt)
+        colorgrading.lut_handle = bgfx.create_texture3d(LUT_DIM, LUT_DIM, LUT_DIM, false, dst_fmt, flags, r)
     end
     lut_handle = colorgrading.lut_handle
 end
