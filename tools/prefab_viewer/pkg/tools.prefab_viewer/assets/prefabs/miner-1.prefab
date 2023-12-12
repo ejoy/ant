@@ -11,7 +11,7 @@ data:
   skinning: true
 mount: 1
 policy:
-  ant.animation|meshskin
+  ant.render|meshskin
   ant.scene|scene_object
 ---
 data:

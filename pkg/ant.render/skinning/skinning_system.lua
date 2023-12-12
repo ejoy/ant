@@ -12,6 +12,7 @@ local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa/enable"
 
 local imaterial = ecs.require "ant.asset|material"
 local skinning_sys = ecs.system "skinning_system"
+local assetmgr = import_package "ant.asset"
 
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
@@ -67,6 +68,24 @@ local update_skin_entity_uniforms = ENABLE_TAA and function (e, meshskin, worldm
 		imaterial.set_property(e, "u_prev_model", meshskin.prev_sm_matrix_ref, "velocity_queue")
 	end
 end or update_aabb
+
+
+function skinning_sys:entity_init()
+	for e in w:select "INIT animation:in meshskin:update" do
+		local skin = assetmgr.resource(e.meshskin)
+		local count = skin.joint_rema
+			and #skin.joint_remap
+			or e.animation.ozz.skeleton:num_joints()
+		if count > 64 then
+			error(("skinning matrices are too large, max is 128, %d needed"):format(count))
+		end
+		e.meshskin = {
+			skin = skin,
+			skinning_matrices = ozz.MatrixVector(count),
+			prev_skinning_matrices = ozz.MatrixVector(count)
+		}
+	end
+end
 
 function skinning_sys:skin_mesh()
 	for e in w:select "animation:in meshskin:in scene:update" do

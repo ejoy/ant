@@ -16,6 +16,10 @@ policy "skinrender"
     .component "mesh"
     .component "visible_state"
 
+policy "meshskin"
+    .component "meshskin"
+    .component "skinning"
+
 -- will not use right now
 feature "cs_skinning"
     .import "skinning/cs_skinning.ecs"

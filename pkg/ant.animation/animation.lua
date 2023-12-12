@@ -3,10 +3,8 @@ local world = ecs.world
 local w 	= world.w
 
 import_package "ant.math"
-local assetmgr 		= import_package "ant.asset"
-local serialize = import_package "ant.serialize"
-local aio       = import_package "ant.io"
-local ozz 	= require "ozz"
+local assetmgr = import_package "ant.asset"
+local ozz = require "ozz"
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
@@ -109,24 +107,6 @@ function ani_sys:component_init()
 			ozz = data,
 			locals = nil,
 			models = ozz.MatrixVector(n),
-		}
-	end
-
-	for e in w:select "INIT animation:in meshskin:update" do
-		local skin = assetmgr.resource(e.meshskin)
-		local n = e.animation.ozz.skeleton:num_joints()
-		local count = n
-		if skin.joint_remap and #skin.joint_remap ~= n then
-			--error(("joint_remap length: %d, skeleton length: %d"):format(#skin.joint_remap, n))
-			count = #skin.joint_remap
-		end
-		if count > 64 then
-			error(("skinning matrices are too large, max is 128, %d needed"):format(n))
-		end
-		e.meshskin = {
-			skin = skin,
-			skinning_matrices = ozz.MatrixVector(count),
-			prev_skinning_matrices = ozz.MatrixVector(count)
 		}
 	end
 

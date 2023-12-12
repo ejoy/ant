@@ -15,10 +15,6 @@ policy "animation"
     .component "anim_ctrl"
     .component "animation"
 
-policy "meshskin"
-    .component "meshskin"
-    .component "skinning"
-
 policy "keyframe"
     .component "keyframe"
 
