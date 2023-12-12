@@ -236,11 +236,11 @@ local function update_animation()
     if animtype == "ske" then
         runtime_anim._handle = build_animation(current_skeleton, runtime_anim.raw_animation, current_anim.target_anims, sample_ratio)
     else
-        local get_keyframe_value = function (type, clip, init_value)
+        local get_keyframe_value = function (type, clip, init)
             if type == "mtl" then
                 return clip.value
             elseif type == "srt" then
-                local value = init_value or {1, 0, 0, 0, 0, 0, 0}
+                local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
                 value[clip.rot_axis + 1] = clip.amplitude_rot
                 if clip.direction < 4 then
                     value[clip.direction + 4] = clip.amplitude_pos
@@ -276,7 +276,7 @@ local function update_animation()
             local last_clip = anim.clips[1]
             for _, clip in ipairs(anim.clips) do
                 if clip.range[1] == last_clip.range[2] + 1 then
-                    from = get_keyframe_value(animtype, last_clip)
+                    from = get_keyframe_value(animtype, last_clip, inherit_for_srt and keyframes[#keyframes].value or nil)
                 else
                     if clip.range[1] > 0 then
                         keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
@@ -1343,9 +1343,10 @@ function m.create_target_animation(at, target)
     create_context.type = at
     new_anim_widget = true
     if at == "srt" then
-        -- local tpl = hierarchy:get_node_info(target).template
-        -- local name = tpl.tag and tpl.tag[1]
-        local name = hierarchy:get_node_info(target).name
+        local tpl = hierarchy:get_node_info(target).template
+        local name = tpl.tag and tpl.tag[1] or ""
+        -- local info = hierarchy:get_node_info(target)
+        -- local name = info.template.tag[1]
         create_context.desc = {{name = name}}
         target_map[name] = target
     elseif at == "mtl" then
