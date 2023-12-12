@@ -24,8 +24,8 @@ function sys:entity_init()
     end
 end
 
-local function calc_pose_mat(pose_result, slot)
-    local adjust_mat = math3d.mul(r2l_mat, pose_result.models:joint(slot.joint_index)) --pose_result.models:joint(slot.joint_index) --
+local function calc_pose_mat(meshskin, slot)
+    local adjust_mat = math3d.mul(r2l_mat, meshskin.models:joint(slot.joint_index)) --pose_result.models:joint(slot.joint_index) --
     -- if slot.offset_srt then
     --     local offset_mat = math3d.matrix(slot.offset_srt)
     --     adjust_mat = math3d.mul(adjust_mat, offset_mat)
@@ -36,16 +36,16 @@ end
 function sys:update_slot()
 	for v in w:select "boneslot slot:in scene:update eid:in" do
         local slot = v.slot
-        local pose_result = slot.pose and slot.pose.pose_result
-        if pose_result then
+        local meshskin = slot.meshskin
+        if meshskin then
             if not slot.joint_index and slot.joint_name then
-                slot.joint_index = slot.pose.skeleton:joint_index(slot.joint_name)
+                slot.joint_index = slot.skeleton:joint_index(slot.joint_name)
             end
             local slot_matrix
             local follow_flag = assert(slot.follow_flag)
             if follow_flag == 1 or follow_flag == 2 then
                 if slot.joint_index then
-                    local adjust_mat = calc_pose_mat(pose_result, slot)
+                    local adjust_mat = calc_pose_mat(meshskin, slot)
                     if follow_flag == 1 then
                         slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
@@ -54,7 +54,7 @@ function sys:update_slot()
                     end
                 end
             elseif follow_flag == 3 then
-                slot_matrix = calc_pose_mat(pose_result, slot)
+                slot_matrix = calc_pose_mat(meshskin, slot)
             else
                 error [[
                     "invalid slot, 'follow_flag' only 1/2/3 is valid

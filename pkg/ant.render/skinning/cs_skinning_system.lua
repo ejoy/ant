@@ -175,7 +175,7 @@ function cs_skinning_sys:skin_mesh()
 	for e in w:select "meshskin:in scene:update" do
 		local skin = e.meshskin.skin
 		local skinning_matrices = e.meshskin.skinning_matrices
-		local pr = e.meshskin.pose.pose_result
+		local pr = e.meshskin.models
 		if pr then
 			ozz.BuildSkinningMatrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, r2l_mat)
 		end

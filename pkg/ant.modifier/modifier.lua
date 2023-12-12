@@ -373,9 +373,9 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
 	}
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             for _, e in ipairs(anim_prefab.tag["*"]) do
-                local anim <close> = world:entity(e, "anim_ctrl?in skeleton?in")
-                if anim.anim_ctrl and anim.skeleton then
-                    return anim.anim_ctrl.pose_result.models:joint(anim.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
+                local anim <close> = world:entity(e, "meshskin?in anim_ctrl?in skeleton?in")
+                if anim.meshskin and anim.skeleton and anim.anim_ctrl then
+                    return anim.meshskin.models:joint(anim.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
                 end
             end
         end)

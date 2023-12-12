@@ -68,7 +68,7 @@ local iani = ecs.require "ant.animation|state_machine"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "playing pose_dirty?out skeleton:in anim_ctrl:in" do
+	for e in w:select "playing pose_dirty?out meshskin:in skeleton:in anim_ctrl:in" do
 		--w:readall(eid)
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
@@ -81,11 +81,9 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "pose_dirty:out skeleton:in playing?out anim_ctrl:in" do
-		local ctrl = e.anim_ctrl
-		local pr = ctrl.pose_result
-		ozz.LocalToModelJob(e.skeleton, pr.locals, pr.models)
-		e.playing = ctrl.play_state.play
+	for e in w:select "pose_dirty:out meshskin:in skeleton:in playing?out anim_ctrl:in" do
+		ozz.LocalToModelJob(e.skeleton, e.meshskin.locals, e.meshskin.models)
+		e.playing = e.anim_ctrl.play_state.play
 		e.pose_dirty = false
 	end
 end
@@ -104,10 +102,6 @@ function ani_sys:component_init()
 		end
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skehandle = e.skeleton
-		e.anim_ctrl.pose_result = {
-			locals = nil,
-			models = ozz.MatrixVector(skehandle:num_joints()),
-		}
 		e.anim_ctrl.keyframe_events = {}
 		local events = e.anim_ctrl.keyframe_events
 		for key, value in pairs(e.animation) do
@@ -130,13 +124,19 @@ function ani_sys:component_init()
 
 	for e in w:select "INIT meshskin:update skeleton:in" do
 		local skin = assetmgr.resource(e.meshskin)
-		local count = skin.joint_remap and #skin.joint_remap or e.skeleton:num_joints()
+		local n = e.skeleton:num_joints()
+		local count = n
+		if skin.joint_remap and #skin.joint_remap ~= n then
+			--error(("joint_remap length: %d, skeleton length: %d"):format(#skin.joint_remap, n))
+			count = #skin.joint_remap
+		end
 		if count > 64 then
-			error(("skinning matrices are too large, max is 128, %d needed"):format(count))
+			error(("skinning matrices are too large, max is 128, %d needed"):format(n))
 		end
 		e.meshskin = {
 			skin = skin,
-			pose = iani.create_pose(),
+			locals = nil,
+			models = ozz.MatrixVector(n),
 			skinning_matrices = ozz.MatrixVector(count),
 			prev_skinning_matrices = ozz.MatrixVector(count)
 		}
@@ -148,17 +148,12 @@ local event_animation = world:sub{"animation_event"}
 function ani_sys:entity_init()
 	local meshskin
 	local skeleton
-	local pose
 	local anim_ctrl
 	for e in w:select "INIT meshskin?in anim_ctrl?in skeleton?in slot?in eid:in pose_dirty?out boneslot?out" do
 		if e.meshskin and e.anim_ctrl then
 			skeleton = e.skeleton
 			meshskin = e.meshskin
 			anim_ctrl = e.anim_ctrl
-			pose = iani.create_pose()
-			meshskin.pose = pose
-			pose.skeleton = skeleton
-			pose.pose_result = e.anim_ctrl.pose_result
 			e.pose_dirty = true
 		elseif e.slot then
 			local slot = e.slot
@@ -168,7 +163,8 @@ function ani_sys:entity_init()
 					e.boneslot = true
 				end
 			end
-			slot.pose = pose
+			slot.meshskin = meshskin
+			slot.skeleton = skeleton
 			if anim_ctrl then
 				if not anim_ctrl.slot_eid then
 					anim_ctrl.slot_eid = {}
