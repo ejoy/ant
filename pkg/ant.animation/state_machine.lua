@@ -64,6 +64,7 @@ function iani.load_events(anim_e, filename)
 		return
 	end
 	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
+	events.filename = filename
 	e.anim_ctrl.keyframe_events = events
 end
 

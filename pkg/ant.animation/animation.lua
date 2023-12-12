@@ -24,6 +24,10 @@ local function process_keyframe_event(task)
 	if not current_events then return end
 
 	local current_time = task.play_state.ratio * task.animation:duration()
+	local _
+	_ = type(current_time) == "number" or error("invalid current time :" .. task.keyframe_events.filename)
+	_ = type(current_events.time) == "number" or error("invalid event time :" .. task.keyframe_events.filename)
+
 	if current_time < current_events.time and event_state.finish then
 		event_state.next_index = 1
 		event_state.finish = false
