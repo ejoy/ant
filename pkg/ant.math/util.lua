@@ -289,7 +289,8 @@ function util.rect2ndc(rect, viewrect)
 	ny = 1.0 - ny
 	nx, ny = remap_NO(nx), remap_NO(ny)
 
-	return {x=nx, y=ny, w=2*nw, h=2*nh,}
+	local ww, hh = 2*nw, 2*nh
+	return {x=nx, y=ny-hh, w=ww, h=hh,}	--ny-hh: to move (x, y) to bottom left
 end
 
 function util.rectpoints(rect)

@@ -599,14 +599,12 @@ function shadowdebug_sys:init_world()
 		},
 	}
 
-	local rectNDC = mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")
-	rectNDC.y = rectNDC.y - rectNDC.h
 	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
 		data = {
-			simplemesh = imesh.init_mesh(ientity.quad_mesh(rectNDC), true),
+			simplemesh = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_queue",
 			scene = {},
