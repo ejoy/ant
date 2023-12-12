@@ -15,8 +15,8 @@ local function createWindow(document, name)
     function window.createModel(view)
         return datamodel.create(document, view)
     end
-    function window.open(url)
-        local newdoc = document_manager.open(url)
+    function window.open(url, ...)
+        local newdoc = document_manager.open(url, nil, ...)
         if not newdoc then
             return
         end
