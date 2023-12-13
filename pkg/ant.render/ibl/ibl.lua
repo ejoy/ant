@@ -20,7 +20,7 @@ local imaterial = ecs.require "ant.asset|material"
 local setting   = import_package "ant.settings"
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 local ENABLE_IBL_LUT<const>       = setting:get "graphic/ibl/enable_lut"
-
+local USE_RGB10A2<const>          = setting:get "graphic/ibl/use_rgb10a2"
 local ibl_viewid<const> = hwi.viewid_get "ibl"
 
 local thread_group_size<const> = 8
@@ -248,6 +248,7 @@ function iibl.set_ibl_intensity(intensity)
 end
 
 local function build_ibl_textures(ibl)
+    local fmt = USE_RGB10A2 and "RGB10A2" or "RGBA16F"
     local function check_destroy(handle)
         if handle then
             bgfx.destroy(handle)
@@ -265,14 +266,14 @@ local function build_ibl_textures(ibl)
             IBL_INFO.irradiance.size = ibl.irradiance.size
             check_destroy(IBL_INFO.irradiance.value)
 
-            IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+            IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, fmt, flags)
         end
     end
 
     if ibl.prefilter.size ~= IBL_INFO.prefilter.size then
         IBL_INFO.prefilter.size = ibl.prefilter.size
         check_destroy(IBL_INFO.prefilter.value)
-        IBL_INFO.prefilter.value = bgfx.create_texturecube(IBL_INFO.prefilter.size, true, 1, "RGBA16F", cubemap_flags)
+        IBL_INFO.prefilter.value = bgfx.create_texturecube(IBL_INFO.prefilter.size, true, 1, fmt, cubemap_flags)
         IBL_INFO.prefilter.mipmap_count = math.log(ibl.prefilter.size, 2)+1
     end
 
