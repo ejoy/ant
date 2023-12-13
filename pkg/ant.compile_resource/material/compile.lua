@@ -191,7 +191,13 @@ local function merge_cfg_setting(setting, fx)
     if fx.cs then
         fx.setting["lighting"]          = 'off'
         fx.setting["receive_shadow"]    = 'off'
-        fx.setting["cast_shadow"]    = 'off'
+        fx.setting["cast_shadow"]       = 'off'
+    else
+        local lighting = assert(fx.setting.lighting)
+        if lighting == "off" then
+            fx.setting["receive_shadow"]    = 'off'
+            fx.setting["cast_shadow"]       = 'off'
+        end
     end
 end
 
