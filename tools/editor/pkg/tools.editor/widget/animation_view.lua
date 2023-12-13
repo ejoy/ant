@@ -65,9 +65,9 @@ local function do_to_runtime_event(evs)
             name        = ev.name,
             asset_path  = ev.asset_path,
             sound_event = ev.sound_event,
-            breakable   = ev.breakable,
-            life_time   = ev.life_time,
-            move        = ev.move,
+            -- breakable   = ev.breakable,
+            -- life_time   = ev.life_time,
+            -- move        = ev.move,
             msg_content = ev.msg_content,
             link_info   = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
         }
@@ -121,12 +121,12 @@ local function from_runtime_event(runtime_event)
                 if e.link_info and e.link_info.slot_name ~= '' then
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
                 end
-                if e.event_type == "Effect" then
-                    e.breakable = e.breakable or false
-                    e.life_time = e.life_time or 2
-                    e.breakable_ui = {e.breakable}
-                    e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
-                end
+                -- if e.event_type == "Effect" then
+                --     e.breakable = e.breakable or false
+                --     e.life_time = e.life_time or 2
+                --     e.breakable_ui = {e.breakable}
+                --     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
+                -- end
             elseif e.event_type == "Message" then
                 e.msg_content = e.msg_content or ""
                 e.msg_content_ui = {text = e.msg_content}
@@ -212,22 +212,22 @@ local function add_event(et)
     local new_event = {
         event_type      = et,
         name            = event_name,
-        asset_path      = (et == "Effect" or et == "Sound") and "" or nil,
+        asset_path      = (et == "Effect" or et == "Sound" or et == "Animation") and "" or nil,
         link_info       = (et == "Effect") and {
             slot_name = "",
             slot_eid = nil,
         } or nil,
         sound_event     = (et == "Sound") and "" or nil,
-        breakable       = (et == "Effect") and false or nil,
-        breakable_ui    = (et == "Effect") and {false} or nil,
-        life_time       = (et == "Effect") and 2 or nil,
-        life_time_ui    = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
-        move            = (et == "Move") and {0.0, 0.0, 0.0} or nil,
-        move_ui         = (et == "Move") and {0.0, 0.0, 0.0} or nil,
+        -- breakable       = (et == "Effect") and false or nil,
+        -- breakable_ui    = (et == "Effect") and {false} or nil,
+        -- life_time       = (et == "Effect") and 2 or nil,
+        -- life_time_ui    = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
+        -- move            = (et == "Move") and {0.0, 0.0, 0.0} or nil,
+        -- move_ui         = (et == "Move") and {0.0, 0.0, 0.0} or nil,
         name_ui         = {text = event_name},
         msg_content     = (et == "Message") and "" or nil,
         msg_content_ui  = (et == "Message") and {text = ""} or nil,
-        asset_path_ui   = (et == "Effect" or et == "Sound") and {text = ""} or nil
+        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and {text = ""} or nil
     }
     current_event = new_event
     local key = tostring(anim_state.selected_frame)
@@ -336,20 +336,7 @@ local function show_current_event()
         current_event.name = tostring(current_event.name_ui.text)
         dirty = true
     end
-    if current_event.event_type == "Animation" then
-        if imgui.widget.Button("SelectAnimation") then
-            local rpath = uiutils.get_open_file_path("Animation", "anim|ozz")
-            if rpath then
-                local pkgpath = access.virtualpath(global_data.repo, rpath)
-                assert(pkgpath)
-                current_event.asset_path_ui.text = pkgpath
-                current_event.asset_path = pkgpath
-                dirty = true
-            end
-        end
-        imgui.widget.PropertyLabel("AnimationPath")
-        imgui.widget.InputText("##AnimationPath", current_event.asset_path_ui)
-    elseif current_event.event_type == "Sound" then
+    if current_event.event_type == "Sound" then
         if not bank_path and imgui.widget.Button("SelectBankPath") then
             local filename = uiutils.get_open_file_path("Bank", "bank")
             if filename then
@@ -412,51 +399,37 @@ local function show_current_event()
                 end
             end
         end
-    elseif current_event.event_type == "Effect" then
-        if imgui.widget.Button("SelectEffect") then
-            local rpath = uiutils.get_open_file_path("Effect", "efk")
-            if rpath then
-                local pkgpath = access.virtualpath(global_data.repo, rpath)
-                assert(pkgpath)
-                current_event.asset_path_ui.text = pkgpath
-                current_event.asset_path = pkgpath
-                dirty = true
-            end
-        end
-        imgui.widget.PropertyLabel("EffectPath")
-        if imgui.widget.InputText("##EffectPath", current_event.asset_path_ui) then
+    elseif current_event.event_type == "Effect" or current_event.event_type == "Animation" then
+        -- if imgui.widget.Button("SelectEffect") then
+        --     local rpath = uiutils.get_open_file_path("Effect", "efk")
+        --     if rpath then
+        --         local pkgpath = access.virtualpath(global_data.repo, rpath)
+        --         assert(pkgpath)
+        --         current_event.asset_path_ui.text = pkgpath
+        --         current_event.asset_path = pkgpath
+        --         dirty = true
+        --     end
+        -- end
+        imgui.widget.PropertyLabel("AssetPath")
+        if imgui.widget.InputText("##AssetPath", current_event.asset_path_ui) then
             current_event.asset_path = tostring(current_event.asset_path_ui.text)
             dirty = true
         end
-        local slot_list = hierarchy.slot_list
-        if slot_list then
-            imgui.widget.PropertyLabel("LinkSlot")
-            if imgui.widget.BeginCombo("##LinkSlot", {current_event.link_info.slot_name, flags = imgui.flags.Combo {}}) then
-                for name, eid in pairs(slot_list) do
-                    if imgui.widget.Selectable(name, current_event.link_info.slot_name == name) then
-                        current_event.link_info.slot_name = name
-                        current_event.link_info.slot_eid = eid
-                        dirty = true
+        if current_event.event_type == "Effect" then
+            local slot_list = hierarchy.slot_list
+            if slot_list then
+                imgui.widget.PropertyLabel("LinkSlot")
+                if imgui.widget.BeginCombo("##LinkSlot", {current_event.link_info.slot_name, flags = imgui.flags.Combo {}}) then
+                    for name, eid in pairs(slot_list) do
+                        if imgui.widget.Selectable(name, current_event.link_info.slot_name == name) then
+                            current_event.link_info.slot_name = name
+                            current_event.link_info.slot_eid = eid
+                            dirty = true
+                        end
                     end
+                    imgui.widget.EndCombo()
                 end
-                imgui.widget.EndCombo()
             end
-        end
-        imgui.widget.PropertyLabel("Breakable")
-        if imgui.widget.Checkbox("##Breakable", current_event.breakable_ui) then
-            current_event.breakable = current_event.breakable_ui[1]
-            dirty = true
-        end
-        imgui.widget.PropertyLabel("LifeTime")
-        if imgui.widget.DragFloat("##LifeTime", current_event.life_time_ui) then
-            current_event.life_time = current_event.life_time_ui[1]
-            dirty = true
-        end
-    elseif current_event.event_type == "Move" then
-        imgui.widget.PropertyLabel("Move")
-        if imgui.widget.DragFloat("##Move", current_event.move_ui) then
-            current_event.move = {current_event.move_ui[1], current_event.move_ui[2], current_event.move_ui[3]}
-            dirty = true
         end
     elseif current_event.event_type == "Message" then
         imgui.widget.PropertyLabel("Content")
@@ -589,6 +562,8 @@ function m.clear()
     current_clip = nil
     edit_anims = nil
     keyframe_view.clear()
+    timeline_eid = nil
+    edit_timeline = nil
 end
 
 local ui_showskeleton = {false}
@@ -971,7 +946,6 @@ function m.on_target(eid)
         anim_key_event = current_timeline.key_event
         anim_state.duration = current_timeline.duration
         anim_state.current_frame = 0
-        anim_state.dirty = true
         set_event_dirty(-1)
     elseif current_anim then
         anim_state.anim_name = current_anim.name
@@ -979,7 +953,7 @@ function m.on_target(eid)
         anim_key_event = current_anim.key_event
         anim_state.duration = current_anim.duration
         anim_state.current_frame = 0
-        anim_state.dirty = true
+        edit_anims.dirty = true
         set_event_dirty(-1)
     end
 end

@@ -4,22 +4,31 @@ local w     = world.w
 local iefk      = ecs.require "ant.efk|efk"
 local tl_sys = ecs.system "timeline_system"
 local itl = ecs.require "ant.timeline|timeline"
-
+local iani = ecs.require "ant.anim_ctrl|state_machine"
 local engine_event = {}
 function engine_event:Animation(tid, ud)
-	print("event animation : ", ud.name, ud.asset_path)
+	local entitys = ud.eid_map["*"]
+	-- TODO: rework this code
+	for _, eid in ipairs(entitys) do
+		local e <close> = world:entity(eid, "anim_ctrl?in")
+		if e.anim_ctrl then
+			iani.play(eid, {name = ud.ev.asset_path})
+			print("event animation : ", ud.ev.name, ud.ev.asset_path)
+			break
+		end
+	end
 end
 function engine_event:Effect(tid, ud)
 	local eid = ud.eid_map[ud.ev.asset_path]
 	local e <close> = world:entity(eid[1], "efk:in")
 	iefk.play(e)
-	print("event effect : ", ud.name, ud.ev.asset_path)
+	print("event effect : ", ud.ev.name, ud.ev.asset_path)
 end
 function engine_event:Sound(tid, ud)
-	print("event sound : ", ud.name, ud.asset_path)
+	print("event sound : ", ud.ev.name, ud.ev.asset_path)
 end
 function engine_event:Message(tid, ud)
-	print("event message : ", ud.name, ud.msg_content)
+	print("event message : ", ud.ev.name, ud.ev.msg_content)
 end
 
 local testtid

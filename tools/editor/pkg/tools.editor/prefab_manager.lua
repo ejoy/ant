@@ -648,6 +648,7 @@ function m:add_effect(filename)
         self:reset_prefab()
     end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
+    local name = fs.path(filename):stem():string()
     local template = {
 		policy = {
             "ant.scene|scene_object",
@@ -662,11 +663,15 @@ function m:add_effect(filename)
             visible_state = "main_queue"
 		},
         tag = {
-            fs.path(filename):stem():string()
+            name
         }
     }
     local tpl = utils.deep_copy(template)
-    self:add_entity(world:create_entity(tpl), parent, template)
+    local efk_eid = world:create_entity(tpl)
+    if self.current_prefab then
+        self.current_prefab.tag[name] = {efk_eid}
+    end
+    self:add_entity(efk_eid, parent, template)
 end
 
 function m:add_prefab(path)
