@@ -7,42 +7,18 @@ local hwi       = import_package "ant.hwi"
 local tm_sys    = ecs.system "tonemapping_system"
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
-local imaterial = ecs.require "ant.asset|material"
 
 local util      = ecs.require "postprocess.util"
-
 local mu        = import_package "ant.math".util
-
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
-local bgfx      = require "bgfx"
 local setting   = import_package "ant.settings"
-local image     = require "image"
+
 local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
 local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_lut"
-local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_dim"
 local tm_viewid<const>      = hwi.viewid_get "tonemapping"
-
-local lut_handle
-if ENABLE_TM_LUT then
-    local colorgrading   = require "postprocess.colorgrading.color_grading"
-    if colorgrading.lut_handle == nil then
-        local r = colorgrading.bake(assert(LUT_DIM))
-        local flags<const> = sampler{
-            U = "CLAMP",
-            V = "CLAMP",
-            W = "CLAMP",
-            MIN="LINEAR",
-            MAG="LINEAR",
-        }
-        local src_fmt, dst_fmt = "RGBA32F", "RGB10A2"
-        r = image.cvt2hdr(LUT_DIM, bgfx.memory_buffer(r), src_fmt, dst_fmt)
-        colorgrading.lut_handle = bgfx.create_texture3d(LUT_DIM, LUT_DIM, LUT_DIM, false, dst_fmt, flags, r)
-    end
-    lut_handle = colorgrading.lut_handle
-end
 
 function tm_sys:init()
     local drawer_material = ENABLE_TM_LUT and "/pkg/ant.resources/materials/postprocess/tonemapping_lut.material" or "/pkg/ant.resources/materials/postprocess/tonemapping.material"
@@ -55,9 +31,6 @@ function tm_sys:init()
             material        = drawer_material,
             visible_state   = "tonemapping_queue",
             tonemapping_drawer=true,
-            on_ready = ENABLE_TM_LUT and function (e)
-                imaterial.set_property(e, "s_colorgrading_lut", lut_handle)
-            end or nil,
             scene           = {},
         }
     }

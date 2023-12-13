@@ -1,11 +1,13 @@
 local math3d    = require "math3d"
-
+local image     = require "image"
+local bgfx      = require "bgfx"
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
-
+local sampler   = import_package "ant.render.core".sampler
 local ACES      = require "postprocess.colorgrading.aces"
 local cs        = require "postprocess.colorgrading.colorspace"
-
+local setting   = import_package "ant.settings"
+local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_dim"
 -- Returns the y chromaticity coordinate in xyY for an illuminant series D,
 -- given its x chromaticity coordinate.
 local function chromaticityCoordinateIlluminantD(x)
@@ -143,9 +145,15 @@ local function bake_lut(dim, luminacnce_scaling)
     return table.concat(results, "")
 end
 
-local ENABLE_TEST = true
-if ENABLE_TEST then
-    bake_lut(32, false)
+local ENABLE_BAKE = false
+if ENABLE_BAKE then
+    local path = "D://vaststars2/3rd/ant/pkg/ant.resources/textures/color_grading/tonemapping_lut.dds"
+    local r = bake_lut(assert(LUT_DIM))
+    local src_fmt, dst_fmt = "RGBA32F", "RGB10A2"
+    r = image.pack2rgb10a2(LUT_DIM, bgfx.memory_buffer(r), src_fmt, dst_fmt)
+    local f = assert(io.open(path, "wb"))
+    f:write(r)
+    f:close()
 end
 
 return {

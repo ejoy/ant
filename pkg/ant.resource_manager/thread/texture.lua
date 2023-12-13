@@ -25,9 +25,9 @@ local function createTexture(c)
         elseif ti.depth == 1 then
             h = bgfx.create_texture2d(ti.width, ti.height, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
         else
-            assert(ti.depth > 1)
-            error "not support 3d texture right now"
-            h = bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
+            --assert(ti.depth > 1)
+            --error "not support 3d texture right now"
+            h = bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.format, c.flag, m)
         end
     else
         h = bgfx.create_texture(bgfx.memory_buffer(aio.readall(c.name.."|main.bin")), c.flag)
@@ -110,33 +110,32 @@ local DefaultTexture = {
         },
         name = "<default2d_array>"
     },
-    --TODO: not support 3d texture right now
-    -- TEX3D = createTexture {
-    --     info = {
-    --         width = 1,
-    --         height = 1,
-    --         format = "RGBA8",
-    --         mipmap = false,
-    --         depth = 2,
-    --         numLayers = 1,
-    --         cubeMap = false,
-    --         storageSize = 8,
-    --         numMips = 1,
-    --         bitsPerPixel = 32,
-    --     },
-    --     value = {
-    --         0, 0, 0, 0, -- depth 1
-    --         0, 0, 0, 0, -- depth 2
-    --     },
-    --     flag = "umwwvm+l*p-l",
-    --     sampler = {
-    --         MAG = "LINEAR",
-    --         MIN = "LINEAR",
-    --         U = "CLAMP",
-    --         V = "CLAMP",
-    --     },
-    --     name = "<default3d>"
-    -- },
+
+    SAMPLER3D = createTexture {
+         info = {
+            width = 1,
+            height = 1,
+            format = "RGBA8",
+            mipmap = false,
+            depth = 1,
+            numLayers = 1,
+            cubeMap = false,
+            storageSize = 4,
+            numMips = 1,
+            bitsPerPixel = 32,
+         },
+         value = {
+             0, 0, 0, 0
+         },
+         flag = "umwwvm+l*p-l",
+         sampler = {
+             MAG = "LINEAR",
+             MIN = "LINEAR",
+             U = "CLAMP",
+             V = "CLAMP",
+         },
+         name = "<default3d>"
+    },
     SAMPLERCUBE = createTexture {
         info = {
             width = 1,

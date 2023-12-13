@@ -1,0 +1,15 @@
+colorspace: sRGB
+normalmap: false
+mipmap: false
+build_lut: true
+size: {32, 32, 32}
+format: RGB10A2
+path: /pkg/ant.resources/textures/color_grading/tonemapping_lut.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture
