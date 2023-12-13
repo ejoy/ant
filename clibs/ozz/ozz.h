@@ -42,19 +42,18 @@ struct ozzSoaTransformVector: public ozz::vector<ozz::math::SoaTransform> {
 	{}
 };
 
-struct ozzAnimation {
-	ozz::animation::Animation animation;
-	ozz::animation::SamplingJob::Context sampling_context;
+struct ozzSamplingJobContext: public ozz::animation::SamplingJob::Context {
+	ozzSamplingJobContext(int n)
+		: ozz::animation::SamplingJob::Context(n) {
+	}
+};
+
+struct ozzAnimation: public ozz::animation::Animation {
 	ozzAnimation()
-		: animation()
-		, sampling_context() {
+		: ozz::animation::Animation(){
 	}
 	ozzAnimation(ozz::animation::Animation&& v)
-		: animation(std::move(v))
-		, sampling_context(animation.num_tracks()) {
-	}
-	void ResizeSamplingContext() {
-		sampling_context.Resize(animation.num_tracks());
+		: ozz::animation::Animation(std::move(v)) {
 	}
 };
 

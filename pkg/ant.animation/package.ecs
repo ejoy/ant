@@ -2,18 +2,28 @@ import_feature "ant.scene"
 
 pipeline "animation"
     .stage "animation_state"
-    .stage "sample_animation_pose"
-    .stage "end_animation"
+    .stage "animation_sample"
 
 policy "animation"
     .component "animation_birth"
     .component "anim_ctrl"
     .component "animation"
+    .component "meshskin"
+    .component "skinning"
 
 policy "slot"
     .include_policy "ant.scene|scene_object"
     .component "slot"
 
+component "animation_changed"
 component "slot".type "lua"
 component "animation".type "lua"
 component "anim_ctrl".type "lua"
+component "meshskin".type "lua"
+component "skinning"
+
+system "animation_system"
+    .implement "animation_system.lua"
+
+system "skinning_system"
+    .implement "skinning_system.lua"

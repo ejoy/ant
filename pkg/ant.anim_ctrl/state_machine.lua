@@ -2,10 +2,10 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local iefk	= ecs.require "ant.efk|efk"
+local animation	= ecs.require "ant.animation|api"
 local fs 	= require "filesystem"
 local datalist  = require "datalist"
 local aio = import_package "ant.io"
-local ozz = require "ozz"
 
 local iani = {}
 
@@ -75,10 +75,8 @@ function iani.play(eid, anim_state)
 	end
 	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in playing?out")
 	local anim_name = anim_state.name
-	local anim = e.animation.ozz.animations[anim_name]
-	assert(anim)
 	e.anim_ctrl.name = anim_name
-	e.anim_ctrl.animation = anim
+	e.anim_ctrl.animation = anim_name
 	e.anim_ctrl.owner = anim_state.owner
 	e.anim_ctrl.group = anim_state.group
 	e.anim_ctrl.context = anim_state.context
@@ -96,22 +94,25 @@ function iani.get_duration(eid, anim_name)
 	end
 	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in")
 	if not anim_name then
-		return e.anim_ctrl.animation:duration()
-	else
-		return e.animation.ozz.animations[anim_name]:duration()
+		anim_name = e.anim_ctrl.animation
 	end
+	return e.animation.status[anim_name].handle:duration()
 end
 
 function iani.step(anim_e, s_delta, absolute)
 	local ctrl = anim_e.anim_ctrl
-	local ani = ctrl.animation
-	if not ani then
+	local name = ctrl.animation
+	if not name then
+		return
+	end
+	local status = anim_e.animation.status[name]
+	if not status then
 		return
 	end
 	local play_state = ctrl.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
-	local duration = ani:duration()
+	local duration = status.handle:duration()
 	local next_time = absolute and adjust_delta or (play_state.ratio * duration + adjust_delta)
 	if next_time > duration then
 		if not play_state.loop then
@@ -125,12 +126,13 @@ function iani.step(anim_e, s_delta, absolute)
 	else
 		play_state.ratio = next_time / duration
 	end
-	if not anim_e.animation.locals then
-		anim_e.animation.locals = ozz.SoaTransformVector(anim_e.animation.ozz.skeleton:num_soa_joints())
-	end
-	ozz.SamplingJob(ani, anim_e.animation.locals, play_state.ratio)
+	w:extend(anim_e, "playing?out")
 	ctrl.dirty = true
-	anim_e.pose_dirty = true
+	anim_e.playing = ctrl.play_state.play
+	for n in pairs(anim_e.animation.status) do
+		animation.play(anim_e, n)
+	end
+	animation.play(anim_e, name, play_state.ratio)
 end
 
 function iani.set_time(eid, second)
@@ -138,7 +140,7 @@ function iani.set_time(eid, second)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in pose_dirty?out")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
@@ -169,9 +171,16 @@ function iani.get_time(eid)
 	if not anim_eid then
 		return 0
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
-	if not e.anim_ctrl.animation then return 0 end
-	return e.anim_ctrl.play_state.ratio * e.anim_ctrl.animation:duration()
+	local e <close> = world:entity(anim_eid, "animation:in anim_ctrl:in")
+	local name = e.anim_ctrl.animation
+	if not name then
+		return 0
+	end
+	local status = e.animation.status[name]
+	if not status then
+		return 0
+	end
+	return e.anim_ctrl.play_state.ratio * status.handle:duration()
 end
 
 function iani.set_speed(eid, speed)

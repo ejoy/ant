@@ -3,8 +3,6 @@ local world = ecs.world
 local w 	= world.w
 
 import_package "ant.math"
-local assetmgr = import_package "ant.asset"
-local ozz = require "ozz"
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.require "ant.timer|timer_system"
@@ -70,22 +68,13 @@ end
 
 local iani = ecs.require "ant.anim_ctrl|state_machine"
 
-function ani_sys:sample_animation_pose()
+function ani_sys:animation_state()
 	local delta_time = timer.delta()
-	for e in w:select "playing pose_dirty?out animation:in anim_ctrl:in" do
-		--w:readall(eid)
+	for e in w:select "playing animation:in anim_ctrl:in" do
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
 			iani.step(e, delta_time * 0.001)
 		end
-	end
-end
-
-function ani_sys:end_animation()
-	for e in w:select "pose_dirty:out animation:in playing?out anim_ctrl:in" do
-		ozz.LocalToModelJob(e.animation.ozz.skeleton, e.animation.locals, e.animation.models)
-		e.playing = e.anim_ctrl.play_state.play
-		e.pose_dirty = false
 	end
 end
 
@@ -95,27 +84,18 @@ function ani_sys:data_changed()
 	end
 end
 
-function ani_sys:component_init()
-	for e in w:select "INIT animation:update" do
-		local data = assetmgr.resource(e.animation)
-		local skeleton = data.skeleton
-		local n = skeleton:num_joints()
-		e.animation = {
-			ozz = data,
-			locals = nil,
-			models = ozz.MatrixVector(n),
-		}
-	end
+local event_animation = world:sub{"animation_event"}
 
-	for e in w:select "INIT anim_ctrl:in animation:in animation_birth:in eid:in" do
+function ani_sys:entity_init()
+	for e in w:select "INIT anim_ctrl:in animation:in animation_birth:in eid:in playing?out" do
 		e.anim_ctrl.keyframe_events = {}
 		local events = e.anim_ctrl.keyframe_events
-		for key, value in pairs(e.animation.ozz.animations) do
+		for key, value in pairs(e.animation.status) do
 			--TODO: auto load event
 			events[key] = {}--load_events(tostring(value))
 		end
 		local anim_name = e.animation_birth
-		e.anim_ctrl.animation = e.animation.ozz.animations[anim_name]
+		e.anim_ctrl.animation = anim_name
 		e.anim_ctrl.event_state = { next_index = 1, keyframe_events = events[anim_name] }
 		e.anim_ctrl.play_state = e.anim_ctrl.play_state or {
 			ratio = 0.0,
@@ -125,24 +105,20 @@ function ani_sys:component_init()
 			loop = true,
 			manual_update = false
 		}
+		e.playing = e.anim_ctrl.play_state.play
 		world:pub {"animation_event", "set_time", e.eid, 0}
 	end
-end
 
-local event_animation = world:sub{"animation_event"}
-
-function ani_sys:entity_init()
 	local animation
 	local anim_ctrl
-	for e in w:select "INIT animation?in anim_ctrl?in slot?in eid:in pose_dirty?out boneslot?out" do
+	for e in w:select "INIT animation?in anim_ctrl?in slot?in eid:in boneslot?out" do
 		if e.animation and e.anim_ctrl then
 			animation = e.animation
 			anim_ctrl = e.anim_ctrl
-			e.pose_dirty = true
 		elseif e.slot then
 			local slot = e.slot
-			if slot.joint_name and animation and animation.ozz.skeleton then
-				slot.joint_index = animation.ozz.skeleton:joint_index(slot.joint_name)
+			if slot.joint_name and animation and animation.skeleton then
+				slot.joint_index = animation.skeleton:joint_index(slot.joint_name)
 				if slot.joint_index then
 					e.boneslot = true
 				end

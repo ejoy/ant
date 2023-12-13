@@ -846,7 +846,7 @@ local function create_animation(animtype, name, duration, target_anims)
             }
             new_anim.raw_animation:setup(current_skeleton, td)
             local e <close> = world:entity(anim_eid, "animation:in")
-            e.animation.ozz.animations[name] = new_anim
+            e.animation.status[name].handle = new_anim
         end
         local edit_anim = {
             type = animtype,
@@ -1504,7 +1504,7 @@ end
 
 function m.init(skeleton)
     for e in w:select "eid:in animation:in" do
-        if e.animation.ozz.skeleton == skeleton then
+        if e.animation.skeleton == skeleton then
             anim_eid = e.eid
         end
     end
@@ -1535,7 +1535,7 @@ function m.init(skeleton)
         end
         local animation
         for ee in w:select "animation:in" do
-            if current_skeleton == ee.animation.ozz.skeleton then
+            if current_skeleton == ee.animation.skeleton then
                 animation = ee.animation
                 break
             end

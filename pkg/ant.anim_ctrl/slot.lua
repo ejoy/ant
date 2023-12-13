@@ -27,7 +27,7 @@ function sys:update_slot()
         local animation = slot.animation
         if animation then
             if not slot.joint_index and slot.joint_name then
-                slot.joint_index = slot.animation.ozz.skeleton:joint_index(slot.joint_name)
+                slot.joint_index = slot.animation.skeleton:joint_index(slot.joint_name)
             end
             local slot_matrix
             local follow_flag = assert(slot.follow_flag)

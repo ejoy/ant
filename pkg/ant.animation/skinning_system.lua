@@ -75,7 +75,7 @@ function skinning_sys:entity_init()
 		local skin = assetmgr.resource(e.meshskin)
 		local count = skin.joint_rema
 			and #skin.joint_remap
-			or e.animation.ozz.skeleton:num_joints()
+			or e.animation.skeleton:num_joints()
 		if count > 64 then
 			error(("skinning matrices are too large, max is 128, %d needed"):format(count))
 		end
