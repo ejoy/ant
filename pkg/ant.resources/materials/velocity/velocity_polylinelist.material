@@ -6,7 +6,7 @@ fx:
         "FIX_WIDTH=1"
     setting:
         lighting: off
-        shadow_receive: off
+        receive_shadow: off
         cast_shadow: off
 properties:
     s_tex:

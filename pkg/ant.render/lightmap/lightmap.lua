@@ -40,7 +40,7 @@ local function load_lightmap_material(mf, setting)
     -- s["ENABLE_SHADOW"] = nil
     -- s["identity"] = nil
     -- s['cast_shadow'] = 'off'
-    -- s['shadow_receive'] = 'off'
+    -- s['receive_shadow'] = 'off'
     -- s['skinning'] = 'UNKNOWN'
     -- s['bloom'] = 'off'
     -- s['ENABLE_IBL'] = 'off'

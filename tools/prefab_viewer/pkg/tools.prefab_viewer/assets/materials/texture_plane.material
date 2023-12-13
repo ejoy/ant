@@ -6,7 +6,7 @@ fx:
   setting:
     uv_motion: true
     lighting: on
-    shadow_receive: on
+    receive_shadow: on
     cast_shadow: off
     subsurface: off
 properties:

@@ -295,7 +295,7 @@ end
 function sm:update_filter()
     for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
-		local receiveshadow = mt.fx.setting.shadow_receive == "on"
+		local receiveshadow = mt.fx.setting.receive_shadow == "on"
 
 		local castshadow
 		if e.visible_state["cast_shadow"] then

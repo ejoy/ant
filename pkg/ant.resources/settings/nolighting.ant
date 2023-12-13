@@ -1,4 +1,4 @@
 lighting: off
 cast_shadow: off
-shadow_receive: off
+receive_shadow: off
 subsurface: off
