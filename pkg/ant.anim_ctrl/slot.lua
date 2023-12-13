@@ -12,20 +12,8 @@ local r2l_mat<const> = mc.R2L_MAT
 
 local sys = ecs.system "slot_system"
 
-function sys:start_frame()
-end
-
-function sys:entity_init()
-    for e in w:select "INIT slot:in skeleton:in" do
-        local slot = e.slot
-        local jn = slot.joint_name
-        local ske = e.skeleton
-        slot.joint_index = assert(ske:joint_index(jn))
-    end
-end
-
-local function calc_pose_mat(meshskin, slot)
-    local adjust_mat = math3d.mul(r2l_mat, meshskin.models:joint(slot.joint_index)) --pose_result.models:joint(slot.joint_index) --
+local function calc_pose_mat(animation, slot)
+    local adjust_mat = math3d.mul(r2l_mat, animation.models:joint(slot.joint_index)) --pose_result.models:joint(slot.joint_index) --
     -- if slot.offset_srt then
     --     local offset_mat = math3d.matrix(slot.offset_srt)
     --     adjust_mat = math3d.mul(adjust_mat, offset_mat)
@@ -36,16 +24,16 @@ end
 function sys:update_slot()
 	for v in w:select "boneslot slot:in scene:update eid:in" do
         local slot = v.slot
-        local meshskin = slot.meshskin
-        if meshskin then
+        local animation = slot.animation
+        if animation then
             if not slot.joint_index and slot.joint_name then
-                slot.joint_index = slot.skeleton:joint_index(slot.joint_name)
+                slot.joint_index = slot.animation.ozz.skeleton:joint_index(slot.joint_name)
             end
             local slot_matrix
             local follow_flag = assert(slot.follow_flag)
             if follow_flag == 1 or follow_flag == 2 then
                 if slot.joint_index then
-                    local adjust_mat = calc_pose_mat(meshskin, slot)
+                    local adjust_mat = calc_pose_mat(animation, slot)
                     if follow_flag == 1 then
                         slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
@@ -54,7 +42,7 @@ function sys:update_slot()
                     end
                 end
             elseif follow_flag == 3 then
-                slot_matrix = calc_pose_mat(meshskin, slot)
+                slot_matrix = calc_pose_mat(animation, slot)
             else
                 error [[
                     "invalid slot, 'follow_flag' only 1/2/3 is valid

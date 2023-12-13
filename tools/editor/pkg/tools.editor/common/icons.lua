@@ -67,10 +67,6 @@ local icons = {
         elseif ext == ".prefab" then
             return self.ICON_PREFAB
         elseif ext == ".ozz" then
-            local filename = tostring(fs.path(path_str):filename())
-            if filename == "skeleton.ozz" then
-                return self.ICON_SKELETON3D
-            end
             return self.ICON_ANIMATION
         elseif ext == ".png" or ext == ".ktx" or ext == ".jpg" then
             return self.ICON_IMAGE

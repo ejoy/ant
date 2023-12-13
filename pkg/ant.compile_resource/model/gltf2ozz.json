@@ -1,11 +1,11 @@
 {
     "skeleton": {
-        "filename": "skeleton.ozz"
+        "filename": "skeleton.bin"
     },
     "animations": [
         {
             "clip": "*",
-            "filename": "*.ozz"
+            "filename": "*.bin"
         }
     ]
 }

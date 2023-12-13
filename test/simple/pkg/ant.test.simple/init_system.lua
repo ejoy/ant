@@ -29,7 +29,6 @@ local function create_plane()
 end
 
 function m:init_world()
-    ientity.create_procedural_sky()
     create_plane()
     irq.set_view_clear_color("main_queue", 0xff0000ff)
     world:create_instance {

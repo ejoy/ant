@@ -1,0 +1,8 @@
+system "timeline_system"
+    .implement "timeline_system.lua"
+
+component "timeline".type "lua"
+component "start_timeline"
+
+policy "timeline"
+    .component "timeline"

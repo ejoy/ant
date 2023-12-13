@@ -1,0 +1,20 @@
+import_feature "ant.efk"
+import_feature "ant.animation"
+
+system "animation_system"
+    .implement "animation.lua"
+
+system "keyframe_system"
+    .implement "keyframe.lua"
+
+system "slot_system"
+    .implement "slot.lua"
+
+policy "keyframe"
+    .component "keyframe"
+
+component "playing"
+component "pose_dirty"
+component "keyframe".type "lua"
+component "boneslot"
+component "animation_birth".type "lua"

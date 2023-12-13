@@ -136,22 +136,15 @@ end
 local function on_target(old, new)
     if old then
         local oe <close> = world:entity(old, "light?in")
-        if oe and oe.light then
-            light_gizmo.bind()
+        if oe.light then
+            light_gizmo.on_target()
         end
     end
     if new then
-        local ne <close> = world:entity(new, "camera?in light?in scene?in render_object?in")
-        if ne.camera then
-            camera_mgr.set_second_camera(new, true)
-        end
-
-        if ne.light then
-            light_gizmo.bind(new)
-        end
-        if ne.render_object or ne.scene then
-            keyframe_view.set_current_target(new)
-        end
+        light_gizmo.on_target(new)
+        camera_mgr.on_target(new, true)
+        keyframe_view.on_target(new)
+        anim_view.on_target(new)
     end
     world:pub {"UpdateAABB", new}
 end
@@ -225,6 +218,7 @@ local function update_visible(node, visible)
     end
     return rv
 end
+local test_prefab
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -354,6 +348,28 @@ function m:handle_event()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
         elseif state.CTRL and key == "T" and press == 1 then
+            if not test_prefab then
+                test_prefab = world:create_instance {
+                    prefab = "/pkg/vaststars.resources/glbs/chemical-plant-1.glb|work_start.prefab",
+                    -- prefab = "/pkg/vaststars.resources/glbs/chimney-1.glb|work.prefab",
+                    on_ready = function (instance)
+                        for _, eid in ipairs(instance.tag["*"]) do
+                            local e <close> = world:entity(eid, "timeline?in")
+                            if e.timeline then
+                                e.timeline.eid_map = instance.tag
+                            end
+                        end
+                    end
+                }
+            else
+                for _, eid in ipairs(test_prefab.tag["*"]) do
+                    local e <close> = world:entity(eid, "timeline?in")
+                    if e.timeline then
+                        w:extend(e, "start_timeline?out")
+                        e.start_timeline = true
+                    end
+                end
+            end
         end
     end
     for _, what, type in event_create:unpack() do

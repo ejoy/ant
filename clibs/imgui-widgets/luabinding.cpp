@@ -92,6 +92,7 @@ wSequencer(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TTABLE) {
 		auto dirty = read_field_boolean(L, "dirty", false, 1);
 		if (dirty) {
+			ImSequencer::anim_fps = read_field_int(L, "anim_fps", 30, 2);
 			ImSequencer::anim_info.clear();
 			auto birth = read_field_string(L, "birth", "", 1);
 			if (ImSequencer::anim_info.empty()) {
@@ -229,6 +230,7 @@ wSimpleSequencer(lua_State* L) {
 			current_frame = read_field_int(L, "current_frame", 0, 1);
 		}
 		if (dirty) {
+			ImSequencer::anim_fps = read_field_int(L, "anim_fps", 30, 2);
 			ImSimpleSequencer::bone_anim.duration = (float)read_field_float(L, "duration", 0.0f, 1);
 			selected_frame = read_field_int(L, "selected_frame", 0, 1);
 			selected_layer_index = read_field_int(L, "selected_layer_index", 0, 1) - 1;

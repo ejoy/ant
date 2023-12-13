@@ -3,7 +3,7 @@ type: ske
 duration: 3
 name: miner_Bone
 sample_ratio: 50
-skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozz
+skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.bin
 target_anims:
   ---
   clips:

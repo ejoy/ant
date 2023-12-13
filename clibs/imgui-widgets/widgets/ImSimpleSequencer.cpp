@@ -12,7 +12,7 @@
 
 namespace ImSimpleSequencer
 {
-	int anim_fps = 50;
+	int anim_fps = 30;
 	anim_layer* current_layer{ nullptr };
 	bone_anim_s bone_anim;
 	int ItemHeight = 20;

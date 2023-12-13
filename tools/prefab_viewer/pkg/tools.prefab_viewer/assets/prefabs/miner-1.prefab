@@ -7,11 +7,11 @@ policy:
 data:
   meshskin: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Armature.skinbin
   scene: {}
-  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozz
+  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.bin
   skinning: true
 mount: 1
 policy:
-  ant.animation|meshskin
+  ant.render|meshskin
   ant.scene|scene_object
 ---
 data:
@@ -59,9 +59,9 @@ policy:
 data:
   anim_ctrl: {}
   animation:
-    ArmatureAction: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/ArmatureAction.ozz
+    ArmatureAction: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/ArmatureAction.bin
     work: /pkg/tools.prefab_viewer/assets/prefabs/animation/miner_Bone.anim
   animation_birth: ArmatureAction
-  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozz
+  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozzbin
 policy:
   ant.animation|animation
