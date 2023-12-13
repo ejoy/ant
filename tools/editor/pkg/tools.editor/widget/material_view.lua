@@ -36,7 +36,7 @@ local function read_datalist_file(p)
     return c
 end
 
-local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.settings"
+local default_setting-- = read_datalist_file "/pkg/ant.resources/settings/default.settings"
 
 local function load_material_file(mf)
     if string.find(mf, ".glb|") then
