@@ -274,7 +274,7 @@ end
 local function calc_focus_matrix(M, verticesLS)
 	local aabb = math3d.aabb()
 	for _, v in ipairs(verticesLS) do
-		local p = math3d.transform(M, v, 1)
+		local p = math3d.transformH(M, v)
 		aabb = math3d.aabb_append(aabb, p)
 	end
 
@@ -329,6 +329,13 @@ function shadow_sys:update_camera_depend()
 	end
 end
 
+local function M3D(o, n)
+	if o then
+		math3d.unmark(o)
+	end
+	return math3d.mark(n)
+end
+
 function shadow_sys:refine_camera()
     local C = w:first "camera_changed"
     if not C then
@@ -351,24 +358,25 @@ function shadow_sys:refine_camera()
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
 
-	local shadow_queueidx, main_queueidx = queuemgr.queue_index "csm1_queue", queuemgr.queue_index "main_queue"
-	local PSRLS, PSCLS	= build_PSR(shadow_queueidx, Lv),	build_PSC(shadow_queueidx, Lv)
-	local PSR, PSC		= build_PSR(main_queueidx), 		build_PSC(main_queueidx)
-	local function M3D(o, n)
-		if o then
-			math3d.unmark(o)
-		end
-		return math3d.mark(n)
-	end
-	C.camera.PSR, C.camera.PSRLS = M3D(C.camera.PSR, PSR), M3D(C.camera.PSRLS, PSRLS)
-	C.camera.PSC, C.camera.PSCLS = M3D(C.camera.PSC, PSC), M3D(C.camera.PSCLS, PSCLS)
+	local main_queueidx = queuemgr.queue_index "main_queue"
+	C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
+	C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
 
-	local sceneaabbLS = merge_PSC_and_PSR(PSC, PSR)
+	C.camera.PSRLS	= M3D(C.camera.PSRLS, 	build_PSR(main_queueidx, Lv))
+	C.camera.PSCLS	= M3D(C.camera.PSCLS, 	build_PSC(main_queueidx, Lv))
+
+	local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
+	C.camera.sceneaabbLS= M3D(C.camera.sceneaabbLS, sceneaabbLS)
+	C.camera.Lv			= M3D(C.camera.Lv, Lv)
 
 	local Ndc2Lv = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
 
-	local viewdirLS = math3d.transform(Lv, viewdir, 0)
-	local Lr = LiSPSM.rotation_matrix(viewdirLS)
+	local useLiSPSM = false
+	local Lr
+	if useLiSPSM then
+		local viewdirLS = math3d.transform(Lv, viewdir, 0)
+		Lr = LiSPSM.rotation_matrix(viewdirLS)
+	end
 
 	local Cv = C.camera.viewmat
 
@@ -394,23 +402,32 @@ function shadow_sys:refine_camera()
 		local verticesLS, nearLS, farLS	= frustum_interset_aabb(Ndc2Lv, sceneaabbLS, sr[1], sr[2])
 
 		local Lp	= math3d.projmat{l=-1, r=1, t=1, b=-1, n=nearLS, f=farLS, ortho=true}
-		local Lrp	= math3d.mul(Lr, Lp)
-		local camerainfo = {
-			Lv			= Lv,
-			Lrp			= Lrp,
-			Lrpv		= math3d.mul(Lrp, Lv),
-			Cv			= Cv,
-			viewdirWS	= viewdir,
-			lightdirWS	= lightdirWS,
-			cameraposWS	= posWS,
-			zn			= zn,
-			zf			= zf,
-			nearHit		= nearHit,
-			farHit		= farHit,
-		}
-		local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
-		update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
-
+		if useLiSPSM then
+			local Lrp	= math3d.mul(Lr, Lp)
+			local camerainfo = {
+				Lv			= Lv,
+				Lrp			= Lrp,
+				Lrpv		= math3d.mul(Lrp, Lv),
+				Cv			= Cv,
+				viewdirWS	= viewdir,
+				lightdirWS	= lightdirWS,
+				cameraposWS	= posWS,
+				zn			= zn,
+				zf			= zf,
+				nearHit		= nearHit,
+				farHit		= farHit,
+			}
+			local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
+			update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
+		else
+			c.viewmat.m = Lv
+			c.projmat.m = Lp
+			local vp = math3d.mul(Lp, Lv)
+			
+			local F = calc_focus_matrix(Lp, verticesLS)
+			c.viewprojmat.m = math3d.mul(F, vp)
+			c.FinalMat.m = c.viewprojmat
+		end
 		mark_camera_changed(ce)
 
 		csm_matrices[csm.index].m = math3d.mul(ishadowcfg.crop_matrix(csm.index), c.FinalMat)
@@ -701,10 +718,24 @@ function shadowdebug_sys:data_changed()
 			-- 	DEBUG_ENTITIES[n] = ientity.create_frustum_entity(math3d.frustum_points(f.m), f.c)
 			-- end
 
-			DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSR)),  {1.0, 0.0, 1.0, 1.0})
-			DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSC)),  {0.5, 0.0, 0.5, 1.0})
-			DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSRLS)),{1.0, 0.5, 1.0, 1.0})
-			DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSCLS)),{0.1, 0.8, 0.3, 1.0})
+			local function aabb_points(aabb, M)
+				local points = math3d.aabb_points(aabb)
+				if M then
+					for i=1, #points do
+						points[i] = math3d.transform(M, points[i], 1)
+					end
+				end
+				return points
+			end
+			local L2W = math3d.inverse(C.Lv)
+			--DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSR)),  		{1.0, 0.0, 0.0, 1.0})
+			--DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSC)),  		{0.0, 1.0, 0.0, 1.0})
+			--DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSRLS, L2W)),{1.0, 0.1, 0.1, 1.0})
+			--DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSCLS, L2W)),{0.1, 1.0, 0.1, 1.0})
+
+			-- local L2W = math3d.inverse(C.Lv)
+			DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabbLS, L2W)),{1.0, 0.0, 0.0, 1.0})
+			DEBUG_ENTITIES["sceneaabb"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabb)),{0.0, 1.0, 0.0, 1.0})
 		elseif key == 'C' and press == 0 then
 
 		end
