@@ -81,6 +81,7 @@ local function destroy_prefab_cache(handle, destroy_rb)
     
     local name = params.HANDLE_CACHE[handle]
     local prefab = params.PREFABS[name]
+    if not prefab then return end
     local objects, fb, camera_srt, prefab_rotation = prefab.objects, prefab.fb, prefab.camera_srt, prefab.prefab_rotaton
     if objects then
         destroy_prefab(objects)
