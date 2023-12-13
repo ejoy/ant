@@ -14,7 +14,6 @@ policy "keyframe"
     .component "keyframe"
 
 component "playing"
-component "pose_dirty"
 component "keyframe".type "lua"
 component "boneslot"
 component "animation_birth".type "lua"

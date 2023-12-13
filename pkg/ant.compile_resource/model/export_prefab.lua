@@ -264,7 +264,6 @@ local function create_skin_entity(status, parent)
     end
     local policy = {
         "ant.animation|animation",
-        "ant.render|meshskin",
         "ant.scene|scene_object",
     }
     local data = {

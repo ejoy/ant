@@ -100,7 +100,7 @@ local function anim_group_delete(anim_name)
     local animation_map = tdata.animation
     animation_map[anim_name] = nil
     local e <close> = world:entity(anim_eid, "animation:in")
-    e.animation.ozz.animations[anim_name] = nil
+    e.animation.status[anim_name] = nil
     prefab_mgr:on_patch_animation(anim_eid, anim_name)
     if tdata.animation_birth == anim_name then
         tdata.animation_birth = next(animation_map) or ""
@@ -687,7 +687,7 @@ function m.show()
                     if #anim_name > 0 and #anim_path > 0 then
                         local update = true
                         local e <close> = world:entity(anim_eid, "animation:in")
-                        if e.animation.ozz.animations[anim_name] then
+                        if e.animation.status[anim_name] then
                             local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                             uiutils.confirm_dialog(confirm)
                             if confirm.answer and confirm.answer == 0 then
@@ -698,7 +698,7 @@ function m.show()
                             local info = hierarchy:get_node_info(anim_eid)
                             info.template.data.animation[anim_name] = anim_path
                             prefab_mgr:on_patch_animation(anim_eid, anim_name, anim_path)
-                            e.animation.ozz.animations[anim_name] = anim_path
+                            e.animation.status[anim_name] = anim_path
                             --TODO:reload
                             reload = true
                         end
@@ -884,16 +884,16 @@ function m.on_prefab_load(entities)
                 iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
             end
             
-            local animations = e.animation.ozz.animations
+            local animations = e.animation.status
             if animations then
                 editanims.birth = e.animation_birth
-                skeleton = e.animation.ozz.skeleton
-                for key, anim in pairs(animations) do
+                skeleton = e.animation.skeleton
+                for key, status in pairs(e.animation.status) do
                     if not editanims[key] then
                         local events = e.anim_ctrl.keyframe_events[key]
                         editanims[key] = {
                             name = key,
-                            duration = anim:duration(),
+                            duration = status.handle:duration(),
                             key_event = events and from_runtime_event(events) or {},
                         }
                         editanims.name_list[#editanims.name_list + 1] = key
