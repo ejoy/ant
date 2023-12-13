@@ -1,7 +1,6 @@
 colorspace: sRGB
 normalmap: false
 mipmap: false
-build_lut: true
 size: {32, 32, 32}
 format: RGB10A2
 path: /pkg/ant.resources/textures/color_grading/tonemapping_lut.dds
