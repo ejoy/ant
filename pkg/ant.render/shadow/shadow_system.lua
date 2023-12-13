@@ -156,7 +156,7 @@ end
 local function merge_visible_bounding(M, aabb, e, queue_index)
 	local ro = e.render_object
 	if Q.check(ro.visible_idx, queue_index) then
-		aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.aabb))
+		aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.scene_aabb))
 	end
 
 	return aabb
@@ -349,6 +349,13 @@ function shadow_sys:refine_camera()
 
 	local queue_index = queuemgr.queue_index "csm1_queue"
 	local PSR, PSC = build_PSR(Lv, queue_index), build_PSC(Lv, queue_index)
+	local function M3D(o, n)
+		if o then
+			math3d.unmark(o)
+		end
+		return math3d.mark(n)
+	end
+	C.camera.PSR, C.camera.PSC = M3D(C.camera.PSR, PSR), M3D(C.camera.PSC, PSC)
 	local sceneaabbLS = merge_PSC_and_PSR(PSC, PSR)
 
 	local Ndc2Lv = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
@@ -647,11 +654,12 @@ function shadowdebug_sys:data_changed()
 			end
 
 			local frustums = {}
-			local function add_frustum(n, m)
+			local function add_frustum(n, m, c)
 				frustums[#frustums+1] = n
-				frustums[n] = {m = m, c = unique_color()}
+				frustums[n] = {m = m, c = c or unique_color()}
 			end
-			add_frustum("camera_viewprojmat", world:entity(irq.main_camera(), "camera:in").camera.viewprojmat)
+			local C = world:entity(irq.main_camera(), "camera:in").camera
+			add_frustum("camera_viewprojmat", C.viewprojmat)
 
 			do
 				for e in w:select "csm:in camera_ref:in" do
@@ -659,14 +667,18 @@ function shadowdebug_sys:data_changed()
 					local prefixname = "csm" .. e.csm.index
 					add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
 					add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
-					add_frustum(prefixname .. "_W", 			math3d.mul(ce.camera.W))
+					add_frustum(prefixname .. "_W", 			ce.camera.W)
 					add_frustum(prefixname .. "_FinalMat", 		ce.camera.FinalMat)
 				end
 			end
 
-			for k, f in pairs(frustums) do
-				DEBUG_ENTITIES[k] = ientity.create_frustum_entity(math3d.frustum_points(f.m), f.c)
+			for _, n in ipairs(frustums) do
+				local f = frustums[n]
+				DEBUG_ENTITIES[n] = ientity.create_frustum_entity(math3d.frustum_points(f.m), f.c)
 			end
+
+			DEBUG_ENTITIES["PSR"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSR)), {1.0, 0.0, 1.0, 1.0})
+			DEBUG_ENTITIES["PSC"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSC)), {0.5, 0.0, 0.5, 1.0})
 		end
 	end
 end
