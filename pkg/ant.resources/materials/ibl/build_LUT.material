@@ -8,4 +8,6 @@ properties:
     u_build_ibl_param: {512, 0, 128, 0}    #sample count, lod bais, cube face texture size, roughness
     s_LUT_write:
         stage: 0
-        texture: /pkg/ant.resources/textures/default.texture
+        mip: 0
+        access: w
+        image: /pkg/ant.resources/textures/default.texture

@@ -60,6 +60,7 @@ uniform vec4 u_ibl_param;
 #define u_ibl_indirect_intensity        u_ibl_param.y
 
 #include "pbr/material_info.sh"
+#define USE_IBL_LUT
 
 SAMPLERCUBE(s_prefilter,        6);
 
