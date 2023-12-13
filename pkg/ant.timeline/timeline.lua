@@ -91,7 +91,9 @@ function timeline.new()
 	return setmetatable(t, timeline)
 end
 
-return timeline
+local singleton = timeline.new()
+
+return singleton
 
 --[[
 

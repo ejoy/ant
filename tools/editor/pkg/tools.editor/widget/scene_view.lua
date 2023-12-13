@@ -297,6 +297,9 @@ function m.show()
             if imgui.widget.MenuItem("Slot") then
                 world:pub { "Create", "slot"}
             end
+            if imgui.widget.MenuItem("Timeline") then
+                world:pub { "Create", "timeline"}
+            end
             imgui.cursor.Separator()
             if imgui.widget.BeginMenu "Terrain" then
                 if imgui.widget.MenuItem "shape" then

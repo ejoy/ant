@@ -12,7 +12,7 @@
 
 namespace ImSequencer
 {
-	int anim_fps = 50;
+	int anim_fps = 30;
 	anim_detail* current_anim{ nullptr };
 	std::unordered_map<std::string, anim_detail> anim_info;
 	int ItemHeight = 20;

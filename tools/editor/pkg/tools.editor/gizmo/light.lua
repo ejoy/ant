@@ -32,12 +32,17 @@ local LENGTH = 1
 local DEFAULT_POSITION = {0, 0, 0}
 local DEFAULT_ROTATE = {2.4, 0, 0}
 
-function m.bind(eid)
+function m.on_target(eid)
     m.show(false)
     m.current_light = eid
     m.current_gizmo = nil
-    if not eid then return end 
-    local ec <close> = world:entity(eid, "light:in")
+    if not eid then
+        return
+    end
+    local ec <close> = world:entity(eid, "light?in")
+    if not ec.light then
+        return
+    end
     local lt = ec.light.type
     m.current_gizmo = m[lt]
     if m.current_gizmo then
@@ -226,7 +231,7 @@ function m.on_remove_light(eid)
     m.billboard[eid] = nil
     -- m.current_light = nil
     -- m.show(false)
-    m.bind()
+    m.on_target()
 end
 
 local inited = false

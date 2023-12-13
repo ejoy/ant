@@ -17,16 +17,18 @@ local utils     = require "common.utils"
 local global_data = require "common.global_data"
 local access    = global_data.repo_access
 local faicons   = require "common.fa_icons"
-local fs        = require "filesystem"
 local fmod      = require "fmod"
+
+local edit_timeline
+local timeline_eid
+local timeline_playing = false
 local m = {}
 local edit_anims
 local anim_eid
 local imgui_message
 local current_anim
-local sample_ratio = 50.0
+local sample_ratio = 30.0
 local joint_map = {}
-local joint_list = {}
 local anim_state = {
     duration = 0,
     selected_frame = -1,
@@ -41,7 +43,8 @@ local anim_state = {
 local birth_anim = {false}
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
-local event_type = {"Effect", "Sound", "Message"}
+local ui_timeline_duration = {1, min = 1, max = 300, speed = 1}
+local event_type = {"Animation", "Effect", "Sound", "Message"}
 
 local current_event
 local current_clip
@@ -84,6 +87,7 @@ local function to_runtime_event(ke)
     for _, frame_idx in ipairs(temp) do
         event[#event + 1] = {
             time = frame_idx / sample_ratio,
+            tick = edit_timeline and frame_idx or nil,
             event_list = do_to_runtime_event(ke[tostring(frame_idx)])
         }
     end
@@ -112,7 +116,7 @@ local function from_runtime_event(runtime_event)
     for _, ev in ipairs(runtime_event) do
         for _, e in ipairs(ev.event_list) do
             e.name_ui = {text = e.name}
-            if e.event_type == "Sound" or e.event_type == "Effect" then
+            if e.event_type == "Sound" or e.event_type == "Effect" or e.event_type == "Animation" then
                 e.asset_path_ui = {text = e.asset_path}
                 if e.link_info and e.link_info.slot_name ~= '' then
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
@@ -122,7 +126,6 @@ local function from_runtime_event(runtime_event)
                     e.life_time = e.life_time or 2
                     e.breakable_ui = {e.breakable}
                     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
-                    -- prefab_mgr.check_effect_preload(e.asset_path)
                 end
             elseif e.event_type == "Message" then
                 e.msg_content = e.msg_content or ""
@@ -137,14 +140,16 @@ end
 local function get_runtime_events()
     if not current_clip then
         return
-    end;
+    end
     return current_clip.key_event
 end
 
 local function set_event_dirty(num)
-    local e <close> = world:entity(anim_eid, "anim_ctrl:in")
-    iani.stop_effect(anim_eid)
-    e.anim_ctrl.keyframe_events[current_anim.name] = to_runtime_event(anim_key_event)
+    if not edit_timeline then
+        local e <close> = world:entity(anim_eid, "anim_ctrl:in")
+        iani.stop_effect(anim_eid)
+        e.anim_ctrl.keyframe_events[current_anim.name] = to_runtime_event(anim_key_event)
+    end
     anim_state.event_dirty = num
 end
 
@@ -331,8 +336,20 @@ local function show_current_event()
         current_event.name = tostring(current_event.name_ui.text)
         dirty = true
     end
-    
-    if current_event.event_type == "Sound" then
+    if current_event.event_type == "Animation" then
+        if imgui.widget.Button("SelectAnimation") then
+            local rpath = uiutils.get_open_file_path("Animation", "anim|ozz")
+            if rpath then
+                local pkgpath = access.virtualpath(global_data.repo, rpath)
+                assert(pkgpath)
+                current_event.asset_path_ui.text = pkgpath
+                current_event.asset_path = pkgpath
+                dirty = true
+            end
+        end
+        imgui.widget.PropertyLabel("AnimationPath")
+        imgui.widget.InputText("##AnimationPath", current_event.asset_path_ui)
+    elseif current_event.event_type == "Sound" then
         if not bank_path and imgui.widget.Button("SelectBankPath") then
             local filename = uiutils.get_open_file_path("Bank", "bank")
             if filename then
@@ -403,12 +420,14 @@ local function show_current_event()
                 assert(pkgpath)
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath
-                -- prefab_mgr.check_effect_preload(pkgpath)
                 dirty = true
             end
         end
         imgui.widget.PropertyLabel("EffectPath")
-        imgui.widget.InputText("##EffectPath", current_event.asset_path_ui)
+        if imgui.widget.InputText("##EffectPath", current_event.asset_path_ui) then
+            current_event.asset_path = tostring(current_event.asset_path_ui.text)
+            dirty = true
+        end
         local slot_list = hierarchy.slot_list
         if slot_list then
             imgui.widget.PropertyLabel("LinkSlot")
@@ -530,8 +549,21 @@ end
 
 local stringify = import_package "ant.serialize".stringify
 local event_filename
+
+function m.save_timeline()
+    if not timeline_eid then
+        return
+    end
+    local info = hierarchy:get_node_info(timeline_eid)
+    info.template.data.timeline.loop = ui_loop[1]
+    info.template.data.timeline.key_event = to_runtime_event(anim_key_event)
+    info.template.data.timeline.duration = ui_timeline_duration[1] / sample_ratio
+end
+
 function m.save_keyevent()
-    if not edit_anims then return end
+    if not edit_anims then
+        return
+    end
     local revent = {}
     for _, name in ipairs(edit_anims.name_list) do
         local eventlist = to_runtime_event(edit_anims[name].key_event)
@@ -581,6 +613,25 @@ local update_slot_list = world:sub {"UpdateSlotList"}
 local event_keyframe = world:sub{"keyframe_event"}
 local iefk = ecs.require "ant.efk|efk"
 local effect_map = {}
+
+local function play_timeline()
+    if not timeline_eid then
+        return
+    end
+    local e <close> = world:entity(timeline_eid, "start_timeline?out timeline:in")
+    e.start_timeline = true
+    e.timeline.key_event = to_runtime_event(anim_key_event)
+    anim_state.current_frame = 0
+    timeline_playing = true
+end
+
+local function stop_timeline()
+    timeline_playing = false
+    if not timeline_eid then
+        return
+    end
+end
+
 function m.show()
     for _ in update_slot_list:unpack() do
         if anim_eid then
@@ -606,143 +657,191 @@ function m.show()
             end
         end
     end
-    if not current_anim or not anim_eid then return end
+    if (not current_anim or not anim_eid) and not edit_timeline then
+        return
+    end
     local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     if imgui.windows.Begin("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
-        if current_anim then
-            anim_state.is_playing = iani.is_playing(anim_eid)
-            if anim_state.is_playing then
-                anim_state.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
-            end
-        end
-        imgui.cursor.SameLine()
-        local title = "Add Animation"
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
-            anim_name_ui.text = ""
-            anim_path_ui.text = ""
-            imgui.windows.OpenPopup(title)
-        end
-        local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
-        if change then
-            imgui.widget.Text("Anim Name:")
-            imgui.cursor.SameLine()
-            if imgui.widget.InputText("##AnimName", anim_name_ui) then
-            end
-            imgui.widget.Text("Anim Path:")
-            imgui.cursor.SameLine()
-            if imgui.widget.InputText("##AnimPath", anim_path_ui) then
-            end
-            imgui.cursor.SameLine()
-            if imgui.widget.Button("...") then
-                local localpath = uiutils.get_open_file_path("Animation", "anim")
-                if localpath then
-                    anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
+        if edit_timeline then
+            if timeline_playing then
+                anim_state.current_frame = anim_state.current_frame + 1
+                local maxframe = math.ceil(anim_state.duration * sample_ratio) - 1
+                if anim_state.current_frame > maxframe then
+                    anim_state.current_frame = maxframe
+                    timeline_playing = false
                 end
             end
-            imgui.cursor.Separator()
-            if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
-                local anim_name = tostring(anim_name_ui.text)
-                local anim_path = tostring(anim_path_ui.text)
-                if #anim_name > 0 and #anim_path > 0 then
-                    local update = true
-                    local e <close> = world:entity(anim_eid, "animation:in")
-                    if e.animation.ozz.animations[anim_name] then
-                        local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
-                        uiutils.confirm_dialog(confirm)
-                        if confirm.answer and confirm.answer == 0 then
-                            update = false
+        else
+            if current_anim then
+                anim_state.is_playing = iani.is_playing(anim_eid)
+                if anim_state.is_playing then
+                    anim_state.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
+                end
+            end
+            imgui.cursor.SameLine()
+            local title = "Add"
+            if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
+                anim_name_ui.text = ""
+                anim_path_ui.text = ""
+                imgui.windows.OpenPopup(title)
+            end
+            local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
+            if change then
+                imgui.widget.Text("Anim Name:")
+                imgui.cursor.SameLine()
+                if imgui.widget.InputText("##AnimName", anim_name_ui) then
+                end
+                imgui.widget.Text("Anim Path:")
+                imgui.cursor.SameLine()
+                if imgui.widget.InputText("##AnimPath", anim_path_ui) then
+                end
+                imgui.cursor.SameLine()
+                if imgui.widget.Button("...") then
+                    local localpath = uiutils.get_open_file_path("Animation", "anim")
+                    if localpath then
+                        anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
+                    end
+                end
+                imgui.cursor.Separator()
+                if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
+                    local anim_name = tostring(anim_name_ui.text)
+                    local anim_path = tostring(anim_path_ui.text)
+                    if #anim_name > 0 and #anim_path > 0 then
+                        local update = true
+                        local e <close> = world:entity(anim_eid, "animation:in")
+                        if e.animation.ozz.animations[anim_name] then
+                            local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
+                            uiutils.confirm_dialog(confirm)
+                            if confirm.answer and confirm.answer == 0 then
+                                update = false
+                            end
+                        end
+                        if update then
+                            local info = hierarchy:get_node_info(anim_eid)
+                            info.template.data.animation[anim_name] = anim_path
+                            prefab_mgr:on_patch_animation(anim_eid, anim_name, anim_path)
+                            e.animation.ozz.animations[anim_name] = anim_path
+                            --TODO:reload
+                            reload = true
                         end
                     end
-                    if update then
-                        local info = hierarchy:get_node_info(anim_eid)
-                        info.template.data.animation[anim_name] = anim_path
-                        prefab_mgr:on_patch_animation(anim_eid, anim_name, anim_path)
-                        e.animation.ozz.animations[anim_name] = anim_path
-                        --TODO:reload
-                        reload = true
-                    end
+                    imgui.windows.CloseCurrentPopup()
                 end
-                imgui.windows.CloseCurrentPopup()
+                imgui.cursor.SameLine()
+                if imgui.widget.Button(faicons.ICON_FA_XMARK.." Cancel") then
+                    imgui.windows.CloseCurrentPopup()
+                end
+                imgui.windows.EndPopup()
+            end
+
+            imgui.cursor.SameLine()
+            if imgui.widget.Button(faicons.ICON_FA_TRASH.." Remove") then
+                anim_group_delete(current_anim.name)
+                local nextanim = edit_anims.name_list[1]
+                if nextanim then
+                    set_current_anim(nextanim)
+                end
+                reload = true
             end
             imgui.cursor.SameLine()
-            if imgui.widget.Button(faicons.ICON_FA_XMARK.." Cancel") then
-                imgui.windows.CloseCurrentPopup()
-            end
-            imgui.windows.EndPopup()
-        end
-
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_TRASH.." Remove") then
-            anim_group_delete(current_anim.name)
-            local nextanim = edit_anims.name_list[1]
-            if nextanim then
-                set_current_anim(nextanim)
-            end
-            reload = true
-        end
-        imgui.cursor.SameLine()
-        imgui.cursor.PushItemWidth(150)
-        if imgui.widget.BeginCombo("##AnimationList", {current_anim.name, flags = imgui.flags.Combo {}}) then
-            for _, name in ipairs(edit_anims.name_list) do
-                if imgui.widget.Selectable(name, current_anim.name == name) then
-                    set_current_anim(name)
+            imgui.cursor.PushItemWidth(150)
+            local current_name = edit_timeline and "" or current_anim.name
+            local current_name_list = edit_timeline and {} or edit_anims.name_list
+            if imgui.widget.BeginCombo("##NameList", {current_name, flags = imgui.flags.Combo {}}) then
+                for _, name in ipairs(current_name_list) do
+                    if imgui.widget.Selectable(name, current_name == name) then
+                        set_current_anim(name)
+                    end
                 end
+                imgui.widget.EndCombo()
             end
-            imgui.widget.EndCombo()
-        end
-        imgui.cursor.PopItemWidth()
-        imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("default", birth_anim) then
-            local tpl = hierarchy:get_node_info(anim_eid).template
-            tpl.data.animation_birth = birth_anim[1] and current_anim.name or nil
-            prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.data.animation_birth)
+            imgui.cursor.PopItemWidth()
+            imgui.cursor.SameLine()
+            if imgui.widget.Checkbox("default", birth_anim) then
+                local tpl = hierarchy:get_node_info(anim_eid).template
+                tpl.data.animation_birth = birth_anim[1] and current_anim.name or nil
+                prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.data.animation_birth)
+            end
         end
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         local imagesize = icon.texinfo.width * icons.scale
         if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], imagesize, imagesize) then
-            if anim_state.is_playing then
-                iani.pause(anim_eid, true)
+            if not edit_timeline then
+                if anim_state.is_playing then
+                    iani.pause(anim_eid, true)
+                else
+                    iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+                end
             else
-                iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+                play_timeline()
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("loop", ui_loop) then
-            iani.set_loop(anim_eid, ui_loop[1])
+            if not edit_timeline then
+                iani.set_loop(anim_eid, ui_loop[1])
+            else
+                local e <close> = world:entity(timeline_eid, "timeline:in")
+                e.timeline.loop = ui_loop[1]
+            end
         end
-        imgui.cursor.SameLine()
-        imgui.cursor.PushItemWidth(50)
-        if imgui.widget.DragFloat("speed", ui_speed) then
-            iani.set_speed(anim_eid, ui_speed[1])
-        end
-        imgui.cursor.PopItemWidth()
-        imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
-            show_skeleton(ui_showskeleton[1])
+        if not edit_timeline then
+            imgui.cursor.SameLine()
+            imgui.cursor.PushItemWidth(50)
+            if imgui.widget.DragFloat("speed", ui_speed) then
+                iani.set_speed(anim_eid, ui_speed[1])
+            end
+            imgui.cursor.PopItemWidth()
+            imgui.cursor.SameLine()
+            if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
+                show_skeleton(ui_showskeleton[1])
+            end
+        else
+            imgui.cursor.SameLine()
+            imgui.cursor.PushItemWidth(100)
+            if imgui.widget.DragInt("duration", ui_timeline_duration) then
+                local second = ui_timeline_duration[1] / sample_ratio
+                edit_timeline.duration = second
+                anim_state.duration = second
+                local tpl = hierarchy:get_node_info(timeline_eid).template
+                edit_timeline[tpl.tag[1]].duration = second
+                edit_timeline.dirty = true
+                local e <close> = world:entity(timeline_eid, "timeline:in")
+                e.timeline.duration = second
+            end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button(faicons.ICON_FA_FLOPPY_DISK.." SaveEvent") then
-            m.save_keyevent()
+            if edit_timeline then
+                m.save_timeline()
+            else
+                m.save_keyevent()
+            end
         end
         imgui.cursor.SameLine()
         local current_time = iani.get_time(anim_eid)
         imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
-        imguiWidgets.Sequencer(edit_anims, anim_state, imgui_message)
-        edit_anims.dirty = false
+        local current_seq = edit_timeline and edit_timeline or edit_anims
+        imguiWidgets.Sequencer(current_seq, anim_state, imgui_message)
+        current_seq.dirty = false
         local move_type
         local new_frame_idx
         local move_delta
         for k, v in pairs(imgui_message) do
             if k == "pause" then
                 if anim_state.current_frame ~= v then
-                    iani.pause(anim_eid, true)
                     anim_state.current_frame = v
-                    iani.set_time(anim_eid, v / sample_ratio)   
+                end
+                if not edit_timeline then
+                    iani.pause(anim_eid, true)
+                    iani.set_time(anim_eid, v / sample_ratio)
+                else
+                    stop_timeline()
                 end
             elseif k == "selected_frame" then
                 new_frame_idx = v
@@ -757,18 +856,21 @@ function m.show()
             on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
         end
         imgui.cursor.Separator()
-        if imgui.table.Begin("EventColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-            imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+        if imgui.table.Begin("EventColumns", edit_timeline and 2 or 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+            if not edit_timeline then
+                imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            end
             imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
             imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 2.0)
             imgui.table.HeadersRow()
-
-            imgui.table.NextColumn()
-            local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_joints", child_width, child_height)
-            joint_utils:show_joints(joint_map.root)
-            imgui.windows.EndChild()
-
+            local child_width, child_height
+            if not edit_timeline then
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_joints", child_width, child_height)
+                joint_utils:show_joints(joint_map.root)
+                imgui.windows.EndChild()
+            end
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##show_events", child_width, child_height)
@@ -838,7 +940,47 @@ function m.on_prefab_load(entities)
         end
         set_current_anim(animname)
         keyframe_view.init(skeleton)
-        joint_map, joint_list = joint_utils:get_joints()
+        joint_map, _ = joint_utils:get_joints()
+    end
+end
+
+function m.on_target(eid)
+    edit_timeline = nil
+    timeline_eid = nil
+    local e <close> = world:entity(eid, "timeline?in")
+    if e.timeline then
+        if not e.timeline.eid_map then
+            e.timeline.eid_map = prefab_mgr.current_prefab.tag
+        end
+        local name = hierarchy:get_node_info(eid).template.tag[1]
+        timeline_eid = eid
+        edit_timeline = {
+            dirty = true
+        }
+        edit_timeline[name] = {
+            name = name,
+            duration = e.timeline.duration,
+            key_event = from_runtime_event(e.timeline.key_event),
+        }
+        local frame = math.floor(e.timeline.duration * sample_ratio)
+        ui_loop[1] = e.timeline.loop
+        ui_timeline_duration[1] = frame
+        local current_timeline = edit_timeline[name]
+        anim_state.anim_name = current_timeline.name
+        anim_state.key_event = current_timeline.key_event
+        anim_key_event = current_timeline.key_event
+        anim_state.duration = current_timeline.duration
+        anim_state.current_frame = 0
+        anim_state.dirty = true
+        set_event_dirty(-1)
+    elseif current_anim then
+        anim_state.anim_name = current_anim.name
+        anim_state.key_event = current_anim.key_event
+        anim_key_event = current_anim.key_event
+        anim_state.duration = current_anim.duration
+        anim_state.current_frame = 0
+        anim_state.dirty = true
+        set_event_dirty(-1)
     end
 end
 

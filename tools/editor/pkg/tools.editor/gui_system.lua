@@ -136,22 +136,15 @@ end
 local function on_target(old, new)
     if old then
         local oe <close> = world:entity(old, "light?in")
-        if oe and oe.light then
-            light_gizmo.bind()
+        if oe.light then
+            light_gizmo.on_target()
         end
     end
     if new then
-        local ne <close> = world:entity(new, "camera?in light?in scene?in render_object?in")
-        if ne.camera then
-            camera_mgr.set_second_camera(new, true)
-        end
-
-        if ne.light then
-            light_gizmo.bind(new)
-        end
-        if ne.render_object or ne.scene then
-            keyframe_view.set_current_target(new)
-        end
+        light_gizmo.on_target(new)
+        camera_mgr.on_target(new, true)
+        keyframe_view.on_target(new)
+        anim_view.on_target(new)
     end
     world:pub {"UpdateAABB", new}
 end

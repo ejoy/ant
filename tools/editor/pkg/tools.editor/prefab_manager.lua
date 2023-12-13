@@ -226,7 +226,7 @@ function m:clone(eid)
     dsttpl.data.name = name
     self:add_entity(new_entity, pid, dsttpl)
 end
-
+local timeline_id = 0
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -287,6 +287,28 @@ function m:create(what, config)
             self:add_entity(newlight, self.root, tpl)
             light_gizmo.init()
         end
+    elseif what == "timeline" then
+        timeline_id = timeline_id + 1
+        local template = {
+            policy = {
+                "ant.timeline|timeline",
+            },
+            data = {
+                timeline = {
+                    loop = false,
+                    duration = 3,
+                    key_event = {}
+                },
+            },
+            tag = { "timeline" .. timeline_id }
+        }
+        local tmp = utils.deep_copy(template)
+        tmp.data.on_ready = function (e)
+            w:extend(e, "timeline:in")
+            e.timeline.eid_map = self.current_prefab.tag
+        end
+        local new_entity = world:create_entity(tmp)
+        self:add_entity(new_entity, nil, template)
     end
 end
 
@@ -507,7 +529,7 @@ function m:open(filename, prefab_name, patch_tpl)
         self.patch_start_index = #self.prefab_template - node_idx + 1
     end
 
-    world:create_instance {
+    self.current_prefab = world:create_instance {
         prefab = filename,
         on_ready = function(instance)
             self:on_prefab_ready(instance)
@@ -592,6 +614,7 @@ function m:reset_prefab(noscene)
     self.scene = nil
     self.save_hitch = false
     self.patch_start_index = 0
+    self.current_prefab = nil
     if not noscene then
         local parent = self.root
         local new_entity, temp = create_simple_entity("Scene", parent)
@@ -691,8 +714,11 @@ function m:get_hitch_content()
             }
         }
     }
-    for _, tpl in ipairs(self.patch_template) do
-        if tpl.op == "add" and tpl.value.data and tpl.value.data.slot then
+    for _, tpl in ipairs(self.origin_patch_template) do
+        if tpl.op == "add" and (type(tpl.value) == "table")
+            and tpl.value.data
+            and tpl.value.data.slot
+            and (tpl.file == "mesh.prefab") then
             -- only one hitch file per glb file
             content[#content + 1] = tpl.value
         end
@@ -736,7 +762,7 @@ function m:get_patch_list(template_list)
     local template = hierarchy:get_prefab_template(true)
     for i = 2, #template do
         local tpl = template[i]
-        if tpl.mount > 1 then
+        if tpl.mount and tpl.mount > 1 then
             tpl.mount = tpl.mount + (self.patch_start_index - 2)
         end
         template_list[#template_list + 1] = {

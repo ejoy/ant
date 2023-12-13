@@ -33,7 +33,7 @@ local joints_map
 local joints_list
 local current_skeleton
 local joint_scale = 0.5
-local sample_ratio = 50.0
+local sample_ratio = 30.0
 local anim_eid
 local current_joint
 local current_anim
@@ -1491,8 +1491,12 @@ function m.on_eid_delete(eid)
     end
 end
 
-function m.set_current_target(target_eid)
+function m.on_target(target_eid)
     if current_target == target_eid then
+        return
+    end
+    local e <close> = world:entity(target_eid, "scene?in render_object?in")
+    if not e.scene and not e.render_object then
         return
     end
     current_target = target_eid
