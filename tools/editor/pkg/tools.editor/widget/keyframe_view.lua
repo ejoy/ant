@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local iani      = ecs.require "ant.animation|state_machine"
+local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local assetmgr  = import_package "ant.asset"
 local aio       = import_package "ant.io"
@@ -20,7 +20,7 @@ local icons     = require "common.icons"
 local mathpkg	= import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local imodifier = ecs.require "ant.modifier|modifier"
-local ika       = ecs.require "ant.animation|keyframe"
+local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local faicons   = require "common.fa_icons"
 local prefab_mgr = ecs.require "prefab_manager"
 local m = {}

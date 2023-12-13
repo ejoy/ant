@@ -9,7 +9,7 @@ local ika = {}
 function ika.create(frames)
     return world:create_entity{
         policy = {
-            "ant.animation|keyframe",
+            "ant.anim_ctrl|keyframe",
         },
         data = {
             keyframe = {

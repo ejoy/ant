@@ -5,10 +5,10 @@ local w 	= world.w
 local serialize = import_package "ant.serialize"
 
 local modifier_sys = ecs.system "modifier_system"
-local iani      = ecs.require "ant.animation|state_machine"
+local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local timer     = ecs.require "ant.timer|timer_system"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local ika       = ecs.require "ant.animation|keyframe"
+local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local imaterial = ecs.require "ant.asset|material"
 local mathpkg	= import_package "ant.math"
 local aio = import_package "ant.io"
