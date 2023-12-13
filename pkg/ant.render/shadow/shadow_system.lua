@@ -153,31 +153,33 @@ function shadow_sys:entity_remove()
 	end
 end
 
-local function merge_visible_bounding(Lv, aabbLS, aabb, e, queue_index)
+local function merge_visible_bounding(M, aabb, e, queue_index)
 	local ro = e.render_object
 	if Q.check(ro.visible_idx, queue_index) and mc.NULL ~= e.bounding.scene_aabb then
-		aabb = math3d.aabb_merge(aabb, e.bounding.scene_aabb)
-		aabbLS = math3d.aabb_merge(aabbLS, math3d.aabb_transform(Lv, e.bounding.scene_aabb))
+		if M then
+			aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.scene_aabb))
+		else
+			aabb = math3d.aabb_merge(aabb, e.bounding.scene_aabb)
+		end
 	end
 
-	return aabb, aabbLS
+	return aabb
 end
 
-local function build_aabb(Lv, queue_index, tag)
+local function build_aabb(queue_index, M, tag)
 	local aabb = math3d.aabb()
-	local aabbLS = math3d.aabb()
 	for e in w:select(("%s render_object:in bounding:in"):format(tag)) do
-		aabb, aabbLS = merge_visible_bounding(Lv, aabbLS, aabb, e, queue_index)
+		aabb = merge_visible_bounding(M, aabb, e, queue_index)
 	end
-	return aabb, aabbLS
+	return aabb
 end
 
-local function build_PSR(Lv, queue_index)
-	return build_aabb(Lv, queue_index, "receive_shadow")
+local function build_PSR(queue_index, M)
+	return build_aabb(queue_index, M, "receive_shadow")
 end
 
-local function build_PSC(Lv, queue_index)
-	return build_aabb(Lv, queue_index, "cast_shadow")
+local function build_PSC(queue_index, M)
+	return build_aabb(queue_index, M, "cast_shadow")
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
@@ -349,9 +351,9 @@ function shadow_sys:refine_camera()
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
 
-	local queue_index = queuemgr.queue_index "csm1_queue"
-	local PSR, PSRLS = build_PSR(Lv, queue_index)
-	local PSC, PSCLS = build_PSC(Lv, queue_index)
+	local shadow_queueidx, main_queueidx = queuemgr.queue_index "csm1_queue", queuemgr.queue_index "main_queue"
+	local PSRLS, PSCLS	= build_PSR(shadow_queueidx, Lv),	build_PSC(shadow_queueidx, Lv)
+	local PSR, PSC		= build_PSR(main_queueidx), 		build_PSC(main_queueidx)
 	local function M3D(o, n)
 		if o then
 			math3d.unmark(o)
@@ -683,7 +685,7 @@ function shadowdebug_sys:data_changed()
 			-- end
 
 			DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSR)),  {1.0, 0.0, 1.0, 1.0})
-			-- DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSC)),  {0.5, 0.0, 0.5, 1.0})
+			DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSC)),  {0.5, 0.0, 0.5, 1.0})
 			-- DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSRLS)),{1.0, 0.5, 1.0, 1.0})
 			-- DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSCLS)),{0.1, 0.8, 0.3, 1.0})
 		end

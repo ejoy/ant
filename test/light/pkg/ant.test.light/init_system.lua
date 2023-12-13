@@ -138,6 +138,12 @@ local function create_plane()
 			scene = {
                 t = {0, 0, 0, 1}, s = {50, 1, 50, 0}
             },
+            bounding = {
+                aabb = {
+                    {-50, 0.0, -50},
+                    { 50, 0.0,  50},
+                }
+            },
 			material        = "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state   = "main_view",
 			simplemesh      = imesh.init_mesh(ientity.plane_mesh()),
