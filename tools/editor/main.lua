@@ -11,6 +11,7 @@ import_package "ant.imgui".start {
         feature = {
             "ant.render|render",
             "tools.editor",
+            "ant.anim_ctrl",
             "ant.animation",
             "ant.daynight",
             "ant.efk",

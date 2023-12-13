@@ -1,41 +1,19 @@
 import_feature "ant.scene"
-import_feature "ant.efk"
 
 pipeline "animation"
     .stage "animation_state"
     .stage "sample_animation_pose"
-    .pipeline "refine_animation_pose"
     .stage "end_animation"
-
-pipeline "refine_animation_pose"
-    .stage "do_refine"
 
 policy "animation"
     .component "animation_birth"
     .component "anim_ctrl"
     .component "animation"
 
-policy "keyframe"
-    .component "keyframe"
-
 policy "slot"
     .include_policy "ant.scene|scene_object"
     .component "slot"
-    
+
+component "slot".type "lua"
 component "animation".type "lua"
 component "anim_ctrl".type "lua"
-component "animation_birth".type "lua"
-component "playing"
-component "pose_dirty"
-component "keyframe".type "lua"
-component "slot".type "lua"
-component "boneslot"
-
-system "animation_system"
-    .implement "animation.lua"
-
-system "keyframe_system"
-    .implement "keyframe.lua"
-
-system "slot_system"
-    .implement "slot.lua"
