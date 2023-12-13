@@ -526,26 +526,43 @@ local imesh 		= ecs.require "ant.asset|mesh"
 local kbmb 			= world:sub{"keyboard"}
 
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
-local shadowdebug_depthqueue, shadowdebug_queue
-local drawereid
-local shadowdebug_depthviewid, shadowdebug_viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"), hwi.viewid_generate("shadowdebug", "ssao")
+
+local DEBUG_view = {
+	queue = {
+		depth = {
+			viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"),
+			queue_name = "shadow_debug_depth_queue",
+			queue_eid = nil,
+		},
+		color = {
+			viewid = hwi.viewid_generate("shadowdebug", "ssao"),
+			queue_name = "shadow_debug_queue",
+			queue_eid = nil,
+		}
+	},
+	light = {
+		perspective_camera = nil,
+	},
+	drawereid = nil
+}
 
 local function update_visible_state(e)
 	w:extend(e, "eid:in")
-	if e.eid == drawereid then
+	if e.eid == DEBUG_view.drawereid then
 		return
 	end
-	if e.visible_state["pre_depth_queue"] then
-		ivs.set_state(e, "shadow_debug_depth_queue", true)
-		w:extend(e, "filter_material:update")
-		e.filter_material["shadow_debug_depth_queue"] = e.filter_material["pre_depth_queue"]
+
+	local function update_queue(whichqueue, matchqueue)
+		if e.visible_state["pre_depth_queue"] then
+			local qn = DEBUG_view.queue[whichqueue].queue_name
+			ivs.set_state(e, qn, true)
+			w:extend(e, "filter_material:update")
+			e.filter_material[qn] = e.filter_material[matchqueue]
+		end
 	end
 
-	if e.visible_state["main_queue"] then
-		ivs.set_state(e, "shadow_debug_queue", true)
-		w:extend(e, "filter_material:update")
-		e.filter_material["shadow_debug_queue"] = e.filter_material["main_queue"]
-	end
+	update_queue("depth", "pre_depth_queue")
+	update_queue("color", "main_queue")
 end
 
 function shadowdebug_sys:init_world()
@@ -580,11 +597,11 @@ function shadowdebug_sys:init_world()
 					{rbidx = depth_rbidx}
 				)
 
-	shadowdebug_depthqueue = world:create_entity{
+	DEBUG_view.queue.depth.queue_eid = world:create_entity{
 		policy = {"ant.render|render_queue"},
 		data = {
 			render_target = {
-				viewid = shadowdebug_depthviewid,
+				viewid = DEBUG_view.queue.depth.viewid,
 				view_rect = {x=0, y=0, w=fbw, h=fbh},
 				clear_state = {
 					clear = "D",
@@ -598,13 +615,13 @@ function shadowdebug_sys:init_world()
 		}
 	}
 	
-	shadowdebug_queue = world:create_entity{
+	DEBUG_view.queue.color.queue_eid = world:create_entity{
 		policy = {
 			"ant.render|render_queue",
 		},
 		data = {
 			render_target = {
-				viewid = shadowdebug_viewid,
+				viewid = DEBUG_view.queue.color.viewid,
 				view_rect = {x=0, y=0, w=fbw, h=fbh},
 				clear_state = {
 					clear = "C",
@@ -618,7 +635,7 @@ function shadowdebug_sys:init_world()
 		},
 	}
 
-	drawereid = world:create_entity{
+	DEBUG_view.drawereid = world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
@@ -686,8 +703,10 @@ function shadowdebug_sys:data_changed()
 
 			DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSR)),  {1.0, 0.0, 1.0, 1.0})
 			DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSC)),  {0.5, 0.0, 0.5, 1.0})
-			-- DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSRLS)),{1.0, 0.5, 1.0, 1.0})
-			-- DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSCLS)),{0.1, 0.8, 0.3, 1.0})
+			DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSRLS)),{1.0, 0.5, 1.0, 1.0})
+			DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.PSCLS)),{0.1, 0.8, 0.3, 1.0})
+		elseif key == 'C' and press == 0 then
+
 		end
 	end
 end
