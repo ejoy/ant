@@ -1,6 +1,0 @@
----
-prefab: $path ./light.prefab
----
-prefab: $path ./camera.prefab
-# ---
-# prefab: $path ./Duck.glb|mesh.prefab
