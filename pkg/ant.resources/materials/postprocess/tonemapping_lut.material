@@ -21,6 +21,6 @@ properties:
     texture: /pkg/ant.resources/textures/black.texture
   s_colorgrading_lut:
     stage: 3
-    texture: /pkg/ant.resources/textures/color_grading/tonemapping_lut.texture
+    texture: /pkg/ant.resources/textures/color_grading/tonemapping_lut_rgb10a2.texture
     sampler: SAMPLER3D
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

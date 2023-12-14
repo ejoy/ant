@@ -145,12 +145,12 @@ local function bake_lut(dim, luminacnce_scaling)
     return table.concat(results, "")
 end
 
-local ENABLE_BAKE = false
+local ENABLE_BAKE <const> = false
 if ENABLE_BAKE then
-    local path = "D://vaststars2/3rd/ant/pkg/ant.resources/textures/color_grading/tonemapping_lut.dds"
+    local path = "D://vaststars2/3rd/ant/pkg/ant.resources/textures/color_grading/tonemapping_lut_rg11b10f.dds"
     local r = bake_lut(assert(LUT_DIM))
-    local src_fmt, dst_fmt = "RGBA32F", "RGB10A2"
-    r = image.pack2rgb10a2(LUT_DIM, bgfx.memory_buffer(r), src_fmt, dst_fmt)
+    local src_fmt, dst_fmt = "RGBA32F", "RG11B10F"
+    r = image.pack3dfile(LUT_DIM, LUT_DIM, LUT_DIM, bgfx.memory_buffer(r), src_fmt, dst_fmt)
     local f = assert(io.open(path, "wb"))
     f:write(r)
     f:close()

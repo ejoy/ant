@@ -2,8 +2,8 @@ colorspace: sRGB
 normalmap: false
 mipmap: false
 size: {32, 32, 32}
-format: RGB10A2
-path: /pkg/ant.resources/textures/color_grading/tonemapping_lut.dds
+format: RGBA32F
+path: /pkg/ant.resources/textures/color_grading/tonemapping_lut_rgba32f.dds
 sampler:
   MAG: LINEAR
   MIN: LINEAR
