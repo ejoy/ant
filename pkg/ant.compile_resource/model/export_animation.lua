@@ -1,15 +1,6 @@
 local lfs = require "bee.filesystem"
 local GLTF2OZZ = require "tool_exe_path"("gltf2ozz")
 local subprocess = require "subprocess"
-local utility = require "model.utility"
-local serialize = import_package "ant.serialize"
-
-local function serialize_path(path)
-    if path:sub(1,1) ~= "/" then
-        return serialize.path(path)
-    end
-    return path
-end
 
 return function (status)
     local gltfscene = status.glbdata.info
@@ -47,19 +38,8 @@ return function (status)
             end
         end
     end
-    status.animation = "animations/animation.ozz"
-    utility.save_txt_file(status, "animations/animation.ozz", {
+    status.animation = {
         skeleton = "skeleton.bin",
         animations = animations,
-    }, function (t)
-        if t.animations then
-            for name, file in pairs(t.animations) do
-                t.animations[name] = serialize_path(file)
-            end
-        end
-        if t.skeleton then
-            t.skeleton = serialize_path(t.skeleton)
-        end
-        return t
-    end)
+    }
 end

@@ -5,7 +5,15 @@ local iefk      = ecs.require "ant.efk|efk"
 local tl_sys = ecs.system "timeline_system"
 local itl = ecs.require "ant.timeline|timeline"
 local iani = ecs.require "ant.anim_ctrl|state_machine"
+
+function itl.start(e, context)
+	w:extend(e, "start_timeline?out")
+	e.start_timeline = true
+	e.timeline.context = context
+end
+
 local engine_event = {}
+
 function engine_event:Animation(tid, ud)
 	local entitys = ud.eid_map["*"]
 	-- TODO: rework this code
@@ -13,22 +21,26 @@ function engine_event:Animation(tid, ud)
 		local e <close> = world:entity(eid, "anim_ctrl?in")
 		if e.anim_ctrl then
 			iani.play(eid, {name = ud.ev.asset_path})
-			print("event animation : ", ud.ev.name, ud.ev.asset_path)
+			-- print("event animation : ", ud.ev.name, ud.ev.asset_path)
 			break
 		end
 	end
 end
+
 function engine_event:Effect(tid, ud)
 	local eid = ud.eid_map[ud.ev.asset_path]
 	local e <close> = world:entity(eid[1], "efk:in")
 	iefk.play(e)
-	print("event effect : ", ud.ev.name, ud.ev.asset_path)
+	-- print("event effect : ", ud.ev.name, ud.ev.asset_path)
 end
+
 function engine_event:Sound(tid, ud)
-	print("event sound : ", ud.ev.name, ud.ev.asset_path)
+	-- print("event sound : ", ud.ev.name, ud.ev.asset_path)
 end
+
 function engine_event:Message(tid, ud)
 	print("event message : ", ud.ev.name, ud.ev.msg_content)
+	world:pub {"keyframe_event", "message", ud.context}
 end
 
 local testtid
@@ -65,7 +77,7 @@ function tl_sys.data_changed()
 		end
 		for _, ke in ipairs(e.timeline.key_event) do
 			for _, event in ipairs(ke.event_list) do
-				itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = e.timeline.eid_map})
+				itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = e.timeline.eid_map, context = e.timeline.context})
 				-- print("add timeline : ", ke.tick, event.event_type)
 			end
 		end

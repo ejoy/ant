@@ -1,4 +1,5 @@
 import_feature "ant.asset"
+import_feature "ant.scene"
 
 policy "skinrender"
     .include_policy "ant.render|render_object"
@@ -7,3 +8,5 @@ policy "skinrender"
     .component_opt "render_layer"
     .component "mesh"
     .component "visible_state"
+    .component "scene"
+    .component "animation"
