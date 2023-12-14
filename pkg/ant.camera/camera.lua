@@ -54,6 +54,7 @@ function ic.create(info, onready)
                 clip_range = info.clip_range,
                 dof     = info.dof,
             },
+            camera_depend = info.camera_depend,
             on_ready = onready,
         },
     }

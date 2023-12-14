@@ -180,7 +180,8 @@ local function create_csm_entity(index, vr, fbidx)
 				l = -1, r = 1, t = -1, b = 1,
 				n = 1, f = 100, ortho = true,
 			},
-			name = csmname
+			name = csmname,
+			camera_depend = true,
 		}
 	world:create_entity {
 		policy = {
@@ -203,7 +204,6 @@ local function create_csm_entity(index, vr, fbidx)
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
-			camera_depend = true
 		},
 	}
 end
