@@ -71,7 +71,8 @@ local function create_csm_entity(index, vr, fbidx)
 				l = -1, r = 1, t = -1, b = 1,
 				n = 1, f = 100, ortho = true,
 			},
-			name = csmname
+			name = csmname,
+			camera_depend = true,
 		}, function (e)
 			w:extend(e, "camera:update")
 			local c = e.camera
@@ -107,7 +108,6 @@ local function create_csm_entity(index, vr, fbidx)
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
-			camera_depend = true
 		},
 	}
 end
@@ -195,14 +195,15 @@ end
 
 local function frustum_points(M, n, f)
 	return {
-		math3d.transform(M, math3d.vector(-1.0,-1.0, n, 1.0), 1),	-- 1
-		math3d.transform(M, math3d.vector(-1.0, 1.0, n, 1.0), 1),	-- 2
-		math3d.transform(M, math3d.vector( 1.0,-1.0, n, 1.0), 1),	-- 3
-		math3d.transform(M, math3d.vector( 1.0, 1.0, n, 1.0), 1),	-- 4
-		math3d.transform(M, math3d.vector(-1.0,-1.0, f, 1.0), 1),	-- 5
-		math3d.transform(M, math3d.vector(-1.0, 1.0, f, 1.0), 1),	-- 6
-		math3d.transform(M, math3d.vector( 1.0 -1.0, f, 1.0), 1),	-- 7
-		math3d.transform(M, math3d.vector( 1.0, 1.0, f, 1.0), 1),	-- 8
+		math3d.transformH(M, math3d.vector(-1.0,-1.0, n, 1.0)),	-- 1
+		math3d.transformH(M, math3d.vector(-1.0, 1.0, n, 1.0)),	-- 2
+		math3d.transformH(M, math3d.vector( 1.0,-1.0, n, 1.0)),	-- 3
+		math3d.transformH(M, math3d.vector( 1.0, 1.0, n, 1.0)),	-- 4
+
+		math3d.transformH(M, math3d.vector(-1.0,-1.0, f, 1.0)),	-- 5
+		math3d.transformH(M, math3d.vector(-1.0, 1.0, f, 1.0)),	-- 6
+		math3d.transformH(M, math3d.vector( 1.0,-1.0, f, 1.0)),	-- 7
+		math3d.transformH(M, math3d.vector( 1.0, 1.0, f, 1.0)),	-- 8
 	}
 end
 
@@ -296,21 +297,27 @@ local function calc_focus_matrix(M, verticesLS)
 		tx,  ty,  0.0, 1.0)
 end
 
-local function update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
+local function update_camera(c, Lv, Lp)
 	c.viewmat.m		= Lv
 	c.projmat.m		= Lp
+	c.infprojmat.m	= Lp
 	c.viewprojmat.m	= math3d.mul(Lv, Lp)
+	c.FinalMat.m= c.viewprojmat
+end
 
+local function update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
 	c.Lr.m	= Lr
 	c.Wv.m	= Wv
 	c.Wp.m	= Wp
 	c.Wpv.m	= math3d.mul(Wp, Wv)
 	c.Wpvl.m= math3d.mul(c.Wpv, Lr)
-	c.W.m	= math3d.mul(c.Wpvl, c.viewprojmat)
+
+	c.W.m	= math3d.mul(c.Wpvl, Lp)
 
 	local F = calc_focus_matrix(c.W, verticesLS)
-	c.F.m		= F
-	c.FinalMat.m= math3d.mul(c.F, c.W)
+	c.F.m			= F
+
+	update_camera(c, Lv, math3d.mul(c.F, c.W))
 end
 
 local function commit_csm_matrices_attribs()
@@ -336,7 +343,7 @@ local function M3D(o, n)
 	return math3d.mark(n)
 end
 
-function shadow_sys:refine_camera()
+function shadow_sys:update_camera_depend()
     local C = w:first "camera_changed"
     if not C then
         return
@@ -402,6 +409,7 @@ function shadow_sys:refine_camera()
 		local verticesLS, nearLS, farLS	= frustum_interset_aabb(Ndc2Lv, sceneaabbLS, sr[1], sr[2])
 
 		local Lp	= math3d.projmat{l=-1, r=1, t=1, b=-1, n=nearLS, f=farLS, ortho=true}
+
 		if useLiSPSM then
 			local Lrp	= math3d.mul(Lr, Lp)
 			local camerainfo = {
@@ -418,15 +426,12 @@ function shadow_sys:refine_camera()
 				farHit		= farHit,
 			}
 			local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
-			update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
+			update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
 		else
-			c.viewmat.m = Lv
-			c.projmat.m = Lp
-			local vp = math3d.mul(Lp, Lv)
-			
-			local F = calc_focus_matrix(Lp, verticesLS)
-			c.viewprojmat.m = math3d.mul(F, vp)
-			c.FinalMat.m = c.viewprojmat
+			local F 		= calc_focus_matrix(Lp, verticesLS)
+			local FLp 		= math3d.mul(F, Lp)
+
+			update_camera(c, Lv, FLp)
 		end
 		mark_camera_changed(ce)
 
@@ -733,9 +738,12 @@ function shadowdebug_sys:data_changed()
 			--DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSRLS, L2W)),{1.0, 0.1, 0.1, 1.0})
 			--DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSCLS, L2W)),{0.1, 1.0, 0.1, 1.0})
 
+			--DEBUG_ENTITIES["CSMFrustum"] = ientity.create_frustum_entity(math3d.frustum_points(C.viewprojmat), {0.1, 1.0, 0.1, 1.0})
+			--DEBUG_ENTITIES["CSMLight"] = ientity.create_frustum_entity(math3d.array_vector(frustum_interset_aabb(math3d.inverse(C.viewprojmat), C.sceneaabbLS, zn, zf)),{1.0, 0.1, 0.1, 1.0})
+
 			-- local L2W = math3d.inverse(C.Lv)
-			DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabbLS, L2W)),{1.0, 0.0, 0.0, 1.0})
-			DEBUG_ENTITIES["sceneaabb"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabb)),{0.0, 1.0, 0.0, 1.0})
+			-- DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabbLS, L2W)),{1.0, 0.0, 0.0, 1.0})
+			-- DEBUG_ENTITIES["sceneaabb"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabb)),{0.0, 1.0, 0.0, 1.0})
 		elseif key == 'C' and press == 0 then
 
 		end
