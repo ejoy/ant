@@ -13,6 +13,7 @@ policy "animation"
 policy "slot"
     .include_policy "ant.scene|scene_object"
     .component "slot"
+    .component "animation"
 
 component "animation".type "lua"
 component "animation_changed"
@@ -24,3 +25,6 @@ system "animation_system"
 
 system "skinning_system"
     .implement "skinning.lua"
+
+--system "slot_system"
+--    .implement "slot.lua"

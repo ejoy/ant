@@ -108,30 +108,6 @@ function ani_sys:entity_init()
 		e.playing = e.anim_ctrl.play_state.play
 		world:pub {"animation_event", "set_time", e.eid, 0}
 	end
-
-	local animation
-	local anim_ctrl
-	for e in w:select "INIT animation?in anim_ctrl?in slot?in eid:in boneslot?out" do
-		if e.animation and e.anim_ctrl then
-			animation = e.animation
-			anim_ctrl = e.anim_ctrl
-		elseif e.slot then
-			local slot = e.slot
-			if slot.joint_name and animation and animation.skeleton then
-				slot.joint_index = animation.skeleton:joint_index(slot.joint_name)
-				if slot.joint_index then
-					e.boneslot = true
-				end
-			end
-			slot.animation = animation
-			if anim_ctrl then
-				if not anim_ctrl.slot_eid then
-					anim_ctrl.slot_eid = {}
-				end
-				-- anim_ctrl.slot_eid[e.name] = e.eid
-			end
-		end
-	end
 end
 
 function ani_sys:entity_ready()
