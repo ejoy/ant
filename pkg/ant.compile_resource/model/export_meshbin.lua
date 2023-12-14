@@ -463,8 +463,8 @@ local function export_skinbin(status, gltfscene, bindata)
 	for skinidx, skin in ipairs(gltfscene.skins) do
 		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, status.scenetree, joint_trees)
 		local skinname = get_obj_name(skin, skinidx, "skin")
-		local resname = "meshes/"..skinname .. ".skinbin"
-		utility.save_bin_file(status, resname, fetch_skininfo(gltfscene, skin, bindata))
+		local resname = skinname .. ".skinbin"
+		utility.save_bin_file(status, "animations/"..resname, fetch_skininfo(gltfscene, skin, bindata))
 		status.skin[skinidx] = resname
 	end
 

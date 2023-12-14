@@ -226,7 +226,8 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         local hasskin   = has_skin(gltfscene, status, nodeidx)
         if hasskin then
             policy[#policy+1] = "ant.render|skinrender"
-            data.skinning = true
+            data.animation = true
+            data.scene = {}
         else
             policy[#policy+1] = "ant.render|render"
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
@@ -235,7 +236,7 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         entity = create_entity(status, {
             policy  = policy,
             data    = data,
-            parent  = (not hasskin) and parent,
+            parent  = hasskin and status.skin_entity or parent,
         })
     end
     return entity
@@ -264,17 +265,15 @@ local function create_skin_entity(status, parent)
     end
     local policy = {
         "ant.animation|animation",
-        "ant.scene|scene_object",
     }
     local data = {
         animation_birth = "",
         anim_ctrl = {},
-        meshskin = status.skin[1],
-        skinning = true,
         scene = {},
-        animation = status.animation,
+        animation = "animations/animation.ozz",
     }
-    return create_entity(status, {
+    status.animation.meshskin = status.skin[1]
+    status.skin_entity = create_entity(status, {
         policy = policy,
         data = data,
         parent = parent,
@@ -312,10 +311,7 @@ local function serialize_prefab(status, data)
             if e.mesh then
                 e.mesh = serialize_path(e.mesh)
             end
-            if e.meshskin then
-                e.meshskin = serialize_path(e.meshskin)
-            end
-            if e.animation then
+            if e.animation and e.animation ~= true then
                 e.animation = serialize_path(e.animation)
             end
         end
@@ -390,6 +386,23 @@ return function (status)
         end
         return data
     end)
+
+    if status.animation then
+        utility.save_txt_file(status, "animations/animation.ozz", status.animation, function (t)
+            if t.animations then
+                for name, file in pairs(t.animations) do
+                    t.animations[name] = serialize_path(file)
+                end
+            end
+            if t.skeleton then
+                t.skeleton = serialize_path(t.skeleton)
+            end
+            if t.meshskin then
+                t.meshskin = serialize_path(t.meshskin)
+            end
+            return t
+        end)
+    end
 
     utility.save_txt_file(status, "materials.names", status.material_names, function (data) return data end)
 end

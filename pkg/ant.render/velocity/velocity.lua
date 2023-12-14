@@ -33,12 +33,12 @@ function velocity_system:end_frame()
     local mq = w:first("main_queue camera_ref:in")
     local camera <close> = world:entity(mq.camera_ref, "camera:in scene:in")
     local viewprojmat = camera.camera.viewprojmat
-    for e in w:select "render_object:in visible_state:in filter_material:in polyline?in skinning?in" do
+    for e in w:select "render_object:in visible_state:in filter_material:in polyline?in animation?in" do
         if e.visible_state["velocity_queue"] then
             if e.polyline then
                 local pl = e.polyline
                 imaterial.set_property(e, "u_line_info", math3d.vector(pl.width, 0.0, 0.0, 0.0), "velocity_queue")
-            elseif e.skinning then
+            elseif e.animation then
                 imaterial.set_property(e, "u_prev_vp", viewprojmat, "velocity_queue")
             else
                 local mvp = math3d.mul(viewprojmat, e.render_object.worldmat)
@@ -117,9 +117,9 @@ function velocity_system:init_world()
 end
 
 function velocity_system:update_filter()
-     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in polyline?in" do
+     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in animation?in polyline?in" do
         if e.visible_state["velocity_queue"] then
-            local mo = assert(which_material(e.polyline, e.skinning))
+            local mo = assert(which_material(e.polyline, e.animation))
             local ro = e.render_object
             local fm = e.filter_material
             local mi = RM.create_instance(mo)
