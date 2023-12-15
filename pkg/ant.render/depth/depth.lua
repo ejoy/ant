@@ -27,8 +27,8 @@ local function which_material(e, matres)
     if matres.fx.depth then
         return matres
     end
-    w:extend(e, "animation?in")
-    return e.animation and pre_depth_skinning_material or pre_depth_material
+    w:extend(e, "skinning?in")
+    return e.skinning and pre_depth_skinning_material or pre_depth_material
 end
 
 function s:init()

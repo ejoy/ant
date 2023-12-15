@@ -20,30 +20,36 @@ local r2l_mat <const> = mathpkg.constant.R2L_MAT
 local m = ecs.system "skinning_system"
 local api = {}
 
-local function skin_mesh(meshskin, worldmat)
-	local sm = meshskin.skinning_matrices
-	local mat = math3d.mul(worldmat, r2l_mat)
-	local matrices = math3d.array_matrix_ref(sm:pointer(), sm:count())
-	return math3d.mul_array(mat, matrices)
+function m:follow_scene_update()
+	for e in w:select "scene_changed animation animation_changed?out" do
+		e.animation_changed = true
+	end
+	for e in w:select "animation_changed animation:in scene:in" do
+		local skinning = e.animation.skinning
+		local sm = skinning.skinning_matrices
+		local matrices = math3d.array_matrix_ref(sm:pointer(), sm:count())
+		local mat = math3d.mul(e.scene.worldmat, r2l_mat)
+		math3d.unmark(skinning.sm_matrices)
+		skinning.sm_matrices = math3d.mark(math3d.mul_array(mat, matrices))
+	end
+	w:propagate("scene", "animation_changed")
 end
 
 if ENABLE_TAA then
 	function m:skin_mesh()
-		for e in w:select "animation:in render_object:update scene:in visible_state:in" do
-			local meshskin = e.animation.meshskin
-			local matrices = math3d.alive(skin_mesh(meshskin, e.scene.worldmat))
+		for e in w:select "animation_changed skinning:in render_object:update visible_state:in" do
+			local skinning = e.skinning
 			if e.visible_state["velocity_queue"] then
-				imaterial.set_property(e, "u_prev_model", meshskin.sm_matrix_ref or matrices, "velocity_queue")
+				imaterial.set_property(e, "u_prev_model", skinning.prev_sm_matrices or skinning.sm_matrices, "velocity_queue")
 			end
-			meshskin.sm_matrix_ref = matrices
-			e.render_object.worldmat = matrices
+			skinning.prev_sm_matrices = skinning.sm_matrices
+			e.render_object.worldmat = skinning.sm_matrices
 		end
 	end
 else
 	function m:skin_mesh()
-		for e in w:select "animation:in render_object:update scene:in" do
-			local meshskin = e.animation.meshskin
-			e.render_object.worldmat = skin_mesh(meshskin, e.scene.worldmat)
+		for e in w:select "animation_changed skinning:in render_object:update" do
+			e.render_object.worldmat = e.skinning.sm_matrices
 		end
 	end
 end
@@ -60,11 +66,12 @@ function api.create(filename, skeleton)
 		inverse_bind_pose = skin.inverse_bind_pose,
 		joint_remap = skin.joint_remap,
 		skinning_matrices = ozz.MatrixVector(count),
+		sm_matrices = mathpkg.constant.NULL,
 	}
 end
 
-function api.build(models, meshskin)
-	ozz.BuildSkinningMatrices(meshskin.skinning_matrices, models, meshskin.inverse_bind_pose, meshskin.joint_remap)
+function api.build(models, skinning)
+	ozz.BuildSkinningMatrices(skinning.skinning_matrices, models, skinning.inverse_bind_pose, skinning.joint_remap)
 end
 
 return api

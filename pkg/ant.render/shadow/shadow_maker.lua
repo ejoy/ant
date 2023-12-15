@@ -259,8 +259,8 @@ local function which_material(e, matres)
 	if matres.fx.depth then
 		return matres
 	end
-    w:extend(e, "animation?in")
-    return e.animation and gpu_skinning_material or shadow_material
+    w:extend(e, "skinning?in")
+    return e.skinning and gpu_skinning_material or shadow_material
 end
 
 --front face is 'CW', when building shadow we need to remove front face, it's 'CW'

@@ -22,7 +22,7 @@ local function create(filename)
     end
     local obj = {
         skeleton = skeleton,
-        meshskin = skinning.create(data.meshskin, skeleton),
+        skinning = skinning.create(data.meshskin, skeleton),
         status = status,
         locals = nil,
         models = ozz.MatrixVector(skeleton:num_joints()),
@@ -32,12 +32,12 @@ end
 
 function m:component_init()
     local animations = {}
-    for e in w:select "INIT animation:update scene:in eid:in animation_changed?out" do
-        if e.animation == true then
+    for e in w:select "INIT scene:in eid:in animation?update skinning?update animation_changed?out" do
+        if e.skinning ~= nil then
             local obj = assert(animations[e.scene.parent])
-            e.animation = obj
+            e.skinning = obj.skinning
             animations[e.eid] = obj
-        else
+        elseif e.animation ~= nil then
             local obj = create(e.animation)
             e.animation = obj
             e.animation_changed = true
@@ -66,8 +66,11 @@ function m:animation_sample()
     for e in w:select "animation_changed animation:in" do
         local obj = e.animation
         sampling(obj)
-        skinning.build(obj.models, obj.meshskin)
+        skinning.build(obj.models, obj.skinning)
     end
+end
+
+function m:final()
     w:clear "animation_changed"
 end
 

@@ -226,7 +226,7 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         local hasskin   = has_skin(gltfscene, status, nodeidx)
         if hasskin then
             policy[#policy+1] = "ant.render|skinrender"
-            data.animation = true
+            policy[#policy+1] = "ant.animation|skinning"
             data.scene = {}
         else
             policy[#policy+1] = "ant.render|render"

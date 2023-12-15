@@ -321,8 +321,8 @@ end
 
 local function which_material(e)
 	--NOTE: pickup system not supprt draw indirect, or we need pickup program generate from material compile??
-	w:extend(e, "animation?in")
-    return e.animation and pickup_skin_material or pickup_material
+	w:extend(e, "skinning?in")
+    return e.skinning and pickup_skin_material or pickup_material
 end
 
 local function create_pickup_state(srcstate, dststate)
