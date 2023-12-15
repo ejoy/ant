@@ -136,7 +136,7 @@ end
 local function on_target(old, new)
     if old then
         local oe <close> = world:entity(old, "light?in")
-        if oe.light then
+        if oe and oe.light then
             light_gizmo.on_target()
         end
     end
@@ -156,7 +156,7 @@ local function on_update(eid)
     -- if e.camera then
     --     camera_mgr.update_frustrum(eid)
     -- else
-    if e.light then
+    if e and e.light then
         light_gizmo.update()
     end
 end

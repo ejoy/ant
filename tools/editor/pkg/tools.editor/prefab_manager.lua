@@ -721,8 +721,9 @@ function m:get_hitch_content()
     }
     for _, tpl in ipairs(self.origin_patch_template) do
         if tpl.op == "add" and (type(tpl.value) == "table")
-            and tpl.value.data
-            and tpl.value.data.slot
+            and tpl.value.policy
+            and #tpl.value.policy == 1
+            and tpl.value.policy[1] == "ant.scene|scene_object"
             and (tpl.file == "mesh.prefab") then
             -- only one hitch file per glb file
             content[#content + 1] = tpl.value

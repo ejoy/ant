@@ -564,6 +564,8 @@ function m.clear()
     keyframe_view.clear()
     timeline_eid = nil
     edit_timeline = nil
+    anim_state.key_event = {}
+    anim_state.current_event_list = nil
 end
 
 local ui_showskeleton = {false}
