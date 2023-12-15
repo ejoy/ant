@@ -36,10 +36,9 @@ function timeline:add(tid, tick, event, ud)
 	}
 	local f = self._event[t]
 	if f then
-		f.next = ev
-	else
-		self._event[t] = ev
+		ev.next = f
 	end
+	self._event[t] = ev
 	self._timeline[tid] = last_n + 1
 end
 

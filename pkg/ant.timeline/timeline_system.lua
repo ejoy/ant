@@ -82,7 +82,7 @@ function tl_sys.data_changed()
 		for _, ke in ipairs(e.timeline.key_event) do
 			for _, event in ipairs(ke.event_list) do
 				itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = e.timeline.eid_map, context = e.timeline.context})
-				-- print("add timeline : ", ke.tick, event.event_type)
+				-- print("add timeline : ", tid, ke.tick, event.event_type)
 			end
 		end
 		e.new_timeline = false
