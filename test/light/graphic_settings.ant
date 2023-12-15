@@ -46,7 +46,7 @@ graphic:
     enable: true
     far_offset: 0
     min_variance: 0.012
-    normal_offset: 1.0
+    normal_offset: 0.012
     size: 1024
     split_lamada: 0.8
     split_num: 1
