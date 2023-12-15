@@ -3,6 +3,7 @@ import_feature "ant.shadow_bounding|scene_bounding_pack"
 
 import_feature "ant.landform"
 import_feature "ant.grid"
+import_feature "ant.animation"
 
 system "init_system"
     .implement "init_system.lua"

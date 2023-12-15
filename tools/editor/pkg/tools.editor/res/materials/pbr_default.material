@@ -4,7 +4,7 @@ fx:
     ALPHAMODE_OPAQUE: 1
     lighting: on
     cast_shadow: on
-    shadow_receive: on
+    receive_shadow: on
     subsurface: off
 properties:
   u_pbr_factor: {0, 0.5, 0.5, 1}

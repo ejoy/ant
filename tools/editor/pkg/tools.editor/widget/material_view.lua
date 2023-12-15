@@ -128,9 +128,9 @@ local function build_fx_ui(mv)
                 end,
             }),
             uiproperty.Bool({label = "ShadowReceive"}, {
-                getter = function () return setting_filed "shadow_receive" == "on" end,
+                getter = function () return setting_filed "receive_shadow" == "on" end,
                 setter = function(value)
-                    check_set_setting("shadow_receive", value and "on" or "off")
+                    check_set_setting("receive_shadow", value and "on" or "off")
                     mv.need_reload = true
                 end,
             }),

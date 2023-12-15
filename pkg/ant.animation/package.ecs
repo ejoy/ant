@@ -10,11 +10,17 @@ policy "animation"
     .component "anim_ctrl"
     .component "animation"
 
+policy "skinning"
+    .include_policy "ant.scene|scene_object"
+    .component_opt "skinning"
+
 policy "slot"
     .include_policy "ant.scene|scene_object"
     .component "slot"
+    .component "animation"
 
 component "animation".type "lua"
+component "skinning".type "lua"
 component "animation_changed"
 component "anim_ctrl".type "lua"
 component "slot".type "lua"
@@ -24,3 +30,6 @@ system "animation_system"
 
 system "skinning_system"
     .implement "skinning.lua"
+
+--system "slot_system"
+--    .implement "slot.lua"

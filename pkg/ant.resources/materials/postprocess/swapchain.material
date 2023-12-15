@@ -4,7 +4,7 @@ fx:
   setting:
     lighting: off
     cast_shadow: off
-    shadow_receive: off
+    receive_shadow: off
 properties:
   s_scene_color:
     stage: 0

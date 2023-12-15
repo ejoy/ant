@@ -26,7 +26,6 @@ cull_sys.exit = cullcore.exit
 
 local function build_cull_args()
 	w:clear "cull_args"
-	
 	for qe in w:select "visible queue_name:in camera_ref:in cull_args:new" do
 		local ce <close> = world:entity(qe.camera_ref, "camera:in")
 		local ca = CULL_ARGS[qe.queue_name]
@@ -40,6 +39,8 @@ function cull_sys:cull()
 		return
 	end
 
-	build_cull_args()
-	cullcore.cull()
+	if w:check "camera_changed" then
+		build_cull_args()
+		cullcore.cull()
+	end
 end

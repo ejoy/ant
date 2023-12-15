@@ -625,7 +625,7 @@ local function macros_from_setting(setting, m)
         m[#m+1] = "MATERIAL_UNLIT=1"
     end
 
-    if ENABLE_SHADOW and setting.shadow_receive == "on" then
+    if ENABLE_SHADOW and setting.receive_shadow == "on" then
         m[#m+1] = "ENABLE_SHADOW=1"
     end
 

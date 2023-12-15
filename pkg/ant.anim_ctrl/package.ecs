@@ -7,13 +7,9 @@ system "animation_system"
 system "keyframe_system"
     .implement "keyframe.lua"
 
-system "slot_system"
-    .implement "slot.lua"
-
 policy "keyframe"
     .component "keyframe"
 
 component "playing"
 component "keyframe".type "lua"
-component "boneslot"
 component "animation_birth".type "lua"

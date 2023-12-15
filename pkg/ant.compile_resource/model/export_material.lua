@@ -310,7 +310,7 @@ return function (status)
             macros[#macros+1] = "ALPHAMODE_OPAQUE=1"
             setting.lighting = "on"
             setting.cast_shadow = "on"
-            setting.shadow_receive = "on"
+            setting.receive_shadow = "on"
         else
             setting.lighting = "off"
         end

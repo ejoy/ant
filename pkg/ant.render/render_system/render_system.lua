@@ -176,7 +176,7 @@ function render_sys:commit_system_properties()
 end
 
 function render_sys:follow_scene_update()
-	for e in w:select "scene_changed scene:in render_object:update" do
+	for e in w:select "scene_changed scene:in render_object:update skinning:absent" do
 		e.render_object.worldmat = e.scene.worldmat
 	end
 

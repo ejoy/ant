@@ -20,6 +20,10 @@ function EffectView:_init()
             getter = function() return self:on_get_speed() end,
             setter = function(v) self:on_set_speed(v) end
         }),
+        uiproperty.Bool({label = "Fadeout"}, {
+            getter = function() return self:on_get_fadeout() end,
+            setter = function(v) self:on_set_fadeout(v) end
+        }),
         uiproperty.Bool({label = "AutoPlay"}, {
             getter = function() return self:on_get_auto_play() end,
             setter = function(v) self:on_set_auto_play(v) end
@@ -91,6 +95,16 @@ function EffectView:on_set_speed(value)
     local e <close> = world:entity(self.eid, "efk:in")
     iefk.set_speed(e, value)
     world:pub { "PatchEvent", self.eid, "/data/efk/speed", value }
+end
+
+function EffectView:on_get_fadeout()
+    local info = hierarchy:get_node_info(self.eid)
+    return info.template.data.efk.fadeout or false
+end
+
+function EffectView:on_set_fadeout(value)
+    local info = hierarchy:get_node_info(self.eid)
+    info.template.data.efk.fadeout = value
 end
 
 function EffectView:on_get_auto_play()

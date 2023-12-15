@@ -126,6 +126,34 @@ local function test_lines()
     }
 end
 
+local function create_plane()
+    local imesh = ecs.require "ant.asset|mesh"
+    local ientity = ecs.require "ant.render|components.entity"
+    local imaterial = ecs.require "ant.asset|material"
+    world:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			scene = {
+                t = {0, 0, 0, 1}, s = {50, 1, 50, 0}
+            },
+            bounding = {
+                aabb = {
+                    {-50, 0.0, -50},
+                    { 50, 0.0,  50},
+                }
+            },
+			material        = "/pkg/ant.resources/materials/mesh_shadow.material",
+			visible_state   = "main_view",
+			simplemesh      = imesh.init_mesh(ientity.plane_mesh()),
+			on_ready        = function (e)
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1.0))
+			end,
+		}
+    }
+end
+
 function S.init_world()
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
@@ -143,10 +171,12 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
-        local root<close> = world:entity(e.tag['*'][1])
-        iom.set_scale(root, math3d.vector(10, 0.1, 10))
-    end)
+    -- create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
+    --     local root<close> = world:entity(e.tag['*'][1])
+    --     iom.set_scale(root, math3d.vector(10, 0.1, 10))
+    -- end)
+
+    create_plane()
 
     create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
         local root<close> = world:entity(e.tag['*'][1])

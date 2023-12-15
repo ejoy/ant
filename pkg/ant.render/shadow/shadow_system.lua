@@ -71,7 +71,8 @@ local function create_csm_entity(index, vr, fbidx)
 				l = -1, r = 1, t = -1, b = 1,
 				n = 1, f = 100, ortho = true,
 			},
-			name = csmname
+			name = csmname,
+			camera_depend = true,
 		}, function (e)
 			w:extend(e, "camera:update")
 			local c = e.camera
@@ -107,7 +108,6 @@ local function create_csm_entity(index, vr, fbidx)
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
-			camera_depend = true
 		},
 	}
 end
@@ -155,27 +155,31 @@ end
 
 local function merge_visible_bounding(M, aabb, e, queue_index)
 	local ro = e.render_object
-	if Q.check(ro.visible_idx, queue_index) then
-		aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.aabb))
+	if Q.check(ro.visible_idx, queue_index) and mc.NULL ~= e.bounding.scene_aabb then
+		if M then
+			aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.scene_aabb))
+		else
+			aabb = math3d.aabb_merge(aabb, e.bounding.scene_aabb)
+		end
 	end
 
 	return aabb
 end
 
-local function build_aabb(Lv, queue_index, tag)
+local function build_aabb(queue_index, M, tag)
 	local aabb = math3d.aabb()
 	for e in w:select(("%s render_object:in bounding:in"):format(tag)) do
-		aabb = merge_visible_bounding(Lv, aabb, e, queue_index)
+		aabb = merge_visible_bounding(M, aabb, e, queue_index)
 	end
 	return aabb
 end
 
-local function build_PSR(Lv, queue_index)
-	return build_aabb(Lv, queue_index, "receive_shadow")
+local function build_PSR(queue_index, M)
+	return build_aabb(queue_index, M, "receive_shadow")
 end
 
-local function build_PSC(Lv, queue_index)
-	return build_aabb(Lv, queue_index, "cast_shadow")
+local function build_PSC(queue_index, M)
+	return build_aabb(queue_index, M, "cast_shadow")
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
@@ -191,14 +195,15 @@ end
 
 local function frustum_points(M, n, f)
 	return {
-		math3d.transform(M, math3d.vector(-1.0,-1.0, n, 1.0), 1),	-- 1
-		math3d.transform(M, math3d.vector(-1.0, 1.0, n, 1.0), 1),	-- 2
-		math3d.transform(M, math3d.vector( 1.0,-1.0, n, 1.0), 1),	-- 3
-		math3d.transform(M, math3d.vector( 1.0, 1.0, n, 1.0), 1),	-- 4
-		math3d.transform(M, math3d.vector(-1.0,-1.0, f, 1.0), 1),	-- 5
-		math3d.transform(M, math3d.vector(-1.0, 1.0, f, 1.0), 1),	-- 6
-		math3d.transform(M, math3d.vector( 1.0 -1.0, f, 1.0), 1),	-- 7
-		math3d.transform(M, math3d.vector( 1.0, 1.0, f, 1.0), 1),	-- 8
+		math3d.transformH(M, math3d.vector(-1.0,-1.0, n, 1.0)),	-- 1
+		math3d.transformH(M, math3d.vector(-1.0, 1.0, n, 1.0)),	-- 2
+		math3d.transformH(M, math3d.vector( 1.0,-1.0, n, 1.0)),	-- 3
+		math3d.transformH(M, math3d.vector( 1.0, 1.0, n, 1.0)),	-- 4
+
+		math3d.transformH(M, math3d.vector(-1.0,-1.0, f, 1.0)),	-- 5
+		math3d.transformH(M, math3d.vector(-1.0, 1.0, f, 1.0)),	-- 6
+		math3d.transformH(M, math3d.vector( 1.0,-1.0, f, 1.0)),	-- 7
+		math3d.transformH(M, math3d.vector( 1.0, 1.0, f, 1.0)),	-- 8
 	}
 end
 
@@ -270,7 +275,7 @@ end
 local function calc_focus_matrix(M, verticesLS)
 	local aabb = math3d.aabb()
 	for _, v in ipairs(verticesLS) do
-		local p = math3d.transform(M, v, 1)
+		local p = math3d.transformH(M, v)
 		aabb = math3d.aabb_append(aabb, p)
 	end
 
@@ -292,21 +297,27 @@ local function calc_focus_matrix(M, verticesLS)
 		tx,  ty,  0.0, 1.0)
 end
 
-local function update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
+local function update_camera(c, Lv, Lp)
 	c.viewmat.m		= Lv
 	c.projmat.m		= Lp
+	c.infprojmat.m	= Lp
 	c.viewprojmat.m	= math3d.mul(Lv, Lp)
+	c.FinalMat.m= c.viewprojmat
+end
 
+local function update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
 	c.Lr.m	= Lr
 	c.Wv.m	= Wv
 	c.Wp.m	= Wp
 	c.Wpv.m	= math3d.mul(Wp, Wv)
 	c.Wpvl.m= math3d.mul(c.Wpv, Lr)
-	c.W.m	= math3d.mul(c.Wpvl, c.viewprojmat)
+
+	c.W.m	= math3d.mul(c.Wpvl, Lp)
 
 	local F = calc_focus_matrix(c.W, verticesLS)
-	c.F.m		= F
-	c.FinalMat.m= math3d.mul(c.F, c.W)
+	c.F.m			= F
+
+	update_camera(c, Lv, math3d.mul(c.F, c.W))
 end
 
 local function commit_csm_matrices_attribs()
@@ -325,7 +336,14 @@ function shadow_sys:update_camera_depend()
 	end
 end
 
-function shadow_sys:refine_camera()
+local function M3D(o, n)
+	if o then
+		math3d.unmark(o)
+	end
+	return math3d.mark(n)
+end
+
+function shadow_sys:update_camera_depend()
     local C = w:first "camera_changed"
     if not C then
         return
@@ -347,14 +365,25 @@ function shadow_sys:refine_camera()
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
 
-	local queue_index = queuemgr.queue_index "csm1_queue"
-	local PSR, PSC = build_PSR(Lv, queue_index), build_PSC(Lv, queue_index)
-	local sceneaabbLS = merge_PSC_and_PSR(PSC, PSR)
+	local main_queueidx = queuemgr.queue_index "main_queue"
+	C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
+	C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
+
+	C.camera.PSRLS	= M3D(C.camera.PSRLS, 	build_PSR(main_queueidx, Lv))
+	C.camera.PSCLS	= M3D(C.camera.PSCLS, 	build_PSC(main_queueidx, Lv))
+
+	local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
+	C.camera.sceneaabbLS= M3D(C.camera.sceneaabbLS, sceneaabbLS)
+	C.camera.Lv			= M3D(C.camera.Lv, Lv)
 
 	local Ndc2Lv = math3d.mul(Lv, math3d.inverse(C.camera.viewprojmat))
 
-	local viewdirLS = math3d.transform(Lv, viewdir, 0)
-	local Lr = LiSPSM.rotation_matrix(viewdirLS)
+	local useLiSPSM = false
+	local Lr
+	if useLiSPSM then
+		local viewdirLS = math3d.transform(Lv, viewdir, 0)
+		Lr = LiSPSM.rotation_matrix(viewdirLS)
+	end
 
 	local Cv = C.camera.viewmat
 
@@ -380,23 +409,30 @@ function shadow_sys:refine_camera()
 		local verticesLS, nearLS, farLS	= frustum_interset_aabb(Ndc2Lv, sceneaabbLS, sr[1], sr[2])
 
 		local Lp	= math3d.projmat{l=-1, r=1, t=1, b=-1, n=nearLS, f=farLS, ortho=true}
-		local Lrp	= math3d.mul(Lr, Lp)
-		local camerainfo = {
-			Lv			= Lv,
-			Lrp			= Lrp,
-			Lrpv		= math3d.mul(Lrp, Lv),
-			Cv			= Cv,
-			viewdirWS	= viewdir,
-			lightdirWS	= lightdirWS,
-			cameraposWS	= posWS,
-			zn			= zn,
-			zf			= zf,
-			nearHit		= nearHit,
-			farHit		= farHit,
-		}
-		local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
-		update_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
 
+		if useLiSPSM then
+			local Lrp	= math3d.mul(Lr, Lp)
+			local camerainfo = {
+				Lv			= Lv,
+				Lrp			= Lrp,
+				Lrpv		= math3d.mul(Lrp, Lv),
+				Cv			= Cv,
+				viewdirWS	= viewdir,
+				lightdirWS	= lightdirWS,
+				cameraposWS	= posWS,
+				zn			= zn,
+				zf			= zf,
+				nearHit		= nearHit,
+				farHit		= farHit,
+			}
+			local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
+			update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
+		else
+			local F 		= calc_focus_matrix(Lp, verticesLS)
+			local FLp 		= math3d.mul(F, Lp)
+
+			update_camera(c, Lv, FLp)
+		end
 		mark_camera_changed(ce)
 
 		csm_matrices[csm.index].m = math3d.mul(ishadowcfg.crop_matrix(csm.index), c.FinalMat)
@@ -408,8 +444,8 @@ local function which_material(e, matres)
 	if matres.fx.depth then
 		return matres
 	end
-    w:extend(e, "animation?in")
-    return e.animation and gpu_skinning_material or shadow_material
+    w:extend(e, "skinning?in")
+    return e.skinning and gpu_skinning_material or shadow_material
 end
 
 
@@ -446,7 +482,7 @@ end
 function shadow_sys:update_filter()
     for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
-		local receiveshadow = mt.fx.setting.shadow_receive == "on"
+		local receiveshadow = mt.fx.setting.receive_shadow == "on"
 
 		local castshadow
 		if e.visible_state["cast_shadow"] then
@@ -512,26 +548,43 @@ local imesh 		= ecs.require "ant.asset|mesh"
 local kbmb 			= world:sub{"keyboard"}
 
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
-local shadowdebug_depthqueue, shadowdebug_queue
-local drawereid
-local shadowdebug_depthviewid, shadowdebug_viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"), hwi.viewid_generate("shadowdebug", "ssao")
+
+local DEBUG_view = {
+	queue = {
+		depth = {
+			viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"),
+			queue_name = "shadow_debug_depth_queue",
+			queue_eid = nil,
+		},
+		color = {
+			viewid = hwi.viewid_generate("shadowdebug", "ssao"),
+			queue_name = "shadow_debug_queue",
+			queue_eid = nil,
+		}
+	},
+	light = {
+		perspective_camera = nil,
+	},
+	drawereid = nil
+}
 
 local function update_visible_state(e)
 	w:extend(e, "eid:in")
-	if e.eid == drawereid then
+	if e.eid == DEBUG_view.drawereid then
 		return
 	end
-	if e.visible_state["pre_depth_queue"] then
-		ivs.set_state(e, "shadow_debug_depth_queue", true)
-		w:extend(e, "filter_material:update")
-		e.filter_material["shadow_debug_depth_queue"] = e.filter_material["pre_depth_queue"]
+
+	local function update_queue(whichqueue, matchqueue)
+		if e.visible_state["pre_depth_queue"] then
+			local qn = DEBUG_view.queue[whichqueue].queue_name
+			ivs.set_state(e, qn, true)
+			w:extend(e, "filter_material:update")
+			e.filter_material[qn] = e.filter_material[matchqueue]
+		end
 	end
 
-	if e.visible_state["main_queue"] then
-		ivs.set_state(e, "shadow_debug_queue", true)
-		w:extend(e, "filter_material:update")
-		e.filter_material["shadow_debug_queue"] = e.filter_material["main_queue"]
-	end
+	update_queue("depth", "pre_depth_queue")
+	update_queue("color", "main_queue")
 end
 
 function shadowdebug_sys:init_world()
@@ -566,11 +619,11 @@ function shadowdebug_sys:init_world()
 					{rbidx = depth_rbidx}
 				)
 
-	shadowdebug_depthqueue = world:create_entity{
+	DEBUG_view.queue.depth.queue_eid = world:create_entity{
 		policy = {"ant.render|render_queue"},
 		data = {
 			render_target = {
-				viewid = shadowdebug_depthviewid,
+				viewid = DEBUG_view.queue.depth.viewid,
 				view_rect = {x=0, y=0, w=fbw, h=fbh},
 				clear_state = {
 					clear = "D",
@@ -584,13 +637,13 @@ function shadowdebug_sys:init_world()
 		}
 	}
 	
-	shadowdebug_queue = world:create_entity{
+	DEBUG_view.queue.color.queue_eid = world:create_entity{
 		policy = {
 			"ant.render|render_queue",
 		},
 		data = {
 			render_target = {
-				viewid = shadowdebug_viewid,
+				viewid = DEBUG_view.queue.color.viewid,
 				view_rect = {x=0, y=0, w=fbw, h=fbh},
 				clear_state = {
 					clear = "C",
@@ -604,7 +657,7 @@ function shadowdebug_sys:init_world()
 		},
 	}
 
-	drawereid = world:create_entity{
+	DEBUG_view.drawereid = world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
@@ -647,26 +700,52 @@ function shadowdebug_sys:data_changed()
 			end
 
 			local frustums = {}
-			local function add_frustum(n, m)
+			local function add_frustum(n, m, c)
 				frustums[#frustums+1] = n
-				frustums[n] = {m = m, c = unique_color()}
+				frustums[n] = {m = m, c = c or unique_color()}
 			end
-			add_frustum("camera_viewprojmat", world:entity(irq.main_camera(), "camera:in").camera.viewprojmat)
+			local C = world:entity(irq.main_camera(), "camera:in").camera
+			-- add_frustum("camera_viewprojmat", C.viewprojmat)
 
-			do
-				for e in w:select "csm:in camera_ref:in" do
-					local ce = world:entity(e.camera_ref, "camera:in scene:in")
-					local prefixname = "csm" .. e.csm.index
-					add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
-					add_frustum(prefixname .. "_W", 			math3d.mul(ce.camera.W))
-					add_frustum(prefixname .. "_FinalMat", 		ce.camera.FinalMat)
+			-- do
+			-- 	for e in w:select "csm:in camera_ref:in" do
+			-- 		local ce = world:entity(e.camera_ref, "camera:in scene:in")
+			-- 		local prefixname = "csm" .. e.csm.index
+			-- 		add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
+			-- 		add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
+			-- 		add_frustum(prefixname .. "_W", 			ce.camera.W)
+			-- 		add_frustum(prefixname .. "_FinalMat", 		ce.camera.FinalMat)
+			-- 	end
+			-- end
+
+			-- for _, n in ipairs(frustums) do
+			-- 	local f = frustums[n]
+			-- 	DEBUG_ENTITIES[n] = ientity.create_frustum_entity(math3d.frustum_points(f.m), f.c)
+			-- end
+
+			local function aabb_points(aabb, M)
+				local points = math3d.aabb_points(aabb)
+				if M then
+					for i=1, #points do
+						points[i] = math3d.transform(M, points[i], 1)
+					end
 				end
+				return points
 			end
+			local L2W = math3d.inverse(C.Lv)
+			--DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSR)),  		{1.0, 0.0, 0.0, 1.0})
+			--DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSC)),  		{0.0, 1.0, 0.0, 1.0})
+			--DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSRLS, L2W)),{1.0, 0.1, 0.1, 1.0})
+			--DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSCLS, L2W)),{0.1, 1.0, 0.1, 1.0})
 
-			for k, f in pairs(frustums) do
-				DEBUG_ENTITIES[k] = ientity.create_frustum_entity(math3d.frustum_points(f.m), f.c)
-			end
+			--DEBUG_ENTITIES["CSMFrustum"] = ientity.create_frustum_entity(math3d.frustum_points(C.viewprojmat), {0.1, 1.0, 0.1, 1.0})
+			--DEBUG_ENTITIES["CSMLight"] = ientity.create_frustum_entity(math3d.array_vector(frustum_interset_aabb(math3d.inverse(C.viewprojmat), C.sceneaabbLS, zn, zf)),{1.0, 0.1, 0.1, 1.0})
+
+			-- local L2W = math3d.inverse(C.Lv)
+			-- DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabbLS, L2W)),{1.0, 0.0, 0.0, 1.0})
+			-- DEBUG_ENTITIES["sceneaabb"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabb)),{0.0, 1.0, 0.0, 1.0})
+		elseif key == 'C' and press == 0 then
+
 		end
 	end
 end

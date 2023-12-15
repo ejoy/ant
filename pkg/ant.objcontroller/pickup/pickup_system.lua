@@ -69,9 +69,9 @@ local function update_camera(pu_camera_ref, clickpt)
 	pqc.scene_changed = true
 	local camera = pqc.camera
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	camera.viewmat.m		= math3d.lookto(eye, viewdir, camera.updir)
+	camera.viewmat.m	= math3d.lookto(eye, viewdir, camera.updir)
 	camera.projmat.m	= math3d.projmat(camera.frustum, INV_Z)
-	camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
+	camera.infprojmat.m = math3d.projmat(camera.frustum, INV_Z, INF_F)
 	camera.viewprojmat.m= math3d.mul(camera.projmat, camera.viewmat)
 end
 
@@ -175,6 +175,7 @@ local function create_pick_entity()
 					type="mat", n=0.2, f=1000, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 				},
 			},
+			camera_depend = true,
 		}
 	}
 
@@ -223,7 +224,6 @@ local function create_pick_entity()
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
 			visible		= false,
-			camera_depend = true,
 		}
 	}
 end
@@ -321,8 +321,8 @@ end
 
 local function which_material(e)
 	--NOTE: pickup system not supprt draw indirect, or we need pickup program generate from material compile??
-	w:extend(e, "animation?in")
-    return e.animation and pickup_skin_material or pickup_material
+	w:extend(e, "skinning?in")
+    return e.skinning and pickup_skin_material or pickup_material
 end
 
 local function create_pickup_state(srcstate, dststate)

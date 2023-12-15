@@ -6,7 +6,7 @@ fx:
   setting:
     lighting: on
     cast_shadow: on
-    shadow_receive: on
+    receive_shadow: on
     subsurface: off
 properties:
   u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength

@@ -4,7 +4,7 @@ fx:
     "ALPHAMODE_OPAQUE=1"
   setting:
     lighting: on
-    shadow_receive: on
+    receive_shadow: on
     cast_shadow: off
     subsurface: off
     uv_motion: true

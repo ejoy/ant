@@ -180,7 +180,8 @@ local function create_csm_entity(index, vr, fbidx)
 				l = -1, r = 1, t = -1, b = 1,
 				n = 1, f = 100, ortho = true,
 			},
-			name = csmname
+			name = csmname,
+			camera_depend = true,
 		}
 	world:create_entity {
 		policy = {
@@ -203,7 +204,6 @@ local function create_csm_entity(index, vr, fbidx)
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
-			camera_depend = true
 		},
 	}
 end
@@ -259,8 +259,8 @@ local function which_material(e, matres)
 	if matres.fx.depth then
 		return matres
 	end
-    w:extend(e, "animation?in")
-    return e.animation and gpu_skinning_material or shadow_material
+    w:extend(e, "skinning?in")
+    return e.skinning and gpu_skinning_material or shadow_material
 end
 
 --front face is 'CW', when building shadow we need to remove front face, it's 'CW'
@@ -295,7 +295,7 @@ end
 function sm:update_filter()
     for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
-		local receiveshadow = mt.fx.setting.shadow_receive == "on"
+		local receiveshadow = mt.fx.setting.receive_shadow == "on"
 
 		local castshadow
 		if e.visible_state["cast_shadow"] then

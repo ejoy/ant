@@ -100,7 +100,7 @@ do
     local VALID_SETTINGS<const> = {
         lighting        = true,
         cast_shadow     = true,
-        shadow_receive  = true,
+        receive_shadow  = true,
         subsurface      = true,
         uv_motion       = true,
         position_only   = true,
@@ -190,7 +190,14 @@ local function merge_cfg_setting(setting, fx)
     fx.setting = fxsetting.adddef(setting, fx.setting)
     if fx.cs then
         fx.setting["lighting"]          = 'off'
-        fx.setting["shadow_receive"]    = 'off'
+        fx.setting["receive_shadow"]    = 'off'
+        fx.setting["cast_shadow"]       = 'off'
+    else
+        local lighting = assert(fx.setting.lighting)
+        if lighting == "off" then
+            fx.setting["receive_shadow"]    = 'off'
+            fx.setting["cast_shadow"]       = 'off'
+        end
     end
 end
 

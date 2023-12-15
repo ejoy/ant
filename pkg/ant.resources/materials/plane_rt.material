@@ -7,7 +7,7 @@ fx:
   setting:
     lighting: on
     cast_shadow: on
-    shadow_receive: on
+    receive_shadow: on
     subsurface: off
 properties:
   u_basecolor_factor: {0.8986663818359375, 0.9804151058197021, 1, 1}

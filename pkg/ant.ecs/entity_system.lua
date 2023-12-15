@@ -64,13 +64,10 @@ function update_sys:frame_remove()
 
     --step3. Remove entity
     w:update()
+    math3d.reset()
 end
 
 function init_sys:frame_create()
-    --step4. Create entity
     world:_flush_instance_queue()
     world:_flush_entity_queue()
-
-    --step5. reset math3d
-    math3d.reset()
 end
