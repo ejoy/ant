@@ -15,20 +15,20 @@ end
 local engine_event = {}
 
 function engine_event:Animation(tid, ud)
-	local entitys = ud.eid_map["*"]
+	local anim_eid = ud.eid_map["anim_eid"]
 	-- TODO: rework this code
-	for _, eid in ipairs(entitys) do
-		local e <close> = world:entity(eid, "anim_ctrl?in")
-		if e.anim_ctrl then
-			iani.play(eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
+	-- for _, eid in ipairs(entitys) do
+	-- 	local e <close> = world:entity(eid, "anim_ctrl?in")
+		if anim_eid then
+			iani.play(anim_eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
 			if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
-				iani.set_time(eid, ud.ev.pause_frame)
-				iani.pause(eid, true)
+				iani.set_time(anim_eid, ud.ev.pause_frame)
+				iani.pause(anim_eid, true)
 			end
 			-- print("event animation : ", ud.ev.name, ud.ev.asset_path)
-			break
+			-- break
 		end
-	end
+	-- end
 end
 
 function engine_event:Effect(tid, ud)
@@ -43,27 +43,24 @@ function engine_event:Sound(tid, ud)
 end
 
 function engine_event:Message(tid, ud)
-	print("event message : ", ud.ev.name, ud.ev.msg_content)
+	-- print("event message : ", ud.ev.name, ud.ev.msg_content)
 	world:pub {"keyframe_event", "message", ud.context}
 end
 
-local testtid
-local ev = {}
-function ev:test(tid, ud)
-	print("test", ud)
+local function add_event(tid, desc)
+	for _, ke in ipairs(desc.key_event) do
+		for _, event in ipairs(ke.event_list) do
+			itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = desc.eid_map, context = desc.context})
+			-- print("add timeline : ", tid, ke.tick, event.event_type)
+		end
+	end
+	if desc.loop then
+		itl:add(tid, math.floor(desc.duration * 30), "Loop", {loop = desc.loop, duration = desc.duration, key_event = desc.key_event, eid_map = e.timeline.eid_map, context = e.timeline.context})
+	end
 end
 
-function ev:cancel(tid, ud)
-	self:stop(tid)
-end
-
-function ev:again(tid, ud)
-	itl:add(tid, 0, "test")
-	itl:add(tid, 20, "again")
-end
-
-local function test_event_handler(t, tid, event, ud)
-	ev[event](t, tid, ud)
+function engine_event:Loop(tid, desc)
+	add_event(tid, desc)
 end
 
 local function engine_event_handler(t, tid, event, ud)
@@ -72,26 +69,24 @@ local function engine_event_handler(t, tid, event, ud)
 		handler(t, tid, ud)
 	end
 end
-local start_tick = 0
+
 function tl_sys.data_changed()
 	for e in w:select "start_timeline?out timeline:in" do
 		local tid
 		if #e.timeline.key_event > 0 then
 			tid = itl:alloc()
 		end
-		for _, ke in ipairs(e.timeline.key_event) do
-			for _, event in ipairs(ke.event_list) do
-				itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = e.timeline.eid_map, context = e.timeline.context})
-				-- print("add timeline : ", tid, ke.tick, event.event_type)
-			end
-		end
+		-- for _, ke in ipairs(e.timeline.key_event) do
+		-- 	for _, event in ipairs(ke.event_list) do
+		-- 		itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = e.timeline.eid_map, context = e.timeline.context})
+		-- 		-- print("add timeline : ", tid, ke.tick, event.event_type)
+		-- 	end
+		-- end
+		-- if e.timeline.loop then
+		-- 	itl:add(tid, math.floor(e.timeline.duration * 30), "Loop", {loop = e.timeline.loop, duration = e.timeline.duration, key_event = e.timeline.key_event, eid_map = e.timeline.eid_map, context = e.timeline.context})
+		-- end
+		add_event(tid, e.timeline)
 		e.new_timeline = false
 	end
 	itl:update(engine_event_handler)
-	-- if not testtid then
-	-- 	testtid = itl:alloc()
-	-- 	itl:add(testtid, 0, "test")
-	-- 	itl:add(testtid, 20, "again")
-	-- end
-	-- itl:update(test_event_handler)
 end
