@@ -1,0 +1,2 @@
+system "debug_texture_system"
+    .implement "debug_texture.lua"

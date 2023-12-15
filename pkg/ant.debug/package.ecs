@@ -6,3 +6,6 @@ feature "debug_material"
 
 feature "debug_mipmap"
     .import "debug_mipmap.ecs"
+
+feature "debug_texture"
+    .import "debug_texture.ecs"

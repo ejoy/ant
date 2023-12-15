@@ -838,6 +838,7 @@ lcvt2file(lua_State *L){
     return 1;
 }
 
+static
 uint32_t cvt2rgbe(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bx::Error* _err){
     uint32_t filesize = 0;
     bimg::UnpackFn unpack = bimg::getUnpack(_format);
@@ -867,6 +868,7 @@ uint32_t cvt2rgbe(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint3
     return filesize;
 }
 
+static
 uint32_t cvt2rgb10A2(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bx::Error* _err){
     uint32_t filesize = 0;
     bimg::UnpackFn unpack = bimg::getUnpack(_format);
@@ -891,21 +893,67 @@ uint32_t cvt2rgb10A2(bx::WriterI* _writer, uint32_t _width, uint32_t _height, ui
     return filesize;
 }
 
+static
+int32_t imageWriteHdr(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bool _yflip, bx::Error* _err)
+{
+	BX_ERROR_SCOPE(_err);
+
+	int32_t total = 0;
+	total += bx::write(_writer, "#?RADIANCE\n" , _err);
+	total += bx::write(_writer, "FORMAT=32-bit_rle_rgbe\n" , _err);
+	total += bx::write(_writer, '\n' , _err);
+
+	total += bx::write(_writer, _err, "%cY %d +X %d\n", _yflip ? '+' : '-', _height, _width);
+
+	bimg::UnpackFn unpack = getUnpack(_format);
+	const uint32_t bpp  = getBitsPerPixel(_format);
+
+	const uint8_t* data = (const uint8_t*)_src;
+
+    for (uint32_t zz = 0; zz < _depth && _err->isOk(); ++zz)
+    {
+        for (uint32_t yy = 0; yy < _height && _err->isOk(); ++yy)
+        {
+            for (uint32_t xx = 0; xx < _width && _err->isOk(); ++xx)
+            {
+                float rgba[4];
+                unpack(rgba, &data[xx*bpp/8]);
+
+                const float maxVal = bx::max(rgba[0], rgba[1], rgba[2]);
+                const float exp    = bx::ceil(bx::log2(maxVal) );
+                const float toRgb8 = 255.0f * 1.0f/bx::ldexp(1.0f, int(exp) );
+
+                uint8_t rgbe[4];
+                rgbe[0] = uint8_t(rgba[0] * toRgb8);
+                rgbe[1] = uint8_t(rgba[1] * toRgb8);
+                rgbe[2] = uint8_t(rgba[2] * toRgb8);
+                rgbe[3] = uint8_t(exp+128.0f);
+
+                total += bx::write(_writer, rgbe, 4, _err);
+            }
+
+            data += _srcPitch;
+        }
+    }
+
+	return total;
+}
+
 static int
-lpack2rgb10a2(lua_State *L){
+lpack3dfile(lua_State *L){
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
     auto width  = luaL_checkinteger(L, 1);
     auto height = luaL_checkinteger(L, 2);
     auto depth  = luaL_checkinteger(L, 3);
-    struct memory *m = (struct memory *)luaL_checkudata(L, 2, "BGFX_MEMORY");
-    const char* src_fmt = luaL_optstring(L, 3, "RGBA32F");
-    const char* dst_fmt = luaL_optstring(L, 4, "RGB10A2");
+    struct memory *m = (struct memory *)luaL_checkudata(L, 4, "BGFX_MEMORY");
+    const char* src_fmt = luaL_optstring(L, 5, "RGBA32F");
+    const char* dst_fmt = luaL_optstring(L, 6, "RGB10A2");
     bimg::ImageContainer ic;
     ic.m_width      = (uint32_t)width;
     ic.m_height     = (uint32_t)height;
     ic.m_format     = bimg::getFormat(src_fmt);
-    ic.m_size       = (uint32_t)(getBitsPerPixel(ic.m_format) / 8 * width * height);
+    ic.m_size       = (uint32_t)(getBitsPerPixel(ic.m_format) / 8 * width * height * depth);
     ic.m_numLayers  = 1;
     ic.m_numMips    = 1;
     ic.m_offset     = 0;
@@ -917,29 +965,50 @@ lpack2rgb10a2(lua_State *L){
     bx::MemoryBlock mb(&allocator);
     bx::MemoryWriter sw(&mb);
     bx::Error err;
-    uint32_t pitch = ic.m_width * getBitsPerPixel(ic.m_format)/8;
-    bimg::ImageContainer *new_ic = nullptr;
-    new_ic = bimg::imageConvert(&allocator, bimg::getFormat(dst_fmt), ic, true);
-    const int32_t filesize = bimg::imageWriteDds(&sw, *new_ic, new_ic->m_data, (uint32_t)m->size, &err);
-    lua_pushlstring(L, (const char*)mb.more(), filesize);
+    if(strcmp(dst_fmt, "RGBE") == 0){
+        uint32_t pitch = ic.m_width * getBitsPerPixel(ic.m_format)/8;
+        const int32_t filesize = imageWriteHdr(&sw, ic.m_width, ic.m_height, ic.m_depth, pitch, ic.m_data, ic.m_format, false, &err);
+        lua_pushlstring(L, (const char*)mb.more(), filesize);
+    }
+    else{
+        bimg::ImageContainer *new_ic = nullptr;
+        new_ic = bimg::imageConvert(&allocator, bimg::getFormat(dst_fmt), ic, true);
+        const int32_t filesize = bimg::imageWriteDds(&sw, *new_ic, new_ic->m_data, new_ic->m_size, &err);
+        lua_pushlstring(L, (const char*)mb.more(), filesize);
+    }
     return 1;
+}
+
+static int
+lunpack_hdr_format(lua_State *L){
+    uint32_t src = (uint32_t)luaL_checkinteger(L, 1);
+    const char *fmt = luaL_optstring(L, 2, "RGB10A2");
+    float dst[4];
+    bimg::UnpackFn unpack = bimg::getUnpack(bimg::getFormat(fmt));
+    unpack(dst, &src);
+    lua_pushnumber(L, dst[0]);
+    lua_pushnumber(L, dst[1]);
+    lua_pushnumber(L, dst[2]);
+    lua_pushnumber(L, dst[3]);
+    return 4;
 }
 
 extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
-        { "parse",              lparse },
-        { "convert",            lconvert},
-        { "encode_image",       lencode_image},
-        { "cvt2file",           lcvt2file},
-        { "get_bpp",            lget_bits_per_pixel},
-        { "get_format_sizebytes",lget_format_sizebytes},
-        { "get_format_name",    lget_format_name},
-        { "pack2cubemap",       lpack2cubemap},
+        { "parse",                   lparse },
+        { "convert",                 lconvert},
+        { "encode_image",            lencode_image},
+        { "cvt2file",                lcvt2file},
+        { "get_bpp",                 lget_bits_per_pixel},
+        { "get_format_sizebytes",    lget_format_sizebytes},
+        { "get_format_name",         lget_format_name},
+        { "pack2cubemap",            lpack2cubemap},
         { "cubemap2equirectangular", lcubemap2equirectangular},
         { "equirectangular2cubemap", lequirectangular2cubemap},
         { "replace_debug_mipmap",    lreplace_debug_mipmap},
-        { "pack2rgb10a2",            lpack2rgb10a2},
+        { "pack3dfile",              lpack3dfile},
+        { "unpack_hdr_format",       lunpack_hdr_format},
         { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);
