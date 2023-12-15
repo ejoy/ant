@@ -170,22 +170,15 @@ end_frame(lua_State *L) {
 static int
 scene_remove(lua_State *L) {
 	auto w = getworld(L);
-	flatset<ecs::eid> removed;
-	for (auto& e : ecs_api::select<ecs::REMOVED, ecs::scene, ecs::eid>(w->ecs)) {
-		auto id = e.get<ecs::eid>();
-		removed.insert(id);
-	}
-	if (removed.empty()) {
+
+	auto selector = ecs_api::select<ecs::REMOVED, ecs::scene>(w->ecs);
+	auto it = selector.begin();
+	if (it == selector.end()) {
 		return 0;
 	}
-	for (auto& e : ecs_api::select<ecs::scene>(w->ecs)) {
-		auto& s = e.get<ecs::scene>();
-		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = e.component<ecs::eid>();
-			removed.insert(id);
-			e.remove();
-		}
-	}
+
+	entity_propagate_tag(w->ecs, ecs_api::component_id<ecs::scene>, ecs_api::component_id<ecs::REMOVED>);
+
 	return 0;
 }
 
