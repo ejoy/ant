@@ -42,23 +42,29 @@ struct ozzSoaTransformVector: public ozz::vector<ozz::math::SoaTransform> {
 	{}
 };
 
-struct ozzSamplingJobContext: public ozz::animation::SamplingJob::Context {
-	ozzSamplingJobContext(int n)
-		: ozz::animation::SamplingJob::Context(n) {
-	}
-};
-
 struct ozzAnimation: public ozz::animation::Animation {
 	ozzAnimation()
-		: ozz::animation::Animation(){
-	}
+		: ozz::animation::Animation()
+	{}
 	ozzAnimation(ozz::animation::Animation&& v)
-		: ozz::animation::Animation(std::move(v)) {
-	}
+		: ozz::animation::Animation(std::move(v))
+	{}
 };
 
 struct ozzRawAnimation: public ozz::animation::offline::RawAnimation {
 };
 
 struct ozzSkeleton : public ozz::animation::Skeleton {
+};
+
+struct ozzSamplingJobContext: public ozz::animation::SamplingJob::Context {
+	ozzSamplingJobContext(int n)
+		: ozz::animation::SamplingJob::Context(n)
+	{}
+};
+
+struct ozzBlendingJobLayerVector: public ozz::vector<ozz::animation::BlendingJob::Layer> {
+	ozzBlendingJobLayerVector()
+		: ozz::vector<ozz::animation::BlendingJob::Layer>()
+	{}
 };

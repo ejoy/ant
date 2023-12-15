@@ -16,6 +16,40 @@ namespace ozzlua::SamplingJobContext {
     }
 }
 
+namespace ozzlua::BlendingJobLayerVector {
+    static int resize(lua_State* L) {
+        auto& vec = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 1);
+        size_t n = bee::lua::checkinteger<size_t>(L, 2);
+        vec.resize(n);
+        return 0;
+    }
+    static int set(lua_State* L) {
+        auto& vec = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 1);
+        size_t n = bee::lua::checkinteger<size_t>(L, 2);
+        if (!lua_isnoneornil(L, 3)) {
+            auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 3);
+            vec[n].transform = ozz::make_span(locals);
+        }
+        vec[n].weight = (float)luaL_optnumber(L, 4, 1.0);
+        // TODO: joint_weights
+        return 0;
+    }
+    static void metatable(lua_State* L) {
+        static luaL_Reg lib[] = {
+            { "resize", resize },
+            { "set", set },
+            { nullptr, nullptr }
+        };
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
+        lua_setfield(L, -2, "__index");
+    }
+    static int create(lua_State* L) {
+        bee::lua::newudata<ozzBlendingJobLayerVector>(L);
+        return 1;
+    }
+}
+
 static int SamplingJob(lua_State* L) {
     auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
     auto& context = bee::lua::checkudata<ozzSamplingJobContext>(L, 2);
@@ -28,6 +62,26 @@ static int SamplingJob(lua_State* L) {
     job.output = ozz::make_span(locals);
     if (!job.Run()) {
         return luaL_error(L, "SamplingJob failed!");
+    }
+    return 0;
+}
+
+static int BlendingJob(lua_State* L) {
+    ozz::animation::BlendingJob job;
+    auto& layers = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 1);
+    auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 2);
+    auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 3);
+    float threshold = (float)luaL_optnumber(L, 4, 0.1);
+    if (!lua_isnoneornil(L, 3)) {
+        auto& additive_layers = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 5);
+        job.additive_layers =  ozz::make_span(additive_layers);
+    }
+    job.layers = ozz::make_span(layers);
+    job.output = ozz::make_span(locals);
+    job.threshold = threshold;
+    job.rest_pose = ske.joint_rest_poses();
+    if (!job.Run()) {
+        return luaL_error(L, "BlendingJob failed!");
     }
     return 0;
 }
@@ -55,7 +109,9 @@ static int LocalToModelJob(lua_State* L) {
 void init_job(lua_State* L) {
     static luaL_Reg lib[] = {
         { "SamplingJobContext", ozzlua::SamplingJobContext::create },
+        { "BlendingJobLayerVector", ozzlua::BlendingJobLayerVector::create },
         { "SamplingJob", SamplingJob },
+        { "BlendingJob", BlendingJob },
         { "LocalToModelJob", LocalToModelJob },
         { NULL, NULL },
     };
@@ -67,5 +123,10 @@ namespace bee::lua {
     struct udata<ozzSamplingJobContext> {
         static inline auto name = "ozzSamplingJobContext";
         static inline auto metatable = ozzlua::SamplingJobContext::metatable;
+    };
+    template <>
+    struct udata<ozzBlendingJobLayerVector> {
+        static inline auto name = "ozzBlendingJobLayerVector";
+        static inline auto metatable = ozzlua::BlendingJobLayerVector::metatable;
     };
 }
