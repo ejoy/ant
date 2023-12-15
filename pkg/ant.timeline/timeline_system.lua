@@ -21,7 +21,7 @@ function engine_event:Animation(tid, ud)
 		local e <close> = world:entity(eid, "anim_ctrl?in")
 		if e.anim_ctrl then
 			iani.play(eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
-			if ud.ev.pause_frame > -1 then
+			if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
 				iani.set_time(eid, ud.ev.pause_frame)
 				iani.pause(eid, true)
 			end
