@@ -15,7 +15,7 @@ local resource_cache = {}
 local config_os
 local config_resource
 do
-    local mem = vfs.read "/resource.settings"
+    local mem = vfs.read "/settings.ant"
     if mem then
         local config = datalist.parse(fastio.wrap(mem))
         config_os = config.os or platform.os
