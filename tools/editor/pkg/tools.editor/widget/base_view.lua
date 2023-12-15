@@ -135,14 +135,9 @@ end
 
 function BaseView:on_set_tag(value)
     local info = hierarchy:get_node_info(self.eid)
-    if not info.template.tag then
-        info.template.tag = {}
-    end
-    local tags = info.template.tag
-    tags[1] = value
-    -- tags[#tags + 1] = value
-    -- value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
-    -- info.template.data.tag = tags
+    local tags = {}
+    value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
+    info.template.tag = tags
     world:pub {"EntityEvent", "tag", self.eid, tags}
 end
 
@@ -150,14 +145,7 @@ function BaseView:on_get_tag()
     local info = hierarchy:get_node_info(self.eid)
     if not info or not info.template then return "" end
     local tags = info.template.tag
-    if tags and #tags > 0 then
-        return tags[1]
-    end
-    -- if type(tags) == "table" then
-    --     return table.concat(tags, "|")
-    -- end
-    -- return tags or ""
-    return ""
+    return tags and table.concat(tags, "|") or ""
 end
 
 function BaseView:on_set_position(value)

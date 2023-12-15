@@ -353,6 +353,7 @@ function m:on_prefab_ready(prefab)
     end
     local j = 1
     local last_tpl
+    local anim_eid
     for i, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
         local e <close> = world:entity(eid, "scene?in light?in")
@@ -370,7 +371,12 @@ function m:on_prefab_ready(prefab)
             self.entities[#self.entities + 1] = eid
             local name = pt.tag and pt.tag[1]
             if not name then
-                name = pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or "")
+                if pt.data.anim_ctrl then
+                    anim_eid = eid
+                    name = "anim_ctrl"
+                else
+                    name = pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or "")
+                end
             end
             node_map[eid] = {template = pt, parent = parent, name = (i == 1) and "Scene" or name, scene_root = (i == 1), is_patch = (i >= self.patch_start_index)}
             j = j + 1
@@ -405,6 +411,14 @@ function m:on_prefab_ready(prefab)
     local srt = self.prefab_template[1].data.scene
     if srt then
         self.root_mat = math3d.ref(math3d.matrix(srt))
+    end
+
+    if anim_eid then
+        local tpl = hierarchy:get_node_info(anim_eid).template
+        if not tpl.tag then
+            tpl.tag = {"anim_ctrl"}
+            self:on_patch_tag(anim_eid, tpl.tag)
+        end
     end
 end
 

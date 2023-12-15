@@ -15,20 +15,15 @@ end
 local engine_event = {}
 
 function engine_event:Animation(tid, ud)
-	local anim_eid = ud.eid_map["anim_eid"]
-	-- TODO: rework this code
-	-- for _, eid in ipairs(entitys) do
-	-- 	local e <close> = world:entity(eid, "anim_ctrl?in")
-		if anim_eid then
-			iani.play(anim_eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
-			if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
-				iani.set_time(anim_eid, ud.ev.pause_frame)
-				iani.pause(anim_eid, true)
-			end
-			-- print("event animation : ", ud.ev.name, ud.ev.asset_path)
-			-- break
+	local anim_ctrl = ud.eid_map["anim_ctrl"]
+	local anim_eid = anim_ctrl and anim_ctrl[1] or nil
+	if anim_eid then
+		iani.play(anim_eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
+		if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
+			iani.set_time(anim_eid, ud.ev.pause_frame)
+			iani.pause(anim_eid, true)
 		end
-	-- end
+	end
 end
 
 function engine_event:Effect(tid, ud)
