@@ -73,7 +73,7 @@ function iani.play(eid, anim_state)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in playing?out")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in playing?out")
 	local anim_name = anim_state.name
 	e.anim_ctrl.name = anim_name
 	e.anim_ctrl.animation = anim_name
@@ -87,16 +87,16 @@ function iani.play(eid, anim_state)
 	world:pub{"animation", anim_name, "play", anim_state.owner}
 end
 
-function iani.get_duration(eid, anim_name)
+function iani.get_duration(eid, name)
 	local anim_eid = get_anim_eid(eid)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in")
-	if not anim_name then
-		anim_name = e.anim_ctrl.animation
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
+	if not name then
+		name = e.anim_ctrl.animation
 	end
-	return e.animation.status[anim_name].handle:duration()
+	return animation.get_duration(e, name)
 end
 
 function iani.step(anim_e, s_delta, absolute)
@@ -105,14 +105,13 @@ function iani.step(anim_e, s_delta, absolute)
 	if not name then
 		return
 	end
-	local status = anim_e.animation.status[name]
-	if not status then
+	local duration = animation.get_duration(anim_e, name)
+	if not duration then
 		return
 	end
 	local play_state = ctrl.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
-	local duration = status.handle:duration()
 	local next_time = absolute and adjust_delta or (play_state.ratio * duration + adjust_delta)
 	if next_time > duration then
 		if not play_state.loop then
@@ -129,9 +128,7 @@ function iani.step(anim_e, s_delta, absolute)
 	w:extend(anim_e, "playing?out")
 	ctrl.dirty = true
 	anim_e.playing = ctrl.play_state.play
-	for n in pairs(anim_e.animation.status) do
-		animation.play(anim_e, n)
-	end
+	animation.reset(anim_e)
 	animation.play(anim_e, name, play_state.ratio)
 end
 
@@ -140,7 +137,7 @@ function iani.set_time(eid, second)
 	if not anim_eid then
 		return
 	end
-	local e <close> = world:entity(anim_eid, "anim_ctrl:in animation:in")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
@@ -171,16 +168,16 @@ function iani.get_time(eid)
 	if not anim_eid then
 		return 0
 	end
-	local e <close> = world:entity(anim_eid, "animation:in anim_ctrl:in")
+	local e <close> = world:entity(anim_eid, "anim_ctrl:in")
 	local name = e.anim_ctrl.animation
 	if not name then
 		return 0
 	end
-	local status = e.animation.status[name]
-	if not status then
+	local duration = animation.get_duration(e, name)
+	if not duration then
 		return 0
 	end
-	return e.anim_ctrl.play_state.ratio * status.handle:duration()
+	return e.anim_ctrl.play_state.ratio * duration
 end
 
 function iani.set_speed(eid, speed)

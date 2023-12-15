@@ -70,7 +70,7 @@ local iani = ecs.require "ant.anim_ctrl|state_machine"
 
 function ani_sys:animation_state()
 	local delta_time = timer.delta()
-	for e in w:select "playing animation:in anim_ctrl:in" do
+	for e in w:select "playing anim_ctrl:in" do
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
 			iani.step(e, delta_time * 0.001)

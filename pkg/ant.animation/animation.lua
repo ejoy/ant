@@ -7,7 +7,6 @@ local ozz = require "ozz"
 local skinning = ecs.require "skinning"
 
 local m = ecs.system "animation_system"
-local api = {}
 
 local function create(filename)
     local data = assetmgr.resource(filename)
@@ -74,12 +73,32 @@ function m:final()
     w:clear "animation_changed"
 end
 
+local api = {}
+
 function api.play(e, name, ratio)
+    w:extend(e, "animation:in animation_changed?out")
     local status = e.animation.status[name]
     if status.ratio ~= ratio then
         status.ratio = ratio
-        w:extend(e, "animation_changed?out")
         e.animation_changed = true
+    end
+end
+
+function api.reset(e)
+    w:extend(e, "animation:in animation_changed?out")
+    for _, status in pairs(e.animation.status) do
+        if status.ratio ~= nil then
+            status.ratio = nil
+            e.animation_changed = true
+        end
+    end
+end
+
+function api.get_duration(e, name)
+    w:extend(e, "animation:in")
+    local status = e.animation.status[name]
+    if status then
+        return status.handle:duration()
     end
 end
 
