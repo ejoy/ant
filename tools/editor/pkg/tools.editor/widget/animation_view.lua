@@ -65,8 +65,8 @@ local function do_to_runtime_event(evs)
             name        = ev.name,
             asset_path  = ev.asset_path,
             sound_event = ev.sound_event,
-            -- breakable   = ev.breakable,
-            -- life_time   = ev.life_time,
+            forwards    = ev.forwards,
+            pause_frame = ev.pause_frame,
             -- move        = ev.move,
             msg_content = ev.msg_content,
             link_info   = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
@@ -122,11 +122,15 @@ local function from_runtime_event(runtime_event)
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
                 end
                 -- if e.event_type == "Effect" then
-                --     e.breakable = e.breakable or false
-                --     e.life_time = e.life_time or 2
-                --     e.breakable_ui = {e.breakable}
-                --     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
+                --     e.fadeout = e.fadeout or false
+                --     e.fadeout_ui = {e.fadeout}
                 -- end
+                if e.event_type == "Animation" then
+                    e.forwards = e.forwards or false
+                    e.forwards_ui = {e.forwards}
+                    e.pause_frame = e.pause_frame or -1
+                    e.pause_frame_ui = {e.pause_frame, min = -1, max = 300, speed = 1}
+                end
             elseif e.event_type == "Message" then
                 e.msg_content = e.msg_content or ""
                 e.msg_content_ui = {text = e.msg_content}
@@ -218,12 +222,12 @@ local function add_event(et)
             slot_eid = nil,
         } or nil,
         sound_event     = (et == "Sound") and "" or nil,
-        -- breakable       = (et == "Effect") and false or nil,
-        -- breakable_ui    = (et == "Effect") and {false} or nil,
-        -- life_time       = (et == "Effect") and 2 or nil,
-        -- life_time_ui    = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
-        -- move            = (et == "Move") and {0.0, 0.0, 0.0} or nil,
-        -- move_ui         = (et == "Move") and {0.0, 0.0, 0.0} or nil,
+        -- fadeout         = (et == "Effect") and false or nil,
+        forwards        = (et == "Animation") and false or nil,
+        pause_frame     = (et == "Animation") and -1 or nil,
+        fadeout_ui      = (et == "Effect") and {false} or nil,
+        forwards_ui     = (et == "Animation") and {false} or nil,
+        pause_frame_ui  = (et == "Animation") and {-1, min = -1, max = 300, speed = 1} or nil,
         name_ui         = {text = event_name},
         msg_content     = (et == "Message") and "" or nil,
         msg_content_ui  = (et == "Message") and {text = ""} or nil,
@@ -416,6 +420,11 @@ local function show_current_event()
             dirty = true
         end
         if current_event.event_type == "Effect" then
+            -- imgui.widget.PropertyLabel("Forwards")
+            -- if imgui.widget.Checkbox("##Forwards", current_event.fadeout_ui) then
+            --     current_event.fadeout = current_event.fadeout_ui[1]
+            --     dirty = true
+            -- end
             local slot_list = hierarchy.slot_list
             if slot_list then
                 imgui.widget.PropertyLabel("LinkSlot")
@@ -429,6 +438,17 @@ local function show_current_event()
                     end
                     imgui.widget.EndCombo()
                 end
+            end
+        else
+            imgui.widget.PropertyLabel("Forwards")
+            if imgui.widget.Checkbox("##Forwards", current_event.forwards_ui) then
+                current_event.forwards = current_event.forwards_ui[1]
+                dirty = true
+            end
+            imgui.widget.PropertyLabel("PauseFrame")
+            if imgui.widget.DragInt("##PauseFrame", current_event.pause_frame_ui) then
+                current_event.pause_frame = current_event.pause_frame_ui[1]
+                dirty = true
             end
         end
     elseif current_event.event_type == "Message" then

@@ -102,7 +102,7 @@ function ani_sys:entity_init()
 			previous_ratio = 0.0,
 			speed = 1.0,
 			play = (anim_name ~= ""),
-			loop = true,
+			loop = false,
 			manual_update = false
 		}
 		e.playing = e.anim_ctrl.play_state.play
