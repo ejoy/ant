@@ -18,6 +18,9 @@ local function getDelta()
     local _, now = ltask.now()
     local delta = now - last
     last = now
+    if delta > 10 then
+        delta = 10
+    end
     return delta * 10
 end
 
