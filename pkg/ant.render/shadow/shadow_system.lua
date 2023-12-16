@@ -69,7 +69,7 @@ local function create_csm_entity(index, vr, fbidx)
 			viewdir = mc.ZAXIS,
 			eyepos 	= mc.ZERO_PT,
 			frustum = {
-				l = -1, r = 1, t = -1, b = 1,
+				l = -1, r = 1, t = 1, b = -1,
 				n = 1, f = 100, ortho = true,
 			},
 			name = csmname,
@@ -215,13 +215,13 @@ local BOX_SEGMENT_INDICES<const> = {
 
 assert(#BOX_SEGMENT_INDICES == 4*3)
 
-local function aabb_near_z(aabb)
-	local minv = math3d.array_index(aabb, 1)
-	return math3d.index(minv, 3)
+local function aabb_near_far(aabb)
+	local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+	return math3d.index(minv, 3), math3d.index(maxv, 3)
 end
 
-local function frustum_interset_aabb(M, aabbLS, nearCS, farCS)
-	local nearLS, farLS = math.maxinteger, -math.maxinteger
+local function frustum_interset_aabb(M, aabbLS)
+	local nearLS, farLS = aabb_near_far(aabbLS)
 
 	local function update_nearfar(p)
 		local z = math3d.index(p, 3)
@@ -230,7 +230,7 @@ local function frustum_interset_aabb(M, aabbLS, nearCS, farCS)
 		return p
 	end
 
-	local cornersLS = math3d.frustum_points(M, nearCS, farCS)
+	local cornersLS = math3d.frustum_points(M)
 	local verticesLS = {}
 	for i=1, 8 do
 		local corner = math3d.array_index(cornersLS, i)
@@ -263,15 +263,15 @@ local function mark_camera_changed(e)
 end
 
 local function calc_focus_matrix(M, verticesLS)
-	local aabb = math3d.aabb()
-	for _, v in ipairs(verticesLS) do
-		local p = math3d.transformH(M, v)
-		aabb = math3d.aabb_append(aabb, p)
-	end
+	local minv, maxv = math3d.minmax(math3d.array_vector(verticesLS), M)
+	-- for _, v in ipairs(verticesLS) do
+	-- 	local p = math3d.transformH(M, v)
+	-- 	aabb = math3d.aabb_append(aabb, p)
+	-- end
 
 	-- extents = maxv - minv
 	-- center = (maxv+minv) * 0.5
-	local center, extents = math3d.aabb_center_extents(aabb)
+	local center, extents = math3d.aabb_center_extents(math3d.aabb(minv, maxv))
 
 	local ex, ey = math3d.index(extents, 1, 2)
 	local sx, sy = 2.0/ex, 2.0/ey
@@ -365,7 +365,7 @@ function shadow_sys:update_camera_depend()
 	local lightdirWS = math3d.index(D.scene.worldmat, 3)
 
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
-	local Lv = math3d.lookat(lightdirWS, mc.ZERO_PT, rightdir)
+	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 
 	local main_queueidx = queuemgr.queue_index "main_queue"
 	C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
@@ -404,8 +404,6 @@ function shadow_sys:update_camera_depend()
 
 	--TODO: need get from setting file
 	local nearHit, farHit = 1, 100
-
-	local PSCnear = aabb_near_z(sceneaabbLS)
 	local viewfrustum = {}; for k, v in pairs(C.camera.frustum) do viewfrustum[k] = v end
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
@@ -426,8 +424,6 @@ function shadow_sys:update_camera_depend()
 
 		local verticesLS
 		verticesLS, c.frustum.n, c.frustum.f = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
-		c.frustum.n = forcePSCnear and PSCnear or c.frustum.n
-
 		local Lp	= math3d.projmat(c.frustum, INV_Z)
 
 		--TODO: debug only
@@ -457,7 +453,8 @@ function shadow_sys:update_camera_depend()
 			local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
 			update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
 		else
-			local F 		= calc_focus_matrix(Lp, verticesLS)
+			--local F 		= calc_focus_matrix(Lp, math3d.aabb_points(C.camera.PSCLS))
+			local F 		= calc_focus_matrix(Lp, math3d.aabb_points(sceneaabbLS))
 			local FLp 		= math3d.mul(F, Lp)
 
 			update_camera(c, Lv, FLp)
@@ -759,9 +756,9 @@ function shadowdebug_sys:data_changed()
 				for e in w:select "csm:in camera_ref:in" do
 					local ce = world:entity(e.camera_ref, "camera:in scene:in")
 					local prefixname = "csm" .. e.csm.index
-					-- add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
+					add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
 					-- add_frustum(prefixname .. "_Lv2Ndc", 		ce.camera.Lv2Ndc)
-					DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabb, L2W), {1.0, 1.0, 0.0, 1.0})
+					--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabb, L2W), {1.0, 1.0, 0.0, 1.0})
 
 					-- add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
 					-- add_frustum(prefixname .. "_W", 			ce.camera.W)

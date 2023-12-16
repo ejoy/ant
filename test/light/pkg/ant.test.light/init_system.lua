@@ -91,9 +91,9 @@ function S.init()
         local leid = e.tag['*'][2]
         local le<close> = world:entity(leid, "directional_light scene:update")
 
-        local r2l_mat<const> = mc.R2L_MAT
-        local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
-        iom.set_direction(le, v)
+        -- local r2l_mat<const> = mc.R2L_MAT
+        -- local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
+        iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
     end)
 
 end
@@ -180,7 +180,7 @@ function S.init_world()
 
     create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", function (e)
         local root<close> = world:entity(e.tag['*'][1])
-        iom.set_position(root, math3d.vector(0, 1, 0))
+        iom.set_position(root, math3d.vector(0, 2, 0))
     end)
 
     -- create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
