@@ -95,7 +95,10 @@ static LRESULT CALLBACK platformMainViewportWindowFunction(HWND hWnd, UINT messa
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-static HWND platformCreateMainWindow(int w, int h) {
+void* platformCreateMainWindow(int w, int h) {
+	if (FAILED(OleInitialize(NULL))) {
+		return nullptr;
+	}
 	RECT rect;
 	rect.left = 0;
 	rect.right = w;
@@ -127,37 +130,17 @@ static HWND platformCreateMainWindow(int w, int h) {
 	}
 	ShowWindow(window, SW_SHOWDEFAULT);
 	UpdateWindow(window);
-	return window;
-}
-
-void* platformGetHandle(ImGuiViewport* viewport) {
-	return viewport->PlatformHandle;
-}
-
-void* platformCreate(lua_State* L, int w, int h) {
-	if (FAILED(OleInitialize(NULL))) {
-		return nullptr;
-	}
-	HWND window = platformCreateMainWindow(w, h);
-	if (!window) {
-		return nullptr;
-	}
 	g_dropmanager.Register(window);
-	ImGui_ImplWin32_Init(window);
-	return window;
+	return (void*)window;
 }
 
-void platformShutdown() {
-	ImGui_ImplWin32_Shutdown();
-}
-
-void platformDestroy() {
+void platformDestroyMainWindow() {
 	g_dropmanager.Revoke();
 	OleUninitialize();
 	UnregisterClassW(L"ImGui Host Viewport", GetModuleHandleW(NULL));
 }
 
-bool platformNewFrame() {
+bool platformDispatchMessage() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -167,8 +150,23 @@ bool platformNewFrame() {
 			DispatchMessageW(&msg);
 		}
 		else {
-			ImGui_ImplWin32_NewFrame();
 			return true;
 		}
 	}
+}
+
+void* platformGetHandle(ImGuiViewport* viewport) {
+	return viewport->PlatformHandle;
+}
+
+void platformInit(void* window) {
+	ImGui_ImplWin32_Init(window);
+}
+
+void platformShutdown() {
+	ImGui_ImplWin32_Shutdown();
+}
+
+void platformNewFrame() {
+	ImGui_ImplWin32_NewFrame();
 }

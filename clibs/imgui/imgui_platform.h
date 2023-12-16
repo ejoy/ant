@@ -1,8 +1,9 @@
 #pragma once
 
-struct lua_State;
-void* platformCreate(lua_State* L, int w, int h);
+void* platformCreateMainWindow(int w, int h);
+void  platformDestroyMainWindow();
+bool  platformDispatchMessage();
+void  platformInit(void* window);
 void  platformShutdown();
-void  platformDestroy();
-bool  platformNewFrame();
+void  platformNewFrame();
 void* platformGetHandle(ImGuiViewport* viewport);

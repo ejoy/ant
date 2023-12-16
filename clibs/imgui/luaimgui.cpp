@@ -51,17 +51,6 @@ static Flags lua_getflags(lua_State* L, int idx, Flags def) {
 	return (Flags)luaL_optinteger(L, idx, lua_Integer(def));
 }
 
-static int
-lDestroy(lua_State *L) {
-	if (ImGui::GetCurrentContext()) {
-		rendererDestroy();
-		platformShutdown();
-	}
-	ImGui::DestroyContext();
-	platformDestroy();
-	return 0;
-}
-
 static int dSpace(lua_State* L) {
 	const char* str_id = luaL_checkstring(L, 1);
 	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
@@ -2970,7 +2959,7 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 #include "imgui_enum.h"
 
 static int
-lCreate(lua_State* L) {
+v1Create(lua_State* L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
@@ -2991,10 +2980,11 @@ lCreate(lua_State* L) {
 	window_register(L, 1);
 	int width = (int)luaL_checkinteger(L, 2);
 	int height = (int)luaL_checkinteger(L, 3);
-	void* window = platformCreate(L, width, height);
+	void* window = platformCreateMainWindow(width, height);
 	if (!window) {
 		return luaL_error(L, "Create platform failed");
 	}
+	platformInit(window);
 	if (!rendererCreate()) {
 		return luaL_error(L, "Create renderer failed");
 	}
@@ -3003,13 +2993,119 @@ lCreate(lua_State* L) {
 }
 
 static int
-lNewFrame(lua_State* L) {
-	if (!platformNewFrame()) {
+v1Destroy(lua_State *L) {
+	if (ImGui::GetCurrentContext()) {
+		rendererDestroy();
+		platformShutdown();
+	}
+	ImGui::DestroyContext();
+	platformDestroyMainWindow();
+	return 0;
+}
+
+static int
+v1NewFrame(lua_State* L) {
+	if (!platformDispatchMessage()) {
 		return 0;
 	}
+	platformNewFrame();
 	ImGui::NewFrame();
 	lua_pushboolean(L, 1);
 	return 1;
+}
+
+
+static int
+v2Create(lua_State* L) {
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = NULL;
+	io.UserData = L;
+
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
+	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
+	io.ConfigViewportsNoTaskBarIcon = true;
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.WindowRounding = 0.0f;
+	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+
+	window_register(L, 1);
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	void* window = lua_touserdata(L, 2);
+	platformInit(window);
+	if (!rendererCreate()) {
+		return luaL_error(L, "Create renderer failed");
+	}
+	lua_pushlightuserdata(L, window);
+	return 1;
+}
+
+static int
+v2Destroy(lua_State *L) {
+	if (ImGui::GetCurrentContext()) {
+		rendererDestroy();
+		platformShutdown();
+	}
+	ImGui::DestroyContext();
+	platformDestroyMainWindow();
+	return 0;
+}
+
+static int
+v2NewFrame(lua_State* L) {
+	platformNewFrame();
+	ImGui::NewFrame();
+	return 0;
+}
+
+static int
+v2CreateMainWindow(lua_State *L) {
+	int width = (int)luaL_checkinteger(L, 1);
+	int height = (int)luaL_checkinteger(L, 2);
+	void* window = platformCreateMainWindow(width, height);
+	if (!window) {
+		return luaL_error(L, "Create platform failed");
+	}
+	lua_pushlightuserdata(L, window);
+	return 1;
+}
+
+static int
+v2DestroyMainWindow(lua_State *L) {
+	platformDestroyMainWindow();
+	return 0;
+}
+
+static int
+v2DispatchMessage(lua_State* L) {
+	if (!platformDispatchMessage()) {
+		return 0;
+	}
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+static int
+v2AddMouseButtonEvent(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	int button = (int)luaL_checkinteger(L, 1);
+	bool down = !!lua_toboolean(L, 2);
+	io.AddMouseButtonEvent(button, down);
+	return 0;
+}
+
+static int
+v2AddMousePosEvent(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	float x = (float)luaL_checknumber(L, 1);
+	float y = (float)luaL_checknumber(L, 2);
+	io.AddMousePosEvent(x, y);
+	return 0;
 }
 
 static int
@@ -3111,9 +3207,9 @@ luaopen_imgui(lua_State *L) {
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
-		{ "Create", lCreate },
-		{ "Destroy", lDestroy },
-		{ "NewFrame", lNewFrame },
+		{ "Create", v1Create },
+		{ "Destroy", v1Destroy },
+		{ "NewFrame", v1NewFrame },
 		{ "EndFrame", lEndFrame},
 		{ "InitRender", lInitRender },
 		{ "Render", lRender },
@@ -3125,6 +3221,20 @@ luaopen_imgui(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+
+	luaL_Reg v2[] = {
+		{ "Create", v2Create },
+		{ "Destroy", v2Destroy },
+		{ "NewFrame", v2NewFrame },
+		{ "CreateMainWindow", v2CreateMainWindow },
+		{ "DestroyMainWindow", v2DestroyMainWindow },
+		{ "DispatchMessage", v2DispatchMessage },
+		{ "AddMouseButtonEvent", v2AddMouseButtonEvent },
+		{ "AddMousePosEvent", v2AddMousePosEvent },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, v2);
+	lua_setfield(L, -2, "v2");
 
 	luaL_Reg dock[] = {
 		{ "Space", dSpace },
