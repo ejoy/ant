@@ -376,8 +376,7 @@ function shadow_sys:update_camera_depend()
 
 	local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
 
-	local Lv2Vv = math3d.mul(C.camera.viewmat, math3d.inverse_fast(Lv))
-	
+	local Lv2Vv = math3d.mul(math3d.inverse_fast(Lv), C.camera.viewmat)
 	C.camera.Lv2Vv		= M3D(C.camera.Lv2Vv, Lv2Vv)
 	C.camera.sceneaabbLS= M3D(C.camera.sceneaabbLS, sceneaabbLS)
 	C.camera.Lv			= M3D(C.camera.Lv, Lv)
@@ -413,14 +412,14 @@ function shadow_sys:update_camera_depend()
 
 		local sr	= split_ratio[csm.index]
 
-		local function Ndc2Lv(zn, zf)
-			viewfrustum.n, viewfrustum.f = zn, zf
-			local p = math3d.projmat(viewfrustum, true)
-			return math3d.mul(p, Lv2Vv)
+		local function Lv2Ndc()
+			c.zn, c.zf = calc_viewspace_z(zn, zf, sr[1]), calc_viewspace_z(zn, zf, sr[2])
+			viewfrustum.n, viewfrustum.f = c.zn, c.zf
+			local sp 	= math3d.projmat(viewfrustum, INV_Z)
+			-- sp * v * inverse(Lv)
+			return math3d.mul(sp, Lv2Vv)
 		end
-
-		c.zn, c.zf = calc_viewspace_z(zn, zf, sr[1]), calc_viewspace_z(zn, zf, sr[2])
-		c.Lv2Ndc = M3D(c.Lv2Ndc, Ndc2Lv(c.zn, c.zf))
+		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc())
 
 		local verticesLS
 		verticesLS, c.frustum.n, c.frustum.f = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
@@ -454,7 +453,7 @@ function shadow_sys:update_camera_depend()
 			update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
 		else
 			--local F 		= calc_focus_matrix(Lp, math3d.aabb_points(C.camera.PSCLS))
-			local F 		= calc_focus_matrix(Lp, math3d.aabb_points(sceneaabbLS))
+			local F 		= calc_focus_matrix(Lp, verticesLS)
 			local FLp 		= math3d.mul(F, Lp)
 
 			update_camera(c, Lv, FLp)
@@ -740,7 +739,7 @@ function shadowdebug_sys:data_changed()
 
 			local C = world:entity(irq.main_camera(), "camera:in").camera
 			local L2W = math3d.inverse(C.Lv)
-			-- add_frustum("camera_viewprojmat", C.viewprojmat)
+			--add_frustum("camera_viewprojmat", C.viewprojmat, {0.0, 1.0, 0.0, 1.0})
 
 			local function aabb_points(aabb, M)
 				local points = math3d.aabb_points(aabb)
@@ -756,9 +755,8 @@ function shadowdebug_sys:data_changed()
 				for e in w:select "csm:in camera_ref:in" do
 					local ce = world:entity(e.camera_ref, "camera:in scene:in")
 					local prefixname = "csm" .. e.csm.index
-					add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					-- add_frustum(prefixname .. "_Lv2Ndc", 		ce.camera.Lv2Ndc)
-					--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabb, L2W), {1.0, 1.0, 0.0, 1.0})
+					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
+					DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabb, L2W), {1.0, 1.0, 0.0, 1.0})
 
 					-- add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
 					-- add_frustum(prefixname .. "_W", 			ce.camera.W)
@@ -771,7 +769,7 @@ function shadowdebug_sys:data_changed()
 			--DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSRLS, L2W)),{1.0, 0.1, 0.1, 1.0})
 			--DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSCLS, L2W)),{0.1, 1.0, 0.1, 1.0})
 
-			--DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(aabb_points(C.PSCLS, L2W),{0.1, 1.0, 0.1, 1.0})
+			--DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W),{0.1, 1.0, 0.1, 1.0})
 
 			--DEBUG_ENTITIES["CSMFrustum"] = ientity.create_frustum_entity(math3d.frustum_points(C.viewprojmat), {0.1, 1.0, 0.1, 1.0})
 			--DEBUG_ENTITIES["CSMLight"] = ientity.create_frustum_entity(math3d.array_vector(frustum_interset_aabb(math3d.inverse(C.viewprojmat), C.sceneaabbLS, zn, zf)),{1.0, 0.1, 0.1, 1.0})
