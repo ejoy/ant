@@ -77,6 +77,7 @@ function m:exit()
 end
 
 local TouchEvent = world:sub { "touch" }
+local GesturePinchEvent = world:sub { "gesture", "pinch" }
 
 function m:start_frame()
 	for _, e in TouchEvent:unpack() do
@@ -85,6 +86,9 @@ function m:start_frame()
 		elseif e.state == "ended" then
 			imgui.v2.AddMouseButtonEvent(0, false)
 		end
+	end
+	for _, _, e in GesturePinchEvent:unpack() do
+		imgui.v2.AddMouseWheelEvent(e.velocity, e.velocity)
 	end
 	imgui.v2.NewFrame()
 end

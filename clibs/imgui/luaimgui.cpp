@@ -3101,11 +3101,11 @@ v2AddMouseButtonEvent(lua_State* L) {
 }
 
 static int
-v2AddMousePosEvent(lua_State* L) {
+v2AddMouseWheelEvent(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
 	float x = (float)luaL_checknumber(L, 1);
 	float y = (float)luaL_checknumber(L, 2);
-	io.AddMousePosEvent(x, y);
+	io.AddMouseWheelEvent(x, y);
 	return 0;
 }
 
@@ -3232,7 +3232,7 @@ luaopen_imgui(lua_State *L) {
 		{ "NewFrame", v2NewFrame },
 		{ "DispatchMessage", v2DispatchMessage },
 		{ "AddMouseButtonEvent", v2AddMouseButtonEvent },
-		{ "AddMousePosEvent", v2AddMousePosEvent },
+		{ "AddMouseWheelEvent", v2AddMouseWheelEvent },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, v2);
