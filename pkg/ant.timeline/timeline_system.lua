@@ -20,7 +20,8 @@ function engine_event:Animation(tid, ud)
 	if anim_eid then
 		iani.play(anim_eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
 		if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
-			iani.set_time(anim_eid, ud.ev.pause_frame)
+			-- TODO: timeline frame ratio is 30
+			iani.set_time(anim_eid, ud.ev.pause_frame / 30)
 			iani.pause(anim_eid, true)
 		end
 	end
