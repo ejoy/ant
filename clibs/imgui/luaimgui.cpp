@@ -3106,6 +3106,15 @@ v2AddMouseWheelEvent(lua_State* L) {
 }
 
 static int
+v2AddKeyEvent(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+	bool down = !!lua_toboolean(L, 2);
+	io.AddKeyEvent(key, down);
+	return 0;
+}
+
+static int
 v2AddInputCharacter(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
 	auto c = (unsigned int)luaL_checkinteger(L, 1);
@@ -3248,6 +3257,7 @@ luaopen_imgui(lua_State *L) {
 		{ "DispatchMessage", v2DispatchMessage },
 		{ "AddMouseButtonEvent", v2AddMouseButtonEvent },
 		{ "AddMouseWheelEvent", v2AddMouseWheelEvent },
+		{ "AddKeyEvent", v2AddKeyEvent },
 		{ "AddInputCharacter", v2AddInputCharacter },
 		{ "AddInputCharacterUTF16", v2AddInputCharacterUTF16 },
 		{ NULL, NULL },
