@@ -232,7 +232,11 @@ local function frustum_interset_aabb(M, aabbLS)
 	end
 
 	local cornersLS = math3d.frustum_points(M)
+	local aabbpointsLS = math3d.aabb_points(aabbLS)
+
 	local verticesLS = {}
+
+	--check aabb included frustum
 	for i=1, 8 do
 		local corner = math3d.array_index(cornersLS, i)
 		if math3d.aabb_test_point(aabbLS, corner) >= 0 then
@@ -240,19 +244,74 @@ local function frustum_interset_aabb(M, aabbLS)
 		end
 	end
 
+	--check frustum included aabb
+	if #verticesLS == 0 then
+		
+	end
+
+	local function aabb_planes(aabbpoints)
+		-- lbn, ltn, rbn, rtn,
+		-- lbf, ltf, rbf, rtf,
+
+		-- plane's normal point inside aabb
+		--[[
+			left, right,
+			bottom, top,
+			near,	far,
+		]]
+
+		
+		local lbn, ltn, rbn, rtn = 1, 2, 3, 4
+		local lbf, ltf,	rbf, rtf = 5, 6, 7, 8
+
+		local planes = {}
+		for idx, d in ipairs{
+			{n = mc.XAXIS, p = math3d.array_index(aabbpoints, ltn)}, --left
+			{n = mc.NXAXIS,p = math3d.array_index(aabbpoints, rbn)}, --right
+
+			{n = mc.YAXIS, p = math3d.array_index(aabbpoints, lbn)}, --bottom
+			{n = mc.NYAXIS,p = math3d.array_index(aabbpoints, ltn)}, --top
+
+			{n = mc.ZAXIS, p = math3d.array_index(aabbpoints, ltn)}, --near
+			{n = mc.NZAXIS,p = math3d.array_index(aabbpoints, ltf)}, --far
+		} do
+			local dis = math3d.dot(d.n, d.p)
+			planes[idx] = math3d.set_index(d.n, 4, dis)
+		end
+
+		return planes
+	end
+
 	--frustum interset with aabbLS or aabbLS inside frustum
 	if #verticesLS < 8 then
-		local aabbpoints = math3d.aabb_points(aabbLS)
-		for _, l in ipairs(BOX_SEGMENT_INDICES) do
-			local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
-			for _, t in ipairs(BOX_TRIANGLES_INDICES) do
-				local v1, v2, v3 = math3d.array_index(cornersLS, t[1]), math3d.array_index(cornersLS, t[2]), math3d.array_index(cornersLS, t[3])
-				local p = mu.segment_triangle(s0, s1, v1, v2, v3)
-				if p then
-					verticesLS[#verticesLS+1] = update_nearfar(p)
+		local aabbplanes = aabb_planes(aabbpointsLS)
+
+		for i=1, 4 do
+			local p0, p1 = cornersLS[i], cornersLS[i+4]
+			local r = {o=p0, d=math3d.sub(p1, p0)}
+
+			for _, p in ipairs(aabbplanes) do
+				local t = math3d.plane_ray(r.o, r.d, p)
+				if t then
+					local pt = math3d.muladd(r.d, t, r.o)
+					if math3d.aabb_test_point(pt) then
+						verticesLS[#verticesLS+1] = update_nearfar(pt)
+					end
 				end
 			end
 		end
+
+		-- local aabbpoints = math3d.aabb_points(aabbLS)
+		-- for _, l in ipairs(BOX_SEGMENT_INDICES) do
+		-- 	local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
+		-- 	for _, t in ipairs(BOX_TRIANGLES_INDICES) do
+		-- 		local v1, v2, v3 = math3d.array_index(cornersLS, t[1]), math3d.array_index(cornersLS, t[2]), math3d.array_index(cornersLS, t[3])
+		-- 		local p = mu.segment_triangle(s0, s1, v1, v2, v3)
+		-- 		if p then
+		-- 			verticesLS[#verticesLS+1] = update_nearfar(p)
+		-- 		end
+		-- 	end
+		-- end
 	end
 
 	return verticesLS, nearLS, farLS
@@ -724,6 +783,26 @@ function shadowdebug_sys:entity_init()
 	-- end
 end
 
+local function draw_lines(lines)
+	return world:create_entity{
+		policy = {"ant.render|simplerender"},
+		data = {
+			simplemesh = {
+				vb = {
+					start = 0, num = #lines,
+					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
+					owned = true,
+				},
+			},
+			material = "/pkg/ant.resources/materials/line.material",
+			scene = {},
+			visible_state = "main_view",
+			owned_mesh_buffer = true,
+		}
+	}
+
+end
+
 function shadowdebug_sys:data_changed()
 	for _, key, press in kbmb:unpack() do
 		if key == "B" and press == 0 then
@@ -772,11 +851,11 @@ function shadowdebug_sys:data_changed()
 					local prefixname = "csm" .. e.csm.index
 					add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
 					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					-- if ce.camera.interset_aabbLS then
-					-- 	DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabbLS, L2W),	{1.0, 1.0, 0.0, 1.0})
-					-- else
-					-- 	log.warn("interset_aabbLS is empty")
-					-- end
+					if ce.camera.interset_aabbLS then
+						DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(transform_points(math3d.aabb_points(ce.camera.interset_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
+					else
+						log.warn("interset_aabbLS is empty")
+					end
 
 					-- local points = math3d.frustum_points(ce.camera.Lv2Ndc)
 					-- local pointsWS = {}
@@ -790,23 +869,7 @@ function shadowdebug_sys:data_changed()
 				end
 			end
 
-			DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = world:create_entity{
-				policy = {"ant.render|simplerender"},
-				data = {
-					simplemesh = {
-						vb = {
-							start = 0, num = #lines,
-							handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
-							owned = true,
-						},
-					},
-					material = "/pkg/ant.resources/materials/line.material",
-					scene = {},
-					visible_state = "main_view",
-					owned_mesh_buffer = true,
-				}
-			}
-
+			--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = draw_lines(lines)
 			
 			--DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSR)),  		{1.0, 0.0, 0.0, 1.0})
 			--DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSC)),  		{0.0, 1.0, 0.0, 1.0})
