@@ -263,11 +263,10 @@ local function mark_camera_changed(e)
 end
 
 local function calc_focus_matrix(M, verticesLS)
+	if #verticesLS == 0 then
+		return mc.IDENTITY_MAT
+	end
 	local minv, maxv = math3d.minmax(math3d.array_vector(verticesLS), M)
-	-- for _, v in ipairs(verticesLS) do
-	-- 	local p = math3d.transformH(M, v)
-	-- 	aabb = math3d.aabb_append(aabb, p)
-	-- end
 
 	-- extents = maxv - minv
 	-- center = (maxv+minv) * 0.5
