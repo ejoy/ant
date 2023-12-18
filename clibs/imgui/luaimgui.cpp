@@ -3016,12 +3016,11 @@ v1NewFrame(lua_State* L) {
 
 
 static int
-v2Create(lua_State* L) {
+v2CreateContext(lua_State* L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.UserData = L;
-
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -3029,24 +3028,26 @@ v2Create(lua_State* L) {
 	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
 	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
 	io.ConfigViewportsNoTaskBarIcon = true;
-
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.WindowRounding = 0.0f;
 	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-
 	window_register(L, 1);
-	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
-	void* window = lua_touserdata(L, 2);
+	return 0;
+}
+
+static int
+v2Init(lua_State* L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	void* window = lua_touserdata(L, 1);
 	platformInit(window);
 	if (!rendererCreate()) {
 		return luaL_error(L, "Create renderer failed");
 	}
-	lua_pushlightuserdata(L, window);
-	return 1;
+	return 0;
 }
 
 static int
-v2Destroy(lua_State *L) {
+v2DestroyContext(lua_State *L) {
 	if (ImGui::GetCurrentContext()) {
 		rendererDestroy();
 		platformShutdown();
@@ -3223,11 +3224,12 @@ luaopen_imgui(lua_State *L) {
 	luaL_newlib(L, l);
 
 	luaL_Reg v2[] = {
-		{ "Create", v2Create },
-		{ "Destroy", v2Destroy },
-		{ "NewFrame", v2NewFrame },
+		{ "CreateContext", v2CreateContext },
+		{ "DestroyContext", v2DestroyContext },
 		{ "CreateMainWindow", v2CreateMainWindow },
 		{ "DestroyMainWindow", v2DestroyMainWindow },
+		{ "Init", v2Init },
+		{ "NewFrame", v2NewFrame },
 		{ "DispatchMessage", v2DispatchMessage },
 		{ "AddMouseButtonEvent", v2AddMouseButtonEvent },
 		{ "AddMousePosEvent", v2AddMousePosEvent },

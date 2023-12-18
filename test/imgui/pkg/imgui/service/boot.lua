@@ -22,7 +22,9 @@ end
 local WIDTH <const> = 1280
 local HEIGHT <const> = 720
 
-local nwh = imgui.Create(event, WIDTH, HEIGHT)
+imgui.v2.CreateContext(event)
+local nwh = imgui.v2.CreateMainWindow(WIDTH, HEIGHT)
+imgui.v2.Init(nwh)
 
 bgfx.init {
     nwh      = nwh,
@@ -73,9 +75,32 @@ imgui.InitRender(
     imgui_image.uniforms.s_tex
 )
 
+local Font = imgui.font.SystemFont
+local function glyphRanges(t)
+    assert(#t % 2 == 0)
+    local s = {}
+    for i = 1, #t do
+        s[#s+1] = ("<I4"):pack(t[i])
+    end
+    s[#s+1] = "\x00\x00\x00"
+    return table.concat(s)
+end
+if platform.os == "windows" then
+    imgui.font.Create {
+        { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
+        { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
+    }
+elseif platform.os == "macos" then
+    imgui.font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
+elseif platform.os == "ios" then
+    imgui.font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
+else
+    error("unknown os:" .. platform.os)
+end
+
 local loop = require "loop"
-loop.init()
-while imgui.NewFrame() do
+while imgui.v2.DispatchMessage() do
+    imgui.v2.NewFrame()
     loop.update(0)
     imgui.Render()
     bgfx.frame()
