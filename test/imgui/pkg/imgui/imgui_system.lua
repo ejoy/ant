@@ -76,19 +76,14 @@ function m:exit()
 	imgui.v2.DestroyContext()
 end
 
-local MouseEvent = world:sub { "mouse" }
-local MouseBtn <const> = {
-	LEFT = 0,
-	RIGHT = 1,
-	MIDDLE = 2,
-}
+local TouchEvent = world:sub { "touch" }
 
 function m:start_frame()
-	for _, btn, state in MouseEvent:unpack() do
-		if state == "DOWN" then
-			imgui.v2.AddMouseButtonEvent(MouseBtn[btn], true)
-		elseif state == "UP" then
-			imgui.v2.AddMouseButtonEvent(MouseBtn[btn], false)
+	for _, e in TouchEvent:unpack() do
+		if e.state == "began" then
+			imgui.v2.AddMouseButtonEvent(0, true)
+		elseif e.state == "ended" then
+			imgui.v2.AddMouseButtonEvent(0, false)
 		end
 	end
 	imgui.v2.NewFrame()
