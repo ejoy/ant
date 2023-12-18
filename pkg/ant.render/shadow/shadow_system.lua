@@ -208,8 +208,8 @@ quad2tri(BOX_TRIANGLES_INDICES, 5, 6, 7, 8) -- far
 assert(#BOX_TRIANGLES_INDICES == 6*2)
 
 local BOX_SEGMENT_INDICES<const> = {
-	{1, 2}, {2, 3}, {3, 4}, {4, 1},
-	{5, 6}, {6, 7}, {7, 8}, {8, 5},
+	{1, 2}, {2, 4}, {4, 3}, {3, 1},
+	{5, 6}, {6, 8}, {8, 7}, {7, 5},
 
 	{1, 5}, {2, 6}, {3, 7}, {4, 8},
 }
@@ -742,47 +742,35 @@ function shadowdebug_sys:data_changed()
 			local L2W = math3d.inverse(C.Lv)
 			--add_frustum("camera_viewprojmat", C.viewprojmat, {0.0, 1.0, 0.0, 1.0})
 
-			local function aabb_points(aabb, M)
-				local points = math3d.aabb_points(aabb)
-				if M then
-					for i=1, #points do
-						points[i] = math3d.transform(M, points[i], 1)
-					end
+			local function transform_points(points, M)
+				local np = {}
+				for i=1, math3d.array_size(points) do
+					np[i] = math3d.transform(M, math3d.array_index(points, i), 1)
 				end
-				return math3d.array_vector(points)
+
+				return math3d.array_vector(np)
 			end
 
 			--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
 
 			local lines = {}
-			local aabbpoints = aabb_points(C.sceneaabbLS, L2W)
-			for _, l in ipairs(BOX_SEGMENT_INDICES) do
-				local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
-				lines[#lines+1] = math3d.serialize(s0):sub(1, 12) .. math3d.serialize(math3d.vector(1.0, 0.0, 0.0, 1.0))
-				lines[#lines+1] = math3d.serialize(s1):sub(1, 12) .. math3d.serialize(math3d.vector(1.0, 0.0, 0.0, 1.0))
+			local aabbpoints = transform_points(math3d.aabb_points(C.sceneaabbLS), L2W)
+
+			local function add_lines(points, color)
+				for _, l in ipairs(BOX_SEGMENT_INDICES) do
+					local s0, s1 = math3d.array_index(points, l[1]), math3d.array_index(points, l[2])
+					lines[#lines+1] = math3d.serialize(s0):sub(1, 12) .. math3d.serialize(color)
+					lines[#lines+1] = math3d.serialize(s1):sub(1, 12) .. math3d.serialize(color)
+				end
 			end
 
-			DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = world:create_entity{
-				policy = {"ant.render|simplerender"},
-				data = {
-					simplemesh = {
-						vb = {
-							start = 0, num = #lines,
-							handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
-							owned = true,
-						},
-					},
-					material = "/pkg/ant.resources/materials/line.material",
-					scene = {},
-					visible_state = "main_queue",
-					owned_mesh_buffer = true,
-				}
-			}
+			add_lines(aabbpoints, math3d.vector(1.0, 0.0, 0.0, 1.0))
 
 			do
 				for e in w:select "csm:in camera_ref:in" do
 					local ce = world:entity(e.camera_ref, "camera:in scene:in")
 					local prefixname = "csm" .. e.csm.index
+					add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
 					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
 					-- if ce.camera.interset_aabbLS then
 					-- 	DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabbLS, L2W),	{1.0, 1.0, 0.0, 1.0})
@@ -801,6 +789,23 @@ function shadowdebug_sys:data_changed()
 					-- add_frustum(prefixname .. "_W", 			ce.camera.W)
 				end
 			end
+
+			DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = world:create_entity{
+				policy = {"ant.render|simplerender"},
+				data = {
+					simplemesh = {
+						vb = {
+							start = 0, num = #lines,
+							handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
+							owned = true,
+						},
+					},
+					material = "/pkg/ant.resources/materials/line.material",
+					scene = {},
+					visible_state = "main_view",
+					owned_mesh_buffer = true,
+				}
+			}
 
 			
 			--DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSR)),  		{1.0, 0.0, 0.0, 1.0})
