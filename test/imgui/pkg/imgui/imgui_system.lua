@@ -72,6 +72,10 @@ function m:init()
 	end
 end
 
+function m:exit()
+	imgui.v2.DestroyContext()
+end
+
 local MouseEvent = world:sub { "mouse" }
 local MouseBtn <const> = {
 	LEFT = 0,
@@ -80,7 +84,7 @@ local MouseBtn <const> = {
 }
 
 function m:start_frame()
-	for _, btn, state, x, y in MouseEvent:unpack() do
+	for _, btn, state in MouseEvent:unpack() do
 		if state == "DOWN" then
 			imgui.v2.AddMouseButtonEvent(MouseBtn[btn], true)
 		elseif state == "UP" then
