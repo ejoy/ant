@@ -5,7 +5,7 @@
 #include "imgui_window.h"
 #include "imgui_platform.h"
 
-struct DropManager : public IDropTarget {
+struct ImguiDropManager : public IDropTarget {
 	ULONG m_refcount = 0;
 	ULONG AddRef() { return InterlockedIncrement(&m_refcount); }
 	ULONG Release() { return InterlockedDecrement(&m_refcount); }
@@ -72,7 +72,7 @@ struct DropManager : public IDropTarget {
 	}
 };
 
-DropManager g_dropmanager;
+static std::unique_ptr<ImguiDropManager> g_dropmanager;
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -130,12 +130,16 @@ void* platformCreateMainWindow(int w, int h) {
 	}
 	ShowWindow(window, SW_SHOWDEFAULT);
 	UpdateWindow(window);
-	g_dropmanager.Register(window);
+	g_dropmanager.reset(new ImguiDropManager);
+	g_dropmanager->Register(window);
 	return (void*)window;
 }
 
 void platformDestroyMainWindow() {
-	g_dropmanager.Revoke();
+	if (g_dropmanager) {
+		g_dropmanager->Revoke();
+	g_dropmanager.reset();
+	}
 	OleUninitialize();
 	UnregisterClassW(L"ImGui Host Viewport", GetModuleHandleW(NULL));
 }

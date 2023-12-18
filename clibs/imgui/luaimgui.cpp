@@ -3050,7 +3050,6 @@ v2DestroyContext(lua_State *L) {
 		platformShutdown();
 	}
 	ImGui::DestroyContext();
-	platformDestroyMainWindow();
 	return 0;
 }
 

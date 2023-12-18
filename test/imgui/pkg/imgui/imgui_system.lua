@@ -15,7 +15,7 @@ local event = {}
 function event.size()
 end
 
-function event.dropfiles()
+function event.dropfiles(files)
 end
 
 local viewidcount = 0

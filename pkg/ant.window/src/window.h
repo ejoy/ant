@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <string>
+#include <vector>
 
 struct lua_State;
 
@@ -21,6 +23,7 @@ void window_message_init(struct ant_window_callback* cb, void* window, void* con
 void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_exit(struct ant_window_callback* cb);
 void window_message_size(struct ant_window_callback* cb, int x, int y);
+void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files);
 
 
 namespace ant::window {

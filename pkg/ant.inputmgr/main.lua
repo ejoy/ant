@@ -54,6 +54,9 @@ local function create(world, type)
     function ev.keyboard(m)
         world:pub {"keyboard", keymap[m.key], m.press, m.state}
     end
+    function ev.dropfiles(...)
+        world:pub {"dropfiles", ...}
+    end
     function ev.size(m)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {

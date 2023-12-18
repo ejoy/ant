@@ -128,6 +128,15 @@ static void push_message_arg(lua_State* L, ant::window::keyboard_state v) {
 	}
 }
 
+static void push_message_arg(lua_State* L, std::vector<std::string> const& strs) {
+	lua_createtable(L, (int)strs.size(), 0);
+	lua_Integer n = 0;
+	for (auto const& str: strs) {
+		lua_pushlstring(L, str.data(), str.size());
+		lua_seti(L, -2, ++n);
+	}
+}
+
 template <typename K, typename V, typename... Args>
 static void push_message_args(lua_State*L, K&& k, V&& v, Args&&... args) {
 	push_message_arg(L, std::forward<K>(k));
@@ -181,6 +190,13 @@ void window_message_size(struct ant_window_callback* cb, int x, int y) {
 		"type", "size",
 		"w", x,
 		"h", y
+	);
+}
+
+void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files) {
+	push_message(cb,
+		"type", "dropfiles",
+		"files", files
 	);
 }
 

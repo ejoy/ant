@@ -1,9 +1,82 @@
 #include <Windows.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <memory>
 #include "../../window.h"
 
 #define CLASSNAME L"ANTCLIENT"
+
+struct DropManager : public IDropTarget {
+	ULONG m_refcount = 0;
+	ULONG AddRef() { return InterlockedIncrement(&m_refcount); }
+	ULONG Release() { return InterlockedDecrement(&m_refcount); }
+	HRESULT QueryInterface(REFIID iid, void** ppv) {
+		if (IsEqualIID(iid, IID_IUnknown) || IsEqualIID(iid, IID_IDropTarget)) {
+			*ppv = static_cast<IDropTarget*>(this);
+			AddRef();
+			return S_OK;
+		}
+		*ppv = NULL;
+		return E_NOINTERFACE;
+	}
+	//---------------------------------------------
+	//---------------------------------------------
+	std::vector<std::string> m_files;
+	struct ant_window_callback* m_cb = NULL;
+	HWND m_window = NULL;
+
+	HRESULT DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+		FORMATETC fmte = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+		STGMEDIUM stgm;
+		if (SUCCEEDED(pDataObj->GetData(&fmte, &stgm))) {
+			HDROP hdrop = reinterpret_cast<HDROP>(stgm.hGlobal);
+			UINT n = DragQueryFileW(hdrop, 0xFFFFFFFF, NULL, 0);
+			for (UINT i = 0; i < n; i++) {
+				UINT wlen = ::DragQueryFileW(hdrop, i, NULL, 0);
+				wlen++;
+				std::unique_ptr<wchar_t[]> wstr(new wchar_t[wlen]);
+				::DragQueryFileW(hdrop, i, wstr.get(), wlen);
+				int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.get(), (int)wlen, NULL, 0, 0, 0);
+				if (len > 0) {
+					std::unique_ptr<char[]> str(new char[len]);
+					::WideCharToMultiByte(CP_UTF8, 0, wstr.get(), (int)wlen, str.get(), len, 0, 0);
+					m_files.push_back(std::string(str.get(), len - 1));
+				}
+				else {
+					m_files.push_back("");
+				}
+			}
+			ReleaseStgMedium(&stgm);
+		}
+		*pdwEffect &= DROPEFFECT_COPY;
+		return S_OK;
+	}
+	HRESULT DragLeave() {
+		m_files.clear();
+		return S_OK;
+	}
+	HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+		*pdwEffect &= DROPEFFECT_COPY;
+		return S_OK;
+	}
+	HRESULT Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+		window_message_dropfiles(m_cb, m_files);
+		m_files.clear();
+		*pdwEffect &= DROPEFFECT_COPY;
+		return S_OK;
+	}
+	void Register(HWND window, struct ant_window_callback* cb) {
+		m_window = window;
+		m_cb = cb;
+		RegisterDragDrop(m_window, this);
+	}
+	void Revoke() {
+		RevokeDragDrop(m_window);
+	}
+};
+
+static DropManager g_dropmanager;
+static bool minimized = false;
 
 static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -17,8 +90,6 @@ static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 	*x = pt.x;
 	*y = pt.y;
 }
-
-static bool minimized = false;
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	struct ant_window_callback *cb = NULL;
@@ -182,6 +253,9 @@ static RECT createWindowRect() {
 }
 
 int window_init(struct ant_window_callback* cb) {
+	if (FAILED(OleInitialize(NULL))) {
+		return 1;
+	}
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
 	wndclass.cbSize = sizeof(wndclass);
@@ -207,10 +281,12 @@ int window_init(struct ant_window_callback* cb) {
 	}
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
+	g_dropmanager.Register(wnd, cb);
 	return 0;
 }
 
 void window_close() {
+	g_dropmanager.Revoke();
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
 
