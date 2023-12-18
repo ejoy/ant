@@ -484,7 +484,14 @@ function m:choose_prefab()
                     if not existing then
                         prefab_list[#prefab_list + 1] = name..".prefab"
                         prefabe_name_ui.text = ""
-                        table.insert(patch_template, 1, {
+                        local insert_index = 1
+                        for index, value in ipairs(patch_template) do
+                            insert_index = index
+                            if value.file ~= "mesh.prefab" or value.op == "add" then
+                                break
+                            end
+                        end
+                        table.insert(patch_template, insert_index, {
                             file = "mesh.prefab",
                             op = "copyfile",
                             path = prefab_list[#prefab_list]
