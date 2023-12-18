@@ -1,6 +1,6 @@
 graphic:
   ibl:
-    #enable_lut: true
+    enable_lut: true
     irradiance_bandnum: 3
   # skinning:
   #   use_cs: true

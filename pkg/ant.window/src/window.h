@@ -38,10 +38,14 @@ namespace ant::window {
 		middle,
 		right,
 	};
-	enum mouse_state : uint8_t {
+	enum class mouse_state : uint8_t {
 		down,
 		move,
 		up,
+	};
+	enum class inputchar_type : uint8_t {
+		native,
+		utf16,
 	};
 	enum class touch_state : uint8_t {
 		began,
@@ -93,6 +97,10 @@ namespace ant::window {
 		int y;
 		float delta;
 	};
+	struct msg_inputchar {
+		inputchar_type what;
+		uint16_t code;
+	};
 	struct msg_touch {
 		uintptr_t id;
 		float x;
@@ -136,6 +144,7 @@ namespace ant::window {
 		keyboard,
 		mouse,
 		mousewheel,
+		inputchar,
 		touch,
 		gesture_tap,
 		gesture_pinch,
@@ -150,6 +159,7 @@ namespace ant::window {
 			struct msg_keyboard keyboard;
 			struct msg_mouse mouse;
 			struct msg_mousewheel mousewheel;
+			struct msg_inputchar inputchar;
 			struct msg_touch touch;
 			struct msg_gesture_tap tap;
 			struct msg_gesture_pinch pinch;
@@ -163,6 +173,7 @@ namespace ant::window {
 	void input_message(struct ant_window_callback* cb, struct msg_keyboard const& keyboard);
 	void input_message(struct ant_window_callback* cb, struct msg_mouse const& mouse);
 	void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel);
+	void input_message(struct ant_window_callback* cb, struct msg_inputchar const& inputchar);
 	void input_message(struct ant_window_callback* cb, struct msg_touch const& touch);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture);

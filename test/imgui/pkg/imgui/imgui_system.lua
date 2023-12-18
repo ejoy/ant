@@ -78,6 +78,7 @@ end
 
 local TouchEvent = world:sub { "touch" }
 local GesturePinchEvent = world:sub { "gesture", "pinch" }
+local InputcharEvent = world:sub { "inputchar" }
 
 function m:start_frame()
 	for _, e in TouchEvent:unpack() do
@@ -89,6 +90,13 @@ function m:start_frame()
 	end
 	for _, _, e in GesturePinchEvent:unpack() do
 		imgui.v2.AddMouseWheelEvent(e.velocity, e.velocity)
+	end
+	for _, e in InputcharEvent:unpack() do
+		if e.what == "native" then
+			imgui.v2.AddInputCharacter(e.code)
+		elseif e.what == "utf16" then
+			imgui.v2.AddInputCharacterUTF16(e.code)
+		end
 	end
 	imgui.v2.NewFrame()
 end

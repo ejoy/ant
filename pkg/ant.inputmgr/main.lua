@@ -57,6 +57,9 @@ local function create(world, type)
     function ev.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
+    function ev.inputchar(...)
+        world:pub {"inputchar", ...}
+    end
     function ev.size(m)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {
