@@ -214,18 +214,14 @@ function m:start_frame()
 	end
 	for _, key, press in KeyboardEvent:unpack() do
 		local keyname = KeyboardCode[key]
-		if not keyname then
-			goto continue
+		if keyname then
+			local keycode = imgui.enum.Key[keyname]
+			if press == 1 then
+				imgui.v2.AddKeyEvent(keycode, true);
+			elseif press == 0 then
+				imgui.v2.AddKeyEvent(keycode, false);
+			end
 		end
-		local keycode = imgui.enum.Key[keyname]
-		if press == 1 then
-			print(key, press)
-			imgui.v2.AddKeyEvent(keycode, true);
-		elseif press == 0 then
-			print(key, press)
-			imgui.v2.AddKeyEvent(keycode, false);
-		end
-		::continue::
 	end
 	for _, e in InputcharEvent:unpack() do
 		if e.what == "native" then
