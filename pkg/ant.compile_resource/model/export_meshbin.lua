@@ -78,12 +78,11 @@ local function create_prim_bounding(math3d, meshscene, prim)
 		assert(#minv == 3)
 		assert(#maxv == 3)
 
-		local nminv, nmaxv = math3d.minmax{
-			{minv[1], minv[2], -minv[3]},
-			{maxv[1], maxv[2], -maxv[3]},
-		}
 		local bounding = {
-			aabb = {math3d.tovalue(nminv), math3d.tovalue(nmaxv)}
+			aabb = {
+				{math.min(minv[1], maxv[1]), math.min(minv[2], maxv[2]), math.min(minv[3], maxv[3]),},
+				{math.max(minv[1], maxv[1]), math.max(minv[2], maxv[2]), math.max(minv[3], maxv[3]),}
+			}
 		}
 		prim.bounding = bounding
 		return bounding

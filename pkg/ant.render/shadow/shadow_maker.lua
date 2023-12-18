@@ -73,7 +73,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 		local light_world = shadow_ce.scene.worldmat
 		local light_view = math3d.inverse(light_world)
 		local aabb_points = math3d.aabb_points(intersected_aabb)
-		local light_frustum_min, light_frustum_max = math3d.minmax(aabb_points, light_view)
+		local light_frustum_minmax = math3d.minmax(aabb_points, light_view)
 		local frustum_ortho = {
 			l = 1, r = -1,
 			t = 1, b = -1,
@@ -81,7 +81,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 			ortho = true,
 		}
 		local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
-		local min_proj, max_proj = math3d.transformH(ortho_proj, light_frustum_min, 1), math3d.transformH(ortho_proj, light_frustum_max, 1)	
+		local min_proj, max_proj = math3d.transformH(ortho_proj, math3d.array_index(light_frustum_minmax, 1)), math3d.transformH(ortho_proj, math3d.array_index(light_frustum_minmax, 2))
 		local minp, maxp = math3d.tovalue(min_proj), math3d.tovalue(max_proj)
 		local scalex, scaley = 2 / (maxp[1] - minp[1]), 2 / (maxp[2] - minp[2])
 		local quantizer = 64

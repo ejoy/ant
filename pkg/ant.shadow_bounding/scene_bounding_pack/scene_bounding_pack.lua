@@ -40,8 +40,11 @@ function sbp_sys:finish_scene_update()
             scene_aabb = merge_aabb(mask, e.hitch.visible_idx, e.hitch.cull_idx, e.bounding.scene_aabb, scene_aabb)
         end
         
-        math3d.unmark(sbe.shadow_bounding.scene_aabb)
-        sbe.shadow_bounding.scene_aabb = math3d.marked_aabb(math3d.array_index(scene_aabb, 1), math3d.array_index(scene_aabb, 2))
+        if math3d.aabb_isvalid(scene_aabb) then
+            math3d.unmark(sbe.shadow_bounding.scene_aabb)
+            sbe.shadow_bounding.scene_aabb = math3d.marked_aabb(math3d.array_index(scene_aabb, 1), math3d.array_index(scene_aabb, 2))
+        end
+
         w:submit(sbe) 
     end
     dirty = false

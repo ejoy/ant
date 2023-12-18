@@ -15,6 +15,7 @@ local hwi       = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local sampler	= import_package "ant.render.core".sampler
+local layoutmgr = require "vertexlayout_mgr"
 
 local RM        = ecs.require "ant.material|material"
 local R         = world:clibs "render.render_material"
@@ -238,14 +239,18 @@ local function frustum_interset_aabb(M, aabbLS)
 			verticesLS[#verticesLS+1] = update_nearfar(corner)
 		end
 	end
-	local aabbpoints = math3d.aabb_points(aabbLS)
-	for _, l in ipairs(BOX_SEGMENT_INDICES) do
-		local s0, s1 = aabbpoints[l[1]], aabbpoints[l[2]]
-		for _, t in ipairs(BOX_TRIANGLES_INDICES) do
-			local v1, v2, v3 = math3d.array_index(cornersLS, t[1]), math3d.array_index(cornersLS, t[2]), math3d.array_index(cornersLS, t[3])
-			local p = mu.segment_triangle(s0, s1, v1, v2, v3)
-			if p then
-				verticesLS[#verticesLS+1] = update_nearfar(p)
+
+	--frustum interset with aabbLS or aabbLS inside frustum
+	if #verticesLS < 8 then
+		local aabbpoints = math3d.aabb_points(aabbLS)
+		for _, l in ipairs(BOX_SEGMENT_INDICES) do
+			local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
+			for _, t in ipairs(BOX_TRIANGLES_INDICES) do
+				local v1, v2, v3 = math3d.array_index(cornersLS, t[1]), math3d.array_index(cornersLS, t[2]), math3d.array_index(cornersLS, t[3])
+				local p = mu.segment_triangle(s0, s1, v1, v2, v3)
+				if p then
+					verticesLS[#verticesLS+1] = update_nearfar(p)
+				end
 			end
 		end
 	end
@@ -266,11 +271,11 @@ local function calc_focus_matrix(M, verticesLS)
 	if #verticesLS == 0 then
 		return mc.IDENTITY_MAT
 	end
-	local minv, maxv = math3d.minmax(math3d.array_vector(verticesLS), M)
+	local aabb = math3d.minmax(verticesLS, M)
 
 	-- extents = maxv - minv
 	-- center = (maxv+minv) * 0.5
-	local center, extents = math3d.aabb_center_extents(math3d.aabb(minv, maxv))
+	local center, extents = math3d.aabb_center_extents(aabb)
 
 	local ex, ey = math3d.index(extents, 1, 2)
 	local sx, sy = 2.0/ex, 2.0/ey
@@ -425,8 +430,7 @@ function shadow_sys:update_camera_depend()
 		local Lp	= math3d.projmat(c.frustum, INV_Z)
 
 		if #verticesLS ~= 0 then
-			local minv, maxv = math3d.minmax(verticesLS)
-			c.interset_aabbLS = M3D(c.interset_aabbLS, math3d.aabb(minv, maxv))
+			c.interset_aabbLS = M3D(c.interset_aabbLS, math3d.minmax(verticesLS))
 			c.verticesLS = M3D(c.verticesLS, math3d.array_vector(verticesLS))
 		end
 
@@ -748,25 +752,50 @@ function shadowdebug_sys:data_changed()
 				return math3d.array_vector(points)
 			end
 
-			DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
+			--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
+
+			local lines = {}
+			local aabbpoints = aabb_points(C.sceneaabbLS, L2W)
+			for _, l in ipairs(BOX_SEGMENT_INDICES) do
+				local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
+				lines[#lines+1] = math3d.serialize(s0):sub(1, 12) .. math3d.serialize(math3d.vector(1.0, 0.0, 0.0, 1.0))
+				lines[#lines+1] = math3d.serialize(s1):sub(1, 12) .. math3d.serialize(math3d.vector(1.0, 0.0, 0.0, 1.0))
+			end
+
+			DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = world:create_entity{
+				policy = {"ant.render|simplerender"},
+				data = {
+					simplemesh = {
+						vb = {
+							start = 0, num = #lines,
+							handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
+							owned = true,
+						},
+					},
+					material = "/pkg/ant.resources/materials/line.material",
+					scene = {},
+					visible_state = "main_queue",
+					owned_mesh_buffer = true,
+				}
+			}
 
 			do
 				for e in w:select "csm:in camera_ref:in" do
 					local ce = world:entity(e.camera_ref, "camera:in scene:in")
 					local prefixname = "csm" .. e.csm.index
 					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					if ce.camera.interset_aabbLS then
-						DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabbLS, L2W),	{1.0, 1.0, 0.0, 1.0})
-					else
-						log.warn("interset_aabbLS is empty")
-					end
+					-- if ce.camera.interset_aabbLS then
+					-- 	DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabbLS, L2W),	{1.0, 1.0, 0.0, 1.0})
+					-- else
+					-- 	log.warn("interset_aabbLS is empty")
+					-- end
 
-					local points = math3d.frustum_points(ce.camera.Lv2Ndc)
-					local pointsWS = {}
-					for i=1, 8 do
-						pointsWS[i] = math3d.transform(L2W, math3d.array_index(points, i), 1)
-					end
-					DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(math3d.array_vector(pointsWS),	{0.0, 0.0, 1.0, 1.0})
+					-- local points = math3d.frustum_points(ce.camera.Lv2Ndc)
+					-- local pointsWS = {}
+					-- for i=1, 8 do
+					-- 	pointsWS[i] = math3d.transform(L2W, math3d.array_index(points, i), 1)
+					-- end
+					-- DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(math3d.array_vector(pointsWS),	{0.0, 0.0, 1.0, 1.0})
 
 					-- add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
 					-- add_frustum(prefixname .. "_W", 			ce.camera.W)
