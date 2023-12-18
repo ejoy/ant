@@ -77,6 +77,7 @@ public:
 protected:
 	void Render() override;
 	void UpdateGeometry(const FontFaceHandle font_face_handle)override;
+	Node* Clone(bool deep = true) const override;
 private:
 	void UpdateImageMaterials();
 	std::vector<Rml::group> groups;

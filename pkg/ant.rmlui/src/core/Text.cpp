@@ -551,6 +551,9 @@ void RichText::Render() {
 	}
 }
 
+Node* RichText::Clone(bool deep) const {
+	return GetParentNode()->GetOwnerDocument()->CreateRichTextNode(text);
+}
 
 }
 
