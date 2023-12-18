@@ -375,7 +375,7 @@ function shadow_sys:update_camera_depend()
 
 	local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
 
-	local Lv2Vv = math3d.mul(math3d.inverse_fast(Lv), C.camera.viewmat)
+	local Lv2Vv = math3d.mul(C.camera.viewmat, math3d.inverse_fast(Lv))
 	C.camera.Lv2Vv		= M3D(C.camera.Lv2Vv, Lv2Vv)
 	C.camera.sceneaabbLS= M3D(C.camera.sceneaabbLS, sceneaabbLS)
 	C.camera.Lv			= M3D(C.camera.Lv, Lv)
@@ -424,14 +424,12 @@ function shadow_sys:update_camera_depend()
 		verticesLS, c.frustum.n, c.frustum.f = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
 		local Lp	= math3d.projmat(c.frustum, INV_Z)
 
-		--TODO: debug only
-		do
-			local aabb = math3d.aabb()
-			for _, v in ipairs(verticesLS) do
-				aabb = math3d.aabb_append(aabb, v)
-			end
-			c.interset_aabb = M3D(c.interset_aabb, aabb)
+		if #verticesLS ~= 0 then
+			local minv, maxv = math3d.minmax(verticesLS)
+			c.interset_aabbLS = M3D(c.interset_aabbLS, math3d.aabb(minv, maxv))
+			c.verticesLS = M3D(c.verticesLS, math3d.array_vector(verticesLS))
 		end
+
 
 		if useLiSPSM then
 			local Lrp	= math3d.mul(Lr, Lp)
@@ -750,12 +748,25 @@ function shadowdebug_sys:data_changed()
 				return math3d.array_vector(points)
 			end
 
+			DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
+
 			do
 				for e in w:select "csm:in camera_ref:in" do
 					local ce = world:entity(e.camera_ref, "camera:in scene:in")
 					local prefixname = "csm" .. e.csm.index
 					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabb, L2W), {1.0, 1.0, 0.0, 1.0})
+					if ce.camera.interset_aabbLS then
+						DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(ce.camera.interset_aabbLS, L2W),	{1.0, 1.0, 0.0, 1.0})
+					else
+						log.warn("interset_aabbLS is empty")
+					end
+
+					local points = math3d.frustum_points(ce.camera.Lv2Ndc)
+					local pointsWS = {}
+					for i=1, 8 do
+						pointsWS[i] = math3d.transform(L2W, math3d.array_index(points, i), 1)
+					end
+					DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(math3d.array_vector(pointsWS),	{0.0, 0.0, 1.0, 1.0})
 
 					-- add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
 					-- add_frustum(prefixname .. "_W", 			ce.camera.W)
