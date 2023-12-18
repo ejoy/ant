@@ -100,6 +100,10 @@ static void UpdateKeyboardCodePage() {
 	}
 }
 
+static bool IsVkDown(int vk) {
+	return (::GetKeyState(vk) & 0x8000) != 0;
+}
+
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	struct ant_window_callback *cb = NULL;
 	switch (message) {
@@ -184,6 +188,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	case WM_KEYDOWN:
 	case WM_KEYUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		const bool is_key_down = message == WM_KEYDOWN;
 		uint8_t press;
 		if (message == WM_KEYUP) {
 			press = 0;
@@ -191,8 +196,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		else {
 			press = (lParam & (1 << 30))? 2: 1;
 		}
+		int vk = (int)wParam;
 		struct ant::window::msg_keyboard msg;
-		msg.key = (int)wParam;
+		msg.press = press;
 		msg.state = ant::window::get_keystate(
 			GetKeyState(VK_CONTROL) < 0,
 			GetKeyState(VK_SHIFT) < 0,
@@ -200,8 +206,40 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			(GetKeyState(VK_LWIN) < 0) || (GetKeyState(VK_RWIN) < 0),
 			lParam & (0x1 << 24)
 		);
-		msg.press = press;
-		ant::window::input_message(cb, msg);
+		if (vk == VK_SHIFT) {
+			if (IsVkDown(VK_LSHIFT) == is_key_down) {
+				msg.key = VK_LSHIFT;
+				ant::window::input_message(cb, msg);
+			}
+			if (IsVkDown(VK_RSHIFT) == is_key_down) {
+				msg.key = VK_RSHIFT;
+				ant::window::input_message(cb, msg);
+			}
+		}
+		else if (vk == VK_CONTROL) {
+			if (IsVkDown(VK_LCONTROL) == is_key_down) {
+				msg.key = VK_LCONTROL;
+				ant::window::input_message(cb, msg);
+			}
+			if (IsVkDown(VK_RCONTROL) == is_key_down) {
+				msg.key = VK_RCONTROL;
+				ant::window::input_message(cb, msg);
+			}
+		}
+		else if (vk == VK_MENU) {
+			if (IsVkDown(VK_LMENU) == is_key_down) {
+				msg.key = VK_LMENU;
+				ant::window::input_message(cb, msg);
+			}
+			if (IsVkDown(VK_RMENU) == is_key_down) {
+				msg.key = VK_RMENU;
+				ant::window::input_message(cb, msg);
+			}
+		}
+		else {
+			msg.key = vk;
+			ant::window::input_message(cb, msg);
+		}
 		break;
 	}
 	case WM_SIZE: {
