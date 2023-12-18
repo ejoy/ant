@@ -35,7 +35,7 @@ end
 
 function m:init()
 	imgui.v2.CreateContext(event)
-	imgui.v2.Init(rhwi.native_window())
+	imgui.v2.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"

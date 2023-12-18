@@ -3036,13 +3036,10 @@ v2CreateContext(lua_State* L) {
 }
 
 static int
-v2Init(lua_State* L) {
+v2InitPlatform(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
 	void* window = lua_touserdata(L, 1);
 	platformInit(window);
-	if (!rendererCreate()) {
-		return luaL_error(L, "Create renderer failed");
-	}
 	return 0;
 }
 
@@ -3117,6 +3114,9 @@ lEndFrame(lua_State* L){
 
 static int
 lInitRender(lua_State* L) {
+	if (!rendererCreate()) {
+		return luaL_error(L, "Create renderer failed");
+	}
 	RendererInitArgs initargs;
 	initargs.font_prog = (int)luaL_checkinteger(L, 1);
 	initargs.image_prog = (int)luaL_checkinteger(L, 2);
@@ -3228,7 +3228,7 @@ luaopen_imgui(lua_State *L) {
 		{ "DestroyContext", v2DestroyContext },
 		{ "CreateMainWindow", v2CreateMainWindow },
 		{ "DestroyMainWindow", v2DestroyMainWindow },
-		{ "Init", v2Init },
+		{ "InitPlatform", v2InitPlatform },
 		{ "NewFrame", v2NewFrame },
 		{ "DispatchMessage", v2DispatchMessage },
 		{ "AddMouseButtonEvent", v2AddMouseButtonEvent },
