@@ -80,21 +80,24 @@ lcull(lua_State *L) {
 	struct cullinfo ci[MAX_QUEUE_COUNT];
 
 	auto add_cull_info = [&ci, &c](math_t mid, uint8_t queue_index){
+		assert(c < MAX_QUEUE_COUNT);
+
 		uint8_t idx = MAX_QUEUE_COUNT;
-		for (; idx<c; ++idx){
-			if (ci[idx].mid.idx == mid.idx)
+		for (uint8_t ii=0; ii<c; ++ii){
+			if (ci[ii].mid.idx == mid.idx){
+				idx = ii;
 				break;
+			}
 		}
 		if (idx == MAX_QUEUE_COUNT){
-			assert(c < MAX_QUEUE_COUNT);
 			struct cullinfo i;
 			i.mid = mid;
 			i.queue_indices[0] = queue_index;
 			i.n = 1;
 			ci[c++] = i;
-
 		} else {
 			auto &i = ci[idx];
+			assert(i.n < 256);
 			i.queue_indices[i.n++] = queue_index;
 		}
 	};
