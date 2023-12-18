@@ -49,6 +49,8 @@ local params = {
         {0.785, 0, 0},
         {0.785, -0.785, 0},
         {0.785, 0.785, 0},
+        {1.000, 0, 0},
+        {1.000, 0.785, 0},
     } 
 }
 
@@ -63,7 +65,7 @@ local function parse_config(config)
     size_tag, rot_tag, dis = tonumber(size_tag), tonumber(rot_tag), tonumber(dis)
     local type = portrait_tag == 'd' and "dynamic" or "static"
     if type:match "dynamic" then
-        rot_tag = 1
+        rot_tag = 4
     end
     local size, rot
     size = size_tag and params.DEFAULT_SIZE_CONFIGS[size_tag] or params.DEFAULT_SIZE_CONFIGS[1]
@@ -286,6 +288,7 @@ function m.get_camera_srt()
                         local camera_pos, scale_factor, translation_offset = calc_srt(camera_rot, scene_aabb, distance)
                         prefab.camera_srt = {r = math3d.mark(camera_rot), t = math3d.mark(camera_pos)}
                         local s, t = math3d.mul(scale_factor, e.scene.s), math3d.add(translation_offset, e.scene.t)
+                        t = math3d.sub(t, math3d.vector(0, 10, 0))
                         iom.set_srt(e, s, e.scene.r, t)
                         add_wait_queue(name)
                         break
