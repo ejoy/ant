@@ -679,6 +679,19 @@ function m.show()
                 end
             end
             imgui.cursor.SameLine()
+            imgui.cursor.PushItemWidth(150)
+            local current_name = edit_timeline and "" or current_anim.name
+            local current_name_list = edit_timeline and {} or edit_anims.name_list
+            if imgui.widget.BeginCombo("##NameList", {current_name, flags = imgui.flags.Combo {}}) then
+                for _, name in ipairs(current_name_list) do
+                    if imgui.widget.Selectable(name, current_name == name) then
+                        set_current_anim(name)
+                    end
+                end
+                imgui.widget.EndCombo()
+            end
+            imgui.cursor.PopItemWidth()
+            imgui.cursor.SameLine()
             local title = "Add"
             if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
                 anim_name_ui.text = ""
@@ -743,19 +756,6 @@ function m.show()
                 end
                 reload = true
             end
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(150)
-            local current_name = edit_timeline and "" or current_anim.name
-            local current_name_list = edit_timeline and {} or edit_anims.name_list
-            if imgui.widget.BeginCombo("##NameList", {current_name, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(current_name_list) do
-                    if imgui.widget.Selectable(name, current_name == name) then
-                        set_current_anim(name)
-                    end
-                end
-                imgui.widget.EndCombo()
-            end
-            imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
             if imgui.widget.Checkbox("default", birth_anim) then
                 local tpl = hierarchy:get_node_info(anim_eid).template
