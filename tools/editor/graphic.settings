@@ -1,6 +1,8 @@
 graphic:
   ibl:
     irradiance_bandnum: 3
+    enable_lut: true
+    use_rgb10a2: true
   ao:
     enable      : true
     bent_normal : false

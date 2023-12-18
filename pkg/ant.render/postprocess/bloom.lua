@@ -4,7 +4,7 @@ local w     = world.w
 
 local setting   = import_package "ant.settings"
 local bloom_sys = ecs.system "bloom_system"
-
+local fbmgr     = require "framebuffer_mgr"
 if not setting:get "graphic/postprocess/bloom/enable" then
     return
 end
@@ -45,11 +45,10 @@ local function create_blur_entity()
                 sample_params = BLOOM_PARAM,
             },
             on_ready = function (e)
-                w:extend(e, "pyramid_sample:update pyramid_sample_ready?out")
+                w:extend(e, "pyramid_sample:update")
                 local mq = w:first("main_queue render_target:in")
                 local mqvr = mq.render_target.view_rect
                 ips.set_pyramid_sample_components(e, mqvr)
-                e.pyramid_sample_ready = true
             end
         }
     }
@@ -63,21 +62,21 @@ function bloom_sys:init_world()
     create_blur_entity()
 end
 
-function bloom_sys:entity_ready()
-    local e = w:first("bloom pyramid_sample:in pyramid_sample_ready:update")
-    if e then
-        local bloom_color_handle = e.pyramid_sample.scene_color_property.value
-        local pp = w:first("postprocess postprocess_input:in")
-        pp.postprocess_input.bloom_color_handle = bloom_color_handle
-        e.pyramid_sample_ready = false
-    end    
-end
-
 function bloom_sys:bloom()
+    local function update_bloom_handle(ps)
+        local last_queue_entity = w:first(("%s%d render_target:in"):format(ps.upsample_queue, ips.get_pyramid_mipcount()))
+        if last_queue_entity then
+            local fb = fbmgr.get(last_queue_entity.render_target.fb_idx)
+            local bloom_color_handle = fbmgr.get_rb(fb[1].rbidx).handle
+            local pp = w:first("postprocess postprocess_input:in")
+            pp.postprocess_input.bloom_color_handle = bloom_color_handle
+        end
+    end
     local e = w:first("bloom pyramid_sample:in")
     if e then
         local pp = w:first("postprocess postprocess_input:in")
         local input_handle = pp.postprocess_input.scene_color_handle
         ips.do_pyramid_sample(e, input_handle)
+        update_bloom_handle(e.pyramid_sample)
     end
 end

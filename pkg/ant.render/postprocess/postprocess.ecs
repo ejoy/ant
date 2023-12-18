@@ -39,8 +39,6 @@ system "pyramid_sample_system"
 component "pyramid_sample"
     .type "lua"
 
-component "pyramid_sample_ready"
-
 policy "pyramid_sample"
     .component "pyramid_sample"
 
