@@ -23,6 +23,10 @@ static uint64_t get_timestamp() {
 
 #endif
 
+static void push_message_arg(lua_State* L, bool v) {
+	lua_pushboolean(L, v);
+}
+
 static void push_message_arg(lua_State* L, const char* v) {
 	lua_pushstring(L, v);
 }
@@ -242,6 +246,13 @@ void input_message(struct ant_window_callback* cb, struct msg_inputchar const& i
 		"type", "inputchar",
 		"what", inputchar.what,
 		"code", inputchar.code
+	);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_focus const& focus) {
+	push_message(cb,
+		"type", "focus",
+		"focused", focus.focused
 	);
 }
 

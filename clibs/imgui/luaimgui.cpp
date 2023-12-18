@@ -3131,6 +3131,14 @@ v2AddInputCharacterUTF16(lua_State* L) {
 }
 
 static int
+v2AddFocusEvent(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	bool focused = !!lua_toboolean(L, 1);
+	io.AddFocusEvent(focused);
+	return 0;
+}
+
+static int
 lEndFrame(lua_State* L){
 	ImGui::EndFrame();
 	return 0;
@@ -3260,6 +3268,7 @@ luaopen_imgui(lua_State *L) {
 		{ "AddKeyEvent", v2AddKeyEvent },
 		{ "AddInputCharacter", v2AddInputCharacter },
 		{ "AddInputCharacterUTF16", v2AddInputCharacterUTF16 },
+		{ "AddFocusEvent", v2AddFocusEvent },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, v2);

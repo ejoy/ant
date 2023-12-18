@@ -283,6 +283,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		}
 		break;
 	}
+	case WM_SETFOCUS:
+	case WM_KILLFOCUS: {
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		struct ant::window::msg_focus msg;
+		msg.focused = message == WM_SETFOCUS;
+		ant::window::input_message(cb, msg);
+		break;
+	}
 	default:
 		break;
 	}

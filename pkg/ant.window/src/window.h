@@ -101,6 +101,9 @@ namespace ant::window {
 		inputchar_type what;
 		uint16_t code;
 	};
+	struct msg_focus {
+		bool focused;
+	};
 	struct msg_touch {
 		uintptr_t id;
 		float x;
@@ -160,6 +163,7 @@ namespace ant::window {
 			struct msg_mouse mouse;
 			struct msg_mousewheel mousewheel;
 			struct msg_inputchar inputchar;
+			struct msg_focus focus;
 			struct msg_touch touch;
 			struct msg_gesture_tap tap;
 			struct msg_gesture_pinch pinch;
@@ -174,6 +178,7 @@ namespace ant::window {
 	void input_message(struct ant_window_callback* cb, struct msg_mouse const& mouse);
 	void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel);
 	void input_message(struct ant_window_callback* cb, struct msg_inputchar const& inputchar);
+	void input_message(struct ant_window_callback* cb, struct msg_focus const& focus);
 	void input_message(struct ant_window_callback* cb, struct msg_touch const& touch);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture);
