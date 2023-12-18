@@ -77,6 +77,7 @@ struct DropManager : public IDropTarget {
 
 static DropManager g_dropmanager;
 static bool minimized = false;
+static UINT g_keyboard_codepage;
 
 static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -89,6 +90,14 @@ static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 	ScreenToClient(hwnd, &pt);
 	*x = pt.x;
 	*y = pt.y;
+}
+
+static void UpdateKeyboardCodePage() {
+	HKL keyboard_layout = ::GetKeyboardLayout(0);
+	LCID keyboard_lcid = MAKELCID(HIWORD(keyboard_layout), SORT_DEFAULT);
+	if (::GetLocaleInfoA(keyboard_lcid, (LOCALE_RETURN_NUMBER | LOCALE_IDEFAULTANSICODEPAGE), (LPSTR)&g_keyboard_codepage, sizeof(g_keyboard_codepage)) == 0) {
+		g_keyboard_codepage = CP_ACP;
+	}
 }
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -214,6 +223,28 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		}
 		break;
 	}
+	case WM_INPUTLANGCHANGE:
+		UpdateKeyboardCodePage();
+		break;
+	case WM_CHAR: {
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		if (::IsWindowUnicode(hWnd)) {
+			if (wParam > 0 && wParam < 0x10000) {
+				struct ant::window::msg_inputchar msg;
+				msg.what = ant::window::inputchar_type::utf16;
+				msg.code = (uint16_t)wParam;
+				ant::window::input_message(cb, msg);
+			}
+		} else {
+			wchar_t wch = 0;
+			::MultiByteToWideChar(g_keyboard_codepage, MB_PRECOMPOSED, (char*)&wParam, 1, &wch, 1);
+			struct ant::window::msg_inputchar msg;
+			msg.what = ant::window::inputchar_type::native;
+			msg.code = (uint16_t)wch;
+			ant::window::input_message(cb, msg);
+		}
+		break;
+	}
 	default:
 		break;
 	}
@@ -282,6 +313,7 @@ int window_init(struct ant_window_callback* cb) {
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 	g_dropmanager.Register(wnd, cb);
+	UpdateKeyboardCodePage();
 	return 0;
 }
 

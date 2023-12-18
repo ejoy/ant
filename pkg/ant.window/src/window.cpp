@@ -104,6 +104,14 @@ static void push_message_arg(lua_State* L, ant::window::mouse_state v) {
 	}
 }
 
+static void push_message_arg(lua_State* L, ant::window::inputchar_type v) {
+	switch (v) {
+	case ant::window::inputchar_type::native: lua_pushstring(L, "native"); break;
+	case ant::window::inputchar_type::utf16: lua_pushstring(L, "utf16"); break;
+	default: std::unreachable();
+	}
+}
+
 static void push_message_arg(lua_State* L, ant::window::keyboard_state v) {
 	lua_newtable(L);
 	if (v.kb_ctrl) {
@@ -226,6 +234,14 @@ void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& 
 		"x", mousewheel.x,
 		"y", mousewheel.y,
 		"delta", mousewheel.delta
+	);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_inputchar const& inputchar) {
+	push_message(cb,
+		"type", "inputchar",
+		"what", inputchar.what,
+		"code", inputchar.code
 	);
 }
 

@@ -3106,6 +3106,22 @@ v2AddMouseWheelEvent(lua_State* L) {
 }
 
 static int
+v2AddInputCharacter(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	auto c = (unsigned int)luaL_checkinteger(L, 1);
+	io.AddInputCharacter(c);
+	return 0;
+}
+
+static int
+v2AddInputCharacterUTF16(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	auto c = (ImWchar16)luaL_checkinteger(L, 1);
+	io.AddInputCharacterUTF16(c);
+	return 0;
+}
+
+static int
 lEndFrame(lua_State* L){
 	ImGui::EndFrame();
 	return 0;
@@ -3232,6 +3248,8 @@ luaopen_imgui(lua_State *L) {
 		{ "DispatchMessage", v2DispatchMessage },
 		{ "AddMouseButtonEvent", v2AddMouseButtonEvent },
 		{ "AddMouseWheelEvent", v2AddMouseWheelEvent },
+		{ "AddInputCharacter", v2AddInputCharacter },
+		{ "AddInputCharacterUTF16", v2AddInputCharacterUTF16 },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, v2);

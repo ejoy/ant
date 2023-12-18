@@ -29,6 +29,7 @@ local function init_inputmgr()
 	event.touch = ev.touch
 	event.gesture = ev.gesture
 	event.size = ev.size
+	event.inputchar = ev.inputchar
 	event.dropfiles = ev.dropfiles
 end
 
