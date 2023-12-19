@@ -1,4 +1,4 @@
 a_position: vec3
 a_texcoord0: vec2
 v_texcoord0: "vec2 TEXCOORD0"
-v_posWS: "vec4 TEXCOORD1"
+v_posWS: "vec3 TEXCOORD1"

@@ -66,11 +66,11 @@ vec4 transform2clipspace(vec4 posWS)
 	return posCS;
 }
 
-vec4 transform_worldpos(mat4 wm, vec3 posLS, out vec4 posCS)
+vec3 transform_worldpos(mat4 wm, vec3 posLS, out vec4 posCS)
 {
 	vec4 posWS = mul(wm, vec4(posLS, 1.0));
 	posCS = transform2clipspace(posWS);
-	return posWS;
+	return posWS.xyz;
 }
 
 vec4 map_screen_coord_to_ndc(vec2 p)
@@ -140,6 +140,11 @@ mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 
-
+void get_viewspace_depth(inout float distanceVS)
+{
+    #ifndef BGFX_SHADER_LANGUAGE_HLSL
+        distanceVS = 1.0 / distanceVS;
+    #endif
+}
 
 #endif //__SHADER_TRANSFORMS_SH__

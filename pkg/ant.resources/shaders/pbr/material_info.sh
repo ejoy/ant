@@ -2,6 +2,7 @@
 #define _MATERIAL_INFO_SH_
 
 #include "pbr/common.sh"
+#include "common/transform.sh"
 
 struct material_info
 {
@@ -75,6 +76,7 @@ void build_material_info(inout material_info mi)
 
     mi.DFG              = get_IBL_DFG(mi.f0, mi.f90, mi.NdotV, mi.perceptual_roughness);
     mi.energy_compensation = vec3_splat(1.0); //1.0 + mi.f0 * (1.0 / mi.DFG.y - 1.0);
+    get_viewspace_depth(mi.distanceVS);
 }
 
 #endif //_MATERIAL_INFO_SH_

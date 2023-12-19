@@ -109,7 +109,7 @@ local check_update_material_info; do
             num_varying = num_varying + gen_varying("a_color", "v_color", 4)
 
             if mat.fx.setting.lighting == "on" then
-                varyings.v_posWS    = "vec4 TEXCOORD" .. vtex_idx
+                varyings.v_posWS    = "vec3 TEXCOORD" .. vtex_idx
                 varyings.v_tangent  = "vec3 TANGENT"
                 varyings.v_normal   = "vec3 NORMAL"
                 varyings.v_bitangent= "vec3 BITANGENT"

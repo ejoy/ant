@@ -15,7 +15,7 @@ mediump vec4 i_data0      : TEXCOORD7;
 
 mediump vec2 v_texcoord0  : TEXCOORD0;
 mediump vec2 v_texcoord1  : TEXCOORD1;
-highp   vec4 v_posWS      : TEXCOORD2;
+highp   vec3 v_posWS      : TEXCOORD2;
 mediump vec3 v_normal     : TEXCOORD3;
 mediump vec3 v_tangent    : TEXCOORD4;
 mediump vec3 v_bitangent  : TEXCOORD5;

@@ -7,7 +7,7 @@ fx:
     a_position: vec3
     a_texcoord0: vec2
     v_texcoord0: vec2
-    v_posWS: "vec4 TEXCOORD1"
+    v_posWS: "vec3 TEXCOORD1"
 properties:
   u_basecolor_factor: {1.0, 1.0, 1.0, 1.0}
   u_grid_params: {1.0, 1.0, 0.01, 0.01} # grid_width grid_height line_width_x light_width_z

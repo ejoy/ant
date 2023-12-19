@@ -35,7 +35,6 @@ void CUSTOM_VS(mat4 wm, VSInput vsinput, inout Varyings varyings)
 #endif //WITH_COLOR0_ATTRIB
 
 #ifndef MATERIAL_UNLIT
-	varyings.posWS.w = mul(u_view, varyings.posWS).z;
 
 #ifdef CALC_TBN
 	varyings.normal	= mul((mat3)wm, vsinput.normal);

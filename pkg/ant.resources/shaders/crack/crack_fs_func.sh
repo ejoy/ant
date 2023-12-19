@@ -39,7 +39,7 @@ void init_material_info(Varyings varyings, inout material_info mi)
     mi.screen_uv = calc_normalize_fragcoord(varyings.frag_coord.xy);
 
     mi.posWS        = varyings.posWS.xyz;
-    mi.distanceVS   = varyings.posWS.w;
+    get_viewspace_depth(mi.distanceVS);
 
     mi.metallic = u_metallic_factor;
     mi.perceptual_roughness = u_roughness_factor;
@@ -97,6 +97,7 @@ void CUSTOM_FS(Varyings varyings, out FSOutput fsoutput)
         discard;
     }
     mi.basecolor = texture2D(s_basecolor, uv); 
+    mi.distanceVS = varyings.frag_coord.w;
     build_material_info(mi);
 
     fsoutput.color = compute_lighting(mi);

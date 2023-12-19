@@ -290,7 +290,7 @@ local function build_input_var(varyingcontent)
     end
 
     if not varyingcontent["v_posWS"] then
-        vac1 "vec4 posWS;"
+        vac1 "vec3 posWS;"
     end
 
     --TODO: maybe we need posCS value back after CUSTOM_VS_POSITION??
@@ -350,7 +350,6 @@ local function build_custom_vs_func(d, varyings, mat)
 
     --normal/tangent/bitangent
     if mat.fx.setting.lighting == "on" then
-        ac1 "varyings.posWS.w = mul(u_view, varyings.posWS).z;"
         if varyings.a_tangent or varyings.a_normal or varyings.a_bitangent then
             if (varyings.a_tangent or varyings.a_bitangent) and not varyings.a_texcoord0 then
                 error "shader need tbn, but 'a_texcoord0' is not provided"
@@ -459,8 +458,8 @@ void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
         assert(properties.u_pbr_factor)
 
         if varyings.v_posWS then
-            ac1 "mi.posWS        = varyings.posWS.xyz;"
-            ac1 "mi.distanceVS   = varyings.posWS.w;"
+            ac1 "mi.posWS        = varyings.posWS;"
+            ac1 "mi.distanceVS   = varyings.frag_coord.w;"
         end
         ac0 "\n"
         

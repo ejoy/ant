@@ -3,7 +3,7 @@ fx:
   fs_code: "void CUSTOM_FS(Varyings varyings, out FSOutput fsoutput){ fsoutput.color = u_color; }"
   varyings:
     a_position: vec3
-    v_posWS: "vec4 TEXCOORD0"
+    v_posWS: "vec3 TEXCOORD0"
 properties:
   u_color: {10, 10, 10, 1}
 state: /pkg/ant.resources/materials/states/default.state
