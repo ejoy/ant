@@ -32,6 +32,7 @@ local function init_inputmgr()
 	event.inputchar = ev.inputchar
 	event.focus = ev.focus
 	event.dropfiles = ev.dropfiles
+	return ev
 end
 
 local function reboot(initargs)
@@ -76,7 +77,8 @@ local function render(nwh, context, width, height, initialized)
 	bgfx.encoder_begin()
 	encoderBegin = true
 	world = ecs.new_world(config)
-	init_inputmgr()
+	local ev = init_inputmgr()
+	ev.set_viewport(config.viewport)
 
 	world:pipeline_init()
 
