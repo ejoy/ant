@@ -610,16 +610,19 @@ local update_slot_list = world:sub {"UpdateSlotList"}
 local event_keyframe = world:sub{"keyframe_event"}
 local iefk = ecs.require "ant.efk|efk"
 local effect_map = {}
-
+local itl = ecs.require "ant.timeline|timeline"
 local function play_timeline()
     if not timeline_eid then
         return
     end
-    local e <close> = world:entity(timeline_eid, "start_timeline?out timeline:in")
-    e.start_timeline = true
+    local e <close> = world:entity(timeline_eid, "timeline:in")
     e.timeline.key_event = to_runtime_event(anim_key_event)
+    if #e.timeline.key_event <= 0 then
+        return
+    end
     anim_state.current_frame = 0
     timeline_playing = true
+    itl:start(e)
 end
 
 local function stop_timeline()
@@ -627,6 +630,8 @@ local function stop_timeline()
     if not timeline_eid then
         return
     end
+    local e <close> = world:entity(timeline_eid, "timeline:in")
+    itl:stop(e.timeline.tid)
 end
 
 function m.show()
@@ -667,8 +672,12 @@ function m.show()
                 anim_state.current_frame = anim_state.current_frame + 1
                 local maxframe = math.ceil(anim_state.duration * sample_ratio) - 1
                 if anim_state.current_frame > maxframe then
-                    anim_state.current_frame = maxframe
-                    timeline_playing = false
+                    if ui_loop[1] then
+                        anim_state.current_frame = anim_state.current_frame - maxframe
+                    else
+                        anim_state.current_frame = maxframe
+                        timeline_playing = false
+                    end
                 end
             end
         else
@@ -782,6 +791,9 @@ function m.show()
             if not edit_timeline then
                 iani.set_loop(anim_eid, ui_loop[1])
             else
+                if timeline_playing then
+                    stop_timeline()
+                end
                 local e <close> = world:entity(timeline_eid, "timeline:in")
                 e.timeline.loop = ui_loop[1]
             end

@@ -6,10 +6,16 @@ local tl_sys = ecs.system "timeline_system"
 local itl = ecs.require "ant.timeline|timeline"
 local iani = ecs.require "ant.anim_ctrl|state_machine"
 
-function itl.start(e, context)
+function itl:start(e, context)
+	if #e.timeline.key_event <= 0 then
+		return 0
+	end
 	w:extend(e, "start_timeline?out")
 	e.start_timeline = true
 	e.timeline.context = context
+	local tid = itl:alloc()
+	e.timeline.tid = tid
+	return tid
 end
 
 local engine_event = {}
@@ -68,20 +74,7 @@ end
 
 function tl_sys.data_changed()
 	for e in w:select "start_timeline?out timeline:in" do
-		local tid
-		if #e.timeline.key_event > 0 then
-			tid = itl:alloc()
-		end
-		-- for _, ke in ipairs(e.timeline.key_event) do
-		-- 	for _, event in ipairs(ke.event_list) do
-		-- 		itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = e.timeline.eid_map, context = e.timeline.context})
-		-- 		-- print("add timeline : ", tid, ke.tick, event.event_type)
-		-- 	end
-		-- end
-		-- if e.timeline.loop then
-		-- 	itl:add(tid, math.floor(e.timeline.duration * 30), "Loop", {loop = e.timeline.loop, duration = e.timeline.duration, key_event = e.timeline.key_event, eid_map = e.timeline.eid_map, context = e.timeline.context})
-		-- end
-		add_event(tid, e.timeline)
+		add_event(e.timeline.tid, e.timeline)
 		e.new_timeline = false
 	end
 	itl:update(engine_event_handler)
