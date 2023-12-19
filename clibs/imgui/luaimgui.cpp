@@ -2961,23 +2961,18 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 static int
 v1Create(lua_State* L) {
 	ImGui::CreateContext();
+	window_register(L, 1);
+
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.UserData = L;
-
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
-	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
+	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 4, ImGuiPopupFlags_None);
 	io.ConfigViewportsNoTaskBarIcon = true;
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.WindowRounding = 0.0f;
 	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
-	window_register(L, 1);
 	int width = (int)luaL_checkinteger(L, 2);
 	int height = (int)luaL_checkinteger(L, 3);
 	void* window = platformCreateMainWindow(width, height);
@@ -3018,20 +3013,15 @@ v1NewFrame(lua_State* L) {
 static int
 v2CreateContext(lua_State* L) {
 	ImGui::CreateContext();
+	window_register(L, 1);
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.UserData = L;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
-	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
+	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 2, ImGuiPopupFlags_None);
 	io.ConfigViewportsNoTaskBarIcon = true;
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.WindowRounding = 0.0f;
 	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-	window_register(L, 1);
 	return 0;
 }
 

@@ -34,7 +34,14 @@ function event.viewid()
 end
 
 function m:init()
-	imgui.v2.CreateContext(event)
+	imgui.v2.CreateContext(event, imgui.flags.Config {
+		"NavEnableKeyboard",
+		--"ViewportsEnable",
+		"DockingEnable",
+		"NavNoCaptureKeyboard",
+		"DpiEnableScaleViewports",
+		"DpiEnableScaleFonts",
+	})
 	imgui.v2.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"

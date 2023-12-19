@@ -452,7 +452,22 @@ static struct enum_pair eKey[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiConfigFlags
+static struct enum_pair eConfigFlags[] = {
+	ENUM(ImGuiConfigFlags, None),
+	ENUM(ImGuiConfigFlags, NavEnableKeyboard),
+	ENUM(ImGuiConfigFlags, NavEnableGamepad),
+	ENUM(ImGuiConfigFlags, NavEnableSetMousePos),
+	ENUM(ImGuiConfigFlags, NavNoCaptureKeyboard),
+	ENUM(ImGuiConfigFlags, NoMouse),
+	ENUM(ImGuiConfigFlags, NoMouseCursorChange),
+	ENUM(ImGuiConfigFlags, DockingEnable),
+	ENUM(ImGuiConfigFlags, ViewportsEnable),
+	ENUM(ImGuiConfigFlags, DpiEnableScaleViewports),
+	ENUM(ImGuiConfigFlags, DpiEnableScaleFonts),
+	ENUM(ImGuiConfigFlags, IsSRGB),
+	ENUM(ImGuiConfigFlags, IsTouchScreen),
+	{ NULL, 0 },
+};
 
 //ImGuiBackendFlags
 
@@ -642,6 +657,7 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "Hovered", eHoveredFlags);
 	flag_gen(L, "DockNode", eDockNodeFlags);
 	flag_gen(L, "DragDrop", eDragDropFlags);
+	flag_gen(L, "Config", eConfigFlags);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "Slider", eSliderFlags);
 	lua_setfield(L, -2, "flags");

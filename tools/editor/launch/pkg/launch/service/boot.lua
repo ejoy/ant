@@ -22,7 +22,14 @@ end
 local WIDTH <const> = 720
 local HEIGHT <const> = 450
 
-local nwh = imgui.Create(event, WIDTH, HEIGHT)
+local nwh = imgui.Create(event, WIDTH, HEIGHT, imgui.flags.Config {
+    "NavEnableKeyboard",
+    "ViewportsEnable",
+    "DockingEnable",
+    "NavNoCaptureKeyboard",
+    "DpiEnableScaleViewports",
+    "DpiEnableScaleFonts",
+})
 imgui.SetWindowTitle("EditorLauncher")
 imgui.SetWindowPos(1280, 720)
 bgfx.init {
