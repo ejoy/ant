@@ -51,7 +51,7 @@ local function add_event(tid, desc)
 		end
 	end
 	if desc.loop then
-		itl:add(tid, math.floor(desc.duration * 30), "Loop", {loop = desc.loop, duration = desc.duration, key_event = desc.key_event, eid_map = e.timeline.eid_map, context = e.timeline.context})
+		itl:add(tid, math.floor(desc.duration * 30), "Loop", {loop = desc.loop, duration = desc.duration, key_event = desc.key_event, eid_map = desc.eid_map, context = desc.context})
 	end
 end
 
