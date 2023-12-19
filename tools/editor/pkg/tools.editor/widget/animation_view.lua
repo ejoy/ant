@@ -575,19 +575,6 @@ function m.save_keyevent()
     end
 end
 
-function m.clear()
-    anim_eid = nil
-    current_anim = nil
-    current_event = nil
-    current_clip = nil
-    edit_anims = nil
-    keyframe_view.clear()
-    timeline_eid = nil
-    edit_timeline = nil
-    anim_state.key_event = {}
-    anim_state.current_event_list = {}
-end
-
 local ui_showskeleton = {false}
 local function show_skeleton(b)
     local _, joints_list = joint_utils:get_joints()
@@ -610,23 +597,45 @@ local update_slot_list = world:sub {"UpdateSlotList"}
 local event_keyframe = world:sub{"keyframe_event"}
 local iefk = ecs.require "ant.efk|efk"
 local effect_map = {}
-
+local itl = ecs.require "ant.timeline|timeline"
+local current_timeline_id
 local function play_timeline()
     if not timeline_eid then
         return
     end
-    local e <close> = world:entity(timeline_eid, "start_timeline?out timeline:in")
-    e.start_timeline = true
+    local e <close> = world:entity(timeline_eid, "timeline:in")
     e.timeline.key_event = to_runtime_event(anim_key_event)
+    if #e.timeline.key_event <= 0 then
+        return
+    end
     anim_state.current_frame = 0
     timeline_playing = true
+    if current_timeline_id then
+        itl:stop(current_timeline_id)
+    end
+    current_timeline_id = itl:start(e)
 end
 
 local function stop_timeline()
     timeline_playing = false
-    if not timeline_eid then
-        return
+    if current_timeline_id then
+        itl:stop(current_timeline_id)
+        current_timeline_id = nil
     end
+end
+
+function m.clear()
+    stop_timeline()
+    anim_eid = nil
+    current_anim = nil
+    current_event = nil
+    current_clip = nil
+    edit_anims = nil
+    keyframe_view.clear()
+    timeline_eid = nil
+    edit_timeline = nil
+    anim_state.key_event = {}
+    anim_state.current_event_list = {}
 end
 
 function m.show()
@@ -667,8 +676,12 @@ function m.show()
                 anim_state.current_frame = anim_state.current_frame + 1
                 local maxframe = math.ceil(anim_state.duration * sample_ratio) - 1
                 if anim_state.current_frame > maxframe then
-                    anim_state.current_frame = maxframe
-                    timeline_playing = false
+                    if ui_loop[1] then
+                        anim_state.current_frame = anim_state.current_frame - maxframe
+                    else
+                        anim_state.current_frame = maxframe
+                        timeline_playing = false
+                    end
                 end
             end
         else
@@ -782,6 +795,9 @@ function m.show()
             if not edit_timeline then
                 iani.set_loop(anim_eid, ui_loop[1])
             else
+                if timeline_playing then
+                    stop_timeline()
+                end
                 local e <close> = world:entity(timeline_eid, "timeline:in")
                 e.timeline.loop = ui_loop[1]
             end
@@ -804,8 +820,7 @@ function m.show()
                 local second = ui_timeline_duration[1] / sample_ratio
                 edit_timeline.duration = second
                 anim_state.duration = second
-                local tpl = hierarchy:get_node_info(timeline_eid).template
-                edit_timeline[tpl.tag[1]].duration = second
+                edit_timeline["timeline"].duration = second
                 edit_timeline.dirty = true
                 local e <close> = world:entity(timeline_eid, "timeline:in")
                 e.timeline.duration = second
@@ -942,6 +957,7 @@ function m.on_prefab_load(entities)
 end
 
 function m.on_target(eid)
+    stop_timeline()
     edit_timeline = nil
     timeline_eid = nil
     local e <close> = world:entity(eid, "timeline?in")
@@ -949,20 +965,20 @@ function m.on_target(eid)
         if not e.timeline.eid_map then
             e.timeline.eid_map = prefab_mgr.current_prefab.tag
         end
-        local name = hierarchy:get_node_info(eid).template.tag[1]
+        
         timeline_eid = eid
         edit_timeline = {
             dirty = true
         }
-        edit_timeline[name] = {
-            name = name,
+        edit_timeline["timeline"] = {
+            name = "timeline",
             duration = e.timeline.duration,
             key_event = from_runtime_event(e.timeline.key_event),
         }
         local frame = math.floor(e.timeline.duration * sample_ratio)
         ui_loop[1] = e.timeline.loop
         ui_timeline_duration[1] = frame
-        local current_timeline = edit_timeline[name]
+        local current_timeline = edit_timeline["timeline"]
         anim_state.anim_name = current_timeline.name
         anim_state.key_event = current_timeline.key_event
         anim_key_event = current_timeline.key_event

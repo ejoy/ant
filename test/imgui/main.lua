@@ -4,6 +4,7 @@ import_package "ant.window".start {
     feature = {
         "ant.render|render",
         "ant.animation",
+        "ant.imgui",
         "imgui",
     },
 }

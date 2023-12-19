@@ -28,9 +28,9 @@ namespace ozzlua::BlendingJobLayerVector {
         size_t n = bee::lua::checkinteger<size_t>(L, 2);
         if (!lua_isnoneornil(L, 3)) {
             auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 3);
-            vec[n].transform = ozz::make_span(locals);
+            vec[n-1].transform = ozz::make_span(locals);
         }
-        vec[n].weight = (float)luaL_optnumber(L, 4, 1.0);
+        vec[n-1].weight = (float)luaL_optnumber(L, 4, 1.0);
         // TODO: joint_weights
         return 0;
     }
@@ -72,7 +72,7 @@ static int BlendingJob(lua_State* L) {
     auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 2);
     auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 3);
     float threshold = (float)luaL_optnumber(L, 4, 0.1);
-    if (!lua_isnoneornil(L, 3)) {
+    if (!lua_isnoneornil(L, 5)) {
         auto& additive_layers = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 5);
         job.additive_layers =  ozz::make_span(additive_layers);
     }

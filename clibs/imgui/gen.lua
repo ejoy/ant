@@ -19,7 +19,6 @@ local disable <const> = {
     ImGuiDataType = true,
     ImGuiDir = true,
     ImGuiNavInput = true,
-    ImGuiConfigFlags = true,
     ImGuiBackendFlags = true,
     ImGuiButtonFlags = true,
     ImGuiMouseSource = true,

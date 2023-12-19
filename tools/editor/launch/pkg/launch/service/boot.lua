@@ -22,7 +22,15 @@ end
 local WIDTH <const> = 720
 local HEIGHT <const> = 450
 
-local nwh = imgui.Create(event, WIDTH, HEIGHT)
+imgui.CreateContext(event, imgui.flags.Config {
+    "NavEnableKeyboard",
+    "ViewportsEnable",
+    "DockingEnable",
+    "NavNoCaptureKeyboard",
+    "DpiEnableScaleViewports",
+    "DpiEnableScaleFonts",
+})
+local nwh = imgui.CreateMainWindow(WIDTH, HEIGHT)
 imgui.SetWindowTitle("EditorLauncher")
 imgui.SetWindowPos(1280, 720)
 bgfx.init {
@@ -67,6 +75,7 @@ end
 
 local imgui_font = load_material "/pkg/ant.imgui/materials/font.material"
 local imgui_image = load_material "/pkg/ant.imgui/materials/image.material"
+imgui.InitPlatform(nwh)
 imgui.InitRender(
     imgui_font.prog,
     imgui_image.prog,
@@ -76,7 +85,8 @@ imgui.InitRender(
 
 local launch = require "launch_panel"
 launch.init()
-while imgui.NewFrame() do
+while imgui.DispatchMessage() do
+    imgui.NewFrame()
     launch.update(0)
     imgui.Render()
     bgfx.frame()

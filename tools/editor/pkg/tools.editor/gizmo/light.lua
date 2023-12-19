@@ -34,7 +34,7 @@ local DEFAULT_ROTATE = {2.4, 0, 0}
 
 function m.on_target(eid)
     m.show(false)
-    m.current_light = eid
+    m.current_light = nil
     m.current_gizmo = nil
     if not eid then
         return
@@ -43,6 +43,7 @@ function m.on_target(eid)
     if not ec.light then
         return
     end
+    m.current_light = eid
     local lt = ec.light.type
     m.current_gizmo = m[lt]
     if m.current_gizmo then

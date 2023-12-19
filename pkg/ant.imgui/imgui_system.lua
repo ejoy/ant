@@ -34,8 +34,15 @@ function event.viewid()
 end
 
 function m:init()
-	imgui.v2.CreateContext(event)
-	imgui.v2.InitPlatform(rhwi.native_window())
+	imgui.CreateContext(event, imgui.flags.Config {
+		"NavEnableKeyboard",
+		--"ViewportsEnable",
+		"DockingEnable",
+		"NavNoCaptureKeyboard",
+		"DpiEnableScaleViewports",
+		"DpiEnableScaleFonts",
+	})
+	imgui.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
@@ -73,7 +80,7 @@ function m:init()
 end
 
 function m:exit()
-	imgui.v2.DestroyContext()
+	imgui.DestroyContext()
 end
 
 local KeyboardCode <const> = {
@@ -205,36 +212,36 @@ local FocusEvent = world:sub { "focus" }
 function m:start_frame()
 	for _, e in TouchEvent:unpack() do
 		if e.state == "began" then
-			imgui.v2.AddMouseButtonEvent(0, true)
+			imgui.io.AddMouseButtonEvent(0, true)
 		elseif e.state == "ended" then
-			imgui.v2.AddMouseButtonEvent(0, false)
+			imgui.io.AddMouseButtonEvent(0, false)
 		end
 	end
 	for _, _, e in GesturePinchEvent:unpack() do
-		imgui.v2.AddMouseWheelEvent(e.velocity, e.velocity)
+		imgui.io.AddMouseWheelEvent(e.velocity, e.velocity)
 	end
 	for _, key, press in KeyboardEvent:unpack() do
 		local keyname = KeyboardCode[key]
 		if keyname then
 			local keycode = imgui.enum.Key[keyname]
 			if press == 1 then
-				imgui.v2.AddKeyEvent(keycode, true);
+				imgui.io.AddKeyEvent(keycode, true);
 			elseif press == 0 then
-				imgui.v2.AddKeyEvent(keycode, false);
+				imgui.io.AddKeyEvent(keycode, false);
 			end
 		end
 	end
 	for _, e in InputcharEvent:unpack() do
 		if e.what == "native" then
-			imgui.v2.AddInputCharacter(e.code)
+			imgui.io.AddInputCharacter(e.code)
 		elseif e.what == "utf16" then
-			imgui.v2.AddInputCharacterUTF16(e.code)
+			imgui.io.AddInputCharacterUTF16(e.code)
 		end
 	end
 	for _, focused in FocusEvent:unpack() do
-		imgui.v2.AddFocusEvent(focused)
+		imgui.io.AddFocusEvent(focused)
 	end
-	imgui.v2.NewFrame()
+	imgui.NewFrame()
 end
 
 function m:end_frame()
