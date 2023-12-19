@@ -64,9 +64,8 @@ local function update_camera(pu_camera_ref, clickpt)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
-	--use scene_changed here, not scene_needchange, see render_system.lua, it check for 'scene_changed' component
-	local pqc<close> = world:entity(pu_camera_ref, "camera:in scene_changed?out")
-	pqc.scene_changed = true
+	local pqc<close> = world:entity(pu_camera_ref, "camera:in camera_changed?out")
+	pqc.camera_changed = true
 	local camera = pqc.camera
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
 	camera.viewmat.m	= math3d.lookto(eye, viewdir, camera.updir)
@@ -326,15 +325,8 @@ local function which_material(e)
 end
 
 local function create_pickup_state(srcstate, dststate)
-
-	local CULL_REVERSE<const> = {
-		CCW		= "CW",
-		CW		= "CCW",
-		NONE	= "CCW",
-	}
-
 	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
-	d.PT, d.CULL = s.PT, CULL_REVERSE[s.CULL]
+	d.PT, d.CULL = s.PT, s.CULL
 	return bgfx.make_state(d)
 end
 
