@@ -154,13 +154,12 @@ function shadow_sys:entity_remove()
 	end
 end
 
-local function merge_visible_bounding(M, aabb, e, queue_index)
-	local ro = e.render_object
-	if Q.check(ro.visible_idx, queue_index) and mc.NULL ~= e.bounding.scene_aabb then
+local function merge_visible_bounding(M, aabb, obj, bounding, queue_index)
+	if Q.check(obj.visible_idx, queue_index) and mc.NULL ~= bounding.scene_aabb then
 		if M then
-			aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, e.bounding.scene_aabb))
+			aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, bounding.scene_aabb))
 		else
-			aabb = math3d.aabb_merge(aabb, e.bounding.scene_aabb)
+			aabb = math3d.aabb_merge(aabb, bounding.scene_aabb)
 		end
 	end
 
@@ -169,9 +168,14 @@ end
 
 local function build_aabb(queue_index, M, tag)
 	local aabb = math3d.aabb()
-	for e in w:select(("%s render_object:in bounding:in"):format(tag)) do
-		aabb = merge_visible_bounding(M, aabb, e, queue_index)
+	for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
+		aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
 	end
+
+	for e in w:select "hitch_visible hitch:in bounding:in" do
+		aabb = merge_visible_bounding(M, aabb, e.hitch, e.bounding, queue_index)
+	end
+
 	return aabb
 end
 
@@ -456,10 +460,10 @@ function shadow_sys:update_camera_depend()
 		return 
 	end
 
-    w:extend(C, "eid:in")
-    if C.eid ~= irq.main_camera() then
-        return 
-    end
+    C = world:entity(irq.main_camera(), "camera_changed?in")
+	if not C.camera_changed then
+		return 
+	end
 
 	--[[
 	the target here is try to find a bounding volume which bound the visible object inode lighting space as tighting as posibile
@@ -697,15 +701,24 @@ local kbmb 			= world:sub{"keyboard"}
 
 local shadowdebug_sys = ecs.system "shadow_debug_system2"
 
+local function debug_viewid(n, after)
+	local viewid = hwi.viewid_get(n)
+	if nil == viewid then
+		viewid = hwi.viewid_generate(n, after)
+	end
+
+	return viewid
+end
+
 local DEBUG_view = {
 	queue = {
 		depth = {
-			viewid = hwi.viewid_generate("shadowdebug_depth", "pre_depth"),
+			viewid = debug_viewid("shadowdebug_depth", "pre_depth"),
 			queue_name = "shadow_debug_depth_queue",
 			queue_eid = nil,
 		},
 		color = {
-			viewid = hwi.viewid_generate("shadowdebug", "ssao"),
+			viewid = debug_viewid("shadowdebug", "ssao"),
 			queue_name = "shadow_debug_queue",
 			queue_eid = nil,
 		}
