@@ -221,6 +221,42 @@ local function aabb_near_far(aabb)
 	return math3d.index(minv, 3), math3d.index(maxv, 3)
 end
 
+local function rays_planes(rays, planes, resultop)
+	for _, r in ipairs(rays) do
+		for i=1, math3d.array_size(planes) do
+			local p = math3d.array_index(planes, i)
+			local t = math3d.plane_ray(r.o, r.d, p)
+			if t and 0 <= t and t <= 1.0 then
+				local pt = math3d.muladd(r.d, t, r.o)
+				-- raypoints[#raypoints+1] = {
+				-- 	result = {
+				-- 		where = t,
+				-- 		test = math3d.aabb_test_point(aabbLS, pt) >= 0,
+				-- 		point = math3d.tostring(pt),
+				-- 	},
+				-- 	plane = pidx,
+				-- 	line = {
+				-- 		idx = i,
+				-- 		p0 = math3d.tostring(p0),
+				-- 		p1 = math3d.tostring(p1)
+				-- 	},
+				-- }
+
+				resultop(pt)
+			end
+		end
+	end
+end
+
+local function build_box_rays(boxpoints)
+	local rays = {}
+	for i=1, 4 do
+		local p0, p1 = math3d.array_index(boxpoints, i), math3d.array_index(boxpoints, i+4)
+		rays[#rays+1] = {o=p0, d=math3d.sub(p1, p0)}
+	end
+	return rays
+end
+
 local function frustum_interset_aabb(M, aabbLS)
 	local nearLS, farLS = aabb_near_far(aabbLS)
 
@@ -279,27 +315,40 @@ local function frustum_interset_aabb(M, aabbLS)
 			planes[idx] = math3d.set_index(d.n, 4, dis)
 		end
 
-		return planes
+		return math3d.array_vector(planes)
 	end
 
 	--frustum interset with aabbLS or aabbLS inside frustum
 	if #verticesLS < 8 then
-		local aabbplanes = aabb_planes(aabbpointsLS)
+		rays_planes(build_box_rays(aabbpointsLS), aabb_planes(aabbpointsLS), function (pt)
+			if math3d.aabb_test_point(aabbLS, pt) >= 0 then
+				verticesLS[#verticesLS+1] = update_nearfar(pt)
+			end
+		end)
 
-		for i=1, 4 do
-			local p0, p1 = math3d.array_index(cornersLS, i), math3d.array_index(cornersLS, i+4)
-			local r = {o=p0, d=math3d.sub(p1, p0)}
+		local function frustum_test_point(frustumplanes, pt)
+			local where = 1
+			for i=1, math3d.array_size(frustumplanes) do
+				local p = math3d.array_index(frustumplanes, i)
+				local v = math3d.dot(p, pt)
+				if v < 0 then
+					return -1
+				end
 
-			for _, p in ipairs(aabbplanes) do
-				local t = math3d.plane_ray(r.o, r.d, p)
-				if t then
-					local pt = math3d.muladd(r.d, t, r.o)
-					if math3d.aabb_test_point(aabbLS, pt) >= 0 then
-						verticesLS[#verticesLS+1] = update_nearfar(pt)
-					end
+				if v == 0 then
+					where = 0
 				end
 			end
+
+			return where
 		end
+
+		local frustumplanes = math3d.frustum_planes(M)
+		rays_planes(build_box_rays(cornersLS), frustumplanes, function (pt)
+			if frustum_test_point(frustumplanes, pt) >= 0 then
+				verticesLS[#verticesLS+1] = update_nearfar(pt)
+			end
+		end)
 
 		-- local aabbpoints = math3d.aabb_points(aabbLS)
 		-- for _, l in ipairs(BOX_SEGMENT_INDICES) do
