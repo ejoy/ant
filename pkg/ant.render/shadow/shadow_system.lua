@@ -380,7 +380,7 @@ local function mark_camera_changed(e)
 end
 
 local function calc_focus_matrix(M, verticesLS)
-	if #verticesLS == 0 then
+	if math3d.array_size(verticesLS) == 0 then
 		return mc.IDENTITY_MAT
 	end
 	local aabb = math3d.minmax(verticesLS, M)
@@ -537,14 +537,20 @@ function shadow_sys:update_camera_depend()
 		end
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc())
 
-		local verticesLS
-		verticesLS, c.frustum.n, c.frustum.f = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
-		local Lp	= math3d.projmat(c.frustum, INV_Z)
+		local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
+		local numintersect_points = math3d.array_size(verticesLS)
 
-		if #verticesLS ~= 0 then
-			c.interset_aabbLS = M3D(c.interset_aabbLS, math3d.minmax(verticesLS))
-			c.verticesLS = M3D(c.verticesLS, math3d.array_vector(verticesLS))
+		if numintersect_points > 0 then
+			local intersectaabb = math3d.minmax(verticesLS)
+
+			c.intersect_aabbLS = M3D(c.intersect_aabbLS, intersectaabb)
+			local minv, maxv = math3d.array_index(intersectaabb, 1), math3d.array_index(intersectaabb, 2)
+			
+			c.frustum.n, c.frustum.f = math3d.index(minv, 3), math3d.index(maxv, 3)
+			c.verticesLS = M3D(c.verticesLS, verticesLS)
 		end
+
+		local Lp	= math3d.projmat(c.frustum, INV_Z)
 
 
 		if useLiSPSM then
@@ -926,10 +932,10 @@ function shadowdebug_sys:data_changed()
 					local prefixname = "csm" .. e.csm.index
 					--add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
 					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					if ce.camera.interset_aabbLS then
-						add_entity(transform_points(math3d.aabb_points(ce.camera.interset_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
+					if ce.camera.intersect_aabbLS then
+						add_entity(transform_points(math3d.aabb_points(ce.camera.intersect_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
 					else
-						log.warn("interset_aabbLS is empty")
+						log.warn("intersect_aabbLS is empty")
 					end
 
 					add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
