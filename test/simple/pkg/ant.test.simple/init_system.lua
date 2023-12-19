@@ -24,10 +24,11 @@ function m:init_world()
 		},
 		data = {
 			scene = {
-				t = {0, 0, 0, 1}, s = {500, 1, 500, 0}
+				t = {0, 0, 0, 1},
+				s = {500, 1, 500, 0}
 			},
 			material = "/pkg/ant.resources/materials/mesh_shadow.material",
-			visible_state= "main_view",
+			visible_state = "main_view",
 			simplemesh = imesh.init_mesh(ientity.plane_mesh()),
 			debug_mesh_bounding = true,
 			on_ready = function (e)
@@ -38,8 +39,5 @@ function m:init_world()
 
 	world:create_instance {
 		prefab = "/pkg/ant.test.simple/resource/light.prefab"
-	}
-	world:create_instance {
-		prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|work.prefab",
 	}
 end

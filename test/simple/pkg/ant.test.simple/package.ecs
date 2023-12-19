@@ -1,8 +1,6 @@
 import_feature "ant.shadow_bounding|camera_bounding_pack"
 import_feature "ant.shadow_bounding|scene_bounding_pack"
 
-system "init_system"
-    .implement "init_system.lua"
 
 pipeline "init"
     .stage "init"
@@ -33,3 +31,11 @@ pipeline "ui"
     .stage "ui_start"
     .stage "ui_update"
     .stage "ui_end"
+
+import_feature "ant.imgui"
+
+system "init_system"
+    .implement "init_system.lua"
+
+system "main_system"
+    .implement "main_system.lua"

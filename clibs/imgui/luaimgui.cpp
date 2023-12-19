@@ -592,19 +592,20 @@ slider_float(lua_State *L, const char *label, int n) {
 	float min = read_field_checkfloat(L, "min");
 	float max = read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
 	bool change = false;
 	switch (n) {
 	case 1:
-		change = ImGui::SliderFloat(label, v, min, max, format);
+		change = ImGui::SliderFloat(label, v, min, max, format, flags);
 		break;
 	case 2:
-		change = ImGui::SliderFloat2(label, v, min, max, format);
+		change = ImGui::SliderFloat2(label, v, min, max, format, flags);
 		break;
 	case 3:
-		change = ImGui::SliderFloat3(label, v, min, max, format);
+		change = ImGui::SliderFloat3(label, v, min, max, format, flags);
 		break;
 	case 4:
-		change = ImGui::SliderFloat4(label, v, min, max, format);
+		change = ImGui::SliderFloat4(label, v, min, max, format, flags);
 		break;
 	}
 	if (change) {
@@ -630,19 +631,20 @@ slider_int(lua_State *L, const char *label, int n) {
 	int min = read_field_checkint(L, "min");
 	int max = read_field_checkint(L, "max");
 	const char * format = read_field_string(L, "format", "%d");
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
 	bool change = false;
 	switch (n) {
 	case 1:
-		change = ImGui::SliderInt(label, v, min, max, format);
+		change = ImGui::SliderInt(label, v, min, max, format, flags);
 		break;
 	case 2:
-		change = ImGui::SliderInt2(label, v, min, max, format);
+		change = ImGui::SliderInt2(label, v, min, max, format, flags);
 		break;
 	case 3:
-		change = ImGui::SliderInt3(label, v, min, max, format);
+		change = ImGui::SliderInt3(label, v, min, max, format, flags);
 		break;
 	case 4:
-		change = ImGui::SliderInt4(label, v, min, max, format);
+		change = ImGui::SliderInt4(label, v, min, max, format, flags);
 		break;
 	}
 	if (change) {
@@ -665,7 +667,8 @@ slider_angle(lua_State *L, const char *label) {
 	float min = (float)read_field_float(L, "min", -360.0f);
 	float max = (float)read_field_float(L, "max", +360.0f);
 	const char * format = read_field_string(L, "format", "%.0f deg");
-	bool change = ImGui::SliderAngle(label, &r, min, max, format);
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
+	bool change = ImGui::SliderAngle(label, &r, min, max, format, flags);
 	if (change) {
 		lua_pushnumber(L, r);
 		lua_seti(L, INDEX_ARGS, 1);
