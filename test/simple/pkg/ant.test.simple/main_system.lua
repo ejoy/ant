@@ -16,9 +16,8 @@ function m:init()
     entities = prefab.tag['*']
 end
 
-
 function m:data_changed()
-    if imgui.windows.Begin ("entities", imgui.flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+    if imgui.windows.Begin("entities", imgui.flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
         local animation_eid
         if imgui.widget.TreeNode "mesh" then
             for i = 1, #entities do
