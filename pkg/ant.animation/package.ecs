@@ -2,6 +2,7 @@ import_feature "ant.scene"
 
 pipeline "animation"
     .stage "animation_state"
+    .stage "animation_playback"
     .stage "animation_sample"
 
 policy "animation"
@@ -22,11 +23,15 @@ policy "slot"
 component "animation".type "lua"
 component "skinning".type "lua"
 component "animation_changed"
+component "animation_playback"
 component "anim_ctrl".type "lua"
 component "slot".type "lua"
 
 system "animation_system"
     .implement "animation.lua"
+
+system "playback_system"
+    .implement "playback.lua"
 
 system "skinning_system"
     .implement "skinning.lua"

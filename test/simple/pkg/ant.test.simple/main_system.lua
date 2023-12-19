@@ -1,9 +1,11 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local imgui = require "imgui"
 local ivs = ecs.require "ant.render|visible_state"
-local iani = ecs.require "ant.animation|animation"
+local ianimation = ecs.require "ant.animation|animation"
+local iplayback = ecs.require "ant.animation|playback"
 
 local m = ecs.system "main_system"
 
@@ -48,17 +50,35 @@ function m:data_changed()
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do
-                local play = status.ratio ~= nil
-                local change, _play = imgui.widget.Checkbox(name, play)
-                if change then
-                    if not _play then
-                        iani.play(e, name)
-                        goto continue
+                if imgui.widget.TreeNode(name) then
+                    do
+                        local change, v = imgui.widget.Checkbox("play", status.play)
+                        if change then
+                            iplayback.play(e, name, {
+                                play = v,
+                                loop = status.loop,
+                            })
+                        end
                     end
-                    play = true
-                    iani.play(e, name, 0)
-                end
-                if play then
+                    do
+                        local change, v = imgui.widget.Checkbox("loop", status.loop)
+                        if change then
+                            iplayback.play(e, name, {
+                                loop = v,
+                                play = status.play,
+                            })
+                        end
+                    end
+                    do
+                        local change, v = imgui.widget.Checkbox("sample", status.weight > 0)
+                        if change then
+                            if v then
+                                ianimation.set_weight(e, name, 1)
+                            else
+                                ianimation.set_weight(e, name, 0)
+                            end
+                        end
+                    end
                     local value = {
                         [1] = status.ratio,
                         min = 0,
@@ -66,11 +86,10 @@ function m:data_changed()
                     }
                     if imgui.widget.SliderFloat("##"..name, value) then
                         local ratio = value[1]
-                        iani.play(e, name, ratio)
+                        ianimation.set_ratio(e, name, ratio)
                     end
-                else
+                    imgui.widget.TreePop()
                 end
-                ::continue::
             end
             imgui.widget.TreePop()
         end

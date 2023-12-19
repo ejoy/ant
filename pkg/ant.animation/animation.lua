@@ -16,8 +16,8 @@ local function create(filename)
         status[name] = {
             handle = handle,
             sampling = ozz.SamplingJobContext(handle:num_tracks()),
-            ratio = nil,
-            weight = 1.0,
+            ratio = 0,
+            weight = 0,
         }
     end
     local obj = {
@@ -62,7 +62,7 @@ local function sampling(ani)
     local skeleton = ani.skeleton
     local layer = {}
     for _, status in pairs(ani.status) do
-        if status.ratio then
+        if status.weight > 0 then
             layer[#layer+1] = status
         end
     end
@@ -105,7 +105,20 @@ end
 
 local api = {}
 
-function api.play(e, name, ratio)
+function api.set_status(e, name, ratio, weight)
+    w:extend(e, "animation:in animation_changed?out")
+    local status = e.animation.status[name]
+    if status.ratio ~= ratio then
+        status.ratio = ratio
+        e.animation_changed = true
+    end
+    if status.weight ~= weight then
+        status.weight = weight
+        e.animation_changed = true
+    end
+end
+
+function api.set_ratio(e, name, ratio)
     w:extend(e, "animation:in animation_changed?out")
     local status = e.animation.status[name]
     if status.ratio ~= ratio then
@@ -114,11 +127,20 @@ function api.play(e, name, ratio)
     end
 end
 
+function api.set_weight(e, name, weight)
+    w:extend(e, "animation:in animation_changed?out")
+    local status = e.animation.status[name]
+    if status.weight ~= weight then
+        status.weight = weight
+        e.animation_changed = true
+    end
+end
+
 function api.reset(e)
     w:extend(e, "animation:in animation_changed?out")
     for _, status in pairs(e.animation.status) do
-        if status.ratio ~= nil then
-            status.ratio = nil
+        if status.weight ~= 0 then
+            status.weight = 0
             e.animation_changed = true
         end
     end

@@ -129,7 +129,7 @@ function iani.step(anim_e, s_delta, absolute)
 	ctrl.dirty = true
 	anim_e.playing = ctrl.play_state.play
 	animation.reset(anim_e)
-	animation.play(anim_e, name, play_state.ratio)
+	animation.set_status(anim_e, name, play_state.ratio, 1)
 end
 
 function iani.set_time(eid, second)
