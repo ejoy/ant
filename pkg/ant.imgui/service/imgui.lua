@@ -159,7 +159,7 @@ ltask.fork(function ()
 	import_package "ant.hwi".init_bgfx()
     init_width, init_height = initargs.w, initargs.h
 
-    local nwh = imgui.Create(dispatch, initargs.w, initargs.h, imgui.flags.Config {
+	imgui.CreateContext(dispatch, imgui.flags.Config {
 		"NavEnableKeyboard",
 		"ViewportsEnable",
 		"DockingEnable",
@@ -167,8 +167,9 @@ ltask.fork(function ()
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
 	})
-    rhwi.init {
-        nwh = nwh,
+	local nwh = imgui.CreateMainWindow(initargs.w, initargs.h)
+	rhwi.init {
+		nwh = nwh,
 		framebuffer = {
 			width = init_width,
 			height = init_height,
@@ -185,6 +186,7 @@ ltask.fork(function ()
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_font.fx.prog)
 	assetmgr.material_mark(imgui_image.fx.prog)
+	imgui.InitPlatform(nwh)
 	imgui.InitRender(
 		PM.program_get(imgui_font.fx.prog),
 		PM.program_get(imgui_image.fx.prog),
@@ -194,7 +196,8 @@ ltask.fork(function ()
 
 	cb.init(init_width, init_height, initargs)
     initialized = true
-    while imgui.NewFrame() do
+    while imgui.DispatchMessage() do
+		imgui.NewFrame()
         updateIO()
 		update_size()
         cb.update(uieditor_viewid, timer_delta())
@@ -206,8 +209,9 @@ ltask.fork(function ()
         ltask.sleep(0)
     end
     cb.exit()
-    imgui.Destroy()
-    bgfx.encoder_end()
+	imgui.DestroyContext()
+	imgui.DestroyMainWindow()
+	bgfx.encoder_end()
 	bgfx.encoder_destroy()
     rhwi.shutdown()
     ltask.multi_wakeup "quit"
