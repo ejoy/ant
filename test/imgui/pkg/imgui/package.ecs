@@ -28,8 +28,5 @@ pipeline "ui"
     .stage "ui_update"
     .stage "ui_end"
 
-system "imgui_system"
-    .implement "imgui_system.lua"
-
 system "init_system"
     .implement "init_system.lua"
