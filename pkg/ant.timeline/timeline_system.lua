@@ -79,3 +79,11 @@ function tl_sys.data_changed()
 	end
 	itl:update(engine_event_handler)
 end
+
+function tl_sys.entity_remove()
+	for e in w:select "REMOVED timeline:in" do
+		if e.timeline.tid then
+			itl:stop(e.timeline.tid)
+		end
+	end
+end
