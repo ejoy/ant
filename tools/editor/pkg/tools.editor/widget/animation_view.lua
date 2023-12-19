@@ -820,8 +820,7 @@ function m.show()
                 local second = ui_timeline_duration[1] / sample_ratio
                 edit_timeline.duration = second
                 anim_state.duration = second
-                local tpl = hierarchy:get_node_info(timeline_eid).template
-                edit_timeline[tpl.tag[1]].duration = second
+                edit_timeline["timeline"].duration = second
                 edit_timeline.dirty = true
                 local e <close> = world:entity(timeline_eid, "timeline:in")
                 e.timeline.duration = second
@@ -966,20 +965,20 @@ function m.on_target(eid)
         if not e.timeline.eid_map then
             e.timeline.eid_map = prefab_mgr.current_prefab.tag
         end
-        local name = hierarchy:get_node_info(eid).template.tag[1]
+        
         timeline_eid = eid
         edit_timeline = {
             dirty = true
         }
-        edit_timeline[name] = {
-            name = name,
+        edit_timeline["timeline"] = {
+            name = "timeline",
             duration = e.timeline.duration,
             key_event = from_runtime_event(e.timeline.key_event),
         }
         local frame = math.floor(e.timeline.duration * sample_ratio)
         ui_loop[1] = e.timeline.loop
         ui_timeline_duration[1] = frame
-        local current_timeline = edit_timeline[name]
+        local current_timeline = edit_timeline["timeline"]
         anim_state.anim_name = current_timeline.name
         anim_state.key_event = current_timeline.key_event
         anim_key_event = current_timeline.key_event
