@@ -287,14 +287,14 @@ local function frustum_interset_aabb(M, aabbLS)
 		local aabbplanes = aabb_planes(aabbpointsLS)
 
 		for i=1, 4 do
-			local p0, p1 = cornersLS[i], cornersLS[i+4]
+			local p0, p1 = math3d.array_index(cornersLS, i), math3d.array_index(cornersLS, i+4)
 			local r = {o=p0, d=math3d.sub(p1, p0)}
 
 			for _, p in ipairs(aabbplanes) do
 				local t = math3d.plane_ray(r.o, r.d, p)
 				if t then
 					local pt = math3d.muladd(r.d, t, r.o)
-					if math3d.aabb_test_point(pt) then
+					if math3d.aabb_test_point(aabbLS, pt) >= 0 then
 						verticesLS[#verticesLS+1] = update_nearfar(pt)
 					end
 				end
@@ -624,12 +624,20 @@ local COLORS<const> = {
 	{0.5, 1.0, 0.5, 1.0},
 }
 
-local unique_color; do
+local unique_color, unique_name; do
 	local idx = 0
 	function unique_color()
 		idx = idx % #COLORS
 		idx = idx + 1
 		return COLORS[idx]
+	end
+
+	local nidx = 0
+	function unique_name()
+		local id = idx + 1
+		local n = "debug_entity" .. id
+		idx = id
+		return n
 	end
 end
 
@@ -800,7 +808,6 @@ local function draw_lines(lines)
 			owned_mesh_buffer = true,
 		}
 	}
-
 end
 
 function shadowdebug_sys:data_changed()
@@ -810,11 +817,15 @@ function shadowdebug_sys:data_changed()
 				w:remove(v)
 			end
 
-			local frustums = {}
+			local function add_entity(points, c, n)
+				local eid = ientity.create_frustum_entity(points, c or unique_color())
+				n = n or unique_name()
+				DEBUG_ENTITIES[n] = eid
+				return eid
+			end
+
 			local function add_frustum(n, m, c)
-				frustums[#frustums+1] = n
-				c = c or unique_color()
-				DEBUG_ENTITIES[n] = ientity.create_frustum_entity(math3d.frustum_points(m), c)
+				return add_entity(math3d.frustum_points(m), c, n)
 			end
 
 			local C = world:entity(irq.main_camera(), "camera:in").camera
@@ -830,7 +841,7 @@ function shadowdebug_sys:data_changed()
 				return math3d.array_vector(np)
 			end
 
-			--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
+			--add_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
 
 			local lines = {}
 			local aabbpoints = transform_points(math3d.aabb_points(C.sceneaabbLS), L2W)
@@ -843,19 +854,23 @@ function shadowdebug_sys:data_changed()
 				end
 			end
 
-			add_lines(aabbpoints, math3d.vector(1.0, 0.0, 0.0, 1.0))
+			--add_lines(aabbpoints, math3d.vector(1.0, 0.0, 0.0, 1.0))
+
+			add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
 
 			do
 				for e in w:select "csm:in camera_ref:in" do
 					local ce = world:entity(e.camera_ref, "camera:in scene:in")
 					local prefixname = "csm" .. e.csm.index
-					add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
+					--add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
 					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
 					if ce.camera.interset_aabbLS then
-						DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(transform_points(math3d.aabb_points(ce.camera.interset_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
+						add_entity(transform_points(math3d.aabb_points(ce.camera.interset_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
 					else
 						log.warn("interset_aabbLS is empty")
 					end
+
+					add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
 
 					-- local points = math3d.frustum_points(ce.camera.Lv2Ndc)
 					-- local pointsWS = {}
