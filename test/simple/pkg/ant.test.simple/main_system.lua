@@ -54,39 +54,45 @@ function m:data_changed()
                     do
                         local change, v = imgui.widget.Checkbox("play", status.play)
                         if change then
-                            iplayback.play(e, name, {
-                                play = v,
-                                loop = status.loop,
-                            })
+                            iplayback.set_play(e, name, v)
                         end
                     end
                     do
                         local change, v = imgui.widget.Checkbox("loop", status.loop)
                         if change then
-                            iplayback.play(e, name, {
-                                loop = v,
-                                play = status.play,
-                            })
+                            iplayback.set_loop(e, name, v)
                         end
                     end
                     do
-                        local change, v = imgui.widget.Checkbox("sample", status.weight > 0)
-                        if change then
-                            if v then
-                                ianimation.set_weight(e, name, 1)
-                            else
-                                ianimation.set_weight(e, name, 0)
-                            end
+                        local value = {
+                            [1] = status.speed and math.floor(status.speed*100) or 100,
+                            min = 0,
+                            max = 500,
+                            format = "%d%%"
+                        }
+                        if imgui.widget.DragInt("speed", value) then
+                            iplayback.set_speed(e, name, value[1] / 100)
                         end
                     end
-                    local value = {
-                        [1] = status.ratio,
-                        min = 0,
-                        max = 1,
-                    }
-                    if imgui.widget.SliderFloat("##"..name, value) then
-                        local ratio = value[1]
-                        ianimation.set_ratio(e, name, ratio)
+                    do
+                        local value = {
+                            [1] = status.weight,
+                            min = 0,
+                            max = 1,
+                        }
+                        if imgui.widget.SliderFloat("weight", value) then
+                            ianimation.set_weight(e, name, value[1])
+                        end
+                    end
+                    do
+                        local value = {
+                            [1] = status.ratio,
+                            min = 0,
+                            max = 1,
+                        }
+                        if imgui.widget.SliderFloat("ratio", value) then
+                            ianimation.set_ratio(e, name, value[1])
+                        end
                     end
                     imgui.widget.TreePop()
                 end
