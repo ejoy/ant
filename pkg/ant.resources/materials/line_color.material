@@ -13,4 +13,4 @@ state:
   LINEAA: true
   MSAA: true
   PT: LINES
-  WRITE_MASK: RGBAZ
+  WRITE_MASK: RGBA

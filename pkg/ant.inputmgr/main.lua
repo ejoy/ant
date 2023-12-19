@@ -60,6 +60,9 @@ local function create(world, type)
     function ev.inputchar(...)
         world:pub {"inputchar", ...}
     end
+    function ev.focus(...)
+        world:pub {"focus", ...}
+    end
     function ev.size(m)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {

@@ -32,16 +32,19 @@ function sbp_sys:finish_scene_update()
     local sbe = w:first "shadow_bounding:update"
     if sbe then
         local scene_aabb = math3d.aabb()
-        local mask = assert(queuemgr.queue_mask("main_queue"))
+        local qidx = assert(queuemgr.queue_index "main_queue")
         for e in w:select "render_object_visible bounding:in render_object:in" do
-            scene_aabb = merge_aabb(mask, e.render_object.visible_idx, e.render_object.cull_idx, e.bounding.scene_aabb, scene_aabb)
+            scene_aabb = merge_aabb(qidx, e.render_object.visible_idx, e.render_object.cull_idx, e.bounding.scene_aabb, scene_aabb)
         end
         for e in w:select "hitch_visible bounding:in hitch:in" do
-            scene_aabb = merge_aabb(mask, e.hitch.visible_idx, e.hitch.cull_idx, e.bounding.scene_aabb, scene_aabb)
+            scene_aabb = merge_aabb(qidx, e.hitch.visible_idx, e.hitch.cull_idx, e.bounding.scene_aabb, scene_aabb)
         end
         
-        math3d.unmark(sbe.shadow_bounding.scene_aabb)
-        sbe.shadow_bounding.scene_aabb = math3d.marked_aabb(math3d.array_index(scene_aabb, 1), math3d.array_index(scene_aabb, 2))
+        if math3d.aabb_isvalid(scene_aabb) then
+            math3d.unmark(sbe.shadow_bounding.scene_aabb)
+            sbe.shadow_bounding.scene_aabb = math3d.marked_aabb(math3d.array_index(scene_aabb, 1), math3d.array_index(scene_aabb, 2))
+        end
+
         w:submit(sbe) 
     end
     dirty = false

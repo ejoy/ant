@@ -1,6 +1,8 @@
 fx:
   shader_type: PBR
-  setting: /pkg/ant.resources/settings/nolighting.ant
+  setting:
+    lighting: off
+    no_predepth: true
   varyings:
     a_position: vec3
     a_color0: vec4
@@ -8,7 +10,7 @@ fx:
     v_posWS: vec3
 state:
   ALPHA_REF: 1
-  CULL: CCW
+  CULL: NONE
   DEPTH_TEST: ALWAYS
   LINEAA: true
   MSAA: true

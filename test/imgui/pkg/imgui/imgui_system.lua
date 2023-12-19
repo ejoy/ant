@@ -76,11 +76,6 @@ function m:exit()
 	imgui.v2.DestroyContext()
 end
 
-local TouchEvent = world:sub { "touch" }
-local GesturePinchEvent = world:sub { "gesture", "pinch" }
-local KeyboardEvent = world:sub { "keyboard" }
-local InputcharEvent = world:sub { "inputchar" }
-
 local KeyboardCode <const> = {
     TAB = "Tab",
     LEFT = "LeftArrow",
@@ -201,6 +196,12 @@ local KeyboardCode <const> = {
     BROWSER_FORWARD = "AppForward",
 }
 
+local TouchEvent = world:sub { "touch" }
+local GesturePinchEvent = world:sub { "gesture", "pinch" }
+local KeyboardEvent = world:sub { "keyboard" }
+local InputcharEvent = world:sub { "inputchar" }
+local FocusEvent = world:sub { "focus" }
+
 function m:start_frame()
 	for _, e in TouchEvent:unpack() do
 		if e.state == "began" then
@@ -229,6 +230,9 @@ function m:start_frame()
 		elseif e.what == "utf16" then
 			imgui.v2.AddInputCharacterUTF16(e.code)
 		end
+	end
+	for _, focused in FocusEvent:unpack() do
+		imgui.v2.AddFocusEvent(focused)
 	end
 	imgui.v2.NewFrame()
 end

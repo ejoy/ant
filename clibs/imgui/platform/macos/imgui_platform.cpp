@@ -19,7 +19,7 @@ void* platformCreateMainWindow(int w, int h) {
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
 	SDL_GetWindowWMInfo(window, &wmInfo);
-	return platformGetHandle(ImGui::GetMainViewport());
+	return window;
 }
 
 void platformDestroyMainWindow() {
@@ -52,9 +52,9 @@ bool platformDispatchMessage() {
 
 void platformInit(void* window) {
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-	ImGui_ImplSDL2_InitForD3D(window);
+	ImGui_ImplSDL2_InitForD3D((SDL_Window*)window);
 #elif defined(SDL_VIDEO_DRIVER_COCOA)
-	ImGui_ImplSDL2_InitForMetal(window);
+	ImGui_ImplSDL2_InitForMetal((SDL_Window*)window);
 #endif
 }
 
@@ -80,9 +80,4 @@ void* platformGetHandle(ImGuiViewport* viewport) {
 #elif defined(SDL_VIDEO_DRIVER_COCOA)
 	return setupMetalLayer(wmInfo.info.cocoa.window);
 #endif
-}
-
-
-void platformShutdown() {
-	ImGui_ImplSDL2_Shutdown();
 }
