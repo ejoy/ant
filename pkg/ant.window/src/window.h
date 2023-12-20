@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <ImGui.h>
+#include <imgui.h>
 
 struct lua_State;
 

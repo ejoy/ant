@@ -1,6 +1,6 @@
 #include <Cocoa/Cocoa.h>
 #include "../../window.h"
-#include "../../virtual_keys.h"
+#include <Carbon/Carbon.h>
 
 static ant::window::keyboard_state get_keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
@@ -13,108 +13,124 @@ static ant::window::keyboard_state get_keyboard_state(NSEvent* event) {
     );
 }
 
-static int keyboard_key(NSEvent* event) {
-	NSString* key = [event charactersIgnoringModifiers];
-	if ([key length] == 0) {
-		return 0;
-	}
-	int code = [key characterAtIndex:0];
-	switch (code) {
-    case 0x08: case 0x7F:          return VK_BACK;
-    case 0x09:                     return VK_TAB;
-    case 0x0D: case 0x03:          return VK_RETURN;
-    case 0x1B:                     return VK_ESCAPE;
-    case ' ':                      return VK_SPACE;
-    case ';':  case ':':           return VK_OEM_1;
-    case '=':  case '+':           return VK_OEM_PLUS;
-    case ',':  case '<':           return VK_OEM_COMMA;
-    case '-':  case '_':           return VK_OEM_MINUS;
-    case '.':  case '>':           return VK_OEM_PERIOD;
-    case '/':  case '?':           return VK_OEM_2;
-    case '`':  case '~':           return VK_OEM_3;
-    case '[':  case '{':           return VK_OEM_4;
-    case '\\': case '|':           return VK_OEM_5;
-    case ']':  case '}':           return VK_OEM_6;
-    case '\'': case '"':           return VK_OEM_7;
-    case '0': case ')':            return VK_0;
-    case '1': case '!':            return VK_1;
-    case '2': case '@':            return VK_2;
-    case '3': case '#':            return VK_3;
-    case '4': case '$':            return VK_4;
-    case '5': case '%':            return VK_5;
-    case '6': case '^':            return VK_6;
-    case '7': case '&':            return VK_7;
-    case '8': case '*':            return VK_8;
-    case '9': case '(':            return VK_9;
-    case 'a': case 'A':            return VK_A;
-    case 'b': case 'B':            return VK_B;
-    case 'c': case 'C':            return VK_C;
-    case 'd': case 'D':            return VK_D;
-    case 'e': case 'E':            return VK_E;
-    case 'f': case 'F':            return VK_F;
-    case 'g': case 'G':            return VK_G;
-    case 'h': case 'H':            return VK_H;
-    case 'i': case 'I':            return VK_I;
-    case 'j': case 'J':            return VK_J;
-    case 'k': case 'K':            return VK_K;
-    case 'l': case 'L':            return VK_L;
-    case 'm': case 'M':            return VK_M;
-    case 'n': case 'N':            return VK_N;
-    case 'o': case 'O':            return VK_O;
-    case 'p': case 'P':            return VK_P;
-    case 'q': case 'Q':            return VK_Q;
-    case 'r': case 'R':            return VK_R;
-    case 's': case 'S':            return VK_S;
-    case 't': case 'T':            return VK_T;
-    case 'u': case 'U':            return VK_U;
-    case 'v': case 'V':            return VK_V;
-    case 'w': case 'W':            return VK_W;
-    case 'x': case 'X':            return VK_X;
-    case 'y': case 'Y':            return VK_Y;
-    case 'z': case 'Z':            return VK_Z;
-	case NSF1FunctionKey:          return VK_F1;
-	case NSF2FunctionKey:          return VK_F2;
-	case NSF3FunctionKey:          return VK_F3;
-	case NSF4FunctionKey:          return VK_F4;
-	case NSF5FunctionKey:          return VK_F5;
-	case NSF6FunctionKey:          return VK_F6;
-	case NSF7FunctionKey:          return VK_F7;
-	case NSF8FunctionKey:          return VK_F8;
-	case NSF9FunctionKey:          return VK_F9;
-	case NSF10FunctionKey:         return VK_F10;
-    case NSF11FunctionKey:         return VK_F11;
-    case NSF12FunctionKey:         return VK_F12;
-    case NSF13FunctionKey:         return VK_F13;
-    case NSF14FunctionKey:         return VK_F14;
-    case NSF15FunctionKey:         return VK_F15;
-    case NSF16FunctionKey:         return VK_F16;
-    case NSF17FunctionKey:         return VK_F17;
-    case NSF18FunctionKey:         return VK_F18;
-    case NSF19FunctionKey:         return VK_F19;
-    case NSF20FunctionKey:         return VK_F20;
-    case NSF21FunctionKey:         return VK_F21;
-    case NSF22FunctionKey:         return VK_F22;
-    case NSF23FunctionKey:         return VK_F23;
-    case NSF24FunctionKey:         return VK_F24;
-	case NSLeftArrowFunctionKey:   return VK_LEFT;
-	case NSRightArrowFunctionKey:  return VK_RIGHT;
-	case NSUpArrowFunctionKey:     return VK_UP;
-	case NSDownArrowFunctionKey:   return VK_DOWN;
-	case NSPageUpFunctionKey:      return VK_PRIOR;
-	case NSPageDownFunctionKey:    return VK_NEXT;
-	case NSHomeFunctionKey:        return VK_HOME;
-	case NSEndFunctionKey:         return VK_END;
-	case NSPrintScreenFunctionKey: return VK_SNAPSHOT;
-    case NSScrollLockFunctionKey:  return VK_SCROLL;
-    case NSPauseFunctionKey:       return VK_PAUSE;
-    case NSSelectFunctionKey:      return VK_SELECT;
-    case NSDeleteFunctionKey:      return VK_DELETE;
-    case NSPrintFunctionKey:       return VK_PRINT;
-    case NSExecuteFunctionKey:     return VK_EXECUTE;
-    case NSInsertFunctionKey:      return VK_INSERT;
-    case NSHelpFunctionKey:        return VK_HELP;
-	}
-	return 0;
+static ImGuiKey ToImGuiKey(int key_code) {
+    switch (key_code) {
+        case kVK_ANSI_A: return ImGuiKey_A;
+        case kVK_ANSI_S: return ImGuiKey_S;
+        case kVK_ANSI_D: return ImGuiKey_D;
+        case kVK_ANSI_F: return ImGuiKey_F;
+        case kVK_ANSI_H: return ImGuiKey_H;
+        case kVK_ANSI_G: return ImGuiKey_G;
+        case kVK_ANSI_Z: return ImGuiKey_Z;
+        case kVK_ANSI_X: return ImGuiKey_X;
+        case kVK_ANSI_C: return ImGuiKey_C;
+        case kVK_ANSI_V: return ImGuiKey_V;
+        case kVK_ANSI_B: return ImGuiKey_B;
+        case kVK_ANSI_Q: return ImGuiKey_Q;
+        case kVK_ANSI_W: return ImGuiKey_W;
+        case kVK_ANSI_E: return ImGuiKey_E;
+        case kVK_ANSI_R: return ImGuiKey_R;
+        case kVK_ANSI_Y: return ImGuiKey_Y;
+        case kVK_ANSI_T: return ImGuiKey_T;
+        case kVK_ANSI_1: return ImGuiKey_1;
+        case kVK_ANSI_2: return ImGuiKey_2;
+        case kVK_ANSI_3: return ImGuiKey_3;
+        case kVK_ANSI_4: return ImGuiKey_4;
+        case kVK_ANSI_6: return ImGuiKey_6;
+        case kVK_ANSI_5: return ImGuiKey_5;
+        case kVK_ANSI_Equal: return ImGuiKey_Equal;
+        case kVK_ANSI_9: return ImGuiKey_9;
+        case kVK_ANSI_7: return ImGuiKey_7;
+        case kVK_ANSI_Minus: return ImGuiKey_Minus;
+        case kVK_ANSI_8: return ImGuiKey_8;
+        case kVK_ANSI_0: return ImGuiKey_0;
+        case kVK_ANSI_RightBracket: return ImGuiKey_RightBracket;
+        case kVK_ANSI_O: return ImGuiKey_O;
+        case kVK_ANSI_U: return ImGuiKey_U;
+        case kVK_ANSI_LeftBracket: return ImGuiKey_LeftBracket;
+        case kVK_ANSI_I: return ImGuiKey_I;
+        case kVK_ANSI_P: return ImGuiKey_P;
+        case kVK_ANSI_L: return ImGuiKey_L;
+        case kVK_ANSI_J: return ImGuiKey_J;
+        case kVK_ANSI_Quote: return ImGuiKey_Apostrophe;
+        case kVK_ANSI_K: return ImGuiKey_K;
+        case kVK_ANSI_Semicolon: return ImGuiKey_Semicolon;
+        case kVK_ANSI_Backslash: return ImGuiKey_Backslash;
+        case kVK_ANSI_Comma: return ImGuiKey_Comma;
+        case kVK_ANSI_Slash: return ImGuiKey_Slash;
+        case kVK_ANSI_N: return ImGuiKey_N;
+        case kVK_ANSI_M: return ImGuiKey_M;
+        case kVK_ANSI_Period: return ImGuiKey_Period;
+        case kVK_ANSI_Grave: return ImGuiKey_GraveAccent;
+        case kVK_ANSI_KeypadDecimal: return ImGuiKey_KeypadDecimal;
+        case kVK_ANSI_KeypadMultiply: return ImGuiKey_KeypadMultiply;
+        case kVK_ANSI_KeypadPlus: return ImGuiKey_KeypadAdd;
+        case kVK_ANSI_KeypadClear: return ImGuiKey_NumLock;
+        case kVK_ANSI_KeypadDivide: return ImGuiKey_KeypadDivide;
+        case kVK_ANSI_KeypadEnter: return ImGuiKey_KeypadEnter;
+        case kVK_ANSI_KeypadMinus: return ImGuiKey_KeypadSubtract;
+        case kVK_ANSI_KeypadEquals: return ImGuiKey_KeypadEqual;
+        case kVK_ANSI_Keypad0: return ImGuiKey_Keypad0;
+        case kVK_ANSI_Keypad1: return ImGuiKey_Keypad1;
+        case kVK_ANSI_Keypad2: return ImGuiKey_Keypad2;
+        case kVK_ANSI_Keypad3: return ImGuiKey_Keypad3;
+        case kVK_ANSI_Keypad4: return ImGuiKey_Keypad4;
+        case kVK_ANSI_Keypad5: return ImGuiKey_Keypad5;
+        case kVK_ANSI_Keypad6: return ImGuiKey_Keypad6;
+        case kVK_ANSI_Keypad7: return ImGuiKey_Keypad7;
+        case kVK_ANSI_Keypad8: return ImGuiKey_Keypad8;
+        case kVK_ANSI_Keypad9: return ImGuiKey_Keypad9;
+        case kVK_Return: return ImGuiKey_Enter;
+        case kVK_Tab: return ImGuiKey_Tab;
+        case kVK_Space: return ImGuiKey_Space;
+        case kVK_Delete: return ImGuiKey_Backspace;
+        case kVK_Escape: return ImGuiKey_Escape;
+        case kVK_CapsLock: return ImGuiKey_CapsLock;
+        case kVK_Control: return ImGuiKey_LeftCtrl;
+        case kVK_Shift: return ImGuiKey_LeftShift;
+        case kVK_Option: return ImGuiKey_LeftAlt;
+        case kVK_Command: return ImGuiKey_LeftSuper;
+        case kVK_RightControl: return ImGuiKey_RightCtrl;
+        case kVK_RightShift: return ImGuiKey_RightShift;
+        case kVK_RightOption: return ImGuiKey_RightAlt;
+        case kVK_RightCommand: return ImGuiKey_RightSuper;
+//      case kVK_Function: return ImGuiKey_;
+//      case kVK_VolumeUp: return ImGuiKey_;
+//      case kVK_VolumeDown: return ImGuiKey_;
+//      case kVK_Mute: return ImGuiKey_;
+        case kVK_F1: return ImGuiKey_F1;
+        case kVK_F2: return ImGuiKey_F2;
+        case kVK_F3: return ImGuiKey_F3;
+        case kVK_F4: return ImGuiKey_F4;
+        case kVK_F5: return ImGuiKey_F5;
+        case kVK_F6: return ImGuiKey_F6;
+        case kVK_F7: return ImGuiKey_F7;
+        case kVK_F8: return ImGuiKey_F8;
+        case kVK_F9: return ImGuiKey_F9;
+        case kVK_F10: return ImGuiKey_F10;
+        case kVK_F11: return ImGuiKey_F11;
+        case kVK_F12: return ImGuiKey_F12;
+        case kVK_F13: return ImGuiKey_F13;
+        case kVK_F14: return ImGuiKey_F14;
+        case kVK_F15: return ImGuiKey_F15;
+        case kVK_F16: return ImGuiKey_F16;
+        case kVK_F17: return ImGuiKey_F17;
+        case kVK_F18: return ImGuiKey_F18;
+        case kVK_F19: return ImGuiKey_F19;
+        case kVK_F20: return ImGuiKey_F20;
+        case 0x6E: return ImGuiKey_Menu;
+        case kVK_Help: return ImGuiKey_Insert;
+        case kVK_Home: return ImGuiKey_Home;
+        case kVK_PageUp: return ImGuiKey_PageUp;
+        case kVK_ForwardDelete: return ImGuiKey_Delete;
+        case kVK_End: return ImGuiKey_End;
+        case kVK_PageDown: return ImGuiKey_PageDown;
+        case kVK_LeftArrow: return ImGuiKey_LeftArrow;
+        case kVK_RightArrow: return ImGuiKey_RightArrow;
+        case kVK_DownArrow: return ImGuiKey_DownArrow;
+        case kVK_UpArrow: return ImGuiKey_UpArrow;
+        default: return ImGuiKey_None;
+    }
 }
 
 static int32_t clamp(int32_t v, int32_t min, int32_t max) {
@@ -331,7 +347,8 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeKeyDown:
     case NSEventTypeKeyUp: {
         struct ant::window::msg_keyboard msg;
-        msg.key = keyboard_key(event);
+        int key_code = (int)[event keyCode];
+        msg.key = ToImGuiKey(key_code);
         msg.state = get_keyboard_state(event);
         msg.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
         ant::window::input_message(cb, msg);

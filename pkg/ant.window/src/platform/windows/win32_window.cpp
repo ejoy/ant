@@ -104,7 +104,7 @@ static bool IsVkDown(int vk) {
 	return (::GetKeyState(vk) & 0x8000) != 0;
 }
 
-static ImGuiKey VirtualKeyToImGuiKey(WPARAM wParam) {
+static ImGuiKey ToImGuiKey(WPARAM wParam) {
     switch (wParam) {
         case VK_TAB: return ImGuiKey_Tab;
         case VK_LEFT: return ImGuiKey_LeftArrow;
@@ -360,7 +360,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			}
 		}
 		else {
-			msg.key = VirtualKeyToImGuiKey(vk);
+			msg.key = ToImGuiKey(vk);
 			ant::window::input_message(cb, msg);
 		}
 		break;
