@@ -3,7 +3,7 @@ local inputmgr = import_package "ant.inputmgr"
 
 local function create_world(config)
     local world = ecs.new_world (config)
-    local ev = inputmgr.create(world, "imgui")
+    local ev = inputmgr.create(world)
     local m = {}
     function m.init()
         world:pipeline_init()

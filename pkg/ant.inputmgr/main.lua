@@ -1,13 +1,20 @@
 local platform = require "bee.platform"
 local ltask = require "ltask"
+local imgui = require "imgui"
+
+local keymap = {}
+
+for name, index in pairs(imgui.enum.Key) do
+    keymap[index] = name
+end
+
 local ServiceRmlui; do
     ltask.fork(function ()
         ServiceRmlui = ltask.queryservice "ant.rmlui|rmlui"
     end)
 end
 
-local function create(world, type)
-    local keymap = require(type.."_keymap")
+local function create(world)
     local ev = {}
     local active_gesture = {}
     local function rmlui_sendmsg(...)

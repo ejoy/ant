@@ -22,7 +22,7 @@ local quit
 local will_reboot
 
 local function init_inputmgr()
-	local ev = inputmgr.create(world, "imgui")
+	local ev = inputmgr.create(world)
 	event.keyboard = ev.keyboard
 	event.mouse = ev.mouse
 	event.mousewheel = ev.mousewheel
