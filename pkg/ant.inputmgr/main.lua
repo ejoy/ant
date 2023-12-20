@@ -15,76 +15,76 @@ local ServiceRmlui; do
 end
 
 local function create(world)
-    local ev = {}
     local active_gesture = {}
     local function rmlui_sendmsg(...)
         return ltask.call(ServiceRmlui, ...)
     end
-    function ev.gesture(m)
-        local active = active_gesture[m.what]
+    local m = {}
+    function m.gesture(e)
+        local active = active_gesture[e.what]
         if active then
             if active == "world" then
-                world:pub { "gesture", m.what, m }
+                world:pub { "gesture", e.what, e }
             else
-                rmlui_sendmsg("gesture", m)
+                rmlui_sendmsg("gesture", e)
             end
-            if m.state == "ended" then
-                active_gesture[m.what] = nil
+            if e.state == "ended" then
+                active_gesture[e.what] = nil
             end
-        elseif m.state == "began" then
+        elseif e.state == "began" then
             if ServiceRmlui then
-                if rmlui_sendmsg("gesture", m) then
-                    active_gesture[m.what] = "rmlui"
+                if rmlui_sendmsg("gesture", e) then
+                    active_gesture[e.what] = "rmlui"
                     return
                 end
             end
-            world:pub { "gesture", m.what, m }
-            active_gesture[m.what] = "world"
+            world:pub { "gesture", e.what, e }
+            active_gesture[e.what] = "world"
         else
             -- assert(m.state == nil)
             if ServiceRmlui then
-                if rmlui_sendmsg("gesture", m) then
+                if rmlui_sendmsg("gesture", e) then
                     return
                 end
             end
-            world:pub { "gesture", m.what, m }
+            world:pub { "gesture", e.what, e }
         end
     end
-    function ev.touch(m)
+    function m.touch(e)
         if ServiceRmlui then
-            if rmlui_sendmsg("touch", m) then
+            if rmlui_sendmsg("touch", e) then
                 return
             end
         end
-        world:pub { "touch", m }
+        world:pub { "touch", e }
     end
-    function ev.keyboard(m)
-        world:pub {"keyboard", keymap[m.key], m.press, m.state}
+    function m.keyboard(e)
+        world:pub {"keyboard", keymap[e.key], e.press, e.state}
     end
-    function ev.dropfiles(...)
+    function m.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
-    function ev.inputchar(...)
+    function m.inputchar(...)
         world:pub {"inputchar", ...}
     end
-    function ev.focus(...)
+    function m.focus(...)
         world:pub {"focus", ...}
     end
-    function ev.size(m)
+    function m.size(e)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {
                 x = 0,
                 y = 0,
-                w = m.w,
-                h = m.h,
+                w = e.w,
+                h = e.h,
                 ratio = world.args.framebuffer.ratio,
             })
         end
         local fb = world.args.framebuffer
-        fb.width, fb.height = m.w, m.h
-        world:pub {"resize", m.w, m.h}
+        fb.width, fb.height = e.w, e.h
+        world:pub {"resize", e.w, e.h}
     end
-    function ev.set_viewport(vp)
+    function m.set_viewport(vp)
         rmlui_sendmsg("set_viewport", {
             x = vp.x,
             y = vp.y,
@@ -94,18 +94,21 @@ local function create(world)
         })
         world:pub{"world_viewport_changed", vp}
     end
+    function m.dispatch(e)
+        local f = assert(m[e.type], e.type)
+        f(e)
+    end
     if platform.os ~= "ios" and platform.os ~= "android" then
+        require "mouse_gesture" (m)
         if world.args.ecs.enable_mouse then
-            function ev.mouse_event(m)
-                world:pub {"mouse", m.what, m.state, m.x, m.y}
-            end
-        else
-            function ev.mouse_event()
+            local mousef = m.mouse
+            function m.mouse(e)
+                world:pub {"mouse", e.what, e.state, e.x, e.y}
+                mousef(e)
             end
         end
-        require "mouse_gesture" (ev)
     end
-    return ev
+    return m
 end
 
 return {
