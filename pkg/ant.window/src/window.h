@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <imgui.h>
 
 struct lua_State;
 
@@ -24,7 +25,6 @@ void window_message_recreate(struct ant_window_callback* cb, void* window, void*
 void window_message_exit(struct ant_window_callback* cb);
 void window_message_size(struct ant_window_callback* cb, int x, int y);
 void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files);
-
 
 namespace ant::window {
 	enum DIRECTION : uint8_t {
@@ -82,7 +82,7 @@ namespace ant::window {
 		};
 	}
 	struct msg_keyboard {
-		int key;
+		ImGuiKey key;
 		keyboard_state state;
 		uint8_t press;
 	};

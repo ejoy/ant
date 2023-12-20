@@ -1,7 +1,6 @@
 local initargs = ...
 
 local ltask     = require "ltask"
-local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
@@ -21,27 +20,15 @@ local encoderBegin = false
 local quit
 local will_reboot
 
-local function init_inputmgr()
-	local ev = inputmgr.create(world, "win32")
-	event.keyboard = ev.keyboard
-	event.mouse = ev.mouse
-	event.mousewheel = ev.mousewheel
-	event.touch = ev.touch
-	event.gesture = ev.gesture
-	event.size = ev.size
-	event.inputchar = ev.inputchar
-	event.focus = ev.focus
-	event.dropfiles = ev.dropfiles
-	return ev
-end
 
 local function reboot(initargs)
 	local config = world.args
+	local enable_mouse = config.ecs.enable_mouse
 	config.REBOOT = true
 	config.ecs = initargs
+	config.ecs.enable_mouse = enable_mouse
 	world:pipeline_exit()
 	world = ecs.new_world(config)
-	init_inputmgr()
 	world:pipeline_init()
 end
 
@@ -77,8 +64,7 @@ local function render(nwh, context, width, height, initialized)
 	bgfx.encoder_begin()
 	encoderBegin = true
 	world = ecs.new_world(config)
-	local ev = init_inputmgr()
-	ev.set_viewport(config.viewport)
+	world:set_viewport(config.viewport)
 
 	world:pipeline_init()
 
@@ -118,7 +104,8 @@ function event.recreate(m)
 	bgfx.set_platform_data {
 		nwh = m.nwh
 	}
-	event.size {
+	world:inputmgr_dispatch {
+		type = "size",
 		w = m.w,
 		h = m.h,
 	}
@@ -143,8 +130,12 @@ ltask.fork(function ()
 			if not m then
 				break
 			end
-			local f = assert(event[m.type], m.type)
-			f(m)
+			local f = event[m.type]
+			if f then
+				f(m)
+			else
+				world:inputmgr_dispatch(m)
+			end
 		end
 		ltask.wait(ms_token)
 	end

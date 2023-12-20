@@ -1,9 +1,11 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local imgui = require "imgui"
 local ivs = ecs.require "ant.render|visible_state"
-local iani = ecs.require "ant.animation|animation"
+local ianimation = ecs.require "ant.animation|animation"
+local iplayback = ecs.require "ant.animation|playback"
 
 local m = ecs.system "main_system"
 
@@ -48,29 +50,52 @@ function m:data_changed()
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do
-                local play = status.ratio ~= nil
-                local change, _play = imgui.widget.Checkbox(name, play)
-                if change then
-                    if not _play then
-                        iani.play(e, name)
-                        goto continue
+                if imgui.widget.TreeNode(name) then
+                    do
+                        local change, v = imgui.widget.Checkbox("play", status.play)
+                        if change then
+                            iplayback.set_play(e, name, v)
+                        end
                     end
-                    play = true
-                    iani.play(e, name, 0)
-                end
-                if play then
-                    local value = {
-                        [1] = status.ratio,
-                        min = 0,
-                        max = 1,
-                    }
-                    if imgui.widget.SliderFloat("##"..name, value) then
-                        local ratio = value[1]
-                        iani.play(e, name, ratio)
+                    do
+                        local change, v = imgui.widget.Checkbox("loop", status.loop)
+                        if change then
+                            iplayback.set_loop(e, name, v)
+                        end
                     end
-                else
+                    do
+                        local value = {
+                            [1] = status.speed and math.floor(status.speed*100) or 100,
+                            min = 0,
+                            max = 500,
+                            format = "%d%%"
+                        }
+                        if imgui.widget.DragInt("speed", value) then
+                            iplayback.set_speed(e, name, value[1] / 100)
+                        end
+                    end
+                    do
+                        local value = {
+                            [1] = status.weight,
+                            min = 0,
+                            max = 1,
+                        }
+                        if imgui.widget.SliderFloat("weight", value) then
+                            ianimation.set_weight(e, name, value[1])
+                        end
+                    end
+                    do
+                        local value = {
+                            [1] = status.ratio,
+                            min = 0,
+                            max = 1,
+                        }
+                        if imgui.widget.SliderFloat("ratio", value) then
+                            ianimation.set_ratio(e, name, value[1])
+                        end
+                    end
+                    imgui.widget.TreePop()
                 end
-                ::continue::
             end
             imgui.widget.TreePop()
         end

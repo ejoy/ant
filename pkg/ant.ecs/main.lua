@@ -1,6 +1,7 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
 local aio = import_package "ant.io"
+local inputmgr = import_package "ant.inputmgr"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
 local policy = require "policy"
@@ -619,6 +620,14 @@ function world:exit_system(name)
     self._system_changed = true
 end
 
+function world:inputmgr_dispatch(e)
+    self._inputmgr.dispatch(e)
+end
+
+function world:set_viewport(vp)
+    self._inputmgr.set_viewport(vp)
+end
+
 event.init(world)
 
 local m = {}
@@ -663,6 +672,7 @@ function m.new_world(config)
         },
         w = ecs,
     }, world_metatable)
+    w._inputmgr = inputmgr.create(w)
 
     log.info "world initializing"
     feature.import(w, config.ecs.feature)

@@ -6,6 +6,7 @@ lm:lua_source "window" {
     includes = {
         ROOT.."3rd/bee.lua/3rd/lua-seri",
         ROOT.."3rd/bee.lua",
+        ROOT.."3rd/imgui",
     },
     sources = {
         "src/*.cpp",
