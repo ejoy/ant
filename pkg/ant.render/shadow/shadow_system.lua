@@ -232,20 +232,6 @@ local function rays_planes(rays, planes, resultop)
 			local t = math3d.plane_ray(r.o, r.d, p)
 			if t and 0 <= t and t <= 1.0 then
 				local pt = math3d.muladd(r.d, t, r.o)
-				-- raypoints[#raypoints+1] = {
-				-- 	result = {
-				-- 		where = t,
-				-- 		test = math3d.aabb_test_point(aabbLS, pt) >= 0,
-				-- 		point = math3d.tostring(pt),
-				-- 	},
-				-- 	plane = pidx,
-				-- 	line = {
-				-- 		idx = i,
-				-- 		p0 = math3d.tostring(p0),
-				-- 		p1 = math3d.tostring(p1)
-				-- 	},
-				-- }
-
 				resultop(pt)
 			end
 		end
@@ -353,18 +339,6 @@ local function frustum_interset_aabb(M, aabbLS)
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
 			end
 		end)
-
-		-- local aabbpoints = math3d.aabb_points(aabbLS)
-		-- for _, l in ipairs(BOX_SEGMENT_INDICES) do
-		-- 	local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
-		-- 	for _, t in ipairs(BOX_TRIANGLES_INDICES) do
-		-- 		local v1, v2, v3 = math3d.array_index(cornersLS, t[1]), math3d.array_index(cornersLS, t[2]), math3d.array_index(cornersLS, t[3])
-		-- 		local p = mu.segment_triangle(s0, s1, v1, v2, v3)
-		-- 		if p then
-		-- 			verticesLS[#verticesLS+1] = update_nearfar(p)
-		-- 		end
-		-- 	end
-		-- end
 	end
 
 	return verticesLS, nearLS, farLS
@@ -441,12 +415,6 @@ local function calc_viewspace_z(n, f, r)
 	return n + (f-n) * r
 end
 
-local function calc_ndc_z(Mp, zn, zf, r)
-	local z = calc_viewspace_z(zn, zf, r)
-	local p = math3d.transformH(Mp, math3d.vector(0.0, 0.0, z, 1.0))
-	return math3d.index(p, 3)
-end
-
 local INV_Z<const> = true
 
 function shadow_sys:update_camera_depend()
@@ -498,7 +466,6 @@ function shadow_sys:update_camera_depend()
 	C.camera.Lv			= M3D(C.camera.Lv, Lv)
 
 	local useLiSPSM = false
-	local forcePSCnear = true
 	local Lr
 	if useLiSPSM then
 		local viewdirLS = math3d.transform(Lv, viewdir, 0)
@@ -849,14 +816,6 @@ function shadowdebug_sys:entity_init()
 	for e in w:select "INIT render_object visible_state:in" do
 		update_visible_state(e)
 	end
-
-	-- if w:first "INIT csm1_queue" then
-	-- 	local qe = w:first "csm1_queue camera_ref:in"
-	-- 	local sddq<close> = world:entity(shadowdebug_depthqueue)
-	-- 	local sdq<close> = world:entity(shadowdebug_queue)
-	-- 	irq.set_camera(sddq, qe.camera_ref)
-	-- 	irq.set_camera(sdq, qe.camera_ref)
-	-- end
 end
 
 local function draw_lines(lines)
@@ -892,13 +851,8 @@ function shadowdebug_sys:data_changed()
 				return eid
 			end
 
-			local function add_frustum(n, m, c)
-				return add_entity(math3d.frustum_points(m), c, n)
-			end
-
 			local C = world:entity(irq.main_camera(), "camera:in").camera
 			local L2W = math3d.inverse(C.Lv)
-			--add_frustum("camera_viewprojmat", C.viewprojmat, {0.0, 1.0, 0.0, 1.0})
 
 			local function transform_points(points, M)
 				local np = {}
@@ -909,21 +863,7 @@ function shadowdebug_sys:data_changed()
 				return math3d.array_vector(np)
 			end
 
-			--add_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
-
-			local lines = {}
 			local aabbpoints = transform_points(math3d.aabb_points(C.sceneaabbLS), L2W)
-
-			local function add_lines(points, color)
-				for _, l in ipairs(BOX_SEGMENT_INDICES) do
-					local s0, s1 = math3d.array_index(points, l[1]), math3d.array_index(points, l[2])
-					lines[#lines+1] = math3d.serialize(s0):sub(1, 12) .. math3d.serialize(color)
-					lines[#lines+1] = math3d.serialize(s1):sub(1, 12) .. math3d.serialize(color)
-				end
-			end
-
-			--add_lines(aabbpoints, math3d.vector(1.0, 0.0, 0.0, 1.0))
-
 			add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
 
 			do
