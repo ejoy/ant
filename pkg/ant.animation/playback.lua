@@ -17,7 +17,7 @@ function m:animation_playback()
         for _, status in pairs(ani.status) do
             if status.play then
                 local duration = status.handle:duration()
-                local speed = status.speed or 1
+                local speed = status.speed
                 local ratio = status.ratio + speed * delta / duration
                 if ratio > 1 then
                     if status.loop then
@@ -52,8 +52,13 @@ function api.set_play(e, name, v)
     local status = e.animation.status[name]
     if status.play ~= v then
         status.play = v
-        if status.play and status.weight == 0 then
-            status.weight = 1
+        if status.play then
+            if status.weight == 0 then
+                status.weight = 1
+            end
+            if status.speed == nil or status.speed == 0 then
+                status.speed = 1
+            end
         end
         e.animation_playback = true
     end
