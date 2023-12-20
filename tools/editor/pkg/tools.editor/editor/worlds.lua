@@ -1,9 +1,7 @@
 local ecs      = import_package "ant.ecs"
-local inputmgr = import_package "ant.inputmgr"
 
 local function create_world(config)
     local world = ecs.new_world (config)
-    local ev = inputmgr.create(world)
     local m = {}
     function m.init()
         world:pipeline_init()
@@ -14,11 +12,21 @@ local function create_world(config)
     function m.exit()
         world:pipeline_exit()
     end
-    m.mousewheel   = ev.mousewheel
-    m.mouse        = ev.mouse
-    m.keyboard     = ev.keyboard
-    m.size         = ev.size
-    m.set_viewport = ev.set_viewport
+    function m.mousewheel(e)
+        world:inputmgr_dispatch(e)
+    end
+    function m.mouse(e)
+        world:inputmgr_dispatch(e)
+    end
+    function m.keyboard(e)
+        world:inputmgr_dispatch(e)
+    end
+    function m.size(e)
+        world:inputmgr_dispatch(e)
+    end
+    function m.set_viewport(vp)
+        world:set_viewport(vp)
+    end
     return m, world
 end
 

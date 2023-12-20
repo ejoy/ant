@@ -26,7 +26,7 @@ local function get_time()
     return now / 100
 end
 
-return function (m)
+return function (dispatch)
     local lastX
     local lastY
     local downX
@@ -63,7 +63,7 @@ return function (m)
     end
     local function mouse_move(e)
         if inLongPress then
-            m.dispatch {
+            dispatch {
                 type = "gesture",
                 what = "longpress",
                 x = e.x,
@@ -85,7 +85,7 @@ return function (m)
             if distance > touchSlopSquare then
                 if not inScrolling then
                     inScrolling = get_time()
-                    m.dispatch {
+                    dispatch {
                         type = "gesture",
                         what = "pan",
                         state = "began",
@@ -96,7 +96,7 @@ return function (m)
                         timestamp = e.timestamp,
                     }
                 end
-                m.dispatch {
+                dispatch {
                     type = "gesture",
                     what = "pan",
                     state = "changed",
@@ -114,7 +114,7 @@ return function (m)
         elseif math.abs(scrollX) >= 1 or math.abs(scrollY) >= 1 then
             if not inScrolling then
                 inScrolling = get_time()
-                m.dispatch {
+                dispatch {
                     type = "gesture",
                     what = "pan",
                     state = "began",
@@ -125,7 +125,7 @@ return function (m)
                     timestamp = e.timestamp,
                 }
             end
-            m.dispatch {
+            dispatch {
                 type = "gesture",
                 what = "pan",
                 state = "changed",
@@ -142,7 +142,7 @@ return function (m)
     local function mouse_up(e)
         if inLongPress then
             inLongPress = false
-            m.dispatch {
+            dispatch {
                 type = "gesture",
                 what = "longpress",
                 x = e.x,
@@ -151,7 +151,7 @@ return function (m)
                 timestamp = e.timestamp,
             }
         elseif alwaysInTapRegion then
-            m.dispatch {
+            dispatch {
                 type = "gesture",
                 what = "tap",
                 x = e.x,
@@ -161,7 +161,7 @@ return function (m)
         elseif inScrolling then
             local scrollX = e.x - lastX
             local scrollY = e.y - lastY
-            m.dispatch {
+            dispatch {
                 type = "gesture",
                 what = "pan",
                 state = "ended",
@@ -177,8 +177,9 @@ return function (m)
         lastY = nil
         stop_timer(longPressTimer)
     end
+    local m = {}
     function m.mousewheel(e)
-        m.dispatch {
+        dispatch {
             type = "gesture",
             what = "pinch",
             x = e.x,
@@ -189,7 +190,7 @@ return function (m)
     end
     function m.mouse(e)
         if e.state == "DOWN" then
-            m.dispatch {
+            dispatch {
                 type = "touch",
                 state = "began",
                 id = Mouse2Touch[e.what],
@@ -198,7 +199,7 @@ return function (m)
                 timestamp = e.timestamp,
             }
         elseif e.state == "MOVE" then
-            m.dispatch {
+            dispatch {
                 type = "touch",
                 state = "moved",
                 id = Mouse2Touch[e.what],
@@ -207,7 +208,7 @@ return function (m)
                 timestamp = e.timestamp,
             }
         elseif e.state == "UP" then
-            m.dispatch {
+            dispatch {
                 type = "touch",
                 state = "ended",
                 id = Mouse2Touch[e.what],
@@ -226,4 +227,5 @@ return function (m)
             end
         end
     end
+    return m
 end

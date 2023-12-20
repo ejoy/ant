@@ -20,7 +20,8 @@ local function create(world)
         return ltask.call(ServiceRmlui, ...)
     end
     local m = {}
-    function m.gesture(e)
+    local event = {}
+    function event.gesture(e)
         local active = active_gesture[e.what]
         if active then
             if active == "world" then
@@ -50,7 +51,7 @@ local function create(world)
             world:pub { "gesture", e.what, e }
         end
     end
-    function m.touch(e)
+    function event.touch(e)
         if ServiceRmlui then
             if rmlui_sendmsg("touch", e) then
                 return
@@ -58,19 +59,19 @@ local function create(world)
         end
         world:pub { "touch", e }
     end
-    function m.keyboard(e)
+    function event.keyboard(e)
         world:pub {"keyboard", keymap[e.key], e.press, e.state}
     end
-    function m.dropfiles(...)
+    function event.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
-    function m.inputchar(...)
+    function event.inputchar(...)
         world:pub {"inputchar", ...}
     end
-    function m.focus(...)
+    function event.focus(...)
         world:pub {"focus", ...}
     end
-    function m.size(e)
+    function event.size(e)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {
                 x = 0,
@@ -95,17 +96,19 @@ local function create(world)
         world:pub{"world_viewport_changed", vp}
     end
     function m.dispatch(e)
-        local f = assert(m[e.type], e.type)
+        local f = assert(event[e.type], e.type)
         f(e)
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
-        require "mouse_gesture" (m)
+        local mg = require "mouse_gesture" (m.dispatch)
+        event.mousewheel = mg.mousewheel
         if world.args.ecs.enable_mouse then
-            local mousef = m.mouse
-            function m.mouse(e)
+            function event.mouse(e)
                 world:pub {"mouse", e.what, e.state, e.x, e.y}
-                mousef(e)
+                mg.mouse(e)
             end
+        else
+            event.mouse = mg.mouse
         end
     end
     return m
