@@ -85,7 +85,6 @@ local function create_simple_triangles()
     -- print(math3d.tostring(n))
 end
 
-
 function S.init()
     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
         local leid = e.tag['*'][2]
@@ -93,7 +92,8 @@ function S.init()
 
         -- local r2l_mat<const> = mc.R2L_MAT
         -- local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
-        iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
+        --iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
+        iom.set_rotation(le, math3d.quaternion{math.pi * 0.75, math.pi * 0.1, 0.0})
     end)
 
 end
