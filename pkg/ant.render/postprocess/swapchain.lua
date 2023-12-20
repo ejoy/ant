@@ -4,19 +4,25 @@ local w     = world.w
 
 local setting = import_package "ant.settings"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
+local ENABLE_TAA   <const>  = setting:get "graphic/postprocess/taa/enable"
 local sc_sys = ecs.system "swapchain_system"
 
-local hwi       = import_package "ant.hwi"
+local hwi           = import_package "ant.hwi"
 
-local mu        = import_package "ant.math".util
-local fbmgr     = require "framebuffer_mgr"
+local mu            = import_package "ant.math".util
+local fbmgr         = require "framebuffer_mgr"
 
-local util      = ecs.require "postprocess.util"
+local util          = ecs.require "postprocess.util"
 
-local imaterial = ecs.require "ant.asset|material"
-local irender   = ecs.require "ant.render|render_system.render"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local imaterial     = ecs.require "ant.asset|material"
+local irender       = ecs.require "ant.render|render_system.render"
+local irq           = ecs.require "ant.render|render_system.renderqueue"
+local ifsr          = ecs.require "ant.render|postprocess.fsr"
 
+local scene_ratio   = irender.get_framebuffer_ratio("scene_ratio")
+local NEED_UPSACLE <const>   = scene_ratio >= 0.5 and scene_ratio < 1
+local ENABLE_FSR   <const>   = setting:get "graphic/postprocess/fsr/enable" and (ENABLE_FXAA or ENABLE_TAA) and NEED_UPSACLE
+--local ENABLE_FSR   <const>   = nil
 function sc_sys:init()
     world:create_entity{
         policy = {
@@ -58,9 +64,11 @@ function sc_sys:swapchain()
             if not ENABLE_FXAA then
                 local tqe = w:first "tonemapping_queue render_target:in"
                 return fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
-            else
+            elseif not ENABLE_FSR then
                 local fqe = w:first "fxaa_queue render_target:in"
                 return fbmgr.get_rb(fqe.render_target.fb_idx, 1).handle
+            else
+                return ifsr.get_fsr_output_handle()
             end
         end
     end

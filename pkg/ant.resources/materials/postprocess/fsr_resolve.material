@@ -1,0 +1,12 @@
+fx:
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_quad.sc
+  fs: /pkg/ant.resources/shaders/postprocess/fs_quad.sc
+  setting:
+    lighting: off
+    cast_shadow: off
+    receive_shadow: off
+properties:
+  s_scene_color:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+state: /pkg/ant.resources/materials/postprocess/postprocess.state

@@ -1,0 +1,16 @@
+fx:
+    cs: /pkg/ant.resources/shaders/postprocess/fsr/cs_fsr.sc
+    macros:
+        "SAMPLE_EASU=1"
+properties:
+    u_params: {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}
+    s_image_input:
+        stage: 0
+        mip: 0
+        access: "r"
+        image: /pkg/ant.resources/textures/default.texture
+    s_image_output:
+        stage: 1
+        mip: 0
+        access: "w"
+        image: /pkg/ant.resources/textures/black.texture

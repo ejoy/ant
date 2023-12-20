@@ -31,6 +31,8 @@ graphic:
       lut_dim: 32
     taa:
       enable: nil
+    fsr:
+      enable: true
   render:
     clear: CDS
     clear_color: 255

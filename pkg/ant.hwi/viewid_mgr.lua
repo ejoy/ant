@@ -79,6 +79,9 @@ add_view "taa"
 add_view "taa_copy"
 add_view "taa_present"
 add_view "fxaa"
+add_view "fsr_resolve"
+add_view "fsr_easu"
+add_view "fsr_rcas"
 add_view "swapchain"
 --end postprocess
 
