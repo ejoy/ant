@@ -168,7 +168,11 @@ end
 
 local function build_aabb(queue_index, M, tag)
 	local aabb = math3d.aabb()
-	for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
+	-- for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
+	-- 	aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
+	-- end
+
+	for e in w:select"render_object_visible render_object:in bounding:in" do
 		aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
 	end
 
@@ -354,7 +358,7 @@ local function mark_camera_changed(e)
 end
 
 local function calc_focus_matrix(M, verticesLS)
-	if math3d.array_size(verticesLS) == 0 then
+	if mc.NULL == verticesLS then
 		return mc.IDENTITY_MAT
 	end
 	local aabb = math3d.minmax(verticesLS, M)
@@ -452,18 +456,19 @@ function shadow_sys:update_camera_depend()
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 
 	local main_queueidx = queuemgr.queue_index "main_queue"
-	C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
-	C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
+	local PSR = build_PSR(main_queueidx)
+	local PSRLS 		= math3d.aabb_transform(Lv, PSR)
+	C.camera.PSRLS		= M3D(C.camera.PSRLS, PSRLS)
 
-	C.camera.PSRLS  = M3D(C.camera.PSRLS, math3d.aabb_transform(Lv, C.camera.PSR))
-	C.camera.PSCLS  = M3D(C.camera.PSCLS, math3d.aabb_transform(Lv, C.camera.PSC))
+	-- C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
+	-- C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
 
-	local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
+	-- C.camera.PSRLS  = M3D(C.camera.PSRLS, math3d.aabb_transform(Lv, C.camera.PSR))
+	-- C.camera.PSCLS  = M3D(C.camera.PSCLS, math3d.aabb_transform(Lv, C.camera.PSC))
 
-	local Lv2Vv = math3d.mul(C.camera.viewmat, math3d.inverse_fast(Lv))
-	C.camera.Lv2Vv		= M3D(C.camera.Lv2Vv, Lv2Vv)
-	C.camera.sceneaabbLS= M3D(C.camera.sceneaabbLS, sceneaabbLS)
-	C.camera.Lv			= M3D(C.camera.Lv, Lv)
+	--local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
+	local sceneaabbLS	= PSRLS
+	local Lv2Vv 		= math3d.mul(C.camera.viewmat, math3d.inverse_fast(Lv))
 
 	local useLiSPSM = false
 	local Lr
@@ -476,7 +481,7 @@ function shadow_sys:update_camera_depend()
 
 	--TODO: hardcode
 	local split_ratio = {
-		{0.0,  0.1},
+		{0.0,  1.0},
 		{0.1,  0.25},
 		{0.25, 0.5},
 		{0.5,  1.0},
@@ -505,20 +510,16 @@ function shadow_sys:update_camera_depend()
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc())
 
 		local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
-		local numintersect_points = math3d.array_size(verticesLS)
-
-		if numintersect_points > 0 then
+	
+		if mc.NULL ~= verticesLS then
 			local intersectaabb = math3d.minmax(verticesLS)
-
-			c.intersect_aabbLS = M3D(c.intersect_aabbLS, intersectaabb)
 			local minv, maxv = math3d.array_index(intersectaabb, 1), math3d.array_index(intersectaabb, 2)
 			
 			c.frustum.n, c.frustum.f = math3d.index(minv, 3), math3d.index(maxv, 3)
-			c.verticesLS = M3D(c.verticesLS, verticesLS)
+			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
 		end
 
 		local Lp	= math3d.projmat(c.frustum, INV_Z)
-
 
 		if useLiSPSM then
 			local Lrp	= math3d.mul(Lr, Lp)
@@ -851,9 +852,6 @@ function shadowdebug_sys:data_changed()
 				return eid
 			end
 
-			local C = world:entity(irq.main_camera(), "camera:in").camera
-			local L2W = math3d.inverse(C.Lv)
-
 			local function transform_points(points, M)
 				local np = {}
 				for i=1, math3d.array_size(points) do
@@ -863,50 +861,21 @@ function shadowdebug_sys:data_changed()
 				return math3d.array_vector(np)
 			end
 
-			local aabbpoints = transform_points(math3d.aabb_points(C.sceneaabbLS), L2W)
-			add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
+			local C = world:entity(irq.main_camera(), "camera:in").camera
+			for e in w:select "csm:in camera_ref:in" do
+				local ce = world:entity(e.camera_ref, "camera:in scene:in")
+				local Lv = ce.camera.viewmat
+				local L2W = math3d.inverse_fast(Lv)
+				local aabbpoints = transform_points(math3d.aabb_points(C.PSRLS), L2W)
+				add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
 
-			do
-				for e in w:select "csm:in camera_ref:in" do
-					local ce = world:entity(e.camera_ref, "camera:in scene:in")
-					local prefixname = "csm" .. e.csm.index
-					--add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
-					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					if ce.camera.intersect_aabbLS then
-						add_entity(transform_points(math3d.aabb_points(ce.camera.intersect_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
-					else
-						log.warn("intersect_aabbLS is empty")
-					end
-
-					add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
-
-					-- local points = math3d.frustum_points(ce.camera.Lv2Ndc)
-					-- local pointsWS = {}
-					-- for i=1, 8 do
-					-- 	pointsWS[i] = math3d.transform(L2W, math3d.array_index(points, i), 1)
-					-- end
-					-- DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(math3d.array_vector(pointsWS),	{0.0, 0.0, 1.0, 1.0})
-
-					-- add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
-					-- add_frustum(prefixname .. "_W", 			ce.camera.W)
+				if ce.camera.verticesLS then
+					local aabb = math3d.minmax(ce.camera.verticesLS, L2W)
+					add_entity(math3d.aabb_points(aabb),	{1.0, 1.0, 0.0, 1.0})
 				end
+
+				add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
 			end
-
-			--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = draw_lines(lines)
-			
-			--DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSR)),  		{1.0, 0.0, 0.0, 1.0})
-			--DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSC)),  		{0.0, 1.0, 0.0, 1.0})
-			--DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSRLS, L2W)),{1.0, 0.1, 0.1, 1.0})
-			--DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSCLS, L2W)),{0.1, 1.0, 0.1, 1.0})
-
-			--DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W),{0.1, 1.0, 0.1, 1.0})
-
-			--DEBUG_ENTITIES["CSMFrustum"] = ientity.create_frustum_entity(math3d.frustum_points(C.viewprojmat), {0.1, 1.0, 0.1, 1.0})
-			--DEBUG_ENTITIES["CSMLight"] = ientity.create_frustum_entity(math3d.array_vector(frustum_interset_aabb(math3d.inverse(C.viewprojmat), C.sceneaabbLS, zn, zf)),{1.0, 0.1, 0.1, 1.0})
-
-			-- local L2W = math3d.inverse(C.Lv)
-			-- DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabbLS, L2W)),{1.0, 0.0, 0.0, 1.0})
-			-- DEBUG_ENTITIES["sceneaabb"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabb)),{0.0, 1.0, 0.0, 1.0})
 		elseif key == 'C' and press == 0 then
 
 		end

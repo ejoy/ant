@@ -19,15 +19,9 @@ function L.rotation_matrix(viewdirLS)
 end
 
 local function calc_near_far(M, points)
-    local n, f = math.maxinteger, -math.maxinteger
-    for _, v in ipairs(points) do
-        local vv = math3d.transform(M, v, 1)
-        local z = math3d.index(vv, 3)
-        n = math.min(n, z)
-        f = math.max(f, z)
-    end
-
-    return n, f
+    local aabb = math3d.minmax(points, M)
+    local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+    return math3d.index(minv, 3), math3d.index(maxv, 3)
 end
 
 local function warp_frustum(n, f)
