@@ -1,10 +1,11 @@
 local platform = require "bee.platform"
 local ltask = require "ltask"
-local imgui = require "imgui"
+local ImGui = require "imgui"
+local ImGuiIO = ImGui.io
 
 local keymap = {}
 
-for name, index in pairs(imgui.enum.Key) do
+for name, index in pairs(ImGui.enum.Key) do
     keymap[index] = name
 end
 
@@ -64,12 +65,6 @@ local function create(world)
     function event.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
-    function event.inputchar(...)
-        world:pub {"inputchar", ...}
-    end
-    function event.focus(...)
-        world:pub {"focus", ...}
-    end
     function event.size(e)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {
@@ -110,13 +105,64 @@ local function create(world)
     return event
 end
 
+local ImGuiEvent = {}
+
+function ImGuiEvent.touch(e)
+    if e.state == "began" then
+        ImGuiIO.AddMouseButtonEvent(0, true)
+    elseif e.state == "ended" then
+        ImGuiIO.AddMouseButtonEvent(0, false)
+    end
+    return ImGuiIO.WantCaptureMouse
+end
+
+function ImGuiEvent.gesture(e)
+    if e.what == "pinch" then
+        ImGuiIO.AddMouseWheelEvent(e.velocity, e.velocity)
+    end
+    return ImGuiIO.WantCaptureMouse
+end
+
+function ImGuiEvent.keyboard(e)
+    if e.press == 1 then
+        ImGuiIO.AddKeyEvent(e.key, true);
+    elseif e.press == 0 then
+        ImGuiIO.AddKeyEvent(e.key, false);
+    end
+    return ImGuiIO.WantCaptureKeyboard
+end
+
+function ImGuiEvent.inputchar(e)
+    if e.what == "native" then
+        ImGuiIO.AddInputCharacter(e.code)
+    elseif e.what == "utf16" then
+        ImGuiIO.AddInputCharacterUTF16(e.code)
+    end
+end
+
+function ImGuiEvent.focus(e)
+    ImGuiIO.AddFocusEvent(e.focused)
+end
+
 local world = {}
 
 function world:dispatch_message(e)
+    if self._enable_imgui then
+        local func = ImGuiEvent[e.type]
+        if func then
+            if func(e) then
+                return
+            end
+        end
+    end
     local func = self._inputmgr[e.type]
     if func then
         func(e)
     end
+end
+
+function world:enable_imgui()
+    self._enable_imgui = true
 end
 
 local m = {}
@@ -124,6 +170,7 @@ local m = {}
 function m:init()
     self._inputmgr = create(self)
     self.dispatch_message = world.dispatch_message
+    self.enable_imgui = world.enable_imgui
 end
 
 return m

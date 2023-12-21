@@ -3159,6 +3159,13 @@ ioGetterWantCaptureMouse(lua_State* L) {
 }
 
 static int
+ioGetterWantCaptureKeyboard(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushboolean(L, io.WantCaptureKeyboard);
+	return 1;
+}
+
+static int
 ioSetter(lua_State* L) {
 	lua_pushvalue(L, 2);
 	if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
@@ -3266,6 +3273,7 @@ luaopen_imgui(lua_State *L) {
 	};
 	luaL_Reg io_getter[] = {
 		{ "WantCaptureMouse", ioGetterWantCaptureMouse },
+		{ "WantCaptureKeyboard", ioGetterWantCaptureKeyboard },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, io);
