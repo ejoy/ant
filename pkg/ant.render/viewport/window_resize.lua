@@ -33,7 +33,7 @@ if not __ANT_EDITOR__ then
 		rhwi.reset(nil, s.w, s.h)
 		local vp = world.args.backbuffer_viewport
 		local vr = world.args.scene.viewrect
-		log.info("world viewport:", vp.x, vp.y, vp.w, vp.h)
+		log.info("backbuffer_viewport:", vp.x, vp.y, vp.w, vp.h)
 		log.info("main viewrect:", vr.x, vr.y, vr.w, vr.h)
 		world:pub{"scene_viewrect_changed", vr}
 	end

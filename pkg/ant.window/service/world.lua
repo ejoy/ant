@@ -47,8 +47,8 @@ local function render(nwh, context, width, height, initialized)
 	config.backbuffer_viewport = {
 		x = 0,
 		y = 0,
-		w = width,
-		h = height
+		w = RESOLUTION.w,
+		h = RESOLUTION.h
 	}
 
 	local vp = config.backbuffer_viewport

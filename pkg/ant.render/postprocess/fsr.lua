@@ -47,6 +47,7 @@ local fsr_dispatch_size = {}
 local fsr_resolve_viewid<const> = hwi.viewid_get "fsr_resolve"
 local fsr_easu_viewid<const>    = hwi.viewid_get "fsr_easu"
 local fsr_rcas_viewid<const>    = hwi.viewid_get "fsr_rcas"
+local fsr_solve_entity
 local ifsr = {}
 
 function ifsr.get_fsr_output_handle()
@@ -112,6 +113,51 @@ local function update_rcas_builder(rcas)
     rcas_dis.material.u_params       = math3d.array_vector(fsr_params)
 end
 
+local function create_fsr_resolve_entity(ratio)
+    local function to_mesh_buffer(vbbin, ib_handle)
+        local numv = #vbbin // layout.stride
+        local numi = (numv // 4) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
+    
+        return {
+            bounding = nil,
+            vb = {
+                start = 0,
+                num = numv,
+                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
+            },
+            ib = {
+                start = 0,
+                num = numi,
+                handle = ib_handle,
+            }
+        }
+    end
+    --[[
+        v1---v3
+        |    |
+        v0---v2
+    ]]
+    local VBFMT<const> = ("fffff"):rep(4)
+    local vb = VBFMT:pack(
+        -1, -2 * ratio + 1, 0, 0, 1,
+        -1, 1, 0, 0, 0,
+        2 * ratio - 1, -2 * ratio + 1, 0, 1, 1,
+        2 * ratio - 1, 1, 0, 1, 0)
+
+    fsr_solve_entity = world:create_entity{
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            simplemesh          = to_mesh_buffer(vb, irender.quad_ib()),
+            material            = "/pkg/ant.resources/materials/postprocess/fsr_resolve.material",
+            visible_state       = "fsr_resolve_queue",
+            fsr_resolve_drawer  = true,
+            scene               = {},
+        }
+    }
+end
+
 function fsr_sys:init()
     local vr = world.args.scene.viewrect
     local function create_fsr_resolve_queue()
@@ -124,52 +170,6 @@ end
 
 function fsr_sys:init_world()
     local vr = world.args.scene.viewrect
-
-    local function create_fsr_resolve_entity()
-        local function to_mesh_buffer(vbbin, ib_handle)
-            local numv = #vbbin // layout.stride
-            local numi = (numv // 4) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
-        
-            return {
-                bounding = nil,
-                vb = {
-                    start = 0,
-                    num = numv,
-                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
-                },
-                ib = {
-                    start = 0,
-                    num = numi,
-                    handle = ib_handle,
-                }
-            }
-        end
-        --[[
-            v1---v3
-            |    |
-            v0---v2
-        ]]
-        local VBFMT<const> = ("fffff"):rep(4)
-        local vb = VBFMT:pack(
-            -1, 0, 0, 0, 1,
-            -1, 1, 0, 0, 0,
-             0, 0, 0, 1, 1,
-             0, 1, 0, 1, 0)
-
-        world:create_entity{
-            policy = {
-                "ant.render|simplerender",
-            },
-            data = {
-                simplemesh          = to_mesh_buffer(vb, irender.quad_ib()),
-                material            = "/pkg/ant.resources/materials/postprocess/fsr_resolve.material",
-                visible_state       = "fsr_resolve_queue",
-                fsr_resolve_drawer  = true,
-                scene               = {},
-            }
-        }
-    end
-
     set_fsr_disptach_size(vr)
 
     local function create_fsr_easu_entity()
@@ -185,7 +185,7 @@ function fsr_sys:init_world()
     set_fsr_disptach_size(vr)
     set_fsr_textures(vr)
     set_fsr_params(vr)
-    create_fsr_resolve_entity()
+    create_fsr_resolve_entity(world.args.scene.scene_ratio)
     create_fsr_easu_entity()
     create_fsr_rcas_entity()
 end
@@ -205,6 +205,10 @@ function fsr_sys:data_changed()
         set_fsr_disptach_size(vr)
         set_fsr_textures(vr)
         set_fsr_params(vr)
+        if fsr_solve_entity then
+            w:remove(fsr_solve_entity)
+        end
+        create_fsr_resolve_entity(world.args.scene.scene_ratio)
         local easu = w:first "fsr_easu_builder dispatch:in"
         update_easu_builder(easu)
         local rcas = w:first "fsr_rcas_builder dispatch:in"
