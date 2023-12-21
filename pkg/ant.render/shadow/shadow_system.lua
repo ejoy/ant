@@ -243,9 +243,21 @@ local function rays_planes(rays, planes, resultop)
 end
 
 local function build_box_rays(boxpoints)
+	local lineindices = {
+		0, 4, 1, 5,
+		2, 6, 3, 7,
+
+		0, 2, 1, 3,
+		4, 6, 5, 7,
+
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+	}
+
 	local rays = {}
-	for i=1, 4 do
-		local p0, p1 = math3d.array_index(boxpoints, i), math3d.array_index(boxpoints, i+4)
+	for i=1, #lineindices, 2 do
+		local s0, s1 = lineindices[i]+1, lineindices[i+1]+1
+		local p0, p1 = math3d.array_index(boxpoints, s0), math3d.array_index(boxpoints, s1)
 		rays[#rays+1] = {o=p0, d=math3d.sub(p1, p0)}
 	end
 	return rays
@@ -261,24 +273,24 @@ local function frustum_interset_aabb(M, aabbLS)
 		return p
 	end
 
-	local cornersLS = math3d.frustum_points(M)
-	local frustumplanesLS = math3d.frustum_planes(M)
-	local aabbpointsLS = math3d.aabb_points(aabbLS)
-	local aabbplanesLS = math3d.aabb_planes(aabbLS)
+	local frustumpointsLS	= math3d.frustum_points(M)
+	local frustumplanesLS	= math3d.frustum_planes(M)
+	local aabbpointsLS		= math3d.aabb_points(aabbLS)
+	local aabbplanesLS		= math3d.aabb_planes(aabbLS)
 
 	local verticesLS = {}
 
 	local function check_point_inside_box(points, checkop, insidepoints)
 		for i=1, 8 do
 			local corner = math3d.array_index(points, i)
-			if checkop(corner) >= 0 then
+			if checkop(corner) then
 				insidepoints[#insidepoints+1] = update_nearfar(corner)
 			end
 		end
 	end
 
-	check_point_inside_box(cornersLS, function (p)
-		return math3d.aabb_test_point(aabbLS, p) end,
+	check_point_inside_box(frustumpointsLS, function (p)
+		return math3d.aabb_test_point(aabbLS, p) >= 0 end,
 	verticesLS)
 
 	--check frustum included aabb
@@ -287,21 +299,24 @@ local function frustum_interset_aabb(M, aabbLS)
 	end
 
 	check_point_inside_box(aabbpointsLS, function (p)
-		return math3d.frustum_test_point(frustumplanesLS, p) end,
+		return math3d.frustum_test_point(frustumplanesLS, p) >= 0 end,
 	verticesLS)
 
 	--frustum interset with aabbLS or aabbLS inside frustum
+	local intersect_points = {}
 	if #verticesLS < 8 then
-		rays_planes(build_box_rays(aabbpointsLS), aabbplanesLS, function (pt)
+		rays_planes(build_box_rays(frustumpointsLS), aabbplanesLS, function (pt)
 			if math3d.aabb_test_point(aabbLS, pt) >= 0 then
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
+				intersect_points[#intersect_points+1] = pt
 			end
 		end)
 
 		local frustumplanes = math3d.frustum_planes(M)
-		rays_planes(build_box_rays(cornersLS), frustumplanes, function (pt)
+		rays_planes(build_box_rays(aabbpointsLS), frustumplanes, function (pt)
 			if math3d.frustum_test_point(frustumplanes, pt) >= 0 then
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
+				intersect_points[#intersect_points+1] = pt
 			end
 		end)
 	end
@@ -471,7 +486,7 @@ function shadow_sys:update_camera_depend()
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc())
 
 		local verticesLS = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
-		--local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
+		local verticesLS2 = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
 	
 		if mc.NULL ~= verticesLS then
 			local intersectaabb = math3d.minmax(verticesLS)
