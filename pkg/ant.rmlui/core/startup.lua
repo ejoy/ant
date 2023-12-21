@@ -65,9 +65,9 @@ local viewid = hwi.viewid_get "uiruntime"
 hwi.init_bgfx()
 bgfx.init()
 
-function S.set_viewport(vp)
-    bgfx.set_view_rect(viewid, vp.x, vp.y, vp.w, vp.h)
-    document_manager.set_viewport(vp)
+function S.set_viewrect(vr)
+    bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
+    document_manager.set_viewrect(vr)
 end
 
 rmlui.RmlInitialise {

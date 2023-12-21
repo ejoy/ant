@@ -12,8 +12,8 @@ local mu		= mathpkg.util
 local fr_sys = ecs.system "forward_render_system"
 
 function fr_sys:init()
-	local ratio = world.args.framebuffer.scene_ratio
-	local vr = mu.calc_viewrect(world.args.viewport, ratio)
+	local ratio = world.args.scene.scene_ratio
+	local vr = mu.calc_viewrect(world.args.scene.viewrect, ratio)
 	if ratio then
 		vr.ratio = ratio
 	end

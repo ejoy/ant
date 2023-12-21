@@ -624,8 +624,8 @@ function world:inputmgr_dispatch(e)
     self._inputmgr.dispatch(e)
 end
 
-function world:set_viewport(vp)
-    self._inputmgr.set_viewport(vp)
+function world:set_viewrect(vr)
+    self._inputmgr.set_viewrect(vr)
 end
 
 event.init(world)

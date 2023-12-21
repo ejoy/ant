@@ -84,33 +84,33 @@ local function update_render_target(newsize, sceneratio)
 end
 
 function vp_detect_sys:post_init()
-	update_render_target(world.args.viewport, world.args.framebuffer.scene_ratio)
+	update_render_target(world.args.scene.viewrect, world.args.scene.scene_ratio)
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
-local scene_vp_changed_mb = world:sub{"scene_viewport_ratio_changed"}
+local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
+local scene_ratio_changed_mb = world:sub{"scene_ratio_changed"}
 
 function vp_detect_sys:data_changed()
-	for _, vp in vp_changed_mb:unpack() do
-		if vp.w ~= 0 and vp.h ~= 0 then
-			update_render_target(vp, world.args.framebuffer.scene_ratio)
+	for _, vr in scene_viewrect_changed_mb:unpack() do
+		if vr.w ~= 0 and vr.h ~= 0 then
+			update_render_target(vr, world.args.scene.scene_ratio)
 			break
 		end
 	end
 
-	for _, newratio in scene_vp_changed_mb:unpack() do
+	for _, newratio in scene_ratio_changed_mb:unpack() do
 		if newratio <= 1e-6 then
 			error "scene ratio should larger than 0"
 		end
-
-		update_render_target(world.args.viewport, newratio)
+		local vr = world.args.scene.viewrect
+		update_render_target(vr, newratio)
 		do
 			local mq = w:first "main_queue render_target:in"
 			local vr = mq.render_target.view_rect
 			log.info(("scene viewrect:x=%2f, y=%2f, w=%2f, h=%2f, scene_ratio=%2f"):format(vr.x, vr.y, vr.w, vr.h, vr.ratio or 1.0))
 		end
 
-		world.args.framebuffer.scene_ratio = newratio
+		world.args.scene.scene_ratio = newratio
 		break
 	end
 end

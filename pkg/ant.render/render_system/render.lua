@@ -333,7 +333,7 @@ function irender.set_framebuffer_ratio(which, ratio)
 end
 
 function irender.get_framebuffer_ratio(which)
-	return world.args.framebuffer[which] or error ("Invalid ratio type:" .. which)
+	return world.args.scene[which] or error ("Invalid ratio type:" .. which)
 end
 
 function irender.mark_group_visible(gid, enable)

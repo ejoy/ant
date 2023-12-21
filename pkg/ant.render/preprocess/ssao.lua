@@ -187,7 +187,7 @@ local function update_ssct_properties(material)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.calc_viewrect(world.args.viewport, ssao_configs.resolution)
+    local vr = mu.calc_viewrect(world.args.scene.viewrect, ssao_configs.resolution)
     local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"

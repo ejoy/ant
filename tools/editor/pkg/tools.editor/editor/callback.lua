@@ -90,9 +90,9 @@ function cb.size(width, height)
         }
     end
 end
-function cb.set_viewport(vp)
+function cb.set_viewrect(vr)
     for _, w in ipairs(worlds) do
-        w.set_viewport(vp)
+        w.set_viewrect(vr)
     end
 end
 function cb.dropfiles(filelst)

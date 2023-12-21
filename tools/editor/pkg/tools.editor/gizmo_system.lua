@@ -34,7 +34,7 @@ local uniform_scale = false
 local local_space = false
 
 local function cvt2scenept(x, y)
-    return x - world.args.viewport.x, y - world.args.viewport.y
+    return x - world.args.scene.viewrect.x, y - world.args.scene.viewrect.y
 end
 
 function gizmo:update()

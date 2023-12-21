@@ -42,7 +42,7 @@ local function cvt_flags(flags)
 end
 
 local function bgfx_init(args)
-	local fb = args.framebuffer
+	local vr = args.scene.viewrect
 	local LOG_NONE  <const> = 1
 	local LOG_ERROR <const> = 2
 	local LOG_WARN  <const> = 3
@@ -50,8 +50,8 @@ local function bgfx_init(args)
 
 	init_args = {
 		nwh 	= args.nwh,
-		width 	= fb.width,
-		height 	= fb.height,
+		width 	= vr.w,
+		height 	= vr.h,
 		renderer= check_renderer(args.renderer),
 		loglevel= args.loglevel or LOG_WARN,
 		reset 	= args.reset or cvt_flags{

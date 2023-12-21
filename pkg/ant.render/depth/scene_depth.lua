@@ -28,7 +28,7 @@ local fbmgr     = require "framebuffer_mgr"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 function sd_sys:post_init()
-    local vr = world.args.viewport
+    local vr = world.args.scene.viewrect
     world:create_entity {
         policy = {
             "ant.render|scene_depth_queue",

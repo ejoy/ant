@@ -50,7 +50,7 @@ local outline_viewid<const> = hwi.viewid_get "outline"
 
 local function create_outline_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
-    local vp = world.args.viewport
+    local vr = world.args.scene.viewrect
     world:create_entity{
         policy = {
             "ant.render|outline_queue",
@@ -60,7 +60,7 @@ local function create_outline_queue()
             camera_ref = mq.camera_ref,
             outline_queue = true,
             render_target = {
-                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
+                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 viewid = outline_viewid,
                 fb_idx = mq.render_target.fb_idx,
                 view_mode = "s",

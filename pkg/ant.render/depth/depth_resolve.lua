@@ -54,7 +54,7 @@ local function update_resolve_depth(vr)
 end
 
 function depth_resolve_sys:init_world()
-    update_resolve_depth(world.args.viewport)
+    update_resolve_depth(world.args.scene.viewrect)
 end
 
 function depth_resolve_sys:data_changed()
@@ -86,7 +86,7 @@ end
 
 local depth_mipmap_viewid = viewidmgr.get "depth_mipmap"
 function depth_mipmap_sys:depth_mipmap()
-    local vr = world.args.viewport
+    local vr = world.args.scene.viewrect
     local nummip = math.log(math.max(vr.w, vr.h), 2)+1
 
     local e = w:first "depth_mipmap dispatch:in"

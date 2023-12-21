@@ -162,7 +162,7 @@ function is:init()
     
 end
 
-local fb_size = {w=world.args.viewport.w, h=world.args.viewport.h}
+local fb_size = {w=world.args.scene.viewrect.w, h=world.args.scene.viewrectt.h}
 
 local function create_fb1(rbs, viewid)
     local fbhandle = bgfx.create_frame_buffer(rbs, true)

@@ -62,7 +62,7 @@ local velocity_viewid<const> = hwi.viewid_get "velocity"
 
 local function create_velocity_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
-    local vp = world.args.viewport
+    local vr = world.args.scene.viewrect
     world:create_entity{
         policy = {
             "ant.render|velocity_queue",
@@ -72,13 +72,13 @@ local function create_velocity_queue()
             camera_ref = mq.camera_ref,
             velocity_queue = true,
             render_target = {
-                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
+                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 viewid = velocity_viewid,
                 fb_idx = fbmgr.create(
                     {
                         rbidx=fbmgr.create_rb(
                         default_comp.render_buffer(
-                            vp.w, vp.h, "RGBA16F", sampler {
+                            vr.w, vr.h, "RGBA16F", sampler {
                                 RT= "RT_ON",
                                 MIN="POINT",
                                 MAG="POINT",
@@ -170,9 +170,9 @@ end
 
 local function update_jitter_table()
     jitter_current_table = {}
-    local vp = world.args.viewport
+    local vr = world.args.scene.viewrect
     for idx = 0, #jitter_origin_table do
-        jitter_current_table[idx] = {(jitter_origin_table[idx][1] - 0.5) / vp.w * 2, (jitter_origin_table[idx][2] - 0.5) / vp.h * 2}
+        jitter_current_table[idx] = {(jitter_origin_table[idx][1] - 0.5) / vr.w * 2, (jitter_origin_table[idx][2] - 0.5) / vr.h * 2}
     end
 end
 

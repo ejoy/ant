@@ -55,7 +55,7 @@ local function check_create_fb(vr)
 end
 
 function tm_sys:init_world()
-    local vr = mu.copy_viewrect(world.args.viewport)
+    local vr = mu.copy_viewrect(world.args.scene.viewrect)
     util.create_queue(tm_viewid, vr, check_create_fb(vr), "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA or ENABLE_TAA)
 end
 

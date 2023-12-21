@@ -24,8 +24,8 @@ local function create_world(config)
     function m.size(e)
         world:inputmgr_dispatch(e)
     end
-    function m.set_viewport(vp)
-        world:set_viewport(vp)
+    function m.set_viewrect(vr)
+        world:set_viewrect(vr)
     end
     return m, world
 end

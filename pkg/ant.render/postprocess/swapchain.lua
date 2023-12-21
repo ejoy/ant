@@ -41,14 +41,14 @@ end
 local swapchain_viewid<const> = hwi.viewid_get "swapchain"
 
 function sc_sys:init_world()
-    util.create_queue(swapchain_viewid, mu.copy_viewrect(world.args.viewport), nil, "swapchain_queue", "swapchain_queue")
+    util.create_queue(swapchain_viewid, mu.copy_viewrect(world.args.backbuffer_viewport), nil, "swapchain_queue", "swapchain_queue")
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
+local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
 
 function sc_sys:data_changed()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("swapchain_queue", vp)
+    for _, vr in scene_viewrect_changed_mb:unpack() do
+        irq.set_view_rect("swapchain_queue", world.args.backbuffer_viewport)
         break
     end
 end

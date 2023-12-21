@@ -16,7 +16,7 @@ local drag_file
 local m = {}
 
 local function cvt2scenept(x, y)
-    return x - world.args.viewport.x, y - world.args.viewport.y
+    return x - world.args.scene.viewrect.x, y - world.args.scene.viewrect.y
 end
 
 local function in_view(x, y)
@@ -77,10 +77,10 @@ function m.show()
         local x, y, ww, hh = imgui.dock.BuilderGetCentralRect "MainViewSpace"
         local mp = imgui_vp.MainPos
         x, y = x - mp[1], y - mp[2]
-        local vp = world.args.viewport
-        if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
-            vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
-            event.set_viewport(vp)
+        local vr = world.args.viewrect
+        if x ~= vr.x or y ~= vr.y or ww ~= vr.w or hh ~= vr.h then
+            vr.x, vr.y, vr.w, vr.h = x, y, ww, hh
+            event.set_viewrect(vr)
             world:pub{"resize", ww, hh}
         end
     end

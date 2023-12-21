@@ -171,7 +171,7 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local main_fb = fbmgr.get(mq.render_target.fb_idx)
-    local vp = world.args.viewport
+    local vr = world.args.scene.viewrect
     world:create_entity{
         policy = {
             "ant.efk|efk_queue",
@@ -180,7 +180,7 @@ function efk_sys:init_world()
         data = {
             efk_queue = true,
             render_target = {
-                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
+                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 viewid = effect_viewid,
                 fb_idx = fbmgr.create(table.unpack(main_fb)),
                 view_mode = "s",

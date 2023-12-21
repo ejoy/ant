@@ -6,7 +6,7 @@ local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
 local setting   = import_package "ant.settings"
 local bgfx      = require "bgfx"
-
+local mu		= import_package "ant.math".util
 local ServiceRmlUi
 ltask.fork(function ()
     ServiceRmlUi = ltask.uniqueservice("ant.rmlui|rmlui", ltask.self())
@@ -32,30 +32,42 @@ local function reboot(initargs)
 	world:pipeline_init()
 end
 
-local SCENE_RATIO <const> = setting:get "framebuffer/scene_ratio" or 1.0
-local RATIO <const>       = setting:get "framebuffer/ratio" or 1.0
+local SCENE_RATIO <const> = setting:get "scene/scene_ratio" or 1.0
+local RESOLUTION <const> = {
+	w = setting:get "scene/resolution_width" or 1280,
+	h = setting:get "scene/resolution_height" or 720
+}
 
 local function render(nwh, context, width, height, initialized)
+
 	local config = {
 		ecs = initargs,
 	}
-	config.framebuffer = {
-		width = width,
-		height = height,
-		ratio = RATIO,
-		scene_ratio = SCENE_RATIO,
-	}
-	log.info(("framebuffer ratio:%2f, scene:%2f"):format(RATIO, SCENE_RATIO))
-	config.viewport = {
+
+	config.backbuffer_viewport = {
 		x = 0,
 		y = 0,
 		w = width,
 		h = height
 	}
+
+	local vp = config.backbuffer_viewport
+	local vr = mu.get_scene_view_rect(RESOLUTION.w, RESOLUTION.h, vp)
+
+	config.scene = {
+		viewrect = vr,
+		resolution = RESOLUTION,
+		scene_ratio = SCENE_RATIO,
+		ratio = 1
+	}
+
+	log.info("scene viewrect: ", vr.x, vr.y, vr.w, vr.h)
+	log.info("scene ratio: ", SCENE_RATIO)
+	log.info("backbuffer viewport: ", vp.x, vp.y, vp.w, vp.h)
 	rhwi.init {
 		nwh			= nwh,
 		context		= context,
-		framebuffer = config.framebuffer,
+		scene       = config.scene,
 	}
 	rhwi.set_profie(false)
 	bgfx.encoder_create "world"
@@ -64,7 +76,7 @@ local function render(nwh, context, width, height, initialized)
 	bgfx.encoder_begin()
 	encoderBegin = true
 	world = ecs.new_world(config)
-	world:set_viewport(config.viewport)
+	world:set_viewrect(vr)
 
 	world:pipeline_init()
 

@@ -113,17 +113,17 @@ local function update_rcas_builder(rcas)
 end
 
 function fsr_sys:init()
-    local vp = world.args.viewport
+    local vr = world.args.scene.viewrect
     local function create_fsr_resolve_queue()
-        local fsr_resolve_fbidx = fbmgr.create({rbidx = fbmgr.create_rb{w = vp.w, h = vp.h, layers = 1, format = "RGBA16F", flags = flags}}) 
-        util.create_queue(fsr_resolve_viewid, mu.copy_viewrect(world.args.viewport), fsr_resolve_fbidx, "fsr_resolve_queue", "fsr_resolve_queue")
+        local fsr_resolve_fbidx = fbmgr.create({rbidx = fbmgr.create_rb{w = vr.w, h = vr.h, layers = 1, format = "RGBA16F", flags = flags}}) 
+        util.create_queue(fsr_resolve_viewid, mu.copy_viewrect(world.args.scene.viewrect), fsr_resolve_fbidx, "fsr_resolve_queue", "fsr_resolve_queue")
     end
 
     create_fsr_resolve_queue()
 end
 
 function fsr_sys:init_world()
-    local vp = world.args.viewport
+    local vr = world.args.scene.viewrect
 
     local function create_fsr_resolve_entity()
         local function to_mesh_buffer(vbbin, ib_handle)
@@ -170,7 +170,7 @@ function fsr_sys:init_world()
         }
     end
 
-    set_fsr_disptach_size(vp)
+    set_fsr_disptach_size(vr)
 
     local function create_fsr_easu_entity()
        icompute.create_compute_entity(
@@ -182,9 +182,9 @@ function fsr_sys:init_world()
             "fsr_rcas_builder", "/pkg/ant.resources/materials/postprocess/fsr_rcas.material", fsr_dispatch_size)
     end
 
-    set_fsr_disptach_size(vp)
-    set_fsr_textures(vp)
-    set_fsr_params(vp)
+    set_fsr_disptach_size(vr)
+    set_fsr_textures(vr)
+    set_fsr_params(vr)
     create_fsr_resolve_entity()
     create_fsr_easu_entity()
     create_fsr_rcas_entity()
@@ -197,14 +197,14 @@ function fsr_sys:entity_init()
     update_rcas_builder(rcas)
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
+local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
 
 function fsr_sys:data_changed()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("fsr_resolve_queue", vp)
-        set_fsr_disptach_size(vp)
-        set_fsr_textures(vp)
-        set_fsr_params(vp)
+    for _, vr in scene_viewrect_changed_mb:unpack() do
+        irq.set_view_rect("fsr_resolve_queue", vr)
+        set_fsr_disptach_size(vr)
+        set_fsr_textures(vr)
+        set_fsr_params(vr)
         local easu = w:first "fsr_easu_builder dispatch:in"
         update_easu_builder(easu)
         local rcas = w:first "fsr_rcas_builder dispatch:in"

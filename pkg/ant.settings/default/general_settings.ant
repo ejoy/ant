@@ -1,5 +1,6 @@
 debug:
   show_bounding: false
-framebuffer:
-  ratio: 1
+scene:
   scene_ratio: 0.5
+  resolution_width: 1280
+  resolution_height: 720
