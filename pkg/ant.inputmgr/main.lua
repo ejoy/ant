@@ -110,6 +110,20 @@ local function create(world)
     return event
 end
 
-return {
-    create = create,
-}
+local world = {}
+
+function world:dispatch_message(e)
+    local func = self._inputmgr[e.type]
+    if func then
+        func(e)
+    end
+end
+
+local m = {}
+
+function m:init()
+    self._inputmgr = create(self)
+    self.dispatch_message = world.dispatch_message
+end
+
+return m

@@ -618,15 +618,6 @@ function world:exit_system(name)
     self._system_changed = true
 end
 
-function world:dispatch_message(e)
-    local func = self._inputmgr[e.type]
-    if func then
-        func(e)
-    end
-end
-
-event.init(world)
-
 local m = {}
 
 function m.new_world(config)
@@ -669,7 +660,9 @@ function m.new_world(config)
         },
         w = ecs,
     }, world_metatable)
-    w._inputmgr = inputmgr.create(w)
+
+    event.init(w)
+    inputmgr.init(w)
 
     log.info "world initializing"
     feature.import(w, config.ecs.feature)
