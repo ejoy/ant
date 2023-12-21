@@ -5,7 +5,6 @@ local runtime = false
 
 local RuntimeBacklist <const> = {
     filedialog = true,
-    imgui = true,
     effekseer = true,
 }
 

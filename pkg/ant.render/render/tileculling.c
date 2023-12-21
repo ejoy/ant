@@ -72,18 +72,29 @@ mark_change(struct screen *S, int id) {
 }
 
 static inline void
+mark_change_tile(struct screen *S, struct tile *t, int n) {
+	int i;
+	int slot = t->slot;
+	for (i=0;i<n;i++) {
+		struct id_list *s = &S->list[slot];
+		mark_change(S, s->id);
+		slot = s->next;
+	}
+}
+
+static inline int
 touch(struct screen *S, int id, int x, int y) {
 	struct tile *t = &S->t[y][x];
-	if (t->dirty_count < 255) {
-		++t->dirty_count;
-	} else {
-		t->slot = CHANGE_TILE_ID;
-	}
-	if (t->slot != CHANGE_TILE_ID) {
+	if (t->slot == CHANGE_TILE_ID)
+		return 1;
+	++t->dirty_count;
+	if (t->dirty_count <= t->last_count && t->dirty_count < 255) {
 		add_list(S, t, id);
-	} else {
-		mark_change(S, id);
+		return 0;
 	}
+	mark_change_tile(S, t, t->dirty_count - 1);
+	t->slot = CHANGE_TILE_ID;
+	return 1;
 }
 
 struct grid_rect {
@@ -138,24 +149,35 @@ screen_changeless(struct screen *S, const float rect[4]) {
 		screen_change(S, rect);
 		return -1;
 	}
-	S->id_max++;
 	struct grid_rect r;
 	if (intcoord(S, rect, &r)) {
-		mark_change(S, id);
-	} else {
-		int i,j;
-		for (i=r.x1;i<=r.x2;i++) {
-			for (j=r.y1;j<=r.y2;j++) {
-				touch(S, id, i, j);
+		// out of screen
+		return -1;
+	}
+
+	int i,j;
+	int anychange = 0;
+	int allchange = 1;
+	for (i=r.x1;i<=r.x2;i++) {
+		for (j=r.y1;j<=r.y2;j++) {
+			if (touch(S, id, i, j)) {
+				anychange = 1;
+			} else {
+				allchange = 0;
 			}
 		}
 	}
+	if (allchange)
+		return -1;
+	if (anychange)
+		mark_change(S, id);
+	S->id_max++;
 	return id;
 }
 
 void
 screen_submit(struct screen *S) {
-	int i,j;
+	int i;
 	int n = TILE_LENGTH * TILE_LENGTH;
 	struct tile *t = &S->t[0][0];
 	unsigned char *mask = &S->mask[0];
@@ -164,12 +186,7 @@ screen_submit(struct screen *S) {
 			// changed
 			t->last_count = t->dirty_count;
 			if (t->slot != CHANGE_TILE_ID) {
-				int slot = t->slot;
-				for (j=0;j<t->dirty_count;j++) {
-					struct id_list *s = &S->list[slot];
-					mark_change(S, s->id);
-					slot = s->next;
-				}
+				mark_change_tile(S, t, t->dirty_count);
 			}
 			*mask = 255;
 		} else if (t->slot == CHANGE_TILE_ID) {
