@@ -262,90 +262,51 @@ local function frustum_interset_aabb(M, aabbLS)
 	end
 
 	local cornersLS = math3d.frustum_points(M)
+	local frustumplanesLS = math3d.frustum_planes(M)
 	local aabbpointsLS = math3d.aabb_points(aabbLS)
+	local aabbplanesLS = math3d.aabb_planes(aabbLS)
 
 	local verticesLS = {}
 
-	--check aabb included frustum
-	for i=1, 8 do
-		local corner = math3d.array_index(cornersLS, i)
-		if math3d.aabb_test_point(aabbLS, corner) >= 0 then
-			verticesLS[#verticesLS+1] = update_nearfar(corner)
+	local function check_point_inside_box(points, checkop, insidepoints)
+		for i=1, 8 do
+			local corner = math3d.array_index(points, i)
+			if checkop(corner) >= 0 then
+				insidepoints[#insidepoints+1] = update_nearfar(corner)
+			end
 		end
 	end
+
+	check_point_inside_box(cornersLS, function (p)
+		return math3d.aabb_test_point(aabbLS, p) end,
+	verticesLS)
 
 	--check frustum included aabb
-	if #verticesLS == 0 then
-		
+	if #verticesLS == 8 then
+		return math3d.array_vector(verticesLS)
 	end
 
-	local function aabb_planes(aabbpoints)
-		-- lbn, ltn, rbn, rtn,
-		-- lbf, ltf, rbf, rtf,
-
-		-- plane's normal point inside aabb
-		--[[
-			left, right,
-			bottom, top,
-			near,	far,
-		]]
-
-		
-		local lbn, ltn, rbn, rtn = 1, 2, 3, 4
-		local lbf, ltf,	rbf, rtf = 5, 6, 7, 8
-
-		local planes = {}
-		for idx, d in ipairs{
-			{n = mc.XAXIS, p = math3d.array_index(aabbpoints, ltn)}, --left
-			{n = mc.NXAXIS,p = math3d.array_index(aabbpoints, rbn)}, --right
-
-			{n = mc.YAXIS, p = math3d.array_index(aabbpoints, lbn)}, --bottom
-			{n = mc.NYAXIS,p = math3d.array_index(aabbpoints, ltn)}, --top
-
-			{n = mc.ZAXIS, p = math3d.array_index(aabbpoints, ltn)}, --near
-			{n = mc.NZAXIS,p = math3d.array_index(aabbpoints, ltf)}, --far
-		} do
-			local dis = math3d.dot(d.n, d.p)
-			planes[idx] = math3d.set_index(d.n, 4, dis)
-		end
-
-		return math3d.array_vector(planes)
-	end
+	check_point_inside_box(aabbpointsLS, function (p)
+		return math3d.frustum_test_point(frustumplanesLS, p) end,
+	verticesLS)
 
 	--frustum interset with aabbLS or aabbLS inside frustum
 	if #verticesLS < 8 then
-		rays_planes(build_box_rays(aabbpointsLS), aabb_planes(aabbpointsLS), function (pt)
+		rays_planes(build_box_rays(aabbpointsLS), aabbplanesLS, function (pt)
 			if math3d.aabb_test_point(aabbLS, pt) >= 0 then
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
 			end
 		end)
 
-		local function frustum_test_point(frustumplanes, pt)
-			local where = 1
-			for i=1, math3d.array_size(frustumplanes) do
-				local p = math3d.array_index(frustumplanes, i)
-				local v = math3d.dot(p, pt)
-				if v < 0 then
-					return -1
-				end
-
-				if v == 0 then
-					where = 0
-				end
-			end
-
-			return where
-		end
-
 		local frustumplanes = math3d.frustum_planes(M)
 		rays_planes(build_box_rays(cornersLS), frustumplanes, function (pt)
-			if frustum_test_point(frustumplanes, pt) >= 0 then
+			if math3d.frustum_test_point(frustumplanes, pt) >= 0 then
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
 			end
 		end)
 	end
 
-	return verticesLS, nearLS, farLS
+	return #verticesLS > 0 and math3d.array_vector(verticesLS) or mc.NULL, nearLS, farLS
 end
 
 local function mark_camera_changed(e)
@@ -509,7 +470,8 @@ function shadow_sys:update_camera_depend()
 		end
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc())
 
-		local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
+		local verticesLS = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
+		--local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
 	
 		if mc.NULL ~= verticesLS then
 			local intersectaabb = math3d.minmax(verticesLS)
