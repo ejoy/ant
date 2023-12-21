@@ -18,9 +18,9 @@ local icompute      = ecs.require "ant.render|compute.compute"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"
 local scene_ratio   = irender.get_framebuffer_ratio("scene_ratio")
+local NEED_UPSACLE <const>   = scene_ratio >= 0.5 and scene_ratio < 1
 local ENABLE_FXAA  <const>   = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA   <const>   = setting:get "graphic/postprocess/taa/enable"
-local NEED_UPSACLE <const>   = scene_ratio >= 0.5 and scene_ratio < 1
 local ENABLE_FSR   <const>   = setting:get "graphic/postprocess/fsr/enable" and (ENABLE_FXAA or ENABLE_TAA) and NEED_UPSACLE
 --local ENABLE_FSR   <const>   = nil
 local DEFAULT_DISPATCH_GROUP_SIZE_X<const>, DEFAULT_DISPATCH_GROUP_SIZE_Y<const> = 16, 16
@@ -70,18 +70,20 @@ local function set_fsr_textures(vp)
         fsr_textures[key] = bgfx.create_texture2d(vp.w, vp.h, false, 1, "RGBA16F", flags)
     end
 
-    local mq = w:first "main_queue render_target:in camera_ref:in"
-    local main_fb = fbmgr.get(mq.render_target.fb_idx)
-    local fq = w:first "fsr_resolve_queue render_target:update"
-    local fsr_fbidx = fq.render_target.fb_idx
-    local fsr_fb = fbmgr.get(fsr_fbidx)
-    local rbidx = fsr_fb[1].rbidx
-    fbmgr.resize_rb(rbidx, vp.w, vp.h)
-    fbmgr.recreate(fsr_fbidx, fsr_fb)
-    irq.update_rendertarget("fsr_resolve_queue", fq.render_target)
-    fsr_fb = fbmgr.get(fsr_fbidx)
-    fsr_textures.source_scene_handle    = fbmgr.get_rb(main_fb[1].rbidx).handle
-    fsr_textures.resolved_scene_handle  = fbmgr.get_rb(fsr_fb[1].rbidx).handle
+    local function resize_fsr_resolve_queue()
+        local fq = w:first "fsr_resolve_queue render_target:update"
+        local fsr_fbidx = fq.render_target.fb_idx
+        local fsr_fb = fbmgr.get(fsr_fbidx)
+        local rbidx = fsr_fb[1].rbidx
+        fbmgr.resize_rb(rbidx, vp.w, vp.h)
+        local new_rb = fbmgr.get_rb(fsr_fbidx, 1)
+        fsr_fb[1].handle = new_rb.handle
+        fbmgr.recreate(fsr_fbidx, fsr_fb)
+        irq.update_rendertarget("fsr_resolve_queue", fq.render_target)
+        fsr_textures.resolved_scene_handle  = new_rb.handle
+    end
+
+    resize_fsr_resolve_queue()
     check_handle("easu_handle")
     check_handle("rcas_handle")
 end
@@ -213,20 +215,22 @@ end
 
 function fsr_sys:fsr_resolve()
     local fsrrde = w:first "fsr_resolve_drawer filter_material:in"
-    imaterial.set_property(fsrrde, "s_scene_color", fsr_textures.source_scene_handle)
+    local mq = w:first "main_queue render_target:in camera_ref:in"
+    local main_fb = fbmgr.get(mq.render_target.fb_idx)
+    imaterial.set_property(fsrrde, "s_scene_color", fbmgr.get_rb(main_fb[1].rbidx).handle)
 end
 
 function fsr_sys:fsr_easu()
-    for ve in w:select "fsr_easu_builder dispatch:in" do
-        local dis = ve.dispatch
+    for easu in w:select "fsr_easu_builder dispatch:in" do
+        local dis = easu.dispatch
         dis.size = fsr_dispatch_size
         icompute.dispatch(fsr_easu_viewid, dis)  
     end
 end
 
 function fsr_sys:fsr_rcas()
-    for ve in w:select "fsr_rcas_builder dispatch:in" do
-        local dis = ve.dispatch
+    for rcas in w:select "fsr_rcas_builder dispatch:in" do
+        local dis = rcas.dispatch
         dis.size = fsr_dispatch_size
         icompute.dispatch(fsr_rcas_viewid, dis)  
     end
