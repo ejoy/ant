@@ -3145,16 +3145,37 @@ ioAddFocusEvent(lua_State* L) {
 }
 
 static int
-setIOConfigFlags(lua_State* L) {
+ioSetterConfigFlags(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 1, ImGuiPopupFlags_None);
+	return 0;
+}
+
+static int
+ioGetterWantCaptureMouse(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushboolean(L, io.WantCaptureMouse);
 	return 1;
 }
 
 static int
-getIOWantCaptureMouse(lua_State* L) {
-	ImGuiIO& io = ImGui::GetIO();
-	lua_pushboolean(L, io.WantCaptureMouse);
+ioSetter(lua_State* L) {
+	lua_pushvalue(L, 2);
+	if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+		return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
+	}
+	lua_pushvalue(L, 3);
+	lua_call(L, 1, 0);
+	return 0;
+}
+
+static int
+ioGetter(lua_State* L) {
+	lua_pushvalue(L, 2);
+	if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+		return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
+	}
+	lua_call(L, 0, 1);
 	return 1;
 }
 
@@ -3240,18 +3261,20 @@ luaopen_imgui(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_Reg io_setter[] = {
-		{ "ConfigFlags", setIOConfigFlags },
+		{ "ConfigFlags", ioSetterConfigFlags },
 		{ NULL, NULL },
 	};
 	luaL_Reg io_getter[] = {
-		{ "WantCaptureMouse", getIOWantCaptureMouse },
+		{ "WantCaptureMouse", ioGetterWantCaptureMouse },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, io);
 	lua_newtable(L);
 	luaL_newlib(L, io_setter);
+	lua_pushcclosure(L, ioSetter, 1);
 	lua_setfield(L, -2, "__newindex");
 	luaL_newlib(L, io_getter);
+	lua_pushcclosure(L, ioGetter, 1);
 	lua_setfield(L, -2, "__index");
 	lua_setmetatable(L, -2);
 	lua_setfield(L, -2, "io");
