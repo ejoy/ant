@@ -1,6 +1,6 @@
 debug:
   show_bounding: false
 scene:
-  scene_ratio: 0.8
+  scene_ratio: 0.75
   resolution_width: 1280
   resolution_height: 720
