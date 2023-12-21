@@ -30,6 +30,7 @@ function m:data_changed()
                     local change, value = imgui.widget.Checkbox(""..eid, v)
                     if change then
                         ivs.set_state(e, "main_view", value)
+                        ivs.set_state(e, "cast_shadow", value)
                     end
                 end
                 if e.animation then
@@ -46,7 +47,7 @@ function m:data_changed()
                 end
             end
         end
-        if animation_eid and imgui.widget.TreeNode "animation" then
+        if animation_eid and imgui.widget.TreeNode("animation", imgui.flags.TreeNode{"DefaultOpen"}) then
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do
