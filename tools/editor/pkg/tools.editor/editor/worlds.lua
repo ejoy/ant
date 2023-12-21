@@ -13,19 +13,19 @@ local function create_world(config)
         world:pipeline_exit()
     end
     function m.mousewheel(e)
-        world:inputmgr_dispatch(e)
+        world:dispatch_message(e)
     end
     function m.mouse(e)
-        world:inputmgr_dispatch(e)
+        world:dispatch_message(e)
     end
     function m.keyboard(e)
-        world:inputmgr_dispatch(e)
+        world:dispatch_message(e)
     end
     function m.size(e)
-        world:inputmgr_dispatch(e)
+        world:dispatch_message(e)
     end
-    function m.set_viewrect(vr)
-        world:set_viewrect(vr)
+    function m.dispatch_message(e)
+        world:dispatch_message(e)
     end
     return m, world
 end

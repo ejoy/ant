@@ -77,10 +77,13 @@ function m.show()
         local x, y, ww, hh = imgui.dock.BuilderGetCentralRect "MainViewSpace"
         local mp = imgui_vp.MainPos
         x, y = x - mp[1], y - mp[2]
-        local vr = world.args.viewrect
+        local vr = world.args.scene.viewrect
         if x ~= vr.x or y ~= vr.y or ww ~= vr.w or hh ~= vr.h then
             vr.x, vr.y, vr.w, vr.h = x, y, ww, hh
-            event.set_viewrect(vr)
+            event.dispatch_message {
+                type = "set_viewrect",
+                viewrect = vr,
+            }
             world:pub{"resize", ww, hh}
         end
     end

@@ -22,14 +22,16 @@ end
 local WIDTH <const> = 720
 local HEIGHT <const> = 450
 
-imgui.CreateContext(event, imgui.flags.Config {
+imgui.CreateContext()
+imgui.io.ConfigFlags = imgui.flags.Config {
     "NavEnableKeyboard",
     "ViewportsEnable",
     "DockingEnable",
     "NavNoCaptureKeyboard",
     "DpiEnableScaleViewports",
     "DpiEnableScaleFonts",
-})
+}
+imgui.SetCallback(event)
 local nwh = imgui.CreateMainWindow(WIDTH, HEIGHT)
 imgui.SetWindowTitle("EditorLauncher")
 imgui.SetWindowPos(1280, 720)

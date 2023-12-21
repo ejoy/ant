@@ -131,14 +131,6 @@ mailbox.__gc = mailbox.clear
 
 local world = {}
 
-function world:init()
-    self._event_lookup = {}
-    self._event_pattern = {}
-	self.sub = world.sub
-	self.pub = world.pub
-	self.unsub = world.unsub
-end
-
 function world:sub(pattern)
     local mb = setmetatable({HEAD_INIT,TAIL_INIT}, mailbox)
     local lookup = self._event_lookup
@@ -198,4 +190,14 @@ function world:pub(message)
 	end
 end
 
-return world
+local m = {}
+
+function m:init()
+    self._event_lookup = {}
+    self._event_pattern = {}
+    self.sub = world.sub
+    self.pub = world.pub
+    self.unsub = world.unsub
+end
+
+return m

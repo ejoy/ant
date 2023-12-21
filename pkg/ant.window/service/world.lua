@@ -76,7 +76,10 @@ local function render(nwh, context, width, height, initialized)
 	bgfx.encoder_begin()
 	encoderBegin = true
 	world = ecs.new_world(config)
-	world:set_viewrect(vr)
+	world:dispatch_message {
+		type = "set_viewrect",
+		viewrect = config.viewrect,
+	}
 
 	world:pipeline_init()
 
@@ -116,7 +119,7 @@ function event.recreate(m)
 	bgfx.set_platform_data {
 		nwh = m.nwh
 	}
-	world:inputmgr_dispatch {
+	world:dispatch_message {
 		type = "size",
 		w = m.w,
 		h = m.h,
@@ -146,7 +149,7 @@ ltask.fork(function ()
 			if f then
 				f(m)
 			else
-				world:inputmgr_dispatch(m)
+				world:dispatch_message(m)
 			end
 		end
 		ltask.wait(ms_token)

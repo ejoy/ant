@@ -159,14 +159,16 @@ ltask.fork(function ()
 	import_package "ant.hwi".init_bgfx()
     init_width, init_height = initargs.w, initargs.h
 
-	imgui.CreateContext(dispatch, imgui.flags.Config {
+	imgui.CreateContext()
+	imgui.io.ConfigFlags = imgui.flags.Config {
 		"NavEnableKeyboard",
 		"ViewportsEnable",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
-	})
+	}
+	imgui.SetCallback(dispatch)
 	local nwh = imgui.CreateMainWindow(initargs.w, initargs.h)
 	rhwi.init {
 		nwh = nwh,
@@ -209,6 +211,8 @@ ltask.fork(function ()
         ltask.sleep(0)
     end
     cb.exit()
+	imgui.DestroyRenderer()
+	imgui.DestroyPlatform()
 	imgui.DestroyContext()
 	imgui.DestroyMainWindow()
 	bgfx.encoder_end()

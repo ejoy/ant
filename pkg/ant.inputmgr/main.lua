@@ -1,10 +1,11 @@
 local platform = require "bee.platform"
 local ltask = require "ltask"
-local imgui = require "imgui"
+local ImGui = require "imgui"
+local ImGuiIO = ImGui.io
 
 local keymap = {}
 
-for name, index in pairs(imgui.enum.Key) do
+for name, index in pairs(ImGui.enum.Key) do
     keymap[index] = name
 end
 
@@ -19,7 +20,6 @@ local function create(world)
     local function rmlui_sendmsg(...)
         return ltask.call(ServiceRmlui, ...)
     end
-    local m = {}
     local event = {}
     function event.gesture(e)
         local active = active_gesture[e.what]
@@ -65,12 +65,6 @@ local function create(world)
     function event.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
-    function event.inputchar(...)
-        world:pub {"inputchar", ...}
-    end
-    function event.focus(...)
-        world:pub {"focus", ...}
-    end
     function event.size(e)
         if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewrect", {
@@ -85,7 +79,8 @@ local function create(world)
         fb.width, fb.height = e.w, e.h
         world:pub {"resize", e.w, e.h}
     end
-    function m.set_viewrect(vr)
+    function event.set_viewrect(e)
+        local vr = e.viewrect
         rmlui_sendmsg("set_viewrect", {
             x = vr.x,
             y = vr.y,
@@ -95,12 +90,8 @@ local function create(world)
         })
         world:pub{"scene_viewrect_changed", vr}
     end
-    function m.dispatch(e)
-        local f = assert(event[e.type], e.type)
-        f(e)
-    end
     if platform.os ~= "ios" and platform.os ~= "android" then
-        local mg = require "mouse_gesture" (m.dispatch)
+        local mg = require "mouse_gesture" (world)
         event.mousewheel = mg.mousewheel
         if world.args.ecs.enable_mouse then
             function event.mouse(e)
@@ -111,9 +102,75 @@ local function create(world)
             event.mouse = mg.mouse
         end
     end
-    return m
+    return event
 end
 
-return {
-    create = create,
-}
+local ImGuiEvent = {}
+
+function ImGuiEvent.touch(e)
+    if e.state == "began" then
+        ImGuiIO.AddMouseButtonEvent(0, true)
+    elseif e.state == "ended" then
+        ImGuiIO.AddMouseButtonEvent(0, false)
+    end
+    return ImGuiIO.WantCaptureMouse
+end
+
+function ImGuiEvent.gesture(e)
+    if e.what == "pinch" then
+        ImGuiIO.AddMouseWheelEvent(e.velocity, e.velocity)
+    end
+    return ImGuiIO.WantCaptureMouse
+end
+
+function ImGuiEvent.keyboard(e)
+    if e.press == 1 then
+        ImGuiIO.AddKeyEvent(e.key, true);
+    elseif e.press == 0 then
+        ImGuiIO.AddKeyEvent(e.key, false);
+    end
+    return ImGuiIO.WantCaptureKeyboard
+end
+
+function ImGuiEvent.inputchar(e)
+    if e.what == "native" then
+        ImGuiIO.AddInputCharacter(e.code)
+    elseif e.what == "utf16" then
+        ImGuiIO.AddInputCharacterUTF16(e.code)
+    end
+end
+
+function ImGuiEvent.focus(e)
+    ImGuiIO.AddFocusEvent(e.focused)
+end
+
+local world = {}
+
+function world:dispatch_message(e)
+    if self._enable_imgui then
+        local func = ImGuiEvent[e.type]
+        if func then
+            if func(e) then
+                return
+            end
+        end
+    end
+    local func = self._inputmgr[e.type]
+    if func then
+        func(e)
+    end
+end
+
+function world:enable_imgui()
+    self._enable_imgui = true
+end
+
+local m = {}
+
+function m:init()
+    self._inputmgr = create(self)
+    self.dispatch_message = world.dispatch_message
+    self.enable_imgui = world.enable_imgui
+end
+
+return m

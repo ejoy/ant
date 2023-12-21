@@ -2961,6 +2961,7 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 
 #include "imgui_enum.h"
 
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX
 static int
 lCreateMainWindow(lua_State *L) {
 	int width = (int)luaL_checkinteger(L, 1);
@@ -2987,19 +2988,30 @@ lDispatchMessage(lua_State* L) {
 	lua_pushboolean(L, 1);
 	return 1;
 }
+#endif
 
 static int
 lCreateContext(lua_State* L) {
 	ImGui::CreateContext();
-	window_register(L, 1);
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.UserData = L;
-	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 2, ImGuiPopupFlags_None);
 	io.ConfigViewportsNoTaskBarIcon = true;
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.WindowRounding = 0.0f;
 	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	return 0;
+}
+
+static int
+lDestroyContext(lua_State *L) {
+	ImGui::DestroyContext();
+	return 0;
+}
+
+static int
+lSetCallback(lua_State* L) {
+	window_register(L, 1);
 	return 0;
 }
 
@@ -3028,12 +3040,14 @@ lInitRender(lua_State* L) {
 }
 
 static int
-lDestroyContext(lua_State *L) {
-	if (ImGui::GetCurrentContext()) {
-		rendererDestroy();
-		platformShutdown();
-	}
-	ImGui::DestroyContext();
+lDestroyPlatform(lua_State* L) {
+	platformShutdown();
+	return 0;
+}
+
+static int
+lDestroyRenderer(lua_State* L) {
+	rendererDestroy();
 	return 0;
 }
 
@@ -3132,6 +3146,48 @@ ioAddFocusEvent(lua_State* L) {
 	return 0;
 }
 
+static int
+ioSetterConfigFlags(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 1, ImGuiPopupFlags_None);
+	return 0;
+}
+
+static int
+ioGetterWantCaptureMouse(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushboolean(L, io.WantCaptureMouse);
+	return 1;
+}
+
+static int
+ioGetterWantCaptureKeyboard(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushboolean(L, io.WantCaptureKeyboard);
+	return 1;
+}
+
+static int
+ioSetter(lua_State* L) {
+	lua_pushvalue(L, 2);
+	if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+		return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
+	}
+	lua_pushvalue(L, 3);
+	lua_call(L, 1, 0);
+	return 0;
+}
+
+static int
+ioGetter(lua_State* L) {
+	lua_pushvalue(L, 2);
+	if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+		return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
+	}
+	lua_call(L, 0, 1);
+	return 1;
+}
+
 #if BX_PLATFORM_WINDOWS
 #define bx_malloc_size _msize
 #elif BX_PLATFORM_LINUX
@@ -3182,13 +3238,18 @@ luaopen_imgui(lua_State *L) {
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX
 		{ "CreateMainWindow", lCreateMainWindow },
 		{ "DestroyMainWindow", lDestroyMainWindow },
 		{ "DispatchMessage", lDispatchMessage },
+#endif
 		{ "CreateContext", lCreateContext },
 		{ "DestroyContext", lDestroyContext },
+		{ "SetCallback", lSetCallback },
 		{ "InitPlatform", lInitPlatform },
 		{ "InitRender", lInitRender },
+		{ "DestroyPlatform", lDestroyPlatform },
+		{ "DestroyRenderer", lDestroyRenderer },
 		{ "NewFrame", lNewFrame },
 		{ "EndFrame", lEndFrame },
 		{ "Render", lRender },
@@ -3210,7 +3271,24 @@ luaopen_imgui(lua_State *L) {
 		{ "AddFocusEvent", ioAddFocusEvent },
 		{ NULL, NULL },
 	};
+	luaL_Reg io_setter[] = {
+		{ "ConfigFlags", ioSetterConfigFlags },
+		{ NULL, NULL },
+	};
+	luaL_Reg io_getter[] = {
+		{ "WantCaptureMouse", ioGetterWantCaptureMouse },
+		{ "WantCaptureKeyboard", ioGetterWantCaptureKeyboard },
+		{ NULL, NULL },
+	};
 	luaL_newlib(L, io);
+	lua_newtable(L);
+	luaL_newlib(L, io_setter);
+	lua_pushcclosure(L, ioSetter, 1);
+	lua_setfield(L, -2, "__newindex");
+	luaL_newlib(L, io_getter);
+	lua_pushcclosure(L, ioGetter, 1);
+	lua_setfield(L, -2, "__index");
+	lua_setmetatable(L, -2);
 	lua_setfield(L, -2, "io");
 
 	luaL_Reg dock[] = {

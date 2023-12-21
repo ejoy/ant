@@ -10,8 +10,6 @@ local feature = require "feature"
 local cworld = require "cworld"
 local components = require "ecs.components"
 
-local math3d = require "math3d"
-
 local world_metatable = {}
 local world = {}
 world_metatable.__index = world
@@ -311,7 +309,7 @@ end
 
 function world:remove_instance(instance)
     assert(instance.tag)
-    world:pub {"OnRemoveInstance", instance}
+    self:pub {"OnRemoveInstance", instance}
 end
 
 function world:remove_template(filename)
@@ -620,16 +618,6 @@ function world:exit_system(name)
     self._system_changed = true
 end
 
-function world:inputmgr_dispatch(e)
-    self._inputmgr.dispatch(e)
-end
-
-function world:set_viewrect(vr)
-    self._inputmgr.set_viewrect(vr)
-end
-
-event.init(world)
-
 local m = {}
 
 function m.new_world(config)
@@ -672,7 +660,9 @@ function m.new_world(config)
         },
         w = ecs,
     }, world_metatable)
-    w._inputmgr = inputmgr.create(w)
+
+    event.init(w)
+    inputmgr.init(w)
 
     log.info "world initializing"
     feature.import(w, config.ecs.feature)
