@@ -309,7 +309,7 @@ end
 
 function world:remove_instance(instance)
     assert(instance.tag)
-    world:pub {"OnRemoveInstance", instance}
+    self:pub {"OnRemoveInstance", instance}
 end
 
 function world:remove_template(filename)
