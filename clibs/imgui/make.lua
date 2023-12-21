@@ -104,7 +104,7 @@ lm:lua_source "imgui" {
     },
     ios = {
         sources = {
-            "platform/ios/imgui_font.mm",
+            "platform/macos/imgui_font.mm",
         }
     }
 }

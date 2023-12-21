@@ -2961,6 +2961,7 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 
 #include "imgui_enum.h"
 
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX
 static int
 lCreateMainWindow(lua_State *L) {
 	int width = (int)luaL_checkinteger(L, 1);
@@ -2987,6 +2988,7 @@ lDispatchMessage(lua_State* L) {
 	lua_pushboolean(L, 1);
 	return 1;
 }
+#endif
 
 static int
 lCreateContext(lua_State* L) {
@@ -3236,9 +3238,11 @@ luaopen_imgui(lua_State *L) {
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX
 		{ "CreateMainWindow", lCreateMainWindow },
 		{ "DestroyMainWindow", lDestroyMainWindow },
 		{ "DispatchMessage", lDispatchMessage },
+#endif
 		{ "CreateContext", lCreateContext },
 		{ "DestroyContext", lDestroyContext },
 		{ "SetCallback", lSetCallback },
