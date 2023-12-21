@@ -13,11 +13,12 @@ local defines = {
 }
 
 lm:source_set "imgui" {
+    includes = {
+        ".",
+        Ant3rd .. "imgui",
+    },
+    defines = defines,
     windows = {
-        includes = {
-            ".",
-            Ant3rd .. "imgui",
-        },
         sources = {
             "platform/windows/imgui_platform.cpp",
             Ant3rd .. "imgui/backends/imgui_impl_win32.cpp",
@@ -25,22 +26,23 @@ lm:source_set "imgui" {
         defines = {
             "_UNICODE",
             "UNICODE",
-            defines,
         }
     },
     macos = {
         --TODO
         deps = "sdl",
         includes = {
-            ".",
-            Ant3rd .. "imgui",
             Ant3rd .. "SDL/include",
         },
         sources = {
             "platform/macos/imgui_platform.cpp",
             Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
         },
-        defines = defines,
+    },
+    ios = {
+        sources = {
+            "platform/ios/imgui_platform.cpp",
+        },
     },
 }
 
@@ -98,6 +100,11 @@ lm:lua_source "imgui" {
         sources = {
             "platform/macos/imgui_osx.mm",
             "platform/macos/imgui_font.mm",
+        }
+    },
+    ios = {
+        sources = {
+            "platform/ios/imgui_font.mm",
         }
     }
 }
