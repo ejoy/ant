@@ -7,9 +7,6 @@
 #include <stdio.h>
 
 void* platformCreateMainWindow(int w, int h) {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-		return nullptr;
-	}
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 	SDL_Window* window = SDL_CreateWindow("ImGui Host Viewport", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, window_flags);
 	if (!window) {
@@ -23,7 +20,6 @@ void* platformCreateMainWindow(int w, int h) {
 }
 
 void platformDestroyMainWindow() {
-	SDL_Quit();
 }
 
 bool platformDispatchMessage() {
@@ -51,6 +47,9 @@ bool platformDispatchMessage() {
 }
 
 void platformInit(void* window) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+		return;
+	}
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	ImGui_ImplSDL2_InitForD3D((SDL_Window*)window);
 #elif defined(SDL_VIDEO_DRIVER_COCOA)
@@ -60,6 +59,7 @@ void platformInit(void* window) {
 
 void platformShutdown() {
 	ImGui_ImplSDL2_Shutdown();
+	SDL_Quit();
 }
 
 void platformNewFrame() {
