@@ -10,8 +10,6 @@ local feature = require "feature"
 local cworld = require "cworld"
 local components = require "ecs.components"
 
-local math3d = require "math3d"
-
 local world_metatable = {}
 local world = {}
 world_metatable.__index = world
