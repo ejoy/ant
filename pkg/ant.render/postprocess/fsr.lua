@@ -215,9 +215,9 @@ end
 
 function fsr_sys:fsr_resolve()
     local fsrrde = w:first "fsr_resolve_drawer filter_material:in"
-    local mq = w:first "main_queue render_target:in camera_ref:in"
-    local main_fb = fbmgr.get(mq.render_target.fb_idx)
-    imaterial.set_property(fsrrde, "s_scene_color", fbmgr.get_rb(main_fb[1].rbidx).handle)
+    local fqe = w:first "fxaa_queue render_target:in"
+    local scene_color = fbmgr.get_rb(fqe.render_target.fb_idx, 1).handle
+    imaterial.set_property(fsrrde, "s_scene_color", scene_color)
 end
 
 function fsr_sys:fsr_easu()
