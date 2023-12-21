@@ -73,7 +73,7 @@ function m:init()
 			{ Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
 		}
 	elseif platform.os == "macos" then
-		imgui.font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
+		imgui.font.Create { { Font "苹方-简" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	elseif platform.os == "ios" then
 		imgui.font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	else
