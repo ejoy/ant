@@ -80,7 +80,10 @@ function m.show()
         local vp = world.args.viewport
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
             vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
-            event.set_viewport(vp)
+            event.dispatch_message {
+                type = "set_viewport",
+                viewport = vp,
+            }
             world:pub{"resize", ww, hh}
         end
     end

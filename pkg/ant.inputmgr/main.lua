@@ -19,7 +19,6 @@ local function create(world)
     local function rmlui_sendmsg(...)
         return ltask.call(ServiceRmlui, ...)
     end
-    local m = {}
     local event = {}
     function event.gesture(e)
         local active = active_gesture[e.what]
@@ -85,7 +84,8 @@ local function create(world)
         fb.width, fb.height = e.w, e.h
         world:pub {"resize", e.w, e.h}
     end
-    function m.set_viewport(vp)
+    function event.set_viewport(e)
+        local vp = e.viewport
         rmlui_sendmsg("set_viewport", {
             x = vp.x,
             y = vp.y,
@@ -95,12 +95,8 @@ local function create(world)
         })
         world:pub{"world_viewport_changed", vp}
     end
-    function m.dispatch(e)
-        local f = assert(event[e.type], e.type)
-        f(e)
-    end
     if platform.os ~= "ios" and platform.os ~= "android" then
-        local mg = require "mouse_gesture" (m.dispatch)
+        local mg = require "mouse_gesture" (world)
         event.mousewheel = mg.mousewheel
         if world.args.ecs.enable_mouse then
             function event.mouse(e)
@@ -111,7 +107,7 @@ local function create(world)
             event.mouse = mg.mouse
         end
     end
-    return m
+    return event
 end
 
 return {

@@ -620,12 +620,9 @@ function world:exit_system(name)
     self._system_changed = true
 end
 
-function world:inputmgr_dispatch(e)
-    self._inputmgr.dispatch(e)
-end
-
-function world:set_viewport(vp)
-    self._inputmgr.set_viewport(vp)
+function world:dispatch_message(e)
+    local f = assert(self._inputmgr[e.type], e.type)
+    f(e)
 end
 
 event.init(world)
