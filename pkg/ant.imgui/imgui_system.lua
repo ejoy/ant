@@ -34,14 +34,16 @@ function event.viewid()
 end
 
 function m:init()
-	imgui.CreateContext(event, imgui.flags.Config {
+	imgui.CreateContext()
+	imgui.io.ConfigFlags = imgui.flags.Config {
 		"NavEnableKeyboard",
 		--"ViewportsEnable",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
-	})
+	}
+	imgui.SetCallback(event)
 	imgui.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
@@ -80,6 +82,8 @@ function m:init()
 end
 
 function m:exit()
+	imgui.DestroyRenderer()
+	imgui.DestroyPlatform()
 	imgui.DestroyContext()
 end
 

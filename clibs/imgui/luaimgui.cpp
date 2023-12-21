@@ -2991,15 +2991,25 @@ lDispatchMessage(lua_State* L) {
 static int
 lCreateContext(lua_State* L) {
 	ImGui::CreateContext();
-	window_register(L, 1);
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.UserData = L;
-	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 2, ImGuiPopupFlags_None);
 	io.ConfigViewportsNoTaskBarIcon = true;
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.WindowRounding = 0.0f;
 	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	return 0;
+}
+
+static int
+lDestroyContext(lua_State *L) {
+	ImGui::DestroyContext();
+	return 0;
+}
+
+static int
+lSetCallback(lua_State* L) {
+	window_register(L, 1);
 	return 0;
 }
 
@@ -3028,12 +3038,14 @@ lInitRender(lua_State* L) {
 }
 
 static int
-lDestroyContext(lua_State *L) {
-	if (ImGui::GetCurrentContext()) {
-		rendererDestroy();
-		platformShutdown();
-	}
-	ImGui::DestroyContext();
+lDestroyPlatform(lua_State* L) {
+	platformShutdown();
+	return 0;
+}
+
+static int
+lDestroyRenderer(lua_State* L) {
+	rendererDestroy();
 	return 0;
 }
 
@@ -3132,6 +3144,20 @@ ioAddFocusEvent(lua_State* L) {
 	return 0;
 }
 
+static int
+setIOConfigFlags(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 1, ImGuiPopupFlags_None);
+	return 1;
+}
+
+static int
+getIOWantCaptureMouse(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushboolean(L, io.WantCaptureMouse);
+	return 1;
+}
+
 #if BX_PLATFORM_WINDOWS
 #define bx_malloc_size _msize
 #elif BX_PLATFORM_LINUX
@@ -3187,8 +3213,11 @@ luaopen_imgui(lua_State *L) {
 		{ "DispatchMessage", lDispatchMessage },
 		{ "CreateContext", lCreateContext },
 		{ "DestroyContext", lDestroyContext },
+		{ "SetCallback", lSetCallback },
 		{ "InitPlatform", lInitPlatform },
 		{ "InitRender", lInitRender },
+		{ "DestroyPlatform", lDestroyPlatform },
+		{ "DestroyRenderer", lDestroyRenderer },
 		{ "NewFrame", lNewFrame },
 		{ "EndFrame", lEndFrame },
 		{ "Render", lRender },
@@ -3210,7 +3239,21 @@ luaopen_imgui(lua_State *L) {
 		{ "AddFocusEvent", ioAddFocusEvent },
 		{ NULL, NULL },
 	};
+	luaL_Reg io_setter[] = {
+		{ "ConfigFlags", setIOConfigFlags },
+		{ NULL, NULL },
+	};
+	luaL_Reg io_getter[] = {
+		{ "WantCaptureMouse", getIOWantCaptureMouse },
+		{ NULL, NULL },
+	};
 	luaL_newlib(L, io);
+	lua_newtable(L);
+	luaL_newlib(L, io_setter);
+	lua_setfield(L, -2, "__newindex");
+	luaL_newlib(L, io_getter);
+	lua_setfield(L, -2, "__index");
+	lua_setmetatable(L, -2);
 	lua_setfield(L, -2, "io");
 
 	luaL_Reg dock[] = {
