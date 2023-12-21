@@ -621,8 +621,10 @@ function world:exit_system(name)
 end
 
 function world:dispatch_message(e)
-    local f = assert(self._inputmgr[e.type], e.type)
-    f(e)
+    local func = self._inputmgr[e.type]
+    if func then
+        func(e)
+    end
 end
 
 event.init(world)
