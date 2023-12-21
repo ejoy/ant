@@ -3141,6 +3141,7 @@ ioAddFocusEvent(lua_State* L) {
 #include <malloc/malloc.h>
 #define bx_malloc_size malloc_size
 #elif BX_PLATFORM_IOS
+#include <malloc/malloc.h>
 #define bx_malloc_size malloc_size
 #else
 #    error "Unknown PLATFORM!"

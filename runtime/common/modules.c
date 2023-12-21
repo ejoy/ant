@@ -52,6 +52,7 @@ int luaopen_render_stat(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
 int luaopen_motion_tween(lua_State *L);
 int luaopen_image(lua_State* L);
+int luaopen_imgui(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_ios(lua_State* L);
 #endif
@@ -64,7 +65,6 @@ int luaopen_firmware(lua_State* L);
 int luaopen_bee_filewatch(lua_State* L);
 int luaopen_bee_subprocess(lua_State* L);
 int luaopen_filedialog(lua_State* L);
-int luaopen_imgui(lua_State* L);
 int luaopen_imgui_widgets(lua_State* L);
 #endif
 int luaopen_system_scene(lua_State* L);
@@ -122,6 +122,7 @@ void ant_loadmodules(lua_State* L) {
         { "motion.sampler",     luaopen_motion_sampler},
         { "motion.tween",       luaopen_motion_tween},
         { "image", luaopen_image },
+        { "imgui", luaopen_imgui },
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
 #endif
@@ -134,7 +135,6 @@ void ant_loadmodules(lua_State* L) {
         { "bee.filewatch", luaopen_bee_filewatch },
         { "bee.subprocess", luaopen_bee_subprocess },
         { "filedialog", luaopen_filedialog },
-        { "imgui", luaopen_imgui },
         { "imgui.widgets", luaopen_imgui_widgets },
 #endif
         { "system.scene", luaopen_system_scene },
