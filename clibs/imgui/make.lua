@@ -3,8 +3,8 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 local defines = {
-    "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
-    "IMGUI_DISABLE_OBSOLETE_KEYIO",
+    lm.os ~= "macos" and "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
+    lm.os ~= "macos" and "IMGUI_DISABLE_OBSOLETE_KEYIO",
     "IMGUI_DISABLE_DEBUG_TOOLS",
     "IMGUI_DISABLE_DEMO_WINDOWS",
     "IMGUI_DISABLE_DEFAULT_ALLOCATORS",
@@ -29,15 +29,19 @@ lm:source_set "imgui" {
         }
     },
     macos = {
-        --TODO
-        deps = "sdl",
         includes = {
             Ant3rd .. "SDL/include",
         },
         sources = {
             "platform/macos/imgui_platform.mm",
-            Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
+            Ant3rd .. "imgui/backends/imgui_impl_osx.mm",
         },
+        flags = {
+            "-fobjc-arc"
+        },
+        frameworks = {
+            "GameController"
+        }
     },
     ios = {
         sources = {
@@ -99,7 +103,7 @@ lm:lua_source "imgui" {
     macos = {
         sources = {
             "platform/macos/imgui_font.mm",
-        }
+        },
     },
     ios = {
         sources = {
