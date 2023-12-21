@@ -172,9 +172,9 @@ ltask.fork(function ()
 	local nwh = imgui.CreateMainWindow(initargs.w, initargs.h)
 	rhwi.init {
 		nwh = nwh,
-		framebuffer = {
-			width = init_width,
-			height = init_height,
+		scene = {
+			viewrect = {x = 0, y = 0, w = init_width, h = init_height},
+			resolution = {w = initargs.w, h = initargs.h},
 			scene_ratio = 1,
 			ui_ratio = 1,
 		}

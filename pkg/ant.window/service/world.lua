@@ -78,7 +78,7 @@ local function render(nwh, context, width, height, initialized)
 	world = ecs.new_world(config)
 	world:dispatch_message {
 		type = "set_viewrect",
-		viewrect = config.viewrect,
+		viewrect = config.scene.viewrect,
 	}
 
 	world:pipeline_init()

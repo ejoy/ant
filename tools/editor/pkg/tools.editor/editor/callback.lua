@@ -7,13 +7,13 @@ local cb = {}
 function cb.init(width, height, cfg)
     local ecs = cfg.ecs
     local m, world = worlds.create "editor" {
-        framebuffer = {
-            width = width,
-            height = height,
+        scene = {
+			viewrect = {x = 0, y = 0, w = width, h = height},
+			resolution = {w = width, h = height},
             ratio = 1,
             scene_ratio = 1,
         },
-        viewport = {x=0, y=0, w=1920, h=1080},
+        backbuffer_viewport = {x=0, y=0, w=1920, h=1080},
         ecs = ecs,
     }
     local oldmouse = m.mouse
