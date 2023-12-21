@@ -35,7 +35,7 @@ lm:source_set "imgui" {
             Ant3rd .. "SDL/include",
         },
         sources = {
-            "platform/macos/imgui_platform.cpp",
+            "platform/macos/imgui_platform.mm",
             Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
         },
     },
@@ -98,7 +98,6 @@ lm:lua_source "imgui" {
     },
     macos = {
         sources = {
-            "platform/macos/imgui_osx.mm",
             "platform/macos/imgui_font.mm",
         }
     },
