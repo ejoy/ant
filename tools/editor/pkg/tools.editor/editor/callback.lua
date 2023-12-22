@@ -22,7 +22,7 @@ function cb.init(width, height, cfg)
     event("init", width, height)
 end
 
-function cb.update(viewid, delta)
+function cb.update(delta)
     if world then
         world:pipeline_update()
     end
