@@ -1,99 +1,96 @@
-local imgui         = require "imgui"
-local task          = require "editor.task"
-local event         = require "editor.event"
-local worlds        = require "editor.worlds"
+local imgui = require "imgui"
+local task = require "editor.task"
+local event = require "editor.event"
+local ecs = import_package "ant.ecs"
 local cb = {}
 
+local world
+
 function cb.init(width, height, cfg)
-    local ecs = cfg.ecs
-    local m, world = worlds.create "editor" {
+    world = ecs.new_world {
+        name = "editor",
         scene = {
-			viewrect = {x = 0, y = 0, w = width, h = height},
-			resolution = {w = width, h = height},
+            viewrect = {x = 0, y = 0, w = width, h = height},
+            resolution = {w = width, h = height},
             ratio = 1,
             scene_ratio = 1,
         },
         backbuffer_viewport = {x=0, y=0, w=1920, h=1080},
-        ecs = ecs,
+        ecs = cfg.ecs,
     }
-    local oldmouse = m.mouse
-    m.mouse = function (x, y, ...)
-        -- local q = world.w:first("tonemapping_queue render_target:in")
-        -- local rt = q.render_target.view_rect
-        -- oldmouse(x-rt.x, y-rt.y, ...)
-        oldmouse(x, y, ...)
-    end
-    m.size = function ()
-        -- no need to push resize
-        -- we check editor scene's view size in gui_system.lua:end_frame function
-    end
+    world:pipeline_init()
     event("init", width, height)
 end
 
 function cb.update(viewid, delta)
-    for _, w in ipairs(worlds) do
-        w.update()
+    if world then
+        world:pipeline_update()
     end
     task.update(delta)
     event "update"
 end
 
 function cb.exit()
-    for _, w in ipairs(worlds) do
-        w.exit()
+    if world then
+        world:pipeline_exit()
     end
     event "exit"
 end
 
 function cb.mousewheel(x, y, delta)
+    if not world then
+        return
+    end
     local mvp = imgui.GetMainViewport()
     x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
-    for _, w in ipairs(worlds) do
-        w.mousewheel {
-            type = "mousewheel",
-            x = x,
-            y = y,
-            delta = delta,
-        }
-    end
+    world:dispatch_message {
+        type = "mousewheel",
+        x = x,
+        y = y,
+        delta = delta,
+    }
 end
 function cb.mouse(x, y, what, state)
+    if not world then
+        return
+    end
     local mvp = imgui.GetMainViewport()
     x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
-    for _, w in ipairs(worlds) do
-        w.mouse {
-            type = "mouse",
-            x = x,
-            y = y,
-            what = what,
-            state = state,
-            timestamp = 0,
-        }
-    end
+    world:dispatch_message {
+        type = "mouse",
+        x = x,
+        y = y,
+        what = what,
+        state = state,
+        timestamp = 0,
+    }
 end
 function cb.keyboard(key, press, state)
-    for _, w in ipairs(worlds) do
-        w.keyboard {
-            type = "keyboard",
-            key = key,
-            press = press,
-            state = state,
-        }
+    if not world then
+        return
     end
+    world:dispatch_message {
+        type = "keyboard",
+        key = key,
+        press = press,
+        state = state,
+    }
 end
 function cb.size(width, height)
-    for _, w in ipairs(worlds) do
-        w.size {
-            type = "size",
-            w = width,
-            h = height,
-        }
+    if not world then
+        return
     end
+    world:dispatch_message {
+        type = "size",
+        w = width,
+        h = height,
+    }
 end
 function cb.dispatch_message(e)
-    for _, w in ipairs(worlds) do
-        w.dispatch_message(e)
+    if not world then
+        return
     end
+    world:dispatch_message(e)
 end
 function cb.dropfiles(filelst)
     event("dropfiles", filelst)
