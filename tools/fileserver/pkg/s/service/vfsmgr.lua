@@ -88,6 +88,7 @@ local function update_vfs()
 		s.resource_verify = true
 	end
 	ltask.multi_wakeup "CHANGEROOT"
+	print("repo root:", repo:root())
 	print("repo rebuild ok..")
 end
 
@@ -102,6 +103,7 @@ do
 	for _, mount in ipairs(repo:initconfig()) do
 		fswatch:add(mount.path)
 	end
+	print("repo root:", repo:root())
 	print("repo init ok.")
 	ltask.fork(function ()
 		while true do
@@ -115,6 +117,7 @@ end
 local S = {}
 
 function S.ROOT()
+	print("repo root:", repo:root())
 	return repo:root()
 end
 
