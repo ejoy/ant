@@ -78,10 +78,10 @@ function imodifier.delete(m)
         return
     end
     local e <close> = world:entity(m.eid, "modifier:in")
-    local mf = e.modifier
-    if mf.target then
-        mf:reset()
-    end
+    -- local mf = e.modifier
+    -- if mf.target then
+    --     mf:reset()
+    -- end
     w:remove(m.eid)
     if type(m.anim_eid) == "table" then
         world:remove_instance(m.anim_eid)
