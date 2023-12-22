@@ -83,7 +83,10 @@ local function update_vfs()
 	changed = {}
 	changed_mark = {}
 	changed_time = nil
-	repo:rebuild(c)
+	repo:close()
+	repo = vfsrepo.new_std {
+		rootpath = fs.path(REPOPATH),
+	}
 	for _, s in pairs(CacheCompileS) do
 		s.resource_verify = true
 	end
