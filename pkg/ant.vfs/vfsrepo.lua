@@ -77,7 +77,7 @@ local function list_files(root, dir, fullpath, filter)
 	end
 end
 
-local function patch_list_files(root, dir, fullpath, filter)s
+local function patch_list_files(root, dir, fullpath, filter)
 	local oldn = #dir
 	local n = 1
 	for path, attr in lfs.pairs(root) do
