@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <memory>
 #include "../../window.h"
 
@@ -435,7 +436,7 @@ static BOOL CALLBACK EnumFunc(HMONITOR monitor, HDC, LPRECT, LPARAM dwData) {
 	return TRUE;
 }
 
-static RECT createWindowRect() {
+static RECT createWindowRect(const char *size) {
 	std::vector<MONITORINFO> monitors;
 	::EnumDisplayMonitors(nullptr, nullptr, EnumFunc, reinterpret_cast<LPARAM>(&monitors));
 	auto& monitor = monitors[0];
@@ -443,6 +444,13 @@ static RECT createWindowRect() {
 	LONG work_h = monitor.rcWork.bottom - monitor.rcWork.top;
 	LONG window_w = (LONG)(work_w * 0.7f);
 	LONG window_h = (LONG)(window_w / 16.f * 9.f);
+	if (size) {
+		int w, h;
+		if (sscanf(size, "%dx%d", &w, &h) == 2) {
+			window_w = w;
+			window_h = h;
+		}
+	}
 	RECT rect;
 	rect.left = monitor.rcWork.left + (work_w - window_w) / 2;
 	rect.right = rect.left + window_w;
@@ -452,7 +460,7 @@ static RECT createWindowRect() {
 	return rect;
 }
 
-int window_init(struct ant_window_callback* cb) {
+int window_init(struct ant_window_callback* cb, const char *size) {
 	if (FAILED(OleInitialize(NULL))) {
 		return 1;
 	}
@@ -467,7 +475,7 @@ int window_init(struct ant_window_callback* cb) {
 	wndclass.lpszClassName = CLASSNAME;
 	RegisterClassExW(&wndclass);
 
-	RECT rect = createWindowRect();
+	RECT rect = createWindowRect(size);
 	HWND wnd = CreateWindowExW(0, CLASSNAME, NULL,
 		WS_OVERLAPPEDWINDOW,
 		rect.left, rect.top,

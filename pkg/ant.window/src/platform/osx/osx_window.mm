@@ -1,6 +1,7 @@
 #include <Cocoa/Cocoa.h>
 #include "../../window.h"
 #include <Carbon/Carbon.h>
+#include <stdio.h>
 
 static ant::window::keyboard_state get_keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
@@ -230,11 +231,18 @@ WindowDelegate* g_wd = nil;
 int32_t g_mx = 0;
 int32_t g_my = 0;
 
-int window_init(struct ant_window_callback* cb) {
-    NSScreen *screen = [NSScreen mainScreen];
-    NSRect visibleFrame = screen.visibleFrame;
+int window_init(struct ant_window_callback* cb, const char *size) {
+	NSScreen *screen = [NSScreen mainScreen];
+	NSRect visibleFrame = screen.visibleFrame;
 	int w = (int)(visibleFrame.size.width * 0.7f);
 	int h = (int)(w / 16.f * 9.f);
+	if (size) {
+		int ww, hh;
+		if (sscanf(size, "%dx%d", &ww, &hh) == 2) {
+			w = ww;
+			h = hh;
+		}
+	}
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
 		| NSWindowStyleMaskTitled

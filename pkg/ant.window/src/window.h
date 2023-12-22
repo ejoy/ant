@@ -14,7 +14,7 @@ struct ant_window_callback {
 	struct lua_State* updateL;
 };
 
-int  window_init(struct ant_window_callback* cb);
+int  window_init(struct ant_window_callback* cb, const char *size);
 void window_close();
 bool window_peekmessage();
 void window_mainloop();
