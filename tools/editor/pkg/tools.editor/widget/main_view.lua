@@ -9,7 +9,6 @@ local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local imgui = require "imgui"
 local irq   = ecs.require "ant.render|render_system.renderqueue"
-local event = require "editor.callback"
 
 local drag_file
 
@@ -80,7 +79,7 @@ function m.show()
         local vr = world.args.scene.viewrect
         if x ~= vr.x or y ~= vr.y or ww ~= vr.w or hh ~= vr.h then
             vr.x, vr.y, vr.w, vr.h = x, y, ww, hh
-            event.dispatch_message {
+            world:dispatch_message {
                 type = "set_viewrect",
                 viewrect = vr,
             }
