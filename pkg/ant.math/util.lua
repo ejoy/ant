@@ -502,6 +502,12 @@ function util.saturate(v)
 	return util.clamp(v, 0.0, 1.0)
 end
 
+function util.convert_device_to_screen_coord(bvp, svr, x, y)
+    local bw, bh = bvp.w, bvp.h
+    local sw, sh = svr.w, svr.h
+    return x * (sw / bw), y * (sh / bh)
+end
+
 return util
 
 end
