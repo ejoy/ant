@@ -196,7 +196,8 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 }
 @end
 
-int window_init(struct ant_window_callback* cb) {
+int window_init(struct ant_window_callback* cb, const char *size) {
+    (void)size;
     g_cb = cb;
     return 0;
 }

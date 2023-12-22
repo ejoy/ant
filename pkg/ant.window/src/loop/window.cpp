@@ -38,10 +38,12 @@ linit(lua_State *L) {
 	lua_xmove(L, cb->messageL, 1);
 
 	lua_pushcfunction(cb->updateL, ltraceback);
-	lua_pushvalue(L, 2);
+	lua_pushvalue(L, 3);
 	lua_xmove(L, cb->updateL, 1);
 
-	if (0 != window_init(cb)) {
+	const char *size = lua_tostring(L, 2);
+
+	if (0 != window_init(cb, size)) {
 		return luaL_error(L, "window init failed");
 	}
 	return 0;

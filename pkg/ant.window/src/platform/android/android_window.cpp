@@ -17,7 +17,8 @@ enum class AndroidPath {
     ExternalDataPath,
 };
 
-int window_init(struct ant_window_callback* cb) {
+int window_init(struct ant_window_callback* cb, const char *size) {
+    (void)size;
     g_cb = cb;
     return 0;
 }

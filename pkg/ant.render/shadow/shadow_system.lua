@@ -168,7 +168,11 @@ end
 
 local function build_aabb(queue_index, M, tag)
 	local aabb = math3d.aabb()
-	for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
+	-- for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
+	-- 	aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
+	-- end
+
+	for e in w:select"render_object_visible render_object:in bounding:in" do
 		aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
 	end
 
@@ -232,20 +236,6 @@ local function rays_planes(rays, planes, resultop)
 			local t = math3d.plane_ray(r.o, r.d, p)
 			if t and 0 <= t and t <= 1.0 then
 				local pt = math3d.muladd(r.d, t, r.o)
-				-- raypoints[#raypoints+1] = {
-				-- 	result = {
-				-- 		where = t,
-				-- 		test = math3d.aabb_test_point(aabbLS, pt) >= 0,
-				-- 		point = math3d.tostring(pt),
-				-- 	},
-				-- 	plane = pidx,
-				-- 	line = {
-				-- 		idx = i,
-				-- 		p0 = math3d.tostring(p0),
-				-- 		p1 = math3d.tostring(p1)
-				-- 	},
-				-- }
-
 				resultop(pt)
 			end
 		end
@@ -253,9 +243,21 @@ local function rays_planes(rays, planes, resultop)
 end
 
 local function build_box_rays(boxpoints)
+	local lineindices = {
+		0, 4, 1, 5,
+		2, 6, 3, 7,
+
+		0, 2, 1, 3,
+		4, 6, 5, 7,
+
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+	}
+
 	local rays = {}
-	for i=1, 4 do
-		local p0, p1 = math3d.array_index(boxpoints, i), math3d.array_index(boxpoints, i+4)
+	for i=1, #lineindices, 2 do
+		local s0, s1 = lineindices[i]+1, lineindices[i+1]+1
+		local p0, p1 = math3d.array_index(boxpoints, s0), math3d.array_index(boxpoints, s1)
 		rays[#rays+1] = {o=p0, d=math3d.sub(p1, p0)}
 	end
 	return rays
@@ -271,103 +273,55 @@ local function frustum_interset_aabb(M, aabbLS)
 		return p
 	end
 
-	local cornersLS = math3d.frustum_points(M)
-	local aabbpointsLS = math3d.aabb_points(aabbLS)
+	local frustumpointsLS	= math3d.frustum_points(M)
+	local frustumplanesLS	= math3d.frustum_planes(M)
+	local aabbpointsLS		= math3d.aabb_points(aabbLS)
+	local aabbplanesLS		= math3d.aabb_planes(aabbLS)
 
 	local verticesLS = {}
 
-	--check aabb included frustum
-	for i=1, 8 do
-		local corner = math3d.array_index(cornersLS, i)
-		if math3d.aabb_test_point(aabbLS, corner) >= 0 then
-			verticesLS[#verticesLS+1] = update_nearfar(corner)
+	local function check_point_inside_box(points, checkop, insidepoints)
+		for i=1, 8 do
+			local corner = math3d.array_index(points, i)
+			if checkop(corner) then
+				insidepoints[#insidepoints+1] = update_nearfar(corner)
+			end
 		end
 	end
+
+	check_point_inside_box(frustumpointsLS, function (p)
+		return math3d.aabb_test_point(aabbLS, p) >= 0 end,
+	verticesLS)
 
 	--check frustum included aabb
-	if #verticesLS == 0 then
-		
+	if #verticesLS == 8 then
+		return math3d.array_vector(verticesLS)
 	end
 
-	local function aabb_planes(aabbpoints)
-		-- lbn, ltn, rbn, rtn,
-		-- lbf, ltf, rbf, rtf,
-
-		-- plane's normal point inside aabb
-		--[[
-			left, right,
-			bottom, top,
-			near,	far,
-		]]
-
-		
-		local lbn, ltn, rbn, rtn = 1, 2, 3, 4
-		local lbf, ltf,	rbf, rtf = 5, 6, 7, 8
-
-		local planes = {}
-		for idx, d in ipairs{
-			{n = mc.XAXIS, p = math3d.array_index(aabbpoints, ltn)}, --left
-			{n = mc.NXAXIS,p = math3d.array_index(aabbpoints, rbn)}, --right
-
-			{n = mc.YAXIS, p = math3d.array_index(aabbpoints, lbn)}, --bottom
-			{n = mc.NYAXIS,p = math3d.array_index(aabbpoints, ltn)}, --top
-
-			{n = mc.ZAXIS, p = math3d.array_index(aabbpoints, ltn)}, --near
-			{n = mc.NZAXIS,p = math3d.array_index(aabbpoints, ltf)}, --far
-		} do
-			local dis = math3d.dot(d.n, d.p)
-			planes[idx] = math3d.set_index(d.n, 4, dis)
-		end
-
-		return math3d.array_vector(planes)
-	end
+	check_point_inside_box(aabbpointsLS, function (p)
+		return math3d.frustum_test_point(frustumplanesLS, p) >= 0 end,
+	verticesLS)
 
 	--frustum interset with aabbLS or aabbLS inside frustum
+	local intersect_points = {}
 	if #verticesLS < 8 then
-		rays_planes(build_box_rays(aabbpointsLS), aabb_planes(aabbpointsLS), function (pt)
+		rays_planes(build_box_rays(frustumpointsLS), aabbplanesLS, function (pt)
 			if math3d.aabb_test_point(aabbLS, pt) >= 0 then
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
+				intersect_points[#intersect_points+1] = pt
 			end
 		end)
-
-		local function frustum_test_point(frustumplanes, pt)
-			local where = 1
-			for i=1, math3d.array_size(frustumplanes) do
-				local p = math3d.array_index(frustumplanes, i)
-				local v = math3d.dot(p, pt)
-				if v < 0 then
-					return -1
-				end
-
-				if v == 0 then
-					where = 0
-				end
-			end
-
-			return where
-		end
 
 		local frustumplanes = math3d.frustum_planes(M)
-		rays_planes(build_box_rays(cornersLS), frustumplanes, function (pt)
-			if frustum_test_point(frustumplanes, pt) >= 0 then
+		rays_planes(build_box_rays(aabbpointsLS), frustumplanes, function (pt)
+			if math3d.frustum_test_point(frustumplanes, pt) >= 0 then
 				verticesLS[#verticesLS+1] = update_nearfar(pt)
+				intersect_points[#intersect_points+1] = pt
 			end
 		end)
-
-		-- local aabbpoints = math3d.aabb_points(aabbLS)
-		-- for _, l in ipairs(BOX_SEGMENT_INDICES) do
-		-- 	local s0, s1 = math3d.array_index(aabbpoints, l[1]), math3d.array_index(aabbpoints, l[2])
-		-- 	for _, t in ipairs(BOX_TRIANGLES_INDICES) do
-		-- 		local v1, v2, v3 = math3d.array_index(cornersLS, t[1]), math3d.array_index(cornersLS, t[2]), math3d.array_index(cornersLS, t[3])
-		-- 		local p = mu.segment_triangle(s0, s1, v1, v2, v3)
-		-- 		if p then
-		-- 			verticesLS[#verticesLS+1] = update_nearfar(p)
-		-- 		end
-		-- 	end
-		-- end
 	end
 
-	return verticesLS, nearLS, farLS
+	return #verticesLS > 0 and math3d.array_vector(verticesLS) or mc.NULL, nearLS, farLS
 end
 
 local function mark_camera_changed(e)
@@ -380,7 +334,7 @@ local function mark_camera_changed(e)
 end
 
 local function calc_focus_matrix(M, verticesLS)
-	if math3d.array_size(verticesLS) == 0 then
+	if mc.NULL == verticesLS then
 		return mc.IDENTITY_MAT
 	end
 	local aabb = math3d.minmax(verticesLS, M)
@@ -441,12 +395,6 @@ local function calc_viewspace_z(n, f, r)
 	return n + (f-n) * r
 end
 
-local function calc_ndc_z(Mp, zn, zf, r)
-	local z = calc_viewspace_z(zn, zf, r)
-	local p = math3d.transformH(Mp, math3d.vector(0.0, 0.0, z, 1.0))
-	return math3d.index(p, 3)
-end
-
 local INV_Z<const> = true
 
 function shadow_sys:update_camera_depend()
@@ -484,21 +432,21 @@ function shadow_sys:update_camera_depend()
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 
 	local main_queueidx = queuemgr.queue_index "main_queue"
-	C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
-	C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
+	local PSR = build_PSR(main_queueidx)
+	local PSRLS 		= math3d.aabb_transform(Lv, PSR)
+	C.camera.PSRLS		= M3D(C.camera.PSRLS, PSRLS)
 
-	C.camera.PSRLS  = M3D(C.camera.PSRLS, math3d.aabb_transform(Lv, C.camera.PSR))
-	C.camera.PSCLS  = M3D(C.camera.PSCLS, math3d.aabb_transform(Lv, C.camera.PSC))
+	-- C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
+	-- C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
 
-	local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
+	-- C.camera.PSRLS  = M3D(C.camera.PSRLS, math3d.aabb_transform(Lv, C.camera.PSR))
+	-- C.camera.PSCLS  = M3D(C.camera.PSCLS, math3d.aabb_transform(Lv, C.camera.PSC))
 
-	local Lv2Vv = math3d.mul(C.camera.viewmat, math3d.inverse_fast(Lv))
-	C.camera.Lv2Vv		= M3D(C.camera.Lv2Vv, Lv2Vv)
-	C.camera.sceneaabbLS= M3D(C.camera.sceneaabbLS, sceneaabbLS)
-	C.camera.Lv			= M3D(C.camera.Lv, Lv)
+	--local sceneaabbLS	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
+	local sceneaabbLS	= PSRLS
+	local Lv2Vv 		= math3d.mul(C.camera.viewmat, math3d.inverse_fast(Lv))
 
 	local useLiSPSM = false
-	local forcePSCnear = true
 	local Lr
 	if useLiSPSM then
 		local viewdirLS = math3d.transform(Lv, viewdir, 0)
@@ -509,7 +457,7 @@ function shadow_sys:update_camera_depend()
 
 	--TODO: hardcode
 	local split_ratio = {
-		{0.0,  0.1},
+		{0.0,  1.0},
 		{0.1,  0.25},
 		{0.25, 0.5},
 		{0.5,  1.0},
@@ -537,21 +485,18 @@ function shadow_sys:update_camera_depend()
 		end
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc())
 
-		local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
-		local numintersect_points = math3d.array_size(verticesLS)
-
-		if numintersect_points > 0 then
+		local verticesLS = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
+		local verticesLS2 = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, sceneaabbLS)
+	
+		if mc.NULL ~= verticesLS then
 			local intersectaabb = math3d.minmax(verticesLS)
-
-			c.intersect_aabbLS = M3D(c.intersect_aabbLS, intersectaabb)
 			local minv, maxv = math3d.array_index(intersectaabb, 1), math3d.array_index(intersectaabb, 2)
 			
 			c.frustum.n, c.frustum.f = math3d.index(minv, 3), math3d.index(maxv, 3)
-			c.verticesLS = M3D(c.verticesLS, verticesLS)
+			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
 		end
 
 		local Lp	= math3d.projmat(c.frustum, INV_Z)
-
 
 		if useLiSPSM then
 			local Lrp	= math3d.mul(Lr, Lp)
@@ -849,14 +794,6 @@ function shadowdebug_sys:entity_init()
 	for e in w:select "INIT render_object visible_state:in" do
 		update_visible_state(e)
 	end
-
-	-- if w:first "INIT csm1_queue" then
-	-- 	local qe = w:first "csm1_queue camera_ref:in"
-	-- 	local sddq<close> = world:entity(shadowdebug_depthqueue)
-	-- 	local sdq<close> = world:entity(shadowdebug_queue)
-	-- 	irq.set_camera(sddq, qe.camera_ref)
-	-- 	irq.set_camera(sdq, qe.camera_ref)
-	-- end
 end
 
 local function draw_lines(lines)
@@ -892,14 +829,6 @@ function shadowdebug_sys:data_changed()
 				return eid
 			end
 
-			local function add_frustum(n, m, c)
-				return add_entity(math3d.frustum_points(m), c, n)
-			end
-
-			local C = world:entity(irq.main_camera(), "camera:in").camera
-			local L2W = math3d.inverse(C.Lv)
-			--add_frustum("camera_viewprojmat", C.viewprojmat, {0.0, 1.0, 0.0, 1.0})
-
 			local function transform_points(points, M)
 				local np = {}
 				for i=1, math3d.array_size(points) do
@@ -909,64 +838,21 @@ function shadowdebug_sys:data_changed()
 				return math3d.array_vector(np)
 			end
 
-			--add_entity(aabb_points(C.sceneaabbLS, L2W), {1.0, 0.0, 0.0, 1.0})
+			local C = world:entity(irq.main_camera(), "camera:in").camera
+			for e in w:select "csm:in camera_ref:in" do
+				local ce = world:entity(e.camera_ref, "camera:in scene:in")
+				local Lv = ce.camera.viewmat
+				local L2W = math3d.inverse_fast(Lv)
+				local aabbpoints = transform_points(math3d.aabb_points(C.PSRLS), L2W)
+				add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
 
-			local lines = {}
-			local aabbpoints = transform_points(math3d.aabb_points(C.sceneaabbLS), L2W)
-
-			local function add_lines(points, color)
-				for _, l in ipairs(BOX_SEGMENT_INDICES) do
-					local s0, s1 = math3d.array_index(points, l[1]), math3d.array_index(points, l[2])
-					lines[#lines+1] = math3d.serialize(s0):sub(1, 12) .. math3d.serialize(color)
-					lines[#lines+1] = math3d.serialize(s1):sub(1, 12) .. math3d.serialize(color)
+				if ce.camera.verticesLS then
+					local aabb = math3d.minmax(ce.camera.verticesLS, L2W)
+					add_entity(math3d.aabb_points(aabb),	{1.0, 1.0, 0.0, 1.0})
 				end
+
+				add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
 			end
-
-			--add_lines(aabbpoints, math3d.vector(1.0, 0.0, 0.0, 1.0))
-
-			add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
-
-			do
-				for e in w:select "csm:in camera_ref:in" do
-					local ce = world:entity(e.camera_ref, "camera:in scene:in")
-					local prefixname = "csm" .. e.csm.index
-					--add_lines(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), math3d.vector(0.0, 1.0, 0.0, 1.0))
-					--add_frustum(prefixname .. "_viewprojtmat", 	ce.camera.viewprojmat)
-					if ce.camera.intersect_aabbLS then
-						add_entity(transform_points(math3d.aabb_points(ce.camera.intersect_aabbLS), L2W),	{1.0, 1.0, 0.0, 1.0})
-					else
-						log.warn("intersect_aabbLS is empty")
-					end
-
-					add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
-
-					-- local points = math3d.frustum_points(ce.camera.Lv2Ndc)
-					-- local pointsWS = {}
-					-- for i=1, 8 do
-					-- 	pointsWS[i] = math3d.transform(L2W, math3d.array_index(points, i), 1)
-					-- end
-					-- DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = ientity.create_frustum_entity(math3d.array_vector(pointsWS),	{0.0, 0.0, 1.0, 1.0})
-
-					-- add_frustum(prefixname .. "_Lrpv", 			math3d.mul(ce.camera.Lr, ce.camera.viewprojmat))
-					-- add_frustum(prefixname .. "_W", 			ce.camera.W)
-				end
-			end
-
-			--DEBUG_ENTITIES[#DEBUG_ENTITIES+1] = draw_lines(lines)
-			
-			--DEBUG_ENTITIES["PSR"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSR)),  		{1.0, 0.0, 0.0, 1.0})
-			--DEBUG_ENTITIES["PSC"]   = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSC)),  		{0.0, 1.0, 0.0, 1.0})
-			--DEBUG_ENTITIES["PSRLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSRLS, L2W)),{1.0, 0.1, 0.1, 1.0})
-			--DEBUG_ENTITIES["PSCLS"] = ientity.create_frustum_entity(math3d.array_vector(aabb_points(C.PSCLS, L2W)),{0.1, 1.0, 0.1, 1.0})
-
-			--DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(aabb_points(C.sceneaabbLS, L2W),{0.1, 1.0, 0.1, 1.0})
-
-			--DEBUG_ENTITIES["CSMFrustum"] = ientity.create_frustum_entity(math3d.frustum_points(C.viewprojmat), {0.1, 1.0, 0.1, 1.0})
-			--DEBUG_ENTITIES["CSMLight"] = ientity.create_frustum_entity(math3d.array_vector(frustum_interset_aabb(math3d.inverse(C.viewprojmat), C.sceneaabbLS, zn, zf)),{1.0, 0.1, 0.1, 1.0})
-
-			-- local L2W = math3d.inverse(C.Lv)
-			-- DEBUG_ENTITIES["sceneaabbLS"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabbLS, L2W)),{1.0, 0.0, 0.0, 1.0})
-			-- DEBUG_ENTITIES["sceneaabb"] = ientity.create_frustum_entity(math3d.array_vector(math3d.aabb_points(C.sceneaabb)),{0.0, 1.0, 0.0, 1.0})
 		elseif key == 'C' and press == 0 then
 
 		end

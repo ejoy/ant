@@ -11,7 +11,9 @@ linit(lua_State *L) {
 	lua_pushvalue(L, 1);
 	lua_xmove(L, cb->messageL, 1);
 
-	if (0 != window_init(cb)) {
+	const char * size = lua_tostring(L, 2);
+
+	if (0 != window_init(cb, size)) {
 		return luaL_error(L, "window init failed");
 	}
 	return 0;

@@ -13,9 +13,9 @@ local WindowMode <const> = {
 
 local message = {}
 
-local function create_peek_window()
+local function create_peek_window(size)
     local window = require "window"
-    window.init(message)
+    window.init(message, size)
     ltask.fork(function()
         local ServiceWorld = ltask.queryservice "ant.window|world"
         repeat
@@ -34,7 +34,7 @@ local function create_peek_window()
     end)
 end
 
-local function create_loop_window()
+local function create_loop_window(size)
     local scheduling = exclusive.scheduling()
     local window = require "window"
     local SCHEDULE_SUCCESS <const> = 3
@@ -51,7 +51,7 @@ local function create_loop_window()
             until ltask.schedule_message() ~= SCHEDULE_SUCCESS
         end
     end
-    window.init(message, update)
+    window.init(message, size, update)
     ltask.fork(function ()
         local ServiceWorld = ltask.queryservice "ant.window|world"
         while true do
@@ -74,15 +74,17 @@ local function create_loop_window()
     end)
 end
 
-if WindowMode[platform.os] == WindowModePeek then
-    create_peek_window()
-elseif WindowMode[platform.os] == WindowModeLoop then
-    create_loop_window()
-else
-    error "window service unimplemented"
-end
-
 local S = {}
+
+function S.start(config)
+	if WindowMode[platform.os] == WindowModePeek then
+		create_peek_window(config.window_size)
+	elseif WindowMode[platform.os] == WindowModeLoop then
+		create_loop_window(config.window_size)
+	else
+		error "window service unimplemented"
+	end
+end
 
 function S.maxfps(fps)
     local window = require "window"
