@@ -66,7 +66,7 @@ local function create(world)
         world:pub {"dropfiles", ...}
     end
     function event.size(e)
-        if not __ANT_EDITOR__ then
+        if not __ANT_EDITOR__ and ServiceRmlui then
             rmlui_sendmsg("set_viewrect", {
                 x = 0,
                 y = 0,
@@ -81,13 +81,15 @@ local function create(world)
     end
     function event.set_viewrect(e)
         local vr = e.viewrect
-        rmlui_sendmsg("set_viewrect", {
-            x = vr.x,
-            y = vr.y,
-            w = vr.w,
-            h = vr.h,
-            ratio = world.args.scene.ratio,
-        })
+        if ServiceRmlui then
+            rmlui_sendmsg("set_viewrect", {
+                x = vr.x,
+                y = vr.y,
+                w = vr.w,
+                h = vr.h,
+                ratio = world.args.scene.ratio,
+            })
+        end
         world:pub{"scene_viewrect_changed", vr}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
