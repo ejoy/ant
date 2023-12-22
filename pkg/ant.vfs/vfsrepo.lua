@@ -77,16 +77,9 @@ local function list_files(root, dir, fullpath, filter)
 	end
 end
 
-local function patch_list_files(root, dir, fullpath, filter)
-	local tmp = {}
+local function patch_list_files(root, dir, fullpath, filter)s
 	local oldn = #dir
 	local n = 1
-	for i = 1, oldn do
-		local item = dir[i]
-		if item.dir then
-			tmp[item.name] = item
-		end
-	end
 	for path, attr in lfs.pairs(root) do
 		local name = path:filename():string()
 		local obj
@@ -101,19 +94,16 @@ local function patch_list_files(root, dir, fullpath, filter)
 		local ext = name:match "%.([^./]+)$" or ""
 
 		if attr:is_directory() then
-			obj = tmp[name]
-			if not obj then
-				-- new dir
-				local d = {}
-				list_files(pathname, d, fullpath_name, filter)
-				if d[1] == nil then
-					goto continue
-				end
-				obj = {
-					dir = d,
-					name = name,
-				}
+			-- new dir
+			local d = {}
+			list_files(pathname, d, fullpath_name, filter)
+			if d[1] == nil then
+				goto continue
 			end
+			obj = {
+				dir = d,
+				name = name,
+			}
 		elseif filter.resource[ext] then
 			obj = {
 				name = name,
