@@ -44,21 +44,20 @@ local function render(nwh, context, width, height, initialized)
 		ecs = initargs,
 	}
 
-	config.backbuffer_viewport = {
+	config.device_size = {
 		x = 0,
 		y = 0,
 		w = width,
 		h = height
 	}
 
-	local vp = config.backbuffer_viewport
-	local vr = mu.get_scene_view_rect(RESOLUTION.w, RESOLUTION.h, vp)
+	local vp = config.device_size
+	local vr = mu.get_scene_view_rect(RESOLUTION.w, RESOLUTION.h, vp, SCENE_RATIO)
 
 	config.scene = {
 		viewrect = vr,
 		resolution = RESOLUTION,
 		scene_ratio = SCENE_RATIO,
-		ratio = 1
 	}
 
 	log.info("scene viewrect: ", vr.x, vr.y, vr.w, vr.h)

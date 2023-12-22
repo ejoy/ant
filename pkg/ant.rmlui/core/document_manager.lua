@@ -24,7 +24,7 @@ local pending = {}
 local update
 
 local function round(x)
-    return math.floor(x*screen_ratio+0.5)
+    return math.floor(x+0.5)
 end
 
 local function createSandbox(document, name)

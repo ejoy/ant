@@ -16,7 +16,7 @@ function dpd_sys:init()
 end
 
 local function remap_xy(x, y)
-    local nx, ny = mu.remap_xy(x, y, world.args.scene.ratio)
+    local nx, ny = mu.convert_device_to_screen_coord(world.args.device_size, world.args.scene.viewrect, x, y)
 	local vr = world.args.scene.viewrect
 	return nx-vr.x, ny-vr.y
 end

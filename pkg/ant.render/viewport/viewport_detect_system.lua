@@ -44,19 +44,18 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 end
 
-local function check_viewrect_size(queue_vr, newsize, sceneratio)
-	local nw, nh = mu.cvt_size(newsize.w, sceneratio), mu.cvt_size(newsize.h, sceneratio)
+local function check_viewrect_size(queue_vr, newsize)
+	local nw, nh = newsize.w, newsize.h
 	if queue_vr.w ~= nw or queue_vr.h ~= nh then
 		queue_vr.w, queue_vr.h = nw, nh
-		queue_vr.x, queue_vr.y = mu.cvt_size(queue_vr.x, sceneratio, 0), mu.cvt_size(queue_vr.x, sceneratio, 0)
-		queue_vr.ratio = sceneratio
+		queue_vr.x, queue_vr.y = mu.cvt_size(queue_vr.x, 1, 0), mu.cvt_size(queue_vr.x, 1, 0)
 	end
 end
 
-local function update_render_queue(q, newsize, sceneratio)
+local function update_render_queue(q, newsize)
 	local rt = q.render_target
 	local vr = rt.view_rect
-	check_viewrect_size(vr, newsize, sceneratio)
+	check_viewrect_size(vr, newsize)
 
 	if q.camera_ref then
 		local camera <close> = world:entity(q.camera_ref)
@@ -72,11 +71,11 @@ local function rebind_rt(rt)
 	fbmgr.bind(viewid, fbidx)
 end
 
-local function update_render_target(newsize, sceneratio)
+local function update_render_target(newsize)
 	clear_cache()
 	for qe in w:select "render_target:in queue_name:in camera_ref?in watch_screen_buffer?in" do
 		if qe.watch_screen_buffer then
-			update_render_queue(qe, newsize, sceneratio)
+			update_render_queue(qe, newsize)
 		else
 			rebind_rt(qe.render_target)
 		end
@@ -84,7 +83,7 @@ local function update_render_target(newsize, sceneratio)
 end
 
 function vp_detect_sys:post_init()
-	update_render_target(world.args.scene.viewrect, world.args.scene.scene_ratio)
+	update_render_target(world.args.scene.viewrect)
 end
 
 local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
@@ -93,7 +92,7 @@ local scene_ratio_changed_mb = world:sub{"scene_ratio_changed"}
 function vp_detect_sys:data_changed()
 	for _, vr in scene_viewrect_changed_mb:unpack() do
 		if vr.w ~= 0 and vr.h ~= 0 then
-			update_render_target(vr, world.args.scene.scene_ratio)
+			update_render_target(vr)
 			break
 		end
 	end
@@ -103,7 +102,7 @@ function vp_detect_sys:data_changed()
 			error "scene ratio should larger than 0"
 		end
 		local vr = world.args.scene.viewrect
-		update_render_target(vr, newratio)
+		update_render_target(vr)
 		do
 			local mq = w:first "main_queue render_target:in"
 			local vr = mq.render_target.view_rect
