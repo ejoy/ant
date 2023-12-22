@@ -6,25 +6,40 @@ local PM		= require "programan.client"
 local imgui		= require "imgui"
 local assetmgr	= import_package "ant.asset"
 local rhwi		= import_package "ant.hwi"
-local cb		= require "callback"
+local ecs		= import_package "ant.ecs"
 local exclusive	= require "ltask.exclusive"
 
-local message     = {}
+local message = {}
 local initialized = false
 local init_width
 local init_height
 local debug_traceback = debug.traceback
+local world
 
-local _, _timer_previous = ltask.now()
-local function timer_delta()
-	local _, current = ltask.now()
-	local delta = current - _timer_previous
-	_timer_previous = current
-	return delta * 10
+local function mousewheel(x, y, delta)
+    local mvp = imgui.GetMainViewport()
+    x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
+    world:dispatch_message {
+        type = "mousewheel",
+        x = x,
+        y = y,
+        delta = delta,
+    }
+end
+local function mouse(x, y, what, state)
+    local mvp = imgui.GetMainViewport()
+    x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
+    world:dispatch_message {
+        type = "mouse",
+        x = x,
+        y = y,
+        what = what,
+        state = state,
+        timestamp = 0,
+    }
 end
 
 function message.dropfiles(filelst)
-	cb.dropfiles(filelst)
 end
 
 local size_dirty
@@ -54,7 +69,11 @@ end
 
 local function update_size()
 	if not size_dirty then return end
-	cb.size(init_width, init_height)
+    world:dispatch_message {
+        type = "size",
+        w = init_width,
+        h = init_height,
+    }
 	rhwi.reset(nil, init_width, init_height)
 	size_dirty = false
 end
@@ -82,9 +101,9 @@ local function updateIO()
 	for _, what, x, y in imgui.InputEvents() do
 		if what == "MousePos" then
 			MousePosX, MousePosY = x, y
-			cb.mouse(MousePosX, MousePosY, 4, 2)
+			mouse(MousePosX, MousePosY, 4, 2)
 		elseif what == "MouseWheel" then
-			cb.mousewheel(MousePosX, MousePosY, y)
+			mousewheel(MousePosX, MousePosY, y)
 		elseif what == "MouseButton" then
 			local down = DOWN[y]
 			local button
@@ -99,9 +118,9 @@ local function updateIO()
 			if cur ~= down then
 				Mouse[button] = down
 				if down then
-					cb.mouse(MousePosX, MousePosY, button, "DOWN")
+					mouse(MousePosX, MousePosY, button, "DOWN")
 				else
-					cb.mouse(MousePosX, MousePosY, button, "UP")
+					mouse(MousePosX, MousePosY, button, "UP")
 				end
 				MouseChanged[button] = true
 			end
@@ -118,9 +137,19 @@ local function updateIO()
 				end
 				Keyboard[code] = down
 				if down then
-					cb.keyboard(code, 1, KeyMods)
+					world:dispatch_message {
+						type = "keyboard",
+						key = code,
+						press = 1,
+						state = KeyMods,
+					}
 				else
-					cb.keyboard(code, 0, KeyMods)
+					world:dispatch_message {
+						type = "keyboard",
+						key = code,
+						press = 0,
+						state = KeyMods,
+					}
 				end
 				KeyboardChanged[code] = true
 			end
@@ -128,12 +157,17 @@ local function updateIO()
 	end
 	for button in pairs(Mouse) do
 		if not MouseChanged[button] then
-			cb.mouse(MousePosX, MousePosY, button, "MOVE")
+			mouse(MousePosX, MousePosY, button, "MOVE")
 		end
 	end
 	for code in pairs(Keyboard) do
 		if not KeyboardChanged[code] then
-			cb.keyboard(code, 2, KeyMods)
+			world:dispatch_message {
+				type = "keyboard",
+				key = code,
+				press = 2,
+				state = KeyMods,
+			}
 		end
 	end
 end
@@ -191,13 +225,24 @@ ltask.fork(function ()
 		imgui_image.fx.uniforms.s_tex.handle
 	)
 
-	cb.init(init_width, init_height, initargs)
+    world = ecs.new_world {
+        name = "editor",
+        scene = {
+            viewrect = {x = 0, y = 0, w = init_width, h = init_height},
+            resolution = {w = init_width, h = init_height},
+            ratio = 1,
+            scene_ratio = 1,
+        },
+        backbuffer_viewport = {x=0, y=0, w=1920, h=1080},
+        ecs = initargs.ecs,
+    }
+    world:pipeline_init()
     initialized = true
     while imgui.DispatchMessage() do
 		imgui.NewFrame()
         updateIO()
 		update_size()
-        cb.update(timer_delta())
+        world:pipeline_update()
         imgui.Render()
         bgfx.encoder_end()
         rhwi.frame()
@@ -205,7 +250,7 @@ ltask.fork(function ()
         bgfx.encoder_begin()
         ltask.sleep(0)
     end
-    cb.exit()
+	world:pipeline_exit()
 	imgui.DestroyRenderer()
 	imgui.DestroyPlatform()
 	imgui.DestroyContext()
