@@ -156,8 +156,8 @@ function util.world_to_screen(vpmat, vr, posWS)
 	if not math3d.get_origin_bottom_left() then
 		screenNDC = math3d.set_index(screenNDC, 2, 1.0 - sy)
 	end
-
 	local r = math3d.mul(screenNDC, math3d.vector(vr.w, vr.h, 1.0))
+	
 	local ratio = vr.ratio
 	if ratio ~= nil and ratio ~= 1 then
 		local z = math3d.index(r, 3)
@@ -506,6 +506,12 @@ function util.convert_device_to_screen_coord(bvp, svr, x, y)
     local bw, bh = bvp.w, bvp.h
     local sw, sh = svr.w, svr.h
     return x * (sw / bw), y * (sh / bh)
+end
+
+function util.convert_screen_to_device_coord(bvp, svr, x, y)
+    local bw, bh = bvp.w, bvp.h
+    local sw, sh = svr.w, svr.h
+    return x * (bw / sw), y * (bh / sh)
 end
 
 return util
