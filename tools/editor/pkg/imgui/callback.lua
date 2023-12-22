@@ -1,6 +1,4 @@
 local imgui = require "imgui"
-local task = require "editor.task"
-local event = require "editor.event"
 local ecs = import_package "ant.ecs"
 local cb = {}
 
@@ -19,22 +17,18 @@ function cb.init(width, height, cfg)
         ecs = cfg.ecs,
     }
     world:pipeline_init()
-    event("init", width, height)
 end
 
 function cb.update(delta)
     if world then
         world:pipeline_update()
     end
-    task.update(delta)
-    event "update"
 end
 
 function cb.exit()
     if world then
         world:pipeline_exit()
     end
-    event "exit"
 end
 
 function cb.mousewheel(x, y, delta)
@@ -93,7 +87,6 @@ function cb.dispatch_message(e)
     world:dispatch_message(e)
 end
 function cb.dropfiles(filelst)
-    event("dropfiles", filelst)
 end
 
 return cb

@@ -6,11 +6,11 @@ local PM		= require "programan.client"
 local imgui		= require "imgui"
 local assetmgr	= import_package "ant.asset"
 local rhwi		= import_package "ant.hwi"
+local cb		= require "callback"
 local exclusive	= require "ltask.exclusive"
 
-local cb          	= {}
-local message     	= {}
-local initialized 	= false
+local message     = {}
+local initialized = false
 local init_width
 local init_height
 local debug_traceback = debug.traceback
@@ -148,11 +148,6 @@ for n, f in pairs(message) do
 			print(err)
 		end
 	end
-end
-
-local callback = import_package(initargs.packagename)
-for _, name in ipairs {"init","update","exit","size","mousewheel","mouse","keyboard"} do
-	cb[name] = callback[name] or (function () end)
 end
 
 ltask.fork(function ()
