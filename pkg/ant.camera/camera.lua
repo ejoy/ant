@@ -153,8 +153,8 @@ function ic.focus_aabb(ce, aabb)
 end
 
 function ic.focus_obj(ce, e)
-    w:extend(e, "scene:in")
-    local aabb = e.scene.scene_aabb
+    w:extend(e, "bounding:in")
+    local aabb = e.bounding.scene_aabb
     if aabb then
         ic.focus_aabb(ce, aabb)
     end
