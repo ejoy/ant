@@ -33,16 +33,21 @@ local function reboot(initargs)
 end
 
 local SCENE_RATIO <const> = setting:get "scene/scene_ratio" or 1.0
-local RESOLUTION <const> = {
-	w = setting:get "scene/resolution_width" or 1280,
-	h = setting:get "scene/resolution_height" or 720
-}
+local RESOLUTION_WIDTH, RESOLUTION_HEIGHT <const> = 1280, 720
 
 local function render(nwh, context, width, height, initialized)
+
+	local function get_resolution()
+		local w, h
+		w, h = (setting:get "scene/resolution"):match "(%d+)%a(%d+)"
+		return {w = tonumber(w and w or RESOLUTION_WIDTH), h = tonumber(h and h or RESOLUTION_HEIGHT)}
+	end
 
 	local config = {
 		ecs = initargs,
 	}
+
+	local resolution = get_resolution()
 
 	config.device_size = {
 		x = 0,
@@ -52,11 +57,11 @@ local function render(nwh, context, width, height, initialized)
 	}
 
 	local vp = config.device_size
-	local vr = mu.get_scene_view_rect(RESOLUTION.w, RESOLUTION.h, vp, SCENE_RATIO)
+	local vr = mu.get_scene_view_rect(resolution.w, resolution.h, vp, SCENE_RATIO)
 
 	config.scene = {
 		viewrect = vr,
-		resolution = RESOLUTION,
+		resolution = resolution,
 		scene_ratio = SCENE_RATIO,
 	}
 
