@@ -7,14 +7,6 @@ local platform = require "bee.platform"
 local window = require "window"
 local inputmgr = import_package "ant.inputmgr"
 
-local event = {}
-
-local viewid = -1
-function event.viewid()
-    viewid = viewid + 1
-    return viewid
-end
-
 local WindowMessage = {}
 
 local WIDTH <const> = 720
@@ -23,13 +15,11 @@ local HEIGHT <const> = 450
 imgui.CreateContext()
 imgui.io.ConfigFlags = imgui.flags.Config {
     "NavEnableKeyboard",
-    "ViewportsEnable",
     "DockingEnable",
     "NavNoCaptureKeyboard",
     "DpiEnableScaleViewports",
     "DpiEnableScaleFonts",
 }
-imgui.SetCallback(event)
 local nwh = window.init(WindowMessage, ("%dx%d"):format(WIDTH, HEIGHT))
 imgui.SetWindowTitle("EditorLauncher")
 imgui.SetWindowPos(1280, 720)
@@ -76,12 +66,13 @@ end
 local imgui_font = load_material "/pkg/ant.imgui/materials/font.material"
 local imgui_image = load_material "/pkg/ant.imgui/materials/image.material"
 imgui.InitPlatform(nwh)
-imgui.InitRender(
-    imgui_font.prog,
-    imgui_image.prog,
-    imgui_font.uniforms.s_tex,
-    imgui_image.uniforms.s_tex
-)
+imgui.InitRender {
+    fontProg = imgui_font.fx.prog,
+    imageProg = imgui_image.fx.prog,
+    fontUniform = imgui_font.fx.uniforms.s_tex.handle,
+    imageUniform = imgui_image.fx.uniforms.s_tex.handle,
+    viewIdPool = { 0 },
+}
 
 local launch = require "launch_panel"
 launch.init()

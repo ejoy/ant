@@ -11,29 +11,12 @@ local exclusive	= require "ltask.exclusive"
 local window	= require "window"
 local inputmgr	= import_package "ant.inputmgr"
 
-local ImGuiCallback = {}
 local initialized = false
 local init_width
 local init_height
 local world
 
 local size_dirty
-
-local viewidcount = 0
-local imgui_viewids = {}
-
-for i=1, 16 do
-	imgui_viewids[i] = rhwi.viewid_generate("imgui_eidtor" .. i, "uiruntime")
-end
-
-function ImGuiCallback.viewid()
-	if viewidcount >= #imgui_viewids then
-		error(("imgui viewid range exceeded, max count:%d"):format(#imgui_viewids))
-	end
-
-	viewidcount = viewidcount + 1
-	return imgui_viewids[viewidcount]
-end
 
 local function update_size()
 	if not size_dirty then return end
@@ -107,7 +90,6 @@ ltask.fork(function ()
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
 	}
-	imgui.SetCallback(ImGuiCallback)
 	local nwh = window.init(WindowMessage, ("%dx%d"):format(initargs.w, initargs.h))
 	rhwi.init {
 		nwh = nwh,
@@ -128,12 +110,17 @@ ltask.fork(function ()
 	assetmgr.material_mark(imgui_font.fx.prog)
 	assetmgr.material_mark(imgui_image.fx.prog)
 	imgui.InitPlatform(nwh)
-	imgui.InitRender(
-		PM.program_get(imgui_font.fx.prog),
-		PM.program_get(imgui_image.fx.prog),
-		imgui_font.fx.uniforms.s_tex.handle,
-		imgui_image.fx.uniforms.s_tex.handle
-	)
+	local imgui_viewids = {}
+	for i = 1, 16 do
+		imgui_viewids[i] = rhwi.viewid_generate("imgui_eidtor" .. i, "uiruntime")
+	end
+	imgui.InitRender {
+		fontProg = PM.program_get(imgui_font.fx.prog),
+		imageProg = PM.program_get(imgui_image.fx.prog),
+		fontUniform = imgui_font.fx.uniforms.s_tex.handle,
+		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
+		viewIdPool = imgui_viewids,
+	}
 
     world = ecs.new_world {
         name = "editor",

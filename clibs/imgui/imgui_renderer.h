@@ -2,15 +2,17 @@
 
 #include <imgui.h>
 #include <optional>
+#include <vector>
 
 struct RendererInitArgs {
-    int font_prog;
-    int image_prog;
-    int font_uniform;
-    int image_uniform;
+    int fontProg;
+    int imageProg;
+    int fontUniform;
+    int imageUniform;
+    std::vector<int> viewIdPool;
 };
-bool rendererInit(RendererInitArgs const& args);
-bool rendererCreate();
+
+bool rendererCreate(RendererInitArgs& args);
 void rendererDestroy();
 void rendererDrawData(ImGuiViewport* viewport);
 void rendererBuildFont();

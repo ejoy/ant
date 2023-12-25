@@ -2,7 +2,6 @@
 #include <oleidl.h>
 #include <backends/imgui_impl_win32.h>
 #include <memory>
-#include "imgui_window.h"
 #include "imgui_platform.h"
 
 void* platformGetHandle(ImGuiViewport* viewport) {

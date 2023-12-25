@@ -11,46 +11,29 @@ local PM = require "programan.client"
 
 local m = ecs.system 'imgui_system'
 
-local event = {}
-
-local viewidcount = 0
-local imgui_viewids = {}
-
-for i = 1, 16 do
-	imgui_viewids[i] = rhwi.viewid_generate("imgui_eidtor" .. i, "uiruntime")
-end
-
-function event.viewid()
-	if viewidcount >= #imgui_viewids then
-		error(("imgui viewid range exceeded, max count:%d"):format(#imgui_viewids))
-	end
-	viewidcount = viewidcount + 1
-	return imgui_viewids[viewidcount]
-end
-
 function m:init()
 	imgui.CreateContext()
 	imgui.io.ConfigFlags = imgui.flags.Config {
 		"NavEnableKeyboard",
-		--"ViewportsEnable",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
 	}
-	imgui.SetCallback(event)
 	imgui.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_font.fx.prog)
 	assetmgr.material_mark(imgui_image.fx.prog)
-	imgui.InitRender(
-		PM.program_get(imgui_font.fx.prog),
-		PM.program_get(imgui_image.fx.prog),
-		imgui_font.fx.uniforms.s_tex.handle,
-		imgui_image.fx.uniforms.s_tex.handle
-	)
+	local viewId = rhwi.viewid_generate("imgui_eidtor" .. 1, "uiruntime")
+	imgui.InitRender {
+		fontProg = PM.program_get(imgui_font.fx.prog),
+		imageProg = PM.program_get(imgui_image.fx.prog),
+		fontUniform = imgui_font.fx.uniforms.s_tex.handle,
+		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
+		viewIdPool = { viewId },
+	}
 
 	local Font = imgui.font.SystemFont
 	local function glyphRanges(t)

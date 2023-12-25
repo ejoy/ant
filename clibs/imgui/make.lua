@@ -75,7 +75,6 @@ lm:lua_source "imgui" {
     sources = {
         "imgui_config.cpp",
         "imgui_renderer.cpp",
-        "imgui_window.cpp",
         "luaimgui_tables.cpp",
         "luaimgui.cpp",
     },

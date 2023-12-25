@@ -6,10 +6,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdlib.h>
-#include <stack>
 #include "bgfx_interface.h"
 #include "luabgfx.h"
-#include "imgui_window.h"
 #include "imgui_platform.h"
 #include "imgui_renderer.h"
 
@@ -32,12 +30,15 @@ union RendererTexture {
 };
 static_assert(sizeof(ImTextureID) == sizeof(RendererTexture));
 
-std::stack<int> g_viewIdPool;
-bgfx_vertex_layout_t  g_layout;
-bgfx_program_handle_t g_fontProgram;
-bgfx_program_handle_t g_imageProgram;
-bgfx_uniform_handle_t g_fontTex;
-bgfx_uniform_handle_t g_imageTex;
+struct RendererContext {
+	bgfx_vertex_layout_t layout;
+	bgfx_program_handle_t fontProgram;
+	bgfx_program_handle_t imageProgram;
+	bgfx_uniform_handle_t fontTex;
+	bgfx_uniform_handle_t imageTex;
+	std::vector<int> viewIdPool;
+};
+static RendererContext g_ctx;
 
 static BGFX_HANDLE bgfxGetHandleType(int id) {
 	return (BGFX_HANDLE)((id >> 16) & 0x0f);
@@ -80,14 +81,14 @@ void rendererDrawData(ImGuiViewport* viewport) {
 		uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
 		uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
-		if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &g_layout)
+		if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &g_ctx.layout)
 			|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices, false)) {
 			break;
 		}
 
 		bgfx_transient_vertex_buffer_t tvb;
 		bgfx_transient_index_buffer_t tib;
-		BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &g_layout);
+		BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &g_ctx.layout);
 		BGFX(alloc_transient_index_buffer)(&tib, numIndices, false);
 		ImDrawVert* verts = (ImDrawVert*)tvb.data;
 		memcpy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
@@ -126,12 +127,12 @@ void rendererDrawData(ImGuiViewport* viewport) {
 			BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, cmd.VtxOffset, numVertices);
 			BGFX(encoder_set_transient_index_buffer)(encoder, &tib, cmd.IdxOffset, cmd.ElemCount);
 			if (texture.s.type == RendererTextureType::Font) {
-				BGFX(encoder_set_texture)(encoder, 0, g_fontTex, texture.s.handle, UINT32_MAX);
-				BGFX(encoder_submit)(encoder, ud->viewid, g_fontProgram, 0, BGFX_DISCARD_STATE);
+				BGFX(encoder_set_texture)(encoder, 0, g_ctx.fontTex, texture.s.handle, UINT32_MAX);
+				BGFX(encoder_submit)(encoder, ud->viewid, g_ctx.fontProgram, 0, BGFX_DISCARD_STATE);
 			}
 			else {
-				BGFX(encoder_set_texture)(encoder, 0, g_imageTex, texture.s.handle, UINT32_MAX);
-				BGFX(encoder_submit)(encoder, ud->viewid, g_imageProgram, 0, BGFX_DISCARD_STATE);
+				BGFX(encoder_set_texture)(encoder, 0, g_ctx.imageTex, texture.s.handle, UINT32_MAX);
+				BGFX(encoder_submit)(encoder, ud->viewid, g_ctx.imageProgram, 0, BGFX_DISCARD_STATE);
 			}
 		}
 	}
@@ -139,20 +140,16 @@ void rendererDrawData(ImGuiViewport* viewport) {
 	BGFX(encoder_end)(encoder);
 }
 
-static int rendererGetViewId() {
-	return window_event_viewid();
-}
- 
 static void rendererFreeViewId(int viewid) {
-	g_viewIdPool.push(viewid);
+	g_ctx.viewIdPool.push_back(viewid);
 }
 
 static int rendererAllocViewId() {
-	if (g_viewIdPool.empty()) {
-		return rendererGetViewId();
+	if (g_ctx.viewIdPool.empty()) {
+		return -1;
 	}
-	int viewid = g_viewIdPool.top();
-	g_viewIdPool.pop();
+	int viewid = g_ctx.viewIdPool.back();
+	g_ctx.viewIdPool.pop_back();
 	return viewid;
 }
 
@@ -217,7 +214,26 @@ static void rendererRenderWindow(ImGuiViewport* viewport, void*) {
 static void rendererSwapBuffers(ImGuiViewport* viewport, void*) {
 }
 
-bool rendererCreate() {
+bool rendererCreate(RendererInitArgs& args) {
+	if (0
+		|| bgfxGetHandleType(args.fontProg) != BGFX_HANDLE_PROGRAM
+		|| bgfxGetHandleType(args.imageProg) != BGFX_HANDLE_PROGRAM
+		|| bgfxGetHandleType(args.fontUniform) != BGFX_HANDLE_UNIFORM
+		|| bgfxGetHandleType(args.imageUniform) != BGFX_HANDLE_UNIFORM
+	) {
+		return false;
+	}
+	g_ctx.fontProgram = bgfx_program_handle_t { bgfxGetHandle(args.fontProg) };
+	g_ctx.imageProgram = bgfx_program_handle_t { bgfxGetHandle(args.imageProg) };
+	g_ctx.fontTex = bgfx_uniform_handle_t { bgfxGetHandle(args.fontUniform) };
+	g_ctx.imageTex = bgfx_uniform_handle_t { bgfxGetHandle(args.imageUniform) };
+	BGFX(vertex_layout_begin)(&g_ctx.layout, BGFX_RENDERER_TYPE_NOOP);
+	BGFX(vertex_layout_add)(&g_ctx.layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+	BGFX(vertex_layout_add)(&g_ctx.layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+	BGFX(vertex_layout_add)(&g_ctx.layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
+	BGFX(vertex_layout_end)(&g_ctx.layout);
+	g_ctx.viewIdPool = std::move(args.viewIdPool);
+
 	ImGuiIO& io = ImGui::GetIO();
 	io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
@@ -256,27 +272,6 @@ void rendererDestroy() {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	delete ud;
 	viewport->RendererUserData = nullptr;
-}
-
-bool rendererInit(RendererInitArgs const& args) {
-	if (0
-		|| bgfxGetHandleType(args.font_prog) != BGFX_HANDLE_PROGRAM
-		|| bgfxGetHandleType(args.image_prog) != BGFX_HANDLE_PROGRAM
-		|| bgfxGetHandleType(args.font_uniform) != BGFX_HANDLE_UNIFORM
-		|| bgfxGetHandleType(args.image_uniform) != BGFX_HANDLE_UNIFORM
-	) {
-		return false;
-	}
-	g_fontProgram = bgfx_program_handle_t { bgfxGetHandle(args.font_prog) };
-	g_imageProgram = bgfx_program_handle_t { bgfxGetHandle(args.image_prog) };
-	g_fontTex = bgfx_uniform_handle_t { bgfxGetHandle(args.font_uniform) };
-	g_imageTex = bgfx_uniform_handle_t { bgfxGetHandle(args.image_uniform) };
-	BGFX(vertex_layout_begin)(&g_layout, BGFX_RENDERER_TYPE_NOOP);
-	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
-	BGFX(vertex_layout_end)(&g_layout);
-	return true;
 }
 
 void rendererBuildFont() {

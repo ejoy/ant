@@ -17,7 +17,6 @@ extern "C" {
 #include <bx/platform.h>
 #include "imgui_renderer.h"
 #include "imgui_platform.h"
-#include "imgui_window.h"
 #include "fastio.h"
 
 namespace imgui::table { void init(lua_State* L); }
@@ -2981,12 +2980,6 @@ lDestroyContext(lua_State *L) {
 }
 
 static int
-lSetCallback(lua_State* L) {
-	window_register(L, 1);
-	return 0;
-}
-
-static int
 lInitPlatform(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
 	void* window = lua_touserdata(L, 1);
@@ -2996,18 +2989,31 @@ lInitPlatform(lua_State* L) {
 
 static int
 lInitRender(lua_State* L) {
-	if (!rendererCreate()) {
+	RendererInitArgs initargs;
+	initargs.fontProg = read_field_checkint(L, "fontProg", 1);
+	initargs.imageProg = read_field_checkint(L, "imageProg", 1);
+	initargs.fontUniform = read_field_checkint(L, "fontUniform", 1);
+	initargs.imageUniform = read_field_checkint(L, "imageUniform", 1);
+	
+	if (lua_getfield(L, 1, "viewIdPool") == LUA_TTABLE) {
+		lua_Integer n = luaL_len(L, -1);
+		initargs.viewIdPool.reserve((size_t)n);
+		for (lua_Integer i = 1; i <= n; ++i) {
+			if (LUA_TNUMBER == lua_geti(L, -1, i)) {
+				initargs.viewIdPool.push_back((int)luaL_checkinteger(L, -1));
+			}
+			lua_pop(L, 1);
+		}
+	}
+	else {
+		luaL_error(L, "no table viewIdPool");
+	}
+	lua_pop(L, 1);
+
+	if (!rendererCreate(initargs)) {
 		return luaL_error(L, "Create renderer failed");
 	}
-	RendererInitArgs initargs;
-	initargs.font_prog = (int)luaL_checkinteger(L, 1);
-	initargs.image_prog = (int)luaL_checkinteger(L, 2);
-	initargs.font_uniform = (int)luaL_checkinteger(L, 3);
-	initargs.image_uniform = (int)luaL_checkinteger(L, 4);
-	if (rendererInit(initargs)) {
-		return 0;
-	}
-	return luaL_error(L, "Invalid handle type");
+	return 0;
 }
 
 static int
@@ -3211,7 +3217,6 @@ luaopen_imgui(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "CreateContext", lCreateContext },
 		{ "DestroyContext", lDestroyContext },
-		{ "SetCallback", lSetCallback },
 		{ "InitPlatform", lInitPlatform },
 		{ "InitRender", lInitRender },
 		{ "DestroyPlatform", lDestroyPlatform },
