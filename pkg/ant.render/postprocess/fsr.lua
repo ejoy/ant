@@ -50,6 +50,10 @@ local fsr_rcas_viewid<const>    = hwi.viewid_get "fsr_rcas"
 local fsr_solve_entity
 local ifsr = {}
 
+local function get_resolution()
+    return {x = 0, y = 0, w = world.args.scene.resolution.w, h = world.args.scene.resolution.h}
+end
+
 function ifsr.get_fsr_output_handle()
     return fsr_textures.rcas_handle
 end
@@ -159,17 +163,17 @@ local function create_fsr_resolve_entity(ratio)
 end
 
 function fsr_sys:init()
-    local vr = world.args.scene.viewrect
+    local vr = get_resolution()
     local function create_fsr_resolve_queue()
         local fsr_resolve_fbidx = fbmgr.create({rbidx = fbmgr.create_rb{w = vr.w, h = vr.h, layers = 1, format = "RGBA16F", flags = flags}}) 
-        util.create_queue(fsr_resolve_viewid, mu.copy_viewrect(world.args.scene.viewrect), fsr_resolve_fbidx, "fsr_resolve_queue", "fsr_resolve_queue")
+        util.create_queue(fsr_resolve_viewid, mu.copy_viewrect(vr), fsr_resolve_fbidx, "fsr_resolve_queue", "fsr_resolve_queue")
     end
 
     create_fsr_resolve_queue()
 end
 
 function fsr_sys:init_world()
-    local vr = world.args.scene.viewrect
+    local vr = get_resolution()
     set_fsr_disptach_size(vr)
 
     local function create_fsr_easu_entity()
@@ -201,6 +205,7 @@ local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
 
 function fsr_sys:data_changed()
     for _, vr in scene_viewrect_changed_mb:unpack() do
+        local vr = get_resolution()
         irq.set_view_rect("fsr_resolve_queue", vr)
         set_fsr_disptach_size(vr)
         set_fsr_textures(vr)
