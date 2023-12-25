@@ -709,7 +709,8 @@ function shadowdebug_sys:init_world()
 	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
 	queuemgr.register_queue("shadow_debug_depth_queue",	queuemgr.material_index "pre_depth_queue")
 	queuemgr.register_queue("shadow_debug_queue", 		queuemgr.material_index "main_queue")
-	local fbw, fbh = 512, 512
+	local vr = irq.view_rect "main_queue"
+	local fbw, fbh = vr.h // 2, vr.h // 2
 	local depth_rbidx = fbmgr.create_rb{
 		format="D32F", w=fbw, h=fbh, layers=1,
 		flags = sampler {
