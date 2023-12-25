@@ -1,0 +1,6 @@
+---
+file: animations/animation.ozz
+op: replace
+path: /animations
+value:
+  work: /pkg/ant.test.simple/resource/miner.anim
