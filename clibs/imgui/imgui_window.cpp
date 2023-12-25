@@ -10,9 +10,7 @@
 #define WINDOW_EVENTS "WINDOW_EVENTS"
 
 enum class ANT_WINDOW {
-	SIZE = 2,
-	DROPFILES,
-	VIEWID,
+	VIEWID = 2,
 };
 
 class events {
@@ -28,8 +26,6 @@ public:
 	}
 	void init(lua_State* L, int idx) {
 		luaL_checktype(L, 1, LUA_TTABLE);
-		ref_function(L, idx, "size", ANT_WINDOW::SIZE);
-		ref_function(L, idx, "dropfiles", ANT_WINDOW::DROPFILES);
 		ref_function(L, idx, "viewid", ANT_WINDOW::VIEWID);
 	}
 	void call(ANT_WINDOW eid, size_t argn, size_t retn) {
@@ -96,28 +92,6 @@ static events* get_events() {
 	events* e = (events*)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 	return e;
-}
-
-void window_event_size(int w, int h) {
-	events* e = get_events();
-	e->invoke([&](lua_State* L) {
-		lua_pushinteger(L, w);
-		lua_pushinteger(L, h);
-		e->call(ANT_WINDOW::SIZE, 2, 0);
-	});
-}
-
-void window_event_dropfiles(std::vector<std::string> files) {
-	events* e = get_events();
-	e->invoke([&](lua_State* L) {
-		lua_createtable(L, (int)files.size(), 0);
-		for (size_t i = 0; i < files.size(); ++i) {
-			lua_pushinteger(L, i + 1);
-			lua_pushlstring(L, files[i].data(), files[i].size());
-			lua_settable(L, -3);
-		}
-		e->call(ANT_WINDOW::DROPFILES, 1, 0);
-	});
 }
 
 int window_event_viewid() {

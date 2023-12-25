@@ -13,12 +13,6 @@ local m = ecs.system 'imgui_system'
 
 local event = {}
 
-function event.size()
-end
-
-function event.dropfiles(files)
-end
-
 local viewidcount = 0
 local imgui_viewids = {}
 

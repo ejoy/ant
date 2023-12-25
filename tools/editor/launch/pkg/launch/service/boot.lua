@@ -9,12 +9,6 @@ local inputmgr = import_package "ant.inputmgr"
 
 local event = {}
 
-function event.size()
-end
-
-function event.dropfiles()
-end
-
 local viewid = -1
 function event.viewid()
     viewid = viewid + 1

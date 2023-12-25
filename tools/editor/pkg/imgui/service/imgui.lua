@@ -11,24 +11,13 @@ local exclusive	= require "ltask.exclusive"
 local window	= require "window"
 local inputmgr	= import_package "ant.inputmgr"
 
-local message = {}
+local ImGuiCallback = {}
 local initialized = false
 local init_width
 local init_height
-local debug_traceback = debug.traceback
 local world
 
-function message.dropfiles(filelst)
-end
-
 local size_dirty
-function message.size(width,height)
-	if initialized then
-		size_dirty = true
-	end
-	init_width = width
-	init_height = height
-end
 
 local viewidcount = 0
 local imgui_viewids = {}
@@ -37,7 +26,7 @@ for i=1, 16 do
 	imgui_viewids[i] = rhwi.viewid_generate("imgui_eidtor" .. i, "uiruntime")
 end
 
-function message.viewid()
+function ImGuiCallback.viewid()
 	if viewidcount >= #imgui_viewids then
 		error(("imgui viewid range exceeded, max count:%d"):format(#imgui_viewids))
 	end
@@ -57,18 +46,6 @@ local function update_size()
 	size_dirty = false
 end
 
-local dispatch = {}
-for n, f in pairs(message) do
-	dispatch[n] = function (...)
-		local ok, err = xpcall(f, debug_traceback, ...)
-		if ok then
-			return err
-		else
-			print(err)
-		end
-	end
-end
-
 local WindowMessage = {}
 local WindowQueue = {}
 local WindowEvent = {}
@@ -77,6 +54,15 @@ local WindowToken = {}
 
 function WindowEvent.exit()
 	WindowQuit = true
+end
+
+function WindowEvent.size(e)
+	if initialized then
+		size_dirty = true
+	end
+	init_width = e.w
+	init_height = e.h
+	world:dispatch_message(e)
 end
 
 ltask.fork(function ()
@@ -121,7 +107,7 @@ ltask.fork(function ()
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
 	}
-	imgui.SetCallback(dispatch)
+	imgui.SetCallback(ImGuiCallback)
 	local nwh = window.init(WindowMessage, ("%dx%d"):format(initargs.w, initargs.h))
 	rhwi.init {
 		nwh = nwh,
