@@ -202,8 +202,8 @@ ltask.fork(function ()
 	rhwi.init {
 		nwh = nwh,
 		scene = {
-			viewrect = {x = 0, y = 0, w = init_width, h = init_height},
-			resolution = {w = initargs.w, h = initargs.h},
+			viewrect = {x = 0, y = 0, w = 1920, h = 1080},
+			resolution = {w = 1920, h = 1080},
 			scene_ratio = 1,
 			ui_ratio = 1,
 		}
@@ -228,12 +228,11 @@ ltask.fork(function ()
     world = ecs.new_world {
         name = "editor",
         scene = {
-            viewrect = {x = 0, y = 0, w = init_width, h = init_height},
-            resolution = {w = init_width, h = init_height},
-            ratio = 1,
+            viewrect = {x = 0, y = 0, w = 1920, h = 1080},
+            resolution = {w = 1920, h = 1080},
             scene_ratio = 1,
         },
-        backbuffer_viewport = {x=0, y=0, w=1920, h=1080},
+     	device_size = {x=0, y=0, w=1920, h=1080},
         ecs = initargs.ecs,
     }
     world:pipeline_init()

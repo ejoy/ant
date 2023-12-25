@@ -269,11 +269,9 @@ function m.process_touch(ev)
     end
 end
 
-function m.set_viewrect(vr)
+function m.set_viewport(vr)
     local w = vr.w
     local h = vr.h
-    local ratio = vr.ratio
-    screen_ratio = ratio
     if w == width and h == height then
         return
     end

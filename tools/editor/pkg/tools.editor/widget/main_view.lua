@@ -76,14 +76,18 @@ function m.show()
         local x, y, ww, hh = imgui.dock.BuilderGetCentralRect "MainViewSpace"
         local mp = imgui_vp.MainPos
         x, y = x - mp[1], y - mp[2]
-        local vr = world.args.scene.viewrect
-        if x ~= vr.x or y ~= vr.y or ww ~= vr.w or hh ~= vr.h then
-            vr.x, vr.y, vr.w, vr.h = x, y, ww, hh
+        local vp = world.args.device_size
+        local resolution = world.args.scene.resolution
+        local aspect_ratio = resolution.w/resolution.h
+        local vr = mu.get_fix_ratio_scene_viewrect(vp, aspect_ratio, world.args.scene.scene_ratio)
+        if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
+            vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
             world:dispatch_message {
-                type = "set_viewrect",
-                viewrect = vr,
+                type = "set_viewport",
+                viewport = vp,
             }
             world:pub{"resize", ww, hh}
+            world:pub{"scene_viewrect_changed", vr}
         end
     end
     imgui.windows.PopStyleVar(3)

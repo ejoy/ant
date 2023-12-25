@@ -67,28 +67,26 @@ local function create(world)
     end
     function event.size(e)
         if not __ANT_EDITOR__ then
-            rmlui_sendmsg("set_viewrect", {
+            rmlui_sendmsg("set_viewport", {
                 x = 0,
                 y = 0,
                 w = e.w,
                 h = e.h,
-                ratio = world.args.scene.ratio,
             })
         end
         local fb = world.args.scene
         fb.width, fb.height = e.w, e.h
         world:pub {"resize", e.w, e.h}
     end
-    function event.set_viewrect(e)
-        local vr = e.viewrect
-        rmlui_sendmsg("set_viewrect", {
-            x = vr.x,
-            y = vr.y,
-            w = vr.w,
-            h = vr.h,
-            ratio = world.args.scene.ratio,
+    function event.set_viewport(e)
+        local vp = e.viewport
+        rmlui_sendmsg("set_viewport", {
+            x = vp.x,
+            y = vp.y,
+            w = vp.w,
+            h = vp.h,
         })
-        world:pub{"scene_viewrect_changed", vr}
+        world:pub{"scene_viewrect_changed", vp}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)

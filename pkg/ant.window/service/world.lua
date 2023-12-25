@@ -62,7 +62,7 @@ local function render(nwh, context, width, height, initialized)
 
 	log.info("scene viewrect: ", vr.x, vr.y, vr.w, vr.h)
 	log.info("scene ratio: ", SCENE_RATIO)
-	log.info("backbuffer viewport: ", vp.x, vp.y, vp.w, vp.h)
+	log.info("device viewport: ", vp.x, vp.y, vp.w, vp.h)
 	rhwi.init {
 		nwh			= nwh,
 		context		= context,
@@ -76,8 +76,8 @@ local function render(nwh, context, width, height, initialized)
 	encoderBegin = true
 	world = ecs.new_world(config)
 	world:dispatch_message {
-		type = "set_viewrect",
-		viewrect = config.scene.viewrect,
+		type = "set_viewport",
+		viewrect = config.device_size,
 	}
 
 	world:pipeline_init()

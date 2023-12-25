@@ -268,6 +268,9 @@ function util.get_scene_view_rect(rw, rh, vp, scene_ratio)
 	return {x = 0, y = 0, w = math.floor(vr_w*scene_ratio), h = math.floor(vr_h*scene_ratio)}
 end
 
+function util.get_fix_ratio_scene_viewrect(vp, aspect_ratio, scene_ratio)
+	return {scene_ratio = scene_ratio, h = math.floor(vp.h), w = math.floor(aspect_ratio*vp.h), x = vp.x, y = vp.y}
+end
 
 function util.remap_xy(x, y, ratio)
 	if ratio ~= nil and ratio ~= 1 then
