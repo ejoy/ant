@@ -7,7 +7,6 @@ local ivs = ecs.require "ant.render|visible_state"
 local ianimation = ecs.require "ant.animation|animation"
 local iplayback = ecs.require "ant.animation|playback"
 local icamera = ecs.require "ant.camera|camera"
-local iom = ecs.require "ant.objcontroller|obj_motion"
 local math3d = require "math3d"
 
 local m = ecs.system "main_system"
