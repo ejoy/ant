@@ -13,9 +13,9 @@ data:
       prefilter:
         size: 128
       source:
-        tex_name: /pkg/ant.resources.test/sky/aerodynamics_workshop_2k.texture
+        tex_name: /pkg/ant.resource.test/sky/colorcube2x2.texture
         facesize: 512
-    material: /pkg/ant.resources.test/sky/skybox.material
+    material: /pkg/ant.resource.test/sky/skybox.material
     render_layer: "background"
     simplemesh: false
     skybox:
