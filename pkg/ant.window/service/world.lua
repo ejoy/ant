@@ -77,7 +77,7 @@ local function render(nwh, context, width, height, initialized)
 	world = ecs.new_world(config)
 	world:dispatch_message {
 		type = "set_viewport",
-		viewrect = config.device_size,
+		viewport = config.device_size,
 	}
 
 	world:pipeline_init()

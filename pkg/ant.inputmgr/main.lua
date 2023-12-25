@@ -67,7 +67,7 @@ local function create(world)
     end
     function event.size(e)
         if not __ANT_EDITOR__ and ServiceRmlui then
-            rmlui_sendmsg("set_viewrect", {
+            rmlui_sendmsg("set_viewport", {
                 x = 0,
                 y = 0,
                 w = e.w,
@@ -78,7 +78,7 @@ local function create(world)
         fb.width, fb.height = e.w, e.h
         world:pub {"resize", e.w, e.h}
     end
-    function event.set_viewrect(e)
+    function event.set_viewport(e)
         local vp = e.viewport
         if ServiceRmlui then
             rmlui_sendmsg("set_viewport", {
