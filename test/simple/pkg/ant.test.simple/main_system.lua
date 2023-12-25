@@ -6,14 +6,26 @@ local imgui = require "imgui"
 local ivs = ecs.require "ant.render|visible_state"
 local ianimation = ecs.require "ant.animation|animation"
 local iplayback = ecs.require "ant.animation|playback"
+local icamera = ecs.require "ant.camera|camera"
+local iom = ecs.require "ant.objcontroller|obj_motion"
+local math3d = require "math3d"
 
 local m = ecs.system "main_system"
 
 local entities
 
-function m:init()
+function m:init_world()
     local prefab = world:create_instance {
+        --prefab = "/pkg/ant.test.simple/resource/Fox.glb|mesh.prefab",
         prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|work.prefab",
+        on_ready = function ()
+            local mq = w:first "main_queue camera_ref:in"
+            local ce <close> = world:entity(mq.camera_ref, "camera:in")
+            local dir = math3d.vector(0, -1, 1)
+            if not icamera.focus_prefab(ce, entities, dir) then
+                error "aabb not found"
+            end
+        end
     }
     entities = prefab.tag['*']
 end
