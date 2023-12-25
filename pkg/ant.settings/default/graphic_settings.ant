@@ -32,7 +32,7 @@ graphic:
     taa:
       enable: nil
     fsr:
-      enable: true
+      enable: nil
   render:
     clear: CDS
     clear_color: 255
