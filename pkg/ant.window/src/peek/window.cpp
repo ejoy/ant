@@ -13,21 +13,23 @@ linit(lua_State *L) {
 
 	const char * size = lua_tostring(L, 2);
 
-	if (0 != window_init(cb, size)) {
+	void* window = peekwindow_init(cb, size);
+	if (!window) {
 		return luaL_error(L, "window init failed");
 	}
-	return 0;
+	lua_pushlightuserdata(L, window);
+	return 1;
 }
 
 static int
 lclose(lua_State *L) {
-	window_close();
+	peekwindow_close();
 	return 0;
 }
 
 static int
 lpeekmessage(lua_State *L) {
-	lua_pushboolean(L, window_peekmessage());
+	lua_pushboolean(L, peekwindow_peekmessage());
 	return 1;
 }
 

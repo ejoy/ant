@@ -231,7 +231,7 @@ WindowDelegate* g_wd = nil;
 int32_t g_mx = 0;
 int32_t g_my = 0;
 
-int window_init(struct ant_window_callback* cb, const char *size) {
+void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 	NSScreen *screen = [NSScreen mainScreen];
 	NSRect visibleFrame = screen.visibleFrame;
 	int w = (int)(visibleFrame.size.width * 0.7f);
@@ -272,7 +272,7 @@ int window_init(struct ant_window_callback* cb, const char *size) {
 
     float scale = [win backingScaleFactor];
     window_message_init(cb, win, 0, w * scale, h * scale);
-    return 0;
+    return (void*)win;
 }
 
 static NSEvent* peek_event() {
@@ -370,10 +370,10 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     return true;
 }
 
-void window_close() {
+void peekwindow_close() {
 }
 
-bool window_peekmessage() {
+bool peekwindow_peekmessage() {
     if ([g_dg applicationHasTerminated]) {
         return false;
     }

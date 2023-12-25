@@ -196,13 +196,12 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 }
 @end
 
-int window_init(struct ant_window_callback* cb, const char *size) {
-    (void)size;
+void loopwindow_init(struct ant_window_callback* cb) {
     g_cb = cb;
     return 0;
 }
 
-void window_mainloop() {
+void loopwindow_mainloop() {
     int argc = 0;
     char **argv = 0;
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));

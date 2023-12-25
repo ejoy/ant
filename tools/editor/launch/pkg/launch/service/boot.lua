@@ -4,6 +4,8 @@ local vfs = require "vfs"
 local fastio = require "fastio"
 local datalist = require "datalist"
 local platform = require "bee.platform"
+local window = require "window"
+local inputmgr = import_package "ant.inputmgr"
 
 local event = {}
 
@@ -19,6 +21,8 @@ function event.viewid()
     return viewid
 end
 
+local WindowMessage = {}
+
 local WIDTH <const> = 720
 local HEIGHT <const> = 450
 
@@ -32,7 +36,7 @@ imgui.io.ConfigFlags = imgui.flags.Config {
     "DpiEnableScaleFonts",
 }
 imgui.SetCallback(event)
-local nwh = imgui.CreateMainWindow(WIDTH, HEIGHT)
+local nwh = window.init(WindowMessage, ("%dx%d"):format(WIDTH, HEIGHT))
 imgui.SetWindowTitle("EditorLauncher")
 imgui.SetWindowPos(1280, 720)
 bgfx.init {
@@ -87,7 +91,9 @@ imgui.InitRender(
 
 local launch = require "launch_panel"
 launch.init()
-while imgui.DispatchMessage() do
+inputmgr:enable_imgui()
+while window.peekmessage() do
+    inputmgr:filter_imgui(WindowMessage, {})
     imgui.NewFrame()
     launch.update(0)
     imgui.Render()

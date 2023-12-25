@@ -14,10 +14,13 @@ struct ant_window_callback {
 	struct lua_State* updateL;
 };
 
-int  window_init(struct ant_window_callback* cb, const char *size);
-void window_close();
-bool window_peekmessage();
-void window_mainloop();
+void* peekwindow_init(struct ant_window_callback* cb, const char* size);
+void peekwindow_close();
+bool peekwindow_peekmessage();
+
+void loopwindow_init(struct ant_window_callback* cb);
+void loopwindow_mainloop();
+
 void window_maxfps(float fps);
 
 void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h);

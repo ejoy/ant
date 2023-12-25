@@ -41,17 +41,13 @@ linit(lua_State *L) {
 	lua_pushvalue(L, 3);
 	lua_xmove(L, cb->updateL, 1);
 
-	const char *size = lua_tostring(L, 2);
-
-	if (0 != window_init(cb, size)) {
-		return luaL_error(L, "window init failed");
-	}
+	loopwindow_init(cb);
 	return 0;
 }
 
 static int
 lmainloop(lua_State *L) {
-	window_mainloop();
+	loopwindow_mainloop();
 	return 0;
 }
 

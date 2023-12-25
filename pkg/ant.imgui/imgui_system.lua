@@ -6,6 +6,7 @@ local imgui = require "imgui"
 local platform = require "bee.platform"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
+local inputmgr = import_package "ant.inputmgr"
 local PM = require "programan.client"
 
 local m = ecs.system 'imgui_system'
@@ -79,7 +80,7 @@ function m:init()
 	else
 		error("unknown os:" .. platform.os)
 	end
-    world:enable_imgui()
+    inputmgr:enable_imgui()
 end
 
 function m:exit()

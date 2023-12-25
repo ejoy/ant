@@ -460,9 +460,9 @@ static RECT createWindowRect(const char *size) {
 	return rect;
 }
 
-int window_init(struct ant_window_callback* cb, const char *size) {
+void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 	if (FAILED(OleInitialize(NULL))) {
-		return 1;
+		return nullptr;
 	}
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
@@ -485,21 +485,21 @@ int window_init(struct ant_window_callback* cb, const char *size) {
 		GetModuleHandleW(0),
 		cb);
 	if (wnd == NULL) {
-		return 1;
+		return nullptr;
 	}
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 	g_dropmanager.Register(wnd, cb);
 	UpdateKeyboardCodePage();
-	return 0;
+	return (void*)wnd;
 }
 
-void window_close() {
+void peekwindow_close() {
 	g_dropmanager.Revoke();
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
 
-bool window_peekmessage() {
+bool peekwindow_peekmessage() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {

@@ -107,19 +107,25 @@ end
 
 local ImGuiEvent = {}
 
-function ImGuiEvent.touch(e)
-    if e.state == "began" then
-        ImGuiIO.AddMouseButtonEvent(0, true)
-    elseif e.state == "ended" then
-        ImGuiIO.AddMouseButtonEvent(0, false)
+function ImGuiEvent.mouse(e)
+    local btn = 0
+    if e.what == "LEFT" then
+        btn = 0
+    elseif e.what == "RIGHT" then
+        btn = 1
+    elseif e.what == "MIDDLE" then
+        btn = 2
+    end
+    if e.state == "DOWN" then
+        ImGuiIO.AddMouseButtonEvent(btn, true)
+    elseif e.state == "UP" then
+        ImGuiIO.AddMouseButtonEvent(btn, false)
     end
     return ImGuiIO.WantCaptureMouse
 end
 
-function ImGuiEvent.gesture(e)
-    if e.what == "pinch" then
-        ImGuiIO.AddMouseWheelEvent(e.velocity, e.velocity)
-    end
+function ImGuiEvent.mousewheel(e)
+    ImGuiIO.AddMouseWheelEvent(e.delta, e.delta)
     return ImGuiIO.WantCaptureMouse
 end
 
@@ -161,16 +167,34 @@ function world:dispatch_message(e)
     end
 end
 
-function world:enable_imgui()
-    self._enable_imgui = true
-end
-
 local m = {}
 
 function m:init()
     self._inputmgr = create(self)
     self.dispatch_message = world.dispatch_message
-    self.enable_imgui = world.enable_imgui
+end
+
+function m:enable_imgui()
+    self._enable_imgui = true
+end
+
+function m:filter_imgui(from, to)
+    if not self._enable_imgui then
+        for i = 1, #from do
+            local e = from[i]
+            to[#to+1] = e
+            from[i] = nil
+        end
+        return
+    end
+    for i = 1, #from do
+        local e = from[i]
+        local func = ImGuiEvent[e.type]
+        if not func or not func(e) then
+            to[#to+1] = e
+        end
+        from[i] = nil
+    end
 end
 
 return m

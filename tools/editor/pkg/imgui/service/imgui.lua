@@ -8,6 +8,8 @@ local assetmgr	= import_package "ant.asset"
 local rhwi		= import_package "ant.hwi"
 local ecs		= import_package "ant.ecs"
 local exclusive	= require "ltask.exclusive"
+local window	= require "window"
+local inputmgr	= import_package "ant.inputmgr"
 
 local message = {}
 local initialized = false
@@ -15,29 +17,6 @@ local init_width
 local init_height
 local debug_traceback = debug.traceback
 local world
-
-local function mousewheel(x, y, delta)
-    local mvp = imgui.GetMainViewport()
-    x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
-    world:dispatch_message {
-        type = "mousewheel",
-        x = x,
-        y = y,
-        delta = delta,
-    }
-end
-local function mouse(x, y, what, state)
-    local mvp = imgui.GetMainViewport()
-    x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
-    world:dispatch_message {
-        type = "mouse",
-        x = x,
-        y = y,
-        what = what,
-        state = state,
-        timestamp = 0,
-    }
-end
 
 function message.dropfiles(filelst)
 end
@@ -78,100 +57,6 @@ local function update_size()
 	size_dirty = false
 end
 
-local Keyboard = {}
-local KeyMods = {}
-local Mouse = {}
-local MousePosX, MousePosY = 0, 0
-local DOWN <const> = {true}
-
-local KeyModifiers <const> = {
-	[imgui.enum.Key.LeftCtrl]   = "CTRL",
-	[imgui.enum.Key.LeftShift]  = "SHIFT",
-	[imgui.enum.Key.LeftAlt]    = "ALT",
-	[imgui.enum.Key.LeftSuper]  = "SYS",
-	[imgui.enum.Key.RightCtrl]  = "CTRL",
-	[imgui.enum.Key.RightShift] = "SHIFT",
-	[imgui.enum.Key.RightAlt]   = "ALT",
-	[imgui.enum.Key.RightSuper] = "SYS",
-}
-
-local function updateIO()
-	local MouseChanged = {}
-	local KeyboardChanged = {}
-	for _, what, x, y in imgui.InputEvents() do
-		if what == "MousePos" then
-			MousePosX, MousePosY = x, y
-			mouse(MousePosX, MousePosY, 4, 2)
-		elseif what == "MouseWheel" then
-			mousewheel(MousePosX, MousePosY, y)
-		elseif what == "MouseButton" then
-			local down = DOWN[y]
-			local button
-			if x == 0 then
-				button = "LEFT"
-			elseif x == 1 then
-				button = "RIGHT"
-			else
-				button = "MIDDLE"
-			end
-			local cur = Mouse[button]
-			if cur ~= down then
-				Mouse[button] = down
-				if down then
-					mouse(MousePosX, MousePosY, button, "DOWN")
-				else
-					mouse(MousePosX, MousePosY, button, "UP")
-				end
-				MouseChanged[button] = true
-			end
-		elseif what == "Key" then
-			local code, down = x, DOWN[y]
-			local cur = Keyboard[code]
-			if cur ~= down then
-				if KeyModifiers[code] then
-					if down then
-						KeyMods[KeyModifiers[code]] = true
-					else
-						KeyMods[KeyModifiers[code]] = nil
-					end
-				end
-				Keyboard[code] = down
-				if down then
-					world:dispatch_message {
-						type = "keyboard",
-						key = code,
-						press = 1,
-						state = KeyMods,
-					}
-				else
-					world:dispatch_message {
-						type = "keyboard",
-						key = code,
-						press = 0,
-						state = KeyMods,
-					}
-				end
-				KeyboardChanged[code] = true
-			end
-		end
-	end
-	for button in pairs(Mouse) do
-		if not MouseChanged[button] then
-			mouse(MousePosX, MousePosY, button, "MOVE")
-		end
-	end
-	for code in pairs(Keyboard) do
-		if not KeyboardChanged[code] then
-			world:dispatch_message {
-				type = "keyboard",
-				key = code,
-				press = 2,
-				state = KeyMods,
-			}
-		end
-	end
-end
-
 local dispatch = {}
 for n, f in pairs(message) do
 	dispatch[n] = function (...)
@@ -181,6 +66,45 @@ for n, f in pairs(message) do
 		else
 			print(err)
 		end
+	end
+end
+
+local WindowMessage = {}
+local WindowQueue = {}
+local WindowEvent = {}
+local WindowQuit
+local WindowToken = {}
+
+function WindowEvent.exit()
+	WindowQuit = true
+end
+
+ltask.fork(function ()
+	while not WindowQuit do
+		while true do
+			local m = table.remove(WindowQueue, 1)
+			if not m then
+				break
+			end
+			local f = WindowEvent[m.type]
+			if f then
+				f(m)
+			else
+				world:dispatch_message(m)
+			end
+		end
+		ltask.wait(WindowToken)
+	end
+end)
+
+local function WindowDispatch()
+	if #WindowMessage == 0 then
+		return
+	end
+	local wakeup = #WindowQueue == 0
+	inputmgr:filter_imgui(WindowMessage, WindowQueue)
+	if wakeup then
+		ltask.wakeup(WindowToken)
 	end
 end
 
@@ -198,7 +122,7 @@ ltask.fork(function ()
 		"DpiEnableScaleFonts",
 	}
 	imgui.SetCallback(dispatch)
-	local nwh = imgui.CreateMainWindow(initargs.w, initargs.h)
+	local nwh = window.init(WindowMessage, ("%dx%d"):format(initargs.w, initargs.h))
 	rhwi.init {
 		nwh = nwh,
 		scene = {
@@ -237,9 +161,10 @@ ltask.fork(function ()
     }
     world:pipeline_init()
     initialized = true
-    while imgui.DispatchMessage() do
+	inputmgr:enable_imgui()
+    while window.peekmessage() do
+		WindowDispatch()
 		imgui.NewFrame()
-        updateIO()
 		update_size()
         world:pipeline_update()
         imgui.Render()
@@ -253,7 +178,6 @@ ltask.fork(function ()
 	imgui.DestroyRenderer()
 	imgui.DestroyPlatform()
 	imgui.DestroyContext()
-	imgui.DestroyMainWindow()
 	bgfx.encoder_end()
 	bgfx.encoder_destroy()
     rhwi.shutdown()

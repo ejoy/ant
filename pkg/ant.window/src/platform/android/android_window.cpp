@@ -17,16 +17,16 @@ enum class AndroidPath {
     ExternalDataPath,
 };
 
-int window_init(struct ant_window_callback* cb, const char *size) {
+void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
     (void)size;
     g_cb = cb;
-    return 0;
+    return nullptr;
 }
 
-void window_close() {
+void peekwindow_close() {
 }
 
-bool window_peekmessage() {
+bool peekwindow_peekmessage() {
     for (;;) {
         if (g_app->destroyRequested) {
             return false;

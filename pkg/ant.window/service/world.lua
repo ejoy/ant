@@ -5,6 +5,7 @@ local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
 local setting   = import_package "ant.settings"
+local inputmgr  = import_package "ant.inputmgr"
 local bgfx      = require "bgfx"
 local mu		= import_package "ant.math".util
 local ServiceRmlUi
@@ -138,10 +139,6 @@ local ms_queue = {}
 local ms_quit
 local ms_token = {}
 
-local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
-end
-
 ltask.fork(function ()
 	while not ms_quit do
 		while true do
@@ -162,10 +159,10 @@ end)
 
 function S.msg(messages)
 	if #ms_queue == 0 then
-		table_append(ms_queue, messages)
+		inputmgr:filter_imgui(messages, ms_queue)
 		ltask.wakeup(ms_token)
 	else
-		table_append(ms_queue, messages)
+		inputmgr:filter_imgui(messages, ms_queue)
 	end
 end
 
