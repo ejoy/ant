@@ -140,8 +140,8 @@ local function create_plane()
             },
             bounding = {
                 aabb = {
-                    {-50, 0.0, -50},
-                    { 50, 0.0,  50},
+                    {-25, 0.0, -25},
+                    { 25, 0.0,  25},
                 }
             },
 			material        = "/pkg/ant.resources/materials/mesh_shadow.material",
