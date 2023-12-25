@@ -88,7 +88,7 @@ local function create(world)
                 h = vp.h,
             })
         end
-        world:pub{"scene_viewrect_changed", vr}
+        world:pub{"scene_viewrect_changed", vp}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)
