@@ -92,8 +92,8 @@ function S.init()
 
         -- local r2l_mat<const> = mc.R2L_MAT
         -- local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
-        --iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
-        iom.set_rotation(le, math3d.quaternion{math.pi * 0.75, math.pi * 0.1, 0.0})
+        iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
+        --iom.set_rotation(le, math3d.quaternion{math.pi * 0.75, math.pi * 0.1, 0.0})
     end)
 
 end
@@ -157,7 +157,7 @@ end
 function S.init_world()
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
-    local eyepos = math3d.vector(0, 10, -10)
+    local eyepos = math3d.vector(0, 5, -5)
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(ce, dir)
