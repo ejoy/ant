@@ -166,17 +166,23 @@ local function merge_visible_bounding(M, aabb, obj, bounding, queue_index)
 	return aabb
 end
 
-local function build_aabb(queue_index, M, tag)
+local renderobj_statement<const> = "render_object_visible render_object:in bounding:in"
+
+--receive_shadow/cast_shadow is far more than render_object_visible/hitch_visible tag
+local RECEIVE_renderobj_statement<const>	= "render_object_visible receive_shadow render_object:in bounding:in"
+local CAST_renderobj_statement<const>		= "render_object_visible cast_shadow render_object:in bounding:in"
+
+local hitchobj_statement<const> = "hitch_visible hitch:in bounding:in"
+local RECEIVE_hitchobj_statement<const> = "hitch_visible receive_shadow render_object:in bounding:in"
+local CAST_hitchobj_statement<const>	= "hitch_visible cast_shadow render_object:in bounding:in"
+
+local function build_aabb(queue_index, M, S, H)
 	local aabb = math3d.aabb()
-	for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
+	for e in w:select(S) do
 		aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
 	end
 
-	-- for e in w:select"render_object_visible render_object:in bounding:in" do
-	-- 	aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
-	-- end
-
-	for e in w:select "hitch_visible hitch:in bounding:in" do
+	for e in w:select(H) do
 		aabb = merge_visible_bounding(M, aabb, e.hitch, e.bounding, queue_index)
 	end
 
@@ -184,11 +190,13 @@ local function build_aabb(queue_index, M, tag)
 end
 
 local function build_PSR(queue_index, M)
-	return build_aabb(queue_index, M, "receive_shadow")
+	--return build_aabb(queue_index, M, renderobj_statement, hitchobj_statement)
+	return build_aabb(queue_index, M, RECEIVE_renderobj_statement, RECEIVE_hitchobj_statement)
 end
 
 local function build_PSC(queue_index, M)
-	return build_aabb(queue_index, M, "cast_shadow")
+	--return build_aabb(queue_index, M, renderobj_statement, hitchobj_statement)
+	return build_aabb(queue_index, M, CAST_renderobj_statement, CAST_hitchobj_statement)
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
@@ -203,9 +211,9 @@ local function merge_PSC_and_PSR(PSC, PSR)
 
 	local USE_CASTER_FAR<const> = true
 	if USE_CASTER_FAR then
-		return math3d.aabb(math3d.vector(sminx, sminy, PSC_far), math3d.vector(smaxx, smaxy, PSC_near))
+		return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSC_far))
 	else
-		return math3d.aabb(math3d.vector(sminx, sminy, PSR_far), math3d.vector(smaxx, smaxy, PSC_near))
+		return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
 	end
 end
 

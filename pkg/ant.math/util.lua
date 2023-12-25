@@ -517,6 +517,15 @@ function util.convert_screen_to_device_coord(bvp, svr, x, y)
     return x * (bw / sw), y * (bh / sh)
 end
 
+function util.aabb_minmax(aabb)
+	return math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+end
+
+function util.aabb_minmax_index(aabb, idx)
+	local minv, maxv = util.aabb_minmax(aabb)
+	return math3d.index(minv, idx), math3d.index(maxv, idx)
+end
+
 return util
 
 end
