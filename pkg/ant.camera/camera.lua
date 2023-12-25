@@ -140,22 +140,43 @@ end
 
 ic.lookto = iom.lookto
 
-function ic.focus_aabb(ce, aabb)
+function ic.focus_aabb(ce, aabb, dir)
     if aabb == mc.NULL then
         return
     end
     local aabb_min, aabb_max = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
     local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
-    local nviewdir = math3d.sub(aabb_max, center)
-    local viewdir = math3d.normalize(math3d.inverse(nviewdir))
-
-    local pos = math3d.muladd(3, nviewdir, center)
-    iom.lookto(ce, pos, viewdir)
+    local viewdir = math3d.sub(center, aabb_max)
+    local len = 3 * math3d.length(viewdir)
+    local nviewdir = math3d.normalize(math3d.inverse(dir or viewdir))
+    local pos = math3d.muladd(len, nviewdir, center)
+    iom.lookto(ce, pos, dir or viewdir)
 end
 
-function ic.focus_obj(ce, e)
+function ic.focus_obj(ce, e, dir)
     w:extend(e, "bounding:in")
-    ic.focus_aabb(ce, e.bounding.scene_aabb)
+    ic.focus_aabb(ce, e.bounding.scene_aabb, dir)
+end
+
+function ic.focus_prefab(ce, entities, dir)
+    local aabb
+    for i = 1, #entities do
+        local e = entities[i]
+        local ec <close> = world:entity(e, "bounding?in")
+        local bounding = ec.bounding
+        if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+            if not aabb then
+                aabb = bounding.scene_aabb
+            else
+                aabb = math3d.aabb_merge(bounding.scene_aabb, aabb)
+            end
+        end
+    end
+    if not aabb then
+        return false
+    end
+    ic.focus_aabb(ce, aabb, dir)
+    return true
 end
 
 local cameraview_sys = ecs.system "camera_view_system"
