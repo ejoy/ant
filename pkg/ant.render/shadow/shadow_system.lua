@@ -168,13 +168,13 @@ end
 
 local function build_aabb(queue_index, M, tag)
 	local aabb = math3d.aabb()
-	-- for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
-	-- 	aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
-	-- end
-
-	for e in w:select"render_object_visible render_object:in bounding:in" do
+	for e in w:select(("%s render_object_visible render_object:in bounding:in"):format(tag)) do
 		aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
 	end
+
+	-- for e in w:select"render_object_visible render_object:in bounding:in" do
+	-- 	aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
+	-- end
 
 	for e in w:select "hitch_visible hitch:in bounding:in" do
 		aabb = merge_visible_bounding(M, aabb, e.hitch, e.bounding, queue_index)
@@ -192,11 +192,21 @@ local function build_PSC(queue_index, M)
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
-	local minv, maxv = math3d.array_index(PSR, 1), math3d.array_index(PSR, 2)
-	local PSC_minz = math3d.index(math3d.array_index(PSC, 1), 3)
-	
-	minv = math3d.set_index(minv, 3, PSC_minz)	--make PSC minz as bounding near plane
-	return math3d.aabb(minv, maxv)
+	local PSR_near, PSR_far = mu.aabb_minmax_index(PSR, 3)
+	local PSC_near, PSC_far = mu.aabb_minmax_index(PSC, 3)
+
+	local sceneaabb = math3d.aabb_intersection(PSR, PSC)
+
+	local sminv, smaxv = mu.aabb_minmax(sceneaabb)
+	local sminx, sminy = math3d.index(sminv, 1, 2)
+	local smaxx, smaxy = math3d.index(smaxv, 1, 2)
+
+	local USE_CASTER_FAR<const> = true
+	if USE_CASTER_FAR then
+		return math3d.aabb(math3d.vector(sminx, sminy, PSC_far), math3d.vector(smaxx, smaxy, PSC_near))
+	else
+		return math3d.aabb(math3d.vector(sminx, sminy, PSR_far), math3d.vector(smaxx, smaxy, PSC_near))
+	end
 end
 
 local BOX_TRIANGLES_INDICES = {}
@@ -400,6 +410,14 @@ end
 
 local INV_Z<const> = true
 
+local function build_scene_aabb(Lv)
+	local mqidx = queuemgr.queue_index "main_queue"
+	local PSRLS	= build_PSR(mqidx, Lv)
+	local PSCLS	= build_PSC(mqidx, Lv)
+
+	return merge_PSC_and_PSR(PSRLS, PSCLS)
+end
+
 function shadow_sys:update_camera_depend()
     local C = w:first "camera_changed"
     if not C then
@@ -433,24 +451,12 @@ function shadow_sys:update_camera_depend()
 
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
+	local Lw = math3d.inverse_fast(Lv)
 
-	local main_queueidx = queuemgr.queue_index "main_queue"
-	local PSR = build_PSR(main_queueidx)
-	local PSRLS 		= math3d.aabb_transform(Lv, PSR)
-	C.camera.PSRLS		= M3D(C.camera.PSRLS, PSRLS)
-
-	-- C.camera.PSR 	= M3D(C.camera.PSR, 	build_PSR(main_queueidx))
-	-- C.camera.PSC	= M3D(C.camera.PSC, 	build_PSC(main_queueidx))
-
-	-- C.camera.PSRLS  = M3D(C.camera.PSRLS, math3d.aabb_transform(Lv, C.camera.PSR))
-	-- C.camera.PSCLS  = M3D(C.camera.PSCLS, math3d.aabb_transform(Lv, C.camera.PSC))
-
-	--local sceneaabb	= merge_PSC_and_PSR(C.camera.PSCLS, C.camera.PSRLS)
-	local sceneaabbLS	= PSRLS
-	local sceneaabbWS	= PSR
+	local sceneaabbLS	= build_scene_aabb(Lv)
+	local sceneaabbWS	= math3d.aabb_transform(sceneaabbLS, Lw)
 	
 	local Cv = C.camera.viewmat
-	local Lw = math3d.inverse_fast(Lv)
 	local Lv2Vv 		= math3d.mul(Cv, Lw)
 
 	local useLiSPSM = false
@@ -482,7 +488,7 @@ function shadow_sys:update_camera_depend()
 		local sr	= split_ratio[csm.index]
 
 		viewfrustum.n, viewfrustum.f = calc_viewspace_z(zn, zf, sr[1]), calc_viewspace_z(zn, zf, sr[2])
-		local sp 	= math3d.projmat(viewfrustum, INV_Z)
+		local sp 	= math3d.projmat(viewfrustum)
 		local Lv2Ndc = math3d.mul(sp, Lv2Vv)
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
 
@@ -583,7 +589,8 @@ end
 function shadow_sys:update_filter()
     for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
-		local receiveshadow = mt.fx.setting.receive_shadow == "on"
+		local hasaabb = e.bounding.aabb ~= mc.NULL
+		local receiveshadow = hasaabb and mt.fx.setting.receive_shadow == "on"
 
 		local castshadow
 		if e.visible_state["cast_shadow"] then
@@ -603,7 +610,7 @@ function shadow_sys:update_filter()
 				fm["csm4_queue"] = mi
 	
 				mat_ptr = mi:ptr()
-				castshadow = true
+				castshadow = hasaabb
 			end
 	
 			R.set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)
