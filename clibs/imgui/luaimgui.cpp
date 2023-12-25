@@ -2961,35 +2961,6 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 
 #include "imgui_enum.h"
 
-#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX
-static int
-lCreateMainWindow(lua_State *L) {
-	int width = (int)luaL_checkinteger(L, 1);
-	int height = (int)luaL_checkinteger(L, 2);
-	void* window = platformCreateMainWindow(width, height);
-	if (!window) {
-		return luaL_error(L, "Create platform failed");
-	}
-	lua_pushlightuserdata(L, window);
-	return 1;
-}
-
-static int
-lDestroyMainWindow(lua_State *L) {
-	platformDestroyMainWindow();
-	return 0;
-}
-
-static int
-lDispatchMessage(lua_State* L) {
-	if (!platformDispatchMessage()) {
-		return 0;
-	}
-	lua_pushboolean(L, 1);
-	return 1;
-}
-#endif
-
 static int
 lCreateContext(lua_State* L) {
 	ImGui::CreateContext();
@@ -3238,11 +3209,6 @@ luaopen_imgui(lua_State *L) {
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
-#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX
-		{ "CreateMainWindow", lCreateMainWindow },
-		{ "DestroyMainWindow", lDestroyMainWindow },
-		{ "DispatchMessage", lDispatchMessage },
-#endif
 		{ "CreateContext", lCreateContext },
 		{ "DestroyContext", lDestroyContext },
 		{ "SetCallback", lSetCallback },

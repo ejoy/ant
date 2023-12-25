@@ -4,17 +4,6 @@
 #include "imgui_platform.h"
 #import <Cocoa/Cocoa.h>
 
-void* platformCreateMainWindow(int w, int h) {
-	return nullptr;
-}
-
-void platformDestroyMainWindow() {
-}
-
-bool platformDispatchMessage() {
-	return false;
-}
-
 void platformInit(void* window) {
 	NSWindow* nswindow = (__bridge NSWindow*)window;
 	ImGui_ImplOSX_Init(nswindow.contentView);

@@ -29,9 +29,6 @@ lm:source_set "imgui" {
         }
     },
     macos = {
-        includes = {
-            Ant3rd .. "SDL/include",
-        },
         sources = {
             "platform/macos/imgui_platform.mm",
             Ant3rd .. "imgui/backends/imgui_impl_osx.mm",
