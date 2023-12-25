@@ -16,8 +16,7 @@ local entities
 
 function m:init_world()
     local prefab = world:create_instance {
-        --prefab = "/pkg/ant.test.simple/resource/Fox.glb|mesh.prefab",
-        prefab = "/pkg/vaststars.resources/glbs/miner-1.glb|work.prefab",
+        prefab = "/pkg/ant.test.simple/resource/miner-1.glb|work.prefab",
         on_ready = function ()
             local mq = w:first "main_queue camera_ref:in"
             local ce <close> = world:entity(mq.camera_ref, "camera:in")
