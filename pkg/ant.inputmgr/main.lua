@@ -66,8 +66,8 @@ local function create(world)
         world:pub {"dropfiles", ...}
     end
     function event.size(e)
-        if not __ANT_EDITOR__ then
-            rmlui_sendmsg("set_viewport", {
+        if not __ANT_EDITOR__ and ServiceRmlui then
+            rmlui_sendmsg("set_viewrect", {
                 x = 0,
                 y = 0,
                 w = e.w,
@@ -78,15 +78,17 @@ local function create(world)
         fb.width, fb.height = e.w, e.h
         world:pub {"resize", e.w, e.h}
     end
-    function event.set_viewport(e)
+    function event.set_viewrect(e)
         local vp = e.viewport
-        rmlui_sendmsg("set_viewport", {
-            x = vp.x,
-            y = vp.y,
-            w = vp.w,
-            h = vp.h,
-        })
-        world:pub{"scene_viewrect_changed", vp}
+        if ServiceRmlui then
+            rmlui_sendmsg("set_viewport", {
+                x = vp.x,
+                y = vp.y,
+                w = vp.w,
+                h = vp.h,
+            })
+        end
+        world:pub{"scene_viewrect_changed", vr}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)

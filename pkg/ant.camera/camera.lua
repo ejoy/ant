@@ -138,12 +138,13 @@ function ic.update_frustum(ce, ww, hh)
     end
 end
 
-function ic.lookto(ce, ...)
-    iom.lookto(ce, ...)
-end
+ic.lookto = iom.lookto
 
 function ic.focus_aabb(ce, aabb)
-    local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+    if aabb == mc.NULL then
+        return
+    end
+    local aabb_min, aabb_max = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
     local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
     local nviewdir = math3d.sub(aabb_max, center)
     local viewdir = math3d.normalize(math3d.inverse(nviewdir))
@@ -153,11 +154,8 @@ function ic.focus_aabb(ce, aabb)
 end
 
 function ic.focus_obj(ce, e)
-    w:extend(e, "scene:in")
-    local aabb = e.scene.scene_aabb
-    if aabb then
-        ic.focus_aabb(ce, aabb)
-    end
+    w:extend(e, "bounding:in")
+    ic.focus_aabb(ce, e.bounding.scene_aabb)
 end
 
 local cameraview_sys = ecs.system "camera_view_system"

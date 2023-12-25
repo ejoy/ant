@@ -1,6 +1,6 @@
 colorspace: linear
 normalmap: false
-path: ./result.ktx
+path: ./colorcube2x2.ktx
 mipmap: 0
 build_irradianceSH: true
 sampler:

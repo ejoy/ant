@@ -74,6 +74,7 @@
   5) 完成point light shadow；
 13. 重构visible_state，将目前的visible_state作为render内部数据，统一使用visible tag作为外部控制物体是否可见的设定；
 14. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；
+15. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
