@@ -84,7 +84,7 @@ ltask.fork(function ()
 	imgui.CreateContext()
 	imgui.io.ConfigFlags = imgui.flags.Config {
 		"NavEnableKeyboard",
-		"ViewportsEnable",
+		--"ViewportsEnable",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
 		"DpiEnableScaleViewports",
