@@ -22,6 +22,7 @@ import_package "imgui".start {
             "ant.objcontroller|pickup_detect",
             "ant.objcontroller|screen_3dobj",
             "ant.rmlui",
+            "ant.imgui",
             "ant.sky|sky",
         }
     }

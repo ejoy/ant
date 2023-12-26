@@ -48,18 +48,6 @@ local function start_fileserver(luaexe, path)
 end
 
 local function init_font()
-	imgui.FontAtlasClear()
-	if platform.os == "windows" then
-		imgui.FontAtlasAddFont {
-			SystemFont = "Segoe UI Emoji",
-			SizePixels = 18,
-			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
-		}
-		imgui.FontAtlasAddFont {
-			SystemFont = "黑体",
-			SizePixels = 18,
-			GlyphRanges = { 0x0020, 0xFFFF }
-		}
 		imgui.FontAtlasAddFont {
 			FontPath = "/pkg/tools.editor/res/fonts/fa-solid-900.ttf",
 			SizePixels = 16,
@@ -116,20 +104,6 @@ local function init_font()
 				0xf021, 0xf021, -- ICON_FA_ARROWS_ROTATE 				"\xef\x80\xa1" U+f021
 				0xe4ba, 0xe4ba, -- ICON_FA_ARROWS_LEFT_RIGHT_TO_LINE	"\xee\x92\xba" U+e4ba
 		}}
-	elseif platform.os == "macos" then
-		imgui.FontAtlasAddFont {
-			SystemFont = "华文细黑",
-			SizePixels = 18,
-			GlyphRanges = { 0x0020, 0xFFFF }
-		}
-	else -- iOS
-		imgui.FontAtlasAddFont {
-			SystemFont = "Heiti SC",
-			SizePixels = 18,
-			GlyphRanges = { 0x0020, 0xFFFF }
-		}
-	end
-	imgui.FontAtlasBuild()
 end
 
 function m:init()
