@@ -154,13 +154,9 @@ function shadow_sys:entity_remove()
 	end
 end
 
-local function merge_visible_bounding(M, aabb, obj, bounding, queue_index)
-	if Q.check(obj.visible_idx, queue_index) and mc.NULL ~= bounding.scene_aabb then
-		if M then
-			aabb = math3d.aabb_merge(aabb, math3d.aabb_transform(M, bounding.scene_aabb))
-		else
-			aabb = math3d.aabb_merge(aabb, bounding.scene_aabb)
-		end
+local function merge_visible_bounding(obj, queue_index, aabb, otheraabb)
+	if Q.check(obj.visible_idx, queue_index) then
+		return math3d.aabb_merge(aabb, otheraabb)
 	end
 
 	return aabb
@@ -176,27 +172,35 @@ local hitchobj_statement<const> = "hitch_visible hitch:in bounding:in"
 local RECEIVE_hitchobj_statement<const> = "hitch_visible receive_shadow render_object:in bounding:in"
 local CAST_hitchobj_statement<const>	= "hitch_visible cast_shadow render_object:in bounding:in"
 
-local function build_aabb(queue_index, M, S, H)
+local function build_aabb(queue_index, S, H, aabb_builder)
+	local function merge_aabb(o, b, aabb)
+		local objaabb = aabb_builder(b.scene_aabb)
+		if objaabb ~= mc.NULL then
+			aabb = merge_visible_bounding(o, queue_index, aabb, objaabb)
+		end
+		return aabb
+	end
+
 	local aabb = math3d.aabb()
 	for e in w:select(S) do
-		aabb = merge_visible_bounding(M, aabb, e.render_object, e.bounding, queue_index)
+		aabb = merge_aabb(e.render_object, e.bounding, aabb)
 	end
 
 	for e in w:select(H) do
-		aabb = merge_visible_bounding(M, aabb, e.hitch, e.bounding, queue_index)
+		aabb = merge_aabb(e.hitch, e.bounding, aabb)
 	end
 
 	return aabb
 end
 
-local function build_PSR(queue_index, M)
+local function build_PSR(queue_index, builder)
 	--return build_aabb(queue_index, M, renderobj_statement, hitchobj_statement)
-	return build_aabb(queue_index, M, RECEIVE_renderobj_statement, RECEIVE_hitchobj_statement)
+	return build_aabb(queue_index, RECEIVE_renderobj_statement,	RECEIVE_hitchobj_statement,	builder)
 end
 
-local function build_PSC(queue_index, M)
+local function build_PSC(queue_index, builder)
 	--return build_aabb(queue_index, M, renderobj_statement, hitchobj_statement)
-	return build_aabb(queue_index, M, CAST_renderobj_statement, CAST_hitchobj_statement)
+	return build_aabb(queue_index, CAST_renderobj_statement, CAST_hitchobj_statement, builder)
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
@@ -281,6 +285,29 @@ local function build_box_rays(boxpoints)
 	return rays
 end
 
+local corner_names = {
+	"lbn", "ltn", "rbn", "rtn",
+	"lbf", "ltf", "rbf", "rtf",
+}
+
+local function print_box_points(points, tabnum)
+	assert(math3d.array_size(points) == 8)
+
+
+	local function point_name(pidx, tabnum)
+		return ('\t'):rep(tabnum or 0) .. ("%s: %s"):format(corner_names[pidx], math3d.tostring(math3d.array_index(points, pidx)))
+	end
+
+	local function point_pairs(pidx1, pidx2, tabnum)
+		return ("%s;\t%s"):format(point_name(pidx1, tabnum), point_name(pidx2))
+	end
+	
+	print(point_pairs(1, 5, tabnum))
+	print(point_pairs(2, 6, tabnum))
+	print(point_pairs(3, 7, tabnum))
+	print(point_pairs(4, 8, tabnum))
+end
+
 local function frustum_interset_aabb(M, aabb)
 	local vertices = {}
 
@@ -294,6 +321,9 @@ local function frustum_interset_aabb(M, aabb)
 	end
 
 	local frustumpoints	= math3d.frustum_points(M)
+
+	print "frustum points:"
+	print_box_points(frustumpoints, 1)
 
 	check_point_inside_box(frustumpoints, function (p)
 		return math3d.aabb_test_point(aabb, p) >= 0 end,
@@ -369,7 +399,7 @@ local function calc_focus_matrix(M, vertices)
 
 	local tx, ty = math3d.index(center, 1, 2)
 	-- inverse scale to translation
-	tx, ty = sx * tx, sy * ty
+	tx, ty = -sx * tx, -sy * ty
 
 	return math3d.matrix(
 		sx,  0.0, 0.0, 0.0,
@@ -418,12 +448,35 @@ end
 
 local INV_Z<const> = true
 
-local function build_scene_aabb(Lv)
+local function build_scene_info(Cv, Lv)
 	local mqidx = queuemgr.queue_index "main_queue"
-	local PSRLS	= build_PSR(mqidx, Lv)
-	local PSCLS	= build_PSC(mqidx, Lv)
+	local zn, zf = math.maxinteger, -math.maxinteger
+	local function build_znzf(objaabb)
+		local n, f = mu.aabb_minmax_index(objaabb, 3)
+		zn, zf = math.min(zn, n), math.max(zf, f)
+		return objaabb
+	end
+	local PSR_builder = function (objaabb)
+		build_znzf(math3d.aabb_transform(Cv, objaabb))
+		return objaabb
+	end
 
-	return merge_PSC_and_PSR(PSRLS, PSCLS)
+	local PSC_builder = function (objaabb) return objaabb end
+
+	local PSR	= build_PSR(mqidx, PSR_builder)
+	local PSC	= build_PSC(mqidx, PSC_builder)
+
+	local PSRLS = math3d.aabb_transform(Lv, PSR)
+	local PSCLS = math3d.aabb_transform(Lv, PSC)
+
+	return {
+		sceneaabbLS	= merge_PSC_and_PSR(PSCLS, PSRLS),
+		PSR 		= PSR,
+		PSC			= PSC,
+		--transform PSR to viewspace to calculate the zn/zf may not be a good idea, calculate every aabb zn/zf can make more tighten [zn, zf] range
+		zn			= zn,
+		zf			= zf,
+	}
 end
 
 function shadow_sys:update_camera_depend()
@@ -459,13 +512,13 @@ function shadow_sys:update_camera_depend()
 
 	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
+	local Cv = C.camera.viewmat
+
 	local Lw = math3d.inverse_fast(Lv)
 
-	local sceneaabbLS	= build_scene_aabb(Lv)
-	local sceneaabbWS	= math3d.aabb_transform(sceneaabbLS, Lw)
-	
-	local Cv = C.camera.viewmat
-	local Lv2Vv 		= math3d.mul(Cv, Lw)
+	local si	= build_scene_info(Cv, Lv)
+
+	local Lv2Vv = math3d.mul(Cv, Lw)
 
 	local useLiSPSM = false
 	local Lr
@@ -482,7 +535,7 @@ function shadow_sys:update_camera_depend()
 		{0.5,  1.0},
 	}
 
-	local zn, zf = C.camera.frustum.n, C.camera.frustum.f
+	local zn, zf = math.max(C.camera.frustum.n, si.zn), math.min(C.camera.frustum.f, si.zf)
 
 	--TODO: need get from setting file
 	local nearHit, farHit = 1, 100
@@ -500,17 +553,14 @@ function shadow_sys:update_camera_depend()
 		local Lv2Ndc = math3d.mul(sp, Lv2Vv)
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
 
-		local svp = math3d.mul(sp, Lv)
-		local verticesLS = frustum_interset_aabb(c.Lv2Ndc, sceneaabbLS)
-		local DEBUG_verticesWS = frustum_interset_aabb(svp, sceneaabbWS)
-
+		local verticesLS = frustum_interset_aabb(c.Lv2Ndc, si.sceneaabbLS)
 		local intersectaabb = mc.NULL
 		if mc.NULL ~= verticesLS then
 			intersectaabb = math3d.minmax(verticesLS)
-			local minv, maxv = math3d.array_index(intersectaabb, 1), math3d.array_index(intersectaabb, 2)
-			
-			c.frustum.n, c.frustum.f = math3d.index(minv, 3), math3d.index(maxv, 3)
-			c.DEBUG_verticesWS = M3D(c.DEBUG_verticesWS, DEBUG_verticesWS)	--TODO just debug
+
+			--TODO: need fix, make sure frustum near/far on +z
+			local n, f = mu.aabb_minmax_index(intersectaabb, 3)
+			c.frustum.n, c.frustum.f = 0, f-n
 			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
 		end
 

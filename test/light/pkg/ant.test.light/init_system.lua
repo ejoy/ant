@@ -7,6 +7,7 @@ local bgfx      = require "bgfx"
 local ltask     = require "ltask"
 local irender   = ecs.require "ant.render|render_system.render"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
+local icamera   = ecs.require "ant.camera|camera"
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
 
@@ -157,6 +158,9 @@ end
 function S.init_world()
     local mq = w:first "main_queue camera_ref:in"
     local ce<close> = world:entity(mq.camera_ref, "camera:in")
+    ce.camera.frustum.n, ce.camera.frustum.f = 0.1, 100
+    icamera.set_frustum(ce, ce.camera.frustum)
+
     local eyepos = math3d.vector(0, 5, -5)
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
