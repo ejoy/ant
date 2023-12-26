@@ -61,7 +61,7 @@ function ImGuiEvent.mouse(e)
 end
 
 function ImGuiEvent.mousewheel(e)
-    ImGuiIO.AddMouseWheelEvent(e.delta, e.delta)
+    ImGuiIO.AddMouseWheelEvent(0, e.delta)
     return ImGuiIO.WantCaptureMouse
 end
 
