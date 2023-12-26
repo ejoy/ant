@@ -116,84 +116,70 @@ static int lGetMainViewport(lua_State* L) {
 	return 1;
 }
 
-static int lPairsInputEvents(lua_State* L) {
-	int event_n = (int)luaL_checkinteger(L, 2);
-	ImGuiContext& g = *ImGui::GetCurrentContext();
-	ImGuiIO& io = ImGui::GetIO();
-	for (; event_n < g.InputEventsTrail.Size;++event_n) {
-		const ImGuiInputEvent* e = &g.InputEventsTrail[event_n];
-		switch (e->Type) {
-		case ImGuiInputEventType_MousePos: {
-			if (io.WantCaptureMouse) {
-				break;
-			}
-			ImVec2 event_pos(e->MousePos.PosX, e->MousePos.PosY);
-			if (ImGui::IsMousePosValid(&event_pos))
-				event_pos = ImVec2(ImFloor(event_pos.x), ImFloor(event_pos.y));
-			lua_pushinteger(L, ++event_n);
-			lua_pushstring(L, "MousePos");
-			lua_pushnumber(L, event_pos.x);
-			lua_pushnumber(L, event_pos.y);
-			return 4;
-		}
-		case ImGuiInputEventType_MouseWheel:
-			if (io.WantCaptureMouse) {
-				break;
-			}
-			if (e->MouseWheel.WheelX == 0.0f && e->MouseWheel.WheelY == 0.0f) {
-				break;
-			}
-			lua_pushinteger(L, ++event_n);
-			lua_pushstring(L, "MouseWheel");
-			lua_pushnumber(L, e->MouseWheel.WheelX);
-			lua_pushnumber(L, e->MouseWheel.WheelY);
-			return 4;
-		case ImGuiInputEventType_MouseButton:
-			if (io.WantCaptureMouse) {
-				break;
-			}
-			lua_pushinteger(L, ++event_n);
-			lua_pushstring(L, "MouseButton");
-			lua_pushinteger(L, e->MouseButton.Button);
-			lua_pushinteger(L, e->MouseButton.Down);
-			return 4;
-		case ImGuiInputEventType_Key:
-		{
-			if (io.WantCaptureKeyboard) {
-				break;
-			}
-			auto key = e->Key.Key;
-			// TODO: fix Ctrl+Space bug, if Ctrl release before Space, there is no ImGuiKey_LeftCtrl event.
-			if (key == ImGuiKey_LeftCtrl) {
-				break;
-			}
-			else if (key == ImGuiMod_Ctrl) {
-				key = ImGuiKey_LeftCtrl;
-			}
-			else if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
-				break;
-			}
-			lua_pushinteger(L, ++event_n);
-			lua_pushstring(L, "Key");
-			lua_pushinteger(L, key);
-			lua_pushinteger(L, e->Key.Down);
-			return 4;
-		}
-		case ImGuiInputEventType_MouseViewport:
-		case ImGuiInputEventType_Text:
-		case ImGuiInputEventType_Focus:
-		default:
-			break;
-		}
+static const ImWchar* GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
+	if (strcmp(type, "Default") == 0) {
+		return atlas->GetGlyphRangesDefault();
 	}
-	return 0;
+	if (strcmp(type, "Korean") == 0) {
+		return atlas->GetGlyphRangesKorean();
+	}
+	if (strcmp(type, "Japanese") == 0) {
+		return atlas->GetGlyphRangesJapanese();
+	}
+	if (strcmp(type, "ChineseFull") == 0) {
+		return atlas->GetGlyphRangesChineseFull();
+	}
+	if (strcmp(type, "ChineseSimplifiedCommon") == 0) {
+		return atlas->GetGlyphRangesChineseSimplifiedCommon();
+	}
+	if (strcmp(type, "Cyrillic") == 0) {
+		return atlas->GetGlyphRangesCyrillic();
+	}
+	if (strcmp(type, "Thai") == 0) {
+		return atlas->GetGlyphRangesThai();
+	}
+	if (strcmp(type, "Vietnamese") == 0) {
+		return atlas->GetGlyphRangesVietnamese();
+	}
+	return (const ImWchar*)type;
 }
 
-static int lInputEvents(lua_State* L) {
-	lua_pushcfunction(L, lPairsInputEvents);
-	lua_pushnil(L);
-	lua_pushinteger(L, 0);
-	return 3;
+static void fCreateFont(lua_State *L, int idx, ImFontAtlas* atlas, ImFontConfig* config) {
+	lua_rawgeti(L, idx, 1);
+	lua_rawgeti(L, idx, 2);
+	auto ttf = getmemory(L, lua_absindex(L, -2));
+	lua_Number size = luaL_checknumber(L, -1);
+	const ImWchar* glyphranges = 0;
+	if (LUA_TSTRING == lua_rawgeti(L, idx, 3)) {
+		glyphranges = GetGlyphRanges(atlas, luaL_checkstring(L, -1));
+	}
+	atlas->AddFontFromMemoryTTF((void*)ttf.data(), (int)ttf.size(), (float)size, config, glyphranges);
+	lua_pop(L, 3);
+}
+
+static int fCreate(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+	atlas->Clear();
+
+	ImFontConfig config;
+	config.FontDataOwnedByAtlas = false;
+
+	lua_Integer in = luaL_len(L, 1);
+	for (lua_Integer i = 1; i <= in; ++i) {
+		lua_rawgeti(L, 1, i);
+		luaL_checktype(L, -1, LUA_TTABLE);
+		config.MergeMode = (i != 1);
+		fCreateFont(L, lua_absindex(L, -1), atlas, &config);
+		lua_pop(L, 1);
+	}
+
+	if (!atlas->Build()) {
+		luaL_error(L, "Create font failed.");
+		return 0;
+	}
+	rendererBuildFont();
+	return 0;
 }
 
 static ImGuiCond
@@ -2723,93 +2709,6 @@ uSaveIniSettings(lua_State *L) {
 }
 
 static int
-fPush(lua_State *L) {
-	lua_Integer id = luaL_checkinteger(L, 1);
-	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
-	if (id <= 0 || id > atlas->Fonts.Size) {
-		luaL_error(L, "Invalid font ID.");
-		return 0;
-	}
-	ImGui::PushFont(atlas->Fonts[int(id - 1)]);
-	return 0;
-}
-
-static int
-fPop(lua_State *L) {
-	ImGui::PopFont();
-	return 0;
-}
-
-static const ImWchar*
-GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
-	if (strcmp(type, "Default") == 0) {
-		return atlas->GetGlyphRangesDefault();
-	}
-	if (strcmp(type, "Korean") == 0) {
-		return atlas->GetGlyphRangesKorean();
-	}
-	if (strcmp(type, "Japanese") == 0) {
-		return atlas->GetGlyphRangesJapanese();
-	}
-	if (strcmp(type, "ChineseFull") == 0) {
-		return atlas->GetGlyphRangesChineseFull();
-	}
-	if (strcmp(type, "ChineseSimplifiedCommon") == 0) {
-		return atlas->GetGlyphRangesChineseSimplifiedCommon();
-	}
-	if (strcmp(type, "Cyrillic") == 0) {
-		return atlas->GetGlyphRangesCyrillic();
-	}
-	if (strcmp(type, "Thai") == 0) {
-		return atlas->GetGlyphRangesThai();
-	}
-	if (strcmp(type, "Vietnamese") == 0) {
-		return atlas->GetGlyphRangesVietnamese();
-	}
-	return (const ImWchar*)type;
-}
-
-static void
-fCreateFont(lua_State *L, int idx, ImFontAtlas* atlas, ImFontConfig* config) {
-	lua_rawgeti(L, idx, 1);
-	lua_rawgeti(L, idx, 2);
-	auto ttf = getmemory(L, lua_absindex(L, -2));
-	lua_Number size = luaL_checknumber(L, -1);
-	const ImWchar* glyphranges = 0;
-	if (LUA_TSTRING == lua_rawgeti(L, idx, 3)) {
-		glyphranges = GetGlyphRanges(atlas, luaL_checkstring(L, -1));
-	}
-	atlas->AddFontFromMemoryTTF((void*)ttf.data(), (int)ttf.size(), (float)size, config, glyphranges);
-	lua_pop(L, 3);
-}
-
-static int
-fCreate(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
-	atlas->Clear();
-
-	ImFontConfig config;
-	config.FontDataOwnedByAtlas = false;
-
-	lua_Integer in = luaL_len(L, 1);
-	for (lua_Integer i = 1; i <= in; ++i) {
-		lua_rawgeti(L, 1, i);
-		luaL_checktype(L, -1, LUA_TTABLE);
-		config.MergeMode = (i != 1);
-		fCreateFont(L, lua_absindex(L, -1), atlas, &config);
-		lua_pop(L, 1);
-	}
-
-	if (!atlas->Build()) {
-		luaL_error(L, "Create font failed.");
-		return 0;
-	}
-	rendererBuildFont();
-	return 0;
-}
-
-static int
 uSetNextFrameWantCaptureKeyboard(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
@@ -3227,11 +3126,18 @@ luaopen_imgui(lua_State *L) {
 		{ "SetWindowPos", lSetWindowPos },
 		{ "SetWindowTitle", lSetWindowTitle },
 		{ "GetMainViewport", lGetMainViewport },
-		{ "InputEvents", lInputEvents },
 		{ "memory", lmemory },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+
+	luaL_Reg font[] = {
+		{ "Create", fCreate },
+		{ "SystemFont", ImGuiSystemFont },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, font);
+	lua_setfield(L, -2, "font");
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },
@@ -3467,20 +3373,8 @@ luaopen_imgui(lua_State *L) {
 		{ "SetClipboardText", cSetClipboardText },
 		{ NULL, NULL },
 	};
-
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
-
-	luaL_Reg font[] = {
-		{ "Push", fPush },
-		{ "Pop", fPop },
-		{ "Create", fCreate },
-		{ "SystemFont", ImGuiSystemFont },
-		{ NULL, NULL },
-	};
-
-	luaL_newlib(L, font);
-	lua_setfield(L, -2, "font");
 
 	luaL_Reg deprecated[] = {
 		{ "Columns", cColumns },
