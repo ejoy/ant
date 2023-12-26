@@ -5,21 +5,17 @@ local w = world.w
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
 local assetmgr      = import_package "ant.asset"
-local aio           = import_package "ant.io"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
 local iani          = ecs.require "ant.anim_ctrl|state_machine"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
-local imgui         = require "imgui"
+local imgui         = import_package "ant.imgui"
 local bfs 			= require "bee.filesystem"
 local global_data	= require "common.global_data"
 local icons         = require "common.icons"
 local platform      = require "bee.platform"
-local font          = imgui.font
-local Font          = imgui.font.SystemFont
 local math3d        = require "math3d"
-local fastio        = require "fastio"
 local fmod 			= require "fmod"
 local log_widget        = require "widget.log"
 local console_widget    = require "widget.console"
@@ -33,16 +29,6 @@ local function LoadImguiLayout(filename)
         rf:close()
         imgui.util.LoadIniSettings(setting)
     end
-end
-
-local function glyphRanges(t)
-	assert(#t % 2 == 0)
-	local s = {}
-	for i = 1, #t do
-		s[#s+1] = ("<I4"):pack(t[i])
-	end
-	s[#s+1] = "\x00\x00\x00"
-	return table.concat(s)
 end
 
 local function start_fileserver(luaexe, path)
@@ -62,12 +48,22 @@ local function start_fileserver(luaexe, path)
 end
 
 local function init_font()
+	imgui.FontAtlasClear()
 	if platform.os == "windows" then
-		local fafontdata = aio.readall("/pkg/tools.editor/res/fonts/fa-solid-900.ttf")
-        font.Create {
-            { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
-            { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
-			{ fafontdata, 16, glyphRanges {
+		imgui.FontAtlasAddFont {
+			SystemFont = "Segoe UI Emoji",
+			SizePixels = 18,
+			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
+		}
+		imgui.FontAtlasAddFont {
+			SystemFont = "黑体",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+		imgui.FontAtlasAddFont {
+			FontPath = "/pkg/tools.editor/res/fonts/fa-solid-900.ttf",
+			SizePixels = 16,
+			GlyphRanges = {
 				0xf062, 0xf062, -- ICON_FA_ARROW_UP 			"\xef\x81\xa2"	U+f062
 				0xf063, 0xf063,	-- ICON_FA_ARROW_DOWN 			"\xef\x81\xa3"	U+f063
 				0xf0c7, 0xf0c7,	-- ICON_FA_FLOPPY_DISK 			"\xef\x83\x87"	U+f0c7
@@ -119,13 +115,21 @@ local function init_font()
 				0xf047, 0xf047, -- ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT	"\xef\x81\x87" U+f047
 				0xf021, 0xf021, -- ICON_FA_ARROWS_ROTATE 				"\xef\x80\xa1" U+f021
 				0xe4ba, 0xe4ba, -- ICON_FA_ARROWS_LEFT_RIGHT_TO_LINE	"\xee\x92\xba" U+e4ba
-			}},
-        }
-    elseif platform.os == "macos" then
-        font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
-    else -- iOS
-        font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
-    end
+		}}
+	elseif platform.os == "macos" then
+		imgui.FontAtlasAddFont {
+			SystemFont = "华文细黑",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+	else -- iOS
+		imgui.FontAtlasAddFont {
+			SystemFont = "Heiti SC",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+	end
+	imgui.FontAtlasBuild()
 end
 
 function m:init()

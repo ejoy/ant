@@ -1,9 +1,7 @@
 local ecs = ...
-local world = ecs.world
-local w = world.w
 
-local imgui = require "imgui"
 local platform = require "bee.platform"
+local imgui = import_package "ant.imgui"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
 local inputmgr = import_package "ant.inputmgr"
@@ -34,30 +32,33 @@ function m:init()
 		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
 		viewIdPool = { viewId },
 	}
-
-	local Font = imgui.font.SystemFont
-	local function glyphRanges(t)
-		assert(#t % 2 == 0)
-		local s = {}
-		for i = 1, #t do
-			s[#s+1] = ("<I4"):pack(t[i])
-		end
-		s[#s+1] = "\x00\x00\x00"
-		return table.concat(s)
-	end
+	imgui.FontAtlasClear()
 	if platform.os == "windows" then
-		imgui.font.Create {
-			{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
-			{ Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
+		imgui.FontAtlasAddFont {
+			SystemFont = "Segoe UI Emoji",
+			SizePixels = 18,
+			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
+		}
+		imgui.FontAtlasAddFont {
+			SystemFont = "黑体",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
 		}
 	elseif platform.os == "macos" then
-		imgui.font.Create { { Font "苹方-简" , 18, glyphRanges { 0x0020, 0xFFFF }} }
-	elseif platform.os == "ios" then
-		imgui.font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
-	else
-		error("unknown os:" .. platform.os)
+		imgui.FontAtlasAddFont {
+			SystemFont = "华文细黑",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+	else -- iOS
+		imgui.FontAtlasAddFont {
+			SystemFont = "Heiti SC",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
 	end
-    inputmgr:enable_imgui()
+	imgui.FontAtlasBuild()
+	inputmgr:enable_imgui()
 end
 
 function m:exit()

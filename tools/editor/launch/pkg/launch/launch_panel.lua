@@ -1,43 +1,47 @@
-local imgui     = require "imgui"
 local bgfx      = require "bgfx"
 local vfs       = require "vfs"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
-local fastio    = require "fastio"
 local subprocess = require "bee.subprocess"
-local aio = import_package "ant.io"
+local imgui = import_package "ant.imgui"
 
 local editor_setting    = require "editor_setting"
 local function init()
     local platform    = require "bee.platform"
-    local Font        = imgui.font.SystemFont
-    local function glyphRanges(t)
-        assert(#t % 2 == 0)
-        local s = {}
-        for i = 1, #t do
-            s[#s+1] = ("<I4"):pack(t[i])
-        end
-        s[#s+1] = "\x00\x00\x00"
-        return table.concat(s)
-    end
-    if platform.os == "windows" then
-        local fafontdata = fastio.readall_s((lfs.current_path() / "tools/editor"):string() .. "/pkg/tools.editor/res/fonts/fa-solid-900.ttf")
-        imgui.font.Create {
-            { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
-            { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
-            { fafontdata, 16, glyphRanges {
+	imgui.FontAtlasClear()
+	if platform.os == "windows" then
+		imgui.FontAtlasAddFont {
+			SystemFont = "Segoe UI Emoji",
+			SizePixels = 18,
+			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
+		}
+		imgui.FontAtlasAddFont {
+			SystemFont = "黑体",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+		imgui.FontAtlasAddFont {
+			FontPath = "/pkg/tools.editor/res/fonts/fa-solid-900.ttf",
+			SizePixels = 16,
+			GlyphRanges = {
 				0xf05e, 0xf05e, -- ICON_FA_BAN 					"\xef\x81\x9e"	U+f05e
 				0xf07c, 0xf07c, -- ICON_FA_FOLDER_OPEN 			"\xef\x81\xbc"	U+f07c
 				0xf65e, 0xf65e, -- ICON_FA_FOLDER_PLUS 			"\xef\x99\x9e"	U+f65e
-			}},
-        }
-    elseif platform.os == "macos" then
-        imgui.font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
-    elseif platform.os == "ios" then
-        imgui.font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
-    else
-        error("unknown os:" .. platform.os)
-    end
+		}}
+	elseif platform.os == "macos" then
+		imgui.FontAtlasAddFont {
+			SystemFont = "华文细黑",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+	else -- iOS
+		imgui.FontAtlasAddFont {
+			SystemFont = "Heiti SC",
+			SizePixels = 18,
+			GlyphRanges = { 0x0020, 0xFFFF }
+		}
+	end
+	imgui.FontAtlasBuild()
     local rf = io.open(lfs.path(vfs.repopath()):string().. "/pkg/launch/imgui.layout", "rb")
     if rf then
         local setting = rf:read "a"

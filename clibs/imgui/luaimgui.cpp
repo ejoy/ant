@@ -50,138 +50,6 @@ static Flags lua_getflags(lua_State* L, int idx, Flags def) {
 	return (Flags)luaL_optinteger(L, idx, lua_Integer(def));
 }
 
-static int dSpace(lua_State* L) {
-	const char* str_id = luaL_checkstring(L, 1);
-	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
-	float w = (float)luaL_optnumber(L, 3, 0);
-	float h = (float)luaL_optnumber(L, 4, 0);
-	ImGui::DockSpace(ImGui::GetID(str_id), ImVec2(w, h), flags);
-	return 0;
-}
-
-static int dBuilderGetCentralRect(lua_State * L) {
-	const char* str_id = luaL_checkstring(L, 1);
-	ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
-	lua_pushnumber(L, central_node->Pos.x);
-	lua_pushnumber(L, central_node->Pos.y);
-	lua_pushnumber(L, central_node->Size.x);
-	lua_pushnumber(L, central_node->Size.y);
-	return 4;
-}
-
-static int lGetMainViewport(lua_State* L) {
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	lua_newtable(L);
-
-	lua_pushinteger(L, viewport->ID);
-	lua_setfield(L, -2, "ID");
-
-	lua_pushlightuserdata(L, viewport->PlatformHandle);
-	lua_setfield(L, -2, "PlatformHandle");
-
-	lua_newtable(L);
-	lua_pushnumber(L, viewport->WorkPos.x);
-	lua_seti(L, -2, 1);
-	lua_pushnumber(L, viewport->WorkPos.y);
-	lua_seti(L, -2, 2);
-	lua_setfield(L, -2, "WorkPos");
-
-	lua_newtable(L);
-	lua_pushnumber(L, viewport->WorkSize.x);
-	lua_seti(L, -2, 1);
-	lua_pushnumber(L, viewport->WorkSize.y);
-	lua_seti(L, -2, 2);
-	lua_setfield(L, -2, "WorkSize");
-
-	// main area position
-	lua_newtable(L);
-	lua_pushnumber(L, viewport->Pos.x);
-	lua_seti(L, -2, 1);
-	lua_pushnumber(L, viewport->Pos.y);
-	lua_seti(L, -2, 2);
-	lua_setfield(L, -2, "MainPos");
-
-	// main area size
-	lua_newtable(L);
-	lua_pushnumber(L, viewport->Size.x);
-	lua_seti(L, -2, 1);
-	lua_pushnumber(L, viewport->Size.y);
-	lua_seti(L, -2, 2);
-	lua_setfield(L, -2, "MainSize");
-
-	// main dpi scale
-	lua_pushnumber(L, viewport->DpiScale);
-	lua_setfield(L, -2, "DpiScale");
-
-	return 1;
-}
-
-static const ImWchar* GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
-	if (strcmp(type, "Default") == 0) {
-		return atlas->GetGlyphRangesDefault();
-	}
-	if (strcmp(type, "Korean") == 0) {
-		return atlas->GetGlyphRangesKorean();
-	}
-	if (strcmp(type, "Japanese") == 0) {
-		return atlas->GetGlyphRangesJapanese();
-	}
-	if (strcmp(type, "ChineseFull") == 0) {
-		return atlas->GetGlyphRangesChineseFull();
-	}
-	if (strcmp(type, "ChineseSimplifiedCommon") == 0) {
-		return atlas->GetGlyphRangesChineseSimplifiedCommon();
-	}
-	if (strcmp(type, "Cyrillic") == 0) {
-		return atlas->GetGlyphRangesCyrillic();
-	}
-	if (strcmp(type, "Thai") == 0) {
-		return atlas->GetGlyphRangesThai();
-	}
-	if (strcmp(type, "Vietnamese") == 0) {
-		return atlas->GetGlyphRangesVietnamese();
-	}
-	return (const ImWchar*)type;
-}
-
-static void fCreateFont(lua_State *L, int idx, ImFontAtlas* atlas, ImFontConfig* config) {
-	lua_rawgeti(L, idx, 1);
-	lua_rawgeti(L, idx, 2);
-	auto ttf = getmemory(L, lua_absindex(L, -2));
-	lua_Number size = luaL_checknumber(L, -1);
-	const ImWchar* glyphranges = 0;
-	if (LUA_TSTRING == lua_rawgeti(L, idx, 3)) {
-		glyphranges = GetGlyphRanges(atlas, luaL_checkstring(L, -1));
-	}
-	atlas->AddFontFromMemoryTTF((void*)ttf.data(), (int)ttf.size(), (float)size, config, glyphranges);
-	lua_pop(L, 3);
-}
-
-static int fCreate(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
-	atlas->Clear();
-
-	ImFontConfig config;
-	config.FontDataOwnedByAtlas = false;
-
-	lua_Integer in = luaL_len(L, 1);
-	for (lua_Integer i = 1; i <= in; ++i) {
-		lua_rawgeti(L, 1, i);
-		luaL_checktype(L, -1, LUA_TTABLE);
-		config.MergeMode = (i != 1);
-		fCreateFont(L, lua_absindex(L, -1), atlas, &config);
-		lua_pop(L, 1);
-	}
-
-	if (!atlas->Build()) {
-		luaL_error(L, "Create font failed.");
-		return 0;
-	}
-	rendererBuildFont();
-	return 0;
-}
-
 static ImGuiCond
 get_cond(lua_State *L, int index) {
 	int t = lua_type(L, index);
@@ -473,6 +341,134 @@ read_field_vec4(lua_State *L, const char *field, ImVec4 def_val, int tidx = INDE
 	return def_val;
 }
 
+
+static int dSpace(lua_State* L) {
+	const char* str_id = luaL_checkstring(L, 1);
+	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
+	float w = (float)luaL_optnumber(L, 3, 0);
+	float h = (float)luaL_optnumber(L, 4, 0);
+	ImGui::DockSpace(ImGui::GetID(str_id), ImVec2(w, h), flags);
+	return 0;
+}
+
+static int dBuilderGetCentralRect(lua_State * L) {
+	const char* str_id = luaL_checkstring(L, 1);
+	ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
+	lua_pushnumber(L, central_node->Pos.x);
+	lua_pushnumber(L, central_node->Pos.y);
+	lua_pushnumber(L, central_node->Size.x);
+	lua_pushnumber(L, central_node->Size.y);
+	return 4;
+}
+
+static int lGetMainViewport(lua_State* L) {
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	lua_newtable(L);
+
+	lua_pushinteger(L, viewport->ID);
+	lua_setfield(L, -2, "ID");
+
+	lua_pushlightuserdata(L, viewport->PlatformHandle);
+	lua_setfield(L, -2, "PlatformHandle");
+
+	lua_newtable(L);
+	lua_pushnumber(L, viewport->WorkPos.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, viewport->WorkPos.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "WorkPos");
+
+	lua_newtable(L);
+	lua_pushnumber(L, viewport->WorkSize.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, viewport->WorkSize.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "WorkSize");
+
+	// main area position
+	lua_newtable(L);
+	lua_pushnumber(L, viewport->Pos.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, viewport->Pos.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "MainPos");
+
+	// main area size
+	lua_newtable(L);
+	lua_pushnumber(L, viewport->Size.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, viewport->Size.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "MainSize");
+
+	// main dpi scale
+	lua_pushnumber(L, viewport->DpiScale);
+	lua_setfield(L, -2, "DpiScale");
+
+	return 1;
+}
+
+static const ImWchar* GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
+	if (!type) {
+		return nullptr;
+	}
+	if (strcmp(type, "Default") == 0) {
+		return atlas->GetGlyphRangesDefault();
+	}
+	if (strcmp(type, "Korean") == 0) {
+		return atlas->GetGlyphRangesKorean();
+	}
+	if (strcmp(type, "Japanese") == 0) {
+		return atlas->GetGlyphRangesJapanese();
+	}
+	if (strcmp(type, "ChineseFull") == 0) {
+		return atlas->GetGlyphRangesChineseFull();
+	}
+	if (strcmp(type, "ChineseSimplifiedCommon") == 0) {
+		return atlas->GetGlyphRangesChineseSimplifiedCommon();
+	}
+	if (strcmp(type, "Cyrillic") == 0) {
+		return atlas->GetGlyphRangesCyrillic();
+	}
+	if (strcmp(type, "Thai") == 0) {
+		return atlas->GetGlyphRangesThai();
+	}
+	if (strcmp(type, "Vietnamese") == 0) {
+		return atlas->GetGlyphRangesVietnamese();
+	}
+	return (const ImWchar*)type;
+}
+
+static int lInitFont(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+	atlas->Clear();
+
+	lua_Integer n = luaL_len(L, 1);
+	for (lua_Integer i = 1; i <= n; ++i) {
+		lua_rawgeti(L, 1, i);
+		luaL_checktype(L, -1, LUA_TTABLE);
+		int idx = lua_absindex(L, -1);
+		lua_getfield(L, idx, "FontData");
+		auto ttf = getmemory(L, lua_absindex(L, -1));
+		ImFontConfig config;
+		config.MergeMode = (i != 1);
+		config.FontData = (void*)ttf.data();
+		config.FontDataSize = (int)ttf.size();
+		config.FontDataOwnedByAtlas = false;
+		config.SizePixels = read_field_checkfloat(L, "SizePixels", idx);
+		config.GlyphRanges = GetGlyphRanges(atlas, read_field_string(L, "GlyphRanges", nullptr, idx));
+		atlas->AddFont(&config);
+		lua_pop(L, 2);
+	}
+
+	if (!atlas->Build()) {
+		luaL_error(L, "Create font failed.");
+		return 0;
+	}
+	rendererBuildFont();
+	return 0;
+}
 
 static bool
 drag_float(lua_State *L, const char *label, int n) {
@@ -3126,18 +3122,12 @@ luaopen_imgui(lua_State *L) {
 		{ "SetWindowPos", lSetWindowPos },
 		{ "SetWindowTitle", lSetWindowTitle },
 		{ "GetMainViewport", lGetMainViewport },
+		{ "InitFont", lInitFont },
+		{ "GetSystemFont", ImGuiSystemFont },
 		{ "memory", lmemory },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
-
-	luaL_Reg font[] = {
-		{ "Create", fCreate },
-		{ "SystemFont", ImGuiSystemFont },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, font);
-	lua_setfield(L, -2, "font");
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },
