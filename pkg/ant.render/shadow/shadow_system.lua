@@ -469,10 +469,15 @@ local function build_scene_info(Cv, Lv)
 	local PSRLS = math3d.aabb_transform(Lv, PSR)
 	local PSCLS = math3d.aabb_transform(Lv, PSC)
 
+	local PSC_nearLS = mu.aabb_minmax_index(PSCLS, 3)
+	local PSR_nearLS, PSR_farLS = mu.aabb_minmax_index(PSRLS, 3)
+
 	return {
 		sceneaabbLS	= merge_PSC_and_PSR(PSCLS, PSRLS),
 		PSR 		= PSR,
 		PSC			= PSC,
+		PSC_nearLS	= PSC_nearLS,
+		PSR_farLS	= PSR_farLS,
 		--transform PSR to viewspace to calculate the zn/zf may not be a good idea, calculate every aabb zn/zf can make more tighten [zn, zf] range
 		zn			= zn,
 		zf			= zf,
@@ -560,7 +565,15 @@ function shadow_sys:update_camera_depend()
 
 			--TODO: need fix, make sure frustum near/far on +z
 			local n, f = mu.aabb_minmax_index(intersectaabb, 3)
-			c.frustum.n, c.frustum.f = 0, f-n
+			local eyepos = math3d.transform(Lw, math3d.vector(0.0, 0.0, n, 1), 1)
+
+			Lv = math3d.lookto(eyepos, lightdirWS, rightdir)
+			Lw = math3d.inverse_fast(Lv)
+			
+			--si.PSC_nearLS and si.PSR_farLS are calculate from Lv in origin(0.0, 0.0, 0.0),
+			--but we need to translate eyepos to light space point (0.0, 0.0, n)
+			--translate these two value si.PSC_nearLS/si.PSR_farLS to new eyepos is just -n
+			c.frustum.n, c.frustum.f = math.min(0.0, si.PSC_nearLS-n), math.max(f-n, si.PSR_farLS-n)
 			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
 		end
 
