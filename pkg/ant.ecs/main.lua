@@ -525,10 +525,16 @@ local function system_changed(w)
     if not w._system_changed then
         return
     end
-    log.info("System changed.")
-    local updatesystems = w._updatesystems
     local initsystems = w._initsystems
     local exitsystems = w._exitsystems
+    local has_initsystem = next(initsystems) ~= nil
+    local has_exitsystem = next(exitsystems) ~= nil
+    if not has_initsystem and not has_exitsystem then
+        w._system_changed = nil
+        return
+    end
+    log.info("System changed.")
+    local updatesystems = w._updatesystems
     w._system_changed = nil
     w._initsystems = {}
     w._exitsystems = {}
@@ -542,14 +548,14 @@ local function system_changed(w)
     w:pipeline_func "_pipeline" ()
     w._pipeline_entity_init = w:pipeline_func "_entity_init"
     w._pipeline_update = w:pipeline_func "_update"
-    if next(exitsystems) ~= nil then
+    if has_exitsystem then
         for name in pairs(exitsystems) do
             updatesystems[name] = nil
         end
         local func = w:pipeline_func("_exit", slove_system(exitsystems))
         func()
     end
-    if next(initsystems) ~= nil then
+    if has_initsystem then
         for name, s in pairs(initsystems) do
             updatesystems[name] = s
         end
@@ -627,18 +633,22 @@ end
 function world:enable_system(name)
     local s = self._systems[name]
     if s then
-        self._initsystems[name] = s
+        if not self._updatesystems[name] then
+            self._initsystems[name] = s
+            self._system_changed = true
+        end
         self._exitsystems[name] = nil
-        self._system_changed = true
     end
 end
 
 function world:disable_system(name)
     local s = self._systems[name]
     if s then
+        if self._updatesystems[name] then
+            self._exitsystems[name] = s
+            self._system_changed = true
+        end
         self._initsystems[name] = nil
-        self._exitsystems[name] = s
-        self._system_changed = true
     end
 end
 
