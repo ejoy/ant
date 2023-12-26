@@ -526,21 +526,33 @@ local function system_changed(w)
         return
     end
     log.info("System changed.")
-    local systems = w._systems
+    local updatesystems = w._updatesystems
     local initsystems = w._initsystems
     local exitsystems = w._exitsystems
     w._system_changed = nil
     w._initsystems = {}
     w._exitsystems = {}
-    w._system_step = slove_system(systems)
+    for name in pairs(exitsystems) do
+        updatesystems[name] = nil
+    end
+    for name, s in pairs(initsystems) do
+        updatesystems[name] = s
+    end
+    w._system_step = slove_system(updatesystems)
     w:pipeline_func "_pipeline" ()
     w._pipeline_entity_init = w:pipeline_func "_entity_init"
     w._pipeline_update = w:pipeline_func "_update"
     if next(exitsystems) ~= nil then
+        for name in pairs(exitsystems) do
+            updatesystems[name] = nil
+        end
         local func = w:pipeline_func("_exit", slove_system(exitsystems))
         func()
     end
     if next(initsystems) ~= nil then
+        for name, s in pairs(initsystems) do
+            updatesystems[name] = s
+        end
         initsystems["ant.ecs|entity_init_system"] = w._systems["ant.ecs|entity_init_system"]
         local step = slove_system(initsystems)
         w:pipeline_func("_init", step)()
@@ -612,10 +624,22 @@ function world:import_feature(name)
     feature.import(self, { name })
 end
 
-function world:exit_system(name)
-    self._exitsystems[name] = self._systems[name]
-    self._systems[name] = nil
-    self._system_changed = true
+function world:enable_system(name)
+    local s = self._systems[name]
+    if s then
+        self._initsystems[name] = s
+        self._exitsystems[name] = nil
+        self._system_changed = true
+    end
+end
+
+function world:disable_system(name)
+    local s = self._systems[name]
+    if s then
+        self._initsystems[name] = nil
+        self._exitsystems[name] = s
+        self._system_changed = true
+    end
 end
 
 local m = {}
@@ -645,6 +669,7 @@ function m.new_world(config)
         _systems = {},
         _initsystems = {},
         _exitsystems = {},
+        _updatesystems = {},
         _system_step = {},
         _system_changed = nil,
         _decl = {
