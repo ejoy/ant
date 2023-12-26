@@ -2,9 +2,13 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local math3d= require "math3d"
-local grid_sys = ecs.system "grid_system"
+local common = ecs.require "common"
+local math3d = require "math3d"
 local igrid = ecs.require "ant.grid|grid"
+
+local grid_sys = common.test_system "grid"
+
+local entities = {}
 
 local function create_grid_entity()
     local grid_width, grid_height = 100, 100 -- [1, ...] 100 x 100
@@ -14,10 +18,17 @@ local function create_grid_entity()
     }
     local color = {1.0, 0.0, 0.0, 1.0} -- default {1.0, 1.0, 1.0, 1.0}
     local render_layer = "translucent" -- default "translucent"
-    igrid.create_grid_entity(grid_width, grid_height, line_width_scale, line_height_scale, srt, color, render_layer)
+    local eid = igrid.create_grid_entity(grid_width, grid_height, line_width_scale, line_height_scale, srt, color, render_layer)
+    entities[#entities+1] = eid
 end
 
 function grid_sys:init_world()
     create_grid_entity()
 end
 
+function grid_sys:exit()
+    for _, eid in ipairs(entities) do
+        world:remove_entity(eid)
+    end
+    entities = {}
+end
