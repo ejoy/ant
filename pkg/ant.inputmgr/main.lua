@@ -1,7 +1,6 @@
 local platform = require "bee.platform"
 local ltask = require "ltask"
 local ImGui = require "imgui"
-local ImGuiIO = ImGui.io
 
 local keymap = {}
 
@@ -105,62 +104,9 @@ local function create(world)
     return event
 end
 
-local ImGuiEvent = {}
-
-function ImGuiEvent.mouse(e)
-    local btn = 0
-    if e.what == "LEFT" then
-        btn = 0
-    elseif e.what == "RIGHT" then
-        btn = 1
-    elseif e.what == "MIDDLE" then
-        btn = 2
-    end
-    if e.state == "DOWN" then
-        ImGuiIO.AddMouseButtonEvent(btn, true)
-    elseif e.state == "UP" then
-        ImGuiIO.AddMouseButtonEvent(btn, false)
-    end
-    return ImGuiIO.WantCaptureMouse
-end
-
-function ImGuiEvent.mousewheel(e)
-    ImGuiIO.AddMouseWheelEvent(e.delta, e.delta)
-    return ImGuiIO.WantCaptureMouse
-end
-
-function ImGuiEvent.keyboard(e)
-    if e.press == 1 then
-        ImGuiIO.AddKeyEvent(e.key, true);
-    elseif e.press == 0 then
-        ImGuiIO.AddKeyEvent(e.key, false);
-    end
-    return ImGuiIO.WantCaptureKeyboard
-end
-
-function ImGuiEvent.inputchar(e)
-    if e.what == "native" then
-        ImGuiIO.AddInputCharacter(e.code)
-    elseif e.what == "utf16" then
-        ImGuiIO.AddInputCharacterUTF16(e.code)
-    end
-end
-
-function ImGuiEvent.focus(e)
-    ImGuiIO.AddFocusEvent(e.focused)
-end
-
 local world = {}
 
 function world:dispatch_message(e)
-    if self._enable_imgui then
-        local func = ImGuiEvent[e.type]
-        if func then
-            if func(e) then
-                return
-            end
-        end
-    end
     local func = self._inputmgr[e.type]
     if func then
         func(e)
@@ -176,6 +122,7 @@ end
 
 function m:enable_imgui()
     self._enable_imgui = true
+    ImGui = import_package "ant.imgui"
 end
 
 function m:filter_imgui(from, to)
@@ -189,8 +136,7 @@ function m:filter_imgui(from, to)
     end
     for i = 1, #from do
         local e = from[i]
-        local func = ImGuiEvent[e.type]
-        if not func or not func(e) then
+        if not ImGui.DispatchEvent(e) then
             to[#to+1] = e
         end
         from[i] = nil
