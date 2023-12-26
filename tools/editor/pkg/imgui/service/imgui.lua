@@ -139,6 +139,7 @@ ltask.fork(function ()
 		WindowDispatch()
 		imgui.NewFrame()
 		update_size()
+		world:dispatch_message { type = "update" }
         world:pipeline_update()
         imgui.Render()
         bgfx.encoder_end()

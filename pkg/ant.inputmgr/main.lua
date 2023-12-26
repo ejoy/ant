@@ -60,33 +60,48 @@ local function create(world)
     function event.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
+    local size
+    local viewport
+    local sizeChanged = false
+    local viewportChanged = false
     function event.size(e)
-        if not __ANT_EDITOR__ then
-            rmlui_sendmsg("set_viewport", {
-                x = 0,
-                y = 0,
-                w = e.w,
-                h = e.h,
-            })
-        end
-        local fb = world.args.scene
-        fb.width, fb.height = e.w, e.h
-        world:pub {"resize", e.w, e.h}
+        size = e
+        sizeChanged = true
     end
     function event.set_viewport(e)
-        local vp = e.viewport
-        rmlui_sendmsg("set_viewport", {
-            x = vp.x,
-            y = vp.y,
-            w = vp.w,
-            h = vp.h,
-        })
-        local resolution = world.args.scene.resolution
-        local aspect_ratio = resolution.w/resolution.h
-        local mathpkg = import_package "ant.math"
-        local vr = mathpkg.util.get_fix_ratio_scene_viewrect(vp, aspect_ratio, world.args.scene.scene_ratio)
-        world:pub{"scene_viewrect_changed", vp}
-        world:pub{"scene_viewrect_changed", vr}
+        viewport = e.viewport
+        viewportChanged = true
+    end
+    function event.update()
+        if sizeChanged then
+            sizeChanged = false
+            if not viewportChanged then
+                rmlui_sendmsg("set_viewport", {
+                    x = 0,
+                    y = 0,
+                    w = size.w,
+                    h = size.h,
+                })
+                local fb = world.args.scene
+                fb.width, fb.height = size.w, size.h
+                world:pub {"resize", size.w, size.h}
+            end
+        end
+        if viewportChanged then
+            viewportChanged = false
+            rmlui_sendmsg("set_viewport", {
+                x = viewport.x,
+                y = viewport.y,
+                w = viewport.w,
+                h = viewport.h,
+            })
+            local resolution = world.args.scene.resolution
+            local aspect_ratio = resolution.w/resolution.h
+            local mathpkg = import_package "ant.math"
+            local vr = mathpkg.util.get_fix_ratio_scene_viewrect(viewport, aspect_ratio, world.args.scene.scene_ratio)
+            world:pub{"scene_viewrect_changed", viewport}
+            world:pub{"scene_viewrect_changed", vr}
+        end
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)

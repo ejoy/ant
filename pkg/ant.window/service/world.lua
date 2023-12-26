@@ -96,6 +96,7 @@ local function render(nwh, context, width, height, initialized)
 			reboot(will_reboot)
 			will_reboot = nil
 		end
+		world:dispatch_message { type = "update" }
 		world:pipeline_update()
 		bgfx.encoder_end()
 		encoderBegin = false
