@@ -69,9 +69,7 @@ local function create(world)
                 h = e.h,
             })
         end
-        local fb = world.args.scene
-        fb.width, fb.height = e.w, e.h
-        world:pub {"resize", e.w, e.h}
+        world:pub{"scene_viewrect_changed", e}
     end
     function event.set_viewport(e)
         local vp = e.viewport
@@ -81,12 +79,7 @@ local function create(world)
             w = vp.w,
             h = vp.h,
         })
-        local resolution = world.args.scene.resolution
-        local aspect_ratio = resolution.w/resolution.h
-        local mathpkg = import_package "ant.math"
-        local vr = mathpkg.util.get_fix_ratio_scene_viewrect(vp, aspect_ratio, world.args.scene.scene_ratio)
         world:pub{"scene_viewrect_changed", vp}
-        world:pub{"scene_viewrect_changed", vr}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)
