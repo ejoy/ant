@@ -60,26 +60,40 @@ local function create(world)
     function event.dropfiles(...)
         world:pub {"dropfiles", ...}
     end
+    local size
+    local viewport
+    local sizeChanged = false
+    local viewportChanged = false
     function event.size(e)
-        if not __ANT_EDITOR__ then
-            rmlui_sendmsg("set_viewport", {
-                x = 0,
-                y = 0,
-                w = e.w,
-                h = e.h,
-            })
-        end
-        world:pub{"scene_viewrect_changed", e}
+        size = e
+        sizeChanged = true
     end
     function event.set_viewport(e)
-        local vp = e.viewport
-        rmlui_sendmsg("set_viewport", {
-            x = vp.x,
-            y = vp.y,
-            w = vp.w,
-            h = vp.h,
-        })
-        world:pub{"scene_viewrect_changed", vp}
+        viewport = e.viewport
+        viewportChanged = true
+    end
+    function event.update()
+        if sizeChanged then
+            sizeChanged = false
+            if not viewportChanged then
+                rmlui_sendmsg("set_viewport", {
+                    x = 0,
+                    y = 0,
+                    w = size.w,
+                    h = size.h,
+                })
+            end
+        end
+        if viewportChanged then
+            viewportChanged = false
+            rmlui_sendmsg("set_viewport", {
+                x = viewport.x,
+                y = viewport.y,
+                w = viewport.w,
+                h = viewport.h,
+            })
+            world:pub{"scene_viewrect_changed", viewport}
+        end
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)

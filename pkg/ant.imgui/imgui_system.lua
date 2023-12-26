@@ -9,7 +9,7 @@ local PM = require "programan.client"
 
 local m = ecs.system 'imgui_system'
 
-function m:init()
+function m:init_system()
 	imgui.CreateContext()
 	imgui.io.ConfigFlags = imgui.flags.Config {
 		"NavEnableKeyboard",
@@ -32,7 +32,6 @@ function m:init()
 		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
 		viewIdPool = { viewId },
 	}
-	imgui.FontAtlasClear()
 	if platform.os == "windows" then
 		imgui.FontAtlasAddFont {
 			SystemFont = "Segoe UI Emoji",
@@ -57,8 +56,11 @@ function m:init()
 			GlyphRanges = { 0x0020, 0xFFFF }
 		}
 	end
-	imgui.FontAtlasBuild()
 	inputmgr:enable_imgui()
+end
+
+function m:init_world()
+	imgui.FontAtlasBuild()
 end
 
 function m:exit()

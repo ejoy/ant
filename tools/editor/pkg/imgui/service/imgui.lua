@@ -2,8 +2,6 @@ local initargs = ...
 
 local ltask		= require "ltask"
 local bgfx		= require "bgfx"
-local PM		= require "programan.client"
-local imgui		= require "imgui"
 local assetmgr	= import_package "ant.asset"
 local rhwi		= import_package "ant.hwi"
 local ecs		= import_package "ant.ecs"
@@ -81,15 +79,6 @@ ltask.fork(function ()
 	import_package "ant.hwi".init_bgfx()
     init_width, init_height = initargs.w, initargs.h
 
-	imgui.CreateContext()
-	imgui.io.ConfigFlags = imgui.flags.Config {
-		"NavEnableKeyboard",
-		--"ViewportsEnable",
-		"DockingEnable",
-		"NavNoCaptureKeyboard",
-		"DpiEnableScaleViewports",
-		"DpiEnableScaleFonts",
-	}
 	local nwh = window.init(WindowMessage, ("%dx%d"):format(initargs.w, initargs.h))
 	rhwi.init {
 		nwh = nwh,
@@ -104,23 +93,6 @@ ltask.fork(function ()
     bgfx.encoder_init()
 	assetmgr.init()
     bgfx.encoder_begin()
-
-	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
-	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
-	assetmgr.material_mark(imgui_font.fx.prog)
-	assetmgr.material_mark(imgui_image.fx.prog)
-	imgui.InitPlatform(nwh)
-	local imgui_viewids = {}
-	for i = 1, 16 do
-		imgui_viewids[i] = rhwi.viewid_generate("imgui_eidtor" .. i, "uiruntime")
-	end
-	imgui.InitRender {
-		fontProg = PM.program_get(imgui_font.fx.prog),
-		imageProg = PM.program_get(imgui_image.fx.prog),
-		fontUniform = imgui_font.fx.uniforms.s_tex.handle,
-		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
-		viewIdPool = imgui_viewids,
-	}
 
     world = ecs.new_world {
         name = "editor",
@@ -137,10 +109,9 @@ ltask.fork(function ()
 	inputmgr:enable_imgui()
     while window.peekmessage() do
 		WindowDispatch()
-		imgui.NewFrame()
 		update_size()
+		world:dispatch_message { type = "update" }
         world:pipeline_update()
-        imgui.Render()
         bgfx.encoder_end()
         rhwi.frame()
         exclusive.sleep(1)
@@ -148,9 +119,6 @@ ltask.fork(function ()
         ltask.sleep(0)
     end
 	world:pipeline_exit()
-	imgui.DestroyRenderer()
-	imgui.DestroyPlatform()
-	imgui.DestroyContext()
 	bgfx.encoder_end()
 	bgfx.encoder_destroy()
     rhwi.shutdown()

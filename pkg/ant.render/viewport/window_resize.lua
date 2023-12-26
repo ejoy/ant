@@ -28,30 +28,29 @@ local ratio_change_mb	= world:sub {"framebuffer_ratio_changed"}
 
 local winresize_sys = ecs.system "window_resize_system"
 
-if not __ANT_EDITOR__ then
-	local function winsize_update(s)
-		update_config(world.args, s.w, s.h)
-		rhwi.reset(nil, s.w, s.h)
-		local vp = world.args.device_size
-		local vr = world.args.scene.viewrect
-		log.info("device_size:", vp.x, vp.y, vp.w, vp.h)
-		log.info("main viewrect:", vr.x, vr.y, vr.w, vr.h)
-		world:pub{"scene_viewrect_changed", vr}
+
+local function winsize_update(s)
+	update_config(world.args, s.w, s.h)
+	rhwi.reset(nil, s.w, s.h)
+	local vp = world.args.device_size
+	local vr = world.args.scene.viewrect
+	log.info("device_size:", vp.x, vp.y, vp.w, vp.h)
+	log.info("main viewrect:", vr.x, vr.y, vr.w, vr.h)
+	world:pub{"scene_viewrect_changed", vr}
+end
+
+function winresize_sys:init_world()
+	local vp = world.args.device_size
+	winsize_update({w=vp.w, h=vp.h})
+end
+
+function winresize_sys:start_frame()
+	for _, ww, hh in resize_mb:unpack() do
+		winsize_update({w=ww, h=hh})
 	end
 
-	function winresize_sys:init_world()
-		local vp = world.args.device_size
-		winsize_update({w=vp.w, h=vp.h})
-	end
-
-	function winresize_sys:start_frame()
-		for _, ww, hh in resize_mb:unpack() do
-			winsize_update({w=ww, h=hh})
-		end
-
-		for _, which, ratio in ratio_change_mb:unpack() do
-			local _ = which == "scene_ratio" or error ("Invalid ratio type:" .. which)
-			world:pub{"scene_ratio_changed", ratio}
-		end
+	for _, which, ratio in ratio_change_mb:unpack() do
+		local _ = which == "scene_ratio" or error ("Invalid ratio type:" .. which)
+		world:pub{"scene_ratio_changed", ratio}
 	end
 end
