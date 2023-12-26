@@ -17,7 +17,9 @@ end
 local function create(world)
     local active_gesture = {}
     local function rmlui_sendmsg(...)
-        return ltask.call(ServiceRmlui, ...)
+        if ServiceRmlui then
+            return ltask.call(ServiceRmlui, ...)
+        end
     end
     local event = {}
     function event.gesture(e)
@@ -32,29 +34,23 @@ local function create(world)
                 active_gesture[e.what] = nil
             end
         elseif e.state == "began" then
-            if ServiceRmlui then
-                if rmlui_sendmsg("gesture", e) then
-                    active_gesture[e.what] = "rmlui"
-                    return
-                end
+            if rmlui_sendmsg("gesture", e) then
+                active_gesture[e.what] = "rmlui"
+                return
             end
             world:pub { "gesture", e.what, e }
             active_gesture[e.what] = "world"
         else
             -- assert(m.state == nil)
-            if ServiceRmlui then
-                if rmlui_sendmsg("gesture", e) then
-                    return
-                end
+            if rmlui_sendmsg("gesture", e) then
+                return
             end
             world:pub { "gesture", e.what, e }
         end
     end
     function event.touch(e)
-        if ServiceRmlui then
-            if rmlui_sendmsg("touch", e) then
-                return
-            end
+        if rmlui_sendmsg("touch", e) then
+            return
         end
         world:pub { "touch", e }
     end
@@ -65,7 +61,7 @@ local function create(world)
         world:pub {"dropfiles", ...}
     end
     function event.size(e)
-        if not __ANT_EDITOR__ and ServiceRmlui then
+        if not __ANT_EDITOR__ then
             rmlui_sendmsg("set_viewport", {
                 x = 0,
                 y = 0,
@@ -79,15 +75,18 @@ local function create(world)
     end
     function event.set_viewport(e)
         local vp = e.viewport
-        if ServiceRmlui then
-            rmlui_sendmsg("set_viewport", {
-                x = vp.x,
-                y = vp.y,
-                w = vp.w,
-                h = vp.h,
-            })
-        end
+        rmlui_sendmsg("set_viewport", {
+            x = vp.x,
+            y = vp.y,
+            w = vp.w,
+            h = vp.h,
+        })
+        local resolution = world.args.scene.resolution
+        local aspect_ratio = resolution.w/resolution.h
+        local mathpkg = import_package "ant.math"
+        local vr = mathpkg.util.get_fix_ratio_scene_viewrect(vp, aspect_ratio, world.args.scene.scene_ratio)
         world:pub{"scene_viewrect_changed", vp}
+        world:pub{"scene_viewrect_changed", vr}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)
