@@ -67,10 +67,10 @@ local imgui_font = load_material "/pkg/ant.imgui/materials/font.material"
 local imgui_image = load_material "/pkg/ant.imgui/materials/image.material"
 imgui.InitPlatform(nwh)
 imgui.InitRender {
-    fontProg = imgui_font.fx.prog,
-    imageProg = imgui_image.fx.prog,
-    fontUniform = imgui_font.fx.uniforms.s_tex.handle,
-    imageUniform = imgui_image.fx.uniforms.s_tex.handle,
+    fontProg = imgui_font.prog,
+    imageProg = imgui_image.prog,
+    fontUniform = imgui_font.uniforms.s_tex,
+    imageUniform = imgui_image.uniforms.s_tex,
     viewIdPool = { 0 },
 }
 
