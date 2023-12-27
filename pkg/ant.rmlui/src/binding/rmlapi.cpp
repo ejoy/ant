@@ -8,7 +8,6 @@
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>
 #include <binding/render.h>
-#include <binding/context.h>
 #include <util/HtmlParser.h>
 #include <bee/nonstd/unreachable.h>
 
@@ -16,13 +15,11 @@
 #include "fastio.h"
 
 struct RmlWrapper {
-	RmlContext m_context;
+	Rml::Renderer   m_renderer;
 	Rml::LuaPlugin m_plugin;
-	Renderer   m_renderer;
 	RmlWrapper(lua_State* L, int idx)
-		: m_context(L, idx)
+		: m_renderer(L, idx)
 		, m_plugin(L)
-		, m_renderer(&m_context)
 	{
 		Rml::SetPlugin(&m_plugin);
 	}

@@ -1,14 +1,15 @@
 ﻿#include <binding/render.h>
 #include <binding/render.h>
 #include <binding/utf8.h>
-#include <binding/context.h>
 #include <core/Core.h>
 #include <core/Color.h>
 #include <core/Interface.h>
 #include <memory.h>
 #include <cassert>
 #include <stdint.h>
+#include <lua.hpp>
 #include "../bgfx/bgfx_interface.h"
+#include "lua2struct.h"
 
 extern "C" {
     #include <textureman.h>
@@ -26,6 +27,11 @@ typedef unsigned int utfint;
 #define MAXUNICODE	0x10FFFFu
 #define MAXUTF		0x7FFFFFFFu
 #define FIXPOINT FONT_POSTION_FIX_POINT
+
+LUA2STRUCT(struct Rml::RendererContext, font_mgr, shader, viewid);
+LUA2STRUCT(struct Rml::Shader, uniforms, font, font_outline, font_shadow, image, font_cr, font_outline_cr, font_shadow_cr, image_cr, image_gray, image_cr_gray);
+
+namespace Rml {
 
 const char* utf8_decode1(const char* s, utfint* val, int strict,int& cnt) {
 
@@ -64,20 +70,20 @@ const char* utf8_decode1(const char* s, utfint* val, int strict,int& cnt) {
     return s + 1;  /* +1 to include first byte */
 }
 
-static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
+static uint32_t getTextureFlags(SamplerFlag flags) {
     switch (flags) {
     default:
-    case Rml::SamplerFlag::Unset:
+    case SamplerFlag::Unset:
         return UINT32_MAX;
-    case Rml::SamplerFlag::Repeat:
+    case SamplerFlag::Repeat:
         return 0;
-    case Rml::SamplerFlag::RepeatX:
+    case SamplerFlag::RepeatX:
         return BGFX_SAMPLER_V_BORDER;
-    case Rml::SamplerFlag::RepeatY:
+    case SamplerFlag::RepeatY:
         return BGFX_SAMPLER_U_BORDER;
-    case Rml::SamplerFlag::NoRepeat:
+    case SamplerFlag::NoRepeat:
         return BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER;
-    case Rml::SamplerFlag::Clamp:
+    case SamplerFlag::Clamp:
         return BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
     }
 }
@@ -98,7 +104,7 @@ private:
 
 class AsyncTextureUniform {
 public:
-    AsyncTextureUniform(uint16_t id, Rml::TextureId tex)
+    AsyncTextureUniform(uint16_t id, TextureId tex)
         : id(id)
         , tex(tex)
     {}
@@ -108,7 +114,7 @@ public:
     }
 private:
     uint16_t id;
-    Rml::TextureId tex;
+    TextureId tex;
 };
 
 class Uniform {
@@ -129,7 +135,7 @@ private:
 
 class ColorUniform: public Uniform {
 public:
-    ColorUniform(uint16_t id, Rml::Color color)
+    ColorUniform(uint16_t id, Color color)
         : Uniform(id)
         , color(color)
     {}
@@ -142,18 +148,18 @@ public:
         );
     }
 private:
-    Rml::Color color;
+    Color color;
 };
 
-class Material : public Rml::Material {
+class RenderMaterial : public Material {
 public:
     virtual void    Submit(bgfx_encoder_t* encoder) = 0;
-    virtual int     Program(const RenderState& state, const shader& s) = 0;
+    virtual int     Program(const RenderState& state, const Shader& s) = 0;
 };
 
-class TextureMaterial: public Material {
+class TextureMaterial: public RenderMaterial {
 public:
-    TextureMaterial(shader const& s, bgfx_texture_handle_t tex, Rml::SamplerFlag flags)
+    TextureMaterial(Shader const& s, bgfx_texture_handle_t tex, SamplerFlag flags)
         : tex_uniform(s.find_uniform("s_tex"), tex.idx)
         , flags(getTextureFlags(flags))
         , gray(false)
@@ -161,7 +167,7 @@ public:
     void Submit(bgfx_encoder_t* encoder) override {
         tex_uniform.Submit(encoder, flags);
     }
-    int Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const Shader& s) override {
         if (state.needShaderClipRect){
             return gray ? s.image_cr_gray : s.image_cr;
         }
@@ -177,9 +183,9 @@ private:
     bool gray;
 };
 
-class AsyncTextureMaterial: public Material {
+class AsyncTextureMaterial: public RenderMaterial {
 public:
-    AsyncTextureMaterial(shader const& s, Rml::TextureId texid, Rml::SamplerFlag flags)
+    AsyncTextureMaterial(Shader const& s, TextureId texid, SamplerFlag flags)
         : tex_uniform(s.find_uniform("s_tex"), texid)
         , flags(getTextureFlags(flags))
         , gray(false)
@@ -187,7 +193,7 @@ public:
     void Submit(bgfx_encoder_t* encoder) override {
         tex_uniform.Submit(encoder, flags);
     }
-    int Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const Shader& s) override {
         if (state.needShaderClipRect){
             return gray ? s.image_cr_gray : s.image_cr;
         }
@@ -203,9 +209,9 @@ private:
     bool gray;
 };
 
-class TextMaterial: public Material {
+class TextMaterial: public RenderMaterial {
 public:
-    TextMaterial(const shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset = 0, float width = 0.f)
+    TextMaterial(const Shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset = 0, float width = 0.f)
         : tex_uniform(s.find_uniform("s_tex"), texid)
         , mask_uniform(s.find_uniform("u_mask"))
         , mask_0(F->font_manager_sdf_mask(F) - F->font_manager_sdf_distance(F, edgeValueOffset))
@@ -216,7 +222,7 @@ public:
         const float distMultiplier = 1.f;
         mask_uniform.Submit(encoder, mask_0, distMultiplier, mask_2);
     }
-    int Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const Shader& s) override {
         return state.needShaderClipRect
             ? s.font_cr
             : s.font
@@ -234,7 +240,7 @@ protected:
 
 class TextStrokeMaterial: public TextMaterial {
 public:
-    TextStrokeMaterial(const shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset, Rml::Color color, float width)
+    TextStrokeMaterial(const Shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset, Color color, float width)
         : TextMaterial(s, F, texid, edgeValueOffset, width)
         , color_uniform(s.find_uniform("u_effect_color"), color)
     {}
@@ -242,7 +248,7 @@ public:
         TextMaterial::Submit(encoder);
         color_uniform.Submit(encoder);
     }
-    int Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const Shader& s) override {
         return state.needShaderClipRect
             ? s.font_outline_cr
             : s.font_outline
@@ -257,7 +263,7 @@ protected:
 
 class TextShadowMaterial: public TextMaterial {
 public:
-    TextShadowMaterial(const shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset, Rml::Color color, Rml::Point offset)
+    TextShadowMaterial(const Shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset, Color color, Point offset)
         : TextMaterial(s, F, texid, edgeValueOffset)
         , color_uniform(s.find_uniform("u_effect_color"), color)
         , offset_uniform(s.find_uniform("u_shadow_offset"))
@@ -268,7 +274,7 @@ public:
         color_uniform.Submit(encoder);
         offset_uniform.Submit(encoder, offset.x / FONT_MANAGER_TEXSIZE, offset.y / FONT_MANAGER_TEXSIZE);
     }
-    int Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const Shader& s) override {
         return state.needShaderClipRect
             ? s.font_shadow_cr
             : s.font_shadow
@@ -280,7 +286,7 @@ public:
 protected:
     ColorUniform color_uniform;
     Uniform offset_uniform;
-    Rml::Point offset;
+    Point offset;
 };
 
 static bgfx_texture_handle_t CreateDefaultTexture() {
@@ -290,22 +296,26 @@ static bgfx_texture_handle_t CreateDefaultTexture() {
     return h;
 }
 
-Renderer::Renderer(const RmlContext* context)
-    : mcontext(context)
+RendererContext::RendererContext(lua_State *L, int idx) {
+    lua_struct::unpack(L, idx, *this);
+}
+
+Renderer::Renderer(lua_State* L, int idx)
+    : context(L, idx)
     , mEncoder(nullptr)
     , default_tex(CreateDefaultTexture())
     , default_tex_mat(std::make_unique<TextureMaterial>(
-        context->shader,
+        context.shader,
         default_tex,
-        Rml::SamplerFlag::Unset
+        SamplerFlag::Unset
     ))
     , default_font_mat(std::make_unique<TextMaterial>(
-        context->shader,
-        context->font_mgr,
-        context->font_mgr->font_manager_texture(context->font_mgr)
+        context.shader,
+        context.font_mgr,
+        context.font_mgr->font_manager_texture(context.font_mgr)
     ))
     , clip_uniform(std::make_unique<Uniform>(
-        context->shader.find_uniform("u_clip_rect")
+        context.shader.find_uniform("u_clip_rect")
     ))
 {
     BGFX(vertex_layout_begin)(&layout, BGFX_RENDERER_TYPE_NOOP);
@@ -313,37 +323,37 @@ Renderer::Renderer(const RmlContext* context)
     BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, true);
     BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
     BGFX(vertex_layout_end)(&layout);
-    BGFX(set_view_mode)(context->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
-    Rml::SetRenderInterface(this);
+    BGFX(set_view_mode)(context.viewid, BGFX_VIEW_MODE_SEQUENTIAL);
+    SetRenderInterface(this);
 }
 
 Renderer::~Renderer() {
     BGFX(destroy_texture)({default_tex});
 }
 
-void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::Material* mat) {
+void Renderer::RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, Material* mat) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)&layout);
 
-    memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
+    memcpy(tvb.data, vertices, num_vertices * sizeof(Vertex));
     BGFX(encoder_set_transient_vertex_buffer)(mEncoder, 0, &tvb, 0, (uint32_t)num_vertices);
 
     bgfx_transient_index_buffer_t tib;
     BGFX(alloc_transient_index_buffer)(&tib, (uint32_t)num_indices, true);
 
-    static_assert(sizeof(Rml::Index) == sizeof(uint32_t));
-    memcpy(tib.data, indices, num_indices * sizeof(Rml::Index));
+    static_assert(sizeof(Index) == sizeof(uint32_t));
+    memcpy(tib.data, indices, num_indices * sizeof(Index));
     BGFX(encoder_set_transient_index_buffer)(mEncoder, &tib, 0, (uint32_t)num_indices);
 
     submitScissorRect(mEncoder);
 
-    Material* material = reinterpret_cast<Material*>(mat);
+    RenderMaterial* material = reinterpret_cast<RenderMaterial*>(mat);
     material->Submit(mEncoder);
 
-    auto prog = program_get(material->Program(state, mcontext->shader));
+    auto prog = program_get(material->Program(state, context.shader));
     const uint8_t discard_flags = ~BGFX_DISCARD_TRANSFORM;
-    BGFX(encoder_submit)(mEncoder, mcontext->viewid, { prog }, 0, discard_flags);
+    BGFX(encoder_submit)(mEncoder, context.viewid, { prog }, 0, discard_flags);
 }
 
 void Renderer::Begin() {
@@ -432,57 +442,57 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
 }
 
-Rml::Material* Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
-    auto material = std::make_unique<AsyncTextureMaterial>(mcontext->shader, texture, flags);
-    return reinterpret_cast<Rml::Material*>(material.release());
+Material* Renderer::CreateTextureMaterial(TextureId texture, SamplerFlag flags) {
+    auto material = std::make_unique<AsyncTextureMaterial>(context.shader, texture, flags);
+    return reinterpret_cast<Material*>(material.release());
 }
 
-Rml::Material* Renderer::CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
-    auto material = std::make_unique<TextureMaterial>(mcontext->shader, bgfx_texture_handle_t{texture}, flags);
-    return reinterpret_cast<Rml::Material*>(material.release());
+Material* Renderer::CreateRenderTextureMaterial(TextureId texture, SamplerFlag flags) {
+    auto material = std::make_unique<TextureMaterial>(context.shader, bgfx_texture_handle_t{texture}, flags);
+    return reinterpret_cast<Material*>(material.release());
 } 
 
-Rml::Material* Renderer::CreateFontMaterial(const Rml::TextEffect& effect) {
+Material* Renderer::CreateFontMaterial(const TextEffect& effect) {
     if (effect.shadow && effect.stroke) {
         assert(false && "not support more than one font effect in single text");
-        return reinterpret_cast<Rml::Material*>(default_font_mat.get());
+        return reinterpret_cast<Material*>(default_font_mat.get());
     }
     if (effect.shadow) {
-        font_manager* F = mcontext->font_mgr;
+        font_manager* F = context.font_mgr;
         int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
         auto material = std::make_unique<TextShadowMaterial>(
-            mcontext->shader,
+            context.shader,
             F,
             F->font_manager_texture(F),
             edgevalueOffset,
             effect.shadow->color,
-            Rml::Point(effect.shadow->offset_h, effect.shadow->offset_v)
+            Point(effect.shadow->offset_h, effect.shadow->offset_v)
         );
-        return reinterpret_cast<Rml::Material*>(material.release());
+        return reinterpret_cast<Material*>(material.release());
     }
     else if (effect.stroke) {
-        font_manager* F = mcontext->font_mgr;
+        font_manager* F = context.font_mgr;
         int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
         auto material = std::make_unique<TextStrokeMaterial>(
-            mcontext->shader,
+            context.shader,
             F,
             F->font_manager_texture(F),
             edgevalueOffset,
             effect.stroke->color,
             effect.stroke->width
         );
-        return reinterpret_cast<Rml::Material*>(material.release());
+        return reinterpret_cast<Material*>(material.release());
     }
     else {
-        return reinterpret_cast<Rml::Material*>(default_font_mat.get());
+        return reinterpret_cast<Material*>(default_font_mat.get());
     }
 }
 
-Rml::Material* Renderer::CreateDefaultMaterial() {
-     return reinterpret_cast<Rml::Material*>(default_tex_mat.get());
+Material* Renderer::CreateDefaultMaterial() {
+     return reinterpret_cast<Material*>(default_tex_mat.get());
 }
 
-void Renderer::DestroyMaterial(Rml::Material* mat) {
+void Renderer::DestroyMaterial(Material* mat) {
     Material* material = reinterpret_cast<Material*>(mat);
     if (default_font_mat.get() != material && default_tex_mat.get() != material) {
         delete material;
@@ -498,11 +508,11 @@ union FontFace {
 	uint64_t handle;
 };
 
-Rml::FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size) {
-    font_manager* F = mcontext->font_mgr;
+FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) {
+    font_manager* F = context.font_mgr;
     int fontid = F->font_manager_addfont_with_family(F, family.c_str());
     if (fontid <= 0) {
-        return static_cast<Rml::FontFaceHandle>(0);
+        return static_cast<FontFaceHandle>(0);
     }
     FontFace face;
     face.fontid = (uint32_t)fontid;
@@ -510,9 +520,9 @@ Rml::FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Rml::
     return face.handle;
 }
 
-static struct font_glyph GetGlyph(const RmlContext* mcontext, const FontFace& face, int codepoint, struct font_glyph* og_ = nullptr) {
+static struct font_glyph GetGlyph(const RendererContext& context, const FontFace& face, int codepoint, struct font_glyph* og_ = nullptr) {
     struct font_glyph g, og;
-    font_manager* F = mcontext->font_mgr;
+    font_manager* F = context.font_mgr;
     //TODO: rasie err
     F->font_manager_glyph(F, face.fontid, codepoint, face.pixelsize, &g, &og);
     if (og_)
@@ -520,24 +530,24 @@ static struct font_glyph GetGlyph(const RmlContext* mcontext, const FontFace& fa
     return g;
 }
 
-void Renderer::GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) {
-    font_manager* F = mcontext->font_mgr;
+void Renderer::GetFontHeight(FontFaceHandle handle, int& ascent, int& descent, int& lineGap) {
+    font_manager* F = context.font_mgr;
     FontFace face;
     face.handle = handle;
     F->font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
 }
 
-bool Renderer::GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness) {
-    font_manager* F = mcontext->font_mgr;
+bool Renderer::GetUnderline(FontFaceHandle handle, float& position, float &thickness) {
+    font_manager* F = context.font_mgr;
     FontFace face;
     face.handle = handle;
     return 0 == F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
-float Renderer::GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) {
+float Renderer::GetFontWidth(FontFaceHandle handle, uint32_t codepoint) {
     FontFace face;
     face.handle = handle;
-    auto glyph = GetGlyph(mcontext, face, codepoint);
+    auto glyph = GetGlyph(context, face, codepoint);
     return (float)glyph.advance_x;
 }
 
@@ -548,25 +558,25 @@ float Renderer::GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) {
 // why store in uint16 ? because bgfx not support ....
 #define MAGIC_FACTOR    32768.f
 
-void Renderer::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry){
+void Renderer::GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry){
     auto& vertices = geometry.GetVertices();
     auto& indices = geometry.GetIndices();
     vertices.clear();
     indices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
-        Rml::Line& line = lines[i];
+        Line& line = lines[i];
         vertices.reserve(vertices.size() + line.text.size() * 4);
         indices.reserve(indices.size() + line.text.size() * 6);
 
         FontFace face;
         face.handle = handle;
-        const Rml::Point fonttexel(1.f / FONT_MANAGER_TEXSIZE, 1.f / FONT_MANAGER_TEXSIZE);
+        const Point fonttexel(1.f / FONT_MANAGER_TEXSIZE, 1.f / FONT_MANAGER_TEXSIZE);
 
         int x = int(line.position.x + 0.5f), y = int(line.position.y + 0.5f);
         for (auto codepoint : utf8::view(line.text)) {
 
             struct font_glyph og;
-            auto g = GetGlyph(mcontext, face, codepoint, &og);
+            auto g = GetGlyph(context, face, codepoint, &og);
 
             // Generate the geometry for the character.
             const int x0 = x + g.offset_x;
@@ -589,23 +599,23 @@ void Renderer::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, 
     }
 }
 
-void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height){
+void Renderer::GenerateRichString(FontFaceHandle handle, LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Geometry& textgeometry, std::vector<std::unique_ptr<Geometry>> & imagegeometries, std::vector<image>& images, int& cur_image_idx, float line_height){
     auto& vertices = textgeometry.GetVertices();
     auto& indices = textgeometry.GetIndices();
     vertices.clear();
     indices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
-        Rml::Line& line = lines[i];
+        Line& line = lines[i];
         vertices.reserve(vertices.size() + line.text.size() * 4);
         indices.reserve(indices.size() + line.text.size() * 6);
 
         FontFace face;
         face.handle = handle;
-        const Rml::Point fonttexel(1.f / FONT_MANAGER_TEXSIZE, 1.f / FONT_MANAGER_TEXSIZE);
+        const Point fonttexel(1.f / FONT_MANAGER_TEXSIZE, 1.f / FONT_MANAGER_TEXSIZE);
 
         float x = line.position.x + 0.5f, y = line.position.y + 0.5f;
         
-        Rml::Color color;
+        Color color;
         for (auto& layout:layouts[i]){
             for(int ii=0;ii<layout.num;++ii){
                 uint32_t codepoint=codepoints[layout.start+ii];
@@ -633,7 +643,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
                 else{
                     color=layout.color;
                     struct font_glyph og;
-                    auto g = GetGlyph(mcontext, face, codepoint, &og);
+                    auto g = GetGlyph(context, face, codepoint, &og);
 
                     const float x0 = x + g.offset_x;
                     const float y0 = y + g.offset_y;
@@ -655,7 +665,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
 
 }
 
-float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups, std::vector<Rml::image>& images, std::vector<Rml::layout>& line_layouts,int start,int num){
+float Renderer::PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups, std::vector<image>& images, std::vector<Rml::layout>& line_layouts,int start,int num){
     float line_width=0.f;
 
     FontFace face;
@@ -664,7 +674,7 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     Rml::layout l;
     uint16_t lstart=(uint16_t)codepoints.size();
     int lnum=0;
-    Rml::Color pre_color,cur_color;
+    Color pre_color,cur_color;
     int i=0;//i代表是当前string的位移 //start+i代表在ctext中的位移
     int cur_lm;
 
@@ -689,7 +699,7 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
             line_width+=images[group_idx-100].rect.size.w;
         } 
         else{
-            auto glyph=GetGlyph(mcontext,face,codepoint);
+            auto glyph=GetGlyph(context,face,codepoint);
             line_width+=glyph.advance_x;
         }
         if(cnt>1){
@@ -731,7 +741,7 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
             line_width+=images[group_idx-100].rect.size.w;
         } 
         else{
-            auto glyph=GetGlyph(mcontext,face,codepoint);
+            auto glyph=GetGlyph(context,face,codepoint);
             line_width+=glyph.advance_x;
         }
         if(cnt>1){
@@ -747,4 +757,5 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     l.num=lnum;
     line_layouts.emplace_back(l);
     return line_width;
+}
 }

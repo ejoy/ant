@@ -1,9 +1,52 @@
 #pragma once
 
-#include <binding/context.h>
 #include <core/Interface.h>
 #include <bgfx/c99/bgfx.h>
 #include <core/Interface.h>
+#include <map>
+#include <string>
+#include <stdint.h>
+
+struct lua_State;
+struct font_manager;
+
+namespace Rml {
+
+struct Shader {
+    std::map<std::string, uint16_t> uniforms;
+
+    int font;
+    int font_outline;
+    int font_shadow;
+    int image;
+
+    //with clip rect
+    int font_cr;
+    int font_outline_cr;
+    int font_shadow_cr;
+    int image_cr;
+    int image_gray;
+    int image_cr_gray;
+
+    #ifdef _DEBUG
+    uint16_t debug_draw;
+    #endif //_DEBUG
+
+    uint16_t find_uniform(const char* name) const {
+        auto iter = uniforms.find(name);
+        if (iter != uniforms.end()) {
+            return iter->second;
+        }
+        return UINT16_MAX;
+    }
+};
+
+struct RendererContext {
+    struct font_manager* font_mgr;
+    struct Shader        shader;
+    uint16_t             viewid;
+    RendererContext(lua_State* L, int idx);
+};
 
 struct RenderState {
     glm::vec4 rectVerteices[2] {glm::vec4(0), glm::vec4(0)};
@@ -15,30 +58,30 @@ class TextureMaterial;
 class TextMaterial;
 class Uniform;
 
-class Renderer : public Rml::RenderInterface {
+class Renderer : public RenderInterface {
 public:
-    Renderer(const RmlContext* context);
+    Renderer(lua_State* L, int idx);
     ~Renderer();
     void Begin() override;
     void End() override;
-    void RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::Material* mat) override;
+    void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, Material* mat) override;
     void SetTransform(const glm::mat4x4& transform) override;
     void SetClipRect() override;
     void SetClipRect(const glm::u16vec4& r) override;
     void SetClipRect(glm::vec4 r[2]) override;
-    Rml::Material* CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
-    Rml::Material* CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
-    Rml::Material* CreateFontMaterial(const Rml::TextEffect& effect) override;
-    Rml::Material* CreateDefaultMaterial() override;
-    void DestroyMaterial(Rml::Material* mat) override;
+    Material* CreateTextureMaterial(TextureId texture, SamplerFlag flag) override;
+    Material* CreateRenderTextureMaterial(TextureId texture, SamplerFlag flag) override;
+    Material* CreateFontMaterial(const TextEffect& effect) override;
+    Material* CreateDefaultMaterial() override;
+    void DestroyMaterial(Material* mat) override;
 
-	Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size) override;
-    void GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) override;
-	bool GetUnderline(Rml::FontFaceHandle handle, float& position, float& thickness) override;
-    float GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) override;
-	void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
-    void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height) override;
-    float PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::image>& images,std::vector<Rml::layout>& line_layouts,int start,int num) override;
+	FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) override;
+    void GetFontHeight(FontFaceHandle handle, int& ascent, int& descent, int& lineGap) override;
+	bool GetUnderline(FontFaceHandle handle, float& position, float& thickness) override;
+    float GetFontWidth(FontFaceHandle handle, uint32_t codepoint) override;
+	void GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry) override;
+    void GenerateRichString(FontFaceHandle handle, LineList& lines, std::vector<std::vector<layout>> layouts, std::vector<uint32_t>& codepoints, Geometry& textgeometry, std::vector<std::unique_ptr<Geometry>> & imagegeometries, std::vector<image>& images, int& cur_image_idx, float line_height) override;
+    float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups,std::vector<image>& images,std::vector<layout>& line_layouts,int start,int num) override;
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
     void setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r);
@@ -48,7 +91,7 @@ private:
 #endif
 
 private:
-    const RmlContext*     mcontext;
+    RendererContext       context;
     bgfx_encoder_t*       mEncoder;
     RenderState           state;
     bgfx_texture_handle_t default_tex;
@@ -57,3 +100,4 @@ private:
     std::unique_ptr<TextMaterial> default_font_mat;
     std::unique_ptr<Uniform>      clip_uniform;
 };
+}
