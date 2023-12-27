@@ -99,7 +99,7 @@ local function get_icon_by_object_type(node)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        local e <close> = world:entity(node.eid, "camera?in light?in mesh?in slot?in")
+        local e <close> = world:entity(node.eid, "camera?in light?in mesh?in slot?in efk?in")
         if e.camera then
             return icons.ICON_CAMERA3D
         end
@@ -122,9 +122,9 @@ local function get_icon_by_object_type(node)
         if e.slot then
             return icons.ICON_SLOT
         end
-        -- if e.effekseer then
-        --     return icons.ICON_PARTICLES3D
-        -- end
+        if e.efk then
+            return icons.ICON_PARTICLES3D
+        end
 
         return icons.ICON_OBJECT
     end
