@@ -562,16 +562,7 @@ function shadow_sys:update_camera_depend()
 		local intersectaabb = mc.NULL
 		if mc.NULL ~= verticesLS then
 			intersectaabb = math3d.minmax(verticesLS)
-			local n, f = mu.aabb_minmax_index(intersectaabb, 3)
-
-			--because shadowmap depth value range from [0, 1], so frustum near/far must be on +z
-			--so we need to move camera position on near plane to make sure frustum are bound the whole scene
-			local eyepos = math3d.transform(Lw, math3d.vector(0.0, 0.0, n, 1), 1)
-
-			Lv = math3d.lookto(eyepos, lightdirWS, rightdir)
-			Lw = math3d.inverse_fast(Lv)
-
-			c.frustum.n, c.frustum.f = 0.0, f-n
+			c.frustum.n, c.frustum.f = mu.aabb_minmax_index(intersectaabb, 3)
 			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
 		end
 
