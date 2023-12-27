@@ -72,7 +72,8 @@ local function render(nwh, context, width, height, initialized)
 	rhwi.init {
 		nwh			= nwh,
 		context		= context,
-		scene       = config.scene,
+		w			= vr.w,
+		h			= vr.h,
 	}
 	rhwi.set_profie(false)
 	bgfx.encoder_create "world"

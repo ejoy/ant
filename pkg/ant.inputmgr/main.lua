@@ -84,6 +84,7 @@ local function create(world)
                 })
                 world:pub{"resize", size.w, size.h}
             end
+            world:pub {"resize", size.w, size.h}
         end
         if viewportChanged then
             viewportChanged = false
