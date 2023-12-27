@@ -384,10 +384,6 @@ function imodifier.start(m, desc, auto_destroy)
     world:pub {"modifier", m, desc}
 end
 
-function imodifier.start_bone_modifier(target, group_id, filename, bone_name, desc)
-    imodifier.start(imodifier.create_bone_modifier(target, group_id, filename, bone_name), desc, true)
-end
-
 function imodifier.stop(m)
     if not m then
         return
