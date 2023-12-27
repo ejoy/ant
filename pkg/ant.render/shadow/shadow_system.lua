@@ -353,7 +353,8 @@ local function update_shadow_matrices(si, c)
 
 	local Lp = math3d.projmat(c.frustum, INV_Z)
 	if useLiSPSM then
-		local Wv, Wp = LiSPSM.warp_matrix(si)
+		si.Lp = Lp
+		local Wv, Wp = LiSPSM.warp_matrix(si, verticesLS)
 		Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
 	end
 
