@@ -58,7 +58,7 @@ class TextureMaterial;
 class TextMaterial;
 class Uniform;
 
-class Renderer : public RenderInterface {
+class Renderer final : public RenderInterface {
 public:
     Renderer(lua_State* L, int idx);
     ~Renderer();

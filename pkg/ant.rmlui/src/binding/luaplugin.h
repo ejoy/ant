@@ -1,6 +1,5 @@
 #pragma once
 
-#include <binding/luabind.h>
 #include <core/Interface.h>
 #include "luaref.h"
 

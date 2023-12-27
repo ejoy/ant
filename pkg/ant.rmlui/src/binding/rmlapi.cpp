@@ -6,7 +6,6 @@
 #include <core/Text.h>
 #include <core/Texture.h>
 #include <binding/luaplugin.h>
-#include <binding/luabind.h>
 #include <binding/render.h>
 #include <util/HtmlParser.h>
 #include <bee/nonstd/unreachable.h>
@@ -651,7 +650,6 @@ __declspec(dllexport)
 int
 luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
-	luabind::init(L);
 	luaL_Reg l[] = {
 		{ "DocumentCreate", lDocumentCreate },
 		{ "DocumentParseHtml", lDocumentParseHtml },
