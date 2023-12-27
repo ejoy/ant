@@ -34,6 +34,8 @@ local init = {
     flags = {},
     enums = {},
 }
+
+local new_enums = {}
 for _, enums in ipairs(meta.enums) do
     if enums.conditionals then
         goto continue
@@ -56,6 +58,13 @@ for _, enums in ipairs(meta.enums) do
             local enum_type, enum_name = enum.name:match "^(%w+)_(%w+)$"
             if enum_type == realname then
                 writeln("\tENUM(%s, %s),", enum_type, enum_name)
+            else
+                local t = new_enums[enum_type]
+                if t then
+                    t[#t+1] = enum_name
+                else
+                    new_enums[enum_type] = { enum_name }
+                end
             end
         end
     end
@@ -63,6 +72,18 @@ for _, enums in ipairs(meta.enums) do
     writeln("};")
     writeln("")
     ::continue::
+end
+
+for enum_type, enum_names in pairs(new_enums) do
+    local name = enum_type:match "^ImGui(%a+)$" or enum_type:match "^Im(%a+)$"
+    table.insert(init.enums, name)
+    writeln("static struct enum_pair e%s[] = {", name)
+    for _, enum_name in ipairs(enum_names) do
+        writeln("\tENUM(%s, %s),", enum_type, enum_name)
+    end
+    writeln("\t{ NULL, 0 },")
+    writeln("};")
+    writeln("")
 end
 
 writeln("void imgui_enum_init(lua_State* L) {")

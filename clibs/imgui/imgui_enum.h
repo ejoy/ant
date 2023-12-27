@@ -640,6 +640,16 @@ static struct enum_pair eMouseCursor[] = {
 
 //ImGuiViewportFlags
 
+static struct enum_pair eMod[] = {
+	ENUM(ImGuiMod, None),
+	ENUM(ImGuiMod, Ctrl),
+	ENUM(ImGuiMod, Shift),
+	ENUM(ImGuiMod, Alt),
+	ENUM(ImGuiMod, Super),
+	ENUM(ImGuiMod, Shortcut),
+	{ NULL, 0 },
+};
+
 void imgui_enum_init(lua_State* L) {
 	lua_newtable(L);
 	flag_gen(L, "Window", eWindowFlags);
@@ -670,5 +680,6 @@ void imgui_enum_init(lua_State* L) {
 	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseButton", eMouseButton);
 	enum_gen(L, "MouseCursor", eMouseCursor);
+	enum_gen(L, "Mod", eMod);
 	lua_setfield(L, -2, "enum");
 }
