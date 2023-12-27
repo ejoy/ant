@@ -28,27 +28,28 @@
             }
         </style>
         <script type="text/x-lua" >
-            local start = window.createModel {
+            local model = window.createModel {
                 show = false,
                 label = "新游戏"
             }
-            function start.new(event)
+            function model.new(event)
                 window.callMessage("click", "new")
             end
-            function start.load(event)
+            function model.load(event)
                 window.callMessage("click", "load")
+                model.label = "继续游戏"
             end
-            function start.setting(event)
+            function model.setting(event)
                 window.callMessage("click", "setting")
-                start.show = not start.show
+                model.show = not model.show
             end
-            function start.exit()
+            function model.exit()
                 window.callMessage("click", "exit")
             end
         </script>
     </head>
     <body>
-        <div id="test">
+        <div>
             <button id = "new" data-event-click="new()">{{label}}</button>
             <button data-event-click="load()">载入游戏</button>
             <button data-event-click="setting()">设置</button>
