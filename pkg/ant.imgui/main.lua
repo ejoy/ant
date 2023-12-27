@@ -66,6 +66,10 @@ function ImGuiEvent.mousewheel(e)
 end
 
 function ImGuiEvent.keyboard(e)
+    ImGuiIO.AddKeyEvent(ImGui.enum.Mod.Ctrl, e.state.CTRL ~= nil);
+    ImGuiIO.AddKeyEvent(ImGui.enum.Mod.Shift, e.state.SHIFT ~= nil);
+    ImGuiIO.AddKeyEvent(ImGui.enum.Mod.Alt, e.state.ALT ~= nil);
+    ImGuiIO.AddKeyEvent(ImGui.enum.Mod.Super, e.state.SYS ~= nil);
     if e.press == 1 then
         ImGuiIO.AddKeyEvent(e.key, true);
     elseif e.press == 0 then
