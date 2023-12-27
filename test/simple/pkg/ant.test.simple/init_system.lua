@@ -22,7 +22,6 @@ function m:init_world()
 			material = "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state = "main_view",
 			simplemesh = imesh.init_mesh(ientity.plane_mesh()),
-			debug_mesh_bounding = true,
 			on_ready = function (e)
 				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
 			end,
