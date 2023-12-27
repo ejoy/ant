@@ -82,7 +82,6 @@ local function create(world)
                     w = size.w,
                     h = size.h,
                 })
-                world:pub{"resize", size.w, size.h}
             end
             world:pub {"resize", size.w, size.h}
         end
