@@ -87,7 +87,9 @@ end
 local event_animation = world:sub{"animation_event"}
 
 function ani_sys:entity_init()
-	for e in w:select "INIT anim_ctrl:in animation:in animation_birth:in eid:in playing?out" do
+	for e in w:select "INIT animation:in animation_birth:new anim_ctrl:new eid:in playing?out" do
+		e.anim_ctrl = {}
+		e.animation_birth = ""
 		e.anim_ctrl.keyframe_events = {}
 		local events = e.anim_ctrl.keyframe_events
 		for key, value in pairs(e.animation.status) do

@@ -267,8 +267,6 @@ local function create_skin_entity(status, parent)
         "ant.animation|animation",
     }
     local data = {
-        animation_birth = "",
-        anim_ctrl = {},
         scene = {},
         animation = "animations/animation.ozz",
     }

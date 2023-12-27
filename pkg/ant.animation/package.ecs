@@ -7,8 +7,6 @@ pipeline "animation"
 
 policy "animation"
     .include_policy "ant.scene|scene_object"
-    .component "animation_birth"
-    .component "anim_ctrl"
     .component "animation"
 
 policy "skinning"
@@ -24,7 +22,6 @@ component "animation".type "lua"
 component "skinning".type "lua"
 component "animation_changed"
 component "animation_playback"
-component "anim_ctrl".type "lua"
 component "slot".type "lua"
 
 system "animation_system"
