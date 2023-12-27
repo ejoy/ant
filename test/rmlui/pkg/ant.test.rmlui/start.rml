@@ -1,4 +1,4 @@
-<rml>
+<html>
     <head>
         <style>
             body {
@@ -57,4 +57,4 @@
             <button data-event-click="exit()">退出</button>
         </div>
     </body>
-</rml>
+</html>
