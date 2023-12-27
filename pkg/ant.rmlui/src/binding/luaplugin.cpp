@@ -40,16 +40,15 @@ namespace lua_struct {
 
 namespace Rml {
 
-static uint32_t
-border_color_or_compare(char c){
-	int n = 0;
-	if(c >= '0' && c <= '9'){
-		n = c - '0';
-	}else if(c >= 'a' && c <= 'f'){
-		n = c - 'a' + 10 ;
-	}
-	return n;
-}
+enum class LuaEvent : uint8_t {
+	OnCreateElement = 2,
+	OnCreateText,
+	OnDispatchEvent,
+	OnDestroyNode,
+	OnLoadTexture,
+	OnParseText,
+};
+
 static int ref_function(luaref reference, lua_State* L, const char* funcname) {
 	if (lua_getfield(L, -1, funcname) != LUA_TFUNCTION) {
 		luaL_error(L, "Missing %s", funcname);
@@ -57,8 +56,25 @@ static int ref_function(luaref reference, lua_State* L, const char* funcname) {
 	return luaref_ref(reference, L);
 }
 
+static void CallLua(lua_State* L, luaref reference, LuaEvent id, size_t argn, size_t retn = 0) {
+	luaref_get(reference, L, (int)id);
+	lua_insert(L, -1 - (int)argn);
+	lua_call(L, (int)argn, (int)retn);
+}
+
 LuaPlugin::LuaPlugin(lua_State* L) {
-	register_event(L);
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_settop(L, 1);
+	lua_getfield(L, 1, "callback");
+	lua_remove(L, 1);
+	luaL_checktype(L, 1, LUA_TTABLE);
+	reference = luaref_init(L);
+	ref_function(reference, L, "OnCreateElement");
+	ref_function(reference, L, "OnCreateText");
+	ref_function(reference, L, "OnDispatchEvent");
+	ref_function(reference, L, "OnDestroyNode");
+	ref_function(reference, L, "OnLoadTexture");
+	ref_function(reference, L, "OnParseText");
 }
 
 LuaPlugin::~LuaPlugin() {
@@ -70,7 +86,7 @@ void LuaPlugin::OnCreateElement(Document* document, Element* element, const std:
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)element);
 		lua_pushlstring(L, tag.data(), tag.size());
-		call(L, LuaEvent::OnCreateElement, 3);
+		CallLua(L, reference, LuaEvent::OnCreateElement, 3);
 	});
 }
 
@@ -78,7 +94,7 @@ void LuaPlugin::OnCreateText(Document* document, Text* text) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)text);
-		call(L, LuaEvent::OnCreateText, 2);
+		CallLua(L, reference, LuaEvent::OnCreateText, 2);
 	});
 }
 
@@ -88,7 +104,7 @@ void LuaPlugin::OnDispatchEvent(Document* document, Element* element, const std:
 		lua_pushlightuserdata(L, (void*)element);
 		lua_pushlstring(L, type.data(), type.size());
 		luavalue::get(L, eventData);
-		call(L, LuaEvent::OnDispatchEvent, 4);
+		CallLua(L, reference, LuaEvent::OnDispatchEvent, 4);
 	});
 }
 
@@ -96,7 +112,7 @@ void LuaPlugin::OnDestroyNode(Document* document, Node* node) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)node);
-		call(L, LuaEvent::OnDestroyNode, 2);
+		CallLua(L, reference, LuaEvent::OnDestroyNode, 2);
 	});
 }
 
@@ -108,7 +124,7 @@ void LuaPlugin::OnLoadTexture(Document* document, Element* element, const std::s
 		lua_pushnumber(L, 0);
 		lua_pushnumber(L, 0);
 		lua_pushboolean(L, false);
-        call(L, LuaEvent::OnLoadTexture, 6, 0);
+        CallLua(L, reference, LuaEvent::OnLoadTexture, 6, 0);
     });
 }
 
@@ -120,14 +136,24 @@ void LuaPlugin::OnLoadTexture(Document* document, Element* element, const std::s
 		lua_pushnumber(L, size.w);
 		lua_pushnumber(L, size.h);
 		lua_pushboolean(L, true);
-        call(L, LuaEvent::OnLoadTexture, 6, 0);
+        CallLua(L, reference, LuaEvent::OnLoadTexture, 6, 0);
     });
+}
+
+static uint32_t border_color_or_compare(char c){
+	int n = 0;
+	if(c >= '0' && c <= '9'){
+		n = c - '0';
+	}else if(c >= 'a' && c <= 'f'){
+		n = c - 'a' + 10 ;
+	}
+	return n;
 }
 
 void LuaPlugin::OnParseText(const std::string& str,std::vector<group>& groups,std::vector<int>& groupMap,std::vector<image>& images,std::vector<int>& imageMap,std::string& ctext,group& default_group) {
     luabind::invoke([&](lua_State* L) {
         lua_pushstring(L, str.data());
-		call(L, LuaEvent::OnParseText, 1, 5);
+		CallLua(L, reference, LuaEvent::OnParseText, 1, 5);
 
 		//-1 -2 -3 -4 -5 - imagemap images groupmap groups ctext
 
@@ -191,50 +217,6 @@ void LuaPlugin::OnParseText(const std::string& str,std::vector<group>& groups,st
     });
 
 	//TODO
-}
-
-void LuaPlugin::register_event(lua_State* L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	lua_settop(L, 1);
-	lua_getfield(L, 1, "callback");
-	lua_remove(L, 1);
-	luaL_checktype(L, 1, LUA_TTABLE);
-	reference = luaref_init(L);
-	ref_function(reference, L, "OnCreateElement");
-	ref_function(reference, L, "OnCreateText");
-	ref_function(reference, L, "OnDispatchEvent");
-	ref_function(reference, L, "OnDestroyNode");
-	ref_function(reference, L, "OnLoadTexture");
-	ref_function(reference, L, "OnParseText");
-}
-
-luaref_box LuaPlugin::ref(lua_State* L) {
-	luaref_box box {reference, L};
-	assert(box.isvalid());
-	return box;
-}
-
-void LuaPlugin::callref(lua_State* L, int ref, size_t argn, size_t retn) {
-	luaref_get(reference, L, ref);
-	lua_insert(L, -1 - (int)argn);
-	lua_call(L, (int)argn, (int)retn);
-}
-
-void LuaPlugin::call(lua_State* L, LuaEvent eid, size_t argn, size_t retn) {
-	callref(L, (int)eid, argn, retn);
-}
-
-void LuaPlugin::pushevent(lua_State* L, const Event& event) {
-	luaref_get(reference, L, event.GetParameters());
-	luaL_checktype(L, -1, LUA_TTABLE);
-	lua_pushstring(L, event.GetType().c_str());
-	lua_setfield(L, -2, "type");
-	Element* target = event.GetTargetElement();
-	target? lua_pushlightuserdata(L, target): lua_pushnil(L);
-	lua_setfield(L, -2, "target");
-	Element* current = event.GetCurrentElement();
-	current ? lua_pushlightuserdata(L, current) : lua_pushnil(L);
-	lua_setfield(L, -2, "current");
 }
 
 }
