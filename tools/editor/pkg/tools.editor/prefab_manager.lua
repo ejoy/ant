@@ -971,35 +971,33 @@ end
 function m:get_efk_list()
     local list = {}
     for k, value in pairs(self.current_prefab.tag) do
-        local ee <close> = world:entity(value[1], "efk?in")
-        if ee.efk then
-            list[#list + 1] = k
+        if k ~= "*" and k ~= "anim_ctrl" then
+            for _, eid in ipairs(value) do
+                local ee <close> = world:entity(eid, "efk?in")
+                if ee.efk then
+                    list[#list + 1] = k
+                end
+            end
         end
     end
     return list
 end
 
-function m:get_srt_list()
+function m:get_srt_mtl_list()
     local list = {}
     for k, value in pairs(self.current_prefab.tag) do
-        local ee <close> = world:entity(value[1], "scene?in")
-        if ee.scene then
-            list[#list + 1] = k
+        if k ~= "*" and k ~= "anim_ctrl" then
+            for _, eid in ipairs(value) do
+                local ee <close> = world:entity(eid, "scene?in material?in")
+                if ee.scene or ee.material then
+                    list[#list + 1] = k
+                end
+            end
         end
     end
     return list
 end
 
-function m:get_mtl_list()
-    local list = {}
-    for k, value in pairs(self.current_prefab.tag) do
-        local ee <close> = world:entity(value[1], "material?in")
-        if ee.material then
-            list[#list + 1] = k
-        end
-    end
-    return list
-end
 function m:do_remove_entity(eid)
     if not eid then
         return

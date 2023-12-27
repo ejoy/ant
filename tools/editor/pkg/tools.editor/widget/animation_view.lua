@@ -25,6 +25,7 @@ local timeline_playing = false
 local efk_tag_list = {}
 local srt_tag_list = {}
 local mtl_tag_list = {}
+local srt_mtl_list = {}
 local m = {}
 local edit_anims
 local anim_eid
@@ -427,22 +428,36 @@ local function show_current_event()
                     update_asset_path(tostring(current_event.asset_path_ui.text))
                     dirty = true
                 end
-                imgui.widget.PropertyLabel("ActionTarget")
-                if imgui.widget.InputText("##ActionTarget", current_event.target_ui) then
-                    current_event.target = tostring(current_event.target_ui.text)
-                    dirty = true
-                end
+                -- imgui.widget.PropertyLabel("ActionTarget")
+                -- if imgui.widget.InputText("##ActionTarget", current_event.target_ui) then
+                --     current_event.target = tostring(current_event.target_ui.text)
+                --     dirty = true
+                -- end
+                
             end
             action_list = current_event.action_list or {}
         end
         action_list = (current_event.event_type == "Effect") and efk_tag_list or (#action_list > 0 and action_list or edit_anims.name_list)
         if #action_list > 0 then
             local action = current_event.action or ''
-            imgui.widget.PropertyLabel((current_event.event_type == "Action(Effect)") and "Effect" or "Action(Animation)")
+            imgui.widget.PropertyLabel("Action")
             if imgui.widget.BeginCombo("##ActionList", {action, flags = imgui.flags.Combo {}}) then
                 for _, name in ipairs(action_list) do
                     if imgui.widget.Selectable(name, action == name) then
                         current_event.action = name
+                    end
+                end
+                imgui.widget.EndCombo()
+                dirty = true
+            end
+        end
+        if current_event.asset_path and #current_event.asset_path > 0 then
+            local target = current_event.target or ''
+            imgui.widget.PropertyLabel("Target")
+            if imgui.widget.BeginCombo("##Target", {target, flags = imgui.flags.Combo {}}) then
+                for _, name in ipairs(srt_mtl_list) do
+                    if imgui.widget.Selectable(name, target == name) then
+                        current_event.target = name
                     end
                 end
                 imgui.widget.EndCombo()
@@ -1010,8 +1025,7 @@ end
 
 function m.update_tag_list()
     efk_tag_list = prefab_mgr:get_efk_list()
-    srt_tag_list = prefab_mgr:get_srt_list()
-    mtl_tag_list = prefab_mgr:get_mtl_list()
+    srt_mtl_list = prefab_mgr:get_srt_mtl_list()
 end
 
 function m.update_anim_namelist()
