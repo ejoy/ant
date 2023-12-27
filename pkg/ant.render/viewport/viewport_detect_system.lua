@@ -11,6 +11,7 @@ local vp_detect_sys = ecs.system "viewport_detect_system"
 
 local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local fb_cache, rb_cache
 local function clear_cache()
@@ -83,7 +84,7 @@ local function update_render_target(newsize)
 end
 
 function vp_detect_sys:post_init()
-	update_render_target(world.args.scene.viewrect)
+	update_render_target(iviewport.viewrect)
 end
 
 local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
@@ -101,7 +102,7 @@ function vp_detect_sys:data_changed()
 		if newratio <= 1e-6 then
 			error "scene ratio should larger than 0"
 		end
-		local vr = world.args.scene.viewrect
+		local vr = iviewport.viewrect
 		update_render_target(vr)
 		do
 			local mq = w:first "main_queue render_target:in"
@@ -109,7 +110,7 @@ function vp_detect_sys:data_changed()
 			log.info(("scene viewrect:x=%2f, y=%2f, w=%2f, h=%2f, scene_ratio=%2f"):format(vr.x, vr.y, vr.w, vr.h, vr.ratio or 1.0))
 		end
 
-		world.args.scene.scene_ratio = newratio
+		iviewport.scene_ratio = newratio
 		break
 	end
 end

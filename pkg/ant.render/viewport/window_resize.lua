@@ -6,21 +6,22 @@ local setting   = import_package "ant.settings"
 local mu		= import_package "ant.math".util
 
 local rhwi      = import_package "ant.hwi"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local ENABLE_HVFILP<const> 	= setting:get "graphic/postprocess/hv_flip/enable"
 
-local function update_config(args, ww, hh)
+local function update_config(ww, hh)
 	local vp = {x = 0, y = 0, w = ww, h = hh}
-	local resolution = args.scene.resolution
-	local scene_ratio = args.scene.scene_ratio
+	local resolution = iviewport.resolution
+	local scene_ratio = iviewport.scene_ratio
 	local vr = mu.get_scene_view_rect(resolution.w ,resolution.h, vp, scene_ratio)
 	if ENABLE_HVFILP then
 		vp.w, vp.h = hh, ww
 	else
 		vp.w, vp.h = ww, hh
 	end
-	args.scene.viewrect = vr
-	args.device_size = vp
+	iviewport.viewrect = vr
+	iviewport.device_size = vp
 end
 
 local resize_mb			= world:sub {"resize"}
@@ -30,17 +31,17 @@ local winresize_sys = ecs.system "window_resize_system"
 
 
 local function winsize_update(s)
-	update_config(world.args, s.w, s.h)
+	update_config(s.w, s.h)
 	rhwi.reset(nil, s.w, s.h)
-	local vp = world.args.device_size
-	local vr = world.args.scene.viewrect
+	local vp = iviewport.device_size
+	local vr = iviewport.viewrect
 	log.info("device_size:", vp.x, vp.y, vp.w, vp.h)
 	log.info("main viewrect:", vr.x, vr.y, vr.w, vr.h)
 	world:pub{"scene_viewrect_changed", vr}
 end
 
 function winresize_sys:init_world()
-	local vp = world.args.device_size
+	local vp = iviewport.device_size
 	winsize_update({w=vp.w, h=vp.h})
 end
 

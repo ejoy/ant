@@ -9,13 +9,14 @@ local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local imgui = require "imgui"
 local irq   = ecs.require "ant.render|render_system.renderqueue"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local drag_file
 
 local m = {}
 
 local function cvt2scenept(x, y)
-    return x - world.args.scene.viewrect.x, y - world.args.scene.viewrect.y
+    return x - iviewport.viewrect.x, y - iviewport.viewrect.y
 end
 
 local function in_view(x, y)
@@ -76,7 +77,7 @@ function m.show()
         local x, y, ww, hh = imgui.dock.BuilderGetCentralRect "MainViewSpace"
         local mp = imgui_vp.MainPos
         x, y = x - mp[1], y - mp[2]
-        local vp = world.args.device_size
+        local vp = iviewport.device_size
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
             vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
             world:dispatch_message {

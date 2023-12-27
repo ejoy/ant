@@ -15,6 +15,7 @@ local imaterial     = ecs.require "ant.asset|material"
 local irender       = ecs.require "ant.render|render_system.render"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icompute      = ecs.require "ant.render|compute.compute"
+local iviewport     = ecs.require "ant.render|viewport.state"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"
 local scene_ratio   = irender.get_framebuffer_ratio("scene_ratio")
@@ -51,7 +52,7 @@ local fsr_solve_entity
 local ifsr = {}
 
 local function get_resolution()
-    return {x = 0, y = 0, w = world.args.scene.resolution.w, h = world.args.scene.resolution.h}
+    return {x = 0, y = 0, w = iviewport.resolution.w, h = iviewport.resolution.h}
 end
 
 function ifsr.get_fsr_output_handle()
@@ -189,7 +190,7 @@ function fsr_sys:init_world()
     set_fsr_disptach_size(vr)
     set_fsr_textures(vr)
     set_fsr_params(vr)
-    create_fsr_resolve_entity(world.args.scene.scene_ratio)
+    create_fsr_resolve_entity(iviewport.scene_ratio)
     create_fsr_easu_entity()
     create_fsr_rcas_entity()
 end
@@ -213,7 +214,7 @@ function fsr_sys:data_changed()
         if fsr_solve_entity then
             w:remove(fsr_solve_entity)
         end
-        create_fsr_resolve_entity(world.args.scene.scene_ratio)
+        create_fsr_resolve_entity(iviewport.scene_ratio)
         local easu = w:first "fsr_easu_builder dispatch:in"
         update_easu_builder(easu)
         local rcas = w:first "fsr_rcas_builder dispatch:in"

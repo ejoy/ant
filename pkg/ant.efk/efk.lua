@@ -19,9 +19,9 @@ local Q         = world:clibs "render.queue"
 
 local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"
-local ig        = ecs.require "ant.group|group"
 local qm        = ecs.require "ant.render|queue_mgr"
 local ilight    = ecs.require "ant.render|light.light"
+local iviewport = ecs.require "ant.render|viewport.state"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local efk_sys = ecs.system "efk_system"
 local iefk = {}
@@ -171,7 +171,7 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local main_fb = fbmgr.get(mq.render_target.fb_idx)
-    local vr = world.args.scene.viewrect
+    local vr = iviewport.viewrect
     world:create_entity{
         policy = {
             "ant.efk|efk_queue",

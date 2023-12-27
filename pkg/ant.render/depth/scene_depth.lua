@@ -11,6 +11,7 @@ local ivs           = ecs.require "ant.render|visible_state"
 local sd_sys        = ecs.system "scene_depth_system"
 local R             = world:clibs "render.render_material"
 local queuemgr      = ecs.require "queue_mgr"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 if (not ENABLE_FXAA) and (not ENABLE_TAA) then
     local function DEF_FUNC() end
@@ -28,7 +29,7 @@ local fbmgr     = require "framebuffer_mgr"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 function sd_sys:post_init()
-    local vr = world.args.scene.viewrect
+    local vr = iviewport.viewrect
     world:create_entity {
         policy = {
             "ant.render|scene_depth_queue",

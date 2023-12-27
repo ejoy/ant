@@ -7,6 +7,8 @@ local mu      = mathpkg.util
 
 local dpd_sys = ecs.system "default_pickup_detect_system"
 local ipu = ecs.require "ant.objcontroller|pickup.pickup_system"
+local iviewport = ecs.require "ant.render|viewport.state"
+
 local topick_mb
 local gesture_mb
 
@@ -16,8 +18,8 @@ function dpd_sys:init()
 end
 
 local function remap_xy(x, y)
-    local nx, ny = mu.convert_device_to_screen_coord(world.args.device_size, world.args.scene.viewrect, x, y)
-	local vr = world.args.scene.viewrect
+    local nx, ny = mu.convert_device_to_screen_coord(iviewport.device_size, iviewport.viewrect, x, y)
+	local vr = iviewport.viewrect
 	return nx-vr.x, ny-vr.y
 end
 

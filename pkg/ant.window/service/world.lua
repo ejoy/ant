@@ -4,10 +4,8 @@ local ltask     = require "ltask"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
-local setting   = import_package "ant.settings"
 local inputmgr  = import_package "ant.inputmgr"
 local bgfx      = require "bgfx"
-local mu		= import_package "ant.math".util
 local ServiceRmlUi
 ltask.fork(function ()
     ServiceRmlUi = ltask.uniqueservice("ant.rmlui|rmlui", ltask.self())
@@ -21,7 +19,6 @@ local encoderBegin = false
 local quit
 local will_reboot
 
-
 local function reboot(initargs)
 	local config = world.args
 	local enable_mouse = config.ecs.enable_mouse
@@ -33,47 +30,19 @@ local function reboot(initargs)
 	world:pipeline_init()
 end
 
-local SCENE_RATIO <const> = setting:get "scene/scene_ratio" or 1.0
-local RESOLUTION_WIDTH, RESOLUTION_HEIGHT <const> = 1280, 720
-
 local function render(nwh, context, width, height, initialized)
-
-	local function get_resolution()
-		local w, h
-		w, h = (setting:get "scene/resolution"):match "(%d+)%a(%d+)"
-		return {w = tonumber(w and w or RESOLUTION_WIDTH), h = tonumber(h and h or RESOLUTION_HEIGHT)}
-	end
-
 	local config = {
 		ecs = initargs,
+		nwh = nwh,
+		context = context,
+		width = width,
+		height = height,
 	}
-
-	local resolution = get_resolution()
-
-	config.device_size = {
-		x = 0,
-		y = 0,
-		w = width,
-		h = height
-	}
-
-	local vp = config.device_size
-	local vr = mu.get_scene_view_rect(resolution.w, resolution.h, vp, SCENE_RATIO)
-
-	config.scene = {
-		viewrect = vr,
-		resolution = resolution,
-		scene_ratio = SCENE_RATIO,
-	}
-
-	log.info("scene viewrect: ", vr.x, vr.y, vr.w, vr.h)
-	log.info("scene ratio: ", SCENE_RATIO)
-	log.info("device viewport: ", vp.x, vp.y, vp.w, vp.h)
 	rhwi.init {
 		nwh			= nwh,
 		context		= context,
-		w			= vr.w,
-		h			= vr.h,
+		w			= width,
+		h			= height,
 	}
 	rhwi.set_profie(false)
 	bgfx.encoder_create "world"
@@ -84,7 +53,12 @@ local function render(nwh, context, width, height, initialized)
 	world = ecs.new_world(config)
 	world:dispatch_message {
 		type = "set_viewport",
-		viewport = config.device_size,
+		viewport = {
+			x = 0,
+			y = 0,
+			w = width,
+			h = height,
+		},
 	}
 
 	world:pipeline_init()

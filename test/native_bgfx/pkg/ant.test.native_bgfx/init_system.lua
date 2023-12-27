@@ -6,6 +6,7 @@ local layoutmgr = require "layoutmgr"
 local fs        = require "filesystem"
 local sampler   = require "sampler"
 local platform  = require "bee.platform"
+local iviewport = ecs.require "ant.render|viewport.state"
 local OS        = platform.os
 
 local caps = bgfx.get_caps()
@@ -162,7 +163,7 @@ function is:init()
     
 end
 
-local fb_size = {w=world.args.scene.viewrect.w, h=world.args.scene.viewrectt.h}
+local fb_size = {w=iviewport.viewrect.w, h=iviewport.viewrectt.h}
 
 local function create_fb1(rbs, viewid)
     local fbhandle = bgfx.create_frame_buffer(rbs, true)

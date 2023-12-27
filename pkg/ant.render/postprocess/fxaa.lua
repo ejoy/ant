@@ -22,6 +22,7 @@ local util      = ecs.require "postprocess.util"
 local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 function fxaasys:init()
     world:create_entity{
@@ -59,8 +60,8 @@ end
 local fxaa_viewid<const> = hwi.viewid_get "fxaa"
 
 function fxaasys:init_world()
-    local vr = mu.copy_viewrect(world.args.scene.viewrect)
-    util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.scene.viewrect), create_fb(vr), "fxaa_queue", "fxaa_queue", true)
+    local vr = mu.copy_viewrect(iviewport.viewrect)
+    util.create_queue(fxaa_viewid, mu.copy_viewrect(iviewport.viewrect), create_fb(vr), "fxaa_queue", "fxaa_queue", true)
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}

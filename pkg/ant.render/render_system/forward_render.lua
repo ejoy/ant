@@ -5,6 +5,7 @@ local w = world.w
 local default	= import_package "ant.general".default
 local icamera	= ecs.require "ant.camera|camera"
 local irender	= ecs.require "ant.render|render_system.render"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
@@ -12,7 +13,7 @@ local mu		= mathpkg.util
 local fr_sys = ecs.system "forward_render_system"
 
 function fr_sys:init()
-	local vr = world.args.scene.viewrect
+	local vr = iviewport.viewrect
 	local camera = icamera.create{
 		name = "default_camera",
 		frustum = default.frustum(vr.w/vr.h),

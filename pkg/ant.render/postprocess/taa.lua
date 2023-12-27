@@ -30,6 +30,7 @@ local util      = ecs.require "postprocess.util"
 local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local taa_first_frame_eid
 local taa_after_first_frame
@@ -101,7 +102,7 @@ local taa_copy_viewid<const> = hwi.viewid_get "taa_copy"
 
 
 function taasys:init_world()
-    local vp = world.args.scene.viewrect
+    local vp = iviewport.viewrect
     local vr = {x=vp.x, y=vp.y, w=vp.w, h=vp.h}
 
     local taa_fbidx, taa_copy_fbidx
@@ -137,10 +138,10 @@ function taasys:init_world()
         }
     ) 
 
-    util.create_queue(taa_viewid, mu.copy_viewrect(world.args.scene.viewrect), taa_fbidx, "taa_queue", "taa_queue", true)
-    util.create_queue(taa_copy_viewid, mu.copy_viewrect(world.args.scene.viewrect), taa_copy_fbidx, "taa_copy_queue", "taa_copy_queue", true)
+    util.create_queue(taa_viewid, mu.copy_viewrect(iviewport.viewrect), taa_fbidx, "taa_queue", "taa_queue", true)
+    util.create_queue(taa_copy_viewid, mu.copy_viewrect(iviewport.viewrect), taa_copy_fbidx, "taa_copy_queue", "taa_copy_queue", true)
     if not ENABLE_FXAA then
-        util.create_queue(taa_present_viewid, mu.copy_viewrect(world.args.scene.viewrect), nil, "taa_present_queue", "taa_present_queue", true) 
+        util.create_queue(taa_present_viewid, mu.copy_viewrect(iviewport.viewrect), nil, "taa_present_queue", "taa_present_queue", true) 
     end
 end
 

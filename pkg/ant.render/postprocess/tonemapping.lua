@@ -13,6 +13,7 @@ local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 local setting   = import_package "ant.settings"
+local iviewport = ecs.require "ant.render|viewport.state"
 local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
@@ -55,7 +56,7 @@ local function check_create_fb(vr)
 end
 
 function tm_sys:init_world()
-    local vr = mu.copy_viewrect(world.args.scene.viewrect)
+    local vr = mu.copy_viewrect(iviewport.viewrect)
     util.create_queue(tm_viewid, vr, check_create_fb(vr), "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA or ENABLE_TAA)
 end
 

@@ -18,6 +18,7 @@ local RM            = ecs.require "ant.material|material"
 local queuemgr      = ecs.require "queue_mgr"
 local R             = world:clibs "render.render_material"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
+local iviewport     = ecs.require "ant.render|viewport.state"
 local fbmgr         = require "framebuffer_mgr"
 local sampler       = import_package "ant.render.core".sampler
 local default_comp  = import_package "ant.general".default
@@ -62,7 +63,7 @@ local velocity_viewid<const> = hwi.viewid_get "velocity"
 
 local function create_velocity_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
-    local vr = world.args.scene.viewrect
+    local vr = iviewport.viewrect
     world:create_entity{
         policy = {
             "ant.render|velocity_queue",
@@ -170,7 +171,7 @@ end
 
 local function update_jitter_table()
     jitter_current_table = {}
-    local vr = world.args.scene.viewrect
+    local vr = iviewport.viewrect
     for idx = 0, #jitter_origin_table do
         jitter_current_table[idx] = {(jitter_origin_table[idx][1] - 0.5) / vr.w * 2, (jitter_origin_table[idx][2] - 0.5) / vr.h * 2}
     end

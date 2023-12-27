@@ -10,6 +10,7 @@ local fbmgr     = require "framebuffer_mgr"
 local bgfx      = require "bgfx"
 
 local icompute = ecs.require "ant.render|compute.compute"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 --resolve depth
 local depth_resolve_sys = ecs.system "depth_resolve_system"
@@ -54,7 +55,7 @@ local function update_resolve_depth(vr)
 end
 
 function depth_resolve_sys:init_world()
-    update_resolve_depth(world.args.scene.viewrect)
+    update_resolve_depth(iviewport.viewrect)
 end
 
 function depth_resolve_sys:data_changed()
@@ -86,7 +87,7 @@ end
 
 local depth_mipmap_viewid = viewidmgr.get "depth_mipmap"
 function depth_mipmap_sys:depth_mipmap()
-    local vr = world.args.scene.viewrect
+    local vr = iviewport.viewrect
     local nummip = math.log(math.max(vr.w, vr.h), 2)+1
 
     local e = w:first "depth_mipmap dispatch:in"

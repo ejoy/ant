@@ -23,6 +23,7 @@ local util      = ecs.require "postprocess.util"
 local icompute  = ecs.require "ant.render|compute.compute"
 local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local ENABLE_BENT_NORMAL<const>         = setting:get "graphic/ao/bent_normal"
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
@@ -187,7 +188,7 @@ local function update_ssct_properties(material)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.calc_viewrect(world.args.scene.viewrect, ssao_configs.resolution)
+    local vr = mu.calc_viewrect(iviewport.viewrect, ssao_configs.resolution)
     local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"

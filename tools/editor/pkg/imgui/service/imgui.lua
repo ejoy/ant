@@ -46,25 +46,23 @@ end
 
 ltask.fork(function ()
     local nwh = window.init(WindowMessage, ("%dx%d"):format(initargs.w, initargs.h))
+	local config = {
+		ecs = initargs.ecs,
+		nwh = nwh,
+		width = 1920,
+		height = 1080,
+	}
     rhwi.init {
         nwh = nwh,
-        w = 1920,
-        h = 1080,
+        w = config.width,
+        h = config.height,
     }
     bgfx.encoder_create "world"
     bgfx.encoder_init()
     assetmgr.init()
     bgfx.encoder_begin()
 
-    world = ecs.new_world {
-        scene = {
-            viewrect = {x = 0, y = 0, w = 1920, h = 1080},
-            resolution = {w = 1920, h = 1080},
-            scene_ratio = 1,
-        },
-        device_size = {x=0, y=0, w=1920, h=1080},
-        ecs = initargs.ecs,
-    }
+    world = ecs.new_world(config)
     WindowDispatch()
     world:pipeline_init()
     while WindowDispatch() do

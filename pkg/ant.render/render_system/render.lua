@@ -14,6 +14,7 @@ local layoutmgr		= require "vertexlayout_mgr"
 
 local hwi			= import_package "ant.hwi"
 local sampler		= import_package "ant.render.core".sampler
+local iviewport		= ecs.require "ant.render|viewport.state"
 
 local ig 			= ecs.require "ant.group|group"
 
@@ -333,7 +334,7 @@ function irender.set_framebuffer_ratio(which, ratio)
 end
 
 function irender.get_framebuffer_ratio(which)
-	return world.args.scene[which] or error ("Invalid ratio type:" .. which)
+	return iviewport[which] or error ("Invalid ratio type:" .. which)
 end
 
 function irender.mark_group_visible(gid, enable)

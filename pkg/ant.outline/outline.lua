@@ -10,6 +10,7 @@ local hwi       = import_package "ant.hwi"
 local queuemgr  = ecs.require "queue_mgr"
 local R         = world:clibs "render.render_material"
 local RM        = ecs.require "ant.material|material"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local outline_material
 local outline_skinning_material
@@ -50,7 +51,7 @@ local outline_viewid<const> = hwi.viewid_get "outline"
 
 local function create_outline_queue()
     local mq = w:first("main_queue render_target:in camera_ref:in")
-    local vr = world.args.scene.viewrect
+    local vr = iviewport.viewrect
     world:create_entity{
         policy = {
             "ant.render|outline_queue",

@@ -18,6 +18,7 @@ local imaterial     = ecs.require "ant.asset|material"
 local irender       = ecs.require "ant.render|render_system.render"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local ifsr          = ecs.require "ant.render|postprocess.fsr"
+local iviewport     = ecs.require "ant.render|viewport.state"
 
 local scene_ratio   = irender.get_framebuffer_ratio("scene_ratio")
 local NEED_UPSACLE <const>   = scene_ratio >= 0.5 and scene_ratio < 1
@@ -41,14 +42,14 @@ end
 local swapchain_viewid<const> = hwi.viewid_get "swapchain"
 
 function sc_sys:init_world()
-    util.create_queue(swapchain_viewid, mu.copy_viewrect(world.args.device_size), nil, "swapchain_queue", "swapchain_queue")
+    util.create_queue(swapchain_viewid, mu.copy_viewrect(iviewport.device_size), nil, "swapchain_queue", "swapchain_queue")
 end
 
 local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
 
 function sc_sys:data_changed()
     for _, vr in scene_viewrect_changed_mb:unpack() do
-        irq.set_view_rect("swapchain_queue", world.args.device_size)
+        irq.set_view_rect("swapchain_queue", iviewport.device_size)
         break
     end
 end

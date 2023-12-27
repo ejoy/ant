@@ -13,6 +13,7 @@ local irq		= ecs.require "ant.render|render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
 local imodifier = ecs.require "ant.modifier|modifier"
 local prefab_mgr = ecs.require "prefab_manager"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local utils 	= ecs.require "mathutils"
@@ -34,7 +35,7 @@ local uniform_scale = false
 local local_space = false
 
 local function cvt2scenept(x, y)
-    return x - world.args.scene.viewrect.x, y - world.args.scene.viewrect.y
+    return x - iviewport.viewrect.x, y - iviewport.viewrect.y
 end
 
 function gizmo:update()

@@ -20,6 +20,7 @@ local fbmgr     = require "framebuffer_mgr"
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.asset|material"
+local iviewport = ecs.require "ant.render|viewport.state"
 
 local hvflip_viewid<const> = hwi.viewid_generate("hv_flip", "fxaa")
 
@@ -64,7 +65,7 @@ function hvflip_sys:init()
 end
 
 function hvflip_sys:init_world()
-    util.create_queue(hvflip_viewid, mu.copy_viewrect(world.args.scene.viewrect), nil, "hv_flip_queue", "hv_flip_queue", false)
+    util.create_queue(hvflip_viewid, mu.copy_viewrect(iviewport.viewrect), nil, "hv_flip_queue", "hv_flip_queue", false)
 end
 
 function hvflip_sys:flip()
