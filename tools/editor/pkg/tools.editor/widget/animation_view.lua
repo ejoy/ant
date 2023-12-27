@@ -22,6 +22,9 @@ local fmod      = require "fmod"
 local edit_timeline
 local timeline_eid
 local timeline_playing = false
+local efk_tag_list = {}
+local srt_tag_list = {}
+local mtl_tag_list = {}
 local m = {}
 local edit_anims
 local anim_eid
@@ -34,7 +37,7 @@ local anim_state = {
     selected_frame = -1,
     current_frame = 0,
     is_playing = false,
-    anim_name = "",
+    anim_name = '',
     key_event = {},
     event_dirty = 0,
     selected_clip_index = 0,
@@ -47,6 +50,7 @@ local ui_timeline_duration = {1, min = 1, max = 300, speed = 1}
 local event_type = {"Animation", "Effect", "Sound", "Message"}
 
 local current_event
+local current_event_index
 local current_clip
 local anim_key_event = {}
 local function find_index(t, item)
@@ -57,19 +61,32 @@ local function find_index(t, item)
     end
 end
 
+local aio = import_package "ant.io"
+local datalist = require "datalist"
+local function get_action_list(asset_path)
+    local al = {}
+    if asset_path and asset_path ~= '' then
+        local animlist = datalist.parse(aio.readall(asset_path))
+        for _, anim in ipairs(animlist) do
+            al[#al + 1] = anim.name
+        end
+    end
+    return al
+end
+
 local function do_to_runtime_event(evs)
     local list = {}
     for _, ev in ipairs(evs) do
         list[#list + 1] = {
-            event_type  = ev.event_type,
             name        = ev.name,
-            asset_path  = ev.asset_path,
+            event_type  = ev.event_type,
+            asset_path  = ev.asset_path ~= '' and ev.asset_path or nil,
+            target      = ev.target ~= '' and ev.target or nil,
+            action      = ev.action,
             sound_event = ev.sound_event,
             forwards    = ev.forwards,
             pause_frame = ev.pause_frame,
-            -- move        = ev.move,
             msg_content = ev.msg_content,
-            link_info   = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
         }
     end
     return list
@@ -103,7 +120,7 @@ local function anim_group_delete(anim_name)
     e.animation.status[anim_name] = nil
     prefab_mgr:on_patch_animation(anim_eid, anim_name)
     if tdata.animation_birth == anim_name then
-        tdata.animation_birth = next(animation_map) or ""
+        tdata.animation_birth = next(animation_map) or ''
     end
     local name_idx = find_index(edit_anims.name_list, anim_name)
     if name_idx then
@@ -115,24 +132,18 @@ local function from_runtime_event(runtime_event)
     local ke = {}
     for _, ev in ipairs(runtime_event) do
         for _, e in ipairs(ev.event_list) do
-            e.name_ui = {text = e.name}
             if e.event_type == "Sound" or e.event_type == "Effect" or e.event_type == "Animation" then
-                e.asset_path_ui = {text = e.asset_path}
-                if e.link_info and e.link_info.slot_name ~= '' then
-                    e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
-                end
-                -- if e.event_type == "Effect" then
-                --     e.fadeout = e.fadeout or false
-                --     e.fadeout_ui = {e.fadeout}
-                -- end
+                e.asset_path_ui = {text = e.asset_path or ''}
+                e.action_list = get_action_list(e.asset_path)
                 if e.event_type == "Animation" then
+                    e.target_ui = {text = e.target or ''}
                     e.forwards = e.forwards or false
                     e.forwards_ui = {e.forwards}
                     e.pause_frame = e.pause_frame or -1
                     e.pause_frame_ui = {e.pause_frame, min = -1, max = 300, speed = 1}
                 end
             elseif e.event_type == "Message" then
-                e.msg_content = e.msg_content or ""
+                e.msg_content = e.msg_content or ''
                 e.msg_content_ui = {text = e.msg_content}
             end
         end
@@ -160,7 +171,7 @@ end
 local widget_utils  = require "widget.utils"
 
 local function set_current_anim(anim_name)
-    if anim_name == "" then
+    if anim_name == '' then
         return
     end
     local anim = edit_anims[anim_name]
@@ -199,7 +210,7 @@ local function set_current_anim(anim_name)
     anim_key_event = current_anim.key_event
     anim_state.duration = current_anim.duration
     current_event = nil
-    
+    current_event_index = 0
     iani.play(anim_eid, {name = anim_name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
     iani.set_time(anim_eid, 0)
     iani.pause(anim_eid, not anim_state.is_playing)
@@ -207,31 +218,21 @@ local function set_current_anim(anim_name)
     return true
 end
 
-local event_id = 1
-
 local function add_event(et)
-    --if not current_clip then return end
-    event_id = event_id + 1
-    local event_name = et..tostring(event_id)
     local new_event = {
         event_type      = et,
-        name            = event_name,
-        asset_path      = (et == "Effect" or et == "Sound" or et == "Animation") and "" or nil,
-        link_info       = (et == "Effect") and {
-            slot_name = "",
-            slot_eid = nil,
-        } or nil,
-        sound_event     = (et == "Sound") and "" or nil,
-        -- fadeout         = (et == "Effect") and false or nil,
+        asset_path      = (et == "Sound" or et == "Animation") and '' or nil,
+        target          = (et == "Animation") and '' or nil,
+        action          = (et == "Effect" or et == "Animation") and '' or nil,
+        sound_event     = (et == "Sound") and '' or nil,
         forwards        = (et == "Animation") and false or nil,
         pause_frame     = (et == "Animation") and -1 or nil,
-        fadeout_ui      = (et == "Effect") and {false} or nil,
         forwards_ui     = (et == "Animation") and {false} or nil,
         pause_frame_ui  = (et == "Animation") and {-1, min = -1, max = 300, speed = 1} or nil,
-        name_ui         = {text = event_name},
-        msg_content     = (et == "Message") and "" or nil,
-        msg_content_ui  = (et == "Message") and {text = ""} or nil,
-        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and {text = ""} or nil
+        msg_content     = (et == "Message") and '' or nil,
+        msg_content_ui  = (et == "Message") and {text = ''} or nil,
+        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and {text = ''} or nil,
+        target_ui       = (et == "Animation") and {text = ''} or nil
     }
     current_event = new_event
     local key = tostring(anim_state.selected_frame)
@@ -241,6 +242,7 @@ local function add_event(et)
     end
     local event_list = anim_key_event[key]--anim_state.current_event_list
     event_list[#event_list + 1] = new_event
+    current_event_index = #event_list
     set_event_dirty(1)
 end
 
@@ -275,6 +277,7 @@ local function delete_event(idx)
         delete_collider(anim_state.current_event_list[idx].collider)
     end
     current_event = nil
+    current_event_index = 0
     table.remove(anim_state.current_event_list, idx)
     set_event_dirty(1)
 end
@@ -310,11 +313,13 @@ local function show_events()
     if anim_state.current_event_list then
         local delete_idx
         for idx, ke in ipairs(anim_state.current_event_list) do
-            if imgui.widget.Selectable(ke.name, current_event and (current_event.name == ke.name)) then
+            local label = "event:" .. tostring(idx)
+            if imgui.widget.Selectable(label, current_event and (current_event_index == idx)) then
                 current_event = ke
+                current_event_index = idx
             end
-            if current_event and (current_event.name == ke.name) then
-                if imgui.windows.BeginPopupContextItem(ke.name) then
+            if current_event and (current_event_index == idx) then
+                if imgui.windows.BeginPopupContextItem(label) then
                     if imgui.widget.Selectable("Delete", false) then
                         delete_idx = idx
                     end
@@ -329,17 +334,13 @@ end
 local sound_event_name_list = {}
 local sound_event_list = {}
 local bank_path
+
 local function show_current_event()
     if not current_event then return end
     imgui.widget.PropertyLabel("EventType")
     imgui.widget.Text(current_event.event_type)
 
     local dirty
-    imgui.widget.PropertyLabel("EventName")
-    if imgui.widget.InputText("##EventName", current_event.name_ui) then
-        current_event.name = tostring(current_event.name_ui.text)
-        dirty = true
-    end
     if current_event.event_type == "Sound" then
         if not bank_path and imgui.widget.Button("SelectBankPath") then
             local filename = uiutils.get_open_file_path("Bank", "bank")
@@ -404,42 +405,51 @@ local function show_current_event()
             end
         end
     elseif current_event.event_type == "Effect" or current_event.event_type == "Animation" then
-        -- if imgui.widget.Button("SelectEffect") then
-        --     local rpath = uiutils.get_open_file_path("Effect", "efk")
-        --     if rpath then
-        --         local pkgpath = access.virtualpath(global_data.repo, rpath)
-        --         assert(pkgpath)
-        --         current_event.asset_path_ui.text = pkgpath
-        --         current_event.asset_path = pkgpath
-        --         dirty = true
-        --     end
-        -- end
-        imgui.widget.PropertyLabel("AssetPath")
-        if imgui.widget.InputText("##AssetPath", current_event.asset_path_ui) then
-            current_event.asset_path = tostring(current_event.asset_path_ui.text)
-            dirty = true
-        end
-        if current_event.event_type == "Effect" then
-            -- imgui.widget.PropertyLabel("Forwards")
-            -- if imgui.widget.Checkbox("##Forwards", current_event.fadeout_ui) then
-            --     current_event.fadeout = current_event.fadeout_ui[1]
-            --     dirty = true
-            -- end
-            local slot_list = hierarchy.slot_list
-            if slot_list then
-                imgui.widget.PropertyLabel("LinkSlot")
-                if imgui.widget.BeginCombo("##LinkSlot", {current_event.link_info.slot_name, flags = imgui.flags.Combo {}}) then
-                    for name, eid in pairs(slot_list) do
-                        if imgui.widget.Selectable(name, current_event.link_info.slot_name == name) then
-                            current_event.link_info.slot_name = name
-                            current_event.link_info.slot_eid = eid
-                            dirty = true
-                        end
-                    end
-                    imgui.widget.EndCombo()
+        local action_list = {}
+        if current_event.event_type == "Animation" then
+            local function update_asset_path(asset_path)
+                current_event.asset_path = tostring(current_event.asset_path_ui.text)
+                current_event.action_list = get_action_list(asset_path)
+                current_event.action = nil
+                current_event.target = nil
+            end
+            if imgui.widget.Button("Modify") then
+                local localpath = uiutils.get_open_file_path("Modify Animation", "anim")
+                if localpath then
+                    current_event.asset_path_ui.text = access.virtualpath(global_data.repo, localpath)
+                    update_asset_path(tostring(current_event.asset_path_ui.text))
+                    dirty = true
                 end
             end
-        else
+            if current_event.asset_path and #current_event.asset_path > 0 then
+                imgui.widget.PropertyLabel("AssetPath")
+                if imgui.widget.InputText("##AssetPath", current_event.asset_path_ui) then
+                    update_asset_path(tostring(current_event.asset_path_ui.text))
+                    dirty = true
+                end
+                imgui.widget.PropertyLabel("ActionTarget")
+                if imgui.widget.InputText("##ActionTarget", current_event.target_ui) then
+                    current_event.target = tostring(current_event.target_ui.text)
+                    dirty = true
+                end
+            end
+            action_list = current_event.action_list or {}
+        end
+        action_list = (current_event.event_type == "Effect") and efk_tag_list or (#action_list > 0 and action_list or edit_anims.name_list)
+        if #action_list > 0 then
+            local action = current_event.action or ''
+            imgui.widget.PropertyLabel((current_event.event_type == "Action(Effect)") and "Effect" or "Action(Animation)")
+            if imgui.widget.BeginCombo("##ActionList", {action, flags = imgui.flags.Combo {}}) then
+                for _, name in ipairs(action_list) do
+                    if imgui.widget.Selectable(name, action == name) then
+                        current_event.action = name
+                    end
+                end
+                imgui.widget.EndCombo()
+                dirty = true
+            end
+        end
+        if current_event.event_type == "Animation" then
             imgui.widget.PropertyLabel("Forwards")
             if imgui.widget.Checkbox("##Forwards", current_event.forwards_ui) then
                 current_event.forwards = current_event.forwards_ui[1]
@@ -469,7 +479,7 @@ function m.on_remove_entity(eid)
     if e.slot and anim_eid then
         local ae <close> = world:entity(anim_eid, "anim_ctrl?in")
         local tpl = hierarchy:get_node_info(eid).template
-        local name = tpl.tag and tpl.tag[1] or ""
+        local name = tpl.tag and tpl.tag[1] or ''
         ae.anim_ctrl.slot_eid[name] = nil
     end
     if dirty then
@@ -495,6 +505,7 @@ local function on_move_keyframe(frame_idx, move_type)
         end
         anim_state.current_event_list = anim_key_event[newkey]
         current_event = nil
+        current_event_index = 0
     end
     set_event_dirty(-1)
 end
@@ -591,8 +602,8 @@ local function show_skeleton(b)
     end
     joint_utils.show_skeleton = b
 end
-local anim_name_ui = {text = ""}
-local anim_path_ui = {text = ""}
+local anim_name_ui = {text = ''}
+local anim_path_ui = {text = ''}
 local update_slot_list = world:sub {"UpdateSlotList"}
 local event_keyframe = world:sub{"keyframe_event"}
 local iefk = ecs.require "ant.efk|efk"
@@ -629,6 +640,7 @@ function m.clear()
     anim_eid = nil
     current_anim = nil
     current_event = nil
+    current_event_index = 0
     current_clip = nil
     edit_anims = nil
     keyframe_view.clear()
@@ -693,7 +705,7 @@ function m.show()
             end
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
-            local current_name = edit_timeline and "" or current_anim.name
+            local current_name = edit_timeline and '' or current_anim.name
             local current_name_list = edit_timeline and {} or edit_anims.name_list
             if imgui.widget.BeginCombo("##NameList", {current_name, flags = imgui.flags.Combo {}}) then
                 for _, name in ipairs(current_name_list) do
@@ -707,8 +719,8 @@ function m.show()
             imgui.cursor.SameLine()
             local title = "Add"
             if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
-                anim_name_ui.text = ""
-                anim_path_ui.text = ""
+                anim_name_ui.text = ''
+                anim_path_ui.text = ''
                 imgui.windows.OpenPopup(title)
             end
             local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
@@ -835,7 +847,7 @@ function m.show()
             end
         end
         imgui.cursor.SameLine()
-        local current_time = iani.get_time(anim_eid)
+        local current_time = edit_timeline and (anim_state.current_frame / sample_ratio) or iani.get_time(anim_eid)
         imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         local current_seq = edit_timeline and edit_timeline or edit_anims
@@ -904,48 +916,48 @@ function m.show()
     end
 end
 
-function m.on_prefab_load(entities)
+function m.on_prefab_load(eid)
+    m.update_tag_list()
+    if not eid then
+        return
+    end
     local editanims = {dirty = true, name_list = {} }
     local skeleton
-    for _, eid in ipairs(entities) do
-        local e <close> = world:entity(eid, "anim_ctrl?in animation?in animation_birth?in")
-        if e.anim_ctrl then
-            anim_eid = eid
-            local prefab_filename = prefab_mgr:get_current_filename()
-            local path_list = utils.split_ant_path(prefab_filename)
-            if path_list[1] then
-                --xxx.glb
-                iani.load_events(eid, string.sub(path_list[1], 1, -5) .. ".event")
-            else
-                ---xxx.prefab
-                iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
-            end
-            
-            local animations = e.animation.status
-            if animations then
-                editanims.birth = e.animation_birth
-                skeleton = e.animation.skeleton
-                for key, status in pairs(e.animation.status) do
-                    if not editanims[key] then
-                        local events = e.anim_ctrl.keyframe_events[key]
-                        editanims[key] = {
-                            name = key,
-                            duration = status.handle:duration(),
-                            key_event = events and from_runtime_event(events) or {},
-                        }
-                        editanims.name_list[#editanims.name_list + 1] = key
-                    end
+    local e <close> = world:entity(eid, "anim_ctrl?in animation?in animation_birth?in")
+    if e.anim_ctrl then
+        anim_eid = eid
+        local prefab_filename = prefab_mgr:get_current_filename()
+        local path_list = utils.split_ant_path(prefab_filename)
+        if path_list[1] then
+            --xxx.glb
+            iani.load_events(eid, string.sub(path_list[1], 1, -5) .. ".event")
+        else
+            ---xxx.prefab
+            iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
+        end
+        
+        local animations = e.animation.status
+        if animations then
+            editanims.birth = e.animation_birth
+            skeleton = e.animation.skeleton
+            for key, status in pairs(e.animation.status) do
+                if not editanims[key] then
+                    local events = e.anim_ctrl.keyframe_events[key]
+                    editanims[key] = {
+                        name = key,
+                        duration = status.handle:duration(),
+                        key_event = events and from_runtime_event(events) or {},
+                    }
+                    editanims.name_list[#editanims.name_list + 1] = key
                 end
-                break
             end
         end
     end
-    hierarchy:update_slot_list(world)
     if #editanims.name_list > 0 then
         edit_anims = editanims
         table.sort(edit_anims.name_list)
         local animname
-        if edit_anims.birth and edit_anims.birth ~="" then
+        if edit_anims.birth and edit_anims.birth ~='' then
             animname = edit_anims.birth
         else
             animname = editanims.name_list[1]
@@ -994,6 +1006,16 @@ function m.on_target(eid)
         edit_anims.dirty = true
         set_event_dirty(-1)
     end
+end
+
+function m.update_tag_list()
+    efk_tag_list = prefab_mgr:get_efk_list()
+    srt_tag_list = prefab_mgr:get_srt_list()
+    mtl_tag_list = prefab_mgr:get_mtl_list()
+end
+
+function m.update_anim_namelist()
+    -- efk_tag_list = namelist
 end
 
 return m

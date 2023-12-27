@@ -5,6 +5,7 @@ local iefk      = ecs.require "ant.efk|efk"
 local tl_sys = ecs.system "timeline_system"
 local itl = ecs.require "ant.timeline|timeline"
 local iani = ecs.require "ant.anim_ctrl|state_machine"
+local imodifier = ecs.require "ant.modifier|modifier"
 
 function itl:start(e, context)
 	if #e.timeline.key_event <= 0 then
@@ -21,31 +22,32 @@ end
 local engine_event = {}
 
 function engine_event:Animation(tid, ud)
-	local anim_ctrl = ud.eid_map["anim_ctrl"]
-	local anim_eid = anim_ctrl and anim_ctrl[1] or nil
-	if anim_eid then
-		iani.play(anim_eid, {name = ud.ev.asset_path, forwards = ud.ev.forwards or false})
-		if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
-			-- TODO: timeline frame ratio is 30
-			iani.set_time(anim_eid, ud.ev.pause_frame / 30)
-			iani.pause(anim_eid, true)
+	if ud.ev.asset_path and #ud.ev.asset_path > 0 then
+		imodifier.start(imodifier.create_modifier_from_file(ud.eid_map[ud.ev.target][1], 0, ud.ev.asset_path, ud.ev.action), {}, true)
+	else
+		local anim_ctrl = ud.eid_map["anim_ctrl"]
+		local anim_eid = anim_ctrl and anim_ctrl[1] or nil
+		if anim_eid then
+			iani.play(anim_eid, {name = ud.ev.action, forwards = ud.ev.forwards or false})
+			if ud.ev.pause_frame and ud.ev.pause_frame > -1 then
+				-- TODO: timeline frame ratio is 30
+				iani.set_time(anim_eid, ud.ev.pause_frame / 30)
+				iani.pause(anim_eid, true)
+			end
 		end
 	end
 end
 
 function engine_event:Effect(tid, ud)
-	local eid = ud.eid_map[ud.ev.asset_path]
+	local eid = ud.eid_map[ud.ev.action]
 	local e <close> = world:entity(eid[1], "efk:in")
 	iefk.play(e)
-	-- print("event effect : ", ud.ev.name, ud.ev.asset_path)
 end
 
 function engine_event:Sound(tid, ud)
-	-- print("event sound : ", ud.ev.name, ud.ev.asset_path)
 end
 
 function engine_event:Message(tid, ud)
-	-- print("event message : ", ud.ev.name, ud.ev.msg_content)
 	world:pub {"keyframe_event", "message", ud.context}
 end
 
@@ -53,7 +55,6 @@ local function add_event(tid, desc)
 	for _, ke in ipairs(desc.key_event) do
 		for _, event in ipairs(ke.event_list) do
 			itl:add(tid, ke.tick, event.event_type, {ev = event, eid_map = desc.eid_map, context = desc.context})
-			-- print("add timeline : ", tid, ke.tick, event.event_type)
 		end
 	end
 	if desc.loop then

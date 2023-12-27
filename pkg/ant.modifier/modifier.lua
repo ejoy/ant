@@ -77,7 +77,7 @@ function imodifier.delete(m)
     if not m then
         return
     end
-    local e <close> = world:entity(m.eid, "modifier:in")
+    -- local e <close> = world:entity(m.eid, "modifier:in")
     -- local mf = e.modifier
     -- if mf.target then
     --     mf:reset()
@@ -191,63 +191,110 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
     }
 end
 
-function imodifier.create_srt_modifier_from_file(target, group_id, path, keep, foreupdate)
-    local get_keyframe_value = function (clip)
-        local value = {1, 0, 0, 0, 0, 0, 0}
-        value[clip.rot_axis + 1] = clip.amplitude_rot
-        if clip.direction < 4 then
-            value[clip.direction + 4] = clip.amplitude_pos
-        elseif clip.direction == 4 then--XY
-            value[5] = clip.amplitude_pos
-            value[6] = clip.amplitude_pos
-        elseif clip.direction == 5 then--YZ
-            value[6] = clip.amplitude_pos
-            value[7] = clip.amplitude_pos
-        elseif clip.direction == 6 then--XZ
-            value[5] = clip.amplitude_pos
-            value[7] = clip.amplitude_pos
-        elseif clip.direction == 7 then--XYZ
-            value[5] = clip.amplitude_pos
-            value[6] = clip.amplitude_pos
-            value[7] = clip.amplitude_pos
-        end
-        return value
-    end
-    local anims = serialize.parse(path, aio.readall(path))
-    local ani = anims[1]
-    local sample_ratio = ani.sample_ratio
-    local frame_count = ani.sample_ratio * ani.duration
-    local target_anim = ani.target_anims[1]
-    local keyframes = {}
-    local init_value = {1, 0, 0, 0, 0, 0, 0}
-    local from = init_value
-    local last_clip = target_anim.clips[1]
-    for _, clip in ipairs(target_anim.clips) do
-        if clip.range[1] == last_clip.range[2] + 1 then
-            from = get_keyframe_value(last_clip)
-        else
-            if clip.range[1] > 0 then
-                keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
+local keyframes_cache = {}
+function imodifier.clear_keyframes_cache()
+    keyframes_cache = {}
+end
+
+function imodifier.create_modifier_from_file(target, group_id, path, anim_name, keep, foreupdate)
+    local key = path .. anim_name
+    if not keyframes_cache[key] then
+        local anims = serialize.parse(path, aio.readall(path))
+        local current_anim
+        if anim_name then
+            for _, value in ipairs(anims) do
+                if value.name == anim_name then
+                    current_anim = value
+                    break
+                end
             end
-            from = init_value
         end
-        local fromvalue = {}
-        for _, value in ipairs(from) do
-            fromvalue[#fromvalue + 1] = value
+        local animtype = current_anim.type
+        local sample_ratio = current_anim.sample_ratio
+        local frame_count = current_anim.sample_ratio * current_anim.duration
+        local get_keyframe_value = function (type, clip, init)
+            if type == "mtl" then
+                return clip.value
+            elseif type == "srt" then
+                local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
+                value[clip.rot_axis + 1] = clip.amplitude_rot
+                if clip.direction < 4 then
+                    value[clip.direction + 4] = clip.amplitude_pos
+                elseif clip.direction == 4 then--XY
+                    value[5] = clip.amplitude_pos
+                    value[6] = clip.amplitude_pos
+                elseif clip.direction == 5 then--YZ
+                    value[6] = clip.amplitude_pos
+                    value[7] = clip.amplitude_pos
+                elseif clip.direction == 6 then--XZ
+                    value[5] = clip.amplitude_pos
+                    value[7] = clip.amplitude_pos
+                elseif clip.direction == 7 then--XYZ
+                    value[5] = clip.amplitude_pos
+                    value[6] = clip.amplitude_pos
+                    value[7] = clip.amplitude_pos
+                end
+                return value
+            end
         end
-        keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
-        local tovalue = get_keyframe_value(clip)
-        keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
-        last_clip = clip
+        
+        local keyframes = {}
+        local property
+        for _, anim in ipairs(current_anim.target_anims) do
+            if #anim.clips < 1 then
+                goto continue
+            end
+            local init_value
+            if animtype == "srt" then
+                init_value = {1, 0, 0, 0, 0, 0, 0}
+            elseif animtype == "mtl" then
+                init_value = anim.init_value
+                property = anim.target_name
+            end
+            local from = init_value
+            local last_clip = anim.clips[1]
+            for _, clip in ipairs(anim.clips) do
+                if clip.range[1] == last_clip.range[2] + 1 then
+                    from = get_keyframe_value(animtype, last_clip, anim.inherit[3] and keyframes[#keyframes].value or nil)
+                else
+                    if clip.range[1] > 0 then
+                        keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
+                    end
+                    from = init_value
+                end
+                local fromvalue = {}
+                for _, value in ipairs(from) do
+                    fromvalue[#fromvalue + 1] = value
+                end
+                keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
+                local tovalue = get_keyframe_value(animtype, clip, anim.inherit[3] and from or nil)
+                if animtype == "mtl" then
+                    local tv = {}
+                    for _, value in ipairs(tovalue) do
+                        tv[#tv + 1] = value * clip.scale
+                    end
+                    tovalue = tv
+                end
+                keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
+                last_clip = clip
+            end
+            local endclip = anim.clips[#anim.clips]
+            if endclip and endclip.range[2] < frame_count - 1 then
+                keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
+                if frame_count > endclip.range[2] + 1 then
+                    keyframes[#keyframes + 1] = {time = frame_count / sample_ratio, value = init_value}
+                end
+            end
+            ::continue::
+        end
+        keyframes_cache[key] = {animtype = animtype, keyframes = keyframes, property = property}
     end
-    local endclip = target_anim.clips[#target_anim.clips]
-    if endclip and endclip.range[2] < frame_count - 1 then
-        keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
-        if frame_count > endclip.range[2] + 1 then
-            keyframes[#keyframes + 1] = {time = frame_count / sample_ratio, value = init_value}
-        end
+    local kfc = keyframes_cache[key]
+    if kfc.animtype == "srt" then
+        return imodifier.create_srt_modifier(target, group_id, kfc.keyframes, keep, foreupdate)
+    else
+        return imodifier.create_mtl_modifier(target, kfc.property, kfc.keyframes, keep, foreupdate)
     end
-    return imodifier.create_srt_modifier(target, group_id, keyframes, keep, foreupdate)
 end
 
 function imodifier.create_srt_modifier(target, group_id, generator, keep, foreupdate)
@@ -325,18 +372,17 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
     }
 end
 
-function imodifier.start(m, desc)
+function imodifier.start(m, desc, auto_destroy)
     if not m then
         return
     end
+    desc.destroy = true
+    auto_destroy_map[m.eid] = m
     world:pub {"modifier", m, desc}
 end
 
 function imodifier.start_bone_modifier(target, group_id, filename, bone_name, desc)
-    local m = imodifier.create_bone_modifier(target, group_id, filename, bone_name)
-    desc.destroy = true
-    auto_destroy_map[m.eid] = m
-    imodifier.start(m, desc)
+    imodifier.start(imodifier.create_bone_modifier(target, group_id, filename, bone_name), desc, true)
 end
 
 function imodifier.stop(m)

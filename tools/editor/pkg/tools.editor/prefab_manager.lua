@@ -113,7 +113,6 @@ local function create_simple_entity(name, parent)
 		},
 		data = {
             scene = {parent = parent},
-            -- bounding = {aabb = {{0,0,0}, {1,1,1}}}
 		},
         tag = {
             name
@@ -354,6 +353,7 @@ function m:on_prefab_ready(prefab)
     local j = 1
     local last_tpl
     local anim_eid
+    local tag_list = {}
     for i, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
         local e <close> = world:entity(eid, "scene?in light?in")
@@ -370,15 +370,18 @@ function m:on_prefab_ready(prefab)
         else
             self.entities[#self.entities + 1] = eid
             local name = pt.tag and pt.tag[1]
+            if pt.data.anim_ctrl then
+                anim_eid = eid
+            end
             if not name then
-                if pt.data.anim_ctrl then
-                    anim_eid = eid
-                    name = "anim_ctrl"
+                if i == 1 then
+                    name = "Scene"
                 else
-                    name = pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or "")
+                    name = pt.data.anim_ctrl and "anim_ctrl" or (pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or ""))
                 end
             end
-            node_map[eid] = {template = pt, parent = parent, name = (i == 1) and "Scene" or name, scene_root = (i == 1), is_patch = (i >= self.patch_start_index)}
+            tag_list[#tag_list + 1] = {name, eid}
+            node_map[eid] = {template = pt, parent = parent, name = name, scene_root = (i == 1), is_patch = (i >= self.patch_start_index)}
             j = j + 1
         end
         last_tpl = pt
@@ -413,13 +416,14 @@ function m:on_prefab_ready(prefab)
         self.root_mat = math3d.ref(math3d.matrix(srt))
     end
 
-    if anim_eid then
-        local tpl = hierarchy:get_node_info(anim_eid).template
+    for _, v in ipairs(tag_list) do
+        local tpl = hierarchy:get_node_info(v[2]).template
         if not tpl.tag then
-            tpl.tag = {"anim_ctrl"}
-            self:on_patch_tag(anim_eid, tpl.tag)
+            tpl.tag = {v[1]}
+            self:on_patch_tag(v[2], nil, tpl.tag, true)
         end
     end
+    anim_view.on_prefab_load(anim_eid)
 end
 
 local prefabe_name_ui = {text = ""}
@@ -534,6 +538,7 @@ function m:open(filename, prefab_name, patch_tpl)
         patch_tpl = patch_tpl or {}
         self.origin_patch_template = patch_tpl
         self.patch_template = {}
+        self.tag_patch = {}
         for _, patch in ipairs(patch_tpl) do
             if patch.path == "hitch.prefab" then
                 self.save_hitch = true
@@ -555,7 +560,6 @@ function m:open(filename, prefab_name, patch_tpl)
         on_ready = function(instance)
             self:on_prefab_ready(instance)
             hierarchy:update_slot_list(world)
-            anim_view.on_prefab_load(self.entities)
             world:pub {"LookAtTarget", self.entities[1]}
         end
     }
@@ -630,6 +634,7 @@ function m:reset_prefab(noscene)
     self.patch_copy_material = {}
     self.prefab_template = {}
     self.patch_template = {}
+    self.tag_patch = {}
     self.prefab_filename = nil
     self.glb_filename = nil
     self.scene = nil
@@ -819,6 +824,9 @@ function m:save(path)
     if self.glb_filename then
         if self.patch_template then
             local final_template = {}
+            for _, v in ipairs(self.tag_patch) do
+                final_template[#final_template + 1] = v
+            end
             if next(self.image_patch) then
                 for _, v in pairs(self.image_patch) do
                     for _, vv in pairs(v) do
@@ -948,6 +956,50 @@ function m:set_parent(target, parent)
         return e
     end
 end
+
+function m:update_efk_tag(eid)
+    local e <close> = world:entity(eid, "efk?in")
+    if e.efk then
+        local tag = self.current_prefab.tag
+        if ov and tag[ov] then
+            tag[ov] = nil
+        end
+        tag[nv] = {eid}
+    end
+end
+
+function m:get_efk_list()
+    local list = {}
+    for k, value in pairs(self.current_prefab.tag) do
+        local ee <close> = world:entity(value[1], "efk?in")
+        if ee.efk then
+            list[#list + 1] = k
+        end
+    end
+    return list
+end
+
+function m:get_srt_list()
+    local list = {}
+    for k, value in pairs(self.current_prefab.tag) do
+        local ee <close> = world:entity(value[1], "scene?in")
+        if ee.scene then
+            list[#list + 1] = k
+        end
+    end
+    return list
+end
+
+function m:get_mtl_list()
+    local list = {}
+    for k, value in pairs(self.current_prefab.tag) do
+        local ee <close> = world:entity(value[1], "material?in")
+        if ee.material then
+            list[#list + 1] = k
+        end
+    end
+    return list
+end
 function m:do_remove_entity(eid)
     if not eid then
         return
@@ -1071,6 +1123,9 @@ function m:find_patch_index(node_idx)
 end
 
 function m:pacth_remove(eid)
+    local name = hierarchy:get_node_info(eid).template.tag[1]
+    self.current_prefab.tag[name] = nil
+    anim_view.update_tag_list()
     if not self.glb_filename then
         return true
     end
@@ -1114,7 +1169,7 @@ function m:pacth_add(tpl, embed)
     end
 end
 
-function m:pacth_modify(pidx, p, v)
+function m:pacth_modify(pidx, p, v, origin_tag)
     if not self.glb_filename then return end
     local index
     local patch_node
@@ -1163,12 +1218,21 @@ function m:pacth_modify(pidx, p, v)
                     target = target[str]
                 end
             end
-            self.patch_template[#self.patch_template + 1] = {
-                file = self.prefab_name,
-                op = target and "replace" or "add",
-                path = path,
-                value = v,
-            }
+            if origin_tag then
+                self.tag_patch[#self.tag_patch + 1] = {
+                    file = "mesh.prefab",
+                    op = target and "replace" or "add",
+                    path = path,
+                    value = v,
+                }
+            else
+                self.patch_template[#self.patch_template + 1] = {
+                    file = self.prefab_name,
+                    op = target and "replace" or "add",
+                    path = path,
+                    value = v,
+                }
+            end
         end
     end
 end
@@ -1266,13 +1330,21 @@ function m:do_material_patch(eid, path, v)
     end
 end
 
-function m:do_patch(eid, path, v)
+function m:do_patch(eid, path, v, origin_tag)
     local info = hierarchy:get_node_info(eid)
-    self:pacth_modify(info.template.index, path, v)
+    self:pacth_modify(info.template.index, path, v, origin_tag)
 end
 
-function m:on_patch_tag(eid, v)
-    self:do_patch(eid, "/tag", v)
+function m:on_patch_tag(eid, ov, nv, origin_tag)
+    self:do_patch(eid, "/tag", #nv > 0 and nv or nil, origin_tag)
+    local tag = self.current_prefab.tag
+    if ov and ov[1] and tag[ov[1]] then
+        tag[ov[1]] = nil
+    end
+    if #nv > 0 then
+        tag[nv[1]] = {eid}
+    end
+    anim_view.update_tag_list()
 end
 
 function m:on_patch_tranform(eid, n, v)
@@ -1281,5 +1353,6 @@ end
 
 function m:on_patch_animation(eid, name, path)
     self:do_patch(eid, "/data/animation/"..name, path)
+    anim_view.update_anim_namelist()
 end
 return m

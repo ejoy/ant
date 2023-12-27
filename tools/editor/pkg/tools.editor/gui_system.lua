@@ -253,7 +253,7 @@ function m:handle_event()
                 if e.slot then
                     hierarchy:update_slot_list(world)
                 end
-                prefab_mgr:on_patch_tag(target, v1)
+                prefab_mgr:on_patch_tag(target, v1, v2)
             end
         elseif what == "parent" then
             target = prefab_mgr:set_parent(target, v1)

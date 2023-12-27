@@ -137,8 +137,9 @@ function BaseView:on_set_tag(value)
     local info = hierarchy:get_node_info(self.eid)
     local tags = {}
     value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
+    local oldtags = info.template.tag
     info.template.tag = tags
-    world:pub {"EntityEvent", "tag", self.eid, tags}
+    world:pub {"EntityEvent", "tag", self.eid, oldtags, tags}
 end
 
 function BaseView:on_get_tag()
