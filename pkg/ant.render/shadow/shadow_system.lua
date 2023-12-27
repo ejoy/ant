@@ -204,8 +204,11 @@ local function build_PSC(queue_index, builder)
 end
 
 local function merge_PSC_and_PSR(PSC, PSR)
-	local PSR_near, PSR_far = mu.aabb_minmax_index(PSR, 3)
-	local PSC_near, PSC_far = mu.aabb_minmax_index(PSC, 3)
+	-- local _, PSR_far = mu.aabb_minmax_index(PSR, 3)
+	-- local PSC_near, _= mu.aabb_minmax_index(PSC, 3)
+
+	local PSR_far = math3d.index(math3d.array_index(PSR, 2), 3)
+	local PSC_near = math3d.index(math3d.array_index(PSC, 1), 3)
 
 	local sceneaabb = math3d.aabb_intersection(PSR, PSC)
 
@@ -213,12 +216,14 @@ local function merge_PSC_and_PSR(PSC, PSR)
 	local sminx, sminy = math3d.index(sminv, 1, 2)
 	local smaxx, smaxy = math3d.index(smaxv, 1, 2)
 
-	local USE_CASTER_FAR<const> = true
-	if USE_CASTER_FAR then
-		return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSC_far))
-	else
-		return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
-	end
+	-- local USE_CASTER_FAR<const> = false
+	-- if USE_CASTER_FAR then
+	-- 	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSC_far))
+	-- else
+	-- 	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
+	-- end
+
+	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
 end
 
 local BOX_TRIANGLES_INDICES = {}
@@ -468,16 +473,10 @@ local function build_scene_info(Cv, Lv)
 
 	local PSRLS = math3d.aabb_transform(Lv, PSR)
 	local PSCLS = math3d.aabb_transform(Lv, PSC)
-
-	local PSC_nearLS = mu.aabb_minmax_index(PSCLS, 3)
-	local PSR_nearLS, PSR_farLS = mu.aabb_minmax_index(PSRLS, 3)
-
 	return {
 		sceneaabbLS	= merge_PSC_and_PSR(PSCLS, PSRLS),
 		PSR 		= PSR,
 		PSC			= PSC,
-		PSC_nearLS	= PSC_nearLS,
-		PSR_farLS	= PSR_farLS,
 		--transform PSR to viewspace to calculate the zn/zf may not be a good idea, calculate every aabb zn/zf can make more tighten [zn, zf] range
 		zn			= zn,
 		zf			= zf,
@@ -558,22 +557,21 @@ function shadow_sys:update_camera_depend()
 		local Lv2Ndc = math3d.mul(sp, Lv2Vv)
 		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
 
-		local verticesLS = frustum_interset_aabb(c.Lv2Ndc, si.sceneaabbLS)
+		--local verticesLS = frustum_interset_aabb(c.Lv2Ndc, si.sceneaabbLS)
+		local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, si.sceneaabbLS)
 		local intersectaabb = mc.NULL
 		if mc.NULL ~= verticesLS then
 			intersectaabb = math3d.minmax(verticesLS)
-
-			--TODO: need fix, make sure frustum near/far on +z
 			local n, f = mu.aabb_minmax_index(intersectaabb, 3)
+
+			--because shadowmap depth value range from [0, 1], so frustum near/far must be on +z
+			--so we need to move camera position on near plane to make sure frustum are bound the whole scene
 			local eyepos = math3d.transform(Lw, math3d.vector(0.0, 0.0, n, 1), 1)
 
 			Lv = math3d.lookto(eyepos, lightdirWS, rightdir)
 			Lw = math3d.inverse_fast(Lv)
-			
-			--si.PSC_nearLS and si.PSR_farLS are calculate from Lv in origin(0.0, 0.0, 0.0),
-			--but we need to translate eyepos to light space point (0.0, 0.0, n)
-			--translate these two value si.PSC_nearLS/si.PSR_farLS to new eyepos is just -n
-			c.frustum.n, c.frustum.f = math.min(0.0, si.PSC_nearLS-n), math.max(f-n, si.PSR_farLS-n)
+
+			c.frustum.n, c.frustum.f = 0.0, f-n
 			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
 		end
 
