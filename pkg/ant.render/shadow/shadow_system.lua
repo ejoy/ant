@@ -226,161 +226,6 @@ local function merge_PSC_and_PSR(PSC, PSR)
 	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
 end
 
-local BOX_TRIANGLES_INDICES = {}
-
-local function quad2tri(indices, i0, i1, i2, i3)
-	indices[#indices+1] = {i0, i1, i2}
-	indices[#indices+1] = {i1, i3, i0}
-end
-
-quad2tri(BOX_TRIANGLES_INDICES, 5, 6, 1, 2) -- left
-quad2tri(BOX_TRIANGLES_INDICES, 3, 4, 7, 8) -- right
-quad2tri(BOX_TRIANGLES_INDICES, 2, 6, 4, 8) -- top
-quad2tri(BOX_TRIANGLES_INDICES, 3, 7, 1, 5) -- bottom
-quad2tri(BOX_TRIANGLES_INDICES, 1, 2, 3, 4) -- near
-quad2tri(BOX_TRIANGLES_INDICES, 5, 6, 7, 8) -- far
-
-assert(#BOX_TRIANGLES_INDICES == 6*2)
-
-local BOX_SEGMENT_INDICES<const> = {
-	{1, 2}, {2, 4}, {4, 3}, {3, 1},
-	{5, 6}, {6, 8}, {8, 7}, {7, 5},
-
-	{1, 5}, {2, 6}, {3, 7}, {4, 8},
-}
-
-assert(#BOX_SEGMENT_INDICES == 4*3)
-
-local function aabb_near_far(aabb)
-	local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
-	return math3d.index(minv, 3), math3d.index(maxv, 3)
-end
-
-local function rays_planes(rays, planes, resultop)
-	for _, r in ipairs(rays) do
-		for i=1, math3d.array_size(planes) do
-			local p = math3d.array_index(planes, i)
-			local t = math3d.plane_ray(r.o, r.d, p)
-			if t and 0 <= t and t <= 1.0 then
-				local pt = math3d.muladd(r.d, t, r.o)
-				resultop(pt)
-			end
-		end
-	end
-end
-
-local function build_box_rays(boxpoints)
-	local lineindices = {
-		0, 4, 1, 5,
-		2, 6, 3, 7,
-
-		0, 2, 1, 3,
-		4, 6, 5, 7,
-
-		0, 1, 2, 3,
-		4, 5, 6, 7,
-	}
-
-	local rays = {}
-	for i=1, #lineindices, 2 do
-		local s0, s1 = lineindices[i]+1, lineindices[i+1]+1
-		local p0, p1 = math3d.array_index(boxpoints, s0), math3d.array_index(boxpoints, s1)
-		rays[#rays+1] = {o=p0, d=math3d.sub(p1, p0)}
-	end
-	return rays
-end
-
-local corner_names = {
-	"lbn", "ltn", "rbn", "rtn",
-	"lbf", "ltf", "rbf", "rtf",
-}
-
-local function print_box_points(points, tabnum)
-	assert(math3d.array_size(points) == 8)
-
-
-	local function point_name(pidx, tabnum)
-		return ('\t'):rep(tabnum or 0) .. ("%s: %s"):format(corner_names[pidx], math3d.tostring(math3d.array_index(points, pidx)))
-	end
-
-	local function point_pairs(pidx1, pidx2, tabnum)
-		return ("%s;\t%s"):format(point_name(pidx1, tabnum), point_name(pidx2))
-	end
-	
-	print(point_pairs(1, 5, tabnum))
-	print(point_pairs(2, 6, tabnum))
-	print(point_pairs(3, 7, tabnum))
-	print(point_pairs(4, 8, tabnum))
-end
-
-local function frustum_interset_aabb(M, aabb)
-	local vertices = {}
-
-	local function check_point_inside_box(points, checkop, insidepoints)
-		for i=1, 8 do
-			local corner = math3d.array_index(points, i)
-			if checkop(corner) then
-				insidepoints[#insidepoints+1] = corner
-			end
-		end
-	end
-
-	local frustumpoints	= math3d.frustum_points(M)
-
-	print "frustum points:"
-	print_box_points(frustumpoints, 1)
-
-	check_point_inside_box(frustumpoints, function (p)
-		return math3d.aabb_test_point(aabb, p) >= 0 end,
-	vertices)
-
-	--check frustum included aabb
-	if #vertices == 8 then
-		return math3d.array_vector(vertices)
-	end
-
-	local frustumplanesLS	= math3d.frustum_planes(M)
-	local aabbpointsLS		= math3d.aabb_points(aabb)
-	check_point_inside_box(aabbpointsLS, function (p)
-		return math3d.frustum_test_point(frustumplanesLS, p) >= 0 end,
-	vertices)
-
-	--frustum interset with aabb or aabb inside frustum
-	if #vertices < 8 then
-		local function to_results(results)
-			if results ~= mc.NULL then
-				for i=1, math3d.array_size(results) do
-					vertices[#vertices+1] = math3d.array_index(results, i)
-				end
-			end
-		end
-		for _, r in ipairs(build_box_rays(frustumpoints)) do
-			to_results(math3d.ray_intersect_box(r.o, r.d, aabbpointsLS))
-		end
-
-		for _, r in ipairs(build_box_rays(aabbpointsLS)) do
-			to_results(math3d.ray_intersect_box(r.o, r.d, frustumpoints))
-		end
-
-		-- rays_planes(build_box_rays(frustumpoints), aabbplanesLS, function (pt)
-		-- 	if math3d.aabb_test_point(aabb, pt) >= 0 then
-		-- 		vertices[#vertices+1] = update_nearfar(pt)
-		-- 		intersect_points[#intersect_points+1] = pt
-		-- 	end
-		-- end)
-
-		-- local frustumplanes = math3d.frustum_planes(M)
-		-- rays_planes(build_box_rays(aabbpointsLS), frustumplanes, function (pt)
-		-- 	if math3d.frustum_test_point(frustumplanes, pt) >= 0 then
-		-- 		vertices[#vertices+1] = update_nearfar(pt)
-		-- 		intersect_points[#intersect_points+1] = pt
-		-- 	end
-		-- end)
-	end
-
-	return #vertices > 0 and math3d.array_vector(vertices) or mc.NULL
-end
-
 local function mark_camera_changed(e)
 	-- this camera should not generate the change tag
 	w:extend(e, "scene_changed?out scene_needchange?out camera_changed?out")
@@ -420,21 +265,6 @@ local function update_camera(c, Lv, Lp)
 	c.viewprojmat.m	= math3d.mul(Lp, Lv)
 end
 
-local function update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, vertices)
-	c.Lr.m	= Lr
-	c.Wv.m	= Wv
-	c.Wp.m	= Wp
-	c.Wpv.m	= math3d.mul(Wp, Wv)
-	c.Wpvl.m= math3d.mul(c.Wpv, Lr)
-
-	c.W.m	= math3d.mul(c.Wpvl, Lp)
-
-	local F = calc_focus_matrix(c.W, vertices)
-	c.F.m			= F
-
-	update_camera(c, Lv, math3d.mul(c.F, c.W))
-end
-
 local function commit_csm_matrices_attribs()
 	imaterial.system_attrib_update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
 	imaterial.system_attrib_update("u_csm_split_distances",	split_distances_VS)
@@ -452,34 +282,92 @@ local function calc_viewspace_z(n, f, r)
 end
 
 local INV_Z<const> = true
+--TODO: read from setting file
+local useLiSPSM<const> = false
 
-local function build_scene_info(Cv, Lv)
+local function build_znzf(objaabb, zn, zf)
+	local n, f = mu.aabb_minmax_index(objaabb, 3)
+	return math.min(zn, n), math.max(zf, f)
+end
+
+local function build_sceneaabb(Lv, C)
 	local mqidx = queuemgr.queue_index "main_queue"
+	--TODO: move zn, zf, PSR, PSC sceneaabbLS to shadow_bounding_system
 	local zn, zf = math.maxinteger, -math.maxinteger
-	local function build_znzf(objaabb)
-		local n, f = mu.aabb_minmax_index(objaabb, 3)
-		zn, zf = math.min(zn, n), math.max(zf, f)
-		return objaabb
-	end
-	local PSR_builder = function (objaabb)
-		build_znzf(math3d.aabb_transform(Cv, objaabb))
-		return objaabb
-	end
-
-	local PSC_builder = function (objaabb) return objaabb end
-
-	local PSR	= build_PSR(mqidx, PSR_builder)
-	local PSC	= build_PSC(mqidx, PSC_builder)
+	local Cv = C.camera.viewmat
+	local PSR	= build_PSR(mqidx, function (objaabb) zn, zf = build_znzf(math3d.aabb_transform(Cv, objaabb), zn, zf) return objaabb end)
+	local PSC	= build_PSC(mqidx, function (objaabb) return objaabb end)
 
 	local PSRLS = math3d.aabb_transform(Lv, PSR)
 	local PSCLS = math3d.aabb_transform(Lv, PSC)
+
+	zn, zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
+	return merge_PSC_and_PSR(PSCLS, PSRLS), zn, zf, PSR, PSC
+end
+
+--TODO: read from setting file
+local nearHit, farHit = 1, 100
+
+local function init_scene_info(C, lightdirWS)
+	local Cv = C.camera.viewmat
+
+	local rightdir, viewdir, camerapos = math3d.index(C.scene.worldmat, 1, 3, 4)
+
+	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
+	local Lw = math3d.inverse_fast(Lv)
+
+	local sceneaabbLS, zn, zf, PSR, PSC = build_sceneaabb(Lv, C)
+
 	return {
-		sceneaabbLS	= merge_PSC_and_PSR(PSCLS, PSRLS),
-		PSR 		= PSR,
+		Lv			= Lv,
+		Lw			= Lw,
+		Cv			= Cv,
+		Lr			= useLiSPSM and LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0)) or nil,
+		Lv2Cv		= math3d.mul(Cv, Lw),
+
+		--bounding
+		sceneaabbLS	= sceneaabbLS,
+		PSR			= PSR,
 		PSC			= PSC,
 		--transform PSR to viewspace to calculate the zn/zf may not be a good idea, calculate every aabb zn/zf can make more tighten [zn, zf] range
 		zn			= zn,
 		zf			= zf,
+		nearHit		= nearHit,
+		farHit		= farHit,
+
+		viewdir		= viewdir,
+		lightdir	= lightdirWS,
+		camerapos	= camerapos,
+	}
+end
+
+local function update_shadow_matrices(si, c)
+	local sp = math3d.projmat(c.viewfrustum)
+	local Lv2Ndc = math3d.mul(sp, si.Lv2Cv)
+
+	local verticesLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
+	if mc.NULL ~= verticesLS then
+		local intersectaabb = math3d.minmax(verticesLS)
+		c.frustum.n, c.frustum.f = mu.aabb_minmax_index(intersectaabb, 3)
+	end
+
+	local Lp = math3d.projmat(c.frustum, INV_Z)
+	if useLiSPSM then
+		local Wv, Wp = LiSPSM.warp_matrix(si)
+		Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
+	end
+
+	local F = calc_focus_matrix(Lp, verticesLS)
+	Lp 		= math3d.mul(F, Lp)
+	update_camera(c, si.Lv, Lp)
+end
+
+local function create_sub_viewfrustum(zn, zf, sr, viewfrustum)
+	return {
+		n = calc_viewspace_z(zn, zf, sr[1]),
+		f = calc_viewspace_z(zn, zf, sr[2]),
+		fov = assert(viewfrustum.fov),
+		aspect = assert(viewfrustum.aspect),
 	}
 end
 
@@ -499,37 +387,10 @@ function shadow_sys:update_camera_depend()
 		return 
 	end
 
-	--[[
-	the target here is try to find a bounding volume which bound the visible object inode lighting space as tighting as posibile
-	we try to do:
-		1) find the PSR and PSC in light space. where the PSC near plane is the light view project near plane.
-		2) PSRLS in light space actually is the scene aabb for casting shadow, so we use it as scene aabb.
-		3) find the view frustum in different layer of csm, and interset with PSRLS to find interset's points(store in vertices).
-		4) the vertices only represents the visible object in view frustum, but light frustum visible object may lay outside the volume defined by vertices
-			so, we need to generate a bounding aabb by vertices, then make this aabb.min.z = PSCLS.min.z
-
-	build PSRLS as scene aabb --> PSRLS intersert with csm view frustum --> light frustum aabb.min.z = PSCLS.min.z
-	]]
-
     w:extend(C, "scene:in camera:in")
 	local lightdirWS = math3d.index(D.scene.worldmat, 3)
-
-	local rightdir, viewdir, posWS = math3d.index(C.scene.worldmat, 1, 3, 4)
-	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
-	local Cv = C.camera.viewmat
-
-	local Lw = math3d.inverse_fast(Lv)
-
-	local si	= build_scene_info(Cv, Lv)
-
-	local Lv2Vv = math3d.mul(Cv, Lw)
-
-	local useLiSPSM = false
-	local Lr
-	if useLiSPSM then
-		local viewdirLS = math3d.transform(Lv, viewdir, 0)
-		Lr = LiSPSM.rotation_matrix(viewdirLS)
-	end
+	
+	local si = init_scene_info(C, lightdirWS)
 
 	--TODO: hardcode
 	local split_ratio = {
@@ -539,65 +400,18 @@ function shadow_sys:update_camera_depend()
 		{0.5,  1.0},
 	}
 
-	local zn, zf = math.max(C.camera.frustum.n, si.zn), math.min(C.camera.frustum.f, si.zf)
-
-	--TODO: need get from setting file
-	local nearHit, farHit = 1, 100
-	local viewfrustum = {}; for k, v in pairs(C.camera.frustum) do viewfrustum[k] = v end
-
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
         local c = ce.camera
         local csm = e.csm
+		c.viewfrustum = create_sub_viewfrustum(si.zn, si.zf, split_ratio[csm.index], C.camera.frustum)
+		update_shadow_matrices(si, c)
 
-		local sr	= split_ratio[csm.index]
-
-		viewfrustum.n, viewfrustum.f = calc_viewspace_z(zn, zf, sr[1]), calc_viewspace_z(zn, zf, sr[2])
-		local sp 	= math3d.projmat(viewfrustum)
-		local Lv2Ndc = math3d.mul(sp, Lv2Vv)
-		c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
-
-		--local verticesLS = frustum_interset_aabb(c.Lv2Ndc, si.sceneaabbLS)
-		local verticesLS = math3d.frustum_aabb_intersect_points(c.Lv2Ndc, si.sceneaabbLS)
-		local intersectaabb = mc.NULL
-		if mc.NULL ~= verticesLS then
-			intersectaabb = math3d.minmax(verticesLS)
-			c.frustum.n, c.frustum.f = mu.aabb_minmax_index(intersectaabb, 3)
-			c.verticesLS = M3D(c.verticesLS, verticesLS)	--TODO just debug
-		end
-
-		local Lp	= math3d.projmat(c.frustum, INV_Z)
-
-		if useLiSPSM then
-			local Lrp	= math3d.mul(Lr, Lp)
-			local camerainfo = {
-				Lv			= Lv,
-				Lrp			= Lrp,
-				Lrpv		= math3d.mul(Lrp, Lv),
-				Cv			= Cv,
-				viewdirWS	= viewdir,
-				lightdirWS	= lightdirWS,
-				cameraposWS	= posWS,
-				zn			= zn,
-				zf			= zf,
-				nearHit		= nearHit,
-				farHit		= farHit,
-			}
-			local Wv, Wp = LiSPSM.warp_matrix(camerainfo, verticesLS)
-			update_warp_camera(c, Lv, Lp, Lr, Wv, Wp, verticesLS)
-		else
-			--local F 		= calc_focus_matrix(Lp, math3d.aabb_points(C.camera.PSCLS))
-			local F 		= calc_focus_matrix(Lp, verticesLS)
-			local FLp 		= math3d.mul(F, Lp)
-
-			update_camera(c, Lv, FLp)
-		end
-
-		ce.scene.worldmat = M3D(ce.scene.worldmat, Lw)
+		ce.scene.worldmat = M3D(ce.scene.worldmat, si.Lw)
 		mark_camera_changed(ce)
 
 		csm_matrices[csm.index].m = math3d.mul(ishadowcfg.crop_matrix(csm.index), c.viewprojmat)
-		split_distances_VS[csm.index] = calc_viewspace_z(zn, zf, sr[2])	--TODO: need remove
+		split_distances_VS[csm.index] = c.viewfrustum.f
     end
 
 	commit_csm_matrices_attribs()
