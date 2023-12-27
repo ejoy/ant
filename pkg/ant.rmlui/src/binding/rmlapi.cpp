@@ -17,13 +17,15 @@
 
 struct RmlWrapper {
 	RmlContext m_context;
-	lua_plugin m_plugin;
+	Rml::LuaPlugin m_plugin;
 	Renderer   m_renderer;
 	RmlWrapper(lua_State* L, int idx)
 		: m_context(L, idx)
 		, m_plugin(L)
 		, m_renderer(&m_context)
-	{}
+	{
+		Rml::SetPlugin(&m_plugin);
+	}
 };
 
 static RmlWrapper* g_wrapper = nullptr;
@@ -643,10 +645,6 @@ lRenderSetTexture(lua_State* L) {
     return 0;
 }
 
-}
-
-lua_plugin* get_lua_plugin() {
-    return &g_wrapper->m_plugin;
 }
 
 extern "C"
