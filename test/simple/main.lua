@@ -4,7 +4,6 @@ import_package "ant.window".start {
     feature = {
         "ant.render|render",
         "ant.test.simple",
-        "ant.timeline",
         "ant.anim_ctrl",
         "ant.animation",
         "ant.camera|camera_controller",
