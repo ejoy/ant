@@ -3,14 +3,6 @@
 #include <map>
 #include <string>
 #include <stdint.h>
-#include <bgfx/c99/bgfx.h>
-
-struct font_namager;
-
-struct texture_desc {
-    int width, height;
-    uint32_t texid;
-};
 
 struct shader {
     std::map<std::string, uint16_t> uniforms;
