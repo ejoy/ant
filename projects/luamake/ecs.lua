@@ -144,7 +144,7 @@ do
     write "#include <array>"
     write "#include <string_view>"
     write ""
-    write "namespace ant_ecs {"
+    write "namespace ant_component {"
     write ""
     write "using eid = uint64_t;"
     write "struct REMOVED {};"
@@ -201,14 +201,14 @@ do
     write "}"
     write "}"
     write ""
-    write "namespace ecs = ant_ecs;"
+    write "namespace component = ant_component;"
     write ""
     
-    write "template <> constexpr inline int ecs_api::component_id<ecs::eid> = 0xFFFFFFFF;"
-    write "template <> constexpr inline int ecs_api::component_id<ecs::REMOVED> = 0;"
+    write "template <> constexpr inline int ecs_api::component_id<component::eid> = 0xFFFFFFFF;"
+    write "template <> constexpr inline int ecs_api::component_id<component::REMOVED> = 0;"
     write ""
     write "#define ECS_COMPONENT(NAME, ID) \\"
-    write "template <> constexpr inline int ecs_api::component_id<ecs::NAME> = ID;"
+    write "template <> constexpr inline int ecs_api::component_id<component::NAME> = ID;"
     write ""
     for i, c in ipairs(components) do
         write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
