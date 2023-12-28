@@ -8,7 +8,7 @@ local m = ecs.system "init_system"
 font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
 
 function m:init()
-    iRmlUi.open "/pkg/ant.test.rmlui/start.rml"
+    iRmlUi.open "/pkg/ant.test.rmlui/start.html"
     iRmlUi.onMessage("click", function (msg)
         print(msg)
     end)
