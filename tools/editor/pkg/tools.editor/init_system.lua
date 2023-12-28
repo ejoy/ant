@@ -19,17 +19,9 @@ local math3d        = require "math3d"
 local fmod 			= require "fmod"
 local log_widget        = require "widget.log"
 local console_widget    = require "widget.console"
+local widget_utils      = require "widget.utils"
 
 local m = ecs.system 'init_system'
-
-local function LoadImguiLayout(filename)
-    local rf = io.open(filename:string(), "rb")
-    if rf then
-        local setting = rf:read "a"
-        rf:close()
-        imgui.util.LoadIniSettings(setting)
-    end
-end
 
 local function start_fileserver(luaexe, path)
     local cthread = require "bee.thread"
@@ -109,7 +101,7 @@ end
 function m:init()
     world.__EDITOR__ = true
     iani.set_edit_mode(true)
-    LoadImguiLayout(global_data.editor_root / "imgui.layout")
+    widget_utils.load_imgui_layout(global_data.editor_root / "imgui.layout")
     imgui.SetWindowTitle("Editor")
 	--
 	global_data:update_project_root(__ANT_EDITOR__)
@@ -164,6 +156,6 @@ function m:data_changed()
 end
 
 function m:exit()
-	prefab_mgr:save_ui_layout()
+	widget_utils:save_ui_layout()
 	global_data.audio:shutdown()
 end

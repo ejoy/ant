@@ -665,6 +665,10 @@ function m.clear()
     anim_state.current_event_list = {}
 end
 
+function m.get_title()
+    return "Animation"
+end
+
 function m.show()
     for _ in update_slot_list:unpack() do
         if anim_eid then
@@ -690,14 +694,14 @@ function m.show()
             end
         end
     end
-    if (not current_anim or not anim_eid) and not edit_timeline then
-        return
-    end
     local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     if imgui.windows.Begin("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+        if (not current_anim or not anim_eid) and not edit_timeline then
+            goto continue
+        end
         if edit_timeline then
             if timeline_playing then
                 anim_state.current_frame = anim_state.current_frame + 1
@@ -750,7 +754,7 @@ function m.show()
                 end
                 imgui.cursor.SameLine()
                 if imgui.widget.Button("...") then
-                    local localpath = uiutils.get_open_file_path("Animation", "anim")
+                    local localpath = uiutils.get_open_file_path("Select Animation", "anim")
                     if localpath then
                         anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
                     end
@@ -923,6 +927,7 @@ function m.show()
             imgui.windows.EndChild()
             imgui.table.End()
         end
+        ::continue::
     end
     imgui.windows.End()
     if reload then

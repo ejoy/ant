@@ -249,6 +249,11 @@ local function post_init_item_height()
     local _, pos_y = imgui.cursor.GetCursorPos()
     item_height = pos_y + item_height
 end
+
+function m.get_title()
+    return "ResourceBrowser"
+end
+
 function m.show()
     if not global_data.project_root then
         return

@@ -54,6 +54,11 @@ local function update_eid()
 end
 
 local event_reset = world:sub {"ResetEditor"}
+
+function m.get_title()
+    return "Inspector"
+end
+
 function m.show()
     for _ in event_reset:unpack() do
         material_panel:clear()

@@ -369,6 +369,10 @@ function m.showConsole()
     m.showLog("ConsoleList")
 end
 
+function m.get_title()
+    return "Log"
+end
+
 function m.show()
     if not err_receiver then
         err_receiver = cthread.channel "errlog"

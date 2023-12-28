@@ -812,13 +812,6 @@ function m:get_patch_list(template_list)
     return template_list
 end
 
-function m:save_ui_layout()
-    local setting = imgui.util.SaveIniSettings()
-    local wf = assert(io.open(tostring(global_data.editor_root) .. "/" .. "imgui.layout", "wb"))
-    wf:write(setting)
-    wf:close()
-end
-
 function m:save(path)
     -- patch glb file
     if self.glb_filename then

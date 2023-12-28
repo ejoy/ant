@@ -61,7 +61,15 @@ function m:init_world()
     iRmlUi.open "/pkg/tools.editor/resource/ui/bgfx_stat.html"
 end
 
+local event_ui_layout = world:sub {"UILayout"}
 function m:ui_update()
+    for _, action in event_ui_layout:unpack() do
+        if action == "save" then
+            widget_utils.save_ui_layout()
+        elseif action == "reset" then
+            widget_utils.reset_ui_layout()
+        end
+    end
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
     imgui.windows.PushStyleColor(imgui.enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
@@ -76,11 +84,9 @@ function m:ui_update()
     keyframe_view.show()
     console_widget.show()
     log_widget.show()
-    -- choose_project()
     prefab_mgr:choose_prefab()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
-
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
     iRmlUi.sendMessage("stat", string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
