@@ -49,7 +49,7 @@ end
 
 local function init_font()
 		imgui.FontAtlasAddFont {
-			FontPath = "/pkg/tools.editor/res/fonts/fa-solid-900.ttf",
+			FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
 			SizePixels = 16,
 			GlyphRanges = {
 				0xf062, 0xf062, -- ICON_FA_ARROW_UP 			"\xef\x81\xa2"	U+f062

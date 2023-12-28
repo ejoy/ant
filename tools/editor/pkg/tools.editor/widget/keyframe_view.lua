@@ -1385,8 +1385,8 @@ local function create_joint_entity(joint_name)
         data = {
             scene = {},
             visible_state = "selectable",
-            material = "/pkg/tools.editor/res/materials/joint.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.editor/res/meshes/joint.meshbin",
+            material = "/pkg/tools.editor/resource/materials/joint.material",
+            mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.editor/resource/meshes/joint.meshbin",
             render_layer = "translucent",
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", bone_color)
@@ -1454,7 +1454,7 @@ local function create_bone_entity(joint_name)
 		},
 		data = {
 			scene 		= {},
-			material	= "/pkg/tools.editor/res/materials/joint.material",
+			material	= "/pkg/tools.editor/resource/materials/joint.material",
             render_layer = "translucent",
 			simplemesh	= imesh.init_mesh(ientity.create_mesh({"p3|n3|t2", bone_vert}), true),
 			visible_state= "selectable",

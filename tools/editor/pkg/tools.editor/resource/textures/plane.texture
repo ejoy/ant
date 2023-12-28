@@ -4,7 +4,7 @@ compress:
   windows: BC3
 maxsize: 256x256
 mipmap: 9
-path: /pkg/tools.editor/res/textures/tile.dds
+path: /pkg/tools.editor/resource/textures/tile.dds
 sampler:
   MAG: LINEAR
   MIN: LINEAR

@@ -118,14 +118,14 @@ end
 local function create_directional_gizmo(initpos, initrot)
     local root = create_gizmo_root(initpos, initrot)
     local vertices, _ = geolib.circle(RADIUS, SLICES)
-    local circle_eid = ipl.add_strip_lines(get_points(vertices), LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root}, "translucent", true)
+    local circle_eid = ipl.add_strip_lines(get_points(vertices), LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root}, "translucent", true)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
     local radian_step = 2 * math.pi / SLICES
     for s=0, SLICES-1 do
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
-        local line_eid = ipl.add_strip_lines({{x, y, 0}, {x, y, LENGTH}}, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root}, "translucent", true)
+        local line_eid = ipl.add_strip_lines({{x, y, 0}, {x, y, LENGTH}}, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root}, "translucent", true)
         alleid[#alleid + 1] = line_eid
     end
     m.directional.root = root
@@ -144,9 +144,9 @@ local function update_point_gizmo()
     if #m.point.eid == 0 then
         local vertices, _ = geolib.circle(1, gizmo_const.ROTATE_SLICES)
         local points = get_points(vertices)
-        local c0 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius}, "translucent", true)
-        local c1 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "translucent", true)
-        local c2 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "translucent", true)
+        local c0 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = radius}, "translucent", true)
+        local c1 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "translucent", true)
+        local c2 = ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = radius, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "translucent", true)
         m.point.eid = {c0, c1, c2}
         m.point.highlight_eid = m.point.eid
     else
@@ -180,12 +180,12 @@ local function update_spot_gizmo()
         local linesPoints = {{0, 0, 0}, {0, 0, 1}}
         local root = m.spot.root
         m.spot.eid = {
-            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q1)}, "translucent", true),
-            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q2)}, "translucent", true),
-            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q3)}, "translucent", true),
-            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q4)}, "translucent", true),
-            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = range}, "translucent", true),
-            ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/res/materials/polyline.material", false, {parent = root, s = radius, t = {0, 0, range}}, "translucent", true)
+            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q1)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q2)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q3)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = scale, r = math3d.tovalue(q4)}, "translucent", true),
+            ipl.add_strip_lines(linesPoints, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = range}, "translucent", true),
+            ipl.add_strip_lines(points, LINEWIDTH, gizmo_const.COLOR.GRAY, "/pkg/tools.editor/resource/materials/polyline.material", false, {parent = root, s = radius, t = {0, 0, range}}, "translucent", true)
         }
         m.spot.highlight_eid = {m.spot.eid[5], m.spot.eid[6]}
     else

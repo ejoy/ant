@@ -60,7 +60,7 @@ local function create_light_billboard(light_eid, lighttype)
                 parent = light_eid
             },
             visible_state = "main_view",
-            material = "/pkg/tools.editor/res/materials/billboard_"..lighttype..".material",
+            material = "/pkg/tools.editor/resource/materials/billboard_"..lighttype..".material",
             simplemesh = {
                 vb = {
                     start = 0,
@@ -175,7 +175,7 @@ function m:update_default_light(enable)
     if enable then
         local filename = editor_setting.setting.light
         if not filename or not fs.exists(fs.path(filename)) then
-            filename = "/pkg/tools.editor/res/light.prefab"
+            filename = "/pkg/tools.editor/resource/light.prefab"
         end
         self.light_prefab = filename
         if not self.default_light then
@@ -268,17 +268,17 @@ function m:create(what, config)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
-            m:add_prefab("/pkg/tools.editor/res/cube.prefab")
+            m:add_prefab("/pkg/tools.editor/resource/cube.prefab")
         elseif config.type == "cone(prefab)" then
-            m:add_prefab("/pkg/tools.editor/res/cone.prefab")
+            m:add_prefab("/pkg/tools.editor/resource/cone.prefab")
         elseif config.type == "cylinder(prefab)" then
-            m:add_prefab("/pkg/tools.editor/res/cylinder.prefab")
+            m:add_prefab("/pkg/tools.editor/resource/cylinder.prefab")
         elseif config.type == "sphere(prefab)" then
-            m:add_prefab("/pkg/tools.editor/res/sphere.prefab")
+            m:add_prefab("/pkg/tools.editor/resource/sphere.prefab")
         elseif config.type == "torus(prefab)" then
-            m:add_prefab("/pkg/tools.editor/res/torus.prefab")
+            m:add_prefab("/pkg/tools.editor/resource/torus.prefab")
         elseif config.type == "plane(prefab)" then
-            m:add_prefab("/pkg/tools.editor/res/plane.prefab")
+            m:add_prefab("/pkg/tools.editor/resource/plane.prefab")
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
@@ -597,8 +597,8 @@ function m:create_ground()
             },
             data = {
                 scene = {s = {200, 1, 200}},
-                mesh  = "/pkg/tools.editor/res/plane.glb|meshes/Plane_P1.meshbin",
-                material    = "/pkg/tools.editor/res/materials/texture_plane.material",
+                mesh  = "/pkg/tools.editor/resource/plane.glb|meshes/Plane_P1.meshbin",
+                material    = "/pkg/tools.editor/resource/materials/texture_plane.material",
                 render_layer = "background",
                 visible_state= "main_view",
                 on_ready = function (e)
@@ -660,7 +660,7 @@ end
 function m:reload()
     local filename = self.prefab_filename
     if filename == 'nil' then
-        self:save((gd.project_root / "res/__temp__.prefab"):string())
+        self:save((gd.project_root / "resource/__temp__.prefab"):string())
     else
         local _, origin_patch_template = get_prefabs_and_patch_template(self.glb_filename)
         self:open(filename, self.prefab_name, origin_patch_template)

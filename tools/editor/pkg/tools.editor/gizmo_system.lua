@@ -398,7 +398,7 @@ function gizmo_sys:post_init()
 		return points
 	end
 	local function create_polyline(points, color, srt)
-		return ipl.add_strip_lines(points, LINEWIDTH, color, "/pkg/tools.editor/res/materials/polyline.material", false, srt, "translucent", true)
+		return ipl.add_strip_lines(points, LINEWIDTH, color, "/pkg/tools.editor/resource/materials/polyline.material", false, srt, "translucent", true)
 	end
 	local vertices, _ = geolib.circle(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES)
 	local uniform_rot_eid = create_polyline(get_points(vertices), gizmo_const.COLOR.GRAY, {parent = uniform_rot_root})
@@ -461,7 +461,7 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 	
     -- ientity.create_grid_entity(64, 64, 1, 1)
-	-- test_bone = ientity.create_bone_mesh("testbone", "/pkg/tools.editor/res/materials/joint.material", {s = 5}, gizmo.rz.color, false)
+	-- test_bone = ientity.create_bone_mesh("testbone", "/pkg/tools.editor/resource/materials/joint.material", {s = 5}, gizmo.rz.color, false)
 end
 local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 

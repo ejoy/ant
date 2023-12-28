@@ -6,7 +6,7 @@ properties:
   u_color: {1, 1, 1, 1}
   s_basecolor:
     stage: 0
-    texture: /pkg/tools.editor/res/icon/DirectionalLight3D.texture
+    texture: /pkg/tools.editor/resource/icon/OmniLight3D.texture
 
 state:
   ALPHA_REF: 0

@@ -58,7 +58,7 @@ function m:start_frame()
 end
 
 function m:init_world()
-    iRmlUi.open "/pkg/tools.editor/res/ui/bgfx_stat.rml"
+    iRmlUi.open "/pkg/tools.editor/resource/ui/bgfx_stat.html"
 end
 
 function m:ui_update()
