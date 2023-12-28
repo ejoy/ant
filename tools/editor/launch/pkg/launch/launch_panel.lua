@@ -21,7 +21,7 @@ local function init()
 			GlyphRanges = { 0x0020, 0xFFFF }
 		}
 		imgui.FontAtlasAddFont {
-			FontPath = "/pkg/tools.editor/res/fonts/fa-solid-900.ttf",
+			FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
 			SizePixels = 16,
 			GlyphRanges = {
 				0xf05e, 0xf05e, -- ICON_FA_BAN 					"\xef\x81\x9e"	U+f05e
