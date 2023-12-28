@@ -145,6 +145,8 @@ local game_whitelist <const> = {
 	-- ui
 	"rcss",
 	"rml",
+	"html",
+	"css",
 	-- effect
 	"efk",
 	-- font
