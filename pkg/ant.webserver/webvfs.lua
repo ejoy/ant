@@ -65,8 +65,8 @@ local content_text_types = {
     -- script
     [".lua"] = plaintext,
     -- ui
-    [".rcss"] = plaintext,
-    [".rml"] = plaintext,
+    [".css"] = plaintext,
+    --[".html"] = plaintext,
     -- animation
     [".event"] = plaintext,
     [".anim"] = plaintext,

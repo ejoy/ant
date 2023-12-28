@@ -28,8 +28,6 @@ local compile_whitelist <const> = {
     -- script
     "lua",
     -- ui
-    "rcss",
-    "rml",
 	"html",
 	"css",
     -- effect
