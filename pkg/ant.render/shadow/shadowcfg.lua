@@ -24,6 +24,7 @@ local SHADOW_CFG = {
 	split_num			= setting:get "graphic/shadow/split_num",
 	height				= setting:get "graphic/shadow/height",
 	split_ratios		= setting:get "graphic/shadow/split_ratios",
+	cross_delta			= setting:get "graphic/shadow/cross_delta"		or 0,
 	type				= setting:get "graphic/shadow/type",
 }
 
@@ -41,11 +42,9 @@ if SHADOW_CFG.split_ratios then
 	else
 		SHADOW_CFG.split_num = #SHADOW_CFG.split_ratios
 	end
-	SHADOW_CFG.split_ratios = SHADOW_CFG.split_ratios
 else
-	SHADOW_CFG.cross_delta	= SHADOW_CFG.cross_delta or 0.00
 	if SHADOW_CFG.split_weight then
-		SHADOW_CFG.split_num	= SHADOW_CFG.split_num
+		SHADOW_CFG.split_num	= assert(SHADOW_CFG.split_num)
 		SHADOW_CFG.split_weight= math.max(0, math.min(1, SHADOW_CFG.split_weight))
 	else
 		SHADOW_CFG.split_num = 4
@@ -213,6 +212,53 @@ end
 
 function ishadow.split_num()
 	return SHADOW_CFG.split_num
+end
+
+function ishadow.calc_uniform_split_positions()
+	local sn = SHADOW_CFG.split_num
+	local positions = {}
+	for c=1, sn-1 do
+		positions[#positions+1] = c / sn
+	end
+	return positions
+end
+
+local function log_split(num, c, n, f)
+	local base = f/n
+	local e =  c/num
+	return ((n * (base ^ e))-n) / (f-n)
+end
+
+--near&far are view camera's  near & far
+function ishadow.calc_log_split_positions(near, far)
+	local positions = {}
+	local sn = SHADOW_CFG.split_num
+	for c=1, sn-1 do
+		positions[#positions+1] = log_split(c, near, far)
+	end
+	return positions
+end
+
+function ishadow.calc_split_positions(near, far, lambda)
+	local sn = SHADOW_CFG.split_num
+	local positions = {}
+	for c=1, sn-1 do
+		local us = c / sn
+		local ls = log_split(sn, c, near, far)
+		positions[c] = lambda * ls + (1.0 - lambda) * us
+	end
+	return positions
+end
+
+function ishadow.split_positions_to_ratios(positions)
+	local ratios = {}
+	local start = 0.0
+	for i=1, #positions do
+		ratios[#ratios+1] = {start, positions[i]}
+		start = positions[i]
+	end
+
+	return ratios
 end
 
 return ishadow

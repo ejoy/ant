@@ -264,19 +264,23 @@ local function init_light_info(C, D)
 end
 
 local function build_sceneaabbLS(si, li)
-	local PSRLS = math3d.aabb_transform(li.Lv, si.PSR)
-	local PSCLS = math3d.aabb_transform(li.Lv, si.PSC)
+	local PSRLS = math3d.aabb_transform(li.Lv, assert(si.PSR))
+	if si.PSC then
+		local PSCLS = math3d.aabb_transform(li.Lv, si.PSC)
+	
+		local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
+		local PSC_nearLS = math3d.index(math3d.array_index(PSCLS, 1), 3)
+	
+		local sceneaabb = math3d.aabb_intersection(PSRLS, PSCLS)
+	
+		local sminv, smaxv = mu.aabb_minmax(sceneaabb)
+		local sminx, sminy = math3d.index(sminv, 1, 2)
+		local smaxx, smaxy = math3d.index(smaxv, 1, 2)
+	
+		return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSR_farLS))
+	end
 
-	local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
-	local PSC_nearLS = math3d.index(math3d.array_index(PSCLS, 1), 3)
-
-	local sceneaabb = math3d.aabb_intersection(PSRLS, PSCLS)
-
-	local sminv, smaxv = mu.aabb_minmax(sceneaabb)
-	local sminx, sminy = math3d.index(sminv, 1, 2)
-	local smaxx, smaxy = math3d.index(smaxv, 1, 2)
-
-	return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSR_farLS))
+	return PSRLS
 end
 
 function shadow_sys:update_camera_depend()
@@ -297,22 +301,18 @@ function shadow_sys:update_camera_depend()
 	local li = init_light_info(C, D)
 	si.sceneaabbLS = build_sceneaabbLS(si, li)
 
-	--TODO: hardcode
-	local split_ratio = {
-		{0.0,  1.0},
-		{0.1,  0.25},
-		{0.25, 0.5},
-		{0.5,  1.0},
-	}
+	local CF = C.camera.frustum
+	local ratios = ishadowcfg.split_positions_to_ratios(ishadowcfg.calc_split_positions(CF.n, CF.f, 1))
 
+	local zn, zf = assert(si.zn), assert(si.zf)
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
+		ce.scene.worldmat = M3D(ce.scene.worldmat, li.Lw)
+
         local c = ce.camera
         local csm = e.csm
-		c.viewfrustum = create_sub_viewfrustum(si.zn, si.zf, split_ratio[csm.index], C.camera.frustum)
+		c.viewfrustum = create_sub_viewfrustum(zn, zf, ratios[csm.index], CF)
 		update_shadow_matrices(si, li, c)
-
-		ce.scene.worldmat = M3D(ce.scene.worldmat, li.Lw)
 		mark_camera_changed(ce)
 
 		csm_matrices[csm.index].m = math3d.mul(ishadowcfg.crop_matrix(csm.index), c.viewprojmat)
