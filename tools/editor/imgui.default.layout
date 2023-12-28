@@ -19,7 +19,7 @@ DockId=0x00000003,0
 Pos=0,1059
 Size=2688,453
 Collapsed=0
-DockId=0x00000001,3
+DockId=0x00000001,4
 
 [Window][Skeleton]
 Pos=0,1059
@@ -69,7 +69,7 @@ Collapsed=0
 Pos=0,1059
 Size=2688,453
 Collapsed=0
-DockId=0x00000001,4
+DockId=0x00000001,3
 
 [Table][0x965D8EB5,3]
 Column 0  Weight=1.0000
