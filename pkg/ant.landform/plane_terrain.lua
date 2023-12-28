@@ -118,12 +118,8 @@ local function create_plane_entity(gid, size, xypos, mesh, material, render_laye
 end
 
 function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, terrain_material)
-    -- local terrain_render_layer = render_layer and render_layer or DEFAULT_TERRAIN_RENDER_LAYER
-    -- local terrain_chunk_size = terrain_chunk and terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
-    -- local border_chunk_size  = border_chunk and border_chunk or DEFAULT_BORDER_CHUNK_SIZE
     terrain_chunk = terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
     render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
-    --TERRAIN_MESH, BORDER_MESH = create_terrain_mesh(), create_border_mesh()
     for gid, infos in pairs(groups) do
         --TODO: merge these plane together
         for _, info in ipairs(infos) do
@@ -132,22 +128,22 @@ function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk
     end
 end
 
-function iplane_terrain.create_border(groups, render_layer, border_chunk, border_material)
+function iplane_terrain.create_borders(borderinfo, render_layer, border_chunk, border_material)
     border_chunk = border_chunk or DEFAULT_BORDER_CHUNK_SIZE
     render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
-    for gid, infos in pairs(groups) do
-        --TODO: merge these plane together
-        for _, info in ipairs(infos) do
-            create_plane_entity(gid, border_chunk, info, BORDER_MESH, border_material)
-        end
+
+    for _, info in ipairs(borderinfo) do
+        create_plane_entity(nil, border_chunk, info, BORDER_MESH, border_material)
     end
 end
 
-function iplane_terrain.clear_plane_terrain()
+local function clear_plane_terrain()
     for e in w:select "plane_terrain eid:in" do
         w:remove(e.eid)
     end
 end
+
+iplane_terrain.clear_plane_terrain = clear_plane_terrain
 
 function pt_sys:init()
     TERRAIN_MESH = create_terrain_mesh()
@@ -155,23 +151,16 @@ function pt_sys:init()
 end
 
 function pt_sys:exit()
+    local function destroy_mesh(m)
+        assert(m)
+        bgfx.destroy(m.vb.handle)
+        m.vb.handle = nil
+        m = nil
+    end
+    destroy_mesh(TERRAIN_MESH)
+    destroy_mesh(BORDER_MESH)
 
-    local function destroy_handle(h)
-        if h then
-            bgfx.destroy(h)
-        end
-    end
-    if TERRAIN_MESH and TERRAIN_MESH.vb.handle then
-        TERRAIN_MESH.vb.handle= destroy_handle(TERRAIN_MESH.vb.handle)
-        TERRAIN_MESH = nil
-    end
-    if BORDER_MESH and BORDER_MESH.vb.handle then
-        BORDER_MESH.vb.handle= destroy_handle(BORDER_MESH.vb.handle)
-        BORDER_MESH = nil
-    end
-    for e in w:select "plane_terrain eid:in" do
-        w:remove(e.eid)
-    end
+    clear_plane_terrain()
 end
 
 return iplane_terrain
