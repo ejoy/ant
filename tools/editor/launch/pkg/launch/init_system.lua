@@ -1,56 +1,14 @@
-local bgfx      = require "bgfx"
-local vfs       = require "vfs"
-local fs        = require "filesystem"
-local lfs       = require "bee.filesystem"
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local vfs = require "vfs"
+local fs = require "filesystem"
+local lfs = require "bee.filesystem"
 local subprocess = require "bee.subprocess"
 local imgui = import_package "ant.imgui"
-
 local editor_setting    = require "editor_setting"
-local function init()
-    local platform    = require "bee.platform"
-	imgui.FontAtlasClear()
-	if platform.os == "windows" then
-		imgui.FontAtlasAddFont {
-			SystemFont = "Segoe UI Emoji",
-			SizePixels = 18,
-			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
-		}
-		imgui.FontAtlasAddFont {
-			SystemFont = "黑体",
-			SizePixels = 18,
-			GlyphRanges = { 0x0020, 0xFFFF }
-		}
-		imgui.FontAtlasAddFont {
-			FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
-			SizePixels = 16,
-			GlyphRanges = {
-				0xf05e, 0xf05e, -- ICON_FA_BAN 					"\xef\x81\x9e"	U+f05e
-				0xf07c, 0xf07c, -- ICON_FA_FOLDER_OPEN 			"\xef\x81\xbc"	U+f07c
-				0xf65e, 0xf65e, -- ICON_FA_FOLDER_PLUS 			"\xef\x99\x9e"	U+f65e
-		}}
-	elseif platform.os == "macos" then
-		imgui.FontAtlasAddFont {
-			SystemFont = "华文细黑",
-			SizePixels = 18,
-			GlyphRanges = { 0x0020, 0xFFFF }
-		}
-	else -- iOS
-		imgui.FontAtlasAddFont {
-			SystemFont = "Heiti SC",
-			SizePixels = 18,
-			GlyphRanges = { 0x0020, 0xFFFF }
-		}
-	end
-	imgui.FontAtlasBuild()
-    local rf = io.open(lfs.path(vfs.repopath()):string().. "/pkg/launch/imgui.layout", "rb")
-    if rf then
-        local setting = rf:read "a"
-        rf:close()
-        imgui.util.LoadIniSettings(setting)
-    end
-    -- local sx, sy = imgui.GetDisplaySize()
-    -- imgui.SetWindowPos(math.floor((sx - 720) * 0.5), math.floor((sy - 450) * 0.5))
-end
+
 
 local function choose_project_dir()
     local filedialog = require 'filedialog'
@@ -142,9 +100,18 @@ local function choose_project()
     return exit
 end
 
-local function update(viewid)
-    bgfx.set_view_clear(viewid, "CD", 0x303030ff, 1, 0)
+local m = ecs.system 'init_system'
 
+function m:init_system()
+    local rf = io.open(lfs.path(vfs.repopath()):string().. "/pkg/launch/imgui.layout", "rb")
+    if rf then
+        local setting = rf:read "a"
+        rf:close()
+        imgui.util.LoadIniSettings(setting)
+    end
+end
+
+function m:data_changed()
     local imgui_vp = imgui.GetMainViewport()
     local s = imgui_vp.Size
     local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
@@ -230,8 +197,3 @@ local function update(viewid)
         os.exit()
     end
 end
-
-return {
-    init = init,
-    update = update,
-}
