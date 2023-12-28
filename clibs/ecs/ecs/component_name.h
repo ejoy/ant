@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-namespace ecs_api {
+namespace ecs {
     constexpr auto component_name(std::string_view name) noexcept {
         for (std::size_t i = name.size(); i > 0; --i) {
             const char c = name[i - 1];

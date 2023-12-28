@@ -8,7 +8,7 @@
 #include <optional>
 #include <cstdint>
 
-namespace ecs_api {
+namespace ecs {
     namespace flags {
         struct absent {};
     }

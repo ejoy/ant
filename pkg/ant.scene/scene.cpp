@@ -41,7 +41,7 @@ worldmat_update(flatmap<component::eid, math_t>& worldmats, struct math_context*
 			if (w) {
 				if ((component::eid)s.parent >= id)
 					return false;
-				auto e = ecs_api::find_entity(w->ecs, (component::eid)s.parent);
+				auto e = ecs::find_entity(w->ecs, (component::eid)s.parent);
 				if (e.invalid()) {
 					return false;
 				}
@@ -68,7 +68,7 @@ static int
 entity_init(lua_State *L) {
 	auto w = getworld(L);
 
-	for (auto& e : ecs_api::select<component::INIT, component::scene>(w->ecs)) {
+	for (auto& e : ecs::select<component::INIT, component::scene>(w->ecs)) {
 		auto& s = e.get<component::scene>();
 		s.movement = 0;
 		e.enable_tag<component::scene_mutable>();
@@ -79,7 +79,7 @@ entity_init(lua_State *L) {
 
 static inline bool
 is_constant(struct ecs_world *w, component::eid eid) {
-	auto e = ecs_api::find_entity(w->ecs, eid);
+	auto e = ecs::find_entity(w->ecs, eid);
 	if (e.invalid()) {
 		return false;
 	}
@@ -93,8 +93,8 @@ is_changed(flatset<component::eid> &changed, component::eid eid) {
 
 static void
 rebuild_mutable_set(struct ecs_world *w, flatset<component::eid> &changed) {
-	using namespace ecs_api::flags;
-	for (auto& e : ecs_api::select< component::scene, component::scene_mutable(absent), component::eid>(w->ecs)) {
+	using namespace ecs::flags;
+	for (auto& e : ecs::select< component::scene, component::scene_mutable(absent), component::eid>(w->ecs)) {
 		auto& s = e.get<component::scene>();
 		if (s.parent != 0 && is_changed(changed, s.parent)) {
 			e.enable_tag<component::scene_mutable>();
@@ -112,7 +112,7 @@ scene_changed(lua_State *L) {
 	flatset<component::eid> changed;
 
 	// step.1
-	auto selector = ecs_api::select<component::scene_needchange, component::eid>(w->ecs);
+	auto selector = ecs::select<component::scene_needchange, component::eid>(w->ecs);
 	auto it = selector.begin();
 	if (it == selector.end()) {
 		return 0;
@@ -128,7 +128,7 @@ scene_changed(lua_State *L) {
 		changed.insert(eid);
 	}
 
-	ecs_api::clear_type<component::scene_needchange>(w->ecs);
+	ecs::clear_type<component::scene_needchange>(w->ecs);
 
 	if (need_rebuild_mutable_set) {
 		rebuild_mutable_set(w, changed);
@@ -136,7 +136,7 @@ scene_changed(lua_State *L) {
 
 	// step.2
 	flatmap<component::eid, math_t> worldmats;
-	for (auto& e : ecs_api::select<component::scene_mutable, component::scene, component::eid>(w->ecs)) {
+	for (auto& e : ecs::select<component::scene_mutable, component::scene, component::eid>(w->ecs)) {
 		auto& s = e.get<component::scene>();
 		component::eid id = e.get<component::eid>();
 		auto selfchanged = is_changed(changed, id);
@@ -163,7 +163,7 @@ scene_changed(lua_State *L) {
 static int
 end_frame(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::clear_type<component::scene_changed>(w->ecs);
+	ecs::clear_type<component::scene_changed>(w->ecs);
 	return 0;
 }
 
@@ -171,13 +171,13 @@ static int
 scene_remove(lua_State *L) {
 	auto w = getworld(L);
 
-	auto selector = ecs_api::select<component::REMOVED, component::scene>(w->ecs);
+	auto selector = ecs::select<component::REMOVED, component::scene>(w->ecs);
 	auto it = selector.begin();
 	if (it == selector.end()) {
 		return 0;
 	}
 
-	entity_propagate_tag(w->ecs, ecs_api::component_id<component::scene>, ecs_api::component_id<component::REMOVED>);
+	entity_propagate_tag(w->ecs, ecs::component_id<component::scene>, ecs::component_id<component::REMOVED>);
 
 	return 0;
 }
@@ -187,7 +187,7 @@ bounding_update(lua_State *L){
 	auto w = getworld(L);
 	auto math3d = w->math3d->M;
 	math3d_checkpoint cp(math3d);
-	for (auto& e : ecs_api::select<component::scene_changed, component::bounding, component::scene>(w->ecs)){
+	for (auto& e : ecs::select<component::scene_changed, component::bounding, component::scene>(w->ecs)){
 		auto &b = e.get<component::bounding>();
 		if (math_isnull(b.aabb))
 			continue;

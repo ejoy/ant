@@ -133,9 +133,9 @@ static int lsample(lua_State *L){
 
 	const float delta = (float)luaL_checknumber(L, 2);
 
-	//int gids[] = {gid};ecs_api::group_enable<component::motion_sampler_tag>(w->ecs, gids);
+	//int gids[] = {gid};ecs::group_enable<component::motion_sampler_tag>(w->ecs, gids);
 	
-	for (auto& e : ecs_api::select<component::motion_sampler_tag, component::motion_sampler, component::scene>(w->ecs)) {
+	for (auto& e : ecs::select<component::motion_sampler_tag, component::motion_sampler, component::scene>(w->ecs)) {
 		auto &ms = e.get<component::motion_sampler>();
 		auto mt = (struct motion_tracks*)ms.motion_tracks;
 		if (nullptr == mt)

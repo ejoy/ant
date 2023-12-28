@@ -28,8 +28,8 @@ struct cullinfo{
 
 struct cull_cached {
 	cull_cached(struct ecs_context* ctx) : render_obj(ctx), hitch_obj(ctx){}
-	ecs_api::cached_context<component::render_object_visible, component::render_object, component::bounding> render_obj;
-	ecs_api::cached_context<component::hitch_visible, component::hitch, component::bounding> hitch_obj;
+	ecs::cached_context<component::render_object_visible, component::render_object, component::bounding> render_obj;
+	ecs::cached_context<component::hitch_visible, component::hitch, component::bounding> hitch_obj;
 }; 
 
 static inline void
@@ -102,18 +102,18 @@ lcull(lua_State *L) {
 		}
 	};
 
-	for (auto& i : ecs_api::array<component::cull_args>(w->ecs)){
+	for (auto& i : ecs::array<component::cull_args>(w->ecs)){
 		add_cull_info(i.frustum_planes, i.queue_index);
 	}
 
 	if (0 == c)
 		return 0;
 
-	for (auto e : ecs_api::cached_select(w->cull_cached->render_obj)) {
+	for (auto e : ecs::cached_select(w->cull_cached->render_obj)) {
 		cull_operation<component::render_object>::cull(w, e, ci, c);
 	}
 
-	for (auto& e : ecs_api::cached_select(w->cull_cached->hitch_obj)) {
+	for (auto& e : ecs::cached_select(w->cull_cached->hitch_obj)) {
 		cull_operation<component::hitch>::cull(w, e, ci, c);
 	}
 

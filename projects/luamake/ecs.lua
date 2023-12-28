@@ -188,7 +188,7 @@ do
     write "template <typename T>"
     write "constexpr auto create() {"
     write "    return component {"
-    write "        ecs_api::component_name_v<T>,"
+    write "        ecs::component_name_v<T>,"
     write "        std::is_empty_v<T> ? 0 : sizeof(T),"
     write "    };"
     write "}"
@@ -204,11 +204,11 @@ do
     write "namespace component = ant_component;"
     write ""
     
-    write "template <> constexpr inline int ecs_api::component_id<component::eid> = 0xFFFFFFFF;"
-    write "template <> constexpr inline int ecs_api::component_id<component::REMOVED> = 0;"
+    write "template <> constexpr inline int ecs::component_id<component::eid> = 0xFFFFFFFF;"
+    write "template <> constexpr inline int ecs::component_id<component::REMOVED> = 0;"
     write ""
     write "#define ECS_COMPONENT(NAME, ID) \\"
-    write "template <> constexpr inline int ecs_api::component_id<component::NAME> = ID;"
+    write "template <> constexpr inline int ecs::component_id<component::NAME> = ID;"
     write ""
     for i, c in ipairs(components) do
         write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
