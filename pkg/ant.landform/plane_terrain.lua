@@ -133,7 +133,7 @@ function iplane_terrain.create_borders(borderinfo, render_layer, border_chunk, b
     render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
 
     for _, info in ipairs(borderinfo) do
-        create_plane_entity(nil, border_chunk, info, BORDER_MESH, border_material)
+        create_plane_entity(nil, border_chunk, info, BORDER_MESH, border_material, render_layer)
     end
 end
 
