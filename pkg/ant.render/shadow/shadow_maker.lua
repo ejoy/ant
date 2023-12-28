@@ -37,12 +37,8 @@ end
 
 local function get_intersected_aabb()
 	local sbe = w:first "shadow_bounding:in"
-	if sbe then
-		local scene_aabb, camera_aabb = sbe.shadow_bounding.scene_aabb, sbe.shadow_bounding.camera_aabb
-		return math3d.aabb_intersection(scene_aabb, camera_aabb)
-	else
-		return math3d.aabb()
-	end
+	local scene_aabb, camera_aabb = sbe.shadow_bounding.scene_aabb, sbe.shadow_bounding.camera_aabb
+	return math3d.aabb_intersection(scene_aabb, camera_aabb)
 end
 
 -- bgfx method
