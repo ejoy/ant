@@ -52,9 +52,8 @@ local function to_mesh_buffer(vb, vblayout, ib_handle)
     }
 end
 
-local function get_border_mesh()
-
-    if BORDER_MESH then return BORDER_MESH end
+local function create_border_mesh()
+    assert(BORDER_MESH == nil)
 
     local function get_border_vb(vbfmt)
         local ox, oz, nx, nz = 0, 0, 1, 1
@@ -72,9 +71,8 @@ local function get_border_mesh()
     return to_mesh_buffer(get_border_vb(vbfmt), layout, irender.quad_ib())
 end
 
-local function get_terrain_mesh()
-
-    if TERRAIN_MESH then return TERRAIN_MESH end
+local function create_terrain_mesh()
+    assert(TERRAIN_MESH == nil)
 
     local function get_terrain_vb(color_texcoords, alpha_texcoords, vbfmt)
         local ox, oz, nx, nz = 0, 0, 1, 1
@@ -94,15 +92,8 @@ local function get_terrain_mesh()
     return to_mesh_buffer(get_terrain_vb(color_texcoords, alpha_texcoords, vbfmt), layout, irender.quad_ib())
 end
 
-
-local function create_plane_terrain_entity(gid, info, render_layer, terrain_chunk, border_chunk, terrain_material, border_material)
-    local mesh, material, size
-    if info.type:match "terrain" then 
-        mesh, material, size = TERRAIN_MESH, terrain_material, terrain_chunk
-    elseif info.type:match "border" then 
-        mesh, material, size = BORDER_MESH, border_material, border_chunk
-    end
-
+local function create_plane_entity(gid, size, xypos, mesh, material, render_layer)
+    local hs = size * 0.5
     return world:create_entity {
         group = gid,
         policy = {
@@ -110,24 +101,44 @@ local function create_plane_terrain_entity(gid, info, render_layer, terrain_chun
             "ant.landform|plane_terrain"
         },
         data = {
-            scene               = {s = {size, 1, size}, t = {info.x, 0, info.y}},
+            scene               = {s = {size, 1, size}, t = {xypos.x, 0, xypos.y}},
             simplemesh          = assert(mesh),
             material            = material,
             visible_state       = "main_view|selectable",
             render_layer        = render_layer,
+            bounding            = {
+                aabb = {
+                    {-hs, 0,   -hs},
+                    { hs, 1e-6, hs},
+                }
+            },
             plane_terrain       = true,
         },
     }
 end
 
-function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, border_chunk, terrain_material, border_material)
-    local terrain_render_layer = render_layer and render_layer or DEFAULT_TERRAIN_RENDER_LAYER
-    local terrain_chunk_size = terrain_chunk and terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
-    local border_chunk_size  = border_chunk and border_chunk or DEFAULT_BORDER_CHUNK_SIZE
-    TERRAIN_MESH, BORDER_MESH = get_terrain_mesh(), get_border_mesh()
+function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, terrain_material)
+    -- local terrain_render_layer = render_layer and render_layer or DEFAULT_TERRAIN_RENDER_LAYER
+    -- local terrain_chunk_size = terrain_chunk and terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
+    -- local border_chunk_size  = border_chunk and border_chunk or DEFAULT_BORDER_CHUNK_SIZE
+    terrain_chunk = terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
+    render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
+    --TERRAIN_MESH, BORDER_MESH = create_terrain_mesh(), create_border_mesh()
     for gid, infos in pairs(groups) do
+        --TODO: merge these plane together
         for _, info in ipairs(infos) do
-            create_plane_terrain_entity(gid, info, terrain_render_layer, terrain_chunk_size, border_chunk_size, terrain_material, border_material)
+            create_plane_entity(gid, terrain_chunk, info, TERRAIN_MESH, terrain_material, render_layer)
+        end
+    end
+end
+
+function iplane_terrain.create_border(groups, render_layer, border_chunk, border_material)
+    border_chunk = border_chunk or DEFAULT_BORDER_CHUNK_SIZE
+    render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
+    for gid, infos in pairs(groups) do
+        --TODO: merge these plane together
+        for _, info in ipairs(infos) do
+            create_plane_entity(gid, border_chunk, info, BORDER_MESH, border_material)
         end
     end
 end
@@ -136,6 +147,11 @@ function iplane_terrain.clear_plane_terrain()
     for e in w:select "plane_terrain eid:in" do
         w:remove(e.eid)
     end
+end
+
+function pt_sys:init()
+    TERRAIN_MESH = create_terrain_mesh()
+    BORDER_MESH = create_border_mesh()
 end
 
 function pt_sys:exit()
