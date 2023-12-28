@@ -1,0 +1,2 @@
+system "scene_bounding_system"
+    .implement "scene_bounding.lua"

@@ -1,5 +1,4 @@
-import_feature "ant.shadow_bounding|camera_bounding_pack"
-import_feature "ant.shadow_bounding|scene_bounding_pack"
+import_feature "ant.shadow_bounding|scene_bounding"
 
 
 pipeline "init"

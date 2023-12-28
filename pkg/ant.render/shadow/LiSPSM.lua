@@ -36,21 +36,21 @@ local function warp_frustum(n, f)
 end
 
 -- from filament: ShadowMap:applyLISPSM
-function L.warp_matrix(camerainfo, lsShadowVolume)
-    local Lv     = camerainfo.Lv
-    local Lrp    = math3d.mul(camerainfo.Lr, camerainfo.Lp)
+function L.warp_matrix(si, li, lsShadowVolume)
+    local Lv     = li.Lv
+    local Lrp    = math3d.mul(li.Lr, li.Lp)
     local Lrpv   = math3d.mul(Lrp, Lv)
 
-    local nearHit, farHit = camerainfo.nearHit, camerainfo.farHit
+    local nearHit, farHit = si.nearHit, si.farHit
 
-    local LoV    = math3d.dot(camerainfo.viewdir, camerainfo.lightdir)
+    local LoV    = math3d.dot(li.viewdir, li.lightdir)
     local sinLV  = math.sqrt(math.max(0.0, 1.0 - LoV * LoV))
 
     -- Virtual near plane -- the default is 1 m, can be changed by the user.
     -- The virtual near plane prevents too much resolution to be wasted in the area near the eye
     -- where shadows might not be visible (e.g. a character standing won't see shadows at her feet).
-    local dzn = math.max(0.0, nearHit - camerainfo.zn)
-    local dzf = math.max(0.0, camerainfo.zf - farHit)
+    local dzn = math.max(0.0, nearHit - si.zn)
+    local dzf = math.max(0.0, si.zf - farHit)
 
     -- near/far plane's distance from the eye in view space of the shadow receiver volume.
 
@@ -58,11 +58,11 @@ function L.warp_matrix(camerainfo, lsShadowVolume)
     -- camerainfo.cameraviewmat to tranfrom point from worldspace to camera view space
     -- ptCv = Cv * inverse(L) * ptLS
     --local Lv2Cv = math3d.mul(camerainfo.Cv, math3d.inverse(Lv)) --matrix for transform light view space to camera view space
-    local Lv2Cv = camerainfo.Lv2Cv
+    local Lv2Cv = li.Lv2Cv
     local zn, zf = calc_near_far(Lv2Cv, lsShadowVolume)
 
-    zn = math.max(camerainfo.zn, zn) -- near plane distance from the eye
-    zf = math.min(camerainfo.zf, zf) -- far plane distance from the eye
+    zn = math.max(si.zn, zn) -- near plane distance from the eye
+    zf = math.min(si.zf, zf) -- far plane distance from the eye
 
     -- Compute n and f, the near and far planes coordinates of Wp (warp space).
     -- It's found by looking down the Y axis in light space (i.e. -Z axis of Wp,
@@ -85,8 +85,8 @@ function L.warp_matrix(camerainfo, lsShadowVolume)
         -- nopt is the optimal near plane distance of Wp (i.e. distance from P).
 
         -- virtual near and far planes
-        local vz0 = math.max(0.0, math.max(math.max(zn, camerainfo.zn + dzn), z0))
-        local vz1 = math.max(0.0, math.min(math.min(zf, camerainfo.zf - dzf), z1))
+        local vz0 = math.max(0.0, math.max(math.max(zn, si.zn + dzn), z0))
+        local vz1 = math.max(0.0, math.min(math.min(zf, si.zf - dzf), z1))
 
         -- in the general case, nopt is computed as:
         local nopt0 = (1.0 / sinLV) * (z0 + math.sqrt(vz0 * vz1))
@@ -99,7 +99,7 @@ function L.warp_matrix(camerainfo, lsShadowVolume)
         -- We simply use the max of the two expressions
         local nopt = math.max(nopt0, nopt1)
 
-        local cameraposLS = math3d.transformH(Lrpv, camerainfo.camerapos);
+        local cameraposLS = math3d.transformH(Lrpv, li.camerapos);
         local p = math3d.vector(
                 -- Another option here is to use lsShadowReceiversCenter.x, which skews less the
                 -- x-axis. Doesn't seem to make a big difference in the end.

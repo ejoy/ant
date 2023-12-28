@@ -1,6 +1,5 @@
 import_feature "ant.polyline"
-import_feature "ant.shadow_bounding|camera_bounding_pack"
-import_feature "ant.shadow_bounding|scene_bounding_pack"
+import_feature "ant.shadow_bounding|scene_bounding"
 
 import_feature "ant.decal"
 import_feature "ant.efk"

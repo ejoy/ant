@@ -158,21 +158,6 @@ function ic.focus_obj(ce, e, dir)
     ic.focus_aabb(ce, e.bounding.scene_aabb, dir)
 end
 
-function ic.main_camera_changed()
-    local C = w:first "camera_changed"
-    if not C then
-        return
-    end
-
-    local mq = w:first "main_queue camera_ref:in"
-
-	C = world:entity(mq.camera_ref, "camera_changed?in")
-	if not C.camera_changed then
-		return 
-	end
-	return C
-end
-
 function ic.focus_prefab(ce, entities, dir)
     local aabb
     for i = 1, #entities do
