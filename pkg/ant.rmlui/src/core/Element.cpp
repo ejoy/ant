@@ -1,5 +1,5 @@
 #include <core/Element.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Document.h>
 #include <core/ElementAnimation.h>
 #include <core/ElementBackground.h>
@@ -17,7 +17,6 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
-#include <binding/luaplugin.h>
 #include <bee/nonstd/unreachable.h>
 
 namespace Rml {

@@ -4,7 +4,7 @@
 #include <core/Geometry.h>
 #include <core/Document.h>
 #include <core/Interface.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <regex>
 
 namespace Rml {

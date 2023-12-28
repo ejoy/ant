@@ -1,7 +1,6 @@
-﻿#include <binding/render.h>
-#include <binding/render.h>
+﻿#include <binding/RenderImpl.h>
 #include <binding/utf8.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Color.h>
 #include <core/Interface.h>
 #include <memory.h>
@@ -324,7 +323,6 @@ RenderImpl::RenderImpl(lua_State* L, int idx)
     BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
     BGFX(vertex_layout_end)(&layout);
     BGFX(set_view_mode)(context.viewid, BGFX_VIEW_MODE_SEQUENTIAL);
-    SetRender(this);
 }
 
 RenderImpl::~RenderImpl() {

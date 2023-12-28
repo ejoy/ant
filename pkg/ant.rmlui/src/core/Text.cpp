@@ -1,5 +1,5 @@
 #include <core/Text.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Document.h>
 #include <core/Interface.h>
 #include <util/Log.h>
