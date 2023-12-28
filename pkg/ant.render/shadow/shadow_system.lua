@@ -373,22 +373,16 @@ local function create_sub_viewfrustum(zn, zf, sr, viewfrustum)
 end
 
 function shadow_sys:update_camera_depend()
-    local C = w:first "camera_changed"
-    if not C then
-        return
-    end
-
+	local C = icamera.main_camera_changed()
+	if not C then
+		return
+	end
 	local D = w:first "make_shadow directional_light scene:in"
 	if not D then
 		return 
 	end
 
-    C = world:entity(irq.main_camera(), "camera_changed?in")
-	if not C.camera_changed then
-		return 
-	end
-
-    w:extend(C, "scene:in camera:in")
+	w:extend(C, "scene:in camera:in")
 	local lightdirWS = math3d.index(D.scene.worldmat, 3)
 	
 	local si = init_scene_info(C, lightdirWS)
