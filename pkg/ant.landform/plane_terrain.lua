@@ -117,24 +117,26 @@ local function create_plane_entity(gid, size, xypos, mesh, material, render_laye
     }
 end
 
-function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, terrain_material)
-    terrain_chunk = terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
-    render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
+local function create_plane_entities(groups, chunksize, mesh, material, render_layer)
     for gid, infos in pairs(groups) do
         --TODO: merge these plane together
         for _, info in ipairs(infos) do
-            create_plane_entity(gid, terrain_chunk, info, TERRAIN_MESH, terrain_material, render_layer)
+            create_plane_entity(gid, chunksize, info, mesh, material, render_layer)
         end
     end
 end
 
-function iplane_terrain.create_borders(borderinfo, render_layer, border_chunk, border_material)
+function iplane_terrain.create_plane_terrain(groups, render_layer, terrain_chunk, terrain_material)
+    terrain_chunk = terrain_chunk or DEFAULT_TERRAIN_CHUNK_SIZE
+    render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
+    create_plane_entities(groups, terrain_chunk, TERRAIN_MESH, terrain_material, render_layer)
+end
+
+function iplane_terrain.create_borders(groups, render_layer, border_chunk, border_material)
     border_chunk = border_chunk or DEFAULT_BORDER_CHUNK_SIZE
     render_layer = render_layer or DEFAULT_TERRAIN_RENDER_LAYER
 
-    for _, info in ipairs(borderinfo) do
-        create_plane_entity(nil, border_chunk, info, BORDER_MESH, border_material, render_layer)
-    end
+    create_plane_entities(groups, border_chunk, TERRAIN_MESH, border_material, render_layer)
 end
 
 local function clear_plane_terrain()
