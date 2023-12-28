@@ -133,18 +133,18 @@ Element* Document::CreateElement(const std::string& tag){
 
 Text* Document::CreateTextNode(const std::string& str) {
 	auto e = new Text(this, str);
-	GetPlugin()->OnCreateText(this, e);
+	GetScript()->OnCreateText(this, e);
 	return e;
 }
 
 RichText* Document::CreateRichTextNode(const std::string& str) {
 	auto e = new RichText(this, str);
-	GetPlugin()->OnCreateText(this, e);
+	GetScript()->OnCreateText(this, e);
 	return e;
 }
 
 void Document::RecycleNode(std::unique_ptr<Node>&& node) {
-	GetPlugin()->OnDestroyNode(this, node.get());
+	GetScript()->OnDestroyNode(this, node.get());
 	removednodes.emplace_back(std::forward<std::unique_ptr<Node>>(node));
 }
 

@@ -9,7 +9,7 @@ namespace Rml {
 void Geometry::Render() {
 	if (vertices.empty() || indices.empty())
 		return;
-	GetRenderInterface()->RenderGeometry(
+	GetRender()->RenderGeometry(
 		&vertices[0],
 		vertices.size(),
 		&indices[0],
@@ -29,7 +29,7 @@ std::vector<Index>& Geometry::GetIndices() {
 Geometry::Geometry()
 	: vertices()
 	, indices()
-	, material(GetRenderInterface()->CreateDefaultMaterial())
+	, material(GetRender()->CreateDefaultMaterial())
 {}
 
 Geometry::~Geometry() {
@@ -39,11 +39,11 @@ Geometry::~Geometry() {
 void Geometry::Release() {
 	vertices.clear();
 	indices.clear();
-	SetMaterial(GetRenderInterface()->CreateDefaultMaterial());
+	SetMaterial(GetRender()->CreateDefaultMaterial());
 }
 
 void Geometry::SetMaterial(Material* mat) {
-	GetRenderInterface()->DestroyMaterial(material);
+	GetRender()->DestroyMaterial(material);
 	material = mat;
 }
 

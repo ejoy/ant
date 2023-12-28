@@ -14,13 +14,13 @@
 #include "fastio.h"
 
 struct RmlWrapper {
-	Rml::Renderer   m_renderer;
-	Rml::LuaPlugin m_plugin;
+	Rml::RenderImpl m_render;
+	Rml::ScriptImpl m_script;
 	RmlWrapper(lua_State* L, int idx)
-		: m_renderer(L, idx)
-		, m_plugin(L)
+		: m_render(L, idx)
+		, m_script(L)
 	{
-		Rml::SetPlugin(&m_plugin);
+		Rml::SetScript(&m_script);
 	}
 };
 
@@ -619,13 +619,13 @@ lRmlShutdown(lua_State* L) {
 
 static int
 lRenderBegin(lua_State* L) {
-	Rml::GetRenderInterface()->Begin();
+	Rml::GetRender()->Begin();
 	return 0;
 }
 
 static int
 lRenderFrame(lua_State* L) {
-	Rml::GetRenderInterface()->End();
+	Rml::GetRender()->End();
     return 0;
 }
 

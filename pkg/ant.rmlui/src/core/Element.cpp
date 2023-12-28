@@ -389,7 +389,7 @@ Node* Element::Clone(bool deep) const {
 }
 
 void Element::NotifyCreated() {
-	GetPlugin()->OnCreateElement(owner_document, this, GetTagName());
+	GetScript()->OnCreateElement(owner_document, this, GetTagName());
 }
 
 void Element::AppendChild(Node* node, size_t index) {
@@ -1197,7 +1197,7 @@ void Element::UpdateClip() {
 bool Element::SetRenderStatus() {
 	switch (clip.type) {
 	case ElementClip::Type::None: {
-		auto render = GetRenderInterface();
+		auto render = GetRender();
 		render->SetTransform(transform);
 		render->SetClipRect();
 		return true;
@@ -1205,13 +1205,13 @@ bool Element::SetRenderStatus() {
 	case ElementClip::Type::Any:
 		return false;
 	case ElementClip::Type::Scissor: {
-		auto render = GetRenderInterface();
+		auto render = GetRender();
 		render->SetTransform(transform);
 		render->SetClipRect(clip.scissor);
 		return true;
 	}
 	case ElementClip::Type::Shader: {
-		auto render = GetRenderInterface();
+		auto render = GetRender();
 		render->SetTransform(transform);
 		render->SetClipRect(clip.shader);
 		return true;
@@ -1234,7 +1234,7 @@ void Element::DirtyBackground() {
 }
 
 bool Element::DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation) {
-	GetPlugin()->OnDispatchEvent(GetOwnerDocument(), this, type, {
+	GetScript()->OnDispatchEvent(GetOwnerDocument(), this, type, {
 		{ "animationName", animation.GetName() },
 		{ "elapsedTime", animation.GetTime() },
 	});

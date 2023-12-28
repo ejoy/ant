@@ -10,10 +10,10 @@ class Element;
 class Document;
 class Event;
 
-class LuaPlugin final : public Plugin {
+class ScriptImpl final : public Script {
 public:
-	LuaPlugin(lua_State* L);
-	~LuaPlugin();
+	ScriptImpl(lua_State* L);
+	~ScriptImpl();
 	void OnCreateElement(Document* document, Element* element, const std::string& tag) override;
 	void OnCreateText(Document* document, Text* text) override;
 	void OnDispatchEvent(Document* document, Element* element, const std::string& type, const luavalue::table& eventData) override;

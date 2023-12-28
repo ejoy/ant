@@ -111,7 +111,7 @@ static void CallLua(lua_State* L, luaref reference, LuaEvent id, size_t argn, si
 	lua_call(L, (int)argn, (int)retn);
 }
 
-LuaPlugin::LuaPlugin(lua_State* L) {
+ScriptImpl::ScriptImpl(lua_State* L) {
 	luabind::init(L);
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
@@ -127,11 +127,11 @@ LuaPlugin::LuaPlugin(lua_State* L) {
 	ref_function(reference, L, "OnParseText");
 }
 
-LuaPlugin::~LuaPlugin() {
+ScriptImpl::~ScriptImpl() {
 	luaref_close(reference);
 }
 
-void LuaPlugin::OnCreateElement(Document* document, Element* element, const std::string& tag) {
+void ScriptImpl::OnCreateElement(Document* document, Element* element, const std::string& tag) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)element);
@@ -140,7 +140,7 @@ void LuaPlugin::OnCreateElement(Document* document, Element* element, const std:
 	});
 }
 
-void LuaPlugin::OnCreateText(Document* document, Text* text) {
+void ScriptImpl::OnCreateText(Document* document, Text* text) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)text);
@@ -148,7 +148,7 @@ void LuaPlugin::OnCreateText(Document* document, Text* text) {
 	});
 }
 
-void LuaPlugin::OnDispatchEvent(Document* document, Element* element, const std::string& type, const luavalue::table& eventData) {
+void ScriptImpl::OnDispatchEvent(Document* document, Element* element, const std::string& type, const luavalue::table& eventData) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)element);
@@ -158,7 +158,7 @@ void LuaPlugin::OnDispatchEvent(Document* document, Element* element, const std:
 	});
 }
 
-void LuaPlugin::OnDestroyNode(Document* document, Node* node) {
+void ScriptImpl::OnDestroyNode(Document* document, Node* node) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)node);
@@ -166,7 +166,7 @@ void LuaPlugin::OnDestroyNode(Document* document, Node* node) {
 	});
 }
 
-void LuaPlugin::OnLoadTexture(Document* document, Element* element, const std::string& path) {
+void ScriptImpl::OnLoadTexture(Document* document, Element* element, const std::string& path) {
     luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)element);
@@ -178,7 +178,7 @@ void LuaPlugin::OnLoadTexture(Document* document, Element* element, const std::s
     });
 }
 
-void LuaPlugin::OnLoadTexture(Document* document, Element* element, const std::string& path, Size size) {
+void ScriptImpl::OnLoadTexture(Document* document, Element* element, const std::string& path, Size size) {
     luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)element);
@@ -200,7 +200,7 @@ static uint32_t border_color_or_compare(char c){
 	return n;
 }
 
-void LuaPlugin::OnParseText(const std::string& str,std::vector<group>& groups,std::vector<int>& groupMap,std::vector<image>& images,std::vector<int>& imageMap,std::string& ctext,group& default_group) {
+void ScriptImpl::OnParseText(const std::string& str,std::vector<group>& groups,std::vector<int>& groupMap,std::vector<image>& images,std::vector<int>& imageMap,std::string& ctext,group& default_group) {
     luabind::invoke([&](lua_State* L) {
         lua_pushstring(L, str.data());
 		CallLua(L, reference, LuaEvent::OnParseText, 1, 5);

@@ -143,7 +143,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		}
 		break;
 	}
-	Material* material = GetRenderInterface()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
+	Material* material = GetRender()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
 	geometry.SetMaterial(material);
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
 	bool has_lattice = lattice_x1 > 0;

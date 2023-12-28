@@ -2,14 +2,14 @@
 
 namespace Rml {
 
-class Plugin;
-class RenderInterface;
+class Script;
+class Render;
 
 bool Initialise();
 void Shutdown();
-void SetRenderInterface(RenderInterface* render_interface);
-RenderInterface* GetRenderInterface();
-void SetPlugin(Plugin* plugin);
-Plugin* GetPlugin();
+void SetRender(Render* render);
+Render* GetRender();
+void SetScript(Script* script);
+Script* GetScript();
 
 }

@@ -58,10 +58,10 @@ class TextureMaterial;
 class TextMaterial;
 class Uniform;
 
-class Renderer final : public RenderInterface {
+class RenderImpl final : public Render {
 public:
-    Renderer(lua_State* L, int idx);
-    ~Renderer();
+    RenderImpl(lua_State* L, int idx);
+    ~RenderImpl();
     void Begin() override;
     void End() override;
     void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, Material* mat) override;

@@ -8,19 +8,19 @@
 
 namespace Rml {
 
-static RenderInterface* render_interface = nullptr;
-static Plugin* plugin = nullptr;
+static Render* g_render = nullptr;
+static Script* g_script = nullptr;
 
 static bool initialised = false;
 
 bool Initialise() {
 	assert(!initialised);
-	if (!render_interface) {
-		Log::Message(Log::Level::Error, "No render interface set!");
+	if (!g_render) {
+		Log::Message(Log::Level::Error, "No render set!");
 		return false;
 	}
-	if (!plugin) {
-		Log::Message(Log::Level::Error, "No plugin set!");
+	if (!g_script) {
+		Log::Message(Log::Level::Error, "No script set!");
 		return false;
 	}
 	StyleSheetSpecification::Initialise();
@@ -36,24 +36,24 @@ void Shutdown() {
 	StyleSheetSpecification::Shutdown();
 	Texture::Shutdown();
 
-	render_interface = nullptr;
+	g_render = nullptr;
 	initialised = false;
 }
 
-void SetRenderInterface(RenderInterface* _render_interface) {
-	render_interface = _render_interface;
+void SetRender(Render* render) {
+	g_render = render;
 }
 
-RenderInterface* GetRenderInterface() {
-	return render_interface;
+Render* GetRender() {
+	return g_render;
 }
 
-void SetPlugin(Plugin* _plugin) {
-	plugin = _plugin;
+void SetScript(Script* script) {
+	g_script = script;
 }
 
-Plugin* GetPlugin() {
-	return plugin;
+Script* GetScript() {
+	return g_script;
 }
 
 }

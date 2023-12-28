@@ -300,7 +300,7 @@ RendererContext::RendererContext(lua_State *L, int idx) {
     lua_struct::unpack(L, idx, *this);
 }
 
-Renderer::Renderer(lua_State* L, int idx)
+RenderImpl::RenderImpl(lua_State* L, int idx)
     : context(L, idx)
     , mEncoder(nullptr)
     , default_tex(CreateDefaultTexture())
@@ -324,14 +324,14 @@ Renderer::Renderer(lua_State* L, int idx)
     BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
     BGFX(vertex_layout_end)(&layout);
     BGFX(set_view_mode)(context.viewid, BGFX_VIEW_MODE_SEQUENTIAL);
-    SetRenderInterface(this);
+    SetRender(this);
 }
 
-Renderer::~Renderer() {
+RenderImpl::~RenderImpl() {
     BGFX(destroy_texture)({default_tex});
 }
 
-void Renderer::RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, Material* mat) {
+void RenderImpl::RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, Material* mat) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)&layout);
@@ -356,17 +356,17 @@ void Renderer::RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indi
     BGFX(encoder_submit)(mEncoder, context.viewid, { prog }, 0, discard_flags);
 }
 
-void Renderer::Begin() {
+void RenderImpl::Begin() {
     mEncoder = BGFX(encoder_begin)(false);
     assert(mEncoder);
 }
 
-void Renderer::End() {
+void RenderImpl::End() {
     BGFX(encoder_end)(mEncoder);
 }
 
 #ifdef _DEBUG
-void Renderer::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid){
+void RenderImpl::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid){
     if (!state.needShaderClipRect)
         return;
 
@@ -400,7 +400,7 @@ void Renderer::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, ui
 }
 #endif //_DEBUG
 
-void Renderer::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]){
+void RenderImpl::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]){
     state.needShaderClipRect = true;
     state.lastScissorId = UINT16_MAX;
     state.rectVerteices[0] = r[0];
@@ -408,7 +408,7 @@ void Renderer::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2
     BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
 }
 
-void Renderer::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
+void RenderImpl::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
     state.needShaderClipRect = false;
     if (r == nullptr){
         state.lastScissorId = UINT16_MAX;
@@ -418,7 +418,7 @@ void Renderer::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
     }
 }
 
-void Renderer::submitScissorRect(bgfx_encoder_t* encoder){
+void RenderImpl::submitScissorRect(bgfx_encoder_t* encoder){
     if (state.needShaderClipRect) {
         clip_uniform->Submit(encoder, state.rectVerteices);
     } else {
@@ -426,33 +426,33 @@ void Renderer::submitScissorRect(bgfx_encoder_t* encoder){
     }
 }
 
-void Renderer::SetTransform(const glm::mat4x4& transform) {
+void RenderImpl::SetTransform(const glm::mat4x4& transform) {
     BGFX(encoder_set_transform)(mEncoder, &transform, 1);
 }
 
-void Renderer::SetClipRect() {
+void RenderImpl::SetClipRect() {
     setScissorRect(mEncoder, nullptr);
 }
 
-void Renderer::SetClipRect(const glm::u16vec4& r) {
+void RenderImpl::SetClipRect(const glm::u16vec4& r) {
     setScissorRect(mEncoder, &r);
 }
 
-void Renderer::SetClipRect(glm::vec4 r[2]) {
+void RenderImpl::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
 }
 
-Material* Renderer::CreateTextureMaterial(TextureId texture, SamplerFlag flags) {
+Material* RenderImpl::CreateTextureMaterial(TextureId texture, SamplerFlag flags) {
     auto material = std::make_unique<AsyncTextureMaterial>(context.shader, texture, flags);
     return reinterpret_cast<Material*>(material.release());
 }
 
-Material* Renderer::CreateRenderTextureMaterial(TextureId texture, SamplerFlag flags) {
+Material* RenderImpl::CreateRenderTextureMaterial(TextureId texture, SamplerFlag flags) {
     auto material = std::make_unique<TextureMaterial>(context.shader, bgfx_texture_handle_t{texture}, flags);
     return reinterpret_cast<Material*>(material.release());
 } 
 
-Material* Renderer::CreateFontMaterial(const TextEffect& effect) {
+Material* RenderImpl::CreateFontMaterial(const TextEffect& effect) {
     if (effect.shadow && effect.stroke) {
         assert(false && "not support more than one font effect in single text");
         return reinterpret_cast<Material*>(default_font_mat.get());
@@ -488,11 +488,11 @@ Material* Renderer::CreateFontMaterial(const TextEffect& effect) {
     }
 }
 
-Material* Renderer::CreateDefaultMaterial() {
+Material* RenderImpl::CreateDefaultMaterial() {
      return reinterpret_cast<Material*>(default_tex_mat.get());
 }
 
-void Renderer::DestroyMaterial(Material* mat) {
+void RenderImpl::DestroyMaterial(Material* mat) {
     Material* material = reinterpret_cast<Material*>(mat);
     if (default_font_mat.get() != material && default_tex_mat.get() != material) {
         delete material;
@@ -508,7 +508,7 @@ union FontFace {
 	uint64_t handle;
 };
 
-FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) {
+FontFaceHandle RenderImpl::GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) {
     font_manager* F = context.font_mgr;
     int fontid = F->font_manager_addfont_with_family(F, family.c_str());
     if (fontid <= 0) {
@@ -530,21 +530,21 @@ static struct font_glyph GetGlyph(const RendererContext& context, const FontFace
     return g;
 }
 
-void Renderer::GetFontHeight(FontFaceHandle handle, int& ascent, int& descent, int& lineGap) {
+void RenderImpl::GetFontHeight(FontFaceHandle handle, int& ascent, int& descent, int& lineGap) {
     font_manager* F = context.font_mgr;
     FontFace face;
     face.handle = handle;
     F->font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
 }
 
-bool Renderer::GetUnderline(FontFaceHandle handle, float& position, float &thickness) {
+bool RenderImpl::GetUnderline(FontFaceHandle handle, float& position, float &thickness) {
     font_manager* F = context.font_mgr;
     FontFace face;
     face.handle = handle;
     return 0 == F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
-float Renderer::GetFontWidth(FontFaceHandle handle, uint32_t codepoint) {
+float RenderImpl::GetFontWidth(FontFaceHandle handle, uint32_t codepoint) {
     FontFace face;
     face.handle = handle;
     auto glyph = GetGlyph(context, face, codepoint);
@@ -558,7 +558,7 @@ float Renderer::GetFontWidth(FontFaceHandle handle, uint32_t codepoint) {
 // why store in uint16 ? because bgfx not support ....
 #define MAGIC_FACTOR    32768.f
 
-void Renderer::GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry){
+void RenderImpl::GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry){
     auto& vertices = geometry.GetVertices();
     auto& indices = geometry.GetIndices();
     vertices.clear();
@@ -599,7 +599,7 @@ void Renderer::GenerateString(FontFaceHandle handle, LineList& lines, const Colo
     }
 }
 
-void Renderer::GenerateRichString(FontFaceHandle handle, LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Geometry& textgeometry, std::vector<std::unique_ptr<Geometry>> & imagegeometries, std::vector<image>& images, int& cur_image_idx, float line_height){
+void RenderImpl::GenerateRichString(FontFaceHandle handle, LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Geometry& textgeometry, std::vector<std::unique_ptr<Geometry>> & imagegeometries, std::vector<image>& images, int& cur_image_idx, float line_height){
     auto& vertices = textgeometry.GetVertices();
     auto& indices = textgeometry.GetIndices();
     vertices.clear();
@@ -665,7 +665,7 @@ void Renderer::GenerateRichString(FontFaceHandle handle, LineList& lines, std::v
 
 }
 
-float Renderer::PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups, std::vector<image>& images, std::vector<Rml::layout>& line_layouts,int start,int num){
+float RenderImpl::PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups, std::vector<image>& images, std::vector<Rml::layout>& line_layouts,int start,int num){
     float line_width=0.f;
 
     FontFace face;
