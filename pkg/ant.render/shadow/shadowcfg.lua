@@ -99,9 +99,9 @@ SHADOW_CFG.fb_index = fbmgr.create(
 
 
 
-local ishadow = {}
+local isc = {}
 
-function ishadow.setting()
+function isc.setting()
 	return SHADOW_CFG
 end
 
@@ -125,23 +125,23 @@ do
 	end
 end
 
-function ishadow.crop_matrix(csm_index)
+function isc.crop_matrix(csm_index)
 	return crop_matrices[csm_index]
 end
 
-function ishadow.fb_index()
+function isc.fb_index()
 	return SHADOW_CFG.fb_index
 end
 
---[[ function ishadow.sqfb_index()
+--[[ function isc.sqfb_index()
 	return SHADOW_CFG.sqfb_index
 end ]]
 
-function ishadow.shadow_param()
+function isc.shadow_param()
 	return SHADOW_CFG.shadow_param
 end
 
-function ishadow.shadow_param2()
+function isc.shadow_param2()
 	return SHADOW_CFG.shadow_param2
 end
 
@@ -155,15 +155,15 @@ local function split_new_frustum(view_frustum, n, f)
 	return frustum
 end
 
-function ishadow.split_frustums()
+function isc.split_frustums()
 	return SHADOW_CFG.split_frustums
 end
 
-function ishadow.shadowmap_size()
+function isc.shadowmap_size()
 	return SHADOW_CFG.shadowmap_size
 end
 
-function ishadow.calc_split_frustums(view_frustum)
+function isc.calc_split_frustums(view_frustum)
 	local split_weight = SHADOW_CFG.split_weight
 	local frustums = SHADOW_CFG.split_frustums
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
@@ -210,11 +210,11 @@ function ishadow.calc_split_frustums(view_frustum)
 	return frustums
 end
 
-function ishadow.split_num()
+function isc.split_num()
 	return SHADOW_CFG.split_num
 end
 
-function ishadow.calc_uniform_split_positions()
+function isc.calc_uniform_split_positions()
 	local sn = SHADOW_CFG.split_num
 	local positions = {1.0}
 	for c=1, sn-1 do
@@ -230,7 +230,7 @@ local function log_split(num, c, n, f)
 end
 
 --near&far are view camera's  near & far
-function ishadow.calc_log_split_positions(near, far)
+function isc.calc_log_split_positions(near, far)
 	local positions = {1.0}
 	local sn = SHADOW_CFG.split_num
 	for c=1, sn-1 do
@@ -239,7 +239,7 @@ function ishadow.calc_log_split_positions(near, far)
 	return positions
 end
 
-function ishadow.calc_split_positions(near, far)
+function isc.calc_split_positions(near, far)
 	local sn = SHADOW_CFG.split_num
 	local positions = {1.0}
 	local lambda = SHADOW_CFG.split_lamada
@@ -251,7 +251,7 @@ function ishadow.calc_split_positions(near, far)
 	return positions
 end
 
-function ishadow.split_positions_to_ratios(positions)
+function isc.split_positions_to_ratios(positions)
 	local ratios = {}
 	local start = 0.0
 	for i=1, #positions do
@@ -275,9 +275,9 @@ local function create_sub_viewfrustum(zn, zf, sr, viewfrustum)
 	}
 end
 
-function ishadow.split_viewfrustum(zn, zf, viewfrustum)
+function isc.split_viewfrustum(zn, zf, viewfrustum)
 	local f = {}
-	local ratios = ishadow.split_positions_to_ratios(ishadow.calc_split_positions(zn, zf))
+	local ratios = isc.split_positions_to_ratios(isc.calc_split_positions(zn, zf))
 	for _, r in ipairs(ratios) do
 		f[#f+1] = create_sub_viewfrustum(zn, zf, r, viewfrustum)
 	end
@@ -285,4 +285,26 @@ function ishadow.split_viewfrustum(zn, zf, viewfrustum)
 	return f
 end
 
-return ishadow
+function isc.calc_focus_matrix(aabb)
+	local center, extents = math3d.aabb_center_extents(aabb)
+
+	local ex, ey = math3d.index(extents, 1, 2)
+	local sx, sy = 1.0/ex, 1.0/ey
+
+	local tx, ty = math3d.index(center, 1, 2)
+
+	local quantizer = 16
+	sx, sy = quantizer / math.ceil(quantizer / sx),  quantizer / math.ceil(quantizer / sy)
+
+	tx, ty =  tx * sx, ty * sy
+	local hs = isc.shadowmap_size() * 0.5
+	tx, ty = -math.ceil(tx * hs) / hs, -math.ceil(ty * hs) / hs
+	return math3d.matrix{
+		sx,  0, 0, 0,
+			0, sy, 0, 0,
+			0,  0, 1, 0,
+		tx, ty, 0, 1
+	}
+end
+
+return isc

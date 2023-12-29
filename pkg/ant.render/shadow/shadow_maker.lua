@@ -36,68 +36,50 @@ local function commit_csm_matrices_attribs()
 end
 
 local function get_intersected_aabb()
-	local sbe = w:first "shadow_bounding:in"
-	local scene_aabb, camera_aabb = sbe.shadow_bounding.scene_aabb, sbe.shadow_bounding.camera_aabb
-	return math3d.aabb_intersection(scene_aabb, camera_aabb)
+	local SB = w:first "shadow_bounding:in".shadow_bounding
+	return math3d.aabb_intersection(SB.scene_info.PSR, SB.camera_aabb)
 end
 
+
+local function update_shadow_camera_matrix(ce, Lv, Lp)
+	local camera = ce.camera
+	camera.viewmat.m = Lv
+	camera.projmat.m = Lp
+	camera.infprojmat.m = Lp
+	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
+
+	-- this camera should not generate the change tag
+	w:extend(ce, "scene_changed?out scene_needchange?out camera_changed?out")
+	ce.camera_changed = true
+	ce.scene_changed = false
+	ce.scene_needchange = false
+	w:submit(ce)
+end
+
+local ORTHO_FRUSTUM = {
+	l = -1, r = 1,
+	b = -1, t = 1,
+	n = 0, 	f = 1,
+	ortho = true,
+}
+
 -- bgfx method
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, intersected_aabb)
+local function update_csm_matrices(lightdir, csm_frustum, shadow_ce, intersected_aabb)
+	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
+	math3d.unmark(shadow_ce.scene.worldmat)
+	shadow_ce.scene.worldmat = math3d.marked_matrix(shadow_ce.scene)
 
-	local function update_shadow_camera_srt()
-		iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
-		math3d.unmark(shadow_ce.scene.worldmat)
-		shadow_ce.scene.worldmat = math3d.marked_matrix(shadow_ce.scene)
-	end
+	local light_world = shadow_ce.scene.worldmat
+	local Lv = math3d.inverse_fast(light_world)
+	local aabbLS = math3d.aabb_transform(Lv, intersected_aabb)
 
-	local function update_shadow_camera_matrix(light_view, light_proj)
-	   local camera = shadow_ce.camera
-	   camera.viewmat.m = light_view
-	   camera.projmat.m = light_proj
-	   camera.infprojmat.m = light_proj
-	   camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
-   
-	   -- this camera should not generate the change tag
-	   w:extend(shadow_ce, "scene_changed?out scene_needchange?out camera_changed?out")
-	   shadow_ce.camera_changed = true
-	   shadow_ce.scene_changed = false
-	   shadow_ce.scene_needchange = false
-	   w:submit(shadow_ce)
-	end
+	--TODO: need remove
+	ORTHO_FRUSTUM.n, ORTHO_FRUSTUM.f = -csm_frustum.f, csm_frustum.f
 
-	local function get_light_view_proj_matrix()
-		local light_world = shadow_ce.scene.worldmat
-		local light_view = math3d.inverse(light_world)
-		local aabb_points = math3d.aabb_points(intersected_aabb)
-		local light_frustum_minmax = math3d.minmax(aabb_points, light_view)
-		local frustum_ortho = {
-			l = 1, r = -1,
-			t = 1, b = -1,
-			n = -csm_frustum.f, f = csm_frustum.f,
-			ortho = true,
-		}
-		local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
-		local min_proj, max_proj = math3d.transformH(ortho_proj, math3d.array_index(light_frustum_minmax, 1)), math3d.transformH(ortho_proj, math3d.array_index(light_frustum_minmax, 2))
-		local minp, maxp = math3d.tovalue(min_proj), math3d.tovalue(max_proj)
-		local scalex, scaley = 2 / (maxp[1] - minp[1]), 2 / (maxp[2] - minp[2])
-		local quantizer = 64
-		scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley)
-		local offsetx, offsety = 0.5 * (maxp[1] + minp[1]) * scalex, 0.5 * (maxp[2] + minp[2]) * scaley
-		local half_size = shadowmap_size * 0.5
-		offsetx, offsety = math.ceil(offsetx * half_size) / half_size, math.ceil(offsety * half_size) / half_size
-		local crop = math3d.matrix{
-			scalex, 0, 0, 0,
-			0, scaley, 0, 0,
-			0, 0, 1, 0,
-			-offsetx, -offsety, 0, 1
-		}
-		ortho_proj = math3d.mul(crop, ortho_proj)
-		return light_view, ortho_proj
-	end
-
-	update_shadow_camera_srt()
-	local light_view, light_proj = get_light_view_proj_matrix()
-	update_shadow_camera_matrix(light_view, light_proj)
+	local Lp = math3d.projmat(ORTHO_FRUSTUM, INV_Z)
+	local F = ishadow.calc_focus_matrix(math3d.aabb_transform(Lp, aabbLS))
+	Lp = math3d.mul(F, Lp)
+	update_shadow_camera_matrix(shadow_ce, Lv, Lp)
 end
 
 local function calc_csm_matrix_attrib(csmidx, vp)
@@ -116,7 +98,7 @@ local function update_shadow_frustum(dl, ce, mc_scene_changed)
 		local shadow_ce = world:entity(qe.camera_ref, "camera:in scene:in camera_changed?in")
 		if mc_scene_changed or shadow_ce.camera_changed then
 			shadow_camera_changed = true
-			update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, intersected_aabb, ce.camera.viewmat)
+			update_csm_matrices(lightdir, csm_frustum, shadow_ce, intersected_aabb)
 			csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 			split_distances_VS[csm.index] = csm_frustum.f
 		end

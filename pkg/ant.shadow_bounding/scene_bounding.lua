@@ -95,7 +95,6 @@ function sb_sys:update_camera_bounding()
 		w:extend(C, "scene:in camera:in")
 		local sbe = w:first "shadow_bounding:update"
 		sbe.shadow_bounding.scene_info = build_scene_info(C)
-		sbe.shadow_bounding.scene_aabb = sbe.shadow_bounding.scene_info.PSR
 		w:submit(sbe)
 		BOUNDING_NEED_UPDATE = false
 	end

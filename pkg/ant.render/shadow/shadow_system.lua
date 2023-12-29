@@ -26,7 +26,7 @@ local math3d    = require "math3d"
 local fbmgr     = require "framebuffer_mgr"
 local queuemgr  = ecs.require "queue_mgr"
 
-local ishadowcfg= ecs.require "shadow.shadowcfg"
+local isc= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
@@ -121,19 +121,19 @@ end
 local shadow_material
 local gpu_skinning_material
 function shadow_sys:init()
-	local fbidx = ishadowcfg.fb_index()
-	local s     = ishadowcfg.shadowmap_size()
+	local fbidx = isc.fb_index()
+	local s     = isc.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-	for ii=1, ishadowcfg.split_num() do
+	for ii=1, isc.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
 	end
 
-	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(ishadowcfg.fb_index(), 1).handle)
-	imaterial.system_attrib_update("u_shadow_param1", ishadowcfg.shadow_param())
-	imaterial.system_attrib_update("u_shadow_param2", ishadowcfg.shadow_param2())
+	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(isc.fb_index(), 1).handle)
+	imaterial.system_attrib_update("u_shadow_param1", isc.shadow_param())
+	imaterial.system_attrib_update("u_shadow_param2", isc.shadow_param2())
 end
 
 local function set_csm_visible(enable)
@@ -165,29 +165,6 @@ local function mark_camera_changed(e)
 	e.scene_changed = false
 	e.scene_needchange = false
 	w:submit(e)
-end
-
-local function calc_focus_matrix(M, vertices)
-	local aabb = math3d.minmax(vertices, M)
-	local center, extents = math3d.aabb_center_extents(aabb)
-
-	local ex, ey = math3d.index(extents, 1, 2)
-	local sx, sy = 1.0/ex, 1.0/ey
-
-	local tx, ty = math3d.index(center, 1, 2)
-
-	local quantizer = 16
-	sx, sy = quantizer / math.ceil(quantizer / sx),  quantizer / math.ceil(quantizer / sy)
-
-	tx, ty =  tx * sx, ty * sy
-	local hs = ishadowcfg.shadowmap_size() * 0.5
-	tx, ty = -math.ceil(tx * hs) / hs, -math.ceil(ty * hs) / hs
-	return math3d.matrix{
-		sx,  0, 0, 0,
-		 0, sy, 0, 0,
-		 0,  0, 1, 0,
-		tx, ty, 0, 1
-	}
 end
 
 local function update_camera(c, Lv, Lp)
@@ -227,7 +204,7 @@ local function update_shadow_matrices(si, li, c)
 			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
 		end
 
-		local F = calc_focus_matrix(Lp, verticesLS)
+		local F = isc.calc_focus_matrix(math3d.minmax(verticesLS, Lp))
 		Lp 		= math3d.mul(F, Lp)
 	else
 		Lp		= math3d.projmat(c.frustum, INV_Z)
@@ -298,7 +275,7 @@ function shadow_sys:update_camera_depend()
 	local CF = C.camera.frustum
 
 	local zn, zf = assert(si.zn), assert(si.zf)
-	local csmfrustums = ishadowcfg.split_viewfrustum(zn, zf, CF)
+	local csmfrustums = isc.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
@@ -310,7 +287,7 @@ function shadow_sys:update_camera_depend()
 		update_shadow_matrices(si, li, c)
 		mark_camera_changed(ce)
 
-		csm_matrices[csm.index].m = math3d.mul(ishadowcfg.crop_matrix(csm.index), c.viewprojmat)
+		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)
 		split_distances_VS[csm.index] = c.viewfrustum.f
     end
 
