@@ -62,29 +62,22 @@ namespace luabind {
 
 namespace lua_struct {
 	template <>
-    inline void unpack<Rml::Rect>(lua_State* L, int idx, Rml::Rect& rect, void*) {
-        luaL_checktype(L, idx, LUA_TTABLE);
-        float x, y, w, h;
-        unpack_field(L, idx, "x", x);
-		unpack_field(L, idx, "y", y);
-		unpack_field(L, idx, "w", w);
-		unpack_field(L, idx, "h", h);
-        rect = Rml::Rect(x, y, w, h);
-    }
-	template <>
-    inline void unpack<Rml::image>(lua_State* L, int idx, Rml::image& image, void*) {
-        luaL_checktype(L, idx, LUA_TTABLE);
-        Rml::TextureId id;
-		Rml::Rect rect;
-		uint16_t width, height;
-        unpack_field(L, idx, "id", id);
-		lua_getfield(L,-1,"rect");
-		unpack(L, idx, rect);
+	Rml::Rect unpack<Rml::Rect>(lua_State* L, int idx) {
+		luaL_checktype(L, idx, LUA_TTABLE);
+		lua_getfield(L, idx, "x");
+		float x = lua_struct::unpack<float>(L, -1);
 		lua_pop(L, 1);
-		unpack_field(L, idx, "width", width);
-		unpack_field(L, idx, "height", height);
-        image = Rml::image(id, rect, width, height);
-    }
+		lua_getfield(L, idx, "y");
+		float y = lua_struct::unpack<float>(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, idx, "w");
+		float w = lua_struct::unpack<float>(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, idx, "h");
+		float h = lua_struct::unpack<float>(L, -1);
+		lua_pop(L, 1);
+		return Rml::Rect(x, y, w, h);
+	}
 }
 
 namespace Rml {
@@ -206,31 +199,15 @@ void ScriptImpl::OnParseText(const std::string& str,std::vector<group>& groups,s
 		CallLua(L, reference, LuaEvent::OnParseText, 1, 5);
 
 		//-1 -2 -3 -4 -5 - imagemap images groupmap groups ctext
+		
+		imageMap = lua_struct::unpack<std::remove_cvref_t<decltype(imageMap)>>(L, -1);
+		lua_pop(L, 1);
 
-		lua_pushnil(L);//-1 -2 - nil imagemap
-		while(lua_next(L,-2)){//-1 -2 idx imagemap
-			imageMap.emplace_back((int)lua_tointeger(L,-1)-1);
-			lua_pop(L,1);
-		}
-		lua_pop(L,1);
-
-		lua_pushnil(L);
-		while(lua_next(L,-2)){
-			image image;
-			//id rect width height
-			lua_struct::unpack(L, -1, image);
-			lua_pop(L,1);
-			images.emplace_back(image);
-		}
-		lua_pop(L,1);
+		images = lua_struct::unpack<std::remove_cvref_t<decltype(images)>>(L, -1);
+		lua_pop(L, 1);
 
 
-		lua_pushnil(L);//-1 -2 - nil groupmap
-		while(lua_next(L,-2)){//-1 -2 idx groupmap
-			//float tmp_idx = (int)lua_tointeger(L,-1);
-			groupMap.emplace_back((int)lua_tointeger(L,-1)-1);
-			lua_pop(L,1);
-		}
+		groupMap = lua_struct::unpack<std::remove_cvref_t<decltype(groupMap)>>(L, -1);
 		lua_pop(L,1);
 
 		lua_pushnil(L);

@@ -45,7 +45,6 @@ struct RendererContext {
     struct font_manager* font_mgr;
     struct Shader        shader;
     uint16_t             viewid;
-    RendererContext(lua_State* L, int idx);
 };
 
 struct RenderState {

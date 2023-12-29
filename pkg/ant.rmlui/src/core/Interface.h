@@ -25,19 +25,18 @@ struct layout {
     uint16_t start;
 };
 
-struct group{
+struct group {
 	Color color;
 	//todo
 };
 
-struct image{
+struct image {
 	Rml::TextureId id;
 	Rect rect;
 	uint16_t width;
 	uint16_t height;
-	image(){}
-	image(Rml::TextureId id, Rect rect, uint16_t width, uint16_t height):id(id), rect(rect), width(width), height(height){}
 };
+
 struct Line {
 	std::string text;
 	Point position;

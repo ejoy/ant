@@ -1,424 +1,460 @@
 #pragma once
 
-#if !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <lua.hpp>
-#include <map>
-#include <string>
-#include <unordered_map>
-#include <vector>
 #include <array>
 #include <limits>
-
-static_assert(sizeof(double) == sizeof(lua_Number));
+#include <map>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+#include <bee/nonstd/unreachable.h>
 
 namespace lua_struct {
-    ///
-    /// check
-    ///
-    namespace symbol {
-        static inline std::array<const char*, 16> stack;
-        static inline size_t stack_top = 0;
-        static inline void push(const char* name) {
-            // TODO: thread unsafe
-            //if (stack_top > stack.max_size()) {
-            //    return;
-            //}
-            //stack[stack_top++] = name;
-        }
-        static inline void pop() {
-            // TODO: thread unsafe
-            //if (stack_top == 0) {
-            //    return;
-            //}
-            //--stack_top;
-        }
-        struct guard {
-            guard(const char* name) { push(name); }
-            guard(size_t index) {
-                if (index <= 0xFFFF) {
-                    push((const char*)index);
-                }
-                else {
-                    push("*");
-                }
-            }
-            ~guard() { pop(); }
+    namespace reflection {
+        template <unsigned short N>
+        struct cstring {
+            constexpr explicit cstring(std::string_view str) noexcept
+                : cstring { str, std::make_integer_sequence<unsigned short, N> {} } {}
+            constexpr const char* data() const noexcept { return chars_; }
+            constexpr unsigned short size() const noexcept { return N; }
+            constexpr operator std::string_view() const noexcept { return { data(), size() }; }
+            template <unsigned short... I>
+            constexpr cstring(std::string_view str, std::integer_sequence<unsigned short, I...>) noexcept
+                : chars_ { str[I]..., '\0' } {}
+            char chars_[static_cast<size_t>(N) + 1];
         };
-        static inline const char* result(lua_State* L) {
-            if (stack_top == 0) {
-                return "";
-            }
-            luaL_Buffer b;
-            luaL_buffinit(L, &b);
-            for (size_t i = 0; i < stack_top; ++i) {
-                const char* s = stack[i];
-                if ((size_t)s <= 0xFFFF) {
-                    luaL_addchar(&b, '[');
-                    char* buff = luaL_prepbuffsize(&b, 10);
-                    luaL_addsize(&b, l_sprintf(buff, 10, "%d", 1 + (int)(size_t)s));
-                    luaL_addchar(&b, ']');
-                }
-                else {
-                    luaL_addchar(&b, '.');
-                    luaL_addstring(&b, s);
-                }
-            }
-            luaL_pushresult(&b);
-            return lua_tostring(L, -1);
-        }
-    };
+        template <>
+        struct cstring<0> {
+            constexpr explicit cstring(std::string_view) noexcept {}
+            constexpr const char* data() const noexcept { return nullptr; }
+            constexpr unsigned short size() const noexcept { return 0; }
+            constexpr operator std::string_view() const noexcept { return {}; }
+        };
 
-    inline void raise(lua_State* L, const char* msg) {
-        luaL_error(L, "bad argument '%s' (%s)", symbol::result(L), msg);
-    }
-    inline const char* gettype(lua_State* L, int idx) {
-        if (luaL_getmetafield(L, idx, "__name") == LUA_TSTRING)
-            return lua_tostring(L, -1);
-        else if (lua_type(L, idx) == LUA_TLIGHTUSERDATA)
-            return "light userdata";
-        else
-            return luaL_typename(L, idx);
-    }
-    inline void checkcond(lua_State* L, int cond, const char* msg) {
-        if (!cond) {
-            raise(L, msg);
+        template <typename T>
+        struct wrapper { T a; };
+        template <typename T>
+        wrapper(T) -> wrapper<T>;
+
+        template <typename T>
+        static inline T storage = {};
+
+        template <auto T>
+        constexpr auto main_name_of_pointer()  {
+            constexpr auto is_identifier = [](char c)
+            { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'; };
+    #if __GNUC__ && (!__clang__) && (!_MSC_VER)
+            std::string_view str = __PRETTY_FUNCTION__;
+            std::size_t start = str.rfind("::") + 2;
+            std::size_t end = start;
+            for (; end < str.size() && is_identifier(str[end]); end++) {}
+            return str.substr(start, end - start);
+    #elif __clang__
+            std::string_view str = __PRETTY_FUNCTION__;
+            std::size_t start = str.rfind(".") + 1;
+            std::size_t end = start;
+            for (; end < str.size() && is_identifier(str[end]); end++) {}
+            return str.substr(start, end - start);
+    #elif _MSC_VER
+            std::string_view str = __FUNCSIG__;
+            std::size_t start = str.rfind("->") + 2;
+            std::size_t end = start;
+            for (; end < str.size() && is_identifier(str[end]); end++) {}
+            return str.substr(start, end - start);
+    #else
+            static_assert(false, "Not supported compiler");
+    #endif
         }
-    }
-    template <typename T, typename R>
-    T checklimit(lua_State* L, R const& r) {
-        if (r < std::numeric_limits<T>::lowest() || r >(std::numeric_limits<T>::max)()) {
-            raise(L, "limit exceeded");
+
+        struct any {
+            constexpr any(int) {}
+            template <typename T>
+                requires std::is_copy_constructible_v<T>
+            operator T&();
+            template <typename T>
+                requires std::is_move_constructible_v<T>
+            operator T&&();
+            template <typename T>
+                requires(!std::is_copy_constructible_v<T> && !std::is_move_constructible_v<T>)
+            operator T();
+        };
+
+        template <typename T, std::size_t N>
+        constexpr std::size_t try_initialize_with_n() {
+            return []<std::size_t... Is>(std::index_sequence<Is...>) { return requires { T{any(Is)...}; }; }(std::make_index_sequence<N>{});
         }
-        return (T)r;
-    }
-    inline void checktype(lua_State* L, int idx, int tag) {
-        if (lua_type(L, idx) != tag) {
-            raise(L, lua_pushfstring(L, "%s expected, got %s", lua_typename(L, tag), gettype(L, idx)));
-        }
-    }
-    inline lua_Integer checkinteger(lua_State* L, int idx) {
-        if (!lua_isinteger(L, idx)) {
-            if (lua_isnumber(L, idx)) {
-                raise(L, "number has no integer representation");
+
+        template <typename T, std::size_t N = 0>
+        constexpr auto field_count_impl() {
+            if constexpr (try_initialize_with_n<T, N>() && !try_initialize_with_n<T, N + 1>()) {
+                return N;
             }
             else {
-                raise(L, lua_pushfstring(L, "%s expected, got %s", lua_typename(L, LUA_TNUMBER), gettype(L, idx)));
+                return field_count_impl<T, N + 1>();
             }
         }
-        return lua_tointeger(L, idx);
-    }
-    inline lua_Number checknumber(lua_State* L, int idx) {
-        checktype(L, idx, LUA_TNUMBER);
-        return lua_tonumber(L, idx);
-    }
-    inline const char* checkstring(lua_State* L, int idx) {
-        checktype(L, idx, LUA_TSTRING);
-        return lua_tostring(L, idx);
-    }
-    inline const char* checklstring(lua_State* L, int idx, size_t* len) {
-        checktype(L, idx, LUA_TSTRING);
-        return lua_tolstring(L, idx, len);
-    }
-    inline void* checkuserdata(lua_State* L, int idx) {
-        if (lua_type(L, idx) != LUA_TLIGHTUSERDATA && lua_type(L, idx) != LUA_TUSERDATA) {
-            raise(L, lua_pushfstring(L, "%s expected, got %s", lua_typename(L, LUA_TUSERDATA), gettype(L, idx)));
+
+        template <typename T>
+            requires std::is_aggregate_v<T>
+        static constexpr auto field_count = field_count_impl<T>();
+
+#if defined(_MSC_VER)
+#   pragma warning(push)
+#   pragma warning(disable : 4101)
+#endif
+
+        template <typename T, std::size_t I>
+        constexpr auto field_type_impl(T object) {
+            constexpr auto N = field_count<T>;
+            if constexpr (N == 0) {
+                static_assert(N != 0, "the object has no fields");
+            }
+            else if constexpr (N == 1) {
+                auto [v0] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0)>>>{};
+            }
+            else if constexpr (N == 2) {
+                auto [v0, v1] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1)>>>{};
+            }
+            else if constexpr (N == 3) {
+                auto [v0, v1, v2] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2)>>>{};
+            }
+            else if constexpr (N == 4) {
+                auto [v0, v1, v2, v3] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3)>>>{};
+            }
+            else if constexpr (N == 5) {
+                auto [v0, v1, v2, v3, v4] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4)>>>{};
+            }
+            else if constexpr (N == 6) {
+                auto [v0, v1, v2, v3, v4, v5] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5)>>>{};
+            }
+            else if constexpr (N == 7) {
+                auto [v0, v1, v2, v3, v4, v5, v6] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6)>>>{};
+            }
+            else if constexpr (N == 8) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7)>>>{};
+            }
+            else if constexpr (N == 9) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8)>>>{};
+            }
+            else if constexpr (N == 10) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9)>>>{};
+            }
+            else if constexpr (N == 11) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9), decltype(v10)>>>{};
+            }
+            else if constexpr (N == 12) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9), decltype(v10), decltype(v11)>>>{};
+            }
+            else if constexpr (N == 13) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9), decltype(v10), decltype(v11), decltype(v12)>>>{};
+            }
+            else if constexpr (N == 14) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9), decltype(v10), decltype(v11), decltype(v12), decltype(v13)>>>{};
+            }
+            else if constexpr (N == 15) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9), decltype(v10), decltype(v11), decltype(v12), decltype(v13), decltype(v14)>>>{};
+            }
+            else if constexpr (N == 16) {
+                auto [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15] = object;
+                return std::type_identity<std::tuple_element_t<I, std::tuple<decltype(v0), decltype(v1), decltype(v2), decltype(v3), decltype(v4), decltype(v5), decltype(v6), decltype(v7), decltype(v8), decltype(v9), decltype(v10), decltype(v11), decltype(v12), decltype(v13), decltype(v14), decltype(v15)>>>{};
+            }
+            else {
+                static_assert(N <= 16, "the max of supported fields is 16");
+            }
         }
-        return lua_touserdata(L, idx);
+
+        template <std::size_t I>
+        constexpr auto&& field_access(auto&& object) {
+            using T = std::remove_cvref_t<decltype(object)>;
+            constexpr auto N = field_count<T>;
+            if constexpr (N == 0) {
+                static_assert(N != 0, "the object has no fields");
+            }
+            else if constexpr (N == 1) {
+                auto&& [v0] = object;
+                return std::get<I> (std::forward_as_tuple(v0));
+            }
+            else if constexpr (N == 2) {
+                auto&& [v0, v1] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1));
+            }
+            else if constexpr (N == 3) {
+                auto&& [v0, v1, v2] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2));
+            }
+            else if constexpr (N == 4) {
+                auto&& [v0, v1, v2, v3] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3));
+            }
+            else if constexpr (N == 5) {
+                auto&& [v0, v1, v2, v3, v4] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4));
+            }
+            else if constexpr (N == 6) {
+                auto&& [v0, v1, v2, v3, v4, v5] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5));
+            }
+            else if constexpr (N == 7) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6));
+            }
+            else if constexpr (N == 8) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7));
+            }
+            else if constexpr (N == 9) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8));
+            }
+            else if constexpr (N == 10) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9));
+            }
+            else if constexpr (N == 11) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10));
+            }
+            else if constexpr (N == 12) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11));
+            }
+            else if constexpr (N == 13) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12));
+            }
+            else if constexpr (N == 14) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13));
+            }
+            else if constexpr (N == 15) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14));
+            }
+            else if constexpr (N == 16) {
+                auto&& [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15] = object;
+                return std::get<I> (std::forward_as_tuple(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15));
+            }
+            else {
+                static_assert(N <= 16, "the max of supported fields is 16");
+            }
+        }
+
+#if defined(_MSC_VER)
+#   pragma warning(pop)
+#endif
+
+        template <typename T, std::size_t I>
+        constexpr auto field_name_impl() noexcept {
+            constexpr auto name = main_name_of_pointer<wrapper{&field_access<I>(storage<T>)}>();
+            return cstring<name.size()> { name };
+        }
+
+    
+        template <typename T, std::size_t I>
+            requires std::is_aggregate_v<T>
+        using field_type = typename decltype(field_type_impl<T, I>(std::declval<T>()))::type;
+
+        template <typename T, std::size_t I>
+            requires std::is_aggregate_v<T>
+        static constexpr auto field_name = field_name_impl<T, I>();
     }
 
-    ///
-    /// unpack
-    ///
+    template <typename T, typename I>
+    static constexpr bool check_integral_limit(I i) {
+        static_assert(std::is_integral_v<I>);
+        static_assert(std::is_integral_v<T>);
+        static_assert(sizeof(I) >= sizeof(T));
+        if constexpr (sizeof(I) == sizeof(T)) {
+            return true;
+        }
+        else if constexpr (std::numeric_limits<I>::is_signed == std::numeric_limits<T>::is_signed) {
+            return i >= std::numeric_limits<T>::lowest() && i <= (std::numeric_limits<T>::max)();
+        }
+        else if constexpr (std::numeric_limits<I>::is_signed) {
+            return static_cast<std::make_unsigned_t<I>>(i) >= std::numeric_limits<T>::lowest() && static_cast<std::make_unsigned_t<I>>(i) <= (std::numeric_limits<T>::max)();
+        }
+        else {
+            return static_cast<std::make_signed_t<I>>(i) >= std::numeric_limits<T>::lowest() && static_cast<std::make_signed_t<I>>(i) <= (std::numeric_limits<T>::max)();
+        }
+    }
+
     template <typename T>
-    void unpack(lua_State* L, int idx, T& v, typename std::enable_if<!std::is_integral<T>::value>::type* = 0);
+    static T unpack(lua_State* L, int arg);
+
+    template <typename T, std::size_t I>
+    static void unpack_struct(lua_State* L, int arg, T& v);
 
     template <typename T>
-    void unpack(lua_State* L, int idx, T& v, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
-        static_assert(sizeof(T) <= sizeof(lua_Integer));
-        v = checklimit<T>(L, checkinteger(L, idx));
+        requires(std::is_integral_v<T> && !std::same_as<T, bool>)
+    static T unpack(lua_State* L, int arg) {
+        lua_Integer r = luaL_checkinteger(L, arg);
+        if constexpr (std::is_same_v<T, lua_Integer>) {
+            return r;
+        }
+        else if constexpr (sizeof(T) >= sizeof(lua_Integer)) {
+            return static_cast<T>(r);
+        }
+        else {
+            if (check_integral_limit<T>(r)) {
+                return static_cast<T>(r);
+            }
+            luaL_error(L, "unpack integer limit exceeded", arg);
+            std::unreachable();
+        }
+    }
+
+    template <typename T>
+        requires(std::same_as<T, bool>)
+    static T unpack(lua_State* L, int arg) {
+        luaL_checktype(L, arg, LUA_TBOOLEAN);
+        return !!lua_toboolean(L, arg);
+    }
+
+    template <typename T>
+        requires std::is_pointer_v<T>
+    static T unpack(lua_State* L, int arg) {
+        luaL_checktype(L, arg, LUA_TLIGHTUSERDATA);
+        return static_cast<T>(lua_touserdata(L, arg));
     }
 
     template <>
-    inline void unpack<float>(lua_State* L, int idx, float& v, void*) {
-        v = checklimit<float>(L, checknumber(L, idx));
+    float unpack<float>(lua_State* L, int arg) {
+        return (float)luaL_checknumber(L, arg);
     }
 
     template <>
-    inline void unpack<double>(lua_State* L, int idx, double& v, void*) {
-        v = (double)checknumber(L, idx);
-    }
-
-    template <>
-    inline void unpack<bool>(lua_State* L, int idx, bool& v, void*) {
-        v = !!lua_toboolean(L, idx);
-    }
-
-    template <>
-    inline void unpack<std::string>(lua_State* L, int idx, std::string& v, void*) {
+    std::string unpack<std::string>(lua_State* L, int arg) {
         size_t sz = 0;
-        const char* str = checklstring(L, idx, &sz);
-        v.assign(str, sz);
+        const char* str = luaL_checklstring(L, arg, &sz);
+        return std::string(str, sz);
     }
 
-    template <typename K, typename V>
-    void unpack(lua_State* L, int idx, std::map<K, V>& v) {
-        idx = lua_absindex(L, idx);
-        checktype(L, idx, LUA_TTABLE);
-        v.clear();
+    template <>
+    std::string_view unpack<std::string_view>(lua_State* L, int arg) {
+        size_t sz = 0;
+        const char* str = luaL_checklstring(L, arg, &sz);
+        return std::string_view(str, sz);
+    }
+
+    template <typename T>
+        requires std::is_aggregate_v<T>
+    static T unpack(lua_State* L, int arg) {
+        T v;
+        unpack_struct<T, 0>(L, arg, v);
+        return v;
+    }
+
+    template<template<typename...> class Template, typename Class>
+    struct is_instantiation : std::false_type {};
+    template<template<typename...> class Template, typename... Args>
+    struct is_instantiation<Template, Template<Args...>> : std::true_type {};
+    template<typename Class, template<typename...> class Template>
+    concept is_instantiation_of = is_instantiation<Template, Class>::value;
+
+    template <typename T>
+        requires is_instantiation_of<T, std::map>
+    T unpack(lua_State* L, int arg) {
+        arg = lua_absindex(L, arg);
+        luaL_checktype(L, arg, LUA_TTABLE);
+        T v;
         lua_pushnil(L);
-        while (lua_next(L, idx)) {
-            symbol::guard guard("*"); //TODO
-            std::pair<K, V> pair;
-            unpack(L, -1, pair.second);
-            lua_pop(L, 1);
-            unpack(L, -1, pair.first);
-            v.emplace(std::move(pair));
-        }
-    }
-
-    template <typename K, typename V>
-    void unpack(lua_State* L, int idx, std::unordered_map<K, V>& v) {
-        idx = lua_absindex(L, idx);
-        checktype(L, idx, LUA_TTABLE);
-        v.clear();
-        lua_pushnil(L);
-        while (lua_next(L, idx)) {
-            symbol::guard guard("*"); //TODO
-            std::pair<K, V> pair;
-            unpack(L, -1, pair.second);
-            lua_pop(L, 1);
-            unpack(L, -1, pair.first);
-            v.emplace(std::move(pair));
-        }
-    }
-
-    template <typename T>
-    void unpack(lua_State* L, int idx, std::vector<T>& v) {
-        checktype(L, idx, LUA_TTABLE);
-        size_t n = (size_t)luaL_len(L, idx);
-        v.resize(n);
-        for (size_t i = 0; i < n; ++i) {
-            symbol::guard guard(i);
-            lua_geti(L, idx, (lua_Integer)(i + 1));
-            unpack(L, -1, v[i]);
+        while (lua_next(L, arg)) {
+            auto key = unpack<typename T::key_type>(L, -2);
+            auto mapped = unpack<typename T::mapped_type>(L, -1);
+            v.emplace(std::move(key), std::move(mapped));
             lua_pop(L, 1);
         }
+        return v;
     }
 
-    template <typename T, size_t N>
-    void unpack(lua_State* L, int idx, std::array<T, N>& v) {
-        checktype(L, idx, LUA_TTABLE);
-        for (size_t i = 0; i < N; ++i) {
-            symbol::guard guard(i);
-            lua_geti(L, idx, (lua_Integer)(i + 1));
-            unpack(L, -1, v[i]);
+    template <typename T>
+        requires is_instantiation_of<T, std::vector>
+    T unpack(lua_State* L, int arg) {
+        arg = lua_absindex(L, arg);
+        luaL_checktype(L, arg, LUA_TTABLE);
+        lua_Integer n = luaL_len(L, arg);
+        T v;
+        v.reserve((size_t)n);
+        for (lua_Integer i = 1; i <= n; ++i) {
+            lua_geti(L, arg, i);
+            auto value = unpack<typename T::value_type>(L, -1);
+            v.emplace_back(std::move(value));
             lua_pop(L, 1);
         }
+        return v;
     }
 
-    template <typename T, size_t N>
-    void unpack(lua_State* L, int idx, T(&v)[N]) {
-        checktype(L, idx, LUA_TTABLE);
-        for (size_t i = 0; i < N; ++i) {
-            symbol::guard guard(i);
-            lua_geti(L, idx, (lua_Integer)(i + 1));
-            unpack(L, -1, v[i]);
+    template <typename T, std::size_t I>
+    static void unpack_struct(lua_State* L, int arg, T& v) {
+        if constexpr (I < reflection::field_count<T>) {
+            constexpr auto name = reflection::field_name<T, I>;
+            lua_getfield(L, arg, name.data());
+            reflection::field_access<I>(v) = unpack<reflection::field_type<T, I>>(L, -1);
             lua_pop(L, 1);
+            unpack_struct<T, I + 1>(L, arg, v);
         }
     }
 
     template <typename T>
-    void unpack(lua_State* L, int idx, T*& v) {
-        v = (T*)checkuserdata(L, idx);
-    }
+    static void pack(lua_State* L, const T& v);
+
+    template <typename T, std::size_t I>
+    static void pack_struct(lua_State* L, const T& v);
 
     template <typename T>
-    void unpack(lua_State* L, int idx, T const*& v) {
-        v = (T const*)checkuserdata(L, idx);
-    }
-
-    template <>
-    inline void unpack<char>(lua_State* L, int idx, char const*& v) {
-        v = checkstring(L, idx);
-    }
-
-    template <typename T>
-    void unpack_field(lua_State* L, int idx, const char* name, T& v) {
-        symbol::guard guard(name);
-        lua_getfield(L, idx, name);
-        unpack(L, -1, v);
-        lua_pop(L, 1);
-    }
-
-    template <typename T>
-    void unpack_field_opt(lua_State* L, int idx, const char* name, T& v) {
-        symbol::guard guard(name);
-        auto t = lua_getfield(L, idx, name);
-        if (t != LUA_TNIL)
-            unpack(L, -1, v);
-        lua_pop(L, 1);
-    }
-
-    ///
-    /// pack
-    ///
-    template <typename T>
-    void pack(lua_State* L, T const& v, typename std::enable_if<!std::is_integral<T>::value>::type* = 0);
-
-    template <typename T>
-    void pack(lua_State* L, T const& v, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
-        static_assert(sizeof(T) <= sizeof(lua_Integer));
-        lua_pushinteger(L, (lua_Integer)v);
-    }
-
-    template <>
-    inline void pack<float>(lua_State* L, float const& v, void*) {
-        lua_pushnumber(L, (lua_Number)v);
-    }
-
-    template <>
-    inline void pack<double>(lua_State* L, double const& v, void*) {
-        lua_pushnumber(L, (lua_Number)v);
-    }
-
-    template <>
-    inline void pack<bool>(lua_State* L, bool const& v, void*) {
-        lua_pushboolean(L, v ? 1 : 0);
-    }
-
-    template <>
-    inline void pack<std::string>(lua_State* L, std::string const& v, void*) {
-        lua_pushlstring(L, v.data(), v.size());
-    }
-
-    template <typename K, typename V>
-    void pack(lua_State* L, std::map<K, V> const& v) {
-        lua_newtable(L);
-        for (auto const& pair : v) {
-            pack(L, pair.first);
-            pack(L, pair.second);
-            lua_settable(L, -3);
+        requires(std::is_integral_v<T> && !std::same_as<T, bool>)
+    static void pack(lua_State* L, const T& v) {
+        if constexpr (std::is_same_v<T, lua_Integer>) {
+            lua_pushinteger(L, v);
         }
-    }
-
-    template <typename K, typename V>
-    void pack(lua_State* L, std::unordered_map<K, V> const& v) {
-        lua_newtable(L);
-        for (auto const& pair : v) {
-            pack(L, pair.first);
-            pack(L, pair.second);
-            lua_settable(L, -3);
+        else if constexpr (sizeof(T) <= sizeof(lua_Integer)) {
+            lua_pushinteger(L, static_cast<lua_Integer>(v));
+        }
+        else {
+            if (check_integral_limit<lua_Integer>(v)) {
+                lua_pushinteger(L, static_cast<lua_Integer>(v));
+            }
+            luaL_error(L, "pack integer limit exceeded");
+            std::unreachable();
         }
     }
 
     template <typename T>
-    void pack(lua_State* L, std::vector<T> const& v) {
-        lua_newtable(L);
-        for (size_t i = 0; i < v.size(); ++i) {
-            pack(L, v[i]);
-            lua_seti(L, -2, (lua_Integer)(i + 1));
-        }
-    }
-
-    template <typename T, size_t N>
-    void pack(lua_State* L, std::array<T, N> const& v) {
-        lua_newtable(L);
-        for (size_t i = 0; i < N; ++i) {
-            pack(L, v[i]);
-            lua_seti(L, -2, (lua_Integer)(i + 1));
-        }
-    }
-
-    template <typename T, size_t N>
-    void pack(lua_State* L, const T(&v)[N]) {
-        lua_newtable(L);
-        for (size_t i = 0; i < N; ++i) {
-            pack(L, v[i]);
-            lua_seti(L, -2, (lua_Integer)(i + 1));
-        }
+        requires(std::same_as<T, bool>)
+    static void pack(lua_State* L, const T& v) {
+        lua_pushboolean(L, v);
     }
 
     template <typename T>
-    void pack(lua_State* L, T* const& v) {
-        lua_pushlightuserdata(L, v);
+        requires std::is_aggregate_v<T>
+    static void pack(lua_State* L, const T& v) {
+        lua_createtable(L, 0, (int)reflection::field_count<T>);
+        pack_struct<T, 0>(L, v);
     }
 
-    template <typename T>
-    void pack(lua_State* L, T const* const& v) {
-        lua_pushlightuserdata(L, const_cast<T*>(v));
-    }
-
-    template <>
-    inline void pack<char>(lua_State* L, char const* const& v) {
-        lua_pushstring(L, v);
-    }
-
-    template <typename T>
-    void pack_field(lua_State* L, const char* name, T const& v) {
-        pack(L, v);
-        lua_setfield(L, -2, name);
+    template <typename T, std::size_t I>
+    static void pack_struct(lua_State* L, const T& v) {
+        if constexpr (I < reflection::field_count<T>) {
+            constexpr auto name = reflection::field_name<T, I>;
+            pack<reflection::field_type<T, I>>(L, reflection::field_access<I>(v));
+            lua_setfield(L, -2, name.data());
+            pack_struct<T, I + 1>(L, v);
+        }
     }
 }
-
-#define LUA2STRUCT_EXPAND(args) args
-#define LUA2STRUCT_PARAMS_COUNT(TAG,_16,_15,_14,_13,_12,_11,_10,_9,_8,_7,_6,_5,_4,_3,_2,_1,N,...) TAG##N
-
-#define LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME) unpack_field((L), (IDX), #NAME, (V).NAME)
-#define LUA2STRUCT_UNPACK_FIELD_1(L, IDX, V, NAME) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME)
-#define LUA2STRUCT_UNPACK_FIELD_2(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_1(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_3(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_2(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_4(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_3(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_5(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_4(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_6(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_5(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_7(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_6(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_8(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_7(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_9(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_8(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_10(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_9(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_11(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_10(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_12(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_11(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_13(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_12(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_14(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_13(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_15(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_14(L, IDX, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_16(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_15(L, IDX, V, __VA_ARGS__))
-
-
-#define LUA2STRUCT_UNPACK(L, IDX, V, ...) LUA2STRUCT_EXPAND(LUA2STRUCT_PARAMS_COUNT(LUA2STRUCT_UNPACK_FIELD, __VA_ARGS__,_16,_15,_14,_13,_12,_11,_10,_9,_8,_7,_6,_5,_4,_3,_2,_1)(L, IDX, V, __VA_ARGS__))
-
-
-#define LUA2STRUCT_PACK_FIELD_0(L, V, NAME) pack_field((L), #NAME, (V).NAME)
-#define LUA2STRUCT_PACK_FIELD_1(L, V, NAME) LUA2STRUCT_PACK_FIELD_0(L, V, NAME)
-#define LUA2STRUCT_PACK_FIELD_2(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_1(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_3(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_2(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_4(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_3(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_5(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_4(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_6(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_5(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_7(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_6(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_8(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_7(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_9(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_8(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_10(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_9(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_11(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_10(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_12(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_11(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_13(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_12(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_14(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_13(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_15(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_14(L, V, __VA_ARGS__))
-#define LUA2STRUCT_PACK_FIELD_16(L, V, NAME, ...) LUA2STRUCT_PACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_PACK_FIELD_15(L, V, __VA_ARGS__))
-
-#define LUA2STRUCT_PACK(L, V, ...) LUA2STRUCT_EXPAND(LUA2STRUCT_PARAMS_COUNT(LUA2STRUCT_PACK_FIELD, __VA_ARGS__,_16,_15,_14,_13,_12,_11,_10,_9,_8,_7,_6,_5,_4,_3,_2,_1)(L, V, __VA_ARGS__))
-
-
-#define LUA2STRUCT(STRUCT, ...) \
-    namespace lua_struct { \
-        template <> \
-        inline void unpack<STRUCT>(lua_State* L, int idx, STRUCT& v, void*) { \
-            luaL_checktype(L, idx, LUA_TTABLE); \
-            LUA2STRUCT_UNPACK(L, idx, v, __VA_ARGS__); \
-        }\
-        template <> \
-        inline void pack<STRUCT>(lua_State* L, STRUCT const& v, void*) { \
-            lua_newtable(L); \
-            LUA2STRUCT_PACK(L, v, __VA_ARGS__); \
-        }\
-    }
