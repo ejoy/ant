@@ -37,6 +37,10 @@ local LiSPSM	= require "shadow.LiSPSM"
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
+local INV_Z<const> = true
+--TODO: read from setting file
+local useLiSPSM<const> = false
+
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
@@ -165,22 +169,25 @@ end
 
 local function calc_focus_matrix(M, vertices)
 	local aabb = math3d.minmax(vertices, M)
-	-- extents = (maxv-minv) * 0.5
-	-- center  = (maxv+minv) * 0.5
 	local center, extents = math3d.aabb_center_extents(aabb)
 
 	local ex, ey = math3d.index(extents, 1, 2)
 	local sx, sy = 1.0/ex, 1.0/ey
 
 	local tx, ty = math3d.index(center, 1, 2)
-	-- inverse scale to translation
-	tx, ty = -sx * tx, -sy * ty
 
-	return math3d.matrix(
-		sx,  0.0, 0.0, 0.0,
-		0.0, sy,  0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		tx,  ty,  0.0, 1.0)
+	local quantizer = 16
+	sx, sy = quantizer / math.ceil(quantizer / sx),  quantizer / math.ceil(quantizer / sy)
+
+	tx, ty =  tx * sx, ty * sy
+	local hs = ishadowcfg.shadowmap_size() * 0.5
+	tx, ty = -math.ceil(tx * hs) / hs, -math.ceil(ty * hs) / hs
+	return math3d.matrix{
+		sx,  0, 0, 0,
+		 0, sy, 0, 0,
+		 0,  0, 1, 0,
+		tx, ty, 0, 1
+	}
 end
 
 local function update_camera(c, Lv, Lp)
@@ -202,43 +209,30 @@ local function M3D(o, n)
 	return math3d.mark(n)
 end
 
-local function calc_viewspace_z(n, f, r)
-	return n + (f-n) * r
-end
-
-local INV_Z<const> = true
---TODO: read from setting file
-local useLiSPSM<const> = false
-
 local function update_shadow_matrices(si, li, c)
 	local sp = math3d.projmat(c.viewfrustum)
 	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
 
 	local verticesLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
+
+	local Lp
 	if mc.NULL ~= verticesLS then
 		local intersectaabb = math3d.minmax(verticesLS)
 		c.frustum.n, c.frustum.f = mu.aabb_minmax_index(intersectaabb, 3)
-	end
 
-	local Lp = math3d.projmat(c.frustum, INV_Z)
-	if useLiSPSM then
-		si.Lp = Lp
-		local Wv, Wp = LiSPSM.warp_matrix(si, li, verticesLS)
-		Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
-	end
+		Lp = math3d.projmat(c.frustum, INV_Z)
+		if useLiSPSM then
+			si.Lp = Lp
+			local Wv, Wp = LiSPSM.warp_matrix(si, li, verticesLS)
+			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
+		end
 
-	local F = calc_focus_matrix(Lp, verticesLS)
-	Lp 		= math3d.mul(F, Lp)
+		local F = calc_focus_matrix(Lp, verticesLS)
+		Lp 		= math3d.mul(F, Lp)
+	else
+		Lp		= math3d.projmat(c.frustum, INV_Z)
+	end
 	update_camera(c, li.Lv, Lp)
-end
-
-local function create_sub_viewfrustum(zn, zf, sr, viewfrustum)
-	return {
-		n = calc_viewspace_z(zn, zf, sr[1]),
-		f = calc_viewspace_z(zn, zf, sr[2]),
-		fov = assert(viewfrustum.fov),
-		aspect = assert(viewfrustum.aspect),
-	}
 end
 
 local function init_light_info(C, D)
@@ -302,16 +296,17 @@ function shadow_sys:update_camera_depend()
 	si.sceneaabbLS = build_sceneaabbLS(si, li)
 
 	local CF = C.camera.frustum
-	local ratios = ishadowcfg.split_positions_to_ratios(ishadowcfg.calc_split_positions(CF.n, CF.f, 1))
 
 	local zn, zf = assert(si.zn), assert(si.zf)
+	local csmfrustums = ishadowcfg.split_viewfrustum(zn, zf, CF)
+
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
 		ce.scene.worldmat = M3D(ce.scene.worldmat, li.Lw)
 
         local c = ce.camera
         local csm = e.csm
-		c.viewfrustum = create_sub_viewfrustum(zn, zf, ratios[csm.index], CF)
+		c.viewfrustum = csmfrustums[csm.index]
 		update_shadow_matrices(si, li, c)
 		mark_camera_changed(ce)
 
