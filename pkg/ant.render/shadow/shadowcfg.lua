@@ -216,7 +216,7 @@ end
 
 function ishadow.calc_uniform_split_positions()
 	local sn = SHADOW_CFG.split_num
-	local positions = {}
+	local positions = {1.0}
 	for c=1, sn-1 do
 		positions[#positions+1] = c / sn
 	end
@@ -231,7 +231,7 @@ end
 
 --near&far are view camera's  near & far
 function ishadow.calc_log_split_positions(near, far)
-	local positions = {}
+	local positions = {1.0}
 	local sn = SHADOW_CFG.split_num
 	for c=1, sn-1 do
 		positions[#positions+1] = log_split(c, near, far)
@@ -239,9 +239,10 @@ function ishadow.calc_log_split_positions(near, far)
 	return positions
 end
 
-function ishadow.calc_split_positions(near, far, lambda)
+function ishadow.calc_split_positions(near, far)
 	local sn = SHADOW_CFG.split_num
-	local positions = {}
+	local positions = {1.0}
+	local lambda = SHADOW_CFG.split_lamada
 	for c=1, sn-1 do
 		local us = c / sn
 		local ls = log_split(sn, c, near, far)
@@ -259,6 +260,29 @@ function ishadow.split_positions_to_ratios(positions)
 	end
 
 	return ratios
+end
+
+local function calc_viewspace_z(n, f, r)
+	return n + (f-n) * r
+end
+
+local function create_sub_viewfrustum(zn, zf, sr, viewfrustum)
+	return {
+		n = calc_viewspace_z(zn, zf, sr[1]),
+		f = calc_viewspace_z(zn, zf, sr[2]),
+		fov = assert(viewfrustum.fov),
+		aspect = assert(viewfrustum.aspect),
+	}
+end
+
+function ishadow.split_viewfrustum(zn, zf, viewfrustum)
+	local f = {}
+	local ratios = ishadow.split_positions_to_ratios(ishadow.calc_split_positions(zn, zf))
+	for _, r in ipairs(ratios) do
+		f[#f+1] = create_sub_viewfrustum(zn, zf, r, viewfrustum)
+	end
+
+	return f
 end
 
 return ishadow
