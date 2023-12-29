@@ -7,11 +7,15 @@ local ientity 	= ecs.require "ant.render|components.entity"
 local imesh		= ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
+local common 	= ecs.require "common"
 
 local util		= ecs.require "util"
+
+local PC		= util.proxy_creator()
+
 local function create_instance(pfile, s, r, t)
 	s = s or {0.1, 0.1, 0.1}
-	util.create_instance(
+	return util.create_instance(
         pfile,
 		function (p)
 			local ee<close> = world:entity(p.tag["*"][1])
@@ -24,18 +28,21 @@ local function create_instance(pfile, s, r, t)
 			if t then
 				iom.set_position(ee, t)
 			end
+
+			PC:add_prefab(p)
 		end)
 end
 
-local st_sys	= ecs.system "shadow_test_system"
+local st_sys	= common.test_system "shadow_test_system"
 function st_sys:init()
 	util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
         local root<close> = world:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
-    end) 
+		PC:add_prefab(e)
+    end)
 
 	create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {10, 0.1, 10}, nil, {10, 0, 0, 1})
-	local root = world:create_entity {
+	local root = PC:create_entity {
 		policy = {
 			"ant.scene|scene_object",
 		},
@@ -44,7 +51,7 @@ function st_sys:init()
 		}
 	}
 
-	world:create_entity{
+	PC:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
@@ -67,6 +74,10 @@ end
 
 function st_sys:entity_init()
 	for e in w:select "INIT make_shadow light:in scene:in eid:in" do
-		ientity.create_arrow_entity(0.3, {1, 1, 1, 1}, "/pkg/ant.resources/materials/meshcolor.material", {parent=e.eid})
+		PC:add_entity(ientity.create_arrow_entity(0.3, {1, 1, 1, 1}, "/pkg/ant.resources/materials/meshcolor.material", {parent=e.eid}))
 	end
+end
+
+function st_sys:exit()
+	PC:clear()
 end
