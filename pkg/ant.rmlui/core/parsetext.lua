@@ -176,6 +176,9 @@ function m.ParseText(os)
     local s = prereplace(replaced_os)
     preorder(s)
     ctext = table.concat(ctable, nil)
+    for k, v in pairs(groupmap) do
+        groupmap[k] = v-1
+    end
     return ctext, groups, groupmap, images, imagemap
 end
 
