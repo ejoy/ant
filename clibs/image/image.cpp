@@ -18,18 +18,14 @@
 #include "lua2struct.h"
 #include "fastio.h"
 
-LUA2STRUCT(bimg::TextureInfo, format, storageSize, width, height, depth, numLayers, numMips, bitsPerPixel, cubeMap);
-
 namespace lua_struct {
     template <>
-    inline void unpack<bimg::TextureFormat::Enum>(lua_State* L, int idx, bimg::TextureFormat::Enum& v, void*) {
-        luaL_checktype(L, idx, LUA_TTABLE);
-        const char* name;
-        unpack_field(L, idx, "format", name);
-        v = bimg::getFormat(name);
+    bimg::TextureFormat::Enum unpack<bimg::TextureFormat::Enum>(lua_State* L, int idx) {
+        auto name = unpack<std::string_view>(L, idx);
+        return bimg::getFormat(name.data());
     }
     template <>
-    inline void pack<bimg::TextureFormat::Enum>(lua_State* L, bimg::TextureFormat::Enum const& fmt, void*) {
+    void pack<bimg::TextureFormat::Enum>(lua_State* L, const bimg::TextureFormat::Enum& fmt) {
         auto name = bimg::getName(fmt);
         lua_pushstring(L, name);
     }
@@ -63,7 +59,11 @@ struct encode_dds_info {
     bool srgb;
 };
 
-LUA2STRUCT(encode_dds_info, srgb);
+struct encode_config {
+    std::string_view type;
+    bimg::TextureFormat::Enum format;
+    bool srgb;
+};
 
 static inline void
 push_texture_info(lua_State *L, const bimg::ImageContainer *ic){
@@ -215,8 +215,7 @@ lencode_image(lua_State *L){
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
     
-    bimg::TextureInfo info;
-    lua_struct::unpack(L, 1, info);
+    auto info = lua_struct::unpack<bimg::TextureInfo>(L, 1);
     info.format = format_from_field(L, 1, "format");
     assert(info.format != bimg::TextureFormat::Unknown);
     struct memory *m = (struct memory *)luaL_checkudata(L, 2, "BGFX_MEMORY");
@@ -234,31 +233,27 @@ lencode_image(lua_State *L){
     ic.m_data       = m->data;
     ic.m_allocator  = nullptr;
 
-    luaL_checktype(L, 3, LUA_TTABLE);
-    const char* image_type = nullptr;
-    lua_struct::unpack_field(L, 3, "type", image_type);
-    bimg::TextureFormat::Enum dst_format = format_from_field(L, 3, "format");
-    
+    auto cfg = lua_struct::unpack<encode_config>(L, 3);
     bimg::ImageContainer *new_ic = nullptr;
-    if (dst_format != bimg::TextureFormat::Unknown && dst_format != ic.m_format){
-        new_ic = bimg::imageConvert(&allocator, dst_format, ic, true);
+    if (cfg.format != bimg::TextureFormat::Unknown && cfg.format != ic.m_format) {
+        new_ic = bimg::imageConvert(&allocator, cfg.format, ic, true);
     }
 
     bx::Error err;
-    if (strcmp(image_type, "dds") == 0){
+    if (cfg.type == "dds") {
         bx::MemoryBlock mb(&allocator);
         bx::MemoryWriter sw(&mb);
 
         auto t_ic = new_ic ? new_ic : &ic;
 
         t_ic->m_ktx = t_ic->m_ktxLE = false;
-        lua_struct::unpack_field(L, 3, "srgb", t_ic->m_srgb);
+        t_ic->m_srgb = cfg.srgb;
 
         const int32_t filesize = bimg::imageWriteDds(&sw, *t_ic, t_ic->m_data, (uint32_t)m->size, &err);
         lua_pushlstring(L, (const char*)mb.more(), filesize);
-    } else if (strcmp(image_type, "ktx") == 0){
+    } else if (cfg.type == "ktx") {
 
-    } else if (strcmp(image_type, "png") == 0){
+    } else if (cfg.type == "png") {
         bx::MemoryBlock mb(&allocator);
         bx::MemoryWriter sw(&mb);
 
@@ -267,10 +262,10 @@ lencode_image(lua_State *L){
             return luaL_error(L, "Save to PNG file failed");
         }
         lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
-    } else if (strcmp(image_type, "tga") == 0){
+    } else if (cfg.type == "tga") {
 
     } else {
-        luaL_error(L, "not support image type:%s", image_type);
+        luaL_error(L, "not support image type:%s", cfg.type.data());
     }
 
     if (!err.isOk()){

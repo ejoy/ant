@@ -27,9 +27,6 @@ typedef unsigned int utfint;
 #define MAXUTF		0x7FFFFFFFu
 #define FIXPOINT FONT_POSTION_FIX_POINT
 
-LUA2STRUCT(struct Rml::RendererContext, font_mgr, shader, viewid);
-LUA2STRUCT(struct Rml::Shader, uniforms, font, font_outline, font_shadow, image, font_cr, font_outline_cr, font_shadow_cr, image_cr, image_gray, image_cr_gray);
-
 namespace Rml {
 
 const char* utf8_decode1(const char* s, utfint* val, int strict,int& cnt) {
@@ -295,12 +292,8 @@ static bgfx_texture_handle_t CreateDefaultTexture() {
     return h;
 }
 
-RendererContext::RendererContext(lua_State *L, int idx) {
-    lua_struct::unpack(L, idx, *this);
-}
-
 RenderImpl::RenderImpl(lua_State* L, int idx)
-    : context(L, idx)
+    : context(lua_struct::unpack<RendererContext>(L, idx))
     , mEncoder(nullptr)
     , default_tex(CreateDefaultTexture())
     , default_tex_mat(std::make_unique<TextureMaterial>(
