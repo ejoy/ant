@@ -199,9 +199,9 @@ local function update_shadow_matrices(si, li, c)
 
 		Lp = math3d.projmat(c.frustum, INV_Z)
 		if useLiSPSM then
-			si.Lp = Lp
+			li.Lp = Lp
 			local Wv, Wp = LiSPSM.warp_matrix(si, li, verticesLS)
-			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
+			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), Lp)
 		end
 
 		local F = isc.calc_focus_matrix(math3d.minmax(verticesLS, Lp))
@@ -269,12 +269,14 @@ function shadow_sys:update_camera_depend()
 
 	local SB = w:first "shadow_bounding:in".shadow_bounding
 	local si = SB.scene_info
+	
 	local li = init_light_info(C, D)
 	si.sceneaabbLS = build_sceneaabbLS(si, li)
 
 	local CF = C.camera.frustum
-
+	si.view_near, si.view_far = CF.n, CF.f
 	local zn, zf = assert(si.zn), assert(si.zf)
+	--split bounding zn, zf
 	local csmfrustums = isc.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do

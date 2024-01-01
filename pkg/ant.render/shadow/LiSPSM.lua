@@ -49,8 +49,8 @@ function L.warp_matrix(si, li, lsShadowVolume)
     -- Virtual near plane -- the default is 1 m, can be changed by the user.
     -- The virtual near plane prevents too much resolution to be wasted in the area near the eye
     -- where shadows might not be visible (e.g. a character standing won't see shadows at her feet).
-    local dzn = math.max(0.0, nearHit - si.zn)
-    local dzf = math.max(0.0, si.zf - farHit)
+    local dzn = math.max(0.0, nearHit - si.view_near)
+    local dzf = math.max(0.0, si.view_far - farHit)
 
     -- near/far plane's distance from the eye in view space of the shadow receiver volume.
 
@@ -61,8 +61,8 @@ function L.warp_matrix(si, li, lsShadowVolume)
     local Lv2Cv = li.Lv2Cv
     local zn, zf = calc_near_far(Lv2Cv, lsShadowVolume)
 
-    zn = math.max(si.zn, zn) -- near plane distance from the eye
-    zf = math.min(si.zf, zf) -- far plane distance from the eye
+    zn = math.max(si.view_near, zn) -- near plane distance from the eye
+    zf = math.min(si.view_far, zf) -- far plane distance from the eye
 
     -- Compute n and f, the near and far planes coordinates of Wp (warp space).
     -- It's found by looking down the Y axis in light space (i.e. -Z axis of Wp,
