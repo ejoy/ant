@@ -14,8 +14,8 @@ local assetmgr	= import_package "ant.asset"
 local queuemgr	= ecs.require "queue_mgr"
 
 local hwi		= import_package "ant.hwi"
---local mu		= mathpkg.util
-local mc 		= import_package "ant.math".constant
+local mathpkg	= import_package "ant.math"
+local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local R         = world:clibs "render.render_material"
@@ -34,12 +34,6 @@ local function commit_csm_matrices_attribs()
 	imaterial.system_attrib_update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
 	imaterial.system_attrib_update("u_csm_split_distances",	split_distances_VS)
 end
-
-local function get_intersected_aabb()
-	local SB = w:first "shadow_bounding:in".shadow_bounding
-	return math3d.aabb_intersection(SB.scene_info.PSR, SB.camera_aabb)
-end
-
 
 local function update_shadow_camera_matrix(ce, Lv, Lp)
 	local camera = ce.camera
@@ -63,22 +57,32 @@ local ORTHO_FRUSTUM = {
 	ortho = true,
 }
 
--- bgfx method
-local function update_csm_matrices(lightdir, csm_frustum, shadow_ce, intersected_aabb)
+local function update_csm_matrices(lightdir, viewmat, csm_frustum, shadow_ce, sceneaabbWS)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	math3d.unmark(shadow_ce.scene.worldmat)
 	shadow_ce.scene.worldmat = math3d.marked_matrix(shadow_ce.scene)
 
-	local light_world = shadow_ce.scene.worldmat
-	local Lv = math3d.inverse_fast(light_world)
-	local aabbLS = math3d.aabb_transform(Lv, intersected_aabb)
+	local Lw = shadow_ce.scene.worldmat
+	local Lv = math3d.inverse_fast(Lw)
 
-	--TODO: need remove
-	ORTHO_FRUSTUM.n, ORTHO_FRUSTUM.f = -csm_frustum.f, csm_frustum.f
+	local Lv2Cv = math3d.mul(viewmat, Lw)
+	local sp = math3d.projmat(csm_frustum)
+	local Lv2Ndc = math3d.mul(sp, Lv2Cv)
 
-	local Lp = math3d.projmat(ORTHO_FRUSTUM, INV_Z)
-	local F = ishadow.calc_focus_matrix(math3d.aabb_transform(Lp, aabbLS))
-	Lp = math3d.mul(F, Lp)
+	local aabbLS = math3d.aabb_transform(Lv, sceneaabbWS)
+
+	local Lp
+	local verticesLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, aabbLS)
+	if mc.NULL ~= verticesLS then
+		local intersect_aabbLS = math3d.minmax(verticesLS)
+		ORTHO_FRUSTUM.n, ORTHO_FRUSTUM.f = mu.aabb_minmax_index(intersect_aabbLS, 3)
+		Lp = math3d.projmat(ORTHO_FRUSTUM, INV_Z)
+		local F = ishadow.calc_focus_matrix(math3d.aabb_transform(Lp, intersect_aabbLS))
+		Lp = math3d.mul(F, Lp)
+	else
+		ORTHO_FRUSTUM.n, ORTHO_FRUSTUM.f = mu.aabb_minmax_index(aabbLS, 3)
+		Lp = math3d.projmat(ORTHO_FRUSTUM, INV_Z)
+	end
 	update_shadow_camera_matrix(shadow_ce, Lv, Lp)
 end
 
@@ -88,9 +92,11 @@ end
 
 local function update_shadow_frustum(dl, ce, mc_scene_changed)
 	local lightdir = iom.get_direction(dl)
-	local shadow_setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(ce.camera.frustum)
-	local intersected_aabb = get_intersected_aabb()
+
+	local SB = w:first "shadow_bounding:in".shadow_bounding
+	local si = SB.scene_info
+	local sceneaabbWS = math3d.aabb_intersection(si.PSR, SB.camera_aabb)
 	local shadow_camera_changed = false
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
@@ -98,7 +104,7 @@ local function update_shadow_frustum(dl, ce, mc_scene_changed)
 		local shadow_ce = world:entity(qe.camera_ref, "camera:in scene:in camera_changed?in")
 		if mc_scene_changed or shadow_ce.camera_changed then
 			shadow_camera_changed = true
-			update_csm_matrices(lightdir, csm_frustum, shadow_ce, intersected_aabb)
+			update_csm_matrices(lightdir, ce.camera.viewmat, csm_frustum, shadow_ce, sceneaabbWS)
 			csm_matrices[csm.index].m = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 			split_distances_VS[csm.index] = csm_frustum.f
 		end
