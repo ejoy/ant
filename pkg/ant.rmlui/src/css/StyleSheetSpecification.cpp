@@ -727,8 +727,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("string");
 	RegisterProperty(PropertyId::BackgroundOrigin, "background-origin", "padding-box")
 		.AddParser("keyword", "padding-box, border-box, content-box");
-	RegisterProperty(PropertyId::BackgroundSize, "background-size", "auto")
-		.AddParser("keyword", "auto, cover, contain");
+	RegisterProperty(PropertyId::BackgroundSize, "background-size", "unset")
+		.AddParser("keyword", "unset, auto, cover, contain");
 	RegisterProperty(PropertyId::BackgroundSizeX, "background-size-x", "0px")
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundSizeY, "background-size-y", "0px")

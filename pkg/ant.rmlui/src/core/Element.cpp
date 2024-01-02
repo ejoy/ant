@@ -935,10 +935,10 @@ void Element::UpdatePerspective() {
 	float distance = p->Get<PropertyFloat>().Compute(this);
 	bool changed = false;
 	if (distance > 0.0f) {
-		auto originX = e->GetComputedProperty(PropertyId::PerspectiveOriginX);
-		auto originY = e->GetComputedProperty(PropertyId::PerspectiveOriginY);
-		float x = PropertyComputeX(e, *originX);
-		float y = PropertyComputeY(e, *originY);
+		auto originX = GetComputedProperty(PropertyId::PerspectiveOriginX);
+		auto originY = GetComputedProperty(PropertyId::PerspectiveOriginY);
+		float x = PropertyComputeX(this, *originX);
+		float y = PropertyComputeY(this, *originY);
 		glm::vec3 origin = { x, y, 0.f };
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
 		glm::mat4x4 new_perspective = {
