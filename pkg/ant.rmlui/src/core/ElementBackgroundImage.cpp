@@ -161,16 +161,11 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
 	bool has_lattice = lattice_x1 > 0;
 
-	if (edge.padding.size() == 0 
-		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
-	) 
-	{
-		if(has_lattice){return false;}
-		geometry.AddRectFilled(surface, color);
-		geometry.UpdateUV(4, surface, uv);
-	}
-	else {
-		if(has_lattice){
+	if (has_lattice) {
+		if (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{}) {
+			return false;
+		}
+		else {
 			auto lattice_y1 = element->GetComputedProperty(PropertyId::BackgroundLatticeY1)->Get<PropertyFloat>().value / 100.0f;
 			auto lattice_x2 = element->GetComputedProperty(PropertyId::BackgroundLatticeX2)->Get<PropertyFloat>().value / 100.0f;
 			auto lattice_y2 = element->GetComputedProperty(PropertyId::BackgroundLatticeY2)->Get<PropertyFloat>().value / 100.0f;
@@ -182,16 +177,24 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			float ur = 1.f - lattice_u - 2.f / texture.dimensions.w;
 			float vb = 1.f - lattice_v - 2.f / texture.dimensions.h;
 			GetRectArray(lattice_u, lattice_v, ur, vb, uv, uv_array);
-			for(int idx = 0; idx < 9; ++idx){
+			for (int idx = 0; idx < 9; ++idx) {
 				geometry.AddRectFilled(surface_array[idx], color);
 				geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
-			}		
+			}
 		}
-		else{
+	}
+	else {
+		if (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{}) {
 			geometry.AddPolygon(edge.padding, color);
 			geometry.UpdateUV(edge.padding.size(), surface, uv);
-		}	
+		}
+		else {
+			geometry.AddRectFilled(surface, color);
+			geometry.UpdateUV(4, surface, uv);
+		}
+
 	}
+
 	if (setGray) {
 		geometry.SetGray();
 	}
