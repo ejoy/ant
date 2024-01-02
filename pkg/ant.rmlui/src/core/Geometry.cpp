@@ -262,16 +262,6 @@ void Geometry::AddPolygon(const Path& points, Color col) {
 	}
 }
 
-void Geometry::UpdateVertices()
-{
-/* 	for(size_t i = 0; i < vertices.size(); ++i)
-	{
- 		float posx = floorf(vertices[i].pos.x - float(0.5));
-		float posy = floorf(vertices[i].pos.y - float(0.5));
-		vertices[i].pos = Point(posx, posy); 
-	} */
-}
-
 void Geometry::UpdateUV(size_t count, const Rect& surface, const Rect& uv) {
 	Vertex* vtx = &vertices[vertices.size() - count];
 	const Size size = surface.size;

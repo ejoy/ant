@@ -192,7 +192,6 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			geometry.UpdateUV(edge.padding.size(), surface, uv);
 		}	
 	}
-	geometry.UpdateVertices();
 	if (setGray) {
 		geometry.SetGray();
 	}
