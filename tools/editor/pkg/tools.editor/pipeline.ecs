@@ -19,6 +19,7 @@ pipeline "update"
 
 pipeline "editor_camera"
     .stage "update_camera"
+    .stage "update_camera_bounding"
     .stage "update_camera_depend"
     .stage "camera_usage"
     
