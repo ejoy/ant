@@ -146,7 +146,6 @@ public:
 	void Render() override;
 	float GetZIndex() const override;
 	Element* ElementFromPoint(Point point) override;
-	Element* ChildFromPoint(Point point);
 	std::string GetInnerHTML() const override;
 	std::string GetOuterHTML() const override;
 	void SetInnerHTML(const std::string& html) override;
