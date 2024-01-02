@@ -21,26 +21,6 @@
 
 namespace Rml {
 
-static PropertyFloat ComputeOrigin(const std::optional<Property>& p) {
-	if (p->Has<PropertyKeyword>()) {
-		switch (p->Get<PropertyKeyword>()) {
-		default:
-		case 0 /* left/top     */: return { 0.0f, PropertyUnit::PERCENT };
-		case 1 /* center       */: return { 50.0f, PropertyUnit::PERCENT };
-		case 2 /* right/bottom */: return { 100.0f, PropertyUnit::PERCENT };
-		}
-	}
-	return p->Get<PropertyFloat>();
-}
-
-static glm::vec3 PerspectiveOrigin(Element* e) {
-	auto originX = e->GetComputedProperty(PropertyId::PerspectiveOriginX);
-	auto originY = e->GetComputedProperty(PropertyId::PerspectiveOriginY);
-	float x = ComputeOrigin(originX).ComputeW(e);
-	float y = ComputeOrigin(originY).ComputeH(e);
-	return { x, y, 0.f };
-}
-
 Element::Element(Document* owner, const std::string& tag)
 	: LayoutNode(Layout::UseElement {})
 	, tag(tag)
@@ -920,9 +900,9 @@ void Element::UpdateTransform() {
 	auto computedTransform = GetComputedProperty(PropertyId::Transform)->Get<Transform>();
 	if (!computedTransform.empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
-			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginX)).ComputeW(this),
-			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginY)).ComputeH(this),
-			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginZ)).Compute (this),
+			PropertyComputeX(this, *GetComputedProperty(PropertyId::TransformOriginX)),
+			PropertyComputeY(this, *GetComputedProperty(PropertyId::TransformOriginY)),
+			PropertyComputeZ(this, *GetComputedProperty(PropertyId::TransformOriginZ))
 		};
 		new_transform = glm::translate(transform_origin) * computedTransform.GetMatrix(*this) * glm::translate(-transform_origin);
 	}
@@ -955,7 +935,11 @@ void Element::UpdatePerspective() {
 	float distance = p->Get<PropertyFloat>().Compute(this);
 	bool changed = false;
 	if (distance > 0.0f) {
-		glm::vec3 origin = PerspectiveOrigin(this);
+		auto originX = e->GetComputedProperty(PropertyId::PerspectiveOriginX);
+		auto originY = e->GetComputedProperty(PropertyId::PerspectiveOriginY);
+		float x = PropertyComputeX(e, *originX);
+		float y = PropertyComputeY(e, *originY);
+		glm::vec3 origin = { x, y, 0.f };
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
 		glm::mat4x4 new_perspective = {
 			{ 1, 0, 0, 0 },
