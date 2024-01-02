@@ -1412,17 +1412,19 @@ void Element::UpdateDefinition() {
 	auto new_definition = GetOwnerDocument()->GetStyleSheet().GetElementDefinition(this);
 	auto& c = Style::Instance();
 	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
-	for (PropertyId id : changed_properties) {
-		if (c.Has(inline_properties, id)) {
-			changed_properties.erase(id);
+	if (!changed_properties.empty()) {
+		for (PropertyId id : changed_properties) {
+			if (c.Has(inline_properties, id)) {
+				changed_properties.erase(id);
+			}
 		}
-	}
-	StartTransition([&](){
-		c.Assgin(definition_properties, new_definition);
-	});
-	DirtyProperties(changed_properties);
-	for (auto& child : children) {
-		child->DirtyDefinition();
+		StartTransition([&](){
+			c.Assgin(definition_properties, new_definition);
+		});
+		DirtyProperties(changed_properties);
+		for (auto& child : children) {
+			child->DirtyDefinition();
+		}
 	}
 }
 

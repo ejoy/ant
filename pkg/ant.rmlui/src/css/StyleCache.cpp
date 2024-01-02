@@ -78,8 +78,8 @@ namespace Rml::Style {
         return {child.idx};
     }
 
-    void Cache::Assgin(Value to, Combination from) {
-        style_assign(c, {to.idx}, {from.idx});
+    bool Cache::Assgin(Value to, Combination from) {
+        return 0 != style_assign(c, {to.idx}, {from.idx});
     }
 
     void Cache::Clone(Value to, Value from) {
