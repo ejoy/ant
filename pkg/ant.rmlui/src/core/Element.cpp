@@ -1061,8 +1061,12 @@ Element* Element::ElementFromPoint(Point point) {
 		return nullptr;
 	}
 	if (InClip(clip, point)) {
-		if (auto res = ChildFromPoint(point)) {
-			return res;
+		UpdateStackingContext();
+		for (auto iter = render_children.rbegin(); iter != render_children.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
+			Element* res = (*iter)->ElementFromPoint(point);
+			if (res) {
+				return res;
+			}
 		}
 	}
 	if (!IgnorePointerEvents()) {
@@ -1070,17 +1074,6 @@ Element* Element::ElementFromPoint(Point point) {
 			if (Rect { {}, GetBounds().size }.Contains(point)) {
 				return this;
 			}
-		}
-	}
-	return nullptr;
-}
-
-Element* Element::ChildFromPoint(Point point) {
-	UpdateStackingContext();
-	for (auto iter = render_children.rbegin(); iter != render_children.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
-		Element* res = (*iter)->ElementFromPoint(point);
-		if (res) {
-			return res;
 		}
 	}
 	return nullptr;
