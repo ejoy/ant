@@ -223,6 +223,23 @@ local function draw_lines(lines)
 	}
 end
 
+
+local function add_entity(points, c, n)
+	local eid = ientity.create_frustum_entity(points, c or unique_color())
+	n = n or unique_name()
+	DEBUG_ENTITIES[n] = eid
+	return eid
+end
+
+local function transform_points(points, M)
+	local np = {}
+	for i=1, math3d.array_size(points) do
+		np[i] = math3d.transform(M, math3d.array_index(points, i), 1)
+	end
+
+	return math3d.array_vector(np)
+end
+
 function shadowdebug_sys:data_changed()
 	for _, key, press in kbmb:unpack() do
 		if key == "B" and press == 0 then
@@ -230,36 +247,21 @@ function shadowdebug_sys:data_changed()
 				w:remove(v)
 			end
 
-			local function add_entity(points, c, n)
-				local eid = ientity.create_frustum_entity(points, c or unique_color())
-				n = n or unique_name()
-				DEBUG_ENTITIES[n] = eid
-				return eid
-			end
-
-			local function transform_points(points, M)
-				local np = {}
-				for i=1, math3d.array_size(points) do
-					np[i] = math3d.transform(M, math3d.array_index(points, i), 1)
-				end
-
-				return math3d.array_vector(np)
-			end
-
 			local C = world:entity(irq.main_camera(), "camera:in").camera
 			for e in w:select "csm:in camera_ref:in" do
 				local ce = world:entity(e.camera_ref, "camera:in scene:in")
 				local Lv = ce.camera.viewmat
-				local L2W = math3d.inverse_fast(Lv)
-				local aabbpoints = transform_points(math3d.aabb_points(C.PSRLS), L2W)
-				add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
-
-				if ce.camera.vertices then
-					local aabb = math3d.minmax(ce.camera.vertices, L2W)
-					add_entity(math3d.aabb_points(aabb),	{1.0, 1.0, 0.0, 1.0})
+				local L2W = ce.scene.worldmat
+				
+				if ce.camera.Lv2Ndc then
+					add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W), {1.0, 0.0, 0.0, 1.0})
 				end
 
-				add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
+				if ce.camera.sceneaabbLS then
+					add_entity(transform_points(math3d.aabb_points(ce.camera.sceneaabbLS), L2W), {0.0, 1.0, 0.0, 1.0})
+				end
+
+				add_entity(math3d.frustum_points(ce.camera.viewprojmat), {0.0, 0.0, 1.0, 1.0})
 			end
 		elseif key == 'C' and press == 0 then
 

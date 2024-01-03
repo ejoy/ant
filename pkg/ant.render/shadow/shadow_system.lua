@@ -189,12 +189,20 @@ local function update_shadow_matrices(si, li, c)
 	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
 
 	local verticesLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
+	-- for debug
+	-- c.verticesLS = M3D(c.verticesLS, verticesLS)
+	-- c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
+	-- c.sceneaabbLS = M3D(c.sceneaabbLS, si.sceneaabbLS)
 
 	local Lp
 	if mc.NULL ~= verticesLS then
 		local intersectaabb = math3d.minmax(verticesLS)
-		c.frustum.n, c.frustum.f = mu.aabb_minmax_index(intersectaabb, 3)
+		local PSR_farLS = math3d.index(math3d.array_index(si.sceneaabbLS, 2), 1)
+		local fn, ff = mu.aabb_minmax_index(intersectaabb, 3)
+		--check for PSR far plane distance
+		ff = math.max(ff, PSR_farLS)
 
+		c.frustum.n, c.frustum.f = fn, ff
 		Lp = math3d.projmat(c.frustum, INV_Z)
 		if useLiSPSM then
 			li.Lp = Lp
