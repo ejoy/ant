@@ -145,6 +145,17 @@ lm:source_set "ant_links" {
     }
 }
 
+local antrt_defines = {
+    "ANT_RUNTIME",
+}
+
+local anted_defines = {}
+
+if lm.mode == "debug" then
+    antrt_defines[#antrt_defines+1] = "MATH3D_ADAPTER_TEST"
+    anted_defines[#anted_defines+1] = "MATH3D_ADAPTER_TEST"
+end
+
 lm:lua_source "ant_runtime" {
     deps = {
         "ant_common",
@@ -154,7 +165,7 @@ lm:lua_source "ant_runtime" {
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
-    defines = "ANT_RUNTIME",
+    defines = antrt_defines,
     sources = "common/modules.c",
 }
 
@@ -167,6 +178,7 @@ lm:lua_source "ant_editor" {
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
+    defines = anted_defines,
     sources = {
         "common/modules.c",
     },
