@@ -922,6 +922,13 @@ void Element::UpdateTransform() {
 		have_inv_transform = true;
 		inv_transform.reset();
 	}
+	auto rect = Rect { {}, GetBounds().size };
+	if (rect.Transform(transform)) {
+		render_rect = rect;
+	}
+	else {
+		render_rect = std::nullopt;
+	}
 }
 
 void Element::UpdatePerspective() {
@@ -1054,9 +1061,16 @@ Element* Element::ElementFromPoint(Point point) {
 		}
 	}
 	if (!IgnorePointerEvents()) {
-		if (Project(point)) {
-			if (Rect { {}, GetBounds().size }.Contains(point)) {
+		if (render_rect) {
+			if (render_rect->Contains(point)) {
 				return this;
+			}
+		}
+		else {
+			if (Project(point)) {
+				if (Rect { {}, GetBounds().size }.Contains(point)) {
+					return this;
+				}
 			}
 		}
 	}

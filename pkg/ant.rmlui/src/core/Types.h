@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <algorithm>
 #include <tuple>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
 
@@ -115,6 +116,28 @@ struct Rect {
 		float r = std::min(right(), rect.right());
 		float b = std::min(bottom(), rect.bottom());
 		SetRect(l, t, r - l, b - t);
+	}
+	bool Transform(const glm::mat4x4& transform) {
+		glm::vec4 corners[] = {
+			{left(),  top(),    0, 1},
+			{right(), top(),    0, 1},
+			{right(), bottom(), 0, 1},
+			{left(),  bottom(), 0, 1},
+		};
+		for (auto& c : corners) {
+			c = transform * c;
+			c /= c.w;
+		}
+		if (corners[0].x == corners[3].x
+			&& corners[0].y == corners[1].y
+			&& corners[2].x == corners[1].x
+			&& corners[2].y == corners[3].y
+		) {
+			SetRect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[2].y - corners[0].y);
+			return true;
+		}
+		SetRect(0, 0, 0, 0);
+		return false;
 	}
 	bool Contains(const Point& point) const {
 		return (point.x >= x()) && (point.x < right()) && (point.y >= y()) && (point.y < bottom());

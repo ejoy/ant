@@ -198,6 +198,7 @@ protected:
 	Style::Combination global_properties = Style::Instance().Inherit(local_properties);
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
+	std::optional<Rect> render_rect;
 	Rect content_rect;
 	EdgeInsets<float> padding{};
 	EdgeInsets<float> border{};
