@@ -132,14 +132,14 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		};
 		if (scale.w > scale.h) {
 			background.size = {
-				surface.size.h / texture.dimensions.h * texture.dimensions.w,
-				surface.size.h,
+				surface.size.w,
+				surface.size.w / texture.dimensions.w * texture.dimensions.h,
 			};
 		}
 		else {
 			background.size = {
-				surface.size.w,
-				surface.size.w / texture.dimensions.w * texture.dimensions.h,
+				surface.size.h / texture.dimensions.h * texture.dimensions.w,
+				surface.size.h,
 			};
 		}
 		break;
