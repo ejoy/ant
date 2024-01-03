@@ -1,8 +1,4 @@
-
--- system "shadow_system"
---     .implement "shadow/shadow_maker.lua"
-
-system "shadow_system2"
+system "shadow_system"
     .implement "shadow/shadow_system.lua"
 
 component "csm_directional_light"
