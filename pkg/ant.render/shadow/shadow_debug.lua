@@ -3,244 +3,266 @@ local world = ecs.world
 local w 	= world.w
 
 local mathpkg	= import_package "ant.math"
-local mc		= mathpkg.constant
+local mc, mu	= mathpkg.constant, mathpkg.util
 
-local INV_Z<const> = true
-local INF_F<const> = true
 local hwi		= import_package "ant.hwi"
 
 local math3d    = require "math3d"
 
-local ientity   = ecs.require "ant.render|components.entity"
-local ishadow	= ecs.require "ant.render|shadow.shadowcfg"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
-local icamera	= ecs.require "ant.camera|camera"
-local iom		= ecs.require "ant.objcontroller|obj_motion"
+local ivs		= ecs.require "ant.render|visible_state"
+local imaterial	= ecs.require "ant.asset|material"
 
-local shadowdbg_sys = ecs.system "shadow_debug_system"
+local queuemgr	= ecs.require "queue_mgr"
+local sampler	= import_package "ant.render.core".sampler
+local layoutmgr = require "vertexlayout_mgr"
+local fbmgr		= require "framebuffer_mgr"
+local bgfx		= require "bgfx"
 
-local quadsize = 192
-local quadmaterial = "/pkg/ant.resources/materials/texquad.material"
-
-local frustum_colors = {
-	mc.RED,
-	mc.GREEN,
-	mc.BLUE,
-	mc.YELLOW,
+----
+local COLORS<const> = {
+	{1.0, 0.0, 0.0, 1.0},
+	{0.0, 1.0, 0.0, 1.0},
+	{0.0, 0.0, 1.0, 1.0},
+	{0.0, 0.0, 0.0, 1.0},
+	{1.0, 1.0, 0.0, 1.0},
+	{1.0, 0.0, 1.0, 1.0},
+	{0.0, 1.0, 1.0, 1.0},
+	{0.5, 0.5, 0.5, 1.0},
+	{0.8, 0.8, 0.1, 1.0},
+	{0.1, 0.8, 0.1, 1.0},
+	{0.1, 0.5, 1.0, 1.0},
+	{0.5, 1.0, 0.5, 1.0},
 }
 
-local function find_csm_entity(index)
-	for se in w:select "csm:in" do
-		if se.csm.index == index then
-			return se.csm
-		end
+local unique_color, unique_name; do
+	local idx = 0
+	function unique_color()
+		idx = idx % #COLORS
+		idx = idx + 1
+		return COLORS[idx]
+	end
+
+	local nidx = 0
+	function unique_name()
+		local id = idx + 1
+		local n = "debug_entity" .. id
+		idx = id
+		return n
 	end
 end
 
-local debug_entities = {}
-local function create_debug_entity()
---[[ 	do
-		local splitnum = ishadow.split_num()
-		debug_entities[#debug_entities+1] = world:create_entity {
-			policy = {
-				"ant.render|simplerender",
+local DEBUG_ENTITIES = {}
+local ientity 		= ecs.require "components.entity"
+local imesh 		= ecs.require "ant.asset|mesh"
+local kbmb 			= world:sub{"keyboard"}
+
+local shadowdebug_sys = ecs.system "shadow_debug_system"
+
+local function debug_viewid(n, after)
+	local viewid = hwi.viewid_get(n)
+	if nil == viewid then
+		viewid = hwi.viewid_generate(n, after)
+	end
+
+	return viewid
+end
+
+local DEBUG_view = {
+	queue = {
+		depth = {
+			viewid = debug_viewid("shadowdebug_depth", "pre_depth"),
+			queue_name = "shadow_debug_depth_queue",
+			queue_eid = nil,
+		},
+		color = {
+			viewid = debug_viewid("shadowdebug", "ssao"),
+			queue_name = "shadow_debug_queue",
+			queue_eid = nil,
+		}
+	},
+	light = {
+		perspective_camera = nil,
+	},
+	drawereid = nil
+}
+
+local function update_visible_state(e)
+	w:extend(e, "eid:in")
+	if e.eid == DEBUG_view.drawereid then
+		return
+	end
+
+	local function update_queue(whichqueue, matchqueue)
+		if e.visible_state["pre_depth_queue"] then
+			local qn = DEBUG_view.queue[whichqueue].queue_name
+			ivs.set_state(e, qn, true)
+			w:extend(e, "filter_material:update")
+			e.filter_material[qn] = e.filter_material[matchqueue]
+		end
+	end
+
+	update_queue("depth", "pre_depth_queue")
+	update_queue("color", "main_queue")
+end
+
+function shadowdebug_sys:init_world()
+	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
+	queuemgr.register_queue("shadow_debug_depth_queue",	queuemgr.material_index "pre_depth_queue")
+	queuemgr.register_queue("shadow_debug_queue", 		queuemgr.material_index "main_queue")
+	local vr = irq.view_rect "main_queue"
+	local fbw, fbh = vr.h // 2, vr.h // 2
+	local depth_rbidx = fbmgr.create_rb{
+		format="D32F", w=fbw, h=fbh, layers=1,
+		flags = sampler {
+			RT = "RT_ON",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		},
+	}
+
+	local depthfbidx = fbmgr.create{rbidx=depth_rbidx}
+
+	local fbidx = fbmgr.create(
+					{rbidx = fbmgr.create_rb{
+						format = "RGBA16F", w=fbw, h=fbh, layers=1,
+						flags=sampler{
+							RT="RT_ON",
+							MIN="LINEAR",
+							MAG="LINEAR",
+							U="CLAMP",
+							V="CLAMP",
+						}
+					}},
+					{rbidx = depth_rbidx}
+				)
+
+	DEBUG_view.queue.depth.queue_eid = world:create_entity{
+		policy = {"ant.render|render_queue"},
+		data = {
+			render_target = {
+				viewid = DEBUG_view.queue.depth.viewid,
+				view_rect = {x=0, y=0, w=fbw, h=fbh},
+				clear_state = {
+					clear = "D",
+					depth = 0,
+				},
+				fb_idx = depthfbidx,
 			},
-			data = {
-				scene 		= {},
-				material	= quadmaterial,
-				render_layer= "translucent",
-				simplemesh	= imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=quadsize*splitnum, h=quadsize}, true),
-				visible_state= "main_view",
-			}
+			visible = true,
+			camera_ref = irq.camera "csm1_queue",
+			queue_name = "shadow_debug_depth_queue",
 		}
-	end ]]
-
-	do
-		local mq = w:first "main_queue camera_ref:in"
-		local mc_e <close> = world:entity(mq.camera_ref, "camera:in")
-		local camera = mc_e.camera
-		for idx, f in ipairs(ishadow.split_frustums()) do
-			local vp = math3d.mul(math3d.projmat(f, INV_Z), camera.viewmat)
-			debug_entities[#debug_entities+1] = ientity.create_frustum_entity(
-				math3d.frustum_points(vp), frustum_colors[idx]
-			)
-		end
-	end
+	}
 	
-	for se in w:select "csm:in camera_ref:in" do
-		local idx = se.csm.index
-		local ce <close> = world:entity(se.camera_ref, "camera:in")
-		local c = ce.camera
-		local frustum_points = math3d.frustum_points(c.viewprojmat)
-		local color = frustum_colors[idx]
+	DEBUG_view.queue.color.queue_eid = world:create_entity{
+		policy = {
+			"ant.render|render_queue",
+		},
+		data = {
+			render_target = {
+				viewid = DEBUG_view.queue.color.viewid,
+				view_rect = {x=0, y=0, w=fbw, h=fbh},
+				clear_state = {
+					clear = "C",
+					color = 0,
+				},
+				fb_idx = fbidx,
+			},
+			visible = true,
+			camera_ref = irq.camera "csm1_queue",
+			queue_name = "shadow_debug_queue",
+		},
+	}
 
-		debug_entities[#debug_entities+1] = world:create_entity(ientity.frustum_entity_data(frustum_points, color))
-
-		local d = ientity.axis_entity_data(ce.scene, color)
-		d.data.on_ready = nil
-		debug_entities[#debug_entities+1] = world:create_entity(d)
-	end
-end
-
-local function print_points(points)
-	for idx, p in ipairs(points) do
-		print(string.format("\tpoint[%d]:[%s]", idx, math3d.tostring(p)))
-	end
-end
-
-local blit_shadowmap_viewid<const> = hwi.viewid_generate "blit_shadowmap"
-
-local function check_shadow_matrix()
-	local se = world[find_csm_entity(1)]
-	local function directional_light()
-		for e in w:select "directional_light scene:in" do
-			return e
-		end
-	end
-	local lightdir = iom.get_direction(directional_light())
-	print("light direction:", math3d.tostring(lightdir))
-
-	for e in w:select "main_queue camera_ref:in" do
-		print("eye posision:", math3d.tostring(iom.get_position(e.camera_ref)))
-		print("view direction:", math3d.tostring(iom.get_direction(e.camera_ref)))
-
-		local camera_2_origin = math3d.length(iom.get_position(e.camera_ref))
-		print("check eye position to [0, 0, 0] distance:", camera_2_origin)
-
-		local f = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))[1]
-		local dis_n, dis_f = f.n, f.f
-		print("csm1 distance:", dis_n, dis_f)
-
-		if dis_n <= camera_2_origin and camera_2_origin <= dis_f then
-			print("origin is on csm1")
-		else
-			print("origin is not on csm1")
-		end
-	
-
-		local csm_index = se.csm.index
-		local ff = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))
-		local split_frustum_desc = ff[csm_index]
-		local viewmat = icamera.calc_viewmat(e.camera_ref)
-		local vp = math3d.mul(math3d.projmat(split_frustum_desc, INV_Z), viewmat)
-
-		local frustum_points = math3d.frustum_points(vp)
-		local center = math3d.points_center(frustum_points)
-
-		print("view split frusutm corners, center: " .. math3d.tostring(center))
-		print_points(frustum_points)
-
-		local lightmatrix = math3d.lookto(center, lightdir)
-		local corners_LS = {}
-		for _, c in ipairs(frustum_points) do
-			corners_LS[#corners_LS+1] = math3d.transform(lightmatrix, c, 1)
-		end
-
-		local minextent, maxextent = math3d.minmax(corners_LS)
-		minextent, maxextent = math3d.tovalue(minextent), math3d.tovalue(maxextent)
-		print("light space corner points:")
-		print_points(corners_LS)
-
-		local frustum_desc = {
-			ortho = true,
-			l = minextent[1], r = maxextent[1],
-			b = minextent[2], t = maxextent[2],
-			n = minextent[3], f = maxextent[3],
+	DEBUG_view.drawereid = world:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			simplemesh = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
+			material = "/pkg/ant.resources/materials/texquad.material",
+			visible_state = "main_queue",
+			scene = {},
+			render_layer = "translucent",
+			on_ready = function (e)
+				imaterial.set_property(e, "s_tex", fbmgr.get_rb(fbidx, 1).handle)
+			end,
 		}
+	}
 
-		print(string.format("split camera frustum:[l=%f, r=%f, b=%f, t=%f, n=%f, f=%f]", 
-		frustum_desc.l, frustum_desc.r, 
-		frustum_desc.b, frustum_desc.t, 
-		frustum_desc.n, frustum_desc.f))
+	for e in w:select "render_object visible_state:in" do
+		update_visible_state(e)
+	end
+end
 
-		local newvp = math3d.mul(math3d.projmat(frustum_desc, INV_Z), math3d.lookto(center, lightdir))
-		local new_light_frustum_points = math3d.frustum_points(newvp)
-		ientity.create_frustum_entity(new_light_frustum_points, 0xff0000ff)
-		
-		---------------------------------------------------------------------------------------------------------
-		local shadow_camera_ref = se.camera_ref
-		print("shadow camera view direction:", math3d.tostring(iom.get_direction(shadow_camera_ref)))
-		print("shadow camera position:", math3d.tostring(iom.get_position(shadow_camera_ref)))
+function shadowdebug_sys:entity_init()
+	for e in w:select "INIT render_object visible_state:in" do
+		update_visible_state(e)
+	end
+end
 
-		local shadowcamera_frustum_desc = icamera.get_frustum(shadow_camera_ref)
-		print(string.format("shadow camera frustum:[l=%f, r=%f, b=%f, t=%f, n=%f, f=%f]", 
-			shadowcamera_frustum_desc.l, shadowcamera_frustum_desc.r, 
-			shadowcamera_frustum_desc.b, shadowcamera_frustum_desc.t, 
-			shadowcamera_frustum_desc.n, shadowcamera_frustum_desc.f))
-
-		local shadow_viewproj = icamera.calc_viewproj(shadow_camera_ref)
-		local shadowcamera_frustum_points = math3d.frustum_points(shadow_viewproj)
-
-		print("shadow view frustm point")
-		print_points(shadowcamera_frustum_points)
-		ientity.create_frustum_entity(shadowcamera_frustum_points, 0xffffff00)
-
-		-------------------------------------------------------------------------------------------------
-		-- test shadow matrix
-		local pt = {-0.00009, -0.01307, 0.1544} --mc.T_ZERO_PT
-		local worldmat = {
-			0.0, 0.0, -20.02002, -20,
+local function draw_lines(lines)
+	return world:create_entity{
+		policy = {"ant.render|simplerender"},
+		data = {
+			simplemesh = {
+				vb = {
+					start = 0, num = #lines,
+					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
+					owned = true,
+				},
+			},
+			material = "/pkg/ant.resources/materials/line.material",
+			scene = {},
+			visible_state = "main_view",
+			owned_mesh_buffer = true,
 		}
-
-		local origin_CS = math3d.index(shadow_viewproj, 1)
-		print(string.format("origin clip space:%s", math3d.tostring(origin_CS)))
-		local origin_NDC = math3d.mul(origin_CS, 1 / math3d.index(origin_CS, 1))
-		print(string.format("origin ndc space:%s", math3d.tostring(origin_NDC)))
-
-		local cp_mat = ishadow.crop_matrix(csm_index)
-		local shadow_matrix = math3d.mul(cp_mat, shadow_viewproj)
-
-		local origin_CS_With_Crop = math3d.transform(shadow_matrix, {0, 0, 0.55, 1}, 1)
-		print(string.format("origin clip space with corp:%s", math3d.tostring(origin_CS_With_Crop)))
-		local origin_NDC_With_Crop = math3d.mul(origin_CS_With_Crop, 1 / math3d.index(origin_CS_With_Crop, 1))
-		print(string.format("origin ndc space with crop:%s", math3d.tostring(origin_NDC_With_Crop)))
-		------------------------------------------------------------------------------------------------------------------------
-		-- read the shadow map back
-		-- if ishadow.depth_type() == "linear" then
-		-- 	local size = ishadow.shadowmap_size()
-		-- 	local fb = fbmgr.get(se.render_target.fb_idx)
-		-- 	local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1].rbidx, true)
-
-		-- 	local depth = pt[3]
-		-- 	local x, y = pt[1], pt[2]
-		-- 	local fx, fy = math.floor(x * width), math.floor(y * height)
-		-- 	local cx, cy = math.ceil(x * width), math.ceil(y * height)
-
-		-- 	local depth0 = memory_handle[fy*pitch+fx]
-		-- 	local depth1 = memory_handle[fy*pitch+cx]
-
-		-- 	local depth2 = memory_handle[cy*pitch+fx]
-		-- 	local depth3 = memory_handle[cy*pitch+cx]
-
-		-- 	print("depth:", depth)
-		-- 	print("depth0:", depth0, "depth1:", depth1, "depth2:", depth2, "depth3:", depth3)
-		-- end
-	end
+	}
 end
 
-local function log_split_distance()
-	local mc <close> = world:entity(irq.main_camera())
-	for idx, f in ipairs(ishadow.calc_split_frustums(icamera.get_frustum(mc))) do
-		print(string.format("csm%d, distance[%f, %f]", idx, f.n, f.f))
-	end
-end
+function shadowdebug_sys:data_changed()
+	for _, key, press in kbmb:unpack() do
+		if key == "B" and press == 0 then
+			for k, v in pairs(DEBUG_ENTITIES) do
+				w:remove(v)
+			end
 
-local keypress_mb = world:sub{"keyboard"}
-function shadowdbg_sys:camera_usage()
-	for _, key, press, state in keypress_mb:unpack() do
-		if key == "SPACE" and press == 0 then
-			for _, eid in ipairs(debug_entities) do
-				w:remove(eid)
+			local function add_entity(points, c, n)
+				local eid = ientity.create_frustum_entity(points, c or unique_color())
+				n = n or unique_name()
+				DEBUG_ENTITIES[n] = eid
+				return eid
 			end
-			debug_entities = {}
-			log_split_distance()
-			create_debug_entity()
-		elseif key == "L" and press == 0 then
-			local eids = {}
-			for se in w:select "csm:in camera_ref:in" do
-				eids[se.csm.index] = se.camera_ref
+
+			local function transform_points(points, M)
+				local np = {}
+				for i=1, math3d.array_size(points) do
+					np[i] = math3d.transform(M, math3d.array_index(points, i), 1)
+				end
+
+				return math3d.array_vector(np)
 			end
-			world:pub{"splitview", "change_camera", eids}
+
+			local C = world:entity(irq.main_camera(), "camera:in").camera
+			for e in w:select "csm:in camera_ref:in" do
+				local ce = world:entity(e.camera_ref, "camera:in scene:in")
+				local Lv = ce.camera.viewmat
+				local L2W = math3d.inverse_fast(Lv)
+				local aabbpoints = transform_points(math3d.aabb_points(C.PSRLS), L2W)
+				add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
+
+				if ce.camera.vertices then
+					local aabb = math3d.minmax(ce.camera.vertices, L2W)
+					add_entity(math3d.aabb_points(aabb),	{1.0, 1.0, 0.0, 1.0})
+				end
+
+				add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
+			end
+		elseif key == 'C' and press == 0 then
+
 		end
 	end
 end
