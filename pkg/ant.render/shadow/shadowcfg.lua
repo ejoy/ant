@@ -163,42 +163,36 @@ function isc.shadowmap_size()
 	return SHADOW_CFG.shadowmap_size
 end
 
-function isc.calc_split_frustums(view_frustum)
+function isc.calc_split_frustums(view_frustum, view_near, view_far)
 	local split_weight = SHADOW_CFG.split_weight
 	local frustums = SHADOW_CFG.split_frustums
-	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
-	local clip_range = view_farclip - view_nearclip
+	view_near = view_near or view_frustum.n
+	view_far = view_far or view_frustum.f
+	local clip_range = view_far - view_near
 	local split_num = SHADOW_CFG.split_num
 
 	if split_weight then
- 		local ratio = view_farclip/view_nearclip
+ 		local ratio = view_far/view_near
 		local num_sclies = split_num*2
-		local nearclip = view_nearclip
+		local nearclip = view_near
 		local farclip
 		local cross_multipler = (1.0+SHADOW_CFG.cross_delta)
 		local nn=2
 		local ff=1
---[[ 		for i=1, split_num do
-			local idx = (i-1)*2
-			local si = (idx+1) / num_sclies
-			local farclip = split_weight*(view_nearclip*(ratio^si)) + (1-split_weight)*(view_nearclip + clip_range*si)
-			frustums[i] = split_new_frustum(view_frustum, nearclip, farclip)
-			nearclip = farclip * 1.005
-		end  ]]
 		while nn < num_sclies do
 			local si = ff / num_sclies
-			farclip = split_weight*(view_nearclip*(ratio^si)) + (1-split_weight)*(view_nearclip + clip_range*si)
+			farclip = split_weight*(view_near*(ratio^si)) + (1-split_weight)*(view_near + clip_range*si)
 			frustums[nn/2] = split_new_frustum(view_frustum, nearclip, farclip)
 			nearclip = farclip / cross_multipler
 			nn = nn + 2
 			ff = ff + 2
 		end
-		farclip = view_farclip
+		farclip = view_far
 		frustums[nn/2] = split_new_frustum(view_frustum, nearclip, farclip)
 
 	else
 		local function calc_clip(r)
-			return view_nearclip + clip_range * r
+			return view_near + clip_range * r
 		end
 
 		for i=1, split_num do
