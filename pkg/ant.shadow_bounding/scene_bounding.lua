@@ -99,14 +99,3 @@ function sb_sys:update_camera_bounding()
 		BOUNDING_NEED_UPDATE = false
 	end
 end
-
-function sb_sys:update_camera()
-    local C = irq.main_camera_changed()
-    if C then
-        w:extend(C, "camera:in")
-        local sbe = w:first "shadow_bounding:update"
-        math3d.unmark(sbe.shadow_bounding.camera_aabb)
-        sbe.shadow_bounding.camera_aabb = math3d.marked_aabb(math3d.minmax(math3d.frustum_points(C.camera.viewprojmat)))
-        w:submit(sbe)
-    end
-end

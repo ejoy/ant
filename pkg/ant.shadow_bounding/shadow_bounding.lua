@@ -10,10 +10,7 @@ function sb_sys:init()
             "ant.shadow_bounding|shadow_bounding",
         },
         data = {
-            shadow_bounding = {
-                scene_aabb  = math3d.marked_aabb(math3d.vector(-1e9, -1e9, -1e9), math3d.vector(1e9, 1e9, 1e9)),
-                camera_aabb = math3d.marked_aabb(math3d.vector(-1e9, -1e9, -1e9), math3d.vector(1e9, 1e9, 1e9))
-            }
+            shadow_bounding = {}
         }
     }
 end
