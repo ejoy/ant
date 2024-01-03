@@ -190,5 +190,10 @@ inline Point operator*(const Point& lhs, const Point& rhs) {
 inline Size operator*(const Size& lhs, float rhs) {
 	return Size(lhs.w * rhs, lhs.h * rhs);
 }
-
+inline Point operator/(const Point& lhs, Size rhs) {
+	return Point(lhs.x / rhs.w, lhs.y / rhs.h);
+}
+inline Size operator/(const Size& lhs, Size rhs) {
+	return Size(lhs.w / rhs.w, lhs.h / rhs.h);
+}
 }

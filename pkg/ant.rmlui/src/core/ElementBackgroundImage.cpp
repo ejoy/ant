@@ -33,6 +33,13 @@ static void GetRectArray(float wl, float ht, float wr, float hb, Rect& rect, std
 		rect_array[8] = Rect{x + w4, y + h4, w3, h3};
 }
 
+static Rect CalcUV(const Rect& surface, const Rect& texture) {
+	Rect uv;
+	uv.origin = (Point {0,0} - texture.origin) / texture.size;
+	uv.size = surface.size / texture.size;
+	return uv;
+}
+
 bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image->Has<std::string>()) {
@@ -93,25 +100,28 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		return false;
 	}
 
-	//Point backgroundPosition {
-	//	PropertyComputeX(element, *element->GetComputedProperty(PropertyId::BackgroundPositionX)),
-	//	PropertyComputeY(element, *element->GetComputedProperty(PropertyId::BackgroundPositionY))
-	//};
-	Rect uv { { 0.f, 0.f }, {} };
+	Rect background {};
+	background.origin = {
+		PropertyComputeX(element, *element->GetComputedProperty(PropertyId::BackgroundPositionX)),
+		PropertyComputeY(element, *element->GetComputedProperty(PropertyId::BackgroundPositionY))
+	};
 	switch (element->GetComputedProperty(PropertyId::BackgroundSize)->Get<Style::BackgroundSize>()) {
 	case Style::BackgroundSize::Contain: {
 		Size scale {
 			surface.size.w / texture.dimensions.w,
 			surface.size.h / texture.dimensions.h
 		};
-		float aspectRatio = scale.w / scale.h;
-		if (aspectRatio < 1.f) {
-			uv.size.w = 1.f;
-			uv.size.h = 1.f / aspectRatio;
+		if (scale.w < scale.h) {
+			background.size = {
+				surface.size.w,
+				surface.size.w / texture.dimensions.w * texture.dimensions.h,
+			};
 		}
 		else {
-			uv.size.w = aspectRatio;
-			uv.size.h = 1.f;
+			background.size = {
+				surface.size.h / texture.dimensions.h * texture.dimensions.w,
+				surface.size.h,
+			};
 		}
 		break;
 	}
@@ -120,48 +130,40 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			surface.size.w / texture.dimensions.w,
 			surface.size.h / texture.dimensions.h
 		};
-		float aspectRatio = scale.w / scale.h;
-		if (aspectRatio > 1.f) {
-			uv.size.w = 1.f;
-			uv.size.h = 1.f / aspectRatio;
+		if (scale.w > scale.h) {
+			background.size = {
+				surface.size.h / texture.dimensions.h * texture.dimensions.w,
+				surface.size.h,
+			};
 		}
 		else {
-			uv.size.w = aspectRatio;
-			uv.size.h = 1.f;
+			background.size = {
+				surface.size.w,
+				surface.size.w / texture.dimensions.w * texture.dimensions.h,
+			};
 		}
 		break;
 	}
 	case Style::BackgroundSize::Auto: {
-		Size scale {
-			surface.size.w / texture.dimensions.w,
-			surface.size.h / texture.dimensions.h
-		};
-		uv.size.w = scale.w;
-		uv.size.h = scale.h;
+		background.size = texture.dimensions;
 		break;
 	}
 	default:
 	case Style::BackgroundSize::Unset: {
-		Size backgroundSize {
+		background.size = {
 			element->GetComputedProperty(PropertyId::BackgroundSizeX)->Get<PropertyFloat>().ComputeW(element),
 			element->GetComputedProperty(PropertyId::BackgroundSizeY)->Get<PropertyFloat>().ComputeH(element)
 		};
-		Size scale {
-			surface.size.w / backgroundSize.w,
-			surface.size.h / backgroundSize.h
-		};
-		uv.size.w = scale.w;
-		uv.size.h = scale.h;
 		break;
 	}
 	}
 
+	Rect uv = CalcUV(surface, background);
 	Material* material = GetRender()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
 	geometry.SetMaterial(material);
-	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
-	bool has_lattice = lattice_x1 > 0;
 
-	if (has_lattice) {
+	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
+	if (lattice_x1 > 0) {
 		if (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{}) {
 			return false;
 		}
