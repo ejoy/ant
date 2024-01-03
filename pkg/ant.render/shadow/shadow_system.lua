@@ -265,15 +265,14 @@ function shadow_sys:update_camera_depend()
 
 	w:extend(C, "scene:in camera:in")
 
-	local SB = w:first "shadow_bounding:in".shadow_bounding
-	local si = SB.scene_info
+	local sb = w:first "shadow_bounding:in".shadow_bounding
 	
 	local li = init_light_info(C, D)
-	si.sceneaabbLS = build_sceneaabbLS(si, li)
+	sb.sceneaabbLS = build_sceneaabbLS(sb, li)
 
 	local CF = C.camera.frustum
-	si.view_near, si.view_far = CF.n, CF.f
-	local zn, zf = assert(si.zn), assert(si.zf)
+	sb.view_near, sb.view_far = CF.n, CF.f
+	local zn, zf = assert(sb.zn), assert(sb.zf)
 	--split bounding zn, zf
 	local csmfrustums = isc.calc_split_frustums(CF, zn, zf)
 
@@ -284,7 +283,7 @@ function shadow_sys:update_camera_depend()
         local c = ce.camera
         local csm = e.csm
 		c.viewfrustum = csmfrustums[csm.index]
-		update_shadow_matrices(si, li, c)
+		update_shadow_matrices(sb, li, c)
 		mark_camera_changed(ce)
 
 		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)

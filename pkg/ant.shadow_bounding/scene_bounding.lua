@@ -38,7 +38,7 @@ end
 --TODO: read from setting file
 local nearHit, farHit = 1, 100
 
-local function build_scene_info(C)
+local function build_scene_info(C, sb)
 	local mqidx = queuemgr.queue_index "main_queue"
 
 	local zn, zf = math.maxinteger, -math.maxinteger
@@ -72,16 +72,10 @@ local function build_scene_info(C)
 		merge_obj_PSC_PSR(e.hitch, e.receive_shadow, e.cast_shadow, e.bounding)
 	end
 
-	zn, zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
-	return {
-		PSR			= math3d.marked_aabb(PSR),
-		PSC			= math3d.marked_aabb(PSC),
-		--transform PSR to viewspace to calculate the zn/zf may not be a good idea, calculate every aabb zn/zf can make more tighten [zn, zf] range
-		zn			= zn,
-		zf			= zf,
-		nearHit		= nearHit,
-		farHit		= farHit,
-	}
+	sb.zn, sb.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
+	sb.nearHit, sb.farHit = nearHit, farHit
+
+	sb.PSR, sb.PSC = math3d.marked_aabb(PSR), math3d.marked_aabb(PSC)
 end
 
 function sb_sys:update_camera_bounding()
@@ -94,7 +88,7 @@ function sb_sys:update_camera_bounding()
 	if C then
 		w:extend(C, "scene:in camera:in")
 		local sbe = w:first "shadow_bounding:update"
-		sbe.shadow_bounding.scene_info = build_scene_info(C)
+		build_scene_info(C, sbe.shadow_bounding)
 		w:submit(sbe)
 		BOUNDING_NEED_UPDATE = false
 	end
