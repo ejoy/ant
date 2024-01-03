@@ -35,7 +35,7 @@ static void GetRectArray(float wl, float ht, float wr, float hb, Rect& rect, std
 
 static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	Rect uv;
-	uv.origin = (Point {0,0} - texture.origin) / texture.size;
+	uv.origin = (surface.origin - texture.origin) / texture.size;
 	uv.size = surface.size / texture.size;
 	return uv;
 }
@@ -101,7 +101,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect background {};
-	background.origin = {
+	background.origin = surface.origin + Point {
 		PropertyComputeX(element, *element->GetComputedProperty(PropertyId::BackgroundPositionX)),
 		PropertyComputeY(element, *element->GetComputedProperty(PropertyId::BackgroundPositionY))
 	};
@@ -186,7 +186,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		}
 	}
 	else {
-		if (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{}) {
+		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
 			auto poly = geometry.ClipPolygon(edge.padding, background);
 			if (!poly.IsEmpty()) {
 				geometry.AddPolygon(poly, color);
