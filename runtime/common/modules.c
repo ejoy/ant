@@ -16,6 +16,9 @@ int luaopen_datalist(lua_State* L);
 int luaopen_ozz(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
+#ifdef MATH3D_ADAPTER_TEST
+int luaopen_math3d_adapter_test(lua_State *L);
+#endif 
 int luaopen_protocol(lua_State* L);
 int luaopen_luadebug(lua_State* L);
 int luaopen_luadebug_hookmgr(lua_State* L);
@@ -90,6 +93,9 @@ void ant_loadmodules(lua_State* L) {
         { "ozz", luaopen_ozz },
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },
+#ifdef MATH3D_ADAPTER_TEST
+        { "math3d.adapter.test", luaopen_math3d_adapter_test},
+#endif
         { "protocol", luaopen_protocol },
         { "luadebug", luaopen_luadebug },
         { "luadebug.hookmgr", luaopen_luadebug_hookmgr },
@@ -114,7 +120,7 @@ void ant_loadmodules(lua_State* L) {
         { "ecs.util", luaopen_ecs_util},
         { "fastio", luaopen_fastio},
         { "render.material.arena",  luaopen_material_arena},
-		{ "render.material.core",   luaopen_material_core},
+	{ "render.material.core",   luaopen_material_core},
         { "render.render_material", luaopen_render_material},
         { "render.queue",           luaopen_render_queue},
         { "system.render",      luaopen_system_render},
