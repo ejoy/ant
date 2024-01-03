@@ -72,10 +72,16 @@ local function build_scene_info(C, sb)
 		merge_obj_PSC_PSR(e.hitch, e.receive_shadow, e.cast_shadow, e.bounding)
 	end
 
-	sb.zn, sb.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
-	sb.nearHit, sb.farHit = nearHit, farHit
+	if math3d.aabb_isvalid(PSR) then
+		if math3d.aabb_isvalid(PSC) then
+			sb.PSC = math3d.marked_aabb(PSC)
+		end
 
-	sb.PSR, sb.PSC = math3d.marked_aabb(PSR), math3d.marked_aabb(PSC)
+		sb.zn, sb.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
+		sb.nearHit, sb.farHit = nearHit, farHit
+	
+		sb.PSR = math3d.marked_aabb(PSR)
+	end
 end
 
 function sb_sys:update_camera_bounding()
