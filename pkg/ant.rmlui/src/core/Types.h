@@ -99,11 +99,22 @@ struct Rect {
 		size.SetSize(width, height);
 	}
 	void Union(const Rect& rect) {
-		float rx = std::min(x(), rect.x());
-		float ry = std::min(y(), rect.y());
-		float rr = std::max(right(), rect.right());
-		float rb = std::max(bottom(), rect.bottom());
-		SetRect(rx, ry, rr - rx, rb - ry);
+		float l = std::min(left(), rect.left());
+		float t = std::min(top(), rect.top());
+		float r = std::max(right(), rect.right());
+		float b = std::max(bottom(), rect.bottom());
+		SetRect(l, t, r - l, b - t);
+	}
+	void Inter(const Rect& rect) {
+		if (left() > rect.right() || rect.left() > right() || top() > rect.bottom() || rect.top() > bottom()) {
+			SetRect(0, 0, 0, 0);
+			return;
+		}
+		float l = std::max(left(), rect.left());
+		float t = std::max(top(), rect.top());
+		float r = std::min(right(), rect.right());
+		float b = std::min(bottom(), rect.bottom());
+		SetRect(l, t, r - l, b - t);
 	}
 	bool Contains(const Point& point) const {
 		return (point.x >= x()) && (point.x < right()) && (point.y >= y()) && (point.y < bottom());

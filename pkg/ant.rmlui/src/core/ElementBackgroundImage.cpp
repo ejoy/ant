@@ -187,14 +187,19 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 	else {
 		if (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{}) {
-			geometry.AddPolygon(edge.padding, color);
-			geometry.UpdateUV(edge.padding.size(), surface, uv);
+			auto poly = geometry.ClipPolygon(edge.padding, background);
+			if (!poly.IsEmpty()) {
+				geometry.AddPolygon(poly, color);
+				geometry.UpdateUV(poly.points.size(), surface, uv);
+			}
 		}
 		else {
-			geometry.AddRectFilled(surface, color);
-			geometry.UpdateUV(4, surface, uv);
+			background.Inter(surface);
+			if (!background.IsEmpty()) {
+				geometry.AddRectFilled(background, color);
+				geometry.UpdateUV(4, surface, uv);
+			}
 		}
-
 	}
 
 	if (setGray) {
