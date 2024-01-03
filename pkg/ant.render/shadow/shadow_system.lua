@@ -281,6 +281,7 @@ function shadow_sys:update_camera_depend()
 	local CF = C.camera.frustum
 	sb.view_near, sb.view_far = CF.n, CF.f
 	local zn, zf = assert(sb.zn), assert(sb.zf)
+	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
 	local csmfrustums = isc.calc_split_frustums(CF, zn, zf)
 
