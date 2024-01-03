@@ -164,7 +164,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
 	if (lattice_x1 > 0) {
-		if (origin == Style::BoxType::ContentBox && padding != edge.padding.size() != 4) {
+		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
 			return false;
 		}
 		else {
