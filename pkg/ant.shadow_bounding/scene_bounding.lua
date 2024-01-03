@@ -87,9 +87,8 @@ function sb_sys:update_camera_bounding()
 	C = C or irq.main_camera_changed()
 	if C then
 		w:extend(C, "scene:in camera:in")
-		local sbe = w:first "shadow_bounding:update"
+		local sbe = w:first "shadow_bounding:in"
 		build_scene_info(C, sbe.shadow_bounding)
-		w:submit(sbe)
 		BOUNDING_NEED_UPDATE = false
 	end
 end
