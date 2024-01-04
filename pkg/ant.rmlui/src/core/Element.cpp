@@ -1235,6 +1235,7 @@ bool Element::SetRenderStatus() {
 	auto render = GetRender();
 	render->SetTransform(transform);
 	render->SetClipRect();
+	return true;
 }
 
 void Element::DirtyTransform() {
