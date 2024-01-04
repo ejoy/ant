@@ -223,8 +223,6 @@ local function init_light_info(C, D)
 	local Cv = C.camera.viewmat
 
 	local rightdir, viewdir, camerapos = math3d.index(C.scene.worldmat, 1, 3, 4)
-	log.info("viewdir:" .. math3d.tostring(viewdir))
-	log.info("camerapos:" .. math3d.tostring(camerapos))
 
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 	local Lw = math3d.inverse_fast(Lv)
@@ -296,20 +294,6 @@ function shadow_sys:update_camera_depend()
 		c.viewfrustum = csmfrustums[csm.index]
 		update_shadow_matrices(sb, li, c)
 		mark_camera_changed(ce)
-
-		-- local planepointsWS = math3d.array_vector{
-		-- 	math3d.vector(-25.0, 0.0,-25.0, 1.0),
-		-- 	math3d.vector(-25.0, 0.0, 25.0, 1.0),
-		-- 	math3d.vector( 25.0, 0.0,-25.0, 1.0),
-		-- 	math3d.vector( 25.0, 0.0, 25.0, 1.0),
-		-- }
-
-		-- local ppp = {}
-		-- local lppp = {}
-		-- for _, p in mu.iter_m3darary(planepointsWS) do
-		-- 	ppp[#ppp+1] = math3d.tostring(math3d.transform(ce.camera.viewprojmat, p, 1))
-		-- 	lppp[#lppp+1] = math3d.tostring(math3d.transform(ce.camera.viewmat, p, 1))
-		-- end
 
 		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)
 		split_distances_VS[csm.index] = c.viewfrustum.f
