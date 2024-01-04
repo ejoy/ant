@@ -62,7 +62,9 @@ static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element
 	auto& t0 = prop0.GetRef<Transform>();
 	auto& t1 = prop1.GetRef<Transform>();
 	if (!PrepareTransformPair(t0, t1, element)) {
-		Log::Message(Log::Level::Warning, "Property '%s' is not interpolation with property '%s'.", prop1.ToString().c_str(), prop0.ToString().c_str());
+		Log::Message(Log::Level::Warning, "Property is not interpolation.");
+		//TODO
+		//Log::Message(Log::Level::Warning, "Property '%s' is not interpolation with property '%s'.", prop1.ToString().c_str(), prop0.ToString().c_str());
 		return false;
 	}
 	return true;
@@ -70,7 +72,9 @@ static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element
 
 static bool AllowInterpolate(Property& prop, Element& element) {
 	if (!prop.AllowInterpolate(element)) {
-		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", prop.ToString().c_str());
+		Log::Message(Log::Level::Warning, "Property is not a valid target for interpolation.");
+		//TODO
+		//Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", prop.ToString().c_str());
 		return false;
 	}
 	return true;

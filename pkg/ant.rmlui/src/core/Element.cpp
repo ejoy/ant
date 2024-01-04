@@ -191,8 +191,8 @@ float Element::GetFontSize() const {
 	return font_size;
 }
 
-static float ComputeFontsize(const Property& property, Element* element) {
-	PropertyFloat fv = property.Get<PropertyFloat>();
+static float ComputeFontsize(const PropertyRaw& prop, Element* element) {
+	PropertyFloat fv = prop.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT || fv.unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
 		Element* parent = element->GetParentNode();
@@ -798,18 +798,26 @@ void Element::StartTransition(std::function<void()> f) {
 	std::vector<PropertyTransition> pt;
 	pt.reserve(transition_list.size());
 	for (auto const& [id, transition] : transition_list) {
-		auto start_value = GetComputedProperty(id);
-		pt.emplace_back(id, transition, start_value);
+		auto raw_start_value = GetComputedProperty(id);
+		if (raw_start_value) {
+			pt.emplace_back(id, transition, raw_start_value->Decode());
+		}
+		else {
+			pt.emplace_back(id, transition, std::nullopt);
+		}
 	}
 	f();
 	for (auto& [id, transition, start_value] : pt) {
-		auto target_value = GetComputedProperty(id);
-		if (start_value && target_value && *start_value != *target_value) {
-			if (!transitions.contains(id)) {
-				ElementTransition ani {*start_value, *target_value, transition };
-				if (ani.IsValid(*this)) {
-					SetAnimationProperty(id, *start_value);
-					transitions.insert_or_assign(id, std::move(ani));
+		auto raw_target_value = GetComputedProperty(id);
+		if (raw_target_value) {
+			auto target_value = raw_target_value->Decode();
+			if (start_value && target_value && *start_value != *target_value) {
+				if (!transitions.contains(id)) {
+					ElementTransition ani {*start_value, *target_value, transition };
+					if (ani.IsValid(*this)) {
+						SetAnimationProperty(id, *start_value);
+						transitions.insert_or_assign(id, std::move(ani));
+					}
 				}
 			}
 		}
@@ -879,13 +887,25 @@ void Element::HandleAnimationProperty() {
 						start_value = vec[0].prop;
 					}
 					else {
-						start_value = GetComputedProperty(id);
+						auto raw = GetComputedProperty(id);
+						if (raw) {
+							start_value = raw->Decode();
+						}
+						else {
+							start_value = std::nullopt;
+						}
 					}
 					if (has_to_key) {
 						target_value = vec.back().prop;
 					}
 					else {
-						target_value = GetComputedProperty(id);
+						auto raw = GetComputedProperty(id);
+						if (raw) {
+							target_value = raw->Decode();
+						}
+						else {
+							target_value = std::nullopt;
+						}
 					}
 					if (!start_value || !target_value) {
 						continue;
@@ -1391,12 +1411,12 @@ void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
 	}
 }
 
-std::optional<Property> Element::GetInlineProperty(PropertyId id) const {
+std::optional<PropertyRaw> Element::GetInlineProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	return c.Find(inline_properties, id);
 }
 
-std::optional<Property> Element::GetLocalProperty(PropertyId id) const {
+std::optional<PropertyRaw> Element::GetLocalProperty(PropertyId id) const {
 	auto& c = Style::Instance();
     return c.Find(local_properties, id);
 }
@@ -1446,7 +1466,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	return res;
 }
 
-std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
+std::optional<PropertyRaw> Element::GetComputedProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	if (auto property = c.Find(global_properties, id)) {
 		return property;

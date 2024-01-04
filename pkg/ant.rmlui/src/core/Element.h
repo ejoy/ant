@@ -125,9 +125,9 @@ public:
 	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 
-	std::optional<Property> GetInlineProperty(PropertyId id) const;
-	std::optional<Property> GetLocalProperty(PropertyId id) const;
-	std::optional<Property> GetComputedProperty(PropertyId id) const;
+	std::optional<PropertyRaw> GetInlineProperty(PropertyId id) const;
+	std::optional<PropertyRaw> GetLocalProperty(PropertyId id) const;
+	std::optional<PropertyRaw> GetComputedProperty(PropertyId id) const;
 	template <typename T>
 	auto GetProperty(PropertyId id) const {
 		if constexpr(std::is_same_v<T, float>) {

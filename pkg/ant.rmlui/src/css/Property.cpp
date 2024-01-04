@@ -2,34 +2,6 @@
 
 namespace Rml {
 
-struct ToStringVisitor {
-	std::string operator()(const PropertyFloat& p) {
-		return p.ToString();
-	}
-	std::string operator()(const PropertyKeyword& p) {
-		return "<keyword," + std::to_string(p) + ">";
-	}
-	std::string operator()(const Color& p) {
-		return p.ToString();
-	}
-	std::string operator()(const std::string& p) {
-		return p;
-	}
-	std::string operator()(const Transform& p) {
-		return p.ToString();
-	}
-	std::string operator()(const TransitionList& p) {
-		return "<transition>";
-	}
-	std::string operator()(const AnimationList& p) {
-		return "<animation>";
-	}
-};
-
-std::string Property::ToString() const {
-	return std::visit(ToStringVisitor{}, (const PropertyVariant&)*this);
-}
-
 struct InterpolateVisitor {
 	const PropertyVariant& other_variant;
 	float alpha;

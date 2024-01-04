@@ -147,13 +147,13 @@ namespace Rml::Style {
         return change;
     }
 
-    std::optional<Property> Cache::Find(ValueOrCombination s, PropertyId id) {
+    std::optional<PropertyRaw> Cache::Find(ValueOrCombination s, PropertyId id) {
         void* data = style_find(c, {s.idx}, (uint8_t)id);
         if (!data) {
             return std::nullopt;
         }
         PropertyRaw prop { (const uint8_t*)data };
-        return PropertyDecode(prop);
+        return prop;
     }
 
     bool Cache::Has(ValueOrCombination s, PropertyId id) {

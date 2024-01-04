@@ -1,6 +1,7 @@
 #include <core/Layout.h>
 #include <core/ID.h>
 #include <css/Property.h>
+#include <css/PropertyRaw.h>
 #include <core/Text.h>
 #include <yoga/Yoga.h>
 #include <bee/nonstd/unreachable.h>
@@ -178,7 +179,7 @@ static void SetPercentProperty(YGNodeRef node, PropertyId id, float v) {
 	}
 }
 
-static void SetIntProperty(YGNodeRef node, PropertyId id, const Property& property) {
+static void SetIntProperty(YGNodeRef node, PropertyId id, const PropertyRaw& prop) {
 	switch (id) {
 	case PropertyId::MarginLeft:     YGNodeStyleSetMarginAuto(node, YGEdgeLeft); break;
 	case PropertyId::MarginTop:      YGNodeStyleSetMarginAuto(node, YGEdgeTop); break;
@@ -186,27 +187,27 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, const Property& proper
 	case PropertyId::MarginBottom:   YGNodeStyleSetMarginAuto(node, YGEdgeBottom); break;
 	case PropertyId::Height:         YGNodeStyleSetHeightAuto(node); break;
 	case PropertyId::Width:          YGNodeStyleSetWidthAuto(node); break;
-	case PropertyId::Position:       YGNodeStyleSetPositionType(node, property.Get<YGPositionType>()); break;
-	case PropertyId::Display:        YGNodeStyleSetDisplay(node, property.Get<YGDisplay>()); break;
-	case PropertyId::Overflow:       YGNodeStyleSetOverflow(node, property.Get<YGOverflow>()); break;
-	case PropertyId::AlignContent:   YGNodeStyleSetAlignContent(node, property.Get<YGAlign>()); break;
-	case PropertyId::AlignItems:     YGNodeStyleSetAlignItems(node, property.Get<YGAlign>()); break;
-	case PropertyId::AlignSelf:      YGNodeStyleSetAlignSelf(node, property.Get<YGAlign>()); break;
-	case PropertyId::Direction:      YGNodeStyleSetDirection(node, property.Get<YGDirection>()); break;
-	case PropertyId::FlexDirection:  YGNodeStyleSetFlexDirection(node, property.Get<YGFlexDirection>()); break;
-	case PropertyId::FlexWrap:       YGNodeStyleSetFlexWrap(node, property.Get<YGWrap>()); break;
-	case PropertyId::JustifyContent: YGNodeStyleSetJustifyContent(node, property.Get<YGJustify>()); break;
+	case PropertyId::Position:       YGNodeStyleSetPositionType(node, prop.Get<YGPositionType>()); break;
+	case PropertyId::Display:        YGNodeStyleSetDisplay(node, prop.Get<YGDisplay>()); break;
+	case PropertyId::Overflow:       YGNodeStyleSetOverflow(node, prop.Get<YGOverflow>()); break;
+	case PropertyId::AlignContent:   YGNodeStyleSetAlignContent(node, prop.Get<YGAlign>()); break;
+	case PropertyId::AlignItems:     YGNodeStyleSetAlignItems(node, prop.Get<YGAlign>()); break;
+	case PropertyId::AlignSelf:      YGNodeStyleSetAlignSelf(node, prop.Get<YGAlign>()); break;
+	case PropertyId::Direction:      YGNodeStyleSetDirection(node, prop.Get<YGDirection>()); break;
+	case PropertyId::FlexDirection:  YGNodeStyleSetFlexDirection(node, prop.Get<YGFlexDirection>()); break;
+	case PropertyId::FlexWrap:       YGNodeStyleSetFlexWrap(node, prop.Get<YGWrap>()); break;
+	case PropertyId::JustifyContent: YGNodeStyleSetJustifyContent(node, prop.Get<YGJustify>()); break;
 	case PropertyId::FlexBasis:      YGNodeStyleSetFlexBasisAuto(node); break;
 	default: break;
 	}
 }
 
-void Layout::SetProperty(PropertyId id, const Property& property, const Element* element) {
-	if (property.Has<PropertyKeyword>()) {
-		SetIntProperty(node, id, property);
+void Layout::SetProperty(PropertyId id, const PropertyRaw& prop, const Element* element) {
+	if (prop.Has<PropertyKeyword>()) {
+		SetIntProperty(node, id, prop);
 		return;
 	}
-	auto const& fv = property.Get<PropertyFloat>();
+	auto const& fv = prop.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT) {
 		SetPercentProperty(node, id, fv.value);
 	}

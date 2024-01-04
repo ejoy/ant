@@ -31,7 +31,7 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
-std::optional<Property> Text::GetComputedProperty(PropertyId id) {
+std::optional<PropertyRaw> Text::GetComputedProperty(PropertyId id) {
 	return GetParentNode()->GetComputedProperty(id);
 }
 
@@ -316,7 +316,7 @@ float Text::GetLineHeight() {
 	if (property->Has<PropertyKeyword>()) {
 		return float(ascent - descent + lineGap);
 	}
-	float percent = property->Get<float>(GetParentNode());
+	float percent = property->Get<PropertyFloat>().Compute(GetParentNode());
 	return (ascent - descent) * percent;
 }
 
@@ -327,7 +327,7 @@ float Text::GetBaseline() {
 	if (property->Has<PropertyKeyword>()) {
 		return ascent + lineGap / 2.f;
 	}
-	float percent = property->Get<float>(GetParentNode());
+	float percent = property->Get<PropertyFloat>().Compute(GetParentNode());
 	return ascent + (ascent - descent) * (percent-1.f) / 2.f;
 }
 

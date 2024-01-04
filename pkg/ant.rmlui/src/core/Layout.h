@@ -11,6 +11,7 @@ namespace Rml {
 
 class Element;
 class Property;
+class PropertyRaw;
 enum class PropertyId : uint8_t;
 
 static constexpr inline PropertyIdSet GetLayoutProperties() {
@@ -86,7 +87,7 @@ public:
 	Layout& operator=(Layout&&) = delete;
 
 	void CalculateLayout(Size const& size);
-	void SetProperty(PropertyId id, const Property& property, const Element* element);
+	void SetProperty(PropertyId id, const PropertyRaw& property, const Element* element);
 	
 	bool IsDirty() const;
 	void MarkDirty();

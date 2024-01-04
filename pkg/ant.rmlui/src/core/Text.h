@@ -5,6 +5,7 @@
 #include <core/Interface.h>
 #include <css/PropertyIdSet.h>
 #include <css/Property.h>
+#include <css/PropertyRaw.h>
 #include <optional>
 
 namespace Rml {
@@ -19,12 +20,12 @@ public:
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
 protected:
-	std::optional<Property> GetComputedProperty(PropertyId id);
+	std::optional<PropertyRaw> GetComputedProperty(PropertyId id);
 
 	template <typename T>
 	auto GetProperty(PropertyId id) {
 		if constexpr(std::is_same_v<T, float>) {
-			return GetComputedProperty(id)->Get<T>(GetParentNode());
+			return GetComputedProperty(id)->Get<PropertyFloat>().Compute(GetParentNode());
 		}
 		else {
 			return GetComputedProperty(id)->Get<T>();
