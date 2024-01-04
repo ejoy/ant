@@ -1,7 +1,6 @@
 #include <css/StyleCache.h>
 #include <css/PropertyRaw.h>
 #include <assert.h>
-#include <bee/utility/dynarray.h>
 #include <array>
 #include <vector>
 extern "C" {
@@ -11,6 +10,12 @@ extern "C" {
 constexpr inline style_handle_t STYLE_NULL = {0};
 
 namespace Rml::Style {
+    struct Attrib: public style_attrib {
+        ~Attrib() {
+            delete[] (uint8_t*)data;
+        }
+    };
+
     static void AttribFree(void *ptr, void *ud) {
         delete[] (uint8_t*)ptr;
     }
@@ -25,7 +30,7 @@ namespace Rml::Style {
     }
 
     Cache::~Cache() {
-        style_deletecache(c, AttribFree, nullptr);
+        style_deletecache(c);
     }
 
     Value Cache::Create() {
@@ -34,7 +39,7 @@ namespace Rml::Style {
     }
 
     Value Cache::Create(const PropertyVector& vec) {
-        bee::dynarray<style_attrib> attrib(vec.size());
+        std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             auto [prop, size] = PropertyEncode(value);
@@ -100,7 +105,7 @@ namespace Rml::Style {
     }
 
     PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
-        bee::dynarray<style_attrib> attrib(vec.size());
+        std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             auto [prop, size] = PropertyEncode(value);
@@ -122,7 +127,7 @@ namespace Rml::Style {
     }
 
     PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
-        bee::dynarray<style_attrib> attrib(set.size());
+        std::vector<Attrib> attrib(set.size());
         size_t i = 0;
         for (auto id : set) {
             attrib[i].data = NULL;
@@ -208,7 +213,7 @@ namespace Rml::Style {
     }
 
     void Cache::Flush() {
-        style_flush(c, AttribFree, nullptr);
+        style_flush(c);
     }
 
     static Cache* cahce = nullptr;
