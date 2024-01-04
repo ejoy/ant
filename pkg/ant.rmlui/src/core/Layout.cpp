@@ -187,16 +187,16 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, const PropertyRaw& pro
 	case PropertyId::MarginBottom:   YGNodeStyleSetMarginAuto(node, YGEdgeBottom); break;
 	case PropertyId::Height:         YGNodeStyleSetHeightAuto(node); break;
 	case PropertyId::Width:          YGNodeStyleSetWidthAuto(node); break;
-	case PropertyId::Position:       YGNodeStyleSetPositionType(node, prop.Get<YGPositionType>()); break;
-	case PropertyId::Display:        YGNodeStyleSetDisplay(node, prop.Get<YGDisplay>()); break;
-	case PropertyId::Overflow:       YGNodeStyleSetOverflow(node, prop.Get<YGOverflow>()); break;
-	case PropertyId::AlignContent:   YGNodeStyleSetAlignContent(node, prop.Get<YGAlign>()); break;
-	case PropertyId::AlignItems:     YGNodeStyleSetAlignItems(node, prop.Get<YGAlign>()); break;
-	case PropertyId::AlignSelf:      YGNodeStyleSetAlignSelf(node, prop.Get<YGAlign>()); break;
-	case PropertyId::Direction:      YGNodeStyleSetDirection(node, prop.Get<YGDirection>()); break;
-	case PropertyId::FlexDirection:  YGNodeStyleSetFlexDirection(node, prop.Get<YGFlexDirection>()); break;
-	case PropertyId::FlexWrap:       YGNodeStyleSetFlexWrap(node, prop.Get<YGWrap>()); break;
-	case PropertyId::JustifyContent: YGNodeStyleSetJustifyContent(node, prop.Get<YGJustify>()); break;
+	case PropertyId::Position:       YGNodeStyleSetPositionType(node, prop.GetEnum<YGPositionType>()); break;
+	case PropertyId::Display:        YGNodeStyleSetDisplay(node, prop.GetEnum<YGDisplay>()); break;
+	case PropertyId::Overflow:       YGNodeStyleSetOverflow(node, prop.GetEnum<YGOverflow>()); break;
+	case PropertyId::AlignContent:   YGNodeStyleSetAlignContent(node, prop.GetEnum<YGAlign>()); break;
+	case PropertyId::AlignItems:     YGNodeStyleSetAlignItems(node, prop.GetEnum<YGAlign>()); break;
+	case PropertyId::AlignSelf:      YGNodeStyleSetAlignSelf(node, prop.GetEnum<YGAlign>()); break;
+	case PropertyId::Direction:      YGNodeStyleSetDirection(node, prop.GetEnum<YGDirection>()); break;
+	case PropertyId::FlexDirection:  YGNodeStyleSetFlexDirection(node, prop.GetEnum<YGFlexDirection>()); break;
+	case PropertyId::FlexWrap:       YGNodeStyleSetFlexWrap(node, prop.GetEnum<YGWrap>()); break;
+	case PropertyId::JustifyContent: YGNodeStyleSetJustifyContent(node, prop.GetEnum<YGJustify>()); break;
 	case PropertyId::FlexBasis:      YGNodeStyleSetFlexBasisAuto(node); break;
 	default: break;
 	}

@@ -38,34 +38,33 @@ namespace Rml {
         return v.unit == unit;
     }
 
-    struct ToStringVisitor {
-        std::string operator()(const PropertyFloat& p) {
-            return p.ToString();
-        }
-        std::string operator()(const PropertyKeyword& p) {
-            return "<keyword," + std::to_string(p) + ">";
-        }
-        std::string operator()(const Color& p) {
-            return p.ToString();
-        }
-        std::string operator()(const std::string& p) {
-            return p;
-        }
-        std::string operator()(const Transform& p) {
-            return p.ToString();
-        }
-        std::string operator()(const TransitionList& p) {
-            return "<transition>";
-        }
-        std::string operator()(const AnimationList& p) {
-            return "<animation>";
-        }
-    };
-
     std::string PropertyRaw::ToString() const {
-        //TODO rewrite
-        if (auto prop = Decode()) {
-            return std::visit(ToStringVisitor{}, (const PropertyVariant&)*prop);
+        strparser<uint8_t> p { m_data.data() };
+        switch (p.pop<uint8_t>()) {
+        case (uint8_t)variant_index<PropertyVariant, PropertyFloat>(): {
+            auto v = p.pop<PropertyFloat>();
+            return v.ToString();
+        }
+        case (uint8_t)variant_index<PropertyVariant, PropertyKeyword>(): {
+            auto v = p.pop<PropertyKeyword>();
+            return "<keyword," + std::to_string(v) + ">";
+        }
+        case (uint8_t)variant_index<PropertyVariant, Color>(): {
+            auto v = p.pop<Color>();
+            return v.ToString();
+        }
+        case (uint8_t)variant_index<PropertyVariant, std::string>(): {
+            auto v = PropertyDecode(tag_v<std::string>, p);
+            return v;
+        }
+        case (uint8_t)variant_index<PropertyVariant, Transform>(): {
+            auto v = PropertyDecode(tag_v<Transform>, p);
+            return v.ToString();
+        }
+        case (uint8_t)variant_index<PropertyVariant, TransitionList>():
+            return "<transition>";
+        case (uint8_t)variant_index<PropertyVariant, AnimationList>():
+            return "<animation>";
         }
         return {};
     }

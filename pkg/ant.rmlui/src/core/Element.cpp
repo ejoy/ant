@@ -180,7 +180,7 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 }
 
 bool Element::IgnorePointerEvents() const {
-	return GetComputedProperty(PropertyId::PointerEvents)->Get<Style::PointerEvents>() == Style::PointerEvents::None;
+	return GetComputedProperty(PropertyId::PointerEvents)->GetEnum<Style::PointerEvents>() == Style::PointerEvents::None;
 }
 
 float Element::GetZIndex() const {
@@ -227,7 +227,7 @@ bool Element::UpdataFontSize() {
 }
 
 bool Element::IsGray() {
-	return GetComputedProperty(PropertyId::Filter)->Get<Style::Filter>() == Style::Filter::Gray;
+	return GetComputedProperty(PropertyId::Filter)->GetEnum<Style::Filter>() == Style::Filter::Gray;
 }
 
 float Element::GetOpacity() {

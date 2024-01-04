@@ -27,6 +27,9 @@ protected:
 		if constexpr(std::is_same_v<T, float>) {
 			return GetComputedProperty(id)->Get<PropertyFloat>().Compute(GetParentNode());
 		}
+		else if constexpr(std::is_enum_v<T>) {
+			return GetComputedProperty(id)->GetEnum<T>();
+		}
 		else {
 			return GetComputedProperty(id)->Get<T>();
 		}

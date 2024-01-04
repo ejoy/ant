@@ -54,7 +54,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
 
-	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<Style::BoxType>();
+	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin)->GetEnum<Style::BoxType>();
 	Rect surface = Rect { {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
 		return false;
@@ -105,7 +105,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		PropertyComputeX(element, *element->GetComputedProperty(PropertyId::BackgroundPositionX)),
 		PropertyComputeY(element, *element->GetComputedProperty(PropertyId::BackgroundPositionY))
 	};
-	switch (element->GetComputedProperty(PropertyId::BackgroundSize)->Get<Style::BackgroundSize>()) {
+	switch (element->GetComputedProperty(PropertyId::BackgroundSize)->GetEnum<Style::BackgroundSize>()) {
 	case Style::BackgroundSize::Contain: {
 		Size scale {
 			surface.size.w / texture.dimensions.w,

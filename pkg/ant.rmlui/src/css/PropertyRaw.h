@@ -23,21 +23,23 @@ namespace Rml {
         template <typename T>
             requires (!std::is_enum_v<T>)
         T Get() const {
-            auto prop = Decode();
-            assert(prop);
-            return std::get<T>((PropertyVariant const&)*prop);
+            static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, T>();
+            strparser<uint8_t> p { m_data.data() };
+            if (index == p.pop<uint8_t>()) {
+                return PropertyDecode(tag_v<T>, p);
+            }
+            throw std::runtime_error("decode property failed.");
         }
 
         template <typename T>
             requires (std::is_enum_v<T>)
-        T Get() const {
+        T GetEnum() const {
             static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, PropertyKeyword>();
             strparser<uint8_t> p { m_data.data() };
             if (index == p.pop<uint8_t>()) {
                 return (T)p.pop<PropertyKeyword>();
             }
-            assert(false);
-            return {};
+            throw std::runtime_error("decode property failed.");
         }
 
         template <typename T>
