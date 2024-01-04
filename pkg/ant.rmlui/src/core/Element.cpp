@@ -1234,7 +1234,19 @@ bool Element::SetRenderStatus() {
 	}
 	auto render = GetRender();
 	render->SetTransform(transform);
-	render->SetClipRect();
+	switch (clip.type) {
+	case ElementClip::Type::None:
+		render->SetClipRect();
+		break;
+	case ElementClip::Type::Scissor:
+		render->SetClipRect(clip.scissor);
+		break;
+	case ElementClip::Type::Shader:
+		render->SetClipRect(clip.shader);
+		break;
+	default:
+		std::unreachable();
+	}
 	return true;
 }
 
