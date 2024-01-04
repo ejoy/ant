@@ -305,19 +305,28 @@ function shadowdebug_sys:data_changed()
 			end
 
 			local sb = w:first "shadow_bounding:in".shadow_bounding
-			add_entity(transform_points(math3d.aabb_points(sb.PSR)),	{0.0, 0.0, 1.0, 1.0})
+			add_entity(math3d.aabb_points(sb.PSR),	{0.0, 0.0, 1.0, 1.0})
 
 			if sb.PSC then
-				add_entity(transform_points(math3d.aabb_points(sb.PSR)),	{0.0, 1.0, 1.0, 1.0})
+				add_entity(math3d.aabb_points(sb.PSC),	{0.0, 1.0, 1.0, 1.0})
 			end
 
-			local C = world:entity(irq.main_camera(), "camera:in").camera
 			for e in w:select "csm:in camera_ref:in" do
 				local ce = world:entity(e.camera_ref, "camera:in scene:in")
 				local L2W = ce.scene.worldmat
 				if ce.camera.Lv2Ndc then
 					add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
 				end
+
+				if ce.camera.sceneaabbLS then
+					add_entity(transform_points(math3d.aabb_points(ce.camera.sceneaabbLS), L2W), {0.0, 1.0, 0.0, 1.0})
+				end
+
+				if ce.camera.verticesLS then
+					add_entity(transform_points(math3d.aabb_points(math3d.minmax(ce.camera.verticesLS)), L2W), {0.0, 1.0, 1.0, 1.0})
+				end
+
+				add_entity(transform_points(math3d.frustum_points(ce.camera.viewprojmat), L2W),	{1.0, 1.0, 0.0, 1.0})
 			end
 		elseif key == 'C' and press == 0 then
 

@@ -526,6 +526,17 @@ function util.aabb_minmax_index(aabb, idx)
 	return math3d.index(minv, idx), math3d.index(maxv, idx)
 end
 
+
+function util.iter_m3darary(m3darray)
+	local n = math3d.array_size(m3darray)
+	return function (_, idx)
+		idx = idx + 1
+		if idx <= n then
+			return idx, math3d.array_index(m3darray, idx)
+		end
+	end, m3darray, 0
+end
+
 return util
 
 end
