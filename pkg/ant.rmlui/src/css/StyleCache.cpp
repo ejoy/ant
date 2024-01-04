@@ -1,7 +1,8 @@
 #include <css/StyleCache.h>
-#include <css/PropertyBinary.h>
+#include <css/PropertyRaw.h>
 #include <assert.h>
 #include <bee/utility/dynarray.h>
+#include <array>
 #include <vector>
 extern "C" {
 #include <style.h>
@@ -33,14 +34,12 @@ namespace Rml::Style {
     }
 
     Value Cache::Create(const PropertyVector& vec) {
-        strbuilder<uint8_t> b;
         bee::dynarray<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            PropertyEncode(b, (PropertyVariant const&)value);
-            auto str = b.string();
-            attrib[i].data = str.data();
-            attrib[i].sz = str.size();
+            auto [prop, size] = PropertyEncode(value);
+            attrib[i].data = (void*)prop.Raw();
+            attrib[i].sz = size;
             attrib[i].key = (uint8_t)id;
             i++;
         }
@@ -90,10 +89,8 @@ namespace Rml::Style {
     }
 
     bool Cache::SetProperty(Value s, PropertyId id, const Property& value) {
-        strbuilder<uint8_t> b;
-        PropertyEncode(b, (PropertyVariant const&)value);
-        auto str = b.string();
-        style_attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
+        auto [prop, size] = PropertyEncode(value);
+        style_attrib attrib = { (void*)prop.Raw(), size, (uint8_t)id, 0 };
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
@@ -103,14 +100,12 @@ namespace Rml::Style {
     }
 
     PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
-        strbuilder<uint8_t> b;
         bee::dynarray<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            PropertyEncode(b, (PropertyVariant const&)value);
-            auto str = b.string();
-            attrib[i].data = str.data();
-            attrib[i].sz = str.size();
+            auto [prop, size] = PropertyEncode(value);
+            attrib[i].data = (void*)prop.Raw();
+            attrib[i].sz = size;
             attrib[i].key = (uint8_t)id;
             i++;
         }
@@ -152,8 +147,8 @@ namespace Rml::Style {
         if (!data) {
             return std::nullopt;
         }
-        strparser<uint8_t> p {(const uint8_t*)data};
-        return PropertyDecode(tag_v<Property>, p);
+        PropertyRaw prop { (const uint8_t*)data };
+        return PropertyDecode(prop);
     }
 
     bool Cache::Has(ValueOrCombination s, PropertyId id) {
@@ -179,7 +174,8 @@ namespace Rml::Style {
             if (!data) {
                 break;
             }
-            if (PropertyIsUnit(unit, data)) {
+            PropertyRaw prop { (const uint8_t*)data };
+            if (prop.IsFloatUnit(unit)) {
                 set.insert(id);
             }
         }

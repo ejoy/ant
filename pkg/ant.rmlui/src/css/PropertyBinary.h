@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <memory>
 #include <array>
+#include <span>
 
 namespace Rml {
     template <class char_t, size_t N = 1024>
@@ -243,15 +244,5 @@ namespace Rml {
             t.emplace_back(PropertyDecode(tag_v<Animation>, data));
         }
         return t;
-    }
-
-    inline bool PropertyIsUnit(PropertyUnit unit, void* data) {
-        static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, PropertyFloat>();
-        strparser<uint8_t> p {(const uint8_t*)data};
-        if (index != p.pop<uint8_t>()) {
-            return false;
-        }
-        auto const& v = p.pop<PropertyFloat>();
-        return v.unit == unit;
     }
 }
