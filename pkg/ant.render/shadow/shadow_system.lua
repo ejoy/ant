@@ -184,33 +184,38 @@ local function M3D(o, n)
 	return math3d.mark(n)
 end
 
+local function calc_light_view_nearfar(intersectpointsLS, sceneaabbLS)
+	local intersectaabb = math3d.minmax(intersectpointsLS)
+	local PSR_farLS = math3d.index(math3d.array_index(sceneaabbLS, 2), 3)
+	local fn, ff = mu.aabb_minmax_index(intersectaabb, 3)
+	--check for PSR far plane distance
+	ff = math.max(ff, PSR_farLS)
+	return fn, ff
+end
+
 local function update_shadow_matrices(si, li, c)
 	local sp = math3d.projmat(c.viewfrustum)
 	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
 
-	local verticesLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
+	local intersectpointsLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
 	-- for debug
-	-- c.verticesLS = M3D(c.verticesLS, verticesLS)
+	-- c.intersectpointsLS = M3D(c.intersectpointsLS, intersectpointsLS)
 	-- c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
 	-- c.sceneaabbLS = M3D(c.sceneaabbLS, si.sceneaabbLS)
 
 	local Lp
-	if mc.NULL ~= verticesLS then
-		local intersectaabb = math3d.minmax(verticesLS)
-		local PSR_farLS = math3d.index(math3d.array_index(si.sceneaabbLS, 2), 3)
-		local fn, ff = mu.aabb_minmax_index(intersectaabb, 3)
-		--check for PSR far plane distance
-		ff = math.max(ff, PSR_farLS)
-
-		c.frustum.n, c.frustum.f = fn, ff
+	if mc.NULL ~= intersectpointsLS then
+		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
+		c.frustum.n, c.frustum.f = n, f
+		si.nearLS, si.farLS = n, f
 		Lp = math3d.projmat(c.frustum, INV_Z)
 		if useLiSPSM then
 			li.Lp = Lp
-			local Wv, Wp = LiSPSM.warp_matrix(si, li, verticesLS)
+			local Wv, Wp = LiSPSM.warp_matrix(si, li, intersectpointsLS)
 			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), Lp)
 		end
 
-		local F = isc.calc_focus_matrix(math3d.minmax(verticesLS, Lp))
+		local F = isc.calc_focus_matrix(math3d.minmax(intersectpointsLS, Lp))
 		Lp 		= math3d.mul(F, Lp)
 	else
 		Lp		= math3d.projmat(c.frustum, INV_Z)

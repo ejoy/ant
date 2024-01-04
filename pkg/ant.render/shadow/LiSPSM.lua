@@ -35,8 +35,8 @@ local function warp_frustum(n, f)
             0.0, 1.0, 0.0, 0.0)
 end
 
--- from filament: ShadowMap:applyLISPSM
-function L.warp_matrix(si, li, lsShadowVolume)
+-- from filament: ShadowMap::applyLISPSM
+function L.warp_matrix(si, li, intersectpointsLS)
     local Lv     = li.Lv
     local Lrp    = math3d.mul(li.Lr, li.Lp)
     local Lrpv   = math3d.mul(Lrp, Lv)
@@ -56,27 +56,23 @@ function L.warp_matrix(si, li, lsShadowVolume)
 
     -- math3d.inverse(Lv) to transform point in light space to worldspace
     -- camerainfo.cameraviewmat to tranfrom point from worldspace to camera view space
-    -- ptCv = Cv * inverse(L) * ptLS
-    --local Lv2Cv = math3d.mul(camerainfo.Cv, math3d.inverse(Lv)) --matrix for transform light view space to camera view space
-    local Lv2Cv = li.Lv2Cv
-    local zn, zf = calc_near_far(Lv2Cv, lsShadowVolume)
-
-    zn = math.max(si.view_near, zn) -- near plane distance from the eye
-    zf = math.min(si.view_far, zf) -- far plane distance from the eye
+    -- zn/zf, near/far plane distance from camera position
+    local zn, zf = si.zn, si.zf
+    assert(zn >= 0 and zf > zn)
 
     -- Compute n and f, the near and far planes coordinates of Wp (warp space).
     -- It's found by looking down the Y axis in light space (i.e. -Z axis of Wp,
     -- i.e. the axis orthogonal to the light direction) and taking the min/max
     -- of the shadow receivers' volume.
     -- Note: znear/zfar encoded in Mp has no influence here (b/c we're interested only by the y-axis)
-    local n_WS, f_WS = calc_near_far(Lrp, lsShadowVolume)
+    local n_WS, f_WS = calc_near_far(Lrp, intersectpointsLS)
     -- const float n = nf[0];              -- near plane coordinate of Mp (light space)
     -- const float f = nf[1];              -- far plane coordinate of Mp (light space)
     local d = math.abs(f_WS - n_WS);    -- Wp's depth-range d (abs necessary because we're dealing with z-coordinates, not distances)
 
     -- The simplification below is correct only for directional lights
-    local z0 = zn;                -- for directional lights, z0 = zn
-    local z1 = z0 + d * sinLV;    -- btw, note that z1 doesn't depend on zf
+    local z0 = zn                -- for directional lights, z0 = zn
+    local z1 = z0 + d * sinLV    -- btw, note that z1 doesn't depend on zf
 
     -- see nopt1 below for an explanation about this test
     -- sinLV is positive since it comes from a square-root
