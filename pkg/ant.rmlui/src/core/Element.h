@@ -41,7 +41,7 @@ struct ElementClip {
 		glm::u16vec4 scissor;
 		glm::vec4 shader[2];
 	};
-	bool Test(const Rect& rect) const
+	bool Test(const Rect& rect) const;
 };
 
 class Element : public LayoutNode {
