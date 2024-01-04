@@ -129,14 +129,13 @@ void Element::Render() {
 	UpdateGeometry();
 	UpdateStackingContext();
 
-	size_t i = 0;
-	for (; i < render_children.size() && render_children[i]->GetZIndex() < 0; ++i) {
-		render_children[i]->Render();
+	for (auto& child: children_under_render) {
+		child->Render();
 	}
 	if (SetRenderStatus()) {
 		geometry.Render();
-		for (; i < render_children.size(); ++i) {
-			render_children[i]->Render();
+		for (auto& child: children_upper_render) {
+			child->Render();
 		}
 	}
 }
@@ -743,21 +742,31 @@ void Element::UpdateStackingContext() {
 		return;
 	}
 	dirty.erase(Dirty::StackingContext);
-	render_children.clear();
-	render_children.reserve(childnodes.size());
+	children_under_render.clear();
+	children_upper_render.clear();
 	for (auto& child : childnodes) {
 		switch (child->GetType()) {
 		case Node::Type::Element:
 		case Node::Type::Text: {
 			auto node = static_cast<LayoutNode*>(child.get());
-			render_children.push_back(node);
+			if (node->GetZIndex() < 0) {
+				children_under_render.push_back(node);
+			}
+			else {
+				children_upper_render.push_back(node);
+			}
 			break;
 		}
 		case Node::Type::Comment:
 			break;
 		}
 	}
-	std::stable_sort(render_children.begin(), render_children.end(),
+	std::stable_sort(children_under_render.begin(), children_under_render.end(),
+		[](auto&& lhs, auto&& rhs) {
+			return lhs->GetZIndex() < rhs->GetZIndex();
+		}
+	);
+	std::stable_sort(children_upper_render.begin(), children_upper_render.end(),
 		[](auto&& lhs, auto&& rhs) {
 			return lhs->GetZIndex() < rhs->GetZIndex();
 		}
@@ -1119,7 +1128,7 @@ Element* Element::ElementFromPoint(Point point) {
 	}
 	if (InClip(clip, point)) {
 		UpdateStackingContext();
-		for (auto iter = render_children.rbegin(); iter != render_children.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
+		for (auto iter = children_upper_render.rbegin(); iter != children_upper_render.rend(); ++iter) {
 			Element* res = (*iter)->ElementFromPoint(point);
 			if (res) {
 				return res;

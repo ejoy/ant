@@ -188,7 +188,8 @@ protected:
 	ElementAttributes attributes;
 	std::vector<std::unique_ptr<Node>> childnodes;
 	std::vector<Element*> children;
-	std::vector<LayoutNode*> render_children;
+	std::vector<LayoutNode*> children_upper_render;
+	std::vector<LayoutNode*> children_under_render;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
