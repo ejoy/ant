@@ -9,11 +9,9 @@ extern "C" {
 constexpr inline style_handle_t STYLE_NULL = {0};
 
 namespace Rml::Style {
-    struct Attrib: public style_attrib {
-        ~Attrib() {
-            delete[] (uint8_t*)data;
-        }
-    };
+    static void AttribFree(void *ptr, void *ud) {
+        delete[] (uint8_t*)ptr;
+    }
 
     Cache::Cache(const PropertyIdSet& inherit) {
         uint8_t inherit_mask[128] = {0};
@@ -25,7 +23,7 @@ namespace Rml::Style {
     }
 
     Cache::~Cache() {
-        style_deletecache(c);
+        style_deletecache(c, AttribFree, nullptr);
     }
 
     Value Cache::Create() {
@@ -35,7 +33,7 @@ namespace Rml::Style {
 
     Value Cache::Create(const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(vec.size());
+        std::vector<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
@@ -94,7 +92,7 @@ namespace Rml::Style {
         strbuilder<uint8_t> b;
         PropertyEncode(b, (PropertyVariant const&)value);
         auto str = b.string();
-        Attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
+        style_attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
@@ -105,7 +103,7 @@ namespace Rml::Style {
 
     PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(vec.size());
+        std::vector<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
@@ -128,7 +126,7 @@ namespace Rml::Style {
     }
 
     PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
-        std::vector<Attrib> attrib(set.size());
+        std::vector<style_attrib> attrib(set.size());
         size_t i = 0;
         for (auto id : set) {
             attrib[i].data = NULL;
@@ -213,7 +211,7 @@ namespace Rml::Style {
     }
 
     void Cache::Flush() {
-        style_flush(c);
+        style_flush(c, AttribFree, nullptr);
     }
 
     static Cache* cahce = nullptr;
