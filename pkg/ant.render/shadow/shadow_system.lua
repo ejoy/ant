@@ -288,7 +288,7 @@ function shadow_sys:update_camera_depend()
 	local zn, zf = assert(sb.zn), assert(sb.zf)
 	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
-	local csmfrustums = isc.calc_split_frustums(CF, zn, zf)
+	local csmfrustums = isc.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat

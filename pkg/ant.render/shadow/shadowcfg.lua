@@ -25,36 +25,32 @@ local SHADOW_CFG = {
 	height				= setting:get "graphic/shadow/height",
 	split_ratios		= setting:get "graphic/shadow/split_ratios",
 	cross_delta			= setting:get "graphic/shadow/cross_delta"		or 0,
-	type				= setting:get "graphic/shadow/type",
 }
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 
 if SHADOW_CFG.split_ratios then
-	if SHADOW_CFG.split_num then
-		if #SHADOW_CFG.split_ratios ~= (SHADOW_CFG.split_num)  then
-			error(("#split_ratios == split_num - 1: %d, %d"):format(#SHADOW_CFG.split_ratios, SHADOW_CFG.split_num))
+	if nil ~= SHADOW_CFG.split_num then
+		if SHADOW_CFG.split_num ~= #SHADOW_CFG.split_ratios then
+			error(("split_num:%d is not equal SHADOW_CFG.split_ratios number"):format(SHADOW_CFG.split_num, #SHADOW_CFG.split_ratios))
 		end
 	else
 		SHADOW_CFG.split_num = #SHADOW_CFG.split_ratios
 	end
-else
-	if SHADOW_CFG.split_weight then
-		SHADOW_CFG.split_num	= assert(SHADOW_CFG.split_num)
-		SHADOW_CFG.split_weight= math.max(0, math.min(1, SHADOW_CFG.split_weight))
-	else
-		SHADOW_CFG.split_num = 4
- 		SHADOW_CFG.split_ratios = {
- 			{0.00,0.1},
-			{0.1,0.30},
-			{0.3,0.40},
-			{0.4,0.68} 
-		}
+
+	if #SHADOW_CFG.split_ratios > 4 then
+		error(("max csm split num should lower than 4, %d is defined"):format(#SHADOW_CFG.split_ratios))
 	end
+else
+	if nil == SHADOW_CFG.split_num then
+		error "'split_ratios' or 'split_num' must be defined"
+	end
+
+	log.info("'split_ratios' is not define, use log split algrithom")
 end
 
 SHADOW_CFG.shadow_param1	= math3d.ref(math3d.vector(SHADOW_CFG.split_num, SHADOW_CFG.min_variance, 1/SHADOW_CFG.shadowmap_size, SHADOW_CFG.depth_multiplier or 1.0))
-SHADOW_CFG.shadow_param2	= math3d.ref(math3d.vector(SHADOW_CFG.color[1], SHADOW_CFG.color[2], SHADOW_CFG.color[3], SHADOW_CFG.normal_offset))
+SHADOW_CFG.shadow_param2	= math3d.ref(math3d.vector(0.0, 0.0, 0.0, SHADOW_CFG.normal_offset))
 SHADOW_CFG.split_frustums	= {nil, nil, nil, nil}
 
 
@@ -79,25 +75,6 @@ SHADOW_CFG.fb_index = fbmgr.create(
 		}
 	}
 )
-
---[[ SHADOW_CFG.sqfb_index = fbmgr.create{
-	sqrbidx = fbmgr.create_rb{
-		format = "R16F",
-		w=SHADOW_CFG.shadowmap_size * SHADOW_CFG.split_num,
-		h=SHADOW_CFG.shadowmap_size,
-		layers=1,
-		flags=sampler{
-			MIN="POINT",
-			MAG="POINT",
-			U="CLAMP",
-			V="CLAMP",
-			RT="RT_ON",
-		}
-	}
-}
- ]]
-
-
 
 local isc = {}
 
@@ -133,10 +110,6 @@ function isc.fb_index()
 	return SHADOW_CFG.fb_index
 end
 
---[[ function isc.sqfb_index()
-	return SHADOW_CFG.sqfb_index
-end ]]
-
 function isc.shadow_param1()
 	return SHADOW_CFG.shadow_param1
 end
@@ -145,63 +118,12 @@ function isc.shadow_param2()
 	return SHADOW_CFG.shadow_param2
 end
 
-local function split_new_frustum(view_frustum, n, f)
-	local frustum = {}
-	for k, v in pairs(view_frustum) do
-		frustum[k] = v
-	end
-
-	frustum.n, frustum.f = n, f
-	return frustum
-end
-
 function isc.split_frustums()
 	return SHADOW_CFG.split_frustums
 end
 
 function isc.shadowmap_size()
 	return SHADOW_CFG.shadowmap_size
-end
-
-function isc.calc_split_frustums(view_frustum, view_near, view_far)
-	local split_weight = SHADOW_CFG.split_weight
-	local frustums = SHADOW_CFG.split_frustums
-	view_near = view_near or view_frustum.n
-	view_far = view_far or view_frustum.f
-	local clip_range = view_far - view_near
-	local split_num = SHADOW_CFG.split_num
-
-	if split_weight then
- 		local ratio = view_far/view_near
-		local num_sclies = split_num*2
-		local nearclip = view_near
-		local farclip
-		local cross_multipler = (1.0+SHADOW_CFG.cross_delta)
-		local nn=2
-		local ff=1
-		while nn < num_sclies do
-			local si = ff / num_sclies
-			farclip = split_weight*(view_near*(ratio^si)) + (1-split_weight)*(view_near + clip_range*si)
-			frustums[nn/2] = split_new_frustum(view_frustum, nearclip, farclip)
-			nearclip = farclip / cross_multipler
-			nn = nn + 2
-			ff = ff + 2
-		end
-		farclip = view_far
-		frustums[nn/2] = split_new_frustum(view_frustum, nearclip, farclip)
-
-	else
-		local function calc_clip(r)
-			return view_near + clip_range * r
-		end
-
-		for i=1, split_num do
-			local ratio = SHADOW_CFG.split_ratios[i]
-			local near_clip, far_clip = calc_clip(ratio[1]), calc_clip(ratio[2])
-			frustums[i] = split_new_frustum(view_frustum, near_clip, far_clip)
-		end
-	end
-	return frustums
 end
 
 function isc.split_num()
@@ -271,7 +193,7 @@ end
 
 function isc.split_viewfrustum(zn, zf, viewfrustum)
 	local f = {}
-	local ratios = isc.split_positions_to_ratios(isc.calc_split_positions(zn, zf))
+	local ratios = SHADOW_CFG.split_ratios or isc.split_positions_to_ratios(isc.calc_split_positions(zn, zf))
 	for _, r in ipairs(ratios) do
 		f[#f+1] = create_sub_viewfrustum(zn, zf, r, viewfrustum)
 	end

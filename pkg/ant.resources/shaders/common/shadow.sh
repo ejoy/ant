@@ -21,7 +21,6 @@ uniform vec4 u_shadow_param2;
 #define u_shadowmap_texelsize	u_shadow_param1.z
 #define u_depthMultiplier 		u_shadow_param1.w
 
-#define u_shadow_color			u_shadow_param2.rgb
 #define u_normal_offset 		u_shadow_param2.w
 
 // omni

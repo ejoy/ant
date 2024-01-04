@@ -39,16 +39,12 @@ graphic:
     clear_depth: 1
     clear_stencil: 0
   shadow:
-    color: {0, 0, 0, 1}
-    depth_multiplier: 100
     enable: true
-    far_offset: 0
-    min_variance: 0.012
     normal_offset: 1.0
     size: 1024
-    split_lamada: 0.8
-    split_num: 1
-    height: 5
     split_ratios:
       {0.00, 1.00}
-    type: inv_z
+    vsm:
+      depth_multiplier: 100
+      far_offset: 0
+      min_variance: 0.012
