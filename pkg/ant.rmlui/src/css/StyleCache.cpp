@@ -16,10 +16,6 @@ namespace Rml::Style {
         }
     };
 
-    static void AttribFree(void *ptr, void *ud) {
-        delete[] (uint8_t*)ptr;
-    }
-
     Cache::Cache(const PropertyIdSet& inherit) {
         uint8_t inherit_mask[128] = {0};
         for (auto id : inherit) {
