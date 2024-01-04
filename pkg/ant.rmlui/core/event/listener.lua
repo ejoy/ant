@@ -49,6 +49,9 @@ end
 
 function m.dispatch(document, element, type, eventData)
     local D = E[document]
+    if not D then
+        return
+    end
     local listeners = {}
     local elements = {}
     local walk_element = element
