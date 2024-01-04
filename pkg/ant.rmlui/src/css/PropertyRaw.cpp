@@ -1,33 +1,36 @@
 #include <css/PropertyRaw.h>
 
 namespace Rml {
-    std::tuple<PropertyRaw, size_t> PropertyEncode(const Property& prop) {
+    PropertyRaw PropertyEncode(const Property& prop) {
         strbuilder<uint8_t> b;
         PropertyEncode(b, (PropertyVariant const&)prop);
-        auto view = b.string();
-        return {
-            PropertyRaw { view.data() },
-            view.size(),
-        };
+        return PropertyRaw { b.string() };
     }
 
+    PropertyRaw::PropertyRaw(void* data, size_t size)
+        : m_data { (uint8_t*)data, size }
+    {}
 
-    PropertyRaw::PropertyRaw(const uint8_t* data)
+    PropertyRaw::PropertyRaw(std::span<uint8_t> data)
         : m_data(data)
     {}
 
-    const uint8_t* PropertyRaw::Raw() const {
-        return m_data;
+    void* PropertyRaw::RawData() const {
+        return (void*)m_data.data();
+    }
+
+    size_t PropertyRaw::RawSize() const {
+        return m_data.size();
     }
 
     std::optional<Property> PropertyRaw::Decode() const {
-        strparser<uint8_t> p { m_data };
+        strparser<uint8_t> p { m_data.data() };
         return PropertyDecode(tag_v<Property>, p);
     }
 
     bool PropertyRaw::IsFloatUnit(PropertyUnit unit) const {
         static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, PropertyFloat>();
-        strparser<uint8_t> p { m_data };
+        strparser<uint8_t> p { m_data.data() };
         if (index != p.pop<uint8_t>()) {
             return false;
         }

@@ -3,17 +3,20 @@
 #include <css/Property.h>
 #include <css/PropertyBinary.h>
 #include <optional>
+#include <span>
 #include <tuple>
 
 namespace Rml {
     class PropertyRaw;
 
-    std::tuple<PropertyRaw, size_t> PropertyEncode(const Property& prop);
+    PropertyRaw PropertyEncode(const Property& prop);
 
     class PropertyRaw {
     public:
-        PropertyRaw(const uint8_t* data);
-        const uint8_t* Raw() const;
+        PropertyRaw(void* data, size_t size);
+        PropertyRaw(std::span<uint8_t> data);
+        void* RawData() const;
+        size_t RawSize() const;
         bool IsFloatUnit(PropertyUnit unit) const;
         std::optional<Property> Decode() const;
         std::string ToString() const;
@@ -29,7 +32,7 @@ namespace Rml {
             requires (std::is_enum_v<T>)
         T Get() const {
             static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, PropertyKeyword>();
-            strparser<uint8_t> p { m_data };
+            strparser<uint8_t> p { m_data.data() };
             if (index == p.pop<uint8_t>()) {
                 return (T)p.pop<PropertyKeyword>();
             }
@@ -40,11 +43,11 @@ namespace Rml {
         template <typename T>
         bool Has() const {
             static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, T>();
-            strparser<uint8_t> p { m_data };
+            strparser<uint8_t> p { m_data.data() };
             return index == p.pop<uint8_t>();
         }
     private:
-        const uint8_t* m_data;
+        std::span<uint8_t> m_data;
     };
 
     inline float PropertyComputeX(const Element* e, const PropertyRaw& p) {

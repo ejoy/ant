@@ -42,9 +42,9 @@ namespace Rml::Style {
         std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            auto [prop, size] = PropertyEncode(value);
-            attrib[i].data = (void*)prop.Raw();
-            attrib[i].sz = size;
+            auto prop = PropertyEncode(value);
+            attrib[i].data = prop.RawData();
+            attrib[i].sz = prop.RawSize();
             attrib[i].key = (uint8_t)id;
             i++;
         }
@@ -94,8 +94,8 @@ namespace Rml::Style {
     }
 
     bool Cache::SetProperty(Value s, PropertyId id, const Property& value) {
-        auto [prop, size] = PropertyEncode(value);
-        style_attrib attrib = { (void*)prop.Raw(), size, (uint8_t)id, 0 };
+        auto prop = PropertyEncode(value);
+        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id, 0 };
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
@@ -108,9 +108,9 @@ namespace Rml::Style {
         std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            auto [prop, size] = PropertyEncode(value);
-            attrib[i].data = (void*)prop.Raw();
-            attrib[i].sz = size;
+            auto prop = PropertyEncode(value);
+            attrib[i].data = prop.RawData();
+            attrib[i].sz = prop.RawSize();
             attrib[i].key = (uint8_t)id;
             i++;
         }
@@ -148,23 +148,23 @@ namespace Rml::Style {
     }
 
     std::optional<PropertyRaw> Cache::Find(ValueOrCombination s, PropertyId id) {
-        void* data = style_find(c, {s.idx}, (uint8_t)id);
+        size_t size;
+        void* data = style_find(c, {s.idx}, (uint8_t)id, &size);
         if (!data) {
             return std::nullopt;
         }
-        PropertyRaw prop { (const uint8_t*)data };
-        return prop;
+        return PropertyRaw { data, size };
     }
 
     bool Cache::Has(ValueOrCombination s, PropertyId id) {
-        void* data = style_find(c, {s.idx}, (uint8_t)id);
+        void* data = style_find(c, {s.idx}, (uint8_t)id, nullptr);
         return !!data;
     }
 
     void Cache::Foreach(ValueOrCombination s, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
             PropertyId id;
-            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id);
+            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id, nullptr);
             if (!data) {
                 break;
             }
@@ -175,11 +175,12 @@ namespace Rml::Style {
     void Cache::Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
             PropertyId id;
-            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id);
+            size_t size;
+            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id, &size);
             if (!data) {
                 break;
             }
-            PropertyRaw prop { (const uint8_t*)data };
+            PropertyRaw prop { data, size };
             if (prop.IsFloatUnit(unit)) {
                 set.insert(id);
             }
@@ -191,7 +192,7 @@ namespace Rml::Style {
         datas.fill(nullptr);
         for (int i = 0;; ++i) {
             PropertyId id;
-            void* data = style_index(c, {t.idx}, i, (uint8_t*)&id);
+            void* data = style_index(c, {t.idx}, i, (uint8_t*)&id, nullptr);
             if (!data) {
                 break;
             }
