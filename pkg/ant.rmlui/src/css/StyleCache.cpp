@@ -1,6 +1,7 @@
 #include <css/StyleCache.h>
 #include <css/PropertyBinary.h>
 #include <assert.h>
+#include <bee/utility/dynarray.h>
 #include <vector>
 extern "C" {
 #include <style.h>
@@ -33,7 +34,7 @@ namespace Rml::Style {
 
     Value Cache::Create(const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<style_attrib> attrib(vec.size());
+        bee::dynarray<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
@@ -103,7 +104,7 @@ namespace Rml::Style {
 
     PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<style_attrib> attrib(vec.size());
+        bee::dynarray<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
@@ -126,7 +127,7 @@ namespace Rml::Style {
     }
 
     PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
-        std::vector<style_attrib> attrib(set.size());
+        bee::dynarray<style_attrib> attrib(set.size());
         size_t i = 0;
         for (auto id : set) {
             attrib[i].data = NULL;
