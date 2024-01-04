@@ -24,6 +24,12 @@ struct HtmlElement;
 
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 
+struct ElementAabb {
+	Rect content;
+	bool normalize;
+	void Set(const Rect& rect, const glm::mat4x4& transform);
+};
+
 struct ElementClip {
 	enum class Type : uint8_t {
 		None,
@@ -35,6 +41,7 @@ struct ElementClip {
 		glm::u16vec4 scissor;
 		glm::vec4 shader[2];
 	};
+	bool Test(const Rect& rect) const
 };
 
 class Element : public LayoutNode {
@@ -198,7 +205,7 @@ protected:
 	Style::Combination global_properties = Style::Instance().Inherit(local_properties);
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
-	std::optional<Rect> render_rect;
+	ElementAabb aabb;
 	Rect content_rect;
 	EdgeInsets<float> padding{};
 	EdgeInsets<float> border{};

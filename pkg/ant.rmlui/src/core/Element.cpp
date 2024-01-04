@@ -21,6 +21,59 @@
 
 namespace Rml {
 
+static float min4(float a, float b, float c, float d) {
+	return std::min(std::min(a, b), std::min(c, d));
+}
+
+static float max4(float a, float b, float c, float d) {
+	return std::max(std::max(a, b), std::max(c, d));
+}
+
+void ElementAabb::Set(const Rect& rect, const glm::mat4x4& transform) {
+	glm::vec4 corners[] = {
+		{ rect.left(),  rect.top(),    0, 1 },
+		{ rect.right(), rect.top(),    0, 1 },
+		{ rect.right(), rect.bottom(), 0, 1 },
+		{ rect.left(),  rect.bottom(), 0, 1 },
+	};
+	for (auto& c : corners) {
+		c = transform * c;
+		c /= c.w;
+	}
+	if (corners[0].x == corners[3].x
+		&& corners[0].y == corners[1].y
+		&& corners[2].x == corners[1].x
+		&& corners[2].y == corners[3].y
+	) {
+		content.SetRect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[2].y - corners[0].y);
+		normalize = true;
+		return;
+	}
+	float l = min4(corners[0].x, corners[1].x, corners[2].x, corners[3].x);
+	float t = min4(corners[0].y, corners[1].y, corners[2].y, corners[3].y);
+	float r = max4(corners[0].x, corners[1].x, corners[2].x, corners[3].x);
+	float b = max4(corners[0].y, corners[1].y, corners[2].y, corners[3].y);
+	content.SetRect(l, t, r - l, b - t);
+	normalize = false;
+}
+
+bool ElementClip::Test(const Rect& rect) const {
+	switch (type) {
+	case ElementClip::Type::None:
+		return true;
+	case ElementClip::Type::Any:
+		return false;
+	case ElementClip::Type::Scissor: {
+		return true;
+	}
+	case ElementClip::Type::Shader: {
+		return true;
+	}
+	default:
+		std::unreachable();
+	}
+}
+
 Element::Element(Document* owner, const std::string& tag)
 	: LayoutNode(Layout::UseElement {})
 	, tag(tag)
@@ -922,13 +975,7 @@ void Element::UpdateTransform() {
 		have_inv_transform = true;
 		inv_transform.reset();
 	}
-	auto rect = Rect { {}, GetBounds().size };
-	if (rect.Transform(transform)) {
-		render_rect = rect;
-	}
-	else {
-		render_rect = std::nullopt;
-	}
+	aabb.Set(Rect { {}, GetBounds().size }, transform);
 }
 
 void Element::UpdatePerspective() {
@@ -1041,7 +1088,6 @@ static bool InClip(ElementClip& clip, Point point) {
 	}
 	case ElementClip::Type::Scissor:
 		return Rect { (float)clip.scissor.x, (float)clip.scissor.y, (float)clip.scissor.z, (float)clip.scissor.w }.Contains(point);
-		break;
 	default:
 		std::unreachable();
 	}
@@ -1060,13 +1106,11 @@ Element* Element::ElementFromPoint(Point point) {
 			}
 		}
 	}
-	if (!IgnorePointerEvents()) {
-		if (render_rect) {
-			if (render_rect->Contains(point)) {
+	if (aabb.content.Contains(point)) {
+		if (!IgnorePointerEvents()) {
+			if (aabb.normalize) {
 				return this;
 			}
-		}
-		else {
 			if (Project(point)) {
 				if (Rect { {}, GetBounds().size }.Contains(point)) {
 					return this;
@@ -1185,30 +1229,12 @@ void Element::UpdateClip() {
 }
 
 bool Element::SetRenderStatus() {
-	switch (clip.type) {
-	case ElementClip::Type::None: {
-		auto render = GetRender();
-		render->SetTransform(transform);
-		render->SetClipRect();
-		return true;
-	}
-	case ElementClip::Type::Any:
+	if (!clip.Test(aabb.content)) {
 		return false;
-	case ElementClip::Type::Scissor: {
-		auto render = GetRender();
-		render->SetTransform(transform);
-		render->SetClipRect(clip.scissor);
-		return true;
 	}
-	case ElementClip::Type::Shader: {
-		auto render = GetRender();
-		render->SetTransform(transform);
-		render->SetClipRect(clip.shader);
-		return true;
-	}
-	default:
-		std::unreachable();
-	}
+	auto render = GetRender();
+	render->SetTransform(transform);
+	render->SetClipRect();
 }
 
 void Element::DirtyTransform() {
