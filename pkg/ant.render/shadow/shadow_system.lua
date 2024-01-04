@@ -130,7 +130,7 @@ function shadow_sys:init()
 	end
 
 	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(isc.fb_index(), 1).handle)
-	imaterial.system_attrib_update("u_shadow_param1", isc.shadow_param())
+	imaterial.system_attrib_update("u_shadow_param1", isc.shadow_param1())
 	imaterial.system_attrib_update("u_shadow_param2", isc.shadow_param2())
 end
 

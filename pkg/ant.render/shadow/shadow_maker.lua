@@ -229,7 +229,7 @@ end
 
 function sm:init_world()
 	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
-	imaterial.system_attrib_update("u_shadow_param1", ishadow.shadow_param())
+	imaterial.system_attrib_update("u_shadow_param1", ishadow.shadow_param1())
 	imaterial.system_attrib_update("u_shadow_param2", ishadow.shadow_param2())
 end
 

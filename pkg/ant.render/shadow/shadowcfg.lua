@@ -30,10 +30,6 @@ local SHADOW_CFG = {
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 
-SHADOW_CFG.shadow_param		= math3d.ref(math3d.vector(0, SHADOW_CFG.min_variance, 1/SHADOW_CFG.shadowmap_size, SHADOW_CFG.depth_multiplier or 1.0))
-SHADOW_CFG.shadow_param2	= math3d.ref(math3d.vector(SHADOW_CFG.color[1], SHADOW_CFG.color[2], SHADOW_CFG.color[3], SHADOW_CFG.normal_offset))
-SHADOW_CFG.split_frustums	= {nil, nil, nil, nil}
-
 if SHADOW_CFG.split_ratios then
 	if SHADOW_CFG.split_num then
 		if #SHADOW_CFG.split_ratios ~= (SHADOW_CFG.split_num)  then
@@ -56,6 +52,10 @@ else
 		}
 	end
 end
+
+SHADOW_CFG.shadow_param1	= math3d.ref(math3d.vector(SHADOW_CFG.split_num, SHADOW_CFG.min_variance, 1/SHADOW_CFG.shadowmap_size, SHADOW_CFG.depth_multiplier or 1.0))
+SHADOW_CFG.shadow_param2	= math3d.ref(math3d.vector(SHADOW_CFG.color[1], SHADOW_CFG.color[2], SHADOW_CFG.color[3], SHADOW_CFG.normal_offset))
+SHADOW_CFG.split_frustums	= {nil, nil, nil, nil}
 
 
 assert(SHADOW_CFG.split_num ~= nil)
@@ -137,8 +137,8 @@ end
 	return SHADOW_CFG.sqfb_index
 end ]]
 
-function isc.shadow_param()
-	return SHADOW_CFG.shadow_param
+function isc.shadow_param1()
+	return SHADOW_CFG.shadow_param1
 end
 
 function isc.shadow_param2()
