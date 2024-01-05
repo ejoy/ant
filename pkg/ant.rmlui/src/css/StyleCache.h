@@ -34,7 +34,6 @@ namespace Rml::Style {
         bool                        Assgin(TableValue to, TableCombination from);
         bool                        Compare(TableValue a, TableCombination b);
         void                        Clone(TableValue to, TableValue from);
-        bool                        SetProperty(TableValue s, PropertyId id, const Property& value);
         bool                        SetProperty(TableValue s, PropertyId id, const PropertyView& value);
         bool                        DelProperty(TableValue s, PropertyId id);
         PropertyIdSet               SetProperty(TableValue s, const PropertyVector& vec);

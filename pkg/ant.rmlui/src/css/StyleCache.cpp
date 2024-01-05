@@ -86,13 +86,6 @@ namespace Rml::Style {
         style_release(c, {s.idx});
     }
 
-    bool Cache::SetProperty(TableValue s, PropertyId id, const Property& value) {
-        auto prop = PropertyEncode(value);
-        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
-        int attrib_id = style_attrib_id(c, &attrib);
-        return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
-    }
-
     bool Cache::SetProperty(TableValue s, PropertyId id, const PropertyView& prop) {
         style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
         int attrib_id = style_attrib_id(c, &attrib);

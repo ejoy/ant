@@ -127,17 +127,9 @@ public:
 	std::optional<PropertyView> GetInlineProperty(PropertyId id) const;
 	std::optional<PropertyView> GetLocalProperty(PropertyId id) const;
 	std::optional<PropertyView> GetComputedProperty(PropertyId id) const;
-	template <typename T>
-	auto GetProperty(PropertyId id) const {
-		if constexpr(std::is_same_v<T, float>) {
-			return GetComputedProperty(id)->Get<T>(this);
-		}
-		else {
-			return GetComputedProperty(id)->Get<T>();
-		}
-	}
 
-	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
+	bool SetProperty(const std::string& name, const std::string& value);
+	bool DelProperty(const std::string& name);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
 	void UpdateProperties();

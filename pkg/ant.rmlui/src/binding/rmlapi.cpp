@@ -458,7 +458,7 @@ lElementSetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	std::string name = lua_checkstdstring(L, 2);
 	if (lua_isnoneornil(L, 3)) {
-		e->SetProperty(name);
+		e->DelProperty(name);
 	}
 	else {
 		std::string value = lua_checkstdstring(L, 3);
