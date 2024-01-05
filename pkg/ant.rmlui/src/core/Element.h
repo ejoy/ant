@@ -124,9 +124,9 @@ public:
 	void SetAnimationProperty(PropertyId id, const PropertyView& property);
 	void DelAnimationProperty(PropertyId id);
 
-	std::optional<PropertyView> GetInlineProperty(PropertyId id) const;
-	std::optional<PropertyView> GetLocalProperty(PropertyId id) const;
-	std::optional<PropertyView> GetComputedProperty(PropertyId id) const;
+	PropertyView GetInlineProperty(PropertyId id) const;
+	PropertyView GetLocalProperty(PropertyId id) const;
+	PropertyView GetComputedProperty(PropertyId id) const;
 
 	bool SetProperty(const std::string& name, const std::string& value);
 	bool DelProperty(const std::string& name);

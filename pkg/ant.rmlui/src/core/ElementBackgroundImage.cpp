@@ -42,11 +42,11 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 
 bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
-	if (!image->Has<std::string>()) {
+	if (!image.Has<std::string>()) {
 		// "none"
 		return false;
 	}
-	std::string path = image->Get<std::string>();
+	std::string path = image.Get<std::string>();
 	if (path.empty()) {
 		return false;
 	}
@@ -54,7 +54,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
 
-	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin)->GetEnum<Style::BoxType>();
+	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin).GetEnum<Style::BoxType>();
 	Rect surface = Rect { {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
 		return false;
@@ -81,9 +81,9 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 	else {
 		auto property = element->GetComputedProperty(PropertyId::BackgroundFilter);
-		if (!property->Has<PropertyKeyword>()) {
+		if (!property.Has<PropertyKeyword>()) {
 			setGray = true;
-			color = property->Get<Color>();
+			color = property.Get<Color>();
 		}
 	}
 	color.ApplyOpacity(element->GetOpacity());
@@ -102,10 +102,10 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 
 	Rect background {};
 	background.origin = surface.origin + Point {
-		PropertyComputeX(element, *element->GetComputedProperty(PropertyId::BackgroundPositionX)),
-		PropertyComputeY(element, *element->GetComputedProperty(PropertyId::BackgroundPositionY))
+		PropertyComputeX(element, element->GetComputedProperty(PropertyId::BackgroundPositionX)),
+		PropertyComputeY(element, element->GetComputedProperty(PropertyId::BackgroundPositionY))
 	};
-	switch (element->GetComputedProperty(PropertyId::BackgroundSize)->GetEnum<Style::BackgroundSize>()) {
+	switch (element->GetComputedProperty(PropertyId::BackgroundSize).GetEnum<Style::BackgroundSize>()) {
 	case Style::BackgroundSize::Contain: {
 		Size scale {
 			surface.size.w / texture.dimensions.w,
@@ -151,8 +151,8 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	default:
 	case Style::BackgroundSize::Unset: {
 		background.size = {
-			element->GetComputedProperty(PropertyId::BackgroundSizeX)->Get<PropertyFloat>().ComputeW(element),
-			element->GetComputedProperty(PropertyId::BackgroundSizeY)->Get<PropertyFloat>().ComputeH(element)
+			element->GetComputedProperty(PropertyId::BackgroundSizeX).Get<PropertyFloat>().ComputeW(element),
+			element->GetComputedProperty(PropertyId::BackgroundSizeY).Get<PropertyFloat>().ComputeH(element)
 		};
 		break;
 	}
@@ -162,17 +162,17 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	Material* material = GetRender()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
 	geometry.SetMaterial(material);
 
-	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
+	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1).Get<PropertyFloat>().value / 100.0f;
 	if (lattice_x1 > 0) {
 		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
 			return false;
 		}
 		else {
-			auto lattice_y1 = element->GetComputedProperty(PropertyId::BackgroundLatticeY1)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_x2 = element->GetComputedProperty(PropertyId::BackgroundLatticeX2)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_y2 = element->GetComputedProperty(PropertyId::BackgroundLatticeY2)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_u = element->GetComputedProperty(PropertyId::BackgroundLatticeU)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_v = element->GetComputedProperty(PropertyId::BackgroundLatticeV)->Get<PropertyFloat>().value / 100.0f;			
+			auto lattice_y1 = element->GetComputedProperty(PropertyId::BackgroundLatticeY1).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_x2 = element->GetComputedProperty(PropertyId::BackgroundLatticeX2).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_y2 = element->GetComputedProperty(PropertyId::BackgroundLatticeY2).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_u = element->GetComputedProperty(PropertyId::BackgroundLatticeU).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_v = element->GetComputedProperty(PropertyId::BackgroundLatticeV).Get<PropertyFloat>().value / 100.0f;			
 			std::vector<Rect> surface_array(9);
 			std::vector<Rect> uv_array(9);
 			GetRectArray(lattice_x1, lattice_y1, lattice_x2, lattice_y2, surface, surface_array);

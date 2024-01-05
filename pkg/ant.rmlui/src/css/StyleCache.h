@@ -38,12 +38,15 @@ namespace Rml::Style {
         bool                        DelProperty(TableValue s, PropertyId id);
         PropertyIdSet               SetProperty(TableValue s, const PropertyVector& vec);
         PropertyIdSet               DelProperty(TableValue s, const PropertyIdSet& set);
-        std::optional<PropertyView> Find(TableValueOrCombination s, PropertyId id);
+        PropertyView                Find(TableValueOrCombination s, PropertyId id);
         bool                        Has(TableValueOrCombination s, PropertyId id);
         void                        Foreach(TableValueOrCombination s, PropertyIdSet& set);
         void                        Foreach(TableValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);
         PropertyIdSet               Diff(TableValueOrCombination a, TableValueOrCombination b);
         void                        Flush();
+        PropertyView                CreateProperty(PropertyId id, std::span<uint8_t> value);
+        PropertyId                  GetPropertyId(PropertyView prop);
+        std::span<uint8_t>          GetPropertyData(PropertyView prop);
 
     private:
         style_cache* c;

@@ -30,7 +30,7 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
-std::optional<PropertyView> Text::GetComputedProperty(PropertyId id) {
+PropertyView Text::GetComputedProperty(PropertyId id) {
 	return GetParentNode()->GetComputedProperty(id);
 }
 
@@ -312,10 +312,10 @@ float Text::GetLineHeight() {
 	int ascent, descent, lineGap;
 	GetRender()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
 	auto property = GetComputedProperty(PropertyId::LineHeight);
-	if (property->Has<PropertyKeyword>()) {
+	if (property.Has<PropertyKeyword>()) {
 		return float(ascent - descent + lineGap);
 	}
-	float percent = property->Get<PropertyFloat>().Compute(GetParentNode());
+	float percent = property.Get<PropertyFloat>().Compute(GetParentNode());
 	return (ascent - descent) * percent;
 }
 
@@ -323,10 +323,10 @@ float Text::GetBaseline() {
 	int ascent, descent, lineGap;
 	GetRender()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
 	auto property = GetComputedProperty(PropertyId::LineHeight);
-	if (property->Has<PropertyKeyword>()) {
+	if (property.Has<PropertyKeyword>()) {
 		return ascent + lineGap / 2.f;
 	}
-	float percent = property->Get<PropertyFloat>().Compute(GetParentNode());
+	float percent = property.Get<PropertyFloat>().Compute(GetParentNode());
 	return ascent + (ascent - descent) * (percent-1.f) / 2.f;
 }
 
@@ -359,7 +359,7 @@ Style::TextDecorationLine Text::GetTextDecorationLine() {
 
 Color Text::GetTextDecorationColor() {
 	auto property = GetComputedProperty(PropertyId::TextDecorationColor);
-	if (property->Has<PropertyKeyword>()) {
+	if (property.Has<PropertyKeyword>()) {
 		// CurrentColor
 		auto stroke = GetTextStroke();
 		if (stroke) {
@@ -369,7 +369,7 @@ Color Text::GetTextDecorationColor() {
 			return GetTextColor();
 		}
 	}
-	return property->Get<Color>();
+	return property.Get<Color>();
 }
 
 Color Text::GetTextColor() {

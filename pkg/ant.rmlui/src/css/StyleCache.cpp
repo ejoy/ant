@@ -32,9 +32,8 @@ namespace Rml::Style {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            PropertyGuard prop = PropertyEncode(value);
-            style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
-            attrib_id[i] = style_attrib_id(c, &attrib);
+            PropertyView view { id, value };
+            attrib_id[i] = view.RawAttribId();
             i++;
         }
         style_handle_t s = style_create(c, (int)attrib_id.size(), attrib_id.data());
@@ -87,8 +86,7 @@ namespace Rml::Style {
     }
 
     bool Cache::SetProperty(TableValue s, PropertyId id, const PropertyView& prop) {
-        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
-        int attrib_id = style_attrib_id(c, &attrib);
+        int attrib_id = prop.RawAttribId();
         return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
@@ -101,9 +99,8 @@ namespace Rml::Style {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            PropertyGuard prop = PropertyEncode(value);
-            style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
-            attrib_id[i] = style_attrib_id(c, &attrib);
+            PropertyView view { id, value };
+            attrib_id[i] = view.RawAttribId();
             i++;
         }
         if (!style_modify(c, {s.idx}, (int)attrib_id.size(), attrib_id.data(), 0, nullptr)) {
@@ -139,14 +136,9 @@ namespace Rml::Style {
         return change;
     }
 
-    std::optional<PropertyView> Cache::Find(TableValueOrCombination s, PropertyId id) {
+    PropertyView Cache::Find(TableValueOrCombination s, PropertyId id) {
         int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
-        if (attrib_id == -1) {
-            return std::nullopt;
-        }
-        style_attrib attrib;
-        style_attrib_value(c, attrib_id, &attrib);
-        return PropertyView { attrib.data, attrib.sz };
+        return { attrib_id };
     }
 
     bool Cache::Has(TableValueOrCombination s, PropertyId id) {
@@ -168,15 +160,12 @@ namespace Rml::Style {
 
     void Cache::Foreach(TableValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
-            int attrib_id = style_index(c, {s.idx}, i);
-            if (attrib_id == -1) {
+            PropertyView prop { style_index(c, {s.idx}, i) };
+            if (!prop) {
                 break;
             }
-            style_attrib attrib;
-            style_attrib_value(c, attrib_id, &attrib);
-            PropertyView prop { attrib.data, attrib.sz };
             if (prop.IsFloatUnit(unit)) {
-                set.insert((PropertyId)attrib.key);
+                set.insert(GetPropertyId(prop));
             }
         }
     }
@@ -210,6 +199,27 @@ namespace Rml::Style {
 
     void Cache::Flush() {
         style_flush(c);
+    }
+
+    PropertyView Cache::CreateProperty(PropertyId id, std::span<uint8_t> value) {
+        style_attrib v;
+        v.key = (uint8_t)id;
+        v.data = (void*)value.data();
+        v.sz = value.size();
+        int attrib_id = style_attrib_id(c, &v);
+        return { attrib_id };
+    }
+        
+    PropertyId Cache::GetPropertyId(PropertyView prop) {
+        style_attrib v;
+        style_attrib_value(c, prop.RawAttribId(), &v);
+        return (PropertyId)v.key;
+    }
+
+    std::span<uint8_t> Cache::GetPropertyData(PropertyView prop) {
+        style_attrib v;
+        style_attrib_value(c, prop.RawAttribId(), &v);
+        return { (uint8_t*)v.data, v.sz };
     }
 
     static Cache* cahce = nullptr;

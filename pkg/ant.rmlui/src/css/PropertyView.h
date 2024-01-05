@@ -4,19 +4,15 @@
 #include <css/PropertyBinary.h>
 #include <optional>
 #include <span>
-#include <tuple>
 
 namespace Rml {
-    class PropertyView;
-
-    PropertyView PropertyEncode(const Property& prop);
-
     class PropertyView {
     public:
-        PropertyView(void* data, size_t size);
-        PropertyView(std::span<uint8_t> data);
-        void* RawData() const;
-        size_t RawSize() const;
+        PropertyView();
+        PropertyView(int attrib_id);
+        PropertyView(PropertyId id, const Property& prop);
+        explicit operator bool () const;
+        int RawAttribId() const;
         bool IsFloatUnit(PropertyUnit unit) const;
         std::optional<Property> Decode() const;
         std::string ToString() const;
@@ -24,7 +20,7 @@ namespace Rml {
             requires (!std::is_enum_v<T>)
         T Get() const {
             static constexpr uint8_t index = (uint8_t)variant_index<Property, T>();
-            strparser<uint8_t> p { m_data.data() };
+            auto p = CreateParser();
             if (index == p.pop<uint8_t>()) {
                 return PropertyDecode(tag_v<T>, p);
             }
@@ -35,7 +31,7 @@ namespace Rml {
             requires (std::is_enum_v<T>)
         T GetEnum() const {
             static constexpr uint8_t index = (uint8_t)variant_index<Property, PropertyKeyword>();
-            strparser<uint8_t> p { m_data.data() };
+            auto p = CreateParser();
             if (index == p.pop<uint8_t>()) {
                 return (T)p.pop<PropertyKeyword>();
             }
@@ -45,27 +41,18 @@ namespace Rml {
         template <typename T>
         bool Has() const {
             static constexpr uint8_t index = (uint8_t)variant_index<Property, T>();
-            strparser<uint8_t> p { m_data.data() };
+            auto p = CreateParser();
             return index == p.pop<uint8_t>();
         }
     private:
-        std::span<uint8_t> m_data;
-    };
-
-    class PropertyGuard: public PropertyView {
-    public:
-        PropertyGuard(PropertyView prop)
-            : PropertyView(prop)
-        { }
-        PropertyGuard(const PropertyGuard&) = delete;
-        PropertyGuard& operator=(const PropertyGuard&) = delete;
-        ~PropertyGuard() {
-            delete[] (uint8_t*)RawData();
-        }
+        strparser<uint8_t> CreateParser() const;
+    
+    private:
+        int attrib_id;
     };
 
     inline bool operator==(const PropertyView& l, const PropertyView& r) {
-        return l.RawData() == r.RawData();
+        return l.RawAttribId() == r.RawAttribId();
     }
 
     inline float PropertyComputeX(const Element* e, const PropertyView& p) {

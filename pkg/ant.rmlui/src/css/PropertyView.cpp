@@ -1,36 +1,45 @@
 #include <css/PropertyView.h>
+#include <css/StyleCache.h>
 
 namespace Rml {
-    PropertyView PropertyEncode(const Property& prop) {
+    PropertyView::PropertyView()
+        : attrib_id(-1)
+    {}
+
+    PropertyView::PropertyView(int attrib_id)
+        : attrib_id(attrib_id)
+    {}
+
+    PropertyView::PropertyView(PropertyId id, const Property& prop) {
         strbuilder<uint8_t> b;
         PropertyEncode(b, prop);
-        return PropertyView { b.string() };
+        auto value = b.string();
+        auto view = Style::Instance().CreateProperty(id, value);
+        attrib_id = view.attrib_id;
+        delete [] value.data();
     }
 
-    PropertyView::PropertyView(void* data, size_t size)
-        : m_data { (uint8_t*)data, size }
-    {}
-
-    PropertyView::PropertyView(std::span<uint8_t> data)
-        : m_data(data)
-    {}
-
-    void* PropertyView::RawData() const {
-        return (void*)m_data.data();
+    PropertyView::operator bool () const {
+         return attrib_id != -1;
     }
 
-    size_t PropertyView::RawSize() const {
-        return m_data.size();
+    strparser<uint8_t> PropertyView::CreateParser() const {
+        auto view = Style::Instance().GetPropertyData(*this);
+        return { view.data() };
+    }
+
+    int PropertyView::RawAttribId() const {
+        return attrib_id;
     }
 
     std::optional<Property> PropertyView::Decode() const {
-        strparser<uint8_t> p { m_data.data() };
+        auto p = CreateParser();
         return PropertyDecode(tag_v<Property>, p);
     }
 
     bool PropertyView::IsFloatUnit(PropertyUnit unit) const {
         static constexpr uint8_t index = (uint8_t)variant_index<Property, PropertyFloat>();
-        strparser<uint8_t> p { m_data.data() };
+        auto p = CreateParser();
         if (index != p.pop<uint8_t>()) {
             return false;
         }
@@ -39,7 +48,7 @@ namespace Rml {
     }
 
     std::string PropertyView::ToString() const {
-        strparser<uint8_t> p { m_data.data() };
+        auto p = CreateParser();
         switch (p.pop<uint8_t>()) {
         case (uint8_t)variant_index<Property, PropertyFloat>(): {
             auto v = p.pop<PropertyFloat>();

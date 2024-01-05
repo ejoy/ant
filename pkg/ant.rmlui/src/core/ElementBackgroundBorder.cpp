@@ -9,18 +9,18 @@ static const auto PI = acosf(-1);
 
 void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geometry, Box& edge) {
 	EdgeInsets<Color> border_color {
-		element->GetComputedProperty(PropertyId::BorderLeftColor)->Get<Color>(),
-		element->GetComputedProperty(PropertyId::BorderTopColor)->Get<Color>(),
-		element->GetComputedProperty(PropertyId::BorderRightColor)->Get<Color>(),
-		element->GetComputedProperty(PropertyId::BorderBottomColor)->Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderLeftColor).Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderTopColor).Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderRightColor).Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderBottomColor).Get<Color>(),
 	};
 	CornerInsets<float> border_radius {
-		element->GetComputedProperty(PropertyId::BorderTopLeftRadius)->Get<PropertyFloat>().ComputeW(element),
-		element->GetComputedProperty(PropertyId::BorderTopRightRadius)->Get<PropertyFloat>().ComputeH(element),
-		element->GetComputedProperty(PropertyId::BorderBottomRightRadius)->Get<PropertyFloat>().ComputeW(element),
-		element->GetComputedProperty(PropertyId::BorderBottomLeftRadius)->Get<PropertyFloat>().ComputeH(element),
+		element->GetComputedProperty(PropertyId::BorderTopLeftRadius).Get<PropertyFloat>().ComputeW(element),
+		element->GetComputedProperty(PropertyId::BorderTopRightRadius).Get<PropertyFloat>().ComputeH(element),
+		element->GetComputedProperty(PropertyId::BorderBottomRightRadius).Get<PropertyFloat>().ComputeW(element),
+		element->GetComputedProperty(PropertyId::BorderBottomLeftRadius).Get<PropertyFloat>().ComputeH(element),
 	};
-	Color background_color = element->GetComputedProperty(PropertyId::BackgroundColor)->Get<Color>();
+	Color background_color = element->GetComputedProperty(PropertyId::BackgroundColor).Get<Color>();
 	float opacity = element->GetOpacity();
 	if (opacity < 1) {
 		background_color.ApplyOpacity(opacity);
@@ -31,9 +31,9 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 	
 	const auto& bounds = element->GetBounds();
 	const auto& border = element->GetBorder();
-	float outlineWidth = element->GetComputedProperty(PropertyId::OutlineWidth)->Get<PropertyFloat>().Compute(element);
+	float outlineWidth = element->GetComputedProperty(PropertyId::OutlineWidth).Get<PropertyFloat>().Compute(element);
 	if (outlineWidth > 0.f) {
-		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor)->Get<Color>();
+		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor).Get<Color>();
 		geometry.AddRect(Rect {Point{}, bounds.size}, outlineWidth, outlineColor);
 	}
 
