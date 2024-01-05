@@ -189,8 +189,8 @@ namespace Rml::Style {
     }
 
     static auto Fetch(style_cache* c, ValueOrCombination t) {
-        std::array<void*, (size_t)EnumCountV<PropertyId>> datas;
-        datas.fill(nullptr);
+        std::array<int, (size_t)EnumCountV<PropertyId>> datas;
+        datas.fill(-1);
         for (int i = 0;; ++i) {
             int attrib_id = style_index(c, {t.idx}, i);
             if (attrib_id == -1) {
@@ -198,7 +198,7 @@ namespace Rml::Style {
             }
             style_attrib attrib;
             style_attrib_value(c, attrib_id, &attrib);
-            datas[(size_t)attrib.key] = attrib.data;
+            datas[(size_t)attrib.key] = attrib_id;
         }
         return datas;
     }
