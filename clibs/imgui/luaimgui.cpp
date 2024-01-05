@@ -3098,8 +3098,6 @@ lmemory(lua_State* L) {
 	return 1;
 }
 
-int ImGuiSystemFont(lua_State* L);
-
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -3123,7 +3121,6 @@ luaopen_imgui(lua_State *L) {
 		{ "SetWindowTitle", lSetWindowTitle },
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InitFont", lInitFont },
-		{ "GetSystemFont", ImGuiSystemFont },
 		{ "memory", lmemory },
 		{ NULL, NULL },
 	};

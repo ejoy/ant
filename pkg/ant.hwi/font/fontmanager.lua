@@ -1,4 +1,5 @@
 local manager = require "font.manager"
+local fontutil = require "font.util"
 local vfs = require "vfs"
 
 local fontvm = [[
@@ -26,8 +27,13 @@ function m.import(path)
         return
     end
     imported[path] = true
-    local memory = vfs.read(path) or error(("`read `%s` failed."):format(path))
-    lfont.import(path, memory)
+    if path:sub(1, 1) == "/" then
+        local memory = vfs.read(path) or error(("`read font `%s` failed."):format(path))
+        lfont.import(memory)
+    else
+        local memory = fontutil.systemfont(path) or error(("`read system font `%s` failed."):format(path))
+        lfont.import(memory)
+    end
 end
 
 function m.shutdown()

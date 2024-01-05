@@ -73,7 +73,7 @@ struct font_manager {
 	uint16_t texture;
 
 	uint16_t (*font_manager_texture)(struct font_manager *F);
-	void (*font_manager_import)(struct font_manager *F, const char* fontpath, void* fontdata);
+	void (*font_manager_import)(struct font_manager *F, void* fontdata);
 	int  (*font_manager_addfont_with_family)(struct font_manager *F, const char* family);
 
 	void (*font_manager_fontheight)(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
@@ -96,7 +96,7 @@ struct font_manager {
 void font_manager_init(struct font_manager *);
 void font_manager_init_lua(struct font_manager *, void *L);
 void* font_manager_release_lua(struct font_manager *);
-void font_manager_import(struct font_manager *F, const char* fontpath, void* fontdata);
+void font_manager_import(struct font_manager *F, void* fontdata);
 
 uint16_t font_manager_texture(struct font_manager *F);
 int font_manager_addfont_with_family(struct font_manager *F, const char* family);

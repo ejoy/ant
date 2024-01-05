@@ -2,7 +2,11 @@
 #include <Foundation/Foundation.h>
 #include <CoreText/CoreText.h>
 
-int ImGuiSystemFont(lua_State* L) {
+extern "C" {
+#include "luazip.h"
+}
+
+static int systemfont(lua_State* L) {
     const char* familyName = luaL_checkstring(L, 1);
     CTFontDescriptorRef fontRef = CTFontDescriptorCreateWithNameAndSize(CFStringCreateWithCString(NULL, familyName, kCFStringEncodingUTF8), 0.0);
     CFURLRef url = (CFURLRef)CTFontDescriptorCopyAttribute(fontRef, kCTFontURLAttribute);
@@ -15,8 +19,21 @@ int ImGuiSystemFont(lua_State* L) {
     fseek(f, 0, SEEK_END);
     size_t len = (size_t)ftell(f);
     fseek(f, 0, SEEK_SET);
-    void* buffer = lua_newuserdatauv(L, len, 0);
+    auto cache = luazip_new(len, NULL);
+    void* buffer = luazip_data(cache, nullptr);
     fread(buffer, len, 1, f);
     fclose(f);
+    lua_pushlightuserdata(L, cache);
     return 1;
+}
+
+extern "C"
+int luaopen_font_util(lua_State *L) {
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "systemfont", systemfont },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, l);
+	return 1;
 }

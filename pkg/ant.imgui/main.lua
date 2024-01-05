@@ -1,5 +1,6 @@
 local aio = import_package "ant.io"
-
+local fontutil = require "font.util"
+local fastio = require "fastio"
 local ImGui = require "imgui"
 local ImGuiIO = ImGui.io
 
@@ -22,7 +23,7 @@ end
 function ImGui.FontAtlasAddFont(config)
     if config.SystemFont then
         FontAtlas[#FontAtlas+1] = {
-            FontData = ImGui.GetSystemFont(config.SystemFont),
+            FontData = fastio.tostring(fontutil.systemfont(config.SystemFont)),
             SizePixels = config.SizePixels,
             GlyphRanges = glyphRanges(config.GlyphRanges),
         }

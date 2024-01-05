@@ -83,9 +83,6 @@ lm:lua_source "imgui" {
         defines,
     },
     windows = {
-        sources = {
-            "platform/windows/imgui_font.cpp",
-        },
         links = {
             "user32",
             "shell32",
@@ -95,16 +92,6 @@ lm:lua_source "imgui" {
             "gdi32",
             "uuid"
         },
-    },
-    macos = {
-        sources = {
-            "platform/macos/imgui_font.mm",
-        },
-    },
-    ios = {
-        sources = {
-            "platform/macos/imgui_font.mm",
-        }
     }
 }
 

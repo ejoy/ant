@@ -4,6 +4,10 @@
 #include <string_view>
 #include <memory>
 
+extern "C" {
+#include "luazip.h"
+}
+
 static std::wstring u2w(const std::string_view& str) {
     if (str.empty()) {
         return L"";
@@ -23,7 +27,7 @@ static std::wstring towstring(lua_State* L, int idx) {
     return u2w(std::string_view(str, len));
 }
 
-int ImGuiSystemFont(lua_State* L) {
+static int systemfont(lua_State* L) {
     auto familyName = towstring(L, 1);
     HDC hdc = CreateCompatibleDC(0);
     LOGFONTW lf;
@@ -35,12 +39,14 @@ int ImGuiSystemFont(lua_State* L) {
         DeleteDC(hdc);
         return luaL_error(L, "Create font failed: %d", GetLastError());
     }
+    zip_reader_cache* cache = nullptr;
     bool ok = false;
     HGDIOBJ oldobj = SelectObject(hdc, hfont);
     for (uint32_t tag : {0x66637474/*ttcf*/, 0}) {
         DWORD bytes = GetFontData(hdc, tag, 0, 0, 0);
         if (bytes != GDI_ERROR) {
-            void* table = lua_newuserdatauv(L, bytes, 0);
+            cache = luazip_new(bytes, NULL);
+            void* table = luazip_data(cache, nullptr);
             bytes = GetFontData(hdc, tag, 0, (unsigned char*)table, bytes);
             if (bytes != GDI_ERROR) {
                 ok = true;
@@ -52,7 +58,20 @@ int ImGuiSystemFont(lua_State* L) {
     DeleteObject(hfont);
     DeleteDC(hdc);
     if (!ok) {
+        luazip_close(cache);
         return luaL_error(L, "Read font data failed");
     }
+    lua_pushlightuserdata(L, cache);
     return 1;
+}
+
+extern "C"
+int luaopen_font_util(lua_State *L) {
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "systemfont", systemfont },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, l);
+	return 1;
 }

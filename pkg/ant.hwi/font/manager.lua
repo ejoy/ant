@@ -5,9 +5,6 @@ local MAXFONT <const> = 64
 
 local namelist = {}
 
---	id -> filename:index
---	filename -> content
---	filename:index -> { filename: index: id: }
 local CACHE = {}
 
 local function utf16toutf8(s)
@@ -63,29 +60,27 @@ local ids = {
 	},
 }
 
-local function import(fontpath, fontdata)
-	local data = fastio.tostring(fontdata)
-	CACHE[fontpath] = data
+local function import(fontdata)
+	fontdata = fastio.tostring(fontdata)
 	local index = 0
 	local cache = {}
 	while true do
 		for _, obj in pairs(ids) do
 			for _, encoding_id in pairs(obj.encoding) do
 				for _, lang_id in pairs(obj.lang) do
-					local fname, sname = ttf.namestring(data, index, obj.id, encoding_id, lang_id)
+					local fname, sname = ttf.namestring(fontdata, index, obj.id, encoding_id, lang_id)
 					if fname then
 						fname = utf16toutf8(fname)
 						sname = utf16toutf8(sname)
-						local full = fname .. " " .. sname
-						if not cache[full] then
-							cache[full] = true
+						local fullname = fname .. " " .. sname
+						if not cache[fullname] then
+							cache[fullname] = true
 							table.insert(namelist, {
-								filename = fontpath,
+								fontdata = fontdata,
 								index = index,
-								key = fontpath .. ":" .. index,
 								family = string.lower(fname),
 								sfamily = string.lower(sname),	-- sub family name
-								name = fname .. " " .. sname,
+								name = fullname,
 							})
 						end
 					elseif fname == nil then
@@ -107,29 +102,20 @@ end
 
 local function matching(obj, name)
 	if obj.family == name or obj.name == name then
-		return obj.key
+		return true
 	end
 end
 
 local function fetch_name(nametable, name_)
 	local name = string.lower(name_)
 	for _, obj in ipairs(namelist) do
-		local key = matching(obj, name)
-		if key then
-			local fontobj = CACHE[key]
-			if not fontobj then
-				-- make index
-				local id = alloc_fontid()
-				fontobj = {
-					filename = obj.filename,
-					index = obj.index,
-					id = id,
-				}
-				CACHE[id] = key
-				CACHE[key] = fontobj
+		if matching(obj, name) then
+			if not obj.id then
+				obj.id = alloc_fontid()
+				CACHE[obj.id] = obj
 			end
 
-			local id = fontobj.id
+			local id = obj.id
 			nametable[name_] = id
 			return id
 		end
@@ -139,10 +125,8 @@ end
 setmetatable(ttf.nametable, { __index = fetch_name })
 
 local function fetch_id(_, id)
-	local key = assert(CACHE[id])
-	local obj = CACHE[key]
-	local c = CACHE[obj.filename]
-	return ttf.update(id, c, obj.index)
+	local obj = assert(CACHE[id])
+	return ttf.update(id, obj.fontdata, obj.index)
 end
 
 setmetatable(ttf.idtable, { __index = fetch_id })

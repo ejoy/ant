@@ -35,6 +35,7 @@ int luaopen_fmod(lua_State* L);
 int luaopen_font(lua_State *L);
 int luaopen_font_manager(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
+int luaopen_font_util(lua_State *L);
 int luaopen_efk(lua_State* L);
 int luaopen_effekseer_callback(lua_State* L);
 int luaopen_ltask(lua_State* L);
@@ -89,6 +90,7 @@ void ant_loadmodules(lua_State* L) {
         { "font", luaopen_font },
         { "font.manager", luaopen_font_manager },
         { "font.truetype", luaopen_font_truetype },
+        { "font.util", luaopen_font_util },
         { "datalist", luaopen_datalist },
         { "ozz", luaopen_ozz },
         { "math3d", luaopen_math3d },
