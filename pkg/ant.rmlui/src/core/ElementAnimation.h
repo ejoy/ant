@@ -36,7 +36,7 @@ public:
 protected:
 	void UpdateProperty(Element& element, PropertyId id, float time);
 private:
-	const Animation& animation;
+	const Animation animation;
 	const Keyframe& keyframe;
 	float time;
 	int current_iteration;
