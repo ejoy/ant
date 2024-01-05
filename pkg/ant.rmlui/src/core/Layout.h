@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/Types.h>
+#include <css/Property.h>
 #include <css/PropertyIdSet.h>
 #include <string>
 #include <stdint.h>
@@ -10,7 +11,6 @@ typedef struct YGNode* YGNodeRef;
 namespace Rml {
 
 class Element;
-class Property;
 class PropertyView;
 enum class PropertyId : uint8_t;
 

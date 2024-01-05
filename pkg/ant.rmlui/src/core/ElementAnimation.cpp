@@ -8,11 +8,11 @@
 namespace Rml {
 
 struct InterpolateVisitor {
-	const PropertyVariant& other_variant;
+	const Property& other;
 	float alpha;
 	template <typename T>
 	Property operator()(const T& p0) {
-		return interpolate(p0, std::get<T>(other_variant));
+		return interpolate(p0, std::get<T>(other));
 	}
 	template <typename T>
 	T interpolate(const T& p0, const T& p1) {
@@ -37,15 +37,16 @@ static Property Interpolate(const Property& p0, const Property& p1, float alpha)
 	if (p0.index() != p1.index()) {
 		return InterpolateFallback(p0, p1, alpha);
 	}
-	return std::visit(InterpolateVisitor { p1, alpha }, (const PropertyVariant&)p0);
+	return std::visit(InterpolateVisitor { p1, alpha }, p0);
 }
 
 ElementInterpolate::ElementInterpolate(Element& element, const Property& in_prop, const Property& out_prop)
 	: p0(in_prop)
 	, p1(out_prop) {
-	if (in_prop.Has<Transform>() && out_prop.Has<Transform>()) {
-		auto& t0 = p0.GetRef<Transform>();
-		auto& t1 = p1.GetRef<Transform>();
+		
+	if (std::holds_alternative<Transform>(in_prop) && std::holds_alternative<Transform>(out_prop)) {
+		auto& t0 = std::get<Transform>(p0);
+		auto& t1 = std::get<Transform>(p1);
 		PrepareTransformPair(t0, t1, element);
 	}
 }
@@ -54,8 +55,8 @@ ElementInterpolate::ElementInterpolate(Element& element, const PropertyView& in_
 	: p0(*in_prop.Decode())
 	, p1(*out_prop.Decode()) {
 	if (in_prop.Has<Transform>() && out_prop.Has<Transform>()) {
-		auto& t0 = p0.GetRef<Transform>();
-		auto& t1 = p1.GetRef<Transform>();
+		auto& t0 = std::get<Transform>(p0);
+		auto& t1 = std::get<Transform>(p1);
 		PrepareTransformPair(t0, t1, element);
 	}
 }

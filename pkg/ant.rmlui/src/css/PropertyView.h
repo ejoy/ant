@@ -23,7 +23,7 @@ namespace Rml {
         template <typename T>
             requires (!std::is_enum_v<T>)
         T Get() const {
-            static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, T>();
+            static constexpr uint8_t index = (uint8_t)variant_index<Property, T>();
             strparser<uint8_t> p { m_data.data() };
             if (index == p.pop<uint8_t>()) {
                 return PropertyDecode(tag_v<T>, p);
@@ -34,7 +34,7 @@ namespace Rml {
         template <typename T>
             requires (std::is_enum_v<T>)
         T GetEnum() const {
-            static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, PropertyKeyword>();
+            static constexpr uint8_t index = (uint8_t)variant_index<Property, PropertyKeyword>();
             strparser<uint8_t> p { m_data.data() };
             if (index == p.pop<uint8_t>()) {
                 return (T)p.pop<PropertyKeyword>();
@@ -44,7 +44,7 @@ namespace Rml {
 
         template <typename T>
         bool Has() const {
-            static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, T>();
+            static constexpr uint8_t index = (uint8_t)variant_index<Property, T>();
             strparser<uint8_t> p { m_data.data() };
             return index == p.pop<uint8_t>();
         }
@@ -94,5 +94,10 @@ namespace Rml {
 
     inline float PropertyComputeZ(const Element* e, const PropertyView& p) {
         return p.Get<PropertyFloat>().Compute(e);
+    }
+
+    template <typename T>
+    inline T InterpolateFallback(const T& p0, const T& p1, float alpha) {
+        return alpha < 1.f ? p0 : p1;
     }
 }

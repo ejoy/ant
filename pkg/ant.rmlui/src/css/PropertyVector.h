@@ -6,7 +6,6 @@
 
 namespace Rml {
 
-class Property;
 enum class PropertyId : uint8_t;
 
 struct PropertyKV {

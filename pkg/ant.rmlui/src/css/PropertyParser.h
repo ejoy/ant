@@ -2,10 +2,9 @@
 
 #include <optional>
 #include <string>
+#include <css/Property.h>
 
 namespace Rml {
-
-class Property;
 
 class PropertyParser {
 public:

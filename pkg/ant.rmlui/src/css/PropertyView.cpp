@@ -3,7 +3,7 @@
 namespace Rml {
     PropertyView PropertyEncode(const Property& prop) {
         strbuilder<uint8_t> b;
-        PropertyEncode(b, (PropertyVariant const&)prop);
+        PropertyEncode(b, prop);
         return PropertyView { b.string() };
     }
 
@@ -29,7 +29,7 @@ namespace Rml {
     }
 
     bool PropertyView::IsFloatUnit(PropertyUnit unit) const {
-        static constexpr uint8_t index = (uint8_t)variant_index<PropertyVariant, PropertyFloat>();
+        static constexpr uint8_t index = (uint8_t)variant_index<Property, PropertyFloat>();
         strparser<uint8_t> p { m_data.data() };
         if (index != p.pop<uint8_t>()) {
             return false;
@@ -41,29 +41,29 @@ namespace Rml {
     std::string PropertyView::ToString() const {
         strparser<uint8_t> p { m_data.data() };
         switch (p.pop<uint8_t>()) {
-        case (uint8_t)variant_index<PropertyVariant, PropertyFloat>(): {
+        case (uint8_t)variant_index<Property, PropertyFloat>(): {
             auto v = p.pop<PropertyFloat>();
             return v.ToString();
         }
-        case (uint8_t)variant_index<PropertyVariant, PropertyKeyword>(): {
+        case (uint8_t)variant_index<Property, PropertyKeyword>(): {
             auto v = p.pop<PropertyKeyword>();
             return "<keyword," + std::to_string(v) + ">";
         }
-        case (uint8_t)variant_index<PropertyVariant, Color>(): {
+        case (uint8_t)variant_index<Property, Color>(): {
             auto v = p.pop<Color>();
             return v.ToString();
         }
-        case (uint8_t)variant_index<PropertyVariant, std::string>(): {
+        case (uint8_t)variant_index<Property, std::string>(): {
             auto v = PropertyDecode(tag_v<std::string>, p);
             return v;
         }
-        case (uint8_t)variant_index<PropertyVariant, Transform>(): {
+        case (uint8_t)variant_index<Property, Transform>(): {
             auto v = PropertyDecode(tag_v<Transform>, p);
             return v.ToString();
         }
-        case (uint8_t)variant_index<PropertyVariant, TransitionList>():
+        case (uint8_t)variant_index<Property, TransitionList>():
             return "<transition>";
-        case (uint8_t)variant_index<PropertyVariant, AnimationList>():
+        case (uint8_t)variant_index<Property, AnimationList>():
             return "<animation>";
         }
         return {};

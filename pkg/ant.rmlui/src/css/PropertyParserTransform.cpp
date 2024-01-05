@@ -227,7 +227,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 			return false;
 		}
 
-		args[i] = prop->GetPropertyFloat();
+		args[i] = std::get<PropertyFloat>(*prop);
 		str += bytes_read;
 		total_bytes_read += bytes_read;
 

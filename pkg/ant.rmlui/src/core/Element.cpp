@@ -1294,7 +1294,7 @@ void Element::SetScrollLeft(float v) {
 	}
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
-	Property value(offset.w, PropertyUnit::PX);
+	Property value { PropertyFloat { offset.w, PropertyUnit::PX } };
 	StartTransition([&](){
 		SetInlineProperty({{PropertyId::ScrollLeft, std::move(value)}});
 	});
@@ -1306,7 +1306,7 @@ void Element::SetScrollTop(float v) {
 	}
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
-	Property value(offset.h, PropertyUnit::PX);
+	Property value { PropertyFloat { offset.h, PropertyUnit::PX } };
 	StartTransition([&](){
 		SetInlineProperty({{PropertyId::ScrollTop, std::move(value)}});
 	});
@@ -1320,8 +1320,8 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	Size offset = GetScrollOffset();
 	UpdateScrollOffset(offset);
 
-	Property left(offset.w, PropertyUnit::PX);
-	Property top(offset.h, PropertyUnit::PX);
+	Property left = PropertyFloat { offset.w, PropertyUnit::PX };
+	Property top = PropertyFloat { offset.h, PropertyUnit::PX };
 	StartTransition([&](){
 		SetInlineProperty({
 			{PropertyId::ScrollLeft, std::move(left)},

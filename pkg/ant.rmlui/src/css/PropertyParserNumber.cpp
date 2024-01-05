@@ -71,22 +71,22 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 	switch (units) {
 	case UnitMark::Number:
 		if (PropertyIsNumber(unit)) {
-			return Property { float_value, unit };
+			return PropertyFloat { float_value, unit };
 		}
 		break;
 	case UnitMark::Length:
 		if (!PropertyIsAngle(unit) && !PropertyIsNumber(unit) && !PropertyIsPercent(unit)) {
-			return Property { float_value, unit };
+			return PropertyFloat { float_value, unit };
 		}
 		break;
 	case UnitMark::LengthPercent:
 		if (!PropertyIsAngle(unit) && !PropertyIsNumber(unit)) {
-			return Property { float_value, unit };
+			return PropertyFloat { float_value, unit };
 		}
 		break;
 	case UnitMark::Angle:
 		if (PropertyIsAngle(unit)) {
-			return Property { float_value, unit };
+			return PropertyFloat { float_value, unit };
 		}
 		break;
 	}
@@ -94,10 +94,10 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 	if (unit == PropertyUnit::NUMBER && float_value == 0.f) {
 		switch (units) {
 		case UnitMark::Angle:
-			return Property { 0.f, PropertyUnit::RAD };
+			return PropertyFloat { 0.f, PropertyUnit::RAD };
 		case UnitMark::Length:
 		case UnitMark::LengthPercent:
-			return Property { 0.f, PropertyUnit::PX };
+			return PropertyFloat { 0.f, PropertyUnit::PX };
 		default:
 			break;
 		}

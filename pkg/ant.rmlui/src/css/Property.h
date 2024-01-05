@@ -9,12 +9,10 @@
 
 namespace Rml {
 
-class Element;
-
 using PropertyKeyword = int;
 using AnimationList = std::vector<Animation>;
 
-using PropertyVariant = std::variant<
+using Property = std::variant<
 	PropertyFloat,
 	PropertyKeyword,
 	Color,
@@ -23,34 +21,5 @@ using PropertyVariant = std::variant<
 	TransitionList,
 	AnimationList
 >;
-
-class Property : public PropertyVariant {
-public:
-	template < typename PropertyType >
-	Property(PropertyType value)
-		: PropertyVariant(value)
-	{}
-
-	Property(float value, PropertyUnit unit)
-		: PropertyVariant(PropertyFloat{value, unit})
-	{}
-
-	template <typename T>
-	T& GetRef() {
-		assert(Has<T>());
-		return std::get<T>(*this);
-	}
-
-	const PropertyFloat& GetPropertyFloat() const {
-		assert(Has<PropertyFloat>());
-		return std::get<PropertyFloat>(*this);
-	}
-
-	template <typename T>
-	bool Has() const { return std::holds_alternative<T>(*this); }
-};
-
-template <typename T>
-T InterpolateFallback(const T& p0, const T& p1, float alpha) { return alpha < 1.f ? p0 : p1; }
 
 }

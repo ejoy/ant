@@ -196,10 +196,6 @@ namespace Rml {
         return jump[type](data);
     }
 
-    inline Property PropertyDecode(tag<Property>, strparser<uint8_t>& data) {
-        return PropertyDecode(tag_v<PropertyVariant>, data);
-    }
-
     inline std::string PropertyDecode(tag<std::string>, strparser<uint8_t>& data) {
         size_t sz = data.pop<size_t>();
         return {(const char*)data.pop(sz), sz};
