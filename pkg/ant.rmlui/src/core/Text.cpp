@@ -3,7 +3,6 @@
 #include <core/Document.h>
 #include <core/Interface.h>
 #include <util/Log.h>
-#include <css/Property.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <binding/utf8.h>
 #include <iostream>

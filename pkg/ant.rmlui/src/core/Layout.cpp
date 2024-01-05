@@ -1,6 +1,5 @@
 #include <core/Layout.h>
 #include <core/ID.h>
-#include <css/Property.h>
 #include <css/PropertyView.h>
 #include <core/Text.h>
 #include <yoga/Yoga.h>

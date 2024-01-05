@@ -4,7 +4,6 @@
 #include <core/Geometry.h>
 #include <core/Interface.h>
 #include <css/PropertyIdSet.h>
-#include <css/Property.h>
 #include <css/PropertyView.h>
 #include <optional>
 

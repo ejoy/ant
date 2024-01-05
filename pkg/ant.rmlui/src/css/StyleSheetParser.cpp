@@ -2,7 +2,6 @@
 #include <css/StyleSheetFactory.h>
 #include <css/StyleSheetNode.h>
 #include <util/Log.h>
-#include <css/Property.h>
 #include <css/StyleSheet.h>
 #include <css/StyleSheetSpecification.h>
 #include <util/StringUtilities.h>

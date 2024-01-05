@@ -5,7 +5,6 @@
 #include <core/Node.h>
 #include <core/Types.h>
 #include <core/ElementBackground.h>
-#include <css/Property.h>
 #include <css/PropertyIdSet.h>
 #include <css/PropertyVector.h>
 #include <css/StyleCache.h>
