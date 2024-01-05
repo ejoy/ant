@@ -122,12 +122,12 @@ public:
 	void DirtyProperties(const PropertyIdSet& properties);
 	void DirtyProperties(PropertyUnit unit);
 
-	void SetAnimationProperty(PropertyId id, const PropertyRaw& property);
+	void SetAnimationProperty(PropertyId id, const PropertyView& property);
 	void DelAnimationProperty(PropertyId id);
 
-	std::optional<PropertyRaw> GetInlineProperty(PropertyId id) const;
-	std::optional<PropertyRaw> GetLocalProperty(PropertyId id) const;
-	std::optional<PropertyRaw> GetComputedProperty(PropertyId id) const;
+	std::optional<PropertyView> GetInlineProperty(PropertyId id) const;
+	std::optional<PropertyView> GetLocalProperty(PropertyId id) const;
+	std::optional<PropertyView> GetComputedProperty(PropertyId id) const;
 	template <typename T>
 	auto GetProperty(PropertyId id) const {
 		if constexpr(std::is_same_v<T, float>) {

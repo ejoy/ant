@@ -4,7 +4,7 @@
 #include <css/PropertyIdSet.h>
 #include <css/PropertyVector.h>
 #include <css/Property.h>
-#include <css/PropertyRaw.h>
+#include <css/PropertyView.h>
 #include <span>
 #include <optional>
 #include <functional>
@@ -35,11 +35,11 @@ namespace Rml::Style {
         bool                       Compare(Value a, Combination b);
         void                       Clone(Value to, Value from);
         bool                       SetProperty(Value s, PropertyId id, const Property& value);
-        bool                       SetProperty(Value s, PropertyId id, const PropertyRaw& value);
+        bool                       SetProperty(Value s, PropertyId id, const PropertyView& value);
         bool                       DelProperty(Value s, PropertyId id);
         PropertyIdSet              SetProperty(Value s, const PropertyVector& vec);
         PropertyIdSet              DelProperty(Value s, const PropertyIdSet& set);
-        std::optional<PropertyRaw> Find(ValueOrCombination s, PropertyId id);
+        std::optional<PropertyView> Find(ValueOrCombination s, PropertyId id);
         bool                       Has(ValueOrCombination s, PropertyId id);
         void                       Foreach(ValueOrCombination s, PropertyIdSet& set);
         void                       Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);

@@ -7,14 +7,14 @@
 #include <tuple>
 
 namespace Rml {
-    class PropertyRaw;
+    class PropertyView;
 
-    PropertyRaw PropertyEncode(const Property& prop);
+    PropertyView PropertyEncode(const Property& prop);
 
-    class PropertyRaw {
+    class PropertyView {
     public:
-        PropertyRaw(void* data, size_t size);
-        PropertyRaw(std::span<uint8_t> data);
+        PropertyView(void* data, size_t size);
+        PropertyView(std::span<uint8_t> data);
         void* RawData() const;
         size_t RawSize() const;
         bool IsFloatUnit(PropertyUnit unit) const;
@@ -52,10 +52,10 @@ namespace Rml {
         std::span<uint8_t> m_data;
     };
 
-    class PropertyGuard: public PropertyRaw {
+    class PropertyGuard: public PropertyView {
     public:
-        PropertyGuard(PropertyRaw prop)
-            : PropertyRaw(prop)
+        PropertyGuard(PropertyView prop)
+            : PropertyView(prop)
         { }
         PropertyGuard(const PropertyGuard&) = delete;
         PropertyGuard& operator=(const PropertyGuard&) = delete;
@@ -64,11 +64,11 @@ namespace Rml {
         }
     };
 
-    inline bool operator==(const PropertyRaw& l, const PropertyRaw& r) {
+    inline bool operator==(const PropertyView& l, const PropertyView& r) {
         return l.RawData() == r.RawData();
     }
 
-    inline float PropertyComputeX(const Element* e, const PropertyRaw& p) {
+    inline float PropertyComputeX(const Element* e, const PropertyView& p) {
         if (p.Has<PropertyKeyword>()) {
             switch (p.Get<PropertyKeyword>()) {
             default:
@@ -80,7 +80,7 @@ namespace Rml {
         return p.Get<PropertyFloat>().ComputeW(e);
     }
 
-    inline float PropertyComputeY(const Element* e, const PropertyRaw& p) {
+    inline float PropertyComputeY(const Element* e, const PropertyView& p) {
         if (p.Has<PropertyKeyword>()) {
             switch (p.Get<PropertyKeyword>()) {
             default:
@@ -92,7 +92,7 @@ namespace Rml {
         return p.Get<PropertyFloat>().ComputeH(e);
     }
 
-    inline float PropertyComputeZ(const Element* e, const PropertyRaw& p) {
+    inline float PropertyComputeZ(const Element* e, const PropertyView& p) {
         return p.Get<PropertyFloat>().Compute(e);
     }
 }

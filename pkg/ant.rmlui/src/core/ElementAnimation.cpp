@@ -50,7 +50,7 @@ ElementInterpolate::ElementInterpolate(Element& element, const Property& in_prop
 	}
 }
 
-ElementInterpolate::ElementInterpolate(Element& element, const PropertyRaw& in_prop, const PropertyRaw& out_prop)
+ElementInterpolate::ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop)
 	: p0(*in_prop.Decode())
 	, p1(*out_prop.Decode()) {
 	if (in_prop.Has<Transform>() && out_prop.Has<Transform>()) {
@@ -60,7 +60,7 @@ ElementInterpolate::ElementInterpolate(Element& element, const PropertyRaw& in_p
 	}
 }
 
-PropertyRaw ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
+PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
 	float alpha = 0.0f;
 	const float eps = 1e-3f;
 	if (t1 - t0 > eps)
@@ -73,14 +73,14 @@ PropertyRaw ElementInterpolate::Update(float t0, float t1, float t, const Tween&
 	return PropertyEncode(p2);
 }
 
-ElementTransition::ElementTransition(Element& element, const Transition& transition, const PropertyRaw& in_prop, const PropertyRaw& out_prop)
+ElementTransition::ElementTransition(Element& element, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop)
 	: transition(transition)
 	, interpolate(element, in_prop, out_prop)
 	, time(transition.delay)
 	, complete(false)
 {}
 
-PropertyRaw ElementTransition::UpdateProperty(float delta) {
+PropertyView ElementTransition::UpdateProperty(float delta) {
 	time += delta;
 	if (time >= transition.duration) {
 		complete = true;
@@ -101,7 +101,7 @@ ElementAnimation::ElementAnimation(Element& element, const Animation& animation,
 	, reverse_direction(false)
 {}
 
-PropertyRaw ElementAnimation::UpdateProperty(Element& element, float delta) {
+PropertyView ElementAnimation::UpdateProperty(Element& element, float delta) {
 	time += delta;
 
 	if (time >= animation.transition.duration) {

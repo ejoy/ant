@@ -1,5 +1,5 @@
 #include <css/StyleCache.h>
-#include <css/PropertyRaw.h>
+#include <css/PropertyView.h>
 #include <assert.h>
 #include <array>
 #include <vector>
@@ -99,7 +99,7 @@ namespace Rml::Style {
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
-    bool Cache::SetProperty(Value s, PropertyId id, const PropertyRaw& prop) {
+    bool Cache::SetProperty(Value s, PropertyId id, const PropertyView& prop) {
         style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id, 0 };
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
@@ -152,13 +152,13 @@ namespace Rml::Style {
         return change;
     }
 
-    std::optional<PropertyRaw> Cache::Find(ValueOrCombination s, PropertyId id) {
+    std::optional<PropertyView> Cache::Find(ValueOrCombination s, PropertyId id) {
         size_t size;
         void* data = style_find(c, {s.idx}, (uint8_t)id, &size);
         if (!data) {
             return std::nullopt;
         }
-        return PropertyRaw { data, size };
+        return PropertyView { data, size };
     }
 
     bool Cache::Has(ValueOrCombination s, PropertyId id) {
@@ -185,7 +185,7 @@ namespace Rml::Style {
             if (!data) {
                 break;
             }
-            PropertyRaw prop { data, size };
+            PropertyView prop { data, size };
             if (prop.IsFloatUnit(unit)) {
                 set.insert(id);
             }

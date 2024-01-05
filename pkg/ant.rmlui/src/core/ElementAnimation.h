@@ -1,7 +1,7 @@
 #pragma once
 
 #include <css/Property.h>
-#include <css/PropertyRaw.h>
+#include <css/PropertyView.h>
 #include <core/Tween.h>
 #include <core/ID.h>
 #include <css/StyleSheet.h>
@@ -11,8 +11,8 @@ namespace Rml {
 class ElementInterpolate {
 public:
 	ElementInterpolate(Element& element, const Property& in_prop, const Property& out_prop);
-	ElementInterpolate(Element& element, const PropertyRaw& in_prop, const PropertyRaw& out_prop);
-	PropertyRaw Update(float t0, float t1, float t, const Tween& tween);
+	ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop);
+	PropertyView Update(float t0, float t1, float t, const Tween& tween);
 private:
 	Property p0;
 	Property p1;
@@ -20,8 +20,8 @@ private:
 
 class ElementTransition {
 public:
-	ElementTransition(Element& element, const Transition& transition, const PropertyRaw& in_prop, const PropertyRaw& out_prop);
-	PropertyRaw UpdateProperty(float delta);
+	ElementTransition(Element& element, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop);
+	PropertyView UpdateProperty(float delta);
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }
 private:
@@ -34,7 +34,7 @@ private:
 class ElementAnimation {
 public:
 	ElementAnimation(Element& element, const Animation& animation, const Keyframe& keyframe);
-	PropertyRaw UpdateProperty(Element& element, float delta);
+	PropertyView UpdateProperty(Element& element, float delta);
 	const std::string& GetName() const { return animation.name; }
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }

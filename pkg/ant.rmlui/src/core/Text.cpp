@@ -31,7 +31,7 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
-std::optional<PropertyRaw> Text::GetComputedProperty(PropertyId id) {
+std::optional<PropertyView> Text::GetComputedProperty(PropertyId id) {
 	return GetParentNode()->GetComputedProperty(id);
 }
 

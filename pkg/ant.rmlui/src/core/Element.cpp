@@ -190,7 +190,7 @@ float Element::GetFontSize() const {
 	return font_size;
 }
 
-static float ComputeFontsize(const PropertyRaw& prop, Element* element) {
+static float ComputeFontsize(const PropertyView& prop, Element* element) {
 	PropertyFloat fv = prop.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT || fv.unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
@@ -797,8 +797,8 @@ void Element::StartTransition(std::function<void()> f) {
 	struct PropertyTransition {
 		PropertyId                 id;
 		const Transition&          transition;
-		std::optional<PropertyRaw> start_value;
-		PropertyTransition(PropertyId id, const Transition& transition, std::optional<PropertyRaw> start_value)
+		std::optional<PropertyView> start_value;
+		PropertyTransition(PropertyId id, const Transition& transition, std::optional<PropertyView> start_value)
 			: id(id)
 			, transition(transition)
 			, start_value(start_value)
@@ -1385,12 +1385,12 @@ void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
 	}
 }
 
-std::optional<PropertyRaw> Element::GetInlineProperty(PropertyId id) const {
+std::optional<PropertyView> Element::GetInlineProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	return c.Find(inline_properties, id);
 }
 
-std::optional<PropertyRaw> Element::GetLocalProperty(PropertyId id) const {
+std::optional<PropertyView> Element::GetLocalProperty(PropertyId id) const {
 	auto& c = Style::Instance();
     return c.Find(local_properties, id);
 }
@@ -1440,7 +1440,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	return res;
 }
 
-std::optional<PropertyRaw> Element::GetComputedProperty(PropertyId id) const {
+std::optional<PropertyView> Element::GetComputedProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	if (auto property = c.Find(global_properties, id)) {
 		return property;
@@ -1495,7 +1495,7 @@ bool Element::DelInlineProperty(const PropertyIdSet& set) {
 	return false;
 }
 
-void Element::SetAnimationProperty(PropertyId id, const PropertyRaw& property) {
+void Element::SetAnimationProperty(PropertyId id, const PropertyView& property) {
 	if (Style::Instance().SetProperty(animation_properties, id, property)) {
 		DirtyProperty(id);
 	}
