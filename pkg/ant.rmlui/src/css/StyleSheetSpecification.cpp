@@ -87,7 +87,7 @@ struct StyleSheetSpecificationInstance {
 
 	std::optional<Property> ParseProperty(PropertyId id, const std::string& value) const;
 
-	Style::Value GetDefaultProperties() const;
+	Style::TableValue GetDefaultProperties() const;
 	const PropertyIdSet& GetInheritableProperties() const;
 	const ShorthandDefinition& GetShorthandDefinition(ShorthandId id) const;
 	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
@@ -114,7 +114,7 @@ struct StyleSheetSpecificationInstance {
 	std::unordered_map<std::string, PropertyId> property_map;
 	std::unordered_map<std::string, ShorthandId> shorthand_map;
 	std::unordered_map<PropertyId, std::string> unparsed_default;
-	Style::Value default_value;
+	Style::TableValue default_value;
 };
 
 PropertyParser* PropertyRegister::GetParser(const std::string& parser_name) {
@@ -236,7 +236,7 @@ std::optional<Property> StyleSheetSpecificationInstance::ParseProperty(PropertyI
 	return std::nullopt;
 }
 
-Style::Value StyleSheetSpecificationInstance::GetDefaultProperties() const {
+Style::TableValue StyleSheetSpecificationInstance::GetDefaultProperties() const {
 	return default_value;
 }
 
@@ -919,7 +919,7 @@ void StyleSheetSpecification::Shutdown() {
 	}
 }
 
-Style::Value StyleSheetSpecification::GetDefaultProperties() {
+Style::TableValue StyleSheetSpecification::GetDefaultProperties() {
 	return instance->GetDefaultProperties();
 }
 

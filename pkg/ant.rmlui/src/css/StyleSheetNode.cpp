@@ -99,7 +99,7 @@ void StyleSheetNode::AddRequirements(StyleSheetRequirements&& req) {
 	requirements.emplace_back(req);
 }
 
-Style::Value StyleSheetNode::GetProperties() const {
+Style::TableValue StyleSheetNode::GetProperties() const {
 	return properties;
 }
 

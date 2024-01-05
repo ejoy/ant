@@ -23,12 +23,12 @@ namespace Rml::Style {
         style_deletecache(c);
     }
 
-    Value Cache::Create() {
+    TableValue Cache::Create() {
         style_handle_t s = style_create(c, 0, NULL);
         return {s.idx};
     }
 
-    Value Cache::Create(const PropertyVector& vec) {
+    TableValue Cache::Create(const PropertyVector& vec) {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
@@ -41,7 +41,7 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    Combination Cache::Merge(const std::span<Value>& maps) {
+    TableCombination Cache::Merge(const std::span<TableValue>& maps) {
         if (maps.empty()) {
             style_handle_t s = style_null(c);
             return {s.idx};
@@ -53,58 +53,58 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    Combination Cache::Merge(Value A, Value B, Value C) {
+    TableCombination Cache::Merge(TableValue A, TableValue B, TableValue C) {
         style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
         style_addref(c, s);
         return {s.idx};
     }
 
-    Combination Cache::Inherit(Combination child, Combination parent) {
+    TableCombination Cache::Inherit(TableCombination child, TableCombination parent) {
         style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
         style_addref(c, s);
         return {s.idx};
     }
 
-    Combination Cache::Inherit(Combination child) {
+    TableCombination Cache::Inherit(TableCombination child) {
         style_addref(c, {child.idx});
         return {child.idx};
     }
 
-    bool Cache::Assgin(Value to, Combination from) {
+    bool Cache::Assgin(TableValue to, TableCombination from) {
         return 0 != style_assign(c, {to.idx}, {from.idx});
     }
 
-    bool Cache::Compare(Value a, Combination b) {
+    bool Cache::Compare(TableValue a, TableCombination b) {
         return 0 != style_compare(c, {a.idx}, {b.idx});
     }
 
-    void Cache::Clone(Value to, Value from) {
+    void Cache::Clone(TableValue to, TableValue from) {
         style_assign(c, {to.idx}, {from.idx});
     }
 
-    void Cache::Release(ValueOrCombination s) {
+    void Cache::Release(TableValueOrCombination s) {
         style_release(c, {s.idx});
     }
 
-    bool Cache::SetProperty(Value s, PropertyId id, const Property& value) {
+    bool Cache::SetProperty(TableValue s, PropertyId id, const Property& value) {
         auto prop = PropertyEncode(value);
         style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
         int attrib_id = style_attrib_id(c, &attrib);
         return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
-    bool Cache::SetProperty(Value s, PropertyId id, const PropertyView& prop) {
+    bool Cache::SetProperty(TableValue s, PropertyId id, const PropertyView& prop) {
         style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
         int attrib_id = style_attrib_id(c, &attrib);
         return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
-    bool Cache::DelProperty(Value s, PropertyId id) {
+    bool Cache::DelProperty(TableValue s, PropertyId id) {
         int removed_key[1] = { (int)(uint8_t)id };
         return !!style_modify(c, {s.idx}, 0, nullptr, 1, removed_key);
     }
 
-    PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
+    PropertyIdSet Cache::SetProperty(TableValue s, const PropertyVector& vec) {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
@@ -125,7 +125,7 @@ namespace Rml::Style {
         return change;
     }
 
-    PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
+    PropertyIdSet Cache::DelProperty(TableValue s, const PropertyIdSet& set) {
         std::vector<int> removed_key(set.size());
         size_t i = 0;
         for (auto id : set) {
@@ -146,7 +146,7 @@ namespace Rml::Style {
         return change;
     }
 
-    std::optional<PropertyView> Cache::Find(ValueOrCombination s, PropertyId id) {
+    std::optional<PropertyView> Cache::Find(TableValueOrCombination s, PropertyId id) {
         int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
         if (attrib_id == -1) {
             return std::nullopt;
@@ -156,12 +156,12 @@ namespace Rml::Style {
         return PropertyView { attrib.data, attrib.sz };
     }
 
-    bool Cache::Has(ValueOrCombination s, PropertyId id) {
+    bool Cache::Has(TableValueOrCombination s, PropertyId id) {
         int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
         return attrib_id != -1;
     }
 
-    void Cache::Foreach(ValueOrCombination s, PropertyIdSet& set) {
+    void Cache::Foreach(TableValueOrCombination s, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
             int attrib_id = style_index(c, {s.idx}, i);
             if (attrib_id == -1) {
@@ -173,7 +173,7 @@ namespace Rml::Style {
         }
     }
 
-    void Cache::Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
+    void Cache::Foreach(TableValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
             int attrib_id = style_index(c, {s.idx}, i);
             if (attrib_id == -1) {
@@ -188,7 +188,7 @@ namespace Rml::Style {
         }
     }
 
-    static auto Fetch(style_cache* c, ValueOrCombination t) {
+    static auto Fetch(style_cache* c, TableValueOrCombination t) {
         std::array<int, (size_t)EnumCountV<PropertyId>> datas;
         datas.fill(-1);
         for (int i = 0;; ++i) {
@@ -203,7 +203,7 @@ namespace Rml::Style {
         return datas;
     }
 
-    PropertyIdSet Cache::Diff(ValueOrCombination a, ValueOrCombination b) {
+    PropertyIdSet Cache::Diff(TableValueOrCombination a, TableValueOrCombination b) {
         PropertyIdSet ids;
         auto a_datas = Fetch(c, a);
         auto b_datas = Fetch(c, b);

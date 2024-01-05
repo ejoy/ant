@@ -41,10 +41,10 @@ public:
 	void SetSpecificity(int rule_specificity);
 	bool IsApplicable(const Element* element) const;
 	int GetSpecificity() const;
-	Style::Value GetProperties() const;
+	Style::TableValue GetProperties() const;
 
 private:
-	Style::Value properties;
+	Style::TableValue properties;
 	std::vector<StyleSheetRequirements> requirements;
 	int specificity = 0;
 };

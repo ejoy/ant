@@ -12,11 +12,11 @@
 struct style_cache;
 
 namespace Rml::Style {
-    struct Value { int idx; };
-    struct Combination { int idx; };
-    struct ValueOrCombination {
-        ValueOrCombination(Value o): idx(o.idx) {}
-        ValueOrCombination(Combination o): idx(o.idx) {}
+    struct TableValue { int idx; };
+    struct TableCombination { int idx; };
+    struct TableValueOrCombination {
+        TableValueOrCombination(TableValue o): idx(o.idx) {}
+        TableValueOrCombination(TableCombination o): idx(o.idx) {}
         int idx;
     };
 
@@ -24,27 +24,27 @@ namespace Rml::Style {
     public:
         Cache(const PropertyIdSet& inherit);
         ~Cache();
-        Value                      Create();
-        Value                      Create(const PropertyVector& vec);
-        Combination                Merge(const std::span<Value>& maps);
-        Combination                Merge(Value A, Value B, Value C);
-        Combination                Inherit(Combination child, Combination parent);
-        Combination                Inherit(Combination child);
-        void                       Release(ValueOrCombination s);
-        bool                       Assgin(Value to, Combination from);
-        bool                       Compare(Value a, Combination b);
-        void                       Clone(Value to, Value from);
-        bool                       SetProperty(Value s, PropertyId id, const Property& value);
-        bool                       SetProperty(Value s, PropertyId id, const PropertyView& value);
-        bool                       DelProperty(Value s, PropertyId id);
-        PropertyIdSet              SetProperty(Value s, const PropertyVector& vec);
-        PropertyIdSet              DelProperty(Value s, const PropertyIdSet& set);
-        std::optional<PropertyView> Find(ValueOrCombination s, PropertyId id);
-        bool                       Has(ValueOrCombination s, PropertyId id);
-        void                       Foreach(ValueOrCombination s, PropertyIdSet& set);
-        void                       Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);
-        PropertyIdSet              Diff(ValueOrCombination a, ValueOrCombination b);
-        void                       Flush();
+        TableValue                  Create();
+        TableValue                  Create(const PropertyVector& vec);
+        TableCombination            Merge(const std::span<TableValue>& maps);
+        TableCombination            Merge(TableValue A, TableValue B, TableValue C);
+        TableCombination            Inherit(TableCombination child, TableCombination parent);
+        TableCombination            Inherit(TableCombination child);
+        void                        Release(TableValueOrCombination s);
+        bool                        Assgin(TableValue to, TableCombination from);
+        bool                        Compare(TableValue a, TableCombination b);
+        void                        Clone(TableValue to, TableValue from);
+        bool                        SetProperty(TableValue s, PropertyId id, const Property& value);
+        bool                        SetProperty(TableValue s, PropertyId id, const PropertyView& value);
+        bool                        DelProperty(TableValue s, PropertyId id);
+        PropertyIdSet               SetProperty(TableValue s, const PropertyVector& vec);
+        PropertyIdSet               DelProperty(TableValue s, const PropertyIdSet& set);
+        std::optional<PropertyView> Find(TableValueOrCombination s, PropertyId id);
+        bool                        Has(TableValueOrCombination s, PropertyId id);
+        void                        Foreach(TableValueOrCombination s, PropertyIdSet& set);
+        void                        Foreach(TableValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);
+        PropertyIdSet               Diff(TableValueOrCombination a, TableValueOrCombination b);
+        void                        Flush();
 
     private:
         style_cache* c;

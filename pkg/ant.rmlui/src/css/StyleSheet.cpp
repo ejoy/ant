@@ -28,8 +28,8 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	return nullptr;
 }
 
-Style::Combination StyleSheet::GetElementDefinition(const Element* element) const {
-	std::vector<Style::Value> applicable;
+Style::TableCombination StyleSheet::GetElementDefinition(const Element* element) const {
+	std::vector<Style::TableValue> applicable;
 	for (auto& node : stylenode) {
 		if (node.IsApplicable(element)) {
 			applicable.push_back(node.GetProperties());
