@@ -10,12 +10,6 @@ extern "C" {
 constexpr inline style_handle_t STYLE_NULL = {0};
 
 namespace Rml::Style {
-    struct Attrib: public style_attrib {
-        ~Attrib() {
-            delete[] (uint8_t*)data;
-        }
-    };
-
     Cache::Cache(const PropertyIdSet& inherit) {
         uint8_t inherit_mask[128] = {0};
         for (auto id : inherit) {
@@ -35,16 +29,15 @@ namespace Rml::Style {
     }
 
     Value Cache::Create(const PropertyVector& vec) {
-        std::vector<Attrib> attrib(vec.size());
+        std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            auto prop = PropertyEncode(value);
-            attrib[i].data = prop.RawData();
-            attrib[i].sz = prop.RawSize();
-            attrib[i].key = (uint8_t)id;
+            PropertyGuard prop = PropertyEncode(value);
+            style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
+            attrib_id[i] = style_attrib_id(c, &attrib);
             i++;
         }
-        style_handle_t s = style_create(c, (int)attrib.size(), attrib.data());
+        style_handle_t s = style_create(c, (int)attrib_id.size(), attrib_id.data());
         return {s.idx};
     }
 
@@ -95,99 +88,102 @@ namespace Rml::Style {
 
     bool Cache::SetProperty(Value s, PropertyId id, const Property& value) {
         auto prop = PropertyEncode(value);
-        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id, 0 };
-        return !!style_modify(c, {s.idx}, 1, &attrib);
+        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
+        int attrib_id = style_attrib_id(c, &attrib);
+        return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
     bool Cache::SetProperty(Value s, PropertyId id, const PropertyView& prop) {
-        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id, 0 };
-        return !!style_modify(c, {s.idx}, 1, &attrib);
+        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
+        int attrib_id = style_attrib_id(c, &attrib);
+        return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
     bool Cache::DelProperty(Value s, PropertyId id) {
-        style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
-        return !!style_modify(c, {s.idx}, 1, &attrib);
+        int removed_key[1] = { (int)(uint8_t)id };
+        return !!style_modify(c, {s.idx}, 0, nullptr, 1, removed_key);
     }
 
     PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
-        std::vector<Attrib> attrib(vec.size());
+        std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
-            auto prop = PropertyEncode(value);
-            attrib[i].data = prop.RawData();
-            attrib[i].sz = prop.RawSize();
-            attrib[i].key = (uint8_t)id;
+            PropertyGuard prop = PropertyEncode(value);
+            style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id };
+            attrib_id[i] = style_attrib_id(c, &attrib);
             i++;
         }
-        if (!style_modify(c, {s.idx}, (int)attrib.size(), attrib.data())) {
+        if (!style_modify(c, {s.idx}, (int)attrib_id.size(), attrib_id.data(), 0, nullptr)) {
             return {};
         }
         PropertyIdSet change;
-        for (auto const& a: attrib) {
-            if (a.change) {
-                change.insert((PropertyId)a.key);
+        for (size_t i = 0; i < attrib_id.size(); ++i) {
+            if (attrib_id[i]) {
+                change.insert(vec[i].id);
             }
         }
         return change;
     }
 
     PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
-        std::vector<Attrib> attrib(set.size());
+        std::vector<int> removed_key(set.size());
         size_t i = 0;
         for (auto id : set) {
-            attrib[i].data = NULL;
-            attrib[i].sz = 0;
-            attrib[i].key = (uint8_t)id;
+            removed_key[i] = (int)(uint8_t)id;
             i++;
         }
-        if (!style_modify(c, {s.idx}, (int)attrib.size(), attrib.data())) {
+        if (!style_modify(c, {s.idx}, 0, nullptr, (int)removed_key.size(), removed_key.data())) {
             return {};
         }
         PropertyIdSet change;
-        for (auto const& a: attrib) {
-            if (a.change) {
-                change.insert((PropertyId)a.key);
+        i = 0;
+        for (auto id : set) {
+            if (removed_key[i]) {
+                change.insert(id);
             }
+            i++;
         }
         return change;
     }
 
     std::optional<PropertyView> Cache::Find(ValueOrCombination s, PropertyId id) {
-        size_t size;
-        void* data = style_find(c, {s.idx}, (uint8_t)id, &size);
-        if (!data) {
+        int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
+        if (attrib_id == -1) {
             return std::nullopt;
         }
-        return PropertyView { data, size };
+        style_attrib attrib;
+        style_attrib_value(c, attrib_id, &attrib);
+        return PropertyView { attrib.data, attrib.sz };
     }
 
     bool Cache::Has(ValueOrCombination s, PropertyId id) {
-        void* data = style_find(c, {s.idx}, (uint8_t)id, nullptr);
-        return !!data;
+        int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
+        return attrib_id != -1;
     }
 
     void Cache::Foreach(ValueOrCombination s, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id, nullptr);
-            if (!data) {
+            int attrib_id = style_index(c, {s.idx}, i);
+            if (attrib_id == -1) {
                 break;
             }
-            set.insert(id);
+            style_attrib attrib;
+            style_attrib_value(c, attrib_id, &attrib);
+            set.insert((PropertyId)attrib.key);
         }
     }
 
     void Cache::Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
-            PropertyId id;
-            size_t size;
-            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id, &size);
-            if (!data) {
+            int attrib_id = style_index(c, {s.idx}, i);
+            if (attrib_id == -1) {
                 break;
             }
-            PropertyView prop { data, size };
+            style_attrib attrib;
+            style_attrib_value(c, attrib_id, &attrib);
+            PropertyView prop { attrib.data, attrib.sz };
             if (prop.IsFloatUnit(unit)) {
-                set.insert(id);
+                set.insert((PropertyId)attrib.key);
             }
         }
     }
@@ -196,12 +192,13 @@ namespace Rml::Style {
         std::array<void*, (size_t)EnumCountV<PropertyId>> datas;
         datas.fill(nullptr);
         for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data = style_index(c, {t.idx}, i, (uint8_t*)&id, nullptr);
-            if (!data) {
+            int attrib_id = style_index(c, {t.idx}, i);
+            if (attrib_id == -1) {
                 break;
             }
-            datas[(size_t)id] = data;
+            style_attrib attrib;
+            style_attrib_value(c, attrib_id, &attrib);
+            datas[(size_t)attrib.key] = attrib.data;
         }
         return datas;
     }
