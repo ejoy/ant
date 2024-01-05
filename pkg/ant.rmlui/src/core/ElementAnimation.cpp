@@ -74,13 +74,12 @@ void ElementTransition::Update(Element& element, PropertyId id, float delta) {
 	UpdateProperty(element, id, time/duration);
 }
 
-ElementAnimation::ElementAnimation(const Keyframe& kf, const Animation& animation)
-	: ElementTransition(*kf.from, *kf.to, animation.transition)
-	, name(animation.name)
-	, keys(kf.keys)
-	, num_iterations(animation.num_iterations)
+ElementAnimation::ElementAnimation(const Animation& animation, const Keyframe& keyframe)
+	: animation(animation)
+	, keyframe(keyframe)
+	, time(animation.transition.delay)
 	, current_iteration(0)
-	, alternate_direction(animation.alternate)
+	, animation_complete(false)
 	, reverse_direction(false)
 {
 	//TODO
@@ -88,6 +87,7 @@ ElementAnimation::ElementAnimation(const Keyframe& kf, const Animation& animatio
 }
 
 void ElementAnimation::UpdateProperty(Element& element, PropertyId id, float t) {
+	auto const& keys = keyframe.keys;
 	const size_t n = keys.size();
 	size_t key = n;
 	for (size_t i = 0; i < keys.size(); ++i) {
@@ -98,9 +98,9 @@ void ElementAnimation::UpdateProperty(Element& element, PropertyId id, float t) 
 	}
 	const float t0 = (key==0)? 0.0f: keys[key-1].time;
 	const float t1 = (key==n)? 1.0f: keys[key].time;
-	const Property& p0 = (key==0)? in_prop: keys[key-1].prop;
-	const Property& p1 = (key==n)? out_prop: keys[key].prop;
-	InterpolateProperty(element, id, p0, p1, t0, t1, t, tween);
+	const Property& p0 = (key==0)? *keyframe.from: keys[key-1].prop;
+	const Property& p1 = (key==n)? *keyframe.to: keys[key].prop;
+	InterpolateProperty(element, id, p0, p1, t0, t1, t, animation.transition.tween);
 }
 
 void ElementAnimation::Update(Element& element, PropertyId id, float delta) {
@@ -108,24 +108,24 @@ void ElementAnimation::Update(Element& element, PropertyId id, float delta) {
 		return;
 	time += delta;
 
-	if (time >= duration) {
+	if (time >= animation.transition.duration) {
 		current_iteration += 1;
-		if (num_iterations == -1 || (current_iteration >= 0 && current_iteration < num_iterations)) {
-			time -= duration;
-			if (alternate_direction)
+		if (animation.num_iterations == -1 || (current_iteration >= 0 && current_iteration < animation.num_iterations)) {
+			time -= animation.transition.duration;
+			if (animation.alternate)
 				reverse_direction = !reverse_direction;
 		}
 		else {
 			animation_complete = true;
-			time = duration;
+			time = animation.transition.duration;
 		}
 	}
 
 	if (reverse_direction) {
-		UpdateProperty(element, id,  duration - time/duration);
+		UpdateProperty(element, id,  animation.transition.duration - time/animation.transition.duration);
 	}
 	else {
-		UpdateProperty(element, id, time/duration);
+		UpdateProperty(element, id, time/animation.transition.duration);
 	}
 }
 

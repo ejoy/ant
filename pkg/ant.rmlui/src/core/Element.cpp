@@ -886,8 +886,8 @@ void Element::HandleAnimationProperty() {
 	for (const auto& animation : animation_list) {
 		if (!animation.paused) {
 			if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
-				for (auto const& [id, kf] : *keyframes) {
-					auto [res, suc] = animations.emplace(id, ElementAnimation { kf, animation });
+				for (auto const& [id, keyframe] : *keyframes) {
+					auto [res, suc] = animations.emplace(id, ElementAnimation { animation, keyframe });
 					if (suc) {
 						DispatchAnimationEvent("animationstart", res->second);
 					}

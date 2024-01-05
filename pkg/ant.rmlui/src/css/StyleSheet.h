@@ -1,7 +1,6 @@
 #pragma once
 
 #include <core/ID.h>
-#include <core/AnimationKey.h>
 #include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <unordered_map>
@@ -11,6 +10,15 @@ namespace Rml {
 
 class Element;
 class StyleSheetNode;
+
+struct AnimationKey {
+	AnimationKey(float time, const Property& prop)
+		: time(time)
+		, prop(prop)
+	{}
+	float time;
+	Property prop;
+};
 
 struct Keyframe {
 	std::optional<Property> from;
