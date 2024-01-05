@@ -34,6 +34,7 @@ namespace Rml::Style {
         bool                       Assgin(Value to, Combination from);
         void                       Clone(Value to, Value from);
         bool                       SetProperty(Value s, PropertyId id, const Property& value);
+        bool                       SetProperty(Value s, PropertyId id, const PropertyRaw& value);
         bool                       DelProperty(Value s, PropertyId id);
         PropertyIdSet              SetProperty(Value s, const PropertyVector& vec);
         PropertyIdSet              DelProperty(Value s, const PropertyIdSet& set);

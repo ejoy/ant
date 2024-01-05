@@ -12,7 +12,7 @@ class ElementInterpolate {
 public:
 	ElementInterpolate(Element& element, const Property& in_prop, const Property& out_prop);
 	ElementInterpolate(Element& element, const PropertyRaw& in_prop, const PropertyRaw& out_prop);
-	Property Update(float t0, float t1, float t, const Tween& tween);
+	PropertyRaw Update(float t0, float t1, float t, const Tween& tween);
 private:
 	Property p0;
 	Property p1;
@@ -21,7 +21,7 @@ private:
 class ElementTransition {
 public:
 	ElementTransition(Element& element, const Transition& transition, const PropertyRaw& in_prop, const PropertyRaw& out_prop);
-	Property UpdateProperty(float delta);
+	PropertyRaw UpdateProperty(float delta);
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }
 private:
@@ -34,7 +34,7 @@ private:
 class ElementAnimation {
 public:
 	ElementAnimation(Element& element, const Animation& animation, const Keyframe& keyframe);
-	Property UpdateProperty(Element& element, float delta);
+	PropertyRaw UpdateProperty(Element& element, float delta);
 	const std::string& GetName() const { return animation.name; }
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }

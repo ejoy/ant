@@ -35,8 +35,6 @@ public:
 		: PropertyVariant(PropertyFloat{value, unit})
 	{}
 
-	Property    Interpolate(const Property& other, float alpha) const;
-
 	template <typename T>
 	T& GetRef() {
 		assert(Has<T>());

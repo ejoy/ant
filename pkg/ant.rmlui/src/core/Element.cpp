@@ -815,7 +815,7 @@ void Element::StartTransition(std::function<void()> f) {
 		auto target_value = GetComputedProperty(id);
 		if (start_value && target_value && *start_value != *target_value) {
 			if (!transitions.contains(id)) {
-				SetAnimationProperty(id, *start_value->Decode());
+				SetAnimationProperty(id, *start_value);
 				transitions.emplace(id, ElementTransition { *this, transition, *start_value, *target_value });
 			}
 		}
@@ -890,7 +890,7 @@ void Element::AdvanceAnimations(float delta) {
 	if (!animations.empty()) {
 		for (auto& [id, animation] : animations) {
 			if (!animation.IsComplete() && delta > 0.0f) {
-				Property p2 = animation.UpdateProperty(*this, delta);
+				PropertyGuard p2 = animation.UpdateProperty(*this, delta);
 				SetAnimationProperty(id, p2);
 			}
 		}
@@ -911,7 +911,7 @@ void Element::AdvanceAnimations(float delta) {
 	if (!transitions.empty()) {
 		for (auto& [id, transition] : transitions) {
 			if (!transition.IsComplete() && delta > 0.0f) {
-				Property p2 = transition.UpdateProperty(delta);
+				PropertyGuard p2 = transition.UpdateProperty(delta);
 				SetAnimationProperty(id, p2);
 			}
 		}
@@ -1493,7 +1493,7 @@ bool Element::DelInlineProperty(const PropertyIdSet& set) {
 	return false;
 }
 
-void Element::SetAnimationProperty(PropertyId id, const Property& property) {
+void Element::SetAnimationProperty(PropertyId id, const PropertyRaw& property) {
 	if (Style::Instance().SetProperty(animation_properties, id, property)) {
 		DirtyProperty(id);
 	}

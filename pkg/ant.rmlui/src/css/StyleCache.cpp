@@ -95,6 +95,11 @@ namespace Rml::Style {
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
+    bool Cache::SetProperty(Value s, PropertyId id, const PropertyRaw& prop) {
+        style_attrib attrib = { prop.RawData(), prop.RawSize(), (uint8_t)id, 0 };
+        return !!style_modify(c, {s.idx}, 1, &attrib);
+    }
+
     bool Cache::DelProperty(Value s, PropertyId id) {
         style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
         return !!style_modify(c, {s.idx}, 1, &attrib);

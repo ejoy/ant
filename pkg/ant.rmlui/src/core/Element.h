@@ -122,7 +122,7 @@ public:
 	void DirtyProperties(const PropertyIdSet& properties);
 	void DirtyProperties(PropertyUnit unit);
 
-	void SetAnimationProperty(PropertyId id, const Property& property);
+	void SetAnimationProperty(PropertyId id, const PropertyRaw& property);
 	void DelAnimationProperty(PropertyId id);
 
 	std::optional<PropertyRaw> GetInlineProperty(PropertyId id) const;

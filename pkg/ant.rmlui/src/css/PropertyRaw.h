@@ -52,6 +52,18 @@ namespace Rml {
         std::span<uint8_t> m_data;
     };
 
+    class PropertyGuard: public PropertyRaw {
+    public:
+        PropertyGuard(PropertyRaw prop)
+            : PropertyRaw(prop)
+        { }
+        PropertyGuard(const PropertyGuard&) = delete;
+        PropertyGuard& operator=(const PropertyGuard&) = delete;
+        ~PropertyGuard() {
+            delete[] (uint8_t*)RawData();
+        }
+    };
+
     inline bool operator==(const PropertyRaw& l, const PropertyRaw& r) {
         return l.RawData() == r.RawData();
     }
