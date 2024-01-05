@@ -32,6 +32,7 @@ namespace Rml::Style {
         Combination                Inherit(Combination child);
         void                       Release(ValueOrCombination s);
         bool                       Assgin(Value to, Combination from);
+        bool                       Compare(Value a, Combination b);
         void                       Clone(Value to, Value from);
         bool                       SetProperty(Value s, PropertyId id, const Property& value);
         bool                       SetProperty(Value s, PropertyId id, const PropertyRaw& value);

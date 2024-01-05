@@ -81,6 +81,10 @@ namespace Rml::Style {
         return 0 != style_assign(c, {to.idx}, {from.idx});
     }
 
+    bool Cache::Compare(Value a, Combination b) {
+        return 0 != style_compare(c, {a.idx}, {b.idx});
+    }
+
     void Cache::Clone(Value to, Value from) {
         style_assign(c, {to.idx}, {from.idx});
     }
