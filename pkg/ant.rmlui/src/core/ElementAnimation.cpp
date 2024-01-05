@@ -1,59 +1,11 @@
 #include <core/ElementAnimation.h>
 #include <core/Element.h>
 #include <core/Transform.h>
+#include <css/StyleSheet.h>
 #include <util/Log.h>
 #include <algorithm>
 
 namespace Rml {
-
-//
-// see
-//   https://www.w3.org/TR/css-transforms-1/#interpolation-of-transforms
-//   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
-//
-static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
-	if (t0.size() != t1.size()) {
-		bool t0_shorter = t0.size() < t1.size();
-		auto& shorter = t0_shorter ? t0 : t1;
-		auto& longer = t0_shorter ? t1 : t0;
-		size_t i = 0;
-		for (; i < shorter.size(); ++i) {
-			auto& p0 = shorter[i];
-			auto& p1 = longer[i];
-			if (p0.index() == p1.index()) {
-				continue;
-			}
-			if (p0.GetType() == p1.GetType()) {
-				p0.ConvertToGenericType();
-				p1.ConvertToGenericType();
-				assert(p0.index() == p1.index());
-				continue;
-			}
-			if (shorter.size() < longer.size()) {
-				TransformPrimitive p = p1;
-				p.SetIdentity();
-				shorter.insert(shorter.begin() + i, p);
-				continue;
-			}
-			return t0.Combine(element, i) && t1.Combine(element, i);
-		}
-		for (; i < longer.size(); ++i) {
-			auto& p1 = longer[i];
-			TransformPrimitive p = p1;
-			p.SetIdentity();
-			shorter.insert(shorter.begin() + i, p);
-		}
-		return true;
-	}
-
-	assert(t0.size() == t1.size());
-	for (size_t i = 0; i < t0.size(); ++i) {
-		if (t0[i].index() != t1[i].index()) {
-			return t0.Combine(element, i) && t1.Combine(element, i);
-		}
-	}
-	return true;
-}
 
 static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element) {
 	if (!prop0.Has<Transform>() || !prop1.Has<Transform>()) {
@@ -65,16 +17,6 @@ static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element
 		Log::Message(Log::Level::Warning, "Property is not interpolation.");
 		//TODO
 		//Log::Message(Log::Level::Warning, "Property '%s' is not interpolation with property '%s'.", prop1.ToString().c_str(), prop0.ToString().c_str());
-		return false;
-	}
-	return true;
-}
-
-static bool AllowInterpolate(Property& prop, Element& element) {
-	if (!prop.AllowInterpolate(element)) {
-		Log::Message(Log::Level::Warning, "Property is not a valid target for interpolation.");
-		//TODO
-		//Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", prop.ToString().c_str());
 		return false;
 	}
 	return true;
@@ -107,12 +49,6 @@ bool ElementTransition::IsValid(Element& element) {
 		Log::Message(Log::Level::Warning, "Animation duration too samll.");
 		return false;
 	}
-	if (!AllowInterpolate(in_prop, element)) {
-		return false;
-	}
-	if (!AllowInterpolate(out_prop, element)) {
-		return false;
-	}
 	if (!PrepareTransforms(in_prop, out_prop, element)) {
 		return false;
 	}
@@ -138,38 +74,17 @@ void ElementTransition::Update(Element& element, PropertyId id, float delta) {
 	UpdateProperty(element, id, time/duration);
 }
 
-ElementAnimation::ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation)
-	: ElementTransition(in_prop, out_prop, animation.transition)
+ElementAnimation::ElementAnimation(const Keyframe& kf, const Animation& animation)
+	: ElementTransition(*kf.from, *kf.to, animation.transition)
 	, name(animation.name)
-	, keys()
+	, keys(kf.keys)
 	, num_iterations(animation.num_iterations)
 	, current_iteration(0)
 	, alternate_direction(animation.alternate)
 	, reverse_direction(false)
-{}
-
-void ElementAnimation::AddKey(float time, const Property& prop) {
-	keys.emplace_back(time, prop);
-}
-
-bool ElementAnimation::IsValid(Element& element) {
-	if (duration < 1e-3f) {
-		Log::Message(Log::Level::Warning, "Animation duration too samll.");
-		return false;
-	}
-	if (!AllowInterpolate(in_prop, element)) {
-		return false;
-	}
-	if (!AllowInterpolate(out_prop, element)) {
-		return false;
-	}
-	for (auto& key : keys) {
-		if (!AllowInterpolate(key.prop, element)) {
-			return false;
-		}
-	}
-	//TODO: PrepareTransformPair
-	return true;
+{
+	//TODO
+	//PrepareTransforms
 }
 
 void ElementAnimation::UpdateProperty(Element& element, PropertyId id, float t) {

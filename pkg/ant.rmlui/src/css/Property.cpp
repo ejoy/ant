@@ -36,21 +36,4 @@ Property Property::Interpolate(const Property& other, float alpha) const {
 	return std::visit(InterpolateVisitor{ other, alpha }, (const PropertyVariant&)*this);
 }
 
-struct AllowInterpolateVisitor {
-	Element& e;
-	template <typename T>
-	bool operator()(T&) { return true; }
-};
-template <> bool AllowInterpolateVisitor::operator()<PropertyKeyword>(PropertyKeyword&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<std::string>(std::string&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<TransitionList>(TransitionList&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<AnimationList>(AnimationList&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<Transform>(Transform& p0) {
-	return p0.AllowInterpolate(e);
-}
-
-bool Property::AllowInterpolate(Element& e) const {
-	return std::visit(AllowInterpolateVisitor{e}, (PropertyVariant&)*this);
-}
-
 }

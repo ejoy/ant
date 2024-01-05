@@ -36,7 +36,6 @@ public:
 	{}
 
 	Property    Interpolate(const Property& other, float alpha) const;
-	bool        AllowInterpolate(Element& e) const;
 
 	template <typename T>
 	T& GetRef() {

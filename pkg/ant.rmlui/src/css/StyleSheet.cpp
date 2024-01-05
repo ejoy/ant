@@ -1,5 +1,6 @@
 #include <css/StyleSheet.h>
 #include <css/StyleSheetNode.h>
+#include <util/Log.h>
 #include <algorithm>
 
 namespace Rml {
@@ -10,17 +11,12 @@ StyleSheet::StyleSheet()
 StyleSheet::~StyleSheet()
 {}
 
-template <typename Vec>
-void vector_append(Vec& a, Vec const& b) {
-	a.insert(std::end(a), std::begin(b), std::end(b));
-}
-
 void StyleSheet::Merge(const StyleSheet& other_sheet) {
 	stylenode.insert(stylenode.end(), other_sheet.stylenode.begin(), other_sheet.stylenode.end());
 	for (auto const& [identifier, other_kf] : other_sheet.keyframes) {
-		auto& kf = keyframes[identifier];
-		for (auto const& [id, value] : other_kf.properties) {
-			vector_append(kf.properties[id], value);
+		auto [_, suc] = keyframes.emplace(identifier, other_kf);
+		if (!suc) {
+			Log::Message(Log::Level::Warning, "Redfined keyframe.");
 		}
 	}
 }
@@ -50,7 +46,15 @@ void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<fl
 	auto& kf = keyframes[identifier];
 	for (float time : rule_values) {
 		for (auto const& [id, value] : properties) {
-			kf.properties[id].emplace_back(AnimationKey {time, value} );
+			if (time == 0) {
+				kf[id].from = value;
+			}
+			else if (time == 1) {
+				kf[id].to = value;
+			}
+			else {
+				kf[id].keys.emplace_back(time, value);
+			}
 		}
 	}
 }
@@ -63,10 +67,21 @@ void StyleSheet::Sort() {
 	std::sort(stylenode.begin(), stylenode.end(), [](const StyleSheetNode& lhs, const StyleSheetNode& rhs) {
 		return lhs.GetSpecificity() > rhs.GetSpecificity();
 	});
-
-	for (auto& [_, kf] : keyframes) {
-		for (auto& [id, vec] : kf.properties) {
-			std::sort(vec.begin(), vec.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
+	for (auto& [_, kfs] : keyframes) {
+		for (auto it = kfs.begin(); it != kfs.end();) {
+			auto& kf = it->second;
+			std::sort(kf.keys.begin(), kf.keys.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
+			if (!kf.from) {
+				Log::Message(Log::Level::Warning, "Keyframe has no from rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			if (!kf.to) {
+				Log::Message(Log::Level::Warning, "Keyframe has no to rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			++it;
 		}
 	}
 }

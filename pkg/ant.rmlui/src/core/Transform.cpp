@@ -511,7 +511,7 @@ void TransformPrimitive::SetIdentity() {
 	std::visit(SetIdentityVisitor(), static_cast<Transforms::Primitive&>(*this));
 }
 
-bool TransformPrimitive::AllowInterpolate(Element& e) {
+bool TransformPrimitive::PrepareInterpolate(Element& e) {
 	PrepareVisitor visitor{ e, *this };
 	std::visit(visitor, static_cast<Transforms::Primitive&>(*this));
 	return visitor.ok;
@@ -536,9 +536,9 @@ TransformType TransformPrimitive::GetType() const {
 	return std::visit(GetTypeVisitor{}, static_cast<Transforms::Primitive const&>(*this));
 }
 
-bool Transform::AllowInterpolate(Element& e) {
+bool Transform::PrepareInterpolate(Element& e) {
 	for (auto& p0 : *this) {
-		if (!p0.AllowInterpolate(e)) {
+		if (!p0.PrepareInterpolate(e)) {
 			return false;
 		}
 	}
@@ -589,6 +589,62 @@ std::string Transform::ToString() const {
 		result += t.ToString();
 	}
 	return result;
+}
+
+
+//
+// see
+//   https://www.w3.org/TR/css-transforms-1/#interpolation-of-transforms
+//   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
+//
+bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
+	if (!t0.PrepareInterpolate(element)) {
+		return false;
+	}
+	if (!t1.PrepareInterpolate(element)) {
+		return false;
+	}
+	if (t0.size() != t1.size()) {
+		bool t0_shorter = t0.size() < t1.size();
+		auto& shorter = t0_shorter ? t0 : t1;
+		auto& longer = t0_shorter ? t1 : t0;
+		size_t i = 0;
+		for (; i < shorter.size(); ++i) {
+			auto& p0 = shorter[i];
+			auto& p1 = longer[i];
+			if (p0.index() == p1.index()) {
+				continue;
+			}
+			if (p0.GetType() == p1.GetType()) {
+				p0.ConvertToGenericType();
+				p1.ConvertToGenericType();
+				assert(p0.index() == p1.index());
+				continue;
+			}
+			if (shorter.size() < longer.size()) {
+				TransformPrimitive p = p1;
+				p.SetIdentity();
+				shorter.insert(shorter.begin() + i, p);
+				continue;
+			}
+			return t0.Combine(element, i) && t1.Combine(element, i);
+		}
+		for (; i < longer.size(); ++i) {
+			auto& p1 = longer[i];
+			TransformPrimitive p = p1;
+			p.SetIdentity();
+			shorter.insert(shorter.begin() + i, p);
+		}
+		return true;
+	}
+
+	assert(t0.size() == t1.size());
+	for (size_t i = 0; i < t0.size(); ++i) {
+		if (t0[i].index() != t1[i].index()) {
+			return t0.Combine(element, i) && t1.Combine(element, i);
+		}
+	}
+	return true;
 }
 
 }

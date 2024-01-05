@@ -884,47 +884,13 @@ void Element::HandleAnimationProperty() {
 	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
 
 	for (const auto& animation : animation_list) {
-		if (const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name)) {
-			auto& properties = keyframes_ptr->properties;
-			if (keyframes_ptr->properties.size() >= 1 && !animation.paused) {
-				for (auto const& [id, vec] : properties) {
-					bool has_from_key = (vec[0].time == 0);
-					bool has_to_key = (vec.back().time == 1);
-					std::optional<Property> start_value;
-					std::optional<Property> target_value;
-					if (has_from_key) {
-						start_value = vec[0].prop;
+		if (!animation.paused) {
+			if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
+				for (auto const& [id, kf] : *keyframes) {
+					auto [res, suc] = animations.emplace(id, ElementAnimation { kf, animation });
+					if (suc) {
+						DispatchAnimationEvent("animationstart", res->second);
 					}
-					else {
-						auto raw = GetComputedProperty(id);
-						if (raw) {
-							start_value = raw->Decode();
-						}
-						else {
-							start_value = std::nullopt;
-						}
-					}
-					if (has_to_key) {
-						target_value = vec.back().prop;
-					}
-					else {
-						auto raw = GetComputedProperty(id);
-						if (raw) {
-							target_value = raw->Decode();
-						}
-						else {
-							target_value = std::nullopt;
-						}
-					}
-					if (!start_value || !target_value) {
-						continue;
-					}
-					ElementAnimation ani { *start_value, *target_value, animation };
-					for (int i = (has_from_key ? 1 : 0); i < (int)vec.size() + (has_to_key ? -1 : 0); i++) {
-						ani.AddKey(vec[i].time, vec[i].prop);
-					}
-					DispatchAnimationEvent("animationstart", ani);
-					animations.insert_or_assign(id, std::move(ani));
 				}
 			}
 		}

@@ -7,6 +7,8 @@
 
 namespace Rml {
 
+struct Keyframe;
+
 class ElementTransition {
 public:
 	ElementTransition(const Property& in_prop, const Property& out_prop, const Transition& transition);
@@ -27,9 +29,7 @@ protected:
 
 class ElementAnimation: public ElementTransition {
 public:
-	ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation);
-	void AddKey(float target_time, const Property& property);
-	bool IsValid(Element& element);
+	ElementAnimation(const Keyframe& kf, const Animation& animation);
 	void Update(Element& element, PropertyId id, float delta);
 	const std::string& GetName() const { return name; }
 protected:

@@ -12,9 +12,13 @@ namespace Rml {
 class Element;
 class StyleSheetNode;
 
-struct Keyframes {
-	std::map<PropertyId, std::vector<AnimationKey>> properties;
+struct Keyframe {
+	std::optional<Property> from;
+	std::optional<Property> to;
+	std::vector<AnimationKey> keys;
 };
+
+using Keyframes = std::map<PropertyId, Keyframe>;
 
 class StyleSheet {
 public:

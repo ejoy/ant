@@ -211,7 +211,7 @@ struct TransformPrimitive : public Transforms::Primitive {
 		: Transforms::Primitive(std::forward<T>(v))
 	{}
 	void   SetIdentity();
-	bool   AllowInterpolate(Element& e);
+	bool   PrepareInterpolate(Element& e);
 	void   ConvertToGenericType();
 	TransformPrimitive Interpolate(const TransformPrimitive& other, float alpha) const;
 	TransformType GetType() const;
@@ -220,11 +220,13 @@ struct TransformPrimitive : public Transforms::Primitive {
 
 class Transform : public std::vector<TransformPrimitive> {
 public:
-	bool AllowInterpolate(Element& e);
+	bool PrepareInterpolate(Element& e);
 	Transform Interpolate(const Transform& other, float alpha) const;
 	glm::mat4x4 GetMatrix(Element& e) const;
 	bool Combine(Element& e, size_t start);
 	std::string ToString() const;
 };
+
+bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element);
 
 }
