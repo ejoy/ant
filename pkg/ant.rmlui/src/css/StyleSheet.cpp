@@ -46,15 +46,7 @@ void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<fl
 	auto& kf = keyframes[identifier];
 	for (float time : rule_values) {
 		for (auto const& [id, value] : properties) {
-			if (time == 0) {
-				kf[id].from = value;
-			}
-			else if (time == 1) {
-				kf[id].to = value;
-			}
-			else {
-				kf[id].keys.emplace_back(time, value);
-			}
+			kf[id].emplace_back(time, value);
 		}
 	}
 }
@@ -70,14 +62,24 @@ void StyleSheet::Sort() {
 	for (auto& [_, kfs] : keyframes) {
 		for (auto it = kfs.begin(); it != kfs.end();) {
 			auto& kf = it->second;
-			std::sort(kf.keys.begin(), kf.keys.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
-			if (!kf.from) {
+			std::sort(kf.begin(), kf.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
+			if (kf.empty()) {
+				Log::Message(Log::Level::Warning, "Keyframe has no rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			if (kf.front().time != 0.f) {
 				Log::Message(Log::Level::Warning, "Keyframe has no from rule.");
 				it = kfs.erase(it);
 				continue;
 			}
-			if (!kf.to) {
+			if (kf.back().time != 1.f) {
 				Log::Message(Log::Level::Warning, "Keyframe has no to rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			if (kf.size() > 255) {
+				Log::Message(Log::Level::Warning, "Keyframe has too many rules.");
 				it = kfs.erase(it);
 				continue;
 			}

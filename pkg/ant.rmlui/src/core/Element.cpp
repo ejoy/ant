@@ -795,10 +795,10 @@ void Element::StartTransition(std::function<void()> f) {
 		return;
 	}
 	struct PropertyTransition {
-		PropertyId              id;
-		const Transition&       transition;
-		std::optional<Property> start_value;
-		PropertyTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value)
+		PropertyId                 id;
+		const Transition&          transition;
+		std::optional<PropertyRaw> start_value;
+		PropertyTransition(PropertyId id, const Transition& transition, std::optional<PropertyRaw> start_value)
 			: id(id)
 			, transition(transition)
 			, start_value(start_value)
@@ -807,27 +807,16 @@ void Element::StartTransition(std::function<void()> f) {
 	std::vector<PropertyTransition> pt;
 	pt.reserve(transition_list.size());
 	for (auto const& [id, transition] : transition_list) {
-		auto raw_start_value = GetComputedProperty(id);
-		if (raw_start_value) {
-			pt.emplace_back(id, transition, raw_start_value->Decode());
-		}
-		else {
-			pt.emplace_back(id, transition, std::nullopt);
-		}
+		auto start_value = GetComputedProperty(id);
+		pt.emplace_back(id, transition, start_value);
 	}
 	f();
 	for (auto& [id, transition, start_value] : pt) {
-		auto raw_target_value = GetComputedProperty(id);
-		if (raw_target_value) {
-			auto target_value = raw_target_value->Decode();
-			if (start_value && target_value && *start_value != *target_value) {
-				if (!transitions.contains(id)) {
-					ElementTransition ani {*start_value, *target_value, transition };
-					if (ani.IsValid(*this)) {
-						SetAnimationProperty(id, *start_value);
-						transitions.insert_or_assign(id, std::move(ani));
-					}
-				}
+		auto target_value = GetComputedProperty(id);
+		if (start_value && target_value && *start_value != *target_value) {
+			if (!transitions.contains(id)) {
+				SetAnimationProperty(id, *start_value->Decode());
+				transitions.emplace(id, ElementTransition { *this, transition, *start_value, *target_value });
 			}
 		}
 	}
@@ -887,7 +876,7 @@ void Element::HandleAnimationProperty() {
 		if (!animation.paused) {
 			if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
 				for (auto const& [id, keyframe] : *keyframes) {
-					auto [res, suc] = animations.emplace(id, ElementAnimation { animation, keyframe });
+					auto [res, suc] = animations.emplace(id, ElementAnimation { *this, animation, keyframe });
 					if (suc) {
 						DispatchAnimationEvent("animationstart", res->second);
 					}
@@ -899,14 +888,19 @@ void Element::HandleAnimationProperty() {
 
 void Element::AdvanceAnimations(float delta) {
 	if (!animations.empty()) {
-		for (auto& [id, e] : animations) {
-			e.Update(*this, id, delta);
+		for (auto& [id, animation] : animations) {
+			if (!animation.IsComplete() && delta > 0.0f) {
+				Property p2 = animation.UpdateProperty(*this, delta);
+				SetAnimationProperty(id, p2);
+			}
 		}
 		for (auto it = animations.begin(); it != animations.end();) {
-			if (it->second.IsComplete()) {
+			auto& id = it->first;
+			auto& animation = it->second;
+			if (animation.IsComplete()) {
 				//TODO animationcancel
-				DispatchAnimationEvent("animationend", it->second);
-				DelAnimationProperty(it->first);
+				DispatchAnimationEvent("animationend", animation);
+				DelAnimationProperty(id);
 				it = animations.erase(it);
 			}
 			else {
@@ -915,12 +909,17 @@ void Element::AdvanceAnimations(float delta) {
 		}
 	}
 	if (!transitions.empty()) {
-		for (auto& [id, e] : transitions) {
-			e.Update(*this, id, delta);
+		for (auto& [id, transition] : transitions) {
+			if (!transition.IsComplete() && delta > 0.0f) {
+				Property p2 = transition.UpdateProperty(delta);
+				SetAnimationProperty(id, p2);
+			}
 		}
 		for (auto it = transitions.begin(); it != transitions.end();) {
-			if (it->second.IsComplete()) {
-				DelAnimationProperty(it->first);
+			auto& id = it->first;
+			auto& transition = it->second;
+			if (transition.IsComplete()) {
+				DelAnimationProperty(id);
 				it = transitions.erase(it);
 			}
 			else {

@@ -20,12 +20,7 @@ struct AnimationKey {
 	Property prop;
 };
 
-struct Keyframe {
-	std::optional<Property> from;
-	std::optional<Property> to;
-	std::vector<AnimationKey> keys;
-};
-
+using Keyframe = std::vector<AnimationKey>;
 using Keyframes = std::map<PropertyId, Keyframe>;
 
 class StyleSheet {

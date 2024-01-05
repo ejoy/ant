@@ -52,6 +52,10 @@ namespace Rml {
         std::span<uint8_t> m_data;
     };
 
+    inline bool operator==(const PropertyRaw& l, const PropertyRaw& r) {
+        return l.RawData() == r.RawData();
+    }
+
     inline float PropertyComputeX(const Element* e, const PropertyRaw& p) {
         if (p.Has<PropertyKeyword>()) {
             switch (p.Get<PropertyKeyword>()) {
