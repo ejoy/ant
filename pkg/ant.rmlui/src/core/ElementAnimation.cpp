@@ -4,6 +4,7 @@
 #include <css/StyleSheet.h>
 #include <util/Log.h>
 #include <algorithm>
+#include <bee/nonstd/unreachable.h>
 
 namespace Rml {
 
@@ -46,9 +47,25 @@ ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Pr
 	, p1(out_prop) {
 		
 	if (std::holds_alternative<Transform>(in_prop) && std::holds_alternative<Transform>(out_prop)) {
-		auto& t0 = std::get<Transform>(p0);
-		auto& t1 = std::get<Transform>(p1);
-		PrepareTransformPair(t0, t1, element);
+		auto t0 = std::get<Transform>(p0);
+		auto t1 = std::get<Transform>(p1);
+		switch (PrepareTransformPair(t0, t1, element)) {
+		case PrepareResult::Failed:
+		case PrepareResult::NoChanged:
+			break;
+		case PrepareResult::ChangedAll:
+			p0 = t0;
+			p1 = t1;
+			break;
+		case PrepareResult::ChangedT0:
+			p0 = t0;
+			break;
+		case PrepareResult::ChangedT1:
+			p1 = t1;
+			break;
+		default:
+			std::unreachable();
+		}
 	}
 }
 
@@ -57,9 +74,25 @@ ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Pr
 	, p0(*in_prop.Decode())
 	, p1(*out_prop.Decode()) {
 	if (in_prop.Has<Transform>() && out_prop.Has<Transform>()) {
-		auto& t0 = std::get<Transform>(p0);
-		auto& t1 = std::get<Transform>(p1);
-		PrepareTransformPair(t0, t1, element);
+		auto t0 = std::get<Transform>(p0);
+		auto t1 = std::get<Transform>(p1);
+		switch (PrepareTransformPair(t0, t1, element)) {
+		case PrepareResult::Failed:
+		case PrepareResult::NoChanged:
+			break;
+		case PrepareResult::ChangedAll:
+			p0 = t0;
+			p1 = t1;
+			break;
+		case PrepareResult::ChangedT0:
+			p0 = t0;
+			break;
+		case PrepareResult::ChangedT1:
+			p1 = t1;
+			break;
+		default:
+			std::unreachable();
+		}
 	}
 }
 

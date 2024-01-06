@@ -597,17 +597,18 @@ std::string Transform::ToString() const {
 //   https://www.w3.org/TR/css-transforms-1/#interpolation-of-transforms
 //   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
 //
-bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
+PrepareResult PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
 	if (!t0.PrepareInterpolate(element)) {
-		return false;
+		return PrepareResult::Failed;
 	}
 	if (!t1.PrepareInterpolate(element)) {
-		return false;
+		return PrepareResult::Failed;
 	}
 	if (t0.size() != t1.size()) {
 		bool t0_shorter = t0.size() < t1.size();
 		auto& shorter = t0_shorter ? t0 : t1;
 		auto& longer = t0_shorter ? t1 : t0;
+		bool changed_longer = false;
 		size_t i = 0;
 		for (; i < shorter.size(); ++i) {
 			auto& p0 = shorter[i];
@@ -619,15 +620,15 @@ bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
 				p0.ConvertToGenericType();
 				p1.ConvertToGenericType();
 				assert(p0.index() == p1.index());
+				changed_longer = true;
 				continue;
 			}
-			if (shorter.size() < longer.size()) {
-				TransformPrimitive p = p1;
-				p.SetIdentity();
-				shorter.insert(shorter.begin() + i, p);
-				continue;
+			if (t0.Combine(element, i) && t1.Combine(element, i)) {
+				return PrepareResult::ChangedAll;
 			}
-			return t0.Combine(element, i) && t1.Combine(element, i);
+			else {
+				return PrepareResult::Failed;
+			}
 		}
 		for (; i < longer.size(); ++i) {
 			auto& p1 = longer[i];
@@ -635,16 +636,27 @@ bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
 			p.SetIdentity();
 			shorter.insert(shorter.begin() + i, p);
 		}
-		return true;
-	}
-
-	assert(t0.size() == t1.size());
-	for (size_t i = 0; i < t0.size(); ++i) {
-		if (t0[i].index() != t1[i].index()) {
-			return t0.Combine(element, i) && t1.Combine(element, i);
+		if (changed_longer) {
+			return PrepareResult::ChangedAll;
+		}
+		if (t0_shorter) {
+			return PrepareResult::ChangedT0;
+		}
+		else {
+			return PrepareResult::ChangedT1;
 		}
 	}
-	return true;
+	for (size_t i = 0; i < t0.size(); ++i) {
+		if (t0[i].index() != t1[i].index()) {
+			if (t0.Combine(element, i) && t1.Combine(element, i)) {
+				return PrepareResult::ChangedAll;
+			}
+			else {
+				return PrepareResult::Failed;
+			}
+		}
+	}
+	return PrepareResult::NoChanged;
 }
 
 }

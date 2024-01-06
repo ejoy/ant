@@ -227,6 +227,14 @@ public:
 	std::string ToString() const;
 };
 
-bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element);
+enum class PrepareResult: uint8_t {
+	Failed,
+	NoChanged,
+	ChangedAll,
+	ChangedT0,
+	ChangedT1,
+};
+
+PrepareResult PrepareTransformPair(Transform& t0, Transform& t1, Element& element);
 
 }
