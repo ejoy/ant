@@ -5,6 +5,9 @@
 #include <memory>
 #include <array>
 #include <span>
+#include <optional>
+#include <cstddef>
+#include <bee/nonstd/unreachable.h>
 
 namespace Rml {
     template <class char_t>
@@ -90,25 +93,6 @@ namespace Rml {
         size_t           pos;
     };
 
-    template <class char_t>
-    struct strparser {
-        strparser(const char_t* str)
-            : data(str)
-        {}
-        template <class T>
-        T const& pop() {
-            const char_t* prev = data;
-            data += sizeof(T);
-            return *(T const*)prev;
-        }
-        const char_t* pop(size_t sz) {
-            const char_t* prev = data;
-            data += sz;
-            return prev;
-        }
-        const char_t* data;
-    };
-
     template<typename VariantType, typename T, std::size_t Is = 0>
     constexpr std::size_t variant_index() {
         static_assert(Is < std::variant_size_v<VariantType>, "Type not found in variant");
@@ -176,24 +160,174 @@ namespace Rml {
         }
     }
 
+    class PropertyBasicView {
+    public:
+        PropertyBasicView(const std::byte* ptr)
+            : ptr(ptr)
+        {}
+        template <typename T>
+        const T& get() const {
+            return *(const T*)ptr;
+        }
+        template <typename T>
+        const T& pop() {
+            const std::byte* prev = ptr;
+            ptr += sizeof(T);
+            return *(const T*)prev;
+        }
+        template <typename T>
+        const T* pop(size_t n) {
+            const std::byte* prev = ptr;
+            ptr += sizeof(T) * n;
+            return (const T*)prev;
+        }
+    protected:
+        const std::byte* ptr;
+    };
+
+
     template <class T>
     struct tag {};
 
     template <class T>
     inline constexpr auto tag_v = tag<T>{};
 
+    template <typename T, typename... Types>
+    constexpr uint8_t PropertyTypeIndex;
+    template <typename T, typename... Types>
+    constexpr uint8_t PropertyTypeIndex<T, T, Types...> = 0;
+    template <typename T, typename U, typename... Types>
+    constexpr uint8_t PropertyTypeIndex<T, U, Types...> = 1 + PropertyTypeIndex<T, Types...>;
+
+    template <typename ...Types>
+    class PropertyVariantView: public PropertyBasicView {
+    public:
+        template <typename T>
+        static constexpr uint8_t Index = PropertyTypeIndex<T, Types...>;
+        PropertyVariantView(const std::byte* ptr)
+            : PropertyBasicView(ptr)
+        {}
+        uint8_t get_index() const {
+            return *(const uint8_t*)ptr;
+        }
+        template <typename T>
+            requires (std::is_trivially_destructible_v<T>)
+        const T& get() const {
+            if (get_index() != Index<T>) {
+                throw std::runtime_error("decode property failed.");
+            }
+            return *(const T*)(ptr + 1);
+        }
+        template <typename T>
+            requires (!std::is_trivially_destructible_v<T>)
+        PropertyBasicView get_view() const {
+            if (get_index() != Index<T>) {
+                throw std::runtime_error("decode property failed.");
+            }
+            return PropertyBasicView { ptr + 1 };
+        }
+        template <typename T>
+            requires (std::is_trivially_destructible_v<T>)
+        const T* get_if() const {
+            if (get_index() != Index<T>) {
+                return nullptr;
+            }
+            return (const T*)(ptr + 1);
+        }
+        template <typename T>
+            requires (!std::is_trivially_destructible_v<T>)
+        std::optional<PropertyBasicView> get_view_if() const {
+            if (get_index() != Index<T>) {
+                return std::nullopt;
+            }
+            return PropertyBasicView { ptr + 1 };
+        }
+
+        template <std::size_t I, std::size_t Max>
+        struct SwitchCase {
+            template <typename Visitor>
+            static auto Run(Visitor&& vis, PropertyBasicView v0) {
+                if constexpr (I < Max) {
+                    using T = std::tuple_element_t<I, std::tuple<Types...>>;
+                    if constexpr (std::is_trivially_destructible_v<T>) {
+                        return std::invoke(std::forward<Visitor>(vis), v0.get<T>());
+                    }
+                    else {
+                        return std::invoke(std::forward<Visitor>(vis), tag_v<T>, v0);
+                    }
+                }
+                else {
+                    return std::invoke(std::forward<Visitor>(vis));
+                }
+            }
+            template <typename Visitor>
+            static auto Run(Visitor&& vis, PropertyBasicView v0, PropertyBasicView v1) {
+                if constexpr (I < Max) {
+                    using T = std::tuple_element_t<I, std::tuple<Types...>>;
+                    if constexpr (std::is_trivially_destructible_v<T>) {
+                        return std::invoke(std::forward<Visitor>(vis), v0.get<T>(), v1.get<T>());
+                    }
+                    else {
+                        return std::invoke(std::forward<Visitor>(vis), tag_v<T>, v0, v1);
+                    }
+                }
+                else {
+                    return std::invoke(std::forward<Visitor>(vis));
+                }
+            }
+        };
+        template <typename Visitor>
+        auto visit(Visitor&& vis) {
+            constexpr static std::size_t Max = sizeof...(Types);
+            static_assert(Max <= 8);
+            switch (get_index()) {
+            case 0: return SwitchCase<0, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 1: return SwitchCase<1, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 2: return SwitchCase<2, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 3: return SwitchCase<3, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 4: return SwitchCase<4, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 5: return SwitchCase<5, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 6: return SwitchCase<6, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            case 7: return SwitchCase<7, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 });
+            default:
+                return std::invoke(std::forward<Visitor>(vis));
+            }
+        }
+        template <typename Visitor>
+        auto visit(Visitor&& vis, PropertyVariantView<Types...> v1) {
+            constexpr static std::size_t Max = sizeof...(Types);
+            static_assert(Max <= 8);
+            auto index0 = get_index();
+            if (index0 != v1.get_index()) {
+                return std::invoke(std::forward<Visitor>(vis));
+            }
+            switch (index0) {
+            case 0: return SwitchCase<0, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 1: return SwitchCase<1, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 2: return SwitchCase<2, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 3: return SwitchCase<3, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 4: return SwitchCase<4, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 5: return SwitchCase<5, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 6: return SwitchCase<6, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            case 7: return SwitchCase<7, Max>::Run(std::forward<Visitor>(vis), { ptr + 1 }, { v1.ptr + 1 });
+            default:
+                return std::invoke(std::forward<Visitor>(vis));
+            }
+        }
+    };
+
     template <class T>
-    inline T PropertyDecode(tag<T>, strparser<uint8_t>& data) {
+    inline T PropertyDecode(tag<T>, PropertyBasicView& data) {
         return data.pop<T>();
     }
 
     template <class VariantType>
-    using DecodeVariantFunc = VariantType (*)(strparser<uint8_t>& data);
+    using DecodeVariantFunc = VariantType (*)(PropertyBasicView& data);
     template <class VariantType>
     using DecodeVariantJumpTable = std::array<DecodeVariantFunc<VariantType>, std::variant_size_v<VariantType>>;
 
     template <class VariantItem, class VariantType>
-    inline VariantType PropertyDecodeVariant(strparser<uint8_t>& data) {
+    inline VariantType PropertyDecodeVariant(PropertyBasicView& data) {
         return PropertyDecode(tag_v<VariantItem>, data);
     }
 
@@ -214,7 +348,7 @@ namespace Rml {
     }
 
     template <class ...Args>
-    inline std::variant<Args...> PropertyDecode(tag<std::variant<Args...>>, strparser<uint8_t>& data) {
+    inline std::variant<Args...> PropertyDecode(tag<std::variant<Args...>>, PropertyBasicView& data) {
         using VariantType = std::variant<Args...>;
         constinit static auto jump = CreateDecodeVariantJumpTable<VariantType>();
         uint8_t type = data.pop<uint8_t>();
@@ -224,12 +358,12 @@ namespace Rml {
         return jump[type](data);
     }
 
-    inline std::string PropertyDecode(tag<std::string>, strparser<uint8_t>& data) {
+    inline std::string PropertyDecode(tag<std::string>, PropertyBasicView& data) {
         size_t sz = data.pop<size_t>();
-        return {(const char*)data.pop(sz), sz};
+        return {data.pop<char>(sz), sz};
     }
 
-    inline Transform PropertyDecode(tag<Transform>, strparser<uint8_t>& data) {
+    inline Transform PropertyDecode(tag<Transform>, PropertyBasicView& data) {
         size_t n = data.pop<uint8_t>();
         Transform t;
         t.reserve(n);
@@ -239,7 +373,7 @@ namespace Rml {
         return t;
     }
 
-    inline TransitionList PropertyDecode(tag<TransitionList>, strparser<uint8_t>& data) {
+    inline TransitionList PropertyDecode(tag<TransitionList>, PropertyBasicView& data) {
         size_t n = data.pop<uint8_t>();
         TransitionList t;
         for (size_t i = 0; i < n; ++i) {
@@ -250,7 +384,7 @@ namespace Rml {
         return t;
     }
 
-    inline Animation PropertyDecode(tag<Animation>, strparser<uint8_t>& data) {
+    inline Animation PropertyDecode(tag<Animation>, PropertyBasicView& data) {
         return {
             data.pop<Transition>(),
             data.pop<int>(),
@@ -260,7 +394,7 @@ namespace Rml {
         };
     }
 
-    inline AnimationList PropertyDecode(tag<AnimationList>, strparser<uint8_t>& data) {
+    inline AnimationList PropertyDecode(tag<AnimationList>, PropertyBasicView& data) {
         size_t n = data.pop<uint8_t>();
         AnimationList t;
         t.reserve(n);

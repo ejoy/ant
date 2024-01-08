@@ -19,7 +19,7 @@ namespace Rml {
          return attrib_id != -1;
     }
 
-    strparser<uint8_t> Property::CreateParser() const {
+    PropertyView Property::GetView() const {
         auto view = Style::Instance().GetPropertyData(*this);
         return { view.data() };
     }
@@ -29,43 +29,44 @@ namespace Rml {
     }
 
     bool Property::IsFloatUnit(PropertyUnit unit) const {
-        auto p = CreateParser();
-        if (p.pop<uint8_t>() != PropertyType<PropertyFloat>) {
-            return false;
+        auto view = GetView();
+        if (auto v = view.get_if<PropertyFloat>()) {
+            return v->unit == unit;
         }
-        auto const& v = p.pop<PropertyFloat>();
-        return v.unit == unit;
+        return false;
     }
 
-    std::string Property::ToString() const {
-        auto p = CreateParser();
-        switch (p.pop<uint8_t>()) {
-        case PropertyType<PropertyFloat>: {
-            auto v = p.pop<PropertyFloat>();
+    struct ToStringVisitor {
+        std::string operator()(const PropertyFloat& v) {
             return v.ToString();
         }
-        case PropertyType<PropertyKeyword>: {
-            auto v = p.pop<PropertyKeyword>();
+        std::string operator()(const PropertyKeyword& v) {
             return "<keyword," + std::to_string(v) + ">";
         }
-        case PropertyType<Color>: {
-            auto v = p.pop<Color>();
+        std::string operator()(const Color& v) {
             return v.ToString();
         }
-        case PropertyType<std::string>: {
-            auto v = PropertyDecode(tag_v<std::string>, p);
+        std::string operator()(tag<std::string>, PropertyBasicView view) {
+            auto v = PropertyDecode(tag_v<std::string>, view);
             return v;
         }
-        case PropertyType<Transform>: {
-            auto v = PropertyDecode(tag_v<Transform>, p);
+        std::string operator()(tag<Transform>, PropertyBasicView view) {
+            auto v = PropertyDecode(tag_v<Transform>, view);
             return v.ToString();
         }
-        case PropertyType<TransitionList>:
+        std::string operator()(tag<TransitionList>, PropertyBasicView view) {
             return "<transition>";
-        case PropertyType<AnimationList>:
+        }
+        std::string operator()(tag<AnimationList>, PropertyBasicView view) {
             return "<animation>";
         }
-        return {};
+        std::string operator()() {
+            return "<unknown>";
+        }
+    };
+    std::string Property::ToString() const {
+        auto view = GetView();
+        return view.visit(ToStringVisitor {});
     }
 
     void PropertyRef::AddRef() {

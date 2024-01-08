@@ -9,36 +9,16 @@
 #include <css/PropertyBinary.h>
 
 namespace Rml {
-    template <typename T, typename... Types>
-    constexpr uint8_t PropertyType_;
-
-    template <typename T, typename... Types>
-    constexpr uint8_t PropertyType_<T, T, Types...> = 0;
-
-    template <typename T, typename U, typename... Types>
-    constexpr uint8_t PropertyType_<T, U, Types...> = 1 + PropertyType_<T, Types...>;
-
-    template <typename T>
-    constexpr uint8_t PropertyType = PropertyType_<T
-        , PropertyFloat
-        , PropertyKeyword
-        , Color
-        , std::string
-        , Transform
-        , TransitionList
-        , AnimationList
-    >;
-    static_assert(PropertyType<PropertyFloat> == 0);
-    static_assert(PropertyType<AnimationList> == 6);
+    using PropertyView = PropertyVariantView<PropertyFloat, PropertyKeyword, Color, std::string, Transform, TransitionList, AnimationList>;
 
     template <typename T>
     str<uint8_t> PropertyEncode(const T& value) {
         strbuilder<uint8_t> b;
-        b.append(PropertyType<T>);
+        b.append(PropertyView::Index<T>);
         PropertyEncode(b, value);
         return b.release();
     }
-    
+
     class Property {
     public:
         Property();
@@ -57,30 +37,47 @@ namespace Rml {
         template <typename T>
             requires (!std::is_enum_v<T>)
         T Get() const {
-            auto p = CreateParser();
-            if (p.pop<uint8_t>() == PropertyType<T>) {
-                return PropertyDecode(tag_v<T>, p);
+            auto view = GetView();
+            if constexpr (std::is_trivially_destructible_v<T>) {
+                return view.get<T>();
             }
-            throw std::runtime_error("decode property failed.");
+            else {
+                auto subview = view.get_view<T>();
+                return PropertyDecode(tag_v<T>, subview);
+            }
+        }
+
+        template <typename T>
+            requires (!std::is_enum_v<T>)
+        std::optional<T> GetIf() const {
+            auto view = GetView();
+            if constexpr (std::is_trivially_destructible_v<T>) {
+                if (auto v = view.get_if<T>()) {
+                    return *v;
+                }
+            }
+            else {
+                if (auto subview = view.get_view_if<T>()) {
+                    return PropertyDecode(tag_v<T>, *subview);
+                }
+            }
+            return std::nullopt;
         }
 
         template <typename T>
             requires (std::is_enum_v<T>)
         T GetEnum() const {
-            auto p = CreateParser();
-            if (p.pop<uint8_t>() == PropertyType<PropertyKeyword>) {
-                return (T)p.pop<PropertyKeyword>();
-            }
-            throw std::runtime_error("decode property failed.");
+            auto view = GetView();
+            return (T)view.get<PropertyKeyword>();
         }
 
         template <typename T>
         bool Has() const {
-            auto p = CreateParser();
-            return p.pop<uint8_t>() == PropertyType<T>;
+            auto view = GetView();
+            return view.get_index() == PropertyView::Index<T>;
         }
 
-        strparser<uint8_t> CreateParser() const;
+        PropertyView GetView() const;
     
     protected:
         int attrib_id;
@@ -127,6 +124,19 @@ namespace Rml {
     };
     
     using PropertyVector = std::vector<Property>;
+
+    template <typename Visitor>
+    auto PropertyVisit(Visitor&& vis, const Property& p0) {
+        auto view0 = p0.GetView();
+        return view0.visit(std::forward<Visitor>(vis));
+    }
+
+    template <typename Visitor>
+    auto PropertyVisit(Visitor&& vis, const Property& p0, const Property& p1) {
+        auto view0 = p0.GetView();
+        auto view1 = p1.GetView();
+        return view0.visit(std::forward<Visitor>(vis), view1);
+    }
 
     inline bool operator==(const Property& l, const Property& r) {
         return l.RawAttribId() == r.RawAttribId();

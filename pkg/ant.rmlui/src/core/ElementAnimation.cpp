@@ -8,37 +8,37 @@
 
 namespace Rml {
 
-static Property Interpolate(PropertyId id, const Property& p0, const Property& p1, float alpha) {
-	auto parser0 = p0.CreateParser();
-	auto parser1 = p1.CreateParser();
-	uint8_t type0 = parser0.pop<uint8_t>();
-	uint8_t type1 = parser1.pop<uint8_t>();
-	if (type0 != type1) {
+struct InterpolateVisitor {
+	PropertyId id;
+	const Property& p0;
+	const Property& p1;
+	float alpha;
+	Property operator()() {
 		return InterpolateFallback(p0, p1, alpha);
 	}
-	switch (type0) {
-	case PropertyType<PropertyFloat>: {
-		auto v0 = parser0.pop<PropertyFloat>();
-		auto v1 = parser1.pop<PropertyFloat>();
-		auto v2 = v0.Interpolate(v1, alpha);
-		return Property { id, v2 };
-	}
-	case PropertyType<Color>: {
-		auto v0 = parser0.pop<Color>();
-		auto v1 = parser1.pop<Color>();
-		auto v2 = v0.Interpolate(v1, alpha);
-		return Property { id, v2 };
-	}
-	case PropertyType<Transform>: {
-		auto v0 = PropertyDecode(tag_v<Transform>, parser0);
-		auto v1 = PropertyDecode(tag_v<Transform>, parser1);
-		auto v2 = v0.Interpolate(v1, alpha);
-		return Property { id, v2 };
-	}
-	default:
+	template <typename T>
+	Property operator()(const T&, const T&) {
 		return InterpolateFallback(p0, p1, alpha);
 	}
-}
+	template <typename T>
+	Property operator()(tag<T>, PropertyBasicView, PropertyBasicView) {
+		return InterpolateFallback(p0, p1, alpha);
+	}
+	Property operator()(const PropertyFloat& v0, const PropertyFloat& v1) {
+		auto v2 = v0.Interpolate(v1, alpha);
+		return Property { id, v2 };
+	}
+	Property operator()(const Color& v0, const Color& v1) {
+		auto v2 = v0.Interpolate(v1, alpha);
+		return Property { id, v2 };
+	}
+	Property operator()(tag<Transform>, PropertyBasicView view0, PropertyBasicView view1) {
+		auto v0 = PropertyDecode(tag_v<Transform>, view0);
+		auto v1 = PropertyDecode(tag_v<Transform>, view1);
+		auto v2 = v0.Interpolate(v1, alpha);
+		return Property { id, v2 };
+	}
+};
 
 ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Property& in_prop, const Property& out_prop)
 	: id(id) {
@@ -46,30 +46,26 @@ ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Pr
 }
 
 void ElementInterpolate::Reset(Element& element, const Property& in_prop, const Property& out_prop) {
-	auto parser0 = p0.CreateParser();
-	auto parser1 = p1.CreateParser();
-	uint8_t type0 = parser0.pop<uint8_t>();
-	uint8_t type1 = parser1.pop<uint8_t>();
-	if (type0 == PropertyType<Transform> && type1 == PropertyType<Transform>) {
-		auto t0 = PropertyDecode(tag_v<Transform>, parser0);
-		auto t1 = PropertyDecode(tag_v<Transform>, parser1);
-		switch (PrepareTransformPair(t0, t1, element)) {
+	auto t0 = p0.GetIf<Transform>();
+	auto t1 = p1.GetIf<Transform>();
+	if (t0 && t1) {
+		switch (PrepareTransformPair(*t0, *t1, element)) {
 		case PrepareResult::Failed:
 		case PrepareResult::NoChanged:
 			p0 = in_prop;
 			p1 = out_prop;
 			break;
 		case PrepareResult::ChangedAll:
-			p0 = Property { id, t0 };
-			p1 = Property { id, t1 };
+			p0 = Property { id, *t0 };
+			p1 = Property { id, *t1 };
 			break;
 		case PrepareResult::ChangedT0:
-			p0 = Property { id, t0 };
+			p0 = Property { id, *t0 };
 			p1 = out_prop;
 			break;
 		case PrepareResult::ChangedT1:
 			p0 = in_prop;
-			p1 = Property { id, t1 };
+			p1 = Property { id, *t1 };
 			break;
 		default:
 			std::unreachable();
@@ -86,7 +82,7 @@ Property ElementInterpolate::Update(float t0, float t1, float t, const Tween& tw
 	alpha = tween.get(alpha);
 	if (alpha > 1.f) alpha = 1.f;
 	if (alpha < 0.f) alpha = 0.f;
-	return Interpolate(id, p0, p1, alpha);
+	return PropertyVisit(InterpolateVisitor { id, p0, p1, alpha }, p0, p1);
 }
 
 ElementTransition::ElementTransition(Element& element, PropertyId id, const Transition& transition, const Property& in_prop, const Property& out_prop)

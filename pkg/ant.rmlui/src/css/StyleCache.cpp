@@ -208,10 +208,10 @@ namespace Rml::Style {
         return (PropertyId)v.key;
     }
 
-    std::span<uint8_t> Cache::GetPropertyData(Property prop) {
+    std::span<const std::byte> Cache::GetPropertyData(Property prop) {
         style_attrib v;
         style_attrib_value(c, prop.RawAttribId(), &v);
-        return { (uint8_t*)v.data, v.sz };
+        return { (const std::byte*)v.data, v.sz };
     }
 
     void Cache::PropertyAddRef(Property prop) {
