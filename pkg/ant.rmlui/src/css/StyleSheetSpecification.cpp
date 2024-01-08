@@ -12,6 +12,7 @@
 #include <core/Layout.h>
 #include <array>
 #include <memory>
+#include <optional>
 
 namespace Rml {
 

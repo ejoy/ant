@@ -4,7 +4,6 @@
 #include <css/PropertyIdSet.h>
 #include <css/Property.h>
 #include <span>
-#include <optional>
 #include <functional>
 
 struct style_cache;

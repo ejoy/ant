@@ -1,6 +1,7 @@
 #pragma once
 
 #include <css/PropertyParser.h>
+#include <optional>
 
 namespace Rml {
 

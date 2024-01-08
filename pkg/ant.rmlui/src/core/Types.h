@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <algorithm>
-#include <tuple>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
