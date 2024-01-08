@@ -7,7 +7,6 @@
 #include <util/HtmlParser.h>
 #include <core/Interface.h>
 #include <util/Log.h>
-#include <css/Property.h>
 #include <util/StringUtilities.h>
 #include <css/StyleSheetParser.h>
 #include <css/StyleSheetSpecification.h>
@@ -1294,9 +1293,9 @@ void Element::SetScrollLeft(float v) {
 	}
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
-	Property value { PropertyFloat { offset.w, PropertyUnit::PX } };
 	StartTransition([&](){
-		SetInlineProperty({{PropertyId::ScrollLeft, std::move(value)}});
+		PropertyView left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
+		SetInlineProperty({ left });
 	});
 }
 
@@ -1306,9 +1305,9 @@ void Element::SetScrollTop(float v) {
 	}
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
-	Property value { PropertyFloat { offset.h, PropertyUnit::PX } };
 	StartTransition([&](){
-		SetInlineProperty({{PropertyId::ScrollTop, std::move(value)}});
+		PropertyView top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
+		SetInlineProperty({ top });
 	});
 }
 
@@ -1320,13 +1319,10 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	Size offset = GetScrollOffset();
 	UpdateScrollOffset(offset);
 
-	Property left = PropertyFloat { offset.w, PropertyUnit::PX };
-	Property top = PropertyFloat { offset.h, PropertyUnit::PX };
 	StartTransition([&](){
-		SetInlineProperty({
-			{PropertyId::ScrollLeft, std::move(left)},
-			{PropertyId::ScrollTop, std::move(top)},
-		});
+		PropertyView left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
+		PropertyView top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
+		SetInlineProperty({ left, top });
 	});
 }
 
