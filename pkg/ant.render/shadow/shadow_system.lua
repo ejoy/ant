@@ -28,7 +28,6 @@ local isc= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
-local ivs		= ecs.require "ant.render|visible_state"
 
 local LiSPSM	= require "shadow.LiSPSM"
 
@@ -38,6 +37,13 @@ local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxint
 local INV_Z<const> = true
 --TODO: read from setting file
 local useLiSPSM<const> = false
+
+--TODO: imporve depth precision, see: filament: far_uses_shadowcasters
+--after use infinity far plane for ortho projection maritx, it not work, just disable it right now, 2024.01.08
+--we try to do the same thing like filament with 'far_uses_shadowcasters' enable, but we found it cannot work like the same(in it's OpenGL API version)
+--object outside PSC far plane with the distance lower than the value in shadowmap(in inverse z verion, that value must lower than 0)
+--and we found that, it use some thick in depth texture sampling, need more effort to find why they work
+local usePSCFar<const> = false
 
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
@@ -67,7 +73,7 @@ end
 local function create_csm_entity(index, vr, fbidx)
 	local csmname = "csm" .. index
 	local queuename = csmname .. "_queue"
-	local camera_ref = icamera.create({
+	local camera_ref = icamera.create{
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
 			eyepos 	= mc.ZERO_PT,
@@ -77,19 +83,7 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			name = csmname,
 			camera_depend = true,
-		}, function (e)
-			w:extend(e, "camera:update")
-			local c = e.camera
-			c.Lr	= math3d.ref()
-			c.Wv	= math3d.ref()
-			c.Wp	= math3d.ref()
-			c.Wpv	= math3d.ref()
-			c.Wpvl	= math3d.ref()
-			c.W		= math3d.ref()
-
-			c.F		= math3d.ref()
-			w:submit(e)
-		end)
+		}
 	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -186,10 +180,10 @@ end
 
 local function calc_light_view_nearfar(intersectpointsLS, sceneaabbLS)
 	local intersectaabb = math3d.minmax(intersectpointsLS)
-	local PSR_farLS = math3d.index(math3d.array_index(sceneaabbLS, 2), 3)
+	local scene_farLS = math3d.index(math3d.array_index(sceneaabbLS, 2), 3)
 	local fn, ff = mu.aabb_minmax_index(intersectaabb, 3)
 	--check for PSR far plane distance
-	ff = math.max(ff, PSR_farLS)
+	ff = math.max(ff, scene_farLS)
 	return fn, ff
 end
 
@@ -198,10 +192,6 @@ local function update_shadow_matrices(si, li, c)
 	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
 
 	local intersectpointsLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
-	-- for debug
-	-- c.intersectpointsLS = M3D(c.intersectpointsLS, intersectpointsLS)
-	-- c.Lv2Ndc = M3D(c.Lv2Ndc, Lv2Ndc)
-	-- c.sceneaabbLS = M3D(c.sceneaabbLS, si.sceneaabbLS)
 
 	local Lp
 	if mc.NULL ~= intersectpointsLS then
@@ -241,6 +231,7 @@ local function init_light_info(C, D)
 	
 		viewdir		= viewdir,
 		lightdir	= lightdirWS,
+		rightdir	= rightdir,
 		camerapos	= camerapos,
 	}
 end
@@ -249,16 +240,14 @@ local function build_sceneaabbLS(si, li)
 	local PSRLS = math3d.aabb_transform(li.Lv, assert(si.PSR))
 	if si.PSC then
 		local PSCLS = math3d.aabb_transform(li.Lv, si.PSC)
-	
-		local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
 		local PSC_nearLS = math3d.index(math3d.array_index(PSCLS, 1), 3)
-	
 		local sceneaabb = math3d.aabb_intersection(PSRLS, PSCLS)
 	
 		local sminv, smaxv = mu.aabb_minmax(sceneaabb)
 		local sminx, sminy = math3d.index(sminv, 1, 2)
 		local smaxx, smaxy = math3d.index(smaxv, 1, 2)
-	
+
+		local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
 		return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSR_farLS))
 	end
 
