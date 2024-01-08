@@ -65,8 +65,43 @@ namespace Rml {
 
         strparser<uint8_t> CreateParser() const;
     
-    private:
+    protected:
         int attrib_id;
+    };
+
+    class PropertyRef: public PropertyView {
+    public:
+        PropertyRef(PropertyView view)
+            : PropertyView(view) {
+            PropertyView::AddRef();
+        }
+        ~PropertyRef() {
+            PropertyView::Release();
+        }
+        PropertyRef(PropertyRef&& rhs)
+            : PropertyView(rhs) {
+            rhs.attrib_id = -1;
+        }
+        PropertyRef(const PropertyRef& rhs)
+            : PropertyView(rhs) {
+            AddRef();
+        }
+        PropertyRef& operator=(PropertyRef&& rhs) {
+            if (this != &rhs) {
+                Release();
+                attrib_id = rhs.attrib_id;
+                rhs.attrib_id = -1;
+            }
+            return *this;
+        }
+        PropertyRef& operator=(const PropertyRef& rhs) {
+            if (this != &rhs) {
+                Release();
+                attrib_id = rhs.attrib_id;
+                AddRef();
+            }
+            return *this;
+        }
     };
 
     inline bool operator==(const PropertyView& l, const PropertyView& r) {

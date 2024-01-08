@@ -12,27 +12,10 @@ class ElementInterpolate {
 public:
 	ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop);
 	~ElementInterpolate();
-	ElementInterpolate(ElementInterpolate&& rhs)
-		: p0(rhs.p0)
-		, p1(rhs.p1) {
-		rhs.p0 = {};
-		rhs.p1 = {};
-	}
-	ElementInterpolate& operator=(ElementInterpolate&& rhs) {
-		if (this != &rhs) {
-			p0 = rhs.p0;
-			p1 = rhs.p1;
-			rhs.p0 = {};
-			rhs.p1 = {};
-		}
-		return *this;
-	}
-	ElementInterpolate(const ElementInterpolate&) = delete;
-	ElementInterpolate& operator=(const ElementInterpolate&) = delete;
 	PropertyView Update(float t0, float t1, float t, const Tween& tween);
 private:
-	PropertyView p0;
-	PropertyView p1;
+	PropertyRef p0;
+	PropertyRef p1;
 };
 
 class ElementTransition {
