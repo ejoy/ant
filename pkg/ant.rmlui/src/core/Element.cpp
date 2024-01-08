@@ -890,7 +890,7 @@ void Element::AdvanceAnimations(float delta) {
 	if (!animations.empty()) {
 		for (auto& [id, animation] : animations) {
 			if (!animation.IsComplete() && delta > 0.0f) {
-				auto p2 = animation.UpdateProperty(*this, id, delta);
+				auto p2 = animation.UpdateProperty(*this, delta);
 				SetAnimationProperty(id, p2);
 			}
 		}

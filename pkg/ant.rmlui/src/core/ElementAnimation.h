@@ -10,6 +10,7 @@ namespace Rml {
 class ElementInterpolate {
 public:
 	ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop);
+	void Reset(Element& element, const PropertyView& in_prop, const PropertyView& out_prop);
 	PropertyView Update(float t0, float t1, float t, const Tween& tween);
 private:
 	PropertyId id;
@@ -33,7 +34,7 @@ private:
 class ElementAnimation {
 public:
 	ElementAnimation(Element& element, PropertyId id, const Animation& animation, const Keyframe& keyframe);
-	PropertyView UpdateProperty(Element& element, PropertyId id, float delta);
+	PropertyView UpdateProperty(Element& element, float delta);
 	const std::string& GetName() const { return animation.name; }
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }

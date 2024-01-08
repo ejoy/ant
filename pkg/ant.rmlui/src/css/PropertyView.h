@@ -68,6 +68,8 @@ namespace Rml {
 
     class PropertyRef: public PropertyView {
     public:
+        PropertyRef()
+        {}
         PropertyRef(PropertyView view)
             : PropertyView(view) {
             AddRef();

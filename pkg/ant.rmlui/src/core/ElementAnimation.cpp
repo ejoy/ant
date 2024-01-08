@@ -41,9 +41,11 @@ static PropertyView Interpolate(PropertyId id, const PropertyView& p0, const Pro
 }
 
 ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop)
-	: id(id)
-	, p0(in_prop)
-	, p1(out_prop) {
+	: id(id) {
+	Reset(element, in_prop, out_prop);
+}
+
+void ElementInterpolate::Reset(Element& element, const PropertyView& in_prop, const PropertyView& out_prop) {
 	auto parser0 = p0.CreateParser();
 	auto parser1 = p1.CreateParser();
 	uint8_t type0 = parser0.pop<uint8_t>();
@@ -54,6 +56,8 @@ ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Pr
 		switch (PrepareTransformPair(t0, t1, element)) {
 		case PrepareResult::Failed:
 		case PrepareResult::NoChanged:
+			p0 = in_prop;
+			p1 = out_prop;
 			break;
 		case PrepareResult::ChangedAll:
 			p0 = PropertyView { id, t0 };
@@ -61,8 +65,10 @@ ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Pr
 			break;
 		case PrepareResult::ChangedT0:
 			p0 = PropertyView { id, t0 };
+			p1 = out_prop;
 			break;
 		case PrepareResult::ChangedT1:
+			p0 = in_prop;
 			p1 = PropertyView { id, t1 };
 			break;
 		default:
@@ -111,7 +117,7 @@ ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animat
 	, reverse_direction(false)
 {}
 
-PropertyView ElementAnimation::UpdateProperty(Element& element, PropertyId id, float delta) {
+PropertyView ElementAnimation::UpdateProperty(Element& element, float delta) {
 	time += delta;
 
 	if (time >= animation.transition.duration) {
@@ -141,7 +147,7 @@ PropertyView ElementAnimation::UpdateProperty(Element& element, PropertyId id, f
 	}
 	if (newkey != key) {
 		key = newkey;
-		interpolate = ElementInterpolate { element, id, keyframe[key-1].prop, keyframe[key].prop };
+		interpolate.Reset(element, keyframe[key-1].prop, keyframe[key].prop);
 	}
 	const float t0 = keyframe[key-1].time;
 	const float t1 = keyframe[key].time;
