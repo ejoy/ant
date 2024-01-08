@@ -1327,6 +1327,9 @@ function m:do_patch(eid, path, v, origin_tag)
 end
 
 function m:on_patch_tag(eid, ov, nv, origin_tag)
+    if not self.current_prefab then
+        return
+    end
     self:do_patch(eid, "/tag", #nv > 0 and nv or nil, origin_tag)
     local tag = self.current_prefab.tag
     if ov and ov[1] and tag[ov[1]] then

@@ -255,7 +255,7 @@ function m:handle_event()
             transform_dirty = false
             if what == "tag" then
                 local e <close> = world:entity(target, "slot?in")
-                hierarchy:update_display_name(target, v1[1])
+                hierarchy:update_display_name(target, v2[1])
                 if e.slot then
                     hierarchy:update_slot_list(world)
                 end
