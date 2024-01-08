@@ -120,12 +120,12 @@ public:
 	void DirtyProperties(const PropertyIdSet& properties);
 	void DirtyProperties(PropertyUnit unit);
 
-	void SetAnimationProperty(PropertyId id, const PropertyView& property);
+	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 
-	PropertyView GetInlineProperty(PropertyId id) const;
-	PropertyView GetLocalProperty(PropertyId id) const;
-	PropertyView GetComputedProperty(PropertyId id) const;
+	Property GetInlineProperty(PropertyId id) const;
+	Property GetLocalProperty(PropertyId id) const;
+	Property GetComputedProperty(PropertyId id) const;
 
 	bool SetProperty(const std::string& name, const std::string& value);
 	bool DelProperty(const std::string& name);

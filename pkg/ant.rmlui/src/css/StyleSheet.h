@@ -11,7 +11,7 @@ class Element;
 class StyleSheetNode;
 
 struct AnimationKey {
-	AnimationKey(float time, const PropertyView& value)
+	AnimationKey(float time, const Property& value)
 		: time(time)
 		, prop(value) {
 		prop.AddRef();

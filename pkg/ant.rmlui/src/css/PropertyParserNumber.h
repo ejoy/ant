@@ -14,7 +14,7 @@ public:
 	};
 
 	PropertyParserNumber(UnitMark units);
-	PropertyView ParseValue(PropertyId id, const std::string& value) const override;
+	Property ParseValue(PropertyId id, const std::string& value) const override;
 	std::optional<PropertyFloat> ParseValue(const std::string& value) const;
 
 private:

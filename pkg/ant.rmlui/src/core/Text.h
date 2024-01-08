@@ -4,7 +4,7 @@
 #include <core/Geometry.h>
 #include <core/Interface.h>
 #include <css/PropertyIdSet.h>
-#include <css/PropertyView.h>
+#include <css/Property.h>
 #include <optional>
 
 namespace Rml {
@@ -19,7 +19,7 @@ public:
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
 protected:
-	PropertyView GetComputedProperty(PropertyId id);
+	Property GetComputedProperty(PropertyId id);
 
 	template <typename T>
 	auto GetProperty(PropertyId id) {

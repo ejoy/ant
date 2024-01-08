@@ -1,7 +1,7 @@
 #pragma once
 
 #include <css/PropertyIdSet.h>
-#include <css/PropertyView.h>
+#include <css/Property.h>
 #include <css/StyleCache.h>
 #include <optional>
 

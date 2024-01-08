@@ -30,7 +30,7 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
-PropertyView Text::GetComputedProperty(PropertyId id) {
+Property Text::GetComputedProperty(PropertyId id) {
 	return GetParentNode()->GetComputedProperty(id);
 }
 

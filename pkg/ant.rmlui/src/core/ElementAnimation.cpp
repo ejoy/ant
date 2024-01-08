@@ -8,7 +8,7 @@
 
 namespace Rml {
 
-static PropertyView Interpolate(PropertyId id, const PropertyView& p0, const PropertyView& p1, float alpha) {
+static Property Interpolate(PropertyId id, const Property& p0, const Property& p1, float alpha) {
 	auto parser0 = p0.CreateParser();
 	auto parser1 = p1.CreateParser();
 	uint8_t type0 = parser0.pop<uint8_t>();
@@ -21,31 +21,31 @@ static PropertyView Interpolate(PropertyId id, const PropertyView& p0, const Pro
 		auto v0 = parser0.pop<PropertyFloat>();
 		auto v1 = parser1.pop<PropertyFloat>();
 		auto v2 = v0.Interpolate(v1, alpha);
-		return PropertyView { id, v2 };
+		return Property { id, v2 };
 	}
 	case PropertyType<Color>: {
 		auto v0 = parser0.pop<Color>();
 		auto v1 = parser1.pop<Color>();
 		auto v2 = v0.Interpolate(v1, alpha);
-		return PropertyView { id, v2 };
+		return Property { id, v2 };
 	}
 	case PropertyType<Transform>: {
 		auto v0 = PropertyDecode(tag_v<Transform>, parser0);
 		auto v1 = PropertyDecode(tag_v<Transform>, parser1);
 		auto v2 = v0.Interpolate(v1, alpha);
-		return PropertyView { id, v2 };
+		return Property { id, v2 };
 	}
 	default:
 		return InterpolateFallback(p0, p1, alpha);
 	}
 }
 
-ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop)
+ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Property& in_prop, const Property& out_prop)
 	: id(id) {
 	Reset(element, in_prop, out_prop);
 }
 
-void ElementInterpolate::Reset(Element& element, const PropertyView& in_prop, const PropertyView& out_prop) {
+void ElementInterpolate::Reset(Element& element, const Property& in_prop, const Property& out_prop) {
 	auto parser0 = p0.CreateParser();
 	auto parser1 = p1.CreateParser();
 	uint8_t type0 = parser0.pop<uint8_t>();
@@ -60,16 +60,16 @@ void ElementInterpolate::Reset(Element& element, const PropertyView& in_prop, co
 			p1 = out_prop;
 			break;
 		case PrepareResult::ChangedAll:
-			p0 = PropertyView { id, t0 };
-			p1 = PropertyView { id, t1 };
+			p0 = Property { id, t0 };
+			p1 = Property { id, t1 };
 			break;
 		case PrepareResult::ChangedT0:
-			p0 = PropertyView { id, t0 };
+			p0 = Property { id, t0 };
 			p1 = out_prop;
 			break;
 		case PrepareResult::ChangedT1:
 			p0 = in_prop;
-			p1 = PropertyView { id, t1 };
+			p1 = Property { id, t1 };
 			break;
 		default:
 			std::unreachable();
@@ -77,7 +77,7 @@ void ElementInterpolate::Reset(Element& element, const PropertyView& in_prop, co
 	}
 }
 
-PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
+Property ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
 	float alpha = 0.0f;
 	const float eps = 1e-3f;
 	if (t1 - t0 > eps)
@@ -89,14 +89,14 @@ PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween
 	return Interpolate(id, p0, p1, alpha);
 }
 
-ElementTransition::ElementTransition(Element& element, PropertyId id, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop)
+ElementTransition::ElementTransition(Element& element, PropertyId id, const Transition& transition, const Property& in_prop, const Property& out_prop)
 	: transition(transition)
 	, interpolate(element, id, in_prop, out_prop)
 	, time(transition.delay)
 	, complete(false)
 {}
 
-PropertyView ElementTransition::UpdateProperty(float delta) {
+Property ElementTransition::UpdateProperty(float delta) {
 	time += delta;
 	if (time >= transition.duration) {
 		complete = true;
@@ -117,7 +117,7 @@ ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animat
 	, reverse_direction(false)
 {}
 
-PropertyView ElementAnimation::UpdateProperty(Element& element, float delta) {
+Property ElementAnimation::UpdateProperty(Element& element, float delta) {
 	time += delta;
 
 	if (time >= animation.transition.duration) {

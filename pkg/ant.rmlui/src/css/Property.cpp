@@ -1,35 +1,35 @@
-#include <css/PropertyView.h>
+#include <css/Property.h>
 #include <css/StyleCache.h>
 
 namespace Rml {
-    PropertyView::PropertyView()
+    Property::Property()
         : attrib_id(-1)
     {}
 
-    PropertyView::PropertyView(int attrib_id)
+    Property::Property(int attrib_id)
         : attrib_id(attrib_id)
     {}
 
-    PropertyView::PropertyView(PropertyId id, const std::span<uint8_t> value) {
+    Property::Property(PropertyId id, const std::span<uint8_t> value) {
         auto view = Style::Instance().CreateProperty(id, value);
         attrib_id = view.attrib_id;
         delete [] value.data();
     }
 
-    PropertyView::operator bool () const {
+    Property::operator bool () const {
          return attrib_id != -1;
     }
 
-    strparser<uint8_t> PropertyView::CreateParser() const {
+    strparser<uint8_t> Property::CreateParser() const {
         auto view = Style::Instance().GetPropertyData(*this);
         return { view.data() };
     }
 
-    int PropertyView::RawAttribId() const {
+    int Property::RawAttribId() const {
         return attrib_id;
     }
 
-    bool PropertyView::IsFloatUnit(PropertyUnit unit) const {
+    bool Property::IsFloatUnit(PropertyUnit unit) const {
         auto p = CreateParser();
         if (p.pop<uint8_t>() != PropertyType<PropertyFloat>) {
             return false;
@@ -38,7 +38,7 @@ namespace Rml {
         return v.unit == unit;
     }
 
-    std::string PropertyView::ToString() const {
+    std::string Property::ToString() const {
         auto p = CreateParser();
         switch (p.pop<uint8_t>()) {
         case PropertyType<PropertyFloat>: {

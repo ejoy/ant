@@ -7,7 +7,7 @@ namespace Rml {
 
 class PropertyParserKeyword : public PropertyParser {
 public:
-	PropertyView ParseValue(PropertyId id, const std::string& value) const override;
+	Property ParseValue(PropertyId id, const std::string& value) const override;
 	std::unordered_map<std::string, int> parameters;
 };
 

@@ -1,5 +1,5 @@
 #include <css/StyleCache.h>
-#include <css/PropertyView.h>
+#include <css/Property.h>
 #include <assert.h>
 #include <array>
 #include <vector>
@@ -78,7 +78,7 @@ namespace Rml::Style {
         style_release(c, {s.idx});
     }
 
-    bool Cache::SetProperty(TableValue s, PropertyId id, const PropertyView& prop) {
+    bool Cache::SetProperty(TableValue s, PropertyId id, const Property& prop) {
         int attrib_id = prop.RawAttribId();
         return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
@@ -128,7 +128,7 @@ namespace Rml::Style {
         return change;
     }
 
-    PropertyView Cache::Find(TableValueOrCombination s, PropertyId id) {
+    Property Cache::Find(TableValueOrCombination s, PropertyId id) {
         int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
         return { attrib_id };
     }
@@ -152,7 +152,7 @@ namespace Rml::Style {
 
     void Cache::Foreach(TableValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
-            PropertyView prop { style_index(c, {s.idx}, i) };
+            Property prop { style_index(c, {s.idx}, i) };
             if (!prop) {
                 break;
             }
@@ -193,7 +193,7 @@ namespace Rml::Style {
         style_flush(c);
     }
 
-    PropertyView Cache::CreateProperty(PropertyId id, std::span<uint8_t> value) {
+    Property Cache::CreateProperty(PropertyId id, std::span<uint8_t> value) {
         style_attrib v;
         v.key = (uint8_t)id;
         v.data = (void*)value.data();
@@ -202,23 +202,23 @@ namespace Rml::Style {
         return { attrib_id };
     }
         
-    PropertyId Cache::GetPropertyId(PropertyView prop) {
+    PropertyId Cache::GetPropertyId(Property prop) {
         style_attrib v;
         style_attrib_value(c, prop.RawAttribId(), &v);
         return (PropertyId)v.key;
     }
 
-    std::span<uint8_t> Cache::GetPropertyData(PropertyView prop) {
+    std::span<uint8_t> Cache::GetPropertyData(Property prop) {
         style_attrib v;
         style_attrib_value(c, prop.RawAttribId(), &v);
         return { (uint8_t*)v.data, v.sz };
     }
 
-    void Cache::PropertyAddRef(PropertyView prop) {
+    void Cache::PropertyAddRef(Property prop) {
         style_attrib_addref(c, prop.RawAttribId());
     }
 
-    void Cache::PropertyRelease(PropertyView prop) {
+    void Cache::PropertyRelease(Property prop) {
         style_attrib_release(c, prop.RawAttribId());
     }
 

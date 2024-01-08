@@ -189,7 +189,7 @@ float Element::GetFontSize() const {
 	return font_size;
 }
 
-static float ComputeFontsize(const PropertyView& prop, Element* element) {
+static float ComputeFontsize(const Property& prop, Element* element) {
 	PropertyFloat fv = prop.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT || fv.unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
@@ -796,8 +796,8 @@ void Element::StartTransition(std::function<void()> f) {
 	struct PropertyTransition {
 		PropertyId        id;
 		const Transition& transition;
-		PropertyView      start_value;
-		PropertyTransition(PropertyId id, const Transition& transition, PropertyView start_value)
+		Property      start_value;
+		PropertyTransition(PropertyId id, const Transition& transition, Property start_value)
 			: id(id)
 			, transition(transition)
 			, start_value(start_value)
@@ -1294,7 +1294,7 @@ void Element::SetScrollLeft(float v) {
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
 	StartTransition([&](){
-		PropertyView left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
+		Property left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
 		SetInlineProperty({ left });
 	});
 }
@@ -1306,7 +1306,7 @@ void Element::SetScrollTop(float v) {
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
 	StartTransition([&](){
-		PropertyView top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
+		Property top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
 		SetInlineProperty({ top });
 	});
 }
@@ -1320,8 +1320,8 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	UpdateScrollOffset(offset);
 
 	StartTransition([&](){
-		PropertyView left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
-		PropertyView top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
+		Property left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
+		Property top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
 		SetInlineProperty({ left, top });
 	});
 }
@@ -1381,7 +1381,7 @@ void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
 	}
 }
 
-PropertyView Element::GetInlineProperty(PropertyId id) const {
+Property Element::GetInlineProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	if (auto prop = c.Find(inline_properties, id)) {
 		return prop;
@@ -1389,7 +1389,7 @@ PropertyView Element::GetInlineProperty(PropertyId id) const {
 	return {};
 }
 
-PropertyView Element::GetLocalProperty(PropertyId id) const {
+Property Element::GetLocalProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	if (auto prop = c.Find(local_properties, id)) {
 		return prop;
@@ -1443,7 +1443,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	return res;
 }
 
-PropertyView Element::GetComputedProperty(PropertyId id) const {
+Property Element::GetComputedProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	if (auto prop = c.Find(global_properties, id)) {
 		return prop;
@@ -1498,7 +1498,7 @@ bool Element::DelInlineProperty(const PropertyIdSet& set) {
 	return false;
 }
 
-void Element::SetAnimationProperty(PropertyId id, const PropertyView& property) {
+void Element::SetAnimationProperty(PropertyId id, const Property& property) {
 	if (Style::Instance().SetProperty(animation_properties, id, property)) {
 		DirtyProperty(id);
 	}

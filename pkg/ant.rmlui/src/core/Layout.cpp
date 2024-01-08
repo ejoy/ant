@@ -1,6 +1,6 @@
 #include <core/Layout.h>
 #include <core/ID.h>
-#include <css/PropertyView.h>
+#include <css/Property.h>
 #include <core/Text.h>
 #include <yoga/Yoga.h>
 #include <bee/nonstd/unreachable.h>
@@ -178,7 +178,7 @@ static void SetPercentProperty(YGNodeRef node, PropertyId id, float v) {
 	}
 }
 
-static void SetIntProperty(YGNodeRef node, PropertyId id, const PropertyView& prop) {
+static void SetIntProperty(YGNodeRef node, PropertyId id, const Property& prop) {
 	switch (id) {
 	case PropertyId::MarginLeft:     YGNodeStyleSetMarginAuto(node, YGEdgeLeft); break;
 	case PropertyId::MarginTop:      YGNodeStyleSetMarginAuto(node, YGEdgeTop); break;
@@ -201,7 +201,7 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, const PropertyView& pr
 	}
 }
 
-void Layout::SetProperty(PropertyId id, const PropertyView& prop, const Element* element) {
+void Layout::SetProperty(PropertyId id, const Property& prop, const Element* element) {
 	if (prop.Has<PropertyKeyword>()) {
 		SetIntProperty(node, id, prop);
 		return;

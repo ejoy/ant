@@ -34,15 +34,15 @@ namespace Rml {
         return b.string();
     }
     
-    class PropertyView {
+    class Property {
     public:
-        PropertyView();
-        PropertyView(int attrib_id);
-        PropertyView(PropertyId id, std::span<uint8_t> value);
+        Property();
+        Property(int attrib_id);
+        Property(PropertyId id, std::span<uint8_t> value);
 
         template <typename T>
-        PropertyView(PropertyId id, const T& value)
-        : PropertyView(id, PropertyEncode<T>(value))
+        Property(PropertyId id, const T& value)
+        : Property(id, PropertyEncode<T>(value))
         {}
 
         explicit operator bool () const;
@@ -80,25 +80,25 @@ namespace Rml {
     protected:
         int attrib_id;
     };
-    static_assert(sizeof(PropertyView) == sizeof(int));
+    static_assert(sizeof(Property) == sizeof(int));
 
-    class PropertyRef: public PropertyView {
+    class PropertyRef: public Property {
     public:
         PropertyRef()
         {}
-        PropertyRef(PropertyView view)
-            : PropertyView(view) {
+        PropertyRef(Property view)
+            : Property(view) {
             AddRef();
         }
         ~PropertyRef() {
             Release();
         }
         PropertyRef(PropertyRef&& rhs)
-            : PropertyView(rhs) {
+            : Property(rhs) {
             rhs.attrib_id = -1;
         }
         PropertyRef(const PropertyRef& rhs)
-            : PropertyView(rhs) {
+            : Property(rhs) {
             AddRef();
         }
         PropertyRef& operator=(PropertyRef&& rhs) {
@@ -121,13 +121,13 @@ namespace Rml {
         void Release();
     };
     
-    using PropertyVector = std::vector<PropertyView>;
+    using PropertyVector = std::vector<Property>;
 
-    inline bool operator==(const PropertyView& l, const PropertyView& r) {
+    inline bool operator==(const Property& l, const Property& r) {
         return l.RawAttribId() == r.RawAttribId();
     }
 
-    inline float PropertyComputeX(const Element* e, const PropertyView& p) {
+    inline float PropertyComputeX(const Element* e, const Property& p) {
         if (p.Has<PropertyKeyword>()) {
             switch (p.Get<PropertyKeyword>()) {
             default:
@@ -139,7 +139,7 @@ namespace Rml {
         return p.Get<PropertyFloat>().ComputeW(e);
     }
 
-    inline float PropertyComputeY(const Element* e, const PropertyView& p) {
+    inline float PropertyComputeY(const Element* e, const Property& p) {
         if (p.Has<PropertyKeyword>()) {
             switch (p.Get<PropertyKeyword>()) {
             default:
@@ -151,7 +151,7 @@ namespace Rml {
         return p.Get<PropertyFloat>().ComputeH(e);
     }
 
-    inline float PropertyComputeZ(const Element* e, const PropertyView& p) {
+    inline float PropertyComputeZ(const Element* e, const Property& p) {
         return p.Get<PropertyFloat>().Compute(e);
     }
 

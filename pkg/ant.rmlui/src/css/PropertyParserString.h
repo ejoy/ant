@@ -6,7 +6,7 @@ namespace Rml {
 
 class PropertyParserString : public PropertyParser {
 public:
-	PropertyView ParseValue(PropertyId id, const std::string& value) const override;
+	Property ParseValue(PropertyId id, const std::string& value) const override;
 };
 
 }

@@ -39,7 +39,7 @@ PropertyParserNumber::PropertyParserNumber(UnitMark units)
 	: units(units)
 {}
 
-PropertyView PropertyParserNumber::ParseValue(PropertyId id, const std::string& value) const {
+Property PropertyParserNumber::ParseValue(PropertyId id, const std::string& value) const {
 	auto v = ParseValue(value);
 	if (v) {
 		return { id, *v };

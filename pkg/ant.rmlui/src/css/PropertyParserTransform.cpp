@@ -11,7 +11,7 @@ PropertyParserTransform::PropertyParserTransform()
 {
 }
 
-PropertyView PropertyParserTransform::ParseValue(PropertyId id, const std::string& value) const {
+Property PropertyParserTransform::ParseValue(PropertyId id, const std::string& value) const {
 	if (value == "none") {
 		return { id, Transform {} };
 	}

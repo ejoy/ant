@@ -85,7 +85,7 @@ struct StyleSheetSpecificationInstance {
 	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 	void RegisterProperties();
 
-	PropertyView ParseProperty(PropertyId id, const std::string& value) const;
+	Property ParseProperty(PropertyId id, const std::string& value) const;
 
 	Style::TableValue GetDefaultProperties() const;
 	const PropertyIdSet& GetInheritableProperties() const;
@@ -225,7 +225,7 @@ PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id
 	return { *this, properties[index] };
 }
 
-PropertyView StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
+Property StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
 	auto& definition = properties[(size_t)id];
 	for (auto parser : definition.parsers) {
 		auto prop = parser->ParseValue(id, value);
