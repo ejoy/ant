@@ -222,6 +222,14 @@ namespace Rml::Style {
         return { (uint8_t*)v.data, v.sz };
     }
 
+    void Cache::PropertyAddRef(PropertyView prop) {
+        style_attrib_addref(c, prop.RawAttribId());
+    }
+
+    void Cache::PropertyRelease(PropertyView prop) {
+        style_attrib_release(c, prop.RawAttribId());
+    }
+
     static Cache* cahce = nullptr;
 
     void Initialise(const PropertyIdSet& inherit) {

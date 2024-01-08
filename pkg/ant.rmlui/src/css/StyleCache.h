@@ -47,6 +47,8 @@ namespace Rml::Style {
         PropertyView                CreateProperty(PropertyId id, std::span<uint8_t> value);
         PropertyId                  GetPropertyId(PropertyView prop);
         std::span<uint8_t>          GetPropertyData(PropertyView prop);
+        void                        PropertyAddRef(PropertyView prop);
+        void                        PropertyRelease(PropertyView prop);
 
     private:
         style_cache* c;

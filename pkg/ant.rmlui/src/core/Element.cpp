@@ -816,7 +816,7 @@ void Element::StartTransition(std::function<void()> f) {
 		if (start_value && target_value && start_value != target_value) {
 			if (!transitions.contains(id)) {
 				SetAnimationProperty(id, start_value);
-				transitions.emplace(id, ElementTransition { *this, id, transition, start_value, target_value });
+				transitions.emplace(id, ElementTransition { *this, transition, start_value, target_value });
 			}
 		}
 	}

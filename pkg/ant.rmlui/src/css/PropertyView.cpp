@@ -10,6 +10,12 @@ namespace Rml {
         : attrib_id(attrib_id)
     {}
 
+    PropertyView::PropertyView(PropertyId id, const std::span<uint8_t> value) {
+        auto view = Style::Instance().CreateProperty(id, value);
+        attrib_id = view.attrib_id;
+        delete [] value.data();
+    }
+
     PropertyView::PropertyView(PropertyId id, const Property& prop) {
         strbuilder<uint8_t> b;
         PropertyEncode(b, prop);
@@ -30,6 +36,24 @@ namespace Rml {
 
     int PropertyView::RawAttribId() const {
         return attrib_id;
+    }
+
+    PropertyId PropertyView::RawId() const {
+        return Style::Instance().GetPropertyId(*this);
+    }
+
+    void PropertyView::AddRef() {
+        if (attrib_id == -1) {
+            return;
+        }
+        Style::Instance().PropertyAddRef(*this);
+    }
+
+    void PropertyView::Release() {
+        if (attrib_id == -1) {
+            return;
+        }
+        Style::Instance().PropertyRelease(*this);
     }
 
     std::optional<Property> PropertyView::Decode() const {

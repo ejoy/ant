@@ -46,7 +46,7 @@ void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<fl
 	auto& kf = keyframes[identifier];
 	for (float time : rule_values) {
 		for (auto const& [id, value] : properties) {
-			kf[id].emplace_back(time, value);
+			kf[id].emplace_back(time, id, value);
 		}
 	}
 }

@@ -6,13 +6,31 @@
 #include <span>
 
 namespace Rml {
+    template <typename T>
+    std::span<uint8_t> PropertyEncode(const T& value) {
+        strbuilder<uint8_t> b;
+        b.append((uint8_t)variant_index<Property, T>());
+        PropertyEncode(b, value);
+        return b.string();
+    }
+    
     class PropertyView {
     public:
         PropertyView();
         PropertyView(int attrib_id);
+        PropertyView(PropertyId id, std::span<uint8_t> value);
         PropertyView(PropertyId id, const Property& prop);
+
+        template <typename T>
+        PropertyView(PropertyId id, const T& value)
+        : PropertyView(id, PropertyEncode<T>(value))
+        {}
+
         explicit operator bool () const;
         int RawAttribId() const;
+        PropertyId RawId() const;
+        void AddRef();
+        void Release();
         bool IsFloatUnit(PropertyUnit unit) const;
         std::optional<Property> Decode() const;
         std::string ToString() const;
@@ -44,7 +62,7 @@ namespace Rml {
             auto p = CreateParser();
             return index == p.pop<uint8_t>();
         }
-    private:
+
         strparser<uint8_t> CreateParser() const;
     
     private:

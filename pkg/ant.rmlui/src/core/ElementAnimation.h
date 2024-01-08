@@ -10,18 +10,34 @@ namespace Rml {
 
 class ElementInterpolate {
 public:
-	ElementInterpolate(Element& element, PropertyId id, const Property& in_prop, const Property& out_prop);
-	ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop);
+	ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop);
+	~ElementInterpolate();
+	ElementInterpolate(ElementInterpolate&& rhs)
+		: p0(rhs.p0)
+		, p1(rhs.p1) {
+		rhs.p0 = {};
+		rhs.p1 = {};
+	}
+	ElementInterpolate& operator=(ElementInterpolate&& rhs) {
+		if (this != &rhs) {
+			p0 = rhs.p0;
+			p1 = rhs.p1;
+			rhs.p0 = {};
+			rhs.p1 = {};
+		}
+		return *this;
+	}
+	ElementInterpolate(const ElementInterpolate&) = delete;
+	ElementInterpolate& operator=(const ElementInterpolate&) = delete;
 	PropertyView Update(float t0, float t1, float t, const Tween& tween);
 private:
-	PropertyId id;
-	Property p0;
-	Property p1;
+	PropertyView p0;
+	PropertyView p1;
 };
 
 class ElementTransition {
 public:
-	ElementTransition(Element& element, PropertyId id, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop);
+	ElementTransition(Element& element, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop);
 	PropertyView UpdateProperty(float delta);
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }

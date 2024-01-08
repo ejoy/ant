@@ -8,92 +8,73 @@
 
 namespace Rml {
 
-struct InterpolateVisitor {
-	const Property& other;
-	float alpha;
-	template <typename T>
-	Property operator()(const T& p0) {
-		return interpolate(p0, std::get<T>(other));
-	}
-	template <typename T>
-	T interpolate(const T& p0, const T& p1) {
+static PropertyView Interpolate(const PropertyView& p0, const PropertyView& p1, float alpha) {
+	auto parser0 = p0.CreateParser();
+	auto parser1 = p1.CreateParser();
+	uint8_t type0 = parser0.pop<uint8_t>();
+	uint8_t type1 = parser1.pop<uint8_t>();
+	if (type0 != type1) {
 		return InterpolateFallback(p0, p1, alpha);
 	}
-};
-
-template <>
-PropertyFloat InterpolateVisitor::interpolate<PropertyFloat>(const PropertyFloat& p0, const PropertyFloat& p1) {
-	return p0.Interpolate(p1, alpha);
-}
-template <>
-Color InterpolateVisitor::interpolate<Color>(const Color& p0, const Color& p1) {
-	return p0.Interpolate(p1, alpha);
-}
-template <>
-Transform InterpolateVisitor::interpolate<Transform>(const Transform& p0, const Transform& p1) {
-	return p0.Interpolate(p1, alpha);
-}
-
-static Property Interpolate(const Property& p0, const Property& p1, float alpha) {
-	if (p0.index() != p1.index()) {
+	switch (type0) {
+	case (uint8_t)variant_index<Property, PropertyFloat>(): {
+		auto v0 = parser0.pop<PropertyFloat>();
+		auto v1 = parser1.pop<PropertyFloat>();
+		auto v2 = v0.Interpolate(v1, alpha);
+		return PropertyView { p0.RawId(), v2 };
+	}
+	case (uint8_t)variant_index<Property, Color>(): {
+		auto v0 = parser0.pop<Color>();
+		auto v1 = parser1.pop<Color>();
+		auto v2 = v0.Interpolate(v1, alpha);
+		return PropertyView { p0.RawId(), v2 };
+	}
+	case (uint8_t)variant_index<Property, Transform>(): {
+		auto v0 = PropertyDecode(tag_v<Transform>, parser0);
+		auto v1 = PropertyDecode(tag_v<Transform>, parser1);
+		auto v2 = v0.Interpolate(v1, alpha);
+		return PropertyView { p0.RawId(), v2 };
+	}
+	default:
 		return InterpolateFallback(p0, p1, alpha);
 	}
-	return std::visit(InterpolateVisitor { p1, alpha }, p0);
 }
 
-ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Property& in_prop, const Property& out_prop)
-	: id(id)
-	, p0(in_prop)
+ElementInterpolate::ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop)
+	: p0(in_prop)
 	, p1(out_prop) {
-		
-	if (std::holds_alternative<Transform>(in_prop) && std::holds_alternative<Transform>(out_prop)) {
-		auto t0 = std::get<Transform>(p0);
-		auto t1 = std::get<Transform>(p1);
+	auto parser0 = p0.CreateParser();
+	auto parser1 = p1.CreateParser();
+	uint8_t type0 = parser0.pop<uint8_t>();
+	uint8_t type1 = parser1.pop<uint8_t>();
+	if (type0 == (uint8_t)variant_index<Property, Transform>() && type1 == (uint8_t)variant_index<Property, Transform>()) {
+		auto t0 = PropertyDecode(tag_v<Transform>, parser0);
+		auto t1 = PropertyDecode(tag_v<Transform>, parser1);
 		switch (PrepareTransformPair(t0, t1, element)) {
 		case PrepareResult::Failed:
 		case PrepareResult::NoChanged:
 			break;
 		case PrepareResult::ChangedAll:
-			p0 = t0;
-			p1 = t1;
+			p0 = PropertyView { p0.RawId(), t0 };
+			p1 = PropertyView { p1.RawId(), t1 };
 			break;
 		case PrepareResult::ChangedT0:
-			p0 = t0;
+			p0 = PropertyView { p0.RawId(), t0 };
 			break;
 		case PrepareResult::ChangedT1:
-			p1 = t1;
+			p1 = PropertyView { p1.RawId(), t1 };
 			break;
 		default:
 			std::unreachable();
 		}
 	}
+	p0.AddRef();
+	p1.AddRef();
 }
 
-ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop)
-	: id(id)
-	, p0(*in_prop.Decode())
-	, p1(*out_prop.Decode()) {
-	if (in_prop.Has<Transform>() && out_prop.Has<Transform>()) {
-		auto t0 = std::get<Transform>(p0);
-		auto t1 = std::get<Transform>(p1);
-		switch (PrepareTransformPair(t0, t1, element)) {
-		case PrepareResult::Failed:
-		case PrepareResult::NoChanged:
-			break;
-		case PrepareResult::ChangedAll:
-			p0 = t0;
-			p1 = t1;
-			break;
-		case PrepareResult::ChangedT0:
-			p0 = t0;
-			break;
-		case PrepareResult::ChangedT1:
-			p1 = t1;
-			break;
-		default:
-			std::unreachable();
-		}
-	}
+ElementInterpolate::~ElementInterpolate() {
+	p0.Release();
+	p1.Release();
 }
 
 PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
@@ -105,13 +86,12 @@ PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween
 	alpha = tween.get(alpha);
 	if (alpha > 1.f) alpha = 1.f;
 	if (alpha < 0.f) alpha = 0.f;
-	Property p2 = Interpolate(p0, p1, alpha);
-	return { id, p2 };
+	return Interpolate(p0, p1, alpha);
 }
 
-ElementTransition::ElementTransition(Element& element, PropertyId id, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop)
+ElementTransition::ElementTransition(Element& element, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop)
 	: transition(transition)
-	, interpolate(element, id, in_prop, out_prop)
+	, interpolate(element, in_prop, out_prop)
 	, time(transition.delay)
 	, complete(false)
 {}
@@ -129,7 +109,7 @@ PropertyView ElementTransition::UpdateProperty(float delta) {
 ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animation& animation, const Keyframe& keyframe)
 	: animation(animation)
 	, keyframe(keyframe)
-	, interpolate(element, id, keyframe[0].prop, keyframe[1].prop)
+	, interpolate(element, keyframe[0].prop, keyframe[1].prop)
 	, time(animation.transition.delay)
 	, current_iteration(0)
 	, key(1)
@@ -167,7 +147,7 @@ PropertyView ElementAnimation::UpdateProperty(Element& element, PropertyId id, f
 	}
 	if (newkey != key) {
 		key = newkey;
-		interpolate = ElementInterpolate { element, id, keyframe[key-1].prop, keyframe[key].prop };
+		interpolate = ElementInterpolate { element, keyframe[key-1].prop, keyframe[key].prop };
 	}
 	const float t0 = keyframe[key-1].time;
 	const float t1 = keyframe[key].time;

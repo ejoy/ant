@@ -12,12 +12,42 @@ class Element;
 class StyleSheetNode;
 
 struct AnimationKey {
-	AnimationKey(float time, const Property& prop)
+	AnimationKey(float time, PropertyId id, const Property& value)
 		: time(time)
-		, prop(prop)
-	{}
+		, prop { id, value } {
+		prop.AddRef();
+	}
+	AnimationKey(AnimationKey&& rhs)
+		: time(rhs.time)
+		, prop(rhs.prop) {
+		rhs.prop = {};
+	}
+	AnimationKey(const AnimationKey& rhs)
+		: time(rhs.time)
+		, prop(rhs.prop) {
+		prop.AddRef();
+	}
+	AnimationKey& operator=(AnimationKey&& rhs) {
+		if (this != &rhs) {
+			time = rhs.time;
+			prop = rhs.prop;
+			rhs.prop = {};
+		}
+		return *this;
+	}
+	AnimationKey& operator=(const AnimationKey& rhs) {
+		if (this != &rhs) {
+			time = rhs.time;
+			prop = rhs.prop;
+			prop.AddRef();
+		}
+		return *this;
+	}
+	~AnimationKey() {
+		prop.Release();
+	}
 	float time;
-	Property prop;
+	PropertyView prop;
 };
 
 using Keyframe = std::vector<AnimationKey>;
