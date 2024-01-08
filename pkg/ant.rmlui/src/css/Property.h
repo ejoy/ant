@@ -5,26 +5,32 @@
 #include <core/Transform.h>
 #include <css/PropertyFloat.h>
 #include <css/PropertyKeyword.h>
-#include <optional>
-#include <span>
-#include <variant>
 #include <string>
+#include <tuple>
 #include <css/PropertyBinary.h>
 
-
 namespace Rml {
-    using PropertyVariant = std::variant<
-        PropertyFloat,
-        PropertyKeyword,
-        Color,
-        std::string,
-        Transform,
-        TransitionList,
-        AnimationList
-    >;
+    template <typename T, typename... Types>
+    constexpr uint8_t PropertyType_;
+
+    template <typename T, typename... Types>
+    constexpr uint8_t PropertyType_<T, T, Types...> = 0;
+
+    template <typename T, typename U, typename... Types>
+    constexpr uint8_t PropertyType_<T, U, Types...> = 1 + PropertyType_<T, Types...>;
 
     template <typename T>
-    constexpr uint8_t PropertyType = (uint8_t)variant_index<PropertyVariant, T>();
+    constexpr uint8_t PropertyType = PropertyType_<T
+        , PropertyFloat
+        , PropertyKeyword
+        , Color
+        , std::string
+        , Transform
+        , TransitionList
+        , AnimationList
+    >;
+    static_assert(PropertyType<PropertyFloat> == 0);
+    static_assert(PropertyType<AnimationList> == 6);
 
     template <typename T>
     str<uint8_t> PropertyEncode(const T& value) {
