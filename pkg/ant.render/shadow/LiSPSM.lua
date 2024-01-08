@@ -19,8 +19,8 @@ function L.rotation_matrix(viewdirLS)
     return mc.IDENTITY_MAT
 end
 
-local function calc_near_far(M, points)
-    return mu.aabb_minmax_index(math3d.minmax(points, M), 3)
+local function calc_near_far(M, points, idx)
+    return mu.aabb_minmax_index(math3d.minmax(points, M), idx)
 end
 
 local function warp_frustum(n, f)
@@ -57,15 +57,17 @@ function L.warp_matrix(si, li, intersectpointsLS)
     -- math3d.inverse(Lv) to transform point in light space to worldspace
     -- camerainfo.cameraviewmat to tranfrom point from worldspace to camera view space
     -- zn/zf, near/far plane distance from camera position
-    local zn, zf = si.zn, si.zf
-    assert(zn >= 0 and zf > zn)
+    local zn, zf = calc_near_far(li.Lv2Cv, intersectpointsLS, 3)    -- 3 for z-axis
+    assert(zf > zn)
+    zn = math.max(zn, si.view_near)
+    zf = math.min(zf, si.view_far)
 
     -- Compute n and f, the near and far planes coordinates of Wp (warp space).
     -- It's found by looking down the Y axis in light space (i.e. -Z axis of Wp,
     -- i.e. the axis orthogonal to the light direction) and taking the min/max
     -- of the shadow receivers' volume.
     -- Note: znear/zfar encoded in Mp has no influence here (b/c we're interested only by the y-axis)
-    local n_WS, f_WS = calc_near_far(Lrp, intersectpointsLS)
+    local n_WS, f_WS = calc_near_far(Lrp, intersectpointsLS, 2) -- 2 for y-axis
     -- const float n = nf[0];              -- near plane coordinate of Mp (light space)
     -- const float f = nf[1];              -- far plane coordinate of Mp (light space)
     local d = math.abs(f_WS - n_WS);    -- Wp's depth-range d (abs necessary because we're dealing with z-coordinates, not distances)

@@ -45,6 +45,8 @@ local useLiSPSM<const> = false
 --and we found that, it use some thick in depth texture sampling, need more effort to find why they work
 local usePSCFar<const> = false
 
+local moveCameraToOrigin<const> = false
+
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
@@ -196,8 +198,27 @@ local function update_shadow_matrices(si, li, c)
 	local Lp
 	if mc.NULL ~= intersectpointsLS then
 		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
+		if moveCameraToOrigin then
+			Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
+
+			if useLiSPSM then
+				local function translate_intersectpoints(t, intersectpointsLS)
+					local p = {}
+					for i=1, math3d.array_size(intersectpointsLS) do
+						p[i] = math3d.add(math3d.array_index(intersectpointsLS, i), t)
+					end
+					return math3d.array_vector(p)
+				end
+	
+				local translate = math3d.vector(0.0, 0.0, n, 1.0)
+				intersectpointsLS = translate_intersectpoints(translate, intersectpointsLS)
+				li.Lv2Cv = math3d.mul(li.Cv, math3d.inverse_fast(Lv))
+			end
+			n, f = 0.0, f - n
+		end
 		c.frustum.n, c.frustum.f = n, f
 		si.nearLS, si.farLS = n, f
+
 		Lp = math3d.projmat(c.frustum, INV_Z)
 		if useLiSPSM then
 			li.Lp = Lp
@@ -247,8 +268,13 @@ local function build_sceneaabbLS(si, li)
 		local sminx, sminy = math3d.index(sminv, 1, 2)
 		local smaxx, smaxy = math3d.index(smaxv, 1, 2)
 
-		local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
-		return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSR_farLS))
+		if usePSCFar then
+			local PSC_farLS = math3d.index(math3d.array_index(PSCLS, 2), 3)
+			return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSC_farLS))
+		else
+			local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
+			return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSR_farLS))
+		end
 	end
 
 	return PSRLS
