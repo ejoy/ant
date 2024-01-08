@@ -17,19 +17,19 @@ static PropertyView Interpolate(PropertyId id, const PropertyView& p0, const Pro
 		return InterpolateFallback(p0, p1, alpha);
 	}
 	switch (type0) {
-	case (uint8_t)variant_index<Property, PropertyFloat>(): {
+	case PropertyType<PropertyFloat>: {
 		auto v0 = parser0.pop<PropertyFloat>();
 		auto v1 = parser1.pop<PropertyFloat>();
 		auto v2 = v0.Interpolate(v1, alpha);
 		return PropertyView { id, v2 };
 	}
-	case (uint8_t)variant_index<Property, Color>(): {
+	case PropertyType<Color>: {
 		auto v0 = parser0.pop<Color>();
 		auto v1 = parser1.pop<Color>();
 		auto v2 = v0.Interpolate(v1, alpha);
 		return PropertyView { id, v2 };
 	}
-	case (uint8_t)variant_index<Property, Transform>(): {
+	case PropertyType<Transform>: {
 		auto v0 = PropertyDecode(tag_v<Transform>, parser0);
 		auto v1 = PropertyDecode(tag_v<Transform>, parser1);
 		auto v2 = v0.Interpolate(v1, alpha);
@@ -50,7 +50,7 @@ void ElementInterpolate::Reset(Element& element, const PropertyView& in_prop, co
 	auto parser1 = p1.CreateParser();
 	uint8_t type0 = parser0.pop<uint8_t>();
 	uint8_t type1 = parser1.pop<uint8_t>();
-	if (type0 == (uint8_t)variant_index<Property, Transform>() && type1 == (uint8_t)variant_index<Property, Transform>()) {
+	if (type0 == PropertyType<Transform> && type1 == PropertyType<Transform>) {
 		auto t0 = PropertyDecode(tag_v<Transform>, parser0);
 		auto t1 = PropertyDecode(tag_v<Transform>, parser1);
 		switch (PrepareTransformPair(t0, t1, element)) {

@@ -1,15 +1,35 @@
 #pragma once
 
-#include <css/Property.h>
-#include <css/PropertyBinary.h>
+#include <core/Color.h>
+#include <core/Animation.h>
+#include <core/Transform.h>
+#include <css/PropertyFloat.h>
+#include <css/PropertyKeyword.h>
 #include <optional>
 #include <span>
+#include <variant>
+#include <string>
+#include <css/PropertyBinary.h>
+
 
 namespace Rml {
+    using PropertyVariant = std::variant<
+        PropertyFloat,
+        PropertyKeyword,
+        Color,
+        std::string,
+        Transform,
+        TransitionList,
+        AnimationList
+    >;
+
+    template <typename T>
+    constexpr uint8_t PropertyType = (uint8_t)variant_index<PropertyVariant, T>();
+
     template <typename T>
     std::span<uint8_t> PropertyEncode(const T& value) {
         strbuilder<uint8_t> b;
-        b.append((uint8_t)variant_index<Property, T>());
+        b.append(PropertyType<T>);
         PropertyEncode(b, value);
         return b.string();
     }
@@ -19,7 +39,6 @@ namespace Rml {
         PropertyView();
         PropertyView(int attrib_id);
         PropertyView(PropertyId id, std::span<uint8_t> value);
-        PropertyView(PropertyId id, const Property& prop);
 
         template <typename T>
         PropertyView(PropertyId id, const T& value)
@@ -29,14 +48,12 @@ namespace Rml {
         explicit operator bool () const;
         int RawAttribId() const;
         bool IsFloatUnit(PropertyUnit unit) const;
-        std::optional<Property> Decode() const;
         std::string ToString() const;
         template <typename T>
             requires (!std::is_enum_v<T>)
         T Get() const {
-            static constexpr uint8_t index = (uint8_t)variant_index<Property, T>();
             auto p = CreateParser();
-            if (index == p.pop<uint8_t>()) {
+            if (p.pop<uint8_t>() == PropertyType<T>) {
                 return PropertyDecode(tag_v<T>, p);
             }
             throw std::runtime_error("decode property failed.");
@@ -45,9 +62,8 @@ namespace Rml {
         template <typename T>
             requires (std::is_enum_v<T>)
         T GetEnum() const {
-            static constexpr uint8_t index = (uint8_t)variant_index<Property, PropertyKeyword>();
             auto p = CreateParser();
-            if (index == p.pop<uint8_t>()) {
+            if (p.pop<uint8_t>() == PropertyType<PropertyKeyword>) {
                 return (T)p.pop<PropertyKeyword>();
             }
             throw std::runtime_error("decode property failed.");
@@ -55,9 +71,8 @@ namespace Rml {
 
         template <typename T>
         bool Has() const {
-            static constexpr uint8_t index = (uint8_t)variant_index<Property, T>();
             auto p = CreateParser();
-            return index == p.pop<uint8_t>();
+            return p.pop<uint8_t>() == PropertyType<T>;
         }
 
         strparser<uint8_t> CreateParser() const;

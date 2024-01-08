@@ -16,15 +16,6 @@ namespace Rml {
         delete [] value.data();
     }
 
-    PropertyView::PropertyView(PropertyId id, const Property& prop) {
-        strbuilder<uint8_t> b;
-        PropertyEncode(b, prop);
-        auto value = b.string();
-        auto view = Style::Instance().CreateProperty(id, value);
-        attrib_id = view.attrib_id;
-        delete [] value.data();
-    }
-
     PropertyView::operator bool () const {
          return attrib_id != -1;
     }
@@ -38,15 +29,9 @@ namespace Rml {
         return attrib_id;
     }
 
-    std::optional<Property> PropertyView::Decode() const {
-        auto p = CreateParser();
-        return PropertyDecode(tag_v<Property>, p);
-    }
-
     bool PropertyView::IsFloatUnit(PropertyUnit unit) const {
-        static constexpr uint8_t index = (uint8_t)variant_index<Property, PropertyFloat>();
         auto p = CreateParser();
-        if (index != p.pop<uint8_t>()) {
+        if (p.pop<uint8_t>() != PropertyType<PropertyFloat>) {
             return false;
         }
         auto const& v = p.pop<PropertyFloat>();
@@ -56,29 +41,29 @@ namespace Rml {
     std::string PropertyView::ToString() const {
         auto p = CreateParser();
         switch (p.pop<uint8_t>()) {
-        case (uint8_t)variant_index<Property, PropertyFloat>(): {
+        case PropertyType<PropertyFloat>: {
             auto v = p.pop<PropertyFloat>();
             return v.ToString();
         }
-        case (uint8_t)variant_index<Property, PropertyKeyword>(): {
+        case PropertyType<PropertyKeyword>: {
             auto v = p.pop<PropertyKeyword>();
             return "<keyword," + std::to_string(v) + ">";
         }
-        case (uint8_t)variant_index<Property, Color>(): {
+        case PropertyType<Color>: {
             auto v = p.pop<Color>();
             return v.ToString();
         }
-        case (uint8_t)variant_index<Property, std::string>(): {
+        case PropertyType<std::string>: {
             auto v = PropertyDecode(tag_v<std::string>, p);
             return v;
         }
-        case (uint8_t)variant_index<Property, Transform>(): {
+        case PropertyType<Transform>: {
             auto v = PropertyDecode(tag_v<Transform>, p);
             return v.ToString();
         }
-        case (uint8_t)variant_index<Property, TransitionList>():
+        case PropertyType<TransitionList>:
             return "<transition>";
-        case (uint8_t)variant_index<Property, AnimationList>():
+        case PropertyType<AnimationList>:
             return "<animation>";
         }
         return {};
