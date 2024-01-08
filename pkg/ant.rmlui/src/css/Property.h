@@ -27,22 +27,22 @@ namespace Rml {
     constexpr uint8_t PropertyType = (uint8_t)variant_index<PropertyVariant, T>();
 
     template <typename T>
-    std::span<uint8_t> PropertyEncode(const T& value) {
+    str<uint8_t> PropertyEncode(const T& value) {
         strbuilder<uint8_t> b;
         b.append(PropertyType<T>);
         PropertyEncode(b, value);
-        return b.string();
+        return b.release();
     }
     
     class Property {
     public:
         Property();
         Property(int attrib_id);
-        Property(PropertyId id, std::span<uint8_t> value);
+        Property(PropertyId id, str<uint8_t> str);
 
         template <typename T>
         Property(PropertyId id, const T& value)
-        : Property(id, PropertyEncode<T>(value))
+            : Property(id, PropertyEncode<T>(value))
         {}
 
         explicit operator bool () const;
@@ -127,33 +127,9 @@ namespace Rml {
         return l.RawAttribId() == r.RawAttribId();
     }
 
-    inline float PropertyComputeX(const Element* e, const Property& p) {
-        if (p.Has<PropertyKeyword>()) {
-            switch (p.Get<PropertyKeyword>()) {
-            default:
-            case 0 /* left   */: return PropertyFloat { 0.0f, PropertyUnit::PERCENT }.ComputeW(e);
-            case 1 /* center */: return PropertyFloat { 50.0f, PropertyUnit::PERCENT }.ComputeW(e);
-            case 2 /* right  */: return PropertyFloat { 100.0f, PropertyUnit::PERCENT }.ComputeW(e);
-            }
-        }
-        return p.Get<PropertyFloat>().ComputeW(e);
-    }
-
-    inline float PropertyComputeY(const Element* e, const Property& p) {
-        if (p.Has<PropertyKeyword>()) {
-            switch (p.Get<PropertyKeyword>()) {
-            default:
-            case 0 /* top    */: return PropertyFloat { 0.0f, PropertyUnit::PERCENT }.ComputeH(e);
-            case 1 /* center */: return PropertyFloat { 50.0f, PropertyUnit::PERCENT }.ComputeH(e);
-            case 2 /* bottom */: return PropertyFloat { 100.0f, PropertyUnit::PERCENT }.ComputeH(e);
-            }
-        }
-        return p.Get<PropertyFloat>().ComputeH(e);
-    }
-
-    inline float PropertyComputeZ(const Element* e, const Property& p) {
-        return p.Get<PropertyFloat>().Compute(e);
-    }
+    float PropertyComputeX(const Element* e, const Property& p);
+    float PropertyComputeY(const Element* e, const Property& p);
+    float PropertyComputeZ(const Element* e, const Property& p);
 
     template <typename T>
     inline T InterpolateFallback(const T& p0, const T& p1, float alpha) {

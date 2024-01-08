@@ -7,6 +7,35 @@
 #include <span>
 
 namespace Rml {
+    template <class char_t>
+    struct str {
+        str(size_t sz)
+            : data(new char_t[sz])
+            , size(sz)
+        {}
+        ~str() { delete[] data; }
+        str(str&& rhs)
+            : data(rhs.data)
+            , size(rhs.size) {
+            rhs.data = nullptr;
+            rhs.size = 0;
+        }
+        str(const str& rhs) = delete;
+        str& operator=(str&&) = delete;
+        str& operator=(const str&) = delete;
+        const char_t& operator[](size_t i) const {
+            return data[i];
+        }
+        char_t& operator[](size_t i) {
+            return data[i];
+        }
+        std::span<char_t> span() {
+            return { data, size };
+        }
+        char_t* data;
+        size_t size;
+    };
+
     template <class char_t, size_t N = 1024>
     struct strbuilder {
         struct node {
@@ -46,16 +75,16 @@ namespace Rml {
             append((const char_t*)str, sizeof(T) * (n - 1));
             return *this;
         }
-        std::span<char_t> string() {
+        str<char_t> release() {
             size_t sz = (data.size() - 1) * N + pos + 1;
-            auto r = new char_t[sz];
+            str<char_t> r(sz);
             for (size_t i = 0; i < data.size() - 1;++i) {
-                memcpy(r + i * N * sizeof(char_t), &data[i], N * sizeof(char_t));
+                memcpy(&r[i * N], &data[i], N * sizeof(char_t));
             }
-            memcpy(r + (data.size() - 1) * N * sizeof(char_t), &data.back(), pos * sizeof(char_t));
+            memcpy(&r[(data.size() - 1) * N], &data.back(), pos * sizeof(char_t));
             r[sz-1] = 0;
             clear();
-            return {r, sz};
+            return r;
         }
         std::deque<node> data;
         size_t           pos;

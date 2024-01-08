@@ -14,5 +14,7 @@ enum class BackgroundSize : uint8_t { Unset, Auto, Cover, Contain };
 enum class BackgroundLattice : uint8_t { Auto, Cover, Contain };
 enum class PointerEvents : uint8_t { None, Auto };
 enum class Filter : uint8_t { None, Gray };
+enum class OriginX : uint8_t { Left, Center, Right };
+enum class OriginY : uint8_t { Top, Center, Bottom };
 
 }}

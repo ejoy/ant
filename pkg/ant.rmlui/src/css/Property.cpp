@@ -1,5 +1,6 @@
 #include <css/Property.h>
 #include <css/StyleCache.h>
+#include <core/ComputedValues.h>
 
 namespace Rml {
     Property::Property()
@@ -10,11 +11,9 @@ namespace Rml {
         : attrib_id(attrib_id)
     {}
 
-    Property::Property(PropertyId id, const std::span<uint8_t> value) {
-        auto view = Style::Instance().CreateProperty(id, value);
-        attrib_id = view.attrib_id;
-        delete [] value.data();
-    }
+    Property::Property(PropertyId id, str<uint8_t> str)
+        : Property(Style::Instance().CreateProperty(id, str.span()))
+    {}
 
     Property::operator bool () const {
          return attrib_id != -1;
@@ -83,4 +82,31 @@ namespace Rml {
         Style::Instance().PropertyRelease(*this);
     }
 
+    float PropertyComputeX(const Element* e, const Property& p) {
+        if (p.Has<PropertyKeyword>()) {
+            switch (p.GetEnum<Style::OriginX>()) {
+            default:
+            case Style::OriginX::Left: return PropertyFloat { 0.0f, PropertyUnit::PERCENT }.ComputeW(e);
+            case Style::OriginX::Center: return PropertyFloat { 50.0f, PropertyUnit::PERCENT }.ComputeW(e);
+            case Style::OriginX::Right: return PropertyFloat { 100.0f, PropertyUnit::PERCENT }.ComputeW(e);
+            }
+        }
+        return p.Get<PropertyFloat>().ComputeW(e);
+    }
+
+    float PropertyComputeY(const Element* e, const Property& p) {
+        if (p.Has<PropertyKeyword>()) {
+            switch (p.GetEnum<Style::OriginY>()) {
+            default:
+            case Style::OriginY::Top: return PropertyFloat { 0.0f, PropertyUnit::PERCENT }.ComputeH(e);
+            case Style::OriginY::Center: return PropertyFloat { 50.0f, PropertyUnit::PERCENT }.ComputeH(e);
+            case Style::OriginY::Bottom: return PropertyFloat { 100.0f, PropertyUnit::PERCENT }.ComputeH(e);
+            }
+        }
+        return p.Get<PropertyFloat>().ComputeH(e);
+    }
+
+    float PropertyComputeZ(const Element* e, const Property& p) {
+        return p.Get<PropertyFloat>().Compute(e);
+    }
 }
