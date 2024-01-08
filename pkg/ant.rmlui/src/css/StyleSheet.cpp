@@ -45,8 +45,9 @@ void StyleSheet::AddNode(StyleSheetNode&& node) {
 void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties) {
 	auto& kf = keyframes[identifier];
 	for (float time : rule_values) {
-		for (auto const& [id, value] : properties) {
-			kf[id].emplace_back(time, id, value);
+		for (auto const& v : properties) {
+			auto id = Style::Instance().GetPropertyId(v);
+			kf[id].emplace_back(time, v);
 		}
 	}
 }

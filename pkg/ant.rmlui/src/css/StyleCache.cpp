@@ -29,14 +29,7 @@ namespace Rml::Style {
     }
 
     TableValue Cache::Create(const PropertyVector& vec) {
-        std::vector<int> attrib_id(vec.size());
-        size_t i = 0;
-        for (auto const& [id, value] : vec) {
-            PropertyView view { id, value };
-            attrib_id[i] = view.RawAttribId();
-            i++;
-        }
-        style_handle_t s = style_create(c, (int)attrib_id.size(), attrib_id.data());
+        style_handle_t s = style_create(c, (int)vec.size(), (int*)vec.data());
         return {s.idx};
     }
 
@@ -98,9 +91,8 @@ namespace Rml::Style {
     PropertyIdSet Cache::SetProperty(TableValue s, const PropertyVector& vec) {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
-        for (auto const& [id, value] : vec) {
-            PropertyView view { id, value };
-            attrib_id[i] = view.RawAttribId();
+        for (auto const& v : vec) {
+            attrib_id[i] = v.RawAttribId();
             i++;
         }
         if (!style_modify(c, {s.idx}, (int)attrib_id.size(), attrib_id.data(), 0, nullptr)) {
@@ -109,7 +101,7 @@ namespace Rml::Style {
         PropertyIdSet change;
         for (size_t i = 0; i < attrib_id.size(); ++i) {
             if (attrib_id[i]) {
-                change.insert(vec[i].id);
+                change.insert(GetPropertyId(vec[i]));
             }
         }
         return change;

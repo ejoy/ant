@@ -899,7 +899,6 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		}
 	}
 	unparsed_default.clear();
-	Style::Initialise(InheritableProperties);
 	default_value = Style::Instance().Create(properties);
 }
 
@@ -908,6 +907,7 @@ static StyleSheetSpecificationInstance* instance = nullptr;
 bool StyleSheetSpecification::Initialise() {
 	if (instance == nullptr) {
 		instance = new StyleSheetSpecificationInstance();
+		Style::Initialise(InheritableProperties);
 		instance->RegisterProperties();
 	}
 	return true;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <css/StyleSheet.h>
-#include <css/PropertyVector.h>
+#include <css/PropertyView.h>
 
 namespace Rml {
 

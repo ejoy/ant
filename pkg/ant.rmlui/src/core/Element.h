@@ -6,7 +6,6 @@
 #include <core/Types.h>
 #include <core/ElementBackground.h>
 #include <css/PropertyIdSet.h>
-#include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <optional>
 #include <unordered_map>

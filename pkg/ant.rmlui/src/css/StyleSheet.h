@@ -1,7 +1,6 @@
 #pragma once
 
 #include <core/ID.h>
-#include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <unordered_map>
 #include <vector>
@@ -12,9 +11,9 @@ class Element;
 class StyleSheetNode;
 
 struct AnimationKey {
-	AnimationKey(float time, PropertyId id, const Property& value)
+	AnimationKey(float time, const PropertyView& value)
 		: time(time)
-		, prop { PropertyView { id, value } } {
+		, prop(value) {
 		prop.AddRef();
 	}
 	float time;

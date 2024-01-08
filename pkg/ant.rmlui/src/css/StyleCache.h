@@ -2,7 +2,6 @@
 
 #include <core/ID.h>
 #include <css/PropertyIdSet.h>
-#include <css/PropertyVector.h>
 #include <css/Property.h>
 #include <css/PropertyView.h>
 #include <span>

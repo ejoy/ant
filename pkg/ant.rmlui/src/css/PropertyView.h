@@ -65,6 +65,7 @@ namespace Rml {
     protected:
         int attrib_id;
     };
+    static_assert(sizeof(PropertyView) == sizeof(int));
 
     class PropertyRef: public PropertyView {
     public:
@@ -104,6 +105,8 @@ namespace Rml {
         void AddRef();
         void Release();
     };
+    
+    using PropertyVector = std::vector<PropertyView>;
 
     inline bool operator==(const PropertyView& l, const PropertyView& r) {
         return l.RawAttribId() == r.RawAttribId();
