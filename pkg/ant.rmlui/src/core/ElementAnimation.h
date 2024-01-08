@@ -1,6 +1,5 @@
 #pragma once
 
-#include <css/Property.h>
 #include <css/PropertyView.h>
 #include <core/Tween.h>
 #include <core/ID.h>
