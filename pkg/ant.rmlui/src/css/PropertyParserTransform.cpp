@@ -1,6 +1,5 @@
 #include <css/PropertyParserTransform.h>
 #include <core/Transform.h>
-#include <css/Property.h>
 #include <string.h>
 
 namespace Rml {
@@ -12,9 +11,9 @@ PropertyParserTransform::PropertyParserTransform()
 {
 }
 
-std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value) const {
+PropertyView PropertyParserTransform::ParseValue(PropertyId id, const std::string& value) const {
 	if (value == "none") {
-		return Transform {};
+		return { id, Transform {} };
 	}
 
 	Transform transform {};
@@ -28,17 +27,17 @@ std::optional<Property> PropertyParserTransform::ParseValue(const std::string& v
 		{0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER},
 	};
 
-	const PropertyParser* angle1[] = { &angle };
-	const PropertyParser* angle2[] = { &angle, &angle };
-	const PropertyParser* length1[] = { &length };
-	const PropertyParser* length2[] = { &length, &length };
-	const PropertyParser* length3[] = { &length, &length, &length };
-	const PropertyParser* number3angle1[] = { &number, &number, &number, &angle };
-	const PropertyParser* number1[] = { &number };
-	const PropertyParser* number2[] = { &number, &number };
-	const PropertyParser* number3[] = { &number, &number, &number };
-	const PropertyParser* number6[] = { &number, &number, &number, &number, &number, &number };
-	const PropertyParser* number16[] = { &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number };
+	const PropertyParserNumber* angle1[] = { &angle };
+	const PropertyParserNumber* angle2[] = { &angle, &angle };
+	const PropertyParserNumber* length1[] = { &length };
+	const PropertyParserNumber* length2[] = { &length, &length };
+	const PropertyParserNumber* length3[] = { &length, &length, &length };
+	const PropertyParserNumber* number3angle1[] = { &number, &number, &number, &angle };
+	const PropertyParserNumber* number1[] = { &number };
+	const PropertyParserNumber* number2[] = { &number, &number };
+	const PropertyParserNumber* number3[] = { &number, &number, &number };
+	const PropertyParserNumber* number6[] = { &number, &number, &number, &number, &number, &number };
+	const PropertyParserNumber* number16[] = { &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number };
 
 	while (*next)
 	{
@@ -150,16 +149,16 @@ std::optional<Property> PropertyParserTransform::ParseValue(const std::string& v
 		}
 		else
 		{
-			return std::nullopt;
+			return {};
 		}
 	}
 
-	return std::move(transform);
+	return { id, transform };
 
 }
 
 // Scan a string for a parameterized keyword with a certain number of numeric arguments.
-bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParser** parsers, PropertyFloat* args, int nargs) const
+bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParserNumber** parsers, PropertyFloat* args, int nargs) const
 {
 	out_bytes_read = 0;
 	int total_bytes_read = 0, bytes_read = 0;
@@ -227,7 +226,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 			return false;
 		}
 
-		args[i] = std::get<PropertyFloat>(*prop);
+		args[i] = *prop;
 		str += bytes_read;
 		total_bytes_read += bytes_read;
 

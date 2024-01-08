@@ -85,7 +85,7 @@ struct StyleSheetSpecificationInstance {
 	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 	void RegisterProperties();
 
-	std::optional<Property> ParseProperty(PropertyId id, const std::string& value) const;
+	PropertyView ParseProperty(PropertyId id, const std::string& value) const;
 
 	Style::TableValue GetDefaultProperties() const;
 	const PropertyIdSet& GetInheritableProperties() const;
@@ -225,15 +225,15 @@ PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id
 	return { *this, properties[index] };
 }
 
-std::optional<Property> StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
+PropertyView StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
 	auto& definition = properties[(size_t)id];
 	for (auto parser : definition.parsers) {
-		auto property = parser->ParseValue(value);
-		if (property) {
-			return property;
+		auto prop = parser->ParseValue(id, value);
+		if (prop) {
+			return prop;
 		}
 	}
-	return std::nullopt;
+	return {};
 }
 
 Style::TableValue StyleSheetSpecificationInstance::GetDefaultProperties() const {
@@ -348,7 +348,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyVector& v
 	auto new_property = ParseProperty(property_id, property_values[0]);
 	if (!new_property)
 		return false;
-	vec.emplace_back(property_id, std::move(*new_property));
+	vec.emplace_back(new_property);
 	return true;
 }
 
@@ -397,7 +397,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 			if (!new_property) {
 				return false;
 			}
-			vec.emplace_back(*id, std::move(*new_property));
+			vec.emplace_back(new_property);
 		}
 	}
 	else if (shorthand_definition.type == ShorthandType::RecursiveRepeat) {
@@ -480,7 +480,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 				return false;
 			}
 
-			vec.emplace_back(*id, std::move(*new_property));
+			vec.emplace_back(new_property);
 
 			// Increment the value index, unless we're replicating the last value and we're up to the last value.
 			if (shorthand_definition.type != ShorthandType::Replicate ||

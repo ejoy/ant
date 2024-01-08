@@ -3,7 +3,6 @@
 #include <util/StringUtilities.h>
 #include <css/StyleSheetSpecification.h>
 #include <core/Tween.h>
-#include <css/Property.h>
 #include <unordered_map>
 
 namespace Rml {
@@ -61,9 +60,9 @@ static const std::unordered_map<std::string, Keyword> keywords = {
 	{"sine-in-out",        {Keyword::TWEEN, {Tween::Type::Sine, Tween::Direction::InOut}}},
 };
 
-std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& value) const {
+PropertyView PropertyParserAnimation::ParseValue(PropertyId id, const std::string& value) const {
 	std::vector<std::string> animation_values;
-	StringUtilities::ExpandString(animation_values, value, ',');
+	StringUtilities::ExpandString(animation_values, value, ','); 
 
 	AnimationList animation_list;
 
@@ -91,8 +90,8 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 				case Keyword::NONE:
 				{
 					if (animation_list.size() > 0) // The none keyword can not be part of multiple definitions
-						return std::nullopt;
-					return AnimationList{};
+						return {};
+					return { id, AnimationList{} };
 				}
 				break;
 				case Keyword::TWEEN:
@@ -103,7 +102,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 					break;
 				case Keyword::INFINITE:
 					if (num_iterations_found)
-						return std::nullopt;
+						return {};
 					animation.num_iterations = -1;
 					num_iterations_found = true;
 					break;
@@ -162,15 +161,15 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 		// Validate the parsed transition
 		if (animation.name.empty() || (animation.num_iterations < -1 || animation.num_iterations == 0))
 		{
-			return std::nullopt;
+			return {};
 		}
 
 		animation_list.push_back(std::move(animation));
 	}
-	return std::move(animation_list);
+	return { id, animation_list };
 }
 
-std::optional<Property> PropertyParserTransition::ParseValue(const std::string& value) const {
+PropertyView PropertyParserTransition::ParseValue(PropertyId id, const std::string& value) const {
 	std::vector<std::string> transition_values;
 	StringUtilities::ExpandString(transition_values, value, ',');
 
@@ -195,8 +194,8 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 			if (it != keywords.end() && it->second.ValidTransition()) {
 				if (it->second.type == Keyword::NONE) {
 					if (transition_list.size() > 0) // The none keyword can not be part of multiple definitions
-						return std::nullopt;
-					return transition_list;
+						return {};
+					return { id, transition_list };
 				}
 				else if (it->second.type == Keyword::TWEEN) {
 					transition.tween = it->second.tween;
@@ -220,16 +219,16 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 							transition.delay = number;
 						}
 						else
-							return false;
+							return {};
 					}
 					else {
-						return std::nullopt;
+						return {};
 					}
 				}
 				else {
 					PropertyIdSet properties;
 					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, argument)) {
-						return std::nullopt;
+						return {};
 					}
 					target_property_ids |= properties;
 				}
@@ -238,18 +237,18 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 
 		// Validate the parsed transition
 		if (transition.duration <= 0.0f) {
-			return std::nullopt;
+			return {};
 		}
 
 		if (target_property_ids.empty()) {
-			return std::nullopt;
+			return {};
 		}
 		for (const auto& id : target_property_ids) {
 			transition_list.emplace(id, transition);
 		}
 	}
 
-	return std::move(transition_list);
+	return { id, transition_list };
 }
 
 }

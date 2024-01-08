@@ -2,14 +2,14 @@
 
 #include <optional>
 #include <string>
-#include <css/Property.h>
+#include <css/PropertyView.h>
 
 namespace Rml {
 
 class PropertyParser {
 public:
 	virtual ~PropertyParser() {}
-	virtual std::optional<Property> ParseValue(const std::string& value) const = 0;
+	virtual PropertyView ParseValue(PropertyId id, const std::string& value) const = 0;
 };
 
 }

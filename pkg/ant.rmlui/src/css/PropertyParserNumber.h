@@ -1,7 +1,6 @@
 #pragma once
 
 #include <css/PropertyParser.h>
-#include <css/Property.h>
 
 namespace Rml {
 
@@ -15,7 +14,9 @@ public:
 	};
 
 	PropertyParserNumber(UnitMark units);
-	std::optional<Property> ParseValue(const std::string& value) const override;
+	PropertyView ParseValue(PropertyId id, const std::string& value) const override;
+	std::optional<PropertyFloat> ParseValue(const std::string& value) const;
+
 private:
 	UnitMark units;
 };

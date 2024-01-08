@@ -39,7 +39,15 @@ PropertyParserNumber::PropertyParserNumber(UnitMark units)
 	: units(units)
 {}
 
-std::optional<Property> PropertyParserNumber::ParseValue(const std::string& value) const {
+PropertyView PropertyParserNumber::ParseValue(PropertyId id, const std::string& value) const {
+	auto v = ParseValue(value);
+	if (v) {
+		return { id, *v };
+	}
+	return {};
+}
+
+std::optional<PropertyFloat> PropertyParserNumber::ParseValue(const std::string& value) const {
 	// Find the beginning of the unit string in 'value'.
 	size_t unit_pos = 0;
 	for (size_t i = value.size(); i--;) {
