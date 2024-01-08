@@ -38,24 +38,6 @@ namespace Rml {
         return attrib_id;
     }
 
-    PropertyId PropertyView::RawId() const {
-        return Style::Instance().GetPropertyId(*this);
-    }
-
-    void PropertyView::AddRef() {
-        if (attrib_id == -1) {
-            return;
-        }
-        Style::Instance().PropertyAddRef(*this);
-    }
-
-    void PropertyView::Release() {
-        if (attrib_id == -1) {
-            return;
-        }
-        Style::Instance().PropertyRelease(*this);
-    }
-
     std::optional<Property> PropertyView::Decode() const {
         auto p = CreateParser();
         return PropertyDecode(tag_v<Property>, p);
@@ -101,4 +83,19 @@ namespace Rml {
         }
         return {};
     }
+
+    void PropertyRef::AddRef() {
+        if (attrib_id == -1) {
+            return;
+        }
+        Style::Instance().PropertyAddRef(*this);
+    }
+
+    void PropertyRef::Release() {
+        if (attrib_id == -1) {
+            return;
+        }
+        Style::Instance().PropertyRelease(*this);
+    }
+
 }

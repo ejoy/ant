@@ -8,7 +8,7 @@
 
 namespace Rml {
 
-static PropertyView Interpolate(const PropertyView& p0, const PropertyView& p1, float alpha) {
+static PropertyView Interpolate(PropertyId id, const PropertyView& p0, const PropertyView& p1, float alpha) {
 	auto parser0 = p0.CreateParser();
 	auto parser1 = p1.CreateParser();
 	uint8_t type0 = parser0.pop<uint8_t>();
@@ -21,27 +21,28 @@ static PropertyView Interpolate(const PropertyView& p0, const PropertyView& p1, 
 		auto v0 = parser0.pop<PropertyFloat>();
 		auto v1 = parser1.pop<PropertyFloat>();
 		auto v2 = v0.Interpolate(v1, alpha);
-		return PropertyView { p0.RawId(), v2 };
+		return PropertyView { id, v2 };
 	}
 	case (uint8_t)variant_index<Property, Color>(): {
 		auto v0 = parser0.pop<Color>();
 		auto v1 = parser1.pop<Color>();
 		auto v2 = v0.Interpolate(v1, alpha);
-		return PropertyView { p0.RawId(), v2 };
+		return PropertyView { id, v2 };
 	}
 	case (uint8_t)variant_index<Property, Transform>(): {
 		auto v0 = PropertyDecode(tag_v<Transform>, parser0);
 		auto v1 = PropertyDecode(tag_v<Transform>, parser1);
 		auto v2 = v0.Interpolate(v1, alpha);
-		return PropertyView { p0.RawId(), v2 };
+		return PropertyView { id, v2 };
 	}
 	default:
 		return InterpolateFallback(p0, p1, alpha);
 	}
 }
 
-ElementInterpolate::ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop)
-	: p0(in_prop)
+ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop)
+	: id(id)
+	, p0(in_prop)
 	, p1(out_prop) {
 	auto parser0 = p0.CreateParser();
 	auto parser1 = p1.CreateParser();
@@ -55,26 +56,19 @@ ElementInterpolate::ElementInterpolate(Element& element, const PropertyView& in_
 		case PrepareResult::NoChanged:
 			break;
 		case PrepareResult::ChangedAll:
-			p0 = PropertyView { p0.RawId(), t0 };
-			p1 = PropertyView { p1.RawId(), t1 };
+			p0 = PropertyView { id, t0 };
+			p1 = PropertyView { id, t1 };
 			break;
 		case PrepareResult::ChangedT0:
-			p0 = PropertyView { p0.RawId(), t0 };
+			p0 = PropertyView { id, t0 };
 			break;
 		case PrepareResult::ChangedT1:
-			p1 = PropertyView { p1.RawId(), t1 };
+			p1 = PropertyView { id, t1 };
 			break;
 		default:
 			std::unreachable();
 		}
 	}
-	p0.AddRef();
-	p1.AddRef();
-}
-
-ElementInterpolate::~ElementInterpolate() {
-	p0.Release();
-	p1.Release();
 }
 
 PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
@@ -86,12 +80,12 @@ PropertyView ElementInterpolate::Update(float t0, float t1, float t, const Tween
 	alpha = tween.get(alpha);
 	if (alpha > 1.f) alpha = 1.f;
 	if (alpha < 0.f) alpha = 0.f;
-	return Interpolate(p0, p1, alpha);
+	return Interpolate(id, p0, p1, alpha);
 }
 
-ElementTransition::ElementTransition(Element& element, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop)
+ElementTransition::ElementTransition(Element& element, PropertyId id, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop)
 	: transition(transition)
-	, interpolate(element, in_prop, out_prop)
+	, interpolate(element, id, in_prop, out_prop)
 	, time(transition.delay)
 	, complete(false)
 {}
@@ -109,7 +103,7 @@ PropertyView ElementTransition::UpdateProperty(float delta) {
 ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animation& animation, const Keyframe& keyframe)
 	: animation(animation)
 	, keyframe(keyframe)
-	, interpolate(element, keyframe[0].prop, keyframe[1].prop)
+	, interpolate(element, id, keyframe[0].prop, keyframe[1].prop)
 	, time(animation.transition.delay)
 	, current_iteration(0)
 	, key(1)
@@ -147,7 +141,7 @@ PropertyView ElementAnimation::UpdateProperty(Element& element, PropertyId id, f
 	}
 	if (newkey != key) {
 		key = newkey;
-		interpolate = ElementInterpolate { element, keyframe[key-1].prop, keyframe[key].prop };
+		interpolate = ElementInterpolate { element, id, keyframe[key-1].prop, keyframe[key].prop };
 	}
 	const float t0 = keyframe[key-1].time;
 	const float t1 = keyframe[key].time;

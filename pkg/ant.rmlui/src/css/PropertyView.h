@@ -28,9 +28,6 @@ namespace Rml {
 
         explicit operator bool () const;
         int RawAttribId() const;
-        PropertyId RawId() const;
-        void AddRef();
-        void Release();
         bool IsFloatUnit(PropertyUnit unit) const;
         std::optional<Property> Decode() const;
         std::string ToString() const;
@@ -73,10 +70,10 @@ namespace Rml {
     public:
         PropertyRef(PropertyView view)
             : PropertyView(view) {
-            PropertyView::AddRef();
+            AddRef();
         }
         ~PropertyRef() {
-            PropertyView::Release();
+            Release();
         }
         PropertyRef(PropertyRef&& rhs)
             : PropertyView(rhs) {
@@ -102,6 +99,8 @@ namespace Rml {
             }
             return *this;
         }
+        void AddRef();
+        void Release();
     };
 
     inline bool operator==(const PropertyView& l, const PropertyView& r) {

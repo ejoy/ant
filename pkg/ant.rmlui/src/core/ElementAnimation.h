@@ -10,17 +10,17 @@ namespace Rml {
 
 class ElementInterpolate {
 public:
-	ElementInterpolate(Element& element, const PropertyView& in_prop, const PropertyView& out_prop);
-	~ElementInterpolate();
+	ElementInterpolate(Element& element, PropertyId id, const PropertyView& in_prop, const PropertyView& out_prop);
 	PropertyView Update(float t0, float t1, float t, const Tween& tween);
 private:
+	PropertyId id;
 	PropertyRef p0;
 	PropertyRef p1;
 };
 
 class ElementTransition {
 public:
-	ElementTransition(Element& element, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop);
+	ElementTransition(Element& element, PropertyId id, const Transition& transition, const PropertyView& in_prop, const PropertyView& out_prop);
 	PropertyView UpdateProperty(float delta);
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }
