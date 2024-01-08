@@ -212,6 +212,14 @@ namespace ozzlua::Animation {
 		ia >> (ozz::animation::Animation&)o;
 		return true;
 	}
+
+	void save(lua_State* L) {
+		auto& anim = bee::lua::checkudata<ozzAnimation>(L, 1);
+		const char* filename = luaL_checkstring(L, 2);
+		ozz::io::File ofile(filename, "wb");
+		ozz::io::OArchive oa(&ofile);
+		oa << (ozz::animation::Animation&)anim;
+	}
 }
 
 void init_animation(lua_State* L) {

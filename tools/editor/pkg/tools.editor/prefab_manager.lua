@@ -370,14 +370,14 @@ function m:on_prefab_ready(prefab)
         else
             self.entities[#self.entities + 1] = eid
             local name = pt.tag and pt.tag[1]
-            if pt.data.anim_ctrl then
+            if pt.data.animation then
                 anim_eid = eid
             end
             if not name then
                 if i == 1 then
                     name = "Scene"
                 else
-                    name = pt.data.anim_ctrl and "anim_ctrl" or (pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or ""))
+                    name = pt.data.animation and "anim_ctrl" or (pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or ""))
                 end
             end
             tag_list[#tag_list + 1] = {name, eid}
@@ -1343,7 +1343,56 @@ function m:on_patch_tranform(eid, n, v)
 end
 
 function m:on_patch_animation(eid, name, path)
-    self:do_patch(eid, "/data/animation/"..name, path)
+    local anim_file
+    local patch_idx
+    local target_path = "/animations/" .. name
+    for index, value in ipairs(self.patch_template) do
+        if value.op == "copyfile" and value.file == "animations/animation.ozz" then
+            anim_file = value.path
+        end
+        if anim_file then
+            if not path then
+                if value.op == "replace" and value.file == anim_file and value.path == target_path then
+                    patch_idx = index
+                    break
+                end
+            else
+                break
+            end
+        end
+    end
+    -- delete animation
+    if patch_idx and not path then
+        table.remove(self.patch_template, patch_idx)
+        return
+    end
+    local new_anim_file
+    if not anim_file then
+        new_anim_file = true
+        anim_file = "animations/" .. self.prefab_name:sub(1, -8) .. ".ozz"
+        self.patch_template[#self.patch_template + 1] = {
+            file = "animations/animation.ozz",
+            op = "copyfile",
+            path = anim_file,
+        }
+    end
+    if path then
+        self.patch_template[#self.patch_template + 1] = {
+            file = anim_file,
+            op = "replace",
+            path = "/animations/"..name,
+            value = path,
+        }
+    end
+    if new_anim_file then
+        self.patch_template[#self.patch_template + 1] = {
+            file = self.prefab_name,
+            op = "replace",
+            path = "/2/data/animation",
+            value = "./"..anim_file
+        }
+    end
+    -- self:do_patch(eid, "/data/animation/"..name, path)
     anim_view.update_anim_namelist()
 end
 return m

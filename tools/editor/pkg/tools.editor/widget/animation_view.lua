@@ -754,7 +754,7 @@ function m.show()
                 end
                 imgui.cursor.SameLine()
                 if imgui.widget.Button("...") then
-                    local localpath = uiutils.get_open_file_path("Select Animation", "anim")
+                    local localpath = uiutils.get_open_file_path("Select Animation", "bin")
                     if localpath then
                         anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
                     end
@@ -774,8 +774,8 @@ function m.show()
                             end
                         end
                         if update then
-                            local info = hierarchy:get_node_info(anim_eid)
-                            info.template.data.animation[anim_name] = anim_path
+                            -- local info = hierarchy:get_node_info(anim_eid)
+                            -- info.template.data.animation[anim_name] = anim_path
                             prefab_mgr:on_patch_animation(anim_eid, anim_name, anim_path)
                             e.animation.status[anim_name] = anim_path
                             --TODO:reload
@@ -800,12 +800,12 @@ function m.show()
                 end
                 reload = true
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("default", birth_anim) then
-                local tpl = hierarchy:get_node_info(anim_eid).template
-                tpl.data.animation_birth = birth_anim[1] and current_anim.name or nil
-                prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.data.animation_birth)
-            end
+            -- imgui.cursor.SameLine()
+            -- if imgui.widget.Checkbox("default", birth_anim) then
+            --     local tpl = hierarchy:get_node_info(anim_eid).template
+            --     tpl.data.animation_birth = birth_anim[1] and current_anim.name or nil
+            --     prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.data.animation_birth)
+            -- end
         end
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY

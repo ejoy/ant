@@ -41,6 +41,7 @@ local compile_whitelist <const> = {
     -- animation
     "event",
     "anim",
+    "bin",
     -- material
     "state",
     "setting",

@@ -90,6 +90,7 @@ private:
 namespace ozzlua {
 	namespace Animation {
 		bool load(lua_State* L, ozz::io::IArchive& ia);
+		void save(lua_State* L);
 	}
 	namespace Skeleton {
 		bool load(lua_State* L, ozz::io::IArchive& ia);
@@ -106,6 +107,11 @@ static int lload(lua_State* L) {
 		}
 		ms.Seek(0, ozz::io::Stream::kSet);
 	}
+	return 0;
+}
+
+static int lsave(lua_State* L) {
+	ozzlua::Animation::save(L);
 	return 0;
 }
 
@@ -129,5 +135,7 @@ luaopen_ozz(lua_State *L) {
 	lua_setfield(L, -2, "memory");
 	lua_pushcfunction(L, lload);
 	lua_setfield(L, -2, "load");
+	lua_pushcfunction(L, lsave);
+	lua_setfield(L, -2, "save");
 	return 1;
 }

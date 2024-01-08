@@ -187,7 +187,7 @@ extern "C"
 __declspec(dllexport)
 #endif
 int luaopen_filedialog(lua_State* L) {
-    if (HRESULT hr = ::CoInitialize(NULL); FAILED(hr)) {
+    if (HRESULT hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED); FAILED(hr)) {
         luaL_error(L, "CoInitialize failed: %p", hr);
     }
 

@@ -156,6 +156,7 @@ local game_whitelist <const> = {
 	-- animation
 	"event",
 	"anim",
+	"bin",
 	-- material
 	"state",
 	"varyings",

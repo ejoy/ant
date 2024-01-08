@@ -229,90 +229,26 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
     end
     return raw_animation:build()
 end
-local inherit_for_srt = false
+
 local function update_animation()
-    local animtype = current_anim.type
-    local raw_anim = current_anim.raw_anim
-    if animtype == "ske" then
+    local anim_type = current_anim.type
+    if anim_type == "ske" then
         local e <close> = world:entity(anim_eid, "animation:in")
-        e.animation.status[current_anim.name].handle = build_animation(current_skeleton, raw_anim, current_anim.target_anims, sample_ratio)
+        e.animation.status[current_anim.name].handle = build_animation(current_skeleton, current_anim.raw_anim, current_anim.target_anims, sample_ratio)
     else
-        local get_keyframe_value = function (type, clip, init)
-            if type == "mtl" then
-                return clip.value
-            elseif type == "srt" then
-                local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
-                value[clip.rot_axis + 1] = clip.amplitude_rot
-                if clip.direction < 4 then
-                    value[clip.direction + 4] = clip.amplitude_pos
-                elseif clip.direction == 4 then--XY
-                    value[5] = clip.amplitude_pos
-                    value[6] = clip.amplitude_pos
-                elseif clip.direction == 5 then--YZ
-                    value[6] = clip.amplitude_pos
-                    value[7] = clip.amplitude_pos
-                elseif clip.direction == 6 then--XZ
-                    value[5] = clip.amplitude_pos
-                    value[7] = clip.amplitude_pos
-                elseif clip.direction == 7 then--XYZ
-                    value[5] = clip.amplitude_pos
-                    value[6] = clip.amplitude_pos
-                    value[7] = clip.amplitude_pos
-                end
-                return value
-            end
-        end
+        local sr = current_anim.sample_ratio
+        local fc = current_anim.sample_ratio * current_anim.duration
         for _, anim in ipairs(current_anim.target_anims) do
             if #anim.clips < 1 then
                 goto continue
             end
-            local keyframes = {}
-            local init_value
-            if animtype == "srt" then
-                init_value = {1, 0, 0, 0, 0, 0, 0}
-            elseif animtype == "mtl" then
-                init_value = anim.init_value
-            end
-            local from = init_value
-            local last_clip = anim.clips[1]
-            for _, clip in ipairs(anim.clips) do
-                if clip.range[1] == last_clip.range[2] + 1 then
-                    from = get_keyframe_value(animtype, last_clip, inherit_for_srt and keyframes[#keyframes].value or nil)
-                else
-                    if clip.range[1] > 0 then
-                        keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
-                    end
-                    from = init_value
-                end
-                local fromvalue = {}
-                for _, value in ipairs(from) do
-                    fromvalue[#fromvalue + 1] = value
-                end
-                keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
-                local tovalue = get_keyframe_value(animtype, clip, inherit_for_srt and from or nil)
-                if animtype == "mtl" then
-                    local tv = {}
-                    for _, value in ipairs(tovalue) do
-                        tv[#tv + 1] = value * clip.scale
-                    end
-                    tovalue = tv
-                end
-                keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
-                last_clip = clip
-            end
-            local endclip = anim.clips[#anim.clips]
-            if endclip and endclip.range[2] < current_anim.frame_count - 1 then
-                keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
-                if current_anim.frame_count > endclip.range[2] + 1 then
-                    keyframes[#keyframes + 1] = {time = current_anim.frame_count / sample_ratio, value = init_value}
-                end
-            end
+            local keyframes = imodifier.keyframes_from_anim_data(anim_type, anim, fc, sr)
             imodifier.delete(anim.modifier)
             anim.modifier = nil
             if #keyframes > 0 then
-                if animtype == "mtl" then
+                if anim_type == "mtl" then
                     anim.modifier = imodifier.create_mtl_modifier(current_target, anim.target_name, keyframes, false, true)
-                elseif animtype == "srt" then
+                elseif anim_type == "srt" then
                     anim.modifier = imodifier.create_srt_modifier(target_map[anim.target_name], 0, keyframes, false, true)
                 end
             end
@@ -595,7 +531,6 @@ local function show_current_detail()
     imgui.cursor.SameLine()
     if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[3]) then
         anim_layer.inherit[3] = anim_layer.inherit_ui[3][1]
-        inherit_for_srt = anim_layer.inherit[3]
         update_animation()
     end
 
@@ -1251,6 +1186,8 @@ function m.save(path)
         filename = path
     end
     local animdata = {}
+    --TODO: one animation per file
+    local isSke = false
     for _, anim in pairs(allanims) do
         local target_anims = utils.deep_copy(anim.target_anims)
         for _, subanim in ipairs(target_anims) do
@@ -1274,8 +1211,13 @@ function m.save(path)
             sample_ratio = sample_ratio,
             skeleton = (anim.type == "ske") and current_skeleton.filename or nil
         }
+        isSke = (anim.type == "ske")
     end
     utils.write_file(filename, stringify(animdata))
+    if isSke then
+        local e <close> = world:entity(anim_eid, "animation:in")
+        ozz.save(e.animation.status[current_anim.name].handle, filename:sub(1, -5) .. "bin")
+    end
     if file_path ~= filename then
         file_path = filename
     end
