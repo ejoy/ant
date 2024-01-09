@@ -1,7 +1,7 @@
 #include <css/StyleSheetFactory.h>
 #include <css/StyleSheet.h>
 #include <core/Interface.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <util/Log.h>
 #include <css/StyleSheetNode.h>
 #include <css/StyleSheetNodeSelector.h>

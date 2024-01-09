@@ -6,8 +6,5 @@ policy "shadow_bounding"
 
 component "shadow_bounding".type "lua"
 
-feature "scene_bounding_pack"
-    .import "scene_bounding_pack/scene_bounding_pack.ecs"
-
-feature "camera_bounding_pack"
-    .import "camera_bounding_pack/camera_bounding_pack.ecs"
+feature "scene_bounding"
+    .import "scene_bounding.ecs"

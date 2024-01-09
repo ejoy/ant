@@ -1,5 +1,5 @@
 #include <core/Texture.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Element.h>
 #include <unordered_map>
 
@@ -19,13 +19,13 @@ const TextureData& Fetch(Element* e, const std::string& path) {
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
-	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path);
+	Rml::GetScript()->OnLoadTexture(e->GetOwnerDocument(), e, path);
 	return InvalidTexture;
 }
 
 const TextureData& Fetch(Element* e, const std::string& path, Size size) {
 	auto iterator = textures.find(path);
-	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
+	Rml::GetScript()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}

@@ -80,6 +80,25 @@ static void push_message_arg(lua_State* L, ant::window::gesture_state v) {
 	}
 }
 
+static void push_message_arg(lua_State* L, ant::window::swipe_direction v) {
+	switch (v) {
+	case ant::window::swipe_direction::left:
+		lua_pushstring(L, "left");
+		break;
+	case ant::window::swipe_direction::right:
+		lua_pushstring(L, "right");
+		break;
+	case ant::window::swipe_direction::up:
+		lua_pushstring(L, "up");
+		break;
+	case ant::window::swipe_direction::down:
+		lua_pushstring(L, "down");
+		break;
+	default:
+		std::unreachable();
+	}
+}
+
 static void push_message_arg(lua_State* L, ant::window::suspend v) {
 	switch (v) {
 	case ant::window::suspend::will_suspend: lua_pushstring(L, "will_suspend"); break;
@@ -99,10 +118,26 @@ static void push_message_arg(lua_State* L, ant::window::mouse_button v) {
 	}
 }
 
+static void push_message_arg(lua_State* L, ant::window::mouse_buttons v) {
+	lua_newtable(L);
+	using namespace ant::window;
+	if ((v & mouse_buttons::left) != mouse_buttons::none) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "LEFT");
+	}
+	if ((v & mouse_buttons::middle) != mouse_buttons::none) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "MIDDLE");
+	}
+	if ((v & mouse_buttons::right) != mouse_buttons::none) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "RIGHT");
+	}
+}
+
 static void push_message_arg(lua_State* L, ant::window::mouse_state v) {
 	switch (v) {
 	case ant::window::mouse_state::up: lua_pushstring(L, "UP"); break;
-	case ant::window::mouse_state::move: lua_pushstring(L, "MOVE"); break;
 	case ant::window::mouse_state::down: lua_pushstring(L, "DOWN"); break;
 	default: std::unreachable();
 	}
@@ -222,13 +257,22 @@ void input_message(struct ant_window_callback* cb, struct msg_keyboard const& ke
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_mouse const& mouse) {
+void input_message(struct ant_window_callback* cb, struct msg_mouseclick const& mouseclick) {
 	push_message(cb,
-		"type", "mouse",
-		"what", mouse.what,
-		"x", mouse.x,
-		"y", mouse.y,
-		"state", mouse.state
+		"type", "mouseclick",
+		"what", mouseclick.what,
+		"x", mouseclick.x,
+		"y", mouseclick.y,
+		"state", mouseclick.state
+	);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_mousemove const& mousemove) {
+	push_message(cb,
+		"type", "mousemove",
+		"what", mousemove.what,
+		"x", mousemove.x,
+		"y", mousemove.y
 	);
 }
 

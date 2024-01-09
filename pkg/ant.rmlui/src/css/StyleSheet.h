@@ -1,8 +1,6 @@
 #pragma once
 
 #include <core/ID.h>
-#include <core/AnimationKey.h>
-#include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <unordered_map>
 #include <vector>
@@ -12,9 +10,18 @@ namespace Rml {
 class Element;
 class StyleSheetNode;
 
-struct Keyframes {
-	std::map<PropertyId, std::vector<AnimationKey>> properties;
+struct AnimationKey {
+	AnimationKey(float time, const Property& value)
+		: time(time)
+		, prop(value) {
+		prop.AddRef();
+	}
+	float time;
+	PropertyRef prop;
 };
+
+using Keyframe = std::vector<AnimationKey>;
+using Keyframes = std::map<PropertyId, Keyframe>;
 
 class StyleSheet {
 public:
@@ -27,7 +34,7 @@ public:
 	void AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties);
 	void Sort();
 	const Keyframes* GetKeyframes(const std::string& name) const;
-	Style::Combination GetElementDefinition(const Element* element) const;
+	Style::TableRef GetElementDefinition(const Element* element) const;
 
 private:
 	std::vector<StyleSheetNode> stylenode;

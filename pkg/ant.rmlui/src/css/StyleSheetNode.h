@@ -2,7 +2,6 @@
 
 #include <core/Types.h>
 #include <css/StyleSheet.h>
-#include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <css/StyleSheetNodeSelector.h>
 
@@ -26,7 +25,7 @@ struct StyleSheetRequirements {
 	PseudoClassSet pseudo_classes = 0;
 	StructuralSelectorList structural_selectors; // Represents structural pseudo classes
 	bool child_combinator = false; // The '>' combinator: This node only matches if the element is a parent of the previous matching element.
-
+	StyleSheetRequirements(const std::string& name);
 	bool operator==(const StyleSheetRequirements& rhs) const;
 	bool Match(const Element* element) const;
 	bool MatchStructuralSelector(const Element* element) const;
@@ -35,16 +34,15 @@ struct StyleSheetRequirements {
 
 class StyleSheetNode {
 public:
-	StyleSheetNode();
-	void AddRequirements(StyleSheetRequirements&& req);
-	void SetProperties(const PropertyVector& properties);
+	StyleSheetNode(const std::string& rule_name, const Style::TableRef& props);
 	void SetSpecificity(int rule_specificity);
 	bool IsApplicable(const Element* element) const;
 	int GetSpecificity() const;
-	Style::Value GetProperties() const;
-
+	const Style::TableRef& GetProperties() const;
 private:
-	Style::Value properties;
+	void ImportRequirements(std::string rule_name);
+private:
+	Style::TableRef properties;
 	std::vector<StyleSheetRequirements> requirements;
 	int specificity = 0;
 };

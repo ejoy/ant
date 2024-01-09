@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <style>
+            .panel {
+                background-color: rgba(120, 120, 120, 255);
+                width: 100%;
+                height: 100%;
+                flex-direction: row;
+            }
+            .item-container {
+                left: 0%;
+                top: 0%;
+                width: 50%;
+                height: 50%;
+                transition: left 1.0s linear-out, top 1.0s linear-out, width 1.0s linear-out, height 1.0s linear-out;
+                background-color: rgba(0, 0, 0, 255);
+                flex-direction: row;
+            }
+            .item {
+                width:33%;
+                height:50%;
+                background-size:cover;
+                background-image:<rt1>
+            }
+        </style>
+        <script type="text/x-lua" >
+            print("before createModel")
+            local start = window.createModel "start" {
+                scale_flag = false,
+                event_state = 'none'
+            }
+            function start.mousedown(event)
+                start.scale_flag = not start.scale_flag
+                local style = event.current.style
+                if start.scale_flag then
+                    style.top = '25%'
+                    style.left = '25%'
+                    style.width = '50%'
+                    style.height = '50%'
+                else
+                    style.top = '0%'
+                    style.left = '0%'
+                    style.width = '10%'
+                    style.height = '10%'
+                end
+                start.event_state = start.scale_flag and 'auto' or 'none'
+            end
+
+            function start.mousedown2(event)
+                print("---mousedown2---")
+            end
+        </script>
+    </head>
+    <body>
+        <div class="panel" data-model="start">
+            <div class="item-container" style='' data-event-mousedown="mousedown()">
+                <div class="item" data-style-pointer-events="event_state" data-event-mousedown="mousedown2()"/>
+                <div class="item" data-style-pointer-events="event_state" data-event-mousedown="mousedown2()"/>
+                <div class="item" data-style-pointer-events="event_state" data-event-mousedown="mousedown2()"/>
+            </div>
+        </div>
+    </body>
+</html>

@@ -12,6 +12,7 @@
 #include <core/Layout.h>
 #include <array>
 #include <memory>
+#include <optional>
 
 namespace Rml {
 
@@ -34,8 +35,10 @@ enum class ShorthandType : uint8_t {
 	RecursiveCommaSeparated
 };
 
+using PropertyParser = Property (*)(PropertyId id, const std::string& value);
+
 struct PropertyDefinition {
-	std::vector<PropertyParser*> parsers;
+	std::vector<PropertyParser> parsers;
 };
 
 struct ShorthandItem {
@@ -51,10 +54,8 @@ struct ShorthandDefinition {
 struct PropertyRegister {
 	StyleSheetSpecificationInstance& instance;
 	PropertyDefinition& definition;
-	PropertyParser*   GetParser(const std::string& parser_name);
-	PropertyParser*   GetKeywordParser(const std::string& parser_parameters);
 	PropertyRegister& AddParser(const std::string& parser_name);
-	PropertyRegister& AddParser(const std::string& parser_name, const std::string& parser_parameters);
+	PropertyRegister& AddParser(PropertyParser new_parser);
 };
 
 static constexpr inline PropertyIdSet GetInheritableProperties() {
@@ -79,83 +80,54 @@ static constexpr PropertyIdSet InheritableProperties = GetInheritableProperties(
 static_assert((InheritableProperties & LayoutProperties).empty());
 
 struct StyleSheetSpecificationInstance {
-	~StyleSheetSpecificationInstance();
 	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name);
 	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value);
 	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 	void RegisterProperties();
 
-	std::optional<Property> ParseProperty(PropertyId id, const std::string& value) const;
+	Property ParseProperty(PropertyId id, const std::string& value) const;
 
-	Style::Value GetDefaultProperties() const;
+	const Style::TableRef& GetDefaultProperties() const;
 	const PropertyIdSet& GetInheritableProperties() const;
 	const ShorthandDefinition& GetShorthandDefinition(ShorthandId id) const;
-	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
-	bool ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const;
+	bool ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const;
+	bool ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const;
 	bool ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) const;
 	void ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const;
 	bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::string& property_value) const;
 	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
 
-	std::unordered_map<std::string, PropertyParser*> parsers = {
-		{"number", new PropertyParserNumber(PropertyParserNumber::UnitMark::Number)},
-		{"length", new PropertyParserNumber(PropertyParserNumber::UnitMark::Length)},
-		{"length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::LengthPercent)},
-		{"angle", new PropertyParserNumber(PropertyParserNumber::UnitMark::Angle)},
-		{"string", new PropertyParserString()},
-		{"animation", new PropertyParserAnimation()},
-		{"transition", new PropertyParserTransition()},
-		{"color", new PropertyParserColour()},
-		{"transform", new PropertyParserTransform()},
+	std::unordered_map<std::string, PropertyParser> parsers = {
+		{"number", PropertyParseNumber<PropertyParseNumberUnit::Number>},
+		{"length", PropertyParseNumber<PropertyParseNumberUnit::Length>},
+		{"length_percent", PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>},
+		{"angle", PropertyParseNumber<PropertyParseNumberUnit::Angle>},
+		{"string", PropertyParseString},
+		{"animation", PropertyParseAnimation},
+		{"transition", PropertyParseTransition},
+		{"color", PropertyParseColour},
+		{"transform", PropertyParseTransform},
 	};
-	std::unordered_map<std::string, PropertyParser*> keyword_parsers;
 	std::array<PropertyDefinition,  EnumCountV<PropertyId>>  properties;
 	std::array<ShorthandDefinition, EnumCountV<ShorthandId>> shorthands;
 	std::unordered_map<std::string, PropertyId> property_map;
 	std::unordered_map<std::string, ShorthandId> shorthand_map;
 	std::unordered_map<PropertyId, std::string> unparsed_default;
-	Style::Value default_value;
+	Style::TableRef default_value;
 };
 
-PropertyParser* PropertyRegister::GetParser(const std::string& parser_name) {
-	auto iterator = instance.parsers.find(parser_name);
-	if (iterator == instance.parsers.end())
-		return nullptr;
-	return (*iterator).second;
-}
-
-PropertyParser* PropertyRegister::GetKeywordParser(const std::string& parser_parameters) {
-	auto it = instance.keyword_parsers.find(parser_parameters);
-	if (it != instance.keyword_parsers.end()) {
-		return it->second;
-	}
-	PropertyParserKeyword* new_parser = new PropertyParserKeyword();
-	std::vector<std::string> parameter_list;
-	StringUtilities::ExpandString(parameter_list, parser_parameters, ',');
-	for (size_t i = 0; i < parameter_list.size(); i++) {
-		new_parser->parameters[parameter_list[i]] = (int) i;
-	}
-	instance.keyword_parsers.emplace(parser_parameters, new_parser);
-	return new_parser;
-}
-
 PropertyRegister& PropertyRegister::AddParser(const std::string& parser_name) {
-	PropertyParser* new_parser = GetParser(parser_name);
-	if (new_parser == nullptr) {
+	auto iterator = instance.parsers.find(parser_name);
+	if (iterator == instance.parsers.end()) {
 		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
 		return *this;
 	}
+	PropertyParser new_parser = iterator->second;
 	definition.parsers.push_back(new_parser);
 	return *this;
 }
 
-PropertyRegister& PropertyRegister::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
-	assert(parser_name == "keyword");
-	PropertyParser* new_parser = GetKeywordParser(parser_parameters);
-	if (new_parser == nullptr) {
-		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
-		return *this;
-	}
+PropertyRegister& PropertyRegister::AddParser(PropertyParser new_parser) {
 	definition.parsers.push_back(new_parser);
 	return *this;
 }
@@ -202,16 +174,6 @@ std::optional<std::string> MapGetName(std::unordered_map<std::string, T> const& 
 	return std::nullopt;
 }
 
-StyleSheetSpecificationInstance::~StyleSheetSpecificationInstance() {
-	for (auto [_, parser] : parsers) {
-		delete parser;
-	}
-	for (auto [_, parser] : keyword_parsers) {
-		delete parser;
-	}
-	Style::Shutdown();
-}
-
 PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value) {
 	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
@@ -225,18 +187,18 @@ PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id
 	return { *this, properties[index] };
 }
 
-std::optional<Property> StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
+Property StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
 	auto& definition = properties[(size_t)id];
 	for (auto parser : definition.parsers) {
-		auto property = parser->ParseValue(value);
-		if (property) {
-			return property;
+		auto prop = parser(id, value);
+		if (prop) {
+			return prop;
 		}
 	}
-	return std::nullopt;
+	return {};
 }
 
-Style::Value StyleSheetSpecificationInstance::GetDefaultProperties() const {
+const Style::TableRef& StyleSheetSpecificationInstance::GetDefaultProperties() const {
 	return default_value;
 }
 
@@ -310,7 +272,7 @@ void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& s
 	}
 }
 
-bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const {
+bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const {
 	auto property_id = MapGet(property_map, property_name);
 	if (property_id) {
 		set.insert(*property_id);
@@ -324,7 +286,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& se
 	return false;
 }
 
-bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const {
+bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const {
 	auto property_id = MapGet(property_map, property_name);
 	if (property_id) {
 		if (ParsePropertyDeclaration(vec, *property_id, property_value)) {
@@ -348,7 +310,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyVector& v
 	auto new_property = ParseProperty(property_id, property_values[0]);
 	if (!new_property)
 		return false;
-	vec.emplace_back(property_id, std::move(*new_property));
+	vec.emplace_back(new_property);
 	return true;
 }
 
@@ -397,7 +359,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 			if (!new_property) {
 				return false;
 			}
-			vec.emplace_back(*id, std::move(*new_property));
+			vec.emplace_back(new_property);
 		}
 	}
 	else if (shorthand_definition.type == ShorthandType::RecursiveRepeat) {
@@ -480,7 +442,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 				return false;
 			}
 
-			vec.emplace_back(*id, std::move(*new_property));
+			vec.emplace_back(new_property);
 
 			// Increment the value index, unless we're replicating the last value and we're up to the last value.
 			if (shorthand_definition.type != ShorthandType::Replicate ||
@@ -660,7 +622,7 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("number");
 
 	RegisterProperty(PropertyId::LineHeight, "line-height", "normal")
-		.AddParser("keyword", "normal")
+		.AddParser(PropertyParseKeyword<"normal">)
 		.AddParser("number");
 
 	RegisterProperty(PropertyId::Color, "color", "white")
@@ -672,44 +634,44 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	RegisterProperty(PropertyId::FontFamily, "font-family", "")
 		.AddParser("string");
 	RegisterProperty(PropertyId::FontStyle, "font-style", "normal")
-		.AddParser("keyword", "normal, italic");
+		.AddParser(PropertyParseKeyword<"normal", "italic">);
 	RegisterProperty(PropertyId::FontWeight, "font-weight", "normal")
-		.AddParser("keyword", "normal, bold");
+		.AddParser(PropertyParseKeyword<"normal", "bold">);
 	RegisterProperty(PropertyId::FontSize, "font-size", "12px")
 		.AddParser("length")
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::Font, "font", "font-style, font-weight, font-size, font-family", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextAlign, "text-align", "left")
-		.AddParser("keyword", "left, right, center, justify");
+		.AddParser(PropertyParseKeyword<"left", "right", "center", "justify">);
 	RegisterProperty(PropertyId::WordBreak, "word-break", "normal")
-		.AddParser("keyword", "normal, break-all, break-word");
+		.AddParser(PropertyParseKeyword<"normal", "break-all", "break-word">);
 
 	RegisterProperty(PropertyId::TextDecorationLine, "text-decoration-line", "none")
-		.AddParser("keyword", "none, underline, overline, line-through");
+		.AddParser(PropertyParseKeyword<"none", "underline", "overline", "line-through">);
 	RegisterProperty(PropertyId::TextDecorationColor, "text-decoration-color", "currentColor")
-		.AddParser("keyword", "currentColor")
+		.AddParser(PropertyParseKeyword<"currentColor">)
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::TextDecoration, "text-decoration", "text-decoration-line, text-decoration-color", ShorthandType::FallThrough);
 	
 	// Perspective and Transform specifications
 	RegisterProperty(PropertyId::Perspective, "perspective", "none")
-		.AddParser("keyword", "none")
+		.AddParser(PropertyParseKeyword<"none">)
 		.AddParser("length");
 	RegisterProperty(PropertyId::PerspectiveOriginX, "perspective-origin-x", "50%")
-		.AddParser("keyword", "left, center, right")
+		.AddParser(PropertyParseKeyword<"left", "center", "right">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::PerspectiveOriginY, "perspective-origin-y", "50%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::PerspectiveOrigin, "perspective-origin", "perspective-origin-x, perspective-origin-y", ShorthandType::FallThrough);
 	RegisterProperty(PropertyId::Transform, "transform", "none")
 		.AddParser("transform");
 	RegisterProperty(PropertyId::TransformOriginX, "transform-origin-x", "50%")
-		.AddParser("keyword", "left, center, right")
+		.AddParser(PropertyParseKeyword<"left", "center", "right">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::TransformOriginY, "transform-origin-y", "50%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::TransformOriginZ, "transform-origin-z", "0px")
 		.AddParser("length");
@@ -723,12 +685,12 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	RegisterProperty(PropertyId::BackgroundColor, "background-color", "transparent")
 		.AddParser("color");
 	RegisterProperty(PropertyId::BackgroundImage, "background-image", "none")
-		.AddParser("keyword", "none")
+		.AddParser(PropertyParseKeyword<"none">)
 		.AddParser("string");
 	RegisterProperty(PropertyId::BackgroundOrigin, "background-origin", "padding-box")
-		.AddParser("keyword", "padding-box, border-box, content-box");
-	RegisterProperty(PropertyId::BackgroundSize, "background-size", "auto")
-		.AddParser("keyword", "auto, cover, contain");
+		.AddParser(PropertyParseKeyword<"padding-box", "border-box", "content-box">);
+	RegisterProperty(PropertyId::BackgroundSize, "background-size", "unset")
+		.AddParser(PropertyParseKeyword<"unset", "auto", "cover", "contain">);
 	RegisterProperty(PropertyId::BackgroundSizeX, "background-size-x", "0px")
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundSizeY, "background-size-y", "0px")
@@ -736,39 +698,39 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	RegisterShorthand(ShorthandId::BackgroundSize, "background-size", "background-size-x, background-size-y", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::BackgroundPositionX, "background-position-x", "0%")
-		.AddParser("keyword", "left, center, right")
+		.AddParser(PropertyParseKeyword<"left", "center", "right">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundPositionY, "background-position-y", "0%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BackgroundPosition, "background-position", "background-position-x, background-position-y", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::BackgroundLattice, "background-lattice", "auto")
-		.AddParser("keyword", "auto, cover, contain");	
+		.AddParser(PropertyParseKeyword<"auto", "cover", "contain">);	
 	RegisterProperty(PropertyId::BackgroundLatticeX1, "background-lattice-x1", "0%")
-		.AddParser("keyword", "left, center, right")
+		.AddParser(PropertyParseKeyword<"left", "center", "right">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundLatticeY1, "background-lattice-y1", "0%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundLatticeX2, "background-lattice-x2", "0%")
-		.AddParser("keyword", "left, center, right")
+		.AddParser(PropertyParseKeyword<"left", "center", "right">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundLatticeY2, "background-lattice-y2", "0%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundLatticeU, "background-lattice-u", "0%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundLatticeV, "background-lattice-v", "0%")
-		.AddParser("keyword", "top, center, bottom")
+		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BackgroundLattice, "background-lattice", "background-lattice-x1, background-lattice-y1, background-lattice-x2, background-lattice-y2, background-lattice-u, background-lattice-v", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat")
-		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");
+		.AddParser(PropertyParseKeyword<"repeat", "repeat-x", "repeat-y", "no-repeat">);
 	RegisterProperty(PropertyId::BackgroundFilter, "background-filter", "none")
-		.AddParser("keyword", "none")
+		.AddParser(PropertyParseKeyword<"none">)
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position-x, background-position-y, background-size-x, background-size-y", ShorthandType::FallThrough);
 
@@ -794,23 +756,23 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 
 	// flex layout
 	RegisterProperty(PropertyId::Display, "display")
-		.AddParser("keyword", "flex, none");
+		.AddParser(PropertyParseKeyword<"flex", "none">);
 	RegisterProperty(PropertyId::Overflow, "overflow")
-		.AddParser("keyword", "visible, hidden, scroll");
+		.AddParser(PropertyParseKeyword<"visible", "hidden", "scroll">);
 	RegisterProperty(PropertyId::Position, "position")
-		.AddParser("keyword", "static, relative, absolute");
+		.AddParser(PropertyParseKeyword<"static", "relative", "absolute">);
 
 	RegisterProperty(PropertyId::MarginTop, "margin-top")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::MarginRight, "margin-right")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::MarginBottom, "margin-bottom")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::MarginLeft, "margin-left")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::Margin, "margin", "margin-top, margin-right, margin-bottom, margin-left", ShorthandType::Box);
 
@@ -834,7 +796,7 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length_percent");
 
 	RegisterProperty(PropertyId::Width, "width")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::MinWidth, "min-width")
 		.AddParser("length_percent");
@@ -842,7 +804,7 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length_percent");
 
 	RegisterProperty(PropertyId::Height, "height")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::MinHeight, "min-height")
 		.AddParser("length_percent");
@@ -857,26 +819,26 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length");
 	
 	RegisterProperty(PropertyId::AlignContent, "align-content")
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around, space-evenly");
+		.AddParser(PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around", "space-evenly">);
 	RegisterProperty(PropertyId::AlignItems, "align-items")
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
+		.AddParser(PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">);
 	RegisterProperty(PropertyId::AlignSelf, "align-self")
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
+		.AddParser(PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">);
 	RegisterProperty(PropertyId::Direction, "direction")
-		.AddParser("keyword", "inherit, ltr, rtl");
+		.AddParser(PropertyParseKeyword<"inherit", "ltr", "rtl">);
 	RegisterProperty(PropertyId::FlexDirection, "flex-direction")
-		.AddParser("keyword", "column, column-reverse, row, row-reverse");
+		.AddParser(PropertyParseKeyword<"column", "column-reverse", "row", "row-reverse">);
 	RegisterProperty(PropertyId::FlexWrap, "flex-wrap")
-		.AddParser("keyword", "nowrap, wrap, wrap-reverse");
+		.AddParser(PropertyParseKeyword<"nowrap", "wrap", "wrap-reverse">);
 	RegisterProperty(PropertyId::JustifyContent, "justify-content")
-		.AddParser("keyword", "flex-start, center, flex-end, space-between, space-around, space-evenly");
+		.AddParser(PropertyParseKeyword<"flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly">);
 
 	RegisterProperty(PropertyId::AspectRatio, "aspect-ratio")
 		.AddParser("number");
 	RegisterProperty(PropertyId::Flex, "flex")
 		.AddParser("number");
 	RegisterProperty(PropertyId::FlexBasis, "flex-basis")
-		.AddParser("keyword", "auto")
+		.AddParser(PropertyParseKeyword<"auto">)
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::FlexGrow, "flex-grow")
 		.AddParser("number");
@@ -884,13 +846,13 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("number");
 
 	RegisterProperty(PropertyId::PointerEvents, "pointer-events", "auto")
-		.AddParser("keyword", "none, auto");
+		.AddParser(PropertyParseKeyword<"none", "auto">);
 	RegisterProperty(PropertyId::ScrollLeft, "scroll-left", "0px")
 		.AddParser("length");
 	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0px")
 		.AddParser("length");
 	RegisterProperty(PropertyId::Filter, "filter", "none")
-		.AddParser("keyword", "none,gray");
+		.AddParser(PropertyParseKeyword<"none", "gray">);
 	PropertyVector properties;
 	for (auto const& [id, value] : unparsed_default) {
 		if (!ParsePropertyDeclaration(properties, id, value)) {
@@ -899,7 +861,6 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		}
 	}
 	unparsed_default.clear();
-	Style::Initialise(InheritableProperties);
 	default_value = Style::Instance().Create(properties);
 }
 
@@ -907,6 +868,7 @@ static StyleSheetSpecificationInstance* instance = nullptr;
 
 bool StyleSheetSpecification::Initialise() {
 	if (instance == nullptr) {
+		Style::Initialise(InheritableProperties);
 		instance = new StyleSheetSpecificationInstance();
 		instance->RegisterProperties();
 	}
@@ -916,10 +878,11 @@ bool StyleSheetSpecification::Initialise() {
 void StyleSheetSpecification::Shutdown() {
 	if (instance != nullptr) {
 		delete instance;
+		Style::Shutdown();
 	}
 }
 
-Style::Value StyleSheetSpecification::GetDefaultProperties() {
+const Style::TableRef& StyleSheetSpecification::GetDefaultProperties() {
 	return instance->GetDefaultProperties();
 }
 
@@ -927,12 +890,12 @@ const PropertyIdSet & StyleSheetSpecification::GetInheritableProperties() {
 	return instance->GetInheritableProperties();
 }
 
-bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) {
-	return instance->ParsePropertyDeclaration(set, property_name);
+bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) {
+	return instance->ParseDeclaration(set, property_name);
 }
 
-bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {
-	return instance->ParsePropertyDeclaration(vec, property_name, property_value);
+bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {
+	return instance->ParseDeclaration(vec, property_name, property_value);
 }
 
 }

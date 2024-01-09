@@ -5,7 +5,6 @@
 #include <core/ComputedValues.h>
 #include <core/TextEffect.h>
 #include <glm/glm.hpp>
-#include <optional>
 #include "luavalue.h"
 
 namespace Rml {
@@ -25,19 +24,18 @@ struct layout {
     uint16_t start;
 };
 
-struct group{
+struct group {
 	Color color;
 	//todo
 };
 
-struct image{
+struct image {
 	Rml::TextureId id;
 	Rect rect;
 	uint16_t width;
 	uint16_t height;
-	image(){}
-	image(Rml::TextureId id, Rect rect, uint16_t width, uint16_t height):id(id), rect(rect), width(width), height(height){}
 };
+
 struct Line {
 	std::string text;
 	Point position;
@@ -54,7 +52,7 @@ struct TextureData {
 	}
 };
 
-class RenderInterface {
+class Render {
 public:
 	virtual void Begin() = 0;
 	virtual void End() = 0;
@@ -78,7 +76,7 @@ public:
 	virtual float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups,std::vector<Rml::image>& images,std::vector<layout>& line_layouts,int start,int num)=0;
 };
 
-class Plugin {
+class Script {
 public:
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnCreateText(Document* document, Text* text) = 0;

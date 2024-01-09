@@ -390,14 +390,14 @@ font_manager_flush(struct font_manager *F) {
 }
 
 static void
-font_manager_import_unsafe(struct font_manager *F, const char* fontpath, void* fontdata) {
-	truetype_import(F->L, fontpath, fontdata);
+font_manager_import_unsafe(struct font_manager *F, void* fontdata) {
+	truetype_import(F->L, fontdata);
 }
 
 void
-font_manager_import(struct font_manager *F, const char* fontpath, void* fontdata) {
+font_manager_import(struct font_manager *F, void* fontdata) {
 	lock(F);
-	font_manager_import_unsafe(F, fontpath, fontdata);
+	font_manager_import_unsafe(F, fontdata);
 	unlock(F);
 }
 

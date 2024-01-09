@@ -2,20 +2,56 @@
 
 #include <core/ID.h>
 #include <css/PropertyIdSet.h>
-#include <css/PropertyVector.h>
 #include <css/Property.h>
 #include <span>
-#include <optional>
 #include <functional>
 
 struct style_cache;
 
 namespace Rml::Style {
-    struct Value { int idx; };
-    struct Combination { int idx; };
-    struct ValueOrCombination {
-        ValueOrCombination(Value o): idx(o.idx) {}
-        ValueOrCombination(Combination o): idx(o.idx) {}
+    class TableRef {
+    public:
+        TableRef()
+            : idx(0)
+        {}
+        TableRef(int idx)
+            : idx(idx)
+        {}
+        ~TableRef() {
+            Release();
+        }
+        TableRef(TableRef&& rhs)
+            : idx(rhs.idx) {
+            rhs.idx = 0;
+        }
+        TableRef(const TableRef& rhs)
+            : idx(rhs.idx) {
+            AddRef();
+        }
+        TableRef& operator=(TableRef&& rhs) {
+            if (this != &rhs) {
+                Release();
+                idx = rhs.idx;
+                rhs.idx = 0 ;
+            }
+            return *this;
+        }
+        TableRef& operator=(const TableRef& rhs) {
+            if (this != &rhs) {
+                Release();
+                idx = rhs.idx;
+                AddRef();
+            }
+            return *this;
+        }
+        void AddRef() const;
+        void Release() const;
+
+        int idx;
+    };
+
+    struct TableValue {
+        TableValue(TableRef o): idx(o.idx) {}
         int idx;
     };
 
@@ -23,25 +59,32 @@ namespace Rml::Style {
     public:
         Cache(const PropertyIdSet& inherit);
         ~Cache();
-        Value                     Create();
-        Value                     Create(const PropertyVector& vec);
-        Combination               Merge(const std::span<Value>& maps);
-        Combination               Merge(Value A, Value B, Value C);
-        Combination               Inherit(Combination child, Combination parent);
-        Combination               Inherit(Combination child);
-        void                      Release(ValueOrCombination s);
-        void                      Assgin(Value to, Combination from);
-        void                      Clone(Value to, Value from);
-        bool                      SetProperty(Value s, PropertyId id, const Property& value);
-        bool                      DelProperty(Value s, PropertyId id);
-        PropertyIdSet             SetProperty(Value s, const PropertyVector& vec);
-        PropertyIdSet             DelProperty(Value s, const PropertyIdSet& set);
-        std::optional<Property>   Find(ValueOrCombination s, PropertyId id);
-        bool                      Has(ValueOrCombination s, PropertyId id);
-        void                      Foreach(ValueOrCombination s, PropertyIdSet& set);
-        void                      Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);
-        PropertyIdSet             Diff(ValueOrCombination a, ValueOrCombination b);
-        void                      Flush();
+        TableRef                   Create();
+        TableRef                   Create(const PropertyVector& vec);
+        TableRef                   Merge(const std::span<TableValue>& tables);
+        TableRef                   Inherit(const TableRef& A, const TableRef& B, const TableRef& C);
+        TableRef                   Inherit(const TableRef& A, const TableRef& B);
+        TableRef                   Inherit(const TableRef& A);
+        bool                       Assgin(const TableRef& to, const TableRef& from);
+        bool                       Compare(const TableRef& a, const TableRef& b);
+        void                       Clone(const TableRef& to, const TableRef& from);
+        bool                       SetProperty(const TableRef& s, PropertyId id, const Property& value);
+        bool                       DelProperty(const TableRef& s, PropertyId id);
+        PropertyIdSet              SetProperty(const TableRef& s, const PropertyVector& vec);
+        PropertyIdSet              DelProperty(const TableRef& s, const PropertyIdSet& set);
+        Property                   Find(const TableRef& s, PropertyId id);
+        bool                       Has(const TableRef& s, PropertyId id);
+        void                       Foreach(const TableRef& s, PropertyIdSet& set);
+        void                       Foreach(const TableRef& s, PropertyUnit unit, PropertyIdSet& set);
+        PropertyIdSet              Diff(const TableRef& a, const TableRef& b);
+        void                       Flush();
+        Property                   CreateProperty(PropertyId id, std::span<uint8_t> value);
+        PropertyId                 GetPropertyId(Property prop);
+        std::span<const std::byte> GetPropertyData(Property prop);
+        void                       PropertyAddRef(Property prop);
+        void                       PropertyRelease(Property prop);
+        void                       TableAddRef(const TableRef& s);
+        void                       TableRelease(const TableRef& s);
 
     private:
         style_cache* c;

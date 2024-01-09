@@ -198,7 +198,6 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 
 void loopwindow_init(struct ant_window_callback* cb) {
     g_cb = cb;
-    return 0;
 }
 
 void loopwindow_mainloop() {

@@ -1,0 +1,24 @@
+<html>
+	<head>
+		<script type="text/x-lua">
+			local bgfx_model = window.createModel {
+				content = ""
+			}
+			window.onMessage("stat", function(data)
+				bgfx_model.content = data
+			end)
+		</script>
+		<style>
+			bgfx {
+				width: auto;
+				height: auto;
+				font: 200% "宋体";
+				color: #7FFF7F;
+				text-align: "left";
+			}
+		</style>
+	</head>
+	<body style = "pointer-events: none;">
+		<bgfx data-if = "content ~= ''">{{content}}</bgfx>
+	</body>
+</html>

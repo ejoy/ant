@@ -19,15 +19,18 @@ public:
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
 protected:
-	std::optional<Property> GetComputedProperty(PropertyId id);
+	Property GetComputedProperty(PropertyId id);
 
 	template <typename T>
 	auto GetProperty(PropertyId id) {
 		if constexpr(std::is_same_v<T, float>) {
-			return GetComputedProperty(id)->Get<T>(GetParentNode());
+			return GetComputedProperty(id).Get<PropertyFloat>().Compute(GetParentNode());
+		}
+		else if constexpr(std::is_enum_v<T>) {
+			return GetComputedProperty(id).GetEnum<T>();
 		}
 		else {
-			return GetComputedProperty(id)->Get<T>();
+			return GetComputedProperty(id).Get<T>();
 		}
 	}
 

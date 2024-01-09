@@ -15,7 +15,7 @@ local init_loader_sys   = ecs.system 'init_system'
 
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
-    ientity.create_grid_entity(128, 128, 1, 3)
+    --ientity.create_grid_entity(128, 128, 1, 3)
     create_instance "/pkg/ant.test.features/assets/entities/light.prefab"
 end
 
@@ -27,7 +27,7 @@ function init_loader_sys:init_world()
     end
 
     local mq = w:first("main_queue camera_ref:in")
-    local eyepos = math3d.vector(0, 8, -8)
+    local eyepos = math3d.vector(0, 100, -100)
     local camera_ref<close> = world:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))

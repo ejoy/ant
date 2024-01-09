@@ -263,6 +263,10 @@ local collider_type = {
     --"capsule"
 }
 
+function m.get_title()
+    return "Hierarchy"
+end
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')

@@ -1,0 +1,87 @@
+[Window][MainView]
+Pos=0,82
+Size=2688,1430
+Collapsed=0
+
+[Window][Inspector]
+Pos=2021,82
+Size=667,975
+Collapsed=0
+DockId=0x00000006,0
+
+[Window][Hierarchy]
+Pos=0,82
+Size=486,975
+Collapsed=0
+DockId=0x00000003,0
+
+[Window][ResourceBrowser]
+Pos=0,1059
+Size=2688,453
+Collapsed=0
+DockId=0x00000001,4
+
+[Window][Skeleton]
+Pos=0,1059
+Size=2688,453
+Collapsed=0
+DockId=0x00000001,2
+
+[Window][Console]
+Pos=0,1059
+Size=2688,453
+Collapsed=0
+DockId=0x00000001,1
+
+[Window][Log]
+Pos=0,1059
+Size=2688,453
+Collapsed=0
+DockId=0x00000001,0
+
+[Window][Debug##Default]
+Pos=30,30
+Size=200,200
+Collapsed=0
+
+[Window][Controll]
+Pos=0,42
+Size=2688,40
+Collapsed=0
+
+[Window][Choose prefab]
+Pos=3,3
+Size=1026,434
+Collapsed=0
+
+[Window][New Animation]
+ViewportPos=3,3
+ViewportId=0x890096F0
+Size=762,192
+Collapsed=0
+
+[Window][New Clip]
+Pos=561,467
+Size=798,146
+Collapsed=0
+
+[Window][Animation]
+Pos=0,1059
+Size=2688,453
+Collapsed=0
+DockId=0x00000001,3
+
+[Table][0x965D8EB5,3]
+Column 0  Weight=1.0000
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+
+[Docking][Data]
+DockSpace       ID=0x6949B3C7 Window=0x8C090316 Pos=0,82 Size=2688,1430 Split=Y
+  DockNode      ID=0x00000002 Parent=0x6949B3C7 SizeRef=1920,975 Split=X
+    DockNode    ID=0x00000003 Parent=0x00000002 SizeRef=486,740 Selected=0x29EABFBD
+    DockNode    ID=0x00000004 Parent=0x00000002 SizeRef=3352,740 Split=X
+      DockNode  ID=0x00000005 Parent=0x00000004 SizeRef=1531,740 CentralNode=1
+      DockNode  ID=0x00000006 Parent=0x00000004 SizeRef=667,740 Selected=0xE7039252
+  DockNode      ID=0x00000001 Parent=0x6949B3C7 SizeRef=1920,453 Selected=0xB9AE6CC5
+

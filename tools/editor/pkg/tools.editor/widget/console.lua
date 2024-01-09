@@ -96,6 +96,10 @@ local function show_input()
     imgui.cursor.Separator()
 end
 
+function m.get_title()
+    return "Console"
+end
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')

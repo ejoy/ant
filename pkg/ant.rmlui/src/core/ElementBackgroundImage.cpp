@@ -4,7 +4,7 @@
 #include <core/Geometry.h>
 #include <core/Document.h>
 #include <core/Interface.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <regex>
 
 namespace Rml {
@@ -33,13 +33,20 @@ static void GetRectArray(float wl, float ht, float wr, float hb, Rect& rect, std
 		rect_array[8] = Rect{x + w4, y + h4, w3, h3};
 }
 
+static Rect CalcUV(const Rect& surface, const Rect& texture) {
+	Rect uv;
+	uv.origin = (surface.origin - texture.origin) / texture.size;
+	uv.size = surface.size / texture.size;
+	return uv;
+}
+
 bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
-	if (!image->Has<std::string>()) {
+	if (!image.Has<std::string>()) {
 		// "none"
 		return false;
 	}
-	std::string path = image->Get<std::string>();
+	std::string path = image.Get<std::string>();
 	if (path.empty()) {
 		return false;
 	}
@@ -47,8 +54,8 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
 
-	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<Style::BoxType>();
-	Rect surface = Rect{ {0, 0}, bounds.size };
+	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin).GetEnum<Style::BoxType>();
+	Rect surface = Rect { {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
 		return false;
 	}
@@ -67,27 +74,16 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		return false;
 	}
 
-	Style::BackgroundSize backgroundSize = element->GetComputedProperty(PropertyId::BackgroundSize)->Get<Style::BackgroundSize>();
-	Size texSize {
-		element->GetComputedProperty(PropertyId::BackgroundSizeX)->Get<PropertyFloat>().ComputeW(element),
-		element->GetComputedProperty(PropertyId::BackgroundSizeY)->Get<PropertyFloat>().ComputeH(element)
-	};
-	Point texPosition {
-		element->GetComputedProperty(PropertyId::BackgroundPositionX)->Get<PropertyFloat>().ComputeW(element),
-		element->GetComputedProperty(PropertyId::BackgroundPositionY)->Get<PropertyFloat>().ComputeH(element)
-	};
-
-
-	Color color = Color::FromSRGB(255,255,255,255);
+	Color color = Color::FromSRGB(255, 255, 255, 255);
 	bool setGray = false;
 	if (element->IsGray()) {
 		setGray = true;
 	}
 	else {
 		auto property = element->GetComputedProperty(PropertyId::BackgroundFilter);
-		if (!property->Has<PropertyKeyword>()) {
+		if (!property.Has<PropertyKeyword>()) {
 			setGray = true;
-			color = property->Get<Color>();
+			color = property.Get<Color>();
 		}
 	}
 	color.ApplyOpacity(element->GetOpacity());
@@ -104,82 +100,108 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		return false;
 	}
 
-	if (texSize.IsEmpty()) {
-		texSize = texture.dimensions;
-	}
-	Size scale{
-		surface.size.w / texSize.w,
-		surface.size.h / texSize.h
+	Rect background {};
+	background.origin = surface.origin + Point {
+		PropertyComputeX(element, element->GetComputedProperty(PropertyId::BackgroundPositionX)),
+		PropertyComputeY(element, element->GetComputedProperty(PropertyId::BackgroundPositionY))
 	};
-	Rect uv { {
-		texPosition.x / texSize.w,
-		texPosition.y / texSize.h
-	}, {} };
-	float aspectRatio = scale.w / scale.h;
-	//uv
-	switch (backgroundSize) {
-	case Style::BackgroundSize::Auto:
-		uv.size.w = scale.w;
-		uv.size.h = scale.h;
-		break;
-	case Style::BackgroundSize::Contain:
-		if (aspectRatio < 1.f) {
-			uv.size.w = 1.f;
-			uv.size.h = 1.f / aspectRatio;
+	switch (element->GetComputedProperty(PropertyId::BackgroundSize).GetEnum<Style::BackgroundSize>()) {
+	case Style::BackgroundSize::Contain: {
+		Size scale {
+			surface.size.w / texture.dimensions.w,
+			surface.size.h / texture.dimensions.h
+		};
+		if (scale.w < scale.h) {
+			background.size = {
+				surface.size.w,
+				surface.size.w / texture.dimensions.w * texture.dimensions.h,
+			};
 		}
 		else {
-			uv.size.w = aspectRatio;
-			uv.size.h = 1.f;
-		}
-		break;
-	case Style::BackgroundSize::Cover:
-		if (aspectRatio > 1.f) {
-			uv.size.w = 1.f;
-			uv.size.h = 1.f / aspectRatio;
-		}
-		else {
-			uv.size.w = aspectRatio;
-			uv.size.h = 1.f;
+			background.size = {
+				surface.size.h / texture.dimensions.h * texture.dimensions.w,
+				surface.size.h,
+			};
 		}
 		break;
 	}
-	Material* material = GetRenderInterface()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
-	geometry.SetMaterial(material);
-	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
-	bool has_lattice = lattice_x1 > 0;
+	case Style::BackgroundSize::Cover: {
+		Size scale {
+			surface.size.w / texture.dimensions.w,
+			surface.size.h / texture.dimensions.h
+		};
+		if (scale.w > scale.h) {
+			background.size = {
+				surface.size.w,
+				surface.size.w / texture.dimensions.w * texture.dimensions.h,
+			};
+		}
+		else {
+			background.size = {
+				surface.size.h / texture.dimensions.h * texture.dimensions.w,
+				surface.size.h,
+			};
+		}
+		break;
+	}
+	case Style::BackgroundSize::Auto: {
+		background.size = texture.dimensions;
+		break;
+	}
+	default:
+	case Style::BackgroundSize::Unset: {
+		background.size = {
+			element->GetComputedProperty(PropertyId::BackgroundSizeX).Get<PropertyFloat>().ComputeW(element),
+			element->GetComputedProperty(PropertyId::BackgroundSizeY).Get<PropertyFloat>().ComputeH(element)
+		};
+		break;
+	}
+	}
 
-	if (edge.padding.size() == 0 
-		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
-	) 
-	{
-		if(has_lattice){return false;}
-		geometry.AddRectFilled(surface, color);
-		geometry.UpdateUV(4, surface, uv);
-	}
-	else {
-		if(has_lattice){
-			auto lattice_y1 = element->GetComputedProperty(PropertyId::BackgroundLatticeY1)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_x2 = element->GetComputedProperty(PropertyId::BackgroundLatticeX2)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_y2 = element->GetComputedProperty(PropertyId::BackgroundLatticeY2)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_u = element->GetComputedProperty(PropertyId::BackgroundLatticeU)->Get<PropertyFloat>().value / 100.0f;
-			auto lattice_v = element->GetComputedProperty(PropertyId::BackgroundLatticeV)->Get<PropertyFloat>().value / 100.0f;			
+	Rect uv = CalcUV(surface, background);
+	Material* material = GetRender()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
+	geometry.SetMaterial(material);
+
+	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1).Get<PropertyFloat>().value / 100.0f;
+	if (lattice_x1 > 0) {
+		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
+			return false;
+		}
+		else {
+			auto lattice_y1 = element->GetComputedProperty(PropertyId::BackgroundLatticeY1).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_x2 = element->GetComputedProperty(PropertyId::BackgroundLatticeX2).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_y2 = element->GetComputedProperty(PropertyId::BackgroundLatticeY2).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_u = element->GetComputedProperty(PropertyId::BackgroundLatticeU).Get<PropertyFloat>().value / 100.0f;
+			auto lattice_v = element->GetComputedProperty(PropertyId::BackgroundLatticeV).Get<PropertyFloat>().value / 100.0f;			
 			std::vector<Rect> surface_array(9);
 			std::vector<Rect> uv_array(9);
 			GetRectArray(lattice_x1, lattice_y1, lattice_x2, lattice_y2, surface, surface_array);
 			float ur = 1.f - lattice_u - 2.f / texture.dimensions.w;
 			float vb = 1.f - lattice_v - 2.f / texture.dimensions.h;
 			GetRectArray(lattice_u, lattice_v, ur, vb, uv, uv_array);
-			for(int idx = 0; idx < 9; ++idx){
+			for (int idx = 0; idx < 9; ++idx) {
 				geometry.AddRectFilled(surface_array[idx], color);
 				geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
-			}		
+			}
 		}
-		else{
-			geometry.AddPolygon(edge.padding, color);
-			geometry.UpdateUV(edge.padding.size(), surface, uv);
-		}	
 	}
-	geometry.UpdateVertices();
+	else {
+		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
+			auto poly = geometry.ClipPolygon(edge.padding, background);
+			if (!poly.IsEmpty()) {
+				geometry.AddPolygon(poly, color);
+				geometry.UpdateUV(poly.points.size(), surface, uv);
+			}
+		}
+		else {
+			background.Inter(surface);
+			if (!background.IsEmpty()) {
+				geometry.AddRectFilled(background, color);
+				geometry.UpdateUV(4, surface, uv);
+			}
+		}
+	}
+
 	if (setGray) {
 		geometry.SetGray();
 	}

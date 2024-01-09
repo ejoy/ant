@@ -147,4 +147,55 @@ function m.get_open_file_path(filetype, extension)
     end
 end
 
+local global_data	= require "common.global_data"
+
+function m.load_imgui_layout(filename)
+    local rf = io.open(filename:string(), "rb")
+    if not rf then
+        rf = io.open(tostring(global_data.editor_root) .. "/imgui.default.layout", "rb")
+    end
+    if rf then
+        local setting = rf:read "a"
+        rf:close()
+        imgui.util.LoadIniSettings(setting)
+    end
+end
+
+function m.save_ui_layout()
+    local setting = imgui.util.SaveIniSettings()
+    local wf = assert(io.open(tostring(global_data.editor_root) .. "/imgui.layout", "wb"))
+    wf:write(setting)
+    wf:close()
+end
+
+function m.reset_ui_layout()
+    -- TODO: default.layout
+    m.load_imgui_layout(tostring(global_data.editor_root) .. "/imgui.default.layout")
+    -- local dockID = imgui.util.GetID("MainViewSpace")
+    -- imgui.dock.BuilderRemoveNode(dockID)
+    -- imgui.dock.BuilderAddNode(dockID, 0)
+    -- local imgui_vp = imgui.GetMainViewport()
+    -- local ms = imgui_vp.MainSize
+    -- imgui.dock.BuilderSetNodeSize(dockID, ms[1], ms[1])
+    -- --
+    -- local splitID = dockID
+    -- local dockLeft
+    -- local dockRight
+    -- local dockDown
+    -- splitID, dockLeft = imgui.dock.BuilderSplitNode(splitID, 'L', 0.25)
+    -- splitID, dockRight = imgui.dock.BuilderSplitNode(splitID, 'R', 0.25)
+    -- splitID, dockDown = imgui.dock.BuilderSplitNode(splitID, 'D', 0.3)
+    -- --
+    -- imgui.dock.BuilderDockWindow(log_widget.get_title(), dockDown)
+    -- imgui.dock.BuilderDockWindow(console_widget.get_title(), dockDown)
+    -- imgui.dock.BuilderDockWindow(keyframe_view.get_title(), dockDown)
+    -- imgui.dock.BuilderDockWindow(anim_view.get_title(), dockDown)
+    -- imgui.dock.BuilderDockWindow(resource_browser.get_title(), dockDown)
+
+    -- imgui.dock.BuilderDockWindow(scene_view.get_title(), dockLeft)
+    -- imgui.dock.BuilderDockWindow(inspector.get_title(), dockRight)
+    -- --
+    -- imgui.dock.BuilderFinish(dockID)
+end
+
 return m

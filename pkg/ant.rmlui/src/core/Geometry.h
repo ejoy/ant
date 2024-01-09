@@ -53,6 +53,9 @@ public:
 		void push(Point point) { points.push_back(point); }
 		void emplace(Point&& point) { points.emplace_back(std::forward<Point>(point)); }
 		void clear() { points.clear(); }
+		bool IsEmpty() const {
+			return points.size() < 3;
+		}
 		std::vector<Point> points;
 	};
 
@@ -61,10 +64,11 @@ public:
 	void AddRect(const Rect& inner, float width, Color col);
 	void AddQuad(const Quad& quad, Color col);
 	void AddArc(const Path& outer, const Path& inner, Color col);
-	void AddPolygon(const Path& points, Color col);
-	void UpdateUV(size_t count, const Rect& surface, const Rect& uv);	void Reserve(size_t idx_count, size_t vtx_count);
+	void AddPolygon(const Path& poly, Color col);
+	Path ClipPolygon(const Path& poly, const Rect& rect);
+	void UpdateUV(size_t count, const Rect& surface, const Rect& uv);
+	void Reserve(size_t idx_count, size_t vtx_count);
 	void SetGray();
-	void UpdateVertices();
 
 protected:
 	std::vector<Vertex> vertices;

@@ -39,10 +39,9 @@ ltexture(lua_State *L) {
 static int
 limport(lua_State *L) {
 	struct font_manager *F = getF(L);
-	const char* fontpath = luaL_checkstring(L, 1);
-	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
-	void* fontdata = lua_touserdata(L, 2);
-	font_manager_import(F, fontpath, fontdata);
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	void* fontdata = lua_touserdata(L, 1);
+	font_manager_import(F, fontdata);
 	return 0;
 }
 

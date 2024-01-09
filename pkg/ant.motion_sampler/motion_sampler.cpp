@@ -133,10 +133,10 @@ static int lsample(lua_State *L){
 
 	const float delta = (float)luaL_checknumber(L, 2);
 
-	//int gids[] = {gid};ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
+	//int gids[] = {gid};ecs::group_enable<component::motion_sampler_tag>(w->ecs, gids);
 	
-	for (auto& e : ecs_api::select<ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>(w->ecs)) {
-		auto &ms = e.get<ecs::motion_sampler>();
+	for (auto& e : ecs::select<component::motion_sampler_tag, component::motion_sampler, component::scene>(w->ecs)) {
+		auto &ms = e.get<component::motion_sampler>();
 		auto mt = (struct motion_tracks*)ms.motion_tracks;
 		if (nullptr == mt)
 			continue;
@@ -151,7 +151,7 @@ static int lsample(lua_State *L){
 		}
 
         if (needupdate){
-			auto &scene = e.get<ecs::scene>();
+			auto &scene = e.get<component::scene>();
 
 			auto M = w->math3d->M;
 
@@ -196,7 +196,7 @@ static int lsample(lua_State *L){
 				math_unmark(M, scene.t);
 				scene.t = math_mark(M, math_import(M, &t.x, MATH_TYPE_VEC4, 1));
 			}
-            e.enable_tag<ecs::scene_needchange>();
+            e.enable_tag<component::scene_needchange>();
 		}
 	}
 	return 0;

@@ -1,20 +1,135 @@
 #include <css/PropertyParserTransform.h>
+#include <css/PropertyParserNumber.h>
 #include <core/Transform.h>
-#include <css/Property.h>
 #include <string.h>
 
 namespace Rml {
 
-PropertyParserTransform::PropertyParserTransform()
-	: number(PropertyParserNumber::UnitMark::Number)
-	, length(PropertyParserNumber::UnitMark::LengthPercent)
-	, angle(PropertyParserNumber::UnitMark::Angle)
-{
+using ParseFloatFunc = std::optional<PropertyFloat> (*) (const std::string&);
+
+static ParseFloatFunc number = PropertyParseNumber<PropertyParseNumberUnit::Number>;
+static ParseFloatFunc length = PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>;
+static ParseFloatFunc angle = PropertyParseNumber<PropertyParseNumberUnit::Angle>;
+
+const ParseFloatFunc angle1[] = { angle };
+const ParseFloatFunc angle2[] = { angle, angle };
+const ParseFloatFunc length1[] = { length };
+const ParseFloatFunc length2[] = { length, length };
+const ParseFloatFunc length3[] = { length, length, length };
+const ParseFloatFunc number3angle1[] = { number, number, number, angle };
+const ParseFloatFunc number1[] = { number };
+const ParseFloatFunc number2[] = { number, number };
+const ParseFloatFunc number3[] = { number, number, number };
+const ParseFloatFunc number6[] = { number, number, number, number, number, number };
+const ParseFloatFunc number16[] = { number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number };
+
+// Scan a string for a parameterized keyword with a certain number of numeric arguments.
+static bool Scan(int& out_bytes_read, const char* str, const char* keyword, const ParseFloatFunc parsers[], PropertyFloat* args, int nargs) {
+	out_bytes_read = 0;
+	int total_bytes_read = 0, bytes_read = 0;
+
+	/* use the quicker stack-based argument buffer, if possible */
+	char *arg = 0;
+	char arg_stack[1024];
+	std::string arg_heap;
+	if (strlen(str) < sizeof(arg_stack))
+	{
+		arg = arg_stack;
+	}
+	else
+	{
+		arg_heap = str;
+		arg = &arg_heap[0];
+	}
+
+	/* skip leading white space */
+	bytes_read = 0;
+	sscanf(str, " %n", &bytes_read);
+	str += bytes_read;
+	total_bytes_read += bytes_read;
+
+	/* find the keyword */
+	if (!memcmp(str, keyword, strlen(keyword)))
+	{
+		bytes_read = (int)strlen(keyword);
+		str += bytes_read;
+		total_bytes_read += bytes_read;
+	}
+	else
+	{
+		return false;
+	}
+
+	/* skip any white space */
+	bytes_read = 0;
+	sscanf(str, " %n", &bytes_read);
+	str += bytes_read;
+	total_bytes_read += bytes_read;
+
+	/* find the opening brace */
+	bytes_read = 0;
+	if (sscanf(str, " ( %n", &bytes_read), bytes_read)
+	{
+		str += bytes_read;
+		total_bytes_read += bytes_read;
+	}
+	else
+	{
+		return false;
+	}
+
+	/* parse the arguments */
+	for (int i = 0; i < nargs; ++i)
+	{
+		bytes_read = 0;
+		sscanf(str, " %[^,)] %n", arg, &bytes_read);
+		if (bytes_read == 0) {
+			return false;
+		}
+		auto prop = parsers[i](std::string(arg));
+		if (!prop) {
+			return false;
+		}
+
+		args[i] = *prop;
+		str += bytes_read;
+		total_bytes_read += bytes_read;
+
+		/* find the comma */
+		if (i < nargs - 1)
+		{
+			bytes_read = 0;
+			if (sscanf(str, " , %n", &bytes_read), bytes_read)
+			{
+				str += bytes_read;
+				total_bytes_read += bytes_read;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	/* find the closing brace */
+	bytes_read = 0;
+	if (sscanf(str, " ) %n", &bytes_read), bytes_read)
+	{
+		str += bytes_read;
+		total_bytes_read += bytes_read;
+	}
+	else
+	{
+		return false;
+	}
+
+	out_bytes_read = total_bytes_read;
+	return total_bytes_read > 0;
 }
 
-std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value) const {
+Property PropertyParseTransform(PropertyId id, const std::string& value) {
 	if (value == "none") {
-		return Transform {};
+		return { id, Transform {} };
 	}
 
 	Transform transform {};
@@ -28,17 +143,6 @@ std::optional<Property> PropertyParserTransform::ParseValue(const std::string& v
 		{0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER},
 	};
 
-	const PropertyParser* angle1[] = { &angle };
-	const PropertyParser* angle2[] = { &angle, &angle };
-	const PropertyParser* length1[] = { &length };
-	const PropertyParser* length2[] = { &length, &length };
-	const PropertyParser* length3[] = { &length, &length, &length };
-	const PropertyParser* number3angle1[] = { &number, &number, &number, &angle };
-	const PropertyParser* number1[] = { &number };
-	const PropertyParser* number2[] = { &number, &number };
-	const PropertyParser* number3[] = { &number, &number, &number };
-	const PropertyParser* number6[] = { &number, &number, &number, &number, &number, &number };
-	const PropertyParser* number16[] = { &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number, &number };
 
 	while (*next)
 	{
@@ -150,117 +254,12 @@ std::optional<Property> PropertyParserTransform::ParseValue(const std::string& v
 		}
 		else
 		{
-			return std::nullopt;
+			return {};
 		}
 	}
 
-	return std::move(transform);
+	return { id, transform };
 
-}
-
-// Scan a string for a parameterized keyword with a certain number of numeric arguments.
-bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParser** parsers, PropertyFloat* args, int nargs) const
-{
-	out_bytes_read = 0;
-	int total_bytes_read = 0, bytes_read = 0;
-
-	/* use the quicker stack-based argument buffer, if possible */
-	char *arg = 0;
-	char arg_stack[1024];
-	std::string arg_heap;
-	if (strlen(str) < sizeof(arg_stack))
-	{
-		arg = arg_stack;
-	}
-	else
-	{
-		arg_heap = str;
-		arg = &arg_heap[0];
-	}
-
-	/* skip leading white space */
-	bytes_read = 0;
-	sscanf(str, " %n", &bytes_read);
-	str += bytes_read;
-	total_bytes_read += bytes_read;
-
-	/* find the keyword */
-	if (!memcmp(str, keyword, strlen(keyword)))
-	{
-		bytes_read = (int)strlen(keyword);
-		str += bytes_read;
-		total_bytes_read += bytes_read;
-	}
-	else
-	{
-		return false;
-	}
-
-	/* skip any white space */
-	bytes_read = 0;
-	sscanf(str, " %n", &bytes_read);
-	str += bytes_read;
-	total_bytes_read += bytes_read;
-
-	/* find the opening brace */
-	bytes_read = 0;
-	if (sscanf(str, " ( %n", &bytes_read), bytes_read)
-	{
-		str += bytes_read;
-		total_bytes_read += bytes_read;
-	}
-	else
-	{
-		return false;
-	}
-
-	/* parse the arguments */
-	for (int i = 0; i < nargs; ++i)
-	{
-		bytes_read = 0;
-		sscanf(str, " %[^,)] %n", arg, &bytes_read);
-		if (bytes_read == 0) {
-			return false;
-		}
-		auto prop = parsers[i]->ParseValue(std::string(arg));
-		if (!prop) {
-			return false;
-		}
-
-		args[i] = prop->Get<PropertyFloat>();
-		str += bytes_read;
-		total_bytes_read += bytes_read;
-
-		/* find the comma */
-		if (i < nargs - 1)
-		{
-			bytes_read = 0;
-			if (sscanf(str, " , %n", &bytes_read), bytes_read)
-			{
-				str += bytes_read;
-				total_bytes_read += bytes_read;
-			}
-			else
-			{
-				return false;
-			}
-		}
-	}
-
-	/* find the closing brace */
-	bytes_read = 0;
-	if (sscanf(str, " ) %n", &bytes_read), bytes_read)
-	{
-		str += bytes_read;
-		total_bytes_read += bytes_read;
-	}
-	else
-	{
-		return false;
-	}
-
-	out_bytes_read = total_bytes_read;
-	return total_bytes_read > 0;
 }
 
 }

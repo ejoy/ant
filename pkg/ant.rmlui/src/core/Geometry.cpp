@@ -1,15 +1,138 @@
 #include <core/Geometry.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Interface.h>
 #include <utility>
 
 namespace Rml {
 
+static float PointCross(const Point& p1, const Point& p2) {
+	return p1.x * p2.x + p1.y * p2.y;
+}
+
+static bool PointCrossFastCheck(const Point& p1,const Point& p2,const Point& q1,const Point& q2) {
+	return true
+		&& std::min(p1.x, p2.x) <= std::max(q1.x, q2.x)
+		&& std::min(q1.x, q2.x) <= std::max(p1.x, p2.x)
+		&& std::min(p1.y, p2.y) <= std::max(q1.y, q2.y)
+		&& std::min(q1.y, q2.y) <= std::max(p1.y, p2.y)
+		;
+}
+
+static bool PointCrossCheck(const Point& p1, const Point& p2, const Point& q1, const Point& q2) {
+	Point Q2Q1 = q2 - q1;
+	Point P1Q1 = p1 - q1;
+	Point P2Q1 = p2 - q1;
+	float c1 = PointCross(P1Q1, Q2Q1);
+	float c2 = PointCross(P2Q1, Q2Q1);
+	if ((c1 != 0 || c2 != 0) && (c1 * c2 <= 0)) {
+		return false;
+	}
+	Point P2P1 = p2 - p1;
+	Point Q1P1 = q1 - p1;
+	Point Q2P1 = q2 - p1;
+	float c3 = PointCross(Q1P1, P2P1);
+	float c4 = PointCross(Q2P1, P2P1);
+	if ((c3 != 0 || c4 != 0) && (c3 * c4 <= 0)) {
+		return false;
+	}
+	return true;
+}
+
+static bool PointCmp(const Point& a, const Point& b, const Point& center) {
+	if (a.x >= 0 && b.x < 0)
+		return true;
+	if (a.x == 0 && b.x == 0)
+		return a.y > b.y;
+	float det = (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y);
+	if (det < 0)
+		return true;
+	if (det > 0)
+		return false;
+	float d1 = (a.x - center.x) * (a.x - center.x) + (a.y - center.y) * (a.y - center.y);
+	float d2 = (b.x - center.x) * (b.x - center.y) + (b.y - center.y) * (b.y - center.y);
+	return d1 > d2;
+}
+
+static bool PointGetCross(const Point& p1, const Point& p2, const Point& q1, const Point& q2, Point& pt) {
+	if (PointCrossFastCheck(p1, p2, q1, q2)) {
+		if (PointCrossCheck(p1, p2, q1, q2)) {
+			float xLeft = (q2.x - q1.x) * (p1.y - p2.y) - (p2.x - p1.x) * (q1.y - q2.y);
+			float xRight = (p1.y - q1.y) * (p2.x - p1.x) * (q2.x - q1.x) + q1.x * (q2.y - q1.y) * (p2.x - p1.x) - p1.x * (p2.y - p1.y) * (q2.x - q1.x);
+			float yLeft = (p1.x - p2.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q1.x - q2.x);
+			float yRight = p2.y * (p1.x - p2.x) * (q2.y - q1.y) + (q2.x- p2.x) * (q2.y - q1.y) * (p1.y - p2.y) - q2.y * (q1.x - q2.x) * (p2.y - p1.y); 
+			pt.x = xRight / xLeft;
+			pt.y = yRight / yLeft;
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool PolygonContainPoint(const Geometry::Path& poly, const Point& pt) {
+	bool c = false;
+	size_t i, j;
+	for (i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
+		if (((poly[i].y <= pt.y) && (pt.y < poly[j].y)) || ((poly[j].y <= pt.y) && (pt.y < poly[i].y))) {
+			if ((pt.x < (poly[j].x - poly[i].x) * (pt.y - poly[i].y)/(poly[j].y - poly[i].y) + poly[i].x)) {
+				c = !c;
+			}
+		}
+	}
+	return c;
+}
+
+static void PolygonSort(Geometry::Path& poly) {
+	Point center;
+	float x = 0.f;
+	float y = 0.f;
+	for (size_t i = 0; i < poly.size(); ++i) {
+		x += poly[i].x;
+		y += poly[i].y;
+	}
+	center.x = x / poly.size();
+	center.y = y / poly.size();
+
+	std::sort(poly.points.begin(), poly.points.end(), [&](const Point& a, const Point& b){
+		return PointCmp(a, b, center);
+	});
+}
+
+static Geometry::Path PolygonClip(const Geometry::Path& poly1, const Geometry::Path& poly2) {
+	if (poly1.size() < 3 || poly2.size() < 3) {
+		return {};
+	}
+	Geometry::Path clip;
+	for (size_t i = 0; i < poly1.size(); ++i) {
+		size_t poly1_next_idx = (i + 1) % poly1.size();
+		for (size_t j = 0; j < poly2.size(); ++j) {
+			size_t poly2_next_idx = (j + 1) % poly2.size();
+			Point pt;
+			if (PointGetCross(poly1[i], poly1[poly1_next_idx], poly2[j], poly2[poly2_next_idx], pt)) {
+				clip.push(pt);
+			}
+		}
+	}
+	for (const Point& pt : poly1.points) {
+		if (PolygonContainPoint(poly2, pt)) {
+			clip.push(pt);
+		}
+	}
+	for (const Point& pt : poly2.points) {
+		if (PolygonContainPoint(poly1, pt)) {
+			clip.push(pt);
+		}
+	}
+	if (clip.size() <= 0) {
+		return {};
+	}
+	PolygonSort(clip);
+	return clip;
+}
 
 void Geometry::Render() {
 	if (vertices.empty() || indices.empty())
 		return;
-	GetRenderInterface()->RenderGeometry(
+	GetRender()->RenderGeometry(
 		&vertices[0],
 		vertices.size(),
 		&indices[0],
@@ -29,7 +152,7 @@ std::vector<Index>& Geometry::GetIndices() {
 Geometry::Geometry()
 	: vertices()
 	, indices()
-	, material(GetRenderInterface()->CreateDefaultMaterial())
+	, material(GetRender()->CreateDefaultMaterial())
 {}
 
 Geometry::~Geometry() {
@@ -39,11 +162,11 @@ Geometry::~Geometry() {
 void Geometry::Release() {
 	vertices.clear();
 	indices.clear();
-	SetMaterial(GetRenderInterface()->CreateDefaultMaterial());
+	SetMaterial(GetRender()->CreateDefaultMaterial());
 }
 
 void Geometry::SetMaterial(Material* mat) {
-	GetRenderInterface()->DestroyMaterial(material);
+	GetRender()->DestroyMaterial(material);
 	material = mat;
 }
 
@@ -262,14 +385,14 @@ void Geometry::AddPolygon(const Path& points, Color col) {
 	}
 }
 
-void Geometry::UpdateVertices()
-{
-/* 	for(size_t i = 0; i < vertices.size(); ++i)
-	{
- 		float posx = floorf(vertices[i].pos.x - float(0.5));
-		float posy = floorf(vertices[i].pos.y - float(0.5));
-		vertices[i].pos = Point(posx, posy); 
-	} */
+Geometry::Path Geometry::ClipPolygon(const Path& poly1, const Rect& rect) {
+	Path poly2;
+	auto points = rect.Vertex();
+	poly2.push(points.topLeft);
+	poly2.push(points.topRight);
+	poly2.push(points.bottomRight);
+	poly2.push(points.bottomLeft);
+	return PolygonClip(poly1, poly2);
 }
 
 void Geometry::UpdateUV(size_t count, const Rect& surface, const Rect& uv) {

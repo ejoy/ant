@@ -3,43 +3,49 @@
 #include <css/Property.h>
 #include <core/Tween.h>
 #include <core/ID.h>
-#include <core/AnimationKey.h>
+#include <css/StyleSheet.h>
 
 namespace Rml {
 
-class ElementTransition {
+class ElementInterpolate {
 public:
-	ElementTransition(const Property& in_prop, const Property& out_prop, const Transition& transition);
-	void Update(Element& element, PropertyId id, float delta);
-	bool IsComplete() const { return animation_complete; }
-	bool IsValid(Element& element);
-	float GetTime() const { return time; }
-protected:
-	void UpdateProperty(Element& element, PropertyId id, float time);
-protected:
-	Property in_prop;
-	Property out_prop;
-	float time;
-	float duration;
-	Tween tween;
-	bool animation_complete;
+	ElementInterpolate(Element& element, PropertyId id, const Property& in_prop, const Property& out_prop);
+	void Reset(Element& element, const Property& in_prop, const Property& out_prop);
+	Property Update(float t0, float t1, float t, const Tween& tween);
+private:
+	PropertyId id;
+	PropertyRef p0;
+	PropertyRef p1;
 };
 
-class ElementAnimation: public ElementTransition {
+class ElementTransition {
 public:
-	ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation);
-	void AddKey(float target_time, const Property& property);
-	bool IsValid(Element& element);
-	void Update(Element& element, PropertyId id, float delta);
-	const std::string& GetName() const { return name; }
-protected:
-	void UpdateProperty(Element& element, PropertyId id, float time);
+	ElementTransition(Element& element, PropertyId id, const Transition& transition, const Property& in_prop, const Property& out_prop);
+	Property UpdateProperty(float delta);
+	bool IsComplete() const { return complete; }
+	float GetTime() const { return time; }
 private:
-	std::string name;
-	std::vector<AnimationKey> keys;
-	int num_iterations;       // -1 for infinity
+	Transition transition;
+	ElementInterpolate interpolate;
+	float time;
+	bool complete;
+};
+
+class ElementAnimation {
+public:
+	ElementAnimation(Element& element, PropertyId id, const Animation& animation, const Keyframe& keyframe);
+	Property UpdateProperty(Element& element, float delta);
+	const std::string& GetName() const { return animation.name; }
+	bool IsComplete() const { return complete; }
+	float GetTime() const { return time; }
+private:
+	const Animation animation;
+	const Keyframe& keyframe;
+	ElementInterpolate interpolate;
+	float time;
 	int current_iteration;
-	bool alternate_direction; // between iterations
+	uint8_t key;
+	bool complete;
 	bool reverse_direction;
 };
 

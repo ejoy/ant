@@ -1,5 +1,6 @@
 #include <css/StyleSheet.h>
 #include <css/StyleSheetNode.h>
+#include <util/Log.h>
 #include <algorithm>
 
 namespace Rml {
@@ -10,17 +11,12 @@ StyleSheet::StyleSheet()
 StyleSheet::~StyleSheet()
 {}
 
-template <typename Vec>
-void vector_append(Vec& a, Vec const& b) {
-	a.insert(std::end(a), std::begin(b), std::end(b));
-}
-
 void StyleSheet::Merge(const StyleSheet& other_sheet) {
 	stylenode.insert(stylenode.end(), other_sheet.stylenode.begin(), other_sheet.stylenode.end());
 	for (auto const& [identifier, other_kf] : other_sheet.keyframes) {
-		auto& kf = keyframes[identifier];
-		for (auto const& [id, value] : other_kf.properties) {
-			vector_append(kf.properties[id], value);
+		auto [_, suc] = keyframes.emplace(identifier, other_kf);
+		if (!suc) {
+			Log::Message(Log::Level::Warning, "Redfined keyframe.");
 		}
 	}
 }
@@ -32,11 +28,11 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	return nullptr;
 }
 
-Style::Combination StyleSheet::GetElementDefinition(const Element* element) const {
-	std::vector<Style::Value> applicable;
+Style::TableRef StyleSheet::GetElementDefinition(const Element* element) const {
+	std::vector<Style::TableValue> applicable;
 	for (auto& node : stylenode) {
 		if (node.IsApplicable(element)) {
-			applicable.push_back(node.GetProperties());
+			applicable.emplace_back(node.GetProperties());
 		}
 	}
 	return Style::Instance().Merge(applicable);
@@ -49,8 +45,9 @@ void StyleSheet::AddNode(StyleSheetNode&& node) {
 void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties) {
 	auto& kf = keyframes[identifier];
 	for (float time : rule_values) {
-		for (auto const& [id, value] : properties) {
-			kf.properties[id].emplace_back(AnimationKey {time, value} );
+		for (auto const& v : properties) {
+			auto id = Style::Instance().GetPropertyId(v);
+			kf[id].emplace_back(time, v);
 		}
 	}
 }
@@ -63,10 +60,31 @@ void StyleSheet::Sort() {
 	std::sort(stylenode.begin(), stylenode.end(), [](const StyleSheetNode& lhs, const StyleSheetNode& rhs) {
 		return lhs.GetSpecificity() > rhs.GetSpecificity();
 	});
-
-	for (auto& [_, kf] : keyframes) {
-		for (auto& [id, vec] : kf.properties) {
-			std::sort(vec.begin(), vec.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
+	for (auto& [_, kfs] : keyframes) {
+		for (auto it = kfs.begin(); it != kfs.end();) {
+			auto& kf = it->second;
+			std::sort(kf.begin(), kf.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
+			if (kf.empty()) {
+				Log::Message(Log::Level::Warning, "Keyframe has no rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			if (kf.front().time != 0.f) {
+				Log::Message(Log::Level::Warning, "Keyframe has no from rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			if (kf.back().time != 1.f) {
+				Log::Message(Log::Level::Warning, "Keyframe has no to rule.");
+				it = kfs.erase(it);
+				continue;
+			}
+			if (kf.size() > 255) {
+				Log::Message(Log::Level::Warning, "Keyframe has too many rules.");
+				it = kfs.erase(it);
+				continue;
+			}
+			++it;
 		}
 	}
 }

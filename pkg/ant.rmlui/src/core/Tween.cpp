@@ -195,10 +195,6 @@ float Tween::get(float t) const {
 	return t;
 }
 
-bool Tween::operator==(const Tween& rhs) const {
-	return v == rhs.v;
-} 
-
 std::string Tween::ToString() const {
 	return TweenToString(TweenGetType(v)) + TweenToString(TweenGetDirection(v));
 }

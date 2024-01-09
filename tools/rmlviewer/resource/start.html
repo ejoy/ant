@@ -1,0 +1,84 @@
+<html>
+    <head>
+        <style>
+            body {
+                font: 300% "宋体";
+            }
+            div {
+                margin-left: 60%;
+                margin-right: 10%;
+                margin-top: 10%;
+                margin-bottom: 20%;
+                gap: 20px;
+            }
+            button {
+                padding: 0 20px;
+                text-align: center;
+                text-decoration: none;
+                border-radius: 10px;
+                border: 1px black;
+                opacity: 0.5;
+                
+                transition: color background-color transform 2s elastic-out;
+                background-color: #f22222;
+                background-size: contain;
+                color: yellow;
+                transform: scale(1.0);
+            }
+            button:active {
+                transform: scale(1.2);
+                filter: gray;
+            }
+            button>span {
+                opacity: 1;
+            }
+            .notransition {
+                transition: none;
+            }
+        </style>
+        <script type="text/x-lua" >
+            local start = window.createModel {
+                show = false,
+                label = "新游戏"
+            }
+            function start.new(event)
+                print(event.target.id)
+                window.open("script.html")
+            end
+            function start.load(event)
+                local e = event.target
+                local oldClassName = e.className
+                e.className = e.className .. " notransition"
+                e.style.backgroundColor = "green"
+                e.className = oldClassName
+            end
+            function start.setting(event)
+                start.show = not start.show
+                local e = event.target
+                local btn = document.createElement "button"
+                local label = document.createTextNode "Test Button"
+                e.parentNode.appendChild(btn)
+                btn.appendChild(label)
+            end
+            function start.exit()
+            end
+            window.addEventListener("message", function(data)
+                window.postMessage(data)
+            end)
+            window.addEventListener('mousemove', function(event)
+                if event.button then
+                    print("darg", event.x, event.y)
+                end
+            end)
+        </script>
+    </head>
+    <body>
+        <div id="test">
+            <button id = "new" data-event-click="new()">{{label}}</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
+        </div>
+    </body>
+</html>

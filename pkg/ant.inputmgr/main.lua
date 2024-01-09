@@ -15,7 +15,6 @@ local ServiceRmlui; do
 end
 
 local function create(world)
-    local active_gesture = {}
     local function rmlui_sendmsg(...)
         if ServiceRmlui then
             return ltask.call(ServiceRmlui, ...)
@@ -23,30 +22,10 @@ local function create(world)
     end
     local event = {}
     function event.gesture(e)
-        local active = active_gesture[e.what]
-        if active then
-            if active == "world" then
-                world:pub { "gesture", e.what, e }
-            else
-                rmlui_sendmsg("gesture", e)
-            end
-            if e.state == "ended" then
-                active_gesture[e.what] = nil
-            end
-        elseif e.state == "began" then
-            if rmlui_sendmsg("gesture", e) then
-                active_gesture[e.what] = "rmlui"
-                return
-            end
-            world:pub { "gesture", e.what, e }
-            active_gesture[e.what] = "world"
-        else
-            -- assert(m.state == nil)
-            if rmlui_sendmsg("gesture", e) then
-                return
-            end
-            world:pub { "gesture", e.what, e }
+        if rmlui_sendmsg("gesture", e) then
+            return
         end
+        world:pub { "gesture", e.what, e }
     end
     function event.touch(e)
         if rmlui_sendmsg("touch", e) then
@@ -100,12 +79,27 @@ local function create(world)
         local mg = require "mouse_gesture" (world)
         event.mousewheel = mg.mousewheel
         if world.args.ecs.enable_mouse then
-            function event.mouse(e)
+            function event.mouseclick(e)
+                world:set_mouse(e)
+                mg.mouseclick(e)
                 world:pub {"mouse", e.what, e.state, e.x, e.y}
-                mg.mouse(e)
+            end
+            function event.mousemove(e)
+                world:set_mouse(e)
+                mg.mousemove(e)
+                if e.what.LEFT then
+                    world:pub {"mouse", "LEFT", "MOVE", e.x, e.y}
+                end
+                if e.what.MIDDLE then
+                    world:pub {"mouse", "MIDDLE", "MOVE", e.x, e.y}
+                end
+                if e.what.RIGHT then
+                    world:pub {"mouse", "RIGHT", "MOVE", e.x, e.y}
+                end
             end
         else
-            event.mouse = mg.mouse
+            event.mouseclick = mg.mouseclick
+            event.mousemove = mg.mousemove
         end
     end
     return event

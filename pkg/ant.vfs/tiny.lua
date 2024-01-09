@@ -28,8 +28,8 @@ local compile_whitelist <const> = {
     -- script
     "lua",
     -- ui
-    "rcss",
-    "rml",
+	"html",
+	"css",
     -- effect
     "efk",
     -- font
@@ -41,6 +41,7 @@ local compile_whitelist <const> = {
     -- animation
     "event",
     "anim",
+    "bin",
     -- material
     "state",
     "setting",

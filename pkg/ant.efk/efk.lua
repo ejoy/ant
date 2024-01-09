@@ -245,30 +245,25 @@ function efk_sys:follow_scene_update()
 	end
 
     for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
-        local vs = e.visible_state
-        local eo = e.efk_object
-
-        local ph = e.efk.play_handle
-        if vs["main_queue"] then
-            Q.set(eo.visible_idx, qm.queue_index "main_queue", true)
-            ph:set_visible(true)
-        else
-            Q.set(eo.visible_idx, qm.queue_index "main_queue", false)
-            ph:set_visible(false)
-        end
+        local visible = e.visible_state.main_queue
+        Q.set(e.efk_object.visible_idx, qm.queue_index "main_queue", visible)
+        e.efk.play_handle:set_visible(visible)
     end
 end
 
+local function normalize_color(color)
+    local nc = math3d.normalize(color)
+    return math3d.set_index(nc, 4, 1.0)
+end
+
 local function get_light_color(dl)
-    local mq = w:first("main_queue camera_ref:in")
+    local mq = w:first "main_queue camera_ref:in"
     local camera <close> = world:entity(mq.camera_ref)
     local ev = iexposure.exposure(camera)
     local intensity = ilight.intensity(dl) * ev
-    intensity = math.min(intensity, 1.0)
-    local color = math3d.mul(intensity, math3d.vector(ilight.color(dl)))
-
-    local r, g, b, a = math3d.index(color, 1, 2, 3, 4)
-    r, g, b, a = math.floor(255*r), math.floor(255*g), math.floor(255*b), math.floor(255*a)
+    local color = normalize_color(math3d.mul(intensity, math3d.vector(ilight.color(dl))))
+    
+    local r, g, b, a = math3d.index(math3d.floor(math3d.mul(255, color)), 1, 2, 3, 4)
     return string.pack("<BBBB", r, g, b, a)
 end
 

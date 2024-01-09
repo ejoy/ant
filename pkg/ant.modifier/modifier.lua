@@ -199,98 +199,105 @@ function imodifier.clear_keyframes_cache()
     keyframes_cache = {}
 end
 
+function imodifier.keyframes_from_anim_data(anim_type, anim_data, frame_count, sample_ratio)
+    local get_keyframe_value = function (type, clip, init)
+        if type == "mtl" then
+            return clip.value
+        elseif type == "srt" then
+            local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
+            value[clip.rot_axis + 1] = clip.amplitude_rot
+            if clip.direction < 4 then
+                value[clip.direction + 4] = clip.amplitude_pos
+            elseif clip.direction == 4 then--XY
+                value[5] = clip.amplitude_pos
+                value[6] = clip.amplitude_pos
+            elseif clip.direction == 5 then--YZ
+                value[6] = clip.amplitude_pos
+                value[7] = clip.amplitude_pos
+            elseif clip.direction == 6 then--XZ
+                value[5] = clip.amplitude_pos
+                value[7] = clip.amplitude_pos
+            elseif clip.direction == 7 then--XYZ
+                value[5] = clip.amplitude_pos
+                value[6] = clip.amplitude_pos
+                value[7] = clip.amplitude_pos
+            end
+            return value
+        end
+    end
+    local keyframes = {}
+    local init_value
+    if anim_type == "srt" then
+        init_value = {1, 0, 0, 0, 0, 0, 0}
+    elseif anim_type == "mtl" then
+        init_value = anim_data.init_value
+    end
+    local from = init_value
+    local last_clip = anim_data.clips[1]
+    for _, clip in ipairs(anim_data.clips) do
+        if clip.range[1] == last_clip.range[2] + 1 then
+            from = get_keyframe_value(anim_type, last_clip, anim_data.inherit[3] and keyframes[#keyframes].value or nil)
+        else
+            if clip.range[1] > 0 then
+                keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
+            end
+            from = init_value
+        end
+        local fromvalue = {}
+        for _, value in ipairs(from) do
+            fromvalue[#fromvalue + 1] = value
+        end
+        keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
+        local tovalue = get_keyframe_value(anim_type, clip, anim_data.inherit[3] and from or nil)
+        if anim_type == "mtl" then
+            local tv = {}
+            for _, value in ipairs(tovalue) do
+                tv[#tv + 1] = value * clip.scale
+            end
+            tovalue = tv
+        end
+        keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
+        last_clip = clip
+    end
+    local endclip = anim_data.clips[#anim_data.clips]
+    if endclip and endclip.range[2] < frame_count - 1 then
+        keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
+        if frame_count > endclip.range[2] + 1 then
+            keyframes[#keyframes + 1] = {time = frame_count / sample_ratio, value = init_value}
+        end
+    end
+    return keyframes
+end
+
 function imodifier.create_modifier_from_file(target, group_id, path, anim_name, keep, foreupdate)
     local key = path .. anim_name
     if not keyframes_cache[key] then
         local anims = serialize.parse(path, aio.readall(path))
-        local current_anim
+        local raw_anim
         if anim_name then
             for _, value in ipairs(anims) do
                 if value.name == anim_name then
-                    current_anim = value
+                    raw_anim = value
                     break
                 end
             end
         end
-        local animtype = current_anim.type
-        local sample_ratio = current_anim.sample_ratio
-        local frame_count = current_anim.sample_ratio * current_anim.duration
-        local get_keyframe_value = function (type, clip, init)
-            if type == "mtl" then
-                return clip.value
-            elseif type == "srt" then
-                local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
-                value[clip.rot_axis + 1] = clip.amplitude_rot
-                if clip.direction < 4 then
-                    value[clip.direction + 4] = clip.amplitude_pos
-                elseif clip.direction == 4 then--XY
-                    value[5] = clip.amplitude_pos
-                    value[6] = clip.amplitude_pos
-                elseif clip.direction == 5 then--YZ
-                    value[6] = clip.amplitude_pos
-                    value[7] = clip.amplitude_pos
-                elseif clip.direction == 6 then--XZ
-                    value[5] = clip.amplitude_pos
-                    value[7] = clip.amplitude_pos
-                elseif clip.direction == 7 then--XYZ
-                    value[5] = clip.amplitude_pos
-                    value[6] = clip.amplitude_pos
-                    value[7] = clip.amplitude_pos
-                end
-                return value
-            end
-        end
-        
-        local keyframes = {}
+        local anim_type = raw_anim.type
+        local sample_ratio = raw_anim.sample_ratio
+        local frame_count = raw_anim.sample_ratio * raw_anim.duration
+        local keyframes
         local property
-        for _, anim in ipairs(current_anim.target_anims) do
-            if #anim.clips < 1 then
+        for _, anim_data in ipairs(raw_anim.target_anims) do
+            if #anim_data.clips < 1 then
                 goto continue
             end
-            local init_value
-            if animtype == "srt" then
-                init_value = {1, 0, 0, 0, 0, 0, 0}
-            elseif animtype == "mtl" then
-                init_value = anim.init_value
-                property = anim.target_name
+            if anim_type == "mtl" then
+                property = anim_data.target_name
             end
-            local from = init_value
-            local last_clip = anim.clips[1]
-            for _, clip in ipairs(anim.clips) do
-                if clip.range[1] == last_clip.range[2] + 1 then
-                    from = get_keyframe_value(animtype, last_clip, anim.inherit[3] and keyframes[#keyframes].value or nil)
-                else
-                    if clip.range[1] > 0 then
-                        keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
-                    end
-                    from = init_value
-                end
-                local fromvalue = {}
-                for _, value in ipairs(from) do
-                    fromvalue[#fromvalue + 1] = value
-                end
-                keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
-                local tovalue = get_keyframe_value(animtype, clip, anim.inherit[3] and from or nil)
-                if animtype == "mtl" then
-                    local tv = {}
-                    for _, value in ipairs(tovalue) do
-                        tv[#tv + 1] = value * clip.scale
-                    end
-                    tovalue = tv
-                end
-                keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
-                last_clip = clip
-            end
-            local endclip = anim.clips[#anim.clips]
-            if endclip and endclip.range[2] < frame_count - 1 then
-                keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
-                if frame_count > endclip.range[2] + 1 then
-                    keyframes[#keyframes + 1] = {time = frame_count / sample_ratio, value = init_value}
-                end
-            end
+            keyframes = imodifier.keyframes_from_anim_data(anim_type, anim_data, frame_count, sample_ratio)
             ::continue::
         end
-        keyframes_cache[key] = {animtype = animtype, keyframes = keyframes, property = property}
+        keyframes_cache[key] = {animtype = anim_type, keyframes = keyframes, property = property}
     end
     local kfc = keyframes_cache[key]
     if kfc.animtype == "srt" then

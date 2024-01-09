@@ -95,7 +95,13 @@ function m.show()
             end
             imgui.cursor.Separator()
             if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then
-                prefab_mgr:save_ui_layout()
+                -- prefab_mgr:save_ui_layout()
+                world:pub{"UILayout", "save"}
+            end
+            imgui.cursor.Separator()
+            if imgui.widget.MenuItem(faicons.ICON_FA_ARROWS_ROTATE.. " ResetUILayout") then
+                -- prefab_mgr:reset_ui_layout()
+                world:pub{"UILayout", "reset"}
             end
             show_select_light_dialog()
             show_select_blender_dialog()

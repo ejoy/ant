@@ -4,73 +4,150 @@
 #include <core/Animation.h>
 #include <core/Transform.h>
 #include <css/PropertyFloat.h>
-#include <variant>
+#include <css/PropertyKeyword.h>
 #include <string>
+#include <css/PropertyBinary.h>
 
 namespace Rml {
+    using PropertyView = PropertyVariantView<PropertyFloat, PropertyKeyword, Color, std::string, Transform, TransitionList, AnimationList>;
 
-class Element;
+    template <typename T>
+    str<uint8_t> PropertyEncode(const T& value) {
+        strbuilder<uint8_t> b;
+        b.append(PropertyView::Index<T>);
+        PropertyEncode(b, value);
+        return b.release();
+    }
 
-using PropertyKeyword = int;
-using AnimationList = std::vector<Animation>;
+    class Property {
+    public:
+        Property();
+        Property(int attrib_id);
+        Property(PropertyId id, str<uint8_t> str);
 
-using PropertyVariant = std::variant<
-	PropertyFloat,
-	PropertyKeyword,
-	Color,
-	std::string,
-	Transform,
-	TransitionList,
-	AnimationList
->;
+        template <typename T>
+        Property(PropertyId id, const T& value)
+            : Property(id, PropertyEncode<T>(value))
+        {}
 
-class Property : public PropertyVariant {
-public:
-	template < typename PropertyType >
-	Property(PropertyType value)
-		: PropertyVariant(value)
-	{}
+        explicit operator bool () const;
+        int RawAttribId() const;
+        bool IsFloatUnit(PropertyUnit unit) const;
+        std::string ToString() const;
+        template <typename T>
+            requires (!std::is_enum_v<T>)
+        T Get() const {
+            auto view = GetView();
+            if constexpr (std::is_trivially_destructible_v<T>) {
+                return view.get<T>();
+            }
+            else {
+                auto subview = view.get_view<T>();
+                return PropertyDecode(tag_v<T>, subview);
+            }
+        }
 
-	Property(float value, PropertyUnit unit)
-		: PropertyVariant(PropertyFloat{value, unit})
-	{}
+        template <typename T>
+            requires (!std::is_enum_v<T>)
+        std::optional<T> GetIf() const {
+            auto view = GetView();
+            if constexpr (std::is_trivially_destructible_v<T>) {
+                if (auto v = view.get_if<T>()) {
+                    return *v;
+                }
+            }
+            else {
+                if (auto subview = view.get_view_if<T>()) {
+                    return PropertyDecode(tag_v<T>, *subview);
+                }
+            }
+            return std::nullopt;
+        }
 
-	std::string ToString() const;
-	Property    Interpolate(const Property& other, float alpha) const;
-	bool        AllowInterpolate(Element& e) const;
+        template <typename T>
+            requires (std::is_enum_v<T>)
+        T GetEnum() const {
+            auto view = GetView();
+            return (T)view.get<PropertyKeyword>();
+        }
 
-	template <typename T>
-	T& GetRef() {
-		assert(Has<T>());
-		return std::get<T>(*this);
-	}
+        template <typename T>
+        bool Has() const {
+            auto view = GetView();
+            return view.get_index() == PropertyView::Index<T>;
+        }
 
-	template <typename T>
-		requires (!std::is_enum_v<T> && !std::is_same_v<T, float>)
-	const T& Get() const {
-		assert(Has<T>());
-		return std::get<T>(*this);
-	}
+        PropertyView GetView() const;
+    
+    protected:
+        int attrib_id;
+    };
+    static_assert(sizeof(Property) == sizeof(int));
 
-	template <typename T>
-		requires (std::is_enum_v<T>)
-	T Get() const {
-		assert(Has<PropertyKeyword>());
-		return (T)std::get<PropertyKeyword>(*this);
-	}
+    class PropertyRef: public Property {
+    public:
+        PropertyRef()
+        {}
+        PropertyRef(Property view)
+            : Property(view) {
+            AddRef();
+        }
+        ~PropertyRef() {
+            Release();
+        }
+        PropertyRef(PropertyRef&& rhs)
+            : Property(rhs) {
+            rhs.attrib_id = -1;
+        }
+        PropertyRef(const PropertyRef& rhs)
+            : Property(rhs) {
+            AddRef();
+        }
+        PropertyRef& operator=(PropertyRef&& rhs) {
+            if (this != &rhs) {
+                Release();
+                attrib_id = rhs.attrib_id;
+                rhs.attrib_id = -1;
+            }
+            return *this;
+        }
+        PropertyRef& operator=(const PropertyRef& rhs) {
+            if (this != &rhs) {
+                Release();
+                attrib_id = rhs.attrib_id;
+                AddRef();
+            }
+            return *this;
+        }
+        void AddRef();
+        void Release();
+    };
+    
+    using PropertyVector = std::vector<Property>;
 
-	template <typename T>
-		requires (std::is_same_v<T, float>)
-	float Get(const Element* e) const {
-		assert(Has<PropertyFloat>());
-		return std::get<PropertyFloat>(*this).Compute(e);
-	}
+    template <typename Visitor>
+    auto PropertyVisit(Visitor&& vis, const Property& p0) {
+        auto view0 = p0.GetView();
+        return view0.visit(std::forward<Visitor>(vis));
+    }
 
-	template <typename T>
-	bool Has() const { return std::holds_alternative<T>(*this); }
-};
+    template <typename Visitor>
+    auto PropertyVisit(Visitor&& vis, const Property& p0, const Property& p1) {
+        auto view0 = p0.GetView();
+        auto view1 = p1.GetView();
+        return view0.visit(std::forward<Visitor>(vis), view1);
+    }
 
-template <typename T>
-T InterpolateFallback(const T& p0, const T& p1, float alpha) { return alpha < 1.f ? p0 : p1; }
+    inline bool operator==(const Property& l, const Property& r) {
+        return l.RawAttribId() == r.RawAttribId();
+    }
 
+    float PropertyComputeX(const Element* e, const Property& p);
+    float PropertyComputeY(const Element* e, const Property& p);
+    float PropertyComputeZ(const Element* e, const Property& p);
+
+    template <typename T>
+    inline T InterpolateFallback(const T& p0, const T& p1, float alpha) {
+        return alpha < 1.f ? p0 : p1;
+    }
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <css/StyleSheet.h>
-#include <css/PropertyVector.h>
+#include <css/Property.h>
 
 namespace Rml {
 
@@ -17,7 +17,6 @@ private:
 	size_t           line_number;
 
 	bool ReadProperties(PropertyVector& vec);
-	static void ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties);
 	bool ParseKeyframeBlock(StyleSheet& style_sheet, const std::string & identifier, const std::string & rules, const PropertyVector& properties);
 	char FindToken(std::string& buffer, const char* tokens, bool remove_token);
 	bool ReadCharacter(char& buffer);

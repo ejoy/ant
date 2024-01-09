@@ -5,9 +5,7 @@
 #include <core/Node.h>
 #include <core/Types.h>
 #include <core/ElementBackground.h>
-#include <css/Property.h>
 #include <css/PropertyIdSet.h>
-#include <css/PropertyVector.h>
 #include <css/StyleCache.h>
 #include <optional>
 #include <unordered_map>
@@ -24,6 +22,12 @@ struct HtmlElement;
 
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 
+struct ElementAabb {
+	Rect content;
+	bool normalize;
+	void Set(const Rect& rect, const glm::mat4x4& transform);
+};
+
 struct ElementClip {
 	enum class Type : uint8_t {
 		None,
@@ -35,6 +39,7 @@ struct ElementClip {
 		glm::u16vec4 scissor;
 		glm::vec4 shader[2];
 	};
+	bool Test(const Rect& rect) const;
 };
 
 class Element : public LayoutNode {
@@ -118,20 +123,12 @@ public:
 	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 
-	std::optional<Property> GetInlineProperty(PropertyId id) const;
-	std::optional<Property> GetLocalProperty(PropertyId id) const;
-	std::optional<Property> GetComputedProperty(PropertyId id) const;
-	template <typename T>
-	auto GetProperty(PropertyId id) const {
-		if constexpr(std::is_same_v<T, float>) {
-			return GetComputedProperty(id)->Get<T>(this);
-		}
-		else {
-			return GetComputedProperty(id)->Get<T>();
-		}
-	}
+	Property GetInlineProperty(PropertyId id) const;
+	Property GetLocalProperty(PropertyId id) const;
+	Property GetComputedProperty(PropertyId id) const;
 
-	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
+	bool SetProperty(const std::string& name, const std::string& value);
+	bool DelProperty(const std::string& name);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
 	void UpdateProperties();
@@ -146,7 +143,6 @@ public:
 	void Render() override;
 	float GetZIndex() const override;
 	Element* ElementFromPoint(Point point) override;
-	Element* ChildFromPoint(Point point);
 	std::string GetInnerHTML() const override;
 	std::string GetOuterHTML() const override;
 	void SetInnerHTML(const std::string& html) override;
@@ -182,7 +178,8 @@ protected:
 	ElementAttributes attributes;
 	std::vector<std::unique_ptr<Node>> childnodes;
 	std::vector<Element*> children;
-	std::vector<LayoutNode*> render_children;
+	std::vector<LayoutNode*> children_upper_render;
+	std::vector<LayoutNode*> children_under_render;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
@@ -192,13 +189,14 @@ protected:
 	PseudoClassSet pseudo_classes = 0;
 	ElementBackground geometry;
 	float font_size = 16.f;
-	Style::Value animation_properties = Style::Instance().Create();
-	Style::Value inline_properties = Style::Instance().Create();
-	Style::Value definition_properties = Style::Instance().Create();
-	Style::Combination local_properties = Style::Instance().Merge(animation_properties, inline_properties, definition_properties);
-	Style::Combination global_properties = Style::Instance().Inherit(local_properties);
+	Style::TableRef animation_properties = Style::Instance().Create();
+	Style::TableRef inline_properties = Style::Instance().Create();
+	Style::TableRef definition_properties = Style::Instance().Create();
+	Style::TableRef local_properties = Style::Instance().Inherit(animation_properties, inline_properties, definition_properties);
+	Style::TableRef global_properties = Style::Instance().Inherit(local_properties);
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
+	ElementAabb aabb;
 	Rect content_rect;
 	EdgeInsets<float> padding{};
 	EdgeInsets<float> border{};

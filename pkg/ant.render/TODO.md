@@ -67,11 +67,12 @@
 11. 摄像机的fov需要根据聚焦的距离来定义fov；
 12. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
 13. 优化阴影:
-  1) 优化shadowmap精度，通过确定PSR/PSC的物体，结合Scene和Camera Frustum的bounding，算出修正的F矩阵；
+  1) 优化shadowmap精度，通过确定PSR/PSC的物体，结合Scene和Camera Frustum的bounding，算出修正的F矩阵；(2024.01.04已经完成)
   2) 添加wraping（LiSPSM的方式），拥挤计算更紧凑的lighting Frustum，并与CSM结合；
   3) 优化VSM；
-  4) 使用texture array，而不是一张拼接的2D贴图；
+  4) 使用texture array，而不是一张拼接的2D贴图。使用texture array的好处是，使用MRT输出多张阴影图（不能够使用目前没有fs的depth pass，需要修改为MRT的方式）；
   5) 完成point light shadow；
+  6) 使用D16 format，并将阴影图的分辨率提升到2048。iOS并不支持D16的格式，尝试使用R16F/R16，并修改采样阴影图的方式，在着色器中判断是否在阴影中，而不是目前时候shadow2DProj的方式判断是否在阴影内（牵涉到两个地方的修改：1.阴影图的创建的flag不在使用compare；2.判断像素是否被遮挡）；
 13. 重构visible_state，将目前的visible_state作为render内部数据，统一使用visible tag作为外部控制物体是否可见的设定；
 14. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；
 15. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
@@ -96,6 +97,7 @@
 #### 新功能/探索
 ##### 已经完成
 1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用预烘培的大气散射模拟天空，将indirect lighting和天空和合拼；（2023.02.22已经暂停，对于移动设备并不友好）（2023.05.26目前使用的方法是，动态调整平行光的方向、intensity以及环境光的intensity来实现昼夜变化（intensity都是通过读取美术给的图来实现的）。由于基于物理的与烘培的大气散射还有很多的理论知识没有搞清楚，暂时停下来了）；
+2. 使用visiblity buffer，尝试在fragment shader中插值光照数据；
 
 ##### 未完成
 1. FSR。详细看bgfx里面的fsr例子；

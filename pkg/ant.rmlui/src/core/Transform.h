@@ -108,72 +108,6 @@ struct DecomposedMatrix4 {
 	glm::vec3 skew = glm::vec3(0, 0, 0);
 };
 
-inline bool operator==(const TranslateX& l, const TranslateX& r) {
-	return l.x == r.x;
-}
-inline bool operator==(const TranslateY& l, const TranslateY& r) {
-	return l.y == r.y;
-}
-inline bool operator==(const TranslateZ& l, const TranslateZ& r) {
-	return l.z == r.z;
-}
-inline bool operator==(const Translate2D& l, const Translate2D& r) {
-	return (l.x == r.x) && (l.y == r.y);
-}
-inline bool operator==(const Translate3D& l, const Translate3D& r) {
-	return (l.x == r.x) && (l.y == r.y) && (l.z == r.z);
-}
-inline bool operator==(const ScaleX& l, const ScaleX& r) {
-	return l.x == r.x;
-}
-inline bool operator==(const ScaleY& l, const ScaleY& r) {
-	return l.y == r.y;
-}
-inline bool operator==(const ScaleZ& l, const ScaleZ& r) {
-	return l.z == r.z;
-}
-inline bool operator==(const Scale2D& l, const Scale2D& r) {
-	return (l.x == r.x) && (l.y == r.y);
-}
-inline bool operator==(const Scale3D& l, const Scale3D& r) {
-	return (l.x == r.x) && (l.y == r.y) && (l.z == r.z);
-}
-inline bool operator==(const RotateX& l, const RotateX& r) {
-	return l.angle == r.angle;
-}
-inline bool operator==(const RotateY& l, const RotateY& r) {
-	return l.angle == r.angle;
-}
-inline bool operator==(const RotateZ& l, const RotateZ& r) {
-	return l.angle == r.angle;
-}
-inline bool operator==(const Rotate2D& l, const Rotate2D& r) {
-	return l.angle == r.angle;
-}
-inline bool operator==(const Rotate3D& l, const Rotate3D& r) {
-	return (l.angle == r.angle) && (l.axis == r.axis);
-}
-inline bool operator==(const SkewX& l, const SkewX& r) {
-	return l.x == r.x;
-}
-inline bool operator==(const SkewY& l, const SkewY& r) {
-	return l.y == r.y;
-}
-inline bool operator==(const Skew2D& l, const Skew2D& r) {
-	return (l.x == r.x) && (l.y == r.y);
-}
-inline bool operator==(const Perspective& l, const Perspective& r) {
-	return l.distance == r.distance;
-}
-inline bool operator==(const DecomposedMatrix4& l, const DecomposedMatrix4& r) {
-	return (l.perspective == r.perspective)
-		&& (l.quaternion == r.quaternion)
-		&& (l.translation == r.translation)
-		&& (l.scale == r.scale)
-		&& (l.skew == r.skew)
-		;
-}
-
 using Primitive = std::variant<
 	Matrix2D,
 	Matrix3D,
@@ -211,7 +145,7 @@ struct TransformPrimitive : public Transforms::Primitive {
 		: Transforms::Primitive(std::forward<T>(v))
 	{}
 	void   SetIdentity();
-	bool   AllowInterpolate(Element& e);
+	bool   PrepareInterpolate(Element& e);
 	void   ConvertToGenericType();
 	TransformPrimitive Interpolate(const TransformPrimitive& other, float alpha) const;
 	TransformType GetType() const;
@@ -220,11 +154,21 @@ struct TransformPrimitive : public Transforms::Primitive {
 
 class Transform : public std::vector<TransformPrimitive> {
 public:
-	bool AllowInterpolate(Element& e);
+	bool PrepareInterpolate(Element& e);
 	Transform Interpolate(const Transform& other, float alpha) const;
 	glm::mat4x4 GetMatrix(Element& e) const;
 	bool Combine(Element& e, size_t start);
 	std::string ToString() const;
 };
+
+enum class PrepareResult: uint8_t {
+	Failed,
+	NoChanged,
+	ChangedAll,
+	ChangedT0,
+	ChangedT1,
+};
+
+PrepareResult PrepareTransformPair(Transform& t0, Transform& t1, Element& element);
 
 }

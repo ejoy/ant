@@ -1,0 +1,25 @@
+fx:
+  shader_type: PBR
+  macros:
+    "ALPHAMODE_OPAQUE=1"
+  varyings: /pkg/ant.resources/materials/lighting.varyings
+  setting:
+    lighting: on
+    receive_shadow: on
+    cast_shadow: off
+    subsurface: off
+    uv_motion: true
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/tools.editor/resource/textures/plane.texture
+  u_emissive_factor:  {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+  u_pbr_factor:       {1, 1, 0.5, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_uvmotion: {0, 0, 1.0, 1.0}
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ

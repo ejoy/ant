@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <style>
+            body {
+                font: 500% "阿里巴巴普惠体";
+            }
+        </style>
+        <script type="text/x-lua" >
+            local start = window.createModel {
+                move_camera = false,
+                dx = 0,
+                dy = 0,
+            }
+
+            function start.click(event)
+                console.log(event.x, event.y)
+            end
+
+            function init()
+                start.joystick = document.getElementById "joystick"
+                start.joystick_left = start.joystick.clientLeft
+                start.joystick_top = start.joystick.clientTop
+                start.joystick_width = start.joystick.clientWidth
+                start.joystick_height = start.joystick.clientHeight
+                local e = assert(document.getElementById "toucharea")
+                e.addEventListener("pan", function(ev)
+                    if ev.state == 'began' then
+                        if ev.x > start.joystick_left and ev.x < start.joystick_left + start.joystick_width
+                            and ev.y > start.joystick_top and ev.y < start.joystick_top + start.joystick_height then
+                            start.move_camera = true
+                        end
+                    elseif ev.state == 'changed' then
+                        if start.move_camera then
+                            local x = ev.x - 0.5 * start.joystick_width
+                            local y = ev.y - 0.5 * start.joystick_height
+                            start.joystick.style.left = x .. 'px'
+                            start.joystick.style.top = y .. 'px'
+                            x = x - start.joystick_left
+                            y = y - start.joystick_top
+                            if start.dx ~= x or start.dy ~= y then
+                                start.dx = dx
+                                start.dy = dy
+                                window.postMessage({moving = true, dx = x, dy = y})
+                            end
+                        end
+                    elseif ev.state == 'ended' then
+                        if start.move_camera then
+                            start.joystick.style.left = start.joystick_left .. 'px'
+                            start.joystick.style.top = start.joystick_top .. 'px'
+                            start.move_camera = false
+                            window.postMessage({moving = false})
+                            start.dx = 0
+                            start.dy = 0
+                        end
+                    end
+                end)
+            end
+        </script>
+    </head>
+    <body style="pointer-events: none;" onload="init()">
+        <div id="toucharea" style="position: absolute; top: 50vmin; width: 50vmin; height: 50vmin; background-color: #ffffff10;"/>
+        <div id ="joystick" style="position: absolute; pointer-events: none; border-radius: 50%; left: 16vmin; top: 68vmin; width: 15vmin; height: 15vmin; background-color: #60ff6050;"/>
+    </body>
+</html>

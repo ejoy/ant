@@ -1,12 +1,5 @@
-
 system "shadow_system"
-    .implement "shadow/shadow_maker.lua"
-
--- system "shadow_system2"
---     .implement "shadow/shadow_system.lua"
-
--- system "shadow_debug_system2"
---     .implement "shadow/shadow_system.lua"
+    .implement "shadow/shadow_system.lua"
 
 component "csm_directional_light"
 component "csm".type "lua"
@@ -25,6 +18,8 @@ component "clear_sm"
 
 feature "shadow_debug"
     .import "shadow/shadow_debug.ecs"
+
+--import "shadow/shadow_debug.ecs"
 
 -- feature "omni_shadow"
 --     .import "shadow/omni_shadow.ecs"

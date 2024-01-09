@@ -1,0 +1,14 @@
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+maxsize: 256x256
+mipmap: 9
+path: /pkg/tools.editor/resource/textures/tile.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

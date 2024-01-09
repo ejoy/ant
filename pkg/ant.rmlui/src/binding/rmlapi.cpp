@@ -1,30 +1,16 @@
 #include <lua.hpp>
 
-#include <core/Core.h>
+#include <binding/Context.h>
+#include <binding/ContextImpl.h>
 #include <core/Document.h>
 #include <core/Element.h>
 #include <core/Text.h>
 #include <core/Texture.h>
-#include <binding/luaplugin.h>
-#include <binding/render.h>
 #include <util/HtmlParser.h>
 #include <bee/nonstd/unreachable.h>
 
 #include <string.h>
 #include "fastio.h"
-
-struct RmlWrapper {
-	Rml::Renderer   m_renderer;
-	Rml::LuaPlugin m_plugin;
-	RmlWrapper(lua_State* L, int idx)
-		: m_renderer(L, idx)
-		, m_plugin(L)
-	{
-		Rml::SetPlugin(&m_plugin);
-	}
-};
-
-static RmlWrapper* g_wrapper = nullptr;
 
 template <typename T>
 T* lua_checkobject(lua_State* L, int idx) {
@@ -472,7 +458,7 @@ lElementSetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	std::string name = lua_checkstdstring(L, 2);
 	if (lua_isnoneornil(L, 3)) {
-		e->SetProperty(name);
+		e->DelProperty(name);
 	}
 	else {
 		std::string value = lua_checkstdstring(L, 3);
@@ -597,11 +583,7 @@ lTextDelete(lua_State* L) {
 
 static int
 lRmlInitialise(lua_State* L) {
-    if (g_wrapper) {
-        return luaL_error(L, "RmlUi has been initialized.");
-    }
-    g_wrapper = new RmlWrapper(L, 1);
-    if (!Rml::Initialise()){
+    if (!Rml::Initialise(L, 1)){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
     return 0;
@@ -610,22 +592,18 @@ lRmlInitialise(lua_State* L) {
 static int
 lRmlShutdown(lua_State* L) {
     Rml::Shutdown();
-    if (g_wrapper) {
-        delete g_wrapper;
-        g_wrapper = nullptr;
-    }
     return 0;
 }
 
 static int
 lRenderBegin(lua_State* L) {
-	Rml::GetRenderInterface()->Begin();
+	Rml::GetRender()->Begin();
 	return 0;
 }
 
 static int
 lRenderFrame(lua_State* L) {
-	Rml::GetRenderInterface()->End();
+	Rml::GetRender()->End();
     return 0;
 }
 

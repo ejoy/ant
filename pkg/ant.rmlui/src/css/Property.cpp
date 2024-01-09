@@ -1,84 +1,113 @@
 #include <css/Property.h>
+#include <css/StyleCache.h>
+#include <core/ComputedValues.h>
 
 namespace Rml {
+    Property::Property()
+        : attrib_id(-1)
+    {}
 
-struct ToStringVisitor {
-	std::string operator()(const PropertyFloat& p) {
-		return p.ToString();
-	}
-	std::string operator()(const PropertyKeyword& p) {
-		return "<keyword," + std::to_string(p) + ">";
-	}
-	std::string operator()(const Color& p) {
-		return p.ToString();
-	}
-	std::string operator()(const std::string& p) {
-		return p;
-	}
-	std::string operator()(const Transform& p) {
-		return p.ToString();
-	}
-	std::string operator()(const TransitionList& p) {
-		return "<transition>";
-	}
-	std::string operator()(const AnimationList& p) {
-		return "<animation>";
-	}
-};
+    Property::Property(int attrib_id)
+        : attrib_id(attrib_id)
+    {}
 
-std::string Property::ToString() const {
-	return std::visit(ToStringVisitor{}, (const PropertyVariant&)*this);
-}
+    Property::Property(PropertyId id, str<uint8_t> str)
+        : Property(Style::Instance().CreateProperty(id, str.span()))
+    {}
 
-struct InterpolateVisitor {
-	const PropertyVariant& other_variant;
-	float alpha;
-	template <typename T>
-	Property operator()(const T& p0) {
-		return interpolate(p0, std::get<T>(other_variant));
-	}
+    Property::operator bool () const {
+         return attrib_id != -1;
+    }
 
-	template <typename T>
-	T interpolate(const T& p0, const T& p1) {
-		return InterpolateFallback(p0, p1, alpha);
-	}
-};
+    PropertyView Property::GetView() const {
+        auto view = Style::Instance().GetPropertyData(*this);
+        return { view.data() };
+    }
 
-template<>
-PropertyFloat InterpolateVisitor::interpolate<PropertyFloat>(const PropertyFloat& p0, const PropertyFloat& p1) {
-	return p0.Interpolate(p1, alpha);
-}
-template<>
-Color InterpolateVisitor::interpolate<Color>(const Color& p0, const Color& p1) {
-	return p0.Interpolate(p1, alpha);
-}
-template<>
-Transform InterpolateVisitor::interpolate<Transform>(const Transform& p0, const Transform& p1) {
-	return p0.Interpolate(p1, alpha);
-}
+    int Property::RawAttribId() const {
+        return attrib_id;
+    }
 
-Property Property::Interpolate(const Property& other, float alpha) const {
-	if (index() != other.index()) {
-		return InterpolateFallback(*this, other, alpha);
-	}
-	return std::visit(InterpolateVisitor{ other, alpha }, (const PropertyVariant&)*this);
-}
+    bool Property::IsFloatUnit(PropertyUnit unit) const {
+        auto view = GetView();
+        if (auto v = view.get_if<PropertyFloat>()) {
+            return v->unit == unit;
+        }
+        return false;
+    }
 
-struct AllowInterpolateVisitor {
-	Element& e;
-	template <typename T>
-	bool operator()(T&) { return true; }
-};
-template <> bool AllowInterpolateVisitor::operator()<PropertyKeyword>(PropertyKeyword&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<std::string>(std::string&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<TransitionList>(TransitionList&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<AnimationList>(AnimationList&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<Transform>(Transform& p0) {
-	return p0.AllowInterpolate(e);
-}
+    struct ToStringVisitor {
+        std::string operator()(const PropertyFloat& v) {
+            return v.ToString();
+        }
+        std::string operator()(const PropertyKeyword& v) {
+            return "<keyword," + std::to_string(v) + ">";
+        }
+        std::string operator()(const Color& v) {
+            return v.ToString();
+        }
+        std::string operator()(tag<std::string>, PropertyBasicView view) {
+            auto v = PropertyDecode(tag_v<std::string>, view);
+            return v;
+        }
+        std::string operator()(tag<Transform>, PropertyBasicView view) {
+            auto v = PropertyDecode(tag_v<Transform>, view);
+            return v.ToString();
+        }
+        std::string operator()(tag<TransitionList>, PropertyBasicView view) {
+            return "<transition>";
+        }
+        std::string operator()(tag<AnimationList>, PropertyBasicView view) {
+            return "<animation>";
+        }
+        std::string operator()() {
+            return "<unknown>";
+        }
+    };
+    std::string Property::ToString() const {
+        auto view = GetView();
+        return view.visit(ToStringVisitor {});
+    }
 
-bool Property::AllowInterpolate(Element& e) const {
-	return std::visit(AllowInterpolateVisitor{e}, (PropertyVariant&)*this);
-}
+    void PropertyRef::AddRef() {
+        if (attrib_id == -1) {
+            return;
+        }
+        Style::Instance().PropertyAddRef(*this);
+    }
 
+    void PropertyRef::Release() {
+        if (attrib_id == -1) {
+            return;
+        }
+        Style::Instance().PropertyRelease(*this);
+    }
+
+    float PropertyComputeX(const Element* e, const Property& p) {
+        if (p.Has<PropertyKeyword>()) {
+            switch (p.GetEnum<Style::OriginX>()) {
+            default:
+            case Style::OriginX::Left: return PropertyFloat { 0.0f, PropertyUnit::PERCENT }.ComputeW(e);
+            case Style::OriginX::Center: return PropertyFloat { 50.0f, PropertyUnit::PERCENT }.ComputeW(e);
+            case Style::OriginX::Right: return PropertyFloat { 100.0f, PropertyUnit::PERCENT }.ComputeW(e);
+            }
+        }
+        return p.Get<PropertyFloat>().ComputeW(e);
+    }
+
+    float PropertyComputeY(const Element* e, const Property& p) {
+        if (p.Has<PropertyKeyword>()) {
+            switch (p.GetEnum<Style::OriginY>()) {
+            default:
+            case Style::OriginY::Top: return PropertyFloat { 0.0f, PropertyUnit::PERCENT }.ComputeH(e);
+            case Style::OriginY::Center: return PropertyFloat { 50.0f, PropertyUnit::PERCENT }.ComputeH(e);
+            case Style::OriginY::Bottom: return PropertyFloat { 100.0f, PropertyUnit::PERCENT }.ComputeH(e);
+            }
+        }
+        return p.Get<PropertyFloat>().ComputeH(e);
+    }
+
+    float PropertyComputeZ(const Element* e, const Property& p) {
+        return p.Get<PropertyFloat>().Compute(e);
+    }
 }

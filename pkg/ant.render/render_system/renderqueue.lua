@@ -42,6 +42,23 @@ function irq.main_camera()
 	return irq.camera "main_queue"
 end
 
+function irq.main_camera_entity(statements)
+	return world:entity(irq.main_camera(), statements)
+end
+
+function irq.main_camera_changed()
+    local C = w:first "camera_changed"
+    if not C then
+        return
+    end
+
+	C = world:entity(irq.main_camera(), "camera_changed?in")
+	if not C.camera_changed then
+		return 
+	end
+	return C
+end
+
 local function view_clear(viewid, cs, queuename)
 	bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
 	world:pub{"clear_state_changed", queuename}

@@ -1,10 +1,9 @@
 #include <css/PropertyParserString.h>
-#include <css/Property.h>
 
 namespace Rml {
 
-std::optional<Property> PropertyParserString::ParseValue(const std::string& value) const {
-	return Property {value};
+Property PropertyParseString(PropertyId id, const std::string& value) {
+	return { id, value };
 }
 
 }

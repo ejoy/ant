@@ -108,22 +108,19 @@ truetype_name(lua_State *L, const char *name) {
 
 static inline int
 import_font(lua_State *L) {
-	const char *fontpath = (const char *)lua_touserdata(L, 1);
 	if (lua_getfield(L, LUA_REGISTRYINDEX, TRUETYPE_IMPORT) != LUA_TFUNCTION) {
 		return 0;
 	}
-	lua_pushstring(L, fontpath);
-	lua_pushvalue(L, 2);
-	lua_call(L, 2, 0);
+	lua_pushvalue(L, 1);
+	lua_call(L, 1, 0);
 	return 0;
 }
 
 static inline void
-truetype_import(lua_State *L, const char *fontpath, void* fontdata) {
+truetype_import(lua_State *L, void* fontdata) {
 	lua_pushcfunction(L, import_font);
-	lua_pushlightuserdata(L, (void *)fontpath);
 	lua_pushlightuserdata(L, fontdata);
-	if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
+	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
 		printf("TRUETYPE_IMPORT err: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 	}

@@ -14,28 +14,38 @@ local assetmgr  = import_package "ant.asset"
 local hwi       = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
-local sampler	= import_package "ant.render.core".sampler
-local layoutmgr = require "vertexlayout_mgr"
 
 local RM        = ecs.require "ant.material|material"
 local R         = world:clibs "render.render_material"
-local Q			= world:clibs "render.queue"
+
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
 local fbmgr     = require "framebuffer_mgr"
 local queuemgr  = ecs.require "queue_mgr"
 
-local ishadowcfg= ecs.require "shadow.shadowcfg"
+local isc= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
-local ivs		= ecs.require "ant.render|visible_state"
 
 local LiSPSM	= require "shadow.LiSPSM"
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
+
+local INV_Z<const> = true
+--TODO: read from setting file
+local useLiSPSM<const> = false
+
+--TODO: imporve depth precision, see: filament: far_uses_shadowcasters
+--after use infinity far plane for ortho projection maritx, it not work, just disable it right now, 2024.01.08
+--we try to do the same thing like filament with 'far_uses_shadowcasters' enable, but we found it cannot work like the same(in it's OpenGL API version)
+--object outside PSC far plane with the distance lower than the value in shadowmap(in inverse z verion, that value must lower than 0)
+--and we found that, it use some thick in depth texture sampling, need more effort to find why they work
+local usePSCFar<const> = false
+
+local moveCameraToOrigin<const> = false
 
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
@@ -65,7 +75,7 @@ end
 local function create_csm_entity(index, vr, fbidx)
 	local csmname = "csm" .. index
 	local queuename = csmname .. "_queue"
-	local camera_ref = icamera.create({
+	local camera_ref = icamera.create{
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
 			eyepos 	= mc.ZERO_PT,
@@ -75,19 +85,7 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			name = csmname,
 			camera_depend = true,
-		}, function (e)
-			w:extend(e, "camera:update")
-			local c = e.camera
-			c.Lr	= math3d.ref()
-			c.Wv	= math3d.ref()
-			c.Wp	= math3d.ref()
-			c.Wpv	= math3d.ref()
-			c.Wpvl	= math3d.ref()
-			c.W		= math3d.ref()
-
-			c.F		= math3d.ref()
-			w:submit(e)
-		end)
+		}
 	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -117,19 +115,19 @@ end
 local shadow_material
 local gpu_skinning_material
 function shadow_sys:init()
-	local fbidx = ishadowcfg.fb_index()
-	local s     = ishadowcfg.shadowmap_size()
+	local fbidx = isc.fb_index()
+	local s     = isc.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-	for ii=1, ishadowcfg.split_num() do
+	for ii=1, isc.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
 	end
 
-	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(ishadowcfg.fb_index(), 1).handle)
-	imaterial.system_attrib_update("u_shadow_param1", ishadowcfg.shadow_param())
-	imaterial.system_attrib_update("u_shadow_param2", ishadowcfg.shadow_param2())
+	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(isc.fb_index(), 1).handle)
+	imaterial.system_attrib_update("u_shadow_param1", isc.shadow_param1())
+	imaterial.system_attrib_update("u_shadow_param2", isc.shadow_param2())
 end
 
 local function set_csm_visible(enable)
@@ -154,78 +152,6 @@ function shadow_sys:entity_remove()
 	end
 end
 
-local function merge_visible_bounding(obj, queue_index, aabb, otheraabb)
-	if Q.check(obj.visible_idx, queue_index) then
-		return math3d.aabb_merge(aabb, otheraabb)
-	end
-
-	return aabb
-end
-
-local renderobj_statement<const> = "render_object_visible render_object:in bounding:in"
-
---receive_shadow/cast_shadow is far more than render_object_visible/hitch_visible tag
-local RECEIVE_renderobj_statement<const>	= "render_object_visible receive_shadow render_object:in bounding:in"
-local CAST_renderobj_statement<const>		= "render_object_visible cast_shadow render_object:in bounding:in"
-
-local hitchobj_statement<const> = "hitch_visible hitch:in bounding:in"
-local RECEIVE_hitchobj_statement<const> = "hitch_visible receive_shadow render_object:in bounding:in"
-local CAST_hitchobj_statement<const>	= "hitch_visible cast_shadow render_object:in bounding:in"
-
-local function build_aabb(queue_index, S, H, aabb_builder)
-	local function merge_aabb(o, b, aabb)
-		local objaabb = aabb_builder(b.scene_aabb)
-		if objaabb ~= mc.NULL then
-			aabb = merge_visible_bounding(o, queue_index, aabb, objaabb)
-		end
-		return aabb
-	end
-
-	local aabb = math3d.aabb()
-	for e in w:select(S) do
-		aabb = merge_aabb(e.render_object, e.bounding, aabb)
-	end
-
-	for e in w:select(H) do
-		aabb = merge_aabb(e.hitch, e.bounding, aabb)
-	end
-
-	return aabb
-end
-
-local function build_PSR(queue_index, builder)
-	--return build_aabb(queue_index, M, renderobj_statement, hitchobj_statement)
-	return build_aabb(queue_index, RECEIVE_renderobj_statement,	RECEIVE_hitchobj_statement,	builder)
-end
-
-local function build_PSC(queue_index, builder)
-	--return build_aabb(queue_index, M, renderobj_statement, hitchobj_statement)
-	return build_aabb(queue_index, CAST_renderobj_statement, CAST_hitchobj_statement, builder)
-end
-
-local function merge_PSC_and_PSR(PSC, PSR)
-	-- local _, PSR_far = mu.aabb_minmax_index(PSR, 3)
-	-- local PSC_near, _= mu.aabb_minmax_index(PSC, 3)
-
-	local PSR_far = math3d.index(math3d.array_index(PSR, 2), 3)
-	local PSC_near = math3d.index(math3d.array_index(PSC, 1), 3)
-
-	local sceneaabb = math3d.aabb_intersection(PSR, PSC)
-
-	local sminv, smaxv = mu.aabb_minmax(sceneaabb)
-	local sminx, sminy = math3d.index(sminv, 1, 2)
-	local smaxx, smaxy = math3d.index(smaxv, 1, 2)
-
-	-- local USE_CASTER_FAR<const> = false
-	-- if USE_CASTER_FAR then
-	-- 	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSC_far))
-	-- else
-	-- 	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
-	-- end
-
-	return math3d.aabb(math3d.vector(sminx, sminy, PSC_near), math3d.vector(smaxx, smaxy, PSR_far))
-end
-
 local function mark_camera_changed(e)
 	-- this camera should not generate the change tag
 	w:extend(e, "scene_changed?out scene_needchange?out camera_changed?out")
@@ -233,29 +159,6 @@ local function mark_camera_changed(e)
 	e.scene_changed = false
 	e.scene_needchange = false
 	w:submit(e)
-end
-
-local function calc_focus_matrix(M, vertices)
-	if mc.NULL == vertices then
-		return mc.IDENTITY_MAT
-	end
-	local aabb = math3d.minmax(vertices, M)
-	-- extents = (maxv-minv) * 0.5
-	-- center  = (maxv+minv) * 0.5
-	local center, extents = math3d.aabb_center_extents(aabb)
-
-	local ex, ey = math3d.index(extents, 1, 2)
-	local sx, sy = 1.0/ex, 1.0/ey
-
-	local tx, ty = math3d.index(center, 1, 2)
-	-- inverse scale to translation
-	tx, ty = -sx * tx, -sy * ty
-
-	return math3d.matrix(
-		sx,  0.0, 0.0, 0.0,
-		0.0, sy,  0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		tx,  ty,  0.0, 1.0)
 end
 
 local function update_camera(c, Lv, Lp)
@@ -277,38 +180,62 @@ local function M3D(o, n)
 	return math3d.mark(n)
 end
 
-local function calc_viewspace_z(n, f, r)
-	return n + (f-n) * r
+local function calc_light_view_nearfar(intersectpointsLS, sceneaabbLS)
+	local intersectaabb = math3d.minmax(intersectpointsLS)
+	local scene_farLS = math3d.index(math3d.array_index(sceneaabbLS, 2), 3)
+	local fn, ff = mu.aabb_minmax_index(intersectaabb, 3)
+	--check for PSR far plane distance
+	ff = math.max(ff, scene_farLS)
+	return fn, ff
 end
 
-local INV_Z<const> = true
---TODO: read from setting file
-local useLiSPSM<const> = false
+local function update_shadow_matrices(si, li, c)
+	local sp = math3d.projmat(c.viewfrustum)
+	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
 
-local function build_znzf(objaabb, zn, zf)
-	local n, f = mu.aabb_minmax_index(objaabb, 3)
-	return math.min(zn, n), math.max(zf, f)
+	local intersectpointsLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
+
+	local Lp
+	if mc.NULL ~= intersectpointsLS then
+		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
+		if moveCameraToOrigin then
+			Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
+
+			if useLiSPSM then
+				local function translate_intersectpoints(t, intersectpointsLS)
+					local p = {}
+					for i=1, math3d.array_size(intersectpointsLS) do
+						p[i] = math3d.add(math3d.array_index(intersectpointsLS, i), t)
+					end
+					return math3d.array_vector(p)
+				end
+	
+				local translate = math3d.vector(0.0, 0.0, n, 1.0)
+				intersectpointsLS = translate_intersectpoints(translate, intersectpointsLS)
+				li.Lv2Cv = math3d.mul(li.Cv, math3d.inverse_fast(Lv))
+			end
+			n, f = 0.0, f - n
+		end
+		c.frustum.n, c.frustum.f = n, f
+		si.nearLS, si.farLS = n, f
+
+		Lp = math3d.projmat(c.frustum, INV_Z)
+		if useLiSPSM then
+			li.Lp = Lp
+			local Wv, Wp = LiSPSM.warp_matrix(si, li, intersectpointsLS)
+			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), Lp)
+		end
+
+		local F = isc.calc_focus_matrix(math3d.minmax(intersectpointsLS, Lp))
+		Lp 		= math3d.mul(F, Lp)
+	else
+		Lp		= math3d.projmat(c.frustum, INV_Z)
+	end
+	update_camera(c, li.Lv, Lp)
 end
 
-local function build_sceneaabb(Lv, C)
-	local mqidx = queuemgr.queue_index "main_queue"
-	--TODO: move zn, zf, PSR, PSC sceneaabbLS to shadow_bounding_system
-	local zn, zf = math.maxinteger, -math.maxinteger
-	local Cv = C.camera.viewmat
-	local PSR	= build_PSR(mqidx, function (objaabb) zn, zf = build_znzf(math3d.aabb_transform(Cv, objaabb), zn, zf) return objaabb end)
-	local PSC	= build_PSC(mqidx, function (objaabb) return objaabb end)
-
-	local PSRLS = math3d.aabb_transform(Lv, PSR)
-	local PSCLS = math3d.aabb_transform(Lv, PSC)
-
-	zn, zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
-	return merge_PSC_and_PSR(PSCLS, PSRLS), zn, zf, PSR, PSC
-end
-
---TODO: read from setting file
-local nearHit, farHit = 1, 100
-
-local function init_scene_info(C, lightdirWS)
+local function init_light_info(C, D)
+    local lightdirWS = math3d.index(D.scene.worldmat, 3)
 	local Cv = C.camera.viewmat
 
 	local rightdir, viewdir, camerapos = math3d.index(C.scene.worldmat, 1, 3, 4)
@@ -316,102 +243,79 @@ local function init_scene_info(C, lightdirWS)
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 	local Lw = math3d.inverse_fast(Lv)
 
-	local sceneaabbLS, zn, zf, PSR, PSC = build_sceneaabb(Lv, C)
-
 	return {
 		Lv			= Lv,
 		Lw			= Lw,
 		Cv			= Cv,
 		Lr			= useLiSPSM and LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0)) or nil,
 		Lv2Cv		= math3d.mul(Cv, Lw),
-
-		--bounding
-		sceneaabbLS	= sceneaabbLS,
-		PSR			= PSR,
-		PSC			= PSC,
-		--transform PSR to viewspace to calculate the zn/zf may not be a good idea, calculate every aabb zn/zf can make more tighten [zn, zf] range
-		zn			= zn,
-		zf			= zf,
-		nearHit		= nearHit,
-		farHit		= farHit,
-
+	
 		viewdir		= viewdir,
 		lightdir	= lightdirWS,
+		rightdir	= rightdir,
 		camerapos	= camerapos,
 	}
 end
 
-local function update_shadow_matrices(si, c)
-	local sp = math3d.projmat(c.viewfrustum)
-	local Lv2Ndc = math3d.mul(sp, si.Lv2Cv)
+local function build_sceneaabbLS(si, li)
+	local PSRLS = math3d.aabb_transform(li.Lv, assert(si.PSR))
+	if si.PSC then
+		local PSCLS = math3d.aabb_transform(li.Lv, si.PSC)
+		local PSC_nearLS = math3d.index(math3d.array_index(PSCLS, 1), 3)
+		local sceneaabb = math3d.aabb_intersection(PSRLS, PSCLS)
+	
+		local sminv, smaxv = mu.aabb_minmax(sceneaabb)
+		local sminx, sminy = math3d.index(sminv, 1, 2)
+		local smaxx, smaxy = math3d.index(smaxv, 1, 2)
 
-	local verticesLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
-	if mc.NULL ~= verticesLS then
-		local intersectaabb = math3d.minmax(verticesLS)
-		c.frustum.n, c.frustum.f = mu.aabb_minmax_index(intersectaabb, 3)
+		if usePSCFar then
+			local PSC_farLS = math3d.index(math3d.array_index(PSCLS, 2), 3)
+			return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSC_farLS))
+		else
+			local PSR_farLS = math3d.index(math3d.array_index(PSRLS, 2), 3)
+			return math3d.aabb(math3d.vector(sminx, sminy, PSC_nearLS), math3d.vector(smaxx, smaxy, PSR_farLS))
+		end
 	end
 
-	local Lp = math3d.projmat(c.frustum, INV_Z)
-	if useLiSPSM then
-		si.Lp = Lp
-		local Wv, Wp = LiSPSM.warp_matrix(si, verticesLS)
-		Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), si.Lr), Lp)
-	end
-
-	local F = calc_focus_matrix(Lp, verticesLS)
-	Lp 		= math3d.mul(F, Lp)
-	update_camera(c, si.Lv, Lp)
-end
-
-local function create_sub_viewfrustum(zn, zf, sr, viewfrustum)
-	return {
-		n = calc_viewspace_z(zn, zf, sr[1]),
-		f = calc_viewspace_z(zn, zf, sr[2]),
-		fov = assert(viewfrustum.fov),
-		aspect = assert(viewfrustum.aspect),
-	}
+	return PSRLS
 end
 
 function shadow_sys:update_camera_depend()
-    local C = w:first "camera_changed"
-    if not C then
-        return
-    end
+	local C = irq.main_camera_changed()
+	if not C then
+		return
+	end
 
 	local D = w:first "make_shadow directional_light scene:in"
 	if not D then
-		return 
+		return
 	end
 
-    C = world:entity(irq.main_camera(), "camera_changed?in")
-	if not C.camera_changed then
-		return 
-	end
+	w:extend(C, "scene:in camera:in")
 
-    w:extend(C, "scene:in camera:in")
-	local lightdirWS = math3d.index(D.scene.worldmat, 3)
+	local sb = w:first "shadow_bounding:in".shadow_bounding
 	
-	local si = init_scene_info(C, lightdirWS)
+	local li = init_light_info(C, D)
+	sb.sceneaabbLS = build_sceneaabbLS(sb, li)
 
-	--TODO: hardcode
-	local split_ratio = {
-		{0.0,  1.0},
-		{0.1,  0.25},
-		{0.25, 0.5},
-		{0.5,  1.0},
-	}
+	local CF = C.camera.frustum
+	sb.view_near, sb.view_far = CF.n, CF.f
+	local zn, zf = assert(sb.zn), assert(sb.zf)
+	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
+	--split bounding zn, zf
+	local csmfrustums = isc.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
+		ce.scene.worldmat = M3D(ce.scene.worldmat, li.Lw)
+
         local c = ce.camera
         local csm = e.csm
-		c.viewfrustum = create_sub_viewfrustum(si.zn, si.zf, split_ratio[csm.index], C.camera.frustum)
-		update_shadow_matrices(si, c)
-
-		ce.scene.worldmat = M3D(ce.scene.worldmat, si.Lw)
+		c.viewfrustum = csmfrustums[csm.index]
+		update_shadow_matrices(sb, li, c)
 		mark_camera_changed(ce)
 
-		csm_matrices[csm.index].m = math3d.mul(ishadowcfg.crop_matrix(csm.index), c.viewprojmat)
+		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)
 		split_distances_VS[csm.index] = c.viewfrustum.f
     end
 
@@ -495,255 +399,5 @@ function shadow_sys:update_filter()
 		end
 		e.cast_shadow		= castshadow
 		e.receive_shadow	= receiveshadow
-	end
-end
-
-
-
-----
-local COLORS<const> = {
-	{1.0, 0.0, 0.0, 1.0},
-	{0.0, 1.0, 0.0, 1.0},
-	{0.0, 0.0, 1.0, 1.0},
-	{0.0, 0.0, 0.0, 1.0},
-	{1.0, 1.0, 0.0, 1.0},
-	{1.0, 0.0, 1.0, 1.0},
-	{0.0, 1.0, 1.0, 1.0},
-	{0.5, 0.5, 0.5, 1.0},
-	{0.8, 0.8, 0.1, 1.0},
-	{0.1, 0.8, 0.1, 1.0},
-	{0.1, 0.5, 1.0, 1.0},
-	{0.5, 1.0, 0.5, 1.0},
-}
-
-local unique_color, unique_name; do
-	local idx = 0
-	function unique_color()
-		idx = idx % #COLORS
-		idx = idx + 1
-		return COLORS[idx]
-	end
-
-	local nidx = 0
-	function unique_name()
-		local id = idx + 1
-		local n = "debug_entity" .. id
-		idx = id
-		return n
-	end
-end
-
-local DEBUG_ENTITIES = {}
-local ientity 		= ecs.require "components.entity"
-local imesh 		= ecs.require "ant.asset|mesh"
-local kbmb 			= world:sub{"keyboard"}
-
-local shadowdebug_sys = ecs.system "shadow_debug_system2"
-
-local function debug_viewid(n, after)
-	local viewid = hwi.viewid_get(n)
-	if nil == viewid then
-		viewid = hwi.viewid_generate(n, after)
-	end
-
-	return viewid
-end
-
-local DEBUG_view = {
-	queue = {
-		depth = {
-			viewid = debug_viewid("shadowdebug_depth", "pre_depth"),
-			queue_name = "shadow_debug_depth_queue",
-			queue_eid = nil,
-		},
-		color = {
-			viewid = debug_viewid("shadowdebug", "ssao"),
-			queue_name = "shadow_debug_queue",
-			queue_eid = nil,
-		}
-	},
-	light = {
-		perspective_camera = nil,
-	},
-	drawereid = nil
-}
-
-local function update_visible_state(e)
-	w:extend(e, "eid:in")
-	if e.eid == DEBUG_view.drawereid then
-		return
-	end
-
-	local function update_queue(whichqueue, matchqueue)
-		if e.visible_state["pre_depth_queue"] then
-			local qn = DEBUG_view.queue[whichqueue].queue_name
-			ivs.set_state(e, qn, true)
-			w:extend(e, "filter_material:update")
-			e.filter_material[qn] = e.filter_material[matchqueue]
-		end
-	end
-
-	update_queue("depth", "pre_depth_queue")
-	update_queue("color", "main_queue")
-end
-
-function shadowdebug_sys:init_world()
-	--make shadow_debug_queue as main_queue alias name, but with different render queue(different render_target)
-	queuemgr.register_queue("shadow_debug_depth_queue",	queuemgr.material_index "pre_depth_queue")
-	queuemgr.register_queue("shadow_debug_queue", 		queuemgr.material_index "main_queue")
-	local vr = irq.view_rect "main_queue"
-	local fbw, fbh = vr.h // 2, vr.h // 2
-	local depth_rbidx = fbmgr.create_rb{
-		format="D32F", w=fbw, h=fbh, layers=1,
-		flags = sampler {
-			RT = "RT_ON",
-			MIN="POINT",
-			MAG="POINT",
-			U="CLAMP",
-			V="CLAMP",
-		},
-	}
-
-	local depthfbidx = fbmgr.create{rbidx=depth_rbidx}
-
-	local fbidx = fbmgr.create(
-					{rbidx = fbmgr.create_rb{
-						format = "RGBA16F", w=fbw, h=fbh, layers=1,
-						flags=sampler{
-							RT="RT_ON",
-							MIN="LINEAR",
-							MAG="LINEAR",
-							U="CLAMP",
-							V="CLAMP",
-						}
-					}},
-					{rbidx = depth_rbidx}
-				)
-
-	DEBUG_view.queue.depth.queue_eid = world:create_entity{
-		policy = {"ant.render|render_queue"},
-		data = {
-			render_target = {
-				viewid = DEBUG_view.queue.depth.viewid,
-				view_rect = {x=0, y=0, w=fbw, h=fbh},
-				clear_state = {
-					clear = "D",
-					depth = 0,
-				},
-				fb_idx = depthfbidx,
-			},
-			visible = true,
-			camera_ref = irq.camera "csm1_queue",
-			queue_name = "shadow_debug_depth_queue",
-		}
-	}
-	
-	DEBUG_view.queue.color.queue_eid = world:create_entity{
-		policy = {
-			"ant.render|render_queue",
-		},
-		data = {
-			render_target = {
-				viewid = DEBUG_view.queue.color.viewid,
-				view_rect = {x=0, y=0, w=fbw, h=fbh},
-				clear_state = {
-					clear = "C",
-					color = 0,
-				},
-				fb_idx = fbidx,
-			},
-			visible = true,
-			camera_ref = irq.camera "csm1_queue",
-			queue_name = "shadow_debug_queue",
-		},
-	}
-
-	DEBUG_view.drawereid = world:create_entity{
-		policy = {
-			"ant.render|simplerender",
-		},
-		data = {
-			simplemesh = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
-			material = "/pkg/ant.resources/materials/texquad.material",
-			visible_state = "main_queue",
-			scene = {},
-			render_layer = "translucent",
-			on_ready = function (e)
-				imaterial.set_property(e, "s_tex", fbmgr.get_rb(fbidx, 1).handle)
-			end,
-		}
-	}
-
-	for e in w:select "render_object visible_state:in" do
-		update_visible_state(e)
-	end
-end
-
-function shadowdebug_sys:entity_init()
-	for e in w:select "INIT render_object visible_state:in" do
-		update_visible_state(e)
-	end
-end
-
-local function draw_lines(lines)
-	return world:create_entity{
-		policy = {"ant.render|simplerender"},
-		data = {
-			simplemesh = {
-				vb = {
-					start = 0, num = #lines,
-					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
-					owned = true,
-				},
-			},
-			material = "/pkg/ant.resources/materials/line.material",
-			scene = {},
-			visible_state = "main_view",
-			owned_mesh_buffer = true,
-		}
-	}
-end
-
-function shadowdebug_sys:data_changed()
-	for _, key, press in kbmb:unpack() do
-		if key == "B" and press == 0 then
-			for k, v in pairs(DEBUG_ENTITIES) do
-				w:remove(v)
-			end
-
-			local function add_entity(points, c, n)
-				local eid = ientity.create_frustum_entity(points, c or unique_color())
-				n = n or unique_name()
-				DEBUG_ENTITIES[n] = eid
-				return eid
-			end
-
-			local function transform_points(points, M)
-				local np = {}
-				for i=1, math3d.array_size(points) do
-					np[i] = math3d.transform(M, math3d.array_index(points, i), 1)
-				end
-
-				return math3d.array_vector(np)
-			end
-
-			local C = world:entity(irq.main_camera(), "camera:in").camera
-			for e in w:select "csm:in camera_ref:in" do
-				local ce = world:entity(e.camera_ref, "camera:in scene:in")
-				local Lv = ce.camera.viewmat
-				local L2W = math3d.inverse_fast(Lv)
-				local aabbpoints = transform_points(math3d.aabb_points(C.PSRLS), L2W)
-				add_entity(aabbpoints,	{0.0, 0.0, 1.0, 1.0})
-
-				if ce.camera.vertices then
-					local aabb = math3d.minmax(ce.camera.vertices, L2W)
-					add_entity(math3d.aabb_points(aabb),	{1.0, 1.0, 0.0, 1.0})
-				end
-
-				add_entity(transform_points(math3d.frustum_points(ce.camera.Lv2Ndc), L2W),	{1.0, 0.0, 0.0, 1.0})
-			end
-		elseif key == 'C' and press == 0 then
-
-		end
 	end
 end

@@ -1,6 +1,7 @@
 #include <css/StyleCache.h>
-#include <css/PropertyBinary.h>
+#include <css/Property.h>
 #include <assert.h>
+#include <array>
 #include <vector>
 extern "C" {
 #include <style.h>
@@ -9,11 +10,19 @@ extern "C" {
 constexpr inline style_handle_t STYLE_NULL = {0};
 
 namespace Rml::Style {
-    struct Attrib: public style_attrib {
-        ~Attrib() {
-            delete[] (uint8_t*)data;
+    void TableRef::AddRef() const {
+        if (idx == 0) {
+            return;
         }
-    };
+        Instance().TableAddRef(*this);
+    }
+
+    void TableRef::Release() const {
+        if (idx == 0) {
+            return;
+        }
+        Instance().TableRelease(*this);
+    }
 
     Cache::Cache(const PropertyIdSet& inherit) {
         uint8_t inherit_mask[128] = {0};
@@ -28,179 +37,158 @@ namespace Rml::Style {
         style_deletecache(c);
     }
 
-    Value Cache::Create() {
+    TableRef Cache::Create() {
         style_handle_t s = style_create(c, 0, NULL);
         return {s.idx};
     }
 
-    Value Cache::Create(const PropertyVector& vec) {
-        strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(vec.size());
-        size_t i = 0;
-        for (auto const& [id, value] : vec) {
-            PropertyEncode(b, (PropertyVariant const&)value);
-            auto str = b.string();
-            attrib[i].data = str.data();
-            attrib[i].sz = str.size();
-            attrib[i].key = (uint8_t)id;
-            i++;
-        }
-        style_handle_t s = style_create(c, (int)attrib.size(), attrib.data());
-        return {s.idx};
+    TableRef Cache::Create(const PropertyVector& vec) {
+        style_handle_t s = style_create(c, (int)vec.size(), (int*)vec.data());
+        return { s.idx };
     }
 
-    Combination Cache::Merge(const std::span<Value>& maps) {
-        if (maps.empty()) {
+    TableRef Cache::Merge(const std::span<TableValue>& tables) {
+        if (tables.empty()) {
             style_handle_t s = style_null(c);
             return {s.idx};
         }
-        style_handle_t s = {maps[0].idx};
-        for (size_t i = 1; i < maps.size(); ++i) {
-            s = style_inherit(c, s, {maps[i].idx}, 0);
+        style_handle_t s = {tables[0].idx};
+        for (size_t i = 1; i < tables.size(); ++i) {
+            s = style_inherit(c, s, {tables[i].idx}, 0);
         }
+        style_addref(c, s);
         return {s.idx};
     }
 
-    Combination Cache::Merge(Value A, Value B, Value C) {
+    TableRef Cache::Inherit(const TableRef& A, const TableRef& B, const TableRef& C) {
         style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
         style_addref(c, s);
         return {s.idx};
     }
 
-    Combination Cache::Inherit(Combination child, Combination parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
+    TableRef Cache::Inherit(const TableRef& A, const TableRef& B) {
+        style_handle_t s = style_inherit(c, {A.idx}, {B.idx}, 1);
         style_addref(c, s);
         return {s.idx};
     }
 
-    Combination Cache::Inherit(Combination child) {
-        style_addref(c, {child.idx});
-        return {child.idx};
+    TableRef Cache::Inherit(const TableRef& A) {
+        style_addref(c, {A.idx});
+        return {A.idx};
     }
 
-    void Cache::Assgin(Value to, Combination from) {
+    bool Cache::Assgin(const TableRef& to, const TableRef& from) {
+        return 0 != style_assign(c, {to.idx}, {from.idx});
+    }
+
+    bool Cache::Compare(const TableRef& a, const TableRef& b) {
+        return 0 != style_compare(c, {a.idx}, {b.idx});
+    }
+
+    void Cache::Clone(const TableRef& to, const TableRef& from) {
         style_assign(c, {to.idx}, {from.idx});
     }
 
-    void Cache::Clone(Value to, Value from) {
-        style_assign(c, {to.idx}, {from.idx});
+    bool Cache::SetProperty(const TableRef& s, PropertyId id, const Property& prop) {
+        int attrib_id = prop.RawAttribId();
+        return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
-    void Cache::Release(ValueOrCombination s) {
-        style_release(c, {s.idx});
+    bool Cache::DelProperty(const TableRef& s, PropertyId id) {
+        int removed_key[1] = { (int)(uint8_t)id };
+        return !!style_modify(c, {s.idx}, 0, nullptr, 1, removed_key);
     }
 
-    bool Cache::SetProperty(Value s, PropertyId id, const Property& value) {
-        strbuilder<uint8_t> b;
-        PropertyEncode(b, (PropertyVariant const&)value);
-        auto str = b.string();
-        Attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
-        return !!style_modify(c, {s.idx}, 1, &attrib);
-    }
-
-    bool Cache::DelProperty(Value s, PropertyId id) {
-        style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
-        return !!style_modify(c, {s.idx}, 1, &attrib);
-    }
-
-    PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
-        strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(vec.size());
+    PropertyIdSet Cache::SetProperty(const TableRef& s, const PropertyVector& vec) {
+        std::vector<int> attrib_id(vec.size());
         size_t i = 0;
-        for (auto const& [id, value] : vec) {
-            PropertyEncode(b, (PropertyVariant const&)value);
-            auto str = b.string();
-            attrib[i].data = str.data();
-            attrib[i].sz = str.size();
-            attrib[i].key = (uint8_t)id;
+        for (auto const& v : vec) {
+            attrib_id[i] = v.RawAttribId();
             i++;
         }
-        if (!style_modify(c, {s.idx}, (int)attrib.size(), attrib.data())) {
+        if (!style_modify(c, {s.idx}, (int)attrib_id.size(), attrib_id.data(), 0, nullptr)) {
             return {};
         }
         PropertyIdSet change;
-        for (auto const& a: attrib) {
-            if (a.change) {
-                change.insert((PropertyId)a.key);
+        for (size_t i = 0; i < attrib_id.size(); ++i) {
+            if (attrib_id[i]) {
+                change.insert(GetPropertyId(vec[i]));
             }
         }
         return change;
     }
 
-    PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
-        std::vector<Attrib> attrib(set.size());
+    PropertyIdSet Cache::DelProperty(const TableRef& s, const PropertyIdSet& set) {
+        std::vector<int> removed_key(set.size());
         size_t i = 0;
         for (auto id : set) {
-            attrib[i].data = NULL;
-            attrib[i].sz = 0;
-            attrib[i].key = (uint8_t)id;
+            removed_key[i] = (int)(uint8_t)id;
             i++;
         }
-        if (!style_modify(c, {s.idx}, (int)attrib.size(), attrib.data())) {
+        if (!style_modify(c, {s.idx}, 0, nullptr, (int)removed_key.size(), removed_key.data())) {
             return {};
         }
         PropertyIdSet change;
-        for (auto const& a: attrib) {
-            if (a.change) {
-                change.insert((PropertyId)a.key);
+        i = 0;
+        for (auto id : set) {
+            if (removed_key[i]) {
+                change.insert(id);
             }
+            i++;
         }
         return change;
     }
 
-    std::optional<Property> Cache::Find(ValueOrCombination s, PropertyId id) {
-        void* data = style_find(c, {s.idx}, (uint8_t)id);
-        if (!data) {
-            return std::nullopt;
-        }
-        strparser<uint8_t> p {(const uint8_t*)data};
-        return PropertyDecode(tag_v<Property>, p);
+    Property Cache::Find(const TableRef& s, PropertyId id) {
+        int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
+        return { attrib_id };
     }
 
-    bool Cache::Has(ValueOrCombination s, PropertyId id) {
-        void* data = style_find(c, {s.idx}, (uint8_t)id);
-        return !!data;
+    bool Cache::Has(const TableRef& s, PropertyId id) {
+        int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
+        return attrib_id != -1;
     }
 
-    void Cache::Foreach(ValueOrCombination s, PropertyIdSet& set) {
+    void Cache::Foreach(const TableRef& s, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id);
-            if (!data) {
+            int attrib_id = style_index(c, {s.idx}, i);
+            if (attrib_id == -1) {
                 break;
             }
-            set.insert(id);
+            style_attrib attrib;
+            style_attrib_value(c, attrib_id, &attrib);
+            set.insert((PropertyId)attrib.key);
         }
     }
 
-    void Cache::Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
+    void Cache::Foreach(const TableRef& s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id);
-            if (!data) {
+            Property prop { style_index(c, {s.idx}, i) };
+            if (!prop) {
                 break;
             }
-            if (PropertyIsUnit(unit, data)) {
-                set.insert(id);
+            if (prop.IsFloatUnit(unit)) {
+                set.insert(GetPropertyId(prop));
             }
         }
     }
 
-    static auto Fetch(style_cache* c, ValueOrCombination t) {
-        std::array<void*, (size_t)EnumCountV<PropertyId>> datas;
-        datas.fill(nullptr);
+    static auto Fetch(style_cache* c, const TableRef& t) {
+        std::array<int, (size_t)EnumCountV<PropertyId>> datas;
+        datas.fill(-1);
         for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data = style_index(c, {t.idx}, i, (uint8_t*)&id);
-            if (!data) {
+            int attrib_id = style_index(c, {t.idx}, i);
+            if (attrib_id == -1) {
                 break;
             }
-            datas[(size_t)id] = data;
+            style_attrib attrib;
+            style_attrib_value(c, attrib_id, &attrib);
+            datas[(size_t)attrib.key] = attrib_id;
         }
         return datas;
     }
 
-    PropertyIdSet Cache::Diff(ValueOrCombination a, ValueOrCombination b) {
+    PropertyIdSet Cache::Diff(const TableRef& a, const TableRef& b) {
         PropertyIdSet ids;
         auto a_datas = Fetch(c, a);
         auto b_datas = Fetch(c, b);
@@ -214,6 +202,43 @@ namespace Rml::Style {
 
     void Cache::Flush() {
         style_flush(c);
+    }
+
+    Property Cache::CreateProperty(PropertyId id, std::span<uint8_t> value) {
+        style_attrib v;
+        v.key = (uint8_t)id;
+        v.data = (void*)value.data();
+        v.sz = value.size();
+        int attrib_id = style_attrib_id(c, &v);
+        return { attrib_id };
+    }
+        
+    PropertyId Cache::GetPropertyId(Property prop) {
+        style_attrib v;
+        style_attrib_value(c, prop.RawAttribId(), &v);
+        return (PropertyId)v.key;
+    }
+
+    std::span<const std::byte> Cache::GetPropertyData(Property prop) {
+        style_attrib v;
+        style_attrib_value(c, prop.RawAttribId(), &v);
+        return { (const std::byte*)v.data, v.sz };
+    }
+
+    void Cache::PropertyAddRef(Property prop) {
+        style_attrib_addref(c, prop.RawAttribId());
+    }
+
+    void Cache::PropertyRelease(Property prop) {
+        style_attrib_release(c, prop.RawAttribId());
+    }
+
+    void Cache::TableAddRef(const TableRef& s) {
+        style_addref(c, { s.idx });
+    }
+
+    void Cache::TableRelease(const TableRef& s) {
+        style_release(c, { s.idx });
     }
 
     static Cache* cahce = nullptr;

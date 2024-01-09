@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local MAX_LAYER<const> = 16
+local MAX_LAYER<const> = 64
 
 local layer_names = {
     "foreground", "opacity", "background", "translucent", "decal", "ui"

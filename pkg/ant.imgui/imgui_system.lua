@@ -45,7 +45,7 @@ function m:init_system()
 		}
 	elseif platform.os == "macos" then
 		imgui.FontAtlasAddFont {
-			SystemFont = "华文细黑",
+			SystemFont = "苹方-简",
 			SizePixels = 18,
 			GlyphRanges = { 0x0020, 0xFFFF }
 		}

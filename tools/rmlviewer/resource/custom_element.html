@@ -1,0 +1,75 @@
+<html>
+    <head>
+        <style>
+            body {
+                font: 200% "宋体";
+                margin: 0 0.5em;
+                flex-direction: row;
+            }
+            color-button {
+                margin: 10px;
+                text-align: center;
+                text-decoration: none;
+                color: black;
+                transition: transform 0.2s linear-out;
+            }
+            color-button:hover {
+                transform: rotate(-15deg);
+            }
+        </style>
+        <script type="text/x-lua">
+            window.customElements.define("template", function(e)
+                e.style.display = "none"
+            end)
+            window.customElements.define("color-button", function(e)
+                e.style.backgroundColor = e.innerHTML:lower()
+            end)
+            window.customElements.define("checkbox", function(e)
+                local color = e.innerHTML:lower()
+                local menu = document.getElementById "checkbox"
+                for _, child in ipairs(menu.childNodes) do
+                    e.appendChild(child.cloneNode())
+                end
+                local btn = e.childNodes[2]
+                btn.style.backgroundColor = color
+                
+                e.style.margin = '10px'
+                e.style.border = '1px white'
+                e.style.color = 'white'
+                e.style.flexDirection = 'row'
+                e.style.justifyContent = 'flex-end'
+
+                e.addEventListener('click', function()
+                    if btn.innerHTML == "√" then
+                        btn.innerHTML = "×"
+                    else
+                        btn.innerHTML = "√"
+                    end
+                end)
+            end)
+        </script>
+    </head>
+    <body>
+        <template id="checkbox">
+            <button style="border: 1px white">√</button>
+        </template>
+        <div style="flex-direction: column">
+            <color-button>Red</color-button>
+            <color-button>Orange</color-button>
+            <color-button>Yellow</color-button>
+            <color-button>Green</color-button>
+            <color-button>Cyan</color-button>
+            <color-button>Blue</color-button>
+            <color-button>Purple</color-button>
+        </div>
+        <div style="flex-direction: column">
+            <checkbox>Red</checkbox>
+            <checkbox>Orange</checkbox>
+            <checkbox>Yellow</checkbox>
+            <checkbox>Green</checkbox>
+            <checkbox>Cyan</checkbox>
+            <checkbox>Blue</checkbox>
+            <checkbox>Purple</checkbox>
+        </div>
+    </body>
+</html>

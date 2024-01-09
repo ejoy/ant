@@ -1,9 +1,8 @@
 #include <core/Text.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Document.h>
 #include <core/Interface.h>
 #include <util/Log.h>
-#include <css/Property.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <binding/utf8.h>
 #include <iostream>
@@ -31,7 +30,7 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
-std::optional<Property> Text::GetComputedProperty(PropertyId id) {
+Property Text::GetComputedProperty(PropertyId id) {
 	return GetParentNode()->GetComputedProperty(id);
 }
 
@@ -66,14 +65,14 @@ bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin,
 		}
 		line.clear();
 		line_width = 0;
-		float kEllipsisWidth = GetRenderInterface()->GetFontWidth(font_handle, kEllipsisCodepoint);
+		float kEllipsisWidth = GetRender()->GetFontWidth(font_handle, kEllipsisCodepoint);
 		if (kEllipsisWidth > maxWidth) {
 			return false;
 		}
 		auto view = utf8::view(ttext, line_begin);
 		for (auto it = view.begin(); it != view.end(); ++it) {
 			auto codepoint = *it;
-			float font_width = GetRenderInterface()->GetFontWidth(font_handle, codepoint);
+			float font_width = GetRender()->GetFontWidth(font_handle, codepoint);
 			if (line_width + font_width + kEllipsisWidth > maxWidth) {
 				line += kEllipsisString;
 				line_width += kEllipsisWidth;
@@ -90,7 +89,7 @@ bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin,
 		auto view = utf8::view(ttext, line_begin);
 		for (auto it = view.begin(); it != view.end(); ++it) {
 			auto codepoint = *it;
-			float font_width = GetRenderInterface()->GetFontWidth(font_handle, codepoint);
+			float font_width = GetRender()->GetFontWidth(font_handle, codepoint);
 			if (line_width + font_width > maxWidth) {
 				return false;
 			}
@@ -182,7 +181,7 @@ void Text::UpdateTextEffects() {
 		stroke->color.ApplyOpacity(GetParentNode()->GetOpacity());
 		text_effect.stroke = stroke;
 	}
-	auto material = GetRenderInterface()->CreateFontMaterial(text_effect);
+	auto material = GetRender()->CreateFontMaterial(text_effect);
 	geometry.SetMaterial(material);
 }
 
@@ -193,7 +192,7 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty.erase(Dirty::Geometry);
 	Color color = GetTextColor();
 	color.ApplyOpacity(GetParentNode()->GetOpacity());
-	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);
+	GetRender()->GenerateString(font_face_handle, lines, color, geometry);
 	if (GetParentNode()->IsGray()) {
 		geometry.SetGray();
 	}
@@ -213,7 +212,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	color.ApplyOpacity(GetParentNode()->GetOpacity());
 	float underline_thickness = 0;
 	float underline_position = 0;
-	if (!GetRenderInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness)) {
+	if (!GetRender()->GetUnderline(font_face_handle, underline_position, underline_thickness)) {
 		return;
 	}
 	for (const Line& line : lines) {
@@ -228,14 +227,14 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		}
 		case Style::TextDecorationLine::Overline: {
 			int ascent, descent, lineGap;
-			GetRenderInterface()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
+			GetRender()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
 			position.y -= ascent;
 			decoration_under = true;
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
 			int ascent, descent, lineGap;
-			GetRenderInterface()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
+			GetRender()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
 			position.y -= (ascent + descent) * 0.5f;
 			decoration_under = false;
 			break;
@@ -311,23 +310,23 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 
 float Text::GetLineHeight() {
 	int ascent, descent, lineGap;
-	GetRenderInterface()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
+	GetRender()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
 	auto property = GetComputedProperty(PropertyId::LineHeight);
-	if (property->Has<PropertyKeyword>()) {
+	if (property.Has<PropertyKeyword>()) {
 		return float(ascent - descent + lineGap);
 	}
-	float percent = property->Get<float>(GetParentNode());
+	float percent = property.Get<PropertyFloat>().Compute(GetParentNode());
 	return (ascent - descent) * percent;
 }
 
 float Text::GetBaseline() {
 	int ascent, descent, lineGap;
-	GetRenderInterface()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
+	GetRender()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
 	auto property = GetComputedProperty(PropertyId::LineHeight);
-	if (property->Has<PropertyKeyword>()) {
+	if (property.Has<PropertyKeyword>()) {
 		return ascent + lineGap / 2.f;
 	}
-	float percent = property->Get<float>(GetParentNode());
+	float percent = property.Get<PropertyFloat>().Compute(GetParentNode());
 	return ascent + (ascent - descent) * (percent-1.f) / 2.f;
 }
 
@@ -360,7 +359,7 @@ Style::TextDecorationLine Text::GetTextDecorationLine() {
 
 Color Text::GetTextDecorationColor() {
 	auto property = GetComputedProperty(PropertyId::TextDecorationColor);
-	if (property->Has<PropertyKeyword>()) {
+	if (property.Has<PropertyKeyword>()) {
 		// CurrentColor
 		auto stroke = GetTextStroke();
 		if (stroke) {
@@ -370,7 +369,7 @@ Color Text::GetTextDecorationColor() {
 			return GetTextColor();
 		}
 	}
-	return property->Get<Color>();
+	return property.Get<Color>();
 }
 
 Color Text::GetTextColor() {
@@ -386,7 +385,7 @@ FontFaceHandle Text::GetFontFaceHandle() {
 	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
 	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
 	int size = (int)GetParentNode()->GetFontSize();
-	font_handle = GetRenderInterface()->GetFontFaceHandle(family, style, weight, size);
+	font_handle = GetRender()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
 		Log::Message(Log::Level::Error, "Load font %s failed.", family.c_str());
 	}
@@ -465,7 +464,7 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	Color default_color = GetTextColor();
 	group default_group;
 	default_group.color = default_color;
-	GetPlugin()->OnParseText(text, groups, groupmap, images, imagemap, ctext, default_group);
+	GetScript()->OnParseText(text, groups, groupmap, images, imagemap, ctext, default_group);
 	imagegeometries.reserve(images.size());
   	for (size_t i = 0 ; i < images.size(); ++i){
 		std::unique_ptr<Rml::Geometry> ug(new Rml::Geometry());
@@ -480,7 +479,7 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 		finish = GenerateLine(line, line_width, line_begin, maxWidth, ctext, false);
 		//richtext
 		line_layouts.clear();
-		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,(int)line_begin,(int)line.size());
+		line_width=GetRender()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,(int)line_begin,(int)line.size());
 
 		lines.push_back(Line { line, Point(line_width, height + baseline), 0 });
 		layouts.push_back(line_layouts);
@@ -515,7 +514,7 @@ void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty.erase(Dirty::Geometry);
 	cur_image_idx = 0;
 	float line_height = GetLineHeight();
-	GetRenderInterface()->GenerateRichString(font_face_handle, lines, layouts, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
+	GetRender()->GenerateRichString(font_face_handle, lines, layouts, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
 	if (GetParentNode()->IsGray()) {
 		geometry.SetGray();
 	}
@@ -524,7 +523,7 @@ void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 void RichText::UpdateImageMaterials() {
 	for(size_t i = 0; i < images.size(); ++i){
 		Rml::TextureId& id = images[i].id;
-		auto material = GetRenderInterface()->CreateTextureMaterial(id, Rml::SamplerFlag::Repeat);
+		auto material = GetRender()->CreateTextureMaterial(id, Rml::SamplerFlag::Repeat);
 		imagegeometries[i]->SetMaterial(material);
 	}
 }

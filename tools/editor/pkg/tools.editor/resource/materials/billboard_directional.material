@@ -1,0 +1,18 @@
+fx:
+  fs: /pkg/ant.resources/shaders/billboard/fs_billboard.sc
+  vs: /pkg/ant.resources/shaders/billboard/vs_billboard.sc
+
+properties:
+  u_color: {1, 1, 1, 1}
+  s_basecolor:
+    stage: 0
+    texture: /pkg/tools.editor/resource/icon/DirectionalLight3D.texture
+
+state:
+  ALPHA_REF: 0
+  PT: TRISTRIP
+  CULL: CCW
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ
+  BLEND: ALPHA

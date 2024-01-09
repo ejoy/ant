@@ -143,8 +143,8 @@ local game_whitelist <const> = {
 	-- script
 	"lua",
 	-- ui
-	"rcss",
-	"rml",
+	"html",
+	"css",
 	-- effect
 	"efk",
 	-- font
@@ -156,6 +156,7 @@ local game_whitelist <const> = {
 	-- animation
 	"event",
 	"anim",
+	"bin",
 	-- material
 	"state",
 	"varyings",

@@ -17,7 +17,7 @@ function m.set_path(path)
     init_param.EngineWinStylePath = string.gsub(init_param.EnginePath, "/", "\\")
     --init_param.MountRoot = string.sub(standard_path, project_pos + 1, -1)
     init_param.PackageName = string.sub(standard_path, project_pos + 1, -1)--string.gsub(init_param.MountRoot, '/', '.')--"ant." .. string.gsub(init_param.MountRoot, '/', '.')
-    lfs.create_directory(lfs.path(init_param.ProjectPath .. "\\res"))
+    lfs.create_directory(lfs.path(init_param.ProjectPath .. "\\resource"))
 end
 
 function m.gen_main()
@@ -70,7 +70,7 @@ end
 
 function m:post_init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
-    --world:create_instance "res/scenes.prefab"
+    --world:create_instance "resource/scenes.prefab"
 end
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\init_system.lua")), system_code)

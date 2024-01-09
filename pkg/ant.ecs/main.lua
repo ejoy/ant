@@ -369,6 +369,15 @@ function world:group_flush(tag)
     end
 end
 
+function world:set_mouse(e)
+    self._mouse.x = e.x
+    self._mouse.y = e.y
+end
+
+function world:get_mouse()
+    return self._mouse
+end
+
 local function cpustat_update(w, funcs, symbols)
     local ecs_world = w._ecs_world
     local get_time = ltask.counter
@@ -693,6 +702,7 @@ function m.new_world(config)
             component = {},
             system = {},
         },
+        _mouse = { x = 0, y = 0 },
         w = ecs,
     }, world_metatable)
 

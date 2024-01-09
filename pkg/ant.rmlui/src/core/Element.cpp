@@ -1,5 +1,5 @@
 #include <core/Element.h>
-#include <core/Core.h>
+#include <binding/Context.h>
 #include <core/Document.h>
 #include <core/ElementAnimation.h>
 #include <core/ElementBackground.h>
@@ -7,7 +7,6 @@
 #include <util/HtmlParser.h>
 #include <core/Interface.h>
 #include <util/Log.h>
-#include <css/Property.h>
 #include <util/StringUtilities.h>
 #include <css/StyleSheetParser.h>
 #include <css/StyleSheetSpecification.h>
@@ -17,29 +16,61 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
-#include <binding/luaplugin.h>
 #include <bee/nonstd/unreachable.h>
 
 namespace Rml {
 
-static PropertyFloat ComputeOrigin(const std::optional<Property>& p) {
-	if (p->Has<PropertyKeyword>()) {
-		switch (p->Get<PropertyKeyword>()) {
-		default:
-		case 0 /* left/top     */: return { 0.0f, PropertyUnit::PERCENT };
-		case 1 /* center       */: return { 50.0f, PropertyUnit::PERCENT };
-		case 2 /* right/bottom */: return { 100.0f, PropertyUnit::PERCENT };
-		}
-	}
-	return p->Get<PropertyFloat>();
+static float min4(float a, float b, float c, float d) {
+	return std::min(std::min(a, b), std::min(c, d));
 }
 
-static glm::vec3 PerspectiveOrigin(Element* e) {
-	auto originX = e->GetComputedProperty(PropertyId::PerspectiveOriginX);
-	auto originY = e->GetComputedProperty(PropertyId::PerspectiveOriginY);
-	float x = ComputeOrigin(originX).ComputeW(e);
-	float y = ComputeOrigin(originY).ComputeH(e);
-	return { x, y, 0.f };
+static float max4(float a, float b, float c, float d) {
+	return std::max(std::max(a, b), std::max(c, d));
+}
+
+void ElementAabb::Set(const Rect& rect, const glm::mat4x4& transform) {
+	glm::vec4 corners[] = {
+		{ rect.left(),  rect.top(),    0, 1 },
+		{ rect.right(), rect.top(),    0, 1 },
+		{ rect.right(), rect.bottom(), 0, 1 },
+		{ rect.left(),  rect.bottom(), 0, 1 },
+	};
+	for (auto& c : corners) {
+		c = transform * c;
+		c /= c.w;
+	}
+	if (corners[0].x == corners[3].x
+		&& corners[0].y == corners[1].y
+		&& corners[2].x == corners[1].x
+		&& corners[2].y == corners[3].y
+	) {
+		content.SetRect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[2].y - corners[0].y);
+		normalize = true;
+		return;
+	}
+	float l = min4(corners[0].x, corners[1].x, corners[2].x, corners[3].x);
+	float t = min4(corners[0].y, corners[1].y, corners[2].y, corners[3].y);
+	float r = max4(corners[0].x, corners[1].x, corners[2].x, corners[3].x);
+	float b = max4(corners[0].y, corners[1].y, corners[2].y, corners[3].y);
+	content.SetRect(l, t, r - l, b - t);
+	normalize = false;
+}
+
+bool ElementClip::Test(const Rect& rect) const {
+	switch (type) {
+	case ElementClip::Type::None:
+		return true;
+	case ElementClip::Type::Any:
+		return false;
+	case ElementClip::Type::Scissor: {
+		return true;
+	}
+	case ElementClip::Type::Shader: {
+		return true;
+	}
+	default:
+		std::unreachable();
+	}
 }
 
 Element::Element(Document* owner, const std::string& tag)
@@ -54,13 +85,6 @@ Element::Element(Document* owner, const std::string& tag)
 Element::~Element() {
 	assert(GetParentNode() == nullptr);
 	assert(childnodes.empty());
-
-	auto& c = Style::Instance();
-	c.Release(animation_properties);
-	c.Release(inline_properties);
-	c.Release(definition_properties);
-	c.Release(local_properties);
-	c.Release(global_properties);
 }
 
 void Element::Update() {
@@ -97,14 +121,13 @@ void Element::Render() {
 	UpdateGeometry();
 	UpdateStackingContext();
 
-	size_t i = 0;
-	for (; i < render_children.size() && render_children[i]->GetZIndex() < 0; ++i) {
-		render_children[i]->Render();
+	for (auto& child: children_under_render) {
+		child->Render();
 	}
 	if (SetRenderStatus()) {
 		geometry.Render();
-		for (; i < render_children.size(); ++i) {
-			render_children[i]->Render();
+		for (auto& child: children_upper_render) {
+			child->Render();
 		}
 	}
 }
@@ -148,19 +171,19 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 }
 
 bool Element::IgnorePointerEvents() const {
-	return GetComputedProperty(PropertyId::PointerEvents)->Get<Style::PointerEvents>() == Style::PointerEvents::None;
+	return GetComputedProperty(PropertyId::PointerEvents).GetEnum<Style::PointerEvents>() == Style::PointerEvents::None;
 }
 
 float Element::GetZIndex() const {
-	return GetComputedProperty(PropertyId::ZIndex)->Get<PropertyFloat>().value;
+	return GetComputedProperty(PropertyId::ZIndex).Get<PropertyFloat>().value;
 }
 
 float Element::GetFontSize() const {
 	return font_size;
 }
 
-static float ComputeFontsize(const Property& property, Element* element) {
-	PropertyFloat fv = property.Get<PropertyFloat>();
+static float ComputeFontsize(const Property& prop, Element* element) {
+	PropertyFloat fv = prop.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT || fv.unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
 		Element* parent = element->GetParentNode();
@@ -183,7 +206,7 @@ static float ComputeFontsize(const Property& property, Element* element) {
 bool Element::UpdataFontSize() {
 	float new_size = font_size;
 	if (auto p = GetLocalProperty(PropertyId::FontSize))
-		new_size = ComputeFontsize(*p, this);
+		new_size = ComputeFontsize(p, this);
 	else if (auto parent = GetParentNode()) {
 		new_size = parent->GetFontSize();
 	}
@@ -195,12 +218,12 @@ bool Element::UpdataFontSize() {
 }
 
 bool Element::IsGray() {
-	return GetComputedProperty(PropertyId::Filter)->Get<Style::Filter>() == Style::Filter::Gray;
+	return GetComputedProperty(PropertyId::Filter).GetEnum<Style::Filter>() == Style::Filter::Gray;
 }
 
 float Element::GetOpacity() {
 	auto property = GetComputedProperty(PropertyId::Opacity);
-	return property->Get<PropertyFloat>().value;
+	return property.Get<PropertyFloat>().value;
 }
 
 bool Element::Project(Point& point) const noexcept {
@@ -389,7 +412,7 @@ Node* Element::Clone(bool deep) const {
 }
 
 void Element::NotifyCreated() {
-	GetPlugin()->OnCreateElement(owner_document, this, GetTagName());
+	GetScript()->OnCreateElement(owner_document, this, GetTagName());
 }
 
 void Element::AppendChild(Node* node, size_t index) {
@@ -683,7 +706,6 @@ std::string Element::GetOuterHTML() const {
 
 void Element::RefreshProperties() {
 	auto& c = Style::Instance();
-	c.Release(global_properties);
 	if (auto parent = GetParentNode()) {
 		DirtyDefinition();
 		DirtyInheritableProperties();
@@ -711,21 +733,31 @@ void Element::UpdateStackingContext() {
 		return;
 	}
 	dirty.erase(Dirty::StackingContext);
-	render_children.clear();
-	render_children.reserve(childnodes.size());
+	children_under_render.clear();
+	children_upper_render.clear();
 	for (auto& child : childnodes) {
 		switch (child->GetType()) {
 		case Node::Type::Element:
 		case Node::Type::Text: {
 			auto node = static_cast<LayoutNode*>(child.get());
-			render_children.push_back(node);
+			if (node->GetZIndex() < 0) {
+				children_under_render.push_back(node);
+			}
+			else {
+				children_upper_render.push_back(node);
+			}
 			break;
 		}
 		case Node::Type::Comment:
 			break;
 		}
 	}
-	std::stable_sort(render_children.begin(), render_children.end(),
+	std::stable_sort(children_under_render.begin(), children_under_render.end(),
+		[](auto&& lhs, auto&& rhs) {
+			return lhs->GetZIndex() < rhs->GetZIndex();
+		}
+	);
+	std::stable_sort(children_upper_render.begin(), children_upper_render.end(),
 		[](auto&& lhs, auto&& rhs) {
 			return lhs->GetZIndex() < rhs->GetZIndex();
 		}
@@ -748,16 +780,16 @@ void Element::UpdateStructure() {
 }
 
 void Element::StartTransition(std::function<void()> f) {
-	auto transition_list = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
+	auto transition_list = GetComputedProperty(PropertyId::Transition).Get<TransitionList>();
 	if (transition_list.empty()) {
 		f();
 		return;
 	}
 	struct PropertyTransition {
-		PropertyId              id;
-		const Transition&       transition;
-		std::optional<Property> start_value;
-		PropertyTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value)
+		PropertyId        id;
+		const Transition& transition;
+		Property      start_value;
+		PropertyTransition(PropertyId id, const Transition& transition, Property start_value)
 			: id(id)
 			, transition(transition)
 			, start_value(start_value)
@@ -772,13 +804,10 @@ void Element::StartTransition(std::function<void()> f) {
 	f();
 	for (auto& [id, transition, start_value] : pt) {
 		auto target_value = GetComputedProperty(id);
-		if (start_value && target_value && *start_value != *target_value) {
+		if (start_value && target_value && start_value != target_value) {
 			if (!transitions.contains(id)) {
-				ElementTransition ani {*start_value, *target_value, transition };
-				if (ani.IsValid(*this)) {
-					SetAnimationProperty(id, *start_value);
-					transitions.insert_or_assign(id, std::move(ani));
-				}
+				SetAnimationProperty(id, start_value);
+				transitions.emplace(id, ElementTransition { *this, id, transition, start_value, target_value });
 			}
 		}
 	}
@@ -790,7 +819,7 @@ void Element::HandleTransitionProperty() {
 	}
 	dirty.erase(Dirty::Transition);
 
-	auto keep = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
+	auto keep = GetComputedProperty(PropertyId::Transition).Get<TransitionList>();
 	if (keep.empty()) {
 		for (auto& [id, _] : transitions) {
 			DelAnimationProperty(id);
@@ -825,7 +854,7 @@ void Element::HandleAnimationProperty() {
 	if (!property) {
 		return;
 	}
-	const AnimationList& animation_list = property->Get<AnimationList>();
+	const AnimationList& animation_list = property.Get<AnimationList>();
 	bool element_has_animations = (!animation_list.empty() || !animations.empty());
 
 	if (!element_has_animations) {
@@ -835,35 +864,13 @@ void Element::HandleAnimationProperty() {
 	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
 
 	for (const auto& animation : animation_list) {
-		if (const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name)) {
-			auto& properties = keyframes_ptr->properties;
-			if (keyframes_ptr->properties.size() >= 1 && !animation.paused) {
-				for (auto const& [id, vec] : properties) {
-					bool has_from_key = (vec[0].time == 0);
-					bool has_to_key = (vec.back().time == 1);
-					std::optional<Property> start_value;
-					std::optional<Property> target_value;
-					if (has_from_key) {
-						start_value = vec[0].prop;
+		if (!animation.paused) {
+			if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
+				for (auto const& [id, keyframe] : *keyframes) {
+					auto [res, suc] = animations.emplace(id, ElementAnimation { *this, id, animation, keyframe });
+					if (suc) {
+						DispatchAnimationEvent("animationstart", res->second);
 					}
-					else {
-						start_value = GetComputedProperty(id);
-					}
-					if (has_to_key) {
-						target_value = vec.back().prop;
-					}
-					else {
-						target_value = GetComputedProperty(id);
-					}
-					if (!start_value || !target_value) {
-						continue;
-					}
-					ElementAnimation ani { *start_value, *target_value, animation };
-					for (int i = (has_from_key ? 1 : 0); i < (int)vec.size() + (has_to_key ? -1 : 0); i++) {
-						ani.AddKey(vec[i].time, vec[i].prop);
-					}
-					DispatchAnimationEvent("animationstart", ani);
-					animations.insert_or_assign(id, std::move(ani));
 				}
 			}
 		}
@@ -872,14 +879,19 @@ void Element::HandleAnimationProperty() {
 
 void Element::AdvanceAnimations(float delta) {
 	if (!animations.empty()) {
-		for (auto& [id, e] : animations) {
-			e.Update(*this, id, delta);
+		for (auto& [id, animation] : animations) {
+			if (!animation.IsComplete() && delta > 0.0f) {
+				auto p2 = animation.UpdateProperty(*this, delta);
+				SetAnimationProperty(id, p2);
+			}
 		}
 		for (auto it = animations.begin(); it != animations.end();) {
-			if (it->second.IsComplete()) {
+			auto& id = it->first;
+			auto& animation = it->second;
+			if (animation.IsComplete()) {
 				//TODO animationcancel
-				DispatchAnimationEvent("animationend", it->second);
-				DelAnimationProperty(it->first);
+				DispatchAnimationEvent("animationend", animation);
+				DelAnimationProperty(id);
 				it = animations.erase(it);
 			}
 			else {
@@ -888,12 +900,17 @@ void Element::AdvanceAnimations(float delta) {
 		}
 	}
 	if (!transitions.empty()) {
-		for (auto& [id, e] : transitions) {
-			e.Update(*this, id, delta);
+		for (auto& [id, transition] : transitions) {
+			if (!transition.IsComplete() && delta > 0.0f) {
+				auto p2 = transition.UpdateProperty(delta);
+				SetAnimationProperty(id, p2);
+			}
 		}
 		for (auto it = transitions.begin(); it != transitions.end();) {
-			if (it->second.IsComplete()) {
-				DelAnimationProperty(it->first);
+			auto& id = it->first;
+			auto& transition = it->second;
+			if (transition.IsComplete()) {
+				DelAnimationProperty(id);
 				it = transitions.erase(it);
 			}
 			else {
@@ -918,12 +935,12 @@ void Element::UpdateTransform() {
 		origin2d = origin2d - parent->GetScrollOffset();
 	}
 	glm::vec3 origin(origin2d.x, origin2d.y, 0);
-	auto computedTransform = GetComputedProperty(PropertyId::Transform)->Get<Transform>();
+	auto computedTransform = GetComputedProperty(PropertyId::Transform).Get<Transform>();
 	if (!computedTransform.empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
-			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginX)).ComputeW(this),
-			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginY)).ComputeH(this),
-			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginZ)).Compute (this),
+			PropertyComputeX(this, GetComputedProperty(PropertyId::TransformOriginX)),
+			PropertyComputeY(this, GetComputedProperty(PropertyId::TransformOriginY)),
+			PropertyComputeZ(this, GetComputedProperty(PropertyId::TransformOriginZ))
 		};
 		new_transform = glm::translate(transform_origin) * computedTransform.GetMatrix(*this) * glm::translate(-transform_origin);
 	}
@@ -943,6 +960,7 @@ void Element::UpdateTransform() {
 		have_inv_transform = true;
 		inv_transform.reset();
 	}
+	aabb.Set(Rect { {}, GetBounds().size }, transform);
 }
 
 void Element::UpdatePerspective() {
@@ -950,13 +968,17 @@ void Element::UpdatePerspective() {
 		return;
 	dirty.erase(Dirty::Perspective);
 	auto p = GetComputedProperty(PropertyId::Perspective);
-	if (!p->Has<PropertyFloat>()) {
+	if (!p.Has<PropertyFloat>()) {
 		return;
 	}
-	float distance = p->Get<PropertyFloat>().Compute(this);
+	float distance = p.Get<PropertyFloat>().Compute(this);
 	bool changed = false;
 	if (distance > 0.0f) {
-		glm::vec3 origin = PerspectiveOrigin(this);
+		auto originX = GetComputedProperty(PropertyId::PerspectiveOriginX);
+		auto originY = GetComputedProperty(PropertyId::PerspectiveOriginY);
+		float x = PropertyComputeX(this, originX);
+		float y = PropertyComputeY(this, originY);
+		glm::vec3 origin = { x, y, 0.f };
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
 		glm::mat4x4 new_perspective = {
 			{ 1, 0, 0, 0 },
@@ -1051,7 +1073,6 @@ static bool InClip(ElementClip& clip, Point point) {
 	}
 	case ElementClip::Type::Scissor:
 		return Rect { (float)clip.scissor.x, (float)clip.scissor.y, (float)clip.scissor.z, (float)clip.scissor.w }.Contains(point);
-		break;
 	default:
 		std::unreachable();
 	}
@@ -1062,26 +1083,24 @@ Element* Element::ElementFromPoint(Point point) {
 		return nullptr;
 	}
 	if (InClip(clip, point)) {
-		if (auto res = ChildFromPoint(point)) {
-			return res;
-		}
-	}
-	if (!IgnorePointerEvents()) {
-		if (Project(point)) {
-			if (Rect { {}, GetBounds().size }.Contains(point)) {
-				return this;
+		UpdateStackingContext();
+		for (auto iter = children_upper_render.rbegin(); iter != children_upper_render.rend(); ++iter) {
+			Element* res = (*iter)->ElementFromPoint(point);
+			if (res) {
+				return res;
 			}
 		}
 	}
-	return nullptr;
-}
-
-Element* Element::ChildFromPoint(Point point) {
-	UpdateStackingContext();
-	for (auto iter = render_children.rbegin(); iter != render_children.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
-		Element* res = (*iter)->ElementFromPoint(point);
-		if (res) {
-			return res;
+	if (aabb.content.Contains(point)) {
+		if (!IgnorePointerEvents()) {
+			if (aabb.normalize) {
+				return this;
+			}
+			if (Project(point)) {
+				if (Rect { {}, GetBounds().size }.Contains(point)) {
+					return this;
+				}
+			}
 		}
 	}
 	return nullptr;
@@ -1195,30 +1214,25 @@ void Element::UpdateClip() {
 }
 
 bool Element::SetRenderStatus() {
-	switch (clip.type) {
-	case ElementClip::Type::None: {
-		auto render = GetRenderInterface();
-		render->SetTransform(transform);
-		render->SetClipRect();
-		return true;
-	}
-	case ElementClip::Type::Any:
+	if (!clip.Test(aabb.content)) {
 		return false;
-	case ElementClip::Type::Scissor: {
-		auto render = GetRenderInterface();
-		render->SetTransform(transform);
+	}
+	auto render = GetRender();
+	render->SetTransform(transform);
+	switch (clip.type) {
+	case ElementClip::Type::None:
+		render->SetClipRect();
+		break;
+	case ElementClip::Type::Scissor:
 		render->SetClipRect(clip.scissor);
-		return true;
-	}
-	case ElementClip::Type::Shader: {
-		auto render = GetRenderInterface();
-		render->SetTransform(transform);
+		break;
+	case ElementClip::Type::Shader:
 		render->SetClipRect(clip.shader);
-		return true;
-	}
+		break;
 	default:
 		std::unreachable();
 	}
+	return true;
 }
 
 void Element::DirtyTransform() {
@@ -1234,7 +1248,7 @@ void Element::DirtyBackground() {
 }
 
 bool Element::DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation) {
-	GetPlugin()->OnDispatchEvent(GetOwnerDocument(), this, type, {
+	GetScript()->OnDispatchEvent(GetOwnerDocument(), this, type, {
 		{ "animationName", animation.GetName() },
 		{ "elapsedTime", animation.GetTime() },
 	});
@@ -1246,8 +1260,8 @@ Size Element::GetScrollOffset() const {
 		return {0,0};
 	}
 	return {
-		GetComputedProperty(PropertyId::ScrollLeft)->Get<PropertyFloat>().Compute(this),
-		GetComputedProperty(PropertyId::ScrollTop)->Get<PropertyFloat>().Compute(this)
+		GetComputedProperty(PropertyId::ScrollLeft).Get<PropertyFloat>().Compute(this),
+		GetComputedProperty(PropertyId::ScrollTop).Get<PropertyFloat>().Compute(this)
 	};
 }
 
@@ -1255,14 +1269,14 @@ float Element::GetScrollLeft() const {
 	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return 0;
 	}
-	return GetComputedProperty(PropertyId::ScrollLeft)->Get<PropertyFloat>().Compute(this);
+	return GetComputedProperty(PropertyId::ScrollLeft).Get<PropertyFloat>().Compute(this);
 }
 
 float Element::GetScrollTop() const {
 	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return 0;
 	}
-	return GetComputedProperty(PropertyId::ScrollTop)->Get<PropertyFloat>().Compute(this);
+	return GetComputedProperty(PropertyId::ScrollTop).Get<PropertyFloat>().Compute(this);
 }
 
 void Element::SetScrollLeft(float v) {
@@ -1271,9 +1285,9 @@ void Element::SetScrollLeft(float v) {
 	}
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
-	Property value(offset.w, PropertyUnit::PX);
 	StartTransition([&](){
-		SetInlineProperty({{PropertyId::ScrollLeft, std::move(value)}});
+		Property left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
+		SetInlineProperty({ left });
 	});
 }
 
@@ -1283,9 +1297,9 @@ void Element::SetScrollTop(float v) {
 	}
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
-	Property value(offset.h, PropertyUnit::PX);
 	StartTransition([&](){
-		SetInlineProperty({{PropertyId::ScrollTop, std::move(value)}});
+		Property top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
+		SetInlineProperty({ top });
 	});
 }
 
@@ -1297,13 +1311,10 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	Size offset = GetScrollOffset();
 	UpdateScrollOffset(offset);
 
-	Property left(offset.w, PropertyUnit::PX);
-	Property top(offset.h, PropertyUnit::PX);
 	StartTransition([&](){
-		SetInlineProperty({
-			{PropertyId::ScrollLeft, std::move(left)},
-			{PropertyId::ScrollTop, std::move(top)},
-		});
+		Property left = { PropertyId::ScrollLeft, PropertyFloat { offset.w, PropertyUnit::PX } };
+		Property top = { PropertyId::ScrollTop, PropertyFloat { offset.h, PropertyUnit::PX } };
+		SetInlineProperty({ left, top });
 	});
 }
 
@@ -1362,44 +1373,51 @@ void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
 	}
 }
 
-std::optional<Property> Element::GetInlineProperty(PropertyId id) const {
+Property Element::GetInlineProperty(PropertyId id) const {
 	auto& c = Style::Instance();
-	return c.Find(inline_properties, id);
+	if (auto prop = c.Find(inline_properties, id)) {
+		return prop;
+	}
+	return {};
 }
 
-std::optional<Property> Element::GetLocalProperty(PropertyId id) const {
+Property Element::GetLocalProperty(PropertyId id) const {
 	auto& c = Style::Instance();
-    return c.Find(local_properties, id);
+	if (auto prop = c.Find(local_properties, id)) {
+		return prop;
+	}
+	return {};
 }
 
-bool Element::SetProperty(const std::string& name, std::optional<std::string> value) {
+bool Element::SetProperty(const std::string& name, const std::string& value) {
 	bool changed;
-	if (value) {
-		PropertyVector properties;
-		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, *value)) {
-			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value->c_str());
-			return false;
-		}
-		StartTransition([&](){
-			changed = SetInlineProperty(properties);
-		});
+	PropertyVector properties;
+	if (!StyleSheetSpecification::ParseDeclaration(properties, name, value)) {
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
+		return false;
 	}
-	else {
-		PropertyIdSet properties;
-		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
-			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
-			return false;
-		}
-		StartTransition([&](){
-			changed = DelInlineProperty(properties);
-		});
+	StartTransition([&](){
+		changed = SetInlineProperty(properties);
+	});
+	return changed;
+}
+
+bool Element::DelProperty(const std::string& name) {
+	bool changed;
+	PropertyIdSet properties;
+	if (!StyleSheetSpecification::ParseDeclaration(properties, name)) {
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
+		return false;
 	}
+	StartTransition([&](){
+		changed = DelInlineProperty(properties);
+	});
 	return changed;
 }
 
 std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	PropertyIdSet properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+	if (!StyleSheetSpecification::ParseDeclaration(properties, name)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
 		return std::nullopt;
 	}
@@ -1411,21 +1429,21 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 			if (!res.empty()) {
 				res += " ";
 			}
-			res += property->ToString();
+			res += property.ToString();
 		}
 	}
 	return res;
 }
 
-std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
+Property Element::GetComputedProperty(PropertyId id) const {
 	auto& c = Style::Instance();
-	if (auto property = c.Find(global_properties, id)) {
-		return property;
+	if (auto prop = c.Find(global_properties, id)) {
+		return prop;
 	}
-	if (auto property = c.Find(StyleSheetSpecification::GetDefaultProperties(), id)) {
-		return property;
+	if (auto prop = c.Find(StyleSheetSpecification::GetDefaultProperties(), id)) {
+		return prop;
 	}
-	return std::nullopt;
+	return {};
 }
 
 void Element::UpdateDefinition() {
@@ -1435,18 +1453,22 @@ void Element::UpdateDefinition() {
 	dirty.erase(Dirty::Definition);
 	auto new_definition = GetOwnerDocument()->GetStyleSheet().GetElementDefinition(this);
 	auto& c = Style::Instance();
-	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
-	for (PropertyId id : changed_properties) {
-		if (c.Has(inline_properties, id)) {
-			changed_properties.erase(id);
+	if (c.Compare(definition_properties, new_definition)) {
+		PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
+		if (!changed_properties.empty()) {
+			for (PropertyId id : changed_properties) {
+				if (c.Has(inline_properties, id)) {
+					changed_properties.erase(id);
+				}
+			}
+			StartTransition([&](){
+				c.Assgin(definition_properties, new_definition);
+			});
+			DirtyProperties(changed_properties);
+			for (auto& child : children) {
+				child->DirtyDefinition();
+			}
 		}
-	}
-	StartTransition([&](){
-		c.Assgin(definition_properties, new_definition);
-	});
-	DirtyProperties(changed_properties);
-	for (auto& child : children) {
-		child->DirtyDefinition();
 	}
 }
 
@@ -1519,7 +1541,7 @@ void Element::UpdateProperties() {
 	PropertyIdSet dirty_layout_properties = dirty_properties & LayoutProperties;
 	for (PropertyId id : dirty_layout_properties) {
 		if (auto property = GetLocalProperty(id)) {
-			GetLayout().SetProperty(id, *property, this);
+			GetLayout().SetProperty(id, property, this);
 		}
 	}
 

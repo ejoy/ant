@@ -40,8 +40,4 @@ struct PropertyFloat {
 	PropertyUnit unit;
 };
 
-inline bool operator==(const PropertyFloat& l, const PropertyFloat& r) {
-	return (l.unit == r.unit) && (l.value == r.value);
-}
-
 }

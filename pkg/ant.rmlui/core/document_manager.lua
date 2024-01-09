@@ -172,6 +172,7 @@ local function fromPoint(x, y)
 end
 
 local gesture = {}
+local active_gesture = {}
 
 function gesture.tap(doc, e, ev)
     eventListener.dispatch(doc, e, "click", ev)
@@ -197,17 +198,40 @@ function gesture.swipe(doc, e, ev)
 end
 
 function m.process_gesture(ev)
-    local f =  gesture[ev.what]
-    if not f then
+    local active = active_gesture[ev.what]
+    if active then
+        if ev.state == "ended" then
+            active_gesture[ev.what] = nil
+        end
+        local func = gesture[ev.what]
+        local doc, e = active[1], active[2]
+        ev.x = round(ev.x)
+        ev.y = round(ev.y)
+        func(doc, e, ev)
+        return true
+    end
+    if active == false then
+        if ev.state == "ended" then
+            active_gesture[ev.what] = nil
+        end
         return
     end
     local x, y = round(ev.x), round(ev.y)
     local doc, e = fromPoint(x, y)
     if e then
+        if ev.state == "began" then
+            active_gesture[ev.what] = { doc, e }
+        end
         ev.x = x
         ev.y = y
-        f(doc, e, ev)
+        local func = gesture[ev.what]
+        func(doc, e, ev)
         return true
+    else
+        if ev.state == "began" then
+            active_gesture[ev.what] = false
+        end
+        return
     end
 end
 

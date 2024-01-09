@@ -16,11 +16,11 @@ uniform vec4 u_csm_split_distances;
 uniform vec4 u_shadow_param1;
 uniform vec4 u_shadow_param2;
 
+#define u_max_cascade_level		u_shadow_param1.x
 #define u_minVariance 			u_shadow_param1.y
 #define u_shadowmap_texelsize	u_shadow_param1.z
 #define u_depthMultiplier 		u_shadow_param1.w
 
-#define u_shadow_color			u_shadow_param2.rgb
 #define u_normal_offset 		u_shadow_param2.w
 
 // omni
@@ -256,7 +256,7 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 	vec4 shadowcoord = vec4_splat(0.0);
 #ifdef USE_VIEW_SPACE_DISTANCE
 	int cascadeidx = select_cascade(distanceVS);
-	if (cascadeidx < 0)
+	if (cascadeidx < 0 || cascadeidx > (int)u_max_cascade_level)
 		return 0.0;	// not in shadow
 	shadowcoord = mul(u_csm_matrix[cascadeidx], posWS);
 #else //!USE_VIEW_SPACE_DISTANCE
