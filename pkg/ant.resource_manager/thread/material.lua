@@ -288,9 +288,6 @@ local function material_destroy(material)
 
     --DO NOT clean fx.prog to nil
     local h = PM.program_reset(fx.prog)
-    if not h then
-        h = PM.program_reset(fx.di.prog)
-    end
     bgfx.destroy(make_prog_handle(h))
 
     local function destroy_stage(stage)
