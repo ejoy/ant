@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <imgui.h>
+#include "enum.h"
 
 struct lua_State;
 
@@ -30,20 +31,25 @@ void window_message_size(struct ant_window_callback* cb, int x, int y);
 void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files);
 
 namespace ant::window {
-	enum DIRECTION : uint8_t {
-		DIRECTION_RIGHT = 1 << 0,
-		DIRECTION_LEFT = 1 << 1,
-		DIRECTION_UP = 1 << 2,
-		DIRECTION_DOWN = 1 << 3,
+	enum class swipe_direction : uint8_t {
+		right = 1 << 0,
+		left = 1 << 1,
+		up = 1 << 2,
+		down = 1 << 3,
 	};
 	enum class mouse_button : uint8_t {
 		left,
 		middle,
 		right,
 	};
+	enum class mouse_buttons : uint8_t {
+		none = 0,
+		left = 1,
+		middle = 2,
+		right = 4,
+	};
 	enum class mouse_state : uint8_t {
 		down,
-		move,
 		up,
 	};
 	enum class inputchar_type : uint8_t {
@@ -89,11 +95,16 @@ namespace ant::window {
 		keyboard_state state;
 		uint8_t press;
 	};
-	struct msg_mouse {
+	struct msg_mouseclick {
 		int x;
 		int y;
 		mouse_button what;
 		mouse_state state;
+	};
+	struct msg_mousemove {
+		int x;
+		int y;
+		mouse_buttons what;
 	};
 	struct msg_mousewheel {
 		int x;
@@ -139,12 +150,13 @@ namespace ant::window {
 		float x;
 		float y;
 		gesture_state state;
-		DIRECTION direction;
+		swipe_direction direction;
 	};
 	struct msg_suspend {
 		suspend what;
 	};
 
+ENUM_FLAG_OPERATORS(mouse_buttons)
 
 	enum class msg_type {
 		keyboard,
@@ -163,7 +175,8 @@ namespace ant::window {
 		msg_type type;
 		union {
 			struct msg_keyboard keyboard;
-			struct msg_mouse mouse;
+			struct msg_mouseclick mouseclick;
+			struct msg_mousemove mousemove;
 			struct msg_mousewheel mousewheel;
 			struct msg_inputchar inputchar;
 			struct msg_focus focus;
@@ -178,7 +191,8 @@ namespace ant::window {
 	};
 
 	void input_message(struct ant_window_callback* cb, struct msg_keyboard const& keyboard);
-	void input_message(struct ant_window_callback* cb, struct msg_mouse const& mouse);
+	void input_message(struct ant_window_callback* cb, struct msg_mouseclick const& mouseclick);
+	void input_message(struct ant_window_callback* cb, struct msg_mousemove const& mousemove);
 	void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel);
 	void input_message(struct ant_window_callback* cb, struct msg_inputchar const& inputchar);
 	void input_message(struct ant_window_callback* cb, struct msg_focus const& focus);
@@ -190,3 +204,4 @@ namespace ant::window {
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend);
 }
+

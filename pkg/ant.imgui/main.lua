@@ -44,7 +44,7 @@ end
 
 local ImGuiEvent = {}
 
-function ImGuiEvent.mouse(e)
+function ImGuiEvent.mouseclick(e)
     local btn = 0
     if e.what == "LEFT" then
         btn = 0

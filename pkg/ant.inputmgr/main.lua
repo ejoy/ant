@@ -79,12 +79,27 @@ local function create(world)
         local mg = require "mouse_gesture" (world)
         event.mousewheel = mg.mousewheel
         if world.args.ecs.enable_mouse then
-            function event.mouse(e)
+            function event.mouseclick(e)
+                world:set_mouse(e)
+                mg.mouseclick(e)
                 world:pub {"mouse", e.what, e.state, e.x, e.y}
-                mg.mouse(e)
+            end
+            function event.mousemove(e)
+                world:set_mouse(e)
+                mg.mousemove(e)
+                if e.what.LEFT then
+                    world:pub {"mouse", "LEFT", "MOVE", e.x, e.y}
+                end
+                if e.what.MIDDLE then
+                    world:pub {"mouse", "MIDDLE", "MOVE", e.x, e.y}
+                end
+                if e.what.RIGHT then
+                    world:pub {"mouse", "RIGHT", "MOVE", e.x, e.y}
+                end
             end
         else
-            event.mouse = mg.mouse
+            event.mouseclick = mg.mouseclick
+            event.mousemove = mg.mousemove
         end
     end
     return event

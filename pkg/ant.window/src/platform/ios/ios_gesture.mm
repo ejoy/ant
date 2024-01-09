@@ -106,7 +106,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     msg.state = state;
     msg.x = pt.x;
     msg.y = pt.y;
-    msg.direction = (ant::window::DIRECTION)gesture.direction;
+    msg.direction = (ant::window::swipe_direction)gesture.direction;
     ant::window::input_message(g_cb, msg);
 }
 @end

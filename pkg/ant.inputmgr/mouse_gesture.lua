@@ -188,20 +188,44 @@ return function (world)
             timestamp = e.timestamp,
         }
     end
-    function m.mouse(e)
-        if e.state == "DOWN" then
+    function m.mousemove(e)
+        if e.what.LEFT then
             world:dispatch_message {
                 type = "touch",
-                state = "began",
-                id = Mouse2Touch[e.what],
+                state = "moved",
+                id = Mouse2Touch.LEFT,
                 x = e.x,
                 y = e.y,
                 timestamp = e.timestamp,
             }
-        elseif e.state == "MOVE" then
+            mouse_move(e)
+        end
+        if e.what.MIDDLE then
             world:dispatch_message {
                 type = "touch",
                 state = "moved",
+                id = Mouse2Touch.MIDDLE,
+                x = e.x,
+                y = e.y,
+                timestamp = e.timestamp,
+            }
+        end
+        if e.what.RIGHT then
+            world:dispatch_message {
+                type = "touch",
+                state = "moved",
+                id = Mouse2Touch.RIGHT,
+                x = e.x,
+                y = e.y,
+                timestamp = e.timestamp,
+            }
+        end
+    end
+    function m.mouseclick(e)
+        if e.state == "DOWN" then
+            world:dispatch_message {
+                type = "touch",
+                state = "began",
                 id = Mouse2Touch[e.what],
                 x = e.x,
                 y = e.y,
@@ -220,8 +244,6 @@ return function (world)
         if e.what == "LEFT" then
             if e.state == "DOWN" then
                 mouse_down(e)
-            elseif e.state == "MOVE" then
-                mouse_move(e)
             elseif e.state == "UP" then
                 mouse_up(e)
             end
