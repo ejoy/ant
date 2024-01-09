@@ -189,11 +189,11 @@ protected:
 	PseudoClassSet pseudo_classes = 0;
 	ElementBackground geometry;
 	float font_size = 16.f;
-	Style::TableValue animation_properties = Style::Instance().Create();
-	Style::TableValue inline_properties = Style::Instance().Create();
-	Style::TableValue definition_properties = Style::Instance().Create();
-	Style::TableCombination local_properties = Style::Instance().Merge(animation_properties, inline_properties, definition_properties);
-	Style::TableCombination global_properties = Style::Instance().Inherit(local_properties);
+	Style::TableRef animation_properties = Style::Instance().Create();
+	Style::TableRef inline_properties = Style::Instance().Create();
+	Style::TableRef definition_properties = Style::Instance().Create();
+	Style::TableRef local_properties = Style::Instance().Inherit(animation_properties, inline_properties, definition_properties);
+	Style::TableRef global_properties = Style::Instance().Inherit(local_properties);
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	ElementAabb aabb;

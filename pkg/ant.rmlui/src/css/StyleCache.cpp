@@ -10,14 +10,14 @@ extern "C" {
 constexpr inline style_handle_t STYLE_NULL = {0};
 
 namespace Rml::Style {
-    void TableRef::AddRef() {
+    void TableRef::AddRef() const {
         if (idx == 0) {
             return;
         }
         Instance().TableAddRef(*this);
     }
 
-    void TableRef::Release() {
+    void TableRef::Release() const {
         if (idx == 0) {
             return;
         }
@@ -37,72 +37,69 @@ namespace Rml::Style {
         style_deletecache(c);
     }
 
-    TableValue Cache::Create() {
+    TableRef Cache::Create() {
         style_handle_t s = style_create(c, 0, NULL);
         return {s.idx};
     }
 
-    TableValue Cache::Create(const PropertyVector& vec) {
+    TableRef Cache::Create(const PropertyVector& vec) {
         style_handle_t s = style_create(c, (int)vec.size(), (int*)vec.data());
-        return {s.idx};
+        return { s.idx };
     }
 
-    TableCombination Cache::Merge(const std::span<TableValue>& maps) {
-        if (maps.empty()) {
+    TableRef Cache::Merge(const std::span<TableValue>& tables) {
+        if (tables.empty()) {
             style_handle_t s = style_null(c);
             return {s.idx};
         }
-        style_handle_t s = {maps[0].idx};
-        for (size_t i = 1; i < maps.size(); ++i) {
-            s = style_inherit(c, s, {maps[i].idx}, 0);
+        style_handle_t s = {tables[0].idx};
+        for (size_t i = 1; i < tables.size(); ++i) {
+            s = style_inherit(c, s, {tables[i].idx}, 0);
         }
+        style_addref(c, s);
         return {s.idx};
     }
 
-    TableCombination Cache::Merge(TableValue A, TableValue B, TableValue C) {
+    TableRef Cache::Inherit(const TableRef& A, const TableRef& B, const TableRef& C) {
         style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
         style_addref(c, s);
         return {s.idx};
     }
 
-    TableCombination Cache::Inherit(TableCombination child, TableCombination parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
+    TableRef Cache::Inherit(const TableRef& A, const TableRef& B) {
+        style_handle_t s = style_inherit(c, {A.idx}, {B.idx}, 1);
         style_addref(c, s);
         return {s.idx};
     }
 
-    TableCombination Cache::Inherit(TableCombination child) {
-        style_addref(c, {child.idx});
-        return {child.idx};
+    TableRef Cache::Inherit(const TableRef& A) {
+        style_addref(c, {A.idx});
+        return {A.idx};
     }
 
-    bool Cache::Assgin(TableValue to, TableCombination from) {
+    bool Cache::Assgin(const TableRef& to, const TableRef& from) {
         return 0 != style_assign(c, {to.idx}, {from.idx});
     }
 
-    bool Cache::Compare(TableValue a, TableCombination b) {
+    bool Cache::Compare(const TableRef& a, const TableRef& b) {
         return 0 != style_compare(c, {a.idx}, {b.idx});
     }
 
-    void Cache::Clone(TableValue to, TableValue from) {
+    void Cache::Clone(const TableRef& to, const TableRef& from) {
         style_assign(c, {to.idx}, {from.idx});
     }
 
-    void Cache::Release(TableValueOrCombination s) {
-        style_release(c, {s.idx});
-    }
-
-    bool Cache::SetProperty(TableValue s, PropertyId id, const Property& prop) {
+    bool Cache::SetProperty(const TableRef& s, PropertyId id, const Property& prop) {
         int attrib_id = prop.RawAttribId();
         return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
 
-    bool Cache::DelProperty(TableValue s, PropertyId id) {
+    bool Cache::DelProperty(const TableRef& s, PropertyId id) {
         int removed_key[1] = { (int)(uint8_t)id };
         return !!style_modify(c, {s.idx}, 0, nullptr, 1, removed_key);
     }
 
-    PropertyIdSet Cache::SetProperty(TableValue s, const PropertyVector& vec) {
+    PropertyIdSet Cache::SetProperty(const TableRef& s, const PropertyVector& vec) {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& v : vec) {
@@ -121,7 +118,7 @@ namespace Rml::Style {
         return change;
     }
 
-    PropertyIdSet Cache::DelProperty(TableValue s, const PropertyIdSet& set) {
+    PropertyIdSet Cache::DelProperty(const TableRef& s, const PropertyIdSet& set) {
         std::vector<int> removed_key(set.size());
         size_t i = 0;
         for (auto id : set) {
@@ -142,17 +139,17 @@ namespace Rml::Style {
         return change;
     }
 
-    Property Cache::Find(TableValueOrCombination s, PropertyId id) {
+    Property Cache::Find(const TableRef& s, PropertyId id) {
         int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
         return { attrib_id };
     }
 
-    bool Cache::Has(TableValueOrCombination s, PropertyId id) {
+    bool Cache::Has(const TableRef& s, PropertyId id) {
         int attrib_id = style_find(c, {s.idx}, (uint8_t)id);
         return attrib_id != -1;
     }
 
-    void Cache::Foreach(TableValueOrCombination s, PropertyIdSet& set) {
+    void Cache::Foreach(const TableRef& s, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
             int attrib_id = style_index(c, {s.idx}, i);
             if (attrib_id == -1) {
@@ -164,7 +161,7 @@ namespace Rml::Style {
         }
     }
 
-    void Cache::Foreach(TableValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
+    void Cache::Foreach(const TableRef& s, PropertyUnit unit, PropertyIdSet& set) {
         for (int i = 0;; ++i) {
             Property prop { style_index(c, {s.idx}, i) };
             if (!prop) {
@@ -176,7 +173,7 @@ namespace Rml::Style {
         }
     }
 
-    static auto Fetch(style_cache* c, TableValueOrCombination t) {
+    static auto Fetch(style_cache* c, const TableRef& t) {
         std::array<int, (size_t)EnumCountV<PropertyId>> datas;
         datas.fill(-1);
         for (int i = 0;; ++i) {
@@ -191,7 +188,7 @@ namespace Rml::Style {
         return datas;
     }
 
-    PropertyIdSet Cache::Diff(TableValueOrCombination a, TableValueOrCombination b) {
+    PropertyIdSet Cache::Diff(const TableRef& a, const TableRef& b) {
         PropertyIdSet ids;
         auto a_datas = Fetch(c, a);
         auto b_datas = Fetch(c, b);
@@ -236,11 +233,11 @@ namespace Rml::Style {
         style_attrib_release(c, prop.RawAttribId());
     }
 
-    void Cache::TableAddRef(TableValueOrCombination s) {
+    void Cache::TableAddRef(const TableRef& s) {
         style_addref(c, { s.idx });
     }
 
-    void Cache::TableRelease(TableValueOrCombination s) {
+    void Cache::TableRelease(const TableRef& s) {
         style_release(c, { s.idx });
     }
 

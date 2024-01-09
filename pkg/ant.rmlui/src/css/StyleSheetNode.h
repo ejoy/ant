@@ -34,11 +34,11 @@ struct StyleSheetRequirements {
 
 class StyleSheetNode {
 public:
-	StyleSheetNode(const std::string& rule_name, Style::TableValue props);
+	StyleSheetNode(const std::string& rule_name, const Style::TableRef& props);
 	void SetSpecificity(int rule_specificity);
 	bool IsApplicable(const Element* element) const;
 	int GetSpecificity() const;
-	Style::TableValue GetProperties() const;
+	const Style::TableRef& GetProperties() const;
 private:
 	void ImportRequirements(std::string rule_name);
 private:

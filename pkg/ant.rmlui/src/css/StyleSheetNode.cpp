@@ -172,7 +172,7 @@ int StyleSheetRequirements::GetSpecificity() const {
 	return specificity;
 }
 
-StyleSheetNode::StyleSheetNode(const std::string& rule_name, Style::TableValue props)
+StyleSheetNode::StyleSheetNode(const std::string& rule_name, const Style::TableRef& props)
 	: properties(props) {
 	ImportRequirements(rule_name);
 }
@@ -210,7 +210,7 @@ bool StyleSheetNode::IsApplicable(const Element* const in_element) const {
 	return requirements[0].MatchStructuralSelector(in_element);
 }
 
-Style::TableValue StyleSheetNode::GetProperties() const {
+const Style::TableRef& StyleSheetNode::GetProperties() const {
 	return properties;
 }
 

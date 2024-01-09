@@ -85,13 +85,6 @@ Element::Element(Document* owner, const std::string& tag)
 Element::~Element() {
 	assert(GetParentNode() == nullptr);
 	assert(childnodes.empty());
-
-	auto& c = Style::Instance();
-	c.Release(animation_properties);
-	c.Release(inline_properties);
-	c.Release(definition_properties);
-	c.Release(local_properties);
-	c.Release(global_properties);
 }
 
 void Element::Update() {
@@ -713,7 +706,6 @@ std::string Element::GetOuterHTML() const {
 
 void Element::RefreshProperties() {
 	auto& c = Style::Instance();
-	c.Release(global_properties);
 	if (auto parent = GetParentNode()) {
 		DirtyDefinition();
 		DirtyInheritableProperties();
