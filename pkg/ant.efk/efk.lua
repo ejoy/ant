@@ -12,6 +12,7 @@ local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
 local iexposure = ecs.require "ant.camera|exposure"
 local hwi       = import_package "ant.hwi"
+local mc        = import_package "ant.math".constant
 
 local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
 
@@ -261,7 +262,7 @@ local function get_light_color(dl)
     local camera <close> = world:entity(mq.camera_ref)
     local ev = iexposure.exposure(camera)
     local intensity = ilight.intensity(dl) * ev
-    local color = normalize_color(math3d.mul(intensity, math3d.vector(ilight.color(dl))))
+    local color = intensity == 0 and mc.ZERO_PT or normalize_color(math3d.mul(intensity, math3d.vector(ilight.color(dl))))
     
     local r, g, b, a = math3d.index(math3d.floor(math3d.mul(255, color)), 1, 2, 3, 4)
     return string.pack("<BBBB", r, g, b, a)
