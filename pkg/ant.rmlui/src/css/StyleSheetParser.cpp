@@ -244,7 +244,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 				{
 					value = StringUtilities::StripWhitespace(value);
 
-					if (!StyleSheetSpecification::ParsePropertyDeclaration(vec, name, value))
+					if (!StyleSheetSpecification::ParseDeclaration(vec, name, value))
 						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), source_url.data(), line_number);
 
 					name.clear();
@@ -282,7 +282,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 	{
 		value = StringUtilities::StripWhitespace(value);
 
-		if (!StyleSheetSpecification::ParsePropertyDeclaration(vec, name, value))
+		if (!StyleSheetSpecification::ParseDeclaration(vec, name, value))
 			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), source_url.data(), line_number);
 	}
 	else if (!name.empty() || !value.empty())

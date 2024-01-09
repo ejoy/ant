@@ -12,8 +12,8 @@ public:
 	static void Shutdown();
 	static const Style::TableRef& GetDefaultProperties();
 	static const PropertyIdSet& GetInheritableProperties();
-	static bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name);
-	static bool ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value);
+	static bool ParseDeclaration(PropertyIdSet& set, const std::string& property_name);
+	static bool ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value);
 };
 
 }

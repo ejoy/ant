@@ -227,7 +227,7 @@ Property PropertyParseTransition(PropertyId id, const std::string& value) {
 				}
 				else {
 					PropertyIdSet properties;
-					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, argument)) {
+					if (!StyleSheetSpecification::ParseDeclaration(properties, argument)) {
 						return {};
 					}
 					target_property_ids |= properties;

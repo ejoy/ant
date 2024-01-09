@@ -54,7 +54,6 @@ struct ShorthandDefinition {
 struct PropertyRegister {
 	StyleSheetSpecificationInstance& instance;
 	PropertyDefinition& definition;
-	PropertyParser    GetParser(const std::string& parser_name);
 	PropertyRegister& AddParser(const std::string& parser_name);
 	PropertyRegister& AddParser(PropertyParser new_parser);
 };
@@ -81,7 +80,6 @@ static constexpr PropertyIdSet InheritableProperties = GetInheritableProperties(
 static_assert((InheritableProperties & LayoutProperties).empty());
 
 struct StyleSheetSpecificationInstance {
-	~StyleSheetSpecificationInstance();
 	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name);
 	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value);
 	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
@@ -92,8 +90,8 @@ struct StyleSheetSpecificationInstance {
 	const Style::TableRef& GetDefaultProperties() const;
 	const PropertyIdSet& GetInheritableProperties() const;
 	const ShorthandDefinition& GetShorthandDefinition(ShorthandId id) const;
-	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
-	bool ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const;
+	bool ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const;
+	bool ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const;
 	bool ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) const;
 	void ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const;
 	bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::string& property_value) const;
@@ -117,13 +115,6 @@ struct StyleSheetSpecificationInstance {
 	std::unordered_map<PropertyId, std::string> unparsed_default;
 	Style::TableRef default_value;
 };
-
-PropertyParser PropertyRegister::GetParser(const std::string& parser_name) {
-	auto iterator = instance.parsers.find(parser_name);
-	if (iterator == instance.parsers.end())
-		return nullptr;
-	return iterator->second;
-}
 
 PropertyRegister& PropertyRegister::AddParser(const std::string& parser_name) {
 	auto iterator = instance.parsers.find(parser_name);
@@ -181,10 +172,6 @@ std::optional<std::string> MapGetName(std::unordered_map<std::string, T> const& 
 		}
 	}
 	return std::nullopt;
-}
-
-StyleSheetSpecificationInstance::~StyleSheetSpecificationInstance() {
-	Style::Shutdown();
 }
 
 PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value) {
@@ -285,7 +272,7 @@ void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& s
 	}
 }
 
-bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const {
+bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const {
 	auto property_id = MapGet(property_map, property_name);
 	if (property_id) {
 		set.insert(*property_id);
@@ -299,7 +286,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& se
 	return false;
 }
 
-bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const {
+bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const {
 	auto property_id = MapGet(property_map, property_name);
 	if (property_id) {
 		if (ParsePropertyDeclaration(vec, *property_id, property_value)) {
@@ -881,8 +868,8 @@ static StyleSheetSpecificationInstance* instance = nullptr;
 
 bool StyleSheetSpecification::Initialise() {
 	if (instance == nullptr) {
-		instance = new StyleSheetSpecificationInstance();
 		Style::Initialise(InheritableProperties);
+		instance = new StyleSheetSpecificationInstance();
 		instance->RegisterProperties();
 	}
 	return true;
@@ -891,6 +878,7 @@ bool StyleSheetSpecification::Initialise() {
 void StyleSheetSpecification::Shutdown() {
 	if (instance != nullptr) {
 		delete instance;
+		Style::Shutdown();
 	}
 }
 
@@ -902,12 +890,12 @@ const PropertyIdSet & StyleSheetSpecification::GetInheritableProperties() {
 	return instance->GetInheritableProperties();
 }
 
-bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) {
-	return instance->ParsePropertyDeclaration(set, property_name);
+bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) {
+	return instance->ParseDeclaration(set, property_name);
 }
 
-bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {
-	return instance->ParsePropertyDeclaration(vec, property_name, property_value);
+bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {
+	return instance->ParseDeclaration(vec, property_name, property_value);
 }
 
 }

@@ -1392,7 +1392,7 @@ Property Element::GetLocalProperty(PropertyId id) const {
 bool Element::SetProperty(const std::string& name, const std::string& value) {
 	bool changed;
 	PropertyVector properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
+	if (!StyleSheetSpecification::ParseDeclaration(properties, name, value)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
 		return false;
 	}
@@ -1405,7 +1405,7 @@ bool Element::SetProperty(const std::string& name, const std::string& value) {
 bool Element::DelProperty(const std::string& name) {
 	bool changed;
 	PropertyIdSet properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+	if (!StyleSheetSpecification::ParseDeclaration(properties, name)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
 		return false;
 	}
@@ -1417,7 +1417,7 @@ bool Element::DelProperty(const std::string& name) {
 
 std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	PropertyIdSet properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+	if (!StyleSheetSpecification::ParseDeclaration(properties, name)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
 		return std::nullopt;
 	}
