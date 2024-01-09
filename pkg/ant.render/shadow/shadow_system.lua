@@ -239,17 +239,17 @@ local function init_light_info(C, D, li)
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 	local Lw = math3d.inverse_fast(Lv)
 
-	li.Lv			= mu.M3D_mark(li.Lv, Lv)
-	li.Lw			= mu.M3D_mark(li.Lw, Lw)
-	li.Cv			= mu.M3D_mark(li.Cv, Cv)
+	li.Lv			= Lv
+	li.Lw			= Lw
+	li.Cv			= Cv
 	if useLiSPSM then
-		li.Lr			= mu.M3D_mark(li.Lr, LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0)))
+		li.Lr			= LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0))
 	end
-	li.Lv2Cv		= mu.M3D_mark(li.Lv2Cv,		math3d.mul(Cv, Lw))
-	li.viewdir		= mu.M3D_mark(li.viewdir,	viewdir)
-	li.lightdir		= mu.M3D_mark(li.lightdir,	lightdirWS)
-	li.rightdir		= mu.M3D_mark(li.rightdir,	rightdir)
-	li.camerapos	= mu.M3D_mark(li.camerapos,	camerapos)
+	li.Lv2Cv		= math3d.mul(Cv, Lw)
+	li.viewdir		= viewdir
+	li.lightdir		= lightdirWS
+	li.rightdir		= rightdir
+	li.camerapos	= camerapos
 end
 
 local function build_sceneaabbLS(si, li)

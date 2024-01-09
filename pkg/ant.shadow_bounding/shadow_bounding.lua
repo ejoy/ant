@@ -18,3 +18,10 @@ function sb_sys:init()
     }
 end
 
+function sb_sys:end_frame()
+    local sb = w:first "shadow_bounding:in".shadow_bounding
+    -- do clear
+    sb.scene_info = {}
+    sb.light_info = {}
+end
+

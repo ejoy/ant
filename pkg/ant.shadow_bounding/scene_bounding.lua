@@ -81,14 +81,14 @@ local function build_scene_info(C, sb)
 	local si = sb.scene_info
 	if math3d.aabb_isvalid(PSR) then
 		if math3d.aabb_isvalid(PSC) then
-			si.PSC = mu.M3D_mark(si.PSC, PSC)
+			si.PSC = PSC
 		end
 
 		si.zn, si.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
 		si.ln, si.lf = ln, lf
 		si.nearHit, si.farHit = nearHit, farHit
 	
-		si.PSR = mu.M3D_mark(si.PSR, PSR)
+		si.PSR = PSR
 	end
 end
 
