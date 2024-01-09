@@ -35,7 +35,7 @@ local uniform_scale = false
 local local_space = false
 
 local function cvt2scenept(x, y)
-    return x - iviewport.viewrect.x, y - iviewport.viewrect.y
+    return x - iviewport.device_size.x, y - iviewport.device_size.y
 end
 
 function gizmo:update()
@@ -700,7 +700,6 @@ end
 local camera_event = world:sub {"camera"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_down = world:sub {"mousedown"}
-local mouse_move = world:sub {"mousemove"}
 local mouse_up = world:sub {"mouseup"}
 local gizmo_mode_event = world:sub {"GizmoMode"}
 
@@ -1048,20 +1047,19 @@ local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
 	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
-	for _, what, x, y in mouse_move:unpack() do
-		x, y = cvt2scenept(x, y)
-		if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
-			last_mouse_pos_x = x
-			last_mouse_pos_y = y
-			local mx, my = x, y
-			if select_light_gizmo(mx, my) == 0 then
-				if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
-					local axis = select_axis(mx, my)
-					gizmo:highlight_axis_or_plane(axis)
-				elseif gizmo.mode == gizmo_const.ROTATE then
-					gizmo:hide_rotate_fan()
-					select_rotate_axis(mx, my)
-				end
+	local mp = world:get_mouse()
+	local x, y = cvt2scenept(mp.x, mp.y)
+	if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
+		last_mouse_pos_x = x
+		last_mouse_pos_y = y
+		local mx, my = x, y
+		if select_light_gizmo(mx, my) == 0 then
+			if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
+				local axis = select_axis(mx, my)
+				gizmo:highlight_axis_or_plane(axis)
+			elseif gizmo.mode == gizmo_const.ROTATE then
+				gizmo:hide_rotate_fan()
+				select_rotate_axis(mx, my)
 			end
 		end
 	end

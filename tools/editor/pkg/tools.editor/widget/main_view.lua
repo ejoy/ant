@@ -16,7 +16,7 @@ local drag_file
 local m = {}
 
 local function cvt2scenept(x, y)
-    return x - iviewport.viewrect.x, y - iviewport.viewrect.y
+    return x - iviewport.device_size.x, y - iviewport.device_size.y
 end
 
 local function in_view(x, y)
