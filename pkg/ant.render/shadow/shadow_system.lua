@@ -175,13 +175,6 @@ local function commit_csm_matrices_attribs()
 	imaterial.system_attrib_update("u_csm_split_distances",	split_distances_VS)
 end
 
-local function M3D(o, n)
-	if o then
-		math3d.unmark(o)
-	end
-	return math3d.mark(n)
-end
-
 local function calc_light_view_nearfar(intersectpointsLS, sceneaabbLS)
 	local intersectaabb = math3d.minmax(intersectpointsLS)
 	local scene_farLS = math3d.index(math3d.array_index(sceneaabbLS, 2), 3)
@@ -200,6 +193,7 @@ local function update_shadow_matrices(si, li, c)
 	local Lp
 	if mc.NULL ~= intersectpointsLS then
 		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
+		assert(f > n)
 		if moveCameraToOrigin then
 			Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
 
@@ -236,7 +230,7 @@ local function update_shadow_matrices(si, li, c)
 	update_camera(c, li.Lv, Lp)
 end
 
-local function init_light_info(C, D)
+local function init_light_info(C, D, li)
     local lightdirWS = math3d.index(D.scene.worldmat, 3)
 	local Cv = C.camera.viewmat
 
@@ -245,18 +239,17 @@ local function init_light_info(C, D)
 	local Lv = math3d.lookto(mc.ZERO_PT, lightdirWS, rightdir)
 	local Lw = math3d.inverse_fast(Lv)
 
-	return {
-		Lv			= Lv,
-		Lw			= Lw,
-		Cv			= Cv,
-		Lr			= useLiSPSM and LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0)) or nil,
-		Lv2Cv		= math3d.mul(Cv, Lw),
-	
-		viewdir		= viewdir,
-		lightdir	= lightdirWS,
-		rightdir	= rightdir,
-		camerapos	= camerapos,
-	}
+	li.Lv			= mu.M3D_mark(li.Lv, Lv)
+	li.Lw			= mu.M3D_mark(li.Lw, Lw)
+	li.Cv			= mu.M3D_mark(li.Cv, Cv)
+	if useLiSPSM then
+		li.Lr			= mu.M3D_mark(li.Lr, LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0)))
+	end
+	li.Lv2Cv		= mu.M3D_mark(li.Lv2Cv,		math3d.mul(Cv, Lw))
+	li.viewdir		= mu.M3D_mark(li.viewdir,	viewdir)
+	li.lightdir		= mu.M3D_mark(li.lightdir,	lightdirWS)
+	li.rightdir		= mu.M3D_mark(li.rightdir,	rightdir)
+	li.camerapos	= mu.M3D_mark(li.camerapos,	camerapos)
 end
 
 local function build_sceneaabbLS(si, li)
@@ -282,8 +275,16 @@ local function build_sceneaabbLS(si, li)
 	return PSRLS
 end
 
-function shadow_sys:update_camera_depend()
+local function check_changed()
 	local C = irq.main_camera_changed()
+	if C then
+		w:extend(C, "scene:in camera:in")
+		return C
+	end
+end
+
+function shadow_sys:update_camera()
+	local C = check_changed()
 	if not C then
 		return
 	end
@@ -293,28 +294,35 @@ function shadow_sys:update_camera_depend()
 		return
 	end
 
-	w:extend(C, "scene:in camera:in")
+	local sb = w:first "shadow_bounding:in".shadow_bounding
+	init_light_info(C, D, sb.light_info)
+end
+
+function shadow_sys:update_camera_depend()
+	local C = check_changed()
+	if not C then
+		return
+	end
 
 	local sb = w:first "shadow_bounding:in".shadow_bounding
-	
-	local li = init_light_info(C, D)
-	sb.sceneaabbLS = build_sceneaabbLS(sb, li)
+	local si, li = sb.scene_info, sb.light_info
+	si.sceneaabbLS = build_sceneaabbLS(si, li)
 
 	local CF = C.camera.frustum
-	sb.view_near, sb.view_far = CF.n, CF.f
-	local zn, zf = assert(sb.zn), assert(sb.zf)
+	si.view_near, si.view_far = CF.n, CF.f
+	local zn, zf = assert(si.zn), assert(si.zf)
 	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
 	local csmfrustums = isc.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
-		ce.scene.worldmat = M3D(ce.scene.worldmat, li.Lw)
+		ce.scene.worldmat = mu.M3D_mark(ce.scene.worldmat, li.Lw)
 
         local c = ce.camera
         local csm = e.csm
 		c.viewfrustum = csmfrustums[csm.index]
-		update_shadow_matrices(sb, li, c)
+		update_shadow_matrices(si, li, c)
 		mark_camera_changed(ce)
 
 		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)

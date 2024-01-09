@@ -44,9 +44,8 @@ local function isChanged()
 		changed = false
 		return true
 	end
-	for _ in w:select "scene_changed light" do
-		return true
-	end
+
+	return w:check "scene_changed light"
 	--TODO state
 end
 

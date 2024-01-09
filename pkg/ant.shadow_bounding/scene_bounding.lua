@@ -26,7 +26,7 @@ function sb_sys:entity_remove()
     end
 end
 
-local function build_znzf(objaabb, zn, zf)
+local function build_nearfar(objaabb, zn, zf)
 	local n, f = mu.aabb_minmax_index(objaabb, 3)
 	return math.min(zn, n), math.max(zf, f)
 end
@@ -42,6 +42,9 @@ local function build_scene_info(C, sb)
 	local mqidx = queuemgr.queue_index "main_queue"
 
 	local zn, zf = math.maxinteger, -math.maxinteger
+	local ln, lf = math.maxinteger, -math.maxinteger
+
+	local Lv = assert(sb.light_info).Lv
 	local Cv = C.camera.viewmat
 	local PSC, PSR = math3d.aabb(), math3d.aabb()
 
@@ -50,7 +53,10 @@ local function build_scene_info(C, sb)
 			if receiveshadow then
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
-					zn, zf = build_znzf(math3d.aabb_transform(Cv, sceneaabb), zn, zf)
+					zn, zf = build_nearfar(math3d.aabb_transform(Cv, sceneaabb), zn, zf)
+					if Lv then
+						ln, lf = build_nearfar(math3d.aabb_transform(Lv, sceneaabb), ln, lf)
+					end
 					PSR = math3d.aabb_merge(PSR, sceneaabb)
 				end
 			end
@@ -72,15 +78,17 @@ local function build_scene_info(C, sb)
 		merge_obj_PSC_PSR(e.hitch, e.receive_shadow, e.cast_shadow, e.bounding)
 	end
 
+	local si = sb.scene_info
 	if math3d.aabb_isvalid(PSR) then
 		if math3d.aabb_isvalid(PSC) then
-			sb.PSC = math3d.marked_aabb(PSC)
+			si.PSC = mu.M3D_mark(si.PSC, PSC)
 		end
 
-		sb.zn, sb.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
-		sb.nearHit, sb.farHit = nearHit, farHit
+		si.zn, si.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
+		si.ln, si.lf = ln, lf
+		si.nearHit, si.farHit = nearHit, farHit
 	
-		sb.PSR = math3d.marked_aabb(PSR)
+		si.PSR = mu.M3D_mark(si.PSR, PSR)
 	end
 end
 

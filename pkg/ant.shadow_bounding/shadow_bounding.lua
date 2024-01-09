@@ -10,7 +10,10 @@ function sb_sys:init()
             "ant.shadow_bounding|shadow_bounding",
         },
         data = {
-            shadow_bounding = {}
+            shadow_bounding = {
+                scene_info = {},
+                light_info = {},
+            }
         }
     }
 end

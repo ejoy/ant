@@ -537,6 +537,13 @@ function util.iter_m3darary(m3darray)
 	end, m3darray, 0
 end
 
+function util.M3D_mark(old, new)
+	if old then
+		math3d.unmark(old)
+	end
+	return math3d.mark(new)
+end
+
 return util
 
 end
