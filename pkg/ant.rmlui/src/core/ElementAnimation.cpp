@@ -71,6 +71,10 @@ void ElementInterpolate::Reset(Element& element, const Property& in_prop, const 
 			std::unreachable();
 		}
 	}
+	else {
+		p0 = in_prop;
+		p1 = out_prop;
+	}
 }
 
 Property ElementInterpolate::Update(float t0, float t1, float t, const Tween& tween) {
