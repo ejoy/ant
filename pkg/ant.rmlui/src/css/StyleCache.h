@@ -17,6 +17,43 @@ namespace Rml::Style {
         int idx;
     };
 
+    class TableRef: public TableValue {
+    public:
+        TableRef(TableValue v)
+            : TableValue(v) {
+            AddRef();
+        }
+        ~TableRef() {
+            Release();
+        }
+        TableRef(TableRef&& rhs)
+            : TableValue(rhs) {
+            rhs.idx = 0;
+        }
+        TableRef(const TableRef& rhs)
+            : TableValue(rhs) {
+            AddRef();
+        }
+        TableRef& operator=(TableRef&& rhs) {
+            if (this != &rhs) {
+                Release();
+                idx = rhs.idx;
+                rhs.idx = 0;
+            }
+            return *this;
+        }
+        TableRef& operator=(const TableRef& rhs) {
+            if (this != &rhs) {
+                Release();
+                idx = rhs.idx;
+                AddRef();
+            }
+            return *this;
+        }
+        void AddRef();
+        void Release();
+    };
+
     class Cache {
     public:
         Cache(const PropertyIdSet& inherit);
@@ -46,6 +83,8 @@ namespace Rml::Style {
         std::span<const std::byte> GetPropertyData(Property prop);
         void                       PropertyAddRef(Property prop);
         void                       PropertyRelease(Property prop);
+        void                       TableAddRef(TableValueOrCombination s);
+        void                       TableRelease(TableValueOrCombination s);
 
     private:
         style_cache* c;

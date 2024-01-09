@@ -10,6 +10,20 @@ extern "C" {
 constexpr inline style_handle_t STYLE_NULL = {0};
 
 namespace Rml::Style {
+    void TableRef::AddRef() {
+        if (idx == 0) {
+            return;
+        }
+        Instance().TableAddRef(*this);
+    }
+
+    void TableRef::Release() {
+        if (idx == 0) {
+            return;
+        }
+        Instance().TableRelease(*this);
+    }
+
     Cache::Cache(const PropertyIdSet& inherit) {
         uint8_t inherit_mask[128] = {0};
         for (auto id : inherit) {
@@ -220,6 +234,14 @@ namespace Rml::Style {
 
     void Cache::PropertyRelease(Property prop) {
         style_attrib_release(c, prop.RawAttribId());
+    }
+
+    void Cache::TableAddRef(TableValueOrCombination s) {
+        style_addref(c, { s.idx });
+    }
+
+    void Cache::TableRelease(TableValueOrCombination s) {
+        style_release(c, { s.idx });
     }
 
     static Cache* cahce = nullptr;

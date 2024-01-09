@@ -11,71 +11,6 @@
 
 namespace Rml {
 
-static StructuralSelector GetSelector(const std::string& name) {
-	const size_t parameter_start = name.find('(');
-	auto func = (parameter_start == std::string::npos)
-			? CreateSelector(name)
-			: CreateSelector(name.substr(0, parameter_start))
-			;
-	if (!func)
-		return StructuralSelector(nullptr, 0, 0);
-
-	// Parse the 'a' and 'b' values.
-	int a = 1;
-	int b = 0;
-
-	const size_t parameter_end = name.find(')', parameter_start + 1);
-	if (parameter_start != std::string::npos && parameter_end != std::string::npos) {
-		std::string parameters = StringUtilities::StripWhitespace(name.substr(parameter_start + 1, parameter_end - (parameter_start + 1)));
-
-		// Check for 'even' or 'odd' first.
-		if (parameters == "even") {
-			a = 2;
-			b = 0;
-		}
-		else if (parameters == "odd") {
-			a = 2;
-			b = 1;
-		}
-		else {
-			// Alrighty; we've got an equation in the form of [[+/-]an][(+/-)b]. So, foist up, we split on 'n'.
-			const size_t n_index = parameters.find('n');
-			if (n_index == std::string::npos) {
-				// The equation is 0n + b. So a = 0, and we only have to parse b.
-				a = 0;
-				b = atoi(parameters.c_str());
-			}
-			else {
-				if (n_index == 0)
-					a = 1;
-				else {
-					const std::string a_parameter = parameters.substr(0, n_index);
-					if (StringUtilities::StripWhitespace(a_parameter) == "-")
-						a = -1;
-					else
-						a = atoi(a_parameter.c_str());
-				}
-
-				size_t pm_index = parameters.find('+', n_index + 1);
-				if (pm_index != std::string::npos)
-					b = 1;
-				else {
-					pm_index = parameters.find('-', n_index + 1);
-					if (pm_index != std::string::npos)
-						b = -1;
-				}
-
-				if (n_index == parameters.size() - 1 || pm_index == std::string::npos)
-					b = 0;
-				else
-					b = b * atoi(parameters.data() + pm_index + 1);
-			}
-		}
-	}
-
-	return StructuralSelector(func, a, b);
-}
-
 static bool IsValidIdentifier(const std::string& str) {
 	if (str.empty())
 		return false;
@@ -163,15 +98,13 @@ bool StyleSheetParser::Parse(std::string_view data, StyleSheet& style_sheet, std
 					PropertyVector properties;
 					if (!ReadProperties(properties))
 						continue;
-
+					Style::TableRef style_properties = Style::Instance().Create(properties);
 					std::vector<std::string> rule_name_list;
 					StringUtilities::ExpandString(rule_name_list, pre_token_str, ',');
-
-					// Add style nodes to the root of the tree
 					for (size_t i = 0; i < rule_name_list.size(); i++) {
-						ImportProperties(style_sheet, rule_name_list[i], properties);
+						StyleSheetNode node(rule_name_list[i], style_properties);
+						style_sheet.AddNode(std::move(node));
 					}
-
 					rule_count++;
 				}
 				else if (token == '@')
@@ -358,101 +291,6 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 	}
 	
 	return true;
-}
-
-void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties)
-{
-	StyleSheetNode node;
-	std::vector<std::string> nodes;
-
-	// Find child combinators, the RCSS '>' rule.
-	size_t i_child = rule_name.find('>');
-	while (i_child != std::string::npos)
-	{
-		// So we found one! Next, we want to format the rule such that the '>' is located at the 
-		// end of the left-hand-side node, and that there is a space to the right-hand-side. This ensures that
-		// the selector is applied to the "parent", and that parent and child are expanded properly below.
-		size_t i_begin = i_child;
-		while (i_begin > 0 && rule_name[i_begin - 1] == ' ')
-			i_begin--;
-
-		const size_t i_end = i_child + 1;
-		rule_name.replace(i_begin, i_end - i_begin, "> ");
-		i_child = rule_name.find('>', i_begin + 1);
-	}
-
-	// Expand each individual node separated by spaces. Don't expand inside parenthesis because of structural selectors.
-	StringUtilities::ExpandString2(nodes, rule_name, ' ', '(', ')', true);
-
-	// Create each node going down the tree
-	for (size_t i = 0; i < nodes.size(); i++)
-	{
-		const std::string& name = nodes[i];
-		
-		StyleSheetRequirements requirements;
-		std::vector<std::string> pseudo_classes;
-
-		size_t index = 0;
-		while (index < name.size())
-		{
-			size_t start_index = index;
-			size_t end_index = index + 1;
-
-			// Read until we hit the next identifier.
-			while (end_index < name.size() &&
-				   name[end_index] != '#' &&
-				   name[end_index] != '.' &&
-				   name[end_index] != ':' &&
-				   name[end_index] != '>')
-				end_index++;
-
-			std::string identifier = name.substr(start_index, end_index - start_index);
-			if (!identifier.empty())
-			{
-				switch (identifier[0])
-				{
-					case '#':	requirements.id = identifier.substr(1); break;
-					case '.':	requirements.class_names.push_back(identifier.substr(1)); break;
-					case ':':
-					{
-						std::string pseudo_class_name = identifier.substr(1);
-						StructuralSelector node_selector = GetSelector(pseudo_class_name);
-						if (node_selector.selector)
-							requirements.structural_selectors.push_back(node_selector);
-						else
-							pseudo_classes.push_back(pseudo_class_name);
-					}
-					break;
-					case '>':	requirements.child_combinator = true; break;
-
-					default:	if(identifier != "*") requirements.tag = identifier;
-				}
-			}
-
-			index = end_index;
-		}
-
-		std::sort(requirements.class_names.begin(), requirements.class_names.end());
-		std::sort(requirements.structural_selectors.begin(), requirements.structural_selectors.end());
-
-		PseudoClassSet set = 0;
-		for (auto& name : pseudo_classes) {
-			if (name == "active") {
-				set = set | PseudoClass::Active;
-			}
-			else if (name == "hover") {
-				set = set | PseudoClass::Hover;
-			}
-		}
-		requirements.pseudo_classes = set;
-
-		// Get the named child node.
-		node.AddRequirements(std::move(requirements));
-	}
-
-	// Merge the new properties with those already on the leaf node.
-	node.SetProperties(properties);
-	style_sheet.AddNode(std::move(node));
 }
 
 char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool remove_token) {
