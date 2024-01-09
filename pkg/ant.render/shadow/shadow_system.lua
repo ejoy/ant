@@ -305,10 +305,10 @@ function shadow_sys:update_camera_depend()
 	end
 
 	local sb = w:first "shadow_bounding:in".shadow_bounding
-	if not sb.PSR then
+	local si, li = sb.scene_info, sb.light_info
+	if not si.PSR then
 		return
 	end
-	local si, li = sb.scene_info, sb.light_info
 	si.sceneaabbLS = build_sceneaabbLS(si, li)
 
 	local CF = C.camera.frustum
