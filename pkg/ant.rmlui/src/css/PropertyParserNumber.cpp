@@ -23,31 +23,7 @@ static const std::unordered_map<std::string, PropertyUnit> g_property_unit_strin
 	{"vmax", PropertyUnit::VMAX},
 };
 
-static constexpr bool PropertyIsAngle(PropertyUnit unit) {
-	return (unit == PropertyUnit::RAD) || (unit == PropertyUnit::DEG);
-}
-
-static constexpr bool PropertyIsNumber(PropertyUnit unit) {
-	return unit == PropertyUnit::NUMBER;
-}
-
-static constexpr bool PropertyIsPercent(PropertyUnit unit) {
-	return unit == PropertyUnit::PERCENT;
-}
-
-PropertyParserNumber::PropertyParserNumber(UnitMark units)
-	: units(units)
-{}
-
-Property PropertyParserNumber::ParseValue(PropertyId id, const std::string& value) const {
-	auto v = ParseValue(value);
-	if (v) {
-		return { id, *v };
-	}
-	return {};
-}
-
-std::optional<PropertyFloat> PropertyParserNumber::ParseValue(const std::string& value) const {
+std::optional<PropertyFloat> PropertyParseRawNumber(const std::string& value) {
 	// Find the beginning of the unit string in 'value'.
 	size_t unit_pos = 0;
 	for (size_t i = value.size(); i--;) {
@@ -73,44 +49,8 @@ std::optional<PropertyFloat> PropertyParserNumber::ParseValue(const std::string&
 		// Invalid unit name
 		return std::nullopt;
 	}
-
 	const PropertyUnit unit = it->second;
-
-	switch (units) {
-	case UnitMark::Number:
-		if (PropertyIsNumber(unit)) {
-			return PropertyFloat { float_value, unit };
-		}
-		break;
-	case UnitMark::Length:
-		if (!PropertyIsAngle(unit) && !PropertyIsNumber(unit) && !PropertyIsPercent(unit)) {
-			return PropertyFloat { float_value, unit };
-		}
-		break;
-	case UnitMark::LengthPercent:
-		if (!PropertyIsAngle(unit) && !PropertyIsNumber(unit)) {
-			return PropertyFloat { float_value, unit };
-		}
-		break;
-	case UnitMark::Angle:
-		if (PropertyIsAngle(unit)) {
-			return PropertyFloat { float_value, unit };
-		}
-		break;
-	}
-
-	if (unit == PropertyUnit::NUMBER && float_value == 0.f) {
-		switch (units) {
-		case UnitMark::Angle:
-			return PropertyFloat { 0.f, PropertyUnit::RAD };
-		case UnitMark::Length:
-		case UnitMark::LengthPercent:
-			return PropertyFloat { 0.f, PropertyUnit::PX };
-		default:
-			break;
-		}
-	}
-	return std::nullopt;
+	return PropertyFloat { float_value, unit };
 }
 
 }
