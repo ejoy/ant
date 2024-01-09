@@ -34,4 +34,4 @@
         return reinterpret_cast<name&>(                               \
             reinterpret_cast<std::underlying_type<name>::type&>(a) ^= \
             static_cast<std::underlying_type<name>::type>(b));        \
-    }                                                                 \
+    }

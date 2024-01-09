@@ -1,12 +1,13 @@
 #pragma once
 
-#include <deque>
-#include <stdexcept>
-#include <memory>
 #include <array>
-#include <span>
-#include <optional>
 #include <cstddef>
+#include <deque>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <span>
+#include <stdexcept>
 #include <bee/nonstd/unreachable.h>
 
 namespace Rml {
