@@ -215,7 +215,6 @@ const Style::TableRef& StyleSheetNode::GetProperties() const {
 }
 
 void StyleSheetNode::ImportRequirements(std::string rule_name) {
-	std::vector<std::string> nodes;
 
 	// Find child combinators, the RCSS '>' rule.
 	size_t i_child = rule_name.find('>');
@@ -233,11 +232,40 @@ void StyleSheetNode::ImportRequirements(std::string rule_name) {
 	}
 
 	// Expand each individual node separated by spaces. Don't expand inside parenthesis because of structural selectors.
-	StringUtilities::ExpandString2(nodes, rule_name, ' ', '(', ')', true);
+	int quote_mode_depth = 0;
+	const char* ptr = rule_name.c_str();
+	const char* start_ptr = nullptr;
+	const char* end_ptr = ptr;
 
-	// Create each node going down the tree
-	for (size_t i = 0; i < nodes.size(); i++) {
-		requirements.emplace_back(nodes[i]);
+	while (*ptr) {
+		// Increment the quote depth for each quote character encountered
+		if (*ptr == '(') {
+			++quote_mode_depth;
+		}
+		// And decrement it for every unquote character
+		else if (*ptr == ')') {
+			--quote_mode_depth;
+		}
+
+		// If we encounter a delimiter while not in quote mode, add the item to the list
+		if (*ptr == ' ' && quote_mode_depth == 0) {
+			if (start_ptr)
+				requirements.emplace_back(std::string(start_ptr, end_ptr + 1));
+			start_ptr = nullptr;
+		}
+		// Otherwise if its not white space or we're in quote mode, advance the pointers
+		else if (!StringUtilities::IsWhitespace(*ptr) || quote_mode_depth > 0) {
+			if (!start_ptr)
+				start_ptr = ptr;
+			end_ptr = ptr;
+		}
+
+		ptr++;
+	}
+
+	// If there's data pending, add it.
+	if (start_ptr) {
+		requirements.emplace_back(std::string(start_ptr, end_ptr + 1));
 	}
 }
 

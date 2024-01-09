@@ -41,14 +41,9 @@ struct PropertyDefinition {
 	std::vector<PropertyParser> parsers;
 };
 
-struct ShorthandItem {
-	std::variant<PropertyId, ShorthandId> definition;
-	bool optional;
-};
-
 struct ShorthandDefinition {
 	ShorthandType type;
-	std::vector<ShorthandItem> items;
+	std::vector<std::variant<PropertyId, ShorthandId>> items;
 };
 
 struct PropertyRegister {
@@ -214,36 +209,26 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 
 	auto& property_shorthand = shorthands[(size_t)id];
 
-	for (const std::string& raw_name : property_list) {
-		bool optional = false;
-		std::optional<ShorthandItem> item;
-		std::string name = raw_name;
-
-		if (!raw_name.empty() && raw_name.back() == '?') {
-			optional = true;
-			name.pop_back();
-		}
-
+	for (const std::string& name : property_list) {
 		auto property_id = MapGet(property_map, name);
 		if (property_id) {
 			// We have a valid property
-			item = { *property_id, optional };
+			property_shorthand.items.emplace_back(*property_id);
+			continue;
 		}
 		else {
 			// Otherwise, we must be a shorthand
 			auto shorthand_id = MapGet(shorthand_map, name);
-
 			// Test for valid shorthand id. The recursive types (and only those) can hold other shorthands.
 			if (shorthand_id && (type == ShorthandType::RecursiveRepeat || type == ShorthandType::RecursiveCommaSeparated)) {
-				item = { *shorthand_id, optional };
+				property_shorthand.items.emplace_back(*shorthand_id);
+				continue;
+			}
+			else {
+				Log::Message(Log::Level::Error, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
+				return false;
 			}
 		}
-
-		if (!item) {
-			Log::Message(Log::Level::Error, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
-			return false;
-		}
-		property_shorthand.items.emplace_back(std::move(*item));
 	}
 
 	property_shorthand.type = type;
@@ -268,7 +253,7 @@ void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& s
 			else {
 				static_assert(always_false_v<T>, "non-exhaustive visitor!");
 			}
-		}, item.definition);
+		}, item);
 	}
 }
 
@@ -349,8 +334,8 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 		}
 
 		for (int i = 0; i < 4; i++) {
-			const ShorthandItem& item = shorthand_definition.items[i];
-			auto id = std::get_if<PropertyId>(&item.definition);
+			auto const& item = shorthand_definition.items[i];
+			auto id = std::get_if<PropertyId>(&item);
 			if (!id) {
 				return false;
 			}
@@ -377,7 +362,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 				else {
 					static_assert(always_false_v<T>, "non-exhaustive visitor!");
 				}
-			}, item.definition);
+			}, item);
 		}
 
 		if (!result)
@@ -387,12 +372,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 		std::vector<std::string> subvalues;
 		StringUtilities::ExpandString(subvalues, property_value, ',');
 
-		size_t num_optional = 0;
-		for (auto& item : shorthand_definition.items)
-			if (item.optional)
-				num_optional += 1;
-
-		if (subvalues.size() + num_optional < shorthand_definition.items.size()) {
+		if (subvalues.size() + 0 < shorthand_definition.items.size()) {
 			// Not enough subvalues declared.
 			return false;
 		}
@@ -400,7 +380,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 		size_t subvalue_i = 0;
 		for (size_t i = 0; i < shorthand_definition.items.size() && subvalue_i < subvalues.size(); i++) {
 			bool result = false;
-			const ShorthandItem& item = shorthand_definition.items[i];
+			auto const& item = shorthand_definition.items[i];
 
 			std::visit([&](auto&& arg) {
 				using T = std::decay_t<decltype(arg)>;
@@ -413,12 +393,10 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 				else {
 					static_assert(always_false_v<T>, "non-exhaustive visitor!");
 				}
-			}, item.definition);
+			}, item);
 
 			if (result)
 				subvalue_i += 1;
-			else if (!item.optional)
-				return false;
 		}
 	}
 	else {
@@ -426,8 +404,8 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& 
 		size_t property_index = 0;
 
 		for (; value_index < property_values.size() && property_index < shorthand_definition.items.size(); property_index++) {
-			const ShorthandItem& item = shorthand_definition.items[property_index];
-			auto id = std::get_if<PropertyId>(&item.definition);
+			auto const& item = shorthand_definition.items[property_index];
+			auto id = std::get_if<PropertyId>(&item);
 			if (!id) {
 				return false;
 			}
