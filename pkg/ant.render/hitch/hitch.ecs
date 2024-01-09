@@ -1,8 +1,8 @@
 import_feature "ant.scene"
 
 component "hitch_tag"
-component "hitch_bounding"
-
+component "hitch_changed"
+component "hitch_memory".type "lua"
 component "hitch"
     .type "c"
     .field "group:int"
@@ -20,3 +20,6 @@ policy "hitch_object"
     .include_policy "ant.scene|bounding"
     .component "hitch"
     .component "visible_state"
+
+policy "hitch_memory"
+    .component "hitch_memory"

@@ -22,18 +22,24 @@ local assetmgr      = import_package "ant.asset"
 
 local pre_depth_material
 local pre_depth_skinning_material
+local pre_di_depth_material
 
 local function which_material(e, matres)
     if matres.fx.depth then
         return matres
     end
-    w:extend(e, "skinning?in")
-    return e.skinning and pre_depth_skinning_material or pre_depth_material
+    w:extend(e, "skinning?in draw_indirect?in")
+    if e.draw_indirect then
+        return pre_di_depth_material
+    else
+        return e.skinning and pre_depth_skinning_material or pre_depth_material 
+    end
 end
 
 function s:init()
-    pre_depth_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_skinning_material = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+    pre_depth_material 			    = assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
+    pre_depth_skinning_material     = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+    pre_di_depth_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -81,7 +87,7 @@ local function create_depth_state(originstate)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result visible_state:in render_layer:in" do
+    for e in w:select "filter_result visible_state:in render_layer:in material:in" do
         if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
             w:extend(e, "material:in render_object:update filter_material:in")
             local matres = assetmgr.resource(e.material)

@@ -1,0 +1,15 @@
+fx:
+  depth: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  macros:
+    "DRAW_INDIRECT=1"
+  varyings:
+    a_position: vec3
+    i_data0: vec4
+    i_data1: vec4
+    i_data2: vec4
+  setting: /pkg/ant.resources/settings/nolighting.ant
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  MSAA: true
+  WRITE_MASK: Z

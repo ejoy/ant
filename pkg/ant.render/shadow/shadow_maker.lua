@@ -210,12 +210,14 @@ end
 
 local shadow_material
 local gpu_skinning_material
+local di_shadow_material
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+	di_shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -259,8 +261,12 @@ local function which_material(e, matres)
 	if matres.fx.depth then
 		return matres
 	end
-    w:extend(e, "skinning?in")
-    return e.skinning and gpu_skinning_material or shadow_material
+    w:extend(e, "skinning?in draw_indirect?in")
+	if e.draw_indirect then
+		return di_shadow_material
+	else
+		return e.skinning and gpu_skinning_material or shadow_material
+	end
 end
 
 --front face is 'CW', when building shadow we need to remove front face, it's 'CW'

@@ -24,6 +24,20 @@ local DEF_SHADER_INFO <const> = {
         template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
         filename                = "vs_%s.sc",
     },
+    di = {
+        defines = {
+            VARYING_DEFINE      = "@VSINPUT_VARYING_DEFINE",
+            INPUTOUTPUT_STRUCT  = "@VSINPUTOUTPUT_STRUCT",
+    
+            PROPERTY_DEFINE     = "@VS_PROPERTY_DEFINE",
+            FUNC_DEFINE         = "@VS_FUNC_DEFINE",
+    
+            INPUT_INIT          = "@VSINPUT_INIT",
+            OUTPUT_VARYINGS     = "@OUTPUT_VARYINGS",
+        },
+        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
+        filename                = "di_%s.sc",
+    },
     fs = {
         defines = {
             VARYING_DEFINE      = "@FSINPUT_VARYINGS_DEFINE",
@@ -255,31 +269,40 @@ end
 
 local function build_input_var(varyingcontent)
     local varying_def_decls = {}
-    local input_decls, varying_decls = {}, {}
-    local input_assignments, varying_assignments = {}, {}
+    local di_varying_def_decls = {}
+    local input_decls, di_input_decls, varying_decls = {}, {}, {}
+    local input_assignments, di_input_assignments, varying_assignments = {}, {}, {}
 
     local vdd_ac0 = code_gen(varying_def_decls, 0)
+    local dvdd_ac0 = code_gen(di_varying_def_decls, 0)
 
     local ia_ac1 = code_gen(input_assignments, 1)
+    local dia_ac1 = code_gen(di_input_assignments, 1)
     local va_ac1 = code_gen(varying_assignments, 1)
 
-    local inputs, varyings = {}, {}
+    local inputs, di_inputs, varyings = {}, {}, {}
     local iac0, iac1 = code_gen(inputs, 0, 1)
+    local diac0, diac1 = code_gen(di_inputs, 0, 1)
     local vac0, vac1 = code_gen(varyings, 0, 1)
     
     iac0 "struct VSInput {"
+    diac0 "struct VSInput {"
     vac0 "struct Varyings {"
 
     local shaderfmt = "%s %s;"
     for k, v in sortpairs(varyingcontent) do
         vdd_ac0(("%s %s : %s;"):format(v.type, k, v.bind or L.SEMANTICS_INFOS[k].bind))
+        dvdd_ac0(("%s %s : %s;"):format(v.type, k, v.bind or L.SEMANTICS_INFOS[k].bind))
 
         local member_name = k:match "[avi]_(%w+)"
         if is_input_varying(k, v) then
             iac1(shaderfmt:format(v.type, member_name))
+            diac1(shaderfmt:format(v.type, member_name))
             ia_ac1(("vsinput.%s = %s;"):format(member_name, k))
+            dia_ac1(("vsinput.%s = %s;"):format(member_name, k))
 
             input_decls[#input_decls+1] = k
+            di_input_decls[#di_input_decls+1] = k
         else
             assert(is_output_varying(k, v))
             vac1(shaderfmt:format(v.type, member_name))
@@ -287,6 +310,27 @@ local function build_input_var(varyingcontent)
 
             varying_decls[#varying_decls+1] = k
         end
+    end
+
+    if not varyingcontent.i_data0 then
+        dvdd_ac0(("%s %s : %s;"):format("vec4", "i_data0", "TEXCOORD7"))
+        dia_ac1(("vsinput.%s = %s;"):format("data0", "i_data0"))
+        di_input_decls[#di_input_decls+1] = "i_data0"
+        diac1(shaderfmt:format("vec4", "data0"))
+    end
+
+    if not varyingcontent.i_data1 then
+        dvdd_ac0(("%s %s : %s;"):format("vec4", "i_data1", "TEXCOORD6"))
+        dia_ac1(("vsinput.%s = %s;"):format("data1", "i_data1"))
+        di_input_decls[#di_input_decls+1] = "i_data1"
+        diac1(shaderfmt:format("vec4", "data1"))
+    end
+
+    if not varyingcontent.i_data2 then
+        dvdd_ac0(("%s %s : %s;"):format("vec4", "i_data2", "TEXCOORD5"))
+        dia_ac1(("vsinput.%s = %s;"):format("data2", "i_data2"))
+        di_input_decls[#di_input_decls+1] = "i_data2"
+        diac1(shaderfmt:format("vec4", "data2"))
     end
 
     if not varyingcontent["v_posWS"] then
@@ -297,16 +341,21 @@ local function build_input_var(varyingcontent)
     --vac1 "vec4 posCS;"
 
     iac0 "};"
+    diac0 "};"
     vac0 "};"
     
     return {
-        varying_def         = varying_def_decls,
-        inputs              = inputs,
-        varyings            = varyings,
-        input_decls         = input_decls,
-        varying_decls       = varying_decls,
-        input_assignments   = input_assignments,
-        varying_assignments = varying_assignments,
+        varying_def             = varying_def_decls,
+        di_varying_def          = di_varying_def_decls,
+        inputs                  = inputs,
+        di_inputs               = di_inputs,
+        varyings                = varyings,
+        input_decls             = input_decls,
+        di_input_decls          = di_input_decls,
+        varying_decls           = varying_decls,
+        input_assignments       = input_assignments,
+        di_input_assignments    = di_input_assignments,
+        varying_assignments     = varying_assignments,
     }
 end
 
@@ -319,6 +368,24 @@ local function build_custom_vs_position_func(d, varyings, mat)
     else
         ac1 "worldmat = u_model[0];"
     end
+
+    ac1 "vec4 posCS;"
+    ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
+    ac1 "return posCS;"
+    ac0 "}"
+end
+
+local function build_di_vs_position_func(d, varyings, mat)
+    local ac0, ac1 = code_gen(d, 0, 1)
+    ac0 "//code gen by genshader.lua"
+    ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
+    if varyings.a_indices and varyings.a_weight then
+        ac1 "worldmat = calc_bone_transform(vsinput.indices, vsinput.weight);"
+    else
+        ac1 "worldmat = u_model[0];"
+    end
+    ac1 "mat4 hitchmat = mat4(vsinput.data0, vsinput.data1, vsinput.data2, vec4(0.0, 0.0, 0.0, 1.0));"
+    ac1 "worldmat = mul(hitchmat, worldmat);"
 
     ac1 "vec4 posCS;"
     ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
@@ -410,6 +477,14 @@ end
 local function build_vs_code(mat, varyings)
     local d = {}
     build_custom_vs_position_func(d, varyings, mat)
+    build_custom_vs_func(d, varyings, mat)
+
+    return table.concat(d, "\n")
+end
+
+local function build_di_vs_code(mat, varyings)
+    local d = {}
+    build_di_vs_position_func(d, varyings, mat)
     build_custom_vs_func(d, varyings, mat)
 
     return table.concat(d, "\n")
@@ -534,9 +609,9 @@ void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
     return table.concat(d, "\n")
 end
 
-local function build_vsinputoutput(results)
-    local input = table.concat(results.inputs, "\n")
-    local varying = table.concat(results.varyings, "\n")
+local function build_vsinputoutput(inputs, varyings)
+    local input = table.concat(inputs, "\n")
+    local varying = table.concat(varyings, "\n")
 
     return ("%s\n\n%s"):format(input, varying)
 end
@@ -591,16 +666,25 @@ local function build_fx_content(mat, varyings, results)
     local fx = mat.fx
 
     local inputdecl         = table.concat(results.input_decls, " ")
+    local diinputdecl       = table.concat(results.di_input_decls, " ")
     local varyingdecl       = table.concat(results.varying_decls, " ")
 
     local vs_properties_content, fs_properties_content = generate_properties(mat)
     return {
         vs = {
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
-            ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results),
+            ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results.inputs, results.varyings),
             ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
             ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(mat, varyings),
             ["@VSINPUT_INIT"]           = table.concat(results.input_assignments, "\n"),
+            ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
+        },
+        di = {
+            ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(diinputdecl, varyingdecl),
+            ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results.di_inputs, results.varyings),
+            ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
+            ["@VS_FUNC_DEFINE"]         = build_di_vs_code(mat, varyings),
+            ["@VSINPUT_INIT"]           = table.concat(results.di_input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
         fs = {
@@ -616,6 +700,12 @@ end
 local function write_varying_def_sc(output, varying_def)
     local varying_path = output / "varying.def.sc"
     write_file(varying_path, table.concat(varying_def, "\n"))
+    return varying_path:string()
+end
+
+local function write_di_varying_def_sc(output, di_varying_def)
+    local varying_path = output / "varying.di.def.sc"
+    write_file(varying_path, table.concat(di_varying_def, "\n"))
     return varying_path:string()
 end
 
@@ -728,6 +818,9 @@ local function find_stages(fx)
     end
 
     local stages = {}
+    if fx.shader_type == "PBR" then
+        stages.di = true
+    end
     if fx.vs or fx.shader_type == "PBR" then
         stages.vs = true
     end
@@ -751,6 +844,7 @@ local function gen_fx(setting, input, output, mat)
     if varyings then
         results = build_input_var(varyings)
         fx.varying_path = write_varying_def_sc(output, results.varying_def)
+        fx.di_varying_path = write_di_varying_def_sc(output, results.di_varying_def)
     end
 
     if fx.shader_type == "PBR" then

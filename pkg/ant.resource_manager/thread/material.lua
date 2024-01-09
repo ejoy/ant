@@ -64,15 +64,19 @@ local function createRenderProgram(fxcfg)
         depth_uniforms = fetch_uniforms(dh)
     end
 
-    local prog, uniforms, vh, fh
+    local prog, uniforms, vh, fh, di_prog, di_vh
     if fxcfg.vs or fxcfg.fs then
         vh = loadShader(fxcfg.vs)
         fh = loadShader(fxcfg.fs)
         prog = bgfx.create_program(vh, fh, false)
         uniforms = fetch_uniforms(vh, fh)
     end
+    if fxcfg.di then
+        di_vh = loadShader(fxcfg.di)
+        di_prog = bgfx.create_program(di_vh, fh, false)
+    end
 
-    if not (prog or depth_prog) then
+    if not (prog or depth_prog or di_prog) then
         error(("create program failed, filename:%s"):format(fxcfg.vs))
     end
 
@@ -92,6 +96,18 @@ local function createRenderProgram(fxcfg)
             prog    = depth_prog,
             uniforms= depth_uniforms,
             varyings= fxcfg.depth_varyings,
+        }
+    end
+
+    if di_prog then
+        fx.di = {
+            shader_type     = fxcfg.shader_type,
+            setting         = fxcfg.setting or {},
+            vs              = di_vh,
+            fs              = fh,
+            prog            = di_prog,
+            uniforms        = uniforms,
+            varyings        = fxcfg.varyings,
         }
     end
 
@@ -160,8 +176,10 @@ local function build_fxcfg(filename, fx)
         fs          = stage_filename "fs",
         cs          = stage_filename "cs",
         depth       = stage_filename "depth",
+        di          = stage_filename "di",
         varyings    = fx.varyings,
         depth_varyings=fx.depth and fx.depth.varyings or nil,
+        di_varyings = fx.di and fx.di.varyings or nil,
     }
 end
 
@@ -200,9 +218,16 @@ local function material_create(filename)
         update_uniforms_handle(attribute.depth.attribs, material.fx.depth.uniforms, filename)
     end
 
+    if attribute.di then
+        update_uniforms_handle(attribute.attribs, material.fx.uniforms, filename)
+    end
+
     material.fx.prog = from_handle(material.fx.prog)
     if material.fx.depth then
         material.fx.depth.prog = from_handle(material.fx.depth.prog)
+    end
+    if material.fx.di then
+        material.fx.di.prog = from_handle(material.fx.di.prog)
     end
     return material, fxcfg, attribute
 end
@@ -221,6 +246,16 @@ function S.material_create(filename)
 
     if material.fx.depth then
         local dpid = material.fx.depth.prog
+        MATERIALS[dpid] = {
+            filename = filename,
+            material = material,
+            cfg      = fxcfg,
+            attr     = attribute
+        }
+    end
+
+    if material.fx.di then
+        local dpid = material.fx.di.prog
         MATERIALS[dpid] = {
             filename = filename,
             material = material,

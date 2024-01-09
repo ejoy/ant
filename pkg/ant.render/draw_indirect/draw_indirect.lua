@@ -24,7 +24,6 @@ local function update_instance_buffer(e, instancememory, instancenum)
     else
         --this memory can be release?
         ib.memory, ib.num = instancememory, instancenum
-
         if ib.handle then
             assert(iobj.itb_handle == ib.handle, "Invalid indirect_object")
             bgfx.update(ib.handle, 0, ib.memory)
@@ -36,6 +35,7 @@ local function update_instance_buffer(e, instancememory, instancenum)
 
         -- only recreate draw indirect buffer when we need more buffer than last allocated
         if ib.num > iobj.draw_num then
+            bgfx.destroy(di.handle)
             di.handle = bgfx.create_indirect_buffer(ib.num)
             iobj.idb_handle = di.handle
         end

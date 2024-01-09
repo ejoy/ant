@@ -236,10 +236,12 @@ local function parent_path(path)
 end
 
 local function find_varying_path(setting, fx, stage)
-    if fx.varying_path then
-        local p = lfs.path(setting.vfs.realpath(fx.varying_path) or fx.varying_path)
+    local path = stage:match "di" and "di_varying_path" or "varying_path"
+    
+    if fx[path] then
+        local p = lfs.path(setting.vfs.realpath(fx[path]) or fx[path])
         if not lfs.exists(p) then
-            error(("Invalid varying path:%s"):format(fx.varying_path))
+            error(("Invalid varying path:%s"):format(fx[path]))
         end
         return p
     end
@@ -462,6 +464,7 @@ local STAGES<const> = {
     fs = "fs",
     cs = "cs",
     depth = "vs",
+    di = "vs"
 }
 
 local function find_stage_file(setting, fx, stage)
@@ -528,6 +531,12 @@ local function create_shader_cfg(setting, post_tasks, inputfolder, output, mat, 
             ao.depth = attrib_obj()
             load_shader_uniforms(setting, output, "depth", ao.depth)
             check_material_properties(properties, ao.depth.attribs)
+        end
+
+        if stages.di then
+            ao.di = attrib_obj()
+            load_shader_uniforms(setting, output, "di", ao.di)
+            check_material_properties(properties, ao.di.attribs)
         end
 
         local outfile = output / "attribute.ant"

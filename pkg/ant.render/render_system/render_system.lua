@@ -239,9 +239,15 @@ function render_sys:update_filter()
 		--but not create this new material instance in entity_init stage
 		for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in material:in" do
 			if e.visible_state["main_queue"] and irl.is_opacity_layer(e.render_layer) then
+				local matres = assetmgr.resource(e.material)
 				local ro = e.render_object
 				local fm = e.filter_material
-				local matres = assetmgr.resource(e.material)
+				w:extend(e, "draw_indirect?in")
+				if e.draw_indirect and matres.fx.di then
+					local m = assetmgr.resource(e.material)
+					local mi = RM.create_instance(m.di.object)
+					fm["main_queue"] = mi
+				end
 				assert(not fm.main_queue:isnull())
 				local state = fm.main_queue:get_state()
 				if not matres.fx.setting.no_predepth then
