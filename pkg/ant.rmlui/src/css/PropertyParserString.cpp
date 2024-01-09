@@ -2,7 +2,7 @@
 
 namespace Rml {
 
-Property PropertyParserString::ParseValue(PropertyId id, const std::string& value) const {
+Property PropertyParseString(PropertyId id, const std::string& value) {
 	return { id, value };
 }
 

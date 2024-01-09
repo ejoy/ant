@@ -1,4 +1,5 @@
 #include <css/PropertyParserTransform.h>
+#include <css/PropertyParserNumber.h>
 #include <core/Transform.h>
 #include <string.h>
 
@@ -126,7 +127,7 @@ static bool Scan(int& out_bytes_read, const char* str, const char* keyword, cons
 	return total_bytes_read > 0;
 }
 
-Property PropertyParserTransform::ParseValue(PropertyId id, const std::string& value) const {
+Property PropertyParseTransform(PropertyId id, const std::string& value) {
 	if (value == "none") {
 		return { id, Transform {} };
 	}

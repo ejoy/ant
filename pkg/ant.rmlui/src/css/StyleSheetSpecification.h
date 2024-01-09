@@ -6,8 +6,6 @@
 
 namespace Rml {
 
-class PropertyParser;
-
 class StyleSheetSpecification {
 public:
 	static bool Initialise();

@@ -1,17 +1,10 @@
 #pragma once
 
-#include <css/PropertyParser.h>
+#include <css/Property.h>
 
 namespace Rml {
 
-class PropertyParserAnimation : public PropertyParser {
-public:
-	Property ParseValue(PropertyId id, const std::string& value) const override;
-};
-
-class PropertyParserTransition : public PropertyParser {
-public:
-	Property ParseValue(PropertyId id, const std::string& value) const override;
-};
+Property PropertyParseAnimation(PropertyId id, const std::string& value);
+Property PropertyParseTransition(PropertyId id, const std::string& value);
 
 }

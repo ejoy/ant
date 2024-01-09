@@ -1,12 +1,9 @@
 #pragma once
 
-#include <css/PropertyParser.h>
+#include <css/Property.h>
 
 namespace Rml {
 
-class PropertyParserString : public PropertyParser {
-public:
-	Property ParseValue(PropertyId id, const std::string& value) const override;
-};
+Property PropertyParseString(PropertyId id, const std::string& value);
 
 }

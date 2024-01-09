@@ -1,6 +1,6 @@
 #pragma once
 
-#include <css/PropertyParser.h>
+#include <css/Property.h>
 #include <optional>
 
 namespace Rml {
@@ -70,15 +70,12 @@ std::optional<PropertyFloat> PropertyParseNumber(const std::string& value) {
 }
 
 template <PropertyParseNumberUnit units>
-class PropertyParserNumber : public PropertyParser {
-public:
-	Property ParseValue(PropertyId id, const std::string& value) const override {
-		auto v = PropertyParseNumber<units>(value);
-		if (v) {
-			return { id, *v };
-		}
-		return {};
+Property PropertyParseNumber(PropertyId id, const std::string& value) {
+	auto v = PropertyParseNumber<units>(value);
+	if (v) {
+		return { id, *v };
 	}
-};
+	return {};
+}
 
 }

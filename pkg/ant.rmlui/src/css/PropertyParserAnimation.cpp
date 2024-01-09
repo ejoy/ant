@@ -60,7 +60,7 @@ static const std::unordered_map<std::string, Keyword> keywords = {
 	{"sine-in-out",        {Keyword::TWEEN, {Tween::Type::Sine, Tween::Direction::InOut}}},
 };
 
-Property PropertyParserAnimation::ParseValue(PropertyId id, const std::string& value) const {
+Property PropertyParseAnimation(PropertyId id, const std::string& value) {
 	std::vector<std::string> animation_values;
 	StringUtilities::ExpandString(animation_values, value, ','); 
 
@@ -169,7 +169,7 @@ Property PropertyParserAnimation::ParseValue(PropertyId id, const std::string& v
 	return { id, animation_list };
 }
 
-Property PropertyParserTransition::ParseValue(PropertyId id, const std::string& value) const {
+Property PropertyParseTransition(PropertyId id, const std::string& value) {
 	std::vector<std::string> transition_values;
 	StringUtilities::ExpandString(transition_values, value, ',');
 

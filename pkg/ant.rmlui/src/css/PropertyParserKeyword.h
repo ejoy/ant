@@ -1,32 +1,33 @@
 #pragma once
 
-#include <css/PropertyParser.h>
+#include <css/Property.h>
 #include <util/StaticString.h>
 #include <tuple>
 
 namespace Rml {
 
-template <StaticString... Keywords>
-class PropertyParserKeyword : public PropertyParser {
-public:
-	static constexpr std::array<std::string_view, sizeof...(Keywords)> keywords { std::string_view { Keywords.data(), Keywords.length() } ... };
+template <StaticString... str>
+struct StaticStringArray {
+	static constexpr std::array<std::string_view, sizeof...(str)> strs { std::string_view { str.data(), str.length() } ... };
 	template <size_t I>
-	int Find(const std::string& value) const {
-		if constexpr (I < sizeof...(Keywords)) {
-			if (value == keywords[I]) {
+	static int find(const std::string& value) {
+		if constexpr (I < sizeof...(str)) {
+			if (value == strs[I]) {
 				return (int)I;
 			}
-			return Find<I+1>(value);
+			return find<I+1>(value);
 		}
 		return -1;
 	}
-	Property ParseValue(PropertyId id, const std::string& value) const override {
-		auto v = Find<0>(value);
-		if (v == -1) {
-			return {};
-		}
-		return { id, v };
-	}
 };
+
+template <StaticString... Keywords>
+Property PropertyParseKeyword(PropertyId id, const std::string& value) {
+	auto v = StaticStringArray<Keywords...>::find<0>(value);
+	if (v == -1) {
+		return {};
+	}
+	return { id, v };
+}
 
 }

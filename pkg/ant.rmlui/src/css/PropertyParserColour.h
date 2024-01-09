@@ -1,12 +1,9 @@
 #pragma once
 
-#include <css/PropertyParser.h>
+#include <css/Property.h>
 
 namespace Rml {
 
-class PropertyParserColour : public PropertyParser {
-public:
-	Property ParseValue(PropertyId id, const std::string& value) const override;
-};
+Property PropertyParseColour(PropertyId id, const std::string& value);
 
 }
