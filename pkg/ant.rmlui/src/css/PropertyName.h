@@ -18,7 +18,7 @@ constexpr bool IsUpper(const char c) {
 }
 
 template <PropertyNameStyle Style, auto E>
-constexpr auto PropertyName_() {
+constexpr auto PropertyNameRaw() {
 	constexpr auto rawname = EnumNameV<E>;
 	size_t i = 1;
 	size_t sz = 0;
@@ -54,15 +54,25 @@ constexpr auto PropertyName_() {
 	return std::make_pair(name, sz);
 }
 
+template <PropertyNameStyle Style, auto E>
+constexpr auto PropertyNameZip() {
+	constexpr auto pair = PropertyNameRaw<Style, E>();
+	constexpr auto buf = pair.first;
+	constexpr auto size = pair.second;
+	std::array<char, size> newbuf;
+	std::copy(buf.begin(), std::next(buf.begin(), size), newbuf.begin());
+	return newbuf;
+}
+
 template <auto Data>
-constexpr auto& MakeItStatic() {
+constexpr auto const& MakeItStatic() {
 	return Data;
 }
 
 template <PropertyNameStyle Style, auto E>
 constexpr auto PropertyName() {
-	constexpr auto& data = MakeItStatic<PropertyName_<Style, E>()>();
-	return std::string_view { data.first.data(), data.second };
+	constexpr auto const& data = MakeItStatic<PropertyNameZip<Style, E>()>();
+	return std::string_view { data.data(), data.size() };
 }
 
 template <PropertyNameStyle Style, auto E>
