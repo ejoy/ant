@@ -25,7 +25,7 @@ local vp = {
     h = height
 }
 
-local vr = mu.get_scene_view_rect(resolution.w, resolution.h, vp, SCENE_RATIO)
+local vr = mu.get_scene_view_rect(resolution, vp, SCENE_RATIO)
 
 log.info("scene viewrect: ", vr.x, vr.y, vr.w, vr.h)
 log.info("scene ratio: ", SCENE_RATIO)

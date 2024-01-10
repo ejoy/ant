@@ -259,13 +259,12 @@ function util.calc_viewrect(vr, ratio)
 	}
 end
 
-function util.get_scene_view_rect(rw, rh, vp, scene_ratio)
-	local vp_ratio = vp.w / vp.h
-	local vr_w  = vp.w < rw and vp.w or rw
-	local vr_h = vp.h < rh and vp.h or rh
-	local vr_ratio = vr_w / vr_h
-	vr_w = vr_w * vp_ratio / vr_ratio
-	return {x = 0, y = 0, w = math.floor(vr_w*scene_ratio), h = math.floor(vr_h*scene_ratio)}
+function util.get_scene_view_rect(resolution, device, scene_ratio)
+	local resolution_ratio = resolution.w / resolution.h
+	local vr_h = scene_ratio * device.h
+	vr_h = vr_h >= resolution.h and vr_h or resolution.h
+	local vr_w = vr_h * resolution_ratio
+	return {x = 0, y = 0, w = math.floor(vr_w), h = math.floor(vr_h)}
 end
 
 function util.get_fix_ratio_scene_viewrect(vp, aspect_ratio, scene_ratio)

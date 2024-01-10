@@ -14,7 +14,7 @@ local function update_config(ww, hh)
 	local vp = {x = 0, y = 0, w = ww, h = hh}
 	local resolution = iviewport.resolution
 	local scene_ratio = iviewport.scene_ratio
-	local vr = mu.get_scene_view_rect(resolution.w ,resolution.h, vp, scene_ratio)
+	local vr = mu.get_scene_view_rect(resolution, vp, scene_ratio)
 	if ENABLE_HVFILP then
 		vp.w, vp.h = hh, ww
 	else
