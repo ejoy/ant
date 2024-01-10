@@ -199,7 +199,7 @@ function m:show_terrain(enable)
     if not enable then
         iterrain.clear_plane_terrain()
     else
-        iterrain.create_plane_terrain({[0] = {{x = -500, y = -500, type = "terrain"}}}, "opacity", 1000, 0, TERRAIN_MATERIAL, BORDER_MATERIAL)
+        iterrain.create_plane_terrain({[0] = {{x = -500, y = -500, type = "terrain"}}}, "opacity", 1000, TERRAIN_MATERIAL)
     end
 end
 function m:clone(eid)
