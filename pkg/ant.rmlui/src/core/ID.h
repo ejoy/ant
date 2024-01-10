@@ -24,7 +24,7 @@ enum class ShorthandId : uint8_t {
 	BackgroundPosition,
 	Background, 
 	TextShadow,
-	TextStroke,
+	_WebkitTextStroke,
 	TextDecoration,
 	Outline,
 };
@@ -107,8 +107,8 @@ enum class PropertyId : uint8_t {
 	TextShadowH,
 	TextShadowV,
 	TextShadowColor,
-	TextStrokeWidth,
-	TextStrokeColor,
+	_WebkitTextStrokeWidth,
+	_WebkitTextStrokeColor,
 
 	BackgroundColor,
 	BackgroundImage,

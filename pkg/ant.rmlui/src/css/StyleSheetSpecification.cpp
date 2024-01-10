@@ -9,6 +9,7 @@
 #include <css/PropertyParserKeyword.h>
 #include <css/PropertyParserString.h>
 #include <css/PropertyParserTransform.h>
+#include <css/PropertyName.h>
 #include <util/AlwaysFalse.h>
 #include <core/Layout.h>
 #include <array>
@@ -121,12 +122,6 @@ static std::string convert(const std::string& s) {
 }
 
 template <typename T>
-void MapAdd(std::unordered_map<std::string, T>& map, const std::string& name, T id) {
-	map.emplace(name, id);
-	map.emplace(convert(name), id);
-}
-
-template <typename T>
 std::optional<T> MapGet(std::unordered_map<std::string, T> const& map, const std::string& name)  {
 	auto it = map.find(name);
 	if (it != map.end())
@@ -145,14 +140,12 @@ std::optional<std::string> MapGetName(std::unordered_map<std::string, T> const& 
 }
 
 PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value) {
-	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
 	unparsed_default[id] = default_value;
 	return { properties[index] };
 }
 
 PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name) {
-	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
 	return { properties[index] };
 }
@@ -177,8 +170,6 @@ const PropertyIdSet& StyleSheetSpecificationInstance::GetInheritableProperties()
 }
 
 bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type) {
-	MapAdd(shorthand_map, shorthand_name, id);
-
 	std::vector<std::string> property_list;
 	StringUtilities::ExpandString(property_list, property_names, ',');
 
@@ -534,7 +525,35 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 	return true;
 }
 
+template <typename E, size_t I, size_t N, typename Data>
+static constexpr void GetPropertyName(Data&& data) {
+	if constexpr (I < N) {
+		data[I] = std::make_tuple(
+			static_cast<E>(I),
+			PropertyNameV<PropertyNameStyle::Camel, static_cast<E>(I)>,
+			PropertyNameV<PropertyNameStyle::Kebab, static_cast<E>(I)>
+		);
+		GetPropertyName<E, I+1, N>(data);
+	}
+}
+
+template <typename E>
+static constexpr auto PropertyNames() {
+	std::array<std::tuple<E, std::string_view, std::string_view>, EnumCountV<E>> data = {};
+	GetPropertyName<E, 0, EnumCountV<E>>(data);
+	return data;
+}
+
 void StyleSheetSpecificationInstance::RegisterProperties() {
+	for (auto [id, camel, kebab]: PropertyNames<PropertyId>()) {
+		property_map.emplace(camel, id);
+		property_map.emplace(kebab, id);
+	}
+	for (auto [id, camel, kebab]: PropertyNames<ShorthandId>()) {
+		shorthand_map.emplace(camel, id);
+		shorthand_map.emplace(kebab, id);
+	}
+
 	RegisterProperty(PropertyId::BorderTopWidth, "border-top-width", "0px")
 		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
 	RegisterProperty(PropertyId::BorderRightWidth, "border-right-width", "0px")
@@ -694,11 +713,11 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser(PropertyParseColour);
 	RegisterShorthand(ShorthandId::TextShadow, "text-shadow", "text-shadow-h, text-shadow-v, text-shadow-color", ShorthandType::FallThrough);
 
-	RegisterProperty(PropertyId::TextStrokeWidth, "-webkit-text-stroke-width", "0px")
+	RegisterProperty(PropertyId::_WebkitTextStrokeWidth, "-webkit-text-stroke-width", "0px")
 		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::TextStrokeColor, "-webkit-text-stroke-color", "white")
+	RegisterProperty(PropertyId::_WebkitTextStrokeColor, "-webkit-text-stroke-color", "white")
 		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::TextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
+	RegisterShorthand(ShorthandId::_WebkitTextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::OutlineWidth, "outline-width", "0px")
 		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);

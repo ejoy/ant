@@ -10,26 +10,36 @@ enum class PropertyNameStyle {
 };
 
 constexpr char ToLower(const char c) {
-    return (c >= 'A' && c <= 'Z') ? c + ('a' - 'A') : c;
+	return (c >= 'A' && c <= 'Z') ? c + ('a' - 'A') : c;
 }
 
 constexpr bool IsUpper(const char c) {
-    return c >= 'A' && c <= 'Z';
+	return c >= 'A' && c <= 'Z';
 }
 
 template <PropertyNameStyle Style, auto E>
 constexpr auto PropertyName_() {
 	constexpr auto rawname = EnumNameV<E>;
+	size_t i = 1;
 	size_t sz = 0;
 	std::array<char, 256> name = {};
-	name[sz++] = ToLower(rawname[0]);
+	if (rawname[0] == '_') {
+		if constexpr (Style == PropertyNameStyle::Camel) {
+			name[sz++] = '-';
+		}
+		name[sz++] = ToLower(rawname[1]);
+		i = 2;
+	}
+	else {
+		name[sz++] = ToLower(rawname[0]);
+	}
 	if constexpr (Style == PropertyNameStyle::Camel) {
-		for (size_t i = 1; i < rawname.size(); ++i) {
+		for (; i < rawname.size(); ++i) {
 			name[sz++] = rawname[i];
 		}
 	}
 	else {
-		for (size_t i = 1; i < rawname.size(); ++i) {
+		for (; i < rawname.size(); ++i) {
 			auto c = rawname[i];
 			if (IsUpper(c)) {
 				name[sz++] = '-';

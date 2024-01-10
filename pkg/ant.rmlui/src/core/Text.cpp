@@ -124,8 +124,8 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	if (changed_properties.contains(PropertyId::TextShadowH) ||
 		changed_properties.contains(PropertyId::TextShadowV) ||
 		changed_properties.contains(PropertyId::TextShadowColor) ||
-		changed_properties.contains(PropertyId::TextStrokeWidth) ||
-		changed_properties.contains(PropertyId::TextStrokeColor))
+		changed_properties.contains(PropertyId::_WebkitTextStrokeWidth) ||
+		changed_properties.contains(PropertyId::_WebkitTextStrokeColor))
 	{
 		dirty.insert(Dirty::Effects);
 	}
@@ -344,8 +344,8 @@ std::optional<TextShadow> Text::GetTextShadow() {
 
 std::optional<TextStroke> Text::GetTextStroke() {
 	TextStroke stroke{
-		GetProperty<float>(PropertyId::TextStrokeWidth),
-		GetProperty<Color>(PropertyId::TextStrokeColor),
+		GetProperty<float>(PropertyId::_WebkitTextStrokeWidth),
+		GetProperty<Color>(PropertyId::_WebkitTextStrokeColor),
 	};
 	if (stroke.width) {
 		return stroke;
