@@ -7,6 +7,18 @@ PM.program_init{
     max = bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
 }
 
+local function get_fx(fx, type)
+    if type:match "draw" then
+        return fx
+    elseif type:match "depth" then
+        return fx.depth
+    elseif type:match "draw_indirect" then
+        return fx.di
+    else
+        error("error program type!\n")
+    end
+end
+
 local function uniform_info(shader, uniforms)
     local shader_uniforms = bgfx.get_shader_uniforms(shader)
     if shader_uniforms then
@@ -92,7 +104,7 @@ local function createRenderProgram(fxcfg)
 
     if depth_prog then
         fx.depth = {
-            handle  = dh,
+            vs      = dh,
             prog    = depth_prog,
             uniforms= depth_uniforms,
             varyings= fxcfg.depth_varyings,
@@ -240,7 +252,8 @@ function S.material_create(filename)
             filename = filename,
             material = material,
             cfg      = fxcfg,
-            attr     = attribute
+            attr     = attribute,
+            type     = "draw"
         }
     end
 
@@ -250,7 +263,8 @@ function S.material_create(filename)
             filename = filename,
             material = material,
             cfg      = fxcfg,
-            attr     = attribute
+            attr     = attribute,
+            type     = "depth"
         }
     end
 
@@ -260,7 +274,8 @@ function S.material_create(filename)
             filename = filename,
             material = material,
             cfg      = fxcfg,
-            attr     = attribute
+            attr     = attribute,
+            type     = "draw_indirect"
         }
     end
 
@@ -275,9 +290,7 @@ function S.material_unmark(pid)
     MATERIAL_MARKED[pid] = nil
 end
 
-local function material_destroy(material)
-    local fx = material.fx
-
+local function material_destroy(fx)
     -- why? PM only keep 16 bit data(it's bgfx handle data), but program type in high 16 bit with int32 data, we need to recover the type for handle when destroy
     local function make_prog_handle(h)
         assert(h ~= 0xffff)
@@ -288,7 +301,9 @@ local function material_destroy(material)
 
     --DO NOT clean fx.prog to nil
     local h = PM.program_reset(fx.prog)
-    bgfx.destroy(make_prog_handle(h))
+    if h then
+        bgfx.destroy(make_prog_handle(h)) 
+    end
 
     local function destroy_stage(stage)
         if fx[stage] then
@@ -306,8 +321,21 @@ function S.material_destroy(material)
     local pid = material.fx.prog
     assert(MATERIALS[pid])
     MATERIALS[pid] = nil
+    material_destroy(material.fx)
 
-    material_destroy(material)
+    if material.fx.depth then
+        local dpid = material.fx.depth.prog
+        assert(MATERIALS[dpid])
+        MATERIALS[dpid] = nil
+        material_destroy(material.fx.depth)
+    end
+
+    if material.fx.di then
+        local diid = material.fx.di.prog
+        assert(MATERIALS[diid])
+        MATERIALS[diid] = nil
+        material_destroy(material.fx.di)
+    end
 end
 
 -- local REMOVED_PROGIDS = {}
@@ -319,9 +347,11 @@ function S.material_check()
         for _, removeid in ipairs(removed) do
             if nil == MATERIAL_MARKED[removeid] then
                 local mi = assert(MATERIALS[removeid])
+                local fx = get_fx(mi.material.fx, mi.type)
                 log.info(("Remove prog:%d, from file:%s"):format(removeid, mi.filename))
                 -- we just destroy bgfx program handle and shader handles, but not remove 'material' from cpu side
-                material_destroy(mi.material)
+                
+                material_destroy(fx)
             end
         end
     end
@@ -334,9 +364,10 @@ function S.material_check()
                 assert(not MATERIAL_MARKED[requestid])
                 log.info(("Recreate prog:%d, from file:%s"):format(requestid, mi.filename))
                 local newfx = create_fx(mi.cfg)
-                PM.program_set(requestid, newfx.prog)
-                newfx.prog = requestid
-
+                assert(mi.type, "material program should own type!\n")
+                local fx = get_fx(newfx, mi.type)
+                PM.program_set(requestid, fx.prog)
+                fx.prog = requestid
                 mi.material.fx = newfx
             else
                 log.info(("Can not create prog:%d, it have been fully remove by 'S.material_destroy'"):format(requestid))
