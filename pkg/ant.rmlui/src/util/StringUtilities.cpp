@@ -58,50 +58,6 @@ void ExpandString(std::vector<std::string>& string_list, const std::string& stri
 		string_list.emplace_back(start_ptr, end_ptr + 1);
 }
 
-void ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters) {
-	int quote_mode_depth = 0;
-	const char* ptr = string.c_str();
-	const char* start_ptr = nullptr;
-	const char* end_ptr = ptr;
-
-	while (*ptr)
-	{
-		// Increment the quote depth for each quote character encountered
-		if (*ptr == quote_character)
-		{
-			++quote_mode_depth;
-		}
-		// And decrement it for every unquote character
-		else if (*ptr == unquote_character)
-		{
-			--quote_mode_depth;
-		}
-
-		// If we encounter a delimiter while not in quote mode, add the item to the list
-		if (*ptr == delimiter && quote_mode_depth == 0)
-		{
-			if (start_ptr)
-				string_list.emplace_back(start_ptr, end_ptr + 1);
-			else if(!ignore_repeated_delimiters)
-				string_list.emplace_back();
-			start_ptr = nullptr;
-		}
-		// Otherwise if its not white space or we're in quote mode, advance the pointers
-		else if (!IsWhitespace(*ptr) || quote_mode_depth > 0)
-		{
-			if (!start_ptr)
-				start_ptr = ptr;
-			end_ptr = ptr;
-		}
-
-		ptr++;
-	}
-
-	// If there's data pending, add it.
-	if (start_ptr)
-		string_list.emplace_back(start_ptr, end_ptr + 1);
-}
-
 std::string StripWhitespace(const std::string& s) {
 	auto start = s.begin();
 	auto end = s.end();

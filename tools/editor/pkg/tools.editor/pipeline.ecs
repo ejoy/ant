@@ -18,6 +18,7 @@ pipeline "update"
     .stage "final"
 
 pipeline "editor_camera"
+    .stage "merge_camera_changed"
     .stage "update_camera"
     .stage "update_camera_bounding"
     .stage "update_camera_depend"

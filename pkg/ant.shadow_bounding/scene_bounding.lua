@@ -42,7 +42,8 @@ local function build_scene_info(C, sb)
 	local mqidx = queuemgr.queue_index "main_queue"
 
 	local zn, zf = math.maxinteger, -math.maxinteger
-	local ln, lf = math.maxinteger, -math.maxinteger
+	local PSR_ln, PSR_lf = math.maxinteger, -math.maxinteger
+	local PSC_ln, PSC_lf = math.maxinteger, -math.maxinteger
 
 	local Lv = assert(sb.light_info).Lv
 	local Cv = C.camera.viewmat
@@ -54,9 +55,8 @@ local function build_scene_info(C, sb)
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
 					zn, zf = build_nearfar(math3d.aabb_transform(Cv, sceneaabb), zn, zf)
-					if Lv then
-						ln, lf = build_nearfar(math3d.aabb_transform(Lv, sceneaabb), ln, lf)
-					end
+					PSR_ln, PSR_lf = build_nearfar(math3d.aabb_transform(Lv, sceneaabb), PSR_ln, PSR_lf)
+					
 					PSR = math3d.aabb_merge(PSR, sceneaabb)
 				end
 			end
@@ -64,6 +64,7 @@ local function build_scene_info(C, sb)
 			if castshadow then
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
+					PSC_ln, PSC_lf = build_nearfar(math3d.aabb_transform(Lv, sceneaabb), PSC_ln, PSC_lf)
 					PSC = math3d.aabb_merge(PSC, sceneaabb)
 				end
 			end
@@ -85,7 +86,8 @@ local function build_scene_info(C, sb)
 		end
 
 		si.zn, si.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
-		si.ln, si.lf = ln, lf
+		si.PSR_ln, si.PSR_lf = PSR_ln, PSR_lf
+		si.PSC_ln, si.PSC_lf = PSR_ln, PSR_lf
 		si.nearHit, si.farHit = nearHit, farHit
 	
 		si.PSR = PSR

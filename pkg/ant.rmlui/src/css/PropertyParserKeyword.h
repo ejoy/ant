@@ -23,7 +23,7 @@ struct StaticStringArray {
 
 template <StaticString... Keywords>
 Property PropertyParseKeyword(PropertyId id, const std::string& value) {
-	auto v = StaticStringArray<Keywords...>::find<0>(value);
+	int v = StaticStringArray<Keywords...>::template find<0>(value);
 	if (v == -1) {
 		return {};
 	}

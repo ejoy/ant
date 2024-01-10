@@ -1,3 +1,5 @@
+import_feature "ant.shadow_bounding|scene_bounding"
+
 system "init_system"
     .implement "init_system.lua"
 

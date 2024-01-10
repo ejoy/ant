@@ -12,6 +12,7 @@
 #include <css/StyleSheetSpecification.h>
 #include <core/Text.h>
 #include <core/Transform.h>
+#include <util/AlwaysFalse.h>
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
@@ -329,8 +330,6 @@ void Element::SetOuterHTML(const std::string& html) {
 		InstanceInner(dom);
 	}
 }
-
-template<class> inline constexpr bool always_false_v = false;
 
 void Element::InstanceOuter(const HtmlElement& html) {
 	tag = html.tag;

@@ -1,9 +1,12 @@
 #pragma once
 
 #include <css/Property.h>
+#include <util/AlwaysFalse.h>
 #include <optional>
 
 namespace Rml {
+
+std::optional<PropertyFloat> PropertyParseRawNumber(const std::string& value);
 
 enum class PropertyParseNumberUnit : uint8_t {
 	Number,
@@ -12,61 +15,66 @@ enum class PropertyParseNumberUnit : uint8_t {
 	Angle,
 };
 
-std::optional<PropertyFloat> PropertyParseRawNumber(const std::string& value);
-
-static constexpr bool PropertyIsAngle(PropertyUnit unit) {
-	return (unit == PropertyUnit::RAD) || (unit == PropertyUnit::DEG);
-}
-
-static constexpr bool PropertyIsNumber(PropertyUnit unit) {
-	return unit == PropertyUnit::NUMBER;
-}
-
-static constexpr bool PropertyIsPercent(PropertyUnit unit) {
-	return unit == PropertyUnit::PERCENT;
-}
-
 template <PropertyParseNumberUnit units>
 std::optional<PropertyFloat> PropertyParseNumber(const std::string& value) {
 	auto f = PropertyParseRawNumber(value);
 	if (!f) {
 		return std::nullopt;
 	}
-	switch (units) {
-	case PropertyParseNumberUnit::Number:
-		if (PropertyIsNumber(f->unit)) {
+	if constexpr (units == PropertyParseNumberUnit::Number) {
+		switch (f->unit) {
+		case PropertyUnit::NUMBER:
 			return f;
-		}
-		break;
-	case PropertyParseNumberUnit::Length:
-		if (!PropertyIsAngle(f->unit) && !PropertyIsNumber(f->unit) && !PropertyIsPercent(f->unit)) {
-			return f;
-		}
-		break;
-	case PropertyParseNumberUnit::LengthPercent:
-		if (!PropertyIsAngle(f->unit) && !PropertyIsNumber(f->unit)) {
-			return f;
-		}
-		break;
-	case PropertyParseNumberUnit::Angle:
-		if (PropertyIsAngle(f->unit)) {
-			return f;
-		}
-		break;
-	}
-
-	if (f->unit == PropertyUnit::NUMBER && f->value == 0.f) {
-		switch (units) {
-		case PropertyParseNumberUnit::Angle:
-			return PropertyFloat { 0.f, PropertyUnit::RAD };
-		case PropertyParseNumberUnit::Length:
-		case PropertyParseNumberUnit::LengthPercent:
-			return PropertyFloat { 0.f, PropertyUnit::PX };
 		default:
-			break;
+			return std::nullopt;
 		}
 	}
-	return std::nullopt;
+	else if constexpr (units == PropertyParseNumberUnit::Length) {
+		switch (f->unit) {
+		case PropertyUnit::RAD:
+		case PropertyUnit::DEG:
+		case PropertyUnit::PERCENT:
+			return std::nullopt;
+		case PropertyUnit::NUMBER:
+			if (f->value == 0.f) {
+				return PropertyFloat { 0.f, PropertyUnit::PX };
+			}
+			return std::nullopt;
+		default:
+			return f;
+		}
+	}
+	else if constexpr (units == PropertyParseNumberUnit::LengthPercent) {
+		switch (f->unit) {
+		case PropertyUnit::RAD:
+		case PropertyUnit::DEG:
+			return std::nullopt;
+		case PropertyUnit::NUMBER:
+			if (f->value == 0.f) {
+				return PropertyFloat { 0.f, PropertyUnit::PX };
+			}
+			return std::nullopt;
+		default:
+			return f;
+		}
+	}
+	else if constexpr (units == PropertyParseNumberUnit::Angle) {
+		switch (f->unit) {
+		case PropertyUnit::RAD:
+		case PropertyUnit::DEG:
+			return f;
+		case PropertyUnit::NUMBER:
+			if (f->value == 0.f) {
+				return PropertyFloat { 0.f, PropertyUnit::RAD };
+			}
+			return std::nullopt;
+		default:
+			return std::nullopt;
+		}
+	}
+	else {
+		static_assert(always_false_v<units>, "unknown number units!");
+	}
 }
 
 template <PropertyParseNumberUnit units>

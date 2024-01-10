@@ -4,4 +4,8 @@ if DEBUG then
     local ecs_core = require "ecs.core"
     ecs_core.DEBUG = true
 end
-return require "ecs"
+local ecs = require "ecs"
+
+ecs.exporter = require "exporter"
+
+return ecs
