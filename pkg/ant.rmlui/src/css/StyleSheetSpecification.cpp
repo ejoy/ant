@@ -73,10 +73,22 @@ static constexpr PropertyIdSet InheritableProperties = GetInheritableProperties(
 static_assert((InheritableProperties & LayoutProperties).empty());
 
 struct StyleSheetSpecificationInstance {
-	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name);
-	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value);
-	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 	void RegisterProperties();
+
+	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
+
+	template <typename... Parser>
+	PropertyRegister RegisterProperty(PropertyId id, const std::string&, Parser&&... parser) {
+		properties[(size_t)id] = { { parser... } };
+		return { properties[(size_t)id] };
+	}
+
+	template <typename... Parser>
+	PropertyRegister RegisterProperty(PropertyId id, const std::string&, const char def[], Parser&&... parser) {
+		unparsed_default[id] = def;
+		properties[(size_t)id] = { { parser... } };
+		return { properties[(size_t)id] };
+	}
 
 	Property ParseProperty(PropertyId id, const std::string& value) const;
 
@@ -103,41 +115,12 @@ PropertyRegister& PropertyRegister::AddParser(PropertyParser new_parser) {
 	return *this;
 }
 
-static std::string convert(const std::string& s) {
-	std::string r;
-	auto f = s.find_first_not_of('-', 0);
-	auto l = s.find_first_of('-', f);
-	while (std::string::npos != f || std::string::npos != l) {
-		auto ss = s.substr(f, l - f);
-		if (!ss.empty()) {
-			if (!r.empty()) {
-				ss[0] = std::toupper(ss[0]);
-			}
-			r += ss;
-		}
-		f = s.find_first_not_of('-', l);
-		l = s.find_first_of('-', f);
-	}
-	return r;
-}
-
 template <typename T>
 std::optional<T> MapGet(std::unordered_map<std::string_view, T> const& map, std::string_view name)  {
 	auto it = map.find(name);
 	if (it != map.end())
 		return it->second;
 	return std::nullopt;
-}
-
-PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value) {
-	size_t index = (size_t)id;
-	unparsed_default[id] = default_value;
-	return { properties[index] };
-}
-
-PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name) {
-	size_t index = (size_t)id;
-	return { properties[index] };
 }
 
 Property StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
@@ -545,8 +528,11 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		shorthand_map.emplace(kebab, id);
 	}
 
-	RegisterProperty(PropertyId::BorderTopWidth, "border-top-width", "0px")
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
+	RegisterProperty(PropertyId::BorderTopWidth,
+		"0px",
+		PropertyParseNumber<PropertyParseNumberUnit::Length>
+	);
+	
 	RegisterProperty(PropertyId::BorderRightWidth, "border-right-width", "0px")
 		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
 	RegisterProperty(PropertyId::BorderBottomWidth, "border-bottom-width", "0px")

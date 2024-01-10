@@ -7,9 +7,9 @@ namespace Rml {
 
 using ParseFloatFunc = std::optional<PropertyFloat> (*) (const std::string&);
 
-static ParseFloatFunc number = PropertyParseNumber<PropertyParseNumberUnit::Number>;
-static ParseFloatFunc length = PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>;
-static ParseFloatFunc angle = PropertyParseNumber<PropertyParseNumberUnit::Angle>;
+static ParseFloatFunc number = PropertyParseFloat<PropertyParseNumberUnit::Number>;
+static ParseFloatFunc length = PropertyParseFloat<PropertyParseNumberUnit::LengthPercent>;
+static ParseFloatFunc angle = PropertyParseFloat<PropertyParseNumberUnit::Angle>;
 
 const ParseFloatFunc angle1[] = { angle };
 const ParseFloatFunc angle2[] = { angle, angle };

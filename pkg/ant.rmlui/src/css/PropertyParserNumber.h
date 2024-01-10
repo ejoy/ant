@@ -6,7 +6,7 @@
 
 namespace Rml {
 
-std::optional<PropertyFloat> PropertyParseRawNumber(const std::string& value);
+std::optional<PropertyFloat> PropertyParseRawFloat(const std::string& value);
 
 enum class PropertyParseNumberUnit : uint8_t {
 	Number,
@@ -16,8 +16,8 @@ enum class PropertyParseNumberUnit : uint8_t {
 };
 
 template <PropertyParseNumberUnit units>
-std::optional<PropertyFloat> PropertyParseNumber(const std::string& value) {
-	auto f = PropertyParseRawNumber(value);
+std::optional<PropertyFloat> PropertyParseFloat(const std::string& value) {
+	auto f = PropertyParseRawFloat(value);
 	if (!f) {
 		return std::nullopt;
 	}
@@ -79,7 +79,7 @@ std::optional<PropertyFloat> PropertyParseNumber(const std::string& value) {
 
 template <PropertyParseNumberUnit units>
 Property PropertyParseNumber(PropertyId id, const std::string& value) {
-	auto v = PropertyParseNumber<units>(value);
+	auto v = PropertyParseFloat<units>(value);
 	if (v) {
 		return { id, *v };
 	}
