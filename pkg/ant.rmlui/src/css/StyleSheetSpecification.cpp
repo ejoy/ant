@@ -9,6 +9,7 @@
 #include <css/PropertyParserKeyword.h>
 #include <css/PropertyParserString.h>
 #include <css/PropertyParserTransform.h>
+#include <util/AlwaysFalse.h>
 #include <core/Layout.h>
 #include <array>
 #include <memory>
@@ -18,8 +19,6 @@ namespace Rml {
 
 class StyleSheetSpecification;
 struct StyleSheetSpecificationInstance;
-
-template<class> inline constexpr bool always_false_v = false;
 
 enum class ShorthandType : uint8_t {
 	// Normal; properties that fail to parse fall-through to the next until they parse correctly, and any
