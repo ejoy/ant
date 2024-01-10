@@ -201,7 +201,7 @@ local function move_camera_to_origin(li, intersectpointsLS, n, f)
 		local translate = math3d.vector(0.0, 0.0, n, 1.0)
 		intersectpointsLS = translate_points(translate, intersectpointsLS)
 	end
-	return 0.0, f - n
+	return 0.0, f - n, intersectpointsLS
 end
 
 local function update_shadow_matrices(si, li, c)
@@ -214,7 +214,7 @@ local function update_shadow_matrices(si, li, c)
 		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
 		assert(f > n)
 		if moveCameraToOrigin then
-			n, f = move_camera_to_origin(li, intersectpointsLS, n, f)
+			n, f, intersectpointsLS = move_camera_to_origin(li, intersectpointsLS, n, f)
 		end
 		c.frustum.n, c.frustum.f = n, f
 		si.nearLS, si.farLS = n, f
@@ -314,7 +314,7 @@ function shadow_sys:update_camera_depend()
 
 	local sb = w:first "shadow_bounding:in".shadow_bounding
 	local si, li = sb.scene_info, sb.light_info
-	if not si.PSR then
+	if not si.PSR or not li.Lv then
 		return
 	end
 	si.sceneaabbLS = build_sceneaabbLS(si, li)

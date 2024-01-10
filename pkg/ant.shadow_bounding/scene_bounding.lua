@@ -45,7 +45,7 @@ local function build_scene_info(C, sb)
 	local PSR_ln, PSR_lf = math.maxinteger, -math.maxinteger
 	local PSC_ln, PSC_lf = math.maxinteger, -math.maxinteger
 
-	local Lv = assert(sb.light_info).Lv
+	local Lv = sb.light_info.Lv
 	local Cv = C.camera.viewmat
 	local PSC, PSR = math3d.aabb(), math3d.aabb()
 
@@ -56,9 +56,11 @@ local function build_scene_info(C, sb)
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
 					zn, zf = build_nearfar(math3d.aabb_transform(Cv, sceneaabb), zn, zf)
-					aabbLS = math3d.aabb_transform(Lv, sceneaabb)
-					PSR_ln, PSR_lf = build_nearfar(aabbLS, PSR_ln, PSR_lf)
-					
+					if Lv then
+						aabbLS = math3d.aabb_transform(Lv, sceneaabb)
+						PSR_ln, PSR_lf = build_nearfar(aabbLS, PSR_ln, PSR_lf)
+					end
+
 					PSR = math3d.aabb_merge(PSR, sceneaabb)
 				end
 			end
@@ -66,8 +68,12 @@ local function build_scene_info(C, sb)
 			if castshadow then
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
-					aabbLS = aabbLS or math3d.aabb_transform(Lv, sceneaabb)
-					PSC_ln, PSC_lf = build_nearfar(aabbLS, PSC_ln, PSC_lf)
+					if nil == aabbLS and Lv then
+						aabbLS =  math3d.aabb_transform(Lv, sceneaabb)
+					end
+					if aabbLS then
+						PSC_ln, PSC_lf = build_nearfar(aabbLS, PSC_ln, PSC_lf)
+					end
 					PSC = math3d.aabb_merge(PSC, sceneaabb)
 				end
 			end
