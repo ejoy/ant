@@ -91,7 +91,7 @@ function rl_sys:start_frame()
             e.render_object.render_layer = idx
         end
 
-        build_opacity_layers()
+        opacity_layers = build_opacity_layers()
         break
     end
 end

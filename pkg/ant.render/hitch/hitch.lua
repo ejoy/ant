@@ -120,8 +120,8 @@ local function create_draw_indirect_and_compute_entity(glbs, gid)
                 simplemesh  = glb.mesh,
                 material    = glb.material,
                 visible_state = "main_view|selectable|cast_shadow",
-                --render_layer = glb.render_layer,
-                render_layer = "opacity",
+                render_layer = glb.render_layer,
+                --render_layer = "opacity",
                 draw_indirect = {
                     instance_buffer = {
                         memory  = memory,
