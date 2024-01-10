@@ -10,6 +10,7 @@
 #include <css/PropertyParserString.h>
 #include <css/PropertyParserTransform.h>
 #include <css/PropertyName.h>
+#include <util/ConstexprMap.h>
 #include <util/AlwaysFalse.h>
 #include <core/Layout.h>
 #include <array>
@@ -72,6 +73,24 @@ static constexpr inline PropertyIdSet GetInheritableProperties() {
 static constexpr PropertyIdSet InheritableProperties = GetInheritableProperties();
 static_assert((InheritableProperties & LayoutProperties).empty());
 
+template <typename E, size_t I, size_t N, typename Data>
+static constexpr void GetPropertyName(Data&& data) {
+	if constexpr (I < N) {
+		data[2*I+0] = std::make_pair(PropertyNameV<PropertyNameStyle::Camel, static_cast<E>(I)>, static_cast<E>(I));
+		data[2*I+1] = std::make_pair(PropertyNameV<PropertyNameStyle::Kebab, static_cast<E>(I)>, static_cast<E>(I));
+		GetPropertyName<E, I+1, N>(data);
+	}
+}
+
+template <typename E>
+static consteval auto GetPropertyNames() {
+	std::array<std::pair<std::string_view, E>, 2 * EnumCountV<E>> data;
+	GetPropertyName<E, 0, EnumCountV<E>>(data);
+	return data;
+}
+static constexpr auto PropertyNames = MakeConstexprMap(GetPropertyNames<PropertyId>());
+static constexpr auto ShorthandNames = MakeConstexprMap(GetPropertyNames<ShorthandId>());
+
 struct StyleSheetSpecificationInstance {
 	void RegisterProperties();
 
@@ -104,8 +123,6 @@ struct StyleSheetSpecificationInstance {
 
 	std::array<PropertyDefinition,  EnumCountV<PropertyId>>  properties;
 	std::array<ShorthandDefinition, EnumCountV<ShorthandId>> shorthands;
-	std::unordered_map<std::string_view, PropertyId> property_map;
-	std::unordered_map<std::string_view, ShorthandId> shorthand_map;
 	std::unordered_map<PropertyId, std::string> unparsed_default;
 	Style::TableRef default_value;
 };
@@ -115,8 +132,8 @@ PropertyRegister& PropertyRegister::AddParser(PropertyParser new_parser) {
 	return *this;
 }
 
-template <typename T>
-std::optional<T> MapGet(std::unordered_map<std::string_view, T> const& map, std::string_view name)  {
+template <typename MAP>
+std::optional<typename MAP::mapped_type> MapGet(MAP const& map, std::string_view name)  {
 	auto it = map.find(name);
 	if (it != map.end())
 		return it->second;
@@ -149,7 +166,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 	auto& property_shorthand = shorthands[(size_t)id];
 
 	for (const std::string& name : property_list) {
-		auto property_id = MapGet(property_map, name);
+		auto property_id = MapGet(PropertyNames, name);
 		if (property_id) {
 			// We have a valid property
 			property_shorthand.items.emplace_back(*property_id);
@@ -157,7 +174,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 		}
 		else {
 			// Otherwise, we must be a shorthand
-			auto shorthand_id = MapGet(shorthand_map, name);
+			auto shorthand_id = MapGet(ShorthandNames, name);
 			// Test for valid shorthand id. The recursive types (and only those) can hold other shorthands.
 			if (shorthand_id && (type == ShorthandType::RecursiveRepeat || type == ShorthandType::RecursiveCommaSeparated)) {
 				property_shorthand.items.emplace_back(*shorthand_id);
@@ -197,12 +214,12 @@ void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& s
 }
 
 bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const {
-	auto property_id = MapGet(property_map, property_name);
+	auto property_id = MapGet(PropertyNames, property_name);
 	if (property_id) {
 		set.insert(*property_id);
 		return true;
 	}
-	auto shorthand_id = MapGet(shorthand_map, property_name);
+	auto shorthand_id = MapGet(ShorthandNames, property_name);
 	if (shorthand_id) {
 		ParseShorthandDeclaration(set, *shorthand_id);
 		return true;
@@ -211,13 +228,13 @@ bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyIdSet& set, const
 }
 
 bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const {
-	auto property_id = MapGet(property_map, property_name);
+	auto property_id = MapGet(PropertyNames, property_name);
 	if (property_id) {
 		if (ParsePropertyDeclaration(vec, *property_id, property_value)) {
 			return true;
 		}
 	}
-	auto shorthand_id = MapGet(shorthand_map, property_name);
+	auto shorthand_id = MapGet(ShorthandNames, property_name);
 	if (shorthand_id) {
 		if (ParseShorthandDeclaration(vec, *shorthand_id, property_value)){
 			return true;
@@ -498,36 +515,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 	return true;
 }
 
-template <typename E, size_t I, size_t N, typename Data>
-static constexpr void GetPropertyName(Data&& data) {
-	if constexpr (I < N) {
-		data[I] = std::make_tuple(
-			static_cast<E>(I),
-			PropertyNameV<PropertyNameStyle::Camel, static_cast<E>(I)>,
-			PropertyNameV<PropertyNameStyle::Kebab, static_cast<E>(I)>
-		);
-		GetPropertyName<E, I+1, N>(data);
-	}
-}
-
-template <typename E>
-static consteval auto PropertyNames() {
-	std::array<std::tuple<E, std::string_view, std::string_view>, EnumCountV<E>> data;
-	GetPropertyName<E, 0, EnumCountV<E>>(data);
-	return data;
-}
-
 void StyleSheetSpecificationInstance::RegisterProperties() {
-	constexpr auto propertyNames = PropertyNames<PropertyId>();
-	for (auto [id, camel, kebab]: propertyNames) {
-		property_map.emplace(camel, id);
-		property_map.emplace(kebab, id);
-	}
-	for (auto [id, camel, kebab]: PropertyNames<ShorthandId>()) {
-		shorthand_map.emplace(camel, id);
-		shorthand_map.emplace(kebab, id);
-	}
-
 	RegisterProperty(PropertyId::BorderTopWidth,
 		"0px",
 		PropertyParseNumber<PropertyParseNumberUnit::Length>
@@ -804,8 +792,12 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	PropertyVector properties;
 	for (auto const& [id, value] : unparsed_default) {
 		if (!ParsePropertyDeclaration(properties, id, value)) {
-			auto kebabName = std::get<2>(propertyNames[(size_t)id]);
-			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", kebabName.data(), value.c_str());
+			for (auto const& [prop_name, prop_id] : PropertyNames) {
+				if (prop_id == id) {
+					Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", prop_name.data(), value.c_str());
+					break;
+				}
+			}
 		}
 	}
 	unparsed_default.clear();
