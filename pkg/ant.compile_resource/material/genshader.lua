@@ -683,7 +683,7 @@ local function build_fx_content(mat, varyings, results)
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(diinputdecl, varyingdecl),
             ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results.di_inputs, results.varyings),
             ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
-            ["@VS_FUNC_DEFINE"]         = build_di_vs_code(mat, varyings),
+            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_di_vs_code(mat, varyings),
             ["@VSINPUT_INIT"]           = table.concat(results.di_input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
