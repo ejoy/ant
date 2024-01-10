@@ -36,7 +36,7 @@ local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxint
 
 local INV_Z<const> = true
 --TODO: read from setting file
-local useLiSPSM<const> = true
+local useLiSPSM<const> = false
 
 --TODO: imporve depth precision, see: filament: far_uses_shadowcasters
 --after use infinity far plane for ortho projection maritx, it not work, just disable it right now, 2024.01.08
