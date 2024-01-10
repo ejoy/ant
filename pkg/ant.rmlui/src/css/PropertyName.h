@@ -22,7 +22,7 @@ constexpr auto PropertyName_() {
 	constexpr auto rawname = EnumNameV<E>;
 	size_t i = 1;
 	size_t sz = 0;
-	std::array<char, 256> name = {};
+	std::array<char, 32> name = {};
 	if (rawname[0] == '_') {
 		if constexpr (Style == PropertyNameStyle::Camel) {
 			name[sz++] = '-';

@@ -92,8 +92,8 @@ struct StyleSheetSpecificationInstance {
 
 	std::array<PropertyDefinition,  EnumCountV<PropertyId>>  properties;
 	std::array<ShorthandDefinition, EnumCountV<ShorthandId>> shorthands;
-	std::unordered_map<std::string, PropertyId> property_map;
-	std::unordered_map<std::string, ShorthandId> shorthand_map;
+	std::unordered_map<std::string_view, PropertyId> property_map;
+	std::unordered_map<std::string_view, ShorthandId> shorthand_map;
 	std::unordered_map<PropertyId, std::string> unparsed_default;
 	Style::TableRef default_value;
 };
@@ -122,20 +122,10 @@ static std::string convert(const std::string& s) {
 }
 
 template <typename T>
-std::optional<T> MapGet(std::unordered_map<std::string, T> const& map, const std::string& name)  {
+std::optional<T> MapGet(std::unordered_map<std::string_view, T> const& map, std::string_view name)  {
 	auto it = map.find(name);
 	if (it != map.end())
 		return it->second;
-	return std::nullopt;
-}
-
-template <typename T>
-std::optional<std::string> MapGetName(std::unordered_map<std::string, T> const& map, T const& v)  {
-	for (auto& [name, value]: map) {
-		if (value == v) {
-			return name;
-		}
-	}
 	return std::nullopt;
 }
 
@@ -538,14 +528,15 @@ static constexpr void GetPropertyName(Data&& data) {
 }
 
 template <typename E>
-static constexpr auto PropertyNames() {
-	std::array<std::tuple<E, std::string_view, std::string_view>, EnumCountV<E>> data = {};
+static consteval auto PropertyNames() {
+	std::array<std::tuple<E, std::string_view, std::string_view>, EnumCountV<E>> data;
 	GetPropertyName<E, 0, EnumCountV<E>>(data);
 	return data;
 }
 
 void StyleSheetSpecificationInstance::RegisterProperties() {
-	for (auto [id, camel, kebab]: PropertyNames<PropertyId>()) {
+	constexpr auto propertyNames = PropertyNames<PropertyId>();
+	for (auto [id, camel, kebab]: propertyNames) {
 		property_map.emplace(camel, id);
 		property_map.emplace(kebab, id);
 	}
@@ -827,8 +818,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	PropertyVector properties;
 	for (auto const& [id, value] : unparsed_default) {
 		if (!ParsePropertyDeclaration(properties, id, value)) {
-			auto name = MapGetName(property_map, id);
-			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", name? name->c_str(): "unk", value.c_str());
+			auto kebabName = std::get<2>(propertyNames[(size_t)id]);
+			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", kebabName.data(), value.c_str());
 		}
 	}
 	unparsed_default.clear();
