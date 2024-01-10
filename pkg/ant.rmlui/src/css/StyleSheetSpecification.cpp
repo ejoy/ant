@@ -440,7 +440,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 					else
 						value += character;
 				}
-				else if (character == '"') {
+				else if (character == '"' || character == '\'') {
 					if (split_values) {
 						value = StringUtilities::StripWhitespace(value);
 						if (value.size() > 0) {
@@ -494,7 +494,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 
 			case VALUE_QUOTE: {
 				if (previous_character == '/') {
-					if (character == '"')
+					if (character == '"' || character == '\'')
 						value += character;
 					else {
 						value += '/';
@@ -502,7 +502,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 					}
 				}
 				else {
-					if (character == '"') {
+					if (character == '"' || character == '\'') {
 						if (split_values) {
 							value = StringUtilities::StripWhitespace(value);
 							if (value.size() > 0) {

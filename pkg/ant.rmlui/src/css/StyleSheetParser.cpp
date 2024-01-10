@@ -258,7 +258,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 				else
 				{
 					value += character;
-					if (character == '"')
+					if (character == '"' || character == '\'')
 						state = QUOTE;
 				}
 			}
@@ -267,7 +267,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 			case QUOTE:
 			{
 				value += character;
-				if (character == '"' && previous_character != '/')
+				if ((character == '"' || character == '\'') && previous_character != '/')
 					state = VALUE;
 			}
 			break;
