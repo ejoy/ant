@@ -168,7 +168,7 @@ function hitch_sys:component_init()
 end
 
 function hitch_sys:entity_remove()
-    for e in w:select "REMOVED hitch:in hitch_memory?in hitch_changed?out eid:in" do
+    for e in w:select "REMOVED hitch:in hitch_changed?out eid:in" do
         local ho = e.hitch
         Q.dealloc(ho.visible_idx)
         Q.dealloc(ho.cull_idx)
@@ -206,12 +206,12 @@ function hitch_sys:finish_scene_update()
             ig.enable(gid, "hitch_tag", true)
     
             local h_aabb = math3d.aabb()
-            for re in w:select "hitch_tag eid:in bounding:in visible_state:in mesh?in material?in render_layer?in scene?in skinning?in" do
+            for re in w:select "hitch_tag eid:in bounding:in visible_state:in mesh?in material?in render_layer?in scene?in skinning?in dynamic_mesh?in" do
                 if mc.NULL ~= re.bounding.aabb then
                     h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
                 end
 
-                if re.skinning then
+                if re.skinning or re.dynamic_mesh then
                     if math3d.aabb_isvalid(h_aabb) then
                         for _, heid in ipairs(HITCHS[gid]) do
                             local e<close> = world:entity(heid, "bounding:update scene_needchange?out")

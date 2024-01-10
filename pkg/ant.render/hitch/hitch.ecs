@@ -2,6 +2,7 @@ import_feature "ant.scene"
 
 component "hitch_tag"
 component "hitch_changed"
+component "dynamic_mesh"
 component "hitch_memory".type "lua"
 component "hitch"
     .type "c"
