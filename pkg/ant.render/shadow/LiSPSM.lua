@@ -26,13 +26,13 @@ end
 local function warp_frustum(n, f)
     assert(f > n)
     local d = 1 / (f - n)
-    local A = (f + n) * d
-    local B = -2 * n * f * d
+    local A = f * d
+    local B = f*n * d
     return math3d.matrix(
-            n,   0.0, 0.0, 0.0,
-            0.0, A,   0.0, B,
-            0.0, 0.0, n,   0.0,
-            0.0, 1.0, 0.0, 0.0)
+        n,   0.0, 0.0, 0.0,
+        0.0, A,   0.0, B,
+        0.0, 0.0, n,   0.0,
+        0.0, 1.0, 0.0, 0.0)
 end
 
 -- from filament: ShadowMap::applyLISPSM
