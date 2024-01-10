@@ -36,7 +36,7 @@ local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxint
 
 local INV_Z<const> = true
 --TODO: read from setting file
-local useLiSPSM<const> = false
+local useLiSPSM<const> = true
 
 --TODO: imporve depth precision, see: filament: far_uses_shadowcasters
 --after use infinity far plane for ortho projection maritx, it not work, just disable it right now, 2024.01.08
@@ -45,7 +45,7 @@ local useLiSPSM<const> = false
 --and we found that, it use some thick in depth texture sampling, need more effort to find why they work
 local usePSCFar<const> = false
 
-local moveCameraToOrigin<const> = false
+local moveCameraToOrigin<const> = true
 
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
@@ -194,11 +194,12 @@ end
 
 local function move_camera_to_origin(li, intersectpointsLS, n, f)
 	li.Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
+	li.Lw = math3d.inverse_fast(li.Lv)
+	li.Lv2Cv = math3d.mul(li.Cv, li.Lw)
 
 	if useLiSPSM then
 		local translate = math3d.vector(0.0, 0.0, n, 1.0)
 		intersectpointsLS = translate_points(translate, intersectpointsLS)
-		li.Lv2Cv = math3d.mul(li.Cv, math3d.inverse_fast(li.Lv))
 	end
 	return 0.0, f - n
 end
@@ -209,7 +210,6 @@ local function update_shadow_matrices(si, li, c)
 
 	local intersectpointsLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
 
-	local Lp
 	if mc.NULL ~= intersectpointsLS then
 		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
 		assert(f > n)
@@ -219,19 +219,23 @@ local function update_shadow_matrices(si, li, c)
 		c.frustum.n, c.frustum.f = n, f
 		si.nearLS, si.farLS = n, f
 
-		Lp = math3d.projmat(c.frustum, INV_Z)
 		if useLiSPSM then
-			li.Lp = Lp
+			-- DO NOT create an INV_Z projection matrix
+			li.Lp = math3d.projmat(c.frustum)
 			local Wv, Wp = LiSPSM.warp_matrix(si, li, intersectpointsLS)
-			Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), Lp)
+
+			--update S matrix and keep it to li.Lp
+			li.Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), math3d.projmat(c.frustum, INV_Z))
+		else
+			li.Lp = math3d.projmat(c.frustum, INV_Z)
 		end
 
-		local F = isc.calc_focus_matrix(math3d.minmax(intersectpointsLS, Lp))
-		Lp 		= math3d.mul(F, Lp)
+		local F = isc.calc_focus_matrix(math3d.minmax(intersectpointsLS, li.Lp))
+		li.Lp 		= math3d.mul(F, li.Lp)
 	else
-		Lp		= math3d.projmat(c.frustum, INV_Z)
+		li.Lp		= math3d.projmat(c.frustum, INV_Z)
 	end
-	update_camera(c, li.Lv, Lp)
+	update_camera(c, li.Lv, li.Lp)
 end
 
 local function init_light_info(C, D, li)
@@ -324,13 +328,13 @@ function shadow_sys:update_camera_depend()
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
-		ce.scene.worldmat = mu.M3D_mark(ce.scene.worldmat, li.Lw)
-
         local c = ce.camera
         local csm = e.csm
 		c.viewfrustum = csmfrustums[csm.index]
 		update_shadow_matrices(si, li, c)
 		mark_camera_changed(ce)
+
+		ce.scene.worldmat = mu.M3D_mark(ce.scene.worldmat, li.Lw)
 
 		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)
 		split_distances_VS[csm.index] = c.viewfrustum.f

@@ -53,10 +53,6 @@ function L.warp_matrix(si, li, intersectpointsLS)
     local dzf = math.max(0.0, si.view_far - farHit)
 
     -- near/far plane's distance from the eye in view space of the shadow receiver volume.
-
-    -- math3d.inverse(Lv) to transform point in light space to worldspace
-    -- camerainfo.cameraviewmat to tranfrom point from worldspace to camera view space
-    -- zn/zf, near/far plane distance from camera position
     local zn, zf = calc_near_far(li.Lv2Cv, intersectpointsLS, 3)    -- 3 for z-axis
     assert(zf > zn)
     zn = math.max(zn, si.view_near)
