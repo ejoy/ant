@@ -184,6 +184,25 @@ local function calc_light_view_nearfar(intersectpointsLS, sceneaabbLS)
 	return fn, ff
 end
 
+local function translate_points(t, intersectpointsLS)
+	local p = {}
+	for i=1, math3d.array_size(intersectpointsLS) do
+		p[i] = math3d.add(math3d.array_index(intersectpointsLS, i), t)
+	end
+	return math3d.array_vector(p)
+end
+
+local function move_camera_to_origin(li, intersectpointsLS, n, f)
+	li.Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
+
+	if useLiSPSM then
+		local translate = math3d.vector(0.0, 0.0, n, 1.0)
+		intersectpointsLS = translate_points(translate, intersectpointsLS)
+		li.Lv2Cv = math3d.mul(li.Cv, math3d.inverse_fast(li.Lv))
+	end
+	return 0.0, f - n
+end
+
 local function update_shadow_matrices(si, li, c)
 	local sp = math3d.projmat(c.viewfrustum)
 	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
@@ -195,22 +214,7 @@ local function update_shadow_matrices(si, li, c)
 		local n, f = calc_light_view_nearfar(intersectpointsLS, si.sceneaabbLS)
 		assert(f > n)
 		if moveCameraToOrigin then
-			Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
-
-			if useLiSPSM then
-				local function translate_intersectpoints(t, intersectpointsLS)
-					local p = {}
-					for i=1, math3d.array_size(intersectpointsLS) do
-						p[i] = math3d.add(math3d.array_index(intersectpointsLS, i), t)
-					end
-					return math3d.array_vector(p)
-				end
-	
-				local translate = math3d.vector(0.0, 0.0, n, 1.0)
-				intersectpointsLS = translate_intersectpoints(translate, intersectpointsLS)
-				li.Lv2Cv = math3d.mul(li.Cv, math3d.inverse_fast(Lv))
-			end
-			n, f = 0.0, f - n
+			n, f = move_camera_to_origin(li, intersectpointsLS, n, f)
 		end
 		c.frustum.n, c.frustum.f = n, f
 		si.nearLS, si.farLS = n, f

@@ -51,11 +51,13 @@ local function build_scene_info(C, sb)
 
 	local function merge_obj_PSC_PSR(obj, receiveshadow, castshadow, bounding)
 		if obj_visible(obj, mqidx) then
+			local aabbLS
 			if receiveshadow then
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
 					zn, zf = build_nearfar(math3d.aabb_transform(Cv, sceneaabb), zn, zf)
-					PSR_ln, PSR_lf = build_nearfar(math3d.aabb_transform(Lv, sceneaabb), PSR_ln, PSR_lf)
+					aabbLS = math3d.aabb_transform(Lv, sceneaabb)
+					PSR_ln, PSR_lf = build_nearfar(aabbLS, PSR_ln, PSR_lf)
 					
 					PSR = math3d.aabb_merge(PSR, sceneaabb)
 				end
@@ -64,7 +66,8 @@ local function build_scene_info(C, sb)
 			if castshadow then
 				local sceneaabb = bounding.scene_aabb
 				if mc.NULL ~= sceneaabb then
-					PSC_ln, PSC_lf = build_nearfar(math3d.aabb_transform(Lv, sceneaabb), PSC_ln, PSC_lf)
+					aabbLS = aabbLS or math3d.aabb_transform(Lv, sceneaabb)
+					PSC_ln, PSC_lf = build_nearfar(aabbLS, PSC_ln, PSC_lf)
 					PSC = math3d.aabb_merge(PSC, sceneaabb)
 				end
 			end
@@ -87,7 +90,7 @@ local function build_scene_info(C, sb)
 
 		si.zn, si.zf = math.max(C.camera.frustum.n, zn), math.min(C.camera.frustum.f, zf)
 		si.PSR_ln, si.PSR_lf = PSR_ln, PSR_lf
-		si.PSC_ln, si.PSC_lf = PSR_ln, PSR_lf
+		si.PSC_ln, si.PSC_lf = PSC_ln, PSC_lf
 		si.nearHit, si.farHit = nearHit, farHit
 	
 		si.PSR = PSR
