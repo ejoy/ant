@@ -10,5 +10,6 @@ namespace Rml::StringUtilities {
 		return (x == '\r' || x == '\n' || x == ' ' || x == '\t' || x == '\f');
 	}
 
-	std::string StripWhitespace(const std::string& string);
+	std::string StripWhitespace(const std::string& s);
+	std::string_view StripWhitespace(std::string_view s);
 }

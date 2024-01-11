@@ -3,14 +3,24 @@
 #include <css/StyleSheetNodeSelector.h>
 #include <css/StyleCache.h>
 #include <util/StringUtilities.h>
+#include <bee/nonstd/charconv.h>
 #include <algorithm>
 #include <bit>
 
 namespace Rml {
 
-static StructuralSelector GetSelector(const std::string& name) {
+template <typename T>
+static T Str2I(std::string_view s) {
+	T v;
+	if (auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v); ec != std::errc()) {
+		return v;
+	}
+	return {};
+}
+
+static StructuralSelector GetSelector(std::string_view name) {
 	const size_t parameter_start = name.find('(');
-	auto func = (parameter_start == std::string::npos)
+	auto func = (parameter_start == std::string_view::npos)
 			? CreateSelector(name)
 			: CreateSelector(name.substr(0, parameter_start))
 			;
@@ -22,8 +32,8 @@ static StructuralSelector GetSelector(const std::string& name) {
 	int b = 0;
 
 	const size_t parameter_end = name.find(')', parameter_start + 1);
-	if (parameter_start != std::string::npos && parameter_end != std::string::npos) {
-		std::string parameters = StringUtilities::StripWhitespace(name.substr(parameter_start + 1, parameter_end - (parameter_start + 1)));
+	if (parameter_start != std::string_view::npos && parameter_end != std::string_view::npos) {
+		std::string_view parameters = StringUtilities::StripWhitespace(name.substr(parameter_start + 1, parameter_end - (parameter_start + 1)));
 
 		// Check for 'even' or 'odd' first.
 		if (parameters == "even") {
@@ -37,32 +47,32 @@ static StructuralSelector GetSelector(const std::string& name) {
 		else {
 			// Alrighty; we've got an equation in the form of [[+/-]an][(+/-)b]. So, foist up, we split on 'n'.
 			const size_t n_index = parameters.find('n');
-			if (n_index == std::string::npos) {
+			if (n_index == std::string_view::npos) {
 				// The equation is 0n + b. So a = 0, and we only have to parse b.
 				a = 0;
-				b = atoi(parameters.c_str());
+				b = Str2I<int>(parameters);
 			}
 			else {
 				if (n_index == 0)
 					a = 1;
 				else {
-					const std::string a_parameter = parameters.substr(0, n_index);
+					std::string_view a_parameter = parameters.substr(0, n_index);
 					if (StringUtilities::StripWhitespace(a_parameter) == "-")
 						a = -1;
 					else
-						a = atoi(a_parameter.c_str());
+						a = Str2I<int>(a_parameter);
 				}
 
 				size_t pm_index = parameters.find('+', n_index + 1);
-				if (pm_index != std::string::npos)
+				if (pm_index != std::string_view::npos)
 					b = 1;
 				else {
 					pm_index = parameters.find('-', n_index + 1);
-					if (pm_index != std::string::npos)
+					if (pm_index != std::string_view::npos)
 						b = -1;
 				}
 
-				if (n_index == parameters.size() - 1 || pm_index == std::string::npos)
+				if (n_index == parameters.size() - 1 || pm_index == std::string_view::npos)
 					b = 0;
 				else
 					b = b * atoi(parameters.data() + pm_index + 1);

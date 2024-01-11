@@ -70,4 +70,17 @@ std::string StripWhitespace(const std::string& s) {
 	return std::string();
 }
 
+std::string_view StripWhitespace(std::string_view s) {
+	auto start = s.begin();
+	auto end = s.end();
+	while (start < end && IsWhitespace(*start))
+		start++;
+	while (end > start && IsWhitespace(*(end - 1)))
+		end--;
+	if (start < end)
+		return { start, end };
+	return {};
+}
+
+
 }
