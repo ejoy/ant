@@ -18,9 +18,11 @@ function dpd_sys:init()
 end
 
 local function remap_xy(x, y)
-    local nx, ny = mu.convert_device_to_screen_coord(iviewport.device_size, iviewport.viewrect, x, y)
-	local vr = iviewport.viewrect
-	return nx-vr.x, ny-vr.y
+    local vp = iviewport.device_size
+    local vr = iviewport.viewrect
+    local nx, ny = x - vp.x, y - vp.y
+    nx, ny  = mu.convert_device_to_screen_coord(vp, vr, nx, ny)
+	return nx, ny
 end
 
 function dpd_sys:data_changed()
