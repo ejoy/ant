@@ -90,7 +90,7 @@ static consteval auto GetPropertyNames() {
 }
 static constexpr auto PropertyNames = MakeConstexprMap(GetPropertyNames<PropertyId>());
 static constexpr auto ShorthandNames = MakeConstexprMap(GetPropertyNames<ShorthandId>());
-static constexpr auto UnparsedDefaultValue = MakeConstexprMap<PropertyId, std::string_view>({
+static constexpr std::pair<PropertyId, std::string_view> UnparsedDefaultValue[] = {
 	{ PropertyId::BorderTopWidth, "0px" },
 	{ PropertyId::BorderRightWidth, "0px" },
 	{ PropertyId::BorderBottomWidth, "0px" },
@@ -152,7 +152,7 @@ static constexpr auto UnparsedDefaultValue = MakeConstexprMap<PropertyId, std::s
 	{ PropertyId::ScrollLeft, "0px" },
 	{ PropertyId::ScrollTop, "0px" },
 	{ PropertyId::Filter, "none" },
-});
+};
 
 struct StyleSheetSpecificationInstance {
 	void RegisterProperties();
