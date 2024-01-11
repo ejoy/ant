@@ -46,10 +46,12 @@ local function get_hitch_worldmats_instance_memory(hitchs)
     local memory = {}
     for heid, _ in pairs(hitchs) do
         local e<close> = world:entity(heid, "scene:in")
-        local wm = get_hitch_worldmat(e)
-        wm = math3d.transpose(wm)
-        local c1, c2, c3 = math3d.index(wm, 1, 2, 3)
-        memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3)) 
+        if e then
+            local wm = get_hitch_worldmat(e)
+            wm = math3d.transpose(wm)
+            local c1, c2, c3 = math3d.index(wm, 1, 2, 3)
+            memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))  
+        end
     end
     return table.concat(memory, "")
 end
