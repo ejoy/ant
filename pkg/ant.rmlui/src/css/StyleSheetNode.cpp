@@ -50,7 +50,7 @@ static StructuralSelector GetSelector(std::string_view name) {
 			if (n_index == std::string_view::npos) {
 				// The equation is 0n + b. So a = 0, and we only have to parse b.
 				a = 0;
-				b = Str2I<int>(parameters);
+				b = Str2I<uint16_t>(parameters);
 			}
 			else {
 				if (n_index == 0)
@@ -60,7 +60,7 @@ static StructuralSelector GetSelector(std::string_view name) {
 					if (StringUtilities::StripWhitespace(a_parameter) == "-")
 						a = -1;
 					else
-						a = Str2I<int>(a_parameter);
+						a = Str2I<uint16_t>(a_parameter);
 				}
 
 				size_t pm_index = parameters.find('+', n_index + 1);
