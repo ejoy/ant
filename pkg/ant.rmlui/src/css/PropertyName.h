@@ -24,7 +24,7 @@ constexpr auto PropertyNameRaw() {
 	size_t sz = 0;
 	std::array<char, 32> name = {};
 	if (rawname[0] == '_') {
-		if constexpr (Style == PropertyNameStyle::Camel) {
+		if constexpr (Style != PropertyNameStyle::Camel) {
 			name[sz++] = '-';
 		}
 		name[sz++] = ToLower(rawname[1]);

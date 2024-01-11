@@ -22,56 +22,13 @@ namespace Rml {
 class StyleSheetSpecification;
 struct StyleSheetSpecificationInstance;
 
-enum class ShorthandType : uint8_t {
-	// Normal; properties that fail to parse fall-through to the next until they parse correctly, and any
-	// undeclared are not set.
-	FallThrough,
-	// A single failed parse will abort, and any undeclared are replicated from the last declared property.
-	Replicate,
-	// For 'padding', 'margin', etc; up to four properties are expected.
-	Box,
-	// Repeatedly resolves the full value string on each property, whether it is a normal property or another shorthand.
-	RecursiveRepeat,
-	// Comma-separated list of properties or shorthands, the number of declared values must match the specified.
-	RecursiveCommaSeparated
-};
-
 using PropertyParser = Property (*)(PropertyId id, const std::string& value);
+using PropertyDefinition = std::vector<PropertyParser>;
 
-struct PropertyDefinition {
-	std::vector<PropertyParser> parsers;
-};
-
-struct ShorthandDefinition {
-	ShorthandType type;
-	std::vector<std::variant<PropertyId, ShorthandId>> items;
-};
-
-struct PropertyRegister {
-	PropertyDefinition& definition;
-	PropertyRegister& AddParser(PropertyParser new_parser);
-};
-
-static constexpr inline PropertyIdSet GetInheritableProperties() {
-	PropertyIdSet set;
-	set.insert(PropertyId::LineHeight);
-	set.insert(PropertyId::Color);
-	set.insert(PropertyId::Opacity);
-	set.insert(PropertyId::FontFamily);
-	set.insert(PropertyId::FontSize);
-	set.insert(PropertyId::FontStyle);
-	set.insert(PropertyId::FontWeight);
-	set.insert(PropertyId::TextAlign);
-	set.insert(PropertyId::WordBreak);
-	set.insert(PropertyId::TextDecorationLine);
-	set.insert(PropertyId::TextDecorationColor);
-	set.insert(PropertyId::TextShadowH);
-	set.insert(PropertyId::TextShadowV);
-	set.insert(PropertyId::TextShadowColor);
-	return set;
-}
-static constexpr PropertyIdSet InheritableProperties = GetInheritableProperties();
-static_assert((InheritableProperties & LayoutProperties).empty());
+using ShorthandDefinitionFallThrough = std::vector<PropertyId>;
+using ShorthandDefinitionBox = std::array<PropertyId, 4>;
+using ShorthandDefinitionRecursiveRepeat = std::vector<ShorthandId>;
+using ShorthandDefinition = std::variant<ShorthandDefinitionFallThrough, ShorthandDefinitionBox, ShorthandDefinitionRecursiveRepeat>;
 
 template <typename E, size_t I, size_t N, typename Data>
 static constexpr void GetPropertyName(Data&& data) {
@@ -88,6 +45,36 @@ static consteval auto GetPropertyNames() {
 	GetPropertyName<E, 0, EnumCountV<E>>(data);
 	return data;
 }
+
+// TODO: constexpr
+template <typename E, typename Value, size_t N>
+auto MakeEnumArray(const std::pair<E, Value> (&items)[N]) noexcept {
+	std::array<Value, EnumCountV<E>> data;
+	for (auto const& [k, v] : items) {
+		data[(size_t)k] = v;
+	}
+	return data;
+}
+
+static constexpr PropertyIdSet InheritableProperties = (+[]{
+	PropertyIdSet set;
+	set.insert(PropertyId::LineHeight);
+	set.insert(PropertyId::Color);
+	set.insert(PropertyId::Opacity);
+	set.insert(PropertyId::FontFamily);
+	set.insert(PropertyId::FontSize);
+	set.insert(PropertyId::FontStyle);
+	set.insert(PropertyId::FontWeight);
+	set.insert(PropertyId::TextAlign);
+	set.insert(PropertyId::WordBreak);
+	set.insert(PropertyId::TextDecorationLine);
+	set.insert(PropertyId::TextDecorationColor);
+	set.insert(PropertyId::TextShadowH);
+	set.insert(PropertyId::TextShadowV);
+	set.insert(PropertyId::TextShadowColor);
+	return set;
+})();
+static_assert((InheritableProperties & LayoutProperties).empty());
 static constexpr auto PropertyNames = MakeConstexprMap(GetPropertyNames<PropertyId>());
 static constexpr auto ShorthandNames = MakeConstexprMap(GetPropertyNames<ShorthandId>());
 static constexpr std::pair<PropertyId, std::string_view> UnparsedDefaultValue[] = {
@@ -154,38 +141,465 @@ static constexpr std::pair<PropertyId, std::string_view> UnparsedDefaultValue[] 
 	{ PropertyId::Filter, "none" },
 };
 
-struct StyleSheetSpecificationInstance {
-	void RegisterProperties();
+static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
+	{ PropertyId::BorderTopWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::BorderRightWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::BorderBottomWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::BorderLeftWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
 
-	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
+	{ PropertyId::BorderTopColor, {
+		PropertyParseColour,
+	}},
+	{ PropertyId::BorderRightColor, {
+		PropertyParseColour,
+	}},
+	{ PropertyId::BorderBottomColor, {
+		PropertyParseColour,
+	}},
+	{ PropertyId::BorderLeftColor, {
+		PropertyParseColour,
+	}},
 
-	template <typename... Parser>
-	PropertyRegister RegisterProperty(PropertyId id/*, Parser&&... parser*/) {
-		//properties[(size_t)id] = { { parser... } };
-		return { properties[(size_t)id] };
-	}
+	{ PropertyId::BorderTopLeftRadius, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BorderTopRightRadius, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BorderBottomRightRadius, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BorderBottomLeftRadius, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
 
-	Property ParseProperty(PropertyId id, const std::string& value) const;
+	{ PropertyId::ZIndex, {
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
 
-	const Style::TableRef& GetDefaultProperties() const;
-	const PropertyIdSet& GetInheritableProperties() const;
-	const ShorthandDefinition& GetShorthandDefinition(ShorthandId id) const;
-	bool ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const;
-	bool ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const;
-	bool ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) const;
-	void ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const;
-	bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::string& property_value) const;
-	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
+	{ PropertyId::LineHeight, {
+		PropertyParseKeyword<"normal">,
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
 
-	std::array<PropertyDefinition,  EnumCountV<PropertyId>>  properties;
-	std::array<ShorthandDefinition, EnumCountV<ShorthandId>> shorthands;
-	Style::TableRef default_value;
-};
+	{ PropertyId::Color, {
+		PropertyParseColour,
+	}},
 
-PropertyRegister& PropertyRegister::AddParser(PropertyParser new_parser) {
-	definition.parsers.push_back(new_parser);
-	return *this;
-}
+	{ PropertyId::Opacity, {
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
+
+	{ PropertyId::FontStyle, {
+		PropertyParseKeyword<"normal", "italic">,
+	}},
+	{ PropertyId::FontWeight, {
+		PropertyParseKeyword<"normal", "bold">,
+	}},
+	{ PropertyId::FontSize, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::FontFamily, {
+		PropertyParseString,
+	}},
+
+	{ PropertyId::TextAlign, {
+		PropertyParseKeyword<"left", "right", "center", "justify">,
+	}},
+	{ PropertyId::WordBreak, {
+		PropertyParseKeyword<"normal", "break-all", "break-word">,
+	}},
+
+	{ PropertyId::TextDecorationLine, {
+		PropertyParseKeyword<"none", "underline", "overline", "line-through">,
+	}},
+	{ PropertyId::TextDecorationColor, {
+		PropertyParseKeyword<"currentColor">,
+		PropertyParseColour,
+	}},
+
+	// Perspective and Transform specifications
+	{ PropertyId::Perspective, {
+		PropertyParseKeyword<"none">,
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::PerspectiveOriginX, {
+		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::PerspectiveOriginY, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::Transform, {
+		PropertyParseTransform,
+	}},
+	{ PropertyId::TransformOriginX, {
+		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::TransformOriginY, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::TransformOriginZ, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+
+	{ PropertyId::Transition, {
+		PropertyParseTransition,
+	}},
+	{ PropertyId::Animation, {
+		PropertyParseAnimation,
+	}},
+
+	{ PropertyId::BackgroundColor, {
+		PropertyParseColour,
+	}},
+	{ PropertyId::BackgroundImage, {
+		PropertyParseKeyword<"none">,
+		PropertyParseString,
+	}},
+	{ PropertyId::BackgroundOrigin, {
+		PropertyParseKeyword<"padding-box", "border-box", "content-box">,
+	}},
+	{ PropertyId::BackgroundSize, {
+		PropertyParseKeyword<"unset", "auto", "cover", "contain">,
+	}},
+	{ PropertyId::BackgroundSizeX, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundSizeY, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::BackgroundPositionX, {
+		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundPositionY, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::BackgroundRepeat, {
+		PropertyParseKeyword<"repeat", "repeat-x", "repeat-y", "no-repeat">,
+	}},
+	{ PropertyId::BackgroundFilter, {
+		PropertyParseKeyword<"none">,
+		PropertyParseColour,
+	}},
+
+	{ PropertyId::BackgroundLattice, {
+		PropertyParseKeyword<"auto", "cover", "contain">,
+	}},	
+	{ PropertyId::BackgroundLatticeX1, {
+		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundLatticeY1, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundLatticeX2, {
+		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundLatticeY2, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundLatticeU, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::BackgroundLatticeV, {
+		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::TextShadowH, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::TextShadowV, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::TextShadowColor, {
+		PropertyParseColour,
+	}},
+
+	{ PropertyId::_WebkitTextStrokeWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::_WebkitTextStrokeColor, {
+		PropertyParseColour,
+	}},
+
+	{ PropertyId::OutlineWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::OutlineColor, {
+		PropertyParseColour,
+	}},
+
+	{ PropertyId::PointerEvents, {
+		PropertyParseKeyword<"none", "auto">,
+	}},
+	{ PropertyId::ScrollLeft, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::ScrollTop, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::Filter, {
+		PropertyParseKeyword<"none", "gray">,
+	}},
+
+	// flex layout
+	{ PropertyId::Display, {
+		PropertyParseKeyword<"flex", "none">,
+	}},
+	{ PropertyId::Overflow, {
+		PropertyParseKeyword<"visible", "hidden", "scroll">,
+	}},
+	{ PropertyId::Position, {
+		PropertyParseKeyword<"static", "relative", "absolute">,
+	}},
+
+	{ PropertyId::MarginTop, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MarginRight, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MarginBottom, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MarginLeft, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::PaddingTop, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::PaddingRight, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::PaddingBottom, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::PaddingLeft, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::Top, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::Right, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::Bottom, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::Left, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::Width, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MinWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MaxWidth, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::Height, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MinHeight, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::MaxHeight, {
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+
+	{ PropertyId::ColumnGap, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::RowGap, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	{ PropertyId::Gap, {
+		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+	}},
+	
+	{ PropertyId::AlignContent, {
+		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around", "space-evenly">,
+	}},
+	{ PropertyId::AlignItems, {
+		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">,
+	}},
+	{ PropertyId::AlignSelf, {
+		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">,
+	}},
+	{ PropertyId::Direction, {
+		PropertyParseKeyword<"inherit", "ltr", "rtl">,
+	}},
+	{ PropertyId::FlexDirection, {
+		PropertyParseKeyword<"column", "column-reverse", "row", "row-reverse">,
+	}},
+	{ PropertyId::FlexWrap, {
+		PropertyParseKeyword<"nowrap", "wrap", "wrap-reverse">,
+	}},
+	{ PropertyId::JustifyContent, {
+		PropertyParseKeyword<"flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly">,
+	}},
+
+	{ PropertyId::AspectRatio, {
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
+	{ PropertyId::Flex, {
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
+	{ PropertyId::FlexBasis, {
+		PropertyParseKeyword<"auto">,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
+	}},
+	{ PropertyId::FlexGrow, {
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
+	{ PropertyId::FlexShrink, {
+		PropertyParseNumber<PropertyParseNumberUnit::Number>,
+	}},
+});
+
+static auto ShorthandDefinitions = MakeEnumArray<ShorthandId, ShorthandDefinition>({
+	{ ShorthandId::BorderWidth, ShorthandDefinitionBox {
+		PropertyId::BorderTopWidth,
+		PropertyId::BorderRightWidth,
+		PropertyId::BorderBottomWidth,
+		PropertyId::BorderLeftWidth,
+	}},
+	{ ShorthandId::BorderColor, ShorthandDefinitionBox {
+		PropertyId::BorderTopColor,
+		PropertyId::BorderRightColor,
+		PropertyId::BorderBottomColor,
+		PropertyId::BorderLeftColor,
+	}},
+	{ ShorthandId::BorderTop, ShorthandDefinitionFallThrough {
+		PropertyId::BorderTopWidth,
+		PropertyId::BorderTopColor,
+	}},
+	{ ShorthandId::BorderRight, ShorthandDefinitionFallThrough {
+		PropertyId::BorderRightWidth,
+		PropertyId::BorderRightColor,
+	}},
+	{ ShorthandId::BorderBottom, ShorthandDefinitionFallThrough {
+		PropertyId::BorderBottomWidth,
+		PropertyId::BorderBottomColor,
+	}},
+	{ ShorthandId::BorderLeft, ShorthandDefinitionFallThrough {
+		PropertyId::BorderLeftWidth,
+		PropertyId::BorderLeftColor,
+	}},
+	{ ShorthandId::Border, ShorthandDefinitionRecursiveRepeat {
+		ShorthandId::BorderTop,
+		ShorthandId::BorderRight,
+		ShorthandId::BorderBottom,
+		ShorthandId::BorderLeft,
+	}},
+	{ ShorthandId::BorderRadius, ShorthandDefinitionBox {
+		PropertyId::BorderTopLeftRadius,
+		PropertyId::BorderTopRightRadius,
+		PropertyId::BorderBottomRightRadius,
+		PropertyId::BorderBottomLeftRadius,
+	}},
+	{ ShorthandId::Font, ShorthandDefinitionFallThrough {
+		PropertyId::FontStyle,
+		PropertyId::FontWeight,
+		PropertyId::FontSize,
+		PropertyId::FontFamily,
+	}},
+	{ ShorthandId::TextDecoration, ShorthandDefinitionFallThrough {
+		PropertyId::TextDecorationLine,
+		PropertyId::TextDecorationColor,
+	}},
+	{ ShorthandId::PerspectiveOrigin, ShorthandDefinitionFallThrough {
+		PropertyId::PerspectiveOriginX,
+		PropertyId::PerspectiveOriginY,
+	}},
+	{ ShorthandId::TransformOrigin, ShorthandDefinitionFallThrough {
+		PropertyId::TransformOriginX,
+		PropertyId::TransformOriginY,
+		PropertyId::TransformOriginZ,
+	}},
+	{ ShorthandId::BackgroundSize, ShorthandDefinitionFallThrough {
+		PropertyId::BackgroundSizeX,
+		PropertyId::BackgroundSizeY,
+	}},
+	{ ShorthandId::BackgroundPosition, ShorthandDefinitionFallThrough {
+		PropertyId::BackgroundPositionX,
+		PropertyId::BackgroundPositionY,
+	}},
+	{ ShorthandId::Background, ShorthandDefinitionFallThrough {
+		PropertyId::BackgroundImage,
+		PropertyId::BackgroundPositionX,
+		PropertyId::BackgroundPositionY,
+		PropertyId::BackgroundSizeX,
+		PropertyId::BackgroundSizeY,
+	}},
+	{ ShorthandId::BackgroundLattice, ShorthandDefinitionFallThrough {
+		PropertyId::BackgroundLatticeX1,
+		PropertyId::BackgroundLatticeY1,
+		PropertyId::BackgroundLatticeX2,
+		PropertyId::BackgroundLatticeY2,
+		PropertyId::BackgroundLatticeU,
+		PropertyId::BackgroundLatticeV,
+	}},
+	{ ShorthandId::TextShadow, ShorthandDefinitionFallThrough {
+		PropertyId::TextShadowH,
+		PropertyId::TextShadowV,
+		PropertyId::TextShadowColor,
+	}},
+	{ ShorthandId::_WebkitTextStroke, ShorthandDefinitionFallThrough {
+		PropertyId::_WebkitTextStrokeWidth,
+		PropertyId::_WebkitTextStrokeColor,
+	}},
+	{ ShorthandId::Outline, ShorthandDefinitionFallThrough {
+		PropertyId::OutlineWidth,
+		PropertyId::OutlineColor,
+	}},
+	{ ShorthandId::Margin, ShorthandDefinitionBox {
+		PropertyId::MarginTop,
+		PropertyId::MarginRight,
+		PropertyId::MarginBottom,
+		PropertyId::MarginLeft,
+	}},
+	{ ShorthandId::Padding, ShorthandDefinitionBox {
+		PropertyId::PaddingTop,
+		PropertyId::PaddingRight,
+		PropertyId::PaddingBottom,
+		PropertyId::PaddingLeft,
+	}},
+});
+
+static Style::TableRef DefaultValueProperties;
 
 template <typename MAP>
 std::optional<typename MAP::mapped_type> MapGet(MAP const& map, std::string_view name)  {
@@ -195,255 +609,7 @@ std::optional<typename MAP::mapped_type> MapGet(MAP const& map, std::string_view
 	return std::nullopt;
 }
 
-Property StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
-	auto& definition = properties[(size_t)id];
-	for (auto parser : definition.parsers) {
-		auto prop = parser(id, value);
-		if (prop) {
-			return prop;
-		}
-	}
-	return {};
-}
-
-const Style::TableRef& StyleSheetSpecificationInstance::GetDefaultProperties() const {
-	return default_value;
-}
-
-const PropertyIdSet& StyleSheetSpecificationInstance::GetInheritableProperties() const {
-	return InheritableProperties;
-}
-
-bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type) {
-	std::vector<std::string> property_list;
-	StringUtilities::ExpandString(property_list, property_names, ',');
-
-	auto& property_shorthand = shorthands[(size_t)id];
-
-	for (const std::string& name : property_list) {
-		auto property_id = MapGet(PropertyNames, name);
-		if (property_id) {
-			// We have a valid property
-			property_shorthand.items.emplace_back(*property_id);
-			continue;
-		}
-		else {
-			// Otherwise, we must be a shorthand
-			auto shorthand_id = MapGet(ShorthandNames, name);
-			// Test for valid shorthand id. The recursive types (and only those) can hold other shorthands.
-			if (shorthand_id && (type == ShorthandType::RecursiveRepeat || type == ShorthandType::RecursiveCommaSeparated)) {
-				property_shorthand.items.emplace_back(*shorthand_id);
-				continue;
-			}
-			else {
-				Log::Message(Log::Level::Error, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
-				return false;
-			}
-		}
-	}
-
-	property_shorthand.type = type;
-	return true;
-}
-
-const ShorthandDefinition& StyleSheetSpecificationInstance::GetShorthandDefinition(ShorthandId id) const {
-	return shorthands[(size_t)id];
-}
-
-void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const {
-	const ShorthandDefinition& shorthand_definition = GetShorthandDefinition(shorthand_id);
-	for (auto& item : shorthand_definition.items) {
-		std::visit([&](auto&& arg) {
-			using T = std::decay_t<decltype(arg)>;
-			if constexpr (std::is_same_v<T, PropertyId>) {
-				set.insert(arg);
-			}
-			else if constexpr (std::is_same_v<T, ShorthandId>) {
-				ParseShorthandDeclaration(set, arg);
-			}
-			else {
-				static_assert(always_false_v<T>, "non-exhaustive visitor!");
-			}
-		}, item);
-	}
-}
-
-bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) const {
-	auto property_id = MapGet(PropertyNames, property_name);
-	if (property_id) {
-		set.insert(*property_id);
-		return true;
-	}
-	auto shorthand_id = MapGet(ShorthandNames, property_name);
-	if (shorthand_id) {
-		ParseShorthandDeclaration(set, *shorthand_id);
-		return true;
-	}
-	return false;
-}
-
-bool StyleSheetSpecificationInstance::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) const {
-	auto property_id = MapGet(PropertyNames, property_name);
-	if (property_id) {
-		if (ParsePropertyDeclaration(vec, *property_id, property_value)) {
-			return true;
-		}
-	}
-	auto shorthand_id = MapGet(ShorthandNames, property_name);
-	if (shorthand_id) {
-		if (ParseShorthandDeclaration(vec, *shorthand_id, property_value)){
-			return true;
-		}
-	}
-	return false;
-}
-
-bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) const {
-	// Parse as a single property.
-	std::vector<std::string> property_values;
-	if (!ParsePropertyValues(property_values, property_value, false) || property_values.size() == 0)
-		return false;
-	auto new_property = ParseProperty(property_id, property_values[0]);
-	if (!new_property)
-		return false;
-	vec.emplace_back(new_property);
-	return true;
-}
-
-// Parses a property declaration, setting any parsed and validated properties on the given dictionary.
-bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::string& property_value) const {
-	std::vector<std::string> property_values;
-	if (!ParsePropertyValues(property_values, property_value, true) || property_values.size() == 0)
-		return false;
-
-	// Parse as a shorthand.
-	const ShorthandDefinition& shorthand_definition = GetShorthandDefinition(shorthand_id);
-
-	// If this definition is a 'box'-style shorthand (x-top, x-right, x-bottom, x-left, etc) and there are fewer
-	// than four values
-	if (shorthand_definition.type == ShorthandType::Box && property_values.size() < 4) {
-		// This array tells which property index each side is parsed from
-		std::array<int, 4> box_side_to_value_index = { 0,0,0,0 };
-		switch (property_values.size()) {
-		case 1:
-			// Only one value is defined, so it is parsed onto all four sides.
-			box_side_to_value_index = { 0,0,0,0 };
-			break;
-		case 2:
-			// Two values are defined, so the first one is parsed onto the top and bottom value, the second onto
-			// the left and right.
-			box_side_to_value_index = { 0,1,0,1 };
-			break;
-		case 3:
-			// Three values are defined, so the first is parsed into the top value, the second onto the left and
-			// right, and the third onto the bottom.
-			box_side_to_value_index = { 0,1,2,1 };
-			break;
-		default:
-			assert(false);
-			break;
-		}
-
-		for (int i = 0; i < 4; i++) {
-			auto const& item = shorthand_definition.items[i];
-			auto id = std::get_if<PropertyId>(&item);
-			if (!id) {
-				return false;
-			}
-			int value_index = box_side_to_value_index[i];
-			auto new_property = ParseProperty(*id, property_values[value_index]);
-			if (!new_property) {
-				return false;
-			}
-			vec.emplace_back(new_property);
-		}
-	}
-	else if (shorthand_definition.type == ShorthandType::RecursiveRepeat) {
-		bool result = true;
-
-		for (auto& item : shorthand_definition.items) {
-			std::visit([&](auto&& arg) {
-				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, PropertyId>) {
-					result &= ParsePropertyDeclaration(vec, arg, property_value);
-				}
-				else if constexpr (std::is_same_v<T, ShorthandId>) {
-					result &= ParseShorthandDeclaration(vec, arg, property_value);
-				}
-				else {
-					static_assert(always_false_v<T>, "non-exhaustive visitor!");
-				}
-			}, item);
-		}
-
-		if (!result)
-			return false;
-	}
-	else if (shorthand_definition.type == ShorthandType::RecursiveCommaSeparated) {
-		std::vector<std::string> subvalues;
-		StringUtilities::ExpandString(subvalues, property_value, ',');
-
-		if (subvalues.size() + 0 < shorthand_definition.items.size()) {
-			// Not enough subvalues declared.
-			return false;
-		}
-
-		size_t subvalue_i = 0;
-		for (size_t i = 0; i < shorthand_definition.items.size() && subvalue_i < subvalues.size(); i++) {
-			bool result = false;
-			auto const& item = shorthand_definition.items[i];
-
-			std::visit([&](auto&& arg) {
-				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, PropertyId>) {
-					result = ParsePropertyDeclaration(vec, arg, subvalues[subvalue_i]);
-				}
-				else if constexpr (std::is_same_v<T, ShorthandId>) {
-					result = ParseShorthandDeclaration(vec, arg, subvalues[subvalue_i]);
-				}
-				else {
-					static_assert(always_false_v<T>, "non-exhaustive visitor!");
-				}
-			}, item);
-
-			if (result)
-				subvalue_i += 1;
-		}
-	}
-	else {
-		size_t value_index = 0;
-		size_t property_index = 0;
-
-		for (; value_index < property_values.size() && property_index < shorthand_definition.items.size(); property_index++) {
-			auto const& item = shorthand_definition.items[property_index];
-			auto id = std::get_if<PropertyId>(&item);
-			if (!id) {
-				return false;
-			}
-			auto new_property = ParseProperty(*id, property_values[value_index]);
-			if (!new_property) {
-				// This definition failed to parse; if we're falling through, try the next property. If there is no
-				// next property, then abort!
-				if (shorthand_definition.type == ShorthandType::FallThrough) {
-					if (property_index + 1 < shorthand_definition.items.size())
-						continue;
-				}
-				return false;
-			}
-
-			vec.emplace_back(new_property);
-
-			// Increment the value index, unless we're replicating the last value and we're up to the last value.
-			if (shorthand_definition.type != ShorthandType::Replicate ||
-				value_index < property_values.size() - 1)
-				value_index++;
-		}
-	}
-
-	return true;
-}
-
-bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const {
+static bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) {
 	std::string value;
 
 	enum ParseState { VALUE, VALUE_PARENTHESIS, VALUE_QUOTE };
@@ -570,277 +736,140 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 	return true;
 }
 
-void StyleSheetSpecificationInstance::RegisterProperties() {
-	RegisterProperty(PropertyId::BorderTopWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::BorderRightWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::BorderBottomWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::BorderLeftWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterShorthand(ShorthandId::BorderWidth, "border-width", "border-top-width, border-right-width, border-bottom-width, border-left-width", ShorthandType::Box);
+static Property ParseProperty(PropertyId id, const std::string& value) {
+	auto& definition = PropertyDefinitions[(size_t)id];
+	for (auto parser : definition) {
+		auto prop = parser(id, value);
+		if (prop) {
+			return prop;
+		}
+	}
+	return {};
+}
 
-	RegisterProperty(PropertyId::BorderTopColor)
-		.AddParser(PropertyParseColour);
-	RegisterProperty(PropertyId::BorderRightColor)
-		.AddParser(PropertyParseColour);
-	RegisterProperty(PropertyId::BorderBottomColor)
-		.AddParser(PropertyParseColour);
-	RegisterProperty(PropertyId::BorderLeftColor)
-		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::BorderColor, "border-color", "border-top-color, border-right-color, border-bottom-color, border-left-color", ShorthandType::Box);
+static bool ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) {
+	// Parse as a single property.
+	std::vector<std::string> property_values;
+	if (!ParsePropertyValues(property_values, property_value, false) || property_values.size() == 0)
+		return false;
+	auto new_property = ParseProperty(property_id, property_values[0]);
+	if (!new_property)
+		return false;
+	vec.emplace_back(new_property);
+	return true;
+}
 
-	RegisterShorthand(ShorthandId::BorderTop, "border-top", "border-top-width, border-top-color", ShorthandType::FallThrough);
-	RegisterShorthand(ShorthandId::BorderRight, "border-right", "border-right-width, border-right-color", ShorthandType::FallThrough);
-	RegisterShorthand(ShorthandId::BorderBottom, "border-bottom", "border-bottom-width, border-bottom-color", ShorthandType::FallThrough);
-	RegisterShorthand(ShorthandId::BorderLeft, "border-left", "border-left-width, border-left-color", ShorthandType::FallThrough);
-	RegisterShorthand(ShorthandId::Border, "border", "border-top, border-right, border-bottom, border-left", ShorthandType::RecursiveRepeat);
+static void ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) {
+	const ShorthandDefinition& shorthand_definition = ShorthandDefinitions[(size_t)shorthand_id];
+	std::visit([&](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, ShorthandDefinitionFallThrough>) {
+			for (auto id : arg) {
+				set.insert(id);
+			}
+		}
+		else if constexpr (std::is_same_v<T, ShorthandDefinitionBox>) {
+			set.insert(arg[0]);
+			set.insert(arg[1]);
+			set.insert(arg[2]);
+			set.insert(arg[3]);
+		}
+		else if constexpr (std::is_same_v<T, ShorthandDefinitionRecursiveRepeat>) {
+			for (auto id : arg) {
+				ParseShorthandDeclaration(set, id);
+			}
+		}
+		else {
+			static_assert(always_false_v<T>, "non-exhaustive visitor!");
+		}
+	}, shorthand_definition);
+}
 
-	RegisterProperty(PropertyId::BorderTopLeftRadius)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BorderTopRightRadius)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BorderBottomRightRadius)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BorderBottomLeftRadius)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::BorderRadius, "border-radius", "border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius", ShorthandType::Box);
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::vector<std::string>& property_values);
 
-	RegisterProperty(PropertyId::ZIndex)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandDefinitionFallThrough const& definition, const std::vector<std::string>& property_values) {
+	size_t value_index = 0;
+	size_t property_index = 0;
+	for (; value_index < property_values.size() && property_index < definition.size(); property_index++) {
+		auto id = definition[property_index];
+		auto new_property = ParseProperty(id, property_values[value_index]);
+		if (!new_property) {
+			// This definition failed to parse; if we're falling through, try the next property. If there is no
+			// next property, then abort!
+			if (property_index + 1 < definition.size())
+				continue;
+			return false;
+		}
+		vec.emplace_back(new_property);
+		// Increment the value index, unless we're replicating the last value and we're up to the last value.
+		value_index++;
+	}
+	return true;
+}
 
-	RegisterProperty(PropertyId::LineHeight)
-		.AddParser(PropertyParseKeyword<"normal">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandDefinitionBox const& definition, const std::vector<std::string>& property_values) {
+	// If this definition is a 'box'-style shorthand (x-top, x-right, x-bottom, x-left, etc) and there are fewer
+	// than four values
+	// This array tells which property index each side is parsed from
+	std::array<int, 4> box_side_to_value_index = { 0,0,0,0 };
+	switch (property_values.size()) {
+	case 0:
+		return false;
+	case 1:
+		// Only one value is defined, so it is parsed onto all four sides.
+		box_side_to_value_index = { 0,0,0,0 };
+		break;
+	case 2:
+		// Two values are defined, so the first one is parsed onto the top and bottom value, the second onto
+		// the left and right.
+		box_side_to_value_index = { 0,1,0,1 };
+		break;
+	case 3:
+		// Three values are defined, so the first is parsed into the top value, the second onto the left and
+		// right, and the third onto the bottom.
+		box_side_to_value_index = { 0,1,2,1 };
+		break;
+	default:
+		box_side_to_value_index = { 0,1,2,3 };
+		break;
+	}
 
-	RegisterProperty(PropertyId::Color)
-		.AddParser(PropertyParseColour);
+	for (size_t i = 0; i < 4; i++) {
+		auto id = definition[i];
+		int value_index = box_side_to_value_index[i];
+		auto new_property = ParseProperty(id, property_values[value_index]);
+		if (!new_property) {
+			return false;
+		}
+		vec.emplace_back(new_property);
+	}
+	return true;
+}
 
-	RegisterProperty(PropertyId::Opacity)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandDefinitionRecursiveRepeat const& definition, const std::vector<std::string>& property_values) {
+	bool ok = true;
+	for (auto id : definition) {
+		ok &= ParseShorthandDeclaration(vec, id, property_values);
+	}
+	return ok;
+}
 
-	RegisterProperty(PropertyId::FontFamily)
-		.AddParser(PropertyParseString);
-	RegisterProperty(PropertyId::FontStyle)
-		.AddParser(PropertyParseKeyword<"normal", "italic">);
-	RegisterProperty(PropertyId::FontWeight)
-		.AddParser(PropertyParseKeyword<"normal", "bold">);
-	RegisterProperty(PropertyId::FontSize)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::Font, "font", "font-style, font-weight, font-size, font-family", ShorthandType::FallThrough);
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::vector<std::string>& property_values) {
+	const ShorthandDefinition& shorthand_definition = ShorthandDefinitions[(size_t)shorthand_id];
+	return std::visit([&](auto&& arg)->bool {
+		return ParseShorthandDeclaration(vec, arg, property_values);
+	}, shorthand_definition);
+}
 
-	RegisterProperty(PropertyId::TextAlign)
-		.AddParser(PropertyParseKeyword<"left", "right", "center", "justify">);
-	RegisterProperty(PropertyId::WordBreak)
-		.AddParser(PropertyParseKeyword<"normal", "break-all", "break-word">);
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::string& property_value) {
+	std::vector<std::string> property_values;
+	if (!ParsePropertyValues(property_values, property_value, true) || property_values.size() == 0) {
+		return false;
+	}
+	return ParseShorthandDeclaration(vec, shorthand_id, property_values);
+}
 
-	RegisterProperty(PropertyId::TextDecorationLine)
-		.AddParser(PropertyParseKeyword<"none", "underline", "overline", "line-through">);
-	RegisterProperty(PropertyId::TextDecorationColor)
-		.AddParser(PropertyParseKeyword<"currentColor">)
-		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::TextDecoration, "text-decoration", "text-decoration-line, text-decoration-color", ShorthandType::FallThrough);
-	
-	// Perspective and Transform specifications
-	RegisterProperty(PropertyId::Perspective)
-		.AddParser(PropertyParseKeyword<"none">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::PerspectiveOriginX)
-		.AddParser(PropertyParseKeyword<"left", "center", "right">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::PerspectiveOriginY)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::PerspectiveOrigin, "perspective-origin", "perspective-origin-x, perspective-origin-y", ShorthandType::FallThrough);
-	RegisterProperty(PropertyId::Transform)
-		.AddParser(PropertyParseTransform);
-	RegisterProperty(PropertyId::TransformOriginX)
-		.AddParser(PropertyParseKeyword<"left", "center", "right">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::TransformOriginY)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::TransformOriginZ)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterShorthand(ShorthandId::TransformOrigin, "transform-origin", "transform-origin-x, transform-origin-y, transform-origin-z", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::Transition)
-		.AddParser(PropertyParseTransition);
-	RegisterProperty(PropertyId::Animation)
-		.AddParser(PropertyParseAnimation);
-
-	RegisterProperty(PropertyId::BackgroundColor)
-		.AddParser(PropertyParseColour);
-	RegisterProperty(PropertyId::BackgroundImage)
-		.AddParser(PropertyParseKeyword<"none">)
-		.AddParser(PropertyParseString);
-	RegisterProperty(PropertyId::BackgroundOrigin)
-		.AddParser(PropertyParseKeyword<"padding-box", "border-box", "content-box">);
-	RegisterProperty(PropertyId::BackgroundSize)
-		.AddParser(PropertyParseKeyword<"unset", "auto", "cover", "contain">);
-	RegisterProperty(PropertyId::BackgroundSizeX)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundSizeY)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::BackgroundSize, "background-size", "background-size-x, background-size-y", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::BackgroundPositionX)
-		.AddParser(PropertyParseKeyword<"left", "center", "right">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundPositionY)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::BackgroundPosition, "background-position", "background-position-x, background-position-y", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::BackgroundLattice)
-		.AddParser(PropertyParseKeyword<"auto", "cover", "contain">);	
-	RegisterProperty(PropertyId::BackgroundLatticeX1)
-		.AddParser(PropertyParseKeyword<"left", "center", "right">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundLatticeY1)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundLatticeX2)
-		.AddParser(PropertyParseKeyword<"left", "center", "right">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundLatticeY2)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundLatticeU)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::BackgroundLatticeV)
-		.AddParser(PropertyParseKeyword<"top", "center", "bottom">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::BackgroundLattice, "background-lattice", "background-lattice-x1, background-lattice-y1, background-lattice-x2, background-lattice-y2, background-lattice-u, background-lattice-v", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::BackgroundRepeat)
-		.AddParser(PropertyParseKeyword<"repeat", "repeat-x", "repeat-y", "no-repeat">);
-	RegisterProperty(PropertyId::BackgroundFilter)
-		.AddParser(PropertyParseKeyword<"none">)
-		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position-x, background-position-y, background-size-x, background-size-y", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::TextShadowH)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::TextShadowV)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::TextShadowColor)
-		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::TextShadow, "text-shadow", "text-shadow-h, text-shadow-v, text-shadow-color", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::_WebkitTextStrokeWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::_WebkitTextStrokeColor)
-		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::_WebkitTextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::OutlineWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::OutlineColor)
-		.AddParser(PropertyParseColour);
-	RegisterShorthand(ShorthandId::Outline, "outline", "outline-width, outline-color", ShorthandType::FallThrough);
-
-	RegisterProperty(PropertyId::PointerEvents)
-		.AddParser(PropertyParseKeyword<"none", "auto">);
-	RegisterProperty(PropertyId::ScrollLeft)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::ScrollTop)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::Filter)
-		.AddParser(PropertyParseKeyword<"none", "gray">);
-
-	// flex layout
-	RegisterProperty(PropertyId::Display)
-		.AddParser(PropertyParseKeyword<"flex", "none">);
-	RegisterProperty(PropertyId::Overflow)
-		.AddParser(PropertyParseKeyword<"visible", "hidden", "scroll">);
-	RegisterProperty(PropertyId::Position)
-		.AddParser(PropertyParseKeyword<"static", "relative", "absolute">);
-
-	RegisterProperty(PropertyId::MarginTop)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MarginRight)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MarginBottom)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MarginLeft)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::Margin, "margin", "margin-top, margin-right, margin-bottom, margin-left", ShorthandType::Box);
-
-	RegisterProperty(PropertyId::PaddingTop)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::PaddingRight)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::PaddingBottom)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::PaddingLeft)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterShorthand(ShorthandId::Padding, "padding", "padding-top, padding-right, padding-bottom, padding-left", ShorthandType::Box);
-
-	RegisterProperty(PropertyId::Top)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::Right)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::Bottom)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::Left)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-
-	RegisterProperty(PropertyId::Width)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MinWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MaxWidth)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-
-	RegisterProperty(PropertyId::Height)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MinHeight)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::MaxHeight)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-
-	RegisterProperty(PropertyId::ColumnGap)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::RowGap)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	RegisterProperty(PropertyId::Gap)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Length>);
-	
-	RegisterProperty(PropertyId::AlignContent)
-		.AddParser(PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around", "space-evenly">);
-	RegisterProperty(PropertyId::AlignItems)
-		.AddParser(PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">);
-	RegisterProperty(PropertyId::AlignSelf)
-		.AddParser(PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">);
-	RegisterProperty(PropertyId::Direction)
-		.AddParser(PropertyParseKeyword<"inherit", "ltr", "rtl">);
-	RegisterProperty(PropertyId::FlexDirection)
-		.AddParser(PropertyParseKeyword<"column", "column-reverse", "row", "row-reverse">);
-	RegisterProperty(PropertyId::FlexWrap)
-		.AddParser(PropertyParseKeyword<"nowrap", "wrap", "wrap-reverse">);
-	RegisterProperty(PropertyId::JustifyContent)
-		.AddParser(PropertyParseKeyword<"flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly">);
-
-	RegisterProperty(PropertyId::AspectRatio)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
-	RegisterProperty(PropertyId::Flex)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
-	RegisterProperty(PropertyId::FlexBasis)
-		.AddParser(PropertyParseKeyword<"auto">)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>);
-	RegisterProperty(PropertyId::FlexGrow)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
-	RegisterProperty(PropertyId::FlexShrink)
-		.AddParser(PropertyParseNumber<PropertyParseNumberUnit::Number>);
+static Style::TableRef CreateDefaultValueProperties() {
 	PropertyVector properties;
 	for (auto const& [id, value] : UnparsedDefaultValue) {
 		if (!ParsePropertyDeclaration(properties, id, std::string { value.data(), value.size() })) {
@@ -852,41 +881,57 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 			}
 		}
 	}
-	default_value = Style::Instance().Create(properties);
+	return Style::Instance().Create(properties);
 }
 
-static StyleSheetSpecificationInstance* instance = nullptr;
 
 bool StyleSheetSpecification::Initialise() {
-	if (instance == nullptr) {
-		Style::Initialise(InheritableProperties);
-		instance = new StyleSheetSpecificationInstance();
-		instance->RegisterProperties();
-	}
+	Style::Initialise(InheritableProperties);
+	DefaultValueProperties = CreateDefaultValueProperties();
 	return true;
 }
 
 void StyleSheetSpecification::Shutdown() {
-	if (instance != nullptr) {
-		delete instance;
-		Style::Shutdown();
-	}
+	DefaultValueProperties = {};
+	Style::Shutdown();
 }
 
 const Style::TableRef& StyleSheetSpecification::GetDefaultProperties() {
-	return instance->GetDefaultProperties();
+	return DefaultValueProperties;
 }
 
 const PropertyIdSet & StyleSheetSpecification::GetInheritableProperties() {
-	return instance->GetInheritableProperties();
+	return InheritableProperties;
 }
 
 bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) {
-	return instance->ParseDeclaration(set, property_name);
+	auto property_id = MapGet(PropertyNames, property_name);
+	if (property_id) {
+		set.insert(*property_id);
+		return true;
+	}
+	auto shorthand_id = MapGet(ShorthandNames, property_name);
+	if (shorthand_id) {
+		ParseShorthandDeclaration(set, *shorthand_id);
+		return true;
+	}
+	return false;
 }
 
 bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {
-	return instance->ParseDeclaration(vec, property_name, property_value);
+	auto property_id = MapGet(PropertyNames, property_name);
+	if (property_id) {
+		if (ParsePropertyDeclaration(vec, *property_id, property_value)) {
+			return true;
+		}
+	}
+	auto shorthand_id = MapGet(ShorthandNames, property_name);
+	if (shorthand_id) {
+		if (ParseShorthandDeclaration(vec, *shorthand_id, property_value)){
+			return true;
+		}
+	}
+	return false;
 }
 
 }
