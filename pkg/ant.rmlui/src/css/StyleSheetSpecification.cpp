@@ -20,7 +20,7 @@
 namespace Rml {
 
 using PropertyParser = Property (*)(PropertyId id, const std::string& value);
-using PropertyDefinition = std::vector<PropertyParser>;
+using PropertyDefinition = std::array<PropertyParser, 2>;
 
 using ShorthandDefinitionFallThrough = std::vector<PropertyId>;
 using ShorthandDefinitionBox = std::array<PropertyId, 4>;
@@ -43,10 +43,9 @@ static consteval auto MakePropertyNames() {
 	return MakeConstexprMap(data);
 }
 
-// TODO: constexpr
 template <typename E, typename Value, size_t N>
-auto MakeEnumArray(const std::pair<E, Value> (&items)[N]) noexcept {
-	std::array<Value, EnumCountV<E>> data;
+static constexpr auto MakeEnumArray(const std::pair<E, Value> (&items)[N]) noexcept {
+	std::array<Value, EnumCountV<E>> data = {};
 	for (auto const& [k, v] : items) {
 		data[(size_t)k] = v;
 	}
@@ -75,7 +74,7 @@ static_assert((InheritableProperties & LayoutProperties).empty());
 static constexpr auto PropertyNames = MakePropertyNames<PropertyId>();
 static constexpr auto ShorthandNames = MakePropertyNames<ShorthandId>();
 
-static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
+static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
 	{ PropertyId::BorderTopWidth, {
 		PropertyParseNumber<PropertyParseNumberUnit::Length>,
 	}},
@@ -423,6 +422,7 @@ static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>(
 	}},
 });
 
+// TODO: constexpr
 static auto ShorthandDefinitions = MakeEnumArray<ShorthandId, ShorthandDefinition>({
 	{ ShorthandId::BorderWidth, ShorthandDefinitionBox {
 		PropertyId::BorderTopWidth,
@@ -671,6 +671,9 @@ static bool ParsePropertyValues(std::vector<std::string>& values_list, const std
 static Property ParseProperty(PropertyId id, const std::string& value) {
 	auto& definition = PropertyDefinitions[(size_t)id];
 	for (auto parser : definition) {
+		if (!parser) {
+			break;
+		}
 		auto prop = parser(id, value);
 		if (prop) {
 			return prop;
@@ -815,7 +818,7 @@ const Style::TableRef& StyleSheetSpecification::GetDefaultProperties() {
 	return StyleSheetDefaultValue::Get();
 }
 
-const PropertyIdSet & StyleSheetSpecification::GetInheritableProperties() {
+const PropertyIdSet& StyleSheetSpecification::GetInheritableProperties() {
 	return InheritableProperties;
 }
 

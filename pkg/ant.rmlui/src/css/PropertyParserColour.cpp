@@ -6,7 +6,7 @@
 
 namespace Rml {
 
-static std::unordered_map<std::string, Color> html_colours = {
+static std::unordered_map<std::string_view, Color> html_colours = {
 	{ "transparent", Color::FromSRGB(0,0,0,0) },
 	{ "aliceblue", Color::FromSRGB(240,248,255,255) },
 	{ "antiquewhite", Color::FromSRGB(250,235,215,255) },
