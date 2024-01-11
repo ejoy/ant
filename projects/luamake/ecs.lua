@@ -138,7 +138,6 @@ do
     write "#pragma once"
     write ""
     write "#include \"ecs/select.h\""
-    write "#include \"ecs/component_name.h\""
     write "#include \"ecs/user.h\""
     write "#include <cstdint>"
     write "#include <tuple>"

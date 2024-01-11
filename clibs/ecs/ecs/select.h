@@ -1,12 +1,13 @@
 #pragma once
 
 #include "luaecs.h"
-#include <type_traits>
-#include <tuple>
 #include <array>
-#include <span>
-#include <optional>
 #include <cstdint>
+#include <optional>
+#include <span>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
 
 namespace ecs {
     namespace flags {
@@ -38,6 +39,27 @@ namespace ecs {
         struct component_has<T, std::tuple<U, Types...>> : component_has<T, std::tuple<Types...>> {};
         template <typename T, typename Tuple>
         constexpr auto component_has_v = component_has<T, Tuple>::value;
+        
+        constexpr auto component_name(std::string_view name) noexcept {
+            for (std::size_t i = name.size(); i > 0; --i) {
+                const char c = name[i - 1];
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_'))) {
+                    name.remove_prefix(i);
+                    break;
+                }
+            }
+            return name;
+        }
+        template <typename C>
+        constexpr auto component_name() noexcept {
+    #if defined(_MSC_VER)
+            return component_name({__FUNCSIG__, sizeof(__FUNCSIG__) - 17});
+    #else
+            return component_name({__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 2});
+    #endif
+        }
+        template <typename T>
+        constexpr auto component_name_v = component_name<T>();
     }
     namespace COMPONENT {
         constexpr int INVALID = 0x80000000;
