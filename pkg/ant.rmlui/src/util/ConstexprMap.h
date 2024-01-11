@@ -38,7 +38,7 @@ private:
     value_type data_[N];
 
     template <typename T, size_t... I>
-    constexpr ConstexprMap(const std::array<T, N>& data, std::index_sequence<I...>) noexcept
+    constexpr ConstexprMap(const T& data, std::index_sequence<I...>) noexcept
         : data_{ { data[I].first, data[I].second }... } {
         for (auto left = data_, right = data_ + N - 1; data_ < right; right = left, left = data_) {
             for (auto it = data_; it < right; ++it) {
@@ -51,7 +51,7 @@ private:
     }
 public:
     template <typename T>
-    constexpr ConstexprMap(const std::array<T, N>& data) noexcept
+    constexpr ConstexprMap(const T& data) noexcept
         : ConstexprMap(data, std::make_index_sequence<N>())
     {}
     constexpr bool unique() const noexcept {
@@ -137,6 +137,11 @@ public:
 
 template <typename Key, typename Value, size_t N>
 constexpr auto MakeConstexprMap(const std::array<std::pair<Key, Value>, N>& items) noexcept {
+    return ConstexprMap<Key, Value, N>(items);
+}
+
+template <typename Key, typename Value, size_t N>
+constexpr auto MakeConstexprMap(const std::pair<Key, Value> (&items)[N]) noexcept {
     return ConstexprMap<Key, Value, N>(items);
 }
 
