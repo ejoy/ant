@@ -334,19 +334,19 @@ namespace lua_struct {
     }
 
     template <>
-    float unpack<float>(lua_State* L, int arg) {
+    inline float unpack<float>(lua_State* L, int arg) {
         return (float)luaL_checknumber(L, arg);
     }
 
     template <>
-    std::string unpack<std::string>(lua_State* L, int arg) {
+    inline std::string unpack<std::string>(lua_State* L, int arg) {
         size_t sz = 0;
         const char* str = luaL_checklstring(L, arg, &sz);
         return std::string(str, sz);
     }
 
     template <>
-    std::string_view unpack<std::string_view>(lua_State* L, int arg) {
+    inline std::string_view unpack<std::string_view>(lua_State* L, int arg) {
         size_t sz = 0;
         const char* str = luaL_checklstring(L, arg, &sz);
         return std::string_view(str, sz);

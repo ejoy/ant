@@ -194,7 +194,7 @@ namespace Rml {
     inline constexpr auto tag_v = tag<T>{};
 
     template <typename T, typename... Types>
-    constexpr uint8_t PropertyTypeIndex;
+    constexpr uint8_t PropertyTypeIndex = -1;
     template <typename T, typename... Types>
     constexpr uint8_t PropertyTypeIndex<T, T, Types...> = 0;
     template <typename T, typename U, typename... Types>

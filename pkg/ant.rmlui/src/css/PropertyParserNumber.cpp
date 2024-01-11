@@ -23,7 +23,7 @@ static const std::unordered_map<std::string, PropertyUnit> g_property_unit_strin
 	{"vmax", PropertyUnit::VMAX},
 };
 
-std::optional<PropertyFloat> PropertyParseRawNumber(const std::string& value) {
+std::optional<PropertyFloat> PropertyParseRawFloat(const std::string& value) {
 	// Find the beginning of the unit string in 'value'.
 	size_t unit_pos = 0;
 	for (size_t i = value.size(); i--;) {
