@@ -19,9 +19,6 @@
 
 namespace Rml {
 
-class StyleSheetSpecification;
-struct StyleSheetSpecificationInstance;
-
 using PropertyParser = Property (*)(PropertyId id, const std::string& value);
 using PropertyDefinition = std::vector<PropertyParser>;
 
@@ -31,19 +28,19 @@ using ShorthandDefinitionRecursiveRepeat = std::vector<ShorthandId>;
 using ShorthandDefinition = std::variant<ShorthandDefinitionFallThrough, ShorthandDefinitionBox, ShorthandDefinitionRecursiveRepeat>;
 
 template <typename E, size_t I, size_t N, typename Data>
-static constexpr void GetPropertyName(Data&& data) {
+static constexpr void MakePropertyName(Data&& data) {
 	if constexpr (I < N) {
 		data[2*I+0] = std::make_pair(PropertyNameV<PropertyNameStyle::Camel, static_cast<E>(I)>, static_cast<E>(I));
 		data[2*I+1] = std::make_pair(PropertyNameV<PropertyNameStyle::Kebab, static_cast<E>(I)>, static_cast<E>(I));
-		GetPropertyName<E, I+1, N>(data);
+		MakePropertyName<E, I+1, N>(data);
 	}
 }
 
 template <typename E>
-static consteval auto GetPropertyNames() {
+static consteval auto MakePropertyNames() {
 	std::array<std::pair<std::string_view, E>, 2 * EnumCountV<E>> data;
-	GetPropertyName<E, 0, EnumCountV<E>>(data);
-	return data;
+	MakePropertyName<E, 0, EnumCountV<E>>(data);
+	return MakeConstexprMap(data);
 }
 
 // TODO: constexpr
@@ -75,8 +72,8 @@ static constexpr PropertyIdSet InheritableProperties = (+[]{
 	return set;
 })();
 static_assert((InheritableProperties & LayoutProperties).empty());
-static constexpr auto PropertyNames = MakeConstexprMap(GetPropertyNames<PropertyId>());
-static constexpr auto ShorthandNames = MakeConstexprMap(GetPropertyNames<ShorthandId>());
+static constexpr auto PropertyNames = MakePropertyNames<PropertyId>();
+static constexpr auto ShorthandNames = MakePropertyNames<ShorthandId>();
 
 static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
 	{ PropertyId::BorderTopWidth, {
