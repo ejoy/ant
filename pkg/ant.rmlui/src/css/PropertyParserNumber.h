@@ -73,7 +73,7 @@ std::optional<PropertyFloat> PropertyParseFloat(const std::string& value) {
 		}
 	}
 	else {
-		static_assert(always_false_v<units>, "unknown number units!");
+		static_assert(always_false_v<decltype(units)>, "unknown number units!");
 	}
 }
 
