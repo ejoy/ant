@@ -1,7 +1,6 @@
 #include <css/StyleSheetSpecification.h>
 #include <css/StyleCache.h>
 #include <css/PropertyIdSet.h>
-#include <util/Log.h>
 #include <util/StringUtilities.h>
 #include <css/PropertyParserNumber.h>
 #include <css/PropertyParserAnimation.h>
@@ -10,6 +9,7 @@
 #include <css/PropertyParserString.h>
 #include <css/PropertyParserTransform.h>
 #include <css/PropertyName.h>
+#include <css/StyleSheetDefaultValue.h>
 #include <util/ConstexprMap.h>
 #include <util/AlwaysFalse.h>
 #include <core/Layout.h>
@@ -77,69 +77,6 @@ static constexpr PropertyIdSet InheritableProperties = (+[]{
 static_assert((InheritableProperties & LayoutProperties).empty());
 static constexpr auto PropertyNames = MakeConstexprMap(GetPropertyNames<PropertyId>());
 static constexpr auto ShorthandNames = MakeConstexprMap(GetPropertyNames<ShorthandId>());
-static constexpr std::pair<PropertyId, std::string_view> UnparsedDefaultValue[] = {
-	{ PropertyId::BorderTopWidth, "0px" },
-	{ PropertyId::BorderRightWidth, "0px" },
-	{ PropertyId::BorderBottomWidth, "0px" },
-	{ PropertyId::BorderLeftWidth, "0px" },
-	{ PropertyId::BorderTopColor, "transparent" },
-	{ PropertyId::BorderRightColor, "transparent" },
-	{ PropertyId::BorderBottomColor, "transparent" },
-	{ PropertyId::BorderLeftColor, "transparent" },
-	{ PropertyId::BorderTopLeftRadius, "0px" },
-	{ PropertyId::BorderTopRightRadius, "0px" },
-	{ PropertyId::BorderBottomRightRadius, "0px" },
-	{ PropertyId::BorderBottomLeftRadius, "0px" },
-	{ PropertyId::ZIndex, "0" },
-	{ PropertyId::LineHeight, "normal" },
-	{ PropertyId::Color, "white" },
-	{ PropertyId::Opacity, "1" },
-	{ PropertyId::FontFamily, "" },
-	{ PropertyId::FontStyle, "normal" },
-	{ PropertyId::FontWeight, "normal" },
-	{ PropertyId::FontSize, "12px" },
-	{ PropertyId::TextAlign, "left" },
-	{ PropertyId::WordBreak, "normal" },
-	{ PropertyId::TextDecorationLine, "none" },
-	{ PropertyId::TextDecorationColor, "currentColor" },
-	{ PropertyId::Perspective, "none" },
-	{ PropertyId::PerspectiveOriginX, "50%" },
-	{ PropertyId::PerspectiveOriginY, "50%" },
-	{ PropertyId::Transform, "none" },
-	{ PropertyId::TransformOriginX, "50%" },
-	{ PropertyId::TransformOriginY, "50%" },
-	{ PropertyId::TransformOriginZ, "0px" },
-	{ PropertyId::Transition, "none" },
-	{ PropertyId::Animation, "none" },
-	{ PropertyId::BackgroundColor, "transparent" },
-	{ PropertyId::BackgroundImage, "none" },
-	{ PropertyId::BackgroundOrigin, "padding-box" },
-	{ PropertyId::BackgroundSize, "unset" },
-	{ PropertyId::BackgroundSizeX, "0px" },
-	{ PropertyId::BackgroundSizeY, "0px" },
-	{ PropertyId::BackgroundPositionX, "0px" },
-	{ PropertyId::BackgroundPositionY, "0px" },
-	{ PropertyId::BackgroundLattice, "auto" },
-	{ PropertyId::BackgroundLatticeX1, "0px" },
-	{ PropertyId::BackgroundLatticeY1, "0px" },
-	{ PropertyId::BackgroundLatticeX2, "0px" },
-	{ PropertyId::BackgroundLatticeY2, "0px" },
-	{ PropertyId::BackgroundLatticeU, "0px" },
-	{ PropertyId::BackgroundLatticeV, "0px" },
-	{ PropertyId::BackgroundRepeat, "repeat" },
-	{ PropertyId::BackgroundFilter, "none" },
-	{ PropertyId::TextShadowH, "0px" },
-	{ PropertyId::TextShadowV, "0px" },
-	{ PropertyId::TextShadowColor, "white" },
-	{ PropertyId::_WebkitTextStrokeWidth, "0px" },
-	{ PropertyId::_WebkitTextStrokeColor, "white" },
-	{ PropertyId::OutlineWidth, "0px" },
-	{ PropertyId::OutlineColor, "white" },
-	{ PropertyId::PointerEvents, "auto" },
-	{ PropertyId::ScrollLeft, "0px" },
-	{ PropertyId::ScrollTop, "0px" },
-	{ PropertyId::Filter, "none" },
-};
 
 static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
 	{ PropertyId::BorderTopWidth, {
@@ -599,8 +536,6 @@ static auto ShorthandDefinitions = MakeEnumArray<ShorthandId, ShorthandDefinitio
 	}},
 });
 
-static Style::TableRef DefaultValueProperties;
-
 template <typename MAP>
 std::optional<typename MAP::mapped_type> MapGet(MAP const& map, std::string_view name)  {
 	auto it = map.find(name);
@@ -869,35 +804,18 @@ static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand
 	return ParseShorthandDeclaration(vec, shorthand_id, property_values);
 }
 
-static Style::TableRef CreateDefaultValueProperties() {
-	PropertyVector properties;
-	for (auto const& [id, value] : UnparsedDefaultValue) {
-		if (!ParsePropertyDeclaration(properties, id, std::string { value.data(), value.size() })) {
-			for (auto const& [prop_name, prop_id] : PropertyNames) {
-				if (prop_id == id) {
-					Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", prop_name.data(), value.data());
-					break;
-				}
-			}
-		}
-	}
-	return Style::Instance().Create(properties);
-}
-
-
-bool StyleSheetSpecification::Initialise() {
+void StyleSheetSpecification::Initialise() {
 	Style::Initialise(InheritableProperties);
-	DefaultValueProperties = CreateDefaultValueProperties();
-	return true;
+	StyleSheetDefaultValue::Initialise();
 }
 
 void StyleSheetSpecification::Shutdown() {
-	DefaultValueProperties = {};
+	StyleSheetDefaultValue::Shutdown();
 	Style::Shutdown();
 }
 
 const Style::TableRef& StyleSheetSpecification::GetDefaultProperties() {
-	return DefaultValueProperties;
+	return StyleSheetDefaultValue::Get();
 }
 
 const PropertyIdSet & StyleSheetSpecification::GetInheritableProperties() {
@@ -916,6 +834,10 @@ bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, const std::st
 		return true;
 	}
 	return false;
+}
+
+bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) {
+	return ParsePropertyDeclaration(vec, property_id, property_value);
 }
 
 bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <util/EnumName.h>
+#include <bee/nonstd/to_underlying.h>
 
 namespace Rml {
 
@@ -77,5 +78,18 @@ constexpr auto PropertyName() {
 
 template <PropertyNameStyle Style, auto E>
 constexpr auto PropertyNameV = PropertyName<Style, E>();
+
+template <PropertyNameStyle Style, typename E, std::underlying_type_t<E> I = 0>
+auto GetPropertyName(E id) {
+	if constexpr (I < EnumCountV<E>) {
+		if (I == std::to_underlying<E>(id)) {
+			return PropertyNameV<Style, static_cast<E>(I)>;
+		}
+		else {
+			return GetPropertyName<Style, E, I+1>(id);
+		}
+	}
+	return std::string_view {};
+}
 
 }
