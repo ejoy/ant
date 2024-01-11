@@ -307,15 +307,14 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeRightMouseDragged:
     case NSEventTypeOtherMouseDragged: {
         [g_wd getMouseX:&g_mx getMouseY:&g_my];
-        struct ant::window::msg_mouse msg;
-        msg.state = ant::window::mouse_state::move;
+        struct ant::window::msg_mousemove msg;
         msg.x = g_mx;
         msg.y = g_my;
         switch (eventType) {
-        case NSEventTypeLeftMouseDragged:  msg.what = ant::window::mouse_button::left; break;
-        case NSEventTypeRightMouseDragged: msg.what = ant::window::mouse_button::middle; break;
-        case NSEventTypeOtherMouseDragged: msg.what = ant::window::mouse_button::right; break;
-        default: break;
+        case NSEventTypeLeftMouseDragged:  msg.what = ant::window::mouse_buttons::left; break;
+        case NSEventTypeRightMouseDragged: msg.what = ant::window::mouse_buttons::middle; break;
+        case NSEventTypeOtherMouseDragged: msg.what = ant::window::mouse_buttons::right; break;
+        default: msg.what = ant::window::mouse_buttons::none; break;
         }
         ant::window::input_message(cb, msg);
         break;
@@ -323,7 +322,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeLeftMouseDown:
     case NSEventTypeRightMouseDown:
     case NSEventTypeOtherMouseDown: {
-        struct ant::window::msg_mouse msg;
+        struct ant::window::msg_mouseclick msg;
         msg.state = ant::window::mouse_state::down;
         msg.x = g_mx;
         msg.y = g_my;
@@ -339,7 +338,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeLeftMouseUp:
     case NSEventTypeRightMouseUp:
     case NSEventTypeOtherMouseUp: {
-        struct ant::window::msg_mouse msg;
+        struct ant::window::msg_mouseclick msg;
         msg.state = ant::window::mouse_state::up;
         msg.x = g_mx;
         msg.y = g_my;
