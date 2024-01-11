@@ -127,9 +127,9 @@ public:
 	Property GetLocalProperty(PropertyId id) const;
 	Property GetComputedProperty(PropertyId id) const;
 
-	bool SetProperty(const std::string& name, const std::string& value);
-	bool DelProperty(const std::string& name);
-	std::optional<std::string> GetProperty(const std::string& name) const;
+	bool SetProperty(std::string_view name, std::string_view value);
+	bool DelProperty(std::string_view name);
+	std::optional<std::string> GetProperty(std::string_view name) const;
 
 	void UpdateProperties();
 	void UpdateAnimations(float delta);

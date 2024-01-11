@@ -76,7 +76,7 @@ static Style::TableRef DefaultValueProperties;
 void StyleSheetDefaultValue::Initialise() {
 	PropertyVector properties;
 	for (auto const& [id, value] : UnparsedDefaultValue) {
-		if (!StyleSheetSpecification::ParseDeclaration(properties, id, std::string { value.data(), value.size() })) {
+		if (!StyleSheetSpecification::ParseDeclaration(properties, id, value)) {
 			auto prop_name = GetPropertyName<PropertyNameStyle::Kebab>(id);
 			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", prop_name.data(), value.data());
 		}
