@@ -8,11 +8,12 @@ namespace Rml {
 
 class StyleSheetSpecification {
 public:
-	static bool Initialise();
+	static void Initialise();
 	static void Shutdown();
 	static const Style::TableRef& GetDefaultProperties();
 	static const PropertyIdSet& GetInheritableProperties();
 	static bool ParseDeclaration(PropertyIdSet& set, const std::string& property_name);
+	static bool ParseDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value);
 	static bool ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value);
 };
 
