@@ -20,7 +20,7 @@
 namespace Rml {
 
 using PropertyParser = Property (*)(PropertyId id, const std::string& value);
-using PropertyDefinition = std::vector<PropertyParser>;
+using PropertyDefinition = std::array<PropertyParser, 2>;
 
 using ShorthandDefinitionFallThrough = std::vector<PropertyId>;
 using ShorthandDefinitionBox = std::array<PropertyId, 4>;
@@ -43,10 +43,9 @@ static consteval auto MakePropertyNames() {
 	return MakeConstexprMap(data);
 }
 
-// TODO: constexpr
 template <typename E, typename Value, size_t N>
-auto MakeEnumArray(const std::pair<E, Value> (&items)[N]) noexcept {
-	std::array<Value, EnumCountV<E>> data;
+static constexpr auto MakeEnumArray(const std::pair<E, Value> (&items)[N]) noexcept {
+	std::array<Value, EnumCountV<E>> data = {};
 	for (auto const& [k, v] : items) {
 		data[(size_t)k] = v;
 	}
@@ -75,7 +74,7 @@ static_assert((InheritableProperties & LayoutProperties).empty());
 static constexpr auto PropertyNames = MakePropertyNames<PropertyId>();
 static constexpr auto ShorthandNames = MakePropertyNames<ShorthandId>();
 
-static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
+static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
 	{ PropertyId::BorderTopWidth, {
 		PropertyParseNumber<PropertyParseNumberUnit::Length>,
 	}},
@@ -423,6 +422,7 @@ static auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>(
 	}},
 });
 
+// TODO: constexpr
 static auto ShorthandDefinitions = MakeEnumArray<ShorthandId, ShorthandDefinition>({
 	{ ShorthandId::BorderWidth, ShorthandDefinitionBox {
 		PropertyId::BorderTopWidth,
@@ -541,7 +541,7 @@ std::optional<typename MAP::mapped_type> MapGet(MAP const& map, std::string_view
 	return std::nullopt;
 }
 
-static bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) {
+static bool ParsePropertyValues(std::vector<std::string>& values_list, std::string_view values, bool split_values) {
 	std::string value;
 
 	enum ParseState { VALUE, VALUE_PARENTHESIS, VALUE_QUOTE };
@@ -671,6 +671,9 @@ static bool ParsePropertyValues(std::vector<std::string>& values_list, const std
 static Property ParseProperty(PropertyId id, const std::string& value) {
 	auto& definition = PropertyDefinitions[(size_t)id];
 	for (auto parser : definition) {
+		if (!parser) {
+			break;
+		}
 		auto prop = parser(id, value);
 		if (prop) {
 			return prop;
@@ -679,7 +682,7 @@ static Property ParseProperty(PropertyId id, const std::string& value) {
 	return {};
 }
 
-static bool ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) {
+static bool ParsePropertyDeclaration(PropertyVector& vec, PropertyId property_id, std::string_view property_value) {
 	// Parse as a single property.
 	std::vector<std::string> property_values;
 	if (!ParsePropertyValues(property_values, property_value, false) || property_values.size() == 0)
@@ -793,7 +796,7 @@ static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand
 	}, shorthand_definition);
 }
 
-static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, const std::string& property_value) {
+static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand_id, std::string_view property_value) {
 	std::vector<std::string> property_values;
 	if (!ParsePropertyValues(property_values, property_value, true) || property_values.size() == 0) {
 		return false;
@@ -815,11 +818,11 @@ const Style::TableRef& StyleSheetSpecification::GetDefaultProperties() {
 	return StyleSheetDefaultValue::Get();
 }
 
-const PropertyIdSet & StyleSheetSpecification::GetInheritableProperties() {
+const PropertyIdSet& StyleSheetSpecification::GetInheritableProperties() {
 	return InheritableProperties;
 }
 
-bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, const std::string& property_name) {
+bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, std::string_view property_name) {
 	auto property_id = MapGet(PropertyNames, property_name);
 	if (property_id) {
 		set.insert(*property_id);
@@ -833,11 +836,11 @@ bool StyleSheetSpecification::ParseDeclaration(PropertyIdSet& set, const std::st
 	return false;
 }
 
-bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, PropertyId property_id, const std::string& property_value) {
+bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, PropertyId property_id, std::string_view property_value) {
 	return ParsePropertyDeclaration(vec, property_id, property_value);
 }
 
-bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, const std::string& property_name, const std::string& property_value) {
+bool StyleSheetSpecification::ParseDeclaration(PropertyVector& vec, std::string_view property_name, std::string_view property_value) {
 	auto property_id = MapGet(PropertyNames, property_name);
 	if (property_id) {
 		if (ParsePropertyDeclaration(vec, *property_id, property_value)) {

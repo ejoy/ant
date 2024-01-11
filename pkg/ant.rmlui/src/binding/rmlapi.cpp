@@ -417,7 +417,7 @@ lElementGetOwnerDocument(lua_State* L) {
 static int
 lElementGetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	std::optional<std::string> prop = e->GetProperty(lua_checkstdstring(L, 2));
+	std::optional<std::string> prop = e->GetProperty(lua_checkstrview(L, 2));
 	if (!prop) {
 		return 0;
 	}
@@ -456,12 +456,12 @@ lElementSetAttribute(lua_State* L) {
 static int
 lElementSetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	std::string name = lua_checkstdstring(L, 2);
+	std::string_view name = lua_checkstrview(L, 2);
 	if (lua_isnoneornil(L, 3)) {
 		e->DelProperty(name);
 	}
 	else {
-		std::string value = lua_checkstdstring(L, 3);
+		std::string_view value = lua_checkstrview(L, 3);
 		e->SetProperty(name, value);
 	}
 	return 0;
