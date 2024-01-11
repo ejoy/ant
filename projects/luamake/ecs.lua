@@ -142,6 +142,7 @@ do
     write "#include \"ecs/user.h\""
     write "#include <stdint.h>"
     write "#include <array>"
+    write "#include <tuple>"
     write "#include <string_view>"
     write ""
     write "namespace ant_component {"
@@ -180,25 +181,14 @@ do
     end
     
     write ""
-    write "namespace decl {"
-    write "struct component {"
-    write "    std::string_view name;"
-    write "    size_t           size;"
-    write "};"
-    write "template <typename T>"
-    write "constexpr auto create() {"
-    write "    return component {"
-    write "        ecs::component_name_v<T>,"
-    write "        std::is_empty_v<T> ? 0 : sizeof(T),"
-    write "    };"
-    write "}"
-    write(("static constexpr std::array<component, %d> components = {"):format(#components))
-    for _, c in ipairs(components) do
-        write(("    create<%s>(),"):format(c[1]))
+    write "using all_components = ::std::tuple<"
+    for i = 1, #components-1 do
+        local c = components[i]
+        write(("    %s,"):format(c[1]))
     end
-    write "};"
+    write(("    %s"):format(components[#components][1]))
+    write ">;"
     write ""
-    write "}"
     write "}"
     write ""
     write "namespace component = ant_component;"
