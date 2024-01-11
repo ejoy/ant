@@ -12,6 +12,33 @@ namespace ecs {
     namespace flags {
         struct absent {};
     }
+    namespace helper {
+        template <typename T, typename Tuple>
+        struct component_id;
+        template <typename T>
+        struct component_id<T, std::tuple<>> {};
+        template <typename T, typename... Types>
+        struct component_id<T, std::tuple<T, Types...>> {
+            static constexpr size_t value = 1;
+        };
+        template <typename T, typename U, typename... Types>
+        struct component_id<T, std::tuple<U, Types...>> {
+            static constexpr size_t value = 1 + component_id<T, std::tuple<Types...>>::value;
+        };
+        template <typename T, typename Tuple>
+        constexpr auto component_id_v = component_id<T, Tuple>::value;
+
+        template <typename T, typename Tuple>
+        struct component_has;
+        template <typename T>
+        struct component_has<T, std::tuple<>> : std::false_type {};
+        template <typename T, typename... Types>
+        struct component_has<T, std::tuple<T, Types...>> : std::true_type {};
+        template <typename T, typename U, typename... Types>
+        struct component_has<T, std::tuple<U, Types...>> : component_has<T, std::tuple<Types...>> {};
+        template <typename T, typename Tuple>
+        constexpr auto component_has_v = component_has<T, Tuple>::value;
+    }
     namespace COMPONENT {
         constexpr int INVALID = 0x80000000;
         constexpr int EID = 0xFFFFFFFF;
@@ -19,7 +46,7 @@ namespace ecs {
     }
 
     template <typename T>
-    constexpr inline int component_id = COMPONENT::INVALID;
+    constexpr int component_id = COMPONENT::INVALID;
 
     template <typename T>
     constexpr bool is_tag = (component_id<T> != COMPONENT::INVALID) && std::is_empty_v<T>;

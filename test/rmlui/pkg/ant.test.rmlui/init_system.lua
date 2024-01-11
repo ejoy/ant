@@ -7,7 +7,7 @@ local platform = require "bee.platform"
 local m = ecs.system "init_system"
 
 if platform.os == "windows" then
-    font.import "黑体"
+    font.import "宋体"
 elseif platform.os == "macos" then
     font.import "苹方-简"
 elseif platform.os == "ios" then

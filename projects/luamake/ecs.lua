@@ -181,7 +181,7 @@ do
     end
     
     write ""
-    write "using all_components = ::std::tuple<"
+    write "using _all_ = ::std::tuple<"
     for i = 1, #components-1 do
         local c = components[i]
         write(("    %s,"):format(c[1]))
@@ -193,18 +193,14 @@ do
     write ""
     write "namespace component = ant_component;"
     write ""
-    
-    write "template <> constexpr inline int ecs::component_id<component::eid> = 0xFFFFFFFF;"
-    write "template <> constexpr inline int ecs::component_id<component::REMOVED> = 0;"
-    write ""
-    write "#define ECS_COMPONENT(NAME, ID) \\"
-    write "template <> constexpr inline int ecs::component_id<component::NAME> = ID;"
-    write ""
-    for i, c in ipairs(components) do
-        write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
-    end
-    write ""
-    write "#undef ECS_COMPONENT"
+
+    write "template <>"
+    write "constexpr int ecs::component_id<ant_component::eid> = ecs::COMPONENT::EID;"
+    write "template <>"
+    write "constexpr int ecs::component_id<ant_component::REMOVED> = ecs::COMPONENT::REMOVED;"
+    write "template <typename T>"
+    write "    requires (ecs::helper::component_has_v<T, ant_component::_all_>)"
+    write "constexpr int ecs::component_id<T> = ecs::helper::component_id_v<T, ant_component::_all_>;"
     write ""
 
     writefile(component_h .. "/component.hpp")
