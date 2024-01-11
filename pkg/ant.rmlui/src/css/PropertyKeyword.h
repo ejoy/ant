@@ -2,7 +2,7 @@
 
 namespace Rml {
 
-using PropertyKeyword = int;
+using PropertyKeyword = uint8_t;
 
 }
  
