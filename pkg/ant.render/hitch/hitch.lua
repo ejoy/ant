@@ -86,7 +86,7 @@ local function update_group_instance_buffer(gid)
     local memory = get_hitch_worldmats_instance_memory(hitchs)
 
     local function update_instance_buffer(diid)
-        local e = world:entity(diid, "draw_indirect:in")
+        local e = world:entity(diid, "draw_indirect:update")
         idi.update_instance_buffer(e, memory, draw_num)
     end
 
@@ -191,9 +191,6 @@ function hitch_sys:follow_scene_update()
 end
 
 function hitch_sys:finish_scene_update()
-    if not w:check "hitch_changed" then
-        return
-    end
     for e in w:select "hitch_changed hitch:in eid:in" do
         set_dirty_hitch_group(e.hitch, e.eid, true)
     end

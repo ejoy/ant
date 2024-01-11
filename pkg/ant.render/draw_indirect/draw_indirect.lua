@@ -42,8 +42,8 @@ local function update_instance_buffer(e, instancememory, instancenum)
     
         iobj.draw_num = ib.num
         assert(iobj.idb_handle ~= INVALID_HANDLE_VALUE, "Indirect buffer not update")
-        return true
     end
+    return true
 end
 
 function di_sys.component_init()
