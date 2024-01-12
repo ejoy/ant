@@ -209,16 +209,7 @@ function hitch_sys:finish_scene_update()
                 if mc.NULL ~= re.bounding.aabb then
                     h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
                 end
-
                 if re.skinning or re.dynamic_mesh then
-                    if math3d.aabb_isvalid(h_aabb) then
-                        for _, heid in ipairs(HITCHS[gid]) do
-                            local e<close> = world:entity(heid, "bounding:update scene_needchange?out")
-                            math3d.unmark(e.bounding.aabb)
-                            e.scene_needchange = true
-                            e.bounding.aabb = math3d.mark(h_aabb)
-                        end
-                    end
                     GROUP_VISIBLE[gid] = true
                 else
                     if re.mesh then
@@ -228,9 +219,18 @@ function hitch_sys:finish_scene_update()
                     ivs.set_state(re, "cast_shadow", false)
                 end
             end
-    
+
             create_draw_indirect_and_compute_entity(glbs, gid)
             GLBS[gid] = glbs
+            
+            if math3d.aabb_isvalid(h_aabb) then
+                for _, heid in ipairs(HITCHS[gid]) do
+                    local e<close> = world:entity(heid, "bounding:update scene_needchange?out")
+                    math3d.unmark(e.bounding.aabb)
+                    e.scene_needchange = true
+                    e.bounding.aabb = math3d.mark(h_aabb)
+                end
+            end
             ig.enable(gid, "hitch_tag", false)
         end
     end
