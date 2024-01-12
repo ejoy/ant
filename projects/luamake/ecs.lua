@@ -86,6 +86,7 @@ local function loadComponents()
         else
             local t = info.type[1]
             if t == "lua" then
+                --components[#components+1] = {name, "lua"}
             elseif t == "c" then
                 components[#components+1] = {name, "c", info.field}
             elseif t == "raw" then
@@ -145,6 +146,7 @@ do
     write "namespace ant_component {"
     write ""
     write "using eid = uint64_t;"
+    write ""
     write "struct REMOVED {};"
     write ""
     for _, info in ipairs(components) do
@@ -169,15 +171,14 @@ do
             write(("struct %s {};"):format(name))
             write ""
         elseif type == "lua" then
-            write(("struct %s {};"):format(name))
+            write(("struct %s { unsigned int lua_object; };"):format(name))
             write ""
         else
             write(("using %s = %s;"):format(name, typenames(type)))
             write ""
         end
     end
-    
-    write ""
+
     write "using _all_ = ::std::tuple<"
     for i = 1, #components-1 do
         local c = components[i]
@@ -190,7 +191,6 @@ do
     write ""
     write "namespace component = ant_component;"
     write ""
-
     write "template <>"
     write "constexpr int ecs::component_id<ant_component::eid> = ecs::COMPONENT::EID;"
     write "template <>"
