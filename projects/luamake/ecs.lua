@@ -60,12 +60,12 @@ local function ecs_components(output, namespace, userheader, components)
     write(("namespace component = %s;"):format(namespace))
     write ""
     write "template <>"
-    write "constexpr int ecs::component_id<component::eid> = ecs::COMPONENT::EID;"
+    write "constexpr inline auto ecs::component_id<component::eid> = ecs::COMPONENT::EID;"
     write "template <>"
-    write "constexpr int ecs::component_id<component::REMOVED> = ecs::COMPONENT::REMOVED;"
+    write "constexpr inline auto ecs::component_id<component::REMOVED> = ecs::COMPONENT::REMOVED;"
     write "template <typename T>"
     write "    requires (ecs::helper::component_has_v<T, component::_all_>)"
-    write "constexpr int ecs::component_id<T> = ecs::helper::component_id_v<T, component::_all_>;"
+    write "constexpr inline auto ecs::component_id<T> = ecs::helper::component_id_v<T, component::_all_>;"
     write ""
     writefile(output)
 end
