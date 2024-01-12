@@ -1,11 +1,10 @@
 #include <core/Text.h>
-#include <binding/Context.h>
 #include <core/Document.h>
 #include <core/Interface.h>
+#include <binding/Context.h>
+#include <binding/utf8.h>
 #include <util/Log.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <binding/utf8.h>
-#include <iostream>
 
 namespace Rml {
 
@@ -55,8 +54,8 @@ void Text::Render() {
 }
 
 //static uint32_t kEllipsisCodepoint = 0x22EF;
-static uint32_t kEllipsisCodepoint = 0x2026;
-static std::string kEllipsisString = utf8::toutf8(kEllipsisCodepoint);
+static constexpr uint32_t kEllipsisCodepoint = 0x2026;
+static constexpr auto kEllipsisString = utf8::toutf8<kEllipsisCodepoint>();
 
 bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin, float maxWidth, std::string& ttext, bool lastLine) {
 	if (lastLine) {

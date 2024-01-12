@@ -1,9 +1,8 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <array>
 #include <iterator>
+#include <string_view>
 #include <stdint.h>
 
 namespace utf8 {
@@ -254,7 +253,7 @@ namespace utf8 {
         uint32_t replacement;
     };
 
-    inline std::string toutf8 (uint32_t codepoint) {
+    constexpr inline std::array<char, 7> toutf8_array(uint32_t codepoint) {
         if (codepoint < 0x80) {
             return {
                 (char)(uint8_t)codepoint
@@ -302,4 +301,19 @@ namespace utf8 {
         }
     }
 
+    template <auto Data>
+    constexpr auto const& make_it_static() {
+        return Data;
+    }
+
+    template <uint32_t codepoint>
+    consteval auto toutf8() {
+        constexpr auto const& data = make_it_static<toutf8_array(codepoint)>();
+        for (size_t i = 0; i < data.size(); ++i) {
+            if (data[i] == 0) {
+                return std::string_view { data.data(), i - 1 };
+            }
+        }
+        return std::string_view { data.data(), data.size() };
+    }
 }
