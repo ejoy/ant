@@ -9,6 +9,7 @@ local Q         = world:clibs "render.queue"
 local ivs       = ecs.require "ant.render|visible_state"
 local hwi       = import_package "ant.hwi"
 local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 local cs_material = "/pkg/vaststars.resources/materials/hitch/hitch_compute.material"
 
 local HITCHS = setmetatable({}, {__index=function(t, gid)
@@ -170,75 +171,105 @@ function hitch_sys:component_init()
 end
 
 function hitch_sys:entity_remove()
-    for e in w:select "REMOVED hitch:in hitch_changed?out eid:in" do
+    for e in w:select "REMOVED hitch:in hitch_update?out eid:in" do
         local ho = e.hitch
         Q.dealloc(ho.visible_idx)
         Q.dealloc(ho.cull_idx)
         set_dirty_hitch_group(e.hitch, e.eid)
-        e.hitch_changed = true
+        e.hitch_update = true
     end
 end
 
 function hitch_sys:entity_init()
-    for e in w:select "INIT hitch:in hitch_changed?out view_visible?in hitch_visible?out" do
-        e.hitch_changed = true
+    for e in w:select "INIT hitch:in hitch_create?out hitch_update?out view_visible?in hitch_visible?out" do
+        e.hitch_create = true
+        e.hitch_update = true
         e.hitch_visible = e.view_visible
     end 
 end
 
 function hitch_sys:follow_scene_update()
-    for e in w:select "hitch scene_changed hitch_changed?out" do
-        e.hitch_changed = true
-    end 
+    for e in w:select "hitch scene_changed hitch_update?out" do
+        e.hitch_update = true
+    end  
 end
 
 function hitch_sys:finish_scene_update()
-    for e in w:select "hitch_changed hitch:in eid:in" do
-        set_dirty_hitch_group(e.hitch, e.eid, true)
+    if not w:check "hitch_create" then
+        return
     end
-    for gid, _ in pairs(DIRTY_GROUPS) do
-        local glbs = GLBS[gid]
-        if glbs then
-            update_group_instance_buffer(gid) 
-        else
-            local glbs = {}
-            ig.enable(gid, "hitch_tag", true)
-    
-            local h_aabb = math3d.aabb()
-            for re in w:select "hitch_tag eid:in bounding:in visible_state:in mesh?in material?in render_layer?in scene?in skinning?in dynamic_mesh?in" do
-                if mc.NULL ~= re.bounding.aabb then
-                    h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
-                end
+
+    local groups = setmetatable({}, {__index=function(t, gid)
+        local gg = {}
+        t[gid] = gg
+        return gg
+    end})
+
+    for e in w:select "hitch_create hitch:in eid:in" do
+        local group = groups[e.hitch.group]
+        group[#group+1] = e.eid
+    end
+
+    for gid, hitchs in pairs(groups) do
+        ig.enable(gid, "hitch_tag", true)
+        local h_aabb = math3d.aabb()
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
+            if mc.NULL ~= re.bounding.aabb then
+                h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
                 if re.skinning or re.dynamic_mesh then
                     GROUP_VISIBLE[gid] = true
                 else
-                    if re.mesh then
-                        glbs[#glbs+1] = {mesh = re.mesh, material = re.material, render_layer = re.render_layer, parent = re.eid}
-                    end
                     ivs.set_state(re, "main_view", false)
                     ivs.set_state(re, "cast_shadow", false)
                 end
+            end
+        end
+        ig.enable(gid, "hitch_tag", false)
+        if math3d.aabb_isvalid(h_aabb) then
+            for _, heid in ipairs(hitchs) do
+                local e<close> = world:entity(heid, "hitch:in hitch_visible?out bounding:update scene_needchange?out")
+                math3d.unmark(e.bounding.aabb)
+                e.scene_needchange = true
+                e.bounding.aabb = math3d.mark(h_aabb)
+                e.hitch_visible = GROUP_VISIBLE[e.hitch.group]
+            end
+        end
+    end
+    w:clear "hitch_create"
+end
+
+local function obj_visible(obj, queue_index)
+	return Q.check(obj.visible_idx, queue_index) and (not Q.check(obj.cull_idx, queue_index))
+end
+
+function hitch_sys:render_preprocess()
+    for e in w:select "hitch_update hitch:in eid:in" do
+        if not GROUP_VISIBLE[e.hitch.group] then
+            local mainmask = queuemgr.queue_mask "main_queue"
+            local is_visible = obj_visible(e.hitch, mainmask)
+            set_dirty_hitch_group(e.hitch, e.eid, is_visible) 
+        end
+    end
+    for gid, _ in pairs(DIRTY_GROUPS) do
+        if GLBS[gid] then
+            update_group_instance_buffer(gid)
+        else
+            local glbs = {}
+            ig.enable(gid, "hitch_tag", true)
+            for re in w:select "hitch_tag eid:in mesh?in material?in render_layer?in scene?in skinning?in" do
+               if re.mesh then
+                    glbs[#glbs+1] = {mesh = re.mesh, material = re.material, render_layer = re.render_layer, parent = re.eid}
+               end
             end
 
             create_draw_indirect_and_compute_entity(glbs, gid)
             GLBS[gid] = glbs
             
-            if math3d.aabb_isvalid(h_aabb) then
-                for _, heid in ipairs(HITCHS[gid]) do
-                    local e<close> = world:entity(heid, "bounding:update scene_needchange?out")
-                    math3d.unmark(e.bounding.aabb)
-                    e.scene_needchange = true
-                    e.bounding.aabb = math3d.mark(h_aabb)
-                end
-            end
             ig.enable(gid, "hitch_tag", false)
         end
     end
-    for e in w:select "hitch_changed hitch:in hitch_visible?out" do
-        e.hitch_visible = GROUP_VISIBLE[e.hitch.group]
-    end
 
     DIRTY_GROUPS = {}
-    w:clear "hitch_changed"
+    w:clear "hitch_update"
 end
 
