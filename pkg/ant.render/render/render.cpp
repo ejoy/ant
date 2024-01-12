@@ -265,12 +265,13 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 		int gids[] = {groupid};
 		ecs::group_enable<component::hitch_tag>(w->ecs, gids);
 		for (auto& e : ecs::select<component::hitch_tag>(w->ecs)) {
+			auto hi = e.component<component::hitch_indirect>();
 			for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 				auto ra = cc.ra[ii];
 				const auto &mats = g[ra->queue_index];
 				if (!mats.empty()){
 					auto ro = e.component<component::render_object>();
-					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index)){
+					if (!hi && ro && obj_queue_visible(w->Q, *ro, ra->queue_index)){
 						draw_obj(L, w, ra, ro, nullptr, &mats, cc.transforms);
 						#ifdef RENDER_DEBUG
 						cc.stat.hitch_submit += (uint32_t)mats.size();

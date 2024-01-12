@@ -213,7 +213,7 @@ function hitch_sys:finish_scene_update()
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
         local h_aabb = math3d.aabb()
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in hitch_indirect?out" do
             if mc.NULL ~= re.bounding.aabb then
                 h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
                 if re.skinning or re.dynamic_mesh then
@@ -221,6 +221,7 @@ function hitch_sys:finish_scene_update()
                 else
                     ivs.set_state(re, "main_view", false)
                     ivs.set_state(re, "cast_shadow", false)
+                    re.hitch_indirect = true
                 end
             end
         end
@@ -231,7 +232,7 @@ function hitch_sys:finish_scene_update()
                 math3d.unmark(e.bounding.aabb)
                 e.scene_needchange = true
                 e.bounding.aabb = math3d.mark(h_aabb)
-                e.hitch_visible = GROUP_VISIBLE[e.hitch.group]
+                --e.hitch_visible = GROUP_VISIBLE[e.hitch.group]
             end
         end
     end
@@ -256,7 +257,7 @@ function hitch_sys:render_preprocess()
         else
             local glbs = {}
             ig.enable(gid, "hitch_tag", true)
-            for re in w:select "hitch_tag eid:in mesh?in material?in render_layer?in scene?in skinning?in" do
+            for re in w:select "hitch_tag eid:in mesh?in material?in render_layer?in scene?in" do
                if re.mesh then
                     glbs[#glbs+1] = {mesh = re.mesh, material = re.material, render_layer = re.render_layer, parent = re.eid}
                end

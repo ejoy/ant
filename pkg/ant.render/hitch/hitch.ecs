@@ -3,6 +3,7 @@ import_feature "ant.scene"
 component "hitch_tag"
 component "hitch_update"
 component "hitch_create"
+component "hitch_indirect"
 component "dynamic_mesh"
 
 component "hitch"
