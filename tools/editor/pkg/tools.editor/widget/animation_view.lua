@@ -574,9 +574,10 @@ function m.save_timeline()
         return
     end
     local info = hierarchy:get_node_info(timeline_eid)
-    info.template.data.timeline.loop = ui_loop[1]
-    info.template.data.timeline.key_event = to_runtime_event(anim_key_event)
-    info.template.data.timeline.duration = ui_timeline_duration[1] / sample_ratio
+    local tl = info.template.data.timeline
+    tl.loop = ui_loop[1]
+    tl.key_event = to_runtime_event(anim_key_event)
+    tl.duration = ui_timeline_duration[1] / sample_ratio
 end
 
 function m.save_keyevent()
@@ -663,6 +664,7 @@ function m.clear()
     edit_timeline = nil
     anim_state.key_event = {}
     anim_state.current_event_list = {}
+    anim_state.selected_frame = -1
 end
 
 function m.get_title()
