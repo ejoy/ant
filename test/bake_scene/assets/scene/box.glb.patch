@@ -1,6 +1,0 @@
----
-file: mesh.prefab
-op: replace
-path: /1/data/scene/srt
-value:
-    s : {100,100,100}
