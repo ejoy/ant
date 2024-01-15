@@ -389,7 +389,7 @@ local function show_current_event()
             end
             action_list = current_event.action_list or {}
         end
-        action_list = (current_event.event_type == "Effect") and efk_tag_list or (#action_list > 0 and action_list or edit_anims.name_list)
+        action_list = (current_event.event_type == "Effect") and efk_tag_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
         if #action_list > 0 then
             local action = current_event.action or ''
             imgui.widget.PropertyLabel("Action")
