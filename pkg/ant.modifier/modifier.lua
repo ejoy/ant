@@ -200,9 +200,13 @@ function imodifier.clear_keyframes_cache()
 end
 
 function imodifier.keyframes_from_anim_data(anim_type, anim_data, frame_count, sample_ratio)
-    local get_keyframe_value = function (type, clip, init)
+    local get_keyframe_value = function(type, clip, init)
         if type == "mtl" then
-            return clip.value
+            local value = {}
+            for _, v in ipairs(clip.value) do
+                value[#value + 1] = v * clip.scale
+            end
+            return value
         elseif type == "srt" then
             local value = init and {init[1], init[2], init[3], init[4], init[5], init[6], init[7]} or {1, 0, 0, 0, 0, 0, 0}
             value[clip.rot_axis + 1] = clip.amplitude_rot
@@ -243,20 +247,9 @@ function imodifier.keyframes_from_anim_data(anim_type, anim_data, frame_count, s
             end
             from = init_value
         end
-        local fromvalue = {}
-        for _, value in ipairs(from) do
-            fromvalue[#fromvalue + 1] = value
-        end
-        keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
-        local tovalue = get_keyframe_value(anim_type, clip, anim_data.inherit[3] and from or nil)
-        if anim_type == "mtl" then
-            local tv = {}
-            for _, value in ipairs(tovalue) do
-                tv[#tv + 1] = value * clip.scale
-            end
-            tovalue = tv
-        end
-        keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
+        keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = from}
+        local to = get_keyframe_value(anim_type, clip, anim_data.inherit[3] and from or nil)
+        keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = to}
         last_clip = clip
     end
     local endclip = anim_data.clips[#anim_data.clips]
