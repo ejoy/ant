@@ -171,12 +171,11 @@ function hitch_sys:component_init()
 end
 
 function hitch_sys:entity_remove()
-    for e in w:select "REMOVED hitch:in hitch_update?out eid:in" do
+    for e in w:select "REMOVED hitch:in eid:in" do
         local ho = e.hitch
         Q.dealloc(ho.visible_idx)
         Q.dealloc(ho.cull_idx)
         set_dirty_hitch_group(e.hitch, e.eid)
-        e.hitch_update = true
     end
 end
 
@@ -232,7 +231,6 @@ function hitch_sys:finish_scene_update()
                 math3d.unmark(e.bounding.aabb)
                 e.scene_needchange = true
                 e.bounding.aabb = math3d.mark(h_aabb)
-                --e.hitch_visible = GROUP_VISIBLE[e.hitch.group]
             end
         end
     end
