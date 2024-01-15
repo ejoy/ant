@@ -168,6 +168,22 @@ local STATES_MAPPER<const> = {
         index = 3,
         color = 0xffe4e4e4,
     },
+    red = {
+        index = 4,
+        color = 0xff2020ff,
+    },
+    yellow = {
+        index = 5,
+        color = 0xff20ffff,
+    },
+    green = {
+        index = 6,
+        color = 0xff20ff20,
+    },
+    blue = {
+        index = 7,
+        color = 0xffff0000,
+    },
 
     --indicator state
     invalid = {
