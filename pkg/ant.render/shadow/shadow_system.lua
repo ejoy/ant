@@ -38,11 +38,7 @@ local INV_Z<const> = true
 --TODO: read from setting file
 local useLiSPSM<const> = false
 
---TODO: imporve depth precision, see: filament: far_uses_shadowcasters
---after use infinity far plane for ortho projection maritx, it not work, just disable it right now, 2024.01.08
---we try to do the same thing like filament with 'far_uses_shadowcasters' enable, but we found it cannot work like the same(in it's OpenGL API version)
---object outside PSC far plane with the distance lower than the value in shadowmap(in inverse z verion, that value must lower than 0)
---and we found that, it use some thick in depth texture sampling, need more effort to find why they work
+--NOTE: use PSC far should enable depth clamp. we should enable reset flag: BGFX_RESET_DEPTH_CLAMP in bgfx.init or bgfx.reset
 local usePSCFar<const> = false
 
 local moveCameraToOrigin<const> = true

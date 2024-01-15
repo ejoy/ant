@@ -8,7 +8,7 @@
 #include <css/PropertyParserKeyword.h>
 #include <css/PropertyParserString.h>
 #include <css/PropertyParserTransform.h>
-#include <css/PropertyName.h>
+#include <css/EnumName.h>
 #include <css/StyleSheetDefaultValue.h>
 #include <util/ConstexprMap.h>
 #include <util/AlwaysFalse.h>
@@ -28,18 +28,18 @@ using ShorthandDefinitionRecursiveRepeat = std::vector<ShorthandId>;
 using ShorthandDefinition = std::variant<ShorthandDefinitionFallThrough, ShorthandDefinitionBox, ShorthandDefinitionRecursiveRepeat>;
 
 template <typename E, size_t I, size_t N, typename Data>
-static constexpr void MakePropertyName(Data&& data) {
+static constexpr void MakeCssEnumName(Data&& data) {
 	if constexpr (I < N) {
-		data[2*I+0] = std::make_pair(PropertyNameV<PropertyNameStyle::Camel, static_cast<E>(I)>, static_cast<E>(I));
-		data[2*I+1] = std::make_pair(PropertyNameV<PropertyNameStyle::Kebab, static_cast<E>(I)>, static_cast<E>(I));
-		MakePropertyName<E, I+1, N>(data);
+		data[2*I+0] = std::make_pair(CssEnumNameV<CssEnumNameStyle::Camel, static_cast<E>(I)>, static_cast<E>(I));
+		data[2*I+1] = std::make_pair(CssEnumNameV<CssEnumNameStyle::Kebab, static_cast<E>(I)>, static_cast<E>(I));
+		MakeCssEnumName<E, I+1, N>(data);
 	}
 }
 
 template <typename E>
-static consteval auto MakePropertyNames() {
+static consteval auto MakeCssEnumNames() {
 	std::array<std::pair<std::string_view, E>, 2 * EnumCountV<E>> data;
-	MakePropertyName<E, 0, EnumCountV<E>>(data);
+	MakeCssEnumName<E, 0, EnumCountV<E>>(data);
 	return MakeConstexprMap(data);
 }
 
@@ -71,8 +71,8 @@ static constexpr PropertyIdSet InheritableProperties = (+[]{
 	return set;
 })();
 static_assert((InheritableProperties & LayoutProperties).empty());
-static constexpr auto PropertyNames = MakePropertyNames<PropertyId>();
-static constexpr auto ShorthandNames = MakePropertyNames<ShorthandId>();
+static constexpr auto PropertyNames = MakeCssEnumNames<PropertyId>();
+static constexpr auto ShorthandNames = MakeCssEnumNames<ShorthandId>();
 
 static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
 	{ PropertyId::BorderTopWidth, {

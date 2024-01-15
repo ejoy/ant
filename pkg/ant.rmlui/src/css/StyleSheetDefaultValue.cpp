@@ -1,7 +1,7 @@
 #include <css/StyleSheetDefaultValue.h>
 #include <css/StyleCache.h>
 #include <css/StyleSheetSpecification.h>
-#include <css/PropertyName.h>
+#include <css/EnumName.h>
 #include <core/ID.h>
 #include <util/Log.h>
 
@@ -77,7 +77,7 @@ void StyleSheetDefaultValue::Initialise() {
 	PropertyVector properties;
 	for (auto const& [id, value] : UnparsedDefaultValue) {
 		if (!StyleSheetSpecification::ParseDeclaration(properties, id, value)) {
-			auto prop_name = GetPropertyName<PropertyNameStyle::Kebab>(id);
+			auto prop_name = GetCssEnumName<CssEnumNameStyle::Kebab>(id);
 			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", prop_name.data(), value.data());
 		}
 	}
