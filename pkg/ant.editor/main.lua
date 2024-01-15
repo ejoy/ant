@@ -1,3 +1,0 @@
-return {
-	worldedit = require "worldedit",
-}

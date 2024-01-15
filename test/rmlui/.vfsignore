@@ -1,5 +1,4 @@
 block:
-	/pkg/ant.editor
 	/pkg/ant.imgui
 	/pkg/ant.vfs
 	/pkg/ant.efk/efkbgfx
