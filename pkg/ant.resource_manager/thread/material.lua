@@ -8,11 +8,11 @@ PM.program_init{
 }
 
 local function get_fx(fx, type)
-    if type:match "draw" then
+    if type == "draw" then
         return fx
-    elseif type:match "depth" then
+    elseif type == "depth" then
         return fx.depth
-    elseif type:match "draw_indirect" then
+    elseif type == "draw_indirect" then
         return fx.di
     else
         error("error program type!\n")
@@ -304,16 +304,6 @@ local function material_destroy(fx)
     if h then
         bgfx.destroy(make_prog_handle(h)) 
     end
-
-    local function destroy_stage(stage)
-        if fx[stage] then
-            bgfx.destroy(fx[stage])
-            fx[stage] = nil
-        end
-    end
-    destroy_stage "vs"
-    destroy_stage "fs"
-    destroy_stage "cs"
 end
 
 --the serive call will fully remove this material, both cpu and gpu side
@@ -364,11 +354,10 @@ function S.material_check()
                 assert(not MATERIAL_MARKED[requestid])
                 log.info(("Recreate prog:%d, from file:%s"):format(requestid, mi.filename))
                 local newfx = create_fx(mi.cfg)
-                assert(mi.type, "material program should own type!\n")
-                local fx = get_fx(newfx, mi.type)
-                PM.program_set(requestid, fx.prog)
-                fx.prog = requestid
-                mi.material.fx = newfx
+                local sub_oldfx = get_fx(mi.material.fx, mi.type)
+                local sub_newfx = get_fx(newfx, mi.type)
+                PM.program_set(requestid, sub_newfx.prog)
+                sub_oldfx.prog = requestid
             else
                 log.info(("Can not create prog:%d, it have been fully remove by 'S.material_destroy'"):format(requestid))
             end
