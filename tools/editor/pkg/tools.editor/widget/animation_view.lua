@@ -44,7 +44,6 @@ local anim_state = {
     selected_clip_index = 0,
     current_event_list = {}
 }
-local birth_anim = {false}
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local ui_timeline_duration = {1, min = 1, max = 300, speed = 1}
@@ -114,15 +113,12 @@ end
 
 local function anim_group_delete(anim_name)
     local info = hierarchy:get_node_info(anim_eid)
-    local tdata = info.template.data
-    local animation_map = tdata.animation
+    local td = info.template.data
+    local animation_map = td.animation
     animation_map[anim_name] = nil
     local e <close> = world:entity(anim_eid, "animation:in")
     e.animation.status[anim_name] = nil
     prefab_mgr:on_patch_animation(anim_eid, anim_name)
-    if tdata.animation_birth == anim_name then
-        tdata.animation_birth = next(animation_map) or ''
-    end
     local name_idx = find_index(edit_anims.name_list, anim_name)
     if name_idx then
         table.remove(edit_anims.name_list, name_idx)
@@ -187,25 +183,7 @@ local function set_current_anim(anim_name)
         return false
     end
     local tpl = hierarchy:get_node_info(anim_eid).template
-    birth_anim[1] = (anim_name == tpl.data.animation_birth)
-
-    if current_anim and current_anim.collider then
-        for _, col in ipairs(current_anim.collider) do
-            if col.collider then
-                local e <close> = world:entity(col.eid)
-                ivs.set_state(e, "visible", false)
-            end
-        end
-    end
     current_anim = anim
-    if current_anim.collider then
-        for _, col in ipairs(current_anim.collider) do
-            if col.collider then
-                local e <close> = world:entity(col.eid)
-                ivs.set_state(e, "visible", true)
-            end
-        end
-    end
     anim_state.anim_name = current_anim.name
     anim_state.key_event = current_anim.key_event
     anim_key_event = current_anim.key_event
@@ -247,37 +225,11 @@ local function add_event(et)
     set_event_dirty(1)
 end
 
-local function delete_collider(collider)
-    if not collider then return end
-    local event_dirty
-    for _, events in pairs(current_clip.key_event) do
-        for i = #events, 1, -1 do
-            if events[i] == collider then
-                table.remove(events, i)
-                event_dirty = true
-            end
-        end
-    end
-    for i = #current_clip.collider, 1, -1 do
-        if current_clip.collider[i] == collider then
-            table.remove(current_clip.collider, i)
-        end
-    end
-    if event_dirty then
-        set_event_dirty(-1)
-    else
-        local runtime_event = get_runtime_events()
-        runtime_event.collider = current_clip.collider
-    end
-end
-
 local function delete_event(idx)
-    if not idx then return end
-    if anim_state.current_event_list[idx].collider then
-        prefab_mgr:remove_entity(anim_state.current_event_list[idx].collider.eid)
-        delete_collider(anim_state.current_event_list[idx].collider)
+    if not idx then
+        return
     end
-    current_event = nil
+    current_event       = nil
     current_event_index = 0
     table.remove(anim_state.current_event_list, idx)
     set_event_dirty(1)
@@ -802,12 +754,6 @@ function m.show()
                 end
                 reload = true
             end
-            -- imgui.cursor.SameLine()
-            -- if imgui.widget.Checkbox("default", birth_anim) then
-            --     local tpl = hierarchy:get_node_info(anim_eid).template
-            --     tpl.data.animation_birth = birth_anim[1] and current_anim.name or nil
-            --     prefab_mgr:do_patch(anim_eid, "/data/animation_birth", tpl.data.animation_birth)
-            -- end
         end
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
@@ -945,7 +891,7 @@ function m.on_prefab_load(eid)
     end
     local editanims = {dirty = true, name_list = {} }
     local skeleton
-    local e <close> = world:entity(eid, "anim_ctrl?in animation?in animation_birth?in")
+    local e <close> = world:entity(eid, "anim_ctrl?in animation?in")
     if e.anim_ctrl then
         anim_eid = eid
         local prefab_filename = prefab_mgr:get_current_filename()
@@ -960,7 +906,6 @@ function m.on_prefab_load(eid)
         
         local animations = e.animation.status
         if animations then
-            editanims.birth = e.animation_birth
             skeleton = e.animation.skeleton
             for key, status in pairs(e.animation.status) do
                 if not editanims[key] then
@@ -978,13 +923,7 @@ function m.on_prefab_load(eid)
     if #editanims.name_list > 0 then
         edit_anims = editanims
         table.sort(edit_anims.name_list)
-        local animname
-        if edit_anims.birth and edit_anims.birth ~='' then
-            animname = edit_anims.birth
-        else
-            animname = editanims.name_list[1]
-        end
-        set_current_anim(animname)
+        set_current_anim(editanims.name_list[1])
         keyframe_view.init(skeleton)
         joint_map, _ = joint_utils:get_joints()
     end

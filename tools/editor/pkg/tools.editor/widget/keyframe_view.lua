@@ -782,6 +782,7 @@ local function create_animation(animtype, name, duration, target_anims)
         end
         local edit_anim = {
             type = animtype,
+            sample_ratio = sample_ratio,
             name = name,
             dirty = true,
             dirty_layer = -1,-- [1...n]: dirty index, 0: no dirty, -1: all dirty
