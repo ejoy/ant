@@ -148,9 +148,7 @@ void ant_loadmodules(lua_State* L) {
         { "system.scene", luaopen_system_scene },
         { "cull.core", luaopen_system_cull},
         { "zip", luaopen_zip },
-#if BX_PLATFORM_WINDOWS
         { "download", luaopen_download },
-#endif
         { NULL, NULL },
     };
 
