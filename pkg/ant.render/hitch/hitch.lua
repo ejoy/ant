@@ -212,10 +212,10 @@ function hitch_sys:finish_scene_update()
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
         local h_aabb = math3d.aabb()
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in hitch_indirect?out" do
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in hitch_indirect?out material?in" do
             if mc.NULL ~= re.bounding.aabb then
                 h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
-                if re.skinning or re.dynamic_mesh then
+                if re.skinning or re.dynamic_mesh or GROUP_VISIBLE[gid] then
                     GROUP_VISIBLE[gid] = true
                 else
                     ivs.set_state(re, "main_view", false)
