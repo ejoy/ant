@@ -1,20 +1,11 @@
 local serialize = import_package "ant.serialize"
-local aio       = import_package "ant.io"
-local vfs               = require "vfs"
+local vfs       = require "vfs"
 local lfs       = require "bee.filesystem"
-local fs        = require "filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
 
 local settingpath = lfs.path(vfs.repopath()):parent_path():parent_path():string().."/pkg/tools.editor/editor.settings"
-local function read()
-    if not io.open(settingpath, "r") then
-        return {}
-    end
-    return datalist.parse(fastio.readall_f(settingpath))
-end
-
-local editor_setting = read()
+local editor_setting = lfs.exists(settingpath) and datalist.parse(fastio.readall_f(settingpath)) or {}
 
 local function save()
     local f <close> = assert(io.open(settingpath, "w"))

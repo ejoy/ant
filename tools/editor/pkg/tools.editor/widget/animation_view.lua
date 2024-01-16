@@ -1,5 +1,8 @@
 local ecs = ...
 local world = ecs.world
+local vfs       = require "vfs"
+local lfs       = require "bee.filesystem"
+local fastio    = require "fastio"
 local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
 local keyframe_view = ecs.require "widget.keyframe_view"
@@ -61,12 +64,11 @@ local function find_index(t, item)
     end
 end
 
-local aio = import_package "ant.io"
 local datalist = require "datalist"
 local function get_action_list(asset_path)
     local al = {}
     if asset_path and asset_path ~= '' then
-        local animlist = datalist.parse(aio.readall(asset_path))
+        local animlist = datalist.parse(fastio.readall_f(global_data.project_root:string()..asset_path))
         for _, anim in ipairs(animlist) do
             al[#al + 1] = anim.name
         end

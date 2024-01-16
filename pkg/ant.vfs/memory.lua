@@ -1,7 +1,7 @@
 local function new_fs()
 	local openfile = io.open
 	local fs = {}
-	local root = { dir = {} }
+	local root = { dir = true }
 	local zip = require "zip"
 
 	local function create_dir(path)
@@ -10,9 +10,8 @@ local function new_fs()
 			local current = t
 			t = t[name]
 			if t == nil then
-				t = { dir = {} }
+				t = { dir = true }
 				current[name] = t
-				t = t.dir
 			elseif not t.dir then
 				return
 			end
@@ -23,9 +22,7 @@ local function new_fs()
 	local function find_dir(path)
 		local t = root
 		for name in path:gmatch "[^/]+" do
-			local current = t
 			t = t[name]
-			t = t and t.dir
 			if t == nil then
 				return
 			end
@@ -89,6 +86,7 @@ local function new_fs()
 	end
 
 	function fs.read(fullpath)
+		fullpath = fullpath:gsub("|", "/")
 		local d, name = fetch(fullpath)
 		if not d then
 			return nil, name
@@ -118,7 +116,7 @@ local function new_fs()
 	end
 
 	function fs.type(path)
-		local d, name = fetch(fullpath)
+		local d, name = fetch(path)
 		if not d then
 			return nil, name
 		end
