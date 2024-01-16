@@ -3,7 +3,8 @@ local world = ecs.world
 local w     = world.w
 local icompute  = ecs.require "ant.render|compute.compute"
 local math3d    = require "math3d"
-local mc        = import_package "ant.math".constant
+local mathpkg   = import_package "ant.math"
+local mc, mu    = mathpkg.constant, mathpkg.uitl
 local ig        = ecs.require "ant.group|group"
 local Q         = world:clibs "render.queue"
 local ivs       = ecs.require "ant.render|visible_state"
@@ -193,17 +194,18 @@ function hitch_sys:follow_scene_update()
     end  
 end
 
+local GO_MT<const> = {__index=function(t, gid)
+    local gg = {}
+    t[gid] = gg
+    return gg
+end}
+
 function hitch_sys:finish_scene_update()
     if not w:check "hitch_create" then
         return
     end
 
-    local groups = setmetatable({}, {__index=function(t, gid)
-        local gg = {}
-        t[gid] = gg
-        return gg
-    end})
-
+    local groups = setmetatable({}, GO_MT)
     for e in w:select "hitch_create hitch:in eid:in" do
         local group = groups[e.hitch.group]
         group[#group+1] = e.eid
@@ -218,8 +220,7 @@ function hitch_sys:finish_scene_update()
                 if re.skinning or re.dynamic_mesh or GROUP_VISIBLE[gid] then
                     GROUP_VISIBLE[gid] = true
                 else
-                    ivs.set_state(re, "main_view", false)
-                    ivs.set_state(re, "cast_shadow", false)
+                    ivs.set_state(re, "main_view|cast_shadow", false)
                     re.hitch_indirect = true
                 end
             end
@@ -228,9 +229,8 @@ function hitch_sys:finish_scene_update()
         if math3d.aabb_isvalid(h_aabb) then
             for _, heid in ipairs(hitchs) do
                 local e<close> = world:entity(heid, "hitch:in hitch_visible?out bounding:update scene_needchange?out")
-                math3d.unmark(e.bounding.aabb)
                 e.scene_needchange = true
-                e.bounding.aabb = math3d.mark(h_aabb)
+                e.bounding.aabb = mu.M3D_mark(e.bounding.aabb, h_aabb)
             end
         end
     end
@@ -249,7 +249,7 @@ function hitch_sys:render_preprocess()
             set_dirty_hitch_group(e.hitch, e.eid, is_visible) 
         end
     end
-    for gid, _ in pairs(DIRTY_GROUPS) do
+    for gid in pairs(DIRTY_GROUPS) do
         if GLBS[gid] then
             update_group_instance_buffer(gid)
         else
