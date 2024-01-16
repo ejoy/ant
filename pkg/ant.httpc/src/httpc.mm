@@ -3,7 +3,6 @@
 #include <queue>
 #include <string>
 #include <string_view>
-#include <variant>
 #include <vector>
 #include <bee/lua/binding.h>
 #include <bee/thread/spinlock.h>
@@ -40,7 +39,7 @@ private:
 
 @interface TaskDelegate: NSObject
 @property(nonatomic) int64_t id;
-@property(nonatomic, strong) NSURL* target;
+@property(nonatomic, strong) NSURL* file;
 @end
 @implementation TaskDelegate
 @end
@@ -96,7 +95,7 @@ private:
     lua_setfield(L, -2, "type");
     self.channel->push(seri_pack(L, 0, NULL));
 }
-- (void)sendProgressMessage:(TaskDelegate*)taskDelegate written:(int64_t)written total:(int64_t)total {
+- (void)sendProgressMessage:(TaskDelegate*)taskDelegate n:(int64_t)n total:(int64_t)total {
     lua_State* L = self.L;
     if (!L) {
         return;
@@ -107,12 +106,27 @@ private:
     lua_setfield(L, -2, "id");
     lua_pushstring(L, "progress");
     lua_setfield(L, -2, "type");
-    lua_pushinteger(L, written);
-    lua_setfield(L, -2, "written");
+    lua_pushinteger(L, n);
+    lua_setfield(L, -2, "n");
     if (total != NSURLSessionTransferSizeUnknown) {
         lua_pushinteger(L, total);
         lua_setfield(L, -2, "total");
     }
+    self.channel->push(seri_pack(L, 0, NULL));
+}
+- (void)sendResponseMessage:(TaskDelegate*)taskDelegate data:(NSData*) data {
+    lua_State* L = self.L;
+    if (!L) {
+        return;
+    }
+    lua_settop(L, 0);
+    lua_newtable(L);
+    lua_pushinteger(L, [taskDelegate id]);
+    lua_setfield(L, -2, "id");
+    lua_pushstring(L, "response");
+    lua_setfield(L, -2, "type");
+    lua_pushlstring(L, (const char*)[data bytes], [data length]);
+    lua_setfield(L, -2, "data");
     self.channel->push(seri_pack(L, 0, NULL));
 }
 
@@ -129,7 +143,19 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
     if (taskDelegate == nil) {
         return;
     }
-    [self sendProgressMessage:taskDelegate written:totalBytesWritten total:totalBytesExpectedToWrite];
+    [self sendProgressMessage:taskDelegate n:totalBytesWritten total:totalBytesExpectedToWrite];
+}
+
+- (void)URLSession:(NSURLSession *)session 
+              task:(NSURLSessionTask *)task 
+   didSendBodyData:(int64_t)bytesSent 
+    totalBytesSent:(int64_t)totalBytesSent 
+totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
+    TaskDelegate* taskDelegate = self.tasks[task];
+    if (taskDelegate == nil) {
+        return;
+    }
+    [self sendProgressMessage:taskDelegate n:totalBytesSent total:totalBytesExpectedToSend];
 }
 
 - (void)URLSession:(NSURLSession *)session
@@ -145,6 +171,10 @@ didCompleteWithError:(NSError *)error {
     if (taskDelegate == nil) {
         return;
     }
+    if (!error && ![taskDelegate file]) {
+        [self sendCompletionMessage:taskDelegate];
+        return;
+    }
     [self sendErrorMessage:taskDelegate error: error];
 }
 
@@ -158,12 +188,22 @@ didFinishDownloadingToURL:(NSURL *)location {
     self.tasks[downloadTask] = nil;
     NSError* error;
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtURL:[taskDelegate target] error:&error];
-    if (![fileManager moveItemAtURL:location toURL:[taskDelegate target] error:&error]) {
+    [fileManager removeItemAtURL:[taskDelegate file] error:&error];
+    if (![fileManager moveItemAtURL:location toURL:[taskDelegate file] error:&error]) {
         [self sendErrorMessage:taskDelegate error: error];
         return;
     }
     [self sendCompletionMessage:taskDelegate];
+}
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data {
+    TaskDelegate* taskDelegate = self.tasks[dataTask];
+    if (taskDelegate == nil) {
+        return;
+    }
+    [self sendResponseMessage:taskDelegate data:data];
 }
 @end
 
@@ -223,21 +263,38 @@ static int download(lua_State* L) {
     SessionDelegate * delegate = s.objc_delegate();
     NSURLSession* session = s.objc_session();
     const char* downloadStr = luaL_checkstring(L, 2);
-    const char* targetStr = luaL_checkstring(L, 3);
+    const char* fileStr = luaL_checkstring(L, 3);
     NSURL* downloadUrl = [NSURL URLWithString:[NSString stringWithUTF8String:downloadStr]];
-    NSURL* targetUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:targetStr]];
+    NSURL* fileUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:fileStr]];
     NSURLSessionDownloadTask* task = [session downloadTaskWithURL:downloadUrl];
     TaskDelegate* taskDelegate = [[TaskDelegate alloc] init];
     taskDelegate.id = [delegate getTaskId];
-    taskDelegate.target = targetUrl;
+    taskDelegate.file = fileUrl;
     delegate.tasks[task] = taskDelegate;
     [task resume];
     lua_pushinteger(L, [taskDelegate id]);
     return 1;
 }
 
-template <typename>
-constexpr bool always_false_v = false;
+static int upload(lua_State* L) {
+    auto& s = bee::lua::checkudata<LuaURLSession>(L, 1);
+    SessionDelegate * delegate = s.objc_delegate();
+    NSURLSession* session = s.objc_session();
+    const char* uploadStr = luaL_checkstring(L, 2);
+    const char* fileStr = luaL_checkstring(L, 3);
+    NSURL* uploadUrl = [NSURL URLWithString:[NSString stringWithUTF8String:uploadStr]];
+    NSURL* fileUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:fileStr]];
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:uploadUrl];
+    request.HTTPMethod = @"POST";
+    NSURLSessionUploadTask* task = [session uploadTaskWithRequest:request fromFile:fileUrl];
+    TaskDelegate* taskDelegate = [[TaskDelegate alloc] init];
+    taskDelegate.id = [delegate getTaskId];
+    taskDelegate.file = nil;
+    delegate.tasks[task] = taskDelegate;
+    [task resume];
+    lua_pushinteger(L, [taskDelegate id]);
+    return 1;
+}
 
 static int select(lua_State* L) {
     auto& s = bee::lua::checkudata<LuaURLSession>(L, 1);
@@ -257,6 +314,7 @@ int luaopen_httpc(lua_State* L) {
     luaL_Reg l[] = {
         { "session", session },
         { "download", download },
+        { "upload", upload },
         { "select", select },
         { NULL, NULL },
     };
