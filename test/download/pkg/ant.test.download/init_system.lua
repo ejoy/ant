@@ -12,6 +12,8 @@ local function startDownload(url, file)
     downloadTask[id] = { url = url, file = file }
 end
 
+--http://antengine-client-logcollector.ejoy.com:80/file_upload
+
 function m:init()
     startDownload(
         "https://antengine-server-patch.ejoy.com/cc/",
