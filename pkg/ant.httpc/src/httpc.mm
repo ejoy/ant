@@ -278,15 +278,30 @@ static int download(lua_State* L) {
 
 static int upload(lua_State* L) {
     auto& s = bee::lua::checkudata<LuaURLSession>(L, 1);
-    SessionDelegate * delegate = s.objc_delegate();
+    SessionDelegate* delegate = s.objc_delegate();
     NSURLSession* session = s.objc_session();
-    const char* uploadStr = luaL_checkstring(L, 2);
-    const char* fileStr = luaL_checkstring(L, 3);
-    NSURL* uploadUrl = [NSURL URLWithString:[NSString stringWithUTF8String:uploadStr]];
-    NSURL* fileUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:fileStr]];
+    NSString* uploadStr = [NSString stringWithUTF8String:luaL_checkstring(L, 2)];
+    NSString* fileStr = [NSString stringWithUTF8String:luaL_checkstring(L, 3)];
+    NSString* nameStr = [NSString stringWithUTF8String:luaL_checkstring(L, 4)];
+    NSString* boundaryStr = [NSString stringWithUTF8String:luaL_checkstring(L, 5)];
+    NSURL* uploadUrl = [NSURL URLWithString:uploadStr];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:uploadUrl];
     request.HTTPMethod = @"POST";
-    NSURLSessionUploadTask* task = [session uploadTaskWithRequest:request fromFile:fileUrl];
+    [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=\"%@\"", boundaryStr] forHTTPHeaderField:@"Content-Type"];
+    NSData* boundaryData = [[NSString stringWithFormat:@"--%@", boundaryStr] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* newlineData = [@"\r\n" dataUsingEncoding:NSUTF8StringEncoding];
+    NSMutableData* body = [NSMutableData data];
+    [body appendData:boundaryData];
+    [body appendData:newlineData];
+    [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"file\"; filename=\"%@\"", nameStr] dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:newlineData];
+    [body appendData:newlineData];
+    [body appendData:[NSData dataWithContentsOfFile:fileStr]];
+    [body appendData:boundaryData];
+    [body appendData:[@"--" dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:newlineData];
+
+    NSURLSessionUploadTask* task = [session uploadTaskWithRequest:request fromData:body];
     TaskDelegate* taskDelegate = [[TaskDelegate alloc] init];
     taskDelegate.id = [delegate getTaskId];
     taskDelegate.file = nil;

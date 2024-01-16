@@ -16,8 +16,8 @@ local function startDownload(url, file)
     }
 end
 
-local function startUpload(url, file)
-    local id = httpc.upload(session, url, file)
+local function startUpload(url, file, name)
+    local id = httpc.upload(session, url, file, name, "------------------------x2PwarBSOi76w65iTCDl5Y")
     Tasks[id] = {
         type = "upload",
         url = url,
@@ -32,7 +32,8 @@ function m:init()
     --)
     startUpload(
         "http://antengine-client-logcollector.ejoy.com:80/file_upload",
-        "./test/httpc/test.html"
+        "./test/httpc/test.html",
+        "test.html"
     )
 end
 
