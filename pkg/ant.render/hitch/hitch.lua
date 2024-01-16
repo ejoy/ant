@@ -4,7 +4,7 @@ local w     = world.w
 local icompute  = ecs.require "ant.render|compute.compute"
 local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
-local mc, mu    = mathpkg.constant, mathpkg.uitl
+local mc, mu    = mathpkg.constant, mathpkg.util
 local ig        = ecs.require "ant.group|group"
 local Q         = world:clibs "render.queue"
 local ivs       = ecs.require "ant.render|visible_state"
@@ -13,11 +13,13 @@ local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local cs_material = "/pkg/vaststars.resources/materials/hitch/hitch_compute.material"
 
-local HITCHS = setmetatable({}, {__index=function(t, gid)
+local GID_MT<const> = {__index=function(t, gid)
     local gg = {}
     t[gid] = gg
     return gg
-end})
+end}
+
+local HITCHS = setmetatable({}, GID_MT)
 
 local DIRTY_GROUPS, GLBS, GROUP_VISIBLE = {}, {}, {}
 
@@ -36,26 +38,18 @@ local function get_hitch_worldmat(e)
     return e.scene.worldmat
 end
 
-local function get_draw_num(hitchs)
-    local draw_num = 0
-    for _, _ in pairs(hitchs) do
-        draw_num = draw_num + 1
-    end
-    return draw_num
-end
-
 local function get_hitch_worldmats_instance_memory(hitchs)
     local memory = {}
-    for heid, _ in pairs(hitchs) do
+    for heid in pairs(hitchs) do
         local e<close> = world:entity(heid, "scene:in")
         if e then
             local wm = get_hitch_worldmat(e)
             wm = math3d.transpose(wm)
             local c1, c2, c3 = math3d.index(wm, 1, 2, 3)
-            memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))  
+            memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
         end
     end
-    return table.concat(memory, "")
+    return table.concat(memory, ""), #memory
 end
 
 local function dispatch_instance_buffer(e, diid, draw_num)
@@ -86,8 +80,7 @@ end
 
 local function update_group_instance_buffer(gid)
     local glbs, hitchs = GLBS[gid], HITCHS[gid]
-    local draw_num = get_draw_num(hitchs)
-    local memory = get_hitch_worldmats_instance_memory(hitchs)
+    local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
 
     local function update_instance_buffer(diid)
         local e = world:entity(diid, "draw_indirect:update")
@@ -107,8 +100,7 @@ end
 
 local function create_draw_indirect_and_compute_entity(glbs, gid)
     local hitchs = HITCHS[gid]
-    local draw_num = get_draw_num(hitchs)
-    local memory = get_hitch_worldmats_instance_memory(hitchs)
+    local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
     for _, glb in ipairs(glbs) do
         glb.mesh.bounding = nil
         local diid = world:create_entity {
@@ -194,18 +186,12 @@ function hitch_sys:follow_scene_update()
     end  
 end
 
-local GO_MT<const> = {__index=function(t, gid)
-    local gg = {}
-    t[gid] = gg
-    return gg
-end}
-
 function hitch_sys:finish_scene_update()
     if not w:check "hitch_create" then
         return
     end
 
-    local groups = setmetatable({}, GO_MT)
+    local groups = setmetatable({}, GID_MT)
     for e in w:select "hitch_create hitch:in eid:in" do
         local group = groups[e.hitch.group]
         group[#group+1] = e.eid
