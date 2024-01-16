@@ -181,7 +181,7 @@ function hitch_sys:entity_init()
 end
 
 function hitch_sys:follow_scene_update()
-    for e in w:select "hitch scene_changed hitch_update?out" do
+    for e in w:select "scene_changed hitch hitch_update?out" do
         e.hitch_update = true
     end  
 end
