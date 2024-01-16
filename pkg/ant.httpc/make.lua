@@ -14,7 +14,7 @@ lm:lua_source "httpc" {
 	},
 	macos = {
 		sources = {
-			"src/download.mm",
+			"src/httpc.mm",
 		},
 		flags = {
 			"-fobjc-arc"
@@ -22,7 +22,7 @@ lm:lua_source "httpc" {
 	},
 	ios = {
 		sources = {
-			"src/download.mm",
+			"src/httpc.mm",
 		},
 		flags = {
 			"-fobjc-arc"
