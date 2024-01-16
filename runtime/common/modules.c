@@ -74,7 +74,7 @@ int luaopen_imgui_widgets(lua_State* L);
 int luaopen_system_scene(lua_State* L);
 int luaopen_system_cull(lua_State* L);
 int luaopen_zip(lua_State* L);
-int luaopen_download(lua_State *L);
+int luaopen_httpc(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -148,7 +148,7 @@ void ant_loadmodules(lua_State* L) {
         { "system.scene", luaopen_system_scene },
         { "cull.core", luaopen_system_cull},
         { "zip", luaopen_zip },
-        { "download", luaopen_download },
+        { "httpc", luaopen_httpc },
         { NULL, NULL },
     };
 

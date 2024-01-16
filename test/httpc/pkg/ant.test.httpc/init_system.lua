@@ -2,13 +2,13 @@ local ecs = ...
 
 local m = ecs.system "init_system"
 
-local dl = require "download"
-local session = dl.session "ephemeral"
+local httpc = require "httpc"
+local session = httpc.session "ephemeral"
 
 local downloadTask = {}
 
 local function startDownload(url, file)
-    local id = dl.download(session, url, file)
+    local id = httpc.download(session, url, file)
     downloadTask[id] = { url = url, file = file }
 end
 
@@ -17,12 +17,12 @@ end
 function m:init()
     startDownload(
         "https://antengine-server-patch.ejoy.com/cc/",
-        "./test/download/test.html"
+        "./test/httpc/test.html"
     )
 end
 
 function m:data_changed()
-    for _, msg in ipairs(dl.select(session)) do
+    for _, msg in ipairs(httpc.select(session)) do
         if  msg.type == "completion" then
             local task = downloadTask[msg.id]
             print("`" .. task.url .. "` completion.")

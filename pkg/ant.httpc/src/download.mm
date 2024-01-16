@@ -252,7 +252,7 @@ static int select(lua_State* L) {
 }
 
 extern "C"
-int luaopen_download(lua_State* L) {
+int luaopen_httpc(lua_State* L) {
     luaL_checkversion(L);
     luaL_Reg l[] = {
         { "session", session },

@@ -3,7 +3,7 @@ require "bootstrap"
 
 import_package "ant.window".start {
     feature = {
-        "ant.test.download",
+        "ant.test.httpc",
         "ant.animation",
         "ant.render|render",
     }

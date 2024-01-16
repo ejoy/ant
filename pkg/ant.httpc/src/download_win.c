@@ -155,7 +155,7 @@ lcancel(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_download(lua_State *L) {
+luaopen_httpc(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "cancel_object", lcancel_object },

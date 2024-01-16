@@ -1,20 +1,20 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
+local ROOT <const> = "../../"
 
-lm:lua_source "download" {
+lm:lua_source "httpc" {
 	includes = {
-		Ant3rd .. "bee.lua",
-	},
+		ROOT .. "3rd/bee.lua",
+    },
 	windows = {
 		sources = {
-			"download_win.c",
+			"src/download_win.c",
 		},
 		links = "urlmon",
 	},
 	macos = {
 		sources = {
-			"download.mm",
+			"src/download.mm",
 		},
 		flags = {
 			"-fobjc-arc"
@@ -22,7 +22,7 @@ lm:lua_source "download" {
 	},
 	ios = {
 		sources = {
-			"download.mm",
+			"src/download.mm",
 		},
 		flags = {
 			"-fobjc-arc"
