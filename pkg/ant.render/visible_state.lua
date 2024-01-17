@@ -39,6 +39,20 @@ local function set_visible_states(vs, s, v)
 	end
 end
 
+function ivs.build_state(vs)
+	local result = {}
+	if vs["main_queue"] or vs["pre_depth_queue"] then
+		result[#result+1] = "main_view"
+	end
+	if vs["pickup_queue"] then
+		result[#result+1] = "selectable"
+	end
+	if vs["csm1_queue"] or vs["csm2_queue"] or vs["csm3_queue"] or vs["csm4_queue"] then
+		result[#result+1] = "cast_shadow"
+	end
+	return table.concat(result, '|')
+end
+
 function ivs.set_state(e, name, v)
 	w:extend(e, "visible_state:in visible_state_changed?out")
 	set_visible_states(e.visible_state, name, v)

@@ -21,7 +21,7 @@ end}
 
 local HITCHS = setmetatable({}, GID_MT)
 
-local DIRTY_GROUPS, GLBS, DIRECT_DRAW_GROUPS = {}, {}, {}
+local DIRTY_GROUPS, GLBS, DIRECT_DRAW_GROUPS, PARENTS = {}, {}, {}, {}
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -115,7 +115,7 @@ local function create_draw_indirect_and_compute_entity(glbs, gid)
                 },
                 simplemesh  = glb.mesh,
                 material    = glb.material,
-                visible_state = "main_view|selectable|cast_shadow",
+                visible_state = glb.visible_state,
                 render_layer = glb.render_layer,
                 --render_layer = "opacity",
                 draw_indirect = {
@@ -127,6 +127,13 @@ local function create_draw_indirect_and_compute_entity(glbs, gid)
                         params  = {draw_num, 0, 0, glb.mesh.ib.num},
                     },
                 },
+                on_ready = function (e)
+                    local pe<close> = world:entity(glb.parent, "visible_state:in")
+                    w:extend(e, "visible_state:update")
+                    e.visible_state = pe.visible_state
+                    --w:extend(e, "filter_material:update")
+                    --e.filter_material = glb.filter_material
+                end
             },
         }
         local cid = world:create_entity{
@@ -145,6 +152,7 @@ local function create_draw_indirect_and_compute_entity(glbs, gid)
             }
         }
         glb.diid, glb.cid = diid, cid
+        PARENTS[glb.parent] = diid
     end
 end
 
@@ -180,10 +188,23 @@ function hitch_sys:entity_init()
     end 
 end
 
+function hitch_sys:bounding_update()
+    if not w:check "visible_state_changed" then
+        return
+    end
+    for pe in w:select "visible_state_changed visible_state:in eid:in" do
+        local diid = PARENTS[pe.eid]
+        if diid then
+            local die = world:entity("visible_state:update", diid)
+            die.visible_state = pe.visible_state
+        end
+    end
+end
+
 function hitch_sys:follow_scene_update()
     for e in w:select "scene_changed hitch hitch_update?out" do
         e.hitch_update = true
-    end  
+    end
 end
 
 function hitch_sys:finish_scene_update()
@@ -252,9 +273,16 @@ function hitch_sys:render_preprocess()
         else
             local glbs = {}
             ig.enable(gid, "hitch_tag", true)
-            for re in w:select "hitch_tag eid:in mesh?in material?in render_layer?in scene?in" do
+            for re in w:select "hitch_tag eid:in mesh?in material?in render_layer?in scene?in visible_state?in filter_material?in" do
                if re.mesh then
-                    glbs[#glbs+1] = {mesh = re.mesh, material = re.material, render_layer = re.render_layer, parent = re.eid}
+                    glbs[#glbs+1] = {
+                        mesh = re.mesh, 
+                        material = re.material, 
+                        render_layer = re.render_layer, 
+                        parent = re.eid, 
+                        visible_state = ivs.build_state(re.visible_state),
+                        filter_material = re.filter_material
+                    }
                end
             end
 
@@ -268,4 +296,17 @@ function hitch_sys:render_preprocess()
     DIRTY_GROUPS = {}
     w:clear "hitch_update"
 end
+
+function hitch_sys:exit()
+    for _, glbs in pairs(GLBS) do
+        for _, glb in ipairs(glbs) do
+            local diid, cid = glb.diid, glb.cid
+            local die<close> = world:entity(diid, "filter_material:update")
+            die.filter_material = nil
+            w:remove(diid)
+            w:remove(cid)
+        end 
+    end
+end
+
 
