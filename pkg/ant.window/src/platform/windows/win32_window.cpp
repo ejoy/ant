@@ -259,8 +259,6 @@ static void UpdateMouseCursor(ImGuiMouseCursor cursor) {
 	case ImGuiMouseCursor_NotAllowed:
 		::SetCursor(::LoadCursor(nullptr, IDC_NO));
 		break;
-		::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-		break;
 	case ImGuiMouseCursor_None:
 		::SetCursor(nullptr);
 		break;
