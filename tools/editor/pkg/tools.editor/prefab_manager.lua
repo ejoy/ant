@@ -438,7 +438,7 @@ local function reset_open_context()
 end
 
 local function get_prefabs_and_patch_template(glbfilename)
-    local localPatchfile = fs.path(glbfilename):localpath():string() .. ".patch"
+    local localPatchfile = lfs.path(glbfilename):string() .. ".patch"
     local patch_tpl = lfs.exists(lfs.path(localPatchfile)) and serialize.parse(localPatchfile, fastio.readall_s(localPatchfile)) or {}
     local prefab_set = {}
     for _, patch in ipairs(patch_tpl) do
@@ -527,14 +527,61 @@ function m:choose_prefab()
     end
 end
 
+local cr = import_package "ant.compile_resource"
+local vfs = require "vfs"
+local memfs = import_package "ant.vfs".memory
+
+local function mount_dir(vroot, lpath, lroot)
+    for path in lfs.pairs(lfs.path(lpath)) do
+        if path:filename():string():sub(1,1) == "." then
+            goto continue
+        end
+        if lfs.is_directory(path) then
+            mount_dir(vroot, path, lroot)
+        else
+            local vp = vroot:string() .. "/" .. lfs.relative(path, lroot):string()
+            memfs.update(vp, path:string())
+        end
+        ::continue::
+    end
+end
+
+local function compile_glb(vpath, lpath)
+    local config = cr.init_setting(vfs, "windows-direct3d11")
+    local current_compile_path = cr.compile_file(config, vpath:string(), lpath:string())
+    mount_dir(vpath, current_compile_path, current_compile_path)
+    return current_compile_path
+end
+
+local function cook_prefab(prefab_filename)
+    local pl = utils.split_ant_path(prefab_filename)
+    if not pl[2] then
+        return
+    end
+    local compile_path = compile_glb(lfs.path(pl[1]), lfs.path(gd.project_root:string()..pl[1]))
+    prefab_filename = prefab_filename:gsub("|", "/")
+    local prefab_template = serialize.parse(prefab_filename, aio.readall(prefab_filename))
+    for _, tpl in ipairs(prefab_template) do
+        if tpl.prefab then
+            cook_prefab(tpl.prefab)
+        end
+    end
+    return compile_path
+end
+
 function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
-    self.prefab_template = serialize.parse(filename, aio.readall(filename))
     local path_list = utils.split_ant_path(filename)
+    local virtual_prefab_path = lfs.path('/') / lfs.relative(path_list[1], gd.project_root)
     if #path_list > 1 then
+        self.prefab_name = path_list[2]
+        gd.virtual_prefab_path = virtual_prefab_path
+        gd.current_compile_path = cook_prefab(virtual_prefab_path:string() .. "|".. self.prefab_name)
         self.glb_filename = path_list[1]
-        self.prefab_name = prefab_name or "mesh.prefab"
+        virtual_prefab_path = virtual_prefab_path:string() .. "/" .. self.prefab_name
+        self.prefab_template = serialize.parse(virtual_prefab_path, aio.readall(virtual_prefab_path))
+
         patch_tpl = patch_tpl or {}
         self.origin_patch_template = patch_tpl
         self.patch_template = {}
@@ -553,10 +600,12 @@ function m:open(filename, prefab_name, patch_tpl)
             end
         end
         self.patch_start_index = #self.prefab_template - node_idx + 1
+    else
+        self.prefab_template = serialize.parse(filename, fastio.readall_s(filename))
     end
 
     self.current_prefab = world:create_instance {
-        prefab = filename,
+        prefab = virtual_prefab_path,
         on_ready = function(instance)
             self:on_prefab_ready(instance)
             hierarchy:update_slot_list(world)
@@ -670,11 +719,16 @@ local global_data       = require "common.global_data"
 local access            = global_data.repo_access
 
 function m:add_effect(filename)
+    for path in lfs.pairs(lfs.path(filename):parent_path()) do
+        local vpath = (lfs.path('/') / lfs.relative(path, gd.project_root)):string()
+        memfs.update(vpath, path:string())
+    end
+    local virtual_path = (lfs.path('/') / lfs.relative(filename, gd.project_root)):string()
     if not self.root then
         self:reset_prefab()
     end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
-    local name = fs.path(filename):stem():string()
+    local name = fs.path(virtual_path):stem():string()
     local template = {
 		policy = {
             "ant.scene|scene_object",
@@ -683,7 +737,7 @@ function m:add_effect(filename)
 		data = {
             scene = {parent = parent},
             efk = {
-                path = filename,
+                path = virtual_path,
                 speed = 1.0,
             },
             visible_state = "main_queue"
@@ -1253,8 +1307,8 @@ function m:do_material_patch(eid, path, v)
     local info = hierarchy:get_node_info(eid)
     local tpl = info.template
     if not self.materials_names then
-        local ret = utils.split_ant_path(tpl.data.material)
-        local fn = ret[1] .. "|materials.names"
+        -- local ret = utils.split_ant_path(tpl.data.material)
+        local fn = gd.virtual_prefab_path:string() .. "/materials.names"
         self.materials_names = serialize.parse(fn, aio.readall(fn))
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))

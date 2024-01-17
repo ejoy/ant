@@ -22,10 +22,12 @@ namespace Rml {
 
     template <typename E, E V>
     constexpr auto EnumIsValid() noexcept {
-#if defined(_MSC_VER)
+#if __GNUC__ || __clang__
+        return EnumIsValid({__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 2});
+#elif _MSC_VER
         return EnumIsValid({__FUNCSIG__, sizeof(__FUNCSIG__) - 17});
 #else
-        return EnumIsValid({__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 2});
+        static_assert(false, "Unsupported compiler");
 #endif
     }
 

@@ -60,7 +60,7 @@ end
 
 lm:copy "copy_mainlua" {
     input = "common/main.lua",
-    output = "../"..lm.bindir,
+    output = "../"..lm.bindir.."/main.lua",
 }
 
 lm:lua_source "ant_common" {

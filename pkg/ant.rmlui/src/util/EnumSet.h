@@ -62,13 +62,15 @@ public:
 
     constexpr void insert(T v) {
         size_t pos = (size_t)v;
-        assert(pos < N);
         data[pos / Bitsperword] |= BitT{1} << pos % Bitsperword;
     }
     constexpr void erase(T v) {
         size_t pos = (size_t)v;
-        assert(pos < N);
         data[pos / Bitsperword] &= ~(BitT{1} << pos % Bitsperword);
+    }
+    constexpr bool contains(T v) const {
+        size_t pos = (size_t)v;
+        return (data[pos / Bitsperword] & (BitT{1} << pos % Bitsperword)) != 0;
     }
     constexpr void clear() {
         if (std::is_constant_evaluated()) {
@@ -86,11 +88,6 @@ public:
             }
         }
         return true;
-    }
-    constexpr bool contains(T v) const {
-        size_t pos = (size_t)v;
-        assert(pos < N);
-        return (data[pos / Bitsperword] & (BitT{1} << pos % Bitsperword)) != 0;
     }
     constexpr size_t size() const {
         size_t n = 0;

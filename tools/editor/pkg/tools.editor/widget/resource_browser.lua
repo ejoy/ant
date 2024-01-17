@@ -54,13 +54,13 @@ local function construct_resource_tree(fspath)
     local tree = {files = {}, dirs = {}}
     if fspath then
         local sorted_path = {}
-        for item in fs.pairs(fspath) do
+        for item in lfs.pairs(fspath) do
             sorted_path[#sorted_path+1] = item
         end
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)
         for _, item in ipairs(sorted_path) do
             local ext = item:extension():string()
-            if fs.is_directory(item) and ext ~= ".glb" and ext ~= ".material" and ext ~= ".texture" then
+            if lfs.is_directory(item) and ext ~= ".glb" and ext ~= ".material" and ext ~= ".texture" then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
                 if selected_folder[1] == item then
                     selected_folder = tree.dirs[#tree.dirs]
@@ -103,8 +103,9 @@ function m.update_resource_tree(hiden_engine_res)
         packages = global_data.packages
     end
     for _, item in ipairs(packages) do
-        local path = fs.path("/pkg") / fs.path(item.name)
-        resource_tree.dirs[#resource_tree.dirs + 1] = {path, construct_resource_tree(path)}
+        local vpath = fs.path("/pkg") / fs.path(item.name)
+        -- resource_tree.dirs[#resource_tree.dirs + 1] = {path, construct_resource_tree(path)}
+        resource_tree.dirs[#resource_tree.dirs + 1] = {vpath, construct_resource_tree(item.path)}
     end
 
     local function set_parent(tree)
@@ -291,7 +292,7 @@ function m.show()
             if (#v[2].dirs == 0) then
                 imgui.widget.TreeNode(fonticon .. dir_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
-                local adjust_flags = base_flags | (string.find(selected_folder[1]._value, "/" .. dir_name) and imgui.flags.TreeNode {"DefaultOpen"} or 0)
+                local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and imgui.flags.TreeNode {"DefaultOpen"} or 0)
                 if imgui.widget.TreeNode(fonticon .. dir_name, adjust_flags) then
                     if imgui.util.IsItemClicked() then
                         selected_folder = v
@@ -308,7 +309,13 @@ function m.show()
     end
     if imgui.windows.Begin("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
-        local _, split_dirs = path_split(selected_folder[1]:string())
+        local relativePath
+        if selected_folder[1]._value then
+            relativePath = selected_folder[1]
+        else
+            relativePath = lfs.relative(selected_folder[1], global_data.project_root)
+        end
+        local _, split_dirs = path_split(relativePath:string())
         for i = 1, #split_dirs do
             if imgui.widget.Button("/" .. split_dirs[i]) then
                 if tostring(selected_folder[1]:filename()) ~= split_dirs[i] then
@@ -475,8 +482,8 @@ function m.show()
             imgui.cursor.SameLine()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height);
-            if fs.path(selected_file):equal_extension(".png") or fs.path(selected_file):equal_extension(".texture") then
+            imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height)
+            if selected_file and (selected_file:equal_extension(".png") or selected_file:equal_extension(".texture")) then
                 local preview = preview_images[selected_file]
                 if preview then
                     if texture_detail[selected_file] then

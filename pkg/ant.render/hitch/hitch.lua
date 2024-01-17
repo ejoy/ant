@@ -3,7 +3,8 @@ local world = ecs.world
 local w     = world.w
 local icompute  = ecs.require "ant.render|compute.compute"
 local math3d    = require "math3d"
-local mc        = import_package "ant.math".constant
+local mathpkg   = import_package "ant.math"
+local mc, mu    = mathpkg.constant, mathpkg.util
 local ig        = ecs.require "ant.group|group"
 local Q         = world:clibs "render.queue"
 local ivs       = ecs.require "ant.render|visible_state"
@@ -12,11 +13,13 @@ local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local cs_material = "/pkg/vaststars.resources/materials/hitch/hitch_compute.material"
 
-local HITCHS = setmetatable({}, {__index=function(t, gid)
+local GID_MT<const> = {__index=function(t, gid)
     local gg = {}
     t[gid] = gg
     return gg
-end})
+end}
+
+local HITCHS = setmetatable({}, GID_MT)
 
 local DIRTY_GROUPS, GLBS, DIRECT_DRAW_GROUPS = {}, {}, {}
 
@@ -35,26 +38,18 @@ local function get_hitch_worldmat(e)
     return e.scene.worldmat
 end
 
-local function get_draw_num(hitchs)
-    local draw_num = 0
-    for _, _ in pairs(hitchs) do
-        draw_num = draw_num + 1
-    end
-    return draw_num
-end
-
 local function get_hitch_worldmats_instance_memory(hitchs)
     local memory = {}
-    for heid, _ in pairs(hitchs) do
+    for heid in pairs(hitchs) do
         local e<close> = world:entity(heid, "scene:in")
         if e then
             local wm = get_hitch_worldmat(e)
             wm = math3d.transpose(wm)
             local c1, c2, c3 = math3d.index(wm, 1, 2, 3)
-            memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))  
+            memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
         end
     end
-    return table.concat(memory, "")
+    return table.concat(memory, ""), #memory
 end
 
 local function dispatch_instance_buffer(e, diid, draw_num)
@@ -85,8 +80,7 @@ end
 
 local function update_group_instance_buffer(gid)
     local glbs, hitchs = GLBS[gid], HITCHS[gid]
-    local draw_num = get_draw_num(hitchs)
-    local memory = get_hitch_worldmats_instance_memory(hitchs)
+    local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
 
     local function update_instance_buffer(diid)
         local e = world:entity(diid, "draw_indirect:update")
@@ -106,8 +100,7 @@ end
 
 local function create_draw_indirect_and_compute_entity(glbs, gid)
     local hitchs = HITCHS[gid]
-    local draw_num = get_draw_num(hitchs)
-    local memory = get_hitch_worldmats_instance_memory(hitchs)
+    local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
     for _, glb in ipairs(glbs) do
         glb.mesh.bounding = nil
         local diid = world:create_entity {
@@ -188,7 +181,7 @@ function hitch_sys:entity_init()
 end
 
 function hitch_sys:follow_scene_update()
-    for e in w:select "hitch scene_changed hitch_update?out" do
+    for e in w:select "scene_changed hitch hitch_update?out" do
         e.hitch_update = true
     end  
 end
@@ -198,12 +191,7 @@ function hitch_sys:finish_scene_update()
         return
     end
 
-    local groups = setmetatable({}, {__index=function(t, gid)
-        local gg = {}
-        t[gid] = gg
-        return gg
-    end})
-
+    local groups = setmetatable({}, GID_MT)
     for e in w:select "hitch_create hitch:in eid:in" do
         local group = groups[e.hitch.group]
         group[#group+1] = e.eid
@@ -237,9 +225,8 @@ function hitch_sys:finish_scene_update()
         if math3d.aabb_isvalid(h_aabb) then
             for _, heid in ipairs(hitchs) do
                 local e<close> = world:entity(heid, "hitch:in hitch_visible?out bounding:update scene_needchange?out")
-                math3d.unmark(e.bounding.aabb)
                 e.scene_needchange = true
-                e.bounding.aabb = math3d.mark(h_aabb)
+                e.bounding.aabb = mu.M3D_mark(e.bounding.aabb, h_aabb)
             end
         end
     end
@@ -259,7 +246,7 @@ function hitch_sys:render_preprocess()
             set_dirty_hitch_group(e.hitch, e.eid, is_visible) 
         end
     end
-    for gid, _ in pairs(DIRTY_GROUPS) do
+    for gid in pairs(DIRTY_GROUPS) do
         if GLBS[gid] then
             update_group_instance_buffer(gid)
         else

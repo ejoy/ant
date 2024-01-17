@@ -12,20 +12,45 @@ local math3d = require "math3d"
 local m = ecs.system "main_system"
 
 local entities
-
+local ig = ecs.require "ant.group|group"
+local imaterial = ecs.require "ant.asset|material"
 function m:init_world()
+    local hitch_group_id = ig.register("HITCH_GROUP_" .. 1)
     local prefab = world:create_instance {
         prefab = "/pkg/ant.test.simple/resource/miner-1.glb|mesh.prefab",
-        on_ready = function ()
+        on_ready = function (instance)
             local mq = w:first "main_queue camera_ref:in"
             local ce <close> = world:entity(mq.camera_ref, "camera:in")
             local dir = math3d.vector(0, -1, 1)
             if not icamera.focus_prefab(ce, entities, dir) then
                 error "aabb not found"
             end
-        end
+            for _, eid in ipairs(instance.tag["*"]) do
+                local e <close> = world:entity(eid,"material?in")
+                if e.material then
+                    imaterial.set_property(e, "u_basecolor_factor", math3d.vector(1,0,0,1))
+                end
+            end
+        end,
+        group = hitch_group_id,
     }
     entities = prefab.tag['*']
+
+    world:create_entity {
+        policy = {
+            "ant.render|hitch_object",
+        },
+        data = {
+            scene = {
+                t = {20, 0, 0},
+            },
+            hitch = {
+                group = hitch_group_id,
+            },
+            visible_state = "main_view|cast_shadow|selectable",
+            on_ready = function (e) end
+        }
+    }
 end
 
 function m:data_changed()

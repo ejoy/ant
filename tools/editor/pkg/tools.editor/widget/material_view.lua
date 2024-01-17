@@ -14,6 +14,7 @@ local imaterial = ecs.require "ant.asset|material"
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
 local aio       = import_package "ant.io"
+local fastio    = require "fastio"
 local utils     = require "common.utils"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
@@ -30,7 +31,8 @@ local file_cache = {}
 local function read_datalist_file(p)
     local c = file_cache[p]
     if c == nil then
-        c = serialize.parse(p, aio.readall(p))
+        local vpath = (p:sub(1, 5) == "/pkg/") and p or global_data:lpath_to_vpath(p)
+        c = serialize.parse(p, aio.readall(vpath))
         file_cache[p] = c
     end
     return c
@@ -39,11 +41,12 @@ end
 local default_setting = read_datalist_file "/pkg/ant.settings/default/graphic_settings.ant"
 
 local function load_material_file(mf)
-    if string.find(mf, ".glb|") then
-        mf = mf .. "/source.ant"
-    end
+    -- if string.find(mf, ".glb|") then
+    --     mf = mf .. "/source.ant"
+    -- end
 
-    return read_datalist_file(mf)
+    -- return read_datalist_file(mf)
+    return read_datalist_file(mf .. "/source.ant")
 end
 
 local function material_template(eid)
@@ -957,7 +960,7 @@ local function to_virtualpath(localpath)
     if vpath == nil then
         error(("save path:%s, is not valid package"):format(localpath))
     end
-
+    assert(false)
     if not vpath:match "/pkg" then
         return fs.path(global_data.package_path:string() .. vpath)
     end
@@ -1064,8 +1067,8 @@ function MaterialView:set_eid(eid)
     for _, v in pairs(t.properties) do
         if v.texture and not texture_flag[v.texture] then
             local imagepath = absolute_path(v.texture, mtlpath)
-            local pl = utils.split_ant_path(imagepath)
-            local data = datalist.parse(aio.readall(pl[1].."|"..fs.path(pl[2]):normalize():string().. "|source.ant"))
+            local tp = fs.path(imagepath):normalize():string() .. "/source.ant"
+            local data = datalist.parse(aio.readall(tp))
             if data and not image_info[v.texture] then
                 image_info[v.texture] = {width = data.info.width, height = data.info.height}
                 texture_flag[v.texture] = true

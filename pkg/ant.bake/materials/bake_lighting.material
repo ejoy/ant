@@ -1,7 +1,0 @@
-fx:
-    vs: /pkg/ant.resources/shaders/pbr/vs_pbr_baked.sc
-    fs: /pkg/ant.resources/shaders/pbr/fs_pbr_baked.sc
-    setting:
-        LIGHTING:on
-properties:
-    state: /pkg/ant.resources/materials/states/default.state

@@ -1,6 +1,8 @@
 #ifndef __SURFACE_SHADING_SH__
 #define __SURFACE_SHADING_SH__
 
+// code from filament|shading_model_standard.fs
+
 #include "common/math.sh"
 
 #ifndef SHADING_WITH_HIGH_QUALITY

@@ -874,7 +874,7 @@ function m.new()
     end
 end
 local ui_playall = { false }
-local ui_loop = {true}
+local ui_loop = { false }
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 function m.clear(keep_skel)
     if current_skeleton and current_joint then
