@@ -1,6 +1,0 @@
-build/
-shaders/*.bin
-shaders/*.bin.d
-shaders/*.hlsl
-
-skinning_job_function.cpp
