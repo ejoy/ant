@@ -8,5 +8,49 @@ jobs:
       with:
         submodules: true
     - uses: actboy168/setup-luamake@master
-    - run: luamake tools
     - run: luamake
+    - run: luamake tools
+  mingw:
+    name: mingw
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actions/checkout@v3
+      with:
+        path: luamake
+        repository: actboy168/luamake
+        submodules : true
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-ninja
+    - shell: msys2 {0}
+      working-directory: luamake
+      run: ./compile/build.sh notest
+    - shell: msys2 {0}
+      run: ./luamake/luamake
+    - shell: msys2 {0}
+      run: ./luamake/luamake tools
+  macos:
+    name: macos
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch arm64
+    - run: luamake -arch arm64 tools
+  ios:
+    name: ios
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch arm64 -os ios
