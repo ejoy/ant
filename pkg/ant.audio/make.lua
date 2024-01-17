@@ -68,6 +68,10 @@ lm:lua_source "audio" {
             EnableLog and "fmodL_iphoneos" or "fmod_iphoneos",
             EnableLog and "fmodstudioL_iphoneos" or "fmodstudio_iphoneos"
         },
+        frameworks = {
+            "AVFAudio",
+            "AudioToolBox",
+        }
     },
     android = {
         sources = "src/empty_luafmod.c",
