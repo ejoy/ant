@@ -59,21 +59,15 @@ git submodule update --init
 luamake tools
 ```
 
-#### 编译editor
+#### 编译runtime
 
 ``` bash
 luamake
 ```
 
-#### 编译runtime
-
-``` bash
-luamake runtime
-```
-
 #### 编译选项
 ``` bash
-luamake [target] -mode [debug/release] #-mode默认是release
+luamake [target] -mode [debug/release] #-mode默认是debug
 ```
 
 ### 运行
@@ -114,4 +108,4 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 - **pkg**：引擎的各个功能包（包与包之间有依赖）
 - **runtime**：引擎运行时的不同平台支持
 - **test**：测试工程
-- **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
+- **tools**：引擎相关的工具
