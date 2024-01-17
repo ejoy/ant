@@ -43,9 +43,6 @@
 [submodule "3rd/Effekseer"]
 	path = 3rd/Effekseer
 	url = https://github.com/effekseer/Effekseer.git
-[submodule "3rd/MoltenVK"]
-	path = 3rd/MoltenVK
-	url = https://github.com/KhronosGroup/MoltenVK.git
 [submodule "3rd/zlib-ng"]
 	path = 3rd/zlib-ng
 	url = https://github.com/zlib-ng/zlib-ng.git
