@@ -10,7 +10,7 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 ### 搭建编译环境
 
 #### MSVC
-- 安装Visual Studio 2019+
+- 安装Visual Studio
 
 #### MINGW
 - 下载并安装[msys2](https://www.msys2.org/)
@@ -37,7 +37,9 @@ pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-ninja
 - 安装xcode, ninja
 
 
-### 构建luamake
+### 编译
+
+#### 编译构建工具 luamake
 
 ``` bash
 git clone https://github.com/actboy168/luamake
@@ -46,12 +48,6 @@ git submodule update --init
 .\compile\install.bat (msvc)
 ./compile/install.sh (mingw/linux/macos)
 ```
-
-### 编译
-工程分为三部分：
-- 3rd为引用的第三方库的目录所在；
-- clibs为引擎使用到的c模块所在的位置，会使用3rd中的第三方库；
-- engine/packages为纯lua的库，会使用clibs编译的c模块；
 
 #### 编译tools
 
@@ -77,26 +73,22 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 ```
 
 ### 调试
-调试一个简单的示例。目前只支持在vscode下调试lua代码。
-- 安装vscode；
+调试一个简单的示例。目前只支持在VSCode下调试lua代码。
+- 安装VSCode；
 - 安装**Lua Debug** 插件；
 
 配置一个调试用的配置：
 ``` json
 {
-    "request": "launch",
-    "program": "${workspaceFolder}/test/simple/main.lua",
     "type": "lua",
-    "name": "ant",
-    "preLaunchTask": "Clear terminal",
-    "stopOnEntry": false,
+    "request": "launch",
+    "name": "Debug",
+    "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
     "console": "integratedTerminal",
+    "stopOnEntry": true,
     "outputCapture": [],
-    "cwd": "${workspaceFolder}",
-    "luaVersion": "5.4",
-    "windows": {
-        "luaexe": "${workspaceRoot}/bin/msvc/debug/lua.exe",
-    },
+    "program": "",
+    "arg": []
 },
 ```
 
