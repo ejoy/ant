@@ -249,11 +249,9 @@ function render_sys:update_filter()
 					fm["main_queue"] = mi
 				end
 				assert(not fm.main_queue:isnull())
-				local state = fm.main_queue:get_state()
 				if not matres.fx.setting.no_predepth then
-					state = check_set_depth_state_as_equal(fm.main_queue:get_state())
+					fm.main_queue:set_state(check_set_depth_state_as_equal(fm.main_queue:get_state()))
 				end
-				fm.main_queue:set_state(state)
 
 				R.set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())
 			end
