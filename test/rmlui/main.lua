@@ -6,7 +6,7 @@ import_package "ant.window".start {
         "ant.test.rmlui",
         "ant.rmlui",
         "ant.animation",
-        "ant.render|render",
+        "ant.render",
         "ant.shadow_bounding|scene_bounding",
         "ant.pipeline",
     }

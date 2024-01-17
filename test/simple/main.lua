@@ -3,7 +3,7 @@ require "bootstrap"
 import_package "ant.window".start {
     feature = {
         "ant.test.simple",
-        "ant.render|render",
+        "ant.render",
         "ant.animation",
         "ant.camera|camera_controller",
         "ant.shadow_bounding|scene_bounding",

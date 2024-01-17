@@ -1,4 +1,4 @@
-import_feature "ant.render|render"
+import_feature "ant.render"
 
 system "ui_rt_system"
     .implement "ui_rt_system.lua"
