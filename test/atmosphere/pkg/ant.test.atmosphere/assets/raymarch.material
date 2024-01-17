@@ -1,4 +1,0 @@
-fx:
-  vs: $path ./shaders/raymarch_scene/vs_raymarch_scene.sc
-  fs: $path ./shaders/raymarch_scene/fs_raymarch_scene.sc
-state: /pkg/ant.resources/materials/states/default.state

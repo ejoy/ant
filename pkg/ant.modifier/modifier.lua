@@ -136,10 +136,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
     local init_value
     if target then
         local e <close> = world:entity(target, "material:in")
-        local filename = e.material
-        if string.find(filename, ".glb|") then
-            filename = filename .. "/source.ant"
-        end
+        local filename = e.material .. "/source.ant"
         local mtl = serialize.parse(filename, aio.readall(filename))
         assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))

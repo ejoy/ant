@@ -15,7 +15,7 @@
 	url = https://github.com/junjie020/glm.git
 [submodule "packages/resources.binary"]
 	path = pkg/ant.resources.binary
-	url = https://gz-tea.ejoy.com/git/Ant/assets.git
+	url = https://github.com/ejoy/ant.resources.git
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
 	url = https://github.com/ocornut/imgui.git
@@ -43,12 +43,12 @@
 [submodule "3rd/Effekseer"]
 	path = 3rd/Effekseer
 	url = https://github.com/effekseer/Effekseer.git
-[submodule "3rd/MoltenVK"]
-	path = 3rd/MoltenVK
-	url = https://github.com/KhronosGroup/MoltenVK.git
 [submodule "3rd/zlib-ng"]
 	path = 3rd/zlib-ng
 	url = https://github.com/zlib-ng/zlib-ng.git
 [submodule "3rd/minizip-ng"]
 	path = 3rd/minizip-ng
 	url = https://github.com/zlib-ng/minizip-ng.git
+[submodule "3rd/bgfx.luamake"]
+	path = 3rd/bgfx.luamake
+	url = https://github.com/actboy168/bgfx.luamake

@@ -75,16 +75,10 @@ end
 --TODO
 lm.visibility = "default"
 
-if lm.os == "macos" then
-    lm:import "3rd/scripts/sdl.lua"
-end
-
-lm:import "3rd/scripts/bgfx.lua"
-lm:import "3rd/scripts/ozz-animation.lua"
 lm:import "runtime/make.lua"
 
 lm:runlua "compile_ecs" {
-    script = "projects/luamake/ecs.lua",
+    script = "clibs/ecs/compile_ecs.lua",
     args =  {
         "@clibs/ecs/ecs/",
         "@pkg",

@@ -17,5 +17,7 @@ import_package "ant.window".start {
         "ant.splitviews",
         "ant.terrain|canvas",
         "ant.terrain|water",
+        "ant.imgui",
+        "ant.pipeline",
     }
 }

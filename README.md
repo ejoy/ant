@@ -1,6 +1,8 @@
 Ant 游戏引擎
 =====
 
+Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库公开，尚未正式发布。文档、示例等均待逐步完善。如有任何问题，可在 [Discussions](https://github.com/ejoy/ant/discussions) 发帖讨论。Issues 仅用于 Bug 跟踪，请不要在里面提问题。
+
 ### 更新并初始化第三方库：
 
 > git submodule update --init
@@ -109,6 +111,5 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 - **libs**：用于存放lua程序必要的lua文件
 - **clibs**：存放lua binding的c/c++库
 - **packages**：引擎提供的系统包（包与包之间有依赖）
-- **projects**：工程相关的目录（目前只用msvc）
 - **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
 - **test**：测试文件存放的地方

@@ -137,7 +137,6 @@
 	* pkg/ant.timer
 	* pkg/ant.widget
 	* pkg/ant.window
-* projects 用于各开发环境的项目文件
 * runtime 引擎运行时的不同平台支持
 * test 测试项目
 * tools 工具

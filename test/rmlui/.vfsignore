@@ -2,7 +2,6 @@ block:
 	/pkg/ant.imgui
 	/pkg/ant.vfs
 	/pkg/ant.efk/efkbgfx
-	/pkg/ant.resources.binary
 	/pkg/ant.resources.test
 	/pkg/ant.resources/textures/color_text.texture
 	/pkg/ant.resources/textures/irbtn_active.texture

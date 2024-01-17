@@ -2,6 +2,8 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
+lm:import "bgfx.lua"
+
 lm:lua_source "bgfx" {
     deps = {
         "bx",

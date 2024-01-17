@@ -6,5 +6,7 @@ import_package "ant.window".start {
         "ant.test.httpc",
         "ant.animation",
         "ant.render|render",
+        "ant.shadow_bounding|scene_bounding",
+        "ant.pipeline"
     }
 }

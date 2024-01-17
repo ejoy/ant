@@ -1,3 +1,0 @@
-D:\Work\ant\bin\msvc\Debug/shaderc.exe --platform windows --type compute -p cs_5_0 -f ./cs_test.sc -o ./cs_test.bin --depends -i D:/Work/ant/3rd/bgfx/src --debug
-D:\Work\ant\bin\msvc\Debug/shaderc.exe --platform windows --type vertex -p vs_5_0 -f ./vs_plane.sc -o ./vs_plane.bin --depends -i D:/Work/ant/3rd/bgfx/src --debug
-D:\Work\ant\bin\msvc\Debug/shaderc.exe --platform windows --type fragment -p ps_5_0 -f ./fs_plane.sc -o ./fs_plane.bin --depends -i D:/Work/ant/3rd/bgfx/src --debug

@@ -1,8 +1,0 @@
-fx:
-  fs: /pkg/ant.tool.baker/GPU/radiosity/assets/shaders/lightmap/fs_lightmap.sc
-  vs: /pkg/ant.tool.baker/GPU/radiosity/assets/shaders/lightmap/vs_lightmap.sc
-properties:
-  s_lightmap:
-    stage: 0
-    texture: /pkg/ant.resources/textures/default.texture
-state: /pkg/ant.resources/materials/states/default.state

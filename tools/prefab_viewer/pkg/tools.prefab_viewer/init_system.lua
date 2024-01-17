@@ -58,7 +58,7 @@ function S.init_world()
     iom.set_direction(ce, dir)
 
     -- rmlui
-    font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
+    font.import "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf"
     local window = irmlui.open "/pkg/tools.prefab_viewer/assets/ui/joystick.html"
 	window.addEventListener("message", function(data) world:pub {"joystick", data} end)
 end

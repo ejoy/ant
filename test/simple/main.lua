@@ -6,6 +6,9 @@ import_package "ant.window".start {
         "ant.render|render",
         "ant.animation",
         "ant.camera|camera_controller",
+        "ant.shadow_bounding|scene_bounding",
+        "ant.imgui",
+        "ant.pipeline",
         "ant.sky|sky",
     },
 }
