@@ -59,6 +59,6 @@ lm:exe "gltf2ozz" {
         "!src/animation/offline/tools/dump2ozz.cc",
     },
     windows = {
-        sources = Ant3rd .. "scripts/utf8/utf8.rc"
+        sources = Ant3rd .. "bgfx.luamake/utf8/utf8.rc"
     }
 }
