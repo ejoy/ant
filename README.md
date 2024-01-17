@@ -87,7 +87,7 @@ bin/msvc/debug/lua.exe test/simple/main.lua
     "console": "integratedTerminal",
     "stopOnEntry": true,
     "outputCapture": [],
-    "program": "",
+    "program": "test/simple/main.lua",
     "arg": []
 },
 ```
