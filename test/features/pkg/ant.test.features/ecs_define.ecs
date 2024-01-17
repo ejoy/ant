@@ -16,6 +16,7 @@ end
 DEFINE_TEST "grid"
 DEFINE_TEST "pbr"
 DEFINE_TEST "shadow"
+DEFINE_TEST "efk"
 --DEFINE_TEST "decal"
 --DEFINE_TEST "hitch_node"
 --DEFINE_TEST "motion_sampler"
