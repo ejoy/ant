@@ -48,7 +48,7 @@ local function select_test(name)
 end
 
 function m:init()
-    enable_test "<all>"
+    enable_test "shadow"
 end
 
 function m:data_changed()

@@ -4,13 +4,16 @@ local w     = world.w
 
 local math3d= require "math3d"
 
+local common = ecs.require "common"
+local util  = ecs.require "util"
+local PC    = util.proxy_creator()
 local iom   = ecs.require "ant.objcontroller|obj_motion"
 local ig    = ecs.require "ant.group|group"
-local hn_test_sys = ecs.system "hitch_node_test_system"
+local hn_test_sys = common.test_system "hitch_node"
 
 local function create_simple_test_group()
-    local hitch_test_group_id<const>    = ig.register "hitch_test"
-    world:create_entity {
+    local hitch_test_group_id<const>    = ig.register "hitch_node_test"
+    PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
@@ -24,7 +27,7 @@ local function create_simple_test_group()
             visible_state = "main_view",
         }
     }
-    world:create_entity {
+    PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
@@ -38,7 +41,7 @@ local function create_simple_test_group()
             visible_state = "main_view",
         }
     }
-    world:create_entity {
+    PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
@@ -54,7 +57,7 @@ local function create_simple_test_group()
     }
 
     --standalone sub tree
-    local p1 = world:create_entity {
+    local p1 = PC:create_entity {
         group = hitch_test_group_id,
         policy = {
             "ant.render|render",
@@ -71,7 +74,7 @@ local function create_simple_test_group()
         },
     }
 
-    world:create_entity {
+    PC:create_entity {
         group = hitch_test_group_id,
         policy = {
             "ant.render|render",
@@ -93,9 +96,9 @@ end
 local change_hitch_eid
 
 local function create_skeleton_test_group()
-    local skeleton_test_group_id<const> = ig.register "hitch_ske_test"
+    local skeleton_test_group_id<const> = ig.register "hitch_node_ske_test"
     --dynamic
-    world:create_entity {
+    PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
@@ -111,7 +114,7 @@ local function create_skeleton_test_group()
         }
     }
 
-    change_hitch_eid = world:create_entity {
+    change_hitch_eid = PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
@@ -129,7 +132,7 @@ local function create_skeleton_test_group()
     }
 
     local function create_obj(gid, file, s, t)
-        world:create_instance {
+        PC:create_instance {
             prefab = file,
             group = gid,
             on_ready = function (e)
@@ -180,4 +183,8 @@ function hn_test_sys:data_changed()
     --     TICK = TICK + 1
     -- end
     
+end
+
+function hn_test_sys:exit()
+    PC:clear()
 end

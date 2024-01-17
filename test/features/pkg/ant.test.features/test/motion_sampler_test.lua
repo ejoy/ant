@@ -3,7 +3,11 @@ local world     = ecs.world
 local w         = world.w
 local math3d    = require "math3d"
 
-local ms_test_sys   = ecs.system "motion_sampler_test_system"
+local common = ecs.require "common"
+local util  = ecs.require "util"
+local PC    = util.proxy_creator()
+
+local ms_test_sys   = common.test_system "motion_sampler"
 
 local ims           = ecs.require "ant.motion_sampler|motion_sampler"
 local itimer        = ecs.require "ant.timer|timer_system"
@@ -11,7 +15,7 @@ local ig            = ecs.require "ant.group|group"
 
 local function motion_sampler_test()
     local sampler_group = ims.sampler_group()
-    local eid = world:create_entity {
+    local eid = PC:create_entity {
         group = sampler_group,
         policy = {
             "ant.scene|scene_object",
@@ -33,7 +37,7 @@ local function motion_sampler_test()
 
     ig.enable(sampler_group, "view_visible", true)
 
-    world:create_instance {
+    PC:create_instance {
         prefab = "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab",
         parent = eid,
         group = sampler_group,
@@ -64,4 +68,8 @@ function ms_test_sys:data_changed()
             ims.set_ratio(mse, (itimer.current() % tenSecondMS) / tenSecondMS)
         end
     end
+end
+
+function ms_test_sys:exit()
+    PC:clear()
 end

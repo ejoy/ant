@@ -2,11 +2,16 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local ct_sys = ecs.system "canvas_test_system"
+local common = ecs.require "common"
+local util  = ecs.require "util"
+local PC    = util.proxy_creator()
+
+local ct_sys = common.test_system "canvas"
+local icanvas = ecs.require "ant.terrain|canvas"
 
 local canvas_eid
 function ct_sys.init_world()
-    canvas_eid = world:create_entity {
+    canvas_eid = PC:create_entity {
         policy = {
             "ant.scene|scene_object",
             "ant.terrain|canvas",
@@ -28,7 +33,6 @@ local itemsids = nil
 function ct_sys.data_changed()
     for _, key, press in kb_mb:unpack() do
         if key == "C" and press == 0 then
-            local icanvas = ecs.require "ant.terrain|canvas"
             if itemsids then
                 icanvas.show(world:entity(canvas_eid), false)
                 icanvas.remove_item(world:entity(canvas_eid), itemsids[1])
@@ -57,4 +61,15 @@ function ct_sys.data_changed()
 
         end
     end
+end
+
+function ct_sys:exit()
+    if canvas_eid and itemsids then
+        for _, id in ipairs(itemsids) do
+            local e<close> = world:entity(canvas_eid)
+            icanvas.remove_item(e, id)
+        end
+    end
+
+    PC:clear()
 end
