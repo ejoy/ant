@@ -1112,7 +1112,7 @@ lgetStats(lua_State *L) {
 		break;
 	}
 	default:
-		return luaL_error(L, "Unkown stat format %c", what[i]);
+		return luaL_error(L, "Unknown stat format %c", what[i]);
 	}}
 	return 1;
 }
