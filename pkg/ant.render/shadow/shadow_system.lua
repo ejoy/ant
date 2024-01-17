@@ -29,8 +29,6 @@ local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
 
-local LiSPSM	= require "shadow.LiSPSM"
-
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
@@ -216,12 +214,12 @@ local function update_shadow_matrices(si, li, c)
 		si.nearLS, si.farLS = n, f
 
 		if useLiSPSM then
-			-- DO NOT create an INV_Z projection matrix
-			li.Lp = math3d.projmat(c.frustum)
-			local Wv, Wp = LiSPSM.warp_matrix(si, li, intersectpointsLS)
+			-- -- DO NOT create an INV_Z projection matrix
+			-- li.Lp = math3d.projmat(c.frustum)
+			-- local Wv, Wp = LiSPSM.warp_matrix(si, li, intersectpointsLS)
 
-			--update S matrix and keep it to li.Lp
-			li.Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), math3d.projmat(c.frustum, INV_Z))
+			-- --update S matrix and keep it to li.Lp
+			-- li.Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), math3d.projmat(c.frustum, INV_Z))
 		else
 			li.Lp = math3d.projmat(c.frustum, INV_Z)
 		end
