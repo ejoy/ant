@@ -3,6 +3,9 @@ local world = ecs.world
 local w 	= world.w
 local math3d = require "math3d"
 
+local mathpkg	= import_package "ant.math"
+local mc		= mathpkg.constant
+
 local ientity 	= ecs.require "ant.render|components.entity"
 local imesh		= ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
@@ -66,25 +69,20 @@ local function multi_entities()
 end
 
 local function simple_entities()
-	create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {10, 0.1, 10}, nil, {10, 0, 0, 1})
-	local root = PC:create_entity {
-		policy = {
-			"ant.scene|scene_object",
-		},
-		data = {
-			scene =  {t={10, 0, 0}},
-		}
+	PC:create_instance{
+		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
+		on_ready = function (p)
+		-- local root<close> = world:entity(p.tag['*'][1], "scene:in")
+		-- iom.set_scale(root, 10)
+		end
 	}
-
 	PC:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
 		data = {
 			scene 		= {
-                t = {0, 0, 0, 1},
 				s = {50, 1, 50, 0},
-				parent = root,
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
@@ -96,18 +94,25 @@ local function simple_entities()
 		}
 	}
 
-	util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+	PC:create_instance{
+		prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", on_ready = function (e)
 		local root<close> = world:entity(e.tag['*'][1])
-		iom.set_scale(root, 10)
-		iom.set_position(root, math3d.vector(5.0, 0.0, 0.0, 1.0))
-		PC:add_instance(e)
-	end)
+	end}
 
 end
 
 local st_sys	= common.test_system "shadow"
 function st_sys:init()
 	simple_entities()
+end
+
+function st_sys:init_world()
+	local mq = w:first "main_queue camera_ref:in"
+    local eyepos = math3d.vector(0, 5, -5)
+    local camera_ref<close> = world:entity(mq.camera_ref)
+    iom.set_position(camera_ref, eyepos)
+    local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
+    iom.set_direction(camera_ref, dir)
 end
 
 function st_sys:entity_init()

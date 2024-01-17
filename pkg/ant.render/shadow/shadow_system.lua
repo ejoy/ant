@@ -297,9 +297,7 @@ function shadow_sys:update_camera()
 	end
 
 	local sb = w:first "shadow_bounding:in".shadow_bounding
-	if sb.PSR then
-		init_light_info(C, D, sb.light_info)
-	end
+	init_light_info(C, D, sb.light_info)
 end
 
 function shadow_sys:update_camera_depend()

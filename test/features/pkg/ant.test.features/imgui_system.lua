@@ -7,8 +7,7 @@ local common = ecs.require "common"
 
 local m = ecs.system "imgui_system"
 
-local currentTest = "<none>"
-
+local currentTest
 local function enable_test(name)
     currentTest = name
     if name == "<none>" then
@@ -48,7 +47,7 @@ local function select_test(name)
 end
 
 function m:init()
-    enable_test "shadow"
+    enable_test(common.init_system)
 end
 
 function m:data_changed()

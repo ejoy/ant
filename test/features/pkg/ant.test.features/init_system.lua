@@ -3,11 +3,13 @@ local world         = ecs.world
 local w             = world.w
 local math3d        = require "math3d"
 
-local ientity       = ecs.require "ant.render|components.entity"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 
 local mathpkg       = import_package"ant.math"
 local mc            = mathpkg.constant
+
+local common = ecs.require "common"
+common.init_system = "shadow"
 
 local create_instance = ecs.require "util".create_instance
 
@@ -26,7 +28,7 @@ function init_loader_sys:init_world()
         iom.set_scale(e, math3d.mul(s, {5, 5, 5, 0}))
     end
 
-    local mq = w:first("main_queue camera_ref:in")
+    local mq = w:first "main_queue camera_ref:in"
     local eyepos = math3d.vector(0, 100, -100)
     local camera_ref<close> = world:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
