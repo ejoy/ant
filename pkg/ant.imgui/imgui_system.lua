@@ -7,6 +7,9 @@ local assetmgr = import_package "ant.asset"
 local inputmgr = import_package "ant.inputmgr"
 local PM = require "programan.client"
 
+local ltask = require "ltask"
+local ServiceWindow = ltask.queryservice "ant.window|window"
+
 local m = ecs.system 'imgui_system'
 
 function m:init_system()
@@ -17,6 +20,7 @@ function m:init_system()
 		"NavNoCaptureKeyboard",
 		"DpiEnableScaleViewports",
 		"DpiEnableScaleFonts",
+		"NoMouseCursorChange",
 	}
 	imgui.InitPlatform(rhwi.native_window())
 
@@ -69,7 +73,14 @@ function m:exit()
 	imgui.DestroyContext()
 end
 
+local last_cursor = 0
+
 function m:start_frame()
+	local cursor = imgui.GetMouseCursor()
+	if last_cursor ~= cursor then
+		last_cursor = cursor
+		ltask.call(ServiceWindow, "setcursor", cursor)
+	end
 	imgui.NewFrame()
 end
 

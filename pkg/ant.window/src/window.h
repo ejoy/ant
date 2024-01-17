@@ -18,6 +18,7 @@ struct ant_window_callback {
 void* peekwindow_init(struct ant_window_callback* cb, const char* size);
 void peekwindow_close();
 bool peekwindow_peekmessage();
+void peekwindow_setcursor(int cursor);
 
 void loopwindow_init(struct ant_window_callback* cb);
 void loopwindow_mainloop();
