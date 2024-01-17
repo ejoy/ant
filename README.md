@@ -72,6 +72,12 @@ luamake [target] -mode [debug/release] #-mode默认是debug
 bin/msvc/debug/lua.exe test/simple/main.lua
 ```
 
+### 启动编辑器
+
+```bash
+bin/msvc/debug/lua.exe tools/editor/main.lua
+```
+
 ### 调试
 调试一个简单的示例。目前只支持在VSCode下调试lua代码。
 - 安装VSCode；
