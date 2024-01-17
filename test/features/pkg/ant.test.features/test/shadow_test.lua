@@ -34,9 +34,7 @@ local function create_instance(pfile, s, r, t)
 		end)
 end
 
-local st_sys	= common.test_system "shadow_test_system"
-function st_sys:init()
-
+local function multi_entities()
 	local rn = 12
 	for i=1, rn * 24 do
 		local xidx, zidx = (i-1)%rn, (i-1)//rn
@@ -48,37 +46,6 @@ function st_sys:init()
 			PC:add_prefab(e)
 		end)
 	end
-
-
-	-- create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {10, 0.1, 10}, nil, {10, 0, 0, 1})
-	-- local root = PC:create_entity {
-	-- 	policy = {
-	-- 		"ant.scene|scene_object",
-	-- 	},
-	-- 	data = {
-	-- 		scene =  {t={10, 0, 0}},
-	-- 	}
-	-- }
-
-	-- PC:create_entity{
-	-- 	policy = {
-	-- 		"ant.render|simplerender",
-	-- 	},
-	-- 	data = {
-	-- 		scene 		= {
-    --             t = {0, 0, 0, 1},
-	-- 			s = {50, 1, 50, 0},
-	-- 			parent = root,
-    --         },
-	-- 		material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-	-- 		visible_state= "main_view",
-	-- 		simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
-    --         debug_mesh_bounding = true,
-	-- 		on_ready = function (e)
-	-- 			imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
-	-- 		end,
-	-- 	}
-    -- }
 
 	local cs = 16 * 10
 
@@ -96,6 +63,51 @@ function st_sys:init()
 	}
 
 	ipt.create_plane_terrain(groups, "opacity", cs, "/pkg/ant.test.features/assets/terrain/plane_terrain.material")
+end
+
+local function simple_entities()
+	create_instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {10, 0.1, 10}, nil, {10, 0, 0, 1})
+	local root = PC:create_entity {
+		policy = {
+			"ant.scene|scene_object",
+		},
+		data = {
+			scene =  {t={10, 0, 0}},
+		}
+	}
+
+	PC:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			scene 		= {
+                t = {0, 0, 0, 1},
+				s = {50, 1, 50, 0},
+				parent = root,
+            },
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
+			visible_state= "main_view",
+			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+            debug_mesh_bounding = true,
+			on_ready = function (e)
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
+			end,
+		}
+	}
+
+	util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+		local root<close> = world:entity(e.tag['*'][1])
+		iom.set_scale(root, 10)
+		iom.set_position(root, math3d.vector(5.0, 0.0, 0.0, 1.0))
+		PC:add_prefab(e)
+	end)
+
+end
+
+local st_sys	= common.test_system "shadow"
+function st_sys:init()
+	simple_entities()
 end
 
 function st_sys:entity_init()
