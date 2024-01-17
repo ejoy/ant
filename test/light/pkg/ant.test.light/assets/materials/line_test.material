@@ -1,4 +1,0 @@
-fx:
-  vs: /pkg/ant.test.light/assets/materials/shaders/vs_line.sc
-  fs: /pkg/ant.test.light/assets/materials/shaders/fs_line.sc
-state: /pkg/ant.resources/materials/states/blend.state
