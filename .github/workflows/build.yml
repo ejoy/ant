@@ -34,7 +34,7 @@ jobs:
       run: ./luamake/luamake
   macos:
     name: macos
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v3
       with:
@@ -43,7 +43,7 @@ jobs:
     - run: luamake -arch arm64
   ios:
     name: ios
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v3
       with:
