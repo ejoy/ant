@@ -1,7 +1,4 @@
-import "pipeline.ecs"
 import "ecs_define.ecs"
-
-import_feature "ant.imgui"
 
 system "imgui_system"
     .implement "imgui_system.lua"

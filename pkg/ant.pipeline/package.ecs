@@ -19,6 +19,7 @@ pipeline "update"
     .pipeline "render"
     .pipeline "select"
     .pipeline "ui"
+    .stage "frame_update"
     .stage "end_frame"
     .stage "final"
 
