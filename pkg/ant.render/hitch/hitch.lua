@@ -18,7 +18,7 @@ local HITCHS = setmetatable({}, {__index=function(t, gid)
     return gg
 end})
 
-local DIRTY_GROUPS, GLBS, GROUP_VISIBLE = {}, {}, {}
+local DIRTY_GROUPS, GLBS, DIRECT_DRAW_GROUPS = {}, {}, {}
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -210,21 +210,30 @@ function hitch_sys:finish_scene_update()
     end
 
     for gid, hitchs in pairs(groups) do
+
         ig.enable(gid, "hitch_tag", true)
         local h_aabb = math3d.aabb()
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in hitch_indirect?out material?in" do
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
             if mc.NULL ~= re.bounding.aabb then
                 h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
-                if re.skinning or re.dynamic_mesh or GROUP_VISIBLE[gid] then
-                    GROUP_VISIBLE[gid] = true
-                else
+                if re.skinning or re.dynamic_mesh then
+                    DIRECT_DRAW_GROUPS[gid] = true
+                end
+            end
+        end
+
+        for re in w:select "hitch_tag bounding:in hitch_indirect?out" do
+            if mc.NULL ~= re.bounding.aabb then
+                local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[gid]
+                if INDIRECT_DRAW_GROUP then
                     ivs.set_state(re, "main_view", false)
                     ivs.set_state(re, "cast_shadow", false)
-                    re.hitch_indirect = true
+                    re.hitch_indirect = true                    
                 end
             end
         end
         ig.enable(gid, "hitch_tag", false)
+
         if math3d.aabb_isvalid(h_aabb) then
             for _, heid in ipairs(hitchs) do
                 local e<close> = world:entity(heid, "hitch:in hitch_visible?out bounding:update scene_needchange?out")
@@ -243,7 +252,8 @@ end
 
 function hitch_sys:render_preprocess()
     for e in w:select "hitch_update hitch:in eid:in" do
-        if not GROUP_VISIBLE[e.hitch.group] then
+        local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[e.hitch.group]
+        if INDIRECT_DRAW_GROUP then
             local mainmask = queuemgr.queue_mask "main_queue"
             local is_visible = obj_visible(e.hitch, mainmask)
             set_dirty_hitch_group(e.hitch, e.eid, is_visible) 
