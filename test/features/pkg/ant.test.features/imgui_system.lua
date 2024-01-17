@@ -48,7 +48,7 @@ local function select_test(name)
 end
 
 function m:init()
-    enable_test "efk"
+    enable_test "<all>"
 end
 
 function m:data_changed()

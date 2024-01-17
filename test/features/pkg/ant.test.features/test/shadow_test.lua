@@ -30,7 +30,7 @@ local function create_instance(pfile, s, r, t)
 				iom.set_position(ee, t)
 			end
 
-			PC:add_prefab(p)
+			PC:add_instance(p)
 		end)
 end
 
@@ -43,7 +43,7 @@ local function multi_entities()
 			local root<close> = world:entity(e.tag['*'][1])
 			iom.set_scale(root, 10)
 			iom.set_position(root, pos)
-			PC:add_prefab(e)
+			PC:add_instance(e)
 		end)
 	end
 
@@ -100,7 +100,7 @@ local function simple_entities()
 		local root<close> = world:entity(e.tag['*'][1])
 		iom.set_scale(root, 10)
 		iom.set_position(root, math3d.vector(5.0, 0.0, 0.0, 1.0))
-		PC:add_prefab(e)
+		PC:add_instance(e)
 	end)
 
 end

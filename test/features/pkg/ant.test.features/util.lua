@@ -27,34 +27,32 @@ end
 
 local PROXY_MT = {
     create_entity = function (self, ...)
-        local eid = world:create_entity(...)
-        self._entities[#self._entities+1] = eid
-        return eid
+        return self:add_entity(world:create_entity(...))
     end,
-    create_prefab = function (self, p)
-        local old_on_ready = p.on_ready
-        p.on_ready = function (pp)
-            old_on_ready(pp)
-            self:add_prefab(pp)
-        end
-        return world:create_prefab(p)
+    create_instance = function (self, ...)
+        return self:add_instance(world:create_instance(...))
     end,
-    add_prefab = function (self, p)
-        local e = util.prefab_entities(p)
-        table.move(e, 1, #e, #self._entities+1, self._entities)
+    add_instance = function (self, p)
+        self._instances[#self._instances+1] = p
         return p
     end,
     add_entity = function (self, eid)
         self._entities[#self._entities+1] = eid
+        return eid
     end,
     clear = function (self)
         util.remove_entities(self._entities)
         self._entities = {}
+
+        for _, p in ipairs(self._instances) do
+            world:remove_instance(p)
+        end
+        self._instances = {}
     end
 }
 
 function util.proxy_creator()
-    return setmetatable({_entities={}}, {__index=PROXY_MT})
+    return setmetatable({_entities={}, _instances={}}, {__index=PROXY_MT})
 end
 
 return util
