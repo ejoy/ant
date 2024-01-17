@@ -1,0 +1,12 @@
+name: build
+on: push
+jobs:
+  msvc:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actboy168/setup-luamake@master
+    - run: luamake tools
+    - run: luamake
