@@ -15,7 +15,7 @@
 	url = https://github.com/junjie020/glm.git
 [submodule "packages/resources.binary"]
 	path = pkg/ant.resources.binary
-	url = https://gz-tea.ejoy.com/git/Ant/assets.git
+	url = https://github.com/ejoy/ant.resources.git
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
 	url = https://github.com/ocornut/imgui.git
