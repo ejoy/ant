@@ -1,1 +1,0 @@
-.\bin\lua.exe tools\prefab_editor\main.lua
