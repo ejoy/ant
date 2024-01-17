@@ -19,9 +19,8 @@ local GID_MT<const> = {__index=function(t, gid)
     return gg
 end}
 
-local HITCHS = setmetatable({}, GID_MT)
-
-local DIRTY_GROUPS, GLBS, DIRECT_DRAW_GROUPS, PARENTS = {}, {}, {}, {}
+local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
+local DIRTY_GROUPS, DIRECT_DRAW_GROUPS, PARENTS = {}, {}, {}
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -78,8 +77,7 @@ local function dispatch_instance_buffer(e, diid, draw_num)
     end
 end
 
-local function update_group_instance_buffer(gid)
-    local glbs, hitchs = GLBS[gid], HITCHS[gid]
+local function update_group_instance_buffer(glbs, hitchs)
     local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
 
     local function update_instance_buffer(diid)
@@ -98,8 +96,7 @@ local function update_group_instance_buffer(gid)
     end
 end
 
-local function create_draw_indirect_and_compute_entity(glbs, gid)
-    local hitchs = HITCHS[gid]
+local function create_draw_indirect_and_compute_entity(glbs, hitchs)
     local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
     for _, glb in ipairs(glbs) do
         glb.mesh.bounding = nil
@@ -115,7 +112,8 @@ local function create_draw_indirect_and_compute_entity(glbs, gid)
                 },
                 simplemesh  = glb.mesh,
                 material    = glb.material,
-                visible_state = glb.visible_state,
+                --visible_state = glb.visible_state,
+                visible_state = "main_view|selectable|cast_shadow",
                 render_layer = glb.render_layer,
                 --render_layer = "opacity",
                 draw_indirect = {
@@ -128,9 +126,9 @@ local function create_draw_indirect_and_compute_entity(glbs, gid)
                     },
                 },
                 on_ready = function (e)
-                    local pe<close> = world:entity(glb.parent, "visible_state:in")
+--[[                     local pe<close> = world:entity(glb.parent, "visible_state:in")
                     w:extend(e, "visible_state:update")
-                    e.visible_state = pe.visible_state
+                    e.visible_state = pe.visible_state ]]
                     --w:extend(e, "filter_material:update")
                     --e.filter_material = glb.filter_material
                 end
@@ -159,8 +157,11 @@ end
 local function set_dirty_hitch_group(hitch, hid, state)
     local gid = hitch.group
     DIRTY_GROUPS[gid] = true
-    local hitchs = HITCHS[gid]
-    hitchs[hid] = state
+    local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
+    if not indirect_draw_group.hitchs then
+        indirect_draw_group.hitchs = {}
+    end
+    indirect_draw_group.hitchs[hid] = state
 end
 
 function hitch_sys:component_init()
@@ -268,8 +269,9 @@ function hitch_sys:render_preprocess()
         end
     end
     for gid in pairs(DIRTY_GROUPS) do
-        if GLBS[gid] then
-            update_group_instance_buffer(gid)
+        local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
+        if indirect_draw_group.glbs then
+            update_group_instance_buffer(indirect_draw_group.glbs, indirect_draw_group.hitchs)
         else
             local glbs = {}
             ig.enable(gid, "hitch_tag", true)
@@ -286,8 +288,8 @@ function hitch_sys:render_preprocess()
                end
             end
 
-            create_draw_indirect_and_compute_entity(glbs, gid)
-            GLBS[gid] = glbs
+            create_draw_indirect_and_compute_entity(glbs, indirect_draw_group.hitchs)
+            indirect_draw_group.glbs = glbs
             
             ig.enable(gid, "hitch_tag", false)
         end
@@ -298,7 +300,8 @@ function hitch_sys:render_preprocess()
 end
 
 function hitch_sys:exit()
-    for _, glbs in pairs(GLBS) do
+    for _, indirect_draw_group in pairs(INDIRECT_DRAW_GROUPS) do
+        local glbs = indirect_draw_group.glbs
         for _, glb in ipairs(glbs) do
             local diid, cid = glb.diid, glb.cid
             local die<close> = world:entity(diid, "filter_material:update")
