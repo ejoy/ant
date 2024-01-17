@@ -23,9 +23,5 @@ component "draw_indirect_queue".type "lua"
 component "draw_indirect_ready"
 component "draw_indirect_update"
 
--- system "draw_indirect_system"
---     .implement "draw_indirect/draw_indirect.lua"
-
-
-system "draw_indirect_system2"
+system "draw_indirect_system"
     .implement "draw_indirect/draw_indirect.lua"
