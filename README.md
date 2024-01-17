@@ -107,9 +107,11 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 ```
 
 ### 关于ant目录结构
-- **bin**：用于存放dll
-- **libs**：用于存放lua程序必要的lua文件
-- **clibs**：存放lua binding的c/c++库
-- **packages**：引擎提供的系统包（包与包之间有依赖）
+- **bin**：编译结果，exe/dll/lib等
+- **build**：编译的中间结果
+- **clibs**：c/c++代码
+- **engine**：引擎基础支持代码，包括包管理器、启动代码等
+- **pkg**：引擎的各个功能包（包与包之间有依赖）
+- **runtime**：引擎运行时的不同平台支持
+- **test**：测试工程
 - **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
-- **test**：测试文件存放的地方
