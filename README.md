@@ -10,7 +10,7 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 ### 搭建编译环境
 
 #### MSVC
-- 安装Visual Studio 2019+
+- 安装Visual Studio
 
 #### MINGW
 - 下载并安装[msys2](https://www.msys2.org/)
@@ -37,7 +37,9 @@ pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-ninja
 - 安装xcode, ninja
 
 
-### 构建luamake
+### 编译
+
+#### 编译构建工具 luamake
 
 ``` bash
 git clone https://github.com/actboy168/luamake
@@ -47,33 +49,21 @@ git submodule update --init
 ./compile/install.sh (mingw/linux/macos)
 ```
 
-### 编译
-工程分为三部分：
-- 3rd为引用的第三方库的目录所在；
-- clibs为引擎使用到的c模块所在的位置，会使用3rd中的第三方库；
-- engine/packages为纯lua的库，会使用clibs编译的c模块；
-
 #### 编译tools
 
 ``` bash
 luamake tools
 ```
 
-#### 编译editor
+#### 编译runtime
 
 ``` bash
 luamake
 ```
 
-#### 编译runtime
-
-``` bash
-luamake runtime
-```
-
 #### 编译选项
 ``` bash
-luamake [target] -mode [debug/release] #-mode默认是release
+luamake [target] -mode [debug/release] #-mode默认是debug
 ```
 
 ### 运行
@@ -83,33 +73,31 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 ```
 
 ### 调试
-调试一个简单的示例。目前只支持在vscode下调试lua代码。
-- 安装vscode；
+调试一个简单的示例。目前只支持在VSCode下调试lua代码。
+- 安装VSCode；
 - 安装**Lua Debug** 插件；
 
 配置一个调试用的配置：
 ``` json
 {
-    "request": "launch",
-    "program": "${workspaceFolder}/test/simple/main.lua",
     "type": "lua",
-    "name": "ant",
-    "preLaunchTask": "Clear terminal",
-    "stopOnEntry": false,
+    "request": "launch",
+    "name": "Debug",
+    "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
     "console": "integratedTerminal",
+    "stopOnEntry": true,
     "outputCapture": [],
-    "cwd": "${workspaceFolder}",
-    "luaVersion": "5.4",
-    "windows": {
-        "luaexe": "${workspaceRoot}/bin/msvc/debug/lua.exe",
-    },
+    "program": "",
+    "arg": []
 },
 ```
 
 ### 关于ant目录结构
-- **bin**：用于存放dll
-- **libs**：用于存放lua程序必要的lua文件
-- **clibs**：存放lua binding的c/c++库
-- **packages**：引擎提供的系统包（包与包之间有依赖）
-- **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
-- **test**：测试文件存放的地方
+- **bin**：编译结果，exe/dll/lib等
+- **build**：编译的中间结果
+- **clibs**：c/c++代码
+- **engine**：引擎基础支持代码，包括包管理器、启动代码等
+- **pkg**：引擎的各个功能包（包与包之间有依赖）
+- **runtime**：引擎运行时的不同平台支持
+- **test**：测试工程
+- **tools**：引擎相关的工具

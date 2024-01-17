@@ -15,7 +15,7 @@ local bgfx          = require "bgfx"
 
 local main_viewid<const> = hwi.viewid_get "main_view"
 
-local terrain_module = require "terrain"
+local lnoise = require "noise"
 
 local sm_sys = ecs.system "stone_mountain_system"
 
@@ -34,7 +34,7 @@ local gen_noise; do
     function gen_noise(x, z, idx)
         idx = idx or 1
         local seed, offset_y, offset_x = z*x+idx, z+idx, x+idx
-        return terrain_module.noise(x, z, noise_freq, noise_depth, seed, offset_y, offset_x)
+        return lnoise.perlin2d(x, z, noise_freq, noise_depth, seed, offset_y, offset_x)
     end
 end
 
