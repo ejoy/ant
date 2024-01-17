@@ -26,7 +26,7 @@ int luaopen_luadebug_stdio(lua_State* L);
 int luaopen_luadebug_visitor(lua_State* L);
 int luaopen_rmlui(lua_State* L);
 int luaopen_window(lua_State* L);
-int luaopen_terrain(lua_State *L);
+int luaopen_noise(lua_State *L);
 int luaopen_textureman_client(lua_State *L);
 int luaopen_textureman_server(lua_State *L);
 int luaopen_programan_client(lua_State *L);
@@ -105,7 +105,7 @@ void ant_loadmodules(lua_State* L) {
         { "luadebug.visitor", luaopen_luadebug_visitor },
         { "rmlui", luaopen_rmlui },
         { "window", luaopen_window },
-        { "terrain", luaopen_terrain },
+        { "noise", luaopen_noise },
         { "textureman.client", luaopen_textureman_client },
         { "textureman.server", luaopen_textureman_server },
         { "programan.client", luaopen_programan_client },
