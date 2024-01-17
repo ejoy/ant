@@ -171,7 +171,7 @@ lparse(lua_State *L) {
     if(!lua_isnoneornil(L, 3)){
         texfmt = bimg::getFormat(lua_tostring(L, 3));
         if (texfmt == bimg::TextureFormat::Unknown){
-            return luaL_error(L, "Unkown texture format: %s", texfmt);
+            return luaL_error(L, "Unknown texture format: %s", texfmt);
         }
     }
 
