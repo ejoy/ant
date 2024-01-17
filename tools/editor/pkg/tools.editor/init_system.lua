@@ -149,7 +149,7 @@ end
 
 function m:post_init()
 	local font = import_package "ant.font"
-    font.import "/pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc"
+    font.import "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf"
 end
 
 function m:data_changed()
