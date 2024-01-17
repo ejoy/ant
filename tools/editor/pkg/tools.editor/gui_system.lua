@@ -96,7 +96,6 @@ local hierarchy_event       = world:sub {"HierarchyEvent"}
 local entity_event          = world:sub {"EntityEvent"}
 local event_keyboard        = world:sub {"keyboard"}
 local event_open_file       = world:sub {"OpenFile"}
-local event_open_proj       = world:sub {"OpenProject"}
 local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
@@ -158,10 +157,7 @@ end
 local function on_update(eid)
     world:pub {"UpdateAABB", eid}
     if not eid then return end
-    local e <close> = world:entity(eid, "camera?in light?in")
-    -- if e.camera then
-    --     camera_mgr.update_frustrum(eid)
-    -- else
+    local e <close> = world:entity(eid, "light?in")
     if e and e.light then
         light_gizmo.update()
     end
@@ -224,7 +220,7 @@ local function update_visible(node, visible)
     end
     return rv
 end
-local test_prefab
+
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -308,10 +304,6 @@ function m:handle_event()
         end
     end
 
-    -- for _ in event_open_proj:unpack() do
-    --     on_open_proj()
-    -- end
-
     for _, filename, isprefab in event_open_file:unpack() do
         if isprefab then
             prefab_mgr:open(filename)
@@ -349,33 +341,8 @@ function m:handle_event()
             if gizmo.target_eid then
                 world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
             end
-        -- elseif state.CTRL and key == "O" and press == 1 then
-        --     on_open_proj()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
-        elseif state.CTRL and key == "T" and press == 1 then
-            if not test_prefab then
-                test_prefab = world:create_instance {
-                    prefab = "/pkg/vaststars.resources/glbs/chemical-plant-1.glb|work_start.prefab",
-                    -- prefab = "/pkg/vaststars.resources/glbs/chimney-1.glb|work.prefab",
-                    on_ready = function (instance)
-                        for _, eid in ipairs(instance.tag["*"]) do
-                            local e <close> = world:entity(eid, "timeline?in")
-                            if e.timeline then
-                                e.timeline.eid_map = instance.tag
-                            end
-                        end
-                    end
-                }
-            else
-                for _, eid in ipairs(test_prefab.tag["*"]) do
-                    local e <close> = world:entity(eid, "timeline?in")
-                    if e.timeline then
-                        w:extend(e, "start_timeline?out")
-                        e.start_timeline = true
-                    end
-                end
-            end
         end
     end
     for _, what, type in event_create:unpack() do

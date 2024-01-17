@@ -23,6 +23,7 @@ local imodifier = ecs.require "ant.modifier|modifier"
 local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local faicons   = require "common.fa_icons"
 local prefab_mgr = ecs.require "prefab_manager"
+local gd        = require "common.global_data"
 local m = {}
 local current_mtl
 local current_target
@@ -1174,7 +1175,8 @@ function m.show()
     end
     imgui.windows.End()
 end
-
+local memfs = import_package "ant.vfs".memory
+local lfs   = require "bee.filesystem"
 function m.save(path)
     if not next(allanims) then
         return
@@ -1216,15 +1218,23 @@ function m.save(path)
     end
     utils.write_file(filename, stringify(animdata))
     if isSke then
+        local bin_file = filename:sub(1, -5) .. "bin"
+        local mount = false
+        local lpath = lfs.path(bin_file)
+        if not lfs.exists(lpath) then
+            mount = true
+        end
         local e <close> = world:entity(anim_eid, "animation:in")
-        ozz.save(e.animation.status[current_anim.name].handle, filename:sub(1, -5) .. "bin")
+        ozz.save(e.animation.status[current_anim.name].handle, bin_file)
+        if mount then
+            memfs.update("/" .. lfs.relative(lpath, gd.project_root):string(), lpath:string())
+        end
     end
     if file_path ~= filename then
         file_path = filename
     end
 end
 
-local lfs = require "bee.filesystem"
 local datalist  = require "datalist"
 local serialize = import_package "ant.serialize"
 function m.load(path)
@@ -1296,9 +1306,7 @@ function m.create_target_animation(at, target)
     elseif at == "mtl" then
         local mtlpath = e.material
         if mtlpath then
-            if string.find(e.material, ".glb|") then
-                mtlpath = mtlpath .. "/source.ant"
-            end
+            mtlpath = mtlpath .. "/source.ant"
             local desc = {}
             local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
             local keys = {}

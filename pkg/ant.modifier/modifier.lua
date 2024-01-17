@@ -110,9 +110,7 @@ function imodifier.set_target(m, target)
         if not filename then
             return
         end
-        if string.find(filename, ".glb|") then
-            filename = filename .. "/source.ant"
-        end
+        filename = filename .. "/source.ant"
         local mtl = serialize.parse(filename, aio.readall(filename))
         if not mtl.properties[mf.property] then
             return
