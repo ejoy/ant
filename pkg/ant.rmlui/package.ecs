@@ -3,5 +3,3 @@ feature "rt"
 
 system "rmlui_system"
     .implement "rmlui_system.lua"
-
-component "rmlui_obj"
