@@ -76,7 +76,6 @@ end
 lm.visibility = "default"
 
 lm:import "3rd/scripts/bgfx.lua"
-lm:import "3rd/scripts/ozz-animation.lua"
 lm:import "runtime/make.lua"
 
 lm:runlua "compile_ecs" {

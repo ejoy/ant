@@ -2,6 +2,8 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
+lm:import "ozz-animation.lua"
+
 lm:lua_source "ozz" {
     deps = {
         "ozz-animation-base",
