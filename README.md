@@ -109,6 +109,5 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 - **libs**：用于存放lua程序必要的lua文件
 - **clibs**：存放lua binding的c/c++库
 - **packages**：引擎提供的系统包（包与包之间有依赖）
-- **projects**：工程相关的目录（目前只用msvc）
 - **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
 - **test**：测试文件存放的地方

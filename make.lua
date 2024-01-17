@@ -78,7 +78,7 @@ lm.visibility = "default"
 lm:import "runtime/make.lua"
 
 lm:runlua "compile_ecs" {
-    script = "projects/luamake/ecs.lua",
+    script = "clibs/ecs/compile_ecs.lua",
     args =  {
         "@clibs/ecs/ecs/",
         "@pkg",
