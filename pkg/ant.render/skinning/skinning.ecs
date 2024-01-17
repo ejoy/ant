@@ -9,3 +9,5 @@ policy "skinrender"
     .component_opt "render_layer"
     .component "mesh"
     .component "visible_state"
+
+component "skinning".type "lua"
