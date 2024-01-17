@@ -19,11 +19,6 @@ function imaterial.set_property(e, who, what, mattype)
 	fm[mattype][who] = what
 end
 
-function imaterial.instance_material(filename)
-	local r = assetmgr.resource(filename)
-    return RM.create_instance(r.object)
-end
-
 assert(RM.system_attrib_update == nil, "'system_attrib_update' should not ready")
 function imaterial.system_attrib_update(...)
 	return RM.system_attrib_update(...)
