@@ -3,27 +3,29 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
+local imodifier = ecs.require "ant.modifier|modifier"
+local ika       = ecs.require "ant.anim_ctrl|keyframe"
+local prefab_mgr= ecs.require "prefab_manager"
 local assetmgr  = import_package "ant.asset"
 local aio       = import_package "ant.io"
 local ImGui     = import_package "ant.imgui"
-local imguiWidgets = require "imgui.widgets"
-local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
-local joint_utils  = require "widget.joint_utils"
-local utils     = require "common.utils"
-local widget_utils  = require "widget.utils"
-local stringify     = import_package "ant.serialize".stringify
-local hierarchy = require "hierarchy_edit"
-local ozz = require "ozz"
-local math3d        = require "math3d"
-local icons     = require "common.icons"
+local stringify = import_package "ant.serialize".stringify
+local serialize = import_package "ant.serialize"
 local mathpkg	= import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
-local imodifier = ecs.require "ant.modifier|modifier"
-local ika       = ecs.require "ant.anim_ctrl|keyframe"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
+local hierarchy = require "hierarchy_edit"
+local ozz       = require "ozz"
+local math3d    = require "math3d"
+local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
-local prefab_mgr = ecs.require "prefab_manager"
 local gd        = require "common.global_data"
+local imguiWidgets  = require "imgui.widgets"
+local joint_utils   = require "widget.joint_utils"
+local widget_utils  = require "widget.utils"
+local utils         = require "common.utils"
+
 local m = {}
 local current_mtl
 local current_target
@@ -839,7 +841,7 @@ function m.end_animation()
     end
 end
 
-function m.new()
+local function ShowNewAnimationUI()
     if not new_anim_widget then return end
     local title = "New Animation"
     if not ImGui.IsPopupOpen(title) then
@@ -980,12 +982,53 @@ function m.show()
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     if ImGui.Begin("Skeleton", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if current_skeleton then
-            if ImGui.Button(faicons.ICON_FA_FILE_PEN.." New") then
+            if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SkeAnim") then
                 new_anim_widget = true
             end
             ImGui.SameLine()
         end
-        m.new()
+        if current_target then
+            local e <close> = world:entity(current_target, "scene?in material?in")
+            -- current_anim.target_anims
+            if e.scene then
+                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SRTAnim") then
+                    new_anim_widget = true
+                    create_context = {type = "srt"}
+                    local tpl = hierarchy:get_node_info(current_target).template
+                    local name = tpl.tag and tpl.tag[1] or ""
+                    create_context.desc = {{name = name}}
+                    target_map[name] = current_target
+                end
+                ImGui.SameLine()
+            end
+            if e.material then
+                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." MTLAnim") then
+                    new_anim_widget = true
+                    create_context = {type = "mtl"}
+                    local mtlpath = e.material
+                    if mtlpath then
+                        mtlpath = mtlpath .. "/source.ant"
+                        local desc = {}
+                        local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
+                        local keys = {}
+                        for k, v in pairs(mtl.properties) do
+                            if not v.stage then
+                                keys[#keys + 1] = k
+                            end
+                        end
+                        table.sort(keys)
+                        for _, k in ipairs(keys) do
+                            desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
+                        end
+                        create_context.desc = desc
+                    end
+                end
+                ImGui.SameLine()
+            end
+        end
+        
+        ShowNewAnimationUI()
+
         if ImGui.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
             local anim_filename = uiutils.get_open_file_path("Load Animation", "anim")
             if anim_filename then
@@ -1236,10 +1279,10 @@ function m.save(path)
 end
 
 local datalist  = require "datalist"
-local serialize = import_package "ant.serialize"
-function m.load(path)
+
+function m.load(path_str)
     m.clear(true)
-    local path = lfs.path(path)
+    local path = lfs.path(path_str)
     local f = assert(io.open(path:string()))
     local data = f:read "a"
     f:close()
@@ -1291,42 +1334,9 @@ function m.load(path)
     file_path = path:string()
 end
 
-function m.create_target_animation(at, target)
-    local e <close> = world:entity(target, "material?in")
-    create_context = {}
-    create_context.type = at
-    new_anim_widget = true
-    if at == "srt" then
-        local tpl = hierarchy:get_node_info(target).template
-        local name = tpl.tag and tpl.tag[1] or ""
-        -- local info = hierarchy:get_node_info(target)
-        -- local name = info.template.tag[1]
-        create_context.desc = {{name = name}}
-        target_map[name] = target
-    elseif at == "mtl" then
-        local mtlpath = e.material
-        if mtlpath then
-            mtlpath = mtlpath .. "/source.ant"
-            local desc = {}
-            local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
-            local keys = {}
-            for k, v in pairs(mtl.properties) do
-                if not v.stage then
-                    keys[#keys + 1] = k
-                end
-            end
-            table.sort(keys)
-            for _, k in ipairs(keys) do
-                desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
-            end
-            create_context.desc = desc
-        end
-    end
-end
-
 local ivs		= ecs.require "ant.render|visible_state"
 local imaterial = ecs.require "ant.asset|material"
-local bone_color = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
+local bone_color    = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
 local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 
 local ientity 	= ecs.require "ant.render|components.entity"
