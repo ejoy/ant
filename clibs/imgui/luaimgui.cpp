@@ -2437,69 +2437,6 @@ cGetTreeNodeToLabelSpacing(lua_State *L) {
 	return 1;
 }
 
-static int 
-cColumns(lua_State *L) {
-	int count = 1;
-	const char * id = 0;
-	bool border = true;
-	if (lua_isinteger(L, 1)) {
-		count = (int)lua_tointeger(L, 1);
-	}
-	if (lua_isstring(L, 2)) {
-		id = lua_tostring(L, 2);
-	}
-	if (lua_isboolean(L, 3)){
-		border = lua_toboolean(L, 3);
-	}
-	ImGui::Columns(count, id, border);
-	return 0;
-}
-
-static int
-cNextColumn(lua_State *L) {
-	ImGui::NextColumn();
-	return 0;
-}
-
-static int
-cGetColumnIndex(lua_State *L) {
-	lua_Integer index = ImGui::GetColumnIndex();
-	lua_pushinteger( L, index + 1 );
-	return 1;
-}
-
-static int
-cGetColumnOffset(lua_State* L) {
-	int index = (int)luaL_optinteger(L, 1, 0) - 1;
-	float offset = ImGui::GetColumnOffset(index);
-	lua_pushnumber(L, offset);
-	return 1;
-}
-
-static int
-cSetColumnOffset(lua_State* L) {
-	int index = (int)luaL_checkinteger(L, 1) - 1;
-	float offset = (float)luaL_checknumber(L, 2);
-	ImGui::SetColumnOffset(index,offset);
-	return 0;
-}
-
-static int
-cGetColumnWidth(lua_State* L) {
-	int index = (int)luaL_optinteger(L, 1, 0) - 1;
-	float width = ImGui::GetColumnWidth(index);
-	lua_pushnumber(L, width);
-	return 1;
-}
-
-static int
-cSetColumnWidth(lua_State* L) {
-	int index = (int)luaL_checkinteger(L, 1) - 1;
-	float width = (float)luaL_checknumber(L, 2);
-	ImGui::SetColumnWidth(index, width);
-	return 0;
-}
-
 static int
 cSetNextItemWidth(lua_State * L) {
 	float w = (float)lua_tonumber(L, 1);
@@ -3368,19 +3305,6 @@ luaopen_imgui(lua_State *L) {
 	};
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
-
-	luaL_Reg deprecated[] = {
-		{ "Columns", cColumns },
-		{ "NextColumn", cNextColumn },
-		{ "GetColumnIndex", cGetColumnIndex },
-		{ "GetColumnOffset", cGetColumnOffset },
-		{ "SetColumnOffset", cSetColumnOffset },
-		{ "GetColumnWidth", cGetColumnWidth },
-		{ "SetColumnWidth", cSetColumnWidth },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, deprecated);
-	lua_setfield(L, -2, "deprecated");
 
 	imgui_enum_init(L);
 
