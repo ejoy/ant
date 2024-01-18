@@ -146,8 +146,12 @@ local function create_LUT_entity()
     local dispatchsize = {
         size / thread_group_size, size / thread_group_size, 1
     }
+    local function mark_prog(e)
+        w:extend(e, "dispatch:in")
+        assetmgr.material_mark(e.dispatch.fx.prog)
+    end
    icompute.create_compute_entity(
-        "LUT_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
+        "LUT_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize, mark_prog)
 end
 
 local ibl_mb = world:sub{"ibl_changed"}

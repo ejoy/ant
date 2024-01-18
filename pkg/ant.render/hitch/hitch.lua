@@ -226,20 +226,18 @@ function hitch_sys:finish_scene_update()
         for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
             if mc.NULL ~= re.bounding.aabb then
                 h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
-                if re.skinning or re.dynamic_mesh then
-                    DIRECT_DRAW_GROUPS[gid] = true
-                end
+            end
+            if re.skinning or re.dynamic_mesh then
+                DIRECT_DRAW_GROUPS[gid] = true
             end
         end
 
-        for re in w:select "hitch_tag bounding:in hitch_indirect?out" do
-            if mc.NULL ~= re.bounding.aabb then
-                local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[gid]
-                if INDIRECT_DRAW_GROUP then
-                    ivs.set_state(re, "main_view", false)
-                    ivs.set_state(re, "cast_shadow", false)
-                    re.hitch_indirect = true                    
-                end
+        for re in w:select "hitch_tag render_object:in hitch_indirect?out" do
+            local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[gid]
+            if INDIRECT_DRAW_GROUP then
+                ivs.set_state(re, "main_view", false)
+                ivs.set_state(re, "cast_shadow", false)
+                re.hitch_indirect = true
             end
         end
         ig.enable(gid, "hitch_tag", false)
