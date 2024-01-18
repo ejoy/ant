@@ -3,7 +3,7 @@ local world     = ecs.world
 local w         = world.w
 
 local math3d    = require "math3d"
-local imgui     = require "imgui"
+local ImGui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local faicons   = require "common.fa_icons"
@@ -70,9 +70,9 @@ function m:ui_update()
             widget_utils.reset_ui_layout()
         end
     end
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
-    imgui.windows.PushStyleColor(imgui.enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
-    imgui.windows.PushStyleColor(imgui.enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0)
+    ImGui.PushStyleColor(ImGui.Enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleColor(ImGui.Enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
@@ -85,8 +85,8 @@ function m:ui_update()
     console_widget.show()
     log_widget.show()
     prefab_mgr:choose_prefab()
-    imgui.windows.PopStyleColor(2)
-    imgui.windows.PopStyleVar()
+    ImGui.PopStyleColor(2)
+    ImGui.PopStyleVar()
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
     iRmlUi.sendMessage("stat", string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
@@ -329,7 +329,7 @@ function m:handle_event()
 
     for _, what in event_window_title:unpack() do
         local title = "Editor - " .. what
-        imgui.SetWindowTitle(title)
+        ImGui.SetWindowTitle(title)
         gizmo:set_target(nil)
     end
 

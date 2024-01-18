@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imgui = require "imgui"
+local ImGui = require "imgui"
 local ivs = ecs.require "ant.render|visible_state"
 local ianimation = ecs.require "ant.animation|animation"
 local iplayback = ecs.require "ant.animation|playback"
@@ -29,15 +29,15 @@ function m:init_world()
 end
 
 function m:data_changed()
-    if imgui.windows.Begin("entities", imgui.flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+    if ImGui.Begin("entities", ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
         local animation_eid
-        if imgui.widget.TreeNode "mesh" then
+        if ImGui.TreeNode "mesh" then
             for i = 1, #entities do
                 local eid = entities[i]
                 local e <close> = world:entity(eid, "render_object?in animation?in")
                 if e.render_object then
                     local v = ivs.has_state(e, "main_view")
-                    local change, value = imgui.widget.Checkbox(""..eid, v)
+                    local change, value = ImGui.Checkbox(""..eid, v)
                     if change then
                         ivs.set_state(e, "main_view", value)
                         ivs.set_state(e, "cast_shadow", value)
@@ -47,7 +47,7 @@ function m:data_changed()
                     animation_eid = eid
                 end
             end
-            imgui.widget.TreePop()
+            ImGui.TreePop()
         else
             for i = 1, #entities do
                 local eid = entities[i]
@@ -57,19 +57,19 @@ function m:data_changed()
                 end
             end
         end
-        if animation_eid and imgui.widget.TreeNode("animation", imgui.flags.TreeNode{"DefaultOpen"}) then
+        if animation_eid and ImGui.TreeNode("animation", ImGui.Flags.TreeNode{"DefaultOpen"}) then
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do
-                if imgui.widget.TreeNode(name) then
+                if ImGui.TreeNode(name) then
                     do
-                        local change, v = imgui.widget.Checkbox("play", status.play)
+                        local change, v = ImGui.Checkbox("play", status.play)
                         if change then
                             iplayback.set_play(e, name, v)
                         end
                     end
                     do
-                        local change, v = imgui.widget.Checkbox("loop", status.loop)
+                        local change, v = ImGui.Checkbox("loop", status.loop)
                         if change then
                             iplayback.set_loop(e, name, v)
                         end
@@ -81,7 +81,7 @@ function m:data_changed()
                             max = 500,
                             format = "%d%%"
                         }
-                        if imgui.widget.DragInt("speed", value) then
+                        if ImGui.DragInt("speed", value) then
                             iplayback.set_speed(e, name, value[1] / 100)
                         end
                     end
@@ -91,7 +91,7 @@ function m:data_changed()
                             min = 0,
                             max = 1,
                         }
-                        if imgui.widget.SliderFloat("weight", value) then
+                        if ImGui.SliderFloat("weight", value) then
                             ianimation.set_weight(e, name, value[1])
                         end
                     end
@@ -101,15 +101,15 @@ function m:data_changed()
                             min = 0,
                             max = 1,
                         }
-                        if imgui.widget.SliderFloat("ratio", value) then
+                        if ImGui.SliderFloat("ratio", value) then
                             ianimation.set_ratio(e, name, value[1])
                         end
                     end
-                    imgui.widget.TreePop()
+                    ImGui.TreePop()
                 end
             end
-            imgui.widget.TreePop()
+            ImGui.TreePop()
         end
     end
-    imgui.windows.End()
+    ImGui.End()
 end

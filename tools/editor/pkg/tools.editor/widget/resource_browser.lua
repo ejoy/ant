@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local assetmgr  = import_package "ant.asset"
 
-local imgui     = require "imgui"
+local ImGui     = require "imgui"
 local lfs       = require "bee.filesystem"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
@@ -129,44 +129,44 @@ local new_filename = {text = "noname"}
 local function rename_file(file)
     if not renaming then return end
 
-    if not imgui.windows.IsPopupOpen("Rename file") then
-        imgui.windows.OpenPopup("Rename file")
+    if not ImGui.IsPopupOpen("Rename file") then
+        ImGui.OpenPopup("Rename file")
     end
 
-    local change, opened = imgui.windows.BeginPopupModal("Rename file", imgui.flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal("Rename file", ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
-        imgui.widget.Text("new name :")
-        imgui.cursor.SameLine()
-        if imgui.widget.InputText("##NewName", new_filename) then
+        ImGui.Text("new name :")
+        ImGui.SameLine()
+        if ImGui.InputText("##NewName", new_filename) then
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             lfs.rename(file:localpath(), file:parent_path():localpath() / tostring(new_filename.text))
             renaming = false
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             renaming = false
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 
 local function ShowContextMenu()
-    if imgui.windows.BeginPopupContextItem(tostring(selected_file:filename())) then
-        if imgui.widget.MenuItem(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
+    if ImGui.BeginPopupContextItem(tostring(selected_file:filename())) then
+        if ImGui.MenuItem(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
             os.execute("c:\\windows\\explorer.exe /select,"..selected_file:localpath():string():gsub("/","\\"))
         end
-        if imgui.widget.MenuItem(faicons.ICON_FA_PEN.." Rename", "F2") then
+        if ImGui.MenuItem(faicons.ICON_FA_PEN.." Rename", "F2") then
             renaming = true
             new_filename.text = tostring(selected_file:filename())
         end
-        imgui.cursor.Separator()
-        if imgui.widget.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
+        ImGui.Separator()
+        if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
             lfs.remove(selected_file:localpath())
             selected_file = nil
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 
@@ -240,14 +240,14 @@ local function pre_init_item_height()
     if item_height then
         return
     end
-    local _, pos_y = imgui.cursor.GetCursorPos()
+    local _, pos_y = ImGui.GetCursorPos()
     item_height = -pos_y
 end
 local function post_init_item_height()
     if item_height and item_height > 0 then
         return
     end
-    local _, pos_y = imgui.cursor.GetCursorPos()
+    local _, pos_y = ImGui.GetCursorPos()
     item_height = pos_y + item_height
 end
 
@@ -278,37 +278,37 @@ function m.show()
         end
     end
 
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     m.update_resource_tree(editor_setting.setting.hide_engine_resource)
 
     local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
             local dir_name = tostring(v[1]:filename())
-            local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
+            local base_flags = ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and ImGui.Flags.TreeNode{"Selected"} or 0)
             local skip = false
             local fonticon = (not v.parent) and (faicons.ICON_FA_FILE_ZIPPER .. " ") or ""
             if (#v[2].dirs == 0) then
-                imgui.widget.TreeNode(fonticon .. dir_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+                ImGui.TreeNode(fonticon .. dir_name, base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
-                local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and imgui.flags.TreeNode {"DefaultOpen"} or 0)
-                if imgui.widget.TreeNode(fonticon .. dir_name, adjust_flags) then
-                    if imgui.util.IsItemClicked() then
+                local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and ImGui.Flags.TreeNode {"DefaultOpen"} or 0)
+                if ImGui.TreeNode(fonticon .. dir_name, adjust_flags) then
+                    if ImGui.IsItemClicked() then
                         selected_folder = v
                     end
                     skip = true
                     do_show_browser(v[2])
-                    imgui.widget.TreePop()
+                    ImGui.TreePop()
                 end
             end
-            if not skip and imgui.util.IsItemClicked() then
+            if not skip and ImGui.IsItemClicked() then
                 selected_folder = v
             end
         end 
     end
-    if imgui.windows.Begin("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
-        imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
+    if ImGui.Begin("ResourceBrowser", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+        ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then
             relativePath = selected_folder[1]
@@ -317,7 +317,7 @@ function m.show()
         end
         local _, split_dirs = path_split(relativePath:string())
         for i = 1, #split_dirs do
-            if imgui.widget.Button("/" .. split_dirs[i]) then
+            if ImGui.Button("/" .. split_dirs[i]) then
                 if tostring(selected_folder[1]:filename()) ~= split_dirs[i] then
                     local lookup_dir = selected_folder.parent
                     while lookup_dir do
@@ -330,35 +330,35 @@ function m.show()
                     end
                 end
             end
-            imgui.cursor.SameLine() --last SameLine for 'HideEngineResource' button
+            ImGui.SameLine() --last SameLine for 'HideEngineResource' button
         end
         local cb = {editor_setting.setting.hide_engine_resource}
-        if imgui.widget.Checkbox("HideEngineResource", cb) then
+        if ImGui.Checkbox("HideEngineResource", cb) then
             editor_setting.setting.hide_engine_resource = cb[1]
             editor_setting.save()
             m.dirty = true
             m.update_resource_tree(editor_setting.setting.hide_engine_resource)
         end
-        imgui.windows.PopStyleVar(1)
-        imgui.cursor.Separator()
+        ImGui.PopStyleVar(1)
+        ImGui.Separator()
         local filter_focus1 = false
         local filter_focuse2 = false
-        if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-            imgui.table.NextColumn()
-            local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height)
-            filter_focus1 = imgui.windows.IsWindowFocused()
+        if ImGui.TableBegin("InspectorTable", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+            ImGui.TableNextColumn()
+            local child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##ResourceBrowserDir", child_width, child_height)
+            filter_focus1 = ImGui.IsWindowFocused()
             do_show_browser(resource_tree)
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.cursor.SameLine()
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height);
+            ImGui.SameLine()
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##ResourceBrowserContent", child_width, child_height);
             
             local folder = selected_folder[2]
             if folder then
-                filter_focuse2 = imgui.windows.IsWindowFocused()
+                filter_focuse2 = ImGui.IsWindowFocused()
                 if filter_focuse2 then
                     create_filter_cache(selected_folder[1], folder.dirs, folder.files)
                     for _, key, press, status in key_mb:unpack() do
@@ -367,21 +367,21 @@ function m.show()
                             -- local file_count = cache and cache.count or 0
                             local file_path, file_pos = get_filter_path(selected_folder[1], key)
                             if file_path then
-                                local max_scrolly = imgui.windows.GetScrollMaxY()
+                                local max_scrolly = ImGui.GetScrollMaxY()
                                 -- local scroll_pos = ((file_pos - 1) / file_count) * max_scrolly
                                 -- if file_pos > 1 then
                                 --     scroll_pos = scroll_pos + 22
                                 -- end
-                                local _, sy = imgui.windows.GetWindowSize()
+                                local _, sy = ImGui.GetWindowSize()
                                 selected_file = file_path or selected_file
-                                local current_pos = imgui.windows.GetScrollY()
+                                local current_pos = ImGui.GetScrollY()
                                 local target_pos = file_pos * (item_height or 22)
                                 if target_pos > current_pos + sy or target_pos < sy or target_pos < (current_pos - sy) then
                                     local newpos = target_pos - sy
                                     if newpos < 0 then
                                         newpos = 0
                                     end
-                                    imgui.windows.SetScrollY(newpos)
+                                    ImGui.SetScrollY(newpos)
                                 end
                             end
                         end
@@ -394,27 +394,27 @@ function m.show()
                 end
                 rename_file(selected_file)
                 local function pre_selectable(icon, noselected)
-                    imgui.windows.PushStyleColor(imgui.enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
+                    ImGui.PushStyleColor(ImGui.Enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
                     if noselected then
-                        imgui.windows.PushStyleColor(imgui.enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
+                        ImGui.PushStyleColor(ImGui.Enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
                     else
-                        imgui.windows.PushStyleColor(imgui.enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                        ImGui.PushStyleColor(ImGui.Enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
                     local imagesize = icon.texinfo.width * icons.scale
-                    imgui.widget.Image(assetmgr.textures[icon.id], imagesize, imagesize)
-                    imgui.cursor.SameLine()
+                    ImGui.Image(assetmgr.textures[icon.id], imagesize, imagesize)
+                    ImGui.SameLine()
                 end
                 local function post_selectable()
-                    imgui.windows.PopStyleColor(2)
+                    ImGui.PopStyleColor(2)
 
                 end
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
                     pre_init_item_height()
-                    if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
-                        if imgui.util.IsMouseDoubleClicked(0) then
+                        if ImGui.IsMouseDoubleClicked(0) then
                             selected_folder = path
                         end
                     end
@@ -427,10 +427,10 @@ function m.show()
                 for _, path in pairs(folder.files) do
                     pre_selectable(icons:get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
-                    if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.Selectable(tostring(path:filename()), selected_file == path, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
-                        if imgui.util.IsMouseDoubleClicked(0) then
+                        if ImGui.IsMouseDoubleClicked(0) then
                             local isprefab = path:equal_extension(".prefab")
                             if path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}
@@ -469,28 +469,28 @@ function m.show()
                         or path:equal_extension(".glb")
                         or path:equal_extension(".efk")
                         or path:equal_extension(".lua") then
-                        if imgui.widget.BeginDragDropSource() then
-                            imgui.widget.SetDragDropPayload("DragFile", tostring(path))
-                            imgui.widget.Text(tostring(path:filename()))
-                            imgui.widget.EndDragDropSource()
+                        if ImGui.BeginDragDropSource() then
+                            ImGui.SetDragDropPayload("DragFile", tostring(path))
+                            ImGui.Text(tostring(path:filename()))
+                            ImGui.EndDragDropSource()
                         end
                     end
                 end
             end
-            imgui.windows.EndChild()
+            ImGui.EndChild()
             
-            imgui.cursor.SameLine()
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height)
+            ImGui.SameLine()
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##ResourceBrowserPreview", child_width, child_height)
             if selected_file and (selected_file:equal_extension(".png") or selected_file:equal_extension(".texture")) then
                 local preview = preview_images[selected_file]
                 if preview then
                     if texture_detail[selected_file] then
-                        imgui.widget.Text("image:" .. tostring(texture_detail[selected_file].path))
+                        ImGui.Text("image:" .. tostring(texture_detail[selected_file].path))
                     end
-                    -- imgui.deprecated.Columns(2, "PreviewColumns", true)
-                    imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.bitsPerPixel)
+                    -- ImGui.Columns(2, "PreviewColumns", true)
+                    ImGui.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.bitsPerPixel)
                     local width, height = preview.texinfo.width, preview.texinfo.height
                     if width > 180 then
                         width = 180
@@ -498,11 +498,11 @@ function m.show()
                     if height > 180 then
                         height = 180
                     end
-                    imgui.widget.Image(assetmgr.textures[preview.id], width, height)
-                    imgui.cursor.SameLine()
+                    ImGui.Image(assetmgr.textures[preview.id], width, height)
+                    ImGui.SameLine()
                     local texture_info = texture_detail[selected_file] 
                     if texture_info then
-                        imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
+                        ImGui.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
                             texture_info.compress and texture_info.compress.android or "raw",
                             texture_info.compress and texture_info.compress.ios or "raw",
                             texture_info.compress and texture_info.compress.windows or "raw",
@@ -515,12 +515,12 @@ function m.show()
                     end
                 end
             end
-            imgui.windows.EndChild()
-        imgui.table.End()
+            ImGui.EndChild()
+        ImGui.TableEnd()
         end
         global_data.camera_lock = filter_focus1 or filter_focuse2
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 
 function m.selected_file()

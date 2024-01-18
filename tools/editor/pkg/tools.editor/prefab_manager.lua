@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local imgui         = require "imgui"
+local ImGui         = require "imgui"
 local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
@@ -462,20 +462,20 @@ function m:choose_prefab()
         prefab_list, patch_template = get_prefabs_and_patch_template(gd.glb_filename)
     end
     local title = "Choose prefab"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         if gd.is_opening then
 
-            imgui.widget.Text("Create new or open existing prefab.")
-            imgui.widget.Text("prefab name:  ")
-            imgui.cursor.SameLine()
-            if imgui.widget.InputText("##PrefabName", prefabe_name_ui) then
+            ImGui.Text("Create new or open existing prefab.")
+            ImGui.Text("prefab name:  ")
+            ImGui.SameLine()
+            if ImGui.InputText("##PrefabName", prefabe_name_ui) then
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
+            ImGui.SameLine()
+            if ImGui.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
                 local name = tostring(prefabe_name_ui.text)
                 if #name > 0 then
                     local existing = false
@@ -505,11 +505,11 @@ function m:choose_prefab()
                 end
             end
         else
-            imgui.widget.Text("Choose a prefab to continue.")
+            ImGui.Text("Choose a prefab to continue.")
         end
-        imgui.cursor.Separator()
+        ImGui.Separator()
         for _, prefab in ipairs(prefab_list) do
-            if imgui.widget.Selectable(prefab, false, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.Selectable(prefab, false, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 if gd.is_opening then
                     self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
                 else
@@ -518,12 +518,12 @@ function m:choose_prefab()
                 reset_open_context()
             end
         end
-        imgui.cursor.Separator()
-        if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
+        ImGui.Separator()
+        if ImGui.Button(faicons.ICON_FA_BAN.." Quit") then
             reset_open_context()
-            imgui.windows.CloseCurrentPopup()
+            ImGui.CloseCurrentPopup()
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 

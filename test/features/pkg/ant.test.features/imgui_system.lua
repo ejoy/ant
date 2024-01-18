@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imgui = require "imgui"
+local ImGui = require "imgui"
 local common = ecs.require "common"
 
 local m = ecs.system "imgui_system"
@@ -38,7 +38,7 @@ local function disable_test(name)
 end
 
 local function select_test(name)
-    if imgui.widget.Selectable(name, name == currentTest) then
+    if ImGui.Selectable(name, name == currentTest) then
         if currentTest ~= name then
             disable_test(currentTest)
             enable_test(name)
@@ -51,15 +51,15 @@ function m:init()
 end
 
 function m:data_changed()
-    if imgui.windows.Begin("test", imgui.flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
-        if imgui.widget.BeginCombo("##test", currentTest) then
+    if ImGui.Begin("test", ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+        if ImGui.BeginCombo("##test", currentTest) then
             select_test "<none>"
             select_test "<all>"
             for name in pairs(common.get_systems()) do
                 select_test(name)
             end
-            imgui.widget.EndCombo()
+            ImGui.EndCombo()
         end
     end
-    imgui.windows.End()
+    ImGui.End()
 end

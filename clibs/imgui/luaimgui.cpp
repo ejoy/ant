@@ -328,8 +328,7 @@ read_field_vec4(lua_State *L, const char *field, ImVec4 def_val, int tidx = INDE
 	return def_val;
 }
 
-
-static int dSpace(lua_State* L) {
+static int dDockSpace(lua_State* L) {
 	const char* str_id = luaL_checkstring(L, 1);
 	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
 	float w = (float)luaL_optnumber(L, 3, 0);
@@ -338,7 +337,7 @@ static int dSpace(lua_State* L) {
 	return 0;
 }
 
-static int dBuilderGetCentralRect(lua_State * L) {
+static int dDockBuilderGetCentralRect(lua_State * L) {
 	const char* str_id = luaL_checkstring(L, 1);
 	ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
 	lua_pushnumber(L, central_node->Pos.x);
@@ -2989,8 +2988,7 @@ static void ImGuiFree(void* ptr, void* /*user_data*/) {
 	free(ptr);
 }
 
-static int
-lmemory(lua_State* L) {
+static int util_memory(lua_State* L) {
 	lua_pushinteger(L, allocator_memory);
 	return 1;
 }
@@ -3019,49 +3017,6 @@ luaopen_imgui(lua_State *L) {
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InitFont", lInitFont },
 		{ "GetMouseCursor", lGetMouseCursor },
-		{ "memory", lmemory },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, l);
-
-	luaL_Reg io[] = {
-		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },
-		{ "AddMouseWheelEvent", ioAddMouseWheelEvent },
-		{ "AddKeyEvent", ioAddKeyEvent },
-		{ "AddInputCharacter", ioAddInputCharacter },
-		{ "AddInputCharacterUTF16", ioAddInputCharacterUTF16 },
-		{ "AddFocusEvent", ioAddFocusEvent },
-		{ NULL, NULL },
-	};
-	luaL_Reg io_setter[] = {
-		{ "ConfigFlags", ioSetterConfigFlags },
-		{ NULL, NULL },
-	};
-	luaL_Reg io_getter[] = {
-		{ "WantCaptureMouse", ioGetterWantCaptureMouse },
-		{ "WantCaptureKeyboard", ioGetterWantCaptureKeyboard },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, io);
-	lua_newtable(L);
-	luaL_newlib(L, io_setter);
-	lua_pushcclosure(L, ioSetter, 1);
-	lua_setfield(L, -2, "__newindex");
-	luaL_newlib(L, io_getter);
-	lua_pushcclosure(L, ioGetter, 1);
-	lua_setfield(L, -2, "__index");
-	lua_setmetatable(L, -2);
-	lua_setfield(L, -2, "io");
-
-	luaL_Reg dock[] = {
-		{ "Space", dSpace },
-		{ "BuilderGetCentralRect", dBuilderGetCentralRect },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, dock);
-	lua_setfield(L, -2, "dock");
-
-	luaL_Reg widgets[] = {
 		{ "Button", wButton },
 		{ "SmallButton", wSmallButton },
 		{ "InvisibleButton", wInvisibleButton },
@@ -3124,12 +3079,6 @@ luaopen_imgui(lua_State *L) {
 		{ "PushTextWrapPos", wPushTextWrapPos },
 		{ "PopTextWrapPos", wPopTextWrapPos },
 		{ "SelectableInput", wSelectableInput },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, widgets);
-	lua_setfield(L, -2, "widget");
-
-	luaL_Reg cursor[] = {
 		{ "Separator", cSeparator },
 		{ "SameLine", cSameLine },
 		{ "NewLine", cNewLine },
@@ -3154,13 +3103,6 @@ luaopen_imgui(lua_State *L) {
 		{ "PushItemWidth", cPushItemWidth},
 		{ "PopItemWidth", cPopItemWidth},
 		{ "SetMouseCursor", cSetMouseCursor },
-		{ NULL, NULL },
-	};
-
-	luaL_newlib(L, cursor);
-	lua_setfield(L, -2, "cursor");
-
-	luaL_Reg windows[] = {
 		{ "Begin", winBegin },
 		{ "End", winEnd },
 		{ "BeginDisabled", winBeginDisabled },
@@ -3213,15 +3155,6 @@ luaopen_imgui(lua_State *L) {
 		{ "PopStyleColor", winPopStyleColor },
 		{ "PushStyleVar", winPushStyleVar },
 		{ "PopStyleVar", winPopStyleVar },
-		{ NULL, NULL },
-	};
-
-	luaL_newlib(L, windows);
-	lua_setfield(L, -2, "windows");
-
-	imgui::table::init(L);
-
-	luaL_Reg util[] = {
 		{ "SetColorEditOptions", uSetColorEditOptions },
 		{ "PushClipRect", uPushClipRect },
 		{ "PopClipRect", uPopClipRect },
@@ -3256,12 +3189,50 @@ luaopen_imgui(lua_State *L) {
 		{ "IsMouseDragging", cIsMouseDragging },
 		{ "GetMousePos", cGetMousePos },
 		{ "SetClipboardText", cSetClipboardText },
+		{ "DockSpace", dDockSpace },
+		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, l);
+
+	luaL_Reg util[] = {
+		{ "memory", util_memory },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
 
-	imgui_enum_init(L);
+	imgui::table::init(L);
 
+	luaL_Reg io[] = {
+		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },
+		{ "AddMouseWheelEvent", ioAddMouseWheelEvent },
+		{ "AddKeyEvent", ioAddKeyEvent },
+		{ "AddInputCharacter", ioAddInputCharacter },
+		{ "AddInputCharacterUTF16", ioAddInputCharacterUTF16 },
+		{ "AddFocusEvent", ioAddFocusEvent },
+		{ NULL, NULL },
+	};
+	luaL_Reg io_setter[] = {
+		{ "ConfigFlags", ioSetterConfigFlags },
+		{ NULL, NULL },
+	};
+	luaL_Reg io_getter[] = {
+		{ "WantCaptureMouse", ioGetterWantCaptureMouse },
+		{ "WantCaptureKeyboard", ioGetterWantCaptureKeyboard },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, io);
+	lua_newtable(L);
+	luaL_newlib(L, io_setter);
+	lua_pushcclosure(L, ioSetter, 1);
+	lua_setfield(L, -2, "__newindex");
+	luaL_newlib(L, io_getter);
+	lua_pushcclosure(L, ioGetter, 1);
+	lua_setfield(L, -2, "__index");
+	lua_setmetatable(L, -2);
+	lua_setfield(L, -2, "io");
+
+	imgui_enum_init(L);
 	return 1;
 }

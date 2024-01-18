@@ -1,4 +1,4 @@
-local imgui     = require "imgui"
+local ImGui     = require "imgui"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
@@ -16,7 +16,7 @@ local command_queue = {}
 local history_pos = -1
 local console = {
     text = "",
-    flags = imgui.flags.InputText{"EnterReturnsTrue", "CallbackCompletion", "CallbackHistory"},
+    flags = ImGui.Flags.InputText{"EnterReturnsTrue", "CallbackCompletion", "CallbackHistory"},
     up = function()
             if #command_queue < 1 then return "" end
 
@@ -76,11 +76,11 @@ end
 
 local faicons   = require "common.fa_icons"
 local function show_input()
-    imgui.widget.Text(faicons.ICON_FA_TERMINAL)
-    imgui.cursor.SameLine()
+    ImGui.Text(faicons.ICON_FA_TERMINAL)
+    ImGui.SameLine()
     local reclaim_focus = false
-    imgui.cursor.PushItemWidth(-1)
-    if imgui.widget.InputText("##SingleLineInput", console) then
+    ImGui.PushItemWidth(-1)
+    if ImGui.InputText("##SingleLineInput", console) then
         local command = tostring(console.text)
         if command ~= "" then
             exec_command(command)
@@ -88,12 +88,12 @@ local function show_input()
         end
         reclaim_focus = true
     end
-    imgui.cursor.PopItemWidth()
-    imgui.util.SetItemDefaultFocus()
+    ImGui.PopItemWidth()
+    ImGui.SetItemDefaultFocus()
     if reclaim_focus then
-        imgui.util.SetKeyboardFocusHere(-1)
+        ImGui.SetKeyboardFocusHere(-1)
     end
-    imgui.cursor.Separator()
+    ImGui.Separator()
 end
 
 function m.get_title()
@@ -101,14 +101,14 @@ function m.get_title()
 end
 
 function m.show()
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if imgui.windows.Begin("Console", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    if ImGui.Begin("Console", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         show_input()
         log_widget.showConsole()
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 
 return m

@@ -6,7 +6,7 @@ local vfs = require "vfs"
 local fs = require "filesystem"
 local lfs = require "bee.filesystem"
 local subprocess = require "bee.subprocess"
-local imgui = import_package "ant.imgui"
+local ImGui = import_package "ant.imgui"
 local editor_setting    = require "editor_setting"
 
 
@@ -43,14 +43,14 @@ local function choose_project()
     -- if global_data.project_root then return end
     local lastprojs = editor_setting.setting.lastprojs
     local title = "Choose project"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
 
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text("Create new or open existing project.")
-        if imgui.widget.Button(ICON_FA_FOLDER_PLUS.." Create") then
+        ImGui.Text("Create new or open existing project.")
+        if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
             local path = choose_project_dir()
             if path then
                 local lpath = lfs.path(path)
@@ -64,23 +64,23 @@ local function choose_project()
                 -- end
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(ICON_FA_FOLDER_OPEN.." Open") then
+        ImGui.SameLine()
+        if ImGui.Button(ICON_FA_FOLDER_OPEN.." Open") then
             local path = choose_project_dir()
             if path then
                 do_open_proj(path)
                 exit = true
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(ICON_FA_BAN.." Quit") then
+        ImGui.SameLine()
+        if ImGui.Button(ICON_FA_BAN.." Quit") then
             exit = true
         end
 
-        imgui.cursor.Separator()
+        ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj)
                     exit = true
@@ -93,9 +93,9 @@ local function choose_project()
         --     fw:add(global_data.project_root:string())
         --     global_data.filewatch = fw
         --     log.warn "need handle effect file"
-        --     imgui.windows.CloseCurrentPopup()
+        --     ImGui.CloseCurrentPopup()
         -- end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
     return exit
 end
@@ -107,21 +107,21 @@ function m:init_system()
     if rf then
         local setting = rf:read "a"
         rf:close()
-        imgui.util.LoadIniSettings(setting)
+        ImGui.LoadIniSettings(setting)
     end
 end
 
 function m:data_changed()
-    local imgui_vp = imgui.GetMainViewport()
+    local imgui_vp = ImGui.GetMainViewport()
     local s = imgui_vp.Size
     local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
-    imgui.windows.SetNextWindowPos(wp[1], wp[2])
-    imgui.windows.SetNextWindowSize(ws[1], ws[2])
-    imgui.windows.SetNextWindowViewport(imgui_vp.ID)
-	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
-	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if imgui.windows.Begin("MainView", imgui.flags.Window {
+    ImGui.SetNextWindowPos(wp[1], wp[2])
+    ImGui.SetNextWindowSize(ws[1], ws[2])
+    ImGui.SetNextWindowViewport(imgui_vp.ID)
+	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
+	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
+    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
+    if ImGui.Begin("MainView", ImGui.Flags.Window {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -131,26 +131,26 @@ function m:data_changed()
         "NoNavFocus",
         "NoBackground",
     }) then
-        imgui.dock.Space("MainViewSpace", imgui.flags.DockNode {
+        ImGui.DockSpace("MainViewSpace", ImGui.Flags.DockNode {
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })
     end
-    imgui.windows.PopStyleVar(3)
-    imgui.windows.End()
+    ImGui.PopStyleVar(3)
+    ImGui.End()
 
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], 'F')
-    -- imgui.windows.SetNextWindowDockID("MainViewSpace", 'F')
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], 'F')
+    -- ImGui.SetNextWindowDockID("MainViewSpace", 'F')
     local exit = false
-    if imgui.windows.Begin("##Choose project", imgui.flags.Window {"NoResize", "NoTitleBar", "NoCollapse", "NoClosed" }) then
+    if ImGui.Begin("##Choose project", ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse", "NoClosed" }) then
         -- exit = choose_project()
-        -- local wid = imgui.GetID("Choose project")
+        -- local wid = ImGui.GetID("Choose project")
         local selected_proj
         local lastprojs = editor_setting.setting.lastprojs
-        imgui.widget.Text("Create new or open existing project.")
-        if imgui.widget.Button(ICON_FA_FOLDER_PLUS.." Create") then
+        ImGui.Text("Create new or open existing project.")
+        if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
             local path = choose_project_dir()
             if path then
                 local lpath = lfs.path(path)
@@ -164,23 +164,23 @@ function m:data_changed()
                 -- end
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(ICON_FA_FOLDER_OPEN.." Open") then
+        ImGui.SameLine()
+        if ImGui.Button(ICON_FA_FOLDER_OPEN.." Open") then
             local path = choose_project_dir()
             if path then
                 do_open_proj(path)
                 exit = true
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(ICON_FA_BAN.." Quit") then
+        ImGui.SameLine()
+        if ImGui.Button(ICON_FA_BAN.." Quit") then
             exit = true
         end
 
-        imgui.cursor.Separator()
+        ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj.proj_path)
                     exit = true
@@ -188,9 +188,9 @@ function m:data_changed()
             end
         end
     end
-    imgui.windows.End()
+    ImGui.End()
     if exit then
-        -- local setting = imgui.util.SaveIniSettings()
+        -- local setting = ImGui.SaveIniSettings()
         -- local wf = assert(io.open("D:/Github/ant/tools/editor/launch/pkg/launch/imgui.layout", "wb"))
         -- wf:write(setting)
         -- wf:close()

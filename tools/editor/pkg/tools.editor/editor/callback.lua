@@ -1,4 +1,4 @@
-local imgui         = require "imgui"
+local ImGui         = require "imgui"
 local task          = require "editor.task"
 local event         = require "editor.event"
 local worlds        = require "editor.worlds"
@@ -46,7 +46,7 @@ function cb.exit()
 end
 
 function cb.mousewheel(x, y, delta)
-    local mvp = imgui.GetMainViewport()
+    local mvp = ImGui.GetMainViewport()
     x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
     for _, w in ipairs(worlds) do
         w.mousewheel {
@@ -58,7 +58,7 @@ function cb.mousewheel(x, y, delta)
     end
 end
 function cb.mouse(x, y, what, state)
-    local mvp = imgui.GetMainViewport()
+    local mvp = ImGui.GetMainViewport()
     x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
     for _, w in ipairs(worlds) do
         w.mouse {

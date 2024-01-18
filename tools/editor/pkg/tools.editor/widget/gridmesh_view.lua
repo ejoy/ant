@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local imgui     = require "imgui"
+local ImGui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local brush_def = require "brush_def"
@@ -36,65 +36,65 @@ local function update_color()
 end
 
 function m.show()
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    if imgui.windows.Begin("GridMesh", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
+    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
+    if ImGui.Begin("GridMesh", ImGui.Flags.Window { "NoCollapse", "NoClosed" }) then
         local title = "CreateGridMesh"
-        if imgui.widget.Button("Create") then
-            imgui.windows.OpenPopup(title)
+        if ImGui.Button("Create") then
+            ImGui.OpenPopup(title)
         end
 
-        local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
+        local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize"})
         if change then
             local label = "Grid Size : "
-            imgui.widget.Text(label)
-            imgui.cursor.SameLine()
-            if imgui.widget.DragFloat("##"..label, grid_size_ui) then
+            ImGui.Text(label)
+            ImGui.SameLine()
+            if ImGui.DragFloat("##"..label, grid_size_ui) then
             
             end
             
             label = "      Row : "
-            imgui.widget.Text(label)
-            imgui.cursor.SameLine()
-            if imgui.widget.DragInt("##"..label, grid_row_ui) then
+            ImGui.Text(label)
+            ImGui.SameLine()
+            if ImGui.DragInt("##"..label, grid_row_ui) then
 
             end
             
             label = "      Col : "
-            imgui.widget.Text(label)
-            imgui.cursor.SameLine()
-            if imgui.widget.DragInt("##"..label, grid_col_ui) then
+            ImGui.Text(label)
+            ImGui.SameLine()
+            if ImGui.DragInt("##"..label, grid_col_ui) then
 
             end
             
-            if imgui.widget.Button("    OK    ") then
+            if ImGui.Button("    OK    ") then
                 world:pub {"GridMesh", "create", grid_size_ui[1], grid_row_ui[1], grid_col_ui[1]}
-                imgui.windows.CloseCurrentPopup()
+                ImGui.CloseCurrentPopup()
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Button("  Cancel  ") then
-                imgui.windows.CloseCurrentPopup()
+            ImGui.SameLine()
+            if ImGui.Button("  Cancel  ") then
+                ImGui.CloseCurrentPopup()
             end
-            imgui.windows.EndPopup()
+            ImGui.EndPopup()
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button("Load") then
+        ImGui.SameLine()
+        if ImGui.Button("Load") then
             local path = uiutils.get_open_file_path("Lua", "lua")
             if path then
                 current_grid:load(path)
             end
         end
         if current_grid then
-            imgui.widget.PropertyLabel("Show")
-            if imgui.widget.Checkbox("##Show", visible_ui) then
+            ImGui.PropertyLabel("Show")
+            if ImGui.Checkbox("##Show", visible_ui) then
                 current_grid:show(visible_ui[1])
             end
             
-            imgui.widget.PropertyLabel("Brush")
-            if imgui.widget.BeginCombo("##Brush", {current_label, flags = imgui.flags.Combo {}}) then
+            ImGui.PropertyLabel("Brush")
+            if ImGui.BeginCombo("##Brush", {current_label, flags = ImGui.Flags.Combo {}}) then
                 for index, label in ipairs(brush_def.label) do
-                    if imgui.widget.Selectable(label, current_label == label) then
+                    if ImGui.Selectable(label, current_label == label) then
                         current_label = label
                         local color = brush_def.color[index]
                         world:pub {"GridMesh", "brushcolor", index, color}
@@ -102,34 +102,34 @@ function m.show()
                         update_color()
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
             end
 
             local color_label = "BrushColor"
-            if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
+            if ImGui.ColorEdit("##"..color_label, brush_color_ui) then
                 update_color()
             end
 
             local brush_size_label = "BrushSize"
-            imgui.widget.PropertyLabel(brush_size_label)
-            if imgui.widget.DragInt("##"..brush_size_label, brush_size_ui) then
+            ImGui.PropertyLabel(brush_size_label)
+            if ImGui.DragInt("##"..brush_size_label, brush_size_ui) then
                 world:pub {"GridMesh", "brushsize", brush_size_ui[1]}
             end
             
             if current_grid.data then
-                if imgui.widget.Button("Save") then
+                if ImGui.Button("Save") then
                     current_grid:save(current_grid.filename)
                 end
                 if current_grid.filename then
-                    imgui.cursor.SameLine()
-                    if imgui.widget.Button("SaveAs") then
+                    ImGui.SameLine()
+                    if ImGui.Button("SaveAs") then
                         current_grid:save()
                     end
                 end
             end
         end
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 
 return m

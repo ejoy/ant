@@ -1,4 +1,4 @@
-local imgui     = require "imgui"
+local ImGui     = require "imgui"
 
 local m = {
     show_skeleton = false,
@@ -69,15 +69,15 @@ function m:init(skeleton)
 end
 
 function m:show_joints(root)
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((self.current_joint and (self.current_joint.name == root.name)) and imgui.flags.TreeNode{"Selected"} or 0)
+    local base_flags = ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((self.current_joint and (self.current_joint.name == root.name)) and ImGui.Flags.TreeNode{"Selected"} or 0)
     local flags = base_flags
     local has_child = true
     if #root.children == 0 then
-        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
+        flags = base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
         has_child = false
     end
-    local open = imgui.widget.TreeNode(root.name, flags)
-    if imgui.util.IsItemClicked() then
+    local open = ImGui.TreeNode(root.name, flags)
+    if ImGui.IsItemClicked() then
         if self.on_select_joint then
             self.on_select_joint(self.current_joint, root)
         end
@@ -87,7 +87,7 @@ function m:show_joints(root)
         for _, joint in ipairs(root.children) do
             self:show_joints(joint)
         end
-        imgui.widget.TreePop()
+        ImGui.TreePop()
     end
 end
 

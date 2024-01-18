@@ -180,7 +180,7 @@ static int ClipperBegin(lua_State* L) {
 	return 4;
 }
 
-static int Clipper(lua_State* L) {
+static int ListClipper(lua_State* L) {
 	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_newuserdatauv(L, sizeof(ImGuiListClipper), 0);
 	new (clipper) ImGuiListClipper;
 	if (luaL_newmetatable(L, "IMGUI_CLIPPER")) {
@@ -205,26 +205,25 @@ static int Clipper(lua_State* L) {
 
 void init(lua_State* L) {
 	luaL_Reg table[] = {
-		{ "Begin", BeginTable },
-		{ "End", EndTable },
-		{ "NextRow", TableNextRow },
-		{ "NextColumn", TableNextColumn },
-		{ "SetColumnIndex", TableSetColumnIndex },
-		{ "GetColumnIndex", TableGetColumnIndex },
-		{ "GetRowIndex", TableGetRowIndex },
-		{ "SetupColumn", TableSetupColumn },
-		{ "SetupScrollFreeze", TableSetupScrollFreeze },
-		{ "HeadersRow", TableHeadersRow },
-		{ "Header", TableHeader },
-		{ "GetColumnCount", TableGetColumnCount },
-		{ "GetColumnName", TableGetColumnName },
-		{ "GetColumnFlags", TableGetColumnFlags },
-		{ "SetColumnEnabled", TableSetColumnEnabled },
-		{ "GetSortSpecs", TableGetSortSpecs },
-		{ "SetBgColor", TableSetBgColor },
-		{ "Clipper", Clipper },
+		{ "TableBegin", BeginTable },
+		{ "TableEnd", EndTable },
+		{ "TableNextRow", TableNextRow },
+		{ "TableNextColumn", TableNextColumn },
+		{ "TableSetColumnIndex", TableSetColumnIndex },
+		{ "TableGetColumnIndex", TableGetColumnIndex },
+		{ "TableGetRowIndex", TableGetRowIndex },
+		{ "TableSetupColumn", TableSetupColumn },
+		{ "TableSetupScrollFreeze", TableSetupScrollFreeze },
+		{ "TableHeadersRow", TableHeadersRow },
+		{ "TableHeader", TableHeader },
+		{ "TableGetColumnCount", TableGetColumnCount },
+		{ "TableGetColumnName", TableGetColumnName },
+		{ "TableGetColumnFlags", TableGetColumnFlags },
+		{ "TableSetColumnEnabled", TableSetColumnEnabled },
+		{ "TableGetSortSpecs", TableGetSortSpecs },
+		{ "TableSetBgColor", TableSetBgColor },
+		{ "ListClipper", ListClipper },
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, table);
-	lua_setfield(L, -2, "table");
+	luaL_setfuncs(L, table, 0);
 }}

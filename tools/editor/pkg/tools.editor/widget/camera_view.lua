@@ -6,7 +6,7 @@ local uiproperty    = require "widget.uiproperty"
 local uiutils       = require "widget.utils"
 local hierarchy     = require "hierarchy_edit"
 local math3d        = require "math3d"
-local imgui         = require "imgui"
+local ImGui         = require "imgui"
 
 local serialize     = import_package "ant.serialize"
 
@@ -22,7 +22,7 @@ local function camera_template(eid)
 end
 
 local function create_transform_property(cv)
-    return uiproperty.Group({label="Transform", flags = imgui.flags.TreeNode{"DefaultOpen"} }, {
+    return uiproperty.Group({label="Transform", flags = ImGui.Flags.TreeNode{"DefaultOpen"} }, {
         uiproperty.Float({label="Scale", speed=0.01, dim=3, disable=true}, {
             getter = function ()
                 local cve <close> = world:entity(cv.eid)

@@ -1,4 +1,4 @@
-local imgui         = require "imgui"
+local ImGui         = require "imgui"
 local global_data   = require "common.global_data"
 local datalist      = require "datalist"
 local serialize     = import_package "ant.serialize"
@@ -12,32 +12,32 @@ local function read_file(p)
     return f:read "a"
 end
 
-local default_tr_flags = imgui.flags.TreeNode{}
-local default_win_flags= imgui.flags.Window{}
-local default_tab_flags= imgui.flags.TabBar{"Reorderable", "AutoSelectNewTabs"}
+local default_tr_flags = ImGui.Flags.TreeNode{}
+local default_win_flags= ImGui.Flags.Window{}
+local default_tab_flags= ImGui.Flags.TabBar{"Reorderable", "AutoSelectNewTabs"}
 
-local TreeNode      = imgui.widget.TreeNode
-local TreePop       = imgui.widget.TreePop
-local PropertyLabel = imgui.widget.PropertyLabel
-local Checkbox      = imgui.widget.Checkbox
-local BeginCombo    = imgui.widget.BeginCombo
-local EndCombo      = imgui.widget.EndCombo
-local Button        = imgui.widget.Button
-local BeginDisabled = imgui.windows.BeginDisabled
-local EndDisabled   = imgui.windows.EndDisabled
-local BeginTabBar   = imgui.windows.BeginTabBar
-local EndTabBar     = imgui.windows.EndTabBar
-local BeginTabItem  = imgui.windows.BeginTabItem
-local EndTabItem    = imgui.windows.EndTabItem
-local IsPopupOpen   = imgui.windows.IsPopupOpen
-local BeginPopupModal=imgui.windows.BeginPopupModal
-local EndPopup      = imgui.windows.EndPopup
-local SameLine      = imgui.cursor.SameLine
+local TreeNode      = ImGui.TreeNode
+local TreePop       = ImGui.TreePop
+local PropertyLabel = ImGui.PropertyLabel
+local Checkbox      = ImGui.Checkbox
+local BeginCombo    = ImGui.BeginCombo
+local EndCombo      = ImGui.EndCombo
+local Button        = ImGui.Button
+local BeginDisabled = ImGui.BeginDisabled
+local EndDisabled   = ImGui.EndDisabled
+local BeginTabBar   = ImGui.BeginTabBar
+local EndTabBar     = ImGui.EndTabBar
+local BeginTabItem  = ImGui.BeginTabItem
+local EndTabItem    = ImGui.EndTabItem
+local IsPopupOpen   = ImGui.IsPopupOpen
+local BeginPopupModal=ImGui.BeginPopupModal
+local EndPopup      = ImGui.EndPopup
+local SameLine      = ImGui.SameLine
 
 local function Property(name, value, ctrltype, config)
     PropertyLabel(name)
     SameLine()
-    return imgui.widget[ctrltype]("##"..name, value, config)
+    return ImGui[ctrltype]("##"..name, value, config)
 end
 
 local function PropertyFloat(name, value, config)
@@ -106,9 +106,9 @@ local function setting_ui(sc)
 
     if TreeNode("Graphic", default_tr_flags) then
         --Render
-        if TreeNode("Render", imgui.flags.TreeNode{}) then
+        if TreeNode("Render", ImGui.Flags.TreeNode{}) then
             local r = graphic.render
-            if TreeNode("Clear State", imgui.flags.TreeNode{}) then
+            if TreeNode("Clear State", ImGui.Flags.TreeNode{}) then
 
                 local rs = {}
                 local rbgcolor = toRGBColor(r.clear_color)
@@ -202,9 +202,9 @@ local function setting_ui(sc)
             cw = cw or deep_copy(default_curve_world)
 
             BeginDisabled(not enable)
-            if BeginCombo("Type", {cw.type, flags = imgui.flags.Combo{} }) then
+            if BeginCombo("Type", {cw.type, flags = ImGui.Flags.Combo{} }) then
                 for _, n in ipairs(default_curve_world.type_options) do
-                    if imgui.widget.Selectable(n, cw.type == n) then
+                    if ImGui.Selectable(n, cw.type == n) then
                         --sc:set("graphic/curve_world/type", n)
                         cw.type = n
                         modified = true
@@ -259,8 +259,8 @@ end
 
 function ps.show(open_popup)
     if open_popup then
-        imgui.windows.OpenPopup(ps.id)
-        imgui.windows.SetNextWindowSize(800, 600)
+        ImGui.OpenPopup(ps.id)
+        ImGui.SetNextWindowSize(800, 600)
     end
 
     if BeginPopupModal(ps.id, default_win_flags) then

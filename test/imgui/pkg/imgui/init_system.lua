@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imgui = require "imgui"
+local ImGui = require "imgui"
 
 local m = ecs.system 'init_system'
 
@@ -14,15 +14,15 @@ function m:data_changed()
     for _, e in DropfilesEvent:unpack() do
         print("dropfiles:", e.files[1])
     end
-    if imgui.windows.Begin ("test", imgui.flags.Window {'AlwaysAutoResize'}) then
-        if imgui.widget.TreeNode("Test", imgui.flags.TreeNode{"DefaultOpen"}) then
-            if imgui.widget.InputText("TEST", text) then
+    if ImGui.Begin ("test", ImGui.Flags.Window {'AlwaysAutoResize'}) then
+        if ImGui.TreeNode("Test", ImGui.Flags.TreeNode{"DefaultOpen"}) then
+            if ImGui.InputText("TEST", text) then
                 print(tostring(text.text))
             end
-            imgui.widget.TreePop()
+            ImGui.TreePop()
         end
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 
 local bgfx = require "bgfx"

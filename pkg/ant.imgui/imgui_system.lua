@@ -1,7 +1,7 @@
 local ecs = ...
 
 local platform = require "bee.platform"
-local imgui = import_package "ant.imgui"
+local ImGui = import_package "ant.imgui"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
 local inputmgr = import_package "ant.inputmgr"
@@ -13,8 +13,8 @@ local ServiceWindow = ltask.queryservice "ant.window|window"
 local m = ecs.system 'imgui_system'
 
 function m:init_system()
-	imgui.CreateContext()
-	imgui.io.ConfigFlags = imgui.flags.Config {
+	ImGui.CreateContext()
+	ImGui.io.ConfigFlags = ImGui.Flags.Config {
 		"NavEnableKeyboard",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
@@ -22,14 +22,14 @@ function m:init_system()
 		"DpiEnableScaleFonts",
 		"NoMouseCursorChange",
 	}
-	imgui.InitPlatform(rhwi.native_window())
+	ImGui.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_font.fx.prog)
 	assetmgr.material_mark(imgui_image.fx.prog)
 	local viewId = rhwi.viewid_generate("imgui_eidtor" .. 1, "uiruntime")
-	imgui.InitRender {
+	ImGui.InitRender {
 		fontProg = PM.program_get(imgui_font.fx.prog),
 		imageProg = PM.program_get(imgui_image.fx.prog),
 		fontUniform = imgui_font.fx.uniforms.s_tex.handle,
@@ -37,24 +37,24 @@ function m:init_system()
 		viewIdPool = { viewId },
 	}
 	if platform.os == "windows" then
-		imgui.FontAtlasAddFont {
+		ImGui.FontAtlasAddFont {
 			SystemFont = "Segoe UI Emoji",
 			SizePixels = 18,
 			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
 		}
-		imgui.FontAtlasAddFont {
+		ImGui.FontAtlasAddFont {
 			SystemFont = "黑体",
 			SizePixels = 18,
 			GlyphRanges = { 0x0020, 0xFFFF }
 		}
 	elseif platform.os == "macos" then
-		imgui.FontAtlasAddFont {
+		ImGui.FontAtlasAddFont {
 			SystemFont = "苹方-简",
 			SizePixels = 18,
 			GlyphRanges = { 0x0020, 0xFFFF }
 		}
 	else -- iOS
-		imgui.FontAtlasAddFont {
+		ImGui.FontAtlasAddFont {
 			SystemFont = "Heiti SC",
 			SizePixels = 18,
 			GlyphRanges = { 0x0020, 0xFFFF }
@@ -64,26 +64,26 @@ function m:init_system()
 end
 
 function m:init_world()
-	imgui.FontAtlasBuild()
+	ImGui.FontAtlasBuild()
 end
 
 function m:exit()
-	imgui.DestroyRenderer()
-	imgui.DestroyPlatform()
-	imgui.DestroyContext()
+	ImGui.DestroyRenderer()
+	ImGui.DestroyPlatform()
+	ImGui.DestroyContext()
 end
 
 local last_cursor = 0
 
 function m:start_frame()
-	local cursor = imgui.GetMouseCursor()
+	local cursor = ImGui.GetMouseCursor()
 	if last_cursor ~= cursor then
 		last_cursor = cursor
 		ltask.call(ServiceWindow, "setcursor", cursor)
 	end
-	imgui.NewFrame()
+	ImGui.NewFrame()
 end
 
 function m:end_frame()
-	imgui.Render()
+	ImGui.Render()
 end

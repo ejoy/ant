@@ -1,24 +1,24 @@
-local imgui      = require "imgui"
+local ImGui      = require "imgui"
 
 local compdefines=require "widget.component_defines"
 
-local SameLine = imgui.cursor.SameLine()
-local PropertyLabel = imgui.widget.PropertyLabel
-local Text          = imgui.widget.Text
-local DisableText   = imgui.widget.DisableText
-local InputText     = imgui.widget.InputText
-local InputInt      = imgui.widget.InputInt
-local InputFloat    = imgui.widget.InputFloat
-local Checkbox      = imgui.widget.Checkbox
-local ColorEdit     = imgui.widget.ColorEdit
-local BeginCombo    = imgui.widget.BeginCombo
-local Selectable    = imgui.widget.Selectable
-local EndCombo      = imgui.widget.EndCombo
-local BeginDisabled = imgui.windows.BeginDisabled
-local EndDisabled   = imgui.windows.EndDisabled
+local SameLine = ImGui.SameLine()
+local PropertyLabel = ImGui.PropertyLabel
+local Text          = ImGui.Text
+local DisableText   = ImGui.DisableText
+local InputText     = ImGui.InputText
+local InputInt      = ImGui.InputInt
+local InputFloat    = ImGui.InputFloat
+local Checkbox      = ImGui.Checkbox
+local ColorEdit     = ImGui.ColorEdit
+local BeginCombo    = ImGui.BeginCombo
+local Selectable    = ImGui.Selectable
+local EndCombo      = ImGui.EndCombo
+local BeginDisabled = ImGui.BeginDisabled
+local EndDisabled   = ImGui.EndDisabled
 
 local function find_widget(wname)
-    return assert(imgui.widget[wname])
+    return assert(ImGui[wname])
 end
 
 local function list_combo(name, comp, ll, updatevalue)
@@ -117,13 +117,13 @@ local component_type_registers = {
     vec1 = float_widget,
     bool = function (name, comp, desc, updatevalue)
         PropertyLabel(name)
-        imgui.windows.BeginDisabled(desc.readonly)
+        ImGui.BeginDisabled(desc.readonly)
         local value = {comp}
         if Checkbox("##" .. name, value) then
             updatevalue[name] = value[1]
         end
 
-        imgui.windows.EndDisabled()
+        ImGui.EndDisabled()
     end,
     vec2 = function (name, comp, desc,  updatevalue)
         vec_widget(name, comp, desc, 2, "float", updatevalue)
@@ -164,7 +164,7 @@ local function build_entity_ui(name, comp, cdesc, updatevalue)
     local comptype = d.type
     if comptype == nil then
         assert(type(comp) == "table")
-        if imgui.widget.TreeNode(name, imgui.flags.TreeNode { "DefaultOpen" }) then
+        if ImGui.TreeNode(name, ImGui.Flags.TreeNode { "DefaultOpen" }) then
             local vv = {}
             for k, v in compdefines.sort_pairs(comp) do
                 local dd = d[k] or error (
@@ -174,7 +174,7 @@ local function build_entity_ui(name, comp, cdesc, updatevalue)
             if next(vv) then
                 updatevalue[name] = vv
             end
-            imgui.widget.TreePop()
+            ImGui.TreePop()
         end
     else
         local w = assert(component_type_registers[comptype])

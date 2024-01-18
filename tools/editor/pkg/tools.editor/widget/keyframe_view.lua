@@ -5,7 +5,7 @@ local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local assetmgr  = import_package "ant.asset"
 local aio       = import_package "ant.io"
-local imgui     = require "imgui"
+local ImGui     = require "imgui"
 local imguiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -402,15 +402,15 @@ local function create_clip()
         return
     end
     local title = "New Clip"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
 
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text("StartFrame:")
-        imgui.cursor.SameLine()
-        if imgui.widget.DragInt("##StartFrame", start_frame_ui) then
+        ImGui.Text("StartFrame:")
+        ImGui.SameLine()
+        if ImGui.DragInt("##StartFrame", start_frame_ui) then
             if start_frame_ui[1] < 0 then
                 start_frame_ui[1] = 0
             end
@@ -418,7 +418,7 @@ local function create_clip()
             new_range_end = new_range_start + 1
         end
         if is_index_valid(new_range_start) and is_index_valid(new_range_end) then
-            if imgui.widget.Button "Create" then
+            if ImGui.Button "Create" then
                 local target_name = get_current_target_name()
                 local anim = get_or_create_target_anim(target_name)
                 local clips = anim.clips
@@ -462,13 +462,13 @@ local function create_clip()
                 new_clip_pop = false
             end
         else
-            imgui.widget.Text("Invalid start range!")
+            ImGui.Text("Invalid start range!")
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             new_clip_pop = false
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 local function max_range_value()
@@ -488,8 +488,8 @@ end
 local function show_current_detail()
     if not current_anim then return end
     local anim_type = current_anim.type
-    imgui.widget.PropertyLabel("FrameCount:")
-    if imgui.widget.DragInt("##FrameCount", current_anim.frame_count_ui) then
+    ImGui.PropertyLabel("FrameCount:")
+    if ImGui.DragInt("##FrameCount", current_anim.frame_count_ui) then
         if current_anim.frame_count_ui[1] < max_range_value() + 1 then
             current_anim.frame_count_ui[1] = max_range_value() + 1
         end
@@ -507,9 +507,9 @@ local function show_current_detail()
     if (anim_type == "mtl" and not current_uniform) or (anim_type == "ske" and not current_joint) or not target_name then
         return
     end
-    imgui.widget.Text(target_name .. ":")
-    imgui.cursor.SameLine()
-    if imgui.widget.Button("NewClip") then
+    ImGui.Text(target_name .. ":")
+    ImGui.SameLine()
+    if ImGui.Button("NewClip") then
         new_clip_pop = true
     end
     create_clip()
@@ -519,18 +519,18 @@ local function show_current_detail()
     local anim_layer = current_anim.target_anims[current_anim.selected_layer_index]
     local clips = anim_layer.clips
     
-    -- imgui.cursor.SameLine()
-    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[1]) then
+    -- ImGui.SameLine()
+    -- if ImGui.Checkbox("inherit", anim_layer.inherit_ui[1]) then
     --     anim_layer.inherit[1] = anim_layer.inherit_ui[1][1]
     --     update_animation()
     -- end
-    -- imgui.cursor.SameLine()
-    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[2]) then
+    -- ImGui.SameLine()
+    -- if ImGui.Checkbox("inherit", anim_layer.inherit_ui[2]) then
     --     anim_layer.inherit[2] = anim_layer.inherit_ui[2][1]
     --     update_animation()
     -- end
-    imgui.cursor.SameLine()
-    if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[3]) then
+    ImGui.SameLine()
+    if ImGui.Checkbox("inherit", anim_layer.inherit_ui[3]) then
         anim_layer.inherit[3] = anim_layer.inherit_ui[3][1]
         update_animation()
     end
@@ -538,8 +538,8 @@ local function show_current_detail()
     if current_anim.selected_clip_index < 1 then
         return
     else
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_TRASH.." DelClip") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_TRASH.." DelClip") then
             table.remove(clips, current_anim.selected_clip_index)
             current_anim.selected_clip_index = 0
             current_anim.dirty_layer = -1
@@ -554,11 +554,11 @@ local function show_current_detail()
         return
     end
 
-    imgui.cursor.Separator()
-    imgui.widget.PropertyLabel("FrameRange")
+    ImGui.Separator()
+    ImGui.PropertyLabel("FrameRange")
     local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
     local dirty = false
-    if imgui.widget.DragInt("##Range", current_clip.range_ui) then
+    if ImGui.DragInt("##Range", current_clip.range_ui) then
         local range_ui = current_clip.range_ui
         local head = false
         if old_range[1] ~= range_ui[1] then
@@ -613,43 +613,43 @@ local function show_current_detail()
         current_anim.dirty_layer = current_anim.selected_layer_index
         dirty = true
     end
-    imgui.widget.PropertyLabel("TweenType")
-    if imgui.widget.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = imgui.flags.Combo {}}) then
+    ImGui.PropertyLabel("TweenType")
+    if ImGui.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = ImGui.Flags.Combo {}}) then
         for i, type in ipairs(tween_type_name) do
-            if imgui.widget.Selectable(type, current_clip.tween == i) then
+            if ImGui.Selectable(type, current_clip.tween == i) then
                 current_clip.tween = i
                 dirty = true
             end
         end
-        imgui.widget.EndCombo()
+        ImGui.EndCombo()
     end
     if anim_type == "mtl" then
-        imgui.widget.PropertyLabel("UniformValue")
+        ImGui.PropertyLabel("UniformValue")
         local ui_data = current_clip.value_ui
-        if imgui.widget.ColorEdit("##UniformValue", ui_data) then
+        if ImGui.ColorEdit("##UniformValue", ui_data) then
             current_clip.value = {ui_data[1], ui_data[2], ui_data[3], ui_data[4]}
             dirty = true
         end
-        imgui.widget.PropertyLabel("Scale")
+        ImGui.PropertyLabel("Scale")
         ui_data = current_clip.scale_ui
-        if imgui.widget.DragFloat("##Scale", ui_data) then
+        if ImGui.DragFloat("##Scale", ui_data) then
             current_clip.scale = ui_data[1]
             dirty = true
         end
     else
         if anim_type == "ske" or anim_type == "srt" then
-            imgui.widget.PropertyLabel("AnimationType")
-            if imgui.widget.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = imgui.flags.Combo {}}) then
+            ImGui.PropertyLabel("AnimationType")
+            if ImGui.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = ImGui.Flags.Combo {}}) then
                 for i, type in ipairs(anim_type_name) do
-                    if imgui.widget.Selectable(type, current_clip.type == i) then
+                    if ImGui.Selectable(type, current_clip.type == i) then
                         current_clip.type = i
                         dirty = true
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
             end
-            imgui.widget.PropertyLabel("Repeat")
-            if imgui.widget.DragInt("##Repeat", current_clip.repeat_ui) then
+            ImGui.PropertyLabel("Repeat")
+            if ImGui.DragInt("##Repeat", current_clip.repeat_ui) then
                 local count = current_clip.repeat_ui[1]
                 if count > max_repeat then
                     count = max_repeat
@@ -661,37 +661,37 @@ local function show_current_detail()
                 dirty = true
             end
         end
-        imgui.widget.PropertyLabel("Direction")
-        if imgui.widget.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = imgui.flags.Combo {}}) then
+        ImGui.PropertyLabel("Direction")
+        if ImGui.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = ImGui.Flags.Combo {}}) then
             for i, type in ipairs(dir_name) do
-                if imgui.widget.Selectable(type, current_clip.direction == i) then
+                if ImGui.Selectable(type, current_clip.direction == i) then
                     current_clip.direction = i
                     dirty = true
                 end
             end
-            imgui.widget.EndCombo()
+            ImGui.EndCombo()
         end
 
-        imgui.widget.PropertyLabel("AmplitudePos")
+        ImGui.PropertyLabel("AmplitudePos")
         local ui_data = current_clip.amplitude_pos_ui
-        if imgui.widget.DragFloat("##AmplitudePos", ui_data) then
+        if ImGui.DragFloat("##AmplitudePos", ui_data) then
             current_clip.amplitude_pos = ui_data[1]
             dirty = true
         end
 
-        imgui.widget.PropertyLabel("RotAxis")
-        if imgui.widget.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = imgui.flags.Combo {}}) then
+        ImGui.PropertyLabel("RotAxis")
+        if ImGui.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = ImGui.Flags.Combo {}}) then
             for i = 1, 3 do
-                if imgui.widget.Selectable(dir_name[i], current_clip.rot_axis == i) then
+                if ImGui.Selectable(dir_name[i], current_clip.rot_axis == i) then
                     current_clip.rot_axis = i
                     dirty = true
                 end
             end
-            imgui.widget.EndCombo()
+            ImGui.EndCombo()
         end
-        imgui.widget.PropertyLabel("AmplitudeRot")
+        ImGui.PropertyLabel("AmplitudeRot")
         ui_data = current_clip.amplitude_rot_ui
-        if imgui.widget.DragFloat("##AmplitudeRot", ui_data) then
+        if ImGui.DragFloat("##AmplitudeRot", ui_data) then
             current_clip.amplitude_rot = ui_data[1]
             dirty = true
         end
@@ -842,36 +842,36 @@ end
 function m.new()
     if not new_anim_widget then return end
     local title = "New Animation"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
 
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text("Name:")
-        imgui.cursor.SameLine()
-        if imgui.widget.InputText("##Name", anim_name_ui) then
+        ImGui.Text("Name:")
+        ImGui.SameLine()
+        if ImGui.InputText("##Name", anim_name_ui) then
             anim_name = tostring(anim_name_ui.text)
         end
-        imgui.widget.Text("Duration:")
-        imgui.cursor.SameLine()
-        if imgui.widget.DragInt("##Duration", duration_ui) then
+        ImGui.Text("Duration:")
+        ImGui.SameLine()
+        if ImGui.DragInt("##Duration", duration_ui) then
             if duration_ui[1] < 1 then
                 duration_ui[1] = 1
             end
             anim_duration = duration_ui[1]
         end
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
+        if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             new_anim_widget = false
             if anim_name ~= "" then
                 create_animation(create_context and create_context.type or "ske", anim_name, anim_duration)
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             new_anim_widget = false
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 local ui_playall = { false }
@@ -932,7 +932,7 @@ end
 
 local function show_uniforms()
     for _, anim in ipairs(current_anim.target_anims) do
-        if imgui.widget.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
+        if ImGui.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
             current_uniform = anim.target_name
             on_select_target(current_uniform)
         end
@@ -975,36 +975,36 @@ function m.get_title()
 end
 
 function m.show()
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if imgui.windows.Begin("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    if ImGui.Begin("Skeleton", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if current_skeleton then
-            if imgui.widget.Button(faicons.ICON_FA_FILE_PEN.." New") then
+            if ImGui.Button(faicons.ICON_FA_FILE_PEN.." New") then
                 new_anim_widget = true
             end
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
         end
         m.new()
-        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
+        if ImGui.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
             local anim_filename = uiutils.get_open_file_path("Load Animation", "anim")
             if anim_filename then
                 m.load(anim_filename)
             end
         end
 
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
             m.save(file_path)
         end
-        imgui.cursor.SameLine()
-        imgui.widget.Text("Mode: "..(current_anim and current_anim.type or ""))
+        ImGui.SameLine()
+        ImGui.Text("Mode: "..(current_anim and current_anim.type or ""))
         if #anim_name_list > 0 then
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(150)
-            if imgui.widget.BeginCombo("##AnimList", {current_anim.name, flags = imgui.flags.Combo {}}) then
+            ImGui.SameLine()
+            ImGui.PushItemWidth(150)
+            if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
                 for _, name in ipairs(anim_name_list) do
-                    if imgui.widget.Selectable(name, current_anim.name == name) then
+                    if ImGui.Selectable(name, current_anim.name == name) then
                         current_anim.selected_layer_index = 0
                         current_anim.selected_clip_index = 0
                         current_anim = allanims[name]
@@ -1014,16 +1014,16 @@ function m.show()
                         current_anim.dirty_layer = -1
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
             end
-            imgui.cursor.PopItemWidth()
+            ImGui.PopItemWidth()
         end
         if current_anim then
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("all ", ui_playall) then
+            ImGui.SameLine()
+            if ImGui.Checkbox("all ", ui_playall) then
                 anim_set_loop(ui_playall[1])
             end
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
             if current_anim.type == "mtl" or current_anim.type == "srt" then
                 for _, anim in ipairs(current_anim.target_anims) do
                     if anim.modifier then
@@ -1046,7 +1046,7 @@ function m.show()
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
             local imagesize = icon.texinfo.width * icons.scale
-            if imgui.widget.ImageButton("##play ", assetmgr.textures[icon.id], imagesize, imagesize) then
+            if ImGui.ImageButton("##play ", assetmgr.textures[icon.id], imagesize, imagesize) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
@@ -1059,18 +1059,18 @@ function m.show()
                     end
                 end
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("loop ", ui_loop) then
+            ImGui.SameLine()
+            if ImGui.Checkbox("loop ", ui_loop) then
                 anim_set_loop(ui_loop[1])
             end
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(50)
-            if imgui.widget.DragFloat("speed ", ui_speed) then
+            ImGui.SameLine()
+            ImGui.PushItemWidth(50)
+            if ImGui.DragFloat("speed ", ui_speed) then
                 anim_set_speed(ui_speed[1])
             end
-            imgui.cursor.PopItemWidth()
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("camera", ui_bindcamera) then
+            ImGui.PopItemWidth()
+            ImGui.SameLine()
+            if ImGui.Checkbox("camera", ui_bindcamera) then
                 if not ui_bindcamera[1] then
                     local mq = w:first("main_queue camera_ref:in")
                     local ce<close> = world:entity(mq.camera_ref, "scene:update")
@@ -1080,7 +1080,7 @@ function m.show()
                 end
                 world:pub {"LockCamera", ui_bindcamera[1]}
             end
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
             local current_time = 0
             if current_anim.type == "ske" then
                 current_time = anim_eid and iani.get_time(anim_eid) or 0
@@ -1093,22 +1093,22 @@ function m.show()
                     end
                 end
             end
-            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", current_anim.selected_frame, current_anim.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(current_anim.duration * sample_ratio), current_time, current_anim.duration))
+            ImGui.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", current_anim.selected_frame, current_anim.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(current_anim.duration * sample_ratio), current_time, current_anim.duration))
         
             if current_anim.type == "mtl" and current_mtl then
-                imgui.cursor.SameLine()
-                imgui.widget.Text("material path: " .. tostring(current_mtl))
+                ImGui.SameLine()
+                ImGui.Text("material path: " .. tostring(current_mtl))
             end
         end
-        if imgui.table.Begin("SkeletonColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-            imgui.table.SetupColumn("Targets", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-            imgui.table.SetupColumn("Detail", imgui.flags.TableColumn {'WidthStretch'}, 1.5)
-            imgui.table.SetupColumn("AnimationLayer", imgui.flags.TableColumn {'WidthStretch'}, 6.5)
-            imgui.table.HeadersRow()
+        if ImGui.TableBegin("SkeletonColumns", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+            ImGui.TableSetupColumn("Targets", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumn("Detail", ImGui.Flags.TableColumn {'WidthStretch'}, 1.5)
+            ImGui.TableSetupColumn("AnimationLayer", ImGui.Flags.TableColumn {'WidthStretch'}, 6.5)
+            ImGui.TableHeadersRow()
 
-            imgui.table.NextColumn()
-            local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_target", child_width, child_height)
+            ImGui.TableNextColumn()
+            local child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_target", child_width, child_height)
             if current_anim then
                 if current_anim.type == "mtl" then
                     show_uniforms()
@@ -1116,17 +1116,17 @@ function m.show()
                     show_joints()
                 end
             end
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_detail", child_width, child_height)
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_detail", child_width, child_height)
             show_current_detail()
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_layers", child_width, child_height)
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_layers", child_width, child_height)
 
             if current_anim then
                 local imgui_message = {}
@@ -1168,12 +1168,12 @@ function m.show()
                     on_move_clip(move_type, current_anim.selected_clip_index, move_delta)
                 end
             end
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.End()
+            ImGui.TableEnd()
         end
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 local memfs = import_package "ant.vfs".memory
 local lfs   = require "bee.filesystem"
