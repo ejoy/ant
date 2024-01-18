@@ -110,7 +110,7 @@ function mailbox:clear()
 	while true do
 		local m = self[i]
 		if m then
-			local c = msg.__count
+			local c = m.__count
 			if c then
 				m.__count = c - 1
 				if c == 1 then

@@ -24,6 +24,8 @@ local socket = require "bee.socket"
 local platform = require "bee.platform"
 local serialization = require "bee.serialization"
 local protocol = require "protocol"
+local exclusive = require "ltask.exclusive"
+local ltask
 
 local bee_select = require "bee.select"
 local selector = bee_select.create()
@@ -468,9 +470,6 @@ local function dispatch(ok, id, cmd, ...)
 	end
 	return true
 end
-
-local exclusive = require "ltask.exclusive"
-local ltask
 
 function CMD.REDIRECT(_, resp_command, service_id)
 	response[resp_command] = function(...)

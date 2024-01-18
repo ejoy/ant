@@ -124,8 +124,7 @@ return {
                 for x=1, u_cluster_size[3] do
                     local id = {x-1, y-1, z-1}
                     local cluster_idx = math3d.dot(id, math3d.vector(1, u_cluster_size[1], u_cluster_size[1] * u_cluster_size[2]))
-                    local aabb = {}
-                    build_aabb(id, screensize, nearZ, farZ, invproj, aabb)
+                    local aabb = build_aabb(id, screensize, nearZ, farZ, invproj)
                     cluster_aabbs[cluster_idx] = aabb
                 end
             end

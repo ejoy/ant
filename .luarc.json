@@ -8,20 +8,28 @@
             "need-check-nil"
         ],
         "globals": [
-            "__EDITOR__"
+            "__EDITOR__",
+            "import_feature",
+            "import",
+            "pipeline",
+            "policy",
+            "component",
+            "feature",
+            "system"
         ]
     },
     "runtime": {
-        "plugin": "misc/lsp-plugin.lua",
+        //"plugin": "misc/lsp-plugin.lua",
         "special": {
             "import_package": "require"
         }
     },
     "workspace": {
         "ignoreDir": [
-            "packages/animation/controller/state_machine.lua",
-            "packages/editor/",
-            "tools/prefab_editor/"
+            "pkg/ant.debugger",
+            "pkg/ant.json",
+            "pkg/ant.ecs/src",
+            "tools/editor"
         ],
         "maxPreload": 100000
     }

@@ -238,16 +238,16 @@ end ]]
 	end ]]
 --end
 
-local omni_stencils = {
-	[0] = bgfx.make_stencil{
-		TEST="EQUAL",
-		FUNC_REF = 0,
-	},
-	[1] = bgfx.make_stencil{
-		TEST="EQUAL",
-		FUNC_REF = 1,
-	},
-}
+--local omni_stencils = {
+--	[0] = bgfx.make_stencil{
+--		TEST="EQUAL",
+--		FUNC_REF = 0,
+--	},
+--	[1] = bgfx.make_stencil{
+--		TEST="EQUAL",
+--		FUNC_REF = 1,
+--	},
+--}
 
 --[[ 
 local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, intersected_aabb, main_view)
