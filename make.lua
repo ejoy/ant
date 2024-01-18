@@ -1,5 +1,7 @@
 local lm = require "luamake"
 
+lm:required_version "1.5"
+
 local plat = (function ()
     if lm.os == "windows" then
         if lm.compiler == "gcc" then
@@ -14,6 +16,8 @@ lm.mode = "debug"
 lm.builddir = ("build/%s/%s"):format(plat, lm.mode)
 lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
 lm.compile_commands = "build"
+
+lm.AntDir = lm:path "."
 
 local EnableEditor = true
 if lm.os == "ios" then

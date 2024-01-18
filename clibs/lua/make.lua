@@ -1,13 +1,11 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
 if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
     lm.ldflags = {
         "/STACK:"..0x160000
     }
 end
-lm.rootdir = Ant3rd .. "bee.lua/3rd/lua/"
+lm.rootdir = lm.AntDir .. "/3rd/bee.lua/3rd/lua/"
 
 lm:source_set "lua_source" {
     sources = "onelua.c",

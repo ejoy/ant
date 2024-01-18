@@ -1,8 +1,6 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm.rootdir = Ant3rd.."bee.lua"
+lm.rootdir = lm.AntDir.."/3rd/bee.lua"
 
 local OS = {
     "win",

@@ -1,12 +1,10 @@
 local lm = require "luamake"
 
-local ROOT <const> = "../../"
-
 lm:lua_source "window" {
     includes = {
-        ROOT.."3rd/bee.lua/3rd/lua-seri",
-        ROOT.."3rd/bee.lua",
-        ROOT.."3rd/imgui",
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua-seri",
+        lm.AntDir .. "/3rd/bee.lua",
+        lm.AntDir .. "/3rd/imgui",
     },
     sources = {
         "src/*.cpp",
@@ -36,7 +34,7 @@ lm:lua_source "window" {
     android = {
         includes = {
             "src/platform/android/include",
-            ROOT.."runtime/common",
+            lm.AntDir .. "/runtime/common",
         },
         sources = {
             "src/platform/android/include/**/*.cpp",

@@ -15,13 +15,13 @@ local defines = {
 lm:source_set "imgui" {
     includes = {
         ".",
-        Ant3rd .. "imgui",
+        lm.AntDir .. "/3rd/imgui",
     },
     defines = defines,
     windows = {
         sources = {
             "platform/windows/imgui_platform.cpp",
-            Ant3rd .. "imgui/backends/imgui_impl_win32.cpp",
+            lm.AntDir .. "/3rd/imgui/backends/imgui_impl_win32.cpp",
         },
         defines = {
             "_UNICODE",
@@ -31,7 +31,7 @@ lm:source_set "imgui" {
     macos = {
         sources = {
             "platform/macos/imgui_platform.mm",
-            Ant3rd .. "imgui/backends/imgui_impl_osx.mm",
+            lm.AntDir .. "/3rd/imgui/backends/imgui_impl_osx.mm",
         },
         flags = {
             "-fobjc-arc"
@@ -50,13 +50,13 @@ lm:source_set "imgui" {
 lm:source_set "imgui" {
     includes = {
         ".",
-        Ant3rd .. "imgui",
+        lm.AntDir .. "/3rd/imgui",
     },
     sources = {
-        Ant3rd .. "imgui/imgui_draw.cpp",
-        Ant3rd .. "imgui/imgui_tables.cpp",
-        Ant3rd .. "imgui/imgui_widgets.cpp",
-        Ant3rd .. "imgui/imgui.cpp",
+        lm.AntDir .. "/3rd/imgui/imgui_draw.cpp",
+        lm.AntDir .. "/3rd/imgui/imgui_tables.cpp",
+        lm.AntDir .. "/3rd/imgui/imgui_widgets.cpp",
+        lm.AntDir .. "/3rd/imgui/imgui.cpp",
     },
     defines = defines,
 }
@@ -65,9 +65,9 @@ lm:lua_source "imgui" {
     deps = "luabind",
     includes = {
         ".",
-        Ant3rd .. "imgui",
-        Ant3rd .. "glm",
-        Ant3rd .. "bee.lua",
+        lm.AntDir .. "/3rd/imgui",
+        lm.AntDir .. "/3rd/glm",
+        lm.AntDir .. "/3rd/bee.lua",
         BgfxInclude,
         "../bgfx",
         "../luabind"
@@ -96,5 +96,6 @@ lm:lua_source "imgui" {
 }
 
 lm:runlua "imgui-gen" {
-    script = "gen.lua"
+    script = "gen.lua",
+    args = { lm.AntDir }
 }

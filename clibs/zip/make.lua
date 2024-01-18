@@ -1,28 +1,26 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-local ZLIBDIR = Ant3rd .. "zlib-ng/"
-local MINIZIPDIR = Ant3rd .. "minizip-ng/"
+local ZLIBDIR = lm.AntDir.."/3rd/zlib-ng"
+local MINIZIPDIR = lm.AntDir.."/3rd/minizip-ng"
 
 lm:runlua "gen-zconf" {
     script = "configure_file.lua",
     args = { "$in", "$out" },
-    input = ZLIBDIR.."zconf-ng.h.in",
+    input = ZLIBDIR.."/zconf-ng.h.in",
     output = "$builddir/gen-zlib/zconf-ng.h",
 }
 
 lm:runlua "gen-zlib" {
     script = "configure_file.lua",
     args = { "$in", "$out" },
-    input = ZLIBDIR.."zlib-ng.h.in",
+    input = ZLIBDIR.."/zlib-ng.h.in",
     output = "$builddir/gen-zlib/zlib-ng.h",
 }
 
 lm:runlua "gen-zlib_name_mangling" {
     script = "configure_file.lua",
     args = { "$in", "$out" },
-    input = ZLIBDIR.."zlib_name_mangling.h.empty",
+    input = ZLIBDIR.."/zlib_name_mangling.h.empty",
     output = "$builddir/gen-zlib/zlib_name_mangling-ng.h",
 }
 
@@ -34,16 +32,16 @@ lm:source_set "zlib-ng-x86" {
     },
     includes = {
         ZLIBDIR,
-        ZLIBDIR.."arch/x86/",
+        ZLIBDIR.."/arch/x86/",
         "$builddir/gen-zlib",
     },
     sources = {
-        ZLIBDIR.."functable.c",
-        ZLIBDIR.."cpu_features.c",
+        ZLIBDIR.."/functable.c",
+        ZLIBDIR.."/cpu_features.c",
     },
     msvc = {
         sources = {
-            ZLIBDIR.."arch/x86/*.c",
+            ZLIBDIR.."/arch/x86/*.c",
         },
         defines = {
             "X86_FEATURES",
@@ -59,7 +57,7 @@ lm:source_set "zlib-ng-x86" {
     },
     gcc = {
         sources = {
-            ZLIBDIR.."arch/x86/x86_features.c",
+            ZLIBDIR.."/arch/x86/x86_features.c",
         },
         defines = {
             "X86_FEATURES",
@@ -77,13 +75,13 @@ lm:source_set "zlib-ng-arm" {
     },
     includes = {
         ZLIBDIR,
-        ZLIBDIR.."arch/arm/",
+        ZLIBDIR.."/arch/arm/",
         "$builddir/gen-zlib",
     },
     sources = {
-        ZLIBDIR.."functable.c",
-        ZLIBDIR.."cpu_features.c",
-        ZLIBDIR.."arch/arm/*.c",
+        ZLIBDIR.."/functable.c",
+        ZLIBDIR.."/cpu_features.c",
+        ZLIBDIR.."/arch/arm/*.c",
     },
     defines = {
         "ARM_FEATURES",
@@ -122,10 +120,10 @@ lm:source_set "zlib-ng" {
         "$builddir/gen-zlib"
     },
     sources = {
-        ZLIBDIR.."*.c",
-        "!"..ZLIBDIR.."gz*.c",
-        "!"..ZLIBDIR.."functable.c",
-        "!"..ZLIBDIR.."cpu_features.c",
+        ZLIBDIR.."/*.c",
+        "!"..ZLIBDIR.."/gz*.c",
+        "!"..ZLIBDIR.."/functable.c",
+        "!"..ZLIBDIR.."/cpu_features.c",
     },
     windows = {
         deps = "zlib-ng-x86",
@@ -171,33 +169,33 @@ lm:source_set "minizip-ng" {
         "$builddir/gen-zlib",
     },
     sources = {
-        MINIZIPDIR.."mz_compat.c",
-        MINIZIPDIR.."mz_os.c",
-        MINIZIPDIR.."mz_crypt.c",
-        MINIZIPDIR.."mz_strm.c",
-        MINIZIPDIR.."mz_zip.c",
-        MINIZIPDIR.."mz_zip_rw.c",
-        MINIZIPDIR.."mz_strm_buf.c",
-        MINIZIPDIR.."mz_strm_mem.c",
-        MINIZIPDIR.."mz_strm_split.c",
-        MINIZIPDIR.."mz_strm_zlib.c",
+        MINIZIPDIR.."/mz_compat.c",
+        MINIZIPDIR.."/mz_os.c",
+        MINIZIPDIR.."/mz_crypt.c",
+        MINIZIPDIR.."/mz_strm.c",
+        MINIZIPDIR.."/mz_zip.c",
+        MINIZIPDIR.."/mz_zip_rw.c",
+        MINIZIPDIR.."/mz_strm_buf.c",
+        MINIZIPDIR.."/mz_strm_mem.c",
+        MINIZIPDIR.."/mz_strm_split.c",
+        MINIZIPDIR.."/mz_strm_zlib.c",
     },
     windows = {
         sources = {
-            MINIZIPDIR.."mz_os_win32.c",
-            MINIZIPDIR.."mz_strm_os_win32.c",
+            MINIZIPDIR.."/mz_os_win32.c",
+            MINIZIPDIR.."/mz_strm_os_win32.c",
         },
     },
     macos = {
         sources = {
-            MINIZIPDIR.."mz_os_posix.c",
-            MINIZIPDIR.."mz_strm_os_posix.c",
+            MINIZIPDIR.."/mz_os_posix.c",
+            MINIZIPDIR.."/mz_strm_os_posix.c",
         },
     },
     ios = {
         sources = {
-            MINIZIPDIR.."mz_os_posix.c",
-            MINIZIPDIR.."mz_strm_os_posix.c",
+            MINIZIPDIR.."/mz_os_posix.c",
+            MINIZIPDIR.."/mz_strm_os_posix.c",
         },
     },
     msvc = {
@@ -209,7 +207,7 @@ lm:source_set "minizip-ng" {
 
 lm:lua_source "zip-binding" {
 	includes = {
-		Ant3rd .. "minizip-ng",
+		lm.AntDir .. "/3rd/minizip-ng",
 		ZLIBDIR,
         "$builddir/gen-zlib",
 	},

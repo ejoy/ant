@@ -3,11 +3,9 @@ do return end
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
-dofile "../common.lua"
-
 lm.defines = lm.mode ~= "release" and "_DEBUG"
 
-local GLMInclude = Ant3rd .. "glm"
+local GLMInclude = lm.AntDir .. "/3rd/glm"
 lm:source_set "Meshbaker" {
     includes = {
         GLMInclude,
