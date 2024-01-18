@@ -28,10 +28,6 @@ lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
 	return allocator(ud, ptr, osize, nsize);
 }
 
-#ifdef _MSC_VER
-#pragma region IMP_IMGUI
-#endif
-
 #define INDEX_ID 1
 #define INDEX_ARGS 2
 
@@ -79,15 +75,6 @@ get_cond(lua_State *L, int index) {
 	}
 	return ImGuiCond_Always;
 }
-
-#ifdef _MSC_VER
-#pragma endregion IMP_IMGUI
-#endif
-
-// Widgets bindings
-#ifdef _MSC_VER
-#pragma region IMP_WIDGET
-#endif
 
 bool f = true;
 
@@ -1826,16 +1813,6 @@ wSelectableInput(lua_State* L) {
 // 	return 1;
 }
 
-
-#ifdef _MSC_VER
-#pragma endregion IMP_WIDGET
-#endif
-
-// windows api
-#ifdef _MSC_VER
-#pragma region IMP_WINDOWS
-#endif
-
 #define NO_CLOSED ((lua_Integer)1 << 32)
 
 struct window_args {
@@ -2284,15 +2261,6 @@ winPopStyleVar(lua_State *L) {
 	return 0;
 }
 
-#ifdef _MSC_VER
-#pragma endregion IMP_WINDOWS
-#endif
-
-// cursor and layout
-#ifdef _MSC_VER
-#pragma region IMP_CURSOR
-#endif
-
 static int
 cSeparator(lua_State *L) {
 	ImGui::Separator();
@@ -2463,15 +2431,6 @@ cSetMouseCursor(lua_State* L) {
 	ImGui::SetMouseCursor(mouseCursorType);
 	return 0;
 }
-
-#ifdef _MSC_VER
-#pragma endregion IMP_CURSOR
-#endif
-
-// Utils
-#ifdef _MSC_VER
-#pragma region IMP_UTIL
-#endif
 
 static int
 uSetColorEditOptions(lua_State *L) {
@@ -2737,10 +2696,6 @@ cSetClipboardText(lua_State* L) {
 	ImGui::SetClipboardText(text);
 	return 0;
 }
-
-#ifdef _MSC_VER
-#pragma endregion IMP_UTIL
-#endif
 
 // enums
 struct enum_pair {
