@@ -935,6 +935,9 @@ function m.on_target(eid)
     stop_timeline()
     edit_timeline = nil
     timeline_eid = nil
+    if not eid then
+        return
+    end
     local e <close> = world:entity(eid, "timeline?in")
     if e.timeline then
         if not e.timeline.eid_map then

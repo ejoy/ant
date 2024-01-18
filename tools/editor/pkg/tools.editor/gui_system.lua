@@ -105,7 +105,6 @@ local event_showground      = world:sub {"ShowGround"}
 local event_showterrain     = world:sub {"ShowTerrain"}
 local event_savehitch       = world:sub {"SaveHitch"}
 local event_gizmo           = world:sub {"Gizmo"}
-local create_animation_event = world:sub {"CreateAnimation"}
 local light_gizmo           = ecs.require "gizmo.light"
 local patch_event          = world:sub {"PatchEvent"}
 
@@ -145,12 +144,10 @@ local function on_target(old, new)
             light_gizmo.on_target()
         end
     end
-    if new then
-        light_gizmo.on_target(new)
-        camera_mgr.on_target(new, true)
-        keyframe_view.on_target(new)
-        anim_view.on_target(new)
-    end
+    light_gizmo.on_target(new)
+    camera_mgr.on_target(new, true)
+    keyframe_view.on_target(new)
+    anim_view.on_target(new)
     world:pub {"UpdateAABB", new}
 end
 
@@ -359,9 +356,6 @@ function m:handle_event()
     end
     for _, enable in event_savehitch:unpack() do
         prefab_mgr.save_hitch = enable
-    end
-    for _, at, target in create_animation_event:unpack() do
-        keyframe_view.create_target_animation(at, target)
     end
     for _, eid, path, value in patch_event:unpack() do
         prefab_mgr:do_patch(eid, path, value)

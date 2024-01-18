@@ -955,15 +955,15 @@ local function play_animation(current)
     else
         for _, anim in ipairs(current.target_anims) do
             if anim.modifier then
-                if current_anim.type == "srt"  then
-                    if not target_map[anim.target_name] then
-                        target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name) 
-                    end
-                    current_target = target_map[anim.target_name]
-                    imodifier.set_target(anim.modifier, current_target)
-                elseif current_anim.type == "mtl" then
-                    imodifier.set_target(anim.modifier, current_target)
-                end
+                -- if current_anim.type == "srt"  then
+                --     if not target_map[anim.target_name] then
+                --         target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name) 
+                --     end
+                --     current_target = target_map[anim.target_name]
+                --     imodifier.set_target(anim.modifier, current_target)
+                -- elseif current_anim.type == "mtl" then
+                --     imodifier.set_target(anim.modifier, current_target)
+                -- end
                 imodifier.start(anim.modifier, {loop = ui_loop[1]})
             end
         end
@@ -1444,13 +1444,6 @@ function m.on_eid_delete(eid)
 end
 
 function m.on_target(target_eid)
-    if current_target == target_eid then
-        return
-    end
-    local e <close> = world:entity(target_eid, "scene?in render_object?in")
-    if not e.scene and not e.render_object then
-        return
-    end
     current_target = target_eid
 end
 

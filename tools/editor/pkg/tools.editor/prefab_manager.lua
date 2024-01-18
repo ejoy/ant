@@ -267,18 +267,18 @@ function m:create(what, config)
             local new_entity = world:create_entity(tmp)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
-        elseif config.type == "cube(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/cube.prefab")
-        elseif config.type == "cone(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/cone.prefab")
-        elseif config.type == "cylinder(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/cylinder.prefab")
-        elseif config.type == "sphere(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/sphere.prefab")
-        elseif config.type == "torus(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/torus.prefab")
-        elseif config.type == "plane(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/plane.prefab")
+        -- elseif config.type == "cube(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/cube.prefab")
+        -- elseif config.type == "cone(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/cone.prefab")
+        -- elseif config.type == "cylinder(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/cylinder.prefab")
+        -- elseif config.type == "sphere(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/sphere.prefab")
+        -- elseif config.type == "torus(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/torus.prefab")
+        -- elseif config.type == "plane(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/plane.prefab")
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
@@ -304,7 +304,7 @@ function m:create(what, config)
         local tmp = utils.deep_copy(template)
         tmp.data.on_ready = function (e)
             w:extend(e, "timeline:in")
-            e.timeline.eid_map = self.current_prefab.tag
+            e.timeline.eid_map = self.current_prefab and self.current_prefab.tag or {}
         end
         local new_entity = world:create_entity(tmp)
         self:add_entity(new_entity, nil, template)

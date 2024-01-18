@@ -250,12 +250,12 @@ local geom_type = {
     "sphere",
     "torus",
     "plane",
-    "cube(prefab)",
-    "cone(prefab)",
-    "cylinder(prefab)",
-    "sphere(prefab)",
-    "torus(prefab)",
-    "plane(prefab)",
+    -- "cube(prefab)",
+    -- "cone(prefab)",
+    -- "cylinder(prefab)",
+    -- "sphere(prefab)",
+    -- "torus(prefab)",
+    -- "plane(prefab)",
 }
 local collider_type = {
     "sphere",
@@ -298,9 +298,9 @@ function m.show()
             if imgui.widget.MenuItem("Camera") then
                 world:pub { "Create", "camera"}
             end
-            if imgui.widget.MenuItem("Slot") then
-                world:pub { "Create", "slot"}
-            end
+            -- if imgui.widget.MenuItem("Slot") then
+            --     world:pub { "Create", "slot"}
+            -- end
             if imgui.widget.MenuItem("Timeline") then
                 world:pub { "Create", "timeline"}
             end
