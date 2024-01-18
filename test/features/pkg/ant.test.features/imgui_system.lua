@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local ImGui = require "imgui"
+local ImGui = import_package "ant.imgui"
 local common = ecs.require "common"
 
 local m = ecs.system "imgui_system"

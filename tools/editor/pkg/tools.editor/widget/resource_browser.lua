@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local assetmgr  = import_package "ant.asset"
 
-local ImGui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local lfs       = require "bee.filesystem"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"

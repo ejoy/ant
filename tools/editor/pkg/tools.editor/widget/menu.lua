@@ -6,7 +6,7 @@ local camerasetting_view= ecs.require "widget.camera_setting_view"
 local rhwi              = import_package "ant.hwi"
 local editor_setting    = require "editor_setting"
 
-local ImGui             = require "imgui"
+local ImGui             = import_package "ant.imgui"
 local lfs               = require "bee.filesystem"
 local global_data       = require "common.global_data"
 local access            = global_data.repo_access

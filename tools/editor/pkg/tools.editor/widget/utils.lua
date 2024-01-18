@@ -1,5 +1,5 @@
 local assetmgr 	= import_package "ant.asset"
-local ImGui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local faicons   = require "common.fa_icons"
 local icons   = require "common.icons"
 local m = {}

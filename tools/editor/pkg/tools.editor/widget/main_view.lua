@@ -7,7 +7,7 @@ local mu        = mathpkg.util
 
 local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
-local ImGui = require "imgui"
+local ImGui = import_package "ant.imgui"
 local irq   = ecs.require "ant.render|render_system.renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 

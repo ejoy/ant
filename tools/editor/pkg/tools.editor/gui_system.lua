@@ -3,7 +3,7 @@ local world     = ecs.world
 local w         = world.w
 
 local math3d    = require "math3d"
-local ImGui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local rhwi      = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local faicons   = require "common.fa_icons"

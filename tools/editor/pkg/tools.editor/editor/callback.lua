@@ -1,4 +1,4 @@
-local ImGui         = require "imgui"
+local ImGui         = import_package "ant.imgui"
 local task          = require "editor.task"
 local event         = require "editor.event"
 local worlds        = require "editor.worlds"

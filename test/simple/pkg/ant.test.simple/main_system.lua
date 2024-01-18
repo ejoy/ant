@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local ImGui = require "imgui"
+local ImGui = import_package "ant.imgui"
 local ivs = ecs.require "ant.render|visible_state"
 local ianimation = ecs.require "ant.animation|animation"
 local iplayback = ecs.require "ant.animation|playback"

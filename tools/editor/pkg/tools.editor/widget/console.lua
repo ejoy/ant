@@ -1,4 +1,4 @@
-local ImGui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"

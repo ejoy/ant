@@ -1,4 +1,4 @@
-local ImGui      = require "imgui"
+local ImGui      = import_package "ant.imgui"
 
 local compdefines=require "widget.component_defines"
 
