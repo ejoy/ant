@@ -3,10 +3,8 @@ local lm = require "luamake"
 local rootdir = "../../../../"
 
 lm.EfkDir       = rootdir .. "3rd/"
-lm.BgfxDir      = lm.EfkDir .. "bgfx"
-lm.BxDir        = lm.EfkDir .. "bx"
-lm.BimgDir      = lm.EfkDir .. "bimg"
 lm.BgfxBinDir   = lm.bindir
+--BgfxDir/BxDir/BimgDir have been defined in clibs/bgfx/bgfx.lua
 lm:import "efkbgfx/luabinding/make.lua"
 lm:import "efkbgfx/renderer/make.lua"
 lm:import "efkbgfx/shaders/make.lua"
