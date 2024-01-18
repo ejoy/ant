@@ -8,7 +8,6 @@
             "need-check-nil"
         ],
         "globals": [
-            "__EDITOR__",
             "import_feature",
             "import",
             "pipeline",
