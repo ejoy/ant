@@ -49,16 +49,16 @@ git submodule update --init
 ./compile/install.sh (mingw/linux/macos)
 ```
 
-#### 编译tools
-
-``` bash
-luamake tools
-```
-
 #### 编译runtime
 
 ``` bash
 luamake
+```
+
+#### 编译tools
+
+``` bash
+luamake tools
 ```
 
 #### 编译选项
@@ -79,23 +79,27 @@ bin/msvc/debug/lua.exe tools/editor/main.lua
 ```
 
 ### 调试
-调试一个简单的示例。目前只支持在VSCode下调试lua代码。
-- 安装VSCode；
-- 安装**Lua Debug** 插件；
 
-配置一个调试用的配置：
+- 安装VSCode；
+- 安装**Lua Debug**插件；
+- 添加调试配置到`.vscode/launch.json`
 ``` json
 {
-    "type": "lua",
-    "request": "launch",
-    "name": "Debug",
-    "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
-    "console": "integratedTerminal",
-    "stopOnEntry": true,
-    "outputCapture": [],
-    "program": "test/simple/main.lua",
-    "arg": []
-},
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "Debug",
+            "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
+            "console": "integratedTerminal",
+            "stopOnEntry": true,
+            "outputCapture": [],
+            "program": "test/simple/main.lua",
+            "arg": []
+        }
+    ]
+}
 ```
 
 ### 关于ant目录结构
