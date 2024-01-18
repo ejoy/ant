@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local common = ecs.require "common"
+local util      = ecs.require "util"
+local PC        = util.proxy_creator()
 
 local pbr_test_sys = common.test_system "pbr"
 
@@ -9,10 +11,8 @@ local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local math3d    = require "math3d"
 
-local instances = {}
-
 local function create_pbr_entity(pos, color, metallic, roughness)
-    instances[#instances+1] = world:create_instance {
+    PC:create_instance {
         prefab = "/pkg/ant.resources.binary/meshes/base/sphere.glb|mesh.prefab",
         on_ready = function (e)
             local root<close> = world:entity(e.tag['*'][1], "scene:update")
@@ -51,8 +51,5 @@ function pbr_test_sys:init()
 end
 
 function pbr_test_sys:exit()
-    for _, v in ipairs(instances) do
-        world:remove_instance(v)
-    end
-    instances = {}
+    PC:clear()
 end

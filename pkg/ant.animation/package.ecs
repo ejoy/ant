@@ -19,7 +19,6 @@ policy "slot"
     .component "animation"
 
 component "animation".type "lua"
-component "skinning".type "lua"
 component "animation_changed"
 component "animation_playback"
 component "slot".type "lua"

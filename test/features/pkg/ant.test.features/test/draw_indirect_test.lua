@@ -2,10 +2,14 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local dit_sys = ecs.system "draw_indirect_test_system"
+local common = ecs.require "common"
+local util  = ecs.require "util"
+local PC    = util.proxy_creator()
+
+local dit_sys = common.test_system "draw_indirect"
 
 function dit_sys.init_world()
---[[     sm_id = world:create_entity {
+--[[     sm_id = PC:create_entity {
         policy = {
             "ant.render|render",
         },
@@ -17,7 +21,7 @@ function dit_sys.init_world()
             visible_state = "main_view",
         }
     } ]]
---[[     world:create_entity {
+--[[     PC:create_entity {
         policy = {
             "ant.render|render",
         },
@@ -28,7 +32,7 @@ function dit_sys.init_world()
             visible_state = "main_view",
         }
     }
-    world:create_entity {
+    PC:create_entity {
         policy = {
             "ant.render|render",
         },
@@ -39,4 +43,8 @@ function dit_sys.init_world()
             visible_state = "main_view",
         }
     } ]]
+end
+
+function dit_sys:exit()
+    PC:clear()
 end

@@ -2,22 +2,24 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+local common = ecs.require "common"
+local util  = ecs.require "util"
+local PC    = util.proxy_creator()
+
 local irl       = ecs.require "ant.render|render_layer.render_layer"
 local ientity   = ecs.require "ant.render|components.entity"
 local imesh     = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
-local util      = ecs.require "util"
-
 local math3d    = require "math3d"
 
-local rlt_sys = ecs.system "render_layer_test_system"
+local rlt_sys = common.test_system "render_layer"
 
 function rlt_sys.init_world()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
-    util.create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
+    PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
         local ee <close> = world:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))
         iom.set_scale(ee, 3)
@@ -27,9 +29,9 @@ function rlt_sys.init_world()
                 irl.set_layer(ee, "mineral")
             end
         end
-    end)
+    end))
 
-    world:create_entity {
+    PC:create_entity {
         policy = {
             "ant.render|simplerender",
         },
@@ -51,7 +53,7 @@ function rlt_sys.init_world()
         }
     }
 
-    util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+    PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
         local ee <close> = world:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, 0, -1))
 
@@ -61,5 +63,9 @@ function rlt_sys.init_world()
                 irl.set_layer(ee, "translucent_plane1")
             end
         end
-    end)
+    end))
+end
+
+function rlt_sys:exit()
+    PC:clear()
 end

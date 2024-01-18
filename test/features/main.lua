@@ -3,7 +3,7 @@ require "bootstrap"
 import_package "ant.window".start {
     enable_mouse = true,
     feature = {
-        "ant.render|render",
+        "ant.render",
         "ant.test.features",
         "ant.anim_ctrl",
         "ant.animation",

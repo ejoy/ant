@@ -382,3 +382,6 @@ bool peekwindow_peekmessage() {
     return true;
 }
 
+void peekwindow_setcursor(int cursor) {
+    //TODO
+}

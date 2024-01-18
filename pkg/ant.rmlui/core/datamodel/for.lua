@@ -30,7 +30,7 @@ function m.create(datamodel, view, element, value)
                 view.var_index = "it_index"
                 view.var_t = var_t
             else
-                error(("invaild data-for: `%s`"):format(value))
+                error(("invalid data-for: `%s`"):format(value))
             end
         end
     end

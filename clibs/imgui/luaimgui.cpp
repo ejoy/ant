@@ -470,6 +470,11 @@ static int lInitFont(lua_State *L) {
 	return 0;
 }
 
+static int lGetMouseCursor(lua_State* L) {
+	lua_pushinteger(L, (lua_Integer)ImGui::GetMouseCursor());
+	return 1;
+}
+
 static bool
 drag_float(lua_State *L, const char *label, int n) {
 	float v[4];
@@ -3121,6 +3126,7 @@ luaopen_imgui(lua_State *L) {
 		{ "SetWindowTitle", lSetWindowTitle },
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InitFont", lInitFont },
+		{ "GetMouseCursor", lGetMouseCursor },
 		{ "memory", lmemory },
 		{ NULL, NULL },
 	};

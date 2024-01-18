@@ -79,6 +79,7 @@ struct DropManager : public IDropTarget {
 static DropManager g_dropmanager;
 static bool minimized = false;
 static UINT g_keyboard_codepage;
+static ImGuiMouseCursor g_cursor = ImGuiMouseCursor_Arrow;
 
 static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -226,6 +227,42 @@ static ImGuiKey ToImGuiKey(WPARAM wParam) {
         case VK_BROWSER_FORWARD: return ImGuiKey_AppForward;
         default: return ImGuiKey_None;
     }
+}
+
+static void UpdateMouseCursor(ImGuiMouseCursor cursor) {
+	switch (cursor) {
+	default:
+	case ImGuiMouseCursor_Arrow:
+		::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+		break;
+	case ImGuiMouseCursor_TextInput:
+		::SetCursor(::LoadCursor(nullptr, IDC_IBEAM));
+		break;
+	case ImGuiMouseCursor_ResizeAll:
+		::SetCursor(::LoadCursor(nullptr, IDC_SIZEALL));
+		break;
+	case ImGuiMouseCursor_ResizeEW:
+		::SetCursor(::LoadCursor(nullptr, IDC_SIZEWE));
+		break;
+	case ImGuiMouseCursor_ResizeNS:
+		::SetCursor(::LoadCursor(nullptr, IDC_SIZENS));
+		break;
+	case ImGuiMouseCursor_ResizeNESW:
+		::SetCursor(::LoadCursor(nullptr, IDC_SIZENESW));
+		break;
+	case ImGuiMouseCursor_ResizeNWSE:
+		::SetCursor(::LoadCursor(nullptr, IDC_SIZENWSE));
+		break;
+	case ImGuiMouseCursor_Hand:
+		::SetCursor(::LoadCursor(nullptr, IDC_HAND));
+		break;
+	case ImGuiMouseCursor_NotAllowed:
+		::SetCursor(::LoadCursor(nullptr, IDC_NO));
+		break;
+	case ImGuiMouseCursor_None:
+		::SetCursor(nullptr);
+		break;
+	}
 }
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -405,6 +442,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		ant::window::input_message(cb, msg);
 		break;
 	}
+	case WM_SETCURSOR:
+		if (LOWORD(lParam) == HTCLIENT) {
+			UpdateMouseCursor(g_cursor);
+			return 1;
+		}
+		return 0;
 	default:
 		break;
 	}
@@ -505,4 +548,8 @@ bool peekwindow_peekmessage() {
 			return true;
 		}
 	}
+}
+
+void peekwindow_setcursor(int cursor) {
+	g_cursor = (ImGuiMouseCursor)cursor;
 }

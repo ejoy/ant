@@ -3,84 +3,97 @@ local world = ecs.world
 local w     = world.w
 
 local math3d    = require "math3d"
-local efk_test_sys = ecs.system "efk_test_system"
+local common    = ecs.require "common"
+
+local efk_test_sys = common.test_system "efk"
 
 local iefk      = ecs.require "ant.efk|efk"
 local ig        = ecs.require "ant.group|group"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
+local util		= ecs.require "util"
+
+local PC		= util.proxy_creator()
+
+local function hitch_test()
+
+    local test_gid<const> = ig.register "hitch_test"
+    
+    local eid = PC:create_entity{
+        group = test_gid,
+        policy = {
+            "ant.scene|scene_object",
+            "ant.efk|efk",
+        },
+        data = {
+            scene = {},
+            efk = {
+                path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
+            },
+            visible_state = "main_queue",
+        }
+    }
+
+    PC:create_entity{
+        policy = {
+            "ant.render|hitch_object",
+        },
+        data = {
+            hitch = {
+                group = test_gid,
+            },
+            visible_state = "main_view",
+            scene = {
+                t = {5, 2, 0, 1}
+            },
+            view_visible = true,
+            on_ready = function (e)
+                w:extend(e, "view_visible?in")
+                print(e.view_visible)
+            end
+        }
+    }
+
+    return eid
+end
+
+local function simple_test()
+    PC:create_entity{
+        policy = {
+            "ant.scene|scene_object",
+            "ant.efk|efk",
+        },
+        data = {
+            scene = {
+                t = {-2, 0, 0, 1}
+            },
+            efk = {
+                path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
+            },
+            visible_state = "main_queue",
+        }
+    }
+
+    PC:create_entity{
+        policy = {
+            "ant.scene|scene_object",
+            "ant.efk|efk",
+        },
+        data = {
+            scene = {
+                t = {3, 0, 0, 1}
+            },
+            efk = {
+                path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
+            },
+            visible_state = "main_queue",
+        }
+    }
+end
+
 local efkeid_group
 function efk_test_sys:init()
-    local test_gid<const> = ig.register "group_test"
-
-    -- world:create_entity{
-    --     policy = {
-    --         "ant.scene|scene_object",
-    --         "ant.efk|efk",
-    --     },
-    --     data = {
-    --         scene = {
-    --             t = {-2, 0, 0, 1}
-    --         },
-    --         efk = {
-    --             path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
-    --         },
-    --         visible_state = "main_queue",
-    --     }
-    -- }
-
-    -- world:create_entity{
-    --     policy = {
-    --         "ant.scene|scene_object",
-    --         "ant.efk|efk",
-    --     },
-    --     data = {
-    --         scene = {
-    --             t = {3, 0, 0, 1}
-    --         },
-    --         efk = {
-    --             path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
-    --         },
-    --         visible_state = "main_queue",
-    --     }
-    -- }
-
-    if nil ~= test_gid then
-        efkeid_group = world:create_entity{
-            group = test_gid,
-            policy = {
-                "ant.scene|scene_object",
-                "ant.efk|efk",
-            },
-            data = {
-                scene = {},
-                efk = {
-                    path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
-                },
-                visible_state = "main_queue",
-            }
-        }
-
-        world:create_entity{
-            policy = {
-                "ant.render|hitch_object",
-            },
-            data = {
-                hitch = {
-                    group = test_gid,
-                },
-                visible_state = "main_view",
-                scene = {
-                    t = {5, 2, 0, 1}
-                },
-                view_visible = true,
-                on_ready = function (e)
-                    w:extend(e, "view_visible?in")
-                    print(e.view_visible)
-                end
-            }
-        }
-    end
+    hitch_test()
 end
 
 function efk_test_sys:init_world()
@@ -102,4 +115,8 @@ function efk_test_sys:data_changed()
             print(w:count "hitch view_visible")
         end
     end
+end
+
+function efk_test_sys:exit()
+    PC:clear()
 end

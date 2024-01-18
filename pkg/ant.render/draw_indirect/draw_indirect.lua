@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local bgfx  = require "bgfx"
-local di_sys = ecs.system "draw_indirect_system2"
+local di_sys = ecs.system "draw_indirect_system"
 
 local layoutmgr = ecs.require "vertexlayout_mgr"
 

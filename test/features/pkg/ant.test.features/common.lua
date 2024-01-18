@@ -18,4 +18,6 @@ function m.get_systems()
     return systems
 end
 
+m.init_system = "<none>"
+
 return m

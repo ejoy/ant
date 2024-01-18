@@ -8,5 +8,49 @@ jobs:
       with:
         submodules: true
     - uses: actboy168/setup-luamake@master
-    - run: luamake tools
     - run: luamake
+  mingw:
+    name: mingw
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actions/checkout@v3
+      with:
+        path: luamake
+        repository: actboy168/luamake
+        submodules : true
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-ninja
+    - shell: msys2 {0}
+      working-directory: luamake
+      run: ./compile/build.sh notest
+    - shell: msys2 {0}
+      run: ./luamake/luamake
+  macos:
+    name: macos
+    runs-on: macos-13
+    steps:
+    - name: switch to Xcode 15.1
+      run: sudo xcode-select -s "/Applications/Xcode_15.1.app"
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch arm64
+  ios:
+    name: ios
+    runs-on: macos-13
+    steps:
+    - name: switch to Xcode 15.1
+      run: sudo xcode-select -s "/Applications/Xcode_15.1.app"
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch arm64 -os ios

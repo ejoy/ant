@@ -93,4 +93,11 @@ function S.maxfps(fps)
     end
 end
 
+function S.setcursor(cursor)
+    local window = require "window"
+    if window.setcursor then
+        window.setcursor(cursor)
+    end
+end
+
 return S
