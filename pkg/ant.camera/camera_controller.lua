@@ -46,9 +46,9 @@ local function calc_key_speed()
 end
 
 local function check_update_control()
-    for _, _, pt in viewat_change_mb:unpack() do
-        viewat = pt
-    end
+    --for _, _, pt in viewat_change_mb:unpack() do
+    --    viewat = pt
+    --end
 
     for _, _, s in move_speed_change_mb:unpack() do
         move_speed = s
