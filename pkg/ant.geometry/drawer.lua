@@ -227,7 +227,7 @@ end
 
 function draw.draw_capsule(capsule, color, transform, desc)
 	draw_primitve(color, transform, desc, function()
-		return geo.capsule(capsule.radius, capsule.height, capsule.tessellation, true, true)
+		return geo.capsule(capsule.radius, capsule.height, capsule.tessellation)
 	end)
 end
 

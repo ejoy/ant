@@ -403,6 +403,7 @@ end
 
 function repo_meta:valid_path(path)
 	local index = self._index
+	local name
 	while true do
 		path, name = split_path(path)
 		local dir = index[path]

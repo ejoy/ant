@@ -171,11 +171,11 @@ function mod.redirect(conf, http_request)
 	init()
 end
 
-local function response(session, write, ...)
+local function response(write, ...)
 	local ok, err = httpd.write_response(write, ...)
 	if not ok then
 		if err ~= socket_error then
-			print(string.format("session = %s, %s", session, err))
+			print(string.format("%s", err))
 		end
 	end
 end
@@ -210,7 +210,7 @@ local function route_vfs(route, cgi)
 		local code, url, method, header, body = httpd.read_request(s.read)
 		if code then
 			if code ~= 200 then
-				response(id, s.write, code)
+				response(s.write, code)
 			else
 				local fullpath, query = urllib.parse(url)
 				local root, path = fullpath:match "^/([^/]+)/?(.*)"
@@ -225,17 +225,17 @@ local function route_vfs(route, cgi)
 						local m = m[mod.name] or m
 						local f = m and m[method]
 						if f == nil then
-							response(id, s.write, 500, lua_error_temp:format ("Unsupport method : " .. method))
+							response(s.write, 500, lua_error_temp:format ("Unsupport method : " .. method))
 							return
 						end
 						local ok, code, data, header = xpcall(f, debug.traceback, path, query, header, body)
 						if ok then
-							response(id, s.write, code, data, header)
+							response(s.write, code, data, header)
 						else
-							response(id, s.write, 500, lua_error_temp:format(escape_html(tostring(code))))
+							response(s.write, 500, lua_error_temp:format(escape_html(tostring(code))))
 						end
 					else
-						response(id, s.write, 500, lua_error_temp:format(escape_html(m)))
+						response(s.write, 500, lua_error_temp:format(escape_html(m)))
 					end
 				else
 					-- static files in vfs
@@ -243,7 +243,7 @@ local function route_vfs(route, cgi)
 					if not mapping then
 						mapping = route["/"]
 						if not mapping then
-							response(id, s.write, 403, "ERROR 403 : No web root")
+							response(s.write, 403, "ERROR 403 : No web root")
 							return
 						end
 						root = "/"
@@ -254,9 +254,9 @@ local function route_vfs(route, cgi)
 					local fsname, fspath = mapping:match "(%w+):(.*)"
 					local ok, code, data, header = xpcall(webvfs.get, debug.traceback, fsname, path, root, fspath)
 					if ok then
-						response(id, s.write, code, data, header)
+						response(s.write, code, data, header)
 					else
-						response(id, s.write, 500, lua_error_temp:format(escape_html(code)))
+						response(s.write, 500, lua_error_temp:format(escape_html(code)))
 					end
 				end
 			end

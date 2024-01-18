@@ -85,7 +85,7 @@ function depth_mipmap_sys:init()
         {1, 1, 1})
 end
 
-local depth_mipmap_viewid = viewidmgr.get "depth_mipmap"
+local depth_mipmap_viewid = hwi.viewid_get "depth_mipmap"
 function depth_mipmap_sys:depth_mipmap()
     local vr = iviewport.viewrect
     local nummip = math.log(math.max(vr.w, vr.h), 2)+1

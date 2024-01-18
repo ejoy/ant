@@ -107,7 +107,7 @@ function net.new(selector)
 			return false, err
 		end
 		local id = new_fd(fd)
-		local obj = obj[id]
+		local obj = fds[id]
 		obj.wt = coroutine.running()
 		selector:event_mod(obj.fd, SELECT_WRITE)
 		ltask.wait(obj.wt)

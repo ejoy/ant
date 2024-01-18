@@ -245,7 +245,8 @@ local function init_light_info(C, D, li)
 	li.Lw			= Lw
 	li.Cv			= Cv
 	if useLiSPSM then
-		li.Lr			= LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0))
+		local LiSPSM = import_package "ant.shadow_bounding".LiSPSM
+		li.Lr = LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0))
 	end
 	li.Lv2Cv		= math3d.mul(Cv, Lw)
 	li.viewdir		= viewdir
