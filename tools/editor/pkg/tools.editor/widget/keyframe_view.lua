@@ -249,10 +249,11 @@ local function update_animation()
             imodifier.delete(anim.modifier)
             anim.modifier = nil
             if #keyframes > 0 then
+                local target = target_map[anim.target_name]
                 if anim_type == "mtl" then
-                    anim.modifier = imodifier.create_mtl_modifier(current_target, anim.target_name, keyframes, false, true)
+                    anim.modifier = imodifier.create_mtl_modifier(target, anim.property_name, keyframes, false, true)
                 elseif anim_type == "srt" then
-                    anim.modifier = imodifier.create_srt_modifier(target_map[anim.target_name], 0, keyframes, false, true)
+                    anim.modifier = imodifier.create_srt_modifier(target, 0, keyframes, false, true)
                 end
             end
             ::continue::
@@ -380,17 +381,18 @@ local function get_current_target_name()
         return current_joint and current_joint.name or nil
     end
 end
-local function get_or_create_target_anim(tn, init_value)
-    if not current_anim or not tn then
+local function get_or_create_target_anim(target, property, init_value)
+    if not current_anim or not target then
         return
     end
-    for _, value in ipairs(current_anim.target_anims) do
-        if tn == value.target_name then
-            return value;
+    for _, anim in ipairs(current_anim.target_anims) do
+        if target == anim.target_name then
+            return anim
         end
     end
     current_anim.target_anims[#current_anim.target_anims + 1] = {
-        target_name = tn,
+        target_name = target,
+        property_name = property,
         init_value = init_value,
         clips = {},
         inherit = {false, false, false}, -- s, r, t
@@ -806,12 +808,8 @@ local function create_animation(animtype, name, duration, target_anims)
         anim_name_list[#anim_name_list + 1] = name
         table.sort(anim_name_list)
         if create_context then
-            if animtype == "mtl" then
-                for _, desc in ipairs(create_context.desc) do
-                    get_or_create_target_anim(desc.name, desc.init_value)
-                end
-            elseif animtype == "srt" then
-                get_or_create_target_anim(create_context.desc[1].name)
+            for _, desc in ipairs(create_context.desc) do
+                get_or_create_target_anim(desc.target, desc.property, desc.init_value)
             end
             create_context = nil
         end
@@ -934,8 +932,8 @@ end
 
 local function show_uniforms()
     for _, anim in ipairs(current_anim.target_anims) do
-        if ImGui.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
-            current_uniform = anim.target_name
+        if ImGui.Selectable(anim.property_name, current_uniform and current_uniform == anim.property_name) then
+            current_uniform = anim.property_name
             on_select_target(current_uniform)
         end
     end
@@ -957,15 +955,6 @@ local function play_animation(current)
     else
         for _, anim in ipairs(current.target_anims) do
             if anim.modifier then
-                -- if current_anim.type == "srt"  then
-                --     if not target_map[anim.target_name] then
-                --         target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name) 
-                --     end
-                --     current_target = target_map[anim.target_name]
-                --     imodifier.set_target(anim.modifier, current_target)
-                -- elseif current_anim.type == "mtl" then
-                --     imodifier.set_target(anim.modifier, current_target)
-                -- end
                 imodifier.start(anim.modifier, {loop = ui_loop[1]})
             end
         end
@@ -981,7 +970,7 @@ function m.show()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     if ImGui.Begin("Skeleton", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
-        if current_skeleton then
+        if current_skeleton and not current_anim then
             if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SkeAnim") then
                 new_anim_widget = true
             end
@@ -990,14 +979,16 @@ function m.show()
         if current_target then
             local e <close> = world:entity(current_target, "scene?in material?in")
             -- current_anim.target_anims
+            local tpl = hierarchy:get_node_info(current_target).template
+            local name = tpl.tag and tpl.tag[1] or ""
+            target_map[name] = current_target
             if e.scene then
                 if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SRTAnim") then
                     new_anim_widget = true
-                    create_context = {type = "srt"}
-                    local tpl = hierarchy:get_node_info(current_target).template
-                    local name = tpl.tag and tpl.tag[1] or ""
-                    create_context.desc = {{name = name}}
-                    target_map[name] = current_target
+                    create_context = {
+                        type = "srt",
+                        desc = {{target = name}}
+                    }
                 end
                 ImGui.SameLine()
             end
@@ -1018,7 +1009,7 @@ function m.show()
                         end
                         table.sort(keys)
                         for _, k in ipairs(keys) do
-                            desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
+                            desc[#desc + 1] = {target = name, property = k, init_value = mtl.properties[k] }
                         end
                         create_context.desc = desc
                     end
@@ -1026,7 +1017,7 @@ function m.show()
                 ImGui.SameLine()
             end
         end
-        
+
         ShowNewAnimationUI()
 
         if ImGui.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
@@ -1035,33 +1026,32 @@ function m.show()
                 m.load(anim_filename)
             end
         end
-
-        ImGui.SameLine()
-        if ImGui.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
-            m.save(file_path)
-        end
-        ImGui.SameLine()
-        ImGui.Text("Mode: "..(current_anim and current_anim.type or ""))
-        if #anim_name_list > 0 then
-            ImGui.SameLine()
-            ImGui.PushItemWidth(150)
-            if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
-                for _, name in ipairs(anim_name_list) do
-                    if ImGui.Selectable(name, current_anim.name == name) then
-                        current_anim.selected_layer_index = 0
-                        current_anim.selected_clip_index = 0
-                        current_anim = allanims[name]
-                        current_anim.dirty = true
-                        current_anim.selected_layer_index = 0
-                        current_anim.selected_clip_index = 0
-                        current_anim.dirty_layer = -1
-                    end
-                end
-                ImGui.EndCombo()
-            end
-            ImGui.PopItemWidth()
-        end
         if current_anim then
+            ImGui.SameLine()
+            if ImGui.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
+                m.save(file_path)
+            end
+            ImGui.SameLine()
+            ImGui.Text("Mode: "..current_anim.type)
+            if #anim_name_list > 0 then
+                ImGui.SameLine()
+                ImGui.PushItemWidth(150)
+                if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
+                    for _, name in ipairs(anim_name_list) do
+                        if ImGui.Selectable(name, current_anim.name == name) then
+                            current_anim.selected_layer_index = 0
+                            current_anim.selected_clip_index = 0
+                            current_anim = allanims[name]
+                            current_anim.dirty = true
+                            current_anim.selected_layer_index = 0
+                            current_anim.selected_clip_index = 0
+                            current_anim.dirty_layer = -1
+                        end
+                    end
+                    ImGui.EndCombo()
+                end
+                ImGui.PopItemWidth()
+            end
             ImGui.SameLine()
             if ImGui.Checkbox("all ", ui_playall) then
                 anim_set_loop(ui_playall[1])
@@ -1193,11 +1183,11 @@ function m.show()
                     elseif k == "selected_layer_index" then
                         current_anim.selected_layer_index = v
                         if v > 0 and v <= #current_anim.target_anims then
-                            local name = current_anim.target_anims[v].target_name
+                            local ani = current_anim.target_anims[v]
                             if current_anim.type == "mtl" then
-                                current_uniform = name
+                                current_uniform = ani.property_name
                             elseif current_anim.type == "ske" then
-                                joint_utils:set_current_joint(current_skeleton, name)
+                                joint_utils:set_current_joint(current_skeleton, ani.target_name)
                             end
                         end
                     elseif k == "move_type" then
@@ -1297,7 +1287,7 @@ function m.load(path_str)
                     clip.scale_ui = {clip.scale, min = 0, max = 10, speed = 0.1}
                 end
                 if not current_uniform then
-                    current_uniform = subanim.target_name
+                    current_uniform = subanim.property_name
                 end
             else
                 for _, clip in ipairs(subanim.clips) do
