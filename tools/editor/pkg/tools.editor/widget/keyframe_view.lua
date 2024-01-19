@@ -30,7 +30,6 @@ local utils         = require "common.utils"
 local m = {}
 local current_mtl
 local current_uniform
-local current_bind_eid
 local file_path
 local joints_map
 local joints_list
@@ -40,6 +39,7 @@ local sample_ratio = 30.0
 local anim_eid
 local current_joint
 local current_anim
+local anim_bind_map = {}
 local allanims = {}
 local anim_name_list = {}
 local create_context = {}
@@ -249,10 +249,12 @@ local function update_animation()
             imodifier.delete(anim.modifier)
             anim.modifier = nil
             if #keyframes > 0 then
+                local bind_eid = prefab_mgr.get_eid_by_name[anim_bind_map[current_anim.name]]
+                assert(bind_eid)
                 if anim_type == "mtl" then
-                    anim.modifier = imodifier.create_mtl_modifier(current_bind_eid, anim.target_name, keyframes, false, true)
+                    anim.modifier = imodifier.create_mtl_modifier(bind_eid, anim.target_name, keyframes, false, true)
                 elseif anim_type == "srt" then
-                    anim.modifier = imodifier.create_srt_modifier(current_bind_eid, 0, keyframes, false, true)
+                    anim.modifier = imodifier.create_srt_modifier(bind_eid, 0, keyframes, false, true)
                 end
             end
             ::continue::
@@ -816,9 +818,9 @@ local function create_animation(animtype, name, duration, target_anims)
             for _, desc in ipairs(create_context.desc) do
                 get_or_create_target_anim(desc.target, desc.init_value)
             end
-            current_bind_eid = create_context.bind_eid
             create_context = nil
         end
+        anim_bind_map[name] = ""
     end
 end
 local update_camera_mb = world:sub {"UpdateCamera"}
@@ -902,7 +904,7 @@ function m.clear(keep_skel)
     current_anim = nil
     current_joint = nil
     current_uniform = nil
-    current_bind_eid = nil
+    anim_bind_map = {}
     current_mtl = nil
     if not keep_skel then
         anim_eid = nil
@@ -978,7 +980,7 @@ function m.show()
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     if ImGui.Begin("Skeleton", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if current_skeleton and not current_anim then
-            if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SkeAnim") then
+            if ImGui.Button(faicons.ICON_FA_FILE_PEN.." ske") then
                 new_anim_widget = true
             end
             ImGui.SameLine()
@@ -986,15 +988,10 @@ function m.show()
         local current_eid = gizmo.target_eid
         if current_eid then
             local e <close> = world:entity(current_eid, "scene?in material?in")
-            -- current_anim.target_anims
-            -- local tpl = hierarchy:get_node_info(current_target).template
-            -- local name = tpl.tag and tpl.tag[1] or ""
-            -- target_map[name] = current_target
             if e.scene then
-                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SRTAnim") then
+                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." srt") then
                     new_anim_widget = true
                     create_context = {
-                        bind_eid = current_eid,
                         type = "srt",
                         desc = {}
                     }
@@ -1002,10 +999,9 @@ function m.show()
                 ImGui.SameLine()
             end
             if e.material then
-                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." MTLAnim") then
+                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." mtl") then
                     new_anim_widget = true
                     create_context = {
-                        bind_eid = current_eid,
                         type = "mtl",
                     }
                     local mtlpath = e.material
@@ -1043,9 +1039,11 @@ function m.show()
             if ImGui.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
                 m.save(file_path)
             end
-            ImGui.SameLine()
-            ImGui.Text("Mode: "..current_anim.type)
+            -- ImGui.SameLine()
+            -- ImGui.Text("Mode: "..current_anim.type)
             if #anim_name_list > 0 then
+                ImGui.SameLine()
+                ImGui.Text("Anim:")
                 ImGui.SameLine()
                 ImGui.PushItemWidth(150)
                 if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
@@ -1058,6 +1056,22 @@ function m.show()
                             current_anim.selected_layer_index = 0
                             current_anim.selected_clip_index = 0
                             current_anim.dirty_layer = -1
+                        end
+                    end
+                    ImGui.EndCombo()
+                end
+                ImGui.PopItemWidth()
+            end
+            if current_anim.type ~= "ske" then
+                ImGui.SameLine()
+                ImGui.Text("BindTo:")
+                ImGui.SameLine()
+                ImGui.PushItemWidth(200)
+                if ImGui.BeginCombo("##BindTo", {anim_bind_map[current_anim.name], flags = ImGui.Flags.Combo {}}) then
+                    for _, name in ipairs(prefab_mgr.srt_mtl_list) do
+                        if ImGui.Selectable(name, anim_bind_map[current_anim.name] == name) then
+                            anim_bind_map[current_anim.name] = name
+                            update_animation()
                         end
                     end
                     ImGui.EndCombo()
@@ -1332,7 +1346,6 @@ function m.load(path_str)
         end
         create_animation(anim.type, anim.name, math.floor(anim.duration * sample_ratio), anim.target_anims)
         sample_ratio = anim.sample_ratio
-        current_bind_eid = gizmo.target_eid
         update_animation()
     end
     file_path = path:string()

@@ -25,10 +25,8 @@ local fmod      = require "fmod"
 local edit_timeline
 local timeline_eid
 local timeline_playing = false
-local efk_tag_list = {}
 local srt_tag_list = {}
 local mtl_tag_list = {}
-local srt_mtl_list = {}
 local m = {}
 local edit_anims
 local anim_eid
@@ -391,7 +389,7 @@ local function show_current_event()
             end
             action_list = current_event.action_list or {}
         end
-        action_list = (current_event.event_type == "Effect") and efk_tag_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
+        action_list = (current_event.event_type == "Effect") and prefab_mgr.efk_tag_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
         if #action_list > 0 then
             local action = current_event.action or ''
             ImGui.PropertyLabel("Action")
@@ -409,7 +407,7 @@ local function show_current_event()
             local target = current_event.target or ''
             ImGui.PropertyLabel("Target")
             if ImGui.BeginCombo("##Target", {target, flags = ImGui.Flags.Combo {}}) then
-                for _, name in ipairs(srt_mtl_list) do
+                for _, name in ipairs(prefab_mgr.srt_mtl_list) do
                     if ImGui.Selectable(name, target == name) then
                         current_event.target = name
                     end
@@ -887,7 +885,6 @@ function m.show()
 end
 
 function m.on_prefab_load(eid)
-    m.update_tag_list()
     if not eid then
         return
     end
@@ -972,11 +969,6 @@ function m.on_target(eid)
         edit_anims.dirty = true
         set_event_dirty(-1)
     end
-end
-
-function m.update_tag_list()
-    efk_tag_list = prefab_mgr:get_efk_list()
-    srt_mtl_list = prefab_mgr:get_srt_mtl_list()
 end
 
 function m.update_anim_namelist()
