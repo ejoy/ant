@@ -280,7 +280,7 @@ function imodifier.create_modifier_from_file(target, group_id, path, anim_name, 
                 goto continue
             end
             if anim_type == "mtl" then
-                property = anim_data.property_name
+                property = anim_data.target_name
             end
             keyframes = imodifier.keyframes_from_anim_data(anim_type, anim_data, frame_count, sample_ratio)
             ::continue::

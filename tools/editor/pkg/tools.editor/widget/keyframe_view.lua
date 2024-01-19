@@ -6,6 +6,7 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local imodifier = ecs.require "ant.modifier|modifier"
 local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local prefab_mgr= ecs.require "prefab_manager"
+local gizmo     = ecs.require "gizmo.gizmo"
 local assetmgr  = import_package "ant.asset"
 local aio       = import_package "ant.io"
 local ImGui     = import_package "ant.imgui"
@@ -28,9 +29,8 @@ local utils         = require "common.utils"
 
 local m = {}
 local current_mtl
-local current_target
 local current_uniform
-local target_map = {}
+local current_bind_eid
 local file_path
 local joints_map
 local joints_list
@@ -249,11 +249,10 @@ local function update_animation()
             imodifier.delete(anim.modifier)
             anim.modifier = nil
             if #keyframes > 0 then
-                local target = target_map[anim.target_name]
                 if anim_type == "mtl" then
-                    anim.modifier = imodifier.create_mtl_modifier(target, anim.property_name, keyframes, false, true)
+                    anim.modifier = imodifier.create_mtl_modifier(current_bind_eid, anim.target_name, keyframes, false, true)
                 elseif anim_type == "srt" then
-                    anim.modifier = imodifier.create_srt_modifier(target, 0, keyframes, false, true)
+                    anim.modifier = imodifier.create_srt_modifier(current_bind_eid, 0, keyframes, false, true)
                 end
             end
             ::continue::
@@ -322,7 +321,9 @@ local function clip_exist(clips, name)
 end
 
 local function find_anim_by_name(name)
-    if not current_anim then return end
+    if not current_anim then
+        return
+    end
     for index, value in ipairs(current_anim.target_anims) do
         if name == value.target_name then
             return index
@@ -381,28 +382,35 @@ local function get_current_target_name()
         return current_joint and current_joint.name or nil
     end
 end
-local function get_or_create_target_anim(target, property, init_value)
+
+local function get_target_anim(target)
     if not current_anim or not target then
         return
     end
     for _, anim in ipairs(current_anim.target_anims) do
-        if (current_anim.type == "srt") and (target == anim.target_name) or (property == anim.property_name) then
+        if anim.target_name == target then
             return anim
         end
     end
-    current_anim.target_anims[#current_anim.target_anims + 1] = {
-        target_name = target,
-        property_name = property,
-        init_value = init_value,
-        clips = {},
-        inherit = {false, false, false}, -- s, r, t
-        inherit_ui = {{false}, {false}, {false}}
-    }
-    return current_anim.target_anims[#current_anim.target_anims]
+end
+
+local function get_or_create_target_anim(target, init_value)
+    local anim = get_target_anim(target)
+    if not anim then
+        anim = {
+            target_name = target,
+            init_value = init_value,
+            clips = {},
+            inherit = {false, false, false}, -- s, r, t
+            inherit_ui = {{false}, {false}, {false}}
+        }
+        current_anim.target_anims[#current_anim.target_anims + 1] = anim
+    end
+    return anim
 end
 
 local function create_clip()
-    if not new_clip_pop or (not current_joint and not current_uniform and not current_target) then
+    if not new_clip_pop or (not current_joint and not current_uniform) then
         return
     end
     local title = "New Clip"
@@ -554,7 +562,7 @@ local function show_current_detail()
 
     local current_clip = clips[current_anim.selected_clip_index]
     local name = get_current_target_name()
-    if not current_clip or anim_layer.target_name ~= name then
+    if not current_clip or (anim_layer.target_name ~= name) then
         return
     end
 
@@ -753,9 +761,6 @@ local function anim_set_time(t)
             if anim.modifier then
                 local kfa <close> = world:entity(anim.modifier.anim_eid)
                 ika.set_time(kfa, t)
-                if not current_target then
-                    current_target = prefab_mgr:get_eid_by_name(anim.target_name)
-                end
                 if ui_bindcamera[1] then
                     world:pub {"UpdateCamera"}
                 end
@@ -809,14 +814,17 @@ local function create_animation(animtype, name, duration, target_anims)
         table.sort(anim_name_list)
         if create_context then
             for _, desc in ipairs(create_context.desc) do
-                get_or_create_target_anim(desc.target, desc.property, desc.init_value)
+                get_or_create_target_anim(desc.target, desc.init_value)
             end
+            current_bind_eid = create_context.bind_eid
             create_context = nil
         end
     end
 end
 local update_camera_mb = world:sub {"UpdateCamera"}
 function m.end_animation()
+    -- TODO: rework camera animation
+    do return end
     if not ui_bindcamera[1] or not current_anim then
         return
     end
@@ -883,7 +891,6 @@ function m.clear(keep_skel)
     end
     allanims = {}
     anim_name_list = {}
-    target_map = {}
     if current_anim then
         for _, anim in ipairs(current_anim.target_anims) do
             if anim.type == "srt" or anim.type == "mtl" then
@@ -895,8 +902,8 @@ function m.clear(keep_skel)
     current_anim = nil
     current_joint = nil
     current_uniform = nil
+    current_bind_eid = nil
     current_mtl = nil
-    current_target = nil
     if not keep_skel then
         anim_eid = nil
         current_skeleton = nil
@@ -932,8 +939,8 @@ end
 
 local function show_uniforms()
     for _, anim in ipairs(current_anim.target_anims) do
-        if ImGui.Selectable(anim.property_name, current_uniform and current_uniform == anim.property_name) then
-            current_uniform = anim.property_name
+        if ImGui.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
+            current_uniform = anim.target_name
             on_select_target(current_uniform)
         end
     end
@@ -976,18 +983,20 @@ function m.show()
             end
             ImGui.SameLine()
         end
-        if current_target then
-            local e <close> = world:entity(current_target, "scene?in material?in")
+        local current_eid = gizmo.target_eid
+        if current_eid then
+            local e <close> = world:entity(current_eid, "scene?in material?in")
             -- current_anim.target_anims
-            local tpl = hierarchy:get_node_info(current_target).template
-            local name = tpl.tag and tpl.tag[1] or ""
-            target_map[name] = current_target
+            -- local tpl = hierarchy:get_node_info(current_target).template
+            -- local name = tpl.tag and tpl.tag[1] or ""
+            -- target_map[name] = current_target
             if e.scene then
                 if ImGui.Button(faicons.ICON_FA_FILE_PEN.." SRTAnim") then
                     new_anim_widget = true
                     create_context = {
+                        bind_eid = current_eid,
                         type = "srt",
-                        desc = {{target = name}}
+                        desc = {}
                     }
                 end
                 ImGui.SameLine()
@@ -995,7 +1004,10 @@ function m.show()
             if e.material then
                 if ImGui.Button(faicons.ICON_FA_FILE_PEN.." MTLAnim") then
                     new_anim_widget = true
-                    create_context = {type = "mtl"}
+                    create_context = {
+                        bind_eid = current_eid,
+                        type = "mtl",
+                    }
                     local mtlpath = e.material
                     if mtlpath then
                         mtlpath = mtlpath .. "/source.ant"
@@ -1009,7 +1021,7 @@ function m.show()
                         end
                         table.sort(keys)
                         for _, k in ipairs(keys) do
-                            desc[#desc + 1] = {target = name, property = k, init_value = mtl.properties[k] }
+                            desc[#desc + 1] = {target = k, init_value = mtl.properties[k] }
                         end
                         create_context.desc = desc
                     end
@@ -1185,7 +1197,7 @@ function m.show()
                         if v > 0 and v <= #current_anim.target_anims then
                             local ani = current_anim.target_anims[v]
                             if current_anim.type == "mtl" then
-                                current_uniform = ani.property_name
+                                current_uniform = ani.target_name
                             elseif current_anim.type == "ske" then
                                 joint_utils:set_current_joint(current_skeleton, ani.target_name)
                             end
@@ -1271,6 +1283,9 @@ end
 local datalist  = require "datalist"
 
 function m.load(path_str)
+    if not gizmo.target_eid and not current_skeleton then
+        return
+    end
     m.clear(true)
     local path = lfs.path(path_str)
     local f = assert(io.open(path:string()))
@@ -1287,7 +1302,7 @@ function m.load(path_str)
                     clip.scale_ui = {clip.scale, min = 0, max = 10, speed = 0.1}
                 end
                 if not current_uniform then
-                    current_uniform = subanim.property_name
+                    current_uniform = subanim.target_name
                 end
             else
                 for _, clip in ipairs(subanim.clips) do
@@ -1311,14 +1326,13 @@ function m.load(path_str)
                 subanim.inherit = {false, false, false}
             end
             subanim.inherit_ui = {{subanim.inherit[1]}, {subanim.inherit[2]}, {subanim.inherit[3]}}
-
-            target_map[subanim.target_name] = prefab_mgr:get_eid_by_name(subanim.target_name)
         end
         if not is_valid then
             return
         end
         create_animation(anim.type, anim.name, math.floor(anim.duration * sample_ratio), anim.target_anims)
         sample_ratio = anim.sample_ratio
+        current_bind_eid = gizmo.target_eid
         update_animation()
     end
     file_path = path:string()
@@ -1425,12 +1439,6 @@ local function create_bone_entity(joint_name)
 end
 
 function m.on_eid_delete(eid)
-    local e <close> = world:entity(eid, "material?in")
-    local tpl = hierarchy:get_node_info(eid).template
-    local name = tpl.tag and tpl.tag[1]
-    if name then
-        target_map[name] = nil
-    end
     for _, anim in pairs(allanims) do
         for _, subanim in ipairs(anim.target_anims) do
             if subanim.modifier then
@@ -1441,10 +1449,6 @@ function m.on_eid_delete(eid)
             end
         end
     end
-end
-
-function m.on_target(target_eid)
-    current_target = target_eid
 end
 
 function m.init(skeleton)

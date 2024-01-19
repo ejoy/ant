@@ -146,7 +146,6 @@ local function on_target(old, new)
     end
     light_gizmo.on_target(new)
     camera_mgr.on_target(new, true)
-    keyframe_view.on_target(new)
     anim_view.on_target(new)
     world:pub {"UpdateAABB", new}
 end
