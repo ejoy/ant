@@ -15,25 +15,28 @@ local create_instance = ecs.require "util".create_instance
 
 local init_loader_sys   = ecs.system 'init_system'
 
-local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
-    --ientity.create_grid_entity(128, 128, 1, 3)
     create_instance "/pkg/ant.test.features/assets/entities/light.prefab"
 end
 
-function init_loader_sys:init_world()
-    for msg in after_init_mb:each() do
-        local e = msg[2]
-        local s = iom.get_scale(e)
-        iom.set_scale(e, math3d.mul(s, {5, 5, 5, 0}))
-    end
-
+local function init_camera()
     local mq = w:first "main_queue camera_ref:in"
-    local eyepos = math3d.vector(0, 100, -100)
+    local eyepos = math3d.vector(0, 5, -5)
     local camera_ref<close> = world:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
+end
+
+local function init_light()
+    local dl = w:first "directional_light scene:update"
+    iom.set_direction(dl, math3d.vector(0.0, -1.0, 0.0, 0.0))
+    w:submit(dl)
+end
+
+function init_loader_sys:init_world()
+    init_camera()
+    --init_light()
 end
 
 function init_loader_sys:camera_usage()
