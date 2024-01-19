@@ -307,6 +307,11 @@ function m.show()
             end
         end 
     end
+
+    if not selected_folder then
+        return
+    end
+    
     if ImGui.Begin("ResourceBrowser", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
         local relativePath
