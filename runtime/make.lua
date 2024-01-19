@@ -1,16 +1,15 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
-
-local runtime = false
+local platform = require "bee.platform"
 
 local RuntimeBacklist <const> = {
     filedialog = true,
-    effekseer = true,
+    window = platform.os == "android",
 }
 
 local EditorBacklist <const> = {
     firmware = true,
-    effekseer = true,
+    window = platform.os == "android",
 }
 
 local RuntimeAlias <const> = {
