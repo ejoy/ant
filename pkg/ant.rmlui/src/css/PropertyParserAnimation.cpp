@@ -61,112 +61,86 @@ static const std::unordered_map<std::string, Keyword> keywords = {
 };
 
 Property PropertyParseAnimation(PropertyId id, const std::string& value) {
-	std::vector<std::string> animation_values;
-	StringUtilities::ExpandString(animation_values, value, ','); 
+	Animation animation;
+	std::vector<std::string> arguments;
+	StringUtilities::ExpandString(arguments, value, ' ');
 
-	AnimationList animation_list;
+	bool duration_found = false;
+	bool delay_found = false;
+	bool num_iterations_found = false;
 
-	for (const std::string& single_animation_value : animation_values) {
-		Animation animation;
+	for (auto& argument : arguments) {
+		if (argument.empty())
+			continue;
 
-		std::vector<std::string> arguments;
-		StringUtilities::ExpandString(arguments, single_animation_value, ' ');
-
-		bool duration_found = false;
-		bool delay_found = false;
-		bool num_iterations_found = false;
-
-		for (auto& argument : arguments)
-		{
-			if (argument.empty())
-				continue;
-
-			// See if we have a <keyword> or <tween> specifier as defined in keywords
-			auto it = keywords.find(argument); 
-			if (it != keywords.end() && it->second.ValidAnimation())
-			{
-				switch (it->second.type)
-				{
-				case Keyword::NONE:
-				{
-					if (animation_list.size() > 0) // The none keyword can not be part of multiple definitions
-						return {};
-					return { id, AnimationList{} };
-				}
+		// See if we have a <keyword> or <tween> specifier as defined in keywords
+		auto it = keywords.find(argument); 
+		if (it != keywords.end() && it->second.ValidAnimation()) {
+			switch (it->second.type) {
+			case Keyword::NONE:
+				return {};
+			case Keyword::TWEEN:
+				animation.transition.tween = it->second.tween;
 				break;
-				case Keyword::TWEEN:
-					animation.transition.tween = it->second.tween;
-					break;
-				case Keyword::ALTERNATE:
-					animation.alternate = true;
-					break;
-				case Keyword::INFINITE:
-					if (num_iterations_found)
-						return {};
-					animation.num_iterations = -1;
-					num_iterations_found = true;
-					break;
-				case Keyword::PAUSED:
-					animation.paused = true;
-					break;
-				default:
-					break;
-				}
+			case Keyword::ALTERNATE:
+				animation.alternate = true;
+				break;
+			case Keyword::INFINITE:
+				if (num_iterations_found)
+					return {};
+				animation.num_iterations = -1;
+				num_iterations_found = true;
+				break;
+			case Keyword::PAUSED:
+				animation.paused = true;
+				break;
+			default:
+				break;
 			}
-			else
-			{
-				// Either <duration>, <delay>, <num_iterations> or a <keyframes-name>
-				float number = 0.0f;
-				int count = 0;
+		}
+		else {
+			// Either <duration>, <delay>, <num_iterations> or a <keyframes-name>
+			float number = 0.0f;
+			int count = 0;
 
-				if (sscanf(argument.c_str(), "%fs%n", &number, &count) == 1)
-				{
-					// Found a number, if there was an 's' unit, count will be positive
-					if (count > 0)
-					{
-						// Duration or delay was assigned
-						if (!duration_found)
-						{
-							duration_found = true;
-							animation.transition.duration = number;
-						}
-						else if (!delay_found)
-						{
-							delay_found = true;
-							animation.transition.delay = number;
-						}
-						else
-							return false;
+			if (sscanf(argument.c_str(), "%fs%n", &number, &count) == 1) {
+				// Found a number, if there was an 's' unit, count will be positive
+				if (count > 0) {
+					// Duration or delay was assigned
+					if (!duration_found) {
+						duration_found = true;
+						animation.transition.duration = number;
+					}
+					else if (!delay_found) {
+						delay_found = true;
+						animation.transition.delay = number;
 					}
 					else
-					{
-						// No 's' unit means num_iterations was found
-						if (!num_iterations_found)
-						{
-							animation.num_iterations = (int)(number + 0.5f);
-							num_iterations_found = true;
-						}
-						else
-							return false;
-					}
+						return false;
 				}
-				else
-				{
-					// Must be an animation name
-					animation.name = argument;
+				else {
+					// No 's' unit means num_iterations was found
+					if (!num_iterations_found) {
+						animation.num_iterations = (int)(number + 0.5f);
+						num_iterations_found = true;
+					}
+					else
+						return false;
 				}
 			}
+			else {
+				// Must be an animation name
+				animation.name = argument;
+			}
 		}
-
-		// Validate the parsed transition
-		if (animation.name.empty() || (animation.num_iterations < -1 || animation.num_iterations == 0))
-		{
-			return {};
-		}
-
-		animation_list.push_back(std::move(animation));
 	}
-	return { id, animation_list };
+
+	// Validate the parsed transition
+	if (animation.name.empty() || (animation.num_iterations < -1 || animation.num_iterations == 0)) {
+		return {};
+	}
+
+	return { id, animation };
 }
 
 Property PropertyParseTransition(PropertyId id, const std::string& value) {

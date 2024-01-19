@@ -57,7 +57,7 @@ namespace Rml {
         std::string operator()(tag<TransitionList>, PropertyBasicView view) {
             return "<transition>";
         }
-        std::string operator()(tag<AnimationList>, PropertyBasicView view) {
+        std::string operator()(tag<Animation>, PropertyBasicView view) {
             return "<animation>";
         }
         std::string operator()() {

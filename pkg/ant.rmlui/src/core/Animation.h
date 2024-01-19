@@ -23,6 +23,5 @@ struct Animation {
 };
 
 using TransitionList = std::map<PropertyId, Transition>;
-using AnimationList = std::vector<Animation>;
 
 }

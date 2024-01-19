@@ -9,7 +9,7 @@
 #include <css/PropertyBinary.h>
 
 namespace Rml {
-    using PropertyView = PropertyVariantView<PropertyFloat, PropertyKeyword, Color, std::string, Transform, TransitionList, AnimationList>;
+    using PropertyView = PropertyVariantView<PropertyFloat, PropertyKeyword, Color, std::string, Transform, TransitionList, Animation>;
 
     template <typename T>
     str<uint8_t> PropertyEncode(const T& value) {

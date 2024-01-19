@@ -40,7 +40,6 @@ static constexpr std::pair<PropertyId, std::string_view> UnparsedDefaultValue[] 
 	{ PropertyId::TransformOriginY, "50%" },
 	{ PropertyId::TransformOriginZ, "0px" },
 	{ PropertyId::Transition, "none" },
-	{ PropertyId::Animation, "none" },
 	{ PropertyId::BackgroundColor, "transparent" },
 	{ PropertyId::BackgroundImage, "none" },
 	{ PropertyId::BackgroundOrigin, "padding-box" },
