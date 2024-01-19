@@ -72,8 +72,9 @@ local function simple_entities()
 	PC:create_instance{
 		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
 		on_ready = function (p)
-		-- local root<close> = world:entity(p.tag['*'][1], "scene:in")
-		-- iom.set_scale(root, 10)
+			local root<close> = world:entity(p.tag['*'][1], "scene:in")
+			--iom.set_scale(root, 0.1)
+			iom.set_position(root, math3d.vector(0.0, 3.0, 0.0, 1.0))
 		end
 	}
 	PC:create_entity{
@@ -82,7 +83,7 @@ local function simple_entities()
 		},
 		data = {
 			scene 		= {
-				s = {50, 1, 50, 0},
+				s = {25, 1, 25},
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
@@ -94,10 +95,10 @@ local function simple_entities()
 		}
 	}
 
-	PC:create_instance{
-		prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", on_ready = function (e)
-		local root<close> = world:entity(e.tag['*'][1])
-	end}
+	-- PC:create_instance{
+	-- 	prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", on_ready = function (e)
+	-- 	local root<close> = world:entity(e.tag['*'][1])
+	-- end}
 
 end
 
