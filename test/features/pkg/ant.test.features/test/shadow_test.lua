@@ -73,7 +73,6 @@ local function simple_entities()
 		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
 		on_ready = function (p)
 			local root<close> = world:entity(p.tag['*'][1], "scene:in")
-			--iom.set_scale(root, 0.1)
 			iom.set_position(root, math3d.vector(0.0, 3.0, 0.0, 1.0))
 		end
 	}
@@ -88,10 +87,6 @@ local function simple_entities()
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
-            debug_mesh_bounding = true,
-			on_ready = function (e)
-				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
-			end,
 		}
 	}
 
