@@ -854,9 +854,6 @@ void Element::HandleAnimationProperty() {
 		return;
 	}
 	auto animation = property.Get<Animation>();
-	if (animation.paused) {
-		return;
-	}
 	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
 	if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
 		for (auto const& [id, keyframe] : *keyframes) {

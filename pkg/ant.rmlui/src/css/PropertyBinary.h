@@ -150,7 +150,6 @@ namespace Rml {
         b.append(v.transition);
         b.append(v.num_iterations);
         b.append(v.alternate);
-        b.append(v.paused);
         PropertyEncode(b, v.name);
     }
 
@@ -382,7 +381,6 @@ namespace Rml {
         return {
             data.pop<Transition>(),
             data.pop<int>(),
-            data.pop<bool>(),
             data.pop<bool>(),
             PropertyDecode(tag_v<std::string>, data)
         };

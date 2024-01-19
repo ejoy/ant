@@ -8,14 +8,14 @@
 namespace Rml {
 
 struct Keyword {
-	enum Type { NONE, TWEEN, ALL, ALTERNATE, INFINITE, PAUSED } type;
+	enum Type { NONE, TWEEN, ALL, ALTERNATE, INFINITE } type;
 	Tween tween;
 
 	bool ValidTransition() const {
 		return type == NONE || type == TWEEN || type == ALL;
 	}
 	bool ValidAnimation() const {
-		return type == NONE || type == TWEEN || type == ALTERNATE || type == INFINITE || type == PAUSED;
+		return type == NONE || type == TWEEN || type == ALTERNATE || type == INFINITE;
 	}
 };
 
@@ -24,7 +24,6 @@ static const std::unordered_map<std::string, Keyword> keywords = {
 	{"all", {Keyword::ALL}},
 	{"alternate", {Keyword::ALTERNATE}},
 	{"infinite", {Keyword::INFINITE}},
-	{"paused", {Keyword::PAUSED}},
 	{"back-in",            {Keyword::TWEEN, {Tween::Type::Back, Tween::Direction::In}}},
 	{"back-out",           {Keyword::TWEEN, {Tween::Type::Back, Tween::Direction::Out}}},
 	{"back-in-out",        {Keyword::TWEEN, {Tween::Type::Back, Tween::Direction::InOut}}},
@@ -90,9 +89,6 @@ Property PropertyParseAnimation(PropertyId id, const std::string& value) {
 					return {};
 				animation.num_iterations = -1;
 				num_iterations_found = true;
-				break;
-			case Keyword::PAUSED:
-				animation.paused = true;
 				break;
 			default:
 				break;

@@ -18,7 +18,6 @@ struct Animation {
 	Transition transition;
 	int num_iterations = 1;
 	bool alternate = false;
-	bool paused = false;
 	std::string name;
 };
 
