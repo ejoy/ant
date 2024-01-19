@@ -16,8 +16,7 @@ local util		= ecs.require "util"
 local PC		= util.proxy_creator()
 
 local function hitch_test()
-
-    local test_gid<const> = ig.register "hitch_test"
+    local test_gid<const> = ig.has "hitch_test" or ig.register "hitch_test"
     
     local eid = PC:create_entity{
         group = test_gid,
