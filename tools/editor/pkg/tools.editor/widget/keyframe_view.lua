@@ -386,7 +386,7 @@ local function get_or_create_target_anim(target, property, init_value)
         return
     end
     for _, anim in ipairs(current_anim.target_anims) do
-        if target == anim.target_name then
+        if (current_anim.type == "srt") and (target == anim.target_name) or (property == anim.property_name) then
             return anim
         end
     end
