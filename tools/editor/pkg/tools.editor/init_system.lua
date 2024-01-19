@@ -106,9 +106,9 @@ function m:init()
     ImGui.SetWindowTitle("Editor")
 	--
 	global_data:update_project_root(__ANT_EDITOR__)
-    start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
-    log_widget.init_log_receiver()
-    console_widget.init_console_sender()
+    -- start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
+    -- log_widget.init_log_receiver()
+    -- console_widget.init_console_sender()
 	--filewatch
 	local bfw = require "bee.filewatch"
 	local fw = bfw.create()
