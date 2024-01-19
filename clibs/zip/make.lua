@@ -128,6 +128,9 @@ lm:source_set "zlib-ng" {
     windows = {
         deps = "zlib-ng-x86",
     },
+    linux = {
+        deps = "zlib-ng-x86",
+    },
     macos = {
         deps = "zlib-ng-arm",
     },
@@ -184,6 +187,15 @@ lm:source_set "minizip-ng" {
         sources = {
             MINIZIPDIR.."/mz_os_win32.c",
             MINIZIPDIR.."/mz_strm_os_win32.c",
+        },
+    },
+    linux = {
+        defines = {
+            "_GNU_SOURCE",
+        },
+        sources = {
+            MINIZIPDIR.."/mz_os_posix.c",
+            MINIZIPDIR.."/mz_strm_os_posix.c",
         },
     },
     macos = {

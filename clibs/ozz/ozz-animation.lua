@@ -58,5 +58,10 @@ lm:exe "gltf2ozz" {
     },
     windows = {
         sources = lm.AntDir .. "/3rd/bgfx.luamake/utf8/utf8.rc"
+    },
+    linux = {
+        links = {
+            "m"
+        }
     }
 }

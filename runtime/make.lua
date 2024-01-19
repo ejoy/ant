@@ -76,11 +76,13 @@ lm:lua_source "ant_common" {
     windows = {
         sources = "windows/main.cpp",
     },
+    linux = {
+        sources = "posix/main.cpp",
+    },
     macos = {
-        sources = "osx/main.cpp",
+        sources = "posix/main.cpp",
     },
     ios = {
-        includes = "../../clibs/window/ios",
         sources = {
             "common/ios/main.mm",
             "common/ios/ios_error.mm",

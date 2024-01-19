@@ -29,6 +29,11 @@ lm:lua_source "ltask" {
             "winmm",
         }
     },
+    linux = {
+        defines = {
+            "_GNU_SOURCE",
+        },
+    },
     msvc = {
         flags = {
             "/experimental:c11atomics"

@@ -10,6 +10,8 @@
 #include <ozz/animation/runtime/skeleton.h>
 #include <ozz/animation/offline/raw_animation.h>
 
+#include <cstring>
+
 struct ozzUint16Verctor: public ozz::vector<uint16_t> {
 	ozzUint16Verctor()
 		: ozz::vector<uint16_t>()

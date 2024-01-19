@@ -13,6 +13,9 @@ lm:source_set "lua_source" {
     windows = {
         defines = "LUA_BUILD_AS_DLL",
     },
+    linux = {
+        defines = "LUA_USE_POSIX",
+    },
     macos = {
         visibility = "default",
         defines = "LUA_USE_MACOSX",

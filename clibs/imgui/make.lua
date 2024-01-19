@@ -28,6 +28,11 @@ lm:source_set "imgui" {
             "UNICODE",
         }
     },
+    linux = {
+        sources = {
+            "platform/linux/imgui_platform.cpp",
+        }
+    },
     macos = {
         sources = {
             "platform/macos/imgui_platform.mm",

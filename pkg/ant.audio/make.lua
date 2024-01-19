@@ -45,6 +45,9 @@ lm:lua_source "audio" {
     macos = {
         sources = "src/empty_luafmod.c",
     },
+    linux = {
+        sources = "src/empty_luafmod.c",
+    },
     ios = {
         sources = "src/luafmod.cpp",
         includes = {
