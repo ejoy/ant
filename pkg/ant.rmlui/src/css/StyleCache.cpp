@@ -25,6 +25,7 @@ namespace Rml::Style {
     }
 
     Cache::Cache(const PropertyIdSet& inherit) {
+        static_assert(EnumCountV<PropertyId> < 128);
         uint8_t inherit_mask[128] = {0};
         for (auto id : inherit) {
             inherit_mask[(size_t)id] = 1;
