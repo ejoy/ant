@@ -58,7 +58,7 @@ luamake
 #### 编译tools
 
 ``` bash
-luamake tools
+luamake -mode release tools #tools包含：shaderc, texturec, gltf2ozz，release模式会快一个数量级（debug模式下的tools可以不编译）
 ```
 
 #### 编译选项
