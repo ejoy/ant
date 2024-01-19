@@ -82,15 +82,14 @@ lm.visibility = "default"
 lm:import "runtime/make.lua"
 
 lm:runlua "compile_ecs" {
-    script = "clibs/ecs/compile_ecs.lua",
-    args =  {
-        "@clibs/ecs/ecs/",
+    script = "clibs/ecs/ecs_compile.lua",
+    args = {
+        lm.AntDir,
+        "$out",
         "@pkg",
     },
     inputs = "pkg/**/*.ecs",
-    output = {
-        "clibs/ecs/ecs/component.hpp",
-    }
+    output = "clibs/ecs/ecs/component.hpp",
 }
 
 if EnableEditor then
