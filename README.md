@@ -14,7 +14,7 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 
 #### MINGW
 - 下载并安装[msys2](https://www.msys2.org/)
-
+- 找到msys2安装目录，用mingw64.exe打开msys2的终端
 - 修改镜像服务器
 ``` bash
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/i686/" > /etc/pacman.d/mirrorlist.mingw32
@@ -56,9 +56,10 @@ luamake
 ```
 
 #### 编译tools
-
+tools包含：shaderc, texturec, gltf2ozz，release模式会快一个数量级（debug模式下的tools可以不编译）
+ 
 ``` bash
-luamake -mode release tools #tools包含：shaderc, texturec, gltf2ozz，release模式会快一个数量级（debug模式下的tools可以不编译）
+luamake -mode release tools
 ```
 
 #### 编译选项
