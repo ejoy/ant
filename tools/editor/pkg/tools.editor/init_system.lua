@@ -110,13 +110,15 @@ function m:init()
     -- log_widget.init_log_receiver()
     -- console_widget.init_console_sender()
 	--filewatch
-	local bfw = require "bee.filewatch"
-	local fw = bfw.create()
-	fw:add(global_data.project_root:string())
-	global_data.filewatch = fw
+	if global_data.project_root then
+		local bfw = require "bee.filewatch"
+		local fw = bfw.create()
+		fw:add(global_data.project_root:string())
+		global_data.filewatch = fw
+	end
 	global_data.audio = fmod.init()
 	
-	init_font();
+	init_font()
 
 	icons:init(assetmgr)
 	if editor_setting.setting.camera == nil then
