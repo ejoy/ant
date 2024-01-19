@@ -11,7 +11,7 @@ local ivs       = ecs.require "ant.render|visible_state"
 local hwi       = import_package "ant.hwi"
 local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
-local cs_material = "/pkg/vaststars.resources/materials/hitch/hitch_compute.material"
+local cs_material = "/pkg/ant.resources/materials/hitch/hitch_compute.material"
 
 local GID_MT<const> = {__index=function(t, gid)
     local gg = {}
