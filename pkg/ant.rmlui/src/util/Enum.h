@@ -63,7 +63,27 @@ namespace Rml {
         static_assert(false, "Unsupported compiler");
 #endif
     }
-
     template <auto Value>
     constexpr auto EnumNameV = EnumName<Value>();
+
+    template <typename T>
+    constexpr auto EnumTypeName() {
+#if __GNUC__ || __clang__
+        std::string_view name = __PRETTY_FUNCTION__;
+        std::size_t start = name.find('=') + 2;
+        std::size_t end = name.size() - 1;
+        return std::string_view{name.data() + start, end - start};
+#elif _MSC_VER
+        std::string_view name = __FUNCSIG__;
+        std::size_t start = name.find('<') + 1;
+        std::size_t end = name.rfind(">(");
+        name = std::string_view{name.data() + start, end - start};
+        start = name.find(' ');
+        return start == std::string_view::npos ? name : std::string_view{name.data() + start + 1, name.size() - start - 1};
+#else
+        static_assert(false, "Unsupported compiler");
+#endif
+    }
+    template <typename T>
+    constexpr auto EnumTypeNameV = EnumTypeName<T>();
 }

@@ -1,6 +1,7 @@
 local lm = require "luamake"
 
 --lm.warnings = "error"
+lm.cxx = "c++latest"
 
 lm:source_set "yoga" {
     rootdir = lm.AntDir .. "/3rd/yoga",
@@ -43,6 +44,7 @@ lm:lua_source "rmlui_css" {
     includes = {
         "src",
         lm.AntDir .. "/3rd/glm",
+        lm.AntDir .. "/3rd/yoga",
         lm.AntDir .. "/3rd/stylecache",
         lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/clibs/luabind",

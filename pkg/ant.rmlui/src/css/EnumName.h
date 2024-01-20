@@ -21,19 +21,24 @@ constexpr bool IsUpper(const char c) {
 template <CssEnumNameStyle Style, auto E>
 constexpr auto CssEnumNameRaw() {
 	constexpr auto rawname = EnumNameV<E>;
-	size_t i = 1;
+	size_t i = 0;
 	size_t sz = 0;
 	std::array<char, 32> name = {};
-	if (rawname[0] == '_') {
+	if constexpr (!std::is_scoped_enum_v<decltype(E)>) {
+		constexpr auto rawtypename = EnumTypeNameV<decltype(E)>;
+		static_assert(rawtypename == std::string_view { rawname.data(), rawtypename.size() });
+		i = rawtypename.size();
+	}
+	if (rawname[i] == '_') {
 		if constexpr (Style != CssEnumNameStyle::Camel) {
 			name[sz++] = '-';
 		}
-		name[sz++] = ToLower(rawname[1]);
-		i = 2;
+		name[sz++] = ToLower(rawname[++i]);
 	}
 	else {
-		name[sz++] = ToLower(rawname[0]);
+		name[sz++] = ToLower(rawname[i]);
 	}
+	++i;
 	if constexpr (Style == CssEnumNameStyle::Camel) {
 		for (; i < rawname.size(); ++i) {
 			name[sz++] = rawname[i];

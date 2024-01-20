@@ -17,6 +17,7 @@
 #include <array>
 #include <memory>
 #include <optional>
+#include <yoga/Yoga.h>
 
 namespace Rml {
 
@@ -72,7 +73,7 @@ static constexpr PropertyIdSet InheritableProperties = (+[]{
 	return set;
 })();
 static_assert((InheritableProperties & LayoutProperties).empty());
-static constexpr auto PropertyNames = MakeCssEnumNames<PropertyId>();
+static constexpr auto PropertyNames = MakeCssEnumNames<PropertyId>(); 
 static constexpr auto ShorthandNames = MakeCssEnumNames<ShorthandId>();
 
 static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDefinition>({
@@ -301,13 +302,13 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 
 	// flex layout
 	{ PropertyId::Display, {
-		PropertyParseKeyword<"flex", "none">,
+		PropertyParseKeyword<YGDisplay>,
 	}},
 	{ PropertyId::Overflow, {
-		PropertyParseKeyword<"visible", "hidden", "scroll">,
+		PropertyParseKeyword<YGOverflow>,
 	}},
 	{ PropertyId::Position, {
-		PropertyParseKeyword<"static", "relative", "absolute">,
+		PropertyParseKeyword<YGPositionType>,
 	}},
 
 	{ PropertyId::MarginTop, {
@@ -395,16 +396,16 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">,
 	}},
 	{ PropertyId::Direction, {
-		PropertyParseKeyword<"inherit", "ltr", "rtl">,
+		PropertyParseKeyword<YGDirection>,
 	}},
 	{ PropertyId::FlexDirection, {
-		PropertyParseKeyword<"column", "column-reverse", "row", "row-reverse">,
+		PropertyParseKeyword<YGFlexDirection>,
 	}},
 	{ PropertyId::FlexWrap, {
-		PropertyParseKeyword<"nowrap", "wrap", "wrap-reverse">,
+		PropertyParseKeyword<YGWrap>,
 	}},
 	{ PropertyId::JustifyContent, {
-		PropertyParseKeyword<"flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly">,
+		PropertyParseKeyword<YGJustify>,
 	}},
 
 	{ PropertyId::AspectRatio, {
@@ -806,7 +807,7 @@ static bool ParseShorthandDeclaration(PropertyVector& vec, ShorthandId shorthand
 	}
 	return ParseShorthandDeclaration(vec, shorthand_id, property_values);
 }
-
+ 
 void StyleSheetSpecification::Initialise() {
 	Style::Initialise(InheritableProperties);
 	StyleSheetDefaultValue::Initialise();
