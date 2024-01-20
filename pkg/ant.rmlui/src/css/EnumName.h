@@ -98,7 +98,7 @@ size_t GetCssEnumIndex(std::string_view name) {
 		if (name == CssEnumNameV<Style, static_cast<E>(I)>) {
 			return (size_t)I;
 		}
-		return GetCssEnumIndex<E, I+1>(name);
+		return GetCssEnumIndex<Style, E, I+1>(name);
 	}
 	return (size_t)-1;
 }

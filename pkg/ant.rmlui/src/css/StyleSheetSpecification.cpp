@@ -13,6 +13,7 @@
 #include <util/ConstexprMap.h>
 #include <util/AlwaysFalse.h>
 #include <core/Layout.h>
+#include <core/ComputedValues.h>
 #include <array>
 #include <memory>
 #include <optional>
@@ -132,10 +133,10 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::FontStyle, {
-		PropertyParseKeyword<"normal", "italic">,
+		PropertyParseKeyword<Style::FontStyle>,
 	}},
 	{ PropertyId::FontWeight, {
-		PropertyParseKeyword<"normal", "bold">,
+		PropertyParseKeyword<Style::FontWeight>,
 	}},
 	{ PropertyId::FontSize, {
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
@@ -145,14 +146,14 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::TextAlign, {
-		PropertyParseKeyword<"left", "right", "center", "justify">,
+		PropertyParseKeyword<Style::TextAlign>,
 	}},
 	{ PropertyId::WordBreak, {
-		PropertyParseKeyword<"normal", "break-all", "break-word">,
+		PropertyParseKeyword<Style::WordBreak>,
 	}},
 
 	{ PropertyId::TextDecorationLine, {
-		PropertyParseKeyword<"none", "underline", "overline", "line-through">,
+		PropertyParseKeyword<Style::TextDecorationLine>,
 	}},
 	{ PropertyId::TextDecorationColor, {
 		PropertyParseKeyword<"currentColor">,
@@ -165,22 +166,22 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 		PropertyParseNumber<PropertyParseNumberUnit::Length>,
 	}},
 	{ PropertyId::PerspectiveOriginX, {
-		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseKeyword<Style::OriginX>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::PerspectiveOriginY, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginY>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::Transform, {
 		PropertyParseTransform,
 	}},
 	{ PropertyId::TransformOriginX, {
-		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseKeyword<Style::OriginX>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::TransformOriginY, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginY>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::TransformOriginZ, {
@@ -202,10 +203,10 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 		PropertyParseString,
 	}},
 	{ PropertyId::BackgroundOrigin, {
-		PropertyParseKeyword<"padding-box", "border-box", "content-box">,
+		PropertyParseKeyword<Style::BoxType>,
 	}},
 	{ PropertyId::BackgroundSize, {
-		PropertyParseKeyword<"unset", "auto", "cover", "contain">,
+		PropertyParseKeyword<Style::BackgroundSize>,
 	}},
 	{ PropertyId::BackgroundSizeX, {
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
@@ -215,47 +216,49 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::BackgroundPositionX, {
-		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseKeyword<Style::OriginX>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::BackgroundPositionY, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginY>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 
-	{ PropertyId::BackgroundRepeat, {
-		PropertyParseKeyword<"repeat", "repeat-x", "repeat-y", "no-repeat">,
-	}},
+	//TODO:
+	//{ PropertyId::BackgroundRepeat, {
+	//	PropertyParseKeyword<"repeat", "repeat-x", "repeat-y", "no-repeat">,
+	//}},
+
 	{ PropertyId::BackgroundFilter, {
 		PropertyParseKeyword<"none">,
 		PropertyParseColour,
 	}},
 
 	{ PropertyId::BackgroundLattice, {
-		PropertyParseKeyword<"auto", "cover", "contain">,
+		PropertyParseKeyword<Style::BackgroundLattice>,
 	}},	
 	{ PropertyId::BackgroundLatticeX1, {
-		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseKeyword<Style::OriginX>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::BackgroundLatticeY1, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginY>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::BackgroundLatticeX2, {
-		PropertyParseKeyword<"left", "center", "right">,
+		PropertyParseKeyword<Style::OriginX>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::BackgroundLatticeY2, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginY>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::BackgroundLatticeU, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginX>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::BackgroundLatticeV, {
-		PropertyParseKeyword<"top", "center", "bottom">,
+		PropertyParseKeyword<Style::OriginY>,
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 
@@ -284,7 +287,7 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::PointerEvents, {
-		PropertyParseKeyword<"none", "auto">,
+		PropertyParseKeyword<Style::PointerEvents>,
 	}},
 	{ PropertyId::ScrollLeft, {
 		PropertyParseNumber<PropertyParseNumberUnit::Length>,
@@ -293,7 +296,7 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 		PropertyParseNumber<PropertyParseNumberUnit::Length>,
 	}},
 	{ PropertyId::Filter, {
-		PropertyParseKeyword<"none", "gray">,
+		PropertyParseKeyword<Style::Filter>,
 	}},
 
 	// flex layout
