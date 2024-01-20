@@ -47,7 +47,7 @@ float SpecularAO_Cones(vec3 bentNormal, vec3 reflect_vector, float visibility, f
     float cosAv = sqrt(1.0 - visibility);
     // aperture from roughness, log(10) / log(2) = 3.321928
     float cosAs = exp2(-3.321928 * sq(roughness));
-    // angle betwen bent normal and reflection direction
+    // angle between bent normal and reflection direction
     float cosB  = dot(bentNormal, reflect_vector);
 
     // Remove the 2 * PI term from the denominator, it cancels out the same term from
