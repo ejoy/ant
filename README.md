@@ -1,4 +1,4 @@
-Ant 游戏引擎
+Beautiful Ant 游戏引擎
 =====
 
 Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库公开，尚未正式发布。文档、示例等均待在 [Wiki](https://github.com/ejoy/ant/wiki) 上逐步完善。如有任何问题，可在 [Discussions](https://github.com/ejoy/ant/discussions) 发帖讨论。Issues 仅用于 Bug 跟踪，请不要在里面提问题。
