@@ -31,7 +31,7 @@ local function get_package(entry_path, readmount)
         for item in lfs.pairs(value) do
             local _, pkgname = item:string():match'(.*/)(.*)'
             local skip = false
-            if string.sub(pkgname, 1, 4) == "ant." then
+            if string.sub(pkgname, 1, 4) == "ant." and string.sub(pkgname, 1, 8) ~= "ant.test" then
                 if not (pkgname == "ant.resources" or pkgname == "ant.resources.binary") then
                     skip = true
                 end
