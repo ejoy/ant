@@ -1147,6 +1147,9 @@ function m:find_patch_index(node_idx)
 end
 
 function m:pacth_remove(eid)
+    if not self.current_prefab then
+        return true
+    end
     local name = hierarchy:get_node_info(eid).template.tag[1]
     self.current_prefab.tag[name] = nil
     self:update_tag_list()

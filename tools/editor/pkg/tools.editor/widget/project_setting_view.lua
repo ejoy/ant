@@ -8,7 +8,7 @@ local ps = {
 }
 
 local function read_file(p)
-    local f <close> = assert(io.open(p:string()))
+    local f <close> = assert(io.open(p))
     return f:read "a"
 end
 
@@ -266,14 +266,16 @@ function ps.show(open_popup)
     if BeginPopupModal(ps.id, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "ProjectSetting" then
-                local p = global_data.project_root / "settings"
-                
-                local s = project_settings[p:string()]
-                if s == nil then
-                    s = datalist.parse(read_file(p))
-                    project_settings[p:string()] = s
+                if global_data.project_root then
+                    local p = global_data.project_root / "settings"
+                    -- local p = "/pkg/ant.settings/default/graphic_settings.ant"
+                    local s = project_settings[p]
+                    if s == nil then
+                        s = datalist.parse(read_file(p))
+                        project_settings[p] = s
+                    end
+                    setting_ui(s)
                 end
-                setting_ui(s)
                 EndTabItem()
             end
             EndTabBar()

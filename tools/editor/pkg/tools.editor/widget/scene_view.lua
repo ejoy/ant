@@ -26,8 +26,36 @@ local function as_main_camera_mode()
     return mq.camera_ref == sv.camera_ref
 end
 
+local function can_delete(eid)
+    local info = hierarchy:get_node_info(eid)
+    -- TODO: cant't remove root node : Scene
+    if (info.template.tag and info.template.tag[1] == "Scene") then
+        return false
+    end
+    local can_delete = true
+    if as_main_camera_mode() then
+        local e <close> = world:entity(eid, "camera?in")
+        if e.camera then
+            can_delete = false
+        else
+            local children = hierarchy:get_node(eid).children
+            if #children > 0 then
+                --TODO: for camera
+                local ce <close> = world:entity(children[1].eid, "camera?in")
+                if ce.camera then
+                    can_delete = false
+                end
+            end
+        end
+    end
+    return can_delete
+end
+
 local function node_context_menu(eid)
-    if gizmo.target_eid ~= eid then return end
+    if gizmo.target_eid ~= eid then
+        return
+    end
+    
     if ImGui.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         local tpl = hierarchy:get_node_info(eid)
@@ -50,25 +78,9 @@ local function node_context_menu(eid)
         if ImGui.MenuItem(current_visible and faicons.ICON_FA_EYE.." Hide" or faicons.ICON_FA_EYE_SLASH.." Show") then
             world:pub { "HierarchyEvent", "visible", hierarchy:get_node(eid), not current_visible }
         end
-        ImGui.Separator()
-        if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
-            local can_delete = true
-            if as_main_camera_mode() then
-                local e <close> = world:entity(eid, "camera?in")
-                if e.camera then
-                    can_delete = false
-                else
-                    local children = hierarchy:get_node(eid).children
-                    if #children > 0 then
-                        --TODO: for camera
-                        local ce <close> = world:entity(children[1].eid, "camera?in")
-                        if ce.camera then
-                            can_delete = false
-                        end
-                    end
-                end
-            end
-            if can_delete then
+        if can_delete(eid) then
+            ImGui.Separator()
+            if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
                 world:pub { "HierarchyEvent", "delete", eid }
             end
         end
@@ -82,13 +94,6 @@ local function node_context_menu(eid)
         ImGui.Separator()
         if ImGui.MenuItem("NoParent") then
             world:pub { "EntityEvent", "parent", eid }
-        end
-        ImGui.Separator()
-        if ImGui.MenuItem("SRT Animation") then
-            world:pub { "CreateAnimation", "srt", eid }
-        end
-        if ImGui.MenuItem("MTL Animation") then
-            world:pub { "CreateAnimation", "mtl", eid }
         end
         ImGui.EndPopup()
     end
