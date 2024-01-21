@@ -46,7 +46,7 @@ local function normalize_value(cmds, quote_cmds, v)
         if t ~= "string" then
             v = tostring(v)
         end
-        cmds[#cmds + 1] = quote_arg(v)
+        cmds[#cmds + 1] = v
         quote_cmds[#quote_cmds + 1] = quote_arg(v)
     end
 end
