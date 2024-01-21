@@ -387,13 +387,13 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 	
 	{ PropertyId::AlignContent, {
-		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around", "space-evenly">,
+		PropertyParseKeyword<YGAlign>,
 	}},
 	{ PropertyId::AlignItems, {
-		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">,
+		PropertyParseKeyword<YGAlign>,
 	}},
 	{ PropertyId::AlignSelf, {
-		PropertyParseKeyword<"auto", "flex-start", "center", "flex-end", "stretch", "baseline", "space-between", "space-around">,
+		PropertyParseKeyword<YGAlign>,
 	}},
 	{ PropertyId::Direction, {
 		PropertyParseKeyword<YGDirection>,
