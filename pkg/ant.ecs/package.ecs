@@ -13,6 +13,7 @@ pipeline "_frame_finish"
 
 pipeline "_init"
     .stage "init_system"
+    .stage "device_check"
     .stage "preinit"
     .pipeline "init"
     .pipeline "_frame_finish"

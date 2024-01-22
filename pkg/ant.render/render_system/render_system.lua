@@ -20,6 +20,25 @@ local RM        = ecs.require "ant.material|material"
 local render_sys= ecs.system "render_system"
 local R			= world:clibs "render.render_material"
 
+function render_sys:device_check()
+	local caps = bgfx.get_caps()
+	if caps.limits.maxTextureSamplers < 16 then
+		error(("need device support 16 texture samplers: %d"):format(caps.limits.maxTextureSamplers))
+	end
+
+	if not caps.formats.RGBA8["2D_SRGB"] then
+		error("device framebuffer format RGBA8_SRGB should be supported.")
+	end
+
+	if not caps.supported.DRAW_INDIRECT then
+		error("need device support draw indirect feature")
+	end
+
+	if not (caps.supported.TEXUTRE_COMPARE_ALL or caps.supported.TEXTURE_COMPARE_LEQUAL) then
+		error("need device support texture compare")
+	end
+end
+
 function render_sys:start_frame()
 	assetmgr.material_check()
 end
