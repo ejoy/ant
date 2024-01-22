@@ -41,11 +41,6 @@ end
 local default_setting = read_datalist_file "/pkg/ant.settings/default/graphic_settings.ant"
 
 local function load_material_file(mf)
-    -- if string.find(mf, ".glb|") then
-    --     mf = mf .. "/source.ant"
-    -- end
-
-    -- return read_datalist_file(mf)
     return read_datalist_file(mf .. "/source.ant")
 end
 

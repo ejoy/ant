@@ -5,7 +5,7 @@ local BASETOOLS<const> = {
     "shaderc", "texturec", "gltf2ozz"
 }
 
-local TOOLSUFFIX<const> = platform.os == "macos" and "" or ".exe"
+local TOOLSUFFIX<const> = platform.os == "windows" and ".exe" or ""
 
 local function check_tool_path_valid(path)
     if not lfs.exists(path) then

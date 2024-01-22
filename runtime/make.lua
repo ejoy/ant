@@ -1,16 +1,15 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
-
-local runtime = false
+local platform = require "bee.platform"
 
 local RuntimeBacklist <const> = {
     filedialog = true,
-    effekseer = true,
+    window = platform.os == "android",
 }
 
 local EditorBacklist <const> = {
     firmware = true,
-    effekseer = true,
+    window = platform.os == "android",
 }
 
 local RuntimeAlias <const> = {
@@ -77,11 +76,13 @@ lm:lua_source "ant_common" {
     windows = {
         sources = "windows/main.cpp",
     },
+    linux = {
+        sources = "posix/main.cpp",
+    },
     macos = {
-        sources = "osx/main.cpp",
+        sources = "posix/main.cpp",
     },
     ios = {
-        includes = "../../clibs/window/ios",
         sources = {
             "common/ios/main.mm",
             "common/ios/ios_error.mm",

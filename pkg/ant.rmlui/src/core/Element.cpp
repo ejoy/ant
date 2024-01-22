@@ -853,24 +853,13 @@ void Element::HandleAnimationProperty() {
 	if (!property) {
 		return;
 	}
-	const AnimationList& animation_list = property.Get<AnimationList>();
-	bool element_has_animations = (!animation_list.empty() || !animations.empty());
-
-	if (!element_has_animations) {
-		return;
-	}
-
+	auto animation = property.Get<Animation>();
 	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
-
-	for (const auto& animation : animation_list) {
-		if (!animation.paused) {
-			if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
-				for (auto const& [id, keyframe] : *keyframes) {
-					auto [res, suc] = animations.emplace(id, ElementAnimation { *this, id, animation, keyframe });
-					if (suc) {
-						DispatchAnimationEvent("animationstart", res->second);
-					}
-				}
+	if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
+		for (auto const& [id, keyframe] : *keyframes) {
+			auto [res, suc] = animations.emplace(id, ElementAnimation { *this, id, animation, keyframe });
+			if (suc) {
+				DispatchAnimationEvent("animationstart", res->second);
 			}
 		}
 	}

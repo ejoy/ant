@@ -1,20 +1,18 @@
 local lm = require "luamake"
 
-local ROOT <const> = "../../"
-
 lm:lua_source "render_core"{
     includes = {
-        ROOT .. "3rd/bgfx/include",
-        ROOT .. "3rd/bx/include",
-        ROOT .. "clibs/bgfx",
-        ROOT .. "3rd/math3d",
-        ROOT .. "clibs/foundation",
-        ROOT .. "clibs/luabind",
-        ROOT .. "3rd/glm",
-        ROOT .. "3rd/luaecs",
-        ROOT .. "clibs/ecs",
-        ROOT .. "pkg/ant.resource_manager/src",
-        ROOT .. "pkg/ant.material",
+        lm.AntDir .. "/3rd/bgfx/include",
+        lm.AntDir .. "/3rd/bx/include",
+        lm.AntDir .. "/clibs/bgfx",
+        lm.AntDir .. "/3rd/math3d",
+        lm.AntDir .. "/clibs/foundation",
+        lm.AntDir .. "/clibs/luabind",
+        lm.AntDir .. "/3rd/glm",
+        lm.AntDir .. "/3rd/luaecs",
+        lm.AntDir .. "/clibs/ecs",
+        lm.AntDir .. "/pkg/ant.resource_manager/src",
+        lm.AntDir .. "/pkg/ant.material",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
@@ -29,11 +27,11 @@ lm:lua_source "render_core"{
 
 lm:lua_source "render" {
     includes = {
-        ROOT .. "3rd/math3d",
-        ROOT .. "clibs/luabind",
-        ROOT .. "3rd/luaecs",
-        ROOT .. "3rd/glm",
-        ROOT .. "clibs/ecs",
+        lm.AntDir .. "/3rd/math3d",
+        lm.AntDir .. "/clibs/luabind",
+        lm.AntDir .. "/3rd/luaecs",
+        lm.AntDir .. "/3rd/glm",
+        lm.AntDir .. "/clibs/ecs",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",

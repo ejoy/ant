@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -150,15 +151,7 @@ namespace Rml {
         b.append(v.transition);
         b.append(v.num_iterations);
         b.append(v.alternate);
-        b.append(v.paused);
         PropertyEncode(b, v.name);
-    }
-
-    inline void PropertyEncode(strbuilder<uint8_t>& b, AnimationList const& v) {
-        PropertyEncodeSize<uint8_t>(b, v);
-        for (auto const& value: v) {
-            PropertyEncode(b, value);
-        }
     }
 
     class PropertyBasicView {
@@ -390,18 +383,7 @@ namespace Rml {
             data.pop<Transition>(),
             data.pop<int>(),
             data.pop<bool>(),
-            data.pop<bool>(),
             PropertyDecode(tag_v<std::string>, data)
         };
-    }
-
-    inline AnimationList PropertyDecode(tag<AnimationList>, PropertyBasicView& data) {
-        size_t n = data.pop<uint8_t>();
-        AnimationList t;
-        t.reserve(n);
-        for (size_t i = 0; i < n; ++i) {
-            t.emplace_back(PropertyDecode(tag_v<Animation>, data));
-        }
-        return t;
     }
 }

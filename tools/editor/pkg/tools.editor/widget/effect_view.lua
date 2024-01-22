@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local iefk          = ecs.require "ant.efk|efk"
-local imgui         = require "imgui"
+local ImGui         = import_package "ant.imgui"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
 local EffectView    = {}
@@ -65,7 +65,7 @@ function EffectView:show()
     if not self.eid then
         return
     end
-    imgui.cursor.Separator()
+    ImGui.Separator()
     self.group_property:show()
 end
 

@@ -1,10 +1,8 @@
 local lm = require "luamake"
 
-local ROOT <const> = "../../"
-
 lm:lua_source "font-systemfont" {
     includes = {
-        ROOT .. "clibs/zip"
+        lm.AntDir .. "/clibs/zip"
     },
     windows = {
         sources = {
@@ -26,10 +24,10 @@ lm:lua_source "font-systemfont" {
 lm:lua_source "font" {
     deps = "font-systemfont",
     includes = {
-        ROOT .. "3rd/bgfx/include",
-        ROOT .. "3rd/bx/include",
-        ROOT .. "3rd/bgfx/3rdparty",
-        ROOT .. "clibs/bgfx"
+        lm.AntDir .. "/3rd/bgfx/include",
+        lm.AntDir .. "/3rd/bx/include",
+        lm.AntDir .. "/3rd/bgfx/3rdparty",
+        lm.AntDir .. "/clibs/bgfx"
     },
     sources = {
         "src/*.c",

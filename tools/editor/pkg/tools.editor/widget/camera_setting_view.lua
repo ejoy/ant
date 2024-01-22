@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local math3d    = require "math3d"
 
 local icamera   = ecs.require "ant.camera|camera"
@@ -13,24 +13,24 @@ local CAMERA_SETTING_NAME<const> = "CameraSetting"
 
 local function show_camera_setting(open)
     if open then
-        if not imgui.windows.IsPopupOpen(CAMERA_SETTING_NAME) then
-            imgui.windows.OpenPopup(CAMERA_SETTING_NAME)
+        if not ImGui.IsPopupOpen(CAMERA_SETTING_NAME) then
+            ImGui.OpenPopup(CAMERA_SETTING_NAME)
         end
     end
 
-    local change, opened = imgui.windows.BeginPopupModal(CAMERA_SETTING_NAME, imgui.flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(CAMERA_SETTING_NAME, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         local mq = w:first "main_queue camera_ref:in"
         local e<close> = world:entity(mq.camera_ref, "camera:update scene:update")
 
-        if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
+        if ImGui.TreeNode("Camera", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
 
             local frustum = e.camera.frustum
-            if imgui.widget.TreeNode("Frustum", imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
+            if ImGui.TreeNode("Frustum", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
                 
                 local changed
                 local uiortho = {frustum.ortho}
-                if imgui.widget.Checkbox("ortho", uiortho) then
+                if ImGui.Checkbox("ortho", uiortho) then
                     frustum.ortho = uiortho[1]
                     changed = true
 
@@ -57,7 +57,7 @@ local function show_camera_setting(open)
 
                 for _, ui in ipairs(uifrustum) do
                     local t = {frustum[ui.field] or ui.defaultvalue}
-                    if imgui.widget.DragFloat(ui.name, t) then
+                    if ImGui.DragFloat(ui.name, t) then
                         frustum[ui.field] = t[1]
                         changed = true
                     end
@@ -66,34 +66,34 @@ local function show_camera_setting(open)
                 if changed then
                     icamera.set_frustum(e, frustum)
                 end
-                imgui.widget.TreePop()
+                ImGui.TreePop()
             end
 
-            imgui.widget.TreePop()
+            ImGui.TreePop()
         end
 
-        if imgui.widget.TreeNode("Scene", imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
+        if ImGui.TreeNode("Scene", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
 
             local uis = math3d.tovalue(e.scene.s)
-            if imgui.widget.DragFloat("Scale", uis) then
+            if ImGui.DragFloat("Scale", uis) then
                 iom.set_scale(e, math3d.vector(uis[1], uis[2], uis[3]))
             end
 
             local uir = math3d.tovalue(math3d.quat2euler(e.scene.r))
-            if imgui.widget.DragFloat("Rotation", uir) then
+            if ImGui.DragFloat("Rotation", uir) then
                 uis[4] = nil
                 iom.set_rotation(e, math3d.quaterion(uir))
             end
 
             local uit = math3d.tovalue(e.scene.t)
-            if imgui.widget.DragFloat("Position", uit) then
+            if ImGui.DragFloat("Position", uit) then
                 uit[4] = 1
                 iom.set_position(e, math3d.vector(uit))
             end
 
-            imgui.widget.TreePop()
+            ImGui.TreePop()
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 

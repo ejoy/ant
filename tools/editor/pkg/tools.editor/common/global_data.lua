@@ -31,7 +31,7 @@ local function get_package(entry_path, readmount)
         for item in lfs.pairs(value) do
             local _, pkgname = item:string():match'(.*/)(.*)'
             local skip = false
-            if string.sub(pkgname, 1, 4) == "ant." then
+            if string.sub(pkgname, 1, 4) == "ant." and string.sub(pkgname, 1, 8) ~= "ant.test" then
                 if not (pkgname == "ant.resources" or pkgname == "ant.resources.binary") then
                     skip = true
                 end
@@ -48,6 +48,9 @@ local function get_package(entry_path, readmount)
 end
 
 function m:update_project_root(rootpath)
+    if not rootpath then
+        return
+    end
     self.project_root   = lfs.path(rootpath)
     self.packages       = get_package(lfs.absolute(self.project_root:string()), true)
     self.package_path   = fs.path(find_package_name(rootpath, self.packages))

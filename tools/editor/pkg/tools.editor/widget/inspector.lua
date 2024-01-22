@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local gizmo     = ecs.require "gizmo.gizmo"
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local uiconfig  = require "widget.config"
 
 local base_panel        = ecs.require "widget.base_view"()
@@ -64,10 +64,10 @@ function m.show()
         material_panel:clear()
     end
     update_eid()
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    if imgui.windows.Begin("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
+    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
+    if ImGui.Begin("Inspector", ImGui.Flags.Window { "NoCollapse", "NoClosed" }) then
         base_panel:show()
         camera_panel:show()
         light_panel:show()
@@ -78,7 +78,7 @@ function m.show()
         material_panel:show()
         daynight_panel:show()
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 
 return m

@@ -83,7 +83,7 @@ Property ElementInterpolate::Update(float t0, float t1, float t, const Tween& tw
 	if (t1 - t0 > eps)
 		alpha = (t - t0) / (t1 - t0);
 	alpha = std::clamp(alpha, 0.0f, 1.0f);
-	alpha = tween.get(alpha);
+	alpha = TweenGet(tween, alpha);
 	if (alpha > 1.f) alpha = 1.f;
 	if (alpha < 0.f) alpha = 0.f;
 	return PropertyVisit(InterpolateVisitor { id, p0, p1, alpha }, p0, p1);

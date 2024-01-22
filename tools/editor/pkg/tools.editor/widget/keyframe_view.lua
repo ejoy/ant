@@ -3,32 +3,33 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local assetmgr  = import_package "ant.asset"
-local aio       = import_package "ant.io"
-local imgui     = require "imgui"
-local imguiWidgets = require "imgui.widgets"
-local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
-local joint_utils  = require "widget.joint_utils"
-local utils     = require "common.utils"
-local widget_utils  = require "widget.utils"
-local stringify     = import_package "ant.serialize".stringify
-local hierarchy = require "hierarchy_edit"
-local ozz = require "ozz"
-local math3d        = require "math3d"
-local icons     = require "common.icons"
-local mathpkg	= import_package "ant.math"
-local mc, mu    = mathpkg.constant, mathpkg.util
 local imodifier = ecs.require "ant.modifier|modifier"
 local ika       = ecs.require "ant.anim_ctrl|keyframe"
+local prefab_mgr= ecs.require "prefab_manager"
+local gizmo     = ecs.require "gizmo.gizmo"
+local assetmgr  = import_package "ant.asset"
+local aio       = import_package "ant.io"
+local ImGui     = import_package "ant.imgui"
+local stringify = import_package "ant.serialize".stringify
+local serialize = import_package "ant.serialize"
+local mathpkg	= import_package "ant.math"
+local mc, mu    = mathpkg.constant, mathpkg.util
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
+local hierarchy = require "hierarchy_edit"
+local ozz       = require "ozz"
+local math3d    = require "math3d"
+local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
-local prefab_mgr = ecs.require "prefab_manager"
 local gd        = require "common.global_data"
+local imguiWidgets  = require "imgui.widgets"
+local joint_utils   = require "widget.joint_utils"
+local widget_utils  = require "widget.utils"
+local utils         = require "common.utils"
+
 local m = {}
 local current_mtl
-local current_target
 local current_uniform
-local target_map = {}
 local file_path
 local joints_map
 local joints_list
@@ -38,6 +39,7 @@ local sample_ratio = 30.0
 local anim_eid
 local current_joint
 local current_anim
+local anim_bind_map = {}
 local allanims = {}
 local anim_name_list = {}
 local create_context = {}
@@ -247,10 +249,12 @@ local function update_animation()
             imodifier.delete(anim.modifier)
             anim.modifier = nil
             if #keyframes > 0 then
+                local bind_eid = prefab_mgr.get_eid_by_name[anim_bind_map[current_anim.name]]
+                assert(bind_eid)
                 if anim_type == "mtl" then
-                    anim.modifier = imodifier.create_mtl_modifier(current_target, anim.target_name, keyframes, false, true)
+                    anim.modifier = imodifier.create_mtl_modifier(bind_eid, anim.target_name, keyframes, false, true)
                 elseif anim_type == "srt" then
-                    anim.modifier = imodifier.create_srt_modifier(target_map[anim.target_name], 0, keyframes, false, true)
+                    anim.modifier = imodifier.create_srt_modifier(bind_eid, 0, keyframes, false, true)
                 end
             end
             ::continue::
@@ -319,7 +323,9 @@ local function clip_exist(clips, name)
 end
 
 local function find_anim_by_name(name)
-    if not current_anim then return end
+    if not current_anim then
+        return
+    end
     for index, value in ipairs(current_anim.target_anims) do
         if name == value.target_name then
             return index
@@ -378,39 +384,47 @@ local function get_current_target_name()
         return current_joint and current_joint.name or nil
     end
 end
-local function get_or_create_target_anim(tn, init_value)
-    if not current_anim or not tn then
+
+local function get_target_anim(target)
+    if not current_anim or not target then
         return
     end
-    for _, value in ipairs(current_anim.target_anims) do
-        if tn == value.target_name then
-            return value;
+    for _, anim in ipairs(current_anim.target_anims) do
+        if anim.target_name == target then
+            return anim
         end
     end
-    current_anim.target_anims[#current_anim.target_anims + 1] = {
-        target_name = tn,
-        init_value = init_value,
-        clips = {},
-        inherit = {false, false, false}, -- s, r, t
-        inherit_ui = {{false}, {false}, {false}}
-    }
-    return current_anim.target_anims[#current_anim.target_anims]
+end
+
+local function get_or_create_target_anim(target, init_value)
+    local anim = get_target_anim(target)
+    if not anim then
+        anim = {
+            target_name = target,
+            init_value = init_value,
+            clips = {},
+            inherit = {false, false, false}, -- s, r, t
+            inherit_ui = {{false}, {false}, {false}}
+        }
+        current_anim.target_anims[#current_anim.target_anims + 1] = anim
+    end
+    return anim
 end
 
 local function create_clip()
-    if not new_clip_pop or (not current_joint and not current_uniform and not current_target) then
+    if not new_clip_pop or (not current_joint and not current_uniform) then
         return
     end
     local title = "New Clip"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
 
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text("StartFrame:")
-        imgui.cursor.SameLine()
-        if imgui.widget.DragInt("##StartFrame", start_frame_ui) then
+        ImGui.Text("StartFrame:")
+        ImGui.SameLine()
+        if ImGui.DragInt("##StartFrame", start_frame_ui) then
             if start_frame_ui[1] < 0 then
                 start_frame_ui[1] = 0
             end
@@ -418,7 +432,7 @@ local function create_clip()
             new_range_end = new_range_start + 1
         end
         if is_index_valid(new_range_start) and is_index_valid(new_range_end) then
-            if imgui.widget.Button "Create" then
+            if ImGui.Button "Create" then
                 local target_name = get_current_target_name()
                 local anim = get_or_create_target_anim(target_name)
                 local clips = anim.clips
@@ -462,13 +476,13 @@ local function create_clip()
                 new_clip_pop = false
             end
         else
-            imgui.widget.Text("Invalid start range!")
+            ImGui.Text("Invalid start range!")
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             new_clip_pop = false
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 local function max_range_value()
@@ -488,8 +502,8 @@ end
 local function show_current_detail()
     if not current_anim then return end
     local anim_type = current_anim.type
-    imgui.widget.PropertyLabel("FrameCount:")
-    if imgui.widget.DragInt("##FrameCount", current_anim.frame_count_ui) then
+    ImGui.PropertyLabel("FrameCount:")
+    if ImGui.DragInt("##FrameCount", current_anim.frame_count_ui) then
         if current_anim.frame_count_ui[1] < max_range_value() + 1 then
             current_anim.frame_count_ui[1] = max_range_value() + 1
         end
@@ -507,9 +521,9 @@ local function show_current_detail()
     if (anim_type == "mtl" and not current_uniform) or (anim_type == "ske" and not current_joint) or not target_name then
         return
     end
-    imgui.widget.Text(target_name .. ":")
-    imgui.cursor.SameLine()
-    if imgui.widget.Button("NewClip") then
+    ImGui.Text(target_name .. ":")
+    ImGui.SameLine()
+    if ImGui.Button("NewClip") then
         new_clip_pop = true
     end
     create_clip()
@@ -519,18 +533,18 @@ local function show_current_detail()
     local anim_layer = current_anim.target_anims[current_anim.selected_layer_index]
     local clips = anim_layer.clips
     
-    -- imgui.cursor.SameLine()
-    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[1]) then
+    -- ImGui.SameLine()
+    -- if ImGui.Checkbox("inherit", anim_layer.inherit_ui[1]) then
     --     anim_layer.inherit[1] = anim_layer.inherit_ui[1][1]
     --     update_animation()
     -- end
-    -- imgui.cursor.SameLine()
-    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[2]) then
+    -- ImGui.SameLine()
+    -- if ImGui.Checkbox("inherit", anim_layer.inherit_ui[2]) then
     --     anim_layer.inherit[2] = anim_layer.inherit_ui[2][1]
     --     update_animation()
     -- end
-    imgui.cursor.SameLine()
-    if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[3]) then
+    ImGui.SameLine()
+    if ImGui.Checkbox("inherit", anim_layer.inherit_ui[3]) then
         anim_layer.inherit[3] = anim_layer.inherit_ui[3][1]
         update_animation()
     end
@@ -538,8 +552,8 @@ local function show_current_detail()
     if current_anim.selected_clip_index < 1 then
         return
     else
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_TRASH.." DelClip") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_TRASH.." DelClip") then
             table.remove(clips, current_anim.selected_clip_index)
             current_anim.selected_clip_index = 0
             current_anim.dirty_layer = -1
@@ -550,15 +564,15 @@ local function show_current_detail()
 
     local current_clip = clips[current_anim.selected_clip_index]
     local name = get_current_target_name()
-    if not current_clip or anim_layer.target_name ~= name then
+    if not current_clip or (anim_layer.target_name ~= name) then
         return
     end
 
-    imgui.cursor.Separator()
-    imgui.widget.PropertyLabel("FrameRange")
+    ImGui.Separator()
+    ImGui.PropertyLabel("FrameRange")
     local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
     local dirty = false
-    if imgui.widget.DragInt("##Range", current_clip.range_ui) then
+    if ImGui.DragInt("##Range", current_clip.range_ui) then
         local range_ui = current_clip.range_ui
         local head = false
         if old_range[1] ~= range_ui[1] then
@@ -613,43 +627,43 @@ local function show_current_detail()
         current_anim.dirty_layer = current_anim.selected_layer_index
         dirty = true
     end
-    imgui.widget.PropertyLabel("TweenType")
-    if imgui.widget.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = imgui.flags.Combo {}}) then
+    ImGui.PropertyLabel("TweenType")
+    if ImGui.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = ImGui.Flags.Combo {}}) then
         for i, type in ipairs(tween_type_name) do
-            if imgui.widget.Selectable(type, current_clip.tween == i) then
+            if ImGui.Selectable(type, current_clip.tween == i) then
                 current_clip.tween = i
                 dirty = true
             end
         end
-        imgui.widget.EndCombo()
+        ImGui.EndCombo()
     end
     if anim_type == "mtl" then
-        imgui.widget.PropertyLabel("UniformValue")
+        ImGui.PropertyLabel("UniformValue")
         local ui_data = current_clip.value_ui
-        if imgui.widget.ColorEdit("##UniformValue", ui_data) then
+        if ImGui.ColorEdit("##UniformValue", ui_data) then
             current_clip.value = {ui_data[1], ui_data[2], ui_data[3], ui_data[4]}
             dirty = true
         end
-        imgui.widget.PropertyLabel("Scale")
+        ImGui.PropertyLabel("Scale")
         ui_data = current_clip.scale_ui
-        if imgui.widget.DragFloat("##Scale", ui_data) then
+        if ImGui.DragFloat("##Scale", ui_data) then
             current_clip.scale = ui_data[1]
             dirty = true
         end
     else
         if anim_type == "ske" or anim_type == "srt" then
-            imgui.widget.PropertyLabel("AnimationType")
-            if imgui.widget.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = imgui.flags.Combo {}}) then
+            ImGui.PropertyLabel("AnimationType")
+            if ImGui.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = ImGui.Flags.Combo {}}) then
                 for i, type in ipairs(anim_type_name) do
-                    if imgui.widget.Selectable(type, current_clip.type == i) then
+                    if ImGui.Selectable(type, current_clip.type == i) then
                         current_clip.type = i
                         dirty = true
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
             end
-            imgui.widget.PropertyLabel("Repeat")
-            if imgui.widget.DragInt("##Repeat", current_clip.repeat_ui) then
+            ImGui.PropertyLabel("Repeat")
+            if ImGui.DragInt("##Repeat", current_clip.repeat_ui) then
                 local count = current_clip.repeat_ui[1]
                 if count > max_repeat then
                     count = max_repeat
@@ -661,37 +675,37 @@ local function show_current_detail()
                 dirty = true
             end
         end
-        imgui.widget.PropertyLabel("Direction")
-        if imgui.widget.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = imgui.flags.Combo {}}) then
+        ImGui.PropertyLabel("Direction")
+        if ImGui.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = ImGui.Flags.Combo {}}) then
             for i, type in ipairs(dir_name) do
-                if imgui.widget.Selectable(type, current_clip.direction == i) then
+                if ImGui.Selectable(type, current_clip.direction == i) then
                     current_clip.direction = i
                     dirty = true
                 end
             end
-            imgui.widget.EndCombo()
+            ImGui.EndCombo()
         end
 
-        imgui.widget.PropertyLabel("AmplitudePos")
+        ImGui.PropertyLabel("AmplitudePos")
         local ui_data = current_clip.amplitude_pos_ui
-        if imgui.widget.DragFloat("##AmplitudePos", ui_data) then
+        if ImGui.DragFloat("##AmplitudePos", ui_data) then
             current_clip.amplitude_pos = ui_data[1]
             dirty = true
         end
 
-        imgui.widget.PropertyLabel("RotAxis")
-        if imgui.widget.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = imgui.flags.Combo {}}) then
+        ImGui.PropertyLabel("RotAxis")
+        if ImGui.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = ImGui.Flags.Combo {}}) then
             for i = 1, 3 do
-                if imgui.widget.Selectable(dir_name[i], current_clip.rot_axis == i) then
+                if ImGui.Selectable(dir_name[i], current_clip.rot_axis == i) then
                     current_clip.rot_axis = i
                     dirty = true
                 end
             end
-            imgui.widget.EndCombo()
+            ImGui.EndCombo()
         end
-        imgui.widget.PropertyLabel("AmplitudeRot")
+        ImGui.PropertyLabel("AmplitudeRot")
         ui_data = current_clip.amplitude_rot_ui
-        if imgui.widget.DragFloat("##AmplitudeRot", ui_data) then
+        if ImGui.DragFloat("##AmplitudeRot", ui_data) then
             current_clip.amplitude_rot = ui_data[1]
             dirty = true
         end
@@ -749,9 +763,6 @@ local function anim_set_time(t)
             if anim.modifier then
                 local kfa <close> = world:entity(anim.modifier.anim_eid)
                 ika.set_time(kfa, t)
-                if not current_target then
-                    current_target = prefab_mgr:get_eid_by_name(anim.target_name)
-                end
                 if ui_bindcamera[1] then
                     world:pub {"UpdateCamera"}
                 end
@@ -804,19 +815,18 @@ local function create_animation(animtype, name, duration, target_anims)
         anim_name_list[#anim_name_list + 1] = name
         table.sort(anim_name_list)
         if create_context then
-            if animtype == "mtl" then
-                for _, desc in ipairs(create_context.desc) do
-                    get_or_create_target_anim(desc.name, desc.init_value)
-                end
-            elseif animtype == "srt" then
-                get_or_create_target_anim(create_context.desc[1].name)
+            for _, desc in ipairs(create_context.desc) do
+                get_or_create_target_anim(desc.target, desc.init_value)
             end
             create_context = nil
         end
+        anim_bind_map[name] = ""
     end
 end
 local update_camera_mb = world:sub {"UpdateCamera"}
 function m.end_animation()
+    -- TODO: rework camera animation
+    do return end
     if not ui_bindcamera[1] or not current_anim then
         return
     end
@@ -839,39 +849,39 @@ function m.end_animation()
     end
 end
 
-function m.new()
+local function ShowNewAnimationUI()
     if not new_anim_widget then return end
     local title = "New Animation"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
 
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text("Name:")
-        imgui.cursor.SameLine()
-        if imgui.widget.InputText("##Name", anim_name_ui) then
+        ImGui.Text("Name:")
+        ImGui.SameLine()
+        if ImGui.InputText("##Name", anim_name_ui) then
             anim_name = tostring(anim_name_ui.text)
         end
-        imgui.widget.Text("Duration:")
-        imgui.cursor.SameLine()
-        if imgui.widget.DragInt("##Duration", duration_ui) then
+        ImGui.Text("Duration:")
+        ImGui.SameLine()
+        if ImGui.DragInt("##Duration", duration_ui) then
             if duration_ui[1] < 1 then
                 duration_ui[1] = 1
             end
             anim_duration = duration_ui[1]
         end
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
+        if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             new_anim_widget = false
             if anim_name ~= "" then
                 create_animation(create_context and create_context.type or "ske", anim_name, anim_duration)
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             new_anim_widget = false
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 local ui_playall = { false }
@@ -883,7 +893,6 @@ function m.clear(keep_skel)
     end
     allanims = {}
     anim_name_list = {}
-    target_map = {}
     if current_anim then
         for _, anim in ipairs(current_anim.target_anims) do
             if anim.type == "srt" or anim.type == "mtl" then
@@ -895,8 +904,8 @@ function m.clear(keep_skel)
     current_anim = nil
     current_joint = nil
     current_uniform = nil
+    anim_bind_map = {}
     current_mtl = nil
-    current_target = nil
     if not keep_skel then
         anim_eid = nil
         current_skeleton = nil
@@ -932,7 +941,7 @@ end
 
 local function show_uniforms()
     for _, anim in ipairs(current_anim.target_anims) do
-        if imgui.widget.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
+        if ImGui.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
             current_uniform = anim.target_name
             on_select_target(current_uniform)
         end
@@ -955,15 +964,6 @@ local function play_animation(current)
     else
         for _, anim in ipairs(current.target_anims) do
             if anim.modifier then
-                if current_anim.type == "srt"  then
-                    if not target_map[anim.target_name] then
-                        target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name) 
-                    end
-                    current_target = target_map[anim.target_name]
-                    imodifier.set_target(anim.modifier, current_target)
-                elseif current_anim.type == "mtl" then
-                    imodifier.set_target(anim.modifier, current_target)
-                end
                 imodifier.start(anim.modifier, {loop = ui_loop[1]})
             end
         end
@@ -975,55 +975,114 @@ function m.get_title()
 end
 
 function m.show()
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if imgui.windows.Begin("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
-        if current_skeleton then
-            if imgui.widget.Button(faicons.ICON_FA_FILE_PEN.." New") then
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    if ImGui.Begin("Skeleton", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+        if current_skeleton and not current_anim then
+            if ImGui.Button(faicons.ICON_FA_FILE_PEN.." ske") then
                 new_anim_widget = true
             end
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
         end
-        m.new()
-        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
+        local current_eid = gizmo.target_eid
+        if current_eid then
+            local e <close> = world:entity(current_eid, "scene?in material?in")
+            if e.scene then
+                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." srt") then
+                    new_anim_widget = true
+                    create_context = {
+                        type = "srt",
+                        desc = {}
+                    }
+                end
+                ImGui.SameLine()
+            end
+            if e.material then
+                if ImGui.Button(faicons.ICON_FA_FILE_PEN.." mtl") then
+                    new_anim_widget = true
+                    create_context = {
+                        type = "mtl",
+                    }
+                    local mtlpath = e.material
+                    if mtlpath then
+                        mtlpath = mtlpath .. "/source.ant"
+                        local desc = {}
+                        local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
+                        local keys = {}
+                        for k, v in pairs(mtl.properties) do
+                            if not v.stage then
+                                keys[#keys + 1] = k
+                            end
+                        end
+                        table.sort(keys)
+                        for _, k in ipairs(keys) do
+                            desc[#desc + 1] = {target = k, init_value = mtl.properties[k] }
+                        end
+                        create_context.desc = desc
+                    end
+                end
+                ImGui.SameLine()
+            end
+        end
+
+        ShowNewAnimationUI()
+
+        if ImGui.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
             local anim_filename = uiutils.get_open_file_path("Load Animation", "anim")
             if anim_filename then
                 m.load(anim_filename)
             end
         end
-
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
-            m.save(file_path)
-        end
-        imgui.cursor.SameLine()
-        imgui.widget.Text("Mode: "..(current_anim and current_anim.type or ""))
-        if #anim_name_list > 0 then
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(150)
-            if imgui.widget.BeginCombo("##AnimList", {current_anim.name, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(anim_name_list) do
-                    if imgui.widget.Selectable(name, current_anim.name == name) then
-                        current_anim.selected_layer_index = 0
-                        current_anim.selected_clip_index = 0
-                        current_anim = allanims[name]
-                        current_anim.dirty = true
-                        current_anim.selected_layer_index = 0
-                        current_anim.selected_clip_index = 0
-                        current_anim.dirty_layer = -1
-                    end
-                end
-                imgui.widget.EndCombo()
-            end
-            imgui.cursor.PopItemWidth()
-        end
         if current_anim then
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("all ", ui_playall) then
+            ImGui.SameLine()
+            if ImGui.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
+                m.save(file_path)
+            end
+            -- ImGui.SameLine()
+            -- ImGui.Text("Mode: "..current_anim.type)
+            if #anim_name_list > 0 then
+                ImGui.SameLine()
+                ImGui.Text("Anim:")
+                ImGui.SameLine()
+                ImGui.PushItemWidth(150)
+                if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
+                    for _, name in ipairs(anim_name_list) do
+                        if ImGui.Selectable(name, current_anim.name == name) then
+                            current_anim.selected_layer_index = 0
+                            current_anim.selected_clip_index = 0
+                            current_anim = allanims[name]
+                            current_anim.dirty = true
+                            current_anim.selected_layer_index = 0
+                            current_anim.selected_clip_index = 0
+                            current_anim.dirty_layer = -1
+                        end
+                    end
+                    ImGui.EndCombo()
+                end
+                ImGui.PopItemWidth()
+            end
+            if current_anim.type ~= "ske" then
+                ImGui.SameLine()
+                ImGui.Text("BindTo:")
+                ImGui.SameLine()
+                ImGui.PushItemWidth(200)
+                if ImGui.BeginCombo("##BindTo", {anim_bind_map[current_anim.name], flags = ImGui.Flags.Combo {}}) then
+                    for _, name in ipairs(prefab_mgr.srt_mtl_list) do
+                        if ImGui.Selectable(name, anim_bind_map[current_anim.name] == name) then
+                            anim_bind_map[current_anim.name] = name
+                            update_animation()
+                        end
+                    end
+                    ImGui.EndCombo()
+                end
+                ImGui.PopItemWidth()
+            end
+            ImGui.SameLine()
+            if ImGui.Checkbox("all ", ui_playall) then
                 anim_set_loop(ui_playall[1])
             end
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
             if current_anim.type == "mtl" or current_anim.type == "srt" then
                 for _, anim in ipairs(current_anim.target_anims) do
                     if anim.modifier then
@@ -1046,7 +1105,7 @@ function m.show()
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
             local imagesize = icon.texinfo.width * icons.scale
-            if imgui.widget.ImageButton("##play ", assetmgr.textures[icon.id], imagesize, imagesize) then
+            if ImGui.ImageButton("##play ", assetmgr.textures[icon.id], imagesize, imagesize) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
@@ -1059,18 +1118,18 @@ function m.show()
                     end
                 end
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("loop ", ui_loop) then
+            ImGui.SameLine()
+            if ImGui.Checkbox("loop ", ui_loop) then
                 anim_set_loop(ui_loop[1])
             end
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(50)
-            if imgui.widget.DragFloat("speed ", ui_speed) then
+            ImGui.SameLine()
+            ImGui.PushItemWidth(50)
+            if ImGui.DragFloat("speed ", ui_speed) then
                 anim_set_speed(ui_speed[1])
             end
-            imgui.cursor.PopItemWidth()
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("camera", ui_bindcamera) then
+            ImGui.PopItemWidth()
+            ImGui.SameLine()
+            if ImGui.Checkbox("camera", ui_bindcamera) then
                 if not ui_bindcamera[1] then
                     local mq = w:first("main_queue camera_ref:in")
                     local ce<close> = world:entity(mq.camera_ref, "scene:update")
@@ -1080,7 +1139,7 @@ function m.show()
                 end
                 world:pub {"LockCamera", ui_bindcamera[1]}
             end
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
             local current_time = 0
             if current_anim.type == "ske" then
                 current_time = anim_eid and iani.get_time(anim_eid) or 0
@@ -1093,22 +1152,22 @@ function m.show()
                     end
                 end
             end
-            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", current_anim.selected_frame, current_anim.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(current_anim.duration * sample_ratio), current_time, current_anim.duration))
+            ImGui.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", current_anim.selected_frame, current_anim.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(current_anim.duration * sample_ratio), current_time, current_anim.duration))
         
             if current_anim.type == "mtl" and current_mtl then
-                imgui.cursor.SameLine()
-                imgui.widget.Text("material path: " .. tostring(current_mtl))
+                ImGui.SameLine()
+                ImGui.Text("material path: " .. tostring(current_mtl))
             end
         end
-        if imgui.table.Begin("SkeletonColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-            imgui.table.SetupColumn("Targets", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-            imgui.table.SetupColumn("Detail", imgui.flags.TableColumn {'WidthStretch'}, 1.5)
-            imgui.table.SetupColumn("AnimationLayer", imgui.flags.TableColumn {'WidthStretch'}, 6.5)
-            imgui.table.HeadersRow()
+        if ImGui.TableBegin("SkeletonColumns", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+            ImGui.TableSetupColumn("Targets", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumn("Detail", ImGui.Flags.TableColumn {'WidthStretch'}, 1.5)
+            ImGui.TableSetupColumn("AnimationLayer", ImGui.Flags.TableColumn {'WidthStretch'}, 6.5)
+            ImGui.TableHeadersRow()
 
-            imgui.table.NextColumn()
-            local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_target", child_width, child_height)
+            ImGui.TableNextColumn()
+            local child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_target", child_width, child_height)
             if current_anim then
                 if current_anim.type == "mtl" then
                     show_uniforms()
@@ -1116,17 +1175,17 @@ function m.show()
                     show_joints()
                 end
             end
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_detail", child_width, child_height)
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_detail", child_width, child_height)
             show_current_detail()
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_layers", child_width, child_height)
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_layers", child_width, child_height)
 
             if current_anim then
                 local imgui_message = {}
@@ -1150,11 +1209,11 @@ function m.show()
                     elseif k == "selected_layer_index" then
                         current_anim.selected_layer_index = v
                         if v > 0 and v <= #current_anim.target_anims then
-                            local name = current_anim.target_anims[v].target_name
+                            local ani = current_anim.target_anims[v]
                             if current_anim.type == "mtl" then
-                                current_uniform = name
+                                current_uniform = ani.target_name
                             elseif current_anim.type == "ske" then
-                                joint_utils:set_current_joint(current_skeleton, name)
+                                joint_utils:set_current_joint(current_skeleton, ani.target_name)
                             end
                         end
                     elseif k == "move_type" then
@@ -1168,12 +1227,12 @@ function m.show()
                     on_move_clip(move_type, current_anim.selected_clip_index, move_delta)
                 end
             end
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.End()
+            ImGui.TableEnd()
         end
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 local memfs = import_package "ant.vfs".memory
 local lfs   = require "bee.filesystem"
@@ -1236,10 +1295,13 @@ function m.save(path)
 end
 
 local datalist  = require "datalist"
-local serialize = import_package "ant.serialize"
-function m.load(path)
+
+function m.load(path_str)
+    if not gizmo.target_eid and not current_skeleton then
+        return
+    end
     m.clear(true)
-    local path = lfs.path(path)
+    local path = lfs.path(path_str)
     local f = assert(io.open(path:string()))
     local data = f:read "a"
     f:close()
@@ -1278,8 +1340,6 @@ function m.load(path)
                 subanim.inherit = {false, false, false}
             end
             subanim.inherit_ui = {{subanim.inherit[1]}, {subanim.inherit[2]}, {subanim.inherit[3]}}
-
-            target_map[subanim.target_name] = prefab_mgr:get_eid_by_name(subanim.target_name)
         end
         if not is_valid then
             return
@@ -1291,42 +1351,9 @@ function m.load(path)
     file_path = path:string()
 end
 
-function m.create_target_animation(at, target)
-    local e <close> = world:entity(target, "material?in")
-    create_context = {}
-    create_context.type = at
-    new_anim_widget = true
-    if at == "srt" then
-        local tpl = hierarchy:get_node_info(target).template
-        local name = tpl.tag and tpl.tag[1] or ""
-        -- local info = hierarchy:get_node_info(target)
-        -- local name = info.template.tag[1]
-        create_context.desc = {{name = name}}
-        target_map[name] = target
-    elseif at == "mtl" then
-        local mtlpath = e.material
-        if mtlpath then
-            mtlpath = mtlpath .. "/source.ant"
-            local desc = {}
-            local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
-            local keys = {}
-            for k, v in pairs(mtl.properties) do
-                if not v.stage then
-                    keys[#keys + 1] = k
-                end
-            end
-            table.sort(keys)
-            for _, k in ipairs(keys) do
-                desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
-            end
-            create_context.desc = desc
-        end
-    end
-end
-
 local ivs		= ecs.require "ant.render|visible_state"
 local imaterial = ecs.require "ant.asset|material"
-local bone_color = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
+local bone_color    = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
 local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 
 local ientity 	= ecs.require "ant.render|components.entity"
@@ -1425,12 +1452,6 @@ local function create_bone_entity(joint_name)
 end
 
 function m.on_eid_delete(eid)
-    local e <close> = world:entity(eid, "material?in")
-    local tpl = hierarchy:get_node_info(eid).template
-    local name = tpl.tag and tpl.tag[1]
-    if name then
-        target_map[name] = nil
-    end
     for _, anim in pairs(allanims) do
         for _, subanim in ipairs(anim.target_anims) do
             if subanim.modifier then
@@ -1441,17 +1462,6 @@ function m.on_eid_delete(eid)
             end
         end
     end
-end
-
-function m.on_target(target_eid)
-    if current_target == target_eid then
-        return
-    end
-    local e <close> = world:entity(target_eid, "scene?in render_object?in")
-    if not e.scene and not e.render_object then
-        return
-    end
-    current_target = target_eid
 end
 
 function m.init(skeleton)

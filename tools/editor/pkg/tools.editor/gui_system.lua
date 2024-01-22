@@ -3,7 +3,7 @@ local world     = ecs.world
 local w         = world.w
 
 local math3d    = require "math3d"
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local rhwi      = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local faicons   = require "common.fa_icons"
@@ -70,9 +70,9 @@ function m:ui_update()
             widget_utils.reset_ui_layout()
         end
     end
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
-    imgui.windows.PushStyleColor(imgui.enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
-    imgui.windows.PushStyleColor(imgui.enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0)
+    ImGui.PushStyleColor(ImGui.Enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleColor(ImGui.Enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
@@ -85,8 +85,8 @@ function m:ui_update()
     console_widget.show()
     log_widget.show()
     prefab_mgr:choose_prefab()
-    imgui.windows.PopStyleColor(2)
-    imgui.windows.PopStyleVar()
+    ImGui.PopStyleColor(2)
+    ImGui.PopStyleVar()
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
     iRmlUi.sendMessage("stat", string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
@@ -105,7 +105,6 @@ local event_showground      = world:sub {"ShowGround"}
 local event_showterrain     = world:sub {"ShowTerrain"}
 local event_savehitch       = world:sub {"SaveHitch"}
 local event_gizmo           = world:sub {"Gizmo"}
-local create_animation_event = world:sub {"CreateAnimation"}
 local light_gizmo           = ecs.require "gizmo.light"
 local patch_event          = world:sub {"PatchEvent"}
 
@@ -145,12 +144,9 @@ local function on_target(old, new)
             light_gizmo.on_target()
         end
     end
-    if new then
-        light_gizmo.on_target(new)
-        camera_mgr.on_target(new, true)
-        keyframe_view.on_target(new)
-        anim_view.on_target(new)
-    end
+    light_gizmo.on_target(new)
+    camera_mgr.on_target(new, true)
+    anim_view.on_target(new)
     world:pub {"UpdateAABB", new}
 end
 
@@ -255,7 +251,7 @@ function m:handle_event()
                 if e.slot then
                     hierarchy:update_slot_list(world)
                 end
-                prefab_mgr:on_patch_tag(target, v1, v2)
+                prefab_mgr:on_patch_tag(target, v1, v2, false, true)
             end
         elseif what == "parent" then
             target = prefab_mgr:set_parent(target, v1)
@@ -332,7 +328,7 @@ function m:handle_event()
 
     for _, what in event_window_title:unpack() do
         local title = "Editor - " .. what
-        imgui.SetWindowTitle(title)
+        ImGui.SetWindowTitle(title)
         gizmo:set_target(nil)
     end
 
@@ -359,9 +355,6 @@ function m:handle_event()
     end
     for _, enable in event_savehitch:unpack() do
         prefab_mgr.save_hitch = enable
-    end
-    for _, at, target in create_animation_event:unpack() do
-        keyframe_view.create_target_animation(at, target)
     end
     for _, eid, path, value in patch_event:unpack() do
         prefab_mgr:do_patch(eid, path, value)

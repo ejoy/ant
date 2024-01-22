@@ -1,4 +1,4 @@
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
@@ -218,37 +218,37 @@ local function checkLog()
 end
 
 local function showHeaderWidget()
-    if imgui.widget.Button("Clear") then
+    if ImGui.Button("Clear") then
         reset_log()
     end
-    imgui.cursor.SameLine()
-    if imgui.widget.Checkbox("Info(" .. tostring(log_count[current_tag][LEVEL_INFO]) .. ")", show_info) then
+    ImGui.SameLine()
+    if ImGui.Checkbox("Info(" .. tostring(log_count[current_tag][LEVEL_INFO]) .. ")", show_info) then
         level_visible[LEVEL_INFO] = show_info[1]
     end
 
-    imgui.cursor.SameLine()
-    if imgui.widget.Checkbox("Warn(" .. tostring(log_count[current_tag][LEVEL_WARN]) .. ")", show_warn) then
+    ImGui.SameLine()
+    if ImGui.Checkbox("Warn(" .. tostring(log_count[current_tag][LEVEL_WARN]) .. ")", show_warn) then
         level_visible[LEVEL_WARN] = show_warn[1]
     end
 
-    imgui.cursor.SameLine()
-    if imgui.widget.Checkbox("Error(" .. tostring(log_count[current_tag][LEVEL_ERROR]) .. ")", show_error) then
+    ImGui.SameLine()
+    if ImGui.Checkbox("Error(" .. tostring(log_count[current_tag][LEVEL_ERROR]) .. ")", show_error) then
         level_visible[LEVEL_ERROR] = show_error[1]
     end
 
-    imgui.cursor.SameLine()
-    imgui.widget.Text("Show:")
-    imgui.cursor.SameLine()
-    imgui.cursor.SetNextItemWidth(120)
-    if imgui.widget.BeginCombo("##Show", {current_tag}) then
+    ImGui.SameLine()
+    ImGui.Text("Show:")
+    ImGui.SameLine()
+    ImGui.SetNextItemWidth(120)
+    if ImGui.BeginCombo("##Show", {current_tag}) then
         for _, tag in ipairs(log_tags) do
-            if imgui.widget.Selectable(tag, current_tag == tag) then
+            if ImGui.Selectable(tag, current_tag == tag) then
                 current_tag = tag
             end
         end
-        imgui.widget.EndCombo()
+        ImGui.EndCombo()
     end
-    imgui.cursor.Separator()
+    ImGui.Separator()
 end
 
 local assetmgr  = import_package "ant.asset"
@@ -256,7 +256,7 @@ function m.showLog(name)
     local current_log = log_items[current_tag]
     local total_virtual_count = #current_log
     if total_virtual_count <= 0 then return end
-    imgui.windows.BeginChild(name, 0, 0, imgui.flags.Child { "None" }, imgui.flags.Window { "HorizontalScrollbar" })
+    ImGui.BeginChild(name, 0, 0, ImGui.Flags.Child { "None" }, ImGui.Flags.Window { "HorizontalScrollbar" })
     local textStart = 0
     for _, item in ipairs(current_log) do
         local textEnd = textStart + #item.message
@@ -266,43 +266,43 @@ function m.showLog(name)
         local color
         if item.level == LEVEL_INFO then
             local imagesize = icons.ICON_INFO.texinfo.width * icons.scale
-            imgui.widget.Image(assetmgr.textures[icons.ICON_INFO.id], imagesize, imagesize)
+            ImGui.Image(assetmgr.textures[icons.ICON_INFO.id], imagesize, imagesize)
         elseif item.level == LEVEL_WARN then
             local imagesize = icons.ICON_WARN.texinfo.width * icons.scale
-            imgui.widget.Image(assetmgr.textures[icons.ICON_WARN.id], imagesize, imagesize)
+            ImGui.Image(assetmgr.textures[icons.ICON_WARN.id], imagesize, imagesize)
             color = level_color.warn
         elseif item.level == LEVEL_ERROR then
             local imagesize = icons.ICON_ERROR.texinfo.width * icons.scale
-            imgui.widget.Image(assetmgr.textures[icons.ICON_ERROR.id], imagesize, imagesize)
+            ImGui.Image(assetmgr.textures[icons.ICON_ERROR.id], imagesize, imagesize)
             color = level_color.error
         end
-        imgui.cursor.SameLine()
+        ImGui.SameLine()
         if color then
-            imgui.windows.PushStyleColor(imgui.enum.Col.Text, color[1], color[2], color[3], color[4])
+            ImGui.PushStyleColor(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
         end
-        imgui.widget.Text(item.message)
+        ImGui.Text(item.message)
         if color then
-            imgui.windows.PopStyleColor()
+            ImGui.PopStyleColor()
         end
         ::continue::
     end
     if scroll_to_end > 0 then
-        imgui.windows.SetScrollHereY(1.0)
+        ImGui.SetScrollHereY(1.0)
         scroll_to_end = scroll_to_end - 1
     end
     local eps = 10.0
-    is_at_end = (imgui.windows.GetScrollY() + eps) >= imgui.windows.GetScrollMaxY()
-    local cpx, cpy = imgui.cursor.GetCursorPos()
-    imgui.cursor.SetCursorPos(cpx, cpy + 1)
-    imgui.cursor.Dummy(0, 0)
-    -- imgui.windows.SetNextWindowContentSize(0, current_log.height)
-    -- imgui.windows.BeginChild(name, 0, 0, imgui.flags.Child { "None" }, imgui.flags.Window { "HorizontalScrollbar" })
+    is_at_end = (ImGui.GetScrollY() + eps) >= ImGui.GetScrollMaxY()
+    local cpx, cpy = ImGui.GetCursorPos()
+    ImGui.SetCursorPos(cpx, cpy + 1)
+    ImGui.Dummy(0, 0)
+    -- ImGui.SetNextWindowContentSize(0, current_log.height)
+    -- ImGui.BeginChild(name, 0, 0, ImGui.Flags.Child { "None" }, ImGui.Flags.Window { "HorizontalScrollbar" })
     -- if m.to_bottom then
-    --     imgui.windows.SetScrollY(imgui.windows.GetScrollMaxY())
+    --     ImGui.SetScrollY(ImGui.GetScrollMaxY())
     --     m.to_bottom = false
     -- end
-    -- local scrolly = imgui.windows.GetScrollY()
-    -- local aw, ah = imgui.windows.GetWindowContentRegionMax()
+    -- local scrolly = ImGui.GetScrollY()
+    -- local aw, ah = ImGui.GetWindowContentRegionMax()
     -- local item_count = math.ceil(ah / log_item_height)
     -- local items_to_show = scrolly / log_item_height
     -- local v_start_idx = math.floor(items_to_show) + 1
@@ -325,7 +325,7 @@ function m.showLog(name)
     -- if offset < 0 then
     --     offset = 0
     -- end
-    -- imgui.cursor.SetCursorPos(nil, scrolly - offset * log_item_height)
+    -- ImGui.SetCursorPos(nil, scrolly - offset * log_item_height)
     -- local start_idx = current_log.vtor_index[v_start_idx][1]
     -- local end_idx = current_log.vtor_index[v_end_idx][1]
     -- for i = start_idx, end_idx do
@@ -333,36 +333,36 @@ function m.showLog(name)
     --     local item = current_log[i]
     --     if item.level == LEVEL_INFO then
     --         local imagesize = icons.ICON_INFO.texinfo.width * icons.scale
-    --         imgui.widget.Image(assetmgr.textures[icons.ICON_INFO.id], imagesize, imagesize)
+    --         ImGui.Image(assetmgr.textures[icons.ICON_INFO.id], imagesize, imagesize)
     --     elseif item.level == LEVEL_WARN then
     --         local imagesize = icons.ICON_WARN.texinfo.width * icons.scale
-    --         imgui.widget.Image(assetmgr.textures[icons.ICON_WARN.id], imagesize, imagesize)
+    --         ImGui.Image(assetmgr.textures[icons.ICON_WARN.id], imagesize, imagesize)
     --         color = level_color.warn
     --     elseif item.level == LEVEL_ERROR then
     --         local imagesize = icons.ICON_ERROR.texinfo.width * icons.scale
-    --         imgui.widget.Image(assetmgr.textures[icons.ICON_ERROR.id], imagesize, imagesize)
+    --         ImGui.Image(assetmgr.textures[icons.ICON_ERROR.id], imagesize, imagesize)
     --         color = level_color.error
     --     end
-    --     imgui.cursor.SameLine()
+    --     ImGui.SameLine()
     --     if color then
-    --         imgui.windows.PushStyleColor(imgui.enum.Col.Text, color[1], color[2], color[3], color[4])
+    --         ImGui.PushStyleColor(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
     --     end
-    --     if imgui.widget.Selectable(item.message, current_select == i) then
+    --     if ImGui.Selectable(item.message, current_select == i) then
     --         current_select = i
     --     end
     --     if current_select == i then
-    --         if imgui.windows.BeginPopupContextItem(current_select) then
-    --             if imgui.widget.Selectable("Copy", false) then
-    --                 imgui.util.SetClipboardText(current_log[current_select].message)
+    --         if ImGui.BeginPopupContextItem(current_select) then
+    --             if ImGui.Selectable("Copy", false) then
+    --                 ImGui.SetClipboardText(current_log[current_select].message)
     --             end
-    --             imgui.windows.EndPopup()
+    --             ImGui.EndPopup()
     --         end
     --     end
     --     if color then
-    --         imgui.windows.PopStyleColor()
+    --         ImGui.PopStyleColor()
     --     end
     -- end
-    imgui.windows.EndChild()
+    ImGui.EndChild()
 end
 
 function m.showConsole()
@@ -377,18 +377,18 @@ function m.show()
     if not err_receiver then
         err_receiver = cthread.channel "errlog"
     end
-    local viewport = imgui.GetMainViewport()
+    local viewport = ImGui.GetMainViewport()
     if not log_item_height then
         log_item_height = 22 * viewport.DpiScale
     end
     checkLog()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if imgui.windows.Begin("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    if ImGui.Begin("Log", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         showHeaderWidget()
         m.showLog("LogList")
     end
-    imgui.windows.End()
+    ImGui.End()
 end
 
 function m.close_log()

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <css/Property.h>
+#include <css/EnumName.h>
 #include <util/StaticString.h>
 #include <tuple>
 
@@ -24,6 +25,16 @@ struct StaticStringArray {
 template <StaticString... Keywords>
 Property PropertyParseKeyword(PropertyId id, const std::string& value) {
 	size_t v = StaticStringArray<Keywords...>::template find<0>(value);
+	if (v == (size_t)-1 || v > (size_t)std::numeric_limits<PropertyKeyword>::max()) {
+		return {};
+	}
+	return { id, (PropertyKeyword)v };
+}
+
+template <typename E>
+	requires(std::is_enum_v<E>)
+Property PropertyParseKeyword(PropertyId id, const std::string& value) {
+	size_t v = GetCssEnumIndex<CssEnumNameStyle::Kebab, E>(value);
 	if (v == (size_t)-1 || v > (size_t)std::numeric_limits<PropertyKeyword>::max()) {
 		return {};
 	}

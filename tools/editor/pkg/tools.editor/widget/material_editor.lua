@@ -2,19 +2,19 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local imgui = require "imgui"
+local ImGui = import_package "ant.imgui"
 
 local md = {} md.__index = md
 
-local wndflags = imgui.flags.Window {
+local wndflags = ImGui.Flags.Window {
     "NoDocking",
     "NoCollapse",
 }
 
 function md.open(materialfile)
-    imgui.windows.Begin("MaterialEditor", wndflags) do
+    ImGui.Begin("MaterialEditor", wndflags) do
         
-        imgui.windows.End()
+        ImGui.End()
     end
 end
 

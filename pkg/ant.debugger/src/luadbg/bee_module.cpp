@@ -17,7 +17,7 @@ extern "C" int luaopen_bee_socket(luadbg_State* L);
 extern "C" int luaopen_bee_thread(luadbg_State* L);
 extern "C" int luaopen_bee_filesystem(luadbg_State* L);
 #if defined(_WIN32)
-extern "C" int luaopen_bee_unicode(luadbg_State* L);
+extern "C" int luaopen_bee_windows(luadbg_State* L);
 #endif
 
 static luadbgL_Reg cmodule[] = {
@@ -29,7 +29,7 @@ static luadbgL_Reg cmodule[] = {
     { "bee.thread", luaopen_bee_thread },
     { "bee.filesystem", luaopen_bee_filesystem },
 #if defined(_WIN32)
-    { "bee.unicode", luaopen_bee_unicode },
+    { "bee.windows", luaopen_bee_windows },
 #endif
     { NULL, NULL },
 };

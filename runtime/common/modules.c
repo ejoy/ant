@@ -90,7 +90,6 @@ void ant_loadmodules(lua_State* L) {
         { "font", luaopen_font },
         { "font.manager", luaopen_font_manager },
         { "font.truetype", luaopen_font_truetype },
-        { "font.util", luaopen_font_util },
         { "datalist", luaopen_datalist },
         { "ozz", luaopen_ozz },
         { "math3d", luaopen_math3d },
@@ -104,7 +103,6 @@ void ant_loadmodules(lua_State* L) {
         { "luadebug.stdio", luaopen_luadebug_stdio },
         { "luadebug.visitor", luaopen_luadebug_visitor },
         { "rmlui", luaopen_rmlui },
-        { "window", luaopen_window },
         { "noise", luaopen_noise },
         { "textureman.client", luaopen_textureman_client },
         { "textureman.server", luaopen_textureman_server },
@@ -142,13 +140,19 @@ void ant_loadmodules(lua_State* L) {
 #else
         { "bee.filewatch", luaopen_bee_filewatch },
         { "bee.subprocess", luaopen_bee_subprocess },
-        { "filedialog", luaopen_filedialog },
         { "imgui.widgets", luaopen_imgui_widgets },
+#if !BX_PLATFORM_LINUX
+        { "filedialog", luaopen_filedialog },
+#endif
 #endif
         { "system.scene", luaopen_system_scene },
         { "cull.core", luaopen_system_cull},
         { "zip", luaopen_zip },
+#if !BX_PLATFORM_LINUX
+        { "window", luaopen_window },
         { "httpc", luaopen_httpc },
+        { "font.util", luaopen_font_util },
+#endif
         { NULL, NULL },
     };
 

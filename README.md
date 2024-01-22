@@ -14,7 +14,7 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 
 #### MINGW
 - 下载并安装[msys2](https://www.msys2.org/)
-
+- 找到msys2安装目录，用mingw64.exe打开msys2的终端
 - 修改镜像服务器
 ``` bash
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/i686/" > /etc/pacman.d/mirrorlist.mingw32
@@ -49,16 +49,17 @@ git submodule update --init
 ./compile/install.sh (mingw/linux/macos)
 ```
 
-#### 编译tools
-
-``` bash
-luamake tools
-```
-
 #### 编译runtime
 
 ``` bash
 luamake
+```
+
+#### 编译tools
+tools包含：shaderc, texturec, gltf2ozz，release模式会快一个数量级（debug模式下的tools可以不编译）
+ 
+``` bash
+luamake -mode release tools
 ```
 
 #### 编译选项
@@ -79,23 +80,27 @@ bin/msvc/debug/lua.exe tools/editor/main.lua
 ```
 
 ### 调试
-调试一个简单的示例。目前只支持在VSCode下调试lua代码。
-- 安装VSCode；
-- 安装**Lua Debug** 插件；
 
-配置一个调试用的配置：
+- 安装VSCode；
+- 安装**Lua Debug**插件；
+- 添加调试配置到`.vscode/launch.json`
 ``` json
 {
-    "type": "lua",
-    "request": "launch",
-    "name": "Debug",
-    "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
-    "console": "integratedTerminal",
-    "stopOnEntry": true,
-    "outputCapture": [],
-    "program": "test/simple/main.lua",
-    "arg": []
-},
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "Debug",
+            "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
+            "console": "integratedTerminal",
+            "stopOnEntry": true,
+            "outputCapture": [],
+            "program": "test/simple/main.lua",
+            "arg": []
+        }
+    ]
+}
 ```
 
 ### 关于ant目录结构

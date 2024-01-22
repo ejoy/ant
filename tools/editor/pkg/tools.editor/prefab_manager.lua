@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local imgui         = require "imgui"
+local ImGui         = import_package "ant.imgui"
 local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
@@ -267,18 +267,18 @@ function m:create(what, config)
             local new_entity = world:create_entity(tmp)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
-        elseif config.type == "cube(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/cube.prefab")
-        elseif config.type == "cone(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/cone.prefab")
-        elseif config.type == "cylinder(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/cylinder.prefab")
-        elseif config.type == "sphere(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/sphere.prefab")
-        elseif config.type == "torus(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/torus.prefab")
-        elseif config.type == "plane(prefab)" then
-            m:add_prefab("/pkg/tools.editor/resource/plane.prefab")
+        -- elseif config.type == "cube(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/cube.prefab")
+        -- elseif config.type == "cone(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/cone.prefab")
+        -- elseif config.type == "cylinder(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/cylinder.prefab")
+        -- elseif config.type == "sphere(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/sphere.prefab")
+        -- elseif config.type == "torus(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/torus.prefab")
+        -- elseif config.type == "plane(prefab)" then
+        --     m:add_prefab("/pkg/tools.editor/resource/plane.prefab")
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
@@ -304,7 +304,7 @@ function m:create(what, config)
         local tmp = utils.deep_copy(template)
         tmp.data.on_ready = function (e)
             w:extend(e, "timeline:in")
-            e.timeline.eid_map = self.current_prefab.tag
+            e.timeline.eid_map = self.current_prefab and self.current_prefab.tag or {}
         end
         local new_entity = world:create_entity(tmp)
         self:add_entity(new_entity, nil, template)
@@ -423,6 +423,7 @@ function m:on_prefab_ready(prefab)
             self:on_patch_tag(v[2], nil, tpl.tag, true)
         end
     end
+    self:update_tag_list()
     anim_view.on_prefab_load(anim_eid)
 end
 
@@ -462,20 +463,20 @@ function m:choose_prefab()
         prefab_list, patch_template = get_prefabs_and_patch_template(gd.glb_filename)
     end
     local title = "Choose prefab"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
+    if not ImGui.IsPopupOpen(title) then
+        ImGui.OpenPopup(title)
     end
-    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         if gd.is_opening then
 
-            imgui.widget.Text("Create new or open existing prefab.")
-            imgui.widget.Text("prefab name:  ")
-            imgui.cursor.SameLine()
-            if imgui.widget.InputText("##PrefabName", prefabe_name_ui) then
+            ImGui.Text("Create new or open existing prefab.")
+            ImGui.Text("prefab name:  ")
+            ImGui.SameLine()
+            if ImGui.InputText("##PrefabName", prefabe_name_ui) then
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
+            ImGui.SameLine()
+            if ImGui.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
                 local name = tostring(prefabe_name_ui.text)
                 if #name > 0 then
                     local existing = false
@@ -505,11 +506,11 @@ function m:choose_prefab()
                 end
             end
         else
-            imgui.widget.Text("Choose a prefab to continue.")
+            ImGui.Text("Choose a prefab to continue.")
         end
-        imgui.cursor.Separator()
+        ImGui.Separator()
         for _, prefab in ipairs(prefab_list) do
-            if imgui.widget.Selectable(prefab, false, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.Selectable(prefab, false, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 if gd.is_opening then
                     self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
                 else
@@ -518,12 +519,12 @@ function m:choose_prefab()
                 reset_open_context()
             end
         end
-        imgui.cursor.Separator()
-        if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
+        ImGui.Separator()
+        if ImGui.Button(faicons.ICON_FA_BAN.." Quit") then
             reset_open_context()
-            imgui.windows.CloseCurrentPopup()
+            ImGui.CloseCurrentPopup()
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 
@@ -1004,45 +1005,23 @@ function m:set_parent(target, parent)
     end
 end
 
-function m:update_efk_tag(eid)
-    local e <close> = world:entity(eid, "efk?in")
-    if e.efk then
-        local tag = self.current_prefab.tag
-        if ov and tag[ov] then
-            tag[ov] = nil
-        end
-        tag[nv] = {eid}
-    end
-end
-
-function m:get_efk_list()
-    local list = {}
-    for k, value in pairs(self.current_prefab.tag) do
-        if k ~= "*" and k ~= "anim_ctrl" then
-            for _, eid in ipairs(value) do
-                local ee <close> = world:entity(eid, "efk?in")
-                if ee.efk then
-                    list[#list + 1] = k
-                end
-            end
-        end
-    end
-    return list
-end
-
-function m:get_srt_mtl_list()
-    local list = {}
+function m:update_tag_list()
+    local srt_mtl_list = {""}
+    local efk_list = {}
     for k, value in pairs(self.current_prefab.tag) do
         if k ~= "*" and k ~= "anim_ctrl" then
             for _, eid in ipairs(value) do
                 local ee <close> = world:entity(eid, "scene?in material?in")
                 if ee.scene or ee.material then
-                    list[#list + 1] = k
+                    srt_mtl_list[#srt_mtl_list + 1] = k
+                elseif ee.efk then
+                    efk_list[#efk_list + 1] = k
                 end
             end
         end
     end
-    return list
+    self.efk_list = efk_list
+    self.srt_mtl_list = srt_mtl_list
 end
 
 function m:do_remove_entity(eid)
@@ -1168,9 +1147,12 @@ function m:find_patch_index(node_idx)
 end
 
 function m:pacth_remove(eid)
+    if not self.current_prefab then
+        return true
+    end
     local name = hierarchy:get_node_info(eid).template.tag[1]
     self.current_prefab.tag[name] = nil
-    anim_view.update_tag_list()
+    self:update_tag_list()
     if not self.glb_filename then
         return true
     end
@@ -1380,7 +1362,7 @@ function m:do_patch(eid, path, v, origin_tag)
     self:pacth_modify(info.template.index, path, v, origin_tag)
 end
 
-function m:on_patch_tag(eid, ov, nv, origin_tag)
+function m:on_patch_tag(eid, ov, nv, origin_tag, update_tag)
     if not self.current_prefab then
         return
     end
@@ -1392,7 +1374,9 @@ function m:on_patch_tag(eid, ov, nv, origin_tag)
     if #nv > 0 then
         tag[nv[1]] = {eid}
     end
-    anim_view.update_tag_list()
+    if update_tag then
+        self:update_tag_list()
+    end
 end
 
 function m:on_patch_tranform(eid, n, v)

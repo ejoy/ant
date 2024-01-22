@@ -1,14 +1,13 @@
 {
-    "Lua.completion.autoRequire": false,
-    "Lua.workspace.checkThirdParty": false,
+    "completion": {
+        "autoRequire": false
+    },
     "diagnostics": {
         "disable": [
             "different-requires",
-            "close-non-object",
             "need-check-nil"
         ],
         "globals": [
-            "__EDITOR__",
             "import_feature",
             "import",
             "pipeline",
@@ -25,7 +24,10 @@
         }
     },
     "workspace": {
+        "checkThirdParty": false,
         "ignoreDir": [
+            "3rd",
+            "clibs",
             "pkg/ant.debugger",
             "pkg/ant.json",
             "pkg/ant.ecs/src",

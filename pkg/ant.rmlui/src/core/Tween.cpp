@@ -1,6 +1,7 @@
 #include <core/Tween.h>
 #include <utility>
 #include <math.h>
+#include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
 
 #include <version>
@@ -12,8 +13,6 @@ static constexpr float const_pi = static_cast<float>(3.141592653589793);
 #endif
 
 namespace Rml {
-
-namespace TweenFunctions {
 
 // Tweening functions below.
 // Partly based on http://libclaw.sourceforge.net/tweeners.html
@@ -76,127 +75,91 @@ static float sine(float t) {
 	return 1.f - cosf(t * const_pi * 0.5f);
 }
 
+enum class Direction : uint8_t {
+	In = 0,
+	Out,
+	InOut
+};
+
+static float TweenIn(float t) {
+	return t;
 }
 
-static float TweenIn(Tween::Type type, float t) {
-	using namespace TweenFunctions;
-	switch (type) {
-	case Tween::Type::Back:
-		return back(t);
-	case Tween::Type::Bounce:
-		return bounce(t);
-	case Tween::Type::Circular:
-		return circular(t);
-	case Tween::Type::Cubic:
-		return cubic(t);
-	case Tween::Type::Elastic:
-		return elastic(t);
-	case Tween::Type::Exponential:
-		return exponential(t);
-	case Tween::Type::Linear:
-		return linear(t);
-	case Tween::Type::Quadratic:
-		return quadratic(t);
-	case Tween::Type::Quartic:
-		return quartic(t);
-	case Tween::Type::Quintic:
-		return quintic(t);
-	case Tween::Type::Sine:
-		return sine(t);
-	default:
-		std::unreachable();
-	}
+static float TweenOut(float t) {
+	return 1.0f - TweenIn(1.0f - t);
 }
 
-static float TweenOut(Tween::Type type, float t) {
-	return 1.0f - TweenIn(type, 1.0f - t);
-}
-
-static float TweenInOut(Tween::Type type, float t) {
+static float TweenInOut(float t) {
 	if (t < 0.5f)
-		return TweenIn(type, 2.0f * t) * 0.5f;
+		return TweenIn(2.0f * t) * 0.5f;
 	else
-		return 0.5f + TweenOut(type, 2.0f * t - 1.0f) * 0.5f;
+		return 0.5f + TweenOut(2.0f * t - 1.0f) * 0.5f;
 }
 
-static std::string TweenToString(Tween::Type type) {
-	switch (type) {
-	case Tween::Type::Back:
-		return "back";
-	case Tween::Type::Bounce:
-		return "bounce";
-	case Tween::Type::Circular:
-		return "circular";
-	case Tween::Type::Cubic:
-		return "cubic";
-	case Tween::Type::Elastic:
-		return "elastic";
-	case Tween::Type::Exponential:
-		return "exponential";
-	case Tween::Type::Linear:
-		return "linear";
-	case Tween::Type::Quadratic:
-		return "quadratic";
-	case Tween::Type::Quartic:
-		return "quartic";
-	case Tween::Type::Quintic:
-		return "quintic";
-	case Tween::Type::Sine:
-		return "sine";
-	default:
-		std::unreachable();
-	}
-}
-
-static std::string TweenToString(Tween::Direction direction) {
-	switch (direction) {
-	case Tween::Direction::In:
-		return "-in";
-	case Tween::Direction::Out:
-		return "-out";
-	case Tween::Direction::InOut:
-		return "-in-out";
-	default:
-		std::unreachable();
-	}
-}
-
-static Tween::Type TweenGetType(uint8_t v) {
-	return (Tween::Type)((v >> 4) & 0xF);
-}
-
-static Tween::Direction TweenGetDirection(uint8_t v) {
-	return (Tween::Direction)(v & 0xF);
-}
-
-static uint8_t TweenMake(Tween::Type type, Tween::Direction direction) {
-	return (uint8_t(type) << 4) | uint8_t(direction);
-}
-
-Tween::Tween()
-	: v(0)
-{ }
-
-Tween::Tween(Type type, Direction direction)
-	: v(TweenMake(type, direction))
-{ }
-
-float Tween::get(float t) const {
-	switch (TweenGetDirection(v)) {
+static float TweenGet(Direction dir, float t) {
+	switch (dir) {
 	case Direction::In:
-		return TweenIn(TweenGetType(v), t);
+		return TweenIn(t);
 	case Direction::Out:
-		return TweenOut(TweenGetType(v), t);
+		return TweenOut(t);
 	case Direction::InOut:
-		return TweenInOut(TweenGetType(v), t);
+		return TweenInOut(t);
 	default:
 		std::unreachable();
 	}
 	return t;
 }
 
-std::string Tween::ToString() const {
-	return TweenToString(TweenGetType(v)) + TweenToString(TweenGetDirection(v));
+float TweenGet(Tween tween, float t) {
+	Direction dir = (Direction)(std::to_underlying(tween) % 3);
+	switch (tween) {
+	case Tween::LinearIn:
+	case Tween::LinearOut:
+	case Tween::LinearInOut:
+		return TweenGet(dir, linear(t));
+	case Tween::BackIn:
+	case Tween::BackOut:
+	case Tween::BackInOut:
+		return TweenGet(dir, back(t));
+	case Tween::BounceIn:
+	case Tween::BounceOut:
+	case Tween::BounceInOut:
+		return TweenGet(dir, bounce(t));
+	case Tween::CircularIn:
+	case Tween::CircularOut:
+	case Tween::CircularInOut:
+		return TweenGet(dir, circular(t));
+	case Tween::CubicIn:
+	case Tween::CubicOut:
+	case Tween::CubicInOut:
+		return TweenGet(dir, cubic(t));
+	case Tween::ElasticIn:
+	case Tween::ElasticOut:
+	case Tween::ElasticInOut:
+		return TweenGet(dir, elastic(t));
+	case Tween::ExponentialIn:
+	case Tween::ExponentialOut:
+	case Tween::ExponentialInOut:
+		return TweenGet(dir, exponential(t));
+	case Tween::QuadraticIn:
+	case Tween::QuadraticOut:
+	case Tween::QuadraticInOut:
+		return TweenGet(dir, quadratic(t));
+	case Tween::QuarticIn:
+	case Tween::QuarticOut:
+	case Tween::QuarticInOut:
+		return TweenGet(dir, quartic(t));
+	case Tween::QuinticIn:
+	case Tween::QuinticOut:
+	case Tween::QuinticInOut:
+		return TweenGet(dir, quintic(t));
+	case Tween::SineIn:
+	case Tween::SineOut:
+	case Tween::SineInOut:
+		return TweenGet(dir, sine(t));
+	default:
+		std::unreachable();
+	}
 }
 
 }

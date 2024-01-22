@@ -10,7 +10,7 @@ local icamera       = ecs.require "ant.camera|camera"
 local iani          = ecs.require "ant.anim_ctrl|state_machine"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
-local imgui         = import_package "ant.imgui"
+local ImGui         = import_package "ant.imgui"
 local bfs 			= require "bee.filesystem"
 local global_data	= require "common.global_data"
 local icons         = require "common.icons"
@@ -39,7 +39,7 @@ local function start_fileserver(luaexe, path)
 end
 
 local function init_font()
-		imgui.FontAtlasAddFont {
+		ImGui.FontAtlasAddFont {
 			FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
 			SizePixels = 16,
 			GlyphRanges = {
@@ -103,20 +103,22 @@ function m:init()
     world.__EDITOR__ = true
     iani.set_edit_mode(true)
     widget_utils.load_imgui_layout(global_data.editor_root / "imgui.layout")
-    imgui.SetWindowTitle("Editor")
+    ImGui.SetWindowTitle("Editor")
 	--
 	global_data:update_project_root(__ANT_EDITOR__)
-    start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
-    log_widget.init_log_receiver()
-    console_widget.init_console_sender()
+    -- start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
+    -- log_widget.init_log_receiver()
+    -- console_widget.init_console_sender()
 	--filewatch
-	local bfw = require "bee.filewatch"
-	local fw = bfw.create()
-	fw:add(global_data.project_root:string())
-	global_data.filewatch = fw
+	if global_data.project_root then
+		local bfw = require "bee.filewatch"
+		local fw = bfw.create()
+		fw:add(global_data.project_root:string())
+		global_data.filewatch = fw
+	end
 	global_data.audio = fmod.init()
 	
-	init_font();
+	init_font()
 
 	icons:init(assetmgr)
 	if editor_setting.setting.camera == nil then

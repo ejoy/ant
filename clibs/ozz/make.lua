@@ -1,7 +1,5 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
 lm:import "ozz-animation.lua"
 
 lm:lua_source "ozz" {
@@ -12,8 +10,8 @@ lm:lua_source "ozz" {
         "ozz-animation-geometry",
     },
     includes = {
-        Ant3rd .. "ozz-animation/include",
-        Ant3rd .. "bee.lua",
+        lm.AntDir .. "/3rd/ozz-animation/include",
+        lm.AntDir .. "/3rd/bee.lua",
         "../luabind",
     },
     sources = {

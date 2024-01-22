@@ -1,4 +1,4 @@
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local imguiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
 local aio  = import_package "ant.io"
@@ -68,7 +68,7 @@ end
 
 function PropertyBase:show_label()
     if self.mode == nil or self.mode == "label_left" then
-        imgui.widget.PropertyLabel(self.label)
+        ImGui.PropertyLabel(self.label)
     end
 end
 
@@ -104,23 +104,23 @@ end
 
 local Int = class("Int", PropertyBase)
 function Int:widget()
-    return imgui.widget.DragInt(self:get_label(), self.uidata)
+    return ImGui.DragInt(self:get_label(), self.uidata)
 end
 
 local Float = class("Float", PropertyBase)
 function Float:widget()
-    return imgui.widget.DragFloat(self:get_label(), self.uidata)
+    return ImGui.DragFloat(self:get_label(), self.uidata)
 end
 
 local Bool = class("Bool", PropertyBase)
 function Bool:widget()
-    return imgui.widget.Checkbox(self:get_label(), self.uidata)
+    return ImGui.Checkbox(self:get_label(), self.uidata)
 end
 
 local Color = class("Color", PropertyBase)
 
 function Color:widget()
-    return imgui.widget.ColorEdit(self:get_label(), self.uidata)
+    return ImGui.ColorEdit(self:get_label(), self.uidata)
 end
 
 local Combo = class("Combo", PropertyBase)
@@ -141,23 +141,23 @@ end
 function Combo:show()
     if self:is_visible() then
         self:show_label()
-        imgui.util.PushID(tostring(self))
+        ImGui.PushID(tostring(self))
         local current_option = self.modifier.getter()
-        if imgui.widget.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then
+        if ImGui.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then
             for _, option in ipairs(self.options) do
-                if imgui.widget.Selectable(option, current_option == option) then
+                if ImGui.Selectable(option, current_option == option) then
                     self.modifier.setter(option)
                 end
             end
-            imgui.widget.EndCombo()
+            ImGui.EndCombo()
         end
-        imgui.util.PopID()
+        ImGui.PopID()
     end
 end
 
 local Text = class("Text", PropertyBase)
 function Text:widget()
-    return imgui.widget.Text(self.uidata.text)
+    return ImGui.Text(self.uidata.text)
 end
 
 local EditText = class("EditText", PropertyBase)
@@ -169,10 +169,10 @@ end
 
 function EditText:widget()
     if self.readonly then
-        return imgui.widget.Text(self.uidata.text)
+        return ImGui.Text(self.uidata.text)
     else
         -- it will change self.uidata.text as userdata
-        return imgui.widget.InputText(self:get_label(), self.uidata)
+        return ImGui.InputText(self:get_label(), self.uidata)
     end
 end
 
@@ -186,7 +186,7 @@ end
 
 function EditText:show()
     if self:is_visible() then
-        imgui.widget.PropertyLabel(self.label)
+        ImGui.PropertyLabel(self.label)
         if self:widget() then
             self.modifier.setter(tostring(self.uidata.text))
         end
@@ -222,12 +222,12 @@ function ResourcePath:show()
     if not self:is_visible() then
         return
     end
-    -- imgui.widget.Text(self.label)
-    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
-    imgui.widget.PropertyLabel(self.label)
+    -- ImGui.Text(self.label)
+    -- ImGui.SameLine(uiconfig.PropertyIndent)
+    ImGui.PropertyLabel(self.label)
     self:widget()
-    if imgui.widget.BeginDragDropTarget() then
-        local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+    if ImGui.BeginDragDropTarget() then
+        local payload = ImGui.AcceptDragDropPayload("DragFile")
         if payload then
             local relative_path = lfs.path(payload)--lfs.relative(lfs.path(payload), fs.path "/":localpath())
             local extension = tostring(relative_path:extension())
@@ -239,7 +239,7 @@ function ResourcePath:show()
                 self:on_dragdrop()
             end
         end
-        imgui.widget.EndDragDropTarget()
+        ImGui.EndDragDropTarget()
     end
 end
 
@@ -312,20 +312,20 @@ function TextureResource:show()
     ResourcePath.show(self)
     if not self.runtimedata then return end
     --if not self.runtimedata._data.handle then return end
-    if imgui.table.Begin("##TextureTable" .. self.label, 2, imgui.flags.Table {}) then
-        imgui.table.SetupColumn("ImagePreview", imgui.flags.TableColumn {'WidthFixed'}, 64.0)
-        imgui.table.SetupColumn("ImagePath", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
-        imgui.table.NextColumn()
+    if ImGui.TableBegin("##TextureTable" .. self.label, 2, ImGui.Flags.Table {}) then
+        ImGui.TableSetupColumn("ImagePreview", ImGui.Flags.TableColumn {'WidthFixed'}, 64.0)
+        ImGui.TableSetupColumn("ImagePath", ImGui.Flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
+        ImGui.TableNextColumn()
         if self.runtimedata._data.handle then
-            imgui.widget.Image(assetmgr.textures[self.runtimedata._data.id], uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+            ImGui.Image(assetmgr.textures[self.runtimedata._data.id], uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
         end
-        imgui.table.NextColumn()
-        imgui.cursor.PushItemWidth(-1)
-        if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
+        ImGui.TableNextColumn()
+        ImGui.PushItemWidth(-1)
+        if ImGui.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
         end
-        imgui.cursor.PopItemWidth()
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+        ImGui.PopItemWidth()
+        if ImGui.BeginDragDropTarget() then
+            local payload = ImGui.AcceptDragDropPayload("DragFile")
             if payload then
                 local path = fs.path(payload);
                 if path:equal_extension ".png" or path:equal_extension ".dds" then
@@ -333,32 +333,32 @@ function TextureResource:show()
                     assetmgr.unload(self.path)
                 end
             end
-            imgui.widget.EndDragDropTarget()
+            ImGui.EndDragDropTarget()
         end
 
         if not self.readonly then
-            imgui.util.PushID("Save" .. self.label)
-            if imgui.widget.Button("Save") then
+            ImGui.PushID("Save" .. self.label)
+            if ImGui.Button("Save") then
                 if not self.path:find("|", 1, true) then
                     utils.write_file(self.path, stringify(self.metadata))
                 end
             end
-            imgui.util.PopID()
-            imgui.cursor.SameLine()
+            ImGui.PopID()
+            ImGui.SameLine()
         end
         
-        imgui.util.PushID("Save As" .. self.label)
-        if imgui.widget.Button("Save As") then
+        ImGui.PushID("Save As" .. self.label)
+        if ImGui.Button("Save As") then
             local path = uiutils.get_saveas_path("Texture", "texture")
             if path then
                 --path = tostring(lfs.relative(lfs.path(path), fs.path "/":localpath()))
                 utils.write_file(path, stringify(self.metadata))
             end
         end
-        imgui.util.PopID()
-        imgui.cursor.SameLine()
+        ImGui.PopID()
+        ImGui.SameLine()
         
-        if imgui.widget.Button("Select...") then
+        if ImGui.Button("Select...") then
             local glb_filename = uiutils.get_open_file_path("Textures", "glb")
             if glb_filename then
                 local vp = access.virtualpath(global_data.repo, glb_filename)
@@ -366,25 +366,25 @@ function TextureResource:show()
                 glb_path = "/" .. vp
                 rc.compile(glb_path)
                 image_path = rc.compile(glb_path .. "|images")
-                imgui.windows.OpenPopup("select_image")
+                ImGui.OpenPopup("select_image")
             end
         end
-        imgui.cursor.SameLine()
+        ImGui.SameLine()
         if image_path then
-            if imgui.windows.BeginPopup("select_image") then
+            if ImGui.BeginPopup("select_image") then
                 for path in fs.pairs(image_path) do
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
-                        if imgui.widget.Selectable(filename, false) then
+                        if ImGui.Selectable(filename, false) then
                             self:set_file(glb_path .. "|images/" .. filename)
                             image_path = nil
                         end
                     end
                 end
-                imgui.windows.EndPopup()
+                ImGui.EndPopup()
             end
         end
-        imgui.table.End()
+        ImGui.TableEnd()
     end
 end
 
@@ -408,13 +408,13 @@ end
 
 function Button:show()
     if self:is_visible() then
-        imgui.util.PushID("ui_button_id" .. self.button_id)
-        imgui.windows.BeginDisabled(self:is_disable())
-        if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
+        ImGui.PushID("ui_button_id" .. self.button_id)
+        ImGui.BeginDisabled(self:is_disable())
+        if ImGui.Button(self.label, self.uidata.width, self.uidata.height) then
             self.modifier.click()
         end
-        imgui.windows.EndDisabled()
-        imgui.util.PopID()
+        ImGui.EndDisabled()
+        ImGui.PopID()
     end
 end
 
@@ -456,9 +456,9 @@ end
 
 function Container:_show_child(c)
     if c:is_visible() then
-        imgui.windows.BeginDisabled(c:is_disable())
+        ImGui.BeginDisabled(c:is_disable())
         c:show()
-        imgui.windows.EndDisabled()
+        ImGui.EndDisabled()
     end
 end
 
@@ -468,22 +468,22 @@ local Group = class("Group", Container)
 function Group:_init(config, subproperty, modifier)
     Container._init(self, config, subproperty, modifier)
     if self.uidata.flags == nil then
-        self.uidata.flags = imgui.flags.TreeNode { "DefaultOpen" }
+        self.uidata.flags = ImGui.Flags.TreeNode { "DefaultOpen" }
     end
 end
 
 function Group:show()
-    imgui.windows.BeginDisabled(self:is_disable())
-    if imgui.widget.TreeNode(self.label, self.uidata.flags) then
+    ImGui.BeginDisabled(self:is_disable())
+    if ImGui.TreeNode(self.label, self.uidata.flags) then
         for _, c in ipairs(self.subproperty) do
             self:_show_child(c)
             if c.sameline then
-                imgui.cursor.SameLine()
+                ImGui.SameLine()
             end
         end
-        imgui.widget.TreePop()
+        ImGui.TreePop()
     end
-    imgui.windows.EndDisabled()
+    ImGui.EndDisabled()
 end
 
 local SameLineContainer = class("SameLineContainer", Container)
@@ -499,7 +499,7 @@ function SameLineContainer:show()
         for i=1, #p-1 do
             local c = p[i]
             self:_show_child(c)
-            imgui.cursor.SameLine()
+            ImGui.SameLine()
         end
         self:_show_child(p[#p])
     end

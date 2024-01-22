@@ -1,14 +1,10 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
+lm.BgfxDir = lm.AntDir.."/3rd/bgfx"
+lm.BxDir = lm.AntDir.."/3rd/bx"
+lm.BimgDir = lm.AntDir.."/3rd/bimg"
 
-lm.BgfxDir = lm:path(Ant3rd .. "bgfx/")
-lm.BxDir = lm:path(Ant3rd .. "bx/")
-lm.BimgDir = lm:path(Ant3rd .. "bimg/")
-
-lm:import(Ant3rd .. "bgfx.luamake/use.lua")
-
-local SHADER_PKG_DIR <const> = Ant3rd .. "../pkg/ant.resources/shaders/"
+lm:import(lm.AntDir.."/3rd/bgfx.luamake/use.lua")
 
 lm:copy "copy_bgfx_shader" {
     input = {
@@ -17,8 +13,8 @@ lm:copy "copy_bgfx_shader" {
         lm.BgfxDir .. "/examples/common/shaderlib.sh",
     },
     output = {
-        SHADER_PKG_DIR .. "bgfx_shader.sh",
-        SHADER_PKG_DIR .. "bgfx_compute.sh",
-        SHADER_PKG_DIR .. "shaderlib.sh",
+        lm.AntDir .. "/pkg/ant.resources/shaders/bgfx_shader.sh",
+        lm.AntDir .. "/pkg/ant.resources/shaders/bgfx_compute.sh",
+        lm.AntDir .. "/pkg/ant.resources/shaders/shaderlib.sh",
     }
 }

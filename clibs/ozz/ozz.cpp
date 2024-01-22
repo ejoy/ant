@@ -1,4 +1,5 @@
 #include <lua.hpp>
+#include <cstring>
 #include "fastio.h"
 
 #include <ozz/base/memory/allocator.h>
@@ -69,8 +70,8 @@ public:
 			default:								return -1;
 		}
 
-		int r = (int)origin + _offset;
-		if (r < 0 || r > ms.size()){
+		int r = origin + _offset;
+		if (r < 0 || r > (int)ms.size()){
 			return -1;
 		}
 		moffset = r;

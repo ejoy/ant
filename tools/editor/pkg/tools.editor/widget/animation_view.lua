@@ -10,7 +10,7 @@ local prefab_mgr = ecs.require "prefab_manager"
 local assetmgr = import_package "ant.asset"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local imguiWidgets = require "imgui.widgets"
 local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
@@ -25,10 +25,8 @@ local fmod      = require "fmod"
 local edit_timeline
 local timeline_eid
 local timeline_playing = false
-local efk_tag_list = {}
 local srt_tag_list = {}
 local mtl_tag_list = {}
-local srt_mtl_list = {}
 local m = {}
 local edit_anims
 local anim_eid
@@ -245,23 +243,23 @@ end
 
 local function show_events()
     if anim_state.selected_frame >= 0 then -- and current_clip then
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." AddEvent") then
-            imgui.windows.OpenPopup("AddKeyEvent")
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." AddEvent") then
+            ImGui.OpenPopup("AddKeyEvent")
         end
     end
 
-    if imgui.windows.BeginPopup("AddKeyEvent") then
+    if ImGui.BeginPopup("AddKeyEvent") then
         for _, et in ipairs(event_type) do
-            if imgui.widget.MenuItem(et) then
+            if ImGui.MenuItem(et) then
                 add_event(et)
             end
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
     if #anim_state.current_event_list > 0 then
-        imgui.cursor.SameLine()
-        if imgui.widget.Button("ClearEvent") then
+        ImGui.SameLine()
+        if ImGui.Button("ClearEvent") then
             clear_event()
         end
     end
@@ -269,16 +267,16 @@ local function show_events()
         local delete_idx
         for idx, ke in ipairs(anim_state.current_event_list) do
             local label = "event:" .. tostring(idx)
-            if imgui.widget.Selectable(label, current_event and (current_event_index == idx)) then
+            if ImGui.Selectable(label, current_event and (current_event_index == idx)) then
                 current_event = ke
                 current_event_index = idx
             end
             if current_event and (current_event_index == idx) then
-                if imgui.windows.BeginPopupContextItem(label) then
-                    if imgui.widget.Selectable("Delete", false) then
+                if ImGui.BeginPopupContextItem(label) then
+                    if ImGui.Selectable("Delete", false) then
                         delete_idx = idx
                     end
-                    imgui.windows.EndPopup()
+                    ImGui.EndPopup()
                 end
             end
         end
@@ -292,12 +290,12 @@ local bank_path
 
 local function show_current_event()
     if not current_event then return end
-    imgui.widget.PropertyLabel("EventType")
-    imgui.widget.Text(current_event.event_type)
+    ImGui.PropertyLabel("EventType")
+    ImGui.Text(current_event.event_type)
 
     local dirty
     if current_event.event_type == "Sound" then
-        if not bank_path and imgui.widget.Button("SelectBankPath") then
+        if not bank_path and ImGui.Button("SelectBankPath") then
             local filename = uiutils.get_open_file_path("Bank", "bank")
             if filename then
                 bank_path = filename:match("^(.+/)[%w*?_.%-]*$")
@@ -347,13 +345,13 @@ local function show_current_event()
             --     dirty = true
             end
         end
-        imgui.widget.Text("BankPath : " .. current_event.asset_path)
-        imgui.widget.Text("SoundEvent : " .. current_event.sound_event)
-        imgui.cursor.Separator();
+        ImGui.Text("BankPath : " .. current_event.asset_path)
+        ImGui.Text("SoundEvent : " .. current_event.sound_event)
+        ImGui.Separator();
         for _, se in ipairs(sound_event_name_list) do
-            if imgui.widget.Selectable(se, current_event.sound_event == se, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.Selectable(se, current_event.sound_event == se, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
-                if (imgui.util.IsMouseDoubleClicked(0)) then
+                if (ImGui.IsMouseDoubleClicked(0)) then
                     fmod.play(sound_event_list[se])
                     dirty = true
                 end
@@ -368,7 +366,7 @@ local function show_current_event()
                 current_event.action = nil
                 current_event.target = nil
             end
-            if imgui.widget.Button("Modify") then
+            if ImGui.Button("Modify") then
                 local localpath = uiutils.get_open_file_path("Modify Animation", "anim")
                 if localpath then
                     current_event.asset_path_ui.text = access.virtualpath(global_data.repo, localpath)
@@ -377,13 +375,13 @@ local function show_current_event()
                 end
             end
             if current_event.asset_path and #current_event.asset_path > 0 then
-                imgui.widget.PropertyLabel("AssetPath")
-                if imgui.widget.InputText("##AssetPath", current_event.asset_path_ui) then
+                ImGui.PropertyLabel("AssetPath")
+                if ImGui.InputText("##AssetPath", current_event.asset_path_ui) then
                     update_asset_path(tostring(current_event.asset_path_ui.text))
                     dirty = true
                 end
-                -- imgui.widget.PropertyLabel("ActionTarget")
-                -- if imgui.widget.InputText("##ActionTarget", current_event.target_ui) then
+                -- ImGui.PropertyLabel("ActionTarget")
+                -- if ImGui.InputText("##ActionTarget", current_event.target_ui) then
                 --     current_event.target = tostring(current_event.target_ui.text)
                 --     dirty = true
                 -- end
@@ -391,48 +389,48 @@ local function show_current_event()
             end
             action_list = current_event.action_list or {}
         end
-        action_list = (current_event.event_type == "Effect") and efk_tag_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
+        action_list = (current_event.event_type == "Effect") and prefab_mgr.efk_tag_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
         if #action_list > 0 then
             local action = current_event.action or ''
-            imgui.widget.PropertyLabel("Action")
-            if imgui.widget.BeginCombo("##ActionList", {action, flags = imgui.flags.Combo {}}) then
+            ImGui.PropertyLabel("Action")
+            if ImGui.BeginCombo("##ActionList", {action, flags = ImGui.Flags.Combo {}}) then
                 for _, name in ipairs(action_list) do
-                    if imgui.widget.Selectable(name, action == name) then
+                    if ImGui.Selectable(name, action == name) then
                         current_event.action = name
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
                 dirty = true
             end
         end
         if current_event.asset_path and #current_event.asset_path > 0 then
             local target = current_event.target or ''
-            imgui.widget.PropertyLabel("Target")
-            if imgui.widget.BeginCombo("##Target", {target, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(srt_mtl_list) do
-                    if imgui.widget.Selectable(name, target == name) then
+            ImGui.PropertyLabel("Target")
+            if ImGui.BeginCombo("##Target", {target, flags = ImGui.Flags.Combo {}}) then
+                for _, name in ipairs(prefab_mgr.srt_mtl_list) do
+                    if ImGui.Selectable(name, target == name) then
                         current_event.target = name
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
                 dirty = true
             end
         end
         if current_event.event_type == "Animation" then
-            imgui.widget.PropertyLabel("Forwards")
-            if imgui.widget.Checkbox("##Forwards", current_event.forwards_ui) then
+            ImGui.PropertyLabel("Forwards")
+            if ImGui.Checkbox("##Forwards", current_event.forwards_ui) then
                 current_event.forwards = current_event.forwards_ui[1]
                 dirty = true
             end
-            imgui.widget.PropertyLabel("PauseFrame")
-            if imgui.widget.DragInt("##PauseFrame", current_event.pause_frame_ui) then
+            ImGui.PropertyLabel("PauseFrame")
+            if ImGui.DragInt("##PauseFrame", current_event.pause_frame_ui) then
                 current_event.pause_frame = current_event.pause_frame_ui[1]
                 dirty = true
             end
         end
     elseif current_event.event_type == "Message" then
-        imgui.widget.PropertyLabel("Content")
-        if imgui.widget.InputText("##Content", current_event.msg_content_ui) then
+        ImGui.PropertyLabel("Content")
+        if ImGui.InputText("##Content", current_event.msg_content_ui) then
             current_event.msg_content = tostring(current_event.msg_content_ui.text)
             dirty = true
         end
@@ -651,10 +649,10 @@ function m.show()
         end
     end
     local reload = false
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if imgui.windows.Begin("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    if ImGui.Begin("Animation", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if (not current_anim or not anim_eid) and not edit_timeline then
             goto continue
         end
@@ -678,45 +676,45 @@ function m.show()
                     anim_state.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
                 end
             end
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(150)
+            ImGui.SameLine()
+            ImGui.PushItemWidth(150)
             local current_name = edit_timeline and '' or current_anim.name
             local current_name_list = edit_timeline and {} or edit_anims.name_list
-            if imgui.widget.BeginCombo("##NameList", {current_name, flags = imgui.flags.Combo {}}) then
+            if ImGui.BeginCombo("##NameList", {current_name, flags = ImGui.Flags.Combo {}}) then
                 for _, name in ipairs(current_name_list) do
-                    if imgui.widget.Selectable(name, current_name == name) then
+                    if ImGui.Selectable(name, current_name == name) then
                         set_current_anim(name)
                     end
                 end
-                imgui.widget.EndCombo()
+                ImGui.EndCombo()
             end
-            imgui.cursor.PopItemWidth()
-            imgui.cursor.SameLine()
+            ImGui.PopItemWidth()
+            ImGui.SameLine()
             local title = "Add"
-            if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
+            if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
                 anim_name_ui.text = ''
                 anim_path_ui.text = ''
-                imgui.windows.OpenPopup(title)
+                ImGui.OpenPopup(title)
             end
-            local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
+            local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize"})
             if change then
-                imgui.widget.Text("Anim Name:")
-                imgui.cursor.SameLine()
-                if imgui.widget.InputText("##AnimName", anim_name_ui) then
+                ImGui.Text("Anim Name:")
+                ImGui.SameLine()
+                if ImGui.InputText("##AnimName", anim_name_ui) then
                 end
-                imgui.widget.Text("Anim Path:")
-                imgui.cursor.SameLine()
-                if imgui.widget.InputText("##AnimPath", anim_path_ui) then
+                ImGui.Text("Anim Path:")
+                ImGui.SameLine()
+                if ImGui.InputText("##AnimPath", anim_path_ui) then
                 end
-                imgui.cursor.SameLine()
-                if imgui.widget.Button("...") then
+                ImGui.SameLine()
+                if ImGui.Button("...") then
                     local localpath = uiutils.get_open_file_path("Select Animation", "bin")
                     if localpath then
                         anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
                     end
                 end
-                imgui.cursor.Separator()
-                if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
+                ImGui.Separator()
+                if ImGui.Button(faicons.ICON_FA_CHECK.."  OK  ") then
                     local anim_name = tostring(anim_name_ui.text)
                     local anim_path = tostring(anim_path_ui.text)
                     if #anim_name > 0 and #anim_path > 0 then
@@ -738,17 +736,17 @@ function m.show()
                             reload = true
                         end
                     end
-                    imgui.windows.CloseCurrentPopup()
+                    ImGui.CloseCurrentPopup()
                 end
-                imgui.cursor.SameLine()
-                if imgui.widget.Button(faicons.ICON_FA_XMARK.." Cancel") then
-                    imgui.windows.CloseCurrentPopup()
+                ImGui.SameLine()
+                if ImGui.Button(faicons.ICON_FA_XMARK.." Cancel") then
+                    ImGui.CloseCurrentPopup()
                 end
-                imgui.windows.EndPopup()
+                ImGui.EndPopup()
             end
 
-            imgui.cursor.SameLine()
-            if imgui.widget.Button(faicons.ICON_FA_TRASH.." Remove") then
+            ImGui.SameLine()
+            if ImGui.Button(faicons.ICON_FA_TRASH.." Remove") then
                 anim_group_delete(current_anim.name)
                 local nextanim = edit_anims.name_list[1]
                 if nextanim then
@@ -757,10 +755,10 @@ function m.show()
                 reload = true
             end
         end
-        imgui.cursor.SameLine()
+        ImGui.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         local imagesize = icon.texinfo.width * icons.scale
-        if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], imagesize, imagesize) then
+        if ImGui.ImageButton("##play", assetmgr.textures[icon.id], imagesize, imagesize) then
             if not edit_timeline then
                 if anim_state.is_playing then
                     iani.pause(anim_eid, true)
@@ -771,8 +769,8 @@ function m.show()
                 play_timeline()
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Checkbox("loop", ui_loop) then
+        ImGui.SameLine()
+        if ImGui.Checkbox("loop", ui_loop) then
             if not edit_timeline then
                 iani.set_loop(anim_eid, ui_loop[1])
             else
@@ -784,20 +782,20 @@ function m.show()
             end
         end
         if not edit_timeline then
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(50)
-            if imgui.widget.DragFloat("speed", ui_speed) then
+            ImGui.SameLine()
+            ImGui.PushItemWidth(50)
+            if ImGui.DragFloat("speed", ui_speed) then
                 iani.set_speed(anim_eid, ui_speed[1])
             end
-            imgui.cursor.PopItemWidth()
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
+            ImGui.PopItemWidth()
+            ImGui.SameLine()
+            if ImGui.Checkbox("showskeleton", ui_showskeleton) then
                 show_skeleton(ui_showskeleton[1])
             end
         else
-            imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(100)
-            if imgui.widget.DragInt("duration", ui_timeline_duration) then
+            ImGui.SameLine()
+            ImGui.PushItemWidth(100)
+            if ImGui.DragInt("duration", ui_timeline_duration) then
                 local second = ui_timeline_duration[1] / sample_ratio
                 edit_timeline.duration = second
                 anim_state.duration = second
@@ -807,17 +805,17 @@ function m.show()
                 e.timeline.duration = second
             end
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_FLOPPY_DISK.." SaveEvent") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_FLOPPY_DISK.." SaveEvent") then
             if edit_timeline then
                 m.save_timeline()
             else
                 m.save_keyevent()
             end
         end
-        imgui.cursor.SameLine()
+        ImGui.SameLine()
         local current_time = edit_timeline and (anim_state.current_frame / sample_ratio) or iani.get_time(anim_eid)
-        imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
+        ImGui.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         local current_seq = edit_timeline and edit_timeline or edit_anims
         imguiWidgets.Sequencer(current_seq, anim_state, imgui_message)
@@ -848,38 +846,38 @@ function m.show()
         if move_type and move_type ~= 0 then
             on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
         end
-        imgui.cursor.Separator()
-        if imgui.table.Begin("EventColumns", edit_timeline and 2 or 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+        ImGui.Separator()
+        if ImGui.TableBegin("EventColumns", edit_timeline and 2 or 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
             if not edit_timeline then
-                imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                ImGui.TableSetupColumn("Bones", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
             end
-            imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-            imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 2.0)
-            imgui.table.HeadersRow()
+            ImGui.TableSetupColumn("Event", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumn("Event(Detail)", ImGui.Flags.TableColumn {'WidthStretch'}, 2.0)
+            ImGui.TableHeadersRow()
             local child_width, child_height
             if not edit_timeline then
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_joints", child_width, child_height)
+                ImGui.TableNextColumn()
+                child_width, child_height = ImGui.GetContentRegionAvail()
+                ImGui.BeginChild("##show_joints", child_width, child_height)
                 joint_utils:show_joints(joint_map.root)
-                imgui.windows.EndChild()
+                ImGui.EndChild()
             end
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_events", child_width, child_height)
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_events", child_width, child_height)
             show_events()
-            imgui.windows.EndChild()
+            ImGui.EndChild()
 
-            imgui.table.NextColumn()
-            child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.windows.BeginChild("##show_current_event", child_width, child_height)
+            ImGui.TableNextColumn()
+            child_width, child_height = ImGui.GetContentRegionAvail()
+            ImGui.BeginChild("##show_current_event", child_width, child_height)
             show_current_event()
-            imgui.windows.EndChild()
-            imgui.table.End()
+            ImGui.EndChild()
+            ImGui.TableEnd()
         end
         ::continue::
     end
-    imgui.windows.End()
+    ImGui.End()
     if reload then
         prefab_mgr:save()
         prefab_mgr:reload()
@@ -887,7 +885,6 @@ function m.show()
 end
 
 function m.on_prefab_load(eid)
-    m.update_tag_list()
     if not eid then
         return
     end
@@ -935,6 +932,9 @@ function m.on_target(eid)
     stop_timeline()
     edit_timeline = nil
     timeline_eid = nil
+    if not eid then
+        return
+    end
     local e <close> = world:entity(eid, "timeline?in")
     if e.timeline then
         if not e.timeline.eid_map then
@@ -969,11 +969,6 @@ function m.on_target(eid)
         edit_anims.dirty = true
         set_event_dirty(-1)
     end
-end
-
-function m.update_tag_list()
-    efk_tag_list = prefab_mgr:get_efk_list()
-    srt_mtl_list = prefab_mgr:get_srt_mtl_list()
 end
 
 function m.update_anim_namelist()

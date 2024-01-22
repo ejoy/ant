@@ -2,9 +2,7 @@ local lm = require "luamake"
 
 local EnableEditor = lm.os ~= "ios"
 
-dofile "../common.lua"
-
-lm.rootdir = Ant3rd .."ozz-animation"
+lm.rootdir = lm.AntDir .. "/3rd/ozz-animation"
 
 lm:source_set "ozz-animation-json" {
     includes = "extern/jsoncpp/dist",
@@ -59,6 +57,11 @@ lm:exe "gltf2ozz" {
         "!src/animation/offline/tools/dump2ozz.cc",
     },
     windows = {
-        sources = Ant3rd .. "bgfx.luamake/utf8/utf8.rc"
+        sources = lm.AntDir .. "/3rd/bgfx.luamake/utf8/utf8.rc"
+    },
+    linux = {
+        links = {
+            "m"
+        }
     }
 }

@@ -1,15 +1,13 @@
 local lm = require "luamake"
 
-local ROOT <const> = "../../"
-
 lm:lua_source "debugger" {
     defines = {
         "LUA_VERSION_LATEST",
     },
     includes = {
-        ROOT .. "3rd/bee.lua/",
-        ROOT .. "3rd/bee.lua/3rd/lua/",
-        ROOT .. "3rd/bee.lua/3rd/lua-seri",
+        lm.AntDir .. "/3rd/bee.lua/",
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua/",
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua-seri",
         "src",
     },
     sources = {

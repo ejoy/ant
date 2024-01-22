@@ -670,7 +670,7 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "Config", eConfigFlags);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "Slider", eSliderFlags);
-	lua_setfield(L, -2, "flags");
+	lua_setfield(L, -2, "Flags");
 
 	lua_newtable(L);
 	enum_gen(L, "TableBgTarget", eTableBgTarget);
@@ -681,5 +681,5 @@ void imgui_enum_init(lua_State* L) {
 	enum_gen(L, "MouseButton", eMouseButton);
 	enum_gen(L, "MouseCursor", eMouseCursor);
 	enum_gen(L, "Mod", eMod);
-	lua_setfield(L, -2, "enum");
+	lua_setfield(L, -2, "Enum");
 }

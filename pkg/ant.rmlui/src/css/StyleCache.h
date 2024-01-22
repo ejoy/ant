@@ -62,7 +62,7 @@ namespace Rml::Style {
         TableRef                   Create();
         TableRef                   Create(const PropertyVector& vec);
         TableRef                   Merge(const std::span<TableValue>& tables);
-        TableRef                   Inherit(const TableRef& A, const TableRef& B, const TableRef& C);
+        TableRef                   Merge(const TableRef& A, const TableRef& B, const TableRef& C);
         TableRef                   Inherit(const TableRef& A, const TableRef& B);
         TableRef                   Inherit(const TableRef& A);
         bool                       Assgin(const TableRef& to, const TableRef& from);

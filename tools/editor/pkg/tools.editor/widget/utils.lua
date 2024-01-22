@@ -1,5 +1,5 @@
 local assetmgr 	= import_package "ant.asset"
-local imgui     = require "imgui"
+local ImGui     = import_package "ant.imgui"
 local faicons   = require "common.fa_icons"
 local icons   = require "common.icons"
 local m = {}
@@ -7,8 +7,8 @@ local m = {}
 local function ONCE(t, s)
     if not s then return t end
 end
-local windiwsBegin = imgui.windows.Begin
-local windiwsEnd = setmetatable({}, { __close = imgui.windows.End })
+local windiwsBegin = ImGui.Begin
+local windiwsEnd = setmetatable({}, { __close = ImGui.End })
 
 function m.imgui_windows(...)
 	windiwsBegin(...)
@@ -16,23 +16,23 @@ function m.imgui_windows(...)
 end
 
 function m.imguiBeginToolbar()
-    imgui.windows.PushStyleColor(imgui.enum.Col.Button, 0, 0, 0, 0)
-    imgui.windows.PushStyleColor(imgui.enum.Col.ButtonActive, 0, 0, 0, 0)
-    imgui.windows.PushStyleColor(imgui.enum.Col.ButtonHovered, 0.5, 0.5, 0.5, 0)
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 4, 0)
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 0, 0)
+    ImGui.PushStyleColor(ImGui.Enum.Col.Button, 0, 0, 0, 0)
+    ImGui.PushStyleColor(ImGui.Enum.Col.ButtonActive, 0, 0, 0, 0)
+    ImGui.PushStyleColor(ImGui.Enum.Col.ButtonHovered, 0.5, 0.5, 0.5, 0)
+    ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 4, 0)
+    ImGui.PushStyleVar(ImGui.Enum.StyleVar.FramePadding, 0, 0)
 end
 
 function m.imguiEndToolbar()
-    imgui.windows.PopStyleVar(2)
-    imgui.windows.PopStyleColor(3)
+    ImGui.PopStyleVar(2)
+    ImGui.PopStyleColor(3)
 end
 
 local function imgui_tooltip(text, wrap)
-    if imgui.util.IsItemHovered() then
-        if imgui.widget.BeginTooltip() then
-            imgui.widget.TextWrapped(text, wrap or 200)
-            imgui.widget.EndTooltip()
+    if ImGui.IsItemHovered() then
+        if ImGui.BeginTooltip() then
+            ImGui.TextWrapped(text, wrap or 200)
+            ImGui.EndTooltip()
         end
     end
 end
@@ -44,10 +44,10 @@ function m.imguiToolbar(icon, tooltip, active)
     else
         bg_col = {0.2, 0.2, 0.2, 1}
     end
-	imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 2, 2);
+	ImGui.PushStyleVar(ImGui.Enum.StyleVar.FramePadding, 2, 2);
     local iconsize = icon.texinfo.width * (icons.scale or 1.5)
-    local r = imgui.widget.ImageButton(tooltip, assetmgr.textures[icon.id], iconsize, iconsize, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
-    imgui.windows.PopStyleVar(1);
+    local r = ImGui.ImageButton(tooltip, assetmgr.textures[icon.id], iconsize, iconsize, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
+    ImGui.PopStyleVar(1);
     if tooltip then
         imgui_tooltip(tooltip)
     end
@@ -65,41 +65,41 @@ function m.show_message_box()
     if #message < 1 then return end
     local level = 1
     local function do_show_message(msg)
-        if not imgui.windows.IsPopupOpen(msg.title) then
-            imgui.windows.OpenPopup(msg.title)
+        if not ImGui.IsPopupOpen(msg.title) then
+            ImGui.OpenPopup(msg.title)
         end
-        local change, opened = imgui.windows.BeginPopupModal(msg.title, imgui.flags.Window{"AlwaysAutoResize"})
+        local change, opened = ImGui.BeginPopupModal(msg.title, ImGui.Flags.Window{"AlwaysAutoResize"})
         if change then
-            imgui.widget.Text(msg.info)
+            ImGui.Text(msg.info)
             level = level + 1
             if level <= #message then
                 do_show_message(message[level])
             end
-            if imgui.widget.Button("Close") then
+            if ImGui.Button("Close") then
                 message[level - 1] = nil
-                imgui.windows.CloseCurrentPopup()
+                ImGui.CloseCurrentPopup()
             end
-            imgui.windows.EndPopup()
+            ImGui.EndPopup()
         end
     end
     do_show_message(message[level])
 end
 
 function m.confirm_dialog(info)
-    imgui.windows.OpenPopup(info.title)
-    local change, opened = imgui.windows.BeginPopupModal(info.title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    ImGui.OpenPopup(info.title)
+    local change, opened = ImGui.BeginPopupModal(info.title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
-        imgui.widget.Text(info.message)
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK" OK") then
+        ImGui.Text(info.message)
+        if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK" OK") then
             info.answer = 1
-            imgui.windows.CloseCurrentPopup()
+            ImGui.CloseCurrentPopup()
         end
-        imgui.cursor.SameLine()
-        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK" Cancel") then
+        ImGui.SameLine()
+        if ImGui.Button(faicons.ICON_FA_SQUARE_XMARK" Cancel") then
             info.answer = 0
-            imgui.windows.CloseCurrentPopup()
+            ImGui.CloseCurrentPopup()
         end
-        imgui.windows.EndPopup()
+        ImGui.EndPopup()
     end
 end
 
@@ -157,12 +157,12 @@ function m.load_imgui_layout(filename)
     if rf then
         local setting = rf:read "a"
         rf:close()
-        imgui.util.LoadIniSettings(setting)
+        ImGui.LoadIniSettings(setting)
     end
 end
 
 function m.save_ui_layout()
-    local setting = imgui.util.SaveIniSettings()
+    local setting = ImGui.SaveIniSettings()
     local wf = assert(io.open(tostring(global_data.editor_root) .. "/imgui.layout", "wb"))
     wf:write(setting)
     wf:close()
@@ -171,31 +171,31 @@ end
 function m.reset_ui_layout()
     -- TODO: default.layout
     m.load_imgui_layout(tostring(global_data.editor_root) .. "/imgui.default.layout")
-    -- local dockID = imgui.util.GetID("MainViewSpace")
-    -- imgui.dock.BuilderRemoveNode(dockID)
-    -- imgui.dock.BuilderAddNode(dockID, 0)
-    -- local imgui_vp = imgui.GetMainViewport()
+    -- local dockID = ImGui.GetID("MainViewSpace")
+    -- ImGui.DockBuilderRemoveNode(dockID)
+    -- ImGui.DockBuilderAddNode(dockID, 0)
+    -- local imgui_vp = ImGui.GetMainViewport()
     -- local ms = imgui_vp.MainSize
-    -- imgui.dock.BuilderSetNodeSize(dockID, ms[1], ms[1])
+    -- ImGui.DockBuilderSetNodeSize(dockID, ms[1], ms[1])
     -- --
     -- local splitID = dockID
     -- local dockLeft
     -- local dockRight
     -- local dockDown
-    -- splitID, dockLeft = imgui.dock.BuilderSplitNode(splitID, 'L', 0.25)
-    -- splitID, dockRight = imgui.dock.BuilderSplitNode(splitID, 'R', 0.25)
-    -- splitID, dockDown = imgui.dock.BuilderSplitNode(splitID, 'D', 0.3)
+    -- splitID, dockLeft = ImGui.DockBuilderSplitNode(splitID, 'L', 0.25)
+    -- splitID, dockRight = ImGui.DockBuilderSplitNode(splitID, 'R', 0.25)
+    -- splitID, dockDown = ImGui.DockBuilderSplitNode(splitID, 'D', 0.3)
     -- --
-    -- imgui.dock.BuilderDockWindow(log_widget.get_title(), dockDown)
-    -- imgui.dock.BuilderDockWindow(console_widget.get_title(), dockDown)
-    -- imgui.dock.BuilderDockWindow(keyframe_view.get_title(), dockDown)
-    -- imgui.dock.BuilderDockWindow(anim_view.get_title(), dockDown)
-    -- imgui.dock.BuilderDockWindow(resource_browser.get_title(), dockDown)
+    -- ImGui.DockBuilderDockWindow(log_widget.get_title(), dockDown)
+    -- ImGui.DockBuilderDockWindow(console_widget.get_title(), dockDown)
+    -- ImGui.DockBuilderDockWindow(keyframe_view.get_title(), dockDown)
+    -- ImGui.DockBuilderDockWindow(anim_view.get_title(), dockDown)
+    -- ImGui.DockBuilderDockWindow(resource_browser.get_title(), dockDown)
 
-    -- imgui.dock.BuilderDockWindow(scene_view.get_title(), dockLeft)
-    -- imgui.dock.BuilderDockWindow(inspector.get_title(), dockRight)
+    -- ImGui.DockBuilderDockWindow(scene_view.get_title(), dockLeft)
+    -- ImGui.DockBuilderDockWindow(inspector.get_title(), dockRight)
     -- --
-    -- imgui.dock.BuilderFinish(dockID)
+    -- ImGui.DockBuilderFinish(dockID)
 end
 
 return m

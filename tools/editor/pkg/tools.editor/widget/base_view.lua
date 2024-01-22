@@ -9,7 +9,7 @@ local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
 local BaseView = {}
-local render_layer_name = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
+local render_layer_name = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
 function BaseView:_init()
     if self.inited then
         return

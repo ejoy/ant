@@ -1,11 +1,9 @@
 local lm = require "luamake"
 
-local ROOT <const> = "../../"
-
 lm:lua_source "httpc" {
 	includes = {
-		ROOT .. "3rd/bee.lua",
-    },
+		lm.AntDir .. "/3rd/bee.lua",
+	},
 	windows = {
 		sources = {
 			"src/download_win.c",

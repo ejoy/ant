@@ -15,11 +15,13 @@ function camera_mgr.set_second_camera(cameraref, show)
 end
 
 function camera_mgr.on_target(eid, show)
+    if not eid then return end
     local e <close> = world:entity(eid, "camera?in")
     if not e.camera then
         return
     end
-    irq.set_camera("second_view", eid)
+    local qe = w:first("second_view render_target:in camera_ref?in")
+    irq.set_camera(qe, eid)
     irq.set_visible("second_view", show)
 end
 

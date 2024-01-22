@@ -1,13 +1,14 @@
+local AnrDir = ...
 local meta; do
-    local json = dofile "3rd/ant/pkg/ant.json/main.lua"
+    local json = dofile(AnrDir.."/pkg/ant.json/main.lua")
     local function readall(path)
         local f <close> = assert(io.open(path, "rb"))
         return f:read "a"
     end
-    meta = json.decode(readall "3rd/ant/clibs/imgui/dear_bindings/cimgui.json")
+    meta = json.decode(readall(AnrDir.."/clibs/imgui/dear_bindings/cimgui.json"))
 end
 
-local w <close> = assert(io.open("3rd/ant/clibs/imgui/imgui_enum.h", "wb"))
+local w <close> = assert(io.open(AnrDir.."/clibs/imgui/imgui_enum.h", "wb"))
 
 local function writeln(fmt, ...)
     w:write(string.format(fmt, ...))
@@ -91,11 +92,11 @@ writeln("\tlua_newtable(L);")
 for _, name in ipairs(init.flags) do
     writeln("\tflag_gen(L, \"%s\", e%s);", name:match "^(.-)Flags$", name)
 end
-writeln("\tlua_setfield(L, -2, \"flags\");")
+writeln("\tlua_setfield(L, -2, \"Flags\");")
 writeln("")
 writeln("\tlua_newtable(L);")
 for _, name in ipairs(init.enums) do
     writeln("\tenum_gen(L, \"%s\", e%s);", name, name)
 end
-writeln("\tlua_setfield(L, -2, \"enum\");")
+writeln("\tlua_setfield(L, -2, \"Enum\");")
 writeln("}")

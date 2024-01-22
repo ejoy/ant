@@ -25,6 +25,7 @@ namespace Rml::Style {
     }
 
     Cache::Cache(const PropertyIdSet& inherit) {
+        static_assert(EnumCountV<PropertyId> < 128);
         uint8_t inherit_mask[128] = {0};
         for (auto id : inherit) {
             inherit_mask[(size_t)id] = 1;
@@ -60,7 +61,7 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    TableRef Cache::Inherit(const TableRef& A, const TableRef& B, const TableRef& C) {
+    TableRef Cache::Merge(const TableRef& A, const TableRef& B, const TableRef& C) {
         style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
         style_addref(c, s);
         return {s.idx};

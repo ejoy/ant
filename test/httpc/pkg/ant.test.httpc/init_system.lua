@@ -2,6 +2,12 @@ local ecs = ...
 
 local m = ecs.system "init_system"
 
+local platform = require "bee.platform"
+if platform.os ~= "macos" then
+    log.error(platform.os .. " is not supported.")
+    return
+end
+
 local httpc = require "httpc"
 local session = httpc.session "ephemeral"
 
