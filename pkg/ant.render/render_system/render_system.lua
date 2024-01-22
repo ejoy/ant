@@ -26,8 +26,13 @@ function render_sys:device_check()
 		error(("need device support 16 texture samplers: %d"):format(caps.limits.maxTextureSamplers))
 	end
 
+	--TODO: need refactor compute shading code, 8 compute binding resource will be enough
+	if caps.limits.maxComputeBindings < 16 then
+		error(("need device support 16 compute sampler bindings: %d"):format(caps.limits.maxCounputeBindings))
+	end
+
 	if not caps.formats.RGBA8["2D_SRGB"] then
-		error("device framebuffer format RGBA8_SRGB should be supported.")
+		error("need device framebuffer format RGBA8_SRGB should be supported.")
 	end
 
 	if not caps.supported.DRAW_INDIRECT then
