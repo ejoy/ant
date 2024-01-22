@@ -17,7 +17,6 @@ DEFINE_TEST "grid"
 DEFINE_TEST "pbr"
 DEFINE_TEST "shadow"
 DEFINE_TEST "efk"
-
 DEFINE_TEST "hitch_node"
 DEFINE_TEST "motion_sampler"
 DEFINE_TEST "group"
@@ -30,7 +29,5 @@ DEFINE_TEST "blur_scene"
 -- NOT work right now
 --DEFINE_TEST "decal"
 --DEFINE_TEST "point_light"
-
 --DEFINE_TEST "camera_recorder"
 --DEFINE_TEST "water"
---DEFINE_TEST "infinite_far_plane"
