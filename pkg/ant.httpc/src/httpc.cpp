@@ -163,7 +163,7 @@ struct HttpcTask {
     bool finish() {
         CloseHandle(tmpFile);
         tmpFile = INVALID_HANDLE_VALUE;
-        if (!MoveFileExW((file + L".part").c_str(), file.c_str(), MOVEFILE_COPY_ALLOWED)) {
+        if (!MoveFileExW((file + L".part").c_str(), file.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING)) {
             return false;
         }
         return true;

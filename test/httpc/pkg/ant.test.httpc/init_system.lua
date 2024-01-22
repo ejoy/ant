@@ -53,6 +53,9 @@ function m:data_changed()
         elseif msg.type == "response" then
             local task = Tasks[msg.id]
             print(("`%s` response: %s."):format(task.url, msg.data))
+        elseif msg.type == "error" then
+            local task = Tasks[msg.id]
+            print(("`%s` error: %s."):format(task.url, msg.errmsg))
         end
     end
 end
