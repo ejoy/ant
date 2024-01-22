@@ -80,6 +80,9 @@ lm:lua_source "bee" {
     sources = "binding/*.cpp",
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
+        sources = {
+            "binding/port/lua_windows.cpp",
+        },
         links = {
             "advapi32",
             "ws2_32",
@@ -100,17 +103,11 @@ lm:lua_source "bee" {
         }
     },
     linux = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
         links = {
             "pthread",
         }
     },
     macos = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
         frameworks = {
             "Foundation",
             "CoreFoundation",
@@ -119,16 +116,10 @@ lm:lua_source "bee" {
     },
     ios = {
         sources = {
-            "!binding/lua_unicode.cpp",
             "!binding/lua_filewatch.cpp",
         },
         frameworks = {
             "Foundation",
         }
     },
-    android = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        }
-    }
 }
