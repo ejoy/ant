@@ -28,7 +28,23 @@ end
 function m:init()
     startDownload(
         "https://antengine-server-patch.ejoy.com/cc/",
-        "./test/httpc/test.html"
+        "./test/httpc/download/cc.html"
+    )
+    startDownload(
+        "https://antengine-server-patch.ejoy.com/cc/a",
+        "./test/httpc/download/cc_a.html"
+    )
+    startDownload(
+        "https://antengine-server-patch.ejoy.com/cc/b",
+        "./test/httpc/download/cc_b.html"
+    )
+    startDownload(
+        "https://antengine-server-patch.ejoy.com/cc/c",
+        "./test/httpc/download/cc_c.html"
+    )
+    startDownload(
+        "https://antengine-server-patch.ejoy.com/cc/d",
+        "./test/httpc/download/cc_d.html"
     )
     --startUpload(
     --    "http://antengine-client-logcollector.ejoy.com:80/file_upload",
