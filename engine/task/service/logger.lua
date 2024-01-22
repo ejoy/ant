@@ -1,4 +1,5 @@
 local ltask = require "ltask"
+local platform = require "bee.platform"
 
 local S = {}
 local lables = {}
@@ -52,56 +53,60 @@ local function parse(id, s)
 	return s
 end
 
-local LOG
-
-local LOG_ERROR; do
-	local platform = require "bee.platform"
+local LOG_ERROR = (function ()
 	if platform.os == 'ios' then
-		function LOG_ERROR(data)
+		return function (data)
 			io.write(data)
 			io.write("\n")
 			io.flush()
 		end
 	elseif platform.os == 'android' then
 		local android = require "android"
-		function LOG_ERROR(data)
+		return function (data)
 			android.rawlog("error", "", data)
 		end
-	else
-		function LOG_ERROR(_)
-		end
 	end
-end
+	return function (_)
+	end
+end)()
 
-
-if __ANT_RUNTIME__ then
-	local ServiceIO = ltask.queryservice "io"
-	local directory = require "directory"
-	local fs = require "bee.filesystem"
-	local logpath = directory.app_path():string()
-	local logfile = logpath .. "/game.log"
-	fs.create_directories(logpath)
-	if fs.exists(logfile) then
-		fs.rename(logfile, logpath .. "/game_1.log")
-	end
-	function LOG(level, data)
-		ltask.send(ServiceIO, "SEND", "LOG", data)
-		local f <close> = io.open(logfile, "a+")
-		if f then
-			f:write(data)
-			f:write("\n")
+local LOG = (function ()
+	if __ANT_RUNTIME__ then
+		local ServiceIO = ltask.queryservice "io"
+		local directory = require "directory"
+		local fs = require "bee.filesystem"
+		local logpath = directory.app_path():string()
+		local logfile = logpath .. "/game.log"
+		fs.create_directories(logpath)
+		if fs.exists(logfile) then
+			fs.rename(logfile, logpath .. "/game_1.log")
 		end
-		if level == "error" then
-			LOG_ERROR(data)
+		return function (level, data)
+			ltask.send(ServiceIO, "SEND", "LOG", data)
+			local f <close> = io.open(logfile, "a+")
+			if f then
+				f:write(data)
+				f:write("\n")
+			end
+			if level == "error" then
+				LOG_ERROR(data)
+			end
+		end
+	elseif platform.os == 'windows' then
+		local windows = require "bee.windows"
+		if windows.isatty(io.stdout) then
+			return function (_, data)
+				windows.write_console(io.stdout, data)
+				windows.write_console(io.stdout, "\n")
+			end
 		end
 	end
-else
-	function LOG(_, data)
+	return function (_, data)
 		io.write(data)
 		io.write("\n")
 		io.flush()
 	end
-end
+end)()
 
 local function writelog()
 	while true do

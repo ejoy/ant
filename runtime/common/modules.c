@@ -10,6 +10,7 @@ int luaopen_bee_socket(lua_State* L);
 int luaopen_bee_thread(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
 int luaopen_bee_time(lua_State* L);
+int luaopen_bee_windows(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_datalist(lua_State* L);
@@ -152,6 +153,9 @@ void ant_loadmodules(lua_State* L) {
         { "window", luaopen_window },
         { "httpc", luaopen_httpc },
         { "font.util", luaopen_font_util },
+#endif
+#if BX_PLATFORM_WINDOWS
+        { "bee.windows", luaopen_bee_windows },
 #endif
         { NULL, NULL },
     };
