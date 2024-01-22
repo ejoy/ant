@@ -11,8 +11,8 @@ lm:import "efkbgfx/shaders/make.lua"
 
 lm:lua_source "efk" {
     includes = {
-        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp",
         lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/Effekseer",
+        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerRendererCommon",
         lm.AntDir .. "/3rd/bgfx/include",
         lm.AntDir .. "/3rd/bx/include",
         lm.AntDir .. "/3rd/bee.lua",
