@@ -55,7 +55,7 @@ static constexpr std::pair<PropertyId, std::string_view> UnparsedDefaultValue[] 
 	{ PropertyId::BackgroundLatticeY2, "0px" },
 	{ PropertyId::BackgroundLatticeU, "0px" },
 	{ PropertyId::BackgroundLatticeV, "0px" },
-	{ PropertyId::BackgroundRepeat, "repeat" },
+	//{ PropertyId::BackgroundRepeat, "repeat" },
 	{ PropertyId::BackgroundFilter, "none" },
 	{ PropertyId::TextShadowH, "0px" },
 	{ PropertyId::TextShadowV, "0px" },
