@@ -1,41 +1,16 @@
 #include <lua.hpp>
-#include <mutex>
-#include <queue>
 #include <string>
 #include <string_view>
-#include <vector>
 #include <bee/lua/binding.h>
-#include <bee/thread/spinlock.h>
 
 #import <Foundation/Foundation.h>
+#include "channel.h"
 
 extern "C" {
 #include <3rd/lua-seri/lua-seri.h>
 }
 
 typedef bool(^CompletionHandler)(NSURL*);
-typedef void(^SelectHandler)(void* data);
-
-class MessageChannel {
-public:
-    void push(void* data) {
-        std::unique_lock<bee::spinlock> lk(mutex);
-        queue.push_back(data);
-    }
-    void select(SelectHandler handler) {
-        std::unique_lock<bee::spinlock> lk(mutex);
-        if (queue.empty()) {
-            return;
-        }
-        for (void* data: queue) {
-            handler(data);
-        }
-        queue.clear();
-    }
-private:
-    std::vector<void*> queue;
-    bee::spinlock mutex;
-};
 
 @interface TaskDelegate: NSObject
 @property(nonatomic) int64_t id;
@@ -207,14 +182,14 @@ didFinishDownloadingToURL:(NSURL *)location {
 }
 @end
 
-struct LuaURLSession {
+struct HttpcSession {
     void* delegate;
     void* session;
-    LuaURLSession(SessionDelegate * d, NSURLSession* s)
+    HttpcSession(SessionDelegate * d, NSURLSession* s)
         : delegate((__bridge_retained void*)d)
         , session((__bridge_retained void*)s)
     {}
-    ~LuaURLSession() {
+    ~HttpcSession() {
         SessionDelegate * ns_delegate = (__bridge_transfer SessionDelegate *)delegate;
         NSURLSession* ns_session = (__bridge_transfer NSURLSession*)session;
         lua_close(ns_delegate.L);
@@ -236,7 +211,7 @@ struct LuaURLSession {
 static std::string_view lua_checkstrview(lua_State* L, int idx) {
     size_t sz = 0;
     const char* str = luaL_checklstring(L, idx, &sz);
-    return std::string_view(str, sz);
+    return { str, sz };
 }
 
 static int session(lua_State* L) {
@@ -254,12 +229,12 @@ static int session(lua_State* L) {
     SessionDelegate * delegate = [[SessionDelegate  alloc] init];
     NSOperationQueue* operation = [[NSOperationQueue alloc] init];
     NSURLSession* session = [NSURLSession sessionWithConfiguration:config delegate:delegate delegateQueue:operation];
-    bee::lua::newudata<LuaURLSession>(L, delegate, session);
+    bee::lua::newudata<HttpcSession>(L, delegate, session);
     return 1;
 }
 
 static int download(lua_State* L) {
-    auto& s = bee::lua::checkudata<LuaURLSession>(L, 1);
+    auto& s = bee::lua::checkudata<HttpcSession>(L, 1);
     SessionDelegate * delegate = s.objc_delegate();
     NSURLSession* session = s.objc_session();
     const char* downloadStr = luaL_checkstring(L, 2);
@@ -277,7 +252,7 @@ static int download(lua_State* L) {
 }
 
 static int upload(lua_State* L) {
-    auto& s = bee::lua::checkudata<LuaURLSession>(L, 1);
+    auto& s = bee::lua::checkudata<HttpcSession>(L, 1);
     SessionDelegate* delegate = s.objc_delegate();
     NSURLSession* session = s.objc_session();
     NSString* uploadStr = [NSString stringWithUTF8String:luaL_checkstring(L, 2)];
@@ -312,7 +287,7 @@ static int upload(lua_State* L) {
 }
 
 static int select(lua_State* L) {
-    auto& s = bee::lua::checkudata<LuaURLSession>(L, 1);
+    auto& s = bee::lua::checkudata<HttpcSession>(L, 1);
     SessionDelegate * delegate = s.objc_delegate();
     lua_newtable(L);
     __block lua_Integer n = 0;
@@ -339,8 +314,8 @@ int luaopen_httpc(lua_State* L) {
 
 namespace bee::lua {
     template <>
-    struct udata<LuaURLSession> {
-        static inline auto name = "LuaURLSession";
+    struct udata<HttpcSession> {
+        static inline auto name = "HttpcSession";
         static inline auto metatable = +[](lua_State*){};
     };
 }

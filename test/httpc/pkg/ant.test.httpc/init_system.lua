@@ -2,12 +2,6 @@ local ecs = ...
 
 local m = ecs.system "init_system"
 
-local platform = require "bee.platform"
-if platform.os ~= "macos" then
-    log.error(platform.os .. " is not supported.")
-    return
-end
-
 local httpc = require "httpc"
 local session = httpc.session "ephemeral"
 
@@ -32,15 +26,15 @@ local function startUpload(url, file, name)
 end
 
 function m:init()
-    --startDownload(
-    --    "https://antengine-server-patch.ejoy.com/cc/",
-    --    "./test/httpc/test.html"
-    --)
-    startUpload(
-        "http://antengine-client-logcollector.ejoy.com:80/file_upload",
-        "./test/httpc/test.html",
-        "test.html"
+    startDownload(
+        "https://antengine-server-patch.ejoy.com/cc/",
+        "./test/httpc/test.html"
     )
+    --startUpload(
+    --    "http://antengine-client-logcollector.ejoy.com:80/file_upload",
+    --    "./test/httpc/test.html",
+    --    "test.html"
+    --)
 end
 
 function m:data_changed()

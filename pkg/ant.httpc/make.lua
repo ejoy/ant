@@ -6,9 +6,11 @@ lm:lua_source "httpc" {
 	},
 	windows = {
 		sources = {
-			"src/download_win.c",
+			"src/httpc.cpp",
 		},
-		links = "urlmon",
+		links = {
+			"Wininet",
+		}
 	},
 	macos = {
 		sources = {
