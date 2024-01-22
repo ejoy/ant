@@ -5,8 +5,10 @@
 #include <bee/thread/simplethread.h>
 #include <bee/platform/win/unicode.h>
 #include <bee/error.h>
-#include <charconv>
 #include <array>
+#include <charconv>
+#include <cstring>
+#include <memory>
 #include <optional>
 #include "channel.h"
 
@@ -124,7 +126,7 @@ struct HttpcTask {
         DWORD option = HTTP_PROTOCOL_FLAG_HTTP2;
         InternetSetOptionW(handle, INTERNET_OPTION_ENABLE_HTTP_PROTOCOL, &option, sizeof(option));
         std::wstring host(comp.lpszHostName, comp.dwHostNameLength);
-        connect = InternetConnectW(handle, host.c_str(), (INTERNET_PORT)comp.nPort, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, NULL);
+        connect = InternetConnectW(handle, host.c_str(), (INTERNET_PORT)comp.nPort, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 0);
         if (!connect) {
             return false;
         }
