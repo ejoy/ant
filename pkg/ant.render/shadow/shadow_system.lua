@@ -279,29 +279,18 @@ local function build_sceneaabbLS(si, li)
 end
 
 local function check_changed()
-	if not w:check "scene_changed" then
+	if not w:check "scene_changed" and not w:check "camera_changed" then
 		return
 	end
 
-	local C = irq.main_camera_changed()
-	local D = w:first "make_shadow directional_light scene_changed"
-
-	if not C and not D then
-		return
-	end
-
-	if not C then
-		C = irq.main_camera_entity()
-	end
-
-	w:extend(C, "scene:in camera:in")
-
+	local D = w:first "make_shadow directional_light"
 	if not D then
-		D = w:first "make_shadow directional_light"
+		return
 	end
+
 	w:extend(D, "scene:in")
 
-	return C, D
+	return irq.main_camera_entity "scene:in camera:in", D
 end
 
 function shadow_sys:update_camera()
