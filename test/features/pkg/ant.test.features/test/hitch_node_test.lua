@@ -11,9 +11,11 @@ local iom   = ecs.require "ant.objcontroller|obj_motion"
 local ig    = ecs.require "ant.group|group"
 local hn_test_sys = common.test_system "hitch_node"
 
+local h1, h2, h3
+local hitch_test_group_id<const>    = ig.register "hitch_node_test"
+
 local function create_simple_test_group()
-    local hitch_test_group_id<const>    = ig.register "hitch_node_test"
-    PC:create_entity {
+    h1 = PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
@@ -27,27 +29,13 @@ local function create_simple_test_group()
             visible_state = "main_view",
         }
     }
-    PC:create_entity {
+    h2 = PC:create_entity {
         policy = {
             "ant.render|hitch_object",
         },
         data = {
             scene = {
                 t = {1, 2, 0},
-            },
-            hitch = {
-                group = hitch_test_group_id
-            },
-            visible_state = "main_view",
-        }
-    }
-    PC:create_entity {
-        policy = {
-            "ant.render|hitch_object",
-        },
-        data = {
-            scene = {
-                t = {0, 0, 3},
             },
             hitch = {
                 group = hitch_test_group_id
@@ -93,78 +81,34 @@ local function create_simple_test_group()
     }
 end
 
-local change_hitch_eid
-
-local function create_skeleton_test_group()
-    local skeleton_test_group_id<const> = ig.register "hitch_node_ske_test"
-    --dynamic
-    PC:create_entity {
-        policy = {
-            "ant.render|hitch_object",
-        },
-        data = {
-            scene = {
-                s = 0.1,
-                t = {0.0, 0.0, -5.0},
-            },
-            hitch = {
-                group = skeleton_test_group_id
-            },
-            visible_state = "main_view",
-        }
-    }
-
-    change_hitch_eid = PC:create_entity {
-        policy = {
-            "ant.render|hitch_object",
-        },
-        data = {
-            scene = {
-                s = 0.1,
-                r = {0.0, 0.8, 0.0},
-                t = {5.0, 0.0, 0.0},
-            },
-            hitch = {
-                group = skeleton_test_group_id
-            },
-            visible_state = "main_view",
-        }
-    }
-
-    local function create_obj(gid, file, s, t)
-        PC:create_instance {
-            prefab = file,
-            group = gid,
-            on_ready = function (e)
-                local ee<close> = world:entity(e.tag['*'][1], "scene:in")
-                if s then
-                    iom.set_scale(ee, s)
-                end
-                if t then
-                    iom.set_position(ee, t)
-                end
-            end
-        }
-    end
-
-    create_obj(skeleton_test_group_id, "/pkg/ant.test.features/meshes/chimney-1.glb|mesh.prefab")
-end
-
 function hn_test_sys:init()
-    --create_simple_test_group()
-    create_skeleton_test_group()
+    create_simple_test_group()
 end
 
 local key_mb = world:sub {"keyboard"}
 function hn_test_sys:data_changed()
     for _, key, press in key_mb:unpack() do
-        if key == "Y" and press == 0 then
-            local e <close> = w:entity(change_hitch_eid, "hitch:update hitch_bounding?out")
-            if not ig.has "hitch_ske_test1" then
-                ig.register "hitch_ske_test1"
-            end
-            e.hitch.group = ig.groupid "hitch_ske_test1"
-            e.hitch_bounding = true
+        if key == "A" and press == 0 then
+            local e <close> = world:entity(h1, "eid:in")
+            w:remove(h1)
+        elseif key == "B" and press == 0 then
+            local e <close> = world:entity(h2, "scene:update")
+            iom.set_position(e, math3d.tovalue(math3d.add(math3d.vector(0, 3, 0), e.scene.t)))
+        elseif key == "C" and press == 0 then
+            h3 = PC:create_entity {
+                policy = {
+                    "ant.render|hitch_object",
+                },
+                data = {
+                    scene = {
+                        t = {0, 0, 3},
+                    },
+                    hitch = {
+                        group = hitch_test_group_id
+                    },
+                    visible_state = "main_view",
+                }
+            }
         end
     end
 
