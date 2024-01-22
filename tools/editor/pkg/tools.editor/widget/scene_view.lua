@@ -26,10 +26,14 @@ local function as_main_camera_mode()
     return mq.camera_ref == sv.camera_ref
 end
 
-local function can_delete(eid)
+local function is_scene_node(eid)
     local info = hierarchy:get_node_info(eid)
+    return (info.template.tag and info.template.tag[1] == "Scene")
+end
+
+local function can_delete(eid)
     -- TODO: cant't remove root node : Scene
-    if (info.template.tag and info.template.tag[1] == "Scene") then
+    if is_scene_node(eid) then
         return false
     end
     local can_delete = true
@@ -59,16 +63,18 @@ local function node_context_menu(eid)
     if ImGui.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         local tpl = hierarchy:get_node_info(eid)
-        if not tpl.filename then
-            if ImGui.MenuItem(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
-                world:pub { "HierarchyEvent", "clone", eid }
+        if not is_scene_node(eid) then
+            if not tpl.filename then
+                if ImGui.MenuItem(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
+                    world:pub { "HierarchyEvent", "clone", eid }
+                end
             end
-        end
-        if ImGui.MenuItem(faicons.ICON_FA_ARROWS_UP_TO_LINE.." MoveTop") then
-            world:pub { "HierarchyEvent", "movetop", eid }
-        end
-        if ImGui.MenuItem(faicons.ICON_FA_ARROW_UP.." MoveUp") then
-            world:pub { "HierarchyEvent", "moveup", eid }
+            if ImGui.MenuItem(faicons.ICON_FA_ARROWS_UP_TO_LINE.." MoveTop") then
+                world:pub { "HierarchyEvent", "movetop", eid }
+            end
+            if ImGui.MenuItem(faicons.ICON_FA_ARROW_UP.." MoveUp") then
+                world:pub { "HierarchyEvent", "moveup", eid }
+            end
         end
         ImGui.Separator()
         if ImGui.MenuItem(current_lock and faicons.ICON_FA_LOCK.." Unlock" or faicons.ICON_FA_LOCK_OPEN.." lock") then
@@ -84,12 +90,14 @@ local function node_context_menu(eid)
                 world:pub { "HierarchyEvent", "delete", eid }
             end
         end
-        ImGui.Separator()
-        if ImGui.MenuItem(faicons.ICON_FA_ARROW_DOWN.." MoveDown") then
-            world:pub { "HierarchyEvent", "movedown", eid }
-        end
-        if ImGui.MenuItem(faicons.ICON_FA_ARROWS_DOWN_TO_LINE.." MoveBottom") then
-            world:pub { "HierarchyEvent", "movebottom", eid }
+        if not is_scene_node(eid) then
+            ImGui.Separator()
+            if ImGui.MenuItem(faicons.ICON_FA_ARROW_DOWN.." MoveDown") then
+                world:pub { "HierarchyEvent", "movedown", eid }
+            end
+            if ImGui.MenuItem(faicons.ICON_FA_ARROWS_DOWN_TO_LINE.." MoveBottom") then
+                world:pub { "HierarchyEvent", "movebottom", eid }
+            end
         end
         ImGui.Separator()
         if ImGui.MenuItem("NoParent") then
