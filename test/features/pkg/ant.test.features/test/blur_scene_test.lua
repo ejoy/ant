@@ -5,7 +5,7 @@ local w     = world.w
 local ibs           = ecs.require "ant.render|blur_scene.blur_scene"
 local util  = ecs.require "util"
 local common = ecs.require "common"
-local bst_sys = common.test_system "blur_scene_test_system"
+local bst_sys = common.test_system "blur_scene"
 
 local kb_mb         = world:sub{"keyboard"}
 

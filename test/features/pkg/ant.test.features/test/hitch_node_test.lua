@@ -147,16 +147,13 @@ local function create_skeleton_test_group()
         }
     end
 
-    create_obj(skeleton_test_group_id, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)
-    create_obj(skeleton_test_group_id+1, "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab")
+    create_obj(skeleton_test_group_id, "/pkg/ant.test.features/meshes/chimney-1.glb|mesh.prefab")
 end
 
 function hn_test_sys:init()
-    create_simple_test_group()
-    --create_skeleton_test_group()
+    --create_simple_test_group()
+    create_skeleton_test_group()
 end
-
-local TICK = 0
 
 local key_mb = world:sub {"keyboard"}
 function hn_test_sys:data_changed()
@@ -171,18 +168,6 @@ function hn_test_sys:data_changed()
         end
     end
 
-    -- if TICK == 20 then
-    --     local queuemgr = ecs.require "ant.render|queue_mgr"
-    --     local mainmask = queuemgr.queue_mask "main_queue"
-    --     for e in w:select "hitch:in" do
-    --         print("hitch object:", e.name, 0 ~= (e.hitch.cull_masks & mainmask) and "culled" or "not culled")
-    --     end
-
-    --     TICK = 0
-    -- else
-    --     TICK = TICK + 1
-    -- end
-    
 end
 
 function hn_test_sys:exit()
