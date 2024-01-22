@@ -33,6 +33,8 @@ local function set_visible_states(vs, s, v)
 			vs["csm2_queue"] = v
 			vs["csm3_queue"] = v
 			vs["csm4_queue"] = v
+		elseif n == "outline" then
+			vs["outline_queue"] = v
 		end
 
 		vs[n] = v

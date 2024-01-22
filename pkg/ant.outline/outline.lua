@@ -7,7 +7,7 @@ local bgfx		= require "bgfx"
 local assetmgr  = import_package "ant.asset"
 
 local hwi       = import_package "ant.hwi"
-local queuemgr  = ecs.require "queue_mgr"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 local R         = world:clibs "render.render_material"
 local RM        = ecs.require "ant.material|material"
 local iviewport = ecs.require "ant.render|viewport.state"
@@ -54,7 +54,7 @@ local function create_outline_queue()
     local vr = iviewport.viewrect
     world:create_entity{
         policy = {
-            "ant.render|outline_queue",
+            "ant.outline|outline_queue",
             "ant.render|watch_screen_buffer",
         },
         data = {
@@ -88,7 +88,7 @@ function outline_system:init_world()
 end
 
 function outline_system:update_filter()
-    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in" do
+    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in outline_info?in" do
         if e.visible_state["outline_queue"] then
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
@@ -97,6 +97,11 @@ function outline_system:update_filter()
             fm["outline_queue"] = mi
             fm["main_queue"]:set_stencil(DEFAULT_STENCIL)
             R.set(ro.rm_idx, queuemgr.material_index "outline_queue", mi:ptr())
+            if e.outline_info then
+                local outline_scale, outline_color = e.outline_info.outline_scale, e.outline_info.outline_color
+                fm["outline_queue"]["u_outlinescale"] = math3d.vector(outline_scale, 0, 0, 0)
+                fm["outline_queue"]["u_outlinecolor"] = math3d.vector(outline_color)
+            end
         end
     end
 end

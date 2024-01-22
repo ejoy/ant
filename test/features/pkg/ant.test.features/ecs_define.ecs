@@ -5,7 +5,7 @@ import_feature "ant.decal"
 import_feature "ant.efk"
 import_feature "ant.landform"
 import_feature "ant.widget"
-
+import_feature "ant.outline"
 system "init_system"
     .implement "init_system.lua"
 
@@ -23,7 +23,7 @@ DEFINE_TEST "motion_sampler"
 DEFINE_TEST "group"
 DEFINE_TEST "render_layer"
 DEFINE_TEST "canvas"
-
+DEFINE_TEST "outline"
 DEFINE_TEST "draw_indirect"
 
 -- NOT work right now

@@ -3,13 +3,13 @@ local world = ecs.world
 local w     = world.w
 
 local util  = ecs.require "util"
+local common = ecs.require "common"
+local ot_sys = common.test_system "outline"
 
-local ot_sys = ecs.system "outline_test_system"
-
-local oueline_prefab
+local outline_prefab
 
 function ot_sys.init_world()
-    oueline_prefab = util.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
+    outline_prefab = util.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
     --util.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab" 
 end
 
@@ -18,9 +18,9 @@ local kb_mb = world:sub{"keyboard"}
 function ot_sys.data_changed()
     for _, key, press in kb_mb:unpack() do
         if key == "L" and press == 0 then
-            --TODO: need fix
-            local ee <close> = world:entity(oueline_prefab.tag['*'][1], "outline_remove?update")
-            ee.outline_remove = true
+            local ee <close> = world:entity(outline_prefab.tag['*'][1], "outline_info?update")
+            ee.outline_info.outline_color = {0, 1, 0, 1}
+            ee.outline_info.outline_scale = 0.8
         end
     end
 end

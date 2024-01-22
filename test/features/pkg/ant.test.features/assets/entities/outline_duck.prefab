@@ -1,20 +1,14 @@
 ---
 policy:
     ant.render|render
+    ant.outline|outline_info
 data:
     scene:
         s: 0.02
         t: {5, 1, 5, 1}
-    material: /pkg/ant.resources/materials/pbr_stencil.material
+    material: "/pkg/ant.resources.binary/meshes/Duck.glb|materials/blinn3-fx.material"
     mesh: "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin"
-    visible_state: main_view|selectable
----
-policy:
-    ant.render|render
-data:
-    scene: {}
-    mesh: "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin"
-    material: /pkg/ant.resources/materials/outline/scale.material
-    visible_state: main_view
-    render_layer: translucent_plane
-mount: 1
+    visible_state: main_view|selectable|outline
+    outline_info:
+        outline_scale: 1
+        outline_color: {1, 0, 0, 1}
