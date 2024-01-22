@@ -117,6 +117,21 @@ function st_sys:entity_init()
 	end
 end
 
+local ky_mb = world:sub{"keyboard"}
+function st_sys:data_changed()
+	for _, key, press in ky_mb:unpack() do
+		if key == "L" then
+			local D = w:first "directional_light scene:update"
+			iom.set_direction(D, math3d.vector(5, -5, 0))
+			w:submit(D)
+		elseif key == "O" then
+			local D = w:first "directional_light scene:update"
+			iom.set_direction(D, math3d.vector(0.0, -1.0, 0.0))
+			w:submit(D)
+		end
+	end
+end
+
 function st_sys:exit()
 	PC:clear()
 	ipt.clear_plane_terrain()
