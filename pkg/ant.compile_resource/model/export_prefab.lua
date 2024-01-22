@@ -4,18 +4,18 @@ local lfs               = require "bee.filesystem"
 local material_compile  = require "material.compile"
 local L                 = import_package "ant.render.core".layout
 
-local function create_entity(status, t)
+local function create_entity(status, t, prefabs)
     if t.parent then
         t.mount = t.parent
         t.data.scene = t.data.scene or {}
     end
     table.sort(t.policy)
-    status.prefab[#status.prefab+1] = {
+    prefabs[#prefabs+1] = {
         policy = t.policy,
         data = t.data,
         mount = t.mount,
     }
-    return #status.prefab
+    return #prefabs
 end
 
 local function get_transform(math3d, node)
@@ -182,7 +182,7 @@ local function has_skin(gltfscene, status, nodeidx)
     end
 end
 
-local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status)
+local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local meshidx = node.mesh
@@ -237,12 +237,12 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
             policy  = policy,
             data    = data,
             parent  = hasskin and status.skin_entity or parent,
-        })
+        }, prefabs)
     end
     return entity
 end
 
-local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
+local function create_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local policy = {
@@ -256,10 +256,10 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
         policy = policy,
         data = data,
         parent = parent,
-    })
+    }, prefabs)
 end
 
-local function create_skin_entity(status, parent)
+local function create_skin_entity(status, parent, prefabs)
     if not status.animation then
         return
     end
@@ -275,7 +275,7 @@ local function create_skin_entity(status, parent)
         policy = policy,
         data = data,
         parent = parent,
-    })
+    }, prefabs)
 end
 
 local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
@@ -325,65 +325,91 @@ return function (status)
     local scene = gltfscene.scenes[sceneidx+1]
 
     status.prefab = {}
+    status.di_prefab = {}
     status.material_names = {}
-    local rootid = create_entity(status, {
-        policy = {
-            "ant.scene|scene_object",
-        },
-        data = {
-            scene = {},
-        },
-    })
 
-    local meshnodes = {}
-    find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
+    local function build_prefabs(prefabs, suffix)
 
-    create_skin_entity(status, rootid)
-
-    local C = {}
-    local scenetree = status.scenetree
-    local function check_create_node_entity(nodeidx)
-        local p_nodeidx = scenetree[nodeidx]
-        local parent
-        if p_nodeidx == nil then
-            parent = rootid
-        else
-            parent = C[p_nodeidx]
-            if parent == nil then
-                parent = check_create_node_entity(p_nodeidx)
+        local rootid = create_entity(status, {
+            policy = {
+                "ant.scene|scene_object",
+            },
+            data = {
+                scene = {},
+            },
+        }, prefabs)
+    
+        local meshnodes = {}
+        find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
+    
+        create_skin_entity(status, rootid, prefabs)
+    
+        local C = {}
+        local scenetree = status.scenetree
+        local function check_create_node_entity(nodeidx)
+            local p_nodeidx = scenetree[nodeidx]
+            local parent
+            if p_nodeidx == nil then
+                parent = rootid
+            else
+                parent = C[p_nodeidx]
+                if parent == nil then
+                    parent = check_create_node_entity(p_nodeidx)
+                end
             end
+    
+            local node = gltfscene.nodes[nodeidx+1]
+            local e
+            if node.mesh then
+                e = create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
+            else
+                e = create_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
+            end
+    
+            C[nodeidx] = e
+            return e
+        end
+    
+        for _, nodeidx in ipairs(meshnodes) do
+            check_create_node_entity(nodeidx)
         end
 
-        local node = gltfscene.nodes[nodeidx+1]
-        local e
-        if node.mesh then
-            e = create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status)
-        else
-            e = create_node_entity(math3d, gltfscene, nodeidx, parent, status)
-        end
-
-        C[nodeidx] = e
-        return e
-    end
-
-    for _, nodeidx in ipairs(meshnodes) do
-        check_create_node_entity(nodeidx)
-    end
-    utility.save_txt_file(status, "mesh.prefab", status.prefab, function (data)
-        return serialize_prefab(status, data)
-    end)
-
-    utility.save_txt_file(status, "translucent.prefab", status.prefab, function (data)
-        for _, v in ipairs(data) do
-            local e = v.data
-            if e then
-                if e.material then
-                    e.material = serialize_path "/pkg/ant.resources/materials/translucent.material"
+        if suffix and (not status.animation) then
+            for _, e in ipairs(prefabs) do
+                if e and e.data.mesh then
+                    e.policy[#e.policy+1] = "ant.render|draw_indirect"
+                    e.data.draw_indirect = {
+                        instance_buffer = {
+                            flag    = "ra",
+                            layout  = "t45NIf|t46NIf|t47NIf",
+                            num     = 0,
+                            params  = {},
+                        }
+                    }
                 end
             end
         end
-        return data
-    end)
+
+        utility.save_txt_file(status, "mesh.prefab", prefabs, function (data)
+            return serialize_prefab(status, data)
+        end, suffix)
+    
+    
+        utility.save_txt_file(status, "translucent.prefab", prefabs, function (data)
+            for _, v in ipairs(data) do
+                local e = v.data
+                if e then
+                    if e.material then
+                        e.material = serialize_path "/pkg/ant.resources/materials/translucent.material"
+                    end
+                end
+            end
+            return data
+        end, suffix)
+    end
+
+    build_prefabs(status.prefab)
+    build_prefabs(status.di_prefab, "di")
 
     if status.animation then
         utility.save_txt_file(status, "animations/animation.ozz", status.animation, function (t)
@@ -401,6 +427,7 @@ return function (status)
             return t
         end)
     end
+
 
     utility.save_txt_file(status, "materials.names", status.material_names, function (data) return data end)
 end

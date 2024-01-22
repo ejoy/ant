@@ -20,7 +20,7 @@ local GID_MT<const> = {__index=function(t, gid)
 end}
 
 local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
-local DIRTY_GROUPS, DIRECT_DRAW_GROUPS, PARENTS = {}, {}, {}
+local DIRTY_GROUPS, DIRECT_DRAW_GROUPS = {}, {}
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -96,44 +96,13 @@ local function update_group_instance_buffer(glbs, hitchs)
     end
 end
 
-local function create_draw_indirect_and_compute_entity(glbs, hitchs)
-    local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
+local function create_compute_entity(glbs, memory, draw_num)
     for _, glb in ipairs(glbs) do
-        glb.mesh.bounding = nil
-        local diid = world:create_entity {
-            --group = gid,
-            policy = {
-                "ant.render|simplerender",
-                "ant.render|draw_indirect",
-            },
-            data = {
-                scene = {
-                    parent = glb.parent
-                },
-                simplemesh  = glb.mesh,
-                material    = glb.material,
-                --visible_state = glb.visible_state,
-                visible_state = "main_view|selectable|cast_shadow",
-                render_layer = glb.render_layer,
-                --render_layer = "opacity",
-                draw_indirect = {
-                    instance_buffer = {
-                        memory  = memory,
-                        flag    = "ra",
-                        layout  = "t45NIf|t46NIf|t47NIf",
-                        num     = draw_num,
-                        params  = {draw_num, 0, 0, glb.mesh.ib.num},
-                    },
-                },
-                on_ready = function (e)
---[[                     local pe<close> = world:entity(glb.parent, "visible_state:in")
-                    w:extend(e, "visible_state:update")
-                    e.visible_state = pe.visible_state ]]
-                    --w:extend(e, "filter_material:update")
-                    --e.filter_material = glb.filter_material
-                end
-            },
-        }
+        local diid = glb.diid
+        local die = world:entity(diid, "draw_indirect:update mesh:in")
+        idi.update_instance_buffer(die, memory, draw_num)
+        die.draw_indirect.instance_buffer.params =  {draw_num, 0, 0, die.mesh.ib.num}
+        w:submit(die)
         local cid = world:create_entity{
             policy = {
                 "ant.render|compute",
@@ -149,8 +118,7 @@ local function create_draw_indirect_and_compute_entity(glbs, hitchs)
                 end
             }
         }
-        glb.diid, glb.cid = diid, cid
-        PARENTS[glb.parent] = diid
+        glb.cid = cid
     end
 end
 
@@ -189,19 +157,6 @@ function hitch_sys:entity_init()
     end 
 end
 
-function hitch_sys:bounding_update()
-    if not w:check "visible_state_changed" then
-        return
-    end
-    for pe in w:select "visible_state_changed visible_state:in eid:in" do
-        local diid = PARENTS[pe.eid]
-        if diid then
-            local die = world:entity("visible_state:update", diid)
-            die.visible_state = pe.visible_state
-        end
-    end
-end
-
 function hitch_sys:follow_scene_update()
     for e in w:select "scene_changed hitch hitch_update?out" do
         e.hitch_update = true
@@ -220,7 +175,6 @@ function hitch_sys:finish_scene_update()
     end
 
     for gid, hitchs in pairs(groups) do
-
         ig.enable(gid, "hitch_tag", true)
         local h_aabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
@@ -231,17 +185,7 @@ function hitch_sys:finish_scene_update()
                 DIRECT_DRAW_GROUPS[gid] = true
             end
         end
-
-        for re in w:select "hitch_tag render_object:in hitch_indirect?out" do
-            local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[gid]
-            if INDIRECT_DRAW_GROUP then
-                ivs.set_state(re, "main_view", false)
-                ivs.set_state(re, "cast_shadow", false)
-                re.hitch_indirect = true
-            end
-        end
         ig.enable(gid, "hitch_tag", false)
-
         if math3d.aabb_isvalid(h_aabb) then
             for _, heid in ipairs(hitchs) do
                 local e<close> = world:entity(heid, "hitch:in hitch_visible?out bounding:update scene_needchange?out")
@@ -271,43 +215,20 @@ function hitch_sys:render_preprocess()
         if indirect_draw_group.glbs then
             update_group_instance_buffer(indirect_draw_group.glbs, indirect_draw_group.hitchs)
         else
-            local glbs = {}
             ig.enable(gid, "hitch_tag", true)
-            for re in w:select "hitch_tag eid:in mesh?in material?in render_layer?in scene?in visible_state?in filter_material?in" do
-               if re.mesh then
-                    glbs[#glbs+1] = {
-                        mesh = re.mesh, 
-                        material = re.material, 
-                        render_layer = re.render_layer, 
-                        parent = re.eid, 
-                        visible_state = ivs.build_state(re.visible_state),
-                        filter_material = re.filter_material
-                    }
-               end
+            local glbs = {}
+            for re in w:select "hitch_tag eid:in mesh:in draw_indirect:in" do
+                glbs[#glbs+1] = { diid = re.eid}
             end
-
-            create_draw_indirect_and_compute_entity(glbs, indirect_draw_group.hitchs)
             indirect_draw_group.glbs = glbs
-            
+            local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
+            create_compute_entity(indirect_draw_group.glbs, memory, draw_num)
             ig.enable(gid, "hitch_tag", false)
         end
     end
 
     DIRTY_GROUPS = {}
     w:clear "hitch_update"
-end
-
-function hitch_sys:exit()
-    for _, indirect_draw_group in pairs(INDIRECT_DRAW_GROUPS) do
-        local glbs = indirect_draw_group.glbs
-        for _, glb in ipairs(glbs) do
-            local diid, cid = glb.diid, glb.cid
-            local die<close> = world:entity(diid, "filter_material:update")
-            die.filter_material = nil
-            w:remove(diid)
-            w:remove(cid)
-        end 
-    end
 end
 
 

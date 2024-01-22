@@ -3,10 +3,14 @@ local lfs            = require "bee.filesystem"
 local serialization = require "bee.serialization"
 local patch         = require "model.patch"
 
-local function writeFile(status, path, data)
-    path = status.output / path
-    lfs.create_directories(path:parent_path())
-    local f <close> = assert(io.open(path:string(), "wb"))
+local function writeFile(status, path, data, suffix)
+    if suffix then
+        local name, type = string.match(path, "([%a-_]+).([%a]+)")
+        path = string.format("%s_%s.%s", name, suffix, type)
+    end
+    local lpath = status.output / path
+    lfs.create_directories(lpath:parent_path())
+    local f <close> = assert(io.open(lpath:string(), "wb"))
     f:write(data)
 end
 
@@ -29,9 +33,9 @@ function m.apply_patch(status, path, data, func)
     end
 end
 
-function m.save_txt_file(status, path, data, conv)
+function m.save_txt_file(status, path, data, conv, suffix)
     m.apply_patch(status, path, data, function (name, desc)
-        writeFile(status, name, serialize.stringify(conv(desc)))
+        writeFile(status, name, serialize.stringify(conv(desc)), suffix)
     end)
 end
 
