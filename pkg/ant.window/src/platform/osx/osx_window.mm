@@ -372,7 +372,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 void peekwindow_close() {
 }
 
-bool peekwindow_peekmessage() {
+bool peekwindow_peek_message() {
     if ([g_dg applicationHasTerminated]) {
         return false;
     }
@@ -382,6 +382,10 @@ bool peekwindow_peekmessage() {
     return true;
 }
 
-void peekwindow_setcursor(int cursor) {
+void peekwindow_set_cursor(int cursor) {
+    //TODO
+}
+
+void peekwindow_set_title(bee::zstring_view title) {
     //TODO
 }

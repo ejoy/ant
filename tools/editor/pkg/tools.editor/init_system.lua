@@ -5,6 +5,7 @@ local w = world.w
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
 local assetmgr      = import_package "ant.asset"
+local window        = import_package "ant.window"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
 local iani          = ecs.require "ant.anim_ctrl|state_machine"
@@ -103,7 +104,7 @@ function m:init()
     world.__EDITOR__ = true
     iani.set_edit_mode(true)
     widget_utils.load_imgui_layout(global_data.editor_root / "imgui.layout")
-    ImGui.SetWindowTitle("Editor")
+    window.set_title("Editor")
 	--
 	global_data:update_project_root(__ANT_EDITOR__)
     -- start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)

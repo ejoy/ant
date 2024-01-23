@@ -3,9 +3,11 @@
 #include <cstdint>
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <imgui.h>
 #include "enum.h"
+#include <bee/utility/zstring_view.h>
 
 struct lua_State;
 
@@ -17,8 +19,9 @@ struct ant_window_callback {
 
 void* peekwindow_init(struct ant_window_callback* cb, const char* size);
 void peekwindow_close();
-bool peekwindow_peekmessage();
-void peekwindow_setcursor(int cursor);
+bool peekwindow_peek_message();
+void peekwindow_set_cursor(int cursor);
+void peekwindow_set_title(bee::zstring_view title);
 
 void loopwindow_init(struct ant_window_callback* cb);
 void loopwindow_mainloop();

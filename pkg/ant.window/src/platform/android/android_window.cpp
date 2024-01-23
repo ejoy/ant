@@ -26,7 +26,7 @@ void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 void peekwindow_close() {
 }
 
-bool peekwindow_peekmessage() {
+bool peekwindow_peek_message() {
     for (;;) {
         if (g_app->destroyRequested) {
             return false;
