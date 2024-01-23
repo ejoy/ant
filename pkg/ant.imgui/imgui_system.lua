@@ -8,18 +8,20 @@ local inputmgr = import_package "ant.inputmgr"
 local window = import_package "ant.window"
 local PM = require "programan.client"
 
-local ltask = require "ltask"
-
 local m = ecs.system 'imgui_system'
 
 function m:init_system()
 	ImGui.CreateContext()
-	ImGui.io.ConfigFlags = ImGui.Flags.Config {
+	local ConfigFlags = {
 		"NavEnableKeyboard",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
 		"NoMouseCursorChange",
 	}
+	if platform.os == "windows" then
+		ConfigFlags[#ConfigFlags+1] = "DpiEnableScaleFonts"
+	end
+	ImGui.io.ConfigFlags = ImGui.Flags.Config(ConfigFlags)
 	ImGui.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
