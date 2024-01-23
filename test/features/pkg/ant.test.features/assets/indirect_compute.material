@@ -1,0 +1,10 @@
+fx:
+  cs: /pkg/ant.test.features/assets/cs_indirect.sc
+  setting:
+    lighting: off
+properties:
+  b_indirect_buffer:
+    stage: 0
+    access: w
+    buffer: b_indirect_buffer
+  u_mesh_params: {0, 0, 0, 0}
