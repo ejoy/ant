@@ -38,7 +38,7 @@ linit(lua_State *L) {
 	lua_xmove(L, cb->messageL, 1);
 
 	lua_pushcfunction(cb->updateL, ltraceback);
-	lua_pushvalue(L, 3);
+	lua_pushvalue(L, 2);
 	lua_xmove(L, cb->updateL, 1);
 
 	loopwindow_init(cb);

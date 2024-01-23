@@ -2,7 +2,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <vector>
 #include <memory>
+#include <bee/platform/win/unicode.h>
 #include "../../window.h"
 
 #define CLASSNAME L"ANTCLIENT"
@@ -80,6 +82,7 @@ static DropManager g_dropmanager;
 static bool minimized = false;
 static UINT g_keyboard_codepage;
 static ImGuiMouseCursor g_cursor = ImGuiMouseCursor_Arrow;
+static HWND g_window = NULL;
 
 static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -454,8 +457,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-#include <vector>
-
 static BOOL CALLBACK EnumFunc(HMONITOR monitor, HDC, LPRECT, LPARAM dwData) {
 	std::vector<MONITORINFO>& monitors = *reinterpret_cast<std::vector<MONITORINFO>*>(dwData);
 	MONITORINFO info = {};
@@ -520,6 +521,7 @@ void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 	if (wnd == NULL) {
 		return nullptr;
 	}
+	g_window = wnd;
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 	g_dropmanager.Register(wnd, cb);
@@ -532,7 +534,7 @@ void peekwindow_close() {
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
 
-bool peekwindow_peekmessage() {
+bool peekwindow_peek_message() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -550,6 +552,10 @@ bool peekwindow_peekmessage() {
 	}
 }
 
-void peekwindow_setcursor(int cursor) {
+void peekwindow_set_cursor(int cursor) {
 	g_cursor = (ImGuiMouseCursor)cursor;
+}
+
+void peekwindow_set_title(bee::zstring_view title) {
+    ::SetWindowTextW(g_window, bee::win::u2w(title).c_str());
 }

@@ -2842,28 +2842,6 @@ lRender(lua_State* L) {
 }
 
 static int
-lSetWindowPos(lua_State* L) {
-	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-	if (!platform_io.Platform_SetWindowPos) {
-		return 0;
-	}
-	auto x = (float)luaL_checkinteger(L, 1);
-	auto y = (float)luaL_checkinteger(L, 2);
-	platform_io.Platform_SetWindowPos(ImGui::GetMainViewport(), {x, y});
-	return 0;
-}
-
-static int
-lSetWindowTitle(lua_State* L) {
-	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-	if (!platform_io.Platform_SetWindowTitle) {
-		return 0;
-	}
-	platform_io.Platform_SetWindowTitle(ImGui::GetMainViewport(), luaL_checkstring(L, 1));
-	return 0;
-}
-
-static int
 ioAddMouseButtonEvent(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
 	int button = (int)luaL_checkinteger(L, 1);
@@ -3012,8 +2990,6 @@ luaopen_imgui(lua_State *L) {
 		{ "NewFrame", lNewFrame },
 		{ "EndFrame", lEndFrame },
 		{ "Render", lRender },
-		{ "SetWindowPos", lSetWindowPos },
-		{ "SetWindowTitle", lSetWindowTitle },
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InitFont", lInitFont },
 		{ "GetMouseCursor", lGetMouseCursor },

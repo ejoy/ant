@@ -5,10 +5,10 @@ local ImGui = import_package "ant.imgui"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
 local inputmgr = import_package "ant.inputmgr"
+local window = import_package "ant.window"
 local PM = require "programan.client"
 
 local ltask = require "ltask"
-local ServiceWindow = ltask.queryservice "ant.window|window"
 
 local m = ecs.system 'imgui_system'
 
@@ -65,7 +65,7 @@ function m:start_frame()
 	local cursor = ImGui.GetMouseCursor()
 	if last_cursor ~= cursor then
 		last_cursor = cursor
-		ltask.call(ServiceWindow, "setcursor", cursor)
+		window.set_cursor(cursor)
 	end
 	ImGui.NewFrame()
 end

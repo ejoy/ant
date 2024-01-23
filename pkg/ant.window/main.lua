@@ -16,13 +16,28 @@ local function start(initargs)
     }
 end
 
-local function reboot(initargs)
+local function newproxy(t, k)
     local ltask = require "ltask"
     local ServiceWorld = ltask.queryservice "ant.window|world"
-    ltask.send(ServiceWorld, "reboot", initargs)
+    local ServiceWindow = ltask.queryservice "ant.window|window"
+
+    local function reboot(initargs)
+        ltask.send(ServiceWorld, "reboot", initargs)
+    end
+
+    local function set_cursor(cursor)
+        ltask.call(ServiceWindow, "set_cursor", cursor)
+    end
+
+    local function set_title(title)
+        ltask.call(ServiceWindow, "set_title", title)
+    end
+
+    t.reboot = reboot
+    t.set_cursor = set_cursor
+    t.set_title = set_title
+    return t[k]
 end
 
-return {
-    start = start,
-    reboot = reboot,
-}
+
+return setmetatable({ start = start }, { __index = newproxy }) 
