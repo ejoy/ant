@@ -107,7 +107,7 @@ local function find_rb_have_multi_ref(rbidx)
 end
 
 local function destroy_rb(rbidx, mark_rbidx)
-	if not find_rb_have_multi_ref(rbidx) then
+	--if not find_rb_have_multi_ref(rbidx) then
 		local rb = mgr.get_rb(rbidx)
 		if rb then
 			bgfx.destroy(rb.handle)
@@ -115,7 +115,7 @@ local function destroy_rb(rbidx, mark_rbidx)
 		if mark_rbidx then
 			RENDER_BUFFERS[rbidx] = nil
 		end
-	end
+	--end
 end
 
 mgr.destroy_rb = destroy_rb
