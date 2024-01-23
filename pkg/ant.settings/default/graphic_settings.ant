@@ -44,6 +44,10 @@ graphic:
     size: 1024
     split_ratios:
       {0.00, 1.00}
+    soft_shadow: pcf
+    pcf:
+      fix4: true
+      kernelsize: 4
     vsm:
       depth_multiplier: 100
       far_offset: 0

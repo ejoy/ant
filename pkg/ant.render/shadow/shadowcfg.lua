@@ -13,18 +13,22 @@ local fbmgr		= require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 
 local SHADOW_CFG = {
-	color				= setting:get "graphic/shadow/color",
-	depth_multiplier	= setting:get "graphic/shadow/depth_multiplier" or 1000,
 	enable				= setting:get "graphic/shadow/enable",
-	far_offset			= setting:get "graphic/shadow/far_offset"		or 0,
-	min_variance		= setting:get "graphic/shadow/min_variance"		or 0.012,
 	normal_offset		= setting:get "graphic/shadow/normal_offset"	or 0.012,
+	soft_shadow			= setting:get "graphic/shadow/soft_shadow",
+	vsm					= {
+		far_offset		= setting:get "graphic/shadow/vsm/far_offset"		or 0,
+		depth_multiplier= setting:get "graphic/shadow/vsm/depth_multiplier" or 1000,
+		min_variance	= setting:get "graphic/shadow/vsm/min_variance"		or 0.012,
+	},
+	pcf					= {
+		fix4			= setting:get "graphic/shadow/pcf/fix4",
+		kernelsize		= setting:get "graphic/shadow/pcf/kernelsize",
+	},
 	shadowmap_size		= setting:get "graphic/shadow/size",
 	split_lamada		= setting:get "graphic/shadow/split_lamada",
 	split_num			= setting:get "graphic/shadow/split_num",
-	height				= setting:get "graphic/shadow/height",
 	split_ratios		= setting:get "graphic/shadow/split_ratios",
-	cross_delta			= setting:get "graphic/shadow/cross_delta"		or 0,
 }
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
@@ -49,12 +53,23 @@ else
 	log.info("'split_ratios' is not define, use log split algrithom")
 end
 
-SHADOW_CFG.shadow_param1	= math3d.ref(math3d.vector(SHADOW_CFG.split_num, SHADOW_CFG.min_variance, 1/SHADOW_CFG.shadowmap_size, SHADOW_CFG.depth_multiplier or 1.0))
-SHADOW_CFG.shadow_param2	= math3d.ref(math3d.vector(0.0, 0.0, 0.0, SHADOW_CFG.normal_offset))
+assert(SHADOW_CFG.split_num ~= nil)
 SHADOW_CFG.split_frustums	= {nil, nil, nil, nil}
 
+--check soft shadow
+if SHADOW_CFG.soft_shadow == "vsm" then
+	SHADOW_CFG.soft_shadow_param = math3d.ref(math3d.vector(SHADOW_CFG.depth_multiplier, SHADOW_CFG.min_variance, SHADOW_CFG.far_offset, 0.0))
+elseif SHADOW_CFG.soft_shadow == "pcf" then
+	if not SHADOW_CFG.pcf.fix4 then
+		local k = SHADOW_CFG.pcf.kernelsize
+		if 2.0 ~= k and 4.0 ~= k and 8.0 ~= k then
+			error(("PCF kernel size should only be: 2.0/4.0/8.0, kernelsize: %2f is not valid"):format(k))
+		end
+		SHADOW_CFG.soft_shadow_param = math3d.ref(math3d.vector(k, 0.0, 0.0, 0.0))
+	end
+end
 
-assert(SHADOW_CFG.split_num ~= nil)
+SHADOW_CFG.shadow_param1	= math3d.ref(math3d.vector(SHADOW_CFG.normal_offset, 1.0/SHADOW_CFG.shadowmap_size, SHADOW_CFG.split_num, 0.0))
 
 SHADOW_CFG.fb_index = fbmgr.create(
 	{
@@ -115,8 +130,8 @@ function isc.shadow_param1()
 	return SHADOW_CFG.shadow_param1
 end
 
-function isc.shadow_param2()
-	return SHADOW_CFG.shadow_param2
+function isc.soft_shadow_param()
+	return SHADOW_CFG.soft_shadow_param
 end
 
 function isc.split_frustums()

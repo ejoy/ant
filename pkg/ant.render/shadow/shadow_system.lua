@@ -120,7 +120,10 @@ function shadow_sys:init()
 
 	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(isc.fb_index(), 1).handle)
 	imaterial.system_attrib_update("u_shadow_param1", isc.shadow_param1())
-	imaterial.system_attrib_update("u_shadow_param2", isc.shadow_param2())
+	local ssp = isc.soft_shadow_param()
+	if ssp then
+		imaterial.system_attrib_update("u_soft_shadow_param", ssp)
+	end
 end
 
 local function set_csm_visible(enable)

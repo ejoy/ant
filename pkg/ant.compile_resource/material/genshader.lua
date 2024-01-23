@@ -7,6 +7,21 @@ local L             = import_package "ant.render.core".layout
 local settings      = import_package "ant.settings"
 local ENABLE_SHADOW<const>      = settings:get "graphic/shadow/enable"
 
+local function soft_shadow_type(sst)
+    if sst then
+        local SST<const> = {
+            pcf = "SM_PCF",
+            vsm = "SM_VSM",
+            esm = "SM_ESM",
+        }
+        return assert(SST[sst])
+    end
+    return "SM_HARD"
+end
+
+local SOFT_SHADOW_TYPE<const> = soft_shadow_type(settings:get "graphic/shadow/soft_shadow") .. "=1"
+local SOFT_SHADOW_PCF_FIX4<const> = SOFT_SHADOW_TYPE:match "PCF" and settings:get "graphic/shadow/pcf/fix4"
+
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
 local DEF_SHADER_INFO <const> = {
@@ -716,6 +731,10 @@ local function macros_from_setting(setting, m)
 
     if ENABLE_SHADOW and setting.receive_shadow == "on" then
         m[#m+1] = "ENABLE_SHADOW=1"
+        m[#m+1] = SOFT_SHADOW_TYPE
+        if SOFT_SHADOW_PCF_FIX4 then
+            m[#m+1] = "PCF_FIX4=1"
+        end
     end
 
     if setting.position_only then

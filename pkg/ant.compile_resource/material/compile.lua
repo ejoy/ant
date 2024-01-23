@@ -17,7 +17,6 @@ local sa            = import_package "ant.render.core".system_attribs
 
 local L             = import_package "ant.render.core".layout
 
-local ENABLE_SHADOW<const>          = settings:get "graphic/shadow/enable"
 local IRRADIANCE_SH_BAND_NUM<const> = settings:get "graphic/ibl/irradiance_bandnum"
 local ENABLE_IBL_LUT<const>         = settings:get "graphic/ibl/enable_lut"
 local USE_CS_SKINNING<const>        = settings:get "graphic/skinning/use_cs"

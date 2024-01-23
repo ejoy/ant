@@ -111,16 +111,12 @@ vec3 debug_cascade_level(in material_info mi)
 
 vec3 calc_direct_light(in material_info mi)
 {
-    vec3 color = vec3_splat(0.0);
 #ifdef USING_LIGHTMAP
     vec4 irradiance = texture2D(s_lightmap, mi.lightmap_uv);
-    color += mi.basecolor.rgb * irradiance.rgb * PI * 0.5;
+    vec3 color = mi.basecolor.rgb * irradiance.rgb * PI * 0.5;
 #else //!USING_LIGHTMAP
     const float dl_visibility = directional_light_visibility(mi);
-    if (dl_visibility > 0.0)
-    {
-        color += shading_color(mi, 0) * dl_visibility;
-    }
+    vec3 color = (dl_visibility > 0.0) ? shading_color(mi, 0) * dl_visibility : vec3_splat(0.0);
 #endif //USING_LIGHTMAP
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
