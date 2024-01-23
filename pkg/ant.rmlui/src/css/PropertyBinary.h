@@ -139,14 +139,6 @@ namespace Rml {
         }
     }
 
-    inline void PropertyEncode(strbuilder<uint8_t>& b, Transition const& v) {
-        b.append(v.duration);
-        b.append(v.delay);
-        b.append(v.tween);
-        b.append(v.type);
-        b.append(v.ids);
-    }
-
     inline void PropertyEncode(strbuilder<uint8_t>& b, Animation const& v) {
         b.append(v.duration);
         b.append(v.delay);
@@ -367,16 +359,6 @@ namespace Rml {
             t.emplace_back(PropertyDecode(tag_v<Transforms::Primitive>, data));
         }
         return t;
-    }
-
-    inline Transition PropertyDecode(tag<Transition>, PropertyBasicView& data) {
-        return {
-            data.pop<float>(),
-            data.pop<float>(),
-            data.pop<Tween>(),
-            data.pop<Transition::Type>(),
-            data.pop<PropertyIdSet>()
-        };
     }
 
     inline Animation PropertyDecode(tag<Animation>, PropertyBasicView& data) {

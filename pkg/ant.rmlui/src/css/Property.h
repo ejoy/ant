@@ -34,32 +34,38 @@ namespace Rml {
         int RawAttribId() const;
         bool IsFloatUnit(PropertyUnit unit) const;
         std::string ToString() const;
+
         template <typename T>
-            requires (!std::is_enum_v<T>)
-        T Get() const {
+            requires (!std::is_enum_v<T> && std::is_trivially_destructible_v<T>)
+        const T& Get() const {
             auto view = GetView();
-            if constexpr (std::is_trivially_destructible_v<T>) {
-                return view.get<T>();
-            }
-            else {
-                auto subview = view.get_view<T>();
-                return PropertyDecode(tag_v<T>, subview);
-            }
+            return view.get<T>();
         }
 
         template <typename T>
-            requires (!std::is_enum_v<T>)
+            requires (!std::is_enum_v<T> && !std::is_trivially_destructible_v<T>)
+        T Get() const {
+            auto view = GetView();
+            auto subview = view.get_view<T>();
+            return PropertyDecode(tag_v<T>, subview);
+        }
+
+        template <typename T>
+            requires (!std::is_enum_v<T> && std::is_trivially_destructible_v<T>)
         std::optional<T> GetIf() const {
             auto view = GetView();
-            if constexpr (std::is_trivially_destructible_v<T>) {
-                if (auto v = view.get_if<T>()) {
-                    return *v;
-                }
+            if (auto v = view.get_if<T>()) {
+                return *v;
             }
-            else {
-                if (auto subview = view.get_view_if<T>()) {
-                    return PropertyDecode(tag_v<T>, *subview);
-                }
+            return std::nullopt;
+        }
+
+        template <typename T>
+            requires (!std::is_enum_v<T> && !std::is_trivially_destructible_v<T>)
+        std::optional<T> GetIf() const {
+            auto view = GetView();
+            if (auto subview = view.get_view_if<T>()) {
+                return PropertyDecode(tag_v<T>, *subview);
             }
             return std::nullopt;
         }
