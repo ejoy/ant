@@ -204,7 +204,7 @@ struct HttpcSession {
     HINTERNET handle = nullptr;
     lua_State* L = nullptr;
     bool stop = false;
-    std::vector<std::unique_ptr<HttpcTask>> update_tasks;
+    std::unique_ptr<HttpcTask> update_tasks;
     
     HttpcSession() noexcept {
     }
@@ -235,34 +235,30 @@ struct HttpcSession {
             request.select([&](void* task) {
                 init_tasks.emplace_back((HttpcTask*)task);
             });
-            if (!init_tasks.empty()) {
-                for (auto&& task : init_tasks) {
-                    if (task->init(handle)) {
-                        update_tasks.emplace_back(std::move(task));
-                    }
-                    else {
-                        sendErrorMessage(task.get());
-                    }
+            if (!update_tasks && !init_tasks.empty()) {
+                auto&& task = init_tasks.back();
+                if (task->init(handle)) {
+                    update_tasks = std::move(task);
                 }
-                init_tasks.clear();
+                else {
+                    sendErrorMessage(task.get());
+                }
+                init_tasks.pop_back();
             }
-            for (auto it = update_tasks.begin(); it != update_tasks.end();) {
-                auto const& task = *it;
-                switch (task->update()) {
+            if (update_tasks) {
+                switch (update_tasks->update()) {
                 case HttpcTask::Status::Idle:
-                    ++it;
                     break;
                 case HttpcTask::Status::Pending:
-                    sendProgressMessage(task.get());
-                    ++it;
+                    sendProgressMessage(update_tasks.get());
                     break;
                 case HttpcTask::Status::Failed:
-                    sendErrorMessage(task.get());
-                    it = update_tasks.erase(it);
+                    sendErrorMessage(update_tasks.get());
+                    update_tasks.reset();
                     break;
                 case HttpcTask::Status::Completion:
-                    sendCompletionMessage(task.get());
-                    it = update_tasks.erase(it);
+                    sendCompletionMessage(update_tasks.get());
+                    update_tasks.reset();
                     break;
                 default:
                     std::unreachable();
