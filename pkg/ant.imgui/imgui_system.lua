@@ -18,8 +18,6 @@ function m:init_system()
 		"NavEnableKeyboard",
 		"DockingEnable",
 		"NavNoCaptureKeyboard",
-		"DpiEnableScaleViewports",
-		"DpiEnableScaleFonts",
 		"NoMouseCursorChange",
 	}
 	ImGui.InitPlatform(rhwi.native_window())

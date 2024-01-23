@@ -79,7 +79,10 @@ function m.show()
         x, y = x - mp[1], y - mp[2]
         local vp = iviewport.device_size
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
-            vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
+            vp.x = x * imgui_vp.DpiScale
+            vp.y = y * imgui_vp.DpiScale
+            vp.w = ww * imgui_vp.DpiScale
+            vp.h = hh * imgui_vp.DpiScale
             world:dispatch_message {
                 type = "set_viewport",
                 viewport = vp,
