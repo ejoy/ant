@@ -46,6 +46,9 @@ namespace Rml {
         std::string operator()(const Color& v) {
             return v.ToString();
         }
+        std::string operator()(const Transition& v) {
+            return "<transition>";
+        }
         std::string operator()(tag<std::string>, PropertyBasicView view) {
             auto v = PropertyDecode(tag_v<std::string>, view);
             return v;
@@ -53,9 +56,6 @@ namespace Rml {
         std::string operator()(tag<Transform>, PropertyBasicView view) {
             auto v = PropertyDecode(tag_v<Transform>, view);
             return v.ToString();
-        }
-        std::string operator()(tag<TransitionList>, PropertyBasicView view) {
-            return "<transition>";
         }
         std::string operator()(tag<Animation>, PropertyBasicView view) {
             return "<animation>";

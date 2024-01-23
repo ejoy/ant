@@ -110,7 +110,7 @@ ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animat
 	: animation(animation)
 	, keyframe(keyframe)
 	, interpolate(element, id, keyframe[0].prop, keyframe[1].prop)
-	, time(animation.transition.delay)
+	, time(animation.delay)
 	, current_iteration(0)
 	, key(1)
 	, complete(false)
@@ -120,22 +120,22 @@ ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animat
 Property ElementAnimation::UpdateProperty(Element& element, float delta) {
 	time += delta;
 
-	if (time >= animation.transition.duration) {
+	if (time >= animation.duration) {
 		current_iteration += 1;
 		if (animation.num_iterations == -1 || (current_iteration >= 0 && current_iteration < animation.num_iterations)) {
-			time -= animation.transition.duration;
+			time -= animation.duration;
 			if (animation.alternate)
 				reverse_direction = !reverse_direction;
 		}
 		else {
 			complete = true;
-			time = animation.transition.duration;
+			time = animation.duration;
 		}
 	}
 
 	const float t = reverse_direction
-		? animation.transition.duration - time / animation.transition.duration
-		: time / animation.transition.duration
+		? animation.duration - time / animation.duration
+		: time / animation.duration
 		;
 	uint8_t n = (uint8_t)keyframe.size();
 	uint8_t newkey = n;
@@ -151,7 +151,7 @@ Property ElementAnimation::UpdateProperty(Element& element, float delta) {
 	}
 	const float t0 = keyframe[key-1].time;
 	const float t1 = keyframe[key].time;
-	return interpolate.Update(t0, t1, t, animation.transition.tween);
+	return interpolate.Update(t0, t1, t, animation.tween);
 }
 
 }

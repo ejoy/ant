@@ -778,8 +778,8 @@ void Element::UpdateStructure() {
 }
 
 void Element::StartTransition(std::function<void()> f) {
-	auto transition_list = GetComputedProperty(PropertyId::Transition).Get<TransitionList>();
-	if (transition_list.empty()) {
+	auto transition = GetComputedProperty(PropertyId::Transition).Get<Transition>();
+	if (transition.type == Transition::Type::None) {
 		f();
 		return;
 	}
@@ -794,8 +794,8 @@ void Element::StartTransition(std::function<void()> f) {
 		{}
 	};
 	std::vector<PropertyTransition> pt;
-	pt.reserve(transition_list.size());
-	for (auto const& [id, transition] : transition_list) {
+	pt.reserve(transition.ids.size());
+	for (auto id : transition.ids) {
 		auto start_value = GetComputedProperty(id);
 		pt.emplace_back(id, transition, start_value);
 	}
@@ -803,7 +803,7 @@ void Element::StartTransition(std::function<void()> f) {
 	for (auto& [id, transition, start_value] : pt) {
 		auto target_value = GetComputedProperty(id);
 		if (start_value && target_value && start_value != target_value) {
-			if (!transitions.contains(id)) {
+			if (!transition.ids.contains(id)) {
 				SetAnimationProperty(id, start_value);
 				transitions.emplace(id, ElementTransition { *this, id, transition, start_value, target_value });
 			}
@@ -817,16 +817,17 @@ void Element::HandleTransitionProperty() {
 	}
 	dirty.erase(Dirty::Transition);
 
-	auto keep = GetComputedProperty(PropertyId::Transition).Get<TransitionList>();
-	if (keep.empty()) {
+	auto transition = GetComputedProperty(PropertyId::Transition).Get<Transition>();
+	switch (transition.type) {
+	case Transition::Type::None:
 		for (auto& [id, _] : transitions) {
 			DelAnimationProperty(id);
 		}
 		transitions.clear();
-	}
-	else {
+		break;
+	case Transition::Type::Id:
 		for (auto it = transitions.begin(); it != transitions.end();) {
-			if (keep.find(it->first) == keep.end()) {
+			if (transition.ids.contains(it->first)) {
 				DelAnimationProperty(it->first);
 				it = transitions.erase(it);
 			}
@@ -834,6 +835,8 @@ void Element::HandleTransitionProperty() {
 				++it;
 			}
 		}
+	default:
+		break;
 	}
 }
 

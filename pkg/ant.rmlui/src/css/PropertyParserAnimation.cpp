@@ -90,7 +90,7 @@ Property PropertyParseAnimation(PropertyId id, const std::string& value) {
 			case Keyword::NONE:
 				return {};
 			case Keyword::TWEEN:
-				animation.transition.tween = it->second.tween;
+				animation.tween = it->second.tween;
 				break;
 			case Keyword::ALTERNATE:
 				animation.alternate = true;
@@ -116,11 +116,11 @@ Property PropertyParseAnimation(PropertyId id, const std::string& value) {
 					// Duration or delay was assigned
 					if (!duration_found) {
 						duration_found = true;
-						animation.transition.duration = number;
+						animation.duration = number;
 					}
 					else if (!delay_found) {
 						delay_found = true;
-						animation.transition.delay = number;
+						animation.delay = number;
 					}
 					else
 						return false;
@@ -151,85 +151,69 @@ Property PropertyParseAnimation(PropertyId id, const std::string& value) {
 }
 
 Property PropertyParseTransition(PropertyId id, const std::string& value) {
-	std::vector<std::string> transition_values;
-	StringUtilities::ExpandString(transition_values, value, ',');
+	Transition transition;
+	std::vector<std::string> arguments;
+	StringUtilities::ExpandString(arguments, value, ' ');
 
-	TransitionList transition_list;
+	bool duration_found = false;
+	bool delay_found = false;
 
-	for (const std::string& single_transition_value : transition_values) {
-		Transition transition;
-		PropertyIdSet target_property_ids;
+	for (auto& argument : arguments) {
+		if (argument.empty())
+			continue;
 
-		std::vector<std::string> arguments;
-		StringUtilities::ExpandString(arguments, single_transition_value, ' ');
+		// See if we have a <keyword> or <tween> specifier as defined in keywords
+		auto it = keywords.find(argument);
+		if (it != keywords.end() && it->second.ValidTransition()) {
+			if (it->second.type == Keyword::NONE) {
+				transition.type = Transition::Type::None;
+				return { id, transition };
+			}
+			else if (it->second.type == Keyword::TWEEN) {
+				transition.tween = it->second.tween;
+			}
+		}
+		else {
+			// Either <duration>, <delay> or a <property name>
+			float number = 0.0f;
+			int count = 0;
 
-		bool duration_found = false;
-		bool delay_found = false;
-
-		for (auto& argument : arguments) {
-			if (argument.empty())
-				continue;
-
-			// See if we have a <keyword> or <tween> specifier as defined in keywords
-			auto it = keywords.find(argument);
-			if (it != keywords.end() && it->second.ValidTransition()) {
-				if (it->second.type == Keyword::NONE) {
-					if (transition_list.size() > 0) // The none keyword can not be part of multiple definitions
+			if (sscanf(argument.c_str(), "%fs%n", &number, &count) == 1) {
+				// Found a number, if there was an 's' unit, count will be positive
+				if (count > 0) {
+					// Duration or delay was assigned
+					if (!duration_found) {
+						duration_found = true;
+						transition.duration = number;
+					}
+					else if (!delay_found) {
+						delay_found = true;
+						transition.delay = number;
+					}
+					else
 						return {};
-					return { id, transition_list };
 				}
-				else if (it->second.type == Keyword::TWEEN) {
-					transition.tween = it->second.tween;
+				else {
+					return {};
 				}
 			}
 			else {
-				// Either <duration>, <delay> or a <property name>
-				float number = 0.0f;
-				int count = 0;
-
-				if (sscanf(argument.c_str(), "%fs%n", &number, &count) == 1) {
-					// Found a number, if there was an 's' unit, count will be positive
-					if (count > 0) {
-						// Duration or delay was assigned
-						if (!duration_found) {
-							duration_found = true;
-							transition.duration = number;
-						}
-						else if (!delay_found) {
-							delay_found = true;
-							transition.delay = number;
-						}
-						else
-							return {};
-					}
-					else {
-						return {};
-					}
-				}
-				else {
-					PropertyIdSet properties;
-					if (!StyleSheetSpecification::ParseDeclaration(properties, argument)) {
-						return {};
-					}
-					target_property_ids |= properties;
+				if (!StyleSheetSpecification::ParseDeclaration(transition.ids, argument)) {
+					return {};
 				}
 			}
 		}
-
-		// Validate the parsed transition
-		if (transition.duration <= 0.0f) {
-			return {};
-		}
-
-		if (target_property_ids.empty()) {
-			return {};
-		}
-		for (const auto& id : target_property_ids) {
-			transition_list.emplace(id, transition);
-		}
 	}
 
-	return { id, transition_list };
+	// Validate the parsed transition
+	if (transition.duration <= 0.0f) {
+		return {};
+	}
+
+	if (transition.ids.empty()) {
+		return {};
+	}
+	return { id, transition };
 }
 
 }
