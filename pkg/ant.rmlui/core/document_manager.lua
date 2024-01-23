@@ -80,10 +80,8 @@ local function OnLoadInlineStyle(document, source_path, content, source_line)
 end
 
 local function OnLoadExternalStyle(document, source_path)
-    if not rmlui.DocumentLoadStyleSheet(document, source_path) then
-        local mem = readfile(source_path)
-        rmlui.DocumentLoadStyleSheet(document, source_path, fastio.wrap(mem))
-    end
+    local mem = readfile(source_path)
+    rmlui.DocumentLoadStyleSheet(document, source_path, fastio.wrap(mem))
 end
 
 function m.open(path, name, ...)

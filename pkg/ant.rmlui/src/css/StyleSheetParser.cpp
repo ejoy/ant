@@ -1,5 +1,4 @@
 #include <css/StyleSheetParser.h>
-#include <css/StyleSheetFactory.h>
 #include <css/StyleSheetNode.h>
 #include <util/Log.h>
 #include <css/StyleSheet.h>
@@ -10,6 +9,28 @@
 #include <string.h>
 
 namespace Rml {
+
+class StyleSheetParser {
+public:
+	bool Parse(std::string_view data, StyleSheet& style_sheet, std::string_view source_url, int begin_line_number);
+	bool ParseProperties(std::string_view data, PropertyVector& vec);
+
+private:
+	std::string_view view;
+	size_t           pos;
+	std::string_view source_url;
+	size_t           line_number;
+
+	bool ReadProperties(PropertyVector& vec);
+	bool ParseKeyframeBlock(StyleSheet& style_sheet, const std::string & identifier, const std::string & rules, const PropertyVector& properties);
+	char FindToken(std::string& buffer, const char* tokens, bool remove_token);
+	bool ReadCharacter(char& buffer);
+
+	uint8_t Peek() const;
+	bool End() const;
+	void Next();
+	void Undo();
+};
 
 static bool IsValidIdentifier(const std::string& str) {
 	if (str.empty())
@@ -31,6 +52,7 @@ static bool IsValidIdentifier(const std::string& str) {
 
 	return true;
 }
+
 
 bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::string& identifier, const std::string& rules, const PropertyVector& properties) {
 	if (!IsValidIdentifier(identifier)) {
@@ -392,6 +414,26 @@ void StyleSheetParser::Next() {
 
 void StyleSheetParser::Undo() {
 	pos--;
+}
+
+void ParseStyleSheet(PropertyVector& properties, std::string_view data) {
+	StyleSheetParser parser;
+	parser.ParseProperties(data, properties);
+}
+
+void ParseStyleSheet(StyleSheet& sheet, std::string_view source_path, std::string_view content) {
+	StyleSheetParser parser;
+	if (!parser.Parse(content, sheet, source_path, 1)) {
+		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", source_path.data());
+		return;
+	}
+}
+
+void ParseStyleSheet(StyleSheet& sheet, std::string_view source_path, std::string_view content, int line) {
+	StyleSheetParser parser;
+	if (!parser.Parse(content, sheet, source_path, line)) {
+		Log::Message(Log::Level::Error, "Failed to load style sheet in %s:%d.", source_path.data(), line);
+	}
 }
 
 }

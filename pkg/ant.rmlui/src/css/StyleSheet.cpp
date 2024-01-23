@@ -11,16 +11,6 @@ StyleSheet::StyleSheet()
 StyleSheet::~StyleSheet()
 {}
 
-void StyleSheet::Merge(const StyleSheet& other_sheet) {
-	stylenode.insert(stylenode.end(), other_sheet.stylenode.begin(), other_sheet.stylenode.end());
-	for (auto const& [identifier, other_kf] : other_sheet.keyframes) {
-		auto [_, suc] = keyframes.emplace(identifier, other_kf);
-		if (!suc) {
-			Log::Message(Log::Level::Warning, "Redfined keyframe.");
-		}
-	}
-}
-
 const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	auto it = keyframes.find(name);
 	if (it != keyframes.end())

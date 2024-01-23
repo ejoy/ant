@@ -343,8 +343,7 @@ void Element::InstanceOuter(const HtmlElement& html) {
 		}
 		else if (name == "style") {
 			PropertyVector properties;
-			StyleSheetParser parser;
-			parser.ParseProperties(value, properties);
+			ParseStyleSheet(properties, value);
 			SetInlineProperty(properties);
 		}
 		else {
