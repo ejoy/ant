@@ -21,6 +21,7 @@ end}
 
 local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
 local DIRTY_GROUPS, DIRECT_DRAW_GROUPS = {}, {}
+local HITCH_MAPS = {}
 
 local h = ecs.component "hitch"
 function h.init(hh)
@@ -126,6 +127,15 @@ local function set_dirty_hitch_group(hitch, hid, state)
     local gid = hitch.group
     DIRTY_GROUPS[gid] = true
     local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
+
+    local old_gid = HITCH_MAPS[hid]
+    if old_gid and old_gid ~= gid then
+        local old_indirect_draw_group = INDIRECT_DRAW_GROUPS[old_gid]
+        old_indirect_draw_group.hitchs[hid] = nil
+        DIRTY_GROUPS[old_gid] = true
+    end
+    HITCH_MAPS[hid] = gid
+
     if not indirect_draw_group.hitchs then
         indirect_draw_group.hitchs = {}
     end
@@ -176,7 +186,7 @@ function hitch_sys:finish_scene_update()
 
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in" do
             if re.skinning or re.dynamic_mesh then
                 DIRECT_DRAW_GROUPS[gid] = true
             end
