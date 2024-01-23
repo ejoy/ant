@@ -65,13 +65,15 @@ end
 local datalist = require "datalist"
 local function get_action_list(asset_path)
     local al = {}
+    local tl = {}
     if asset_path and asset_path ~= '' then
         local animlist = datalist.parse(fastio.readall_f(global_data.project_root:string()..asset_path))
         for _, anim in ipairs(animlist) do
             al[#al + 1] = anim.name
+            tl[anim.name] = anim.type
         end
     end
-    return al
+    return al, tl
 end
 
 local function do_to_runtime_event(evs)
@@ -131,7 +133,7 @@ local function from_runtime_event(runtime_event)
         for _, e in ipairs(ev.event_list) do
             if e.event_type == "Sound" or e.event_type == "Effect" or e.event_type == "Animation" then
                 e.asset_path_ui = {text = e.asset_path or ''}
-                e.action_list = get_action_list(e.asset_path)
+                e.action_list, e.action_type_map = get_action_list(e.asset_path)
                 if e.event_type == "Animation" then
                     e.target_ui = {text = e.target or ''}
                     e.forwards = e.forwards or false
@@ -362,7 +364,7 @@ local function show_current_event()
         if current_event.event_type == "Animation" then
             local function update_asset_path(asset_path)
                 current_event.asset_path = tostring(current_event.asset_path_ui.text)
-                current_event.action_list = get_action_list(asset_path)
+                current_event.action_list, current_event.action_type_map = get_action_list(asset_path)
                 current_event.action = nil
                 current_event.target = nil
             end
@@ -380,12 +382,6 @@ local function show_current_event()
                     update_asset_path(tostring(current_event.asset_path_ui.text))
                     dirty = true
                 end
-                -- ImGui.PropertyLabel("ActionTarget")
-                -- if ImGui.InputText("##ActionTarget", current_event.target_ui) then
-                --     current_event.target = tostring(current_event.target_ui.text)
-                --     dirty = true
-                -- end
-                
             end
             action_list = current_event.action_list or {}
         end
@@ -407,7 +403,8 @@ local function show_current_event()
             local target = current_event.target or ''
             ImGui.PropertyLabel("Target")
             if ImGui.BeginCombo("##Target", {target, flags = ImGui.Flags.Combo {}}) then
-                for _, name in ipairs(prefab_mgr.srt_mtl_list) do
+                local namelist = (current_event.action_type_map[current_event.action] == "mtl") and prefab_mgr.mtl_list or prefab_mgr.srt_mtl_list
+                for _, name in ipairs(namelist) do
                     if ImGui.Selectable(name, target == name) then
                         current_event.target = name
                     end
