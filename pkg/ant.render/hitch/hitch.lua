@@ -176,38 +176,25 @@ function hitch_sys:finish_scene_update()
 
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
-        local h_aabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
-            if mc.NULL ~= re.bounding.aabb then
-                h_aabb = math3d.aabb_merge(h_aabb, re.bounding.aabb)
-            end
             if re.skinning or re.dynamic_mesh then
                 DIRECT_DRAW_GROUPS[gid] = true
             end
         end
         ig.enable(gid, "hitch_tag", false)
-        if math3d.aabb_isvalid(h_aabb) then
-            for _, heid in ipairs(hitchs) do
-                local e<close> = world:entity(heid, "hitch:in hitch_visible?out bounding:update scene_needchange?out")
-                e.scene_needchange = true
-                e.bounding.aabb = mu.M3D_mark(e.bounding.aabb, h_aabb)
-            end
+        for _, heid in ipairs(hitchs) do
+            local e<close> = world:entity(heid, "hitch:in scene_needchange?out")
+            e.scene_needchange = true
         end
     end
     w:clear "hitch_create"
-end
-
-local function obj_visible(obj, queue_index)
-	return Q.check(obj.visible_idx, queue_index) and (not Q.check(obj.cull_idx, queue_index))
 end
 
 function hitch_sys:render_preprocess()
     for e in w:select "hitch_update hitch:in eid:in" do
         local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[e.hitch.group]
         if INDIRECT_DRAW_GROUP then
-            local mainmask = queuemgr.queue_mask "main_queue"
-            local is_visible = obj_visible(e.hitch, mainmask)
-            set_dirty_hitch_group(e.hitch, e.eid, is_visible) 
+            set_dirty_hitch_group(e.hitch, e.eid, true) 
         end
     end
     for gid in pairs(DIRTY_GROUPS) do
