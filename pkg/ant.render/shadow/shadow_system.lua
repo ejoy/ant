@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local shadow_sys = ecs.system "shadow_system2"
+local shadow_sys = ecs.system "shadow_system"
 
 local setting	= import_package "ant.settings"
 local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
@@ -33,9 +33,6 @@ local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
 local INV_Z<const> = true
---TODO: read from setting file
-local useLiSPSM<const> = false
-
 --NOTE: use PSC far should enable depth clamp. we should enable reset flag: BGFX_RESET_DEPTH_CLAMP in bgfx.init or bgfx.reset
 local usePSCFar<const> = false
 
@@ -190,11 +187,6 @@ local function move_camera_to_origin(li, intersectpointsLS, n, f)
 	li.Lv = math3d.lookto(math3d.mul(n, li.lightdir), li.lightdir, li.rightdir)
 	li.Lw = math3d.inverse_fast(li.Lv)
 	li.Lv2Cv = math3d.mul(li.Cv, li.Lw)
-
-	if useLiSPSM then
-		local translate = math3d.vector(0.0, 0.0, n, 1.0)
-		intersectpointsLS = translate_points(translate, intersectpointsLS)
-	end
 	return 0.0, f - n, intersectpointsLS
 end
 
@@ -212,17 +204,7 @@ local function update_shadow_matrices(si, li, c)
 		end
 		c.frustum.n, c.frustum.f = n, f
 		si.nearLS, si.farLS = n, f
-
-		if useLiSPSM then
-			-- -- DO NOT create an INV_Z projection matrix
-			-- li.Lp = math3d.projmat(c.frustum)
-			-- local Wv, Wp = LiSPSM.warp_matrix(si, li, intersectpointsLS)
-
-			-- --update S matrix and keep it to li.Lp
-			-- li.Lp = math3d.mul(math3d.mul(math3d.mul(Wp, Wv), li.Lr), math3d.projmat(c.frustum, INV_Z))
-		else
-			li.Lp = math3d.projmat(c.frustum, INV_Z)
-		end
+		li.Lp = math3d.projmat(c.frustum, INV_Z)
 
 		local F = isc.calc_focus_matrix(math3d.minmax(intersectpointsLS, li.Lp))
 		li.Lp 		= math3d.mul(F, li.Lp)
@@ -244,10 +226,6 @@ local function init_light_info(C, D, li)
 	li.Lv			= Lv
 	li.Lw			= Lw
 	li.Cv			= Cv
-	if useLiSPSM then
-		local LiSPSM = import_package "ant.shadow_bounding".LiSPSM
-		li.Lr = LiSPSM.rotation_matrix(math3d.transform(Lv, viewdir, 0))
-	end
 	li.Lv2Cv		= math3d.mul(Cv, Lw)
 	li.viewdir		= viewdir
 	li.lightdir		= lightdirWS
@@ -279,29 +257,18 @@ local function build_sceneaabbLS(si, li)
 end
 
 local function check_changed()
-	if not w:check "scene_changed" then
+	if not w:check "scene_changed" and not w:check "camera_changed" then
 		return
 	end
 
-	local C = irq.main_camera_changed()
-	local D = w:first "make_shadow directional_light scene_changed"
-
-	if not C and not D then
-		return
-	end
-
-	if not C then
-		C = irq.main_camera_entity()
-	end
-
-	w:extend(C, "scene:in camera:in")
-
+	local D = w:first "make_shadow directional_light"
 	if not D then
-		D = w:first "make_shadow directional_light"
+		return
 	end
+
 	w:extend(D, "scene:in")
 
-	return C, D
+	return irq.main_camera_entity "scene:in camera:in", D
 end
 
 function shadow_sys:update_camera()

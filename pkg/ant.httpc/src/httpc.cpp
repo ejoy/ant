@@ -63,7 +63,6 @@ struct HttpcTask {
     std::wstring url;
     std::wstring file;
     URL_COMPONENTSW comp { sizeof(comp) };
-    HINTERNET handle = nullptr;
     HINTERNET connect = nullptr;
     HINTERNET request = nullptr;
     HANDLE tmpFile = INVALID_HANDLE_VALUE;
@@ -83,9 +82,6 @@ struct HttpcTask {
         , file(bee::win::u2w(file))
     {}
     ~HttpcTask() noexcept {
-        if (handle) {
-            InternetCloseHandle(handle);
-        }
         if (connect) {
             InternetCloseHandle(connect);
         }
@@ -117,14 +113,8 @@ struct HttpcTask {
         }
         return v;
     }
-    bool init() noexcept {
+    bool init(HINTERNET handle) noexcept {
         DeleteUrlCacheEntryW(url.c_str());
-        handle = InternetOpenW(L"WindowsGet", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
-        if (!handle) {
-            return false;
-        }
-        DWORD option = HTTP_PROTOCOL_FLAG_HTTP2;
-        InternetSetOptionW(handle, INTERNET_OPTION_ENABLE_HTTP_PROTOCOL, &option, sizeof(option));
         std::wstring host(comp.lpszHostName, comp.dwHostNameLength);
         connect = InternetConnectW(handle, host.c_str(), (INTERNET_PORT)comp.nPort, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 0);
         if (!connect) {
@@ -163,7 +153,7 @@ struct HttpcTask {
     bool finish() {
         CloseHandle(tmpFile);
         tmpFile = INVALID_HANDLE_VALUE;
-        if (!MoveFileExW((file + L".part").c_str(), file.c_str(), MOVEFILE_COPY_ALLOWED)) {
+        if (!MoveFileExW((file + L".part").c_str(), file.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING)) {
             return false;
         }
         return true;
@@ -211,19 +201,33 @@ struct HttpcSession {
     MessageChannel request;
     MessageChannel response;
     int64_t taskid = 0;
+    HINTERNET handle = nullptr;
     lua_State* L = nullptr;
     bool stop = false;
     std::vector<std::unique_ptr<HttpcTask>> update_tasks;
+    
     HttpcSession() noexcept {
-        L = luaL_newstate();
-        thread = bee::thread_create(+[](void* ud) noexcept {
-            ((HttpcSession*)ud)->threadFunc();
-        }, this);
     }
     ~HttpcSession() noexcept {
         stop = true;
         bee::thread_wait(thread);
         lua_close(L);
+        if (handle) {
+            InternetCloseHandle(handle);
+        }
+    }
+    bool init() noexcept {
+        handle = InternetOpenW(L"ant-httpc", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+        if (!handle) {
+            return false;
+        }
+        DWORD option = HTTP_PROTOCOL_FLAG_HTTP2;
+        InternetSetOptionW(handle, INTERNET_OPTION_ENABLE_HTTP_PROTOCOL, &option, sizeof(option));
+        L = luaL_newstate();
+        thread = bee::thread_create(+[](void* ud) noexcept {
+            ((HttpcSession*)ud)->threadFunc();
+        }, this);
+        return true;
     }
     void threadFunc() noexcept {
         std::vector<std::unique_ptr<HttpcTask>> init_tasks;
@@ -233,7 +237,7 @@ struct HttpcSession {
             });
             if (!init_tasks.empty()) {
                 for (auto&& task : init_tasks) {
-                    if (task->init()) {
+                    if (task->init(handle)) {
                         update_tasks.emplace_back(std::move(task));
                     }
                     else {
@@ -323,7 +327,12 @@ static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 }
 
 static int session(lua_State* L) {
-    bee::lua::newudata<HttpcSession>(L);
+    auto& s = bee::lua::newudata<HttpcSession>(L);
+    if (!s.init()) {
+        lua_pushnil(L);
+        lua_pushstring(L, bee::make_syserror("session").c_str());
+        return 2;
+    }
     return 1;
 }
 

@@ -209,21 +209,22 @@ function m:clone(eid)
     end
     local dsttpl = utils.deep_copy(srctpl.template)
     local tmp = utils.deep_copy(dsttpl)
-    local e <close> = world:entity(eid, "name:in scene?in")
+    local e <close> = world:entity(eid, "scene?in")
     if not e.scene then
         print("can not clone noscene node.")
         return
     end
     local name = (tmp.tag and tmp.tag[1] or "") .. "_copy"
-    tmp.tag = {name}
+    tmp.tag = { name }
+    dsttpl.tag = { name }
     local pid = e.scene.parent > 0 and e.scene.parent or self.root
     tmp.data.scene.parent = pid
     if e.scene.slot then
         tmp.data.on_ready = function (obj) hierarchy:update_slot_list(world) end
     end
     local new_entity = world:create_entity(tmp)
-    dsttpl.data.name = name
     self:add_entity(new_entity, pid, dsttpl)
+    world:pub {"EntityEvent", "tag", new_entity, {}, { name }}
 end
 local timeline_id = 0
 function m:create(what, config)
@@ -573,14 +574,18 @@ end
 function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
-    local path_list = utils.split_ant_path(filename)
-    local virtual_prefab_path = lfs.path('/') / lfs.relative(path_list[1], gd.project_root)
+    local isglb = false
+    if filename:find('.glb|') then
+        isglb = true
+    end
+    local path_list = isglb and utils.split_ant_path(filename) or {}
+    local virtual_prefab_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or filename, gd.project_root)):string()
     if #path_list > 1 then
         self.prefab_name = path_list[2]
         gd.virtual_prefab_path = virtual_prefab_path
-        gd.current_compile_path = cook_prefab(virtual_prefab_path:string() .. "|".. self.prefab_name)
+        gd.current_compile_path = cook_prefab(virtual_prefab_path .. "|".. self.prefab_name)
         self.glb_filename = path_list[1]
-        virtual_prefab_path = virtual_prefab_path:string() .. "/" .. self.prefab_name
+        virtual_prefab_path = virtual_prefab_path .. "/" .. self.prefab_name
         self.prefab_template = serialize.parse(virtual_prefab_path, aio.readall(virtual_prefab_path))
 
         patch_tpl = patch_tpl or {}
@@ -615,7 +620,7 @@ function m:open(filename, prefab_name, patch_tpl)
     }
     editor_setting.add_recent_file(filename)
     editor_setting.save()
-    world:pub {"WindowTitle", filename}
+    world:pub {"WindowTitle", virtual_prefab_path}
 end
 
 local function remove_entity_self(eid)
@@ -868,6 +873,10 @@ function m:get_patch_list(template_list)
 end
 
 function m:save(path)
+    if not gd.repo then
+        widget_utils.message_box({title = "SaveError", info = "no project is opened"})
+        return
+    end
     -- patch glb file
     if self.glb_filename then
         if self.patch_template then
@@ -933,13 +942,14 @@ function m:save(path)
         end
         return
     end
+    local lpath
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
-            local lp = widget_utils.get_saveas_path("Prefab", "prefab")
-            if not lp then
+            lpath = widget_utils.get_saveas_path("Prefab", "prefab")
+            if not lpath then
                 return
             end
-            path = tostring(access.virtualpath(gd.repo, lp))
+            path = tostring(access.virtualpath(gd.repo, lpath))
         end
     end
     assert(path or self.prefab_filename)
@@ -947,9 +957,10 @@ function m:save(path)
     local filename = path or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local template = hierarchy:get_prefab_template()
-    utils.write_file(filename, stringify(template))
+    utils.write_file(lpath, stringify(template))
+    memfs.update(filename, lpath)
     if saveas then
-        self:open(filename)
+        self:open(lpath)
         world:pub {"WindowTitle", filename}
     end
     if prefab_filename then
@@ -1290,7 +1301,7 @@ function m:do_material_patch(eid, path, v)
     local tpl = info.template
     if not self.materials_names then
         -- local ret = utils.split_ant_path(tpl.data.material)
-        local fn = gd.virtual_prefab_path:string() .. "/materials.names"
+        local fn = gd.virtual_prefab_path .. "/materials.names"
         self.materials_names = serialize.parse(fn, aio.readall(fn))
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))

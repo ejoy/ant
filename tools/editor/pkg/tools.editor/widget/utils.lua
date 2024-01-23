@@ -152,7 +152,7 @@ local global_data	= require "common.global_data"
 function m.load_imgui_layout(filename)
     local rf = io.open(filename:string(), "rb")
     if not rf then
-        rf = io.open(tostring(global_data.editor_root) .. "/imgui.default.layout", "rb")
+        rf = io.open(tostring(global_data.editor_root) .. "imgui.default.layout", "rb")
     end
     if rf then
         local setting = rf:read "a"
@@ -163,14 +163,14 @@ end
 
 function m.save_ui_layout()
     local setting = ImGui.SaveIniSettings()
-    local wf = assert(io.open(tostring(global_data.editor_root) .. "/imgui.layout", "wb"))
+    local wf = assert(io.open(tostring(global_data.editor_root) .. "imgui.layout", "wb"))
     wf:write(setting)
     wf:close()
 end
 
 function m.reset_ui_layout()
     -- TODO: default.layout
-    m.load_imgui_layout(tostring(global_data.editor_root) .. "/imgui.default.layout")
+    m.load_imgui_layout(global_data.editor_root / "imgui.default.layout")
     -- local dockID = ImGui.GetID("MainViewSpace")
     -- ImGui.DockBuilderRemoveNode(dockID)
     -- ImGui.DockBuilderAddNode(dockID, 0)
