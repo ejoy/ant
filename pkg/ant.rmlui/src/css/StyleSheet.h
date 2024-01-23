@@ -29,7 +29,6 @@ public:
 	~StyleSheet();
 	StyleSheet(const StyleSheet&) = delete;
 	StyleSheet& operator=(const StyleSheet&) = delete;
-	void Merge(const StyleSheet& sheet);
 	void AddNode(StyleSheetNode && node);
 	void AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties);
 	void Sort();

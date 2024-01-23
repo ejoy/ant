@@ -112,28 +112,14 @@ lDocumentInstanceBody(lua_State* L) {
 static int
 lDocumentLoadStyleSheet(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	switch (lua_gettop(L)) {
-	case 1:
-	case 2: {
-		auto path = lua_checkstrview(L, 2);
-		bool ok = doc->LoadStyleSheet(path);
-		lua_pushboolean(L, ok);
-		return 1;
-	}
-	case 3: {
-		auto path = lua_checkstrview(L, 2);
-		auto data = getmemory(L, 3);
-		doc->LoadStyleSheet(path, data);
-		return 0;
-	}
-	default:
-	case 4: {
-		auto path = lua_checkstrview(L, 2);
-		auto data = getmemory(L, 3);
+	auto path = lua_checkstrview(L, 2);
+	auto data = getmemory(L, 3);
+	if (lua_gettop(L) >= 4) {
 		auto line = luaL_checkinteger(L, 4);
 		doc->LoadStyleSheet(path, data, (int)line);
-		return 0;
 	}
+	else {
+		doc->LoadStyleSheet(path, data);
 	}
 	return 0;
 }

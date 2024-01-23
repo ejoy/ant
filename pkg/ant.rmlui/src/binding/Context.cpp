@@ -4,7 +4,6 @@
 #include <binding/ScriptImpl.h>
 #include <css/StyleSheetSpecification.h>
 #include <core/Texture.h>
-#include <css/StyleSheetFactory.h>
 
 namespace Rml {
 
@@ -25,12 +24,10 @@ bool Initialise(lua_State* L, int idx) {
     }
     g_context = new ContextImpl(L, idx);
     StyleSheetSpecification::Initialise();
-    StyleSheetFactory::Initialise();
     return true;
 }
 
 void Shutdown() {
-    StyleSheetFactory::Shutdown();
     StyleSheetSpecification::Shutdown();
     Texture::Shutdown();
     if (g_context) {

@@ -2,8 +2,8 @@
 #include <binding/Context.h>
 #include <core/Interface.h>
 #include <css/StyleSheet.h>
+#include <css/StyleSheetParser.h>
 #include <core/Text.h>
-#include <css/StyleSheetFactory.h>
 #include <util/HtmlParser.h>
 
 namespace Rml {
@@ -147,16 +147,12 @@ void Document::RecycleNode(std::unique_ptr<Node>&& node) {
 	removednodes.emplace_back(std::forward<std::unique_ptr<Node>>(node));
 }
 
-bool Document::LoadStyleSheet(std::string_view source_path) {
-	return StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
-}
-
 void Document::LoadStyleSheet(std::string_view source_path, std::string_view content) {
-	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path, content);
+	ParseStyleSheet(style_sheet, source_path, content);
 }
 
 void Document::LoadStyleSheet(std::string_view source_path, std::string_view content, int source_line) {
-	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path, content, source_line);
+	ParseStyleSheet(style_sheet, source_path, content, source_line);
 }
 
 }

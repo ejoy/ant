@@ -38,7 +38,6 @@ public:
 	void InstanceHead(const HtmlElement& html, std::function<void(HtmlHead, const std::string&, int)> func);
 	void InstanceBody(const HtmlElement& html);
 
-	bool LoadStyleSheet(std::string_view source_path);
 	void LoadStyleSheet(std::string_view source_path, std::string_view content);
 	void LoadStyleSheet(std::string_view source_path, std::string_view content, int line);
 
