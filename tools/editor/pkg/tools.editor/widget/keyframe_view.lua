@@ -245,12 +245,11 @@ local function update_animation()
             if #anim.clips < 1 then
                 goto continue
             end
-            local keyframes = imodifier.keyframes_from_anim_data(anim_type, anim, fc, sr)
             imodifier.delete(anim.modifier)
             anim.modifier = nil
-            if #keyframes > 0 then
-                local bind_eid = prefab_mgr.get_eid_by_name[anim_bind_map[current_anim.name]]
-                assert(bind_eid)
+            local keyframes = imodifier.keyframes_from_anim_data(anim_type, anim, fc, sr)
+            local bind_eid = prefab_mgr:get_eid_by_name(anim_bind_map[current_anim.name])
+            if #keyframes > 0 and bind_eid then
                 if anim_type == "mtl" then
                     anim.modifier = imodifier.create_mtl_modifier(bind_eid, anim.target_name, keyframes, false, true)
                 elseif anim_type == "srt" then
@@ -1068,7 +1067,8 @@ function m.show()
                 ImGui.SameLine()
                 ImGui.PushItemWidth(200)
                 if ImGui.BeginCombo("##BindTo", {anim_bind_map[current_anim.name], flags = ImGui.Flags.Combo {}}) then
-                    for _, name in ipairs(prefab_mgr.srt_mtl_list) do
+                    local taglist = (current_anim.type == "srt") and prefab_mgr.srt_mtl_list or prefab_mgr.mtl_list
+                    for _, name in ipairs(taglist) do
                         if ImGui.Selectable(name, anim_bind_map[current_anim.name] == name) then
                             anim_bind_map[current_anim.name] = name
                             update_animation()

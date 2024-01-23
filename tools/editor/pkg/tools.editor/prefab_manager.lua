@@ -942,7 +942,7 @@ function m:save(path)
         end
         return
     end
-    local lpath
+    local lpath = self.prefab_filename
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
             lpath = widget_utils.get_saveas_path("Prefab", "prefab")
@@ -1018,6 +1018,7 @@ end
 
 function m:update_tag_list()
     local srt_mtl_list = {""}
+    local mtl_list = {""}
     local efk_list = {}
     for k, value in pairs(self.current_prefab.tag) do
         if k ~= "*" and k ~= "anim_ctrl" then
@@ -1025,6 +1026,9 @@ function m:update_tag_list()
                 local ee <close> = world:entity(eid, "scene?in material?in")
                 if ee.scene or ee.material then
                     srt_mtl_list[#srt_mtl_list + 1] = k
+                    if ee.material then
+                        mtl_list[#mtl_list + 1] = k
+                    end
                 elseif ee.efk then
                     efk_list[#efk_list + 1] = k
                 end
@@ -1033,6 +1037,7 @@ function m:update_tag_list()
     end
     self.efk_list = efk_list
     self.srt_mtl_list = srt_mtl_list
+    self.mtl_list = mtl_list
 end
 
 function m:do_remove_entity(eid)
