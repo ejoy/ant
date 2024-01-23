@@ -2,6 +2,7 @@
 #include <core/Document.h>
 #include <core/Element.h>
 #include <glm/gtx/compatibility.hpp>
+#include <bee/nonstd/format.h>
 
 #include <version>
 #if defined(__cpp_lib_math_constants)
@@ -19,7 +20,7 @@ PropertyFloat::PropertyFloat(float v, PropertyUnit unit)
 {}
 
 std::string PropertyFloat::ToString() const {
-    std::string v = std::to_string(value);
+    std::string v = std::format("{}", value);
     switch (unit) {
         case PropertyUnit::PX:		v += "px"; break;
         case PropertyUnit::DEG:		v += "deg"; break;

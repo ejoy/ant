@@ -1,6 +1,7 @@
 #include <css/Property.h>
 #include <css/StyleCache.h>
 #include <core/ComputedValues.h>
+#include <bee/nonstd/format.h>
 
 namespace Rml {
     Property::Property()
@@ -41,7 +42,7 @@ namespace Rml {
             return v.ToString();
         }
         std::string operator()(const PropertyKeyword& v) {
-            return "<keyword," + std::to_string(v) + ">";
+            return std::format("<keyword,{}>", v);
         }
         std::string operator()(const Color& v) {
             return v.ToString();

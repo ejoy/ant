@@ -1,6 +1,7 @@
 #include <core/Color.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/color_space.hpp>
+#include <bee/nonstd/format.h>
 
 namespace Rml {
 
@@ -26,11 +27,7 @@ Color Color::FromSRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
 std::string Color::ToString() const {
 	auto sRGB = glm::convertLinearToSRGB(glm::vec4(r, g, b, a) / 255.f) * 255.f;
-	return "rgba("
-		+std::to_string(sRGB.r)+","
-		+std::to_string(sRGB.g)+","
-		+std::to_string(sRGB.b)+","
-		+std::to_string(sRGB.a)+")";
+	return std::format("rgba({},{},{},{})", sRGB.r, sRGB.g, sRGB.b, sRGB.a);
 }
 
 Color Color::Interpolate(const Color& c1, float alpha) const {

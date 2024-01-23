@@ -4,6 +4,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <bee/nonstd/format.h>
 #include <optional>
 
 namespace Rml {
@@ -11,7 +12,7 @@ namespace Rml {
 using namespace Transforms;
 
 static std::string ToString(const float& v) {
-	return std::to_string(v);
+	return std::format("{}", v);
 }
 
 static glm::mat4x4 skew(float angle_x, float angle_y) {
