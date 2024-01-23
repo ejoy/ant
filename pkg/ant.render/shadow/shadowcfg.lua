@@ -65,8 +65,9 @@ SHADOW_CFG.fb_index = fbmgr.create(
 			layers=1,
 			flags=sampler{
 				RT="RT_ON",
-				MIN="POINT",
-				MAG="POINT",
+				--LINEAR for pcf2x2 with shadow2DProj in shader
+				MIN="LINEAR",
+				MAG="LINEAR",
 				U="BORDER",
 				V="BORDER",
 				COMPARE="COMPARE_GEQUAL",
