@@ -69,7 +69,7 @@ local repopath
 local function spawnFileServer()
     assert(subprocess.spawn {
         luaexe,
-        (string.sub(luaexe, -7) == "lua.exe") and "tools/fileserver/main.lua" or "3rd/ant/tools/fileserver/main.lua",
+        (luaexe:sub(-7) == "lua.exe" or luaexe:sub(-3) == "lua") and "tools/fileserver/main.lua" or "3rd/ant/tools/fileserver/main.lua",
         repopath,
         console = "disable",
     })

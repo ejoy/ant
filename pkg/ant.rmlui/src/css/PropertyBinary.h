@@ -139,16 +139,10 @@ namespace Rml {
         }
     }
 
-    inline void PropertyEncode(strbuilder<uint8_t>& b, TransitionList const& v) {
-        PropertyEncodeSize<uint8_t>(b, v);
-        for (auto const& [id, value]: v) {
-            b.append(id);
-            b.append(value);
-        }
-    }
-
     inline void PropertyEncode(strbuilder<uint8_t>& b, Animation const& v) {
-        b.append(v.transition);
+        b.append(v.duration);
+        b.append(v.delay);
+        b.append(v.tween);
         b.append(v.num_iterations);
         b.append(v.alternate);
         PropertyEncode(b, v.name);
@@ -367,20 +361,11 @@ namespace Rml {
         return t;
     }
 
-    inline TransitionList PropertyDecode(tag<TransitionList>, PropertyBasicView& data) {
-        size_t n = data.pop<uint8_t>();
-        TransitionList t;
-        for (size_t i = 0; i < n; ++i) {
-            auto id = data.pop<PropertyId>();
-            auto value = data.pop<Transition>();
-            t.emplace(std::move(id), std::move(value));
-        }
-        return t;
-    }
-
     inline Animation PropertyDecode(tag<Animation>, PropertyBasicView& data) {
         return {
-            data.pop<Transition>(),
+            data.pop<float>(),
+            data.pop<float>(),
+            data.pop<Tween>(),
             data.pop<int>(),
             data.pop<bool>(),
             PropertyDecode(tag_v<std::string>, data)
