@@ -49,8 +49,7 @@
 19. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；(2023.12.01已经完成)
 20. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；（2024.01.24 bgfx的view_mode能够解决一部分的问题，使用render_layer，在上层控制好渲染的顺序，这个问题已经解决）
 21. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；（2024.01.01已经解决。目前在genshader.lua里面，根据具体的platform，会生成对应的.w的数据，而不是通过viewmat在着色器中在运算一次）
-22. 优化PBR的计算量：
-  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/； （2023.10.01已经完成）
+
 
 ##### 未完成
 1. 关于ibl:
@@ -77,6 +76,8 @@
 11. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
 12. 优化compute shader使用到的resource（包括image、texture和buffer），目前的compute shader不应该使用超过8个的resource；
 13. 修改render_queue下的view_mode，在增加了render_layer之后，view_mode设置成为顺序渲染已经没有必要，使用bgfx default的模式（就是空字符串），会根据program id和texture id对渲染进行排序，利用上这个特性会减少api的状态切换；
+22. 优化PBR的计算量：
+  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
