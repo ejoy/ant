@@ -43,7 +43,7 @@
 16. 使用更优质的line渲染：（2023.11.10已经完成）
   - 优化目前使用的polyline的效果。尤其是不在使用MSAA，换用FXAA之后，polyline的线会丢失（https://mattdesl.svbtle.com/drawing-lines-is-hard，参考的库：https://github.com/spite/THREE.MeshLine）；
   - 需要一个更优质的网格：https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
-17. 预烘培Tonemapping计算到3D贴图中：（2023.09，10已经完成）
+17. 预烘培Tonemapping计算到3D贴图中：（2023.09.10已经完成）
   - - tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
 18. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；（2023.10.30已经完成）
 19. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；(2023.12.01已经完成)
@@ -68,7 +68,7 @@
 8. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
 9. 优化阴影:
   1) 优化shadowmap精度，通过确定PSR/PSC的物体，结合Scene和Camera Frustum的bounding，算出修正的F矩阵；(2024.01.04已经完成)
-  2) 添加wraping（LiSPSM的方式），拥挤计算更紧凑的lighting Frustum，并与CSM结合；(2024.01.23暂时停下，某些概念还需要理清楚一下)
+  2) 添加wraping（LiSPSM的方式），并与CSM结合；(2024.01.23暂时停下，某些概念还需要理清楚一下)
   3) 优化VSM；
   4) 使用texture array，而不是一张拼接的2D贴图。使用texture array的好处是，使用MRT输出多张阴影图（不能够使用目前没有fs的depth pass，需要修改为MRT的方式）；
   5) 完成point light shadow；
@@ -93,28 +93,27 @@
 
 #### 架构
 1. RT需要使用FrameGraph的形式进行修改。目前postprocess尤其需要这个修改进行不同pass的引用；
-2. 使用DeferredShading。目前的one pass deferred能够很好解决deferrd shading占用过多带宽的问题；(2024.01.23材质系统为每一个不同的render_object生成对应的着色器，改成defer之后，需要一个uber shader解决材质不一致的问题，Visibility Buffer结合GPU rendering 才能从根本上解决问题。目前暂停defer的实现)；
+2. 使用DeferredShading。目前的one pass deferred能够很好解决deferrd shading占用过多带宽的问题；(2024.01.23，目前暂停。材质系统为每一个不同的render_object生成对应的着色器，改成defer之后，需要一个uber shader解决材质不一致的问题，Visibility Buffer结合GPU rendering 才能从根本上解决问题。目前暂停defer的实现)；
 
 #### 新功能/探索
 ##### 已经完成
 1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用预烘培的大气散射模拟天空，将indirect lighting和天空和合拼；（2023.02.22已经暂停，对于移动设备并不友好）（2023.05.26目前使用的方法是，动态调整平行光的方向、intensity以及环境光的intensity来实现昼夜变化（intensity都是通过读取美术给的图来实现的）。由于基于物理的与烘培的大气散射还有很多的理论知识没有搞清楚，暂时停下来了）；
 2. 使用debug visiblity buffer，尝试在fragment shader中插值光照数据；
-
+3. FSR。详细看bgfx里面的fsr例子；（2024.01.24已经尝试添加，成为后处理的一个阶段，但在iOS上，性能很低，尽管分辨率已经降下来了。在PC确实很很大的提升，前提是，目前是PS是瓶颈）
 ##### 未完成
-1. FSR。详细看bgfx里面的fsr例子；
-2. SDF Shadow；
-3. Visibility Buffer，https://jcgt.org/published/0002/02/04/paper.pdf，http://filmicworlds.com/blog/visibility-buffer-rendering-with-material-graphs/；
-4. GI相关。SSGI、SSR、SDFGI(https://zhuanlan.zhihu.com/p/404520592)、DDGI(Dynamic Diffuse Global Illumination，https://morgan3d.github.io/articles/2019-04-01-ddgi/)等；
-5. LOD；
-6. 尝试一下虚拟纹理。后面的GIProbe、点光源阴影都需要大量的纹理贴图。探索一下虚拟纹理是否解决这些问题，BGFX里面就有相关的例子；
+1. SDF Shadow；
+2. Visibility Buffer，https://jcgt.org/published/0002/02/04/paper.pdf，http://filmicworlds.com/blog/visibility-buffer-rendering-with-material-graphs/；
+3. GI相关。SSGI、SSR、SDFGI(https://zhuanlan.zhihu.com/p/404520592)、DDGI(Dynamic Diffuse Global Illumination，https://morgan3d.github.io/articles/2019-04-01-ddgi/)等；
+4. LOD；
+5. 尝试一下虚拟纹理。后面的GIProbe、点光源阴影都需要大量的纹理贴图。探索一下虚拟纹理是否解决这些问题，BGFX里面就有相关的例子；
 
 #### 增强调试功能
 1. 修复bgfx编译后的vulkan着色器无法在renderdoc进行单步调试；（2023.10.30 bgfx中无法开启vulkan debug的选项。一种说法是，使用hlsl编译到spriv后，无法保留相应的调试信息，需要glslang这个第三方的工具支持才行。目前bgfx就是把hlsl编译到vulkan的spriv的，所以无法开启vulkan的单步调试）；
-2. 影子。只管的在屏幕上看到对应的shadowmap、csm frustum等；(2024.01.08重写shadow debug system，能够从light view中观察场景)
-3. 添加一个overdraw的模式，观察哪些像素被多次渲染了。详细参考unity和虚幻上的做法；(2023.11.01已经完成)
 
 #### 已经完成的调试功能
 1. bgfx支持查看每一个view下cpu/gpu时间，但在init的时候加上profile=true，还是无法取出每个view的时间；(2023.10.30 已经完成了)
+2. 影子。只管的在屏幕上看到对应的shadowmap、csm frustum等；(2024.01.08重写shadow debug system，能够从light view中观察场景)
+3. 添加一个overdraw的模式，观察哪些像素被多次渲染了。详细参考unity和虚幻上的做法；(2023.11.01已经完成)
 
 #### 编辑器相关
 1. 优化材质编辑器
