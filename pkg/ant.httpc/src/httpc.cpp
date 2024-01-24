@@ -8,8 +8,11 @@
 #include <array>
 #include <charconv>
 #include <cstring>
+#include <cstddef>
 #include <memory>
 #include <optional>
+#include <span>
+#include <deque>
 #include "channel.h"
 
 extern "C" {
@@ -58,18 +61,145 @@ struct HttpcTaskBuffer {
     DWORD m_size = 0;
 };
 
+struct HttpcDownloadOutput {
+    virtual ~HttpcDownloadOutput() {}
+    virtual bool init() noexcept { return true; }
+    virtual bool finish() noexcept { return true; }
+    virtual void completion(lua_State* L) noexcept { }
+    virtual std::optional<size_t> write(const void* buf, size_t len) noexcept { return std::nullopt; }
+};
+
+struct HttpcDownloadOutputFile: public HttpcDownloadOutput {
+    std::wstring file;
+    HANDLE tmpFile = INVALID_HANDLE_VALUE;
+    HttpcDownloadOutputFile(bee::zstring_view file) noexcept
+        : file(bee::win::u2w(file))
+    {}
+    ~HttpcDownloadOutputFile() noexcept {
+        if (tmpFile != INVALID_HANDLE_VALUE) {
+            CloseHandle(tmpFile);
+        }
+    }
+    bool init() noexcept {
+        tmpFile = CreateFileW((file + L".part").c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (tmpFile == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        return true;
+    }
+    bool finish() noexcept {
+        CloseHandle(tmpFile);
+        tmpFile = INVALID_HANDLE_VALUE;
+        if (!MoveFileExW((file + L".part").c_str(), file.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING)) {
+            return false;
+        }
+        return true;
+    }
+    std::optional<size_t> write(const void* buf, size_t len) noexcept {
+        DWORD n = 0;
+        if (!WriteFile(tmpFile, buf, (DWORD)len, &n, nullptr)) {
+            return std::nullopt;
+        }
+        return (size_t)n;
+    }
+};
+
+struct HttpcDownloadOutputMemory: public HttpcDownloadOutput {
+    struct Memory {
+        Memory(size_t sz) noexcept
+            : m_data(new std::byte[sz])
+            , m_size(sz)
+        {}
+        ~Memory() noexcept { delete[] m_data; }
+        Memory(Memory&& rhs) noexcept
+            : m_data(rhs.m_data)
+            , m_size(rhs.m_size) {
+            rhs.m_data = nullptr;
+            rhs.m_size = 0;
+        }
+        Memory(const Memory& rhs) noexcept = delete;
+        Memory& operator=(Memory&&) noexcept = delete;
+        Memory& operator=(const Memory&) noexcept = delete;
+        const std::byte* data() const noexcept {
+            return m_data;
+        }
+        size_t size() const noexcept {
+            return m_size;
+        }
+        const std::byte& operator[](size_t i) const {
+            return m_data[i];
+        }
+        std::byte& operator[](size_t i) {
+            return m_data[i];
+        }
+        std::byte* m_data;
+        size_t m_size;
+    };
+    template <size_t N = 1024>
+    struct MemoryBuilder {
+        struct node {
+            std::byte data[N];
+            void append(size_t pos, const std::byte* str, size_t n) noexcept {
+                assert (pos + n <= N);
+                memcpy(&data[pos], str, n * sizeof(std::byte));
+            }
+        };
+        MemoryBuilder() noexcept
+            : pos(0) {
+            data.resize(1);
+        }
+        void clear() noexcept {
+            pos = 0;
+            data.resize(1);
+        }
+        void append(const std::byte* str, size_t n) noexcept {
+            if (pos + n <= N) {
+                data.back().append(pos, str, n);
+                pos += n;
+                return;
+            }
+            size_t m = N - pos;
+            data.back().append(pos, str, m);
+            data.emplace_back();
+            pos = 0;
+            append(str + m, n - m);
+        }
+        Memory release() noexcept {
+            size_t sz = (data.size() - 1) * N + pos;
+            Memory r(sz);
+            for (size_t i = 0; i < data.size() - 1;++i) {
+                memcpy(&r[i * N], &data[i], N * sizeof(std::byte));
+            }
+            memcpy(&r[(data.size() - 1) * N], &data.back(), pos * sizeof(std::byte));
+            clear();
+            return r;
+        }
+        std::deque<node> data;
+        size_t           pos;
+    };
+    MemoryBuilder<1024> builder;
+    void completion(lua_State* L) noexcept {
+        auto mem = builder.release();
+        lua_pushlstring(L, (const char*)mem.data(), mem.size());
+        lua_setfield(L, -2, "content");
+    }
+    std::optional<size_t> write(const void* buf, size_t len) noexcept {
+        builder.append((const std::byte*)buf, len);
+        return len;
+    }
+};
+
 struct HttpcTask {
     int64_t id;
     std::wstring url;
-    std::wstring file;
     URL_COMPONENTSW comp { sizeof(comp) };
     HINTERNET connect = nullptr;
     HINTERNET request = nullptr;
-    HANDLE tmpFile = INVALID_HANDLE_VALUE;
     uint64_t writtenLength = 0;
     uint64_t contentLength = 0;
     HttpcTaskBuffer<4096> buffer;
     bool completion = false;
+    std::unique_ptr<HttpcDownloadOutput> output;
     enum class Status {
         Failed,
         Idle,
@@ -79,7 +209,12 @@ struct HttpcTask {
     HttpcTask(int64_t id, bee::zstring_view url, bee::zstring_view file) noexcept
         : id(id)
         , url(bee::win::u2w(url))
-        , file(bee::win::u2w(file))
+        , output(new HttpcDownloadOutputFile(file))
+    {}
+    HttpcTask(int64_t id, bee::zstring_view url) noexcept
+        : id(id)
+        , url(bee::win::u2w(url))
+        , output(new HttpcDownloadOutputMemory())
     {}
     ~HttpcTask() noexcept {
         if (connect) {
@@ -87,9 +222,6 @@ struct HttpcTask {
         }
         if (request) {
             InternetCloseHandle(request);
-        }
-        if (tmpFile != INVALID_HANDLE_VALUE) {
-            CloseHandle(tmpFile);
         }
     }
     bool parseUrl() noexcept {
@@ -144,19 +276,13 @@ struct HttpcTask {
                 }
             }
         }
-        tmpFile = CreateFileW((file + L".part").c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (tmpFile == INVALID_HANDLE_VALUE) {
+        if (!output->init()) {
             return false;
         }
         return true;
     }
     bool finish() {
-        CloseHandle(tmpFile);
-        tmpFile = INVALID_HANDLE_VALUE;
-        if (!MoveFileExW((file + L".part").c_str(), file.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING)) {
-            return false;
-        }
-        return true;
+        return output->finish();
     }
     Status update() noexcept {
         if (!completion && buffer.in_size() > 0) {
@@ -174,19 +300,21 @@ struct HttpcTask {
         }
         if (buffer.size() != 0) {
             DWORD write = 0;
-            if (!WriteFile(tmpFile, buffer.data(), buffer.size(), &write, nullptr)) {
-                return Status::Failed;
-            }
-            if (write == 0) {
-                return Status::Idle;
+            if (auto write = output->write(buffer.data(), buffer.size())) {
+                if (*write == 0) {
+                    return Status::Idle;
+                }
+                else {
+                    buffer.write((DWORD)*write);
+                    writtenLength += *write;
+                    if (completion && buffer.size() == 0) {
+                        return finish()? Status::Completion: Status::Failed;
+                    }
+                    return Status::Pending;
+                }
             }
             else {
-                buffer.write(write);
-                writtenLength += write;
-                if (completion && buffer.size() == 0) {
-                    return finish()? Status::Completion: Status::Failed;
-                }
-                return Status::Pending;
+                return Status::Failed;
             }
         }
         if (completion) {
@@ -285,6 +413,7 @@ struct HttpcSession {
         lua_setfield(L, -2, "id");
         lua_pushstring(L, "completion");
         lua_setfield(L, -2, "type");
+        task->output->completion(L);
         response.push(seri_pack(L, 0, NULL));
     }
     void sendProgressMessage(HttpcTask* task) {
@@ -314,6 +443,15 @@ struct HttpcSession {
         request.push(task.release());
         return id;
     }
+    std::optional<int64_t> createDownloadTask(bee::zstring_view url) noexcept {
+        int64_t id = ++taskid;
+        auto task = std::make_unique<HttpcTask>(id, url);
+        if (!task->parseUrl()) {
+            return std::nullopt;
+        }
+        request.push(task.release());
+        return id;
+    }
 };
 
 static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
@@ -335,10 +473,18 @@ static int session(lua_State* L) {
 static int download(lua_State* L) {
     auto& s = bee::lua::checkudata<HttpcSession>(L, 1);
     auto url = lua_checkstrview(L, 2);
-    auto file = lua_checkstrview(L, 3);
-    if (auto id = s.createDownloadTask(url, file)) {
-        lua_pushinteger(L, *id);
-        return 1;
+    if (lua_isnoneornil(L, 3)) {
+        if (auto id = s.createDownloadTask(url)) {
+            lua_pushinteger(L, *id);
+            return 1;
+        }
+    }
+    else {
+        auto file = lua_checkstrview(L, 3);
+        if (auto id = s.createDownloadTask(url, file)) {
+            lua_pushinteger(L, *id);
+            return 1;
+        }
     }
     lua_pushnil(L);
     lua_pushstring(L, bee::make_syserror("download").c_str());

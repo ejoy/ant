@@ -45,7 +45,7 @@ function m:data_changed()
         if  msg.type == "completion" then
             local task = Tasks[msg.id]
             print("`" .. task.url .. "` completion.")
-            task[msg.id] = nil
+            Tasks[msg.id] = nil
         elseif msg.type == "progress" then
             local task = Tasks[msg.id]
             if msg.total then
