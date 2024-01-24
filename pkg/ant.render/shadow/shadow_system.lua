@@ -24,7 +24,7 @@ local math3d    = require "math3d"
 local fbmgr     = require "framebuffer_mgr"
 local queuemgr  = ecs.require "queue_mgr"
 
-local shadowcfg	= require "shadow.shadowcfg"
+local shadowcfg	= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
@@ -36,7 +36,7 @@ local INV_Z<const> = true
 --NOTE: use PSC far should enable depth clamp. we should enable reset flag: BGFX_RESET_DEPTH_CLAMP in bgfx.init or bgfx.reset
 local usePSCFar<const> = false
 
-local moveCameraToOrigin<const> = true
+local moveCameraToOrigin<const> = false
 
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
