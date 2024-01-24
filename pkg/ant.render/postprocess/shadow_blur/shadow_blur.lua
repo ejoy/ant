@@ -12,9 +12,9 @@ local fbmgr		= require "framebuffer_mgr"
 local sampler = renderpkg.sampler
 
 local bgfx = require "bgfx"
+local shadowcfg	= require "shadow.shadowcfg"
 
 local icompute = ecs.require "ant.render|compute.compute"
-local ishadow	= ecs.require "ant.render|shadow.shadowcfg"
 local imaterial = ecs.require "ant.asset|material"
 
 local vblur_viewid<const> = hwi.viewid_get "svblur"
@@ -52,15 +52,15 @@ function shadow_blur_sys:init_world()
     end
     
     local function build_blur_textures()
-        local s_setting = ishadow.setting()
-        blur_w = s_setting.shadowmap_size * s_setting.split_num
-        blur_h = s_setting.shadowmap_size
         local function check_destroy(handle)
             if handle then
                 bgfx.destroy(handle)
             end
         end
-        blur_textures.source_texture_handle = fbmgr.get_rb(ishadow.fb_index(), 1).handle
+        local depthrb = fbmgr.get_rb(shadowcfg.fb_index(), 1)
+        blur_w, blur_h = depthrb.w, depthrb.h
+
+        blur_textures.source_texture_handle = depthrb.handle
         check_destroy(blur_textures.vblur_texture_handle)
         blur_textures.vblur_texture_handle = bgfx.create_texture2d(blur_w, blur_h, false, 1, "R32F", flags)
         check_destroy(blur_textures.hblur_texture_handle)

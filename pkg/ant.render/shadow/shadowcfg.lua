@@ -1,8 +1,10 @@
-local ecs 	= ...
-local world = ecs.world
-local w 	= world.w
-
 local setting	= import_package "ant.settings"
+
+local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
+if not ENABLE_SHADOW then
+	return
+end
+
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
 local math3d	= require "math3d"
@@ -13,7 +15,6 @@ local fbmgr		= require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 
 local SHADOW_CFG = {
-	enable				= setting:get "graphic/shadow/enable",
 	normal_offset		= setting:get "graphic/shadow/normal_offset"	or 0.012,
 	soft_shadow			= setting:get "graphic/shadow/soft_shadow",
 	vsm					= {

@@ -24,7 +24,7 @@ local math3d    = require "math3d"
 local fbmgr     = require "framebuffer_mgr"
 local queuemgr  = ecs.require "queue_mgr"
 
-local isc= ecs.require "shadow.shadowcfg"
+local shadowcfg	= require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
@@ -107,20 +107,20 @@ local shadow_material
 local di_shadow_material
 local gpu_skinning_material
 function shadow_sys:init()
-	local fbidx = isc.fb_index()
-	local s     = isc.shadowmap_size()
+	local fbidx = shadowcfg.fb_index()
+	local s     = shadowcfg.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	di_shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-	for ii=1, isc.split_num() do
+	for ii=1, shadowcfg.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
 	end
 
-	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(isc.fb_index(), 1).handle)
-	imaterial.system_attrib_update("u_shadow_param1", isc.shadow_param1())
-	local ssp = isc.soft_shadow_param()
+	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(shadowcfg.fb_index(), 1).handle)
+	imaterial.system_attrib_update("u_shadow_param1", shadowcfg.shadow_param1())
+	local ssp = shadowcfg.soft_shadow_param()
 	if ssp then
 		imaterial.system_attrib_update("u_soft_shadow_param", ssp)
 	end
@@ -209,7 +209,7 @@ local function update_shadow_matrices(si, li, c)
 		si.nearLS, si.farLS = n, f
 		li.Lp = math3d.projmat(c.frustum, INV_Z)
 
-		local F = isc.calc_focus_matrix(math3d.minmax(intersectpointsLS, li.Lp))
+		local F = shadowcfg.calc_focus_matrix(math3d.minmax(intersectpointsLS, li.Lp))
 		li.Lp 		= math3d.mul(F, li.Lp)
 	else
 		li.Lp		= math3d.projmat(c.frustum, INV_Z)
@@ -303,7 +303,7 @@ function shadow_sys:update_camera_depend()
 	local zn, zf = assert(si.zn), assert(si.zf)
 	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
-	local csmfrustums = isc.split_viewfrustum(zn, zf, CF)
+	local csmfrustums = shadowcfg.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
@@ -315,7 +315,7 @@ function shadow_sys:update_camera_depend()
 
 		ce.scene.worldmat = mu.M3D_mark(ce.scene.worldmat, li.Lw)
 
-		csm_matrices[csm.index].m = math3d.mul(isc.crop_matrix(csm.index), c.viewprojmat)
+		csm_matrices[csm.index].m = math3d.mul(shadowcfg.crop_matrix(csm.index), c.viewprojmat)
 		split_distances_VS[csm.index] = c.viewfrustum.f
     end
 
