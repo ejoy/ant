@@ -77,6 +77,7 @@
 12. 优化compute shader使用到的resource（包括image、texture和buffer），目前的compute shader不应该使用超过8个的resource；
 13. 优化PBR的计算量：
   - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
+14. 资源编译生成inverse_bind_matrices这个属性下，理论上应该是在右手空间，但在ext_skinbin.lua里，会把它转成左手矩阵，最后在算蒙皮矩阵的时候，会和ozz内部的右手矩阵相乘，蒙皮矩阵最后会转到左手空间下，这个解决居然是对的。inverse_bind_matrices这个属性不应该是右手的；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
