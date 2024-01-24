@@ -62,13 +62,13 @@ function vfs.new(config)
 		root = nil,
 		ziproot = "",
 	}
-	local zipfile = zip.open(repo.bundlepath.."vfs.zip", "r")
+	local zipfile = zip.open(repo.bundlepath.."00.zip", "r")
 	if not zipfile then
-		print("Can't open " .. repo.bundlepath .. "vfs.zip")
+		print("Can't open " .. repo.bundlepath .. "00.zip")
 	else
 		repo.zipfile = zipfile
 		repo.zipreader = zip.reader(zipfile, repo.cachesize)
-		repo.ziproot = fastio.readall_s(repo.bundlepath .. "vfs_root")
+		repo.ziproot = fastio.readall_s(repo.bundlepath .. "00.hash")
 	end
 	setmetatable(repo, vfs)
 	return repo
