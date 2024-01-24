@@ -46,38 +46,37 @@
 17. 预烘培Tonemapping计算到3D贴图中：（2023.09，10已经完成）
   - - tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
 18. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；（2023.10.30已经完成）
+19. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；(2023.12.01已经完成)
+20. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；（2024.01.24 bgfx的view_mode能够解决一部分的问题，使用render_layer，在上层控制好渲染的顺序，这个问题已经解决）
+21. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；（2024.01.01已经解决。目前在genshader.lua里面，根据具体的platform，会生成对应的.w的数据，而不是通过viewmat在着色器中在运算一次）
+22. 优化PBR的计算量：
+  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/； （2023.10.01已经完成）
 
 ##### 未完成
-1. 优化PBR的计算量：
-  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
-2. 优化阴影。结合CSM和LiPSM（无法做成稳定的阴影），提高阴影精度；
-3. 关于ibl:
+1. 关于ibl:
   - 离线计算ibl相关的数据，将目前的compute shader中计算的内容转移到cpu端，并离线计算；
-4. 后处理优化
+2. 后处理优化
   - 充分利用全屏/半屏的render_target，而不是每个后处理的draw都用一个新的target；
   - 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
   - Color Grading需要用于调整颜色；
   - AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
-5. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；
-6. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
-7. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
-8. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
-9. 优化bgfx的draw viewid和compute shader viewid；
-10. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
-11. 摄像机的fov需要根据聚焦的距离来定义fov；
-12. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
-13. 优化阴影:
+3. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
+4. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
+5. 优化bgfx的draw viewid和compute shader viewid；
+6. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
+7. 摄像机的fov需要根据聚焦的距离来定义fov；
+8. 合拼UI上使用的贴图（主要是Rmlui，用altas的方法把贴图都拼到一张大图里面）。目前的想法是，1.接管UI的集合体生成方式，UV的信息有UI的管理器去生成；2.做一个类似于虚拟贴图的东西，把每个UI上面的UV映射放到一个buffer里面，运行时在vs里面取对应的uv；
+9. 优化阴影:
   1) 优化shadowmap精度，通过确定PSR/PSC的物体，结合Scene和Camera Frustum的bounding，算出修正的F矩阵；(2024.01.04已经完成)
   2) 添加wraping（LiSPSM的方式），拥挤计算更紧凑的lighting Frustum，并与CSM结合；(2024.01.23暂时停下，某些概念还需要理清楚一下)
   3) 优化VSM；
   4) 使用texture array，而不是一张拼接的2D贴图。使用texture array的好处是，使用MRT输出多张阴影图（不能够使用目前没有fs的depth pass，需要修改为MRT的方式）；
   5) 完成point light shadow；
   6) 使用D16 format，并将阴影图的分辨率提升到2048。iOS并不支持D16的格式，尝试使用R16F/R16，并修改采样阴影图的方式，在着色器中判断是否在阴影中，而不是目前时候shadow2DProj的方式判断是否在阴影内（牵涉到两个地方的修改：1.阴影图的创建的flag不在使用compare；2.判断像素是否被遮挡），理论上就是时间换空间。是否真的能够提升性能还有待考察。iOS在较新的版本里已经支持D16的format，但bgfx目前并没有支持；
-13. 重构visible_state，将目前的visible_state作为render内部数据，统一使用visible tag作为外部控制物体是否可见的设定；
-14. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；
-15. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
-16. 优化compute shader使用到的resource（包括image、texture和buffer），目前的compute shader不应该使用超过8个的resource；
-17. 修改render_queue下的view_mode，在增加了render_layer之后，view_mode设置成为顺序渲染已经没有必要，使用bgfx default的模式（就是空字符串），会根据program id和texture id对渲染进行排序，利用上这个特性会减少api的状态切换；
+10. 重构visible_state，将目前的visible_state作为render内部数据，统一使用visible tag作为外部控制物体是否可见的设定；
+11. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
+12. 优化compute shader使用到的resource（包括image、texture和buffer），目前的compute shader不应该使用超过8个的resource；
+13. 修改render_queue下的view_mode，在增加了render_layer之后，view_mode设置成为顺序渲染已经没有必要，使用bgfx default的模式（就是空字符串），会根据program id和texture id对渲染进行排序，利用上这个特性会减少api的状态切换；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
