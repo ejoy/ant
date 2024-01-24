@@ -197,6 +197,7 @@ struct HttpcTask {
     HINTERNET request = nullptr;
     uint64_t writtenLength = 0;
     uint64_t contentLength = 0;
+    DWORD statusCode = 200;
     HttpcTaskBuffer<4096> buffer;
     bool completion = false;
     std::unique_ptr<HttpcDownloadOutput> output;
@@ -264,9 +265,11 @@ struct HttpcTask {
         if (!request) {
             return false;
         }
-        if (!queryInfo<DWORD>(HTTP_QUERY_FLAG_NUMBER | HTTP_QUERY_STATUS_CODE)) {
+        auto code = queryInfo<DWORD>(HTTP_QUERY_FLAG_NUMBER | HTTP_QUERY_STATUS_CODE);
+        if (!code) {
             return false;
         }
+        statusCode = *code;
         auto wszContentLength = queryInfo<std::array<wchar_t, 20>>(HTTP_QUERY_CONTENT_LENGTH);
         if (wszContentLength) {
             std::array<char, 20> szContentLength;
@@ -413,6 +416,8 @@ struct HttpcSession {
         lua_setfield(L, -2, "id");
         lua_pushstring(L, "completion");
         lua_setfield(L, -2, "type");
+        lua_pushinteger(L, task->statusCode);
+        lua_setfield(L, -2, "code");
         task->output->completion(L);
         response.push(seri_pack(L, 0, NULL));
     }
