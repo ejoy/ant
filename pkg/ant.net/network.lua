@@ -62,10 +62,10 @@ function net.new(selector)
 			update = nil,
 		}
 		function obj.update(event)
-			if event & SELECT_READ then
+			if (event & SELECT_READ) ~= 0 then
 				wakeup(obj.rd)
 				obj.rd = nil
-			elseif event & SELECT_WRITE then
+			elseif (event & SELECT_WRITE) ~= 0 then
 				wakeup(obj.wt)
 				obj.wt = nil
 			end
@@ -103,7 +103,7 @@ function net.new(selector)
 			return false, err
 		end
 		local ok, err = fd:connect(addr, port)
-		if not ok then
+		if err then
 			return false, err
 		end
 		local id = new_fd(fd)
