@@ -74,16 +74,4 @@ function idi.update_instance_buffer(e, instancememory, instancenum)
     end
 end
 
---TODO: need remove
-function idi.indirect_type(e)
-    w:extend(e, "stonemountain?in road?in")
-    if e.stonemountain then
-        return "mountain"
-    end
-
-    if e.road then
-        return "road"
-    end
-end
-
 return idi

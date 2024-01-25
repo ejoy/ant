@@ -26,6 +26,8 @@ DEFINE_TEST "outline"
 DEFINE_TEST "draw_indirect"
 DEFINE_TEST "blur_scene"
 
+DEFINE_TEST "empty"
+
 -- NOT work right now
 --DEFINE_TEST "decal"
 --DEFINE_TEST "point_light"

@@ -12,7 +12,7 @@ local fbmgr		= require "framebuffer_mgr"
 local sampler = renderpkg.sampler
 
 local bgfx = require "bgfx"
-local shadowcfg	= require "shadow.shadowcfg"
+local shadowcfg	= ecs.require "shadow.shadowcfg"
 
 local icompute = ecs.require "ant.render|compute.compute"
 local imaterial = ecs.require "ant.asset|material"

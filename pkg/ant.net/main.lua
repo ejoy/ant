@@ -58,6 +58,7 @@ init()
 
 return {
 	listen = api "listen",
+	connect = api "connect",
 	accept = api "accept",
 	recv = api "recv",
 	send = api "send",

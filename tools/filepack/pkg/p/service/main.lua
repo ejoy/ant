@@ -93,15 +93,15 @@ end
 local writer = {}
 
 function writer.zip(bundlepath)
-    local zippath = bundlepath / "vfs.zip"
-    local rootpath = bundlepath / "vfs_root"
+    local zippath = bundlepath / "00.zip"
+    local hashpath = bundlepath / "00.hash"
     local m = {}
     function m.root(content)
-        local f <close> = assert(io.open(rootpath:string(), "wb"))
+        local f <close> = assert(io.open(hashpath:string(), "wb"))
         f:write(content)
     end
     if fs.exists(zippath) then
-        local oldzippath = bundlepath / "vfs.old.zip"
+        local oldzippath = bundlepath / "00.old.zip"
         fs.rename(zippath, oldzippath)
         local oldzip = zip.open(oldzippath:string(), "r")
         if oldzip then

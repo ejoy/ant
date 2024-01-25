@@ -42,10 +42,10 @@ end
 
 function m:data_changed()
     for _, msg in ipairs(httpc.select(session)) do
-        if  msg.type == "completion" then
+        if msg.type == "completion" then
             local task = Tasks[msg.id]
-            print("`" .. task.url .. "` completion.")
-            task[msg.id] = nil
+            print("`" .. task.url .. "` completion. code="..msg.code..".")
+            Tasks[msg.id] = nil
         elseif msg.type == "progress" then
             local task = Tasks[msg.id]
             if msg.total then
