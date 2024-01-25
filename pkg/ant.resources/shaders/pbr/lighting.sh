@@ -126,7 +126,7 @@ vec3 calc_direct_light(in material_info mi)
     if (u_light_count[0] > 1)
     {
         //TODO: other lights not check visibility right now
-        light_grid g = get_light_grid(mi.fragcoord);
+        light_grid g = get_light_grid(mi.frag_coord);
         for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
         {
             uint ilight = get_light_index(ii);

@@ -1,0 +1,17 @@
+---
+policy:
+  ant.render|light
+data:
+  scene:
+    t: {0, 10, 0, 1}
+    r: {0.5, 0.0, 0.0}
+  light:
+    color: {0.8, 0.8, 0.8, 1}
+    intensity: 12000
+    intensity_unit: candela
+    range: 15
+    inner_radian:  0.8
+    outter_radian: 0.9
+    type: spot
+  visible: true
+
