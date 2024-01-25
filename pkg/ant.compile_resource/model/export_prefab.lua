@@ -317,6 +317,20 @@ local function serialize_prefab(status, data)
     return data
 end
 
+local function compile_animation(status, skeleton, name, file)
+    if not lfs.path(file):equal_extension ".anim" then
+        return serialize_path(file)
+    end
+    local anim2ozz = require "model.anim2ozz"
+    local vfs_fastio = require "vfs_fastio"
+    local loc_fastio = require "fastio"
+    local skecontent = skeleton:sub(1,1) == "/"
+         and vfs_fastio.readall_f(status.setting, skeleton)
+         or loc_fastio.readall_f((status.output / "animations" / skeleton):string())
+    anim2ozz(status.setting, skecontent, file, (status.output / "animations" / (name..".bin")):string())
+    return serialize.path(name..".bin")
+end
+
 return function (status)
     local glbdata = status.glbdata
     local math3d = status.math3d
@@ -413,12 +427,12 @@ return function (status)
 
     if status.animation then
         utility.save_txt_file(status, "animations/animation.ozz", status.animation, function (t)
-            if t.animations then
-                for name, file in pairs(t.animations) do
-                    t.animations[name] = serialize_path(file)
-                end
-            end
             if t.skeleton then
+                if t.animations then
+                    for name, file in pairs(t.animations) do
+                        t.animations[name] = compile_animation(status, t.skeleton, name, file)
+                    end
+                end
                 t.skeleton = serialize_path(t.skeleton)
             end
             if t.meshskin then

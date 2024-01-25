@@ -1,8 +1,7 @@
 local datalist 	= require "datalist"
 local ozz 		= require "ozz"
-local fastio 	= require "fastio"
-local lfs 		= require "bee.filesystem"
 local math3d 	= require "math3d"
+local vfs_fastio = require "vfs_fastio"
 local mathpkg 	= import_package "ant.math"
 local mc, mu 	= mathpkg.constant, mathpkg.util
 
@@ -150,14 +149,10 @@ local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inh
 	end
 end
 
-local function readdatalist(filepath)
-	return datalist.parse(fastio.readall_f(filepath), function(args)
+return function (setting, skecontent, input, output)
+	local anim_list = datalist.parse(vfs_fastio.readall_f(setting.vfs, input), function(args)
 		return args[2]
 	end)
-end
-
-return function(filepath, output, skepath)
-	local anim_list = readdatalist(filepath)
 	local ske_anim
 	for _, anim in ipairs(anim_list) do
 		if anim.type == "ske" then
@@ -165,7 +160,7 @@ return function(filepath, output, skepath)
 			break
 		end
 	end
-	local ske = ozz.load(fastio.readall_f(skepath))
+	local ske = ozz.load(skecontent)
 	local raw_animation = ozz.RawAnimation()
 	local joint_anims = ske_anim.target_anims
 	local sample_ratio = ske_anim.sample_ratio
@@ -187,5 +182,3 @@ return function(filepath, output, skepath)
 	local ozzhandle = raw_animation:build()
 	ozz.save(ozzhandle, output)
 end
-
--- anim2ozz("xxx.anim", folder / "xxx.bin", folder / "skeleton.bin")
