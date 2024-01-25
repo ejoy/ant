@@ -31,11 +31,11 @@ local function pbr_spheres()
     local roughness_step = 1.0 / num_samples
     local basecolor = {0.8, 0.2, 0.2, 1.0}
     local movestep = 2
-    local x = 0.0
+    local x = num_samples / 2 * -movestep
 
     for row=1, num_samples do
         local metallic = row * metallic_step
-        local z = 0.0
+        local z = num_samples / 2 * -movestep
         for col=1, num_samples do
             local roughness = col * roughness_step
             create_pbr_entity(math3d.vector(x, 0.0, z, 1.0), basecolor, metallic, roughness)
