@@ -257,8 +257,7 @@ static int session(lua_State* L) {
         config = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:[NSString stringWithUTF8String:config_name.data()]];
     }
     SessionDelegate * delegate = [[SessionDelegate  alloc] init];
-    NSOperationQueue* operation = [[NSOperationQueue alloc] init];
-    NSURLSession* session = [NSURLSession sessionWithConfiguration:config delegate:delegate delegateQueue:operation];
+    NSURLSession* session = [NSURLSession sessionWithConfiguration:config delegate:delegate delegateQueue:nil];
     bee::lua::newudata<HttpcSession>(L, delegate, session);
     return 1;
 }
