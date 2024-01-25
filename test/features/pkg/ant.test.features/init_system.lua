@@ -16,7 +16,8 @@ local create_instance = ecs.require "util".create_instance
 local init_loader_sys   = ecs.system 'init_system'
 
 function init_loader_sys:init()
-    create_instance "/pkg/ant.test.features/assets/entities/light.prefab"
+    --create_instance "/pkg/ant.test.features/assets/entities/directional_light.prefab"
+    create_instance "/pkg/ant.test.features/assets/entities/sky_with_ibl.prefab"
 end
 
 local function init_camera()
@@ -38,7 +39,7 @@ end
 
 function init_loader_sys:init_world()
     init_camera()
-    init_light()
+    --init_light()
 end
 
 function init_loader_sys:camera_usage()

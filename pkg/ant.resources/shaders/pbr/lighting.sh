@@ -24,11 +24,11 @@ float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inn
     return smoothstep(outter_cone, inner_cone, cosv);	//outter_cone is less than inner_cone
 }
 
-light_grid get_light_grid(vec4 fragcoord)
+light_grid get_light_grid(in material_info mi)
 {
     light_grid g;
 #ifdef CLUSTER_SHADING
-	uint cluster_idx = which_cluster(fragcoord);
+	uint cluster_idx = which_cluster(mi.frag_coord.xy, mi.distanceVS);
 
     uint cluster_count = u_cluster_size.x * u_cluster_size.y * u_cluster_size.z;
     cluster_idx = clamp(cluster_idx, 0, cluster_count-1);
@@ -126,7 +126,7 @@ vec3 calc_direct_light(in material_info mi)
     if (u_light_count[0] > 1)
     {
         //TODO: other lights not check visibility right now
-        light_grid g = get_light_grid(mi.frag_coord);
+        light_grid g = get_light_grid(mi);
         for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
         {
             uint ilight = get_light_index(ii);
