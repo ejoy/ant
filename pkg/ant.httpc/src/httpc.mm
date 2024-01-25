@@ -68,11 +68,9 @@ typedef bool(^CompletionHandler)(NSURL*);
     lua_setfield(L, -2, "id");
     lua_pushstring(L, "completion");
     lua_setfield(L, -2, "type");
-    lua_pushinteger(L, 200);
-    lua_setfield(L, -2, "code");
     self.channel->push(seri_pack(L, 0, NULL));
 }
-- (void)sendCompletionMessage:(TaskDelegate*)taskDelegate content:(NSString*)content {
+- (void)sendCompletionMessage:(TaskDelegate*)taskDelegate statusCode:(NSInteger)statusCode {
     lua_State* L = self.L;
     if (!L) {
         return;
@@ -83,7 +81,22 @@ typedef bool(^CompletionHandler)(NSURL*);
     lua_setfield(L, -2, "id");
     lua_pushstring(L, "completion");
     lua_setfield(L, -2, "type");
-    lua_pushinteger(L, 200);
+    lua_pushinteger(L, statusCode);
+    lua_setfield(L, -2, "code");
+    self.channel->push(seri_pack(L, 0, NULL));
+}
+- (void)sendCompletionMessage:(TaskDelegate*)taskDelegate statusCode:(NSInteger)statusCode content:(NSString*)content {
+    lua_State* L = self.L;
+    if (!L) {
+        return;
+    }
+    lua_settop(L, 0);
+    lua_newtable(L);
+    lua_pushinteger(L, [taskDelegate id]);
+    lua_setfield(L, -2, "id");
+    lua_pushstring(L, "completion");
+    lua_setfield(L, -2, "type");
+    lua_pushinteger(L, statusCode);
     lua_setfield(L, -2, "code");
     lua_pushstring(L, [content UTF8String]);
     lua_setfield(L, -2, "content");
@@ -180,6 +193,12 @@ didFinishDownloadingToURL:(NSURL *)location {
         return;
     }
     self.tasks[downloadTask] = nil;
+
+    NSInteger statusCode = 200;
+    NSURLResponse* response = [downloadTask response];
+    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+        statusCode = ((NSHTTPURLResponse*)response).statusCode;
+    }
     if ([taskDelegate file] != nil) {
         NSError* error;
         NSFileManager* fileManager = [NSFileManager defaultManager];
@@ -188,7 +207,7 @@ didFinishDownloadingToURL:(NSURL *)location {
             [self sendErrorMessage:taskDelegate error: error];
             return;
         }
-        [self sendCompletionMessage:taskDelegate];
+        [self sendCompletionMessage:taskDelegate statusCode:statusCode];
     }
     else {
         NSError* error;
@@ -197,7 +216,7 @@ didFinishDownloadingToURL:(NSURL *)location {
             [self sendErrorMessage:taskDelegate error: error];
             return;
         }
-        [self sendCompletionMessage:taskDelegate content:content];
+        [self sendCompletionMessage:taskDelegate statusCode:statusCode content:content];
     }
 }
 
