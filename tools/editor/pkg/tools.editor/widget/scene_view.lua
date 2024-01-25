@@ -38,8 +38,8 @@ local function can_delete(eid)
     end
     local can_delete = true
     if as_main_camera_mode() then
-        local e <close> = world:entity(eid, "camera?in")
-        if e.camera then
+        local e <close> = world:entity(eid, "camera?in animation?in")
+        if e.camera or e.animation then
             can_delete = false
         else
             local children = hierarchy:get_node(eid).children
