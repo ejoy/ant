@@ -27,9 +27,10 @@ DEFINE_TEST "draw_indirect"
 DEFINE_TEST "blur_scene"
 
 DEFINE_TEST "empty"
+DEFINE_TEST "point_light"
 
 -- NOT work right now
 --DEFINE_TEST "decal"
---DEFINE_TEST "point_light"
+
 --DEFINE_TEST "camera_recorder"
 --DEFINE_TEST "water"

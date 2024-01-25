@@ -2,9 +2,14 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local iom   = ecs.require "ant.objcontroller|obj_motion"
+local common    = ecs.require "common"
+local iom       = ecs.require "ant.objcontroller|obj_motion"
+local util      = ecs.require "util"
+local PC        = util.proxy_creator()
+local imesh     = ecs.require "ant.asset|mesh"
+local ientity 	= ecs.require "ant.render|components.entity"
 
-local plt_sys = ecs.system "point_light_test_system"
+local plt_sys = common.test_system "point_light"
 
 function plt_sys.init_world()
     local pl_pos = {
@@ -28,22 +33,38 @@ function plt_sys.init_world()
     }
 
     for _, p in ipairs(pl_pos) do
-        world:create_instance {
+        PC:create_instance {
             prefab = "/pkg/ant.test.features/assets/entities/light_point.prefab",
             on_ready = function(pl)
-                iom.set_position(pl.root, pl)
+                local root<close> = world:entity(pl.tag['*'][1], "scene:update")
+                iom.set_position(root, p)
             end
         }
     end
 
-    world:create_instance {
-        prefab = "/pkg/ant.test.features/assets/entities/pbr_cube.prefab",
+    PC:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			scene 		= {
+				s = {25, 1, 25},
+            },
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
+			visible_state= "main_view",
+			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+		}
+	}
+
+    PC:create_instance {
+        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
         on_ready = function (ce)
-            iom.set_position(ce.root, {0, 0, 0, 1})
+            local root<close> = world:entity(ce.tag['*'][1], "scene:update")
+            iom.set_position(root, {0, 0, 0, 1})
         end
     }
-    
-    world:create_instance {
-        prefab = "/pkg/ant.test.features/assets/entities/light_directional.prefab",
-    }
+end
+
+function plt_sys:exit()
+    PC:clear()
 end
