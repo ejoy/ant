@@ -226,7 +226,7 @@ function m:clone(eid)
     self:add_entity(new_entity, pid, dsttpl)
     world:pub {"EntityEvent", "tag", new_entity, {}, { name }}
 end
-local timeline_id = 0
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -276,7 +276,6 @@ function m:create(what, config)
             light_gizmo.init()
         end
     elseif what == "timeline" then
-        timeline_id = timeline_id + 1
         local template = {
             policy = {
                 "ant.timeline|timeline",
@@ -288,7 +287,7 @@ function m:create(what, config)
                     key_event = {}
                 },
             },
-            tag = { "timeline" .. timeline_id }
+            tag = { "timeline" }
         }
         local tmp = utils.deep_copy(template)
         tmp.data.on_ready = function (e)

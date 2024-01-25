@@ -52,7 +52,7 @@ function mount.read(repo)
 		end
 	end
 	if __ANT_EDITOR__ then
-		local rootpath = fs.path(__ANT_EDITOR__)
+		local rootpath = fs.absolute(__ANT_EDITOR__)
 		local cfg = loadmount(rootpath)
 		for i = 1, #cfg.mount, 2 do
 			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]

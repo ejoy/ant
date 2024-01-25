@@ -263,17 +263,6 @@ local geom_type = {
     "sphere",
     "torus",
     "plane",
-    -- "cube(prefab)",
-    -- "cone(prefab)",
-    -- "cylinder(prefab)",
-    -- "sphere(prefab)",
-    -- "torus(prefab)",
-    -- "plane(prefab)",
-}
-local collider_type = {
-    "sphere",
-    "box",
-    --"capsule"
 }
 
 function m.get_title()
@@ -311,9 +300,6 @@ function m.show()
             if ImGui.MenuItem("Camera") then
                 world:pub { "Create", "camera"}
             end
-            -- if ImGui.MenuItem("Slot") then
-            --     world:pub { "Create", "slot"}
-            -- end
             if ImGui.MenuItem("Timeline") then
                 world:pub { "Create", "timeline"}
             end

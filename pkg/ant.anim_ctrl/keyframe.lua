@@ -66,7 +66,6 @@ end
 
 function ika.play(e, desc)
 	ika.stop(e)
-	-- w:extend(e, "keyframe?in")
 	if not e.keyframe then
 		return
 	end
@@ -79,20 +78,11 @@ end
 
 local ma_sys = ecs.system "keyframe_system"
 function ma_sys:component_init()
-    -- for e in w:select "INIT keyframe:in" do
-    --     e.keyframe.play_state = {
-    --         current_time = 0,
-    --         target_e = nil,
-	-- 		loop = false,
-	-- 		playing = false
-    --     }
-    -- end
 end
 
 local timer = ecs.require "ant.timer|timer_system"
 
 local function step_keyframe(e, delta_time, absolute)
-	-- w:extend(e, "keyframe:in")
 	local kf_anim = e.keyframe
 	if not kf_anim.play_state.playing and not absolute then
 		return
@@ -106,11 +96,11 @@ local function step_keyframe(e, delta_time, absolute)
 			local count = #v0
 			local ret = {}
 			for i = 1, count do
-				ret[#ret + 1] = v0[i] + (v1[i] - v0[i]) * f
+				ret[#ret + 1] = mu.lerp(v0[i], v1[i], f)
 			end
 			return ret
 		else
-			return v0 + (v1 - v0) * f
+			return mu.lerp(v0, v1, f)
 		end
 	end
 	local function update_value(time)

@@ -11,8 +11,8 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local imaterial = ecs.require "ant.asset|material"
 local mathpkg	= import_package "ant.math"
-local aio = import_package "ant.io"
-local mc	= mathpkg.constant
+local aio       = import_package "ant.io"
+local mc	    = mathpkg.constant
 local math3d    = require "math3d"
 
 local imodifier = {}
@@ -52,16 +52,19 @@ function modifier_sys:start_frame()
 end
 function modifier_sys:update_modifier()
     local delta_time = timer.delta() * 0.001
-    local to_remove = {}
+    local to_destroy = {}
     for e in w:select "modifier:in eid:in" do
-        local rm = e.modifier:update(delta_time)
-        if rm then
-            to_remove[#to_remove + 1] = e.eid
+        local destroy = e.modifier:update(delta_time)
+        if destroy then
+            to_destroy[#to_destroy + 1] = e.eid
         end
     end
-    for _, eid in ipairs(to_remove) do
-        imodifier.delete(auto_destroy_map[eid])
-        auto_destroy_map[eid] = nil
+    for _, eid in ipairs(to_destroy) do
+        local m = auto_destroy_map[eid]
+        if m then
+            imodifier.delete(m)
+            auto_destroy_map[eid] = nil
+        end
     end
 end
 
@@ -374,8 +377,10 @@ function imodifier.start(m, desc, auto_destroy)
     if not m then
         return
     end
-    desc.destroy = true
-    auto_destroy_map[m.eid] = m
+    desc.destroy = auto_destroy
+    if auto_destroy then
+        auto_destroy_map[m.eid] = m
+    end
     world:pub {"modifier", m, desc}
 end
 
@@ -387,7 +392,6 @@ function imodifier.stop(m)
     e.modifier.continue = false
 end
 
-local ivs = ecs.require "ant.render|visible_state"
 function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local anim_prefab = world:create_instance {
 		prefab = filename,
@@ -399,21 +403,21 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
                     filename:gsub('[^|]*', function (wd) path_list[#path_list+1] = wd end)
                     if path_list[1] then
                         --xxx.glb
-                        iani.load_events(eid, string.sub(path_list[1], 1, -5) .. ".event")
+                        iani.load_events(eid, path_list[1]:sub(1, -5) .. ".event")
                     else
                         ---xxx.prefab
-                        iani.load_events(eid, string.sub(filename, 1, -8) .. ".event")
+                        iani.load_events(eid, filename:sub(1, -8) .. ".event")
                     end
                 elseif e.mesh then
-                    -- ivs.set_state(e, "main_view", false)
                     w:remove(eid)
                 end
             end
         end
 	}
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
-            for _, e in ipairs(anim_prefab.tag["*"]) do
-                local anim <close> = world:entity(e, "animation?in anim_ctrl?in")
+            if anim_prefab.tag["anim_ctrl"] then
+                local eid = anim_prefab.tag["anim_ctrl"][1]
+                local anim <close> = world:entity(eid, "animation?in anim_ctrl?in")
                 if anim.animation and anim.anim_ctrl then
                     return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
                 end
