@@ -1,23 +1,22 @@
-local datalist  = require "datalist"
-local ozz = require "ozz"
-local aio = import_package "ant.io"
-local math3d = require "math3d"
-local mathpkg = import_package "ant.math"
-local mc, mu = mathpkg.constant, mathpkg.util
+local datalist 	= require "datalist"
+local ozz 		= require "ozz"
+local fastio 	= require "fastio"
+local lfs 		= require "bee.filesystem"
+local math3d 	= require "math3d"
+local mathpkg 	= import_package "ant.math"
+local mc, mu 	= mathpkg.constant, mathpkg.util
 
 local TYPE_LINEAR <const>	= 1
 local TYPE_REBOUND <const>	= 2
 local TYPE_SHAKE <const>	= 3
-
 local TWEEN_SAMPLE <const>	= 16
-
-local DIR_X <const> 	= 1
-local DIR_Y <const> 	= 2
-local DIR_Z <const> 	= 3
-local DIR_XY <const>	= 4
-local DIR_YZ <const>	= 5
-local DIR_XZ <const> 	= 6
-local DIR_XYZ <const> 	= 7
+local DIR_X <const> 		= 1
+local DIR_Y <const> 		= 2
+local DIR_Z <const> 		= 3
+local DIR_XY <const>		= 4
+local DIR_YZ <const>		= 5
+local DIR_XZ <const> 		= 6
+local DIR_XYZ <const> 		= 7
 
 local Dir = {
 	math3d.ref(math3d.vector{1,0,0}),
@@ -151,44 +150,42 @@ local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inh
 	end
 end
 
-local function absolute_path(path, base)
-	if path:sub(1,1) == "/" then
-		return path
-	end
-	return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+local function readdatalist(filepath)
+	return datalist.parse(fastio.readall_f(filepath), function(args)
+		return args[2]
+	end)
 end
 
-return {
-	loader = function (filename)
-		local anim_list = datalist.parse(aio.readall(filename))
-		local ske_anim
-		for _, anim in ipairs(anim_list) do
-			if anim.type == "ske" then
-				ske_anim = anim
-				break
-			end
+return function(filepath, output, skepath)
+	local anim_list = readdatalist(filepath)
+	local ske_anim
+	for _, anim in ipairs(anim_list) do
+		if anim.type == "ske" then
+			ske_anim = anim
+			break
 		end
-		local ske = ozz.load(aio.readall(absolute_path(ske_anim.skeleton, filename)))
-		local raw_animation = ozz.RawAnimation()
-		local joint_anims = ske_anim.target_anims
-		local sample_ratio = ske_anim.sample_ratio
-		local flags = {}
-		raw_animation:setup(ske, ske_anim.duration)
-		for _, anim in ipairs(joint_anims) do
-			flags[ske:joint_index(anim.target_name)] = true
-			raw_animation:clear_prekey(ske, anim.target_name)
-			push_anim_key(raw_animation, ske, sample_ratio, anim.target_name, anim.clips, anim.inherit and anim.inherit[3])
-		end
-		local ske_count = ske:num_joints()
-		for i = 1, ske_count do
-			if not flags[i] then
-				local joint_name = ske:joint_name(i)
-				raw_animation:clear_prekey(ske, joint_name)
-				push_anim_key(raw_animation, ske, sample_ratio, joint_name)
-			end
-		end
-		return raw_animation:build()
-	end,
-	unloader = function (res)
 	end
-}
+	local ske = ozz.load(fastio.readall_f(skepath))
+	local raw_animation = ozz.RawAnimation()
+	local joint_anims = ske_anim.target_anims
+	local sample_ratio = ske_anim.sample_ratio
+	local flags = {}
+	raw_animation:setup(ske, ske_anim.duration)
+	for _, anim in ipairs(joint_anims) do
+		flags[ske:joint_index(anim.target_name)] = true
+		raw_animation:clear_prekey(ske, anim.target_name)
+		push_anim_key(raw_animation, ske, sample_ratio, anim.target_name, anim.clips, anim.inherit and anim.inherit[3])
+	end
+	local ske_count = ske:num_joints()
+	for i = 1, ske_count do
+		if not flags[i] then
+			local joint_name = ske:joint_name(i)
+			raw_animation:clear_prekey(ske, joint_name)
+			push_anim_key(raw_animation, ske, sample_ratio, joint_name)
+		end
+	end
+	local ozzhandle = raw_animation:build()
+	ozz.save(ozzhandle, output)
+end
+
+-- anim2ozz("xxx.anim", folder / "xxx.bin", folder / "skeleton.bin")
