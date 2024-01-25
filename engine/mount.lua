@@ -23,7 +23,7 @@ local function loadmount(rootpath)
 	return datalist.parse(MountConfig)
 end
 
-function mount.add(repo, vpath, lpath)
+local function addmount(repo, vpath, lpath)
 	if not fs.exists(lpath) then
 		return
 	end
@@ -45,7 +45,7 @@ function mount.read(repo)
 		local cfg = loadmount(rootpath)
 		for i = 1, #cfg.mount, 2 do
 			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
-			mount.add(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
+			addmount(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
 				engine = fs.current_path():string(),
 				project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
 			}))
@@ -57,7 +57,7 @@ function mount.read(repo)
 		for i = 1, #cfg.mount, 2 do
 			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
 			if not lpath:match "%%engine%%" then
-				mount.add(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
+				addmount(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
 					project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
 				}))
 			end

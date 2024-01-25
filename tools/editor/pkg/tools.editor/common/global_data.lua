@@ -2,7 +2,7 @@ local m = {}
 local fs                = require "filesystem"
 local lfs               = require "bee.filesystem"
 local vfs               = require "vfs"
-local access            = dofile "/engine/editor/vfs_access.lua"
+local access            = require "common.vfs_access"
 m.repo_access = access
 
 m.editor_root           = lfs.path(vfs.repopath())
