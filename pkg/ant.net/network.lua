@@ -111,7 +111,7 @@ function net.new(selector)
 		obj.wt = coroutine.running()
 		selector:event_mod(obj.fd, SELECT_WRITE)
 		ltask.wait(obj.wt)
-		return true
+		return true, id
 	end
 
 	local function add_event(obj, flag)
