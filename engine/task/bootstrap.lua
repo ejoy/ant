@@ -57,6 +57,22 @@ end
 
 local function init(c)
 	config = c
+
+	local directory = require "directory"
+	local log_path = directory.app_path()
+	if not config.debuglog then
+		config.debuglog = (log_path / "debug.log"):string()
+	end
+	if not config.crashlog then
+		config.crashlog = (log_path / "crash.log"):string()
+	end
+	if not config.logger then
+		config.logger = { "logger" }
+	end
+	if not config.worker then
+		config.worker = 4
+	end
+
 	config.lua_path = nil
 	config.lua_cpath = ""
 	config.service_path = "${package}/service/?.lua;/engine/task/service/?.lua"
