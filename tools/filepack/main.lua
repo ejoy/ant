@@ -1,7 +1,7 @@
 package.path = "/engine/?.lua"
 require "bootstrap"
 
-dofile "/engine/task/bootstrap.lua" {
+dofile "/engine/ltask.lua" {
     bootstrap = { "p|main", arg },
     exclusive = { "timer", "subprocess" },
 }

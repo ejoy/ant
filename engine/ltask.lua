@@ -20,7 +20,7 @@ local function root_thread()
 	local init_msg, sz = ltask.pack("init", {
 		lua_path = config.lua_path,
 		lua_cpath = config.lua_cpath,
-		service_path = "/engine/task/service/root.lua",
+		service_path = "/engine/service/root.lua",
 		name = "root",
 		args = {config}
 	})
@@ -75,9 +75,9 @@ local function init(c)
 
 	config.lua_path = nil
 	config.lua_cpath = ""
-	config.service_path = "${package}/service/?.lua;/engine/task/service/?.lua"
+	config.service_path = "${package}/service/?.lua;/engine/service/?.lua"
 
-	local servicelua = readall "/engine/task/service/service.lua"
+	local servicelua = readall "/engine/service/service.lua"
 
 	local initstr = ""
 
@@ -154,7 +154,7 @@ end
 end
 
 local function io_switch()
-	local servicelua = "/engine/task/service/service.lua"
+	local servicelua = "/engine/service/service.lua"
 	local mem = vfs.read(servicelua)
 	vfs.send("SWITCH", servicelua, mem)
 end

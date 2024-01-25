@@ -3,7 +3,7 @@ local function start(initargs)
     if not __ANT_RUNTIME__ then
         exclusive[#exclusive+1] = "subprocess"
     end
-    dofile "/engine/task/bootstrap.lua" {
+    dofile "/engine/ltask.lua" {
         bootstrap = { "ant.window|boot", initargs },
         exclusive = exclusive,
     }
