@@ -10,6 +10,10 @@ local text = {text = ""}
 
 local DropfilesEvent = world:sub { "dropfiles" }
 
+function m:init()
+    ImGui.SetViewClear("C", 0x000000ff, 1.0, 0.0)
+end
+
 function m:data_changed()
     for _, e in DropfilesEvent:unpack() do
         print("dropfiles:", e.files[1])
@@ -23,12 +27,4 @@ function m:data_changed()
         end
     end
     ImGui.End()
-end
-
-local bgfx = require "bgfx"
-local rhwi = import_package "ant.hwi"
-
-function m:end_frame()
-	local viewId = rhwi.viewid_get("imgui_eidtor" .. 1)
-    bgfx.set_view_clear(viewId, "C", 0x000000ff, 1.0, 0.0)
 end

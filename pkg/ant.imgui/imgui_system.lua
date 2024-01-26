@@ -7,6 +7,7 @@ local assetmgr = import_package "ant.asset"
 local inputmgr = import_package "ant.inputmgr"
 local window = import_package "ant.window"
 local PM = require "programan.client"
+local viewIdPool = require "viewid_pool"
 
 local m = ecs.system 'imgui_system'
 
@@ -28,13 +29,12 @@ function m:init_system()
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_font.fx.prog)
 	assetmgr.material_mark(imgui_image.fx.prog)
-	local viewId = rhwi.viewid_generate("imgui_eidtor" .. 1, "uiruntime")
 	ImGui.InitRender {
 		fontProg = PM.program_get(imgui_font.fx.prog),
 		imageProg = PM.program_get(imgui_image.fx.prog),
 		fontUniform = imgui_font.fx.uniforms.s_tex.handle,
 		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
-		viewIdPool = { viewId },
+		viewIdPool = viewIdPool,
 	}
 	if platform.os == "windows" then
 		ImGui.FontAtlasAddFont {

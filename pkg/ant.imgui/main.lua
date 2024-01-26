@@ -2,6 +2,8 @@ local aio = import_package "ant.io"
 local fontutil = require "font.util"
 local fastio = require "fastio"
 local ImGui = require "imgui"
+local bgfx = require "bgfx"
+local viewIdPool = require "viewid_pool"
 local ImGuiIO = ImGui.io
 
 local FontAtlas = {}
@@ -94,6 +96,12 @@ end
 function ImGui.DispatchEvent(e)
     local func = ImGuiEvent[e.type]
     return func and func(e)
+end
+
+function ImGui.SetViewClear(...)
+    for _, viewid in ipairs(viewIdPool) do
+        bgfx.set_view_clear(viewid, ...)
+    end
 end
 
 return ImGui
