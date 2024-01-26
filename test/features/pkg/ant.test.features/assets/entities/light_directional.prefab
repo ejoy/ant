@@ -1,14 +1,13 @@
 ---
-policy:
-  ant.render|light
 data:
-  scene:
-    r: {0.78, 0.1, 0}
-    t: {0, 5, 0, 1}
-  visible: true
   light:
-    color: {1, 1, 1, 1}
-    intensity: 120000
+    color: {1, 0.9251054525375366, 0.876447856426239, 1}
+    intensity: 130000
     intensity_unit: lux
     type: directional
   make_shadow: true
+  scene:
+    r: {0.7, 0.1, 0.0}
+  visible: true
+policy:
+  ant.render|light

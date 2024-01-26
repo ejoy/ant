@@ -544,6 +544,7 @@ void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
     if fx.setting.lighting == "on" then
         ac1 "mi.V = normalize(u_eyepos.xyz - varyings.posWS.xyz);"
         ac1 "mi.screen_uv = calc_normalize_fragcoord(varyings.frag_coord.xy);"
+        ac1 "mi.frag_coord = varyings.frag_coord;"
 
         assert(properties.u_pbr_factor)
 

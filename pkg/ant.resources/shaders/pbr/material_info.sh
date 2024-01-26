@@ -36,7 +36,7 @@ struct material_info
     vec3 T;
     vec3 B;
 
-    vec4 fragcoord;
+    vec4 frag_coord;
     vec2 screen_uv;
 #ifdef USING_LIGHTMAP
     vec2 lightmap_uv;
