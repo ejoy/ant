@@ -133,7 +133,7 @@ local block <const> = {
     "/pkg/ant.resources.binary/test",
 }
 
-local resource <const> = { "material" , "glb" , "texture" }
+local resource <const> = { "material" , "glb" , "gltf", "texture" }
 
 local game_whitelist <const> = {
 	"ant",

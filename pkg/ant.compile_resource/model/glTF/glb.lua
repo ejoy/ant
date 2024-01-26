@@ -1,12 +1,10 @@
-local JSON = import_package "ant.json"
-local jsonDecode = JSON.decode
-local jsonEncode = JSON.encode
+local json = import_package "ant.json"
 
 local function decode_chunk(f, checktype)
-    local header = f:read(8)
-    local length, type = ("<I4c4"):unpack(header)
-    assert(checktype == type)
-    return f:read(length)
+	local header = f:read(8)
+	local length, type = ("<I4c4"):unpack(header)
+	assert(checktype == type)
+	return f:read(length)
 end
 
 local function aligh_data(data, alignbytes, align_char)
@@ -27,23 +25,21 @@ local function encode_chunk(f, datatype, data, length)
 end
 
 local function decode(filename)
-    local f <close> = assert(io.open(filename, "rb"))
-    local header = f:read(12)
-    local magic, version, _ = ("<c4I4I4"):unpack(header)
-    assert(magic == "glTF")
-    local json = decode_chunk(f, "JSON")
+	local f <close> = assert(io.open(filename, "rb"))
+	local header = f:read(12)
+	local magic, version, _ = ("<c4I4I4"):unpack(header)
+	assert(magic == "glTF")
+	assert(version == 2)
+	local info = json.decode(decode_chunk(f, "JSON"))
 	local bin = decode_chunk(f, "BIN\0")
 	assert(f:read(1) == nil)
-    return {
-        version = version,
-        info 	= jsonDecode(json),
-        bin 	= bin,
-    }
+	info.buffers[1].bin = bin
+	return info
 end
 
 local function encode(filename, data)
 	local f <close> = assert(io.open(filename:string(), "wb"))
-	local jsondata = jsonEncode(data.info)
+	local jsondata = json.encode(data.info)
 	local align_json, align_json_length = aligh_data(jsondata, 4, " ")
 	local align_bin, align_bin_length = aligh_data(data.bin, 4, "\0")
 	local headersize <const> = 12

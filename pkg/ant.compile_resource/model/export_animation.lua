@@ -3,7 +3,7 @@ local GLTF2OZZ = require "tool_exe_path"("gltf2ozz")
 local subprocess = require "subprocess"
 
 return function (status)
-    local gltfscene = status.glbdata.info
+    local gltfscene = status.gltfscene
     local skins = gltfscene.skins
     if skins == nil then
         return

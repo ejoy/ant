@@ -125,20 +125,19 @@ end
 
 return function (status)
     local output = status.output
-    local glbdata = status.glbdata
     local setting = status.setting
-    local glbscene, glbbin = glbdata.info, glbdata.bin
-    local materials = glbscene.materials
+    local gltfscene = status.gltfscene
+    local materials = gltfscene.materials
     if not materials then
         return
     end
 
     local EXPORTED_FILES = {}
-    local images = glbscene.images
-    local bufferviews = glbscene.bufferViews
-    local buffers = glbscene.buffers
-    local textures = glbscene.textures
-    local samplers = glbscene.samplers
+    local images = gltfscene.images
+    local bufferviews = gltfscene.bufferViews
+    local buffers = gltfscene.buffers
+    local textures = gltfscene.textures
+    local samplers = gltfscene.samplers
     local function export_image(imgidx)
         local img = images[imgidx+1]
         local ext = image_extension[img.mimeType]
@@ -155,12 +154,17 @@ return function (status)
         end
 
         local function serialize_image_file(imagename)
+            if img.uri then
+                local c = status.gltf_fetch(img.uri)
+                utility.save_file(status, imagename, c)
+                return
+            end
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
             local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
             assert((endidx - 1) <= buf.byteLength)
-            local c = glbbin:sub(begidx, endidx)
+            local c = buf.bin:sub(begidx, endidx)
             utility.save_file(status, imagename, c)
         end
 
@@ -321,7 +325,7 @@ return function (status)
 
         --Blender will always export glb with 'doubleSided' as true
         local function is_Blender_exporter()
-            local asset = glbscene.asset
+            local asset = gltfscene.asset
             if asset then
                 local g = asset.generator
                 if g then

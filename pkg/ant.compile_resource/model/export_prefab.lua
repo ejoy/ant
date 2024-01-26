@@ -334,9 +334,8 @@ local function compile_animation(status, skeleton, name, file)
 end
 
 return function (status)
-    local glbdata = status.glbdata
     local math3d = status.math3d
-    local gltfscene = glbdata.info
+    local gltfscene = status.gltfscene
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]
 

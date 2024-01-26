@@ -33,7 +33,8 @@ local function to_ib(indexbin, flag, count)
 	}
 end
 
- local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor, ib_table)
+ local function fetch_ib_buffer(gltfscene, index_accessor, ib_table)
+	local buffers = gltfscene.buffers
 	local bufferViews = gltfscene.bufferViews
 
 	local bvidx = index_accessor.bufferView+1
@@ -51,7 +52,8 @@ end
 	local n = index_accessor.count
 	local size = n * elemsize
 
-	local indexbin = gltfbin:sub(offset+1, offset+size)
+	local buf = buffers[bv.buffer+1]
+	local indexbin = buf.bin:sub(offset+1, offset+size)
 	local num_triangles = n // 3
 
 	local buffer = {}
@@ -89,7 +91,7 @@ local function create_prim_bounding(math3d, meshscene, prim)
 	end
 end
 
-local function fetch_skininfo(gltfscene, skin, bindata)
+local function fetch_skininfo(gltfscene, skin)
 	local ibm_idx 	= skin.inverseBindMatrices
 	local ibm 		= gltfscene.accessors[ibm_idx+1]
 	local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
@@ -100,8 +102,9 @@ local function fetch_skininfo(gltfscene, skin, bindata)
 	for i = 1, #joints do
 		jointsbin[i] = string.pack("<I2", joints[i])
 	end
+	local buf = gltfscene.buffers[ibm_bv.buffer+1]
 	return {
-		inverse_bind_matrices = bindata:sub(start_offset, end_offset-1),
+		inverse_bind_matrices = buf.bin:sub(start_offset, end_offset-1),
 		joints = table.concat(jointsbin),
 	}
 end
@@ -347,7 +350,9 @@ local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
 	return vertices
 end
 
-local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, meshexport)
+local function fetch_vb_buffers(math3d, gltfscene, prim, ib_table, meshexport)
+	--TODO: Remove the hard code here
+	local gltfbin = gltfscene.buffers[1].bin
 	assert(prim.mode == nil or prim.mode == 4)
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 
@@ -450,7 +455,8 @@ local function redirect_skin_joints(gltfscene, skin, joint_index, scenetree, joi
 	return joint_index
 end
 
-local function export_skinbin(status, gltfscene, bindata)
+local function export_skinbin(status)
+	local gltfscene = status.gltfscene
 	status.skin = {}
 	local skins = gltfscene.skins
 	if skins == nil then
@@ -463,7 +469,7 @@ local function export_skinbin(status, gltfscene, bindata)
 		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, status.scenetree, joint_trees)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = skinname .. ".skinbin"
-		utility.save_bin_file(status, "animations/"..resname, fetch_skininfo(gltfscene, skin, bindata))
+		utility.save_bin_file(status, "animations/"..resname, fetch_skininfo(gltfscene, skin))
 		status.skin[skinidx] = resname
 	end
 
@@ -563,7 +569,8 @@ local function save_meshbin_files(status, resname, meshgroup)
 end
 
 
- local function export_meshbin(status, gltfscene, bindata)
+ local function export_meshbin(status)
+	local gltfscene = status.gltfscene
 	local math3d = status.math3d
 	status.mesh = {}
 	local meshes = gltfscene.meshes
@@ -578,11 +585,11 @@ end
 			local group = {}
 			local indices_accidx = prim.indices
 			if indices_accidx then
-				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
+				group.ib = fetch_ib_buffer(gltfscene, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
 
 			local meshexport = {}
-			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table, meshexport)
+			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, prim, ib_table, meshexport)
 			local bb = create_prim_bounding(math3d, gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
@@ -640,7 +647,6 @@ end
 end ]]
 
 return function (status)
-	local glbdata = status.glbdata
-	export_meshbin(status, glbdata.info, glbdata.bin)
-	export_skinbin(status, glbdata.info, glbdata.bin)
+	export_meshbin(status)
+	export_skinbin(status)
 end

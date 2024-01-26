@@ -16,7 +16,7 @@ local function init_setting(vfs, setting)
     lfs.create_directories(respath)
     lfs.create_directories(scpath)
     lfs.create_directories(shaderpath)
-    for _, ext in ipairs {"glb", "texture", "material"} do
+    for _, ext in ipairs {"glb", "gltf", "texture", "material"} do
         lfs.create_directory(respath / ext)
     end
     return {
@@ -38,6 +38,7 @@ end
 
 local COMPILER <const> = {
     glb = require "model.glb",
+    gltf = require "model.glb",
     texture = require "texture.convert",
     material = require "material.convert",
 }
