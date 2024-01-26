@@ -5,7 +5,6 @@ lm:import "ozz-animation.lua"
 lm:lua_source "ozz" {
     deps = {
         "ozz-animation-base",
-        "ozz-animation-geometry",
         "ozz-animation-runtime",
     },
     includes = {
