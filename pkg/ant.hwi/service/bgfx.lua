@@ -384,9 +384,8 @@ function S.maxfps(v)
     if not v or v >= 10 then
         maxfps = v
     end
-    --TODO: editor does not have "ant.window|window"
     if platform.os == "ios" then
-        local ServiceWindow = ltask.queryservice "ant.window|window"
+        local ServiceWindow = ltask.queryservice "ant.window|ios_window"
         ltask.call(ServiceWindow, "maxfps", maxfps)
     end
     return maxfps
