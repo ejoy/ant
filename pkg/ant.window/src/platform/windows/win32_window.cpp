@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <bee/platform/win/unicode.h>
+#include <bee/nonstd/unreachable.h>
 #include "../../window.h"
 
 #define CLASSNAME L"ANTCLIENT"
@@ -78,11 +79,14 @@ struct DropManager : public IDropTarget {
 	}
 };
 
-static DropManager g_dropmanager;
-static bool minimized = false;
-static UINT g_keyboard_codepage;
-static ImGuiMouseCursor g_cursor = ImGuiMouseCursor_Arrow;
-static HWND g_window = NULL;
+struct WindowData {
+	HWND             hWnd = NULL;
+	ImGuiMouseCursor MouseCursor = ImGuiMouseCursor_Arrow;
+	UINT             KeyboardCodePage = 0;
+	DropManager      DropManager;
+	bool             Minimized = false;
+};
+static WindowData G;
 
 static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -100,8 +104,8 @@ static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 static void UpdateKeyboardCodePage() {
 	HKL keyboard_layout = ::GetKeyboardLayout(0);
 	LCID keyboard_lcid = MAKELCID(HIWORD(keyboard_layout), SORT_DEFAULT);
-	if (::GetLocaleInfoA(keyboard_lcid, (LOCALE_RETURN_NUMBER | LOCALE_IDEFAULTANSICODEPAGE), (LPSTR)&g_keyboard_codepage, sizeof(g_keyboard_codepage)) == 0) {
-		g_keyboard_codepage = CP_ACP;
+	if (::GetLocaleInfoA(keyboard_lcid, (LOCALE_RETURN_NUMBER | LOCALE_IDEFAULTANSICODEPAGE), (LPSTR)&G.KeyboardCodePage, sizeof(G.KeyboardCodePage)) == 0) {
+		G.KeyboardCodePage = CP_ACP;
 	}
 }
 
@@ -289,7 +293,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mousewheel msg;
 		msg.delta = 1.0f * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
-		get_screen_xy(hWnd, lParam, &msg.x, &msg.y);
+		get_xy(lParam, &msg.x, &msg.y);
 		ant::window::input_message(cb, msg);
 		break;
 	}
@@ -310,31 +314,47 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		ant::window::input_message(cb, msg);
 		break;
 	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		struct ant::window::msg_mouseclick msg;
-		msg.what = ant::window::mouse_button::left;
-		msg.state = (message == WM_LBUTTONDOWN) ? ant::window::mouse_state::down : ant::window::mouse_state::up;
-		get_xy(lParam, &msg.x, &msg.y);
-		ant::window::input_message(cb, msg);
-		break;
-	}
 	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP: {
+	case WM_RBUTTONDOWN:{
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouseclick msg;
-		msg.what = ant::window::mouse_button::middle;
-		msg.state = (message == WM_MBUTTONDOWN) ? ant::window::mouse_state::down : ant::window::mouse_state::up;
+		switch (message) {
+		case WM_LBUTTONDOWN:
+			msg.what = ant::window::mouse_button::left;
+			break;
+		case WM_MBUTTONDOWN:
+			msg.what = ant::window::mouse_button::middle;
+			break;
+		case WM_RBUTTONDOWN:
+			msg.what = ant::window::mouse_button::right;
+			break;
+		default:
+			std::unreachable();
+		}
+		msg.state = ant::window::mouse_state::down;
 		get_xy(lParam, &msg.x, &msg.y);
 		ant::window::input_message(cb, msg);
 		break;
 	}
-	case WM_RBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_MBUTTONUP:
 	case WM_RBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouseclick msg;
-		msg.what = ant::window::mouse_button::right;
-		msg.state = (message == WM_RBUTTONDOWN) ? ant::window::mouse_state::down : ant::window::mouse_state::up;
+		switch (message) {
+		case WM_LBUTTONUP:
+			msg.what = ant::window::mouse_button::left;
+			break;
+		case WM_MBUTTONUP:
+			msg.what = ant::window::mouse_button::middle;
+			break;
+		case WM_RBUTTONUP:
+			msg.what = ant::window::mouse_button::right;
+			break;
+		default:
+			std::unreachable();
+		}
+		msg.state = ant::window::mouse_state::up;
 		get_xy(lParam, &msg.x, &msg.y);
 		ant::window::input_message(cb, msg);
 		break;
@@ -401,12 +421,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		int x = LOWORD(lParam);
 		int y = HIWORD(lParam);
 		if (wParam == SIZE_MINIMIZED) {
-			minimized = true;
+			G.Minimized = true;
 			ant::window::input_message(cb, {ant::window::suspend::will_suspend});
 			ant::window::input_message(cb, {ant::window::suspend::did_suspend});
 		}
-		else if (minimized) {
-			minimized = false;
+		else if (G.Minimized) {
+			G.Minimized = false;
 			ant::window::input_message(cb, {ant::window::suspend::will_resume});
 			ant::window::input_message(cb, {ant::window::suspend::did_resume});
 		}
@@ -429,7 +449,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			}
 		} else {
 			wchar_t wch = 0;
-			::MultiByteToWideChar(g_keyboard_codepage, MB_PRECOMPOSED, (char*)&wParam, 1, &wch, 1);
+			::MultiByteToWideChar(G.KeyboardCodePage, MB_PRECOMPOSED, (char*)&wParam, 1, &wch, 1);
 			struct ant::window::msg_inputchar msg;
 			msg.what = ant::window::inputchar_type::native;
 			msg.code = (uint16_t)wch;
@@ -447,7 +467,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	}
 	case WM_SETCURSOR:
 		if (LOWORD(lParam) == HTCLIENT) {
-			UpdateMouseCursor(g_cursor);
+			UpdateMouseCursor(G.MouseCursor);
 			return 1;
 		}
 		return 0;
@@ -521,16 +541,16 @@ void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 	if (wnd == NULL) {
 		return nullptr;
 	}
-	g_window = wnd;
+	G.hWnd = wnd;
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
-	g_dropmanager.Register(wnd, cb);
+	G.DropManager.Register(wnd, cb);
 	UpdateKeyboardCodePage();
 	return (void*)wnd;
 }
 
 void peekwindow_close() {
-	g_dropmanager.Revoke();
+	G.DropManager.Revoke();
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
 
@@ -540,9 +560,6 @@ bool peekwindow_peek_message() {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
 				return false;
-			if ((msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) && msg.wParam == VK_PROCESSKEY) {
-				msg.wParam = ImmGetVirtualKey(msg.hwnd);
-			}
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
@@ -553,9 +570,9 @@ bool peekwindow_peek_message() {
 }
 
 void peekwindow_set_cursor(int cursor) {
-	g_cursor = (ImGuiMouseCursor)cursor;
+	G.MouseCursor = (ImGuiMouseCursor)cursor;
 }
 
 void peekwindow_set_title(bee::zstring_view title) {
-    ::SetWindowTextW(g_window, bee::win::u2w(title).c_str());
+    ::SetWindowTextW(G.hWnd, bee::win::u2w(title).c_str());
 }

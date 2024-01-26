@@ -187,8 +187,11 @@ extern "C"
 __declspec(dllexport)
 #endif
 int luaopen_filedialog(lua_State* L) {
-    if (HRESULT hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED); FAILED(hr)) {
-        luaL_error(L, "CoInitialize failed: %p", hr);
+    HRESULT hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (hr != RPC_E_CHANGED_MODE) {
+        if (FAILED(hr)) {
+            luaL_error(L, "CoInitialize failed: %p", hr);
+        }
     }
 
     static luaL_Reg lib[] = {
