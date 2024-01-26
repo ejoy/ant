@@ -14,6 +14,9 @@ local m = ecs.system "main_system"
 local entities
 
 function m:init_world()
+    world:create_instance {
+        prefab = "/pkg/ant.test.simple/resource/light.prefab"
+    }
     local prefab = world:create_instance {
         prefab = "/pkg/ant.test.simple/resource/miner-1.glb|mesh.prefab",
         on_ready = function ()

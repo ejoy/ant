@@ -1,5 +1,2 @@
-system "init_system"
-    .implement "init_system.lua"
-
 system "main_system"
     .implement "main_system.lua"
