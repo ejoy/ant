@@ -1005,17 +1005,36 @@ wInputText(lua_State *L) {
 	bool change;
 	flags |= ImGuiInputTextFlags_CallbackResize;
 	int top = lua_gettop(L);
-	if (flags & ImGuiInputTextFlags_Multiline) {
-		float width = (float)read_field_float(L, "width", 0);
-		float height = (float)read_field_float(L, "height", 0);
-		change = ImGui::InputTextMultiline(label, ebuf->buf, ebuf->size, ImVec2(width, height), flags, edit_callback, ebuf);
+	if (hint) {
+		change = ImGui::InputTextWithHint(label, hint, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
 	} else {
-		if (hint) {
-			change = ImGui::InputTextWithHint(label, hint, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
-		} else {
-			change = ImGui::InputText(label, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
-		}
+		change = ImGui::InputText(label, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
 	}
+	if (lua_gettop(L) != top) {
+		lua_error(L);
+	}
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wInputTextMultiline(lua_State *L) {
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
+	int t = lua_getfield(L, INDEX_ARGS, "text");
+	if (t == LUA_TSTRING || t == LUA_TNIL) {
+		create_new_editbuf(L);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, INDEX_ARGS, "text");
+	}
+	struct editbuf * ebuf = (struct editbuf *)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
+	ebuf->L = L;
+	int top = lua_gettop(L);
+	float width = (float)read_field_float(L, "width", 0);
+	float height = (float)read_field_float(L, "height", 0);
+	flags |= ImGuiInputTextFlags_CallbackResize;
+	bool change = ImGui::InputTextMultiline(label, ebuf->buf, ebuf->size, ImVec2(width, height), flags, edit_callback, ebuf);
 	if (lua_gettop(L) != top) {
 		lua_error(L);
 	}
@@ -3012,6 +3031,7 @@ luaopen_imgui(lua_State *L) {
 		{ "ColorPicker", wColorPicker },
 		{ "ColorButton", wColorButton },
 		{ "InputText", wInputText },
+		{ "InputTextMultiline", wInputTextMultiline },
 		{ "InputFloat", wInputFloat },
 		{ "InputInt", wInputInt },
 		{ "Text", wText },
