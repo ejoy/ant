@@ -15,7 +15,7 @@ extern "C" {
 #include <map>
 #include <string_view>
 #include <bx/platform.h>
-#include "imgui_renderer.h"
+#include "backend/imgui_impl_bgfx.h"
 #include "imgui_platform.h"
 #include "fastio.h"
 
@@ -452,7 +452,7 @@ static int lInitFont(lua_State *L) {
 		luaL_error(L, "Create font failed.");
 		return 0;
 	}
-	rendererBuildFont();
+	ImGui_ImplBgfx_CreateFontsTexture();
 	return 0;
 }
 
@@ -1581,7 +1581,7 @@ wListBox(lua_State *L) {
 
 static ImTextureID getTextureId(lua_State* L, int idx) {
 	int lua_handle = (int)luaL_checkinteger(L, idx);
-	if (auto id = rendererGetTextureID(lua_handle)) {
+	if (auto id = ImGui_ImplBgfx_GetTextureID(lua_handle)) {
 		return *id;
 	}
 	luaL_error(L, "Invalid handle type TEXTURE");
@@ -2801,7 +2801,7 @@ lInitRender(lua_State* L) {
 	}
 	lua_pop(L, 1);
 
-	if (!rendererCreate(initargs)) {
+	if (!ImGui_ImplBgfx_Init(initargs)) {
 		return luaL_error(L, "Create renderer failed");
 	}
 	return 0;
@@ -2815,7 +2815,7 @@ lDestroyPlatform(lua_State* L) {
 
 static int
 lDestroyRenderer(lua_State* L) {
-	rendererDestroy();
+	ImGui_ImplBgfx_Shutdown();
 	return 0;
 }
 
@@ -2835,7 +2835,7 @@ lEndFrame(lua_State* L){
 static int
 lRender(lua_State* L) {
 	ImGui::Render();
-	rendererDrawData(ImGui::GetMainViewport());
+	ImGui_ImplBgfx_RenderDrawData(ImGui::GetMainViewport());
 	ImGui::UpdatePlatformWindows();
 	ImGui::RenderPlatformWindowsDefault();
 	return 0;

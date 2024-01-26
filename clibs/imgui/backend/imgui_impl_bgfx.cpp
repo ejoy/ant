@@ -9,7 +9,7 @@
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 #include "imgui_platform.h"
-#include "imgui_renderer.h"
+#include "imgui_impl_bgfx.h"
 
 struct RendererViewport {
 	int viewid = -1;
@@ -48,7 +48,7 @@ static uint16_t bgfxGetHandle(int id) {
 	return (uint16_t)(id & 0xffff);
 }
 
-void rendererDrawData(ImGuiViewport* viewport) {
+void ImGui_ImplBgfx_RenderDrawData(ImGuiViewport* viewport) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	const ImDrawData* drawData = viewport->DrawData;
 	const ImVec2& clip_size = drawData->DisplaySize;
@@ -140,11 +140,11 @@ void rendererDrawData(ImGuiViewport* viewport) {
 	BGFX(encoder_end)(encoder);
 }
 
-static void rendererFreeViewId(int viewid) {
+static void ImGui_ImplBgfx_FreeViewId(int viewid) {
 	g_ctx.viewIdPool.push_back(viewid);
 }
 
-static int rendererAllocViewId() {
+static int ImGui_ImplBgfx_AllocViewId() {
 	if (g_ctx.viewIdPool.empty()) {
 		return -1;
 	}
@@ -153,8 +153,8 @@ static int rendererAllocViewId() {
 	return viewid;
 }
 
-static void rendererCreateWindow(ImGuiViewport* viewport) {
-	int viewid = rendererAllocViewId();
+static void ImGui_ImplBgfx_CreateWindow(ImGuiViewport* viewport) {
+	int viewid = ImGui_ImplBgfx_AllocViewId();
 	if (viewid == -1) {
 		return;
 	}
@@ -166,7 +166,7 @@ static void rendererCreateWindow(ImGuiViewport* viewport) {
 		BGFX_TEXTURE_FORMAT_D24S8
 		);
 	if (!BGFX_HANDLE_IS_VALID(fb)) {
-		rendererFreeViewId(viewid);
+		ImGui_ImplBgfx_FreeViewId(viewid);
 		return;
 	}
 	RendererViewport* ud = new RendererViewport;
@@ -176,21 +176,21 @@ static void rendererCreateWindow(ImGuiViewport* viewport) {
 	BGFX(set_view_frame_buffer)(ud->viewid, fb);
 }
 
-static void rendererDestroyWindow(ImGuiViewport* viewport) {
+static void ImGui_ImplBgfx_DestroyWindow(ImGuiViewport* viewport) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	if (ud) {
 		if (!BGFX_HANDLE_IS_VALID(ud->fb)) {
 			BGFX(destroy_frame_buffer)(ud->fb);
 		}
 		if (ud->viewid != -1) {
-			rendererFreeViewId(ud->viewid);
+			ImGui_ImplBgfx_FreeViewId(ud->viewid);
 		}
 		delete ud;
 		viewport->RendererUserData = nullptr;
 	}
 }
 
-static void rendererSetWindowSize(ImGuiViewport* viewport, ImVec2 size) {
+static void ImGui_ImplBgfx_SetWindowSize(ImGuiViewport* viewport, ImVec2 size) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	bgfx_frame_buffer_handle_t fb = BGFX(create_frame_buffer_from_nwh)(
 		platformGetHandle(viewport),
@@ -207,14 +207,14 @@ static void rendererSetWindowSize(ImGuiViewport* viewport, ImVec2 size) {
 	ud->fb = fb;
 }
 
-static void rendererRenderWindow(ImGuiViewport* viewport, void*) {
-	rendererDrawData(viewport);
+static void ImGui_ImplBgfx_RenderWindow(ImGuiViewport* viewport, void*) {
+	ImGui_ImplBgfx_RenderDrawData(viewport);
 }
 
-static void rendererSwapBuffers(ImGuiViewport* viewport, void*) {
+static void ImGui_ImplBgfx_SwapBuffers(ImGuiViewport* viewport, void*) {
 }
 
-bool rendererCreate(RendererInitArgs& args) {
+bool ImGui_ImplBgfx_Init(RendererInitArgs& args) {
 	if (0
 		|| bgfxGetHandleType(args.fontProg) != BGFX_HANDLE_PROGRAM
 		|| bgfxGetHandleType(args.imageProg) != BGFX_HANDLE_PROGRAM
@@ -238,13 +238,13 @@ bool rendererCreate(RendererInitArgs& args) {
 	io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
 	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-	platform_io.Renderer_CreateWindow = rendererCreateWindow;
-	platform_io.Renderer_DestroyWindow = rendererDestroyWindow;
-	platform_io.Renderer_SetWindowSize = rendererSetWindowSize;
-	platform_io.Renderer_RenderWindow = rendererRenderWindow;
-	platform_io.Renderer_SwapBuffers = rendererSwapBuffers;
+	platform_io.Renderer_CreateWindow = ImGui_ImplBgfx_CreateWindow;
+	platform_io.Renderer_DestroyWindow = ImGui_ImplBgfx_DestroyWindow;
+	platform_io.Renderer_SetWindowSize = ImGui_ImplBgfx_SetWindowSize;
+	platform_io.Renderer_RenderWindow = ImGui_ImplBgfx_RenderWindow;
+	platform_io.Renderer_SwapBuffers = ImGui_ImplBgfx_SwapBuffers;
 
-	int viewid = rendererAllocViewId();
+	int viewid = ImGui_ImplBgfx_AllocViewId();
 	if (viewid == -1) {
 		return false;
 	}
@@ -255,7 +255,7 @@ bool rendererCreate(RendererInitArgs& args) {
 	return true;
 }
 
-static void rendererDestroyFont() {
+static void ImGui_ImplBgfx_DestroyFontsTexture() {
 	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
 	ImTextureID texid = atlas->TexID;
 	if (NULL != texid) {
@@ -266,16 +266,16 @@ static void rendererDestroyFont() {
 	}
 }
 
-void rendererDestroy() {
-	rendererDestroyFont();
+void ImGui_ImplBgfx_Shutdown() {
+	ImGui_ImplBgfx_DestroyFontsTexture();
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	delete ud;
 	viewport->RendererUserData = nullptr;
 }
 
-void rendererBuildFont() {
-	rendererDestroyFont();
+void ImGui_ImplBgfx_CreateFontsTexture() {
+	ImGui_ImplBgfx_DestroyFontsTexture();
 
 	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
 	uint8_t* data;
@@ -299,7 +299,7 @@ void rendererBuildFont() {
 	atlas->ClearTexData();
 }
 
-std::optional<ImTextureID> rendererGetTextureID(int tex) {
+std::optional<ImTextureID> ImGui_ImplBgfx_GetTextureID(int tex) {
 	if (bgfxGetHandleType(tex) != BGFX_HANDLE_TEXTURE) {
 		return std::nullopt;
 	}
