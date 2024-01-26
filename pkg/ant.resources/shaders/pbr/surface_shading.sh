@@ -4,10 +4,17 @@
 // code from filament|shading_model_standard.fs
 
 #include "common/math.sh"
-
+#include "direct_specular.sh"
 #ifndef SHADING_WITH_HIGH_QUALITY
 #define SHADING_WITH_HIGH_QUALITY 1
 #endif //
+
+#define USE_DIRECT_SPECULAR_LUT
+
+#ifdef USE_DIRECT_SPECULAR_LUT
+SAMPLER2D(s_direct_specular,                13);
+#endif // USE_DIRECT_SPECULAR_LUT
+
 
 //------------------------------------------------------------------------------
 // Specular BRDF implementations
@@ -38,10 +45,10 @@ float V_SmithGGXCorrelated(float roughness, float NdotV, float NdotL) {
 }
 
 float V_SmithGGXCorrelated_Fast(float roughness, float NdotV, float NdotL) {
-    // Hammon 2017, "PBR Diffuse Lighting for GGX+Smith Microsurfaces"
-    float v = 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, roughness);
-    //return saturateMediump(v);
-    return saturate(v);
+    float a = roughness;
+    float GGXV = NdotL * (NdotV * (1.0 - a) + a);
+    float GGXL = NdotV * (NdotL * (1.0 - a) + a);
+    return 0.5 / (GGXV + GGXL);
 }
 
 float V_Neubelt(float NdotV, float NdotL) {
@@ -70,11 +77,7 @@ float distribution(float roughness, float NdotH) {
 }
 
 float visibility(float roughness, float NdotV, float NdotL) {
-#if SHADING_WITH_HIGH_QUALITY
-    return V_SmithGGXCorrelated(roughness, NdotV, NdotL);
-#else //!SHADING_WITH_HIGH_QUALITY
-    return V_SmithGGXCorrelated_Fast(roughness, NdotV, NdotL);
-#endif //SHADING_WITH_HIGH_QUALITY
+return V_SmithGGXCorrelated_Fast(roughness, NdotV, NdotL);
 }
 
 vec3 fresnel(vec3 f0, float LdotH) {
@@ -86,14 +89,23 @@ vec3 fresnel(vec3 f0, float LdotH) {
 #endif //SHADING_WITH_HIGH_QUALITY
 }
 
+float G1V(float dotNV, float k)
+{
+	return 1.0f/(dotNV*(1.0f-k)+k);
+}
+
 vec3 specular_lobe(material_info mi, light_info light, vec3 h,
         float NdotH, float LdotH) {
-
-    float D = distribution(mi.roughness, NdotH);
-    float V = visibility(mi.roughness, mi.NdotV, mi.NdotL);
-    vec3  F = fresnel(mi.f0, LdotH);
-
-    return (D * V) * F;
+//http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/
+#ifdef USE_DIRECT_SPECULAR_LUT
+	float D = texture2D(s_direct_specular, vec2(NdotH, mi.roughness)).x;
+    vec2 FV_helper = texture2D(s_direct_specular, vec2(LdotH, mi.roughness)).yz;
+#else !USE_DIRECT_SPECULAR_LUT
+    float D = LightingFuncGGX_D(NdotH, mi.roughness);
+    vec2 FV_helper = LightingFuncGGX_FV(LdotH, mi.roughness);
+#endif // USE_DIRECT_SPECULAR_LUT 
+	vec3 FV = mi.f0 * FV_helper.x + vec3_splat(FV_helper.y);
+	return mi.NdotL * D * FV;
 }
 
 ///////// diffuse

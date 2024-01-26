@@ -100,7 +100,10 @@ local SYS_ATTRIBS = {
 	s_ssao				= texture_value(9, "SAMPLER2D"),
 	--postprocess
 	u_reverse_pos_param	= uniform_value(ZERO),
-	u_jitter            = uniform_value(ZERO)
+	u_jitter            = uniform_value(ZERO),
+
+	--- direct specular D F V
+	s_direct_specular = texture_value(13, "SAMPLER2D"),
 }
 
 return SYS_ATTRIBS

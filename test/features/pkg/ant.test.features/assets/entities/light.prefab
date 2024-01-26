@@ -36,3 +36,12 @@ data:
   visible: true
 policy:
   ant.render|light
+---
+data:
+  direct_specular:
+    sample_size:
+      dot: 512
+      roughness: 128
+    material: /pkg/ant.resources/materials/build_directspecular.material
+policy:
+  ant.render|direct_specular

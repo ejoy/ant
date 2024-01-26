@@ -1,0 +1,12 @@
+fx:
+    cs: /pkg/ant.resources/shaders/pbr/cs_build_directspecular.sc
+    macros:
+        "USE_DIRECT_SPECULAR_LUT=1"
+    setting:
+        lighting: off
+properties:
+    s_LUT_write:
+        stage: 0
+        mip: 0
+        access: w
+        image: /pkg/ant.resources/textures/default.texture

@@ -1,0 +1,10 @@
+system "direct_specular_system"
+    .implement "direct_specular/direct_specular.lua"
+
+policy "direct_specular"
+    .component "direct_specular"
+
+component "direct_specular"
+    .type "lua"
+
+component "direct_specular_builder"
