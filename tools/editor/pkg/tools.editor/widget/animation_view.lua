@@ -113,10 +113,6 @@ local function to_runtime_event(ke)
 end
 
 local function anim_group_delete(anim_name)
-    local info = hierarchy:get_node_info(anim_eid)
-    local td = info.template.data
-    local animation_map = td.animation
-    animation_map[anim_name] = nil
     local e <close> = world:entity(anim_eid, "animation:in")
     e.animation.status[anim_name] = nil
     prefab_mgr:on_patch_animation(anim_eid, anim_name)
@@ -703,7 +699,7 @@ function m.show()
                 end
                 ImGui.SameLine()
                 if ImGui.Button("...") then
-                    local localpath = uiutils.get_open_file_path("Select Animation", "bin")
+                    local localpath = uiutils.get_open_file_path("Select Animation", "anim")
                     if localpath then
                         anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
                     end
