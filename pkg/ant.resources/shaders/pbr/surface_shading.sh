@@ -9,7 +9,7 @@
 #define SHADING_WITH_HIGH_QUALITY 1
 #endif //
 
-#define USE_DIRECT_SPECULAR_LUT
+//#define USE_DIRECT_SPECULAR_LUT
 
 #ifdef USE_DIRECT_SPECULAR_LUT
 SAMPLER2D(s_direct_specular,                13);
