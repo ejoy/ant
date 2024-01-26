@@ -186,9 +186,11 @@ function hitch_sys:finish_scene_update()
 
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
+        ig.enable(gid, "view_visible", true)
         for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in" do
             if re.skinning or re.dynamic_mesh then
                 DIRECT_DRAW_GROUPS[gid] = true
+                ig.enable(gid, "view_visible", false)
             end
         end
         ig.enable(gid, "hitch_tag", false)

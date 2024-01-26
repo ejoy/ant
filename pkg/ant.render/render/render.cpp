@@ -272,13 +272,8 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 					auto ro = e.component<component::render_object>();
 					auto iobj = e.component<component::indirect_object>();
 
-					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index)){
-						if (iobj && indirect_draw_valid(iobj)){
-							draw_obj(L, w, ra, ro, iobj, nullptr, cc.transforms);
-						}
-						else{
-							draw_obj(L, w, ra, ro, nullptr, &mats, cc.transforms);
-						}
+					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index) && !iobj){
+						draw_obj(L, w, ra, ro, nullptr, &mats, cc.transforms);
 					}
 
 					const auto eo = e.component<component::efk_object>();
