@@ -10,25 +10,25 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 ### 搭建编译环境
 
 #### MSVC
-- 安装Visual Studio
+- 安装 Visual Studio
 
 #### MINGW
-- 下载并安装[msys2](https://www.msys2.org/)
-- 找到msys2安装目录，用mingw64.exe打开msys2的终端
-- 修改镜像服务器
+- 下载并安装 [msys2](https://www.msys2.org/)
+- 找到 msys2 安装目录，用 mingw64.exe 打开 msys2 的终端
+- 在 msys2 的终端中修改镜像服务器
 ``` bash
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/i686/" > /etc/pacman.d/mirrorlist.mingw32
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/" > /etc/pacman.d/mirrorlist.mingw64
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/msys/\$arch/" > /etc/pacman.d/mirrorlist.msys
 ```
 
-- 把ming64的路径加到环境变量
+- 把 ming64 的路径加到环境变量
 ``` bash
 echo "export MINGW=/mingw64" >> ~/.bash_profile
 echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 ```
 
-- 安装gcc/ninja
+- 安装 gcc/ninja
 ``` bash
 pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-ninja
 ```
