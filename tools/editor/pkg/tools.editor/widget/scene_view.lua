@@ -38,8 +38,8 @@ local function can_delete(eid)
     end
     local can_delete = true
     if as_main_camera_mode() then
-        local e <close> = world:entity(eid, "camera?in")
-        if e.camera then
+        local e <close> = world:entity(eid, "camera?in animation?in")
+        if e.camera or e.animation then
             can_delete = false
         else
             local children = hierarchy:get_node(eid).children
@@ -263,17 +263,6 @@ local geom_type = {
     "sphere",
     "torus",
     "plane",
-    -- "cube(prefab)",
-    -- "cone(prefab)",
-    -- "cylinder(prefab)",
-    -- "sphere(prefab)",
-    -- "torus(prefab)",
-    -- "plane(prefab)",
-}
-local collider_type = {
-    "sphere",
-    "box",
-    --"capsule"
 }
 
 function m.get_title()
@@ -311,9 +300,6 @@ function m.show()
             if ImGui.MenuItem("Camera") then
                 world:pub { "Create", "camera"}
             end
-            -- if ImGui.MenuItem("Slot") then
-            --     world:pub { "Create", "slot"}
-            -- end
             if ImGui.MenuItem("Timeline") then
                 world:pub { "Create", "timeline"}
             end

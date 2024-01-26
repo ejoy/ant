@@ -2,18 +2,9 @@ local m = {}
 local fs                = require "filesystem"
 local lfs               = require "bee.filesystem"
 local vfs               = require "vfs"
-local access            = dofile "/engine/editor/vfs_access.lua"
+local access            = require "common.vfs_access"
 m.repo_access = access
-
-m.editor_root           = lfs.path(vfs.repopath())
-
-local function find_package_name(proj_path, packages)
-    for _, pkg in ipairs(packages) do
-        if pkg.path == proj_path then
-            return pkg.name
-        end
-    end
-end
+m.editor_root = lfs.path(vfs.repopath())
 
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
@@ -22,16 +13,17 @@ local function get_package(entry_path, readmount)
     end
     local packages = {}
     for _, value in ipairs(repo._mountlpath) do
-        if string.sub(tostring(value), -7) == '/engine' then
+        local strvalue = value:string()
+        if strvalue:sub(-7) == '/engine' then
             goto continue
         end
-        if string.sub(tostring(value), -4) ~= '/pkg' then
+        if strvalue:sub(-4) ~= '/pkg' then
             value = value / 'pkg'
         end
         for item in lfs.pairs(value) do
             local _, pkgname = item:string():match'(.*/)(.*)'
             local skip = false
-            if string.sub(pkgname, 1, 4) == "ant." and string.sub(pkgname, 1, 8) ~= "ant.test" then
+            if pkgname:sub(1, 4) == "ant." and pkgname:sub(1, 8) ~= "ant.test" then
                 if not (pkgname == "ant.resources" or pkgname == "ant.resources.binary") then
                     skip = true
                 end
@@ -43,7 +35,6 @@ local function get_package(entry_path, readmount)
         ::continue::
     end
     m.repo = repo
-    --vfs.mount(entry_path:string())
     return packages
 end
 
@@ -51,10 +42,9 @@ function m:update_project_root(rootpath)
     if not rootpath then
         return
     end
-    self.project_root   = lfs.path(rootpath)
-    self.packages       = get_package(lfs.absolute(self.project_root:string()), true)
-    self.package_path   = fs.path(find_package_name(rootpath, self.packages))
-    return self.package_path
+    local fullpath      = lfs.absolute(rootpath)
+    self.project_root   = fullpath
+    self.packages       = get_package(fullpath, true)
 end
 
 function m:lpath_to_vpath(lpath)

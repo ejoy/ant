@@ -76,7 +76,7 @@ bin/msvc/debug/lua.exe test/simple/main.lua
 ### 启动编辑器
 
 ```bash
-bin/msvc/debug/lua.exe tools/editor/main.lua
+bin/msvc/debug/lua.exe tools/editor/main.lua [projectdir] #for example: test/simple
 ```
 
 ### 调试

@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local vfs       = require "vfs"
-local lfs       = require "bee.filesystem"
+local fs        = require "filesystem"
 local fastio    = require "fastio"
 local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
@@ -308,12 +307,11 @@ local function show_current_event()
                         break;
                     end
                 end
-                local files = access.list_files(global_data.repo, bank_path)
                 local bank_files = {
                     bank_path .. "Master.strings.bank",
                     bank_path .. "Master.bank"
                 }
-                for value in pairs(files) do
+                for value in fs.pairs(fs.path(bank_path)) do
                     if string.sub(value, -5) == ".bank" and (value ~= "Master.strings.bank") and (value ~= "Master.bank") then
                         bank_files[#bank_files + 1] = bank_path .. value
                     end

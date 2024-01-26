@@ -20,7 +20,7 @@ local function root_thread()
 	local init_msg, sz = ltask.pack("init", {
 		lua_path = config.lua_path,
 		lua_cpath = config.lua_cpath,
-		service_path = "/engine/task/service/root.lua",
+		service_path = "/engine/service/root.lua",
 		name = "root",
 		args = {config}
 	})
@@ -57,11 +57,27 @@ end
 
 local function init(c)
 	config = c
+
+	local directory = require "directory"
+	local log_path = directory.app_path()
+	if not config.debuglog then
+		config.debuglog = (log_path / "debug.log"):string()
+	end
+	if not config.crashlog then
+		config.crashlog = (log_path / "crash.log"):string()
+	end
+	if not config.logger then
+		config.logger = { "logger" }
+	end
+	if not config.worker then
+		config.worker = 4
+	end
+
 	config.lua_path = nil
 	config.lua_cpath = ""
-	config.service_path = "${package}/service/?.lua;/engine/task/service/?.lua"
+	config.service_path = "${package}/service/?.lua;/engine/service/?.lua"
 
-	local servicelua = readall "/engine/task/service/service.lua"
+	local servicelua = readall "/engine/service/service.lua"
 
 	local initstr = ""
 
@@ -138,7 +154,7 @@ end
 end
 
 local function io_switch()
-	local servicelua = "/engine/task/service/service.lua"
+	local servicelua = "/engine/service/service.lua"
 	local mem = vfs.read(servicelua)
 	vfs.send("SWITCH", servicelua, mem)
 end

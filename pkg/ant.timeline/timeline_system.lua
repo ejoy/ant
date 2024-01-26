@@ -1,10 +1,10 @@
 local ecs = ...
 local world = ecs.world
 local w     = world.w
-local iefk      = ecs.require "ant.efk|efk"
+local iefk	= ecs.require "ant.efk|efk"
 local tl_sys = ecs.system "timeline_system"
-local itl = ecs.require "ant.timeline|timeline"
-local iani = ecs.require "ant.anim_ctrl|state_machine"
+local itl 	= ecs.require "ant.timeline|timeline"
+local iani 	= ecs.require "ant.anim_ctrl|state_machine"
 local imodifier = ecs.require "ant.modifier|modifier"
 
 function itl:start(e, context)
