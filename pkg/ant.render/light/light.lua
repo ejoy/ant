@@ -247,14 +247,16 @@ local function create_light_buffers()
 	local ev = iexposure.exposure(camera)
 
 	local function pack_light(e)
-		local p	= math3d.tovalue(iom.get_position(e))
-		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e)))
+		local dir, pos = math3d.index(e.scene.worldmat, 3, 4)
+		dir = math3d.inverse(dir)
+		local dx, dy, dz = math3d.index(dir, 1, 2, 3)
+		local px, py, pz = math3d.index(pos, 1, 2, 3)
 		local c = e.light.color
 		local t	= e.light.type
 		local enable<const> = 1
 		return ('f'):rep(16):pack(
-			p[1], p[2], p[3], e.light.range or math.maxinteger,
-			d[1], d[2], d[3], enable,
+			px, py, pz, e.light.range or math.maxinteger,
+			dx, dy, dz, enable,
 			c[1], c[2], c[3], 0.0,	-- not use
 			lighttypes[t],
 			e.light.intensity * ev,
@@ -266,10 +268,13 @@ local function create_light_buffers()
 	for e in w:select "directional_light light:in visible scene:in" do
 		lights[#lights+1] = pack_light(e)
 	end
+
+	local culledlightcount = 0
 	for e in w:select "light:in directional_light:absent visible scene:in" do
 		lights[#lights+1] = pack_light(e)
+		culledlightcount = culledlightcount + 1
 	end
-    return lights
+    return lights, culledlightcount
 end
 
 function ilight.use_cluster_shading()
@@ -279,11 +284,11 @@ end
 local light_buffer = bgfx.create_dynamic_vertex_buffer(1, layoutmgr.get "t40".handle, "ra")
 
 local function update_light_buffers()
-	local lights = create_light_buffers()
+	local lights, culledlightcount = create_light_buffers()
 	if #lights ~= 0 then
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
 	end
-	imaterial.system_attrib_update("u_light_count", math3d.vector(#lights, 0, 0, 0))
+	imaterial.system_attrib_update("u_light_count", math3d.vector(#lights, culledlightcount, 0, 0))
 end
 
 function ilight.light_buffer()
