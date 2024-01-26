@@ -18,6 +18,7 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
 local ozz       = require "ozz"
+local ozzoffline = require "ozz.offline"
 local math3d    = require "math3d"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
@@ -786,7 +787,7 @@ local function create_animation(animtype, name, duration, target_anims)
         if animtype == "mtl" or animtype == "srt" then
             raw_anim = {}
         else
-            raw_anim = ozz.RawAnimation()
+            raw_anim = ozzoffline.RawAnimation()
             -- _duration = td,
             -- _sampling_context = ozz.new_sampling_context(1)
             raw_anim:setup(current_skeleton, td)
@@ -1284,7 +1285,7 @@ function m.save(path)
             mount = true
         end
         local e <close> = world:entity(anim_eid, "animation:in")
-        ozz.save(e.animation.status[current_anim.name].handle, bin_file)
+        ozzoffline.save(e.animation.status[current_anim.name].handle, bin_file)
         if mount then
             memfs.update("/" .. lfs.relative(lpath, gd.project_root):string(), lpath:string())
         end

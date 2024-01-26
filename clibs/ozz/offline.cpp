@@ -5,6 +5,8 @@
 
 #include <ozz/animation/offline/animation_builder.h>
 #include <ozz/animation/runtime/skeleton_utils.h>
+#include <ozz/base/io/stream.h>
+#include <ozz/base/io/archive.h>
 
 #include <cstring>
 
@@ -119,13 +121,27 @@ namespace ozzlua::RawAnimation {
 	}
 }
 
-void init_offline(lua_State* L) {
+static int lsave(lua_State* L) {
+	auto& anim = bee::lua::checkudata<ozzAnimation>(L, 1);
+	const char* filename = luaL_checkstring(L, 2);
+	ozz::io::File ofile(filename, "wb");
+	ozz::io::OArchive oa(&ofile);
+	oa << (ozz::animation::Animation&)anim;
+	return 0;
+}
+
+extern "C" int
+luaopen_ozz_offline(lua_State *L) {
+	luaL_checkversion(L);
+	lua_newtable(L);
 	static luaL_Reg lib[] = {
 		{ "RawAnimation",		ozzlua::RawAnimation::create },
 		{ "RawAnimationMt",		ozzlua::RawAnimation::getmetatable },
+		{ "save", lsave },
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L, lib, 0);
+	return 1;
 }
 
 namespace bee::lua {

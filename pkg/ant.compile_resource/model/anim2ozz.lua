@@ -1,5 +1,6 @@
 local datalist 	= require "datalist"
 local ozz 		= require "ozz"
+local ozzoffline = require "ozz.offline"
 local math3d 	= require "math3d"
 local vfs_fastio = require "vfs_fastio"
 local mathpkg 	= import_package "ant.math"
@@ -161,7 +162,7 @@ return function (setting, skecontent, input, output)
 		end
 	end
 	local ske = ozz.load(skecontent)
-	local raw_animation = ozz.RawAnimation()
+	local raw_animation = ozzoffline.RawAnimation()
 	local joint_anims = ske_anim.target_anims
 	local sample_ratio = ske_anim.sample_ratio
 	local flags = {}
@@ -180,5 +181,5 @@ return function (setting, skecontent, input, output)
 		end
 	end
 	local ozzhandle = raw_animation:build()
-	ozz.save(ozzhandle, output)
+	ozzoffline.save(ozzhandle, output)
 end

@@ -3,79 +3,71 @@
 #include <lauxlib.h>
 #include <bgfx/c99/bgfx.h>
 
+int luaopen_android(lua_State* L);
 int luaopen_bee_filesystem(lua_State* L);
+int luaopen_bee_filewatch(lua_State* L);
+int luaopen_bee_platform(lua_State* L);
 int luaopen_bee_select(lua_State* L);
 int luaopen_bee_serialization(lua_State* L);
 int luaopen_bee_socket(lua_State* L);
+int luaopen_bee_subprocess(lua_State* L);
 int luaopen_bee_thread(lua_State* L);
-int luaopen_bee_platform(lua_State* L);
 int luaopen_bee_time(lua_State* L);
 int luaopen_bee_windows(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_datalist(lua_State* L);
-int luaopen_ozz(lua_State* L);
-int luaopen_math3d(lua_State* L);
-int luaopen_math3d_adapter(lua_State* L);
-#ifdef MATH3D_ADAPTER_TEST
-int luaopen_math3d_adapter_test(lua_State *L);
-#endif 
-int luaopen_protocol(lua_State* L);
-int luaopen_luadebug(lua_State* L);
-int luaopen_luadebug_hookmgr(lua_State* L);
-int luaopen_luadebug_stdio(lua_State* L);
-int luaopen_luadebug_visitor(lua_State* L);
-int luaopen_rmlui(lua_State* L);
-int luaopen_window(lua_State* L);
-int luaopen_noise(lua_State *L);
-int luaopen_textureman_client(lua_State *L);
-int luaopen_textureman_server(lua_State *L);
-int luaopen_programan_client(lua_State *L);
-int luaopen_programan_server(lua_State *L);
+int luaopen_ecs_core(lua_State* L);
+int luaopen_ecs_components(lua_State* L);
+int luaopen_ecs_util(lua_State* L);
+int luaopen_efk(lua_State* L);
+int luaopen_effekseer_callback(lua_State* L);
+int luaopen_fastio(lua_State* L);
+int luaopen_filedialog(lua_State* L);
+int luaopen_firmware(lua_State* L);
 int luaopen_fmod(lua_State* L);
 int luaopen_font(lua_State *L);
 int luaopen_font_manager(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
 int luaopen_font_util(lua_State *L);
-int luaopen_efk(lua_State* L);
-int luaopen_effekseer_callback(lua_State* L);
-int luaopen_ltask(lua_State* L);
-int luaopen_ltask_bootstrap(lua_State* L);
-int luaopen_ltask_root(lua_State* L);
-int luaopen_ltask_exclusive(lua_State* L);
-int luaopen_vfs(lua_State* L);
-int luaopen_ecs_core(lua_State* L);
-int luaopen_ecs_components(lua_State* L);
-int luaopen_ecs_util(lua_State* L);
-int luaopen_fastio(lua_State* L);
-int luaopen_material_arena(lua_State *L);
-int luaopen_material_core(lua_State *L);
-int luaopen_render_material(lua_State *L);
-int luaopen_render_queue(lua_State *L);
-int luaopen_system_render(lua_State *L);
-int luaopen_render_stat(lua_State *L);
-int luaopen_motion_sampler(lua_State *L);
-int luaopen_motion_tween(lua_State *L);
+int luaopen_httpc(lua_State *L);
 int luaopen_image(lua_State* L);
 int luaopen_imgui(lua_State* L);
-#if BX_PLATFORM_IOS
-int luaopen_ios(lua_State* L);
-#endif
-#if BX_PLATFORM_ANDROID
-int luaopen_android(lua_State* L);
-#endif
-#if defined(ANT_RUNTIME)
-int luaopen_firmware(lua_State* L);
-#else
-int luaopen_bee_filewatch(lua_State* L);
-int luaopen_bee_subprocess(lua_State* L);
-int luaopen_filedialog(lua_State* L);
 int luaopen_imgui_widgets(lua_State* L);
-#endif
-int luaopen_system_scene(lua_State* L);
+int luaopen_ios(lua_State* L);
+int luaopen_ltask(lua_State* L);
+int luaopen_ltask_bootstrap(lua_State* L);
+int luaopen_ltask_exclusive(lua_State* L);
+int luaopen_ltask_root(lua_State* L);
+int luaopen_luadebug(lua_State* L);
+int luaopen_luadebug_hookmgr(lua_State* L);
+int luaopen_luadebug_stdio(lua_State* L);
+int luaopen_luadebug_visitor(lua_State* L);
+int luaopen_material_arena(lua_State *L);
+int luaopen_material_core(lua_State *L);
+int luaopen_math3d(lua_State* L);
+int luaopen_math3d_adapter(lua_State* L);
+int luaopen_math3d_adapter_test(lua_State *L);
+int luaopen_motion_sampler(lua_State *L);
+int luaopen_motion_tween(lua_State *L);
+int luaopen_noise(lua_State *L);
+int luaopen_ozz(lua_State* L);
+int luaopen_ozz_offline(lua_State* L);
+int luaopen_protocol(lua_State* L);
+int luaopen_programan_client(lua_State *L);
+int luaopen_programan_server(lua_State *L);
+int luaopen_render_material(lua_State *L);
+int luaopen_render_queue(lua_State *L);
+int luaopen_render_stat(lua_State *L);
+int luaopen_rmlui(lua_State* L);
 int luaopen_system_cull(lua_State* L);
+int luaopen_system_render(lua_State *L);
+int luaopen_system_scene(lua_State* L);
+int luaopen_textureman_client(lua_State *L);
+int luaopen_textureman_server(lua_State *L);
+int luaopen_vfs(lua_State* L);
+int luaopen_window(lua_State* L);
 int luaopen_zip(lua_State* L);
-int luaopen_httpc(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -139,6 +131,7 @@ void ant_loadmodules(lua_State* L) {
 #if defined(ANT_RUNTIME)
         { "firmware", luaopen_firmware },
 #else
+        { "ozz.offline", luaopen_ozz_offline },
         { "bee.filewatch", luaopen_bee_filewatch },
         { "bee.subprocess", luaopen_bee_subprocess },
         { "imgui.widgets", luaopen_imgui_widgets },
