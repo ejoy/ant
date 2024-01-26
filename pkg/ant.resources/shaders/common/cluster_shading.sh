@@ -5,6 +5,10 @@
 #include "common/lightdata.sh"
 #include "common/camera.sh"
 
+#ifndef CLUSTER_MAX_LIGHT_COUNT
+#define CLUSTER_MAX_LIGHT_COUNT 8
+#endif //CLUSTER_MAX_LIGHT_COUNT
+
 struct light_grid{
     uint offset;
     uint count;

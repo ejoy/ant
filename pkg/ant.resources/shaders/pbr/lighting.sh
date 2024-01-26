@@ -127,7 +127,9 @@ vec3 calc_direct_light(in material_info mi)
     {
         //TODO: other lights not check visibility right now
         light_grid g = get_light_grid(mi);
-        for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
+        const uint count = min(CLUSTER_MAX_LIGHT_COUNT, g.count);
+        [unroll(CLUSTER_MAX_LIGHT_COUNT)]
+        for (uint ii=g.offset; ii<g.offset + count; ++ii)
         {
             uint ilight = get_light_index(ii);
             color += shading_color(mi, ilight);
