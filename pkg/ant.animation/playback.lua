@@ -19,15 +19,29 @@ function m:animation_playback()
                 local duration = status.handle:duration()
                 local speed = status.speed
                 local ratio = status.ratio + speed * delta / duration
-                if ratio > 1 then
-                    if status.loop then
-                        ratio = ratio - math.floor(ratio)
-                    else
-                        status.play = nil
-                        status.ratio = 0
-                        status.weight = 0
-                        e.animation_changed = true
-                        goto continue
+                if speed < 0 then
+                    if ratio < 0 then
+                        if status.loop then
+                            ratio = ratio - math.floor(ratio)
+                        else
+                            status.play = nil
+                            status.ratio = 1
+                            status.weight = 0
+                            e.animation_changed = true
+                            goto continue
+                        end
+                    end
+                else
+                    if ratio > 1 then
+                        if status.loop then
+                            ratio = ratio - math.floor(ratio)
+                        else
+                            status.play = nil
+                            status.ratio = 0
+                            status.weight = 0
+                            e.animation_changed = true
+                            goto continue
+                        end
                     end
                 end
                 playing = true

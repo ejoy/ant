@@ -77,7 +77,7 @@ function m:data_changed()
                     do
                         local value = {
                             [1] = status.speed and math.floor(status.speed*100) or 100,
-                            min = 0,
+                            min = -500,
                             max = 500,
                             format = "%d%%"
                         }
