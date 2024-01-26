@@ -100,7 +100,7 @@ vec3 specular_lobe(material_info mi, light_info light, vec3 h,
 #ifdef USE_DIRECT_SPECULAR_LUT
 	float D = texture2D(s_direct_specular, vec2(NdotH, mi.roughness)).x;
     vec2 FV_helper = texture2D(s_direct_specular, vec2(LdotH, mi.roughness)).yz;
-#else !USE_DIRECT_SPECULAR_LUT
+#else //!USE_DIRECT_SPECULAR_LUT
     float D = LightingFuncGGX_D(NdotH, mi.roughness);
     vec2 FV_helper = LightingFuncGGX_FV(LdotH, mi.roughness);
 #endif // USE_DIRECT_SPECULAR_LUT 
