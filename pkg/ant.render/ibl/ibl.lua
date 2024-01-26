@@ -192,7 +192,6 @@ function ibl_sys:render_preprocess()
 
         assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
-        assetmgr.material_unmark(dis.fx.prog)
         w:remove(e)
     end
 
@@ -224,7 +223,6 @@ function ibl_sys:render_preprocess()
 
         assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
-        assetmgr.material_unmark(dis.fx.prog)
         w:remove(e)
     end
 
