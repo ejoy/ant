@@ -67,24 +67,37 @@ lm:source_set "imgui" {
 }
 
 lm:lua_source "imgui" {
-    deps = "luabind",
     includes = {
         ".",
         lm.AntDir .. "/3rd/imgui",
         lm.AntDir .. "/3rd/glm",
-        lm.AntDir .. "/3rd/bee.lua",
         BgfxInclude,
         "../bgfx",
+    },
+    sources = {
+        "backend/imgui_impl_bgfx.cpp",
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
+        defines,
+    },
+}
+
+lm:lua_source "imgui" {
+    deps = "luabind",
+    includes = {
+        ".",
+        lm.AntDir .. "/3rd/imgui",
+        lm.AntDir .. "/3rd/bee.lua",
+        BgfxInclude,
         "../luabind"
     },
     sources = {
         "imgui_config.cpp",
-        "imgui_renderer.cpp",
         "luaimgui_tables.cpp",
         "luaimgui.cpp",
     },
     defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
         defines,
     },
     windows = {
