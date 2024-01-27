@@ -276,7 +276,7 @@ namespace lua_struct {
     }
 
     template <typename T, typename I>
-    static constexpr bool check_integral_limit(I i) {
+    constexpr bool check_integral_limit(I i) {
         static_assert(std::is_integral_v<I>);
         static_assert(std::is_integral_v<T>);
         static_assert(sizeof(I) >= sizeof(T));
@@ -295,14 +295,14 @@ namespace lua_struct {
     }
 
     template <typename T>
-    static T unpack(lua_State* L, int arg);
+    T unpack(lua_State* L, int arg);
 
     template <typename T, std::size_t I>
-    static void unpack_struct(lua_State* L, int arg, T& v);
+    void unpack_struct(lua_State* L, int arg, T& v);
 
     template <typename T>
         requires(std::is_integral_v<T> && !std::same_as<T, bool>)
-    static T unpack(lua_State* L, int arg) {
+    T unpack(lua_State* L, int arg) {
         lua_Integer r = luaL_checkinteger(L, arg);
         if constexpr (std::is_same_v<T, lua_Integer>) {
             return r;
@@ -321,14 +321,14 @@ namespace lua_struct {
 
     template <typename T>
         requires(std::same_as<T, bool>)
-    static T unpack(lua_State* L, int arg) {
+    T unpack(lua_State* L, int arg) {
         luaL_checktype(L, arg, LUA_TBOOLEAN);
         return !!lua_toboolean(L, arg);
     }
 
     template <typename T>
         requires std::is_pointer_v<T>
-    static T unpack(lua_State* L, int arg) {
+    T unpack(lua_State* L, int arg) {
         luaL_checktype(L, arg, LUA_TLIGHTUSERDATA);
         return static_cast<T>(lua_touserdata(L, arg));
     }
@@ -354,7 +354,7 @@ namespace lua_struct {
 
     template <typename T>
         requires std::is_aggregate_v<T>
-    static T unpack(lua_State* L, int arg) {
+    T unpack(lua_State* L, int arg) {
         T v;
         unpack_struct<T, 0>(L, arg, v);
         return v;
@@ -401,7 +401,7 @@ namespace lua_struct {
     }
 
     template <typename T, std::size_t I>
-    static void unpack_struct(lua_State* L, int arg, T& v) {
+    void unpack_struct(lua_State* L, int arg, T& v) {
         if constexpr (I < reflection::field_count<T>) {
             constexpr auto name = reflection::field_name<T, I>;
             lua_getfield(L, arg, name.data());
@@ -412,14 +412,14 @@ namespace lua_struct {
     }
 
     template <typename T>
-    static void pack(lua_State* L, const T& v);
+    void pack(lua_State* L, const T& v);
 
     template <typename T, std::size_t I>
-    static void pack_struct(lua_State* L, const T& v);
+    void pack_struct(lua_State* L, const T& v);
 
     template <typename T>
         requires(std::is_integral_v<T> && !std::same_as<T, bool>)
-    static void pack(lua_State* L, const T& v) {
+    void pack(lua_State* L, const T& v) {
         if constexpr (std::is_same_v<T, lua_Integer>) {
             lua_pushinteger(L, v);
         }
@@ -437,24 +437,24 @@ namespace lua_struct {
 
     template <typename T>
         requires(std::same_as<T, bool>)
-    static void pack(lua_State* L, const T& v) {
+    void pack(lua_State* L, const T& v) {
         lua_pushboolean(L, v);
     }
 
     template <>
-    static void pack<float>(lua_State* L, const float& v) {
+    inline void pack<float>(lua_State* L, const float& v) {
         lua_pushnumber(L, (lua_Number)v);
     }
 
     template <typename T>
         requires std::is_aggregate_v<T>
-    static void pack(lua_State* L, const T& v) {
+    void pack(lua_State* L, const T& v) {
         lua_createtable(L, 0, (int)reflection::field_count<T>);
         pack_struct<T, 0>(L, v);
     }
 
     template <typename T, std::size_t I>
-    static void pack_struct(lua_State* L, const T& v) {
+    void pack_struct(lua_State* L, const T& v) {
         if constexpr (I < reflection::field_count<T>) {
             constexpr auto name = reflection::field_name<T, I>;
             pack<reflection::field_type<T, I>>(L, reflection::field_access<I>(v));
