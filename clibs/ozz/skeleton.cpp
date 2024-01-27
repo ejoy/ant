@@ -31,7 +31,7 @@ namespace ozzlua::Skeleton {
     }
 
     static int parent(lua_State* L) {
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         const int jointidx = get_joint_index(L, ske, 2);
         auto parents = ske.joint_parents();
         auto parentid = parents[jointidx];
@@ -40,7 +40,7 @@ namespace ozzlua::Skeleton {
     }
 
     static int isroot(lua_State* L) {
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         const int jointidx = get_joint_index(L, ske, 2);
         auto parents = ske.joint_parents();
         auto parentid = parents[jointidx];
@@ -49,7 +49,7 @@ namespace ozzlua::Skeleton {
     }
 
     static int jointindex(lua_State* L) {
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         const char* name = luaL_checkstring(L, 2);
         auto jointidx = find_joint_index(ske, name);
         if (jointidx >= 0) {
@@ -72,7 +72,7 @@ namespace ozzlua::Skeleton {
     }
 
     static int joint(lua_State* L) {
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         const int jointidx = get_joint_index(L, ske, 2);
         auto *r = (float*)lua_touserdata(L, 3);
         const auto trans = joint_matrix(ske, jointidx);
@@ -82,7 +82,7 @@ namespace ozzlua::Skeleton {
     }
 
     static int jointname(lua_State* L){
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         const int jointidx = get_joint_index(L, ske, 2);
         auto name = ske.joint_names()[jointidx];
         lua_pushstring(L, name);
@@ -90,13 +90,13 @@ namespace ozzlua::Skeleton {
     }
 
     static int num_soa_joints(lua_State* L) {
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         lua_pushinteger(L, ske.num_soa_joints());
         return 1;
     }
 
     static int num_joints(lua_State* L) {
-        auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+        auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
         lua_pushinteger(L, ske.num_joints());
         return 1;
     }
@@ -116,14 +116,14 @@ namespace ozzlua::Skeleton {
         lua_setfield(L, -2, "__index");
     }
     static int getmetatable(lua_State* L) {
-        bee::lua::getmetatable<ozzSkeleton>(L);
+        bee::lua::getmetatable<ozz::animation::Skeleton>(L);
         return 1;
     }
     bool load(lua_State* L, ozz::io::IArchive& ia) {
         if (!ia.TestTag<ozz::animation::Skeleton>()) {
             return false;
         }
-        auto& o = bee::lua::newudata<ozzSkeleton>(L);
+        auto& o = bee::lua::newudata<ozz::animation::Skeleton>(L);
         ia >> (ozz::animation::Skeleton&)o;
         return true;
     }
@@ -139,8 +139,8 @@ void init_skeleton(lua_State* L) {
 
 namespace bee::lua {
 	template <>
-	struct udata<ozzSkeleton> {
-		static inline auto name = "ozzSkeleton";
+	struct udata<ozz::animation::Skeleton> {
+		static inline auto name = "ozz::Skeleton";
 		static inline auto metatable = ozzlua::Skeleton::metatable;
 	};
 }

@@ -156,31 +156,31 @@ namespace ozzlua::SoaTransformVector {
 
 namespace ozzlua::Animation {
 	static int duration(lua_State* L) {
-		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
+		auto& animation = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
 		lua_pushnumber(L, animation.duration());
 		return 1;
 	}
 
 	static int num_tracks(lua_State* L) {
-		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
+		auto& animation = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
 		lua_pushinteger(L, animation.num_tracks());
 		return 1;
 	}
 
 	static int num_soa_tracks(lua_State* L) {
-		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
+		auto& animation = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
 		lua_pushinteger(L, animation.num_soa_tracks());
 		return 1;
 	}
 
 	static int name(lua_State* L) {
-		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
+		auto& animation = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
 		lua_pushstring(L, animation.name());
 		return 1;
 	}
 
 	static int size(lua_State* L) {
-		auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
+		auto& animation = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
 		lua_pushinteger(L, animation.size());
 		return 1;
 	}
@@ -200,7 +200,7 @@ namespace ozzlua::Animation {
 	}
 
 	int create(lua_State* L, ozz::animation::Animation&& v) {
-		bee::lua::newudata<ozzAnimation>(L, std::forward<ozz::animation::Animation>(v));
+		bee::lua::newudata<ozz::animation::Animation>(L, std::forward<ozz::animation::Animation>(v));
 		return 1;
 	}
 
@@ -208,7 +208,7 @@ namespace ozzlua::Animation {
 		if (!ia.TestTag<ozz::animation::Animation>()) {
 			return false;
 		}
-		auto& o = bee::lua::newudata<ozzAnimation>(L);
+		auto& o = bee::lua::newudata<ozz::animation::Animation>(L);
 		ia >> (ozz::animation::Animation&)o;
 		return true;
 	}
@@ -242,8 +242,8 @@ namespace bee::lua {
 		static inline auto metatable = ozzlua::SoaTransformVector::metatable;
 	};
 	template <>
-	struct udata<ozzAnimation> {
-		static inline auto name = "ozzAnimation";
+	struct udata<ozz::animation::Animation> {
+		static inline auto name = "ozz::Animation";
 		static inline auto metatable = ozzlua::Animation::metatable;
 	};
 }
