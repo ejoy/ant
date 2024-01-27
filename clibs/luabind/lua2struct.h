@@ -441,6 +441,11 @@ namespace lua_struct {
         lua_pushboolean(L, v);
     }
 
+    template <>
+    static void pack<float>(lua_State* L, const float& v) {
+        lua_pushnumber(L, (lua_Number)v);
+    }
+
     template <typename T>
         requires std::is_aggregate_v<T>
     static void pack(lua_State* L, const T& v) {

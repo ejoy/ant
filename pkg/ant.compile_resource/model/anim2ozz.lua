@@ -180,6 +180,15 @@ return function (setting, skecontent, input, output)
 			push_anim_key(raw_animation, ske, sample_ratio, joint_name)
 		end
 	end
-	local ozzhandle = raw_animation:build()
+	local optimizer_setting = {
+		tolerance = 0.001,
+		distance  = 0.1,
+		joints = {},
+	}
+	local raw_optimized_animation, statistics = ozzoffline.AnimationOptimizer(raw_animation, ske, optimizer_setting)
+	for k, v in pairs(statistics) do
+		print("\t animation optimizer statistics", k..":"..v)
+	end
+	local ozzhandle = raw_optimized_animation:build()
 	ozzoffline.save(ozzhandle, output)
 end
