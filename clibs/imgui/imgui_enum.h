@@ -628,13 +628,42 @@ static struct enum_pair eMouseCursor[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eDrawFlags[] = {
+	ENUM(ImDrawFlags, None),
+	ENUM(ImDrawFlags, Closed),
+	ENUM(ImDrawFlags, RoundCornersTopLeft),
+	ENUM(ImDrawFlags, RoundCornersTopRight),
+	ENUM(ImDrawFlags, RoundCornersBottomLeft),
+	ENUM(ImDrawFlags, RoundCornersBottomRight),
+	ENUM(ImDrawFlags, RoundCornersNone),
+	ENUM(ImDrawFlags, RoundCornersTop),
+	ENUM(ImDrawFlags, RoundCornersBottom),
+	ENUM(ImDrawFlags, RoundCornersLeft),
+	ENUM(ImDrawFlags, RoundCornersRight),
+	ENUM(ImDrawFlags, RoundCornersAll),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eDrawListFlags[] = {
+	ENUM(ImDrawListFlags, None),
+	ENUM(ImDrawListFlags, AntiAliasedLines),
+	ENUM(ImDrawListFlags, AntiAliasedLinesUseTex),
+	ENUM(ImDrawListFlags, AntiAliasedFill),
+	ENUM(ImDrawListFlags, AllowVtxOffset),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eButtonFlags[] = {
+	ENUM(ImGuiButtonFlags, None),
+	ENUM(ImGuiButtonFlags, MouseButtonLeft),
+	ENUM(ImGuiButtonFlags, MouseButtonRight),
+	ENUM(ImGuiButtonFlags, MouseButtonMiddle),
+	{ NULL, 0 },
+};
+
 //ImGuiMouseSource
 
 //ImGuiCond
-
-//ImDrawFlags
-
-//ImDrawListFlags
 
 //ImFontAtlasFlags
 
@@ -670,6 +699,9 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "Config", eConfigFlags);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "Slider", eSliderFlags);
+	flag_gen(L, "Draw", eDrawFlags);
+	flag_gen(L, "DrawList", eDrawListFlags);
+	flag_gen(L, "Button", eButtonFlags);
 	lua_setfield(L, -2, "Flags");
 
 	lua_newtable(L);

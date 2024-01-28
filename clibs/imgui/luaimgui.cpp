@@ -101,7 +101,8 @@ wInvisibleButton(lua_State *L) {
 	const char * text = luaL_checkstring(L, INDEX_ID);
 	float w = (float)luaL_optnumber(L, 2, 0);
 	float h = (float)luaL_optnumber(L, 3, 0);
-	bool click = ImGui::InvisibleButton(text, ImVec2(w, h));
+	ImGuiButtonFlags flags = lua_getflags<ImGuiButtonFlags>(L, 4, ImGuiButtonFlags_None);
+	bool click = ImGui::InvisibleButton(text, ImVec2(w, h), flags);
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -2652,8 +2653,26 @@ uIsMouseDoubleClicked(lua_State * L) {
 static int
 uIsKeyPressed(lua_State * L) {
 	auto key = lua_getflags<ImGuiKey>(L, 1);
-	bool pressed = ImGui::IsKeyPressed(key);
+	bool repeat = true;
+	if (lua_isboolean(L, 2)) {
+		repeat = lua_toboolean(L, 2);
+	}
+	bool pressed = ImGui::IsKeyPressed(key, repeat);
 	lua_pushboolean(L, pressed);
+	return 1;
+}
+
+static int 
+cIsKeyDown(lua_State* L) {
+	auto key = lua_getflags<ImGuiKey>(L, 1);
+	lua_pushboolean(L, ImGui::IsKeyDown(key));
+	return 1;
+}
+
+static int 
+cIsKeyReleased(lua_State* L) {
+	auto key = lua_getflags<ImGuiKey>(L, 1);
+	lua_pushboolean(L, ImGui::IsKeyReleased(key));
 	return 1;
 }
 
@@ -2696,7 +2715,22 @@ uCalcItemWidth(lua_State* L) {
 static int
 cIsMouseDragging(lua_State* L) {
 	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
-	lua_pushboolean(L, ImGui::IsMouseDragging(mouse_button));
+	const float lock_threshold = (const float)luaL_optnumber(L, 2, -1.0f);
+	lua_pushboolean(L, ImGui::IsMouseDragging(mouse_button, lock_threshold));
+	return 1;
+}
+
+static int 
+cIsMouseClicked(lua_State* L) {
+	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
+	lua_pushboolean(L, ImGui::IsMouseClicked(mouse_button));
+	return 1;
+}
+
+static int 
+cIsMouseDown(lua_State* L) {
+	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
+	lua_pushboolean(L, ImGui::IsMouseDown(mouse_button));
 	return 1;
 }
 
@@ -2706,6 +2740,23 @@ cGetMousePos(lua_State* L) {
 	lua_pushnumber(L, pos.x);
 	lua_pushnumber(L, pos.y);
 	return 2;
+}
+
+static int
+cGetMouseDragDelta(lua_State* L) {
+	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
+	const float lock_threshold = (const float)luaL_optnumber(L, 2, -1.0f);
+	auto delta = ImGui::GetMouseDragDelta(mouse_button, lock_threshold);
+	lua_pushnumber(L, delta.x);
+	lua_pushnumber(L, delta.y);
+	return 2;
+}
+
+static int 
+cGetFontSize(lua_State* L) {
+	float size = ImGui::GetFontSize();
+	lua_pushnumber(L, size);
+	return 1;
 }
 
 static int
@@ -2911,6 +2962,14 @@ ioAddFocusEvent(lua_State* L) {
 	return 0;
 }
 
+static int 
+ioGetMouseDelta(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushnumber(L, io.MouseDelta.x);
+	lua_pushnumber(L, io.MouseDelta.y);
+	return 2;
+}
+
 static int
 ioSetterConfigFlags(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
@@ -2951,6 +3010,381 @@ ioGetter(lua_State* L) {
 	}
 	lua_call(L, 0, 1);
 	return 1;
+}
+
+static int 
+dlPushClipRect(lua_State* L) {
+	float left = (float)luaL_checknumber(L, 1);
+	float top = (float)luaL_checknumber(L, 2);
+	float right = (float)luaL_checknumber(L, 3);
+	float bottom = (float)luaL_checknumber(L, 4);
+	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (draw_list) {
+		draw_list->PushClipRect(ImVec2(left, top), ImVec2(right, bottom), intersect_with_current_clip_rect);
+	}
+	return 0;
+}
+
+static int 
+dlPopClipRect(lua_State* L) {
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (draw_list) {
+		draw_list->PopClipRect();
+	}
+	return 0;
+}
+
+static int 
+dlGetClipRectMin(lua_State* L) {
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (draw_list) {
+		auto min = draw_list->GetClipRectMin();
+		lua_pushnumber(L, min.x);
+		lua_pushnumber(L, min.y);
+		return 2;
+	}
+	return 0;
+}
+
+static int 
+dlGetClipRectMax(lua_State* L) {
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (draw_list) {
+		auto max = draw_list->GetClipRectMax();
+		lua_pushnumber(L, max.x);
+		lua_pushnumber(L, max.y);
+		return 2;
+	}
+	return 0;
+}
+
+static int
+dlAddLine(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 1.0f, 1.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddLine(p1, p2, ImGui::ColorConvertFloat4ToU32(col), thickness);
+	}
+	return 0;
+}
+
+static int 
+dlAddRect(lua_State* L) {
+	ImVec2 min = { 0.0f, 0.0f };
+	ImVec2 max = { 1.0f, 1.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float rounding = 0;
+	ImDrawFlags flags = 0;
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		min = read_field_vec2(L, "min", min, 1);
+		max = read_field_vec2(L, "max", max, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		rounding = (float)read_field_float(L, "rounding", rounding, 1);
+		flags = read_field_int(L, "flags", flags, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddRect(min, max, ImGui::ColorConvertFloat4ToU32(col), rounding, flags, thickness);
+	}
+	return 0;
+}
+
+static int 
+dlAddRectFilled(lua_State* L) {
+	ImVec2 min = { 0.0f, 0.0f };
+	ImVec2 max = { 1.0f, 1.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float rounding = 0;
+	ImDrawFlags flags = 0;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		min = read_field_vec2(L, "min", min, 1);
+		max = read_field_vec2(L, "max", max, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		rounding = (float)read_field_float(L, "rounding", rounding, 1);
+		flags = read_field_int(L, "flags", flags, 1);
+		draw_list->AddRectFilled(min, max, ImGui::ColorConvertFloat4ToU32(col), rounding, flags);
+	}
+	return 0;
+}
+
+static int
+dlAddRectFilledMultiColor(lua_State* L) {
+	ImVec2 min = { 0.0f, 0.0f };
+	ImVec2 max = { 1.0f, 1.0f };
+	ImVec4 col_upr_left = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImVec4 col_upr_right = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImVec4 col_bot_right = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImVec4 col_bot_left = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		min = read_field_vec2(L, "min", min, 1);
+		max = read_field_vec2(L, "max", max, 1);
+		ImU32 upr_left = ImGui::ColorConvertFloat4ToU32(read_field_vec4(L, "col_upr_left", col_upr_left, 1));
+		ImU32 upr_right = ImGui::ColorConvertFloat4ToU32(read_field_vec4(L, "col_upr_right", col_upr_right, 1));
+		ImU32 bot_right = ImGui::ColorConvertFloat4ToU32(read_field_vec4(L, "col_bot_right", col_bot_right, 1));
+		ImU32 bot_left = ImGui::ColorConvertFloat4ToU32(read_field_vec4(L, "col_bot_left", col_bot_left, 1));
+		draw_list->AddRectFilledMultiColor(min, max, upr_left, upr_right, bot_right, bot_left);
+	}
+	return 0;
+}
+
+static int
+dlAddQuad(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 0.0f, 0.0f };
+	ImVec2 p3 = { 0.0f, 0.0f };
+	ImVec2 p4 = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		p3 = read_field_vec2(L, "p3", p3, 1);
+		p4 = read_field_vec2(L, "p4", p4, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddQuad(p1, p2, p3, p4, ImGui::ColorConvertFloat4ToU32(col), thickness);
+	}
+	return 0;
+}
+
+static int
+dlAddQuadFilled(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 0.0f, 0.0f };
+	ImVec2 p3 = { 0.0f, 0.0f };
+	ImVec2 p4 = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		p3 = read_field_vec2(L, "p3", p3, 1);
+		p4 = read_field_vec2(L, "p4", p4, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		draw_list->AddQuadFilled(p1, p2, p3, p4, ImGui::ColorConvertFloat4ToU32(col));
+	}
+	return 0;
+}
+
+static int
+dlAddTriangle(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 0.0f, 0.0f };
+	ImVec2 p3 = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		p3 = read_field_vec2(L, "p3", p3, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddTriangle(p1, p2, p3, ImGui::ColorConvertFloat4ToU32(col), thickness);
+	}
+	return 0;
+}
+
+static int
+dlAddTriangleFilled(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 0.0f, 0.0f };
+	ImVec2 p3 = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		p3 = read_field_vec2(L, "p3", p3, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		draw_list->AddTriangleFilled(p1, p2, p3, ImGui::ColorConvertFloat4ToU32(col));
+	}
+	return 0;
+}
+
+static int
+dlAddCircle(lua_State* L) {
+	ImVec2 center = { 0.0f, 0.0f };
+	float radius = 100;
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int num_segments = 0;
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		center = read_field_vec2(L, "center", center, 1);
+		radius = (float)read_field_float(L, "radius", radius, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddCircle(center, radius, ImGui::ColorConvertFloat4ToU32(col), num_segments, thickness);
+	}
+	return 0;
+}
+
+static int
+dlAddCircleFilled(lua_State* L) {
+	ImVec2 center = { 0.0f, 0.0f };
+	float radius = 100;
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int num_segments = 0;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		center = read_field_vec2(L, "center", center, 1);
+		radius = (float)read_field_float(L, "radius", radius, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		draw_list->AddCircleFilled(center, radius, ImGui::ColorConvertFloat4ToU32(col), num_segments);
+	}
+	return 0;
+}
+
+static int
+dlAddNgon(lua_State* L) {
+	ImVec2 center = { 0.0f, 0.0f };
+	float radius = 100;
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int num_segments = 0;
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		center = read_field_vec2(L, "center", center, 1);
+		radius = (float)read_field_float(L, "radius", radius, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddNgon(center, radius, ImGui::ColorConvertFloat4ToU32(col), num_segments, thickness);
+	}
+	return 0;
+}
+
+static int
+dlAddNgonFilled(lua_State* L) {
+	ImVec2 center = { 0.0f, 0.0f };
+	float radius = 100;
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int num_segments = 0;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		center = read_field_vec2(L, "center", center, 1);
+		radius = (float)read_field_float(L, "radius", radius, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		draw_list->AddNgonFilled(center, radius, ImGui::ColorConvertFloat4ToU32(col), num_segments);
+	}
+	return 0;
+}
+
+static int
+dlAddEllipse(lua_State* L) {
+	ImVec2 center = { 0.0f, 0.0f };
+	float radius_x = 100;
+	float radius_y = 100;
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float rot = 0;
+	int num_segments = 0;
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		center = read_field_vec2(L, "center", center, 1);
+		radius_x = (float)read_field_float(L, "radius_x", radius_x, 1);
+		radius_y = (float)read_field_float(L, "radius_y", radius_y, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		rot = (float)read_field_float(L, "rot", rot, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddEllipse(center, radius_x, radius_y, ImGui::ColorConvertFloat4ToU32(col), rot, num_segments, thickness);
+	}
+	return 0;
+}
+
+static int
+dlAddEllipseFilled(lua_State* L) {
+	ImVec2 center = { 0.0f, 0.0f };
+	float radius_x = 100;
+	float radius_y = 100;
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float rot = 0;
+	int num_segments = 0;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		center = read_field_vec2(L, "center", center, 1);
+		radius_x = (float)read_field_float(L, "radius_x", radius_x, 1);
+		radius_y = (float)read_field_float(L, "radius_y", radius_y, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		rot = (float)read_field_float(L, "rot", rot, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		draw_list->AddEllipseFilled(center, radius_x, radius_y, ImGui::ColorConvertFloat4ToU32(col), rot, num_segments);
+	}
+	return 0;
+}
+
+static int
+dlAddText(lua_State* L) {
+	ImVec2 pos = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		pos = read_field_vec2(L, "pos", pos, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		const char * text = read_field_string(L, "text", NULL, 1);
+		draw_list->AddText(pos, ImGui::ColorConvertFloat4ToU32(col), text);
+	}
+	return 0;
+}
+
+static int 
+dlAddBezierCubic(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 0.0f, 0.0f };
+	ImVec2 p3 = { 0.0f, 0.0f };
+	ImVec2 p4 = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int num_segments = 0;
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		p3 = read_field_vec2(L, "p3", p3, 1);
+		p4 = read_field_vec2(L, "p4", p3, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddBezierCubic(p1, p2, p3, p4, ImGui::ColorConvertFloat4ToU32(col), thickness, num_segments);
+	}
+	return 0;
+}
+
+static int 
+dlAddBezierQuadratic(lua_State* L) {
+	ImVec2 p1 = { 0.0f, 0.0f };
+	ImVec2 p2 = { 0.0f, 0.0f };
+	ImVec2 p3 = { 0.0f, 0.0f };
+	ImVec4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int num_segments = 0;
+	float thickness = 1;
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	if (lua_type(L, 1) == LUA_TTABLE && draw_list) {
+		p1 = read_field_vec2(L, "p1", p1, 1);
+		p2 = read_field_vec2(L, "p2", p2, 1);
+		p3 = read_field_vec2(L, "p3", p3, 1);
+		col = read_field_vec4(L, "col", col, 1);
+		num_segments = read_field_int(L, "segments", num_segments, 1);
+		thickness = (float)read_field_float(L, "thickness", thickness, 1);
+		draw_list->AddBezierQuadratic(p1, p2, p3, ImGui::ColorConvertFloat4ToU32(col), thickness, num_segments);
+	}
+	return 0;
 }
 
 #if BX_PLATFORM_WINDOWS
@@ -3178,12 +3612,18 @@ luaopen_imgui(lua_State *L) {
 		{ "SetNextFrameWantCaptureMouse", uSetNextFrameWantCaptureMouse },
 		{ "IsMouseDoubleClicked", uIsMouseDoubleClicked},
 		{ "IsKeyPressed", uIsKeyPressed},
+		{ "IsKeyDown", cIsKeyDown },
+		{ "IsKeyReleased", cIsKeyReleased },
 		{ "PushID",uPushID},
 		{ "PopID",uPopID},
 		{ "CalcTextSize",uCalcTextSize},
 		{ "CalcItemWidth",uCalcItemWidth},
 		{ "IsMouseDragging", cIsMouseDragging },
+		{ "IsMouseClicked", cIsMouseClicked },
+		{ "IsMouseDown", cIsMouseDown },
 		{ "GetMousePos", cGetMousePos },
+		{ "GetMouseDragDelta", cGetMouseDragDelta },
+		{ "GetFontSize", cGetFontSize },
 		{ "SetClipboardText", cSetClipboardText },
 		{ "DockSpace", dDockSpace },
 		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
@@ -3207,6 +3647,7 @@ luaopen_imgui(lua_State *L) {
 		{ "AddInputCharacter", ioAddInputCharacter },
 		{ "AddInputCharacterUTF16", ioAddInputCharacterUTF16 },
 		{ "AddFocusEvent", ioAddFocusEvent },
+		{ "GetMouseDelta", ioGetMouseDelta },
 		{ NULL, NULL },
 	};
 	luaL_Reg io_setter[] = {
@@ -3228,6 +3669,33 @@ luaopen_imgui(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 	lua_setmetatable(L, -2);
 	lua_setfield(L, -2, "io");
+
+	luaL_Reg draw_list[] = {
+		{ "PushClipRect", dlPushClipRect },
+		{ "PopClipRect", dlPopClipRect },
+		{ "GetClipRectMin", dlGetClipRectMin },
+		{ "GetClipRectMax", dlGetClipRectMax },
+		{ "AddLine", dlAddLine },
+		{ "AddRect", dlAddRect },
+		{ "AddRectFilled", dlAddRectFilled },
+		{ "AddRectFilledMultiColor", dlAddRectFilledMultiColor },
+		{ "AddQuad", dlAddQuad },
+		{ "AddQuadFilled", dlAddQuadFilled },
+		{ "AddTriangle", dlAddTriangle },
+		{ "AddTriangleFilled", dlAddTriangleFilled },
+		{ "AddCircle", dlAddCircle },
+		{ "AddCircleFilled", dlAddCircleFilled },
+		{ "AddNgon", dlAddNgon },
+		{ "AddNgonFilled", dlAddNgonFilled },
+		{ "AddEllipse", dlAddEllipse },
+		{ "AddEllipseFilled", dlAddEllipseFilled },
+		{ "AddText", dlAddText },
+		{ "AddBezierCubic", dlAddBezierCubic },
+		{ "AddBezierQuadratic", dlAddBezierQuadratic },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, draw_list);
+	lua_setfield(L, -2, "draw_list");
 
 	imgui_enum_init(L);
 	return 1;
