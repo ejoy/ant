@@ -102,7 +102,6 @@ local memfs = import_package "ant.vfs".memory
 function m:init()
 	memfs.init()
     world.__EDITOR__ = true
-    iani.set_edit_mode(true)
     widget_utils.load_imgui_layout(global_data.editor_root / "imgui.layout")
     window.set_title("Editor")
 	--

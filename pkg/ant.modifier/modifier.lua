@@ -397,17 +397,8 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
 		prefab = filename,
         on_ready = function (instance)
             for _, eid in ipairs(instance.tag["*"]) do
-                local e <close> = world:entity(eid, "anim_ctrl?in mesh?in")
-                if e.anim_ctrl then
-                    local path_list = {}
-                    filename:gsub('[^|]*', function (wd) path_list[#path_list+1] = wd end)
-                    if path_list[1] then
-                        --xxx.glb
-                        iani.load_events(eid, path_list[1]:sub(1, -5) .. ".event")
-                    else
-                        ---xxx.prefab
-                        iani.load_events(eid, filename:sub(1, -8) .. ".event")
-                    end
+                local e <close> = world:entity(eid, "animation?in mesh?in")
+                if e.animation then
                 elseif e.mesh then
                     w:remove(eid)
                 end
@@ -417,8 +408,8 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             if anim_prefab.tag["anim_ctrl"] then
                 local eid = anim_prefab.tag["anim_ctrl"][1]
-                local anim <close> = world:entity(eid, "animation?in anim_ctrl?in")
-                if anim.animation and anim.anim_ctrl then
+                local anim <close> = world:entity(eid, "animation?in")
+                if anim.animation then
                     return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name)), anim.anim_ctrl.play_state.play
                 end
             end

@@ -957,7 +957,7 @@ end
 
 local function play_animation(current)
     if current.type == "ske" then
-        iani.play(anim_eid, {name = current.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+        iani.play(anim_eid, {name = current.name, loop = ui_loop[1], speed = ui_speed[1]})
     else
         for _, anim in ipairs(current.target_anims) do
             if anim.modifier then
@@ -1461,7 +1461,7 @@ function m.on_eid_delete(eid)
 end
 
 function m.init(skeleton)
-    for e in w:select "eid:in animation:in anim_ctrl:in" do
+    for e in w:select "eid:in animation:in" do
         if e.animation.skeleton == skeleton then
             anim_eid = e.eid
         end

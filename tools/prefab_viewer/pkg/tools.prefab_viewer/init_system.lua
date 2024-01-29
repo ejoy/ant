@@ -38,16 +38,6 @@ function S.init_world()
 	world:create_instance {
 		prefab = "/pkg/tools.prefab_viewer/assets/prefabs/preview.prefab"
 	}
-    -- local miner = world:create_instance("/pkg/tools.prefab_viewer/assets/prefabs/miner-1.prefab")
-    -- miner.on_ready = function(instance)
-    --     for _, eid in ipairs(instance.tag["*"]) do
-    --         local e <close> = world:entity(eid, "tag?in anim_ctrl?in")
-    --         if e.anim_ctrl then
-    --             iani.load_events(eid, "/pkg/tools.prefab_viewer/assets/prefabs/miner-1.event")
-    --         end
-    --     end
-    --     iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
-    -- end
 
     -- camera
     local mq = w:first "main_queue camera_ref:in"
