@@ -66,17 +66,6 @@ namespace ozzlua::RawAnimation {
 		return 0;
 	}
 
-	static int build(lua_State* L) {
-		auto& raw = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
-		ozz::animation::offline::AnimationBuilder builder;
-		ozz::animation::Animation* animation = builder(raw).release();
-		if (!animation) {
-			luaL_error(L, "Failed to build animation");
-			return 0;
-		}
-		return ozzlua::Animation::create(L, std::move(*animation));
-	}
-
 	static int clear(lua_State* L) {
 		auto& raw = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
 		raw.tracks.clear();
@@ -102,7 +91,6 @@ namespace ozzlua::RawAnimation {
 		static luaL_Reg lib[] = {
 			{ "setup", setup },
 			{ "push_prekey", push_prekey },
-			{ "build", build },
 			{ "clear", clear },
 			{ "clear_prekey", clear_prekey },
 			{ nullptr, nullptr }
@@ -157,7 +145,8 @@ namespace ozzlua {
 				}
 			}
 		}
-		ozz::animation::offline::RawAnimation raw_optimized_animation;
+
+		auto& raw_optimized_animation = bee::lua::newudata<ozz::animation::offline::RawAnimation>(L);
 		if (!optimizer(raw_animation, skeleton, &raw_optimized_animation)) {
 			return luaL_error(L, "Failed to optimize animation.");
 		}
@@ -182,9 +171,19 @@ namespace ozzlua {
 		statistics.rotation_ratio = opt_rotations != 0 ? 1.f * non_opt_rotations / opt_rotations : 0.f;
 		statistics.scale_ratio = opt_scales != 0 ? 1.f * non_opt_scales / opt_scales : 0.f;
 
-		bee::lua::newudata<ozz::animation::offline::RawAnimation>(L, raw_optimized_animation);
 		lua_struct::pack(L, statistics);
 		return 2;
+	}
+
+	static int AnimationBuilder(lua_State* L) {
+		auto& raw_animation = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
+		ozz::animation::offline::AnimationBuilder builder;
+		auto animation = builder(raw_animation);
+		if (!animation) {
+			luaL_error(L, "Failed to build runtime animation.");
+			return 0;
+		}
+		return ozzlua::Animation::create(L, std::move(*animation.get()));
 	}
 }
 
@@ -203,9 +202,10 @@ luaopen_ozz_offline(lua_State *L) {
 	luaL_checkversion(L);
 	lua_newtable(L);
 	static luaL_Reg lib[] = {
-		{ "RawAnimation",		ozzlua::RawAnimation::create },
-		{ "RawAnimationMt",		ozzlua::RawAnimation::getmetatable },
+		{ "RawAnimation", ozzlua::RawAnimation::create },
+		{ "RawAnimationMt", ozzlua::RawAnimation::getmetatable },
 		{ "AnimationOptimizer", ozzlua::AnimationOptimizer },
+		{ "AnimationBuilder", ozzlua::AnimationBuilder },
 		{ "save", lsave },
 		{ NULL, NULL },
 	};
