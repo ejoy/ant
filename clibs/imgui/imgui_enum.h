@@ -49,8 +49,7 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
 	ENUM(ImGuiInputTextFlags, CallbackCompletion),
 	ENUM(ImGuiInputTextFlags, CallbackHistory),
-	// Todo : support CallbackAlways
-	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
+	ENUM(ImGuiInputTextFlags, CallbackAlways),
 	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
 	ENUM(ImGuiInputTextFlags, AllowTabInput),
 	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),

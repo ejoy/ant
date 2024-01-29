@@ -892,6 +892,7 @@ create_new_editbuf(lua_State *L) {
 	lua_replace(L, -2);
 }
 
+// TODO: support ImGuiInputTextFlags_CallbackAlways
 static int
 edit_callback(ImGuiInputTextCallbackData *data) {
 	struct editbuf * ebuf = (struct editbuf *)data->UserData;
