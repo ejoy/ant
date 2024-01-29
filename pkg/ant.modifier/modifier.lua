@@ -32,7 +32,8 @@ function modifier_sys:start_frame()
         mf.init_srt = desc.init_srt
         if m.anim_eid then
             if desc.name then
-                iani.play(m.anim_eid, desc)
+                local eid = m.anim_eid.tag["animation"][1]
+                iani.play(eid, desc)
             else
                 local anim <close> = world:entity(m.anim_eid)
                 ika.play(anim, desc)
