@@ -16,12 +16,10 @@ local mathpkg	= import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
-local hierarchy = require "hierarchy_edit"
-local ozz       = require "ozz"
+local ozzoffline = require "ozz.offline"
 local math3d    = require "math3d"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
-local gd        = require "common.global_data"
 local imguiWidgets  = require "imgui.widgets"
 local joint_utils   = require "widget.joint_utils"
 local widget_utils  = require "widget.utils"
@@ -786,7 +784,7 @@ local function create_animation(animtype, name, duration, target_anims)
         if animtype == "mtl" or animtype == "srt" then
             raw_anim = {}
         else
-            raw_anim = ozz.RawAnimation()
+            raw_anim = ozzoffline.RawAnimation()
             -- _duration = td,
             -- _sampling_context = ozz.new_sampling_context(1)
             raw_anim:setup(current_skeleton, td)
@@ -1249,7 +1247,6 @@ function m.save(path)
     end
     local animdata = {}
     --TODO: one animation per file
-    local isSke = false
     for _, anim in pairs(allanims) do
         local target_anims = utils.deep_copy(anim.target_anims)
         for _, subanim in ipairs(target_anims) do
@@ -1273,22 +1270,21 @@ function m.save(path)
             sample_ratio = sample_ratio,
             skeleton = (anim.type == "ske") and current_skeleton.filename or nil
         }
-        isSke = (anim.type == "ske")
     end
     utils.write_file(filename, stringify(animdata))
-    if isSke then
-        local bin_file = filename:sub(1, -5) .. "bin"
-        local mount = false
-        local lpath = lfs.path(bin_file)
-        if not lfs.exists(lpath) then
-            mount = true
-        end
-        local e <close> = world:entity(anim_eid, "animation:in")
-        ozz.save(e.animation.status[current_anim.name].handle, bin_file)
-        if mount then
-            memfs.update("/" .. lfs.relative(lpath, gd.project_root):string(), lpath:string())
-        end
-    end
+    -- if isSke then
+    --     local bin_file = filename:sub(1, -5) .. "bin"
+    --     local mount = false
+    --     local lpath = lfs.path(bin_file)
+    --     if not lfs.exists(lpath) then
+    --         mount = true
+    --     end
+    --     local e <close> = world:entity(anim_eid, "animation:in")
+    --     ozzoffline.save(e.animation.status[current_anim.name].handle, bin_file)
+    --     if mount then
+    --         memfs.update("/" .. lfs.relative(lpath, gd.project_root):string(), lpath:string())
+    --     end
+    -- end
     if file_path ~= filename then
         file_path = filename
     end

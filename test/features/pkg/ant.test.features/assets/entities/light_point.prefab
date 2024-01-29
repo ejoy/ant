@@ -2,13 +2,12 @@
 policy:
   ant.render|light
 data:
-  scene:
-    t: {0, 10, 0, 1}
+  scene: {}
   light:
-    color: {0.8, 0.8, 0.8, 1}
-    intensity: 12000
+    color: {0.8, 0.0, 0.0, 1}
+    intensity: 120000
     intensity_unit: candela
-    range: 15
+    range: 5
     type: point
   visible: true
 

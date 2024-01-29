@@ -1,6 +1,7 @@
 #ifndef __SHADER_LIGHTING_SH__
 #define __SHADER_LIGHTING_SH__
 
+#if BGFX_SHADER_TYPE_FRAGMENT
 #include "common/lightdata.sh"
 #include "common/cluster_shading.sh"
 #ifdef ENABLE_SHADOW
@@ -12,10 +13,21 @@
 #include "pbr/indirect_lighting.sh"
 #include "pbr/surface_shading.sh"
 
+float directional_light_visibility(in material_info mi)
+{
+#   ifdef ENABLE_SHADOW
+    const vec4 posWS = vec4(mi.posWS + mi.gN * u_normal_offset, 1.0);
+	return shadow_visibility(mi.distanceVS, posWS);
+#   else //!ENABLE_SHADOW
+    return 1.0;
+#   endif //ENABLE_SHADOW
+}
+
+
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
 float get_range_attenuation(float range, float dis)
 {
-    return max(min(1.0 - pow(dis / range, 4.0), 1.0), 0.0) / pow(dis, 2.0);
+    return saturate(1.0 - pow(dis / range, 4.0)) / (dis*dis);
 }
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles
 float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inner_cone)
@@ -49,16 +61,17 @@ uint get_light_index(uint idx)
 #endif //CLUSTER_SHADING
 }
 
-void init_light_info(inout light_info l, vec3 posWS)
+void init_light_info(inout light_info l, in material_info mi)
 {
     if(IS_DIRECTIONAL_LIGHT(l.type))
     {
-        l.pt2l = l.dir; //we assume l.dir is normalize
-        l.attenuation = 1.0;
+        //we assume l.dir is normalize
+        l.pt2l = l.dir;
+        l.attenuation = directional_light_visibility(mi);
     }
     else
     {
-        l.pt2l = l.pos - posWS;
+        l.pt2l = l.pos - mi.posWS;
         float pt2l_len = length(l.pt2l);
         l.attenuation = get_range_attenuation(l.range, pt2l_len);
         if (IS_SPOT_LIGHT(l.type))
@@ -70,42 +83,39 @@ void init_light_info(inout light_info l, vec3 posWS)
     }
 }
 
-light_info get_light(uint ilight, vec3 posWS)
+light_info get_light(uint ilight, in material_info mi)
 {
     light_info l; load_light_info(b_light_info, ilight, l);
-    init_light_info(l, posWS);
+    init_light_info(l, mi);
     return l;
 }
 
-#if BGFX_SHADER_TYPE_FRAGMENT
-float directional_light_visibility(in material_info mi)
-{
-#   ifdef ENABLE_SHADOW
-    const vec4 posWS = vec4(mi.posWS + mi.gN * u_normal_offset, 1.0);
-	return shadow_visibility(mi.distanceVS, posWS);
-#   else //!ENABLE_SHADOW
-    return 1.0;
-#   endif //ENABLE_SHADOW
-}
 
 vec3 shading_color(in material_info mi, in uint ilight)
 {
-    const light_info l = get_light(ilight, mi.posWS);
-    mi.NdotL = dot(mi.N, l.pt2l);
-    return mi.NdotL > 0 ? surface_shading(mi, l) : vec3_splat(0.0);
+    const light_info l = get_light(ilight, mi);
+    if (l.attenuation > 0)
+    {
+        mi.NdotL = dot(mi.N, l.pt2l);
+        if (mi.NdotL > 0)
+        {
+            return surface_shading(mi, l);
+        }
+    }
+    return vec3_splat(0.0);
 }
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
 vec3 debug_cascade_level(in material_info mi)
 {
-    int cascadeidx = select_cascade(mi.distanceVS);
+    int cascadeidx = max(0, select_cascade(mi.distanceVS));
     vec3 colors[4] = {
         vec3(1.0, 0.0, 0.0),
         vec3(0.0, 1.0, 0.0),
         vec3(0.0, 0.0, 1.0),
         vec3(1.0, 0.0, 1.0)
     };
-    return (cascadeidx < 0) ? vec3_splat(0.0) : colors[cascadeidx];
+    return colors[cascadeidx];
 }
 #endif //ENABLE_DEBUG_CASCADE_LEVEL
 
@@ -115,19 +125,19 @@ vec3 calc_direct_light(in material_info mi)
     vec4 irradiance = texture2D(s_lightmap, mi.lightmap_uv);
     vec3 color = mi.basecolor.rgb * irradiance.rgb * PI * 0.5;
 #else //!USING_LIGHTMAP
-    const float dl_visibility = directional_light_visibility(mi);
-    vec3 color = (dl_visibility > 0.0) ? shading_color(mi, 0) * dl_visibility : vec3_splat(0.0);
+    vec3 color = has_directional_light() ? shading_color(mi, 0) : vec3_splat(0.0);
 #endif //USING_LIGHTMAP
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
-    color += debug_cascade_level(input_attrib);
+    color += debug_cascade_level(mi);
 #endif //ENABLE_DEBUG_CASCADE_LEVEL
 
-    if (u_light_count[0] > 1)
+    if (u_culled_light_count > 0)
     {
         //TODO: other lights not check visibility right now
         light_grid g = get_light_grid(mi);
-        const uint count = min(CLUSTER_MAX_LIGHT_COUNT, g.count);
+        //const uint count = min(CLUSTER_MAX_LIGHT_COUNT, g.count);
+        const uint count = g.count; //see cs_lightcull.sc, limit g.count into CLUSTER_MAX_LIGHT_COUNT
         [unroll(CLUSTER_MAX_LIGHT_COUNT)]
         for (uint ii=g.offset; ii<g.offset + count; ++ii)
         {

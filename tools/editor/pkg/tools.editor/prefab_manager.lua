@@ -575,17 +575,27 @@ function m:open(filename, prefab_name, patch_tpl)
         virtual_prefab_path = virtual_prefab_path .. "/" .. self.prefab_name
         self.prefab_template = serialize.parse(virtual_prefab_path, aio.readall(virtual_prefab_path))
 
-        patch_tpl = patch_tpl or {}
-        self.origin_patch_template = patch_tpl
+        self.origin_patch_template = patch_tpl or {}
         self.patch_template = {}
         self.tag_patch = {}
-        for _, patch in ipairs(patch_tpl) do
+
+        local anim_file = "animations/" .. self.prefab_name:sub(1, -8) .. ".ozz"
+        local anim_patch = {}
+        for _, patch in ipairs(self.origin_patch_template) do
             if patch.path == "hitch.prefab" then
                 self.save_hitch = true
             elseif patch.file == self.prefab_name then
                 self.patch_template[#self.patch_template + 1] = patch
             end
+            if patch.file == "animations/animation.ozz" and patch.path == anim_file then
+                anim_patch[#anim_patch + 1] = patch
+            elseif patch.file == anim_file then
+                anim_patch[#anim_patch + 1] = patch
+            end
         end
+        self.anim_file = anim_file
+        self.anim_patch = anim_patch
+
         local node_idx = 0
         for _, patch in ipairs(self.patch_template) do
             if patch.op == "add" and patch.path == "/-" then
@@ -818,7 +828,7 @@ function m:is_image_patch_node(patch)
 end
 function m:get_origin_patch_list(template_list)
     for _, patch in ipairs(self.origin_patch_template) do
-        if self:is_image_patch_node(patch) then
+        if self:is_image_patch_node(patch) or patch.file == self.anim_file or patch.path == self.anim_file then
             goto continue
         end
         if patch.file ~= self.prefab_name and patch.path ~= "hitch.prefab" then
@@ -838,6 +848,9 @@ function m:get_origin_patch_list(template_list)
 end
 
 function m:get_patch_list(template_list)
+    for _, patch in ipairs(self.anim_patch) do
+        template_list[#template_list + 1] = patch
+    end
     local template = hierarchy:get_prefab_template(true)
     for i = 2, #template do
         local tpl = template[i]
@@ -921,6 +934,7 @@ function m:save(path)
             end
             if #final_template > 0 then
                 utils.write_file(self.glb_filename..".patch", stringify(final_template))
+                assetmgr.unload(gd.virtual_prefab_path.."/" .. self.anim_file)
                 assetmgr.unload(self.glb_filename..".patch")
                 assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
                 anim_view.save_keyevent()
@@ -1387,56 +1401,42 @@ function m:on_patch_tranform(eid, n, v)
 end
 
 function m:on_patch_animation(eid, name, path)
-    local anim_file
-    local patch_idx
+    local anim_file_exists
+    local remove_index
     local target_path = "/animations/" .. name
-    for index, value in ipairs(self.patch_template) do
-        if value.op == "copyfile" and value.file == "animations/animation.ozz" then
-            anim_file = value.path
+    for index, value in ipairs(self.anim_patch) do
+        if value.file == "animations/animation.ozz" and value.path == self.anim_file then
+            anim_file_exists = true
         end
-        if anim_file then
-            if not path then
-                if value.op == "replace" and value.file == anim_file and value.path == target_path then
-                    patch_idx = index
-                    break
-                end
-            else
-                break
-            end
+        if not path and value.op == "replace" and value.file == self.anim_file and value.path == target_path then
+            remove_index = index
+            break
         end
     end
     -- delete animation
-    if patch_idx and not path then
-        table.remove(self.patch_template, patch_idx)
+    if remove_index then
+        table.remove(self.anim_patch, remove_index)
         return
     end
-    local new_anim_file
-    if not anim_file then
-        new_anim_file = true
-        anim_file = "animations/" .. self.prefab_name:sub(1, -8) .. ".ozz"
-        self.patch_template[#self.patch_template + 1] = {
+    if not anim_file_exists then
+        self.anim_patch = {
             file = "animations/animation.ozz",
             op = "copyfile",
-            path = anim_file,
+            path = self.anim_file,
         }
-    end
-    if path then
-        self.patch_template[#self.patch_template + 1] = {
-            file = anim_file,
-            op = "replace",
-            path = "/animations/"..name,
-            value = path,
-        }
-    end
-    if new_anim_file then
         self.patch_template[#self.patch_template + 1] = {
             file = self.prefab_name,
             op = "replace",
             path = "/2/data/animation",
-            value = "./"..anim_file
+            value = "./"..self.anim_file
         }
     end
-    -- self:do_patch(eid, "/data/animation/"..name, path)
+    self.anim_patch[#self.anim_patch + 1] = {
+        file = self.anim_file,
+        op = path and "replace" or "remove",
+        path = "/animations/"..name,
+        value = path and path or nil,
+    }
     anim_view.update_anim_namelist()
 end
 return m

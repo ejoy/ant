@@ -3,6 +3,7 @@ local serialize         = import_package "ant.serialize"
 local lfs               = require "bee.filesystem"
 local material_compile  = require "material.compile"
 local L                 = import_package "ant.render.core".layout
+local depends           = require "depends"
 
 local function create_entity(status, t, prefabs)
     if t.parent then
@@ -327,14 +328,14 @@ local function compile_animation(status, skeleton, name, file)
     local skecontent = skeleton:sub(1,1) == "/"
          and vfs_fastio.readall_f(status.setting, skeleton)
          or loc_fastio.readall_f((status.output / "animations" / skeleton):string())
+    depends.add_vpath(status.depfiles, status.setting, file)
     anim2ozz(status.setting, skecontent, file, (status.output / "animations" / (name..".bin")):string())
     return serialize.path(name..".bin")
 end
 
 return function (status)
-    local glbdata = status.glbdata
     local math3d = status.math3d
-    local gltfscene = glbdata.info
+    local gltfscene = status.gltfscene
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]
 

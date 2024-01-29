@@ -11,7 +11,7 @@ namespace ozzlua::SamplingJobContext {
     }
     static int create(lua_State* L) {
         lua_Integer n = luaL_checkinteger(L, 1);
-        bee::lua::newudata<ozzSamplingJobContext>(L, (int)n);
+        bee::lua::newudata<ozz::animation::SamplingJob::Context>(L, (int)n);
         return 1;
     }
 }
@@ -51,8 +51,8 @@ namespace ozzlua::BlendingJobLayerVector {
 }
 
 static int SamplingJob(lua_State* L) {
-    auto& animation = bee::lua::checkudata<ozzAnimation>(L, 1);
-    auto& context = bee::lua::checkudata<ozzSamplingJobContext>(L, 2);
+    auto& animation = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
+    auto& context = bee::lua::checkudata<ozz::animation::SamplingJob::Context>(L, 2);
     auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 3);
     float ratio = (float)luaL_checknumber(L, 4);
     ozz::animation::SamplingJob job;
@@ -70,7 +70,7 @@ static int BlendingJob(lua_State* L) {
     ozz::animation::BlendingJob job;
     auto& layers = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 1);
     auto& locals = bee::lua::checkudata<ozzSoaTransformVector>(L, 2);
-    auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 3);
+    auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 3);
     float threshold = (float)luaL_optnumber(L, 4, 0.1);
     if (!lua_isnoneornil(L, 5)) {
         auto& additive_layers = bee::lua::checkudata<ozzBlendingJobLayerVector>(L, 5);
@@ -88,7 +88,7 @@ static int BlendingJob(lua_State* L) {
 
 static int LocalToModelJob(lua_State* L) {
     ozz::animation::LocalToModelJob job;
-    auto& ske = bee::lua::checkudata<ozzSkeleton>(L, 1);
+    auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 1);
     job.skeleton = &ske;
     if (lua_type(L, 2) == LUA_TNIL) {
         job.input = ske.joint_rest_poses();
@@ -120,8 +120,8 @@ void init_job(lua_State* L) {
 
 namespace bee::lua {
     template <>
-    struct udata<ozzSamplingJobContext> {
-        static inline auto name = "ozzSamplingJobContext";
+    struct udata<ozz::animation::SamplingJob::Context> {
+        static inline auto name = "ozz::SamplingJob::Context";
         static inline auto metatable = ozzlua::SamplingJobContext::metatable;
     };
     template <>

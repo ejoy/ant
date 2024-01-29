@@ -21,9 +21,16 @@ if not ozz.adapter then
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
     mt = ozz.MatrixVectorMt().__index
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-    mt = ozz.RawAnimationMt().__index
-    mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 5)
 
     ozz.LocalToModelJob = math3d_adapter.getter(ozz.LocalToModelJob, "m", 2)
     ozz.BuildSkinningMatrices = math3d_adapter.matrix(ozz.BuildSkinningMatrices, 5)
+end
+
+if not __ANT_RUNTIME__ then
+    local ozzoffline = require "ozz.offline"
+    if not ozzoffline.adapter then
+        ozzoffline.adapter = true
+        local mt = ozzoffline.RawAnimationMt().__index
+        mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 5)
+    end
 end
