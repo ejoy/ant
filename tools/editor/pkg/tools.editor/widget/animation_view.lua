@@ -328,7 +328,7 @@ local function show_current_event()
         ImGui.Text("SoundEvent : " .. current_event.sound_event)
         ImGui.Separator();
         for _, se in ipairs(sound_event_name_list) do
-            if ImGui.Selectable(se, current_event.sound_event == se, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.Selectable(se, current_event.sound_event == se, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
                 if (ImGui.IsMouseDoubleClicked(0)) then
                     fmod.play(sound_event_list[se])

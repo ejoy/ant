@@ -105,9 +105,8 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+	ENUM(ImGuiSelectableFlags, Disabled),
 	ENUM(ImGuiSelectableFlags, AllowOverlap),
-	// Use boolean(disabled) in Selectable(_,_, disabled)
-	//	ENUM(ImGuiSelectableFlags, Disabled),
 	{ NULL, 0 },
 };
 

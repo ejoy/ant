@@ -1297,46 +1297,13 @@ wEndCombo(lua_State *L) {
 
 static int
 wSelectable(lua_State *L) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	bool selected;
-	ImGuiSelectableFlags flags = 0;
+	const char *label = luaL_checkstring(L, 1);
+	bool selected = lua_toboolean(L, 2);
+	ImGuiSelectableFlags flags = lua_getflags<ImGuiSelectableFlags>(L, 3, ImGuiSelectableFlags_None);
 	ImVec2 size(0, 0);
-	int t = lua_type(L, INDEX_ARGS);
-	switch (t) {
-	case LUA_TNIL:
-	case LUA_TBOOLEAN:
-		selected = lua_toboolean(L, INDEX_ARGS);
-		size.x = (float)luaL_optnumber(L, 3, 0.0f);
-		size.y = (float)luaL_optnumber(L, 4, 0.0f);
-		flags = lua_getflags<ImGuiSelectableFlags>(L, 5, ImGuiSelectableFlags_None);
-		if (lua_toboolean(L, 6)) {
-			flags |= ImGuiSelectableFlags_Disabled;
-		}
-		break;
-	case LUA_TTABLE:
-		if (lua_geti(L, INDEX_ARGS, 1) == LUA_TSTRING &&
-			lua_compare(L, INDEX_ID, -1, LUA_OPEQ)) {
-			selected = true;
-		} else {
-			selected = false;
-		}
-		lua_pop(L, 1);
-		flags = read_field_int(L, "item_flags", 0);
-		size.x = (float)read_field_float(L, "width", 0);
-		size.y = (float)read_field_float(L, "height", 0);
-		if (lua_toboolean(L, 3)) {
-			flags |= ImGuiSelectableFlags_Disabled;
-		}
-		break;
-	default:
-		return luaL_error(L, "Invalid selected type %s", lua_typename(L, t));
-	}
-	
+	size.x = (float)luaL_optnumber(L, 4, 0.0f);
+	size.y = (float)luaL_optnumber(L, 5, 0.0f);
 	bool change = ImGui::Selectable(label, selected, flags, size);
-	if (change && t == LUA_TTABLE) {
-		lua_pushvalue(L, INDEX_ID);
-		lua_seti(L, INDEX_ARGS, 1);
-	}
 	lua_pushboolean(L, change);
 	return 1;
 }

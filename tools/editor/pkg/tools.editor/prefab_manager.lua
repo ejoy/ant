@@ -498,7 +498,7 @@ function m:choose_prefab()
         end
         ImGui.Separator()
         for _, prefab in ipairs(prefab_list) do
-            if ImGui.Selectable(prefab, false, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.Selectable(prefab, false, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 if gd.is_opening then
                     self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
                 else
