@@ -313,7 +313,7 @@ function TextureResource:show()
     if not self.runtimedata then return end
     --if not self.runtimedata._data.handle then return end
     if ImGui.BeginTable("##TextureTable" .. self.label, 2, ImGui.Flags.Table {}) then
-        ImGui.TableSetupCoTableSetupColumnExlumn("ImagePreview", ImGui.Flags.TableColumn {'WidthFixed'}, 64.0)
+        ImGui.TableSetupColumnEx("ImagePreview", ImGui.Flags.TableColumn {'WidthFixed'}, 64.0)
         ImGui.TableSetupColumnEx("ImagePath", ImGui.Flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
         ImGui.TableNextColumn()
         if self.runtimedata._data.handle then
