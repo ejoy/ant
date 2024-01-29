@@ -53,7 +53,7 @@ static int TableGetRowIndex(lua_State* L) {
 	return 1;
 }
 
-static int TableSetupColumn(lua_State* L) {
+static int TableSetupColumnEx(lua_State* L) {
 	const char* label = luaL_checkstring(L, 1);
 	ImGuiTableColumnFlags flags = (ImGuiTableColumnFlags)luaL_optinteger(L, 2, ImGuiTableColumnFlags_None);
 	float init_width_or_weight = (float)luaL_optnumber(L, 3, 0.f);
@@ -155,7 +155,7 @@ void init(lua_State* L) {
 		{ "TableSetColumnIndex", TableSetColumnIndex },
 		{ "TableGetColumnIndex", TableGetColumnIndex },
 		{ "TableGetRowIndex", TableGetRowIndex },
-		{ "TableSetupColumn", TableSetupColumn },
+		{ "TableSetupColumnEx", TableSetupColumnEx },
 		{ "TableSetupScrollFreeze", TableSetupScrollFreeze },
 		{ "TableHeadersRow", TableHeadersRow },
 		{ "TableHeader", TableHeader },

@@ -796,10 +796,10 @@ function m.show()
         ImGui.Separator()
         if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
             if not edit_timeline then
-                ImGui.TableSetupColumn("Bones", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+                ImGui.TableSetupColumnEx("Bones", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
             end
-            ImGui.TableSetupColumn("Event", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
-            ImGui.TableSetupColumn("Event(Detail)", ImGui.Flags.TableColumn {'WidthStretch'}, 2.0)
+            ImGui.TableSetupColumnEx("Event", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumnEx("Event(Detail)", ImGui.Flags.TableColumn {'WidthStretch'}, 2.0)
             ImGui.TableHeadersRow()
             local child_width, child_height
             if not edit_timeline then

@@ -315,10 +315,10 @@ function m.show()
         ImGui.Separator()
         if ImGui.BeginTable("InspectorTable", 3, ImGui.Flags.Table {'ScrollY'}) then
             -- local child_width, child_height = ImGui.GetContentRegionAvail()
-            ImGui.TableSetupColumn("Entity", ImGui.Flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumnEx("Entity", ImGui.Flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
             local fw = 24.0 * icons.scale
-            ImGui.TableSetupColumn("Lock", ImGui.Flags.TableColumn {'WidthFixed'}, fw)
-            ImGui.TableSetupColumn("Visible", ImGui.Flags.TableColumn {'WidthFixed'}, fw)
+            ImGui.TableSetupColumnEx("Lock", ImGui.Flags.TableColumn {'WidthFixed'}, fw)
+            ImGui.TableSetupColumnEx("Visible", ImGui.Flags.TableColumn {'WidthFixed'}, fw)
             ImGui.TableHeadersRow()
             for _, child in ipairs(hierarchy.root.children) do
                 target_e = nil

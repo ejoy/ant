@@ -1158,9 +1158,9 @@ function m.show()
             end
         end
         if ImGui.BeginTable("SkeletonColumns", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
-            ImGui.TableSetupColumn("Targets", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
-            ImGui.TableSetupColumn("Detail", ImGui.Flags.TableColumn {'WidthStretch'}, 1.5)
-            ImGui.TableSetupColumn("AnimationLayer", ImGui.Flags.TableColumn {'WidthStretch'}, 6.5)
+            ImGui.TableSetupColumnEx("Targets", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumnEx("Detail", ImGui.Flags.TableColumn {'WidthStretch'}, 1.5)
+            ImGui.TableSetupColumnEx("AnimationLayer", ImGui.Flags.TableColumn {'WidthStretch'}, 6.5)
             ImGui.TableHeadersRow()
 
             ImGui.TableNextColumn()
