@@ -8,6 +8,7 @@ local patch             = require "model.patch"
 local depends           = require "depends"
 local parallel_task     = require "parallel_task"
 local lfs               = require "bee.filesystem"
+local base64            = require "model.glTF.base64"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -43,8 +44,13 @@ return function (input, output, setting, changed)
     status.patch = patch.init(input, status.depfiles)
 
     local gltf_cwd = lfs.path(input):remove_filename():string()
-    function status.gltf_fetch(path)
-        local fullpath = gltf_cwd .. path
+    function status.gltf_fetch(uri)
+        if uri:sub(1, 5) == "data:" then
+            local match = uri:match "^data:[a-z-]+/[a-z-]+;base64,"
+            assert(match)
+            return base64.decode(uri:sub(#match + 1))
+        end
+        local fullpath = gltf_cwd .. uri
         depends.add_lpath(status.depfiles, fullpath)
         return readall(fullpath)
     end
