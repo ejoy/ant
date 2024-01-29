@@ -18,7 +18,7 @@ local function show_camera_setting(open)
         end
     end
 
-    local change, opened = ImGui.BeginPopupModal(CAMERA_SETTING_NAME, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change = ImGui.BeginPopupModal(CAMERA_SETTING_NAME, nil, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         local mq = w:first "main_queue camera_ref:in"
         local e<close> = world:entity(mq.camera_ref, "camera:update scene:update")

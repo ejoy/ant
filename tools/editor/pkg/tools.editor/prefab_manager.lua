@@ -454,7 +454,7 @@ function m:choose_prefab()
     if not ImGui.IsPopupOpen(title) then
         ImGui.OpenPopup(title)
     end
-    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         if gd.is_opening then
 

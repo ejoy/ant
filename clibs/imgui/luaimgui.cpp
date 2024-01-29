@@ -1831,34 +1831,19 @@ wSelectableInput(lua_State* L) {
 // 	return 1;
 }
 
-#define NO_CLOSED ((lua_Integer)1 << 32)
-
-struct window_args {
-	const char * id;
-	bool *p_open;
-	bool opened;
-	unsigned int flags;
-};
-
-static void
-get_window_args(lua_State *L, struct window_args *args) {
-	args->id = luaL_checkstring(L, INDEX_ID);
-	lua_Integer flagsx = luaL_optinteger(L, 2, 0);
-	args->flags = (unsigned int)(flagsx & 0xffffffff);
-	args->opened = true;
-	args->p_open = &args->opened;
-	if (flagsx & NO_CLOSED) {
-		args->p_open = NULL;
-	}
-}
-
 static int
 winBegin(lua_State *L) {
-	struct window_args args;
-	get_window_args(L, &args);
-	bool change = ImGui::Begin(args.id, args.p_open, args.flags);
+	const char* name = luaL_checkstring(L, 1);
+	auto window_flags = lua_getflags<ImGuiWindowFlags>(L, 3, ImGuiWindowFlags_None);
+	if (lua_isnil(L, 2)) {
+		bool change = ImGui::Begin(name, NULL, window_flags);
+		lua_pushboolean(L, change);
+		return 1;
+	}
+	bool opened = true;
+	bool change = ImGui::Begin(name, &opened, window_flags);
 	lua_pushboolean(L, change);
-	lua_pushboolean(L, args.opened);
+	lua_pushboolean(L, opened);
 	return 2;
 }
 
@@ -1916,11 +1901,17 @@ winEndTabBar(lua_State *L) {
 
 static int
 winBeginTabItem(lua_State *L) {
-	struct window_args args;
-	get_window_args(L, &args);
-	bool change = ImGui::BeginTabItem(args.id, args.p_open, args.flags);
+	const char* name = luaL_checkstring(L, 1);
+	auto flags = lua_getflags<ImGuiTabItemFlags>(L, 3, ImGuiTabItemFlags_None);
+	if (lua_isnil(L, 2)) {
+		bool change = ImGui::BeginTabItem(name, NULL, flags);
+		lua_pushboolean(L, change);
+		return 1;
+	}
+	bool opened = true;
+	bool change = ImGui::BeginTabItem(name, &opened, flags);
 	lua_pushboolean(L, change);
-	lua_pushboolean(L, args.opened);
+	lua_pushboolean(L, opened);
 	return 2;
 }
 
@@ -1990,11 +1981,17 @@ winBeginPopupContextVoid(lua_State *L) {
 
 static int
 winBeginPopupModal(lua_State *L) {
-	struct window_args args;
-	get_window_args(L, &args);
-	bool change = ImGui::BeginPopupModal(args.id, args.p_open, args.flags);
+	const char* name = luaL_checkstring(L, 1);
+	auto window_flags = lua_getflags<ImGuiWindowFlags>(L, 3, ImGuiWindowFlags_None);
+	if (lua_isnil(L, 2)) {
+		bool change = ImGui::BeginPopupModal(name, NULL, window_flags);
+		lua_pushboolean(L, change);
+		return 1;
+	}
+	bool opened = true;
+	bool change = ImGui::BeginPopupModal(name, &opened, window_flags);
 	lua_pushboolean(L, change);
-	lua_pushboolean(L, args.opened);
+	lua_pushboolean(L, opened);
 	return 2;
 }
 

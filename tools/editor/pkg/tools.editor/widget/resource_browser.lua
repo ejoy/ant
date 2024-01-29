@@ -127,7 +127,7 @@ local function rename_file(file)
         ImGui.OpenPopup("Rename file")
     end
 
-    local change, opened = ImGui.BeginPopupModal("Rename file", ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change = ImGui.BeginPopupModal("Rename file", nil, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text("new name :")
         ImGui.SameLine()
@@ -306,7 +306,7 @@ function m.show()
         return
     end
     
-    if ImGui.Begin("ResourceBrowser", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    if ImGui.Begin("ResourceBrowser", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then

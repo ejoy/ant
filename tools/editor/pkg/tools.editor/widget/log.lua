@@ -384,7 +384,7 @@ function m.show()
     checkLog()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if ImGui.Begin("Log", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    if ImGui.Begin("Log", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         showHeaderWidget()
         m.showLog("LogList")
     end

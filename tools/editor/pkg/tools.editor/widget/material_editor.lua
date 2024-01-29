@@ -12,7 +12,7 @@ local wndflags = ImGui.Flags.Window {
 }
 
 function md.open(materialfile)
-    ImGui.Begin("MaterialEditor", wndflags) do
+    ImGui.Begin("MaterialEditor", nil, wndflags) do
         
         ImGui.End()
     end

@@ -4,17 +4,6 @@ local faicons   = require "common.fa_icons"
 local icons   = require "common.icons"
 local m = {}
 
-local function ONCE(t, s)
-    if not s then return t end
-end
-local windiwsBegin = ImGui.Begin
-local windiwsEnd = setmetatable({}, { __close = ImGui.End })
-
-function m.imgui_windows(...)
-	windiwsBegin(...)
-	return ONCE, windiwsEnd, nil, windiwsEnd
-end
-
 function m.imguiBeginToolbar()
     ImGui.PushStyleColor(ImGui.Enum.Col.Button, 0, 0, 0, 0)
     ImGui.PushStyleColor(ImGui.Enum.Col.ButtonActive, 0, 0, 0, 0)
@@ -68,7 +57,7 @@ function m.show_message_box()
         if not ImGui.IsPopupOpen(msg.title) then
             ImGui.OpenPopup(msg.title)
         end
-        local change, opened = ImGui.BeginPopupModal(msg.title, ImGui.Flags.Window{"AlwaysAutoResize"})
+        local change = ImGui.BeginPopupModal(msg.title, nil, ImGui.Flags.Window{"AlwaysAutoResize"})
         if change then
             ImGui.Text(msg.info)
             level = level + 1
@@ -87,7 +76,7 @@ end
 
 function m.confirm_dialog(info)
     ImGui.OpenPopup(info.title)
-    local change, opened = ImGui.BeginPopupModal(info.title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(info.title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text(info.message)
         if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK" OK") then

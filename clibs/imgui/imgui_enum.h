@@ -23,7 +23,6 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoNav),
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
-	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
 
@@ -135,7 +134,6 @@ static struct enum_pair eTabBarFlags[] = {
 	ENUM(ImGuiTabBarFlags, NoTooltip),
 	ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
 	ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
-	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
 

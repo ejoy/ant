@@ -47,7 +47,7 @@ local function choose_project()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text("Create new or open existing project.")
         if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
@@ -121,7 +121,7 @@ function m:data_changed()
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", ImGui.Flags.Window {
+    if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -144,7 +144,7 @@ function m:data_changed()
     ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], 'F')
     -- ImGui.SetNextWindowDockID("MainViewSpace", 'F')
     local exit = false
-    if ImGui.Begin("##Choose project", ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse", "NoClosed" }) then
+    if ImGui.Begin("##Choose project", true, ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse" }) then
         -- exit = choose_project()
         -- local wid = ImGui.GetID("Choose project")
         local selected_proj

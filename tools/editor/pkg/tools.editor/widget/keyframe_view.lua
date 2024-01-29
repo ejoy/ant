@@ -417,7 +417,7 @@ local function create_clip()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text("StartFrame:")
         ImGui.SameLine()
@@ -853,7 +853,7 @@ local function ShowNewAnimationUI()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text("Name:")
         ImGui.SameLine()
@@ -975,7 +975,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if ImGui.Begin("Skeleton", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    if ImGui.Begin("Skeleton", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         if current_skeleton and not current_anim then
             if ImGui.Button(faicons.ICON_FA_FILE_PEN.." ske") then
                 new_anim_widget = true
