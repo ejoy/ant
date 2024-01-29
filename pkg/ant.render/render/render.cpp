@@ -293,6 +293,7 @@ static inline void
 render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 	// draw simple objects
 	for (auto& e : ecs::select<component::render_object_visible, component::render_object>(w->ecs)) {
+		const component::indirect_object* iobj = e.component<component::indirect_object>();
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			auto ra = cc.ra[ii];
 			const auto& obj = e.get<component::render_object>();
@@ -300,7 +301,6 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 			auto eid = e.component<component::eid>();eid;
 #endif //RENDER_DEBUG
 
-			const component::indirect_object* iobj = e.component<component::indirect_object>();
 			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(iobj) && obj_queue_visible(w->Q, obj, ra->queue_index))){
 				draw_obj(L, w, ra, &obj, iobj, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
