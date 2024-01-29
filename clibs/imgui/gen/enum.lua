@@ -1,14 +1,6 @@
-local AnrDir = ...
-local meta; do
-    local json = dofile(AnrDir.."/pkg/ant.json/main.lua")
-    local function readall(path)
-        local f <close> = assert(io.open(path, "rb"))
-        return f:read "a"
-    end
-    meta = json.decode(readall(AnrDir.."/clibs/imgui/dear_bindings/cimgui.json"))
-end
+local AntDir, meta = ...
 
-local w <close> = assert(io.open(AnrDir.."/clibs/imgui/imgui_enum.h", "wb"))
+local w <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_enum.h", "wb"))
 
 local function writeln(fmt, ...)
     w:write(string.format(fmt, ...))
