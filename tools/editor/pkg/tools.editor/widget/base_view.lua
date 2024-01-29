@@ -117,22 +117,6 @@ function BaseView:on_get_preview()
     return info.editor
 end
 
--- function BaseView:on_set_name(value)
---     local info = hierarchy:get_node_info(self.eid)
---     info.template.data.name = value
---     local e <close> = world:entity(self.eid, "name:out")
---     e.name = value
---     world:pub {"EntityEvent", "name", self.eid, value}
--- end
-
--- function BaseView:on_get_name()
---     local e <close> = world:entity(self.eid, "name?in")
---     if type(e.name) == "number" then
---         return tostring(e.name)
---     end
---     return e.name or ""
--- end
-
 function BaseView:on_set_tag(value)
     local info = hierarchy:get_node_info(self.eid)
     local tags = {}

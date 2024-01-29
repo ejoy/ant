@@ -568,10 +568,10 @@ function m:open(filename, prefab_name, patch_tpl)
     local path_list = isglb and utils.split_ant_path(filename) or {}
     local virtual_prefab_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or filename, gd.project_root)):string()
     if #path_list > 1 then
+        self.glb_filename = path_list[1]
         self.prefab_name = path_list[2]
         gd.virtual_prefab_path = virtual_prefab_path
         gd.current_compile_path = cook_prefab(virtual_prefab_path .. "|".. self.prefab_name)
-        self.glb_filename = path_list[1]
         virtual_prefab_path = virtual_prefab_path .. "/" .. self.prefab_name
         self.prefab_template = serialize.parse(virtual_prefab_path, aio.readall(virtual_prefab_path))
 
@@ -761,10 +761,16 @@ function m:add_prefab(path)
     if not self.root then
         self:reset_prefab()
     end
+    local path_list = utils.split_ant_path(path)
+    local virtual_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or path, gd.project_root)):string()
+    if #path_list > 1 then
+        virtual_path = virtual_path .. "|".. path_list[2]
+        cook_prefab(virtual_path)
+    end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):stem()), parent)
     world:create_instance {
-        prefab = path,
+        prefab = virtual_path,
         parent = v_root,
         on_ready = function(inst)
             local children = inst.tag["*"]
@@ -774,14 +780,14 @@ function m:add_prefab(path)
                     local child = children[1]
                     local e <close> = world:entity(child, "camera?in")
                     if e.camera then
-                        local tpl = serialize.parse(path, aio.readall(path))
+                        local tpl = serialize.parse(virtual_path, aio.readall(virtual_path))
                         hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
                     end
                 end
             end
         end
     }
-    self:add_entity(v_root, parent, temp, path)
+    self:add_entity(v_root, parent, temp, virtual_path)
 end
 
 function m:get_hitch_content()
