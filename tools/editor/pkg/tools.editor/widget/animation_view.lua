@@ -94,6 +94,9 @@ local function do_to_runtime_event(evs)
 end
 
 local function to_runtime_event(ke)
+    if not ke then
+        return {}
+    end
     local temp = {}
     for key, value in pairs(ke) do
         if #value > 0 then
