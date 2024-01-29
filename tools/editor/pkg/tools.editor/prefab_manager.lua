@@ -365,7 +365,7 @@ function m:on_prefab_ready(prefab)
                 if i == 1 then
                     name = "Scene"
                 else
-                    name = pt.data.animation and "anim_ctrl" or (pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or ""))
+                    name = pt.data.animation and "animation" or (pt.data.mesh and tostring(fs.path(pt.data.mesh):stem()) or (pt.data.meshskin and tostring(fs.path(pt.data.meshskin):stem()) or ""))
                 end
             end
             tag_list[#tag_list + 1] = {name, eid}
@@ -1028,7 +1028,7 @@ function m:update_tag_list()
     local mtl_list = {""}
     local efk_list = {}
     for k, value in pairs(self.current_prefab.tag) do
-        if k ~= "*" and k ~= "anim_ctrl" then
+        if k ~= "*" and k ~= "animation" then
             for _, eid in ipairs(value) do
                 local ee <close> = world:entity(eid, "scene?in material?in")
                 if ee.scene or ee.material then

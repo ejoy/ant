@@ -25,8 +25,8 @@ function engine_event:Animation(tid, ud)
 	if ud.ev.asset_path and #ud.ev.asset_path > 0 then
 		imodifier.start(imodifier.create_modifier_from_file(ud.eid_map[ud.ev.target][1], 0, ud.ev.asset_path, ud.ev.action), {}, true)
 	else
-		local anim_ctrl = ud.eid_map["anim_ctrl"]
-		local anim_eid = anim_ctrl and anim_ctrl[1] or nil
+		local animation = ud.eid_map["animation"]
+		local anim_eid = animation and animation[1] or nil
 		if anim_eid then
 			iani.play(anim_eid, {name = ud.ev.action, forwards = ud.ev.forwards or false})
 			if ud.ev.pause_frame and ud.ev.pause_frame > -1 then

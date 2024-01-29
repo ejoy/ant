@@ -57,7 +57,6 @@ policy:
   ant.render|skinrender
 ---
 data:
-  anim_ctrl: {}
   animation:
     ArmatureAction: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/ArmatureAction.bin
     work: /pkg/tools.prefab_viewer/assets/prefabs/animation/miner_Bone.anim

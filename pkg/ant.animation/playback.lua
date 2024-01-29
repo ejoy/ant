@@ -78,6 +78,20 @@ function api.set_play(e, name, v)
     end
 end
 
+function api.set_play_all(e, v)
+    w:extend(e, "animation:in animation_playback?out")
+    local playing = false
+    for _, status in pairs(e.animation.status) do
+        if status.weight > 0 then
+            if status.play ~= v then
+                status.play = v
+                playing = playing or v
+            end
+        end
+    end
+    e.animation_playback = playing
+end
+
 function api.set_loop(e, name, v)
     w:extend(e, "animation:in")
     local status = e.animation.status[name]
