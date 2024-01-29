@@ -14,8 +14,7 @@ local imaterial = ecs.require "ant.asset|material"
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
 local aio       = import_package "ant.io"
-local fastio    = require "fastio"
-local utils     = require "common.utils"
+local assetmgr  = import_package "ant.asset"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
 local uiproperty= require "widget.uiproperty"
@@ -300,7 +299,6 @@ local function get_pbr_factor(t)
 end
 
 local image_info = {}
-
 local function build_properties_ui(mv)
     local t = material_template(assert(mv.eid))
     local properties = {}
@@ -938,7 +936,7 @@ local default_files<const> = {
 local function is_glb_resource()
     local cp = prefab_mgr:get_current_filename()
     if cp then
-        return cp:match "%.glb%|mesh%.prefab$" ~= nil
+        return cp:match "%.glb%|mesh%.prefab$" or cp:match "%.gltf%|mesh%.prefab$"
     end
 end
 
@@ -947,7 +945,7 @@ local function is_readonly_resource(p)
     if is_glb_resource() then
         return true
     end
-    return p:match ".glb|" or default_files[p]
+    return p:match ".glb|" or p:match ".gltf|" or default_files[p]
 end
 
 local function to_virtualpath(localpath)
@@ -1061,12 +1059,12 @@ function MaterialView:set_eid(eid)
     local mtlpath = hierarchy:get_node_info(self.eid).template.data.material
     for _, v in pairs(t.properties) do
         if v.texture and not texture_flag[v.texture] then
-            local imagepath = absolute_path(v.texture, mtlpath)
-            local tp = fs.path(imagepath):normalize():string() .. "/source.ant"
+            local imagepath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
+            local tp = imagepath:string() .. "/source.ant"
             local data = datalist.parse(aio.readall(tp))
             if data and not image_info[v.texture] then
                 image_info[v.texture] = {width = data.info.width, height = data.info.height}
-                texture_flag[v.texture] = true
+                texture_flag[imagepath] = assetmgr.resource(imagepath:string())
             end
         end
     end
@@ -1144,18 +1142,27 @@ function MaterialView:enable_properties_ui()
     end
 end
 local filewatch_event = world:sub {"FileWatch"}
+
 function MaterialView:show()
     if not self.eid then
         return
     end
     -- check_disable_file_fetch_ui(self.mat_file)
-    -- for _, _, filename in filewatch_event:unpack() do
-    --     local texture = image_to_texture[filename]
-    --     if texture then
-    --         assetmgr.reload(texture)
-    --     end
-    --     break
-    -- end
+    for _, _, filename in filewatch_event:unpack() do
+        local tname = fs.path(filename):filename():string():gsub(".png", ".texture")
+        local path
+        for k, _ in pairs(texture_flag) do
+            if k:filename():string() == tname then
+                path = k
+                break
+            end
+        end
+        if path then
+            texture_flag[path] = assetmgr.reload(path:string())
+            local e <close> = world:entity(self.eid)
+            imaterial.set_property(e, "s_basecolor", assetmgr.textures[texture_flag[path].id])
+        end
+    end
     self.material:show()
 end
 

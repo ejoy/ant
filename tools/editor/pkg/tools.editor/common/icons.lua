@@ -58,7 +58,7 @@ local icons = {
             return self.ICON_SCRIPT
         elseif ext == ".shader" then
             return self.ICON_SHADER
-        elseif ext == ".glb" or ext == ".fbx" then
+        elseif ext == ".gltf" or ext == ".glb" or ext == ".fbx" then
             return self.ICON_MESHLIBRARY
         elseif ext == ".meshbin" then
             return self.ICON_MESH

@@ -314,7 +314,7 @@ function m:handle_event()
         local ext = string.sub(filename, -4)
         if ext == ".efk" then
             prefab_mgr:add_effect(filename)
-        elseif ext == ".glb" then
+        elseif ext == ".glb" or ext == ".gltf" then
             global_data.glb_filename = filename
         else
             prefab_mgr:add_prefab(filename)

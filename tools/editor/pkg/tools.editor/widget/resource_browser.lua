@@ -60,7 +60,7 @@ local function construct_resource_tree(fspath)
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)
         for _, item in ipairs(sorted_path) do
             local ext = item:extension():string()
-            if lfs.is_directory(item) and ext ~= ".glb" and ext ~= ".material" and ext ~= ".texture" then
+            if lfs.is_directory(item) and ext ~= ".glb" and ext ~= ".gltf" and ext ~= ".material" and ext ~= ".texture" then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
                 if selected_folder[1] == item then
                     selected_folder = tree.dirs[#tree.dirs]
@@ -431,7 +431,7 @@ function m.show()
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(0) then
                             local isprefab = path:equal_extension(".prefab")
-                            if path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
+                            if path:equal_extension(".gltf") or path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}
                             elseif path:equal_extension ".material" then
                                 local me = ecs.require "widget.material_editor"
@@ -466,6 +466,7 @@ function m.show()
                         or path:equal_extension(".dds")
                         or path:equal_extension(".prefab")
                         or path:equal_extension(".glb")
+                        or path:equal_extension(".gltf")
                         or path:equal_extension(".efk")
                         or path:equal_extension(".lua") then
                         if ImGui.BeginDragDropSource() then

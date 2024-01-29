@@ -562,7 +562,7 @@ function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
     local isglb = false
-    if filename:find('.glb|') then
+    if filename:match('.glb|') or filename:match('.gltf|') then
         isglb = true
     end
     local path_list = isglb and utils.split_ant_path(filename) or {}

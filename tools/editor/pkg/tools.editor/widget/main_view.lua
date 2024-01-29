@@ -36,7 +36,7 @@ function m.show()
             if not drag_file then
                 local dropdata = ImGui.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
-                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb") then
+                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb" or string.sub(dropdata, -5) == ".gltf") then
                     drag_file = dropdata
                 end
             end
