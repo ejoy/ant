@@ -312,7 +312,7 @@ function TextureResource:show()
     ResourcePath.show(self)
     if not self.runtimedata then return end
     --if not self.runtimedata._data.handle then return end
-    if ImGui.TableBegin("##TextureTable" .. self.label, 2, ImGui.Flags.Table {}) then
+    if ImGui.BeginTable("##TextureTable" .. self.label, 2, ImGui.Flags.Table {}) then
         ImGui.TableSetupColumn("ImagePreview", ImGui.Flags.TableColumn {'WidthFixed'}, 64.0)
         ImGui.TableSetupColumn("ImagePath", ImGui.Flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
         ImGui.TableNextColumn()
@@ -384,7 +384,7 @@ function TextureResource:show()
                 ImGui.EndPopup()
             end
         end
-        ImGui.TableEnd()
+        ImGui.EndTable()
     end
 end
 

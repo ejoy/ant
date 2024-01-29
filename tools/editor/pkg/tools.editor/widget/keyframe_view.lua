@@ -1157,7 +1157,7 @@ function m.show()
                 ImGui.Text("material path: " .. tostring(current_mtl))
             end
         end
-        if ImGui.TableBegin("SkeletonColumns", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+        if ImGui.BeginTable("SkeletonColumns", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
             ImGui.TableSetupColumn("Targets", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
             ImGui.TableSetupColumn("Detail", ImGui.Flags.TableColumn {'WidthStretch'}, 1.5)
             ImGui.TableSetupColumn("AnimationLayer", ImGui.Flags.TableColumn {'WidthStretch'}, 6.5)
@@ -1227,7 +1227,7 @@ function m.show()
             end
             ImGui.EndChild()
 
-            ImGui.TableEnd()
+            ImGui.EndTable()
         end
     end
     ImGui.End()

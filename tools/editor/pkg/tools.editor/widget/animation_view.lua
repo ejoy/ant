@@ -794,7 +794,7 @@ function m.show()
             on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
         end
         ImGui.Separator()
-        if ImGui.TableBegin("EventColumns", edit_timeline and 2 or 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+        if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
             if not edit_timeline then
                 ImGui.TableSetupColumn("Bones", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
             end
@@ -820,7 +820,7 @@ function m.show()
             ImGui.BeginChild("##show_current_event", child_width, child_height)
             show_current_event()
             ImGui.EndChild()
-            ImGui.TableEnd()
+            ImGui.EndTable()
         end
         ::continue::
     end

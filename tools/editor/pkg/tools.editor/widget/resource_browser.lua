@@ -342,7 +342,7 @@ function m.show()
         ImGui.Separator()
         local filter_focus1 = false
         local filter_focuse2 = false
-        if ImGui.TableBegin("InspectorTable", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+        if ImGui.BeginTable("InspectorTable", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
             ImGui.TableNextColumn()
             local child_width, child_height = ImGui.GetContentRegionAvail()
             ImGui.BeginChild("##ResourceBrowserDir", child_width, child_height)
@@ -516,7 +516,7 @@ function m.show()
                 end
             end
             ImGui.EndChild()
-        ImGui.TableEnd()
+        ImGui.EndTable()
         end
         global_data.camera_lock = filter_focus1 or filter_focuse2
     end

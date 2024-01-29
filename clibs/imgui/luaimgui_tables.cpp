@@ -148,8 +148,8 @@ static int TableSetBgColor(lua_State* L) {
 
 void init(lua_State* L) {
 	luaL_Reg table[] = {
-		{ "TableBegin", BeginTable },
-		{ "TableEnd", EndTable },
+		{ "BeginTable", BeginTable },
+		{ "EndTable", EndTable },
 		{ "TableNextRow", TableNextRow },
 		{ "TableNextColumn", TableNextColumn },
 		{ "TableSetColumnIndex", TableSetColumnIndex },
