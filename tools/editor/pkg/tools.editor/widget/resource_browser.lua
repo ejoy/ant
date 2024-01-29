@@ -60,7 +60,7 @@ local function construct_resource_tree(fspath)
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)
         for _, item in ipairs(sorted_path) do
             local ext = item:extension():string()
-            if lfs.is_directory(item) and ext ~= ".glb" and ext ~= ".material" and ext ~= ".texture" then
+            if lfs.is_directory(item) and ext ~= ".glb" and ext ~= ".gltf" and ext ~= ".material" and ext ~= ".texture" then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
                 if selected_folder[1] == item then
                     selected_folder = tree.dirs[#tree.dirs]
@@ -127,7 +127,7 @@ local function rename_file(file)
         ImGui.OpenPopup("Rename file")
     end
 
-    local change, opened = ImGui.BeginPopupModal("Rename file", ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change = ImGui.BeginPopupModal("Rename file", nil, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text("new name :")
         ImGui.SameLine()
@@ -306,7 +306,7 @@ function m.show()
         return
     end
     
-    if ImGui.Begin("ResourceBrowser", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    if ImGui.Begin("ResourceBrowser", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then
@@ -410,7 +410,7 @@ function m.show()
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
                     pre_init_item_height()
-                    if ImGui.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.Selectable(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(0) then
@@ -426,12 +426,12 @@ function m.show()
                 for _, path in pairs(folder.files) do
                     pre_selectable(icons:get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
-                    if ImGui.Selectable(tostring(path:filename()), selected_file == path, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.Selectable(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(0) then
                             local isprefab = path:equal_extension(".prefab")
-                            if path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
+                            if path:equal_extension(".gltf") or path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}
                             elseif path:equal_extension ".material" then
                                 local me = ecs.require "widget.material_editor"
@@ -466,6 +466,7 @@ function m.show()
                         or path:equal_extension(".dds")
                         or path:equal_extension(".prefab")
                         or path:equal_extension(".glb")
+                        or path:equal_extension(".gltf")
                         or path:equal_extension(".efk")
                         or path:equal_extension(".lua") then
                         if ImGui.BeginDragDropSource() then

@@ -263,7 +263,7 @@ function ps.show(open_popup)
         ImGui.SetNextWindowSize(800, 600)
     end
 
-    if BeginPopupModal(ps.id, default_win_flags) then
+    if BeginPopupModal(ps.id, nil, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "ProjectSetting" then
                 if global_data.project_root then

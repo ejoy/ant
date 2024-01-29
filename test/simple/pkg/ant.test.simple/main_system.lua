@@ -32,7 +32,7 @@ function m:init_world()
 end
 
 function m:data_changed()
-    if ImGui.Begin("entities", ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+    if ImGui.Begin("entities", nil, ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
         local animation_eid
         if ImGui.TreeNode "mesh" then
             for i = 1, #entities do

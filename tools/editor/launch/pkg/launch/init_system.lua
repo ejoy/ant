@@ -47,7 +47,7 @@ local function choose_project()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, ImGui.Flags.Window{"AlwaysAutoResize", "NoClosed"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
     if change then
         ImGui.Text("Create new or open existing project.")
         if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
@@ -80,7 +80,7 @@ local function choose_project()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj)
                     exit = true
@@ -121,7 +121,7 @@ function m:data_changed()
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", ImGui.Flags.Window {
+    if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -144,7 +144,7 @@ function m:data_changed()
     ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], 'F')
     -- ImGui.SetNextWindowDockID("MainViewSpace", 'F')
     local exit = false
-    if ImGui.Begin("##Choose project", ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse", "NoClosed" }) then
+    if ImGui.Begin("##Choose project", true, ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse" }) then
         -- exit = choose_project()
         -- local wid = ImGui.GetID("Choose project")
         local selected_proj
@@ -180,7 +180,7 @@ function m:data_changed()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj.proj_path)
                     exit = true

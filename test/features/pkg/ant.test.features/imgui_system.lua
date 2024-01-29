@@ -51,7 +51,7 @@ function m:init()
 end
 
 function m:data_changed()
-    if ImGui.Begin("test", ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+    if ImGui.Begin("test", nil, ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
         if ImGui.BeginCombo("##test", currentTest) then
             select_test "<none>"
             select_test "<all>"

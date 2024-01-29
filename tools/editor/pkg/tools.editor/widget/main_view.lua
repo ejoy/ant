@@ -36,7 +36,7 @@ function m.show()
             if not drag_file then
                 local dropdata = ImGui.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
-                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb") then
+                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb" or string.sub(dropdata, -5) == ".gltf") then
                     drag_file = dropdata
                 end
             end
@@ -59,7 +59,7 @@ function m.show()
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", ImGui.Flags.Window {
+    if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",

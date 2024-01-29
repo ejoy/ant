@@ -68,7 +68,6 @@ local content_text_types = {
     [".css"] = plaintext,
     --[".html"] = plaintext,
     -- animation
-    [".event"] = plaintext,
     [".anim"] = plaintext,
     -- compiled resource
     [".ant"] = plaintext,

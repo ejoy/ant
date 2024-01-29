@@ -8,7 +8,6 @@ local assetmgr      = import_package "ant.asset"
 local window        = import_package "ant.window"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
-local iani          = ecs.require "ant.anim_ctrl|state_machine"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
 local ImGui         = import_package "ant.imgui"
@@ -102,7 +101,6 @@ local memfs = import_package "ant.vfs".memory
 function m:init()
 	memfs.init()
     world.__EDITOR__ = true
-    iani.set_edit_mode(true)
     widget_utils.load_imgui_layout(global_data.editor_root / "imgui.layout")
     window.set_title("Editor")
 	--

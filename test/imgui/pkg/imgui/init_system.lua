@@ -18,7 +18,7 @@ function m:data_changed()
     for _, e in DropfilesEvent:unpack() do
         print("dropfiles:", e.files[1])
     end
-    if ImGui.Begin ("test", ImGui.Flags.Window {'AlwaysAutoResize'}) then
+    if ImGui.Begin ("test", nil, ImGui.Flags.Window {'AlwaysAutoResize'}) then
         if ImGui.TreeNode("Test", ImGui.Flags.TreeNode{"DefaultOpen"}) then
             if ImGui.InputText("TEST", text) then
                 print(tostring(text.text))

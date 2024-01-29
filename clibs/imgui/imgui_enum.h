@@ -23,7 +23,6 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoNav),
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
-	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
 
@@ -50,8 +49,7 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
 	ENUM(ImGuiInputTextFlags, CallbackCompletion),
 	ENUM(ImGuiInputTextFlags, CallbackHistory),
-	// Todo : support CallbackAlways
-	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
+	ENUM(ImGuiInputTextFlags, CallbackAlways),
 	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
 	ENUM(ImGuiInputTextFlags, AllowTabInput),
 	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
@@ -106,9 +104,8 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+	ENUM(ImGuiSelectableFlags, Disabled),
 	ENUM(ImGuiSelectableFlags, AllowOverlap),
-	// Use boolean(disabled) in Selectable(_,_, disabled)
-	//	ENUM(ImGuiSelectableFlags, Disabled),
 	{ NULL, 0 },
 };
 
@@ -135,93 +132,10 @@ static struct enum_pair eTabBarFlags[] = {
 	ENUM(ImGuiTabBarFlags, NoTooltip),
 	ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
 	ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
-	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
 
 //ImGuiTabItemFlags
-
-static struct enum_pair eTableFlags[] = {
-	ENUM(ImGuiTableFlags, None),
-	ENUM(ImGuiTableFlags, Resizable),
-	ENUM(ImGuiTableFlags, Reorderable),
-	ENUM(ImGuiTableFlags, Hideable),
-	ENUM(ImGuiTableFlags, Sortable),
-	ENUM(ImGuiTableFlags, NoSavedSettings),
-	ENUM(ImGuiTableFlags, ContextMenuInBody),
-	ENUM(ImGuiTableFlags, RowBg),
-	ENUM(ImGuiTableFlags, BordersInnerH),
-	ENUM(ImGuiTableFlags, BordersOuterH),
-	ENUM(ImGuiTableFlags, BordersInnerV),
-	ENUM(ImGuiTableFlags, BordersOuterV),
-	ENUM(ImGuiTableFlags, BordersH),
-	ENUM(ImGuiTableFlags, BordersV),
-	ENUM(ImGuiTableFlags, BordersInner),
-	ENUM(ImGuiTableFlags, BordersOuter),
-	ENUM(ImGuiTableFlags, Borders),
-	ENUM(ImGuiTableFlags, NoBordersInBody),
-	ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
-	ENUM(ImGuiTableFlags, SizingFixedFit),
-	ENUM(ImGuiTableFlags, SizingFixedSame),
-	ENUM(ImGuiTableFlags, SizingStretchProp),
-	ENUM(ImGuiTableFlags, SizingStretchSame),
-	ENUM(ImGuiTableFlags, NoHostExtendX),
-	ENUM(ImGuiTableFlags, NoHostExtendY),
-	ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
-	ENUM(ImGuiTableFlags, PreciseWidths),
-	ENUM(ImGuiTableFlags, NoClip),
-	ENUM(ImGuiTableFlags, PadOuterX),
-	ENUM(ImGuiTableFlags, NoPadOuterX),
-	ENUM(ImGuiTableFlags, NoPadInnerX),
-	ENUM(ImGuiTableFlags, ScrollX),
-	ENUM(ImGuiTableFlags, ScrollY),
-	ENUM(ImGuiTableFlags, SortMulti),
-	ENUM(ImGuiTableFlags, SortTristate),
-	ENUM(ImGuiTableFlags, HighlightHoveredColumn),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eTableColumnFlags[] = {
-	ENUM(ImGuiTableColumnFlags, None),
-	ENUM(ImGuiTableColumnFlags, Disabled),
-	ENUM(ImGuiTableColumnFlags, DefaultHide),
-	ENUM(ImGuiTableColumnFlags, DefaultSort),
-	ENUM(ImGuiTableColumnFlags, WidthStretch),
-	ENUM(ImGuiTableColumnFlags, WidthFixed),
-	ENUM(ImGuiTableColumnFlags, NoResize),
-	ENUM(ImGuiTableColumnFlags, NoReorder),
-	ENUM(ImGuiTableColumnFlags, NoHide),
-	ENUM(ImGuiTableColumnFlags, NoClip),
-	ENUM(ImGuiTableColumnFlags, NoSort),
-	ENUM(ImGuiTableColumnFlags, NoSortAscending),
-	ENUM(ImGuiTableColumnFlags, NoSortDescending),
-	ENUM(ImGuiTableColumnFlags, NoHeaderLabel),
-	ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
-	ENUM(ImGuiTableColumnFlags, PreferSortAscending),
-	ENUM(ImGuiTableColumnFlags, PreferSortDescending),
-	ENUM(ImGuiTableColumnFlags, IndentEnable),
-	ENUM(ImGuiTableColumnFlags, IndentDisable),
-	ENUM(ImGuiTableColumnFlags, AngledHeader),
-	ENUM(ImGuiTableColumnFlags, IsEnabled),
-	ENUM(ImGuiTableColumnFlags, IsVisible),
-	ENUM(ImGuiTableColumnFlags, IsSorted),
-	ENUM(ImGuiTableColumnFlags, IsHovered),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eTableRowFlags[] = {
-	ENUM(ImGuiTableRowFlags, None),
-	ENUM(ImGuiTableRowFlags, Headers),
-	{ NULL, 0 },
-};
-
-static struct enum_pair eTableBgTarget[] = {
-	ENUM(ImGuiTableBgTarget, None),
-	ENUM(ImGuiTableBgTarget, RowBg0),
-	ENUM(ImGuiTableBgTarget, RowBg1),
-	ENUM(ImGuiTableBgTarget, CellBg),
-	{ NULL, 0 },
-};
 
 static struct enum_pair eFocusedFlags[] = {
 	ENUM(ImGuiFocusedFlags, None),
@@ -632,6 +546,88 @@ static struct enum_pair eMouseCursor[] = {
 
 //ImGuiCond
 
+static struct enum_pair eTableFlags[] = {
+	ENUM(ImGuiTableFlags, None),
+	ENUM(ImGuiTableFlags, Resizable),
+	ENUM(ImGuiTableFlags, Reorderable),
+	ENUM(ImGuiTableFlags, Hideable),
+	ENUM(ImGuiTableFlags, Sortable),
+	ENUM(ImGuiTableFlags, NoSavedSettings),
+	ENUM(ImGuiTableFlags, ContextMenuInBody),
+	ENUM(ImGuiTableFlags, RowBg),
+	ENUM(ImGuiTableFlags, BordersInnerH),
+	ENUM(ImGuiTableFlags, BordersOuterH),
+	ENUM(ImGuiTableFlags, BordersInnerV),
+	ENUM(ImGuiTableFlags, BordersOuterV),
+	ENUM(ImGuiTableFlags, BordersH),
+	ENUM(ImGuiTableFlags, BordersV),
+	ENUM(ImGuiTableFlags, BordersInner),
+	ENUM(ImGuiTableFlags, BordersOuter),
+	ENUM(ImGuiTableFlags, Borders),
+	ENUM(ImGuiTableFlags, NoBordersInBody),
+	ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
+	ENUM(ImGuiTableFlags, SizingFixedFit),
+	ENUM(ImGuiTableFlags, SizingFixedSame),
+	ENUM(ImGuiTableFlags, SizingStretchProp),
+	ENUM(ImGuiTableFlags, SizingStretchSame),
+	ENUM(ImGuiTableFlags, NoHostExtendX),
+	ENUM(ImGuiTableFlags, NoHostExtendY),
+	ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
+	ENUM(ImGuiTableFlags, PreciseWidths),
+	ENUM(ImGuiTableFlags, NoClip),
+	ENUM(ImGuiTableFlags, PadOuterX),
+	ENUM(ImGuiTableFlags, NoPadOuterX),
+	ENUM(ImGuiTableFlags, NoPadInnerX),
+	ENUM(ImGuiTableFlags, ScrollX),
+	ENUM(ImGuiTableFlags, ScrollY),
+	ENUM(ImGuiTableFlags, SortMulti),
+	ENUM(ImGuiTableFlags, SortTristate),
+	ENUM(ImGuiTableFlags, HighlightHoveredColumn),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableColumnFlags[] = {
+	ENUM(ImGuiTableColumnFlags, None),
+	ENUM(ImGuiTableColumnFlags, Disabled),
+	ENUM(ImGuiTableColumnFlags, DefaultHide),
+	ENUM(ImGuiTableColumnFlags, DefaultSort),
+	ENUM(ImGuiTableColumnFlags, WidthStretch),
+	ENUM(ImGuiTableColumnFlags, WidthFixed),
+	ENUM(ImGuiTableColumnFlags, NoResize),
+	ENUM(ImGuiTableColumnFlags, NoReorder),
+	ENUM(ImGuiTableColumnFlags, NoHide),
+	ENUM(ImGuiTableColumnFlags, NoClip),
+	ENUM(ImGuiTableColumnFlags, NoSort),
+	ENUM(ImGuiTableColumnFlags, NoSortAscending),
+	ENUM(ImGuiTableColumnFlags, NoSortDescending),
+	ENUM(ImGuiTableColumnFlags, NoHeaderLabel),
+	ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
+	ENUM(ImGuiTableColumnFlags, PreferSortAscending),
+	ENUM(ImGuiTableColumnFlags, PreferSortDescending),
+	ENUM(ImGuiTableColumnFlags, IndentEnable),
+	ENUM(ImGuiTableColumnFlags, IndentDisable),
+	ENUM(ImGuiTableColumnFlags, AngledHeader),
+	ENUM(ImGuiTableColumnFlags, IsEnabled),
+	ENUM(ImGuiTableColumnFlags, IsVisible),
+	ENUM(ImGuiTableColumnFlags, IsSorted),
+	ENUM(ImGuiTableColumnFlags, IsHovered),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableRowFlags[] = {
+	ENUM(ImGuiTableRowFlags, None),
+	ENUM(ImGuiTableRowFlags, Headers),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableBgTarget[] = {
+	ENUM(ImGuiTableBgTarget, None),
+	ENUM(ImGuiTableBgTarget, RowBg0),
+	ENUM(ImGuiTableBgTarget, RowBg1),
+	ENUM(ImGuiTableBgTarget, CellBg),
+	{ NULL, 0 },
+};
+
 //ImDrawFlags
 
 //ImDrawListFlags
@@ -660,9 +656,6 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "Selectable", eSelectableFlags);
 	flag_gen(L, "Combo", eComboFlags);
 	flag_gen(L, "TabBar", eTabBarFlags);
-	flag_gen(L, "Table", eTableFlags);
-	flag_gen(L, "TableColumn", eTableColumnFlags);
-	flag_gen(L, "TableRow", eTableRowFlags);
 	flag_gen(L, "Focused", eFocusedFlags);
 	flag_gen(L, "Hovered", eHoveredFlags);
 	flag_gen(L, "DockNode", eDockNodeFlags);
@@ -670,16 +663,19 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "Config", eConfigFlags);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "Slider", eSliderFlags);
+	flag_gen(L, "Table", eTableFlags);
+	flag_gen(L, "TableColumn", eTableColumnFlags);
+	flag_gen(L, "TableRow", eTableRowFlags);
 	lua_setfield(L, -2, "Flags");
 
 	lua_newtable(L);
-	enum_gen(L, "TableBgTarget", eTableBgTarget);
 	enum_gen(L, "SortDirection", eSortDirection);
 	enum_gen(L, "Key", eKey);
 	enum_gen(L, "Col", eCol);
 	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseButton", eMouseButton);
 	enum_gen(L, "MouseCursor", eMouseCursor);
+	enum_gen(L, "TableBgTarget", eTableBgTarget);
 	enum_gen(L, "Mod", eMod);
 	lua_setfield(L, -2, "Enum");
 }

@@ -189,6 +189,7 @@ return function (setting, skecontent, input, output)
 	for k, v in pairs(statistics) do
 		print("\t animation optimizer statistics", k..":"..v)
 	end
-	local ozzhandle = raw_optimized_animation:build()
-	ozzoffline.save(ozzhandle, output)
+
+	local animation = ozzoffline.AnimationBuilder(raw_optimized_animation)
+	ozzoffline.save(animation, output)
 end

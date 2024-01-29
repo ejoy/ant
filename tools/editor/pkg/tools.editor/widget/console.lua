@@ -104,7 +104,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if ImGui.Begin("Console", ImGui.Flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
+    if ImGui.Begin("Console", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         show_input()
         log_widget.showConsole()
     end
