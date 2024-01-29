@@ -17,15 +17,6 @@ local math3d    = require "math3d"
 
 local imodifier = {}
 local auto_destroy_map = {}
-function modifier_sys:init()
-
-end
-
-function modifier_sys:component_init()
-    for e in w:select "INIT modifier:in" do
-
-    end
-end
 
 local modifierevent = world:sub {"modifier"}
 function modifier_sys:start_frame()

@@ -1,16 +1,10 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local animation = ecs.require "ant.animation|animation"
+
 local playback = ecs.require "ant.animation|playback"
 
 local iani = {}
-
-function iani.create(filename)
-	return world:create_instance {
-		prefab = filename,
-	}
-end
 
 local function get_first_playing_animation(e)
 	for name, status in pairs(e.animation.status) do
@@ -30,10 +24,6 @@ function iani.play(eid, anim_state)
 		playback.set_speed(e, name, anim_state.speed or 1.0)
 	end
 	playback.set_loop(e, name, anim_state.loop)
-end
-
-function iani.get_duration(eid, name)
-	return animation.get_duration(eid, name)
 end
 
 function iani.set_time(eid, time)
