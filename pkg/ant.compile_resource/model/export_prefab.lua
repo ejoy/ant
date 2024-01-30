@@ -390,17 +390,27 @@ return function (status)
         end
 
         if suffix and (not status.animation) then
-            for _, e in ipairs(prefabs) do
-                if e and e.data.mesh then
-                    e.policy[#e.policy+1] = "ant.render|draw_indirect"
-                    e.data.draw_indirect = {
-                        instance_buffer = {
-                            flag    = "ra",
-                            layout  = "t45NIf|t46NIf|t47NIf",
-                            num     = 0,
-                            params  = {},
+            if not status.animation then
+                for _, e in ipairs(prefabs) do
+                    if e and e.data.mesh then
+                        e.policy[#e.policy+1] = "ant.render|draw_indirect"
+                        e.data.draw_indirect = {
+                            instance_buffer = {
+                                flag    = "ra",
+                                layout  = "t45NIf|t46NIf|t47NIf",
+                                num     = 0,
+                                params  = {},
+                            }
                         }
-                    }
+                    end
+                end 
+            end
+            for _, patchs in pairs(status.patch) do
+                for _, patch in ipairs(patchs) do
+                    local v = patch.value
+                    if type(v) == "table" and v.mount and v.prefab then
+                        v.prefab = v.prefab:gsub("(%.[^%.]+)$", "_di%1")
+                    end
                 end
             end
         end
