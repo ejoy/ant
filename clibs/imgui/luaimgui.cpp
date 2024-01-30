@@ -19,7 +19,7 @@ extern "C" {
 #include "imgui_platform.h"
 #include "fastio.h"
 
-namespace imgui::table { void init(lua_State* L); }
+namespace imgui_lua { void init(lua_State* L); }
 
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
@@ -1681,96 +1681,6 @@ wImageButton(lua_State *L) {
 }
 
 static int
-wBeginDragDropSource(lua_State * L) {
-	auto flags = lua_getflags<ImGuiDragDropFlags>(L, 1, ImGuiDragDropFlags_None);
-	bool change = ImGui::BeginDragDropSource(flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndDragDropSource(lua_State * L) {
-	ImGui::EndDragDropSource();
-	return 0;
-}
-
-static int
-wSetDragDropPayload(lua_State * L) {
-	const char * type = luaL_checkstring(L, 1);
-	const char * data = luaL_optstring(L, 2,NULL);
-	ImGuiCond cond = get_cond(L, 3);
-	bool change = ImGui::SetDragDropPayload(type, data, strlen(data), cond);
-	lua_pushboolean(L, change);
-	return 0;
-}
-
-static int
-wBeginDragDropTarget(lua_State * L) {
-	bool change = ImGui::BeginDragDropTarget();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndDragDropTarget(lua_State * L) {
-	ImGui::EndDragDropTarget();
-	return 0;
-}
-
-//data or nil = AcceptDragDropPayload( type,ImGuiDragDropFlags );
-//change = AcceptDragDropPayload( { type=[in],flags==[in],data=[out],isPreview=[out],isDelivery=[out] } );
-static int
-wAcceptDragDropPayload(lua_State * L) {
-	bool is_table_arg = lua_istable(L, 1);
-	const char * type;
-	ImGuiDragDropFlags flags;
-	if (is_table_arg) {
-		type = read_field_checkstring(L, "type", 1);
-		flags = read_field_int(L, "flags", 0, 1);
-	}
-	else {
-		type = luaL_checkstring(L, 1);
-		flags = lua_getflags<ImGuiDragDropFlags>(L, 2, ImGuiDragDropFlags_None);
-	}
-	const ImGuiPayload * payload = ImGui::AcceptDragDropPayload(type, flags);
-	if (payload != NULL){
-		if (is_table_arg){
-			lua_pushlstring(L, (const char *)payload->Data,payload->DataSize);
-			lua_setfield(L, 1, "data");
-			lua_pushboolean(L, payload->IsPreview());
-			lua_setfield(L, 1, "isPreview");
-			lua_pushboolean(L, payload->IsDelivery());
-			lua_setfield(L, 1, "isDelivery");
-			lua_pushboolean(L, true);
-		}
-		else {
-			const char * data = (const char *)payload->Data;
-			lua_pushlstring(L, data, payload->DataSize);
-		}
-	}
-	else{
-		if (is_table_arg)
-			lua_pushboolean(L, false);
-		else
-			lua_pushnil(L);
-	}
-	return 1;
-}
-
-static int
-wGetDragDropPayload(lua_State* L) {
-	const ImGuiPayload* payload = ImGui::GetDragDropPayload();
-	if (payload != NULL) {
-		const char* data = (const char*)payload->Data;
-		lua_pushlstring(L, data, payload->DataSize);
-	}
-	else {
-		lua_pushnil(L);
-	}
-	return 1;
-}
-
-static int
 wPushTextWrapPos(lua_State* L) {
 	float pos = (float)luaL_optnumber(L, 1, 0.0f);
 	ImGui::PushTextWrapPos(pos);
@@ -1880,19 +1790,6 @@ winEnd(lua_State *L) {
 }
 
 static int
-winBeginDisabled(lua_State *L) {
-	bool disabled = (bool)lua_toboolean(L, 1);
-	ImGui::BeginDisabled(disabled);
-	return 0;
-}
-
-static int
-winEndDisabled(lua_State *L) {
-	ImGui::EndDisabled();
-	return 0;
-}
-
-static int
 winBeginChild(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
 	float width = (float)luaL_optnumber(L, 2, 0);
@@ -1907,50 +1804,6 @@ winBeginChild(lua_State *L) {
 static int
 winEndChild(lua_State *L) {
 	ImGui::EndChild();
-	return 0;
-}
-
-static int
-winBeginTabBar(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiTabBarFlags>(L, 2, ImGuiTabBarFlags_None);
-	bool change = ImGui::BeginTabBar(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winEndTabBar(lua_State *L) {
-	ImGui::EndTabBar();
-	return 0;
-}
-
-static int
-winBeginTabItem(lua_State *L) {
-	const char* name = luaL_checkstring(L, 1);
-	auto flags = lua_getflags<ImGuiTabItemFlags>(L, 3, ImGuiTabItemFlags_None);
-	if (lua_isnil(L, 2)) {
-		bool change = ImGui::BeginTabItem(name, NULL, flags);
-		lua_pushboolean(L, change);
-		return 1;
-	}
-	bool opened = true;
-	bool change = ImGui::BeginTabItem(name, &opened, flags);
-	lua_pushboolean(L, change);
-	lua_pushboolean(L, opened);
-	return 2;
-}
-
-static int
-winEndTabItem(lua_State *L) {
-	ImGui::EndTabItem();
-	return 0;
-}
-
-static int
-winSetTabItemClosed(lua_State *L) {
-	const char * tab_or_docked_window_label = luaL_checkstring(L, 1);
-	ImGui::SetTabItemClosed(tab_or_docked_window_label);
 	return 0;
 }
 
@@ -2477,23 +2330,6 @@ static int
 uSetColorEditOptions(lua_State *L) {
 	auto flags = lua_getflags<ImGuiColorEditFlags>(L, 1);
 	ImGui::SetColorEditOptions(flags);
-	return 0;
-}
-
-static int
-uPushClipRect(lua_State *L) {
-	float left = (float)luaL_checknumber(L, 1);
-	float top = (float)luaL_checknumber(L, 2);
-	float right = (float)luaL_checknumber(L, 3);
-	float bottom = (float)luaL_checknumber(L, 4);
-	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
-	ImGui::PushClipRect(ImVec2(left, top), ImVec2(right, bottom), intersect_with_current_clip_rect);
-	return 0;
-}
-
-static int
-uPopClipRect(lua_State *L) {
-	ImGui::PopClipRect();
 	return 0;
 }
 
@@ -3088,13 +2924,6 @@ luaopen_imgui(lua_State *L) {
 		{ "ListBox", wListBox },
 		{ "Image", wImage },
 		{ "ImageButton", wImageButton },
-		{ "BeginDragDropSource", wBeginDragDropSource },
-		{ "EndDragDropSource", wEndDragDropSource },
-		{ "SetDragDropPayload", wSetDragDropPayload },
-		{ "BeginDragDropTarget", wBeginDragDropTarget },
-		{ "EndDragDropTarget", wEndDragDropTarget },
-		{ "AcceptDragDropPayload", wAcceptDragDropPayload },
-		{ "GetDragDropPayload", wGetDragDropPayload},
 		{ "PushTextWrapPos", wPushTextWrapPos },
 		{ "PopTextWrapPos", wPopTextWrapPos },
 		{ "SelectableInput", wSelectableInput },
@@ -3124,15 +2953,8 @@ luaopen_imgui(lua_State *L) {
 		{ "SetMouseCursor", cSetMouseCursor },
 		{ "Begin", winBegin },
 		{ "End", winEnd },
-		{ "BeginDisabled", winBeginDisabled },
-		{ "EndDisabled", winEndDisabled },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
-		{ "BeginTabBar", winBeginTabBar },
-		{ "EndTabBar", winEndTabBar },
-		{ "BeginTabItem", winBeginTabItem },
-		{ "EndTabItem", winEndTabItem },
-		{ "SetTabItemClosed", winSetTabItemClosed },
 		{ "OpenPopup", winOpenPopup },
 		{ "BeginPopup", winBeginPopup },
 		{ "BeginPopupContextItem", winBeginPopupContextItem },
@@ -3175,8 +2997,6 @@ luaopen_imgui(lua_State *L) {
 		{ "PushStyleVar", winPushStyleVar },
 		{ "PopStyleVar", winPopStyleVar },
 		{ "SetColorEditOptions", uSetColorEditOptions },
-		{ "PushClipRect", uPushClipRect },
-		{ "PopClipRect", uPopClipRect },
 		{ "SetItemDefaultFocus", uSetItemDefaultFocus },
 		{ "SetKeyboardFocusHere", uSetKeyboardFocusHere },
 		{ "IsItemHovered", uIsItemHovered },
@@ -3222,7 +3042,7 @@ luaopen_imgui(lua_State *L) {
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
 
-	imgui::table::init(L);
+	imgui_lua::init(L);
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },

@@ -135,7 +135,19 @@ static struct enum_pair eTabBarFlags[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiTabItemFlags
+static struct enum_pair eTabItemFlags[] = {
+	ENUM(ImGuiTabItemFlags, None),
+	ENUM(ImGuiTabItemFlags, UnsavedDocument),
+	ENUM(ImGuiTabItemFlags, SetSelected),
+	ENUM(ImGuiTabItemFlags, NoCloseWithMiddleMouseButton),
+	ENUM(ImGuiTabItemFlags, NoPushId),
+	ENUM(ImGuiTabItemFlags, NoTooltip),
+	ENUM(ImGuiTabItemFlags, NoReorder),
+	ENUM(ImGuiTabItemFlags, Leading),
+	ENUM(ImGuiTabItemFlags, Trailing),
+	ENUM(ImGuiTabItemFlags, NoAssumedClosure),
+	{ NULL, 0 },
+};
 
 static struct enum_pair eFocusedFlags[] = {
 	ENUM(ImGuiFocusedFlags, None),
@@ -200,9 +212,30 @@ static struct enum_pair eDragDropFlags[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiDataType
+static struct enum_pair eDataType[] = {
+	ENUM(ImGuiDataType, S8),
+	ENUM(ImGuiDataType, U8),
+	ENUM(ImGuiDataType, S16),
+	ENUM(ImGuiDataType, U16),
+	ENUM(ImGuiDataType, S32),
+	ENUM(ImGuiDataType, U32),
+	ENUM(ImGuiDataType, S64),
+	ENUM(ImGuiDataType, U64),
+	ENUM(ImGuiDataType, Float),
+	ENUM(ImGuiDataType, Double),
+	ENUM(ImGuiDataType, COUNT),
+	{ NULL, 0 },
+};
 
-//ImGuiDir
+static struct enum_pair eDir[] = {
+	ENUM(ImGuiDir, None),
+	ENUM(ImGuiDir, Left),
+	ENUM(ImGuiDir, Right),
+	ENUM(ImGuiDir, Up),
+	ENUM(ImGuiDir, Down),
+	ENUM(ImGuiDir, COUNT),
+	{ NULL, 0 },
+};
 
 static struct enum_pair eSortDirection[] = {
 	ENUM(ImGuiSortDirection, None),
@@ -383,7 +416,17 @@ static struct enum_pair eConfigFlags[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiBackendFlags
+static struct enum_pair eBackendFlags[] = {
+	ENUM(ImGuiBackendFlags, None),
+	ENUM(ImGuiBackendFlags, HasGamepad),
+	ENUM(ImGuiBackendFlags, HasMouseCursors),
+	ENUM(ImGuiBackendFlags, HasSetMousePos),
+	ENUM(ImGuiBackendFlags, RendererHasVtxOffset),
+	ENUM(ImGuiBackendFlags, PlatformHasViewports),
+	ENUM(ImGuiBackendFlags, HasMouseHoveredViewport),
+	ENUM(ImGuiBackendFlags, RendererHasViewports),
+	{ NULL, 0 },
+};
 
 static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, Text),
@@ -480,7 +523,13 @@ static struct enum_pair eStyleVar[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiButtonFlags
+static struct enum_pair eButtonFlags[] = {
+	ENUM(ImGuiButtonFlags, None),
+	ENUM(ImGuiButtonFlags, MouseButtonLeft),
+	ENUM(ImGuiButtonFlags, MouseButtonRight),
+	ENUM(ImGuiButtonFlags, MouseButtonMiddle),
+	{ NULL, 0 },
+};
 
 static struct enum_pair eColorEditFlags[] = {
 	ENUM(ImGuiColorEditFlags, None),
@@ -542,9 +591,22 @@ static struct enum_pair eMouseCursor[] = {
 	{ NULL, 0 },
 };
 
-//ImGuiMouseSource
+static struct enum_pair eMouseSource[] = {
+	ENUM(ImGuiMouseSource, Mouse),
+	ENUM(ImGuiMouseSource, TouchScreen),
+	ENUM(ImGuiMouseSource, Pen),
+	ENUM(ImGuiMouseSource, COUNT),
+	{ NULL, 0 },
+};
 
-//ImGuiCond
+static struct enum_pair eCond[] = {
+	ENUM(ImGuiCond, None),
+	ENUM(ImGuiCond, Always),
+	ENUM(ImGuiCond, Once),
+	ENUM(ImGuiCond, FirstUseEver),
+	ENUM(ImGuiCond, Appearing),
+	{ NULL, 0 },
+};
 
 static struct enum_pair eTableFlags[] = {
 	ENUM(ImGuiTableFlags, None),
@@ -628,13 +690,57 @@ static struct enum_pair eTableBgTarget[] = {
 	{ NULL, 0 },
 };
 
-//ImDrawFlags
+static struct enum_pair eDrawFlags[] = {
+	ENUM(ImDrawFlags, None),
+	ENUM(ImDrawFlags, Closed),
+	ENUM(ImDrawFlags, RoundCornersTopLeft),
+	ENUM(ImDrawFlags, RoundCornersTopRight),
+	ENUM(ImDrawFlags, RoundCornersBottomLeft),
+	ENUM(ImDrawFlags, RoundCornersBottomRight),
+	ENUM(ImDrawFlags, RoundCornersNone),
+	ENUM(ImDrawFlags, RoundCornersTop),
+	ENUM(ImDrawFlags, RoundCornersBottom),
+	ENUM(ImDrawFlags, RoundCornersLeft),
+	ENUM(ImDrawFlags, RoundCornersRight),
+	ENUM(ImDrawFlags, RoundCornersAll),
+	{ NULL, 0 },
+};
 
-//ImDrawListFlags
+static struct enum_pair eDrawListFlags[] = {
+	ENUM(ImDrawListFlags, None),
+	ENUM(ImDrawListFlags, AntiAliasedLines),
+	ENUM(ImDrawListFlags, AntiAliasedLinesUseTex),
+	ENUM(ImDrawListFlags, AntiAliasedFill),
+	ENUM(ImDrawListFlags, AllowVtxOffset),
+	{ NULL, 0 },
+};
 
-//ImFontAtlasFlags
+static struct enum_pair eFontAtlasFlags[] = {
+	ENUM(ImFontAtlasFlags, None),
+	ENUM(ImFontAtlasFlags, NoPowerOfTwoHeight),
+	ENUM(ImFontAtlasFlags, NoMouseCursors),
+	ENUM(ImFontAtlasFlags, NoBakedLines),
+	{ NULL, 0 },
+};
 
-//ImGuiViewportFlags
+static struct enum_pair eViewportFlags[] = {
+	ENUM(ImGuiViewportFlags, None),
+	ENUM(ImGuiViewportFlags, IsPlatformWindow),
+	ENUM(ImGuiViewportFlags, IsPlatformMonitor),
+	ENUM(ImGuiViewportFlags, OwnedByApp),
+	ENUM(ImGuiViewportFlags, NoDecoration),
+	ENUM(ImGuiViewportFlags, NoTaskBarIcon),
+	ENUM(ImGuiViewportFlags, NoFocusOnAppearing),
+	ENUM(ImGuiViewportFlags, NoFocusOnClick),
+	ENUM(ImGuiViewportFlags, NoInputs),
+	ENUM(ImGuiViewportFlags, NoRendererClear),
+	ENUM(ImGuiViewportFlags, NoAutoMerge),
+	ENUM(ImGuiViewportFlags, TopMost),
+	ENUM(ImGuiViewportFlags, CanHostOtherWindows),
+	ENUM(ImGuiViewportFlags, IsMinimized),
+	ENUM(ImGuiViewportFlags, IsFocused),
+	{ NULL, 0 },
+};
 
 static struct enum_pair eMod[] = {
 	ENUM(ImGuiMod, None),
@@ -656,25 +762,36 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "Selectable", eSelectableFlags);
 	flag_gen(L, "Combo", eComboFlags);
 	flag_gen(L, "TabBar", eTabBarFlags);
+	flag_gen(L, "TabItem", eTabItemFlags);
 	flag_gen(L, "Focused", eFocusedFlags);
 	flag_gen(L, "Hovered", eHoveredFlags);
 	flag_gen(L, "DockNode", eDockNodeFlags);
 	flag_gen(L, "DragDrop", eDragDropFlags);
 	flag_gen(L, "Config", eConfigFlags);
+	flag_gen(L, "Backend", eBackendFlags);
+	flag_gen(L, "Button", eButtonFlags);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "Slider", eSliderFlags);
 	flag_gen(L, "Table", eTableFlags);
 	flag_gen(L, "TableColumn", eTableColumnFlags);
 	flag_gen(L, "TableRow", eTableRowFlags);
+	flag_gen(L, "Draw", eDrawFlags);
+	flag_gen(L, "DrawList", eDrawListFlags);
+	flag_gen(L, "FontAtlas", eFontAtlasFlags);
+	flag_gen(L, "Viewport", eViewportFlags);
 	lua_setfield(L, -2, "Flags");
 
 	lua_newtable(L);
+	enum_gen(L, "DataType", eDataType);
+	enum_gen(L, "Dir", eDir);
 	enum_gen(L, "SortDirection", eSortDirection);
 	enum_gen(L, "Key", eKey);
 	enum_gen(L, "Col", eCol);
 	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseButton", eMouseButton);
 	enum_gen(L, "MouseCursor", eMouseCursor);
+	enum_gen(L, "MouseSource", eMouseSource);
+	enum_gen(L, "Cond", eCond);
 	enum_gen(L, "TableBgTarget", eTableBgTarget);
 	enum_gen(L, "Mod", eMod);
 	lua_setfield(L, -2, "Enum");

@@ -51,7 +51,7 @@ struct queue_container {
         }
 
         const int Qidx = n++;
-        if (n == nodes.size()){
+        if (n == (int)nodes.size()){
             nodes.resize(n*2);
         }
         return Qidx;

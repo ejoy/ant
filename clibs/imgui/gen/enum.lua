@@ -7,22 +7,6 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
-local disable <const> = {
-    ImGuiTabItemFlags = true,
-    ImGuiDataType = true,
-    ImGuiDir = true,
-    ImGuiNavInput = true,
-    ImGuiBackendFlags = true,
-    ImGuiButtonFlags = true,
-    ImGuiMouseSource = true,
-    ImGuiCond = true,
-    ImDrawFlags = true,
-    ImDrawListFlags = true,
-    ImFontAtlasFlags = true,
-    ImGuiViewportFlags = true,
-    ImGuiModFlags = true,
-}
-
 local init = {
     flags = {},
     enums = {},
@@ -34,11 +18,6 @@ for _, enums in ipairs(meta.enums) do
         goto continue
     end
     local realname = enums.name:match "(.-)_?$"
-    if disable[realname] then
-        writeln("//%s", realname)
-        writeln("")
-        goto continue
-    end
     local name = realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
     if enums.is_flags_enum then
         table.insert(init.flags, name)
