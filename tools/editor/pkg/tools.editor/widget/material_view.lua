@@ -1022,7 +1022,7 @@ function MaterialView:_init()
         self.save, self.saveas,
     })
 end
-local texture_flag = {}
+local sampler_info = {}
 local datalist   = require "datalist"
 local function split(str)
     local r = {}
@@ -1057,14 +1057,14 @@ function MaterialView:set_eid(eid)
     end
 
     local mtlpath = hierarchy:get_node_info(self.eid).template.data.material
-    for _, v in pairs(t.properties) do
-        if v.texture and not texture_flag[v.texture] then
-            local imagepath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
-            local tp = imagepath:string() .. "/source.ant"
+    for k, v in pairs(t.properties) do
+        if v.texture and not sampler_info[v.texture] then
+            local texpath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
+            local tp = texpath:string() .. "/source.ant"
             local data = datalist.parse(aio.readall(tp))
             if data and not image_info[v.texture] then
                 image_info[v.texture] = {width = data.info.width, height = data.info.height}
-                texture_flag[imagepath] = assetmgr.resource(imagepath:string())
+                sampler_info[texpath] = {stage_name = k, texture_resource = assetmgr.resource(texpath:string())}
             end
         end
     end
@@ -1096,7 +1096,7 @@ end
 
 function MaterialView:clear()
     image_info = {}
-    texture_flag = {}
+    sampler_info = {}
 end
 
 function MaterialView:update()
@@ -1151,16 +1151,19 @@ function MaterialView:show()
     for _, _, filename in filewatch_event:unpack() do
         local tname = fs.path(filename):filename():string():gsub(".png", ".texture")
         local path
-        for k, _ in pairs(texture_flag) do
+        for k, _ in pairs(sampler_info) do
             if k:filename():string() == tname then
                 path = k
                 break
             end
         end
         if path then
-            texture_flag[path] = assetmgr.reload(path:string())
+            prefab_mgr:compile_current_glb()
+            local info = sampler_info[path]
+            info.texture_resource = assetmgr.reload(path:string())
             local e <close> = world:entity(self.eid)
-            imaterial.set_property(e, "s_basecolor", assetmgr.textures[texture_flag[path].id])
+            print("id, handle:", info.texture_resource.id, assetmgr.textures[info.texture_resource.id])
+            imaterial.set_property(e, info.stage_name, assetmgr.textures[info.texture_resource.id])
         end
     end
     self.material:show()

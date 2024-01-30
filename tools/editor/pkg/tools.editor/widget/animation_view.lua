@@ -175,8 +175,8 @@ local function set_current_anim(anim_name)
     current_event = nil
     current_event_index = 0
     iani.play(anim_eid, {name = anim_name, loop = ui_loop[1], speed = ui_speed[1]})
-    iani.set_time(anim_eid, 0)
-    iani.pause(anim_eid, not anim_state.is_playing)
+    iani.set_time(anim_eid, 0, current_anim.name)
+    iani.pause(anim_eid, not anim_state.is_playing, current_anim.name)
     return true
 end
 
@@ -618,9 +618,9 @@ function m.show()
             end
         else
             if current_anim then
-                anim_state.is_playing = iani.is_playing(anim_eid)
+                anim_state.is_playing = iani.is_playing(anim_eid, current_anim.name)
                 if anim_state.is_playing then
-                    anim_state.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
+                    anim_state.current_frame = math.floor(iani.get_time(anim_eid, current_anim.name) * sample_ratio)
                 end
             end
             ImGui.SameLine()
@@ -708,7 +708,7 @@ function m.show()
         if ImGui.ImageButton("##play", assetmgr.textures[icon.id], imagesize, imagesize) then
             if not edit_timeline then
                 if anim_state.is_playing then
-                    iani.pause(anim_eid, true)
+                    iani.pause(anim_eid, true, current_anim.name)
                 else
                     iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1]})
                 end
@@ -719,7 +719,7 @@ function m.show()
         ImGui.SameLine()
         if ImGui.Checkbox("loop", ui_loop) then
             if not edit_timeline then
-                iani.set_loop(anim_eid, ui_loop[1])
+                iani.set_loop(anim_eid, ui_loop[1], current_anim.name)
             else
                 if timeline_playing then
                     stop_timeline()
@@ -732,7 +732,7 @@ function m.show()
             ImGui.SameLine()
             ImGui.PushItemWidth(50)
             if ImGui.DragFloat("speed", ui_speed) then
-                iani.set_speed(anim_eid, ui_speed[1])
+                iani.set_speed(anim_eid, ui_speed[1], current_anim.name)
             end
             ImGui.PopItemWidth()
             ImGui.SameLine()
@@ -761,7 +761,7 @@ function m.show()
             end
         end
         ImGui.SameLine()
-        local current_time = edit_timeline and (anim_state.current_frame / sample_ratio) or iani.get_time(anim_eid)
+        local current_time = edit_timeline and (anim_state.current_frame / sample_ratio) or iani.get_time(anim_eid, current_anim.name)
         ImGui.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         local current_seq = edit_timeline and edit_timeline or edit_anims
@@ -776,8 +776,8 @@ function m.show()
                     anim_state.current_frame = v
                 end
                 if not edit_timeline then
-                    iani.pause(anim_eid, true)
-                    iani.set_time(anim_eid, v / sample_ratio)
+                    iani.pause(anim_eid, true, current_anim.name)
+                    iani.set_time(anim_eid, v / sample_ratio, current_anim.name)
                 else
                     stop_timeline()
                 end
