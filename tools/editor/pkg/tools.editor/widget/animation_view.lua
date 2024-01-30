@@ -375,7 +375,7 @@ local function show_current_event()
         if #action_list > 0 then
             local action = current_event.action or ''
             ImGui.PropertyLabel("Action")
-            if ImGui.BeginCombo("##ActionList", {action, flags = ImGui.Flags.Combo {}}) then
+            if ImGui.BeginCombo("##ActionList", action) then
                 for _, name in ipairs(action_list) do
                     if ImGui.SelectableEx(name, action == name) then
                         current_event.action = name
@@ -388,7 +388,7 @@ local function show_current_event()
         if current_event.asset_path and #current_event.asset_path > 0 then
             local target = current_event.target or ''
             ImGui.PropertyLabel("Target")
-            if ImGui.BeginCombo("##Target", {target, flags = ImGui.Flags.Combo {}}) then
+            if ImGui.BeginCombo("##Target", target) then
                 local namelist = (current_event.action_type_map[current_event.action] == "mtl") and prefab_mgr.mtl_list or prefab_mgr.srt_mtl_list
                 for _, name in ipairs(namelist) do
                     if ImGui.SelectableEx(name, target == name) then
@@ -610,8 +610,8 @@ function m.show()
     end
     local reload = false
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
     if ImGui.Begin("Animation", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         if (not current_anim or not anim_eid) and not edit_timeline then
             goto continue
@@ -640,7 +640,7 @@ function m.show()
             ImGui.PushItemWidth(150)
             local current_name = edit_timeline and '' or current_anim.name
             local current_name_list = edit_timeline and {} or edit_anims.name_list
-            if ImGui.BeginCombo("##NameList", {current_name, flags = ImGui.Flags.Combo {}}) then
+            if ImGui.BeginCombo("##NameList", current_name) then
                 for _, name in ipairs(current_name_list) do
                     if ImGui.SelectableEx(name, current_name == name) then
                         set_current_anim(name)

@@ -202,7 +202,7 @@ local function setting_ui(sc)
             cw = cw or deep_copy(default_curve_world)
 
             BeginDisabled(not enable)
-            if BeginCombo("Type", {cw.type, flags = ImGui.Flags.Combo{} }) then
+            if BeginCombo("Type", cw.type) then
                 for _, n in ipairs(default_curve_world.type_options) do
                     if ImGui.SelectableEx(n, cw.type == n) then
                         --sc:set("graphic/curve_world/type", n)

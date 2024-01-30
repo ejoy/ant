@@ -29,7 +29,7 @@ function m.show()
         icons.scale = imgui_vp.DpiScale
     end
     --drag file to view
-    if ImGui.IsMouseDragging(0) then
+    if ImGui.IsMouseDragging(ImGui.Enum.MouseButton.Left) then
         local x, y = ImGui.GetMousePos()
         x, y = x - imgui_vp.MainPos[1], y - imgui_vp.MainPos[2]
         if in_view(cvt2scenept(x, y)) then
@@ -58,7 +58,7 @@ function m.show()
     ImGui.SetNextWindowViewport(imgui_vp.ID)
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
+    ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
     if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
         "NoDocking",
         "NoTitleBar",
@@ -93,7 +93,7 @@ function m.show()
             }
         end
     end
-    ImGui.PopStyleVar(3)
+    ImGui.PopStyleVarEx(3)
     ImGui.End()
 end
 

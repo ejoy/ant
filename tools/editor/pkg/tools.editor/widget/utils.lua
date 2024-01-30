@@ -5,16 +5,16 @@ local icons   = require "common.icons"
 local m = {}
 
 function m.imguiBeginToolbar()
-    ImGui.PushStyleColor(ImGui.Enum.Col.Button, 0, 0, 0, 0)
-    ImGui.PushStyleColor(ImGui.Enum.Col.ButtonActive, 0, 0, 0, 0)
-    ImGui.PushStyleColor(ImGui.Enum.Col.ButtonHovered, 0.5, 0.5, 0.5, 0)
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 4, 0)
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.FramePadding, 0, 0)
+    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.Button, 0, 0, 0, 0)
+    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.ButtonActive, 0, 0, 0, 0)
+    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.ButtonHovered, 0.5, 0.5, 0.5, 0)
+    ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.ItemSpacing, 4, 0)
+    ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.FramePadding, 0, 0)
 end
 
 function m.imguiEndToolbar()
-    ImGui.PopStyleVar(2)
-    ImGui.PopStyleColor(3)
+    ImGui.PopStyleVarEx(2)
+    ImGui.PopStyleColorEx(3)
 end
 
 local function imgui_tooltip(text, wrap)
@@ -33,10 +33,10 @@ function m.imguiToolbar(icon, tooltip, active)
     else
         bg_col = {0.2, 0.2, 0.2, 1}
     end
-	ImGui.PushStyleVar(ImGui.Enum.StyleVar.FramePadding, 2, 2);
+	ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.FramePadding, 2, 2);
     local iconsize = icon.texinfo.width * (icons.scale or 1.5)
     local r = ImGui.ImageButton(tooltip, assetmgr.textures[icon.id], iconsize, iconsize, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
-    ImGui.PopStyleVar(1);
+    ImGui.PopStyleVar();
     if tooltip then
         imgui_tooltip(tooltip)
     end

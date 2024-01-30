@@ -22,7 +22,7 @@ local function find_widget(wname)
 end
 
 local function list_combo(name, comp, ll, updatevalue)
-    if BeginCombo("##" .. name, {comp}) then
+    if BeginCombo("##" .. name, comp) then
         for ii=1, #ll do
             local v = ll[ii]
             if SelectableEx(v, v == name) then

@@ -72,8 +72,8 @@ function m:ui_update()
         end
     end
     ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0)
-    ImGui.PushStyleColor(ImGui.Enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
-    ImGui.PushStyleColor(ImGui.Enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
@@ -86,7 +86,7 @@ function m:ui_update()
     console_widget.show()
     log_widget.show()
     prefab_mgr:choose_prefab()
-    ImGui.PopStyleColor(2)
+    ImGui.PopStyleColorEx(2)
     ImGui.PopStyleVar()
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
     iRmlUi.sendMessage("stat", string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 

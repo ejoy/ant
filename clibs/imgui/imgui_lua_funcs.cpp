@@ -29,11 +29,976 @@ static auto field_tonumber(lua_State* L, int idx, lua_Integer i) {
     return v;
 }
 
+static auto field_toboolean(lua_State* L, int idx, lua_Integer i) {
+    lua_geti(L, idx, i);
+    bool v = !!lua_toboolean(L, -1);
+    lua_pop(L, 1);
+    return v;
+}
+
+static int Begin(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    bool has_p_open = !lua_isnil(L, 2);
+    bool p_open = true;
+    auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
+    auto _retval = ImGui::Begin(name, (has_p_open? &p_open: NULL), flags);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_open || p_open);
+    return 2;
+}
+
+static int End(lua_State* L) {
+    ImGui::End();
+    return 0;
+}
+
+static int BeginChild(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 2, 0),
+        (float)luaL_optnumber(L, 3, 0),
+    };
+    auto child_flags = (ImGuiChildFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiChildFlags_None));
+    auto window_flags = (ImGuiWindowFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiWindowFlags_None));
+    auto _retval = ImGui::BeginChild(str_id, size, child_flags, window_flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginChildID(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 2, 0),
+        (float)luaL_optnumber(L, 3, 0),
+    };
+    auto child_flags = (ImGuiChildFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiChildFlags_None));
+    auto window_flags = (ImGuiWindowFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiWindowFlags_None));
+    auto _retval = ImGui::BeginChild(id, size, child_flags, window_flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndChild(lua_State* L) {
+    ImGui::EndChild();
+    return 0;
+}
+
+static int IsWindowAppearing(lua_State* L) {
+    auto _retval = ImGui::IsWindowAppearing();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsWindowCollapsed(lua_State* L) {
+    auto _retval = ImGui::IsWindowCollapsed();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsWindowFocused(lua_State* L) {
+    auto flags = (ImGuiFocusedFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiFocusedFlags_None));
+    auto _retval = ImGui::IsWindowFocused(flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsWindowHovered(lua_State* L) {
+    auto flags = (ImGuiHoveredFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiHoveredFlags_None));
+    auto _retval = ImGui::IsWindowHovered(flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int GetWindowDpiScale(lua_State* L) {
+    auto _retval = ImGui::GetWindowDpiScale();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetWindowPos(lua_State* L) {
+    auto _retval = ImGui::GetWindowPos();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetWindowSize(lua_State* L) {
+    auto _retval = ImGui::GetWindowSize();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetWindowWidth(lua_State* L) {
+    auto _retval = ImGui::GetWindowWidth();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetWindowHeight(lua_State* L) {
+    auto _retval = ImGui::GetWindowHeight();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int SetNextWindowPos(lua_State* L) {
+    auto pos = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    ImGui::SetNextWindowPos(pos, cond);
+    return 0;
+}
+
+static int SetNextWindowPosEx(lua_State* L) {
+    auto pos = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    auto pivot = ImVec2 {
+        (float)luaL_optnumber(L, 4, 0),
+        (float)luaL_optnumber(L, 5, 0),
+    };
+    ImGui::SetNextWindowPos(pos, cond, pivot);
+    return 0;
+}
+
+static int SetNextWindowSize(lua_State* L) {
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    ImGui::SetNextWindowSize(size, cond);
+    return 0;
+}
+
+static int SetNextWindowContentSize(lua_State* L) {
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    ImGui::SetNextWindowContentSize(size);
+    return 0;
+}
+
+static int SetNextWindowCollapsed(lua_State* L) {
+    auto collapsed = !!lua_toboolean(L, 1);
+    auto cond = (ImGuiCond)luaL_optinteger(L, 2, lua_Integer(ImGuiCond_None));
+    ImGui::SetNextWindowCollapsed(collapsed, cond);
+    return 0;
+}
+
+static int SetNextWindowFocus(lua_State* L) {
+    ImGui::SetNextWindowFocus();
+    return 0;
+}
+
+static int SetNextWindowScroll(lua_State* L) {
+    auto scroll = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    ImGui::SetNextWindowScroll(scroll);
+    return 0;
+}
+
+static int SetNextWindowBgAlpha(lua_State* L) {
+    auto alpha = (float)luaL_checknumber(L, 1);
+    ImGui::SetNextWindowBgAlpha(alpha);
+    return 0;
+}
+
+static int SetNextWindowViewport(lua_State* L) {
+    auto viewport_id = (ImGuiID)luaL_checkinteger(L, 1);
+    ImGui::SetNextWindowViewport(viewport_id);
+    return 0;
+}
+
+static int SetWindowPos(lua_State* L) {
+    auto pos = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    ImGui::SetWindowPos(pos, cond);
+    return 0;
+}
+
+static int SetWindowSize(lua_State* L) {
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    ImGui::SetWindowSize(size, cond);
+    return 0;
+}
+
+static int SetWindowCollapsed(lua_State* L) {
+    auto collapsed = !!lua_toboolean(L, 1);
+    auto cond = (ImGuiCond)luaL_optinteger(L, 2, lua_Integer(ImGuiCond_None));
+    ImGui::SetWindowCollapsed(collapsed, cond);
+    return 0;
+}
+
+static int SetWindowFocus(lua_State* L) {
+    ImGui::SetWindowFocus();
+    return 0;
+}
+
+static int SetWindowFontScale(lua_State* L) {
+    auto scale = (float)luaL_checknumber(L, 1);
+    ImGui::SetWindowFontScale(scale);
+    return 0;
+}
+
+static int SetWindowPosStr(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    auto pos = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 4, lua_Integer(ImGuiCond_None));
+    ImGui::SetWindowPos(name, pos, cond);
+    return 0;
+}
+
+static int SetWindowSizeStr(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    auto cond = (ImGuiCond)luaL_optinteger(L, 4, lua_Integer(ImGuiCond_None));
+    ImGui::SetWindowSize(name, size, cond);
+    return 0;
+}
+
+static int SetWindowCollapsedStr(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    auto collapsed = !!lua_toboolean(L, 2);
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    ImGui::SetWindowCollapsed(name, collapsed, cond);
+    return 0;
+}
+
+static int SetWindowFocusStr(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    ImGui::SetWindowFocus(name);
+    return 0;
+}
+
+static int GetContentRegionAvail(lua_State* L) {
+    auto _retval = ImGui::GetContentRegionAvail();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetContentRegionMax(lua_State* L) {
+    auto _retval = ImGui::GetContentRegionMax();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetWindowContentRegionMin(lua_State* L) {
+    auto _retval = ImGui::GetWindowContentRegionMin();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetWindowContentRegionMax(lua_State* L) {
+    auto _retval = ImGui::GetWindowContentRegionMax();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetScrollX(lua_State* L) {
+    auto _retval = ImGui::GetScrollX();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetScrollY(lua_State* L) {
+    auto _retval = ImGui::GetScrollY();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int SetScrollX(lua_State* L) {
+    auto scroll_x = (float)luaL_checknumber(L, 1);
+    ImGui::SetScrollX(scroll_x);
+    return 0;
+}
+
+static int SetScrollY(lua_State* L) {
+    auto scroll_y = (float)luaL_checknumber(L, 1);
+    ImGui::SetScrollY(scroll_y);
+    return 0;
+}
+
+static int GetScrollMaxX(lua_State* L) {
+    auto _retval = ImGui::GetScrollMaxX();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetScrollMaxY(lua_State* L) {
+    auto _retval = ImGui::GetScrollMaxY();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int SetScrollHereX(lua_State* L) {
+    auto center_x_ratio = (float)luaL_optnumber(L, 1, 0.5f);
+    ImGui::SetScrollHereX(center_x_ratio);
+    return 0;
+}
+
+static int SetScrollHereY(lua_State* L) {
+    auto center_y_ratio = (float)luaL_optnumber(L, 1, 0.5f);
+    ImGui::SetScrollHereY(center_y_ratio);
+    return 0;
+}
+
+static int SetScrollFromPosX(lua_State* L) {
+    auto local_x = (float)luaL_checknumber(L, 1);
+    auto center_x_ratio = (float)luaL_optnumber(L, 2, 0.5f);
+    ImGui::SetScrollFromPosX(local_x, center_x_ratio);
+    return 0;
+}
+
+static int SetScrollFromPosY(lua_State* L) {
+    auto local_y = (float)luaL_checknumber(L, 1);
+    auto center_y_ratio = (float)luaL_optnumber(L, 2, 0.5f);
+    ImGui::SetScrollFromPosY(local_y, center_y_ratio);
+    return 0;
+}
+
+static int PopFont(lua_State* L) {
+    ImGui::PopFont();
+    return 0;
+}
+
+static int PushStyleColor(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto col = (ImU32)luaL_checkinteger(L, 2);
+    ImGui::PushStyleColor(idx, col);
+    return 0;
+}
+
+static int PushStyleColorImVec4(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto col = ImVec4 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+        (float)luaL_checknumber(L, 5),
+    };
+    ImGui::PushStyleColor(idx, col);
+    return 0;
+}
+
+static int PopStyleColor(lua_State* L) {
+    ImGui::PopStyleColor();
+    return 0;
+}
+
+static int PopStyleColorEx(lua_State* L) {
+    auto count = (int)luaL_optinteger(L, 1, 1);
+    ImGui::PopStyleColor(count);
+    return 0;
+}
+
+static int PushStyleVar(lua_State* L) {
+    auto idx = (ImGuiStyleVar)luaL_checkinteger(L, 1);
+    auto val = (float)luaL_checknumber(L, 2);
+    ImGui::PushStyleVar(idx, val);
+    return 0;
+}
+
+static int PushStyleVarImVec2(lua_State* L) {
+    auto idx = (ImGuiStyleVar)luaL_checkinteger(L, 1);
+    auto val = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    ImGui::PushStyleVar(idx, val);
+    return 0;
+}
+
+static int PopStyleVar(lua_State* L) {
+    ImGui::PopStyleVar();
+    return 0;
+}
+
+static int PopStyleVarEx(lua_State* L) {
+    auto count = (int)luaL_optinteger(L, 1, 1);
+    ImGui::PopStyleVar(count);
+    return 0;
+}
+
+static int PushTabStop(lua_State* L) {
+    auto tab_stop = !!lua_toboolean(L, 1);
+    ImGui::PushTabStop(tab_stop);
+    return 0;
+}
+
+static int PopTabStop(lua_State* L) {
+    ImGui::PopTabStop();
+    return 0;
+}
+
+static int PushButtonRepeat(lua_State* L) {
+    auto repeat = !!lua_toboolean(L, 1);
+    ImGui::PushButtonRepeat(repeat);
+    return 0;
+}
+
+static int PopButtonRepeat(lua_State* L) {
+    ImGui::PopButtonRepeat();
+    return 0;
+}
+
+static int PushItemWidth(lua_State* L) {
+    auto item_width = (float)luaL_checknumber(L, 1);
+    ImGui::PushItemWidth(item_width);
+    return 0;
+}
+
+static int PopItemWidth(lua_State* L) {
+    ImGui::PopItemWidth();
+    return 0;
+}
+
+static int SetNextItemWidth(lua_State* L) {
+    auto item_width = (float)luaL_checknumber(L, 1);
+    ImGui::SetNextItemWidth(item_width);
+    return 0;
+}
+
+static int CalcItemWidth(lua_State* L) {
+    auto _retval = ImGui::CalcItemWidth();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int PushTextWrapPos(lua_State* L) {
+    auto wrap_local_pos_x = (float)luaL_optnumber(L, 1, 0.0f);
+    ImGui::PushTextWrapPos(wrap_local_pos_x);
+    return 0;
+}
+
+static int PopTextWrapPos(lua_State* L) {
+    ImGui::PopTextWrapPos();
+    return 0;
+}
+
+static int GetFontSize(lua_State* L) {
+    auto _retval = ImGui::GetFontSize();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetFontTexUvWhitePixel(lua_State* L) {
+    auto _retval = ImGui::GetFontTexUvWhitePixel();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetColorU32(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetColorU32(idx);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetColorU32Ex(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto alpha_mul = (float)luaL_optnumber(L, 2, 1.0f);
+    auto _retval = ImGui::GetColorU32(idx, alpha_mul);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetColorU32ImVec4(lua_State* L) {
+    auto col = ImVec4 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    auto _retval = ImGui::GetColorU32(col);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetColorU32ImU32(lua_State* L) {
+    auto col = (ImU32)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetColorU32(col);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetCursorScreenPos(lua_State* L) {
+    auto _retval = ImGui::GetCursorScreenPos();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int SetCursorScreenPos(lua_State* L) {
+    auto pos = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    ImGui::SetCursorScreenPos(pos);
+    return 0;
+}
+
+static int GetCursorPos(lua_State* L) {
+    auto _retval = ImGui::GetCursorPos();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetCursorPosX(lua_State* L) {
+    auto _retval = ImGui::GetCursorPosX();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetCursorPosY(lua_State* L) {
+    auto _retval = ImGui::GetCursorPosY();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int SetCursorPos(lua_State* L) {
+    auto local_pos = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    ImGui::SetCursorPos(local_pos);
+    return 0;
+}
+
+static int SetCursorPosX(lua_State* L) {
+    auto local_x = (float)luaL_checknumber(L, 1);
+    ImGui::SetCursorPosX(local_x);
+    return 0;
+}
+
+static int SetCursorPosY(lua_State* L) {
+    auto local_y = (float)luaL_checknumber(L, 1);
+    ImGui::SetCursorPosY(local_y);
+    return 0;
+}
+
+static int GetCursorStartPos(lua_State* L) {
+    auto _retval = ImGui::GetCursorStartPos();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int Separator(lua_State* L) {
+    ImGui::Separator();
+    return 0;
+}
+
+static int SameLine(lua_State* L) {
+    ImGui::SameLine();
+    return 0;
+}
+
+static int SameLineEx(lua_State* L) {
+    auto offset_from_start_x = (float)luaL_optnumber(L, 1, 0.0f);
+    auto spacing = (float)luaL_optnumber(L, 2, -1.0f);
+    ImGui::SameLine(offset_from_start_x, spacing);
+    return 0;
+}
+
+static int NewLine(lua_State* L) {
+    ImGui::NewLine();
+    return 0;
+}
+
+static int Spacing(lua_State* L) {
+    ImGui::Spacing();
+    return 0;
+}
+
+static int Dummy(lua_State* L) {
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    ImGui::Dummy(size);
+    return 0;
+}
+
+static int Indent(lua_State* L) {
+    ImGui::Indent();
+    return 0;
+}
+
+static int IndentEx(lua_State* L) {
+    auto indent_w = (float)luaL_optnumber(L, 1, 0.0f);
+    ImGui::Indent(indent_w);
+    return 0;
+}
+
+static int Unindent(lua_State* L) {
+    ImGui::Unindent();
+    return 0;
+}
+
+static int UnindentEx(lua_State* L) {
+    auto indent_w = (float)luaL_optnumber(L, 1, 0.0f);
+    ImGui::Unindent(indent_w);
+    return 0;
+}
+
+static int BeginGroup(lua_State* L) {
+    ImGui::BeginGroup();
+    return 0;
+}
+
+static int EndGroup(lua_State* L) {
+    ImGui::EndGroup();
+    return 0;
+}
+
+static int AlignTextToFramePadding(lua_State* L) {
+    ImGui::AlignTextToFramePadding();
+    return 0;
+}
+
+static int GetTextLineHeight(lua_State* L) {
+    auto _retval = ImGui::GetTextLineHeight();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetTextLineHeightWithSpacing(lua_State* L) {
+    auto _retval = ImGui::GetTextLineHeightWithSpacing();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetFrameHeight(lua_State* L) {
+    auto _retval = ImGui::GetFrameHeight();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetFrameHeightWithSpacing(lua_State* L) {
+    auto _retval = ImGui::GetFrameHeightWithSpacing();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int PushID(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    ImGui::PushID(str_id);
+    return 0;
+}
+
+static int PushIDStr(lua_State* L) {
+    auto str_id_begin = luaL_checkstring(L, 1);
+    auto str_id_end = luaL_checkstring(L, 2);
+    ImGui::PushID(str_id_begin, str_id_end);
+    return 0;
+}
+
+static int PushIDPtr(lua_State* L) {
+    auto ptr_id = lua_touserdata(L, 1);
+    ImGui::PushID(ptr_id);
+    return 0;
+}
+
+static int PushIDInt(lua_State* L) {
+    auto int_id = (int)luaL_checkinteger(L, 1);
+    ImGui::PushID(int_id);
+    return 0;
+}
+
+static int PopID(lua_State* L) {
+    ImGui::PopID();
+    return 0;
+}
+
+static int GetID(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto _retval = ImGui::GetID(str_id);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetIDStr(lua_State* L) {
+    auto str_id_begin = luaL_checkstring(L, 1);
+    auto str_id_end = luaL_checkstring(L, 2);
+    auto _retval = ImGui::GetID(str_id_begin, str_id_end);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetIDPtr(lua_State* L) {
+    auto ptr_id = lua_touserdata(L, 1);
+    auto _retval = ImGui::GetID(ptr_id);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int Text(lua_State* L) {
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 1);
+    lua_call(L, lua_gettop(L) - 1, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::Text("%s", _fmtstr);
+    return 0;
+}
+
+static int TextColored(lua_State* L) {
+    auto col = ImVec4 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 5);
+    lua_call(L, lua_gettop(L) - 5, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::TextColored(col, "%s", _fmtstr);
+    return 0;
+}
+
+static int TextDisabled(lua_State* L) {
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 1);
+    lua_call(L, lua_gettop(L) - 1, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::TextDisabled("%s", _fmtstr);
+    return 0;
+}
+
+static int TextWrapped(lua_State* L) {
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 1);
+    lua_call(L, lua_gettop(L) - 1, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::TextWrapped("%s", _fmtstr);
+    return 0;
+}
+
+static int LabelText(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 2);
+    lua_call(L, lua_gettop(L) - 2, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::LabelText(label, "%s", _fmtstr);
+    return 0;
+}
+
+static int BulletText(lua_State* L) {
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 1);
+    lua_call(L, lua_gettop(L) - 1, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::BulletText("%s", _fmtstr);
+    return 0;
+}
+
+static int SeparatorText(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    ImGui::SeparatorText(label);
+    return 0;
+}
+
+static int Button(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _retval = ImGui::Button(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int ButtonEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 2, 0),
+        (float)luaL_optnumber(L, 3, 0),
+    };
+    auto _retval = ImGui::Button(label, size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SmallButton(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _retval = ImGui::SmallButton(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int InvisibleButton(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    auto flags = (ImGuiButtonFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiButtonFlags_None));
+    auto _retval = ImGui::InvisibleButton(str_id, size, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int ArrowButton(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto dir = (ImGuiDir)luaL_checkinteger(L, 2);
+    auto _retval = ImGui::ArrowButton(str_id, dir);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int Checkbox(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    bool v[] = {
+        field_toboolean(L, 2, 1),
+    };
+    auto _retval = ImGui::Checkbox(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushboolean(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int CheckboxFlagsIntPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _flags_index = 2;
+    int flags[] = {
+        (int)field_tointeger(L, 2, 1),
+    };
+    auto flags_value = (int)luaL_checkinteger(L, 3);
+    auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, flags[0]);
+        lua_seti(L, _flags_index, 1);
+    };
+    return 1;
+}
+
+static int RadioButton(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto active = !!lua_toboolean(L, 2);
+    auto _retval = ImGui::RadioButton(label, active);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int RadioButtonIntPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    int v[] = {
+        (int)field_tointeger(L, 2, 1),
+    };
+    auto v_button = (int)luaL_checkinteger(L, 3);
+    auto _retval = ImGui::RadioButton(label, v, v_button);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int ProgressBar(lua_State* L) {
+    auto fraction = (float)luaL_checknumber(L, 1);
+    auto size_arg = ImVec2 {
+        (float)luaL_optnumber(L, 2, -FLT_MIN),
+        (float)luaL_optnumber(L, 3, 0),
+    };
+    auto overlay = luaL_optstring(L, 4, NULL);
+    ImGui::ProgressBar(fraction, size_arg, overlay);
+    return 0;
+}
+
+static int Bullet(lua_State* L) {
+    ImGui::Bullet();
+    return 0;
+}
+
+static int BeginCombo(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto preview_value = luaL_checkstring(L, 2);
+    auto flags = (ImGuiComboFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiComboFlags_None));
+    auto _retval = ImGui::BeginCombo(label, preview_value, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndCombo(lua_State* L) {
+    ImGui::EndCombo();
+    return 0;
+}
+
+static int Combo(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _current_item_index = 2;
+    int current_item[] = {
+        (int)field_tointeger(L, 2, 1),
+    };
+    auto items_separated_by_zeros = luaL_checkstring(L, 3);
+    auto _retval = ImGui::Combo(label, current_item, items_separated_by_zeros);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, current_item[0]);
+        lua_seti(L, _current_item_index, 1);
+    };
+    return 1;
+}
+
+static int ComboEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _current_item_index = 2;
+    int current_item[] = {
+        (int)field_tointeger(L, 2, 1),
+    };
+    auto items_separated_by_zeros = luaL_checkstring(L, 3);
+    auto popup_max_height_in_items = (int)luaL_optinteger(L, 4, -1);
+    auto _retval = ImGui::Combo(label, current_item, items_separated_by_zeros, popup_max_height_in_items);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, current_item[0]);
+        lua_seti(L, _current_item_index, 1);
+    };
+    return 1;
+}
+
 static int DragFloat(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[1] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
     };
     auto _retval = ImGui::DragFloat(label, v);
@@ -49,7 +1014,7 @@ static int DragFloatEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[1] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
@@ -70,7 +1035,7 @@ static int DragFloat2(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[2] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
     };
@@ -89,7 +1054,7 @@ static int DragFloat2Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[2] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
     };
@@ -113,7 +1078,7 @@ static int DragFloat3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[3] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -135,7 +1100,7 @@ static int DragFloat3Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[3] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -162,7 +1127,7 @@ static int DragFloat4(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[4] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -187,7 +1152,7 @@ static int DragFloat4Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[4] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -217,12 +1182,12 @@ static int DragFloatRange2(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
-    float v_current_min[1] = {
+    float v_current_min[] = {
         (float)field_tonumber(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
-    float v_current_max[1] = {
+    float v_current_max[] = {
         (float)field_tonumber(L, 3, 1),
     };
     auto _retval = ImGui::DragFloatRange2(label, v_current_min, v_current_max);
@@ -242,12 +1207,12 @@ static int DragFloatRange2Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
-    float v_current_min[1] = {
+    float v_current_min[] = {
         (float)field_tonumber(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
-    float v_current_max[1] = {
+    float v_current_max[] = {
         (float)field_tonumber(L, 3, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 4, 1.0f);
@@ -273,7 +1238,7 @@ static int DragInt(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[1] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
     };
     auto _retval = ImGui::DragInt(label, v);
@@ -289,7 +1254,7 @@ static int DragIntEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[1] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
@@ -310,7 +1275,7 @@ static int DragInt2(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[2] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
     };
@@ -329,7 +1294,7 @@ static int DragInt2Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[2] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
     };
@@ -353,7 +1318,7 @@ static int DragInt3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[3] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -375,7 +1340,7 @@ static int DragInt3Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[3] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -402,7 +1367,7 @@ static int DragInt4(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[4] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -427,7 +1392,7 @@ static int DragInt4Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[4] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -457,12 +1422,12 @@ static int DragIntRange2(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
-    int v_current_min[1] = {
+    int v_current_min[] = {
         (int)field_tointeger(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
-    int v_current_max[1] = {
+    int v_current_max[] = {
         (int)field_tointeger(L, 3, 1),
     };
     auto _retval = ImGui::DragIntRange2(label, v_current_min, v_current_max);
@@ -482,12 +1447,12 @@ static int DragIntRange2Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
-    int v_current_min[1] = {
+    int v_current_min[] = {
         (int)field_tointeger(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
-    int v_current_max[1] = {
+    int v_current_max[] = {
         (int)field_tointeger(L, 3, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 4, 1.0f);
@@ -513,7 +1478,7 @@ static int SliderFloat(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[1] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
@@ -531,7 +1496,7 @@ static int SliderFloatEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[1] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
@@ -551,7 +1516,7 @@ static int SliderFloat2(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[2] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
     };
@@ -572,7 +1537,7 @@ static int SliderFloat2Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[2] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
     };
@@ -595,7 +1560,7 @@ static int SliderFloat3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[3] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -619,7 +1584,7 @@ static int SliderFloat3Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[3] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -645,7 +1610,7 @@ static int SliderFloat4(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[4] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -672,7 +1637,7 @@ static int SliderFloat4Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    float v[4] = {
+    float v[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -701,7 +1666,7 @@ static int SliderAngle(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_rad_index = 2;
-    float v_rad[1] = {
+    float v_rad[] = {
         (float)field_tonumber(L, 2, 1),
     };
     auto _retval = ImGui::SliderAngle(label, v_rad);
@@ -717,7 +1682,7 @@ static int SliderAngleEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_rad_index = 2;
-    float v_rad[1] = {
+    float v_rad[] = {
         (float)field_tonumber(L, 2, 1),
     };
     auto v_degrees_min = (float)luaL_optnumber(L, 3, -360.0f);
@@ -737,7 +1702,7 @@ static int SliderInt(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[1] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
@@ -755,7 +1720,7 @@ static int SliderIntEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[1] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
@@ -775,7 +1740,7 @@ static int SliderInt2(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[2] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
     };
@@ -796,7 +1761,7 @@ static int SliderInt2Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[2] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
     };
@@ -819,7 +1784,7 @@ static int SliderInt3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[3] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -843,7 +1808,7 @@ static int SliderInt3Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[3] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -869,7 +1834,7 @@ static int SliderInt4(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[4] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -896,7 +1861,7 @@ static int SliderInt4Ex(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
-    int v[4] = {
+    int v[] = {
         (int)field_tointeger(L, 2, 1),
         (int)field_tointeger(L, 2, 2),
         (int)field_tointeger(L, 2, 3),
@@ -929,7 +1894,7 @@ static int VSliderFloat(lua_State* L) {
     };
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
-    float v[1] = {
+    float v[] = {
         (float)field_tonumber(L, 4, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 5);
@@ -951,7 +1916,7 @@ static int VSliderFloatEx(lua_State* L) {
     };
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
-    float v[1] = {
+    float v[] = {
         (float)field_tonumber(L, 4, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 5);
@@ -975,7 +1940,7 @@ static int VSliderInt(lua_State* L) {
     };
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
-    int v[1] = {
+    int v[] = {
         (int)field_tointeger(L, 4, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 5);
@@ -997,7 +1962,7 @@ static int VSliderIntEx(lua_State* L) {
     };
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
-    int v[1] = {
+    int v[] = {
         (int)field_tointeger(L, 4, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 5);
@@ -1017,7 +1982,7 @@ static int ColorEdit3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _col_index = 2;
-    float col[3] = {
+    float col[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -1040,7 +2005,7 @@ static int ColorEdit4(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _col_index = 2;
-    float col[4] = {
+    float col[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -1066,7 +2031,7 @@ static int ColorPicker3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
     int _col_index = 2;
-    float col[3] = {
+    float col[] = {
         (float)field_tonumber(L, 2, 1),
         (float)field_tonumber(L, 2, 2),
         (float)field_tonumber(L, 2, 3),
@@ -1109,8 +2074,8 @@ static int ColorButtonEx(lua_State* L) {
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiColorEditFlags_None));
     auto size = ImVec2 {
-        (float)luaL_optnumber(L, 7, 0.f),
-        (float)luaL_optnumber(L, 8, 0.f),
+        (float)luaL_optnumber(L, 7, 0),
+        (float)luaL_optnumber(L, 8, 0),
     };
     auto _retval = ImGui::ColorButton(desc_id, col, flags, size);
     lua_pushboolean(L, _retval);
@@ -1217,13 +2182,19 @@ static int CollapsingHeader(lua_State* L) {
 
 static int CollapsingHeaderBoolPtr(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    bool has_p_visible = !lua_isnil(L, 2);
-    bool p_visible = true;
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _p_visible_index = 2;
+    bool p_visible[] = {
+        field_toboolean(L, 2, 1),
+    };
     auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTreeNodeFlags_None));
-    auto _retval = ImGui::CollapsingHeader(label, (has_p_visible? &p_visible: NULL), flags);
+    auto _retval = ImGui::CollapsingHeader(label, p_visible, flags);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_visible || p_visible);
-    return 2;
+    if (_retval) {
+        lua_pushboolean(L, p_visible[0]);
+        lua_seti(L, _p_visible_index, 1);
+    };
+    return 1;
 }
 
 static int SetNextItemOpen(lua_State* L) {
@@ -1245,8 +2216,8 @@ static int SelectableEx(lua_State* L) {
     auto selected = lua_isnoneornil(L, 2)? false: !!lua_toboolean(L, 2);
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
     auto size = ImVec2 {
-        (float)luaL_optnumber(L, 4, 0.f),
-        (float)luaL_optnumber(L, 5, 0.f),
+        (float)luaL_optnumber(L, 4, 0),
+        (float)luaL_optnumber(L, 5, 0),
     };
     auto _retval = ImGui::Selectable(label, selected, flags, size);
     lua_pushboolean(L, _retval);
@@ -1255,35 +2226,47 @@ static int SelectableEx(lua_State* L) {
 
 static int SelectableBoolPtr(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    bool has_p_selected = !lua_isnil(L, 2);
-    bool p_selected = true;
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _p_selected_index = 2;
+    bool p_selected[] = {
+        field_toboolean(L, 2, 1),
+    };
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
-    auto _retval = ImGui::Selectable(label, (has_p_selected? &p_selected: NULL), flags);
+    auto _retval = ImGui::Selectable(label, p_selected, flags);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_selected || p_selected);
-    return 2;
+    if (_retval) {
+        lua_pushboolean(L, p_selected[0]);
+        lua_seti(L, _p_selected_index, 1);
+    };
+    return 1;
 }
 
 static int SelectableBoolPtrEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    bool has_p_selected = !lua_isnil(L, 2);
-    bool p_selected = true;
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _p_selected_index = 2;
+    bool p_selected[] = {
+        field_toboolean(L, 2, 1),
+    };
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
     auto size = ImVec2 {
-        (float)luaL_optnumber(L, 4, 0.f),
-        (float)luaL_optnumber(L, 5, 0.f),
+        (float)luaL_optnumber(L, 4, 0),
+        (float)luaL_optnumber(L, 5, 0),
     };
-    auto _retval = ImGui::Selectable(label, (has_p_selected? &p_selected: NULL), flags, size);
+    auto _retval = ImGui::Selectable(label, p_selected, flags, size);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_selected || p_selected);
-    return 2;
+    if (_retval) {
+        lua_pushboolean(L, p_selected[0]);
+        lua_seti(L, _p_selected_index, 1);
+    };
+    return 1;
 }
 
 static int BeginListBox(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto size = ImVec2 {
-        (float)luaL_optnumber(L, 2, 0.f),
-        (float)luaL_optnumber(L, 3, 0.f),
+        (float)luaL_optnumber(L, 2, 0),
+        (float)luaL_optnumber(L, 3, 0),
     };
     auto _retval = ImGui::BeginListBox(label, size);
     lua_pushboolean(L, _retval);
@@ -1357,13 +2340,19 @@ static int MenuItemEx(lua_State* L) {
 static int MenuItemBoolPtr(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto shortcut = luaL_checkstring(L, 2);
-    bool has_p_selected = !lua_isnil(L, 3);
-    bool p_selected = true;
+    luaL_checktype(L, 3, LUA_TTABLE);
+    int _p_selected_index = 3;
+    bool p_selected[] = {
+        field_toboolean(L, 3, 1),
+    };
     auto enabled = lua_isnoneornil(L, 4)? true: !!lua_toboolean(L, 4);
-    auto _retval = ImGui::MenuItem(label, shortcut, (has_p_selected? &p_selected: NULL), enabled);
+    auto _retval = ImGui::MenuItem(label, shortcut, p_selected, enabled);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_selected || p_selected);
-    return 2;
+    if (_retval) {
+        lua_pushboolean(L, p_selected[0]);
+        lua_seti(L, _p_selected_index, 1);
+    };
+    return 1;
 }
 
 static int BeginTooltip(lua_State* L) {
@@ -1515,8 +2504,8 @@ static int BeginTableEx(lua_State* L) {
     auto column = (int)luaL_checkinteger(L, 2);
     auto flags = (ImGuiTableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTableFlags_None));
     auto outer_size = ImVec2 {
-        (float)luaL_optnumber(L, 4, 0.f),
-        (float)luaL_optnumber(L, 5, 0.f),
+        (float)luaL_optnumber(L, 4, 0.0f),
+        (float)luaL_optnumber(L, 5, 0.0f),
     };
     auto inner_width = (float)luaL_optnumber(L, 6, 0.0f);
     auto _retval = ImGui::BeginTable(str_id, column, flags, outer_size, inner_width);
@@ -2256,6 +3245,133 @@ static int GetKeyIndex(lua_State* L) {
 
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
+        { "Begin", Begin },
+        { "End", End },
+        { "BeginChild", BeginChild },
+        { "BeginChildID", BeginChildID },
+        { "EndChild", EndChild },
+        { "IsWindowAppearing", IsWindowAppearing },
+        { "IsWindowCollapsed", IsWindowCollapsed },
+        { "IsWindowFocused", IsWindowFocused },
+        { "IsWindowHovered", IsWindowHovered },
+        { "GetWindowDpiScale", GetWindowDpiScale },
+        { "GetWindowPos", GetWindowPos },
+        { "GetWindowSize", GetWindowSize },
+        { "GetWindowWidth", GetWindowWidth },
+        { "GetWindowHeight", GetWindowHeight },
+        { "SetNextWindowPos", SetNextWindowPos },
+        { "SetNextWindowPosEx", SetNextWindowPosEx },
+        { "SetNextWindowSize", SetNextWindowSize },
+        { "SetNextWindowContentSize", SetNextWindowContentSize },
+        { "SetNextWindowCollapsed", SetNextWindowCollapsed },
+        { "SetNextWindowFocus", SetNextWindowFocus },
+        { "SetNextWindowScroll", SetNextWindowScroll },
+        { "SetNextWindowBgAlpha", SetNextWindowBgAlpha },
+        { "SetNextWindowViewport", SetNextWindowViewport },
+        { "SetWindowPos", SetWindowPos },
+        { "SetWindowSize", SetWindowSize },
+        { "SetWindowCollapsed", SetWindowCollapsed },
+        { "SetWindowFocus", SetWindowFocus },
+        { "SetWindowFontScale", SetWindowFontScale },
+        { "SetWindowPosStr", SetWindowPosStr },
+        { "SetWindowSizeStr", SetWindowSizeStr },
+        { "SetWindowCollapsedStr", SetWindowCollapsedStr },
+        { "SetWindowFocusStr", SetWindowFocusStr },
+        { "GetContentRegionAvail", GetContentRegionAvail },
+        { "GetContentRegionMax", GetContentRegionMax },
+        { "GetWindowContentRegionMin", GetWindowContentRegionMin },
+        { "GetWindowContentRegionMax", GetWindowContentRegionMax },
+        { "GetScrollX", GetScrollX },
+        { "GetScrollY", GetScrollY },
+        { "SetScrollX", SetScrollX },
+        { "SetScrollY", SetScrollY },
+        { "GetScrollMaxX", GetScrollMaxX },
+        { "GetScrollMaxY", GetScrollMaxY },
+        { "SetScrollHereX", SetScrollHereX },
+        { "SetScrollHereY", SetScrollHereY },
+        { "SetScrollFromPosX", SetScrollFromPosX },
+        { "SetScrollFromPosY", SetScrollFromPosY },
+        { "PopFont", PopFont },
+        { "PushStyleColor", PushStyleColor },
+        { "PushStyleColorImVec4", PushStyleColorImVec4 },
+        { "PopStyleColor", PopStyleColor },
+        { "PopStyleColorEx", PopStyleColorEx },
+        { "PushStyleVar", PushStyleVar },
+        { "PushStyleVarImVec2", PushStyleVarImVec2 },
+        { "PopStyleVar", PopStyleVar },
+        { "PopStyleVarEx", PopStyleVarEx },
+        { "PushTabStop", PushTabStop },
+        { "PopTabStop", PopTabStop },
+        { "PushButtonRepeat", PushButtonRepeat },
+        { "PopButtonRepeat", PopButtonRepeat },
+        { "PushItemWidth", PushItemWidth },
+        { "PopItemWidth", PopItemWidth },
+        { "SetNextItemWidth", SetNextItemWidth },
+        { "CalcItemWidth", CalcItemWidth },
+        { "PushTextWrapPos", PushTextWrapPos },
+        { "PopTextWrapPos", PopTextWrapPos },
+        { "GetFontSize", GetFontSize },
+        { "GetFontTexUvWhitePixel", GetFontTexUvWhitePixel },
+        { "GetColorU32", GetColorU32 },
+        { "GetColorU32Ex", GetColorU32Ex },
+        { "GetColorU32ImVec4", GetColorU32ImVec4 },
+        { "GetColorU32ImU32", GetColorU32ImU32 },
+        { "GetCursorScreenPos", GetCursorScreenPos },
+        { "SetCursorScreenPos", SetCursorScreenPos },
+        { "GetCursorPos", GetCursorPos },
+        { "GetCursorPosX", GetCursorPosX },
+        { "GetCursorPosY", GetCursorPosY },
+        { "SetCursorPos", SetCursorPos },
+        { "SetCursorPosX", SetCursorPosX },
+        { "SetCursorPosY", SetCursorPosY },
+        { "GetCursorStartPos", GetCursorStartPos },
+        { "Separator", Separator },
+        { "SameLine", SameLine },
+        { "SameLineEx", SameLineEx },
+        { "NewLine", NewLine },
+        { "Spacing", Spacing },
+        { "Dummy", Dummy },
+        { "Indent", Indent },
+        { "IndentEx", IndentEx },
+        { "Unindent", Unindent },
+        { "UnindentEx", UnindentEx },
+        { "BeginGroup", BeginGroup },
+        { "EndGroup", EndGroup },
+        { "AlignTextToFramePadding", AlignTextToFramePadding },
+        { "GetTextLineHeight", GetTextLineHeight },
+        { "GetTextLineHeightWithSpacing", GetTextLineHeightWithSpacing },
+        { "GetFrameHeight", GetFrameHeight },
+        { "GetFrameHeightWithSpacing", GetFrameHeightWithSpacing },
+        { "PushID", PushID },
+        { "PushIDStr", PushIDStr },
+        { "PushIDPtr", PushIDPtr },
+        { "PushIDInt", PushIDInt },
+        { "PopID", PopID },
+        { "GetID", GetID },
+        { "GetIDStr", GetIDStr },
+        { "GetIDPtr", GetIDPtr },
+        { "Text", Text },
+        { "TextColored", TextColored },
+        { "TextDisabled", TextDisabled },
+        { "TextWrapped", TextWrapped },
+        { "LabelText", LabelText },
+        { "BulletText", BulletText },
+        { "SeparatorText", SeparatorText },
+        { "Button", Button },
+        { "ButtonEx", ButtonEx },
+        { "SmallButton", SmallButton },
+        { "InvisibleButton", InvisibleButton },
+        { "ArrowButton", ArrowButton },
+        { "Checkbox", Checkbox },
+        { "CheckboxFlagsIntPtr", CheckboxFlagsIntPtr },
+        { "RadioButton", RadioButton },
+        { "RadioButtonIntPtr", RadioButtonIntPtr },
+        { "ProgressBar", ProgressBar },
+        { "Bullet", Bullet },
+        { "BeginCombo", BeginCombo },
+        { "EndCombo", EndCombo },
+        { "Combo", Combo },
+        { "ComboEx", ComboEx },
         { "DragFloat", DragFloat },
         { "DragFloatEx", DragFloatEx },
         { "DragFloat2", DragFloat2 },

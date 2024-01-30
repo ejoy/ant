@@ -1053,6 +1053,896 @@ function ImGui.Flags.Viewport(flags) end
 ---@alias ImGuiKeyChord ImGuiKey
 
 --
+-- Windows
+-- - Begin() = push window to the stack and start appending to it. End() = pop window from the stack.
+-- - Passing 'bool* p_open != NULL' shows a window-closing widget in the upper-right corner of the window,
+--   which clicking will set the boolean to false when clicked.
+-- - You may append multiple times to the same window during the same frame by calling Begin()/End() pairs multiple times.
+--   Some information such as 'flags' or 'p_open' will only be considered by the first call to Begin().
+-- - Begin() return false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting
+--   anything to the window. Always call a matching End() for each Begin() call, regardless of its return value!
+--   [Important: due to legacy reason, Begin/End and BeginChild/EndChild are inconsistent with all other functions
+--    such as BeginMenu/EndMenu, BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding
+--    BeginXXX function returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
+-- - Note that the bottom of window stack always contains a window called "Debug".
+--
+---@param name string
+---@param p_open true | nil
+---@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@return boolean
+---@return boolean p_open
+function ImGui.Begin(name, p_open, flags) end
+
+function ImGui.End() end
+
+--
+-- Child Windows
+-- - Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
+-- - Before 1.90 (November 2023), the "ImGuiChildFlags child_flags = 0" parameter was "bool border = false".
+--   This API is backward compatible with old code, as we guarantee that ImGuiChildFlags_Border == true.
+--   Consider updating your old call sites:
+--      BeginChild("Name", size, false)   -> Begin("Name", size, 0); or Begin("Name", size, ImGuiChildFlags_None);
+--      BeginChild("Name", size, true)    -> Begin("Name", size, ImGuiChildFlags_Border);
+-- - Manual sizing (each axis can use a different setting e.g. ImVec2(0.0f, 400.0f)):
+--     == 0.0f: use remaining parent window size for this axis.
+--      > 0.0f: use specified size for this axis.
+--      < 0.0f: right/bottom-align to specified distance from available content boundaries.
+-- - Specifying ImGuiChildFlags_AutoResizeX or ImGuiChildFlags_AutoResizeY makes the sizing automatic based on child contents.
+--   Combining both ImGuiChildFlags_AutoResizeX _and_ ImGuiChildFlags_AutoResizeY defeats purpose of a scrolling region and is NOT recommended.
+-- - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting
+--   anything to the window. Always call a matching EndChild() for each BeginChild() call, regardless of its return value.
+--   [Important: due to legacy reason, Begin/End and BeginChild/EndChild are inconsistent with all other functions
+--    such as BeginMenu/EndMenu, BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding
+--    BeginXXX function returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
+--
+---@param str_id string
+---@param size_x? number | `0`
+---@param size_y? number | `0`
+---@param child_flags? ImGuiChildFlags | `ImGui.Flags.Child { "None" }`
+---@param window_flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@return boolean
+function ImGui.BeginChild(str_id, size_x, size_y, child_flags, window_flags) end
+
+---@param id integer
+---@param size_x? number | `0`
+---@param size_y? number | `0`
+---@param child_flags? ImGuiChildFlags | `ImGui.Flags.Child { "None" }`
+---@param window_flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@return boolean
+function ImGui.BeginChildID(id, size_x, size_y, child_flags, window_flags) end
+
+function ImGui.EndChild() end
+
+--
+-- Windows Utilities
+-- - 'current window' = the window we are appending into while inside a Begin()/End() block. 'next window' = next window we will Begin() into.
+--
+---@return boolean
+function ImGui.IsWindowAppearing() end
+
+---@return boolean
+function ImGui.IsWindowCollapsed() end
+
+--
+-- is current window focused? or its root/child, depending on flags. see flags for options.
+--
+---@param flags? ImGuiFocusedFlags | `ImGui.Flags.Focused { "None" }`
+---@return boolean
+function ImGui.IsWindowFocused(flags) end
+
+--
+-- is current window hovered and hoverable (e.g. not blocked by a popup/modal)? See ImGuiHoveredFlags_ for options. IMPORTANT: If you are trying to check whether your mouse should be dispatched to Dear ImGui or to your underlying app, you should not use this function! Use the 'io.WantCaptureMouse' boolean for that! Refer to FAQ entry "How can I tell whether to dispatch mouse/keyboard to Dear ImGui or my application?" for details.
+--
+---@param flags? ImGuiHoveredFlags | `ImGui.Flags.Hovered { "None" }`
+---@return boolean
+function ImGui.IsWindowHovered(flags) end
+
+--
+-- get DPI scale currently associated to the current window's viewport.
+--
+---@return number
+function ImGui.GetWindowDpiScale() end
+
+--
+-- get current window position in screen space (note: it is unlikely you need to use this. Consider using current layout pos instead, GetCursorScreenPos())
+--
+---@return number
+---@return number
+function ImGui.GetWindowPos() end
+
+--
+-- get current window size (note: it is unlikely you need to use this. Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead)
+--
+---@return number
+---@return number
+function ImGui.GetWindowSize() end
+
+--
+-- get current window width (shortcut for GetWindowSize().x)
+--
+---@return number
+function ImGui.GetWindowWidth() end
+
+--
+-- get current window height (shortcut for GetWindowSize().y)
+--
+---@return number
+function ImGui.GetWindowHeight() end
+
+--
+-- Window manipulation
+-- - Prefer using SetNextXXX functions (before Begin) rather that SetXXX functions (after Begin).
+--
+--
+-- Implied pivot = ImVec2(0, 0)
+--
+---@param pos_x number
+---@param pos_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetNextWindowPos(pos_x, pos_y, cond) end
+
+--
+-- set next window position. call before Begin(). use pivot=(0.5f,0.5f) to center on given point, etc.
+--
+---@param pos_x number
+---@param pos_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param pivot_x? number | `0`
+---@param pivot_y? number | `0`
+function ImGui.SetNextWindowPosEx(pos_x, pos_y, cond, pivot_x, pivot_y) end
+
+--
+-- set next window size. set axis to 0.0f to force an auto-fit on this axis. call before Begin()
+--
+---@param size_x number
+---@param size_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetNextWindowSize(size_x, size_y, cond) end
+
+--
+-- set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. call before Begin()
+--
+---@param size_x number
+---@param size_y number
+function ImGui.SetNextWindowContentSize(size_x, size_y) end
+
+--
+-- set next window collapsed state. call before Begin()
+--
+---@param collapsed boolean
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetNextWindowCollapsed(collapsed, cond) end
+
+--
+-- set next window to be focused / top-most. call before Begin()
+--
+function ImGui.SetNextWindowFocus() end
+
+--
+-- set next window scrolling value (use < 0.0f to not affect a given axis).
+--
+---@param scroll_x number
+---@param scroll_y number
+function ImGui.SetNextWindowScroll(scroll_x, scroll_y) end
+
+--
+-- set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
+--
+---@param alpha number
+function ImGui.SetNextWindowBgAlpha(alpha) end
+
+--
+-- set next window viewport
+--
+---@param viewport_id integer
+function ImGui.SetNextWindowViewport(viewport_id) end
+
+--
+-- (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
+--
+---@param pos_x number
+---@param pos_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetWindowPos(pos_x, pos_y, cond) end
+
+--
+-- (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
+--
+---@param size_x number
+---@param size_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetWindowSize(size_x, size_y, cond) end
+
+--
+-- (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
+--
+---@param collapsed boolean
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetWindowCollapsed(collapsed, cond) end
+
+--
+-- (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
+--
+function ImGui.SetWindowFocus() end
+
+--
+-- [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
+--
+---@param scale number
+function ImGui.SetWindowFontScale(scale) end
+
+--
+-- set named window position.
+--
+---@param name string
+---@param pos_x number
+---@param pos_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetWindowPosStr(name, pos_x, pos_y, cond) end
+
+--
+-- set named window size. set axis to 0.0f to force an auto-fit on this axis.
+--
+---@param name string
+---@param size_x number
+---@param size_y number
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetWindowSizeStr(name, size_x, size_y, cond) end
+
+--
+-- set named window collapsed state
+--
+---@param name string
+---@param collapsed boolean
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetWindowCollapsedStr(name, collapsed, cond) end
+
+--
+-- set named window to be focused / top-most. use NULL to remove focus.
+--
+---@param name string
+function ImGui.SetWindowFocusStr(name) end
+
+--
+-- Content region
+-- - Retrieve available space from a given point. GetContentRegionAvail() is frequently useful.
+-- - Those functions are bound to be redesigned (they are confusing, incomplete and the Min/Max return values are in local window coordinates which increases confusion)
+--
+--
+-- == GetContentRegionMax() - GetCursorPos()
+--
+---@return number
+---@return number
+function ImGui.GetContentRegionAvail() end
+
+--
+-- current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
+--
+---@return number
+---@return number
+function ImGui.GetContentRegionMax() end
+
+--
+-- content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
+--
+---@return number
+---@return number
+function ImGui.GetWindowContentRegionMin() end
+
+--
+-- content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be overridden with SetNextWindowContentSize(), in window coordinates
+--
+---@return number
+---@return number
+function ImGui.GetWindowContentRegionMax() end
+
+--
+-- Windows Scrolling
+-- - Any change of Scroll will be applied at the beginning of next frame in the first call to Begin().
+-- - You may instead use SetNextWindowScroll() prior to calling Begin() to avoid this delay, as an alternative to using SetScrollX()/SetScrollY().
+--
+--
+-- get scrolling amount [0 .. GetScrollMaxX()]
+--
+---@return number
+function ImGui.GetScrollX() end
+
+--
+-- get scrolling amount [0 .. GetScrollMaxY()]
+--
+---@return number
+function ImGui.GetScrollY() end
+
+--
+-- set scrolling amount [0 .. GetScrollMaxX()]
+--
+---@param scroll_x number
+function ImGui.SetScrollX(scroll_x) end
+
+--
+-- set scrolling amount [0 .. GetScrollMaxY()]
+--
+---@param scroll_y number
+function ImGui.SetScrollY(scroll_y) end
+
+--
+-- get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
+--
+---@return number
+function ImGui.GetScrollMaxX() end
+
+--
+-- get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
+--
+---@return number
+function ImGui.GetScrollMaxY() end
+
+--
+-- adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+--
+---@param center_x_ratio? number | `0.5`
+function ImGui.SetScrollHereX(center_x_ratio) end
+
+--
+-- adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+--
+---@param center_y_ratio? number | `0.5`
+function ImGui.SetScrollHereY(center_y_ratio) end
+
+--
+-- adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+--
+---@param local_x number
+---@param center_x_ratio? number | `0.5`
+function ImGui.SetScrollFromPosX(local_x, center_x_ratio) end
+
+--
+-- adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+--
+---@param local_y number
+---@param center_y_ratio? number | `0.5`
+function ImGui.SetScrollFromPosY(local_y, center_y_ratio) end
+
+function ImGui.PopFont() end
+
+--
+-- modify a style color. always use this if you modify the style after NewFrame().
+--
+---@param idx ImGuiCol
+---@param col integer
+function ImGui.PushStyleColor(idx, col) end
+
+---@param idx ImGuiCol
+---@param col_x number
+---@param col_y number
+---@param col_z number
+---@param col_w number
+function ImGui.PushStyleColorImVec4(idx, col_x, col_y, col_z, col_w) end
+
+--
+-- Implied count = 1
+--
+function ImGui.PopStyleColor() end
+
+---@param count? integer | `1`
+function ImGui.PopStyleColorEx(count) end
+
+--
+-- modify a style float variable. always use this if you modify the style after NewFrame().
+--
+---@param idx ImGuiStyleVar
+---@param val number
+function ImGui.PushStyleVar(idx, val) end
+
+--
+-- modify a style ImVec2 variable. always use this if you modify the style after NewFrame().
+--
+---@param idx ImGuiStyleVar
+---@param val_x number
+---@param val_y number
+function ImGui.PushStyleVarImVec2(idx, val_x, val_y) end
+
+--
+-- Implied count = 1
+--
+function ImGui.PopStyleVar() end
+
+---@param count? integer | `1`
+function ImGui.PopStyleVarEx(count) end
+
+--
+-- == tab stop enable. Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
+--
+---@param tab_stop boolean
+function ImGui.PushTabStop(tab_stop) end
+
+function ImGui.PopTabStop() end
+
+--
+-- in 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.
+--
+---@param arg_repeat boolean
+function ImGui.PushButtonRepeat(arg_repeat) end
+
+function ImGui.PopButtonRepeat() end
+
+--
+-- Parameters stacks (current window)
+--
+--
+-- push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side).
+--
+---@param item_width number
+function ImGui.PushItemWidth(item_width) end
+
+function ImGui.PopItemWidth() end
+
+--
+-- set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
+--
+---@param item_width number
+function ImGui.SetNextItemWidth(item_width) end
+
+--
+-- width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
+--
+---@return number
+function ImGui.CalcItemWidth() end
+
+--
+-- push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space
+--
+---@param wrap_local_pos_x? number | `0.0`
+function ImGui.PushTextWrapPos(wrap_local_pos_x) end
+
+function ImGui.PopTextWrapPos() end
+
+--
+-- get current font size (= height in pixels) of current font with current scale applied
+--
+---@return number
+function ImGui.GetFontSize() end
+
+--
+-- get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
+--
+---@return number
+---@return number
+function ImGui.GetFontTexUvWhitePixel() end
+
+--
+-- Implied alpha_mul = 1.0f
+--
+---@param idx ImGuiCol
+---@return integer
+function ImGui.GetColorU32(idx) end
+
+--
+-- retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
+--
+---@param idx ImGuiCol
+---@param alpha_mul? number | `1.0`
+---@return integer
+function ImGui.GetColorU32Ex(idx, alpha_mul) end
+
+--
+-- retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+--
+---@param col_x number
+---@param col_y number
+---@param col_z number
+---@param col_w number
+---@return integer
+function ImGui.GetColorU32ImVec4(col_x, col_y, col_z, col_w) end
+
+--
+-- retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+--
+---@param col integer
+---@return integer
+function ImGui.GetColorU32ImU32(col) end
+
+--
+-- Layout cursor positioning
+-- - By "cursor" we mean the current output position.
+-- - The typical widget behavior is to output themselves at the current cursor position, then move the cursor one line down.
+-- - You can call SameLine() between widgets to undo the last carriage return and output at the right of the preceding widget.
+-- - Attention! We currently have inconsistencies between window-local and absolute positions we will aim to fix with future API:
+--    - Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions. -> this is the preferred way forward.
+--    - Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
+-- - GetCursorScreenPos() = GetCursorPos() + GetWindowPos(). GetWindowPos() is almost only ever useful to convert from window-local to absolute coordinates.
+--
+--
+-- cursor position in absolute coordinates (prefer using this, also more useful to work with ImDrawList API).
+--
+---@return number
+---@return number
+function ImGui.GetCursorScreenPos() end
+
+--
+-- cursor position in absolute coordinates
+--
+---@param pos_x number
+---@param pos_y number
+function ImGui.SetCursorScreenPos(pos_x, pos_y) end
+
+--
+-- [window-local] cursor position in window coordinates (relative to window position)
+--
+---@return number
+---@return number
+function ImGui.GetCursorPos() end
+
+--
+-- [window-local] "
+--
+---@return number
+function ImGui.GetCursorPosX() end
+
+--
+-- [window-local] "
+--
+---@return number
+function ImGui.GetCursorPosY() end
+
+--
+-- [window-local] "
+--
+---@param local_pos_x number
+---@param local_pos_y number
+function ImGui.SetCursorPos(local_pos_x, local_pos_y) end
+
+--
+-- [window-local] "
+--
+---@param local_x number
+function ImGui.SetCursorPosX(local_x) end
+
+--
+-- [window-local] "
+--
+---@param local_y number
+function ImGui.SetCursorPosY(local_y) end
+
+--
+-- [window-local] initial cursor position, in window coordinates
+--
+---@return number
+---@return number
+function ImGui.GetCursorStartPos() end
+
+--
+-- Other layout functions
+--
+--
+-- separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
+--
+function ImGui.Separator() end
+
+--
+-- Implied offset_from_start_x = 0.0f, spacing = -1.0f
+--
+function ImGui.SameLine() end
+
+--
+-- call between widgets or groups to layout them horizontally. X position given in window coordinates.
+--
+---@param offset_from_start_x? number | `0.0`
+---@param spacing? number | `-1.0`
+function ImGui.SameLineEx(offset_from_start_x, spacing) end
+
+--
+-- undo a SameLine() or force a new line when in a horizontal-layout context.
+--
+function ImGui.NewLine() end
+
+--
+-- add vertical spacing.
+--
+function ImGui.Spacing() end
+
+--
+-- add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
+--
+---@param size_x number
+---@param size_y number
+function ImGui.Dummy(size_x, size_y) end
+
+--
+-- Implied indent_w = 0.0f
+--
+function ImGui.Indent() end
+
+--
+-- move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
+--
+---@param indent_w? number | `0.0`
+function ImGui.IndentEx(indent_w) end
+
+--
+-- Implied indent_w = 0.0f
+--
+function ImGui.Unindent() end
+
+--
+-- move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
+--
+---@param indent_w? number | `0.0`
+function ImGui.UnindentEx(indent_w) end
+
+--
+-- lock horizontal starting position
+--
+function ImGui.BeginGroup() end
+
+--
+-- unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
+--
+function ImGui.EndGroup() end
+
+--
+-- vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
+--
+function ImGui.AlignTextToFramePadding() end
+
+--
+-- ~ FontSize
+--
+---@return number
+function ImGui.GetTextLineHeight() end
+
+--
+-- ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
+--
+---@return number
+function ImGui.GetTextLineHeightWithSpacing() end
+
+--
+-- ~ FontSize + style.FramePadding.y * 2
+--
+---@return number
+function ImGui.GetFrameHeight() end
+
+--
+-- ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
+--
+---@return number
+function ImGui.GetFrameHeightWithSpacing() end
+
+--
+-- ID stack/scopes
+-- Read the FAQ (docs/FAQ.md or http://dearimgui.com/faq) for more details about how ID are handled in dear imgui.
+-- - Those questions are answered and impacted by understanding of the ID stack system:
+--   - "Q: Why is my widget not reacting when I click on it?"
+--   - "Q: How can I have widgets with an empty label?"
+--   - "Q: How can I have multiple widgets with the same label?"
+-- - Short version: ID are hashes of the entire ID stack. If you are creating widgets in a loop you most likely
+--   want to push a unique identifier (e.g. object pointer, loop index) to uniquely differentiate them.
+-- - You can also use the "Label##foobar" syntax within widget label to distinguish them from each others.
+-- - In this header file we use the "label"/"name" terminology to denote a string that will be displayed + used as an ID,
+--   whereas "str_id" denote a string that is only used as an ID and not normally displayed.
+--
+--
+-- push string into the ID stack (will hash string).
+--
+---@param str_id string
+function ImGui.PushID(str_id) end
+
+--
+-- push string into the ID stack (will hash string).
+--
+---@param str_id_begin string
+---@param str_id_end string
+function ImGui.PushIDStr(str_id_begin, str_id_end) end
+
+--
+-- push pointer into the ID stack (will hash pointer).
+--
+---@param ptr_id lightuserdata
+function ImGui.PushIDPtr(ptr_id) end
+
+--
+-- push integer into the ID stack (will hash integer).
+--
+---@param int_id integer
+function ImGui.PushIDInt(int_id) end
+
+--
+-- pop from the ID stack.
+--
+function ImGui.PopID() end
+
+--
+-- calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
+--
+---@param str_id string
+---@return integer
+function ImGui.GetID(str_id) end
+
+---@param str_id_begin string
+---@param str_id_end string
+---@return integer
+function ImGui.GetIDStr(str_id_begin, str_id_end) end
+
+---@param ptr_id lightuserdata
+---@return integer
+function ImGui.GetIDPtr(ptr_id) end
+
+--
+-- formatted text
+--
+---@param fmt string
+---@param ...  any
+function ImGui.Text(fmt, ...) end
+
+--
+-- shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor();
+--
+---@param col_x number
+---@param col_y number
+---@param col_z number
+---@param col_w number
+---@param fmt string
+---@param ...  any
+function ImGui.TextColored(col_x, col_y, col_z, col_w, fmt, ...) end
+
+--
+-- shortcut for PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]); Text(fmt, ...); PopStyleColor();
+--
+---@param fmt string
+---@param ...  any
+function ImGui.TextDisabled(fmt, ...) end
+
+--
+-- shortcut for PushTextWrapPos(0.0f); Text(fmt, ...); PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
+--
+---@param fmt string
+---@param ...  any
+function ImGui.TextWrapped(fmt, ...) end
+
+--
+-- display text+label aligned the same way as value+label widgets
+--
+---@param label string
+---@param fmt string
+---@param ...  any
+function ImGui.LabelText(label, fmt, ...) end
+
+--
+-- shortcut for Bullet()+Text()
+--
+---@param fmt string
+---@param ...  any
+function ImGui.BulletText(fmt, ...) end
+
+--
+-- currently: formatted text with an horizontal line
+--
+---@param label string
+function ImGui.SeparatorText(label) end
+
+--
+-- Widgets: Main
+-- - Most widgets return true when the value has been changed or when pressed/selected
+-- - You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
+--
+--
+-- Implied size = ImVec2(0, 0)
+--
+---@param label string
+---@return boolean
+function ImGui.Button(label) end
+
+--
+-- button
+--
+---@param label string
+---@param size_x? number | `0`
+---@param size_y? number | `0`
+---@return boolean
+function ImGui.ButtonEx(label, size_x, size_y) end
+
+--
+-- button with (FramePadding.y == 0) to easily embed within text
+--
+---@param label string
+---@return boolean
+function ImGui.SmallButton(label) end
+
+--
+-- flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
+--
+---@param str_id string
+---@param size_x number
+---@param size_y number
+---@param flags? ImGuiButtonFlags | `ImGui.Flags.Button { "None" }`
+---@return boolean
+function ImGui.InvisibleButton(str_id, size_x, size_y, flags) end
+
+--
+-- square button with an arrow shape
+--
+---@param str_id string
+---@param dir ImGuiDir
+---@return boolean
+function ImGui.ArrowButton(str_id, dir) end
+
+---@param label string
+---@param v boolean[]
+---@return boolean
+---@return boolean v
+function ImGui.Checkbox(label, v) end
+
+---@param label string
+---@param flags integer[]
+---@param flags_value integer
+---@return boolean
+function ImGui.CheckboxFlagsIntPtr(label, flags, flags_value) end
+
+--
+-- use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; }
+--
+---@param label string
+---@param active boolean
+---@return boolean
+function ImGui.RadioButton(label, active) end
+
+--
+-- shortcut to handle the above pattern when value is an integer
+--
+---@param label string
+---@param v integer[]
+---@param v_button integer
+---@return boolean
+function ImGui.RadioButtonIntPtr(label, v, v_button) end
+
+---@param fraction number
+---@param size_arg_x? number | `-math.huge`
+---@param size_arg_y? number | `0`
+---@param overlay? string
+function ImGui.ProgressBar(fraction, size_arg_x, size_arg_y, overlay) end
+
+--
+-- draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
+--
+function ImGui.Bullet() end
+
+--
+-- Widgets: Combo Box (Dropdown)
+-- - The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
+-- - The old Combo() api are helpers over BeginCombo()/EndCombo() which are kept available for convenience purpose. This is analogous to how ListBox are created.
+--
+---@param label string
+---@param preview_value string
+---@param flags? ImGuiComboFlags | `ImGui.Flags.Combo { "None" }`
+---@return boolean
+function ImGui.BeginCombo(label, preview_value, flags) end
+
+--
+-- only call EndCombo() if BeginCombo() returns true!
+--
+function ImGui.EndCombo() end
+
+--
+-- Implied popup_max_height_in_items = -1
+--
+---@param label string
+---@param current_item integer[]
+---@param items_separated_by_zeros string
+---@return boolean
+function ImGui.Combo(label, current_item, items_separated_by_zeros) end
+
+--
+-- Separate items with \0 within a string, end item-list with \0\0. e.g. "One\0Two\0Three\0"
+--
+---@param label string
+---@param current_item integer[]
+---@param items_separated_by_zeros string
+---@param popup_max_height_in_items? integer | `-1`
+---@return boolean
+function ImGui.ComboEx(label, current_item, items_separated_by_zeros, popup_max_height_in_items) end
+
+--
 -- Widgets: Drag Sliders
 -- - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
 -- - For all the Float2/Float3/Float4/Int2/Int3/Int4 versions of every function, note that a 'float v[X]' function argument is the same as 'float* v',
@@ -1528,8 +2418,8 @@ function ImGui.ColorButton(desc_id, col_x, col_y, col_z, col_w, flags) end
 ---@param col_z number
 ---@param col_w number
 ---@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
----@param size_x? number | `0.0`
----@param size_y? number | `0.0`
+---@param size_x? number | `0`
+---@param size_y? number | `0`
 ---@return boolean
 function ImGui.ColorButtonEx(desc_id, col_x, col_y, col_z, col_w, flags, size_x, size_y) end
 
@@ -1619,7 +2509,7 @@ function ImGui.CollapsingHeader(label, flags) end
 -- when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if '*p_visible==false' don't display the header.
 --
 ---@param label string
----@param p_visible true | nil
+---@param p_visible boolean[]
 ---@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
 ---@return boolean
 ---@return boolean p_visible
@@ -1650,8 +2540,8 @@ function ImGui.Selectable(label) end
 ---@param label string
 ---@param selected? boolean | `false`
 ---@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
----@param size_x? number | `0.0`
----@param size_y? number | `0.0`
+---@param size_x? number | `0`
+---@param size_y? number | `0`
 ---@return boolean
 function ImGui.SelectableEx(label, selected, flags, size_x, size_y) end
 
@@ -1659,7 +2549,7 @@ function ImGui.SelectableEx(label, selected, flags, size_x, size_y) end
 -- Implied size = ImVec2(0, 0)
 --
 ---@param label string
----@param p_selected true | nil
+---@param p_selected boolean[]
 ---@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
 ---@return boolean
 ---@return boolean p_selected
@@ -1669,10 +2559,10 @@ function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 -- "bool* p_selected" point to the selection state (read-write), as a convenient helper.
 --
 ---@param label string
----@param p_selected true | nil
+---@param p_selected boolean[]
 ---@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
----@param size_x? number | `0.0`
----@param size_y? number | `0.0`
+---@param size_x? number | `0`
+---@param size_y? number | `0`
 ---@return boolean
 ---@return boolean p_selected
 function ImGui.SelectableBoolPtrEx(label, p_selected, flags, size_x, size_y) end
@@ -1689,8 +2579,8 @@ function ImGui.SelectableBoolPtrEx(label, p_selected, flags, size_x, size_y) end
 -- open a framed scrolling region
 --
 ---@param label string
----@param size_x? number | `0.0`
----@param size_y? number | `0.0`
+---@param size_x? number | `0`
+---@param size_y? number | `0`
 ---@return boolean
 function ImGui.BeginListBox(label, size_x, size_y) end
 
@@ -1770,7 +2660,7 @@ function ImGui.MenuItemEx(label, shortcut, selected, enabled) end
 --
 ---@param label string
 ---@param shortcut string
----@param p_selected true | nil
+---@param p_selected boolean[]
 ---@param enabled? boolean | `true`
 ---@return boolean
 ---@return boolean p_selected

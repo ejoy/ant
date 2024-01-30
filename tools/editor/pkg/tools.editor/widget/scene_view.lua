@@ -224,11 +224,11 @@ local function show_scene_node(node)
     ImGui.Image(assetmgr.textures[current_icon.id], imagesize, imagesize)
     ImGui.SameLine()
     if not has_child then
-        ImGui.Indent(-2)
+        ImGui.IndentEx(-2)
     end
     local open = ImGui.TreeNodeEx(node.display_name, flags)
     if not has_child then
-        ImGui.Indent(2)
+        ImGui.IndentEx(2)
     end
     node_context_menu(node.eid)
     select_or_move(node)
@@ -271,8 +271,8 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
-    ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
     if ImGui.Begin("Hierarchy", nil, ImGui.Flags.Window { "NoCollapse" }) then
         if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." Create") then
             ImGui.OpenPopup("CreateEntity")

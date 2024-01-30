@@ -273,8 +273,8 @@ function m.show()
     end
 
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
     m.update_resource_tree(editor_setting.setting.hide_engine_resource)
 
     local function do_show_browser(folder)
@@ -307,7 +307,7 @@ function m.show()
     end
     
     if ImGui.Begin("ResourceBrowser", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
-        ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
+        ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then
             relativePath = selected_folder[1]
@@ -338,7 +338,7 @@ function m.show()
             m.dirty = true
             m.update_resource_tree(editor_setting.setting.hide_engine_resource)
         end
-        ImGui.PopStyleVar(1)
+        ImGui.PopStyleVar()
         ImGui.Separator()
         local filter_focus1 = false
         local filter_focuse2 = false
@@ -393,18 +393,18 @@ function m.show()
                 end
                 rename_file(selected_file)
                 local function pre_selectable(icon, noselected)
-                    ImGui.PushStyleColor(ImGui.Enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
+                    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
                     if noselected then
-                        ImGui.PushStyleColor(ImGui.Enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
+                        ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
                     else
-                        ImGui.PushStyleColor(ImGui.Enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                        ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
                     local imagesize = icon.texinfo.width * icons.scale
                     ImGui.Image(assetmgr.textures[icon.id], imagesize, imagesize)
                     ImGui.SameLine()
                 end
                 local function post_selectable()
-                    ImGui.PopStyleColor(2)
+                    ImGui.PopStyleColorEx(2)
 
                 end
                 for _, path in pairs(folder.dirs) do

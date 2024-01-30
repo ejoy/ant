@@ -37,8 +37,8 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
-    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
     if ImGui.Begin("GridMesh", nil, ImGui.Flags.Window { "NoCollapse" }) then
         local title = "CreateGridMesh"
         if ImGui.Button("Create") then
@@ -92,7 +92,7 @@ function m.show()
             end
             
             ImGui.PropertyLabel("Brush")
-            if ImGui.BeginCombo("##Brush", {current_label, flags = ImGui.Flags.Combo {}}) then
+            if ImGui.BeginCombo("##Brush", current_label) then
                 for index, label in ipairs(brush_def.label) do
                     if ImGui.SelectableEx(label, current_label == label) then
                         current_label = label

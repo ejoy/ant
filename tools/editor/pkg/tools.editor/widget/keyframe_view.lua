@@ -638,7 +638,7 @@ local function show_current_detail()
         dirty = true
     end
     ImGui.PropertyLabel("TweenType")
-    if ImGui.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = ImGui.Flags.Combo {}}) then
+    if ImGui.BeginCombo("##TweenType", tween_type_name[current_clip.tween]) then
         for i, type in ipairs(tween_type_name) do
             if ImGui.SelectableEx(type, current_clip.tween == i) then
                 current_clip.tween = i
@@ -663,7 +663,7 @@ local function show_current_detail()
     else
         if anim_type == "ske" or anim_type == "srt" then
             ImGui.PropertyLabel("AnimationType")
-            if ImGui.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = ImGui.Flags.Combo {}}) then
+            if ImGui.BeginCombo("##AnimationType", anim_type_name[current_clip.type]) then
                 for i, type in ipairs(anim_type_name) do
                     if ImGui.SelectableEx(type, current_clip.type == i) then
                         current_clip.type = i
@@ -686,7 +686,7 @@ local function show_current_detail()
             end
         end
         ImGui.PropertyLabel("Direction")
-        if ImGui.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = ImGui.Flags.Combo {}}) then
+        if ImGui.BeginCombo("##Direction", dir_name[current_clip.direction]) then
             for i, type in ipairs(dir_name) do
                 if ImGui.SelectableEx(type, current_clip.direction == i) then
                     current_clip.direction = i
@@ -704,7 +704,7 @@ local function show_current_detail()
         end
 
         ImGui.PropertyLabel("RotAxis")
-        if ImGui.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = ImGui.Flags.Combo {}}) then
+        if ImGui.BeginCombo("##RotAxis", dir_name[current_clip.rot_axis]) then
             for i = 1, 3 do
                 if ImGui.SelectableEx(dir_name[i], current_clip.rot_axis == i) then
                     current_clip.rot_axis = i
@@ -986,8 +986,8 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
     if ImGui.Begin("Skeleton", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         if current_skeleton and not current_anim then
             if ImGui.Button(faicons.ICON_FA_FILE_PEN.." ske") then
@@ -1056,7 +1056,7 @@ function m.show()
                 ImGui.Text("Anim:")
                 ImGui.SameLine()
                 ImGui.PushItemWidth(150)
-                if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
+                if ImGui.BeginCombo("##AnimList", current_anim.name) then
                     for _, name in ipairs(anim_name_list) do
                         if ImGui.SelectableEx(name, current_anim.name == name) then
                             current_anim.selected_layer_index = 0
@@ -1077,7 +1077,7 @@ function m.show()
                 ImGui.Text("BindTo:")
                 ImGui.SameLine()
                 ImGui.PushItemWidth(200)
-                if ImGui.BeginCombo("##BindTo", {anim_bind_map[current_anim.name], flags = ImGui.Flags.Combo {}}) then
+                if ImGui.BeginCombo("##BindTo", anim_bind_map[current_anim.name]) then
                     local taglist = (current_anim.type == "srt") and prefab_mgr.srt_mtl_list or prefab_mgr.mtl_list
                     for _, name in ipairs(taglist) do
                         if ImGui.SelectableEx(name, anim_bind_map[current_anim.name] == name) then

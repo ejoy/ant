@@ -70,10 +70,10 @@ write_arg["ImVec2"] = function(type_meta, status)
         writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
         writeln "    };"
     else
-        assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)" or type_meta.default_value == "ImVec2(0, 0)", type_meta.default_value)
+        local def_x, def_y = type_meta.default_value:match "^ImVec2%(([^,]+), ([^,]+)%)$"
         writeln("    auto %s = ImVec2 {", type_meta.name)
-        writeln("        (float)luaL_optnumber(L, %d, 0.f),", status.idx + 1)
-        writeln("        (float)luaL_optnumber(L, %d, 0.f),", status.idx + 2)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 1, def_x)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 2, def_y)
         writeln "    };"
     end
     status.arguments[#status.arguments+1] = type_meta.name
@@ -113,15 +113,32 @@ write_arg["bool"] = function(type_meta, status)
 end
 
 write_arg["bool*"] = function(type_meta, status)
+    if type_meta.default_value then
+        status.idx = status.idx + 1
+        writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
+        writeln("    bool %s = true;", type_meta.name)
+        status.arguments[#status.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
+        return
+    end
     status.idx = status.idx + 1
-    writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
-    writeln("    bool %s = true;", type_meta.name)
-    status.arguments[#status.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
+    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
+    writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+    writeln("    bool %s[] = {", type_meta.name)
+    writeln("        field_toboolean(L, %d, %d),", status.idx, 1)
+    writeln "    };"
+    status.arguments[#status.arguments+1] = type_meta.name
 end
 
 write_arg_ret["bool*"] = function(type_meta)
-    writeln("    lua_pushboolean(L, has_%s || %s);", type_meta.name, type_meta.name)
-    return 1
+    if type_meta.default_value then
+        writeln("    lua_pushboolean(L, has_%s || %s);", type_meta.name, type_meta.name)
+        return 1
+    end
+    writeln "    if (_retval) {"
+    writeln("        lua_pushboolean(L, %s[0]);", type_meta.name)
+    writeln("        lua_seti(L, _%s_index, 1);", type_meta.name)
+    writeln "    };"
+    return 0
 end
 
 write_arg["size_t*"] = function(type_meta, status)
@@ -141,7 +158,7 @@ for n = 1, 4 do
         status.idx = status.idx + 1
         writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
         writeln("    int _%s_index = %d;", type_meta.name, status.idx)
-        writeln("    int %s[%d] = {", type_meta.name, n)
+        writeln("    int %s[] = {", type_meta.name)
         for i = 1, n do
             writeln("        (int)field_tointeger(L, %d, %d),", status.idx, i)
         end
@@ -166,7 +183,7 @@ for n = 1, 4 do
         status.idx = status.idx + 1
         writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
         writeln("    int _%s_index = %d;", type_meta.name, status.idx)
-        writeln("    float %s[%d] = {", type_meta.name, n)
+        writeln("    float %s[] = {", type_meta.name)
         for i = 1, n do
             writeln("        (float)field_tonumber(L, %d, %d),", status.idx, i)
         end
@@ -325,9 +342,8 @@ local allow = require "allow"
 
 local function write_func_scope()
     local funcs = {}
-    allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        if allow.query(func_meta) then
+        if allow(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end
@@ -361,6 +377,13 @@ writeln ""
 writeln "static auto field_tonumber(lua_State* L, int idx, lua_Integer i) {"
 writeln "    lua_geti(L, idx, i);"
 writeln "    auto v = luaL_checknumber(L, -1);"
+writeln "    lua_pop(L, 1);"
+writeln "    return v;"
+writeln "}"
+writeln ""
+writeln "static auto field_toboolean(lua_State* L, int idx, lua_Integer i) {"
+writeln "    lua_geti(L, idx, i);"
+writeln "    bool v = !!lua_toboolean(L, -1);"
 writeln "    lua_pop(L, 1);"
 writeln "    return v;"
 writeln "}"

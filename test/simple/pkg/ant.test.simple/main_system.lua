@@ -39,11 +39,10 @@ function m:data_changed()
                 local eid = entities[i]
                 local e <close> = world:entity(eid, "render_object?in animation?in")
                 if e.render_object then
-                    local v = ivs.has_state(e, "main_view")
-                    local change, value = ImGui.Checkbox(""..eid, v)
-                    if change then
-                        ivs.set_state(e, "main_view", value)
-                        ivs.set_state(e, "cast_shadow", value)
+                    local value = { ivs.has_state(e, "main_view") }
+                    if ImGui.Checkbox(""..eid, value) then
+                        ivs.set_state(e, "main_view", value[1])
+                        ivs.set_state(e, "cast_shadow", value[1])
                     end
                 end
                 if e.animation then
@@ -66,15 +65,15 @@ function m:data_changed()
             for name, status in pairs(animation.status) do
                 if ImGui.TreeNode(name) then
                     do
-                        local change, v = ImGui.Checkbox("play", status.play)
-                        if change then
-                            iplayback.set_play(e, name, v)
+                        local v = { status.play }
+                        if ImGui.Checkbox("play", v) then
+                            iplayback.set_play(e, name, v[1])
                         end
                     end
                     do
-                        local change, v = ImGui.Checkbox("loop", status.loop)
-                        if change then
-                            iplayback.set_loop(e, name, v)
+                        local v = { status.loop }
+                        if ImGui.Checkbox("loop", v) then
+                            iplayback.set_loop(e, name, v[1])
                         end
                     end
                     do

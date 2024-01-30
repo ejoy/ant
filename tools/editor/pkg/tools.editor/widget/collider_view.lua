@@ -122,7 +122,7 @@ function ColliderView:show()
     local slot_list = hierarchy.slot_list
     if slot_list then
         ImGui.PropertyLabel("LinkSlot")
-        if ImGui.BeginCombo("##LinkSlot", {e.slot_name or "None", flags = ImGui.Flags.Combo {}}) then
+        if ImGui.BeginCombo("##LinkSlot", e.slot_name or "None") then
             for name, eid in pairs(slot_list) do
                 if ImGui.SelectableEx(name, e.slot_name and e.slot_name == name) then
                     e.slot_name = name

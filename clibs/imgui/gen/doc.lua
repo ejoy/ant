@@ -47,9 +47,15 @@ special_arg["ImVec2"] = function (type_meta, status)
         writeln("---@param %s_x number", type_meta.name)
         writeln("---@param %s_y number", type_meta.name)
     else
-        assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)" or type_meta.default_value == "ImVec2(0, 0)", type_meta.default_value)
-        writeln("---@param %s_x? number | `0.0`", type_meta.name)
-        writeln("---@param %s_y? number | `0.0`", type_meta.name)
+        local def_x, def_y = type_meta.default_value:match "^ImVec2%(([^,]+), ([^,]+)%)$"
+        local function convert(f)
+            if f == "-FLT_MIN" then
+                return "-math.huge"
+            end
+            return f:match "^(.-)f?$"
+        end
+        writeln("---@param %s_x? number | `%s`", type_meta.name, convert(def_x))
+        writeln("---@param %s_y? number | `%s`", type_meta.name, convert(def_y))
     end
     status.arguments[#status.arguments+1] = type_meta.name .. "_x"
     status.arguments[#status.arguments+1] = type_meta.name .. "_y"
@@ -83,8 +89,8 @@ end
 for n = 1, 4 do
     special_arg["int["..n.."]"] = function (type_meta, status)
         assert(type_meta.default_value == nil)
-        writeln("---@param %s integer[]", type_meta.name)
-        status.arguments[#status.arguments+1] = type_meta.name
+        writeln("---@param %s integer[]", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
     end
 end
 special_arg["int*"] = special_arg["int[1]"]
@@ -92,14 +98,19 @@ special_arg["int*"] = special_arg["int[1]"]
 for n = 1, 4 do
     special_arg["float["..n.."]"] = function (type_meta, status)
         assert(type_meta.default_value == nil)
-        writeln("---@param %s number[]", type_meta.name)
-        status.arguments[#status.arguments+1] = type_meta.name
+        writeln("---@param %s number[]", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
     end
 end
 special_arg["float*"] = special_arg["float[1]"]
 
 special_arg["bool*"] = function (type_meta, status)
-    writeln("---@param %s true | nil", safe_name(type_meta.name))
+    if type_meta.default_value then
+        writeln("---@param %s true | nil", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+        return
+    end
+    writeln("---@param %s boolean[]", safe_name(type_meta.name))
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
@@ -370,9 +381,8 @@ local allow = require "allow"
 
 local function write_func_scope()
     local funcs = {}
-    allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        if allow.query(func_meta) then
+        if allow(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end

@@ -143,7 +143,7 @@ function Combo:show()
         self:show_label()
         ImGui.PushID(tostring(self))
         local current_option = self.modifier.getter()
-        if ImGui.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then
+        if ImGui.BeginCombo(self:get_label(), current_option, self.uidata.flags) then
             for _, option in ipairs(self.options) do
                 if ImGui.SelectableEx(option, current_option == option) then
                     self.modifier.setter(option)
@@ -410,7 +410,7 @@ function Button:show()
     if self:is_visible() then
         ImGui.PushID("ui_button_id" .. self.button_id)
         ImGui.BeginDisabled(self:is_disable())
-        if ImGui.Button(self.label, self.uidata.width, self.uidata.height) then
+        if ImGui.ButtonEx(self.label, self.uidata.width, self.uidata.height) then
             self.modifier.click()
         end
         ImGui.EndDisabled()

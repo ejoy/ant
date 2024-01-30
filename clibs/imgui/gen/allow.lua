@@ -1,4 +1,29 @@
 local BlackList <const> = {
+    ImGui_CreateContext = true,
+    ImGui_DestroyContext = true,
+    ImGui_GetCurrentContext = true,
+    ImGui_SetCurrentContext = true,
+    ImGui_GetIO = true,
+    ImGui_GetStyle = true,
+    ImGui_NewFrame = true,
+    ImGui_EndFrame = true,
+    ImGui_Render = true,
+    ImGui_GetDrawData = true,
+    ImGui_ShowDemoWindow = true,
+    ImGui_ShowMetricsWindow = true,
+    ImGui_ShowDebugLogWindow = true,
+    ImGui_ShowIDStackToolWindow = true,
+    ImGui_ShowIDStackToolWindowEx = true,
+    ImGui_ShowAboutWindow = true,
+    ImGui_ShowStyleEditor = true,
+    ImGui_ShowStyleSelector = true,
+    ImGui_ShowFontSelector = true,
+    ImGui_ShowUserGuide = true,
+    ImGui_GetVersion = true,
+    ImGui_StyleColorsDark = true,
+    ImGui_StyleColorsLight = true,
+    ImGui_StyleColorsClassic = true,
+
     ImGui_Columns = true,
     ImGui_ColumnsEx = true,
     ImGui_NextColumn = true,
@@ -34,6 +59,20 @@ local BlackList <const> = {
     ImGui_DestroyPlatformWindows = true,
     ImGui_FindViewportByID = true,
     ImGui_FindViewportByPlatformHandle = true,
+
+    ImGui_TextUnformatted = true,
+    ImGui_TextUnformattedEx = true,
+    ImGui_TextV = true,
+    ImGui_TextColoredUnformatted = true,
+    ImGui_TextColoredV = true,
+    ImGui_TextDisabledUnformatted = true,
+    ImGui_TextDisabledV = true,
+    ImGui_TextWrappedUnformatted = true,
+    ImGui_TextWrappedV = true,
+    ImGui_LabelTextUnformatted = true,
+    ImGui_LabelTextV = true,
+    ImGui_BulletTextUnformatted = true,
+    ImGui_BulletTextV = true,
 
     ImGui_SetTooltipUnformatted = true,
     ImGui_SetTooltipV = true,
@@ -122,6 +161,22 @@ local TodoList <const> = {
     ImGui_VSliderScalarEx = true,
     ImGui_VSliderScalarN = true,
     ImGui_VSliderScalarNEx = true,
+
+    ImGui_GetWindowDrawList  = true,
+    ImGui_GetWindowViewport = true,
+    ImGui_SetNextWindowSizeConstraints = true,
+    ImGui_PushFont = true,
+    ImGui_GetFont = true,
+    ImGui_GetStyleColorVec4 = true,
+    ImGui_CheckboxFlagsUintPtr = true,
+    ImGui_Image = true,
+    ImGui_ImageEx = true,
+    ImGui_ImageButton = true,
+    ImGui_ImageButtonEx = true,
+    ImGui_ComboChar = true,
+    ImGui_ComboCharEx = true,
+    ImGui_ComboCallback = true,
+    ImGui_ComboCallbackEx = true,
 }
 
 local function conditionals(t)
@@ -151,15 +206,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-local s <const> = "ImGui_DragFloat"
-
-local within_scope = false
-
-local function init()
-    within_scope = false
-end
-
-local function allow(func_meta)
+return function (func_meta)
     if func_meta.is_internal then
         return
     end
@@ -180,24 +227,3 @@ local function allow(func_meta)
     end
     return true
 end
-
-local function query(func_meta)
-    if within_scope then
-        if allow(func_meta) then
-            return true
-        end
-    else
-        if func_meta.name == s then
-            within_scope = true
-            if allow(func_meta) then
-                return true
-            end
-        end
-    end
-    return false
-end
-
-return {
-    init = init,
-    query = query,
-}
