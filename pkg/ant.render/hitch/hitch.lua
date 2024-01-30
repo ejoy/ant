@@ -187,12 +187,15 @@ function hitch_sys:finish_scene_update()
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
         ig.enable(gid, "view_visible", true)
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in efk?in" do
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in efk?in efk_visible?update" do
             -- skinning mesh / dynamic mesh(lorry, etc...) / efk should be rendered in hitch_render_submit by hitch_visible tag
             -- other mesh should be rendered in render_submit by view_visible tag
-            if re.skinning or re.dynamic_mesh or re.efk then
+            if re.skinning or re.dynamic_mesh  then
                 DIRECT_DRAW_GROUPS[gid] = true
                 ig.enable(gid, "view_visible", false)
+            end
+            if re.efk then
+                re.efk_visible = nil
             end
         end
         ig.enable(gid, "hitch_tag", false)
@@ -204,6 +207,9 @@ function hitch_sys:finish_scene_update()
     w:clear "hitch_create"
 end
 
+local tick<const> = 10
+local cur_tick = 0
+
 function hitch_sys:render_preprocess()
     for e in w:select "hitch_update hitch:in eid:in" do
         local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[e.hitch.group]
@@ -211,6 +217,19 @@ function hitch_sys:render_preprocess()
             set_dirty_hitch_group(e.hitch, e.eid, true) 
         end
     end
+
+    if cur_tick >= tick then
+        for e in w:select "hitch:in eid:in view_visible?in" do
+            local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[e.hitch.group]
+            if INDIRECT_DRAW_GROUP then
+                set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
+            end
+        end
+        cur_tick = 0
+    else
+        cur_tick = cur_tick + 1
+    end 
+
     for gid in pairs(DIRTY_GROUPS) do
         local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
         if indirect_draw_group.glbs then
