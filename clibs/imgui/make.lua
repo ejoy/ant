@@ -94,8 +94,8 @@ lm:lua_source "imgui" {
     },
     sources = {
         "imgui_config.cpp",
-        "luaimgui_tables.cpp",
         "luaimgui.cpp",
+        "imgui_lua_funcs.cpp",
     },
     defines = {
         defines,

@@ -19,7 +19,7 @@ extern "C" {
 #include "imgui_platform.h"
 #include "fastio.h"
 
-namespace imgui::table { void init(lua_State* L); }
+namespace imgui_lua { void init(lua_State* L); }
 
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
@@ -3222,7 +3222,7 @@ luaopen_imgui(lua_State *L) {
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
 
-	imgui::table::init(L);
+	imgui_lua::init(L);
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },
