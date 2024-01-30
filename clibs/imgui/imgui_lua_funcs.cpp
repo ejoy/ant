@@ -289,6 +289,188 @@ static int PopClipRect(lua_State* L) {
     return 0;
 }
 
+static int SetItemDefaultFocus(lua_State* L) {
+    ImGui::SetItemDefaultFocus();
+    return 0;
+}
+
+static int SetKeyboardFocusHere(lua_State* L) {
+    ImGui::SetKeyboardFocusHere();
+    return 0;
+}
+
+static int SetKeyboardFocusHereEx(lua_State* L) {
+    auto offset = (int)luaL_optinteger(L, 1, 0);
+    ImGui::SetKeyboardFocusHere(offset);
+    return 0;
+}
+
+static int SetNextItemAllowOverlap(lua_State* L) {
+    ImGui::SetNextItemAllowOverlap();
+    return 0;
+}
+
+static int IsItemHovered(lua_State* L) {
+    auto flags = (ImGuiHoveredFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiHoveredFlags_None));
+    auto _retval = ImGui::IsItemHovered(flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemActive(lua_State* L) {
+    auto _retval = ImGui::IsItemActive();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemFocused(lua_State* L) {
+    auto _retval = ImGui::IsItemFocused();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemClicked(lua_State* L) {
+    auto _retval = ImGui::IsItemClicked();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemClickedEx(lua_State* L) {
+    auto mouse_button = (ImGuiMouseButton)luaL_optinteger(L, 1, lua_Integer(ImGuiMouseButton_Left));
+    auto _retval = ImGui::IsItemClicked(mouse_button);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemVisible(lua_State* L) {
+    auto _retval = ImGui::IsItemVisible();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemEdited(lua_State* L) {
+    auto _retval = ImGui::IsItemEdited();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemActivated(lua_State* L) {
+    auto _retval = ImGui::IsItemActivated();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemDeactivated(lua_State* L) {
+    auto _retval = ImGui::IsItemDeactivated();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemDeactivatedAfterEdit(lua_State* L) {
+    auto _retval = ImGui::IsItemDeactivatedAfterEdit();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsItemToggledOpen(lua_State* L) {
+    auto _retval = ImGui::IsItemToggledOpen();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsAnyItemHovered(lua_State* L) {
+    auto _retval = ImGui::IsAnyItemHovered();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsAnyItemActive(lua_State* L) {
+    auto _retval = ImGui::IsAnyItemActive();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsAnyItemFocused(lua_State* L) {
+    auto _retval = ImGui::IsAnyItemFocused();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int GetItemID(lua_State* L) {
+    auto _retval = ImGui::GetItemID();
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetItemRectMin(lua_State* L) {
+    auto _retval = ImGui::GetItemRectMin();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetItemRectMax(lua_State* L) {
+    auto _retval = ImGui::GetItemRectMax();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetItemRectSize(lua_State* L) {
+    auto _retval = ImGui::GetItemRectSize();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int CalcTextSize(lua_State* L) {
+    auto text = luaL_checkstring(L, 1);
+    auto _retval = ImGui::CalcTextSize(text);
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int CalcTextSizeEx(lua_State* L) {
+    auto text = luaL_checkstring(L, 1);
+    auto text_end = luaL_optstring(L, 2, NULL);
+    auto hide_text_after_double_hash = lua_isnoneornil(L, 3)? false: !!lua_toboolean(L, 3);
+    auto wrap_width = (float)luaL_optnumber(L, 4, -1.0f);
+    auto _retval = ImGui::CalcTextSize(text, text_end, hide_text_after_double_hash, wrap_width);
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int IsKeyDown(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsKeyDown(key);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsKeyPressed(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsKeyPressed(key);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsKeyPressedEx(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto repeat = lua_isnoneornil(L, 2)? true: !!lua_toboolean(L, 2);
+    auto _retval = ImGui::IsKeyPressed(key, repeat);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsKeyReleased(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsKeyReleased(key);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
         { "BeginTable", BeginTable },
@@ -332,6 +514,34 @@ void init(lua_State* L) {
         { "EndDisabled", EndDisabled },
         { "PushClipRect", PushClipRect },
         { "PopClipRect", PopClipRect },
+        { "SetItemDefaultFocus", SetItemDefaultFocus },
+        { "SetKeyboardFocusHere", SetKeyboardFocusHere },
+        { "SetKeyboardFocusHereEx", SetKeyboardFocusHereEx },
+        { "SetNextItemAllowOverlap", SetNextItemAllowOverlap },
+        { "IsItemHovered", IsItemHovered },
+        { "IsItemActive", IsItemActive },
+        { "IsItemFocused", IsItemFocused },
+        { "IsItemClicked", IsItemClicked },
+        { "IsItemClickedEx", IsItemClickedEx },
+        { "IsItemVisible", IsItemVisible },
+        { "IsItemEdited", IsItemEdited },
+        { "IsItemActivated", IsItemActivated },
+        { "IsItemDeactivated", IsItemDeactivated },
+        { "IsItemDeactivatedAfterEdit", IsItemDeactivatedAfterEdit },
+        { "IsItemToggledOpen", IsItemToggledOpen },
+        { "IsAnyItemHovered", IsAnyItemHovered },
+        { "IsAnyItemActive", IsAnyItemActive },
+        { "IsAnyItemFocused", IsAnyItemFocused },
+        { "GetItemID", GetItemID },
+        { "GetItemRectMin", GetItemRectMin },
+        { "GetItemRectMax", GetItemRectMax },
+        { "GetItemRectSize", GetItemRectSize },
+        { "CalcTextSize", CalcTextSize },
+        { "CalcTextSizeEx", CalcTextSizeEx },
+        { "IsKeyDown", IsKeyDown },
+        { "IsKeyPressed", IsKeyPressed },
+        { "IsKeyPressedEx", IsKeyPressedEx },
+        { "IsKeyReleased", IsKeyReleased },
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);
