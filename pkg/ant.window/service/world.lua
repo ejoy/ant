@@ -14,10 +14,11 @@ function S.wait()
     world_instance.wait()
 end
 
+function S.msg(messages)
+    world_instance.message(messages)
+end
+
 if platform.os == "ios" then
-    function S.msg(messages)
-        world_instance.message(messages)
-    end
     return S
 end
 
