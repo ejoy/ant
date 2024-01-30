@@ -17,7 +17,7 @@ local PropertyBase = class "PropertyBase"
 function PropertyBase:_init(config, modifier)
     self.label      = config.label
     self.readonly   = config.readonly
-    self.disable    = config.disable
+    self.disable    = config.disable or false
     self.visible    = config.visible or true
     self.id         = config.id
     self.dim        = config.dim or 1
