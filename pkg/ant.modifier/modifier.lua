@@ -400,9 +400,9 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             if anim_prefab.tag["animation"] then
                 local eid = anim_prefab.tag["animation"][1]
-                local anim <close> = world:entity(eid, "animation?in")
+                local anim <close> = world:entity(eid, "animation?in animation_playback?in")
                 if anim.animation then
-                    return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name))
+                    return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name)), anim.animation_playback
                 end
             end
         end)
