@@ -76,7 +76,7 @@ function m:show_joints(root)
         flags = base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
         has_child = false
     end
-    local open = ImGui.TreeNode(root.name, flags)
+    local open = ImGui.TreeNodeEx(root.name, flags)
     if ImGui.IsItemClicked() then
         if self.on_select_joint then
             self.on_select_joint(self.current_joint, root)

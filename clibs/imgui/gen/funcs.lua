@@ -12,16 +12,29 @@ local write_arg_ret = {}
 
 write_arg["const char*"] = function(type_meta, status)
     local size_meta = status.args[status.i + 1]
-    if size_meta and size_meta.type.declaration == "size_t" then
-        assert(not type_meta.default_value)
-        assert(size_meta.type.declaration == "size_t")
-        status.idx = status.idx + 1
-        status.i = status.i + 1
-        writeln("    size_t %s = 0;", size_meta.name)
-        writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
-        status.arguments[#status.arguments+1] = type_meta.name
-        status.arguments[#status.arguments+1] = size_meta.name
-        return
+    if size_meta then
+        if size_meta.type and size_meta.type.declaration == "size_t" then
+            assert(not type_meta.default_value)
+            assert(size_meta.type.declaration == "size_t")
+            status.idx = status.idx + 1
+            status.i = status.i + 1
+            writeln("    size_t %s = 0;", size_meta.name)
+            writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
+            status.arguments[#status.arguments+1] = type_meta.name
+            status.arguments[#status.arguments+1] = size_meta.name
+            return
+        end
+        if size_meta.is_varargs then
+            status.idx = status.idx + 1
+            status.i = status.i + 1
+            writeln("    lua_pushcfunction(L, str_format);")
+            writeln("    lua_insert(L, %d);", status.idx)
+            writeln("    lua_call(L, lua_gettop(L) - %d, 1);", status.idx)
+            writeln("    const char* _fmtstr = lua_tostring(L, -1);")
+            status.arguments[#status.arguments+1] = [["%s"]]
+            status.arguments[#status.arguments+1] = "_fmtstr"
+            return
+        end
     end
     status.idx = status.idx + 1
     status.arguments[#status.arguments+1] = type_meta.name
@@ -34,15 +47,20 @@ end
 
 write_arg["const void*"] = function(type_meta, status)
     local size_meta = status.args[status.i + 1]
-    assert(not type_meta.default_value)
-    assert(not size_meta.default_value)
-    assert(size_meta.type.declaration == "size_t")
+    if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        assert(not size_meta.default_value)
+        status.idx = status.idx + 1
+        status.i = status.i + 1
+        writeln("    size_t %s = 0;", size_meta.name)
+        writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
+        status.arguments[#status.arguments+1] = type_meta.name
+        status.arguments[#status.arguments+1] = size_meta.name
+        return
+    end
     status.idx = status.idx + 1
-    status.i = status.i + 1
-    writeln("    size_t %s = 0;", size_meta.name)
-    writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
+    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, status.idx)
     status.arguments[#status.arguments+1] = type_meta.name
-    status.arguments[#status.arguments+1] = size_meta.name
 end
 
 write_arg["ImVec2"] = function(type_meta, status)
@@ -104,6 +122,11 @@ local write_ret = {}
 
 write_ret["bool"] = function()
     writeln "    lua_pushboolean(L, _retval);"
+    return 1
+end
+
+write_ret["float"] = function()
+    writeln "    lua_pushnumber(L, _retval);"
     return 1
 end
 
@@ -208,9 +231,11 @@ local function write_func(func_meta)
         local nret = 0
         nret = nret + rfunc(func_meta.return_type)
         for _, type_meta in ipairs(func_meta.arguments) do
-            local func = write_arg_ret[type_meta.type.declaration]
-            if func then
-                nret = nret + func(type_meta)
+            if type_meta.type then
+                local func = write_arg_ret[type_meta.type.declaration]
+                if func then
+                    nret = nret + func(type_meta)
+                end
             end
         end
         writeln("    return %d;", nret)
@@ -241,6 +266,15 @@ writeln "#include <lua.hpp>"
 writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
+writeln "lua_CFunction str_format = NULL;"
+writeln ""
+writeln "void find_str_format(lua_State* L) {"
+writeln "    luaopen_string(L);"
+writeln "    lua_getfield(L, -1, \"format\");"
+writeln "    str_format = lua_tocfunction(L, -1);"
+writeln "    lua_pop(L, 2);"
+writeln "}"
+writeln ""
 local funcs = write_func_scope()
 writeln "void init(lua_State* L) {"
 writeln "    luaL_Reg funcs[] = {"
@@ -250,5 +284,6 @@ end
 writeln "        { NULL, NULL },"
 writeln "    };"
 writeln "    luaL_setfuncs(L, funcs, 0);"
+writeln "    find_str_format(L);"
 writeln "}"
 writeln "}"

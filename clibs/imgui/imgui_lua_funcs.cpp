@@ -6,6 +6,125 @@
 
 namespace imgui_lua {
 
+lua_CFunction str_format = NULL;
+
+void find_str_format(lua_State* L) {
+    luaopen_string(L);
+    lua_getfield(L, -1, "format");
+    str_format = lua_tocfunction(L, -1);
+    lua_pop(L, 2);
+}
+
+static int TreeNode(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _retval = ImGui::TreeNode(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TreeNodeStr(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 2);
+    lua_call(L, lua_gettop(L) - 2, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    auto _retval = ImGui::TreeNode(str_id, "%s", _fmtstr);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TreeNodePtr(lua_State* L) {
+    auto ptr_id = lua_touserdata(L, 1);
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 2);
+    lua_call(L, lua_gettop(L) - 2, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    auto _retval = ImGui::TreeNode(ptr_id, "%s", _fmtstr);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TreeNodeEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTreeNodeFlags_None));
+    auto _retval = ImGui::TreeNodeEx(label, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TreeNodeExStr(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto flags = (ImGuiTreeNodeFlags)luaL_checkinteger(L, 2);
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 3);
+    lua_call(L, lua_gettop(L) - 3, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    auto _retval = ImGui::TreeNodeEx(str_id, flags, "%s", _fmtstr);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TreeNodeExPtr(lua_State* L) {
+    auto ptr_id = lua_touserdata(L, 1);
+    auto flags = (ImGuiTreeNodeFlags)luaL_checkinteger(L, 2);
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 3);
+    lua_call(L, lua_gettop(L) - 3, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    auto _retval = ImGui::TreeNodeEx(ptr_id, flags, "%s", _fmtstr);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TreePush(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    ImGui::TreePush(str_id);
+    return 0;
+}
+
+static int TreePushPtr(lua_State* L) {
+    auto ptr_id = lua_touserdata(L, 1);
+    ImGui::TreePush(ptr_id);
+    return 0;
+}
+
+static int TreePop(lua_State* L) {
+    ImGui::TreePop();
+    return 0;
+}
+
+static int GetTreeNodeToLabelSpacing(lua_State* L) {
+    auto _retval = ImGui::GetTreeNodeToLabelSpacing();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int CollapsingHeader(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTreeNodeFlags_None));
+    auto _retval = ImGui::CollapsingHeader(label, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int CollapsingHeaderBoolPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    bool has_p_visible = !lua_isnil(L, 2);
+    bool p_visible = true;
+    auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTreeNodeFlags_None));
+    auto _retval = ImGui::CollapsingHeader(label, (has_p_visible? &p_visible: NULL), flags);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_visible || p_visible);
+    return 2;
+}
+
+static int SetNextItemOpen(lua_State* L) {
+    auto is_open = !!lua_toboolean(L, 1);
+    auto cond = (ImGuiCond)luaL_optinteger(L, 2, lua_Integer(ImGuiCond_None));
+    ImGui::SetNextItemOpen(is_open, cond);
+    return 0;
+}
+
 static int Selectable(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto _retval = ImGui::Selectable(label);
@@ -141,9 +260,12 @@ static int EndTooltip(lua_State* L) {
     return 0;
 }
 
-static int SetTooltipUnformatted(lua_State* L) {
-    auto text = luaL_checkstring(L, 1);
-    ImGui::SetTooltip(text);
+static int SetTooltip(lua_State* L) {
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 1);
+    lua_call(L, lua_gettop(L) - 1, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::SetTooltip("%s", _fmtstr);
     return 0;
 }
 
@@ -153,9 +275,12 @@ static int BeginItemTooltip(lua_State* L) {
     return 1;
 }
 
-static int SetItemTooltipUnformatted(lua_State* L) {
-    auto text = luaL_checkstring(L, 1);
-    ImGui::SetItemTooltip(text);
+static int SetItemTooltip(lua_State* L) {
+    lua_pushcfunction(L, str_format);
+    lua_insert(L, 1);
+    lua_call(L, lua_gettop(L) - 1, 1);
+    const char* _fmtstr = lua_tostring(L, -1);
+    ImGui::SetItemTooltip("%s", _fmtstr);
     return 0;
 }
 
@@ -962,6 +1087,19 @@ static int GetKeyIndex(lua_State* L) {
 
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
+        { "TreeNode", TreeNode },
+        { "TreeNodeStr", TreeNodeStr },
+        { "TreeNodePtr", TreeNodePtr },
+        { "TreeNodeEx", TreeNodeEx },
+        { "TreeNodeExStr", TreeNodeExStr },
+        { "TreeNodeExPtr", TreeNodeExPtr },
+        { "TreePush", TreePush },
+        { "TreePushPtr", TreePushPtr },
+        { "TreePop", TreePop },
+        { "GetTreeNodeToLabelSpacing", GetTreeNodeToLabelSpacing },
+        { "CollapsingHeader", CollapsingHeader },
+        { "CollapsingHeaderBoolPtr", CollapsingHeaderBoolPtr },
+        { "SetNextItemOpen", SetNextItemOpen },
         { "Selectable", Selectable },
         { "SelectableEx", SelectableEx },
         { "SelectableBoolPtr", SelectableBoolPtr },
@@ -980,9 +1118,9 @@ void init(lua_State* L) {
         { "MenuItemBoolPtr", MenuItemBoolPtr },
         { "BeginTooltip", BeginTooltip },
         { "EndTooltip", EndTooltip },
-        { "SetTooltipUnformatted", SetTooltipUnformatted },
+        { "SetTooltip", SetTooltip },
         { "BeginItemTooltip", BeginItemTooltip },
-        { "SetItemTooltipUnformatted", SetItemTooltipUnformatted },
+        { "SetItemTooltip", SetItemTooltip },
         { "BeginPopup", BeginPopup },
         { "BeginPopupModal", BeginPopupModal },
         { "EndPopup", EndPopup },
@@ -1103,5 +1241,6 @@ void init(lua_State* L) {
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);
+    find_str_format(L);
 }
 }

@@ -284,10 +284,10 @@ function m.show()
             local skip = false
             local fonticon = (not v.parent) and (faicons.ICON_FA_FILE_ZIPPER .. " ") or ""
             if (#v[2].dirs == 0) then
-                ImGui.TreeNode(fonticon .. dir_name, base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+                ImGui.TreeNodeEx(fonticon .. dir_name, base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
                 local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and ImGui.Flags.TreeNode {"DefaultOpen"} or 0)
-                if ImGui.TreeNode(fonticon .. dir_name, adjust_flags) then
+                if ImGui.TreeNodeEx(fonticon .. dir_name, adjust_flags) then
                     if ImGui.IsItemClicked() then
                         selected_folder = v
                     end

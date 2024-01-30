@@ -474,7 +474,7 @@ end
 
 function Group:show()
     ImGui.BeginDisabled(self:is_disable())
-    if ImGui.TreeNode(self.label, self.uidata.flags) then
+    if ImGui.TreeNodeEx(self.label, self.uidata.flags) then
         for _, c in ipairs(self.subproperty) do
             self:_show_child(c)
             if c.sameline then

@@ -23,10 +23,10 @@ local function show_camera_setting(open)
         local mq = w:first "main_queue camera_ref:in"
         local e<close> = world:entity(mq.camera_ref, "camera:update scene:update")
 
-        if ImGui.TreeNode("Camera", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
+        if ImGui.TreeNodeEx("Camera", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
 
             local frustum = e.camera.frustum
-            if ImGui.TreeNode("Frustum", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
+            if ImGui.TreeNodeEx("Frustum", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
                 
                 local changed
                 local uiortho = {frustum.ortho}
@@ -72,7 +72,7 @@ local function show_camera_setting(open)
             ImGui.TreePop()
         end
 
-        if ImGui.TreeNode("Scene", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
+        if ImGui.TreeNodeEx("Scene", ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth", "DefaultOpen" }) then
 
             local uis = math3d.tovalue(e.scene.s)
             if ImGui.DragFloat("Scale", uis) then

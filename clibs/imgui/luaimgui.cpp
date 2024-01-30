@@ -1349,46 +1349,6 @@ wEndCombo(lua_State *L) {
 	return 0;
 }
 
-// todo: TreePush/CollapsingHeader (with p_open)
-static int
-wTreeNode(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiTreeNodeFlags>(L, 2, ImGuiTreeNodeFlags_None);
-	bool change = ImGui::TreeNodeEx(label, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wTreePush(lua_State* L) {
-	const char* label = luaL_checkstring(L, INDEX_ID);
-	ImGui::TreePush(label);
-	return 0;
-}
-
-static int
-wTreePop(lua_State *L) {
-	ImGui::TreePop();
-	return 0;
-}
-
-static int
-wSetNextItemOpen(lua_State *L) {
-	bool is_open = lua_toboolean(L, 1);
-	ImGuiCond c = get_cond(L, 2);
-	ImGui::SetNextItemOpen(is_open, c);
-	return 0;
-}
-
-static int
-wCollapsingHeader(lua_State *L) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiTreeNodeFlags>(L, 2, ImGuiTreeNodeFlags_None);
-	bool change = ImGui::CollapsingHeader(label, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
 #define PLOT_LINES 0
 #define PLOT_HISTOGRAM 1
 
@@ -1946,13 +1906,6 @@ cGetFrameHeightWithSpacing(lua_State *L) {
 }
 
 static int
-cGetTreeNodeToLabelSpacing(lua_State *L) {
-	float v = ImGui::GetTreeNodeToLabelSpacing();
-	lua_pushnumber(L, v);
-	return 1;
-}
-
-static int
 cSetNextItemWidth(lua_State * L) {
 	float w = (float)lua_tonumber(L, 1);
 	ImGui::SetNextItemWidth(w);
@@ -2350,11 +2303,6 @@ luaopen_imgui(lua_State *L) {
 		{ "BulletText", wBulletText },
 		{ "BeginCombo", wBeginCombo },
 		{ "EndCombo", wEndCombo },
-		{ "TreeNode", wTreeNode },
-		{ "TreePush", wTreePush },
-		{ "TreePop", wTreePop },
-		{ "CollapsingHeader", wCollapsingHeader },
-		{ "SetNextItemOpen", wSetNextItemOpen },
 		{ "Image", wImage },
 		{ "ImageButton", wImageButton },
 		{ "PushTextWrapPos", wPushTextWrapPos },
@@ -2378,7 +2326,6 @@ luaopen_imgui(lua_State *L) {
 		{ "GetTextLineHeightWithSpacing", cGetTextLineHeightWithSpacing },
 		{ "GetFrameHeight", cGetFrameHeight },
 		{ "GetFrameHeightWithSpacing", cGetFrameHeightWithSpacing },
-		{ "GetTreeNodeToLabelSpacing", cGetTreeNodeToLabelSpacing },
 		{ "SetNextItemWidth", cSetNextItemWidth },
 		{ "PushItemWidth", cPushItemWidth},
 		{ "PopItemWidth", cPopItemWidth},

@@ -71,13 +71,23 @@ end
 
 special_arg["const char*"] = function (type_meta, status)
     local size_meta = status.args[status.i + 1]
-    if size_meta and size_meta.type.declaration == "size_t" then
-        assert(not type_meta.default_value)
-        assert(size_meta.type.declaration == "size_t")
-        status.i = status.i + 1
-        writeln("---@param %s string", safe_name(type_meta.name))
-        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
-        return
+    if size_meta then
+        if size_meta.type and size_meta.type.declaration == "size_t" then
+            assert(not type_meta.default_value)
+            assert(size_meta.type.declaration == "size_t")
+            status.i = status.i + 1
+            writeln("---@param %s string", safe_name(type_meta.name))
+            status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+            return
+        end
+        if size_meta.is_varargs then
+            status.i = status.i + 1
+            writeln("---@param %s string", safe_name(type_meta.name))
+            writeln "---@param ...  any"
+            status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+            status.arguments[#status.arguments+1] = "..."
+            return
+        end
     end
     if type_meta.default_value then
         local default_value = get_default_value(type_meta)
@@ -94,11 +104,15 @@ end
 
 special_arg["const void*"] = function (type_meta, status)
     local size_meta = status.args[status.i + 1]
-    assert(not type_meta.default_value)
-    assert(not size_meta.default_value)
-    assert(size_meta.type.declaration == "size_t")
-    status.i = status.i + 1
-    writeln("---@param %s string", safe_name(type_meta.name))
+    if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        assert(not size_meta.default_value)
+        status.i = status.i + 1
+        writeln("---@param %s string", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+        return
+    end
+    writeln("---@param %s lightuserdata", safe_name(type_meta.name))
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
@@ -298,9 +312,11 @@ local function write_func(func_meta)
             writeln("---@return %s", luatype)
         end
         for _, type_meta in ipairs(func_meta.arguments) do
-            local typefunc = return_type[type_meta.type.declaration]
-            if typefunc then
-                typefunc(type_meta)
+            if type_meta.type then
+                local typefunc = return_type[type_meta.type.declaration]
+                if typefunc then
+                    typefunc(type_meta)
+                end
             end
         end
     end

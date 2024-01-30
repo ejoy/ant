@@ -34,6 +34,19 @@ local BlackList <const> = {
     ImGui_DestroyPlatformWindows = true,
     ImGui_FindViewportByID = true,
     ImGui_FindViewportByPlatformHandle = true,
+
+    ImGui_SetTooltipUnformatted = true,
+    ImGui_SetTooltipV = true,
+    ImGui_SetItemTooltipUnformatted = true,
+    ImGui_SetItemTooltipV = true,
+    ImGui_TreeNodeStrUnformatted = true,
+    ImGui_TreeNodePtrUnformatted = true,
+    ImGui_TreeNodeV = true,
+    ImGui_TreeNodeVPtr = true,
+    ImGui_TreeNodeExStrUnformatted = true,
+    ImGui_TreeNodeExPtrUnformatted = true,
+    ImGui_TreeNodeExV = true,
+    ImGui_TreeNodeExVPtr = true,
 }
 
 local TodoList <const> = {
@@ -55,11 +68,6 @@ local TodoList <const> = {
     ImGui_ColorConvertRGBtoHSV = true,
     ImGui_ColorConvertHSVtoRGB = true,
     ImGui_IsMousePosValid = true,
-
-    ImGui_SetTooltip = true,
-    ImGui_SetTooltipV = true,
-    ImGui_SetItemTooltip = true,
-    ImGui_SetItemTooltipV = true,
 
     ImGui_PlotLines = true,
     ImGui_PlotLinesEx = true,
@@ -102,7 +110,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-local s <const> = "ImGui_Selectable"
+local s <const> = "ImGui_TreeNode"
 
 local within_scope = false
 

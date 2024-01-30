@@ -1053,6 +1053,99 @@ function ImGui.Flags.Viewport(flags) end
 ---@alias ImGuiKeyChord ImGuiKey
 
 --
+-- Widgets: Trees
+-- - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
+--
+---@param label string
+---@return boolean
+function ImGui.TreeNode(label) end
+
+--
+-- helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
+--
+---@param str_id string
+---@param fmt string
+---@param ...  any
+---@return boolean
+function ImGui.TreeNodeStr(str_id, fmt, ...) end
+
+--
+-- "
+--
+---@param ptr_id lightuserdata
+---@param fmt string
+---@param ...  any
+---@return boolean
+function ImGui.TreeNodePtr(ptr_id, fmt, ...) end
+
+---@param label string
+---@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@return boolean
+function ImGui.TreeNodeEx(label, flags) end
+
+---@param str_id string
+---@param flags ImGuiTreeNodeFlags
+---@param fmt string
+---@param ...  any
+---@return boolean
+function ImGui.TreeNodeExStr(str_id, flags, fmt, ...) end
+
+---@param ptr_id lightuserdata
+---@param flags ImGuiTreeNodeFlags
+---@param fmt string
+---@param ...  any
+---@return boolean
+function ImGui.TreeNodeExPtr(ptr_id, flags, fmt, ...) end
+
+--
+-- ~ Indent()+PushID(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
+--
+---@param str_id string
+function ImGui.TreePush(str_id) end
+
+--
+-- "
+--
+---@param ptr_id lightuserdata
+function ImGui.TreePushPtr(ptr_id) end
+
+--
+-- ~ Unindent()+PopID()
+--
+function ImGui.TreePop() end
+
+--
+-- horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
+--
+---@return number
+function ImGui.GetTreeNodeToLabelSpacing() end
+
+--
+-- if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
+--
+---@param label string
+---@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@return boolean
+function ImGui.CollapsingHeader(label, flags) end
+
+--
+-- when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if '*p_visible==false' don't display the header.
+--
+---@param label string
+---@param p_visible true | nil
+---@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@return boolean
+---@return boolean p_visible
+function ImGui.CollapsingHeaderBoolPtr(label, p_visible, flags) end
+
+--
+-- set next TreeNode/CollapsingHeader open state.
+--
+---@param is_open boolean
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+function ImGui.SetNextItemOpen(is_open, cond) end
+
+--
 -- Widgets: Selectables
 -- - A selectable highlights when hovered, and can display another color when selected.
 -- - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
@@ -1215,8 +1308,9 @@ function ImGui.EndTooltip() end
 --
 -- set a text-only tooltip. Often used after a ImGui::IsItemHovered() check. Override any previous call to SetTooltip().
 --
----@param text string
-function ImGui.SetTooltipUnformatted(text) end
+---@param fmt string
+---@param ...  any
+function ImGui.SetTooltip(fmt, ...) end
 
 --
 -- Tooltips: helpers for showing a tooltip when hovering an item
@@ -1233,8 +1327,9 @@ function ImGui.BeginItemTooltip() end
 --
 -- set a text-only tooltip if preceeding item was hovered. override any previous call to SetTooltip().
 --
----@param text string
-function ImGui.SetItemTooltipUnformatted(text) end
+---@param fmt string
+---@param ...  any
+function ImGui.SetItemTooltip(fmt, ...) end
 
 --
 -- Popups, Modals

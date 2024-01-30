@@ -226,7 +226,7 @@ local function show_scene_node(node)
     if not has_child then
         ImGui.Indent(-2)
     end
-    local open = ImGui.TreeNode(node.display_name, flags)
+    local open = ImGui.TreeNodeEx(node.display_name, flags)
     if not has_child then
         ImGui.Indent(2)
     end
