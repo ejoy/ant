@@ -557,7 +557,10 @@ local function cook_prefab(prefab_filename)
     end
     return compile_path
 end
-
+function m:compile_current_glb()
+    local virtual_prefab_path = lfs.path('/') / lfs.relative(self.glb_filename, gd.project_root)
+    compile_glb(virtual_prefab_path, lfs.path(self.glb_filename))
+end
 function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename

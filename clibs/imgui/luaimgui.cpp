@@ -2334,135 +2334,6 @@ uSetColorEditOptions(lua_State *L) {
 }
 
 static int
-uSetItemDefaultFocus(lua_State *L) {
-	ImGui::SetItemDefaultFocus();
-	return 0;
-}
-
-static int
-uSetKeyboardFocusHere(lua_State *L) {
-	int offset = (int)luaL_optinteger(L, 1, 0);
-	ImGui::SetKeyboardFocusHere(offset);
-	return 0;
-}
-
-static int
-uIsItemHovered(lua_State *L) {
-	auto flags = lua_getflags<ImGuiHoveredFlags>(L, 1, ImGuiHoveredFlags_None);
-	bool change = ImGui::IsItemHovered(flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemActive(lua_State *L) {
-	bool change = ImGui::IsItemActive();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemFocused(lua_State *L) {
-	bool change = ImGui::IsItemFocused();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemClicked(lua_State *L) {
-	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
-	bool change = ImGui::IsItemClicked(mouse_button);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemVisible(lua_State *L) {
-	bool change = ImGui::IsItemVisible();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemEdited(lua_State *L) {
-	bool change = ImGui::IsItemEdited();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemActivated(lua_State *L) {
-	bool change = ImGui::IsItemActivated();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemDeactivated(lua_State *L) {
-	bool change = ImGui::IsItemDeactivated();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsItemDeactivatedAfterEdit(lua_State *L) {
-	bool change = ImGui::IsItemDeactivatedAfterEdit();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsAnyItemHovered(lua_State *L) {
-	bool change = ImGui::IsAnyItemHovered();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsAnyItemActive(lua_State *L) {
-	bool change = ImGui::IsAnyItemActive();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uIsAnyItemFocused(lua_State *L) {
-	bool change = ImGui::IsAnyItemFocused();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-uGetItemRectMin(lua_State *L) {
-	ImVec2 v = ImGui::GetItemRectMin();
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
-}
-
-static int
-uGetItemRectMax(lua_State *L) {
-	ImVec2 v = ImGui::GetItemRectMax();
-	lua_pushnumber(L, (lua_Number)v.x);
-	lua_pushnumber(L, (lua_Number)v.y);
-	return 2;
-}
-
-static int
-uGetItemRectSize(lua_State *L) {
-	ImVec2 v = ImGui::GetItemRectSize();
-	lua_pushnumber(L, (lua_Number)v.x);
-	lua_pushnumber(L, (lua_Number)v.y);
-	return 2;
-}
-
-static int
-uSetNextItemAllowOverlap(lua_State *L) {
-	ImGui::SetNextItemAllowOverlap();
-	return 0;
-}
-
-static int
 uLoadIniSettings(lua_State *L) {
 	size_t sz;
 	const char * ini = luaL_checklstring(L, 1, &sz);
@@ -2509,14 +2380,6 @@ uIsMouseDoubleClicked(lua_State * L) {
 }
 
 static int
-uIsKeyPressed(lua_State * L) {
-	auto key = lua_getflags<ImGuiKey>(L, 1);
-	bool pressed = ImGui::IsKeyPressed(key);
-	lua_pushboolean(L, pressed);
-	return 1;
-}
-
-static int
 uPushID(lua_State* L) {
 	if (lua_isinteger(L, INDEX_ID)) {
 		int id = (int)lua_tointeger(L, INDEX_ID);
@@ -2533,17 +2396,6 @@ static int
 uPopID(lua_State* L) {
 	ImGui::PopID();
 	return 0;
-}
-
-static int
-uCalcTextSize(lua_State * L){
-	const char * label = luaL_checkstring(L, 1);
-	const bool hide_text_after_double_hash = lua_tonumber(L, 2);
-	const float wrap_width = (const float)luaL_optnumber(L, 3, -1.0f);
-	ImVec2 size = ImGui::CalcTextSize(label, NULL, hide_text_after_double_hash, wrap_width);
-	lua_pushnumber(L,size.x);
-	lua_pushnumber(L,size.y);
-	return 2;
 }
 
 static int
@@ -2997,33 +2849,13 @@ luaopen_imgui(lua_State *L) {
 		{ "PushStyleVar", winPushStyleVar },
 		{ "PopStyleVar", winPopStyleVar },
 		{ "SetColorEditOptions", uSetColorEditOptions },
-		{ "SetItemDefaultFocus", uSetItemDefaultFocus },
-		{ "SetKeyboardFocusHere", uSetKeyboardFocusHere },
-		{ "IsItemHovered", uIsItemHovered },
-		{ "IsItemActive", uIsItemActive },
-		{ "IsItemFocused", uIsItemFocused },
-		{ "IsItemClicked", uIsItemClicked },
-		{ "IsItemVisible", uIsItemVisible },
-		{ "IsItemEdited", uIsItemEdited },
-		{ "IsItemActivated", uIsItemActivated },
-		{ "IsItemDeactivated", uIsItemDeactivated },
-		{ "IsItemDeactivatedAfterEdit", uIsItemDeactivatedAfterEdit },
-		{ "IsAnyItemHovered", uIsAnyItemHovered },
-		{ "IsAnyItemActive", uIsAnyItemActive },
-		{ "IsAnyItemFocused", uIsAnyItemFocused },
-		{ "GetItemRectMin", uGetItemRectMin },
-		{ "GetItemRectMax", uGetItemRectMax },
-		{ "GetItemRectSize", uGetItemRectSize },
-		{ "SetNextItemAllowOverlap", uSetNextItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
 		{ "SetNextFrameWantCaptureKeyboard", uSetNextFrameWantCaptureKeyboard },
 		{ "SetNextFrameWantCaptureMouse", uSetNextFrameWantCaptureMouse },
 		{ "IsMouseDoubleClicked", uIsMouseDoubleClicked},
-		{ "IsKeyPressed", uIsKeyPressed},
 		{ "PushID",uPushID},
 		{ "PopID",uPopID},
-		{ "CalcTextSize",uCalcTextSize},
 		{ "CalcItemWidth",uCalcItemWidth},
 		{ "IsMouseDragging", cIsMouseDragging },
 		{ "GetMousePos", cGetMousePos },

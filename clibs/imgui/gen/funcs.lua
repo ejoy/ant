@@ -11,10 +11,13 @@ local write_arg = {}
 local write_arg_ret = {}
 
 write_arg["const char*"] = function(type_meta, status)
-    assert(not type_meta.default_value)
     status.idx = status.idx + 1
-    writeln("    auto %s = luaL_checkstring(L, %d);", type_meta.name, status.idx)
     status.arguments[#status.arguments+1] = type_meta.name
+    if type_meta.default_value then
+        writeln("    auto %s = luaL_optstring(L, %d, %s);", type_meta.name, status.idx, type_meta.default_value)
+    else
+        writeln("    auto %s = luaL_checkstring(L, %d);", type_meta.name, status.idx)
+    end
 end
 
 write_arg["const void*"] = function(type_meta, status)
@@ -92,6 +95,12 @@ end
 write_ret["const char*"] = function()
     writeln "    lua_pushstring(L, _retval);"
     return 1
+end
+
+write_ret["ImVec2"] = function()
+    writeln "    lua_pushnumber(L, _retval.x);"
+    writeln "    lua_pushnumber(L, _retval.y);"
+    return 2
 end
 
 for _, type_name in ipairs {"int", "ImU32", "ImGuiID"} do

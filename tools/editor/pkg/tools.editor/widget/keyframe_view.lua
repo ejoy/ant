@@ -228,7 +228,20 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
         	push_anim_key(raw_animation, joint_name)
 		end
     end
-    return raw_animation:build()
+
+    -- local optimizer_setting = {
+	-- 	tolerance = 0.001,
+	-- 	distance  = 0.1,
+	-- 	joints = {},
+	-- }
+
+	-- local raw_optimized_animation, statistics = ozzoffline.AnimationOptimizer(raw_animation, ske, optimizer_setting)
+	-- -- for k, v in pairs(statistics) do
+	-- -- 	print("\t animation optimizer statistics", k..":"..v)
+	-- -- end
+	-- return ozzoffline.AnimationBuilder(raw_optimized_animation)
+
+    return ozzoffline.AnimationBuilder(raw_animation)
 end
 
 local function update_animation()

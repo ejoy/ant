@@ -1045,4 +1045,205 @@ function ImGui.PushClipRect(clip_rect_min_x, clip_rect_min_y, clip_rect_max_x, c
 
 function ImGui.PopClipRect() end
 
+--
+-- Focus, Activation
+-- - Prefer using "SetItemDefaultFocus()" over "if (IsWindowAppearing()) SetScrollHereY()" when applicable to signify "this is the default item"
+--
+--
+-- make last item the default focused item of a window.
+--
+function ImGui.SetItemDefaultFocus() end
+
+--
+-- Implied offset = 0
+--
+function ImGui.SetKeyboardFocusHere() end
+
+--
+-- focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
+--
+---@param offset? integer | `0`
+function ImGui.SetKeyboardFocusHereEx(offset) end
+
+--
+-- Overlapping mode
+--
+--
+-- allow next item to be overlapped by a subsequent item. Useful with invisible buttons, selectable, treenode covering an area where subsequent items may need to be added. Note that both Selectable() and TreeNode() have dedicated flags doing this.
+--
+function ImGui.SetNextItemAllowOverlap() end
+
+--
+-- Item/Widgets Utilities and Query Functions
+-- - Most of the functions are referring to the previous Item that has been submitted.
+-- - See Demo Window under "Widgets->Querying Status" for an interactive visualization of most of those functions.
+--
+--
+-- is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.
+--
+---@param flags? ImGuiHoveredFlags | `ImGui.Flags.Hovered { "None" }`
+---@return boolean
+function ImGui.IsItemHovered(flags) end
+
+--
+-- is the last item active? (e.g. button being held, text field being edited. This will continuously return true while holding mouse button on an item. Items that don't interact will always return false)
+--
+---@return boolean
+function ImGui.IsItemActive() end
+
+--
+-- is the last item focused for keyboard/gamepad navigation?
+--
+---@return boolean
+function ImGui.IsItemFocused() end
+
+--
+-- Implied mouse_button = 0
+--
+---@return boolean
+function ImGui.IsItemClicked() end
+
+--
+-- is the last item hovered and mouse clicked on? (**)  == IsMouseClicked(mouse_button) && IsItemHovered()Important. (**) this is NOT equivalent to the behavior of e.g. Button(). Read comments in function definition.
+--
+---@param mouse_button? ImGuiMouseButton | `ImGui.Flags.nil { "Left" }`
+---@return boolean
+function ImGui.IsItemClickedEx(mouse_button) end
+
+--
+-- is the last item visible? (items may be out of sight because of clipping/scrolling)
+--
+---@return boolean
+function ImGui.IsItemVisible() end
+
+--
+-- did the last item modify its underlying value this frame? or was pressed? This is generally the same as the "bool" return value of many widgets.
+--
+---@return boolean
+function ImGui.IsItemEdited() end
+
+--
+-- was the last item just made active (item was previously inactive).
+--
+---@return boolean
+function ImGui.IsItemActivated() end
+
+--
+-- was the last item just made inactive (item was previously active). Useful for Undo/Redo patterns with widgets that require continuous editing.
+--
+---@return boolean
+function ImGui.IsItemDeactivated() end
+
+--
+-- was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that require continuous editing. Note that you may get false positives (some widgets such as Combo()/ListBox()/Selectable() will return true even when clicking an already selected item).
+--
+---@return boolean
+function ImGui.IsItemDeactivatedAfterEdit() end
+
+--
+-- was the last item open state toggled? set by TreeNode().
+--
+---@return boolean
+function ImGui.IsItemToggledOpen() end
+
+--
+-- is any item hovered?
+--
+---@return boolean
+function ImGui.IsAnyItemHovered() end
+
+--
+-- is any item active?
+--
+---@return boolean
+function ImGui.IsAnyItemActive() end
+
+--
+-- is any item focused?
+--
+---@return boolean
+function ImGui.IsAnyItemFocused() end
+
+--
+-- get ID of last item (~~ often same ImGui::GetID(label) beforehand)
+--
+---@return integer
+function ImGui.GetItemID() end
+
+--
+-- get upper-left bounding rectangle of the last item (screen space)
+--
+---@return number
+---@return number
+function ImGui.GetItemRectMin() end
+
+--
+-- get lower-right bounding rectangle of the last item (screen space)
+--
+---@return number
+---@return number
+function ImGui.GetItemRectMax() end
+
+--
+-- get size of last item
+--
+---@return number
+---@return number
+function ImGui.GetItemRectSize() end
+
+--
+-- Text Utilities
+--
+--
+-- Implied text_end = NULL, hide_text_after_double_hash = false, wrap_width = -1.0f
+--
+---@param text string
+---@return number
+---@return number
+function ImGui.CalcTextSize(text) end
+
+---@param text string
+---@param text_end? string
+---@param hide_text_after_double_hash? boolean | `false`
+---@param wrap_width? number | `-1.0`
+---@return number
+---@return number
+function ImGui.CalcTextSizeEx(text, text_end, hide_text_after_double_hash, wrap_width) end
+
+--
+-- Inputs Utilities: Keyboard/Mouse/Gamepad
+-- - the ImGuiKey enum contains all possible keyboard, mouse and gamepad inputs (e.g. ImGuiKey_A, ImGuiKey_MouseLeft, ImGuiKey_GamepadDpadUp...).
+-- - before v1.87, we used ImGuiKey to carry native/user indices as defined by each backends. About use of those legacy ImGuiKey values:
+--  - without IMGUI_DISABLE_OBSOLETE_KEYIO (legacy support): you can still use your legacy native/user indices (< 512) according to how your backend/engine stored them in io.KeysDown[], but need to cast them to ImGuiKey.
+--  - with    IMGUI_DISABLE_OBSOLETE_KEYIO (this is the way forward): any use of ImGuiKey will assert with key < 512. GetKeyIndex() is pass-through and therefore deprecated (gone if IMGUI_DISABLE_OBSOLETE_KEYIO is defined).
+--
+--
+-- is key being held.
+--
+---@param key ImGuiKey
+---@return boolean
+function ImGui.IsKeyDown(key) end
+
+--
+-- Implied repeat = true
+--
+---@param key ImGuiKey
+---@return boolean
+function ImGui.IsKeyPressed(key) end
+
+--
+-- was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
+--
+---@param key ImGuiKey
+---@param repeat? boolean | `true`
+---@return boolean
+function ImGui.IsKeyPressedEx(key, repeat) end
+
+--
+-- was key released (went from Down to !Down)?
+--
+---@param key ImGuiKey
+---@return boolean
+function ImGui.IsKeyReleased(key) end
+
 return ImGui

@@ -25,10 +25,27 @@ local TodoList <const> = {
     ImGui_DockSpaceEx = true,
     ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
+    ImGui_GetMainViewport = true,
+    ImGui_GetBackgroundDrawList = true,
+    ImGui_GetForegroundDrawList = true,
+    ImGui_GetBackgroundDrawListImGuiViewportPtr = true,
+    ImGui_GetForegroundDrawListImGuiViewportPtr = true,
+    ImGui_IsRectVisibleBySize = true,
+    ImGui_IsRectVisible = true,
+    ImGui_GetTime = true,
+    ImGui_GetFrameCount = true,
+    ImGui_GetDrawListSharedData = true,
+    ImGui_GetStyleColorName = true,
+    ImGui_SetStateStorage = true,
+    ImGui_GetStateStorage = true,
+    ImGui_ColorConvertU32ToFloat4 = true,
+    ImGui_ColorConvertFloat4ToU32 = true,
+    ImGui_ColorConvertRGBtoHSV = true,
+    ImGui_ColorConvertHSVtoRGB = true,
 }
 
 local s <const> = "ImGui_BeginTable"
-local e <const> = "ImGui_PopClipRect"
+local e <const> = "ImGui_IsKeyReleased"
 
 local within_scope = false
 local skip = false

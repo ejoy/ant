@@ -18,11 +18,12 @@ local lua_type = {
     ["const ImGuiPayload*"] = "string | nil",
 }
 
-local special_type = {}
+local special_arg = {}
+local special_ret = {}
 local return_type = {}
 local default_type = {}
 
-special_type["ImVec2"] = function (type_meta, status)
+special_arg["ImVec2"] = function (type_meta, status)
     if type_meta.default_value == nil then
         writeln("---@param %s_x number", type_meta.name)
         writeln("---@param %s_y number", type_meta.name)
@@ -35,12 +36,17 @@ special_type["ImVec2"] = function (type_meta, status)
     status.arguments[#status.arguments+1] = type_meta.name .. "_y"
 end
 
-special_type["bool*"] = function (type_meta, status)
+special_ret["ImVec2"] = function ()
+    writeln("---@return number")
+    writeln("---@return number")
+end
+
+special_arg["bool*"] = function (type_meta, status)
     writeln("---@param %s true | nil", type_meta.name)
     status.arguments[#status.arguments+1] = type_meta.name
 end
 
-special_type["const void*"] = function (type_meta, status)
+special_arg["const void*"] = function (type_meta, status)
     local size_meta = status.args[status.i + 1]
     assert(not type_meta.default_value)
     assert(not size_meta.default_value)
@@ -56,6 +62,11 @@ end
 
 default_type["float"] = function (value)
     return value:match "^(.*)f$"
+end
+
+default_type["const char*"] = function (value)
+    assert(value == "NULL")
+    return
 end
 
 local function get_default_value(type_meta)
@@ -147,14 +158,19 @@ local function write_func(func_meta)
     }
     while status.i <= #status.args do
         local type_meta = status.args[status.i]
-        local typefunc = special_type[type_meta.type.declaration]
+        local typefunc = special_arg[type_meta.type.declaration]
         if typefunc then
             typefunc(type_meta, status)
         else
             local luatype = lua_type[type_meta.type.declaration]
             if luatype then
                 if type_meta.default_value then
-                    writeln("---@param %s? %s | `%s`", type_meta.name, luatype, get_default_value(type_meta))
+                    local default_value = get_default_value(type_meta)
+                    if default_value then
+                        writeln("---@param %s? %s | `%s`", type_meta.name, luatype, default_value)
+                    else
+                        writeln("---@param %s? %s", type_meta.name, luatype)
+                    end
                 else
                     writeln("---@param %s %s", type_meta.name, luatype)
                 end
@@ -166,11 +182,16 @@ local function write_func(func_meta)
         status.i = status.i + 1
     end
     if func_meta.return_type.declaration ~= "void" then
-        local luatype = lua_type[func_meta.return_type.declaration]
-        if not luatype then
-            error(string.format("undefined lua type `%s`", func_meta.return_type.declaration))
+        local typefunc = special_ret[func_meta.return_type.declaration]
+        if typefunc then
+            typefunc(func_meta)
+        else
+            local luatype = lua_type[func_meta.return_type.declaration]
+            if not luatype then
+                error(string.format("undefined lua type `%s`", func_meta.return_type.declaration))
+            end
+            writeln("---@return %s", luatype)
         end
-        writeln("---@return %s", luatype)
         for _, type_meta in ipairs(func_meta.arguments) do
             local typefunc = return_type[type_meta.type.declaration]
             if typefunc then
