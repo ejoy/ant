@@ -1,3 +1,6 @@
+//
+// Automatically generated file; DO NOT EDIT.
+//
 #include <imgui.h>
 #include <lua.hpp>
 
@@ -146,6 +149,49 @@ static int TableSetBgColor(lua_State* L) {
     return 0;
 }
 
+static int BeginTabBar(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto flags = (ImGuiTabBarFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTabBarFlags_None));
+    auto _retval = ImGui::BeginTabBar(str_id, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndTabBar(lua_State* L) {
+    ImGui::EndTabBar();
+    return 0;
+}
+
+static int BeginTabItem(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto has_p_open = !lua_isnil(L, 2);
+    bool p_open = true;
+    auto flags = (ImGuiTabItemFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTabItemFlags_None));
+    auto _retval = ImGui::BeginTabItem(label, (has_p_open? &p_open: NULL), flags);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_open || p_open);
+    return 2;
+}
+
+static int EndTabItem(lua_State* L) {
+    ImGui::EndTabItem();
+    return 0;
+}
+
+static int TabItemButton(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto flags = (ImGuiTabItemFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTabItemFlags_None));
+    auto _retval = ImGui::TabItemButton(label, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetTabItemClosed(lua_State* L) {
+    auto tab_or_docked_window_label = luaL_checkstring(L, 1);
+    ImGui::SetTabItemClosed(tab_or_docked_window_label);
+    return 0;
+}
+
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
         { "BeginTable", BeginTable },
@@ -169,6 +215,12 @@ void init(lua_State* L) {
         { "TableGetColumnFlags", TableGetColumnFlags },
         { "TableSetColumnEnabled", TableSetColumnEnabled },
         { "TableSetBgColor", TableSetBgColor },
+        { "BeginTabBar", BeginTabBar },
+        { "EndTabBar", EndTabBar },
+        { "BeginTabItem", BeginTabItem },
+        { "EndTabItem", EndTabItem },
+        { "TabItemButton", TabItemButton },
+        { "SetTabItemClosed", SetTabItemClosed },
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);

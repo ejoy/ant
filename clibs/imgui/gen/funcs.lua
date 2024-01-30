@@ -1,6 +1,5 @@
 local AntDir, meta = ...
 
-
 local w <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_lua_funcs.cpp", "wb"))
 
 local function writeln(fmt, ...)
@@ -9,6 +8,7 @@ local function writeln(fmt, ...)
 end
 
 local write_arg = {}
+local write_arg_ret = {}
 
 write_arg["const char*"] = function(type_meta, arguments, idx)
     assert(not type_meta.default_value)
@@ -58,27 +58,41 @@ write_arg["bool"] = function(type_meta, arguments, idx)
     return idx
 end
 
+write_arg["bool*"] = function(type_meta, arguments, idx)
+    assert(type_meta.name:match "^p_")
+    idx = idx + 1
+    writeln("    auto has_%s = !lua_isnil(L, %d);", type_meta.name, idx)
+    writeln("    bool %s = true;", type_meta.name)
+    arguments[#arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
+    return idx
+end
+
+write_arg_ret["bool*"] = function(type_meta)
+    writeln("    lua_pushboolean(L, has_%s || %s);", type_meta.name, type_meta.name)
+    return 1
+end
+
 local write_ret = {}
 
 write_ret["bool"] = function()
     writeln "    lua_pushboolean(L, _retval);"
-    writeln "    return 1;"
+    return 1
 end
 
 write_ret["ImGuiTableSortSpecs*"] = function()
     writeln "    //TODO"
     writeln "    lua_pushlightuserdata(L, _retval);"
-    writeln "    return 1;"
+    return 1
 end
 
 write_ret["int"] = function()
     writeln "    lua_pushinteger(L, _retval);"
-    writeln "    return 1;"
+    return 1
 end
 
 write_ret["const char*"] = function()
     writeln "    lua_pushstring(L, _retval);"
-    writeln "    return 1;"
+    return 1
 end
 
 for _, enums in ipairs(meta.enums) do
@@ -107,7 +121,7 @@ for _, enums in ipairs(meta.enums) do
     end
     write_ret[realname] = function()
         writeln "    lua_pushinteger(L, _retval);"
-        writeln "    return 1;"
+        return 1
     end
     ::continue::
 end
@@ -133,42 +147,47 @@ local function write_func(func_meta)
             error(string.format("undefined write ret func `%s`", func_meta.return_type.declaration))
         end
         writeln("    auto _retval = %s(%s);", func_meta.original_fully_qualified_name, table.concat(arguments, ", "))
-        rfunc(func_meta.return_type)
+        local nret = 0
+        nret = nret + rfunc(func_meta.return_type)
+        for _, type_meta in ipairs(func_meta.arguments) do
+            local func = write_arg_ret[type_meta.type.declaration]
+            if func then
+                nret = nret + func(type_meta)
+            end
+        end
+        writeln("    return %d;", nret)
     end
     writeln "}"
     writeln ""
     return realname
 end
 
-local function write_func_scope(s, e)
+local allow = require "allow"
+
+local function write_func_scope()
     local funcs = {}
-    local within_scope = false
+    allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        if within_scope then
-            if not func_meta.is_internal then
-                funcs[#funcs+1] = write_func(func_meta)
-            end
-            if func_meta.name == e then
-                break
-            end
-        else
-            if func_meta.name == s then
-                within_scope = true
-                if not func_meta.is_internal then
-                    funcs[#funcs+1] = write_func(func_meta)
-                end
-            end
+        local status = allow.query(func_meta)
+        if status == "skip" then
+            break
+        end
+        if status then
+            funcs[#funcs+1] = write_func(func_meta)
         end
     end
     return funcs
 end
 
+writeln "//"
+writeln "// Automatically generated file; DO NOT EDIT."
+writeln "//"
 writeln "#include <imgui.h>"
 writeln "#include <lua.hpp>"
 writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
-local funcs = write_func_scope("ImGui_BeginTable", "ImGui_TableSetBgColor")
+local funcs = write_func_scope()
 writeln "void init(lua_State* L) {"
 writeln "    luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do

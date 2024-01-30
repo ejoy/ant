@@ -15,12 +15,14 @@ local lua_type = {
     ["int"] = "integer",
     ["ImGuiID"] = "integer",
     ["ImU32"] = "integer",
-    ["ImGuiTableSortSpecs*"] = "lightuserdata"
+    ["ImGuiTableSortSpecs*"] = "lightuserdata",
 }
 
-local composite_type = {}
+local special_type = {}
+local return_type = {}
+local default_type = {}
 
-composite_type["ImVec2"] = function (type_meta, arguments)
+special_type["ImVec2"] = function (type_meta, arguments)
     assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)")
     writeln("---@param %s_x? number | `0.0`", type_meta.name)
     writeln("---@param %s_y? number | `0.0`", type_meta.name)
@@ -28,7 +30,14 @@ composite_type["ImVec2"] = function (type_meta, arguments)
     arguments[#arguments+1] = type_meta.name .. "_y"
 end
 
-local default_type = {}
+special_type["bool*"] = function (type_meta, arguments)
+    writeln("---@param %s true | nil", type_meta.name)
+    arguments[#arguments+1] = type_meta.name
+end
+
+return_type["bool*"] = function (type_meta)
+    writeln("---@return boolean %s", type_meta.name)
+end
 
 default_type["float"] = function (value)
     return value:match "^(.*)f$"
@@ -118,7 +127,7 @@ local function write_func(func_meta)
         end
     end
     for _, type_meta in ipairs(func_meta.arguments) do
-        local typefunc = composite_type[type_meta.type.declaration]
+        local typefunc = special_type[type_meta.type.declaration]
         if typefunc then
             typefunc(type_meta, arguments)
             goto continue
@@ -142,30 +151,30 @@ local function write_func(func_meta)
             error(string.format("undefined lua type `%s`", func_meta.return_type.declaration))
         end
         writeln("---@return %s", luatype)
+        for _, type_meta in ipairs(func_meta.arguments) do
+            local typefunc = return_type[type_meta.type.declaration]
+            if typefunc then
+                typefunc(type_meta)
+            end
+        end
     end
     writeln("function ImGui.%s(%s) end", realname, table.concat(arguments, ", "))
     writeln ""
     return realname
 end
 
-local function write_func_scope(s, e)
+local allow = require "allow"
+
+local function write_func_scope()
     local funcs = {}
-    local within_scope = false
+    allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        if within_scope then
-            if not func_meta.is_internal then
-                funcs[#funcs+1] = write_func(func_meta)
-            end
-            if func_meta.name == e then
-                break
-            end
-        else
-            if func_meta.name == s then
-                within_scope = true
-                if not func_meta.is_internal then
-                    funcs[#funcs+1] = write_func(func_meta)
-                end
-            end
+        local status = allow.query(func_meta)
+        if status == "skip" then
+            break
+        end
+        if status then
+            funcs[#funcs+1] = write_func(func_meta)
         end
     end
     return funcs
@@ -181,5 +190,5 @@ writeln "local ImGui = {}"
 writeln ""
 write_enum_scope()
 writeln ""
-write_func_scope("ImGui_BeginTable", "ImGui_TableSetBgColor")
+write_func_scope()
 writeln "return ImGui"

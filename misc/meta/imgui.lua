@@ -914,4 +914,50 @@ function ImGui.TableSetColumnEnabled(column_n, v) end
 ---@param column_n? integer | `-1`
 function ImGui.TableSetBgColor(target, color, column_n) end
 
+--
+-- Tab Bars, Tabs
+-- - Note: Tabs are automatically created by the docking system (when in 'docking' branch). Use this to create tab bars/tabs yourself.
+--
+--
+-- create and append into a TabBar
+--
+---@param str_id string
+---@param flags? ImGuiTabBarFlags | `ImGui.Flags.TabBar { "None" }`
+---@return boolean
+function ImGui.BeginTabBar(str_id, flags) end
+
+--
+-- only call EndTabBar() if BeginTabBar() returns true!
+--
+function ImGui.EndTabBar() end
+
+--
+-- create a Tab. Returns true if the Tab is selected.
+--
+---@param label string
+---@param p_open true | nil
+---@param flags? ImGuiTabItemFlags | `ImGui.Flags.TabItem { "None" }`
+---@return boolean
+---@return boolean p_open
+function ImGui.BeginTabItem(label, p_open, flags) end
+
+--
+-- only call EndTabItem() if BeginTabItem() returns true!
+--
+function ImGui.EndTabItem() end
+
+--
+-- create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
+--
+---@param label string
+---@param flags? ImGuiTabItemFlags | `ImGui.Flags.TabItem { "None" }`
+---@return boolean
+function ImGui.TabItemButton(label, flags) end
+
+--
+-- notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
+--
+---@param tab_or_docked_window_label string
+function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
+
 return ImGui

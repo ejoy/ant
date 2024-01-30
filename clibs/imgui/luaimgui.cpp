@@ -1911,50 +1911,6 @@ winEndChild(lua_State *L) {
 }
 
 static int
-winBeginTabBar(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiTabBarFlags>(L, 2, ImGuiTabBarFlags_None);
-	bool change = ImGui::BeginTabBar(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winEndTabBar(lua_State *L) {
-	ImGui::EndTabBar();
-	return 0;
-}
-
-static int
-winBeginTabItem(lua_State *L) {
-	const char* name = luaL_checkstring(L, 1);
-	auto flags = lua_getflags<ImGuiTabItemFlags>(L, 3, ImGuiTabItemFlags_None);
-	if (lua_isnil(L, 2)) {
-		bool change = ImGui::BeginTabItem(name, NULL, flags);
-		lua_pushboolean(L, change);
-		return 1;
-	}
-	bool opened = true;
-	bool change = ImGui::BeginTabItem(name, &opened, flags);
-	lua_pushboolean(L, change);
-	lua_pushboolean(L, opened);
-	return 2;
-}
-
-static int
-winEndTabItem(lua_State *L) {
-	ImGui::EndTabItem();
-	return 0;
-}
-
-static int
-winSetTabItemClosed(lua_State *L) {
-	const char * tab_or_docked_window_label = luaL_checkstring(L, 1);
-	ImGui::SetTabItemClosed(tab_or_docked_window_label);
-	return 0;
-}
-
-static int
 winOpenPopup(lua_State *L) {
 	if (lua_isinteger(L, INDEX_ID)) {
 		ImGuiID id = (ImGuiID)lua_tointeger(L, INDEX_ID);
@@ -3128,11 +3084,6 @@ luaopen_imgui(lua_State *L) {
 		{ "EndDisabled", winEndDisabled },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
-		{ "BeginTabBar", winBeginTabBar },
-		{ "EndTabBar", winEndTabBar },
-		{ "BeginTabItem", winBeginTabItem },
-		{ "EndTabItem", winEndTabItem },
-		{ "SetTabItemClosed", winSetTabItemClosed },
 		{ "OpenPopup", winOpenPopup },
 		{ "BeginPopup", winBeginPopup },
 		{ "BeginPopupContextItem", winBeginPopupContextItem },

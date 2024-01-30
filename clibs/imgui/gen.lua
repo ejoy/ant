@@ -8,6 +8,8 @@ local meta; do
     meta = json.decode(readall(AntDir.."/clibs/imgui/dear_bindings/cimgui.json"))
 end
 
+package.path = AntDir.."/clibs/imgui/gen/?.lua"
+
 loadfile(AntDir.."/clibs/imgui/gen/enum.lua")(AntDir, meta)
 loadfile(AntDir.."/clibs/imgui/gen/funcs.lua")(AntDir, meta)
 loadfile(AntDir.."/clibs/imgui/gen/doc.lua")(AntDir, meta)
