@@ -18,7 +18,6 @@
         ]
     },
     "runtime": {
-        //"plugin": "misc/lsp-plugin.lua",
         "special": {
             "import_package": "require"
         }

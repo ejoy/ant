@@ -9,3 +9,5 @@ local meta; do
 end
 
 loadfile(AntDir.."/clibs/imgui/gen/enum.lua")(AntDir, meta)
+loadfile(AntDir.."/clibs/imgui/gen/funcs.lua")(AntDir, meta)
+loadfile(AntDir.."/clibs/imgui/gen/doc.lua")(AntDir, meta)
