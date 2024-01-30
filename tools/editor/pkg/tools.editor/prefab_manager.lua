@@ -1033,13 +1033,14 @@ function m:update_tag_list()
     for k, value in pairs(self.current_prefab.tag) do
         if k ~= "*" and k ~= "animation" then
             for _, eid in ipairs(value) do
-                local ee <close> = world:entity(eid, "scene?in material?in")
+                local ee <close> = world:entity(eid, "scene?in material?in efk?in")
                 if ee.scene or ee.material then
                     srt_mtl_list[#srt_mtl_list + 1] = k
                     if ee.material then
                         mtl_list[#mtl_list + 1] = k
                     end
-                elseif ee.efk then
+                end
+                if ee.efk then
                     efk_list[#efk_list + 1] = k
                 end
             end

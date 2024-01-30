@@ -211,6 +211,7 @@ local function add_event(et)
     local event_list = anim_key_event[key]--anim_state.current_event_list
     event_list[#event_list + 1] = new_event
     current_event_index = #event_list
+    set_event_dirty(1)
 end
 
 local function delete_event(idx)
@@ -370,7 +371,7 @@ local function show_current_event()
             end
             action_list = current_event.action_list or {}
         end
-        action_list = (current_event.event_type == "Effect") and prefab_mgr.efk_tag_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
+        action_list = (current_event.event_type == "Effect") and prefab_mgr.efk_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
         if #action_list > 0 then
             local action = current_event.action or ''
             ImGui.PropertyLabel("Action")
