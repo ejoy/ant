@@ -17,6 +17,23 @@ local BlackList <const> = {
     ImGui_LogText = true,
     ImGui_LogTextUnformatted = true,
     ImGui_LogTextV = true,
+
+    ImGui_SetAllocatorFunctions = true,
+    ImGui_GetAllocatorFunctions = true,
+    ImGui_MemAlloc = true,
+    ImGui_MemFree = true,
+
+    ImGui_DebugTextEncoding = true,
+    ImGui_DebugFlashStyleColor = true,
+    ImGui_DebugCheckVersionAndDataLayout = true,
+
+    ImGui_GetPlatformIO = true,
+    ImGui_UpdatePlatformWindows = true,
+    ImGui_RenderPlatformWindowsDefault = true,
+    ImGui_RenderPlatformWindowsDefaultEx = true,
+    ImGui_DestroyPlatformWindows = true,
+    ImGui_FindViewportByID = true,
+    ImGui_FindViewportByPlatformHandle = true,
 }
 
 local TodoList <const> = {
@@ -42,6 +59,7 @@ local TodoList <const> = {
     ImGui_ColorConvertFloat4ToU32 = true,
     ImGui_ColorConvertRGBtoHSV = true,
     ImGui_ColorConvertHSVtoRGB = true,
+    ImGui_IsMousePosValid = true,
 }
 
 local function conditionals(t)
@@ -72,18 +90,21 @@ local function conditionals(t)
 end
 
 local s <const> = "ImGui_BeginTable"
-local e <const> = "ImGui_IsKeyChordPressed"
 
 local within_scope = false
-local skip = false
 
 local function init()
     within_scope = false
-    skip = false
 end
 
 local function allow(func_meta)
     if func_meta.is_internal then
+        return
+    end
+    if func_meta.is_manual_helper then
+        return
+    end
+    if func_meta.original_class then
         return
     end
     if not conditionals(func_meta) then
@@ -99,13 +120,7 @@ local function allow(func_meta)
 end
 
 local function query(func_meta)
-    if skip then
-        return "skip"
-    end
     if within_scope then
-        if func_meta.name == e then
-            skip = true
-        end
         if allow(func_meta) then
             return true
         end
@@ -116,9 +131,6 @@ local function query(func_meta)
                 return true
             end
         end
-    end
-    if skip then
-        return "skip"
     end
     return false
 end

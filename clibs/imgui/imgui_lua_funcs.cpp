@@ -157,7 +157,7 @@ static int EndTabBar(lua_State* L) {
 
 static int BeginTabItem(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto has_p_open = !lua_isnil(L, 2);
+    bool has_p_open = !lua_isnil(L, 2);
     bool p_open = true;
     auto flags = (ImGuiTabItemFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTabItemFlags_None));
     auto _retval = ImGui::BeginTabItem(label, (has_p_open? &p_open: NULL), flags);
@@ -478,6 +478,201 @@ static int IsKeyChordPressed(lua_State* L) {
     return 1;
 }
 
+static int GetKeyPressedAmount(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto repeat_delay = (float)luaL_checknumber(L, 2);
+    auto rate = (float)luaL_checknumber(L, 3);
+    auto _retval = ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetKeyName(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetKeyName(key);
+    lua_pushstring(L, _retval);
+    return 1;
+}
+
+static int SetNextFrameWantCaptureKeyboard(lua_State* L) {
+    auto want_capture_keyboard = !!lua_toboolean(L, 1);
+    ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
+    return 0;
+}
+
+static int IsMouseDown(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsMouseDown(button);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsMouseClicked(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsMouseClicked(button);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsMouseClickedEx(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto repeat = lua_isnoneornil(L, 2)? false: !!lua_toboolean(L, 2);
+    auto _retval = ImGui::IsMouseClicked(button, repeat);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsMouseReleased(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsMouseReleased(button);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsMouseDoubleClicked(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsMouseDoubleClicked(button);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int GetMouseClickedCount(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetMouseClickedCount(button);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int IsMouseHoveringRect(lua_State* L) {
+    auto r_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
+    auto r_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto _retval = ImGui::IsMouseHoveringRect(r_min, r_max);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsMouseHoveringRectEx(lua_State* L) {
+    auto r_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
+    auto r_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto clip = lua_isnoneornil(L, 5)? true: !!lua_toboolean(L, 5);
+    auto _retval = ImGui::IsMouseHoveringRect(r_min, r_max, clip);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsAnyMouseDown(lua_State* L) {
+    auto _retval = ImGui::IsAnyMouseDown();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int GetMousePos(lua_State* L) {
+    auto _retval = ImGui::GetMousePos();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetMousePosOnOpeningCurrentPopup(lua_State* L) {
+    auto _retval = ImGui::GetMousePosOnOpeningCurrentPopup();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int IsMouseDragging(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+    auto lock_threshold = (float)luaL_optnumber(L, 2, -1.0f);
+    auto _retval = ImGui::IsMouseDragging(button, lock_threshold);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int GetMouseDragDelta(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_optinteger(L, 1, lua_Integer(ImGuiMouseButton_Left));
+    auto lock_threshold = (float)luaL_optnumber(L, 2, -1.0f);
+    auto _retval = ImGui::GetMouseDragDelta(button, lock_threshold);
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int ResetMouseDragDelta(lua_State* L) {
+    ImGui::ResetMouseDragDelta();
+    return 0;
+}
+
+static int ResetMouseDragDeltaEx(lua_State* L) {
+    auto button = (ImGuiMouseButton)luaL_optinteger(L, 1, lua_Integer(ImGuiMouseButton_Left));
+    ImGui::ResetMouseDragDelta(button);
+    return 0;
+}
+
+static int GetMouseCursor(lua_State* L) {
+    auto _retval = ImGui::GetMouseCursor();
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int SetMouseCursor(lua_State* L) {
+    auto cursor_type = (ImGuiMouseCursor)luaL_checkinteger(L, 1);
+    ImGui::SetMouseCursor(cursor_type);
+    return 0;
+}
+
+static int SetNextFrameWantCaptureMouse(lua_State* L) {
+    auto want_capture_mouse = !!lua_toboolean(L, 1);
+    ImGui::SetNextFrameWantCaptureMouse(want_capture_mouse);
+    return 0;
+}
+
+static int GetClipboardText(lua_State* L) {
+    auto _retval = ImGui::GetClipboardText();
+    lua_pushstring(L, _retval);
+    return 1;
+}
+
+static int SetClipboardText(lua_State* L) {
+    auto text = luaL_checkstring(L, 1);
+    ImGui::SetClipboardText(text);
+    return 0;
+}
+
+static int LoadIniSettingsFromDisk(lua_State* L) {
+    auto ini_filename = luaL_checkstring(L, 1);
+    ImGui::LoadIniSettingsFromDisk(ini_filename);
+    return 0;
+}
+
+static int LoadIniSettingsFromMemory(lua_State* L) {
+    size_t ini_size = 0;
+    auto ini_data = luaL_checklstring(L, 1, &ini_size);
+    ImGui::LoadIniSettingsFromMemory(ini_data, ini_size);
+    return 0;
+}
+
+static int SaveIniSettingsToDisk(lua_State* L) {
+    auto ini_filename = luaL_checkstring(L, 1);
+    ImGui::SaveIniSettingsToDisk(ini_filename);
+    return 0;
+}
+
+static int SaveIniSettingsToMemory(lua_State* L) {
+    bool has_out_ini_size = !lua_isnil(L, 1);
+    size_t out_ini_size = 0;
+    auto _retval = ImGui::SaveIniSettingsToMemory((has_out_ini_size? &out_ini_size: NULL));
+    lua_pushstring(L, _retval);
+    has_out_ini_size? lua_pushinteger(L, out_ini_size): lua_pushnil(L);
+    return 2;
+}
+
+static int GetKeyIndex(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetKeyIndex(key);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
         { "BeginTable", BeginTable },
@@ -550,6 +745,34 @@ void init(lua_State* L) {
         { "IsKeyPressedEx", IsKeyPressedEx },
         { "IsKeyReleased", IsKeyReleased },
         { "IsKeyChordPressed", IsKeyChordPressed },
+        { "GetKeyPressedAmount", GetKeyPressedAmount },
+        { "GetKeyName", GetKeyName },
+        { "SetNextFrameWantCaptureKeyboard", SetNextFrameWantCaptureKeyboard },
+        { "IsMouseDown", IsMouseDown },
+        { "IsMouseClicked", IsMouseClicked },
+        { "IsMouseClickedEx", IsMouseClickedEx },
+        { "IsMouseReleased", IsMouseReleased },
+        { "IsMouseDoubleClicked", IsMouseDoubleClicked },
+        { "GetMouseClickedCount", GetMouseClickedCount },
+        { "IsMouseHoveringRect", IsMouseHoveringRect },
+        { "IsMouseHoveringRectEx", IsMouseHoveringRectEx },
+        { "IsAnyMouseDown", IsAnyMouseDown },
+        { "GetMousePos", GetMousePos },
+        { "GetMousePosOnOpeningCurrentPopup", GetMousePosOnOpeningCurrentPopup },
+        { "IsMouseDragging", IsMouseDragging },
+        { "GetMouseDragDelta", GetMouseDragDelta },
+        { "ResetMouseDragDelta", ResetMouseDragDelta },
+        { "ResetMouseDragDeltaEx", ResetMouseDragDeltaEx },
+        { "GetMouseCursor", GetMouseCursor },
+        { "SetMouseCursor", SetMouseCursor },
+        { "SetNextFrameWantCaptureMouse", SetNextFrameWantCaptureMouse },
+        { "GetClipboardText", GetClipboardText },
+        { "SetClipboardText", SetClipboardText },
+        { "LoadIniSettingsFromDisk", LoadIniSettingsFromDisk },
+        { "LoadIniSettingsFromMemory", LoadIniSettingsFromMemory },
+        { "SaveIniSettingsToDisk", SaveIniSettingsToDisk },
+        { "SaveIniSettingsToMemory", SaveIniSettingsToMemory },
+        { "GetKeyIndex", GetKeyIndex },
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);

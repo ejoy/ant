@@ -107,7 +107,7 @@ function m:init_system()
     if rf then
         local setting = rf:read "a"
         rf:close()
-        ImGui.LoadIniSettings(setting)
+        ImGui.LoadIniSettingsFromMemory(setting)
     end
 end
 

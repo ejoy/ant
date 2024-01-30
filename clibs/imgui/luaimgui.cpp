@@ -514,11 +514,6 @@ static int lInitFont(lua_State *L) {
 	return 0;
 }
 
-static int lGetMouseCursor(lua_State* L) {
-	lua_pushinteger(L, (lua_Integer)ImGui::GetMouseCursor());
-	return 1;
-}
-
 static bool
 drag_float(lua_State *L, const char *label, int n) {
 	float v[4];
@@ -2320,13 +2315,6 @@ cPopItemWidth(lua_State* L) {
 }
 
 static int
-cSetMouseCursor(lua_State* L) {
-	int mouseCursorType = (int)luaL_optinteger(L, 1, 1);
-	ImGui::SetMouseCursor(mouseCursorType);
-	return 0;
-}
-
-static int
 uSetColorEditOptions(lua_State *L) {
 	auto flags = lua_getflags<ImGuiColorEditFlags>(L, 1);
 	ImGui::SetColorEditOptions(flags);
@@ -2354,32 +2342,6 @@ uSaveIniSettings(lua_State *L) {
 }
 
 static int
-uSetNextFrameWantCaptureKeyboard(lua_State * L) {
-	bool val = true;
-	if (lua_isboolean(L, 1))
-		val = lua_toboolean(L, 1);
-	ImGui::SetNextFrameWantCaptureKeyboard(val);
-	return 0;
-}
-
-static int
-uSetNextFrameWantCaptureMouse(lua_State * L) {
-	bool val = true;
-	if (lua_isboolean(L, 1))
-		val = lua_toboolean(L, 1);
-	ImGui::SetNextFrameWantCaptureMouse(val);
-	return 0;
-}
-
-static int
-uIsMouseDoubleClicked(lua_State * L) {
-	auto btn = lua_getflags<ImGuiMouseButton>(L, 1);
-	bool clicked = ImGui::IsMouseDoubleClicked(btn);
-	lua_pushboolean(L, clicked);
-	return 1;
-}
-
-static int
 uPushID(lua_State* L) {
 	if (lua_isinteger(L, INDEX_ID)) {
 		int id = (int)lua_tointeger(L, INDEX_ID);
@@ -2402,28 +2364,6 @@ static int
 uCalcItemWidth(lua_State* L) {
 	lua_pushnumber(L, ImGui::CalcItemWidth());
 	return 1;
-}
-
-static int
-cIsMouseDragging(lua_State* L) {
-	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
-	lua_pushboolean(L, ImGui::IsMouseDragging(mouse_button));
-	return 1;
-}
-
-static int
-cGetMousePos(lua_State* L) {
-	auto pos = ImGui::GetMousePos();
-	lua_pushnumber(L, pos.x);
-	lua_pushnumber(L, pos.y);
-	return 2;
-}
-
-static int
-cSetClipboardText(lua_State* L) {
-	const char* text = luaL_checkstring(L, 1);
-	ImGui::SetClipboardText(text);
-	return 0;
 }
 
 // enums
@@ -2722,7 +2662,6 @@ luaopen_imgui(lua_State *L) {
 		{ "Render", lRender },
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InitFont", lInitFont },
-		{ "GetMouseCursor", lGetMouseCursor },
 		{ "Button", wButton },
 		{ "SmallButton", wSmallButton },
 		{ "InvisibleButton", wInvisibleButton },
@@ -2802,7 +2741,6 @@ luaopen_imgui(lua_State *L) {
 		{ "SetNextItemWidth", cSetNextItemWidth },
 		{ "PushItemWidth", cPushItemWidth},
 		{ "PopItemWidth", cPopItemWidth},
-		{ "SetMouseCursor", cSetMouseCursor },
 		{ "Begin", winBegin },
 		{ "End", winEnd },
 		{ "BeginChild", winBeginChild },
@@ -2851,15 +2789,9 @@ luaopen_imgui(lua_State *L) {
 		{ "SetColorEditOptions", uSetColorEditOptions },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
-		{ "SetNextFrameWantCaptureKeyboard", uSetNextFrameWantCaptureKeyboard },
-		{ "SetNextFrameWantCaptureMouse", uSetNextFrameWantCaptureMouse },
-		{ "IsMouseDoubleClicked", uIsMouseDoubleClicked},
 		{ "PushID",uPushID},
 		{ "PopID",uPopID},
 		{ "CalcItemWidth",uCalcItemWidth},
-		{ "IsMouseDragging", cIsMouseDragging },
-		{ "GetMousePos", cGetMousePos },
-		{ "SetClipboardText", cSetClipboardText },
 		{ "DockSpace", dDockSpace },
 		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
 		{ "ListClipper", ListClipper },

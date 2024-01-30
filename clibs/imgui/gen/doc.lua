@@ -20,6 +20,7 @@ local lua_type = {
     ["bool"] = "boolean",
     ["float"] = "number",
     ["int"] = "integer",
+    ["size_t"] = "integer",
     ["ImGuiID"] = "integer",
     ["ImU32"] = "integer",
     ["ImGuiKeyChord"] = "ImGuiKeyChord",
@@ -30,6 +31,14 @@ local special_arg = {}
 local special_ret = {}
 local return_type = {}
 local default_type = {}
+
+local function get_default_value(type_meta)
+    local func = default_type[type_meta.type.declaration]
+    if func then
+        return func(type_meta.default_value)
+    end
+    return type_meta.default_value
+end
 
 special_arg["ImVec2"] = function (type_meta, status)
     if type_meta.default_value == nil then
@@ -54,6 +63,34 @@ special_arg["bool*"] = function (type_meta, status)
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
+special_arg["size_t*"] = function (type_meta, status)
+    writeln("---@param %s integer | nil", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+end
+
+special_arg["const char*"] = function (type_meta, status)
+    local size_meta = status.args[status.i + 1]
+    if size_meta and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        assert(size_meta.type.declaration == "size_t")
+        status.i = status.i + 1
+        writeln("---@param %s string", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+        return
+    end
+    if type_meta.default_value then
+        local default_value = get_default_value(type_meta)
+        if default_value then
+            writeln("---@param %s? string | `%s`", safe_name(type_meta.name), default_value)
+        else
+            writeln("---@param %s? string", safe_name(type_meta.name))
+        end
+    else
+        writeln("---@param %s string", safe_name(type_meta.name))
+    end
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+end
+
 special_arg["const void*"] = function (type_meta, status)
     local size_meta = status.args[status.i + 1]
     assert(not type_meta.default_value)
@@ -74,15 +111,7 @@ end
 
 default_type["const char*"] = function (value)
     assert(value == "NULL")
-    return
-end
-
-local function get_default_value(type_meta)
-    local func = default_type[type_meta.type.declaration]
-    if func then
-        return func(type_meta.default_value)
-    end
-    return type_meta.default_value
+    return nil
 end
 
 local function conditionals(t)
@@ -285,11 +314,7 @@ local function write_func_scope()
     local funcs = {}
     allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        local status = allow.query(func_meta)
-        if status == "skip" then
-            break
-        end
-        if status then
+        if allow.query(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end

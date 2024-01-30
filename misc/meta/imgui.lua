@@ -1569,4 +1569,207 @@ function ImGui.IsKeyReleased(key) end
 ---@return boolean
 function ImGui.IsKeyChordPressed(key_chord) end
 
+--
+-- uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
+--
+---@param key ImGuiKey
+---@param repeat_delay number
+---@param rate number
+---@return integer
+function ImGui.GetKeyPressedAmount(key, repeat_delay, rate) end
+
+--
+-- [DEBUG] returns English name of the key. Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
+--
+---@param key ImGuiKey
+---@return string
+function ImGui.GetKeyName(key) end
+
+--
+-- Override io.WantCaptureKeyboard flag next frame (said flag is left for your application to handle, typically when true it instructs your app to ignore inputs). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard"; after the next NewFrame() call.
+--
+---@param want_capture_keyboard boolean
+function ImGui.SetNextFrameWantCaptureKeyboard(want_capture_keyboard) end
+
+--
+-- Inputs Utilities: Mouse specific
+-- - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
+-- - You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
+-- - Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' and 'io.MouseDraggingThreshold')
+--
+--
+-- is mouse button held?
+--
+---@param button ImGuiMouseButton
+---@return boolean
+function ImGui.IsMouseDown(button) end
+
+--
+-- Implied repeat = false
+--
+---@param button ImGuiMouseButton
+---@return boolean
+function ImGui.IsMouseClicked(button) end
+
+--
+-- did mouse button clicked? (went from !Down to Down). Same as GetMouseClickedCount() == 1.
+--
+---@param button ImGuiMouseButton
+---@param repeat_? boolean | `false`
+---@return boolean
+function ImGui.IsMouseClickedEx(button, repeat_) end
+
+--
+-- did mouse button released? (went from Down to !Down)
+--
+---@param button ImGuiMouseButton
+---@return boolean
+function ImGui.IsMouseReleased(button) end
+
+--
+-- did mouse button double-clicked? Same as GetMouseClickedCount() == 2. (note that a double-click will also report IsMouseClicked() == true)
+--
+---@param button ImGuiMouseButton
+---@return boolean
+function ImGui.IsMouseDoubleClicked(button) end
+
+--
+-- return the number of successive mouse-clicks at the time where a click happen (otherwise 0).
+--
+---@param button ImGuiMouseButton
+---@return integer
+function ImGui.GetMouseClickedCount(button) end
+
+--
+-- Implied clip = true
+--
+---@param r_min_x number
+---@param r_min_y number
+---@param r_max_x number
+---@param r_max_y number
+---@return boolean
+function ImGui.IsMouseHoveringRect(r_min_x, r_min_y, r_max_x, r_max_y) end
+
+--
+-- is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
+--
+---@param r_min_x number
+---@param r_min_y number
+---@param r_max_x number
+---@param r_max_y number
+---@param clip? boolean | `true`
+---@return boolean
+function ImGui.IsMouseHoveringRectEx(r_min_x, r_min_y, r_max_x, r_max_y, clip) end
+
+--
+-- [WILL OBSOLETE] is any mouse button held? This was designed for backends, but prefer having backend maintain a mask of held mouse buttons, because upcoming input queue system will make this invalid.
+--
+---@return boolean
+function ImGui.IsAnyMouseDown() end
+
+--
+-- shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
+--
+---@return number
+---@return number
+function ImGui.GetMousePos() end
+
+--
+-- retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to avoid user backing that value themselves)
+--
+---@return number
+---@return number
+function ImGui.GetMousePosOnOpeningCurrentPopup() end
+
+--
+-- is mouse dragging? (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
+--
+---@param button ImGuiMouseButton
+---@param lock_threshold? number | `-1.0`
+---@return boolean
+function ImGui.IsMouseDragging(button, lock_threshold) end
+
+--
+-- return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
+--
+---@param button? ImGuiMouseButton | `ImGui.Enum.MouseButton.Left`
+---@param lock_threshold? number | `-1.0`
+---@return number
+---@return number
+function ImGui.GetMouseDragDelta(button, lock_threshold) end
+
+--
+-- Implied button = 0
+--
+function ImGui.ResetMouseDragDelta() end
+
+--
+--
+--
+---@param button? ImGuiMouseButton | `ImGui.Enum.MouseButton.Left`
+function ImGui.ResetMouseDragDeltaEx(button) end
+
+--
+-- get desired mouse cursor shape. Important: reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
+--
+---@return ImGuiMouseCursor
+function ImGui.GetMouseCursor() end
+
+--
+-- set desired mouse cursor shape
+--
+---@param cursor_type ImGuiMouseCursor
+function ImGui.SetMouseCursor(cursor_type) end
+
+--
+-- Override io.WantCaptureMouse flag next frame (said flag is left for your application to handle, typical when true it instucts your app to ignore inputs). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse;" after the next NewFrame() call.
+--
+---@param want_capture_mouse boolean
+function ImGui.SetNextFrameWantCaptureMouse(want_capture_mouse) end
+
+--
+-- Clipboard Utilities
+-- - Also see the LogToClipboard() function to capture GUI into clipboard, or easily output text data to the clipboard.
+--
+---@return string
+function ImGui.GetClipboardText() end
+
+---@param text string
+function ImGui.SetClipboardText(text) end
+
+--
+-- Settings/.Ini Utilities
+-- - The disk functions are automatically called if io.IniFilename != NULL (default is "imgui.ini").
+-- - Set io.IniFilename to NULL to load/save manually. Read io.WantSaveIniSettings description about handling .ini saving manually.
+-- - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.g. same path as executables).
+--
+--
+-- call after CreateContext() and before the first call to NewFrame(). NewFrame() automatically calls LoadIniSettingsFromDisk(io.IniFilename).
+--
+---@param ini_filename string
+function ImGui.LoadIniSettingsFromDisk(ini_filename) end
+
+--
+-- call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
+--
+---@param ini_data string
+function ImGui.LoadIniSettingsFromMemory(ini_data) end
+
+--
+-- this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
+--
+---@param ini_filename string
+function ImGui.SaveIniSettingsToDisk(ini_filename) end
+
+--
+-- return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
+--
+---@param out_ini_size integer | nil
+---@return string
+function ImGui.SaveIniSettingsToMemory(out_ini_size) end
+
+---@param key ImGuiKey
+---@return ImGuiKey
+function ImGui.GetKeyIndex(key) end
+
 return ImGui

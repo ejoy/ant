@@ -11,6 +11,18 @@ local write_arg = {}
 local write_arg_ret = {}
 
 write_arg["const char*"] = function(type_meta, status)
+    local size_meta = status.args[status.i + 1]
+    if size_meta and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        assert(size_meta.type.declaration == "size_t")
+        status.idx = status.idx + 1
+        status.i = status.i + 1
+        writeln("    size_t %s = 0;", size_meta.name)
+        writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
+        status.arguments[#status.arguments+1] = type_meta.name
+        status.arguments[#status.arguments+1] = size_meta.name
+        return
+    end
     status.idx = status.idx + 1
     status.arguments[#status.arguments+1] = type_meta.name
     if type_meta.default_value then
@@ -66,13 +78,25 @@ end
 
 write_arg["bool*"] = function(type_meta, status)
     status.idx = status.idx + 1
-    writeln("    auto has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
+    writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
     writeln("    bool %s = true;", type_meta.name)
     status.arguments[#status.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
 end
 
 write_arg_ret["bool*"] = function(type_meta)
     writeln("    lua_pushboolean(L, has_%s || %s);", type_meta.name, type_meta.name)
+    return 1
+end
+
+write_arg["size_t*"] = function(type_meta, status)
+    status.idx = status.idx + 1
+    writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
+    writeln("    size_t %s = 0;", type_meta.name)
+    status.arguments[#status.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
+end
+
+write_arg_ret["size_t*"] = function(type_meta)
+    writeln("    has_%s? lua_pushinteger(L, %s): lua_pushnil(L);", type_meta.name, type_meta.name)
     return 1
 end
 
@@ -103,7 +127,7 @@ write_ret["ImVec2"] = function()
     return 2
 end
 
-for _, type_name in ipairs {"int", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
+for _, type_name in ipairs {"int", "size_t", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, status)
         status.idx = status.idx + 1
         if type_meta.default_value then
@@ -162,7 +186,7 @@ local function write_func(func_meta)
         local type_meta = status.args[status.i]
         local wfunc = write_arg[type_meta.type.declaration]
         if not wfunc then
-            error(string.format("undefined write arg func `%s`", type_meta.type.declaration))
+            error(string.format("`%s` undefined write arg func `%s`", func_meta.name, type_meta.type.declaration))
         end
         wfunc(type_meta, status)
         status.i = status.i + 1
@@ -173,7 +197,7 @@ local function write_func(func_meta)
     else
         local rfunc = write_ret[func_meta.return_type.declaration]
         if not rfunc then
-            error(string.format("undefined write ret func `%s`", func_meta.return_type.declaration))
+            error(string.format("`%s` undefined write ret func `%s`", func_meta.name, func_meta.return_type.declaration))
         end
         writeln("    auto _retval = %s(%s);", func_meta.original_fully_qualified_name, table.concat(status.arguments, ", "))
         local nret = 0
@@ -197,11 +221,7 @@ local function write_func_scope()
     local funcs = {}
     allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        local status = allow.query(func_meta)
-        if status == "skip" then
-            break
-        end
-        if status then
+        if allow.query(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end

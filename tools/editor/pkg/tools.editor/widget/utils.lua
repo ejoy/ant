@@ -146,7 +146,7 @@ function m.load_imgui_layout(filename)
     if rf then
         local setting = rf:read "a"
         rf:close()
-        ImGui.LoadIniSettings(setting)
+        ImGui.LoadIniSettingsFromMemory(setting)
     end
 end
 
