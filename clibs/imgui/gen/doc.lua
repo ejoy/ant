@@ -15,24 +15,39 @@ local lua_type = {
     ["int"] = "integer",
     ["ImGuiID"] = "integer",
     ["ImU32"] = "integer",
-    ["ImGuiTableSortSpecs*"] = "lightuserdata",
+    ["const ImGuiPayload*"] = "string | nil",
 }
 
 local special_type = {}
 local return_type = {}
 local default_type = {}
 
-special_type["ImVec2"] = function (type_meta, arguments)
-    assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)")
-    writeln("---@param %s_x? number | `0.0`", type_meta.name)
-    writeln("---@param %s_y? number | `0.0`", type_meta.name)
-    arguments[#arguments+1] = type_meta.name .. "_x"
-    arguments[#arguments+1] = type_meta.name .. "_y"
+special_type["ImVec2"] = function (type_meta, status)
+    if type_meta.default_value == nil then
+        writeln("---@param %s_x number", type_meta.name)
+        writeln("---@param %s_y number", type_meta.name)
+    else
+        assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)" or type_meta.default_value == "ImVec2(0, 0)", type_meta.default_value)
+        writeln("---@param %s_x? number | `0.0`", type_meta.name)
+        writeln("---@param %s_y? number | `0.0`", type_meta.name)
+    end
+    status.arguments[#status.arguments+1] = type_meta.name .. "_x"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_y"
 end
 
-special_type["bool*"] = function (type_meta, arguments)
+special_type["bool*"] = function (type_meta, status)
     writeln("---@param %s true | nil", type_meta.name)
-    arguments[#arguments+1] = type_meta.name
+    status.arguments[#status.arguments+1] = type_meta.name
+end
+
+special_type["const void*"] = function (type_meta, status)
+    local size_meta = status.args[status.i + 1]
+    assert(not type_meta.default_value)
+    assert(not size_meta.default_value)
+    assert(size_meta.type.declaration == "size_t")
+    status.i = status.i + 1
+    writeln("---@param %s string", type_meta.name)
+    status.arguments[#status.arguments+1] = type_meta.name
 end
 
 return_type["bool*"] = function (type_meta)
@@ -110,7 +125,6 @@ end
 
 local function write_func(func_meta)
     local realname = func_meta.name:match "^ImGui_([%w]+)$"
-    local arguments = {}
 
     if func_meta.comments then
         if func_meta.comments.preceding then
@@ -126,24 +140,30 @@ local function write_func(func_meta)
             writeln "--"
         end
     end
-    for _, type_meta in ipairs(func_meta.arguments) do
+    local status = {
+        i = 1,
+        args = func_meta.arguments,
+        arguments = {},
+    }
+    while status.i <= #status.args do
+        local type_meta = status.args[status.i]
         local typefunc = special_type[type_meta.type.declaration]
         if typefunc then
-            typefunc(type_meta, arguments)
-            goto continue
-        end
-        local luatype = lua_type[type_meta.type.declaration]
-        if luatype then
-            if type_meta.default_value then
-                writeln("---@param %s? %s | `%s`", type_meta.name, luatype, get_default_value(type_meta))
+            typefunc(type_meta, status)
+        else
+            local luatype = lua_type[type_meta.type.declaration]
+            if luatype then
+                if type_meta.default_value then
+                    writeln("---@param %s? %s | `%s`", type_meta.name, luatype, get_default_value(type_meta))
+                else
+                    writeln("---@param %s %s", type_meta.name, luatype)
+                end
+                status.arguments[#status.arguments+1] = type_meta.name
             else
-                writeln("---@param %s %s", type_meta.name, luatype)
+                error(string.format("undefined lua type `%s`", type_meta.type.declaration))
             end
-            arguments[#arguments+1] = type_meta.name
-            goto continue
         end
-        error(string.format("undefined lua type `%s`", type_meta.type.declaration))
-        ::continue::
+        status.i = status.i + 1
     end
     if func_meta.return_type.declaration ~= "void" then
         local luatype = lua_type[func_meta.return_type.declaration]
@@ -158,7 +178,7 @@ local function write_func(func_meta)
             end
         end
     end
-    writeln("function ImGui.%s(%s) end", realname, table.concat(arguments, ", "))
+    writeln("function ImGui.%s(%s) end", realname, table.concat(status.arguments, ", "))
     writeln ""
     return realname
 end

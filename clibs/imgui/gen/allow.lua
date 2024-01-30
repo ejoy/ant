@@ -8,10 +8,27 @@ local BlackList <const> = {
     ImGui_GetColumnOffset = true,
     ImGui_SetColumnOffset = true,
     ImGui_GetColumnsCount = true,
+
+    ImGui_LogToTTY = true,
+    ImGui_LogToFile = true,
+    ImGui_LogToClipboard = true,
+    ImGui_LogFinish = true,
+    ImGui_LogButtons = true,
+    ImGui_LogText = true,
+    ImGui_LogTextUnformatted = true,
+    ImGui_LogTextV = true,
+}
+
+local TodoList <const> = {
+    ImGui_TableGetSortSpecs = true,
+    ImGui_DockSpace = true,
+    ImGui_DockSpaceEx = true,
+    ImGui_SetNextWindowClass = true,
+    ImGui_DockSpaceOverViewportEx = true,
 }
 
 local s <const> = "ImGui_BeginTable"
-local e <const> = "ImGui_SetTabItemClosed"
+local e <const> = "ImGui_PopClipRect"
 
 local within_scope = false
 local skip = false
@@ -22,9 +39,16 @@ local function init()
 end
 
 local function allow(func_meta)
-    if not func_meta.is_internal and not BlackList[func_meta.name] then
-        return true
+    if func_meta.is_internal then
+        return
     end
+    if BlackList[func_meta.name] then
+        return
+    end
+    if TodoList[func_meta.name] then
+        return
+    end
+    return true
 end
 
 local function query(func_meta)

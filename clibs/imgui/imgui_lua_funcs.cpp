@@ -95,13 +95,6 @@ static int TableAngledHeadersRow(lua_State* L) {
     return 0;
 }
 
-static int TableGetSortSpecs(lua_State* L) {
-    auto _retval = ImGui::TableGetSortSpecs();
-    //TODO
-    lua_pushlightuserdata(L, _retval);
-    return 1;
-}
-
 static int TableGetColumnCount(lua_State* L) {
     auto _retval = ImGui::TableGetColumnCount();
     lua_pushinteger(L, _retval);
@@ -192,6 +185,110 @@ static int SetTabItemClosed(lua_State* L) {
     return 0;
 }
 
+static int DockSpaceOverViewport(lua_State* L) {
+    auto _retval = ImGui::DockSpaceOverViewport();
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int SetNextWindowDockID(lua_State* L) {
+    auto dock_id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto cond = (ImGuiCond)luaL_optinteger(L, 2, lua_Integer(ImGuiCond_None));
+    ImGui::SetNextWindowDockID(dock_id, cond);
+    return 0;
+}
+
+static int GetWindowDockID(lua_State* L) {
+    auto _retval = ImGui::GetWindowDockID();
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int IsWindowDocked(lua_State* L) {
+    auto _retval = ImGui::IsWindowDocked();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginDragDropSource(lua_State* L) {
+    auto flags = (ImGuiDragDropFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiDragDropFlags_None));
+    auto _retval = ImGui::BeginDragDropSource(flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetDragDropPayload(lua_State* L) {
+    auto type = luaL_checkstring(L, 1);
+    size_t sz = 0;
+    auto data = luaL_checklstring(L, 2, &sz);
+    auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
+    auto _retval = ImGui::SetDragDropPayload(type, data, sz, cond);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndDragDropSource(lua_State* L) {
+    ImGui::EndDragDropSource();
+    return 0;
+}
+
+static int BeginDragDropTarget(lua_State* L) {
+    auto _retval = ImGui::BeginDragDropTarget();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int AcceptDragDropPayload(lua_State* L) {
+    auto type = luaL_checkstring(L, 1);
+    auto flags = (ImGuiDragDropFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiDragDropFlags_None));
+    auto _retval = ImGui::AcceptDragDropPayload(type, flags);
+    if (_retval != NULL) {
+        lua_pushlstring(L, (const char*)_retval->Data, _retval->DataSize);
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+static int EndDragDropTarget(lua_State* L) {
+    ImGui::EndDragDropTarget();
+    return 0;
+}
+
+static int GetDragDropPayload(lua_State* L) {
+    auto _retval = ImGui::GetDragDropPayload();
+    if (_retval != NULL) {
+        lua_pushlstring(L, (const char*)_retval->Data, _retval->DataSize);
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+static int BeginDisabled(lua_State* L) {
+    auto disabled = lua_isnoneornil(L, 1)? true: !!lua_toboolean(L, 1);
+    ImGui::BeginDisabled(disabled);
+    return 0;
+}
+
+static int EndDisabled(lua_State* L) {
+    ImGui::EndDisabled();
+    return 0;
+}
+
+static int PushClipRect(lua_State* L) {
+    auto clip_rect_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
+    auto clip_rect_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto intersect_with_current_clip_rect = !!lua_toboolean(L, 5);
+    ImGui::PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
+    return 0;
+}
+
+static int PopClipRect(lua_State* L) {
+    ImGui::PopClipRect();
+    return 0;
+}
+
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
         { "BeginTable", BeginTable },
@@ -207,7 +304,6 @@ void init(lua_State* L) {
         { "TableHeader", TableHeader },
         { "TableHeadersRow", TableHeadersRow },
         { "TableAngledHeadersRow", TableAngledHeadersRow },
-        { "TableGetSortSpecs", TableGetSortSpecs },
         { "TableGetColumnCount", TableGetColumnCount },
         { "TableGetColumnIndex", TableGetColumnIndex },
         { "TableGetRowIndex", TableGetRowIndex },
@@ -221,6 +317,21 @@ void init(lua_State* L) {
         { "EndTabItem", EndTabItem },
         { "TabItemButton", TabItemButton },
         { "SetTabItemClosed", SetTabItemClosed },
+        { "DockSpaceOverViewport", DockSpaceOverViewport },
+        { "SetNextWindowDockID", SetNextWindowDockID },
+        { "GetWindowDockID", GetWindowDockID },
+        { "IsWindowDocked", IsWindowDocked },
+        { "BeginDragDropSource", BeginDragDropSource },
+        { "SetDragDropPayload", SetDragDropPayload },
+        { "EndDragDropSource", EndDragDropSource },
+        { "BeginDragDropTarget", BeginDragDropTarget },
+        { "AcceptDragDropPayload", AcceptDragDropPayload },
+        { "EndDragDropTarget", EndDragDropTarget },
+        { "GetDragDropPayload", GetDragDropPayload },
+        { "BeginDisabled", BeginDisabled },
+        { "EndDisabled", EndDisabled },
+        { "PushClipRect", PushClipRect },
+        { "PopClipRect", PopClipRect },
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);

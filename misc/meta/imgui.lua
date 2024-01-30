@@ -854,20 +854,6 @@ function ImGui.TableHeadersRow() end
 function ImGui.TableAngledHeadersRow() end
 
 --
--- Tables: Sorting & Miscellaneous functions
--- - Sorting: call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
---   When 'sort_specs->SpecsDirty == true' you should sort your data. It will be true when sorting specs have
---   changed since last call, or the first time. Make sure to set 'SpecsDirty = false' after sorting,
---   else you may wastefully sort your data every frame!
--- - Functions args 'int column_n' treat the default value of -1 as the same as passing the current column index.
---
---
--- get latest sort specs for the table (NULL if not sorting).  Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
---
----@return lightuserdata
-function ImGui.TableGetSortSpecs() end
-
---
 -- return number of columns (value passed to BeginTable)
 --
 ---@return integer
@@ -959,5 +945,104 @@ function ImGui.TabItemButton(label, flags) end
 --
 ---@param tab_or_docked_window_label string
 function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
+
+--
+-- Implied viewport = NULL, flags = 0, window_class = NULL
+--
+---@return integer
+function ImGui.DockSpaceOverViewport() end
+
+--
+-- set next window dock id
+--
+---@param dock_id integer
+---@param cond? ImGuiCond | `ImGui.Flags.nil { "None" }`
+function ImGui.SetNextWindowDockID(dock_id, cond) end
+
+---@return integer
+function ImGui.GetWindowDockID() end
+
+--
+-- is current window docked into another window?
+--
+---@return boolean
+function ImGui.IsWindowDocked() end
+
+--
+-- Drag and Drop
+-- - On source items, call BeginDragDropSource(), if it returns true also call SetDragDropPayload() + EndDragDropSource().
+-- - On target candidates, call BeginDragDropTarget(), if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().
+-- - If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip, see #1725)
+-- - An item can be both drag source and drop target.
+--
+--
+-- call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
+--
+---@param flags? ImGuiDragDropFlags | `ImGui.Flags.DragDrop { "None" }`
+---@return boolean
+function ImGui.BeginDragDropSource(flags) end
+
+--
+-- type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui. Return true when payload has been accepted.
+--
+---@param type string
+---@param data string
+---@param cond? ImGuiCond | `ImGui.Flags.nil { "None" }`
+---@return boolean
+function ImGui.SetDragDropPayload(type, data, cond) end
+
+--
+-- only call EndDragDropSource() if BeginDragDropSource() returns true!
+--
+function ImGui.EndDragDropSource() end
+
+--
+-- call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()
+--
+---@return boolean
+function ImGui.BeginDragDropTarget() end
+
+--
+-- accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+--
+---@param type string
+---@param flags? ImGuiDragDropFlags | `ImGui.Flags.DragDrop { "None" }`
+---@return string | nil
+function ImGui.AcceptDragDropPayload(type, flags) end
+
+--
+-- only call EndDragDropTarget() if BeginDragDropTarget() returns true!
+--
+function ImGui.EndDragDropTarget() end
+
+--
+-- peek directly into the current payload from anywhere. returns NULL when drag and drop is finished or inactive. use ImGuiPayload::IsDataType() to test for the payload type.
+--
+---@return string | nil
+function ImGui.GetDragDropPayload() end
+
+--
+-- Disabling [BETA API]
+-- - Disable all user interactions and dim items visuals (applying style.DisabledAlpha over current colors)
+-- - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
+-- - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
+--
+---@param disabled? boolean | `true`
+function ImGui.BeginDisabled(disabled) end
+
+function ImGui.EndDisabled() end
+
+--
+-- Clipping
+-- - Mouse hovering is affected by ImGui::PushClipRect() calls, unlike direct calls to ImDrawList::PushClipRect() which are render only.
+--
+---@param clip_rect_min_x number
+---@param clip_rect_min_y number
+---@param clip_rect_max_x number
+---@param clip_rect_max_y number
+---@param intersect_with_current_clip_rect boolean
+function ImGui.PushClipRect(clip_rect_min_x, clip_rect_min_y, clip_rect_max_x, clip_rect_max_y, intersect_with_current_clip_rect) end
+
+function ImGui.PopClipRect() end
 
 return ImGui
