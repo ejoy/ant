@@ -3,6 +3,7 @@
 #include <new>
 
 namespace imgui::table {
+
 static int BeginTable(lua_State* L) {
 	const char* strid = luaL_checkstring(L, 1);
 	int columns = (int)luaL_checkinteger(L, 2);
@@ -52,7 +53,7 @@ static int TableGetRowIndex(lua_State* L) {
 	return 1;
 }
 
-static int TableSetupColumn(lua_State* L) {
+static int TableSetupColumnEx(lua_State* L) {
 	const char* label = luaL_checkstring(L, 1);
 	ImGuiTableColumnFlags flags = (ImGuiTableColumnFlags)luaL_optinteger(L, 2, ImGuiTableColumnFlags_None);
 	float init_width_or_weight = (float)luaL_optnumber(L, 3, 0.f);
@@ -145,74 +146,16 @@ static int TableSetBgColor(lua_State* L) {
 	return 0;
 }
 
-static int ClipperRelease(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)luaL_testudata(L, 1, "IMGUI_CLIPPER");
-	clipper->~ImGuiListClipper();
-	return 0;
-}
-
-static int ClipperEnd(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	clipper->End();
-	return 0;
-}
-
-static int ClipperStep(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	bool ok = clipper->Step();
-	if (!ok) {
-		return 0;
-	}
-	lua_pushinteger(L, (lua_Integer)clipper->DisplayStart + 1);
-	lua_pushinteger(L, (lua_Integer)clipper->DisplayEnd);
-	return 2;
-}
-
-static int ClipperBegin(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	int n = (int)luaL_checkinteger(L, 1);
-	float height = (float)luaL_optnumber(L, 2, -1.0f);
-	clipper->Begin(n, height);
-	lua_pushvalue(L, lua_upvalueindex(2));
-	lua_pushnil(L);
-	lua_pushnil(L);
-	lua_pushvalue(L, lua_upvalueindex(3));
-	return 4;
-}
-
-static int ListClipper(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_newuserdatauv(L, sizeof(ImGuiListClipper), 0);
-	new (clipper) ImGuiListClipper;
-	if (luaL_newmetatable(L, "IMGUI_CLIPPER")) {
-		lua_pushcfunction(L, ClipperRelease);
-		lua_setfield(L, -2, "__gc");
-	}
-	lua_setmetatable(L, -2);
-
-	lua_pushvalue(L, -1);
-	lua_pushcclosure(L, ClipperStep, 1);
-
-	lua_newtable(L);
-	lua_pushvalue(L, -3);
-	lua_pushcclosure(L, ClipperEnd, 1);
-	lua_setfield(L, -2, "__close");
-	lua_pushvalue(L, -1);
-	lua_setmetatable(L, -2);
-	
-	lua_pushcclosure(L, ClipperBegin, 3);
-	return 1;
-}
-
 void init(lua_State* L) {
 	luaL_Reg table[] = {
-		{ "TableBegin", BeginTable },
-		{ "TableEnd", EndTable },
+		{ "BeginTable", BeginTable },
+		{ "EndTable", EndTable },
 		{ "TableNextRow", TableNextRow },
 		{ "TableNextColumn", TableNextColumn },
 		{ "TableSetColumnIndex", TableSetColumnIndex },
 		{ "TableGetColumnIndex", TableGetColumnIndex },
 		{ "TableGetRowIndex", TableGetRowIndex },
-		{ "TableSetupColumn", TableSetupColumn },
+		{ "TableSetupColumnEx", TableSetupColumnEx },
 		{ "TableSetupScrollFreeze", TableSetupScrollFreeze },
 		{ "TableHeadersRow", TableHeadersRow },
 		{ "TableHeader", TableHeader },
@@ -222,8 +165,9 @@ void init(lua_State* L) {
 		{ "TableSetColumnEnabled", TableSetColumnEnabled },
 		{ "TableGetSortSpecs", TableGetSortSpecs },
 		{ "TableSetBgColor", TableSetBgColor },
-		{ "ListClipper", ListClipper },
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L, table, 0);
-}}
+}
+
+}
