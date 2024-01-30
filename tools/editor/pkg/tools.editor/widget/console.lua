@@ -91,7 +91,7 @@ local function show_input()
     ImGui.PopItemWidth()
     ImGui.SetItemDefaultFocus()
     if reclaim_focus then
-        ImGui.SetKeyboardFocusHere(-1)
+        ImGui.SetKeyboardFocusHereEx(-1)
     end
     ImGui.Separator()
 end
