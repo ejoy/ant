@@ -1469,70 +1469,6 @@ wPlotHistogram(lua_State *L) {
 }
 
 static int
-wBeginTooltip(lua_State *L) {
-	bool change = ImGui::BeginTooltip();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndTooltip(lua_State *L) {
-	ImGui::EndTooltip();
-	return 0;
-}
-
-static int
-wSetTooltip(lua_State *L) {
-	const char *tooltip = luaL_checkstring(L, 1);
-	ImGui::SetTooltip("%s", tooltip);
-	return 0;
-}
-
-static int
-wBeginMainMenuBar(lua_State *L) {
-	bool change = ImGui::BeginMainMenuBar();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndMainMenuBar(lua_State *L) {
-	ImGui::EndMainMenuBar();
-	return 0;
-}
-
-static int
-wBeginMenuBar(lua_State *L) {
-	bool change = ImGui::BeginMenuBar();
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndMenuBar(lua_State *L) {
-	ImGui::EndMenuBar();
-	return 0;
-}
-
-static int
-wBeginMenu(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	bool enabled = true;
-	if (lua_isboolean(L, 2)) {
-		enabled = lua_toboolean(L, 2);
-	}
-	bool change = ImGui::BeginMenu(label, enabled);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndMenu(lua_State *L) {
-	ImGui::EndMenu();
-	return 0;
-}
-
-static int
 wMenuItem(lua_State *L) {
 	const char * label = luaL_checkstring(L, INDEX_ID);
 	const char *shortcut = luaL_optstring(L, 2, NULL);
@@ -1799,101 +1735,6 @@ winBeginChild(lua_State *L) {
 static int
 winEndChild(lua_State *L) {
 	ImGui::EndChild();
-	return 0;
-}
-
-static int
-winOpenPopup(lua_State *L) {
-	if (lua_isinteger(L, INDEX_ID)) {
-		ImGuiID id = (ImGuiID)lua_tointeger(L, INDEX_ID);
-		auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_None);
-		ImGui::OpenPopup(id, flags);
-	}
-	else {
-		const char * id = luaL_checkstring(L, INDEX_ID);
-		auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_None);
-		ImGui::OpenPopup(id, flags);
-	}
-	return 0;
-}
-
-static int
-winBeginPopup(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiWindowFlags>(L, INDEX_ARGS, ImGuiWindowFlags_None);
-	bool change = ImGui::BeginPopup(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winBeginPopupContextItem(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
-	int change = ImGui::BeginPopupContextItem(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winBeginPopupContextWindow(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
-	int change = ImGui::BeginPopupContextWindow(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winBeginPopupContextVoid(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
-	int change = ImGui::BeginPopupContextVoid(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winBeginPopupModal(lua_State *L) {
-	const char* name = luaL_checkstring(L, 1);
-	auto window_flags = lua_getflags<ImGuiWindowFlags>(L, 3, ImGuiWindowFlags_None);
-	if (lua_isnil(L, 2)) {
-		bool change = ImGui::BeginPopupModal(name, NULL, window_flags);
-		lua_pushboolean(L, change);
-		return 1;
-	}
-	bool opened = true;
-	bool change = ImGui::BeginPopupModal(name, &opened, window_flags);
-	lua_pushboolean(L, change);
-	lua_pushboolean(L, opened);
-	return 2;
-}
-
-static int
-winEndPopup(lua_State *L) {
-	ImGui::EndPopup();
-	return 0;
-}
-
-static int
-winOpenPopupOnItemClick(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
-	ImGui::OpenPopupOnItemClick(id, flags);
-	return 0;
-}
-
-static int
-winIsPopupOpen(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	bool change = ImGui::IsPopupOpen(id);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-winCloseCurrentPopup(lua_State *L) {
-	ImGui::CloseCurrentPopup();
 	return 0;
 }
 
@@ -2700,15 +2541,6 @@ luaopen_imgui(lua_State *L) {
 		{ "SetNextItemOpen", wSetNextItemOpen },
 		{ "PlotLines", wPlotLines },
 		{ "PlotHistogram", wPlotHistogram },
-		{ "BeginTooltip", wBeginTooltip },
-		{ "EndTooltip", wEndTooltip },
-		{ "SetTooltip", wSetTooltip },
-		{ "BeginMainMenuBar", wBeginMainMenuBar },
-		{ "EndMainMenuBar", wEndMainMenuBar },
-		{ "BeginMenuBar", wBeginMenuBar },
-		{ "EndMenuBar", wEndMenuBar },
-		{ "BeginMenu", wBeginMenu },
-		{ "EndMenu", wEndMenu },
 		{ "MenuItem", wMenuItem },
 		{ "BeginListBox", wBeginListBox },
 		{ "EndListBox", wEndListBox },
@@ -2745,16 +2577,6 @@ luaopen_imgui(lua_State *L) {
 		{ "End", winEnd },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
-		{ "OpenPopup", winOpenPopup },
-		{ "BeginPopup", winBeginPopup },
-		{ "BeginPopupContextItem", winBeginPopupContextItem },
-		{ "BeginPopupContextWindow", winBeginPopupContextWindow },
-		{ "BeginPopupContextVoid", winBeginPopupContextVoid },
-		{ "BeginPopupModal", winBeginPopupModal },
-		{ "EndPopup", winEndPopup },
-		{ "OpenPopupOnItemClick", winOpenPopupOnItemClick },
-		{ "IsPopupOpen", winIsPopupOpen },
-		{ "CloseCurrentPopup", winCloseCurrentPopup },
 		{ "IsWindowAppearing", winIsWindowAppearing },
 		{ "IsWindowCollapsed", winIsWindowCollapsed },
 		{ "IsWindowFocused", winIsWindowFocused },

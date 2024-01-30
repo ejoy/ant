@@ -261,7 +261,7 @@ local function show_events()
                 current_event_index = idx
             end
             if current_event and (current_event_index == idx) then
-                if ImGui.BeginPopupContextItem(label) then
+                if ImGui.BeginPopupContextItemEx(label) then
                     if ImGui.Selectable("Delete", false) then
                         delete_idx = idx
                     end
@@ -339,7 +339,7 @@ local function show_current_event()
         for _, se in ipairs(sound_event_name_list) do
             if ImGui.Selectable(se, current_event.sound_event == se, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
-                if (ImGui.IsMouseDoubleClicked(0)) then
+                if (ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left)) then
                     fmod.play(sound_event_list[se])
                     dirty = true
                 end

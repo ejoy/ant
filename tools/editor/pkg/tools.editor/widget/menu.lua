@@ -53,10 +53,10 @@ function m.show()
     local camera_setting
     if ImGui.BeginMainMenuBar() then
         if ImGui.BeginMenu "File" then
-            if ImGui.MenuItem(faicons.ICON_FA_FILE_PEN.." New", "Ctrl+N") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_FILE_PEN.." New", "Ctrl+N") then
                 prefab_mgr:reset_prefab()
             end
-            if ImGui.MenuItem(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
                 world:pub{"OpenProject"}
             end
             ImGui.Separator()
@@ -74,7 +74,7 @@ function m.show()
                 ImGui.EndMenu()
             end
             ImGui.Separator()
-            if ImGui.MenuItem(faicons.ICON_FA_FLOPPY_DISK.." Save", "Ctrl+S") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_FLOPPY_DISK.." Save", "Ctrl+S") then
                 prefab_mgr:save()
             end
             
@@ -88,10 +88,10 @@ function m.show()
         end
         if ImGui.BeginMenu "Edit" then
             ImGui.Separator()
-            if ImGui.MenuItem(faicons.ICON_FA_ARROW_ROTATE_LEFT.." Undo", "CTRL+Z") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_ARROW_ROTATE_LEFT.." Undo", "CTRL+Z") then
             end
 
-            if ImGui.MenuItem(faicons.ICON_FA_ARROW_ROTATE_RIGHT.." Redo", "CTRL+Y", false, false) then
+            if ImGui.MenuItemEx(faicons.ICON_FA_ARROW_ROTATE_RIGHT.." Redo", "CTRL+Y", false, false) then
             end
             ImGui.Separator()
             if ImGui.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then

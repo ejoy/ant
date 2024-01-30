@@ -1053,6 +1053,257 @@ function ImGui.Flags.Viewport(flags) end
 ---@alias ImGuiKeyChord ImGuiKey
 
 --
+-- Widgets: Menus
+-- - Use BeginMenuBar() on a window ImGuiWindowFlags_MenuBar to append to its menu bar.
+-- - Use BeginMainMenuBar() to create a menu bar at the top of the screen and append to it.
+-- - Use BeginMenu() to create a menu. You can call BeginMenu() multiple time with the same identifier to append more items to it.
+-- - Not that MenuItem() keyboardshortcuts are displayed as a convenience but _not processed_ by Dear ImGui at the moment.
+--
+--
+-- append to menu-bar of current window (requires ImGuiWindowFlags_MenuBar flag set on parent window).
+--
+---@return boolean
+function ImGui.BeginMenuBar() end
+
+--
+-- only call EndMenuBar() if BeginMenuBar() returns true!
+--
+function ImGui.EndMenuBar() end
+
+--
+-- create and append to a full screen menu-bar.
+--
+---@return boolean
+function ImGui.BeginMainMenuBar() end
+
+--
+-- only call EndMainMenuBar() if BeginMainMenuBar() returns true!
+--
+function ImGui.EndMainMenuBar() end
+
+--
+-- Implied enabled = true
+--
+---@param label string
+---@return boolean
+function ImGui.BeginMenu(label) end
+
+--
+-- create a sub-menu entry. only call EndMenu() if this returns true!
+--
+---@param label string
+---@param enabled? boolean | `true`
+---@return boolean
+function ImGui.BeginMenuEx(label, enabled) end
+
+--
+-- only call EndMenu() if BeginMenu() returns true!
+--
+function ImGui.EndMenu() end
+
+--
+-- Implied shortcut = NULL, selected = false, enabled = true
+--
+---@param label string
+---@return boolean
+function ImGui.MenuItem(label) end
+
+--
+-- return true when activated.
+--
+---@param label string
+---@param shortcut? string
+---@param selected? boolean | `false`
+---@param enabled? boolean | `true`
+---@return boolean
+function ImGui.MenuItemEx(label, shortcut, selected, enabled) end
+
+--
+-- return true when activated + toggle (*p_selected) if p_selected != NULL
+--
+---@param label string
+---@param shortcut string
+---@param p_selected true | nil
+---@param enabled? boolean | `true`
+---@return boolean
+---@return boolean p_selected
+function ImGui.MenuItemBoolPtr(label, shortcut, p_selected, enabled) end
+
+--
+-- Tooltips
+-- - Tooltips are windows following the mouse. They do not take focus away.
+-- - A tooltip window can contain items of any types. SetTooltip() is a shortcut for the 'if (BeginTooltip()) { Text(...); EndTooltip(); }' idiom.
+--
+--
+-- begin/append a tooltip window.
+--
+---@return boolean
+function ImGui.BeginTooltip() end
+
+--
+-- only call EndTooltip() if BeginTooltip()/BeginItemTooltip() returns true!
+--
+function ImGui.EndTooltip() end
+
+--
+-- set a text-only tooltip. Often used after a ImGui::IsItemHovered() check. Override any previous call to SetTooltip().
+--
+---@param text string
+function ImGui.SetTooltipUnformatted(text) end
+
+--
+-- Tooltips: helpers for showing a tooltip when hovering an item
+-- - BeginItemTooltip() is a shortcut for the 'if (IsItemHovered(ImGuiHoveredFlags_ForTooltip) && BeginTooltip())' idiom.
+-- - SetItemTooltip() is a shortcut for the 'if (IsItemHovered(ImGuiHoveredFlags_ForTooltip)) { SetTooltip(...); }' idiom.
+-- - Where 'ImGuiHoveredFlags_ForTooltip' itself is a shortcut to use 'style.HoverFlagsForTooltipMouse' or 'style.HoverFlagsForTooltipNav' depending on active input type. For mouse it defaults to 'ImGuiHoveredFlags_Stationary | ImGuiHoveredFlags_DelayShort'.
+--
+--
+-- begin/append a tooltip window if preceding item was hovered.
+--
+---@return boolean
+function ImGui.BeginItemTooltip() end
+
+--
+-- set a text-only tooltip if preceeding item was hovered. override any previous call to SetTooltip().
+--
+---@param text string
+function ImGui.SetItemTooltipUnformatted(text) end
+
+--
+-- Popups, Modals
+--  - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
+--  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
+--  - Their visibility state (~bool) is held internally instead of being held by the programmer as we are used to with regular Begin*() calls.
+--  - The 3 properties above are related: we need to retain popup visibility state in the library because popups may be closed as any time.
+--  - You can bypass the hovering restriction by using ImGuiHoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered() or IsWindowHovered().
+--  - IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.
+--    This is sometimes leading to confusing mistakes. May rework this in the future.
+--  - BeginPopup(): query popup state, if open start appending into the window. Call EndPopup() afterwards if returned true. ImGuiWindowFlags are forwarded to the window.
+--  - BeginPopupModal(): block every interaction behind the window, cannot be closed by user, add a dimming background, has a title bar.
+--
+--
+-- return true if the popup is open, and you can start outputting to it.
+--
+---@param str_id string
+---@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@return boolean
+function ImGui.BeginPopup(str_id, flags) end
+
+--
+-- return true if the modal is open, and you can start outputting to it.
+--
+---@param name string
+---@param p_open true | nil
+---@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@return boolean
+---@return boolean p_open
+function ImGui.BeginPopupModal(name, p_open, flags) end
+
+--
+-- only call EndPopup() if BeginPopupXXX() returns true!
+--
+function ImGui.EndPopup() end
+
+--
+-- Popups: open/close functions
+--  - OpenPopup(): set popup state to open. ImGuiPopupFlags are available for opening options.
+--  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
+--  - CloseCurrentPopup(): use inside the BeginPopup()/EndPopup() scope to close manually.
+--  - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
+--  - Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
+--  - Use IsWindowAppearing() after BeginPopup() to tell if a window just opened.
+--  - IMPORTANT: Notice that for OpenPopupOnItemClick() we exceptionally default flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter
+--
+--
+-- call to mark popup as open (don't call every frame!).
+--
+---@param str_id string
+---@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+function ImGui.OpenPopup(str_id, popup_flags) end
+
+--
+-- id overload to facilitate calling from nested stacks
+--
+---@param id integer
+---@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+function ImGui.OpenPopupID(id, popup_flags) end
+
+--
+-- helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
+--
+---@param str_id? string
+---@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+function ImGui.OpenPopupOnItemClick(str_id, popup_flags) end
+
+--
+-- manually close the popup we have begin-ed into.
+--
+function ImGui.CloseCurrentPopup() end
+
+--
+-- Popups: open+begin combined functions helpers
+--  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.
+--  - They are convenient to easily create context menus, hence the name.
+--  - IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup(). For full consistency, we may add ImGuiWindowFlags to the BeginPopupContextXXX functions in the future.
+--  - IMPORTANT: Notice that we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.
+--
+--
+-- Implied str_id = NULL, popup_flags = 1
+--
+---@return boolean
+function ImGui.BeginPopupContextItem() end
+
+--
+-- open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
+--
+---@param str_id? string
+---@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@return boolean
+function ImGui.BeginPopupContextItemEx(str_id, popup_flags) end
+
+--
+-- Implied str_id = NULL, popup_flags = 1
+--
+---@return boolean
+function ImGui.BeginPopupContextWindow() end
+
+--
+-- open+begin popup when clicked on current window.
+--
+---@param str_id? string
+---@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@return boolean
+function ImGui.BeginPopupContextWindowEx(str_id, popup_flags) end
+
+--
+-- Implied str_id = NULL, popup_flags = 1
+--
+---@return boolean
+function ImGui.BeginPopupContextVoid() end
+
+--
+-- open+begin popup when clicked in void (where there are no windows).
+--
+---@param str_id? string
+---@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@return boolean
+function ImGui.BeginPopupContextVoidEx(str_id, popup_flags) end
+
+--
+-- Popups: query functions
+--  - IsPopupOpen(): return true if the popup is open at the current BeginPopup() level of the popup stack.
+--  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
+--  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId + ImGuiPopupFlags_AnyPopupLevel: return true if any popup is open.
+--
+--
+-- return true if the popup is open.
+--
+---@param str_id string
+---@param flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@return boolean
+function ImGui.IsPopupOpen(str_id, flags) end
+
+--
 -- Tables
 -- - Full-featured replacement for old Columns API.
 -- - See Demo->Tables for demo code. See top of imgui_tables.cpp for general commentary.

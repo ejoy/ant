@@ -60,12 +60,12 @@ local function node_context_menu(eid)
         return
     end
     
-    if ImGui.BeginPopupContextItem(tostring(eid)) then
+    if ImGui.BeginPopupContextItemEx(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         local tpl = hierarchy:get_node_info(eid)
         if not is_scene_node(eid) then
             if not tpl.filename then
-                if ImGui.MenuItem(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
+                if ImGui.MenuItemEx(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
                     world:pub { "HierarchyEvent", "clone", eid }
                 end
             end
@@ -86,7 +86,7 @@ local function node_context_menu(eid)
         end
         if can_delete(eid) then
             ImGui.Separator()
-            if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_TRASH.." Delete", "Delete") then
                 world:pub { "HierarchyEvent", "delete", eid }
             end
         end

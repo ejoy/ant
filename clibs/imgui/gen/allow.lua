@@ -60,6 +60,18 @@ local TodoList <const> = {
     ImGui_ColorConvertRGBtoHSV = true,
     ImGui_ColorConvertHSVtoRGB = true,
     ImGui_IsMousePosValid = true,
+
+    ImGui_SetTooltip = true,
+    ImGui_SetTooltipV = true,
+    ImGui_SetItemTooltip = true,
+    ImGui_SetItemTooltipV = true,
+
+    ImGui_PlotLinesCallback = true,
+    ImGui_PlotLinesCallbackEx = true,
+    ImGui_PlotHistogramCallback = true,
+    ImGui_PlotHistogramCallbackEx = true,
+    ImGui_ListBoxCallback = true,
+    ImGui_ListBoxCallbackEx = true,
 }
 
 local function conditionals(t)
@@ -89,7 +101,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-local s <const> = "ImGui_BeginTable"
+local s <const> = "ImGui_BeginMenuBar"
 
 local within_scope = false
 

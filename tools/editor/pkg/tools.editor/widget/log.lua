@@ -351,7 +351,7 @@ function m.showLog(name)
     --         current_select = i
     --     end
     --     if current_select == i then
-    --         if ImGui.BeginPopupContextItem(current_select) then
+    --         if ImGui.BeginPopupContextItemEx(current_select) then
     --             if ImGui.Selectable("Copy", false) then
     --                 ImGui.SetClipboardText(current_log[current_select].message)
     --             end

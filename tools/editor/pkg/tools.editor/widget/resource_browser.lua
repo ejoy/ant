@@ -147,16 +147,16 @@ local function rename_file(file)
 end
 
 local function ShowContextMenu()
-    if ImGui.BeginPopupContextItem(tostring(selected_file:filename())) then
-        if ImGui.MenuItem(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
+    if ImGui.BeginPopupContextItemEx(tostring(selected_file:filename())) then
+        if ImGui.MenuItemEx(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
             os.execute("c:\\windows\\explorer.exe /select,"..selected_file:localpath():string():gsub("/","\\"))
         end
-        if ImGui.MenuItem(faicons.ICON_FA_PEN.." Rename", "F2") then
+        if ImGui.MenuItemEx(faicons.ICON_FA_PEN.." Rename", "F2") then
             renaming = true
             new_filename.text = tostring(selected_file:filename())
         end
         ImGui.Separator()
-        if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
+        if ImGui.MenuItemEx(faicons.ICON_FA_TRASH.." Delete", "Delete") then
             lfs.remove(selected_file:localpath())
             selected_file = nil
         end
@@ -413,7 +413,7 @@ function m.show()
                     if ImGui.Selectable(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
-                        if ImGui.IsMouseDoubleClicked(0) then
+                        if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
                             selected_folder = path
                         end
                     end
@@ -429,7 +429,7 @@ function m.show()
                     if ImGui.Selectable(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
-                        if ImGui.IsMouseDoubleClicked(0) then
+                        if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
                             local isprefab = path:equal_extension(".prefab")
                             if path:equal_extension(".gltf") or path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}

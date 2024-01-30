@@ -6,6 +6,206 @@
 
 namespace imgui_lua {
 
+static int BeginMenuBar(lua_State* L) {
+    auto _retval = ImGui::BeginMenuBar();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndMenuBar(lua_State* L) {
+    ImGui::EndMenuBar();
+    return 0;
+}
+
+static int BeginMainMenuBar(lua_State* L) {
+    auto _retval = ImGui::BeginMainMenuBar();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndMainMenuBar(lua_State* L) {
+    ImGui::EndMainMenuBar();
+    return 0;
+}
+
+static int BeginMenu(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _retval = ImGui::BeginMenu(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginMenuEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto enabled = lua_isnoneornil(L, 2)? true: !!lua_toboolean(L, 2);
+    auto _retval = ImGui::BeginMenu(label, enabled);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndMenu(lua_State* L) {
+    ImGui::EndMenu();
+    return 0;
+}
+
+static int MenuItem(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _retval = ImGui::MenuItem(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int MenuItemEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto shortcut = luaL_optstring(L, 2, NULL);
+    auto selected = lua_isnoneornil(L, 3)? false: !!lua_toboolean(L, 3);
+    auto enabled = lua_isnoneornil(L, 4)? true: !!lua_toboolean(L, 4);
+    auto _retval = ImGui::MenuItem(label, shortcut, selected, enabled);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int MenuItemBoolPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto shortcut = luaL_checkstring(L, 2);
+    bool has_p_selected = !lua_isnil(L, 3);
+    bool p_selected = true;
+    auto enabled = lua_isnoneornil(L, 4)? true: !!lua_toboolean(L, 4);
+    auto _retval = ImGui::MenuItem(label, shortcut, (has_p_selected? &p_selected: NULL), enabled);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_selected || p_selected);
+    return 2;
+}
+
+static int BeginTooltip(lua_State* L) {
+    auto _retval = ImGui::BeginTooltip();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndTooltip(lua_State* L) {
+    ImGui::EndTooltip();
+    return 0;
+}
+
+static int SetTooltipUnformatted(lua_State* L) {
+    auto text = luaL_checkstring(L, 1);
+    ImGui::SetTooltip(text);
+    return 0;
+}
+
+static int BeginItemTooltip(lua_State* L) {
+    auto _retval = ImGui::BeginItemTooltip();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetItemTooltipUnformatted(lua_State* L) {
+    auto text = luaL_checkstring(L, 1);
+    ImGui::SetItemTooltip(text);
+    return 0;
+}
+
+static int BeginPopup(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiWindowFlags_None));
+    auto _retval = ImGui::BeginPopup(str_id, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginPopupModal(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    bool has_p_open = !lua_isnil(L, 2);
+    bool p_open = true;
+    auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
+    auto _retval = ImGui::BeginPopupModal(name, (has_p_open? &p_open: NULL), flags);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_open || p_open);
+    return 2;
+}
+
+static int EndPopup(lua_State* L) {
+    ImGui::EndPopup();
+    return 0;
+}
+
+static int OpenPopup(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_None));
+    ImGui::OpenPopup(str_id, popup_flags);
+    return 0;
+}
+
+static int OpenPopupID(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_None));
+    ImGui::OpenPopup(id, popup_flags);
+    return 0;
+}
+
+static int OpenPopupOnItemClick(lua_State* L) {
+    auto str_id = luaL_optstring(L, 1, NULL);
+    auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
+    ImGui::OpenPopupOnItemClick(str_id, popup_flags);
+    return 0;
+}
+
+static int CloseCurrentPopup(lua_State* L) {
+    ImGui::CloseCurrentPopup();
+    return 0;
+}
+
+static int BeginPopupContextItem(lua_State* L) {
+    auto _retval = ImGui::BeginPopupContextItem();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginPopupContextItemEx(lua_State* L) {
+    auto str_id = luaL_optstring(L, 1, NULL);
+    auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
+    auto _retval = ImGui::BeginPopupContextItem(str_id, popup_flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginPopupContextWindow(lua_State* L) {
+    auto _retval = ImGui::BeginPopupContextWindow();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginPopupContextWindowEx(lua_State* L) {
+    auto str_id = luaL_optstring(L, 1, NULL);
+    auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
+    auto _retval = ImGui::BeginPopupContextWindow(str_id, popup_flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginPopupContextVoid(lua_State* L) {
+    auto _retval = ImGui::BeginPopupContextVoid();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int BeginPopupContextVoidEx(lua_State* L) {
+    auto str_id = luaL_optstring(L, 1, NULL);
+    auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
+    auto _retval = ImGui::BeginPopupContextVoid(str_id, popup_flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsPopupOpen(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_None));
+    auto _retval = ImGui::IsPopupOpen(str_id, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
 static int BeginTable(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto column = (int)luaL_checkinteger(L, 2);
@@ -675,6 +875,35 @@ static int GetKeyIndex(lua_State* L) {
 
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
+        { "BeginMenuBar", BeginMenuBar },
+        { "EndMenuBar", EndMenuBar },
+        { "BeginMainMenuBar", BeginMainMenuBar },
+        { "EndMainMenuBar", EndMainMenuBar },
+        { "BeginMenu", BeginMenu },
+        { "BeginMenuEx", BeginMenuEx },
+        { "EndMenu", EndMenu },
+        { "MenuItem", MenuItem },
+        { "MenuItemEx", MenuItemEx },
+        { "MenuItemBoolPtr", MenuItemBoolPtr },
+        { "BeginTooltip", BeginTooltip },
+        { "EndTooltip", EndTooltip },
+        { "SetTooltipUnformatted", SetTooltipUnformatted },
+        { "BeginItemTooltip", BeginItemTooltip },
+        { "SetItemTooltipUnformatted", SetItemTooltipUnformatted },
+        { "BeginPopup", BeginPopup },
+        { "BeginPopupModal", BeginPopupModal },
+        { "EndPopup", EndPopup },
+        { "OpenPopup", OpenPopup },
+        { "OpenPopupID", OpenPopupID },
+        { "OpenPopupOnItemClick", OpenPopupOnItemClick },
+        { "CloseCurrentPopup", CloseCurrentPopup },
+        { "BeginPopupContextItem", BeginPopupContextItem },
+        { "BeginPopupContextItemEx", BeginPopupContextItemEx },
+        { "BeginPopupContextWindow", BeginPopupContextWindow },
+        { "BeginPopupContextWindowEx", BeginPopupContextWindowEx },
+        { "BeginPopupContextVoid", BeginPopupContextVoid },
+        { "BeginPopupContextVoidEx", BeginPopupContextVoidEx },
+        { "IsPopupOpen", IsPopupOpen },
         { "BeginTable", BeginTable },
         { "BeginTableEx", BeginTableEx },
         { "EndTable", EndTable },
