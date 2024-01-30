@@ -10,7 +10,7 @@ local InputText     = ImGui.InputText
 local InputInt      = ImGui.InputInt
 local InputFloat    = ImGui.InputFloat
 local Checkbox      = ImGui.Checkbox
-local ColorEdit     = ImGui.ColorEdit
+local ColorEdit4    = ImGui.ColorEdit4
 local BeginCombo    = ImGui.BeginCombo
 local SelectableEx  = ImGui.SelectableEx
 local EndCombo      = ImGui.EndCombo
@@ -148,7 +148,7 @@ local component_type_registers = {
         BeginDisabled(desc.readonly)
         assert(type(comp) == "table" and #comp == 4)
         local value = {table.unpack(comp)}
-        if ColorEdit("##" .. name, value) then
+        if ColorEdit4("##" .. name, value) then
             updatevalue[name] = value
         end
         EndDisabled()

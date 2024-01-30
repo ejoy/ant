@@ -47,6 +47,9 @@ local BlackList <const> = {
     ImGui_TreeNodeExPtrUnformatted = true,
     ImGui_TreeNodeExV = true,
     ImGui_TreeNodeExVPtr = true,
+
+    ImGui_ColorConvertRGBtoHSV = true,
+    ImGui_ColorConvertHSVtoRGB = true,
 }
 
 local TodoList <const> = {
@@ -63,10 +66,6 @@ local TodoList <const> = {
     ImGui_GetDrawListSharedData = true,
     ImGui_SetStateStorage = true,
     ImGui_GetStateStorage = true,
-    ImGui_ColorConvertU32ToFloat4 = true,
-    ImGui_ColorConvertFloat4ToU32 = true,
-    ImGui_ColorConvertRGBtoHSV = true,
-    ImGui_ColorConvertHSVtoRGB = true,
     ImGui_IsMousePosValid = true,
 
     ImGui_PlotLines = true,
@@ -81,6 +80,8 @@ local TodoList <const> = {
     ImGui_ListBox = true,
     ImGui_ListBoxCallback = true,
     ImGui_ListBoxCallbackEx = true,
+
+    ImGui_ColorPicker4 = true,
 }
 
 local function conditionals(t)
@@ -110,7 +111,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-local s <const> = "ImGui_TreeNode"
+local s <const> = "ImGui_ColorEdit3"
 
 local within_scope = false
 

@@ -8,7 +8,8 @@ local function writeln(fmt, ...)
 end
 
 local KEYWORD <const> = {
-    ["repeat"] = "repeat_"
+    ["repeat"] = "arg_repeat",
+    ["in"] = "arg_in",
 }
 
 local function safe_name(v)
@@ -57,6 +58,38 @@ end
 special_ret["ImVec2"] = function ()
     writeln("---@return number")
     writeln("---@return number")
+end
+
+special_arg["ImVec4"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s_x number", type_meta.name)
+    writeln("---@param %s_y number", type_meta.name)
+    writeln("---@param %s_z number", type_meta.name)
+    writeln("---@param %s_w number", type_meta.name)
+    status.arguments[#status.arguments+1] = type_meta.name .. "_x"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_y"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_z"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_w"
+end
+
+special_ret["ImVec4"] = function ()
+    writeln("---@return number")
+    writeln("---@return number")
+    writeln("---@return number")
+    writeln("---@return number")
+end
+
+--TODO: 指定数组长度
+special_arg["float[3]"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s number[]", type_meta.name)
+    status.arguments[#status.arguments+1] = type_meta.name
+end
+
+special_arg["float[4]"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s number[]", type_meta.name)
+    status.arguments[#status.arguments+1] = type_meta.name
 end
 
 special_arg["bool*"] = function (type_meta, status)

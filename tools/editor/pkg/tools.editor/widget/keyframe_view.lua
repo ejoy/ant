@@ -650,7 +650,7 @@ local function show_current_detail()
     if anim_type == "mtl" then
         ImGui.PropertyLabel("UniformValue")
         local ui_data = current_clip.value_ui
-        if ImGui.ColorEdit("##UniformValue", ui_data) then
+        if ImGui.ColorEdit4("##UniformValue", ui_data) then
             current_clip.value = {ui_data[1], ui_data[2], ui_data[3], ui_data[4]}
             dirty = true
         end

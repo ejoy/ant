@@ -106,7 +106,7 @@ function m.show()
             end
 
             local color_label = "BrushColor"
-            if ImGui.ColorEdit("##"..color_label, brush_color_ui) then
+            if ImGui.ColorEdit4("##"..color_label, brush_color_ui) then
                 update_color()
             end
 

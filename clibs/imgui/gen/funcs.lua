@@ -65,13 +65,31 @@ end
 
 write_arg["ImVec2"] = function(type_meta, status)
     if type_meta.default_value == nil then
-        writeln("    auto %s = ImVec2 { (float)luaL_checknumber(L, %d), (float)luaL_checknumber(L, %d) };", type_meta.name, status.idx + 1, status.idx + 2)
+        writeln("    auto %s = ImVec2 {", type_meta.name)
+        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 1)
+        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
+        writeln "    };"
     else
         assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)" or type_meta.default_value == "ImVec2(0, 0)", type_meta.default_value)
-        writeln("    auto %s = ImVec2 { (float)luaL_optnumber(L, %d, 0.f), (float)luaL_optnumber(L, %d, 0.f) };", type_meta.name, status.idx + 1, status.idx + 2)
+        writeln("    auto %s = ImVec2 {", type_meta.name)
+        writeln("        (float)luaL_optnumber(L, %d, 0.f),", status.idx + 1)
+        writeln("        (float)luaL_optnumber(L, %d, 0.f),", status.idx + 2)
+        writeln "    };"
     end
     status.arguments[#status.arguments+1] = type_meta.name
     status.idx = status.idx + 2
+end
+
+write_arg["ImVec4"] = function(type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("    auto %s = ImVec4 {", type_meta.name)
+    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 1)
+    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
+    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 3)
+    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 4)
+    writeln "    };"
+    status.arguments[#status.arguments+1] = type_meta.name
+    status.idx = status.idx + 4
 end
 
 write_arg["float"] = function(type_meta, status)
@@ -118,6 +136,30 @@ write_arg_ret["size_t*"] = function(type_meta)
     return 1
 end
 
+for n = 3, 4 do
+    write_arg["float["..n.."]"] = function(type_meta, status)
+        status.idx = status.idx + 1
+        writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
+        writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+        writeln("    float %s[%d] = {", type_meta.name, n)
+        for i = 1, n do
+            writeln("        (float)field_tonumber(L, %d, %d),", status.idx, i)
+        end
+        writeln "    };"
+        status.arguments[#status.arguments+1] = type_meta.name
+        status.idx = status.idx + 4
+    end
+    write_arg_ret["float["..n.."]"] = function(type_meta)
+        writeln "    if (_retval) {"
+        for i = 1, n do
+            writeln("        lua_pushnumber(L, %s[%d]);", type_meta.name, i)
+            writeln("        lua_seti(L, _%s_index, %d);", type_meta.name, i)
+        end
+        writeln "    };"
+        return 0
+    end
+end
+
 local write_ret = {}
 
 write_ret["bool"] = function()
@@ -153,6 +195,14 @@ write_ret["ImVec2"] = function()
     writeln "    lua_pushnumber(L, _retval.x);"
     writeln "    lua_pushnumber(L, _retval.y);"
     return 2
+end
+
+write_ret["ImVec4"] = function()
+    writeln "    lua_pushnumber(L, _retval.x);"
+    writeln "    lua_pushnumber(L, _retval.y);"
+    writeln "    lua_pushnumber(L, _retval.z);"
+    writeln "    lua_pushnumber(L, _retval.w);"
+    return 4
 end
 
 for _, type_name in ipairs {"int", "size_t", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
@@ -268,11 +318,18 @@ writeln "namespace imgui_lua {"
 writeln ""
 writeln "lua_CFunction str_format = NULL;"
 writeln ""
-writeln "void find_str_format(lua_State* L) {"
+writeln "static void find_str_format(lua_State* L) {"
 writeln "    luaopen_string(L);"
 writeln "    lua_getfield(L, -1, \"format\");"
 writeln "    str_format = lua_tocfunction(L, -1);"
 writeln "    lua_pop(L, 2);"
+writeln "}"
+writeln ""
+writeln "static lua_Number field_tonumber(lua_State* L, int idx, lua_Integer i) {"
+writeln "    lua_geti(L, idx, i);"
+writeln "    lua_Number v = luaL_checknumber(L, -1);"
+writeln "    lua_pop(L, 1);"
+writeln "    return v;"
 writeln "}"
 writeln ""
 local funcs = write_func_scope()

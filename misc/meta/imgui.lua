@@ -1053,6 +1053,61 @@ function ImGui.Flags.Viewport(flags) end
 ---@alias ImGuiKeyChord ImGuiKey
 
 --
+-- Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
+-- - Note that in C++ a 'float v[X]' function argument is the _same_ as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible.
+-- - You can pass the address of a first float element out of a contiguous structure, e.g. &myvector.x
+--
+---@param label string
+---@param col number[]
+---@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@return boolean
+function ImGui.ColorEdit3(label, col, flags) end
+
+---@param label string
+---@param col number[]
+---@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@return boolean
+function ImGui.ColorEdit4(label, col, flags) end
+
+---@param label string
+---@param col number[]
+---@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@return boolean
+function ImGui.ColorPicker3(label, col, flags) end
+
+--
+-- Implied size = ImVec2(0, 0)
+--
+---@param desc_id string
+---@param col_x number
+---@param col_y number
+---@param col_z number
+---@param col_w number
+---@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@return boolean
+function ImGui.ColorButton(desc_id, col_x, col_y, col_z, col_w, flags) end
+
+--
+-- display a color square/button, hover for details, return true when pressed.
+--
+---@param desc_id string
+---@param col_x number
+---@param col_y number
+---@param col_z number
+---@param col_w number
+---@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param size_x? number | `0.0`
+---@param size_y? number | `0.0`
+---@return boolean
+function ImGui.ColorButtonEx(desc_id, col_x, col_y, col_z, col_w, flags, size_x, size_y) end
+
+--
+-- initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
+--
+---@param flags ImGuiColorEditFlags
+function ImGui.SetColorEditOptions(flags) end
+
+--
 -- Widgets: Trees
 -- - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
 --
@@ -1980,6 +2035,23 @@ function ImGui.CalcTextSize(text) end
 function ImGui.CalcTextSizeEx(text, text_end, hide_text_after_double_hash, wrap_width) end
 
 --
+-- Color Utilities
+--
+---@param arg_in integer
+---@return number
+---@return number
+---@return number
+---@return number
+function ImGui.ColorConvertU32ToFloat4(arg_in) end
+
+---@param in_x number
+---@param in_y number
+---@param in_z number
+---@param in_w number
+---@return integer
+function ImGui.ColorConvertFloat4ToU32(in_x, in_y, in_z, in_w) end
+
+--
 -- Inputs Utilities: Keyboard/Mouse/Gamepad
 -- - the ImGuiKey enum contains all possible keyboard, mouse and gamepad inputs (e.g. ImGuiKey_A, ImGuiKey_MouseLeft, ImGuiKey_GamepadDpadUp...).
 -- - before v1.87, we used ImGuiKey to carry native/user indices as defined by each backends. About use of those legacy ImGuiKey values:
@@ -2004,9 +2076,9 @@ function ImGui.IsKeyPressed(key) end
 -- was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
 --
 ---@param key ImGuiKey
----@param repeat_? boolean | `true`
+---@param arg_repeat? boolean | `true`
 ---@return boolean
-function ImGui.IsKeyPressedEx(key, repeat_) end
+function ImGui.IsKeyPressedEx(key, arg_repeat) end
 
 --
 -- was key released (went from Down to !Down)?
@@ -2068,9 +2140,9 @@ function ImGui.IsMouseClicked(button) end
 -- did mouse button clicked? (went from !Down to Down). Same as GetMouseClickedCount() == 1.
 --
 ---@param button ImGuiMouseButton
----@param repeat_? boolean | `false`
+---@param arg_repeat? boolean | `false`
 ---@return boolean
-function ImGui.IsMouseClickedEx(button, repeat_) end
+function ImGui.IsMouseClickedEx(button, arg_repeat) end
 
 --
 -- did mouse button released? (went from Down to !Down)

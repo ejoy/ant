@@ -8,11 +8,128 @@ namespace imgui_lua {
 
 lua_CFunction str_format = NULL;
 
-void find_str_format(lua_State* L) {
+static void find_str_format(lua_State* L) {
     luaopen_string(L);
     lua_getfield(L, -1, "format");
     str_format = lua_tocfunction(L, -1);
     lua_pop(L, 2);
+}
+
+static lua_Number field_tonumber(lua_State* L, int idx, lua_Integer i) {
+    lua_geti(L, idx, i);
+    lua_Number v = luaL_checknumber(L, -1);
+    lua_pop(L, 1);
+    return v;
+}
+
+static int ColorEdit3(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _col_index = 2;
+    float col[3] = {
+        (float)field_tonumber(L, 2, 1),
+        (float)field_tonumber(L, 2, 2),
+        (float)field_tonumber(L, 2, 3),
+    };
+    auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiColorEditFlags_None));
+    auto _retval = ImGui::ColorEdit3(label, col, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, col[1]);
+        lua_seti(L, _col_index, 1);
+        lua_pushnumber(L, col[2]);
+        lua_seti(L, _col_index, 2);
+        lua_pushnumber(L, col[3]);
+        lua_seti(L, _col_index, 3);
+    };
+    return 1;
+}
+
+static int ColorEdit4(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _col_index = 2;
+    float col[4] = {
+        (float)field_tonumber(L, 2, 1),
+        (float)field_tonumber(L, 2, 2),
+        (float)field_tonumber(L, 2, 3),
+        (float)field_tonumber(L, 2, 4),
+    };
+    auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiColorEditFlags_None));
+    auto _retval = ImGui::ColorEdit4(label, col, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, col[1]);
+        lua_seti(L, _col_index, 1);
+        lua_pushnumber(L, col[2]);
+        lua_seti(L, _col_index, 2);
+        lua_pushnumber(L, col[3]);
+        lua_seti(L, _col_index, 3);
+        lua_pushnumber(L, col[4]);
+        lua_seti(L, _col_index, 4);
+    };
+    return 1;
+}
+
+static int ColorPicker3(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _col_index = 2;
+    float col[3] = {
+        (float)field_tonumber(L, 2, 1),
+        (float)field_tonumber(L, 2, 2),
+        (float)field_tonumber(L, 2, 3),
+    };
+    auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiColorEditFlags_None));
+    auto _retval = ImGui::ColorPicker3(label, col, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, col[1]);
+        lua_seti(L, _col_index, 1);
+        lua_pushnumber(L, col[2]);
+        lua_seti(L, _col_index, 2);
+        lua_pushnumber(L, col[3]);
+        lua_seti(L, _col_index, 3);
+    };
+    return 1;
+}
+
+static int ColorButton(lua_State* L) {
+    auto desc_id = luaL_checkstring(L, 1);
+    auto col = ImVec4 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+        (float)luaL_checknumber(L, 5),
+    };
+    auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiColorEditFlags_None));
+    auto _retval = ImGui::ColorButton(desc_id, col, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int ColorButtonEx(lua_State* L) {
+    auto desc_id = luaL_checkstring(L, 1);
+    auto col = ImVec4 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+        (float)luaL_checknumber(L, 5),
+    };
+    auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiColorEditFlags_None));
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 7, 0.f),
+        (float)luaL_optnumber(L, 8, 0.f),
+    };
+    auto _retval = ImGui::ColorButton(desc_id, col, flags, size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetColorEditOptions(lua_State* L) {
+    auto flags = (ImGuiColorEditFlags)luaL_checkinteger(L, 1);
+    ImGui::SetColorEditOptions(flags);
+    return 0;
 }
 
 static int TreeNode(lua_State* L) {
@@ -136,7 +253,10 @@ static int SelectableEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto selected = lua_isnoneornil(L, 2)? false: !!lua_toboolean(L, 2);
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
-    auto size = ImVec2 { (float)luaL_optnumber(L, 4, 0.f), (float)luaL_optnumber(L, 5, 0.f) };
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 4, 0.f),
+        (float)luaL_optnumber(L, 5, 0.f),
+    };
     auto _retval = ImGui::Selectable(label, selected, flags, size);
     lua_pushboolean(L, _retval);
     return 1;
@@ -158,7 +278,10 @@ static int SelectableBoolPtrEx(lua_State* L) {
     bool has_p_selected = !lua_isnil(L, 2);
     bool p_selected = true;
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
-    auto size = ImVec2 { (float)luaL_optnumber(L, 4, 0.f), (float)luaL_optnumber(L, 5, 0.f) };
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 4, 0.f),
+        (float)luaL_optnumber(L, 5, 0.f),
+    };
     auto _retval = ImGui::Selectable(label, (has_p_selected? &p_selected: NULL), flags, size);
     lua_pushboolean(L, _retval);
     lua_pushboolean(L, has_p_selected || p_selected);
@@ -167,7 +290,10 @@ static int SelectableBoolPtrEx(lua_State* L) {
 
 static int BeginListBox(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto size = ImVec2 { (float)luaL_optnumber(L, 2, 0.f), (float)luaL_optnumber(L, 3, 0.f) };
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 2, 0.f),
+        (float)luaL_optnumber(L, 3, 0.f),
+    };
     auto _retval = ImGui::BeginListBox(label, size);
     lua_pushboolean(L, _retval);
     return 1;
@@ -397,7 +523,10 @@ static int BeginTableEx(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto column = (int)luaL_checkinteger(L, 2);
     auto flags = (ImGuiTableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTableFlags_None));
-    auto outer_size = ImVec2 { (float)luaL_optnumber(L, 4, 0.f), (float)luaL_optnumber(L, 5, 0.f) };
+    auto outer_size = ImVec2 {
+        (float)luaL_optnumber(L, 4, 0.f),
+        (float)luaL_optnumber(L, 5, 0.f),
+    };
     auto inner_width = (float)luaL_optnumber(L, 6, 0.0f);
     auto _retval = ImGui::BeginTable(str_id, column, flags, outer_size, inner_width);
     lua_pushboolean(L, _retval);
@@ -655,8 +784,14 @@ static int EndDisabled(lua_State* L) {
 }
 
 static int PushClipRect(lua_State* L) {
-    auto clip_rect_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
-    auto clip_rect_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto clip_rect_min = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto clip_rect_max = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
     auto intersect_with_current_clip_rect = !!lua_toboolean(L, 5);
     ImGui::PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
     return 0;
@@ -802,15 +937,24 @@ static int GetItemRectSize(lua_State* L) {
 }
 
 static int IsRectVisibleBySize(lua_State* L) {
-    auto size = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
+    auto size = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
     auto _retval = ImGui::IsRectVisible(size);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsRectVisible(lua_State* L) {
-    auto rect_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
-    auto rect_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto rect_min = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto rect_max = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
     auto _retval = ImGui::IsRectVisible(rect_min, rect_max);
     lua_pushboolean(L, _retval);
     return 1;
@@ -852,6 +996,28 @@ static int CalcTextSizeEx(lua_State* L) {
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
+}
+
+static int ColorConvertU32ToFloat4(lua_State* L) {
+    auto in = (ImU32)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::ColorConvertU32ToFloat4(in);
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    lua_pushnumber(L, _retval.z);
+    lua_pushnumber(L, _retval.w);
+    return 4;
+}
+
+static int ColorConvertFloat4ToU32(lua_State* L) {
+    auto in = ImVec4 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    auto _retval = ImGui::ColorConvertFloat4ToU32(in);
+    lua_pushinteger(L, _retval);
+    return 1;
 }
 
 static int IsKeyDown(lua_State* L) {
@@ -956,16 +1122,28 @@ static int GetMouseClickedCount(lua_State* L) {
 }
 
 static int IsMouseHoveringRect(lua_State* L) {
-    auto r_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
-    auto r_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto r_min = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto r_max = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
     auto _retval = ImGui::IsMouseHoveringRect(r_min, r_max);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsMouseHoveringRectEx(lua_State* L) {
-    auto r_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
-    auto r_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto r_min = ImVec2 {
+        (float)luaL_checknumber(L, 1),
+        (float)luaL_checknumber(L, 2),
+    };
+    auto r_max = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
     auto clip = lua_isnoneornil(L, 5)? true: !!lua_toboolean(L, 5);
     auto _retval = ImGui::IsMouseHoveringRect(r_min, r_max, clip);
     lua_pushboolean(L, _retval);
@@ -1087,6 +1265,12 @@ static int GetKeyIndex(lua_State* L) {
 
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
+        { "ColorEdit3", ColorEdit3 },
+        { "ColorEdit4", ColorEdit4 },
+        { "ColorPicker3", ColorPicker3 },
+        { "ColorButton", ColorButton },
+        { "ColorButtonEx", ColorButtonEx },
+        { "SetColorEditOptions", SetColorEditOptions },
         { "TreeNode", TreeNode },
         { "TreeNodeStr", TreeNodeStr },
         { "TreeNodePtr", TreeNodePtr },
@@ -1205,6 +1389,8 @@ void init(lua_State* L) {
         { "GetStyleColorName", GetStyleColorName },
         { "CalcTextSize", CalcTextSize },
         { "CalcTextSizeEx", CalcTextSizeEx },
+        { "ColorConvertU32ToFloat4", ColorConvertU32ToFloat4 },
+        { "ColorConvertFloat4ToU32", ColorConvertFloat4ToU32 },
         { "IsKeyDown", IsKeyDown },
         { "IsKeyPressed", IsKeyPressed },
         { "IsKeyPressedEx", IsKeyPressedEx },

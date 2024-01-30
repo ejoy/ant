@@ -120,7 +120,7 @@ end
 local Color = class("Color", PropertyBase)
 
 function Color:widget()
-    return ImGui.ColorEdit(self:get_label(), self.uidata)
+    return ImGui.ColorEdit4(self:get_label(), self.uidata)
 end
 
 local Combo = class("Combo", PropertyBase)

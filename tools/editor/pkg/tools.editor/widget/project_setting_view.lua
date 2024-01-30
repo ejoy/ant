@@ -45,7 +45,7 @@ local function PropertyFloat(name, value, config)
 end
 
 local function PropertyColor(name, value, config)
-    return Property(name, value, "ColorEdit", config)
+    return Property(name, value, "ColorEdit4", config)
 end
 
 local function CheckProperty(name, value, enable, p, set_p, config)

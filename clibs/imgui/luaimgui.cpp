@@ -134,21 +134,6 @@ wArrowButton(lua_State *L) {
 	return 1;
 }
 
-static int
-wColorButton(lua_State *L) {
-	const char * desc = luaL_checkstring(L, INDEX_ID);
-	float c1 = (float)luaL_checknumber(L, 2);
-	float c2 = (float)luaL_checknumber(L, 3);
-	float c3 = (float)luaL_checknumber(L, 4);
-	float c4 = (float)luaL_optnumber(L, 5, 1.0f);
-	auto flags = lua_getflags<ImGuiColorEditFlags>(L, 6, ImGuiColorEditFlags_None);
-	float w = (float)luaL_optnumber(L, 7, 0);
-	float h = (float)luaL_optnumber(L, 8, 0);
-	bool click = ImGui::ColorButton(desc, ImVec4(c1, c2, c3, c4), flags, ImVec2(w, h));
-	lua_pushboolean(L, click);
-	return 1;
-}
-
 // Todo:  Image ,  ImageButton, CheckboxFlags, Combo
 
 static int
@@ -826,68 +811,6 @@ wVSliderFloat(lua_State *L) {
 static int
 wVSliderInt(lua_State *L) {
 	return wDrag(L, VSLIDER_INT);
-}
-
-static int
-wColor(lua_State *L, int type) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	if (n < 3 || n > 4)
-		return luaL_error(L, "Need 3-4 numbers");
-	ImGuiColorEditFlags flags = read_field_int(L, "flags", 0);
-	float v[4];
-	int i;
-	for (i = 0; i < n; i++) {
-		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
-			luaL_error(L, "Color should be a number");
-		}
-		v[i] = (float)lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-	bool change;
-	if (type == COLOR_EDIT) {
-		if (n == 3) {
-			change = ImGui::ColorEdit3(label, v, flags);
-		} else {
-			change = ImGui::ColorEdit4(label, v, flags);
-		}
-	} else {
-		if (n == 3) {
-			change = ImGui::ColorPicker3(label, v, flags);
-		} else {
-			const char * ref = NULL;
-			if (lua_getfield(L, INDEX_ARGS, "ref") == LUA_TSTRING) {
-				size_t sz;
-				ref = lua_tolstring(L, -1, &sz);
-				if (sz != 4 * sizeof(float)) {
-					luaL_error(L, "Color ref should be 4 float string");
-				}
-			}
-			lua_pop(L, 1);
-			change = ImGui::ColorPicker4(label, v, flags, (const float *)ref);
-		}
-	}
-	if (change) {
-		for (i = 0; i < n; i++) {
-			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i + 1);
-		}
-	}
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wColorEdit(lua_State *L) {
-	return wColor(L, COLOR_EDIT);
-}
-
-static int
-wColorPicker(lua_State *L) {
-	return wColor(L, COLOR_PICKER);
 }
 
 struct editbuf {
@@ -2288,9 +2211,6 @@ luaopen_imgui(lua_State *L) {
 		{ "SliderAngle", wSliderAngle },
 		{ "VSliderFloat", wVSliderFloat },
 		{ "VSliderInt", wVSliderInt },
-		{ "ColorEdit", wColorEdit },
-		{ "ColorPicker", wColorPicker },
-		{ "ColorButton", wColorButton },
 		{ "InputText", wInputText },
 		{ "InputTextMultiline", wInputTextMultiline },
 		{ "InputFloat", wInputFloat },
