@@ -1349,19 +1349,6 @@ wEndCombo(lua_State *L) {
 	return 0;
 }
 
-static int
-wSelectable(lua_State *L) {
-	const char *label = luaL_checkstring(L, 1);
-	bool selected = lua_toboolean(L, 2);
-	ImGuiSelectableFlags flags = lua_getflags<ImGuiSelectableFlags>(L, 3, ImGuiSelectableFlags_None);
-	ImVec2 size(0, 0);
-	size.x = (float)luaL_optnumber(L, 4, 0.0f);
-	size.y = (float)luaL_optnumber(L, 5, 0.0f);
-	bool change = ImGui::Selectable(label, selected, flags, size);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
 // todo: TreePush/CollapsingHeader (with p_open)
 static int
 wTreeNode(lua_State *L) {
@@ -1432,83 +1419,6 @@ get_plot(void* data, int idx) {
 	return r;
 }
 
-static void
-plot(lua_State *L, int t) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	int values_offset = read_field_int(L, "offset", 0);
-	const char * overlay_text = read_field_string(L, "text", NULL);
-	float scale_min = (float)read_field_float(L, "min", FLT_MAX);
-	float scale_max = (float)read_field_float(L, "max", FLT_MAX);
-	float width = (float)read_field_float(L, "width", 0);
-	float height = (float)read_field_float(L, "height", 0);
-	struct lua_args args = { L, false };
-	if (t == PLOT_LINES) {
-		ImGui::PlotLines(label, get_plot, &args, n, values_offset, overlay_text, scale_min, scale_max, ImVec2(width, height));
-	} else {
-		ImGui::PlotHistogram(label, get_plot, &args, n, values_offset, overlay_text, scale_min, scale_max, ImVec2(width, height));
-	}
-	if (args.err) {
-		lua_error(L);
-	}
-}
-
-static int
-wPlotLines(lua_State *L) {
-	plot(L, PLOT_LINES);
-	return 0;
-}
-
-static int
-wPlotHistogram(lua_State *L) {
-	plot(L, PLOT_HISTOGRAM);
-	return 0;
-}
-
-static int
-wMenuItem(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	const char *shortcut = luaL_optstring(L, 2, NULL);
-	bool enabled = true;
-	if (lua_isboolean(L, 4)) {
-		enabled = lua_toboolean(L, 4);
-	}
-	if (lua_isboolean(L, 3)) {
-		bool selected = lua_toboolean(L, 3);
-		bool change = ImGui::MenuItem(label, shortcut, &selected, enabled);
-		lua_pushboolean(L, change);
-		lua_pushboolean(L, selected);
-		return 2;
-	}
-	else
-	{
-		bool change = ImGui::MenuItem(label, shortcut, false, enabled);
-		lua_pushboolean(L, change);
-		return 1;
-	}
-
-
-}
-
-static int
-wBeginListBox(lua_State *L) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	float width = (float)luaL_optnumber(L, 2, 0);
-	float height = (float)luaL_optnumber(L, 3, 0);
-	bool change = ImGui::BeginListBox(label, ImVec2(width, height));
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wEndListBox(lua_State *L) {
-	ImGui::EndListBox();
-	return 0;
-}
-
 static int
 get_listitem_func(lua_State *L) {
 	int n = (int)lua_tointeger(L, 2);
@@ -1534,25 +1444,6 @@ get_listitem(void* data, int idx) {
 	}
 	lua_pop(L, 1);
 	return nullptr;
-}
-
-static int
-wListBox(lua_State *L) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	int height_in_items = read_field_int(L, "height", -1);
-	struct lua_args args = { L, false };
-	int current = read_field_int(L, "current", 0) - 1;
-	bool change = ImGui::ListBox(label, &current, get_listitem, &args, n, height_in_items);
-	if (change) {
-		lua_pushinteger(L, current + 1);
-		lua_setfield(L, INDEX_ARGS, "current");
-	}
-	lua_pushboolean(L, change);
-	return 1;
 }
 
 static ImTextureID getTextureId(lua_State* L, int idx) {
@@ -1622,80 +1513,6 @@ static int
 wPopTextWrapPos(lua_State* L) {
 	ImGui::PopTextWrapPos();
 	return 0;
-}
-
-static int
-wSelectableInput(lua_State* L) {
-	const char* label = luaL_checkstring(L, INDEX_ID);
-	bool selected;
-	ImGuiSelectableFlags flags = 0;
-	ImVec2 size(0, 0);
-	int t = lua_type(L, INDEX_ARGS);
-	switch (t) {
-	case LUA_TNIL:
-	case LUA_TBOOLEAN:
-		selected = lua_toboolean(L, INDEX_ARGS);
-		size.x = (float)luaL_optnumber(L, 3, 0.0f);
-		size.y = (float)luaL_optnumber(L, 4, 0.0f);
-		flags = lua_getflags<ImGuiSelectableFlags>(L, 5, ImGuiSelectableFlags_None);
-		if (lua_toboolean(L, 6)) {
-			flags |= ImGuiSelectableFlags_Disabled;
-		}
-		break;
-	case LUA_TTABLE:
-		if (lua_geti(L, INDEX_ARGS, 1) == LUA_TSTRING &&
-			lua_compare(L, INDEX_ID, -1, LUA_OPEQ)) {
-			selected = true;
-		}
-		else {
-			selected = false;
-		}
-		lua_pop(L, 1);
-		flags = read_field_int(L, "item_flags", 0);
-		size.x = (float)read_field_float(L, "width", 0);
-		size.y = (float)read_field_float(L, "height", 0);
-		if (lua_toboolean(L, 3)) {
-			flags |= ImGuiSelectableFlags_Disabled;
-		}
-		break;
-	default:
-		return luaL_error(L, "Invalid selected type %s", lua_typename(L, t));
-	}
-
-	bool change = ImGui::Selectable(label, selected, flags, size);
-	if (change && t == LUA_TTABLE) {
-		lua_pushvalue(L, INDEX_ID);
-		lua_seti(L, INDEX_ARGS, 1);
-	}
-	lua_pushboolean(L, change);
-	return 1;
-
-	//const char* label = luaL_checkstring(L, INDEX_ID);
-// 	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-// 	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
-// 	const char* hint = read_field_string(L, "hint", NULL);
-// 	int t = lua_getfield(L, INDEX_ARGS, "text");
-// 	if (t == LUA_TSTRING || t == LUA_TNIL) {
-// 		create_new_editbuf(L);
-// 		lua_pushvalue(L, -1);
-// 		lua_setfield(L, INDEX_ARGS, "text");
-// 	}
-// 	struct editbuf* ebuf = (struct editbuf*)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
-// 	ebuf->L = L;
-// 	bool change;
-// 	flags |= ImGuiInputTextFlags_CallbackResize;
-// 	int top = lua_gettop(L);
-// 	if (hint) {
-// 		change = ImGui::InputTextWithHint(label, hint, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
-// 	}
-// 	else {
-// 		change = ImGui::InputText(label, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
-// 	}
-// 	if (lua_gettop(L) != top) {
-// 		lua_error(L);
-// 	}
-// 	lua_pushboolean(L, change);
-// 	return 1;
 }
 
 static int
@@ -2533,23 +2350,15 @@ luaopen_imgui(lua_State *L) {
 		{ "BulletText", wBulletText },
 		{ "BeginCombo", wBeginCombo },
 		{ "EndCombo", wEndCombo },
-		{ "Selectable", wSelectable },
 		{ "TreeNode", wTreeNode },
 		{ "TreePush", wTreePush },
 		{ "TreePop", wTreePop },
 		{ "CollapsingHeader", wCollapsingHeader },
 		{ "SetNextItemOpen", wSetNextItemOpen },
-		{ "PlotLines", wPlotLines },
-		{ "PlotHistogram", wPlotHistogram },
-		{ "MenuItem", wMenuItem },
-		{ "BeginListBox", wBeginListBox },
-		{ "EndListBox", wEndListBox },
-		{ "ListBox", wListBox },
 		{ "Image", wImage },
 		{ "ImageButton", wImageButton },
 		{ "PushTextWrapPos", wPushTextWrapPos },
 		{ "PopTextWrapPos", wPopTextWrapPos },
-		{ "SelectableInput", wSelectableInput },
 		{ "Separator", cSeparator },
 		{ "SameLine", cSameLine },
 		{ "NewLine", cNewLine },

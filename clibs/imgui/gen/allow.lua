@@ -47,12 +47,7 @@ local TodoList <const> = {
     ImGui_GetForegroundDrawList = true,
     ImGui_GetBackgroundDrawListImGuiViewportPtr = true,
     ImGui_GetForegroundDrawListImGuiViewportPtr = true,
-    ImGui_IsRectVisibleBySize = true,
-    ImGui_IsRectVisible = true,
-    ImGui_GetTime = true,
-    ImGui_GetFrameCount = true,
     ImGui_GetDrawListSharedData = true,
-    ImGui_GetStyleColorName = true,
     ImGui_SetStateStorage = true,
     ImGui_GetStateStorage = true,
     ImGui_ColorConvertU32ToFloat4 = true,
@@ -66,10 +61,16 @@ local TodoList <const> = {
     ImGui_SetItemTooltip = true,
     ImGui_SetItemTooltipV = true,
 
+    ImGui_PlotLines = true,
+    ImGui_PlotLinesEx = true,
     ImGui_PlotLinesCallback = true,
     ImGui_PlotLinesCallbackEx = true,
+    ImGui_PlotHistogram = true,
+    ImGui_PlotHistogramEx = true,
     ImGui_PlotHistogramCallback = true,
     ImGui_PlotHistogramCallbackEx = true,
+
+    ImGui_ListBox = true,
     ImGui_ListBoxCallback = true,
     ImGui_ListBoxCallbackEx = true,
 }
@@ -101,7 +102,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-local s <const> = "ImGui_BeginMenuBar"
+local s <const> = "ImGui_Selectable"
 
 local within_scope = false
 

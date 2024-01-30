@@ -1053,6 +1053,73 @@ function ImGui.Flags.Viewport(flags) end
 ---@alias ImGuiKeyChord ImGuiKey
 
 --
+-- Widgets: Selectables
+-- - A selectable highlights when hovered, and can display another color when selected.
+-- - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
+--
+--
+-- Implied selected = false, flags = 0, size = ImVec2(0, 0)
+--
+---@param label string
+---@return boolean
+function ImGui.Selectable(label) end
+
+--
+-- "bool selected" carry the selection state (read-only). Selectable() is clicked is returns true so you can modify your selection state. size.x==0.0: use remaining width, size.x>0.0: specify width. size.y==0.0: use label height, size.y>0.0: specify height
+--
+---@param label string
+---@param selected? boolean | `false`
+---@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param size_x? number | `0.0`
+---@param size_y? number | `0.0`
+---@return boolean
+function ImGui.SelectableEx(label, selected, flags, size_x, size_y) end
+
+--
+-- Implied size = ImVec2(0, 0)
+--
+---@param label string
+---@param p_selected true | nil
+---@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@return boolean
+---@return boolean p_selected
+function ImGui.SelectableBoolPtr(label, p_selected, flags) end
+
+--
+-- "bool* p_selected" point to the selection state (read-write), as a convenient helper.
+--
+---@param label string
+---@param p_selected true | nil
+---@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param size_x? number | `0.0`
+---@param size_y? number | `0.0`
+---@return boolean
+---@return boolean p_selected
+function ImGui.SelectableBoolPtrEx(label, p_selected, flags, size_x, size_y) end
+
+--
+-- Widgets: List Boxes
+-- - This is essentially a thin wrapper to using BeginChild/EndChild with the ImGuiChildFlags_FrameStyle flag for stylistic changes + displaying a label.
+-- - You can submit contents and manage your selection state however you want it, by creating e.g. Selectable() or any other items.
+-- - The simplified/old ListBox() api are helpers over BeginListBox()/EndListBox() which are kept available for convenience purpose. This is analoguous to how Combos are created.
+-- - Choose frame width:   size.x > 0.0f: custom  /  size.x < 0.0f or -FLT_MIN: right-align   /  size.x = 0.0f (default): use current ItemWidth
+-- - Choose frame height:  size.y > 0.0f: custom  /  size.y < 0.0f or -FLT_MIN: bottom-align  /  size.y = 0.0f (default): arbitrary default height which can fit ~7 items
+--
+--
+-- open a framed scrolling region
+--
+---@param label string
+---@param size_x? number | `0.0`
+---@param size_y? number | `0.0`
+---@return boolean
+function ImGui.BeginListBox(label, size_x, size_y) end
+
+--
+-- only call EndListBox() if BeginListBox() returned true!
+--
+function ImGui.EndListBox() end
+
+--
 -- Widgets: Menus
 -- - Use BeginMenuBar() on a window ImGuiWindowFlags_MenuBar to append to its menu bar.
 -- - Use BeginMainMenuBar() to create a menu bar at the top of the screen and append to it.
@@ -1757,6 +1824,46 @@ function ImGui.GetItemRectMax() end
 ---@return number
 ---@return number
 function ImGui.GetItemRectSize() end
+
+--
+-- Miscellaneous Utilities
+--
+--
+-- test if rectangle (of given size, starting from cursor position) is visible / not clipped.
+--
+---@param size_x number
+---@param size_y number
+---@return boolean
+function ImGui.IsRectVisibleBySize(size_x, size_y) end
+
+--
+-- test if rectangle (in screen space) is visible / not clipped. to perform coarse clipping on user's side.
+--
+---@param rect_min_x number
+---@param rect_min_y number
+---@param rect_max_x number
+---@param rect_max_y number
+---@return boolean
+function ImGui.IsRectVisible(rect_min_x, rect_min_y, rect_max_x, rect_max_y) end
+
+--
+-- get global imgui time. incremented by io.DeltaTime every frame.
+--
+---@return number
+function ImGui.GetTime() end
+
+--
+-- get global imgui frame count. incremented by 1 every frame.
+--
+---@return integer
+function ImGui.GetFrameCount() end
+
+--
+-- get a string corresponding to the enum value (for display, saving, etc.).
+--
+---@param idx ImGuiCol
+---@return string
+function ImGui.GetStyleColorName(idx) end
 
 --
 -- Text Utilities

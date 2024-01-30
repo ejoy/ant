@@ -242,7 +242,7 @@ local function showHeaderWidget()
     ImGui.SetNextItemWidth(120)
     if ImGui.BeginCombo("##Show", {current_tag}) then
         for _, tag in ipairs(log_tags) do
-            if ImGui.Selectable(tag, current_tag == tag) then
+            if ImGui.SelectableEx(tag, current_tag == tag) then
                 current_tag = tag
             end
         end
@@ -347,12 +347,12 @@ function m.showLog(name)
     --     if color then
     --         ImGui.PushStyleColor(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
     --     end
-    --     if ImGui.Selectable(item.message, current_select == i) then
+    --     if ImGui.SelectableEx(item.message, current_select == i) then
     --         current_select = i
     --     end
     --     if current_select == i then
     --         if ImGui.BeginPopupContextItemEx(current_select) then
-    --             if ImGui.Selectable("Copy", false) then
+    --             if ImGui.SelectableEx("Copy", false) then
     --                 ImGui.SetClipboardText(current_log[current_select].message)
     --             end
     --             ImGui.EndPopup()

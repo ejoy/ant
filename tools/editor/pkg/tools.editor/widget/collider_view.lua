@@ -124,7 +124,7 @@ function ColliderView:show()
         ImGui.PropertyLabel("LinkSlot")
         if ImGui.BeginCombo("##LinkSlot", {e.slot_name or "None", flags = ImGui.Flags.Combo {}}) then
             for name, eid in pairs(slot_list) do
-                if ImGui.Selectable(name, e.slot_name and e.slot_name == name) then
+                if ImGui.SelectableEx(name, e.slot_name and e.slot_name == name) then
                     e.slot_name = name
                     world:pub {"EntityEvent", "parent", self.eid, eid}
                 end

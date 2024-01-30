@@ -256,13 +256,13 @@ local function show_events()
         local delete_idx
         for idx, ke in ipairs(anim_state.current_event_list) do
             local label = "event:" .. tostring(idx)
-            if ImGui.Selectable(label, current_event and (current_event_index == idx)) then
+            if ImGui.SelectableEx(label, current_event and (current_event_index == idx)) then
                 current_event = ke
                 current_event_index = idx
             end
             if current_event and (current_event_index == idx) then
                 if ImGui.BeginPopupContextItemEx(label) then
-                    if ImGui.Selectable("Delete", false) then
+                    if ImGui.SelectableEx("Delete", false) then
                         delete_idx = idx
                     end
                     ImGui.EndPopup()
@@ -337,7 +337,7 @@ local function show_current_event()
         ImGui.Text("SoundEvent : " .. current_event.sound_event)
         ImGui.Separator();
         for _, se in ipairs(sound_event_name_list) do
-            if ImGui.Selectable(se, current_event.sound_event == se, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.SelectableEx(se, current_event.sound_event == se, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
                 if (ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left)) then
                     fmod.play(sound_event_list[se])
@@ -377,7 +377,7 @@ local function show_current_event()
             ImGui.PropertyLabel("Action")
             if ImGui.BeginCombo("##ActionList", {action, flags = ImGui.Flags.Combo {}}) then
                 for _, name in ipairs(action_list) do
-                    if ImGui.Selectable(name, action == name) then
+                    if ImGui.SelectableEx(name, action == name) then
                         current_event.action = name
                     end
                 end
@@ -391,7 +391,7 @@ local function show_current_event()
             if ImGui.BeginCombo("##Target", {target, flags = ImGui.Flags.Combo {}}) then
                 local namelist = (current_event.action_type_map[current_event.action] == "mtl") and prefab_mgr.mtl_list or prefab_mgr.srt_mtl_list
                 for _, name in ipairs(namelist) do
-                    if ImGui.Selectable(name, target == name) then
+                    if ImGui.SelectableEx(name, target == name) then
                         current_event.target = name
                     end
                 end
@@ -642,7 +642,7 @@ function m.show()
             local current_name_list = edit_timeline and {} or edit_anims.name_list
             if ImGui.BeginCombo("##NameList", {current_name, flags = ImGui.Flags.Combo {}}) then
                 for _, name in ipairs(current_name_list) do
-                    if ImGui.Selectable(name, current_name == name) then
+                    if ImGui.SelectableEx(name, current_name == name) then
                         set_current_anim(name)
                     end
                 end

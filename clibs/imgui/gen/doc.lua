@@ -19,6 +19,7 @@ local lua_type = {
     ["const char*"] = "string",
     ["bool"] = "boolean",
     ["float"] = "number",
+    ["double"] = "number",
     ["int"] = "integer",
     ["size_t"] = "integer",
     ["ImGuiID"] = "integer",

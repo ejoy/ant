@@ -12,7 +12,7 @@ local InputFloat    = ImGui.InputFloat
 local Checkbox      = ImGui.Checkbox
 local ColorEdit     = ImGui.ColorEdit
 local BeginCombo    = ImGui.BeginCombo
-local Selectable    = ImGui.Selectable
+local SelectableEx  = ImGui.SelectableEx
 local EndCombo      = ImGui.EndCombo
 local BeginDisabled = ImGui.BeginDisabled
 local EndDisabled   = ImGui.EndDisabled
@@ -25,7 +25,7 @@ local function list_combo(name, comp, ll, updatevalue)
     if BeginCombo("##" .. name, {comp}) then
         for ii=1, #ll do
             local v = ll[ii]
-            if Selectable(v, v == name) then
+            if SelectableEx(v, v == name) then
                 updatevalue[name] = v
             end
         end

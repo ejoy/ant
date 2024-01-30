@@ -6,6 +6,59 @@
 
 namespace imgui_lua {
 
+static int Selectable(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _retval = ImGui::Selectable(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SelectableEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto selected = lua_isnoneornil(L, 2)? false: !!lua_toboolean(L, 2);
+    auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
+    auto size = ImVec2 { (float)luaL_optnumber(L, 4, 0.f), (float)luaL_optnumber(L, 5, 0.f) };
+    auto _retval = ImGui::Selectable(label, selected, flags, size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SelectableBoolPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    bool has_p_selected = !lua_isnil(L, 2);
+    bool p_selected = true;
+    auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
+    auto _retval = ImGui::Selectable(label, (has_p_selected? &p_selected: NULL), flags);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_selected || p_selected);
+    return 2;
+}
+
+static int SelectableBoolPtrEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    bool has_p_selected = !lua_isnil(L, 2);
+    bool p_selected = true;
+    auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
+    auto size = ImVec2 { (float)luaL_optnumber(L, 4, 0.f), (float)luaL_optnumber(L, 5, 0.f) };
+    auto _retval = ImGui::Selectable(label, (has_p_selected? &p_selected: NULL), flags, size);
+    lua_pushboolean(L, _retval);
+    lua_pushboolean(L, has_p_selected || p_selected);
+    return 2;
+}
+
+static int BeginListBox(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto size = ImVec2 { (float)luaL_optnumber(L, 2, 0.f), (float)luaL_optnumber(L, 3, 0.f) };
+    auto _retval = ImGui::BeginListBox(label, size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int EndListBox(lua_State* L) {
+    ImGui::EndListBox();
+    return 0;
+}
+
 static int BeginMenuBar(lua_State* L) {
     auto _retval = ImGui::BeginMenuBar();
     lua_pushboolean(L, _retval);
@@ -623,6 +676,40 @@ static int GetItemRectSize(lua_State* L) {
     return 2;
 }
 
+static int IsRectVisibleBySize(lua_State* L) {
+    auto size = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
+    auto _retval = ImGui::IsRectVisible(size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsRectVisible(lua_State* L) {
+    auto rect_min = ImVec2 { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2) };
+    auto rect_max = ImVec2 { (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) };
+    auto _retval = ImGui::IsRectVisible(rect_min, rect_max);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int GetTime(lua_State* L) {
+    auto _retval = ImGui::GetTime();
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetFrameCount(lua_State* L) {
+    auto _retval = ImGui::GetFrameCount();
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetStyleColorName(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetStyleColorName(idx);
+    lua_pushstring(L, _retval);
+    return 1;
+}
+
 static int CalcTextSize(lua_State* L) {
     auto text = luaL_checkstring(L, 1);
     auto _retval = ImGui::CalcTextSize(text);
@@ -875,6 +962,12 @@ static int GetKeyIndex(lua_State* L) {
 
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
+        { "Selectable", Selectable },
+        { "SelectableEx", SelectableEx },
+        { "SelectableBoolPtr", SelectableBoolPtr },
+        { "SelectableBoolPtrEx", SelectableBoolPtrEx },
+        { "BeginListBox", BeginListBox },
+        { "EndListBox", EndListBox },
         { "BeginMenuBar", BeginMenuBar },
         { "EndMenuBar", EndMenuBar },
         { "BeginMainMenuBar", BeginMainMenuBar },
@@ -967,6 +1060,11 @@ void init(lua_State* L) {
         { "GetItemRectMin", GetItemRectMin },
         { "GetItemRectMax", GetItemRectMax },
         { "GetItemRectSize", GetItemRectSize },
+        { "IsRectVisibleBySize", IsRectVisibleBySize },
+        { "IsRectVisible", IsRectVisible },
+        { "GetTime", GetTime },
+        { "GetFrameCount", GetFrameCount },
+        { "GetStyleColorName", GetStyleColorName },
         { "CalcTextSize", CalcTextSize },
         { "CalcTextSizeEx", CalcTextSizeEx },
         { "IsKeyDown", IsKeyDown },

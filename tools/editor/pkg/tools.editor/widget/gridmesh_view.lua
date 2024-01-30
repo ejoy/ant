@@ -94,7 +94,7 @@ function m.show()
             ImGui.PropertyLabel("Brush")
             if ImGui.BeginCombo("##Brush", {current_label, flags = ImGui.Flags.Combo {}}) then
                 for index, label in ipairs(brush_def.label) do
-                    if ImGui.Selectable(label, current_label == label) then
+                    if ImGui.SelectableEx(label, current_label == label) then
                         current_label = label
                         local color = brush_def.color[index]
                         world:pub {"GridMesh", "brushcolor", index, color}

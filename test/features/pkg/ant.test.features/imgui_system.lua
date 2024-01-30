@@ -38,7 +38,7 @@ local function disable_test(name)
 end
 
 local function select_test(name)
-    if ImGui.Selectable(name, name == currentTest) then
+    if ImGui.SelectableEx(name, name == currentTest) then
         if currentTest ~= name then
             disable_test(currentTest)
             enable_test(name)

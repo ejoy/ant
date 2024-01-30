@@ -145,7 +145,7 @@ function Combo:show()
         local current_option = self.modifier.getter()
         if ImGui.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then
             for _, option in ipairs(self.options) do
-                if ImGui.Selectable(option, current_option == option) then
+                if ImGui.SelectableEx(option, current_option == option) then
                     self.modifier.setter(option)
                 end
             end
@@ -375,7 +375,7 @@ function TextureResource:show()
                 for path in fs.pairs(image_path) do
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
-                        if ImGui.Selectable(filename, false) then
+                        if ImGui.SelectableEx(filename, false) then
                             self:set_file(glb_path .. "|images/" .. filename)
                             image_path = nil
                         end

@@ -410,7 +410,7 @@ function m.show()
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
                     pre_init_item_height()
-                    if ImGui.Selectable(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.SelectableEx(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
@@ -426,7 +426,7 @@ function m.show()
                 for _, path in pairs(folder.files) do
                     pre_selectable(icons:get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
-                    if ImGui.Selectable(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.SelectableEx(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then

@@ -80,7 +80,7 @@ local function choose_project()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj)
                     exit = true
@@ -180,7 +180,7 @@ function m:data_changed()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj.proj_path)
                     exit = true

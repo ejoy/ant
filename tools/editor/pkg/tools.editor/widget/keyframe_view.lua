@@ -640,7 +640,7 @@ local function show_current_detail()
     ImGui.PropertyLabel("TweenType")
     if ImGui.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = ImGui.Flags.Combo {}}) then
         for i, type in ipairs(tween_type_name) do
-            if ImGui.Selectable(type, current_clip.tween == i) then
+            if ImGui.SelectableEx(type, current_clip.tween == i) then
                 current_clip.tween = i
                 dirty = true
             end
@@ -665,7 +665,7 @@ local function show_current_detail()
             ImGui.PropertyLabel("AnimationType")
             if ImGui.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = ImGui.Flags.Combo {}}) then
                 for i, type in ipairs(anim_type_name) do
-                    if ImGui.Selectable(type, current_clip.type == i) then
+                    if ImGui.SelectableEx(type, current_clip.type == i) then
                         current_clip.type = i
                         dirty = true
                     end
@@ -688,7 +688,7 @@ local function show_current_detail()
         ImGui.PropertyLabel("Direction")
         if ImGui.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = ImGui.Flags.Combo {}}) then
             for i, type in ipairs(dir_name) do
-                if ImGui.Selectable(type, current_clip.direction == i) then
+                if ImGui.SelectableEx(type, current_clip.direction == i) then
                     current_clip.direction = i
                     dirty = true
                 end
@@ -706,7 +706,7 @@ local function show_current_detail()
         ImGui.PropertyLabel("RotAxis")
         if ImGui.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = ImGui.Flags.Combo {}}) then
             for i = 1, 3 do
-                if ImGui.Selectable(dir_name[i], current_clip.rot_axis == i) then
+                if ImGui.SelectableEx(dir_name[i], current_clip.rot_axis == i) then
                     current_clip.rot_axis = i
                     dirty = true
                 end
@@ -951,7 +951,7 @@ end
 
 local function show_uniforms()
     for _, anim in ipairs(current_anim.target_anims) do
-        if ImGui.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
+        if ImGui.SelectableEx(anim.target_name, current_uniform and current_uniform == anim.target_name) then
             current_uniform = anim.target_name
             on_select_target(current_uniform)
         end
@@ -1058,7 +1058,7 @@ function m.show()
                 ImGui.PushItemWidth(150)
                 if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
                     for _, name in ipairs(anim_name_list) do
-                        if ImGui.Selectable(name, current_anim.name == name) then
+                        if ImGui.SelectableEx(name, current_anim.name == name) then
                             current_anim.selected_layer_index = 0
                             current_anim.selected_clip_index = 0
                             current_anim = allanims[name]
@@ -1080,7 +1080,7 @@ function m.show()
                 if ImGui.BeginCombo("##BindTo", {anim_bind_map[current_anim.name], flags = ImGui.Flags.Combo {}}) then
                     local taglist = (current_anim.type == "srt") and prefab_mgr.srt_mtl_list or prefab_mgr.mtl_list
                     for _, name in ipairs(taglist) do
-                        if ImGui.Selectable(name, anim_bind_map[current_anim.name] == name) then
+                        if ImGui.SelectableEx(name, anim_bind_map[current_anim.name] == name) then
                             anim_bind_map[current_anim.name] = name
                             update_animation()
                         end

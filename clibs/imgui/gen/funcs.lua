@@ -107,6 +107,11 @@ write_ret["bool"] = function()
     return 1
 end
 
+write_ret["double"] = function()
+    writeln "    lua_pushnumber(L, _retval);"
+    return 1
+end
+
 write_ret["const ImGuiPayload*"] = function()
     writeln "    if (_retval != NULL) {"
     writeln "        lua_pushlstring(L, (const char*)_retval->Data, _retval->DataSize);"
