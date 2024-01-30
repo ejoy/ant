@@ -1053,6 +1053,438 @@ function ImGui.Flags.Viewport(flags) end
 ---@alias ImGuiKeyChord ImGuiKey
 
 --
+-- Widgets: Drag Sliders
+-- - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
+-- - For all the Float2/Float3/Float4/Int2/Int3/Int4 versions of every function, note that a 'float v[X]' function argument is the same as 'float* v',
+--   the array syntax is just a way to document the number of elements that are expected to be accessible. You can pass address of your first element out of a contiguous set, e.g. &myvector.x
+-- - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2f secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
+-- - Format string may also be set to NULL or use the default format ("%f" or "%d").
+-- - Speed are per-pixel of mouse movement (v_speed=0.2f: mouse needs to move by 5 pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed is Max(v_speed, minimum_step_at_given_precision).
+-- - Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual input can override those limits if ImGuiSliderFlags_AlwaysClamp is not used.
+-- - Use v_max = FLT_MAX / INT_MAX etc to avoid clamping to a maximum, same with v_min = -FLT_MAX / INT_MIN to avoid clamping to a minimum.
+-- - We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
+-- - Legacy: Pre-1.78 there are DragXXX() function signatures that take a final `float power=1.0f' argument instead of the `ImGuiSliderFlags flags=0' argument.
+--   If you get a warning converting a float to ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
+--
+--
+-- Implied v_speed = 1.0f, v_min = 0.0f, v_max = 0.0f, format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.DragFloat(label, v) end
+
+--
+-- If v_min >= v_max we have no bound
+--
+---@param label string
+---@param v number[]
+---@param v_speed? number | `1.0`
+---@param v_min? number | `0.0`
+---@param v_max? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragFloatEx(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0.0f, v_max = 0.0f, format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.DragFloat2(label, v) end
+
+---@param label string
+---@param v number[]
+---@param v_speed? number | `1.0`
+---@param v_min? number | `0.0`
+---@param v_max? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragFloat2Ex(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0.0f, v_max = 0.0f, format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.DragFloat3(label, v) end
+
+---@param label string
+---@param v number[]
+---@param v_speed? number | `1.0`
+---@param v_min? number | `0.0`
+---@param v_max? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragFloat3Ex(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0.0f, v_max = 0.0f, format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.DragFloat4(label, v) end
+
+---@param label string
+---@param v number[]
+---@param v_speed? number | `1.0`
+---@param v_min? number | `0.0`
+---@param v_max? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragFloat4Ex(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0.0f, v_max = 0.0f, format = "%.3f", format_max = NULL, flags = 0
+--
+---@param label string
+---@param v_current_min number[]
+---@param v_current_max number[]
+---@return boolean
+function ImGui.DragFloatRange2(label, v_current_min, v_current_max) end
+
+---@param label string
+---@param v_current_min number[]
+---@param v_current_max number[]
+---@param v_speed? number | `1.0`
+---@param v_min? number | `0.0`
+---@param v_max? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param format_max? string
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragFloatRange2Ex(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0, v_max = 0, format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@return boolean
+function ImGui.DragInt(label, v) end
+
+--
+-- If v_min >= v_max we have no bound
+--
+---@param label string
+---@param v integer[]
+---@param v_speed? number | `1.0`
+---@param v_min? integer | `0`
+---@param v_max? integer | `0`
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragIntEx(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0, v_max = 0, format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@return boolean
+function ImGui.DragInt2(label, v) end
+
+---@param label string
+---@param v integer[]
+---@param v_speed? number | `1.0`
+---@param v_min? integer | `0`
+---@param v_max? integer | `0`
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragInt2Ex(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0, v_max = 0, format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@return boolean
+function ImGui.DragInt3(label, v) end
+
+---@param label string
+---@param v integer[]
+---@param v_speed? number | `1.0`
+---@param v_min? integer | `0`
+---@param v_max? integer | `0`
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragInt3Ex(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0, v_max = 0, format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@return boolean
+function ImGui.DragInt4(label, v) end
+
+---@param label string
+---@param v integer[]
+---@param v_speed? number | `1.0`
+---@param v_min? integer | `0`
+---@param v_max? integer | `0`
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragInt4Ex(label, v, v_speed, v_min, v_max, format, flags) end
+
+--
+-- Implied v_speed = 1.0f, v_min = 0, v_max = 0, format = "%d", format_max = NULL, flags = 0
+--
+---@param label string
+---@param v_current_min integer[]
+---@param v_current_max integer[]
+---@return boolean
+function ImGui.DragIntRange2(label, v_current_min, v_current_max) end
+
+---@param label string
+---@param v_current_min integer[]
+---@param v_current_max integer[]
+---@param v_speed? number | `1.0`
+---@param v_min? integer | `0`
+---@param v_max? integer | `0`
+---@param format? string | `"%d"`
+---@param format_max? string
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.DragIntRange2Ex(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags) end
+
+--
+-- Widgets: Regular Sliders
+-- - CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
+-- - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2f secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
+-- - Format string may also be set to NULL or use the default format ("%f" or "%d").
+-- - Legacy: Pre-1.78 there are SliderXXX() function signatures that take a final `float power=1.0f' argument instead of the `ImGuiSliderFlags flags=0' argument.
+--   If you get a warning converting a float to ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
+--
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@return boolean
+function ImGui.SliderFloat(label, v, v_min, v_max) end
+
+--
+-- adjust format to decorate the value with a prefix or a suffix for in-slider labels or unit display.
+--
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderFloatEx(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@return boolean
+function ImGui.SliderFloat2(label, v, v_min, v_max) end
+
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderFloat2Ex(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@return boolean
+function ImGui.SliderFloat3(label, v, v_min, v_max) end
+
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderFloat3Ex(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@return boolean
+function ImGui.SliderFloat4(label, v, v_min, v_max) end
+
+---@param label string
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderFloat4Ex(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied v_degrees_min = -360.0f, v_degrees_max = +360.0f, format = "%.0f deg", flags = 0
+--
+---@param label string
+---@param v_rad number[]
+---@return boolean
+function ImGui.SliderAngle(label, v_rad) end
+
+---@param label string
+---@param v_rad number[]
+---@param v_degrees_min? number | `-360.0`
+---@param v_degrees_max? number | `+360.0`
+---@param format? string | `"%.0f deg"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderAngleEx(label, v_rad, v_degrees_min, v_degrees_max, format, flags) end
+
+--
+-- Implied format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@return boolean
+function ImGui.SliderInt(label, v, v_min, v_max) end
+
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderIntEx(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@return boolean
+function ImGui.SliderInt2(label, v, v_min, v_max) end
+
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderInt2Ex(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@return boolean
+function ImGui.SliderInt3(label, v, v_min, v_max) end
+
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderInt3Ex(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%d", flags = 0
+--
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@return boolean
+function ImGui.SliderInt4(label, v, v_min, v_max) end
+
+---@param label string
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.SliderInt4Ex(label, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param size_x number
+---@param size_y number
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@return boolean
+function ImGui.VSliderFloat(label, size_x, size_y, v, v_min, v_max) end
+
+---@param label string
+---@param size_x number
+---@param size_y number
+---@param v number[]
+---@param v_min number
+---@param v_max number
+---@param format? string | `"%.3f"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.VSliderFloatEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
+
+--
+-- Implied format = "%d", flags = 0
+--
+---@param label string
+---@param size_x number
+---@param size_y number
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@return boolean
+function ImGui.VSliderInt(label, size_x, size_y, v, v_min, v_max) end
+
+---@param label string
+---@param size_x number
+---@param size_y number
+---@param v integer[]
+---@param v_min integer
+---@param v_max integer
+---@param format? string | `"%d"`
+---@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@return boolean
+function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
+
+--
 -- Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
 -- - Note that in C++ a 'float v[X]' function argument is the _same_ as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible.
 -- - You can pass the address of a first float element out of a contiguous structure, e.g. &myvector.x

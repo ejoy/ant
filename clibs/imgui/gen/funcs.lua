@@ -136,7 +136,32 @@ write_arg_ret["size_t*"] = function(type_meta)
     return 1
 end
 
-for n = 3, 4 do
+for n = 1, 4 do
+    write_arg["int["..n.."]"] = function(type_meta, status)
+        status.idx = status.idx + 1
+        writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
+        writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+        writeln("    int %s[%d] = {", type_meta.name, n)
+        for i = 1, n do
+            writeln("        (int)field_tointeger(L, %d, %d),", status.idx, i)
+        end
+        writeln "    };"
+        status.arguments[#status.arguments+1] = type_meta.name
+    end
+    write_arg_ret["int["..n.."]"] = function(type_meta)
+        writeln "    if (_retval) {"
+        for i = 1, n do
+            writeln("        lua_pushinteger(L, %s[%d]);", type_meta.name, i-1)
+            writeln("        lua_seti(L, _%s_index, %d);", type_meta.name, i)
+        end
+        writeln "    };"
+        return 0
+    end
+end
+write_arg["int*"] = write_arg["int[1]"]
+write_arg_ret["int*"] = write_arg_ret["int[1]"]
+
+for n = 1, 4 do
     write_arg["float["..n.."]"] = function(type_meta, status)
         status.idx = status.idx + 1
         writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
@@ -147,18 +172,19 @@ for n = 3, 4 do
         end
         writeln "    };"
         status.arguments[#status.arguments+1] = type_meta.name
-        status.idx = status.idx + 4
     end
     write_arg_ret["float["..n.."]"] = function(type_meta)
         writeln "    if (_retval) {"
         for i = 1, n do
-            writeln("        lua_pushnumber(L, %s[%d]);", type_meta.name, i)
+            writeln("        lua_pushnumber(L, %s[%d]);", type_meta.name, i-1)
             writeln("        lua_seti(L, _%s_index, %d);", type_meta.name, i)
         end
         writeln "    };"
         return 0
     end
 end
+write_arg["float*"] = write_arg["float[1]"]
+write_arg_ret["float*"] = write_arg_ret["float[1]"]
 
 local write_ret = {}
 
@@ -325,9 +351,16 @@ writeln "    str_format = lua_tocfunction(L, -1);"
 writeln "    lua_pop(L, 2);"
 writeln "}"
 writeln ""
-writeln "static lua_Number field_tonumber(lua_State* L, int idx, lua_Integer i) {"
+writeln "static auto field_tointeger(lua_State* L, int idx, lua_Integer i) {"
 writeln "    lua_geti(L, idx, i);"
-writeln "    lua_Number v = luaL_checknumber(L, -1);"
+writeln "    auto v = luaL_checknumber(L, -1);"
+writeln "    lua_pop(L, 1);"
+writeln "    return v;"
+writeln "}"
+writeln ""
+writeln "static auto field_tonumber(lua_State* L, int idx, lua_Integer i) {"
+writeln "    lua_geti(L, idx, i);"
+writeln "    auto v = luaL_checknumber(L, -1);"
 writeln "    lua_pop(L, 1);"
 writeln "    return v;"
 writeln "}"

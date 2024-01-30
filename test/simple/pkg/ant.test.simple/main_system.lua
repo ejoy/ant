@@ -78,33 +78,20 @@ function m:data_changed()
                         end
                     end
                     do
-                        local value = {
-                            [1] = status.speed and math.floor(status.speed*100) or 100,
-                            min = -500,
-                            max = 500,
-                            format = "%d%%"
-                        }
-                        if ImGui.DragInt("speed", value) then
+                        local value = { status.speed and math.floor(status.speed*100) or 100 }
+                        if ImGui.DragIntEx("speed", value, 5.0, -500, 500, "%d%%") then
                             iplayback.set_speed(e, name, value[1] / 100)
                         end
                     end
                     do
-                        local value = {
-                            [1] = status.weight,
-                            min = 0,
-                            max = 1,
-                        }
-                        if ImGui.SliderFloat("weight", value) then
+                        local value = { status.weight }
+                        if ImGui.SliderFloat("weight", value, 0, 1) then
                             ianimation.set_weight(e, name, value[1])
                         end
                     end
                     do
-                        local value = {
-                            [1] = status.ratio,
-                            min = 0,
-                            max = 1,
-                        }
-                        if ImGui.SliderFloat("ratio", value) then
+                        local value = { status.ratio }
+                        if ImGui.SliderFloat("ratio", value, 0, 1) then
                             ianimation.set_ratio(e, name, value[1])
                         end
                     end

@@ -82,6 +82,46 @@ local TodoList <const> = {
     ImGui_ListBoxCallbackEx = true,
 
     ImGui_ColorPicker4 = true,
+
+    ImGui_InputText = true,
+    ImGui_InputTextEx = true,
+    ImGui_InputTextMultiline = true,
+    ImGui_InputTextMultilineEx = true,
+    ImGui_InputTextWithHint = true,
+    ImGui_InputTextWithHintEx = true,
+    ImGui_InputFloat = true,
+    ImGui_InputFloatEx = true,
+    ImGui_InputFloat2 = true,
+    ImGui_InputFloat2Ex = true,
+    ImGui_InputFloat3 = true,
+    ImGui_InputFloat3Ex = true,
+    ImGui_InputFloat4 = true,
+    ImGui_InputFloat4Ex = true,
+    ImGui_InputInt = true,
+    ImGui_InputIntEx = true,
+    ImGui_InputInt2 = true,
+    ImGui_InputInt3 = true,
+    ImGui_InputInt4 = true,
+    ImGui_InputDouble = true,
+    ImGui_InputDoubleEx = true,
+    ImGui_InputScalar = true,
+    ImGui_InputScalarEx = true,
+    ImGui_InputScalarN = true,
+    ImGui_InputScalarNEx = true,
+
+    ImGui_DragScalar = true,
+    ImGui_DragScalarEx = true,
+    ImGui_DragScalarN = true,
+    ImGui_DragScalarNEx = true,
+
+    ImGui_SliderScalar = true,
+    ImGui_SliderScalarEx = true,
+    ImGui_SliderScalarN = true,
+    ImGui_SliderScalarNEx = true,
+    ImGui_VSliderScalar = true,
+    ImGui_VSliderScalarEx = true,
+    ImGui_VSliderScalarN = true,
+    ImGui_VSliderScalarNEx = true,
 }
 
 local function conditionals(t)
@@ -111,7 +151,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-local s <const> = "ImGui_ColorEdit3"
+local s <const> = "ImGui_DragFloat"
 
 local within_scope = false
 

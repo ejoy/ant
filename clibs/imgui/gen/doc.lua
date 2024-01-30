@@ -80,17 +80,23 @@ special_ret["ImVec4"] = function ()
 end
 
 --TODO: 指定数组长度
-special_arg["float[3]"] = function (type_meta, status)
-    assert(type_meta.default_value == nil)
-    writeln("---@param %s number[]", type_meta.name)
-    status.arguments[#status.arguments+1] = type_meta.name
+for n = 1, 4 do
+    special_arg["int["..n.."]"] = function (type_meta, status)
+        assert(type_meta.default_value == nil)
+        writeln("---@param %s integer[]", type_meta.name)
+        status.arguments[#status.arguments+1] = type_meta.name
+    end
 end
+special_arg["int*"] = special_arg["int[1]"]
 
-special_arg["float[4]"] = function (type_meta, status)
-    assert(type_meta.default_value == nil)
-    writeln("---@param %s number[]", type_meta.name)
-    status.arguments[#status.arguments+1] = type_meta.name
+for n = 1, 4 do
+    special_arg["float["..n.."]"] = function (type_meta, status)
+        assert(type_meta.default_value == nil)
+        writeln("---@param %s number[]", type_meta.name)
+        status.arguments[#status.arguments+1] = type_meta.name
+    end
 end
+special_arg["float*"] = special_arg["float[1]"]
 
 special_arg["bool*"] = function (type_meta, status)
     writeln("---@param %s true | nil", safe_name(type_meta.name))
@@ -158,8 +164,10 @@ default_type["float"] = function (value)
 end
 
 default_type["const char*"] = function (value)
-    assert(value == "NULL")
-    return nil
+    if value == "NULL" then
+        return
+    end
+    return value
 end
 
 local function conditionals(t)

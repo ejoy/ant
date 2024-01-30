@@ -729,90 +729,6 @@ vslider_int(lua_State *L, const char *label) {
 	return change;
 }
 
-#define DRAG_FLOAT 0
-#define DRAG_INT 1
-#define SLIDER_FLOAT 2
-#define SLIDER_INT 3
-#define SLIDER_ANGLE 4
-#define VSLIDER_FLOAT 5
-#define VSLIDER_INT 6
-
-#define COLOR_EDIT 0
-#define COLOR_PICKER 1
-
-static int
-wDrag(lua_State *L, int type) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	if (n < 1 || n > 4)
-		return luaL_error(L, "Need 1-4 numbers");
-	bool change = false;
-	// todo: DragScalar/DragScalarN/SliderScalar/SliderScalarN/VSliderScalar
-	switch (type) {
-	case DRAG_FLOAT:
-		change = drag_float(L, label, n);
-		break;
-	case DRAG_INT:
-		change = drag_int(L, label, n);
-		break;
-	case SLIDER_FLOAT:
-		change = slider_float(L, label, n);
-		break;
-	case SLIDER_INT:
-		change = slider_int(L, label, n);
-		break;
-	case SLIDER_ANGLE:
-		change = slider_angle(L, label);
-		break;
-	case VSLIDER_FLOAT:
-		change = vslider_float(L, label);
-		break;
-	case VSLIDER_INT:
-		change = vslider_int(L, label);
-		break;
-	}
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wDragFloat(lua_State *L) {
-	return wDrag(L, DRAG_FLOAT);
-}
-
-static int
-wDragInt(lua_State *L) {
-	return wDrag(L, DRAG_INT);
-}
-
-static int
-wSliderFloat(lua_State *L) {
-	return wDrag(L, SLIDER_FLOAT);
-}
-
-static int
-wSliderInt(lua_State *L) {
-	return wDrag(L, SLIDER_INT);
-}
-
-static int
-wSliderAngle(lua_State *L) {
-	return wDrag(L, SLIDER_ANGLE);
-}
-
-static int
-wVSliderFloat(lua_State *L) {
-	return wDrag(L, VSLIDER_FLOAT);
-}
-
-static int
-wVSliderInt(lua_State *L) {
-	return wDrag(L, VSLIDER_INT);
-}
-
 struct editbuf {
 	char * buf;
 	size_t size;
@@ -2204,13 +2120,6 @@ luaopen_imgui(lua_State *L) {
 		{ "RadioButton", wRadioButton },
 		{ "ProgressBar", wProgressBar },
 		{ "Bullet", wBullet },
-		{ "DragFloat", wDragFloat },
-		{ "DragInt", wDragInt },
-		{ "SliderFloat", wSliderFloat },
-		{ "SliderInt", wSliderInt },
-		{ "SliderAngle", wSliderAngle },
-		{ "VSliderFloat", wVSliderFloat },
-		{ "VSliderInt", wVSliderInt },
 		{ "InputText", wInputText },
 		{ "InputTextMultiline", wInputTextMultiline },
 		{ "InputFloat", wInputFloat },
