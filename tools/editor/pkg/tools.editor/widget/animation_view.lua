@@ -44,6 +44,7 @@ local anim_state = {
     selected_clip_index = 0,
     current_event_list = {}
 }
+
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local ui_timeline_duration = {1, min = 1, max = 300, speed = 1}
@@ -149,6 +150,10 @@ local function from_runtime_event(runtime_event)
     return ke
 end
 
+local function set_event_dirty(num)
+    anim_state.event_dirty = num
+end
+
 local widget_utils  = require "widget.utils"
 
 local function set_current_anim(anim_name)
@@ -177,6 +182,7 @@ local function set_current_anim(anim_name)
     iani.play(anim_eid, {name = anim_name, loop = ui_loop[1], speed = ui_speed[1]})
     iani.set_time(anim_eid, 0, current_anim.name)
     iani.pause(anim_eid, not anim_state.is_playing, current_anim.name)
+    set_event_dirty(-1)
     return true
 end
 
@@ -214,11 +220,13 @@ local function delete_event(idx)
     current_event       = nil
     current_event_index = 0
     table.remove(anim_state.current_event_list, idx)
+    set_event_dirty(1)
 end
 
 local function clear_event()
     anim_key_event[tostring(anim_state.selected_frame)] = {}
     anim_state.current_event_list = anim_key_event[tostring(anim_state.selected_frame)]
+    set_event_dirty(1)
 end
 
 local function show_events()
@@ -409,6 +417,9 @@ local function show_current_event()
             dirty = true
         end
     end
+    if dirty then
+        set_event_dirty(1)
+    end
 end
 
 function m.on_remove_entity(eid)
@@ -434,6 +445,7 @@ local function on_move_keyframe(frame_idx, move_type)
         current_event = nil
         current_event_index = 0
     end
+    set_event_dirty(-1)
 end
 local function min_max_range_value(clip_index)
     return 0, math.ceil(current_anim.duration * sample_ratio) - 1
@@ -894,6 +906,7 @@ function m.on_target(eid)
         anim_key_event = current_timeline.key_event
         anim_state.duration = current_timeline.duration
         anim_state.current_frame = 0
+        set_event_dirty(-1)
     elseif current_anim then
         anim_state.anim_name = current_anim.name
         anim_state.key_event = current_anim.key_event
@@ -901,6 +914,7 @@ function m.on_target(eid)
         anim_state.duration = current_anim.duration
         anim_state.current_frame = 0
         edit_anims.dirty = true
+        set_event_dirty(-1)
     end
 end
 
