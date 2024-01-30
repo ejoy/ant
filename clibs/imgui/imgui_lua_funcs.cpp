@@ -471,6 +471,13 @@ static int IsKeyReleased(lua_State* L) {
     return 1;
 }
 
+static int IsKeyChordPressed(lua_State* L) {
+    auto key_chord = (ImGuiKeyChord)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::IsKeyChordPressed(key_chord);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
 void init(lua_State* L) {
     luaL_Reg funcs[] = {
         { "BeginTable", BeginTable },
@@ -542,6 +549,7 @@ void init(lua_State* L) {
         { "IsKeyPressed", IsKeyPressed },
         { "IsKeyPressedEx", IsKeyPressedEx },
         { "IsKeyReleased", IsKeyReleased },
+        { "IsKeyChordPressed", IsKeyChordPressed },
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);

@@ -1,11 +1,18 @@
 local AntDir, meta = ...
 
-
 local w <close> = assert(io.open(AntDir.."/misc/meta/imgui.lua", "wb"))
 
 local function writeln(fmt, ...)
     w:write(string.format(fmt, ...))
     w:write "\n"
+end
+
+local KEYWORD <const> = {
+    ["repeat"] = "repeat_"
+}
+
+local function safe_name(v)
+    return KEYWORD[v] or v
 end
 
 local lua_type = {
@@ -15,6 +22,7 @@ local lua_type = {
     ["int"] = "integer",
     ["ImGuiID"] = "integer",
     ["ImU32"] = "integer",
+    ["ImGuiKeyChord"] = "ImGuiKeyChord",
     ["const ImGuiPayload*"] = "string | nil",
 }
 
@@ -42,8 +50,8 @@ special_ret["ImVec2"] = function ()
 end
 
 special_arg["bool*"] = function (type_meta, status)
-    writeln("---@param %s true | nil", type_meta.name)
-    status.arguments[#status.arguments+1] = type_meta.name
+    writeln("---@param %s true | nil", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
 special_arg["const void*"] = function (type_meta, status)
@@ -52,12 +60,12 @@ special_arg["const void*"] = function (type_meta, status)
     assert(not size_meta.default_value)
     assert(size_meta.type.declaration == "size_t")
     status.i = status.i + 1
-    writeln("---@param %s string", type_meta.name)
-    status.arguments[#status.arguments+1] = type_meta.name
+    writeln("---@param %s string", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
 return_type["bool*"] = function (type_meta)
-    writeln("---@return boolean %s", type_meta.name)
+    writeln("---@return boolean %s", safe_name(type_meta.name))
 end
 
 default_type["float"] = function (value)
@@ -77,24 +85,42 @@ local function get_default_value(type_meta)
     return type_meta.default_value
 end
 
+local function conditionals(t)
+    local cond = t.conditionals
+    if not cond then
+        return true
+    end
+    assert(#cond == 1)
+    cond = cond[1]
+    if cond.condition == "ifndef" then
+        cond = cond.expression
+        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
+            return
+        end
+        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
+            return
+        end
+    elseif cond.condition == "ifdef" then
+        cond = cond.expression
+        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
+            return true
+        end
+        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
+            return true
+        end
+    end
+    assert(false, t.name)
+end
+
 local function write_enum_scope()
     writeln("ImGui.Flags = {}")
     writeln("ImGui.Enum = {}")
     writeln ""
     for _, enums in ipairs(meta.enums) do
-        if enums.conditionals then
+        if not conditionals(enums) then
             goto continue
         end
         local realname = enums.name:match "(.-)_?$"
-        lua_type[realname] = realname
-        default_type[realname] = function (value)
-            local v = math.tointeger(value)
-            for _, element in ipairs(enums.elements) do
-                if element.value == v then
-                    return string.format("ImGui.Flags.%s { %q }", realname:match "^ImGui(%a+)Flags$", element.name:sub(#realname+2))
-                end
-            end
-        end
         if enums.comments then
             if enums.comments.preceding then
                 writeln "--"
@@ -111,10 +137,11 @@ local function write_enum_scope()
         end
         writeln("---@class %s", realname)
         if enums.is_flags_enum then
+            local name = realname:match "^ImGui(%a+)Flags$" or realname:match "^Im(%a+)Flags$"
             writeln ""
             writeln("---@alias _%s_Name", realname)
             for _, element in ipairs(enums.elements) do
-                if not element.is_internal then
+                if not element.is_internal and conditionals(element) then
                     if element.comments and element.comments.attached then
                         writeln("---| %q # %s", element.name:sub(#realname+2), element.comments.attached:match "^//(.*)$")
                     else
@@ -125,13 +152,61 @@ local function write_enum_scope()
             writeln ""
             writeln("---@param flags _%s_Name[]", realname)
             writeln("---@return %s", realname)
-            writeln("function ImGui.Flags.%s(flags) end", realname:match "^ImGui(%a+)Flags$")
+            writeln("function ImGui.Flags.%s(flags) end", name)
+            lua_type[realname] = realname
+            default_type[realname] = function (value)
+                local v = math.tointeger(value)
+                for _, element in ipairs(enums.elements) do
+                    if element.value == v then
+                        return string.format("ImGui.Flags.%s { %q }", name, element.name:sub(#realname+2))
+                    end
+                end
+            end
         else
-            --TODO
+            local name = realname:match "^ImGui(%a+)$"
+            writeln ""
+            writeln("---@class _%s_Name", realname)
+            local mark = {}
+            for _, element in ipairs(enums.elements) do
+                if not element.is_internal and not element.is_count and conditionals(element) then
+                    local fieldname = element.name:sub(#realname+2)
+                    if fieldname:match "^[0-9]" then
+                        fieldname = "["..fieldname.."]"
+                    end
+                    if not mark[fieldname] then
+                        mark[fieldname] = true
+                        if element.comments and element.comments.attached then
+                            writeln("---@field %s %s # %s", fieldname, realname, element.comments.attached:match "^//(.*)$")
+                        else
+                            writeln("---@field %s %s", fieldname, realname)
+                        end
+                    end
+                end
+            end
+            writeln("ImGui.Enum.%s = {}", name)
+            lua_type[realname] = realname
+            default_type[realname] = function (value)
+                local v = math.tointeger(value)
+                for _, element in ipairs(enums.elements) do
+                    if element.value == v then
+                        local fieldname = element.name:sub(#realname+2)
+                        if fieldname:match "^[0-9]" then
+                            fieldname = "["..fieldname.."]"
+                        else
+                            fieldname = "."..fieldname
+                        end
+                        return string.format("ImGui.Enum.%s%s", name, fieldname)
+                    end
+                end
+            end
         end
         writeln ""
         ::continue::
     end
+end
+
+local function write_type_scope()
+    writeln("---@alias ImGuiKeyChord ImGuiKey")
 end
 
 local function write_func(func_meta)
@@ -167,14 +242,14 @@ local function write_func(func_meta)
                 if type_meta.default_value then
                     local default_value = get_default_value(type_meta)
                     if default_value then
-                        writeln("---@param %s? %s | `%s`", type_meta.name, luatype, default_value)
+                        writeln("---@param %s? %s | `%s`", safe_name(type_meta.name), luatype, default_value)
                     else
-                        writeln("---@param %s? %s", type_meta.name, luatype)
+                        writeln("---@param %s? %s", safe_name(type_meta.name), luatype)
                     end
                 else
-                    writeln("---@param %s %s", type_meta.name, luatype)
+                    writeln("---@param %s %s", safe_name(type_meta.name), luatype)
                 end
-                status.arguments[#status.arguments+1] = type_meta.name
+                status.arguments[#status.arguments+1] = safe_name(type_meta.name)
             else
                 error(string.format("undefined lua type `%s`", type_meta.type.declaration))
             end
@@ -230,6 +305,8 @@ writeln ""
 writeln "local ImGui = {}"
 writeln ""
 write_enum_scope()
+writeln ""
+write_type_scope()
 writeln ""
 write_func_scope()
 writeln "return ImGui"

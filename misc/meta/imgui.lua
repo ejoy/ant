@@ -40,7 +40,6 @@ ImGui.Enum = {}
 ---| "NoNav"
 ---| "NoDecoration"
 ---| "NoInputs"
----| "AlwaysUseWindowPadding" #  Obsoleted in 1.90: Use ImGuiChildFlags_AlwaysUseWindowPadding in BeginChild() call.
 
 ---@param flags _ImGuiWindowFlags_Name[]
 ---@return ImGuiWindowFlags
@@ -131,7 +130,6 @@ function ImGui.Flags.InputText(flags) end
 ---| "SpanAllColumns" #  Frame will span all columns of its container table (text will still fit in current column)
 ---| "NavLeftJumpsBackHere" #  (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
 ---| "CollapsingHeader"
----| "AllowItemOverlap" #  Renamed in 1.89.7
 
 ---@param flags _ImGuiTreeNodeFlags_Name[]
 ---@return ImGuiTreeNodeFlags
@@ -176,7 +174,6 @@ function ImGui.Flags.Popup(flags) end
 ---| "AllowDoubleClick" #  Generate press events on double clicks too
 ---| "Disabled" #  Cannot be selected, display grayed out text
 ---| "AllowOverlap" #  (WIP) Hit testing to allow subsequent widgets to overlap this one
----| "AllowItemOverlap" #  Renamed in 1.89.7
 
 ---@param flags _ImGuiSelectableFlags_Name[]
 ---@return ImGuiSelectableFlags
@@ -311,8 +308,6 @@ function ImGui.Flags.Hovered(flags) end
 ---| "NoResize" #  Saved // Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.
 ---| "AutoHideTabBar" #        // Tab bar will automatically hide when there is a single window in the dock node.
 ---| "NoUndocking" #        // Disable undocking this node.
----| "NoSplit" #  Renamed in 1.90
----| "NoDockingInCentralNode" #  Renamed in 1.90
 
 ---@param flags _ImGuiDockNodeFlags_Name[]
 ---@return ImGuiDockNodeFlags
@@ -345,15 +340,42 @@ function ImGui.Flags.DragDrop(flags) end
 --
 ---@class ImGuiDataType
 
+---@class _ImGuiDataType_Name
+---@field S8 ImGuiDataType #  signed char / char (with sensible compilers)
+---@field U8 ImGuiDataType #  unsigned char
+---@field S16 ImGuiDataType #  short
+---@field U16 ImGuiDataType #  unsigned short
+---@field S32 ImGuiDataType #  int
+---@field U32 ImGuiDataType #  unsigned int
+---@field S64 ImGuiDataType #  long long / __int64
+---@field U64 ImGuiDataType #  unsigned long long / unsigned __int64
+---@field Float ImGuiDataType #  float
+---@field Double ImGuiDataType #  double
+ImGui.Enum.DataType = {}
+
 --
 -- A cardinal direction
 --
 ---@class ImGuiDir
 
+---@class _ImGuiDir_Name
+---@field None ImGuiDir
+---@field Left ImGuiDir
+---@field Right ImGuiDir
+---@field Up ImGuiDir
+---@field Down ImGuiDir
+ImGui.Enum.Dir = {}
+
 --
 -- A sorting direction
 --
 ---@class ImGuiSortDirection
+
+---@class _ImGuiSortDirection_Name
+---@field None ImGuiSortDirection
+---@field Ascending ImGuiSortDirection #  Ascending = 0->9, A->Z etc.
+---@field Descending ImGuiSortDirection #  Descending = 9->0, Z->A etc.
+ImGui.Enum.SortDirection = {}
 
 --
 -- A key identifier (ImGuiKey_XXX or ImGuiMod_XXX value): can represent Keyboard, Mouse and Gamepad values.
@@ -366,6 +388,167 @@ function ImGui.Flags.DragDrop(flags) end
 -- Forward declared enum type ImGuiKey
 --
 ---@class ImGuiKey
+
+---@class _ImGuiKey_Name
+---@field None ImGuiKey
+---@field Tab ImGuiKey #  == ImGuiKey_NamedKey_BEGIN
+---@field LeftArrow ImGuiKey
+---@field RightArrow ImGuiKey
+---@field UpArrow ImGuiKey
+---@field DownArrow ImGuiKey
+---@field PageUp ImGuiKey
+---@field PageDown ImGuiKey
+---@field Home ImGuiKey
+---@field End ImGuiKey
+---@field Insert ImGuiKey
+---@field Delete ImGuiKey
+---@field Backspace ImGuiKey
+---@field Space ImGuiKey
+---@field Enter ImGuiKey
+---@field Escape ImGuiKey
+---@field LeftCtrl ImGuiKey
+---@field LeftShift ImGuiKey
+---@field LeftAlt ImGuiKey
+---@field LeftSuper ImGuiKey
+---@field RightCtrl ImGuiKey
+---@field RightShift ImGuiKey
+---@field RightAlt ImGuiKey
+---@field RightSuper ImGuiKey
+---@field Menu ImGuiKey
+---@field [0] ImGuiKey
+---@field [1] ImGuiKey
+---@field [2] ImGuiKey
+---@field [3] ImGuiKey
+---@field [4] ImGuiKey
+---@field [5] ImGuiKey
+---@field [6] ImGuiKey
+---@field [7] ImGuiKey
+---@field [8] ImGuiKey
+---@field [9] ImGuiKey
+---@field A ImGuiKey
+---@field B ImGuiKey
+---@field C ImGuiKey
+---@field D ImGuiKey
+---@field E ImGuiKey
+---@field F ImGuiKey
+---@field G ImGuiKey
+---@field H ImGuiKey
+---@field I ImGuiKey
+---@field J ImGuiKey
+---@field K ImGuiKey
+---@field L ImGuiKey
+---@field M ImGuiKey
+---@field N ImGuiKey
+---@field O ImGuiKey
+---@field P ImGuiKey
+---@field Q ImGuiKey
+---@field R ImGuiKey
+---@field S ImGuiKey
+---@field T ImGuiKey
+---@field U ImGuiKey
+---@field V ImGuiKey
+---@field W ImGuiKey
+---@field X ImGuiKey
+---@field Y ImGuiKey
+---@field Z ImGuiKey
+---@field F1 ImGuiKey
+---@field F2 ImGuiKey
+---@field F3 ImGuiKey
+---@field F4 ImGuiKey
+---@field F5 ImGuiKey
+---@field F6 ImGuiKey
+---@field F7 ImGuiKey
+---@field F8 ImGuiKey
+---@field F9 ImGuiKey
+---@field F10 ImGuiKey
+---@field F11 ImGuiKey
+---@field F12 ImGuiKey
+---@field F13 ImGuiKey
+---@field F14 ImGuiKey
+---@field F15 ImGuiKey
+---@field F16 ImGuiKey
+---@field F17 ImGuiKey
+---@field F18 ImGuiKey
+---@field F19 ImGuiKey
+---@field F20 ImGuiKey
+---@field F21 ImGuiKey
+---@field F22 ImGuiKey
+---@field F23 ImGuiKey
+---@field F24 ImGuiKey
+---@field Apostrophe ImGuiKey #  '
+---@field Comma ImGuiKey #  ,
+---@field Minus ImGuiKey #  -
+---@field Period ImGuiKey #  .
+---@field Slash ImGuiKey #  /
+---@field Semicolon ImGuiKey #  ;
+---@field Equal ImGuiKey #  =
+---@field LeftBracket ImGuiKey #  [
+---@field Backslash ImGuiKey #  \ (this text inhibit multiline comment caused by backslash)
+---@field RightBracket ImGuiKey #  ]
+---@field GraveAccent ImGuiKey #  `
+---@field CapsLock ImGuiKey
+---@field ScrollLock ImGuiKey
+---@field NumLock ImGuiKey
+---@field PrintScreen ImGuiKey
+---@field Pause ImGuiKey
+---@field Keypad0 ImGuiKey
+---@field Keypad1 ImGuiKey
+---@field Keypad2 ImGuiKey
+---@field Keypad3 ImGuiKey
+---@field Keypad4 ImGuiKey
+---@field Keypad5 ImGuiKey
+---@field Keypad6 ImGuiKey
+---@field Keypad7 ImGuiKey
+---@field Keypad8 ImGuiKey
+---@field Keypad9 ImGuiKey
+---@field KeypadDecimal ImGuiKey
+---@field KeypadDivide ImGuiKey
+---@field KeypadMultiply ImGuiKey
+---@field KeypadSubtract ImGuiKey
+---@field KeypadAdd ImGuiKey
+---@field KeypadEnter ImGuiKey
+---@field KeypadEqual ImGuiKey
+---@field AppBack ImGuiKey #  Available on some keyboard/mouses. Often referred as "Browser Back"
+---@field AppForward ImGuiKey
+---@field GamepadStart ImGuiKey #  Menu (Xbox)      + (Switch)   Start/Options (PS)
+---@field GamepadBack ImGuiKey #  View (Xbox)      - (Switch)   Share (PS)
+---@field GamepadFaceLeft ImGuiKey #  X (Xbox)         Y (Switch)   Square (PS)        // Tap: Toggle Menu. Hold: Windowing mode (Focus/Move/Resize windows)
+---@field GamepadFaceRight ImGuiKey #  B (Xbox)         A (Switch)   Circle (PS)        // Cancel / Close / Exit
+---@field GamepadFaceUp ImGuiKey #  Y (Xbox)         X (Switch)   Triangle (PS)      // Text Input / On-screen Keyboard
+---@field GamepadFaceDown ImGuiKey #  A (Xbox)         B (Switch)   Cross (PS)         // Activate / Open / Toggle / Tweak
+---@field GamepadDpadLeft ImGuiKey #  D-pad Left                                       // Move / Tweak / Resize Window (in Windowing mode)
+---@field GamepadDpadRight ImGuiKey #  D-pad Right                                      // Move / Tweak / Resize Window (in Windowing mode)
+---@field GamepadDpadUp ImGuiKey #  D-pad Up                                         // Move / Tweak / Resize Window (in Windowing mode)
+---@field GamepadDpadDown ImGuiKey #  D-pad Down                                       // Move / Tweak / Resize Window (in Windowing mode)
+---@field GamepadL1 ImGuiKey #  L Bumper (Xbox)  L (Switch)   L1 (PS)            // Tweak Slower / Focus Previous (in Windowing mode)
+---@field GamepadR1 ImGuiKey #  R Bumper (Xbox)  R (Switch)   R1 (PS)            // Tweak Faster / Focus Next (in Windowing mode)
+---@field GamepadL2 ImGuiKey #  L Trig. (Xbox)   ZL (Switch)  L2 (PS) [Analog]
+---@field GamepadR2 ImGuiKey #  R Trig. (Xbox)   ZR (Switch)  R2 (PS) [Analog]
+---@field GamepadL3 ImGuiKey #  L Stick (Xbox)   L3 (Switch)  L3 (PS)
+---@field GamepadR3 ImGuiKey #  R Stick (Xbox)   R3 (Switch)  R3 (PS)
+---@field GamepadLStickLeft ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
+---@field GamepadLStickRight ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
+---@field GamepadLStickUp ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
+---@field GamepadLStickDown ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
+---@field GamepadRStickLeft ImGuiKey #  [Analog]
+---@field GamepadRStickRight ImGuiKey #  [Analog]
+---@field GamepadRStickUp ImGuiKey #  [Analog]
+---@field GamepadRStickDown ImGuiKey #  [Analog]
+---@field MouseLeft ImGuiKey
+---@field MouseRight ImGuiKey
+---@field MouseMiddle ImGuiKey
+---@field MouseX1 ImGuiKey
+---@field MouseX2 ImGuiKey
+---@field MouseWheelX ImGuiKey
+---@field MouseWheelY ImGuiKey
+---@field Ctrl ImGuiKey #  Ctrl
+---@field Shift ImGuiKey #  Shift
+---@field Alt ImGuiKey #  Option/Menu
+---@field Super ImGuiKey #  Cmd/Super/Windows
+---@field Shortcut ImGuiKey #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
+---@field KeysData_SIZE ImGuiKey #  Size of KeysData[]: only hold named keys
+---@field KeysData_OFFSET ImGuiKey #  Accesses to io.KeysData[] must use (key - ImGuiKey_KeysData_OFFSET) index.
+ImGui.Enum.Key = {}
 
 --
 -- Configuration flags stored in io.ConfigFlags. Set by user/application.
@@ -415,6 +598,64 @@ function ImGui.Flags.Backend(flags) end
 --
 ---@class ImGuiCol
 
+---@class _ImGuiCol_Name
+---@field Text ImGuiCol
+---@field TextDisabled ImGuiCol
+---@field WindowBg ImGuiCol #  Background of normal windows
+---@field ChildBg ImGuiCol #  Background of child windows
+---@field PopupBg ImGuiCol #  Background of popups, menus, tooltips windows
+---@field Border ImGuiCol
+---@field BorderShadow ImGuiCol
+---@field FrameBg ImGuiCol #  Background of checkbox, radio button, plot, slider, text input
+---@field FrameBgHovered ImGuiCol
+---@field FrameBgActive ImGuiCol
+---@field TitleBg ImGuiCol #  Title bar
+---@field TitleBgActive ImGuiCol #  Title bar when focused
+---@field TitleBgCollapsed ImGuiCol #  Title bar when collapsed
+---@field MenuBarBg ImGuiCol
+---@field ScrollbarBg ImGuiCol
+---@field ScrollbarGrab ImGuiCol
+---@field ScrollbarGrabHovered ImGuiCol
+---@field ScrollbarGrabActive ImGuiCol
+---@field CheckMark ImGuiCol #  Checkbox tick and RadioButton circle
+---@field SliderGrab ImGuiCol
+---@field SliderGrabActive ImGuiCol
+---@field Button ImGuiCol
+---@field ButtonHovered ImGuiCol
+---@field ButtonActive ImGuiCol
+---@field Header ImGuiCol #  Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+---@field HeaderHovered ImGuiCol
+---@field HeaderActive ImGuiCol
+---@field Separator ImGuiCol
+---@field SeparatorHovered ImGuiCol
+---@field SeparatorActive ImGuiCol
+---@field ResizeGrip ImGuiCol #  Resize grip in lower-right and lower-left corners of windows.
+---@field ResizeGripHovered ImGuiCol
+---@field ResizeGripActive ImGuiCol
+---@field Tab ImGuiCol #  TabItem in a TabBar
+---@field TabHovered ImGuiCol
+---@field TabActive ImGuiCol
+---@field TabUnfocused ImGuiCol
+---@field TabUnfocusedActive ImGuiCol
+---@field DockingPreview ImGuiCol #  Preview overlay color when about to docking something
+---@field DockingEmptyBg ImGuiCol #  Background color for empty node (e.g. CentralNode with no window docked into it)
+---@field PlotLines ImGuiCol
+---@field PlotLinesHovered ImGuiCol
+---@field PlotHistogram ImGuiCol
+---@field PlotHistogramHovered ImGuiCol
+---@field TableHeaderBg ImGuiCol #  Table header background
+---@field TableBorderStrong ImGuiCol #  Table outer and header borders (prefer using Alpha=1.0 here)
+---@field TableBorderLight ImGuiCol #  Table inner borders (prefer using Alpha=1.0 here)
+---@field TableRowBg ImGuiCol #  Table row background (even rows)
+---@field TableRowBgAlt ImGuiCol #  Table row background (odd rows)
+---@field TextSelectedBg ImGuiCol
+---@field DragDropTarget ImGuiCol #  Rectangle highlighting a drop target
+---@field NavHighlight ImGuiCol #  Gamepad/keyboard: current highlighted item
+---@field NavWindowingHighlight ImGuiCol #  Highlight window when using CTRL+TAB
+---@field NavWindowingDimBg ImGuiCol #  Darken/colorize entire screen behind the CTRL+TAB window list, when active
+---@field ModalWindowDimBg ImGuiCol #  Darken/colorize entire screen behind a modal window, when one is active
+ImGui.Enum.Col = {}
+
 --
 -- Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
 -- - The enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside UI code.
@@ -425,6 +666,39 @@ function ImGui.Flags.Backend(flags) end
 -- - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
 --
 ---@class ImGuiStyleVar
+
+---@class _ImGuiStyleVar_Name
+---@field Alpha ImGuiStyleVar #  float     Alpha
+---@field DisabledAlpha ImGuiStyleVar #  float     DisabledAlpha
+---@field WindowPadding ImGuiStyleVar #  ImVec2    WindowPadding
+---@field WindowRounding ImGuiStyleVar #  float     WindowRounding
+---@field WindowBorderSize ImGuiStyleVar #  float     WindowBorderSize
+---@field WindowMinSize ImGuiStyleVar #  ImVec2    WindowMinSize
+---@field WindowTitleAlign ImGuiStyleVar #  ImVec2    WindowTitleAlign
+---@field ChildRounding ImGuiStyleVar #  float     ChildRounding
+---@field ChildBorderSize ImGuiStyleVar #  float     ChildBorderSize
+---@field PopupRounding ImGuiStyleVar #  float     PopupRounding
+---@field PopupBorderSize ImGuiStyleVar #  float     PopupBorderSize
+---@field FramePadding ImGuiStyleVar #  ImVec2    FramePadding
+---@field FrameRounding ImGuiStyleVar #  float     FrameRounding
+---@field FrameBorderSize ImGuiStyleVar #  float     FrameBorderSize
+---@field ItemSpacing ImGuiStyleVar #  ImVec2    ItemSpacing
+---@field ItemInnerSpacing ImGuiStyleVar #  ImVec2    ItemInnerSpacing
+---@field IndentSpacing ImGuiStyleVar #  float     IndentSpacing
+---@field CellPadding ImGuiStyleVar #  ImVec2    CellPadding
+---@field ScrollbarSize ImGuiStyleVar #  float     ScrollbarSize
+---@field ScrollbarRounding ImGuiStyleVar #  float     ScrollbarRounding
+---@field GrabMinSize ImGuiStyleVar #  float     GrabMinSize
+---@field GrabRounding ImGuiStyleVar #  float     GrabRounding
+---@field TabRounding ImGuiStyleVar #  float     TabRounding
+---@field TabBarBorderSize ImGuiStyleVar #  float     TabBarBorderSize
+---@field ButtonTextAlign ImGuiStyleVar #  ImVec2    ButtonTextAlign
+---@field SelectableTextAlign ImGuiStyleVar #  ImVec2    SelectableTextAlign
+---@field SeparatorTextBorderSize ImGuiStyleVar #  float  SeparatorTextBorderSize
+---@field SeparatorTextAlign ImGuiStyleVar #  ImVec2    SeparatorTextAlign
+---@field SeparatorTextPadding ImGuiStyleVar #  ImVec2    SeparatorTextPadding
+---@field DockingSeparatorSize ImGuiStyleVar #  float     DockingSeparatorSize
+ImGui.Enum.StyleVar = {}
 
 --
 -- Flags for InvisibleButton() [extended in imgui_internal.h]
@@ -500,11 +774,30 @@ function ImGui.Flags.Slider(flags) end
 --
 ---@class ImGuiMouseButton
 
+---@class _ImGuiMouseButton_Name
+---@field Left ImGuiMouseButton
+---@field Right ImGuiMouseButton
+---@field Middle ImGuiMouseButton
+ImGui.Enum.MouseButton = {}
+
 --
 -- Enumeration for GetMouseCursor()
 -- User code may request backend to display given cursor by calling SetMouseCursor(), which is why we have some cursors that are marked unused here
 --
 ---@class ImGuiMouseCursor
+
+---@class _ImGuiMouseCursor_Name
+---@field None ImGuiMouseCursor
+---@field Arrow ImGuiMouseCursor
+---@field TextInput ImGuiMouseCursor #  When hovering over InputText, etc.
+---@field ResizeAll ImGuiMouseCursor #  (Unused by Dear ImGui functions)
+---@field ResizeNS ImGuiMouseCursor #  When hovering over a horizontal border
+---@field ResizeEW ImGuiMouseCursor #  When hovering over a vertical border or a column
+---@field ResizeNESW ImGuiMouseCursor #  When hovering over the bottom-left corner of a window
+---@field ResizeNWSE ImGuiMouseCursor #  When hovering over the bottom-right corner of a window
+---@field Hand ImGuiMouseCursor #  (Unused by Dear ImGui functions. Use for e.g. hyperlinks)
+---@field NotAllowed ImGuiMouseCursor #  When hovering something with disallowed interaction. Usually a crossed circle.
+ImGui.Enum.MouseCursor = {}
 
 --
 -- Enumeration for AddMouseSourceEvent() actual source of Mouse Input data.
@@ -517,12 +810,26 @@ function ImGui.Flags.Slider(flags) end
 --
 ---@class ImGuiMouseSource
 
+---@class _ImGuiMouseSource_Name
+---@field Mouse ImGuiMouseSource #  Input is coming from an actual mouse.
+---@field TouchScreen ImGuiMouseSource #  Input is coming from a touch screen (no hovering prior to initial press, less precise initial press aiming, dual-axis wheeling possible).
+---@field Pen ImGuiMouseSource #  Input is coming from a pressure/magnetic pen (often used in conjunction with high-sampling rates).
+ImGui.Enum.MouseSource = {}
+
 --
 -- Enumeration for ImGui::SetNextWindow***(), SetWindow***(), SetNextItem***() functions
 -- Represent a condition.
 -- Important: Treat as a regular enum! Do NOT combine multiple values using binary operators! All the functions above treat 0 as a shortcut to ImGuiCond_Always.
 --
 ---@class ImGuiCond
+
+---@class _ImGuiCond_Name
+---@field None ImGuiCond #  No condition (always set the variable), same as _Always
+---@field Always ImGuiCond #  No condition (always set the variable), same as _None
+---@field Once ImGuiCond #  Set the variable once per runtime session (only the first call will succeed)
+---@field FirstUseEver ImGuiCond #  Set the variable if the object/window has no persistently saved data (no entry in .ini file)
+---@field Appearing ImGuiCond #  Set the variable if the object/window is appearing after being hidden/inactive (or the first time)
+ImGui.Enum.Cond = {}
 
 --
 -- Flags for ImGui::BeginTable()
@@ -653,6 +960,13 @@ function ImGui.Flags.TableRow(flags) end
 --
 ---@class ImGuiTableBgTarget
 
+---@class _ImGuiTableBgTarget_Name
+---@field None ImGuiTableBgTarget
+---@field RowBg0 ImGuiTableBgTarget #  Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)
+---@field RowBg1 ImGuiTableBgTarget #  Set row background color 1 (generally used for selection marking)
+---@field CellBg ImGuiTableBgTarget #  Set cell background color (top-most color)
+ImGui.Enum.TableBgTarget = {}
+
 --
 -- Flags for ImDrawList functions
 -- (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
@@ -675,7 +989,7 @@ function ImGui.Flags.TableRow(flags) end
 
 ---@param flags _ImDrawFlags_Name[]
 ---@return ImDrawFlags
-function ImGui.Flags.nil(flags) end
+function ImGui.Flags.Draw(flags) end
 
 --
 -- Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
@@ -692,7 +1006,7 @@ function ImGui.Flags.nil(flags) end
 
 ---@param flags _ImDrawListFlags_Name[]
 ---@return ImDrawListFlags
-function ImGui.Flags.nil(flags) end
+function ImGui.Flags.DrawList(flags) end
 
 --
 -- Flags for ImFontAtlas build
@@ -707,7 +1021,7 @@ function ImGui.Flags.nil(flags) end
 
 ---@param flags _ImFontAtlasFlags_Name[]
 ---@return ImFontAtlasFlags
-function ImGui.Flags.nil(flags) end
+function ImGui.Flags.FontAtlas(flags) end
 
 --
 -- Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
@@ -735,6 +1049,8 @@ function ImGui.Flags.nil(flags) end
 ---@return ImGuiViewportFlags
 function ImGui.Flags.Viewport(flags) end
 
+
+---@alias ImGuiKeyChord ImGuiKey
 
 --
 -- Tables
@@ -956,7 +1272,7 @@ function ImGui.DockSpaceOverViewport() end
 -- set next window dock id
 --
 ---@param dock_id integer
----@param cond? ImGuiCond | `ImGui.Flags.nil { "None" }`
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
 function ImGui.SetNextWindowDockID(dock_id, cond) end
 
 ---@return integer
@@ -987,7 +1303,7 @@ function ImGui.BeginDragDropSource(flags) end
 --
 ---@param type string
 ---@param data string
----@param cond? ImGuiCond | `ImGui.Flags.nil { "None" }`
+---@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
 ---@return boolean
 function ImGui.SetDragDropPayload(type, data, cond) end
 
@@ -1106,7 +1422,7 @@ function ImGui.IsItemClicked() end
 --
 -- is the last item hovered and mouse clicked on? (**)  == IsMouseClicked(mouse_button) && IsItemHovered()Important. (**) this is NOT equivalent to the behavior of e.g. Button(). Read comments in function definition.
 --
----@param mouse_button? ImGuiMouseButton | `ImGui.Flags.nil { "Left" }`
+---@param mouse_button? ImGuiMouseButton | `ImGui.Enum.MouseButton.Left`
 ---@return boolean
 function ImGui.IsItemClickedEx(mouse_button) end
 
@@ -1235,9 +1551,9 @@ function ImGui.IsKeyPressed(key) end
 -- was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
 --
 ---@param key ImGuiKey
----@param repeat? boolean | `true`
+---@param repeat_? boolean | `true`
 ---@return boolean
-function ImGui.IsKeyPressedEx(key, repeat) end
+function ImGui.IsKeyPressedEx(key, repeat_) end
 
 --
 -- was key released (went from Down to !Down)?
@@ -1245,5 +1561,12 @@ function ImGui.IsKeyPressedEx(key, repeat) end
 ---@param key ImGuiKey
 ---@return boolean
 function ImGui.IsKeyReleased(key) end
+
+--
+-- was key chord (mods + key) pressed, e.g. you can pass 'ImGuiMod_Ctrl | ImGuiKey_S' as a key-chord. This doesn't do any routing or focus check, please consider using Shortcut() function instead.
+--
+---@param key_chord ImGuiKeyChord
+---@return boolean
+function ImGui.IsKeyChordPressed(key_chord) end
 
 return ImGui

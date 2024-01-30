@@ -103,7 +103,7 @@ write_ret["ImVec2"] = function()
     return 2
 end
 
-for _, type_name in ipairs {"int", "ImU32", "ImGuiID"} do
+for _, type_name in ipairs {"int", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, status)
         status.idx = status.idx + 1
         if type_meta.default_value then

@@ -44,8 +44,35 @@ local TodoList <const> = {
     ImGui_ColorConvertHSVtoRGB = true,
 }
 
+local function conditionals(t)
+    local cond = t.conditionals
+    if not cond then
+        return true
+    end
+    assert(#cond == 1)
+    cond = cond[1]
+    if cond.condition == "ifndef" then
+        cond = cond.expression
+        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
+            return
+        end
+        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
+            return
+        end
+    elseif cond.condition == "ifdef" then
+        cond = cond.expression
+        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
+            return true
+        end
+        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
+            return true
+        end
+    end
+    assert(false, t.name)
+end
+
 local s <const> = "ImGui_BeginTable"
-local e <const> = "ImGui_IsKeyReleased"
+local e <const> = "ImGui_IsKeyChordPressed"
 
 local within_scope = false
 local skip = false
@@ -57,6 +84,9 @@ end
 
 local function allow(func_meta)
     if func_meta.is_internal then
+        return
+    end
+    if not conditionals(func_meta) then
         return
     end
     if BlackList[func_meta.name] then
