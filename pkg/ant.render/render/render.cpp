@@ -55,11 +55,10 @@ update_transform(struct ecs_world* w, const component::render_object *ro, const 
 		bgfx_transform_t bt;
 		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &bt, (uint16_t)num);
 		t.stride = num;
-		if(hwm.idx == MATH_NULL.idx){
+		if(math_isnull(hwm)){
 			const float * v = math_value(w->math3d->M, wm);
 			memcpy(bt.data, v, sizeof(float)*16*num);
-		}
-		else{
+		} else{
 			math_t r = math_ref(w->math3d->M, bt.data, MATH_TYPE_MAT, t.stride);
 			math3d_mul_matrix_array(w->math3d->M, hwm, wm, r);			
 		}
@@ -193,10 +192,17 @@ struct submit_cache{
 	submit_stat stat;
 #endif //RENDER_DEBUG
 
+	void clear_groups(){
+		for (auto &g : groups){
+			for (std::vector<math_t> &q : g.second){
+				q.clear();
+			}
+		}
+	}
+
 	void clear(){
 		transforms.clear();
-		groups.clear();
-
+		clear_groups();
 		ra_count = 0;
 
 #ifdef RENDER_DEBUG
@@ -247,7 +253,7 @@ build_hitch_info(struct ecs_world*w, submit_cache &cc){
 			if (obj_visible(w->Q, h, ra->queue_index)){
 				const auto &s = e.get<component::scene>();
 				if (h.group != 0){
-					cc.groups[h.group][ra->queue_index].push_back(s.worldmat);
+					cc.groups[h.group][ra->queue_index].emplace_back(s.worldmat);
 					#ifdef RENDER_DEBUG
 					++cc.stat.hitch_count;
 					#endif //RENDER_DEBUG
@@ -334,11 +340,18 @@ lrender_submit(lua_State *L) {
 
 // static int
 // lrender_preprocess(lua_State *L){
+// 	auto w = getworld(L);
+// 	cc.clear();
+
+// 	find_render_args(w, cc);
+// 	build_hitch_info(w, cc);
 // 	return 0;
 // }
 
 // static int
 // lrender_hitch_submit(lua_State *L){
+// 	auto w = getworld(L);
+// 	render_hitch_submit(L, w, cc);
 // 	return 0;
 // }
 
@@ -462,13 +475,13 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init_system",	linit_system},
-		{ "exit",			lexit},
+		{ "init_system",		linit_system},
+		{ "exit",				lexit},
 		//{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
-		// { "render_hitch_submit",lrender_hitch_submit},
-		// { "render_postprocess", lrender_postprocess},
-		{ nullptr, 			nullptr },
+		//{ "render_hitch_submit",lrender_hitch_submit},
+		//{ "render_postprocess", lrender_postprocess},
+		{ nullptr, 				nullptr },
 	};
 	luaL_newlibtable(L,l);
 	lua_pushnil(L);
