@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local playback = ecs.require "ant.animation|playback"
-
+local ianimation = ecs.require "ant.animation|animation"
 local iani = {}
 
 local function get_first_playing_animation(e)
@@ -25,6 +25,7 @@ function iani.play(eid, anim_state)
 		end
 	end
 	local name = anim_state.name
+	ianimation.set_ratio(e, name, 0)
 	playback.set_play(e, name, true)
 	if anim_state.forwards then
 		playback.set_speed(e, name, -1 * (anim_state.speed or 1.0))
