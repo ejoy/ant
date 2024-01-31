@@ -1160,9 +1160,8 @@ function MaterialView:show()
         if path then
             prefab_mgr:compile_current_glb()
             local info = sampler_info[path]
-            info.texture_resource = assetmgr.reload(path:string())
+            info.texture_resource = assetmgr.reload(path:string(), true)
             local e <close> = world:entity(self.eid)
-            print("id, handle:", info.texture_resource.id, assetmgr.textures[info.texture_resource.id])
             imaterial.set_property(e, info.stage_name, assetmgr.textures[info.texture_resource.id])
         end
     end
