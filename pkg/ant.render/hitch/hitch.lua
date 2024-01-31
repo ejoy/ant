@@ -12,7 +12,6 @@ local hwi       = import_package "ant.hwi"
 local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local cs_material = "/pkg/ant.resources/materials/hitch/hitch_compute.material"
-
 local GID_MT<const> = {__index=function(t, gid)
     local gg = {}
     t[gid] = gg
@@ -78,16 +77,17 @@ local function dispatch_instance_buffer(e, diid, draw_num)
     end
 end
 
-local function update_group_instance_buffer(glbs, hitchs)
+local function update_instance_buffer(diid, memory, draw_num)
+    local e = world:entity(diid, "draw_indirect:update")
+    idi.update_instance_buffer(e, memory, draw_num)
+end
+
+local function update_group_instance_buffer(indirect_draw_group)
+    local glbs, hitchs = indirect_draw_group.glbs, indirect_draw_group.hitchs
     local memory, draw_num = get_hitch_worldmats_instance_memory(hitchs)
 
-    local function update_instance_buffer(diid)
-        local e = world:entity(diid, "draw_indirect:update")
-        idi.update_instance_buffer(e, memory, draw_num)
-    end
-
     local function update_buffer_and_dispatch(diid, cid)
-        update_instance_buffer(diid)
+        update_instance_buffer(diid, memory, draw_num)
         dispatch_instance_buffer(world:entity(cid, "dispatch:update"), diid, draw_num)
     end
 
@@ -210,15 +210,19 @@ function hitch_sys:render_preprocess()
     for gid in pairs(DIRTY_GROUPS) do
         local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
         if indirect_draw_group.glbs then
-            update_group_instance_buffer(indirect_draw_group.glbs, indirect_draw_group.hitchs)
+            update_group_instance_buffer(indirect_draw_group)
         else
             ig.enable(gid, "hitch_tag", true)
+            local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
+            
             local glbs = {}
             for re in w:select "hitch_tag eid:in mesh:in draw_indirect:in" do
                 glbs[#glbs+1] = { diid = re.eid}
+                update_instance_buffer(re.eid, memory, draw_num)
             end
+
             indirect_draw_group.glbs = glbs
-            local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
+
             create_compute_entity(indirect_draw_group.glbs, memory, draw_num)
             ig.enable(gid, "hitch_tag", false)
         end

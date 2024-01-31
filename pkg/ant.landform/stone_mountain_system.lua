@@ -18,7 +18,7 @@ local main_viewid<const> = hwi.viewid_get "main_view"
 local lnoise = require "noise"
 
 local sm_sys = ecs.system "stone_mountain_system"
-
+local DEFAULT_SIZE<const> = 100
 local NOISE_RATIO<const> = 0.88
 
 local SM_SRT_INFOS = {
@@ -108,6 +108,7 @@ local function create_sm_entity(gid, indices, mountain_material, cs_material, me
                     layout  = "t45NIf|t46NIf|t47NIf",
                     flag    = "r",
                     num     = drawnum,
+                    size    = DEFAULT_SIZE
                 },
             },
             render_layer  = "foreground",

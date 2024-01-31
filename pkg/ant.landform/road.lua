@@ -11,8 +11,8 @@ local idi           = ecs.require "ant.render|draw_indirect.draw_indirect"
 local renderpkg     = import_package "ant.render"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"
-
 local hwi           = import_package "ant.hwi"
+local DEFAULT_SIZE<const> = 50
 
 -- local ROT_TABLES = {
 --     N = {0,   270, 180, 0},
@@ -329,6 +329,7 @@ local function create_road_obj(gid, render_layer, buffer, dimaterial, cs_materia
                     flag    = "r",
                     layout  = "t45NIf",
                     num     = instancenum,
+                    size    = DEFAULT_SIZE
                 },
             },
         },

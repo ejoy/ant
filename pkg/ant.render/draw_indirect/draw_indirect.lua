@@ -18,6 +18,22 @@ local function update_instance_buffer(e, instancememory, instancenum)
     local di = e.draw_indirect
     local ib = di.instance_buffer
     local iobj = e.indirect_object
+
+    local function create_indirect_buffer(size)
+        di.handle = bgfx.create_indirect_buffer(size)
+        iobj.idb_handle = di.handle
+    end
+
+    if not di.handle then
+        create_indirect_buffer(ib.size)
+    else
+        if instancenum > ib.size then
+            ib.size = instancenum * 2
+            bgfx.destroy(di.handle)
+            create_indirect_buffer(ib.size)
+        end
+    end
+
     if instancenum == 0 then
         -- not destroy ib.handle or di.handle
         iobj.draw_num, ib.num = 0, 0
@@ -32,17 +48,9 @@ local function update_instance_buffer(e, instancememory, instancenum)
             ib.handle = bgfx.create_dynamic_vertex_buffer(ib.memory, layoutmgr.get(ib.layout).handle, ib.flag)
             iobj.itb_handle = ib.handle
         end
-
-        -- only recreate draw indirect buffer when we need more buffer than last allocated
-        if ib.num > iobj.draw_num then
-            bgfx.destroy(di.handle)
-            di.handle = bgfx.create_indirect_buffer(ib.num)
-            iobj.idb_handle = di.handle
-        end
-    
         iobj.draw_num = ib.num
-        assert(iobj.idb_handle ~= INVALID_HANDLE_VALUE, "Indirect buffer not update")
     end
+
     return true
 end
 
