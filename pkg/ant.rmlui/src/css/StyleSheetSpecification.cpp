@@ -225,10 +225,9 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 
-	//TODO:
-	//{ PropertyId::BackgroundRepeat, {
-	//	PropertyParseKeyword<"repeat", "repeat-x", "repeat-y", "no-repeat">,
-	//}},
+	{ PropertyId::BackgroundRepeat, {
+		PropertyParseKeyword<Style::BackgroundRepeat>,
+	}},
 
 	{ PropertyId::BackgroundFilter, {
 		PropertyParseKeyword<"none">,
