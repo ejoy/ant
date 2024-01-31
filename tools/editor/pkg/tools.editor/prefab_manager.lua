@@ -1449,4 +1449,9 @@ function m:on_patch_animation(eid, name, path)
     }
     anim_view.update_anim_namelist()
 end
+
+function m:can_create_empty()
+    return self.glb_filename and self.prefab_name == "mesh.prefab"
+end
+
 return m

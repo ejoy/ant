@@ -29,8 +29,7 @@
             "clibs",
             "pkg/ant.debugger",
             "pkg/ant.json",
-            "pkg/ant.ecs/src",
-            "tools/editor"
+            "pkg/ant.ecs/src"
         ],
         "maxPreload": 100000
     }

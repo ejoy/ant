@@ -103,13 +103,25 @@ function DirectionalArrow:widget()
 end
 
 local Int = class("Int", PropertyBase)
+local DragInt = {
+    ImGui.DragInt,
+    ImGui.DragInt2,
+    ImGui.DragInt3,
+    ImGui.DragInt4
+}
 function Int:widget()
-    return ImGui.DragInt(self:get_label(), self.uidata)
+    return DragInt[self.dim](self:get_label(), self.uidata)
 end
 
 local Float = class("Float", PropertyBase)
+local DragFloat = {
+    ImGui.DragFloat,
+    ImGui.DragFloat2,
+    ImGui.DragFloat3,
+    ImGui.DragFloat4
+}
 function Float:widget()
-    return ImGui.DragFloat(self:get_label(), self.uidata)
+    return DragFloat[self.dim](self:get_label(), self.uidata)
 end
 
 local Bool = class("Bool", PropertyBase)
@@ -161,6 +173,7 @@ function Text:widget()
 end
 
 local EditText = class("EditText", PropertyBase)
+
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)

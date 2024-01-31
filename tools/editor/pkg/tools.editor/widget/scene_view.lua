@@ -269,6 +269,8 @@ function m.get_title()
     return "Hierarchy"
 end
 
+local prefab_mgr  = ecs.require "prefab_manager"
+
 function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
@@ -278,8 +280,11 @@ function m.show()
             ImGui.OpenPopup("CreateEntity")
         end
         if ImGui.BeginPopup("CreateEntity") then
-            if ImGui.MenuItem("EmptyNode") then
-                world:pub {"Create", "empty"}
+            if prefab_mgr:can_create_empty() then
+                -- only for xxx.glb(gltf)|mesh.prefab
+                if ImGui.MenuItem("EmptyNode") then
+                    world:pub {"Create", "empty"}
+                end
             end
             if ImGui.BeginMenu("Geometry") then
                 for _, type in ipairs(geom_type) do
