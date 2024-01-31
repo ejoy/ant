@@ -68,10 +68,7 @@ static int lreadfile(lua_State* L) {
 	return 1;
 }
 
-extern "C" 
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
+extern "C"
 int luaopen_firmware(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {

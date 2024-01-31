@@ -69,7 +69,7 @@ function m.show()
         "NoNavFocus",
         "NoBackground",
     }) then
-        ImGui.DockSpace("MainViewSpace", ImGui.Flags.DockNode {
+        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.Flags.DockNode {
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })

@@ -97,15 +97,6 @@ read_field_string(lua_State *L, const char * field, const char *v, int tidx = IN
 	return v;
 }
 
-static int dDockSpace(lua_State* L) {
-	const char* str_id = luaL_checkstring(L, 1);
-	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
-	float w = (float)luaL_optnumber(L, 3, 0);
-	float h = (float)luaL_optnumber(L, 4, 0);
-	ImGui::DockSpace(ImGui::GetID(str_id), ImVec2(w, h), flags);
-	return 0;
-}
-
 static int dDockBuilderGetCentralRect(lua_State * L) {
 	const char* str_id = luaL_checkstring(L, 1);
 	ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
@@ -114,64 +105,6 @@ static int dDockBuilderGetCentralRect(lua_State * L) {
 	lua_pushnumber(L, central_node->Size.x);
 	lua_pushnumber(L, central_node->Size.y);
 	return 4;
-}
-
-static int ClipperRelease(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)luaL_testudata(L, 1, "IMGUI_CLIPPER");
-	clipper->~ImGuiListClipper();
-	return 0;
-}
-
-static int ClipperEnd(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	clipper->End();
-	return 0;
-}
-
-static int ClipperStep(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	bool ok = clipper->Step();
-	if (!ok) {
-		return 0;
-	}
-	lua_pushinteger(L, (lua_Integer)clipper->DisplayStart + 1);
-	lua_pushinteger(L, (lua_Integer)clipper->DisplayEnd);
-	return 2;
-}
-
-static int ClipperBegin(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	int n = (int)luaL_checkinteger(L, 1);
-	float height = (float)luaL_optnumber(L, 2, -1.0f);
-	clipper->Begin(n, height);
-	lua_pushvalue(L, lua_upvalueindex(2));
-	lua_pushnil(L);
-	lua_pushnil(L);
-	lua_pushvalue(L, lua_upvalueindex(3));
-	return 4;
-}
-
-static int ListClipper(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_newuserdatauv(L, sizeof(ImGuiListClipper), 0);
-	new (clipper) ImGuiListClipper;
-	if (luaL_newmetatable(L, "IMGUI_CLIPPER")) {
-		lua_pushcfunction(L, ClipperRelease);
-		lua_setfield(L, -2, "__gc");
-	}
-	lua_setmetatable(L, -2);
-
-	lua_pushvalue(L, -1);
-	lua_pushcclosure(L, ClipperStep, 1);
-
-	lua_newtable(L);
-	lua_pushvalue(L, -3);
-	lua_pushcclosure(L, ClipperEnd, 1);
-	lua_setfield(L, -2, "__close");
-	lua_pushvalue(L, -1);
-	lua_setmetatable(L, -2);
-	
-	lua_pushcclosure(L, ClipperBegin, 3);
-	return 1;
 }
 
 static int lGetMainViewport(lua_State* L) {
@@ -879,11 +812,7 @@ static int util_memory(lua_State* L) {
 }
 
 extern "C"
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
-int
-luaopen_imgui(lua_State *L) {
+int luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
@@ -903,9 +832,7 @@ luaopen_imgui(lua_State *L) {
 		{ "InputTextMultiline", wInputTextMultiline },
 		{ "InputFloat", wInputFloat },
 		{ "InputInt", wInputInt },
-		{ "DockSpace", dDockSpace },
 		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
-		{ "ListClipper", ListClipper },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

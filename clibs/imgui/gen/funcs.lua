@@ -1,5 +1,7 @@
 local AntDir, meta = ...
 
+local util = require "util"
+
 local w <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_lua_funcs.cpp", "wb"))
 
 local function writeln(fmt, ...)
@@ -105,6 +107,10 @@ write_arg["ImTextureID"] = function(type_meta, status)
     writeln("    auto %s = util::get_texture_id(L, %d);", type_meta.name, status.idx)
 end
 
+write_arg["const ImGuiWindowClass*"] = function()
+    --NOTICE: Ignore ImGuiWindowClass for now.
+end
+
 write_arg["float"] = function(type_meta, status)
     status.idx = status.idx + 1
     if type_meta.default_value then
@@ -157,6 +163,23 @@ end
 write_arg["size_t*"] = function(type_meta, status)
     writeln("    size_t %s = 0;", type_meta.name)
     status.arguments[#status.arguments+1] = string.format("&%s", type_meta.name, type_meta.name)
+end
+
+write_arg["unsigned int*"] = function(type_meta, status)
+    status.idx = status.idx + 1
+    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
+    writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+    writeln("    unsigned int %s[] = {", type_meta.name)
+    writeln("        (unsigned int)util::field_tointeger(L, %d, 1),", status.idx)
+    writeln "    };"
+    status.arguments[#status.arguments+1] = type_meta.name
+end
+write_arg_ret["unsigned int*"] = function(type_meta)
+    writeln "    if (_retval) {"
+    writeln("        lua_pushinteger(L, %s[0]);", type_meta.name)
+    writeln("        lua_seti(L, _%s_index, 1);", type_meta.name)
+    writeln "    };"
+    return 0
 end
 
 for n = 1, 4 do
@@ -259,7 +282,16 @@ write_ret["ImVec4"] = function()
     return 4
 end
 
-for _, type_name in ipairs {"int", "size_t", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
+write_ret["const ImVec4*"] = function()
+    --NOTICE: It's actually `const ImVec4&`
+    writeln "    lua_pushnumber(L, _retval.x);"
+    writeln "    lua_pushnumber(L, _retval.y);"
+    writeln "    lua_pushnumber(L, _retval.z);"
+    writeln "    lua_pushnumber(L, _retval.w);"
+    return 4
+end
+
+for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, status)
         status.idx = status.idx + 1
         if type_meta.default_value then
@@ -276,7 +308,7 @@ for _, type_name in ipairs {"int", "size_t", "ImU32", "ImGuiID", "ImGuiKeyChord"
 end
 
 for _, enums in ipairs(meta.enums) do
-    if enums.conditionals then
+    if not util.conditionals(enums) then
         goto continue
     end
     local realname = enums.name:match "(.-)_?$"
@@ -349,12 +381,10 @@ local function write_func(func_meta)
     return realname
 end
 
-local allow = require "allow"
-
 local function write_func_scope()
     local funcs = {}
     for _, func_meta in ipairs(meta.functions) do
-        if allow(func_meta) then
+        if util.allow(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end

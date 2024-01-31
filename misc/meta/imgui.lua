@@ -546,8 +546,6 @@ ImGui.Enum.SortDirection = {}
 ---@field Alt ImGuiKey #  Option/Menu
 ---@field Super ImGuiKey #  Cmd/Super/Windows
 ---@field Shortcut ImGuiKey #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
----@field KeysData_SIZE ImGuiKey #  Size of KeysData[]: only hold named keys
----@field KeysData_OFFSET ImGuiKey #  Accesses to io.KeysData[] must use (key - ImGuiKey_KeysData_OFFSET) index.
 ImGui.Enum.Key = {}
 
 --
@@ -1404,8 +1402,6 @@ function ImGui.SetScrollFromPosX(local_x, center_x_ratio) end
 ---@param center_y_ratio? number | `0.5`
 function ImGui.SetScrollFromPosY(local_y, center_y_ratio) end
 
-function ImGui.PopFont() end
-
 --
 -- modify a style color. always use this if you modify the style after NewFrame().
 --
@@ -1542,6 +1538,16 @@ function ImGui.GetColorU32ImVec4(col_x, col_y, col_z, col_w) end
 ---@param col integer
 ---@return integer
 function ImGui.GetColorU32ImU32(col) end
+
+--
+-- retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
+--
+---@param idx ImGuiCol
+---@return number
+---@return number
+---@return number
+---@return number
+function ImGui.GetStyleColorVec4(idx) end
 
 --
 -- Layout cursor positioning
@@ -1879,6 +1885,12 @@ function ImGui.Checkbox(label, v) end
 ---@param flags_value integer
 ---@return boolean
 function ImGui.CheckboxFlagsIntPtr(label, flags, flags_value) end
+
+---@param label string
+---@param flags integer[]
+---@param flags_value integer
+---@return boolean
+function ImGui.CheckboxFlagsUintPtr(label, flags, flags_value) end
 
 --
 -- use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; }
@@ -3111,6 +3123,35 @@ function ImGui.TabItemButton(label, flags) end
 --
 ---@param tab_or_docked_window_label string
 function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
+
+--
+-- Docking
+-- [BETA API] Enable with io.ConfigFlags |= ImGuiConfigFlags_DockingEnable.
+-- Note: You can use most Docking facilities without calling any API. You DO NOT need to call DockSpace() to use Docking!
+-- - Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.
+-- - Drag from window menu button (upper-left button) to undock an entire node (all windows).
+-- - When io.ConfigDockingWithShift == true, you instead need to hold SHIFT to enable docking.
+-- About dockspaces:
+-- - Use DockSpaceOverViewport() to create an explicit dock node covering the screen or a specific viewport.
+--   This is often used with ImGuiDockNodeFlags_PassthruCentralNode to make it transparent.
+-- - Use DockSpace() to create an explicit dock node _within_ an existing window. See Docking demo for details.
+-- - Important: Dockspaces need to be submitted _before_ any window they can host. Submit it early in your frame!
+-- - Important: Dockspaces need to be kept alive if hidden, otherwise windows docked into it will be undocked.
+--   e.g. if you have multiple tabs with a dockspace inside each tab: submit the non-visible dockspaces with ImGuiDockNodeFlags_KeepAliveOnly.
+--
+--
+-- Implied size = ImVec2(0, 0), flags = 0, window_class = NULL
+--
+---@param id integer
+---@return integer
+function ImGui.DockSpace(id) end
+
+---@param id integer
+---@param size_x? number | `0`
+---@param size_y? number | `0`
+---@param flags? ImGuiDockNodeFlags | `ImGui.Flags.DockNode { "None" }`
+---@return integer
+function ImGui.DockSpaceEx(id, size_x, size_y, flags) end
 
 --
 -- Implied viewport = NULL, flags = 0, window_class = NULL

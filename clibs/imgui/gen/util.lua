@@ -93,8 +93,6 @@ local BlackList <const> = {
 
 local TodoList <const> = {
     ImGui_TableGetSortSpecs = true,
-    ImGui_DockSpace = true,
-    ImGui_DockSpaceEx = true,
     ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
     ImGui_GetMainViewport = true,
@@ -166,9 +164,8 @@ local TodoList <const> = {
     ImGui_GetWindowViewport = true,
     ImGui_SetNextWindowSizeConstraints = true,
     ImGui_PushFont = true,
+    ImGui_PopFont = true,
     ImGui_GetFont = true,
-    ImGui_GetStyleColorVec4 = true,
-    ImGui_CheckboxFlagsUintPtr = true,
     ImGui_ComboChar = true,
     ImGui_ComboCharEx = true,
     ImGui_ComboCallback = true,
@@ -202,7 +199,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-return function (func_meta)
+local function allow(func_meta)
     if func_meta.is_internal then
         return
     end
@@ -223,3 +220,8 @@ return function (func_meta)
     end
     return true
 end
+
+return {
+    allow = allow,
+    conditionals = conditionals,
+}

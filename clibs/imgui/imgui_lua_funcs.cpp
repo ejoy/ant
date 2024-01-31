@@ -352,11 +352,6 @@ static int SetScrollFromPosY(lua_State* L) {
     return 0;
 }
 
-static int PopFont(lua_State* L) {
-    ImGui::PopFont();
-    return 0;
-}
-
 static int PushStyleColor(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
     auto col = (ImU32)luaL_checkinteger(L, 2);
@@ -516,6 +511,16 @@ static int GetColorU32ImU32(lua_State* L) {
     auto _retval = ImGui::GetColorU32(col);
     lua_pushinteger(L, _retval);
     return 1;
+}
+
+static int GetStyleColorVec4(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetStyleColorVec4(idx);
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    lua_pushnumber(L, _retval.z);
+    lua_pushnumber(L, _retval.w);
+    return 4;
 }
 
 static int GetCursorScreenPos(lua_State* L) {
@@ -848,6 +853,23 @@ static int CheckboxFlagsIntPtr(lua_State* L) {
         (int)util::field_tointeger(L, 2, 1),
     };
     auto flags_value = (int)luaL_checkinteger(L, 3);
+    auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, flags[0]);
+        lua_seti(L, _flags_index, 1);
+    };
+    return 1;
+}
+
+static int CheckboxFlagsUintPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _flags_index = 2;
+    unsigned int flags[] = {
+        (unsigned int)util::field_tointeger(L, 2, 1),
+    };
+    auto flags_value = (unsigned int)luaL_checkinteger(L, 3);
     auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
     lua_pushboolean(L, _retval);
     if (_retval) {
@@ -2691,6 +2713,25 @@ static int SetTabItemClosed(lua_State* L) {
     return 0;
 }
 
+static int DockSpace(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::DockSpace(id);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int DockSpaceEx(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 2, 0),
+        (float)luaL_optnumber(L, 3, 0),
+    };
+    auto flags = (ImGuiDockNodeFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiDockNodeFlags_None));
+    auto _retval = ImGui::DockSpace(id, size, flags);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
 static int DockSpaceOverViewport(lua_State* L) {
     auto _retval = ImGui::DockSpaceOverViewport();
     lua_pushinteger(L, _retval);
@@ -3308,7 +3349,6 @@ void init(lua_State* L) {
         { "SetScrollHereY", SetScrollHereY },
         { "SetScrollFromPosX", SetScrollFromPosX },
         { "SetScrollFromPosY", SetScrollFromPosY },
-        { "PopFont", PopFont },
         { "PushStyleColor", PushStyleColor },
         { "PushStyleColorImVec4", PushStyleColorImVec4 },
         { "PopStyleColor", PopStyleColor },
@@ -3333,6 +3373,7 @@ void init(lua_State* L) {
         { "GetColorU32Ex", GetColorU32Ex },
         { "GetColorU32ImVec4", GetColorU32ImVec4 },
         { "GetColorU32ImU32", GetColorU32ImU32 },
+        { "GetStyleColorVec4", GetStyleColorVec4 },
         { "GetCursorScreenPos", GetCursorScreenPos },
         { "SetCursorScreenPos", SetCursorScreenPos },
         { "GetCursorPos", GetCursorPos },
@@ -3381,6 +3422,7 @@ void init(lua_State* L) {
         { "ArrowButton", ArrowButton },
         { "Checkbox", Checkbox },
         { "CheckboxFlagsIntPtr", CheckboxFlagsIntPtr },
+        { "CheckboxFlagsUintPtr", CheckboxFlagsUintPtr },
         { "RadioButton", RadioButton },
         { "RadioButtonIntPtr", RadioButtonIntPtr },
         { "ProgressBar", ProgressBar },
@@ -3515,6 +3557,8 @@ void init(lua_State* L) {
         { "EndTabItem", EndTabItem },
         { "TabItemButton", TabItemButton },
         { "SetTabItemClosed", SetTabItemClosed },
+        { "DockSpace", DockSpace },
+        { "DockSpaceEx", DockSpaceEx },
         { "DockSpaceOverViewport", DockSpaceOverViewport },
         { "SetNextWindowDockID", SetNextWindowDockID },
         { "GetWindowDockID", GetWindowDockID },

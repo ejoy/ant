@@ -1,5 +1,7 @@
 local AntDir, meta = ...
 
+local util = require "util"
+
 local w <close> = assert(io.open(AntDir.."/misc/meta/imgui.lua", "wb"))
 
 local function writeln(fmt, ...)
@@ -21,6 +23,7 @@ local lua_type = {
     ["bool"] = "boolean",
     ["float"] = "number",
     ["double"] = "number",
+    ["unsigned int"] = "integer",
     ["int"] = "integer",
     ["size_t"] = "integer",
     ["ImGuiID"] = "integer",
@@ -93,9 +96,26 @@ special_ret["ImVec4"] = function ()
     writeln("---@return number")
 end
 
+special_ret["const ImVec4*"] = function ()
+    writeln("---@return number")
+    writeln("---@return number")
+    writeln("---@return number")
+    writeln("---@return number")
+end
+
 special_arg["ImTextureID"] = function (type_meta, status)
     assert(type_meta.default_value == nil)
     writeln("---@param %s ImTextureID", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+end
+
+special_arg["const ImGuiWindowClass*"] = function()
+    --NOTICE: Ignore ImGuiWindowClass for now.
+end
+
+special_arg["unsigned int*"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s integer[]", safe_name(type_meta.name))
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
@@ -193,39 +213,12 @@ default_type["const char*"] = function (value)
     return value
 end
 
-local function conditionals(t)
-    local cond = t.conditionals
-    if not cond then
-        return true
-    end
-    assert(#cond == 1)
-    cond = cond[1]
-    if cond.condition == "ifndef" then
-        cond = cond.expression
-        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
-            return
-        end
-        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
-            return
-        end
-    elseif cond.condition == "ifdef" then
-        cond = cond.expression
-        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
-            return true
-        end
-        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
-            return true
-        end
-    end
-    assert(false, t.name)
-end
-
 local function write_enum_scope()
     writeln("ImGui.Flags = {}")
     writeln("ImGui.Enum = {}")
     writeln ""
     for _, enums in ipairs(meta.enums) do
-        if not conditionals(enums) then
+        if not util.conditionals(enums) then
             goto continue
         end
         local realname = enums.name:match "(.-)_?$"
@@ -249,7 +242,7 @@ local function write_enum_scope()
             writeln ""
             writeln("---@alias _%s_Name", realname)
             for _, element in ipairs(enums.elements) do
-                if not element.is_internal and conditionals(element) then
+                if not element.is_internal and not element.conditionals then
                     if element.comments and element.comments.attached then
                         writeln("---| %q # %s", element.name:sub(#realname+2), element.comments.attached:match "^//(.*)$")
                     else
@@ -276,7 +269,7 @@ local function write_enum_scope()
             writeln("---@class _%s_Name", realname)
             local mark = {}
             for _, element in ipairs(enums.elements) do
-                if not element.is_internal and not element.is_count and conditionals(element) then
+                if not element.is_internal and not element.is_count and not element.conditionals then
                     local fieldname = element.name:sub(#realname+2)
                     if fieldname:match "^[0-9]" then
                         fieldname = "["..fieldname.."]"
@@ -390,12 +383,10 @@ local function write_func(func_meta)
     return realname
 end
 
-local allow = require "allow"
-
 local function write_func_scope()
     local funcs = {}
     for _, func_meta in ipairs(meta.functions) do
-        if allow(func_meta) then
+        if util.allow(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end

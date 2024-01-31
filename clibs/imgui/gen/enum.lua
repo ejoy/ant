@@ -1,5 +1,7 @@
 local AntDir, meta = ...
 
+local util = require "util"
+
 local w <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_enum.h", "wb"))
 
 local function writeln(fmt, ...)
@@ -14,7 +16,7 @@ local init = {
 
 local new_enums = {}
 for _, enums in ipairs(meta.enums) do
-    if enums.conditionals then
+    if not util.conditionals(enums) then
         goto continue
     end
     local realname = enums.name:match "(.-)_?$"
@@ -25,9 +27,9 @@ for _, enums in ipairs(meta.enums) do
         table.insert(init.enums, name)
     end
     writeln("static struct enum_pair e%s[] = {", name)
-    for _, enum in ipairs(enums.elements) do
-        if not enum.is_internal and not enum.conditionals then
-            local enum_type, enum_name = enum.name:match "^(%w+)_(%w+)$"
+    for _, element in ipairs(enums.elements) do
+        if not element.is_internal and not element.conditionals then
+            local enum_type, enum_name = element.name:match "^(%w+)_(%w+)$"
             if enum_type == realname then
                 writeln("\tENUM(%s, %s),", enum_type, enum_name)
             else
