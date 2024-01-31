@@ -240,7 +240,7 @@ function S.texture_default()
     return DefaultTexture
 end
 
-function S.texture_create(name, type)
+function S.texture_create(name, type, block)
     local c = textureByName[name]
     if c then
         if c.texinfo then
@@ -262,6 +262,9 @@ function S.texture_create(name, type)
         textureById[id] = c
     end
     ltask.multi_wait(asyncLoadTexture(c))
+    if block then
+        blockWaitTexture(name)
+    end
     return {
         id = c.id,
         texinfo = c.texinfo,
@@ -286,15 +289,16 @@ function S.texture_create_fast(name, type)
     return c.id
 end
 
-function S.texture_reload(name, type)
+function S.texture_reload(name, type, block)
     textureByName[name] = nil
-    return S.texture_create(name, type)
+    return S.texture_create(name, type, block)
 end
 
 local FrameLoaded = 0
 local MaxFrameLoaded <const> = 64
 local rt_table = {}
 local chain_table = {}
+local blockQueue = {}
 ltask.fork(function ()
     while true do
         ltask.wait(token)
@@ -310,6 +314,11 @@ ltask.fork(function ()
             createQueue[name] = nil
             local c = textureByName[name]
             local handle = textureData.handle or createTexture(textureData)
+            local block_token = blockQueue[name]
+            if block_token then
+                blockQueue[name] = nil
+                ltask.multi_wakeup(block_token)
+            end
             c.handle = handle
             c.flag   = textureData.flag
             textureman.texture_set(c.id, handle)
@@ -318,6 +327,18 @@ ltask.fork(function ()
         end
     end
 end)
+
+local function blockWaitTexture(name)
+    if createQueue[name] then
+        -- waiting for create
+        local token = blockQueue[name]
+        if not token then
+            token = {}
+            blockQueue[name] = token
+        end
+        ltask.multi_wait(token)
+    end
+end
 
 local update; do
     local FrameNew = 0

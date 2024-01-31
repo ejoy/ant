@@ -15,15 +15,14 @@ function assetmgr.init()
 	texture_mgr.init()
 
 	local MA	  = import_package "ant.material".arena
-	
 	sa.init(texture_mgr, MA)
 end
 
-function assetmgr.load(fullpath)
+function assetmgr.load(fullpath, block)
 	local robj = FILELIST[fullpath]
 	if not robj then
 		local ext = fullpath:match "[^.]*$"
-		robj = require_ext(ext).loader(fullpath)
+		robj = require_ext(ext).loader(fullpath, block)
 		FILELIST[fullpath] = robj
 	end
 	return robj
@@ -39,11 +38,11 @@ function assetmgr.unload(fullpath)
 	FILELIST[fullpath] = nil
 end
 
-function assetmgr.reload(fullpath)
+function assetmgr.reload(fullpath, block)
 	local robj = FILELIST[fullpath]
 	if robj then
 		local ext = fullpath:match "[^.]*$"
-		robj = require_ext(ext).reloader(fullpath, robj)
+		robj = require_ext(ext).reloader(fullpath, robj, block)
 		FILELIST[fullpath] = robj
 	end
 	return robj
