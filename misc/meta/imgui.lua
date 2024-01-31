@@ -1018,6 +1018,34 @@ function ImGui.ViewportFlags(flags) end
 ---@alias ImTextureID integer
 
 --
+-- Context creation and access
+-- - Each context create its own ImFontAtlas by default. You may instance one yourself and pass it to CreateContext() to share a font atlas between contexts.
+-- - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
+--   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
+--
+function ImGui.CreateContext() end
+
+--
+-- NULL = destroy current context
+--
+function ImGui.DestroyContext() end
+
+--
+-- start a new Dear ImGui frame, you can submit any command from this point until Render()/EndFrame().
+--
+function ImGui.NewFrame() end
+
+--
+-- ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!
+--
+function ImGui.EndFrame() end
+
+--
+-- ends the Dear ImGui frame, finalize the draw data. You can then get call GetDrawData().
+--
+function ImGui.Render() end
+
+--
 -- Windows
 -- - Begin() = push window to the stack and start appending to it. End() = pop window from the stack.
 -- - Passing 'bool* p_open != NULL' shows a window-closing widget in the upper-right corner of the window,
@@ -3793,6 +3821,16 @@ function ImGui.SaveIniSettingsToDisk(ini_filename) end
 --
 ---@return string
 function ImGui.SaveIniSettingsToMemory() end
+
+--
+-- call in main loop. will call CreateWindow/ResizeWindow/etc. platform functions for each secondary viewport, and DestroyWindow for each inactive viewport.
+--
+function ImGui.UpdatePlatformWindows() end
+
+--
+-- Implied platform_render_arg = NULL, renderer_render_arg = NULL
+--
+function ImGui.RenderPlatformWindowsDefault() end
 
 ---@param key ImGui.Key
 ---@return ImGui.Key

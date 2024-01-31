@@ -58,10 +58,7 @@ namespace vg {
 TEMPLATE_TYPENAME_T class virtualGizmoBaseClass {
 
 public:
-    virtualGizmoBaseClass() : tbActive(false), pos(0), delta(0),
-                           tbControlButton(evLeftButton), tbControlModifiers(evNoModifier),
-                           tbRotationButton(evRightButton), xRotationModifier(evShiftModifier),
-                           yRotationModifier(evControlModifier),  zRotationModifier(evAltModifier|evSuperModifier)
+    virtualGizmoBaseClass()
     { 
         viewportSize(T(256), T(256));  //initial dummy value
     }
@@ -262,11 +259,11 @@ public:
 
 protected:
 
-    tVec2 pos, delta;
+    tVec2 pos = tVec2(0), delta = tVec2(0);
 
     // UI commands that this virtualGizmo responds to (defaults to left mouse button with no modifier key)
-    vgButtons   tbControlButton, tbRotationButton;   
-    vgModifiers tbControlModifiers, xRotationModifier, yRotationModifier, zRotationModifier;
+    vgButtons   tbControlButton = evLeftButton, tbRotationButton = evRightButton;   
+    vgModifiers tbControlModifiers = evNoModifier, xRotationModifier = evShiftModifier, yRotationModifier = evControlModifier, zRotationModifier = evAltModifier|evSuperModifier;
 
     tVec3 rotationVector = tVec3(T(1));
 
@@ -285,7 +282,7 @@ protected:
     T minVal;
     tVec3 offset;
 
-    bool tbActive;  // trackbal activated via mouse
+    bool tbActive = false;  // trackbal activated via mouse
 
     T width, height;
 };

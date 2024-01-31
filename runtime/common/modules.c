@@ -33,6 +33,7 @@ int luaopen_font_util(lua_State *L);
 int luaopen_httpc(lua_State *L);
 int luaopen_image(lua_State* L);
 int luaopen_imgui(lua_State* L);
+int luaopen_imgui_backend(lua_State* L);
 int luaopen_imgui_widgets(lua_State* L);
 int luaopen_ios(lua_State* L);
 int luaopen_ltask(lua_State* L);
@@ -120,6 +121,7 @@ void ant_loadmodules(lua_State* L) {
         { "motion.tween",       luaopen_motion_tween},
         { "image", luaopen_image },
         { "imgui", luaopen_imgui },
+        { "imgui.backend", luaopen_imgui_backend },
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
 #endif
