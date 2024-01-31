@@ -190,7 +190,7 @@ function m:data_changed()
     end
     ImGui.End()
     if exit then
-        -- local setting = ImGui.SaveIniSettings()
+        -- local setting = ImGui.SaveIniSettingsToMemory()
         -- local wf = assert(io.open("D:/Github/ant/tools/editor/launch/pkg/launch/imgui.layout", "wb"))
         -- wf:write(setting)
         -- wf:close()

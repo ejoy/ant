@@ -1,5 +1,5 @@
 local ImGui     = import_package "ant.imgui"
-local imguiWidgets = require "imgui.widgets"
+local ImGuiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
 local aio  = import_package "ant.io"
 local uiconfig  = require "widget.config"
@@ -68,7 +68,7 @@ end
 
 function PropertyBase:show_label()
     if self.mode == nil or self.mode == "label_left" then
-        ImGui.PropertyLabel(self.label)
+        ImGuiWidgets.PropertyLabel(self.label)
     end
 end
 
@@ -99,7 +99,7 @@ end
 
 local DirectionalArrow = class("DirectionalArrow", PropertyBase)
 function DirectionalArrow:widget()
-    return imguiWidgets.DirectionalArrow(self:get_label(), self.uidata)
+    return ImGuiWidgets.DirectionalArrow(self:get_label(), self.uidata)
 end
 
 local Int = class("Int", PropertyBase)
@@ -199,7 +199,7 @@ end
 
 function EditText:show()
     if self:is_visible() then
-        ImGui.PropertyLabel(self.label)
+        ImGuiWidgets.PropertyLabel(self.label)
         if self:widget() then
             self.modifier.setter(tostring(self.uidata.text))
         end
@@ -237,7 +237,7 @@ function ResourcePath:show()
     end
     -- ImGui.Text(self.label)
     -- ImGui.SameLine(uiconfig.PropertyIndent)
-    ImGui.PropertyLabel(self.label)
+    ImGuiWidgets.PropertyLabel(self.label)
     self:widget()
     if ImGui.BeginDragDropTarget() then
         local payload = ImGui.AcceptDragDropPayload("DragFile")

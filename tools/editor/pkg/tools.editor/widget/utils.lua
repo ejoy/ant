@@ -151,7 +151,7 @@ function m.load_imgui_layout(filename)
 end
 
 function m.save_ui_layout()
-    local setting = ImGui.SaveIniSettings()
+    local setting = ImGui.SaveIniSettingsToMemory()
     local wf = assert(io.open(tostring(global_data.editor_root) .. "imgui.layout", "wb"))
     wf:write(setting)
     wf:close()

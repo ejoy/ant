@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local ImGui     = import_package "ant.imgui"
+local ImGuiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local brush_def = require "brush_def"
@@ -86,12 +87,12 @@ function m.show()
             end
         end
         if current_grid then
-            ImGui.PropertyLabel("Show")
+            ImGuiWidgets.PropertyLabel("Show")
             if ImGui.Checkbox("##Show", visible_ui) then
                 current_grid:show(visible_ui[1])
             end
             
-            ImGui.PropertyLabel("Brush")
+            ImGuiWidgets.PropertyLabel("Brush")
             if ImGui.BeginCombo("##Brush", current_label) then
                 for index, label in ipairs(brush_def.label) do
                     if ImGui.SelectableEx(label, current_label == label) then
@@ -111,7 +112,7 @@ function m.show()
             end
 
             local brush_size_label = "BrushSize"
-            ImGui.PropertyLabel(brush_size_label)
+            ImGuiWidgets.PropertyLabel(brush_size_label)
             if ImGui.DragInt("##"..brush_size_label, brush_size_ui) then
                 world:pub {"GridMesh", "brushsize", brush_size_ui[1]}
             end

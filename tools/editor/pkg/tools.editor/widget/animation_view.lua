@@ -10,7 +10,7 @@ local assetmgr = import_package "ant.asset"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
 local ImGui     = import_package "ant.imgui"
-local imguiWidgets = require "imgui.widgets"
+local ImGuiWidgets = require "imgui.widgets"
 local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -279,7 +279,7 @@ local bank_path
 
 local function show_current_event()
     if not current_event then return end
-    ImGui.PropertyLabel("EventType")
+    ImGuiWidgets.PropertyLabel("EventType")
     ImGui.Text(current_event.event_type)
 
     local dirty
@@ -363,7 +363,7 @@ local function show_current_event()
                 end
             end
             if current_event.asset_path and #current_event.asset_path > 0 then
-                ImGui.PropertyLabel("AssetPath")
+                ImGuiWidgets.PropertyLabel("AssetPath")
                 if ImGui.InputText("##AssetPath", current_event.asset_path_ui) then
                     update_asset_path(tostring(current_event.asset_path_ui.text))
                     dirty = true
@@ -374,7 +374,7 @@ local function show_current_event()
         action_list = (current_event.event_type == "Effect") and prefab_mgr.efk_list or (#action_list > 0 and action_list or (edit_anims and edit_anims.name_list or {}))
         if #action_list > 0 then
             local action = current_event.action or ''
-            ImGui.PropertyLabel("Action")
+            ImGuiWidgets.PropertyLabel("Action")
             if ImGui.BeginCombo("##ActionList", action) then
                 for _, name in ipairs(action_list) do
                     if ImGui.SelectableEx(name, action == name) then
@@ -387,7 +387,7 @@ local function show_current_event()
         end
         if current_event.asset_path and #current_event.asset_path > 0 then
             local target = current_event.target or ''
-            ImGui.PropertyLabel("Target")
+            ImGuiWidgets.PropertyLabel("Target")
             if ImGui.BeginCombo("##Target", target) then
                 local namelist = (current_event.action_type_map[current_event.action] == "mtl") and prefab_mgr.mtl_list or prefab_mgr.srt_mtl_list
                 for _, name in ipairs(namelist) do
@@ -400,19 +400,19 @@ local function show_current_event()
             end
         end
         if current_event.event_type == "Animation" then
-            ImGui.PropertyLabel("Forwards")
+            ImGuiWidgets.PropertyLabel("Forwards")
             if ImGui.Checkbox("##Forwards", current_event.forwards_ui) then
                 current_event.forwards = current_event.forwards_ui[1]
                 dirty = true
             end
-            ImGui.PropertyLabel("PauseFrame")
+            ImGuiWidgets.PropertyLabel("PauseFrame")
             if ImGui.DragInt("##PauseFrame", current_event.pause_frame_ui) then
                 current_event.pause_frame = current_event.pause_frame_ui[1]
                 dirty = true
             end
         end
     elseif current_event.event_type == "Message" then
-        ImGui.PropertyLabel("Content")
+        ImGuiWidgets.PropertyLabel("Content")
         if ImGui.InputText("##Content", current_event.msg_content_ui) then
             current_event.msg_content = tostring(current_event.msg_content_ui.text)
             dirty = true
@@ -778,7 +778,7 @@ function m.show()
         ImGui.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         local current_seq = edit_timeline and edit_timeline or edit_anims
-        imguiWidgets.Sequencer(current_seq, anim_state, imgui_message)
+        ImGuiWidgets.Sequencer(current_seq, anim_state, imgui_message)
         current_seq.dirty = false
         local move_type
         local new_frame_idx

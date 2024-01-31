@@ -114,9 +114,7 @@ special_arg["bool*"] = function (type_meta, status)
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
-special_arg["size_t*"] = function (type_meta, status)
-    writeln("---@param %s integer | nil", safe_name(type_meta.name))
-    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+special_arg["size_t*"] = function ()
 end
 
 special_arg["const char*"] = function (type_meta, status)

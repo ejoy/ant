@@ -1,9 +1,10 @@
 local ImGui      = import_package "ant.imgui"
+local ImGuiWidgets = require "imgui.widgets"
 
 local compdefines=require "widget.component_defines"
 
 local SameLine = ImGui.SameLine()
-local PropertyLabel = ImGui.PropertyLabel
+local PropertyLabel = ImGuiWidgets.PropertyLabel
 local Text          = ImGui.Text
 local DisableText   = ImGui.DisableText
 local InputText     = ImGui.InputText

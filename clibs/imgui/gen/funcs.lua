@@ -27,12 +27,9 @@ write_arg["const char*"] = function(type_meta, status)
         if size_meta.is_varargs then
             status.idx = status.idx + 1
             status.i = status.i + 1
-            writeln("    lua_pushcfunction(L, str_format);")
-            writeln("    lua_insert(L, %d);", status.idx)
-            writeln("    lua_call(L, lua_gettop(L) - %d, 1);", status.idx)
-            writeln("    const char* _fmtstr = lua_tostring(L, -1);")
+            writeln("    const char* %s = util::format(L, %d);", type_meta.name, status.idx)
             status.arguments[#status.arguments+1] = [["%s"]]
-            status.arguments[#status.arguments+1] = "_fmtstr"
+            status.arguments[#status.arguments+1] = type_meta.name
             return
         end
     end
@@ -124,7 +121,7 @@ write_arg["bool*"] = function(type_meta, status)
     writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
     writeln("    int _%s_index = %d;", type_meta.name, status.idx)
     writeln("    bool %s[] = {", type_meta.name)
-    writeln("        field_toboolean(L, %d, %d),", status.idx, 1)
+    writeln("        util::field_toboolean(L, %d, %d),", status.idx, 1)
     writeln "    };"
     status.arguments[#status.arguments+1] = type_meta.name
 end
@@ -142,15 +139,8 @@ write_arg_ret["bool*"] = function(type_meta)
 end
 
 write_arg["size_t*"] = function(type_meta, status)
-    status.idx = status.idx + 1
-    writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
     writeln("    size_t %s = 0;", type_meta.name)
-    status.arguments[#status.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
-end
-
-write_arg_ret["size_t*"] = function(type_meta)
-    writeln("    has_%s? lua_pushinteger(L, %s): lua_pushnil(L);", type_meta.name, type_meta.name)
-    return 1
+    status.arguments[#status.arguments+1] = string.format("&%s", type_meta.name, type_meta.name)
 end
 
 for n = 1, 4 do
@@ -160,7 +150,7 @@ for n = 1, 4 do
         writeln("    int _%s_index = %d;", type_meta.name, status.idx)
         writeln("    int %s[] = {", type_meta.name)
         for i = 1, n do
-            writeln("        (int)field_tointeger(L, %d, %d),", status.idx, i)
+            writeln("        (int)util::field_tointeger(L, %d, %d),", status.idx, i)
         end
         writeln "    };"
         status.arguments[#status.arguments+1] = type_meta.name
@@ -185,7 +175,7 @@ for n = 1, 4 do
         writeln("    int _%s_index = %d;", type_meta.name, status.idx)
         writeln("    float %s[] = {", type_meta.name)
         for i = 1, n do
-            writeln("        (float)field_tonumber(L, %d, %d),", status.idx, i)
+            writeln("        (float)util::field_tonumber(L, %d, %d),", status.idx, i)
         end
         writeln "    };"
         status.arguments[#status.arguments+1] = type_meta.name
@@ -229,7 +219,12 @@ write_ret["const ImGuiPayload*"] = function()
     return 1
 end
 
-write_ret["const char*"] = function()
+write_ret["const char*"] = function(func_meta)
+    local type_meta = func_meta.arguments[1]
+    if type_meta and type_meta.type and type_meta.type.declaration == "size_t*" then
+        writeln("    lua_pushlstring(L, _retval, %s);", type_meta.name)
+        return 1
+    end
     writeln "    lua_pushstring(L, _retval);"
     return 1
 end
@@ -322,7 +317,7 @@ local function write_func(func_meta)
         end
         writeln("    auto _retval = %s(%s);", func_meta.original_fully_qualified_name, table.concat(status.arguments, ", "))
         local nret = 0
-        nret = nret + rfunc(func_meta.return_type)
+        nret = nret + rfunc(func_meta, func_meta.return_type)
         for _, type_meta in ipairs(func_meta.arguments) do
             if type_meta.type then
                 local func = write_arg_ret[type_meta.type.declaration]
@@ -355,38 +350,9 @@ writeln "// Automatically generated file; DO NOT EDIT."
 writeln "//"
 writeln "#include <imgui.h>"
 writeln "#include <lua.hpp>"
+writeln "#include \"imgui_lua_util.h\""
 writeln ""
 writeln "namespace imgui_lua {"
-writeln ""
-writeln "lua_CFunction str_format = NULL;"
-writeln ""
-writeln "static void find_str_format(lua_State* L) {"
-writeln "    luaopen_string(L);"
-writeln "    lua_getfield(L, -1, \"format\");"
-writeln "    str_format = lua_tocfunction(L, -1);"
-writeln "    lua_pop(L, 2);"
-writeln "}"
-writeln ""
-writeln "static auto field_tointeger(lua_State* L, int idx, lua_Integer i) {"
-writeln "    lua_geti(L, idx, i);"
-writeln "    auto v = luaL_checknumber(L, -1);"
-writeln "    lua_pop(L, 1);"
-writeln "    return v;"
-writeln "}"
-writeln ""
-writeln "static auto field_tonumber(lua_State* L, int idx, lua_Integer i) {"
-writeln "    lua_geti(L, idx, i);"
-writeln "    auto v = luaL_checknumber(L, -1);"
-writeln "    lua_pop(L, 1);"
-writeln "    return v;"
-writeln "}"
-writeln ""
-writeln "static auto field_toboolean(lua_State* L, int idx, lua_Integer i) {"
-writeln "    lua_geti(L, idx, i);"
-writeln "    bool v = !!lua_toboolean(L, -1);"
-writeln "    lua_pop(L, 1);"
-writeln "    return v;"
-writeln "}"
 writeln ""
 local funcs = write_func_scope()
 writeln "void init(lua_State* L) {"
@@ -397,6 +363,6 @@ end
 writeln "        { NULL, NULL },"
 writeln "    };"
 writeln "    luaL_setfuncs(L, funcs, 0);"
-writeln "    find_str_format(L);"
+writeln "    util::init(L);"
 writeln "}"
 writeln "}"

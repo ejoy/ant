@@ -20,7 +20,7 @@ local ozzoffline = require "ozz.offline"
 local math3d    = require "math3d"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
-local imguiWidgets  = require "imgui.widgets"
+local ImGuiWidgets  = require "imgui.widgets"
 local joint_utils   = require "widget.joint_utils"
 local widget_utils  = require "widget.utils"
 local utils         = require "common.utils"
@@ -512,7 +512,7 @@ end
 local function show_current_detail()
     if not current_anim then return end
     local anim_type = current_anim.type
-    ImGui.PropertyLabel("FrameCount:")
+    ImGuiWidgets.PropertyLabel("FrameCount:")
     if ImGui.DragInt("##FrameCount", current_anim.frame_count_ui) then
         if current_anim.frame_count_ui[1] < max_range_value() + 1 then
             current_anim.frame_count_ui[1] = max_range_value() + 1
@@ -579,7 +579,7 @@ local function show_current_detail()
     end
 
     ImGui.Separator()
-    ImGui.PropertyLabel("FrameRange")
+    ImGuiWidgets.PropertyLabel("FrameRange")
     local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
     local dirty = false
     if ImGui.DragInt("##Range", current_clip.range_ui) then
@@ -637,7 +637,7 @@ local function show_current_detail()
         current_anim.dirty_layer = current_anim.selected_layer_index
         dirty = true
     end
-    ImGui.PropertyLabel("TweenType")
+    ImGuiWidgets.PropertyLabel("TweenType")
     if ImGui.BeginCombo("##TweenType", tween_type_name[current_clip.tween]) then
         for i, type in ipairs(tween_type_name) do
             if ImGui.SelectableEx(type, current_clip.tween == i) then
@@ -648,13 +648,13 @@ local function show_current_detail()
         ImGui.EndCombo()
     end
     if anim_type == "mtl" then
-        ImGui.PropertyLabel("UniformValue")
+        ImGuiWidgets.PropertyLabel("UniformValue")
         local ui_data = current_clip.value_ui
         if ImGui.ColorEdit4("##UniformValue", ui_data) then
             current_clip.value = {ui_data[1], ui_data[2], ui_data[3], ui_data[4]}
             dirty = true
         end
-        ImGui.PropertyLabel("Scale")
+        ImGuiWidgets.PropertyLabel("Scale")
         ui_data = current_clip.scale_ui
         if ImGui.DragFloat("##Scale", ui_data) then
             current_clip.scale = ui_data[1]
@@ -662,7 +662,7 @@ local function show_current_detail()
         end
     else
         if anim_type == "ske" or anim_type == "srt" then
-            ImGui.PropertyLabel("AnimationType")
+            ImGuiWidgets.PropertyLabel("AnimationType")
             if ImGui.BeginCombo("##AnimationType", anim_type_name[current_clip.type]) then
                 for i, type in ipairs(anim_type_name) do
                     if ImGui.SelectableEx(type, current_clip.type == i) then
@@ -672,7 +672,7 @@ local function show_current_detail()
                 end
                 ImGui.EndCombo()
             end
-            ImGui.PropertyLabel("Repeat")
+            ImGuiWidgets.PropertyLabel("Repeat")
             if ImGui.DragInt("##Repeat", current_clip.repeat_ui) then
                 local count = current_clip.repeat_ui[1]
                 if count > max_repeat then
@@ -685,7 +685,7 @@ local function show_current_detail()
                 dirty = true
             end
         end
-        ImGui.PropertyLabel("Direction")
+        ImGuiWidgets.PropertyLabel("Direction")
         if ImGui.BeginCombo("##Direction", dir_name[current_clip.direction]) then
             for i, type in ipairs(dir_name) do
                 if ImGui.SelectableEx(type, current_clip.direction == i) then
@@ -696,14 +696,14 @@ local function show_current_detail()
             ImGui.EndCombo()
         end
 
-        ImGui.PropertyLabel("AmplitudePos")
+        ImGuiWidgets.PropertyLabel("AmplitudePos")
         local ui_data = current_clip.amplitude_pos_ui
         if ImGui.DragFloat("##AmplitudePos", ui_data) then
             current_clip.amplitude_pos = ui_data[1]
             dirty = true
         end
 
-        ImGui.PropertyLabel("RotAxis")
+        ImGuiWidgets.PropertyLabel("RotAxis")
         if ImGui.BeginCombo("##RotAxis", dir_name[current_clip.rot_axis]) then
             for i = 1, 3 do
                 if ImGui.SelectableEx(dir_name[i], current_clip.rot_axis == i) then
@@ -713,7 +713,7 @@ local function show_current_detail()
             end
             ImGui.EndCombo()
         end
-        ImGui.PropertyLabel("AmplitudeRot")
+        ImGuiWidgets.PropertyLabel("AmplitudeRot")
         ui_data = current_clip.amplitude_rot_ui
         if ImGui.DragFloat("##AmplitudeRot", ui_data) then
             current_clip.amplitude_rot = ui_data[1]
@@ -1200,7 +1200,7 @@ function m.show()
 
             if current_anim then
                 local imgui_message = {}
-                imguiWidgets.SimpleSequencer(current_anim, imgui_message)
+                ImGuiWidgets.SimpleSequencer(current_anim, imgui_message)
                 current_anim.dirty = false
                 current_anim.clip_range_dirty = 0
                 current_anim.dirty_layer = 0

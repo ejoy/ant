@@ -1,4 +1,5 @@
 local ImGui         = import_package "ant.imgui"
+local ImGuiWidgets  = require "imgui.widgets"
 local global_data   = require "common.global_data"
 local datalist      = require "datalist"
 local serialize     = import_package "ant.serialize"
@@ -18,7 +19,7 @@ local default_tab_flags= ImGui.Flags.TabBar{"Reorderable", "AutoSelectNewTabs"}
 
 local TreeNodeEx    = ImGui.TreeNodeEx
 local TreePop       = ImGui.TreePop
-local PropertyLabel = ImGui.PropertyLabel
+local PropertyLabel = ImGuiWidgets.PropertyLabel
 local Checkbox      = ImGui.Checkbox
 local BeginCombo    = ImGui.BeginCombo
 local EndCombo      = ImGui.EndCombo

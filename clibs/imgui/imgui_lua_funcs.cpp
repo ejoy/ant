@@ -3,38 +3,9 @@
 //
 #include <imgui.h>
 #include <lua.hpp>
+#include "imgui_lua_util.h"
 
 namespace imgui_lua {
-
-lua_CFunction str_format = NULL;
-
-static void find_str_format(lua_State* L) {
-    luaopen_string(L);
-    lua_getfield(L, -1, "format");
-    str_format = lua_tocfunction(L, -1);
-    lua_pop(L, 2);
-}
-
-static auto field_tointeger(lua_State* L, int idx, lua_Integer i) {
-    lua_geti(L, idx, i);
-    auto v = luaL_checknumber(L, -1);
-    lua_pop(L, 1);
-    return v;
-}
-
-static auto field_tonumber(lua_State* L, int idx, lua_Integer i) {
-    lua_geti(L, idx, i);
-    auto v = luaL_checknumber(L, -1);
-    lua_pop(L, 1);
-    return v;
-}
-
-static auto field_toboolean(lua_State* L, int idx, lua_Integer i) {
-    lua_geti(L, idx, i);
-    bool v = !!lua_toboolean(L, -1);
-    lua_pop(L, 1);
-    return v;
-}
 
 static int Begin(lua_State* L) {
     auto name = luaL_checkstring(L, 1);
@@ -760,11 +731,8 @@ static int GetIDPtr(lua_State* L) {
 }
 
 static int Text(lua_State* L) {
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 1);
-    lua_call(L, lua_gettop(L) - 1, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::Text("%s", _fmtstr);
+    const char* fmt = util::format(L, 1);
+    ImGui::Text("%s", fmt);
     return 0;
 }
 
@@ -775,48 +743,33 @@ static int TextColored(lua_State* L) {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
     };
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 5);
-    lua_call(L, lua_gettop(L) - 5, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::TextColored(col, "%s", _fmtstr);
+    const char* fmt = util::format(L, 5);
+    ImGui::TextColored(col, "%s", fmt);
     return 0;
 }
 
 static int TextDisabled(lua_State* L) {
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 1);
-    lua_call(L, lua_gettop(L) - 1, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::TextDisabled("%s", _fmtstr);
+    const char* fmt = util::format(L, 1);
+    ImGui::TextDisabled("%s", fmt);
     return 0;
 }
 
 static int TextWrapped(lua_State* L) {
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 1);
-    lua_call(L, lua_gettop(L) - 1, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::TextWrapped("%s", _fmtstr);
+    const char* fmt = util::format(L, 1);
+    ImGui::TextWrapped("%s", fmt);
     return 0;
 }
 
 static int LabelText(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 2);
-    lua_call(L, lua_gettop(L) - 2, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::LabelText(label, "%s", _fmtstr);
+    const char* fmt = util::format(L, 2);
+    ImGui::LabelText(label, "%s", fmt);
     return 0;
 }
 
 static int BulletText(lua_State* L) {
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 1);
-    lua_call(L, lua_gettop(L) - 1, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::BulletText("%s", _fmtstr);
+    const char* fmt = util::format(L, 1);
+    ImGui::BulletText("%s", fmt);
     return 0;
 }
 
@@ -876,7 +829,7 @@ static int Checkbox(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     bool v[] = {
-        field_toboolean(L, 2, 1),
+        util::field_toboolean(L, 2, 1),
     };
     auto _retval = ImGui::Checkbox(label, v);
     lua_pushboolean(L, _retval);
@@ -892,7 +845,7 @@ static int CheckboxFlagsIntPtr(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _flags_index = 2;
     int flags[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto flags_value = (int)luaL_checkinteger(L, 3);
     auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
@@ -917,7 +870,7 @@ static int RadioButtonIntPtr(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto v_button = (int)luaL_checkinteger(L, 3);
     auto _retval = ImGui::RadioButton(label, v, v_button);
@@ -964,7 +917,7 @@ static int Combo(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _current_item_index = 2;
     int current_item[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto items_separated_by_zeros = luaL_checkstring(L, 3);
     auto _retval = ImGui::Combo(label, current_item, items_separated_by_zeros);
@@ -981,7 +934,7 @@ static int ComboEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _current_item_index = 2;
     int current_item[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto items_separated_by_zeros = luaL_checkstring(L, 3);
     auto popup_max_height_in_items = (int)luaL_optinteger(L, 4, -1);
@@ -999,7 +952,7 @@ static int DragFloat(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     auto _retval = ImGui::DragFloat(label, v);
     lua_pushboolean(L, _retval);
@@ -1015,7 +968,7 @@ static int DragFloatEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (float)luaL_optnumber(L, 4, 0.0f);
@@ -1036,8 +989,8 @@ static int DragFloat2(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
     };
     auto _retval = ImGui::DragFloat2(label, v);
     lua_pushboolean(L, _retval);
@@ -1055,8 +1008,8 @@ static int DragFloat2Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (float)luaL_optnumber(L, 4, 0.0f);
@@ -1079,9 +1032,9 @@ static int DragFloat3(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
     };
     auto _retval = ImGui::DragFloat3(label, v);
     lua_pushboolean(L, _retval);
@@ -1101,9 +1054,9 @@ static int DragFloat3Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (float)luaL_optnumber(L, 4, 0.0f);
@@ -1128,10 +1081,10 @@ static int DragFloat4(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
-        (float)field_tonumber(L, 2, 4),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
     };
     auto _retval = ImGui::DragFloat4(label, v);
     lua_pushboolean(L, _retval);
@@ -1153,10 +1106,10 @@ static int DragFloat4Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
-        (float)field_tonumber(L, 2, 4),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (float)luaL_optnumber(L, 4, 0.0f);
@@ -1183,12 +1136,12 @@ static int DragFloatRange2(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
     float v_current_min[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
     float v_current_max[] = {
-        (float)field_tonumber(L, 3, 1),
+        (float)util::field_tonumber(L, 3, 1),
     };
     auto _retval = ImGui::DragFloatRange2(label, v_current_min, v_current_max);
     lua_pushboolean(L, _retval);
@@ -1208,12 +1161,12 @@ static int DragFloatRange2Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
     float v_current_min[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
     float v_current_max[] = {
-        (float)field_tonumber(L, 3, 1),
+        (float)util::field_tonumber(L, 3, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 4, 1.0f);
     auto v_min = (float)luaL_optnumber(L, 5, 0.0f);
@@ -1239,7 +1192,7 @@ static int DragInt(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto _retval = ImGui::DragInt(label, v);
     lua_pushboolean(L, _retval);
@@ -1255,7 +1208,7 @@ static int DragIntEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (int)luaL_optinteger(L, 4, 0);
@@ -1276,8 +1229,8 @@ static int DragInt2(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
     };
     auto _retval = ImGui::DragInt2(label, v);
     lua_pushboolean(L, _retval);
@@ -1295,8 +1248,8 @@ static int DragInt2Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (int)luaL_optinteger(L, 4, 0);
@@ -1319,9 +1272,9 @@ static int DragInt3(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
     };
     auto _retval = ImGui::DragInt3(label, v);
     lua_pushboolean(L, _retval);
@@ -1341,9 +1294,9 @@ static int DragInt3Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (int)luaL_optinteger(L, 4, 0);
@@ -1368,10 +1321,10 @@ static int DragInt4(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
-        (int)field_tointeger(L, 2, 4),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 4),
     };
     auto _retval = ImGui::DragInt4(label, v);
     lua_pushboolean(L, _retval);
@@ -1393,10 +1346,10 @@ static int DragInt4Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
-        (int)field_tointeger(L, 2, 4),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 4),
     };
     auto v_speed = (float)luaL_optnumber(L, 3, 1.0f);
     auto v_min = (int)luaL_optinteger(L, 4, 0);
@@ -1423,12 +1376,12 @@ static int DragIntRange2(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
     int v_current_min[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
     int v_current_max[] = {
-        (int)field_tointeger(L, 3, 1),
+        (int)util::field_tointeger(L, 3, 1),
     };
     auto _retval = ImGui::DragIntRange2(label, v_current_min, v_current_max);
     lua_pushboolean(L, _retval);
@@ -1448,12 +1401,12 @@ static int DragIntRange2Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_current_min_index = 2;
     int v_current_min[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     luaL_checktype(L, 3, LUA_TTABLE);
     int _v_current_max_index = 3;
     int v_current_max[] = {
-        (int)field_tointeger(L, 3, 1),
+        (int)util::field_tointeger(L, 3, 1),
     };
     auto v_speed = (float)luaL_optnumber(L, 4, 1.0f);
     auto v_min = (int)luaL_optinteger(L, 5, 0);
@@ -1479,7 +1432,7 @@ static int SliderFloat(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1497,7 +1450,7 @@ static int SliderFloatEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1517,8 +1470,8 @@ static int SliderFloat2(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1538,8 +1491,8 @@ static int SliderFloat2Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1561,9 +1514,9 @@ static int SliderFloat3(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1585,9 +1538,9 @@ static int SliderFloat3Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1611,10 +1564,10 @@ static int SliderFloat4(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
-        (float)field_tonumber(L, 2, 4),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1638,10 +1591,10 @@ static int SliderFloat4Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     float v[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
-        (float)field_tonumber(L, 2, 4),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
@@ -1667,7 +1620,7 @@ static int SliderAngle(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_rad_index = 2;
     float v_rad[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     auto _retval = ImGui::SliderAngle(label, v_rad);
     lua_pushboolean(L, _retval);
@@ -1683,7 +1636,7 @@ static int SliderAngleEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_rad_index = 2;
     float v_rad[] = {
-        (float)field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 1),
     };
     auto v_degrees_min = (float)luaL_optnumber(L, 3, -360.0f);
     auto v_degrees_max = (float)luaL_optnumber(L, 4, +360.0f);
@@ -1703,7 +1656,7 @@ static int SliderInt(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1721,7 +1674,7 @@ static int SliderIntEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1741,8 +1694,8 @@ static int SliderInt2(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1762,8 +1715,8 @@ static int SliderInt2Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1785,9 +1738,9 @@ static int SliderInt3(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1809,9 +1762,9 @@ static int SliderInt3Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1835,10 +1788,10 @@ static int SliderInt4(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
-        (int)field_tointeger(L, 2, 4),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 4),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1862,10 +1815,10 @@ static int SliderInt4Ex(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _v_index = 2;
     int v[] = {
-        (int)field_tointeger(L, 2, 1),
-        (int)field_tointeger(L, 2, 2),
-        (int)field_tointeger(L, 2, 3),
-        (int)field_tointeger(L, 2, 4),
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 4),
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
@@ -1895,7 +1848,7 @@ static int VSliderFloat(lua_State* L) {
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
     float v[] = {
-        (float)field_tonumber(L, 4, 1),
+        (float)util::field_tonumber(L, 4, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 5);
     auto v_max = (float)luaL_checknumber(L, 6);
@@ -1917,7 +1870,7 @@ static int VSliderFloatEx(lua_State* L) {
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
     float v[] = {
-        (float)field_tonumber(L, 4, 1),
+        (float)util::field_tonumber(L, 4, 1),
     };
     auto v_min = (float)luaL_checknumber(L, 5);
     auto v_max = (float)luaL_checknumber(L, 6);
@@ -1941,7 +1894,7 @@ static int VSliderInt(lua_State* L) {
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
     int v[] = {
-        (int)field_tointeger(L, 4, 1),
+        (int)util::field_tointeger(L, 4, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 5);
     auto v_max = (int)luaL_checkinteger(L, 6);
@@ -1963,7 +1916,7 @@ static int VSliderIntEx(lua_State* L) {
     luaL_checktype(L, 4, LUA_TTABLE);
     int _v_index = 4;
     int v[] = {
-        (int)field_tointeger(L, 4, 1),
+        (int)util::field_tointeger(L, 4, 1),
     };
     auto v_min = (int)luaL_checkinteger(L, 5);
     auto v_max = (int)luaL_checkinteger(L, 6);
@@ -1983,9 +1936,9 @@ static int ColorEdit3(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _col_index = 2;
     float col[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiColorEditFlags_None));
     auto _retval = ImGui::ColorEdit3(label, col, flags);
@@ -2006,10 +1959,10 @@ static int ColorEdit4(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _col_index = 2;
     float col[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
-        (float)field_tonumber(L, 2, 4),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiColorEditFlags_None));
     auto _retval = ImGui::ColorEdit4(label, col, flags);
@@ -2032,9 +1985,9 @@ static int ColorPicker3(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _col_index = 2;
     float col[] = {
-        (float)field_tonumber(L, 2, 1),
-        (float)field_tonumber(L, 2, 2),
-        (float)field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiColorEditFlags_None));
     auto _retval = ImGui::ColorPicker3(label, col, flags);
@@ -2097,22 +2050,16 @@ static int TreeNode(lua_State* L) {
 
 static int TreeNodeStr(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 2);
-    lua_call(L, lua_gettop(L) - 2, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    auto _retval = ImGui::TreeNode(str_id, "%s", _fmtstr);
+    const char* fmt = util::format(L, 2);
+    auto _retval = ImGui::TreeNode(str_id, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int TreeNodePtr(lua_State* L) {
     auto ptr_id = lua_touserdata(L, 1);
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 2);
-    lua_call(L, lua_gettop(L) - 2, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    auto _retval = ImGui::TreeNode(ptr_id, "%s", _fmtstr);
+    const char* fmt = util::format(L, 2);
+    auto _retval = ImGui::TreeNode(ptr_id, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -2128,11 +2075,8 @@ static int TreeNodeEx(lua_State* L) {
 static int TreeNodeExStr(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto flags = (ImGuiTreeNodeFlags)luaL_checkinteger(L, 2);
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 3);
-    lua_call(L, lua_gettop(L) - 3, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    auto _retval = ImGui::TreeNodeEx(str_id, flags, "%s", _fmtstr);
+    const char* fmt = util::format(L, 3);
+    auto _retval = ImGui::TreeNodeEx(str_id, flags, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -2140,11 +2084,8 @@ static int TreeNodeExStr(lua_State* L) {
 static int TreeNodeExPtr(lua_State* L) {
     auto ptr_id = lua_touserdata(L, 1);
     auto flags = (ImGuiTreeNodeFlags)luaL_checkinteger(L, 2);
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 3);
-    lua_call(L, lua_gettop(L) - 3, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    auto _retval = ImGui::TreeNodeEx(ptr_id, flags, "%s", _fmtstr);
+    const char* fmt = util::format(L, 3);
+    auto _retval = ImGui::TreeNodeEx(ptr_id, flags, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -2185,7 +2126,7 @@ static int CollapsingHeaderBoolPtr(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _p_visible_index = 2;
     bool p_visible[] = {
-        field_toboolean(L, 2, 1),
+        util::field_toboolean(L, 2, 1),
     };
     auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTreeNodeFlags_None));
     auto _retval = ImGui::CollapsingHeader(label, p_visible, flags);
@@ -2229,7 +2170,7 @@ static int SelectableBoolPtr(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _p_selected_index = 2;
     bool p_selected[] = {
-        field_toboolean(L, 2, 1),
+        util::field_toboolean(L, 2, 1),
     };
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
     auto _retval = ImGui::Selectable(label, p_selected, flags);
@@ -2246,7 +2187,7 @@ static int SelectableBoolPtrEx(lua_State* L) {
     luaL_checktype(L, 2, LUA_TTABLE);
     int _p_selected_index = 2;
     bool p_selected[] = {
-        field_toboolean(L, 2, 1),
+        util::field_toboolean(L, 2, 1),
     };
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
     auto size = ImVec2 {
@@ -2343,7 +2284,7 @@ static int MenuItemBoolPtr(lua_State* L) {
     luaL_checktype(L, 3, LUA_TTABLE);
     int _p_selected_index = 3;
     bool p_selected[] = {
-        field_toboolean(L, 3, 1),
+        util::field_toboolean(L, 3, 1),
     };
     auto enabled = lua_isnoneornil(L, 4)? true: !!lua_toboolean(L, 4);
     auto _retval = ImGui::MenuItem(label, shortcut, p_selected, enabled);
@@ -2367,11 +2308,8 @@ static int EndTooltip(lua_State* L) {
 }
 
 static int SetTooltip(lua_State* L) {
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 1);
-    lua_call(L, lua_gettop(L) - 1, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::SetTooltip("%s", _fmtstr);
+    const char* fmt = util::format(L, 1);
+    ImGui::SetTooltip("%s", fmt);
     return 0;
 }
 
@@ -2382,11 +2320,8 @@ static int BeginItemTooltip(lua_State* L) {
 }
 
 static int SetItemTooltip(lua_State* L) {
-    lua_pushcfunction(L, str_format);
-    lua_insert(L, 1);
-    lua_call(L, lua_gettop(L) - 1, 1);
-    const char* _fmtstr = lua_tostring(L, -1);
-    ImGui::SetItemTooltip("%s", _fmtstr);
+    const char* fmt = util::format(L, 1);
+    ImGui::SetItemTooltip("%s", fmt);
     return 0;
 }
 
@@ -3228,12 +3163,10 @@ static int SaveIniSettingsToDisk(lua_State* L) {
 }
 
 static int SaveIniSettingsToMemory(lua_State* L) {
-    bool has_out_ini_size = !lua_isnil(L, 1);
     size_t out_ini_size = 0;
-    auto _retval = ImGui::SaveIniSettingsToMemory((has_out_ini_size? &out_ini_size: NULL));
-    lua_pushstring(L, _retval);
-    has_out_ini_size? lua_pushinteger(L, out_ini_size): lua_pushnil(L);
-    return 2;
+    auto _retval = ImGui::SaveIniSettingsToMemory(&out_ini_size);
+    lua_pushlstring(L, _retval, out_ini_size);
+    return 1;
 }
 
 static int GetKeyIndex(lua_State* L) {
@@ -3576,6 +3509,6 @@ void init(lua_State* L) {
         { NULL, NULL },
     };
     luaL_setfuncs(L, funcs, 0);
-    find_str_format(L);
+    util::init(L);
 }
 }

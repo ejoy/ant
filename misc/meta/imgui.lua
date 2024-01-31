@@ -3611,9 +3611,8 @@ function ImGui.SaveIniSettingsToDisk(ini_filename) end
 --
 -- return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
 --
----@param out_ini_size integer | nil
 ---@return string
-function ImGui.SaveIniSettingsToMemory(out_ini_size) end
+function ImGui.SaveIniSettingsToMemory() end
 
 ---@param key ImGuiKey
 ---@return ImGuiKey
