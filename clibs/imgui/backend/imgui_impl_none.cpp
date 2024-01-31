@@ -1,5 +1,5 @@
 #include <imgui.h>
-#include "imgui_platform.h"
+#include "backend/imgui_impl_platform.h"
 
 void platformInit(void* window) {
 }

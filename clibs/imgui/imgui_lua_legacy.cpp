@@ -3,10 +3,6 @@
 #include <imgui_internal.h>
 #include <cstdint>
 
-namespace imgui_lua {
-    void init(lua_State* L, int extra);
-}
-
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
     void *ud;

@@ -290,16 +290,28 @@ end
 
 local function write_flags(realname, elements)
     local name = string.format("ImGui.%s", realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$")
+    local lines = {}
+    local maxn = 0
+    for _, element in ipairs(elements) do
+        if not element.is_internal and not element.conditionals then
+            local fname = element.name:sub(#realname+2)
+            maxn = math.max(maxn, #fname)
+            if element.comments and element.comments.attached then
+                lines[#lines+1] = { fname, element.comments.attached:match "^//(.*)$" }
+            else
+                lines[#lines+1] = { fname }
+            end
+        end
+    end
     writeln("---@class %s", name)
     writeln ""
     writeln("---@alias _%s_Name", realname)
-    for _, element in ipairs(elements) do
-        if not element.is_internal and not element.conditionals then
-            if element.comments and element.comments.attached then
-                writeln("---| %q # %s", element.name:sub(#realname+2), element.comments.attached:match "^//(.*)$")
-            else
-                writeln("---| %q", element.name:sub(#realname+2))
-            end
+    for _, line in ipairs(lines) do
+        local fname, comment = line[1], line[2]
+        if comment then
+            writeln("---| %q %s# %s", fname, string.rep(" ", maxn - #fname), comment)
+        else
+            writeln("---| %q", fname)
         end
     end
     writeln ""

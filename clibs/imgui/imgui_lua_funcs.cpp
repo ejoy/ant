@@ -746,6 +746,12 @@ static int Render(lua_State* L) {
     return 0;
 }
 
+static int GetVersion(lua_State* L) {
+    auto _retval = ImGui::GetVersion();
+    lua_pushstring(L, _retval);
+    return 1;
+}
+
 static int Begin(lua_State* L) {
     auto name = luaL_checkstring(L, 1);
     bool has_p_open = !lua_isnil(L, 2);
@@ -4371,6 +4377,7 @@ void init(lua_State* L) {
         { "NewFrame", NewFrame },
         { "EndFrame", EndFrame },
         { "Render", Render },
+        { "GetVersion", GetVersion },
         { "Begin", Begin },
         { "End", End },
         { "BeginChild", BeginChild },

@@ -20,22 +20,33 @@ lm:source_set "imgui" {
     defines = defines,
     windows = {
         sources = {
-            "platform/windows/imgui_platform.cpp",
+            "backend/imgui_impl_win32.cpp",
             lm.AntDir .. "/3rd/imgui/backends/imgui_impl_win32.cpp",
         },
         defines = {
             "_UNICODE",
             "UNICODE",
+        },
+        windows = {
+            links = {
+                "user32",
+                "shell32",
+                "ole32",
+                "imm32",
+                "dwmapi",
+                "gdi32",
+                "uuid"
+            },
         }
     },
     linux = {
         sources = {
-            "platform/linux/imgui_platform.cpp",
+            "backend/imgui_impl_none.cpp",
         }
     },
     macos = {
         sources = {
-            "platform/macos/imgui_platform.mm",
+            "backend/imgui_impl_osx.mm",
             lm.AntDir .. "/3rd/imgui/backends/imgui_impl_osx.mm",
         },
         flags = {
@@ -47,7 +58,7 @@ lm:source_set "imgui" {
     },
     ios = {
         sources = {
-            "platform/ios/imgui_platform.cpp",
+            "backend/imgui_impl_none.cpp",
         },
     },
 }
@@ -94,25 +105,14 @@ lm:lua_source "imgui" {
     },
     sources = {
         "imgui_config.cpp",
-        "luaimgui.cpp",
         "imgui_lua_funcs.cpp",
         "imgui_lua_util.cpp",
         "imgui_lua_backend.cpp",
+        "imgui_lua_legacy.cpp",
     },
     defines = {
         defines,
     },
-    windows = {
-        links = {
-            "user32",
-            "shell32",
-            "ole32",
-            "imm32",
-            "dwmapi",
-            "gdi32",
-            "uuid"
-        },
-    }
 }
 
 lm:runlua "imgui-gen" {
