@@ -124,6 +124,9 @@ local function create_compute_entity(glbs, memory, draw_num)
 end
 
 local function set_dirty_hitch_group(hitch, hid, state)
+    if DIRECT_DRAW_GROUPS[hitch.group] then
+        return
+    end
     local gid = hitch.group
     DIRTY_GROUPS[gid] = true
     local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
@@ -160,9 +163,7 @@ function hitch_sys:entity_remove()
 end
 
 function hitch_sys:entity_init()
-    for e in w:select "INIT hitch:in hitch_create?out hitch_update?out view_visible?in hitch_visible?out" do
-        e.hitch_create = true
-        e.hitch_update = true
+    for e in w:select "INIT hitch:in view_visible?in hitch_visible?out" do
         e.hitch_visible = e.view_visible
     end 
 end
@@ -186,44 +187,62 @@ function hitch_sys:finish_scene_update()
 
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in" do
-            if re.skinning or re.dynamic_mesh then
+        -- draw instance in render_submit
+        ig.enable(gid, "view_visible", true)
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in efk?in efk_visible?update" do
+            if re.skinning or re.dynamic_mesh  then
                 DIRECT_DRAW_GROUPS[gid] = true
+                ig.enable(gid, "view_visible", false)
             end
         end
         ig.enable(gid, "hitch_tag", false)
         for _, heid in ipairs(hitchs) do
-            local e<close> = world:entity(heid, "hitch:in scene_needchange?out")
+            local e<close> = world:entity(heid, "hitch:in scene_needchange?out eid:in")
+            set_dirty_hitch_group(e.hitch, e.eid, true) 
             e.scene_needchange = true
         end
     end
     w:clear "hitch_create"
 end
 
-function hitch_sys:render_preprocess()
+local tick<const> = 10
+local cur_tick = 0
+
+function hitch_sys:refine_camera()
+    -- remove hitch / hitch scene_update / reset hitch group
     for e in w:select "hitch_update hitch:in eid:in" do
-        local INDIRECT_DRAW_GROUP = not DIRECT_DRAW_GROUPS[e.hitch.group]
-        if INDIRECT_DRAW_GROUP then
-            set_dirty_hitch_group(e.hitch, e.eid, true) 
-        end
+        set_dirty_hitch_group(e.hitch, e.eid, true)
     end
+
+    -- group cull
+    if cur_tick >= tick then
+        for e in w:select "hitch:in eid:in view_visible?in" do
+            set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
+        end
+        cur_tick = 0
+    else
+        cur_tick = cur_tick + 1
+    end  
+
     for gid in pairs(DIRTY_GROUPS) do
+        ig.enable(gid, "view_visible", true)
         local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
         if indirect_draw_group.glbs then
             update_group_instance_buffer(indirect_draw_group)
         else
             ig.enable(gid, "hitch_tag", true)
-            local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             
+            local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             local glbs = {}
-            for re in w:select "hitch_tag eid:in mesh:in draw_indirect:in" do
+            for re in w:select "hitch_tag eid:in mesh:in draw_indirect:in render_object_visible?update" do
+                -- render_object_visible only set in render_system entity_init by view_visible
+                re.render_object_visible = true
                 glbs[#glbs+1] = { diid = re.eid}
                 update_instance_buffer(re.eid, memory, draw_num)
             end
-
             indirect_draw_group.glbs = glbs
-
             create_compute_entity(indirect_draw_group.glbs, memory, draw_num)
+
             ig.enable(gid, "hitch_tag", false)
         end
     end

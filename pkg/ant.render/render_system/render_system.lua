@@ -109,7 +109,7 @@ local function update_visible_masks(e)
 end
 
 function render_sys:entity_init()
-	for e in w:select "INIT material_result:in render_object:in filter_material:in view_visible?in render_object_visible?out draw_indirect?in" do
+	for e in w:select "INIT material_result:in render_object:in filter_material:in view_visible?in render_object_visible?out draw_indirect?in eid:in" do
 		local mr = e.material_result
 		local fm = e.filter_material
 		local mi
