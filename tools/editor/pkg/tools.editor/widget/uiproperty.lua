@@ -130,9 +130,14 @@ function Bool:widget()
 end
 
 local Color = class("Color", PropertyBase)
-
+local ColorEdit = {
+    "",
+    "",
+    ImGui.ColorEdit3,
+    ImGui.ColorEdit4
+}
 function Color:widget()
-    return ImGui.ColorEdit4(self:get_label(), self.uidata)
+    return ColorEdit[self.dim](self:get_label(), self.uidata)
 end
 
 local Combo = class("Combo", PropertyBase)
