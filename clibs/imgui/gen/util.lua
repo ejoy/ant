@@ -14,7 +14,6 @@ local BlackList <const> = {
     ImGui_ShowStyleSelector = true,
     ImGui_ShowFontSelector = true,
     ImGui_ShowUserGuide = true,
-    ImGui_GetVersion = true,
     ImGui_StyleColorsDark = true,
     ImGui_StyleColorsLight = true,
     ImGui_StyleColorsClassic = true,

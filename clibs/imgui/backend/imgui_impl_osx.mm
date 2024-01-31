@@ -1,6 +1,6 @@
 #include <imgui.h>
 #include <backends/imgui_impl_osx.h>
-#include "imgui_platform.h"
+#include "backend/imgui_impl_platform.h"
 #import <Cocoa/Cocoa.h>
 
 void platformInit(void* window) {

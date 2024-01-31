@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <bx/platform.h>
 #include "backend/imgui_impl_bgfx.h"
-#include "imgui_platform.h"
+#include "backend/imgui_impl_platform.h"
 #include "fastio.h"
 
 namespace imgui_lua_backend {

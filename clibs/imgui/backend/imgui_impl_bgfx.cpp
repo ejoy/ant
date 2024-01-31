@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "bgfx_interface.h"
 #include "luabgfx.h"
-#include "imgui_platform.h"
+#include "imgui_impl_platform.h"
 #include "imgui_impl_bgfx.h"
 
 struct RendererViewport {
