@@ -339,7 +339,7 @@ local function show_current_event()
         for _, se in ipairs(sound_event_name_list) do
             if ImGui.SelectableEx(se, current_event.sound_event == se, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
-                if (ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left)) then
+                if (ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left)) then
                     fmod.play(sound_event_list[se])
                     dirty = true
                 end
@@ -610,8 +610,8 @@ function m.show()
     end
     local reload = false
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Animation", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         if (not current_anim or not anim_eid) and not edit_timeline then
             goto continue

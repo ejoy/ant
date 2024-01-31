@@ -273,8 +273,8 @@ function m.show()
     end
 
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     m.update_resource_tree(editor_setting.setting.hide_engine_resource)
 
     local function do_show_browser(folder)
@@ -307,7 +307,7 @@ function m.show()
     end
     
     if ImGui.Begin("ResourceBrowser", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
-        ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
+        ImGui.PushStyleVarImVec2(ImGui.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then
             relativePath = selected_folder[1]
@@ -393,11 +393,11 @@ function m.show()
                 end
                 rename_file(selected_file)
                 local function pre_selectable(icon, noselected)
-                    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
+                    ImGui.PushStyleColorImVec4(ImGui.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
                     if noselected then
-                        ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
+                        ImGui.PushStyleColorImVec4(ImGui.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
                     else
-                        ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                        ImGui.PushStyleColorImVec4(ImGui.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
                     local imagesize = icon.texinfo.width * icons.scale
                     ImGui.Image(assetmgr.textures[icon.id], imagesize, imagesize)
@@ -413,7 +413,7 @@ function m.show()
                     if ImGui.SelectableEx(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
-                        if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
+                        if ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left) then
                             selected_folder = path
                         end
                     end
@@ -429,7 +429,7 @@ function m.show()
                     if ImGui.SelectableEx(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
-                        if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
+                        if ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left) then
                             local isprefab = path:equal_extension(".prefab")
                             if path:equal_extension(".gltf") or path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}

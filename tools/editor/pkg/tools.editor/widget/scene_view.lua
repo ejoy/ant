@@ -273,8 +273,8 @@ local prefab_mgr  = ecs.require "prefab_manager"
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Hierarchy", nil, ImGui.Flags.Window { "NoCollapse" }) then
         if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." Create") then
             ImGui.OpenPopup("CreateEntity")

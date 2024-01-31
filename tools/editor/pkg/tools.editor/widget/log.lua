@@ -278,7 +278,7 @@ function m.showLog(name)
         end
         ImGui.SameLine()
         if color then
-            ImGui.PushStyleColorImVec4(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
+            ImGui.PushStyleColorImVec4(ImGui.Col.Text, color[1], color[2], color[3], color[4])
         end
         ImGui.Text(item.message)
         if color then
@@ -345,7 +345,7 @@ function m.showLog(name)
     --     end
     --     ImGui.SameLine()
     --     if color then
-    --         ImGui.PushStyleColorImVec4(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
+    --         ImGui.PushStyleColorImVec4(ImGui.Col.Text, color[1], color[2], color[3], color[4])
     --     end
     --     if ImGui.SelectableEx(item.message, current_select == i) then
     --         current_select = i
@@ -382,8 +382,8 @@ function m.show()
         log_item_height = 22 * viewport.DpiScale
     end
     checkLog()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Log", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         showHeaderWidget()
         m.showLog("LogList")

@@ -28,7 +28,7 @@ local lua_type = {
     ["size_t"] = "integer",
     ["ImGuiID"] = "integer",
     ["ImU32"] = "integer",
-    ["ImGuiKeyChord"] = "ImGuiKeyChord",
+    ["ImGuiKeyChord"] = "ImGui.KeyChord",
     ["const ImGuiPayload*"] = "string | nil",
 }
 
@@ -213,9 +213,65 @@ default_type["const char*"] = function (value)
     return value
 end
 
-local function write_enum_scope()
+local function write_enum(realname, elements, new_enums)
+    local name = string.format("ImGui.%s", realname:match "^ImGui(%a+)$")
+    local function fullname(element)
+        local fieldname = element.name:sub(#realname+2)
+        if fieldname:match "^[0-9]" then
+            return name.."["..fieldname.."]"
+        else
+            return name.."."..fieldname
+        end
+    end
+    local lines = {}
+    local maxn = 0
+    for _, element in ipairs(elements) do
+        if not element.is_internal and not element.is_count and not element.conditionals then
+            if new_enums then
+                local enum_type = element.name:match "^(%w+)_%w+$"
+                if enum_type ~= realname then
+                    local t = new_enums[enum_type]
+                    if t then
+                        t[#t+1] = element
+                    else
+                        new_enums[enum_type] = { element }
+                    end
+                    goto continue
+                end
+            end
+            local fname = fullname(element)
+            maxn = math.max(maxn, #fname)
+            if element.comments and element.comments.attached then
+                lines[#lines+1] = { fname, element.comments.attached:match "^//(.*)$" }
+            else
+                lines[#lines+1] = { fname }
+            end
+            ::continue::
+        end
+    end
+    writeln("---@alias %s", name)
+    for _, line in ipairs(lines) do
+        local fname, comment = line[1], line[2]
+        if comment then
+            writeln("---| `%s` %s# %s", fname, string.rep(" ", maxn - #fname), comment)
+        else
+            writeln("---| `%s`", fname)
+        end
+    end
+    lua_type[realname] = name
+    default_type[realname] = function (value)
+        local v = math.tointeger(value)
+        for _, element in ipairs(elements) do
+            if element.value == v then
+                return fullname(element)
+            end
+        end
+    end
+end
+
+local function write_flags_and_enums()
+    local new_enums = {}
     writeln("ImGui.Flags = {}")
-    writeln("ImGui.Enum = {}")
     writeln ""
     for _, enums in ipairs(meta.enums) do
         if not util.conditionals(enums) then
@@ -236,9 +292,9 @@ local function write_enum_scope()
                 writeln "--"
             end
         end
-        writeln("---@class %s", realname)
         if enums.is_flags_enum then
             local name = realname:match "^ImGui(%a+)Flags$" or realname:match "^Im(%a+)Flags$"
+            writeln("---@class %s", realname)
             writeln ""
             writeln("---@alias _%s_Name", realname)
             for _, element in ipairs(enums.elements) do
@@ -264,50 +320,18 @@ local function write_enum_scope()
                 end
             end
         else
-            local name = realname:match "^ImGui(%a+)$"
-            writeln ""
-            writeln("---@class _%s_Name", realname)
-            local mark = {}
-            for _, element in ipairs(enums.elements) do
-                if not element.is_internal and not element.is_count and not element.conditionals then
-                    local fieldname = element.name:sub(#realname+2)
-                    if fieldname:match "^[0-9]" then
-                        fieldname = "["..fieldname.."]"
-                    end
-                    if not mark[fieldname] then
-                        mark[fieldname] = true
-                        if element.comments and element.comments.attached then
-                            writeln("---@field %s %s # %s", fieldname, realname, element.comments.attached:match "^//(.*)$")
-                        else
-                            writeln("---@field %s %s", fieldname, realname)
-                        end
-                    end
-                end
-            end
-            writeln("ImGui.Enum.%s = {}", name)
-            lua_type[realname] = realname
-            default_type[realname] = function (value)
-                local v = math.tointeger(value)
-                for _, element in ipairs(enums.elements) do
-                    if element.value == v then
-                        local fieldname = element.name:sub(#realname+2)
-                        if fieldname:match "^[0-9]" then
-                            fieldname = "["..fieldname.."]"
-                        else
-                            fieldname = "."..fieldname
-                        end
-                        return string.format("ImGui.Enum.%s%s", name, fieldname)
-                    end
-                end
-            end
+            write_enum(realname, enums.elements, new_enums)
         end
         writeln ""
         ::continue::
     end
+    for enum_type, elements in pairs(new_enums) do
+        write_enum(enum_type, elements)
+    end
 end
 
-local function write_type_scope()
-    writeln("---@alias ImGuiKeyChord ImGuiKey")
+local function write_types()
+    writeln("---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod")
     writeln("---@alias ImTextureID integer")
 end
 
@@ -383,7 +407,7 @@ local function write_func(func_meta)
     return realname
 end
 
-local function write_func_scope()
+local function write_funcs()
     local funcs = {}
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
@@ -401,9 +425,9 @@ writeln "--"
 writeln ""
 writeln "local ImGui = {}"
 writeln ""
-write_enum_scope()
+write_flags_and_enums()
 writeln ""
-write_type_scope()
+write_types()
 writeln ""
-write_func_scope()
+write_funcs()
 writeln "return ImGui"

@@ -223,7 +223,6 @@ static struct enum_pair eDataType[] = {
 	ENUM(ImGuiDataType, U64),
 	ENUM(ImGuiDataType, Float),
 	ENUM(ImGuiDataType, Double),
-	ENUM(ImGuiDataType, COUNT),
 	{ NULL, 0 },
 };
 
@@ -233,7 +232,6 @@ static struct enum_pair eDir[] = {
 	ENUM(ImGuiDir, Right),
 	ENUM(ImGuiDir, Up),
 	ENUM(ImGuiDir, Down),
-	ENUM(ImGuiDir, COUNT),
 	{ NULL, 0 },
 };
 
@@ -484,7 +482,6 @@ static struct enum_pair eCol[] = {
 	ENUM(ImGuiCol, NavWindowingHighlight),
 	ENUM(ImGuiCol, NavWindowingDimBg),
 	ENUM(ImGuiCol, ModalWindowDimBg),
-	ENUM(ImGuiCol, COUNT),
 	{ NULL, 0 },
 };
 
@@ -519,7 +516,6 @@ static struct enum_pair eStyleVar[] = {
 	ENUM(ImGuiStyleVar, SeparatorTextAlign),
 	ENUM(ImGuiStyleVar, SeparatorTextPadding),
 	ENUM(ImGuiStyleVar, DockingSeparatorSize),
-	ENUM(ImGuiStyleVar, COUNT),
 	{ NULL, 0 },
 };
 
@@ -572,7 +568,6 @@ static struct enum_pair eMouseButton[] = {
 	ENUM(ImGuiMouseButton, Left),
 	ENUM(ImGuiMouseButton, Right),
 	ENUM(ImGuiMouseButton, Middle),
-	ENUM(ImGuiMouseButton, COUNT),
 	{ NULL, 0 },
 };
 
@@ -587,7 +582,6 @@ static struct enum_pair eMouseCursor[] = {
 	ENUM(ImGuiMouseCursor, ResizeNWSE),
 	ENUM(ImGuiMouseCursor, Hand),
 	ENUM(ImGuiMouseCursor, NotAllowed),
-	ENUM(ImGuiMouseCursor, COUNT),
 	{ NULL, 0 },
 };
 
@@ -595,7 +589,6 @@ static struct enum_pair eMouseSource[] = {
 	ENUM(ImGuiMouseSource, Mouse),
 	ENUM(ImGuiMouseSource, TouchScreen),
 	ENUM(ImGuiMouseSource, Pen),
-	ENUM(ImGuiMouseSource, COUNT),
 	{ NULL, 0 },
 };
 
@@ -780,19 +773,4 @@ void imgui_enum_init(lua_State* L) {
 	flag_gen(L, "FontAtlas", eFontAtlasFlags);
 	flag_gen(L, "Viewport", eViewportFlags);
 	lua_setfield(L, -2, "Flags");
-
-	lua_newtable(L);
-	enum_gen(L, "DataType", eDataType);
-	enum_gen(L, "Dir", eDir);
-	enum_gen(L, "SortDirection", eSortDirection);
-	enum_gen(L, "Key", eKey);
-	enum_gen(L, "Col", eCol);
-	enum_gen(L, "StyleVar", eStyleVar);
-	enum_gen(L, "MouseButton", eMouseButton);
-	enum_gen(L, "MouseCursor", eMouseCursor);
-	enum_gen(L, "MouseSource", eMouseSource);
-	enum_gen(L, "Cond", eCond);
-	enum_gen(L, "TableBgTarget", eTableBgTarget);
-	enum_gen(L, "Mod", eMod);
-	lua_setfield(L, -2, "Enum");
 }

@@ -28,7 +28,7 @@ for _, enums in ipairs(meta.enums) do
     end
     writeln("static struct enum_pair e%s[] = {", name)
     for _, element in ipairs(enums.elements) do
-        if not element.is_internal and not element.conditionals then
+        if not element.is_internal and not element.is_count and not element.conditionals then
             local enum_type, enum_name = element.name:match "^(%w+)_(%w+)$"
             if enum_type == realname then
                 writeln("\tENUM(%s, %s),", enum_type, enum_name)
@@ -66,10 +66,4 @@ for _, name in ipairs(init.flags) do
     writeln("\tflag_gen(L, \"%s\", e%s);", name:match "^(.-)Flags$", name)
 end
 writeln("\tlua_setfield(L, -2, \"Flags\");")
-writeln("")
-writeln("\tlua_newtable(L);")
-for _, name in ipairs(init.enums) do
-    writeln("\tenum_gen(L, \"%s\", e%s);", name, name)
-end
-writeln("\tlua_setfield(L, -2, \"Enum\");")
 writeln("}")

@@ -307,34 +307,80 @@ for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImGuiID",
     end
 end
 
-for _, enums in ipairs(meta.enums) do
-    if not util.conditionals(enums) then
-        goto continue
-    end
-    local realname = enums.name:match "(.-)_?$"
-    local function find_name(value)
-        local v = math.tointeger(value)
-        for _, element in ipairs(enums.elements) do
-            if element.value == v then
-                return element.name
+local function write_enum(realname, elements, new_enums)
+    local lines = {}
+    for _, element in ipairs(elements) do
+        if not element.is_internal and not element.is_count and not element.conditionals then
+            local enum_type, enum_name = element.name:match "^(%w+)_(%w+)$"
+            if new_enums and enum_type ~= realname then
+                local t = new_enums[enum_type]
+                if t then
+                    t[#t+1] = element
+                else
+                    new_enums[enum_type] = { element }
+                end
+                goto continue
             end
+            lines[#lines+1] = { enum_type, enum_name }
+            ::continue::
         end
-        assert(false)
     end
-    write_arg[realname] = function(type_meta, status)
-        status.idx = status.idx + 1
-        if type_meta.default_value then
-            writeln("    auto %s = (%s)luaL_optinteger(L, %d, lua_Integer(%s));", type_meta.name, realname, status.idx, find_name(type_meta.default_value))
+    local name = realname:match "^ImGui(%a+)$"
+    writeln("static util::TableInteger %s[] = {", name)
+    for _, line in ipairs(lines) do
+        local enum_type, enum_name = line[1], line[2]
+        writeln("    ENUM(%s, %s),", enum_type, enum_name)
+    end
+    writeln "};"
+    writeln ""
+    return name
+end
+
+local function write_flags_and_enums()
+    writeln("#define ENUM(prefix, name) { #name, prefix##_##name }")
+    writeln ""
+    local flags = {}
+    local enums = {}
+    local new_enums = {}
+    for _, enum_meta in ipairs(meta.enums) do
+        if not util.conditionals(enum_meta) then
+            goto continue
+        end
+        local realname = enum_meta.name:match "(.-)_?$"
+        local function find_name(value)
+            local v = math.tointeger(value)
+            for _, element in ipairs(enum_meta.elements) do
+                if element.value == v then
+                    return element.name
+                end
+            end
+            assert(false)
+        end
+        if enum_meta.is_flags_enum then
         else
-            writeln("    auto %s = (%s)luaL_checkinteger(L, %d);", type_meta.name, realname, status.idx)
+            enums[#enums+1] = write_enum(realname, enum_meta.elements, new_enums)
         end
-        status.arguments[#status.arguments+1] = type_meta.name
+        write_arg[realname] = function(type_meta, status)
+            status.idx = status.idx + 1
+            if type_meta.default_value then
+                writeln("    auto %s = (%s)luaL_optinteger(L, %d, lua_Integer(%s));", type_meta.name, realname, status.idx, find_name(type_meta.default_value))
+            else
+                writeln("    auto %s = (%s)luaL_checkinteger(L, %d);", type_meta.name, realname, status.idx)
+            end
+            status.arguments[#status.arguments+1] = type_meta.name
+        end
+        write_ret[realname] = function()
+            writeln "    lua_pushinteger(L, _retval);"
+            return 1
+        end
+        ::continue::
     end
-    write_ret[realname] = function()
-        writeln "    lua_pushinteger(L, _retval);"
-        return 1
+    for enum_type, elements in pairs(new_enums) do
+        enums[#enums+1] = write_enum(enum_type, elements)
     end
-    ::continue::
+    writeln("#undef ENUM")
+    writeln ""
+    return flags, enums
 end
 
 local function write_func(func_meta)
@@ -381,7 +427,7 @@ local function write_func(func_meta)
     return realname
 end
 
-local function write_func_scope()
+local function write_funcs()
     local funcs = {}
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
@@ -400,15 +446,26 @@ writeln "#include \"imgui_lua_util.h\""
 writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
-local funcs = write_func_scope()
+local flags, enums = write_flags_and_enums()
+local funcs = write_funcs()
 writeln "void init(lua_State* L) {"
-writeln "    luaL_Reg funcs[] = {"
+writeln "    static luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do
     writeln("        { %q, %s },", func, func)
 end
 writeln "        { NULL, NULL },"
 writeln "    };"
 writeln "    luaL_setfuncs(L, funcs, 0);"
+writeln ""
+writeln "    #define GEN_ENUM(name) { #name, +[](lua_State* L){ util::create_table(L, name); } }"
+writeln "    static util::TableAny enums[] = {"
+for _, enum in ipairs(enums) do
+    writeln("        GEN_ENUM(%s),", enum)
+end
+writeln "    };"
+writeln "    #undef GEN_ENUM"
+writeln "    util::set_table(L, enums);"
+writeln ""
 writeln "    util::init(L);"
 writeln "}"
 writeln "}"

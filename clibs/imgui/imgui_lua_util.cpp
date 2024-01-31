@@ -43,6 +43,21 @@ const char* format(lua_State* L, int idx) {
     return lua_tostring(L, -1);
 }
 
+void create_table(lua_State* L, std::span<TableInteger> l) {
+    lua_createtable(L, 0, (int)l.size());
+    for (auto const& e : l) {
+        lua_pushinteger(L, e.value);
+        lua_setfield(L, -2, e.name);
+    }
+}
+
+void set_table(lua_State* L, std::span<TableAny> l) {
+    for (auto const& e : l) {
+        e.value(L);
+        lua_setfield(L, -2, e.name);
+    }
+}
+
 void init(lua_State* L) {
     luaopen_string(L);
     lua_getfield(L, -1, "format");
