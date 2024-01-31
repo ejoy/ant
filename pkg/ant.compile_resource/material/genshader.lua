@@ -374,7 +374,7 @@ local function build_input_var(varyingcontent)
     }
 end
 
-local function build_custom_vs_position_func(d, varyings, mat)
+local function build_custom_vs_position_func(d, varyings, isdi)
     local ac0, ac1 = code_gen(d, 0, 1)
     ac0 "//code gen by genshader.lua"
     ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
@@ -384,23 +384,10 @@ local function build_custom_vs_position_func(d, varyings, mat)
         ac1 "worldmat = u_model[0];"
     end
 
-    ac1 "vec4 posCS;"
-    ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
-    ac1 "return posCS;"
-    ac0 "}"
-end
-
-local function build_di_vs_position_func(d, varyings, mat)
-    local ac0, ac1 = code_gen(d, 0, 1)
-    ac0 "//code gen by genshader.lua"
-    ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
-    if varyings.a_indices and varyings.a_weight then
-        ac1 "worldmat = calc_bone_transform(vsinput.indices, vsinput.weight);"
-    else
-        ac1 "worldmat = u_model[0];"
+    if isdi then
+        ac1 "mat4 hitchmat = mat4(vsinput.data0, vsinput.data1, vsinput.data2, vec4(0.0, 0.0, 0.0, 1.0));"
+        ac1 "worldmat = mul(hitchmat, worldmat);"
     end
-    ac1 "mat4 hitchmat = mat4(vsinput.data0, vsinput.data1, vsinput.data2, vec4(0.0, 0.0, 0.0, 1.0));"
-    ac1 "worldmat = mul(hitchmat, worldmat);"
 
     ac1 "vec4 posCS;"
     ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
@@ -489,17 +476,9 @@ local function build_custom_vs_func(d, varyings, mat)
     ac0 "}"
 end
 
-local function build_vs_code(mat, varyings)
+local function build_vs_code(mat, varyings, isdi)
     local d = {}
-    build_custom_vs_position_func(d, varyings, mat)
-    build_custom_vs_func(d, varyings, mat)
-
-    return table.concat(d, "\n")
-end
-
-local function build_di_vs_code(mat, varyings)
-    local d = {}
-    build_di_vs_position_func(d, varyings, mat)
+    build_custom_vs_position_func(d, varyings, isdi)
     build_custom_vs_func(d, varyings, mat)
 
     return table.concat(d, "\n")
@@ -699,7 +678,7 @@ local function build_fx_content(mat, varyings, results)
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(diinputdecl, varyingdecl),
             ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results.di_inputs, results.varyings),
             ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
-            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_di_vs_code(mat, varyings),
+            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(mat, varyings, true),
             ["@VSINPUT_INIT"]           = table.concat(results.di_input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
