@@ -41,8 +41,6 @@ enum queue_type{
 	qt_count,
 };
 
-static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
-
 //using obj_transforms = std::unordered_map<uint64_t, transform>;
 struct obj_transforms {
 	static constexpr uint16_t MAX_CACHE = 10240*2;
@@ -207,12 +205,10 @@ draw_obj(lua_State *L, struct ecs_world *w, const component::render_args* ra, co
 	submit_draw(w, ra->viewid, obj, iobj, prog, BGFX_DISCARD_ALL);
 }
 
-using group_queues = std::array<matrix_array, 64>;
+using group_queues = std::array<matrix_array, MAX_VISIBLE_QUEUE>;
 using group_collection = std::unordered_map<int, group_queues>;
 struct submit_cache{
 	obj_transforms	transforms;
-
-	//TODO: need more fine control of the cache
 	group_collection	groups;
 
 	const component::render_args* ra[MAX_VISIBLE_QUEUE];

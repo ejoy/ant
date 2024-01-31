@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+
+#define MAX_VISIBLE_QUEUE   64
 struct queue_container;
 struct queue_container* queue_create();
 void queue_destroy(struct queue_container*);

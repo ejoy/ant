@@ -1,4 +1,5 @@
 #include "lua.hpp"
+#include "queue.h"
 
 #include <cstdint>
 #include <vector>
@@ -9,8 +10,7 @@
 #include "ecs/world.h"
 
 struct queue_node {
-	static constexpr uint8_t NUM_MASK = 1;
-	static constexpr uint16_t QUEUE_NUM = NUM_MASK * 64;
+	static constexpr uint8_t NUM_MASK = MAX_VISIBLE_QUEUE / 64;
 	uint64_t masks[NUM_MASK] = {0};
 
     constexpr void clear() {
