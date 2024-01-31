@@ -10,6 +10,7 @@ local assetmgr = import_package "ant.asset"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
 local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
@@ -364,7 +365,7 @@ local function show_current_event()
             end
             if current_event.asset_path and #current_event.asset_path > 0 then
                 ImGuiWidgets.PropertyLabel("AssetPath")
-                if ImGui.InputText("##AssetPath", current_event.asset_path_ui) then
+                if ImGuiLegacy.InputText("##AssetPath", current_event.asset_path_ui) then
                     update_asset_path(tostring(current_event.asset_path_ui.text))
                     dirty = true
                 end
@@ -413,7 +414,7 @@ local function show_current_event()
         end
     elseif current_event.event_type == "Message" then
         ImGuiWidgets.PropertyLabel("Content")
-        if ImGui.InputText("##Content", current_event.msg_content_ui) then
+        if ImGuiLegacy.InputText("##Content", current_event.msg_content_ui) then
             current_event.msg_content = tostring(current_event.msg_content_ui.text)
             dirty = true
         end
@@ -609,7 +610,7 @@ function m.show()
         end
     end
     local reload = false
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Animation", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
@@ -660,11 +661,11 @@ function m.show()
             if change then
                 ImGui.Text("Anim Name:")
                 ImGui.SameLine()
-                if ImGui.InputText("##AnimName", anim_name_ui) then
+                if ImGuiLegacy.InputText("##AnimName", anim_name_ui) then
                 end
                 ImGui.Text("Anim Path:")
                 ImGui.SameLine()
-                if ImGui.InputText("##AnimPath", anim_path_ui) then
+                if ImGuiLegacy.InputText("##AnimPath", anim_path_ui) then
                 end
                 ImGui.SameLine()
                 if ImGui.Button("...") then

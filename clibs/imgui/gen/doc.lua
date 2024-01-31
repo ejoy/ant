@@ -276,6 +276,7 @@ local function write_enum(realname, elements, new_enums)
             writeln("---| `%s`", fname)
         end
     end
+    writeln("%s = {}", name)
     lua_type[realname] = name
     default_type[realname] = function (value)
         local v = math.tointeger(value)
@@ -443,6 +444,7 @@ writeln "--"
 writeln "-- Automatically generated file; DO NOT EDIT."
 writeln "--"
 writeln ""
+writeln "---@class _ImGui_Lib"
 writeln "local ImGui = {}"
 writeln ""
 write_flags_and_enums()

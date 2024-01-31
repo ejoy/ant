@@ -1,10 +1,14 @@
 local aio = import_package "ant.io"
 local fontutil = require "font.util"
 local fastio = require "fastio"
-local ImGui = require "imgui"
 local bgfx = require "bgfx"
 local viewIdPool = require "viewid_pool"
-local ImGuiIO = ImGui.io
+
+---@class _ImGui_Lib
+local ImGui = require "imgui"
+local ImGuiBackend = require "imgui.backend"
+local ImGuiLegacy = require "imgui.legacy"
+local ImGuiIO = ImGuiLegacy.io
 
 local FontAtlas = {}
 
@@ -39,10 +43,9 @@ function ImGui.FontAtlasAddFont(config)
 end
 
 function ImGui.FontAtlasBuild()
-    ImGui.InitFont(FontAtlas)
+    ImGuiBackend.RenderCreateFontsTexture(FontAtlas)
     FontAtlas = {}
 end
-
 
 local ImGuiEvent = {}
 

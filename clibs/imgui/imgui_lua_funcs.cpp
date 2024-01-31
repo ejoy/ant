@@ -4364,7 +4364,7 @@ static int GetKeyIndex(lua_State* L) {
     return 1;
 }
 
-void init(lua_State* L, int extra) {
+void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
@@ -4784,11 +4784,16 @@ void init(lua_State* L, int extra) {
     lua_createtable(L, 0,
         sizeof(funcs) / sizeof(funcs[0]) - 1 +
         sizeof(flags) / sizeof(flags[0]) +
-        sizeof(enums) / sizeof(enums[0]) +
-        extra
+        sizeof(enums) / sizeof(enums[0])
     );
     luaL_setfuncs(L, funcs, 0);
     util::set_table(L, flags);
     util::set_table(L, enums);
 }
+}
+
+extern "C"
+int luaopen_imgui(lua_State *L) {
+    imgui_lua::init(L);
+    return 1;
 }

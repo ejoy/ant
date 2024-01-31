@@ -1,4 +1,5 @@
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
@@ -377,7 +378,7 @@ function m.show()
     if not err_receiver then
         err_receiver = cthread.channel "errlog"
     end
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     if not log_item_height then
         log_item_height = 22 * viewport.DpiScale
     end

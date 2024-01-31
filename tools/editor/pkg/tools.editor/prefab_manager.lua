@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local ImGui         = import_package "ant.imgui"
+local ImGuiLegacy   = require "imgui.legacy"
 local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
@@ -461,7 +462,7 @@ function m:choose_prefab()
             ImGui.Text("Create new or open existing prefab.")
             ImGui.Text("prefab name:  ")
             ImGui.SameLine()
-            if ImGui.InputText("##PrefabName", prefabe_name_ui) then
+            if ImGuiLegacy.InputText("##PrefabName", prefabe_name_ui) then
             end
             ImGui.SameLine()
             if ImGui.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then

@@ -7,6 +7,7 @@ local fs = require "filesystem"
 local lfs = require "bee.filesystem"
 local subprocess = require "bee.subprocess"
 local ImGui = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local editor_setting    = require "editor_setting"
 
 
@@ -112,7 +113,7 @@ function m:init_system()
 end
 
 function m:data_changed()
-    local imgui_vp = ImGui.GetMainViewport()
+    local imgui_vp = ImGuiLegacy.GetMainViewport()
     local s = imgui_vp.Size
     local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
     ImGui.SetNextWindowPos(wp[1], wp[2])
@@ -139,7 +140,7 @@ function m:data_changed()
     ImGui.PopStyleVarEx(3)
     ImGui.End()
 
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], ImGui.Cond.FirstUseEver)
     -- ImGui.SetNextWindowDockID("MainViewSpace", ImGui.Cond.FirstUseEver)

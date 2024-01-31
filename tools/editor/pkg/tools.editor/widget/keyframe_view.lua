@@ -10,6 +10,7 @@ local gizmo     = ecs.require "gizmo.gizmo"
 local assetmgr  = import_package "ant.asset"
 local aio       = import_package "ant.io"
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local stringify = import_package "ant.serialize".stringify
 local serialize = import_package "ant.serialize"
 local mathpkg	= import_package "ant.math"
@@ -870,7 +871,7 @@ local function ShowNewAnimationUI()
     if change then
         ImGui.Text("Name:")
         ImGui.SameLine()
-        if ImGui.InputText("##Name", anim_name_ui) then
+        if ImGuiLegacy.InputText("##Name", anim_name_ui) then
             anim_name = tostring(anim_name_ui.text)
         end
         ImGui.Text("Duration:")
@@ -985,7 +986,7 @@ function m.get_title()
 end
 
 function m.show()
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Skeleton", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then

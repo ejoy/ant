@@ -1,4 +1,5 @@
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
@@ -80,7 +81,7 @@ local function show_input()
     ImGui.SameLine()
     local reclaim_focus = false
     ImGui.PushItemWidth(-1)
-    if ImGui.InputText("##SingleLineInput", console) then
+    if ImGuiLegacy.InputText("##SingleLineInput", console) then
         local command = tostring(console.text)
         if command ~= "" then
             exec_command(command)
@@ -101,7 +102,7 @@ function m.get_title()
 end
 
 function m.show()
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Console", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then

@@ -4,6 +4,7 @@
 -- Automatically generated file; DO NOT EDIT.
 --
 
+---@class _ImGui_Lib
 local ImGui = {}
 
 --
@@ -346,6 +347,7 @@ function ImGui.DragDropFlags(flags) end
 ---| `ImGui.DataType.U64`    #  unsigned long long / unsigned __int64
 ---| `ImGui.DataType.Float`  #  float
 ---| `ImGui.DataType.Double` #  double
+ImGui.DataType = {}
 
 --
 -- A cardinal direction
@@ -356,6 +358,7 @@ function ImGui.DragDropFlags(flags) end
 ---| `ImGui.Dir.Right`
 ---| `ImGui.Dir.Up`
 ---| `ImGui.Dir.Down`
+ImGui.Dir = {}
 
 --
 -- A sorting direction
@@ -364,6 +367,7 @@ function ImGui.DragDropFlags(flags) end
 ---| `ImGui.SortDirection.None`
 ---| `ImGui.SortDirection.Ascending`  #  Ascending = 0->9, A->Z etc.
 ---| `ImGui.SortDirection.Descending` #  Descending = 9->0, Z->A etc.
+ImGui.SortDirection = {}
 
 --
 -- A key identifier (ImGuiKey_XXX or ImGuiMod_XXX value): can represent Keyboard, Mouse and Gamepad values.
@@ -527,6 +531,7 @@ function ImGui.DragDropFlags(flags) end
 ---| `ImGui.Key.MouseX2`
 ---| `ImGui.Key.MouseWheelX`
 ---| `ImGui.Key.MouseWheelY`
+ImGui.Key = {}
 
 --
 -- Configuration flags stored in io.ConfigFlags. Set by user/application.
@@ -630,6 +635,7 @@ function ImGui.BackendFlags(flags) end
 ---| `ImGui.Col.NavWindowingHighlight` #  Highlight window when using CTRL+TAB
 ---| `ImGui.Col.NavWindowingDimBg`     #  Darken/colorize entire screen behind the CTRL+TAB window list, when active
 ---| `ImGui.Col.ModalWindowDimBg`      #  Darken/colorize entire screen behind a modal window, when one is active
+ImGui.Col = {}
 
 --
 -- Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
@@ -671,6 +677,7 @@ function ImGui.BackendFlags(flags) end
 ---| `ImGui.StyleVar.SeparatorTextAlign`      #  ImVec2    SeparatorTextAlign
 ---| `ImGui.StyleVar.SeparatorTextPadding`    #  ImVec2    SeparatorTextPadding
 ---| `ImGui.StyleVar.DockingSeparatorSize`    #  float     DockingSeparatorSize
+ImGui.StyleVar = {}
 
 --
 -- Flags for InvisibleButton() [extended in imgui_internal.h]
@@ -748,6 +755,7 @@ function ImGui.SliderFlags(flags) end
 ---| `ImGui.MouseButton.Left`
 ---| `ImGui.MouseButton.Right`
 ---| `ImGui.MouseButton.Middle`
+ImGui.MouseButton = {}
 
 --
 -- Enumeration for GetMouseCursor()
@@ -764,6 +772,7 @@ function ImGui.SliderFlags(flags) end
 ---| `ImGui.MouseCursor.ResizeNWSE` #  When hovering over the bottom-right corner of a window
 ---| `ImGui.MouseCursor.Hand`       #  (Unused by Dear ImGui functions. Use for e.g. hyperlinks)
 ---| `ImGui.MouseCursor.NotAllowed` #  When hovering something with disallowed interaction. Usually a crossed circle.
+ImGui.MouseCursor = {}
 
 --
 -- Enumeration for AddMouseSourceEvent() actual source of Mouse Input data.
@@ -778,6 +787,7 @@ function ImGui.SliderFlags(flags) end
 ---| `ImGui.MouseSource.Mouse`       #  Input is coming from an actual mouse.
 ---| `ImGui.MouseSource.TouchScreen` #  Input is coming from a touch screen (no hovering prior to initial press, less precise initial press aiming, dual-axis wheeling possible).
 ---| `ImGui.MouseSource.Pen`         #  Input is coming from a pressure/magnetic pen (often used in conjunction with high-sampling rates).
+ImGui.MouseSource = {}
 
 --
 -- Enumeration for ImGui::SetNextWindow***(), SetWindow***(), SetNextItem***() functions
@@ -790,6 +800,7 @@ function ImGui.SliderFlags(flags) end
 ---| `ImGui.Cond.Once`         #  Set the variable once per runtime session (only the first call will succeed)
 ---| `ImGui.Cond.FirstUseEver` #  Set the variable if the object/window has no persistently saved data (no entry in .ini file)
 ---| `ImGui.Cond.Appearing`    #  Set the variable if the object/window is appearing after being hidden/inactive (or the first time)
+ImGui.Cond = {}
 
 --
 -- Flags for ImGui::BeginTable()
@@ -923,6 +934,7 @@ function ImGui.TableRowFlags(flags) end
 ---| `ImGui.TableBgTarget.RowBg0` #  Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)
 ---| `ImGui.TableBgTarget.RowBg1` #  Set row background color 1 (generally used for selection marking)
 ---| `ImGui.TableBgTarget.CellBg` #  Set cell background color (top-most color)
+ImGui.TableBgTarget = {}
 
 --
 -- Flags for ImDrawList functions
@@ -1013,6 +1025,7 @@ function ImGui.ViewportFlags(flags) end
 ---| `ImGui.Mod.Alt`      #  Option/Menu
 ---| `ImGui.Mod.Super`    #  Cmd/Super/Windows
 ---| `ImGui.Mod.Shortcut` #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
+ImGui.Mod = {}
 
 ---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod
 ---@alias ImTextureID integer

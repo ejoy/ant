@@ -4,6 +4,7 @@ local w = world.w
 
 local gizmo     = ecs.require "gizmo.gizmo"
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 
 local base_panel        = ecs.require "widget.base_view"()
@@ -64,7 +65,7 @@ function m.show()
         material_panel:clear()
     end
     update_eid()
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Inspector", nil, ImGui.WindowFlags { "NoCollapse" }) then

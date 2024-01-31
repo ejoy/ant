@@ -1,4 +1,5 @@
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
 local aio  = import_package "ant.io"
@@ -190,7 +191,7 @@ function EditText:widget()
         return ImGui.Text(self.uidata.text)
     else
         -- it will change self.uidata.text as userdata
-        return ImGui.InputText(self:get_label(), self.uidata)
+        return ImGuiLegacy.InputText(self:get_label(), self.uidata)
     end
 end
 
@@ -339,7 +340,7 @@ function TextureResource:show()
         end
         ImGui.TableNextColumn()
         ImGui.PushItemWidth(-1)
-        if ImGui.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
+        if ImGuiLegacy.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
         end
         ImGui.PopItemWidth()
         if ImGui.BeginDragDropTarget() then

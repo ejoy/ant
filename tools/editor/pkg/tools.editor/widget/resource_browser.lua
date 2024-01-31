@@ -3,6 +3,7 @@ local world = ecs.world
 local assetmgr  = import_package "ant.asset"
 
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local lfs       = require "bee.filesystem"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
@@ -131,7 +132,7 @@ local function rename_file(file)
     if change then
         ImGui.Text("new name :")
         ImGui.SameLine()
-        if ImGui.InputText("##NewName", new_filename) then
+        if ImGuiLegacy.InputText("##NewName", new_filename) then
         end
         ImGui.SameLine()
         if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
@@ -272,7 +273,7 @@ function m.show()
         end
     end
 
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     m.update_resource_tree(editor_setting.setting.hide_engine_resource)

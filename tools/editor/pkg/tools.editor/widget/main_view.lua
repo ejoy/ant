@@ -8,6 +8,7 @@ local mu        = mathpkg.util
 local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local ImGui = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local irq   = ecs.require "ant.render|render_system.renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 
@@ -24,7 +25,7 @@ local function in_view(x, y)
 end
 
 function m.show()
-    local imgui_vp = ImGui.GetMainViewport()
+    local imgui_vp = ImGuiLegacy.GetMainViewport()
     if not icons.scale then
         icons.scale = imgui_vp.DpiScale
     end
@@ -74,7 +75,7 @@ function m.show()
             "PassthruCentralNode",
         })
         --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
-        local x, y, ww, hh = ImGui.DockBuilderGetCentralRect "MainViewSpace"
+        local x, y, ww, hh = ImGuiLegacy.DockBuilderGetCentralRect "MainViewSpace"
         local mp = imgui_vp.MainPos
         x, y = x - mp[1], y - mp[2]
         local vp = iviewport.device_size

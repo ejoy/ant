@@ -3,6 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local gizmo     = ecs.require "gizmo.gizmo"
@@ -37,7 +38,7 @@ local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"
 
 function m.show()
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)
     ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0)

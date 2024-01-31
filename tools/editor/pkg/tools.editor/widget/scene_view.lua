@@ -7,6 +7,7 @@ local icons = require "common.icons"
 local gizmo = ecs.require "gizmo.gizmo"
 local ivs       = ecs.require "ant.render|visible_state"
 local ImGui     = import_package "ant.imgui"
+local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 local hierarchy = require "hierarchy_edit"
 local faicons   = require "common.fa_icons"
@@ -272,7 +273,7 @@ end
 local prefab_mgr  = ecs.require "prefab_manager"
 
 function m.show()
-    local viewport = ImGui.GetMainViewport()
+    local viewport = ImGuiLegacy.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Hierarchy", nil, ImGui.WindowFlags { "NoCollapse" }) then
