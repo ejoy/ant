@@ -1,6 +1,7 @@
 local AntDir, meta = ...
 
 local util = require "util"
+local types = require "types"
 
 local w <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_lua_funcs.cpp", "wb"))
 
@@ -18,7 +19,6 @@ write_arg["const char*"] = function(type_meta, status)
     if size_meta then
         if size_meta.type and size_meta.type.declaration == "size_t" then
             assert(not type_meta.default_value)
-            assert(size_meta.type.declaration == "size_t")
             status.idx = status.idx + 1
             status.i = status.i + 1
             writeln("    size_t %s = 0;", size_meta.name)
@@ -106,6 +106,11 @@ write_arg["ImTextureID"] = function(type_meta, status)
     status.idx = status.idx + 1
     status.arguments[#status.arguments+1] = type_meta.name
     writeln("    auto %s = util::get_texture_id(L, %d);", type_meta.name, status.idx)
+end
+
+write_ret["ImGuiViewport*"] = function()
+    writeln("    PushImGuiViewport(L, *_retval);")
+    return 1
 end
 
 write_arg["const ImGuiWindowClass*"] = function()
@@ -423,6 +428,16 @@ local function write_flags_and_enums()
     return flags, enums
 end
 
+local function write_type(name)
+    writeln("static void Push%s(lua_State* L, const %s& v) {", name, name)
+    types.decode_func("ImGuiViewport", writeln, "v")
+    writeln "}"
+end
+
+local function write_types()
+    write_type "ImGuiViewport"
+end
+
 local function write_func(func_meta)
     local realname = func_meta.name:match "^ImGui_([%w]+)$"
     writeln("static int %s(lua_State* L) {", realname)
@@ -487,6 +502,7 @@ writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
 local flags, enums = write_flags_and_enums()
+write_types()
 local funcs = write_funcs()
 writeln "void init(lua_State* L) {"
 writeln "    static luaL_Reg funcs[] = {"

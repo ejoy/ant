@@ -38,9 +38,9 @@ local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"
 
 function m.show()
-    local viewport = ImGuiLegacy.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y)
+    ImGui.SetNextWindowSize(viewport.WorkSize.x, uiconfig.ToolBarHeight)
     ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0)
     ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0)
     ImGui.PushStyleColorImVec4(ImGui.Col.WindowBg, 0.25, 0.25, 0.25, 1)

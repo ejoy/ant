@@ -168,7 +168,7 @@ function m.reset_ui_layout()
     -- local dockID = ImGui.GetID("MainViewSpace")
     -- ImGui.DockBuilderRemoveNode(dockID)
     -- ImGui.DockBuilderAddNode(dockID, 0)
-    -- local imgui_vp = ImGuiLegacy.GetMainViewport()
+    -- local imgui_vp = ImGui.GetMainViewport()
     -- local ms = imgui_vp.MainSize
     -- ImGui.DockBuilderSetNodeSize(dockID, ms[1], ms[1])
     -- --

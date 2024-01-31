@@ -113,12 +113,10 @@ function m:init_system()
 end
 
 function m:data_changed()
-    local imgui_vp = ImGuiLegacy.GetMainViewport()
-    local s = imgui_vp.Size
-    local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
-    ImGui.SetNextWindowPos(wp[1], wp[2])
-    ImGui.SetNextWindowSize(ws[1], ws[2])
-    ImGui.SetNextWindowViewport(imgui_vp.ID)
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y)
+    ImGui.SetNextWindowSize(viewport.WorkSize.x, viewport.WorkSize.y)
+    ImGui.SetNextWindowViewport(viewport.ID)
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
@@ -140,9 +138,9 @@ function m:data_changed()
     ImGui.PopStyleVarEx(3)
     ImGui.End()
 
-    local viewport = ImGuiLegacy.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], ImGui.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], ImGui.Cond.FirstUseEver)
+    viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize.x, viewport.WorkSize.y, ImGui.Cond.FirstUseEver)
     -- ImGui.SetNextWindowDockID("MainViewSpace", ImGui.Cond.FirstUseEver)
     local exit = false
     if ImGui.Begin("##Choose project", true, ImGui.WindowFlags {"NoResize", "NoTitleBar", "NoCollapse" }) then

@@ -47,8 +47,8 @@ function cb.exit()
 end
 
 function cb.mousewheel(x, y, delta)
-    local mvp = ImGuiLegacy.GetMainViewport()
-    x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
+    local viewport = ImGui.GetMainViewport()
+    x, y = x - viewport.WorkPos.x, y - viewport.WorkPos.y
     for _, w in ipairs(worlds) do
         w.mousewheel {
             type = "mousewheel",
@@ -59,8 +59,8 @@ function cb.mousewheel(x, y, delta)
     end
 end
 function cb.mouse(x, y, what, state)
-    local mvp = ImGuiLegacy.GetMainViewport()
-    x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
+    local viewport = ImGui.GetMainViewport()
+    x, y = x - viewport.Pos.x, y - viewport.Pos.y
     for _, w in ipairs(worlds) do
         w.mouse {
             type = "mouse",

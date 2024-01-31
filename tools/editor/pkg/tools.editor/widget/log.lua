@@ -378,13 +378,13 @@ function m.show()
     if not err_receiver then
         err_receiver = cthread.channel "errlog"
     end
-    local viewport = ImGuiLegacy.GetMainViewport()
+    local viewport = ImGui.GetMainViewport()
     if not log_item_height then
         log_item_height = 22 * viewport.DpiScale
     end
     checkLog()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y + viewport.WorkSize.y - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize.x, uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("Log", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
         showHeaderWidget()
         m.showLog("LogList")

@@ -1,6 +1,7 @@
 local AntDir, meta = ...
 
 local util = require "util"
+local types = require "types"
 
 local w <close> = assert(io.open(AntDir.."/misc/meta/imgui.lua", "wb"))
 
@@ -109,6 +110,10 @@ special_arg["ImTextureID"] = function (type_meta, status)
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
+special_ret["ImGuiViewport*"] = function()
+    writeln("---@return ImGuiViewport")
+end
+
 special_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
 end
@@ -174,7 +179,6 @@ special_arg["const char*"] = function (type_meta, status)
     if size_meta then
         if size_meta.type and size_meta.type.declaration == "size_t" then
             assert(not type_meta.default_value)
-            assert(size_meta.type.declaration == "size_t")
             status.i = status.i + 1
             writeln("---@param %s string", safe_name(type_meta.name))
             status.arguments[#status.arguments+1] = safe_name(type_meta.name)
@@ -366,6 +370,8 @@ end
 local function write_types()
     writeln("---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod")
     writeln("---@alias ImTextureID integer")
+    writeln ""
+    types.decode_docs("ImGuiViewport", writeln)
 end
 
 local function write_func(func_meta)
@@ -456,7 +462,7 @@ writeln "--"
 writeln "-- Automatically generated file; DO NOT EDIT."
 writeln "--"
 writeln ""
-writeln "---@class _ImGui_Lib"
+writeln "---@class ImGui"
 writeln "local ImGui = {}"
 writeln ""
 write_flags_and_enums()

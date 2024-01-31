@@ -63,53 +63,6 @@ static int dDockBuilderGetCentralRect(lua_State * L) {
     return 4;
 }
 
-static int lGetMainViewport(lua_State* L) {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    lua_newtable(L);
-
-    lua_pushinteger(L, viewport->ID);
-    lua_setfield(L, -2, "ID");
-
-    lua_pushlightuserdata(L, viewport->PlatformHandle);
-    lua_setfield(L, -2, "PlatformHandle");
-
-    lua_newtable(L);
-    lua_pushnumber(L, viewport->WorkPos.x);
-    lua_seti(L, -2, 1);
-    lua_pushnumber(L, viewport->WorkPos.y);
-    lua_seti(L, -2, 2);
-    lua_setfield(L, -2, "WorkPos");
-
-    lua_newtable(L);
-    lua_pushnumber(L, viewport->WorkSize.x);
-    lua_seti(L, -2, 1);
-    lua_pushnumber(L, viewport->WorkSize.y);
-    lua_seti(L, -2, 2);
-    lua_setfield(L, -2, "WorkSize");
-
-    // main area position
-    lua_newtable(L);
-    lua_pushnumber(L, viewport->Pos.x);
-    lua_seti(L, -2, 1);
-    lua_pushnumber(L, viewport->Pos.y);
-    lua_seti(L, -2, 2);
-    lua_setfield(L, -2, "MainPos");
-
-    // main area size
-    lua_newtable(L);
-    lua_pushnumber(L, viewport->Size.x);
-    lua_seti(L, -2, 1);
-    lua_pushnumber(L, viewport->Size.y);
-    lua_seti(L, -2, 2);
-    lua_setfield(L, -2, "MainSize");
-
-    // main dpi scale
-    lua_pushnumber(L, viewport->DpiScale);
-    lua_setfield(L, -2, "DpiScale");
-
-    return 1;
-}
-
 struct editbuf {
     char * buf;
     size_t size;
@@ -413,7 +366,6 @@ extern "C"
 int luaopen_imgui_legacy(lua_State *L) {
     lua_newtable(L);
     luaL_Reg l[] = {
-        { "GetMainViewport", lGetMainViewport },
         { "InputText", wInputText },
         { "InputTextMultiline", wInputTextMultiline },
         { "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },

@@ -721,6 +721,76 @@ static util::TableInteger Mod[] = {
 
 #undef ENUM
 
+static void PushImGuiViewport(lua_State* L, const ImGuiViewport& v) {
+    lua_createtable(L, 0, 17);
+
+    lua_pushinteger(L, v.ID);
+    lua_setfield(L, -2, "ID");
+
+    lua_pushinteger(L, v.Flags);
+    lua_setfield(L, -2, "Flags");
+
+    lua_createtable(L, 0, 2);
+    lua_pushnumber(L, v.Pos.x);
+    lua_setfield(L, -2, "x");
+    lua_pushnumber(L, v.Pos.y);
+    lua_setfield(L, -2, "y");
+    lua_setfield(L, -2, "Pos");
+
+    lua_createtable(L, 0, 2);
+    lua_pushnumber(L, v.Size.x);
+    lua_setfield(L, -2, "x");
+    lua_pushnumber(L, v.Size.y);
+    lua_setfield(L, -2, "y");
+    lua_setfield(L, -2, "Size");
+
+    lua_createtable(L, 0, 2);
+    lua_pushnumber(L, v.WorkPos.x);
+    lua_setfield(L, -2, "x");
+    lua_pushnumber(L, v.WorkPos.y);
+    lua_setfield(L, -2, "y");
+    lua_setfield(L, -2, "WorkPos");
+
+    lua_createtable(L, 0, 2);
+    lua_pushnumber(L, v.WorkSize.x);
+    lua_setfield(L, -2, "x");
+    lua_pushnumber(L, v.WorkSize.y);
+    lua_setfield(L, -2, "y");
+    lua_setfield(L, -2, "WorkSize");
+
+    lua_pushnumber(L, v.DpiScale);
+    lua_setfield(L, -2, "DpiScale");
+
+    lua_pushinteger(L, v.ParentViewportId);
+    lua_setfield(L, -2, "ParentViewportId");
+
+    lua_pushlightuserdata(L, v.DrawData);
+    lua_setfield(L, -2, "DrawData");
+
+    lua_pushlightuserdata(L, v.RendererUserData);
+    lua_setfield(L, -2, "RendererUserData");
+
+    lua_pushlightuserdata(L, v.PlatformUserData);
+    lua_setfield(L, -2, "PlatformUserData");
+
+    lua_pushlightuserdata(L, v.PlatformHandle);
+    lua_setfield(L, -2, "PlatformHandle");
+
+    lua_pushlightuserdata(L, v.PlatformHandleRaw);
+    lua_setfield(L, -2, "PlatformHandleRaw");
+
+    lua_pushboolean(L, v.PlatformWindowCreated);
+    lua_setfield(L, -2, "PlatformWindowCreated");
+
+    lua_pushboolean(L, v.PlatformRequestMove);
+    lua_setfield(L, -2, "PlatformRequestMove");
+
+    lua_pushboolean(L, v.PlatformRequestResize);
+    lua_setfield(L, -2, "PlatformRequestResize");
+
+    lua_pushboolean(L, v.PlatformRequestClose);
+    lua_setfield(L, -2, "PlatformRequestClose");
+}
 static int CreateContext(lua_State* L) {
     auto _retval = ImGui::CreateContext();
     return 0;
@@ -854,6 +924,12 @@ static int GetWindowWidth(lua_State* L) {
 static int GetWindowHeight(lua_State* L) {
     auto _retval = ImGui::GetWindowHeight();
     lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int GetWindowViewport(lua_State* L) {
+    auto _retval = ImGui::GetWindowViewport();
+    PushImGuiViewport(L, *_retval);
     return 1;
 }
 
@@ -4035,6 +4111,12 @@ static int GetItemRectSize(lua_State* L) {
     return 2;
 }
 
+static int GetMainViewport(lua_State* L) {
+    auto _retval = ImGui::GetMainViewport();
+    PushImGuiViewport(L, *_retval);
+    return 1;
+}
+
 static int IsRectVisibleBySize(lua_State* L) {
     auto size = ImVec2 {
         (float)luaL_checknumber(L, 1),
@@ -4363,6 +4445,13 @@ static int RenderPlatformWindowsDefault(lua_State* L) {
     return 0;
 }
 
+static int FindViewportByID(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::FindViewportByID(id);
+    PushImGuiViewport(L, *_retval);
+    return 1;
+}
+
 static int GetKeyIndex(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
     auto _retval = ImGui::GetKeyIndex(key);
@@ -4392,6 +4481,7 @@ void init(lua_State* L) {
         { "GetWindowSize", GetWindowSize },
         { "GetWindowWidth", GetWindowWidth },
         { "GetWindowHeight", GetWindowHeight },
+        { "GetWindowViewport", GetWindowViewport },
         { "SetNextWindowPos", SetNextWindowPos },
         { "SetNextWindowPosEx", SetNextWindowPosEx },
         { "SetNextWindowSize", SetNextWindowSize },
@@ -4686,6 +4776,7 @@ void init(lua_State* L) {
         { "GetItemRectMin", GetItemRectMin },
         { "GetItemRectMax", GetItemRectMax },
         { "GetItemRectSize", GetItemRectSize },
+        { "GetMainViewport", GetMainViewport },
         { "IsRectVisibleBySize", IsRectVisibleBySize },
         { "IsRectVisible", IsRectVisible },
         { "GetTime", GetTime },
@@ -4729,6 +4820,7 @@ void init(lua_State* L) {
         { "SaveIniSettingsToMemory", SaveIniSettingsToMemory },
         { "UpdatePlatformWindows", UpdatePlatformWindows },
         { "RenderPlatformWindowsDefault", RenderPlatformWindowsDefault },
+        { "FindViewportByID", FindViewportByID },
         { "GetKeyIndex", GetKeyIndex },
         { NULL, NULL },
     };

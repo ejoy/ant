@@ -10,5 +10,8 @@ end
 
 package.path = AntDir.."/clibs/imgui/gen/?.lua"
 
+local types = require "types"
+types.init(meta)
+
 assert(loadfile(AntDir.."/clibs/imgui/gen/funcs.lua"))(AntDir, meta)
 assert(loadfile(AntDir.."/clibs/imgui/gen/doc.lua"))(AntDir, meta)

@@ -4,7 +4,7 @@
 -- Automatically generated file; DO NOT EDIT.
 --
 
----@class _ImGui_Lib
+---@class ImGui
 local ImGui = {}
 
 --
@@ -1030,6 +1030,32 @@ ImGui.Mod = {}
 ---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod
 ---@alias ImTextureID integer
 
+---@class ImGuiViewport
+---@field ID ImGuiID
+---@field Flags ImGui.ViewportFlags
+---@field Pos ImVec2
+---@field Size ImVec2
+---@field WorkPos ImVec2
+---@field WorkSize ImVec2
+---@field DpiScale number
+---@field ParentViewportId ImGuiID
+---@field DrawData lightuserdata
+---@field RendererUserData lightuserdata
+---@field PlatformUserData lightuserdata
+---@field PlatformHandle lightuserdata
+---@field PlatformHandleRaw lightuserdata
+---@field PlatformWindowCreated boolean
+---@field PlatformRequestMove boolean
+---@field PlatformRequestResize boolean
+---@field PlatformRequestClose boolean
+
+---@alias ImGuiID integer
+
+---@class ImVec2
+---@field x number
+---@field y number
+
+
 --
 -- Context creation and access
 -- - Each context create its own ImFontAtlas by default. You may instance one yourself and pass it to CreateContext() to share a font atlas between contexts.
@@ -1180,6 +1206,12 @@ function ImGui.GetWindowWidth() end
 --
 ---@return number
 function ImGui.GetWindowHeight() end
+
+--
+-- get viewport currently associated to the current window.
+--
+---@return ImGuiViewport
+function ImGui.GetWindowViewport() end
 
 --
 -- Window manipulation
@@ -3525,6 +3557,18 @@ function ImGui.GetItemRectMax() end
 function ImGui.GetItemRectSize() end
 
 --
+-- Viewports
+-- - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
+-- - In 'docking' branch with multi-viewport enabled, we extend this concept to have multiple active viewports.
+-- - In the future we will extend this concept further to also represent Platform Monitor and support a "no main platform window" operation mode.
+--
+--
+-- return primary/default viewport. This can never be NULL.
+--
+---@return ImGuiViewport
+function ImGui.GetMainViewport() end
+
+--
 -- Miscellaneous Utilities
 --
 --
@@ -3850,6 +3894,13 @@ function ImGui.UpdatePlatformWindows() end
 -- Implied platform_render_arg = NULL, renderer_render_arg = NULL
 --
 function ImGui.RenderPlatformWindowsDefault() end
+
+--
+-- this is a helper for backends.
+--
+---@param id integer
+---@return ImGuiViewport
+function ImGui.FindViewportByID(id) end
 
 ---@param key ImGui.Key
 ---@return ImGui.Key

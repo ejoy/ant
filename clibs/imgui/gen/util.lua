@@ -49,7 +49,6 @@ local BlackList <const> = {
     ImGui_GetPlatformIO = true,
     ImGui_RenderPlatformWindowsDefaultEx = true,
     ImGui_DestroyPlatformWindows = true,
-    ImGui_FindViewportByID = true,
     ImGui_FindViewportByPlatformHandle = true,
 
     ImGui_TextUnformatted = true,
@@ -87,7 +86,6 @@ local TodoList <const> = {
     ImGui_TableGetSortSpecs = true,
     ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
-    ImGui_GetMainViewport = true,
     ImGui_GetBackgroundDrawList = true,
     ImGui_GetForegroundDrawList = true,
     ImGui_GetBackgroundDrawListImGuiViewportPtr = true,
@@ -137,7 +135,6 @@ local TodoList <const> = {
     ImGui_VSliderScalarNEx = true,
 
     ImGui_GetWindowDrawList  = true,
-    ImGui_GetWindowViewport = true,
     ImGui_SetNextWindowSizeConstraints = true,
     ImGui_PushFont = true,
     ImGui_PopFont = true,

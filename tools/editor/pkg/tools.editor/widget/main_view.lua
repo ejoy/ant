@@ -25,14 +25,14 @@ local function in_view(x, y)
 end
 
 function m.show()
-    local imgui_vp = ImGuiLegacy.GetMainViewport()
+    local viewport = ImGui.GetMainViewport()
     if not icons.scale then
-        icons.scale = imgui_vp.DpiScale
+        icons.scale = viewport.DpiScale
     end
     --drag file to view
     if ImGui.IsMouseDragging(ImGui.MouseButton.Left) then
         local x, y = ImGui.GetMousePos()
-        x, y = x - imgui_vp.MainPos[1], y - imgui_vp.MainPos[2]
+        x, y = x - viewport.Pos.x, y - viewport.Pos.y
         if in_view(cvt2scenept(x, y)) then
             if not drag_file then
                 local dropdata = ImGui.GetDragDropPayload()
@@ -51,12 +51,11 @@ function m.show()
         end
     end
 
-    local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
-    local posx, posy = wp[1], wp[2]+uiconfig.ToolBarHeight
-    local sizew, sizeh = ws[1], ws[2]-uiconfig.ToolBarHeight
+    local posx, posy = viewport.WorkPos.x, viewport.WorkPos.y + uiconfig.ToolBarHeight
+    local sizew, sizeh = viewport.WorkSize.x, viewport.WorkSize.y - uiconfig.ToolBarHeight
     ImGui.SetNextWindowPos(posx, posy)
     ImGui.SetNextWindowSize(sizew, sizeh)
-    ImGui.SetNextWindowViewport(imgui_vp.ID)
+    ImGui.SetNextWindowViewport(viewport.ID)
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
@@ -76,15 +75,14 @@ function m.show()
         })
         --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
         local x, y, ww, hh = ImGuiLegacy.DockBuilderGetCentralRect "MainViewSpace"
-        local mp = imgui_vp.MainPos
-        x, y = x - mp[1], y - mp[2]
+        x, y = x - viewport.Pos.x, y - viewport.Pos.y
         local vp = iviewport.device_size
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
             if platform.os == "macos" then
-                vp.x = x * imgui_vp.DpiScale
-                vp.y = y * imgui_vp.DpiScale
-                vp.w = ww * imgui_vp.DpiScale
-                vp.h = hh * imgui_vp.DpiScale
+                vp.x = x * viewport.DpiScale
+                vp.y = y * viewport.DpiScale
+                vp.w = ww * viewport.DpiScale
+                vp.h = hh * viewport.DpiScale
             else
                 vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
             end

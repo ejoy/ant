@@ -38,9 +38,9 @@ local function update_color()
 end
 
 function m.show()
-    local viewport = ImGuiLegacy.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
+    local viewport = ImGui.GetMainViewport()
+    ImGui.SetNextWindowPos(viewport.WorkPos.x + viewport.WorkSize.x - uiconfig.PropertyWidgetWidth, viewport.WorkPos.y + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize.y - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     if ImGui.Begin("GridMesh", nil, ImGui.WindowFlags { "NoCollapse" }) then
         local title = "CreateGridMesh"
         if ImGui.Button("Create") then
