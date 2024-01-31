@@ -91,7 +91,7 @@ local function show_input()
     ImGui.PopItemWidth()
     ImGui.SetItemDefaultFocus()
     if reclaim_focus then
-        ImGui.SetKeyboardFocusHere(-1)
+        ImGui.SetKeyboardFocusHereEx(-1)
     end
     ImGui.Separator()
 end
@@ -102,9 +102,9 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if ImGui.Begin("Console", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    if ImGui.Begin("Console", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         show_input()
         log_widget.showConsole()
     end

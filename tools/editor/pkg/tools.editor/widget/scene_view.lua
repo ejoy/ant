@@ -60,12 +60,12 @@ local function node_context_menu(eid)
         return
     end
     
-    if ImGui.BeginPopupContextItem(tostring(eid)) then
+    if ImGui.BeginPopupContextItemEx(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         local tpl = hierarchy:get_node_info(eid)
         if not is_scene_node(eid) then
             if not tpl.filename then
-                if ImGui.MenuItem(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
+                if ImGui.MenuItemEx(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
                     world:pub { "HierarchyEvent", "clone", eid }
                 end
             end
@@ -86,7 +86,7 @@ local function node_context_menu(eid)
         end
         if can_delete(eid) then
             ImGui.Separator()
-            if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_TRASH.." Delete", "Delete") then
                 world:pub { "HierarchyEvent", "delete", eid }
             end
         end
@@ -224,11 +224,11 @@ local function show_scene_node(node)
     ImGui.Image(assetmgr.textures[current_icon.id], imagesize, imagesize)
     ImGui.SameLine()
     if not has_child then
-        ImGui.Indent(-2)
+        ImGui.IndentEx(-2)
     end
-    local open = ImGui.TreeNode(node.display_name, flags)
+    local open = ImGui.TreeNodeEx(node.display_name, flags)
     if not has_child then
-        ImGui.Indent(2)
+        ImGui.IndentEx(2)
     end
     node_context_menu(node.eid)
     select_or_move(node)
@@ -269,17 +269,22 @@ function m.get_title()
     return "Hierarchy"
 end
 
+local prefab_mgr  = ecs.require "prefab_manager"
+
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
-    ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    if ImGui.Begin("Hierarchy", true, ImGui.Flags.Window { "NoCollapse" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    if ImGui.Begin("Hierarchy", nil, ImGui.Flags.Window { "NoCollapse" }) then
         if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." Create") then
             ImGui.OpenPopup("CreateEntity")
         end
         if ImGui.BeginPopup("CreateEntity") then
-            if ImGui.MenuItem("EmptyNode") then
-                world:pub {"Create", "empty"}
+            if prefab_mgr:can_create_empty() then
+                -- only for xxx.glb(gltf)|mesh.prefab
+                if ImGui.MenuItem("EmptyNode") then
+                    world:pub {"Create", "empty"}
+                end
             end
             if ImGui.BeginMenu("Geometry") then
                 for _, type in ipairs(geom_type) do

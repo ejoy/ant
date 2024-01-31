@@ -39,11 +39,10 @@ function m:data_changed()
                 local eid = entities[i]
                 local e <close> = world:entity(eid, "render_object?in animation?in")
                 if e.render_object then
-                    local v = ivs.has_state(e, "main_view")
-                    local change, value = ImGui.Checkbox(""..eid, v)
-                    if change then
-                        ivs.set_state(e, "main_view", value)
-                        ivs.set_state(e, "cast_shadow", value)
+                    local value = { ivs.has_state(e, "main_view") }
+                    if ImGui.Checkbox(""..eid, value) then
+                        ivs.set_state(e, "main_view", value[1])
+                        ivs.set_state(e, "cast_shadow", value[1])
                     end
                 end
                 if e.animation then
@@ -60,51 +59,38 @@ function m:data_changed()
                 end
             end
         end
-        if animation_eid and ImGui.TreeNode("animation", ImGui.Flags.TreeNode{"DefaultOpen"}) then
+        if animation_eid and ImGui.TreeNodeEx("animation", ImGui.Flags.TreeNode{"DefaultOpen"}) then
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do
                 if ImGui.TreeNode(name) then
                     do
-                        local change, v = ImGui.Checkbox("play", status.play)
-                        if change then
-                            iplayback.set_play(e, name, v)
+                        local v = { status.play }
+                        if ImGui.Checkbox("play", v) then
+                            iplayback.set_play(e, name, v[1])
                         end
                     end
                     do
-                        local change, v = ImGui.Checkbox("loop", status.loop)
-                        if change then
-                            iplayback.set_loop(e, name, v)
+                        local v = { status.loop }
+                        if ImGui.Checkbox("loop", v) then
+                            iplayback.set_loop(e, name, v[1])
                         end
                     end
                     do
-                        local value = {
-                            [1] = status.speed and math.floor(status.speed*100) or 100,
-                            min = -500,
-                            max = 500,
-                            format = "%d%%"
-                        }
-                        if ImGui.DragInt("speed", value) then
+                        local value = { status.speed and math.floor(status.speed*100) or 100 }
+                        if ImGui.DragIntEx("speed", value, 5.0, -500, 500, "%d%%") then
                             iplayback.set_speed(e, name, value[1] / 100)
                         end
                     end
                     do
-                        local value = {
-                            [1] = status.weight,
-                            min = 0,
-                            max = 1,
-                        }
-                        if ImGui.SliderFloat("weight", value) then
+                        local value = { status.weight }
+                        if ImGui.SliderFloat("weight", value, 0, 1) then
                             ianimation.set_weight(e, name, value[1])
                         end
                     end
                     do
-                        local value = {
-                            [1] = status.ratio,
-                            min = 0,
-                            max = 1,
-                        }
-                        if ImGui.SliderFloat("ratio", value) then
+                        local value = { status.ratio }
+                        if ImGui.SliderFloat("ratio", value, 0, 1) then
                             ianimation.set_ratio(e, name, value[1])
                         end
                     end

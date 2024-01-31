@@ -240,9 +240,9 @@ local function showHeaderWidget()
     ImGui.Text("Show:")
     ImGui.SameLine()
     ImGui.SetNextItemWidth(120)
-    if ImGui.BeginCombo("##Show", {current_tag}) then
+    if ImGui.BeginCombo("##Show", current_tag) then
         for _, tag in ipairs(log_tags) do
-            if ImGui.Selectable(tag, current_tag == tag) then
+            if ImGui.SelectableEx(tag, current_tag == tag) then
                 current_tag = tag
             end
         end
@@ -278,7 +278,7 @@ function m.showLog(name)
         end
         ImGui.SameLine()
         if color then
-            ImGui.PushStyleColor(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
+            ImGui.PushStyleColorImVec4(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
         end
         ImGui.Text(item.message)
         if color then
@@ -345,14 +345,14 @@ function m.showLog(name)
     --     end
     --     ImGui.SameLine()
     --     if color then
-    --         ImGui.PushStyleColor(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
+    --         ImGui.PushStyleColorImVec4(ImGui.Enum.Col.Text, color[1], color[2], color[3], color[4])
     --     end
-    --     if ImGui.Selectable(item.message, current_select == i) then
+    --     if ImGui.SelectableEx(item.message, current_select == i) then
     --         current_select = i
     --     end
     --     if current_select == i then
-    --         if ImGui.BeginPopupContextItem(current_select) then
-    --             if ImGui.Selectable("Copy", false) then
+    --         if ImGui.BeginPopupContextItemEx(current_select) then
+    --             if ImGui.SelectableEx("Copy", false) then
     --                 ImGui.SetClipboardText(current_log[current_select].message)
     --             end
     --             ImGui.EndPopup()
@@ -382,9 +382,9 @@ function m.show()
         log_item_height = 22 * viewport.DpiScale
     end
     checkLog()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if ImGui.Begin("Log", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    if ImGui.Begin("Log", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         showHeaderWidget()
         m.showLog("LogList")
     end

@@ -1,18 +1,19 @@
 local ImGui      = import_package "ant.imgui"
+local ImGuiWidgets = require "imgui.widgets"
 
 local compdefines=require "widget.component_defines"
 
 local SameLine = ImGui.SameLine()
-local PropertyLabel = ImGui.PropertyLabel
+local PropertyLabel = ImGuiWidgets.PropertyLabel
 local Text          = ImGui.Text
 local DisableText   = ImGui.DisableText
 local InputText     = ImGui.InputText
 local InputInt      = ImGui.InputInt
 local InputFloat    = ImGui.InputFloat
 local Checkbox      = ImGui.Checkbox
-local ColorEdit     = ImGui.ColorEdit
+local ColorEdit4    = ImGui.ColorEdit4
 local BeginCombo    = ImGui.BeginCombo
-local Selectable    = ImGui.Selectable
+local SelectableEx  = ImGui.SelectableEx
 local EndCombo      = ImGui.EndCombo
 local BeginDisabled = ImGui.BeginDisabled
 local EndDisabled   = ImGui.EndDisabled
@@ -22,10 +23,10 @@ local function find_widget(wname)
 end
 
 local function list_combo(name, comp, ll, updatevalue)
-    if BeginCombo("##" .. name, {comp}) then
+    if BeginCombo("##" .. name, comp) then
         for ii=1, #ll do
             local v = ll[ii]
-            if Selectable(v, v == name) then
+            if SelectableEx(v, v == name) then
                 updatevalue[name] = v
             end
         end
@@ -148,7 +149,7 @@ local component_type_registers = {
         BeginDisabled(desc.readonly)
         assert(type(comp) == "table" and #comp == 4)
         local value = {table.unpack(comp)}
-        if ColorEdit("##" .. name, value) then
+        if ColorEdit4("##" .. name, value) then
             updatevalue[name] = value
         end
         EndDisabled()
@@ -164,7 +165,7 @@ local function build_entity_ui(name, comp, cdesc, updatevalue)
     local comptype = d.type
     if comptype == nil then
         assert(type(comp) == "table")
-        if ImGui.TreeNode(name, ImGui.Flags.TreeNode { "DefaultOpen" }) then
+        if ImGui.TreeNodeEx(name, ImGui.Flags.TreeNode { "DefaultOpen" }) then
             local vv = {}
             for k, v in compdefines.sort_pairs(comp) do
                 local dd = d[k] or error (

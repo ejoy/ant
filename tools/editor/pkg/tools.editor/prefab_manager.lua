@@ -498,7 +498,7 @@ function m:choose_prefab()
         end
         ImGui.Separator()
         for _, prefab in ipairs(prefab_list) do
-            if ImGui.Selectable(prefab, false, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.SelectableEx(prefab, false, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                 if gd.is_opening then
                     self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
                 else
@@ -1449,4 +1449,9 @@ function m:on_patch_animation(eid, name, path)
     }
     anim_view.update_anim_namelist()
 end
+
+function m:can_create_empty()
+    return self.glb_filename and self.prefab_name == "mesh.prefab"
+end
+
 return m

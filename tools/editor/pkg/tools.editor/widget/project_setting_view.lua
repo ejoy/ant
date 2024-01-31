@@ -1,4 +1,5 @@
 local ImGui         = import_package "ant.imgui"
+local ImGuiWidgets  = require "imgui.widgets"
 local global_data   = require "common.global_data"
 local datalist      = require "datalist"
 local serialize     = import_package "ant.serialize"
@@ -16,9 +17,9 @@ local default_tr_flags = ImGui.Flags.TreeNode{}
 local default_win_flags= ImGui.Flags.Window{}
 local default_tab_flags= ImGui.Flags.TabBar{"Reorderable", "AutoSelectNewTabs"}
 
-local TreeNode      = ImGui.TreeNode
+local TreeNodeEx    = ImGui.TreeNodeEx
 local TreePop       = ImGui.TreePop
-local PropertyLabel = ImGui.PropertyLabel
+local PropertyLabel = ImGuiWidgets.PropertyLabel
 local Checkbox      = ImGui.Checkbox
 local BeginCombo    = ImGui.BeginCombo
 local EndCombo      = ImGui.EndCombo
@@ -45,7 +46,7 @@ local function PropertyFloat(name, value, config)
 end
 
 local function PropertyColor(name, value, config)
-    return Property(name, value, "ColorEdit", config)
+    return Property(name, value, "ColorEdit4", config)
 end
 
 local function CheckProperty(name, value, enable, p, set_p, config)
@@ -104,11 +105,11 @@ end
 local function setting_ui(sc)
     local graphic = sc.graphic
 
-    if TreeNode("Graphic", default_tr_flags) then
+    if TreeNodeEx("Graphic", default_tr_flags) then
         --Render
-        if TreeNode("Render", ImGui.Flags.TreeNode{}) then
+        if TreeNodeEx("Render", ImGui.Flags.TreeNode{}) then
             local r = graphic.render
-            if TreeNode("Clear State", ImGui.Flags.TreeNode{}) then
+            if TreeNodeEx("Clear State", ImGui.Flags.TreeNode{}) then
 
                 local rs = {}
                 local rbgcolor = toRGBColor(r.clear_color)
@@ -147,14 +148,14 @@ local function setting_ui(sc)
         end
 
         --shadow
-        if TreeNode("Shadow", default_tr_flags) then
+        if TreeNodeEx("Shadow", default_tr_flags) then
             TreePop()
         end
 
         --postprocess
-        if TreeNode("Postprocess", default_tr_flags) then
+        if TreeNodeEx("Postprocess", default_tr_flags) then
             local pp = graphic.postprocess
-            if TreeNode("Bloom", default_tr_flags) then
+            if TreeNodeEx("Bloom", default_tr_flags) then
                 local b = pp.bloom
                 local change, enable = Checkbox("Enable", b.enable)
                 if change then
@@ -183,7 +184,7 @@ local function setting_ui(sc)
         end
 
         --curve world
-        if TreeNode("Curve World", default_tr_flags)then
+        if TreeNodeEx("Curve World", default_tr_flags)then
             local cw = graphic.curve_world
 
             SameLine()
@@ -202,9 +203,9 @@ local function setting_ui(sc)
             cw = cw or deep_copy(default_curve_world)
 
             BeginDisabled(not enable)
-            if BeginCombo("Type", {cw.type, flags = ImGui.Flags.Combo{} }) then
+            if BeginCombo("Type", cw.type) then
                 for _, n in ipairs(default_curve_world.type_options) do
-                    if ImGui.Selectable(n, cw.type == n) then
+                    if ImGui.SelectableEx(n, cw.type == n) then
                         --sc:set("graphic/curve_world/type", n)
                         cw.type = n
                         modified = true

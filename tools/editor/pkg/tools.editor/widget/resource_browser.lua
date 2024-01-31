@@ -147,16 +147,16 @@ local function rename_file(file)
 end
 
 local function ShowContextMenu()
-    if ImGui.BeginPopupContextItem(tostring(selected_file:filename())) then
-        if ImGui.MenuItem(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
+    if ImGui.BeginPopupContextItemEx(tostring(selected_file:filename())) then
+        if ImGui.MenuItemEx(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
             os.execute("c:\\windows\\explorer.exe /select,"..selected_file:localpath():string():gsub("/","\\"))
         end
-        if ImGui.MenuItem(faicons.ICON_FA_PEN.." Rename", "F2") then
+        if ImGui.MenuItemEx(faicons.ICON_FA_PEN.." Rename", "F2") then
             renaming = true
             new_filename.text = tostring(selected_file:filename())
         end
         ImGui.Separator()
-        if ImGui.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
+        if ImGui.MenuItemEx(faicons.ICON_FA_TRASH.." Delete", "Delete") then
             lfs.remove(selected_file:localpath())
             selected_file = nil
         end
@@ -273,8 +273,8 @@ function m.show()
     end
 
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
     m.update_resource_tree(editor_setting.setting.hide_engine_resource)
 
     local function do_show_browser(folder)
@@ -284,10 +284,10 @@ function m.show()
             local skip = false
             local fonticon = (not v.parent) and (faicons.ICON_FA_FILE_ZIPPER .. " ") or ""
             if (#v[2].dirs == 0) then
-                ImGui.TreeNode(fonticon .. dir_name, base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+                ImGui.TreeNodeEx(fonticon .. dir_name, base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
                 local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and ImGui.Flags.TreeNode {"DefaultOpen"} or 0)
-                if ImGui.TreeNode(fonticon .. dir_name, adjust_flags) then
+                if ImGui.TreeNodeEx(fonticon .. dir_name, adjust_flags) then
                     if ImGui.IsItemClicked() then
                         selected_folder = v
                     end
@@ -306,8 +306,8 @@ function m.show()
         return
     end
     
-    if ImGui.Begin("ResourceBrowser", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
-        ImGui.PushStyleVar(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
+    if ImGui.Begin("ResourceBrowser", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+        ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then
             relativePath = selected_folder[1]
@@ -338,7 +338,7 @@ function m.show()
             m.dirty = true
             m.update_resource_tree(editor_setting.setting.hide_engine_resource)
         end
-        ImGui.PopStyleVar(1)
+        ImGui.PopStyleVar()
         ImGui.Separator()
         local filter_focus1 = false
         local filter_focuse2 = false
@@ -393,27 +393,27 @@ function m.show()
                 end
                 rename_file(selected_file)
                 local function pre_selectable(icon, noselected)
-                    ImGui.PushStyleColor(ImGui.Enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
+                    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderActive, 0.0, 0.0, 0.0, 0.0)
                     if noselected then
-                        ImGui.PushStyleColor(ImGui.Enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
+                        ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
                     else
-                        ImGui.PushStyleColor(ImGui.Enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                        ImGui.PushStyleColorImVec4(ImGui.Enum.Col.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
                     local imagesize = icon.texinfo.width * icons.scale
                     ImGui.Image(assetmgr.textures[icon.id], imagesize, imagesize)
                     ImGui.SameLine()
                 end
                 local function post_selectable()
-                    ImGui.PopStyleColor(2)
+                    ImGui.PopStyleColorEx(2)
 
                 end
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
                     pre_init_item_height()
-                    if ImGui.Selectable(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.SelectableEx(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
-                        if ImGui.IsMouseDoubleClicked(0) then
+                        if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
                             selected_folder = path
                         end
                     end
@@ -426,10 +426,10 @@ function m.show()
                 for _, path in pairs(folder.files) do
                     pre_selectable(icons:get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
-                    if ImGui.Selectable(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.SelectableEx(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
-                        if ImGui.IsMouseDoubleClicked(0) then
+                        if ImGui.IsMouseDoubleClicked(ImGui.Enum.MouseButton.Left) then
                             local isprefab = path:equal_extension(".prefab")
                             if path:equal_extension(".gltf") or path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}

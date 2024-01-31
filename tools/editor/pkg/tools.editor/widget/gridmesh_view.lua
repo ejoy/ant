@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local ImGui     = import_package "ant.imgui"
+local ImGuiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local brush_def = require "brush_def"
@@ -37,9 +38,9 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
-    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    if ImGui.Begin("GridMesh", true, ImGui.Flags.Window { "NoCollapse" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
+    if ImGui.Begin("GridMesh", nil, ImGui.Flags.Window { "NoCollapse" }) then
         local title = "CreateGridMesh"
         if ImGui.Button("Create") then
             ImGui.OpenPopup(title)
@@ -86,15 +87,15 @@ function m.show()
             end
         end
         if current_grid then
-            ImGui.PropertyLabel("Show")
+            ImGuiWidgets.PropertyLabel("Show")
             if ImGui.Checkbox("##Show", visible_ui) then
                 current_grid:show(visible_ui[1])
             end
             
-            ImGui.PropertyLabel("Brush")
-            if ImGui.BeginCombo("##Brush", {current_label, flags = ImGui.Flags.Combo {}}) then
+            ImGuiWidgets.PropertyLabel("Brush")
+            if ImGui.BeginCombo("##Brush", current_label) then
                 for index, label in ipairs(brush_def.label) do
-                    if ImGui.Selectable(label, current_label == label) then
+                    if ImGui.SelectableEx(label, current_label == label) then
                         current_label = label
                         local color = brush_def.color[index]
                         world:pub {"GridMesh", "brushcolor", index, color}
@@ -106,12 +107,12 @@ function m.show()
             end
 
             local color_label = "BrushColor"
-            if ImGui.ColorEdit("##"..color_label, brush_color_ui) then
+            if ImGui.ColorEdit4("##"..color_label, brush_color_ui) then
                 update_color()
             end
 
             local brush_size_label = "BrushSize"
-            ImGui.PropertyLabel(brush_size_label)
+            ImGuiWidgets.PropertyLabel(brush_size_label)
             if ImGui.DragInt("##"..brush_size_label, brush_size_ui) then
                 world:pub {"GridMesh", "brushsize", brush_size_ui[1]}
             end

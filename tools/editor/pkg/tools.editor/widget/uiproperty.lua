@@ -1,5 +1,5 @@
 local ImGui     = import_package "ant.imgui"
-local imguiWidgets = require "imgui.widgets"
+local ImGuiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
 local aio  = import_package "ant.io"
 local uiconfig  = require "widget.config"
@@ -17,7 +17,7 @@ local PropertyBase = class "PropertyBase"
 function PropertyBase:_init(config, modifier)
     self.label      = config.label
     self.readonly   = config.readonly
-    self.disable    = config.disable
+    self.disable    = config.disable or false
     self.visible    = config.visible or true
     self.id         = config.id
     self.dim        = config.dim or 1
@@ -68,7 +68,7 @@ end
 
 function PropertyBase:show_label()
     if self.mode == nil or self.mode == "label_left" then
-        ImGui.PropertyLabel(self.label)
+        ImGuiWidgets.PropertyLabel(self.label)
     end
 end
 
@@ -99,17 +99,29 @@ end
 
 local DirectionalArrow = class("DirectionalArrow", PropertyBase)
 function DirectionalArrow:widget()
-    return imguiWidgets.DirectionalArrow(self:get_label(), self.uidata)
+    return ImGuiWidgets.DirectionalArrow(self:get_label(), self.uidata)
 end
 
 local Int = class("Int", PropertyBase)
+local DragInt = {
+    ImGui.DragInt,
+    ImGui.DragInt2,
+    ImGui.DragInt3,
+    ImGui.DragInt4
+}
 function Int:widget()
-    return ImGui.DragInt(self:get_label(), self.uidata)
+    return DragInt[self.dim](self:get_label(), self.uidata)
 end
 
 local Float = class("Float", PropertyBase)
+local DragFloat = {
+    ImGui.DragFloat,
+    ImGui.DragFloat2,
+    ImGui.DragFloat3,
+    ImGui.DragFloat4
+}
 function Float:widget()
-    return ImGui.DragFloat(self:get_label(), self.uidata)
+    return DragFloat[self.dim](self:get_label(), self.uidata)
 end
 
 local Bool = class("Bool", PropertyBase)
@@ -120,7 +132,7 @@ end
 local Color = class("Color", PropertyBase)
 
 function Color:widget()
-    return ImGui.ColorEdit(self:get_label(), self.uidata)
+    return ImGui.ColorEdit4(self:get_label(), self.uidata)
 end
 
 local Combo = class("Combo", PropertyBase)
@@ -143,9 +155,9 @@ function Combo:show()
         self:show_label()
         ImGui.PushID(tostring(self))
         local current_option = self.modifier.getter()
-        if ImGui.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then
+        if ImGui.BeginCombo(self:get_label(), current_option, self.uidata.flags) then
             for _, option in ipairs(self.options) do
-                if ImGui.Selectable(option, current_option == option) then
+                if ImGui.SelectableEx(option, current_option == option) then
                     self.modifier.setter(option)
                 end
             end
@@ -161,6 +173,7 @@ function Text:widget()
 end
 
 local EditText = class("EditText", PropertyBase)
+
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
@@ -186,7 +199,7 @@ end
 
 function EditText:show()
     if self:is_visible() then
-        ImGui.PropertyLabel(self.label)
+        ImGuiWidgets.PropertyLabel(self.label)
         if self:widget() then
             self.modifier.setter(tostring(self.uidata.text))
         end
@@ -224,7 +237,7 @@ function ResourcePath:show()
     end
     -- ImGui.Text(self.label)
     -- ImGui.SameLine(uiconfig.PropertyIndent)
-    ImGui.PropertyLabel(self.label)
+    ImGuiWidgets.PropertyLabel(self.label)
     self:widget()
     if ImGui.BeginDragDropTarget() then
         local payload = ImGui.AcceptDragDropPayload("DragFile")
@@ -375,7 +388,7 @@ function TextureResource:show()
                 for path in fs.pairs(image_path) do
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
-                        if ImGui.Selectable(filename, false) then
+                        if ImGui.SelectableEx(filename, false) then
                             self:set_file(glb_path .. "|images/" .. filename)
                             image_path = nil
                         end
@@ -410,7 +423,7 @@ function Button:show()
     if self:is_visible() then
         ImGui.PushID("ui_button_id" .. self.button_id)
         ImGui.BeginDisabled(self:is_disable())
-        if ImGui.Button(self.label, self.uidata.width, self.uidata.height) then
+        if ImGui.ButtonEx(self.label, self.uidata.width, self.uidata.height) then
             self.modifier.click()
         end
         ImGui.EndDisabled()
@@ -474,7 +487,7 @@ end
 
 function Group:show()
     ImGui.BeginDisabled(self:is_disable())
-    if ImGui.TreeNode(self.label, self.uidata.flags) then
+    if ImGui.TreeNodeEx(self.label, self.uidata.flags) then
         for _, c in ipairs(self.subproperty) do
             self:_show_child(c)
             if c.sameline then

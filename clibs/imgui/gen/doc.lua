@@ -8,7 +8,8 @@ local function writeln(fmt, ...)
 end
 
 local KEYWORD <const> = {
-    ["repeat"] = "repeat_"
+    ["repeat"] = "arg_repeat",
+    ["in"] = "arg_in",
 }
 
 local function safe_name(v)
@@ -19,7 +20,9 @@ local lua_type = {
     ["const char*"] = "string",
     ["bool"] = "boolean",
     ["float"] = "number",
+    ["double"] = "number",
     ["int"] = "integer",
+    ["size_t"] = "integer",
     ["ImGuiID"] = "integer",
     ["ImU32"] = "integer",
     ["ImGuiKeyChord"] = "ImGuiKeyChord",
@@ -31,14 +34,28 @@ local special_ret = {}
 local return_type = {}
 local default_type = {}
 
+local function get_default_value(type_meta)
+    local func = default_type[type_meta.type.declaration]
+    if func then
+        return func(type_meta.default_value)
+    end
+    return type_meta.default_value
+end
+
 special_arg["ImVec2"] = function (type_meta, status)
     if type_meta.default_value == nil then
         writeln("---@param %s_x number", type_meta.name)
         writeln("---@param %s_y number", type_meta.name)
     else
-        assert(type_meta.default_value == "ImVec2(0.0f, 0.0f)" or type_meta.default_value == "ImVec2(0, 0)", type_meta.default_value)
-        writeln("---@param %s_x? number | `0.0`", type_meta.name)
-        writeln("---@param %s_y? number | `0.0`", type_meta.name)
+        local def_x, def_y = type_meta.default_value:match "^ImVec2%(([^,]+), ([^,]+)%)$"
+        local function convert(f)
+            if f == "-FLT_MIN" then
+                return "-math.huge"
+            end
+            return f:match "^(.-)f?$"
+        end
+        writeln("---@param %s_x? number | `%s`", type_meta.name, convert(def_x))
+        writeln("---@param %s_y? number | `%s`", type_meta.name, convert(def_y))
     end
     status.arguments[#status.arguments+1] = type_meta.name .. "_x"
     status.arguments[#status.arguments+1] = type_meta.name .. "_y"
@@ -49,18 +66,101 @@ special_ret["ImVec2"] = function ()
     writeln("---@return number")
 end
 
+special_arg["ImVec4"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s_x number", type_meta.name)
+    writeln("---@param %s_y number", type_meta.name)
+    writeln("---@param %s_z number", type_meta.name)
+    writeln("---@param %s_w number", type_meta.name)
+    status.arguments[#status.arguments+1] = type_meta.name .. "_x"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_y"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_z"
+    status.arguments[#status.arguments+1] = type_meta.name .. "_w"
+end
+
+special_ret["ImVec4"] = function ()
+    writeln("---@return number")
+    writeln("---@return number")
+    writeln("---@return number")
+    writeln("---@return number")
+end
+
+--TODO: 指定数组长度
+for n = 1, 4 do
+    special_arg["int["..n.."]"] = function (type_meta, status)
+        assert(type_meta.default_value == nil)
+        writeln("---@param %s integer[]", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    end
+end
+special_arg["int*"] = special_arg["int[1]"]
+
+for n = 1, 4 do
+    special_arg["float["..n.."]"] = function (type_meta, status)
+        assert(type_meta.default_value == nil)
+        writeln("---@param %s number[]", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    end
+end
+special_arg["float*"] = special_arg["float[1]"]
+
 special_arg["bool*"] = function (type_meta, status)
-    writeln("---@param %s true | nil", safe_name(type_meta.name))
+    if type_meta.default_value then
+        writeln("---@param %s true | nil", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+        return
+    end
+    writeln("---@param %s boolean[]", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+end
+
+special_arg["size_t*"] = function ()
+end
+
+special_arg["const char*"] = function (type_meta, status)
+    local size_meta = status.args[status.i + 1]
+    if size_meta then
+        if size_meta.type and size_meta.type.declaration == "size_t" then
+            assert(not type_meta.default_value)
+            assert(size_meta.type.declaration == "size_t")
+            status.i = status.i + 1
+            writeln("---@param %s string", safe_name(type_meta.name))
+            status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+            return
+        end
+        if size_meta.is_varargs then
+            status.i = status.i + 1
+            writeln("---@param %s string", safe_name(type_meta.name))
+            writeln "---@param ...  any"
+            status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+            status.arguments[#status.arguments+1] = "..."
+            return
+        end
+    end
+    if type_meta.default_value then
+        local default_value = get_default_value(type_meta)
+        if default_value then
+            writeln("---@param %s? string | `%s`", safe_name(type_meta.name), default_value)
+        else
+            writeln("---@param %s? string", safe_name(type_meta.name))
+        end
+    else
+        writeln("---@param %s string", safe_name(type_meta.name))
+    end
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
 special_arg["const void*"] = function (type_meta, status)
     local size_meta = status.args[status.i + 1]
-    assert(not type_meta.default_value)
-    assert(not size_meta.default_value)
-    assert(size_meta.type.declaration == "size_t")
-    status.i = status.i + 1
-    writeln("---@param %s string", safe_name(type_meta.name))
+    if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        assert(not size_meta.default_value)
+        status.i = status.i + 1
+        writeln("---@param %s string", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+        return
+    end
+    writeln("---@param %s lightuserdata", safe_name(type_meta.name))
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
@@ -73,16 +173,10 @@ default_type["float"] = function (value)
 end
 
 default_type["const char*"] = function (value)
-    assert(value == "NULL")
-    return
-end
-
-local function get_default_value(type_meta)
-    local func = default_type[type_meta.type.declaration]
-    if func then
-        return func(type_meta.default_value)
+    if value == "NULL" then
+        return
     end
-    return type_meta.default_value
+    return value
 end
 
 local function conditionals(t)
@@ -268,9 +362,11 @@ local function write_func(func_meta)
             writeln("---@return %s", luatype)
         end
         for _, type_meta in ipairs(func_meta.arguments) do
-            local typefunc = return_type[type_meta.type.declaration]
-            if typefunc then
-                typefunc(type_meta)
+            if type_meta.type then
+                local typefunc = return_type[type_meta.type.declaration]
+                if typefunc then
+                    typefunc(type_meta)
+                end
             end
         end
     end
@@ -283,13 +379,8 @@ local allow = require "allow"
 
 local function write_func_scope()
     local funcs = {}
-    allow.init()
     for _, func_meta in ipairs(meta.functions) do
-        local status = allow.query(func_meta)
-        if status == "skip" then
-            break
-        end
-        if status then
+        if allow(func_meta) then
             funcs[#funcs+1] = write_func(func_meta)
         end
     end

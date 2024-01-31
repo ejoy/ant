@@ -351,6 +351,53 @@ zDirectionalArrow(lua_State *L) {
 	}
 }
 
+static int
+wPropertyLabel(lua_State* L) {
+	size_t sz;
+	const char* label = luaL_checklstring(L, 1, &sz);
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	const ImGuiStyle& style = ImGui::GetStyle();
+	const ImVec2 lineStart = ImGui::GetCursorScreenPos();
+
+	float fullWidth = ImGui::GetContentRegionAvail().x;
+	float itemWidth = ImGui::CalcItemWidth() + style.ItemSpacing.x;
+	ImVec2 textSize = ImGui::CalcTextSize(label);
+	ImRect textRect;
+	textRect.Min = ImGui::GetCursorScreenPos();
+	// TODO: support right style
+	bool isLeft = true;
+	if (!isLeft)
+        textRect.Min.x = textRect.Min.x + itemWidth;
+	textRect.Max = textRect.Min;
+	textRect.Max.x += fullWidth - itemWidth;
+	textRect.Max.y += textSize.y;
+
+	ImGui::SetCursorScreenPos(textRect.Min);
+
+	ImGui::AlignTextToFramePadding();
+	textRect.Min.y += window->DC.CurrLineTextBaseOffset;
+	textRect.Max.y += window->DC.CurrLineTextBaseOffset;
+
+	ImGui::ItemSize(textRect);
+	if (ImGui::ItemAdd(textRect, window->GetID(label))) {
+		ImGui::RenderTextEllipsis(ImGui::GetWindowDrawList(), textRect.Min, textRect.Max, textRect.Max.x,
+			textRect.Max.x, label, nullptr, &textSize);
+
+		if (textRect.GetWidth() < textSize.x && ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", label);
+	}
+
+	if (isLeft) {
+		ImGui::SetCursorScreenPos({ textRect.Max.x, textRect.Max.y - (textSize.y + window->DC.CurrLineTextBaseOffset) });
+		ImGui::SameLine();
+	}
+	else {
+		ImGui::SetCursorScreenPos(lineStart);
+	}
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+	return 0;
+}
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -361,6 +408,7 @@ luaopen_imgui_widgets(lua_State *L) {
         { "Sequencer", wSequencer },
         { "SimpleSequencer", wSimpleSequencer },
         { "DirectionalArrow", zDirectionalArrow },
+        { "PropertyLabel", wPropertyLabel },
         { NULL, NULL },
     };
     luaL_newlib(L, lib);

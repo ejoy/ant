@@ -80,7 +80,7 @@ local function choose_project()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj)
                     exit = true
@@ -107,7 +107,7 @@ function m:init_system()
     if rf then
         local setting = rf:read "a"
         rf:close()
-        ImGui.LoadIniSettings(setting)
+        ImGui.LoadIniSettingsFromMemory(setting)
     end
 end
 
@@ -120,7 +120,7 @@ function m:data_changed()
     ImGui.SetNextWindowViewport(imgui_vp.ID)
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
+    ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
     if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
         "NoDocking",
         "NoTitleBar",
@@ -136,13 +136,13 @@ function m:data_changed()
             "PassthruCentralNode",
         })
     end
-    ImGui.PopStyleVar(3)
+    ImGui.PopStyleVarEx(3)
     ImGui.End()
 
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], 'F')
-    -- ImGui.SetNextWindowDockID("MainViewSpace", 'F')
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], ImGui.Enum.Cond.FirstUseEver)
+    -- ImGui.SetNextWindowDockID("MainViewSpace", ImGui.Enum.Cond.FirstUseEver)
     local exit = false
     if ImGui.Begin("##Choose project", true, ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse" }) then
         -- exit = choose_project()
@@ -180,7 +180,7 @@ function m:data_changed()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj.proj_path)
                     exit = true
@@ -190,7 +190,7 @@ function m:data_changed()
     end
     ImGui.End()
     if exit then
-        -- local setting = ImGui.SaveIniSettings()
+        -- local setting = ImGui.SaveIniSettingsToMemory()
         -- local wf = assert(io.open("D:/Github/ant/tools/editor/launch/pkg/launch/imgui.layout", "wb"))
         -- wf:write(setting)
         -- wf:close()

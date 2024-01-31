@@ -20,7 +20,7 @@ local ozzoffline = require "ozz.offline"
 local math3d    = require "math3d"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
-local imguiWidgets  = require "imgui.widgets"
+local ImGuiWidgets  = require "imgui.widgets"
 local joint_utils   = require "widget.joint_utils"
 local widget_utils  = require "widget.utils"
 local utils         = require "common.utils"
@@ -229,19 +229,19 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
 		end
     end
 
-    -- local optimizer_setting = {
-	-- 	tolerance = 0.001,
-	-- 	distance  = 0.1,
-	-- 	joints = {},
-	-- }
+    local optimizer_setting = {
+		tolerance = 0.001,
+		distance  = 0.1,
+		joints = {},
+	}
 
-	-- local raw_optimized_animation, statistics = ozzoffline.AnimationOptimizer(raw_animation, ske, optimizer_setting)
-	-- -- for k, v in pairs(statistics) do
-	-- -- 	print("\t animation optimizer statistics", k..":"..v)
-	-- -- end
-	-- return ozzoffline.AnimationBuilder(raw_optimized_animation)
+	local raw_optimized_animation, statistics = ozzoffline.AnimationOptimizer(raw_animation, ske, optimizer_setting)
+	-- for k, v in pairs(statistics) do
+	-- 	print("\t animation optimizer statistics", k..":"..v)
+	-- end
+	return ozzoffline.AnimationBuilder(raw_optimized_animation)
 
-    return ozzoffline.AnimationBuilder(raw_animation)
+    -- return ozzoffline.AnimationBuilder(raw_animation)
 end
 
 local function update_animation()
@@ -512,7 +512,7 @@ end
 local function show_current_detail()
     if not current_anim then return end
     local anim_type = current_anim.type
-    ImGui.PropertyLabel("FrameCount:")
+    ImGuiWidgets.PropertyLabel("FrameCount:")
     if ImGui.DragInt("##FrameCount", current_anim.frame_count_ui) then
         if current_anim.frame_count_ui[1] < max_range_value() + 1 then
             current_anim.frame_count_ui[1] = max_range_value() + 1
@@ -579,7 +579,7 @@ local function show_current_detail()
     end
 
     ImGui.Separator()
-    ImGui.PropertyLabel("FrameRange")
+    ImGuiWidgets.PropertyLabel("FrameRange")
     local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
     local dirty = false
     if ImGui.DragInt("##Range", current_clip.range_ui) then
@@ -637,10 +637,10 @@ local function show_current_detail()
         current_anim.dirty_layer = current_anim.selected_layer_index
         dirty = true
     end
-    ImGui.PropertyLabel("TweenType")
-    if ImGui.BeginCombo("##TweenType", {tween_type_name[current_clip.tween], flags = ImGui.Flags.Combo {}}) then
+    ImGuiWidgets.PropertyLabel("TweenType")
+    if ImGui.BeginCombo("##TweenType", tween_type_name[current_clip.tween]) then
         for i, type in ipairs(tween_type_name) do
-            if ImGui.Selectable(type, current_clip.tween == i) then
+            if ImGui.SelectableEx(type, current_clip.tween == i) then
                 current_clip.tween = i
                 dirty = true
             end
@@ -648,13 +648,13 @@ local function show_current_detail()
         ImGui.EndCombo()
     end
     if anim_type == "mtl" then
-        ImGui.PropertyLabel("UniformValue")
+        ImGuiWidgets.PropertyLabel("UniformValue")
         local ui_data = current_clip.value_ui
-        if ImGui.ColorEdit("##UniformValue", ui_data) then
+        if ImGui.ColorEdit4("##UniformValue", ui_data) then
             current_clip.value = {ui_data[1], ui_data[2], ui_data[3], ui_data[4]}
             dirty = true
         end
-        ImGui.PropertyLabel("Scale")
+        ImGuiWidgets.PropertyLabel("Scale")
         ui_data = current_clip.scale_ui
         if ImGui.DragFloat("##Scale", ui_data) then
             current_clip.scale = ui_data[1]
@@ -662,17 +662,17 @@ local function show_current_detail()
         end
     else
         if anim_type == "ske" or anim_type == "srt" then
-            ImGui.PropertyLabel("AnimationType")
-            if ImGui.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = ImGui.Flags.Combo {}}) then
+            ImGuiWidgets.PropertyLabel("AnimationType")
+            if ImGui.BeginCombo("##AnimationType", anim_type_name[current_clip.type]) then
                 for i, type in ipairs(anim_type_name) do
-                    if ImGui.Selectable(type, current_clip.type == i) then
+                    if ImGui.SelectableEx(type, current_clip.type == i) then
                         current_clip.type = i
                         dirty = true
                     end
                 end
                 ImGui.EndCombo()
             end
-            ImGui.PropertyLabel("Repeat")
+            ImGuiWidgets.PropertyLabel("Repeat")
             if ImGui.DragInt("##Repeat", current_clip.repeat_ui) then
                 local count = current_clip.repeat_ui[1]
                 if count > max_repeat then
@@ -685,10 +685,10 @@ local function show_current_detail()
                 dirty = true
             end
         end
-        ImGui.PropertyLabel("Direction")
-        if ImGui.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = ImGui.Flags.Combo {}}) then
+        ImGuiWidgets.PropertyLabel("Direction")
+        if ImGui.BeginCombo("##Direction", dir_name[current_clip.direction]) then
             for i, type in ipairs(dir_name) do
-                if ImGui.Selectable(type, current_clip.direction == i) then
+                if ImGui.SelectableEx(type, current_clip.direction == i) then
                     current_clip.direction = i
                     dirty = true
                 end
@@ -696,24 +696,24 @@ local function show_current_detail()
             ImGui.EndCombo()
         end
 
-        ImGui.PropertyLabel("AmplitudePos")
+        ImGuiWidgets.PropertyLabel("AmplitudePos")
         local ui_data = current_clip.amplitude_pos_ui
         if ImGui.DragFloat("##AmplitudePos", ui_data) then
             current_clip.amplitude_pos = ui_data[1]
             dirty = true
         end
 
-        ImGui.PropertyLabel("RotAxis")
-        if ImGui.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = ImGui.Flags.Combo {}}) then
+        ImGuiWidgets.PropertyLabel("RotAxis")
+        if ImGui.BeginCombo("##RotAxis", dir_name[current_clip.rot_axis]) then
             for i = 1, 3 do
-                if ImGui.Selectable(dir_name[i], current_clip.rot_axis == i) then
+                if ImGui.SelectableEx(dir_name[i], current_clip.rot_axis == i) then
                     current_clip.rot_axis = i
                     dirty = true
                 end
             end
             ImGui.EndCombo()
         end
-        ImGui.PropertyLabel("AmplitudeRot")
+        ImGuiWidgets.PropertyLabel("AmplitudeRot")
         ui_data = current_clip.amplitude_rot_ui
         if ImGui.DragFloat("##AmplitudeRot", ui_data) then
             current_clip.amplitude_rot = ui_data[1]
@@ -951,7 +951,7 @@ end
 
 local function show_uniforms()
     for _, anim in ipairs(current_anim.target_anims) do
-        if ImGui.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
+        if ImGui.SelectableEx(anim.target_name, current_uniform and current_uniform == anim.target_name) then
             current_uniform = anim.target_name
             on_select_target(current_uniform)
         end
@@ -986,9 +986,9 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    if ImGui.Begin("Skeleton", true, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Enum.Cond.FirstUseEver)
+    if ImGui.Begin("Skeleton", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
         if current_skeleton and not current_anim then
             if ImGui.Button(faicons.ICON_FA_FILE_PEN.." ske") then
                 new_anim_widget = true
@@ -1056,9 +1056,9 @@ function m.show()
                 ImGui.Text("Anim:")
                 ImGui.SameLine()
                 ImGui.PushItemWidth(150)
-                if ImGui.BeginCombo("##AnimList", {current_anim.name, flags = ImGui.Flags.Combo {}}) then
+                if ImGui.BeginCombo("##AnimList", current_anim.name) then
                     for _, name in ipairs(anim_name_list) do
-                        if ImGui.Selectable(name, current_anim.name == name) then
+                        if ImGui.SelectableEx(name, current_anim.name == name) then
                             current_anim.selected_layer_index = 0
                             current_anim.selected_clip_index = 0
                             current_anim = allanims[name]
@@ -1077,10 +1077,10 @@ function m.show()
                 ImGui.Text("BindTo:")
                 ImGui.SameLine()
                 ImGui.PushItemWidth(200)
-                if ImGui.BeginCombo("##BindTo", {anim_bind_map[current_anim.name], flags = ImGui.Flags.Combo {}}) then
+                if ImGui.BeginCombo("##BindTo", anim_bind_map[current_anim.name]) then
                     local taglist = (current_anim.type == "srt") and prefab_mgr.srt_mtl_list or prefab_mgr.mtl_list
                     for _, name in ipairs(taglist) do
-                        if ImGui.Selectable(name, anim_bind_map[current_anim.name] == name) then
+                        if ImGui.SelectableEx(name, anim_bind_map[current_anim.name] == name) then
                             anim_bind_map[current_anim.name] = name
                             update_animation()
                         end
@@ -1200,7 +1200,7 @@ function m.show()
 
             if current_anim then
                 local imgui_message = {}
-                imguiWidgets.SimpleSequencer(current_anim, imgui_message)
+                ImGuiWidgets.SimpleSequencer(current_anim, imgui_message)
                 current_anim.dirty = false
                 current_anim.clip_range_dirty = 0
                 current_anim.dirty_layer = 0

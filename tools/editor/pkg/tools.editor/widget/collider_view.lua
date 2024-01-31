@@ -5,6 +5,7 @@ local iom           = ecs.require "ant.objcontroller|obj_motion"
 local imaterial     = ecs.require "ant.asset|material"
 local anim_view     = ecs.require "widget.animation_view"
 local ImGui     = import_package "ant.imgui"
+local ImGuiWidgets = require "imgui.widgets"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
 local hierarchy = require "hierarchy_edit"
@@ -121,10 +122,10 @@ function ColliderView:show()
     end
     local slot_list = hierarchy.slot_list
     if slot_list then
-        ImGui.PropertyLabel("LinkSlot")
-        if ImGui.BeginCombo("##LinkSlot", {e.slot_name or "None", flags = ImGui.Flags.Combo {}}) then
+        ImGuiWidgets.PropertyLabel("LinkSlot")
+        if ImGui.BeginCombo("##LinkSlot", e.slot_name or "None") then
             for name, eid in pairs(slot_list) do
-                if ImGui.Selectable(name, e.slot_name and e.slot_name == name) then
+                if ImGui.SelectableEx(name, e.slot_name and e.slot_name == name) then
                     e.slot_name = name
                     world:pub {"EntityEvent", "parent", self.eid, eid}
                 end
