@@ -18,6 +18,7 @@
 #include <memory>
 #include <optional>
 #include <yoga/Yoga.h>
+#include <core/Geometry.h>
 
 namespace Rml {
 
@@ -226,7 +227,7 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::BackgroundRepeat, {
-		PropertyParseKeyword<Style::BackgroundRepeat>,
+		PropertyParseKeyword<SamplerFlag>,
 	}},
 
 	{ PropertyId::BackgroundFilter, {

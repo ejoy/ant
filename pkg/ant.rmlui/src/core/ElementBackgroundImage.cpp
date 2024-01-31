@@ -159,11 +159,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect uv = CalcUV(surface, background);
-	SamplerFlag flag = SamplerFlag::Clamp;
-	bool is_repeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>() == Style::BackgroundRepeat::Repeat;
-	if (is_repeat){
-		flag = SamplerFlag::Repeat;
-	}
+	SamplerFlag flag = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<SamplerFlag>();
 	Material* material = GetRender()->CreateTextureMaterial(texture.handle, flag);
 	geometry.SetMaterial(material);
 

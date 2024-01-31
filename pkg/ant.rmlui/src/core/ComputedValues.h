@@ -16,5 +16,4 @@ enum class PointerEvents : uint8_t { None, Auto };
 enum class Filter : uint8_t { None, Gray };
 enum class OriginX : uint8_t { Left, Center, Right };
 enum class OriginY : uint8_t { Top, Center, Bottom };
-enum class BackgroundRepeat : uint8_t { None, Repeat };
 }}
