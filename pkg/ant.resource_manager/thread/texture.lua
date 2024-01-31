@@ -236,63 +236,6 @@ end
 
 local S = require "thread.main"
 
-function S.texture_default()
-    return DefaultTexture
-end
-
-function S.texture_create(name, type, block)
-    local c = textureByName[name]
-    if c then
-        if c.texinfo then
-            return {
-                id = c.id,
-                texinfo = c.texinfo,
-                sampler = c.sampler,
-            }
-        end
-    else
-        type = type or "SAMPLER2D"
-        local id = textureman.texture_create(assert(DefaultTexture[type]))
-        c = {
-            name = name,
-            id = id,
-            type = type,
-        }
-        textureByName[name] = c
-        textureById[id] = c
-    end
-    ltask.multi_wait(asyncLoadTexture(c))
-    if block then
-        blockWaitTexture(name)
-    end
-    return {
-        id = c.id,
-        texinfo = c.texinfo,
-        sampler = c.sampler,
-    }
-end
-
-function S.texture_create_fast(name, type)
-    local c = textureByName[name]
-    if not c then
-        type = type or "SAMPLER2D"
-        local id = textureman.texture_create(assert(DefaultTexture[type]))
-        c = {
-            name = name,
-            id = id,
-            type = type,
-        }
-        textureByName[name] = c
-        textureById[id] = c
-        asyncLoadTexture(c)
-    end
-    return c.id
-end
-
-function S.texture_reload(name, type, block)
-    textureByName[name] = nil
-    return S.texture_create(name, type, block)
-end
 
 local FrameLoaded = 0
 local MaxFrameLoaded <const> = 64
@@ -314,14 +257,14 @@ ltask.fork(function ()
             createQueue[name] = nil
             local c = textureByName[name]
             local handle = textureData.handle or createTexture(textureData)
+            c.handle = handle
+            c.flag   = textureData.flag
+            textureman.texture_set(c.id, handle)
             local block_token = blockQueue[name]
             if block_token then
                 blockQueue[name] = nil
                 ltask.multi_wakeup(block_token)
             end
-            c.handle = handle
-            c.flag   = textureData.flag
-            textureman.texture_set(c.id, handle)
             FrameLoaded = FrameLoaded + 1
             ltask.sleep(0)
         end
@@ -390,6 +333,65 @@ local update; do
         textureman.frame_tick()
     end
 end
+
+function S.texture_default()
+    return DefaultTexture
+end
+
+function S.texture_create(name, type, block)
+    local c = textureByName[name]
+    if c then
+        if c.texinfo then
+            return {
+                id = c.id,
+                texinfo = c.texinfo,
+                sampler = c.sampler,
+            }
+        end
+    else
+        type = type or "SAMPLER2D"
+        local id = textureman.texture_create(assert(DefaultTexture[type]))
+        c = {
+            name = name,
+            id = id,
+            type = type,
+        }
+        textureByName[name] = c
+        textureById[id] = c
+    end
+    ltask.multi_wait(asyncLoadTexture(c))
+    if block then
+        blockWaitTexture(name)
+    end
+    return {
+        id = c.id,
+        texinfo = c.texinfo,
+        sampler = c.sampler,
+    }
+end
+
+function S.texture_create_fast(name, type)
+    local c = textureByName[name]
+    if not c then
+        type = type or "SAMPLER2D"
+        local id = textureman.texture_create(assert(DefaultTexture[type]))
+        c = {
+            name = name,
+            id = id,
+            type = type,
+        }
+        textureByName[name] = c
+        textureById[id] = c
+        asyncLoadTexture(c)
+    end
+    return c.id
+end
+
+function S.texture_reload(name, type, block)
+    textureByName[name] = nil
+    return S.texture_create(name, type, block)
+end
+
 
 function S.texture_timestamp(rtid_table)
     local id_table = {}

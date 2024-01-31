@@ -42,8 +42,8 @@ function m.texture_create_fast(filename)
 	return ltask.call(ServiceResource, "texture_create_fast", filename)
 end
 
-function m.texture_reload(filename)
-	return ltask.call(ServiceResource, "texture_reload", filename)
+function m.texture_reload(filename, block)
+	return ltask.call(ServiceResource, "texture_reload", filename, nil, block)
 end
 
 function m.texture_default()
