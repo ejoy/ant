@@ -1051,6 +1051,7 @@ function ImGui.Flags.Viewport(flags) end
 
 
 ---@alias ImGuiKeyChord ImGuiKey
+---@alias ImTextureID integer
 
 --
 -- Windows
@@ -1906,6 +1907,65 @@ function ImGui.ProgressBar(fraction, size_arg_x, size_arg_y, overlay) end
 -- draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
 --
 function ImGui.Bullet() end
+
+--
+-- Widgets: Images
+-- - Read about ImTextureID here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+-- - Note that Image() may add +2.0f to provided size if a border is visible, ImageButton() adds style.FramePadding*2.0f to provided size.
+--
+--
+-- Implied uv0 = ImVec2(0, 0), uv1 = ImVec2(1, 1), tint_col = ImVec4(1, 1, 1, 1), border_col = ImVec4(0, 0, 0, 0)
+--
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+function ImGui.Image(user_texture_id, image_size_x, image_size_y) end
+
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+---@param uv0_x? number | `0`
+---@param uv0_y? number | `0`
+---@param uv1_x? number | `1`
+---@param uv1_y? number | `1`
+---@param tint_col_x? number | `1`
+---@param tint_col_y? number | `1`
+---@param tint_col_z? number | `1`
+---@param tint_col_w? number | `1`
+---@param border_col_x? number | `0`
+---@param border_col_y? number | `0`
+---@param border_col_z? number | `0`
+---@param border_col_w? number | `0`
+function ImGui.ImageEx(user_texture_id, image_size_x, image_size_y, uv0_x, uv0_y, uv1_x, uv1_y, tint_col_x, tint_col_y, tint_col_z, tint_col_w, border_col_x, border_col_y, border_col_z, border_col_w) end
+
+--
+-- Implied uv0 = ImVec2(0, 0), uv1 = ImVec2(1, 1), bg_col = ImVec4(0, 0, 0, 0), tint_col = ImVec4(1, 1, 1, 1)
+--
+---@param str_id string
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+---@return boolean
+function ImGui.ImageButton(str_id, user_texture_id, image_size_x, image_size_y) end
+
+---@param str_id string
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+---@param uv0_x? number | `0`
+---@param uv0_y? number | `0`
+---@param uv1_x? number | `1`
+---@param uv1_y? number | `1`
+---@param bg_col_x? number | `0`
+---@param bg_col_y? number | `0`
+---@param bg_col_z? number | `0`
+---@param bg_col_w? number | `0`
+---@param tint_col_x? number | `1`
+---@param tint_col_y? number | `1`
+---@param tint_col_z? number | `1`
+---@param tint_col_w? number | `1`
+---@return boolean
+function ImGui.ImageButtonEx(str_id, user_texture_id, image_size_x, image_size_y, uv0_x, uv0_y, uv1_x, uv1_y, bg_col_x, bg_col_y, bg_col_z, bg_col_w, tint_col_x, tint_col_y, tint_col_z, tint_col_w) end
 
 --
 -- Widgets: Combo Box (Dropdown)

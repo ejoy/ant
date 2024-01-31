@@ -42,20 +42,21 @@ local function get_default_value(type_meta)
     return type_meta.default_value
 end
 
+local function convert_float(f)
+    if f == "-FLT_MIN" then
+        return "-math.huge"
+    end
+    return f:match "^(.-)f?$"
+end
+
 special_arg["ImVec2"] = function (type_meta, status)
     if type_meta.default_value == nil then
         writeln("---@param %s_x number", type_meta.name)
         writeln("---@param %s_y number", type_meta.name)
     else
         local def_x, def_y = type_meta.default_value:match "^ImVec2%(([^,]+), ([^,]+)%)$"
-        local function convert(f)
-            if f == "-FLT_MIN" then
-                return "-math.huge"
-            end
-            return f:match "^(.-)f?$"
-        end
-        writeln("---@param %s_x? number | `%s`", type_meta.name, convert(def_x))
-        writeln("---@param %s_y? number | `%s`", type_meta.name, convert(def_y))
+        writeln("---@param %s_x? number | `%s`", type_meta.name, convert_float(def_x))
+        writeln("---@param %s_y? number | `%s`", type_meta.name, convert_float(def_y))
     end
     status.arguments[#status.arguments+1] = type_meta.name .. "_x"
     status.arguments[#status.arguments+1] = type_meta.name .. "_y"
@@ -67,11 +68,18 @@ special_ret["ImVec2"] = function ()
 end
 
 special_arg["ImVec4"] = function (type_meta, status)
-    assert(type_meta.default_value == nil)
-    writeln("---@param %s_x number", type_meta.name)
-    writeln("---@param %s_y number", type_meta.name)
-    writeln("---@param %s_z number", type_meta.name)
-    writeln("---@param %s_w number", type_meta.name)
+    if type_meta.default_value == nil then
+        writeln("---@param %s_x number", type_meta.name)
+        writeln("---@param %s_y number", type_meta.name)
+        writeln("---@param %s_z number", type_meta.name)
+        writeln("---@param %s_w number", type_meta.name)
+    else
+        local def_x, def_y, def_z, def_w = type_meta.default_value:match "^ImVec4%(([^,]+), ([^,]+), ([^,]+), ([^,]+)%)$"
+        writeln("---@param %s_x? number | `%s`", type_meta.name, convert_float(def_x))
+        writeln("---@param %s_y? number | `%s`", type_meta.name, convert_float(def_y))
+        writeln("---@param %s_z? number | `%s`", type_meta.name, convert_float(def_z))
+        writeln("---@param %s_w? number | `%s`", type_meta.name, convert_float(def_w))
+    end
     status.arguments[#status.arguments+1] = type_meta.name .. "_x"
     status.arguments[#status.arguments+1] = type_meta.name .. "_y"
     status.arguments[#status.arguments+1] = type_meta.name .. "_z"
@@ -83,6 +91,12 @@ special_ret["ImVec4"] = function ()
     writeln("---@return number")
     writeln("---@return number")
     writeln("---@return number")
+end
+
+special_arg["ImTextureID"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s ImTextureID", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
 --TODO: 指定数组长度
@@ -301,6 +315,7 @@ end
 
 local function write_type_scope()
     writeln("---@alias ImGuiKeyChord ImGuiKey")
+    writeln("---@alias ImTextureID integer")
 end
 
 local function write_func(func_meta)

@@ -78,15 +78,31 @@ write_arg["ImVec2"] = function(type_meta, status)
 end
 
 write_arg["ImVec4"] = function(type_meta, status)
-    assert(type_meta.default_value == nil)
-    writeln("    auto %s = ImVec4 {", type_meta.name)
-    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 1)
-    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
-    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 3)
-    writeln("        (float)luaL_checknumber(L, %d),", status.idx + 4)
-    writeln "    };"
+    if type_meta.default_value == nil then
+        writeln("    auto %s = ImVec4 {", type_meta.name)
+        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 1)
+        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
+        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 3)
+        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 4)
+        writeln "    };"
+    else
+        local def_x, def_y, def_z, def_w = type_meta.default_value:match "^ImVec4%(([^,]+), ([^,]+), ([^,]+), ([^,]+)%)$"
+        writeln("    auto %s = ImVec4 {", type_meta.name)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 1, def_x)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 2, def_y)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 3, def_z)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 4, def_w)
+        writeln "    };"
+    end
     status.arguments[#status.arguments+1] = type_meta.name
     status.idx = status.idx + 4
+end
+
+write_arg["ImTextureID"] = function(type_meta, status)
+    assert(type_meta.default_value == nil)
+    status.idx = status.idx + 1
+    status.arguments[#status.arguments+1] = type_meta.name
+    writeln("    auto %s = util::get_texture_id(L, %d);", type_meta.name, status.idx)
 end
 
 write_arg["float"] = function(type_meta, status)

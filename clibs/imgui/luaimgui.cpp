@@ -11,9 +11,6 @@ extern "C" {
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
-#include <functional>
-#include <map>
-#include <string_view>
 #include <bx/platform.h>
 #include "backend/imgui_impl_bgfx.h"
 #include "imgui_platform.h"
@@ -30,11 +27,6 @@ lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
 
 #define INDEX_ID 1
 #define INDEX_ARGS 2
-
-struct lua_args {
-	lua_State *L;
-	bool err;
-};
 
 template <typename Flags>
 static Flags lua_getflags(lua_State* L, int idx) {
@@ -103,38 +95,6 @@ read_field_string(lua_State *L, const char * field, const char *v, int tidx = IN
 	}
 	lua_pop(L, 1);
 	return v;
-}
-
-//read table { x, y }
-static ImVec2
-read_field_vec2(lua_State *L, const char *field, ImVec2 def_val, int tidx = INDEX_ARGS) {
-	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
-		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
-			def_val.x = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
-			def_val.y = (float)lua_tonumber(L, -1);
-		lua_pop(L, 2);
-	}
-	lua_pop(L, 1);
-	return def_val;
-}
-
-//read table { x, y, z, w }
-static ImVec4
-read_field_vec4(lua_State *L, const char *field, ImVec4 def_val, int tidx = INDEX_ARGS) {
-	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
-		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
-			def_val.x = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
-			def_val.y = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -3, 3) == LUA_TNUMBER)
-			def_val.z = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -4, 4) == LUA_TNUMBER)
-			def_val.w = (float)lua_tonumber(L, -1);
-		lua_pop(L, 4);
-	}
-	lua_pop(L, 1);
-	return def_val;
 }
 
 static int dDockSpace(lua_State* L) {
@@ -643,63 +603,6 @@ wInputInt(lua_State *L) {
 	return 1;
 }
 
-static ImTextureID getTextureId(lua_State* L, int idx) {
-	int lua_handle = (int)luaL_checkinteger(L, idx);
-	if (auto id = ImGui_ImplBgfx_GetTextureID(lua_handle)) {
-		return *id;
-	}
-	luaL_error(L, "Invalid handle type TEXTURE");
-	std::unreachable();
-}
-
-static int wImage(lua_State *L) {
-	ImTextureID tex_id = getTextureId(L, 1);
-	float size_x = (float)luaL_checknumber(L, 2);
-	float size_y = (float)luaL_checknumber(L, 3);
-	ImVec2 size = { size_x, size_y };
-
-	ImVec2 uv0 = { 0.0f,0.0f };
-	ImVec2 uv1 = { 1.0f,1.0f };
-	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
-	ImVec4 border_col = { 0.0f,0.0f,0.0f,0.0f };
-
-	if (lua_type(L, 4) == LUA_TTABLE)
-	{
-		uv0 = read_field_vec2(L, "uv0", uv0, 4);
-		uv1 = read_field_vec2(L, "uv1", uv1, 4);
-		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
-		border_col = read_field_vec4(L, "border_col", border_col, 4);
-	}
-	ImGui::Image(tex_id, size, uv0, uv1, tint_col, border_col);
-	return 0;
-}
-
-static int
-wImageButton(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImTextureID tex_id = getTextureId(L, 2);
-	float size_x = (float)luaL_checknumber(L, 3);
-	float size_y = (float)luaL_checknumber(L, 4);
-	ImVec2 size = { size_x, size_y };
-
-	ImVec2 uv0 = { 0.0f,0.0f };
-	ImVec2 uv1 = { 1.0f,1.0f };
-	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
-	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
-
-	if (lua_type(L, 5) == LUA_TTABLE)
-	{
-		uv0 = read_field_vec2(L, "uv0", uv0, 5);
-		uv1 = read_field_vec2(L, "uv1", uv1, 5);
-		bg_col = read_field_vec4(L, "bg_col", bg_col, 5);
-		tint_col = read_field_vec4(L, "tint_col", tint_col, 5);
-	}
-	bool clicked = ImGui::ImageButton(id, tex_id, size, uv0, uv1, bg_col, tint_col);
-	lua_pushboolean(L, clicked);
-	return 1;
-}
-
-
 // enums
 struct enum_pair {
 	const char * name;
@@ -1000,8 +903,6 @@ luaopen_imgui(lua_State *L) {
 		{ "InputTextMultiline", wInputTextMultiline },
 		{ "InputFloat", wInputFloat },
 		{ "InputInt", wInputInt },
-		{ "Image", wImage },
-		{ "ImageButton", wImageButton },
 		{ "DockSpace", dDockSpace },
 		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
 		{ "ListClipper", ListClipper },

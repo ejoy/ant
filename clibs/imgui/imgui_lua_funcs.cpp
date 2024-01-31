@@ -898,6 +898,90 @@ static int Bullet(lua_State* L) {
     return 0;
 }
 
+static int Image(lua_State* L) {
+    auto user_texture_id = util::get_texture_id(L, 1);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    ImGui::Image(user_texture_id, image_size);
+    return 0;
+}
+
+static int ImageEx(lua_State* L) {
+    auto user_texture_id = util::get_texture_id(L, 1);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    auto uv0 = ImVec2 {
+        (float)luaL_optnumber(L, 4, 0),
+        (float)luaL_optnumber(L, 5, 0),
+    };
+    auto uv1 = ImVec2 {
+        (float)luaL_optnumber(L, 6, 1),
+        (float)luaL_optnumber(L, 7, 1),
+    };
+    auto tint_col = ImVec4 {
+        (float)luaL_optnumber(L, 8, 1),
+        (float)luaL_optnumber(L, 9, 1),
+        (float)luaL_optnumber(L, 10, 1),
+        (float)luaL_optnumber(L, 11, 1),
+    };
+    auto border_col = ImVec4 {
+        (float)luaL_optnumber(L, 12, 0),
+        (float)luaL_optnumber(L, 13, 0),
+        (float)luaL_optnumber(L, 14, 0),
+        (float)luaL_optnumber(L, 15, 0),
+    };
+    ImGui::Image(user_texture_id, image_size, uv0, uv1, tint_col, border_col);
+    return 0;
+}
+
+static int ImageButton(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto user_texture_id = util::get_texture_id(L, 2);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    auto _retval = ImGui::ImageButton(str_id, user_texture_id, image_size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int ImageButtonEx(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto user_texture_id = util::get_texture_id(L, 2);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    auto uv0 = ImVec2 {
+        (float)luaL_optnumber(L, 5, 0),
+        (float)luaL_optnumber(L, 6, 0),
+    };
+    auto uv1 = ImVec2 {
+        (float)luaL_optnumber(L, 7, 1),
+        (float)luaL_optnumber(L, 8, 1),
+    };
+    auto bg_col = ImVec4 {
+        (float)luaL_optnumber(L, 9, 0),
+        (float)luaL_optnumber(L, 10, 0),
+        (float)luaL_optnumber(L, 11, 0),
+        (float)luaL_optnumber(L, 12, 0),
+    };
+    auto tint_col = ImVec4 {
+        (float)luaL_optnumber(L, 13, 1),
+        (float)luaL_optnumber(L, 14, 1),
+        (float)luaL_optnumber(L, 15, 1),
+        (float)luaL_optnumber(L, 16, 1),
+    };
+    auto _retval = ImGui::ImageButton(str_id, user_texture_id, image_size, uv0, uv1, bg_col, tint_col);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
 static int BeginCombo(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto preview_value = luaL_checkstring(L, 2);
@@ -3301,6 +3385,10 @@ void init(lua_State* L) {
         { "RadioButtonIntPtr", RadioButtonIntPtr },
         { "ProgressBar", ProgressBar },
         { "Bullet", Bullet },
+        { "Image", Image },
+        { "ImageEx", ImageEx },
+        { "ImageButton", ImageButton },
+        { "ImageButtonEx", ImageButtonEx },
         { "BeginCombo", BeginCombo },
         { "EndCombo", EndCombo },
         { "Combo", Combo },

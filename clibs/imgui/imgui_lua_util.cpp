@@ -1,4 +1,6 @@
 #include "imgui_lua_util.h"
+#include "backend/imgui_impl_bgfx.h"
+#include <bee/nonstd/unreachable.h>
 
 namespace imgui_lua::util {
 
@@ -23,6 +25,15 @@ bool field_toboolean(lua_State* L, int idx, lua_Integer i) {
     bool v = !!lua_toboolean(L, -1);
     lua_pop(L, 1);
     return v;
+}
+
+ImTextureID get_texture_id(lua_State* L, int idx) {
+    int lua_handle = (int)luaL_checkinteger(L, idx);
+    if (auto id = ImGui_ImplBgfx_GetTextureID(lua_handle)) {
+    	return *id;
+    }
+    luaL_error(L, "Invalid handle type TEXTURE");
+    std::unreachable();
 }
 
 const char* format(lua_State* L, int idx) {
