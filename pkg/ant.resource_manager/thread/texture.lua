@@ -272,15 +272,12 @@ ltask.fork(function ()
 end)
 
 local function blockWaitTexture(name)
-    if createQueue[name] then
-        -- waiting for create
-        local token = blockQueue[name]
-        if not token then
-            token = {}
-            blockQueue[name] = token
-        end
-        ltask.multi_wait(token)
+    local token = blockQueue[name]
+    if not token then
+        token = {}
+        blockQueue[name] = token
     end
+	return token
 end
 
 local update; do
@@ -359,9 +356,14 @@ function S.texture_create(name, type, block)
         textureByName[name] = c
         textureById[id] = c
     end
-    ltask.multi_wait(asyncLoadTexture(c))
     if block then
-        blockWaitTexture(name)
+        local block_token = blockWaitTexture(name)
+        local load_token = asyncLoadTexture(c)
+        -- todo : wait2
+        ltask.multi_wait(load_token)
+        ltask.multi_wait(block_token)
+    else
+        ltask.multi_wait(asyncLoadTexture(c))
     end
     return {
         id = c.id,
