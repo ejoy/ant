@@ -1,13 +1,8 @@
 local BlackList <const> = {
-    ImGui_CreateContext = true,
-    ImGui_DestroyContext = true,
     ImGui_GetCurrentContext = true,
     ImGui_SetCurrentContext = true,
     ImGui_GetIO = true,
     ImGui_GetStyle = true,
-    ImGui_NewFrame = true,
-    ImGui_EndFrame = true,
-    ImGui_Render = true,
     ImGui_GetDrawData = true,
     ImGui_ShowDemoWindow = true,
     ImGui_ShowMetricsWindow = true,
@@ -53,8 +48,6 @@ local BlackList <const> = {
     ImGui_DebugCheckVersionAndDataLayout = true,
 
     ImGui_GetPlatformIO = true,
-    ImGui_UpdatePlatformWindows = true,
-    ImGui_RenderPlatformWindowsDefault = true,
     ImGui_RenderPlatformWindowsDefaultEx = true,
     ImGui_DestroyPlatformWindows = true,
     ImGui_FindViewportByID = true,

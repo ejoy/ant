@@ -721,6 +721,31 @@ static util::TableInteger Mod[] = {
 
 #undef ENUM
 
+static int CreateContext(lua_State* L) {
+    auto _retval = ImGui::CreateContext();
+    return 0;
+}
+
+static int DestroyContext(lua_State* L) {
+    ImGui::DestroyContext();
+    return 0;
+}
+
+static int NewFrame(lua_State* L) {
+    ImGui::NewFrame();
+    return 0;
+}
+
+static int EndFrame(lua_State* L) {
+    ImGui::EndFrame();
+    return 0;
+}
+
+static int Render(lua_State* L) {
+    ImGui::Render();
+    return 0;
+}
+
 static int Begin(lua_State* L) {
     auto name = luaL_checkstring(L, 1);
     bool has_p_open = !lua_isnil(L, 2);
@@ -4322,6 +4347,16 @@ static int SaveIniSettingsToMemory(lua_State* L) {
     return 1;
 }
 
+static int UpdatePlatformWindows(lua_State* L) {
+    ImGui::UpdatePlatformWindows();
+    return 0;
+}
+
+static int RenderPlatformWindowsDefault(lua_State* L) {
+    ImGui::RenderPlatformWindowsDefault();
+    return 0;
+}
+
 static int GetKeyIndex(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
     auto _retval = ImGui::GetKeyIndex(key);
@@ -4331,6 +4366,11 @@ static int GetKeyIndex(lua_State* L) {
 
 void init(lua_State* L, int extra) {
     static luaL_Reg funcs[] = {
+        { "CreateContext", CreateContext },
+        { "DestroyContext", DestroyContext },
+        { "NewFrame", NewFrame },
+        { "EndFrame", EndFrame },
+        { "Render", Render },
         { "Begin", Begin },
         { "End", End },
         { "BeginChild", BeginChild },
@@ -4680,6 +4720,8 @@ void init(lua_State* L, int extra) {
         { "LoadIniSettingsFromMemory", LoadIniSettingsFromMemory },
         { "SaveIniSettingsToDisk", SaveIniSettingsToDisk },
         { "SaveIniSettingsToMemory", SaveIniSettingsToMemory },
+        { "UpdatePlatformWindows", UpdatePlatformWindows },
+        { "RenderPlatformWindowsDefault", RenderPlatformWindowsDefault },
         { "GetKeyIndex", GetKeyIndex },
         { NULL, NULL },
     };
