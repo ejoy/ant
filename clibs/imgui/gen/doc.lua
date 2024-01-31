@@ -113,6 +113,18 @@ special_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
 end
 
+special_arg["ImGuiContext*"] = function()
+    --NOTICE: Ignore ImGuiContext for now.
+end
+
+special_ret["ImGuiContext*"] = function()
+    --NOTICE: Ignore ImGuiContext for now.
+end
+
+special_arg["ImFontAtlas*"] = function()
+    --NOTICE: Ignore ImFontAtlas for now.
+end
+
 special_arg["unsigned int*"] = function (type_meta, status)
     assert(type_meta.default_value == nil)
     writeln("---@param %s integer[]", safe_name(type_meta.name))

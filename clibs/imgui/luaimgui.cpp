@@ -74,22 +74,6 @@ read_field_int(lua_State *L, const char * field, int v, int tidx = INDEX_ARGS) {
 	return v;
 }
 
-static int
-read_field_checkint(lua_State *L, const char * field, int tidx = INDEX_ARGS) {
-	int v;
-	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
-		if (!lua_isinteger(L, -1)) {
-			luaL_error(L, "Not an integer");
-		}
-		v = (int)lua_tointeger(L, -1);
-	} else {
-		v = 0;
-		luaL_error(L, "no int %s", field);
-	}
-	lua_pop(L, 1);
-	return v;
-}
-
 static const char *
 read_field_string(lua_State *L, const char * field, const char *v, int tidx = INDEX_ARGS) {
 	if (lua_getfield(L, tidx, field) == LUA_TSTRING) {
@@ -425,96 +409,6 @@ wInputTextMultiline(lua_State *L) {
 }
 
 static int
-lCreateContext(lua_State* L) {
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.IniFilename = NULL;
-	io.UserData = L;
-	io.ConfigViewportsNoTaskBarIcon = true;
-	ImGuiStyle& style = ImGui::GetStyle();
-	style.WindowRounding = 0.0f;
-	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-	return 0;
-}
-
-static int
-lDestroyContext(lua_State *L) {
-	ImGui::DestroyContext();
-	return 0;
-}
-
-static int
-lInitPlatform(lua_State* L) {
-	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-	void* window = lua_touserdata(L, 1);
-	platformInit(window);
-	return 0;
-}
-
-static int
-lInitRender(lua_State* L) {
-	RendererInitArgs initargs;
-	initargs.fontProg = read_field_checkint(L, "fontProg", 1);
-	initargs.imageProg = read_field_checkint(L, "imageProg", 1);
-	initargs.fontUniform = read_field_checkint(L, "fontUniform", 1);
-	initargs.imageUniform = read_field_checkint(L, "imageUniform", 1);
-	
-	if (lua_getfield(L, 1, "viewIdPool") == LUA_TTABLE) {
-		lua_Integer n = luaL_len(L, -1);
-		initargs.viewIdPool.reserve((size_t)n);
-		for (lua_Integer i = 1; i <= n; ++i) {
-			if (LUA_TNUMBER == lua_geti(L, -1, i)) {
-				initargs.viewIdPool.push_back((int)luaL_checkinteger(L, -1));
-			}
-			lua_pop(L, 1);
-		}
-	}
-	else {
-		luaL_error(L, "no table viewIdPool");
-	}
-	lua_pop(L, 1);
-
-	if (!ImGui_ImplBgfx_Init(initargs)) {
-		return luaL_error(L, "Create renderer failed");
-	}
-	return 0;
-}
-
-static int
-lDestroyPlatform(lua_State* L) {
-	platformShutdown();
-	return 0;
-}
-
-static int
-lDestroyRenderer(lua_State* L) {
-	ImGui_ImplBgfx_Shutdown();
-	return 0;
-}
-
-static int
-lNewFrame(lua_State* L) {
-	platformNewFrame();
-	ImGui::NewFrame();
-	return 0;
-}
-
-static int
-lEndFrame(lua_State* L){
-	ImGui::EndFrame();
-	return 0;
-}
-
-static int
-lRender(lua_State* L) {
-	ImGui::Render();
-	ImGui_ImplBgfx_RenderDrawData(ImGui::GetMainViewport());
-	ImGui::UpdatePlatformWindows();
-	ImGui::RenderPlatformWindowsDefault();
-	return 0;
-}
-
-static int
 ioAddMouseButtonEvent(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
 	int button = (int)luaL_checkinteger(L, 1);
@@ -607,60 +501,13 @@ ioGetter(lua_State* L) {
 	return 1;
 }
 
-#if BX_PLATFORM_WINDOWS
-#define bx_malloc_size _msize
-#elif BX_PLATFORM_LINUX || BX_PLATFORM_ANDROID
-#include <malloc.h>
-#define bx_malloc_size malloc_usable_size
-#elif BX_PLATFORM_OSX
-#include <malloc/malloc.h>
-#define bx_malloc_size malloc_size
-#elif BX_PLATFORM_IOS
-#include <malloc/malloc.h>
-#define bx_malloc_size malloc_size
-#else
-#    error "Unknown PLATFORM!"
-#endif
-
-int64_t allocator_memory = 0;
-
-static void* ImGuiAlloc(size_t sz, void* /*user_data*/) {
-	void* ptr = malloc(sz);
-	if (ptr) {
-		allocator_memory += bx_malloc_size(ptr);
-	}
-	return ptr;
-}
-
-static void ImGuiFree(void* ptr, void* /*user_data*/) {
-	if (ptr) {
-		allocator_memory -= bx_malloc_size(ptr);
-	}
-	free(ptr);
-}
-
-static int util_memory(lua_State* L) {
-	lua_pushinteger(L, allocator_memory);
-	return 1;
-}
-
 extern "C"
 int luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
-	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	imgui_lua::init(L, 0);
 
 	luaL_Reg l[] = {
-		{ "CreateContext", lCreateContext },
-		{ "DestroyContext", lDestroyContext },
-		{ "InitPlatform", lInitPlatform },
-		{ "InitRender", lInitRender },
-		{ "DestroyPlatform", lDestroyPlatform },
-		{ "DestroyRenderer", lDestroyRenderer },
-		{ "NewFrame", lNewFrame },
-		{ "EndFrame", lEndFrame },
-		{ "Render", lRender },
 		{ "GetMainViewport", lGetMainViewport },
 		{ "InitFont", lInitFont },
 		{ "InputText", wInputText },
@@ -669,13 +516,6 @@ int luaopen_imgui(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L, l, 0);
-
-	luaL_Reg util[] = {
-		{ "memory", util_memory },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, util);
-	lua_setfield(L, -2, "util");
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },

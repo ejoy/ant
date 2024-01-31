@@ -11,6 +11,7 @@ end
 
 local write_arg = {}
 local write_arg_ret = {}
+local write_ret = {}
 
 write_arg["const char*"] = function(type_meta, status)
     local size_meta = status.args[status.i + 1]
@@ -109,6 +110,19 @@ end
 
 write_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
+end
+
+write_arg["ImGuiContext*"] = function()
+    --NOTICE: Ignore ImGuiContext for now.
+end
+
+write_ret["ImGuiContext*"] = function()
+    --NOTICE: Ignore ImGuiContext for now.
+    return 0
+end
+
+write_arg["ImFontAtlas*"] = function()
+    --NOTICE: Ignore ImFontAtlas for now.
 end
 
 write_arg["float"] = function(type_meta, status)
@@ -258,8 +272,6 @@ for n = 1, 4 do
 end
 write_arg["float*"] = write_arg["float[1]"]
 write_arg_ret["float*"] = write_arg_ret["float[1]"]
-
-local write_ret = {}
 
 write_ret["bool"] = function()
     writeln "    lua_pushboolean(L, _retval);"

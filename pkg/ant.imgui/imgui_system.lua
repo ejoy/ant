@@ -2,6 +2,7 @@ local ecs = ...
 
 local platform = require "bee.platform"
 local ImGui = import_package "ant.imgui"
+local ImGuiBackend = require "imgui.backend"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
 local inputmgr = import_package "ant.inputmgr"
@@ -13,6 +14,7 @@ local m = ecs.system 'imgui_system'
 
 function m:init_system()
 	ImGui.CreateContext()
+	ImGuiBackend.Init()
 	local ConfigFlags = {
 		"NavEnableKeyboard",
 		"DockingEnable",
@@ -23,13 +25,13 @@ function m:init_system()
 		ConfigFlags[#ConfigFlags+1] = "DpiEnableScaleFonts"
 	end
 	ImGui.io.ConfigFlags = ImGui.ConfigFlags(ConfigFlags)
-	ImGui.InitPlatform(rhwi.native_window())
+	ImGuiBackend.PlatformInit(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
 	local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
 	assetmgr.material_mark(imgui_font.fx.prog)
 	assetmgr.material_mark(imgui_image.fx.prog)
-	ImGui.InitRender {
+	ImGuiBackend.RenderInit {
 		fontProg = PM.program_get(imgui_font.fx.prog),
 		imageProg = PM.program_get(imgui_image.fx.prog),
 		fontUniform = imgui_font.fx.uniforms.s_tex.handle,
@@ -56,8 +58,8 @@ function m:init_world()
 end
 
 function m:exit()
-	ImGui.DestroyRenderer()
-	ImGui.DestroyPlatform()
+	ImGuiBackend.RenderDestroy()
+	ImGuiBackend.PlatformDestroy()
 	ImGui.DestroyContext()
 end
 
@@ -69,9 +71,13 @@ function m:start_frame()
 		last_cursor = cursor
 		window.set_cursor(cursor)
 	end
+	ImGuiBackend.PlatformNewFrame()
 	ImGui.NewFrame()
 end
 
 function m:end_frame()
 	ImGui.Render()
+	ImGuiBackend.RenderDrawData()
+	ImGui.UpdatePlatformWindows()
+	ImGui.RenderPlatformWindowsDefault()
 end
