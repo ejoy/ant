@@ -25,6 +25,7 @@ const char* format(lua_State* L, int idx);
 
 void        create_table(lua_State* L, std::span<TableInteger> l);
 void        set_table(lua_State* L, std::span<TableAny> l);
+void        flags_gen(lua_State* L, const char* name);
 void        init(lua_State* L);
 
 }

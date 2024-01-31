@@ -58,6 +58,30 @@ void set_table(lua_State* L, std::span<TableAny> l) {
     }
 }
 
+static int make_flags(lua_State* L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int i, t;
+	lua_Integer r = 0;
+	for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
+		if (t != LUA_TSTRING)
+			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
+		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
+			lua_geti(L, 1, i);
+			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
+		}
+		lua_Integer v = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		r |= v;
+	}
+	lua_pushinteger(L, r);
+	return 1;
+}
+
+void flags_gen(lua_State* L, const char* name) {
+	lua_pushstring(L, name);
+	lua_pushcclosure(L, make_flags, 2);
+}
+
 void init(lua_State* L) {
     luaopen_string(L);
     lua_getfield(L, -1, "format");

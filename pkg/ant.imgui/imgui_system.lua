@@ -22,7 +22,7 @@ function m:init_system()
 	if platform.os == "windows" then
 		ConfigFlags[#ConfigFlags+1] = "DpiEnableScaleFonts"
 	end
-	ImGui.io.ConfigFlags = ImGui.Flags.Config(ConfigFlags)
+	ImGui.io.ConfigFlags = ImGui.ConfigFlags(ConfigFlags)
 	ImGui.InitPlatform(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"

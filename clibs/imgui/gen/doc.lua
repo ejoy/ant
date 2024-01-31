@@ -269,10 +269,37 @@ local function write_enum(realname, elements, new_enums)
     end
 end
 
+local function write_flags(realname, elements)
+    local name = string.format("ImGui.%s", realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$")
+    writeln("---@class %s", name)
+    writeln ""
+    writeln("---@alias _%s_Name", realname)
+    for _, element in ipairs(elements) do
+        if not element.is_internal and not element.conditionals then
+            if element.comments and element.comments.attached then
+                writeln("---| %q # %s", element.name:sub(#realname+2), element.comments.attached:match "^//(.*)$")
+            else
+                writeln("---| %q", element.name:sub(#realname+2))
+            end
+        end
+    end
+    writeln ""
+    writeln("---@param flags _%s_Name[]", realname)
+    writeln("---@return %s", name)
+    writeln("function %s(flags) end", name)
+    lua_type[realname] = name
+    default_type[realname] = function (value)
+        local v = math.tointeger(value)
+        for _, element in ipairs(elements) do
+            if element.value == v then
+                return string.format("%s { %q }", name, element.name:sub(#realname+2))
+            end
+        end
+    end
+end
+
 local function write_flags_and_enums()
     local new_enums = {}
-    writeln("ImGui.Flags = {}")
-    writeln ""
     for _, enums in ipairs(meta.enums) do
         if not util.conditionals(enums) then
             goto continue
@@ -293,32 +320,7 @@ local function write_flags_and_enums()
             end
         end
         if enums.is_flags_enum then
-            local name = realname:match "^ImGui(%a+)Flags$" or realname:match "^Im(%a+)Flags$"
-            writeln("---@class %s", realname)
-            writeln ""
-            writeln("---@alias _%s_Name", realname)
-            for _, element in ipairs(enums.elements) do
-                if not element.is_internal and not element.conditionals then
-                    if element.comments and element.comments.attached then
-                        writeln("---| %q # %s", element.name:sub(#realname+2), element.comments.attached:match "^//(.*)$")
-                    else
-                        writeln("---| %q", element.name:sub(#realname+2))
-                    end
-                end
-            end
-            writeln ""
-            writeln("---@param flags _%s_Name[]", realname)
-            writeln("---@return %s", realname)
-            writeln("function ImGui.Flags.%s(flags) end", name)
-            lua_type[realname] = realname
-            default_type[realname] = function (value)
-                local v = math.tointeger(value)
-                for _, element in ipairs(enums.elements) do
-                    if element.value == v then
-                        return string.format("ImGui.Flags.%s { %q }", name, element.name:sub(#realname+2))
-                    end
-                end
-            end
+            write_flags(realname, enums.elements)
         else
             write_enum(realname, enums.elements, new_enums)
         end

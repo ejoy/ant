@@ -59,7 +59,7 @@ function m.show()
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
+    if ImGui.Begin("MainView", nil, ImGui.WindowFlags {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -69,7 +69,7 @@ function m.show()
         "NoNavFocus",
         "NoBackground",
     }) then
-        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.Flags.DockNode {
+        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.DockNodeFlags {
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })

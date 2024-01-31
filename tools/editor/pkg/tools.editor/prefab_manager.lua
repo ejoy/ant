@@ -454,7 +454,7 @@ function m:choose_prefab()
     if not ImGui.IsPopupOpen(title) then
         ImGui.OpenPopup(title)
     end
-    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
     if change then
         if gd.is_opening then
 
@@ -498,7 +498,7 @@ function m:choose_prefab()
         end
         ImGui.Separator()
         for _, prefab in ipairs(prefab_list) do
-            if ImGui.SelectableEx(prefab, false, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.SelectableEx(prefab, false, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                 if gd.is_opening then
                     self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
                 else

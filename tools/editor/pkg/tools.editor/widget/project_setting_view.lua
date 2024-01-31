@@ -13,9 +13,9 @@ local function read_file(p)
     return f:read "a"
 end
 
-local default_tr_flags = ImGui.Flags.TreeNode{}
-local default_win_flags= ImGui.Flags.Window{}
-local default_tab_flags= ImGui.Flags.TabBar{"Reorderable", "AutoSelectNewTabs"}
+local default_tr_flags = ImGui.TreeNodeFlags {}
+local default_win_flags= ImGui.WindowFlags {}
+local default_tab_flags= ImGui.TabBarFlags {"Reorderable", "AutoSelectNewTabs"}
 
 local TreeNodeEx    = ImGui.TreeNodeEx
 local TreePop       = ImGui.TreePop
@@ -107,9 +107,9 @@ local function setting_ui(sc)
 
     if TreeNodeEx("Graphic", default_tr_flags) then
         --Render
-        if TreeNodeEx("Render", ImGui.Flags.TreeNode{}) then
+        if TreeNodeEx("Render", ImGui.TreeNodeFlags {}) then
             local r = graphic.render
-            if TreeNodeEx("Clear State", ImGui.Flags.TreeNode{}) then
+            if TreeNodeEx("Clear State", ImGui.TreeNodeFlags {}) then
 
                 local rs = {}
                 local rbgcolor = toRGBColor(r.clear_color)

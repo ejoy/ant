@@ -127,7 +127,7 @@ local function rename_file(file)
         ImGui.OpenPopup("Rename file")
     end
 
-    local change = ImGui.BeginPopupModal("Rename file", nil, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change = ImGui.BeginPopupModal("Rename file", nil, ImGui.WindowFlags {"AlwaysAutoResize"})
     if change then
         ImGui.Text("new name :")
         ImGui.SameLine()
@@ -280,13 +280,13 @@ function m.show()
     local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
             local dir_name = tostring(v[1]:filename())
-            local base_flags = ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and ImGui.Flags.TreeNode{"Selected"} or 0)
+            local base_flags = ImGui.TreeNodeFlags { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and ImGui.TreeNodeFlags {"Selected"} or 0)
             local skip = false
             local fonticon = (not v.parent) and (faicons.ICON_FA_FILE_ZIPPER .. " ") or ""
             if (#v[2].dirs == 0) then
-                ImGui.TreeNodeEx(fonticon .. dir_name, base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+                ImGui.TreeNodeEx(fonticon .. dir_name, base_flags | ImGui.TreeNodeFlags { "Leaf", "NoTreePushOnOpen" })
             else
-                local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and ImGui.Flags.TreeNode {"DefaultOpen"} or 0)
+                local adjust_flags = base_flags | (string.find(selected_folder[1]:string(), "/" .. dir_name) and ImGui.TreeNodeFlags {"DefaultOpen"} or 0)
                 if ImGui.TreeNodeEx(fonticon .. dir_name, adjust_flags) then
                     if ImGui.IsItemClicked() then
                         selected_folder = v
@@ -306,7 +306,7 @@ function m.show()
         return
     end
     
-    if ImGui.Begin("ResourceBrowser", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+    if ImGui.Begin("ResourceBrowser", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
         ImGui.PushStyleVarImVec2(ImGui.StyleVar.ItemSpacing, 0, 6)
         local relativePath
         if selected_folder[1]._value then
@@ -342,7 +342,7 @@ function m.show()
         ImGui.Separator()
         local filter_focus1 = false
         local filter_focuse2 = false
-        if ImGui.BeginTable("InspectorTable", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+        if ImGui.BeginTable("InspectorTable", 3, ImGui.TableFlags {'Resizable', 'ScrollY'}) then
             ImGui.TableNextColumn()
             local child_width, child_height = ImGui.GetContentRegionAvail()
             ImGui.BeginChild("##ResourceBrowserDir", child_width, child_height)
@@ -410,7 +410,7 @@ function m.show()
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
                     pre_init_item_height()
-                    if ImGui.SelectableEx(tostring(path[1]:filename()), selected_file == path[1], ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.SelectableEx(tostring(path[1]:filename()), selected_file == path[1], ImGui.SelectableFlags {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left) then
@@ -426,7 +426,7 @@ function m.show()
                 for _, path in pairs(folder.files) do
                     pre_selectable(icons:get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
-                    if ImGui.SelectableEx(tostring(path:filename()), selected_file == path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                    if ImGui.SelectableEx(tostring(path:filename()), selected_file == path, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left) then

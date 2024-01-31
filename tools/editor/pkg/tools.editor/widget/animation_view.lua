@@ -337,7 +337,7 @@ local function show_current_event()
         ImGui.Text("SoundEvent : " .. current_event.sound_event)
         ImGui.Separator();
         for _, se in ipairs(sound_event_name_list) do
-            if ImGui.SelectableEx(se, current_event.sound_event == se, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.SelectableEx(se, current_event.sound_event == se, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                 current_event.sound_event = se
                 if (ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left)) then
                     fmod.play(sound_event_list[se])
@@ -612,7 +612,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Animation", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+    if ImGui.Begin("Animation", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
         if (not current_anim or not anim_eid) and not edit_timeline then
             goto continue
         end
@@ -656,7 +656,7 @@ function m.show()
                 anim_path_ui.text = ''
                 ImGui.OpenPopup(title)
             end
-            local change = ImGui.BeginPopupModal(title, nil, ImGui.Flags.Window{"AlwaysAutoResize"})
+            local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags {"AlwaysAutoResize"})
             if change then
                 ImGui.Text("Anim Name:")
                 ImGui.SameLine()
@@ -807,12 +807,12 @@ function m.show()
             on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
         end
         ImGui.Separator()
-        if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
+        if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.TableFlags {'Resizable', 'ScrollY'}) then
             if not edit_timeline then
-                ImGui.TableSetupColumnEx("Bones", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
+                ImGui.TableSetupColumnEx("Bones", ImGui.TableColumnFlags {'WidthStretch'}, 1.0)
             end
-            ImGui.TableSetupColumnEx("Event", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
-            ImGui.TableSetupColumnEx("Event(Detail)", ImGui.Flags.TableColumn {'WidthStretch'}, 2.0)
+            ImGui.TableSetupColumnEx("Event", ImGui.TableColumnFlags {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumnEx("Event(Detail)", ImGui.TableColumnFlags {'WidthStretch'}, 2.0)
             ImGui.TableHeadersRow()
             local child_width, child_height
             if not edit_timeline then

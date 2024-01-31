@@ -325,7 +325,7 @@ local function write_enum(realname, elements, new_enums)
             ::continue::
         end
     end
-    local name = realname:match "^ImGui(%a+)$"
+    local name = realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
     writeln("static util::TableInteger %s[] = {", name)
     for _, line in ipairs(lines) do
         local enum_type, enum_name = line[1], line[2]
@@ -357,6 +357,7 @@ local function write_flags_and_enums()
             assert(false)
         end
         if enum_meta.is_flags_enum then
+            flags[#flags+1] = write_enum(realname, enum_meta.elements)
         else
             enums[#enums+1] = write_enum(realname, enum_meta.elements, new_enums)
         end
@@ -457,10 +458,26 @@ writeln "        { NULL, NULL },"
 writeln "    };"
 writeln "    luaL_setfuncs(L, funcs, 0);"
 writeln ""
-writeln "    #define GEN_ENUM(name) { #name, +[](lua_State* L){ util::create_table(L, name); } }"
+writeln "    #define GEN_FLAGS(name) { #name, +[](lua_State* L){ \\"
+writeln "         util::create_table(L, name); \\"
+writeln "         util::flags_gen(L, #name); \\"
+writeln "    }}"
+writeln ""
+writeln "    static util::TableAny flags[] = {"
+for _, name in ipairs(flags) do
+    writeln("        GEN_FLAGS(%s),", name)
+end
+writeln "    };"
+writeln "    #undef GEN_FLAGS"
+writeln "    util::set_table(L, flags);"
+writeln ""
+writeln "    #define GEN_ENUM(name) { #name, +[](lua_State* L){ \\"
+writeln "         util::create_table(L, name); \\"
+writeln "    }}"
+writeln ""
 writeln "    static util::TableAny enums[] = {"
-for _, enum in ipairs(enums) do
-    writeln("        GEN_ENUM(%s),", enum)
+for _, name in ipairs(enums) do
+    writeln("        GEN_ENUM(%s),", name)
 end
 writeln "    };"
 writeln "    #undef GEN_ENUM"

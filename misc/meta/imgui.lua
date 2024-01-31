@@ -6,13 +6,11 @@
 
 local ImGui = {}
 
-ImGui.Flags = {}
-
 --
 -- Flags for ImGui::Begin()
 -- (Those are per-window flags. There are shared flags in ImGuiIO: io.ConfigWindowsResizeFromEdges and io.ConfigWindowsMoveFromTitleBarOnly)
 --
----@class ImGuiWindowFlags
+---@class ImGui.WindowFlags
 
 ---@alias _ImGuiWindowFlags_Name
 ---| "None"
@@ -41,8 +39,8 @@ ImGui.Flags = {}
 ---| "NoInputs"
 
 ---@param flags _ImGuiWindowFlags_Name[]
----@return ImGuiWindowFlags
-function ImGui.Flags.Window(flags) end
+---@return ImGui.WindowFlags
+function ImGui.WindowFlags(flags) end
 
 --
 -- Flags for ImGui::BeginChild()
@@ -55,7 +53,7 @@ function ImGui.Flags.Window(flags) end
 --   - You may also use ImGuiChildFlags_AlwaysAutoResize to force an update even when child window is not in view.
 --     HOWEVER PLEASE UNDERSTAND THAT DOING SO WILL PREVENT BeginChild() FROM EVER RETURNING FALSE, disabling benefits of coarse clipping.
 --
----@class ImGuiChildFlags
+---@class ImGui.ChildFlags
 
 ---@alias _ImGuiChildFlags_Name
 ---| "None"
@@ -69,14 +67,14 @@ function ImGui.Flags.Window(flags) end
 ---| "FrameStyle" #  Style the child window like a framed item: use FrameBg, FrameRounding, FrameBorderSize, FramePadding instead of ChildBg, ChildRounding, ChildBorderSize, WindowPadding.
 
 ---@param flags _ImGuiChildFlags_Name[]
----@return ImGuiChildFlags
-function ImGui.Flags.Child(flags) end
+---@return ImGui.ChildFlags
+function ImGui.ChildFlags(flags) end
 
 --
 -- Flags for ImGui::InputText()
 -- (Those are per-item flags. There are shared flags in ImGuiIO: io.ConfigInputTextCursorBlink and io.ConfigInputTextEnterKeepActive)
 --
----@class ImGuiInputTextFlags
+---@class ImGui.InputTextFlags
 
 ---@alias _ImGuiInputTextFlags_Name
 ---| "None"
@@ -103,13 +101,13 @@ function ImGui.Flags.Child(flags) end
 ---| "EscapeClearsAll" #  Escape key clears content if not empty, and deactivate otherwise (contrast to default behavior of Escape to revert)
 
 ---@param flags _ImGuiInputTextFlags_Name[]
----@return ImGuiInputTextFlags
-function ImGui.Flags.InputText(flags) end
+---@return ImGui.InputTextFlags
+function ImGui.InputTextFlags(flags) end
 
 --
 -- Flags for ImGui::TreeNodeEx(), ImGui::CollapsingHeader*()
 --
----@class ImGuiTreeNodeFlags
+---@class ImGui.TreeNodeFlags
 
 ---@alias _ImGuiTreeNodeFlags_Name
 ---| "None"
@@ -131,8 +129,8 @@ function ImGui.Flags.InputText(flags) end
 ---| "CollapsingHeader"
 
 ---@param flags _ImGuiTreeNodeFlags_Name[]
----@return ImGuiTreeNodeFlags
-function ImGui.Flags.TreeNode(flags) end
+---@return ImGui.TreeNodeFlags
+function ImGui.TreeNodeFlags(flags) end
 
 --
 -- Flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
@@ -144,7 +142,7 @@ function ImGui.Flags.TreeNode(flags) end
 --   and want to use another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag explicitly.
 -- - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
 --
----@class ImGuiPopupFlags
+---@class ImGui.PopupFlags
 
 ---@alias _ImGuiPopupFlags_Name
 ---| "None"
@@ -158,13 +156,13 @@ function ImGui.Flags.TreeNode(flags) end
 ---| "AnyPopup"
 
 ---@param flags _ImGuiPopupFlags_Name[]
----@return ImGuiPopupFlags
-function ImGui.Flags.Popup(flags) end
+---@return ImGui.PopupFlags
+function ImGui.PopupFlags(flags) end
 
 --
 -- Flags for ImGui::Selectable()
 --
----@class ImGuiSelectableFlags
+---@class ImGui.SelectableFlags
 
 ---@alias _ImGuiSelectableFlags_Name
 ---| "None"
@@ -175,13 +173,13 @@ function ImGui.Flags.Popup(flags) end
 ---| "AllowOverlap" #  (WIP) Hit testing to allow subsequent widgets to overlap this one
 
 ---@param flags _ImGuiSelectableFlags_Name[]
----@return ImGuiSelectableFlags
-function ImGui.Flags.Selectable(flags) end
+---@return ImGui.SelectableFlags
+function ImGui.SelectableFlags(flags) end
 
 --
 -- Flags for ImGui::BeginCombo()
 --
----@class ImGuiComboFlags
+---@class ImGui.ComboFlags
 
 ---@alias _ImGuiComboFlags_Name
 ---| "None"
@@ -195,13 +193,13 @@ function ImGui.Flags.Selectable(flags) end
 ---| "WidthFitPreview" #  Width dynamically calculated from preview contents
 
 ---@param flags _ImGuiComboFlags_Name[]
----@return ImGuiComboFlags
-function ImGui.Flags.Combo(flags) end
+---@return ImGui.ComboFlags
+function ImGui.ComboFlags(flags) end
 
 --
 -- Flags for ImGui::BeginTabBar()
 --
----@class ImGuiTabBarFlags
+---@class ImGui.TabBarFlags
 
 ---@alias _ImGuiTabBarFlags_Name
 ---| "None"
@@ -215,13 +213,13 @@ function ImGui.Flags.Combo(flags) end
 ---| "FittingPolicyScroll" #  Add scroll buttons when tabs don't fit
 
 ---@param flags _ImGuiTabBarFlags_Name[]
----@return ImGuiTabBarFlags
-function ImGui.Flags.TabBar(flags) end
+---@return ImGui.TabBarFlags
+function ImGui.TabBarFlags(flags) end
 
 --
 -- Flags for ImGui::BeginTabItem()
 --
----@class ImGuiTabItemFlags
+---@class ImGui.TabItemFlags
 
 ---@alias _ImGuiTabItemFlags_Name
 ---| "None"
@@ -236,13 +234,13 @@ function ImGui.Flags.TabBar(flags) end
 ---| "NoAssumedClosure" #  Tab is selected when trying to close + closure is not immediately assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
 
 ---@param flags _ImGuiTabItemFlags_Name[]
----@return ImGuiTabItemFlags
-function ImGui.Flags.TabItem(flags) end
+---@return ImGui.TabItemFlags
+function ImGui.TabItemFlags(flags) end
 
 --
 -- Flags for ImGui::IsWindowFocused()
 --
----@class ImGuiFocusedFlags
+---@class ImGui.FocusedFlags
 
 ---@alias _ImGuiFocusedFlags_Name
 ---| "None"
@@ -254,15 +252,15 @@ function ImGui.Flags.TabItem(flags) end
 ---| "RootAndChildWindows"
 
 ---@param flags _ImGuiFocusedFlags_Name[]
----@return ImGuiFocusedFlags
-function ImGui.Flags.Focused(flags) end
+---@return ImGui.FocusedFlags
+function ImGui.FocusedFlags(flags) end
 
 --
 -- Flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()
 -- Note: if you are trying to check whether your mouse should be dispatched to Dear ImGui or to your app, you should use 'io.WantCaptureMouse' instead! Please read the FAQ!
 -- Note: windows with the ImGuiWindowFlags_NoInputs flag are ignored by IsWindowHovered() calls.
 --
----@class ImGuiHoveredFlags
+---@class ImGui.HoveredFlags
 
 ---@alias _ImGuiHoveredFlags_Name
 ---| "None" #  Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
@@ -288,15 +286,15 @@ function ImGui.Flags.Focused(flags) end
 ---| "NoSharedDelay" #  IsItemHovered() only: Disable shared delay system where moving from one item to the next keeps the previous timer for a short time (standard for tooltips with long delays)
 
 ---@param flags _ImGuiHoveredFlags_Name[]
----@return ImGuiHoveredFlags
-function ImGui.Flags.Hovered(flags) end
+---@return ImGui.HoveredFlags
+function ImGui.HoveredFlags(flags) end
 
 --
 -- Flags for ImGui::DockSpace(), shared/inherited by child nodes.
 -- (Some flags can be applied to individual nodes directly)
 -- FIXME-DOCK: Also see ImGuiDockNodeFlagsPrivate_ which may involve using the WIP and internal DockBuilder api.
 --
----@class ImGuiDockNodeFlags
+---@class ImGui.DockNodeFlags
 
 ---@alias _ImGuiDockNodeFlags_Name
 ---| "None"
@@ -309,13 +307,13 @@ function ImGui.Flags.Hovered(flags) end
 ---| "NoUndocking" #        // Disable undocking this node.
 
 ---@param flags _ImGuiDockNodeFlags_Name[]
----@return ImGuiDockNodeFlags
-function ImGui.Flags.DockNode(flags) end
+---@return ImGui.DockNodeFlags
+function ImGui.DockNodeFlags(flags) end
 
 --
 -- Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
 --
----@class ImGuiDragDropFlags
+---@class ImGui.DragDropFlags
 
 ---@alias _ImGuiDragDropFlags_Name
 ---| "None"
@@ -331,8 +329,8 @@ function ImGui.Flags.DockNode(flags) end
 ---| "AcceptPeekOnly" #  For peeking ahead and inspecting the payload before delivery.
 
 ---@param flags _ImGuiDragDropFlags_Name[]
----@return ImGuiDragDropFlags
-function ImGui.Flags.DragDrop(flags) end
+---@return ImGui.DragDropFlags
+function ImGui.DragDropFlags(flags) end
 
 --
 -- A primary data type
@@ -533,7 +531,7 @@ function ImGui.Flags.DragDrop(flags) end
 --
 -- Configuration flags stored in io.ConfigFlags. Set by user/application.
 --
----@class ImGuiConfigFlags
+---@class ImGui.ConfigFlags
 
 ---@alias _ImGuiConfigFlags_Name
 ---| "None"
@@ -551,13 +549,13 @@ function ImGui.Flags.DragDrop(flags) end
 ---| "IsTouchScreen" #  Application is using a touch screen instead of a mouse.
 
 ---@param flags _ImGuiConfigFlags_Name[]
----@return ImGuiConfigFlags
-function ImGui.Flags.Config(flags) end
+---@return ImGui.ConfigFlags
+function ImGui.ConfigFlags(flags) end
 
 --
 -- Backend capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom backend.
 --
----@class ImGuiBackendFlags
+---@class ImGui.BackendFlags
 
 ---@alias _ImGuiBackendFlags_Name
 ---| "None"
@@ -570,8 +568,8 @@ function ImGui.Flags.Config(flags) end
 ---| "RendererHasViewports" #  Backend Renderer supports multiple viewports.
 
 ---@param flags _ImGuiBackendFlags_Name[]
----@return ImGuiBackendFlags
-function ImGui.Flags.Backend(flags) end
+---@return ImGui.BackendFlags
+function ImGui.BackendFlags(flags) end
 
 --
 -- Enumeration for PushStyleColor() / PopStyleColor()
@@ -677,7 +675,7 @@ function ImGui.Flags.Backend(flags) end
 --
 -- Flags for InvisibleButton() [extended in imgui_internal.h]
 --
----@class ImGuiButtonFlags
+---@class ImGui.ButtonFlags
 
 ---@alias _ImGuiButtonFlags_Name
 ---| "None"
@@ -686,13 +684,13 @@ function ImGui.Flags.Backend(flags) end
 ---| "MouseButtonMiddle" #  React on center mouse button
 
 ---@param flags _ImGuiButtonFlags_Name[]
----@return ImGuiButtonFlags
-function ImGui.Flags.Button(flags) end
+---@return ImGui.ButtonFlags
+function ImGui.ButtonFlags(flags) end
 
 --
 -- Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
 --
----@class ImGuiColorEditFlags
+---@class ImGui.ColorEditFlags
 
 ---@alias _ImGuiColorEditFlags_Name
 ---| "None"
@@ -721,15 +719,15 @@ function ImGui.Flags.Button(flags) end
 ---| "InputHSV" #  [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
 
 ---@param flags _ImGuiColorEditFlags_Name[]
----@return ImGuiColorEditFlags
-function ImGui.Flags.ColorEdit(flags) end
+---@return ImGui.ColorEditFlags
+function ImGui.ColorEditFlags(flags) end
 
 --
 -- Flags for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.
 -- We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
 -- (Those are per-item flags. There are shared flags in ImGuiIO: io.ConfigDragClickToInputText)
 --
----@class ImGuiSliderFlags
+---@class ImGui.SliderFlags
 
 ---@alias _ImGuiSliderFlags_Name
 ---| "None"
@@ -739,8 +737,8 @@ function ImGui.Flags.ColorEdit(flags) end
 ---| "NoInput" #  Disable CTRL+Click or Enter key allowing to input text directly into the widget
 
 ---@param flags _ImGuiSliderFlags_Name[]
----@return ImGuiSliderFlags
-function ImGui.Flags.Slider(flags) end
+---@return ImGui.SliderFlags
+function ImGui.SliderFlags(flags) end
 
 --
 -- Identify a mouse button.
@@ -817,7 +815,7 @@ function ImGui.Flags.Slider(flags) end
 --      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
 -- - Read on documentation at the top of imgui_tables.cpp for details.
 --
----@class ImGuiTableFlags
+---@class ImGui.TableFlags
 
 ---@alias _ImGuiTableFlags_Name
 ---| "None"
@@ -858,13 +856,13 @@ function ImGui.Flags.Slider(flags) end
 ---| "HighlightHoveredColumn" #  Highlight column headers when hovered (may evolve into a fuller highlight)
 
 ---@param flags _ImGuiTableFlags_Name[]
----@return ImGuiTableFlags
-function ImGui.Flags.Table(flags) end
+---@return ImGui.TableFlags
+function ImGui.TableFlags(flags) end
 
 --
 -- Flags for ImGui::TableSetupColumn()
 --
----@class ImGuiTableColumnFlags
+---@class ImGui.TableColumnFlags
 
 ---@alias _ImGuiTableColumnFlags_Name
 ---| "None"
@@ -893,21 +891,21 @@ function ImGui.Flags.Table(flags) end
 ---| "IsHovered" #  Status: is hovered by mouse
 
 ---@param flags _ImGuiTableColumnFlags_Name[]
----@return ImGuiTableColumnFlags
-function ImGui.Flags.TableColumn(flags) end
+---@return ImGui.TableColumnFlags
+function ImGui.TableColumnFlags(flags) end
 
 --
 -- Flags for ImGui::TableNextRow()
 --
----@class ImGuiTableRowFlags
+---@class ImGui.TableRowFlags
 
 ---@alias _ImGuiTableRowFlags_Name
 ---| "None"
 ---| "Headers" #  Identify header row (set default background color + width of its contents accounted differently for auto column width)
 
 ---@param flags _ImGuiTableRowFlags_Name[]
----@return ImGuiTableRowFlags
-function ImGui.Flags.TableRow(flags) end
+---@return ImGui.TableRowFlags
+function ImGui.TableRowFlags(flags) end
 
 --
 -- Enum for ImGui::TableSetBgColor()
@@ -930,7 +928,7 @@ function ImGui.Flags.TableRow(flags) end
 -- Flags for ImDrawList functions
 -- (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
 --
----@class ImDrawFlags
+---@class ImGui.DrawFlags
 
 ---@alias _ImDrawFlags_Name
 ---| "None"
@@ -947,14 +945,14 @@ function ImGui.Flags.TableRow(flags) end
 ---| "RoundCornersAll"
 
 ---@param flags _ImDrawFlags_Name[]
----@return ImDrawFlags
-function ImGui.Flags.Draw(flags) end
+---@return ImGui.DrawFlags
+function ImGui.DrawFlags(flags) end
 
 --
 -- Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
 -- It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
 --
----@class ImDrawListFlags
+---@class ImGui.DrawListFlags
 
 ---@alias _ImDrawListFlags_Name
 ---| "None"
@@ -964,13 +962,13 @@ function ImGui.Flags.Draw(flags) end
 ---| "AllowVtxOffset" #  Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 
 ---@param flags _ImDrawListFlags_Name[]
----@return ImDrawListFlags
-function ImGui.Flags.DrawList(flags) end
+---@return ImGui.DrawListFlags
+function ImGui.DrawListFlags(flags) end
 
 --
 -- Flags for ImFontAtlas build
 --
----@class ImFontAtlasFlags
+---@class ImGui.FontAtlasFlags
 
 ---@alias _ImFontAtlasFlags_Name
 ---| "None"
@@ -979,13 +977,13 @@ function ImGui.Flags.DrawList(flags) end
 ---| "NoBakedLines" #  Don't build thick line textures into the atlas (save a little texture memory, allow support for point/nearest filtering). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
 
 ---@param flags _ImFontAtlasFlags_Name[]
----@return ImFontAtlasFlags
-function ImGui.Flags.FontAtlas(flags) end
+---@return ImGui.FontAtlasFlags
+function ImGui.FontAtlasFlags(flags) end
 
 --
 -- Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
 --
----@class ImGuiViewportFlags
+---@class ImGui.ViewportFlags
 
 ---@alias _ImGuiViewportFlags_Name
 ---| "None"
@@ -1005,8 +1003,8 @@ function ImGui.Flags.FontAtlas(flags) end
 ---| "IsFocused" #  Platform Window: Window is focused (last call to Platform_GetWindowFocus() returned true)
 
 ---@param flags _ImGuiViewportFlags_Name[]
----@return ImGuiViewportFlags
-function ImGui.Flags.Viewport(flags) end
+---@return ImGui.ViewportFlags
+function ImGui.ViewportFlags(flags) end
 
 ---@alias ImGui.Mod
 ---| `ImGui.Mod.None`
@@ -1035,7 +1033,7 @@ function ImGui.Flags.Viewport(flags) end
 --
 ---@param name string
 ---@param p_open true | nil
----@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 ---@return boolean p_open
 function ImGui.Begin(name, p_open, flags) end
@@ -1065,16 +1063,16 @@ function ImGui.End() end
 ---@param str_id string
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
----@param child_flags? ImGuiChildFlags | `ImGui.Flags.Child { "None" }`
----@param window_flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param child_flags? ImGui.ChildFlags | `ImGui.ChildFlags { "None" }`
+---@param window_flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 function ImGui.BeginChild(str_id, size_x, size_y, child_flags, window_flags) end
 
 ---@param id integer
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
----@param child_flags? ImGuiChildFlags | `ImGui.Flags.Child { "None" }`
----@param window_flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param child_flags? ImGui.ChildFlags | `ImGui.ChildFlags { "None" }`
+---@param window_flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 function ImGui.BeginChildID(id, size_x, size_y, child_flags, window_flags) end
 
@@ -1093,14 +1091,14 @@ function ImGui.IsWindowCollapsed() end
 --
 -- is current window focused? or its root/child, depending on flags. see flags for options.
 --
----@param flags? ImGuiFocusedFlags | `ImGui.Flags.Focused { "None" }`
+---@param flags? ImGui.FocusedFlags | `ImGui.FocusedFlags { "None" }`
 ---@return boolean
 function ImGui.IsWindowFocused(flags) end
 
 --
 -- is current window hovered and hoverable (e.g. not blocked by a popup/modal)? See ImGuiHoveredFlags_ for options. IMPORTANT: If you are trying to check whether your mouse should be dispatched to Dear ImGui or to your underlying app, you should not use this function! Use the 'io.WantCaptureMouse' boolean for that! Refer to FAQ entry "How can I tell whether to dispatch mouse/keyboard to Dear ImGui or my application?" for details.
 --
----@param flags? ImGuiHoveredFlags | `ImGui.Flags.Hovered { "None" }`
+---@param flags? ImGui.HoveredFlags | `ImGui.HoveredFlags { "None" }`
 ---@return boolean
 function ImGui.IsWindowHovered(flags) end
 
@@ -1830,7 +1828,7 @@ function ImGui.SmallButton(label) end
 ---@param str_id string
 ---@param size_x number
 ---@param size_y number
----@param flags? ImGuiButtonFlags | `ImGui.Flags.Button { "None" }`
+---@param flags? ImGui.ButtonFlags | `ImGui.ButtonFlags { "None" }`
 ---@return boolean
 function ImGui.InvisibleButton(str_id, size_x, size_y, flags) end
 
@@ -1954,7 +1952,7 @@ function ImGui.ImageButtonEx(str_id, user_texture_id, image_size_x, image_size_y
 --
 ---@param label string
 ---@param preview_value string
----@param flags? ImGuiComboFlags | `ImGui.Flags.Combo { "None" }`
+---@param flags? ImGui.ComboFlags | `ImGui.ComboFlags { "None" }`
 ---@return boolean
 function ImGui.BeginCombo(label, preview_value, flags) end
 
@@ -2013,7 +2011,7 @@ function ImGui.DragFloat(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloatEx(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2031,7 +2029,7 @@ function ImGui.DragFloat2(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloat2Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2049,7 +2047,7 @@ function ImGui.DragFloat3(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloat3Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2067,7 +2065,7 @@ function ImGui.DragFloat4(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloat4Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2088,7 +2086,7 @@ function ImGui.DragFloatRange2(label, v_current_min, v_current_max) end
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
 ---@param format_max? string
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloatRange2Ex(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags) end
 
@@ -2109,7 +2107,7 @@ function ImGui.DragInt(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragIntEx(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2127,7 +2125,7 @@ function ImGui.DragInt2(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragInt2Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2145,7 +2143,7 @@ function ImGui.DragInt3(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragInt3Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2163,7 +2161,7 @@ function ImGui.DragInt4(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragInt4Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2184,7 +2182,7 @@ function ImGui.DragIntRange2(label, v_current_min, v_current_max) end
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
 ---@param format_max? string
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragIntRange2Ex(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags) end
 
@@ -2214,7 +2212,7 @@ function ImGui.SliderFloat(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloatEx(label, v, v_min, v_max, format, flags) end
 
@@ -2233,7 +2231,7 @@ function ImGui.SliderFloat2(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloat2Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2252,7 +2250,7 @@ function ImGui.SliderFloat3(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloat3Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2271,7 +2269,7 @@ function ImGui.SliderFloat4(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloat4Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2288,7 +2286,7 @@ function ImGui.SliderAngle(label, v_rad) end
 ---@param v_degrees_min? number | `-360.0`
 ---@param v_degrees_max? number | `+360.0`
 ---@param format? string | `"%.0f deg"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderAngleEx(label, v_rad, v_degrees_min, v_degrees_max, format, flags) end
 
@@ -2307,7 +2305,7 @@ function ImGui.SliderInt(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderIntEx(label, v, v_min, v_max, format, flags) end
 
@@ -2326,7 +2324,7 @@ function ImGui.SliderInt2(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderInt2Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2345,7 +2343,7 @@ function ImGui.SliderInt3(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderInt3Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2364,7 +2362,7 @@ function ImGui.SliderInt4(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderInt4Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2387,7 +2385,7 @@ function ImGui.VSliderFloat(label, size_x, size_y, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.VSliderFloatEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
 
@@ -2410,7 +2408,7 @@ function ImGui.VSliderInt(label, size_x, size_y, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
 
@@ -2421,19 +2419,19 @@ function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flag
 --
 ---@param label string
 ---@param col number[]
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorEdit3(label, col, flags) end
 
 ---@param label string
 ---@param col number[]
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorEdit4(label, col, flags) end
 
 ---@param label string
 ---@param col number[]
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorPicker3(label, col, flags) end
 
@@ -2445,7 +2443,7 @@ function ImGui.ColorPicker3(label, col, flags) end
 ---@param col_y number
 ---@param col_z number
 ---@param col_w number
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorButton(desc_id, col_x, col_y, col_z, col_w, flags) end
 
@@ -2457,7 +2455,7 @@ function ImGui.ColorButton(desc_id, col_x, col_y, col_z, col_w, flags) end
 ---@param col_y number
 ---@param col_z number
 ---@param col_w number
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
@@ -2466,7 +2464,7 @@ function ImGui.ColorButtonEx(desc_id, col_x, col_y, col_z, col_w, flags, size_x,
 --
 -- initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
 --
----@param flags ImGuiColorEditFlags
+---@param flags ImGui.ColorEditFlags
 function ImGui.SetColorEditOptions(flags) end
 
 --
@@ -2496,19 +2494,19 @@ function ImGui.TreeNodeStr(str_id, fmt, ...) end
 function ImGui.TreeNodePtr(ptr_id, fmt, ...) end
 
 ---@param label string
----@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
 function ImGui.TreeNodeEx(label, flags) end
 
 ---@param str_id string
----@param flags ImGuiTreeNodeFlags
+---@param flags ImGui.TreeNodeFlags
 ---@param fmt string
 ---@param ...  any
 ---@return boolean
 function ImGui.TreeNodeExStr(str_id, flags, fmt, ...) end
 
 ---@param ptr_id lightuserdata
----@param flags ImGuiTreeNodeFlags
+---@param flags ImGui.TreeNodeFlags
 ---@param fmt string
 ---@param ...  any
 ---@return boolean
@@ -2541,7 +2539,7 @@ function ImGui.GetTreeNodeToLabelSpacing() end
 -- if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
 --
 ---@param label string
----@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
 function ImGui.CollapsingHeader(label, flags) end
 
@@ -2550,7 +2548,7 @@ function ImGui.CollapsingHeader(label, flags) end
 --
 ---@param label string
 ---@param p_visible boolean[]
----@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
 ---@return boolean p_visible
 function ImGui.CollapsingHeaderBoolPtr(label, p_visible, flags) end
@@ -2579,7 +2577,7 @@ function ImGui.Selectable(label) end
 --
 ---@param label string
 ---@param selected? boolean | `false`
----@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
@@ -2590,7 +2588,7 @@ function ImGui.SelectableEx(label, selected, flags, size_x, size_y) end
 --
 ---@param label string
 ---@param p_selected boolean[]
----@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@return boolean
 ---@return boolean p_selected
 function ImGui.SelectableBoolPtr(label, p_selected, flags) end
@@ -2600,7 +2598,7 @@ function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 --
 ---@param label string
 ---@param p_selected boolean[]
----@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
@@ -2764,7 +2762,7 @@ function ImGui.SetItemTooltip(fmt, ...) end
 -- return true if the popup is open, and you can start outputting to it.
 --
 ---@param str_id string
----@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 function ImGui.BeginPopup(str_id, flags) end
 
@@ -2773,7 +2771,7 @@ function ImGui.BeginPopup(str_id, flags) end
 --
 ---@param name string
 ---@param p_open true | nil
----@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 ---@return boolean p_open
 function ImGui.BeginPopupModal(name, p_open, flags) end
@@ -2797,21 +2795,21 @@ function ImGui.EndPopup() end
 -- call to mark popup as open (don't call every frame!).
 --
 ---@param str_id string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 function ImGui.OpenPopup(str_id, popup_flags) end
 
 --
 -- id overload to facilitate calling from nested stacks
 --
 ---@param id integer
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 function ImGui.OpenPopupID(id, popup_flags) end
 
 --
 -- helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 function ImGui.OpenPopupOnItemClick(str_id, popup_flags) end
 
 --
@@ -2836,7 +2834,7 @@ function ImGui.BeginPopupContextItem() end
 -- open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 ---@return boolean
 function ImGui.BeginPopupContextItemEx(str_id, popup_flags) end
 
@@ -2850,7 +2848,7 @@ function ImGui.BeginPopupContextWindow() end
 -- open+begin popup when clicked on current window.
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 ---@return boolean
 function ImGui.BeginPopupContextWindowEx(str_id, popup_flags) end
 
@@ -2864,7 +2862,7 @@ function ImGui.BeginPopupContextVoid() end
 -- open+begin popup when clicked in void (where there are no windows).
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 ---@return boolean
 function ImGui.BeginPopupContextVoidEx(str_id, popup_flags) end
 
@@ -2878,7 +2876,7 @@ function ImGui.BeginPopupContextVoidEx(str_id, popup_flags) end
 -- return true if the popup is open.
 --
 ---@param str_id string
----@param flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@param flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 ---@return boolean
 function ImGui.IsPopupOpen(str_id, flags) end
 
@@ -2910,13 +2908,13 @@ function ImGui.IsPopupOpen(str_id, flags) end
 --
 ---@param str_id string
 ---@param column integer
----@param flags? ImGuiTableFlags | `ImGui.Flags.Table { "None" }`
+---@param flags? ImGui.TableFlags | `ImGui.TableFlags { "None" }`
 ---@return boolean
 function ImGui.BeginTable(str_id, column, flags) end
 
 ---@param str_id string
 ---@param column integer
----@param flags? ImGuiTableFlags | `ImGui.Flags.Table { "None" }`
+---@param flags? ImGui.TableFlags | `ImGui.TableFlags { "None" }`
 ---@param outer_size_x? number | `0.0`
 ---@param outer_size_y? number | `0.0`
 ---@param inner_width? number | `0.0`
@@ -2936,7 +2934,7 @@ function ImGui.TableNextRow() end
 --
 -- append into the first cell of a new row.
 --
----@param row_flags? ImGuiTableRowFlags | `ImGui.Flags.TableRow { "None" }`
+---@param row_flags? ImGui.TableRowFlags | `ImGui.TableRowFlags { "None" }`
 ---@param min_row_height? number | `0.0`
 function ImGui.TableNextRowEx(row_flags, min_row_height) end
 
@@ -2967,11 +2965,11 @@ function ImGui.TableSetColumnIndex(column_n) end
 -- Implied init_width_or_weight = 0.0f, user_id = 0
 --
 ---@param label string
----@param flags? ImGuiTableColumnFlags | `ImGui.Flags.TableColumn { "None" }`
+---@param flags? ImGui.TableColumnFlags | `ImGui.TableColumnFlags { "None" }`
 function ImGui.TableSetupColumn(label, flags) end
 
 ---@param label string
----@param flags? ImGuiTableColumnFlags | `ImGui.Flags.TableColumn { "None" }`
+---@param flags? ImGui.TableColumnFlags | `ImGui.TableColumnFlags { "None" }`
 ---@param init_width_or_weight? number | `0.0`
 ---@param user_id? integer | `0`
 function ImGui.TableSetupColumnEx(label, flags, init_width_or_weight, user_id) end
@@ -3028,7 +3026,7 @@ function ImGui.TableGetColumnName(column_n) end
 -- return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 --
 ---@param column_n? integer | `-1`
----@return ImGuiTableColumnFlags
+---@return ImGui.TableColumnFlags
 function ImGui.TableGetColumnFlags(column_n) end
 
 --
@@ -3054,7 +3052,7 @@ function ImGui.TableSetBgColor(target, color, column_n) end
 -- create and append into a TabBar
 --
 ---@param str_id string
----@param flags? ImGuiTabBarFlags | `ImGui.Flags.TabBar { "None" }`
+---@param flags? ImGui.TabBarFlags | `ImGui.TabBarFlags { "None" }`
 ---@return boolean
 function ImGui.BeginTabBar(str_id, flags) end
 
@@ -3068,7 +3066,7 @@ function ImGui.EndTabBar() end
 --
 ---@param label string
 ---@param p_open true | nil
----@param flags? ImGuiTabItemFlags | `ImGui.Flags.TabItem { "None" }`
+---@param flags? ImGui.TabItemFlags | `ImGui.TabItemFlags { "None" }`
 ---@return boolean
 ---@return boolean p_open
 function ImGui.BeginTabItem(label, p_open, flags) end
@@ -3082,7 +3080,7 @@ function ImGui.EndTabItem() end
 -- create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 --
 ---@param label string
----@param flags? ImGuiTabItemFlags | `ImGui.Flags.TabItem { "None" }`
+---@param flags? ImGui.TabItemFlags | `ImGui.TabItemFlags { "None" }`
 ---@return boolean
 function ImGui.TabItemButton(label, flags) end
 
@@ -3117,7 +3115,7 @@ function ImGui.DockSpace(id) end
 ---@param id integer
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
----@param flags? ImGuiDockNodeFlags | `ImGui.Flags.DockNode { "None" }`
+---@param flags? ImGui.DockNodeFlags | `ImGui.DockNodeFlags { "None" }`
 ---@return integer
 function ImGui.DockSpaceEx(id, size_x, size_y, flags) end
 
@@ -3153,7 +3151,7 @@ function ImGui.IsWindowDocked() end
 --
 -- call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
 --
----@param flags? ImGuiDragDropFlags | `ImGui.Flags.DragDrop { "None" }`
+---@param flags? ImGui.DragDropFlags | `ImGui.DragDropFlags { "None" }`
 ---@return boolean
 function ImGui.BeginDragDropSource(flags) end
 
@@ -3181,7 +3179,7 @@ function ImGui.BeginDragDropTarget() end
 -- accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 --
 ---@param type string
----@param flags? ImGuiDragDropFlags | `ImGui.Flags.DragDrop { "None" }`
+---@param flags? ImGui.DragDropFlags | `ImGui.DragDropFlags { "None" }`
 ---@return string | nil
 function ImGui.AcceptDragDropPayload(type, flags) end
 
@@ -3256,7 +3254,7 @@ function ImGui.SetNextItemAllowOverlap() end
 --
 -- is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.
 --
----@param flags? ImGuiHoveredFlags | `ImGui.Flags.Hovered { "None" }`
+---@param flags? ImGui.HoveredFlags | `ImGui.HoveredFlags { "None" }`
 ---@return boolean
 function ImGui.IsItemHovered(flags) end
 

@@ -430,7 +430,7 @@ local function create_clip()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
     if change then
         ImGui.Text("StartFrame:")
         ImGui.SameLine()
@@ -866,7 +866,7 @@ local function ShowNewAnimationUI()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
     if change then
         ImGui.Text("Name:")
         ImGui.SameLine()
@@ -988,7 +988,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Skeleton", nil, ImGui.Flags.Window { "NoCollapse", "NoScrollbar" }) then
+    if ImGui.Begin("Skeleton", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
         if current_skeleton and not current_anim then
             if ImGui.Button(faicons.ICON_FA_FILE_PEN.." ske") then
                 new_anim_widget = true
@@ -1170,10 +1170,10 @@ function m.show()
                 ImGui.Text("material path: " .. tostring(current_mtl))
             end
         end
-        if ImGui.BeginTable("SkeletonColumns", 3, ImGui.Flags.Table {'Resizable', 'ScrollY'}) then
-            ImGui.TableSetupColumnEx("Targets", ImGui.Flags.TableColumn {'WidthStretch'}, 1.0)
-            ImGui.TableSetupColumnEx("Detail", ImGui.Flags.TableColumn {'WidthStretch'}, 1.5)
-            ImGui.TableSetupColumnEx("AnimationLayer", ImGui.Flags.TableColumn {'WidthStretch'}, 6.5)
+        if ImGui.BeginTable("SkeletonColumns", 3, ImGui.TableFlags {'Resizable', 'ScrollY'}) then
+            ImGui.TableSetupColumnEx("Targets", ImGui.TableColumnFlags {'WidthStretch'}, 1.0)
+            ImGui.TableSetupColumnEx("Detail", ImGui.TableColumnFlags {'WidthStretch'}, 1.5)
+            ImGui.TableSetupColumnEx("AnimationLayer", ImGui.TableColumnFlags {'WidthStretch'}, 6.5)
             ImGui.TableHeadersRow()
 
             ImGui.TableNextColumn()

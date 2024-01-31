@@ -22,7 +22,7 @@ local function camera_template(eid)
 end
 
 local function create_transform_property(cv)
-    return uiproperty.Group({label="Transform", flags = ImGui.Flags.TreeNode{"DefaultOpen"} }, {
+    return uiproperty.Group({label="Transform", flags = ImGui.TreeNodeFlags {"DefaultOpen"} }, {
         uiproperty.Float({label="Scale", speed=0.01, dim=3, disable=true}, {
             getter = function ()
                 local cve <close> = world:entity(cv.eid)

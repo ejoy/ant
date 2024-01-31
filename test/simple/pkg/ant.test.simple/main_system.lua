@@ -32,7 +32,7 @@ function m:init_world()
 end
 
 function m:data_changed()
-    if ImGui.Begin("entities", nil, ImGui.Flags.Window {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+    if ImGui.Begin("entities", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
         local animation_eid
         if ImGui.TreeNode "mesh" then
             for i = 1, #entities do
@@ -59,7 +59,7 @@ function m:data_changed()
                 end
             end
         end
-        if animation_eid and ImGui.TreeNodeEx("animation", ImGui.Flags.TreeNode{"DefaultOpen"}) then
+        if animation_eid and ImGui.TreeNodeEx("animation", ImGui.TreeNodeFlags {"DefaultOpen"}) then
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do

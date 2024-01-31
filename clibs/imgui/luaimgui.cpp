@@ -536,61 +536,6 @@ wInputInt(lua_State *L) {
 	return 1;
 }
 
-// enums
-struct enum_pair {
-	const char * name;
-	lua_Integer value;
-};
-
-#define ENUM(prefix, name) { #name, prefix##_##name }
-
-static int
-make_flag(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	int i, t;
-	lua_Integer r = 0;
-
-	for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
-		if (t != LUA_TSTRING)
-			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
-		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
-			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
-		}
-		lua_Integer v = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		r |= v;
-	}
-	lua_pushinteger(L, r);
-	return 1;
-}
-
-static void
-flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i = 0; enums[i].name; i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_flag, 2);
-	lua_setfield(L, -2, name);
-}
-
-static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i = 0; enums[i].name; i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_setfield(L, -2, name);
-}
-
-#include "imgui_enum.h"
-
 static int
 lCreateContext(lua_State* L) {
 	ImGui::CreateContext();
@@ -875,6 +820,5 @@ int luaopen_imgui(lua_State *L) {
 	lua_setmetatable(L, -2);
 	lua_setfield(L, -2, "io");
 
-	imgui_enum_init(L);
 	return 1;
 }
