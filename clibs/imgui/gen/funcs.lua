@@ -121,6 +121,16 @@ write_arg["float"] = function(type_meta, status)
     status.arguments[#status.arguments+1] = type_meta.name
 end
 
+write_arg["double"] = function(type_meta, status)
+    status.idx = status.idx + 1
+    if type_meta.default_value then
+        writeln("    auto %s = (double)luaL_optnumber(L, %d, %s);", type_meta.name, status.idx, type_meta.default_value)
+    else
+        writeln("    auto %s = (double)luaL_checknumber(L, %d);", type_meta.name, status.idx)
+    end
+    status.arguments[#status.arguments+1] = type_meta.name
+end
+
 write_arg["bool"] = function(type_meta, status)
     status.idx = status.idx + 1
     status.arguments[#status.arguments+1] = type_meta.name
@@ -177,6 +187,23 @@ end
 write_arg_ret["unsigned int*"] = function(type_meta)
     writeln "    if (_retval) {"
     writeln("        lua_pushinteger(L, %s[0]);", type_meta.name)
+    writeln("        lua_seti(L, _%s_index, 1);", type_meta.name)
+    writeln "    };"
+    return 0
+end
+
+write_arg["double*"] = function(type_meta, status)
+    status.idx = status.idx + 1
+    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
+    writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+    writeln("    double %s[] = {", type_meta.name)
+    writeln("        (double)util::field_tonumber(L, %d, 1),", status.idx)
+    writeln "    };"
+    status.arguments[#status.arguments+1] = type_meta.name
+end
+write_arg_ret["double*"] = function(type_meta)
+    writeln "    if (_retval) {"
+    writeln("        lua_pushnumber(L, %s[0]);", type_meta.name)
     writeln("        lua_seti(L, _%s_index, 1);", type_meta.name)
     writeln "    };"
     return 0
@@ -449,14 +476,13 @@ writeln "namespace imgui_lua {"
 writeln ""
 local flags, enums = write_flags_and_enums()
 local funcs = write_funcs()
-writeln "void init(lua_State* L) {"
+writeln "void init(lua_State* L, int extra) {"
 writeln "    static luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do
     writeln("        { %q, %s },", func, func)
 end
 writeln "        { NULL, NULL },"
 writeln "    };"
-writeln "    luaL_setfuncs(L, funcs, 0);"
 writeln ""
 writeln "    #define GEN_FLAGS(name) { #name, +[](lua_State* L){ \\"
 writeln "         util::create_table(L, name); \\"
@@ -469,7 +495,6 @@ for _, name in ipairs(flags) do
 end
 writeln "    };"
 writeln "    #undef GEN_FLAGS"
-writeln "    util::set_table(L, flags);"
 writeln ""
 writeln "    #define GEN_ENUM(name) { #name, +[](lua_State* L){ \\"
 writeln "         util::create_table(L, name); \\"
@@ -481,8 +506,16 @@ for _, name in ipairs(enums) do
 end
 writeln "    };"
 writeln "    #undef GEN_ENUM"
-writeln "    util::set_table(L, enums);"
 writeln ""
 writeln "    util::init(L);"
+writeln "    lua_createtable(L, 0,"
+writeln "        sizeof(funcs) / sizeof(funcs[0]) - 1 +"
+writeln "        sizeof(flags) / sizeof(flags[0]) +"
+writeln "        sizeof(enums) / sizeof(enums[0]) +"
+writeln "        extra"
+writeln "    );"
+writeln "    luaL_setfuncs(L, funcs, 0);"
+writeln "    util::set_table(L, flags);"
+writeln "    util::set_table(L, enums);"
 writeln "}"
 writeln "}"

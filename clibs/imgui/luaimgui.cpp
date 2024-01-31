@@ -16,7 +16,9 @@ extern "C" {
 #include "imgui_platform.h"
 #include "fastio.h"
 
-namespace imgui_lua { void init(lua_State* L); }
+namespace imgui_lua {
+	void init(lua_State* L, int extra);
+}
 
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
@@ -422,120 +424,6 @@ wInputTextMultiline(lua_State *L) {
 	return 1;
 }
 
-static bool
-input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextFlags flags, int n) {
-	if (n == 1) {
-		double step = read_field_float(L, "step", 0);
-		double step_fast = read_field_float(L, "step_fast", 0);
-		lua_geti(L, INDEX_ARGS, 1);
-		double v = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		bool r = ImGui::InputDouble(label, &v, step, step_fast, format, flags);
-		if (r) {
-			lua_pushnumber(L, v);
-			lua_seti(L, INDEX_ARGS, 1);
-		}
-		return r;
-	} else {
-		float v[4];
-		int i;
-		for (i=0;i<n;i++) {
-			lua_geti(L, INDEX_ARGS, i + 1);
-			v[i] = (float)lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
-		bool r = false;
-		switch (n) {
-		case 2:
-			r = ImGui::InputFloat2(label, v, format, flags);
-			break;
-		case 3:
-			r = ImGui::InputFloat3(label, v, format, flags);
-			break;
-		case 4:
-			r = ImGui::InputFloat4(label, v, format, flags);
-			break;
-		}
-		if (r) {
-			for (i = 0; i < n; i++) {
-				lua_pushnumber(L, v[i]);
-				lua_seti(L, INDEX_ARGS, i + 1);
-			}
-		}
-		return r;
-	}
-}
-
-static bool
-input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
-	int step = 1;
-	int step_fast = 100;
-	if (n > 1) {
-		step = read_field_int(L, "step", 1);
-		step_fast = read_field_int(L, "step_fast", 100);
-	}
-	int v[4];
-	int i;
-	for (i = 0; i < n; i++) {
-		lua_geti(L, INDEX_ARGS, i + 1);
-		v[i] = (int)lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	}
-	bool r = false;
-	switch (n) {
-	case 1:
-		r = ImGui::InputInt(label, v, step, step_fast, flags);
-		break;
-	case 2:
-		r = ImGui::InputInt2(label, v, flags);
-		break;
-	case 3:
-		r = ImGui::InputInt3(label, v, flags);
-		break;
-	case 4:
-		r = ImGui::InputInt4(label, v, flags);
-		break;
-	}
-	if (r) {
-		for (i = 0; i < n; i++) {
-			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i + 1);
-		}
-	}
-	return r;
-}
-
-static int
-wInputFloat(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	if (n < 1 || n > 4)
-		return luaL_error(L, "Need 1-4 numbers");
-	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
-	const char * format = read_field_string(L, "format", "%.3f");
-	bool change = input_float(L, label, format, flags, n);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wInputInt(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	if (n < 1 || n > 4)
-		return luaL_error(L, "Need 1-4 int");
-	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
-	bool change = input_int(L, label, flags, n);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
 static int
 lCreateContext(lua_State* L) {
 	ImGui::CreateContext();
@@ -761,6 +649,8 @@ int luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
+	imgui_lua::init(L, 0);
+
 	luaL_Reg l[] = {
 		{ "CreateContext", lCreateContext },
 		{ "DestroyContext", lDestroyContext },
@@ -775,12 +665,10 @@ int luaopen_imgui(lua_State *L) {
 		{ "InitFont", lInitFont },
 		{ "InputText", wInputText },
 		{ "InputTextMultiline", wInputTextMultiline },
-		{ "InputFloat", wInputFloat },
-		{ "InputInt", wInputInt },
 		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, l);
+	luaL_setfuncs(L, l, 0);
 
 	luaL_Reg util[] = {
 		{ "memory", util_memory },
@@ -788,8 +676,6 @@ int luaopen_imgui(lua_State *L) {
 	};
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
-
-	imgui_lua::init(L);
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },

@@ -2413,6 +2413,119 @@ function ImGui.VSliderInt(label, size_x, size_y, v, v_min, v_max) end
 function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
 
 --
+-- Implied step = 0.0f, step_fast = 0.0f, format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat(label, v) end
+
+---@param label string
+---@param v number[]
+---@param step? number | `0.0`
+---@param step_fast? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloatEx(label, v, step, step_fast, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat2(label, v) end
+
+---@param label string
+---@param v number[]
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloat2Ex(label, v, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat3(label, v) end
+
+---@param label string
+---@param v number[]
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloat3Ex(label, v, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat4(label, v) end
+
+---@param label string
+---@param v number[]
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloat4Ex(label, v, format, flags) end
+
+--
+-- Implied step = 1, step_fast = 100, flags = 0
+--
+---@param label string
+---@param v integer[]
+---@return boolean
+function ImGui.InputInt(label, v) end
+
+---@param label string
+---@param v integer[]
+---@param step? integer | `1`
+---@param step_fast? integer | `100`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputIntEx(label, v, step, step_fast, flags) end
+
+---@param label string
+---@param v integer[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputInt2(label, v, flags) end
+
+---@param label string
+---@param v integer[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputInt3(label, v, flags) end
+
+---@param label string
+---@param v integer[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputInt4(label, v, flags) end
+
+--
+-- Implied step = 0.0, step_fast = 0.0, format = "%.6f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputDouble(label, v) end
+
+---@param label string
+---@param v number[]
+---@param step? number | `0.0`
+---@param step_fast? number | `0.0`
+---@param format? string | `"%.6f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputDoubleEx(label, v, step, step_fast, format, flags) end
+
+--
 -- Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
 -- - Note that in C++ a 'float v[X]' function argument is the _same_ as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible.
 -- - You can pass the address of a first float element out of a contiguous structure, e.g. &myvector.x

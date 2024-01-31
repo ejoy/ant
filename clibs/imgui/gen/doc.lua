@@ -119,6 +119,12 @@ special_arg["unsigned int*"] = function (type_meta, status)
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
+special_arg["double*"] = function (type_meta, status)
+    assert(type_meta.default_value == nil)
+    writeln("---@param %s number[]", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+end
+
 --TODO: 指定数组长度
 for n = 1, 4 do
     special_arg["int["..n.."]"] = function (type_meta, status)
