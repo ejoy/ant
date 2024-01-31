@@ -27,17 +27,15 @@ lm:source_set "imgui" {
             "_UNICODE",
             "UNICODE",
         },
-        windows = {
-            links = {
-                "user32",
-                "shell32",
-                "ole32",
-                "imm32",
-                "dwmapi",
-                "gdi32",
-                "uuid"
-            },
-        }
+        links = {
+            "user32",
+            "shell32",
+            "ole32",
+            "imm32",
+            "dwmapi",
+            "gdi32",
+            "uuid"
+        },
     },
     linux = {
         sources = {
