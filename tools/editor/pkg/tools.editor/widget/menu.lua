@@ -64,10 +64,10 @@ function m.show()
                 local rf = editor_setting.setting.recent_files
                 if rf then
                     for _, f in ipairs(editor_setting.setting.recent_files) do
-                        local ff = f:match "([^|]+)|mesh.prefab"
+                        local ff, _ = f:match "([^|]+)|([%a%.]+)"
                         ff = ff or f
-                        if fs.exists(fs.path(ff)) and ImGui.MenuItem(ff) then
-                            world:pub{"OpenFile", ff}
+                        if lfs.exists(lfs.path(ff)) and ImGui.MenuItem(f) then
+                            world:pub{"OpenFile", f, true}
                         end
                     end
                 end
