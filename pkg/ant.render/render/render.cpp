@@ -11,6 +11,7 @@ extern "C"{
 }
 
 #include "queue.h"
+#include "hash.h"
 
 #include "lua.hpp"
 #include "luabgfx.h"
@@ -44,13 +45,10 @@ static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 
 //using obj_transforms = std::unordered_map<uint64_t, transform>;
 struct obj_transforms {
-	obj_transforms() = default;
 	static constexpr uint16_t MAX_CACHE = 10240*2;
 	struct key {
-		static std::hash<uint64_t>	h;
-
 		static uint16_t hash_idx(const component::render_object *ro, math_t m) {
-			return (uint16_t)(h(h((uint64_t)ro) ^ h(m.idx)) % obj_transforms::MAX_CACHE);
+			return (uint16_t)((hash64((uint64_t)ro^m.idx)) % obj_transforms::MAX_CACHE);
 		}
 
 		const component::render_object * ro;
@@ -79,9 +77,6 @@ struct obj_transforms {
 		memset(keys, 0, sizeof(keys));
 	}
 };
-
-//static
-std::hash<uint64_t> obj_transforms::key::h;
 
 static inline transform
 update_transform(struct ecs_world* w, const component::render_object *ro, const math_t& hwm, obj_transforms &trans){
@@ -215,7 +210,6 @@ draw_obj(lua_State *L, struct ecs_world *w, const component::render_args* ra, co
 using group_queues = std::array<matrix_array, 64>;
 using group_collection = std::unordered_map<int, group_queues>;
 struct submit_cache{
-	submit_cache() = default;
 	obj_transforms	transforms;
 
 	//TODO: need more fine control of the cache
