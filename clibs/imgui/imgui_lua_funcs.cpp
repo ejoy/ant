@@ -7,6 +7,720 @@
 
 namespace imgui_lua {
 
+#define ENUM(prefix, name) { #name, prefix##_##name }
+
+static util::TableInteger WindowFlags[] = {
+    ENUM(ImGuiWindowFlags, None),
+    ENUM(ImGuiWindowFlags, NoTitleBar),
+    ENUM(ImGuiWindowFlags, NoResize),
+    ENUM(ImGuiWindowFlags, NoMove),
+    ENUM(ImGuiWindowFlags, NoScrollbar),
+    ENUM(ImGuiWindowFlags, NoScrollWithMouse),
+    ENUM(ImGuiWindowFlags, NoCollapse),
+    ENUM(ImGuiWindowFlags, AlwaysAutoResize),
+    ENUM(ImGuiWindowFlags, NoBackground),
+    ENUM(ImGuiWindowFlags, NoSavedSettings),
+    ENUM(ImGuiWindowFlags, NoMouseInputs),
+    ENUM(ImGuiWindowFlags, MenuBar),
+    ENUM(ImGuiWindowFlags, HorizontalScrollbar),
+    ENUM(ImGuiWindowFlags, NoFocusOnAppearing),
+    ENUM(ImGuiWindowFlags, NoBringToFrontOnFocus),
+    ENUM(ImGuiWindowFlags, AlwaysVerticalScrollbar),
+    ENUM(ImGuiWindowFlags, AlwaysHorizontalScrollbar),
+    ENUM(ImGuiWindowFlags, NoNavInputs),
+    ENUM(ImGuiWindowFlags, NoNavFocus),
+    ENUM(ImGuiWindowFlags, UnsavedDocument),
+    ENUM(ImGuiWindowFlags, NoDocking),
+    ENUM(ImGuiWindowFlags, NoNav),
+    ENUM(ImGuiWindowFlags, NoDecoration),
+    ENUM(ImGuiWindowFlags, NoInputs),
+};
+
+static util::TableInteger ChildFlags[] = {
+    ENUM(ImGuiChildFlags, None),
+    ENUM(ImGuiChildFlags, Border),
+    ENUM(ImGuiChildFlags, AlwaysUseWindowPadding),
+    ENUM(ImGuiChildFlags, ResizeX),
+    ENUM(ImGuiChildFlags, ResizeY),
+    ENUM(ImGuiChildFlags, AutoResizeX),
+    ENUM(ImGuiChildFlags, AutoResizeY),
+    ENUM(ImGuiChildFlags, AlwaysAutoResize),
+    ENUM(ImGuiChildFlags, FrameStyle),
+};
+
+static util::TableInteger InputTextFlags[] = {
+    ENUM(ImGuiInputTextFlags, None),
+    ENUM(ImGuiInputTextFlags, CharsDecimal),
+    ENUM(ImGuiInputTextFlags, CharsHexadecimal),
+    ENUM(ImGuiInputTextFlags, CharsUppercase),
+    ENUM(ImGuiInputTextFlags, CharsNoBlank),
+    ENUM(ImGuiInputTextFlags, AutoSelectAll),
+    ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
+    ENUM(ImGuiInputTextFlags, CallbackCompletion),
+    ENUM(ImGuiInputTextFlags, CallbackHistory),
+    ENUM(ImGuiInputTextFlags, CallbackAlways),
+    ENUM(ImGuiInputTextFlags, CallbackCharFilter),
+    ENUM(ImGuiInputTextFlags, AllowTabInput),
+    ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+    ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+    ENUM(ImGuiInputTextFlags, AlwaysOverwrite),
+    ENUM(ImGuiInputTextFlags, ReadOnly),
+    ENUM(ImGuiInputTextFlags, Password),
+    ENUM(ImGuiInputTextFlags, NoUndoRedo),
+    ENUM(ImGuiInputTextFlags, CharsScientific),
+    ENUM(ImGuiInputTextFlags, CallbackResize),
+    ENUM(ImGuiInputTextFlags, CallbackEdit),
+    ENUM(ImGuiInputTextFlags, EscapeClearsAll),
+};
+
+static util::TableInteger TreeNodeFlags[] = {
+    ENUM(ImGuiTreeNodeFlags, None),
+    ENUM(ImGuiTreeNodeFlags, Selected),
+    ENUM(ImGuiTreeNodeFlags, Framed),
+    ENUM(ImGuiTreeNodeFlags, AllowOverlap),
+    ENUM(ImGuiTreeNodeFlags, NoTreePushOnOpen),
+    ENUM(ImGuiTreeNodeFlags, NoAutoOpenOnLog),
+    ENUM(ImGuiTreeNodeFlags, DefaultOpen),
+    ENUM(ImGuiTreeNodeFlags, OpenOnDoubleClick),
+    ENUM(ImGuiTreeNodeFlags, OpenOnArrow),
+    ENUM(ImGuiTreeNodeFlags, Leaf),
+    ENUM(ImGuiTreeNodeFlags, Bullet),
+    ENUM(ImGuiTreeNodeFlags, FramePadding),
+    ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
+    ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
+    ENUM(ImGuiTreeNodeFlags, SpanAllColumns),
+    ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
+    ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
+};
+
+static util::TableInteger PopupFlags[] = {
+    ENUM(ImGuiPopupFlags, None),
+    ENUM(ImGuiPopupFlags, MouseButtonLeft),
+    ENUM(ImGuiPopupFlags, MouseButtonRight),
+    ENUM(ImGuiPopupFlags, MouseButtonMiddle),
+    ENUM(ImGuiPopupFlags, NoOpenOverExistingPopup),
+    ENUM(ImGuiPopupFlags, NoOpenOverItems),
+    ENUM(ImGuiPopupFlags, AnyPopupId),
+    ENUM(ImGuiPopupFlags, AnyPopupLevel),
+    ENUM(ImGuiPopupFlags, AnyPopup),
+};
+
+static util::TableInteger SelectableFlags[] = {
+    ENUM(ImGuiSelectableFlags, None),
+    ENUM(ImGuiSelectableFlags, DontClosePopups),
+    ENUM(ImGuiSelectableFlags, SpanAllColumns),
+    ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+    ENUM(ImGuiSelectableFlags, Disabled),
+    ENUM(ImGuiSelectableFlags, AllowOverlap),
+};
+
+static util::TableInteger ComboFlags[] = {
+    ENUM(ImGuiComboFlags, None),
+    ENUM(ImGuiComboFlags, PopupAlignLeft),
+    ENUM(ImGuiComboFlags, HeightSmall),
+    ENUM(ImGuiComboFlags, HeightRegular),
+    ENUM(ImGuiComboFlags, HeightLarge),
+    ENUM(ImGuiComboFlags, HeightLargest),
+    ENUM(ImGuiComboFlags, NoArrowButton),
+    ENUM(ImGuiComboFlags, NoPreview),
+    ENUM(ImGuiComboFlags, WidthFitPreview),
+};
+
+static util::TableInteger TabBarFlags[] = {
+    ENUM(ImGuiTabBarFlags, None),
+    ENUM(ImGuiTabBarFlags, Reorderable),
+    ENUM(ImGuiTabBarFlags, AutoSelectNewTabs),
+    ENUM(ImGuiTabBarFlags, TabListPopupButton),
+    ENUM(ImGuiTabBarFlags, NoCloseWithMiddleMouseButton),
+    ENUM(ImGuiTabBarFlags, NoTabListScrollingButtons),
+    ENUM(ImGuiTabBarFlags, NoTooltip),
+    ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
+    ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
+};
+
+static util::TableInteger TabItemFlags[] = {
+    ENUM(ImGuiTabItemFlags, None),
+    ENUM(ImGuiTabItemFlags, UnsavedDocument),
+    ENUM(ImGuiTabItemFlags, SetSelected),
+    ENUM(ImGuiTabItemFlags, NoCloseWithMiddleMouseButton),
+    ENUM(ImGuiTabItemFlags, NoPushId),
+    ENUM(ImGuiTabItemFlags, NoTooltip),
+    ENUM(ImGuiTabItemFlags, NoReorder),
+    ENUM(ImGuiTabItemFlags, Leading),
+    ENUM(ImGuiTabItemFlags, Trailing),
+    ENUM(ImGuiTabItemFlags, NoAssumedClosure),
+};
+
+static util::TableInteger FocusedFlags[] = {
+    ENUM(ImGuiFocusedFlags, None),
+    ENUM(ImGuiFocusedFlags, ChildWindows),
+    ENUM(ImGuiFocusedFlags, RootWindow),
+    ENUM(ImGuiFocusedFlags, AnyWindow),
+    ENUM(ImGuiFocusedFlags, NoPopupHierarchy),
+    ENUM(ImGuiFocusedFlags, DockHierarchy),
+    ENUM(ImGuiFocusedFlags, RootAndChildWindows),
+};
+
+static util::TableInteger HoveredFlags[] = {
+    ENUM(ImGuiHoveredFlags, None),
+    ENUM(ImGuiHoveredFlags, ChildWindows),
+    ENUM(ImGuiHoveredFlags, RootWindow),
+    ENUM(ImGuiHoveredFlags, AnyWindow),
+    ENUM(ImGuiHoveredFlags, NoPopupHierarchy),
+    ENUM(ImGuiHoveredFlags, DockHierarchy),
+    ENUM(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
+    ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
+    ENUM(ImGuiHoveredFlags, AllowWhenOverlappedByItem),
+    ENUM(ImGuiHoveredFlags, AllowWhenOverlappedByWindow),
+    ENUM(ImGuiHoveredFlags, AllowWhenDisabled),
+    ENUM(ImGuiHoveredFlags, NoNavOverride),
+    ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
+    ENUM(ImGuiHoveredFlags, RectOnly),
+    ENUM(ImGuiHoveredFlags, RootAndChildWindows),
+    ENUM(ImGuiHoveredFlags, ForTooltip),
+    ENUM(ImGuiHoveredFlags, Stationary),
+    ENUM(ImGuiHoveredFlags, DelayNone),
+    ENUM(ImGuiHoveredFlags, DelayShort),
+    ENUM(ImGuiHoveredFlags, DelayNormal),
+    ENUM(ImGuiHoveredFlags, NoSharedDelay),
+};
+
+static util::TableInteger DockNodeFlags[] = {
+    ENUM(ImGuiDockNodeFlags, None),
+    ENUM(ImGuiDockNodeFlags, KeepAliveOnly),
+    ENUM(ImGuiDockNodeFlags, NoDockingOverCentralNode),
+    ENUM(ImGuiDockNodeFlags, PassthruCentralNode),
+    ENUM(ImGuiDockNodeFlags, NoDockingSplit),
+    ENUM(ImGuiDockNodeFlags, NoResize),
+    ENUM(ImGuiDockNodeFlags, AutoHideTabBar),
+    ENUM(ImGuiDockNodeFlags, NoUndocking),
+};
+
+static util::TableInteger DragDropFlags[] = {
+    ENUM(ImGuiDragDropFlags, None),
+    ENUM(ImGuiDragDropFlags, SourceNoPreviewTooltip),
+    ENUM(ImGuiDragDropFlags, SourceNoDisableHover),
+    ENUM(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
+    ENUM(ImGuiDragDropFlags, SourceAllowNullID),
+    ENUM(ImGuiDragDropFlags, SourceExtern),
+    ENUM(ImGuiDragDropFlags, SourceAutoExpirePayload),
+    ENUM(ImGuiDragDropFlags, AcceptBeforeDelivery),
+    ENUM(ImGuiDragDropFlags, AcceptNoDrawDefaultRect),
+    ENUM(ImGuiDragDropFlags, AcceptNoPreviewTooltip),
+    ENUM(ImGuiDragDropFlags, AcceptPeekOnly),
+};
+
+static util::TableInteger DataType[] = {
+    ENUM(ImGuiDataType, S8),
+    ENUM(ImGuiDataType, U8),
+    ENUM(ImGuiDataType, S16),
+    ENUM(ImGuiDataType, U16),
+    ENUM(ImGuiDataType, S32),
+    ENUM(ImGuiDataType, U32),
+    ENUM(ImGuiDataType, S64),
+    ENUM(ImGuiDataType, U64),
+    ENUM(ImGuiDataType, Float),
+    ENUM(ImGuiDataType, Double),
+};
+
+static util::TableInteger Dir[] = {
+    ENUM(ImGuiDir, None),
+    ENUM(ImGuiDir, Left),
+    ENUM(ImGuiDir, Right),
+    ENUM(ImGuiDir, Up),
+    ENUM(ImGuiDir, Down),
+};
+
+static util::TableInteger SortDirection[] = {
+    ENUM(ImGuiSortDirection, None),
+    ENUM(ImGuiSortDirection, Ascending),
+    ENUM(ImGuiSortDirection, Descending),
+};
+
+static util::TableInteger Key[] = {
+    ENUM(ImGuiKey, None),
+    ENUM(ImGuiKey, Tab),
+    ENUM(ImGuiKey, LeftArrow),
+    ENUM(ImGuiKey, RightArrow),
+    ENUM(ImGuiKey, UpArrow),
+    ENUM(ImGuiKey, DownArrow),
+    ENUM(ImGuiKey, PageUp),
+    ENUM(ImGuiKey, PageDown),
+    ENUM(ImGuiKey, Home),
+    ENUM(ImGuiKey, End),
+    ENUM(ImGuiKey, Insert),
+    ENUM(ImGuiKey, Delete),
+    ENUM(ImGuiKey, Backspace),
+    ENUM(ImGuiKey, Space),
+    ENUM(ImGuiKey, Enter),
+    ENUM(ImGuiKey, Escape),
+    ENUM(ImGuiKey, LeftCtrl),
+    ENUM(ImGuiKey, LeftShift),
+    ENUM(ImGuiKey, LeftAlt),
+    ENUM(ImGuiKey, LeftSuper),
+    ENUM(ImGuiKey, RightCtrl),
+    ENUM(ImGuiKey, RightShift),
+    ENUM(ImGuiKey, RightAlt),
+    ENUM(ImGuiKey, RightSuper),
+    ENUM(ImGuiKey, Menu),
+    ENUM(ImGuiKey, 0),
+    ENUM(ImGuiKey, 1),
+    ENUM(ImGuiKey, 2),
+    ENUM(ImGuiKey, 3),
+    ENUM(ImGuiKey, 4),
+    ENUM(ImGuiKey, 5),
+    ENUM(ImGuiKey, 6),
+    ENUM(ImGuiKey, 7),
+    ENUM(ImGuiKey, 8),
+    ENUM(ImGuiKey, 9),
+    ENUM(ImGuiKey, A),
+    ENUM(ImGuiKey, B),
+    ENUM(ImGuiKey, C),
+    ENUM(ImGuiKey, D),
+    ENUM(ImGuiKey, E),
+    ENUM(ImGuiKey, F),
+    ENUM(ImGuiKey, G),
+    ENUM(ImGuiKey, H),
+    ENUM(ImGuiKey, I),
+    ENUM(ImGuiKey, J),
+    ENUM(ImGuiKey, K),
+    ENUM(ImGuiKey, L),
+    ENUM(ImGuiKey, M),
+    ENUM(ImGuiKey, N),
+    ENUM(ImGuiKey, O),
+    ENUM(ImGuiKey, P),
+    ENUM(ImGuiKey, Q),
+    ENUM(ImGuiKey, R),
+    ENUM(ImGuiKey, S),
+    ENUM(ImGuiKey, T),
+    ENUM(ImGuiKey, U),
+    ENUM(ImGuiKey, V),
+    ENUM(ImGuiKey, W),
+    ENUM(ImGuiKey, X),
+    ENUM(ImGuiKey, Y),
+    ENUM(ImGuiKey, Z),
+    ENUM(ImGuiKey, F1),
+    ENUM(ImGuiKey, F2),
+    ENUM(ImGuiKey, F3),
+    ENUM(ImGuiKey, F4),
+    ENUM(ImGuiKey, F5),
+    ENUM(ImGuiKey, F6),
+    ENUM(ImGuiKey, F7),
+    ENUM(ImGuiKey, F8),
+    ENUM(ImGuiKey, F9),
+    ENUM(ImGuiKey, F10),
+    ENUM(ImGuiKey, F11),
+    ENUM(ImGuiKey, F12),
+    ENUM(ImGuiKey, F13),
+    ENUM(ImGuiKey, F14),
+    ENUM(ImGuiKey, F15),
+    ENUM(ImGuiKey, F16),
+    ENUM(ImGuiKey, F17),
+    ENUM(ImGuiKey, F18),
+    ENUM(ImGuiKey, F19),
+    ENUM(ImGuiKey, F20),
+    ENUM(ImGuiKey, F21),
+    ENUM(ImGuiKey, F22),
+    ENUM(ImGuiKey, F23),
+    ENUM(ImGuiKey, F24),
+    ENUM(ImGuiKey, Apostrophe),
+    ENUM(ImGuiKey, Comma),
+    ENUM(ImGuiKey, Minus),
+    ENUM(ImGuiKey, Period),
+    ENUM(ImGuiKey, Slash),
+    ENUM(ImGuiKey, Semicolon),
+    ENUM(ImGuiKey, Equal),
+    ENUM(ImGuiKey, LeftBracket),
+    ENUM(ImGuiKey, Backslash),
+    ENUM(ImGuiKey, RightBracket),
+    ENUM(ImGuiKey, GraveAccent),
+    ENUM(ImGuiKey, CapsLock),
+    ENUM(ImGuiKey, ScrollLock),
+    ENUM(ImGuiKey, NumLock),
+    ENUM(ImGuiKey, PrintScreen),
+    ENUM(ImGuiKey, Pause),
+    ENUM(ImGuiKey, Keypad0),
+    ENUM(ImGuiKey, Keypad1),
+    ENUM(ImGuiKey, Keypad2),
+    ENUM(ImGuiKey, Keypad3),
+    ENUM(ImGuiKey, Keypad4),
+    ENUM(ImGuiKey, Keypad5),
+    ENUM(ImGuiKey, Keypad6),
+    ENUM(ImGuiKey, Keypad7),
+    ENUM(ImGuiKey, Keypad8),
+    ENUM(ImGuiKey, Keypad9),
+    ENUM(ImGuiKey, KeypadDecimal),
+    ENUM(ImGuiKey, KeypadDivide),
+    ENUM(ImGuiKey, KeypadMultiply),
+    ENUM(ImGuiKey, KeypadSubtract),
+    ENUM(ImGuiKey, KeypadAdd),
+    ENUM(ImGuiKey, KeypadEnter),
+    ENUM(ImGuiKey, KeypadEqual),
+    ENUM(ImGuiKey, AppBack),
+    ENUM(ImGuiKey, AppForward),
+    ENUM(ImGuiKey, GamepadStart),
+    ENUM(ImGuiKey, GamepadBack),
+    ENUM(ImGuiKey, GamepadFaceLeft),
+    ENUM(ImGuiKey, GamepadFaceRight),
+    ENUM(ImGuiKey, GamepadFaceUp),
+    ENUM(ImGuiKey, GamepadFaceDown),
+    ENUM(ImGuiKey, GamepadDpadLeft),
+    ENUM(ImGuiKey, GamepadDpadRight),
+    ENUM(ImGuiKey, GamepadDpadUp),
+    ENUM(ImGuiKey, GamepadDpadDown),
+    ENUM(ImGuiKey, GamepadL1),
+    ENUM(ImGuiKey, GamepadR1),
+    ENUM(ImGuiKey, GamepadL2),
+    ENUM(ImGuiKey, GamepadR2),
+    ENUM(ImGuiKey, GamepadL3),
+    ENUM(ImGuiKey, GamepadR3),
+    ENUM(ImGuiKey, GamepadLStickLeft),
+    ENUM(ImGuiKey, GamepadLStickRight),
+    ENUM(ImGuiKey, GamepadLStickUp),
+    ENUM(ImGuiKey, GamepadLStickDown),
+    ENUM(ImGuiKey, GamepadRStickLeft),
+    ENUM(ImGuiKey, GamepadRStickRight),
+    ENUM(ImGuiKey, GamepadRStickUp),
+    ENUM(ImGuiKey, GamepadRStickDown),
+    ENUM(ImGuiKey, MouseLeft),
+    ENUM(ImGuiKey, MouseRight),
+    ENUM(ImGuiKey, MouseMiddle),
+    ENUM(ImGuiKey, MouseX1),
+    ENUM(ImGuiKey, MouseX2),
+    ENUM(ImGuiKey, MouseWheelX),
+    ENUM(ImGuiKey, MouseWheelY),
+};
+
+static util::TableInteger ConfigFlags[] = {
+    ENUM(ImGuiConfigFlags, None),
+    ENUM(ImGuiConfigFlags, NavEnableKeyboard),
+    ENUM(ImGuiConfigFlags, NavEnableGamepad),
+    ENUM(ImGuiConfigFlags, NavEnableSetMousePos),
+    ENUM(ImGuiConfigFlags, NavNoCaptureKeyboard),
+    ENUM(ImGuiConfigFlags, NoMouse),
+    ENUM(ImGuiConfigFlags, NoMouseCursorChange),
+    ENUM(ImGuiConfigFlags, DockingEnable),
+    ENUM(ImGuiConfigFlags, ViewportsEnable),
+    ENUM(ImGuiConfigFlags, DpiEnableScaleViewports),
+    ENUM(ImGuiConfigFlags, DpiEnableScaleFonts),
+    ENUM(ImGuiConfigFlags, IsSRGB),
+    ENUM(ImGuiConfigFlags, IsTouchScreen),
+};
+
+static util::TableInteger BackendFlags[] = {
+    ENUM(ImGuiBackendFlags, None),
+    ENUM(ImGuiBackendFlags, HasGamepad),
+    ENUM(ImGuiBackendFlags, HasMouseCursors),
+    ENUM(ImGuiBackendFlags, HasSetMousePos),
+    ENUM(ImGuiBackendFlags, RendererHasVtxOffset),
+    ENUM(ImGuiBackendFlags, PlatformHasViewports),
+    ENUM(ImGuiBackendFlags, HasMouseHoveredViewport),
+    ENUM(ImGuiBackendFlags, RendererHasViewports),
+};
+
+static util::TableInteger Col[] = {
+    ENUM(ImGuiCol, Text),
+    ENUM(ImGuiCol, TextDisabled),
+    ENUM(ImGuiCol, WindowBg),
+    ENUM(ImGuiCol, ChildBg),
+    ENUM(ImGuiCol, PopupBg),
+    ENUM(ImGuiCol, Border),
+    ENUM(ImGuiCol, BorderShadow),
+    ENUM(ImGuiCol, FrameBg),
+    ENUM(ImGuiCol, FrameBgHovered),
+    ENUM(ImGuiCol, FrameBgActive),
+    ENUM(ImGuiCol, TitleBg),
+    ENUM(ImGuiCol, TitleBgActive),
+    ENUM(ImGuiCol, TitleBgCollapsed),
+    ENUM(ImGuiCol, MenuBarBg),
+    ENUM(ImGuiCol, ScrollbarBg),
+    ENUM(ImGuiCol, ScrollbarGrab),
+    ENUM(ImGuiCol, ScrollbarGrabHovered),
+    ENUM(ImGuiCol, ScrollbarGrabActive),
+    ENUM(ImGuiCol, CheckMark),
+    ENUM(ImGuiCol, SliderGrab),
+    ENUM(ImGuiCol, SliderGrabActive),
+    ENUM(ImGuiCol, Button),
+    ENUM(ImGuiCol, ButtonHovered),
+    ENUM(ImGuiCol, ButtonActive),
+    ENUM(ImGuiCol, Header),
+    ENUM(ImGuiCol, HeaderHovered),
+    ENUM(ImGuiCol, HeaderActive),
+    ENUM(ImGuiCol, Separator),
+    ENUM(ImGuiCol, SeparatorHovered),
+    ENUM(ImGuiCol, SeparatorActive),
+    ENUM(ImGuiCol, ResizeGrip),
+    ENUM(ImGuiCol, ResizeGripHovered),
+    ENUM(ImGuiCol, ResizeGripActive),
+    ENUM(ImGuiCol, Tab),
+    ENUM(ImGuiCol, TabHovered),
+    ENUM(ImGuiCol, TabActive),
+    ENUM(ImGuiCol, TabUnfocused),
+    ENUM(ImGuiCol, TabUnfocusedActive),
+    ENUM(ImGuiCol, DockingPreview),
+    ENUM(ImGuiCol, DockingEmptyBg),
+    ENUM(ImGuiCol, PlotLines),
+    ENUM(ImGuiCol, PlotLinesHovered),
+    ENUM(ImGuiCol, PlotHistogram),
+    ENUM(ImGuiCol, PlotHistogramHovered),
+    ENUM(ImGuiCol, TableHeaderBg),
+    ENUM(ImGuiCol, TableBorderStrong),
+    ENUM(ImGuiCol, TableBorderLight),
+    ENUM(ImGuiCol, TableRowBg),
+    ENUM(ImGuiCol, TableRowBgAlt),
+    ENUM(ImGuiCol, TextSelectedBg),
+    ENUM(ImGuiCol, DragDropTarget),
+    ENUM(ImGuiCol, NavHighlight),
+    ENUM(ImGuiCol, NavWindowingHighlight),
+    ENUM(ImGuiCol, NavWindowingDimBg),
+    ENUM(ImGuiCol, ModalWindowDimBg),
+};
+
+static util::TableInteger StyleVar[] = {
+    ENUM(ImGuiStyleVar, Alpha),
+    ENUM(ImGuiStyleVar, DisabledAlpha),
+    ENUM(ImGuiStyleVar, WindowPadding),
+    ENUM(ImGuiStyleVar, WindowRounding),
+    ENUM(ImGuiStyleVar, WindowBorderSize),
+    ENUM(ImGuiStyleVar, WindowMinSize),
+    ENUM(ImGuiStyleVar, WindowTitleAlign),
+    ENUM(ImGuiStyleVar, ChildRounding),
+    ENUM(ImGuiStyleVar, ChildBorderSize),
+    ENUM(ImGuiStyleVar, PopupRounding),
+    ENUM(ImGuiStyleVar, PopupBorderSize),
+    ENUM(ImGuiStyleVar, FramePadding),
+    ENUM(ImGuiStyleVar, FrameRounding),
+    ENUM(ImGuiStyleVar, FrameBorderSize),
+    ENUM(ImGuiStyleVar, ItemSpacing),
+    ENUM(ImGuiStyleVar, ItemInnerSpacing),
+    ENUM(ImGuiStyleVar, IndentSpacing),
+    ENUM(ImGuiStyleVar, CellPadding),
+    ENUM(ImGuiStyleVar, ScrollbarSize),
+    ENUM(ImGuiStyleVar, ScrollbarRounding),
+    ENUM(ImGuiStyleVar, GrabMinSize),
+    ENUM(ImGuiStyleVar, GrabRounding),
+    ENUM(ImGuiStyleVar, TabRounding),
+    ENUM(ImGuiStyleVar, TabBarBorderSize),
+    ENUM(ImGuiStyleVar, ButtonTextAlign),
+    ENUM(ImGuiStyleVar, SelectableTextAlign),
+    ENUM(ImGuiStyleVar, SeparatorTextBorderSize),
+    ENUM(ImGuiStyleVar, SeparatorTextAlign),
+    ENUM(ImGuiStyleVar, SeparatorTextPadding),
+    ENUM(ImGuiStyleVar, DockingSeparatorSize),
+};
+
+static util::TableInteger ButtonFlags[] = {
+    ENUM(ImGuiButtonFlags, None),
+    ENUM(ImGuiButtonFlags, MouseButtonLeft),
+    ENUM(ImGuiButtonFlags, MouseButtonRight),
+    ENUM(ImGuiButtonFlags, MouseButtonMiddle),
+};
+
+static util::TableInteger ColorEditFlags[] = {
+    ENUM(ImGuiColorEditFlags, None),
+    ENUM(ImGuiColorEditFlags, NoAlpha),
+    ENUM(ImGuiColorEditFlags, NoPicker),
+    ENUM(ImGuiColorEditFlags, NoOptions),
+    ENUM(ImGuiColorEditFlags, NoSmallPreview),
+    ENUM(ImGuiColorEditFlags, NoInputs),
+    ENUM(ImGuiColorEditFlags, NoTooltip),
+    ENUM(ImGuiColorEditFlags, NoLabel),
+    ENUM(ImGuiColorEditFlags, NoSidePreview),
+    ENUM(ImGuiColorEditFlags, NoDragDrop),
+    ENUM(ImGuiColorEditFlags, NoBorder),
+    ENUM(ImGuiColorEditFlags, AlphaBar),
+    ENUM(ImGuiColorEditFlags, AlphaPreview),
+    ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
+    ENUM(ImGuiColorEditFlags, HDR),
+    ENUM(ImGuiColorEditFlags, DisplayRGB),
+    ENUM(ImGuiColorEditFlags, DisplayHSV),
+    ENUM(ImGuiColorEditFlags, DisplayHex),
+    ENUM(ImGuiColorEditFlags, Uint8),
+    ENUM(ImGuiColorEditFlags, Float),
+    ENUM(ImGuiColorEditFlags, PickerHueBar),
+    ENUM(ImGuiColorEditFlags, PickerHueWheel),
+    ENUM(ImGuiColorEditFlags, InputRGB),
+    ENUM(ImGuiColorEditFlags, InputHSV),
+};
+
+static util::TableInteger SliderFlags[] = {
+    ENUM(ImGuiSliderFlags, None),
+    ENUM(ImGuiSliderFlags, AlwaysClamp),
+    ENUM(ImGuiSliderFlags, Logarithmic),
+    ENUM(ImGuiSliderFlags, NoRoundToFormat),
+    ENUM(ImGuiSliderFlags, NoInput),
+};
+
+static util::TableInteger MouseButton[] = {
+    ENUM(ImGuiMouseButton, Left),
+    ENUM(ImGuiMouseButton, Right),
+    ENUM(ImGuiMouseButton, Middle),
+};
+
+static util::TableInteger MouseCursor[] = {
+    ENUM(ImGuiMouseCursor, None),
+    ENUM(ImGuiMouseCursor, Arrow),
+    ENUM(ImGuiMouseCursor, TextInput),
+    ENUM(ImGuiMouseCursor, ResizeAll),
+    ENUM(ImGuiMouseCursor, ResizeNS),
+    ENUM(ImGuiMouseCursor, ResizeEW),
+    ENUM(ImGuiMouseCursor, ResizeNESW),
+    ENUM(ImGuiMouseCursor, ResizeNWSE),
+    ENUM(ImGuiMouseCursor, Hand),
+    ENUM(ImGuiMouseCursor, NotAllowed),
+};
+
+static util::TableInteger MouseSource[] = {
+    ENUM(ImGuiMouseSource, Mouse),
+    ENUM(ImGuiMouseSource, TouchScreen),
+    ENUM(ImGuiMouseSource, Pen),
+};
+
+static util::TableInteger Cond[] = {
+    ENUM(ImGuiCond, None),
+    ENUM(ImGuiCond, Always),
+    ENUM(ImGuiCond, Once),
+    ENUM(ImGuiCond, FirstUseEver),
+    ENUM(ImGuiCond, Appearing),
+};
+
+static util::TableInteger TableFlags[] = {
+    ENUM(ImGuiTableFlags, None),
+    ENUM(ImGuiTableFlags, Resizable),
+    ENUM(ImGuiTableFlags, Reorderable),
+    ENUM(ImGuiTableFlags, Hideable),
+    ENUM(ImGuiTableFlags, Sortable),
+    ENUM(ImGuiTableFlags, NoSavedSettings),
+    ENUM(ImGuiTableFlags, ContextMenuInBody),
+    ENUM(ImGuiTableFlags, RowBg),
+    ENUM(ImGuiTableFlags, BordersInnerH),
+    ENUM(ImGuiTableFlags, BordersOuterH),
+    ENUM(ImGuiTableFlags, BordersInnerV),
+    ENUM(ImGuiTableFlags, BordersOuterV),
+    ENUM(ImGuiTableFlags, BordersH),
+    ENUM(ImGuiTableFlags, BordersV),
+    ENUM(ImGuiTableFlags, BordersInner),
+    ENUM(ImGuiTableFlags, BordersOuter),
+    ENUM(ImGuiTableFlags, Borders),
+    ENUM(ImGuiTableFlags, NoBordersInBody),
+    ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
+    ENUM(ImGuiTableFlags, SizingFixedFit),
+    ENUM(ImGuiTableFlags, SizingFixedSame),
+    ENUM(ImGuiTableFlags, SizingStretchProp),
+    ENUM(ImGuiTableFlags, SizingStretchSame),
+    ENUM(ImGuiTableFlags, NoHostExtendX),
+    ENUM(ImGuiTableFlags, NoHostExtendY),
+    ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
+    ENUM(ImGuiTableFlags, PreciseWidths),
+    ENUM(ImGuiTableFlags, NoClip),
+    ENUM(ImGuiTableFlags, PadOuterX),
+    ENUM(ImGuiTableFlags, NoPadOuterX),
+    ENUM(ImGuiTableFlags, NoPadInnerX),
+    ENUM(ImGuiTableFlags, ScrollX),
+    ENUM(ImGuiTableFlags, ScrollY),
+    ENUM(ImGuiTableFlags, SortMulti),
+    ENUM(ImGuiTableFlags, SortTristate),
+    ENUM(ImGuiTableFlags, HighlightHoveredColumn),
+};
+
+static util::TableInteger TableColumnFlags[] = {
+    ENUM(ImGuiTableColumnFlags, None),
+    ENUM(ImGuiTableColumnFlags, Disabled),
+    ENUM(ImGuiTableColumnFlags, DefaultHide),
+    ENUM(ImGuiTableColumnFlags, DefaultSort),
+    ENUM(ImGuiTableColumnFlags, WidthStretch),
+    ENUM(ImGuiTableColumnFlags, WidthFixed),
+    ENUM(ImGuiTableColumnFlags, NoResize),
+    ENUM(ImGuiTableColumnFlags, NoReorder),
+    ENUM(ImGuiTableColumnFlags, NoHide),
+    ENUM(ImGuiTableColumnFlags, NoClip),
+    ENUM(ImGuiTableColumnFlags, NoSort),
+    ENUM(ImGuiTableColumnFlags, NoSortAscending),
+    ENUM(ImGuiTableColumnFlags, NoSortDescending),
+    ENUM(ImGuiTableColumnFlags, NoHeaderLabel),
+    ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
+    ENUM(ImGuiTableColumnFlags, PreferSortAscending),
+    ENUM(ImGuiTableColumnFlags, PreferSortDescending),
+    ENUM(ImGuiTableColumnFlags, IndentEnable),
+    ENUM(ImGuiTableColumnFlags, IndentDisable),
+    ENUM(ImGuiTableColumnFlags, AngledHeader),
+    ENUM(ImGuiTableColumnFlags, IsEnabled),
+    ENUM(ImGuiTableColumnFlags, IsVisible),
+    ENUM(ImGuiTableColumnFlags, IsSorted),
+    ENUM(ImGuiTableColumnFlags, IsHovered),
+};
+
+static util::TableInteger TableRowFlags[] = {
+    ENUM(ImGuiTableRowFlags, None),
+    ENUM(ImGuiTableRowFlags, Headers),
+};
+
+static util::TableInteger TableBgTarget[] = {
+    ENUM(ImGuiTableBgTarget, None),
+    ENUM(ImGuiTableBgTarget, RowBg0),
+    ENUM(ImGuiTableBgTarget, RowBg1),
+    ENUM(ImGuiTableBgTarget, CellBg),
+};
+
+static util::TableInteger DrawFlags[] = {
+    ENUM(ImDrawFlags, None),
+    ENUM(ImDrawFlags, Closed),
+    ENUM(ImDrawFlags, RoundCornersTopLeft),
+    ENUM(ImDrawFlags, RoundCornersTopRight),
+    ENUM(ImDrawFlags, RoundCornersBottomLeft),
+    ENUM(ImDrawFlags, RoundCornersBottomRight),
+    ENUM(ImDrawFlags, RoundCornersNone),
+    ENUM(ImDrawFlags, RoundCornersTop),
+    ENUM(ImDrawFlags, RoundCornersBottom),
+    ENUM(ImDrawFlags, RoundCornersLeft),
+    ENUM(ImDrawFlags, RoundCornersRight),
+    ENUM(ImDrawFlags, RoundCornersAll),
+};
+
+static util::TableInteger DrawListFlags[] = {
+    ENUM(ImDrawListFlags, None),
+    ENUM(ImDrawListFlags, AntiAliasedLines),
+    ENUM(ImDrawListFlags, AntiAliasedLinesUseTex),
+    ENUM(ImDrawListFlags, AntiAliasedFill),
+    ENUM(ImDrawListFlags, AllowVtxOffset),
+};
+
+static util::TableInteger FontAtlasFlags[] = {
+    ENUM(ImFontAtlasFlags, None),
+    ENUM(ImFontAtlasFlags, NoPowerOfTwoHeight),
+    ENUM(ImFontAtlasFlags, NoMouseCursors),
+    ENUM(ImFontAtlasFlags, NoBakedLines),
+};
+
+static util::TableInteger ViewportFlags[] = {
+    ENUM(ImGuiViewportFlags, None),
+    ENUM(ImGuiViewportFlags, IsPlatformWindow),
+    ENUM(ImGuiViewportFlags, IsPlatformMonitor),
+    ENUM(ImGuiViewportFlags, OwnedByApp),
+    ENUM(ImGuiViewportFlags, NoDecoration),
+    ENUM(ImGuiViewportFlags, NoTaskBarIcon),
+    ENUM(ImGuiViewportFlags, NoFocusOnAppearing),
+    ENUM(ImGuiViewportFlags, NoFocusOnClick),
+    ENUM(ImGuiViewportFlags, NoInputs),
+    ENUM(ImGuiViewportFlags, NoRendererClear),
+    ENUM(ImGuiViewportFlags, NoAutoMerge),
+    ENUM(ImGuiViewportFlags, TopMost),
+    ENUM(ImGuiViewportFlags, CanHostOtherWindows),
+    ENUM(ImGuiViewportFlags, IsMinimized),
+    ENUM(ImGuiViewportFlags, IsFocused),
+};
+
+static util::TableInteger Mod[] = {
+    ENUM(ImGuiMod, None),
+    ENUM(ImGuiMod, Ctrl),
+    ENUM(ImGuiMod, Shift),
+    ENUM(ImGuiMod, Alt),
+    ENUM(ImGuiMod, Super),
+    ENUM(ImGuiMod, Shortcut),
+};
+
+#undef ENUM
+
 static int Begin(lua_State* L) {
     auto name = luaL_checkstring(L, 1);
     bool has_p_open = !lua_isnil(L, 2);
@@ -352,11 +1066,6 @@ static int SetScrollFromPosY(lua_State* L) {
     return 0;
 }
 
-static int PopFont(lua_State* L) {
-    ImGui::PopFont();
-    return 0;
-}
-
 static int PushStyleColor(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
     auto col = (ImU32)luaL_checkinteger(L, 2);
@@ -516,6 +1225,16 @@ static int GetColorU32ImU32(lua_State* L) {
     auto _retval = ImGui::GetColorU32(col);
     lua_pushinteger(L, _retval);
     return 1;
+}
+
+static int GetStyleColorVec4(lua_State* L) {
+    auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::GetStyleColorVec4(idx);
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    lua_pushnumber(L, _retval.z);
+    lua_pushnumber(L, _retval.w);
+    return 4;
 }
 
 static int GetCursorScreenPos(lua_State* L) {
@@ -857,6 +1576,23 @@ static int CheckboxFlagsIntPtr(lua_State* L) {
     return 1;
 }
 
+static int CheckboxFlagsUintPtr(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _flags_index = 2;
+    unsigned int flags[] = {
+        (unsigned int)util::field_tointeger(L, 2, 1),
+    };
+    auto flags_value = (unsigned int)luaL_checkinteger(L, 3);
+    auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, flags[0]);
+        lua_seti(L, _flags_index, 1);
+    };
+    return 1;
+}
+
 static int RadioButton(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto active = !!lua_toboolean(L, 2);
@@ -896,6 +1632,90 @@ static int ProgressBar(lua_State* L) {
 static int Bullet(lua_State* L) {
     ImGui::Bullet();
     return 0;
+}
+
+static int Image(lua_State* L) {
+    auto user_texture_id = util::get_texture_id(L, 1);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    ImGui::Image(user_texture_id, image_size);
+    return 0;
+}
+
+static int ImageEx(lua_State* L) {
+    auto user_texture_id = util::get_texture_id(L, 1);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 2),
+        (float)luaL_checknumber(L, 3),
+    };
+    auto uv0 = ImVec2 {
+        (float)luaL_optnumber(L, 4, 0),
+        (float)luaL_optnumber(L, 5, 0),
+    };
+    auto uv1 = ImVec2 {
+        (float)luaL_optnumber(L, 6, 1),
+        (float)luaL_optnumber(L, 7, 1),
+    };
+    auto tint_col = ImVec4 {
+        (float)luaL_optnumber(L, 8, 1),
+        (float)luaL_optnumber(L, 9, 1),
+        (float)luaL_optnumber(L, 10, 1),
+        (float)luaL_optnumber(L, 11, 1),
+    };
+    auto border_col = ImVec4 {
+        (float)luaL_optnumber(L, 12, 0),
+        (float)luaL_optnumber(L, 13, 0),
+        (float)luaL_optnumber(L, 14, 0),
+        (float)luaL_optnumber(L, 15, 0),
+    };
+    ImGui::Image(user_texture_id, image_size, uv0, uv1, tint_col, border_col);
+    return 0;
+}
+
+static int ImageButton(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto user_texture_id = util::get_texture_id(L, 2);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    auto _retval = ImGui::ImageButton(str_id, user_texture_id, image_size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int ImageButtonEx(lua_State* L) {
+    auto str_id = luaL_checkstring(L, 1);
+    auto user_texture_id = util::get_texture_id(L, 2);
+    auto image_size = ImVec2 {
+        (float)luaL_checknumber(L, 3),
+        (float)luaL_checknumber(L, 4),
+    };
+    auto uv0 = ImVec2 {
+        (float)luaL_optnumber(L, 5, 0),
+        (float)luaL_optnumber(L, 6, 0),
+    };
+    auto uv1 = ImVec2 {
+        (float)luaL_optnumber(L, 7, 1),
+        (float)luaL_optnumber(L, 8, 1),
+    };
+    auto bg_col = ImVec4 {
+        (float)luaL_optnumber(L, 9, 0),
+        (float)luaL_optnumber(L, 10, 0),
+        (float)luaL_optnumber(L, 11, 0),
+        (float)luaL_optnumber(L, 12, 0),
+    };
+    auto tint_col = ImVec4 {
+        (float)luaL_optnumber(L, 13, 1),
+        (float)luaL_optnumber(L, 14, 1),
+        (float)luaL_optnumber(L, 15, 1),
+        (float)luaL_optnumber(L, 16, 1),
+    };
+    auto _retval = ImGui::ImageButton(str_id, user_texture_id, image_size, uv0, uv1, bg_col, tint_col);
+    lua_pushboolean(L, _retval);
+    return 1;
 }
 
 static int BeginCombo(lua_State* L) {
@@ -1931,6 +2751,320 @@ static int VSliderIntEx(lua_State* L) {
     return 1;
 }
 
+static int InputFloat(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+    };
+    auto _retval = ImGui::InputFloat(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int InputFloatEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+    };
+    auto step = (float)luaL_optnumber(L, 3, 0.0f);
+    auto step_fast = (float)luaL_optnumber(L, 4, 0.0f);
+    auto format = luaL_optstring(L, 5, "%.3f");
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputFloat(label, v, step, step_fast, format, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int InputFloat2(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+    };
+    auto _retval = ImGui::InputFloat2(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushnumber(L, v[1]);
+        lua_seti(L, _v_index, 2);
+    };
+    return 1;
+}
+
+static int InputFloat2Ex(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+    };
+    auto format = luaL_optstring(L, 3, "%.3f");
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputFloat2(label, v, format, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushnumber(L, v[1]);
+        lua_seti(L, _v_index, 2);
+    };
+    return 1;
+}
+
+static int InputFloat3(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+    };
+    auto _retval = ImGui::InputFloat3(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushnumber(L, v[1]);
+        lua_seti(L, _v_index, 2);
+        lua_pushnumber(L, v[2]);
+        lua_seti(L, _v_index, 3);
+    };
+    return 1;
+}
+
+static int InputFloat3Ex(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+    };
+    auto format = luaL_optstring(L, 3, "%.3f");
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputFloat3(label, v, format, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushnumber(L, v[1]);
+        lua_seti(L, _v_index, 2);
+        lua_pushnumber(L, v[2]);
+        lua_seti(L, _v_index, 3);
+    };
+    return 1;
+}
+
+static int InputFloat4(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
+    };
+    auto _retval = ImGui::InputFloat4(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushnumber(L, v[1]);
+        lua_seti(L, _v_index, 2);
+        lua_pushnumber(L, v[2]);
+        lua_seti(L, _v_index, 3);
+        lua_pushnumber(L, v[3]);
+        lua_seti(L, _v_index, 4);
+    };
+    return 1;
+}
+
+static int InputFloat4Ex(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    float v[] = {
+        (float)util::field_tonumber(L, 2, 1),
+        (float)util::field_tonumber(L, 2, 2),
+        (float)util::field_tonumber(L, 2, 3),
+        (float)util::field_tonumber(L, 2, 4),
+    };
+    auto format = luaL_optstring(L, 3, "%.3f");
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputFloat4(label, v, format, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushnumber(L, v[1]);
+        lua_seti(L, _v_index, 2);
+        lua_pushnumber(L, v[2]);
+        lua_seti(L, _v_index, 3);
+        lua_pushnumber(L, v[3]);
+        lua_seti(L, _v_index, 4);
+    };
+    return 1;
+}
+
+static int InputInt(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    int v[] = {
+        (int)util::field_tointeger(L, 2, 1),
+    };
+    auto _retval = ImGui::InputInt(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int InputIntEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    int v[] = {
+        (int)util::field_tointeger(L, 2, 1),
+    };
+    auto step = (int)luaL_optinteger(L, 3, 1);
+    auto step_fast = (int)luaL_optinteger(L, 4, 100);
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputInt(label, v, step, step_fast, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int InputInt2(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    int v[] = {
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+    };
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputInt2(label, v, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushinteger(L, v[1]);
+        lua_seti(L, _v_index, 2);
+    };
+    return 1;
+}
+
+static int InputInt3(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    int v[] = {
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
+    };
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputInt3(label, v, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushinteger(L, v[1]);
+        lua_seti(L, _v_index, 2);
+        lua_pushinteger(L, v[2]);
+        lua_seti(L, _v_index, 3);
+    };
+    return 1;
+}
+
+static int InputInt4(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    int v[] = {
+        (int)util::field_tointeger(L, 2, 1),
+        (int)util::field_tointeger(L, 2, 2),
+        (int)util::field_tointeger(L, 2, 3),
+        (int)util::field_tointeger(L, 2, 4),
+    };
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputInt4(label, v, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushinteger(L, v[0]);
+        lua_seti(L, _v_index, 1);
+        lua_pushinteger(L, v[1]);
+        lua_seti(L, _v_index, 2);
+        lua_pushinteger(L, v[2]);
+        lua_seti(L, _v_index, 3);
+        lua_pushinteger(L, v[3]);
+        lua_seti(L, _v_index, 4);
+    };
+    return 1;
+}
+
+static int InputDouble(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    double v[] = {
+        (double)util::field_tonumber(L, 2, 1),
+    };
+    auto _retval = ImGui::InputDouble(label, v);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
+static int InputDoubleEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int _v_index = 2;
+    double v[] = {
+        (double)util::field_tonumber(L, 2, 1),
+    };
+    auto step = (double)luaL_optnumber(L, 3, 0.0);
+    auto step_fast = (double)luaL_optnumber(L, 4, 0.0);
+    auto format = luaL_optstring(L, 5, "%.6f");
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiInputTextFlags_None));
+    auto _retval = ImGui::InputDouble(label, v, step, step_fast, format, flags);
+    lua_pushboolean(L, _retval);
+    if (_retval) {
+        lua_pushnumber(L, v[0]);
+        lua_seti(L, _v_index, 1);
+    };
+    return 1;
+}
+
 static int ColorEdit3(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
@@ -2607,6 +3741,25 @@ static int SetTabItemClosed(lua_State* L) {
     return 0;
 }
 
+static int DockSpace(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto _retval = ImGui::DockSpace(id);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int DockSpaceEx(lua_State* L) {
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 2, 0),
+        (float)luaL_optnumber(L, 3, 0),
+    };
+    auto flags = (ImGuiDockNodeFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiDockNodeFlags_None));
+    auto _retval = ImGui::DockSpace(id, size, flags);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
 static int DockSpaceOverViewport(lua_State* L) {
     auto _retval = ImGui::DockSpaceOverViewport();
     lua_pushinteger(L, _retval);
@@ -3176,8 +4329,8 @@ static int GetKeyIndex(lua_State* L) {
     return 1;
 }
 
-void init(lua_State* L) {
-    luaL_Reg funcs[] = {
+void init(lua_State* L, int extra) {
+    static luaL_Reg funcs[] = {
         { "Begin", Begin },
         { "End", End },
         { "BeginChild", BeginChild },
@@ -3224,7 +4377,6 @@ void init(lua_State* L) {
         { "SetScrollHereY", SetScrollHereY },
         { "SetScrollFromPosX", SetScrollFromPosX },
         { "SetScrollFromPosY", SetScrollFromPosY },
-        { "PopFont", PopFont },
         { "PushStyleColor", PushStyleColor },
         { "PushStyleColorImVec4", PushStyleColorImVec4 },
         { "PopStyleColor", PopStyleColor },
@@ -3249,6 +4401,7 @@ void init(lua_State* L) {
         { "GetColorU32Ex", GetColorU32Ex },
         { "GetColorU32ImVec4", GetColorU32ImVec4 },
         { "GetColorU32ImU32", GetColorU32ImU32 },
+        { "GetStyleColorVec4", GetStyleColorVec4 },
         { "GetCursorScreenPos", GetCursorScreenPos },
         { "SetCursorScreenPos", SetCursorScreenPos },
         { "GetCursorPos", GetCursorPos },
@@ -3297,10 +4450,15 @@ void init(lua_State* L) {
         { "ArrowButton", ArrowButton },
         { "Checkbox", Checkbox },
         { "CheckboxFlagsIntPtr", CheckboxFlagsIntPtr },
+        { "CheckboxFlagsUintPtr", CheckboxFlagsUintPtr },
         { "RadioButton", RadioButton },
         { "RadioButtonIntPtr", RadioButtonIntPtr },
         { "ProgressBar", ProgressBar },
         { "Bullet", Bullet },
+        { "Image", Image },
+        { "ImageEx", ImageEx },
+        { "ImageButton", ImageButton },
+        { "ImageButtonEx", ImageButtonEx },
         { "BeginCombo", BeginCombo },
         { "EndCombo", EndCombo },
         { "Combo", Combo },
@@ -3347,6 +4505,21 @@ void init(lua_State* L) {
         { "VSliderFloatEx", VSliderFloatEx },
         { "VSliderInt", VSliderInt },
         { "VSliderIntEx", VSliderIntEx },
+        { "InputFloat", InputFloat },
+        { "InputFloatEx", InputFloatEx },
+        { "InputFloat2", InputFloat2 },
+        { "InputFloat2Ex", InputFloat2Ex },
+        { "InputFloat3", InputFloat3 },
+        { "InputFloat3Ex", InputFloat3Ex },
+        { "InputFloat4", InputFloat4 },
+        { "InputFloat4Ex", InputFloat4Ex },
+        { "InputInt", InputInt },
+        { "InputIntEx", InputIntEx },
+        { "InputInt2", InputInt2 },
+        { "InputInt3", InputInt3 },
+        { "InputInt4", InputInt4 },
+        { "InputDouble", InputDouble },
+        { "InputDoubleEx", InputDoubleEx },
         { "ColorEdit3", ColorEdit3 },
         { "ColorEdit4", ColorEdit4 },
         { "ColorPicker3", ColorPicker3 },
@@ -3427,6 +4600,8 @@ void init(lua_State* L) {
         { "EndTabItem", EndTabItem },
         { "TabItemButton", TabItemButton },
         { "SetTabItemClosed", SetTabItemClosed },
+        { "DockSpace", DockSpace },
+        { "DockSpaceEx", DockSpaceEx },
         { "DockSpaceOverViewport", DockSpaceOverViewport },
         { "SetNextWindowDockID", SetNextWindowDockID },
         { "GetWindowDockID", GetWindowDockID },
@@ -3508,7 +4683,70 @@ void init(lua_State* L) {
         { "GetKeyIndex", GetKeyIndex },
         { NULL, NULL },
     };
-    luaL_setfuncs(L, funcs, 0);
+
+    #define GEN_FLAGS(name) { #name, +[](lua_State* L){ \
+         util::create_table(L, name); \
+         util::flags_gen(L, #name); \
+    }}
+
+    static util::TableAny flags[] = {
+        GEN_FLAGS(WindowFlags),
+        GEN_FLAGS(ChildFlags),
+        GEN_FLAGS(InputTextFlags),
+        GEN_FLAGS(TreeNodeFlags),
+        GEN_FLAGS(PopupFlags),
+        GEN_FLAGS(SelectableFlags),
+        GEN_FLAGS(ComboFlags),
+        GEN_FLAGS(TabBarFlags),
+        GEN_FLAGS(TabItemFlags),
+        GEN_FLAGS(FocusedFlags),
+        GEN_FLAGS(HoveredFlags),
+        GEN_FLAGS(DockNodeFlags),
+        GEN_FLAGS(DragDropFlags),
+        GEN_FLAGS(ConfigFlags),
+        GEN_FLAGS(BackendFlags),
+        GEN_FLAGS(ButtonFlags),
+        GEN_FLAGS(ColorEditFlags),
+        GEN_FLAGS(SliderFlags),
+        GEN_FLAGS(TableFlags),
+        GEN_FLAGS(TableColumnFlags),
+        GEN_FLAGS(TableRowFlags),
+        GEN_FLAGS(DrawFlags),
+        GEN_FLAGS(DrawListFlags),
+        GEN_FLAGS(FontAtlasFlags),
+        GEN_FLAGS(ViewportFlags),
+    };
+    #undef GEN_FLAGS
+
+    #define GEN_ENUM(name) { #name, +[](lua_State* L){ \
+         util::create_table(L, name); \
+    }}
+
+    static util::TableAny enums[] = {
+        GEN_ENUM(DataType),
+        GEN_ENUM(Dir),
+        GEN_ENUM(SortDirection),
+        GEN_ENUM(Key),
+        GEN_ENUM(Col),
+        GEN_ENUM(StyleVar),
+        GEN_ENUM(MouseButton),
+        GEN_ENUM(MouseCursor),
+        GEN_ENUM(MouseSource),
+        GEN_ENUM(Cond),
+        GEN_ENUM(TableBgTarget),
+        GEN_ENUM(Mod),
+    };
+    #undef GEN_ENUM
+
     util::init(L);
+    lua_createtable(L, 0,
+        sizeof(funcs) / sizeof(funcs[0]) - 1 +
+        sizeof(flags) / sizeof(flags[0]) +
+        sizeof(enums) / sizeof(enums[0]) +
+        extra
+    );
+    luaL_setfuncs(L, funcs, 0);
+    util::set_table(L, flags);
+    util::set_table(L, enums);
 }
 }

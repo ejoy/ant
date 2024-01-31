@@ -399,11 +399,7 @@ wPropertyLabel(lua_State* L) {
 }
 
 extern "C"
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
-int
-luaopen_imgui_widgets(lua_State *L) {
+int luaopen_imgui_widgets(lua_State *L) {
     luaL_Reg lib[] = {
         { "Sequencer", wSequencer },
         { "SimpleSequencer", wSimpleSequencer },

@@ -454,7 +454,7 @@ function m:choose_prefab()
     if not ImGui.IsPopupOpen(title) then
         ImGui.OpenPopup(title)
     end
-    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
     if change then
         if gd.is_opening then
 
@@ -498,7 +498,7 @@ function m:choose_prefab()
         end
         ImGui.Separator()
         for _, prefab in ipairs(prefab_list) do
-            if ImGui.SelectableEx(prefab, false, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+            if ImGui.SelectableEx(prefab, false, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                 if gd.is_opening then
                     self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
                 else
@@ -557,10 +557,12 @@ local function cook_prefab(prefab_filename)
     end
     return compile_path
 end
+
 function m:compile_current_glb()
     local virtual_prefab_path = lfs.path('/') / lfs.relative(self.glb_filename, gd.project_root)
     compile_glb(virtual_prefab_path, lfs.path(self.glb_filename))
 end
+
 function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
@@ -618,8 +620,8 @@ function m:open(filename, prefab_name, patch_tpl)
             world:pub {"LookAtTarget", self.entities[1]}
         end
     }
-    editor_setting.add_recent_file(filename)
-    editor_setting.save()
+    local glbfile, _ = filename:match "([^|]+)|([%a%.]+)"
+    editor_setting.add_recent_file(glbfile and glbfile or filename)
     world:pub {"WindowTitle", virtual_prefab_path}
 end
 

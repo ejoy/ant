@@ -80,9 +80,6 @@ static int lsave(lua_State* L) {
 }
 
 extern "C"
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
 int luaopen_filedialog(lua_State* L) {
     static luaL_Reg lib[] = {
         { "open", lopen },

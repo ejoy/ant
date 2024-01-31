@@ -38,15 +38,15 @@ end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Enum.Cond.FirstUseEver)
-    if ImGui.Begin("GridMesh", nil, ImGui.Flags.Window { "NoCollapse" }) then
+    ImGui.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
+    if ImGui.Begin("GridMesh", nil, ImGui.WindowFlags { "NoCollapse" }) then
         local title = "CreateGridMesh"
         if ImGui.Button("Create") then
             ImGui.OpenPopup(title)
         end
 
-        local change = ImGui.BeginPopupModal(title, nil, ImGui.Flags.Window{"AlwaysAutoResize"})
+        local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags {"AlwaysAutoResize"})
         if change then
             local label = "Grid Size : "
             ImGui.Text(label)

@@ -40,10 +40,10 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
     ImGui.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0)
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0)
-    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.WindowBg, 0.25, 0.25, 0.25, 1)
-    if ImGui.Begin("Controll", nil, ImGui.Flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) then
+    ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0)
+    ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0)
+    ImGui.PushStyleColorImVec4(ImGui.Col.WindowBg, 0.25, 0.25, 0.25, 1)
+    if ImGui.Begin("Controll", nil, ImGui.WindowFlags { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) then
         uiutils.imguiBeginToolbar()
         if uiutils.imguiToolbar(icons.ICON_SELECT, "Select", status.GizmoMode == "select") then
             status.GizmoMode = "select"

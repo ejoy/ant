@@ -63,11 +63,9 @@ function m.show()
             if ImGui.BeginMenu(faicons.ICON_FA_LIST.." Recent Files") then
                 local rf = editor_setting.setting.recent_files
                 if rf then
-                    for _, f in ipairs(editor_setting.setting.recent_files) do
-                        local ff = f:match "([^|]+)|mesh.prefab"
-                        ff = ff or f
-                        if fs.exists(fs.path(ff)) and ImGui.MenuItem(ff) then
-                            world:pub{"OpenFile", ff}
+                    for _, filepath in ipairs(editor_setting.setting.recent_files) do
+                        if lfs.exists(lfs.path(filepath)) and ImGui.MenuItem(filepath) then
+                            world:pub{"OpenFile", filepath, lfs.path(filepath):equal_extension(".prefab")}
                         end
                     end
                 end

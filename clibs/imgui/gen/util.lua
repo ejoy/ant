@@ -93,8 +93,6 @@ local BlackList <const> = {
 
 local TodoList <const> = {
     ImGui_TableGetSortSpecs = true,
-    ImGui_DockSpace = true,
-    ImGui_DockSpaceEx = true,
     ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
     ImGui_GetMainViewport = true,
@@ -128,31 +126,15 @@ local TodoList <const> = {
     ImGui_InputTextMultilineEx = true,
     ImGui_InputTextWithHint = true,
     ImGui_InputTextWithHintEx = true,
-    ImGui_InputFloat = true,
-    ImGui_InputFloatEx = true,
-    ImGui_InputFloat2 = true,
-    ImGui_InputFloat2Ex = true,
-    ImGui_InputFloat3 = true,
-    ImGui_InputFloat3Ex = true,
-    ImGui_InputFloat4 = true,
-    ImGui_InputFloat4Ex = true,
-    ImGui_InputInt = true,
-    ImGui_InputIntEx = true,
-    ImGui_InputInt2 = true,
-    ImGui_InputInt3 = true,
-    ImGui_InputInt4 = true,
-    ImGui_InputDouble = true,
-    ImGui_InputDoubleEx = true,
+
     ImGui_InputScalar = true,
     ImGui_InputScalarEx = true,
     ImGui_InputScalarN = true,
     ImGui_InputScalarNEx = true,
-
     ImGui_DragScalar = true,
     ImGui_DragScalarEx = true,
     ImGui_DragScalarN = true,
     ImGui_DragScalarNEx = true,
-
     ImGui_SliderScalar = true,
     ImGui_SliderScalarEx = true,
     ImGui_SliderScalarN = true,
@@ -166,13 +148,8 @@ local TodoList <const> = {
     ImGui_GetWindowViewport = true,
     ImGui_SetNextWindowSizeConstraints = true,
     ImGui_PushFont = true,
+    ImGui_PopFont = true,
     ImGui_GetFont = true,
-    ImGui_GetStyleColorVec4 = true,
-    ImGui_CheckboxFlagsUintPtr = true,
-    ImGui_Image = true,
-    ImGui_ImageEx = true,
-    ImGui_ImageButton = true,
-    ImGui_ImageButtonEx = true,
     ImGui_ComboChar = true,
     ImGui_ComboCharEx = true,
     ImGui_ComboCallback = true,
@@ -206,7 +183,7 @@ local function conditionals(t)
     assert(false, t.name)
 end
 
-return function (func_meta)
+local function allow(func_meta)
     if func_meta.is_internal then
         return
     end
@@ -227,3 +204,8 @@ return function (func_meta)
     end
     return true
 end
+
+return {
+    allow = allow,
+    conditionals = conditionals,
+}

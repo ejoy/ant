@@ -6,14 +6,11 @@
 
 local ImGui = {}
 
-ImGui.Flags = {}
-ImGui.Enum = {}
-
 --
 -- Flags for ImGui::Begin()
 -- (Those are per-window flags. There are shared flags in ImGuiIO: io.ConfigWindowsResizeFromEdges and io.ConfigWindowsMoveFromTitleBarOnly)
 --
----@class ImGuiWindowFlags
+---@class ImGui.WindowFlags
 
 ---@alias _ImGuiWindowFlags_Name
 ---| "None"
@@ -42,8 +39,8 @@ ImGui.Enum = {}
 ---| "NoInputs"
 
 ---@param flags _ImGuiWindowFlags_Name[]
----@return ImGuiWindowFlags
-function ImGui.Flags.Window(flags) end
+---@return ImGui.WindowFlags
+function ImGui.WindowFlags(flags) end
 
 --
 -- Flags for ImGui::BeginChild()
@@ -56,7 +53,7 @@ function ImGui.Flags.Window(flags) end
 --   - You may also use ImGuiChildFlags_AlwaysAutoResize to force an update even when child window is not in view.
 --     HOWEVER PLEASE UNDERSTAND THAT DOING SO WILL PREVENT BeginChild() FROM EVER RETURNING FALSE, disabling benefits of coarse clipping.
 --
----@class ImGuiChildFlags
+---@class ImGui.ChildFlags
 
 ---@alias _ImGuiChildFlags_Name
 ---| "None"
@@ -70,14 +67,14 @@ function ImGui.Flags.Window(flags) end
 ---| "FrameStyle" #  Style the child window like a framed item: use FrameBg, FrameRounding, FrameBorderSize, FramePadding instead of ChildBg, ChildRounding, ChildBorderSize, WindowPadding.
 
 ---@param flags _ImGuiChildFlags_Name[]
----@return ImGuiChildFlags
-function ImGui.Flags.Child(flags) end
+---@return ImGui.ChildFlags
+function ImGui.ChildFlags(flags) end
 
 --
 -- Flags for ImGui::InputText()
 -- (Those are per-item flags. There are shared flags in ImGuiIO: io.ConfigInputTextCursorBlink and io.ConfigInputTextEnterKeepActive)
 --
----@class ImGuiInputTextFlags
+---@class ImGui.InputTextFlags
 
 ---@alias _ImGuiInputTextFlags_Name
 ---| "None"
@@ -104,13 +101,13 @@ function ImGui.Flags.Child(flags) end
 ---| "EscapeClearsAll" #  Escape key clears content if not empty, and deactivate otherwise (contrast to default behavior of Escape to revert)
 
 ---@param flags _ImGuiInputTextFlags_Name[]
----@return ImGuiInputTextFlags
-function ImGui.Flags.InputText(flags) end
+---@return ImGui.InputTextFlags
+function ImGui.InputTextFlags(flags) end
 
 --
 -- Flags for ImGui::TreeNodeEx(), ImGui::CollapsingHeader*()
 --
----@class ImGuiTreeNodeFlags
+---@class ImGui.TreeNodeFlags
 
 ---@alias _ImGuiTreeNodeFlags_Name
 ---| "None"
@@ -132,8 +129,8 @@ function ImGui.Flags.InputText(flags) end
 ---| "CollapsingHeader"
 
 ---@param flags _ImGuiTreeNodeFlags_Name[]
----@return ImGuiTreeNodeFlags
-function ImGui.Flags.TreeNode(flags) end
+---@return ImGui.TreeNodeFlags
+function ImGui.TreeNodeFlags(flags) end
 
 --
 -- Flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
@@ -145,7 +142,7 @@ function ImGui.Flags.TreeNode(flags) end
 --   and want to use another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag explicitly.
 -- - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
 --
----@class ImGuiPopupFlags
+---@class ImGui.PopupFlags
 
 ---@alias _ImGuiPopupFlags_Name
 ---| "None"
@@ -159,13 +156,13 @@ function ImGui.Flags.TreeNode(flags) end
 ---| "AnyPopup"
 
 ---@param flags _ImGuiPopupFlags_Name[]
----@return ImGuiPopupFlags
-function ImGui.Flags.Popup(flags) end
+---@return ImGui.PopupFlags
+function ImGui.PopupFlags(flags) end
 
 --
 -- Flags for ImGui::Selectable()
 --
----@class ImGuiSelectableFlags
+---@class ImGui.SelectableFlags
 
 ---@alias _ImGuiSelectableFlags_Name
 ---| "None"
@@ -176,13 +173,13 @@ function ImGui.Flags.Popup(flags) end
 ---| "AllowOverlap" #  (WIP) Hit testing to allow subsequent widgets to overlap this one
 
 ---@param flags _ImGuiSelectableFlags_Name[]
----@return ImGuiSelectableFlags
-function ImGui.Flags.Selectable(flags) end
+---@return ImGui.SelectableFlags
+function ImGui.SelectableFlags(flags) end
 
 --
 -- Flags for ImGui::BeginCombo()
 --
----@class ImGuiComboFlags
+---@class ImGui.ComboFlags
 
 ---@alias _ImGuiComboFlags_Name
 ---| "None"
@@ -196,13 +193,13 @@ function ImGui.Flags.Selectable(flags) end
 ---| "WidthFitPreview" #  Width dynamically calculated from preview contents
 
 ---@param flags _ImGuiComboFlags_Name[]
----@return ImGuiComboFlags
-function ImGui.Flags.Combo(flags) end
+---@return ImGui.ComboFlags
+function ImGui.ComboFlags(flags) end
 
 --
 -- Flags for ImGui::BeginTabBar()
 --
----@class ImGuiTabBarFlags
+---@class ImGui.TabBarFlags
 
 ---@alias _ImGuiTabBarFlags_Name
 ---| "None"
@@ -216,13 +213,13 @@ function ImGui.Flags.Combo(flags) end
 ---| "FittingPolicyScroll" #  Add scroll buttons when tabs don't fit
 
 ---@param flags _ImGuiTabBarFlags_Name[]
----@return ImGuiTabBarFlags
-function ImGui.Flags.TabBar(flags) end
+---@return ImGui.TabBarFlags
+function ImGui.TabBarFlags(flags) end
 
 --
 -- Flags for ImGui::BeginTabItem()
 --
----@class ImGuiTabItemFlags
+---@class ImGui.TabItemFlags
 
 ---@alias _ImGuiTabItemFlags_Name
 ---| "None"
@@ -237,13 +234,13 @@ function ImGui.Flags.TabBar(flags) end
 ---| "NoAssumedClosure" #  Tab is selected when trying to close + closure is not immediately assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
 
 ---@param flags _ImGuiTabItemFlags_Name[]
----@return ImGuiTabItemFlags
-function ImGui.Flags.TabItem(flags) end
+---@return ImGui.TabItemFlags
+function ImGui.TabItemFlags(flags) end
 
 --
 -- Flags for ImGui::IsWindowFocused()
 --
----@class ImGuiFocusedFlags
+---@class ImGui.FocusedFlags
 
 ---@alias _ImGuiFocusedFlags_Name
 ---| "None"
@@ -255,15 +252,15 @@ function ImGui.Flags.TabItem(flags) end
 ---| "RootAndChildWindows"
 
 ---@param flags _ImGuiFocusedFlags_Name[]
----@return ImGuiFocusedFlags
-function ImGui.Flags.Focused(flags) end
+---@return ImGui.FocusedFlags
+function ImGui.FocusedFlags(flags) end
 
 --
 -- Flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()
 -- Note: if you are trying to check whether your mouse should be dispatched to Dear ImGui or to your app, you should use 'io.WantCaptureMouse' instead! Please read the FAQ!
 -- Note: windows with the ImGuiWindowFlags_NoInputs flag are ignored by IsWindowHovered() calls.
 --
----@class ImGuiHoveredFlags
+---@class ImGui.HoveredFlags
 
 ---@alias _ImGuiHoveredFlags_Name
 ---| "None" #  Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
@@ -289,15 +286,15 @@ function ImGui.Flags.Focused(flags) end
 ---| "NoSharedDelay" #  IsItemHovered() only: Disable shared delay system where moving from one item to the next keeps the previous timer for a short time (standard for tooltips with long delays)
 
 ---@param flags _ImGuiHoveredFlags_Name[]
----@return ImGuiHoveredFlags
-function ImGui.Flags.Hovered(flags) end
+---@return ImGui.HoveredFlags
+function ImGui.HoveredFlags(flags) end
 
 --
 -- Flags for ImGui::DockSpace(), shared/inherited by child nodes.
 -- (Some flags can be applied to individual nodes directly)
 -- FIXME-DOCK: Also see ImGuiDockNodeFlagsPrivate_ which may involve using the WIP and internal DockBuilder api.
 --
----@class ImGuiDockNodeFlags
+---@class ImGui.DockNodeFlags
 
 ---@alias _ImGuiDockNodeFlags_Name
 ---| "None"
@@ -310,13 +307,13 @@ function ImGui.Flags.Hovered(flags) end
 ---| "NoUndocking" #        // Disable undocking this node.
 
 ---@param flags _ImGuiDockNodeFlags_Name[]
----@return ImGuiDockNodeFlags
-function ImGui.Flags.DockNode(flags) end
+---@return ImGui.DockNodeFlags
+function ImGui.DockNodeFlags(flags) end
 
 --
 -- Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
 --
----@class ImGuiDragDropFlags
+---@class ImGui.DragDropFlags
 
 ---@alias _ImGuiDragDropFlags_Name
 ---| "None"
@@ -332,50 +329,41 @@ function ImGui.Flags.DockNode(flags) end
 ---| "AcceptPeekOnly" #  For peeking ahead and inspecting the payload before delivery.
 
 ---@param flags _ImGuiDragDropFlags_Name[]
----@return ImGuiDragDropFlags
-function ImGui.Flags.DragDrop(flags) end
+---@return ImGui.DragDropFlags
+function ImGui.DragDropFlags(flags) end
 
 --
 -- A primary data type
 --
----@class ImGuiDataType
-
----@class _ImGuiDataType_Name
----@field S8 ImGuiDataType #  signed char / char (with sensible compilers)
----@field U8 ImGuiDataType #  unsigned char
----@field S16 ImGuiDataType #  short
----@field U16 ImGuiDataType #  unsigned short
----@field S32 ImGuiDataType #  int
----@field U32 ImGuiDataType #  unsigned int
----@field S64 ImGuiDataType #  long long / __int64
----@field U64 ImGuiDataType #  unsigned long long / unsigned __int64
----@field Float ImGuiDataType #  float
----@field Double ImGuiDataType #  double
-ImGui.Enum.DataType = {}
+---@alias ImGui.DataType
+---| `ImGui.DataType.S8`     #  signed char / char (with sensible compilers)
+---| `ImGui.DataType.U8`     #  unsigned char
+---| `ImGui.DataType.S16`    #  short
+---| `ImGui.DataType.U16`    #  unsigned short
+---| `ImGui.DataType.S32`    #  int
+---| `ImGui.DataType.U32`    #  unsigned int
+---| `ImGui.DataType.S64`    #  long long / __int64
+---| `ImGui.DataType.U64`    #  unsigned long long / unsigned __int64
+---| `ImGui.DataType.Float`  #  float
+---| `ImGui.DataType.Double` #  double
 
 --
 -- A cardinal direction
 --
----@class ImGuiDir
-
----@class _ImGuiDir_Name
----@field None ImGuiDir
----@field Left ImGuiDir
----@field Right ImGuiDir
----@field Up ImGuiDir
----@field Down ImGuiDir
-ImGui.Enum.Dir = {}
+---@alias ImGui.Dir
+---| `ImGui.Dir.None`
+---| `ImGui.Dir.Left`
+---| `ImGui.Dir.Right`
+---| `ImGui.Dir.Up`
+---| `ImGui.Dir.Down`
 
 --
 -- A sorting direction
 --
----@class ImGuiSortDirection
-
----@class _ImGuiSortDirection_Name
----@field None ImGuiSortDirection
----@field Ascending ImGuiSortDirection #  Ascending = 0->9, A->Z etc.
----@field Descending ImGuiSortDirection #  Descending = 9->0, Z->A etc.
-ImGui.Enum.SortDirection = {}
+---@alias ImGui.SortDirection
+---| `ImGui.SortDirection.None`
+---| `ImGui.SortDirection.Ascending`  #  Ascending = 0->9, A->Z etc.
+---| `ImGui.SortDirection.Descending` #  Descending = 9->0, Z->A etc.
 
 --
 -- A key identifier (ImGuiKey_XXX or ImGuiMod_XXX value): can represent Keyboard, Mouse and Gamepad values.
@@ -387,173 +375,163 @@ ImGui.Enum.SortDirection = {}
 --
 -- Forward declared enum type ImGuiKey
 --
----@class ImGuiKey
-
----@class _ImGuiKey_Name
----@field None ImGuiKey
----@field Tab ImGuiKey #  == ImGuiKey_NamedKey_BEGIN
----@field LeftArrow ImGuiKey
----@field RightArrow ImGuiKey
----@field UpArrow ImGuiKey
----@field DownArrow ImGuiKey
----@field PageUp ImGuiKey
----@field PageDown ImGuiKey
----@field Home ImGuiKey
----@field End ImGuiKey
----@field Insert ImGuiKey
----@field Delete ImGuiKey
----@field Backspace ImGuiKey
----@field Space ImGuiKey
----@field Enter ImGuiKey
----@field Escape ImGuiKey
----@field LeftCtrl ImGuiKey
----@field LeftShift ImGuiKey
----@field LeftAlt ImGuiKey
----@field LeftSuper ImGuiKey
----@field RightCtrl ImGuiKey
----@field RightShift ImGuiKey
----@field RightAlt ImGuiKey
----@field RightSuper ImGuiKey
----@field Menu ImGuiKey
----@field [0] ImGuiKey
----@field [1] ImGuiKey
----@field [2] ImGuiKey
----@field [3] ImGuiKey
----@field [4] ImGuiKey
----@field [5] ImGuiKey
----@field [6] ImGuiKey
----@field [7] ImGuiKey
----@field [8] ImGuiKey
----@field [9] ImGuiKey
----@field A ImGuiKey
----@field B ImGuiKey
----@field C ImGuiKey
----@field D ImGuiKey
----@field E ImGuiKey
----@field F ImGuiKey
----@field G ImGuiKey
----@field H ImGuiKey
----@field I ImGuiKey
----@field J ImGuiKey
----@field K ImGuiKey
----@field L ImGuiKey
----@field M ImGuiKey
----@field N ImGuiKey
----@field O ImGuiKey
----@field P ImGuiKey
----@field Q ImGuiKey
----@field R ImGuiKey
----@field S ImGuiKey
----@field T ImGuiKey
----@field U ImGuiKey
----@field V ImGuiKey
----@field W ImGuiKey
----@field X ImGuiKey
----@field Y ImGuiKey
----@field Z ImGuiKey
----@field F1 ImGuiKey
----@field F2 ImGuiKey
----@field F3 ImGuiKey
----@field F4 ImGuiKey
----@field F5 ImGuiKey
----@field F6 ImGuiKey
----@field F7 ImGuiKey
----@field F8 ImGuiKey
----@field F9 ImGuiKey
----@field F10 ImGuiKey
----@field F11 ImGuiKey
----@field F12 ImGuiKey
----@field F13 ImGuiKey
----@field F14 ImGuiKey
----@field F15 ImGuiKey
----@field F16 ImGuiKey
----@field F17 ImGuiKey
----@field F18 ImGuiKey
----@field F19 ImGuiKey
----@field F20 ImGuiKey
----@field F21 ImGuiKey
----@field F22 ImGuiKey
----@field F23 ImGuiKey
----@field F24 ImGuiKey
----@field Apostrophe ImGuiKey #  '
----@field Comma ImGuiKey #  ,
----@field Minus ImGuiKey #  -
----@field Period ImGuiKey #  .
----@field Slash ImGuiKey #  /
----@field Semicolon ImGuiKey #  ;
----@field Equal ImGuiKey #  =
----@field LeftBracket ImGuiKey #  [
----@field Backslash ImGuiKey #  \ (this text inhibit multiline comment caused by backslash)
----@field RightBracket ImGuiKey #  ]
----@field GraveAccent ImGuiKey #  `
----@field CapsLock ImGuiKey
----@field ScrollLock ImGuiKey
----@field NumLock ImGuiKey
----@field PrintScreen ImGuiKey
----@field Pause ImGuiKey
----@field Keypad0 ImGuiKey
----@field Keypad1 ImGuiKey
----@field Keypad2 ImGuiKey
----@field Keypad3 ImGuiKey
----@field Keypad4 ImGuiKey
----@field Keypad5 ImGuiKey
----@field Keypad6 ImGuiKey
----@field Keypad7 ImGuiKey
----@field Keypad8 ImGuiKey
----@field Keypad9 ImGuiKey
----@field KeypadDecimal ImGuiKey
----@field KeypadDivide ImGuiKey
----@field KeypadMultiply ImGuiKey
----@field KeypadSubtract ImGuiKey
----@field KeypadAdd ImGuiKey
----@field KeypadEnter ImGuiKey
----@field KeypadEqual ImGuiKey
----@field AppBack ImGuiKey #  Available on some keyboard/mouses. Often referred as "Browser Back"
----@field AppForward ImGuiKey
----@field GamepadStart ImGuiKey #  Menu (Xbox)      + (Switch)   Start/Options (PS)
----@field GamepadBack ImGuiKey #  View (Xbox)      - (Switch)   Share (PS)
----@field GamepadFaceLeft ImGuiKey #  X (Xbox)         Y (Switch)   Square (PS)        // Tap: Toggle Menu. Hold: Windowing mode (Focus/Move/Resize windows)
----@field GamepadFaceRight ImGuiKey #  B (Xbox)         A (Switch)   Circle (PS)        // Cancel / Close / Exit
----@field GamepadFaceUp ImGuiKey #  Y (Xbox)         X (Switch)   Triangle (PS)      // Text Input / On-screen Keyboard
----@field GamepadFaceDown ImGuiKey #  A (Xbox)         B (Switch)   Cross (PS)         // Activate / Open / Toggle / Tweak
----@field GamepadDpadLeft ImGuiKey #  D-pad Left                                       // Move / Tweak / Resize Window (in Windowing mode)
----@field GamepadDpadRight ImGuiKey #  D-pad Right                                      // Move / Tweak / Resize Window (in Windowing mode)
----@field GamepadDpadUp ImGuiKey #  D-pad Up                                         // Move / Tweak / Resize Window (in Windowing mode)
----@field GamepadDpadDown ImGuiKey #  D-pad Down                                       // Move / Tweak / Resize Window (in Windowing mode)
----@field GamepadL1 ImGuiKey #  L Bumper (Xbox)  L (Switch)   L1 (PS)            // Tweak Slower / Focus Previous (in Windowing mode)
----@field GamepadR1 ImGuiKey #  R Bumper (Xbox)  R (Switch)   R1 (PS)            // Tweak Faster / Focus Next (in Windowing mode)
----@field GamepadL2 ImGuiKey #  L Trig. (Xbox)   ZL (Switch)  L2 (PS) [Analog]
----@field GamepadR2 ImGuiKey #  R Trig. (Xbox)   ZR (Switch)  R2 (PS) [Analog]
----@field GamepadL3 ImGuiKey #  L Stick (Xbox)   L3 (Switch)  L3 (PS)
----@field GamepadR3 ImGuiKey #  R Stick (Xbox)   R3 (Switch)  R3 (PS)
----@field GamepadLStickLeft ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
----@field GamepadLStickRight ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
----@field GamepadLStickUp ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
----@field GamepadLStickDown ImGuiKey #  [Analog]                                         // Move Window (in Windowing mode)
----@field GamepadRStickLeft ImGuiKey #  [Analog]
----@field GamepadRStickRight ImGuiKey #  [Analog]
----@field GamepadRStickUp ImGuiKey #  [Analog]
----@field GamepadRStickDown ImGuiKey #  [Analog]
----@field MouseLeft ImGuiKey
----@field MouseRight ImGuiKey
----@field MouseMiddle ImGuiKey
----@field MouseX1 ImGuiKey
----@field MouseX2 ImGuiKey
----@field MouseWheelX ImGuiKey
----@field MouseWheelY ImGuiKey
----@field Ctrl ImGuiKey #  Ctrl
----@field Shift ImGuiKey #  Shift
----@field Alt ImGuiKey #  Option/Menu
----@field Super ImGuiKey #  Cmd/Super/Windows
----@field Shortcut ImGuiKey #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
----@field KeysData_SIZE ImGuiKey #  Size of KeysData[]: only hold named keys
----@field KeysData_OFFSET ImGuiKey #  Accesses to io.KeysData[] must use (key - ImGuiKey_KeysData_OFFSET) index.
-ImGui.Enum.Key = {}
+---@alias ImGui.Key
+---| `ImGui.Key.None`
+---| `ImGui.Key.Tab`                #  == ImGuiKey_NamedKey_BEGIN
+---| `ImGui.Key.LeftArrow`
+---| `ImGui.Key.RightArrow`
+---| `ImGui.Key.UpArrow`
+---| `ImGui.Key.DownArrow`
+---| `ImGui.Key.PageUp`
+---| `ImGui.Key.PageDown`
+---| `ImGui.Key.Home`
+---| `ImGui.Key.End`
+---| `ImGui.Key.Insert`
+---| `ImGui.Key.Delete`
+---| `ImGui.Key.Backspace`
+---| `ImGui.Key.Space`
+---| `ImGui.Key.Enter`
+---| `ImGui.Key.Escape`
+---| `ImGui.Key.LeftCtrl`
+---| `ImGui.Key.LeftShift`
+---| `ImGui.Key.LeftAlt`
+---| `ImGui.Key.LeftSuper`
+---| `ImGui.Key.RightCtrl`
+---| `ImGui.Key.RightShift`
+---| `ImGui.Key.RightAlt`
+---| `ImGui.Key.RightSuper`
+---| `ImGui.Key.Menu`
+---| `ImGui.Key[0]`
+---| `ImGui.Key[1]`
+---| `ImGui.Key[2]`
+---| `ImGui.Key[3]`
+---| `ImGui.Key[4]`
+---| `ImGui.Key[5]`
+---| `ImGui.Key[6]`
+---| `ImGui.Key[7]`
+---| `ImGui.Key[8]`
+---| `ImGui.Key[9]`
+---| `ImGui.Key.A`
+---| `ImGui.Key.B`
+---| `ImGui.Key.C`
+---| `ImGui.Key.D`
+---| `ImGui.Key.E`
+---| `ImGui.Key.F`
+---| `ImGui.Key.G`
+---| `ImGui.Key.H`
+---| `ImGui.Key.I`
+---| `ImGui.Key.J`
+---| `ImGui.Key.K`
+---| `ImGui.Key.L`
+---| `ImGui.Key.M`
+---| `ImGui.Key.N`
+---| `ImGui.Key.O`
+---| `ImGui.Key.P`
+---| `ImGui.Key.Q`
+---| `ImGui.Key.R`
+---| `ImGui.Key.S`
+---| `ImGui.Key.T`
+---| `ImGui.Key.U`
+---| `ImGui.Key.V`
+---| `ImGui.Key.W`
+---| `ImGui.Key.X`
+---| `ImGui.Key.Y`
+---| `ImGui.Key.Z`
+---| `ImGui.Key.F1`
+---| `ImGui.Key.F2`
+---| `ImGui.Key.F3`
+---| `ImGui.Key.F4`
+---| `ImGui.Key.F5`
+---| `ImGui.Key.F6`
+---| `ImGui.Key.F7`
+---| `ImGui.Key.F8`
+---| `ImGui.Key.F9`
+---| `ImGui.Key.F10`
+---| `ImGui.Key.F11`
+---| `ImGui.Key.F12`
+---| `ImGui.Key.F13`
+---| `ImGui.Key.F14`
+---| `ImGui.Key.F15`
+---| `ImGui.Key.F16`
+---| `ImGui.Key.F17`
+---| `ImGui.Key.F18`
+---| `ImGui.Key.F19`
+---| `ImGui.Key.F20`
+---| `ImGui.Key.F21`
+---| `ImGui.Key.F22`
+---| `ImGui.Key.F23`
+---| `ImGui.Key.F24`
+---| `ImGui.Key.Apostrophe`         #  '
+---| `ImGui.Key.Comma`              #  ,
+---| `ImGui.Key.Minus`              #  -
+---| `ImGui.Key.Period`             #  .
+---| `ImGui.Key.Slash`              #  /
+---| `ImGui.Key.Semicolon`          #  ;
+---| `ImGui.Key.Equal`              #  =
+---| `ImGui.Key.LeftBracket`        #  [
+---| `ImGui.Key.Backslash`          #  \ (this text inhibit multiline comment caused by backslash)
+---| `ImGui.Key.RightBracket`       #  ]
+---| `ImGui.Key.GraveAccent`        #  `
+---| `ImGui.Key.CapsLock`
+---| `ImGui.Key.ScrollLock`
+---| `ImGui.Key.NumLock`
+---| `ImGui.Key.PrintScreen`
+---| `ImGui.Key.Pause`
+---| `ImGui.Key.Keypad0`
+---| `ImGui.Key.Keypad1`
+---| `ImGui.Key.Keypad2`
+---| `ImGui.Key.Keypad3`
+---| `ImGui.Key.Keypad4`
+---| `ImGui.Key.Keypad5`
+---| `ImGui.Key.Keypad6`
+---| `ImGui.Key.Keypad7`
+---| `ImGui.Key.Keypad8`
+---| `ImGui.Key.Keypad9`
+---| `ImGui.Key.KeypadDecimal`
+---| `ImGui.Key.KeypadDivide`
+---| `ImGui.Key.KeypadMultiply`
+---| `ImGui.Key.KeypadSubtract`
+---| `ImGui.Key.KeypadAdd`
+---| `ImGui.Key.KeypadEnter`
+---| `ImGui.Key.KeypadEqual`
+---| `ImGui.Key.AppBack`            #  Available on some keyboard/mouses. Often referred as "Browser Back"
+---| `ImGui.Key.AppForward`
+---| `ImGui.Key.GamepadStart`       #  Menu (Xbox)      + (Switch)   Start/Options (PS)
+---| `ImGui.Key.GamepadBack`        #  View (Xbox)      - (Switch)   Share (PS)
+---| `ImGui.Key.GamepadFaceLeft`    #  X (Xbox)         Y (Switch)   Square (PS)        // Tap: Toggle Menu. Hold: Windowing mode (Focus/Move/Resize windows)
+---| `ImGui.Key.GamepadFaceRight`   #  B (Xbox)         A (Switch)   Circle (PS)        // Cancel / Close / Exit
+---| `ImGui.Key.GamepadFaceUp`      #  Y (Xbox)         X (Switch)   Triangle (PS)      // Text Input / On-screen Keyboard
+---| `ImGui.Key.GamepadFaceDown`    #  A (Xbox)         B (Switch)   Cross (PS)         // Activate / Open / Toggle / Tweak
+---| `ImGui.Key.GamepadDpadLeft`    #  D-pad Left                                       // Move / Tweak / Resize Window (in Windowing mode)
+---| `ImGui.Key.GamepadDpadRight`   #  D-pad Right                                      // Move / Tweak / Resize Window (in Windowing mode)
+---| `ImGui.Key.GamepadDpadUp`      #  D-pad Up                                         // Move / Tweak / Resize Window (in Windowing mode)
+---| `ImGui.Key.GamepadDpadDown`    #  D-pad Down                                       // Move / Tweak / Resize Window (in Windowing mode)
+---| `ImGui.Key.GamepadL1`          #  L Bumper (Xbox)  L (Switch)   L1 (PS)            // Tweak Slower / Focus Previous (in Windowing mode)
+---| `ImGui.Key.GamepadR1`          #  R Bumper (Xbox)  R (Switch)   R1 (PS)            // Tweak Faster / Focus Next (in Windowing mode)
+---| `ImGui.Key.GamepadL2`          #  L Trig. (Xbox)   ZL (Switch)  L2 (PS) [Analog]
+---| `ImGui.Key.GamepadR2`          #  R Trig. (Xbox)   ZR (Switch)  R2 (PS) [Analog]
+---| `ImGui.Key.GamepadL3`          #  L Stick (Xbox)   L3 (Switch)  L3 (PS)
+---| `ImGui.Key.GamepadR3`          #  R Stick (Xbox)   R3 (Switch)  R3 (PS)
+---| `ImGui.Key.GamepadLStickLeft`  #  [Analog]                                         // Move Window (in Windowing mode)
+---| `ImGui.Key.GamepadLStickRight` #  [Analog]                                         // Move Window (in Windowing mode)
+---| `ImGui.Key.GamepadLStickUp`    #  [Analog]                                         // Move Window (in Windowing mode)
+---| `ImGui.Key.GamepadLStickDown`  #  [Analog]                                         // Move Window (in Windowing mode)
+---| `ImGui.Key.GamepadRStickLeft`  #  [Analog]
+---| `ImGui.Key.GamepadRStickRight` #  [Analog]
+---| `ImGui.Key.GamepadRStickUp`    #  [Analog]
+---| `ImGui.Key.GamepadRStickDown`  #  [Analog]
+---| `ImGui.Key.MouseLeft`
+---| `ImGui.Key.MouseRight`
+---| `ImGui.Key.MouseMiddle`
+---| `ImGui.Key.MouseX1`
+---| `ImGui.Key.MouseX2`
+---| `ImGui.Key.MouseWheelX`
+---| `ImGui.Key.MouseWheelY`
 
 --
 -- Configuration flags stored in io.ConfigFlags. Set by user/application.
 --
----@class ImGuiConfigFlags
+---@class ImGui.ConfigFlags
 
 ---@alias _ImGuiConfigFlags_Name
 ---| "None"
@@ -571,13 +549,13 @@ ImGui.Enum.Key = {}
 ---| "IsTouchScreen" #  Application is using a touch screen instead of a mouse.
 
 ---@param flags _ImGuiConfigFlags_Name[]
----@return ImGuiConfigFlags
-function ImGui.Flags.Config(flags) end
+---@return ImGui.ConfigFlags
+function ImGui.ConfigFlags(flags) end
 
 --
 -- Backend capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom backend.
 --
----@class ImGuiBackendFlags
+---@class ImGui.BackendFlags
 
 ---@alias _ImGuiBackendFlags_Name
 ---| "None"
@@ -590,71 +568,68 @@ function ImGui.Flags.Config(flags) end
 ---| "RendererHasViewports" #  Backend Renderer supports multiple viewports.
 
 ---@param flags _ImGuiBackendFlags_Name[]
----@return ImGuiBackendFlags
-function ImGui.Flags.Backend(flags) end
+---@return ImGui.BackendFlags
+function ImGui.BackendFlags(flags) end
 
 --
 -- Enumeration for PushStyleColor() / PopStyleColor()
 --
----@class ImGuiCol
-
----@class _ImGuiCol_Name
----@field Text ImGuiCol
----@field TextDisabled ImGuiCol
----@field WindowBg ImGuiCol #  Background of normal windows
----@field ChildBg ImGuiCol #  Background of child windows
----@field PopupBg ImGuiCol #  Background of popups, menus, tooltips windows
----@field Border ImGuiCol
----@field BorderShadow ImGuiCol
----@field FrameBg ImGuiCol #  Background of checkbox, radio button, plot, slider, text input
----@field FrameBgHovered ImGuiCol
----@field FrameBgActive ImGuiCol
----@field TitleBg ImGuiCol #  Title bar
----@field TitleBgActive ImGuiCol #  Title bar when focused
----@field TitleBgCollapsed ImGuiCol #  Title bar when collapsed
----@field MenuBarBg ImGuiCol
----@field ScrollbarBg ImGuiCol
----@field ScrollbarGrab ImGuiCol
----@field ScrollbarGrabHovered ImGuiCol
----@field ScrollbarGrabActive ImGuiCol
----@field CheckMark ImGuiCol #  Checkbox tick and RadioButton circle
----@field SliderGrab ImGuiCol
----@field SliderGrabActive ImGuiCol
----@field Button ImGuiCol
----@field ButtonHovered ImGuiCol
----@field ButtonActive ImGuiCol
----@field Header ImGuiCol #  Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
----@field HeaderHovered ImGuiCol
----@field HeaderActive ImGuiCol
----@field Separator ImGuiCol
----@field SeparatorHovered ImGuiCol
----@field SeparatorActive ImGuiCol
----@field ResizeGrip ImGuiCol #  Resize grip in lower-right and lower-left corners of windows.
----@field ResizeGripHovered ImGuiCol
----@field ResizeGripActive ImGuiCol
----@field Tab ImGuiCol #  TabItem in a TabBar
----@field TabHovered ImGuiCol
----@field TabActive ImGuiCol
----@field TabUnfocused ImGuiCol
----@field TabUnfocusedActive ImGuiCol
----@field DockingPreview ImGuiCol #  Preview overlay color when about to docking something
----@field DockingEmptyBg ImGuiCol #  Background color for empty node (e.g. CentralNode with no window docked into it)
----@field PlotLines ImGuiCol
----@field PlotLinesHovered ImGuiCol
----@field PlotHistogram ImGuiCol
----@field PlotHistogramHovered ImGuiCol
----@field TableHeaderBg ImGuiCol #  Table header background
----@field TableBorderStrong ImGuiCol #  Table outer and header borders (prefer using Alpha=1.0 here)
----@field TableBorderLight ImGuiCol #  Table inner borders (prefer using Alpha=1.0 here)
----@field TableRowBg ImGuiCol #  Table row background (even rows)
----@field TableRowBgAlt ImGuiCol #  Table row background (odd rows)
----@field TextSelectedBg ImGuiCol
----@field DragDropTarget ImGuiCol #  Rectangle highlighting a drop target
----@field NavHighlight ImGuiCol #  Gamepad/keyboard: current highlighted item
----@field NavWindowingHighlight ImGuiCol #  Highlight window when using CTRL+TAB
----@field NavWindowingDimBg ImGuiCol #  Darken/colorize entire screen behind the CTRL+TAB window list, when active
----@field ModalWindowDimBg ImGuiCol #  Darken/colorize entire screen behind a modal window, when one is active
-ImGui.Enum.Col = {}
+---@alias ImGui.Col
+---| `ImGui.Col.Text`
+---| `ImGui.Col.TextDisabled`
+---| `ImGui.Col.WindowBg`              #  Background of normal windows
+---| `ImGui.Col.ChildBg`               #  Background of child windows
+---| `ImGui.Col.PopupBg`               #  Background of popups, menus, tooltips windows
+---| `ImGui.Col.Border`
+---| `ImGui.Col.BorderShadow`
+---| `ImGui.Col.FrameBg`               #  Background of checkbox, radio button, plot, slider, text input
+---| `ImGui.Col.FrameBgHovered`
+---| `ImGui.Col.FrameBgActive`
+---| `ImGui.Col.TitleBg`               #  Title bar
+---| `ImGui.Col.TitleBgActive`         #  Title bar when focused
+---| `ImGui.Col.TitleBgCollapsed`      #  Title bar when collapsed
+---| `ImGui.Col.MenuBarBg`
+---| `ImGui.Col.ScrollbarBg`
+---| `ImGui.Col.ScrollbarGrab`
+---| `ImGui.Col.ScrollbarGrabHovered`
+---| `ImGui.Col.ScrollbarGrabActive`
+---| `ImGui.Col.CheckMark`             #  Checkbox tick and RadioButton circle
+---| `ImGui.Col.SliderGrab`
+---| `ImGui.Col.SliderGrabActive`
+---| `ImGui.Col.Button`
+---| `ImGui.Col.ButtonHovered`
+---| `ImGui.Col.ButtonActive`
+---| `ImGui.Col.Header`                #  Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+---| `ImGui.Col.HeaderHovered`
+---| `ImGui.Col.HeaderActive`
+---| `ImGui.Col.Separator`
+---| `ImGui.Col.SeparatorHovered`
+---| `ImGui.Col.SeparatorActive`
+---| `ImGui.Col.ResizeGrip`            #  Resize grip in lower-right and lower-left corners of windows.
+---| `ImGui.Col.ResizeGripHovered`
+---| `ImGui.Col.ResizeGripActive`
+---| `ImGui.Col.Tab`                   #  TabItem in a TabBar
+---| `ImGui.Col.TabHovered`
+---| `ImGui.Col.TabActive`
+---| `ImGui.Col.TabUnfocused`
+---| `ImGui.Col.TabUnfocusedActive`
+---| `ImGui.Col.DockingPreview`        #  Preview overlay color when about to docking something
+---| `ImGui.Col.DockingEmptyBg`        #  Background color for empty node (e.g. CentralNode with no window docked into it)
+---| `ImGui.Col.PlotLines`
+---| `ImGui.Col.PlotLinesHovered`
+---| `ImGui.Col.PlotHistogram`
+---| `ImGui.Col.PlotHistogramHovered`
+---| `ImGui.Col.TableHeaderBg`         #  Table header background
+---| `ImGui.Col.TableBorderStrong`     #  Table outer and header borders (prefer using Alpha=1.0 here)
+---| `ImGui.Col.TableBorderLight`      #  Table inner borders (prefer using Alpha=1.0 here)
+---| `ImGui.Col.TableRowBg`            #  Table row background (even rows)
+---| `ImGui.Col.TableRowBgAlt`         #  Table row background (odd rows)
+---| `ImGui.Col.TextSelectedBg`
+---| `ImGui.Col.DragDropTarget`        #  Rectangle highlighting a drop target
+---| `ImGui.Col.NavHighlight`          #  Gamepad/keyboard: current highlighted item
+---| `ImGui.Col.NavWindowingHighlight` #  Highlight window when using CTRL+TAB
+---| `ImGui.Col.NavWindowingDimBg`     #  Darken/colorize entire screen behind the CTRL+TAB window list, when active
+---| `ImGui.Col.ModalWindowDimBg`      #  Darken/colorize entire screen behind a modal window, when one is active
 
 --
 -- Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
@@ -665,45 +640,42 @@ ImGui.Enum.Col = {}
 --   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
 -- - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
 --
----@class ImGuiStyleVar
-
----@class _ImGuiStyleVar_Name
----@field Alpha ImGuiStyleVar #  float     Alpha
----@field DisabledAlpha ImGuiStyleVar #  float     DisabledAlpha
----@field WindowPadding ImGuiStyleVar #  ImVec2    WindowPadding
----@field WindowRounding ImGuiStyleVar #  float     WindowRounding
----@field WindowBorderSize ImGuiStyleVar #  float     WindowBorderSize
----@field WindowMinSize ImGuiStyleVar #  ImVec2    WindowMinSize
----@field WindowTitleAlign ImGuiStyleVar #  ImVec2    WindowTitleAlign
----@field ChildRounding ImGuiStyleVar #  float     ChildRounding
----@field ChildBorderSize ImGuiStyleVar #  float     ChildBorderSize
----@field PopupRounding ImGuiStyleVar #  float     PopupRounding
----@field PopupBorderSize ImGuiStyleVar #  float     PopupBorderSize
----@field FramePadding ImGuiStyleVar #  ImVec2    FramePadding
----@field FrameRounding ImGuiStyleVar #  float     FrameRounding
----@field FrameBorderSize ImGuiStyleVar #  float     FrameBorderSize
----@field ItemSpacing ImGuiStyleVar #  ImVec2    ItemSpacing
----@field ItemInnerSpacing ImGuiStyleVar #  ImVec2    ItemInnerSpacing
----@field IndentSpacing ImGuiStyleVar #  float     IndentSpacing
----@field CellPadding ImGuiStyleVar #  ImVec2    CellPadding
----@field ScrollbarSize ImGuiStyleVar #  float     ScrollbarSize
----@field ScrollbarRounding ImGuiStyleVar #  float     ScrollbarRounding
----@field GrabMinSize ImGuiStyleVar #  float     GrabMinSize
----@field GrabRounding ImGuiStyleVar #  float     GrabRounding
----@field TabRounding ImGuiStyleVar #  float     TabRounding
----@field TabBarBorderSize ImGuiStyleVar #  float     TabBarBorderSize
----@field ButtonTextAlign ImGuiStyleVar #  ImVec2    ButtonTextAlign
----@field SelectableTextAlign ImGuiStyleVar #  ImVec2    SelectableTextAlign
----@field SeparatorTextBorderSize ImGuiStyleVar #  float  SeparatorTextBorderSize
----@field SeparatorTextAlign ImGuiStyleVar #  ImVec2    SeparatorTextAlign
----@field SeparatorTextPadding ImGuiStyleVar #  ImVec2    SeparatorTextPadding
----@field DockingSeparatorSize ImGuiStyleVar #  float     DockingSeparatorSize
-ImGui.Enum.StyleVar = {}
+---@alias ImGui.StyleVar
+---| `ImGui.StyleVar.Alpha`                   #  float     Alpha
+---| `ImGui.StyleVar.DisabledAlpha`           #  float     DisabledAlpha
+---| `ImGui.StyleVar.WindowPadding`           #  ImVec2    WindowPadding
+---| `ImGui.StyleVar.WindowRounding`          #  float     WindowRounding
+---| `ImGui.StyleVar.WindowBorderSize`        #  float     WindowBorderSize
+---| `ImGui.StyleVar.WindowMinSize`           #  ImVec2    WindowMinSize
+---| `ImGui.StyleVar.WindowTitleAlign`        #  ImVec2    WindowTitleAlign
+---| `ImGui.StyleVar.ChildRounding`           #  float     ChildRounding
+---| `ImGui.StyleVar.ChildBorderSize`         #  float     ChildBorderSize
+---| `ImGui.StyleVar.PopupRounding`           #  float     PopupRounding
+---| `ImGui.StyleVar.PopupBorderSize`         #  float     PopupBorderSize
+---| `ImGui.StyleVar.FramePadding`            #  ImVec2    FramePadding
+---| `ImGui.StyleVar.FrameRounding`           #  float     FrameRounding
+---| `ImGui.StyleVar.FrameBorderSize`         #  float     FrameBorderSize
+---| `ImGui.StyleVar.ItemSpacing`             #  ImVec2    ItemSpacing
+---| `ImGui.StyleVar.ItemInnerSpacing`        #  ImVec2    ItemInnerSpacing
+---| `ImGui.StyleVar.IndentSpacing`           #  float     IndentSpacing
+---| `ImGui.StyleVar.CellPadding`             #  ImVec2    CellPadding
+---| `ImGui.StyleVar.ScrollbarSize`           #  float     ScrollbarSize
+---| `ImGui.StyleVar.ScrollbarRounding`       #  float     ScrollbarRounding
+---| `ImGui.StyleVar.GrabMinSize`             #  float     GrabMinSize
+---| `ImGui.StyleVar.GrabRounding`            #  float     GrabRounding
+---| `ImGui.StyleVar.TabRounding`             #  float     TabRounding
+---| `ImGui.StyleVar.TabBarBorderSize`        #  float     TabBarBorderSize
+---| `ImGui.StyleVar.ButtonTextAlign`         #  ImVec2    ButtonTextAlign
+---| `ImGui.StyleVar.SelectableTextAlign`     #  ImVec2    SelectableTextAlign
+---| `ImGui.StyleVar.SeparatorTextBorderSize` #  float  SeparatorTextBorderSize
+---| `ImGui.StyleVar.SeparatorTextAlign`      #  ImVec2    SeparatorTextAlign
+---| `ImGui.StyleVar.SeparatorTextPadding`    #  ImVec2    SeparatorTextPadding
+---| `ImGui.StyleVar.DockingSeparatorSize`    #  float     DockingSeparatorSize
 
 --
 -- Flags for InvisibleButton() [extended in imgui_internal.h]
 --
----@class ImGuiButtonFlags
+---@class ImGui.ButtonFlags
 
 ---@alias _ImGuiButtonFlags_Name
 ---| "None"
@@ -712,13 +684,13 @@ ImGui.Enum.StyleVar = {}
 ---| "MouseButtonMiddle" #  React on center mouse button
 
 ---@param flags _ImGuiButtonFlags_Name[]
----@return ImGuiButtonFlags
-function ImGui.Flags.Button(flags) end
+---@return ImGui.ButtonFlags
+function ImGui.ButtonFlags(flags) end
 
 --
 -- Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
 --
----@class ImGuiColorEditFlags
+---@class ImGui.ColorEditFlags
 
 ---@alias _ImGuiColorEditFlags_Name
 ---| "None"
@@ -747,15 +719,15 @@ function ImGui.Flags.Button(flags) end
 ---| "InputHSV" #  [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
 
 ---@param flags _ImGuiColorEditFlags_Name[]
----@return ImGuiColorEditFlags
-function ImGui.Flags.ColorEdit(flags) end
+---@return ImGui.ColorEditFlags
+function ImGui.ColorEditFlags(flags) end
 
 --
 -- Flags for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.
 -- We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
 -- (Those are per-item flags. There are shared flags in ImGuiIO: io.ConfigDragClickToInputText)
 --
----@class ImGuiSliderFlags
+---@class ImGui.SliderFlags
 
 ---@alias _ImGuiSliderFlags_Name
 ---| "None"
@@ -765,39 +737,33 @@ function ImGui.Flags.ColorEdit(flags) end
 ---| "NoInput" #  Disable CTRL+Click or Enter key allowing to input text directly into the widget
 
 ---@param flags _ImGuiSliderFlags_Name[]
----@return ImGuiSliderFlags
-function ImGui.Flags.Slider(flags) end
+---@return ImGui.SliderFlags
+function ImGui.SliderFlags(flags) end
 
 --
 -- Identify a mouse button.
 -- Those values are guaranteed to be stable and we frequently use 0/1 directly. Named enums provided for convenience.
 --
----@class ImGuiMouseButton
-
----@class _ImGuiMouseButton_Name
----@field Left ImGuiMouseButton
----@field Right ImGuiMouseButton
----@field Middle ImGuiMouseButton
-ImGui.Enum.MouseButton = {}
+---@alias ImGui.MouseButton
+---| `ImGui.MouseButton.Left`
+---| `ImGui.MouseButton.Right`
+---| `ImGui.MouseButton.Middle`
 
 --
 -- Enumeration for GetMouseCursor()
 -- User code may request backend to display given cursor by calling SetMouseCursor(), which is why we have some cursors that are marked unused here
 --
----@class ImGuiMouseCursor
-
----@class _ImGuiMouseCursor_Name
----@field None ImGuiMouseCursor
----@field Arrow ImGuiMouseCursor
----@field TextInput ImGuiMouseCursor #  When hovering over InputText, etc.
----@field ResizeAll ImGuiMouseCursor #  (Unused by Dear ImGui functions)
----@field ResizeNS ImGuiMouseCursor #  When hovering over a horizontal border
----@field ResizeEW ImGuiMouseCursor #  When hovering over a vertical border or a column
----@field ResizeNESW ImGuiMouseCursor #  When hovering over the bottom-left corner of a window
----@field ResizeNWSE ImGuiMouseCursor #  When hovering over the bottom-right corner of a window
----@field Hand ImGuiMouseCursor #  (Unused by Dear ImGui functions. Use for e.g. hyperlinks)
----@field NotAllowed ImGuiMouseCursor #  When hovering something with disallowed interaction. Usually a crossed circle.
-ImGui.Enum.MouseCursor = {}
+---@alias ImGui.MouseCursor
+---| `ImGui.MouseCursor.None`
+---| `ImGui.MouseCursor.Arrow`
+---| `ImGui.MouseCursor.TextInput`  #  When hovering over InputText, etc.
+---| `ImGui.MouseCursor.ResizeAll`  #  (Unused by Dear ImGui functions)
+---| `ImGui.MouseCursor.ResizeNS`   #  When hovering over a horizontal border
+---| `ImGui.MouseCursor.ResizeEW`   #  When hovering over a vertical border or a column
+---| `ImGui.MouseCursor.ResizeNESW` #  When hovering over the bottom-left corner of a window
+---| `ImGui.MouseCursor.ResizeNWSE` #  When hovering over the bottom-right corner of a window
+---| `ImGui.MouseCursor.Hand`       #  (Unused by Dear ImGui functions. Use for e.g. hyperlinks)
+---| `ImGui.MouseCursor.NotAllowed` #  When hovering something with disallowed interaction. Usually a crossed circle.
 
 --
 -- Enumeration for AddMouseSourceEvent() actual source of Mouse Input data.
@@ -808,28 +774,22 @@ ImGui.Enum.MouseCursor = {}
 --
 -- Forward declared enum type ImGuiMouseSource
 --
----@class ImGuiMouseSource
-
----@class _ImGuiMouseSource_Name
----@field Mouse ImGuiMouseSource #  Input is coming from an actual mouse.
----@field TouchScreen ImGuiMouseSource #  Input is coming from a touch screen (no hovering prior to initial press, less precise initial press aiming, dual-axis wheeling possible).
----@field Pen ImGuiMouseSource #  Input is coming from a pressure/magnetic pen (often used in conjunction with high-sampling rates).
-ImGui.Enum.MouseSource = {}
+---@alias ImGui.MouseSource
+---| `ImGui.MouseSource.Mouse`       #  Input is coming from an actual mouse.
+---| `ImGui.MouseSource.TouchScreen` #  Input is coming from a touch screen (no hovering prior to initial press, less precise initial press aiming, dual-axis wheeling possible).
+---| `ImGui.MouseSource.Pen`         #  Input is coming from a pressure/magnetic pen (often used in conjunction with high-sampling rates).
 
 --
 -- Enumeration for ImGui::SetNextWindow***(), SetWindow***(), SetNextItem***() functions
 -- Represent a condition.
 -- Important: Treat as a regular enum! Do NOT combine multiple values using binary operators! All the functions above treat 0 as a shortcut to ImGuiCond_Always.
 --
----@class ImGuiCond
-
----@class _ImGuiCond_Name
----@field None ImGuiCond #  No condition (always set the variable), same as _Always
----@field Always ImGuiCond #  No condition (always set the variable), same as _None
----@field Once ImGuiCond #  Set the variable once per runtime session (only the first call will succeed)
----@field FirstUseEver ImGuiCond #  Set the variable if the object/window has no persistently saved data (no entry in .ini file)
----@field Appearing ImGuiCond #  Set the variable if the object/window is appearing after being hidden/inactive (or the first time)
-ImGui.Enum.Cond = {}
+---@alias ImGui.Cond
+---| `ImGui.Cond.None`         #  No condition (always set the variable), same as _Always
+---| `ImGui.Cond.Always`       #  No condition (always set the variable), same as _None
+---| `ImGui.Cond.Once`         #  Set the variable once per runtime session (only the first call will succeed)
+---| `ImGui.Cond.FirstUseEver` #  Set the variable if the object/window has no persistently saved data (no entry in .ini file)
+---| `ImGui.Cond.Appearing`    #  Set the variable if the object/window is appearing after being hidden/inactive (or the first time)
 
 --
 -- Flags for ImGui::BeginTable()
@@ -855,7 +815,7 @@ ImGui.Enum.Cond = {}
 --      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
 -- - Read on documentation at the top of imgui_tables.cpp for details.
 --
----@class ImGuiTableFlags
+---@class ImGui.TableFlags
 
 ---@alias _ImGuiTableFlags_Name
 ---| "None"
@@ -896,13 +856,13 @@ ImGui.Enum.Cond = {}
 ---| "HighlightHoveredColumn" #  Highlight column headers when hovered (may evolve into a fuller highlight)
 
 ---@param flags _ImGuiTableFlags_Name[]
----@return ImGuiTableFlags
-function ImGui.Flags.Table(flags) end
+---@return ImGui.TableFlags
+function ImGui.TableFlags(flags) end
 
 --
 -- Flags for ImGui::TableSetupColumn()
 --
----@class ImGuiTableColumnFlags
+---@class ImGui.TableColumnFlags
 
 ---@alias _ImGuiTableColumnFlags_Name
 ---| "None"
@@ -931,21 +891,21 @@ function ImGui.Flags.Table(flags) end
 ---| "IsHovered" #  Status: is hovered by mouse
 
 ---@param flags _ImGuiTableColumnFlags_Name[]
----@return ImGuiTableColumnFlags
-function ImGui.Flags.TableColumn(flags) end
+---@return ImGui.TableColumnFlags
+function ImGui.TableColumnFlags(flags) end
 
 --
 -- Flags for ImGui::TableNextRow()
 --
----@class ImGuiTableRowFlags
+---@class ImGui.TableRowFlags
 
 ---@alias _ImGuiTableRowFlags_Name
 ---| "None"
 ---| "Headers" #  Identify header row (set default background color + width of its contents accounted differently for auto column width)
 
 ---@param flags _ImGuiTableRowFlags_Name[]
----@return ImGuiTableRowFlags
-function ImGui.Flags.TableRow(flags) end
+---@return ImGui.TableRowFlags
+function ImGui.TableRowFlags(flags) end
 
 --
 -- Enum for ImGui::TableSetBgColor()
@@ -958,20 +918,17 @@ function ImGui.Flags.TableRow(flags) end
 -- If you set the color of RowBg0 target, your color will override the existing RowBg0 color.
 -- If you set the color of RowBg1 or ColumnBg1 target, your color will blend over the RowBg0 color.
 --
----@class ImGuiTableBgTarget
-
----@class _ImGuiTableBgTarget_Name
----@field None ImGuiTableBgTarget
----@field RowBg0 ImGuiTableBgTarget #  Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)
----@field RowBg1 ImGuiTableBgTarget #  Set row background color 1 (generally used for selection marking)
----@field CellBg ImGuiTableBgTarget #  Set cell background color (top-most color)
-ImGui.Enum.TableBgTarget = {}
+---@alias ImGui.TableBgTarget
+---| `ImGui.TableBgTarget.None`
+---| `ImGui.TableBgTarget.RowBg0` #  Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)
+---| `ImGui.TableBgTarget.RowBg1` #  Set row background color 1 (generally used for selection marking)
+---| `ImGui.TableBgTarget.CellBg` #  Set cell background color (top-most color)
 
 --
 -- Flags for ImDrawList functions
 -- (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
 --
----@class ImDrawFlags
+---@class ImGui.DrawFlags
 
 ---@alias _ImDrawFlags_Name
 ---| "None"
@@ -988,14 +945,14 @@ ImGui.Enum.TableBgTarget = {}
 ---| "RoundCornersAll"
 
 ---@param flags _ImDrawFlags_Name[]
----@return ImDrawFlags
-function ImGui.Flags.Draw(flags) end
+---@return ImGui.DrawFlags
+function ImGui.DrawFlags(flags) end
 
 --
 -- Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
 -- It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
 --
----@class ImDrawListFlags
+---@class ImGui.DrawListFlags
 
 ---@alias _ImDrawListFlags_Name
 ---| "None"
@@ -1005,13 +962,13 @@ function ImGui.Flags.Draw(flags) end
 ---| "AllowVtxOffset" #  Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 
 ---@param flags _ImDrawListFlags_Name[]
----@return ImDrawListFlags
-function ImGui.Flags.DrawList(flags) end
+---@return ImGui.DrawListFlags
+function ImGui.DrawListFlags(flags) end
 
 --
 -- Flags for ImFontAtlas build
 --
----@class ImFontAtlasFlags
+---@class ImGui.FontAtlasFlags
 
 ---@alias _ImFontAtlasFlags_Name
 ---| "None"
@@ -1020,13 +977,13 @@ function ImGui.Flags.DrawList(flags) end
 ---| "NoBakedLines" #  Don't build thick line textures into the atlas (save a little texture memory, allow support for point/nearest filtering). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
 
 ---@param flags _ImFontAtlasFlags_Name[]
----@return ImFontAtlasFlags
-function ImGui.Flags.FontAtlas(flags) end
+---@return ImGui.FontAtlasFlags
+function ImGui.FontAtlasFlags(flags) end
 
 --
 -- Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
 --
----@class ImGuiViewportFlags
+---@class ImGui.ViewportFlags
 
 ---@alias _ImGuiViewportFlags_Name
 ---| "None"
@@ -1046,11 +1003,19 @@ function ImGui.Flags.FontAtlas(flags) end
 ---| "IsFocused" #  Platform Window: Window is focused (last call to Platform_GetWindowFocus() returned true)
 
 ---@param flags _ImGuiViewportFlags_Name[]
----@return ImGuiViewportFlags
-function ImGui.Flags.Viewport(flags) end
+---@return ImGui.ViewportFlags
+function ImGui.ViewportFlags(flags) end
 
+---@alias ImGui.Mod
+---| `ImGui.Mod.None`
+---| `ImGui.Mod.Ctrl`     #  Ctrl
+---| `ImGui.Mod.Shift`    #  Shift
+---| `ImGui.Mod.Alt`      #  Option/Menu
+---| `ImGui.Mod.Super`    #  Cmd/Super/Windows
+---| `ImGui.Mod.Shortcut` #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
 
----@alias ImGuiKeyChord ImGuiKey
+---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod
+---@alias ImTextureID integer
 
 --
 -- Windows
@@ -1068,7 +1033,7 @@ function ImGui.Flags.Viewport(flags) end
 --
 ---@param name string
 ---@param p_open true | nil
----@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 ---@return boolean p_open
 function ImGui.Begin(name, p_open, flags) end
@@ -1098,16 +1063,16 @@ function ImGui.End() end
 ---@param str_id string
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
----@param child_flags? ImGuiChildFlags | `ImGui.Flags.Child { "None" }`
----@param window_flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param child_flags? ImGui.ChildFlags | `ImGui.ChildFlags { "None" }`
+---@param window_flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 function ImGui.BeginChild(str_id, size_x, size_y, child_flags, window_flags) end
 
 ---@param id integer
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
----@param child_flags? ImGuiChildFlags | `ImGui.Flags.Child { "None" }`
----@param window_flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param child_flags? ImGui.ChildFlags | `ImGui.ChildFlags { "None" }`
+---@param window_flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 function ImGui.BeginChildID(id, size_x, size_y, child_flags, window_flags) end
 
@@ -1126,14 +1091,14 @@ function ImGui.IsWindowCollapsed() end
 --
 -- is current window focused? or its root/child, depending on flags. see flags for options.
 --
----@param flags? ImGuiFocusedFlags | `ImGui.Flags.Focused { "None" }`
+---@param flags? ImGui.FocusedFlags | `ImGui.FocusedFlags { "None" }`
 ---@return boolean
 function ImGui.IsWindowFocused(flags) end
 
 --
 -- is current window hovered and hoverable (e.g. not blocked by a popup/modal)? See ImGuiHoveredFlags_ for options. IMPORTANT: If you are trying to check whether your mouse should be dispatched to Dear ImGui or to your underlying app, you should not use this function! Use the 'io.WantCaptureMouse' boolean for that! Refer to FAQ entry "How can I tell whether to dispatch mouse/keyboard to Dear ImGui or my application?" for details.
 --
----@param flags? ImGuiHoveredFlags | `ImGui.Flags.Hovered { "None" }`
+---@param flags? ImGui.HoveredFlags | `ImGui.HoveredFlags { "None" }`
 ---@return boolean
 function ImGui.IsWindowHovered(flags) end
 
@@ -1178,7 +1143,7 @@ function ImGui.GetWindowHeight() end
 --
 ---@param pos_x number
 ---@param pos_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextWindowPos(pos_x, pos_y, cond) end
 
 --
@@ -1186,7 +1151,7 @@ function ImGui.SetNextWindowPos(pos_x, pos_y, cond) end
 --
 ---@param pos_x number
 ---@param pos_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 ---@param pivot_x? number | `0`
 ---@param pivot_y? number | `0`
 function ImGui.SetNextWindowPosEx(pos_x, pos_y, cond, pivot_x, pivot_y) end
@@ -1196,7 +1161,7 @@ function ImGui.SetNextWindowPosEx(pos_x, pos_y, cond, pivot_x, pivot_y) end
 --
 ---@param size_x number
 ---@param size_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextWindowSize(size_x, size_y, cond) end
 
 --
@@ -1210,7 +1175,7 @@ function ImGui.SetNextWindowContentSize(size_x, size_y) end
 -- set next window collapsed state. call before Begin()
 --
 ---@param collapsed boolean
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextWindowCollapsed(collapsed, cond) end
 
 --
@@ -1242,7 +1207,7 @@ function ImGui.SetNextWindowViewport(viewport_id) end
 --
 ---@param pos_x number
 ---@param pos_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetWindowPos(pos_x, pos_y, cond) end
 
 --
@@ -1250,14 +1215,14 @@ function ImGui.SetWindowPos(pos_x, pos_y, cond) end
 --
 ---@param size_x number
 ---@param size_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetWindowSize(size_x, size_y, cond) end
 
 --
 -- (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
 --
 ---@param collapsed boolean
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetWindowCollapsed(collapsed, cond) end
 
 --
@@ -1277,7 +1242,7 @@ function ImGui.SetWindowFontScale(scale) end
 ---@param name string
 ---@param pos_x number
 ---@param pos_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetWindowPosStr(name, pos_x, pos_y, cond) end
 
 --
@@ -1286,7 +1251,7 @@ function ImGui.SetWindowPosStr(name, pos_x, pos_y, cond) end
 ---@param name string
 ---@param size_x number
 ---@param size_y number
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetWindowSizeStr(name, size_x, size_y, cond) end
 
 --
@@ -1294,7 +1259,7 @@ function ImGui.SetWindowSizeStr(name, size_x, size_y, cond) end
 --
 ---@param name string
 ---@param collapsed boolean
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetWindowCollapsedStr(name, collapsed, cond) end
 
 --
@@ -1403,16 +1368,14 @@ function ImGui.SetScrollFromPosX(local_x, center_x_ratio) end
 ---@param center_y_ratio? number | `0.5`
 function ImGui.SetScrollFromPosY(local_y, center_y_ratio) end
 
-function ImGui.PopFont() end
-
 --
 -- modify a style color. always use this if you modify the style after NewFrame().
 --
----@param idx ImGuiCol
+---@param idx ImGui.Col
 ---@param col integer
 function ImGui.PushStyleColor(idx, col) end
 
----@param idx ImGuiCol
+---@param idx ImGui.Col
 ---@param col_x number
 ---@param col_y number
 ---@param col_z number
@@ -1430,14 +1393,14 @@ function ImGui.PopStyleColorEx(count) end
 --
 -- modify a style float variable. always use this if you modify the style after NewFrame().
 --
----@param idx ImGuiStyleVar
+---@param idx ImGui.StyleVar
 ---@param val number
 function ImGui.PushStyleVar(idx, val) end
 
 --
 -- modify a style ImVec2 variable. always use this if you modify the style after NewFrame().
 --
----@param idx ImGuiStyleVar
+---@param idx ImGui.StyleVar
 ---@param val_x number
 ---@param val_y number
 function ImGui.PushStyleVarImVec2(idx, val_x, val_y) end
@@ -1513,14 +1476,14 @@ function ImGui.GetFontTexUvWhitePixel() end
 --
 -- Implied alpha_mul = 1.0f
 --
----@param idx ImGuiCol
+---@param idx ImGui.Col
 ---@return integer
 function ImGui.GetColorU32(idx) end
 
 --
 -- retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
 --
----@param idx ImGuiCol
+---@param idx ImGui.Col
 ---@param alpha_mul? number | `1.0`
 ---@return integer
 function ImGui.GetColorU32Ex(idx, alpha_mul) end
@@ -1541,6 +1504,16 @@ function ImGui.GetColorU32ImVec4(col_x, col_y, col_z, col_w) end
 ---@param col integer
 ---@return integer
 function ImGui.GetColorU32ImU32(col) end
+
+--
+-- retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
+--
+---@param idx ImGui.Col
+---@return number
+---@return number
+---@return number
+---@return number
+function ImGui.GetStyleColorVec4(idx) end
 
 --
 -- Layout cursor positioning
@@ -1855,7 +1828,7 @@ function ImGui.SmallButton(label) end
 ---@param str_id string
 ---@param size_x number
 ---@param size_y number
----@param flags? ImGuiButtonFlags | `ImGui.Flags.Button { "None" }`
+---@param flags? ImGui.ButtonFlags | `ImGui.ButtonFlags { "None" }`
 ---@return boolean
 function ImGui.InvisibleButton(str_id, size_x, size_y, flags) end
 
@@ -1863,7 +1836,7 @@ function ImGui.InvisibleButton(str_id, size_x, size_y, flags) end
 -- square button with an arrow shape
 --
 ---@param str_id string
----@param dir ImGuiDir
+---@param dir ImGui.Dir
 ---@return boolean
 function ImGui.ArrowButton(str_id, dir) end
 
@@ -1878,6 +1851,12 @@ function ImGui.Checkbox(label, v) end
 ---@param flags_value integer
 ---@return boolean
 function ImGui.CheckboxFlagsIntPtr(label, flags, flags_value) end
+
+---@param label string
+---@param flags integer[]
+---@param flags_value integer
+---@return boolean
+function ImGui.CheckboxFlagsUintPtr(label, flags, flags_value) end
 
 --
 -- use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; }
@@ -1908,13 +1887,72 @@ function ImGui.ProgressBar(fraction, size_arg_x, size_arg_y, overlay) end
 function ImGui.Bullet() end
 
 --
+-- Widgets: Images
+-- - Read about ImTextureID here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+-- - Note that Image() may add +2.0f to provided size if a border is visible, ImageButton() adds style.FramePadding*2.0f to provided size.
+--
+--
+-- Implied uv0 = ImVec2(0, 0), uv1 = ImVec2(1, 1), tint_col = ImVec4(1, 1, 1, 1), border_col = ImVec4(0, 0, 0, 0)
+--
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+function ImGui.Image(user_texture_id, image_size_x, image_size_y) end
+
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+---@param uv0_x? number | `0`
+---@param uv0_y? number | `0`
+---@param uv1_x? number | `1`
+---@param uv1_y? number | `1`
+---@param tint_col_x? number | `1`
+---@param tint_col_y? number | `1`
+---@param tint_col_z? number | `1`
+---@param tint_col_w? number | `1`
+---@param border_col_x? number | `0`
+---@param border_col_y? number | `0`
+---@param border_col_z? number | `0`
+---@param border_col_w? number | `0`
+function ImGui.ImageEx(user_texture_id, image_size_x, image_size_y, uv0_x, uv0_y, uv1_x, uv1_y, tint_col_x, tint_col_y, tint_col_z, tint_col_w, border_col_x, border_col_y, border_col_z, border_col_w) end
+
+--
+-- Implied uv0 = ImVec2(0, 0), uv1 = ImVec2(1, 1), bg_col = ImVec4(0, 0, 0, 0), tint_col = ImVec4(1, 1, 1, 1)
+--
+---@param str_id string
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+---@return boolean
+function ImGui.ImageButton(str_id, user_texture_id, image_size_x, image_size_y) end
+
+---@param str_id string
+---@param user_texture_id ImTextureID
+---@param image_size_x number
+---@param image_size_y number
+---@param uv0_x? number | `0`
+---@param uv0_y? number | `0`
+---@param uv1_x? number | `1`
+---@param uv1_y? number | `1`
+---@param bg_col_x? number | `0`
+---@param bg_col_y? number | `0`
+---@param bg_col_z? number | `0`
+---@param bg_col_w? number | `0`
+---@param tint_col_x? number | `1`
+---@param tint_col_y? number | `1`
+---@param tint_col_z? number | `1`
+---@param tint_col_w? number | `1`
+---@return boolean
+function ImGui.ImageButtonEx(str_id, user_texture_id, image_size_x, image_size_y, uv0_x, uv0_y, uv1_x, uv1_y, bg_col_x, bg_col_y, bg_col_z, bg_col_w, tint_col_x, tint_col_y, tint_col_z, tint_col_w) end
+
+--
 -- Widgets: Combo Box (Dropdown)
 -- - The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
 -- - The old Combo() api are helpers over BeginCombo()/EndCombo() which are kept available for convenience purpose. This is analogous to how ListBox are created.
 --
 ---@param label string
 ---@param preview_value string
----@param flags? ImGuiComboFlags | `ImGui.Flags.Combo { "None" }`
+---@param flags? ImGui.ComboFlags | `ImGui.ComboFlags { "None" }`
 ---@return boolean
 function ImGui.BeginCombo(label, preview_value, flags) end
 
@@ -1973,7 +2011,7 @@ function ImGui.DragFloat(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloatEx(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -1991,7 +2029,7 @@ function ImGui.DragFloat2(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloat2Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2009,7 +2047,7 @@ function ImGui.DragFloat3(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloat3Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2027,7 +2065,7 @@ function ImGui.DragFloat4(label, v) end
 ---@param v_min? number | `0.0`
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloat4Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2048,7 +2086,7 @@ function ImGui.DragFloatRange2(label, v_current_min, v_current_max) end
 ---@param v_max? number | `0.0`
 ---@param format? string | `"%.3f"`
 ---@param format_max? string
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragFloatRange2Ex(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags) end
 
@@ -2069,7 +2107,7 @@ function ImGui.DragInt(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragIntEx(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2087,7 +2125,7 @@ function ImGui.DragInt2(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragInt2Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2105,7 +2143,7 @@ function ImGui.DragInt3(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragInt3Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2123,7 +2161,7 @@ function ImGui.DragInt4(label, v) end
 ---@param v_min? integer | `0`
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragInt4Ex(label, v, v_speed, v_min, v_max, format, flags) end
 
@@ -2144,7 +2182,7 @@ function ImGui.DragIntRange2(label, v_current_min, v_current_max) end
 ---@param v_max? integer | `0`
 ---@param format? string | `"%d"`
 ---@param format_max? string
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.DragIntRange2Ex(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags) end
 
@@ -2174,7 +2212,7 @@ function ImGui.SliderFloat(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloatEx(label, v, v_min, v_max, format, flags) end
 
@@ -2193,7 +2231,7 @@ function ImGui.SliderFloat2(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloat2Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2212,7 +2250,7 @@ function ImGui.SliderFloat3(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloat3Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2231,7 +2269,7 @@ function ImGui.SliderFloat4(label, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderFloat4Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2248,7 +2286,7 @@ function ImGui.SliderAngle(label, v_rad) end
 ---@param v_degrees_min? number | `-360.0`
 ---@param v_degrees_max? number | `+360.0`
 ---@param format? string | `"%.0f deg"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderAngleEx(label, v_rad, v_degrees_min, v_degrees_max, format, flags) end
 
@@ -2267,7 +2305,7 @@ function ImGui.SliderInt(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderIntEx(label, v, v_min, v_max, format, flags) end
 
@@ -2286,7 +2324,7 @@ function ImGui.SliderInt2(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderInt2Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2305,7 +2343,7 @@ function ImGui.SliderInt3(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderInt3Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2324,7 +2362,7 @@ function ImGui.SliderInt4(label, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.SliderInt4Ex(label, v, v_min, v_max, format, flags) end
 
@@ -2347,7 +2385,7 @@ function ImGui.VSliderFloat(label, size_x, size_y, v, v_min, v_max) end
 ---@param v_min number
 ---@param v_max number
 ---@param format? string | `"%.3f"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.VSliderFloatEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
 
@@ -2370,9 +2408,122 @@ function ImGui.VSliderInt(label, size_x, size_y, v, v_min, v_max) end
 ---@param v_min integer
 ---@param v_max integer
 ---@param format? string | `"%d"`
----@param flags? ImGuiSliderFlags | `ImGui.Flags.Slider { "None" }`
+---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
+
+--
+-- Implied step = 0.0f, step_fast = 0.0f, format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat(label, v) end
+
+---@param label string
+---@param v number[]
+---@param step? number | `0.0`
+---@param step_fast? number | `0.0`
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloatEx(label, v, step, step_fast, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat2(label, v) end
+
+---@param label string
+---@param v number[]
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloat2Ex(label, v, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat3(label, v) end
+
+---@param label string
+---@param v number[]
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloat3Ex(label, v, format, flags) end
+
+--
+-- Implied format = "%.3f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputFloat4(label, v) end
+
+---@param label string
+---@param v number[]
+---@param format? string | `"%.3f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputFloat4Ex(label, v, format, flags) end
+
+--
+-- Implied step = 1, step_fast = 100, flags = 0
+--
+---@param label string
+---@param v integer[]
+---@return boolean
+function ImGui.InputInt(label, v) end
+
+---@param label string
+---@param v integer[]
+---@param step? integer | `1`
+---@param step_fast? integer | `100`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputIntEx(label, v, step, step_fast, flags) end
+
+---@param label string
+---@param v integer[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputInt2(label, v, flags) end
+
+---@param label string
+---@param v integer[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputInt3(label, v, flags) end
+
+---@param label string
+---@param v integer[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputInt4(label, v, flags) end
+
+--
+-- Implied step = 0.0, step_fast = 0.0, format = "%.6f", flags = 0
+--
+---@param label string
+---@param v number[]
+---@return boolean
+function ImGui.InputDouble(label, v) end
+
+---@param label string
+---@param v number[]
+---@param step? number | `0.0`
+---@param step_fast? number | `0.0`
+---@param format? string | `"%.6f"`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputDoubleEx(label, v, step, step_fast, format, flags) end
 
 --
 -- Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
@@ -2381,19 +2532,19 @@ function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flag
 --
 ---@param label string
 ---@param col number[]
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorEdit3(label, col, flags) end
 
 ---@param label string
 ---@param col number[]
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorEdit4(label, col, flags) end
 
 ---@param label string
 ---@param col number[]
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorPicker3(label, col, flags) end
 
@@ -2405,7 +2556,7 @@ function ImGui.ColorPicker3(label, col, flags) end
 ---@param col_y number
 ---@param col_z number
 ---@param col_w number
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@return boolean
 function ImGui.ColorButton(desc_id, col_x, col_y, col_z, col_w, flags) end
 
@@ -2417,7 +2568,7 @@ function ImGui.ColorButton(desc_id, col_x, col_y, col_z, col_w, flags) end
 ---@param col_y number
 ---@param col_z number
 ---@param col_w number
----@param flags? ImGuiColorEditFlags | `ImGui.Flags.ColorEdit { "None" }`
+---@param flags? ImGui.ColorEditFlags | `ImGui.ColorEditFlags { "None" }`
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
@@ -2426,7 +2577,7 @@ function ImGui.ColorButtonEx(desc_id, col_x, col_y, col_z, col_w, flags, size_x,
 --
 -- initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
 --
----@param flags ImGuiColorEditFlags
+---@param flags ImGui.ColorEditFlags
 function ImGui.SetColorEditOptions(flags) end
 
 --
@@ -2456,19 +2607,19 @@ function ImGui.TreeNodeStr(str_id, fmt, ...) end
 function ImGui.TreeNodePtr(ptr_id, fmt, ...) end
 
 ---@param label string
----@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
 function ImGui.TreeNodeEx(label, flags) end
 
 ---@param str_id string
----@param flags ImGuiTreeNodeFlags
+---@param flags ImGui.TreeNodeFlags
 ---@param fmt string
 ---@param ...  any
 ---@return boolean
 function ImGui.TreeNodeExStr(str_id, flags, fmt, ...) end
 
 ---@param ptr_id lightuserdata
----@param flags ImGuiTreeNodeFlags
+---@param flags ImGui.TreeNodeFlags
 ---@param fmt string
 ---@param ...  any
 ---@return boolean
@@ -2501,7 +2652,7 @@ function ImGui.GetTreeNodeToLabelSpacing() end
 -- if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
 --
 ---@param label string
----@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
 function ImGui.CollapsingHeader(label, flags) end
 
@@ -2510,7 +2661,7 @@ function ImGui.CollapsingHeader(label, flags) end
 --
 ---@param label string
 ---@param p_visible boolean[]
----@param flags? ImGuiTreeNodeFlags | `ImGui.Flags.TreeNode { "None" }`
+---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
 ---@return boolean p_visible
 function ImGui.CollapsingHeaderBoolPtr(label, p_visible, flags) end
@@ -2519,7 +2670,7 @@ function ImGui.CollapsingHeaderBoolPtr(label, p_visible, flags) end
 -- set next TreeNode/CollapsingHeader open state.
 --
 ---@param is_open boolean
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextItemOpen(is_open, cond) end
 
 --
@@ -2539,7 +2690,7 @@ function ImGui.Selectable(label) end
 --
 ---@param label string
 ---@param selected? boolean | `false`
----@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
@@ -2550,7 +2701,7 @@ function ImGui.SelectableEx(label, selected, flags, size_x, size_y) end
 --
 ---@param label string
 ---@param p_selected boolean[]
----@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@return boolean
 ---@return boolean p_selected
 function ImGui.SelectableBoolPtr(label, p_selected, flags) end
@@ -2560,7 +2711,7 @@ function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 --
 ---@param label string
 ---@param p_selected boolean[]
----@param flags? ImGuiSelectableFlags | `ImGui.Flags.Selectable { "None" }`
+---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
@@ -2724,7 +2875,7 @@ function ImGui.SetItemTooltip(fmt, ...) end
 -- return true if the popup is open, and you can start outputting to it.
 --
 ---@param str_id string
----@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 function ImGui.BeginPopup(str_id, flags) end
 
@@ -2733,7 +2884,7 @@ function ImGui.BeginPopup(str_id, flags) end
 --
 ---@param name string
 ---@param p_open true | nil
----@param flags? ImGuiWindowFlags | `ImGui.Flags.Window { "None" }`
+---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
 ---@return boolean p_open
 function ImGui.BeginPopupModal(name, p_open, flags) end
@@ -2757,21 +2908,21 @@ function ImGui.EndPopup() end
 -- call to mark popup as open (don't call every frame!).
 --
 ---@param str_id string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 function ImGui.OpenPopup(str_id, popup_flags) end
 
 --
 -- id overload to facilitate calling from nested stacks
 --
 ---@param id integer
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 function ImGui.OpenPopupID(id, popup_flags) end
 
 --
 -- helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 function ImGui.OpenPopupOnItemClick(str_id, popup_flags) end
 
 --
@@ -2796,7 +2947,7 @@ function ImGui.BeginPopupContextItem() end
 -- open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 ---@return boolean
 function ImGui.BeginPopupContextItemEx(str_id, popup_flags) end
 
@@ -2810,7 +2961,7 @@ function ImGui.BeginPopupContextWindow() end
 -- open+begin popup when clicked on current window.
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 ---@return boolean
 function ImGui.BeginPopupContextWindowEx(str_id, popup_flags) end
 
@@ -2824,7 +2975,7 @@ function ImGui.BeginPopupContextVoid() end
 -- open+begin popup when clicked in void (where there are no windows).
 --
 ---@param str_id? string
----@param popup_flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "MouseButtonRight" }`
+---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "MouseButtonRight" }`
 ---@return boolean
 function ImGui.BeginPopupContextVoidEx(str_id, popup_flags) end
 
@@ -2838,7 +2989,7 @@ function ImGui.BeginPopupContextVoidEx(str_id, popup_flags) end
 -- return true if the popup is open.
 --
 ---@param str_id string
----@param flags? ImGuiPopupFlags | `ImGui.Flags.Popup { "None" }`
+---@param flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 ---@return boolean
 function ImGui.IsPopupOpen(str_id, flags) end
 
@@ -2870,13 +3021,13 @@ function ImGui.IsPopupOpen(str_id, flags) end
 --
 ---@param str_id string
 ---@param column integer
----@param flags? ImGuiTableFlags | `ImGui.Flags.Table { "None" }`
+---@param flags? ImGui.TableFlags | `ImGui.TableFlags { "None" }`
 ---@return boolean
 function ImGui.BeginTable(str_id, column, flags) end
 
 ---@param str_id string
 ---@param column integer
----@param flags? ImGuiTableFlags | `ImGui.Flags.Table { "None" }`
+---@param flags? ImGui.TableFlags | `ImGui.TableFlags { "None" }`
 ---@param outer_size_x? number | `0.0`
 ---@param outer_size_y? number | `0.0`
 ---@param inner_width? number | `0.0`
@@ -2896,7 +3047,7 @@ function ImGui.TableNextRow() end
 --
 -- append into the first cell of a new row.
 --
----@param row_flags? ImGuiTableRowFlags | `ImGui.Flags.TableRow { "None" }`
+---@param row_flags? ImGui.TableRowFlags | `ImGui.TableRowFlags { "None" }`
 ---@param min_row_height? number | `0.0`
 function ImGui.TableNextRowEx(row_flags, min_row_height) end
 
@@ -2927,11 +3078,11 @@ function ImGui.TableSetColumnIndex(column_n) end
 -- Implied init_width_or_weight = 0.0f, user_id = 0
 --
 ---@param label string
----@param flags? ImGuiTableColumnFlags | `ImGui.Flags.TableColumn { "None" }`
+---@param flags? ImGui.TableColumnFlags | `ImGui.TableColumnFlags { "None" }`
 function ImGui.TableSetupColumn(label, flags) end
 
 ---@param label string
----@param flags? ImGuiTableColumnFlags | `ImGui.Flags.TableColumn { "None" }`
+---@param flags? ImGui.TableColumnFlags | `ImGui.TableColumnFlags { "None" }`
 ---@param init_width_or_weight? number | `0.0`
 ---@param user_id? integer | `0`
 function ImGui.TableSetupColumnEx(label, flags, init_width_or_weight, user_id) end
@@ -2988,7 +3139,7 @@ function ImGui.TableGetColumnName(column_n) end
 -- return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 --
 ---@param column_n? integer | `-1`
----@return ImGuiTableColumnFlags
+---@return ImGui.TableColumnFlags
 function ImGui.TableGetColumnFlags(column_n) end
 
 --
@@ -3001,7 +3152,7 @@ function ImGui.TableSetColumnEnabled(column_n, v) end
 --
 -- change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 --
----@param target ImGuiTableBgTarget
+---@param target ImGui.TableBgTarget
 ---@param color integer
 ---@param column_n? integer | `-1`
 function ImGui.TableSetBgColor(target, color, column_n) end
@@ -3014,7 +3165,7 @@ function ImGui.TableSetBgColor(target, color, column_n) end
 -- create and append into a TabBar
 --
 ---@param str_id string
----@param flags? ImGuiTabBarFlags | `ImGui.Flags.TabBar { "None" }`
+---@param flags? ImGui.TabBarFlags | `ImGui.TabBarFlags { "None" }`
 ---@return boolean
 function ImGui.BeginTabBar(str_id, flags) end
 
@@ -3028,7 +3179,7 @@ function ImGui.EndTabBar() end
 --
 ---@param label string
 ---@param p_open true | nil
----@param flags? ImGuiTabItemFlags | `ImGui.Flags.TabItem { "None" }`
+---@param flags? ImGui.TabItemFlags | `ImGui.TabItemFlags { "None" }`
 ---@return boolean
 ---@return boolean p_open
 function ImGui.BeginTabItem(label, p_open, flags) end
@@ -3042,7 +3193,7 @@ function ImGui.EndTabItem() end
 -- create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 --
 ---@param label string
----@param flags? ImGuiTabItemFlags | `ImGui.Flags.TabItem { "None" }`
+---@param flags? ImGui.TabItemFlags | `ImGui.TabItemFlags { "None" }`
 ---@return boolean
 function ImGui.TabItemButton(label, flags) end
 
@@ -3051,6 +3202,35 @@ function ImGui.TabItemButton(label, flags) end
 --
 ---@param tab_or_docked_window_label string
 function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
+
+--
+-- Docking
+-- [BETA API] Enable with io.ConfigFlags |= ImGuiConfigFlags_DockingEnable.
+-- Note: You can use most Docking facilities without calling any API. You DO NOT need to call DockSpace() to use Docking!
+-- - Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.
+-- - Drag from window menu button (upper-left button) to undock an entire node (all windows).
+-- - When io.ConfigDockingWithShift == true, you instead need to hold SHIFT to enable docking.
+-- About dockspaces:
+-- - Use DockSpaceOverViewport() to create an explicit dock node covering the screen or a specific viewport.
+--   This is often used with ImGuiDockNodeFlags_PassthruCentralNode to make it transparent.
+-- - Use DockSpace() to create an explicit dock node _within_ an existing window. See Docking demo for details.
+-- - Important: Dockspaces need to be submitted _before_ any window they can host. Submit it early in your frame!
+-- - Important: Dockspaces need to be kept alive if hidden, otherwise windows docked into it will be undocked.
+--   e.g. if you have multiple tabs with a dockspace inside each tab: submit the non-visible dockspaces with ImGuiDockNodeFlags_KeepAliveOnly.
+--
+--
+-- Implied size = ImVec2(0, 0), flags = 0, window_class = NULL
+--
+---@param id integer
+---@return integer
+function ImGui.DockSpace(id) end
+
+---@param id integer
+---@param size_x? number | `0`
+---@param size_y? number | `0`
+---@param flags? ImGui.DockNodeFlags | `ImGui.DockNodeFlags { "None" }`
+---@return integer
+function ImGui.DockSpaceEx(id, size_x, size_y, flags) end
 
 --
 -- Implied viewport = NULL, flags = 0, window_class = NULL
@@ -3062,7 +3242,7 @@ function ImGui.DockSpaceOverViewport() end
 -- set next window dock id
 --
 ---@param dock_id integer
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextWindowDockID(dock_id, cond) end
 
 ---@return integer
@@ -3084,7 +3264,7 @@ function ImGui.IsWindowDocked() end
 --
 -- call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
 --
----@param flags? ImGuiDragDropFlags | `ImGui.Flags.DragDrop { "None" }`
+---@param flags? ImGui.DragDropFlags | `ImGui.DragDropFlags { "None" }`
 ---@return boolean
 function ImGui.BeginDragDropSource(flags) end
 
@@ -3093,7 +3273,7 @@ function ImGui.BeginDragDropSource(flags) end
 --
 ---@param type string
 ---@param data string
----@param cond? ImGuiCond | `ImGui.Enum.Cond.None`
+---@param cond? ImGui.Cond | `ImGui.Cond.None`
 ---@return boolean
 function ImGui.SetDragDropPayload(type, data, cond) end
 
@@ -3112,7 +3292,7 @@ function ImGui.BeginDragDropTarget() end
 -- accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 --
 ---@param type string
----@param flags? ImGuiDragDropFlags | `ImGui.Flags.DragDrop { "None" }`
+---@param flags? ImGui.DragDropFlags | `ImGui.DragDropFlags { "None" }`
 ---@return string | nil
 function ImGui.AcceptDragDropPayload(type, flags) end
 
@@ -3187,7 +3367,7 @@ function ImGui.SetNextItemAllowOverlap() end
 --
 -- is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.
 --
----@param flags? ImGuiHoveredFlags | `ImGui.Flags.Hovered { "None" }`
+---@param flags? ImGui.HoveredFlags | `ImGui.HoveredFlags { "None" }`
 ---@return boolean
 function ImGui.IsItemHovered(flags) end
 
@@ -3212,7 +3392,7 @@ function ImGui.IsItemClicked() end
 --
 -- is the last item hovered and mouse clicked on? (**)  == IsMouseClicked(mouse_button) && IsItemHovered()Important. (**) this is NOT equivalent to the behavior of e.g. Button(). Read comments in function definition.
 --
----@param mouse_button? ImGuiMouseButton | `ImGui.Enum.MouseButton.Left`
+---@param mouse_button? ImGui.MouseButton | `ImGui.MouseButton.Left`
 ---@return boolean
 function ImGui.IsItemClickedEx(mouse_button) end
 
@@ -3333,7 +3513,7 @@ function ImGui.GetFrameCount() end
 --
 -- get a string corresponding to the enum value (for display, saving, etc.).
 --
----@param idx ImGuiCol
+---@param idx ImGui.Col
 ---@return string
 function ImGui.GetStyleColorName(idx) end
 
@@ -3383,21 +3563,21 @@ function ImGui.ColorConvertFloat4ToU32(in_x, in_y, in_z, in_w) end
 --
 -- is key being held.
 --
----@param key ImGuiKey
+---@param key ImGui.Key
 ---@return boolean
 function ImGui.IsKeyDown(key) end
 
 --
 -- Implied repeat = true
 --
----@param key ImGuiKey
+---@param key ImGui.Key
 ---@return boolean
 function ImGui.IsKeyPressed(key) end
 
 --
 -- was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
 --
----@param key ImGuiKey
+---@param key ImGui.Key
 ---@param arg_repeat? boolean | `true`
 ---@return boolean
 function ImGui.IsKeyPressedEx(key, arg_repeat) end
@@ -3405,21 +3585,21 @@ function ImGui.IsKeyPressedEx(key, arg_repeat) end
 --
 -- was key released (went from Down to !Down)?
 --
----@param key ImGuiKey
+---@param key ImGui.Key
 ---@return boolean
 function ImGui.IsKeyReleased(key) end
 
 --
 -- was key chord (mods + key) pressed, e.g. you can pass 'ImGuiMod_Ctrl | ImGuiKey_S' as a key-chord. This doesn't do any routing or focus check, please consider using Shortcut() function instead.
 --
----@param key_chord ImGuiKeyChord
+---@param key_chord ImGui.KeyChord
 ---@return boolean
 function ImGui.IsKeyChordPressed(key_chord) end
 
 --
 -- uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
 --
----@param key ImGuiKey
+---@param key ImGui.Key
 ---@param repeat_delay number
 ---@param rate number
 ---@return integer
@@ -3428,7 +3608,7 @@ function ImGui.GetKeyPressedAmount(key, repeat_delay, rate) end
 --
 -- [DEBUG] returns English name of the key. Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
 --
----@param key ImGuiKey
+---@param key ImGui.Key
 ---@return string
 function ImGui.GetKeyName(key) end
 
@@ -3447,21 +3627,21 @@ function ImGui.SetNextFrameWantCaptureKeyboard(want_capture_keyboard) end
 --
 -- is mouse button held?
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@return boolean
 function ImGui.IsMouseDown(button) end
 
 --
 -- Implied repeat = false
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@return boolean
 function ImGui.IsMouseClicked(button) end
 
 --
 -- did mouse button clicked? (went from !Down to Down). Same as GetMouseClickedCount() == 1.
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@param arg_repeat? boolean | `false`
 ---@return boolean
 function ImGui.IsMouseClickedEx(button, arg_repeat) end
@@ -3469,21 +3649,21 @@ function ImGui.IsMouseClickedEx(button, arg_repeat) end
 --
 -- did mouse button released? (went from Down to !Down)
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@return boolean
 function ImGui.IsMouseReleased(button) end
 
 --
 -- did mouse button double-clicked? Same as GetMouseClickedCount() == 2. (note that a double-click will also report IsMouseClicked() == true)
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@return boolean
 function ImGui.IsMouseDoubleClicked(button) end
 
 --
 -- return the number of successive mouse-clicks at the time where a click happen (otherwise 0).
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@return integer
 function ImGui.GetMouseClickedCount(button) end
 
@@ -3531,7 +3711,7 @@ function ImGui.GetMousePosOnOpeningCurrentPopup() end
 --
 -- is mouse dragging? (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
 --
----@param button ImGuiMouseButton
+---@param button ImGui.MouseButton
 ---@param lock_threshold? number | `-1.0`
 ---@return boolean
 function ImGui.IsMouseDragging(button, lock_threshold) end
@@ -3539,7 +3719,7 @@ function ImGui.IsMouseDragging(button, lock_threshold) end
 --
 -- return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
 --
----@param button? ImGuiMouseButton | `ImGui.Enum.MouseButton.Left`
+---@param button? ImGui.MouseButton | `ImGui.MouseButton.Left`
 ---@param lock_threshold? number | `-1.0`
 ---@return number
 ---@return number
@@ -3553,19 +3733,19 @@ function ImGui.ResetMouseDragDelta() end
 --
 --
 --
----@param button? ImGuiMouseButton | `ImGui.Enum.MouseButton.Left`
+---@param button? ImGui.MouseButton | `ImGui.MouseButton.Left`
 function ImGui.ResetMouseDragDeltaEx(button) end
 
 --
 -- get desired mouse cursor shape. Important: reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
 --
----@return ImGuiMouseCursor
+---@return ImGui.MouseCursor
 function ImGui.GetMouseCursor() end
 
 --
 -- set desired mouse cursor shape
 --
----@param cursor_type ImGuiMouseCursor
+---@param cursor_type ImGui.MouseCursor
 function ImGui.SetMouseCursor(cursor_type) end
 
 --
@@ -3614,8 +3794,8 @@ function ImGui.SaveIniSettingsToDisk(ini_filename) end
 ---@return string
 function ImGui.SaveIniSettingsToMemory() end
 
----@param key ImGuiKey
----@return ImGuiKey
+---@param key ImGui.Key
+---@return ImGui.Key
 function ImGui.GetKeyIndex(key) end
 
 return ImGui

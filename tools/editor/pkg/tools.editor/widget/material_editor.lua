@@ -6,7 +6,7 @@ local ImGui = import_package "ant.imgui"
 
 local md = {} md.__index = md
 
-local wndflags = ImGui.Flags.Window {
+local wndflags = ImGui.WindowFlags {
     "NoDocking",
     "NoCollapse",
 }

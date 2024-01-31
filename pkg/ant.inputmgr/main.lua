@@ -4,7 +4,7 @@ local ImGui = require "imgui"
 
 local keymap = {}
 
-for name, index in pairs(ImGui.Enum.Key) do
+for name, index in pairs(ImGui.Key) do
     keymap[index] = name
 end
 

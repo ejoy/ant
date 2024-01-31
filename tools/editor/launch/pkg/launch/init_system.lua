@@ -47,7 +47,7 @@ local function choose_project()
         ImGui.OpenPopup(title)
     end
 
-    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.Flags.Window{"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
     if change then
         ImGui.Text("Create new or open existing project.")
         if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
@@ -80,7 +80,7 @@ local function choose_project()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj)
                     exit = true
@@ -118,10 +118,10 @@ function m:data_changed()
     ImGui.SetNextWindowPos(wp[1], wp[2])
     ImGui.SetNextWindowSize(ws[1], ws[2])
     ImGui.SetNextWindowViewport(imgui_vp.ID)
-	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
-	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
-    ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
+	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
+	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
+    ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
+    if ImGui.Begin("MainView", nil, ImGui.WindowFlags {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -131,7 +131,7 @@ function m:data_changed()
         "NoNavFocus",
         "NoBackground",
     }) then
-        ImGui.DockSpace("MainViewSpace", ImGui.Flags.DockNode {
+        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.DockNodeFlags {
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })
@@ -140,11 +140,11 @@ function m:data_changed()
     ImGui.End()
 
     local viewport = ImGui.GetMainViewport()
-    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], ImGui.Enum.Cond.FirstUseEver)
-    ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], ImGui.Enum.Cond.FirstUseEver)
-    -- ImGui.SetNextWindowDockID("MainViewSpace", ImGui.Enum.Cond.FirstUseEver)
+    ImGui.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2], ImGui.Cond.FirstUseEver)
+    ImGui.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2], ImGui.Cond.FirstUseEver)
+    -- ImGui.SetNextWindowDockID("MainViewSpace", ImGui.Cond.FirstUseEver)
     local exit = false
-    if ImGui.Begin("##Choose project", true, ImGui.Flags.Window {"NoResize", "NoTitleBar", "NoCollapse" }) then
+    if ImGui.Begin("##Choose project", true, ImGui.WindowFlags {"NoResize", "NoTitleBar", "NoCollapse" }) then
         -- exit = choose_project()
         -- local wid = ImGui.GetID("Choose project")
         local selected_proj
@@ -180,7 +180,7 @@ function m:data_changed()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.Flags.Selectable {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj.proj_path)
                     exit = true

@@ -183,9 +183,6 @@ static int lsave(lua_State* L) {
 
 
 extern "C"
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
 int luaopen_filedialog(lua_State* L) {
     HRESULT hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (hr != RPC_E_CHANGED_MODE) {

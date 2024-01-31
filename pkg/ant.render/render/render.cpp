@@ -11,6 +11,7 @@ extern "C"{
 }
 
 #include "queue.h"
+#include "hash.h"
 
 #include "lua.hpp"
 #include "luabgfx.h"
@@ -42,30 +43,65 @@ enum queue_type{
 
 static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 
-using obj_transforms = std::unordered_map<uint64_t, transform>;
+//using obj_transforms = std::unordered_map<uint64_t, transform>;
+struct obj_transforms {
+	static constexpr uint16_t MAX_CACHE = 10240*2;
+	struct key {
+		static uint16_t hash_idx(const component::render_object *ro, math_t m) {
+			return (uint16_t)((hash64((uint64_t)ro^m.idx)) % obj_transforms::MAX_CACHE);
+		}
+
+		const component::render_object * ro;
+		math_t m;
+		uint16_t hidx;
+	};
+
+	key			keys[MAX_CACHE] = {0};
+	transform	values[MAX_CACHE] = {0};
+
+	bool check(const key& k, transform &v) const {
+		const key& r = keys[k.hidx];
+		if (r.ro == k.ro && r.m.idx == k.m.idx){
+			v = values[k.hidx];
+			return true;
+		}
+		return false;
+	}
+
+	void add(const key& k, const transform &v){
+		values[k.hidx] = v;
+		keys[k.hidx] = k;
+	}
+
+	void clear(){
+		memset(keys, 0, sizeof(keys));
+	}
+};
+
 static inline transform
 update_transform(struct ecs_world* w, const component::render_object *ro, const math_t& hwm, obj_transforms &trans){
-	uint64_t tran_key = (uint64_t)ro ^ hwm.idx;
-	auto it = trans.find(tran_key);
-	if (it == trans.end()){
+	auto key = obj_transforms::key{ro, hwm, obj_transforms::key::hash_idx(ro, hwm)};
+	transform t;
+	if (!trans.check(key, t)){
 		const math_t wm = ro->worldmat;
 		assert(math_valid(w->math3d->M, wm) && !math_isnull(wm) && "Invalid world mat");
 		const int num = math_size(w->math3d->M, wm);
-		transform t;
+
 		bgfx_transform_t bt;
 		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &bt, (uint16_t)num);
 		t.stride = num;
-		if(hwm.idx == MATH_NULL.idx){
+		if(math_isnull(hwm)){
 			const float * v = math_value(w->math3d->M, wm);
 			memcpy(bt.data, v, sizeof(float)*16*num);
-		}
-		else{
+		} else{
 			math_t r = math_ref(w->math3d->M, bt.data, MATH_TYPE_MAT, t.stride);
 			math3d_mul_matrix_array(w->math3d->M, hwm, wm, r);			
 		}
-		it = trans.insert(std::make_pair(tran_key, t)).first;
+
+		trans.add(key, t);
 	}
-	return it->second;
+
+	return t;
 }
 
 #define INVALID_BUFFER_TYPE		UINT16_MAX
@@ -193,10 +229,17 @@ struct submit_cache{
 	submit_stat stat;
 #endif //RENDER_DEBUG
 
+	void clear_groups(){
+		for (auto &g : groups){
+			for (std::vector<math_t> &q : g.second){
+				q.clear();
+			}
+		}
+	}
+
 	void clear(){
 		transforms.clear();
-		groups.clear();
-
+		clear_groups();
 		ra_count = 0;
 
 #ifdef RENDER_DEBUG
@@ -247,7 +290,7 @@ build_hitch_info(struct ecs_world*w, submit_cache &cc){
 			if (obj_visible(w->Q, h, ra->queue_index)){
 				const auto &s = e.get<component::scene>();
 				if (h.group != 0){
-					cc.groups[h.group][ra->queue_index].push_back(s.worldmat);
+					cc.groups[h.group][ra->queue_index].emplace_back(s.worldmat);
 					#ifdef RENDER_DEBUG
 					++cc.stat.hitch_count;
 					#endif //RENDER_DEBUG
@@ -301,6 +344,7 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 			auto eid = e.component<component::eid>();eid;
 #endif //RENDER_DEBUG
 
+			const component::indirect_object* iobj = e.component<component::indirect_object>();
 			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(iobj) && obj_queue_visible(w->Q, obj, ra->queue_index))){
 				draw_obj(L, w, ra, &obj, iobj, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
@@ -329,11 +373,18 @@ lrender_submit(lua_State *L) {
 
 // static int
 // lrender_preprocess(lua_State *L){
+// 	auto w = getworld(L);
+// 	cc.clear();
+
+// 	find_render_args(w, cc);
+// 	build_hitch_info(w, cc);
 // 	return 0;
 // }
 
 // static int
 // lrender_hitch_submit(lua_State *L){
+// 	auto w = getworld(L);
+// 	render_hitch_submit(L, w, cc);
 // 	return 0;
 // }
 
@@ -457,13 +508,13 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init_system",	linit_system},
-		{ "exit",			lexit},
+		{ "init_system",		linit_system},
+		{ "exit",				lexit},
 		//{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
-		// { "render_hitch_submit",lrender_hitch_submit},
-		// { "render_postprocess", lrender_postprocess},
-		{ nullptr, 			nullptr },
+		//{ "render_hitch_submit",lrender_hitch_submit},
+		//{ "render_postprocess", lrender_postprocess},
+		{ nullptr, 				nullptr },
 	};
 	luaL_newlibtable(L,l);
 	lua_pushnil(L);

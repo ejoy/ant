@@ -165,7 +165,7 @@ local function build_entity_ui(name, comp, cdesc, updatevalue)
     local comptype = d.type
     if comptype == nil then
         assert(type(comp) == "table")
-        if ImGui.TreeNodeEx(name, ImGui.Flags.TreeNode { "DefaultOpen" }) then
+        if ImGui.TreeNodeEx(name, ImGui.TreeNodeFlags { "DefaultOpen" }) then
             local vv = {}
             for k, v in compdefines.sort_pairs(comp) do
                 local dd = d[k] or error (

@@ -69,11 +69,11 @@ function m:init(skeleton)
 end
 
 function m:show_joints(root)
-    local base_flags = ImGui.Flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((self.current_joint and (self.current_joint.name == root.name)) and ImGui.Flags.TreeNode{"Selected"} or 0)
+    local base_flags = ImGui.TreeNodeFlags { "OpenOnArrow", "SpanFullWidth" } | ((self.current_joint and (self.current_joint.name == root.name)) and ImGui.TreeNodeFlags {"Selected"} or 0)
     local flags = base_flags
     local has_child = true
     if #root.children == 0 then
-        flags = base_flags | ImGui.Flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
+        flags = base_flags | ImGui.TreeNodeFlags { "Leaf", "NoTreePushOnOpen" }
         has_child = false
     end
     local open = ImGui.TreeNodeEx(root.name, flags)

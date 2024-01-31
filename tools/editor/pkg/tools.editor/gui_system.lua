@@ -71,9 +71,9 @@ function m:ui_update()
             widget_utils.reset_ui_layout()
         end
     end
-    ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0)
-    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.WindowBg, 0.2, 0.2, 0.2, 1)
-    ImGui.PushStyleColorImVec4(ImGui.Enum.Col.TitleBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0)
+    ImGui.PushStyleColorImVec4(ImGui.Col.WindowBg, 0.2, 0.2, 0.2, 1)
+    ImGui.PushStyleColorImVec4(ImGui.Col.TitleBg, 0.2, 0.2, 0.2, 1)
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()

@@ -29,7 +29,7 @@ function m.show()
         icons.scale = imgui_vp.DpiScale
     end
     --drag file to view
-    if ImGui.IsMouseDragging(ImGui.Enum.MouseButton.Left) then
+    if ImGui.IsMouseDragging(ImGui.MouseButton.Left) then
         local x, y = ImGui.GetMousePos()
         x, y = x - imgui_vp.MainPos[1], y - imgui_vp.MainPos[2]
         if in_view(cvt2scenept(x, y)) then
@@ -56,10 +56,10 @@ function m.show()
     ImGui.SetNextWindowPos(posx, posy)
     ImGui.SetNextWindowSize(sizew, sizeh)
     ImGui.SetNextWindowViewport(imgui_vp.ID)
-	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowRounding, 0.0);
-	ImGui.PushStyleVar(ImGui.Enum.StyleVar.WindowBorderSize, 0.0);
-    ImGui.PushStyleVarImVec2(ImGui.Enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", nil, ImGui.Flags.Window {
+	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
+	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
+    ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
+    if ImGui.Begin("MainView", nil, ImGui.WindowFlags {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -69,7 +69,7 @@ function m.show()
         "NoNavFocus",
         "NoBackground",
     }) then
-        ImGui.DockSpace("MainViewSpace", ImGui.Flags.DockNode {
+        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.DockNodeFlags {
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })

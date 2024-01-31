@@ -55,6 +55,7 @@ local function add_recent_file(f)
     end
     table.insert(rf, 1, f)
     assert(#rf <= 10)
+    save()
 end
 
 local function update_camera_setting(speed)

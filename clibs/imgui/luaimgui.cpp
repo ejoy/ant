@@ -11,15 +11,14 @@ extern "C" {
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
-#include <functional>
-#include <map>
-#include <string_view>
 #include <bx/platform.h>
 #include "backend/imgui_impl_bgfx.h"
 #include "imgui_platform.h"
 #include "fastio.h"
 
-namespace imgui_lua { void init(lua_State* L); }
+namespace imgui_lua {
+	void init(lua_State* L, int extra);
+}
 
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
@@ -30,11 +29,6 @@ lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
 
 #define INDEX_ID 1
 #define INDEX_ARGS 2
-
-struct lua_args {
-	lua_State *L;
-	bool err;
-};
 
 template <typename Flags>
 static Flags lua_getflags(lua_State* L, int idx) {
@@ -105,47 +99,6 @@ read_field_string(lua_State *L, const char * field, const char *v, int tidx = IN
 	return v;
 }
 
-//read table { x, y }
-static ImVec2
-read_field_vec2(lua_State *L, const char *field, ImVec2 def_val, int tidx = INDEX_ARGS) {
-	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
-		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
-			def_val.x = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
-			def_val.y = (float)lua_tonumber(L, -1);
-		lua_pop(L, 2);
-	}
-	lua_pop(L, 1);
-	return def_val;
-}
-
-//read table { x, y, z, w }
-static ImVec4
-read_field_vec4(lua_State *L, const char *field, ImVec4 def_val, int tidx = INDEX_ARGS) {
-	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
-		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
-			def_val.x = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
-			def_val.y = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -3, 3) == LUA_TNUMBER)
-			def_val.z = (float)lua_tonumber(L, -1);
-		if (lua_geti(L, -4, 4) == LUA_TNUMBER)
-			def_val.w = (float)lua_tonumber(L, -1);
-		lua_pop(L, 4);
-	}
-	lua_pop(L, 1);
-	return def_val;
-}
-
-static int dDockSpace(lua_State* L) {
-	const char* str_id = luaL_checkstring(L, 1);
-	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
-	float w = (float)luaL_optnumber(L, 3, 0);
-	float h = (float)luaL_optnumber(L, 4, 0);
-	ImGui::DockSpace(ImGui::GetID(str_id), ImVec2(w, h), flags);
-	return 0;
-}
-
 static int dDockBuilderGetCentralRect(lua_State * L) {
 	const char* str_id = luaL_checkstring(L, 1);
 	ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
@@ -154,64 +107,6 @@ static int dDockBuilderGetCentralRect(lua_State * L) {
 	lua_pushnumber(L, central_node->Size.x);
 	lua_pushnumber(L, central_node->Size.y);
 	return 4;
-}
-
-static int ClipperRelease(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)luaL_testudata(L, 1, "IMGUI_CLIPPER");
-	clipper->~ImGuiListClipper();
-	return 0;
-}
-
-static int ClipperEnd(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	clipper->End();
-	return 0;
-}
-
-static int ClipperStep(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	bool ok = clipper->Step();
-	if (!ok) {
-		return 0;
-	}
-	lua_pushinteger(L, (lua_Integer)clipper->DisplayStart + 1);
-	lua_pushinteger(L, (lua_Integer)clipper->DisplayEnd);
-	return 2;
-}
-
-static int ClipperBegin(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_touserdata(L, lua_upvalueindex(1));
-	int n = (int)luaL_checkinteger(L, 1);
-	float height = (float)luaL_optnumber(L, 2, -1.0f);
-	clipper->Begin(n, height);
-	lua_pushvalue(L, lua_upvalueindex(2));
-	lua_pushnil(L);
-	lua_pushnil(L);
-	lua_pushvalue(L, lua_upvalueindex(3));
-	return 4;
-}
-
-static int ListClipper(lua_State* L) {
-	ImGuiListClipper* clipper = (ImGuiListClipper*)lua_newuserdatauv(L, sizeof(ImGuiListClipper), 0);
-	new (clipper) ImGuiListClipper;
-	if (luaL_newmetatable(L, "IMGUI_CLIPPER")) {
-		lua_pushcfunction(L, ClipperRelease);
-		lua_setfield(L, -2, "__gc");
-	}
-	lua_setmetatable(L, -2);
-
-	lua_pushvalue(L, -1);
-	lua_pushcclosure(L, ClipperStep, 1);
-
-	lua_newtable(L);
-	lua_pushvalue(L, -3);
-	lua_pushcclosure(L, ClipperEnd, 1);
-	lua_setfield(L, -2, "__close");
-	lua_pushvalue(L, -1);
-	lua_setmetatable(L, -2);
-	
-	lua_pushcclosure(L, ClipperBegin, 3);
-	return 1;
 }
 
 static int lGetMainViewport(lua_State* L) {
@@ -529,232 +424,6 @@ wInputTextMultiline(lua_State *L) {
 	return 1;
 }
 
-static bool
-input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextFlags flags, int n) {
-	if (n == 1) {
-		double step = read_field_float(L, "step", 0);
-		double step_fast = read_field_float(L, "step_fast", 0);
-		lua_geti(L, INDEX_ARGS, 1);
-		double v = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		bool r = ImGui::InputDouble(label, &v, step, step_fast, format, flags);
-		if (r) {
-			lua_pushnumber(L, v);
-			lua_seti(L, INDEX_ARGS, 1);
-		}
-		return r;
-	} else {
-		float v[4];
-		int i;
-		for (i=0;i<n;i++) {
-			lua_geti(L, INDEX_ARGS, i + 1);
-			v[i] = (float)lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
-		bool r = false;
-		switch (n) {
-		case 2:
-			r = ImGui::InputFloat2(label, v, format, flags);
-			break;
-		case 3:
-			r = ImGui::InputFloat3(label, v, format, flags);
-			break;
-		case 4:
-			r = ImGui::InputFloat4(label, v, format, flags);
-			break;
-		}
-		if (r) {
-			for (i = 0; i < n; i++) {
-				lua_pushnumber(L, v[i]);
-				lua_seti(L, INDEX_ARGS, i + 1);
-			}
-		}
-		return r;
-	}
-}
-
-static bool
-input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
-	int step = 1;
-	int step_fast = 100;
-	if (n > 1) {
-		step = read_field_int(L, "step", 1);
-		step_fast = read_field_int(L, "step_fast", 100);
-	}
-	int v[4];
-	int i;
-	for (i = 0; i < n; i++) {
-		lua_geti(L, INDEX_ARGS, i + 1);
-		v[i] = (int)lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	}
-	bool r = false;
-	switch (n) {
-	case 1:
-		r = ImGui::InputInt(label, v, step, step_fast, flags);
-		break;
-	case 2:
-		r = ImGui::InputInt2(label, v, flags);
-		break;
-	case 3:
-		r = ImGui::InputInt3(label, v, flags);
-		break;
-	case 4:
-		r = ImGui::InputInt4(label, v, flags);
-		break;
-	}
-	if (r) {
-		for (i = 0; i < n; i++) {
-			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i + 1);
-		}
-	}
-	return r;
-}
-
-static int
-wInputFloat(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	if (n < 1 || n > 4)
-		return luaL_error(L, "Need 1-4 numbers");
-	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
-	const char * format = read_field_string(L, "format", "%.3f");
-	bool change = input_float(L, label, format, flags, n);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wInputInt(lua_State *L) {
-	const char * label = luaL_checkstring(L, INDEX_ID);
-	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
-	lua_len(L, INDEX_ARGS);
-	int n = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-	if (n < 1 || n > 4)
-		return luaL_error(L, "Need 1-4 int");
-	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
-	bool change = input_int(L, label, flags, n);
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static ImTextureID getTextureId(lua_State* L, int idx) {
-	int lua_handle = (int)luaL_checkinteger(L, idx);
-	if (auto id = ImGui_ImplBgfx_GetTextureID(lua_handle)) {
-		return *id;
-	}
-	luaL_error(L, "Invalid handle type TEXTURE");
-	std::unreachable();
-}
-
-static int wImage(lua_State *L) {
-	ImTextureID tex_id = getTextureId(L, 1);
-	float size_x = (float)luaL_checknumber(L, 2);
-	float size_y = (float)luaL_checknumber(L, 3);
-	ImVec2 size = { size_x, size_y };
-
-	ImVec2 uv0 = { 0.0f,0.0f };
-	ImVec2 uv1 = { 1.0f,1.0f };
-	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
-	ImVec4 border_col = { 0.0f,0.0f,0.0f,0.0f };
-
-	if (lua_type(L, 4) == LUA_TTABLE)
-	{
-		uv0 = read_field_vec2(L, "uv0", uv0, 4);
-		uv1 = read_field_vec2(L, "uv1", uv1, 4);
-		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
-		border_col = read_field_vec4(L, "border_col", border_col, 4);
-	}
-	ImGui::Image(tex_id, size, uv0, uv1, tint_col, border_col);
-	return 0;
-}
-
-static int
-wImageButton(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImTextureID tex_id = getTextureId(L, 2);
-	float size_x = (float)luaL_checknumber(L, 3);
-	float size_y = (float)luaL_checknumber(L, 4);
-	ImVec2 size = { size_x, size_y };
-
-	ImVec2 uv0 = { 0.0f,0.0f };
-	ImVec2 uv1 = { 1.0f,1.0f };
-	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
-	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
-
-	if (lua_type(L, 5) == LUA_TTABLE)
-	{
-		uv0 = read_field_vec2(L, "uv0", uv0, 5);
-		uv1 = read_field_vec2(L, "uv1", uv1, 5);
-		bg_col = read_field_vec4(L, "bg_col", bg_col, 5);
-		tint_col = read_field_vec4(L, "tint_col", tint_col, 5);
-	}
-	bool clicked = ImGui::ImageButton(id, tex_id, size, uv0, uv1, bg_col, tint_col);
-	lua_pushboolean(L, clicked);
-	return 1;
-}
-
-
-// enums
-struct enum_pair {
-	const char * name;
-	lua_Integer value;
-};
-
-#define ENUM(prefix, name) { #name, prefix##_##name }
-
-static int
-make_flag(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	int i, t;
-	lua_Integer r = 0;
-
-	for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
-		if (t != LUA_TSTRING)
-			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
-		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
-			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
-		}
-		lua_Integer v = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		r |= v;
-	}
-	lua_pushinteger(L, r);
-	return 1;
-}
-
-static void
-flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i = 0; enums[i].name; i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_flag, 2);
-	lua_setfield(L, -2, name);
-}
-
-static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i = 0; enums[i].name; i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_setfield(L, -2, name);
-}
-
-#include "imgui_enum.h"
-
 static int
 lCreateContext(lua_State* L) {
 	ImGui::CreateContext();
@@ -976,13 +645,11 @@ static int util_memory(lua_State* L) {
 }
 
 extern "C"
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
-int
-luaopen_imgui(lua_State *L) {
+int luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
+
+	imgui_lua::init(L, 0);
 
 	luaL_Reg l[] = {
 		{ "CreateContext", lCreateContext },
@@ -998,16 +665,10 @@ luaopen_imgui(lua_State *L) {
 		{ "InitFont", lInitFont },
 		{ "InputText", wInputText },
 		{ "InputTextMultiline", wInputTextMultiline },
-		{ "InputFloat", wInputFloat },
-		{ "InputInt", wInputInt },
-		{ "Image", wImage },
-		{ "ImageButton", wImageButton },
-		{ "DockSpace", dDockSpace },
 		{ "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
-		{ "ListClipper", ListClipper },
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, l);
+	luaL_setfuncs(L, l, 0);
 
 	luaL_Reg util[] = {
 		{ "memory", util_memory },
@@ -1015,8 +676,6 @@ luaopen_imgui(lua_State *L) {
 	};
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
-
-	imgui_lua::init(L);
 
 	luaL_Reg io[] = {
 		{ "AddMouseButtonEvent", ioAddMouseButtonEvent },
@@ -1047,6 +706,5 @@ luaopen_imgui(lua_State *L) {
 	lua_setmetatable(L, -2);
 	lua_setfield(L, -2, "io");
 
-	imgui_enum_init(L);
 	return 1;
 }
