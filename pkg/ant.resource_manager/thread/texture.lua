@@ -359,9 +359,10 @@ function S.texture_create(name, type, block)
     if block then
         local block_token = blockWaitTexture(name)
         local load_token = asyncLoadTexture(c)
-        -- todo : wait2
-        ltask.multi_wait(load_token)
-        ltask.multi_wait(block_token)
+        ltask.parallel {
+            { ltask.multi_wait, block_token },
+            { ltask.multi_wait, load_token },
+        }
     else
         ltask.multi_wait(asyncLoadTexture(c))
     end
