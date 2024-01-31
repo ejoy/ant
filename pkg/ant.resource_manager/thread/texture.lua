@@ -214,7 +214,7 @@ local function asyncLoadTexture(c)
         c.lifespan = textureData.lifespan
         asyncCreateTexture(c.name, textureData)
         loadQueue[c.id] = nil
-        ltask.wakeup(Token)
+        ltask.multi_wakeup(Token)
     end)
     return Token
 end
@@ -261,7 +261,7 @@ function S.texture_create(name, type)
         textureByName[name] = c
         textureById[id] = c
     end
-    ltask.wait(asyncLoadTexture(c))
+    ltask.multi_wait(asyncLoadTexture(c))
     return {
         id = c.id,
         texinfo = c.texinfo,
