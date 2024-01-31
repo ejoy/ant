@@ -42,16 +42,56 @@ enum queue_type{
 
 static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 
-using obj_transforms = std::unordered_map<uint64_t, transform>;
+//using obj_transforms = std::unordered_map<uint64_t, transform>;
+struct obj_transforms {
+	obj_transforms() = default;
+	static constexpr uint16_t MAX_CACHE = 10240*2;
+	struct key {
+		static std::hash<uint64_t>	h;
+
+		static uint16_t hash_idx(const component::render_object *ro, math_t m) {
+			return (uint16_t)(h(h((uint64_t)ro) ^ h(m.idx)) % obj_transforms::MAX_CACHE);
+		}
+
+		const component::render_object * ro;
+		math_t m;
+		uint16_t hidx;
+	};
+
+	key			keys[MAX_CACHE] = {0};
+	transform	values[MAX_CACHE] = {0};
+
+	bool check(const key& k, transform &v) const {
+		const key& r = keys[k.hidx];
+		if (r.ro == k.ro && r.m.idx == k.m.idx){
+			v = values[k.hidx];
+			return true;
+		}
+		return false;
+	}
+
+	void add(const key& k, const transform &v){
+		values[k.hidx] = v;
+		keys[k.hidx] = k;
+	}
+
+	void clear(){
+		memset(keys, 0, sizeof(keys));
+	}
+};
+
+//static
+std::hash<uint64_t> obj_transforms::key::h;
+
 static inline transform
 update_transform(struct ecs_world* w, const component::render_object *ro, const math_t& hwm, obj_transforms &trans){
-	uint64_t tran_key = (uint64_t)ro ^ hwm.idx;
-	auto it = trans.find(tran_key);
-	if (it == trans.end()){
+	auto key = obj_transforms::key{ro, hwm, obj_transforms::key::hash_idx(ro, hwm)};
+	transform t;
+	if (!trans.check(key, t)){
 		const math_t wm = ro->worldmat;
 		assert(math_valid(w->math3d->M, wm) && !math_isnull(wm) && "Invalid world mat");
 		const int num = math_size(w->math3d->M, wm);
-		transform t;
+
 		bgfx_transform_t bt;
 		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &bt, (uint16_t)num);
 		t.stride = num;
@@ -62,9 +102,11 @@ update_transform(struct ecs_world* w, const component::render_object *ro, const 
 			math_t r = math_ref(w->math3d->M, bt.data, MATH_TYPE_MAT, t.stride);
 			math3d_mul_matrix_array(w->math3d->M, hwm, wm, r);			
 		}
-		it = trans.insert(std::make_pair(tran_key, t)).first;
+
+		trans.add(key, t);
 	}
-	return it->second;
+
+	return t;
 }
 
 #define INVALID_BUFFER_TYPE		UINT16_MAX
@@ -173,6 +215,7 @@ draw_obj(lua_State *L, struct ecs_world *w, const component::render_args* ra, co
 using group_queues = std::array<matrix_array, 64>;
 using group_collection = std::unordered_map<int, group_queues>;
 struct submit_cache{
+	submit_cache() = default;
 	obj_transforms	transforms;
 
 	//TODO: need more fine control of the cache
