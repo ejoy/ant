@@ -1,5 +1,6 @@
 #include <lua.hpp>
 #include <imgui.h>
+#include <cstdint>
 #include <bx/platform.h>
 #include "backend/imgui_impl_bgfx.h"
 #include "imgui_platform.h"

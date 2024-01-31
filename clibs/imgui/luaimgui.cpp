@@ -1,9 +1,6 @@
 #include <lua.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <algorithm>
-#include <cstring>
-#include <cstdlib>
 #include <cstdint>
 
 namespace imgui_lua {
