@@ -46,6 +46,7 @@ lm:config "engine_config" {
     msvc = {
         flags = "/utf-8",
     },
+    defines = "BGFX_CONFIG_DEBUG_UNIFORM=0"
 }
 
 lm.configs = {
