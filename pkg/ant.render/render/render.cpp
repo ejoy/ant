@@ -343,8 +343,6 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 #ifdef RENDER_DEBUG
 			auto eid = e.component<component::eid>();eid;
 #endif //RENDER_DEBUG
-
-			const component::indirect_object* iobj = e.component<component::indirect_object>();
 			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(iobj) && obj_queue_visible(w->Q, obj, ra->queue_index))){
 				draw_obj(L, w, ra, &obj, iobj, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
