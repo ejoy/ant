@@ -307,16 +307,16 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 	for (auto const& [groupid, g] : cc.groups) {
 		int gids[] = {groupid};
 		ecs::group_enable<component::hitch_tag>(w->ecs, gids);
+
 		for (auto& e : ecs::select<component::hitch_tag>(w->ecs)) {
-			auto ro = e.component<component::render_object>();
-			auto iobj = e.component<component::indirect_object>();
+			const auto ro = e.component<component::render_object>();
+			const auto io = e.component<component::indirect_object>();
 			const auto eo = e.component<component::efk_object>();
 			for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 				auto ra = cc.ra[ii];
 				const auto &mats = g[ra->queue_index];
 				if (!mats.empty()){
-
-					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index) && !iobj){
+					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index) && !io){
 						draw_obj(L, w, ra, ro, nullptr, &mats, cc.transforms);
 					}
 
@@ -336,15 +336,17 @@ static inline void
 render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 	// draw simple objects
 	for (auto& e : ecs::select<component::render_object_visible, component::render_object>(w->ecs)) {
-		const component::indirect_object* iobj = e.component<component::indirect_object>();
+		const component::indirect_object* io = e.component<component::indirect_object>();
+		const auto& ro = e.get<component::render_object>();
+
+		#ifdef RENDER_DEBUG
+			auto eid = e.component<component::eid>();(void)eid;
+		#endif //RENDER_DEBUG
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			auto ra = cc.ra[ii];
 			const auto& obj = e.get<component::render_object>();
-#ifdef RENDER_DEBUG
-			auto eid = e.component<component::eid>();(void)eid;
-#endif //RENDER_DEBUG
-			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(iobj) && obj_queue_visible(w->Q, obj, ra->queue_index))){
-				draw_obj(L, w, ra, &obj, iobj, nullptr, cc.transforms);
+			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(io) && obj_queue_visible(w->Q, obj, ra->queue_index))){
+				draw_obj(L, w, ra, &obj, io, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
 				++cc.stat.simple_submit;
 				#endif //RENDER_DEBUG
