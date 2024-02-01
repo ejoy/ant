@@ -25,3 +25,10 @@ component "draw_indirect_update"
 
 system "draw_indirect_system"
     .implement "draw_indirect/draw_indirect.lua"
+
+component "indirect_entity".type "lua"
+component "indirect_update"
+policy "indirect_entity"
+    .component "indirect_entity"
+system "indirect_entity_system"
+    .implement "draw_indirect/indirect_entity.lua"
