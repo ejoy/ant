@@ -4,7 +4,6 @@ local w = world.w
 
 local gizmo     = ecs.require "gizmo.gizmo"
 local ImGui     = import_package "ant.imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 
 local base_panel        = ecs.require "widget.base_view"()

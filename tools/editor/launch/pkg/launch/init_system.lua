@@ -7,7 +7,6 @@ local fs = require "filesystem"
 local lfs = require "bee.filesystem"
 local subprocess = require "bee.subprocess"
 local ImGui = import_package "ant.imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local editor_setting    = require "editor_setting"
 
 

@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local ImGui     = import_package "ant.imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
