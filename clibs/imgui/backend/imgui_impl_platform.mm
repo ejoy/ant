@@ -1,4 +1,3 @@
-#include <imgui.h>
 #include <backends/imgui_impl_osx.h>
 #include "backend/imgui_impl_platform.h"
 #import <Cocoa/Cocoa.h>

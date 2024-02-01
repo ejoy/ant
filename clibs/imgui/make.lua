@@ -18,9 +18,11 @@ lm:source_set "imgui" {
         lm.AntDir .. "/3rd/imgui",
     },
     defines = defines,
+    sources = {
+        "backend/imgui_impl_platform.cpp",
+    },
     windows = {
         sources = {
-            "backend/imgui_impl_win32.cpp",
             lm.AntDir .. "/3rd/imgui/backends/imgui_impl_win32.cpp",
         },
         defines = {
@@ -37,14 +39,9 @@ lm:source_set "imgui" {
             "uuid"
         },
     },
-    linux = {
-        sources = {
-            "backend/imgui_impl_none.cpp",
-        }
-    },
     macos = {
         sources = {
-            "backend/imgui_impl_osx.mm",
+            "backend/imgui_impl_platform.mm",
             lm.AntDir .. "/3rd/imgui/backends/imgui_impl_osx.mm",
         },
         flags = {
@@ -53,11 +50,6 @@ lm:source_set "imgui" {
         frameworks = {
             "GameController"
         }
-    },
-    ios = {
-        sources = {
-            "backend/imgui_impl_none.cpp",
-        },
     },
 }
 
