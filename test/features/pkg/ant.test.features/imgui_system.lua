@@ -6,53 +6,21 @@ local ImGui = import_package "ant.imgui"
 local common = ecs.require "common"
 
 local m = ecs.system "imgui_system"
-
-local currentTest
-local function enable_test(name)
-    currentTest = name
-    if name == "<none>" then
-        return
-    end
-    local systems = common.get_systems()
-    if name == "<all>" then
-        for _, fullname in pairs(systems) do
-            world:enable_system(fullname)
-        end
-        return
-    end
-    world:enable_system(systems[name])
-end
-
-local function disable_test(name)
-    if name == "<none>" then
-        return
-    end
-    local systems = common.get_systems()
-    if name == "<all>" then
-        for _, fullname in pairs(systems) do
-            world:disable_system(fullname)
-        end
-        return
-    end
-    world:disable_system(systems[name])
-end
-
+local current_test
 local function select_test(name)
-    if ImGui.SelectableEx(name, name == currentTest) then
-        if currentTest ~= name then
-            disable_test(currentTest)
-            enable_test(name)
+    if ImGui.SelectableEx(name, name == current_test) then
+        if current_test ~= name then
+            common.disable_test(current_test)
+
+            current_test = name
+            common.enable_test(name)
         end
     end
-end
-
-function m:init()
-    enable_test(common.init_system)
 end
 
 function m:data_changed()
     if ImGui.Begin("test", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
-        if ImGui.BeginCombo("##test", currentTest) then
+        if ImGui.BeginCombo("##test", current_test) then
             select_test "<none>"
             select_test "<all>"
             for name in pairs(common.get_systems()) do

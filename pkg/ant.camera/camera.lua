@@ -188,10 +188,10 @@ end
 function cameraview_sys:entity_init()
     for e in w:select "INIT camera:in camera_changed?out" do
         local camera = e.camera
-        camera.viewmat       = math3d.ref()
-        camera.projmat       = math3d.ref()
-        camera.infprojmat    = math3d.ref()
-        camera.viewprojmat   = math3d.ref()
+        camera.viewmat       = math3d.ref(mc.IDENTITY_MAT)
+        camera.projmat       = math3d.ref(mc.IDENTITY_MAT)
+        camera.infprojmat    = math3d.ref(mc.IDENTITY_MAT)
+        camera.viewprojmat   = math3d.ref(mc.IDENTITY_MAT)
 
         e.camera_changed    = true
     end
