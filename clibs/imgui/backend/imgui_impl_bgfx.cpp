@@ -159,7 +159,7 @@ static void ImGui_ImplBgfx_CreateWindow(ImGuiViewport* viewport) {
 		return;
 	}
 	bgfx_frame_buffer_handle_t fb = BGFX(create_frame_buffer_from_nwh)(
-		platformGetHandle(viewport),
+		viewport->PlatformHandleRaw,
 		(uint16_t)viewport->Size.x,
 		(uint16_t)viewport->Size.y,
 		BGFX_TEXTURE_FORMAT_RGBA8,
@@ -193,7 +193,7 @@ static void ImGui_ImplBgfx_DestroyWindow(ImGuiViewport* viewport) {
 static void ImGui_ImplBgfx_SetWindowSize(ImGuiViewport* viewport, ImVec2 size) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	bgfx_frame_buffer_handle_t fb = BGFX(create_frame_buffer_from_nwh)(
-		platformGetHandle(viewport),
+		viewport->PlatformHandleRaw,
 		(uint16_t)size.x,
 		(uint16_t)size.y,
 		BGFX_TEXTURE_FORMAT_RGBA8,

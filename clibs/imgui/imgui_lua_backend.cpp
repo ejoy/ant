@@ -90,17 +90,17 @@ static int Init(lua_State* L) {
 static int PlatformInit(lua_State* L) {
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     void* window = lua_touserdata(L, 1);
-    platformInit(window);
+    ImGui_ImplPlatform_Init(window);
     return 0;
 }
 
 static int PlatformDestroy(lua_State* L) {
-    platformShutdown();
+    ImGui_ImplPlatform_Shutdown();
     return 0;
 }
 
 static int PlatformNewFrame(lua_State* L) {
-    platformNewFrame();
+    ImGui_ImplPlatform_NewFrame();
     return 0;
 }
 

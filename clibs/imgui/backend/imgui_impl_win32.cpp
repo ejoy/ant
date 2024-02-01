@@ -4,18 +4,14 @@
 #include <memory>
 #include "backend/imgui_impl_platform.h"
 
-void* platformGetHandle(ImGuiViewport* viewport) {
-	return viewport->PlatformHandle;
-}
-
-void platformInit(void* window) {
+void ImGui_ImplPlatform_Init(void* window) {
 	ImGui_ImplWin32_Init(window);
 }
 
-void platformShutdown() {
+void ImGui_ImplPlatform_Shutdown() {
 	ImGui_ImplWin32_Shutdown();
 }
 
-void platformNewFrame() {
+void ImGui_ImplPlatform_NewFrame() {
 	ImGui_ImplWin32_NewFrame();
 }

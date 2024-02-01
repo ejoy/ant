@@ -1,15 +1,11 @@
 #include <imgui.h>
 #include "backend/imgui_impl_platform.h"
 
-void platformInit(void* window) {
+void ImGui_ImplPlatform_Init(void* window) {
 }
 
-void platformShutdown() {
+void ImGui_ImplPlatform_Shutdown() {
 }
 
-void platformNewFrame() {
-}
-
-void* platformGetHandle(ImGuiViewport* viewport) {
-	return nullptr;
+void ImGui_ImplPlatform_NewFrame() {
 }
