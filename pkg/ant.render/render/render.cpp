@@ -56,8 +56,8 @@ struct obj_transforms {
 		uint16_t hidx;
 	};
 
-	key			keys[MAX_CACHE] = {0};
-	transform	values[MAX_CACHE] = {0};
+	key			keys[MAX_CACHE] = {{0}};
+	transform	values[MAX_CACHE] = {{0}};
 
 	bool check(const key& k, transform &v) const {
 		const key& r = keys[k.hidx];
@@ -341,7 +341,7 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 			auto ra = cc.ra[ii];
 			const auto& obj = e.get<component::render_object>();
 #ifdef RENDER_DEBUG
-			auto eid = e.component<component::eid>();eid;
+			auto eid = e.component<component::eid>();(void)eid;
 #endif //RENDER_DEBUG
 			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(iobj) && obj_queue_visible(w->Q, obj, ra->queue_index))){
 				draw_obj(L, w, ra, &obj, iobj, nullptr, cc.transforms);
