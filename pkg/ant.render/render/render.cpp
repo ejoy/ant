@@ -43,7 +43,7 @@ enum queue_type{
 
 //using obj_transforms = std::unordered_map<uint64_t, transform>;
 struct obj_transforms {
-	static constexpr uint16_t MAX_CACHE = 10240*2;
+	static constexpr uint16_t MAX_CACHE = (16384-1);
 	struct key {
 		static uint16_t hash_idx(const component::render_object *ro, math_t m) {
 			return (uint16_t)((hash64((uint64_t)ro^m.idx)) % obj_transforms::MAX_CACHE);
@@ -207,12 +207,70 @@ draw_obj(lua_State *L, struct ecs_world *w, const component::render_args* ra, co
 
 using group_queues = std::array<matrix_array, MAX_VISIBLE_QUEUE>;
 using group_collection = std::unordered_map<int, group_queues>;
+
+static constexpr uint16_t MAX_SUBMIT_NUM = 4096;
+struct submit_hitch{
+	const component::render_object *ro;
+	const component::indirect_object *io;
+	const component::efk_object* eo;
+	const group_queues* g;
+#ifdef RENDER_DEBUG
+	component::eid eid;
+#endif //RENDER_DEBUG
+};
+
+struct submit_object {
+	const component::render_object *ro;
+	const component::indirect_object *io;
+#ifdef RENDER_DEBUG
+	component::eid eid;
+#endif //RENDER_DEBUG
+};
+
 struct submit_cache{
 	obj_transforms	transforms;
 	group_collection	groups;
 
 	const component::render_args* ra[MAX_VISIBLE_QUEUE];
 	uint8_t ra_count = 0;
+
+	submit_object sobjects[MAX_SUBMIT_NUM];
+	uint16_t so_num = 0;
+
+	void add_submit_obj(const component::render_object *ro, const component::indirect_object *io
+#ifdef RENDER_DEBUG
+	, component::eid eid
+#endif //RENDER_DEBUG
+	){
+		assert(so_num < MAX_SUBMIT_NUM);
+		sobjects[so_num++] = submit_object{
+			ro, io
+#ifdef RENDER_DEBUG
+			, eid
+#endif //RENDER_DEBUG
+		};
+	}
+
+	submit_hitch shitchs[MAX_SUBMIT_NUM];
+	uint16_t sh_num = 0;
+
+	void add_submit_hitch(
+		const component::render_object *ro,
+		const component::indirect_object *io,
+		const component::efk_object *eo,
+		const group_queues* g
+#ifdef RENDER_DEBUG
+	, component::eid eid
+#endif //RENDER_DEBUG
+	){
+		assert(sh_num < MAX_SUBMIT_NUM);
+		shitchs[sh_num++] = submit_hitch{
+			ro, io, eo, g
+#ifdef RENDER_DEBUG
+			, eid
+#endif //RENDER_DEBUG
+		};
+	}
 
 #ifdef RENDER_DEBUG
 	struct submit_stat{
@@ -237,6 +295,8 @@ struct submit_cache{
 		transforms.clear();
 		clear_groups();
 		ra_count = 0;
+		so_num = 0;
+		sh_num = 0;
 
 #ifdef RENDER_DEBUG
 		memset(ra, 0, sizeof(ra));
@@ -308,20 +368,30 @@ render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
 			const auto ro = e.component<component::render_object>();
 			const auto io = e.component<component::indirect_object>();
 			const auto eo = e.component<component::efk_object>();
-			for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-				auto ra = cc.ra[ii];
-				const auto &mats = g[ra->queue_index];
-				if (!mats.empty()){
-					if (ro && obj_queue_visible(w->Q, *ro, ra->queue_index) && !io){
-						draw_obj(L, w, ra, ro, nullptr, &mats, cc.transforms);
-					}
+		#ifdef RENDER_DEBUG
+			auto eid = e.component<component::eid>();
+			cc.add_submit_hitch(ro, io, eo, &g, eid);
+		#else
+			cc.add_submit_hitch(ro, io, eo, &g);
+		#endif //RENDER_DEBUG
+		}
+	}
 
-					if (eo && obj_queue_visible(w->Q, *eo, ra->queue_index)){
-						submit_efk_obj(L, w, eo, mats);
-						#ifdef RENDER_DEBUG
-						cc.stat.efk_hitch_submit += (uint32_t)mats.size();
-						#endif //RENDER_DEBUG
-					}
+	for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+		auto ra = cc.ra[ii];
+		for (uint16_t ih=0; ih<cc.sh_num; ++ih){
+			const submit_hitch& sh = cc.shitchs[ih];
+			const auto &mats = (*sh.g)[ra->queue_index];
+			if (!mats.empty()){
+				if (sh.ro && !sh.io && obj_queue_visible(w->Q, *sh.ro, ra->queue_index)){
+					draw_obj(L, w, ra, sh.ro, nullptr, &mats, cc.transforms);
+				}
+
+				if (sh.eo && obj_queue_visible(w->Q, *sh.eo, ra->queue_index)){
+					submit_efk_obj(L, w, sh.eo, mats);
+					#ifdef RENDER_DEBUG
+					cc.stat.efk_hitch_submit += (uint32_t)mats.size();
+					#endif //RENDER_DEBUG
 				}
 			}
 		}
@@ -337,11 +407,18 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 
 	#ifdef RENDER_DEBUG
 		auto eid = e.component<component::eid>();(void)eid;
+		cc.add_submit_obj(&ro, io, eid);
+	#else
+		cc.add_submit_obj(&ro, io);
 	#endif //RENDER_DEBUG
-		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-			auto ra = cc.ra[ii];
-			if (obj_visible(w->Q, ro, ra->queue_index) || (indirect_draw_valid(io) && obj_queue_visible(w->Q, ro, ra->queue_index))){
-				draw_obj(L, w, ra, &ro, io, nullptr, cc.transforms);
+	}
+
+	for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+		auto ra = cc.ra[ii];
+		for (uint16_t is=0; is<cc.so_num; ++is){
+			const submit_object& so = cc.sobjects[is];
+			if (obj_visible(w->Q, *so.ro, ra->queue_index) || (indirect_draw_valid(so.io) && obj_queue_visible(w->Q, *so.ro, ra->queue_index))){
+				draw_obj(L, w, ra, so.ro, so.io, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
 				++cc.stat.simple_submit;
 				#endif //RENDER_DEBUG
