@@ -12,7 +12,7 @@ local logger    = require "widget.log"
 local ImGui     = import_package "ant.imgui"
 local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
-local hierarchy = require "hierarchy_edit"
+local hierarchy = ecs.require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils = require "widget.joint_utils"
@@ -845,26 +845,19 @@ function m.show()
     end
 end
 
-function m.on_prefab_load(eid)
-    if not eid then
-        return
-    end
+function m.on_prefab_load(e)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
-    local e <close> = world:entity(eid, "animation?in")
-    if e.animation then
-        anim_eid = eid
-        local animations = e.animation.status
-        if animations then
-            skeleton = e.animation.skeleton
-            for key, status in pairs(e.animation.status) do
-                if not editanims[key] then
-                    editanims[key] = {
-                        name = key,
-                        duration = status.handle:duration(),
-                    }
-                    editanims.name_list[#editanims.name_list + 1] = key
-                end
+    local animations = e.animation.status
+    if animations then
+        skeleton = e.animation.skeleton
+        for key, status in pairs(e.animation.status) do
+            if not editanims[key] then
+                editanims[key] = {
+                    name = key,
+                    duration = status.handle:duration(),
+                }
+                editanims.name_list[#editanims.name_list + 1] = key
             end
         end
     end
@@ -920,8 +913,28 @@ function m.on_target(eid)
     end
 end
 
-function m.update_anim_namelist()
-    -- efk_tag_list = namelist
+local event_save            = world:sub {"Save"}
+local event_prefab_ready    = world:sub {"PrefabReady"}
+local event_reset_editor    = world:sub {"ResetEditor"}
+function m:handle_event()
+    for _ in event_save:unpack() do
+        self.save_keyevent()
+    end
+    for _, prefab in event_prefab_ready:unpack() do
+        local entitys = prefab.tag["*"]
+        for _, eid in ipairs(entitys) do
+            local e <close> = world:entity(eid, "animation?in")
+            if e.animation then
+                anim_eid = eid
+                self.on_prefab_load(e)
+                break
+            end
+        end
+        break
+    end
+    for _ in event_reset_editor:unpack() do
+        self.clear()
+    end
 end
 
 return m

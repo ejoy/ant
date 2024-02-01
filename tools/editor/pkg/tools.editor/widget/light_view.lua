@@ -4,7 +4,7 @@ local w = world.w
 local ilight        = ecs.require "ant.render|light.light"
 local light_gizmo   = ecs.require "gizmo.light"
 local uiproperty    = require "widget.uiproperty"
-local hierarchy     = require "hierarchy_edit"
+local hierarchy     = ecs.require "hierarchy_edit"
 local MOTION_TYPE_options<const> = { "dynamic", "station", "static" }
 local LightView = {}
 function LightView:_init()

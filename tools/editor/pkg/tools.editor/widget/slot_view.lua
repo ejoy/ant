@@ -5,7 +5,7 @@ local w = world.w
 local ImGui     = import_package "ant.imgui"
 local joint_utils = require "widget.joint_utils"
 local uiproperty = require "widget.uiproperty"
-local hierarchy = require "hierarchy_edit"
+local hierarchy = ecs.require "hierarchy_edit"
 
 local follow_flag = {
     "pos",

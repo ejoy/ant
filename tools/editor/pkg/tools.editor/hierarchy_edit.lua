@@ -1,5 +1,6 @@
+local ecs       = ...
+local world     = ecs.world
 local utils = require "common.utils"
-
 local hierarchy = {
     root = {eid = -1, parent = -1, info = {}, children = {}, locked = {false}, visible = {true}},
     all_node = {},
@@ -262,4 +263,24 @@ function hierarchy:move_bottom(eid)
     table.remove(t, i)
     table.insert(t, self.all_node[eid])
 end
+
+local hierarchy_event = world:sub {"HierarchyEvent"}
+function hierarchy:handle_event()
+    for _, what, target, value in hierarchy_event:unpack() do
+        if what == "visible" then
+            self:set_visible(target, value, true)
+        elseif what == "lock" then
+            self:set_lock(target, value)
+        elseif what == "movetop" then
+            self:move_top(target)
+        elseif what == "moveup" then
+            self:move_up(target)
+        elseif what == "movedown" then
+            self:move_down(target)
+        elseif what == "movebottom" then
+            self:move_bottom(target)
+        end
+    end
+end
+
 return hierarchy

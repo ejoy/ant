@@ -22,7 +22,7 @@ local gizmo 	= ecs.require "gizmo.gizmo"
 local light_gizmo = ecs.require "gizmo.light"
 local inspector = ecs.require "widget.inspector"
 
-local hierarchy = require "hierarchy_edit"
+local hierarchy = ecs.require "hierarchy_edit"
 local gizmo_const= require "gizmo.const"
 
 local math3d = require "math3d"

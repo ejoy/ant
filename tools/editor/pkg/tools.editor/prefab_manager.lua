@@ -21,7 +21,7 @@ local editor_setting = require "editor_setting"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "bee.filesystem"
-local hierarchy     = require "hierarchy_edit"
+local hierarchy     = ecs.require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
@@ -30,7 +30,6 @@ local layoutmgr     = import_package "ant.render".layoutmgr
 local bgfx          = require "bgfx"
 local TERRAIN_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/plane_terrain.material"
 local BORDER_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/border.material"
-local anim_view
 local m = {
     entities = {}
 }
@@ -413,7 +412,10 @@ function m:on_prefab_ready(prefab)
         end
     end
     self:update_tag_list()
-    anim_view.on_prefab_load(anim_eid)
+    hierarchy:update_slot_list(world)
+
+    world:pub {"PrefabReady", prefab}
+    world:pub {"LookAtTarget", self.entities[1]}
 end
 
 local prefabe_name_ui = {text = ""}
@@ -617,8 +619,6 @@ function m:open(filename, prefab_name, patch_tpl)
         prefab = virtual_prefab_path,
         on_ready = function(instance)
             self:on_prefab_ready(instance)
-            hierarchy:update_slot_list(world)
-            world:pub {"LookAtTarget", self.entities[1]}
         end
     }
     local glbfile, _ = filename:match "([^|]+)|([%a%.]+)"
@@ -675,7 +675,6 @@ function m:reset_prefab(noscene)
     imodifier.set_target(imodifier.highlight, nil)
     light_gizmo.clear()
     hierarchy:clear()
-    anim_view.clear()
     self.root = create_simple_entity("root")
     self.entities = {}
     world:pub {"WindowTitle", ""}
@@ -949,8 +948,7 @@ function m:save(path)
                 assetmgr.unload(gd.virtual_prefab_path.."/" .. self.anim_file)
                 assetmgr.unload(self.glb_filename..".patch")
                 assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
-                anim_view.save_keyevent()
-                world:pub {"ResourceBrowser", "dirty"}
+                world:pub {"Save"}
             end
         end
         return
@@ -979,8 +977,7 @@ function m:save(path)
     if prefab_filename then
         world:remove_template(prefab_filename)
     end
-    anim_view.save_keyevent()
-    world:pub {"ResourceBrowser", "dirty"}
+    world:pub {"Save"}
 end
 
 function m:set_parent(target, parent)
@@ -1092,12 +1089,11 @@ end
 function m:get_current_filename()
     return self.prefab_filename
 end
+
 function m:get_root_mat()
     return self.root_mat
 end
-function m.set_anim_view(aview)
-    anim_view = aview
-end
+
 function m:get_eid_by_name(name)
     for _, eid in ipairs(self.entities) do
         local info = hierarchy:get_node_info(eid)
@@ -1450,11 +1446,65 @@ function m:on_patch_animation(eid, name, path)
         path = "/animations/"..name,
         value = path and path or nil,
     }
-    anim_view.update_anim_namelist()
 end
 
 function m:can_create_empty()
     return self.glb_filename and self.prefab_name == "mesh.prefab"
+end
+
+local event_patch           = world:sub {"PatchEvent"}
+local event_showground      = world:sub {"ShowGround"}
+local event_showterrain     = world:sub {"ShowTerrain"}
+local event_savehitch       = world:sub {"SaveHitch"}
+local event_create          = world:sub {"Create"}
+local event_light           = world:sub {"UpdateDefaultLight"}
+local event_open_file       = world:sub {"OpenFile"}
+local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
+local event_hierarchy       = world:sub {"HierarchyEvent"}
+function m:handle_event()
+    for _, eid, path, value in event_patch:unpack() do
+        self:do_patch(eid, path, value)
+    end
+    for _, enable in event_showground:unpack() do
+        self:show_ground(enable)
+    end
+    for _, enable in event_showterrain:unpack() do
+        self:show_terrain(enable)
+    end
+    for _, enable in event_savehitch:unpack() do
+        self.save_hitch = enable
+    end
+    for _, what, type in event_create:unpack() do
+        self:create(what, type)
+    end
+    for _, enable in event_light:unpack() do
+        self:update_default_light(enable)
+    end
+    for _, filename, isprefab in event_open_file:unpack() do
+        if isprefab then
+            self:open(filename)
+        else
+            global_data.glb_filename = filename
+            global_data.is_opening = true
+        end
+    end
+    for _, filename in event_add_prefab:unpack() do
+        local ext = string.sub(filename, -4)
+        if ext == ".efk" then
+            self:add_effect(filename)
+        elseif ext == ".glb" or ext == ".gltf" then
+            global_data.glb_filename = filename
+        else
+            self:add_prefab(filename)
+        end
+    end
+    for _, what, target, value in event_hierarchy:unpack() do
+        if what == "delete" then
+            self:remove_entity(target)
+        elseif what == "clone" then
+            self:clone(target)
+        end
+    end
 end
 
 return m

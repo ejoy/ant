@@ -532,4 +532,11 @@ function m.selected_folder()
     return selected_folder
 end
 
+local save_event = world:sub {"Save"}
+function m:handle_event()
+    for _ in save_event:unpack() do
+        self.dirty = true
+    end
+end
+
 return m

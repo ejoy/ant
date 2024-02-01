@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local uiproperty = require "widget.uiproperty"
-local hierarchy     = require "hierarchy_edit"
+local hierarchy     = ecs.require "hierarchy_edit"
 local size_str = {"16","32","64","128","256","512","1024"}
 local prefilter_size_str = {"256","512","1024"}
 

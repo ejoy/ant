@@ -16,7 +16,7 @@ local serialize = import_package "ant.serialize"
 local aio       = import_package "ant.io"
 local assetmgr  = import_package "ant.asset"
 local uiutils   = require "widget.utils"
-local hierarchy = require "hierarchy_edit"
+local hierarchy = ecs.require "hierarchy_edit"
 local uiproperty= require "widget.uiproperty"
 local global_data=require "common.global_data"
 local fs        = require "filesystem"
@@ -40,6 +40,9 @@ end
 local default_setting = read_datalist_file "/pkg/ant.settings/default/graphic_settings.ant"
 
 local function load_material_file(mf)
+    if not mf then
+        return
+    end
     return read_datalist_file(mf .. "/source.ant")
 end
 
@@ -1056,19 +1059,6 @@ function MaterialView:set_eid(eid)
         cs.visible = false
     end
 
-    local mtlpath = hierarchy:get_node_info(self.eid).template.data.material
-    for k, v in pairs(t.properties) do
-        if v.texture and not sampler_info[v.texture] then
-            local texpath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
-            local tp = texpath:string() .. "/source.ant"
-            local data = datalist.parse(aio.readall(tp))
-            if data and not image_info[v.texture] then
-                image_info[v.texture] = {width = data.info.width, height = data.info.height}
-                sampler_info[texpath] = {stage_name = k, texture_resource = assetmgr.resource(texpath:string())}
-            end
-        end
-    end
-
     do
         local idx
         for i, p in ipairs(self.material.subproperty) do
@@ -1085,7 +1075,7 @@ function MaterialView:set_eid(eid)
             self.properties:set_subproperty(ui_pp)
         end
     end
-
+    local mtlpath = hierarchy:get_node_info(self.eid).template.data.material
     local readonly_res = is_readonly_resource(mtlpath)
     self.save.disable = readonly_res
     self.saveas.disable = is_glb_resource()
@@ -1095,8 +1085,6 @@ function MaterialView:set_eid(eid)
 end
 
 function MaterialView:clear()
-    image_info = {}
-    sampler_info = {}
 end
 
 function MaterialView:update()
@@ -1141,31 +1129,65 @@ function MaterialView:enable_properties_ui()
 
     end
 end
-local filewatch_event = world:sub {"FileWatch"}
 
 function MaterialView:show()
+    -- check_disable_file_fetch_ui(self.mat_file)
     if not self.eid then
         return
     end
-    -- check_disable_file_fetch_ui(self.mat_file)
-    for _, _, filename in filewatch_event:unpack() do
+    self.material:show()
+end
+
+local prefab_ready_event = world:sub {"PrefabReady"}
+local file_watch_event = world:sub {"FileWatch"}
+
+function MaterialView:handle_event()
+    for _, prefab in prefab_ready_event:unpack() do
+        local entitys = prefab.tag["*"]
+        image_info = {}
+        sampler_info = {}
+        for _, eid in ipairs(entitys) do
+            local t = material_template(eid)
+            if not t then
+                goto continue
+            end
+            local mtlpath = hierarchy:get_node_info(eid).template.data.material
+            for k, v in pairs(t.properties) do
+                if v.texture then
+                    local texpath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
+                    local tp = texpath:string() .. "/source.ant"
+                    local data = datalist.parse(aio.readall(tp))
+                    if not image_info[v.texture] then
+                        image_info[v.texture] = {width = data.info.width, height = data.info.height}
+                    end
+                    local si = sampler_info[texpath]
+                    if not si then
+                        si = {stage_name = k, eid = {}, texture_resource = assetmgr.resource(texpath:string())}
+                        sampler_info[texpath] = si
+                    end
+                    si.eid[#si.eid + 1] = eid
+                end
+            end
+            ::continue::
+        end
+        break
+    end
+
+    for _, _, filename in file_watch_event:unpack() do
         local tname = fs.path(filename):filename():string():gsub(".png", ".texture")
-        local path
-        for k, _ in pairs(sampler_info) do
-            if k:filename():string() == tname then
-                path = k
+        for path, info in pairs(sampler_info) do
+            if path:filename():string() == tname then
+                -- TODO: compile dirty texture only
+                prefab_mgr:compile_current_glb()
+                info.texture_resource = assetmgr.reload(path:string(), true)
+                for _, eid in ipairs(info.eid) do
+                    local e <close> = world:entity(eid)
+                    imaterial.set_property(e, info.stage_name, assetmgr.textures[info.texture_resource.id])
+                end
                 break
             end
         end
-        if path then
-            prefab_mgr:compile_current_glb()
-            local info = sampler_info[path]
-            info.texture_resource = assetmgr.reload(path:string(), true)
-            local e <close> = world:entity(self.eid)
-            imaterial.set_property(e, info.stage_name, assetmgr.textures[info.texture_resource.id])
-        end
     end
-    self.material:show()
 end
 
 return function ()

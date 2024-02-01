@@ -4,10 +4,8 @@ local w         = world.w
 
 local math3d    = require "math3d"
 local ImGui     = import_package "ant.imgui"
-local rhwi      = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local window    = import_package "ant.window"
-local faicons   = require "common.fa_icons"
 local mc        = mathpkg.constant
 local ivs       = ecs.require "ant.render|visible_state"
 local iwd       = ecs.require "ant.widget|widget"
@@ -23,22 +21,17 @@ local inspector         = ecs.require "widget.inspector"
 local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
-
+local mtl_view          = ecs.require "widget.material_view"()
 local widget_utils      = require "widget.utils"
 local log_widget        = require "widget.log"
 local console_widget    = require "widget.console"
-local hierarchy         = require "hierarchy_edit"
-local editor_setting    = require "editor_setting"
+local hierarchy         = ecs.require "hierarchy_edit"
 
 local global_data       = require "common.global_data"
 local new_project       = require "common.new_project"
 local gizmo_const       = require "gizmo.const"
 
 local prefab_mgr        = ecs.require "prefab_manager"
-prefab_mgr.set_anim_view(anim_view)
-
-local fs                = require "filesystem"
-local lfs               = require "bee.filesystem"
 local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
@@ -93,21 +86,14 @@ function m:ui_update()
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
 end
 
-local hierarchy_event       = world:sub {"HierarchyEvent"}
+
 local entity_event          = world:sub {"EntityEvent"}
 local event_keyboard        = world:sub {"keyboard"}
-local event_open_file       = world:sub {"OpenFile"}
-local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
-local event_resource_browser= world:sub {"ResourceBrowser"}
+
+
 local event_window_title    = world:sub {"WindowTitle"}
-local event_create          = world:sub {"Create"}
-local event_light           = world:sub {"UpdateDefaultLight"}
-local event_showground      = world:sub {"ShowGround"}
-local event_showterrain     = world:sub {"ShowTerrain"}
-local event_savehitch       = world:sub {"SaveHitch"}
 local event_gizmo           = world:sub {"Gizmo"}
 local light_gizmo           = ecs.require "gizmo.light"
-local patch_event          = world:sub {"PatchEvent"}
 
 local aabb_color_i <const> = 0x6060ffff
 local highlight_aabb = {
@@ -217,7 +203,7 @@ local function update_visible(node, visible)
     end
     return rv
 end
-
+local hierarchy_event = world:sub {"HierarchyEvent"}
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -262,10 +248,10 @@ function m:handle_event()
             on_update(target)
         end
     end
+
     for _, what, target, value in hierarchy_event:unpack() do
         if what == "visible" then
             local e <close> = world:entity(target.eid, "efk?in light?in")
-            hierarchy:set_visible(target, value, true)
             if e.efk then
                 iefk.set_visible(e, value)
             elseif e.light then
@@ -273,57 +259,8 @@ function m:handle_event()
             else
                 update_visible(target, value)
             end
-            for ie in w:select "scene:in ibl:in" do
-                if ie.scene.parent == target.eid then
-                    isp.enable_ibl(value)
-                    break
-                end
-            end
-        elseif what == "lock" then
-            hierarchy:set_lock(target, value)
         elseif what == "delete" then
-            local e <close> = world:entity(gizmo.target_eid, "slot?in")
-            if e.slot then
-                anim_view.on_remove_entity(gizmo.target_eid)
-            end
             keyframe_view.on_eid_delete(target)
-            prefab_mgr:remove_entity(target)
-        elseif what == "clone" then
-            prefab_mgr:clone(target)
-        elseif what == "movetop" then
-            hierarchy:move_top(target)
-        elseif what == "moveup" then
-            hierarchy:move_up(target)
-        elseif what == "movedown" then
-            hierarchy:move_down(target)
-        elseif what == "movebottom" then
-            hierarchy:move_bottom(target)
-        end
-    end
-
-    for _, filename, isprefab in event_open_file:unpack() do
-        if isprefab then
-            prefab_mgr:open(filename)
-        else
-            global_data.glb_filename = filename
-            global_data.is_opening = true
-        end
-    end
-
-    for _, filename in event_add_prefab:unpack() do
-        local ext = string.sub(filename, -4)
-        if ext == ".efk" then
-            prefab_mgr:add_effect(filename)
-        elseif ext == ".glb" or ext == ".gltf" then
-            global_data.glb_filename = filename
-        else
-            prefab_mgr:add_prefab(filename)
-        end
-    end
-
-    for _, what in event_resource_browser:unpack() do
-        if what == "dirty" then
-            resource_browser.dirty = true
         end
     end
 
@@ -342,24 +279,11 @@ function m:handle_event()
             prefab_mgr:save()
         end
     end
-    for _, what, type in event_create:unpack() do
-        prefab_mgr:create(what, type)
-    end
-    for _, enable in event_light:unpack() do
-        prefab_mgr:update_default_light(enable)
-    end
-    for _, enable in event_showground:unpack() do
-        prefab_mgr:show_ground(enable)
-    end
-    for _, enable in event_showterrain:unpack() do
-        prefab_mgr:show_terrain(enable)
-    end
-    for _, enable in event_savehitch:unpack() do
-        prefab_mgr.save_hitch = enable
-    end
-    for _, eid, path, value in patch_event:unpack() do
-        prefab_mgr:do_patch(eid, path, value)
-    end
+    hierarchy:handle_event()
+    prefab_mgr:handle_event()
+    mtl_view:handle_event()
+    anim_view:handle_event()
+    resource_browser:handle_event()
 end
 
 function m:data_changed()

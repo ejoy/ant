@@ -8,7 +8,7 @@ local ImGui     = import_package "ant.imgui"
 local ImGuiWidgets = require "imgui.widgets"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
-local hierarchy = require "hierarchy_edit"
+local hierarchy = ecs.require "hierarchy_edit"
 local collider_type = {"sphere", "box", "capsule"}
 local ColliderView = {}
 function ColliderView:_init()

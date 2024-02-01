@@ -7,7 +7,7 @@ local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
-local hierarchy     = require "hierarchy_edit"
+local hierarchy     = ecs.require "hierarchy_edit"
 local BaseView = {}
 local render_layer_name = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
 function BaseView:_init()

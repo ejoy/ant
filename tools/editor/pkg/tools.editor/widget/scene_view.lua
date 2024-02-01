@@ -8,7 +8,7 @@ local gizmo = ecs.require "gizmo.gizmo"
 local ivs       = ecs.require "ant.render|visible_state"
 local ImGui     = import_package "ant.imgui"
 local uiconfig  = require "widget.config"
-local hierarchy = require "hierarchy_edit"
+local hierarchy = ecs.require "hierarchy_edit"
 local faicons   = require "common.fa_icons"
 
 local m = {}

@@ -4,7 +4,7 @@ local w = world.w
 local iefk          = ecs.require "ant.efk|efk"
 local ImGui         = import_package "ant.imgui"
 local uiproperty    = require "widget.uiproperty"
-local hierarchy     = require "hierarchy_edit"
+local hierarchy     = ecs.require "hierarchy_edit"
 local EffectView    = {}
 
 function EffectView:_init()
