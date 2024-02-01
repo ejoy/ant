@@ -335,14 +335,13 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 		const component::indirect_object* io = e.component<component::indirect_object>();
 		const auto& ro = e.get<component::render_object>();
 
-		#ifdef RENDER_DEBUG
-			auto eid = e.component<component::eid>();(void)eid;
-		#endif //RENDER_DEBUG
+	#ifdef RENDER_DEBUG
+		auto eid = e.component<component::eid>();(void)eid;
+	#endif //RENDER_DEBUG
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			auto ra = cc.ra[ii];
-			const auto& obj = e.get<component::render_object>();
-			if (obj_visible(w->Q, obj, ra->queue_index) || (indirect_draw_valid(io) && obj_queue_visible(w->Q, obj, ra->queue_index))){
-				draw_obj(L, w, ra, &obj, io, nullptr, cc.transforms);
+			if (obj_visible(w->Q, ro, ra->queue_index) || (indirect_draw_valid(io) && obj_queue_visible(w->Q, ro, ra->queue_index))){
+				draw_obj(L, w, ra, &ro, io, nullptr, cc.transforms);
 				#ifdef RENDER_DEBUG
 				++cc.stat.simple_submit;
 				#endif //RENDER_DEBUG
