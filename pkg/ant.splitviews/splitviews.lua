@@ -229,10 +229,7 @@ function svs:update_camera()
             local scene = cref.scene
             local worldmat = scene.worldmat
             local d, p = math3d.index(worldmat, 3, 4)
-            camera.viewmat.m = math3d.lookto(p, d, scene.updir)
-            camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
-            camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
-            camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
+            icamera.update_camera_matrices(camera, math3d.lookto(p, d, scene.updir), camera.frustum)
         end
     end
 end

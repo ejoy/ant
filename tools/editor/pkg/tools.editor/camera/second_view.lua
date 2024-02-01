@@ -92,10 +92,7 @@ function second_camera_sys:update_camera()
         local camera, scene = ce.camera, ce.scene
 
         local pos, dir = math3d.index(scene.worldmat, 4, 3)
-        camera.viewmat.m = math3d.lookto(pos, dir, scene.updir)
-        camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
-        camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
-        camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
+        icamera.update_camera_matrices(camera, math3d.lookto(pos, dir, scene.updir), camera.frustum)
     end
 end
 

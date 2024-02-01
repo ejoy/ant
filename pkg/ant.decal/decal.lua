@@ -5,6 +5,7 @@ local w = world.w
 local math3d = require "math3d"
 
 local imaterial = ecs.require "ant.asset|material"
+local icamera   = ecs.require "ant.camera|camera"
 
 local function update_decal(decal)
     local hw, hh = decal.w * 0.5, decal.h * 0.5
@@ -42,23 +43,20 @@ function ds:data_changed()
 end
 
 -- rotate Z Axis -> Y Axis
-local rotateYZ_MAT = math3d.ref(
+local rotateYZ_MAT = math3d.constant("mat",
     math3d.matrix(
         1, 0, 0, 0,
-        0, 0, -1, 0,
+        0, 0,-1, 0,
         0, 1, 0, 0,
         0, 0, 0, 1)
-    )
+)
 
 function ds:follow_scene_update()
     for e in w:select "decal:in render_object:update" do
         local ro = e.render_object
         local d = e.decal
         local mm = math3d.mul(rotateYZ_MAT, ro.worldmat)
-
-        local viewmat = math3d.inverse(mm)
-        local projmat = math3d.projmat(d.frustum)
-        local viewprojmat = math3d.mul(projmat, viewmat)
-        imaterial.set_property(e, "u_decal_mat", math3d.mul(viewprojmat, ro.worldmat))
+        icamera.update_camera_matrices(e.camera, math3d.inverse_fast(mm), d.frustum)
+        imaterial.set_property(e, "u_decal_mat", math3d.mul(e.camera.viewprojmat, ro.worldmat))
     end
 end

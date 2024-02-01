@@ -20,6 +20,7 @@ end
 
 function m:data_changed()
     if ImGui.Begin("test", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+        current_test = current_test or common.init_system
         if ImGui.BeginCombo("##test", current_test) then
             select_test "<none>"
             select_test "<all>"

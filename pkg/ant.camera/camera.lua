@@ -164,7 +164,7 @@ function ic.focus_prefab(ce, entities, dir)
         local e = entities[i]
         local ec <close> = world:entity(e, "bounding?in")
         local bounding = ec.bounding
-        if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+        if bounding and bounding.scene_aabb ~= mc.NULL then
             if not aabb then
                 aabb = bounding.scene_aabb
             else
@@ -179,30 +179,59 @@ function ic.focus_prefab(ce, entities, dir)
     return true
 end
 
+local function update_camera_matrices(camera, viewmat, frustum)
+    camera.viewmat     = viewmat
+    camera.projmat     = math3d.projmat(frustum, INV_Z)
+    camera.infprojmat  = math3d.projmat(frustum, INV_Z, INF_F)
+    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+end
+
+ic.update_camera_matrices = update_camera_matrices
+
 local cameraview_sys = ecs.system "camera_view_system"
 
 function cameraview_sys:start_frame()
     w:clear "camera_changed"
 end
 
-function cameraview_sys:entity_init()
-    for e in w:select "INIT camera:in camera_changed?out" do
-        local camera = e.camera
-        camera.viewmat       = math3d.ref(mc.IDENTITY_MAT)
-        camera.projmat       = math3d.ref(mc.IDENTITY_MAT)
-        camera.infprojmat    = math3d.ref(mc.IDENTITY_MAT)
-        camera.viewprojmat   = math3d.ref(mc.IDENTITY_MAT)
+local function init_camera(c)
+    local m = {
+        viewmat     = math3d.mark(math3d.matrix()),
+        projmat     = math3d.mark(math3d.matrix()),
+        infprojmat  = math3d.mark(math3d.matrix()),
+        viewprojmat = math3d.mark(math3d.matrix()),
+    }
 
-        e.camera_changed    = true
+    local function access_matrices(t, k, v)
+        math3d.unmark(t.matrices[k])
+        t.matrices[k] = math3d.mark(v)
     end
+
+    local function unmark_matrices(t)
+        local m = t.matrices
+        math3d.unmark(m.viewmat)
+        math3d.unmark(m.projmat)
+        math3d.unmark(m.infprojmat)
+        math3d.unmark(m.viewprojmat)
+    end
+    return setmetatable({
+        frustum     = c.frustum,
+        dof         = c.dof,
+        clip_range  = c.clip_range,
+        exposure    = c.exposure,
+        matrices    = m,
+    }, {
+        __index     = m,
+        __newindex  = access_matrices,
+        __gc        = unmark_matrices,
+    })
 end
 
-local function update_camera(e)
-    local camera = e.camera
-    camera.viewmat.m     = math3d.inverse(e.scene.worldmat)
-    camera.projmat.m     = math3d.projmat(camera.frustum, INV_Z)
-    camera.infprojmat.m  = math3d.projmat(camera.frustum, INV_Z, INF_F)
-    camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
+function cameraview_sys:entity_init()
+    for e in w:select "INIT camera:out camera_changed?out" do
+        e.camera = init_camera(e.camera)
+        e.camera_changed    = true
+    end
 end
 
 function cameraview_sys:merge_camera_changed()
@@ -214,7 +243,7 @@ end
 
 function cameraview_sys:update_camera()
     for e in w:select "camera_changed camera_depend:absent camera:in scene:in" do
-        update_camera(e)
+        update_camera_matrices(e.camera, math3d.inverse_fast(e.scene.worldmat), e.camera.frustum)
     end
 end
 

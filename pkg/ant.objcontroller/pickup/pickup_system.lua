@@ -6,7 +6,7 @@ local mu 		= import_package "ant.math".util
 local R         = world:clibs "render.render_material"
 local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
-local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
+local icamera	= ecs.require "ant.camera|camera"
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
@@ -68,10 +68,7 @@ local function update_camera(pu_camera_ref, clickpt)
 	pqc.camera_changed = true
 	local camera = pqc.camera
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	camera.viewmat.m	= math3d.lookto(eye, viewdir, camera.updir)
-	camera.projmat.m	= math3d.projmat(camera.frustum, INV_Z)
-	camera.infprojmat.m = math3d.projmat(camera.frustum, INV_Z, INF_F)
-	camera.viewprojmat.m= math3d.mul(camera.projmat, camera.viewmat)
+	icamera.update_camera_matrices(camera, math3d.lookto(eye, viewdir, camera.updir), camera.frustum)
 end
 
 

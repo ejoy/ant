@@ -158,10 +158,10 @@ local function mark_camera_changed(e)
 end
 
 local function update_camera(c, Lv, Lp)
-	c.viewmat.m		= Lv
-	c.projmat.m		= Lp
-	c.infprojmat.m	= Lp
-	c.viewprojmat.m	= math3d.mul(Lp, Lv)
+	c.viewmat		= Lv
+	c.projmat		= Lp
+	c.infprojmat	= math3d.mark(Lp)	--copy Lp
+	c.viewprojmat	= math3d.mul(Lp, Lv)
 end
 
 local function commit_csm_matrices_attribs()
@@ -193,8 +193,8 @@ local function move_camera_to_origin(li, intersectpointsLS, n, f)
 	return 0.0, f - n, intersectpointsLS
 end
 
-local function update_shadow_matrices(si, li, c)
-	local sp = math3d.projmat(c.viewfrustum)
+local function update_shadow_matrices(si, li, c, viewfrustum)
+	local sp = math3d.projmat(viewfrustum)
 	local Lv2Ndc = math3d.mul(sp, li.Lv2Cv)
 
 	local intersectpointsLS = math3d.frustum_aabb_intersect_points(Lv2Ndc, si.sceneaabbLS)
@@ -308,14 +308,14 @@ function shadow_sys:update_camera_depend()
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
         local c = ce.camera
         local csm = e.csm
-		c.viewfrustum = csmfrustums[csm.index]
-		update_shadow_matrices(si, li, c)
+		local viewfrustum = csmfrustums[csm.index]
+		update_shadow_matrices(si, li, c, viewfrustum)
 		mark_camera_changed(ce)
 
 		ce.scene.worldmat = mu.M3D_mark(ce.scene.worldmat, li.Lw)
 
 		csm_matrices[csm.index].m = math3d.mul(shadowcfg.crop_matrix(csm.index), c.viewprojmat)
-		split_distances_VS[csm.index] = c.viewfrustum.f
+		split_distances_VS[csm.index] = viewfrustum.f
     end
 
 	commit_csm_matrices_attribs()
