@@ -269,80 +269,74 @@ wInputTextMultiline(lua_State *L) {
     return 1;
 }
 
-static int
-ioAddMouseButtonEvent(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+namespace wrap_ImGuiIO {
+
+static int tag = 0;
+
+static int AddMouseButtonEvent(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     int button = (int)luaL_checkinteger(L, 1);
     bool down = !!lua_toboolean(L, 2);
     io.AddMouseButtonEvent(button, down);
     return 0;
 }
 
-static int
-ioAddMouseWheelEvent(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int AddMouseWheelEvent(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     float x = (float)luaL_checknumber(L, 1);
     float y = (float)luaL_checknumber(L, 2);
     io.AddMouseWheelEvent(x, y);
     return 0;
 }
 
-static int
-ioAddKeyEvent(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int AddKeyEvent(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
     bool down = !!lua_toboolean(L, 2);
     io.AddKeyEvent(key, down);
     return 0;
 }
 
-static int
-ioAddInputCharacter(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int AddInputCharacter(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     auto c = (unsigned int)luaL_checkinteger(L, 1);
     io.AddInputCharacter(c);
     return 0;
 }
 
-static int
-ioAddInputCharacterUTF16(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int AddInputCharacterUTF16(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     auto c = (ImWchar16)luaL_checkinteger(L, 1);
     io.AddInputCharacterUTF16(c);
     return 0;
 }
 
-static int
-ioAddFocusEvent(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int AddFocusEvent(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     bool focused = !!lua_toboolean(L, 1);
     io.AddFocusEvent(focused);
     return 0;
 }
 
-static int
-ioSetterConfigFlags(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int SetterConfigFlags(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     io.ConfigFlags = lua_getflags<ImGuiConfigFlags>(L, 1, ImGuiPopupFlags_None);
     return 0;
 }
 
-static int
-ioGetterWantCaptureMouse(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int GetterWantCaptureMouse(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     lua_pushboolean(L, io.WantCaptureMouse);
     return 1;
 }
 
-static int
-ioGetterWantCaptureKeyboard(lua_State* L) {
-    ImGuiIO& io = ImGui::GetIO();
+static int GetterWantCaptureKeyboard(lua_State* L) {
+    auto& io = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     lua_pushboolean(L, io.WantCaptureKeyboard);
     return 1;
 }
 
-static int
-ioSetter(lua_State* L) {
+static int setter_func(lua_State* L) {
     lua_pushvalue(L, 2);
     if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
         return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
@@ -352,13 +346,69 @@ ioSetter(lua_State* L) {
     return 0;
 }
 
-static int
-ioGetter(lua_State* L) {
+static int getter_func(lua_State* L) {
     lua_pushvalue(L, 2);
     if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
         return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
     }
     lua_call(L, 0, 1);
+    return 1;
+}
+
+static void init(lua_State* L) {
+    luaL_Reg funcs[] = {
+        { "AddMouseButtonEvent", AddMouseButtonEvent },
+        { "AddMouseWheelEvent", AddMouseWheelEvent },
+        { "AddKeyEvent", AddKeyEvent },
+        { "AddInputCharacter", AddInputCharacter },
+        { "AddInputCharacterUTF16", AddInputCharacterUTF16 },
+        { "AddFocusEvent", AddFocusEvent },
+        { NULL, NULL },
+    };
+    luaL_Reg setter[] = {
+        { "ConfigFlags", SetterConfigFlags },
+        { NULL, NULL },
+    };
+    luaL_Reg getter[] = {
+        { "WantCaptureMouse", GetterWantCaptureMouse },
+        { "WantCaptureKeyboard", GetterWantCaptureKeyboard },
+        { NULL, NULL },
+    };
+
+    lua_newuserdatauv(L, sizeof(ImGuiIO*), 0);
+    int ud = lua_gettop(L);
+    lua_newtable(L);
+    luaL_newlibtable(L, setter);
+    lua_pushvalue(L, ud);
+    luaL_setfuncs(L, setter, 1);
+    lua_pushcclosure(L, setter_func, 1);
+    lua_setfield(L, -2, "__newindex");
+    luaL_newlibtable(L, funcs);
+    lua_pushvalue(L, ud);
+    luaL_setfuncs(L, funcs, 1);
+    lua_newtable(L);
+    luaL_newlibtable(L, getter);
+    lua_pushvalue(L, ud);
+    luaL_setfuncs(L, getter, 1);
+    lua_pushcclosure(L, getter_func, 1);
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);
+}
+
+static void fetch(lua_State* L, ImGuiIO& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);
+    ImGuiIO** ptr = (ImGuiIO**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+}
+
+static int GetIO(lua_State* L) {
+    ImGuiIO& io = ImGui::GetIO();
+    wrap_ImGuiIO::fetch(L, io);
     return 1;
 }
 
@@ -369,38 +419,10 @@ int luaopen_imgui_legacy(lua_State *L) {
         { "InputText", wInputText },
         { "InputTextMultiline", wInputTextMultiline },
         { "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },
+        { "GetIO", GetIO },
         { NULL, NULL },
     };
     luaL_setfuncs(L, l, 0);
-
-    luaL_Reg io[] = {
-        { "AddMouseButtonEvent", ioAddMouseButtonEvent },
-        { "AddMouseWheelEvent", ioAddMouseWheelEvent },
-        { "AddKeyEvent", ioAddKeyEvent },
-        { "AddInputCharacter", ioAddInputCharacter },
-        { "AddInputCharacterUTF16", ioAddInputCharacterUTF16 },
-        { "AddFocusEvent", ioAddFocusEvent },
-        { NULL, NULL },
-    };
-    luaL_Reg io_setter[] = {
-        { "ConfigFlags", ioSetterConfigFlags },
-        { NULL, NULL },
-    };
-    luaL_Reg io_getter[] = {
-        { "WantCaptureMouse", ioGetterWantCaptureMouse },
-        { "WantCaptureKeyboard", ioGetterWantCaptureKeyboard },
-        { NULL, NULL },
-    };
-    luaL_newlib(L, io);
-    lua_newtable(L);
-    luaL_newlib(L, io_setter);
-    lua_pushcclosure(L, ioSetter, 1);
-    lua_setfield(L, -2, "__newindex");
-    luaL_newlib(L, io_getter);
-    lua_pushcclosure(L, ioGetter, 1);
-    lua_setfield(L, -2, "__index");
-    lua_setmetatable(L, -2);
-    lua_setfield(L, -2, "io");
-
+    wrap_ImGuiIO::init(L);
     return 1;
 }

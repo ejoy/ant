@@ -4,11 +4,11 @@ local fastio = require "fastio"
 local bgfx = require "bgfx"
 local viewIdPool = require "viewid_pool"
 
----@class _ImGui_Lib
+---@class ImGui
 local ImGui = require "imgui"
 local ImGuiBackend = require "imgui.backend"
 local ImGuiLegacy = require "imgui.legacy"
-local ImGuiIO = ImGuiLegacy.io
+local ImGuiIO
 
 local FontAtlas = {}
 
@@ -97,6 +97,7 @@ function ImGuiEvent.focus(e)
 end
 
 function ImGui.DispatchEvent(e)
+    ImGuiIO = ImGuiLegacy.GetIO()
     local func = ImGuiEvent[e.type]
     return func and func(e)
 end
