@@ -75,7 +75,7 @@ SHADOW_CFG.shadow_param1	= math3d.ref(math3d.vector(SHADOW_CFG.normal_offset, 1.
 SHADOW_CFG.fb_index = fbmgr.create(
 	{
 		rbidx=fbmgr.create_rb{
-			format = "D32F",
+			format = "D16",
 			w=SHADOW_CFG.shadowmap_size * SHADOW_CFG.split_num,
 			h=SHADOW_CFG.shadowmap_size,
 			layers=1,

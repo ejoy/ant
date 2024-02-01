@@ -1,6 +1,5 @@
 #pragma once
 
-void  platformInit(void* window);
-void  platformShutdown();
-void  platformNewFrame();
-void* platformGetHandle(ImGuiViewport* viewport);
+void ImGui_ImplPlatform_Init(void* window);
+void ImGui_ImplPlatform_Shutdown();
+void ImGui_ImplPlatform_NewFrame();

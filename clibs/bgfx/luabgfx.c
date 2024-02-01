@@ -21,7 +21,7 @@
 #include <android/log.h>
 #endif
 
-#if BGFX_API_VERSION != 122
+#if BGFX_API_VERSION != 125
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -296,14 +296,9 @@ renderer_type_id(lua_State *L, int index) {
 #define RENDERER_TYPE_ID(x) else if (strcmp(type, #x) == 0) id = BGFX_RENDERER_TYPE_##x
 	if (0) ;
 	RENDERER_TYPE_ID(NOOP);
-	RENDERER_TYPE_ID(DIRECT3D9);
 	RENDERER_TYPE_ID(DIRECT3D11);
 	RENDERER_TYPE_ID(DIRECT3D12);
-	RENDERER_TYPE_ID(GNM);
 	RENDERER_TYPE_ID(METAL);
-	RENDERER_TYPE_ID(NVN);
-	RENDERER_TYPE_ID(OPENGLES);
-	RENDERER_TYPE_ID(OPENGL);
 	RENDERER_TYPE_ID(VULKAN);
 	else return luaL_error(L, "Invalid renderer type %s", type);
 
@@ -704,13 +699,9 @@ push_renderer_type(lua_State *L, bgfx_renderer_type_t t) {
 #define RENDERER_TYPE(x) case BGFX_RENDERER_TYPE_##x : st = #x; break
 	switch(t) {
 		RENDERER_TYPE(NOOP);
-		RENDERER_TYPE(DIRECT3D9);
 		RENDERER_TYPE(DIRECT3D11);
 		RENDERER_TYPE(DIRECT3D12);
-		RENDERER_TYPE(GNM);
 		RENDERER_TYPE(METAL);
-		RENDERER_TYPE(OPENGLES);
-		RENDERER_TYPE(OPENGL);
 		RENDERER_TYPE(VULKAN);
 		default: {
 			luaL_error(L, "Unknown renderer type %d", t);

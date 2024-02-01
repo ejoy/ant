@@ -9,14 +9,14 @@ local mathpkg       = import_package"ant.math"
 local mc            = mathpkg.constant
 
 local common = ecs.require "common"
-common.init_system = "point_light"
+common.init_system = "shadow"
 
 local create_instance = ecs.require "util".create_instance
 
 local init_loader_sys   = ecs.system 'init_system'
 
 function init_loader_sys:init()
-    --create_instance "/pkg/ant.test.features/assets/entities/directional_light.prefab"
+    create_instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     create_instance "/pkg/ant.test.features/assets/entities/sky_with_ibl.prefab"
 end
 
