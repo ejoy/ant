@@ -46,8 +46,8 @@ ElementInterpolate::ElementInterpolate(Element& element, PropertyId id, const Pr
 }
 
 void ElementInterpolate::Reset(Element& element, const Property& in_prop, const Property& out_prop) {
-	auto t0 = p0.GetIf<Transform>();
-	auto t1 = p1.GetIf<Transform>();
+	auto t0 = in_prop.GetIf<Transform>();
+	auto t1 = out_prop.GetIf<Transform>();
 	if (t0 && t1) {
 		switch (PrepareTransformPair(*t0, *t1, element)) {
 		case PrepareResult::Failed:
