@@ -28,6 +28,7 @@ local lua_type = {
     ["int"] = "integer",
     ["size_t"] = "integer",
     ["ImGuiID"] = "integer",
+    ["ImWchar16"] = "integer",
     ["ImU32"] = "integer",
     ["ImGuiKeyChord"] = "ImGui.KeyChord",
     ["const ImGuiPayload*"] = "string | nil",
@@ -367,16 +368,7 @@ local function write_flags_and_enums()
     end
 end
 
-local function write_types()
-    writeln("---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod")
-    writeln("---@alias ImTextureID integer")
-    writeln ""
-    types.decode_docs("ImGuiViewport", writeln)
-end
-
 local function write_func(func_meta)
-    local realname = func_meta.name:match "^ImGui_([%w]+)$"
-
     if func_meta.comments then
         if func_meta.comments.preceding then
             writeln "--"
@@ -391,11 +383,19 @@ local function write_func(func_meta)
             writeln "--"
         end
     end
+
+    local realname
     local status = {
         i = 1,
         args = func_meta.arguments,
         arguments = {},
     }
+    if func_meta.original_class then
+        realname = func_meta.name:match("^"..func_meta.original_class.."_([%w]+)$")
+        status.i = 2
+    else
+        realname = func_meta.name:match "^ImGui_([%w]+)$"
+    end
     while status.i <= #status.args do
         local type_meta = status.args[status.i]
         local typefunc = special_arg[type_meta.type.declaration]
@@ -441,21 +441,50 @@ local function write_func(func_meta)
             end
         end
     end
-    writeln("function ImGui.%s(%s) end", realname, table.concat(status.arguments, ", "))
+    if func_meta.original_class then
+        writeln("function %s.%s(%s) end", func_meta.original_class, realname, table.concat(status.arguments, ", "))
+    else
+        writeln("function ImGui.%s(%s) end", realname, table.concat(status.arguments, ", "))
+    end
     writeln ""
     return realname
 end
 
-local function write_funcs()
+local function write_structs(struct_funcs)
+    writeln("---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod")
+    writeln ""
+    writeln("---@alias ImTextureID integer")
+    writeln ""
+    writeln("---@alias ImGuiID integer")
+    writeln ""
+    local lst <const> = {
+        "ImVec2",
+        "ImGuiViewport",
+        "ImGuiIO",
+    }
+    for _, name in ipairs(lst) do
+        types.decode_docs(name, struct_funcs[name] or {}, writeln, write_func)
+    end
+end
+
+local function get_funcs()
     local funcs = {}
+    local struct_funcs = {}
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
-            if not func_meta.original_class then
-                funcs[#funcs+1] = write_func(func_meta)
+            if func_meta.original_class then
+                local v = struct_funcs[func_meta.original_class]
+                if v then
+                    v[#v+1] = func_meta
+                else
+                    struct_funcs[func_meta.original_class] = { func_meta }
+                end
+            else
+                funcs[#funcs+1] = func_meta
             end
         end
     end
-    return funcs
+    return funcs, struct_funcs
 end
 
 writeln "---@meta imgui"
@@ -469,7 +498,8 @@ writeln "local ImGui = {}"
 writeln ""
 write_flags_and_enums()
 writeln ""
-write_types()
-writeln ""
-write_funcs()
-writeln "return ImGui"
+local funcs, struct_funcs = get_funcs()
+write_structs(struct_funcs)
+for _, func_meta in ipairs(funcs) do
+    write_func(func_meta)
+end

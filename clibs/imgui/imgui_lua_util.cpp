@@ -30,7 +30,7 @@ bool field_toboolean(lua_State* L, int idx, lua_Integer i) {
 ImTextureID get_texture_id(lua_State* L, int idx) {
     int lua_handle = (int)luaL_checkinteger(L, idx);
     if (auto id = ImGui_ImplBgfx_GetTextureID(lua_handle)) {
-    	return *id;
+        return *id;
     }
     luaL_error(L, "Invalid handle type TEXTURE");
     std::unreachable();
@@ -58,28 +58,88 @@ void set_table(lua_State* L, std::span<TableAny> l) {
     }
 }
 
+static void set_table(lua_State* L, std::span<luaL_Reg> l, int nup) {
+    luaL_checkstack(L, nup, "too many upvalues");
+    for (auto const& e : l) {
+        for (int i = 0; i < nup; i++) {
+            lua_pushvalue(L, -nup);
+        }
+        lua_pushcclosure(L, e.func, nup);
+        lua_setfield(L, -(nup + 2), e.name);
+    }
+    lua_pop(L, nup);
+}
+
 static int make_flags(lua_State* L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	int i, t;
-	lua_Integer r = 0;
-	for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
-		if (t != LUA_TSTRING)
-			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
-		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
-			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
-		}
-		lua_Integer v = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		r |= v;
-	}
-	lua_pushinteger(L, r);
-	return 1;
+    luaL_checktype(L, 1, LUA_TTABLE);
+    int i, t;
+    lua_Integer r = 0;
+    for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
+        if (t != LUA_TSTRING)
+            luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
+        if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
+            lua_geti(L, 1, i);
+            luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
+        }
+        lua_Integer v = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        r |= v;
+    }
+    lua_pushinteger(L, r);
+    return 1;
+}
+
+void struct_gen(lua_State* L, const char* name, std::span<luaL_Reg> funcs, std::span<luaL_Reg> setters, std::span<luaL_Reg> getters) {
+    lua_newuserdatauv(L, sizeof(uintptr_t), 0);
+    int ud = lua_gettop(L);
+    lua_newtable(L);
+    if (!setters.empty()) {
+        static lua_CFunction setter_func = +[](lua_State* L) {
+            lua_pushvalue(L, 2);
+            if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+                return luaL_error(L, "%s.%s is invalid.", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, 2));
+            }
+            lua_pushvalue(L, 3);
+            lua_call(L, 1, 0);
+            return 0;
+        };
+        lua_createtable(L, 0, (int)setters.size());
+        lua_pushvalue(L, ud);
+        set_table(L, setters, 1);
+        lua_pushstring(L, name);
+        lua_pushcclosure(L, setter_func, 2);
+        lua_setfield(L, -2, "__newindex");
+    }
+    if (!funcs.empty()) {
+        lua_createtable(L, 0, (int)funcs.size());
+        lua_pushvalue(L, ud);
+        set_table(L, funcs, 1);
+        lua_newtable(L);
+    }
+    static lua_CFunction getter_func = +[](lua_State* L) {
+        lua_pushvalue(L, 2);
+        if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+            return luaL_error(L, "%s.%s is invalid.", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, 2));
+        }
+        lua_call(L, 0, 1);
+        return 1;
+    };
+    lua_createtable(L, 0, (int)getters.size());
+    lua_pushvalue(L, ud);
+    set_table(L, getters, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, getter_func, 2);
+    lua_setfield(L, -2, "__index");
+    if (!funcs.empty()) {
+        lua_setmetatable(L, -2);
+        lua_setfield(L, -2, "__index");
+    }
+    lua_setmetatable(L, -2);
 }
 
 void flags_gen(lua_State* L, const char* name) {
-	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_flags, 2);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, make_flags, 2);
 }
 
 void init(lua_State* L) {

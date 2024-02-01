@@ -1028,32 +1028,214 @@ function ImGui.ViewportFlags(flags) end
 ImGui.Mod = {}
 
 ---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod
----@alias ImTextureID integer
 
----@class ImGuiViewport
----@field ID ImGuiID
----@field Flags ImGui.ViewportFlags
----@field Pos ImVec2
----@field Size ImVec2
----@field WorkPos ImVec2
----@field WorkSize ImVec2
----@field DpiScale number
----@field ParentViewportId ImGuiID
----@field DrawData lightuserdata
----@field RendererUserData lightuserdata
----@field PlatformUserData lightuserdata
----@field PlatformHandle lightuserdata
----@field PlatformHandleRaw lightuserdata
----@field PlatformWindowCreated boolean
----@field PlatformRequestMove boolean
----@field PlatformRequestResize boolean
----@field PlatformRequestClose boolean
+---@alias ImTextureID integer
 
 ---@alias ImGuiID integer
 
 ---@class ImVec2
 ---@field x number
 ---@field y number
+
+---@class ImGuiViewport
+---@field ID ImGuiID                     #  Unique identifier for the viewport
+---@field Flags ImGui.ViewportFlags      #  See ImGuiViewportFlags_
+---@field Pos ImVec2                     #  Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
+---@field Size ImVec2                    #  Main Area: Size of the viewport.
+---@field WorkPos ImVec2                 #  Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
+---@field WorkSize ImVec2                #  Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
+---@field DpiScale number                #  1.0f = 96 DPI = No extra scale.
+---@field ParentViewportId ImGuiID       #  (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
+---@field RendererUserData lightuserdata #  void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
+---@field PlatformUserData lightuserdata #  void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
+---@field PlatformHandle lightuserdata   #  void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
+---@field PlatformHandleRaw lightuserdata#  void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
+---@field PlatformWindowCreated boolean  #  Platform window has been created (Platform_CreateWindow() has been called). This is false during the first frame where a viewport is being created.
+---@field PlatformRequestMove boolean    #  Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
+---@field PlatformRequestResize boolean  #  Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
+---@field PlatformRequestClose boolean   #  Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
+
+---@class ImGuiIO
+---@field ConfigFlags ImGui.ConfigFlags            #  = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
+---@field BackendFlags ImGui.BackendFlags          #  = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
+---@field DisplaySize ImVec2                       #  <unset>          // Main display size, in pixels (generally == GetMainViewport()->Size). May change every frame.
+---@field DeltaTime number                         #  = 1.0f/60.0f     // Time elapsed since last frame, in seconds. May change every frame.
+---@field IniSavingRate number                     #  = 5.0f           // Minimum time between saving positions/sizes to .ini file, in seconds.
+---@field UserData lightuserdata                   #  = NULL           // Store your own data.
+---@field FontGlobalScale number                   #  = 1.0f           // Global scale all fonts
+---@field FontAllowUserScaling boolean             #  = false          // Allow user scaling text of individual window with CTRL+Wheel.
+---@field DisplayFramebufferScale ImVec2           #  = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::FramebufferScale.
+---@field ConfigDockingNoSplit boolean             #  = false          // Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.
+---@field ConfigDockingWithShift boolean           #  = false          // Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)
+---@field ConfigDockingAlwaysTabBar boolean        #  = false          // [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node.
+---@field ConfigDockingTransparentPayload boolean  #  = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.
+---@field ConfigViewportsNoAutoMerge boolean       #  = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport.
+---@field ConfigViewportsNoTaskBarIcon boolean     #  = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImGuiViewportFlags_NoTaskBarIcon will be set on it.
+---@field ConfigViewportsNoDecoration boolean      #  = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
+---@field ConfigViewportsNoDefaultParent boolean   #  = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
+---@field MouseDrawCursor boolean                  #  = false          // Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor). Cannot be easily renamed to 'io.ConfigXXX' because this is frequently used by backend implementations.
+---@field ConfigMacOSXBehaviors boolean            #  = defined(__APPLE__) // OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.
+---@field ConfigInputTrickleEventQueue boolean     #  = true           // Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.
+---@field ConfigInputTextCursorBlink boolean       #  = true           // Enable blinking cursor (optional as some users consider it to be distracting).
+---@field ConfigInputTextEnterKeepActive boolean   #  = false          // [BETA] Pressing Enter will keep item active and select contents (single-line only).
+---@field ConfigDragClickToInputText boolean       #  = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
+---@field ConfigWindowsResizeFromEdges boolean     #  = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
+---@field ConfigWindowsMoveFromTitleBarOnly boolean#  = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
+---@field ConfigMemoryCompactTimer number          #  = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
+---@field MouseDoubleClickTime number              #  = 0.30f          // Time for a double-click, in seconds.
+---@field MouseDoubleClickMaxDist number           #  = 6.0f           // Distance threshold to stay in to validate a double-click, in pixels.
+---@field MouseDragThreshold number                #  = 6.0f           // Distance threshold before considering we are dragging.
+---@field KeyRepeatDelay number                    #  = 0.275f         // When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).
+---@field KeyRepeatRate number                     #  = 0.050f         // When holding a key/button, rate at which it repeats, in seconds.
+---@field ConfigDebugBeginReturnValueOnce boolean  #  = false          // First-time calls to Begin()/BeginChild() will return false. NEEDS TO BE SET AT APPLICATION BOOT TIME if you don't want to miss windows.
+---@field ConfigDebugBeginReturnValueLoop boolean  #  = false          // Some calls to Begin()/BeginChild() will return false. Will cycle through window depths then repeat. Suggested use: add "io.ConfigDebugBeginReturnValue = io.KeyShift" in your main loop then occasionally press SHIFT. Windows should be flickering while running.
+---@field ConfigDebugIgnoreFocusLoss boolean       #  = false          // Ignore io.AddFocusEvent(false), consequently not calling io.ClearInputKeys() in input processing.
+---@field ConfigDebugIniSettings boolean           #  = false          // Save .ini data with extra comments (particularly helpful for Docking, but makes saving slower)
+---@field BackendPlatformUserData lightuserdata    #  = NULL           // User data for platform backend
+---@field BackendRendererUserData lightuserdata    #  = NULL           // User data for renderer backend
+---@field BackendLanguageUserData lightuserdata    #  = NULL           // User data for non C++ programming language backend
+---@field ClipboardUserData lightuserdata
+---@field PlatformLocaleDecimalPoint integer       #  '.'              // [Experimental] Configure decimal point e.g. '.' or ',' useful for some languages (e.g. German), generally pulled from *localeconv()->decimal_point
+---@field WantCaptureMouse boolean                 #  Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+---@field WantCaptureKeyboard boolean              #  Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+---@field WantTextInput boolean                    #  Mobile/console: when set, you may display an on-screen keyboard. This is set by Dear ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+---@field WantSetMousePos boolean                  #  MousePos has been altered, backend should reposition mouse on next frame. Rarely used! Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+---@field WantSaveIniSettings boolean              #  When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.WantSaveIniSettings yourself after saving!
+---@field NavActive boolean                        #  Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+---@field NavVisible boolean                       #  Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+---@field Framerate number                         #  Estimate of application framerate (rolling average over 60 frames, based on io.DeltaTime), in frame per second. Solely for convenience. Slow applications may not want to use a moving average or may want to reset underlying buffers occasionally.
+---@field MetricsRenderVertices integer            #  Vertices output during last call to Render()
+---@field MetricsRenderIndices integer             #  Indices output during last call to Render() = number of triangles * 3
+---@field MetricsRenderWindows integer             #  Number of visible windows
+---@field MetricsActiveWindows integer             #  Number of active windows
+---@field MouseDelta ImVec2                        #  Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+---@field MousePos ImVec2                          #  Mouse position, in pixels. Set to ImVec2(-FLT_MAX, -FLT_MAX) if mouse is unavailable (on another screen, etc.)
+---@field MouseWheel number                        #  Mouse wheel Vertical: 1 unit scrolls about 5 lines text. >0 scrolls Up, <0 scrolls Down. Hold SHIFT to turn vertical scroll into horizontal scroll.
+---@field MouseWheelH number                       #  Mouse wheel Horizontal. >0 scrolls Left, <0 scrolls Right. Most users don't have a mouse with a horizontal wheel, may not be filled by all backends.
+---@field MouseSource ImGui.MouseSource            #  Mouse actual input peripheral (Mouse/TouchScreen/Pen).
+---@field MouseHoveredViewport ImGuiID             #  (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
+---@field KeyCtrl boolean                          #  Keyboard modifier down: Control
+---@field KeyShift boolean                         #  Keyboard modifier down: Shift
+---@field KeyAlt boolean                           #  Keyboard modifier down: Alt
+---@field KeySuper boolean                         #  Keyboard modifier down: Cmd/Super/Windows
+---@field KeyMods ImGui.KeyChord                   #  Key mods flags (any of ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Alt/ImGuiMod_Super flags, same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags. DOES NOT CONTAINS ImGuiMod_Shortcut which is pretranslated). Read-only, updated by NewFrame()
+---@field WantCaptureMouseUnlessPopupClose boolean #  Alternative to WantCaptureMouse: (WantCaptureMouse == true && WantCaptureMouseUnlessPopupClose == false) when a click over void is expected to close a popup.
+---@field MousePosPrev ImVec2                      #  Previous mouse position (note that MouseDelta is not necessary == MousePos-MousePosPrev, in case either position is invalid)
+---@field MouseWheelRequestAxisSwap boolean        #  On a non-Mac system, holding SHIFT requests WheelY to perform the equivalent of a WheelX event. On a Mac system this is already enforced by the system.
+---@field PenPressure number                       #  Touch/Pen pressure (0.0f to 1.0f, should be >0.0f only when MouseDown[0] == true). Helper storage currently unused by Dear ImGui.
+---@field AppFocusLost boolean                     #  Only modify via AddFocusEvent()
+---@field AppAcceptingEvents boolean               #  Only modify via SetAppAcceptingEvents()
+---@field BackendUsingLegacyKeyArrays integer      #  -1: unknown, 0: using AddKeyEvent(), 1: using legacy io.KeysDown[]
+---@field BackendUsingLegacyNavInputArray boolean  #  0: using AddKeyAnalogEvent(), 1: writing to legacy io.NavInputs[] directly
+---@field InputQueueSurrogate integer              #  For AddInputCharacterUTF16()
+local ImGuiIO = {}
+--
+-- Input Functions
+--
+--
+-- Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
+--
+---@param key ImGui.Key
+---@param down boolean
+function ImGuiIO.AddKeyEvent(key, down) end
+
+--
+-- Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
+--
+---@param key ImGui.Key
+---@param down boolean
+---@param v number
+function ImGuiIO.AddKeyAnalogEvent(key, down, v) end
+
+--
+-- Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
+--
+---@param x number
+---@param y number
+function ImGuiIO.AddMousePosEvent(x, y) end
+
+--
+-- Queue a mouse button change
+--
+---@param button integer
+---@param down boolean
+function ImGuiIO.AddMouseButtonEvent(button, down) end
+
+--
+-- Queue a mouse wheel update. wheel_y<0: scroll down, wheel_y>0: scroll up, wheel_x<0: scroll right, wheel_x>0: scroll left.
+--
+---@param wheel_x number
+---@param wheel_y number
+function ImGuiIO.AddMouseWheelEvent(wheel_x, wheel_y) end
+
+--
+-- Queue a mouse source change (Mouse/TouchScreen/Pen)
+--
+---@param source ImGui.MouseSource
+function ImGuiIO.AddMouseSourceEvent(source) end
+
+--
+-- Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+--
+---@param id integer
+function ImGuiIO.AddMouseViewportEvent(id) end
+
+--
+-- Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
+--
+---@param focused boolean
+function ImGuiIO.AddFocusEvent(focused) end
+
+--
+-- Queue a new character input
+--
+---@param c integer
+function ImGuiIO.AddInputCharacter(c) end
+
+--
+-- Queue a new character input from a UTF-16 character, it can be a surrogate
+--
+---@param c integer
+function ImGuiIO.AddInputCharacterUTF16(c) end
+
+--
+-- Queue a new characters input from a UTF-8 string
+--
+---@param str string
+function ImGuiIO.AddInputCharactersUTF8(str) end
+
+--
+-- Implied native_legacy_index = -1
+--
+---@param key ImGui.Key
+---@param native_keycode integer
+---@param native_scancode integer
+function ImGuiIO.SetKeyEventNativeData(key, native_keycode, native_scancode) end
+
+--
+-- [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
+--
+---@param key ImGui.Key
+---@param native_keycode integer
+---@param native_scancode integer
+---@param native_legacy_index? integer | `-1`
+function ImGuiIO.SetKeyEventNativeDataEx(key, native_keycode, native_scancode, native_legacy_index) end
+
+--
+-- Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
+--
+---@param accepting_events boolean
+function ImGuiIO.SetAppAcceptingEvents(accepting_events) end
+
+--
+-- Clear all incoming events.
+--
+function ImGuiIO.ClearEventsQueue() end
+
+--
+-- Clear current keyboard/mouse/gamepad state + current frame text input buffer. Equivalent to releasing all keys/buttons.
+--
+function ImGuiIO.ClearInputKeys() end
 
 
 --
@@ -3906,4 +4088,3 @@ function ImGui.FindViewportByID(id) end
 ---@return ImGui.Key
 function ImGui.GetKeyIndex(key) end
 
-return ImGui

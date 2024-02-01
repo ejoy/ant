@@ -721,76 +721,8 @@ static util::TableInteger Mod[] = {
 
 #undef ENUM
 
-static void PushImGuiViewport(lua_State* L, const ImGuiViewport& v) {
-    lua_createtable(L, 0, 17);
-
-    lua_pushinteger(L, v.ID);
-    lua_setfield(L, -2, "ID");
-
-    lua_pushinteger(L, v.Flags);
-    lua_setfield(L, -2, "Flags");
-
-    lua_createtable(L, 0, 2);
-    lua_pushnumber(L, v.Pos.x);
-    lua_setfield(L, -2, "x");
-    lua_pushnumber(L, v.Pos.y);
-    lua_setfield(L, -2, "y");
-    lua_setfield(L, -2, "Pos");
-
-    lua_createtable(L, 0, 2);
-    lua_pushnumber(L, v.Size.x);
-    lua_setfield(L, -2, "x");
-    lua_pushnumber(L, v.Size.y);
-    lua_setfield(L, -2, "y");
-    lua_setfield(L, -2, "Size");
-
-    lua_createtable(L, 0, 2);
-    lua_pushnumber(L, v.WorkPos.x);
-    lua_setfield(L, -2, "x");
-    lua_pushnumber(L, v.WorkPos.y);
-    lua_setfield(L, -2, "y");
-    lua_setfield(L, -2, "WorkPos");
-
-    lua_createtable(L, 0, 2);
-    lua_pushnumber(L, v.WorkSize.x);
-    lua_setfield(L, -2, "x");
-    lua_pushnumber(L, v.WorkSize.y);
-    lua_setfield(L, -2, "y");
-    lua_setfield(L, -2, "WorkSize");
-
-    lua_pushnumber(L, v.DpiScale);
-    lua_setfield(L, -2, "DpiScale");
-
-    lua_pushinteger(L, v.ParentViewportId);
-    lua_setfield(L, -2, "ParentViewportId");
-
-    lua_pushlightuserdata(L, v.DrawData);
-    lua_setfield(L, -2, "DrawData");
-
-    lua_pushlightuserdata(L, v.RendererUserData);
-    lua_setfield(L, -2, "RendererUserData");
-
-    lua_pushlightuserdata(L, v.PlatformUserData);
-    lua_setfield(L, -2, "PlatformUserData");
-
-    lua_pushlightuserdata(L, v.PlatformHandle);
-    lua_setfield(L, -2, "PlatformHandle");
-
-    lua_pushlightuserdata(L, v.PlatformHandleRaw);
-    lua_setfield(L, -2, "PlatformHandleRaw");
-
-    lua_pushboolean(L, v.PlatformWindowCreated);
-    lua_setfield(L, -2, "PlatformWindowCreated");
-
-    lua_pushboolean(L, v.PlatformRequestMove);
-    lua_setfield(L, -2, "PlatformRequestMove");
-
-    lua_pushboolean(L, v.PlatformRequestResize);
-    lua_setfield(L, -2, "PlatformRequestResize");
-
-    lua_pushboolean(L, v.PlatformRequestClose);
-    lua_setfield(L, -2, "PlatformRequestClose");
-}
+namespace wrap_ImGuiViewport { static void fetch(lua_State* L, ImGuiViewport& v); }
+namespace wrap_ImGuiIO { static void fetch(lua_State* L, ImGuiIO& v); }
 static int CreateContext(lua_State* L) {
     auto _retval = ImGui::CreateContext();
     return 0;
@@ -929,7 +861,7 @@ static int GetWindowHeight(lua_State* L) {
 
 static int GetWindowViewport(lua_State* L) {
     auto _retval = ImGui::GetWindowViewport();
-    PushImGuiViewport(L, *_retval);
+    wrap_ImGuiViewport::fetch(L, *_retval);
     return 1;
 }
 
@@ -4113,7 +4045,7 @@ static int GetItemRectSize(lua_State* L) {
 
 static int GetMainViewport(lua_State* L) {
     auto _retval = ImGui::GetMainViewport();
-    PushImGuiViewport(L, *_retval);
+    wrap_ImGuiViewport::fetch(L, *_retval);
     return 1;
 }
 
@@ -4448,7 +4380,7 @@ static int RenderPlatformWindowsDefault(lua_State* L) {
 static int FindViewportByID(lua_State* L) {
     auto id = (ImGuiID)luaL_checkinteger(L, 1);
     auto _retval = ImGui::FindViewportByID(id);
-    PushImGuiViewport(L, *_retval);
+    wrap_ImGuiViewport::fetch(L, *_retval);
     return 1;
 }
 
@@ -4459,6 +4391,1483 @@ static int GetKeyIndex(lua_State* L) {
     return 1;
 }
 
+namespace wrap_ImGuiViewport {
+
+static int tag = 0;
+
+struct ID {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ID);
+        return 1;
+    }
+};
+
+struct Flags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.Flags);
+        return 1;
+    }
+};
+
+struct Pos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.Pos.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.Pos.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct Size {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.Size.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.Size.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct WorkPos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.WorkPos.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.WorkPos.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct WorkSize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.WorkSize.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.WorkSize.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct DpiScale {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.DpiScale);
+        return 1;
+    }
+};
+
+struct ParentViewportId {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ParentViewportId);
+        return 1;
+    }
+};
+
+struct RendererUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.RendererUserData);
+        return 1;
+    }
+};
+
+struct PlatformUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformUserData);
+        return 1;
+    }
+};
+
+struct PlatformHandle {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformHandle);
+        return 1;
+    }
+};
+
+struct PlatformHandleRaw {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformHandleRaw);
+        return 1;
+    }
+};
+
+struct PlatformWindowCreated {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformWindowCreated);
+        return 1;
+    }
+};
+
+struct PlatformRequestMove {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformRequestMove);
+        return 1;
+    }
+};
+
+struct PlatformRequestResize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformRequestResize);
+        return 1;
+    }
+};
+
+struct PlatformRequestClose {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformRequestClose);
+        return 1;
+    }
+};
+
+static void init(lua_State* L) {
+    static luaL_Reg getters[] = {
+        { "ID", ID::getter },
+        { "Flags", Flags::getter },
+        { "Pos", Pos::getter },
+        { "Size", Size::getter },
+        { "WorkPos", WorkPos::getter },
+        { "WorkSize", WorkSize::getter },
+        { "DpiScale", DpiScale::getter },
+        { "ParentViewportId", ParentViewportId::getter },
+        { "RendererUserData", RendererUserData::getter },
+        { "PlatformUserData", PlatformUserData::getter },
+        { "PlatformHandle", PlatformHandle::getter },
+        { "PlatformHandleRaw", PlatformHandleRaw::getter },
+        { "PlatformWindowCreated", PlatformWindowCreated::getter },
+        { "PlatformRequestMove", PlatformRequestMove::getter },
+        { "PlatformRequestResize", PlatformRequestResize::getter },
+        { "PlatformRequestClose", PlatformRequestClose::getter },
+    };
+    util::struct_gen(L, "ImGuiViewport", {}, {}, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);
+}
+
+static void fetch(lua_State* L, ImGuiViewport& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);
+    auto** ptr = (ImGuiViewport**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+}
+namespace wrap_ImGuiIO {
+
+static int tag = 0;
+
+static int AddKeyEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto down = !!lua_toboolean(L, 2);
+    OBJ.AddKeyEvent(key, down);
+    return 0;
+}
+
+static int AddKeyAnalogEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto down = !!lua_toboolean(L, 2);
+    auto v = (float)luaL_checknumber(L, 3);
+    OBJ.AddKeyAnalogEvent(key, down, v);
+    return 0;
+}
+
+static int AddMousePosEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto x = (float)luaL_checknumber(L, 1);
+    auto y = (float)luaL_checknumber(L, 2);
+    OBJ.AddMousePosEvent(x, y);
+    return 0;
+}
+
+static int AddMouseButtonEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto button = (int)luaL_checkinteger(L, 1);
+    auto down = !!lua_toboolean(L, 2);
+    OBJ.AddMouseButtonEvent(button, down);
+    return 0;
+}
+
+static int AddMouseWheelEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto wheel_x = (float)luaL_checknumber(L, 1);
+    auto wheel_y = (float)luaL_checknumber(L, 2);
+    OBJ.AddMouseWheelEvent(wheel_x, wheel_y);
+    return 0;
+}
+
+static int AddMouseSourceEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto source = (ImGuiMouseSource)luaL_checkinteger(L, 1);
+    OBJ.AddMouseSourceEvent(source);
+    return 0;
+}
+
+static int AddMouseViewportEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    OBJ.AddMouseViewportEvent(id);
+    return 0;
+}
+
+static int AddFocusEvent(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto focused = !!lua_toboolean(L, 1);
+    OBJ.AddFocusEvent(focused);
+    return 0;
+}
+
+static int AddInputCharacter(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto c = (unsigned int)luaL_checkinteger(L, 1);
+    OBJ.AddInputCharacter(c);
+    return 0;
+}
+
+static int AddInputCharacterUTF16(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto c = (ImWchar16)luaL_checkinteger(L, 1);
+    OBJ.AddInputCharacterUTF16(c);
+    return 0;
+}
+
+static int AddInputCharactersUTF8(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto str = luaL_checkstring(L, 1);
+    OBJ.AddInputCharactersUTF8(str);
+    return 0;
+}
+
+static int SetKeyEventNativeData(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto native_keycode = (int)luaL_checkinteger(L, 2);
+    auto native_scancode = (int)luaL_checkinteger(L, 3);
+    OBJ.SetKeyEventNativeData(key, native_keycode, native_scancode);
+    return 0;
+}
+
+static int SetKeyEventNativeDataEx(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    auto native_keycode = (int)luaL_checkinteger(L, 2);
+    auto native_scancode = (int)luaL_checkinteger(L, 3);
+    auto native_legacy_index = (int)luaL_optinteger(L, 4, -1);
+    OBJ.SetKeyEventNativeData(key, native_keycode, native_scancode, native_legacy_index);
+    return 0;
+}
+
+static int SetAppAcceptingEvents(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    auto accepting_events = !!lua_toboolean(L, 1);
+    OBJ.SetAppAcceptingEvents(accepting_events);
+    return 0;
+}
+
+static int ClearEventsQueue(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearEventsQueue();
+    return 0;
+}
+
+static int ClearInputKeys(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearInputKeys();
+    return 0;
+}
+
+struct ConfigFlags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ConfigFlags);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigFlags = (ImGuiConfigFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BackendFlags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.BackendFlags);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BackendFlags = (ImGuiBackendFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct DisplaySize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.DisplaySize.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.DisplaySize.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct DeltaTime {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.DeltaTime);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.DeltaTime = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct IniSavingRate {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.IniSavingRate);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.IniSavingRate = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct UserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.UserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.UserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct FontGlobalScale {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.FontGlobalScale);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FontGlobalScale = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct FontAllowUserScaling {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.FontAllowUserScaling);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FontAllowUserScaling = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct DisplayFramebufferScale {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.DisplayFramebufferScale.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.DisplayFramebufferScale.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct ConfigDockingNoSplit {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDockingNoSplit);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDockingNoSplit = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDockingWithShift {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDockingWithShift);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDockingWithShift = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDockingAlwaysTabBar {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDockingAlwaysTabBar);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDockingAlwaysTabBar = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDockingTransparentPayload {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDockingTransparentPayload);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDockingTransparentPayload = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigViewportsNoAutoMerge {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigViewportsNoAutoMerge);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigViewportsNoAutoMerge = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigViewportsNoTaskBarIcon {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigViewportsNoTaskBarIcon);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigViewportsNoTaskBarIcon = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigViewportsNoDecoration {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigViewportsNoDecoration);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigViewportsNoDecoration = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigViewportsNoDefaultParent {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigViewportsNoDefaultParent);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigViewportsNoDefaultParent = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct MouseDrawCursor {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.MouseDrawCursor);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseDrawCursor = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigMacOSXBehaviors {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigMacOSXBehaviors);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigMacOSXBehaviors = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigInputTrickleEventQueue {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigInputTrickleEventQueue);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigInputTrickleEventQueue = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigInputTextCursorBlink {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigInputTextCursorBlink);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigInputTextCursorBlink = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigInputTextEnterKeepActive {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigInputTextEnterKeepActive);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigInputTextEnterKeepActive = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDragClickToInputText {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDragClickToInputText);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDragClickToInputText = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigWindowsResizeFromEdges {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigWindowsResizeFromEdges);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigWindowsResizeFromEdges = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigWindowsMoveFromTitleBarOnly {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigWindowsMoveFromTitleBarOnly);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigWindowsMoveFromTitleBarOnly = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigMemoryCompactTimer {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.ConfigMemoryCompactTimer);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigMemoryCompactTimer = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MouseDoubleClickTime {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.MouseDoubleClickTime);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseDoubleClickTime = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MouseDoubleClickMaxDist {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.MouseDoubleClickMaxDist);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseDoubleClickMaxDist = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MouseDragThreshold {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.MouseDragThreshold);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseDragThreshold = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct KeyRepeatDelay {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.KeyRepeatDelay);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeyRepeatDelay = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct KeyRepeatRate {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.KeyRepeatRate);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeyRepeatRate = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDebugBeginReturnValueOnce {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDebugBeginReturnValueOnce);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDebugBeginReturnValueOnce = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDebugBeginReturnValueLoop {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDebugBeginReturnValueLoop);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDebugBeginReturnValueLoop = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDebugIgnoreFocusLoss {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDebugIgnoreFocusLoss);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDebugIgnoreFocusLoss = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ConfigDebugIniSettings {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDebugIniSettings);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDebugIniSettings = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct BackendPlatformUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.BackendPlatformUserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.BackendPlatformUserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct BackendRendererUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.BackendRendererUserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.BackendRendererUserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct BackendLanguageUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.BackendLanguageUserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.BackendLanguageUserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct ClipboardUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.ClipboardUserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.ClipboardUserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct PlatformLocaleDecimalPoint {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.PlatformLocaleDecimalPoint);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.PlatformLocaleDecimalPoint = (ImWchar)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct WantCaptureMouse {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.WantCaptureMouse);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.WantCaptureMouse = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct WantCaptureKeyboard {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.WantCaptureKeyboard);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.WantCaptureKeyboard = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct WantTextInput {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.WantTextInput);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.WantTextInput = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct WantSetMousePos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.WantSetMousePos);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.WantSetMousePos = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct WantSaveIniSettings {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.WantSaveIniSettings);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.WantSaveIniSettings = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct NavActive {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.NavActive);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.NavActive = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct NavVisible {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.NavVisible);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.NavVisible = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct Framerate {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.Framerate);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Framerate = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MetricsRenderVertices {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.MetricsRenderVertices);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MetricsRenderVertices = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct MetricsRenderIndices {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.MetricsRenderIndices);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MetricsRenderIndices = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct MetricsRenderWindows {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.MetricsRenderWindows);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MetricsRenderWindows = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct MetricsActiveWindows {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.MetricsActiveWindows);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MetricsActiveWindows = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct MouseDelta {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.MouseDelta.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.MouseDelta.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct MousePos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.MousePos.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.MousePos.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct MouseWheel {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.MouseWheel);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseWheel = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MouseWheelH {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.MouseWheelH);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseWheelH = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MouseSource {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.MouseSource);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseSource = (ImGuiMouseSource)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct MouseHoveredViewport {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.MouseHoveredViewport);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseHoveredViewport = (ImGuiID)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct KeyCtrl {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.KeyCtrl);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeyCtrl = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct KeyShift {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.KeyShift);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeyShift = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct KeyAlt {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.KeyAlt);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeyAlt = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct KeySuper {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.KeySuper);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeySuper = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct KeyMods {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.KeyMods);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.KeyMods = (ImGuiKeyChord)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct WantCaptureMouseUnlessPopupClose {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.WantCaptureMouseUnlessPopupClose);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.WantCaptureMouseUnlessPopupClose = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct MousePosPrev {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.MousePosPrev.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.MousePosPrev.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct MouseWheelRequestAxisSwap {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.MouseWheelRequestAxisSwap);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseWheelRequestAxisSwap = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct PenPressure {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.PenPressure);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.PenPressure = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct AppFocusLost {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.AppFocusLost);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.AppFocusLost = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct AppAcceptingEvents {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.AppAcceptingEvents);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.AppAcceptingEvents = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct BackendUsingLegacyKeyArrays {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.BackendUsingLegacyKeyArrays);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BackendUsingLegacyKeyArrays = (ImS8)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BackendUsingLegacyNavInputArray {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.BackendUsingLegacyNavInputArray);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BackendUsingLegacyNavInputArray = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct InputQueueSurrogate {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.InputQueueSurrogate);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.InputQueueSurrogate = (ImWchar16)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+static void init(lua_State* L) {
+    static luaL_Reg funcs[] = {
+        { "AddKeyEvent", AddKeyEvent },
+        { "AddKeyAnalogEvent", AddKeyAnalogEvent },
+        { "AddMousePosEvent", AddMousePosEvent },
+        { "AddMouseButtonEvent", AddMouseButtonEvent },
+        { "AddMouseWheelEvent", AddMouseWheelEvent },
+        { "AddMouseSourceEvent", AddMouseSourceEvent },
+        { "AddMouseViewportEvent", AddMouseViewportEvent },
+        { "AddFocusEvent", AddFocusEvent },
+        { "AddInputCharacter", AddInputCharacter },
+        { "AddInputCharacterUTF16", AddInputCharacterUTF16 },
+        { "AddInputCharactersUTF8", AddInputCharactersUTF8 },
+        { "SetKeyEventNativeData", SetKeyEventNativeData },
+        { "SetKeyEventNativeDataEx", SetKeyEventNativeDataEx },
+        { "SetAppAcceptingEvents", SetAppAcceptingEvents },
+        { "ClearEventsQueue", ClearEventsQueue },
+        { "ClearInputKeys", ClearInputKeys },
+    };
+    static luaL_Reg setters[] = {
+        { "ConfigFlags", ConfigFlags::setter },
+        { "BackendFlags", BackendFlags::setter },
+        { "DeltaTime", DeltaTime::setter },
+        { "IniSavingRate", IniSavingRate::setter },
+        { "UserData", UserData::setter },
+        { "FontGlobalScale", FontGlobalScale::setter },
+        { "FontAllowUserScaling", FontAllowUserScaling::setter },
+        { "ConfigDockingNoSplit", ConfigDockingNoSplit::setter },
+        { "ConfigDockingWithShift", ConfigDockingWithShift::setter },
+        { "ConfigDockingAlwaysTabBar", ConfigDockingAlwaysTabBar::setter },
+        { "ConfigDockingTransparentPayload", ConfigDockingTransparentPayload::setter },
+        { "ConfigViewportsNoAutoMerge", ConfigViewportsNoAutoMerge::setter },
+        { "ConfigViewportsNoTaskBarIcon", ConfigViewportsNoTaskBarIcon::setter },
+        { "ConfigViewportsNoDecoration", ConfigViewportsNoDecoration::setter },
+        { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::setter },
+        { "MouseDrawCursor", MouseDrawCursor::setter },
+        { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::setter },
+        { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::setter },
+        { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::setter },
+        { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::setter },
+        { "ConfigDragClickToInputText", ConfigDragClickToInputText::setter },
+        { "ConfigWindowsResizeFromEdges", ConfigWindowsResizeFromEdges::setter },
+        { "ConfigWindowsMoveFromTitleBarOnly", ConfigWindowsMoveFromTitleBarOnly::setter },
+        { "ConfigMemoryCompactTimer", ConfigMemoryCompactTimer::setter },
+        { "MouseDoubleClickTime", MouseDoubleClickTime::setter },
+        { "MouseDoubleClickMaxDist", MouseDoubleClickMaxDist::setter },
+        { "MouseDragThreshold", MouseDragThreshold::setter },
+        { "KeyRepeatDelay", KeyRepeatDelay::setter },
+        { "KeyRepeatRate", KeyRepeatRate::setter },
+        { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::setter },
+        { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::setter },
+        { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::setter },
+        { "ConfigDebugIniSettings", ConfigDebugIniSettings::setter },
+        { "BackendPlatformUserData", BackendPlatformUserData::setter },
+        { "BackendRendererUserData", BackendRendererUserData::setter },
+        { "BackendLanguageUserData", BackendLanguageUserData::setter },
+        { "ClipboardUserData", ClipboardUserData::setter },
+        { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::setter },
+        { "WantCaptureMouse", WantCaptureMouse::setter },
+        { "WantCaptureKeyboard", WantCaptureKeyboard::setter },
+        { "WantTextInput", WantTextInput::setter },
+        { "WantSetMousePos", WantSetMousePos::setter },
+        { "WantSaveIniSettings", WantSaveIniSettings::setter },
+        { "NavActive", NavActive::setter },
+        { "NavVisible", NavVisible::setter },
+        { "Framerate", Framerate::setter },
+        { "MetricsRenderVertices", MetricsRenderVertices::setter },
+        { "MetricsRenderIndices", MetricsRenderIndices::setter },
+        { "MetricsRenderWindows", MetricsRenderWindows::setter },
+        { "MetricsActiveWindows", MetricsActiveWindows::setter },
+        { "MouseWheel", MouseWheel::setter },
+        { "MouseWheelH", MouseWheelH::setter },
+        { "MouseSource", MouseSource::setter },
+        { "MouseHoveredViewport", MouseHoveredViewport::setter },
+        { "KeyCtrl", KeyCtrl::setter },
+        { "KeyShift", KeyShift::setter },
+        { "KeyAlt", KeyAlt::setter },
+        { "KeySuper", KeySuper::setter },
+        { "KeyMods", KeyMods::setter },
+        { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::setter },
+        { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::setter },
+        { "PenPressure", PenPressure::setter },
+        { "AppFocusLost", AppFocusLost::setter },
+        { "AppAcceptingEvents", AppAcceptingEvents::setter },
+        { "BackendUsingLegacyKeyArrays", BackendUsingLegacyKeyArrays::setter },
+        { "BackendUsingLegacyNavInputArray", BackendUsingLegacyNavInputArray::setter },
+        { "InputQueueSurrogate", InputQueueSurrogate::setter },
+    };
+    static luaL_Reg getters[] = {
+        { "ConfigFlags", ConfigFlags::getter },
+        { "BackendFlags", BackendFlags::getter },
+        { "DisplaySize", DisplaySize::getter },
+        { "DeltaTime", DeltaTime::getter },
+        { "IniSavingRate", IniSavingRate::getter },
+        { "UserData", UserData::getter },
+        { "FontGlobalScale", FontGlobalScale::getter },
+        { "FontAllowUserScaling", FontAllowUserScaling::getter },
+        { "DisplayFramebufferScale", DisplayFramebufferScale::getter },
+        { "ConfigDockingNoSplit", ConfigDockingNoSplit::getter },
+        { "ConfigDockingWithShift", ConfigDockingWithShift::getter },
+        { "ConfigDockingAlwaysTabBar", ConfigDockingAlwaysTabBar::getter },
+        { "ConfigDockingTransparentPayload", ConfigDockingTransparentPayload::getter },
+        { "ConfigViewportsNoAutoMerge", ConfigViewportsNoAutoMerge::getter },
+        { "ConfigViewportsNoTaskBarIcon", ConfigViewportsNoTaskBarIcon::getter },
+        { "ConfigViewportsNoDecoration", ConfigViewportsNoDecoration::getter },
+        { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::getter },
+        { "MouseDrawCursor", MouseDrawCursor::getter },
+        { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::getter },
+        { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::getter },
+        { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::getter },
+        { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::getter },
+        { "ConfigDragClickToInputText", ConfigDragClickToInputText::getter },
+        { "ConfigWindowsResizeFromEdges", ConfigWindowsResizeFromEdges::getter },
+        { "ConfigWindowsMoveFromTitleBarOnly", ConfigWindowsMoveFromTitleBarOnly::getter },
+        { "ConfigMemoryCompactTimer", ConfigMemoryCompactTimer::getter },
+        { "MouseDoubleClickTime", MouseDoubleClickTime::getter },
+        { "MouseDoubleClickMaxDist", MouseDoubleClickMaxDist::getter },
+        { "MouseDragThreshold", MouseDragThreshold::getter },
+        { "KeyRepeatDelay", KeyRepeatDelay::getter },
+        { "KeyRepeatRate", KeyRepeatRate::getter },
+        { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::getter },
+        { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::getter },
+        { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::getter },
+        { "ConfigDebugIniSettings", ConfigDebugIniSettings::getter },
+        { "BackendPlatformUserData", BackendPlatformUserData::getter },
+        { "BackendRendererUserData", BackendRendererUserData::getter },
+        { "BackendLanguageUserData", BackendLanguageUserData::getter },
+        { "ClipboardUserData", ClipboardUserData::getter },
+        { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::getter },
+        { "WantCaptureMouse", WantCaptureMouse::getter },
+        { "WantCaptureKeyboard", WantCaptureKeyboard::getter },
+        { "WantTextInput", WantTextInput::getter },
+        { "WantSetMousePos", WantSetMousePos::getter },
+        { "WantSaveIniSettings", WantSaveIniSettings::getter },
+        { "NavActive", NavActive::getter },
+        { "NavVisible", NavVisible::getter },
+        { "Framerate", Framerate::getter },
+        { "MetricsRenderVertices", MetricsRenderVertices::getter },
+        { "MetricsRenderIndices", MetricsRenderIndices::getter },
+        { "MetricsRenderWindows", MetricsRenderWindows::getter },
+        { "MetricsActiveWindows", MetricsActiveWindows::getter },
+        { "MouseDelta", MouseDelta::getter },
+        { "MousePos", MousePos::getter },
+        { "MouseWheel", MouseWheel::getter },
+        { "MouseWheelH", MouseWheelH::getter },
+        { "MouseSource", MouseSource::getter },
+        { "MouseHoveredViewport", MouseHoveredViewport::getter },
+        { "KeyCtrl", KeyCtrl::getter },
+        { "KeyShift", KeyShift::getter },
+        { "KeyAlt", KeyAlt::getter },
+        { "KeySuper", KeySuper::getter },
+        { "KeyMods", KeyMods::getter },
+        { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::getter },
+        { "MousePosPrev", MousePosPrev::getter },
+        { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::getter },
+        { "PenPressure", PenPressure::getter },
+        { "AppFocusLost", AppFocusLost::getter },
+        { "AppAcceptingEvents", AppAcceptingEvents::getter },
+        { "BackendUsingLegacyKeyArrays", BackendUsingLegacyKeyArrays::getter },
+        { "BackendUsingLegacyNavInputArray", BackendUsingLegacyNavInputArray::getter },
+        { "InputQueueSurrogate", InputQueueSurrogate::getter },
+    };
+    util::struct_gen(L, "ImGuiIO", funcs, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);
+}
+
+static void fetch(lua_State* L, ImGuiIO& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);
+    auto** ptr = (ImGuiIO**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+}
 void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "CreateContext", CreateContext },
@@ -4888,6 +6297,8 @@ void init(lua_State* L) {
     luaL_setfuncs(L, funcs, 0);
     util::set_table(L, flags);
     util::set_table(L, enums);
+    wrap_ImGuiViewport::init(L);
+    wrap_ImGuiIO::init(L);
 }
 }
 

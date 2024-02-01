@@ -508,12 +508,17 @@ local function write_struct_define(name)
 end
 
 local function write_structs(struct_funcs)
-    types.decode_func_readonly("ImGuiViewport", writeln)
-    types.decode_func("ImGuiIO", struct_funcs["ImGuiIO"], writeln, write_func)
-    return {
+    local readonly <const> = {
+        ["ImGuiViewport"] = true,
+    }
+    local lst <const> = {
         "ImGuiViewport",
         "ImGuiIO",
     }
+    for _, name in ipairs(lst) do
+        types.decode_func(name, struct_funcs[name] or {}, writeln, write_func, readonly[name] or false)
+    end
+    return lst
 end
 
 writeln "//"

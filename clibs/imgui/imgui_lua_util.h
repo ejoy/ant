@@ -22,9 +22,9 @@ lua_Number  field_tonumber(lua_State* L, int idx, lua_Integer i);
 bool        field_toboolean(lua_State* L, int idx, lua_Integer i);
 ImTextureID get_texture_id(lua_State* L, int idx);
 const char* format(lua_State* L, int idx);
-
 void        create_table(lua_State* L, std::span<TableInteger> l);
 void        set_table(lua_State* L, std::span<TableAny> l);
+void        struct_gen(lua_State* L, const char* name, std::span<luaL_Reg> funcs, std::span<luaL_Reg> setters, std::span<luaL_Reg> getters);
 void        flags_gen(lua_State* L, const char* name);
 void        init(lua_State* L);
 

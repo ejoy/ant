@@ -6,8 +6,6 @@ local builtin_type <const> = {
     ["signed char"] = "integer",
     ["float"] = "number",
     ["void*"] = "lightuserdata",
-    ["ImDrawData*"] = "lightuserdata",
-    ["const char*"] = "string",
 }
 
 local builtin_get <const> = {
@@ -24,15 +22,17 @@ local builtin_get <const> = {
         "luaL_checktype(L, {IDX}, LUA_TLIGHTUSERDATA);",
         "{RET}lua_touserdata(L, {IDX});",
     },
-    ["string"] = {
-        "{RET}luaL_checkstring(L, {IDX});",
-    },
 }
+
+local reserve_type <const> = {
+    ["ImGuiID"] = "ImGuiID",
+    ["ImGuiKeyChord"] = "ImGui.KeyChord"
+}
+
+local registered_type = {}
 
 local types = {}
 local enums = {}
-local docs_mark = {}
-local docs_queue = {}
 
 local function init(meta)
     for _, typedef_meta in ipairs(meta.typedefs) do
@@ -49,54 +49,77 @@ local function init(meta)
         if enum_meta.is_flags_enum then
             local name = realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
             enums[realname] = string.format("ImGui.%s", name)
+        else
+            local name = realname:match "^ImGui(%a+)$"
+            enums[realname] = string.format("ImGui.%s", name)
         end
         ::continue::
     end
 end
 
-local decode_docs_queue
-
-local function decode_docs(name, writeln)
-    if docs_mark[name] then
-        return
-    end
-    docs_mark[name] = true
+local function decode_docs(name, funcs_meta, writeln, write_func)
     local meta = types[name]
-    if not meta then
-        assert(false)
+    assert(meta and meta.kind == "struct")
+    registered_type[name] = name
+    local lines = {}
+    local maxn = 0
+    local function push_line(field, typename)
+        local fname = string.format("%s %s", field.name, typename)
+        maxn = math.max(maxn, #fname)
+        if field.comments and field.comments.attached then
+            lines[#lines+1] = { fname, field.comments.attached:match "^//(.*)$" }
+        else
+            lines[#lines+1] = { fname }
+        end
+    end
+    for _, field in ipairs(meta.fields) do
+        if field.conditionals then
+            goto continue
+        end
+        if registered_type[field.type.declaration] then
+            push_line(field, registered_type[field.type.declaration])
+            goto continue
+        end
+        if reserve_type[field.type.declaration] then
+            push_line(field, reserve_type[field.type.declaration])
+            goto continue
+        end
+        if builtin_type[field.type.declaration] then
+            push_line(field, builtin_type[field.type.declaration])
+            goto continue
+        end
+        if enums[field.type.declaration] then
+            push_line(field, enums[field.type.declaration])
+            goto continue
+        end
+        local field_meta = types[field.type.declaration]
+        if not field_meta then
+            goto continue
+        end
+        if field_meta.kind ~= "struct" then
+            push_line(field, builtin_type[field_meta.type.declaration])
+            goto continue
+        end
+        ::continue::
+    end
+    writeln("---@class %s", name)
+    for _, line in ipairs(lines) do
+        local fname, comment = line[1], line[2]
+        if comment then
+            writeln("---@field %s%s# %s", fname, string.rep(" ", maxn - #fname), comment)
+        else
+            writeln("---@field %s", fname)
+        end
+    end
+    if #funcs_meta == 0 then
+        writeln ""
         return
     end
-    if meta.kind == "struct" then
-        writeln("---@class %s", name)
-        for _, field in ipairs(meta.fields) do
-            local builtin = builtin_type[field.type.declaration]
-            if builtin then
-                writeln("---@field %s %s", field.name, builtin)
-            elseif enums[field.type.declaration] then
-                writeln("---@field %s %s", field.name, enums[field.type.declaration])
-            else
-                writeln("---@field %s %s", field.name, field.type.declaration)
-                docs_queue[#docs_queue+1] = field.type.declaration
-            end
-        end
-        writeln ""
-        decode_docs_queue(writeln)
-    else
-        local builtin = builtin_type[meta.type.declaration]
-        assert(builtin)
-        writeln("---@alias %s %s", name, builtin)
-        writeln ""
+    writeln("local %s = {}", name)
+    for _, func_meta in ipairs(funcs_meta) do
+        write_func(func_meta)
     end
-end
-
-function decode_docs_queue(writeln)
-    while true do
-        local name = table.remove(docs_queue, 1)
-        if not name then
-            break
-        end
-        decode_docs(name, writeln)
-    end
+    writeln ""
 end
 
 local function decode_func_builtin(name, writeln, readonly, attris, builtin, field)
@@ -171,7 +194,7 @@ local function decode_func_attris(name, writeln, readonly, meta)
     return attris
 end
 
-local function decode_func(name, funcs_meta, writeln, write_func)
+local function decode_func(name, funcs_meta, writeln, write_func, readonly)
     local meta = types[name]
     assert(meta and meta.kind == "struct")
     writeln("namespace wrap_%s {", name)
@@ -182,105 +205,36 @@ local function decode_func(name, funcs_meta, writeln, write_func)
     for _, func_meta in ipairs(funcs_meta) do
         funcs[#funcs+1] = write_func(func_meta)
     end
-    local attris = decode_func_attris(name, writeln, false, meta)
+    local attris = decode_func_attris(name, writeln, readonly, meta)
     writeln "static void init(lua_State* L) {"
-    writeln "    static luaL_Reg funcs[] = {"
-    for _, func_name in ipairs(funcs) do
-        writeln("        { %q, %s },", func_name, func_name)
+    local funcs_args = "{}"
+    local setters_args = "{}"
+    local getters_args = "{}"
+    if #funcs > 0 then
+        writeln "    static luaL_Reg funcs[] = {"
+        for _, func_name in ipairs(funcs) do
+            writeln("        { %q, %s },", func_name, func_name)
+        end
+        writeln "    };"
+        funcs_args = "funcs"
     end
-    writeln "        { NULL, NULL },"
-    writeln "    };"
-    writeln "    static luaL_Reg setter[] = {"
-    for _, attri_name in ipairs(attris.setters) do
-        writeln("        { %q, %s::setter },", attri_name, attri_name)
+    if #attris.setters > 0 then
+        writeln "    static luaL_Reg setters[] = {"
+        for _, attri_name in ipairs(attris.setters) do
+            writeln("        { %q, %s::setter },", attri_name, attri_name)
+        end
+        writeln "    };"
+        setters_args = "setters"
     end
-    writeln "        { NULL, NULL },"
-    writeln "    };"
-    writeln "    static luaL_Reg getter[] = {"
-    for _, attri_name in ipairs(attris.getters) do
-        writeln("        { %q, %s::getter },", attri_name, attri_name)
+    if #attris.getters > 0 then
+        writeln "    static luaL_Reg getters[] = {"
+        for _, attri_name in ipairs(attris.getters) do
+            writeln("        { %q, %s::getter },", attri_name, attri_name)
+        end
+        writeln "    };"
+        getters_args = "getters"
     end
-    writeln "        { NULL, NULL },"
-    writeln "    };"
-    writeln "    static lua_CFunction setter_func = +[](lua_State* L) {"
-    writeln "        lua_pushvalue(L, 2);"
-    writeln "        if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {"
-    writeln("            return luaL_error(L, \"%s.%%s is invalid\", lua_tostring(L, 2));", name)
-    writeln "        }"
-    writeln "        lua_pushvalue(L, 3);"
-    writeln "        lua_call(L, 1, 0);"
-    writeln "        return 0;"
-    writeln "    };"
-    writeln "    static lua_CFunction getter_func = +[](lua_State* L) {"
-    writeln "        lua_pushvalue(L, 2);"
-    writeln "        if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {"
-    writeln("            return luaL_error(L, \"%s.%%s is invalid\", lua_tostring(L, 2));", name)
-    writeln "        }"
-    writeln "        lua_call(L, 0, 1);"
-    writeln "        return 1;"
-    writeln "    };"
-    writeln "    lua_newuserdatauv(L, sizeof(uintptr_t), 0);"
-    writeln "    int ud = lua_gettop(L);"
-    writeln "    lua_newtable(L);"
-    writeln "    luaL_newlibtable(L, setter);"
-    writeln "    lua_pushvalue(L, ud);"
-    writeln "    luaL_setfuncs(L, setter, 1);"
-    writeln "    lua_pushcclosure(L, setter_func, 1);"
-    writeln "    lua_setfield(L, -2, \"__newindex\");"
-    writeln "    luaL_newlibtable(L, funcs);"
-    writeln "    lua_pushvalue(L, ud);"
-    writeln "    luaL_setfuncs(L, funcs, 1);"
-    writeln "    lua_newtable(L);"
-    writeln "    luaL_newlibtable(L, getter);"
-    writeln "    lua_pushvalue(L, ud);"
-    writeln "    luaL_setfuncs(L, getter, 1);"
-    writeln "    lua_pushcclosure(L, getter_func, 1);"
-    writeln "    lua_setfield(L, -2, \"__index\");"
-    writeln "    lua_setmetatable(L, -2);"
-    writeln "    lua_setfield(L, -2, \"__index\");"
-    writeln "    lua_setmetatable(L, -2);"
-    writeln "    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);"
-    writeln "}"
-    writeln ""
-    writeln("static void fetch(lua_State* L, %s& v) {", name)
-    writeln "    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);"
-    writeln("    auto** ptr = (%s**)lua_touserdata(L, -1);", name)
-    writeln "    *ptr = &v;"
-    writeln "}"
-    writeln "}"
-end
-
-local function decode_func_readonly(name, writeln)
-    local meta = types[name]
-    assert(meta and meta.kind == "struct")
-    writeln("namespace wrap_%s {", name)
-    writeln "static int tag = 0;"
-    writeln ""
-    local attris = decode_func_attris(name, writeln, true, meta)
-    writeln "static void init(lua_State* L) {"
-    writeln "    static luaL_Reg getter[] = {"
-    for _, attri_name in ipairs(attris.getters) do
-        writeln("        { %q, %s::getter },", attri_name, attri_name)
-    end
-    writeln "        { NULL, NULL },"
-    writeln "    };"
-    writeln "    static lua_CFunction getter_func = +[](lua_State* L) {"
-    writeln "        lua_pushvalue(L, 2);"
-    writeln "        if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {"
-    writeln("            return luaL_error(L, \"%s.%%s is invalid\", lua_tostring(L, 2));", name)
-    writeln "        }"
-    writeln "        lua_call(L, 0, 1);"
-    writeln "        return 1;"
-    writeln "    };"
-    writeln "    lua_newuserdatauv(L, sizeof(uintptr_t), 0);"
-    writeln "    int ud = lua_gettop(L);"
-    writeln "    lua_newtable(L);"
-    writeln "    luaL_newlibtable(L, getter);"
-    writeln "    lua_pushvalue(L, ud);"
-    writeln "    luaL_setfuncs(L, getter, 1);"
-    writeln "    lua_pushcclosure(L, getter_func, 1);"
-    writeln "    lua_setfield(L, -2, \"__index\");"
-    writeln "    lua_setmetatable(L, -2);"
+    writeln("    util::struct_gen(L, %q, %s, %s, %s);", name, funcs_args, setters_args, getters_args)
     writeln "    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);"
     writeln "}"
     writeln ""
@@ -296,5 +250,4 @@ return {
     init = init,
     decode_docs = decode_docs,
     decode_func = decode_func,
-    decode_func_readonly = decode_func_readonly,
 }
