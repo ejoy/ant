@@ -692,16 +692,9 @@ local function build_fx_content(mat, varyings, results)
     }
 end
 
-local function write_varying_def_sc(output, varying_def)
-    local varying_path = output / "varying.def.sc"
-    write_file(varying_path, table.concat(varying_def, "\n"))
-    return varying_path:string()
-end
-
-local function write_di_varying_def_sc(output, di_varying_def)
-    local varying_path = output / "varying.di.def.sc"
-    write_file(varying_path, table.concat(di_varying_def, "\n"))
-    return varying_path:string()
+local function write_varying_def_sc(def_filename, varying_def)
+    write_file(def_filename, table.concat(varying_def, "\n"))
+    return def_filename:string()
 end
 
 local function macros_from_setting(setting, m)
@@ -842,8 +835,8 @@ local function gen_fx(setting, input, output, mat)
     local results
     if varyings then
         results = build_input_var(varyings)
-        fx.varying_path = write_varying_def_sc(output, results.varying_def)
-        fx.di_varying_path = write_di_varying_def_sc(output, results.di_varying_def)
+        fx.varying_path     = write_varying_def_sc(output / "varying.def.sc", results.varying_def)
+        fx.di_varying_path  = write_varying_def_sc(output / "varying.di.def.sc", results.di_varying_def)
     end
 
     if fx.shader_type == "PBR" then

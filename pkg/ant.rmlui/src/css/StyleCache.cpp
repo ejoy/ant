@@ -91,6 +91,7 @@ namespace Rml::Style {
     }
 
     bool Cache::SetProperty(const TableRef& s, PropertyId id, const Property& prop) {
+        assert(!!prop);
         int attrib_id = prop.RawAttribId();
         return !!style_modify(c, {s.idx}, 1, &attrib_id, 0, nullptr);
     }
@@ -104,6 +105,7 @@ namespace Rml::Style {
         std::vector<int> attrib_id(vec.size());
         size_t i = 0;
         for (auto const& v : vec) {
+            assert(!!v);
             attrib_id[i] = v.RawAttribId();
             i++;
         }
@@ -215,22 +217,26 @@ namespace Rml::Style {
     }
         
     PropertyId Cache::GetPropertyId(Property prop) {
+        assert(!!prop);
         style_attrib v;
         style_attrib_value(c, prop.RawAttribId(), &v);
         return (PropertyId)v.key;
     }
 
     std::span<const std::byte> Cache::GetPropertyData(Property prop) {
+        assert(!!prop);
         style_attrib v;
         style_attrib_value(c, prop.RawAttribId(), &v);
         return { (const std::byte*)v.data, v.sz };
     }
 
     void Cache::PropertyAddRef(Property prop) {
+        assert(!!prop);
         style_attrib_addref(c, prop.RawAttribId());
     }
 
     void Cache::PropertyRelease(Property prop) {
+        assert(!!prop);
         style_attrib_release(c, prop.RawAttribId());
     }
 
