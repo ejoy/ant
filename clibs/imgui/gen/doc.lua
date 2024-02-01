@@ -450,7 +450,9 @@ local function write_funcs()
     local funcs = {}
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
-            funcs[#funcs+1] = write_func(func_meta)
+            if not func_meta.original_class then
+                funcs[#funcs+1] = write_func(func_meta)
+            end
         end
     end
     return funcs

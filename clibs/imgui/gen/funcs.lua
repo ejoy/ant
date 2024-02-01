@@ -109,7 +109,7 @@ write_arg["ImTextureID"] = function(type_meta, status)
 end
 
 write_ret["ImGuiViewport*"] = function()
-    writeln("    PushImGuiViewport(L, *_retval);")
+    writeln("    wrap_ImGuiViewport::fetch(L, *_retval);")
     return 1
 end
 
@@ -335,7 +335,7 @@ write_ret["const ImVec4*"] = function()
     return 4
 end
 
-for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImGuiID", "ImGuiKeyChord"} do
+for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar16", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, status)
         status.idx = status.idx + 1
         if type_meta.default_value then
@@ -428,25 +428,26 @@ local function write_flags_and_enums()
     return flags, enums
 end
 
-local function write_type(name)
-    writeln("static void Push%s(lua_State* L, const %s& v) {", name, name)
-    types.decode_func("ImGuiViewport", writeln, "v")
-    writeln "}"
-end
-
-local function write_types()
-    write_type "ImGuiViewport"
-end
-
 local function write_func(func_meta)
-    local realname = func_meta.name:match "^ImGui_([%w]+)$"
-    writeln("static int %s(lua_State* L) {", realname)
+    local realname
+    local function_string
     local status = {
         i = 1,
         args = func_meta.arguments,
         idx = 0,
         arguments = {},
     }
+    if func_meta.original_class then
+        realname = func_meta.name:match("^"..func_meta.original_class.."_([%w]+)$")
+        status.i = 2
+        writeln("static int %s(lua_State* L) {", realname)
+        writeln("    auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", func_meta.original_class)
+        function_string = ("OBJ.%s"):format(func_meta.original_fully_qualified_name);
+    else
+        realname = func_meta.name:match "^ImGui_([%w]+)$"
+        writeln("static int %s(lua_State* L) {", realname)
+        function_string = func_meta.original_fully_qualified_name
+    end
     while status.i <= #status.args do
         local type_meta = status.args[status.i]
         local wfunc = write_arg[type_meta.type.declaration]
@@ -457,14 +458,14 @@ local function write_func(func_meta)
         status.i = status.i + 1
     end
     if func_meta.return_type.declaration == "void" then
-        writeln("    %s(%s);", func_meta.original_fully_qualified_name, table.concat(status.arguments, ", "))
+        writeln("    %s(%s);", function_string, table.concat(status.arguments, ", "))
         writeln "    return 0;"
     else
         local rfunc = write_ret[func_meta.return_type.declaration]
         if not rfunc then
             error(string.format("`%s` undefined write ret func `%s`", func_meta.name, func_meta.return_type.declaration))
         end
-        writeln("    auto _retval = %s(%s);", func_meta.original_fully_qualified_name, table.concat(status.arguments, ", "))
+        writeln("    auto _retval = %s(%s);", function_string, table.concat(status.arguments, ", "))
         local nret = 0
         nret = nret + rfunc(func_meta, func_meta.return_type)
         for _, type_meta in ipairs(func_meta.arguments) do
@@ -484,12 +485,35 @@ end
 
 local function write_funcs()
     local funcs = {}
+    local struct_funcs = {}
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
-            funcs[#funcs+1] = write_func(func_meta)
+            if func_meta.original_class then
+                local v = struct_funcs[func_meta.original_class]
+                if v then
+                    v[#v+1] = func_meta
+                else
+                    struct_funcs[func_meta.original_class] = { func_meta }
+                end
+            else
+                funcs[#funcs+1] = write_func(func_meta)
+            end
         end
     end
-    return funcs
+    return funcs, struct_funcs
+end
+
+local function write_struct_define(name)
+    writeln("namespace wrap_%s { static void fetch(lua_State* L, %s& v); }", name, name)
+end
+
+local function write_structs(struct_funcs)
+    types.decode_func_readonly("ImGuiViewport", writeln)
+    types.decode_func("ImGuiIO", struct_funcs["ImGuiIO"], writeln, write_func)
+    return {
+        "ImGuiViewport",
+        "ImGuiIO",
+    }
 end
 
 writeln "//"
@@ -502,8 +526,10 @@ writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
 local flags, enums = write_flags_and_enums()
-write_types()
-local funcs = write_funcs()
+write_struct_define "ImGuiViewport"
+write_struct_define "ImGuiIO"
+local funcs, struct_funcs = write_funcs()
+local structs = write_structs(struct_funcs)
 writeln "void init(lua_State* L) {"
 writeln "    static luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do
@@ -544,6 +570,9 @@ writeln "    );"
 writeln "    luaL_setfuncs(L, funcs, 0);"
 writeln "    util::set_table(L, flags);"
 writeln "    util::set_table(L, enums);"
+for _, struct in ipairs(structs) do
+    writeln("    wrap_%s::init(L);", struct)
+end
 writeln "}"
 writeln "}"
 writeln ""

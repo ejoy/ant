@@ -179,9 +179,6 @@ local function allow(func_meta)
     if func_meta.is_manual_helper then
         return
     end
-    if func_meta.original_class then
-        return
-    end
     if not conditionals(func_meta) then
         return
     end
@@ -190,6 +187,11 @@ local function allow(func_meta)
     end
     if TodoList[func_meta.name] then
         return
+    end
+    if func_meta.original_class then
+        if func_meta.original_class ~= "ImGuiIO" then
+            return
+        end
     end
     return true
 end

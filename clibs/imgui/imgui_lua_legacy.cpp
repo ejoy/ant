@@ -336,27 +336,8 @@ static int GetterWantCaptureKeyboard(lua_State* L) {
     return 1;
 }
 
-static int setter_func(lua_State* L) {
-    lua_pushvalue(L, 2);
-    if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
-        return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
-    }
-    lua_pushvalue(L, 3);
-    lua_call(L, 1, 0);
-    return 0;
-}
-
-static int getter_func(lua_State* L) {
-    lua_pushvalue(L, 2);
-    if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
-        return luaL_error(L, "io.%s is invalid", lua_tostring(L, 2));
-    }
-    lua_call(L, 0, 1);
-    return 1;
-}
-
 static void init(lua_State* L) {
-    luaL_Reg funcs[] = {
+    static luaL_Reg funcs[] = {
         { "AddMouseButtonEvent", AddMouseButtonEvent },
         { "AddMouseWheelEvent", AddMouseWheelEvent },
         { "AddKeyEvent", AddKeyEvent },
@@ -365,17 +346,33 @@ static void init(lua_State* L) {
         { "AddFocusEvent", AddFocusEvent },
         { NULL, NULL },
     };
-    luaL_Reg setter[] = {
+    static luaL_Reg setter[] = {
         { "ConfigFlags", SetterConfigFlags },
         { NULL, NULL },
     };
-    luaL_Reg getter[] = {
+    static luaL_Reg getter[] = {
         { "WantCaptureMouse", GetterWantCaptureMouse },
         { "WantCaptureKeyboard", GetterWantCaptureKeyboard },
         { NULL, NULL },
     };
-
-    lua_newuserdatauv(L, sizeof(ImGuiIO*), 0);
+    static lua_CFunction setter_func = +[](lua_State* L) {
+        lua_pushvalue(L, 2);
+        if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+            return luaL_error(L, "ImGuiIO.%s is invalid", lua_tostring(L, 2));
+        }
+        lua_pushvalue(L, 3);
+        lua_call(L, 1, 0);
+        return 0;
+    };
+    static lua_CFunction getter_func = +[](lua_State* L) {
+        lua_pushvalue(L, 2);
+        if (LUA_TNIL == lua_gettable(L, lua_upvalueindex(1))) {
+            return luaL_error(L, "ImGuiIO.%s is invalid", lua_tostring(L, 2));
+        }
+        lua_call(L, 0, 1);
+        return 1;
+    };
+    lua_newuserdatauv(L, sizeof(uintptr_t), 0);
     int ud = lua_gettop(L);
     lua_newtable(L);
     luaL_newlibtable(L, setter);
@@ -400,7 +397,7 @@ static void init(lua_State* L) {
 
 static void fetch(lua_State* L, ImGuiIO& v) {
     lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);
-    ImGuiIO** ptr = (ImGuiIO**)lua_touserdata(L, -1);
+    auto** ptr = (ImGuiIO**)lua_touserdata(L, -1);
     *ptr = &v;
 }
 
