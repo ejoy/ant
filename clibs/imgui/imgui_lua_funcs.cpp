@@ -725,6 +725,7 @@ namespace wrap_ImGuiViewport { static void fetch(lua_State* L, ImGuiViewport& v)
 namespace wrap_ImGuiIO { static void fetch(lua_State* L, ImGuiIO& v); }
 static int CreateContext(lua_State* L) {
     auto&& _retval = ImGui::CreateContext();
+   (void)_retval;
     return 0;
 }
 

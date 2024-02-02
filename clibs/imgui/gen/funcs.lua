@@ -123,6 +123,7 @@ end
 
 write_ret["ImGuiContext*"] = function()
     --NOTICE: Ignore ImGuiContext for now.
+    writeln("   (void)_retval;")
     return 0
 end
 
