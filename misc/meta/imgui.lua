@@ -4088,3 +4088,4 @@ function ImGui.FindViewportByID(id) end
 ---@return ImGui.Key
 function ImGui.GetKeyIndex(key) end
 
+return ImGui

@@ -4,7 +4,7 @@ local w = world.w
 
 local icamera = ecs.require "ant.camera|camera"
 local math3d = require "math3d"
---local widget = ecs.require "widget"
+local widget = ecs.require "widget"
 
 local m = ecs.system "main_system"
 
@@ -47,5 +47,5 @@ function m:init_world()
 end
 
 function m:data_changed()
-    --widget.AnimationView(entities)
+    widget.AnimationView(entities)
 end

@@ -26,9 +26,15 @@ function iani.play(eid, anim_state)
 	end
 	local name = anim_state.name
 	ianimation.set_ratio(e, name, 0)
-	playback.set_play(e, name, true, anim_state.forwards)
+	playback.set_play(e, name, true)
 	playback.set_speed(e, name, anim_state.speed or 1.0)
-	playback.set_loop(e, name, anim_state.loop)
+	if anim_state.forwards then
+		playback.completion_stop(e, name)
+	elseif anim_state.loop then
+		playback.completion_loop(e, name)
+	else
+		playback.completion_hide(e, name)
+	end
 end
 
 function iani.set_time(eid, time, anim_name)
@@ -62,7 +68,11 @@ function iani.set_loop(eid, loop, anim_name)
 	local e <close> = world:entity(eid, "animation:in")
 	local name = anim_name or get_first_playing_animation(e)
 	if name then
-		playback.set_loop(e, name, loop)
+		if loop then
+			playback.completion_loop(e, name)
+		else
+			playback.completion_hide(e, name)
+		end
 	end
 end
 

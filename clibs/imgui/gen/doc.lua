@@ -503,3 +503,4 @@ write_structs(struct_funcs)
 for _, func_meta in ipairs(funcs) do
     write_func(func_meta)
 end
+writeln "return ImGui"

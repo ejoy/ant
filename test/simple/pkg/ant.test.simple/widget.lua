@@ -47,15 +47,18 @@ function m.AnimationView(entities)
                             iplayback.set_play(e, name, v[1])
                         end
                     end
-                    do
-                        local v = { status.loop }
-                        if ImGui.Checkbox("loop", v) then
-                            iplayback.set_loop(e, name, v[1])
-                        end
+                    if ImGui.RadioButton("hide", iplayback.get_completion(e, name) == "hide") then
+                        iplayback.completion_hide(e, name)
+                    end
+                    if ImGui.RadioButton("loop", iplayback.get_completion(e, name) == "loop") then
+                        iplayback.completion_loop(e, name)
+                    end
+                    if ImGui.RadioButton("stop", iplayback.get_completion(e, name) == "stop") then
+                        iplayback.completion_stop(e, name)
                     end
                     do
                         local value = { status.speed and math.floor(status.speed*100) or 100 }
-                        if ImGui.DragIntEx("speed", value, 5.0, -500, 500, "%d%%") then
+                        if ImGui.DragIntEx("speed", value, 5.0, 0, 500, "%d%%") then
                             iplayback.set_speed(e, name, value[1] / 100)
                         end
                     end
