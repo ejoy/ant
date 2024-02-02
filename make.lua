@@ -1,6 +1,7 @@
 local lm = require "luamake"
 
 lm:required_version "1.5"
+--lm.luaversion = "lua55"
 
 local plat = (function ()
     if lm.os == "windows" then

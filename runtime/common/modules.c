@@ -92,10 +92,12 @@ void ant_loadmodules(lua_State* L) {
         { "math3d.adapter.test", luaopen_math3d_adapter_test},
 #endif
         { "protocol", luaopen_protocol },
+#if LUA_VERSION_NUM < 505
         { "luadebug", luaopen_luadebug },
         { "luadebug.hookmgr", luaopen_luadebug_hookmgr },
         { "luadebug.stdio", luaopen_luadebug_stdio },
         { "luadebug.visitor", luaopen_luadebug_visitor },
+#endif
         { "rmlui", luaopen_rmlui },
         { "noise", luaopen_noise },
         { "textureman.client", luaopen_textureman_client },

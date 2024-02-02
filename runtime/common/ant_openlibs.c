@@ -21,7 +21,11 @@ static const luaL_Reg loadedlibs[] = {
     {NULL, NULL}
 };
 
+#if LUA_VERSION_NUM >= 505
+LUALIB_API void luaL_openselectedlibs (lua_State *L, int mask) {
+#else
 LUALIB_API void luaL_openlibs (lua_State *L) {
+#endif
     const luaL_Reg *lib;
     for (lib = loadedlibs; lib->func; lib++) {
         luaL_requiref(L, lib->name, lib->func, 1);

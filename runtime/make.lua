@@ -5,11 +5,13 @@ local platform = require "bee.platform"
 local RuntimeBacklist <const> = {
     filedialog = true,
     window = platform.os == "android",
+    debugger = lm.luaversion == "lua55",
 }
 
 local EditorBacklist <const> = {
     firmware = true,
     window = platform.os == "android",
+    debugger = lm.luaversion == "lua55",
 }
 
 local RuntimeAlias <const> = {
