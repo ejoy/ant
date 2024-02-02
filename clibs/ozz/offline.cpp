@@ -38,9 +38,9 @@ namespace ozzlua::RawAnimation {
 		auto const& translation = *(ozz::math::Float3*)lua_touserdata(L, 6);
 
 		auto& track = raw.tracks[joint_index-1];
-		track.scales.emplace_back(time, scale);
-		track.rotations.emplace_back(time, rotation);
-		track.translations.emplace_back(time, translation);
+		track.scales.emplace_back(ozz::animation::offline::RawAnimation::ScaleKey { time, scale });
+		track.rotations.emplace_back(ozz::animation::offline::RawAnimation::RotationKey { time, rotation });
+		track.translations.emplace_back(ozz::animation::offline::RawAnimation::TranslationKey { time, translation });
 		return 0;
 	}
 
