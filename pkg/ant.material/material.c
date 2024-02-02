@@ -569,7 +569,7 @@ linstance_set_attrib(lua_State *L) {
 #define BGFX(api) w->bgfx->api
 
 void
-apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_world *w) {
+apply_material_instance(lua_State *L, const struct material_instance *mi, struct ecs_world *w) {
 	BGFX(encoder_set_state)(w->holder->encoder, 
 		(mi->patch_state.state == 0 ? mi->m->state.state : mi->patch_state.state), 
 		(mi->patch_state.rgba == 0 ? mi->m->state.rgba : mi->patch_state.rgba));
@@ -790,7 +790,7 @@ luaopen_material_core(lua_State *L) {
 }
 
 bgfx_program_handle_t
-material_prog(lua_State *L, struct material_instance *mi){
+material_prog(lua_State *L, const struct material_instance *mi){
 	(void)L;
 	return program_get(mi->m->prog);
 }
