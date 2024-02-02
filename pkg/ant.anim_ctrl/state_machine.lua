@@ -26,12 +26,8 @@ function iani.play(eid, anim_state)
 	end
 	local name = anim_state.name
 	ianimation.set_ratio(e, name, 0)
-	playback.set_play(e, name, true)
-	if anim_state.forwards then
-		playback.set_speed(e, name, -1 * (anim_state.speed or 1.0))
-	else
-		playback.set_speed(e, name, anim_state.speed or 1.0)
-	end
+	playback.set_play(e, name, true, anim_state.forwards)
+	playback.set_speed(e, name, anim_state.speed or 1.0)
 	playback.set_loop(e, name, anim_state.loop)
 end
 

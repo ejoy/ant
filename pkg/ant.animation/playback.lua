@@ -37,8 +37,7 @@ function m:animation_playback()
                             ratio = ratio - math.floor(ratio)
                         else
                             status.play = nil
-                            status.ratio = 0
-                            status.weight = 0
+                            status.ratio = status.forwards and 1 or 0
                             e.animation_changed = true
                             goto continue
                         end
@@ -61,11 +60,12 @@ end
 
 local api = {}
 
-function api.set_play(e, name, v)
+function api.set_play(e, name, v, forwards)
     w:extend(e, "animation:in animation_playback?out")
     local status = e.animation.status[name]
     if status.play ~= v then
         status.play = v
+        status.forwards = forwards
         if status.play then
             if status.weight == 0 then
                 status.weight = 1
