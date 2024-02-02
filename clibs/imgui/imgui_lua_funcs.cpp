@@ -724,13 +724,19 @@ static util::TableInteger Mod[] = {
 namespace wrap_ImGuiViewport { static void fetch(lua_State* L, ImGuiViewport& v); }
 namespace wrap_ImGuiIO { static void fetch(lua_State* L, ImGuiIO& v); }
 static int CreateContext(lua_State* L) {
-    auto _retval = ImGui::CreateContext();
+    auto&& _retval = ImGui::CreateContext();
     return 0;
 }
 
 static int DestroyContext(lua_State* L) {
     ImGui::DestroyContext();
     return 0;
+}
+
+static int GetIO(lua_State* L) {
+    auto&& _retval = ImGui::GetIO();
+    wrap_ImGuiIO::fetch(L, _retval);
+    return 1;
 }
 
 static int NewFrame(lua_State* L) {
@@ -749,7 +755,7 @@ static int Render(lua_State* L) {
 }
 
 static int GetVersion(lua_State* L) {
-    auto _retval = ImGui::GetVersion();
+    auto&& _retval = ImGui::GetVersion();
     lua_pushstring(L, _retval);
     return 1;
 }
@@ -759,7 +765,7 @@ static int Begin(lua_State* L) {
     bool has_p_open = !lua_isnil(L, 2);
     bool p_open = true;
     auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
-    auto _retval = ImGui::Begin(name, (has_p_open? &p_open: NULL), flags);
+    auto&& _retval = ImGui::Begin(name, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
     lua_pushboolean(L, has_p_open || p_open);
     return 2;
@@ -778,7 +784,7 @@ static int BeginChild(lua_State* L) {
     };
     auto child_flags = (ImGuiChildFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiChildFlags_None));
     auto window_flags = (ImGuiWindowFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiWindowFlags_None));
-    auto _retval = ImGui::BeginChild(str_id, size, child_flags, window_flags);
+    auto&& _retval = ImGui::BeginChild(str_id, size, child_flags, window_flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -791,7 +797,7 @@ static int BeginChildID(lua_State* L) {
     };
     auto child_flags = (ImGuiChildFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiChildFlags_None));
     auto window_flags = (ImGuiWindowFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiWindowFlags_None));
-    auto _retval = ImGui::BeginChild(id, size, child_flags, window_flags);
+    auto&& _retval = ImGui::BeginChild(id, size, child_flags, window_flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -802,65 +808,65 @@ static int EndChild(lua_State* L) {
 }
 
 static int IsWindowAppearing(lua_State* L) {
-    auto _retval = ImGui::IsWindowAppearing();
+    auto&& _retval = ImGui::IsWindowAppearing();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsWindowCollapsed(lua_State* L) {
-    auto _retval = ImGui::IsWindowCollapsed();
+    auto&& _retval = ImGui::IsWindowCollapsed();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsWindowFocused(lua_State* L) {
     auto flags = (ImGuiFocusedFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiFocusedFlags_None));
-    auto _retval = ImGui::IsWindowFocused(flags);
+    auto&& _retval = ImGui::IsWindowFocused(flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsWindowHovered(lua_State* L) {
     auto flags = (ImGuiHoveredFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiHoveredFlags_None));
-    auto _retval = ImGui::IsWindowHovered(flags);
+    auto&& _retval = ImGui::IsWindowHovered(flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int GetWindowDpiScale(lua_State* L) {
-    auto _retval = ImGui::GetWindowDpiScale();
+    auto&& _retval = ImGui::GetWindowDpiScale();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetWindowPos(lua_State* L) {
-    auto _retval = ImGui::GetWindowPos();
+    auto&& _retval = ImGui::GetWindowPos();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetWindowSize(lua_State* L) {
-    auto _retval = ImGui::GetWindowSize();
+    auto&& _retval = ImGui::GetWindowSize();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetWindowWidth(lua_State* L) {
-    auto _retval = ImGui::GetWindowWidth();
+    auto&& _retval = ImGui::GetWindowWidth();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetWindowHeight(lua_State* L) {
-    auto _retval = ImGui::GetWindowHeight();
+    auto&& _retval = ImGui::GetWindowHeight();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetWindowViewport(lua_State* L) {
-    auto _retval = ImGui::GetWindowViewport();
+    auto&& _retval = ImGui::GetWindowViewport();
     wrap_ImGuiViewport::fetch(L, *_retval);
     return 1;
 }
@@ -1016,41 +1022,41 @@ static int SetWindowFocusStr(lua_State* L) {
 }
 
 static int GetContentRegionAvail(lua_State* L) {
-    auto _retval = ImGui::GetContentRegionAvail();
+    auto&& _retval = ImGui::GetContentRegionAvail();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetContentRegionMax(lua_State* L) {
-    auto _retval = ImGui::GetContentRegionMax();
+    auto&& _retval = ImGui::GetContentRegionMax();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetWindowContentRegionMin(lua_State* L) {
-    auto _retval = ImGui::GetWindowContentRegionMin();
+    auto&& _retval = ImGui::GetWindowContentRegionMin();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetWindowContentRegionMax(lua_State* L) {
-    auto _retval = ImGui::GetWindowContentRegionMax();
+    auto&& _retval = ImGui::GetWindowContentRegionMax();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetScrollX(lua_State* L) {
-    auto _retval = ImGui::GetScrollX();
+    auto&& _retval = ImGui::GetScrollX();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetScrollY(lua_State* L) {
-    auto _retval = ImGui::GetScrollY();
+    auto&& _retval = ImGui::GetScrollY();
     lua_pushnumber(L, _retval);
     return 1;
 }
@@ -1068,13 +1074,13 @@ static int SetScrollY(lua_State* L) {
 }
 
 static int GetScrollMaxX(lua_State* L) {
-    auto _retval = ImGui::GetScrollMaxX();
+    auto&& _retval = ImGui::GetScrollMaxX();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetScrollMaxY(lua_State* L) {
-    auto _retval = ImGui::GetScrollMaxY();
+    auto&& _retval = ImGui::GetScrollMaxY();
     lua_pushnumber(L, _retval);
     return 1;
 }
@@ -1203,7 +1209,7 @@ static int SetNextItemWidth(lua_State* L) {
 }
 
 static int CalcItemWidth(lua_State* L) {
-    auto _retval = ImGui::CalcItemWidth();
+    auto&& _retval = ImGui::CalcItemWidth();
     lua_pushnumber(L, _retval);
     return 1;
 }
@@ -1220,13 +1226,13 @@ static int PopTextWrapPos(lua_State* L) {
 }
 
 static int GetFontSize(lua_State* L) {
-    auto _retval = ImGui::GetFontSize();
+    auto&& _retval = ImGui::GetFontSize();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetFontTexUvWhitePixel(lua_State* L) {
-    auto _retval = ImGui::GetFontTexUvWhitePixel();
+    auto&& _retval = ImGui::GetFontTexUvWhitePixel();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -1234,7 +1240,7 @@ static int GetFontTexUvWhitePixel(lua_State* L) {
 
 static int GetColorU32(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetColorU32(idx);
+    auto&& _retval = ImGui::GetColorU32(idx);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -1242,7 +1248,7 @@ static int GetColorU32(lua_State* L) {
 static int GetColorU32Ex(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
     auto alpha_mul = (float)luaL_optnumber(L, 2, 1.0f);
-    auto _retval = ImGui::GetColorU32(idx, alpha_mul);
+    auto&& _retval = ImGui::GetColorU32(idx, alpha_mul);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -1254,21 +1260,21 @@ static int GetColorU32ImVec4(lua_State* L) {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
     };
-    auto _retval = ImGui::GetColorU32(col);
+    auto&& _retval = ImGui::GetColorU32(col);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int GetColorU32ImU32(lua_State* L) {
     auto col = (ImU32)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetColorU32(col);
+    auto&& _retval = ImGui::GetColorU32(col);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int GetStyleColorVec4(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetStyleColorVec4(idx);
+    auto&& _retval = ImGui::GetStyleColorVec4(idx);
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     lua_pushnumber(L, _retval.z);
@@ -1277,7 +1283,7 @@ static int GetStyleColorVec4(lua_State* L) {
 }
 
 static int GetCursorScreenPos(lua_State* L) {
-    auto _retval = ImGui::GetCursorScreenPos();
+    auto&& _retval = ImGui::GetCursorScreenPos();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -1293,20 +1299,20 @@ static int SetCursorScreenPos(lua_State* L) {
 }
 
 static int GetCursorPos(lua_State* L) {
-    auto _retval = ImGui::GetCursorPos();
+    auto&& _retval = ImGui::GetCursorPos();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetCursorPosX(lua_State* L) {
-    auto _retval = ImGui::GetCursorPosX();
+    auto&& _retval = ImGui::GetCursorPosX();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetCursorPosY(lua_State* L) {
-    auto _retval = ImGui::GetCursorPosY();
+    auto&& _retval = ImGui::GetCursorPosY();
     lua_pushnumber(L, _retval);
     return 1;
 }
@@ -1333,7 +1339,7 @@ static int SetCursorPosY(lua_State* L) {
 }
 
 static int GetCursorStartPos(lua_State* L) {
-    auto _retval = ImGui::GetCursorStartPos();
+    auto&& _retval = ImGui::GetCursorStartPos();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -1413,25 +1419,25 @@ static int AlignTextToFramePadding(lua_State* L) {
 }
 
 static int GetTextLineHeight(lua_State* L) {
-    auto _retval = ImGui::GetTextLineHeight();
+    auto&& _retval = ImGui::GetTextLineHeight();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetTextLineHeightWithSpacing(lua_State* L) {
-    auto _retval = ImGui::GetTextLineHeightWithSpacing();
+    auto&& _retval = ImGui::GetTextLineHeightWithSpacing();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetFrameHeight(lua_State* L) {
-    auto _retval = ImGui::GetFrameHeight();
+    auto&& _retval = ImGui::GetFrameHeight();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetFrameHeightWithSpacing(lua_State* L) {
-    auto _retval = ImGui::GetFrameHeightWithSpacing();
+    auto&& _retval = ImGui::GetFrameHeightWithSpacing();
     lua_pushnumber(L, _retval);
     return 1;
 }
@@ -1468,7 +1474,7 @@ static int PopID(lua_State* L) {
 
 static int GetID(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
-    auto _retval = ImGui::GetID(str_id);
+    auto&& _retval = ImGui::GetID(str_id);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -1476,14 +1482,14 @@ static int GetID(lua_State* L) {
 static int GetIDStr(lua_State* L) {
     auto str_id_begin = luaL_checkstring(L, 1);
     auto str_id_end = luaL_checkstring(L, 2);
-    auto _retval = ImGui::GetID(str_id_begin, str_id_end);
+    auto&& _retval = ImGui::GetID(str_id_begin, str_id_end);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int GetIDPtr(lua_State* L) {
     auto ptr_id = lua_touserdata(L, 1);
-    auto _retval = ImGui::GetID(ptr_id);
+    auto&& _retval = ImGui::GetID(ptr_id);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -1539,7 +1545,7 @@ static int SeparatorText(lua_State* L) {
 
 static int Button(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _retval = ImGui::Button(label);
+    auto&& _retval = ImGui::Button(label);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1550,14 +1556,14 @@ static int ButtonEx(lua_State* L) {
         (float)luaL_optnumber(L, 2, 0),
         (float)luaL_optnumber(L, 3, 0),
     };
-    auto _retval = ImGui::Button(label, size);
+    auto&& _retval = ImGui::Button(label, size);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int SmallButton(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _retval = ImGui::SmallButton(label);
+    auto&& _retval = ImGui::SmallButton(label);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1569,7 +1575,7 @@ static int InvisibleButton(lua_State* L) {
         (float)luaL_checknumber(L, 3),
     };
     auto flags = (ImGuiButtonFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiButtonFlags_None));
-    auto _retval = ImGui::InvisibleButton(str_id, size, flags);
+    auto&& _retval = ImGui::InvisibleButton(str_id, size, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1577,7 +1583,7 @@ static int InvisibleButton(lua_State* L) {
 static int ArrowButton(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto dir = (ImGuiDir)luaL_checkinteger(L, 2);
-    auto _retval = ImGui::ArrowButton(str_id, dir);
+    auto&& _retval = ImGui::ArrowButton(str_id, dir);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1589,7 +1595,7 @@ static int Checkbox(lua_State* L) {
     bool v[] = {
         util::field_toboolean(L, 2, 1),
     };
-    auto _retval = ImGui::Checkbox(label, v);
+    auto&& _retval = ImGui::Checkbox(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushboolean(L, v[0]);
@@ -1606,7 +1612,7 @@ static int CheckboxFlagsIntPtr(lua_State* L) {
         (int)util::field_tointeger(L, 2, 1),
     };
     auto flags_value = (int)luaL_checkinteger(L, 3);
-    auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
+    auto&& _retval = ImGui::CheckboxFlags(label, flags, flags_value);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, flags[0]);
@@ -1623,7 +1629,7 @@ static int CheckboxFlagsUintPtr(lua_State* L) {
         (unsigned int)util::field_tointeger(L, 2, 1),
     };
     auto flags_value = (unsigned int)luaL_checkinteger(L, 3);
-    auto _retval = ImGui::CheckboxFlags(label, flags, flags_value);
+    auto&& _retval = ImGui::CheckboxFlags(label, flags, flags_value);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, flags[0]);
@@ -1635,7 +1641,7 @@ static int CheckboxFlagsUintPtr(lua_State* L) {
 static int RadioButton(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto active = !!lua_toboolean(L, 2);
-    auto _retval = ImGui::RadioButton(label, active);
+    auto&& _retval = ImGui::RadioButton(label, active);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1648,7 +1654,7 @@ static int RadioButtonIntPtr(lua_State* L) {
         (int)util::field_tointeger(L, 2, 1),
     };
     auto v_button = (int)luaL_checkinteger(L, 3);
-    auto _retval = ImGui::RadioButton(label, v, v_button);
+    auto&& _retval = ImGui::RadioButton(label, v, v_button);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -1720,7 +1726,7 @@ static int ImageButton(lua_State* L) {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
     };
-    auto _retval = ImGui::ImageButton(str_id, user_texture_id, image_size);
+    auto&& _retval = ImGui::ImageButton(str_id, user_texture_id, image_size);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1752,7 +1758,7 @@ static int ImageButtonEx(lua_State* L) {
         (float)luaL_optnumber(L, 15, 1),
         (float)luaL_optnumber(L, 16, 1),
     };
-    auto _retval = ImGui::ImageButton(str_id, user_texture_id, image_size, uv0, uv1, bg_col, tint_col);
+    auto&& _retval = ImGui::ImageButton(str_id, user_texture_id, image_size, uv0, uv1, bg_col, tint_col);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1761,7 +1767,7 @@ static int BeginCombo(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto preview_value = luaL_checkstring(L, 2);
     auto flags = (ImGuiComboFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiComboFlags_None));
-    auto _retval = ImGui::BeginCombo(label, preview_value, flags);
+    auto&& _retval = ImGui::BeginCombo(label, preview_value, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -1779,7 +1785,7 @@ static int Combo(lua_State* L) {
         (int)util::field_tointeger(L, 2, 1),
     };
     auto items_separated_by_zeros = luaL_checkstring(L, 3);
-    auto _retval = ImGui::Combo(label, current_item, items_separated_by_zeros);
+    auto&& _retval = ImGui::Combo(label, current_item, items_separated_by_zeros);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, current_item[0]);
@@ -1797,7 +1803,7 @@ static int ComboEx(lua_State* L) {
     };
     auto items_separated_by_zeros = luaL_checkstring(L, 3);
     auto popup_max_height_in_items = (int)luaL_optinteger(L, 4, -1);
-    auto _retval = ImGui::Combo(label, current_item, items_separated_by_zeros, popup_max_height_in_items);
+    auto&& _retval = ImGui::Combo(label, current_item, items_separated_by_zeros, popup_max_height_in_items);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, current_item[0]);
@@ -1813,7 +1819,7 @@ static int DragFloat(lua_State* L) {
     float v[] = {
         (float)util::field_tonumber(L, 2, 1),
     };
-    auto _retval = ImGui::DragFloat(label, v);
+    auto&& _retval = ImGui::DragFloat(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1834,7 +1840,7 @@ static int DragFloatEx(lua_State* L) {
     auto v_max = (float)luaL_optnumber(L, 5, 0.0f);
     auto format = luaL_optstring(L, 6, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragFloat(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragFloat(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1851,7 +1857,7 @@ static int DragFloat2(lua_State* L) {
         (float)util::field_tonumber(L, 2, 1),
         (float)util::field_tonumber(L, 2, 2),
     };
-    auto _retval = ImGui::DragFloat2(label, v);
+    auto&& _retval = ImGui::DragFloat2(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1875,7 +1881,7 @@ static int DragFloat2Ex(lua_State* L) {
     auto v_max = (float)luaL_optnumber(L, 5, 0.0f);
     auto format = luaL_optstring(L, 6, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragFloat2(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragFloat2(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1895,7 +1901,7 @@ static int DragFloat3(lua_State* L) {
         (float)util::field_tonumber(L, 2, 2),
         (float)util::field_tonumber(L, 2, 3),
     };
-    auto _retval = ImGui::DragFloat3(label, v);
+    auto&& _retval = ImGui::DragFloat3(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1922,7 +1928,7 @@ static int DragFloat3Ex(lua_State* L) {
     auto v_max = (float)luaL_optnumber(L, 5, 0.0f);
     auto format = luaL_optstring(L, 6, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragFloat3(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragFloat3(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1945,7 +1951,7 @@ static int DragFloat4(lua_State* L) {
         (float)util::field_tonumber(L, 2, 3),
         (float)util::field_tonumber(L, 2, 4),
     };
-    auto _retval = ImGui::DragFloat4(label, v);
+    auto&& _retval = ImGui::DragFloat4(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -1975,7 +1981,7 @@ static int DragFloat4Ex(lua_State* L) {
     auto v_max = (float)luaL_optnumber(L, 5, 0.0f);
     auto format = luaL_optstring(L, 6, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragFloat4(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragFloat4(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2002,7 +2008,7 @@ static int DragFloatRange2(lua_State* L) {
     float v_current_max[] = {
         (float)util::field_tonumber(L, 3, 1),
     };
-    auto _retval = ImGui::DragFloatRange2(label, v_current_min, v_current_max);
+    auto&& _retval = ImGui::DragFloatRange2(label, v_current_min, v_current_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v_current_min[0]);
@@ -2033,7 +2039,7 @@ static int DragFloatRange2Ex(lua_State* L) {
     auto format = luaL_optstring(L, 7, "%.3f");
     auto format_max = luaL_optstring(L, 8, NULL);
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 9, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags);
+    auto&& _retval = ImGui::DragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v_current_min[0]);
@@ -2053,7 +2059,7 @@ static int DragInt(lua_State* L) {
     int v[] = {
         (int)util::field_tointeger(L, 2, 1),
     };
-    auto _retval = ImGui::DragInt(label, v);
+    auto&& _retval = ImGui::DragInt(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2074,7 +2080,7 @@ static int DragIntEx(lua_State* L) {
     auto v_max = (int)luaL_optinteger(L, 5, 0);
     auto format = luaL_optstring(L, 6, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragInt(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragInt(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2091,7 +2097,7 @@ static int DragInt2(lua_State* L) {
         (int)util::field_tointeger(L, 2, 1),
         (int)util::field_tointeger(L, 2, 2),
     };
-    auto _retval = ImGui::DragInt2(label, v);
+    auto&& _retval = ImGui::DragInt2(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2115,7 +2121,7 @@ static int DragInt2Ex(lua_State* L) {
     auto v_max = (int)luaL_optinteger(L, 5, 0);
     auto format = luaL_optstring(L, 6, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragInt2(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragInt2(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2135,7 +2141,7 @@ static int DragInt3(lua_State* L) {
         (int)util::field_tointeger(L, 2, 2),
         (int)util::field_tointeger(L, 2, 3),
     };
-    auto _retval = ImGui::DragInt3(label, v);
+    auto&& _retval = ImGui::DragInt3(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2162,7 +2168,7 @@ static int DragInt3Ex(lua_State* L) {
     auto v_max = (int)luaL_optinteger(L, 5, 0);
     auto format = luaL_optstring(L, 6, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragInt3(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragInt3(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2185,7 +2191,7 @@ static int DragInt4(lua_State* L) {
         (int)util::field_tointeger(L, 2, 3),
         (int)util::field_tointeger(L, 2, 4),
     };
-    auto _retval = ImGui::DragInt4(label, v);
+    auto&& _retval = ImGui::DragInt4(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2215,7 +2221,7 @@ static int DragInt4Ex(lua_State* L) {
     auto v_max = (int)luaL_optinteger(L, 5, 0);
     auto format = luaL_optstring(L, 6, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 7, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragInt4(label, v, v_speed, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::DragInt4(label, v, v_speed, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2242,7 +2248,7 @@ static int DragIntRange2(lua_State* L) {
     int v_current_max[] = {
         (int)util::field_tointeger(L, 3, 1),
     };
-    auto _retval = ImGui::DragIntRange2(label, v_current_min, v_current_max);
+    auto&& _retval = ImGui::DragIntRange2(label, v_current_min, v_current_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v_current_min[0]);
@@ -2273,7 +2279,7 @@ static int DragIntRange2Ex(lua_State* L) {
     auto format = luaL_optstring(L, 7, "%d");
     auto format_max = luaL_optstring(L, 8, NULL);
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 9, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::DragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags);
+    auto&& _retval = ImGui::DragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v_current_min[0]);
@@ -2295,7 +2301,7 @@ static int SliderFloat(lua_State* L) {
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
-    auto _retval = ImGui::SliderFloat(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderFloat(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2315,7 +2321,7 @@ static int SliderFloatEx(lua_State* L) {
     auto v_max = (float)luaL_checknumber(L, 4);
     auto format = luaL_optstring(L, 5, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderFloat(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderFloat(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2334,7 +2340,7 @@ static int SliderFloat2(lua_State* L) {
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
-    auto _retval = ImGui::SliderFloat2(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderFloat2(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2357,7 +2363,7 @@ static int SliderFloat2Ex(lua_State* L) {
     auto v_max = (float)luaL_checknumber(L, 4);
     auto format = luaL_optstring(L, 5, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderFloat2(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderFloat2(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2379,7 +2385,7 @@ static int SliderFloat3(lua_State* L) {
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
-    auto _retval = ImGui::SliderFloat3(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderFloat3(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2405,7 +2411,7 @@ static int SliderFloat3Ex(lua_State* L) {
     auto v_max = (float)luaL_checknumber(L, 4);
     auto format = luaL_optstring(L, 5, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderFloat3(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderFloat3(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2430,7 +2436,7 @@ static int SliderFloat4(lua_State* L) {
     };
     auto v_min = (float)luaL_checknumber(L, 3);
     auto v_max = (float)luaL_checknumber(L, 4);
-    auto _retval = ImGui::SliderFloat4(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderFloat4(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2459,7 +2465,7 @@ static int SliderFloat4Ex(lua_State* L) {
     auto v_max = (float)luaL_checknumber(L, 4);
     auto format = luaL_optstring(L, 5, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderFloat4(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderFloat4(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2481,7 +2487,7 @@ static int SliderAngle(lua_State* L) {
     float v_rad[] = {
         (float)util::field_tonumber(L, 2, 1),
     };
-    auto _retval = ImGui::SliderAngle(label, v_rad);
+    auto&& _retval = ImGui::SliderAngle(label, v_rad);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v_rad[0]);
@@ -2501,7 +2507,7 @@ static int SliderAngleEx(lua_State* L) {
     auto v_degrees_max = (float)luaL_optnumber(L, 4, +360.0f);
     auto format = luaL_optstring(L, 5, "%.0f deg");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderAngle(label, v_rad, v_degrees_min, v_degrees_max, format, flags);
+    auto&& _retval = ImGui::SliderAngle(label, v_rad, v_degrees_min, v_degrees_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v_rad[0]);
@@ -2519,7 +2525,7 @@ static int SliderInt(lua_State* L) {
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
-    auto _retval = ImGui::SliderInt(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderInt(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2539,7 +2545,7 @@ static int SliderIntEx(lua_State* L) {
     auto v_max = (int)luaL_checkinteger(L, 4);
     auto format = luaL_optstring(L, 5, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderInt(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderInt(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2558,7 +2564,7 @@ static int SliderInt2(lua_State* L) {
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
-    auto _retval = ImGui::SliderInt2(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderInt2(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2581,7 +2587,7 @@ static int SliderInt2Ex(lua_State* L) {
     auto v_max = (int)luaL_checkinteger(L, 4);
     auto format = luaL_optstring(L, 5, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderInt2(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderInt2(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2603,7 +2609,7 @@ static int SliderInt3(lua_State* L) {
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
-    auto _retval = ImGui::SliderInt3(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderInt3(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2629,7 +2635,7 @@ static int SliderInt3Ex(lua_State* L) {
     auto v_max = (int)luaL_checkinteger(L, 4);
     auto format = luaL_optstring(L, 5, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderInt3(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderInt3(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2654,7 +2660,7 @@ static int SliderInt4(lua_State* L) {
     };
     auto v_min = (int)luaL_checkinteger(L, 3);
     auto v_max = (int)luaL_checkinteger(L, 4);
-    auto _retval = ImGui::SliderInt4(label, v, v_min, v_max);
+    auto&& _retval = ImGui::SliderInt4(label, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2683,7 +2689,7 @@ static int SliderInt4Ex(lua_State* L) {
     auto v_max = (int)luaL_checkinteger(L, 4);
     auto format = luaL_optstring(L, 5, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::SliderInt4(label, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::SliderInt4(label, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2711,7 +2717,7 @@ static int VSliderFloat(lua_State* L) {
     };
     auto v_min = (float)luaL_checknumber(L, 5);
     auto v_max = (float)luaL_checknumber(L, 6);
-    auto _retval = ImGui::VSliderFloat(label, size, v, v_min, v_max);
+    auto&& _retval = ImGui::VSliderFloat(label, size, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2735,7 +2741,7 @@ static int VSliderFloatEx(lua_State* L) {
     auto v_max = (float)luaL_checknumber(L, 6);
     auto format = luaL_optstring(L, 7, "%.3f");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 8, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::VSliderFloat(label, size, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::VSliderFloat(label, size, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2757,7 +2763,7 @@ static int VSliderInt(lua_State* L) {
     };
     auto v_min = (int)luaL_checkinteger(L, 5);
     auto v_max = (int)luaL_checkinteger(L, 6);
-    auto _retval = ImGui::VSliderInt(label, size, v, v_min, v_max);
+    auto&& _retval = ImGui::VSliderInt(label, size, v, v_min, v_max);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2781,7 +2787,7 @@ static int VSliderIntEx(lua_State* L) {
     auto v_max = (int)luaL_checkinteger(L, 6);
     auto format = luaL_optstring(L, 7, "%d");
     auto flags = (ImGuiSliderFlags)luaL_optinteger(L, 8, lua_Integer(ImGuiSliderFlags_None));
-    auto _retval = ImGui::VSliderInt(label, size, v, v_min, v_max, format, flags);
+    auto&& _retval = ImGui::VSliderInt(label, size, v, v_min, v_max, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2797,7 +2803,7 @@ static int InputFloat(lua_State* L) {
     float v[] = {
         (float)util::field_tonumber(L, 2, 1),
     };
-    auto _retval = ImGui::InputFloat(label, v);
+    auto&& _retval = ImGui::InputFloat(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2817,7 +2823,7 @@ static int InputFloatEx(lua_State* L) {
     auto step_fast = (float)luaL_optnumber(L, 4, 0.0f);
     auto format = luaL_optstring(L, 5, "%.3f");
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputFloat(label, v, step, step_fast, format, flags);
+    auto&& _retval = ImGui::InputFloat(label, v, step, step_fast, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2834,7 +2840,7 @@ static int InputFloat2(lua_State* L) {
         (float)util::field_tonumber(L, 2, 1),
         (float)util::field_tonumber(L, 2, 2),
     };
-    auto _retval = ImGui::InputFloat2(label, v);
+    auto&& _retval = ImGui::InputFloat2(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2855,7 +2861,7 @@ static int InputFloat2Ex(lua_State* L) {
     };
     auto format = luaL_optstring(L, 3, "%.3f");
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputFloat2(label, v, format, flags);
+    auto&& _retval = ImGui::InputFloat2(label, v, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2875,7 +2881,7 @@ static int InputFloat3(lua_State* L) {
         (float)util::field_tonumber(L, 2, 2),
         (float)util::field_tonumber(L, 2, 3),
     };
-    auto _retval = ImGui::InputFloat3(label, v);
+    auto&& _retval = ImGui::InputFloat3(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2899,7 +2905,7 @@ static int InputFloat3Ex(lua_State* L) {
     };
     auto format = luaL_optstring(L, 3, "%.3f");
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputFloat3(label, v, format, flags);
+    auto&& _retval = ImGui::InputFloat3(label, v, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2922,7 +2928,7 @@ static int InputFloat4(lua_State* L) {
         (float)util::field_tonumber(L, 2, 3),
         (float)util::field_tonumber(L, 2, 4),
     };
-    auto _retval = ImGui::InputFloat4(label, v);
+    auto&& _retval = ImGui::InputFloat4(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2949,7 +2955,7 @@ static int InputFloat4Ex(lua_State* L) {
     };
     auto format = luaL_optstring(L, 3, "%.3f");
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputFloat4(label, v, format, flags);
+    auto&& _retval = ImGui::InputFloat4(label, v, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -2971,7 +2977,7 @@ static int InputInt(lua_State* L) {
     int v[] = {
         (int)util::field_tointeger(L, 2, 1),
     };
-    auto _retval = ImGui::InputInt(label, v);
+    auto&& _retval = ImGui::InputInt(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -2990,7 +2996,7 @@ static int InputIntEx(lua_State* L) {
     auto step = (int)luaL_optinteger(L, 3, 1);
     auto step_fast = (int)luaL_optinteger(L, 4, 100);
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputInt(label, v, step, step_fast, flags);
+    auto&& _retval = ImGui::InputInt(label, v, step, step_fast, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -3008,7 +3014,7 @@ static int InputInt2(lua_State* L) {
         (int)util::field_tointeger(L, 2, 2),
     };
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputInt2(label, v, flags);
+    auto&& _retval = ImGui::InputInt2(label, v, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -3029,7 +3035,7 @@ static int InputInt3(lua_State* L) {
         (int)util::field_tointeger(L, 2, 3),
     };
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputInt3(label, v, flags);
+    auto&& _retval = ImGui::InputInt3(label, v, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -3053,7 +3059,7 @@ static int InputInt4(lua_State* L) {
         (int)util::field_tointeger(L, 2, 4),
     };
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputInt4(label, v, flags);
+    auto&& _retval = ImGui::InputInt4(label, v, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushinteger(L, v[0]);
@@ -3075,7 +3081,7 @@ static int InputDouble(lua_State* L) {
     double v[] = {
         (double)util::field_tonumber(L, 2, 1),
     };
-    auto _retval = ImGui::InputDouble(label, v);
+    auto&& _retval = ImGui::InputDouble(label, v);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -3095,7 +3101,7 @@ static int InputDoubleEx(lua_State* L) {
     auto step_fast = (double)luaL_optnumber(L, 4, 0.0);
     auto format = luaL_optstring(L, 5, "%.6f");
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiInputTextFlags_None));
-    auto _retval = ImGui::InputDouble(label, v, step, step_fast, format, flags);
+    auto&& _retval = ImGui::InputDouble(label, v, step, step_fast, format, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, v[0]);
@@ -3114,7 +3120,7 @@ static int ColorEdit3(lua_State* L) {
         (float)util::field_tonumber(L, 2, 3),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiColorEditFlags_None));
-    auto _retval = ImGui::ColorEdit3(label, col, flags);
+    auto&& _retval = ImGui::ColorEdit3(label, col, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, col[0]);
@@ -3138,7 +3144,7 @@ static int ColorEdit4(lua_State* L) {
         (float)util::field_tonumber(L, 2, 4),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiColorEditFlags_None));
-    auto _retval = ImGui::ColorEdit4(label, col, flags);
+    auto&& _retval = ImGui::ColorEdit4(label, col, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, col[0]);
@@ -3163,7 +3169,7 @@ static int ColorPicker3(lua_State* L) {
         (float)util::field_tonumber(L, 2, 3),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiColorEditFlags_None));
-    auto _retval = ImGui::ColorPicker3(label, col, flags);
+    auto&& _retval = ImGui::ColorPicker3(label, col, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushnumber(L, col[0]);
@@ -3185,7 +3191,7 @@ static int ColorButton(lua_State* L) {
         (float)luaL_checknumber(L, 5),
     };
     auto flags = (ImGuiColorEditFlags)luaL_optinteger(L, 6, lua_Integer(ImGuiColorEditFlags_None));
-    auto _retval = ImGui::ColorButton(desc_id, col, flags);
+    auto&& _retval = ImGui::ColorButton(desc_id, col, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3203,7 +3209,7 @@ static int ColorButtonEx(lua_State* L) {
         (float)luaL_optnumber(L, 7, 0),
         (float)luaL_optnumber(L, 8, 0),
     };
-    auto _retval = ImGui::ColorButton(desc_id, col, flags, size);
+    auto&& _retval = ImGui::ColorButton(desc_id, col, flags, size);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3216,7 +3222,7 @@ static int SetColorEditOptions(lua_State* L) {
 
 static int TreeNode(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _retval = ImGui::TreeNode(label);
+    auto&& _retval = ImGui::TreeNode(label);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3224,7 +3230,7 @@ static int TreeNode(lua_State* L) {
 static int TreeNodeStr(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     const char* fmt = util::format(L, 2);
-    auto _retval = ImGui::TreeNode(str_id, "%s", fmt);
+    auto&& _retval = ImGui::TreeNode(str_id, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3232,7 +3238,7 @@ static int TreeNodeStr(lua_State* L) {
 static int TreeNodePtr(lua_State* L) {
     auto ptr_id = lua_touserdata(L, 1);
     const char* fmt = util::format(L, 2);
-    auto _retval = ImGui::TreeNode(ptr_id, "%s", fmt);
+    auto&& _retval = ImGui::TreeNode(ptr_id, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3240,7 +3246,7 @@ static int TreeNodePtr(lua_State* L) {
 static int TreeNodeEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTreeNodeFlags_None));
-    auto _retval = ImGui::TreeNodeEx(label, flags);
+    auto&& _retval = ImGui::TreeNodeEx(label, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3249,7 +3255,7 @@ static int TreeNodeExStr(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto flags = (ImGuiTreeNodeFlags)luaL_checkinteger(L, 2);
     const char* fmt = util::format(L, 3);
-    auto _retval = ImGui::TreeNodeEx(str_id, flags, "%s", fmt);
+    auto&& _retval = ImGui::TreeNodeEx(str_id, flags, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3258,7 +3264,7 @@ static int TreeNodeExPtr(lua_State* L) {
     auto ptr_id = lua_touserdata(L, 1);
     auto flags = (ImGuiTreeNodeFlags)luaL_checkinteger(L, 2);
     const char* fmt = util::format(L, 3);
-    auto _retval = ImGui::TreeNodeEx(ptr_id, flags, "%s", fmt);
+    auto&& _retval = ImGui::TreeNodeEx(ptr_id, flags, "%s", fmt);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3281,7 +3287,7 @@ static int TreePop(lua_State* L) {
 }
 
 static int GetTreeNodeToLabelSpacing(lua_State* L) {
-    auto _retval = ImGui::GetTreeNodeToLabelSpacing();
+    auto&& _retval = ImGui::GetTreeNodeToLabelSpacing();
     lua_pushnumber(L, _retval);
     return 1;
 }
@@ -3289,7 +3295,7 @@ static int GetTreeNodeToLabelSpacing(lua_State* L) {
 static int CollapsingHeader(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTreeNodeFlags_None));
-    auto _retval = ImGui::CollapsingHeader(label, flags);
+    auto&& _retval = ImGui::CollapsingHeader(label, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3302,7 +3308,7 @@ static int CollapsingHeaderBoolPtr(lua_State* L) {
         util::field_toboolean(L, 2, 1),
     };
     auto flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTreeNodeFlags_None));
-    auto _retval = ImGui::CollapsingHeader(label, p_visible, flags);
+    auto&& _retval = ImGui::CollapsingHeader(label, p_visible, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushboolean(L, p_visible[0]);
@@ -3320,7 +3326,7 @@ static int SetNextItemOpen(lua_State* L) {
 
 static int Selectable(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _retval = ImGui::Selectable(label);
+    auto&& _retval = ImGui::Selectable(label);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3333,7 +3339,7 @@ static int SelectableEx(lua_State* L) {
         (float)luaL_optnumber(L, 4, 0),
         (float)luaL_optnumber(L, 5, 0),
     };
-    auto _retval = ImGui::Selectable(label, selected, flags, size);
+    auto&& _retval = ImGui::Selectable(label, selected, flags, size);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3346,7 +3352,7 @@ static int SelectableBoolPtr(lua_State* L) {
         util::field_toboolean(L, 2, 1),
     };
     auto flags = (ImGuiSelectableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiSelectableFlags_None));
-    auto _retval = ImGui::Selectable(label, p_selected, flags);
+    auto&& _retval = ImGui::Selectable(label, p_selected, flags);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushboolean(L, p_selected[0]);
@@ -3367,7 +3373,7 @@ static int SelectableBoolPtrEx(lua_State* L) {
         (float)luaL_optnumber(L, 4, 0),
         (float)luaL_optnumber(L, 5, 0),
     };
-    auto _retval = ImGui::Selectable(label, p_selected, flags, size);
+    auto&& _retval = ImGui::Selectable(label, p_selected, flags, size);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushboolean(L, p_selected[0]);
@@ -3382,7 +3388,7 @@ static int BeginListBox(lua_State* L) {
         (float)luaL_optnumber(L, 2, 0),
         (float)luaL_optnumber(L, 3, 0),
     };
-    auto _retval = ImGui::BeginListBox(label, size);
+    auto&& _retval = ImGui::BeginListBox(label, size);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3393,7 +3399,7 @@ static int EndListBox(lua_State* L) {
 }
 
 static int BeginMenuBar(lua_State* L) {
-    auto _retval = ImGui::BeginMenuBar();
+    auto&& _retval = ImGui::BeginMenuBar();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3404,7 +3410,7 @@ static int EndMenuBar(lua_State* L) {
 }
 
 static int BeginMainMenuBar(lua_State* L) {
-    auto _retval = ImGui::BeginMainMenuBar();
+    auto&& _retval = ImGui::BeginMainMenuBar();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3416,7 +3422,7 @@ static int EndMainMenuBar(lua_State* L) {
 
 static int BeginMenu(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _retval = ImGui::BeginMenu(label);
+    auto&& _retval = ImGui::BeginMenu(label);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3424,7 +3430,7 @@ static int BeginMenu(lua_State* L) {
 static int BeginMenuEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto enabled = lua_isnoneornil(L, 2)? true: !!lua_toboolean(L, 2);
-    auto _retval = ImGui::BeginMenu(label, enabled);
+    auto&& _retval = ImGui::BeginMenu(label, enabled);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3436,7 +3442,7 @@ static int EndMenu(lua_State* L) {
 
 static int MenuItem(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _retval = ImGui::MenuItem(label);
+    auto&& _retval = ImGui::MenuItem(label);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3446,7 +3452,7 @@ static int MenuItemEx(lua_State* L) {
     auto shortcut = luaL_optstring(L, 2, NULL);
     auto selected = lua_isnoneornil(L, 3)? false: !!lua_toboolean(L, 3);
     auto enabled = lua_isnoneornil(L, 4)? true: !!lua_toboolean(L, 4);
-    auto _retval = ImGui::MenuItem(label, shortcut, selected, enabled);
+    auto&& _retval = ImGui::MenuItem(label, shortcut, selected, enabled);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3460,7 +3466,7 @@ static int MenuItemBoolPtr(lua_State* L) {
         util::field_toboolean(L, 3, 1),
     };
     auto enabled = lua_isnoneornil(L, 4)? true: !!lua_toboolean(L, 4);
-    auto _retval = ImGui::MenuItem(label, shortcut, p_selected, enabled);
+    auto&& _retval = ImGui::MenuItem(label, shortcut, p_selected, enabled);
     lua_pushboolean(L, _retval);
     if (_retval) {
         lua_pushboolean(L, p_selected[0]);
@@ -3470,7 +3476,7 @@ static int MenuItemBoolPtr(lua_State* L) {
 }
 
 static int BeginTooltip(lua_State* L) {
-    auto _retval = ImGui::BeginTooltip();
+    auto&& _retval = ImGui::BeginTooltip();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3487,7 +3493,7 @@ static int SetTooltip(lua_State* L) {
 }
 
 static int BeginItemTooltip(lua_State* L) {
-    auto _retval = ImGui::BeginItemTooltip();
+    auto&& _retval = ImGui::BeginItemTooltip();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3501,7 +3507,7 @@ static int SetItemTooltip(lua_State* L) {
 static int BeginPopup(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiWindowFlags_None));
-    auto _retval = ImGui::BeginPopup(str_id, flags);
+    auto&& _retval = ImGui::BeginPopup(str_id, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3511,7 +3517,7 @@ static int BeginPopupModal(lua_State* L) {
     bool has_p_open = !lua_isnil(L, 2);
     bool p_open = true;
     auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
-    auto _retval = ImGui::BeginPopupModal(name, (has_p_open? &p_open: NULL), flags);
+    auto&& _retval = ImGui::BeginPopupModal(name, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
     lua_pushboolean(L, has_p_open || p_open);
     return 2;
@@ -3549,7 +3555,7 @@ static int CloseCurrentPopup(lua_State* L) {
 }
 
 static int BeginPopupContextItem(lua_State* L) {
-    auto _retval = ImGui::BeginPopupContextItem();
+    auto&& _retval = ImGui::BeginPopupContextItem();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3557,13 +3563,13 @@ static int BeginPopupContextItem(lua_State* L) {
 static int BeginPopupContextItemEx(lua_State* L) {
     auto str_id = luaL_optstring(L, 1, NULL);
     auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
-    auto _retval = ImGui::BeginPopupContextItem(str_id, popup_flags);
+    auto&& _retval = ImGui::BeginPopupContextItem(str_id, popup_flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int BeginPopupContextWindow(lua_State* L) {
-    auto _retval = ImGui::BeginPopupContextWindow();
+    auto&& _retval = ImGui::BeginPopupContextWindow();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3571,13 +3577,13 @@ static int BeginPopupContextWindow(lua_State* L) {
 static int BeginPopupContextWindowEx(lua_State* L) {
     auto str_id = luaL_optstring(L, 1, NULL);
     auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
-    auto _retval = ImGui::BeginPopupContextWindow(str_id, popup_flags);
+    auto&& _retval = ImGui::BeginPopupContextWindow(str_id, popup_flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int BeginPopupContextVoid(lua_State* L) {
-    auto _retval = ImGui::BeginPopupContextVoid();
+    auto&& _retval = ImGui::BeginPopupContextVoid();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3585,7 +3591,7 @@ static int BeginPopupContextVoid(lua_State* L) {
 static int BeginPopupContextVoidEx(lua_State* L) {
     auto str_id = luaL_optstring(L, 1, NULL);
     auto popup_flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_MouseButtonRight));
-    auto _retval = ImGui::BeginPopupContextVoid(str_id, popup_flags);
+    auto&& _retval = ImGui::BeginPopupContextVoid(str_id, popup_flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3593,7 +3599,7 @@ static int BeginPopupContextVoidEx(lua_State* L) {
 static int IsPopupOpen(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto flags = (ImGuiPopupFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiPopupFlags_None));
-    auto _retval = ImGui::IsPopupOpen(str_id, flags);
+    auto&& _retval = ImGui::IsPopupOpen(str_id, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3602,7 +3608,7 @@ static int BeginTable(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto column = (int)luaL_checkinteger(L, 2);
     auto flags = (ImGuiTableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTableFlags_None));
-    auto _retval = ImGui::BeginTable(str_id, column, flags);
+    auto&& _retval = ImGui::BeginTable(str_id, column, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3616,7 +3622,7 @@ static int BeginTableEx(lua_State* L) {
         (float)luaL_optnumber(L, 5, 0.0f),
     };
     auto inner_width = (float)luaL_optnumber(L, 6, 0.0f);
-    auto _retval = ImGui::BeginTable(str_id, column, flags, outer_size, inner_width);
+    auto&& _retval = ImGui::BeginTable(str_id, column, flags, outer_size, inner_width);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3639,14 +3645,14 @@ static int TableNextRowEx(lua_State* L) {
 }
 
 static int TableNextColumn(lua_State* L) {
-    auto _retval = ImGui::TableNextColumn();
+    auto&& _retval = ImGui::TableNextColumn();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int TableSetColumnIndex(lua_State* L) {
     auto column_n = (int)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::TableSetColumnIndex(column_n);
+    auto&& _retval = ImGui::TableSetColumnIndex(column_n);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3691,33 +3697,33 @@ static int TableAngledHeadersRow(lua_State* L) {
 }
 
 static int TableGetColumnCount(lua_State* L) {
-    auto _retval = ImGui::TableGetColumnCount();
+    auto&& _retval = ImGui::TableGetColumnCount();
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int TableGetColumnIndex(lua_State* L) {
-    auto _retval = ImGui::TableGetColumnIndex();
+    auto&& _retval = ImGui::TableGetColumnIndex();
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int TableGetRowIndex(lua_State* L) {
-    auto _retval = ImGui::TableGetRowIndex();
+    auto&& _retval = ImGui::TableGetRowIndex();
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int TableGetColumnName(lua_State* L) {
     auto column_n = (int)luaL_optinteger(L, 1, -1);
-    auto _retval = ImGui::TableGetColumnName(column_n);
+    auto&& _retval = ImGui::TableGetColumnName(column_n);
     lua_pushstring(L, _retval);
     return 1;
 }
 
 static int TableGetColumnFlags(lua_State* L) {
     auto column_n = (int)luaL_optinteger(L, 1, -1);
-    auto _retval = ImGui::TableGetColumnFlags(column_n);
+    auto&& _retval = ImGui::TableGetColumnFlags(column_n);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -3740,7 +3746,7 @@ static int TableSetBgColor(lua_State* L) {
 static int BeginTabBar(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
     auto flags = (ImGuiTabBarFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTabBarFlags_None));
-    auto _retval = ImGui::BeginTabBar(str_id, flags);
+    auto&& _retval = ImGui::BeginTabBar(str_id, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3755,7 +3761,7 @@ static int BeginTabItem(lua_State* L) {
     bool has_p_open = !lua_isnil(L, 2);
     bool p_open = true;
     auto flags = (ImGuiTabItemFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTabItemFlags_None));
-    auto _retval = ImGui::BeginTabItem(label, (has_p_open? &p_open: NULL), flags);
+    auto&& _retval = ImGui::BeginTabItem(label, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
     lua_pushboolean(L, has_p_open || p_open);
     return 2;
@@ -3769,7 +3775,7 @@ static int EndTabItem(lua_State* L) {
 static int TabItemButton(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto flags = (ImGuiTabItemFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiTabItemFlags_None));
-    auto _retval = ImGui::TabItemButton(label, flags);
+    auto&& _retval = ImGui::TabItemButton(label, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3782,7 +3788,7 @@ static int SetTabItemClosed(lua_State* L) {
 
 static int DockSpace(lua_State* L) {
     auto id = (ImGuiID)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::DockSpace(id);
+    auto&& _retval = ImGui::DockSpace(id);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -3794,13 +3800,13 @@ static int DockSpaceEx(lua_State* L) {
         (float)luaL_optnumber(L, 3, 0),
     };
     auto flags = (ImGuiDockNodeFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiDockNodeFlags_None));
-    auto _retval = ImGui::DockSpace(id, size, flags);
+    auto&& _retval = ImGui::DockSpace(id, size, flags);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int DockSpaceOverViewport(lua_State* L) {
-    auto _retval = ImGui::DockSpaceOverViewport();
+    auto&& _retval = ImGui::DockSpaceOverViewport();
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -3813,20 +3819,20 @@ static int SetNextWindowDockID(lua_State* L) {
 }
 
 static int GetWindowDockID(lua_State* L) {
-    auto _retval = ImGui::GetWindowDockID();
+    auto&& _retval = ImGui::GetWindowDockID();
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int IsWindowDocked(lua_State* L) {
-    auto _retval = ImGui::IsWindowDocked();
+    auto&& _retval = ImGui::IsWindowDocked();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int BeginDragDropSource(lua_State* L) {
     auto flags = (ImGuiDragDropFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiDragDropFlags_None));
-    auto _retval = ImGui::BeginDragDropSource(flags);
+    auto&& _retval = ImGui::BeginDragDropSource(flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3836,7 +3842,7 @@ static int SetDragDropPayload(lua_State* L) {
     size_t sz = 0;
     auto data = luaL_checklstring(L, 2, &sz);
     auto cond = (ImGuiCond)luaL_optinteger(L, 3, lua_Integer(ImGuiCond_None));
-    auto _retval = ImGui::SetDragDropPayload(type, data, sz, cond);
+    auto&& _retval = ImGui::SetDragDropPayload(type, data, sz, cond);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3847,7 +3853,7 @@ static int EndDragDropSource(lua_State* L) {
 }
 
 static int BeginDragDropTarget(lua_State* L) {
-    auto _retval = ImGui::BeginDragDropTarget();
+    auto&& _retval = ImGui::BeginDragDropTarget();
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3855,7 +3861,7 @@ static int BeginDragDropTarget(lua_State* L) {
 static int AcceptDragDropPayload(lua_State* L) {
     auto type = luaL_checkstring(L, 1);
     auto flags = (ImGuiDragDropFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiDragDropFlags_None));
-    auto _retval = ImGui::AcceptDragDropPayload(type, flags);
+    auto&& _retval = ImGui::AcceptDragDropPayload(type, flags);
     if (_retval != NULL) {
         lua_pushlstring(L, (const char*)_retval->Data, _retval->DataSize);
     } else {
@@ -3870,7 +3876,7 @@ static int EndDragDropTarget(lua_State* L) {
 }
 
 static int GetDragDropPayload(lua_State* L) {
-    auto _retval = ImGui::GetDragDropPayload();
+    auto&& _retval = ImGui::GetDragDropPayload();
     if (_retval != NULL) {
         lua_pushlstring(L, (const char*)_retval->Data, _retval->DataSize);
     } else {
@@ -3932,119 +3938,119 @@ static int SetNextItemAllowOverlap(lua_State* L) {
 
 static int IsItemHovered(lua_State* L) {
     auto flags = (ImGuiHoveredFlags)luaL_optinteger(L, 1, lua_Integer(ImGuiHoveredFlags_None));
-    auto _retval = ImGui::IsItemHovered(flags);
+    auto&& _retval = ImGui::IsItemHovered(flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemActive(lua_State* L) {
-    auto _retval = ImGui::IsItemActive();
+    auto&& _retval = ImGui::IsItemActive();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemFocused(lua_State* L) {
-    auto _retval = ImGui::IsItemFocused();
+    auto&& _retval = ImGui::IsItemFocused();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemClicked(lua_State* L) {
-    auto _retval = ImGui::IsItemClicked();
+    auto&& _retval = ImGui::IsItemClicked();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemClickedEx(lua_State* L) {
     auto mouse_button = (ImGuiMouseButton)luaL_optinteger(L, 1, lua_Integer(ImGuiMouseButton_Left));
-    auto _retval = ImGui::IsItemClicked(mouse_button);
+    auto&& _retval = ImGui::IsItemClicked(mouse_button);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemVisible(lua_State* L) {
-    auto _retval = ImGui::IsItemVisible();
+    auto&& _retval = ImGui::IsItemVisible();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemEdited(lua_State* L) {
-    auto _retval = ImGui::IsItemEdited();
+    auto&& _retval = ImGui::IsItemEdited();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemActivated(lua_State* L) {
-    auto _retval = ImGui::IsItemActivated();
+    auto&& _retval = ImGui::IsItemActivated();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemDeactivated(lua_State* L) {
-    auto _retval = ImGui::IsItemDeactivated();
+    auto&& _retval = ImGui::IsItemDeactivated();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemDeactivatedAfterEdit(lua_State* L) {
-    auto _retval = ImGui::IsItemDeactivatedAfterEdit();
+    auto&& _retval = ImGui::IsItemDeactivatedAfterEdit();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsItemToggledOpen(lua_State* L) {
-    auto _retval = ImGui::IsItemToggledOpen();
+    auto&& _retval = ImGui::IsItemToggledOpen();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsAnyItemHovered(lua_State* L) {
-    auto _retval = ImGui::IsAnyItemHovered();
+    auto&& _retval = ImGui::IsAnyItemHovered();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsAnyItemActive(lua_State* L) {
-    auto _retval = ImGui::IsAnyItemActive();
+    auto&& _retval = ImGui::IsAnyItemActive();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsAnyItemFocused(lua_State* L) {
-    auto _retval = ImGui::IsAnyItemFocused();
+    auto&& _retval = ImGui::IsAnyItemFocused();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int GetItemID(lua_State* L) {
-    auto _retval = ImGui::GetItemID();
+    auto&& _retval = ImGui::GetItemID();
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int GetItemRectMin(lua_State* L) {
-    auto _retval = ImGui::GetItemRectMin();
+    auto&& _retval = ImGui::GetItemRectMin();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetItemRectMax(lua_State* L) {
-    auto _retval = ImGui::GetItemRectMax();
+    auto&& _retval = ImGui::GetItemRectMax();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetItemRectSize(lua_State* L) {
-    auto _retval = ImGui::GetItemRectSize();
+    auto&& _retval = ImGui::GetItemRectSize();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetMainViewport(lua_State* L) {
-    auto _retval = ImGui::GetMainViewport();
+    auto&& _retval = ImGui::GetMainViewport();
     wrap_ImGuiViewport::fetch(L, *_retval);
     return 1;
 }
@@ -4054,7 +4060,7 @@ static int IsRectVisibleBySize(lua_State* L) {
         (float)luaL_checknumber(L, 1),
         (float)luaL_checknumber(L, 2),
     };
-    auto _retval = ImGui::IsRectVisible(size);
+    auto&& _retval = ImGui::IsRectVisible(size);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -4068,33 +4074,33 @@ static int IsRectVisible(lua_State* L) {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
     };
-    auto _retval = ImGui::IsRectVisible(rect_min, rect_max);
+    auto&& _retval = ImGui::IsRectVisible(rect_min, rect_max);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int GetTime(lua_State* L) {
-    auto _retval = ImGui::GetTime();
+    auto&& _retval = ImGui::GetTime();
     lua_pushnumber(L, _retval);
     return 1;
 }
 
 static int GetFrameCount(lua_State* L) {
-    auto _retval = ImGui::GetFrameCount();
+    auto&& _retval = ImGui::GetFrameCount();
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int GetStyleColorName(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetStyleColorName(idx);
+    auto&& _retval = ImGui::GetStyleColorName(idx);
     lua_pushstring(L, _retval);
     return 1;
 }
 
 static int CalcTextSize(lua_State* L) {
     auto text = luaL_checkstring(L, 1);
-    auto _retval = ImGui::CalcTextSize(text);
+    auto&& _retval = ImGui::CalcTextSize(text);
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -4105,7 +4111,7 @@ static int CalcTextSizeEx(lua_State* L) {
     auto text_end = luaL_optstring(L, 2, NULL);
     auto hide_text_after_double_hash = lua_isnoneornil(L, 3)? false: !!lua_toboolean(L, 3);
     auto wrap_width = (float)luaL_optnumber(L, 4, -1.0f);
-    auto _retval = ImGui::CalcTextSize(text, text_end, hide_text_after_double_hash, wrap_width);
+    auto&& _retval = ImGui::CalcTextSize(text, text_end, hide_text_after_double_hash, wrap_width);
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -4113,7 +4119,7 @@ static int CalcTextSizeEx(lua_State* L) {
 
 static int ColorConvertU32ToFloat4(lua_State* L) {
     auto in = (ImU32)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::ColorConvertU32ToFloat4(in);
+    auto&& _retval = ImGui::ColorConvertU32ToFloat4(in);
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     lua_pushnumber(L, _retval.z);
@@ -4128,21 +4134,21 @@ static int ColorConvertFloat4ToU32(lua_State* L) {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
     };
-    auto _retval = ImGui::ColorConvertFloat4ToU32(in);
+    auto&& _retval = ImGui::ColorConvertFloat4ToU32(in);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int IsKeyDown(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsKeyDown(key);
+    auto&& _retval = ImGui::IsKeyDown(key);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsKeyPressed(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsKeyPressed(key);
+    auto&& _retval = ImGui::IsKeyPressed(key);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -4150,21 +4156,21 @@ static int IsKeyPressed(lua_State* L) {
 static int IsKeyPressedEx(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
     auto repeat = lua_isnoneornil(L, 2)? true: !!lua_toboolean(L, 2);
-    auto _retval = ImGui::IsKeyPressed(key, repeat);
+    auto&& _retval = ImGui::IsKeyPressed(key, repeat);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsKeyReleased(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsKeyReleased(key);
+    auto&& _retval = ImGui::IsKeyReleased(key);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsKeyChordPressed(lua_State* L) {
     auto key_chord = (ImGuiKeyChord)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsKeyChordPressed(key_chord);
+    auto&& _retval = ImGui::IsKeyChordPressed(key_chord);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -4173,14 +4179,14 @@ static int GetKeyPressedAmount(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
     auto repeat_delay = (float)luaL_checknumber(L, 2);
     auto rate = (float)luaL_checknumber(L, 3);
-    auto _retval = ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
+    auto&& _retval = ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int GetKeyName(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetKeyName(key);
+    auto&& _retval = ImGui::GetKeyName(key);
     lua_pushstring(L, _retval);
     return 1;
 }
@@ -4193,14 +4199,14 @@ static int SetNextFrameWantCaptureKeyboard(lua_State* L) {
 
 static int IsMouseDown(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsMouseDown(button);
+    auto&& _retval = ImGui::IsMouseDown(button);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsMouseClicked(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsMouseClicked(button);
+    auto&& _retval = ImGui::IsMouseClicked(button);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -4208,28 +4214,28 @@ static int IsMouseClicked(lua_State* L) {
 static int IsMouseClickedEx(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
     auto repeat = lua_isnoneornil(L, 2)? false: !!lua_toboolean(L, 2);
-    auto _retval = ImGui::IsMouseClicked(button, repeat);
+    auto&& _retval = ImGui::IsMouseClicked(button, repeat);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsMouseReleased(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsMouseReleased(button);
+    auto&& _retval = ImGui::IsMouseReleased(button);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsMouseDoubleClicked(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::IsMouseDoubleClicked(button);
+    auto&& _retval = ImGui::IsMouseDoubleClicked(button);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int GetMouseClickedCount(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetMouseClickedCount(button);
+    auto&& _retval = ImGui::GetMouseClickedCount(button);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -4243,7 +4249,7 @@ static int IsMouseHoveringRect(lua_State* L) {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
     };
-    auto _retval = ImGui::IsMouseHoveringRect(r_min, r_max);
+    auto&& _retval = ImGui::IsMouseHoveringRect(r_min, r_max);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -4258,26 +4264,26 @@ static int IsMouseHoveringRectEx(lua_State* L) {
         (float)luaL_checknumber(L, 4),
     };
     auto clip = lua_isnoneornil(L, 5)? true: !!lua_toboolean(L, 5);
-    auto _retval = ImGui::IsMouseHoveringRect(r_min, r_max, clip);
+    auto&& _retval = ImGui::IsMouseHoveringRect(r_min, r_max, clip);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int IsAnyMouseDown(lua_State* L) {
-    auto _retval = ImGui::IsAnyMouseDown();
+    auto&& _retval = ImGui::IsAnyMouseDown();
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int GetMousePos(lua_State* L) {
-    auto _retval = ImGui::GetMousePos();
+    auto&& _retval = ImGui::GetMousePos();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
 }
 
 static int GetMousePosOnOpeningCurrentPopup(lua_State* L) {
-    auto _retval = ImGui::GetMousePosOnOpeningCurrentPopup();
+    auto&& _retval = ImGui::GetMousePosOnOpeningCurrentPopup();
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -4286,7 +4292,7 @@ static int GetMousePosOnOpeningCurrentPopup(lua_State* L) {
 static int IsMouseDragging(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
     auto lock_threshold = (float)luaL_optnumber(L, 2, -1.0f);
-    auto _retval = ImGui::IsMouseDragging(button, lock_threshold);
+    auto&& _retval = ImGui::IsMouseDragging(button, lock_threshold);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -4294,7 +4300,7 @@ static int IsMouseDragging(lua_State* L) {
 static int GetMouseDragDelta(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_optinteger(L, 1, lua_Integer(ImGuiMouseButton_Left));
     auto lock_threshold = (float)luaL_optnumber(L, 2, -1.0f);
-    auto _retval = ImGui::GetMouseDragDelta(button, lock_threshold);
+    auto&& _retval = ImGui::GetMouseDragDelta(button, lock_threshold);
     lua_pushnumber(L, _retval.x);
     lua_pushnumber(L, _retval.y);
     return 2;
@@ -4312,7 +4318,7 @@ static int ResetMouseDragDeltaEx(lua_State* L) {
 }
 
 static int GetMouseCursor(lua_State* L) {
-    auto _retval = ImGui::GetMouseCursor();
+    auto&& _retval = ImGui::GetMouseCursor();
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -4330,7 +4336,7 @@ static int SetNextFrameWantCaptureMouse(lua_State* L) {
 }
 
 static int GetClipboardText(lua_State* L) {
-    auto _retval = ImGui::GetClipboardText();
+    auto&& _retval = ImGui::GetClipboardText();
     lua_pushstring(L, _retval);
     return 1;
 }
@@ -4362,7 +4368,7 @@ static int SaveIniSettingsToDisk(lua_State* L) {
 
 static int SaveIniSettingsToMemory(lua_State* L) {
     size_t out_ini_size = 0;
-    auto _retval = ImGui::SaveIniSettingsToMemory(&out_ini_size);
+    auto&& _retval = ImGui::SaveIniSettingsToMemory(&out_ini_size);
     lua_pushlstring(L, _retval, out_ini_size);
     return 1;
 }
@@ -4379,14 +4385,14 @@ static int RenderPlatformWindowsDefault(lua_State* L) {
 
 static int FindViewportByID(lua_State* L) {
     auto id = (ImGuiID)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::FindViewportByID(id);
+    auto&& _retval = ImGui::FindViewportByID(id);
     wrap_ImGuiViewport::fetch(L, *_retval);
     return 1;
 }
 
 static int GetKeyIndex(lua_State* L) {
     auto key = (ImGuiKey)luaL_checkinteger(L, 1);
-    auto _retval = ImGui::GetKeyIndex(key);
+    auto&& _retval = ImGui::GetKeyIndex(key);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -5872,6 +5878,7 @@ void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
+        { "GetIO", GetIO },
         { "NewFrame", NewFrame },
         { "EndFrame", EndFrame },
         { "Render", Render },

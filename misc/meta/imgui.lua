@@ -1252,6 +1252,15 @@ function ImGui.CreateContext() end
 function ImGui.DestroyContext() end
 
 --
+-- Main
+--
+--
+-- access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
+--
+---@return ImGuiIO
+function ImGui.GetIO() end
+
+--
 -- start a new Dear ImGui frame, you can submit any command from this point until Render()/EndFrame().
 --
 function ImGui.NewFrame() end

@@ -105,6 +105,10 @@ special_ret["const ImVec4*"] = function ()
     writeln("---@return number")
 end
 
+special_ret["ImGuiIO*"] = function()
+    writeln("---@return ImGuiIO")
+end
+
 special_arg["ImTextureID"] = function (type_meta, status)
     assert(type_meta.default_value == nil)
     writeln("---@param %s ImTextureID", safe_name(type_meta.name))

@@ -1,7 +1,6 @@
 local BlackList <const> = {
     ImGui_GetCurrentContext = true,
     ImGui_SetCurrentContext = true,
-    ImGui_GetIO = true,
     ImGui_GetStyle = true,
     ImGui_GetDrawData = true,
     ImGui_ShowDemoWindow = true,

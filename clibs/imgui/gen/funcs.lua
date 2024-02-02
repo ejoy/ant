@@ -335,6 +335,12 @@ write_ret["const ImVec4*"] = function()
     return 4
 end
 
+write_ret["ImGuiIO*"] = function()
+    --NOTICE: It's actually `ImGuiIO&`
+    writeln("    wrap_ImGuiIO::fetch(L, _retval);")
+    return 1
+end
+
 for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar16", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, status)
         status.idx = status.idx + 1
@@ -465,7 +471,7 @@ local function write_func(func_meta)
         if not rfunc then
             error(string.format("`%s` undefined write ret func `%s`", func_meta.name, func_meta.return_type.declaration))
         end
-        writeln("    auto _retval = %s(%s);", function_string, table.concat(status.arguments, ", "))
+        writeln("    auto&& _retval = %s(%s);", function_string, table.concat(status.arguments, ", "))
         local nret = 0
         nret = nret + rfunc(func_meta, func_meta.return_type)
         for _, type_meta in ipairs(func_meta.arguments) do
