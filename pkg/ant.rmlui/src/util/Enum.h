@@ -33,7 +33,12 @@ namespace Rml {
 
     template <typename E, std::size_t I = 0>
     constexpr auto EnumCount() noexcept {
-        if constexpr (!EnumIsValid<E, static_cast<E>(static_cast<std::underlying_type_t<E>>(I))>()) {
+#if defined(__clang__) && __clang_major__ >= 16
+        constexpr E e = __builtin_bit_cast(E, static_cast<std::underlying_type_t<E>>(I));
+#else
+        constexpr E e = static_cast<E>(static_cast<std::underlying_type_t<E>>(I));
+#endif
+        if constexpr (!EnumIsValid<E, e>()) {
             return I;
         } else {
             return EnumCount<E, I+1>();
