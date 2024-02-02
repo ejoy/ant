@@ -24,7 +24,7 @@ lm:runlua "gen-zlib_name_mangling" {
     output = "$builddir/gen-zlib/zlib_name_mangling-ng.h",
 }
 
-lm:source_set "zlib-ng-x86" {
+lm:source_set "zlib-ng-x86-simd" {
     objdeps = {
         "gen-zconf",
         "gen-zlib",
@@ -39,12 +39,12 @@ lm:source_set "zlib-ng-x86" {
         ZLIBDIR.."/functable.c",
         ZLIBDIR.."/cpu_features.c",
     },
+    defines = "X86_FEATURES",
     msvc = {
         sources = {
             ZLIBDIR.."/arch/x86/*.c",
         },
         defines = {
-            "X86_FEATURES",
             "X86_AVX2",
             "X86_AVX512VNNI",
             "X86_AVX512",
@@ -55,12 +55,27 @@ lm:source_set "zlib-ng-x86" {
             "X86_VPCLMULQDQ_CRC",
         }
     },
+}
+
+lm:source_set "zlib-ng-x86" {
+    objdeps = {
+        "gen-zconf",
+        "gen-zlib",
+        "gen-zlib_name_mangling",
+    },
+    includes = {
+        ZLIBDIR,
+        ZLIBDIR.."/arch/x86/",
+        "$builddir/gen-zlib",
+    },
+    sources = {
+        ZLIBDIR.."/functable.c",
+        ZLIBDIR.."/cpu_features.c",
+        ZLIBDIR.."/arch/x86/x86_features.c",
+    },
+    defines =  "X86_FEATURES",
     gcc = {
-        sources = {
-            ZLIBDIR.."/arch/x86/x86_features.c",
-        },
         defines = {
-            "X86_FEATURES",
             "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
         },
@@ -125,9 +140,6 @@ lm:source_set "zlib-ng" {
         "!"..ZLIBDIR.."/functable.c",
         "!"..ZLIBDIR.."/cpu_features.c",
     },
-    windows = {
-        deps = "zlib-ng-x86",
-    },
     linux = {
         deps = "zlib-ng-x86",
     },
@@ -138,10 +150,17 @@ lm:source_set "zlib-ng" {
         deps = "zlib-ng-arm",
     },
     msvc = {
+        deps = "zlib-ng-x86-simd",
         defines = {
             "_CRT_SECURE_NO_DEPRECATE",
             "_CRT_NONSTDC_NO_DEPRECATE",
         }
+    },
+    mingw = {
+        deps = "zlib-ng-x86",
+    },
+    clang_cl = {
+        deps = "zlib-ng-x86",
     },
     gcc = {
         defines = {
