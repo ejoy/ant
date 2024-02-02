@@ -34,7 +34,7 @@ jobs:
       run: ./luamake/luamake
   macos:
     name: macos
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
     - name: switch to Xcode 15.1
       run: sudo xcode-select -s "/Applications/Xcode_15.1.app"
@@ -42,10 +42,10 @@ jobs:
       with:
         submodules: true
     - uses: actboy168/setup-luamake@master
-    - run: luamake -arch arm64
+    - run: luamake
   ios:
     name: ios
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
     - name: switch to Xcode 15.1
       run: sudo xcode-select -s "/Applications/Xcode_15.1.app"
@@ -53,4 +53,4 @@ jobs:
       with:
         submodules: true
     - uses: actboy168/setup-luamake@master
-    - run: luamake -arch arm64 -os ios
+    - run: luamake -os ios
