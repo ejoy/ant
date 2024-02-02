@@ -8,6 +8,9 @@ local plat = (function ()
         if lm.compiler == "gcc" then
             return "mingw"
         end
+        if lm.cc == "clang-cl" then
+            return "clang_cl"
+        end
         return "msvc"
     end
     return lm.os
