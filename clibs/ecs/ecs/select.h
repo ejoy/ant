@@ -52,10 +52,10 @@ namespace ecs {
         }
         template <typename C>
         constexpr auto component_name() noexcept {
-    #if defined(_MSC_VER)
-            return component_name({__FUNCSIG__, sizeof(__FUNCSIG__) - 17});
-    #else
+    #if __GNUC__ || __clang__
             return component_name({__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 2});
+    #else
+            return component_name({__FUNCSIG__, sizeof(__FUNCSIG__) - 17});
     #endif
         }
         template <typename T>

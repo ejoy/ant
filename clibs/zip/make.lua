@@ -150,16 +150,17 @@ lm:source_set "zlib-ng" {
         deps = "zlib-ng-arm",
     },
     msvc = {
-        deps = "zlib-ng-x86-simd",
+        deps = {
+            lm.cc == "clang-cl"
+                and "zlib-ng-x86"
+                or "zlib-ng-x86-simd",
+        },
         defines = {
             "_CRT_SECURE_NO_DEPRECATE",
             "_CRT_NONSTDC_NO_DEPRECATE",
         }
     },
     mingw = {
-        deps = "zlib-ng-x86",
-    },
-    clang_cl = {
         deps = "zlib-ng-x86",
     },
     gcc = {
