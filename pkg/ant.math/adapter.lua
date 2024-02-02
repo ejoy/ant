@@ -31,6 +31,6 @@ if not __ANT_RUNTIME__ then
     if not ozzoffline.adapter then
         ozzoffline.adapter = true
         local mt = ozzoffline.RawAnimationMt().__index
-        mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 5)
+        mt.add_key = math3d_adapter.format(mt.add_key, "vqv", 4)
     end
 end

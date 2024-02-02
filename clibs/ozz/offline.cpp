@@ -19,81 +19,37 @@ namespace ozzlua {
 }
 
 namespace ozzlua::RawAnimation {
-	static int setup(lua_State* L) {
+	static int set_duration(lua_State* L) {
 		auto& raw = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
-		auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 2);
-		raw.duration = (float)lua_tonumber(L, 3);
-		raw.tracks.resize(ske.num_joints());
+		raw.duration = (float)luaL_checknumber(L, 2);
 		return 0;
 	}
-
-	static int push_prekey(lua_State* L) {
+	static int resize(lua_State* L) {
 		auto& raw = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
-		auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 2);
-		int idx = ozz::animation::FindJoint(ske, luaL_checkstring(L, 3));
-		if (idx < 0) {
-			luaL_error(L, "Can not found joint name");
-			return 0;
-		}
-		ozz::animation::offline::RawAnimation::JointTrack& track = raw.tracks[idx];
-
-		// time
-		float time = (float)lua_tonumber(L, 4);
-
-		// scale
-		ozz::math::Float3 scale;
-		memcpy(&scale, lua_touserdata(L, 5), sizeof(scale));
-		ozz::animation::offline::RawAnimation::ScaleKey PreScaleKey;
-		PreScaleKey.time = time;
-		PreScaleKey.value = scale;
-		track.scales.push_back(PreScaleKey);
-
-		// rotation
-		ozz::math::Quaternion rotation;
-		memcpy(&rotation, lua_touserdata(L, 6), sizeof(rotation));
-		ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
-		PreRotationKey.time = time;
-		PreRotationKey.value = rotation;
-		track.rotations.push_back(PreRotationKey);
-
-		// translation
-		ozz::math::Float3 translation;
-		memcpy(&translation, lua_touserdata(L, 7), sizeof(translation));
-		ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
-		PreTranslationKeys.time = time;
-		PreTranslationKeys.value = translation;
-		track.translations.push_back(PreTranslationKeys);
+		raw.tracks.resize(luaL_checkinteger(L, 2));
 		return 0;
 	}
-
-	static int clear(lua_State* L) {
+	static int add_key(lua_State* L) {
 		auto& raw = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
-		raw.tracks.clear();
-		return 0;
-	}
+		lua_Integer joint_index = luaL_checkinteger(L, 2);
+		float time = (float)luaL_checknumber(L, 3);
+		auto const& scale = *(ozz::math::Float3*)lua_touserdata(L, 4);
+		auto const& rotation = *(ozz::math::Quaternion*)lua_touserdata(L, 5);
+		auto const& translation = *(ozz::math::Float3*)lua_touserdata(L, 6);
 
-	static int clear_prekey(lua_State* L) {
-		auto& raw = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
-		auto& ske = bee::lua::checkudata<ozz::animation::Skeleton>(L, 2);
-		int idx = ozz::animation::FindJoint(ske, lua_tostring(L, 3));
-		if (idx < 0) {
-			luaL_error(L, "Can not found joint name");
-			return 0;
-		}
-		ozz::animation::offline::RawAnimation::JointTrack& track = raw.tracks[idx];
-		track.scales.clear();
-		track.rotations.clear();
-		track.translations.clear();
+		auto& track = raw.tracks[joint_index-1];
+		track.scales.emplace_back(time, scale);
+		track.rotations.emplace_back(time, rotation);
+		track.translations.emplace_back(time, translation);
 		return 0;
 	}
 
 	static void metatable(lua_State* L) {
 		static luaL_Reg lib[] = {
-			{ "setup", setup },
-			{ "push_prekey", push_prekey },
-			{ "clear", clear },
-			{ "clear_prekey", clear_prekey },
-			{ nullptr, nullptr }
+			{ "set_duration", set_duration },
+			{ "resize", resize },
+			{ "add_key", add_key },
+			{ nullptr, nullptr },
 		};
 		luaL_newlibtable(L, lib);
 		luaL_setfuncs(L, lib, 0);
@@ -187,7 +143,6 @@ namespace ozzlua {
 	}
 }
 
-
 static int lsave(lua_State* L) {
 	auto& anim = bee::lua::checkudata<ozz::animation::Animation>(L, 1);
 	const char* filename = luaL_checkstring(L, 2);
@@ -197,10 +152,8 @@ static int lsave(lua_State* L) {
 	return 0;
 }
 
-extern "C" int
-luaopen_ozz_offline(lua_State *L) {
-	luaL_checkversion(L);
-	lua_newtable(L);
+extern "C"
+int luaopen_ozz_offline(lua_State *L) {
 	static luaL_Reg lib[] = {
 		{ "RawAnimation", ozzlua::RawAnimation::create },
 		{ "RawAnimationMt", ozzlua::RawAnimation::getmetatable },
@@ -209,7 +162,7 @@ luaopen_ozz_offline(lua_State *L) {
 		{ "save", lsave },
 		{ NULL, NULL },
 	};
-	luaL_setfuncs(L, lib, 0);
+	luaL_newlib(L, lib);
 	return 1;
 }
 

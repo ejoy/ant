@@ -28,7 +28,7 @@ local Dir = {
 	math3d.ref(math3d.normalize(math3d.vector{1,1,1})),
 }
 
-local function tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip, time, duration, to_pos, to_rot, poseMat, reverse, sum)
+local function tween_push_anim_key(raw_anim, sample_ratio, joint_index, clip, time, duration, to_pos, to_rot, poseMat, reverse, sum)
 	if clip.tween == mu.TWEEN_LINEAR and math.abs(to_rot[1]) < 180 and math.abs(to_rot[2]) < 180 and math.abs(to_rot[3]) < 180 then
 		return
 	end
@@ -52,18 +52,17 @@ local function tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip
 			t = math3d.add(start_pos, target_pos)
 		}
 		local tween_to_s, tween_to_r, tween_to_t = math3d.srt(math3d.mul(poseMat, tween_local_mat))
-		raw_anim:push_prekey(ske, joint_name, time + j * tween_step * duration, tween_to_s, tween_to_r, tween_to_t)
+		raw_anim:add_key(joint_index, time + j * tween_step * duration, tween_to_s, tween_to_r, tween_to_t)
 	end
 end
 
-local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inherit)
+local function push_anim_key(raw_anim, poseMat, sample_ratio, joint_index, clips, inherit)
 	local frame_to_time = 1.0 / sample_ratio
-	local poseMat = ske:joint(ske:joint_index(joint_name))
 	local localMat = math3d.matrix{s = 1, r = mc.IDENTITY_QUAT, t = mc.ZERO}
 	local from_s, from_r, from_t = math3d.srt(math3d.mul(poseMat, localMat))
 	local sum = {pos = mc.ZERO, rot = {0, 0, 0}}
 	if not clips or #clips < 1 then
-		raw_anim:push_prekey(ske, joint_name, 0, from_s, from_r, from_t)
+		raw_anim:add_key(joint_index, 0, from_s, from_r, from_t)
 	else
 		for _, clip in ipairs(clips) do
 			if clip.range[1] >= 0 and clip.range[2] >= 0 then
@@ -77,7 +76,7 @@ local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inh
 				local step = (duration / subdiv) * frame_to_time
 				local start_time = clip.range[1] * frame_to_time
 				if duration < subdiv or step <= frame_to_time then
-					raw_anim:push_prekey(ske, joint_name, start_time, from_s, from_r, from_t)
+					raw_anim:add_key(joint_index, start_time, from_s, from_r, from_t)
 					goto continue
 				end
 				local to_rot = {0,clip.amplitude_rot,0}
@@ -104,10 +103,10 @@ local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inh
 				local endtime = clip.range[2] * frame_to_time
 				if clip.type == TYPE_LINEAR then
 					for i = 1, clip.repeat_count, 1 do
-						raw_anim:push_prekey(ske, joint_name, time, from_s, from_r, from_t)
-						tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
+						raw_anim:add_key(joint_index, time, from_s, from_r, from_t)
+						tween_push_anim_key(raw_anim, sample_ratio, joint_index, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
 						time = start_time + i * step - frame_to_time
-						raw_anim:push_prekey(ske, joint_name, time, to_s, to_r, to_t)
+						raw_anim:add_key(joint_index, time, to_s, to_r, to_t)
 						time = time + frame_to_time
 						if time >= endtime then
 							break;
@@ -116,21 +115,21 @@ local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inh
 				else
 					localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(-target_rot[1]), math.rad(-target_rot[2]), math.rad(-target_rot[3])}, t = math3d.mul(target_pos, math3d.vector(-1,-1,-1))}
 					local to_s2, to_r2, to_t2 = math3d.srt(math3d.mul(poseMat, localMat))
-					raw_anim:push_prekey(ske, joint_name, time, from_s, from_r, from_t)
+					raw_anim:add_key(joint_index, time, from_s, from_r, from_t)
 					for i = 1, clip.repeat_count, 1 do
-						tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
+						tween_push_anim_key(raw_anim, sample_ratio, joint_index, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
 						time = time + step
-						raw_anim:push_prekey(ske, joint_name, time, to_s, to_r, to_t)
-						tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, true, inherit and sum)
+						raw_anim:add_key(joint_index, time, to_s, to_r, to_t)
+						tween_push_anim_key(raw_anim, sample_ratio, joint_index, clip, time, step, clip.amplitude_pos, to_rot, poseMat, true, inherit and sum)
 						if clip.type == TYPE_REBOUND then
 							time = (i == clip.repeat_count) and (clip.range[2] * frame_to_time) or (time + step)
-							raw_anim:push_prekey(ske, joint_name, time, from_s, from_r, from_t)
+							raw_anim:add_key(joint_index, time, from_s, from_r, from_t)
 						elseif clip.type == TYPE_SHAKE then
 							time = time + step
-							tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, false, inherit and sum)
+							tween_push_anim_key(raw_anim, sample_ratio, joint_index, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, false, inherit and sum)
 							time = time + step
-							raw_anim:push_prekey(ske, joint_name, time, to_s2, to_r2, to_t2)
-							tween_push_anim_key(raw_anim, ske, sample_ratio, joint_name, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, true, inherit and sum)
+							raw_anim:add_key(joint_index, time, to_s2, to_r2, to_t2)
+							tween_push_anim_key(raw_anim, sample_ratio, joint_index, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, true, inherit and sum)
 							time = time + step
 						end
 						if time >= endtime then
@@ -138,7 +137,7 @@ local function push_anim_key(raw_anim, ske, sample_ratio, joint_name, clips, inh
 						end
 					end
 					if clip.type == TYPE_SHAKE then
-						raw_anim:push_prekey(ske, joint_name, clip.range[2] * frame_to_time, from_s, from_r, from_t)
+						raw_anim:add_key(joint_index, clip.range[2] * frame_to_time, from_s, from_r, from_t)
 					end
 				end
 				if inherit then
@@ -165,19 +164,21 @@ return function (setting, skecontent, input, output)
 	local raw_animation = ozzoffline.RawAnimation()
 	local joint_anims = ske_anim.target_anims
 	local sample_ratio = ske_anim.sample_ratio
-	local flags = {}
-	raw_animation:setup(ske, ske_anim.duration)
+	local map = {}
 	for _, anim in ipairs(joint_anims) do
-		flags[ske:joint_index(anim.target_name)] = true
-		raw_animation:clear_prekey(ske, anim.target_name)
-		push_anim_key(raw_animation, ske, sample_ratio, anim.target_name, anim.clips, anim.inherit and anim.inherit[3])
+		map[anim.target_name] = anim
 	end
-	local ske_count = ske:num_joints()
-	for i = 1, ske_count do
-		if not flags[i] then
-			local joint_name = ske:joint_name(i)
-			raw_animation:clear_prekey(ske, joint_name)
-			push_anim_key(raw_animation, ske, sample_ratio, joint_name)
+	local num_joints = ske:num_joints()
+	raw_animation:set_duration(ske_anim.duration)
+	raw_animation:resize(num_joints)
+	for joint_index = 1, num_joints do
+		local joint_name = ske:joint_name(joint_index)
+		local poseMat = ske:joint(joint_index)
+		local anim = map[joint_name]
+		if anim then
+			push_anim_key(raw_animation, poseMat, sample_ratio, joint_index, anim.clips, anim.inherit and anim.inherit[3])
+		else
+			push_anim_key(raw_animation, poseMat, sample_ratio, joint_index)
 		end
 	end
 	local optimizer_setting = {
