@@ -6,7 +6,6 @@ import_package "ant.window".start {
     feature = {
         "ant.render",
         "ant.test.features",
-        "ant.anim_ctrl",
         "ant.animation",
         "ant.camera|camera_controller",
         "ant.camera|camera_recorder",
