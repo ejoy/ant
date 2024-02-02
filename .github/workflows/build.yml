@@ -10,7 +10,6 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake
   mingw:
-    name: mingw
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
@@ -33,22 +32,16 @@ jobs:
     - shell: msys2 {0}
       run: ./luamake/luamake
   macos:
-    name: macos
     runs-on: macos-14
     steps:
-    - name: switch to Xcode 15.1
-      run: sudo xcode-select -s "/Applications/Xcode_15.1.app"
     - uses: actions/checkout@v4
       with:
         submodules: true
     - uses: actboy168/setup-luamake@master
     - run: luamake
   ios:
-    name: ios
     runs-on: macos-14
     steps:
-    - name: switch to Xcode 15.1
-      run: sudo xcode-select -s "/Applications/Xcode_15.1.app"
     - uses: actions/checkout@v4
       with:
         submodules: true
