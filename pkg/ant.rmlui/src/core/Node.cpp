@@ -1,5 +1,4 @@
 #include <core/Node.h>
-#include <core/Element.h>
 
 namespace Rml {
 

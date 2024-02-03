@@ -53,12 +53,6 @@ struct EdgeInsets {
 	T& operator[](size_t i) const {
 		return ((T*)this)[i];
 	}
-	bool operator==(const EdgeInsets& rhs) const {
-		return std::tie(left, top, right, bottom) == std::tie(rhs.left, rhs.top, rhs.right, bottom);
-	}
-	bool operator!=(const EdgeInsets& rhs) const {
-		return !(*this == rhs);
-	}
 };
 
 template <typename T>
@@ -69,12 +63,6 @@ struct CornerInsets {
 	T bottomLeft{};
 	T& operator[](size_t i) const {
 		return ((T*)this)[i];
-	}
-	bool operator==(const CornerInsets& rhs) const {
-		return std::tie(topLeft, topRight, bottomLeft, bottomRight) == std::tie(rhs.topLeft, rhs.topRight, rhs.bottomLeft, bottomRight);
-	}
-	bool operator!=(const CornerInsets& rhs) const {
-		return !(*this == rhs);
 	}
 };
 
