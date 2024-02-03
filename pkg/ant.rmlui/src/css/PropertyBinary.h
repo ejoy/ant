@@ -8,6 +8,7 @@
 #include <optional>
 #include <span>
 #include <stdexcept>
+#include <functional>
 #include <bee/nonstd/unreachable.h>
 
 namespace Rml {

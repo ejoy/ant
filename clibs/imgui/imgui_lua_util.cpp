@@ -1,6 +1,7 @@
 #include "imgui_lua_util.h"
 #include "backend/imgui_impl_bgfx.h"
 #include <bee/nonstd/unreachable.h>
+#include <stdint.h>
 
 namespace imgui_lua::util {
 
