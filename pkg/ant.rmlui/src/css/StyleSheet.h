@@ -2,7 +2,6 @@
 
 #include <core/ID.h>
 #include <css/StyleCache.h>
-#include <unordered_map>
 #include <map>
 #include <vector>
 
@@ -21,8 +20,10 @@ struct AnimationKey {
 	PropertyRef prop;
 };
 
-using Keyframe = std::vector<AnimationKey>;
-using Keyframes = std::map<PropertyId, Keyframe>;
+struct AnimationKeyframe: public std::vector<AnimationKey> {
+};
+
+using AnimationKeyframes = std::map<PropertyId, AnimationKeyframe>;
 
 class StyleSheet {
 public:
@@ -33,12 +34,12 @@ public:
 	void AddNode(StyleSheetNode && node);
 	void AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties);
 	void Sort();
-	const Keyframes* GetKeyframes(const std::string& name) const;
+	const AnimationKeyframes* GetKeyframes(const std::string& name) const;
 	Style::TableRef GetElementDefinition(const Element* element) const;
 
 private:
 	std::vector<StyleSheetNode> stylenode;
-	std::unordered_map<std::string, Keyframes> keyframes;
+	std::map<std::string, AnimationKeyframes> keyframes;
 };
 
 }

@@ -2,7 +2,6 @@
 
 #include <core/Types.h>
 #include <css/PropertyIdSet.h>
-#include <string>
 #include <stdint.h>
 
 typedef struct YGNode* YGNodeRef;

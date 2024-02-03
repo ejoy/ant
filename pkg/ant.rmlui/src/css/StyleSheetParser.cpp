@@ -1,8 +1,8 @@
 #include <css/StyleSheetParser.h>
 #include <css/StyleSheetNode.h>
-#include <util/Log.h>
 #include <css/StyleSheet.h>
 #include <css/StyleSheetSpecification.h>
+#include <util/Log.h>
 #include <util/StringUtilities.h>
 #include <algorithm>
 #include <assert.h>

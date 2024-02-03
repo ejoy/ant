@@ -5,8 +5,9 @@
 #include <core/Transform.h>
 #include <css/PropertyFloat.h>
 #include <css/PropertyKeyword.h>
-#include <string>
 #include <css/PropertyBinary.h>
+#include <functional>
+#include <string>
 
 namespace Rml {
     using PropertyView = PropertyVariantView<PropertyFloat, PropertyKeyword, Color, std::string, Transform, Transition, Animation>;

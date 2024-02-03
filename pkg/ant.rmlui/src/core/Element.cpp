@@ -1,18 +1,18 @@
 #include <core/Element.h>
-#include <binding/Context.h>
 #include <core/Document.h>
 #include <core/ElementAnimation.h>
 #include <core/ElementBackground.h>
-#include <core/Event.h>
-#include <util/HtmlParser.h>
 #include <core/Interface.h>
-#include <util/Log.h>
-#include <util/StringUtilities.h>
-#include <css/StyleSheetParser.h>
-#include <css/StyleSheetSpecification.h>
 #include <core/Text.h>
 #include <core/Transform.h>
+#include <css/StyleSheet.h>
+#include <css/StyleSheetParser.h>
+#include <css/StyleSheetSpecification.h>
+#include <binding/Context.h>
 #include <util/AlwaysFalse.h>
+#include <util/HtmlParser.h>
+#include <util/Log.h>
+#include <util/StringUtilities.h>
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
@@ -857,7 +857,7 @@ void Element::HandleAnimationProperty() {
 	}
 	auto animation = property.Get<Animation>();
 	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
-	if (const Keyframes* keyframes = stylesheet.GetKeyframes(animation.name)) {
+	if (auto keyframes = stylesheet.GetKeyframes(animation.name)) {
 		for (auto const& [id, keyframe] : *keyframes) {
 			auto [res, suc] = animations.emplace(id, ElementAnimation { *this, id, animation, keyframe });
 			if (suc) {

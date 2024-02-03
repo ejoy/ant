@@ -3,9 +3,10 @@
 #include <css/Property.h>
 #include <core/Tween.h>
 #include <core/ID.h>
-#include <css/StyleSheet.h>
 
 namespace Rml {
+
+struct AnimationKeyframe;
 
 class ElementInterpolate {
 public:
@@ -33,14 +34,14 @@ private:
 
 class ElementAnimation {
 public:
-	ElementAnimation(Element& element, PropertyId id, const Animation& animation, const Keyframe& keyframe);
+	ElementAnimation(Element& element, PropertyId id, const Animation& animation, const AnimationKeyframe& keyframe);
 	Property UpdateProperty(Element& element, float delta);
 	const std::string& GetName() const { return animation.name; }
 	bool IsComplete() const { return complete; }
 	float GetTime() const { return time; }
 private:
 	const Animation animation;
-	const Keyframe& keyframe;
+	const AnimationKeyframe& keyframe;
 	ElementInterpolate interpolate;
 	float time;
 	int current_iteration;

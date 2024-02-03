@@ -106,7 +106,7 @@ Property ElementTransition::UpdateProperty(float delta) {
 	return interpolate.Update(0.0f, 1.0f, t, transition.tween);
 }
 
-ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animation& animation, const Keyframe& keyframe)
+ElementAnimation::ElementAnimation(Element& element, PropertyId id, const Animation& animation, const AnimationKeyframe& keyframe)
 	: animation(animation)
 	, keyframe(keyframe)
 	, interpolate(element, id, keyframe[0].prop, keyframe[1].prop)

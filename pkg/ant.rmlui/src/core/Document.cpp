@@ -1,9 +1,9 @@
 #include <core/Document.h>
-#include <binding/Context.h>
 #include <core/Interface.h>
+#include <core/Text.h>
 #include <css/StyleSheet.h>
 #include <css/StyleSheetParser.h>
-#include <core/Text.h>
+#include <binding/Context.h>
 #include <util/HtmlParser.h>
 
 namespace Rml {

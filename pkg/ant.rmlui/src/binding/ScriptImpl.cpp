@@ -1,7 +1,6 @@
 #include <binding/Context.h>
 #include <core/Interface.h>
 #include <core/Document.h>
-#include <core/Event.h>
 #include <binding/ScriptImpl.h>
 #include "lua2struct.h"
 #include <functional>

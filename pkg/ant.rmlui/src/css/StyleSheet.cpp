@@ -11,7 +11,7 @@ StyleSheet::StyleSheet()
 StyleSheet::~StyleSheet()
 {}
 
-const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
+const AnimationKeyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	auto it = keyframes.find(name);
 	if (it != keyframes.end())
 		return &(it->second);
