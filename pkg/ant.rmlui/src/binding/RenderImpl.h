@@ -2,7 +2,6 @@
 
 #include <core/Interface.h>
 #include <bgfx/c99/bgfx.h>
-#include <core/Interface.h>
 #include <map>
 #include <string>
 #include <stdint.h>

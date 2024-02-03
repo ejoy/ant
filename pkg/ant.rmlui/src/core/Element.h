@@ -9,6 +9,8 @@
 #include <css/StyleCache.h>
 #include <optional>
 #include <unordered_map>
+#include <map>
+#include <functional>
 
 namespace Rml {
 

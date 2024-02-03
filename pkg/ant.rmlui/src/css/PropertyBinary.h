@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstring>
 #include <deque>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <span>

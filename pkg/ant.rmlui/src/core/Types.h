@@ -1,9 +1,7 @@
 #pragma once
 
 #include <algorithm>
-#include <cstdint>
-#include <tuple>
-#include <glm/gtc/matrix_transform.hpp>
+#include <stdint.h>
 
 namespace Rml {
 

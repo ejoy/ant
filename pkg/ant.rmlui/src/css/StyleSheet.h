@@ -3,6 +3,7 @@
 #include <core/ID.h>
 #include <css/StyleCache.h>
 #include <unordered_map>
+#include <map>
 #include <vector>
 
 namespace Rml {

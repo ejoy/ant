@@ -3,9 +3,7 @@
 #include <core/Tween.h>
 #include <core/ID.h>
 #include <css/PropertyIdSet.h>
-#include <map>
 #include <string>
-#include <vector>
 
 namespace Rml {
 

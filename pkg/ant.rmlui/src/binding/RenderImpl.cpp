@@ -3,8 +3,8 @@
 #include <binding/Context.h>
 #include <core/Color.h>
 #include <core/Interface.h>
+#include <assert.h>
 #include <memory.h>
-#include <cassert>
 #include <stdint.h>
 #include <lua.hpp>
 #include "../bgfx/bgfx_interface.h"
@@ -16,16 +16,11 @@ extern "C" {
     #include <font_manager.h>
 }
 
-#ifdef RMLUI_MATRIX_ROW_MAJOR
-error "need matrix type as column major"
-#endif //RMLUI_MATRIX_ROW_MAJOR
-
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 
 typedef unsigned int utfint;
 #define MAXUNICODE	0x10FFFFu
 #define MAXUTF		0x7FFFFFFFu
-#define FIXPOINT FONT_POSTION_FIX_POINT
 
 namespace Rml {
 

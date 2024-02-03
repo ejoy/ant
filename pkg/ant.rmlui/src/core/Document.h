@@ -4,6 +4,7 @@
 #include <css/StyleSheet.h>
 #include <memory>
 #include <deque>
+#include <functional>
 
 namespace Rml {
 
