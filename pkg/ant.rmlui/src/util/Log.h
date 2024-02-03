@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bee/nonstd/format.h>
 #include <bee/nonstd/print.h>
 
 namespace Rml::Log {
