@@ -56,7 +56,7 @@ static bool IsValidIdentifier(const std::string& str) {
 
 bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::string& identifier, const std::string& rules, const PropertyVector& properties) {
 	if (!IsValidIdentifier(identifier)) {
-		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), source_url.data(), line_number);
+		Log::Warning("Invalid keyframes identifier '{}' at {}:{}", identifier, source_url, line_number);
 		return false;
 	}
 	if (properties.empty()) {
@@ -82,7 +82,7 @@ bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::st
 	}
 
 	if (rule_values.empty()) {
-		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), source_url.data(), line_number);
+		Log::Warning("Invalid keyframes rule(s) '{}' at {}:{}", rules, source_url, line_number);
 		return false;
 	}
 
@@ -135,7 +135,7 @@ bool StyleSheetParser::Parse(std::string_view data, StyleSheet& style_sheet, std
 				}
 				else
 				{
-					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, source_url.data(), line_number);
+					Log::Warning("Invalid character '{}' found while parsing stylesheet at {}:{}. Trying to proceed.", token, source_url, line_number);
 				}
 			}
 			break;
@@ -155,13 +155,13 @@ bool StyleSheetParser::Parse(std::string_view data, StyleSheet& style_sheet, std
 						// Invalid identifier, should ignore
 						at_rule_name.clear();
 						state = State::Global;
-						Log::Message(Log::Level::Warning, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), source_url.data(), line_number);
+						Log::Warning("Invalid at-rule identifier '{}' found in stylesheet at {}:{}", at_rule_identifier, source_url, line_number);
 					}
 
 				}
 				else
 				{
-					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, source_url.data(), line_number);
+					Log::Warning("Invalid character '{}' found while parsing at-rule identifier in stylesheet at {}:{}", token, source_url, line_number);
 					state = State::Invalid;
 				}
 			}
@@ -185,7 +185,7 @@ bool StyleSheetParser::Parse(std::string_view data, StyleSheet& style_sheet, std
 				}
 				else
 				{
-					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, source_url.data(), line_number);
+					Log::Warning("Invalid character '{}' found while parsing keyframe block in stylesheet at {}:{}", token, source_url, line_number);
 					state = State::Invalid;
 				}
 			}
@@ -239,7 +239,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
 					{
-						Log::Message(Log::Level::Warning, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), source_url.data(), line_number);
+						Log::Warning("Found name with no value while parsing property declaration '{}' at {}:{}", name, source_url, line_number);
 						name.clear();
 					}
 				}
@@ -247,7 +247,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 				{
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
-						Log::Message(Log::Level::Warning, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), source_url.data(), line_number);
+						Log::Warning("End of rule encountered while parsing property declaration '{}' at {}:{}", name, source_url, line_number);
 					return true;
 				}
 				else if (character == ':')
@@ -267,7 +267,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 					value = StringUtilities::StripWhitespace(value);
 
 					if (!StyleSheetSpecification::ParseDeclaration(vec, name, value))
-						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), source_url.data(), line_number);
+						Log::Warning("Syntax error parsing property declaration '{}: {};' in {}:{}.", name, value, source_url, line_number);
 
 					name.clear();
 					value.clear();
@@ -305,11 +305,11 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 		value = StringUtilities::StripWhitespace(value);
 
 		if (!StyleSheetSpecification::ParseDeclaration(vec, name, value))
-			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), source_url.data(), line_number);
+			Log::Warning("Syntax error parsing property declaration '{}: {};' in {}:{}.", name, value, source_url, line_number);
 	}
 	else if (!name.empty() || !value.empty())
 	{
-		Log::Message(Log::Level::Warning, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), source_url.data(), line_number);
+		Log::Warning("Invalid property declaration '{}':'{}' at {}:{}", name, value, source_url, line_number);
 	}
 	
 	return true;
@@ -424,7 +424,7 @@ void ParseStyleSheet(PropertyVector& properties, std::string_view data) {
 void ParseStyleSheet(StyleSheet& sheet, std::string_view source_path, std::string_view content) {
 	StyleSheetParser parser;
 	if (!parser.Parse(content, sheet, source_path, 1)) {
-		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", source_path.data());
+		Log::Error("Failed to load style sheet in {}.", source_path);
 		return;
 	}
 }
@@ -432,7 +432,7 @@ void ParseStyleSheet(StyleSheet& sheet, std::string_view source_path, std::strin
 void ParseStyleSheet(StyleSheet& sheet, std::string_view source_path, std::string_view content, int line) {
 	StyleSheetParser parser;
 	if (!parser.Parse(content, sheet, source_path, line)) {
-		Log::Message(Log::Level::Error, "Failed to load style sheet in %s:%d.", source_path.data(), line);
+		Log::Error("Failed to load style sheet in {}:{}.", source_path, line);
 	}
 }
 

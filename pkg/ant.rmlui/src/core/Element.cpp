@@ -1382,7 +1382,7 @@ bool Element::SetProperty(std::string_view name, std::string_view value) {
 	bool changed;
 	PropertyVector properties;
 	if (!StyleSheetSpecification::ParseDeclaration(properties, name, value)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.data(), value.data());
+		Log::Warning("Syntax error parsing inline property declaration '{}: {};'.", name, value);
 		return false;
 	}
 	StartTransition([&](){
@@ -1395,7 +1395,7 @@ bool Element::DelProperty(std::string_view name) {
 	bool changed;
 	PropertyIdSet properties;
 	if (!StyleSheetSpecification::ParseDeclaration(properties, name)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.data());
+		Log::Warning("Syntax error parsing inline property declaration '{};'.", name);
 		return false;
 	}
 	StartTransition([&](){
@@ -1407,7 +1407,7 @@ bool Element::DelProperty(std::string_view name) {
 std::optional<std::string> Element::GetProperty(std::string_view name) const {
 	PropertyIdSet properties;
 	if (!StyleSheetSpecification::ParseDeclaration(properties, name)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.data());
+		Log::Warning("Syntax error parsing inline property declaration '{};'.", name);
 		return std::nullopt;
 	}
 

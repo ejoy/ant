@@ -55,22 +55,22 @@ void StyleSheet::Sort() {
 			auto& kf = it->second;
 			std::sort(kf.begin(), kf.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
 			if (kf.empty()) {
-				Log::Message(Log::Level::Warning, "Keyframe has no rule.");
+				Log::Warning("Keyframe has no rule.");
 				it = kfs.erase(it);
 				continue;
 			}
 			if (kf.front().time != 0.f) {
-				Log::Message(Log::Level::Warning, "Keyframe has no from rule.");
+				Log::Warning("Keyframe has no from rule.");
 				it = kfs.erase(it);
 				continue;
 			}
 			if (kf.back().time != 1.f) {
-				Log::Message(Log::Level::Warning, "Keyframe has no to rule.");
+				Log::Warning("Keyframe has no to rule.");
 				it = kfs.erase(it);
 				continue;
 			}
 			if (kf.size() > 255) {
-				Log::Message(Log::Level::Warning, "Keyframe has too many rules.");
+				Log::Warning("Keyframe has too many rules.");
 				it = kfs.erase(it);
 				continue;
 			}

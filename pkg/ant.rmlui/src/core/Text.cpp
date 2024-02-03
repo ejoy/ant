@@ -386,7 +386,7 @@ FontFaceHandle Text::GetFontFaceHandle() {
 	int size = (int)GetParentNode()->GetFontSize();
 	font_handle = GetRender()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
-		Log::Message(Log::Level::Error, "Load font %s failed.", family.c_str());
+		Log::Error("Load font {} failed.", family);
 	}
 	return font_handle;
 }

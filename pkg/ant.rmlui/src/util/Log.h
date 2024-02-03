@@ -1,20 +1,14 @@
 #pragma once
 
-#include <stdint.h>
+#include <bee/nonstd/print.h>
 
-namespace Rml {
-
-class Log {
-public:
-	enum class Level : uint8_t {
-		Always,
-		Error,
-		Warning,
-		Info,
-		Debug,
-	};
-	
-	static void Message(Level level, const char* format, ...);
-};
-
+namespace Rml::Log {
+template <typename... T>
+void Warning(std::format_string<T...> fmt, T&&... args) {
+    std::println(stderr, fmt, std::forward<T>(args)...);
+}
+template <typename... T>
+void Error(std::format_string<T...> fmt, T&&... args) {
+    std::println(stderr, fmt, std::forward<T>(args)...);
+}
 }

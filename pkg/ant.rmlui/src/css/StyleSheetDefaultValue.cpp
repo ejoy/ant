@@ -77,7 +77,7 @@ void StyleSheetDefaultValue::Initialise() {
 	for (auto const& [id, value] : UnparsedDefaultValue) {
 		if (!StyleSheetSpecification::ParseDeclaration(properties, id, value)) {
 			auto prop_name = GetCssEnumName<CssEnumNameStyle::Kebab>(id);
-			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", prop_name.data(), value.data());
+			Log::Error("property '{}' default value ({}) parse failed..", prop_name, value);
 		}
 	}
 	DefaultValueProperties = Style::Instance().Create(properties);

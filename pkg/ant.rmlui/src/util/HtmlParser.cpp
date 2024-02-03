@@ -779,10 +779,10 @@ bool ParseHtml(const std::string_view& path, const std::string_view& data, bool 
 	}
 	catch (HtmlParserException& e) {
 		if (path.empty()) {
-			Log::Message(Log::Level::Error, "Parse error: %s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
+			Log::Error("Parse error: {} Line: {} Column: {}", e.what(), e.GetLine(), e.GetColumn());
 		}
 		else {
-			Log::Message(Log::Level::Error, "%s Parse error: %s Line: %d Column: %d", path.data(), e.what(), e.GetLine(), e.GetColumn());
+			Log::Error("{} Parse error: {} Line: {} Column: {}", path, e.what(), e.GetLine(), e.GetColumn());
 		}
 		return false;
 	}
