@@ -89,7 +89,6 @@ public:
 	
 	bool IsDirty() const;
 	void MarkDirty();
-	void Print() const;
 
 	bool HasNewLayout();
 	Overflow GetOverflow() const;

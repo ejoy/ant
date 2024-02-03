@@ -86,7 +86,6 @@ Layout::~Layout() {
 
 float Layout::YGValueToFloat(float v) const {
 	if (YGFloatIsUndefined(v)) {
-		//Print();
 		return 0.0f;
 	}
 	return v;
@@ -106,13 +105,6 @@ void Layout::RemoveChild(Layout const& child) {
 
 void Layout::RemoveAllChildren() {
 	YGNodeRemoveAllChildren(node);
-}
-
-void Layout::Print() const {
-#if defined(DEBUG)
-	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
-	YGNodePrint(node, options);
-#endif
 }
 
 static void SetFloatProperty(YGNodeRef node, PropertyId id, float v) {
