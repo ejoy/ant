@@ -69,6 +69,7 @@ int luaopen_textureman_server(lua_State *L);
 int luaopen_vfs(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_zip(lua_State* L);
+int luaopen_cell_core(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -115,7 +116,7 @@ void ant_loadmodules(lua_State* L) {
         { "ecs.util", luaopen_ecs_util},
         { "fastio", luaopen_fastio},
         { "render.material.arena",  luaopen_material_arena},
-	{ "render.material.core",   luaopen_material_core},
+        { "render.material.core",   luaopen_material_core},
         { "render.render_material", luaopen_render_material},
         { "render.queue",           luaopen_render_queue},
         { "system.render",      luaopen_system_render},
@@ -127,6 +128,7 @@ void ant_loadmodules(lua_State* L) {
         { "imgui.backend", luaopen_imgui_backend },
         { "imgui.legacy", luaopen_imgui_legacy },
         { "imgui.widgets", luaopen_imgui_widgets },
+		{ "cell.core", luaopen_cell_core },
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
 #endif

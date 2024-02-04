@@ -3,6 +3,7 @@ local exclusive     = require "ltask.exclusive"
 local bgfx          = require "bgfx"
 local platform      = require "bee.platform"
 local fontmanager
+local cell = import_package "ant.textcell"
 
 local initialized = false
 
@@ -200,6 +201,15 @@ function S.encoder_frame()
         encoder[who] = encoder_frame
         encoder_cur = encoder_cur + 1
         profile_end(who)
+--  textcell test
+--	cell.color(0x3)
+--	cell.open ">40% =3"
+--		cell.text "Hello"
+--		cell.text "|"
+--		cell.text "World"
+--	cell.close()
+--	local img, w, h = cell.frame(80, 25)
+--	bgfx.dbg_text_image(10,10, w, h, img)
     end
     return ltask.multi_wait "bgfx.frame"
 end

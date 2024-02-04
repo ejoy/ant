@@ -3262,7 +3262,12 @@ ldbgTextImage(lua_State *L) {
 	int y = luaL_checkinteger(L, 2);
 	int w = luaL_checkinteger(L, 3);
 	int h = luaL_checkinteger(L, 4);
-	const char * image = luaL_checkstring(L, 5);
+	const char * image;
+	if (lua_isuserdata(L, 5)) {
+		image = (const char *)lua_touserdata(L, 5);
+	} else {
+		image = luaL_checkstring(L, 5);
+	}
 	int pitch = luaL_optinteger(L, 6, 2 * w);
 	BGFX(dbg_text_image)(x,y,w,h,image, pitch);
 	return 0;
