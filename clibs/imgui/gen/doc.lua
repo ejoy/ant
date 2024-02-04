@@ -28,6 +28,7 @@ local lua_type = {
     ["int"] = "integer",
     ["size_t"] = "integer",
     ["ImGuiID"] = "integer",
+    ["ImWchar"] = "integer",
     ["ImWchar16"] = "integer",
     ["ImU32"] = "integer",
     ["ImGuiKeyChord"] = "ImGui.KeyChord",
@@ -117,6 +118,31 @@ end
 
 special_ret["ImGuiViewport*"] = function()
     writeln("---@return ImGuiViewport")
+end
+
+special_arg["const ImFontConfig*"] = function(type_meta, status)
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    if type_meta.default_value == nil then
+        writeln("---@param %s ImFontConfig", safe_name(type_meta.name))
+    elseif type_meta.default_value == "NULL" then
+        writeln("---@param %s? ImFontConfig", safe_name(type_meta.name))
+    else
+        assert(false)
+    end
+end
+
+special_arg["ImFont*"] = function(type_meta, status)
+    assert(type_meta.default_value == nil)
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    writeln("---@param %s ImFont", safe_name(type_meta.name))
+end
+
+special_ret["ImFont*"] = function()
+    writeln("---@return ImFont")
+end
+
+special_ret["const ImWchar*"] = function()
+    writeln("---@return ImFontRange")
 end
 
 special_arg["const ImGuiWindowClass*"] = function()
@@ -461,10 +487,14 @@ local function write_structs(struct_funcs)
     writeln ""
     writeln("---@alias ImGuiID integer")
     writeln ""
+    writeln("---@class ImFontRange")
+    writeln ""
     local lst <const> = {
         "ImVec2",
         "ImGuiViewport",
         "ImGuiIO",
+        "ImFontConfig",
+        "ImFontAtlas",
     }
     for _, name in ipairs(lst) do
         types.decode_docs(name, struct_funcs[name] or {}, writeln, write_func)

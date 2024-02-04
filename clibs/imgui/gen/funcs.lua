@@ -113,6 +113,36 @@ write_ret["ImGuiViewport*"] = function()
     return 1
 end
 
+write_arg["const ImFontConfig*"] = function(type_meta, status)
+    status.idx = status.idx + 1
+    status.arguments[#status.arguments+1] = type_meta.name
+    if type_meta.default_value == nil then
+        writeln("    auto %s = *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, status.idx)
+    elseif type_meta.default_value == "NULL" then
+        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, status.idx, status.idx)
+    else
+        assert(false)
+    end
+end
+
+write_arg["ImFont*"] = function(type_meta, status)
+    assert(type_meta.default_value == nil)
+    status.idx = status.idx + 1
+    status.arguments[#status.arguments+1] = type_meta.name
+    writeln("    auto %s = (ImFont*)lua_touserdata(L, %d);", type_meta.name, status.idx)
+end
+
+write_ret["ImFont*"] = function()
+    --TODO
+    writeln("    lua_pushlightuserdata(L, (void*)_retval);")
+    return 1
+end
+
+write_ret["const ImWchar*"] = function()
+    writeln("    lua_pushlightuserdata(L, (void*)_retval);")
+    return 1
+end
+
 write_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
 end
@@ -342,7 +372,7 @@ write_ret["ImGuiIO*"] = function()
     return 1
 end
 
-for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar16", "ImGuiID", "ImGuiKeyChord"} do
+for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar", "ImWchar16", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, status)
         status.idx = status.idx + 1
         if type_meta.default_value then
@@ -517,10 +547,13 @@ end
 local function write_structs(struct_funcs)
     local readonly <const> = {
         ["ImGuiViewport"] = true,
+        ["ImFontAtlas"] = true,
     }
     local lst <const> = {
         "ImGuiViewport",
         "ImGuiIO",
+        "ImFontConfig",
+        "ImFontAtlas",
     }
     for _, name in ipairs(lst) do
         types.decode_func(name, struct_funcs[name] or {}, writeln, write_func, readonly[name] or false)

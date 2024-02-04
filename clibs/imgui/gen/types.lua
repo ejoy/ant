@@ -26,7 +26,8 @@ local builtin_get <const> = {
 
 local reserve_type <const> = {
     ["ImGuiID"] = "ImGuiID",
-    ["ImGuiKeyChord"] = "ImGui.KeyChord"
+    ["ImGuiKeyChord"] = "ImGui.KeyChord",
+    ["const ImWchar*"] = "ImFontRange",
 }
 
 local registered_type = {}
@@ -188,6 +189,25 @@ local function decode_func_attris(name, writeln, readonly, meta)
                 decode_func_builtin(name, writeln, readonly, attris, builtin, field)
                 goto continue
             end
+        elseif field.type.declaration == "const ImWchar*" then
+            writeln("struct %s {", field.name)
+            writeln "    static int getter(lua_State* L) {"
+            writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+            writeln("        lua_pushlightuserdata(L, (void*)OBJ.%s);", field.name)
+            writeln "        return 1;"
+            writeln "    }"
+            if not readonly then
+                writeln ""
+                writeln "    static int setter(lua_State* L) {"
+                writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+                writeln("        OBJ.%s = (const ImWchar*)lua_touserdata(L, 1);", field.name, field.type.declaration)
+                writeln "        return 0;"
+                writeln "    }"
+            end
+            writeln "};"
+            writeln ""
+            attris.setters[#attris.setters+1] = field.name
+            attris.getters[#attris.getters+1] = field.name
         end
         ::continue::
     end

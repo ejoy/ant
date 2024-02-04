@@ -5,23 +5,9 @@
 #include "backend/imgui_impl_bgfx.h"
 #include "backend/imgui_impl_platform.h"
 #include "fastio.h"
+#include "../luabind/lua2struct.h"
 
 namespace imgui_lua_backend {
-
-static int read_field_checkint(lua_State *L, const char * field, int tidx) {
-    int v;
-    if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
-        if (!lua_isinteger(L, -1)) {
-            luaL_error(L, "Not an integer");
-        }
-        v = (int)lua_tointeger(L, -1);
-    } else {
-        v = 0;
-        luaL_error(L, "no int %s", field);
-    }
-    lua_pop(L, 1);
-    return v;
-}
 
 static float read_field_checkfloat(lua_State *L, const char * field, int tidx) {
     float v;
@@ -105,27 +91,7 @@ static int PlatformNewFrame(lua_State* L) {
 }
 
 static int RenderInit(lua_State* L) {
-    RendererInitArgs initargs;
-    initargs.fontProg = read_field_checkint(L, "fontProg", 1);
-    initargs.imageProg = read_field_checkint(L, "imageProg", 1);
-    initargs.fontUniform = read_field_checkint(L, "fontUniform", 1);
-    initargs.imageUniform = read_field_checkint(L, "imageUniform", 1);
-    
-    if (lua_getfield(L, 1, "viewIdPool") == LUA_TTABLE) {
-        lua_Integer n = luaL_len(L, -1);
-        initargs.viewIdPool.reserve((size_t)n);
-        for (lua_Integer i = 1; i <= n; ++i) {
-            if (LUA_TNUMBER == lua_geti(L, -1, i)) {
-                initargs.viewIdPool.push_back((int)luaL_checkinteger(L, -1));
-            }
-            lua_pop(L, 1);
-        }
-    }
-    else {
-        luaL_error(L, "no table viewIdPool");
-    }
-    lua_pop(L, 1);
-
+    auto initargs = lua_struct::unpack<RendererInitArgs>(L, 1);
     if (!ImGui_ImplBgfx_Init(initargs)) {
         return luaL_error(L, "Create renderer failed");
     }

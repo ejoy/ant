@@ -142,6 +142,14 @@ local TodoList <const> = {
     ImGui_ComboCharEx = true,
     ImGui_ComboCallback = true,
     ImGui_ComboCallbackEx = true,
+
+    ImFontAtlas_AddFontFromFileTTF = true,
+    ImFontAtlas_AddFontFromMemoryTTF = true,
+    ImFontAtlas_AddFontFromMemoryCompressedTTF = true,
+    ImFontAtlas_AddFontFromMemoryCompressedBase85TTF = true,
+    ImFontAtlas_GetTexDataAsAlpha8 = true,
+    ImFontAtlas_GetTexDataAsRGBA32 = true,
+    ImFontAtlas_GetCustomRectByIndex = true,
 }
 
 local function conditionals(t)
@@ -188,9 +196,13 @@ local function allow(func_meta)
         return
     end
     if func_meta.original_class then
-        if func_meta.original_class ~= "ImGuiIO" then
-            return
+        if func_meta.original_class == "ImGuiIO" then
+            return true
         end
+        if func_meta.original_class == "ImFontAtlas" then
+            return true
+        end
+        return
     end
     return true
 end
