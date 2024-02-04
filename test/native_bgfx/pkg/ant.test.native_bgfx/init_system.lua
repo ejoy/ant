@@ -3,11 +3,11 @@ local world     = ecs.world
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local layoutmgr = require "layoutmgr"
-local fs        = require "filesystem"
 local sampler   = require "sampler"
 local platform  = require "bee.platform"
-local iviewport = ecs.require "ant.render|viewport.state"
 local OS        = platform.os
+
+local ROOT<const> = "./test/native_bgfx"
 
 local caps = bgfx.get_caps()
 
@@ -71,13 +71,13 @@ local function create_render_program(vs, fs)
 end
 
 local function read_file(filename)
-    local f<close> = io.open(filename:localpath():string(), "rb")
-    return f:read "a"
+    local f<close> = io.open(filename, "rb")
+    return assert(f):read "a"
 end
 
 local function load_shader(shaderfile)
     local h = bgfx.create_shader(read_file(shaderfile))
-    bgfx.set_name(h, shaderfile:string())
+    bgfx.set_name(h, shaderfile)
     return h
 end
 
@@ -133,7 +133,7 @@ local function load_program(shader, vsfile, fsfile)
 end
 
 local function shader_path(name)
-    return fs.path(("/pkg/ant.test.native_bgfx/shaders/bin/%s/%s/%s"):format(OS, renderer:lower(), name))
+    return (ROOT .. "/pkg/ant.test.native_bgfx/shaders/bin/%s/%s/%s"):format(OS, renderer:lower(), name)
 end
 
 load_program(material.mesh.shader,          shader_path "vs_mesh.bin", shader_path "fs_mesh.bin")
@@ -144,11 +144,11 @@ load_program(material.depth.shader,         shader_path "vs_mesh.bin")
 local function create_tex2d(filename, flags)
     local f = read_file(filename)
     local h = bgfx.create_texture(f, flags)
-    bgfx.set_name(h, filename:string())
+    bgfx.set_name(h, filename)
     return h
 end
 
-local texhandle = create_tex2d(fs.path "/pkg/ant.test.native_bgfx/textures/2x2.dds", sampler{
+local texhandle = create_tex2d(ROOT .. "/pkg/ant.test.native_bgfx/textures/2x2.dds", sampler{
     MIN="LINEAR",
     MAG="LINEAR",
     U="CLAMP",
@@ -163,7 +163,7 @@ function is:init()
     
 end
 
-local fb_size = {w=iviewport.viewrect.w, h=iviewport.viewrectt.h}
+local fb_size = {w=world.args.width, h=world.args.height}
 
 local function create_fb1(rbs, viewid)
     local fbhandle = bgfx.create_frame_buffer(rbs, true)
