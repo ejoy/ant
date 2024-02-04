@@ -6,6 +6,6 @@
 struct material_instance;
 struct ecs_world;
 struct lua_State;
-void apply_material_instance(struct lua_State *L, struct material_instance *mi, struct ecs_world *w);
-bgfx_program_handle_t material_prog(struct lua_State *L, struct material_instance *mi);
+void apply_material_instance(struct lua_State *L, const struct material_instance *mi, struct ecs_world *w);
+bgfx_program_handle_t material_prog(struct lua_State *L, const struct material_instance *mi);
 #endif //_MATERIAL_H_

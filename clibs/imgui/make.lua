@@ -51,6 +51,11 @@ lm:source_set "imgui" {
             "GameController"
         }
     },
+    ios = {
+        sources = {
+            "backend/imgui_impl_platform.mm",
+        },
+    },
 }
 
 lm:source_set "imgui" {
