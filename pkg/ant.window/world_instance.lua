@@ -37,10 +37,8 @@ end
 
 local function reboot(args)
     local config = world.args
-    local enable_mouse = config.ecs.enable_mouse
     config.REBOOT = true
     config.ecs = args
-    config.ecs.enable_mouse = enable_mouse
     world:pipeline_exit()
     world = ecs.new_world(config)
     world:pipeline_init()

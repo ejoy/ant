@@ -3,7 +3,6 @@ __ANT_EDITOR__ = arg[1]-- or "../../startup"
 package.path = "/engine/?.lua"
 require "bootstrap"
 import_package "ant.window".start {
-    enable_mouse = true,
     feature = {
         "ant.render",
         "tools.editor",
