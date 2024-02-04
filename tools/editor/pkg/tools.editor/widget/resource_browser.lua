@@ -1,17 +1,18 @@
 local ecs = ...
 local world = ecs.world
-local assetmgr  = import_package "ant.asset"
 
+local assetmgr  = import_package "ant.asset"
 local ImGui     = import_package "ant.imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local lfs       = require "bee.filesystem"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
-local editor_setting=require "editor_setting"
 local global_data = require "common.global_data"
+local ImGuiLegacy = require "imgui.legacy"
+local editor_setting=require "editor_setting"
+
 local m = {
     dirty = true
 }
@@ -165,7 +166,6 @@ local function ShowContextMenu()
     end
 end
 
-local key_mb    = world:sub {"keyboard"}
 local filter_cache = {}
 local function create_filter_cache(parent, dirs, files)
     local key = tostring(parent)
@@ -250,6 +250,7 @@ function m.get_title()
     return "ResourceBrowser"
 end
 
+local event_key    = world:sub {"keyboard"}
 function m.show()
     if not global_data.project_root then
         return
@@ -361,7 +362,7 @@ function m.show()
                 filter_focuse2 = ImGui.IsWindowFocused()
                 if filter_focuse2 then
                     create_filter_cache(selected_folder[1], folder.dirs, folder.files)
-                    for _, key, press, status in key_mb:unpack() do
+                    for _, key, press, status in event_key:unpack() do
                         if #key == 1 and press == 1 then
                             -- local cache = filter_cache[tostring(selected_folder[1])]
                             -- local file_count = cache and cache.count or 0
@@ -406,7 +407,6 @@ function m.show()
                 end
                 local function post_selectable()
                     ImGui.PopStyleColorEx(2)
-
                 end
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
@@ -532,9 +532,9 @@ function m.selected_folder()
     return selected_folder
 end
 
-local save_event = world:sub {"Save"}
+local event_save = world:sub {"Save"}
 function m:handle_event()
-    for _ in save_event:unpack() do
+    for _ in event_save:unpack() do
         self.dirty = true
     end
 end

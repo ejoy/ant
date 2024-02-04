@@ -463,13 +463,13 @@ function gizmo_sys:post_init()
     -- ientity.create_grid_entity(64, 64, 1, 1)
 	-- test_bone = ientity.create_bone_mesh("testbone", "/pkg/tools.editor/resource/materials/joint.material", {s = 5}, gizmo.rz.color, false)
 end
-local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}
+local event_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 function gizmo_sys:init_world()
 	create_global_axes{s=0.1}
 end
 function gizmo_sys:entity_ready()
-	for _ in mb_main_camera_changed:each() do
+	for _ in event_main_camera_changed:each() do
 		gizmo:update_scale()
 		gizmo:show_by_state(false)
 		gizmo:hide_rotate_fan()
@@ -518,7 +518,7 @@ function gizmo:update_axis_plane()
 	do_update_axis_plane(self.tyz, invmat, gizmo_pos, eye_pos)
 end
 
-local pickup_mb = world:sub {"pickup"}
+local event_pickup = world:sub {"pickup"}
 
 local function select_axis_plane(x, y)
 	if gizmo.mode ~= gizmo_const.MOVE then
@@ -697,19 +697,13 @@ local function select_rotate_axis(x, y)
 	end
 end
 
-local camera_event = world:sub {"camera"}
-local mouse_drag = world:sub {"mousedrag"}
-local mouse_down = world:sub {"mousedown"}
-local mouse_up = world:sub {"mouseup"}
-local gizmo_mode_event = world:sub {"GizmoMode"}
-
 local last_mouse_pos
 local last_gizmo_pos
-local init_offset = math3d.ref()
 local last_gizmo_scale
-local last_rotate_axis = math3d.ref()
-local last_rotate = math3d.ref()
-local last_hit = math3d.ref()
+local init_offset 		= math3d.ref()
+local last_rotate_axis 	= math3d.ref()
+local last_rotate 		= math3d.ref()
+local last_hit 			= math3d.ref()
 local gizmo_seleted = false
 local is_tran_dirty = false
 
@@ -1041,12 +1035,12 @@ function gizmo:select_gizmo(x, y)
 	return false
 end
 
-local keypress_mb = world:sub{"keyboard"}
-local look_at_target_mb = world:sub{"LookAtTarget"}
 local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
-	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
+	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then
+		return
+	end
 	local mp = world:get_mouse()
 	local x, y = cvt2scenept(mp.x, mp.y)
 	if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
@@ -1073,31 +1067,12 @@ local function focus_aabb(ce, aabb)
     iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
 end
 
-function gizmo_sys:handle_event()
-	for _ in camera_event:unpack() do
-		gizmo:update_scale()
-		gizmo:updata_uniform_scale()
-		gizmo:update_axis_plane()
-		break
-	end
-
-	for _, what, value in gizmo_mode_event:unpack() do
-		if what == "select" then
-			gizmo:on_mode(gizmo_const.SELECT)
-		elseif what == "rotate" then
-			gizmo:on_mode(gizmo_const.ROTATE)
-		elseif what == "move" then
-			gizmo:on_mode(gizmo_const.MOVE)
-		elseif what == "scale" then
-			gizmo:on_mode(gizmo_const.SCALE)
-		elseif what == "localspace" then
-			local_space = value
-			gizmo:update_axis_plane()
-			gizmo:set_rotation()
-		end
-	end
-
-	for _, what, x, y in mouse_down:unpack() do
+local event_mouse_drag	= world:sub {"mousedrag"}
+local event_mouse_down	= world:sub {"mousedown"}
+local event_mouse_up	= world:sub {"mouseup"}
+local event_keypress	= world:sub {"keyboard"}
+function gizmo_sys:handle_input()
+	for _, what, x, y in event_mouse_down:unpack() do
 		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
 			gizmo_seleted = gizmo:select_gizmo(x, y)
@@ -1107,7 +1082,7 @@ function gizmo_sys:handle_event()
 		end
 	end
 
-	for _, what, x, y in mouse_up:unpack() do
+	for _, what, x, y in event_mouse_up:unpack() do
 		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
@@ -1152,7 +1127,7 @@ function gizmo_sys:handle_event()
 
 	on_mouse_move()
 
-	for _, what, x, y in mouse_drag:unpack() do
+	for _, what, x, y in event_mouse_drag:unpack() do
 		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
 			if light_gizmo_mode ~= 0 then
@@ -1168,8 +1143,43 @@ function gizmo_sys:handle_event()
 			end
 		end
 	end
-	
-	for _,pick_id in pickup_mb:unpack() do
+	for _, key, press, state in event_keypress:unpack() do
+		if state.CTRL then
+			if key == "Z" and press == 1 then
+				cmd_queue:undo()
+			elseif key == "Y" and press == 1 then
+				cmd_queue:redo()
+			end
+		end
+	end
+end
+
+local event_camera 			= world:sub {"camera"}
+local event_gizmo_mode 		= world:sub {"GizmoMode"}
+local event_look_at_target 	= world:sub{"LookAtTarget"}
+function gizmo_sys:handle_event()
+	for _ in event_camera:unpack() do
+		gizmo:update_scale()
+		gizmo:updata_uniform_scale()
+		gizmo:update_axis_plane()
+		break
+	end
+	for _, what, value in event_gizmo_mode:unpack() do
+		if what == "select" then
+			gizmo:on_mode(gizmo_const.SELECT)
+		elseif what == "rotate" then
+			gizmo:on_mode(gizmo_const.ROTATE)
+		elseif what == "move" then
+			gizmo:on_mode(gizmo_const.MOVE)
+		elseif what == "scale" then
+			gizmo:on_mode(gizmo_const.SCALE)
+		elseif what == "localspace" then
+			local_space = value
+			gizmo:update_axis_plane()
+			gizmo:set_rotation()
+		end
+	end
+	for _,pick_id in event_pickup:unpack() do
 		local eid = pick_id
 		if eid then
 			if not gizmo_seleted then
@@ -1190,16 +1200,7 @@ function gizmo_sys:handle_event()
 			end
 		end
 	end
-	for _, key, press, state in keypress_mb:unpack() do
-		if state.CTRL then
-			if key == "Z" and press == 1 then
-				cmd_queue:undo()
-			elseif key == "Y" and press == 1 then
-				cmd_queue:redo()
-			end
-		end
-	end
-	for _, tid, anim in look_at_target_mb:unpack() do
+	for _, tid, anim in event_look_at_target:unpack() do
 		local target = tid or gizmo.target_eid
 		if target then
 			local aabb = prefab_mgr:get_world_aabb(target)

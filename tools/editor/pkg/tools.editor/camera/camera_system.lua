@@ -126,12 +126,12 @@ local function on_wheel(delta)
 	world:pub {"camera", "zoom"}
 end
 
-local key_mb             = world:sub {"keyboard"}
-local mouse_mb           = world:sub {"mouse"}
-local event_gesture      = world:sub {"gesture", "pinch"}
-local smooth_lookat_mb   = world:sub {"SmoothLookAt"}
-local event_camera_speed = world:sub {"camera_controller", "move_speed"}
-local lock_camera_mb     = world:sub {"LockCamera"}
+local event_key             = world:sub {"keyboard"}
+local event_mouse           = world:sub {"mouse"}
+local event_gesture      	= world:sub {"gesture", "pinch"}
+local event_smooth_lookat   = world:sub {"SmoothLookAt"}
+local event_camera_speed 	= world:sub {"camera_controller", "move_speed"}
+local event_lock_camera		= world:sub {"LockCamera"}
 local lock_camera
 local function do_animation()
 	if not animation.running then
@@ -165,14 +165,14 @@ local function do_animation()
 end
 
 function camera_sys:handle_input()
-	for _, lock in lock_camera_mb:unpack() do
+	for _, lock in event_lock_camera:unpack() do
 		lock_camera = lock
 	end
 	if not do_animation() or lock_camera then
 		return
 	end
 
-	for _, t, d in smooth_lookat_mb:unpack() do
+	for _, t, d in event_smooth_lookat:unpack() do
 		animation.target = t
 		animation.dist = d
 		animation.running = true
@@ -186,7 +186,7 @@ function camera_sys:handle_input()
 		on_wheel(e.velocity)
 	end
 
-	for _, btn, state, x, y in mouse_mb:unpack() do
+	for _, btn, state, x, y in event_mouse:unpack() do
 		if state == "DOWN" then
 			last_mousex, last_mousey = x, y
 			if btn == "RIGHT" then
@@ -212,7 +212,7 @@ function camera_sys:handle_input()
 		end
 	end
 
-	for _, key, press, status in key_mb:unpack() do
+	for _, key, press, status in event_key:unpack() do
 		if key == "LeftShift" then
 			shift_down = (press == 1 or press == 2)
 		end

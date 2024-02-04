@@ -4,6 +4,7 @@ local utils     = require "common.utils"
 local cthread   = require "bee.thread"
 local fs        = require "filesystem"
 local icons     = require "common.icons"
+local faicons   = require "common.fa_icons"
 
 local m = {
     to_bottom = false
@@ -258,7 +259,7 @@ function m.showLog(name)
     if total_virtual_count <= 0 then return end
     ImGui.BeginChild(name, 0, 0, ImGui.ChildFlags { "None" }, ImGui.WindowFlags { "HorizontalScrollbar" })
     local textStart = 0
-    for _, item in ipairs(current_log) do
+    for i, item in ipairs(current_log) do
         local textEnd = textStart + #item.message
         if not level_visible[item.level] then
             goto continue
@@ -281,6 +282,12 @@ function m.showLog(name)
             ImGui.PushStyleColorImVec4(ImGui.Col.Text, color[1], color[2], color[3], color[4])
         end
         ImGui.Text(item.message)
+        if ImGui.BeginPopupContextItemEx(item.message) then
+            if ImGui.MenuItem(faicons.ICON_FA_COPY.." Copy") then
+                ImGui.SetClipboardText(item.message)
+            end
+            ImGui.EndPopup()
+        end
         if color then
             ImGui.PopStyleColor()
         end

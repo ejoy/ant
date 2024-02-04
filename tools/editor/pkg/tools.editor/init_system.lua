@@ -94,6 +94,9 @@ local function init_font()
 				0xf047, 0xf047, -- ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT	"\xef\x81\x87" U+f047
 				0xf021, 0xf021, -- ICON_FA_ARROWS_ROTATE 				"\xef\x80\xa1" U+f021
 				0xe4ba, 0xe4ba, -- ICON_FA_ARROWS_LEFT_RIGHT_TO_LINE	"\xee\x92\xba" U+e4ba
+				0xf0c4, 0xf0c4, -- ICON_FA_CUT					"\xef\x83\x84" U+f0c4
+				0xf0c5, 0xf0c5, -- ICON_FA_COPY					"\xef\x83\x85" U+f0c5
+				0xf0ea, 0xf0ea, -- ICON_FA_PASTE				"\xef\x83\xaa" U+f0ea
 		}}
 end
 

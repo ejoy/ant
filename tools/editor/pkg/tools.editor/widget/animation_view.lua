@@ -4,23 +4,25 @@ local fs        = require "filesystem"
 local fastio    = require "fastio"
 local iani      = ecs.require "ant.anim_ctrl|state_machine"
 local ivs       = ecs.require "ant.render|visible_state"
+local iefk      = ecs.require "ant.efk|efk"
+local itl       = ecs.require "ant.timeline|timeline"
 local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"
-local assetmgr = import_package "ant.asset"
+local hierarchy = ecs.require "hierarchy_edit"
+local assetmgr  = import_package "ant.asset"
+local ImGui     = import_package "ant.imgui"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
-local ImGui     = import_package "ant.imgui"
 local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
-local hierarchy = ecs.require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
-local global_data = require "common.global_data"
-local access    = global_data.repo_access
 local faicons   = require "common.fa_icons"
 local fmod      = require "fmod"
+local global_data = require "common.global_data"
+local access    = global_data.repo_access
 
 local edit_timeline
 local timeline_eid
@@ -542,14 +544,13 @@ local function show_skeleton(b)
     end
     joint_utils.show_skeleton = b
 end
+
 local anim_name_ui = {text = ''}
 local anim_path_ui = {text = ''}
-local update_slot_list = world:sub {"UpdateSlotList"}
 local event_keyframe = world:sub{"keyframe_event"}
-local iefk = ecs.require "ant.efk|efk"
 local effect_map = {}
-local itl = ecs.require "ant.timeline|timeline"
 local current_timeline_id
+
 local function play_timeline()
     if not timeline_eid then
         return

@@ -1,33 +1,42 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+
 local ImGui         = import_package "ant.imgui"
-local ImGuiLegacy   = require "imgui.legacy"
 local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
-local aio           = import_package "ant.io"
-local fastio        = require "fastio"
 local mc            = mathpkg.constant
+local aio           = import_package "ant.io"
+local layoutmgr     = import_package "ant.render".layoutmgr
+local stringify     = import_package "ant.serialize".stringify
+local cr            = import_package "ant.compile_resource"
+local memfs         = import_package "ant.vfs".memory
+
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
-local stringify     = import_package "ant.serialize".stringify
 local ilight        = ecs.require "ant.render|light.light"
 local imodifier     = ecs.require "ant.modifier|modifier"
 local camera_mgr    = ecs.require "camera.camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
 local gizmo         = ecs.require "gizmo.gizmo"
-local editor_setting = require "editor_setting"
-local math3d 		= require "math3d"
-local fs            = require "filesystem"
-local lfs           = require "bee.filesystem"
 local hierarchy     = ecs.require "hierarchy_edit"
+local iterrain      = ecs.require "ant.landform|plane_terrain"
+
 local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
-local iterrain      = ecs.require "ant.landform|plane_terrain"
-local layoutmgr     = import_package "ant.render".layoutmgr
+local math3d 		= require "math3d"
+local fs            = require "filesystem"
+local lfs           = require "bee.filesystem"
+local ImGuiLegacy   = require "imgui.legacy"
+local fastio        = require "fastio"
 local bgfx          = require "bgfx"
+local vfs           = require "vfs"
+local global_data   = require "common.global_data"
+local access        = global_data.repo_access
+local editor_setting = require "editor_setting"
+
 local TERRAIN_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/plane_terrain.material"
 local BORDER_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/border.material"
 local m = {
@@ -170,6 +179,7 @@ function m:clear_light()
     end
     self.default_light = nil
 end
+
 function m:update_default_light(enable)
     self:clear_light()
     if enable then
@@ -519,10 +529,6 @@ function m:choose_prefab()
     end
 end
 
-local cr = import_package "ant.compile_resource"
-local vfs = require "vfs"
-local memfs = import_package "ant.vfs".memory
-
 local function mount_dir(vroot, lpath, lroot)
     for path in lfs.pairs(lfs.path(lpath)) do
         if path:filename():string():sub(1,1) == "." then
@@ -723,8 +729,6 @@ function m:reload()
         self:open(filename, self.prefab_name, origin_patch_template)
     end
 end
-local global_data       = require "common.global_data"
-local access            = global_data.repo_access
 
 function m:add_effect(filename)
     for path in lfs.pairs(lfs.path(filename):parent_path()) do
@@ -1452,15 +1456,15 @@ function m:can_create_empty()
     return self.glb_filename and self.prefab_name == "mesh.prefab"
 end
 
-local event_patch           = world:sub {"PatchEvent"}
-local event_showground      = world:sub {"ShowGround"}
-local event_showterrain     = world:sub {"ShowTerrain"}
-local event_savehitch       = world:sub {"SaveHitch"}
-local event_create          = world:sub {"Create"}
-local event_light           = world:sub {"UpdateDefaultLight"}
-local event_open_file       = world:sub {"OpenFile"}
-local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
-local event_hierarchy       = world:sub {"HierarchyEvent"}
+local event_patch       = world:sub {"PatchEvent"}
+local event_showground  = world:sub {"ShowGround"}
+local event_showterrain = world:sub {"ShowTerrain"}
+local event_savehitch   = world:sub {"SaveHitch"}
+local event_create      = world:sub {"Create"}
+local event_light       = world:sub {"UpdateDefaultLight"}
+local event_open_file   = world:sub {"OpenFile"}
+local event_add_prefab  = world:sub {"AddPrefabOrEffect"}
+local event_hierarchy   = world:sub {"HierarchyEvent"}
 function m:handle_event()
     for _, eid, path, value in event_patch:unpack() do
         self:do_patch(eid, path, value)

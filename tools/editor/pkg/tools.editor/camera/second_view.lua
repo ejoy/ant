@@ -72,10 +72,10 @@ end
 function second_camera_sys:entity_init()
 end
 
-local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
+local event_mq_vr = world:sub{"view_rect_changed", "main_queue"}
 
 function second_camera_sys:data_changed()
-    for msg in mq_vr_mb:each() do
+    for msg in event_mq_vr:each() do
         local vr = msg[3]
         local sv_vr = calc_second_view_viewport(vr)
         irq.set_view_rect("second_view", sv_vr)
@@ -274,9 +274,9 @@ local function show_frustum(visible)
     end
 end
 
-local sc_visible_mb = world:sub{"queue_visible_changed", "second_view"}
+local event_sc_visible = world:sub{"queue_visible_changed", "second_view"}
 function sc_frustum_sys:camera_usage()
-    for _, _, visible in sc_visible_mb:unpack() do
+    for _, _, visible in event_sc_visible:unpack() do
         show_frustum(visible)
     end
 end

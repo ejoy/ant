@@ -264,9 +264,10 @@ function hierarchy:move_bottom(eid)
     table.insert(t, self.all_node[eid])
 end
 
-local hierarchy_event = world:sub {"HierarchyEvent"}
+local event_hierarchy = world:sub {"HierarchyEvent"}
+
 function hierarchy:handle_event()
-    for _, what, target, value in hierarchy_event:unpack() do
+    for _, what, target, value in event_hierarchy:unpack() do
         if what == "visible" then
             self:set_visible(target, value, true)
         elseif what == "lock" then

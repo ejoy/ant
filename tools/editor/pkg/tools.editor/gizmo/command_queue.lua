@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 
 local iom = ecs.require "ant.objcontroller|obj_motion"
 local gizmo = ecs.require "gizmo.gizmo"
@@ -10,7 +9,7 @@ local cmd_queue = {
 	cmd_undo = queue.new(),
 	cmd_redo = queue.new()
 }
-local isTranDirty = false
+
 function cmd_queue:undo()
 	local cmd = queue.pop_last(self.cmd_undo)
 	if not cmd then

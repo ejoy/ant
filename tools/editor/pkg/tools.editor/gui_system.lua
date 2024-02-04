@@ -1,16 +1,17 @@
 local ecs       = ...
 local world     = ecs.world
-local w         = world.w
 
-local math3d    = require "math3d"
 local ImGui     = import_package "ant.imgui"
 local mathpkg   = import_package "ant.math"
-local window    = import_package "ant.window"
 local mc        = mathpkg.constant
+local window    = import_package "ant.window"
+
 local ivs       = ecs.require "ant.render|visible_state"
 local iwd       = ecs.require "ant.widget|widget"
 local iefk      = ecs.require "ant.efk|efk"
 local iRmlUi    = ecs.require "ant.rmlui|rmlui_system"
+local cmd_queue = ecs.require "gizmo.command_queue"
+local light_gizmo       = ecs.require "gizmo.light"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local keyframe_view     = ecs.require "widget.keyframe_view"
@@ -22,16 +23,17 @@ local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
 local mtl_view          = ecs.require "widget.material_view"()
+local hierarchy         = ecs.require "hierarchy_edit"
+local prefab_mgr        = ecs.require "prefab_manager"
+local math3d            = require "math3d"
+local joint_utils       = require "widget.joint_utils"
 local widget_utils      = require "widget.utils"
 local log_widget        = require "widget.log"
 local console_widget    = require "widget.console"
-local hierarchy         = ecs.require "hierarchy_edit"
-
 local global_data       = require "common.global_data"
 local new_project       = require "common.new_project"
 local gizmo_const       = require "gizmo.const"
 
-local prefab_mgr        = ecs.require "prefab_manager"
 local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
@@ -86,15 +88,6 @@ function m:ui_update()
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
 end
 
-
-local entity_event          = world:sub {"EntityEvent"}
-local event_keyboard        = world:sub {"keyboard"}
-
-
-local event_window_title    = world:sub {"WindowTitle"}
-local event_gizmo           = world:sub {"Gizmo"}
-local light_gizmo           = ecs.require "gizmo.light"
-
 local aabb_color_i <const> = 0x6060ffff
 local highlight_aabb = {
     visible = false,
@@ -145,9 +138,6 @@ local function on_update(eid)
         light_gizmo.update()
     end
 end
-
-local cmd_queue = ecs.require "gizmo.command_queue"
-local event_update_aabb = world:sub {"UpdateAABB"}
 
 function hierarchy:set_adaptee_visible(nd, b, recursion)
     local adaptee = self:get_select_adaptee(nd.eid)
@@ -203,7 +193,25 @@ local function update_visible(node, visible)
     end
     return rv
 end
-local hierarchy_event = world:sub {"HierarchyEvent"}
+
+local event_keyboard        = world:sub {"keyboard"}
+function m:handle_input()
+    for _, key, press, state in event_keyboard:unpack() do
+        if key == "Delete" and press == 1 then
+            if gizmo.target_eid then
+                world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
+            end
+        elseif state.CTRL and key == "S" and press == 1 then
+            prefab_mgr:save()
+        end
+    end
+end
+
+local event_hierarchy       = world:sub {"HierarchyEvent"}
+local event_update_aabb     = world:sub {"UpdateAABB"}
+local entity_event          = world:sub {"EntityEvent"}
+local event_window_title    = world:sub {"WindowTitle"}
+local event_gizmo           = world:sub {"Gizmo"}
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -249,7 +257,7 @@ function m:handle_event()
         end
     end
 
-    for _, what, target, value in hierarchy_event:unpack() do
+    for _, what, target, value in event_hierarchy:unpack() do
         if what == "visible" then
             local e <close> = world:entity(target.eid, "efk?in light?in")
             if e.efk then
@@ -270,15 +278,6 @@ function m:handle_event()
         gizmo:set_target(nil)
     end
 
-    for _, key, press, state in event_keyboard:unpack() do
-        if key == "Delete" and press == 1 then
-            if gizmo.target_eid then
-                world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
-            end
-        elseif state.CTRL and key == "S" and press == 1 then
-            prefab_mgr:save()
-        end
-    end
     hierarchy:handle_event()
     prefab_mgr:handle_event()
     mtl_view:handle_event()
@@ -296,7 +295,6 @@ end
 function m:widget()
 end
 
-local joint_utils = require "widget.joint_utils"
 function m.end_animation()
     joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
     keyframe_view.end_animation()
