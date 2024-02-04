@@ -11,6 +11,7 @@ lm:lua_source "bgfx" {
     },
     includes = {
         BgfxInclude,
+        lm.AntDir.."/3rd/bee.lua/3rd/lua-seri"
     },
     sources = {
         "*.c",

@@ -101,12 +101,14 @@ struct log_cache {
 	char log[MAX_LOGBUFFER];
 };
 
+typedef void (*bgfx_pushlog)(void* context, const char *file, uint16_t line, const char *format, va_list ap);
+
 struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
-	struct log_cache lc;
 	uint32_t filterlog;
-	bool getlog;
+	bgfx_pushlog pushlog;
+	void* pushlog_context;
 };
 
 static int
@@ -380,19 +382,20 @@ trace_filter(const char *format, int level) {
 
 static void
 cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line, const char *format, va_list ap) {
-	char tmp[MAX_LOGBUFFER];
-	int n = sprintf(tmp, "%s (%d): ", file, line);
-
-	n += vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
-	if (n > MAX_LOGBUFFER) {
-		// truncated
-		n = MAX_LOGBUFFER;
-	}
 	struct callback * cb = (struct callback *)self;
-	if (cb->getlog) {
-		append_log(&(cb->lc), tmp, n);
-	}
 	if (cb->filterlog > 0 && trace_filter(format, cb->filterlog)) {
+		if (cb->pushlog) {
+			cb->pushlog(cb->pushlog_context, file, line, format, ap);
+			return;
+		}
+		char tmp[MAX_LOGBUFFER];
+		int n = sprintf(tmp, "%s (%d): ", file, line);
+
+		n += vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
+		if (n > MAX_LOGBUFFER) {
+			// truncated
+			n = MAX_LOGBUFFER;
+		}
 #if BX_PLATFORM_ANDROID
 		__android_log_write(ANDROID_LOG_INFO, "bgfx", tmp);
 #else
@@ -668,13 +671,10 @@ linit(lua_State *L) {
 		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
 		read_boolean(L, 1, "debug", &init.debug);
 		read_boolean(L, 1, "profile", &init.profile);
-		read_boolean(L, 1, "getlog", &cb->getlog);
-		if (cb->getlog) {
-			cb->filterlog = 0;	// log none
-		} else {
-			cb->filterlog = 255;	// log all
-		}
+
 		read_uint32(L, 1, "loglevel", &cb->filterlog);
+		cb->pushlog = getfield(L, "pushlog");
+		cb->pushlog_context = getfield(L, "pushlog_context");
 
 		init.platformData.ndt = getfield(L, "ndt");
 		init.platformData.nwh = getfield(L, "nwh");
@@ -5057,34 +5057,6 @@ lgetScreenshot(lua_State *L) {
 	return memptr ? 6 : 5;
 }
 
-static int
-lgetLog(lua_State *L) {
-	if (lua_getfield(L, LUA_REGISTRYINDEX, "bgfx_cb") != LUA_TUSERDATA) {
-		return luaL_error(L, "get_log failed!");
-	}
-	struct callback *cb = lua_touserdata(L, -1);
-	struct log_cache *lc = &cb->lc;
-	spin_lock(lc);
-	int offset = lc->head % MAX_LOGBUFFER;
-	int sz = (int)(lc->tail - lc->head);
-
-	int part = MAX_LOGBUFFER - offset;
-
-	if (part >= sz) {
-		// only one part
-		lua_pushlstring(L, lc->log + offset, sz);
-	} else {
-		char tmp[MAX_LOGBUFFER];
-		memcpy(tmp, lc->log + offset, part);
-		memcpy(tmp + part, lc->log, sz - part);
-		lua_pushlstring(L, tmp, sz);
-	}
-	lc->head = lc->tail;
-
-	spin_unlock(lc);
-	return 1;
-}
-
 #define SET_UNIFORM 0
 #define SET_TEXTURE 1
 #define SET_BUFFER 2
@@ -5477,7 +5449,6 @@ luaopen_bgfx(lua_State *L) {
 		{ "init", linit },
 		{ "shutdown", lshutdown },
 
-		{ "get_log", lgetLog },
 		{ "get_screenshot", lgetScreenshot },
 		{ "request_screenshot", lrequestScreenshot },
 

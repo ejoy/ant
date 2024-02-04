@@ -6,17 +6,22 @@ local lables = {}
 local command = {}
 local tasks = {}
 
+local builtin <const> = {
+	[0] = "system",
+	[0x62676678] = "bgfx",
+}
+
 local function querylabel(id)
 	if not id then
 		return "unknown"
 	end
-	if id == 0 then
-		return "system"
+	if builtin[id] then
+		return builtin[id]
 	end
 	if lables[id] then
 		return lables[id]
 	end
-	return "unknown"
+	return ("(unknown:%x)"):format(id)
 end
 
 local function service(id)

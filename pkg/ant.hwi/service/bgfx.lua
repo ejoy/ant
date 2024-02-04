@@ -444,6 +444,8 @@ end
 local init_token = {}
 local thread_num = 0
 
+local logger
+
 local function init_args(args)
     local maxwh = math.max(args.width, args.height)
     if maxwh > 1920 then
@@ -451,6 +453,12 @@ local function init_args(args)
     else
         args.debugTextScale = 1
     end
+    local bgfxutil = require "bgfx.util"
+    local ltask_pushlog, ltask_context = ltask.get_pushlog()
+    local ud, bgfx_pushlog, bgfx_context = bgfxutil.get_pushlog(ltask_pushlog, ltask_context)
+    logger = ud
+    args.pushlog = bgfx_pushlog
+    args.pushlog_context = bgfx_context
 end
 
 local function init_resource()
