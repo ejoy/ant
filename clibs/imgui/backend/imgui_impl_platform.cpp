@@ -1,6 +1,6 @@
 #include "backend/imgui_impl_platform.h"
 
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
+#if defined(__APPLE__)
 
 #elif defined(_WIN32)
 
