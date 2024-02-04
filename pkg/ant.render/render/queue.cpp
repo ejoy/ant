@@ -19,6 +19,12 @@ struct queue_node {
         }
     }
 
+    constexpr void fetch(uint64_t *outmasks) const {
+        for (int ii=0; ii<NUM_MASK; ++ii){
+            outmasks[ii] = masks[ii];
+        }
+    }
+
     bool check(uint8_t queue) const {
         const uint8_t eidx = queue / 64;
         const uint8_t sidx = queue % 64;
@@ -65,6 +71,10 @@ struct queue_container {
         return 0 <= Qidx && Qidx < n;
     }
 
+    inline void fetch(int Qidx, uint64_t *outmask) const {
+        return nodes[Qidx].fetch(outmask);
+    }
+
     inline bool check(int Qidx, uint8_t queue) const {
         return nodes[Qidx].check(queue);
     }
@@ -92,6 +102,10 @@ bool queue_check(struct queue_container* Q, int Qidx, uint8_t queue){
 
 void queue_set(struct queue_container* Q, int Qidx, uint8_t queue, bool value){
     return Q->set(Qidx, queue, value);
+}
+
+void queue_fetch(struct queue_container* Q, int Qidx, uint64_t *outmasks){
+    return Q->fetch(Qidx, outmasks);
 }
 
 static int
