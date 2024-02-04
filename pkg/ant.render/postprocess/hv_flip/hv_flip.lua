@@ -11,31 +11,18 @@ end
 
 local hwi       = import_package "ant.hwi"
 local mu        = import_package "ant.math".util
-
-local bgfx      = require "bgfx"
-local layoutmgr = require "vertexlayout_mgr"
-
 local fbmgr     = require "framebuffer_mgr"
 
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.asset|material"
+local imesh     = ecs.require "ant.asset|mesh"
 local iviewport = ecs.require "ant.render|viewport.state"
 
 local hvflip_viewid<const> = hwi.viewid_generate("hv_flip", "fxaa")
 
 function hvflip_sys:init()
-    world:create_entity{
-        policy = {
-            "ant.render|simplerender",
-        },
-        data = {
-            hv_flip_drawer = true,
-            simplemesh = {
-                vb = {
-                    start = 0,
-                    num = 4,
---[[
+    --[[
     v0---v1
     |     |
     v3---v2
@@ -47,13 +34,19 @@ function hvflip_sys:init()
     |        |
     u1v0--u1v1
 ]]
-					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
-					   -1.0, 1.0, 1.0, 1.0,
-						1.0, 1.0, 1.0, 0.0,
-                       -1.0,-1.0, 0.0, 1.0,
-						1.0,-1.0, 0.0, 0.0,
-					}), layoutmgr.get "p2|t2".handle),
-					owned = true,
+
+    world:create_entity{
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            hv_flip_drawer = true,
+            simplemesh = imesh.create_mesh{
+                "p2|t2",{
+                    -1.0, 1.0, 1.0, 1.0,
+                        1.0, 1.0, 1.0, 0.0,
+                    -1.0,-1.0, 0.0, 1.0,
+                        1.0,-1.0, 0.0, 0.0,
                 }
             },
             owned_mesh_buffer = true,

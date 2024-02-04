@@ -27,6 +27,10 @@ local fbmgr     = require "framebuffer_mgr"
 
 
 local irq       = ecs.require "ant.render|render_system.renderqueue"
+function sd_sys:init()
+    --make "scene_depth_queue" with the same 'material_index' of "pre_depth_queue"
+    queuemgr.register_queue("scene_depth_queue", queuemgr.material_index "pre_depth_queue")
+end
 
 function sd_sys:post_init()
     local vr = iviewport.viewrect
@@ -83,15 +87,3 @@ function sd_sys:data_changed()
     end
 end
 
-function sd_sys:end_filter()
-    assert(false, "filter_result is miss here, it have been clear in render_system.lua:end_filter")
-    for e in w:select "filter_result visible_state:in opacity render_object:update filter_material:in" do
-        if e.visible_state["pre_depth_queue"] then
-            local fm = e.filter_material
-            fm["scene_depth_queue"] = fm.pre_depth_queue
-    
-            R.set(e.render_object.rm_idx, queuemgr.material_index "scene_depth_queue", fm.pre_depth_queue:ptr())
-            ivs.set_state(e, "scene_depth_queue", true)
-        end
-    end
-end

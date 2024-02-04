@@ -4,6 +4,12 @@ assert(ecs.world)
 local m = {}
 local QUEUE_MATERIALS = {}
 
+local DEFAULT_MATERIAL_IDX<const> = 0
+
+function m.default_material_index()
+	return DEFAULT_MATERIAL_IDX
+end
+
 function m.material_index(queue_name)
 	return QUEUE_MATERIALS[queue_name]
 end
@@ -11,7 +17,7 @@ end
 local QUEUE_INDICES, QUEUE_MASKS = {}, {}
 do
 	local NEXT_QUEUE_IDX = 0
-	local NEXT_MATERIAL_IDX = 0
+	local NEXT_MATERIAL_IDX = DEFAULT_MATERIAL_IDX
 
 	local function alloc_material()
 		local idx = NEXT_MATERIAL_IDX
@@ -19,7 +25,6 @@ do
 		return idx
 	end
 
-	local DEFAULT_MATERIAL_IDX<const> = alloc_material()
 	--qidx&midx is base 0
 	local function register_queue(qn, midx)
 		local _ = QUEUE_INDICES[qn] == nil or error (qn .. " already register")
@@ -44,7 +49,7 @@ do
 		return qidx
 	end
 
-	register_queue("main_queue", 			DEFAULT_MATERIAL_IDX)
+	register_queue("main_queue", 			alloc_material())
 	register_queue("pre_depth_queue", 		alloc_material())
 	register_queue("pickup_queue", 			alloc_material())
 	local shadow_material_idx	= alloc_material()
@@ -56,6 +61,8 @@ do
 
 	m.alloc_material = alloc_material
 	m.register_queue = register_queue
+
+	assert(QUEUE_MATERIALS["main_queue"] == DEFAULT_MATERIAL_IDX)
 end
 
 function m.has(qn)

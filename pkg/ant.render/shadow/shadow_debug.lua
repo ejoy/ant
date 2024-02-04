@@ -208,13 +208,7 @@ local function draw_lines(lines)
 	return world:create_entity{
 		policy = {"ant.render|simplerender"},
 		data = {
-			simplemesh = {
-				vb = {
-					start = 0, num = #lines,
-					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lines)), layoutmgr.get "p3|c40".handle),
-					owned = true,
-				},
-			},
+			simplemesh = ientity.create_mesh{"p3|c40", lines,},
 			material = "/pkg/ant.resources/materials/line.material",
 			scene = {},
 			render_layer = "translucent",
@@ -245,26 +239,19 @@ local function draw_box(points, M)
 	world:create_entity{
 		policy = {"ant.render|simplerender"},
 		data = {
-			simplemesh = {
-				vb = {
-					start = 0, num = #s,
-					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(s)), layoutmgr.get "p3|c40".handle),
-					owned = true,
-				},
-				ib = {
-					start = 0, num = 4*2 * 3,--3 ,
-					handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", {
-						0, 4, 1, 5,
-						2, 6, 3, 7,
-				
-						0, 2, 1, 3,
-						4, 6, 5, 7,
-				
-						0, 1, 2, 3,
-						4, 5, 6, 7,
-					}))
+			simplemesh = ientity.create_mesh(
+				{"p3|c40", s,},
+				{
+					0, 4, 1, 5,
+					2, 6, 3, 7,
+			
+					0, 2, 1, 3,
+					4, 6, 5, 7,
+			
+					0, 1, 2, 3,
+					4, 5, 6, 7,
 				}
-			},
+			),
 			material = "/pkg/ant.resources/materials/line.material",
 			scene = {},
 			render_layer = "translucent",

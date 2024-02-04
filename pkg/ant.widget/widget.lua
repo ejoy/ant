@@ -24,6 +24,7 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 		vb = {
 			start = 0,
 			num = 0,
+			declname = "p3|c40niu",
 			handle=bgfx.create_dynamic_vertex_buffer(vb_size, layoutmgr.get(layout).handle, "a")
 		},
 		ib = {

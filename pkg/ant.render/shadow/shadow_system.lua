@@ -107,6 +107,11 @@ local shadow_material
 local di_shadow_material
 local gpu_skinning_material
 function shadow_sys:init()
+	local midx = queuemgr.material_index "csm1_queue"
+	assert(midx == queuemgr.material_index "csm2_queue")
+	assert(midx == queuemgr.material_index "csm3_queue")
+	assert(midx == queuemgr.material_index "csm4_queue")
+
 	local fbidx = shadowcfg.fb_index()
 	local s     = shadowcfg.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
@@ -368,7 +373,7 @@ function shadow_sys:follow_scene_update()
 end
 
 
-function shadow_sys:update_filter()
+function shadow_sys:entity_ready()
     for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
 		local hasaabb = e.bounding.aabb ~= mc.NULL
@@ -377,28 +382,19 @@ function shadow_sys:update_filter()
 		local castshadow
 		if e.visible_state["cast_shadow"] then
 			local ro = e.render_object
+			local midx = queuemgr.material_index "csm1_queue"
 
-			local mat_ptr
 			if mt.fx.setting.cast_shadow == "on" then
 				w:extend(e, "filter_material:in")
 				local dstres = which_material(e, mt)
 				local fm = e.filter_material
 				local mi = RM.create_instance(dstres.depth.object)
-				assert(not fm.main_queue:isnull())
-				mi:set_state(create_depth_state(fm.main_queue:get_state(), dstres.state))
-				fm["csm1_queue"] = mi
-				fm["csm2_queue"] = mi
-				fm["csm3_queue"] = mi
-				fm["csm4_queue"] = mi
-	
-				mat_ptr = mi:ptr()
+				local Dmi = fm.DEFAULT_MATERIAL
+				mi:set_state(create_depth_state(Dmi:get_state(), dstres.state))
+				fm[midx] = mi
+				R.set(ro.rm_idx, midx, mi:ptr())
 				castshadow = hasaabb
 			end
-	
-			R.set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)
-			R.set(ro.rm_idx, queuemgr.material_index "csm2_queue", mat_ptr)
-			R.set(ro.rm_idx, queuemgr.material_index "csm3_queue", mat_ptr)
-			R.set(ro.rm_idx, queuemgr.material_index "csm4_queue", mat_ptr)
 		end
 		e.cast_shadow		= castshadow
 		e.receive_shadow	= receiveshadow

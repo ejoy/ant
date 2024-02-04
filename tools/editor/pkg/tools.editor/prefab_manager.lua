@@ -36,9 +36,9 @@ local vfs           = require "vfs"
 local global_data   = require "common.global_data"
 local access        = global_data.repo_access
 local editor_setting = require "editor_setting"
+local ientity       = ecs.require "ant.render|components.entity"
 
 local TERRAIN_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/plane_terrain.material"
-local BORDER_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/border.material"
 local m = {
     entities = {}
 }
@@ -56,7 +56,6 @@ local function create_light_billboard(light_eid, lighttype)
          1, -1, 0, 1, 1,
          1,  1, 0, 1, 0,
     }
-    local layout = layoutmgr.get "p3|t2"
     return world:create_entity{
         policy = {
             "ant.render|simplerender",
@@ -70,13 +69,7 @@ local function create_light_billboard(light_eid, lighttype)
             },
             visible_state = "main_view",
             material = "/pkg/tools.editor/resource/materials/billboard_"..lighttype..".material",
-            simplemesh = {
-                vb = {
-                    start = 0,
-                    num = 4,
-                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fffff", vbdata), layout.handle)
-                },
-            }
+            simplemesh = ientity.create_mesh{"p3|t2", vbdata},
         }
     }
 end

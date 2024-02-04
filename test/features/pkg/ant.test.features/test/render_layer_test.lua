@@ -18,7 +18,6 @@ local rlt_sys = common.test_system "render_layer"
 
 function rlt_sys.init_world()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
-    local m = imesh.init_mesh(ientity.plane_mesh())
     PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
         local ee <close> = world:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))
@@ -36,7 +35,7 @@ function rlt_sys.init_world()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh = m,
+            simplemesh = ientity.plane_mesh(),
             scene = {t = {-10, 0, 0}, s = 10},
             material = "/pkg/ant.test.features/assets/render_layer_test.material",
             render_layer = "translucent_plane",

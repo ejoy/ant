@@ -27,7 +27,6 @@ local assetmgr      = import_package "ant.asset"
 
 local velocity_material
 local velocity_polylinelist_material
-local velocity_material_idx
 local velocity_skinning_material
 
 function velocity_system:end_frame()
@@ -109,23 +108,24 @@ function velocity_system:init()
     velocity_material 			    = assetmgr.resource "/pkg/ant.resources/materials/velocity/velocity.material"
     velocity_polylinelist_material  = assetmgr.resource "/pkg/ant.resources/materials/velocity/velocity_polylinelist.material"
     velocity_skinning_material      = assetmgr.resource "/pkg/ant.resources/materials/velocity/velocity_skinning.material"
-    velocity_material_idx	        = queuemgr.alloc_material()
-    queuemgr.register_queue("velocity_queue", velocity_material_idx)
+    queuemgr.register_queue("velocity_queue", queuemgr.alloc_material())
 end
 
 function velocity_system:init_world()
     create_velocity_queue()
 end
 
-function velocity_system:update_filter()
-     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in polyline?in" do
+function velocity_system:entity_ready()
+     for e in w:select "filter_result visible_state:in" do
         if e.visible_state["velocity_queue"] then
+            w:extend(e, "render_layer:in render_object:update filter_material:in skinning?in polyline?in")
             local mo = assert(which_material(e.polyline, e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
             local mi = RM.create_instance(mo)
-            fm["velocity_queue"] = mi
-            R.set(ro.rm_idx, queuemgr.material_index "velocity_queue", mi:ptr())
+            local midx = queuemgr.material_index "velocity_queue"
+            fm[midx] = mi
+            R.set(ro.rm_idx, midx, mi:ptr())
         end
     end 
 end

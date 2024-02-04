@@ -13,6 +13,7 @@ local hn_test_sys = common.test_system "hitch_node"
 
 local h1, h2, h3
 local hitch_test_group_id<const>    = ig.register "hitch_node_test"
+local TEST_INDIRECT<const> = true
 
 local function create_simple_test_group()
     h1 = PC:create_entity {
@@ -27,6 +28,7 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
+            hitch_create = TEST_INDIRECT,
         }
     }
     h2 = PC:create_entity {
@@ -41,43 +43,31 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view",
+            hitch_create = TEST_INDIRECT,
         }
     }
 
+    local prefabname = TEST_INDIRECT and "mesh_di.prefab" or "mesh.prefab"
+
     --standalone sub tree
-    local p1 = PC:create_entity {
+    local p1 = PC:create_instance {
         group = hitch_test_group_id,
-        policy = {
-            "ant.render|render",
-        },
-        data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-            material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
-            visible_state = "main_view",
-            scene = {},
-            on_ready = function (e)
-                iom.set_position(e, math3d.vector(0, 2, 0))
-                --iom.set_scale(e, 3)
-            end,
-        },
+        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|" .. prefabname,
+        on_ready = function (p)
+            local root<close> = world:entity(p.tag['*'][1], "scene:update")
+            iom.set_position(root, math3d.vector(0, 2, 0))
+        end,
     }
 
-    PC:create_entity {
+    PC:create_instance {
         group = hitch_test_group_id,
-        policy = {
-            "ant.render|render",
-        },
-        data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
-            material = "/pkg/ant.resources.binary/meshes/base/cone.glb|materials/Material.001.material",
-            visible_state = "main_view",
-            scene = {
-                parent = p1,
-            },
-            on_ready = function (e)
-                iom.set_position(e, math3d.vector(1, 2, 3))
-            end,
-        },
+        prefab = "/pkg/ant.resources.binary/meshes/base/cone.glb|" .. prefabname,
+        on_ready = function (p)
+            local root<close> = world:entity(p.tag['*'][1], "scene:update scene_needchange?out")
+            iom.set_position(root, math3d.vector(1, 2, 3))
+            root.scene.parent = p1.tag['*'][1]
+            root.scene_needchange = true
+        end,
     }
 end
 

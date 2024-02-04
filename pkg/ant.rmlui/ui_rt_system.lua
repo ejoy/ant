@@ -75,8 +75,7 @@ local function create_rt_queue(width, height, name, fbidx)
     local viewid = VIEWIDS[name]
     gen_group_id(name)
     local queuename = QUEUENAMES[name]
-    local ui_rt_material_idx = queuemgr.material_index("main_queue")
-    queuemgr.register_queue(queuename, ui_rt_material_idx)
+    queuemgr.register_queue(queuename, queuemgr.material_index "main_queue")    --same with main_queue
     return world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -351,20 +350,15 @@ function ui_rt_sys:data_changed()
     end
 end
 
-function ui_rt_sys:update_filter()
+function ui_rt_sys:entity_ready()
     for rt_name, rt in pairs(rt_table) do
         local distance = rt_table[rt_name].distance
         local queuename = QUEUENAMES[rt_name]
         local objname = OBJNAMES[rt_name]
         if objname then
-            local select_tag = ("filter_result %s visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"):format(OBJNAMES[rt_name])
+            local select_tag = ("filter_result %s visible_state:in scene?update eid:in bounding?in focus_obj?in"):format(OBJNAMES[rt_name])
             for e in w:select(select_tag) do
                 if e.visible_state[queuename] then
-                    local fm = e.filter_material
-                    local mi = fm["main_queue"]
-                    fm[queuename] = mi
-                    --fm[queuename]:set_state(bgfx.make_state(DEFAULT_STATE))
-                    R.set(e.render_object.rm_idx, queuemgr.material_index(queuename), mi:ptr())
                     if e.bounding and e.focus_obj then
                         calc_camera_t(queuename, e.bounding.scene_aabb, e.scene, distance) 
                     end

@@ -66,22 +66,20 @@ end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
-local function update_scene_ldr()
-    local function get_scene_ldr_handle()
-        if not ENABLE_TAA then
-            local tme = w:first "tonemapping_queue render_target:in"
-            return fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
-        else
-            local tame = w:first "taa_queue render_target:in"
-            return fbmgr.get_rb(tame.render_target.fb_idx, 1).handle
-        end
+local get_scene_ldr_handle; do
+    local qn = ENABLE_TAA and "taa_queue render_target:in" or "tonemapping_queue render_target:in"
+    function get_scene_ldr_handle()
+        local q = w:first(qn)
+        return fbmgr.get_rb(q.render_target.fb_idx, 1).handle
     end
+end
 
+local function update_scene_ldr()
     local fd = w:first "fxaa_drawer filter_material:in"
     imaterial.set_property(fd, "s_scene_ldr_color", get_scene_ldr_handle())
 end
 
-function fxaasys:data_changed()
+function fxaasys:fxaa()
     for _, _, vr in vr_mb:unpack() do
         irq.set_view_rect("fxaa_queue", vr)
         update_scene_ldr()

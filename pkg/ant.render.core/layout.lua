@@ -299,6 +299,7 @@ local SEMANTICS_WITH_INDICES<const> = {
 }
 
 local function format_varying(d)
+    d = L.correct_layout(d)
     local n = d:sub(2, 2)
     local w = d:sub(1, 1)
     local s = assert(NAME_MAPPER[w])

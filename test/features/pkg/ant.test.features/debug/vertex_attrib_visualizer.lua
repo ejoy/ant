@@ -8,6 +8,7 @@ local layoutmgr = import_package "ant.render".layoutmgr
 
 local ivav = {}
 local imaterial = ecs.require "ant.asset|material"
+local ientity   = ecs.require "ant.render|components.entity"
 
 local function find_stream(vb, what)
     for i=1, #vb do
@@ -32,25 +33,15 @@ local function create_line_arrow_mesh(len)
     local head_height<const> = len * 0.08
     local head_len<const> = len * 0.15
 
-    return {
-        vb = {
-            start = 0,
-            num = 4,
-            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
+    return ientity.create_mesh(
+            {"p3", {
                 0.0, 0.0, 0.0,
                 0.0, 0.0, len,
-                -head_height, 0.0, len - head_len,
-                    head_height, 0.0, len - head_len,
-            }), layoutmgr.get "p3".handle),
-        },
-        ib = {
-            start = 0,
-            num = 6,    -- 3 line
-            handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", {
-                0, 1, 2, 1, 3, 1
-            }))
-        }
-    }
+               -head_height, 0.0, len - head_len,
+                head_height, 0.0, len - head_len,
+            }},
+            {0, 1, 2, 1, 3, 1}
+        )
 end
 
 local line_arrow_mesh<const> = create_line_arrow_mesh(1.0)

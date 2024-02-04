@@ -17,6 +17,7 @@ local irq       = ecs.require "ant.render|render_system.renderqueue"
 local icamera   = ecs.require "ant.camera|camera"
 local imesh     = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
+local ientity   = ecs.require "ant.render|components.entity"
 
 local second_camera_sys = ecs.system "second_view_camera_system"
 
@@ -189,21 +190,7 @@ local function create_frustum_entity(eid)
         },
         data = {
             on_ready = onready,
-            simplemesh = imesh.init_mesh{
-                vb = {
-                    start = 0,
-                    num = 8,
-                    declname = "p3",
-                    memory = {"fff", vb},
-                    owned = true,
-                },
-                ib = {
-                    start = 0,
-                    num = #frustum_ib,
-                    memory = {"w", frustum_ib},
-                    owned = true,
-                }
-            },
+            simplemesh = ientity.create_mesh({"p3", vb}, frustum_ib),
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
             render_layer = "translucent",
@@ -217,26 +204,20 @@ local function create_frustum_entity(eid)
     }
 
     local tri_bottomcenter = math3d.mul(0.5, math3d.add(frustum_points[6], frustum_points[8]))
-    local tri_edge_len<const> = math3d.length(frustum_points[6], frustum_points[8]) * 0.25
-    local tri_edge_len_half<const> = tri_edge_len * 0.5
-    local tri_edge_height<const> = tri_edge_len * 2 / 3.0
+    local l<const> = math3d.length(frustum_points[6], frustum_points[8]) * 0.25
+    local hl<const> = l * 0.5
+    local h<const> = l * 2 / 3.0
 
     world:create_entity {
         policy = {
             "ant.render|simplerender",
         },
         data = {
-            simplemesh = imesh.init_mesh{
-                vb = {
-                    start = 0,
-                    num = 3,
-                    declname = "p3",
-                    memory = {"fff", {
-                        -tri_edge_len_half, 0.0, 0.0,
-                        0.0, tri_edge_height, 0.0,
-                        tri_edge_len_half, 0.0, 0.0,
-                    }},
-                    owned = true,
+            simplemesh = ientity.create_mesh{
+                "p3",{
+                    -hl, 0.0, 0.0,
+                    0.0, h,   0.0,
+                     hl, 0.0, 0.0,
                 }
             },
             owned_mesh_buffer = true,

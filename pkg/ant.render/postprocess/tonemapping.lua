@@ -85,5 +85,5 @@ end
 
 function tm_sys:tonemapping()
     local m = w:first "tonemapping_drawer filter_material:in"
-    update_properties(m.filter_material.main_queue)
+    update_properties(m.filter_material.DEFAULT_MATERIAL)
 end

@@ -203,13 +203,13 @@ function ips.do_pyramid_sample(e, input_handle)
             for i=1, PYRAMID_MIPCOUNT do
                 local drawer = world:entity(drawers[i], "filter_material:in")
                 local fm = drawer.filter_material
-                local material = fm.main_queue
+                local mi = fm.DEFAULT_MATERIAL
                 local mip = next_mip()
                 sample_params[1] = mip
                 scene_color_property.value = current_handle
                 scene_color_property.mip = mip
-                material.s_scene_color = scene_color_property
-                material.u_bloom_param = sample_params
+                mi.s_scene_color = scene_color_property
+                mi.u_bloom_param = sample_params
                 current_handle = rbhandle 
             end
             return current_handle

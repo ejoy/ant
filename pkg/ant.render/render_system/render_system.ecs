@@ -1,12 +1,15 @@
 import_feature "ant.asset"
 import_feature "ant.scene"
 
+component "mesh_result".type "lua"
+
 policy "render"
     .include_policy "ant.render|render_object"
     .include_policy "ant.scene|scene_object"
     .include_policy "ant.scene|bounding"
     .include_policy "ant.asset|material"
     .component_opt "render_layer"
+    .component_opt "mesh_result"
     .component "mesh"
     .component "visible_state"
 
@@ -15,8 +18,9 @@ policy "simplerender"
     .include_policy "ant.scene|scene_object"
     .include_policy "ant.scene|bounding"
     .include_policy "ant.asset|material"
-    .component "simplemesh"
     .component_opt "render_layer"
+    .component_opt "mesh_result"
+    .component "simplemesh"
     .component "visible_state"
 
 system "submit_render_system"

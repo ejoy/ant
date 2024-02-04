@@ -327,7 +327,7 @@ local function create_pickup_state(srcstate, dststate)
 	return bgfx.make_state(d)
 end
 
-function pickup_sys:update_filter()
+function pickup_sys:entity_ready()
 	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in" do
 		if e.visible_state["pickup_queue"] then
 			local ro = e.render_object
@@ -339,9 +339,10 @@ function pickup_sys:update_filter()
 			assert(not fm.main_queue:isnull())
 			mi:set_state(create_pickup_state(fm.main_queue:get_state(), dstres.state))
 			mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
-			fm["pickup_queue"] = mi
-
-			R.set(ro.rm_idx, queuemgr.material_index "pickup_queue", mi:ptr())
+			
+			local midx = queuemgr.material_index "pickup_queue"
+			fm[midx] = mi
+			R.set(ro.rm_idx, midx, mi:ptr())
 		end
 	end
 end

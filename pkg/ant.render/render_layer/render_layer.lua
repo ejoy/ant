@@ -87,7 +87,7 @@ local rl_sys = ecs.system "render_layer_system"
 function rl_sys:start_frame()
     for _ in rl_mb:unpack() do
         for e in w:select "render_layer:in render_object:update" do
-            local idx = irl.layeridx(e.render_layer)
+            local idx = irl.layeridx(e.render_layer) or error(("Invalid layer name:%s"):format(e.render_layer))
             e.render_object.render_layer = idx
         end
 

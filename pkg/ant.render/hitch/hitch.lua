@@ -100,9 +100,9 @@ end
 local function create_compute_entity(glbs, memory, draw_num)
     for _, glb in ipairs(glbs) do
         local diid = glb.diid
-        local die = world:entity(diid, "draw_indirect:update mesh:in")
+        local die = world:entity(diid, "draw_indirect:update mesh_result:in")
         idi.update_instance_buffer(die, memory, draw_num)
-        die.draw_indirect.instance_buffer.params =  {draw_num, 0, 0, die.mesh.ib.num}
+        die.draw_indirect.instance_buffer.params =  {draw_num, 0, 0, die.mesh_result.ib.num}
         w:submit(die)
         local cid = world:create_entity{
             policy = {
@@ -234,7 +234,7 @@ function hitch_sys:refine_camera()
             
             local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             local glbs = {}
-            for re in w:select "hitch_tag eid:in mesh:in draw_indirect:in render_object_visible?update" do
+            for re in w:select "hitch_tag eid:in mesh_result:in draw_indirect:in render_object_visible?update" do
                 -- render_object_visible only set in render_system entity_init by view_visible
                 re.render_object_visible = true
                 glbs[#glbs+1] = { diid = re.eid}

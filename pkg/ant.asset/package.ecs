@@ -6,11 +6,6 @@ system "material_system"
 system "mesh_system"
     .implement "mesh.lua"
 
-component "mesh_result"
-    .type "lua"
-
-component "material_result"
-    .type "lua"
 component "material"
     .type "lua"
 

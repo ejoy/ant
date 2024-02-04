@@ -72,7 +72,7 @@ function bloom_sys:bloom()
             pp.postprocess_input.bloom_color_handle = bloom_color_handle
         end
     end
-    local e = w:first("bloom pyramid_sample:in")
+    local e = w:first "bloom pyramid_sample:in"
     if e then
         local pp = w:first("postprocess postprocess_input:in")
         local input_handle = pp.postprocess_input.scene_color_handle

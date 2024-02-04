@@ -46,10 +46,6 @@ local function hitch_test()
                 t = {5, 2, 0, 1}
             },
             view_visible = true,
-            on_ready = function (e)
-                w:extend(e, "view_visible?in")
-                print(e.view_visible)
-            end
         }
     }
 

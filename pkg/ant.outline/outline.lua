@@ -87,20 +87,22 @@ function outline_system:init_world()
     create_outline_queue()
 end
 
-function outline_system:update_filter()
+function outline_system:entity_ready()
     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in outline_info?in" do
         if e.visible_state["outline_queue"] then
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
             local mi = RM.create_instance(mo)
-            fm["outline_queue"] = mi
-            fm["main_queue"]:set_stencil(DEFAULT_STENCIL)
-            R.set(ro.rm_idx, queuemgr.material_index "outline_queue", mi:ptr())
+            local outline_midx = queuemgr.material_index "outline_queue"
+            fm[outline_midx] = mi
+
+            local mq_midx = queuemgr.material_index "outline_queue"
+            assert(fm[mq_midx]):set_stencil(DEFAULT_STENCIL)
+            R.set(ro.rm_idx, outline_midx, mi:ptr())
             if e.outline_info then
-                local outline_scale, outline_color = e.outline_info.outline_scale, e.outline_info.outline_color
-                fm["outline_queue"]["u_outlinescale"] = math3d.vector(outline_scale, 0, 0, 0)
-                fm["outline_queue"]["u_outlinecolor"] = math3d.vector(outline_color)
+                mi["u_outlinescale"] = math3d.vector(e.outline_info.outline_scale, 0, 0, 0)
+                mi["u_outlinecolor"] = e.outline_info.outline_color
             end
         end
     end

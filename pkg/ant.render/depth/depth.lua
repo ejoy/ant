@@ -86,7 +86,7 @@ local function create_depth_state(originstate)
     end
 end
 
-function s:update_filter()
+function s:entity_ready()
     for e in w:select "filter_result visible_state:in render_layer:in material:in" do
         if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
             w:extend(e, "material:in render_object:update filter_material:in")
@@ -94,14 +94,15 @@ function s:update_filter()
             if not matres.fx.setting.no_predepth then
                 local fm = e.filter_material
                 local m = which_material(e, matres)
-                assert(not fm.main_queue:isnull())
-                local newstate = create_depth_state(fm.main_queue:get_state())
+                local Dmi = fm.DEFAULT_MATERIAL
+                local newstate = create_depth_state(Dmi:get_state())
                 if newstate then
                     local mi = RM.create_instance(m.depth.object)
                     mi:set_state(newstate)
 
-                    fm["pre_depth_queue"] = mi
-                    R.set(e.render_object.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
+                    local midx = queuemgr.material_index "pre_depth_queue"
+                    fm[midx] = mi
+                    R.set(e.render_object.rm_idx, midx, mi:ptr())
                 end
             end
         end

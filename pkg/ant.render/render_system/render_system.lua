@@ -3,6 +3,12 @@ local world = ecs.world
 local w = world.w
 
 local assetmgr  = import_package "ant.asset"
+local setting		= import_package "ant.settings"
+local ENABLE_PRE_DEPTH<const>	= not setting:get "graphic/disable_pre_z"
+
+local L			= import_package "ant.render.core".layout
+
+local aio		= import_package "ant.io"
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
@@ -13,6 +19,7 @@ local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"
+local imesh		= ecs.require "ant.asset|mesh"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer.render_layer"
 local RM        = ecs.require "ant.material|material"
@@ -48,17 +55,27 @@ function render_sys:start_frame()
 	assetmgr.material_check()
 end
 
-function render_sys:component_init()
-	for e in w:select "INIT render_object:update filter_material:update" do
-		local ro = e.render_object
-		ro.rm_idx = R.alloc()
+--[[
+about rm_idx/Qidx(queue index): (visible_idx|cull_idx):
+	*_idx: all of then are allocated in c file, rm_idx in render_material.c, Qidx in queue.cpp
+	rm_idx: it's a handle pointing in a memory allocated in render_material.c, it keep multiple 'material_instance' pointer for rendering.
+		one render entity(with render_object entity), can be render in multi queue
+		one queue for correspond to some render output
+		visible_state indicate this render entity should render in which queues
+		ex:
+			a simple opaticy render entity's visible_state: main_view|cast_shadow|selectable
+			'main_view' mean it should first render in 'pre_depth_queue'(use one special vertex only shader, see depth.lua), than render in 'main_queue'(depth write disable, depth test set to equal)
+			it will be submit twice with difference shader
+			'material_index' of 'main_queue'  in 'rm_idx' slot is 0, and 'material_index' of 'pre_depth_queue' in 'rm_idx' slot is 1, see queue_mgr.lua
 
-		ro.visible_idx	= Q.alloc()
-		ro.cull_idx		= Q.alloc()
+		so, if we create a new queue, and we want to create some entities only render in this queue, we need:
+			1. use queuemgr.alloc_material to alloc 'material_index', and use queue_mgr.register, to bind this queue with allocated 'material_index'(if call queuemgr.register without 'material_index', it will use default material index which is 0);
+			2. create entity, and specify visible_state with this new queue_name;
+			3. if the new queue need special material, we should create a system with update_fitler/update_filter_depend stage, add a new material for this 'material_index' reigter with this queue;
+			4. if this queue still need to render in 'main_queue', the 'material_index' register with this queue should use a different 'material_index' with 'main_queue' 'material_index';
 
-		e.filter_material	= e.filter_material or {}
-	end
-end
+	visible_idx|cull_idx: it indicates which queue is visibled/culled.
+]]
 
 local function update_ro(ro, m)
 	local vb = m.vb
@@ -84,7 +101,7 @@ end
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {
 		queue_index		= queuemgr.queue_index(k),
-		material_index	= queuemgr.material_index(k),
+		material_index	= queuemgr.material_index(k)
 	}
 	t[k] = v
 	return v
@@ -108,38 +125,148 @@ local function update_visible_masks(e)
 	end
 end
 
-function render_sys:entity_init()
-	for e in w:select "INIT material_result:in render_object:in filter_material:in view_visible?in render_object_visible?out draw_indirect?in eid:in" do
-		local mr = e.material_result
+function render_sys:init()
+	assert(imaterial.default_material_index() == queuemgr.default_material_index())
+end
+
+local function create_material_instance(e)
+	--TODO: add render_features flag to replace skinning and draw_indirect component check
+	w:extend(e, "draw_indirect?in")
+	local mr = assetmgr.resource(e.material)
+	if e.draw_indirect then
+		local di = mr.di
+		if not mr.di then
+			error("use draw_indirect component, but material file not define draw_indirect material")
+		end
+
+		return RM.create_instance(di.object)
+	end
+	return RM.create_instance(mr.object)
+end
+
+local function update_default_material_index(e)
+	local ro = e.render_object
+	local mi = create_material_instance(e)
+	local midx = queuemgr.default_material_index()
+	R.set(ro.rm_idx, midx, mi:ptr())
+	e.filter_material.DEFAULT_MATERIAL = mi
+	e.filter_material[midx] = mi	-- just make it same with rm_idx data
+end
+
+local function check_set_depth_state_as_equal(state)
+	local ss = bgfx.parse_state(state)
+	ss.DEPTH_TEST = "EQUAL"
+	local wm = ss.WRITE_MASK
+	ss.WRITE_MASK = wm and wm:gsub("Z", "") or "RGBA"
+	return bgfx.make_state(ss)
+end
+
+local function check_update_main_queue_material(e)
+	w:extend(e, "visible_state:in")
+	if ENABLE_PRE_DEPTH and e.visible_state["main_queue"] and irl.is_opacity_layer(assert(e.render_layer)) then
+		w:extend(e, "filter_material:in")
 		local fm = e.filter_material
-		local mi
-		if e.draw_indirect and mr.di then
-			mi = RM.create_instance(mr.di.object)
-		else
-			mi = RM.create_instance(mr.object)
+		local mr = assetmgr.resource(e.material)
+		local mi = fm.DEFAULT_MATERIAL
+		if not mr.fx.setting.no_predepth then
+			local nmi = create_material_instance(e)
+			nmi:set_state(check_set_depth_state_as_equal(mi:get_state()))
+			mi = nmi
 		end
-		fm["main_queue"] = mi
+
+		local midx = queuemgr.material_index "main_queue"
+		R.set(e.render_object.rm_idx, midx, mi:ptr())
+		fm[midx] = mi
+	end
+end
+
+
+function render_sys:component_init()
+	for e in w:select "INIT material:in render_object:update filter_material:update filter_result:new" do
 		local ro = e.render_object
-		R.set(ro.rm_idx, queuemgr.material_index "main_queue", mi:ptr())
+		ro.rm_idx = R.alloc()
 
-		e.render_object_visible = e.view_visible
+		ro.visible_idx	= Q.alloc()
+		ro.cull_idx		= Q.alloc()
+
+		e.filter_material	= {}
+
+		--filter_material&filter_result
+		w:extend(e, "filter_material:in filter_result:new")
+		e.filter_result = true
+		update_default_material_index(e)
+	end
+end
+
+local function read_mat_varyings(varyings)
+	if varyings then
+		if type(varyings) == "string" then
+			assert(varyings:sub(1, 1) == "/", "Only support full vfs path")
+			local datalist = require "datalist"
+			varyings = datalist.parse(aio.readall(varyings))
+		end
+		return L.parse_varyings(varyings)
+	end
+end
+
+local function check_varyings(mesh, material)
+	local declname = mesh.vb.declname
+	if not declname then
+		return 
 	end
 
-	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
-		local m = e.mesh or e.simplemesh
-		if m then
-			update_ro(e.render_object, m)
+	if mesh.vb2 then
+		declname = ("%s|%s"):format(declname, assert(mesh.vb2.declname))
+	end
+
+	local matres = assetmgr.resource(material)
+	local varyings = read_mat_varyings(matres.fx.varyings)
+	if varyings then
+		local inputs = L.parse_varyings(L.varying_inputs(declname))
+		for k, v in pairs(varyings) do
+			--NOTE: why check "a_" here, because bgfx assume our shader input var must be: a_position|a_texcoord|a_color|a_normal...etc, so only check "a_*" here
+			if k:match "a_" then
+				local function is_input_equal(lhs, rhs)
+					return lhs.type == rhs.type and lhs.bind == rhs.bind
+				end
+				if not (inputs[k] and is_input_equal(inputs[k], v)) then
+					error(("Layout: %s, is not declared or not equal to varyings defined"):format(k))
+				end
+			end
 		end
 	end
+end
 
-	for e in w:select "INIT render_layer?update render_object:update" do
+function render_sys:entity_init()
+	for e in w:select "INIT mesh:in mesh_result?update" do
+		e.mesh_result = assetmgr.resource(e.mesh)
+	end
+
+	for e in w:select "INIT simplemesh:update mesh_result?update" do
+		e.mesh_result = e.simplemesh
+	end
+
+	for e in w:select "INIT render_object:update" do
+		--mesh & material
+		w:extend(e, "mesh_result:in material:in")
+		update_ro(e.render_object, e.mesh_result)
+		check_varyings(e.mesh_result, e.material)
+
+		--render_layer
+		w:extend(e, "render_layer?update")
 		local rl = e.render_layer
 		if not rl  then
 			rl = "opacity"
 			e.render_layer = rl
 		end
-
 		e.render_object.render_layer = assert(irl.layeridx(rl))
+
+		--render_object_visible
+		w:extend(e, "render_object_visible?out view_visible?in")
+		e.render_object_visible = e.view_visible
+
+		--filter_material.main_queue
+		check_update_main_queue_material(e)
 	end
 
 	for qe in w:select "INIT queue_name:in render_target:in" do
@@ -148,10 +275,6 @@ function render_sys:entity_init()
 			queuemgr.register_queue(qn)
 		end
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
-	end
-
-	for e in w:select "INIT render_object filter_result:new" do
-		e.filter_result = true
 	end
 
 	for e in w:select "INIT visible_state visible_state_changed?out" do
@@ -246,39 +369,14 @@ local function clear_render_object(ro)
 end
 
 function render_sys:entity_remove()
+	for e in w:select "REMOVED owned_mesh_buffer simplemesh:in" do
+		imesh.delete_mesh(e.simplemesh)
+	end
+
 	for e in w:select "REMOVED render_object:update filter_material:in" do
 		clear_filter_material(e.filter_material)
 
 		clear_render_object(e.render_object)
-	end
-end
-
-local function check_set_depth_state_as_equal(state)
-	local ss = bgfx.parse_state(state)
-	ss.DEPTH_TEST = "EQUAL"
-	local wm = ss.WRITE_MASK
-	ss.WRITE_MASK = wm and wm:gsub("Z", "") or "RGBA"
-	return bgfx.make_state(ss)
-end
-
-function render_sys:update_filter()
-	if irender.use_pre_depth() then
-		--we should check 'filter_result' here and change the default material
-		--because render entity will change it's visible state after it created
-		--but not create this new material instance in entity_init stage
-		for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in material:in" do
-			if e.visible_state["main_queue"] and irl.is_opacity_layer(e.render_layer) then
-				local matres = assetmgr.resource(e.material)
-				local ro = e.render_object
-				local fm = e.filter_material
-				assert(not fm.main_queue:isnull())
-				if not matres.fx.setting.no_predepth then
-					fm.main_queue:set_state(check_set_depth_state_as_equal(fm.main_queue:get_state()))
-				end
-
-				R.set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())
-			end
-		end
 	end
 end
 

@@ -56,10 +56,11 @@ end
 
 local cs = ecs.system "compute_system"
 function cs:entity_init()
-	for e in w:select "INIT material_result:in dispatch:in" do
+	for e in w:select "INIT material:in dispatch:in" do
         -- no state for compute shader
-        e.dispatch.material = RM.create_instance(e.material_result.object)
-        e.dispatch.fx       = e.material_result.fx
+        local mr = assetmgr.resource(e.material)
+        e.dispatch.material = RM.create_instance(mr.object)
+        e.dispatch.fx       = mr.fx
 	end
 end
 

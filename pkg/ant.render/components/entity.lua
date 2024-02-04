@@ -45,11 +45,13 @@ local function create_mesh(vbdata, ibdata, aabb)
 	vb.num = #vbdata[2] // #flag
 	vb.declname = correct_layout
 	vb.memory = {flag, vbdata[2]}
+	vb.owned = true
 
 	if ibdata then
 		mesh.ib = {
 			start = 0, num = #ibdata,
 			memory = {"w", ibdata},
+			owned = true,
 		}
 	end
 	return imesh.init_mesh(mesh)
@@ -237,7 +239,7 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 			material 	= materialpath,
 			visible_state= hide and "" or "main_view",
 			render_layer= render_layer,
-			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}), true),
+			simplemesh 	= create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}),
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -545,7 +547,7 @@ function ientity.create_procedural_sky(settings)
 end
 
 function ientity.create_gamma_test_entity()
-	world:create_entity {
+	return world:create_entity {
         policy = {
             "ant.render|simplerender",
         },
@@ -561,6 +563,7 @@ function ientity.create_gamma_test_entity()
                 vb = {
                     start = 0,
                     num = 4,
+					declname = "p2|t2",
 					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
 						100, 200, 0.0, 0.0,
 						100, 132, 0.0, 1.0,
@@ -666,6 +669,7 @@ local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
 		vb = {
 			start = 0,
 			num = numv,
+			declname = "p3",
 			handle = bgfx.create_vertex_buffer(vb, layout.handle)
 		},
 		ib = {
@@ -699,20 +703,26 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
     assert(quadnum > 0)
     local hw = width * 0.5
     local function create_vertex_buffer()
+		local vertices = {}
+
+		local function add_vertex(...)
+			local offset = #vertices
+			for i=1, select(..., "#") do
+				vertices[offset+i] = select(..., i)
+			end
+		end
+
         local x0, x1 = -hw, hw
         local z = 0.0
-        local vertices = {}
-        local fmt = "fffff"
-        local u, v = 0.0, 0.0
+        local v = 0.0
         for i=0, quadnum do
-            vertices[#vertices+1] = fmt:pack(x0, 0.0, z, 0.0, v)
-            vertices[#vertices+1] = fmt:pack(x1, 0.0, z, 1.0, v)
-
+			add_vertex(x0, 0.0, z, 0.0, v)
+            add_vertex(x1, 0.0, z, 1.0, v)
             z = z + width
             v = v+1.0
         end
 
-        return bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(vertices)), layoutmgr.get "p3|t2".handle)
+        return {"p3|t2", vertices}
     end
 
 	local function create_index_buffer()
@@ -729,7 +739,7 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
 			ib[#ib+1] = ib[6] + d
 		end
 
-		return bgfx.create_index_buffer(bgfx.memory_buffer("w", ib))
+		return ib
 	end
 
     return world:create_entity {
@@ -739,18 +749,7 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
         data = {
 			scene = scene or {},
 			visible_state = hide and "" or "main_view",
-            simplemesh = {
-                vb = {
-                    start = 0,
-                    num = (quadnum+1)*2,
-                    handle = create_vertex_buffer(),
-                },
-                ib = {
-                    start = 0,
-                    num = 0,
-                    handle = create_index_buffer(),
-                }
-            },
+            simplemesh = create_mesh(create_vertex_buffer(), create_index_buffer()),
 			material = material,
 			render_layer = render_layer,
         }
