@@ -307,26 +307,6 @@ renderer_type_id(lua_State *L, int index) {
 	return id;
 }
 
-static void
-append_log(struct log_cache *lc, const char * buffer, int n) {
-	spin_lock(lc);
-	int sz = (int)(lc->tail - lc->head);	// sz must less than MAX_LOGBUFFER
-	if (sz + n > MAX_LOGBUFFER)
-		n = MAX_LOGBUFFER - sz;
-	int offset = lc->tail % MAX_LOGBUFFER;
-	int part = MAX_LOGBUFFER - offset;
-	if (part >= n) {
-		// only one part
-		memcpy(lc->log + offset, buffer, n);
-	} else {
-		// ring buffer rewind
-		memcpy(lc->log + offset, buffer, part);
-		memcpy(lc->log, buffer + part, n - part);
-	}
-	lc->tail += n;
-	spin_unlock(lc);
-}
-
 static const char*
 fatal_code_str(bgfx_fatal_t code) {
 	switch (code) {
