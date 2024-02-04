@@ -428,7 +428,6 @@ struct hitch_submiter {
 	submit_hitch hitchs[MAX_SUBMIT_NUM];
 	uint16_t num = 0;
 
-	//TODO
 	//uint16_t submit_queues[MAX_VISIBLE_QUEUE][MAX_SUBMIT_NUM];
 };
 
@@ -554,8 +553,9 @@ static submit_cache cc;
 static int
 lrender_submit(lua_State *L) {
 	auto w = getworld(L);
-
 	cc.clear();
+	cc.ctx.L = L;
+	cc.ctx.w = w;
 
 	find_render_args(w, cc);
 	build_hitch_info(w, cc);
