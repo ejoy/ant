@@ -348,8 +348,7 @@ using VGIZMO_BASE_CLASS::qtV;
 
 public:
     //////////////////////////////////////////////////////////////////
-    virtualGizmo3DClass() : dollyControlButton(evRightButton),   panControlButton(evMiddleButton),  dollyActive(false),
-                         dollyControlModifiers(evNoModifier), panControlModifiers(evNoModifier), panActive(false) { }
+    virtualGizmo3DClass() = default;
 
     //////////////////////////////////////////////////////////////////
     void mouse( vgButtons button, vgModifiers mod, bool pressed, int x, int y) { mouse(button, mod, pressed, T(x), T(y)); }
@@ -513,12 +512,12 @@ public:
 
 private:
     // UI commands that this virtualGizmo responds to (defaults to left mouse button with no modifier key)
-    vgButtons   dollyControlButton,    panControlButton;
-    vgModifiers dollyControlModifiers, panControlModifiers;
+    vgButtons   dollyControlButton = evRightButton,    panControlButton = evMiddleButton;
+    vgModifiers dollyControlModifiers = evNoModifier, panControlModifiers = evNoModifier;
 
     // Variable used to determine if the manipulator is presently tracking the mouse
-    bool dollyActive;
-    bool panActive;      
+    bool dollyActive = false;
+    bool panActive = false;
 
     tVec3 pan   = tVec3(T(0));
     tVec3 dolly = tVec3(T(0));
