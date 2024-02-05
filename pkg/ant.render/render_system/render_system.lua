@@ -135,7 +135,7 @@ local function create_material_instance(e)
 	local mr = assetmgr.resource(e.material)
 	if e.draw_indirect then
 		local di = mr.di
-		if not mr.di then
+		if not di then
 			error("use draw_indirect component, but material file not define draw_indirect material")
 		end
 
