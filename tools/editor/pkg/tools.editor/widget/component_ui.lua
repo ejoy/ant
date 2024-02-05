@@ -1,4 +1,4 @@
-local ImGui      = import_package "ant.imgui"
+local ImGui      = require "imgui"
 local ImGuiWidgets = require "imgui.widgets"
 local ImGuiLegacy = require "imgui.legacy"
 

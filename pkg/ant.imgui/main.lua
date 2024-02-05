@@ -4,9 +4,9 @@ local fastio = require "fastio"
 local bgfx = require "bgfx"
 local viewIdPool = require "viewid_pool"
 
----@class ImGui
 local ImGui = require "imgui"
 local ImGuiBackend = require "imgui.backend"
+local ImGuiAnt = {}
 local ImGuiIO
 
 local FontAtlas = {}
@@ -21,11 +21,11 @@ local function glyphRanges(t)
 	return table.concat(s)
 end
 
-function ImGui.FontAtlasClear()
+function ImGuiAnt.FontAtlasClear()
     FontAtlas = {}
 end
 
-function ImGui.FontAtlasAddFont(config)
+function ImGuiAnt.FontAtlasAddFont(config)
     if config.SystemFont then
         FontAtlas[#FontAtlas+1] = {
             FontData = fastio.tostring(fontutil.systemfont(config.SystemFont)),
@@ -41,7 +41,7 @@ function ImGui.FontAtlasAddFont(config)
     }
 end
 
-function ImGui.FontAtlasBuild()
+function ImGuiAnt.FontAtlasBuild()
     ImGuiBackend.RenderCreateFontsTexture(FontAtlas)
     FontAtlas = {}
 end
@@ -95,16 +95,16 @@ function ImGuiEvent.focus(e)
     ImGuiIO.AddFocusEvent(e.focused)
 end
 
-function ImGui.DispatchEvent(e)
+function ImGuiAnt.DispatchEvent(e)
     ImGuiIO = ImGui.GetIO()
     local func = ImGuiEvent[e.type]
     return func and func(e)
 end
 
-function ImGui.SetViewClear(...)
+function ImGuiAnt.SetViewClear(...)
     for _, viewid in ipairs(viewIdPool) do
         bgfx.set_view_clear(viewid, ...)
     end
 end
 
-return ImGui
+return ImGuiAnt

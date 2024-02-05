@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local ImGui     = import_package "ant.imgui"
+local ImGui     = require "imgui"
 local joint_utils = require "widget.joint_utils"
 local uiproperty = require "widget.uiproperty"
 local hierarchy = ecs.require "hierarchy_edit"

@@ -669,8 +669,8 @@ function world:dispatch_message(e)
 end
 
 function world:enable_imgui()
-    local ImGui = import_package "ant.imgui"
-    self._dispatch_imgui = ImGui.DispatchEvent
+    local ImGuiAnt = import_package "ant.imgui"
+    self._dispatch_imgui = ImGuiAnt.DispatchEvent
 end
 
 function world:dispatch_imgui(msg)

@@ -1,4 +1,4 @@
-local ImGui         = import_package "ant.imgui"
+local ImGui         = require "imgui"
 local ImGuiWidgets  = require "imgui.widgets"
 local global_data   = require "common.global_data"
 local datalist      = require "datalist"

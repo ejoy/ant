@@ -10,7 +10,7 @@ local irq           = ecs.require "ant.render|render_system.renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
-local ImGui         = import_package "ant.imgui"
+local ImGuiAnt      = import_package "ant.imgui"
 local bfs 			= require "bee.filesystem"
 local global_data	= require "common.global_data"
 local icons         = require "common.icons"
@@ -39,7 +39,7 @@ local function start_fileserver(luaexe, path)
 end
 
 local function init_font()
-		ImGui.FontAtlasAddFont {
+		ImGuiAnt.FontAtlasAddFont {
 			FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
 			SizePixels = 16,
 			GlyphRanges = {

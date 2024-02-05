@@ -1,4 +1,4 @@
-local ImGui     = import_package "ant.imgui"
+local ImGui     = require "imgui"
 
 local m = {
     show_skeleton = false,

@@ -2,8 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local ImGui = import_package "ant.imgui"
+local ImGui = require "imgui"
 local ImGuiLegacy = require "imgui.legacy"
+local ImGuiAnt = import_package "ant.imgui"
 
 local m = ecs.system 'init_system'
 
@@ -12,7 +13,7 @@ local text = {text = ""}
 local DropfilesEvent = world:sub { "dropfiles" }
 
 function m:init()
-    ImGui.SetViewClear("C", 0x000000ff, 1.0, 0.0)
+    ImGuiAnt.SetViewClear("C", 0x000000ff, 1.0, 0.0)
 end
 
 function m:data_changed()

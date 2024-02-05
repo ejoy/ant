@@ -6,7 +6,7 @@ local uiproperty    = require "widget.uiproperty"
 local uiutils       = require "widget.utils"
 local hierarchy     = ecs.require "hierarchy_edit"
 local math3d        = require "math3d"
-local ImGui         = import_package "ant.imgui"
+local ImGui         = require "imgui"
 
 local serialize     = import_package "ant.serialize"
 

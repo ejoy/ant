@@ -1,7 +1,7 @@
 local ecs       = ...
 local world     = ecs.world
 
-local ImGui     = import_package "ant.imgui"
+local ImGui     = require "imgui"
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 local window    = import_package "ant.window"
