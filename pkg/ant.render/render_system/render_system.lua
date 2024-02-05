@@ -196,6 +196,14 @@ function render_sys:component_init()
 		e.filter_result = true
 		update_default_material_index(e)
 	end
+
+	for e in w:select "INIT mesh:in mesh_result?update" do
+		e.mesh_result = assetmgr.resource(e.mesh)
+	end
+
+	for e in w:select "INIT simplemesh:update mesh_result?update" do
+		e.mesh_result = e.simplemesh
+	end
 end
 
 local function read_mat_varyings(varyings)
@@ -238,14 +246,6 @@ local function check_varyings(mesh, material)
 end
 
 function render_sys:entity_init()
-	for e in w:select "INIT mesh:in mesh_result?update" do
-		e.mesh_result = assetmgr.resource(e.mesh)
-	end
-
-	for e in w:select "INIT simplemesh:update mesh_result?update" do
-		e.mesh_result = e.simplemesh
-	end
-
 	for e in w:select "INIT render_object:update" do
 		--mesh & material
 		w:extend(e, "mesh_result:in material:in")

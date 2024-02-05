@@ -18,10 +18,7 @@ local function init_bounding(bounding, bb)
 end
 
 function b:entity_init()
-	for e in w:select "INIT bounding:update mesh?in simplemesh?in" do
-		local m = e.mesh or e.simplemesh
-		if m then
-			init_bounding(e.bounding, m.bounding)
-		end
+	for e in w:select "INIT mesh_result:in bounding:update" do
+		init_bounding(e.bounding, e.mesh_result.bounding)
 	end
 end
