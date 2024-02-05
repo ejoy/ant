@@ -19,7 +19,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
     pendQueue[path] = {element}
     if isRT then
         ltask.fork(function ()
-            local id = ltask.call(ServiceWorld, "render_target_update", width, height, path)
+            local id = ltask.call(ServiceWindow, "render_target_update", width, height, path)
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],

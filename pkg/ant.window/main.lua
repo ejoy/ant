@@ -1,36 +1,36 @@
 local function start(initargs)
     local platform = require "bee.platform"
+    local exclusive = {}
     if platform.os == "ios" then
-        dofile "/engine/ltask.lua" {
-            bootstrap = { "ant.window|ios_boot", initargs },
-            exclusive = { "ant.window|ios_window", "timer", "ant.hwi|bgfx" },
-        }
-        return
+        exclusive[#exclusive+1] = "ant.window|ios"
+    else
+        exclusive[#exclusive+1] = { "ant.window|window", initargs }
     end
-    local exclusive = { { "ant.window|world", initargs }, "timer", "ant.hwi|bgfx" }
+    exclusive[#exclusive+1] = "timer"
+    exclusive[#exclusive+1] = "ant.hwi|bgfx"
     if not __ANT_RUNTIME__ then
         exclusive[#exclusive+1] = "subprocess"
     end
     dofile "/engine/ltask.lua" {
-        bootstrap = { "ant.window|boot" },
+        bootstrap = { "ant.window|boot", initargs },
         exclusive = exclusive,
     }
 end
 
 local function newproxy(t, k)
     local ltask = require "ltask"
-    local ServiceWorld = ltask.queryservice "ant.window|world"
+    local ServiceWindow = ltask.queryservice "ant.window|window"
 
     local function reboot(initargs)
-        ltask.send(ServiceWorld, "reboot", initargs)
+        ltask.send(ServiceWindow, "reboot", initargs)
     end
 
     local function set_cursor(cursor)
-        ltask.call(ServiceWorld, "set_cursor", cursor)
+        ltask.call(ServiceWindow, "set_cursor", cursor)
     end
 
     local function set_title(title)
-        ltask.call(ServiceWorld, "set_title", title)
+        ltask.call(ServiceWindow, "set_title", title)
     end
 
     t.reboot = reboot

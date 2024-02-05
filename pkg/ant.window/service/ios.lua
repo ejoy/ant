@@ -20,7 +20,7 @@ local function update()
 end
 window.init(message, update)
 ltask.fork(function ()
-    local ServiceWorld = ltask.queryservice "ant.window|world"
+    local ServiceWindow = ltask.queryservice "ant.window|window"
     while true do
         if #message > 0 then
             local mq = {}
@@ -29,7 +29,7 @@ ltask.fork(function ()
                 message[i] = nil
             end
             CALL = true
-            ltask.call(ServiceWorld, "msg", mq)
+            ltask.call(ServiceWindow, "msg", mq)
             CALL = false
         end
         ltask.wait "update"

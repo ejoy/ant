@@ -70,10 +70,10 @@ local function createWindow(document, name)
         return name
     end
     function window.callMessage(...)
-        return message.call(ServiceWorld, ...)
+        return message.call(ServiceWindow, ...)
     end
     function window.sendMessage(...)
-        message.send(ServiceWorld, ...)
+        message.send(ServiceWindow, ...)
     end
     local ctors = {}
     local customElements = {}
