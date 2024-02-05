@@ -227,7 +227,7 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::BackgroundRepeat, {
-		PropertyParseKeyword<SamplerFlag>,
+		PropertyParseKeyword<Style::BackgroundRepeat>,
 	}},
 
 	{ PropertyId::BackgroundFilter, {
