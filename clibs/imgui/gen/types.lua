@@ -28,6 +28,7 @@ local reserve_type <const> = {
     ["ImGuiID"] = "ImGuiID",
     ["ImGuiKeyChord"] = "ImGui.KeyChord",
     ["const ImWchar*"] = "ImFontRange",
+    ["ImFontAtlas*"] = "ImFontAtlas",
 }
 
 local registered_type = {}
@@ -196,6 +197,7 @@ local function decode_func_attris(name, writeln, readonly, meta)
             writeln("        lua_pushlightuserdata(L, (void*)OBJ.%s);", field.name)
             writeln "        return 1;"
             writeln "    }"
+            attris.getters[#attris.getters+1] = field.name
             if not readonly then
                 writeln ""
                 writeln "    static int setter(lua_State* L) {"
@@ -203,67 +205,92 @@ local function decode_func_attris(name, writeln, readonly, meta)
                 writeln("        OBJ.%s = (const ImWchar*)lua_touserdata(L, 1);", field.name, field.type.declaration)
                 writeln "        return 0;"
                 writeln "    }"
+                attris.setters[#attris.setters+1] = field.name
             end
             writeln "};"
             writeln ""
-            attris.setters[#attris.setters+1] = field.name
+        elseif field.type.declaration == "ImFontAtlas*" then
+            writeln("struct %s {", field.name)
+            writeln "    static int getter(lua_State* L) {"
+            writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+            writeln("        wrap_ImFontAtlas::const_pointer(L, *OBJ.%s);", field.name)
+            writeln "        return 1;"
+            writeln "    }"
             attris.getters[#attris.getters+1] = field.name
+            writeln "};"
+            writeln ""
         end
         ::continue::
     end
     return attris
 end
 
-local function decode_func(name, funcs_meta, writeln, write_func, readonly)
+local function decode_func(name, funcs_meta, writeln, write_func, modes)
     local meta = types[name]
     assert(meta and meta.kind == "struct")
     writeln("namespace wrap_%s {", name)
-    writeln ""
-    writeln "static int tag = 0;"
     writeln ""
     local funcs = {}
     for _, func_meta in ipairs(funcs_meta) do
         funcs[#funcs+1] = write_func(func_meta)
     end
+    local readonly = #modes == 1 and modes[1] == "const_pointer"
     local attris = decode_func_attris(name, writeln, readonly, meta)
-    writeln "static void init(lua_State* L) {"
     local funcs_args = "{}"
     local setters_args = "{}"
     local getters_args = "{}"
     if #funcs > 0 then
-        writeln "    static luaL_Reg funcs[] = {"
+        writeln "static luaL_Reg funcs[] = {"
         for _, func_name in ipairs(funcs) do
-            writeln("        { %q, %s },", func_name, func_name)
+            writeln("    { %q, %s },", func_name, func_name)
         end
-        writeln "    };"
+        writeln "};"
+        writeln ""
         funcs_args = "funcs"
     end
     if #attris.setters > 0 then
-        writeln "    static luaL_Reg setters[] = {"
+        writeln "static luaL_Reg setters[] = {"
         for _, attri_name in ipairs(attris.setters) do
-            writeln("        { %q, %s::setter },", attri_name, attri_name)
+            writeln("    { %q, %s::setter },", attri_name, attri_name)
         end
-        writeln "    };"
+        writeln "};"
+        writeln ""
         setters_args = "setters"
     end
     if #attris.getters > 0 then
-        writeln "    static luaL_Reg getters[] = {"
+        writeln "static luaL_Reg getters[] = {"
         for _, attri_name in ipairs(attris.getters) do
-            writeln("        { %q, %s::getter },", attri_name, attri_name)
+            writeln("    { %q, %s::getter },", attri_name, attri_name)
         end
-        writeln "    };"
+        writeln "};"
+        writeln ""
         getters_args = "getters"
     end
-    writeln("    util::struct_gen(L, %q, %s, %s, %s);", name, funcs_args, setters_args, getters_args)
-    writeln "    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);"
+    for _, mode in ipairs(modes) do
+        writeln("static int tag_%s = 0;", mode)
+        writeln ""
+        writeln("static void %s(lua_State* L, %s& v) {", mode, name)
+        writeln("    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
+        writeln("    auto** ptr = (%s**)lua_touserdata(L, -1);", name)
+        writeln "    *ptr = &v;"
+        writeln "}"
+        writeln ""
+    end
+    writeln "static void init(lua_State* L) {"
+    for _, mode in ipairs(modes) do
+        if mode == "const_pointer" then
+            writeln("    util::struct_gen(L, %q, %s, {}, %s);", name, funcs_args, getters_args)
+        elseif mode == "pointer" then
+            writeln("    util::struct_gen(L, %q, %s, %s, %s);", name, funcs_args, setters_args, getters_args)
+        else
+            assert(false)
+        end
+        writeln("    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
+    end
     writeln "}"
     writeln ""
-    writeln("static void fetch(lua_State* L, %s& v) {", name)
-    writeln "    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);"
-    writeln("    auto** ptr = (%s**)lua_touserdata(L, -1);", name)
-    writeln "    *ptr = &v;"
     writeln "}"
-    writeln "}"
+    writeln ""
 end
 
 return {

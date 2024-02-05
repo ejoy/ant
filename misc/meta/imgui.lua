@@ -1033,6 +1033,10 @@ ImGui.Mod = {}
 
 ---@alias ImGuiID integer
 
+---@class ImFont
+
+---@class ImFontRange
+
 ---@class ImVec2
 ---@field x number
 ---@field y number
@@ -1062,6 +1066,7 @@ ImGui.Mod = {}
 ---@field DeltaTime number                         #  = 1.0f/60.0f     // Time elapsed since last frame, in seconds. May change every frame.
 ---@field IniSavingRate number                     #  = 5.0f           // Minimum time between saving positions/sizes to .ini file, in seconds.
 ---@field UserData lightuserdata                   #  = NULL           // Store your own data.
+---@field Fonts ImFontAtlas                        #  <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
 ---@field FontGlobalScale number                   #  = 1.0f           // Global scale all fonts
 ---@field FontAllowUserScaling boolean             #  = false          // Allow user scaling text of individual window with CTRL+Wheel.
 ---@field DisplayFramebufferScale ImVec2           #  = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::FramebufferScale.
@@ -1237,6 +1242,221 @@ function ImGuiIO.ClearEventsQueue() end
 --
 function ImGuiIO.ClearInputKeys() end
 
+
+---@class ImFontConfig
+---@field FontData lightuserdata      #           // TTF/OTF data
+---@field FontDataSize integer        #           // TTF/OTF data size
+---@field FontDataOwnedByAtlas boolean#  true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
+---@field FontNo integer              #  0        // Index of font within TTF/OTF file
+---@field SizePixels number           #           // Size in pixels for rasterizer (more or less maps to the resulting font height).
+---@field OversampleH integer         #  2        // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal. You can reduce this to 1 for large glyphs save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
+---@field OversampleV integer         #  1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
+---@field PixelSnapH boolean          #  false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
+---@field GlyphExtraSpacing ImVec2    #  0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
+---@field GlyphOffset ImVec2          #  0, 0     // Offset all glyphs from this font input.
+---@field GlyphRanges ImFontRange     #  NULL     // THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE. Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list).
+---@field GlyphMinAdvanceX number     #  0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
+---@field GlyphMaxAdvanceX number     #  FLT_MAX  // Maximum AdvanceX for glyphs
+---@field MergeMode boolean           #  false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
+---@field FontBuilderFlags integer    #  0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
+---@field RasterizerMultiply number   #  1.0f     // Linearly brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable. This is a silly thing we may remove in the future.
+---@field RasterizerDensity number    #  1.0f     // DPI scale for rasterization, not altering other font metrics: make it easy to swap between e.g. a 100% and a 400% fonts for a zooming display. IMPORTANT: If you increase this it is expected that you increase font scale accordingly, otherwise quality may look lowered.
+---@field EllipsisChar integer        #  -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+
+---@class ImFontAtlas
+---@field Flags ImGui.FontAtlasFlags#  Build flags (see ImFontAtlasFlags_)
+---@field TexID lightuserdata       #  User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
+---@field TexDesiredWidth integer   #  Texture width desired by user before Build(). Must be a power-of-two. If have many glyphs your graphics API have texture size restrictions you may want to increase texture width to decrease height.
+---@field TexGlyphPadding integer   #  Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0 (will also need to set AntiAliasedLinesUseTex = false).
+---@field Locked boolean            #  Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
+---@field UserData lightuserdata    #  Store your own atlas related user-data (if e.g. you have multiple font atlas).
+---@field TexReady boolean          #  Set when texture was built matching current font input
+---@field TexPixelsUseColors boolean#  Tell whether our texture data is known to use colors (rather than just alpha channel), in order to help backend select a format.
+---@field TexWidth integer          #  Texture width calculated during Build().
+---@field TexHeight integer         #  Texture height calculated during Build().
+---@field TexUvScale ImVec2         #  = (1.0f/TexWidth, 1.0f/TexHeight)
+---@field TexUvWhitePixel ImVec2    #  Texture coordinates to a white pixel
+---@field FontBuilderFlags integer  #  Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
+---@field PackIdMouseCursors integer#  Custom texture rectangle ID for white pixel and mouse cursors
+---@field PackIdLines integer       #  Custom texture rectangle ID for baked anti-aliased lines
+local ImFontAtlas = {}
+---@param font_cfg ImFontConfig
+---@return ImFont
+function ImFontAtlas.AddFont(font_cfg) end
+
+---@param font_cfg? ImFontConfig
+---@return ImFont
+function ImFontAtlas.AddFontDefault(font_cfg) end
+
+---@param filename string
+---@param size_pixels number
+---@param font_cfg? ImFontConfig
+---@param glyph_ranges? ImFontRange
+---@return ImFont
+function ImFontAtlas.AddFontFromFileTTF(filename, size_pixels, font_cfg, glyph_ranges) end
+
+--
+-- Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+--
+---@param font_data lightuserdata
+---@param font_data_size integer
+---@param size_pixels number
+---@param font_cfg? ImFontConfig
+---@param glyph_ranges? ImFontRange
+---@return ImFont
+function ImFontAtlas.AddFontFromMemoryTTF(font_data, font_data_size, size_pixels, font_cfg, glyph_ranges) end
+
+--
+-- 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
+--
+---@param compressed_font_data lightuserdata
+---@param compressed_font_data_size integer
+---@param size_pixels number
+---@param font_cfg? ImFontConfig
+---@param glyph_ranges? ImFontRange
+---@return ImFont
+function ImFontAtlas.AddFontFromMemoryCompressedTTF(compressed_font_data, compressed_font_data_size, size_pixels, font_cfg, glyph_ranges) end
+
+--
+-- 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
+--
+---@param compressed_font_data_base85 string
+---@param size_pixels number
+---@param font_cfg? ImFontConfig
+---@param glyph_ranges? ImFontRange
+---@return ImFont
+function ImFontAtlas.AddFontFromMemoryCompressedBase85TTF(compressed_font_data_base85, size_pixels, font_cfg, glyph_ranges) end
+
+--
+-- Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
+--
+function ImFontAtlas.ClearInputData() end
+
+--
+-- Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
+--
+function ImFontAtlas.ClearTexData() end
+
+--
+-- Clear output font data (glyphs storage, UV coordinates).
+--
+function ImFontAtlas.ClearFonts() end
+
+--
+-- Clear all input and output.
+--
+function ImFontAtlas.Clear() end
+
+--
+-- Build atlas, retrieve pixel data.
+-- User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
+-- The pitch is always = Width * BytesPerPixels (1 or 4)
+-- Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
+-- the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
+--
+--
+-- Build pixels data. This is called automatically for you by the GetTexData*** functions.
+--
+---@return boolean
+function ImFontAtlas.Build() end
+
+--
+-- Bit ambiguous: used to detect when user didn't build texture but effectively we should check TexID != 0 except that would be backend dependent...
+--
+---@return boolean
+function ImFontAtlas.IsBuilt() end
+
+---@param id ImTextureID
+function ImFontAtlas.SetTexID(id) end
+
+--
+-- Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)
+-- NB: Make sure that your string are UTF-8 and NOT in your local code page.
+-- Read https://github.com/ocornut/imgui/blob/master/docs/FONTS.md/#about-utf-8-encoding for details.
+-- NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
+--
+--
+-- Basic Latin, Extended Latin
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesDefault() end
+
+--
+-- Default + Greek and Coptic
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesGreek() end
+
+--
+-- Default + Korean characters
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesKorean() end
+
+--
+-- Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesJapanese() end
+
+--
+-- Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesChineseFull() end
+
+--
+-- Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesChineseSimplifiedCommon() end
+
+--
+-- Default + about 400 Cyrillic characters
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesCyrillic() end
+
+--
+-- Default + Thai characters
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesThai() end
+
+--
+-- Default + Vietnamese characters
+--
+---@return ImFontRange
+function ImFontAtlas.GetGlyphRangesVietnamese() end
+
+--
+-- You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
+-- - After calling Build(), you can query the rectangle position and render your pixels.
+-- - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
+-- - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
+--   so you can render e.g. custom colorful icons and use them as regular glyphs.
+-- - Read docs/FONTS.md for more details about using colorful icons.
+-- - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
+--
+---@param width integer
+---@param height integer
+---@return integer
+function ImFontAtlas.AddCustomRectRegular(width, height) end
+
+---@param font ImFont
+---@param id integer
+---@param width integer
+---@param height integer
+---@param advance_x number
+---@param offset_x? number | `0`
+---@param offset_y? number | `0`
+---@return integer
+function ImFontAtlas.AddCustomRectFontGlyph(font, id, width, height, advance_x, offset_x, offset_y) end
+
+
+---@return userdata
+---@return ImFontConfig
+function ImGui.FontConfig() end
 
 --
 -- Context creation and access

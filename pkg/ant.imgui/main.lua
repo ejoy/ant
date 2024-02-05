@@ -28,21 +28,34 @@ end
 function ImGuiAnt.FontAtlasAddFont(config)
     if config.SystemFont then
         FontAtlas[#FontAtlas+1] = {
-            FontData = fastio.tostring(fontutil.systemfont(config.SystemFont)),
+            FontData = fontutil.systemfont(config.SystemFont),
             SizePixels = config.SizePixels,
             GlyphRanges = glyphRanges(config.GlyphRanges),
         }
         return
     end
     FontAtlas[#FontAtlas+1] = {
-        FontData = aio.readall(config.FontPath),
+        FontData = aio.readall_v(config.FontPath),
         SizePixels = config.SizePixels,
         GlyphRanges = glyphRanges(config.GlyphRanges),
     }
 end
 
 function ImGuiAnt.FontAtlasBuild()
-    ImGuiBackend.RenderCreateFontsTexture(FontAtlas)
+    local atlas = ImGui.GetIO().Fonts
+    atlas.Clear()
+    local _, ImFontConfig = ImGui.FontConfig()
+    ImFontConfig.FontDataOwnedByAtlas = false
+    for i, config in ipairs(FontAtlas) do
+        local data, size = fastio.wrap(config.FontData)()
+        ImFontConfig.MergeMode = i > 1
+        atlas.AddFontFromMemoryTTF(data, size, config.SizePixels, ImFontConfig, config.GlyphRanges)
+    end
+    atlas.Build()
+    ImGuiBackend.RenderCreateFontsTexture()
+    for _, config in ipairs(FontAtlas) do
+        fastio.free(config.FontData)
+    end
     FontAtlas = {}
 end
 

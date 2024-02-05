@@ -721,8 +721,26 @@ static util::TableInteger Mod[] = {
 
 #undef ENUM
 
-namespace wrap_ImGuiViewport { static void fetch(lua_State* L, ImGuiViewport& v); }
-namespace wrap_ImGuiIO { static void fetch(lua_State* L, ImGuiIO& v); }
+namespace wrap_ImGuiViewport {
+    static void const_pointer(lua_State* L, ImGuiViewport& v);
+}
+namespace wrap_ImGuiIO {
+    static void pointer(lua_State* L, ImGuiIO& v);
+}
+namespace wrap_ImFontConfig {
+    static void pointer(lua_State* L, ImFontConfig& v);
+}
+namespace wrap_ImFontAtlas {
+    static void const_pointer(lua_State* L, ImFontAtlas& v);
+}
+
+static int FontConfig(lua_State* L) {
+    auto _retval = (ImFontConfig*)lua_newuserdatauv(L, sizeof(ImFontConfig), 0);
+    new (_retval) ImFontConfig;
+    wrap_ImFontConfig::pointer(L, *_retval);
+    return 2;
+}
+
 static int CreateContext(lua_State* L) {
     auto&& _retval = ImGui::CreateContext();
    (void)_retval;
@@ -736,7 +754,7 @@ static int DestroyContext(lua_State* L) {
 
 static int GetIO(lua_State* L) {
     auto&& _retval = ImGui::GetIO();
-    wrap_ImGuiIO::fetch(L, _retval);
+    wrap_ImGuiIO::pointer(L, _retval);
     return 1;
 }
 
@@ -868,7 +886,7 @@ static int GetWindowHeight(lua_State* L) {
 
 static int GetWindowViewport(lua_State* L) {
     auto&& _retval = ImGui::GetWindowViewport();
-    wrap_ImGuiViewport::fetch(L, *_retval);
+    wrap_ImGuiViewport::const_pointer(L, *_retval);
     return 1;
 }
 
@@ -4052,7 +4070,7 @@ static int GetItemRectSize(lua_State* L) {
 
 static int GetMainViewport(lua_State* L) {
     auto&& _retval = ImGui::GetMainViewport();
-    wrap_ImGuiViewport::fetch(L, *_retval);
+    wrap_ImGuiViewport::const_pointer(L, *_retval);
     return 1;
 }
 
@@ -4387,7 +4405,7 @@ static int RenderPlatformWindowsDefault(lua_State* L) {
 static int FindViewportByID(lua_State* L) {
     auto id = (ImGuiID)luaL_checkinteger(L, 1);
     auto&& _retval = ImGui::FindViewportByID(id);
-    wrap_ImGuiViewport::fetch(L, *_retval);
+    wrap_ImGuiViewport::const_pointer(L, *_retval);
     return 1;
 }
 
@@ -4399,8 +4417,6 @@ static int GetKeyIndex(lua_State* L) {
 }
 
 namespace wrap_ImGuiViewport {
-
-static int tag = 0;
 
 struct ID {
     static int getter(lua_State* L) {
@@ -4546,38 +4562,41 @@ struct PlatformRequestClose {
     }
 };
 
-static void init(lua_State* L) {
-    static luaL_Reg getters[] = {
-        { "ID", ID::getter },
-        { "Flags", Flags::getter },
-        { "Pos", Pos::getter },
-        { "Size", Size::getter },
-        { "WorkPos", WorkPos::getter },
-        { "WorkSize", WorkSize::getter },
-        { "DpiScale", DpiScale::getter },
-        { "ParentViewportId", ParentViewportId::getter },
-        { "RendererUserData", RendererUserData::getter },
-        { "PlatformUserData", PlatformUserData::getter },
-        { "PlatformHandle", PlatformHandle::getter },
-        { "PlatformHandleRaw", PlatformHandleRaw::getter },
-        { "PlatformWindowCreated", PlatformWindowCreated::getter },
-        { "PlatformRequestMove", PlatformRequestMove::getter },
-        { "PlatformRequestResize", PlatformRequestResize::getter },
-        { "PlatformRequestClose", PlatformRequestClose::getter },
-    };
-    util::struct_gen(L, "ImGuiViewport", {}, {}, getters);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);
-}
+static luaL_Reg getters[] = {
+    { "ID", ID::getter },
+    { "Flags", Flags::getter },
+    { "Pos", Pos::getter },
+    { "Size", Size::getter },
+    { "WorkPos", WorkPos::getter },
+    { "WorkSize", WorkSize::getter },
+    { "DpiScale", DpiScale::getter },
+    { "ParentViewportId", ParentViewportId::getter },
+    { "RendererUserData", RendererUserData::getter },
+    { "PlatformUserData", PlatformUserData::getter },
+    { "PlatformHandle", PlatformHandle::getter },
+    { "PlatformHandleRaw", PlatformHandleRaw::getter },
+    { "PlatformWindowCreated", PlatformWindowCreated::getter },
+    { "PlatformRequestMove", PlatformRequestMove::getter },
+    { "PlatformRequestResize", PlatformRequestResize::getter },
+    { "PlatformRequestClose", PlatformRequestClose::getter },
+};
 
-static void fetch(lua_State* L, ImGuiViewport& v) {
-    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);
+static int tag_const_pointer = 0;
+
+static void const_pointer(lua_State* L, ImGuiViewport& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
     auto** ptr = (ImGuiViewport**)lua_touserdata(L, -1);
     *ptr = &v;
 }
-}
-namespace wrap_ImGuiIO {
 
-static int tag = 0;
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiViewport", {}, {}, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
+}
+
+}
+
+namespace wrap_ImGuiIO {
 
 static int AddKeyEvent(lua_State* L) {
     auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
@@ -4780,6 +4799,14 @@ struct UserData {
         luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
         OBJ.UserData = (void*)lua_touserdata(L, 1);
         return 0;
+    }
+};
+
+struct Fonts {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        wrap_ImFontAtlas::const_pointer(L, *OBJ.Fonts);
+        return 1;
     }
 };
 
@@ -5703,180 +5730,900 @@ struct InputQueueSurrogate {
     }
 };
 
-static void init(lua_State* L) {
-    static luaL_Reg funcs[] = {
-        { "AddKeyEvent", AddKeyEvent },
-        { "AddKeyAnalogEvent", AddKeyAnalogEvent },
-        { "AddMousePosEvent", AddMousePosEvent },
-        { "AddMouseButtonEvent", AddMouseButtonEvent },
-        { "AddMouseWheelEvent", AddMouseWheelEvent },
-        { "AddMouseSourceEvent", AddMouseSourceEvent },
-        { "AddMouseViewportEvent", AddMouseViewportEvent },
-        { "AddFocusEvent", AddFocusEvent },
-        { "AddInputCharacter", AddInputCharacter },
-        { "AddInputCharacterUTF16", AddInputCharacterUTF16 },
-        { "AddInputCharactersUTF8", AddInputCharactersUTF8 },
-        { "SetKeyEventNativeData", SetKeyEventNativeData },
-        { "SetKeyEventNativeDataEx", SetKeyEventNativeDataEx },
-        { "SetAppAcceptingEvents", SetAppAcceptingEvents },
-        { "ClearEventsQueue", ClearEventsQueue },
-        { "ClearInputKeys", ClearInputKeys },
-    };
-    static luaL_Reg setters[] = {
-        { "ConfigFlags", ConfigFlags::setter },
-        { "BackendFlags", BackendFlags::setter },
-        { "DeltaTime", DeltaTime::setter },
-        { "IniSavingRate", IniSavingRate::setter },
-        { "UserData", UserData::setter },
-        { "FontGlobalScale", FontGlobalScale::setter },
-        { "FontAllowUserScaling", FontAllowUserScaling::setter },
-        { "ConfigDockingNoSplit", ConfigDockingNoSplit::setter },
-        { "ConfigDockingWithShift", ConfigDockingWithShift::setter },
-        { "ConfigDockingAlwaysTabBar", ConfigDockingAlwaysTabBar::setter },
-        { "ConfigDockingTransparentPayload", ConfigDockingTransparentPayload::setter },
-        { "ConfigViewportsNoAutoMerge", ConfigViewportsNoAutoMerge::setter },
-        { "ConfigViewportsNoTaskBarIcon", ConfigViewportsNoTaskBarIcon::setter },
-        { "ConfigViewportsNoDecoration", ConfigViewportsNoDecoration::setter },
-        { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::setter },
-        { "MouseDrawCursor", MouseDrawCursor::setter },
-        { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::setter },
-        { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::setter },
-        { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::setter },
-        { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::setter },
-        { "ConfigDragClickToInputText", ConfigDragClickToInputText::setter },
-        { "ConfigWindowsResizeFromEdges", ConfigWindowsResizeFromEdges::setter },
-        { "ConfigWindowsMoveFromTitleBarOnly", ConfigWindowsMoveFromTitleBarOnly::setter },
-        { "ConfigMemoryCompactTimer", ConfigMemoryCompactTimer::setter },
-        { "MouseDoubleClickTime", MouseDoubleClickTime::setter },
-        { "MouseDoubleClickMaxDist", MouseDoubleClickMaxDist::setter },
-        { "MouseDragThreshold", MouseDragThreshold::setter },
-        { "KeyRepeatDelay", KeyRepeatDelay::setter },
-        { "KeyRepeatRate", KeyRepeatRate::setter },
-        { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::setter },
-        { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::setter },
-        { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::setter },
-        { "ConfigDebugIniSettings", ConfigDebugIniSettings::setter },
-        { "BackendPlatformUserData", BackendPlatformUserData::setter },
-        { "BackendRendererUserData", BackendRendererUserData::setter },
-        { "BackendLanguageUserData", BackendLanguageUserData::setter },
-        { "ClipboardUserData", ClipboardUserData::setter },
-        { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::setter },
-        { "WantCaptureMouse", WantCaptureMouse::setter },
-        { "WantCaptureKeyboard", WantCaptureKeyboard::setter },
-        { "WantTextInput", WantTextInput::setter },
-        { "WantSetMousePos", WantSetMousePos::setter },
-        { "WantSaveIniSettings", WantSaveIniSettings::setter },
-        { "NavActive", NavActive::setter },
-        { "NavVisible", NavVisible::setter },
-        { "Framerate", Framerate::setter },
-        { "MetricsRenderVertices", MetricsRenderVertices::setter },
-        { "MetricsRenderIndices", MetricsRenderIndices::setter },
-        { "MetricsRenderWindows", MetricsRenderWindows::setter },
-        { "MetricsActiveWindows", MetricsActiveWindows::setter },
-        { "MouseWheel", MouseWheel::setter },
-        { "MouseWheelH", MouseWheelH::setter },
-        { "MouseSource", MouseSource::setter },
-        { "MouseHoveredViewport", MouseHoveredViewport::setter },
-        { "KeyCtrl", KeyCtrl::setter },
-        { "KeyShift", KeyShift::setter },
-        { "KeyAlt", KeyAlt::setter },
-        { "KeySuper", KeySuper::setter },
-        { "KeyMods", KeyMods::setter },
-        { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::setter },
-        { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::setter },
-        { "PenPressure", PenPressure::setter },
-        { "AppFocusLost", AppFocusLost::setter },
-        { "AppAcceptingEvents", AppAcceptingEvents::setter },
-        { "BackendUsingLegacyKeyArrays", BackendUsingLegacyKeyArrays::setter },
-        { "BackendUsingLegacyNavInputArray", BackendUsingLegacyNavInputArray::setter },
-        { "InputQueueSurrogate", InputQueueSurrogate::setter },
-    };
-    static luaL_Reg getters[] = {
-        { "ConfigFlags", ConfigFlags::getter },
-        { "BackendFlags", BackendFlags::getter },
-        { "DisplaySize", DisplaySize::getter },
-        { "DeltaTime", DeltaTime::getter },
-        { "IniSavingRate", IniSavingRate::getter },
-        { "UserData", UserData::getter },
-        { "FontGlobalScale", FontGlobalScale::getter },
-        { "FontAllowUserScaling", FontAllowUserScaling::getter },
-        { "DisplayFramebufferScale", DisplayFramebufferScale::getter },
-        { "ConfigDockingNoSplit", ConfigDockingNoSplit::getter },
-        { "ConfigDockingWithShift", ConfigDockingWithShift::getter },
-        { "ConfigDockingAlwaysTabBar", ConfigDockingAlwaysTabBar::getter },
-        { "ConfigDockingTransparentPayload", ConfigDockingTransparentPayload::getter },
-        { "ConfigViewportsNoAutoMerge", ConfigViewportsNoAutoMerge::getter },
-        { "ConfigViewportsNoTaskBarIcon", ConfigViewportsNoTaskBarIcon::getter },
-        { "ConfigViewportsNoDecoration", ConfigViewportsNoDecoration::getter },
-        { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::getter },
-        { "MouseDrawCursor", MouseDrawCursor::getter },
-        { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::getter },
-        { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::getter },
-        { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::getter },
-        { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::getter },
-        { "ConfigDragClickToInputText", ConfigDragClickToInputText::getter },
-        { "ConfigWindowsResizeFromEdges", ConfigWindowsResizeFromEdges::getter },
-        { "ConfigWindowsMoveFromTitleBarOnly", ConfigWindowsMoveFromTitleBarOnly::getter },
-        { "ConfigMemoryCompactTimer", ConfigMemoryCompactTimer::getter },
-        { "MouseDoubleClickTime", MouseDoubleClickTime::getter },
-        { "MouseDoubleClickMaxDist", MouseDoubleClickMaxDist::getter },
-        { "MouseDragThreshold", MouseDragThreshold::getter },
-        { "KeyRepeatDelay", KeyRepeatDelay::getter },
-        { "KeyRepeatRate", KeyRepeatRate::getter },
-        { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::getter },
-        { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::getter },
-        { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::getter },
-        { "ConfigDebugIniSettings", ConfigDebugIniSettings::getter },
-        { "BackendPlatformUserData", BackendPlatformUserData::getter },
-        { "BackendRendererUserData", BackendRendererUserData::getter },
-        { "BackendLanguageUserData", BackendLanguageUserData::getter },
-        { "ClipboardUserData", ClipboardUserData::getter },
-        { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::getter },
-        { "WantCaptureMouse", WantCaptureMouse::getter },
-        { "WantCaptureKeyboard", WantCaptureKeyboard::getter },
-        { "WantTextInput", WantTextInput::getter },
-        { "WantSetMousePos", WantSetMousePos::getter },
-        { "WantSaveIniSettings", WantSaveIniSettings::getter },
-        { "NavActive", NavActive::getter },
-        { "NavVisible", NavVisible::getter },
-        { "Framerate", Framerate::getter },
-        { "MetricsRenderVertices", MetricsRenderVertices::getter },
-        { "MetricsRenderIndices", MetricsRenderIndices::getter },
-        { "MetricsRenderWindows", MetricsRenderWindows::getter },
-        { "MetricsActiveWindows", MetricsActiveWindows::getter },
-        { "MouseDelta", MouseDelta::getter },
-        { "MousePos", MousePos::getter },
-        { "MouseWheel", MouseWheel::getter },
-        { "MouseWheelH", MouseWheelH::getter },
-        { "MouseSource", MouseSource::getter },
-        { "MouseHoveredViewport", MouseHoveredViewport::getter },
-        { "KeyCtrl", KeyCtrl::getter },
-        { "KeyShift", KeyShift::getter },
-        { "KeyAlt", KeyAlt::getter },
-        { "KeySuper", KeySuper::getter },
-        { "KeyMods", KeyMods::getter },
-        { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::getter },
-        { "MousePosPrev", MousePosPrev::getter },
-        { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::getter },
-        { "PenPressure", PenPressure::getter },
-        { "AppFocusLost", AppFocusLost::getter },
-        { "AppAcceptingEvents", AppAcceptingEvents::getter },
-        { "BackendUsingLegacyKeyArrays", BackendUsingLegacyKeyArrays::getter },
-        { "BackendUsingLegacyNavInputArray", BackendUsingLegacyNavInputArray::getter },
-        { "InputQueueSurrogate", InputQueueSurrogate::getter },
-    };
-    util::struct_gen(L, "ImGuiIO", funcs, setters, getters);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag);
-}
+static luaL_Reg funcs[] = {
+    { "AddKeyEvent", AddKeyEvent },
+    { "AddKeyAnalogEvent", AddKeyAnalogEvent },
+    { "AddMousePosEvent", AddMousePosEvent },
+    { "AddMouseButtonEvent", AddMouseButtonEvent },
+    { "AddMouseWheelEvent", AddMouseWheelEvent },
+    { "AddMouseSourceEvent", AddMouseSourceEvent },
+    { "AddMouseViewportEvent", AddMouseViewportEvent },
+    { "AddFocusEvent", AddFocusEvent },
+    { "AddInputCharacter", AddInputCharacter },
+    { "AddInputCharacterUTF16", AddInputCharacterUTF16 },
+    { "AddInputCharactersUTF8", AddInputCharactersUTF8 },
+    { "SetKeyEventNativeData", SetKeyEventNativeData },
+    { "SetKeyEventNativeDataEx", SetKeyEventNativeDataEx },
+    { "SetAppAcceptingEvents", SetAppAcceptingEvents },
+    { "ClearEventsQueue", ClearEventsQueue },
+    { "ClearInputKeys", ClearInputKeys },
+};
 
-static void fetch(lua_State* L, ImGuiIO& v) {
-    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag);
+static luaL_Reg setters[] = {
+    { "ConfigFlags", ConfigFlags::setter },
+    { "BackendFlags", BackendFlags::setter },
+    { "DeltaTime", DeltaTime::setter },
+    { "IniSavingRate", IniSavingRate::setter },
+    { "UserData", UserData::setter },
+    { "FontGlobalScale", FontGlobalScale::setter },
+    { "FontAllowUserScaling", FontAllowUserScaling::setter },
+    { "ConfigDockingNoSplit", ConfigDockingNoSplit::setter },
+    { "ConfigDockingWithShift", ConfigDockingWithShift::setter },
+    { "ConfigDockingAlwaysTabBar", ConfigDockingAlwaysTabBar::setter },
+    { "ConfigDockingTransparentPayload", ConfigDockingTransparentPayload::setter },
+    { "ConfigViewportsNoAutoMerge", ConfigViewportsNoAutoMerge::setter },
+    { "ConfigViewportsNoTaskBarIcon", ConfigViewportsNoTaskBarIcon::setter },
+    { "ConfigViewportsNoDecoration", ConfigViewportsNoDecoration::setter },
+    { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::setter },
+    { "MouseDrawCursor", MouseDrawCursor::setter },
+    { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::setter },
+    { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::setter },
+    { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::setter },
+    { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::setter },
+    { "ConfigDragClickToInputText", ConfigDragClickToInputText::setter },
+    { "ConfigWindowsResizeFromEdges", ConfigWindowsResizeFromEdges::setter },
+    { "ConfigWindowsMoveFromTitleBarOnly", ConfigWindowsMoveFromTitleBarOnly::setter },
+    { "ConfigMemoryCompactTimer", ConfigMemoryCompactTimer::setter },
+    { "MouseDoubleClickTime", MouseDoubleClickTime::setter },
+    { "MouseDoubleClickMaxDist", MouseDoubleClickMaxDist::setter },
+    { "MouseDragThreshold", MouseDragThreshold::setter },
+    { "KeyRepeatDelay", KeyRepeatDelay::setter },
+    { "KeyRepeatRate", KeyRepeatRate::setter },
+    { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::setter },
+    { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::setter },
+    { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::setter },
+    { "ConfigDebugIniSettings", ConfigDebugIniSettings::setter },
+    { "BackendPlatformUserData", BackendPlatformUserData::setter },
+    { "BackendRendererUserData", BackendRendererUserData::setter },
+    { "BackendLanguageUserData", BackendLanguageUserData::setter },
+    { "ClipboardUserData", ClipboardUserData::setter },
+    { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::setter },
+    { "WantCaptureMouse", WantCaptureMouse::setter },
+    { "WantCaptureKeyboard", WantCaptureKeyboard::setter },
+    { "WantTextInput", WantTextInput::setter },
+    { "WantSetMousePos", WantSetMousePos::setter },
+    { "WantSaveIniSettings", WantSaveIniSettings::setter },
+    { "NavActive", NavActive::setter },
+    { "NavVisible", NavVisible::setter },
+    { "Framerate", Framerate::setter },
+    { "MetricsRenderVertices", MetricsRenderVertices::setter },
+    { "MetricsRenderIndices", MetricsRenderIndices::setter },
+    { "MetricsRenderWindows", MetricsRenderWindows::setter },
+    { "MetricsActiveWindows", MetricsActiveWindows::setter },
+    { "MouseWheel", MouseWheel::setter },
+    { "MouseWheelH", MouseWheelH::setter },
+    { "MouseSource", MouseSource::setter },
+    { "MouseHoveredViewport", MouseHoveredViewport::setter },
+    { "KeyCtrl", KeyCtrl::setter },
+    { "KeyShift", KeyShift::setter },
+    { "KeyAlt", KeyAlt::setter },
+    { "KeySuper", KeySuper::setter },
+    { "KeyMods", KeyMods::setter },
+    { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::setter },
+    { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::setter },
+    { "PenPressure", PenPressure::setter },
+    { "AppFocusLost", AppFocusLost::setter },
+    { "AppAcceptingEvents", AppAcceptingEvents::setter },
+    { "BackendUsingLegacyKeyArrays", BackendUsingLegacyKeyArrays::setter },
+    { "BackendUsingLegacyNavInputArray", BackendUsingLegacyNavInputArray::setter },
+    { "InputQueueSurrogate", InputQueueSurrogate::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "ConfigFlags", ConfigFlags::getter },
+    { "BackendFlags", BackendFlags::getter },
+    { "DisplaySize", DisplaySize::getter },
+    { "DeltaTime", DeltaTime::getter },
+    { "IniSavingRate", IniSavingRate::getter },
+    { "UserData", UserData::getter },
+    { "Fonts", Fonts::getter },
+    { "FontGlobalScale", FontGlobalScale::getter },
+    { "FontAllowUserScaling", FontAllowUserScaling::getter },
+    { "DisplayFramebufferScale", DisplayFramebufferScale::getter },
+    { "ConfigDockingNoSplit", ConfigDockingNoSplit::getter },
+    { "ConfigDockingWithShift", ConfigDockingWithShift::getter },
+    { "ConfigDockingAlwaysTabBar", ConfigDockingAlwaysTabBar::getter },
+    { "ConfigDockingTransparentPayload", ConfigDockingTransparentPayload::getter },
+    { "ConfigViewportsNoAutoMerge", ConfigViewportsNoAutoMerge::getter },
+    { "ConfigViewportsNoTaskBarIcon", ConfigViewportsNoTaskBarIcon::getter },
+    { "ConfigViewportsNoDecoration", ConfigViewportsNoDecoration::getter },
+    { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::getter },
+    { "MouseDrawCursor", MouseDrawCursor::getter },
+    { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::getter },
+    { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::getter },
+    { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::getter },
+    { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::getter },
+    { "ConfigDragClickToInputText", ConfigDragClickToInputText::getter },
+    { "ConfigWindowsResizeFromEdges", ConfigWindowsResizeFromEdges::getter },
+    { "ConfigWindowsMoveFromTitleBarOnly", ConfigWindowsMoveFromTitleBarOnly::getter },
+    { "ConfigMemoryCompactTimer", ConfigMemoryCompactTimer::getter },
+    { "MouseDoubleClickTime", MouseDoubleClickTime::getter },
+    { "MouseDoubleClickMaxDist", MouseDoubleClickMaxDist::getter },
+    { "MouseDragThreshold", MouseDragThreshold::getter },
+    { "KeyRepeatDelay", KeyRepeatDelay::getter },
+    { "KeyRepeatRate", KeyRepeatRate::getter },
+    { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::getter },
+    { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::getter },
+    { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::getter },
+    { "ConfigDebugIniSettings", ConfigDebugIniSettings::getter },
+    { "BackendPlatformUserData", BackendPlatformUserData::getter },
+    { "BackendRendererUserData", BackendRendererUserData::getter },
+    { "BackendLanguageUserData", BackendLanguageUserData::getter },
+    { "ClipboardUserData", ClipboardUserData::getter },
+    { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::getter },
+    { "WantCaptureMouse", WantCaptureMouse::getter },
+    { "WantCaptureKeyboard", WantCaptureKeyboard::getter },
+    { "WantTextInput", WantTextInput::getter },
+    { "WantSetMousePos", WantSetMousePos::getter },
+    { "WantSaveIniSettings", WantSaveIniSettings::getter },
+    { "NavActive", NavActive::getter },
+    { "NavVisible", NavVisible::getter },
+    { "Framerate", Framerate::getter },
+    { "MetricsRenderVertices", MetricsRenderVertices::getter },
+    { "MetricsRenderIndices", MetricsRenderIndices::getter },
+    { "MetricsRenderWindows", MetricsRenderWindows::getter },
+    { "MetricsActiveWindows", MetricsActiveWindows::getter },
+    { "MouseDelta", MouseDelta::getter },
+    { "MousePos", MousePos::getter },
+    { "MouseWheel", MouseWheel::getter },
+    { "MouseWheelH", MouseWheelH::getter },
+    { "MouseSource", MouseSource::getter },
+    { "MouseHoveredViewport", MouseHoveredViewport::getter },
+    { "KeyCtrl", KeyCtrl::getter },
+    { "KeyShift", KeyShift::getter },
+    { "KeyAlt", KeyAlt::getter },
+    { "KeySuper", KeySuper::getter },
+    { "KeyMods", KeyMods::getter },
+    { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::getter },
+    { "MousePosPrev", MousePosPrev::getter },
+    { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::getter },
+    { "PenPressure", PenPressure::getter },
+    { "AppFocusLost", AppFocusLost::getter },
+    { "AppAcceptingEvents", AppAcceptingEvents::getter },
+    { "BackendUsingLegacyKeyArrays", BackendUsingLegacyKeyArrays::getter },
+    { "BackendUsingLegacyNavInputArray", BackendUsingLegacyNavInputArray::getter },
+    { "InputQueueSurrogate", InputQueueSurrogate::getter },
+};
+
+static int tag_pointer = 0;
+
+static void pointer(lua_State* L, ImGuiIO& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
     auto** ptr = (ImGuiIO**)lua_touserdata(L, -1);
     *ptr = &v;
 }
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiIO", funcs, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
 }
+
+}
+
+namespace wrap_ImFontConfig {
+
+struct FontData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.FontData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.FontData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct FontDataSize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.FontDataSize);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FontDataSize = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct FontDataOwnedByAtlas {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.FontDataOwnedByAtlas);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FontDataOwnedByAtlas = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct FontNo {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.FontNo);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FontNo = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct SizePixels {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.SizePixels);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.SizePixels = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct OversampleH {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.OversampleH);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.OversampleH = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct OversampleV {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.OversampleV);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.OversampleV = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct PixelSnapH {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PixelSnapH);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.PixelSnapH = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct GlyphExtraSpacing {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.GlyphExtraSpacing.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.GlyphExtraSpacing.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct GlyphOffset {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.GlyphOffset.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.GlyphOffset.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct GlyphRanges {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, (void*)OBJ.GlyphRanges);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.GlyphRanges = (const ImWchar*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct GlyphMinAdvanceX {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.GlyphMinAdvanceX);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.GlyphMinAdvanceX = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct GlyphMaxAdvanceX {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.GlyphMaxAdvanceX);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.GlyphMaxAdvanceX = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct MergeMode {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.MergeMode);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MergeMode = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct FontBuilderFlags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.FontBuilderFlags);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FontBuilderFlags = (unsigned int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct RasterizerMultiply {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.RasterizerMultiply);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RasterizerMultiply = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct RasterizerDensity {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.RasterizerDensity);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RasterizerDensity = (float)luaL_checknumber(L, 1);
+        return 0;
+    }
+};
+
+struct EllipsisChar {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EllipsisChar);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontConfig**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EllipsisChar = (ImWchar)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg setters[] = {
+    { "FontData", FontData::setter },
+    { "FontDataSize", FontDataSize::setter },
+    { "FontDataOwnedByAtlas", FontDataOwnedByAtlas::setter },
+    { "FontNo", FontNo::setter },
+    { "SizePixels", SizePixels::setter },
+    { "OversampleH", OversampleH::setter },
+    { "OversampleV", OversampleV::setter },
+    { "PixelSnapH", PixelSnapH::setter },
+    { "GlyphRanges", GlyphRanges::setter },
+    { "GlyphMinAdvanceX", GlyphMinAdvanceX::setter },
+    { "GlyphMaxAdvanceX", GlyphMaxAdvanceX::setter },
+    { "MergeMode", MergeMode::setter },
+    { "FontBuilderFlags", FontBuilderFlags::setter },
+    { "RasterizerMultiply", RasterizerMultiply::setter },
+    { "RasterizerDensity", RasterizerDensity::setter },
+    { "EllipsisChar", EllipsisChar::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "FontData", FontData::getter },
+    { "FontDataSize", FontDataSize::getter },
+    { "FontDataOwnedByAtlas", FontDataOwnedByAtlas::getter },
+    { "FontNo", FontNo::getter },
+    { "SizePixels", SizePixels::getter },
+    { "OversampleH", OversampleH::getter },
+    { "OversampleV", OversampleV::getter },
+    { "PixelSnapH", PixelSnapH::getter },
+    { "GlyphExtraSpacing", GlyphExtraSpacing::getter },
+    { "GlyphOffset", GlyphOffset::getter },
+    { "GlyphRanges", GlyphRanges::getter },
+    { "GlyphMinAdvanceX", GlyphMinAdvanceX::getter },
+    { "GlyphMaxAdvanceX", GlyphMaxAdvanceX::getter },
+    { "MergeMode", MergeMode::getter },
+    { "FontBuilderFlags", FontBuilderFlags::getter },
+    { "RasterizerMultiply", RasterizerMultiply::getter },
+    { "RasterizerDensity", RasterizerDensity::getter },
+    { "EllipsisChar", EllipsisChar::getter },
+};
+
+static int tag_pointer = 0;
+
+static void pointer(lua_State* L, ImFontConfig& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImFontConfig**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImFontConfig", {}, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
+namespace wrap_ImFontAtlas {
+
+static int AddFont(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto font_cfg = *(const ImFontConfig**)lua_touserdata(L, 1);
+    auto&& _retval = OBJ.AddFont(font_cfg);
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int AddFontDefault(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto font_cfg = lua_isnoneornil(L, 1)? NULL: *(const ImFontConfig**)lua_touserdata(L, 1);
+    auto&& _retval = OBJ.AddFontDefault(font_cfg);
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int AddFontFromFileTTF(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto filename = luaL_checkstring(L, 1);
+    auto size_pixels = (float)luaL_checknumber(L, 2);
+    auto font_cfg = lua_isnoneornil(L, 3)? NULL: *(const ImFontConfig**)lua_touserdata(L, 3);
+    const ImWchar* glyph_ranges = NULL;
+    switch(lua_type(L, 4)) {
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    default: break;
+    };
+    auto&& _retval = OBJ.AddFontFromFileTTF(filename, size_pixels, font_cfg, glyph_ranges);
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int AddFontFromMemoryTTF(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto font_data = lua_touserdata(L, 1);
+    auto font_data_size = (int)luaL_checkinteger(L, 2);
+    auto size_pixels = (float)luaL_checknumber(L, 3);
+    auto font_cfg = lua_isnoneornil(L, 4)? NULL: *(const ImFontConfig**)lua_touserdata(L, 4);
+    const ImWchar* glyph_ranges = NULL;
+    switch(lua_type(L, 5)) {
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    default: break;
+    };
+    auto&& _retval = OBJ.AddFontFromMemoryTTF(font_data, font_data_size, size_pixels, font_cfg, glyph_ranges);
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int AddFontFromMemoryCompressedTTF(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto compressed_font_data = lua_touserdata(L, 1);
+    auto compressed_font_data_size = (int)luaL_checkinteger(L, 2);
+    auto size_pixels = (float)luaL_checknumber(L, 3);
+    auto font_cfg = lua_isnoneornil(L, 4)? NULL: *(const ImFontConfig**)lua_touserdata(L, 4);
+    const ImWchar* glyph_ranges = NULL;
+    switch(lua_type(L, 5)) {
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    default: break;
+    };
+    auto&& _retval = OBJ.AddFontFromMemoryCompressedTTF(compressed_font_data, compressed_font_data_size, size_pixels, font_cfg, glyph_ranges);
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int AddFontFromMemoryCompressedBase85TTF(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto compressed_font_data_base85 = luaL_checkstring(L, 1);
+    auto size_pixels = (float)luaL_checknumber(L, 2);
+    auto font_cfg = lua_isnoneornil(L, 3)? NULL: *(const ImFontConfig**)lua_touserdata(L, 3);
+    const ImWchar* glyph_ranges = NULL;
+    switch(lua_type(L, 4)) {
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    default: break;
+    };
+    auto&& _retval = OBJ.AddFontFromMemoryCompressedBase85TTF(compressed_font_data_base85, size_pixels, font_cfg, glyph_ranges);
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int ClearInputData(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearInputData();
+    return 0;
+}
+
+static int ClearTexData(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearTexData();
+    return 0;
+}
+
+static int ClearFonts(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearFonts();
+    return 0;
+}
+
+static int Clear(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.Clear();
+    return 0;
+}
+
+static int Build(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.Build();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int IsBuilt(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.IsBuilt();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetTexID(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto id = util::get_texture_id(L, 1);
+    OBJ.SetTexID(id);
+    return 0;
+}
+
+static int GetGlyphRangesDefault(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesDefault();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesGreek(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesGreek();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesKorean(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesKorean();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesJapanese(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesJapanese();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesChineseFull(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesChineseFull();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesChineseSimplifiedCommon(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesChineseSimplifiedCommon();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesCyrillic(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesCyrillic();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesThai(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesThai();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int GetGlyphRangesVietnamese(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetGlyphRangesVietnamese();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
+}
+
+static int AddCustomRectRegular(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto width = (int)luaL_checkinteger(L, 1);
+    auto height = (int)luaL_checkinteger(L, 2);
+    auto&& _retval = OBJ.AddCustomRectRegular(width, height);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int AddCustomRectFontGlyph(lua_State* L) {
+    auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+    auto font = (ImFont*)lua_touserdata(L, 1);
+    auto id = (ImWchar)luaL_checkinteger(L, 2);
+    auto width = (int)luaL_checkinteger(L, 3);
+    auto height = (int)luaL_checkinteger(L, 4);
+    auto advance_x = (float)luaL_checknumber(L, 5);
+    auto offset = ImVec2 {
+        (float)luaL_optnumber(L, 6, 0),
+        (float)luaL_optnumber(L, 7, 0),
+    };
+    auto&& _retval = OBJ.AddCustomRectFontGlyph(font, id, width, height, advance_x, offset);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+struct Flags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.Flags);
+        return 1;
+    }
+};
+
+struct TexID {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.TexID);
+        return 1;
+    }
+};
+
+struct TexDesiredWidth {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.TexDesiredWidth);
+        return 1;
+    }
+};
+
+struct TexGlyphPadding {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.TexGlyphPadding);
+        return 1;
+    }
+};
+
+struct Locked {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.Locked);
+        return 1;
+    }
+};
+
+struct UserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.UserData);
+        return 1;
+    }
+};
+
+struct TexReady {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.TexReady);
+        return 1;
+    }
+};
+
+struct TexPixelsUseColors {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.TexPixelsUseColors);
+        return 1;
+    }
+};
+
+struct TexWidth {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.TexWidth);
+        return 1;
+    }
+};
+
+struct TexHeight {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.TexHeight);
+        return 1;
+    }
+};
+
+struct TexUvScale {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.TexUvScale.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.TexUvScale.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct TexUvWhitePixel {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.TexUvWhitePixel.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.TexUvWhitePixel.y);
+        lua_setfield(L, -2, "y");
+        return 1;
+    }
+};
+
+struct FontBuilderFlags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.FontBuilderFlags);
+        return 1;
+    }
+};
+
+struct PackIdMouseCursors {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.PackIdMouseCursors);
+        return 1;
+    }
+};
+
+struct PackIdLines {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.PackIdLines);
+        return 1;
+    }
+};
+
+static luaL_Reg funcs[] = {
+    { "AddFont", AddFont },
+    { "AddFontDefault", AddFontDefault },
+    { "AddFontFromFileTTF", AddFontFromFileTTF },
+    { "AddFontFromMemoryTTF", AddFontFromMemoryTTF },
+    { "AddFontFromMemoryCompressedTTF", AddFontFromMemoryCompressedTTF },
+    { "AddFontFromMemoryCompressedBase85TTF", AddFontFromMemoryCompressedBase85TTF },
+    { "ClearInputData", ClearInputData },
+    { "ClearTexData", ClearTexData },
+    { "ClearFonts", ClearFonts },
+    { "Clear", Clear },
+    { "Build", Build },
+    { "IsBuilt", IsBuilt },
+    { "SetTexID", SetTexID },
+    { "GetGlyphRangesDefault", GetGlyphRangesDefault },
+    { "GetGlyphRangesGreek", GetGlyphRangesGreek },
+    { "GetGlyphRangesKorean", GetGlyphRangesKorean },
+    { "GetGlyphRangesJapanese", GetGlyphRangesJapanese },
+    { "GetGlyphRangesChineseFull", GetGlyphRangesChineseFull },
+    { "GetGlyphRangesChineseSimplifiedCommon", GetGlyphRangesChineseSimplifiedCommon },
+    { "GetGlyphRangesCyrillic", GetGlyphRangesCyrillic },
+    { "GetGlyphRangesThai", GetGlyphRangesThai },
+    { "GetGlyphRangesVietnamese", GetGlyphRangesVietnamese },
+    { "AddCustomRectRegular", AddCustomRectRegular },
+    { "AddCustomRectFontGlyph", AddCustomRectFontGlyph },
+};
+
+static luaL_Reg getters[] = {
+    { "Flags", Flags::getter },
+    { "TexID", TexID::getter },
+    { "TexDesiredWidth", TexDesiredWidth::getter },
+    { "TexGlyphPadding", TexGlyphPadding::getter },
+    { "Locked", Locked::getter },
+    { "UserData", UserData::getter },
+    { "TexReady", TexReady::getter },
+    { "TexPixelsUseColors", TexPixelsUseColors::getter },
+    { "TexWidth", TexWidth::getter },
+    { "TexHeight", TexHeight::getter },
+    { "TexUvScale", TexUvScale::getter },
+    { "TexUvWhitePixel", TexUvWhitePixel::getter },
+    { "FontBuilderFlags", FontBuilderFlags::getter },
+    { "PackIdMouseCursors", PackIdMouseCursors::getter },
+    { "PackIdLines", PackIdLines::getter },
+};
+
+static int tag_const_pointer = 0;
+
+static void const_pointer(lua_State* L, ImFontAtlas& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
+    auto** ptr = (ImFontAtlas**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImFontAtlas", funcs, {}, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
+}
+
+}
+
 void init(lua_State* L) {
     static luaL_Reg funcs[] = {
+        { "FontConfig", FontConfig },
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
         { "GetIO", GetIO },
@@ -6307,6 +7054,8 @@ void init(lua_State* L) {
     util::set_table(L, enums);
     wrap_ImGuiViewport::init(L);
     wrap_ImGuiIO::init(L);
+    wrap_ImFontConfig::init(L);
+    wrap_ImFontAtlas::init(L);
 }
 }
 

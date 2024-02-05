@@ -103,63 +103,7 @@ static int RenderDestroy(lua_State* L) {
     return 0;
 }
 
-static const ImWchar* GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
-    if (!type) {
-        return nullptr;
-    }
-    if (strcmp(type, "Default") == 0) {
-        return atlas->GetGlyphRangesDefault();
-    }
-    if (strcmp(type, "Korean") == 0) {
-        return atlas->GetGlyphRangesKorean();
-    }
-    if (strcmp(type, "Japanese") == 0) {
-        return atlas->GetGlyphRangesJapanese();
-    }
-    if (strcmp(type, "ChineseFull") == 0) {
-        return atlas->GetGlyphRangesChineseFull();
-    }
-    if (strcmp(type, "ChineseSimplifiedCommon") == 0) {
-        return atlas->GetGlyphRangesChineseSimplifiedCommon();
-    }
-    if (strcmp(type, "Cyrillic") == 0) {
-        return atlas->GetGlyphRangesCyrillic();
-    }
-    if (strcmp(type, "Thai") == 0) {
-        return atlas->GetGlyphRangesThai();
-    }
-    if (strcmp(type, "Vietnamese") == 0) {
-        return atlas->GetGlyphRangesVietnamese();
-    }
-    return (const ImWchar*)type;
-}
-
 static int RenderCreateFontsTexture(lua_State *L) {
-    luaL_checktype(L, 1, LUA_TTABLE);
-    ImFontAtlas* atlas = ImGui::GetIO().Fonts;
-    atlas->Clear();
-
-    lua_Integer n = luaL_len(L, 1);
-    for (lua_Integer i = 1; i <= n; ++i) {
-        lua_rawgeti(L, 1, i);
-        luaL_checktype(L, -1, LUA_TTABLE);
-        int idx = lua_absindex(L, -1);
-        lua_getfield(L, idx, "FontData");
-        auto ttf = getmemory(L, lua_absindex(L, -1));
-        ImFontConfig config;
-        config.MergeMode = (i != 1);
-        config.FontData = (void*)ttf.data();
-        config.FontDataSize = (int)ttf.size();
-        config.FontDataOwnedByAtlas = false;
-        config.SizePixels = read_field_checkfloat(L, "SizePixels", idx);
-        config.GlyphRanges = GetGlyphRanges(atlas, read_field_string(L, "GlyphRanges", nullptr, idx));
-        atlas->AddFont(&config);
-        lua_pop(L, 2);
-    }
-    if (!atlas->Build()) {
-        luaL_error(L, "Create font failed.");
-        return 0;
-    }
     ImGui_ImplBgfx_CreateFontsTexture();
     return 0;
 }

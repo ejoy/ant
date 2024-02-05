@@ -10,6 +10,10 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
+local struct_constructor <const> = {
+    "ImFontConfig",
+}
+
 local KEYWORD <const> = {
     ["repeat"] = "arg_repeat",
     ["in"] = "arg_in",
@@ -141,6 +145,15 @@ special_ret["ImFont*"] = function()
     writeln("---@return ImFont")
 end
 
+special_arg["const ImWchar*"] = function(type_meta, status)
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    if type_meta.default_value == "NULL" then
+        writeln("---@param %s? ImFontRange", safe_name(type_meta.name))
+    else
+        assert(false)
+    end
+end
+
 special_ret["const ImWchar*"] = function()
     writeln("---@return ImFontRange")
 end
@@ -247,6 +260,11 @@ special_arg["const void*"] = function (type_meta, status)
         status.arguments[#status.arguments+1] = safe_name(type_meta.name)
         return
     end
+    writeln("---@param %s lightuserdata", safe_name(type_meta.name))
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+end
+
+special_arg["void*"] = function (type_meta, status)
     writeln("---@param %s lightuserdata", safe_name(type_meta.name))
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
@@ -487,6 +505,8 @@ local function write_structs(struct_funcs)
     writeln ""
     writeln("---@alias ImGuiID integer")
     writeln ""
+    writeln("---@class ImFont")
+    writeln ""
     writeln("---@class ImFontRange")
     writeln ""
     local lst <const> = {
@@ -534,6 +554,13 @@ write_flags_and_enums()
 writeln ""
 local funcs, struct_funcs = get_funcs()
 write_structs(struct_funcs)
+for _, name in ipairs(struct_constructor) do
+    local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
+    writeln("---@return userdata")
+    writeln("---@return %s", name)
+    writeln("function ImGui.%s() end", realname)
+    writeln ""
+end
 for _, func_meta in ipairs(funcs) do
     write_func(func_meta)
 end

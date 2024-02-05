@@ -10,6 +10,17 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
+local struct_list <const> = {
+    { "ImGuiViewport", { "const_pointer" } },
+    { "ImGuiIO", { "pointer" } },
+    { "ImFontConfig", { "pointer" } },
+    { "ImFontAtlas", { "const_pointer" } },
+}
+
+local struct_constructor <const> = {
+    "ImFontConfig",
+}
+
 local write_arg = {}
 local write_arg_ret = {}
 local write_ret = {}
@@ -63,6 +74,13 @@ write_arg["const void*"] = function(type_meta, status)
     status.arguments[#status.arguments+1] = type_meta.name
 end
 
+write_arg["void*"] = function(type_meta, status)
+    assert(type_meta.default_value == nil)
+    status.idx = status.idx + 1
+    status.arguments[#status.arguments+1] = type_meta.name
+    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, status.idx)
+end
+
 write_arg["ImVec2"] = function(type_meta, status)
     if type_meta.default_value == nil then
         writeln("    auto %s = ImVec2 {", type_meta.name)
@@ -109,7 +127,7 @@ write_arg["ImTextureID"] = function(type_meta, status)
 end
 
 write_ret["ImGuiViewport*"] = function()
-    writeln("    wrap_ImGuiViewport::fetch(L, *_retval);")
+    writeln("    wrap_ImGuiViewport::const_pointer(L, *_retval);")
     return 1
 end
 
@@ -136,6 +154,21 @@ write_ret["ImFont*"] = function()
     --TODO
     writeln("    lua_pushlightuserdata(L, (void*)_retval);")
     return 1
+end
+
+write_arg["const ImWchar*"] = function(type_meta, status)
+    status.idx = status.idx + 1
+    status.arguments[#status.arguments+1] = type_meta.name
+    if type_meta.default_value == "NULL" then
+        writeln("    const ImWchar* %s = NULL;", type_meta.name)
+        writeln("    switch(lua_type(L, %d)) {", status.idx)
+        writeln("    case LUA_TSTRING: %s = (const ImWchar*)lua_touserdata(L, %d); break;", type_meta.name, status.idx)
+        writeln("    case LUA_TLIGHTUSERDATA: %s = (const ImWchar*)lua_tostring(L, %d); break;", type_meta.name, status.idx)
+        writeln "    default: break;"
+        writeln "    };"
+    else
+        assert(false)
+    end
 end
 
 write_ret["const ImWchar*"] = function()
@@ -368,7 +401,7 @@ end
 
 write_ret["ImGuiIO*"] = function()
     --NOTICE: It's actually `ImGuiIO&`
-    writeln("    wrap_ImGuiIO::fetch(L, _retval);")
+    writeln("    wrap_ImGuiIO::pointer(L, _retval);")
     return 1
 end
 
@@ -523,6 +556,18 @@ end
 local function write_funcs()
     local funcs = {}
     local struct_funcs = {}
+    for _, name in ipairs(struct_constructor) do
+        local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
+        writeln("static int %s(lua_State* L) {", realname)
+        --TODO: use bee::lua::newudata
+        writeln("    auto _retval = (%s*)lua_newuserdatauv(L, sizeof(%s), 0);", name, name)
+        writeln("    new (_retval) %s;", name)
+        writeln("    wrap_%s::pointer(L, *_retval);", name)
+        writeln "    return 2;"
+        writeln "}"
+        writeln ""
+        funcs[#funcs+1] = realname
+    end
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
             if func_meta.original_class then
@@ -540,25 +585,23 @@ local function write_funcs()
     return funcs, struct_funcs
 end
 
-local function write_struct_define(name)
-    writeln("namespace wrap_%s { static void fetch(lua_State* L, %s& v); }", name, name)
+
+local function write_struct_defines()
+    for _, v in ipairs(struct_list) do
+        local name, modes = v[1], v[2]
+        writeln("namespace wrap_%s {", name)
+        for _, mode in ipairs(modes) do
+            writeln("    static void %s(lua_State* L, %s& v);", mode, name)
+        end
+        writeln "}"
+    end
 end
 
 local function write_structs(struct_funcs)
-    local readonly <const> = {
-        ["ImGuiViewport"] = true,
-        ["ImFontAtlas"] = true,
-    }
-    local lst <const> = {
-        "ImGuiViewport",
-        "ImGuiIO",
-        "ImFontConfig",
-        "ImFontAtlas",
-    }
-    for _, name in ipairs(lst) do
-        types.decode_func(name, struct_funcs[name] or {}, writeln, write_func, readonly[name] or false)
+    for _, v in ipairs(struct_list) do
+        local name, modes = v[1], v[2]
+        types.decode_func(name, struct_funcs[name] or {}, writeln, write_func, modes)
     end
-    return lst
 end
 
 writeln "//"
@@ -571,10 +614,10 @@ writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
 local flags, enums = write_flags_and_enums()
-write_struct_define "ImGuiViewport"
-write_struct_define "ImGuiIO"
+write_struct_defines()
+writeln ""
 local funcs, struct_funcs = write_funcs()
-local structs = write_structs(struct_funcs)
+write_structs(struct_funcs)
 writeln "void init(lua_State* L) {"
 writeln "    static luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do
@@ -615,8 +658,9 @@ writeln "    );"
 writeln "    luaL_setfuncs(L, funcs, 0);"
 writeln "    util::set_table(L, flags);"
 writeln "    util::set_table(L, enums);"
-for _, struct in ipairs(structs) do
-    writeln("    wrap_%s::init(L);", struct)
+for _, v in ipairs(struct_list) do
+    local name = v[1]
+    writeln("    wrap_%s::init(L);", name)
 end
 writeln "}"
 writeln "}"
