@@ -159,8 +159,8 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect uv = CalcUV(surface, background);
-	SamplerFlag flag = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
-	Material* material = GetRender()->CreateTextureMaterial(texture.handle, flag);
+	auto backgroundRepeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
+	Material* material = GetRender()->CreateTextureMaterial(texture.handle, (SamplerFlag)backgroundRepeat);
 	geometry.SetMaterial(material);
 
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1).Get<PropertyFloat>().value / 100.0f;
@@ -188,16 +188,30 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 	else {
 		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
-			auto poly = geometry.ClipPolygon(edge.padding, background);
-			if (!poly.IsEmpty()) {
-				geometry.AddPolygon(poly, color);
-				geometry.UpdateUV(poly.points.size(), surface, uv);
+			if (backgroundRepeat == Style::BackgroundRepeat::NoRepeat) {
+				auto poly = geometry.ClipPolygon(edge.padding, background);
+				if (!poly.IsEmpty()) {
+					geometry.AddPolygon(poly, color);
+					geometry.UpdateUV(poly.points.size(), surface, uv);
+				}
+			}
+			else {
+				//TODO: optimization repeat-x/repeat-y
+				geometry.AddPolygon(edge.padding, color);
+				geometry.UpdateUV(edge.padding.points.size(), surface, uv);
 			}
 		}
 		else {
-			background.Inter(surface);
-			if (!background.IsEmpty()) {
-				geometry.AddRectFilled(background, color);
+			if (backgroundRepeat == Style::BackgroundRepeat::NoRepeat) {
+				background.Inter(surface);
+				if (!background.IsEmpty()) {
+					geometry.AddRectFilled(background, color);
+					geometry.UpdateUV(4, surface, uv);
+				}
+			}
+			else {
+				//TODO: optimization repeat-x/repeat-y
+				geometry.AddRectFilled(surface, color);
 				geometry.UpdateUV(4, surface, uv);
 			}
 		}
