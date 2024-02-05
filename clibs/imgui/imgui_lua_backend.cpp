@@ -4,30 +4,9 @@
 #include <bx/platform.h>
 #include "backend/imgui_impl_bgfx.h"
 #include "backend/imgui_impl_platform.h"
-#include "fastio.h"
 #include "../luabind/lua2struct.h"
 
 namespace imgui_lua_backend {
-
-static float read_field_checkfloat(lua_State *L, const char * field, int tidx) {
-    float v;
-    if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
-        v = (float)lua_tonumber(L, -1);
-    } else {
-        v = 0;
-        luaL_error(L, "no float %s", field);
-    }
-    lua_pop(L, 1);
-    return v;
-}
-
-static const char* read_field_string(lua_State *L, const char * field, const char *v, int tidx) {
-    if (lua_getfield(L, tidx, field) == LUA_TSTRING) {
-        v = lua_tostring(L, -1);
-    }
-    lua_pop(L, 1);
-    return v;
-}
 
 #if BX_PLATFORM_WINDOWS
 #define bx_malloc_size _msize

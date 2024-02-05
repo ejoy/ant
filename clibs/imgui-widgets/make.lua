@@ -6,7 +6,7 @@ local defines = {
     "IMGUI_DISABLE_DEBUG_TOOLS",
     "IMGUI_DISABLE_DEMO_WINDOWS",
     "IMGUI_DISABLE_DEFAULT_ALLOCATORS",
-    "IMGUI_USER_CONFIG=\\\"imgui_config.h\\\"",
+    "IMGUI_USER_CONFIG=\\\"imgui_lua_config.h\\\"",
     lm.os == "windows" and "IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS"
 }
 
