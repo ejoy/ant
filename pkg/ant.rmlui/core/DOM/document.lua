@@ -32,6 +32,10 @@ end
 local pool = {}
 
 function event.OnDocumentDestroy(handle)
+    local o = pool[handle]
+    if o then
+        o._handle = nil
+    end
     pool[handle] = nil
 end
 
