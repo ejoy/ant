@@ -162,8 +162,8 @@ write_arg["const ImWchar*"] = function(type_meta, status)
     if type_meta.default_value == "NULL" then
         writeln("    const ImWchar* %s = NULL;", type_meta.name)
         writeln("    switch(lua_type(L, %d)) {", status.idx)
-        writeln("    case LUA_TSTRING: %s = (const ImWchar*)lua_touserdata(L, %d); break;", type_meta.name, status.idx)
-        writeln("    case LUA_TLIGHTUSERDATA: %s = (const ImWchar*)lua_tostring(L, %d); break;", type_meta.name, status.idx)
+        writeln("    case LUA_TSTRING: %s = (const ImWchar*)lua_tostring(L, %d); break;", type_meta.name, status.idx)
+        writeln("    case LUA_TLIGHTUSERDATA: %s = (const ImWchar*)lua_touserdata(L, %d); break;", type_meta.name, status.idx)
         writeln "    default: break;"
         writeln "    };"
     else

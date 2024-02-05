@@ -6241,8 +6241,8 @@ static int AddFontFromFileTTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 3)? NULL: *(const ImFontConfig**)lua_touserdata(L, 3);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 4)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromFileTTF(filename, size_pixels, font_cfg, glyph_ranges);
@@ -6258,8 +6258,8 @@ static int AddFontFromMemoryTTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 4)? NULL: *(const ImFontConfig**)lua_touserdata(L, 4);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 5)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromMemoryTTF(font_data, font_data_size, size_pixels, font_cfg, glyph_ranges);
@@ -6275,8 +6275,8 @@ static int AddFontFromMemoryCompressedTTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 4)? NULL: *(const ImFontConfig**)lua_touserdata(L, 4);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 5)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromMemoryCompressedTTF(compressed_font_data, compressed_font_data_size, size_pixels, font_cfg, glyph_ranges);
@@ -6291,8 +6291,8 @@ static int AddFontFromMemoryCompressedBase85TTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 3)? NULL: *(const ImFontConfig**)lua_touserdata(L, 3);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 4)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromMemoryCompressedBase85TTF(compressed_font_data_base85, size_pixels, font_cfg, glyph_ranges);
