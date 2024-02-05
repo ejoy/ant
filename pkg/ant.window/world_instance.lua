@@ -22,19 +22,6 @@ local WindowQuit
 local WindowToken = {}
 local WindowEvent = {}
 
-local function WindowPushMessage(msgs)
-    local wakeup = #WindowQueue == 0
-    inputmgr:filter_imgui(msgs, WindowQueue)
-    if wakeup then
-        ltask.wakeup(WindowToken)
-    end
-end
-
-local function WindowDispatchMessage()
-    world:dispatch_message { type = "update" }
-    return true
-end
-
 local function reboot(args)
     local config = world.args
     config.REBOOT = true
@@ -73,14 +60,15 @@ local function render(nwh, context, width, height, args, initialized)
             h = config.height,
         },
     }
-    WindowDispatchMessage()
+    world:dispatch_message { type = "update" }
     world:pipeline_init()
     bgfx.encoder_end()
 
     ltask.wakeup(initialized)
     initialized = nil
 
-    while WindowDispatchMessage() do
+    while true do
+        world:dispatch_message { type = "update" }
         if WindowQuit then
             break
         end
@@ -163,7 +151,11 @@ function m.reboot(args)
 end
 
 function m.message(messages)
-    WindowPushMessage(messages)
+    local wakeup = #WindowQueue == 0
+    inputmgr:filter_imgui(messages, WindowQueue)
+    if wakeup then
+        ltask.wakeup(WindowToken)
+    end
 end
 
 function m.wait()
