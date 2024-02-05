@@ -1058,6 +1058,18 @@ ImGui.Mod = {}
 ---@field PlatformRequestMove boolean    #  Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
 ---@field PlatformRequestResize boolean  #  Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
 ---@field PlatformRequestClose boolean   #  Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
+local ImGuiViewport = {}
+--
+-- Helpers
+--
+---@return number
+---@return number
+function ImGuiViewport.GetCenter() end
+
+---@return number
+---@return number
+function ImGuiViewport.GetWorkCenter() end
+
 
 ---@class ImGuiIO
 ---@field ConfigFlags ImGui.ConfigFlags            #  = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
@@ -1859,6 +1871,17 @@ function ImGui.SetScrollFromPosX(local_x, center_x_ratio) end
 function ImGui.SetScrollFromPosY(local_y, center_y_ratio) end
 
 --
+-- Parameters stacks (shared)
+--
+--
+-- use NULL as a shortcut to push default font
+--
+---@param font ImFont
+function ImGui.PushFont(font) end
+
+function ImGui.PopFont() end
+
+--
 -- modify a style color. always use this if you modify the style after NewFrame().
 --
 ---@param idx ImGui.Col
@@ -1949,6 +1972,16 @@ function ImGui.CalcItemWidth() end
 function ImGui.PushTextWrapPos(wrap_local_pos_x) end
 
 function ImGui.PopTextWrapPos() end
+
+--
+-- Style read access
+-- - Use the ShowStyleEditor() function to interactively see/edit the colors.
+--
+--
+-- get current font
+--
+---@return ImFont
+function ImGui.GetFont() end
 
 --
 -- get current font size (= height in pixels) of current font with current scale applied

@@ -1130,6 +1130,17 @@ static int SetScrollFromPosY(lua_State* L) {
     return 0;
 }
 
+static int PushFont(lua_State* L) {
+    auto font = (ImFont*)lua_touserdata(L, 1);
+    ImGui::PushFont(font);
+    return 0;
+}
+
+static int PopFont(lua_State* L) {
+    ImGui::PopFont();
+    return 0;
+}
+
 static int PushStyleColor(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
     auto col = (ImU32)luaL_checkinteger(L, 2);
@@ -1242,6 +1253,12 @@ static int PushTextWrapPos(lua_State* L) {
 static int PopTextWrapPos(lua_State* L) {
     ImGui::PopTextWrapPos();
     return 0;
+}
+
+static int GetFont(lua_State* L) {
+    auto&& _retval = ImGui::GetFont();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
 }
 
 static int GetFontSize(lua_State* L) {
@@ -4418,6 +4435,22 @@ static int GetKeyIndex(lua_State* L) {
 
 namespace wrap_ImGuiViewport {
 
+static int GetCenter(lua_State* L) {
+    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetCenter();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetWorkCenter(lua_State* L) {
+    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetWorkCenter();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
 struct ID {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
@@ -4562,6 +4595,11 @@ struct PlatformRequestClose {
     }
 };
 
+static luaL_Reg funcs[] = {
+    { "GetCenter", GetCenter },
+    { "GetWorkCenter", GetWorkCenter },
+};
+
 static luaL_Reg getters[] = {
     { "ID", ID::getter },
     { "Flags", Flags::getter },
@@ -4590,7 +4628,7 @@ static void const_pointer(lua_State* L, ImGuiViewport& v) {
 }
 
 static void init(lua_State* L) {
-    util::struct_gen(L, "ImGuiViewport", {}, {}, getters);
+    util::struct_gen(L, "ImGuiViewport", funcs, {}, getters);
     lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
 }
 
@@ -6678,6 +6716,8 @@ void init(lua_State* L) {
         { "SetScrollHereY", SetScrollHereY },
         { "SetScrollFromPosX", SetScrollFromPosX },
         { "SetScrollFromPosY", SetScrollFromPosY },
+        { "PushFont", PushFont },
+        { "PopFont", PopFont },
         { "PushStyleColor", PushStyleColor },
         { "PushStyleColorImVec4", PushStyleColorImVec4 },
         { "PopStyleColor", PopStyleColor },
@@ -6696,6 +6736,7 @@ void init(lua_State* L) {
         { "CalcItemWidth", CalcItemWidth },
         { "PushTextWrapPos", PushTextWrapPos },
         { "PopTextWrapPos", PopTextWrapPos },
+        { "GetFont", GetFont },
         { "GetFontSize", GetFontSize },
         { "GetFontTexUvWhitePixel", GetFontTexUvWhitePixel },
         { "GetColorU32", GetColorU32 },
