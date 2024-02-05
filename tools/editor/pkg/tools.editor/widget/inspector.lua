@@ -1,11 +1,7 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 
-local gizmo     = ecs.require "gizmo.gizmo"
-local ImGui     = require "imgui"
-local uiconfig  = require "widget.config"
-
+local gizmo             = ecs.require "gizmo.gizmo"
 local base_panel        = ecs.require "widget.base_view"()
 local light_panel       = ecs.require "widget.light_view"()
 local material_panel    = ecs.require "widget.material_view"()
@@ -14,6 +10,8 @@ local effect_panel      = ecs.require "widget.effect_view"()
 local skybox_panel      = ecs.require "widget.skybox_view"()
 local camera_panel      = ecs.require "widget.camera_view"()
 local daynight_panel    = ecs.require "widget.daynight_view"()
+local ImGui             = require "imgui"
+local uiconfig          = require "widget.config"
 
 local m = {}
 local current_panel

@@ -201,6 +201,14 @@ function m:handle_input()
             if gizmo.target_eid then
                 world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
             end
+        elseif (key == "Escape" or key == "GraveAccent") and press == 1 then
+            world:pub { "GizmoMode", "select" }
+        elseif key == "1" and press == 1 then
+            world:pub { "GizmoMode", "move" }
+        elseif key == "2" and press == 1 then
+            world:pub { "GizmoMode", "rotate" }
+        elseif key == "3" and press == 1 then
+            world:pub { "GizmoMode", "scale" }
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
         end
