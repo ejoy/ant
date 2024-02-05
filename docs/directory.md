@@ -66,7 +66,7 @@
 	* pkg/ant.debug
 	* pkg/ant.debugger
 	* pkg/ant.decal
-	* pkg/ant.ecs
+	* pkg/ant.world
 	* pkg/ant.editor
 	* pkg/ant.efk 特效
 	* pkg/ant.font 字体

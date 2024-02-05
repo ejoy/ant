@@ -29,7 +29,7 @@
             "clibs",
             "pkg/ant.debugger",
             "pkg/ant.json",
-            "pkg/ant.ecs/src"
+            "pkg/ant.world/src"
         ],
         "maxPreload": 100000
     }

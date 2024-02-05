@@ -568,7 +568,7 @@ local function system_changed(w)
         for name, s in pairs(initsystems) do
             updatesystems[name] = s
         end
-        initsystems["ant.ecs|entity_init_system"] = w._systems["ant.ecs|entity_init_system"]
+        initsystems["ant.world|entity_init_system"] = w._systems["ant.world|entity_init_system"]
         local step = slove_system(initsystems)
         w:pipeline_func("_init", step)()
     end
@@ -668,7 +668,7 @@ function m.new_world(config)
         local cfg = config.ecs
         if cfg then
             cfg.feature = cfg.feature or {}
-            table.insert(cfg.feature, 1, "ant.ecs")
+            table.insert(cfg.feature, 1, "ant.world")
         end
     end
     local ecs = luaecs.world(components)

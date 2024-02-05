@@ -2,7 +2,7 @@ local ltask    = require "ltask"
 local bgfx     = require "bgfx"
 local assetmgr = import_package "ant.asset"
 local audio    = import_package "ant.audio"
-local ecs      = import_package "ant.ecs"
+local new_world = import_package "ant.world".new_world
 local rhwi     = import_package "ant.hwi"
 local inputmgr = import_package "ant.inputmgr"
 
@@ -40,7 +40,7 @@ local function reboot(args)
     config.REBOOT = true
     config.ecs = args
     world:pipeline_exit()
-    world = ecs.new_world(config)
+    world = new_world(config)
     world:pipeline_init()
 end
 
@@ -63,7 +63,7 @@ local function render(nwh, context, width, height, args, initialized)
     bgfx.encoder_init()
     assetmgr.init()
     bgfx.encoder_begin()
-    world = ecs.new_world(config)
+    world = new_world(config)
     world:dispatch_message {
         type = "set_viewport",
         viewport = {
