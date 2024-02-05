@@ -75,7 +75,6 @@
 	* pkg/ant.group
 	* pkg/ant.hwi
 	* pkg/ant.imgui 编辑器用 UI （IMGUI）
-	* pkg/ant.inputmgr
 	* pkg/ant.json
 	* pkg/ant.landform
 	* pkg/ant.luaecs

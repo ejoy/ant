@@ -1,7 +1,7 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
 local aio = import_package "ant.io"
-local inputmgr = import_package "ant.inputmgr"
+local inputmgr = require "inputmgr"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
 local policy = require "policy"
@@ -659,6 +659,25 @@ function world:disable_system(name)
         end
         self._initsystems[name] = nil
     end
+end
+
+function world:dispatch_message(e)
+    local func = self._inputmgr[e.type]
+    if func then
+        func(e)
+    end
+end
+
+function world:enable_imgui()
+    local ImGui = import_package "ant.imgui"
+    self._dispatch_imgui = ImGui.DispatchEvent
+end
+
+function world:dispatch_imgui(msg)
+    if not self._dispatch_imgui then
+        return
+    end
+    return self._dispatch_imgui(msg)
 end
 
 local m = {}

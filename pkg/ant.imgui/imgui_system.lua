@@ -1,11 +1,11 @@
 local ecs = ...
+local world = ecs.world
 
 local platform = require "bee.platform"
 local ImGui = import_package "ant.imgui"
 local ImGuiBackend = require "imgui.backend"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
-local inputmgr = import_package "ant.inputmgr"
 local window = import_package "ant.window"
 local PM = require "programan.client"
 local viewIdPool = require "viewid_pool"
@@ -50,7 +50,7 @@ function m:init_system()
 		SizePixels = 18,
 		GlyphRanges = { 0x0020, 0xFFFF }
 	}
-	inputmgr:enable_imgui()
+	world:enable_imgui()
 end
 
 function m:init_world()

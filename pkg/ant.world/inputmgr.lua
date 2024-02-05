@@ -100,43 +100,10 @@ local function create(world)
     return event
 end
 
-local world = {}
-
-function world:dispatch_message(e)
-    local func = self._inputmgr[e.type]
-    if func then
-        func(e)
-    end
-end
-
 local m = {}
 
 function m:init()
     self._inputmgr = create(self)
-    self.dispatch_message = world.dispatch_message
-end
-
-function m:enable_imgui()
-    self._enable_imgui = true
-    ImGui = import_package "ant.imgui"
-end
-
-function m:filter_imgui(from, to)
-    if not self._enable_imgui then
-        for i = 1, #from do
-            local e = from[i]
-            to[#to+1] = e
-            from[i] = nil
-        end
-        return
-    end
-    for i = 1, #from do
-        local e = from[i]
-        if not ImGui.DispatchEvent(e) then
-            to[#to+1] = e
-        end
-        from[i] = nil
-    end
 end
 
 return m

@@ -4,7 +4,6 @@ local assetmgr = import_package "ant.asset"
 local audio    = import_package "ant.audio"
 local new_world = import_package "ant.world".new_world
 local rhwi     = import_package "ant.hwi"
-local inputmgr = import_package "ant.inputmgr"
 
 import_package "ant.hwi".init_bgfx()
 
@@ -125,15 +124,15 @@ end
 ltask.fork(function ()
     while not WindowQuit do
         while true do
-            local m = table.remove(WindowQueue, 1)
-            if not m then
+            local msg = table.remove(WindowQueue, 1)
+            if not msg then
                 break
             end
-            local f = WindowEvent[m.type]
+            local f = WindowEvent[msg.type]
             if f then
-                f(m)
-            else
-                world:dispatch_message(m)
+                f(msg)
+            elseif not world:dispatch_imgui(msg) then
+                world:dispatch_message(msg)
             end
         end
         ltask.wait(WindowToken)
@@ -150,9 +149,13 @@ function m.reboot(args)
     WillReboot = args
 end
 
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
+
 function m.message(messages)
     local wakeup = #WindowQueue == 0
-    inputmgr:filter_imgui(messages, WindowQueue)
+    table_append(WindowQueue, messages)
     if wakeup then
         ltask.wakeup(WindowToken)
     end
