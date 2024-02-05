@@ -40,6 +40,21 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	return uv;
 }
 
+static auto GetSamplerFlag(Style::BackgroundRepeat v) {
+	switch (v) {
+	case Style::BackgroundRepeat::NoRepeat:
+		return SamplerFlag::Clamp;
+	case Style::BackgroundRepeat::Repeat:
+		return SamplerFlag::Repeat;
+	case Style::BackgroundRepeat::RepeatX:
+		return SamplerFlag::RepeatX;
+	case Style::BackgroundRepeat::RepeatY:
+		return SamplerFlag::RepeatY;
+	default:
+		std::unreachable();
+	}
+}
+
 bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image.Has<std::string>()) {
@@ -160,7 +175,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 
 	Rect uv = CalcUV(surface, background);
 	auto backgroundRepeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
-	Material* material = GetRender()->CreateTextureMaterial(texture.handle, (SamplerFlag)backgroundRepeat);
+	Material* material = GetRender()->CreateTextureMaterial(texture.handle, GetSamplerFlag(backgroundRepeat));
 	geometry.SetMaterial(material);
 
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1).Get<PropertyFloat>().value / 100.0f;
