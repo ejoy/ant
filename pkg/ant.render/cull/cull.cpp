@@ -97,7 +97,7 @@ lcull(lua_State *L) {
 			ci[c++] = i;
 		} else {
 			auto &i = ci[idx];
-			assert(i.n < 256);
+			assert(i.n < MAX_VISIBLE_QUEUE);
 			i.queue_indices[i.n++] = queue_index;
 		}
 	};
