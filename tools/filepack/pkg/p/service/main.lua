@@ -1,40 +1,26 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local platform = require "bee.platform"
-local vfs = require "vfs"
-local fastio = require "fastio"
-local datalist = require "datalist"
 local zip = require "zip"
 local vfsrepo = import_package "ant.vfs"
 local cr = import_package "ant.compile_resource"
 
 local arg = ...
+
 local repopath = fs.absolute(arg[1]):lexically_normal()
 local resource_cache = {}
 
-local config_os
-local config_resource
-do
-    local mem = vfs.read "/settings.ant"
-    if mem then
-        local config = datalist.parse(fastio.wrap(mem))
-        config_os = config.os or platform.os
-        config_resource = config.resource
-    else
-        config_os = platform.os
-    end
-    if not config_resource then
-        local platform_relates <const> = {
-            windows = "direct3d11",
-            macos = "metal",
-            ios = "metal",
-            android = "vulken",
-        }
-        config_resource = {
-            ("%s-%s"):format(config_os, platform_relates[config_os]),
-        }
-    end
-end
+local platform_relates <const> = {
+    windows = "direct3d11",
+    macos = "metal",
+    ios = "metal",
+    android = "vulken",
+}
+
+local config_os = arg[2] or platform.os
+local config_resource = {
+    ("%s-%s"):format(config_os, platform_relates[config_os]),
+}
 
 do print "step1. check resource cache."
     for _, setting in ipairs(config_resource) do
