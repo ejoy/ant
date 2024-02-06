@@ -89,9 +89,9 @@ write_arg["char*"] = function(type_meta, status)
         assert(not size_meta.default_value)
         status.idx = status.idx + 1
         status.i = status.i + 1
-        writeln("    auto _ebuf = util::editbuf_create(L, %d);", status.idx)
-        status.arguments[#status.arguments+1] = "_ebuf->buf"
-        status.arguments[#status.arguments+1] = "_ebuf->size"
+        writeln("    auto _strbuf = util::strbuf_get(L, %d);", status.idx)
+        status.arguments[#status.arguments+1] = "_strbuf->data"
+        status.arguments[#status.arguments+1] = "_strbuf->size"
         return
     end
     assert(false)
@@ -102,10 +102,10 @@ write_arg["ImGuiInputTextCallback"] = function(type_meta, status)
     if ud_meta and ud_meta.type and ud_meta.type.declaration == "void*" then
         status.idx = status.idx + 1
         status.i = status.i + 1
-        writeln("    _ebuf->callback = %d;", status.idx)
+        writeln("    util::input_context _ctx { L, %d };", status.idx)
         writeln "    auto _top = lua_gettop(L);"
-        status.arguments[#status.arguments+1] = "util::editbuf_callback"
-        status.arguments[#status.arguments+1] = "_ebuf"
+        status.arguments[#status.arguments+1] = "util::input_callback"
+        status.arguments[#status.arguments+1] = "&_ctx"
         return
     end
     assert(false)
@@ -606,6 +606,12 @@ local function write_funcs()
         writeln ""
         funcs[#funcs+1] = realname
     end
+    writeln "static int StringBuf(lua_State* L) {"
+    writeln "    util::strbuf_create(L, 1);"
+    writeln "    return 1;"
+    writeln "}"
+    writeln ""
+    funcs[#funcs+1] = "StringBuf"
     for _, func_meta in ipairs(meta.functions) do
         if util.allow(func_meta) then
             if func_meta.original_class then

@@ -1037,7 +1037,7 @@ ImGui.Mod = {}
 
 ---@class ImFontRange
 
----@class ImEditBuf
+---@class ImStringBuf
 
 ---@class ImVec2
 ---@field x number
@@ -1501,6 +1501,10 @@ function ImGuiInputTextCallbackData.HasSelection() end
 ---@return userdata
 ---@return ImFontConfig
 function ImGui.FontConfig() end
+
+---@param str? string
+---@return ImStringBuf
+function ImGui.StringBuf(str) end
 
 --
 -- Context creation and access
@@ -2976,13 +2980,13 @@ function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flag
 -- Implied callback = NULL, user_data = NULL
 --
 ---@param label string
----@param buf ImEditBuf[] | string[]
+---@param buf ImStringBuf | ImStringBuf[] | string[]
 ---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
 ---@return boolean
 function ImGui.InputText(label, buf, flags) end
 
 ---@param label string
----@param buf ImEditBuf[] | string[]
+---@param buf ImStringBuf | ImStringBuf[] | string[]
 ---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
 ---@param user_data lightuserdata
 ---@return boolean
@@ -2992,12 +2996,12 @@ function ImGui.InputTextEx(label, buf, flags, user_data) end
 -- Implied size = ImVec2(0, 0), flags = 0, callback = NULL, user_data = NULL
 --
 ---@param label string
----@param buf ImEditBuf[] | string[]
+---@param buf ImStringBuf | ImStringBuf[] | string[]
 ---@return boolean
 function ImGui.InputTextMultiline(label, buf) end
 
 ---@param label string
----@param buf ImEditBuf[] | string[]
+---@param buf ImStringBuf | ImStringBuf[] | string[]
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
@@ -3010,14 +3014,14 @@ function ImGui.InputTextMultilineEx(label, buf, size_x, size_y, flags, user_data
 --
 ---@param label string
 ---@param hint string
----@param buf ImEditBuf[] | string[]
+---@param buf ImStringBuf | ImStringBuf[] | string[]
 ---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
 ---@return boolean
 function ImGui.InputTextWithHint(label, hint, buf, flags) end
 
 ---@param label string
 ---@param hint string
----@param buf ImEditBuf[] | string[]
+---@param buf ImStringBuf | ImStringBuf[] | string[]
 ---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
 ---@param user_data lightuserdata
 ---@return boolean

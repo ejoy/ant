@@ -7,7 +7,7 @@ local ImGuiAnt = import_package "ant.imgui"
 
 local m = ecs.system 'init_system'
 
-local text = {}
+local text = ImGui.StringBuf()
 
 local DropfilesEvent = world:sub { "dropfiles" }
 
@@ -22,7 +22,7 @@ function m:data_changed()
     if ImGui.Begin("test", nil, ImGui.WindowFlags {'AlwaysAutoResize'}) then
         if ImGui.TreeNodeEx("Test", ImGui.TreeNodeFlags {"DefaultOpen"}) then
             if ImGui.InputText("TEST", text) then
-                print(tostring(text[1]))
+                print(tostring(text))
             end
             ImGui.TreePop()
         end

@@ -277,7 +277,7 @@ special_arg["char*"] = function (type_meta, status)
     if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
         assert(not type_meta.default_value)
         status.i = status.i + 1
-        writeln("---@param %s ImEditBuf[] | string[]", safe_name(type_meta.name))
+        writeln("---@param %s ImStringBuf | ImStringBuf[] | string[]", safe_name(type_meta.name))
         status.arguments[#status.arguments+1] = safe_name(type_meta.name)
         return
     end
@@ -524,7 +524,7 @@ local function write_structs(struct_funcs)
     writeln ""
     writeln("---@class ImFontRange")
     writeln ""
-    writeln("---@class ImEditBuf")
+    writeln("---@class ImStringBuf")
     writeln ""
     local lst <const> = {
         "ImVec2",
@@ -579,6 +579,10 @@ for _, name in ipairs(struct_constructor) do
     writeln("function ImGui.%s() end", realname)
     writeln ""
 end
+writeln "---@param str? string"
+writeln "---@return ImStringBuf"
+writeln "function ImGui.StringBuf(str) end"
+writeln ""
 for _, func_meta in ipairs(funcs) do
     write_func(func_meta)
 end

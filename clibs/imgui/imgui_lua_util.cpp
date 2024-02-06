@@ -48,75 +48,110 @@ const char* format(lua_State* L, int idx) {
     return lua_tostring(L, -1);
 }
 
-static void* editbuf_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
+static void* strbuf_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
     void *ud;
     lua_Alloc allocator = lua_getallocf(L, &ud);
     return allocator(ud, ptr, osize, nsize);
 }
 
-static int editbuf_tostring(lua_State* L) {
-    auto ebuf = (ImEditBuf*)lua_touserdata(L, 1);
-    lua_pushstring(L, ebuf->buf);
-    return 1;
-}
-
-static int editbuf_release(lua_State* L) {
-    auto ebuf = (ImEditBuf*)lua_touserdata(L, 1);
-    editbuf_realloc(L, ebuf->buf, ebuf->size, 0);
-    ebuf->buf = NULL;
-    ebuf->size = 0;
+static int strbuf_set(lua_State* L) {
+    auto sbuf = (strbuf*)lua_touserdata(L, 1);
+    size_t newsize = 0;
+    const char* newbuf = luaL_checklstring(L, 2, &newsize);
+    newsize++;
+    if (newsize > sbuf->size) {
+        sbuf->data = (char *)strbuf_realloc(L, sbuf->data, sbuf->size, newsize);
+        sbuf->size = newsize;
+    }
+    memcpy(sbuf->data, newbuf, newsize);
     return 0;
 }
 
-int editbuf_callback(ImGuiInputTextCallbackData* data) {
-    auto ebuf = (ImEditBuf*)data->UserData;
-    lua_State* L = ebuf->L;
-    lua_pushvalue(L, ebuf->callback);
+static int strbuf_resize(lua_State* L) {
+    auto sbuf = (strbuf*)lua_touserdata(L, 1);
+    size_t newsize = (size_t)luaL_checkinteger(L, 2);
+    sbuf->data = (char *)strbuf_realloc(L, sbuf->data, sbuf->size, newsize);
+    sbuf->size = newsize;
+    return 0;
+}
+
+static int strbuf_tostring(lua_State* L) {
+    auto sbuf = (strbuf*)lua_touserdata(L, 1);
+    lua_pushstring(L, sbuf->data);
+    return 1;
+}
+
+static int strbuf_release(lua_State* L) {
+    auto sbuf = (strbuf*)lua_touserdata(L, 1);
+    strbuf_realloc(L, sbuf->data, sbuf->size, 0);
+    sbuf->data = NULL;
+    sbuf->size = 0;
+    return 0;
+}
+
+static constexpr size_t kStrBufMinSize = 256;
+
+strbuf* strbuf_create(lua_State* L, int idx) {
+    size_t sz;
+    const char* text = lua_tolstring(L, idx, &sz);
+    auto sbuf = (strbuf*)lua_newuserdatauv(L, sizeof(strbuf), 0);
+    if (sbuf->data == NULL)
+        luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
+    if (text == NULL) {
+        sbuf->size = kStrBufMinSize;
+        sbuf->data = (char *)strbuf_realloc(L, NULL, 0, sbuf->size);
+        sbuf->data[0] = '\0';
+    } else {
+        sbuf->size = (std::min)(sz + 1, kStrBufMinSize);
+        sbuf->data = (char *)strbuf_realloc(L, NULL, 0, sbuf->size);
+        memcpy(sbuf->data, text, sz + 1);
+    }
+    if (luaL_newmetatable(L, "ImGui::StringBuf")) {
+        lua_pushcfunction(L, strbuf_tostring);
+        lua_setfield(L, -2, "__tostring");
+        lua_pushcfunction(L, strbuf_release);
+        lua_setfield(L, -2, "__gc");
+        static luaL_Reg l[] = {
+            { "set", strbuf_set },
+            { "resize", strbuf_resize },
+            { NULL, NULL },
+        };
+        luaL_newlib(L, l);
+        lua_setfield(L, -2, "__index");
+    }
+    lua_setmetatable(L, -2);
+    return sbuf;
+}
+
+strbuf* strbuf_get(lua_State* L, int idx) {
+    if (lua_type(L, idx) == LUA_TUSERDATA) {
+        auto sbuf = (strbuf*)luaL_checkudata(L, idx, "ImGui::StringBuf");
+        return sbuf;
+    }
+    luaL_checktype(L, idx, LUA_TTABLE);
+    int t = lua_geti(L, idx, 1);
+    if (t != LUA_TSTRING && t != LUA_TNIL) {
+        auto sbuf = (strbuf*)luaL_checkudata(L, -1, "ImGui::StringBuf");
+        lua_pop(L, 1);
+        return sbuf;
+    }
+    auto sbuf = strbuf_create(L, -1);
+    lua_replace(L, -2);
+    lua_seti(L, idx, 1);
+    return sbuf;
+}
+
+int input_callback(ImGuiInputTextCallbackData* data) {
+    auto ctx = (input_context*)data->UserData;
+    lua_State* L = ctx->L;
+    lua_pushvalue(L, ctx->callback);
     wrap_ImGuiInputTextCallbackData::pointer(L, *data);
-    if (lua_pcall(ebuf->L, 1, 1, 0) != LUA_OK) {
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
         return 1;
     }
     lua_Integer retval = lua_tointeger(L, -1);
     lua_pop(L, 1);
     return (int)retval;
-}
-
-ImEditBuf* editbuf_create(lua_State* L, int idx) {
-    luaL_checktype(L, idx, LUA_TTABLE);
-    int t = lua_geti(L, idx, 1);
-    if (t == LUA_TSTRING || t == LUA_TNIL) {
-        size_t sz;
-        const char* text = lua_tolstring(L, -1, &sz);
-        if (text == NULL) {
-            sz = 64;    // default buf size 64
-        } else {
-            ++sz;
-        }
-        auto ebuf = (ImEditBuf*)lua_newuserdatauv(L, sizeof(ImEditBuf), 0);
-        ebuf->buf = (char *)editbuf_realloc(L, NULL, 0, sz);
-        if (ebuf->buf == NULL)
-            luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
-        ebuf->size = sz;
-        if (text) {
-            memcpy(ebuf->buf, text, sz);
-        } else {
-            ebuf->buf[0] = 0;
-        }
-        if (luaL_newmetatable(L, "IMGUI_EDITBUF")) {
-            lua_pushcfunction(L, editbuf_tostring);
-            lua_setfield(L, -2, "__tostring");
-            lua_pushcfunction(L, editbuf_release);
-            lua_setfield(L, -2, "__gc");
-        }
-        lua_setmetatable(L, -2);
-        lua_replace(L, -2);
-        lua_pushvalue(L, -1);
-        lua_seti(L, idx, 1);
-    }
-    auto ebuf = (ImEditBuf*)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
-    lua_pop(L, 1);
-    ebuf->L = L;
-    return ebuf;
 }
 
 void create_table(lua_State* L, std::span<TableInteger> l) {

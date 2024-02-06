@@ -744,6 +744,11 @@ static int FontConfig(lua_State* L) {
     return 2;
 }
 
+static int StringBuf(lua_State* L) {
+    util::strbuf_create(L, 1);
+    return 1;
+}
+
 static int CreateContext(lua_State* L) {
     auto&& _retval = ImGui::CreateContext();
    (void)_retval;
@@ -2837,20 +2842,20 @@ static int VSliderIntEx(lua_State* L) {
 
 static int InputText(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _ebuf = util::editbuf_create(L, 2);
+    auto _strbuf = util::strbuf_get(L, 2);
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
-    auto&& _retval = ImGui::InputText(label, _ebuf->buf, _ebuf->size, flags);
+    auto&& _retval = ImGui::InputText(label, _strbuf->data, _strbuf->size, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int InputTextEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _ebuf = util::editbuf_create(L, 2);
+    auto _strbuf = util::strbuf_get(L, 2);
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
-    _ebuf->callback = 4;
+    util::input_context _ctx { L, 4 };
     auto _top = lua_gettop(L);
-    auto&& _retval = ImGui::InputText(label, _ebuf->buf, _ebuf->size, flags, util::editbuf_callback, _ebuf);
+    auto&& _retval = ImGui::InputText(label, _strbuf->data, _strbuf->size, flags, util::input_callback, &_ctx);
     lua_pushboolean(L, _retval);
     if (lua_gettop(L) != _top + 1) {
         lua_pop(L, 1);
@@ -2861,23 +2866,23 @@ static int InputTextEx(lua_State* L) {
 
 static int InputTextMultiline(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _ebuf = util::editbuf_create(L, 2);
-    auto&& _retval = ImGui::InputTextMultiline(label, _ebuf->buf, _ebuf->size);
+    auto _strbuf = util::strbuf_get(L, 2);
+    auto&& _retval = ImGui::InputTextMultiline(label, _strbuf->data, _strbuf->size);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int InputTextMultilineEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
-    auto _ebuf = util::editbuf_create(L, 2);
+    auto _strbuf = util::strbuf_get(L, 2);
     auto size = ImVec2 {
         (float)luaL_optnumber(L, 3, 0),
         (float)luaL_optnumber(L, 4, 0),
     };
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiInputTextFlags_None));
-    _ebuf->callback = 6;
+    util::input_context _ctx { L, 6 };
     auto _top = lua_gettop(L);
-    auto&& _retval = ImGui::InputTextMultiline(label, _ebuf->buf, _ebuf->size, size, flags, util::editbuf_callback, _ebuf);
+    auto&& _retval = ImGui::InputTextMultiline(label, _strbuf->data, _strbuf->size, size, flags, util::input_callback, &_ctx);
     lua_pushboolean(L, _retval);
     if (lua_gettop(L) != _top + 1) {
         lua_pop(L, 1);
@@ -2889,9 +2894,9 @@ static int InputTextMultilineEx(lua_State* L) {
 static int InputTextWithHint(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto hint = luaL_checkstring(L, 2);
-    auto _ebuf = util::editbuf_create(L, 3);
+    auto _strbuf = util::strbuf_get(L, 3);
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
-    auto&& _retval = ImGui::InputTextWithHint(label, hint, _ebuf->buf, _ebuf->size, flags);
+    auto&& _retval = ImGui::InputTextWithHint(label, hint, _strbuf->data, _strbuf->size, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -2899,11 +2904,11 @@ static int InputTextWithHint(lua_State* L) {
 static int InputTextWithHintEx(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto hint = luaL_checkstring(L, 2);
-    auto _ebuf = util::editbuf_create(L, 3);
+    auto _strbuf = util::strbuf_get(L, 3);
     auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
-    _ebuf->callback = 5;
+    util::input_context _ctx { L, 5 };
     auto _top = lua_gettop(L);
-    auto&& _retval = ImGui::InputTextWithHint(label, hint, _ebuf->buf, _ebuf->size, flags, util::editbuf_callback, _ebuf);
+    auto&& _retval = ImGui::InputTextWithHint(label, hint, _strbuf->data, _strbuf->size, flags, util::input_callback, &_ctx);
     lua_pushboolean(L, _retval);
     if (lua_gettop(L) != _top + 1) {
         lua_pop(L, 1);
@@ -6986,6 +6991,7 @@ static void init(lua_State* L) {
 static void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "FontConfig", FontConfig },
+        { "StringBuf", StringBuf },
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
         { "GetIO", GetIO },
