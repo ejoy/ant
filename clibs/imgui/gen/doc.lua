@@ -269,6 +269,21 @@ special_arg["void*"] = function (type_meta, status)
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
 end
 
+special_arg["ImGuiInputTextCallback"] = function (type_meta, status)
+end
+
+special_arg["char*"] = function (type_meta, status)
+    local size_meta = status.args[status.i + 1]
+    if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        status.i = status.i + 1
+        writeln("---@param %s ImEditBuf[] | string[]", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+        return
+    end
+    assert(false)
+end
+
 return_type["bool*"] = function (type_meta)
     writeln("---@return boolean %s", safe_name(type_meta.name))
 end
@@ -509,12 +524,15 @@ local function write_structs(struct_funcs)
     writeln ""
     writeln("---@class ImFontRange")
     writeln ""
+    writeln("---@class ImEditBuf")
+    writeln ""
     local lst <const> = {
         "ImVec2",
         "ImGuiViewport",
         "ImGuiIO",
         "ImFontConfig",
         "ImFontAtlas",
+        "ImGuiInputTextCallbackData"
     }
     for _, name in ipairs(lst) do
         types.decode_docs(name, struct_funcs[name] or {}, writeln, write_func)

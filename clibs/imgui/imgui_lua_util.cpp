@@ -3,6 +3,10 @@
 #include <bee/nonstd/unreachable.h>
 #include <stdint.h>
 
+namespace imgui_lua::wrap_ImGuiInputTextCallbackData {
+    void pointer(lua_State* L, ImGuiInputTextCallbackData& v);
+}
+
 namespace imgui_lua::util {
 
 static lua_CFunction str_format = NULL;
@@ -42,6 +46,76 @@ const char* format(lua_State* L, int idx) {
     lua_insert(L, idx);
     lua_call(L, lua_gettop(L) - idx, 1);
     return lua_tostring(L, -1);
+}
+
+static void* editbuf_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
+    void *ud;
+    lua_Alloc allocator = lua_getallocf(L, &ud);
+    return allocator(ud, ptr, osize, nsize);
+}
+
+static int editbuf_tostring(lua_State* L) {
+    auto ebuf = (ImEditBuf*)lua_touserdata(L, 1);
+    lua_pushstring(L, ebuf->buf);
+    return 1;
+}
+
+static int editbuf_release(lua_State* L) {
+    auto ebuf = (ImEditBuf*)lua_touserdata(L, 1);
+    editbuf_realloc(L, ebuf->buf, ebuf->size, 0);
+    ebuf->buf = NULL;
+    ebuf->size = 0;
+    return 0;
+}
+
+int editbuf_callback(ImGuiInputTextCallbackData* data) {
+    auto ebuf = (ImEditBuf*)data->UserData;
+    lua_State* L = ebuf->L;
+    lua_pushvalue(L, ebuf->callback);
+    wrap_ImGuiInputTextCallbackData::pointer(L, *data);
+    if (lua_pcall(ebuf->L, 1, 1, 0) != LUA_OK) {
+        return 1;
+    }
+    lua_Integer retval = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    return (int)retval;
+}
+
+ImEditBuf* editbuf_create(lua_State* L, int idx) {
+    luaL_checktype(L, idx, LUA_TTABLE);
+    int t = lua_geti(L, idx, 1);
+    if (t == LUA_TSTRING || t == LUA_TNIL) {
+        size_t sz;
+        const char* text = lua_tolstring(L, -1, &sz);
+        if (text == NULL) {
+            sz = 64;    // default buf size 64
+        } else {
+            ++sz;
+        }
+        auto ebuf = (ImEditBuf*)lua_newuserdatauv(L, sizeof(ImEditBuf), 0);
+        ebuf->buf = (char *)editbuf_realloc(L, NULL, 0, sz);
+        if (ebuf->buf == NULL)
+            luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
+        ebuf->size = sz;
+        if (text) {
+            memcpy(ebuf->buf, text, sz);
+        } else {
+            ebuf->buf[0] = 0;
+        }
+        if (luaL_newmetatable(L, "IMGUI_EDITBUF")) {
+            lua_pushcfunction(L, editbuf_tostring);
+            lua_setfield(L, -2, "__tostring");
+            lua_pushcfunction(L, editbuf_release);
+            lua_setfield(L, -2, "__gc");
+        }
+        lua_setmetatable(L, -2);
+        lua_replace(L, -2);
+        lua_pushvalue(L, -1);
+        lua_seti(L, idx, 1);
+    }
+    auto ebuf = (ImEditBuf*)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
+    ebuf->L = L;
+    return ebuf;
 }
 
 void create_table(lua_State* L, std::span<TableInteger> l) {

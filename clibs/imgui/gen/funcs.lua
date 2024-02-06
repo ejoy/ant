@@ -15,6 +15,7 @@ local struct_list <const> = {
     { "ImGuiIO", { "pointer" } },
     { "ImFontConfig", { "pointer" } },
     { "ImFontAtlas", { "const_pointer" } },
+    { "ImGuiInputTextCallbackData", { "pointer" } },
 }
 
 local struct_constructor <const> = {
@@ -79,6 +80,43 @@ write_arg["void*"] = function(type_meta, status)
     status.idx = status.idx + 1
     status.arguments[#status.arguments+1] = type_meta.name
     writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, status.idx)
+end
+
+write_arg["char*"] = function(type_meta, status)
+    local size_meta = status.args[status.i + 1]
+    if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
+        assert(not type_meta.default_value)
+        assert(not size_meta.default_value)
+        status.idx = status.idx + 1
+        status.i = status.i + 1
+        writeln("    auto _ebuf = util::editbuf_create(L, %d);", status.idx)
+        status.arguments[#status.arguments+1] = "_ebuf->buf"
+        status.arguments[#status.arguments+1] = "_ebuf->size"
+        return
+    end
+    assert(false)
+end
+
+write_arg["ImGuiInputTextCallback"] = function(type_meta, status)
+    local ud_meta = status.args[status.i + 1]
+    if ud_meta and ud_meta.type and ud_meta.type.declaration == "void*" then
+        status.idx = status.idx + 1
+        status.i = status.i + 1
+        writeln("    _ebuf->callback = %d;", status.idx)
+        writeln "    auto _top = lua_gettop(L);"
+        status.arguments[#status.arguments+1] = "util::editbuf_callback"
+        status.arguments[#status.arguments+1] = "_ebuf"
+        return
+    end
+    assert(false)
+end
+
+write_arg_ret["ImGuiInputTextCallback"] = function()
+    writeln "    if (lua_gettop(L) != _top + 1) {"
+    writeln "        lua_pop(L, 1);"
+    writeln "        lua_error(L);"
+    writeln "    }"
+    return 0
 end
 
 write_arg["ImVec2"] = function(type_meta, status)
@@ -591,7 +629,7 @@ local function write_struct_defines()
         local name, modes = v[1], v[2]
         writeln("namespace wrap_%s {", name)
         for _, mode in ipairs(modes) do
-            writeln("    static void %s(lua_State* L, %s& v);", mode, name)
+            writeln("    void %s(lua_State* L, %s& v);", mode, name)
         end
         writeln "}"
     end
@@ -618,7 +656,7 @@ write_struct_defines()
 writeln ""
 local funcs, struct_funcs = write_funcs()
 write_structs(struct_funcs)
-writeln "void init(lua_State* L) {"
+writeln "static void init(lua_State* L) {"
 writeln "    static luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do
     writeln("        { %q, %s },", func, func)

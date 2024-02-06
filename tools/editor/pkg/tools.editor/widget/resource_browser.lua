@@ -133,8 +133,7 @@ local function rename_file(file)
     if change then
         ImGui.Text("new name :")
         ImGui.SameLine()
-        if ImGuiLegacy.InputText("##NewName", new_filename) then
-        end
+        ImGuiLegacy.InputText("##NewName", new_filename)
         ImGui.SameLine()
         if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             lfs.rename(file:localpath(), file:parent_path():localpath() / tostring(new_filename.text))

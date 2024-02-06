@@ -109,13 +109,6 @@ local TodoList <const> = {
 
     ImGui_ColorPicker4 = true,
 
-    ImGui_InputText = true,
-    ImGui_InputTextEx = true,
-    ImGui_InputTextMultiline = true,
-    ImGui_InputTextMultilineEx = true,
-    ImGui_InputTextWithHint = true,
-    ImGui_InputTextWithHintEx = true,
-
     ImGui_InputScalar = true,
     ImGui_InputScalarEx = true,
     ImGui_InputScalarN = true,
@@ -155,7 +148,6 @@ local TodoClass <const> = {
     ImGuiTextBuffer = true,
     ImGuiTextFilter = true,
     ImGuiTextFilter_ImGuiTextRange = true,
-    ImGuiInputTextCallbackData = true,
     ImGuiListClipper = true,
     ImGuiPayload = true,
     ImGuiStorage = true,

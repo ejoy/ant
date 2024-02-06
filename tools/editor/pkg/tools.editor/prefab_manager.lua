@@ -467,8 +467,7 @@ function m:choose_prefab()
             ImGui.Text("Create new or open existing prefab.")
             ImGui.Text("prefab name:  ")
             ImGui.SameLine()
-            if ImGuiLegacy.InputText("##PrefabName", prefabe_name_ui) then
-            end
+            ImGuiLegacy.InputText("##PrefabName", prefabe_name_ui)
             ImGui.SameLine()
             if ImGui.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
                 local name = tostring(prefabe_name_ui.text)

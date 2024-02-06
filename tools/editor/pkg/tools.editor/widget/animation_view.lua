@@ -662,12 +662,10 @@ function m.show()
             if change then
                 ImGui.Text("Anim Name:")
                 ImGui.SameLine()
-                if ImGuiLegacy.InputText("##AnimName", anim_name_ui) then
-                end
+                ImGuiLegacy.InputText("##AnimName", anim_name_ui)
                 ImGui.Text("Anim Path:")
                 ImGui.SameLine()
-                if ImGuiLegacy.InputText("##AnimPath", anim_path_ui) then
-                end
+                ImGuiLegacy.InputText("##AnimPath", anim_path_ui)
                 ImGui.SameLine()
                 if ImGui.Button("...") then
                     local localpath = uiutils.get_open_file_path("Select Animation", "anim")

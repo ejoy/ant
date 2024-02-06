@@ -340,8 +340,7 @@ function TextureResource:show()
         end
         ImGui.TableNextColumn()
         ImGui.PushItemWidth(-1)
-        if ImGuiLegacy.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
-        end
+        ImGuiLegacy.InputText("##" .. self.metadata.path .. self.label, self.uidata2)
         ImGui.PopItemWidth()
         if ImGui.BeginDragDropTarget() then
             local payload = ImGui.AcceptDragDropPayload("DragFile")

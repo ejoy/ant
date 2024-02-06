@@ -269,7 +269,7 @@ local function decode_func(name, funcs_meta, writeln, write_func, modes)
     for _, mode in ipairs(modes) do
         writeln("static int tag_%s = 0;", mode)
         writeln ""
-        writeln("static void %s(lua_State* L, %s& v) {", mode, name)
+        writeln("void %s(lua_State* L, %s& v) {", mode, name)
         writeln("    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
         writeln("    auto** ptr = (%s**)lua_touserdata(L, -1);", name)
         writeln "    *ptr = &v;"
