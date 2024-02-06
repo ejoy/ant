@@ -44,6 +44,18 @@ struct queue_node {
             masks[eidx] &= ~(1ull << sidx);
         }
     }
+
+    void set(queue_node &n, bool value) {
+        if (value){
+            for(uint8_t ii=0; ii<NUM_MASK; ++ii){
+                masks[ii] |= n.masks[ii];
+            }
+        } else {
+            for(uint8_t ii=0; ii<NUM_MASK; ++ii){
+                masks[ii] &= ~(n.masks[ii]);
+            }
+        }
+    }
 };
 
 struct queue_container {
@@ -83,6 +95,10 @@ struct queue_container {
         nodes[Qidx].set(queue, value);
     }
 
+    inline void set(int Qidx, int nextQidx, bool value) {
+        nodes[Qidx].set(nodes[nextQidx], value);
+    }
+
     std::vector<queue_node> nodes;
     std::forward_list<int>   freelist;
     int n = 0;
@@ -102,6 +118,10 @@ bool queue_check(struct queue_container* Q, int Qidx, uint8_t queue){
 
 void queue_set(struct queue_container* Q, int Qidx, uint8_t queue, bool value){
     return Q->set(Qidx, queue, value);
+}
+
+void queue_set_by_index(struct queue_container *Q, int Qidx, int nextQidx, bool value){
+    return Q->set(Qidx, nextQidx, value);
 }
 
 void queue_fetch(struct queue_container* Q, int Qidx, uint64_t *outmasks){

@@ -20,10 +20,48 @@ extern "C"{
 using tags = std::vector<int>;
 using cull_infos = std::unordered_map<uint64_t, tags>;
 
-struct cullinfo{
+struct cullqueue_info{
 	math_t	mid;
-	uint8_t n;
-	uint8_t	queue_indices[256];
+	int 	Qidx;
+};
+
+struct cullqueue_cache {
+	uint16_t count = 0;
+	struct cullqueue_info cq[MAX_VISIBLE_QUEUE];
+	struct ecs_world *w;
+	cullqueue_cache(struct ecs_world *w_) : w(w_){}
+	~cullqueue_cache(){
+		clear();
+	}
+
+	bool empty() const {
+		return count == 0;
+	}
+
+	struct cullqueue_info& find_cullqueue(math_t mid) {
+		for (uint16_t ii=0; ii<count; ++ii){
+			if (cq[ii].mid.idx == mid.idx){
+				return cq[ii];
+			}
+		}
+		assert(count < MAX_VISIBLE_QUEUE);
+		struct cullqueue_info& q = cq[count++];
+		q.mid = mid;
+		q.Qidx = queue_alloc(w->Q);
+
+		return q;
+	}
+
+	void clear(){
+		for (uint16_t ii=0; ii<count; ++ii){
+			queue_dealloc(w->Q, cq[ii].Qidx);
+		}
+	}
+
+	void add_queue(math_t mid, uint8_t queue_index){
+		struct cullqueue_info& q = find_cullqueue(mid);
+		queue_set(w->Q, q.Qidx, queue_index, true);
+	}
 };
 
 struct cull_cached {
@@ -32,25 +70,18 @@ struct cull_cached {
 	ecs::cached_context<component::hitch_visible, component::hitch, component::bounding> hitch_obj;
 }; 
 
-static inline void
-set_mark(int64_t &s, uint64_t m, bool set){
-	s = set ? (s|m) : (s&(~m));
-}
-
 template<typename ObjType>
 struct cull_operation{
 	template<typename EntityType>
-	static void cull(struct ecs_world*w, EntityType &e, struct cullinfo *ci, uint8_t c){
+	static void cull(struct ecs_world*w, EntityType &e, struct cullqueue_cache *cc){
 		const auto &b = e.template get<component::bounding>();
 
 		if (!math_isnull(b.scene_aabb)){
 			auto &o = e.template get<ObjType>();
-			for (uint8_t ii=0; ii<c; ++ii){
-				const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
-				for (uint8_t iq=0; iq<ci[ii].n; ++iq){
-					queue_set(w->Q, o.cull_idx, ci[ii].queue_indices[iq], isculled);
-				}
-				//set_mark(o.cull_masks, ci[ii].masks, isculled);
+			for (uint8_t ii=0; ii<cc->count; ++ii){
+				struct cullqueue_info& q = cc->cq[ii];
+				const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, q.mid, b.scene_aabb) < 0;
+				queue_set_by_index(w->Q, o.cull_idx, q.Qidx, isculled);
 			}
 		}
 	}
@@ -70,53 +101,25 @@ lexit(lua_State *L) {
 	return 0;
 }
 
-constexpr uint8_t MAX_QUEUE_COUNT = 64;
-
 static int
 lcull(lua_State *L) {
 	auto w = getworld(L);
 
-	uint8_t c = 0;
-	struct cullinfo ci[MAX_QUEUE_COUNT];
-
-	auto add_cull_info = [&ci, &c](math_t mid, uint8_t queue_index){
-		assert(c < MAX_QUEUE_COUNT);
-
-		uint8_t idx = MAX_QUEUE_COUNT;
-		for (uint8_t ii=0; ii<c; ++ii){
-			if (ci[ii].mid.idx == mid.idx){
-				idx = ii;
-				break;
-			}
-		}
-		if (idx == MAX_QUEUE_COUNT){
-			struct cullinfo i;
-			i.mid = mid;
-			i.queue_indices[0] = queue_index;
-			i.n = 1;
-			ci[c++] = i;
-		} else {
-			auto &i = ci[idx];
-			assert(i.n < MAX_VISIBLE_QUEUE);
-			i.queue_indices[i.n++] = queue_index;
-		}
-	};
+	cullqueue_cache cqc(w);
 
 	for (auto& i : ecs::array<component::cull_args>(w->ecs)){
-		add_cull_info(i.frustum_planes, i.queue_index);
+		cqc.add_queue(i.frustum_planes, i.queue_index);
 	}
 
-	if (0 == c)
-		return 0;
+	if (!cqc.empty()){
+		for (auto e : ecs::cached_select(w->cull_cached->render_obj)) {
+			cull_operation<component::render_object>::cull(w, e, &cqc);
+		}
 
-	for (auto e : ecs::cached_select(w->cull_cached->render_obj)) {
-		cull_operation<component::render_object>::cull(w, e, ci, c);
+		for (auto& e : ecs::cached_select(w->cull_cached->hitch_obj)) {
+			cull_operation<component::hitch>::cull(w, e, &cqc);
+		}
 	}
-
-	for (auto& e : ecs::cached_select(w->cull_cached->hitch_obj)) {
-		cull_operation<component::hitch>::cull(w, e, ci, c);
-	}
-
 	return 0;
 }
 
