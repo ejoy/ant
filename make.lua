@@ -26,7 +26,7 @@ lm.AntDir = lm:path "."
 local EnableEditor = true
 if lm.os == "ios" then
     lm.arch = "arm64"
-    lm.sys = "ios15.0"
+    lm.sys = "ios16.0"
     EnableEditor = false
 end
 
