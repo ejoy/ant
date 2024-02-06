@@ -94,10 +94,6 @@ update_transform(struct ecs_world* w, const component::render_object *ro, const 
 #define INVALID_BUFFER_TYPE		UINT16_MAX
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
 
-static inline bool indirect_draw_valid(const component::indirect_object *ido){
-	return ido && ido->draw_num != 0 && ido->draw_num != UINT32_MAX;
-}
-
 template<typename ObjType>
 static bool obj_visible(struct queue_container* Q, const ObjType &o, uint8_t qidx){
 	return	queue_check(Q, o.visible_idx, qidx) &&
@@ -146,17 +142,6 @@ get_material(struct render_material * R, uint32_t rmidx, size_t midx){
 }
 
 using matrix_array = std::vector<math_t>;
-
-static inline void
-submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const component::render_object *obj, const component::indirect_object *iobj, bgfx_program_handle_t prog, uint8_t discardflags){
-	if(indirect_draw_valid(iobj)){
-		const auto idb = bgfx_indirect_buffer_handle_t{(uint16_t)iobj->idb_handle};
-		assert(BGFX_HANDLE_IS_VALID(idb));
-		w->bgfx->encoder_submit_indirect(w->holder->encoder, viewid, prog, idb, 0, iobj->draw_num, obj->render_layer, discardflags);
-	}else{
-		w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, obj->render_layer, discardflags);
-	}
-}
 
 //TODO: maybe move to another c module
 static constexpr uint16_t MAX_EFK_HITCH = 256;
@@ -294,7 +279,7 @@ struct obj_submiter {
 
 		assert(num < MAX_SUBMIT_NUM);
 		objects[num++] = submit_object{
-			ro, nullptr, UINT16_MAX, io
+			ro, nullptr, {UINT16_MAX}, io
 #ifdef RENDER_DEBUG
 			, eid
 #endif //RENDER_DEBUG
@@ -373,7 +358,7 @@ struct hitch_submiter {
 		//auto mi = find_submit_material();
 		assert(num < MAX_SUBMIT_NUM);
 		hitchs[num++] = submit_hitch{
-			ro, nullptr, UINT16_MAX, g, eo
+			ro, nullptr, {UINT16_MAX}, g, eo
 #ifdef RENDER_DEBUG
 			, eid
 #endif //RENDER_DEBUG
@@ -493,9 +478,9 @@ build_hitch_info(struct ecs_world*w, submit_cache &cc){
 	}
 }
 
-static inline bool notdiscards(uint16_t viewid){
-	return viewid == 2 || viewid == 3 || viewid == 4 || viewid == 5 || viewid == 12;
-}
+// static inline bool notdiscards(uint16_t viewid){
+// 	return viewid == 2 || viewid == 3 || viewid == 4 || viewid == 5 || viewid == 12;
+// }
 
 static inline void
 render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
