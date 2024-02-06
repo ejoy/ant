@@ -160,6 +160,19 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 
 	Rect uv = CalcUV(surface, background);
 	SamplerFlag flag = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
+
+	if (flag == SamplerFlag::Repeat){
+		uv.size = uv.size / ( Size(texture.dimensions) / background.size);
+	}
+	else if (flag == SamplerFlag::RepeatX){
+		uv.size = uv.size / ( Size(texture.dimensions) / background.size);
+		background.size.h = background.size.h > texture.dimensions.h ? texture.dimensions.h : background.size.h;
+	}
+	else if (flag == SamplerFlag::RepeatY){
+		uv.size = uv.size / ( Size(texture.dimensions) / background.size);
+		background.size.w = background.size.w > texture.dimensions.w ? texture.dimensions.w : background.size.w;		
+	}
+
 	Material* material = GetRender()->CreateTextureMaterial(texture.handle, flag);
 	geometry.SetMaterial(material);
 
