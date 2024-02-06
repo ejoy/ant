@@ -31,7 +31,7 @@ local function create(w)
 		bgfx.CINTERFACE,
 		math3d.CINTERFACE,
 		bgfx.encoder_get(),
-		0,0,0,0 --kMaxMember == 4
+		0,0,0,0,0,0,0,0
 	)
 end
 

@@ -540,16 +540,14 @@ render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
 	cc.obj.submit(cc.transforms);
 }
 
-static submit_cache cc;
-
 static int
 lrender_submit(lua_State *L) {
 	auto w = getworld(L);
-	cc.clear();
-	cc.init(L, w);
+	w->submit_cache->clear();
+	w->submit_cache->init(L, w);
 
-	render_submit(L, w, cc);
-	render_hitch_submit(L, w, cc);
+	render_submit(L, w, *w->submit_cache);
+	render_hitch_submit(L, w, *w->submit_cache);
 	
 	return 0;
 }
@@ -641,6 +639,7 @@ linit_system(lua_State *L){
 	auto w = getworld(L);
 	w->R = render_material_create();
 	w->Q = queue_create();
+	w->submit_cache = new submit_cache;
 	return 1;
 }
 
@@ -653,25 +652,27 @@ lexit(lua_State *L){
 	queue_destroy(w->Q);
 	w->Q = nullptr;
 
+	delete w->submit_cache;
 	return 0;
 }
 
 static int
 lsubmit_stat(lua_State *L){
 	lua_createtable(L, 0, 4);
-#ifdef RENDER_DEBUG
-	lua_pushinteger(L, cc.stat.hitch_submit);
-	lua_setfield(L, -2, "hitch_submit");
-
-	lua_pushinteger(L, cc.stat.simple_submit);
-	lua_setfield(L, -2, "simple_submit");
-
-	lua_pushinteger(L, cc.stat.efk_hitch_submit);
-	lua_setfield(L, -2, "efk_hitch_submit");
-
-	lua_pushinteger(L, cc.stat.hitch_count);
-	lua_setfield(L, -2, "hitch_count");
-#endif //RENDER_DEBUG
+//TODO
+//#ifdef RENDER_DEBUG
+//	lua_pushinteger(L, cc.stat.hitch_submit);
+//	lua_setfield(L, -2, "hitch_submit");
+//
+//	lua_pushinteger(L, cc.stat.simple_submit);
+//	lua_setfield(L, -2, "simple_submit");
+//
+//	lua_pushinteger(L, cc.stat.efk_hitch_submit);
+//	lua_setfield(L, -2, "efk_hitch_submit");
+//
+//	lua_pushinteger(L, cc.stat.hitch_count);
+//	lua_setfield(L, -2, "hitch_count");
+//#endif //RENDER_DEBUG
 	return 1;
 }
 
