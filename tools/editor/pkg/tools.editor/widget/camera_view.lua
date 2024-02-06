@@ -2,17 +2,15 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local uiproperty    = require "widget.uiproperty"
-local uiutils       = require "widget.utils"
-local hierarchy     = ecs.require "hierarchy_edit"
-local math3d        = require "math3d"
-local ImGui         = require "imgui"
-
 local serialize     = import_package "ant.serialize"
-
+local hierarchy     = ecs.require "hierarchy_edit"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local icamera       = ecs.require "ant.camera|camera"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
+local math3d        = require "math3d"
+local ImGui         = require "imgui"
+local uiproperty    = require "widget.uiproperty"
+local uiutils       = require "widget.utils"
 
 local CameraView = {}
 

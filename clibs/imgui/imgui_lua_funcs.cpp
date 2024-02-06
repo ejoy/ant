@@ -1130,6 +1130,17 @@ static int SetScrollFromPosY(lua_State* L) {
     return 0;
 }
 
+static int PushFont(lua_State* L) {
+    auto font = (ImFont*)lua_touserdata(L, 1);
+    ImGui::PushFont(font);
+    return 0;
+}
+
+static int PopFont(lua_State* L) {
+    ImGui::PopFont();
+    return 0;
+}
+
 static int PushStyleColor(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
     auto col = (ImU32)luaL_checkinteger(L, 2);
@@ -1242,6 +1253,12 @@ static int PushTextWrapPos(lua_State* L) {
 static int PopTextWrapPos(lua_State* L) {
     ImGui::PopTextWrapPos();
     return 0;
+}
+
+static int GetFont(lua_State* L) {
+    auto&& _retval = ImGui::GetFont();
+    lua_pushlightuserdata(L, (void*)_retval);
+    return 1;
 }
 
 static int GetFontSize(lua_State* L) {
@@ -4418,6 +4435,22 @@ static int GetKeyIndex(lua_State* L) {
 
 namespace wrap_ImGuiViewport {
 
+static int GetCenter(lua_State* L) {
+    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetCenter();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
+static int GetWorkCenter(lua_State* L) {
+    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetWorkCenter();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
 struct ID {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
@@ -4562,6 +4595,11 @@ struct PlatformRequestClose {
     }
 };
 
+static luaL_Reg funcs[] = {
+    { "GetCenter", GetCenter },
+    { "GetWorkCenter", GetWorkCenter },
+};
+
 static luaL_Reg getters[] = {
     { "ID", ID::getter },
     { "Flags", Flags::getter },
@@ -4590,7 +4628,7 @@ static void const_pointer(lua_State* L, ImGuiViewport& v) {
 }
 
 static void init(lua_State* L) {
-    util::struct_gen(L, "ImGuiViewport", {}, {}, getters);
+    util::struct_gen(L, "ImGuiViewport", funcs, {}, getters);
     lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
 }
 
@@ -6241,8 +6279,8 @@ static int AddFontFromFileTTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 3)? NULL: *(const ImFontConfig**)lua_touserdata(L, 3);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 4)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromFileTTF(filename, size_pixels, font_cfg, glyph_ranges);
@@ -6258,8 +6296,8 @@ static int AddFontFromMemoryTTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 4)? NULL: *(const ImFontConfig**)lua_touserdata(L, 4);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 5)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromMemoryTTF(font_data, font_data_size, size_pixels, font_cfg, glyph_ranges);
@@ -6275,8 +6313,8 @@ static int AddFontFromMemoryCompressedTTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 4)? NULL: *(const ImFontConfig**)lua_touserdata(L, 4);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 5)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 5); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 5); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromMemoryCompressedTTF(compressed_font_data, compressed_font_data_size, size_pixels, font_cfg, glyph_ranges);
@@ -6291,8 +6329,8 @@ static int AddFontFromMemoryCompressedBase85TTF(lua_State* L) {
     auto font_cfg = lua_isnoneornil(L, 3)? NULL: *(const ImFontConfig**)lua_touserdata(L, 3);
     const ImWchar* glyph_ranges = NULL;
     switch(lua_type(L, 4)) {
-    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
-    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TSTRING: glyph_ranges = (const ImWchar*)lua_tostring(L, 4); break;
+    case LUA_TLIGHTUSERDATA: glyph_ranges = (const ImWchar*)lua_touserdata(L, 4); break;
     default: break;
     };
     auto&& _retval = OBJ.AddFontFromMemoryCompressedBase85TTF(compressed_font_data_base85, size_pixels, font_cfg, glyph_ranges);
@@ -6678,6 +6716,8 @@ void init(lua_State* L) {
         { "SetScrollHereY", SetScrollHereY },
         { "SetScrollFromPosX", SetScrollFromPosX },
         { "SetScrollFromPosY", SetScrollFromPosY },
+        { "PushFont", PushFont },
+        { "PopFont", PopFont },
         { "PushStyleColor", PushStyleColor },
         { "PushStyleColorImVec4", PushStyleColorImVec4 },
         { "PopStyleColor", PopStyleColor },
@@ -6696,6 +6736,7 @@ void init(lua_State* L) {
         { "CalcItemWidth", CalcItemWidth },
         { "PushTextWrapPos", PushTextWrapPos },
         { "PopTextWrapPos", PopTextWrapPos },
+        { "GetFont", GetFont },
         { "GetFontSize", GetFontSize },
         { "GetFontTexUvWhitePixel", GetFontTexUvWhitePixel },
         { "GetColorU32", GetColorU32 },

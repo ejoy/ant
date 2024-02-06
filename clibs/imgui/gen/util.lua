@@ -135,9 +135,6 @@ local TodoList <const> = {
 
     ImGui_GetWindowDrawList  = true,
     ImGui_SetNextWindowSizeConstraints = true,
-    ImGui_PushFont = true,
-    ImGui_PopFont = true,
-    ImGui_GetFont = true,
     ImGui_ComboChar = true,
     ImGui_ComboCharEx = true,
     ImGui_ComboCallback = true,
@@ -145,6 +142,25 @@ local TodoList <const> = {
     ImFontAtlas_GetTexDataAsAlpha8 = true,
     ImFontAtlas_GetTexDataAsRGBA32 = true,
     ImFontAtlas_GetCustomRectByIndex = true,
+}
+
+local TodoClass <const> = {
+    ImFont = true,
+    ImFontGlyphRangesBuilder = true,
+    ImFontAtlasCustomRect = true,
+    ImDrawData = true,
+    ImDrawList = true,
+    ImDrawCmd = true,
+    ImDrawListSplitter = true,
+    ImGuiTextBuffer = true,
+    ImGuiTextFilter = true,
+    ImGuiTextFilter_ImGuiTextRange = true,
+    ImGuiInputTextCallbackData = true,
+    ImGuiListClipper = true,
+    ImGuiPayload = true,
+    ImGuiStorage = true,
+    ImGuiStyle = true,
+    ImColor = true,
 }
 
 local function conditionals(t)
@@ -191,13 +207,10 @@ local function allow(func_meta)
         return
     end
     if func_meta.original_class then
-        if func_meta.original_class == "ImGuiIO" then
-            return true
+        if TodoClass[func_meta.original_class] then
+            return
         end
-        if func_meta.original_class == "ImFontAtlas" then
-            return true
-        end
-        return
+        return true
     end
     return true
 end

@@ -113,6 +113,37 @@ static bool IsVkDown(int vk) {
 	return (::GetKeyState(vk) & 0x8000) != 0;
 }
 
+static ImGuiKey ScancodeToImGuiKey(int scancode) {
+	static const ImGuiKey windows_scancode_table[] = {
+		/*	0					1						2						3						4					5						6						7 */
+		/*	8					9						A						B						C					D						E						F */
+		ImGuiKey_None,			ImGuiKey_Escape,		ImGuiKey_1,				ImGuiKey_2,				ImGuiKey_3,			ImGuiKey_4,				ImGuiKey_5,				ImGuiKey_6,				/* 0 */
+		ImGuiKey_7,				ImGuiKey_8,				ImGuiKey_9,				ImGuiKey_0,				ImGuiKey_Minus,		ImGuiKey_Equal,			ImGuiKey_Backspace,		ImGuiKey_Tab,			/* 0 */
+
+		ImGuiKey_Q,				ImGuiKey_W,				ImGuiKey_E,				ImGuiKey_R,				ImGuiKey_T,			ImGuiKey_Y,				ImGuiKey_U,				ImGuiKey_I,				/* 1 */
+		ImGuiKey_O,				ImGuiKey_P,				ImGuiKey_LeftBracket,	ImGuiKey_RightBracket,	ImGuiKey_Enter,		ImGuiKey_LeftCtrl,		ImGuiKey_A,				ImGuiKey_S,				/* 1 */
+
+		ImGuiKey_D,				ImGuiKey_F,				ImGuiKey_G,				ImGuiKey_H,				ImGuiKey_J,			ImGuiKey_K,				ImGuiKey_L,				ImGuiKey_Semicolon,		/* 2 */
+		ImGuiKey_Apostrophe,	ImGuiKey_GraveAccent,	ImGuiKey_LeftShift,		ImGuiKey_Backslash,		ImGuiKey_Z,			ImGuiKey_X,				ImGuiKey_C,				ImGuiKey_V,				/* 2 */
+
+		ImGuiKey_B,				ImGuiKey_N,				ImGuiKey_M,				ImGuiKey_Comma,			ImGuiKey_Period,	ImGuiKey_Slash,			ImGuiKey_RightShift,	ImGuiKey_PrintScreen,	/* 3 */
+		ImGuiKey_LeftAlt,		ImGuiKey_Space,			ImGuiKey_CapsLock,		ImGuiKey_F1,			ImGuiKey_F2,		ImGuiKey_F3,			ImGuiKey_F4,			ImGuiKey_F5,			/* 3 */
+
+		ImGuiKey_F6,			ImGuiKey_F7,			ImGuiKey_F8,			ImGuiKey_F9,			ImGuiKey_F10,		ImGuiKey_NumLock,		ImGuiKey_ScrollLock,	ImGuiKey_Home,		/* 4 */
+		ImGuiKey_UpArrow,		ImGuiKey_PageUp,		ImGuiKey_None,			ImGuiKey_LeftArrow,		ImGuiKey_None,		ImGuiKey_RightArrow,	ImGuiKey_None,			ImGuiKey_End,		/* 4 */
+
+		ImGuiKey_DownArrow,		ImGuiKey_PageDown,		ImGuiKey_Insert,		ImGuiKey_Delete,		ImGuiKey_None,		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_F11,		/* 5 */
+		ImGuiKey_F12,			ImGuiKey_Pause,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,		/* 5 */
+
+		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_F13,		ImGuiKey_F14,			ImGuiKey_F15,			ImGuiKey_F16,		/* 6 */
+		ImGuiKey_F17,			ImGuiKey_F18,			ImGuiKey_F19,			ImGuiKey_None,			ImGuiKey_None,		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,		/* 6 */
+
+		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,		/* 7 */
+		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None,		ImGuiKey_None,			ImGuiKey_None,			ImGuiKey_None		/* 7 */
+	};
+	return (scancode >= 0 && scancode < 128) ? windows_scancode_table[scancode] : ImGuiKey_None;
+}
+
 static ImGuiKey ToImGuiKey(WPARAM wParam) {
     switch (wParam) {
         case VK_TAB: return ImGuiKey_Tab;
@@ -170,42 +201,42 @@ static ImGuiKey ToImGuiKey(WPARAM wParam) {
         case VK_RMENU: return ImGuiKey_RightAlt;
         case VK_RWIN: return ImGuiKey_RightSuper;
         case VK_APPS: return ImGuiKey_Menu;
-        case '0': return ImGuiKey_0;
-        case '1': return ImGuiKey_1;
-        case '2': return ImGuiKey_2;
-        case '3': return ImGuiKey_3;
-        case '4': return ImGuiKey_4;
-        case '5': return ImGuiKey_5;
-        case '6': return ImGuiKey_6;
-        case '7': return ImGuiKey_7;
-        case '8': return ImGuiKey_8;
-        case '9': return ImGuiKey_9;
-        case 'A': return ImGuiKey_A;
-        case 'B': return ImGuiKey_B;
-        case 'C': return ImGuiKey_C;
-        case 'D': return ImGuiKey_D;
-        case 'E': return ImGuiKey_E;
-        case 'F': return ImGuiKey_F;
-        case 'G': return ImGuiKey_G;
-        case 'H': return ImGuiKey_H;
-        case 'I': return ImGuiKey_I;
-        case 'J': return ImGuiKey_J;
-        case 'K': return ImGuiKey_K;
-        case 'L': return ImGuiKey_L;
-        case 'M': return ImGuiKey_M;
-        case 'N': return ImGuiKey_N;
-        case 'O': return ImGuiKey_O;
-        case 'P': return ImGuiKey_P;
-        case 'Q': return ImGuiKey_Q;
-        case 'R': return ImGuiKey_R;
-        case 'S': return ImGuiKey_S;
-        case 'T': return ImGuiKey_T;
-        case 'U': return ImGuiKey_U;
-        case 'V': return ImGuiKey_V;
-        case 'W': return ImGuiKey_W;
-        case 'X': return ImGuiKey_X;
-        case 'Y': return ImGuiKey_Y;
-        case 'Z': return ImGuiKey_Z;
+		case '0': return ImGuiKey_0;
+		case '1': return ImGuiKey_1;
+		case '2': return ImGuiKey_2;
+		case '3': return ImGuiKey_3;
+		case '4': return ImGuiKey_4;
+		case '5': return ImGuiKey_5;
+		case '6': return ImGuiKey_6;
+		case '7': return ImGuiKey_7;
+		case '8': return ImGuiKey_8;
+		case '9': return ImGuiKey_9;
+		case 'A': return ImGuiKey_A;
+		case 'B': return ImGuiKey_B;
+		case 'C': return ImGuiKey_C;
+		case 'D': return ImGuiKey_D;
+		case 'E': return ImGuiKey_E;
+		case 'F': return ImGuiKey_F;
+		case 'G': return ImGuiKey_G;
+		case 'H': return ImGuiKey_H;
+		case 'I': return ImGuiKey_I;
+		case 'J': return ImGuiKey_J;
+		case 'K': return ImGuiKey_K;
+		case 'L': return ImGuiKey_L;
+		case 'M': return ImGuiKey_M;
+		case 'N': return ImGuiKey_N;
+		case 'O': return ImGuiKey_O;
+		case 'P': return ImGuiKey_P;
+		case 'Q': return ImGuiKey_Q;
+		case 'R': return ImGuiKey_R;
+		case 'S': return ImGuiKey_S;
+		case 'T': return ImGuiKey_T;
+		case 'U': return ImGuiKey_U;
+		case 'V': return ImGuiKey_V;
+		case 'W': return ImGuiKey_W;
+		case 'X': return ImGuiKey_X;
+		case 'Y': return ImGuiKey_Y;
+		case 'Z': return ImGuiKey_Z;
         case VK_F1: return ImGuiKey_F1;
         case VK_F2: return ImGuiKey_F2;
         case VK_F3: return ImGuiKey_F3;
@@ -411,7 +442,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			}
 		}
 		else {
-			msg.key = ToImGuiKey(vk);
+			auto k = ToImGuiKey(vk);
+			if (k == ImGuiKey_None) {
+				k = ScancodeToImGuiKey((lParam >> 16) & 0xff);
+			}
+			msg.key = k;
 			ant::window::input_message(cb, msg);
 		}
 		break;

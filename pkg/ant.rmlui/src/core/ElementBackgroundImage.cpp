@@ -40,6 +40,21 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	return uv;
 }
 
+static auto GetSamplerFlag(Style::BackgroundRepeat v) {
+	switch (v) {
+	case Style::BackgroundRepeat::NoRepeat:
+		return SamplerFlag::Clamp;
+	case Style::BackgroundRepeat::Repeat:
+		return SamplerFlag::Repeat;
+	case Style::BackgroundRepeat::RepeatX:
+		return SamplerFlag::RepeatX;
+	case Style::BackgroundRepeat::RepeatY:
+		return SamplerFlag::RepeatY;
+	default:
+		std::unreachable();
+	}
+}
+
 bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image.Has<std::string>()) {
@@ -201,16 +216,30 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 	else {
 		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
-			auto poly = geometry.ClipPolygon(edge.padding, background);
-			if (!poly.IsEmpty()) {
-				geometry.AddPolygon(poly, color);
-				geometry.UpdateUV(poly.points.size(), surface, uv);
+			if (backgroundRepeat == Style::BackgroundRepeat::NoRepeat) {
+				auto poly = geometry.ClipPolygon(edge.padding, background);
+				if (!poly.IsEmpty()) {
+					geometry.AddPolygon(poly, color);
+					geometry.UpdateUV(poly.points.size(), surface, uv);
+				}
+			}
+			else {
+				//TODO: optimization repeat-x/repeat-y
+				geometry.AddPolygon(edge.padding, color);
+				geometry.UpdateUV(edge.padding.points.size(), surface, uv);
 			}
 		}
 		else {
-			background.Inter(surface);
-			if (!background.IsEmpty()) {
-				geometry.AddRectFilled(background, color);
+			if (backgroundRepeat == Style::BackgroundRepeat::NoRepeat) {
+				background.Inter(surface);
+				if (!background.IsEmpty()) {
+					geometry.AddRectFilled(background, color);
+					geometry.UpdateUV(4, surface, uv);
+				}
+			}
+			else {
+				//TODO: optimization repeat-x/repeat-y
+				geometry.AddRectFilled(surface, color);
 				geometry.UpdateUV(4, surface, uv);
 			}
 		}

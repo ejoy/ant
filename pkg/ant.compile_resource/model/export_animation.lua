@@ -27,16 +27,24 @@ return function (status)
     if not lfs.exists(folder / "skeleton.bin") then
         error("NO SKELETON export!")
     end
-    local animations = {}
+    local list = {}
     for path in lfs.pairs(folder) do
         if path:equal_extension ".bin" then
             local filename = path:filename():string()
             if filename ~= "skeleton.bin" then
-                local stemname = path:stem():string()
-                assert(not stemname:match "[<>:/\\|?%s%[%]%(%)]")
-                animations[stemname] = filename
+                list[#list+1] = path
             end
         end
+    end
+    local animations = {}
+    for _, path in ipairs(list) do
+        local stemname = path:stem():string()
+        local newname = stemname:gsub("[<>:/\\|?%s%[%]%(%)]", "_")
+        if stemname ~= newname then
+            local newpath = path:parent_path() / (newname .. path:extension())
+            lfs.rename(path, newpath)
+        end
+        animations[newname] = newname .. path:extension():string()
     end
     status.animation = {
         skeleton = "skeleton.bin",

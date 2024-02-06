@@ -1,10 +1,11 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
+
 local iefk          = ecs.require "ant.efk|efk"
+local hierarchy     = ecs.require "hierarchy_edit"
 local ImGui         = require "imgui"
 local uiproperty    = require "widget.uiproperty"
-local hierarchy     = ecs.require "hierarchy_edit"
+
 local EffectView    = {}
 
 function EffectView:_init()

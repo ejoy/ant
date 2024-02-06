@@ -1,13 +1,14 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
-local event_gizmo   = world:sub {"Gizmo"}
-local iom           = ecs.require "ant.objcontroller|obj_motion"
+
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
+local iom           = ecs.require "ant.objcontroller|obj_motion"
+local irl		    = ecs.require "ant.render|render_layer.render_layer"
+local hierarchy     = ecs.require "hierarchy_edit"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
-local hierarchy     = ecs.require "hierarchy_edit"
+
 local BaseView = {}
 local render_layer_name = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
 function BaseView:_init()
@@ -58,11 +59,10 @@ function BaseView:set_eid(eid)
     if self.eid == eid then
         return
     end
+    self.eid = eid
     if not eid then
-        self.eid = nil
         return
     end
-    self.eid = eid
     local info = hierarchy:get_node_info(self.eid)
     self.is_prefab = info and info.filename
     local property = {}
@@ -279,7 +279,6 @@ function BaseView:on_get_render_layer()
     return e.render_layer
 end
 
-local irl		    = ecs.require "ant.render|render_layer.render_layer"
 function BaseView:on_set_render_layer(value)
     local e <close> = world:entity(self.eid)
     irl.set_layer(e, value)
@@ -351,6 +350,7 @@ function BaseView:update()
     self.general_property:update()
 end
 
+local event_gizmo = world:sub {"Gizmo"}
 function BaseView:show()
     if not self.eid then return end
     for _, _, _, _ in event_gizmo:unpack() do

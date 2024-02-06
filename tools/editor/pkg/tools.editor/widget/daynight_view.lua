@@ -1,15 +1,15 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
+
+local serialize     = import_package "ant.serialize"
 local idn           = ecs.require "ant.daynight|daynight"
-local uiproperty    = require "widget.uiproperty"
-local fs        = require "filesystem"
-local lfs       = require "bee.filesystem"
 local hierarchy     = ecs.require "hierarchy_edit"
 local daynightui    = ecs.require "daynight_ui"
-local prefab_mgr  = ecs.require "prefab_manager"
-local serialize = import_package "ant.serialize"
-local math3d    = require "math3d"
+local prefab_mgr    = ecs.require "prefab_manager"
+local math3d        = require "math3d"
+local uiproperty    = require "widget.uiproperty"
+local fs            = require "filesystem"
+
 local DaynightView = {}
 local function check_relative_path(path, basepath)
     if path:is_relative() then

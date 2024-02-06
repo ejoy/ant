@@ -131,17 +131,9 @@ function m.parse_prefab_name(name)
 end
 
 function m.register_new_rt()
-
-    local function register_mem_texture_render_queue(queue_name)
+    local function init_mem_texture_queue(view_id, queue_name)
         w:register{name = queue_name}
-    end
-    
-    local function register_mem_texture_material_queue(queue_name)
-        local mem_texture_material_idx = queuemgr.material_index("main_queue")
-        queuemgr.register_queue(queue_name, mem_texture_material_idx)
-    end
-
-    local function create_mem_texture_queue(view_id, queue_name)
+        queuemgr.register_queue(queue_name, queuemgr.material_index "main_queue")
 
         local fb = {
             {rbidx = fbmgr.create_rb{w = params.DEFAULT_RT_WIDTH, h = params.DEFAULT_RT_HEIGHT, layers = 1, format = "RGBA8", flags = params.RB_FLAGS}},
@@ -202,10 +194,7 @@ function m.register_new_rt()
         }
     end
 
-    local queue_name, view_id = params.QUEUE_NAME, params.VIEWID
-    register_mem_texture_render_queue(queue_name)
-    register_mem_texture_material_queue(queue_name)
-    create_mem_texture_queue(view_id, queue_name)
+    init_mem_texture_queue(params.VIEWID, params.QUEUE_NAME)
 end
 
 function m.create_prefab_entity(name, path, rotation, distance, type)
@@ -304,13 +293,13 @@ function m.copy_main_material()
     for _, prefab in pairs(params.PREFABS) do
         if prefab.objects then
             for _, eid in ipairs(prefab.objects) do
-                local e = world:entity(eid, "filter_result visible_state?in render_object?in filter_material?in")
-                if e.filter_material and e.render_object then
-                    local fm = e.filter_material
-                    local mi = fm["main_queue"]
-                    fm[queue_name] = mi
-                    R.set(e.render_object.rm_idx, queuemgr.material_index(queue_name), mi:ptr()) 
-                end
+                -- local e = world:entity(eid, "filter_result visible_state?in render_object?in filter_material?in")
+                -- if e.filter_material and e.render_object then
+                --     local fm = e.filter_material
+                --     local mi = fm["main_queue"]
+                --     fm[queue_name] = mi
+                --     R.set(e.render_object.rm_idx, queuemgr.material_index(queue_name), mi:ptr()) 
+                -- end
             end 
         end
     end

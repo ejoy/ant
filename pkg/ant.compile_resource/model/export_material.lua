@@ -140,17 +140,15 @@ return function (status)
     local samplers = gltfscene.samplers
     local function export_image(imgidx)
         local img = images[imgidx+1]
-        local ext = image_extension[img.mimeType]
-        if ext == nil then
-            if img.uri then
-                error("not support base64 format")
-            end
-            error(("not support image type:%d"):format(img.mimeType))
-        end
-
         local name = img.name or tostring(imgidx)
-        if lfs.path(name):extension():string() ~= ext then
-            name = name .. ext
+        if img.mimeTyp then
+            local ext = image_extension[img.mimeType]
+            if ext == nil then
+                error(("not support image type:%d"):format(img.mimeType))
+            end
+            if lfs.path(name):extension():string() ~= ext then
+                name = name .. ext
+            end
         end
 
         local function serialize_image_file(imagename)
