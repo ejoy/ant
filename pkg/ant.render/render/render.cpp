@@ -237,17 +237,32 @@ using group_collection = std::unordered_map<int, group_queues>;
 
 static constexpr uint16_t MAX_SUBMIT_NUM = 4096;
 struct submit_context {
-	lua_State *L;
-	struct ecs_world* w;
+	lua_State *L = nullptr;
+	struct ecs_world* w = nullptr;
 	const component::render_args* ra[MAX_VISIBLE_QUEUE];
-	uint8_t ra_count;
+	uint8_t ra_count = 0;
 
-	void clear() {
-#ifdef RENDER_DEBUG
-		L = nullptr;
-		w = nullptr;
-#endif //RENDER_DEBUG
+	int Qidx = -1;
+	uint64_t queuemasks[MAX_VISIBLE_QUEUE/64];
+
+	void init_render_args(){
 		ra_count = 0;
+		if (Qidx == -1){
+			Qidx = queue_alloc(w->Q);
+		}
+
+		for (auto& r : ecs::array<component::render_args>(w->ecs)) {
+			ra[ra_count++] = &r;
+			queue_set(w->Q, Qidx, r.queue_index, true);
+		}
+
+		queue_fetch(w->Q, Qidx, queuemasks);
+	}
+
+	void init(lua_State *L_, struct ecs_world *w_){
+		L = L_;
+		w = w_;
+		init_render_args();
 	}
 };
 
@@ -313,6 +328,21 @@ struct obj_submiter {
 			//ctx->w->bgfx->encoder_discard(w->holder->encoder, BGFX_DISCARD_ALL);
 		}
 
+	}
+
+	void collect(){
+		// draw simple objects
+		for (auto& e : ecs::select<component::render_object_visible, component::render_object>(ctx->w->ecs)) {
+			const component::indirect_object* io = e.component<component::indirect_object>();
+			const auto& ro = e.get<component::render_object>();
+
+		#ifdef RENDER_DEBUG
+			auto eid = e.component<component::eid>();(void)eid;
+			add(&ro, io, eid);
+		#else
+			add(&ro, io);
+		#endif //RENDER_DEBUG
+		}
 	}
 
 	void clear(){
@@ -397,11 +427,62 @@ struct hitch_submiter {
 		}
 	}
 
+	void collect_groups(){
+		for (auto e : ecs::select<component::hitch_visible, component::hitch, component::scene>(ctx->w->ecs)) {
+			const auto &h = e.get<component::hitch>();
+			for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
+				auto ra = ctx->ra[ii];
+				if (obj_visible(ctx->w->Q, h, ra->queue_index)){
+					const auto &s = e.get<component::scene>();
+					if (h.group != 0){
+						groups[h.group][ra->queue_index].emplace_back(s.worldmat);
+					}
+				}
+			}
+		}
+	}
+
+	void collect(){
+		collect_groups();
+		// draw object which hanging on hitch node
+		ecs::clear_type<component::efk_hitch>(ctx->w->ecs);
+		for (auto const& [groupid, g] : groups) {
+			int gids[] = {groupid};
+			ecs::group_enable<component::hitch_tag>(ctx->w->ecs, gids);
+
+			for (auto& e : ecs::select<component::hitch_tag>(ctx->w->ecs)) {
+				const auto io = e.component<component::indirect_object>();
+				if (!io){
+					const auto ro = e.component<component::render_object>();
+					const auto eo = e.component<component::efk_object>();
+					if (ro || eo){
+					#ifdef RENDER_DEBUG
+						auto eid = e.component<component::eid>();
+						add(ro, eo, &g, eid);
+					#else
+						add(ro, eo, &g);
+					#endif //RENDER_DEBUG
+					}
+				}
+			}
+		}
+	}
+
+	void clear_groups(){
+		for (auto &g : groups){
+			for (std::vector<math_t> &q : g.second){
+				q.clear();
+			}
+		}
+	}
+
 	void clear(){
+		clear_groups();
 		ctx = nullptr;
 		num = 0;
 	}
 
+	group_collection	groups;
 	submit_context *ctx = nullptr;
 	submit_hitch hitchs[MAX_SUBMIT_NUM];
 	uint16_t num = 0;
@@ -411,7 +492,6 @@ struct hitch_submiter {
 
 struct submit_cache{
 	obj_transforms	transforms;
-	group_collection	groups;
 
 	submit_context		ctx;
 	obj_submiter		obj;
@@ -428,23 +508,15 @@ struct submit_cache{
 	submit_stat stat;
 #endif //RENDER_DEBUG
 
-	void clear_groups(){
-		for (auto &g : groups){
-			for (std::vector<math_t> &q : g.second){
-				q.clear();
-			}
-		}
+	void init(lua_State *L, struct ecs_world *w){
+		ctx.init(L, w);
+		obj.ctx = hitch.ctx = &ctx;
 	}
 
 	void clear(){
-		ctx.clear();
 		transforms.clear();
-		clear_groups();
-
 		obj.clear();
 		hitch.clear();
-
-		obj.ctx = hitch.ctx = &ctx;
 
 #ifdef RENDER_DEBUG
 		memset(&stat, 0, sizeof(stat));
@@ -452,79 +524,19 @@ struct submit_cache{
 	}
 };
 
-static inline void
-find_render_args(struct ecs_world *w, submit_cache &cc) {
-	for (auto& r : ecs::array<component::render_args>(w->ecs)) {
-		cc.ctx.ra[cc.ctx.ra_count++] = &r;
-	}
-}
-
-static inline void
-build_hitch_info(struct ecs_world*w, submit_cache &cc){
-	for (auto e : ecs::select<component::hitch_visible, component::hitch, component::scene>(w->ecs)) {
-		const auto &h = e.get<component::hitch>();
-		for (uint8_t ii=0; ii<cc.ctx.ra_count; ++ii){
-			auto ra = cc.ctx.ra[ii];
-			if (obj_visible(w->Q, h, ra->queue_index)){
-				const auto &s = e.get<component::scene>();
-				if (h.group != 0){
-					cc.groups[h.group][ra->queue_index].emplace_back(s.worldmat);
-					#ifdef RENDER_DEBUG
-					++cc.stat.hitch_count;
-					#endif //RENDER_DEBUG
-				}
-			}
-		}
-	}
-}
-
 // static inline bool notdiscards(uint16_t viewid){
 // 	return viewid == 2 || viewid == 3 || viewid == 4 || viewid == 5 || viewid == 12;
 // }
 
 static inline void
 render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
-	// draw object which hanging on hitch node
-	ecs::clear_type<component::efk_hitch>(w->ecs);
-	for (auto const& [groupid, g] : cc.groups) {
-		int gids[] = {groupid};
-		ecs::group_enable<component::hitch_tag>(w->ecs, gids);
-
-		for (auto& e : ecs::select<component::hitch_tag>(w->ecs)) {
-			const auto io = e.component<component::indirect_object>();
-			if (!io){
-				const auto ro = e.component<component::render_object>();
-				const auto eo = e.component<component::efk_object>();
-				if (ro || eo){
-				#ifdef RENDER_DEBUG
-					auto eid = e.component<component::eid>();
-					cc.hitch.add(ro, eo, &g, eid);
-				#else
-					cc.hitch.add(ro, eo, &g);
-				#endif //RENDER_DEBUG
-				}
-			}
-		}
-	}
-
+	cc.hitch.collect();
 	cc.hitch.submit(cc.transforms);
 }
 
 static inline void
 render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
-	// draw simple objects
-	for (auto& e : ecs::select<component::render_object_visible, component::render_object>(w->ecs)) {
-		const component::indirect_object* io = e.component<component::indirect_object>();
-		const auto& ro = e.get<component::render_object>();
-
-	#ifdef RENDER_DEBUG
-		auto eid = e.component<component::eid>();(void)eid;
-		cc.obj.add(&ro, io, eid);
-	#else
-		cc.obj.add(&ro, io);
-	#endif //RENDER_DEBUG
-	}
-
+	cc.obj.collect();
 	cc.obj.submit(cc.transforms);
 }
 
@@ -534,11 +546,8 @@ static int
 lrender_submit(lua_State *L) {
 	auto w = getworld(L);
 	cc.clear();
-	cc.ctx.L = L;
-	cc.ctx.w = w;
+	cc.init(L, w);
 
-	find_render_args(w, cc);
-	build_hitch_info(w, cc);
 	render_submit(L, w, cc);
 	render_hitch_submit(L, w, cc);
 	

@@ -108,22 +108,34 @@ void queue_fetch(struct queue_container* Q, int Qidx, uint64_t *outmasks){
     return Q->fetch(Qidx, outmasks);
 }
 
+int
+queue_dealloc(struct queue_container* Q, int Qidx){
+    if (Q->isvalid(Qidx)){
+        Q->dealloc(Qidx);
+        return 1;
+    }
+    return 0;
+}
+
 static int
 lqueue_dealloc(lua_State *L){
     auto w = getworld(L);
     const int Qidx = (int)luaL_checkinteger(L, 1);
-    if (!w->Q->isvalid(Qidx)){
+    if (!queue_dealloc(w->Q, Qidx)){
         return luaL_error(L, "Invalid Qidx");
     }
-
-    w->Q->dealloc(Qidx);
 	return 0;
+}
+
+int
+queue_alloc(struct queue_container* Q){
+    return Q->alloc();
 }
 
 static int
 lqueue_alloc(lua_State *L){
     auto w = getworld(L);
-    lua_pushinteger(L, w->Q->alloc());
+    lua_pushinteger(L, queue_alloc(w->Q));
     return 1;
 }
 
