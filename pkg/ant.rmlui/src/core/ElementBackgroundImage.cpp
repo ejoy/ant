@@ -40,21 +40,6 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	return uv;
 }
 
-static auto GetSamplerFlag(Style::BackgroundRepeat v) {
-	switch (v) {
-	case Style::BackgroundRepeat::NoRepeat:
-		return SamplerFlag::Clamp;
-	case Style::BackgroundRepeat::Repeat:
-		return SamplerFlag::Repeat;
-	case Style::BackgroundRepeat::RepeatX:
-		return SamplerFlag::RepeatX;
-	case Style::BackgroundRepeat::RepeatY:
-		return SamplerFlag::RepeatY;
-	default:
-		std::unreachable();
-	}
-}
-
 bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image.Has<std::string>()) {
@@ -174,21 +159,21 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect uv = CalcUV(surface, background);
-	SamplerFlag flag = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
+	auto backgroundRepeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
 
-	if (flag == SamplerFlag::Repeat){
+	if (backgroundRepeat == Style::BackgroundRepeat::Repeat){
 		uv.size = uv.size / ( Size(texture.dimensions) / background.size);
 	}
-	else if (flag == SamplerFlag::RepeatX){
+	else if (backgroundRepeat == Style::BackgroundRepeat::RepeatX){
 		uv.size = uv.size / ( Size(texture.dimensions) / background.size);
 		background.size.h = background.size.h > texture.dimensions.h ? texture.dimensions.h : background.size.h;
 	}
-	else if (flag == SamplerFlag::RepeatY){
+	else if (backgroundRepeat == Style::BackgroundRepeat::RepeatY){
 		uv.size = uv.size / ( Size(texture.dimensions) / background.size);
 		background.size.w = background.size.w > texture.dimensions.w ? texture.dimensions.w : background.size.w;		
 	}
 
-	Material* material = GetRender()->CreateTextureMaterial(texture.handle, flag);
+	Material* material = GetRender()->CreateTextureMaterial(texture.handle, (SamplerFlag)backgroundRepeat);
 	geometry.SetMaterial(material);
 
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1).Get<PropertyFloat>().value / 100.0f;
@@ -216,16 +201,30 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 	else {
 		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
-			auto poly = geometry.ClipPolygon(edge.padding, background);
-			if (!poly.IsEmpty()) {
-				geometry.AddPolygon(poly, color);
-				geometry.UpdateUV(poly.points.size(), surface, uv);
+			if (backgroundRepeat == Style::BackgroundRepeat::NoRepeat) {
+				auto poly = geometry.ClipPolygon(edge.padding, background);
+				if (!poly.IsEmpty()) {
+					geometry.AddPolygon(poly, color);
+					geometry.UpdateUV(poly.points.size(), surface, uv);
+				}
+			}
+			else {
+				//TODO: optimization repeat-x/repeat-y
+				geometry.AddPolygon(edge.padding, color);
+				geometry.UpdateUV(edge.padding.points.size(), surface, uv);
 			}
 		}
 		else {
-			background.Inter(surface);
-			if (!background.IsEmpty()) {
-				geometry.AddRectFilled(background, color);
+			if (backgroundRepeat == Style::BackgroundRepeat::NoRepeat) {
+				background.Inter(surface);
+				if (!background.IsEmpty()) {
+					geometry.AddRectFilled(background, color);
+					geometry.UpdateUV(4, surface, uv);
+				}
+			}
+			else {
+				//TODO: optimization repeat-x/repeat-y
+				geometry.AddRectFilled(surface, color);
 				geometry.UpdateUV(4, surface, uv);
 			}
 		}
