@@ -114,6 +114,7 @@ ImEditBuf* editbuf_create(lua_State* L, int idx) {
         lua_seti(L, idx, 1);
     }
     auto ebuf = (ImEditBuf*)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
+    lua_pop(L, 1);
     ebuf->L = L;
     return ebuf;
 }
