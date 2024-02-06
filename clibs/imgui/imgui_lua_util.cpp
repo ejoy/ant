@@ -54,7 +54,7 @@ static void* strbuf_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize)
     return allocator(ud, ptr, osize, nsize);
 }
 
-static int strbuf_set(lua_State* L) {
+static int strbuf_assgin(lua_State* L) {
     auto sbuf = (strbuf*)lua_touserdata(L, 1);
     size_t newsize = 0;
     const char* newbuf = luaL_checklstring(L, 2, &newsize);
@@ -112,8 +112,8 @@ strbuf* strbuf_create(lua_State* L, int idx) {
         lua_pushcfunction(L, strbuf_release);
         lua_setfield(L, -2, "__gc");
         static luaL_Reg l[] = {
-            { "set", strbuf_set },
-            { "resize", strbuf_resize },
+            { "Assgin", strbuf_assgin },
+            { "Resize", strbuf_resize },
             { NULL, NULL },
         };
         luaL_newlib(L, l);

@@ -1038,6 +1038,13 @@ ImGui.Mod = {}
 ---@class ImFontRange
 
 ---@class ImStringBuf
+local ImStringBuf = {}
+
+---@param str string
+function ImStringBuf:Assgin(str) end
+
+---@param size integer
+function ImStringBuf:Resize(size) end
 
 ---@class ImVec2
 ---@field x number

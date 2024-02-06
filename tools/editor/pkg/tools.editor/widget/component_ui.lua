@@ -1,11 +1,10 @@
 local ImGui      = require "imgui"
 local ImGuiWidgets = require "imgui.widgets"
-local ImGuiLegacy = require "imgui.legacy"
 
 local compdefines=require "widget.component_defines"
 
 local PropertyLabel = ImGuiWidgets.PropertyLabel
-local InputText     = ImGuiLegacy.InputText
+local InputText     = ImGui.InputText
 local InputInt      = ImGui.InputInt
 local InputFloat    = ImGui.InputFloat
 local Checkbox      = ImGui.Checkbox
@@ -73,9 +72,9 @@ local function string_widget(name, comp, desc, updatevalue)
     if ll then
         list_combo(name, comp, ll, updatevalue)
     else
-        local value = {text=comp or ""}
+        local value = ImGui.StringBuf(comp or "")
         if InputText("##" .. name, value) then
-            updatevalue[name] = tostring(value.text)
+            updatevalue[name] = tostring(value)
         end
     end
     EndDisabled()

@@ -13,7 +13,6 @@ local assetmgr  = import_package "ant.asset"
 local ImGui     =  require "imgui"
 local icons     = require "common.icons"
 local logger    = require "widget.log"
-local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -134,7 +133,7 @@ local function from_runtime_event(runtime_event)
     for _, ev in ipairs(runtime_event) do
         for _, e in ipairs(ev.event_list) do
             if e.event_type == "Sound" or e.event_type == "Effect" or e.event_type == "Animation" then
-                e.asset_path_ui = {text = e.asset_path or ''}
+                e.asset_path_ui = ImGui.StringBuf(e.asset_path or '')
                 e.action_list, e.action_type_map = get_action_list(e.asset_path)
                 if e.event_type == "Animation" then
                     e.target_ui = {text = e.target or ''}
@@ -145,7 +144,7 @@ local function from_runtime_event(runtime_event)
                 end
             elseif e.event_type == "Message" then
                 e.msg_content = e.msg_content or ''
-                e.msg_content_ui = {text = e.msg_content}
+                e.msg_content_ui = ImGui.StringBuf(e.msg_content)
             end
         end
         ke[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
@@ -201,8 +200,8 @@ local function add_event(et)
         forwards_ui     = (et == "Animation") and {false} or nil,
         pause_frame_ui  = (et == "Animation") and {-1, min = -1, max = 300, speed = 1} or nil,
         msg_content     = (et == "Message") and '' or nil,
-        msg_content_ui  = (et == "Message") and {text = ''} or nil,
-        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and {text = ''} or nil,
+        msg_content_ui  = (et == "Message") and (ImGui.StringBuf "") or nil,
+        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and (ImGui.StringBuf "") or nil,
         target_ui       = (et == "Animation") and {text = ''} or nil
     }
     current_event = new_event
@@ -352,7 +351,7 @@ local function show_current_event()
         local action_list = {}
         if current_event.event_type == "Animation" then
             local function update_asset_path(asset_path)
-                current_event.asset_path = tostring(current_event.asset_path_ui.text)
+                current_event.asset_path = tostring(current_event.asset_path_ui)
                 current_event.action_list, current_event.action_type_map = get_action_list(asset_path)
                 current_event.action = nil
                 current_event.target = nil
@@ -360,15 +359,15 @@ local function show_current_event()
             if ImGui.Button("Modify") then
                 local localpath = uiutils.get_open_file_path("Modify Animation", "anim")
                 if localpath then
-                    current_event.asset_path_ui.text = access.virtualpath(global_data.repo, localpath)
-                    update_asset_path(tostring(current_event.asset_path_ui.text))
+                    current_event.asset_path_ui:Assgin(access.virtualpath(global_data.repo, localpath))
+                    update_asset_path(tostring(current_event.asset_path_ui))
                     dirty = true
                 end
             end
             if current_event.asset_path and #current_event.asset_path > 0 then
                 ImGuiWidgets.PropertyLabel("AssetPath")
-                if ImGuiLegacy.InputText("##AssetPath", current_event.asset_path_ui) then
-                    update_asset_path(tostring(current_event.asset_path_ui.text))
+                if ImGui.InputText("##AssetPath", current_event.asset_path_ui) then
+                    update_asset_path(tostring(current_event.asset_path_ui))
                     dirty = true
                 end
             end
@@ -416,8 +415,8 @@ local function show_current_event()
         end
     elseif current_event.event_type == "Message" then
         ImGuiWidgets.PropertyLabel("Content")
-        if ImGuiLegacy.InputText("##Content", current_event.msg_content_ui) then
-            current_event.msg_content = tostring(current_event.msg_content_ui.text)
+        if ImGui.InputText("##Content", current_event.msg_content_ui) then
+            current_event.msg_content = tostring(current_event.msg_content_ui)
             dirty = true
         end
     end
@@ -545,8 +544,8 @@ local function show_skeleton(b)
     joint_utils.show_skeleton = b
 end
 
-local anim_name_ui = {text = ''}
-local anim_path_ui = {text = ''}
+local anim_name_ui = ImGui.StringBuf ""
+local anim_path_ui = ImGui.StringBuf ""
 local event_keyframe = world:sub{"keyframe_event"}
 local effect_map = {}
 local current_timeline_id
@@ -654,29 +653,29 @@ function m.show()
             ImGui.SameLine()
             local title = "Add"
             if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
-                anim_name_ui.text = ''
-                anim_path_ui.text = ''
+                anim_name_ui:Assgin ""
+                anim_path_ui:Assgin ""
                 ImGui.OpenPopup(title)
             end
             local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags {"AlwaysAutoResize"})
             if change then
                 ImGui.Text("Anim Name:")
                 ImGui.SameLine()
-                ImGuiLegacy.InputText("##AnimName", anim_name_ui)
+                ImGui.InputText("##AnimName", anim_name_ui)
                 ImGui.Text("Anim Path:")
                 ImGui.SameLine()
-                ImGuiLegacy.InputText("##AnimPath", anim_path_ui)
+                ImGui.InputText("##AnimPath", anim_path_ui)
                 ImGui.SameLine()
                 if ImGui.Button("...") then
                     local localpath = uiutils.get_open_file_path("Select Animation", "anim")
                     if localpath then
-                        anim_path_ui.text = access.virtualpath(global_data.repo, localpath)
+                        anim_path_ui:Assgin(access.virtualpath(global_data.repo, localpath))
                     end
                 end
                 ImGui.Separator()
                 if ImGui.Button(faicons.ICON_FA_CHECK.."  OK  ") then
-                    local anim_name = tostring(anim_name_ui.text)
-                    local anim_path = tostring(anim_path_ui.text)
+                    local anim_name = tostring(anim_name_ui)
+                    local anim_path = tostring(anim_path_ui)
                     if #anim_name > 0 and #anim_path > 0 then
                         local update = true
                         local e <close> = world:entity(anim_eid, "animation:in")

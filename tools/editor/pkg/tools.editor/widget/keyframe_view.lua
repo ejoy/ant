@@ -10,7 +10,6 @@ local gizmo     = ecs.require "gizmo.gizmo"
 local assetmgr  = import_package "ant.asset"
 local aio       = import_package "ant.io"
 local ImGui     = require "imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local stringify = import_package "ant.serialize".stringify
 local serialize = import_package "ant.serialize"
 local mathpkg	= import_package "ant.math"
@@ -784,7 +783,7 @@ end
 
 local anim_name = ""
 local anim_duration = 30
-local anim_name_ui = {text = ""}
+local anim_name_ui = ImGui.StringBuf()
 local duration_ui = {30, speed = 1, min = 1}
 local new_anim_widget = false
 
@@ -871,8 +870,8 @@ local function ShowNewAnimationUI()
     if change then
         ImGui.Text("Name:")
         ImGui.SameLine()
-        if ImGuiLegacy.InputText("##Name", anim_name_ui) then
-            anim_name = tostring(anim_name_ui.text)
+        if ImGui.InputText("##Name", anim_name_ui) then
+            anim_name = tostring(anim_name_ui)
         end
         ImGui.Text("Duration:")
         ImGui.SameLine()

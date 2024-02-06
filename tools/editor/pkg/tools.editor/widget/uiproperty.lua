@@ -1,5 +1,4 @@
 local ImGui     = require "imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local ImGuiWidgets = require "imgui.widgets"
 local assetmgr  = import_package "ant.asset"
 local aio  = import_package "ant.io"
@@ -183,15 +182,15 @@ local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
-    self.uidata.text = ""
+    self.uidata.text = ImGui.StringBuf ""
 end
 
 function EditText:widget()
     if self.readonly then
-        return ImGui.Text(self.uidata.text)
+        return ImGui.Text(tostring(self.uidata.text))
     else
         -- it will change self.uidata.text as userdata
-        return ImGuiLegacy.InputText(self:get_label(), self.uidata)
+        return ImGui.InputText(self:get_label(), self.uidata.text)
     end
 end
 
@@ -200,7 +199,7 @@ function EditText:update()
 end
 
 function EditText:value()
-    return tostring(self.uidata.text)   -- self.uidata.text maybe userdata from c
+    return tostring(self.uidata.text)
 end
 
 function EditText:show()
@@ -291,10 +290,10 @@ function TextureResource:do_update()
     end
     self.runtimedata = assetmgr.resource(self.path)
     if not self.uidata2 then
-        self.uidata2 = {text = ""}
+        self.uidata2 = ImGui.StringBuf(self.metadata.path)
+    else
+        self.uidata2:Assgin(self.metadata.path)
     end
-    self.uidata2.text = self.metadata.path
-    local s = self.runtimedata.sampler
 end
 
 function TextureResource:update()
@@ -317,7 +316,7 @@ local selected_file
 
 function TextureResource:set_file(path)
     self.metadata.path = path
-    self.uidata2.text = self.metadata.path
+    self.uidata2:Assgin(self.metadata.path)
     if string.sub(path, -4) ~= ".dds" then
         local t = assetmgr.resource(path, { compile = true })
         self.runtimedata._data.handle = t.handle
@@ -340,7 +339,7 @@ function TextureResource:show()
         end
         ImGui.TableNextColumn()
         ImGui.PushItemWidth(-1)
-        ImGuiLegacy.InputText("##" .. self.metadata.path .. self.label, self.uidata2)
+        ImGui.InputText("##" .. self.metadata.path .. self.label, self.uidata2)
         ImGui.PopItemWidth()
         if ImGui.BeginDragDropTarget() then
             local payload = ImGui.AcceptDragDropPayload("DragFile")

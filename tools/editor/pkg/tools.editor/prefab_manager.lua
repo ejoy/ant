@@ -29,9 +29,7 @@ local utils         = require "common.utils"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "bee.filesystem"
-local ImGuiLegacy   = require "imgui.legacy"
 local fastio        = require "fastio"
-local bgfx          = require "bgfx"
 local vfs           = require "vfs"
 local global_data   = require "common.global_data"
 local access        = global_data.repo_access
@@ -421,7 +419,7 @@ function m:on_prefab_ready(prefab)
     world:pub {"LookAtTarget", self.entities[1]}
 end
 
-local prefabe_name_ui = {text = ""}
+local prefabe_name_ui = ImGui.StringBuf()
 local prefab_list = {}
 local patch_template
 local faicons   = require "common.fa_icons"
@@ -429,7 +427,7 @@ local function reset_open_context()
     gd.glb_filename = nil
     gd.is_opening = false
     prefab_list = {}
-    prefabe_name_ui = {text = ""}
+    prefabe_name_ui:Assgin ""
 end
 
 local function get_prefabs_and_patch_template(glbfilename)
@@ -467,10 +465,10 @@ function m:choose_prefab()
             ImGui.Text("Create new or open existing prefab.")
             ImGui.Text("prefab name:  ")
             ImGui.SameLine()
-            ImGuiLegacy.InputText("##PrefabName", prefabe_name_ui)
+            ImGui.InputText("##PrefabName", prefabe_name_ui)
             ImGui.SameLine()
             if ImGui.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
-                local name = tostring(prefabe_name_ui.text)
+                local name = tostring(prefabe_name_ui)
                 if #name > 0 then
                     local existing = false
                     for _, value in ipairs(prefab_list) do
@@ -481,7 +479,7 @@ function m:choose_prefab()
                     end
                     if not existing then
                         prefab_list[#prefab_list + 1] = name..".prefab"
-                        prefabe_name_ui.text = ""
+                        prefabe_name_ui:Assgin ""
                         local insert_index = 1
                         for index, value in ipairs(patch_template) do
                             insert_index = index

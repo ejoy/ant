@@ -514,17 +514,24 @@ local function write_func(func_meta)
 end
 
 local function write_structs(struct_funcs)
-    writeln("---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod")
+    writeln "---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod"
     writeln ""
-    writeln("---@alias ImTextureID integer")
+    writeln "---@alias ImTextureID integer"
     writeln ""
-    writeln("---@alias ImGuiID integer")
+    writeln "---@alias ImGuiID integer"
     writeln ""
-    writeln("---@class ImFont")
+    writeln "---@class ImFont"
     writeln ""
-    writeln("---@class ImFontRange")
+    writeln "---@class ImFontRange"
     writeln ""
-    writeln("---@class ImStringBuf")
+    writeln "---@class ImStringBuf"
+    writeln "local ImStringBuf = {}"
+    writeln ""
+    writeln "---@param str string"
+    writeln "function ImStringBuf:Assgin(str) end"
+    writeln ""
+    writeln "---@param size integer"
+    writeln "function ImStringBuf:Resize(size) end"
     writeln ""
     local lst <const> = {
         "ImVec2",

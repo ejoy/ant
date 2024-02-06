@@ -10,7 +10,6 @@ local utils     = require "common.utils"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
 local global_data = require "common.global_data"
-local ImGuiLegacy = require "imgui.legacy"
 local editor_setting=require "editor_setting"
 
 local m = {
@@ -121,7 +120,7 @@ function m.update_resource_tree(hiden_engine_res)
 end
 
 local renaming = false
-local new_filename = {text = "noname"}
+local new_filename = ImGui.StringBuf "noname"
 local function rename_file(file)
     if not renaming then return end
 
@@ -133,10 +132,10 @@ local function rename_file(file)
     if change then
         ImGui.Text("new name :")
         ImGui.SameLine()
-        ImGuiLegacy.InputText("##NewName", new_filename)
+        ImGui.InputText("##NewName", new_filename)
         ImGui.SameLine()
         if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
-            lfs.rename(file:localpath(), file:parent_path():localpath() / tostring(new_filename.text))
+            lfs.rename(file:localpath(), file:parent_path():localpath() / tostring(new_filename))
             renaming = false
         end
         ImGui.SameLine()
@@ -154,7 +153,7 @@ local function ShowContextMenu()
         end
         if ImGui.MenuItemEx(faicons.ICON_FA_PEN.." Rename", "F2") then
             renaming = true
-            new_filename.text = tostring(selected_file:filename())
+            new_filename:Assgin(tostring(selected_file:filename()))
         end
         ImGui.Separator()
         if ImGui.MenuItemEx(faicons.ICON_FA_TRASH.." Delete", "Delete") then
