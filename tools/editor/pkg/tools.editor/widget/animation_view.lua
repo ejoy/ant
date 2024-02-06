@@ -200,8 +200,8 @@ local function add_event(et)
         forwards_ui     = (et == "Animation") and {false} or nil,
         pause_frame_ui  = (et == "Animation") and {-1, min = -1, max = 300, speed = 1} or nil,
         msg_content     = (et == "Message") and '' or nil,
-        msg_content_ui  = (et == "Message") and (ImGui.StringBuf "") or nil,
-        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and (ImGui.StringBuf "") or nil,
+        msg_content_ui  = (et == "Message") and (ImGui.StringBuf()) or nil,
+        asset_path_ui   = (et == "Effect" or et == "Sound" or et == "Animation") and (ImGui.StringBuf()) or nil,
         target_ui       = (et == "Animation") and {text = ''} or nil
     }
     current_event = new_event
@@ -544,8 +544,8 @@ local function show_skeleton(b)
     joint_utils.show_skeleton = b
 end
 
-local anim_name_ui = ImGui.StringBuf ""
-local anim_path_ui = ImGui.StringBuf ""
+local anim_name_ui = ImGui.StringBuf()
+local anim_path_ui = ImGui.StringBuf()
 local event_keyframe = world:sub{"keyframe_event"}
 local effect_map = {}
 local current_timeline_id

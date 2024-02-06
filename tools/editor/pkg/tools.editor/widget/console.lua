@@ -1,5 +1,4 @@
 local ImGui     = require "imgui"
-local ImGuiLegacy = require "imgui.legacy"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
@@ -15,41 +14,8 @@ end
 
 local command_queue = {}
 local history_pos = -1
-local console = {
-    text = "",
-    flags = ImGui.InputTextFlags {"EnterReturnsTrue", "CallbackCompletion", "CallbackHistory"},
-    up = function()
-            if #command_queue < 1 then return "" end
 
-            local prev_history_pos = history_pos
-            if history_pos == -1 then
-                history_pos = #command_queue - 1
-            elseif history_pos > 0 then
-                history_pos = history_pos - 1
-            end
-            if prev_history_pos ~= history_pos then
-                return (history_pos >= 0) and command_queue[history_pos + 1] or ""
-            else
-                return nil
-            end
-        end,
-    down = function()
-            if #command_queue < 1 then return "" end
-
-            local prev_history_pos = history_pos
-            if history_pos ~= -1 then
-                history_pos = history_pos + 1
-                if history_pos >= #command_queue then
-                    history_pos = -1
-                end
-            end
-            if prev_history_pos ~= history_pos then
-                return (history_pos >= 0) and command_queue[history_pos + 1] or ""
-            else
-                return nil
-            end
-        end
-}
+local console = ImGui.StringBuf()
 
 local function exec_command(command)
     history_pos = -1
@@ -81,11 +47,13 @@ local function show_input()
     ImGui.SameLine()
     local reclaim_focus = false
     ImGui.PushItemWidth(-1)
-    if ImGuiLegacy.InputText("##SingleLineInput", console) then
-        local command = tostring(console.text)
+    --TODO
+    --local flags = ImGui.InputTextFlags {"EnterReturnsTrue", "CallbackCompletion", "CallbackHistory"}
+    if ImGui.InputText("##SingleLineInput", console, ImGui.InputTextFlags { "EnterReturnsTrue" }) then
+        local command = tostring(console)
         if command ~= "" then
             exec_command(command)
-            console.text = ""
+            console:Assgin ""
         end
         reclaim_focus = true
     end

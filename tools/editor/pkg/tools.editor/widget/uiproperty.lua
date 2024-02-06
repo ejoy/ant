@@ -182,7 +182,7 @@ local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
-    self.uidata.text = ImGui.StringBuf ""
+    self.uidata.text = ImGui.StringBuf()
 end
 
 function EditText:widget()

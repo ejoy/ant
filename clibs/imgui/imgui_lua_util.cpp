@@ -102,7 +102,7 @@ strbuf* strbuf_create(lua_State* L, int idx) {
         sbuf->data = (char *)strbuf_realloc(L, NULL, 0, sbuf->size);
         sbuf->data[0] = '\0';
     } else {
-        sbuf->size = (std::min)(sz + 1, kStrBufMinSize);
+        sbuf->size = (std::max)(sz + 1, kStrBufMinSize);
         sbuf->data = (char *)strbuf_realloc(L, NULL, 0, sbuf->size);
         memcpy(sbuf->data, text, sz + 1);
     }
