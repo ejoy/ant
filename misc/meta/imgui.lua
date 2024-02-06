@@ -1037,6 +1037,8 @@ ImGui.Mod = {}
 
 ---@class ImFontRange
 
+---@class ImEditBuf
+
 ---@class ImVec2
 ---@field x number
 ---@field y number
@@ -1464,6 +1466,36 @@ function ImFontAtlas.AddCustomRectRegular(width, height) end
 ---@param offset_y? number | `0`
 ---@return integer
 function ImFontAtlas.AddCustomRectFontGlyph(font, id, width, height, advance_x, offset_x, offset_y) end
+
+
+---@class ImGuiInputTextCallbackData
+---@field EventFlag ImGui.InputTextFlags#  One ImGuiInputTextFlags_Callback*    // Read-only
+---@field Flags ImGui.InputTextFlags    #  What user passed to InputText()      // Read-only
+---@field UserData lightuserdata        #  What user passed to InputText()      // Read-only
+---@field EventChar integer             #  Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
+---@field EventKey ImGui.Key            #  Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
+---@field BufTextLen integer            #  Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
+---@field BufSize integer               #  Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
+---@field BufDirty boolean              #  Set if you modify Buf/BufTextLen!    // Write        // [Completion,History,Always]
+---@field CursorPos integer             #                                       // Read-write   // [Completion,History,Always]
+---@field SelectionStart integer        #                                       // Read-write   // [Completion,History,Always] == to SelectionEnd when no selection)
+---@field SelectionEnd integer          #                                       // Read-write   // [Completion,History,Always]
+local ImGuiInputTextCallbackData = {}
+---@param pos integer
+---@param bytes_count integer
+function ImGuiInputTextCallbackData.DeleteChars(pos, bytes_count) end
+
+---@param pos integer
+---@param text string
+---@param text_end? string
+function ImGuiInputTextCallbackData.InsertChars(pos, text, text_end) end
+
+function ImGuiInputTextCallbackData.SelectAll() end
+
+function ImGuiInputTextCallbackData.ClearSelection() end
+
+---@return boolean
+function ImGuiInputTextCallbackData.HasSelection() end
 
 
 ---@return userdata
@@ -2934,6 +2966,62 @@ function ImGui.VSliderInt(label, size_x, size_y, v, v_min, v_max) end
 ---@param flags? ImGui.SliderFlags | `ImGui.SliderFlags { "None" }`
 ---@return boolean
 function ImGui.VSliderIntEx(label, size_x, size_y, v, v_min, v_max, format, flags) end
+
+--
+-- Widgets: Input with Keyboard
+-- - If you want to use InputText() with std::string or any custom dynamic string type, see misc/cpp/imgui_stdlib.h and comments in imgui_demo.cpp.
+-- - Most of the ImGuiInputTextFlags flags are only useful for InputText() and not for InputFloatX, InputIntX, InputDouble etc.
+--
+--
+-- Implied callback = NULL, user_data = NULL
+--
+---@param label string
+---@param buf ImEditBuf[] | string[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputText(label, buf, flags) end
+
+---@param label string
+---@param buf ImEditBuf[] | string[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@param user_data lightuserdata
+---@return boolean
+function ImGui.InputTextEx(label, buf, flags, user_data) end
+
+--
+-- Implied size = ImVec2(0, 0), flags = 0, callback = NULL, user_data = NULL
+--
+---@param label string
+---@param buf ImEditBuf[] | string[]
+---@return boolean
+function ImGui.InputTextMultiline(label, buf) end
+
+---@param label string
+---@param buf ImEditBuf[] | string[]
+---@param size_x? number | `0`
+---@param size_y? number | `0`
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@param user_data lightuserdata
+---@return boolean
+function ImGui.InputTextMultilineEx(label, buf, size_x, size_y, flags, user_data) end
+
+--
+-- Implied callback = NULL, user_data = NULL
+--
+---@param label string
+---@param hint string
+---@param buf ImEditBuf[] | string[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@return boolean
+function ImGui.InputTextWithHint(label, hint, buf, flags) end
+
+---@param label string
+---@param hint string
+---@param buf ImEditBuf[] | string[]
+---@param flags? ImGui.InputTextFlags | `ImGui.InputTextFlags { "None" }`
+---@param user_data lightuserdata
+---@return boolean
+function ImGui.InputTextWithHintEx(label, hint, buf, flags, user_data) end
 
 --
 -- Implied step = 0.0f, step_fast = 0.0f, format = "%.3f", flags = 0

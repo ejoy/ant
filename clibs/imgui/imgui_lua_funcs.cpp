@@ -722,16 +722,19 @@ static util::TableInteger Mod[] = {
 #undef ENUM
 
 namespace wrap_ImGuiViewport {
-    static void const_pointer(lua_State* L, ImGuiViewport& v);
+    void const_pointer(lua_State* L, ImGuiViewport& v);
 }
 namespace wrap_ImGuiIO {
-    static void pointer(lua_State* L, ImGuiIO& v);
+    void pointer(lua_State* L, ImGuiIO& v);
 }
 namespace wrap_ImFontConfig {
-    static void pointer(lua_State* L, ImFontConfig& v);
+    void pointer(lua_State* L, ImFontConfig& v);
 }
 namespace wrap_ImFontAtlas {
-    static void const_pointer(lua_State* L, ImFontAtlas& v);
+    void const_pointer(lua_State* L, ImFontAtlas& v);
+}
+namespace wrap_ImGuiInputTextCallbackData {
+    void pointer(lua_State* L, ImGuiInputTextCallbackData& v);
 }
 
 static int FontConfig(lua_State* L) {
@@ -2832,6 +2835,83 @@ static int VSliderIntEx(lua_State* L) {
     return 1;
 }
 
+static int InputText(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _ebuf = util::editbuf_create(L, 2);
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
+    auto&& _retval = ImGui::InputText(label, _ebuf->buf, _ebuf->size, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int InputTextEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _ebuf = util::editbuf_create(L, 2);
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiInputTextFlags_None));
+    _ebuf->callback = 4;
+    auto _top = lua_gettop(L);
+    auto&& _retval = ImGui::InputText(label, _ebuf->buf, _ebuf->size, flags, util::editbuf_callback, _ebuf);
+    lua_pushboolean(L, _retval);
+    if (lua_gettop(L) != _top + 1) {
+        lua_pop(L, 1);
+        lua_error(L);
+    }
+    return 1;
+}
+
+static int InputTextMultiline(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _ebuf = util::editbuf_create(L, 2);
+    auto&& _retval = ImGui::InputTextMultiline(label, _ebuf->buf, _ebuf->size);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int InputTextMultilineEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto _ebuf = util::editbuf_create(L, 2);
+    auto size = ImVec2 {
+        (float)luaL_optnumber(L, 3, 0),
+        (float)luaL_optnumber(L, 4, 0),
+    };
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 5, lua_Integer(ImGuiInputTextFlags_None));
+    _ebuf->callback = 6;
+    auto _top = lua_gettop(L);
+    auto&& _retval = ImGui::InputTextMultiline(label, _ebuf->buf, _ebuf->size, size, flags, util::editbuf_callback, _ebuf);
+    lua_pushboolean(L, _retval);
+    if (lua_gettop(L) != _top + 1) {
+        lua_pop(L, 1);
+        lua_error(L);
+    }
+    return 1;
+}
+
+static int InputTextWithHint(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto hint = luaL_checkstring(L, 2);
+    auto _ebuf = util::editbuf_create(L, 3);
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
+    auto&& _retval = ImGui::InputTextWithHint(label, hint, _ebuf->buf, _ebuf->size, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int InputTextWithHintEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto hint = luaL_checkstring(L, 2);
+    auto _ebuf = util::editbuf_create(L, 3);
+    auto flags = (ImGuiInputTextFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiInputTextFlags_None));
+    _ebuf->callback = 5;
+    auto _top = lua_gettop(L);
+    auto&& _retval = ImGui::InputTextWithHint(label, hint, _ebuf->buf, _ebuf->size, flags, util::editbuf_callback, _ebuf);
+    lua_pushboolean(L, _retval);
+    if (lua_gettop(L) != _top + 1) {
+        lua_pop(L, 1);
+        lua_error(L);
+    }
+    return 1;
+}
+
 static int InputFloat(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     luaL_checktype(L, 2, LUA_TTABLE);
@@ -4621,7 +4701,7 @@ static luaL_Reg getters[] = {
 
 static int tag_const_pointer = 0;
 
-static void const_pointer(lua_State* L, ImGuiViewport& v) {
+void const_pointer(lua_State* L, ImGuiViewport& v) {
     lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
     auto** ptr = (ImGuiViewport**)lua_touserdata(L, -1);
     *ptr = &v;
@@ -5935,7 +6015,7 @@ static luaL_Reg getters[] = {
 
 static int tag_pointer = 0;
 
-static void pointer(lua_State* L, ImGuiIO& v) {
+void pointer(lua_State* L, ImGuiIO& v) {
     lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
     auto** ptr = (ImGuiIO**)lua_touserdata(L, -1);
     *ptr = &v;
@@ -6241,7 +6321,7 @@ static luaL_Reg getters[] = {
 
 static int tag_pointer = 0;
 
-static void pointer(lua_State* L, ImFontConfig& v) {
+void pointer(lua_State* L, ImFontConfig& v) {
     lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
     auto** ptr = (ImFontConfig**)lua_touserdata(L, -1);
     *ptr = &v;
@@ -6646,7 +6726,7 @@ static luaL_Reg getters[] = {
 
 static int tag_const_pointer = 0;
 
-static void const_pointer(lua_State* L, ImFontAtlas& v) {
+void const_pointer(lua_State* L, ImFontAtlas& v) {
     lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
     auto** ptr = (ImFontAtlas**)lua_touserdata(L, -1);
     *ptr = &v;
@@ -6659,7 +6739,251 @@ static void init(lua_State* L) {
 
 }
 
-void init(lua_State* L) {
+namespace wrap_ImGuiInputTextCallbackData {
+
+static int DeleteChars(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    auto pos = (int)luaL_checkinteger(L, 1);
+    auto bytes_count = (int)luaL_checkinteger(L, 2);
+    OBJ.DeleteChars(pos, bytes_count);
+    return 0;
+}
+
+static int InsertChars(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    auto pos = (int)luaL_checkinteger(L, 1);
+    auto text = luaL_checkstring(L, 2);
+    auto text_end = luaL_optstring(L, 3, NULL);
+    OBJ.InsertChars(pos, text, text_end);
+    return 0;
+}
+
+static int SelectAll(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.SelectAll();
+    return 0;
+}
+
+static int ClearSelection(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearSelection();
+    return 0;
+}
+
+static int HasSelection(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.HasSelection();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+struct EventFlag {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EventFlag);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EventFlag = (ImGuiInputTextFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct Flags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.Flags);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Flags = (ImGuiInputTextFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct UserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.UserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.UserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct EventChar {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EventChar);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EventChar = (ImWchar)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct EventKey {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EventKey);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EventKey = (ImGuiKey)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BufTextLen {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.BufTextLen);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BufTextLen = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BufSize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.BufSize);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BufSize = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BufDirty {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.BufDirty);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BufDirty = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct CursorPos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.CursorPos);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.CursorPos = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct SelectionStart {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.SelectionStart);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.SelectionStart = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct SelectionEnd {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.SelectionEnd);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.SelectionEnd = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg funcs[] = {
+    { "DeleteChars", DeleteChars },
+    { "InsertChars", InsertChars },
+    { "SelectAll", SelectAll },
+    { "ClearSelection", ClearSelection },
+    { "HasSelection", HasSelection },
+};
+
+static luaL_Reg setters[] = {
+    { "EventFlag", EventFlag::setter },
+    { "Flags", Flags::setter },
+    { "UserData", UserData::setter },
+    { "EventChar", EventChar::setter },
+    { "EventKey", EventKey::setter },
+    { "BufTextLen", BufTextLen::setter },
+    { "BufSize", BufSize::setter },
+    { "BufDirty", BufDirty::setter },
+    { "CursorPos", CursorPos::setter },
+    { "SelectionStart", SelectionStart::setter },
+    { "SelectionEnd", SelectionEnd::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "EventFlag", EventFlag::getter },
+    { "Flags", Flags::getter },
+    { "UserData", UserData::getter },
+    { "EventChar", EventChar::getter },
+    { "EventKey", EventKey::getter },
+    { "BufTextLen", BufTextLen::getter },
+    { "BufSize", BufSize::getter },
+    { "BufDirty", BufDirty::getter },
+    { "CursorPos", CursorPos::getter },
+    { "SelectionStart", SelectionStart::getter },
+    { "SelectionEnd", SelectionEnd::getter },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiInputTextCallbackData& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiInputTextCallbackData**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiInputTextCallbackData", funcs, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
+static void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "FontConfig", FontConfig },
         { "CreateContext", CreateContext },
@@ -6847,6 +7171,12 @@ void init(lua_State* L) {
         { "VSliderFloatEx", VSliderFloatEx },
         { "VSliderInt", VSliderInt },
         { "VSliderIntEx", VSliderIntEx },
+        { "InputText", InputText },
+        { "InputTextEx", InputTextEx },
+        { "InputTextMultiline", InputTextMultiline },
+        { "InputTextMultilineEx", InputTextMultilineEx },
+        { "InputTextWithHint", InputTextWithHint },
+        { "InputTextWithHintEx", InputTextWithHintEx },
         { "InputFloat", InputFloat },
         { "InputFloatEx", InputFloatEx },
         { "InputFloat2", InputFloat2 },
@@ -7097,6 +7427,7 @@ void init(lua_State* L) {
     wrap_ImGuiIO::init(L);
     wrap_ImFontConfig::init(L);
     wrap_ImFontAtlas::init(L);
+    wrap_ImGuiInputTextCallbackData::init(L);
 }
 }
 
