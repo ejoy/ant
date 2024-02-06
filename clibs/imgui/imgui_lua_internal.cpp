@@ -1,11 +1,10 @@
 #include <lua.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <cstdint>
 
 static int dDockBuilderGetCentralRect(lua_State * L) {
-    const char* str_id = luaL_checkstring(L, 1);
-    ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
+    auto node_id = (ImGuiID)luaL_checkinteger(L, 1);
+    ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(node_id);
     lua_pushnumber(L, central_node->Pos.x);
     lua_pushnumber(L, central_node->Pos.y);
     lua_pushnumber(L, central_node->Size.x);
@@ -14,7 +13,7 @@ static int dDockBuilderGetCentralRect(lua_State * L) {
 }
 
 extern "C"
-int luaopen_imgui_legacy(lua_State *L) {
+int luaopen_imgui_internal(lua_State *L) {
     lua_newtable(L);
     luaL_Reg l[] = {
         { "DockBuilderGetCentralRect", dDockBuilderGetCentralRect },

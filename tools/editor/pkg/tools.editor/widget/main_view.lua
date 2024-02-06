@@ -8,7 +8,7 @@ local mu        = mathpkg.util
 local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local ImGui = require "imgui"
-local ImGuiLegacy = require "imgui.legacy"
+local ImGuiInternal = require "imgui.internal"
 local irq   = ecs.require "ant.render|render_system.renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 
@@ -69,12 +69,13 @@ function m.show()
         "NoNavFocus",
         "NoBackground",
     }) then
-        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.DockNodeFlags {
+        local node_id = ImGui.GetID "MainViewSpace"
+        ImGui.DockSpaceEx(node_id, 0, 0, ImGui.DockNodeFlags {
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })
         --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
-        local x, y, ww, hh = ImGuiLegacy.DockBuilderGetCentralRect "MainViewSpace"
+        local x, y, ww, hh = ImGuiInternal.DockBuilderGetCentralRect(node_id)
         x, y = x - viewport.Pos.x, y - viewport.Pos.y
         local vp = iviewport.device_size
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then

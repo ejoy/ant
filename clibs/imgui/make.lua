@@ -103,7 +103,7 @@ lm:lua_source "imgui" {
         "imgui_lua_funcs.cpp",
         "imgui_lua_util.cpp",
         "imgui_lua_backend.cpp",
-        "imgui_lua_legacy.cpp",
+        "imgui_lua_internal.cpp",
     },
     defines = {
         defines,

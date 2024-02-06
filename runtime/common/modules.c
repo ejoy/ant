@@ -34,7 +34,7 @@ int luaopen_httpc(lua_State *L);
 int luaopen_image(lua_State* L);
 int luaopen_imgui(lua_State* L);
 int luaopen_imgui_backend(lua_State* L);
-int luaopen_imgui_legacy(lua_State* L);
+int luaopen_imgui_internal(lua_State* L);
 int luaopen_imgui_widgets(lua_State* L);
 int luaopen_ios(lua_State* L);
 int luaopen_ltask(lua_State* L);
@@ -126,7 +126,7 @@ void ant_loadmodules(lua_State* L) {
         { "image", luaopen_image },
         { "imgui", luaopen_imgui },
         { "imgui.backend", luaopen_imgui_backend },
-        { "imgui.legacy", luaopen_imgui_legacy },
+        { "imgui.internal", luaopen_imgui_internal },
         { "imgui.widgets", luaopen_imgui_widgets },
 		{ "cell.core", luaopen_cell_core },
 #if BX_PLATFORM_IOS
