@@ -1,4 +1,4 @@
-local BlackList <const> = {
+local TodoFunction <const> = {
     ImGui_GetCurrentContext = true,
     ImGui_SetCurrentContext = true,
     ImGui_GetStyle = true,
@@ -79,9 +79,7 @@ local BlackList <const> = {
 
     ImGui_ColorConvertRGBtoHSV = true,
     ImGui_ColorConvertHSVtoRGB = true,
-}
 
-local TodoList <const> = {
     ImGui_TableGetSortSpecs = true,
     ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
@@ -137,14 +135,24 @@ local TodoList <const> = {
     ImFontAtlas_GetCustomRectByIndex = true,
 }
 
-local TodoClass <const> = {
+local IgnoreStruct <const> = {
+    ImVec2 = true,
+    ImVec4 = true,
+    __anonymous_type0 = true,
+}
+
+local TodoStruct <const> = {
     ImFont = true,
+    ImFontGlyph = true,
     ImFontGlyphRangesBuilder = true,
     ImFontAtlasCustomRect = true,
+    ImFontBuilderIO = true,
+    ImGuiContext = true,
     ImDrawData = true,
     ImDrawList = true,
     ImDrawCmd = true,
     ImDrawListSplitter = true,
+    ImDrawListSharedData = true,
     ImGuiTextBuffer = true,
     ImGuiTextFilter = true,
     ImGuiTextFilter_ImGuiTextRange = true,
@@ -152,7 +160,46 @@ local TodoClass <const> = {
     ImGuiPayload = true,
     ImGuiStorage = true,
     ImGuiStyle = true,
+    ImGuiTableSortSpecs = true,
+    ImDrawVert = true,
+    ImDrawCmdHeader = true,
+    ImDrawChannel = true,
     ImColor = true,
+    ImGuiPlatformIO = true,
+    ImGuiPlatformMonitor = true,
+    ImGuiPlatformImeData = true,
+    ImGuiTableColumnSortSpecs = true,
+    ImGuiKeyData = true,
+    ImGuiSizeCallbackData = true,
+    ImGuiWindowClass = true,
+    ImGuiStorage_ImGuiStoragePair = true,
+}
+
+local TodoType <const> = {
+    ImTextureID = true,
+    ImGuiKeyChord = true,
+}
+
+local BuiltinType <const> = {
+    ["signed char"] = "integer",
+    ["unsigned char"] = "integer",
+    ["signed short"] = "integer",
+    ["unsigned short"] = "integer",
+    ["signed int"] = "integer",
+    ["unsigned int"] = "integer",
+    ["signed long long"] = "integer",
+    ["unsigned long long"] = "integer",
+}
+
+local Readonly <const> = {
+    ImGuiViewport = true,
+    ImFontAtlas = true,
+}
+
+local Marcos <const> = {
+    IMGUI_DISABLE_OBSOLETE_KEYIO = true,
+    IMGUI_DISABLE_OBSOLETE_FUNCTIONS = true,
+    IMGUI_USE_WCHAR32 = true,
 }
 
 local function conditionals(t)
@@ -163,26 +210,20 @@ local function conditionals(t)
     assert(#cond == 1)
     cond = cond[1]
     if cond.condition == "ifndef" then
-        cond = cond.expression
-        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
+        if Marcos[cond.expression] then
             return
         end
-        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
-            return
-        end
+        return true
     elseif cond.condition == "ifdef" then
-        cond = cond.expression
-        if cond == "IMGUI_DISABLE_OBSOLETE_KEYIO" then
+        if Marcos[cond.expression] then
             return true
         end
-        if cond == "IMGUI_DISABLE_OBSOLETE_FUNCTIONS" then
-            return true
-        end
+        return
     end
     assert(false, t.name)
 end
 
-local function allow(func_meta)
+local function allow_function(func_meta)
     if func_meta.is_internal then
         return
     end
@@ -192,19 +233,41 @@ local function allow(func_meta)
     if not conditionals(func_meta) then
         return
     end
-    if BlackList[func_meta.name] then
+    if TodoFunction[func_meta.name] then
         return
-    end
-    if TodoList[func_meta.name] then
-        return
-    end
-    if func_meta.original_class then
-        if TodoClass[func_meta.original_class] then
-            return
-        end
-        return true
     end
     return true
+end
+
+local function allow_struct(struct_meta)
+    local name = struct_meta.name
+    if name:match "^ImVector_" then
+        return
+    end
+    if IgnoreStruct[name] then
+        return
+    end
+    if TodoStruct[name] then
+        return
+    end
+    return true
+end
+
+local function is_function_pointer(meta)
+    if not meta.type.type_details then
+        return
+    end
+    return meta.type.type_details.flavour == "function_pointer"
+end
+
+local function get_builtin_type(typename, types)
+    if BuiltinType[typename] then
+        return BuiltinType[typename]
+    end
+    if types[typename] then
+        return types[typename].type
+    end
+    assert(false, typename)
 end
 
 local function cimgui_json(AntDir)
@@ -224,12 +287,23 @@ function m.init(status)
     local flags = {}
     local enums = {}
     local funcs = {}
-    local struct_funcs = {}
-    for _, typedef_meta in ipairs(meta.typedefs) do
-        types[typedef_meta.name] = typedef_meta
-    end
+    local structs = {}
     for _, struct_meta in ipairs(meta.structs) do
-        types[struct_meta.name] = struct_meta
+        if not allow_struct(struct_meta) then
+            goto continue
+        end
+        local name = struct_meta.name
+        local modes = Readonly[name]
+            and { "const_pointer" }
+            or { "pointer" }
+        local struct = {
+            name = name,
+            modes = modes,
+            fields = struct_meta.fields,
+        }
+        structs[name] = struct
+        structs[#structs+1] = struct
+        ::continue::
     end
     for _, enum_meta in ipairs(meta.enums) do
         if not conditionals(enum_meta) then
@@ -306,24 +380,41 @@ function m.init(status)
         ::continue::
     end
     for _, func_meta in ipairs(meta.functions) do
-        if allow(func_meta) then
+        if allow_function(func_meta) then
             if func_meta.original_class then
-                local v = struct_funcs[func_meta.original_class]
-                if v then
-                    v[#v+1] = func_meta
-                else
-                    struct_funcs[func_meta.original_class] = { func_meta }
+                if not TodoStruct[func_meta.original_class] then
+                    local v = structs[func_meta.original_class].funcs
+                    if v then
+                        v[#v+1] = func_meta
+                    else
+                        structs[func_meta.original_class].funcs= { func_meta }
+                    end
                 end
             else
                 funcs[#funcs+1] = func_meta
             end
         end
     end
+    for _, typedef_meta in ipairs(meta.typedefs) do
+        if conditionals(typedef_meta)
+            and not TodoType[typedef_meta.name]
+            and not flags[typedef_meta.name]
+            and not enums[typedef_meta.name]
+            and not is_function_pointer(typedef_meta)
+        then
+            local type = {
+                name = typedef_meta.name,
+                type = get_builtin_type(typedef_meta.type.declaration, types),
+            }
+            types[type.name] = type
+            types[#types+1] = type
+        end
+    end
     status.types = types
+    status.structs = structs
     status.flags = flags
     status.enums = enums
     status.funcs = funcs
-    status.struct_funcs = struct_funcs
 end
 
 return m

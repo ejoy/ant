@@ -1032,8 +1032,6 @@ ImGui.TableBgTarget = {}
 
 ---@alias ImTextureID integer
 
----@alias ImGuiID integer
-
 ---@class ImFont
 
 ---@class ImFontRange
@@ -1051,35 +1049,31 @@ function ImStringBuf:Resize(size) end
 ---@field x number
 ---@field y number
 
----@class ImGuiViewport
----@field ID ImGuiID                     #  Unique identifier for the viewport
----@field Flags ImGui.ViewportFlags      #  See ImGuiViewportFlags_
----@field Pos ImVec2                     #  Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
----@field Size ImVec2                    #  Main Area: Size of the viewport.
----@field WorkPos ImVec2                 #  Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
----@field WorkSize ImVec2                #  Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
----@field DpiScale number                #  1.0f = 96 DPI = No extra scale.
----@field ParentViewportId ImGuiID       #  (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
----@field RendererUserData lightuserdata #  void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
----@field PlatformUserData lightuserdata #  void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
----@field PlatformHandle lightuserdata   #  void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
----@field PlatformHandleRaw lightuserdata#  void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
----@field PlatformWindowCreated boolean  #  Platform window has been created (Platform_CreateWindow() has been called). This is false during the first frame where a viewport is being created.
----@field PlatformRequestMove boolean    #  Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
----@field PlatformRequestResize boolean  #  Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
----@field PlatformRequestClose boolean   #  Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
-local ImGuiViewport = {}
---
--- Helpers
---
----@return number
----@return number
-function ImGuiViewport.GetCenter() end
+---@alias ImDrawIdx integer
 
----@return number
----@return number
-function ImGuiViewport.GetWorkCenter() end
+---@alias ImGuiID integer
 
+---@alias ImS8 integer
+
+---@alias ImU8 integer
+
+---@alias ImS16 integer
+
+---@alias ImU16 integer
+
+---@alias ImS32 integer
+
+---@alias ImU32 integer
+
+---@alias ImS64 integer
+
+---@alias ImU64 integer
+
+---@alias ImWchar32 integer
+
+---@alias ImWchar16 integer
+
+---@alias ImWchar integer
 
 ---@class ImGuiIO
 ---@field ConfigFlags ImGui.ConfigFlags            #  = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
@@ -1204,7 +1198,7 @@ function ImGuiIO.AddMouseSourceEvent(source) end
 --
 -- Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
 --
----@param id integer
+---@param id ImGuiID
 function ImGuiIO.AddMouseViewportEvent(id) end
 
 --
@@ -1222,7 +1216,7 @@ function ImGuiIO.AddInputCharacter(c) end
 --
 -- Queue a new character input from a UTF-16 character, it can be a surrogate
 --
----@param c integer
+---@param c ImWchar16
 function ImGuiIO.AddInputCharacterUTF16(c) end
 
 --
@@ -1265,6 +1259,36 @@ function ImGuiIO.ClearEventsQueue() end
 function ImGuiIO.ClearInputKeys() end
 
 
+---@class ImGuiInputTextCallbackData
+---@field EventFlag ImGui.InputTextFlags#  One ImGuiInputTextFlags_Callback*    // Read-only
+---@field Flags ImGui.InputTextFlags    #  What user passed to InputText()      // Read-only
+---@field UserData lightuserdata        #  What user passed to InputText()      // Read-only
+---@field EventChar integer             #  Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
+---@field EventKey ImGui.Key            #  Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
+---@field BufTextLen integer            #  Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
+---@field BufSize integer               #  Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
+---@field BufDirty boolean              #  Set if you modify Buf/BufTextLen!    // Write        // [Completion,History,Always]
+---@field CursorPos integer             #                                       // Read-write   // [Completion,History,Always]
+---@field SelectionStart integer        #                                       // Read-write   // [Completion,History,Always] == to SelectionEnd when no selection)
+---@field SelectionEnd integer          #                                       // Read-write   // [Completion,History,Always]
+local ImGuiInputTextCallbackData = {}
+---@param pos integer
+---@param bytes_count integer
+function ImGuiInputTextCallbackData.DeleteChars(pos, bytes_count) end
+
+---@param pos integer
+---@param text string
+---@param text_end? string
+function ImGuiInputTextCallbackData.InsertChars(pos, text, text_end) end
+
+function ImGuiInputTextCallbackData.SelectAll() end
+
+function ImGuiInputTextCallbackData.ClearSelection() end
+
+---@return boolean
+function ImGuiInputTextCallbackData.HasSelection() end
+
+
 ---@class ImFontConfig
 ---@field FontData lightuserdata      #           // TTF/OTF data
 ---@field FontDataSize integer        #           // TTF/OTF data size
@@ -1287,7 +1311,7 @@ function ImGuiIO.ClearInputKeys() end
 
 ---@class ImFontAtlas
 ---@field Flags ImGui.FontAtlasFlags#  Build flags (see ImFontAtlasFlags_)
----@field TexID lightuserdata       #  User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
+---@field TexID ImTextureID         #  User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
 ---@field TexDesiredWidth integer   #  Texture width desired by user before Build(). Must be a power-of-two. If have many glyphs your graphics API have texture size restrictions you may want to increase texture width to decrease height.
 ---@field TexGlyphPadding integer   #  Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0 (will also need to set AntiAliasedLinesUseTex = false).
 ---@field Locked boolean            #  Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
@@ -1466,7 +1490,7 @@ function ImFontAtlas.GetGlyphRangesVietnamese() end
 function ImFontAtlas.AddCustomRectRegular(width, height) end
 
 ---@param font ImFont
----@param id integer
+---@param id ImWchar
 ---@param width integer
 ---@param height integer
 ---@param advance_x number
@@ -1476,34 +1500,34 @@ function ImFontAtlas.AddCustomRectRegular(width, height) end
 function ImFontAtlas.AddCustomRectFontGlyph(font, id, width, height, advance_x, offset_x, offset_y) end
 
 
----@class ImGuiInputTextCallbackData
----@field EventFlag ImGui.InputTextFlags#  One ImGuiInputTextFlags_Callback*    // Read-only
----@field Flags ImGui.InputTextFlags    #  What user passed to InputText()      // Read-only
----@field UserData lightuserdata        #  What user passed to InputText()      // Read-only
----@field EventChar integer             #  Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
----@field EventKey ImGui.Key            #  Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
----@field BufTextLen integer            #  Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
----@field BufSize integer               #  Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
----@field BufDirty boolean              #  Set if you modify Buf/BufTextLen!    // Write        // [Completion,History,Always]
----@field CursorPos integer             #                                       // Read-write   // [Completion,History,Always]
----@field SelectionStart integer        #                                       // Read-write   // [Completion,History,Always] == to SelectionEnd when no selection)
----@field SelectionEnd integer          #                                       // Read-write   // [Completion,History,Always]
-local ImGuiInputTextCallbackData = {}
----@param pos integer
----@param bytes_count integer
-function ImGuiInputTextCallbackData.DeleteChars(pos, bytes_count) end
+---@class ImGuiViewport
+---@field ID ImGuiID                     #  Unique identifier for the viewport
+---@field Flags ImGui.ViewportFlags      #  See ImGuiViewportFlags_
+---@field Pos ImVec2                     #  Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
+---@field Size ImVec2                    #  Main Area: Size of the viewport.
+---@field WorkPos ImVec2                 #  Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
+---@field WorkSize ImVec2                #  Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
+---@field DpiScale number                #  1.0f = 96 DPI = No extra scale.
+---@field ParentViewportId ImGuiID       #  (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
+---@field RendererUserData lightuserdata #  void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
+---@field PlatformUserData lightuserdata #  void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
+---@field PlatformHandle lightuserdata   #  void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
+---@field PlatformHandleRaw lightuserdata#  void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
+---@field PlatformWindowCreated boolean  #  Platform window has been created (Platform_CreateWindow() has been called). This is false during the first frame where a viewport is being created.
+---@field PlatformRequestMove boolean    #  Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
+---@field PlatformRequestResize boolean  #  Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
+---@field PlatformRequestClose boolean   #  Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
+local ImGuiViewport = {}
+--
+-- Helpers
+--
+---@return number
+---@return number
+function ImGuiViewport.GetCenter() end
 
----@param pos integer
----@param text string
----@param text_end? string
-function ImGuiInputTextCallbackData.InsertChars(pos, text, text_end) end
-
-function ImGuiInputTextCallbackData.SelectAll() end
-
-function ImGuiInputTextCallbackData.ClearSelection() end
-
----@return boolean
-function ImGuiInputTextCallbackData.HasSelection() end
+---@return number
+---@return number
+function ImGuiViewport.GetWorkCenter() end
 
 
 ---@return userdata
@@ -1608,7 +1632,7 @@ function ImGui.End() end
 ---@return boolean
 function ImGui.BeginChild(str_id, size_x, size_y, child_flags, window_flags) end
 
----@param id integer
+---@param id ImGuiID
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@param child_flags? ImGui.ChildFlags | `ImGui.ChildFlags { "None" }`
@@ -1745,7 +1769,7 @@ function ImGui.SetNextWindowBgAlpha(alpha) end
 --
 -- set next window viewport
 --
----@param viewport_id integer
+---@param viewport_id ImGuiID
 function ImGui.SetNextWindowViewport(viewport_id) end
 
 --
@@ -1929,7 +1953,7 @@ function ImGui.PopFont() end
 -- modify a style color. always use this if you modify the style after NewFrame().
 --
 ---@param idx ImGui.Col
----@param col integer
+---@param col ImU32
 function ImGui.PushStyleColor(idx, col) end
 
 ---@param idx ImGui.Col
@@ -2044,7 +2068,7 @@ function ImGui.GetFontTexUvWhitePixel() end
 -- Implied alpha_mul = 1.0f
 --
 ---@param idx ImGui.Col
----@return integer
+---@return ImU32
 function ImGui.GetColorU32(idx) end
 
 --
@@ -2052,7 +2076,7 @@ function ImGui.GetColorU32(idx) end
 --
 ---@param idx ImGui.Col
 ---@param alpha_mul? number | `1.0`
----@return integer
+---@return ImU32
 function ImGui.GetColorU32Ex(idx, alpha_mul) end
 
 --
@@ -2062,14 +2086,14 @@ function ImGui.GetColorU32Ex(idx, alpha_mul) end
 ---@param col_y number
 ---@param col_z number
 ---@param col_w number
----@return integer
+---@return ImU32
 function ImGui.GetColorU32ImVec4(col_x, col_y, col_z, col_w) end
 
 --
 -- retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 --
----@param col integer
----@return integer
+---@param col ImU32
+---@return ImU32
 function ImGui.GetColorU32ImU32(col) end
 
 --
@@ -2296,16 +2320,16 @@ function ImGui.PopID() end
 -- calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
 --
 ---@param str_id string
----@return integer
+---@return ImGuiID
 function ImGui.GetID(str_id) end
 
 ---@param str_id_begin string
 ---@param str_id_end string
----@return integer
+---@return ImGuiID
 function ImGui.GetIDStr(str_id_begin, str_id_end) end
 
 ---@param ptr_id lightuserdata
----@return integer
+---@return ImGuiID
 function ImGui.GetIDPtr(ptr_id) end
 
 --
@@ -3537,7 +3561,7 @@ function ImGui.OpenPopup(str_id, popup_flags) end
 --
 -- id overload to facilitate calling from nested stacks
 --
----@param id integer
+---@param id ImGuiID
 ---@param popup_flags? ImGui.PopupFlags | `ImGui.PopupFlags { "None" }`
 function ImGui.OpenPopupID(id, popup_flags) end
 
@@ -3707,7 +3731,7 @@ function ImGui.TableSetupColumn(label, flags) end
 ---@param label string
 ---@param flags? ImGui.TableColumnFlags | `ImGui.TableColumnFlags { "None" }`
 ---@param init_width_or_weight? number | `0.0`
----@param user_id? integer | `0`
+---@param user_id? ImGuiID | `0`
 function ImGui.TableSetupColumnEx(label, flags, init_width_or_weight, user_id) end
 
 --
@@ -3776,7 +3800,7 @@ function ImGui.TableSetColumnEnabled(column_n, v) end
 -- change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 --
 ---@param target ImGui.TableBgTarget
----@param color integer
+---@param color ImU32
 ---@param column_n? integer | `-1`
 function ImGui.TableSetBgColor(target, color, column_n) end
 
@@ -3844,31 +3868,31 @@ function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
 --
 -- Implied size = ImVec2(0, 0), flags = 0, window_class = NULL
 --
----@param id integer
----@return integer
+---@param id ImGuiID
+---@return ImGuiID
 function ImGui.DockSpace(id) end
 
----@param id integer
+---@param id ImGuiID
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@param flags? ImGui.DockNodeFlags | `ImGui.DockNodeFlags { "None" }`
----@return integer
+---@return ImGuiID
 function ImGui.DockSpaceEx(id, size_x, size_y, flags) end
 
 --
 -- Implied viewport = NULL, flags = 0, window_class = NULL
 --
----@return integer
+---@return ImGuiID
 function ImGui.DockSpaceOverViewport() end
 
 --
 -- set next window dock id
 --
----@param dock_id integer
+---@param dock_id ImGuiID
 ---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextWindowDockID(dock_id, cond) end
 
----@return integer
+---@return ImGuiID
 function ImGui.GetWindowDockID() end
 
 --
@@ -4076,7 +4100,7 @@ function ImGui.IsAnyItemFocused() end
 --
 -- get ID of last item (~~ often same ImGui::GetID(label) beforehand)
 --
----@return integer
+---@return ImGuiID
 function ImGui.GetItemID() end
 
 --
@@ -4174,7 +4198,7 @@ function ImGui.CalcTextSizeEx(text, text_end, hide_text_after_double_hash, wrap_
 --
 -- Color Utilities
 --
----@param arg_in integer
+---@param arg_in ImU32
 ---@return number
 ---@return number
 ---@return number
@@ -4185,7 +4209,7 @@ function ImGui.ColorConvertU32ToFloat4(arg_in) end
 ---@param in_y number
 ---@param in_z number
 ---@param in_w number
----@return integer
+---@return ImU32
 function ImGui.ColorConvertFloat4ToU32(in_x, in_y, in_z, in_w) end
 
 --
@@ -4442,7 +4466,7 @@ function ImGui.RenderPlatformWindowsDefault() end
 --
 -- this is a helper for backends.
 --
----@param id integer
+---@param id ImGuiID
 ---@return ImGuiViewport
 function ImGui.FindViewportByID(id) end
 

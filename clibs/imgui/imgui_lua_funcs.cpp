@@ -721,11 +721,11 @@ static util::TableInteger TableBgTarget[] = {
 
 #undef ENUM
 
-namespace wrap_ImGuiViewport {
-    void const_pointer(lua_State* L, ImGuiViewport& v);
-}
 namespace wrap_ImGuiIO {
     void pointer(lua_State* L, ImGuiIO& v);
+}
+namespace wrap_ImGuiInputTextCallbackData {
+    void pointer(lua_State* L, ImGuiInputTextCallbackData& v);
 }
 namespace wrap_ImFontConfig {
     void pointer(lua_State* L, ImFontConfig& v);
@@ -733,8 +733,8 @@ namespace wrap_ImFontConfig {
 namespace wrap_ImFontAtlas {
     void const_pointer(lua_State* L, ImFontAtlas& v);
 }
-namespace wrap_ImGuiInputTextCallbackData {
-    void pointer(lua_State* L, ImGuiInputTextCallbackData& v);
+namespace wrap_ImGuiViewport {
+    void const_pointer(lua_State* L, ImGuiViewport& v);
 }
 
 static int FontConfig(lua_State* L) {
@@ -4518,207 +4518,6 @@ static int GetKeyIndex(lua_State* L) {
     return 1;
 }
 
-namespace wrap_ImGuiViewport {
-
-static int GetCenter(lua_State* L) {
-    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-    auto&& _retval = OBJ.GetCenter();
-    lua_pushnumber(L, _retval.x);
-    lua_pushnumber(L, _retval.y);
-    return 2;
-}
-
-static int GetWorkCenter(lua_State* L) {
-    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-    auto&& _retval = OBJ.GetWorkCenter();
-    lua_pushnumber(L, _retval.x);
-    lua_pushnumber(L, _retval.y);
-    return 2;
-}
-
-struct ID {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.ID);
-        return 1;
-    }
-};
-
-struct Flags {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.Flags);
-        return 1;
-    }
-};
-
-struct Pos {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, OBJ.Pos.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, OBJ.Pos.y);
-        lua_setfield(L, -2, "y");
-        return 1;
-    }
-};
-
-struct Size {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, OBJ.Size.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, OBJ.Size.y);
-        lua_setfield(L, -2, "y");
-        return 1;
-    }
-};
-
-struct WorkPos {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, OBJ.WorkPos.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, OBJ.WorkPos.y);
-        lua_setfield(L, -2, "y");
-        return 1;
-    }
-};
-
-struct WorkSize {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, OBJ.WorkSize.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, OBJ.WorkSize.y);
-        lua_setfield(L, -2, "y");
-        return 1;
-    }
-};
-
-struct DpiScale {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushnumber(L, OBJ.DpiScale);
-        return 1;
-    }
-};
-
-struct ParentViewportId {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.ParentViewportId);
-        return 1;
-    }
-};
-
-struct RendererUserData {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushlightuserdata(L, OBJ.RendererUserData);
-        return 1;
-    }
-};
-
-struct PlatformUserData {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushlightuserdata(L, OBJ.PlatformUserData);
-        return 1;
-    }
-};
-
-struct PlatformHandle {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushlightuserdata(L, OBJ.PlatformHandle);
-        return 1;
-    }
-};
-
-struct PlatformHandleRaw {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushlightuserdata(L, OBJ.PlatformHandleRaw);
-        return 1;
-    }
-};
-
-struct PlatformWindowCreated {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.PlatformWindowCreated);
-        return 1;
-    }
-};
-
-struct PlatformRequestMove {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.PlatformRequestMove);
-        return 1;
-    }
-};
-
-struct PlatformRequestResize {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.PlatformRequestResize);
-        return 1;
-    }
-};
-
-struct PlatformRequestClose {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.PlatformRequestClose);
-        return 1;
-    }
-};
-
-static luaL_Reg funcs[] = {
-    { "GetCenter", GetCenter },
-    { "GetWorkCenter", GetWorkCenter },
-};
-
-static luaL_Reg getters[] = {
-    { "ID", ID::getter },
-    { "Flags", Flags::getter },
-    { "Pos", Pos::getter },
-    { "Size", Size::getter },
-    { "WorkPos", WorkPos::getter },
-    { "WorkSize", WorkSize::getter },
-    { "DpiScale", DpiScale::getter },
-    { "ParentViewportId", ParentViewportId::getter },
-    { "RendererUserData", RendererUserData::getter },
-    { "PlatformUserData", PlatformUserData::getter },
-    { "PlatformHandle", PlatformHandle::getter },
-    { "PlatformHandleRaw", PlatformHandleRaw::getter },
-    { "PlatformWindowCreated", PlatformWindowCreated::getter },
-    { "PlatformRequestMove", PlatformRequestMove::getter },
-    { "PlatformRequestResize", PlatformRequestResize::getter },
-    { "PlatformRequestClose", PlatformRequestClose::getter },
-};
-
-static int tag_const_pointer = 0;
-
-void const_pointer(lua_State* L, ImGuiViewport& v) {
-    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
-    auto** ptr = (ImGuiViewport**)lua_touserdata(L, -1);
-    *ptr = &v;
-}
-
-static void init(lua_State* L) {
-    util::struct_gen(L, "ImGuiViewport", funcs, {}, getters);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
-}
-
-}
-
 namespace wrap_ImGuiIO {
 
 static int AddKeyEvent(lua_State* L) {
@@ -6033,6 +5832,250 @@ static void init(lua_State* L) {
 
 }
 
+namespace wrap_ImGuiInputTextCallbackData {
+
+static int DeleteChars(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    auto pos = (int)luaL_checkinteger(L, 1);
+    auto bytes_count = (int)luaL_checkinteger(L, 2);
+    OBJ.DeleteChars(pos, bytes_count);
+    return 0;
+}
+
+static int InsertChars(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    auto pos = (int)luaL_checkinteger(L, 1);
+    auto text = luaL_checkstring(L, 2);
+    auto text_end = luaL_optstring(L, 3, NULL);
+    OBJ.InsertChars(pos, text, text_end);
+    return 0;
+}
+
+static int SelectAll(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.SelectAll();
+    return 0;
+}
+
+static int ClearSelection(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearSelection();
+    return 0;
+}
+
+static int HasSelection(lua_State* L) {
+    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.HasSelection();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+struct EventFlag {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EventFlag);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EventFlag = (ImGuiInputTextFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct Flags {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.Flags);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Flags = (ImGuiInputTextFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct UserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.UserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.UserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+struct EventChar {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EventChar);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EventChar = (ImWchar)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct EventKey {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.EventKey);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.EventKey = (ImGuiKey)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BufTextLen {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.BufTextLen);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BufTextLen = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BufSize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.BufSize);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BufSize = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct BufDirty {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.BufDirty);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.BufDirty = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct CursorPos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.CursorPos);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.CursorPos = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct SelectionStart {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.SelectionStart);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.SelectionStart = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct SelectionEnd {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.SelectionEnd);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.SelectionEnd = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg funcs[] = {
+    { "DeleteChars", DeleteChars },
+    { "InsertChars", InsertChars },
+    { "SelectAll", SelectAll },
+    { "ClearSelection", ClearSelection },
+    { "HasSelection", HasSelection },
+};
+
+static luaL_Reg setters[] = {
+    { "EventFlag", EventFlag::setter },
+    { "Flags", Flags::setter },
+    { "UserData", UserData::setter },
+    { "EventChar", EventChar::setter },
+    { "EventKey", EventKey::setter },
+    { "BufTextLen", BufTextLen::setter },
+    { "BufSize", BufSize::setter },
+    { "BufDirty", BufDirty::setter },
+    { "CursorPos", CursorPos::setter },
+    { "SelectionStart", SelectionStart::setter },
+    { "SelectionEnd", SelectionEnd::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "EventFlag", EventFlag::getter },
+    { "Flags", Flags::getter },
+    { "UserData", UserData::getter },
+    { "EventChar", EventChar::getter },
+    { "EventKey", EventKey::getter },
+    { "BufTextLen", BufTextLen::getter },
+    { "BufSize", BufSize::getter },
+    { "BufDirty", BufDirty::getter },
+    { "CursorPos", CursorPos::getter },
+    { "SelectionStart", SelectionStart::getter },
+    { "SelectionEnd", SelectionEnd::getter },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiInputTextCallbackData& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiInputTextCallbackData**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiInputTextCallbackData", funcs, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
 namespace wrap_ImFontConfig {
 
 struct FontData {
@@ -6564,14 +6607,6 @@ struct Flags {
     }
 };
 
-struct TexID {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushlightuserdata(L, OBJ.TexID);
-        return 1;
-    }
-};
-
 struct TexDesiredWidth {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
@@ -6713,7 +6748,6 @@ static luaL_Reg funcs[] = {
 
 static luaL_Reg getters[] = {
     { "Flags", Flags::getter },
-    { "TexID", TexID::getter },
     { "TexDesiredWidth", TexDesiredWidth::getter },
     { "TexGlyphPadding", TexGlyphPadding::getter },
     { "Locked", Locked::getter },
@@ -6744,246 +6778,203 @@ static void init(lua_State* L) {
 
 }
 
-namespace wrap_ImGuiInputTextCallbackData {
+namespace wrap_ImGuiViewport {
 
-static int DeleteChars(lua_State* L) {
-    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-    auto pos = (int)luaL_checkinteger(L, 1);
-    auto bytes_count = (int)luaL_checkinteger(L, 2);
-    OBJ.DeleteChars(pos, bytes_count);
-    return 0;
+static int GetCenter(lua_State* L) {
+    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetCenter();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
 }
 
-static int InsertChars(lua_State* L) {
-    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-    auto pos = (int)luaL_checkinteger(L, 1);
-    auto text = luaL_checkstring(L, 2);
-    auto text_end = luaL_optstring(L, 3, NULL);
-    OBJ.InsertChars(pos, text, text_end);
-    return 0;
+static int GetWorkCenter(lua_State* L) {
+    auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+    auto&& _retval = OBJ.GetWorkCenter();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
 }
 
-static int SelectAll(lua_State* L) {
-    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-    OBJ.SelectAll();
-    return 0;
-}
-
-static int ClearSelection(lua_State* L) {
-    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-    OBJ.ClearSelection();
-    return 0;
-}
-
-static int HasSelection(lua_State* L) {
-    auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-    auto&& _retval = OBJ.HasSelection();
-    lua_pushboolean(L, _retval);
-    return 1;
-}
-
-struct EventFlag {
+struct ID {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.EventFlag);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ID);
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.EventFlag = (ImGuiInputTextFlags)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
 struct Flags {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
         lua_pushinteger(L, OBJ.Flags);
         return 1;
     }
+};
 
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.Flags = (ImGuiInputTextFlags)luaL_checkinteger(L, 1);
-        return 0;
+struct Pos {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.Pos.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.Pos.y);
+        lua_setfield(L, -2, "y");
+        return 1;
     }
 };
 
-struct UserData {
+struct Size {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushlightuserdata(L, OBJ.UserData);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.Size.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.Size.y);
+        lua_setfield(L, -2, "y");
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        OBJ.UserData = (void*)lua_touserdata(L, 1);
-        return 0;
     }
 };
 
-struct EventChar {
+struct WorkPos {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.EventChar);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.WorkPos.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.WorkPos.y);
+        lua_setfield(L, -2, "y");
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.EventChar = (ImWchar)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
-struct EventKey {
+struct WorkSize {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.EventKey);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, OBJ.WorkSize.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, OBJ.WorkSize.y);
+        lua_setfield(L, -2, "y");
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.EventKey = (ImGuiKey)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
-struct BufTextLen {
+struct DpiScale {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.BufTextLen);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushnumber(L, OBJ.DpiScale);
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.BufTextLen = (int)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
-struct BufSize {
+struct ParentViewportId {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.BufSize);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ParentViewportId);
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.BufSize = (int)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
-struct BufDirty {
+struct RendererUserData {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.BufDirty);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.RendererUserData);
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.BufDirty = (bool)!!lua_toboolean(L, 1);
-        return 0;
     }
 };
 
-struct CursorPos {
+struct PlatformUserData {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.CursorPos);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformUserData);
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.CursorPos = (int)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
-struct SelectionStart {
+struct PlatformHandle {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.SelectionStart);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformHandle);
         return 1;
-    }
-
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.SelectionStart = (int)luaL_checkinteger(L, 1);
-        return 0;
     }
 };
 
-struct SelectionEnd {
+struct PlatformHandleRaw {
     static int getter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.SelectionEnd);
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformHandleRaw);
         return 1;
     }
+};
 
-    static int setter(lua_State* L) {
-        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
-        OBJ.SelectionEnd = (int)luaL_checkinteger(L, 1);
-        return 0;
+struct PlatformWindowCreated {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformWindowCreated);
+        return 1;
+    }
+};
+
+struct PlatformRequestMove {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformRequestMove);
+        return 1;
+    }
+};
+
+struct PlatformRequestResize {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformRequestResize);
+        return 1;
+    }
+};
+
+struct PlatformRequestClose {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiViewport**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.PlatformRequestClose);
+        return 1;
     }
 };
 
 static luaL_Reg funcs[] = {
-    { "DeleteChars", DeleteChars },
-    { "InsertChars", InsertChars },
-    { "SelectAll", SelectAll },
-    { "ClearSelection", ClearSelection },
-    { "HasSelection", HasSelection },
-};
-
-static luaL_Reg setters[] = {
-    { "EventFlag", EventFlag::setter },
-    { "Flags", Flags::setter },
-    { "UserData", UserData::setter },
-    { "EventChar", EventChar::setter },
-    { "EventKey", EventKey::setter },
-    { "BufTextLen", BufTextLen::setter },
-    { "BufSize", BufSize::setter },
-    { "BufDirty", BufDirty::setter },
-    { "CursorPos", CursorPos::setter },
-    { "SelectionStart", SelectionStart::setter },
-    { "SelectionEnd", SelectionEnd::setter },
+    { "GetCenter", GetCenter },
+    { "GetWorkCenter", GetWorkCenter },
 };
 
 static luaL_Reg getters[] = {
-    { "EventFlag", EventFlag::getter },
+    { "ID", ID::getter },
     { "Flags", Flags::getter },
-    { "UserData", UserData::getter },
-    { "EventChar", EventChar::getter },
-    { "EventKey", EventKey::getter },
-    { "BufTextLen", BufTextLen::getter },
-    { "BufSize", BufSize::getter },
-    { "BufDirty", BufDirty::getter },
-    { "CursorPos", CursorPos::getter },
-    { "SelectionStart", SelectionStart::getter },
-    { "SelectionEnd", SelectionEnd::getter },
+    { "Pos", Pos::getter },
+    { "Size", Size::getter },
+    { "WorkPos", WorkPos::getter },
+    { "WorkSize", WorkSize::getter },
+    { "DpiScale", DpiScale::getter },
+    { "ParentViewportId", ParentViewportId::getter },
+    { "RendererUserData", RendererUserData::getter },
+    { "PlatformUserData", PlatformUserData::getter },
+    { "PlatformHandle", PlatformHandle::getter },
+    { "PlatformHandleRaw", PlatformHandleRaw::getter },
+    { "PlatformWindowCreated", PlatformWindowCreated::getter },
+    { "PlatformRequestMove", PlatformRequestMove::getter },
+    { "PlatformRequestResize", PlatformRequestResize::getter },
+    { "PlatformRequestClose", PlatformRequestClose::getter },
 };
 
-static int tag_pointer = 0;
+static int tag_const_pointer = 0;
 
-void pointer(lua_State* L, ImGuiInputTextCallbackData& v) {
-    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
-    auto** ptr = (ImGuiInputTextCallbackData**)lua_touserdata(L, -1);
+void const_pointer(lua_State* L, ImGuiViewport& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
+    auto** ptr = (ImGuiViewport**)lua_touserdata(L, -1);
     *ptr = &v;
 }
 
 static void init(lua_State* L) {
-    util::struct_gen(L, "ImGuiInputTextCallbackData", funcs, setters, getters);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    util::struct_gen(L, "ImGuiViewport", funcs, {}, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
 }
 
 }
@@ -7429,11 +7420,11 @@ static void init(lua_State* L) {
     luaL_setfuncs(L, funcs, 0);
     util::set_table(L, flags);
     util::set_table(L, enums);
-    wrap_ImGuiViewport::init(L);
     wrap_ImGuiIO::init(L);
+    wrap_ImGuiInputTextCallbackData::init(L);
     wrap_ImFontConfig::init(L);
     wrap_ImFontAtlas::init(L);
-    wrap_ImGuiInputTextCallbackData::init(L);
+    wrap_ImGuiViewport::init(L);
 }
 }
 

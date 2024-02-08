@@ -8,14 +8,6 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
-local struct_list <const> = {
-    { "ImGuiViewport", { "const_pointer" } },
-    { "ImGuiIO", { "pointer" } },
-    { "ImFontConfig", { "pointer" } },
-    { "ImFontAtlas", { "const_pointer" } },
-    { "ImGuiInputTextCallbackData", { "pointer" } },
-}
-
 local struct_constructor <const> = {
     "ImFontConfig",
 }
@@ -589,20 +581,18 @@ end
 
 
 local function write_struct_defines()
-    for _, v in ipairs(struct_list) do
-        local name, modes = v[1], v[2]
-        writeln("namespace wrap_%s {", name)
-        for _, mode in ipairs(modes) do
-            writeln("    void %s(lua_State* L, %s& v);", mode, name)
+    for _, v in ipairs(status.structs) do
+        writeln("namespace wrap_%s {", v.name)
+        for _, mode in ipairs(v.modes) do
+            writeln("    void %s(lua_State* L, %s& v);", mode, v.name)
         end
         writeln "}"
     end
 end
 
 local function write_structs()
-    for _, v in ipairs(struct_list) do
-        local name, modes = v[1], v[2]
-        types.decode_func(status, name, writeln, write_func, modes)
+    for _, v in ipairs(status.structs) do
+        types.decode_func(status, v.name, writeln, write_func, v.modes)
     end
 end
 
@@ -660,9 +650,8 @@ writeln "    );"
 writeln "    luaL_setfuncs(L, funcs, 0);"
 writeln "    util::set_table(L, flags);"
 writeln "    util::set_table(L, enums);"
-for _, v in ipairs(struct_list) do
-    local name = v[1]
-    writeln("    wrap_%s::init(L);", name)
+for _, v in ipairs(status.structs) do
+    writeln("    wrap_%s::init(L);", v.name)
 end
 writeln "}"
 writeln "}"

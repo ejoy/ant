@@ -29,10 +29,6 @@ local lua_type = {
     ["unsigned int"] = "integer",
     ["int"] = "integer",
     ["size_t"] = "integer",
-    ["ImGuiID"] = "integer",
-    ["ImWchar"] = "integer",
-    ["ImWchar16"] = "integer",
-    ["ImU32"] = "integer",
     ["ImGuiKeyChord"] = "ImGui.KeyChord",
     ["const ImGuiPayload*"] = "string | nil",
 }
@@ -425,52 +421,51 @@ local function write_func(func_meta)
     end
 
     local realname
-    local status = {
+    local context = {
         i = 1,
         args = func_meta.arguments,
         arguments = {},
     }
     if func_meta.original_class then
         realname = func_meta.name:match("^"..func_meta.original_class.."_([%w]+)$")
-        status.i = 2
+        context.i = 2
     else
         realname = func_meta.name:match "^ImGui_([%w]+)$"
     end
-    while status.i <= #status.args do
-        local type_meta = status.args[status.i]
-        local typefunc = special_arg[type_meta.type.declaration]
-        if typefunc then
-            typefunc(type_meta, status)
-        else
-            local luatype = lua_type[type_meta.type.declaration]
-            if luatype then
-                if type_meta.default_value then
-                    local default_value = get_default_value(type_meta)
-                    if default_value then
-                        writeln("---@param %s? %s | `%s`", safe_name(type_meta.name), luatype, default_value)
-                    else
-                        writeln("---@param %s? %s", safe_name(type_meta.name), luatype)
-                    end
+    while context.i <= #context.args do
+        local type_meta = context.args[context.i]
+        local type_name = type_meta.type.declaration
+        local type_func = special_arg[type_name]
+        if type_func then
+            type_func(type_meta, context)
+        elseif status.types[type_name] or lua_type[type_name] then
+            local luatype = status.types[type_name] and type_name or lua_type[type_name]
+            if type_meta.default_value then
+                local default_value = get_default_value(type_meta)
+                if default_value then
+                    writeln("---@param %s? %s | `%s`", safe_name(type_meta.name), luatype, default_value)
                 else
-                    writeln("---@param %s %s", safe_name(type_meta.name), luatype)
+                    writeln("---@param %s? %s", safe_name(type_meta.name), luatype)
                 end
-                status.arguments[#status.arguments+1] = safe_name(type_meta.name)
             else
-                error(string.format("undefined lua type `%s`", type_meta.type.declaration))
+                writeln("---@param %s %s", safe_name(type_meta.name), luatype)
             end
+            context.arguments[#context.arguments+1] = safe_name(type_meta.name)
+        else
+            error(string.format("undefined lua type `%s`", type_name))
         end
-        status.i = status.i + 1
+        context.i = context.i + 1
     end
     if func_meta.return_type.declaration ~= "void" then
-        local typefunc = special_ret[func_meta.return_type.declaration]
-        if typefunc then
-            typefunc(func_meta)
-        else
-            local luatype = lua_type[func_meta.return_type.declaration]
-            if not luatype then
-                error(string.format("undefined lua type `%s`", func_meta.return_type.declaration))
-            end
+        local type_name = func_meta.return_type.declaration
+        local type_func = special_ret[type_name]
+        if type_func then
+            type_func(func_meta)
+        elseif status.types[type_name] or lua_type[type_name] then
+            local luatype = status.types[type_name] and type_name or lua_type[type_name]
             writeln("---@return %s", luatype)
+        else
+            error(string.format("undefined lua type `%s`", type_name))
         end
         for _, type_meta in ipairs(func_meta.arguments) do
             if type_meta.type then
@@ -482,9 +477,9 @@ local function write_func(func_meta)
         end
     end
     if func_meta.original_class then
-        writeln("function %s.%s(%s) end", func_meta.original_class, realname, table.concat(status.arguments, ", "))
+        writeln("function %s.%s(%s) end", func_meta.original_class, realname, table.concat(context.arguments, ", "))
     else
-        writeln("function ImGui.%s(%s) end", realname, table.concat(status.arguments, ", "))
+        writeln("function ImGui.%s(%s) end", realname, table.concat(context.arguments, ", "))
     end
     writeln ""
     return realname
@@ -494,8 +489,6 @@ local function write_structs()
     writeln "---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod"
     writeln ""
     writeln "---@alias ImTextureID integer"
-    writeln ""
-    writeln "---@alias ImGuiID integer"
     writeln ""
     writeln "---@class ImFont"
     writeln ""
@@ -510,16 +503,16 @@ local function write_structs()
     writeln "---@param size integer"
     writeln "function ImStringBuf:Resize(size) end"
     writeln ""
-    local lst <const> = {
-        "ImVec2",
-        "ImGuiViewport",
-        "ImGuiIO",
-        "ImFontConfig",
-        "ImFontAtlas",
-        "ImGuiInputTextCallbackData"
-    }
-    for _, name in ipairs(lst) do
-        types.decode_docs(status, name, writeln, write_func)
+    writeln "---@class ImVec2"
+    writeln "---@field x number"
+    writeln "---@field y number"
+    writeln ""
+    for _, v in ipairs(status.types) do
+        writeln("---@alias %s %s", v.name, v.type)
+        writeln ""
+    end
+    for _, v in ipairs(status.structs) do
+        types.decode_docs(status, v.name, writeln, write_func)
     end
 end
 

@@ -2,7 +2,6 @@ local builtin_type <const> = {
     ["bool"] = "boolean",
     ["int"] = "integer",
     ["unsigned int"] = "integer",
-    ["ImWchar16"] = "integer",
     ["signed char"] = "integer",
     ["float"] = "number",
     ["void*"] = "lightuserdata",
@@ -26,16 +25,91 @@ local builtin_get <const> = {
 
 local reserve_type <const> = {
     ["ImGuiID"] = "ImGuiID",
+    ["ImTextureID"] = "ImTextureID",
     ["ImGuiKeyChord"] = "ImGui.KeyChord",
     ["const ImWchar*"] = "ImFontRange",
     ["ImFontAtlas*"] = "ImFontAtlas",
+    ["ImVec2"] = "ImVec2",
 }
+
+local special = {}
+
+special["ImVec2"] = function (name, field, attris, writeln)
+    writeln("struct %s {", field.name)
+    writeln "    static int getter(lua_State* L) {"
+    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+    writeln "        lua_createtable(L, 0, 2);"
+    writeln("        lua_pushnumber(L, OBJ.%s.x);", field.name)
+    writeln "        lua_setfield(L, -2, \"x\");"
+    writeln("        lua_pushnumber(L, OBJ.%s.y);", field.name)
+    writeln "        lua_setfield(L, -2, \"y\");"
+    writeln "        return 1;"
+    writeln "    }"
+    writeln "};"
+    writeln ""
+    attris.getters[#attris.getters+1] = field.name
+end
+
+special["const ImWchar*"] = function (name, field, attris, writeln, readonly)
+    writeln("struct %s {", field.name)
+    writeln "    static int getter(lua_State* L) {"
+    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+    writeln("        lua_pushlightuserdata(L, (void*)OBJ.%s);", field.name)
+    writeln "        return 1;"
+    writeln "    }"
+    attris.getters[#attris.getters+1] = field.name
+    if not readonly then
+        writeln ""
+        writeln "    static int setter(lua_State* L) {"
+        writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+        writeln("        OBJ.%s = (const ImWchar*)lua_touserdata(L, 1);", field.name, field.type.declaration)
+        writeln "        return 0;"
+        writeln "    }"
+        attris.setters[#attris.setters+1] = field.name
+    end
+    writeln "};"
+    writeln ""
+end
+
+special["ImFontAtlas*"] = function (name, field, attris, writeln)
+    writeln("struct %s {", field.name)
+    writeln "    static int getter(lua_State* L) {"
+    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+    writeln("        wrap_ImFontAtlas::const_pointer(L, *OBJ.%s);", field.name)
+    writeln "        return 1;"
+    writeln "    }"
+    attris.getters[#attris.getters+1] = field.name
+    writeln "};"
+    writeln ""
+end
+
+special["ImGuiKeyChord"] = function (name, field, attris, writeln, readonly)
+    writeln("struct %s {", field.name)
+    writeln "    static int getter(lua_State* L) {"
+    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+    writeln("        lua_pushinteger(L, OBJ.%s);", field.name)
+    writeln "        return 1;"
+    writeln "    }"
+    attris.getters[#attris.getters+1] = field.name
+    if not readonly then
+        writeln ""
+        writeln "    static int setter(lua_State* L) {"
+        writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+        writeln("        OBJ.%s = (ImGuiKeyChord)luaL_checkinteger(L, 1);", field.name, field.type.declaration)
+        writeln "        return 0;"
+        writeln "    }"
+        attris.setters[#attris.setters+1] = field.name
+    end
+    writeln "};"
+    writeln ""
+end
+
+special["ImTextureID"] = function ()
+end
 
 local registered_type = {}
 
 local function decode_docs(status, name, writeln, write_func)
-    local meta = status.types[name]
-    assert(meta and meta.kind == "struct")
     registered_type[name] = name
     local lines = {}
     local maxn = 0
@@ -48,7 +122,7 @@ local function decode_docs(status, name, writeln, write_func)
             lines[#lines+1] = { fname }
         end
     end
-    for _, field in ipairs(meta.fields) do
+    for _, field in ipairs(status.structs[name].fields) do
         if field.conditionals then
             goto continue
         end
@@ -72,12 +146,9 @@ local function decode_docs(status, name, writeln, write_func)
             push_line(field, string.format("ImGui.%s", status.enums[field.type.declaration].name))
             goto continue
         end
-        local field_meta = status.types[field.type.declaration]
-        if not field_meta then
-            goto continue
-        end
-        if field_meta.kind ~= "struct" then
-            push_line(field, builtin_type[field_meta.type.declaration])
+        local type_meta = status.types[field.type.declaration]
+        if type_meta then
+            push_line(field, type_meta.type)
             goto continue
         end
         ::continue::
@@ -91,13 +162,12 @@ local function decode_docs(status, name, writeln, write_func)
             writeln("---@field %s", fname)
         end
     end
-    local funcs_meta = status.struct_funcs[name] or {}
-    if #funcs_meta == 0 then
+    if not status.structs[name] or not status.structs[name].funcs then
         writeln ""
         return
     end
     writeln("local %s = {}", name)
-    for _, func_meta in ipairs(funcs_meta) do
+    for _, func_meta in ipairs(status.structs[name].funcs) do
         write_func(func_meta)
     end
     writeln ""
@@ -130,74 +200,35 @@ local function decode_func_builtin(name, writeln, readonly, attris, builtin, fie
     writeln ""
 end
 
-local function decode_func_attris(status, name, writeln, readonly, meta)
+local function decode_func_attris(status, name, writeln, readonly)
     local attris = {
         setters = {},
         getters = {},
     }
-    for _, field in ipairs(meta.fields) do
+    for _, field in ipairs(status.structs[name].fields) do
         if field.conditionals then
             goto continue
         end
-        local builtin = builtin_type[field.type.declaration]
-        if builtin then
-            decode_func_builtin(name, writeln, readonly, attris, builtin, field)
+        if builtin_type[field.type.declaration] then
+            decode_func_builtin(name, writeln, readonly, attris, builtin_type[field.type.declaration], field)
             goto continue
         end
-        local field_meta = status.types[field.type.declaration]
-        if field_meta then
-            if field_meta.kind == "struct" then
-                if field_meta.name == "ImVec2" then
-                    writeln("struct %s {", field.name)
-                    writeln "    static int getter(lua_State* L) {"
-                    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
-                    writeln "        lua_createtable(L, 0, 2);"
-                    writeln("        lua_pushnumber(L, OBJ.%s.x);", field.name)
-                    writeln "        lua_setfield(L, -2, \"x\");"
-                    writeln("        lua_pushnumber(L, OBJ.%s.y);", field.name)
-                    writeln "        lua_setfield(L, -2, \"y\");"
-                    writeln "        return 1;"
-                    writeln "    }"
-                    writeln "};"
-                    writeln ""
-                    attris.getters[#attris.getters+1] = field.name
-                    goto continue
-                end
-            else
-                builtin = builtin_type[field_meta.type.declaration]
-                assert(builtin, field_meta.type.declaration)
-                decode_func_builtin(name, writeln, readonly, attris, builtin, field)
-                goto continue
-            end
-        elseif field.type.declaration == "const ImWchar*" then
-            writeln("struct %s {", field.name)
-            writeln "    static int getter(lua_State* L) {"
-            writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
-            writeln("        lua_pushlightuserdata(L, (void*)OBJ.%s);", field.name)
-            writeln "        return 1;"
-            writeln "    }"
-            attris.getters[#attris.getters+1] = field.name
-            if not readonly then
-                writeln ""
-                writeln "    static int setter(lua_State* L) {"
-                writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
-                writeln("        OBJ.%s = (const ImWchar*)lua_touserdata(L, 1);", field.name, field.type.declaration)
-                writeln "        return 0;"
-                writeln "    }"
-                attris.setters[#attris.setters+1] = field.name
-            end
-            writeln "};"
-            writeln ""
-        elseif field.type.declaration == "ImFontAtlas*" then
-            writeln("struct %s {", field.name)
-            writeln "    static int getter(lua_State* L) {"
-            writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
-            writeln("        wrap_ImFontAtlas::const_pointer(L, *OBJ.%s);", field.name)
-            writeln "        return 1;"
-            writeln "    }"
-            attris.getters[#attris.getters+1] = field.name
-            writeln "};"
-            writeln ""
+        if status.flags[field.type.declaration] then
+            decode_func_builtin(name, writeln, readonly, attris, "integer", field)
+            goto continue
+        end
+        if status.enums[field.type.declaration] then
+            decode_func_builtin(name, writeln, readonly, attris, "integer", field)
+            goto continue
+        end
+        if special[field.type.declaration] then
+            special[field.type.declaration](name, field, attris, writeln, readonly)
+            goto continue
+        end
+        local type_meta = status.types[field.type.declaration]
+        if type_meta then
+            decode_func_builtin(name, writeln, readonly, attris, type_meta.type, field)
+            goto continue
         end
         ::continue::
     end
@@ -205,17 +236,15 @@ local function decode_func_attris(status, name, writeln, readonly, meta)
 end
 
 local function decode_func(status, name, writeln, write_func, modes)
-    local meta = status.types[name]
-    assert(meta and meta.kind == "struct")
     writeln("namespace wrap_%s {", name)
     writeln ""
-    local funcs_meta = status.struct_funcs[name] or {}
+    local funcs_meta = status.structs[name].funcs or {}
     local funcs = {}
     for _, func_meta in ipairs(funcs_meta) do
         funcs[#funcs+1] = write_func(func_meta)
     end
     local readonly = #modes == 1 and modes[1] == "const_pointer"
-    local attris = decode_func_attris(status, name, writeln, readonly, meta)
+    local attris = decode_func_attris(status, name, writeln, readonly)
     local funcs_args = "{}"
     local setters_args = "{}"
     local getters_args = "{}"
