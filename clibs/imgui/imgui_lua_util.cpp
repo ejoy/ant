@@ -95,8 +95,6 @@ strbuf* strbuf_create(lua_State* L, int idx) {
     size_t sz;
     const char* text = lua_tolstring(L, idx, &sz);
     auto sbuf = (strbuf*)lua_newuserdatauv(L, sizeof(strbuf), 0);
-    if (sbuf->data == NULL)
-        luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
     if (text == NULL) {
         sbuf->size = kStrBufMinSize;
         sbuf->data = (char *)strbuf_realloc(L, NULL, 0, sbuf->size);
