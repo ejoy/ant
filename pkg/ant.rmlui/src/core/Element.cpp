@@ -778,7 +778,7 @@ void Element::UpdateStructure() {
 }
 
 void Element::StartTransition(std::function<void()> f) {
-	auto const& transition = GetComputedProperty(PropertyId::Transition).Get<Transition>();
+	auto transition = GetComputedProperty(PropertyId::Transition).Get<Transition>();
 	if (transition.type == Transition::Type::None) {
 		f();
 		return;
@@ -817,7 +817,7 @@ void Element::HandleTransitionProperty() {
 	}
 	dirty.erase(Dirty::Transition);
 
-	auto const& transition = GetComputedProperty(PropertyId::Transition).Get<Transition>();
+	auto transition = GetComputedProperty(PropertyId::Transition).Get<Transition>();
 	switch (transition.type) {
 	case Transition::Type::None:
 		for (auto& [id, _] : transitions) {
