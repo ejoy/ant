@@ -16,86 +16,86 @@ local write_arg = {}
 local write_arg_ret = {}
 local write_ret = {}
 
-write_arg["const char*"] = function(type_meta, status)
-    local size_meta = status.args[status.i + 1]
+write_arg["const char*"] = function(type_meta, context)
+    local size_meta = context.args[context.i + 1]
     if size_meta then
         if size_meta.type and size_meta.type.declaration == "size_t" then
             assert(not type_meta.default_value)
-            status.idx = status.idx + 1
-            status.i = status.i + 1
+            context.idx = context.idx + 1
+            context.i = context.i + 1
             writeln("    size_t %s = 0;", size_meta.name)
-            writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
-            status.arguments[#status.arguments+1] = type_meta.name
-            status.arguments[#status.arguments+1] = size_meta.name
+            writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, context.idx, size_meta.name)
+            context.arguments[#context.arguments+1] = type_meta.name
+            context.arguments[#context.arguments+1] = size_meta.name
             return
         end
         if size_meta.is_varargs then
-            status.idx = status.idx + 1
-            status.i = status.i + 1
-            writeln("    const char* %s = util::format(L, %d);", type_meta.name, status.idx)
-            status.arguments[#status.arguments+1] = [["%s"]]
-            status.arguments[#status.arguments+1] = type_meta.name
+            context.idx = context.idx + 1
+            context.i = context.i + 1
+            writeln("    const char* %s = util::format(L, %d);", type_meta.name, context.idx)
+            context.arguments[#context.arguments+1] = [["%s"]]
+            context.arguments[#context.arguments+1] = type_meta.name
             return
         end
     end
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
     if type_meta.default_value then
-        writeln("    auto %s = luaL_optstring(L, %d, %s);", type_meta.name, status.idx, type_meta.default_value)
+        writeln("    auto %s = luaL_optstring(L, %d, %s);", type_meta.name, context.idx, type_meta.default_value)
     else
-        writeln("    auto %s = luaL_checkstring(L, %d);", type_meta.name, status.idx)
+        writeln("    auto %s = luaL_checkstring(L, %d);", type_meta.name, context.idx)
     end
 end
 
-write_arg["const void*"] = function(type_meta, status)
-    local size_meta = status.args[status.i + 1]
+write_arg["const void*"] = function(type_meta, context)
+    local size_meta = context.args[context.i + 1]
     if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
         assert(not type_meta.default_value)
         assert(not size_meta.default_value)
-        status.idx = status.idx + 1
-        status.i = status.i + 1
+        context.idx = context.idx + 1
+        context.i = context.i + 1
         writeln("    size_t %s = 0;", size_meta.name)
-        writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, status.idx, size_meta.name)
-        status.arguments[#status.arguments+1] = type_meta.name
-        status.arguments[#status.arguments+1] = size_meta.name
+        writeln("    auto %s = luaL_checklstring(L, %d, &%s);", type_meta.name, context.idx, size_meta.name)
+        context.arguments[#context.arguments+1] = type_meta.name
+        context.arguments[#context.arguments+1] = size_meta.name
         return
     end
-    status.idx = status.idx + 1
-    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, status.idx)
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.idx = context.idx + 1
+    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, context.idx)
+    context.arguments[#context.arguments+1] = type_meta.name
 end
 
-write_arg["void*"] = function(type_meta, status)
+write_arg["void*"] = function(type_meta, context)
     assert(type_meta.default_value == nil)
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
-    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, status.idx)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
+    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, context.idx)
 end
 
-write_arg["char*"] = function(type_meta, status)
-    local size_meta = status.args[status.i + 1]
+write_arg["char*"] = function(type_meta, context)
+    local size_meta = context.args[context.i + 1]
     if size_meta and size_meta.type and size_meta.type.declaration == "size_t" then
         assert(not type_meta.default_value)
         assert(not size_meta.default_value)
-        status.idx = status.idx + 1
-        status.i = status.i + 1
-        writeln("    auto _strbuf = util::strbuf_get(L, %d);", status.idx)
-        status.arguments[#status.arguments+1] = "_strbuf->data"
-        status.arguments[#status.arguments+1] = "_strbuf->size"
+        context.idx = context.idx + 1
+        context.i = context.i + 1
+        writeln("    auto _strbuf = util::strbuf_get(L, %d);", context.idx)
+        context.arguments[#context.arguments+1] = "_strbuf->data"
+        context.arguments[#context.arguments+1] = "_strbuf->size"
         return
     end
     assert(false)
 end
 
-write_arg["ImGuiInputTextCallback"] = function(type_meta, status)
-    local ud_meta = status.args[status.i + 1]
+write_arg["ImGuiInputTextCallback"] = function(type_meta, context)
+    local ud_meta = context.args[context.i + 1]
     if ud_meta and ud_meta.type and ud_meta.type.declaration == "void*" then
-        status.idx = status.idx + 1
-        status.i = status.i + 1
-        writeln("    util::input_context _ctx { L, %d };", status.idx)
+        context.idx = context.idx + 1
+        context.i = context.i + 1
+        writeln("    util::input_context _ctx { L, %d };", context.idx)
         writeln "    auto _top = lua_gettop(L);"
-        status.arguments[#status.arguments+1] = "util::input_callback"
-        status.arguments[#status.arguments+1] = "&_ctx"
+        context.arguments[#context.arguments+1] = "util::input_callback"
+        context.arguments[#context.arguments+1] = "&_ctx"
         return
     end
     assert(false)
@@ -109,49 +109,49 @@ write_arg_ret["ImGuiInputTextCallback"] = function()
     return 0
 end
 
-write_arg["ImVec2"] = function(type_meta, status)
+write_arg["ImVec2"] = function(type_meta, context)
     if type_meta.default_value == nil then
         writeln("    auto %s = ImVec2 {", type_meta.name)
-        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 1)
-        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
+        writeln("        (float)luaL_checknumber(L, %d),", context.idx + 1)
+        writeln("        (float)luaL_checknumber(L, %d),", context.idx + 2)
         writeln "    };"
     else
         local def_x, def_y = type_meta.default_value:match "^ImVec2%(([^,]+), ([^,]+)%)$"
         writeln("    auto %s = ImVec2 {", type_meta.name)
-        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 1, def_x)
-        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 2, def_y)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", context.idx + 1, def_x)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", context.idx + 2, def_y)
         writeln "    };"
     end
-    status.arguments[#status.arguments+1] = type_meta.name
-    status.idx = status.idx + 2
+    context.arguments[#context.arguments+1] = type_meta.name
+    context.idx = context.idx + 2
 end
 
-write_arg["ImVec4"] = function(type_meta, status)
+write_arg["ImVec4"] = function(type_meta, context)
     if type_meta.default_value == nil then
         writeln("    auto %s = ImVec4 {", type_meta.name)
-        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 1)
-        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 2)
-        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 3)
-        writeln("        (float)luaL_checknumber(L, %d),", status.idx + 4)
+        writeln("        (float)luaL_checknumber(L, %d),", context.idx + 1)
+        writeln("        (float)luaL_checknumber(L, %d),", context.idx + 2)
+        writeln("        (float)luaL_checknumber(L, %d),", context.idx + 3)
+        writeln("        (float)luaL_checknumber(L, %d),", context.idx + 4)
         writeln "    };"
     else
         local def_x, def_y, def_z, def_w = type_meta.default_value:match "^ImVec4%(([^,]+), ([^,]+), ([^,]+), ([^,]+)%)$"
         writeln("    auto %s = ImVec4 {", type_meta.name)
-        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 1, def_x)
-        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 2, def_y)
-        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 3, def_z)
-        writeln("        (float)luaL_optnumber(L, %d, %s),", status.idx + 4, def_w)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", context.idx + 1, def_x)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", context.idx + 2, def_y)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", context.idx + 3, def_z)
+        writeln("        (float)luaL_optnumber(L, %d, %s),", context.idx + 4, def_w)
         writeln "    };"
     end
-    status.arguments[#status.arguments+1] = type_meta.name
-    status.idx = status.idx + 4
+    context.arguments[#context.arguments+1] = type_meta.name
+    context.idx = context.idx + 4
 end
 
-write_arg["ImTextureID"] = function(type_meta, status)
+write_arg["ImTextureID"] = function(type_meta, context)
     assert(type_meta.default_value == nil)
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
-    writeln("    auto %s = util::get_texture_id(L, %d);", type_meta.name, status.idx)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
+    writeln("    auto %s = util::get_texture_id(L, %d);", type_meta.name, context.idx)
 end
 
 write_ret["ImGuiViewport*"] = function()
@@ -159,23 +159,23 @@ write_ret["ImGuiViewport*"] = function()
     return 1
 end
 
-write_arg["const ImFontConfig*"] = function(type_meta, status)
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
+write_arg["const ImFontConfig*"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
     if type_meta.default_value == nil then
-        writeln("    auto %s = *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, status.idx)
+        writeln("    auto %s = *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, context.idx)
     elseif type_meta.default_value == "NULL" then
-        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, status.idx, status.idx)
+        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
     else
         assert(false)
     end
 end
 
-write_arg["ImFont*"] = function(type_meta, status)
+write_arg["ImFont*"] = function(type_meta, context)
     assert(type_meta.default_value == nil)
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
-    writeln("    auto %s = (ImFont*)lua_touserdata(L, %d);", type_meta.name, status.idx)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
+    writeln("    auto %s = (ImFont*)lua_touserdata(L, %d);", type_meta.name, context.idx)
 end
 
 write_ret["ImFont*"] = function()
@@ -184,14 +184,14 @@ write_ret["ImFont*"] = function()
     return 1
 end
 
-write_arg["const ImWchar*"] = function(type_meta, status)
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
+write_arg["const ImWchar*"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
     if type_meta.default_value == "NULL" then
         writeln("    const ImWchar* %s = NULL;", type_meta.name)
-        writeln("    switch(lua_type(L, %d)) {", status.idx)
-        writeln("    case LUA_TSTRING: %s = (const ImWchar*)lua_tostring(L, %d); break;", type_meta.name, status.idx)
-        writeln("    case LUA_TLIGHTUSERDATA: %s = (const ImWchar*)lua_touserdata(L, %d); break;", type_meta.name, status.idx)
+        writeln("    switch(lua_type(L, %d)) {", context.idx)
+        writeln("    case LUA_TSTRING: %s = (const ImWchar*)lua_tostring(L, %d); break;", type_meta.name, context.idx)
+        writeln("    case LUA_TLIGHTUSERDATA: %s = (const ImWchar*)lua_touserdata(L, %d); break;", type_meta.name, context.idx)
         writeln "    default: break;"
         writeln "    };"
     else
@@ -222,51 +222,51 @@ write_arg["ImFontAtlas*"] = function()
     --NOTICE: Ignore ImFontAtlas for now.
 end
 
-write_arg["float"] = function(type_meta, status)
-    status.idx = status.idx + 1
+write_arg["float"] = function(type_meta, context)
+    context.idx = context.idx + 1
     if type_meta.default_value then
-        writeln("    auto %s = (float)luaL_optnumber(L, %d, %s);", type_meta.name, status.idx, type_meta.default_value)
+        writeln("    auto %s = (float)luaL_optnumber(L, %d, %s);", type_meta.name, context.idx, type_meta.default_value)
     else
-        writeln("    auto %s = (float)luaL_checknumber(L, %d);", type_meta.name, status.idx)
+        writeln("    auto %s = (float)luaL_checknumber(L, %d);", type_meta.name, context.idx)
     end
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.arguments[#context.arguments+1] = type_meta.name
 end
 
-write_arg["double"] = function(type_meta, status)
-    status.idx = status.idx + 1
+write_arg["double"] = function(type_meta, context)
+    context.idx = context.idx + 1
     if type_meta.default_value then
-        writeln("    auto %s = (double)luaL_optnumber(L, %d, %s);", type_meta.name, status.idx, type_meta.default_value)
+        writeln("    auto %s = (double)luaL_optnumber(L, %d, %s);", type_meta.name, context.idx, type_meta.default_value)
     else
-        writeln("    auto %s = (double)luaL_checknumber(L, %d);", type_meta.name, status.idx)
+        writeln("    auto %s = (double)luaL_checknumber(L, %d);", type_meta.name, context.idx)
     end
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.arguments[#context.arguments+1] = type_meta.name
 end
 
-write_arg["bool"] = function(type_meta, status)
-    status.idx = status.idx + 1
-    status.arguments[#status.arguments+1] = type_meta.name
+write_arg["bool"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
     if type_meta.default_value then
-        writeln("    auto %s = lua_isnoneornil(L, %d)? %s: !!lua_toboolean(L, %d);", type_meta.name, status.idx, type_meta.default_value, status.idx)
+        writeln("    auto %s = lua_isnoneornil(L, %d)? %s: !!lua_toboolean(L, %d);", type_meta.name, context.idx, type_meta.default_value, context.idx)
     else
-        writeln("    auto %s = !!lua_toboolean(L, %d);", type_meta.name, status.idx)
+        writeln("    auto %s = !!lua_toboolean(L, %d);", type_meta.name, context.idx)
     end
 end
 
-write_arg["bool*"] = function(type_meta, status)
+write_arg["bool*"] = function(type_meta, context)
     if type_meta.default_value then
-        status.idx = status.idx + 1
-        writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, status.idx)
+        context.idx = context.idx + 1
+        writeln("    bool has_%s = !lua_isnil(L, %d);", type_meta.name, context.idx)
         writeln("    bool %s = true;", type_meta.name)
-        status.arguments[#status.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
+        context.arguments[#context.arguments+1] = string.format("(has_%s? &%s: NULL)", type_meta.name, type_meta.name)
         return
     end
-    status.idx = status.idx + 1
-    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
-    writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+    context.idx = context.idx + 1
+    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", context.idx)
+    writeln("    int _%s_index = %d;", type_meta.name, context.idx)
     writeln("    bool %s[] = {", type_meta.name)
-    writeln("        util::field_toboolean(L, %d, %d),", status.idx, 1)
+    writeln("        util::field_toboolean(L, %d, %d),", context.idx, 1)
     writeln "    };"
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.arguments[#context.arguments+1] = type_meta.name
 end
 
 write_arg_ret["bool*"] = function(type_meta)
@@ -281,19 +281,19 @@ write_arg_ret["bool*"] = function(type_meta)
     return 0
 end
 
-write_arg["size_t*"] = function(type_meta, status)
+write_arg["size_t*"] = function(type_meta, context)
     writeln("    size_t %s = 0;", type_meta.name)
-    status.arguments[#status.arguments+1] = string.format("&%s", type_meta.name, type_meta.name)
+    context.arguments[#context.arguments+1] = string.format("&%s", type_meta.name, type_meta.name)
 end
 
-write_arg["unsigned int*"] = function(type_meta, status)
-    status.idx = status.idx + 1
-    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
-    writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+write_arg["unsigned int*"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", context.idx)
+    writeln("    int _%s_index = %d;", type_meta.name, context.idx)
     writeln("    unsigned int %s[] = {", type_meta.name)
-    writeln("        (unsigned int)util::field_tointeger(L, %d, 1),", status.idx)
+    writeln("        (unsigned int)util::field_tointeger(L, %d, 1),", context.idx)
     writeln "    };"
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.arguments[#context.arguments+1] = type_meta.name
 end
 write_arg_ret["unsigned int*"] = function(type_meta)
     writeln "    if (_retval) {"
@@ -303,14 +303,14 @@ write_arg_ret["unsigned int*"] = function(type_meta)
     return 0
 end
 
-write_arg["double*"] = function(type_meta, status)
-    status.idx = status.idx + 1
-    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
-    writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+write_arg["double*"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    writeln("    luaL_checktype(L, %d, LUA_TTABLE);", context.idx)
+    writeln("    int _%s_index = %d;", type_meta.name, context.idx)
     writeln("    double %s[] = {", type_meta.name)
-    writeln("        (double)util::field_tonumber(L, %d, 1),", status.idx)
+    writeln("        (double)util::field_tonumber(L, %d, 1),", context.idx)
     writeln "    };"
-    status.arguments[#status.arguments+1] = type_meta.name
+    context.arguments[#context.arguments+1] = type_meta.name
 end
 write_arg_ret["double*"] = function(type_meta)
     writeln "    if (_retval) {"
@@ -321,16 +321,16 @@ write_arg_ret["double*"] = function(type_meta)
 end
 
 for n = 1, 4 do
-    write_arg["int["..n.."]"] = function(type_meta, status)
-        status.idx = status.idx + 1
-        writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
-        writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+    write_arg["int["..n.."]"] = function(type_meta, context)
+        context.idx = context.idx + 1
+        writeln("    luaL_checktype(L, %d, LUA_TTABLE);", context.idx)
+        writeln("    int _%s_index = %d;", type_meta.name, context.idx)
         writeln("    int %s[] = {", type_meta.name)
         for i = 1, n do
-            writeln("        (int)util::field_tointeger(L, %d, %d),", status.idx, i)
+            writeln("        (int)util::field_tointeger(L, %d, %d),", context.idx, i)
         end
         writeln "    };"
-        status.arguments[#status.arguments+1] = type_meta.name
+        context.arguments[#context.arguments+1] = type_meta.name
     end
     write_arg_ret["int["..n.."]"] = function(type_meta)
         writeln "    if (_retval) {"
@@ -346,16 +346,16 @@ write_arg["int*"] = write_arg["int[1]"]
 write_arg_ret["int*"] = write_arg_ret["int[1]"]
 
 for n = 1, 4 do
-    write_arg["float["..n.."]"] = function(type_meta, status)
-        status.idx = status.idx + 1
-        writeln("    luaL_checktype(L, %d, LUA_TTABLE);", status.idx)
-        writeln("    int _%s_index = %d;", type_meta.name, status.idx)
+    write_arg["float["..n.."]"] = function(type_meta, context)
+        context.idx = context.idx + 1
+        writeln("    luaL_checktype(L, %d, LUA_TTABLE);", context.idx)
+        writeln("    int _%s_index = %d;", type_meta.name, context.idx)
         writeln("    float %s[] = {", type_meta.name)
         for i = 1, n do
-            writeln("        (float)util::field_tonumber(L, %d, %d),", status.idx, i)
+            writeln("        (float)util::field_tonumber(L, %d, %d),", context.idx, i)
         end
         writeln "    };"
-        status.arguments[#status.arguments+1] = type_meta.name
+        context.arguments[#context.arguments+1] = type_meta.name
     end
     write_arg_ret["float["..n.."]"] = function(type_meta)
         writeln "    if (_retval) {"
@@ -434,14 +434,14 @@ write_ret["ImGuiIO*"] = function()
 end
 
 for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar", "ImWchar16", "ImGuiID", "ImGuiKeyChord"} do
-    write_arg[type_name] = function(type_meta, status)
-        status.idx = status.idx + 1
+    write_arg[type_name] = function(type_meta, context)
+        context.idx = context.idx + 1
         if type_meta.default_value then
-            writeln("    auto %s = (%s)luaL_optinteger(L, %d, %s);", type_meta.name, type_name, status.idx, type_meta.default_value)
+            writeln("    auto %s = (%s)luaL_optinteger(L, %d, %s);", type_meta.name, type_name, context.idx, type_meta.default_value)
         else
-            writeln("    auto %s = (%s)luaL_checkinteger(L, %d);", type_meta.name, type_name, status.idx)
+            writeln("    auto %s = (%s)luaL_checkinteger(L, %d);", type_meta.name, type_name, context.idx)
         end
-        status.arguments[#status.arguments+1] = type_meta.name
+        context.arguments[#context.arguments+1] = type_meta.name
     end
     write_ret[type_name] = function()
         writeln "    lua_pushinteger(L, _retval);"
@@ -472,14 +472,14 @@ local function write_flags_and_enums()
             end
             assert(false)
         end
-        write_arg[realname] = function(type_meta, status)
-            status.idx = status.idx + 1
+        write_arg[realname] = function(type_meta, context)
+            context.idx = context.idx + 1
             if type_meta.default_value then
-                writeln("    auto %s = (%s)luaL_optinteger(L, %d, lua_Integer(%s));", type_meta.name, realname, status.idx, find_name(type_meta.default_value))
+                writeln("    auto %s = (%s)luaL_optinteger(L, %d, lua_Integer(%s));", type_meta.name, realname, context.idx, find_name(type_meta.default_value))
             else
-                writeln("    auto %s = (%s)luaL_checkinteger(L, %d);", type_meta.name, realname, status.idx)
+                writeln("    auto %s = (%s)luaL_checkinteger(L, %d);", type_meta.name, realname, context.idx)
             end
-            status.arguments[#status.arguments+1] = type_meta.name
+            context.arguments[#context.arguments+1] = type_meta.name
         end
         write_ret[realname] = function()
             writeln "    lua_pushinteger(L, _retval);"
@@ -501,7 +501,7 @@ end
 local function write_func(func_meta)
     local realname
     local function_string
-    local status = {
+    local context = {
         i = 1,
         args = func_meta.arguments,
         idx = 0,
@@ -509,7 +509,7 @@ local function write_func(func_meta)
     }
     if func_meta.original_class then
         realname = func_meta.name:match("^"..func_meta.original_class.."_([%w]+)$")
-        status.i = 2
+        context.i = 2
         writeln("static int %s(lua_State* L) {", realname)
         writeln("    auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", func_meta.original_class)
         function_string = ("OBJ.%s"):format(func_meta.original_fully_qualified_name);
@@ -518,24 +518,24 @@ local function write_func(func_meta)
         writeln("static int %s(lua_State* L) {", realname)
         function_string = func_meta.original_fully_qualified_name
     end
-    while status.i <= #status.args do
-        local type_meta = status.args[status.i]
+    while context.i <= #context.args do
+        local type_meta = context.args[context.i]
         local wfunc = write_arg[type_meta.type.declaration]
         if not wfunc then
             error(string.format("`%s` undefined write arg func `%s`", func_meta.name, type_meta.type.declaration))
         end
-        wfunc(type_meta, status)
-        status.i = status.i + 1
+        wfunc(type_meta, context)
+        context.i = context.i + 1
     end
     if func_meta.return_type.declaration == "void" then
-        writeln("    %s(%s);", function_string, table.concat(status.arguments, ", "))
+        writeln("    %s(%s);", function_string, table.concat(context.arguments, ", "))
         writeln "    return 0;"
     else
         local rfunc = write_ret[func_meta.return_type.declaration]
         if not rfunc then
             error(string.format("`%s` undefined write ret func `%s`", func_meta.name, func_meta.return_type.declaration))
         end
-        writeln("    auto&& _retval = %s(%s);", function_string, table.concat(status.arguments, ", "))
+        writeln("    auto&& _retval = %s(%s);", function_string, table.concat(context.arguments, ", "))
         local nret = 0
         nret = nret + rfunc(func_meta, func_meta.return_type)
         for _, type_meta in ipairs(func_meta.arguments) do
