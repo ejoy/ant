@@ -334,6 +334,315 @@ function ImGui.DockNodeFlags(flags) end
 function ImGui.DragDropFlags(flags) end
 
 --
+-- Configuration flags stored in io.ConfigFlags. Set by user/application.
+--
+---@class ImGui.ConfigFlags
+
+---@alias _ImGuiConfigFlags_Name
+---| "None"
+---| "NavEnableKeyboard"       #  Master keyboard navigation enable flag. Enable full Tabbing + directional arrows + space/enter to activate.
+---| "NavEnableGamepad"        #  Master gamepad navigation enable flag. Backend also needs to set ImGuiBackendFlags_HasGamepad.
+---| "NavEnableSetMousePos"    #  Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.MousePos and set io.WantSetMousePos=true. If enabled you MUST honor io.WantSetMousePos requests in your backend, otherwise ImGui will react as if the mouse is jumping around back and forth.
+---| "NavNoCaptureKeyboard"    #  Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.
+---| "NoMouse"                 #  Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.
+---| "NoMouseCursorChange"     #  Instruct backend to not alter mouse cursor shape and visibility. Use if the backend cursor changes are interfering with yours and you don't want to use SetMouseCursor() to change mouse cursor. You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
+---| "DockingEnable"           #  Docking enable flags.
+---| "ViewportsEnable"         #  Viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
+---| "DpiEnableScaleViewports" #  [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
+---| "DpiEnableScaleFonts"     #  [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match DpiScale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress.
+---| "IsSRGB"                  #  Application is SRGB-aware.
+---| "IsTouchScreen"           #  Application is using a touch screen instead of a mouse.
+
+---@param flags _ImGuiConfigFlags_Name[]
+---@return ImGui.ConfigFlags
+function ImGui.ConfigFlags(flags) end
+
+--
+-- Backend capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom backend.
+--
+---@class ImGui.BackendFlags
+
+---@alias _ImGuiBackendFlags_Name
+---| "None"
+---| "HasGamepad"              #  Backend Platform supports gamepad and currently has one connected.
+---| "HasMouseCursors"         #  Backend Platform supports honoring GetMouseCursor() value to change the OS cursor shape.
+---| "HasSetMousePos"          #  Backend Platform supports io.WantSetMousePos requests to reposition the OS mouse position (only used if ImGuiConfigFlags_NavEnableSetMousePos is set).
+---| "RendererHasVtxOffset"    #  Backend Renderer supports ImDrawCmd::VtxOffset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices.
+---| "PlatformHasViewports"    #  Backend Platform supports multiple viewports.
+---| "HasMouseHoveredViewport" #  Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE, ignore viewports with the ImGuiViewportFlags_NoInputs flag (Win32 backend, GLFW 3.30+ backend can do this, SDL backend cannot). If this cannot be done, Dear ImGui needs to use a flawed heuristic to find the viewport under.
+---| "RendererHasViewports"    #  Backend Renderer supports multiple viewports.
+
+---@param flags _ImGuiBackendFlags_Name[]
+---@return ImGui.BackendFlags
+function ImGui.BackendFlags(flags) end
+
+--
+-- Flags for InvisibleButton() [extended in imgui_internal.h]
+--
+---@class ImGui.ButtonFlags
+
+---@alias _ImGuiButtonFlags_Name
+---| "None"
+---| "MouseButtonLeft"   #  React on left mouse button (default)
+---| "MouseButtonRight"  #  React on right mouse button
+---| "MouseButtonMiddle" #  React on center mouse button
+
+---@param flags _ImGuiButtonFlags_Name[]
+---@return ImGui.ButtonFlags
+function ImGui.ButtonFlags(flags) end
+
+--
+-- Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
+--
+---@class ImGui.ColorEditFlags
+
+---@alias _ImGuiColorEditFlags_Name
+---| "None"
+---| "NoAlpha"          #               // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).
+---| "NoPicker"         #               // ColorEdit: disable picker when clicking on color square.
+---| "NoOptions"        #               // ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.
+---| "NoSmallPreview"   #               // ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.g. to show only the inputs)
+---| "NoInputs"         #               // ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.g. to show only the small preview color square).
+---| "NoTooltip"        #               // ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.
+---| "NoLabel"          #               // ColorEdit, ColorPicker: disable display of inline text label (the label is still forwarded to the tooltip and picker).
+---| "NoSidePreview"    #               // ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.
+---| "NoDragDrop"       #               // ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.
+---| "NoBorder"         #               // ColorButton: disable border (which is enforced by default)
+---| "AlphaBar"         #               // ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
+---| "AlphaPreview"     #               // ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.
+---| "AlphaPreviewHalf" #               // ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.
+---| "HDR"              #               // (WIP) ColorEdit: Currently only disable 0.0f..1.0f limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).
+---| "DisplayRGB"       #  [Display]    // ColorEdit: override _display_ type among RGB/HSV/Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.
+---| "DisplayHSV"       #  [Display]    // "
+---| "DisplayHex"       #  [Display]    // "
+---| "Uint8"            #  [DataType]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.
+---| "Float"            #  [DataType]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0f..1.0f floats instead of 0..255 integers. No round-trip of value via integers.
+---| "PickerHueBar"     #  [Picker]     // ColorPicker: bar for Hue, rectangle for Sat/Value.
+---| "PickerHueWheel"   #  [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/Value.
+---| "InputRGB"         #  [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
+---| "InputHSV"         #  [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
+
+---@param flags _ImGuiColorEditFlags_Name[]
+---@return ImGui.ColorEditFlags
+function ImGui.ColorEditFlags(flags) end
+
+--
+-- Flags for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.
+-- We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
+-- (Those are per-item flags. There are shared flags in ImGuiIO: io.ConfigDragClickToInputText)
+--
+---@class ImGui.SliderFlags
+
+---@alias _ImGuiSliderFlags_Name
+---| "None"
+---| "AlwaysClamp"     #  Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.
+---| "Logarithmic"     #  Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
+---| "NoRoundToFormat" #  Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
+---| "NoInput"         #  Disable CTRL+Click or Enter key allowing to input text directly into the widget
+
+---@param flags _ImGuiSliderFlags_Name[]
+---@return ImGui.SliderFlags
+function ImGui.SliderFlags(flags) end
+
+--
+-- Flags for ImGui::BeginTable()
+-- - Important! Sizing policies have complex and subtle side effects, much more so than you would expect.
+--   Read comments/demos carefully + experiment with live demos to get acquainted with them.
+-- - The DEFAULT sizing policies are:
+--    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
+--    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
+-- - When ScrollX is off:
+--    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
+--    - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
+--    - Fixed Columns (if any) will generally obtain their requested width (unless the table cannot fit them all).
+--    - Stretch Columns will share the remaining width according to their respective weight.
+--    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
+--      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
+--      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
+-- - When ScrollX is on:
+--    - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
+--    - Columns sizing policy allowed: Fixed/Auto mostly.
+--    - Fixed Columns can be enlarged as needed. Table will show a horizontal scrollbar if needed.
+--    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
+--    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+--      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
+-- - Read on documentation at the top of imgui_tables.cpp for details.
+--
+---@class ImGui.TableFlags
+
+---@alias _ImGuiTableFlags_Name
+---| "None"
+---| "Resizable"                  #  Enable resizing columns.
+---| "Reorderable"                #  Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
+---| "Hideable"                   #  Enable hiding/disabling columns in context menu.
+---| "Sortable"                   #  Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
+---| "NoSavedSettings"            #  Disable persisting columns order, width and sort settings in the .ini file.
+---| "ContextMenuInBody"          #  Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
+---| "RowBg"                      #  Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
+---| "BordersInnerH"              #  Draw horizontal borders between rows.
+---| "BordersOuterH"              #  Draw horizontal borders at the top and bottom.
+---| "BordersInnerV"              #  Draw vertical borders between columns.
+---| "BordersOuterV"              #  Draw vertical borders on the left and right sides.
+---| "BordersH"                   #  Draw horizontal borders.
+---| "BordersV"                   #  Draw vertical borders.
+---| "BordersInner"               #  Draw inner borders.
+---| "BordersOuter"               #  Draw outer borders.
+---| "Borders"                    #  Draw all borders.
+---| "NoBordersInBody"            #  [ALPHA] Disable vertical borders in columns Body (borders will always appear in Headers). -> May move to style
+---| "NoBordersInBodyUntilResize" #  [ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers). -> May move to style
+---| "SizingFixedFit"             #  Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching contents width.
+---| "SizingFixedSame"            #  Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching the maximum contents width of all columns. Implicitly enable ImGuiTableFlags_NoKeepColumnsVisible.
+---| "SizingStretchProp"          #  Columns default to _WidthStretch with default weights proportional to each columns contents widths.
+---| "SizingStretchSame"          #  Columns default to _WidthStretch with default weights all equal, unless overridden by TableSetupColumn().
+---| "NoHostExtendX"              #  Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
+---| "NoHostExtendY"              #  Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.
+---| "NoKeepColumnsVisible"       #  Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
+---| "PreciseWidths"              #  Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.
+---| "NoClip"                     #  Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with TableSetupScrollFreeze().
+---| "PadOuterX"                  #  Default if BordersOuterV is on. Enable outermost padding. Generally desirable if you have headers.
+---| "NoPadOuterX"                #  Default if BordersOuterV is off. Disable outermost padding.
+---| "NoPadInnerX"                #  Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
+---| "ScrollX"                    #  Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this creates a child window, ScrollY is currently generally recommended when using ScrollX.
+---| "ScrollY"                    #  Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
+---| "SortMulti"                  #  Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).
+---| "SortTristate"               #  Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
+---| "HighlightHoveredColumn"     #  Highlight column headers when hovered (may evolve into a fuller highlight)
+
+---@param flags _ImGuiTableFlags_Name[]
+---@return ImGui.TableFlags
+function ImGui.TableFlags(flags) end
+
+--
+-- Flags for ImGui::TableSetupColumn()
+--
+---@class ImGui.TableColumnFlags
+
+---@alias _ImGuiTableColumnFlags_Name
+---| "None"
+---| "Disabled"             #  Overriding/master disable flag: hide column, won't show in context menu (unlike calling TableSetColumnEnabled() which manipulates the user accessible state)
+---| "DefaultHide"          #  Default as a hidden/disabled column.
+---| "DefaultSort"          #  Default as a sorting column.
+---| "WidthStretch"         #  Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).
+---| "WidthFixed"           #  Column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).
+---| "NoResize"             #  Disable manual resizing.
+---| "NoReorder"            #  Disable manual reordering this column, this will also prevent other columns from crossing over this column.
+---| "NoHide"               #  Disable ability to hide/disable this column.
+---| "NoClip"               #  Disable clipping for this column (all NoClip columns will render in a same draw command).
+---| "NoSort"               #  Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).
+---| "NoSortAscending"      #  Disable ability to sort in the ascending direction.
+---| "NoSortDescending"     #  Disable ability to sort in the descending direction.
+---| "NoHeaderLabel"        #  TableHeadersRow() will not submit horizontal label for this column. Convenient for some small columns. Name will still appear in context menu or in angled headers.
+---| "NoHeaderWidth"        #  Disable header text width contribution to automatic column width.
+---| "PreferSortAscending"  #  Make the initial sort direction Ascending when first sorting on this column (default).
+---| "PreferSortDescending" #  Make the initial sort direction Descending when first sorting on this column.
+---| "IndentEnable"         #  Use current Indent value when entering cell (default for column 0).
+---| "IndentDisable"        #  Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
+---| "AngledHeader"         #  TableHeadersRow() will submit an angled header row for this column. Note this will add an extra row.
+---| "IsEnabled"            #  Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
+---| "IsVisible"            #  Status: is visible == is enabled AND not clipped by scrolling.
+---| "IsSorted"             #  Status: is currently part of the sort specs
+---| "IsHovered"            #  Status: is hovered by mouse
+
+---@param flags _ImGuiTableColumnFlags_Name[]
+---@return ImGui.TableColumnFlags
+function ImGui.TableColumnFlags(flags) end
+
+--
+-- Flags for ImGui::TableNextRow()
+--
+---@class ImGui.TableRowFlags
+
+---@alias _ImGuiTableRowFlags_Name
+---| "None"
+---| "Headers" #  Identify header row (set default background color + width of its contents accounted differently for auto column width)
+
+---@param flags _ImGuiTableRowFlags_Name[]
+---@return ImGui.TableRowFlags
+function ImGui.TableRowFlags(flags) end
+
+--
+-- Flags for ImDrawList functions
+-- (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
+--
+---@class ImGui.DrawFlags
+
+---@alias _ImDrawFlags_Name
+---| "None"
+---| "Closed"                  #  PathStroke(), AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
+---| "RoundCornersTopLeft"     #  AddRect(), AddRectFilled(), PathRect(): enable rounding top-left corner only (when rounding > 0.0f, we default to all corners). Was 0x01.
+---| "RoundCornersTopRight"    #  AddRect(), AddRectFilled(), PathRect(): enable rounding top-right corner only (when rounding > 0.0f, we default to all corners). Was 0x02.
+---| "RoundCornersBottomLeft"  #  AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners). Was 0x04.
+---| "RoundCornersBottomRight" #  AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners). Wax 0x08.
+---| "RoundCornersNone"        #  AddRect(), AddRectFilled(), PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!
+---| "RoundCornersTop"
+---| "RoundCornersBottom"
+---| "RoundCornersLeft"
+---| "RoundCornersRight"
+---| "RoundCornersAll"
+
+---@param flags _ImDrawFlags_Name[]
+---@return ImGui.DrawFlags
+function ImGui.DrawFlags(flags) end
+
+--
+-- Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
+-- It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
+--
+---@class ImGui.DrawListFlags
+
+---@alias _ImDrawListFlags_Name
+---| "None"
+---| "AntiAliasedLines"       #  Enable anti-aliased lines/borders (*2 the number of triangles for 1.0f wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
+---| "AntiAliasedLinesUseTex" #  Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
+---| "AntiAliasedFill"        #  Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
+---| "AllowVtxOffset"         #  Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
+
+---@param flags _ImDrawListFlags_Name[]
+---@return ImGui.DrawListFlags
+function ImGui.DrawListFlags(flags) end
+
+--
+-- Flags for ImFontAtlas build
+--
+---@class ImGui.FontAtlasFlags
+
+---@alias _ImFontAtlasFlags_Name
+---| "None"
+---| "NoPowerOfTwoHeight" #  Don't round the height to next power of two
+---| "NoMouseCursors"     #  Don't build software mouse cursors into the atlas (save a little texture memory)
+---| "NoBakedLines"       #  Don't build thick line textures into the atlas (save a little texture memory, allow support for point/nearest filtering). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
+
+---@param flags _ImFontAtlasFlags_Name[]
+---@return ImGui.FontAtlasFlags
+function ImGui.FontAtlasFlags(flags) end
+
+--
+-- Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
+--
+---@class ImGui.ViewportFlags
+
+---@alias _ImGuiViewportFlags_Name
+---| "None"
+---| "IsPlatformWindow"    #  Represent a Platform Window
+---| "IsPlatformMonitor"   #  Represent a Platform Monitor (unused yet)
+---| "OwnedByApp"          #  Platform Window: Was created/managed by the user application? (rather than our backend)
+---| "NoDecoration"        #  Platform Window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
+---| "NoTaskBarIcon"       #  Platform Window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
+---| "NoFocusOnAppearing"  #  Platform Window: Don't take focus when created.
+---| "NoFocusOnClick"      #  Platform Window: Don't take focus when clicked on.
+---| "NoInputs"            #  Platform Window: Make mouse pass through so we can drag this window while peaking behind it.
+---| "NoRendererClear"     #  Platform Window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
+---| "NoAutoMerge"         #  Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
+---| "TopMost"             #  Platform Window: Display on top (for tooltips only).
+---| "CanHostOtherWindows" #  Viewport can host multiple imgui windows (secondary viewports are associated to a single window). // FIXME: In practice there's still probably code making the assumption that this is always and only on the MainViewport. Will fix once we add support for "no main viewport".
+---| "IsMinimized"         #  Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
+---| "IsFocused"           #  Platform Window: Window is focused (last call to Platform_GetWindowFocus() returned true)
+
+---@param flags _ImGuiViewportFlags_Name[]
+---@return ImGui.ViewportFlags
+function ImGui.ViewportFlags(flags) end
+
+--
 -- A primary data type
 --
 ---@alias ImGui.DataType
@@ -533,48 +842,14 @@ ImGui.SortDirection = {}
 ---| `ImGui.Key.MouseWheelY`
 ImGui.Key = {}
 
---
--- Configuration flags stored in io.ConfigFlags. Set by user/application.
---
----@class ImGui.ConfigFlags
-
----@alias _ImGuiConfigFlags_Name
----| "None"
----| "NavEnableKeyboard"       #  Master keyboard navigation enable flag. Enable full Tabbing + directional arrows + space/enter to activate.
----| "NavEnableGamepad"        #  Master gamepad navigation enable flag. Backend also needs to set ImGuiBackendFlags_HasGamepad.
----| "NavEnableSetMousePos"    #  Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.MousePos and set io.WantSetMousePos=true. If enabled you MUST honor io.WantSetMousePos requests in your backend, otherwise ImGui will react as if the mouse is jumping around back and forth.
----| "NavNoCaptureKeyboard"    #  Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.
----| "NoMouse"                 #  Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.
----| "NoMouseCursorChange"     #  Instruct backend to not alter mouse cursor shape and visibility. Use if the backend cursor changes are interfering with yours and you don't want to use SetMouseCursor() to change mouse cursor. You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
----| "DockingEnable"           #  Docking enable flags.
----| "ViewportsEnable"         #  Viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
----| "DpiEnableScaleViewports" #  [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
----| "DpiEnableScaleFonts"     #  [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match DpiScale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress.
----| "IsSRGB"                  #  Application is SRGB-aware.
----| "IsTouchScreen"           #  Application is using a touch screen instead of a mouse.
-
----@param flags _ImGuiConfigFlags_Name[]
----@return ImGui.ConfigFlags
-function ImGui.ConfigFlags(flags) end
-
---
--- Backend capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom backend.
---
----@class ImGui.BackendFlags
-
----@alias _ImGuiBackendFlags_Name
----| "None"
----| "HasGamepad"              #  Backend Platform supports gamepad and currently has one connected.
----| "HasMouseCursors"         #  Backend Platform supports honoring GetMouseCursor() value to change the OS cursor shape.
----| "HasSetMousePos"          #  Backend Platform supports io.WantSetMousePos requests to reposition the OS mouse position (only used if ImGuiConfigFlags_NavEnableSetMousePos is set).
----| "RendererHasVtxOffset"    #  Backend Renderer supports ImDrawCmd::VtxOffset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices.
----| "PlatformHasViewports"    #  Backend Platform supports multiple viewports.
----| "HasMouseHoveredViewport" #  Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE, ignore viewports with the ImGuiViewportFlags_NoInputs flag (Win32 backend, GLFW 3.30+ backend can do this, SDL backend cannot). If this cannot be done, Dear ImGui needs to use a flawed heuristic to find the viewport under.
----| "RendererHasViewports"    #  Backend Renderer supports multiple viewports.
-
----@param flags _ImGuiBackendFlags_Name[]
----@return ImGui.BackendFlags
-function ImGui.BackendFlags(flags) end
+---@alias ImGui.Mod
+---| `ImGui.Mod.None`
+---| `ImGui.Mod.Ctrl`     #  Ctrl
+---| `ImGui.Mod.Shift`    #  Shift
+---| `ImGui.Mod.Alt`      #  Option/Menu
+---| `ImGui.Mod.Super`    #  Cmd/Super/Windows
+---| `ImGui.Mod.Shortcut` #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
+ImGui.Mod = {}
 
 --
 -- Enumeration for PushStyleColor() / PopStyleColor()
@@ -680,74 +955,6 @@ ImGui.Col = {}
 ImGui.StyleVar = {}
 
 --
--- Flags for InvisibleButton() [extended in imgui_internal.h]
---
----@class ImGui.ButtonFlags
-
----@alias _ImGuiButtonFlags_Name
----| "None"
----| "MouseButtonLeft"   #  React on left mouse button (default)
----| "MouseButtonRight"  #  React on right mouse button
----| "MouseButtonMiddle" #  React on center mouse button
-
----@param flags _ImGuiButtonFlags_Name[]
----@return ImGui.ButtonFlags
-function ImGui.ButtonFlags(flags) end
-
---
--- Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
---
----@class ImGui.ColorEditFlags
-
----@alias _ImGuiColorEditFlags_Name
----| "None"
----| "NoAlpha"          #               // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).
----| "NoPicker"         #               // ColorEdit: disable picker when clicking on color square.
----| "NoOptions"        #               // ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.
----| "NoSmallPreview"   #               // ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.g. to show only the inputs)
----| "NoInputs"         #               // ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.g. to show only the small preview color square).
----| "NoTooltip"        #               // ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.
----| "NoLabel"          #               // ColorEdit, ColorPicker: disable display of inline text label (the label is still forwarded to the tooltip and picker).
----| "NoSidePreview"    #               // ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.
----| "NoDragDrop"       #               // ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.
----| "NoBorder"         #               // ColorButton: disable border (which is enforced by default)
----| "AlphaBar"         #               // ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
----| "AlphaPreview"     #               // ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.
----| "AlphaPreviewHalf" #               // ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.
----| "HDR"              #               // (WIP) ColorEdit: Currently only disable 0.0f..1.0f limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).
----| "DisplayRGB"       #  [Display]    // ColorEdit: override _display_ type among RGB/HSV/Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.
----| "DisplayHSV"       #  [Display]    // "
----| "DisplayHex"       #  [Display]    // "
----| "Uint8"            #  [DataType]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.
----| "Float"            #  [DataType]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0f..1.0f floats instead of 0..255 integers. No round-trip of value via integers.
----| "PickerHueBar"     #  [Picker]     // ColorPicker: bar for Hue, rectangle for Sat/Value.
----| "PickerHueWheel"   #  [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/Value.
----| "InputRGB"         #  [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
----| "InputHSV"         #  [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
-
----@param flags _ImGuiColorEditFlags_Name[]
----@return ImGui.ColorEditFlags
-function ImGui.ColorEditFlags(flags) end
-
---
--- Flags for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.
--- We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
--- (Those are per-item flags. There are shared flags in ImGuiIO: io.ConfigDragClickToInputText)
---
----@class ImGui.SliderFlags
-
----@alias _ImGuiSliderFlags_Name
----| "None"
----| "AlwaysClamp"     #  Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.
----| "Logarithmic"     #  Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
----| "NoRoundToFormat" #  Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
----| "NoInput"         #  Disable CTRL+Click or Enter key allowing to input text directly into the widget
-
----@param flags _ImGuiSliderFlags_Name[]
----@return ImGui.SliderFlags
-function ImGui.SliderFlags(flags) end
-
---
 -- Identify a mouse button.
 -- Those values are guaranteed to be stable and we frequently use 0/1 directly. Named enums provided for convenience.
 --
@@ -803,122 +1010,6 @@ ImGui.MouseSource = {}
 ImGui.Cond = {}
 
 --
--- Flags for ImGui::BeginTable()
--- - Important! Sizing policies have complex and subtle side effects, much more so than you would expect.
---   Read comments/demos carefully + experiment with live demos to get acquainted with them.
--- - The DEFAULT sizing policies are:
---    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
---    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
--- - When ScrollX is off:
---    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
---    - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
---    - Fixed Columns (if any) will generally obtain their requested width (unless the table cannot fit them all).
---    - Stretch Columns will share the remaining width according to their respective weight.
---    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
---      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
---      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
--- - When ScrollX is on:
---    - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
---    - Columns sizing policy allowed: Fixed/Auto mostly.
---    - Fixed Columns can be enlarged as needed. Table will show a horizontal scrollbar if needed.
---    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
---    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
---      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
--- - Read on documentation at the top of imgui_tables.cpp for details.
---
----@class ImGui.TableFlags
-
----@alias _ImGuiTableFlags_Name
----| "None"
----| "Resizable"                  #  Enable resizing columns.
----| "Reorderable"                #  Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
----| "Hideable"                   #  Enable hiding/disabling columns in context menu.
----| "Sortable"                   #  Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
----| "NoSavedSettings"            #  Disable persisting columns order, width and sort settings in the .ini file.
----| "ContextMenuInBody"          #  Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
----| "RowBg"                      #  Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
----| "BordersInnerH"              #  Draw horizontal borders between rows.
----| "BordersOuterH"              #  Draw horizontal borders at the top and bottom.
----| "BordersInnerV"              #  Draw vertical borders between columns.
----| "BordersOuterV"              #  Draw vertical borders on the left and right sides.
----| "BordersH"                   #  Draw horizontal borders.
----| "BordersV"                   #  Draw vertical borders.
----| "BordersInner"               #  Draw inner borders.
----| "BordersOuter"               #  Draw outer borders.
----| "Borders"                    #  Draw all borders.
----| "NoBordersInBody"            #  [ALPHA] Disable vertical borders in columns Body (borders will always appear in Headers). -> May move to style
----| "NoBordersInBodyUntilResize" #  [ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers). -> May move to style
----| "SizingFixedFit"             #  Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching contents width.
----| "SizingFixedSame"            #  Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching the maximum contents width of all columns. Implicitly enable ImGuiTableFlags_NoKeepColumnsVisible.
----| "SizingStretchProp"          #  Columns default to _WidthStretch with default weights proportional to each columns contents widths.
----| "SizingStretchSame"          #  Columns default to _WidthStretch with default weights all equal, unless overridden by TableSetupColumn().
----| "NoHostExtendX"              #  Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
----| "NoHostExtendY"              #  Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.
----| "NoKeepColumnsVisible"       #  Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
----| "PreciseWidths"              #  Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.
----| "NoClip"                     #  Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with TableSetupScrollFreeze().
----| "PadOuterX"                  #  Default if BordersOuterV is on. Enable outermost padding. Generally desirable if you have headers.
----| "NoPadOuterX"                #  Default if BordersOuterV is off. Disable outermost padding.
----| "NoPadInnerX"                #  Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
----| "ScrollX"                    #  Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this creates a child window, ScrollY is currently generally recommended when using ScrollX.
----| "ScrollY"                    #  Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
----| "SortMulti"                  #  Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).
----| "SortTristate"               #  Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
----| "HighlightHoveredColumn"     #  Highlight column headers when hovered (may evolve into a fuller highlight)
-
----@param flags _ImGuiTableFlags_Name[]
----@return ImGui.TableFlags
-function ImGui.TableFlags(flags) end
-
---
--- Flags for ImGui::TableSetupColumn()
---
----@class ImGui.TableColumnFlags
-
----@alias _ImGuiTableColumnFlags_Name
----| "None"
----| "Disabled"             #  Overriding/master disable flag: hide column, won't show in context menu (unlike calling TableSetColumnEnabled() which manipulates the user accessible state)
----| "DefaultHide"          #  Default as a hidden/disabled column.
----| "DefaultSort"          #  Default as a sorting column.
----| "WidthStretch"         #  Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).
----| "WidthFixed"           #  Column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).
----| "NoResize"             #  Disable manual resizing.
----| "NoReorder"            #  Disable manual reordering this column, this will also prevent other columns from crossing over this column.
----| "NoHide"               #  Disable ability to hide/disable this column.
----| "NoClip"               #  Disable clipping for this column (all NoClip columns will render in a same draw command).
----| "NoSort"               #  Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).
----| "NoSortAscending"      #  Disable ability to sort in the ascending direction.
----| "NoSortDescending"     #  Disable ability to sort in the descending direction.
----| "NoHeaderLabel"        #  TableHeadersRow() will not submit horizontal label for this column. Convenient for some small columns. Name will still appear in context menu or in angled headers.
----| "NoHeaderWidth"        #  Disable header text width contribution to automatic column width.
----| "PreferSortAscending"  #  Make the initial sort direction Ascending when first sorting on this column (default).
----| "PreferSortDescending" #  Make the initial sort direction Descending when first sorting on this column.
----| "IndentEnable"         #  Use current Indent value when entering cell (default for column 0).
----| "IndentDisable"        #  Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
----| "AngledHeader"         #  TableHeadersRow() will submit an angled header row for this column. Note this will add an extra row.
----| "IsEnabled"            #  Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
----| "IsVisible"            #  Status: is visible == is enabled AND not clipped by scrolling.
----| "IsSorted"             #  Status: is currently part of the sort specs
----| "IsHovered"            #  Status: is hovered by mouse
-
----@param flags _ImGuiTableColumnFlags_Name[]
----@return ImGui.TableColumnFlags
-function ImGui.TableColumnFlags(flags) end
-
---
--- Flags for ImGui::TableNextRow()
---
----@class ImGui.TableRowFlags
-
----@alias _ImGuiTableRowFlags_Name
----| "None"
----| "Headers" #  Identify header row (set default background color + width of its contents accounted differently for auto column width)
-
----@param flags _ImGuiTableRowFlags_Name[]
----@return ImGui.TableRowFlags
-function ImGui.TableRowFlags(flags) end
-
---
 -- Enum for ImGui::TableSetBgColor()
 -- Background colors are rendering in 3 layers:
 --  - Layer 0: draw with RowBg0 color if set, otherwise draw with ColumnBg0 if set.
@@ -936,96 +1027,6 @@ function ImGui.TableRowFlags(flags) end
 ---| `ImGui.TableBgTarget.CellBg` #  Set cell background color (top-most color)
 ImGui.TableBgTarget = {}
 
---
--- Flags for ImDrawList functions
--- (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
---
----@class ImGui.DrawFlags
-
----@alias _ImDrawFlags_Name
----| "None"
----| "Closed"                  #  PathStroke(), AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
----| "RoundCornersTopLeft"     #  AddRect(), AddRectFilled(), PathRect(): enable rounding top-left corner only (when rounding > 0.0f, we default to all corners). Was 0x01.
----| "RoundCornersTopRight"    #  AddRect(), AddRectFilled(), PathRect(): enable rounding top-right corner only (when rounding > 0.0f, we default to all corners). Was 0x02.
----| "RoundCornersBottomLeft"  #  AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners). Was 0x04.
----| "RoundCornersBottomRight" #  AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners). Wax 0x08.
----| "RoundCornersNone"        #  AddRect(), AddRectFilled(), PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!
----| "RoundCornersTop"
----| "RoundCornersBottom"
----| "RoundCornersLeft"
----| "RoundCornersRight"
----| "RoundCornersAll"
-
----@param flags _ImDrawFlags_Name[]
----@return ImGui.DrawFlags
-function ImGui.DrawFlags(flags) end
-
---
--- Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
--- It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
---
----@class ImGui.DrawListFlags
-
----@alias _ImDrawListFlags_Name
----| "None"
----| "AntiAliasedLines"       #  Enable anti-aliased lines/borders (*2 the number of triangles for 1.0f wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
----| "AntiAliasedLinesUseTex" #  Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
----| "AntiAliasedFill"        #  Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
----| "AllowVtxOffset"         #  Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
-
----@param flags _ImDrawListFlags_Name[]
----@return ImGui.DrawListFlags
-function ImGui.DrawListFlags(flags) end
-
---
--- Flags for ImFontAtlas build
---
----@class ImGui.FontAtlasFlags
-
----@alias _ImFontAtlasFlags_Name
----| "None"
----| "NoPowerOfTwoHeight" #  Don't round the height to next power of two
----| "NoMouseCursors"     #  Don't build software mouse cursors into the atlas (save a little texture memory)
----| "NoBakedLines"       #  Don't build thick line textures into the atlas (save a little texture memory, allow support for point/nearest filtering). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
-
----@param flags _ImFontAtlasFlags_Name[]
----@return ImGui.FontAtlasFlags
-function ImGui.FontAtlasFlags(flags) end
-
---
--- Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
---
----@class ImGui.ViewportFlags
-
----@alias _ImGuiViewportFlags_Name
----| "None"
----| "IsPlatformWindow"    #  Represent a Platform Window
----| "IsPlatformMonitor"   #  Represent a Platform Monitor (unused yet)
----| "OwnedByApp"          #  Platform Window: Was created/managed by the user application? (rather than our backend)
----| "NoDecoration"        #  Platform Window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
----| "NoTaskBarIcon"       #  Platform Window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
----| "NoFocusOnAppearing"  #  Platform Window: Don't take focus when created.
----| "NoFocusOnClick"      #  Platform Window: Don't take focus when clicked on.
----| "NoInputs"            #  Platform Window: Make mouse pass through so we can drag this window while peaking behind it.
----| "NoRendererClear"     #  Platform Window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
----| "NoAutoMerge"         #  Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
----| "TopMost"             #  Platform Window: Display on top (for tooltips only).
----| "CanHostOtherWindows" #  Viewport can host multiple imgui windows (secondary viewports are associated to a single window). // FIXME: In practice there's still probably code making the assumption that this is always and only on the MainViewport. Will fix once we add support for "no main viewport".
----| "IsMinimized"         #  Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
----| "IsFocused"           #  Platform Window: Window is focused (last call to Platform_GetWindowFocus() returned true)
-
----@param flags _ImGuiViewportFlags_Name[]
----@return ImGui.ViewportFlags
-function ImGui.ViewportFlags(flags) end
-
----@alias ImGui.Mod
----| `ImGui.Mod.None`
----| `ImGui.Mod.Ctrl`     #  Ctrl
----| `ImGui.Mod.Shift`    #  Shift
----| `ImGui.Mod.Alt`      #  Option/Menu
----| `ImGui.Mod.Super`    #  Cmd/Super/Windows
----| `ImGui.Mod.Shortcut` #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
-ImGui.Mod = {}
 
 ---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod
 

@@ -1,11 +1,9 @@
-local AntDir, meta = ...
+local status = ...
 
-local util = require "util"
 local types = require "types"
 
-local w <close> = assert(io.open(AntDir.."/misc/meta/imgui.lua", "wb"))
-
 local function writeln(fmt, ...)
+    local w = status.docs_file
     w:write(string.format(fmt, ...))
     w:write "\n"
 end
@@ -299,10 +297,10 @@ default_type["const char*"] = function (value)
     return value
 end
 
-local function write_enum(realname, elements, new_enums)
+local function write_enum(realname, elements)
     local name = string.format("ImGui.%s", realname:match "^ImGui(%a+)$")
     local function fullname(element)
-        local fieldname = element.name:sub(#realname+2)
+        local fieldname = element.name
         if fieldname:match "^[0-9]" then
             return name.."["..fieldname.."]"
         else
@@ -312,27 +310,12 @@ local function write_enum(realname, elements, new_enums)
     local lines = {}
     local maxn = 0
     for _, element in ipairs(elements) do
-        if not element.is_internal and not element.is_count and not element.conditionals then
-            if new_enums then
-                local enum_type = element.name:match "^(%w+)_%w+$"
-                if enum_type ~= realname then
-                    local t = new_enums[enum_type]
-                    if t then
-                        t[#t+1] = element
-                    else
-                        new_enums[enum_type] = { element }
-                    end
-                    goto continue
-                end
-            end
-            local fname = fullname(element)
-            maxn = math.max(maxn, #fname)
-            if element.comments and element.comments.attached then
-                lines[#lines+1] = { fname, element.comments.attached:match "^//(.*)$" }
-            else
-                lines[#lines+1] = { fname }
-            end
-            ::continue::
+        local fname = fullname(element)
+        maxn = math.max(maxn, #fname)
+        if element.comments and element.comments.attached then
+            lines[#lines+1] = { fname, element.comments.attached:match "^//(.*)$" }
+        else
+            lines[#lines+1] = { fname }
         end
     end
     writeln("---@alias %s", name)
@@ -361,14 +344,12 @@ local function write_flags(realname, elements)
     local lines = {}
     local maxn = 0
     for _, element in ipairs(elements) do
-        if not element.is_internal and not element.conditionals then
-            local fname = element.name:sub(#realname+2)
-            maxn = math.max(maxn, #fname)
-            if element.comments and element.comments.attached then
-                lines[#lines+1] = { fname, element.comments.attached:match "^//(.*)$" }
-            else
-                lines[#lines+1] = { fname }
-            end
+        local fname = element.name
+        maxn = math.max(maxn, #fname)
+        if element.comments and element.comments.attached then
+            lines[#lines+1] = { fname, element.comments.attached:match "^//(.*)$" }
+        else
+            lines[#lines+1] = { fname }
         end
     end
     writeln("---@class %s", name)
@@ -391,43 +372,39 @@ local function write_flags(realname, elements)
         local v = math.tointeger(value)
         for _, element in ipairs(elements) do
             if element.value == v then
-                return string.format("%s { %q }", name, element.name:sub(#realname+2))
+                return string.format("%s { %q }", name, element.name)
             end
         end
     end
 end
 
-local function write_flags_and_enums()
-    local new_enums = {}
-    for _, enums in ipairs(meta.enums) do
-        if not util.conditionals(enums) then
-            goto continue
-        end
-        local realname = enums.name:match "(.-)_?$"
-        if enums.comments then
-            if enums.comments.preceding then
-                writeln "--"
-                for _, line in pairs(enums.comments.preceding) do
-                    writeln("--%s", line:match "^//(.*)$")
-                end
-                writeln "--"
+local function write_comments(comments)
+    if comments then
+        if comments.preceding then
+            writeln "--"
+            for _, line in pairs(comments.preceding) do
+                writeln("--%s", line:match "^//(.*)$")
             end
-            if enums.comments.attached then
-                writeln "--"
-                writeln("--%s", enums.comments.attached:match "^//(.*)$")
-                writeln "--"
-            end
+            writeln "--"
         end
-        if enums.is_flags_enum then
-            write_flags(realname, enums.elements)
-        else
-            write_enum(realname, enums.elements, new_enums)
+        if comments.attached then
+            writeln "--"
+            writeln("--%s", comments.attached:match "^//(.*)$")
+            writeln "--"
         end
-        writeln ""
-        ::continue::
     end
-    for enum_type, elements in pairs(new_enums) do
-        write_enum(enum_type, elements)
+end
+
+local function write_flags_and_enums()
+    for _, v in ipairs(status.flags) do
+        write_comments(v.comments)
+        write_flags(v.realname, v.elements)
+        writeln ""
+    end
+    for _, v in ipairs(status.enums) do
+        write_comments(v.comments)
+        write_enum(v.realname, v.elements)
+        writeln ""
     end
 end
 
@@ -513,7 +490,7 @@ local function write_func(func_meta)
     return realname
 end
 
-local function write_structs(struct_funcs)
+local function write_structs()
     writeln "---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod"
     writeln ""
     writeln "---@alias ImTextureID integer"
@@ -542,28 +519,8 @@ local function write_structs(struct_funcs)
         "ImGuiInputTextCallbackData"
     }
     for _, name in ipairs(lst) do
-        types.decode_docs(name, struct_funcs[name] or {}, writeln, write_func)
+        types.decode_docs(status, name, writeln, write_func)
     end
-end
-
-local function get_funcs()
-    local funcs = {}
-    local struct_funcs = {}
-    for _, func_meta in ipairs(meta.functions) do
-        if util.allow(func_meta) then
-            if func_meta.original_class then
-                local v = struct_funcs[func_meta.original_class]
-                if v then
-                    v[#v+1] = func_meta
-                else
-                    struct_funcs[func_meta.original_class] = { func_meta }
-                end
-            else
-                funcs[#funcs+1] = func_meta
-            end
-        end
-    end
-    return funcs, struct_funcs
 end
 
 writeln "---@meta imgui"
@@ -577,8 +534,7 @@ writeln "local ImGui = {}"
 writeln ""
 write_flags_and_enums()
 writeln ""
-local funcs, struct_funcs = get_funcs()
-write_structs(struct_funcs)
+write_structs()
 for _, name in ipairs(struct_constructor) do
     local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
     writeln("---@return userdata")
@@ -590,7 +546,7 @@ writeln "---@param str? string"
 writeln "---@return ImStringBuf"
 writeln "function ImGui.StringBuf(str) end"
 writeln ""
-for _, func_meta in ipairs(funcs) do
+for _, func_meta in ipairs(status.funcs) do
     write_func(func_meta)
 end
 writeln "return ImGui"

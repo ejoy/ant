@@ -1,17 +1,15 @@
 local AntDir = ...
-local meta; do
-    local json = dofile(AntDir.."/pkg/ant.json/main.lua")
-    local function readall(path)
-        local f <close> = assert(io.open(path, "rb"))
-        return f:read "a"
-    end
-    meta = json.decode(readall(AntDir.."/clibs/imgui/dear_bindings/cimgui.json"))
-end
 
 package.path = AntDir.."/clibs/imgui/gen/?.lua"
 
-local types = require "types"
-types.init(meta)
+local status = { AntDir = AntDir }
+local meta = require "meta"
+meta.init(status)
 
-assert(loadfile(AntDir.."/clibs/imgui/gen/funcs.lua"))(AntDir, meta)
-assert(loadfile(AntDir.."/clibs/imgui/gen/doc.lua"))(AntDir, meta)
+local apis_file <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_lua_funcs.cpp", "wb"))
+local docs_file <close> = assert(io.open(AntDir.."/misc/meta/imgui.lua", "wb"))
+status.apis_file = apis_file
+status.docs_file = docs_file
+
+assert(loadfile(AntDir.."/clibs/imgui/gen/funcs.lua"))(status)
+assert(loadfile(AntDir.."/clibs/imgui/gen/doc.lua"))(status)

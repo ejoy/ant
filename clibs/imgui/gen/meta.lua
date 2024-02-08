@@ -207,7 +207,123 @@ local function allow(func_meta)
     return true
 end
 
-return {
-    allow = allow,
-    conditionals = conditionals,
-}
+local function cimgui_json(AntDir)
+    local json = dofile(AntDir.."/pkg/ant.json/main.lua")
+    local function readall(path)
+        local f <close> = assert(io.open(path, "rb"))
+        return f:read "a"
+    end
+    return json.decode(readall(AntDir.."/clibs/imgui/dear_bindings/cimgui.json"))
+end
+
+local m = {}
+
+function m.init(status)
+    local meta = cimgui_json(status.AntDir)
+    local types = {}
+    local flags = {}
+    local enums = {}
+    local funcs = {}
+    local struct_funcs = {}
+    for _, typedef_meta in ipairs(meta.typedefs) do
+        types[typedef_meta.name] = typedef_meta
+    end
+    for _, struct_meta in ipairs(meta.structs) do
+        types[struct_meta.name] = struct_meta
+    end
+    for _, enum_meta in ipairs(meta.enums) do
+        if not conditionals(enum_meta) then
+            goto continue
+        end
+        local realname = enum_meta.name:match "(.-)_?$"
+        if enum_meta.is_flags_enum then
+            local elements = {}
+            local name = realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
+            local flag = {
+                name = name,
+                realname = realname,
+                elements = elements,
+                comments = enum_meta.comments,
+            }
+            flags[realname] = flag
+            flags[#flags+1] = flag
+            for _, element in ipairs(enum_meta.elements) do
+                if not element.is_internal and not element.is_count and not element.conditionals then
+                    local enum_name = element.name:match "^%w+_(%w+)$"
+                    elements[#elements+1] = {
+                        name = enum_name,
+                        value = element.value,
+                        comments = element.comments,
+                    }
+                end
+            end
+        else
+            local elements = {}
+            local name = realname:match "^ImGui(%a+)$"
+            local enum = {
+                name = name,
+                realname = realname,
+                elements = elements,
+                comments = enum_meta.comments,
+            }
+            enums[realname] = enum
+            enums[#enums+1] = enum
+            for _, element in ipairs(enum_meta.elements) do
+                if not element.is_internal and not element.is_count and not element.conditionals then
+                    local enum_type, enum_name = element.name:match "^(%w+)_(%w+)$"
+                    if enum_type ~= realname then
+                        local t = enums[enum_type]
+                        if t then
+                            t.elements[#t.elements+1] = {
+                                name = enum_name,
+                                value = element.value,
+                                comments = element.comments,
+                            }
+                        else
+                            local name = enum_type:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
+                            local enum = {
+                                name = name,
+                                realname = enum_type,
+                                elements = {{
+                                    name = enum_name,
+                                    value = element.value,
+                                    comments = element.comments,
+                                }},
+                            }
+                            enums[enum_type] = enum
+                            enums[#enums+1] = enum
+                        end
+                    else
+                        elements[#elements+1] = {
+                            name = enum_name,
+                            value = element.value,
+                            comments = element.comments,
+                        }
+                    end
+                end
+            end
+        end
+        ::continue::
+    end
+    for _, func_meta in ipairs(meta.functions) do
+        if allow(func_meta) then
+            if func_meta.original_class then
+                local v = struct_funcs[func_meta.original_class]
+                if v then
+                    v[#v+1] = func_meta
+                else
+                    struct_funcs[func_meta.original_class] = { func_meta }
+                end
+            else
+                funcs[#funcs+1] = func_meta
+            end
+        end
+    end
+    status.types = types
+    status.flags = flags
+    status.enums = enums
+    status.funcs = funcs
+    status.struct_funcs = struct_funcs
+end
+
+return m

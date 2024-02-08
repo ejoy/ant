@@ -1,11 +1,9 @@
-local AntDir, meta = ...
+local status = ...
 
-local util = require "util"
 local types = require "types"
 
-local w <close> = assert(io.open(AntDir.."/clibs/imgui/imgui_lua_funcs.cpp", "wb"))
-
 local function writeln(fmt, ...)
+    local w = status.apis_file
     w:write(string.format(fmt, ...))
     w:write "\n"
 end
@@ -459,29 +457,10 @@ for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar",
     end
 end
 
-local function write_enum(realname, elements, new_enums)
-    local lines = {}
-    for _, element in ipairs(elements) do
-        if not element.is_internal and not element.is_count and not element.conditionals then
-            local enum_type, enum_name = element.name:match "^(%w+)_(%w+)$"
-            if new_enums and enum_type ~= realname then
-                local t = new_enums[enum_type]
-                if t then
-                    t[#t+1] = element
-                else
-                    new_enums[enum_type] = { element }
-                end
-                goto continue
-            end
-            lines[#lines+1] = { enum_type, enum_name }
-            ::continue::
-        end
-    end
-    local name = realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
+local function write_enum(name, realname, elements)
     writeln("static util::TableInteger %s[] = {", name)
-    for _, line in ipairs(lines) do
-        local enum_type, enum_name = line[1], line[2]
-        writeln("    ENUM(%s, %s),", enum_type, enum_name)
+    for _, element in ipairs(elements) do
+        writeln("    ENUM(%s, %s),", realname, element.name)
     end
     writeln "};"
     writeln ""
@@ -491,27 +470,15 @@ end
 local function write_flags_and_enums()
     writeln("#define ENUM(prefix, name) { #name, prefix##_##name }")
     writeln ""
-    local flags = {}
-    local enums = {}
-    local new_enums = {}
-    for _, enum_meta in ipairs(meta.enums) do
-        if not util.conditionals(enum_meta) then
-            goto continue
-        end
-        local realname = enum_meta.name:match "(.-)_?$"
+    local function init_enum(realname, elements)
         local function find_name(value)
             local v = math.tointeger(value)
-            for _, element in ipairs(enum_meta.elements) do
+            for _, element in ipairs(elements) do
                 if element.value == v then
-                    return element.name
+                    return realname.."_"..element.name
                 end
             end
             assert(false)
-        end
-        if enum_meta.is_flags_enum then
-            flags[#flags+1] = write_enum(realname, enum_meta.elements)
-        else
-            enums[#enums+1] = write_enum(realname, enum_meta.elements, new_enums)
         end
         write_arg[realname] = function(type_meta, status)
             status.idx = status.idx + 1
@@ -526,14 +493,17 @@ local function write_flags_and_enums()
             writeln "    lua_pushinteger(L, _retval);"
             return 1
         end
-        ::continue::
     end
-    for enum_type, elements in pairs(new_enums) do
-        enums[#enums+1] = write_enum(enum_type, elements)
+    for _, v in ipairs(status.flags) do
+        write_enum(v.name, v.realname, v.elements)
+        init_enum(v.realname, v.elements)
+    end
+    for _, v in ipairs(status.enums) do
+        write_enum(v.name, v.realname, v.elements)
+        init_enum(v.realname, v.elements)
     end
     writeln("#undef ENUM")
     writeln ""
-    return flags, enums
 end
 
 local function write_func(func_meta)
@@ -593,7 +563,6 @@ end
 
 local function write_funcs()
     local funcs = {}
-    local struct_funcs = {}
     for _, name in ipairs(struct_constructor) do
         local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
         writeln("static int %s(lua_State* L) {", realname)
@@ -612,21 +581,10 @@ local function write_funcs()
     writeln "}"
     writeln ""
     funcs[#funcs+1] = "StringBuf"
-    for _, func_meta in ipairs(meta.functions) do
-        if util.allow(func_meta) then
-            if func_meta.original_class then
-                local v = struct_funcs[func_meta.original_class]
-                if v then
-                    v[#v+1] = func_meta
-                else
-                    struct_funcs[func_meta.original_class] = { func_meta }
-                end
-            else
-                funcs[#funcs+1] = write_func(func_meta)
-            end
-        end
+    for _, func_meta in ipairs(status.funcs) do
+        funcs[#funcs+1] = write_func(func_meta)
     end
-    return funcs, struct_funcs
+    return funcs
 end
 
 
@@ -641,10 +599,10 @@ local function write_struct_defines()
     end
 end
 
-local function write_structs(struct_funcs)
+local function write_structs()
     for _, v in ipairs(struct_list) do
         local name, modes = v[1], v[2]
-        types.decode_func(name, struct_funcs[name] or {}, writeln, write_func, modes)
+        types.decode_func(status, name, writeln, write_func, modes)
     end
 end
 
@@ -657,11 +615,11 @@ writeln "#include \"imgui_lua_util.h\""
 writeln ""
 writeln "namespace imgui_lua {"
 writeln ""
-local flags, enums = write_flags_and_enums()
+write_flags_and_enums()
 write_struct_defines()
 writeln ""
-local funcs, struct_funcs = write_funcs()
-write_structs(struct_funcs)
+local funcs = write_funcs()
+write_structs()
 writeln "static void init(lua_State* L) {"
 writeln "    static luaL_Reg funcs[] = {"
 for _, func in ipairs(funcs) do
@@ -676,8 +634,8 @@ writeln "         util::flags_gen(L, #name); \\"
 writeln "    }}"
 writeln ""
 writeln "    static util::TableAny flags[] = {"
-for _, name in ipairs(flags) do
-    writeln("        GEN_FLAGS(%s),", name)
+for _, v in ipairs(status.flags) do
+    writeln("        GEN_FLAGS(%s),", v.name)
 end
 writeln "    };"
 writeln "    #undef GEN_FLAGS"
@@ -687,8 +645,8 @@ writeln "         util::create_table(L, name); \\"
 writeln "    }}"
 writeln ""
 writeln "    static util::TableAny enums[] = {"
-for _, name in ipairs(enums) do
-    writeln("        GEN_ENUM(%s),", name)
+for _, v in ipairs(status.enums) do
+    writeln("        GEN_ENUM(%s),", v.name)
 end
 writeln "    };"
 writeln "    #undef GEN_ENUM"

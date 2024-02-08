@@ -210,6 +210,194 @@ static util::TableInteger DragDropFlags[] = {
     ENUM(ImGuiDragDropFlags, AcceptPeekOnly),
 };
 
+static util::TableInteger ConfigFlags[] = {
+    ENUM(ImGuiConfigFlags, None),
+    ENUM(ImGuiConfigFlags, NavEnableKeyboard),
+    ENUM(ImGuiConfigFlags, NavEnableGamepad),
+    ENUM(ImGuiConfigFlags, NavEnableSetMousePos),
+    ENUM(ImGuiConfigFlags, NavNoCaptureKeyboard),
+    ENUM(ImGuiConfigFlags, NoMouse),
+    ENUM(ImGuiConfigFlags, NoMouseCursorChange),
+    ENUM(ImGuiConfigFlags, DockingEnable),
+    ENUM(ImGuiConfigFlags, ViewportsEnable),
+    ENUM(ImGuiConfigFlags, DpiEnableScaleViewports),
+    ENUM(ImGuiConfigFlags, DpiEnableScaleFonts),
+    ENUM(ImGuiConfigFlags, IsSRGB),
+    ENUM(ImGuiConfigFlags, IsTouchScreen),
+};
+
+static util::TableInteger BackendFlags[] = {
+    ENUM(ImGuiBackendFlags, None),
+    ENUM(ImGuiBackendFlags, HasGamepad),
+    ENUM(ImGuiBackendFlags, HasMouseCursors),
+    ENUM(ImGuiBackendFlags, HasSetMousePos),
+    ENUM(ImGuiBackendFlags, RendererHasVtxOffset),
+    ENUM(ImGuiBackendFlags, PlatformHasViewports),
+    ENUM(ImGuiBackendFlags, HasMouseHoveredViewport),
+    ENUM(ImGuiBackendFlags, RendererHasViewports),
+};
+
+static util::TableInteger ButtonFlags[] = {
+    ENUM(ImGuiButtonFlags, None),
+    ENUM(ImGuiButtonFlags, MouseButtonLeft),
+    ENUM(ImGuiButtonFlags, MouseButtonRight),
+    ENUM(ImGuiButtonFlags, MouseButtonMiddle),
+};
+
+static util::TableInteger ColorEditFlags[] = {
+    ENUM(ImGuiColorEditFlags, None),
+    ENUM(ImGuiColorEditFlags, NoAlpha),
+    ENUM(ImGuiColorEditFlags, NoPicker),
+    ENUM(ImGuiColorEditFlags, NoOptions),
+    ENUM(ImGuiColorEditFlags, NoSmallPreview),
+    ENUM(ImGuiColorEditFlags, NoInputs),
+    ENUM(ImGuiColorEditFlags, NoTooltip),
+    ENUM(ImGuiColorEditFlags, NoLabel),
+    ENUM(ImGuiColorEditFlags, NoSidePreview),
+    ENUM(ImGuiColorEditFlags, NoDragDrop),
+    ENUM(ImGuiColorEditFlags, NoBorder),
+    ENUM(ImGuiColorEditFlags, AlphaBar),
+    ENUM(ImGuiColorEditFlags, AlphaPreview),
+    ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
+    ENUM(ImGuiColorEditFlags, HDR),
+    ENUM(ImGuiColorEditFlags, DisplayRGB),
+    ENUM(ImGuiColorEditFlags, DisplayHSV),
+    ENUM(ImGuiColorEditFlags, DisplayHex),
+    ENUM(ImGuiColorEditFlags, Uint8),
+    ENUM(ImGuiColorEditFlags, Float),
+    ENUM(ImGuiColorEditFlags, PickerHueBar),
+    ENUM(ImGuiColorEditFlags, PickerHueWheel),
+    ENUM(ImGuiColorEditFlags, InputRGB),
+    ENUM(ImGuiColorEditFlags, InputHSV),
+};
+
+static util::TableInteger SliderFlags[] = {
+    ENUM(ImGuiSliderFlags, None),
+    ENUM(ImGuiSliderFlags, AlwaysClamp),
+    ENUM(ImGuiSliderFlags, Logarithmic),
+    ENUM(ImGuiSliderFlags, NoRoundToFormat),
+    ENUM(ImGuiSliderFlags, NoInput),
+};
+
+static util::TableInteger TableFlags[] = {
+    ENUM(ImGuiTableFlags, None),
+    ENUM(ImGuiTableFlags, Resizable),
+    ENUM(ImGuiTableFlags, Reorderable),
+    ENUM(ImGuiTableFlags, Hideable),
+    ENUM(ImGuiTableFlags, Sortable),
+    ENUM(ImGuiTableFlags, NoSavedSettings),
+    ENUM(ImGuiTableFlags, ContextMenuInBody),
+    ENUM(ImGuiTableFlags, RowBg),
+    ENUM(ImGuiTableFlags, BordersInnerH),
+    ENUM(ImGuiTableFlags, BordersOuterH),
+    ENUM(ImGuiTableFlags, BordersInnerV),
+    ENUM(ImGuiTableFlags, BordersOuterV),
+    ENUM(ImGuiTableFlags, BordersH),
+    ENUM(ImGuiTableFlags, BordersV),
+    ENUM(ImGuiTableFlags, BordersInner),
+    ENUM(ImGuiTableFlags, BordersOuter),
+    ENUM(ImGuiTableFlags, Borders),
+    ENUM(ImGuiTableFlags, NoBordersInBody),
+    ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
+    ENUM(ImGuiTableFlags, SizingFixedFit),
+    ENUM(ImGuiTableFlags, SizingFixedSame),
+    ENUM(ImGuiTableFlags, SizingStretchProp),
+    ENUM(ImGuiTableFlags, SizingStretchSame),
+    ENUM(ImGuiTableFlags, NoHostExtendX),
+    ENUM(ImGuiTableFlags, NoHostExtendY),
+    ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
+    ENUM(ImGuiTableFlags, PreciseWidths),
+    ENUM(ImGuiTableFlags, NoClip),
+    ENUM(ImGuiTableFlags, PadOuterX),
+    ENUM(ImGuiTableFlags, NoPadOuterX),
+    ENUM(ImGuiTableFlags, NoPadInnerX),
+    ENUM(ImGuiTableFlags, ScrollX),
+    ENUM(ImGuiTableFlags, ScrollY),
+    ENUM(ImGuiTableFlags, SortMulti),
+    ENUM(ImGuiTableFlags, SortTristate),
+    ENUM(ImGuiTableFlags, HighlightHoveredColumn),
+};
+
+static util::TableInteger TableColumnFlags[] = {
+    ENUM(ImGuiTableColumnFlags, None),
+    ENUM(ImGuiTableColumnFlags, Disabled),
+    ENUM(ImGuiTableColumnFlags, DefaultHide),
+    ENUM(ImGuiTableColumnFlags, DefaultSort),
+    ENUM(ImGuiTableColumnFlags, WidthStretch),
+    ENUM(ImGuiTableColumnFlags, WidthFixed),
+    ENUM(ImGuiTableColumnFlags, NoResize),
+    ENUM(ImGuiTableColumnFlags, NoReorder),
+    ENUM(ImGuiTableColumnFlags, NoHide),
+    ENUM(ImGuiTableColumnFlags, NoClip),
+    ENUM(ImGuiTableColumnFlags, NoSort),
+    ENUM(ImGuiTableColumnFlags, NoSortAscending),
+    ENUM(ImGuiTableColumnFlags, NoSortDescending),
+    ENUM(ImGuiTableColumnFlags, NoHeaderLabel),
+    ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
+    ENUM(ImGuiTableColumnFlags, PreferSortAscending),
+    ENUM(ImGuiTableColumnFlags, PreferSortDescending),
+    ENUM(ImGuiTableColumnFlags, IndentEnable),
+    ENUM(ImGuiTableColumnFlags, IndentDisable),
+    ENUM(ImGuiTableColumnFlags, AngledHeader),
+    ENUM(ImGuiTableColumnFlags, IsEnabled),
+    ENUM(ImGuiTableColumnFlags, IsVisible),
+    ENUM(ImGuiTableColumnFlags, IsSorted),
+    ENUM(ImGuiTableColumnFlags, IsHovered),
+};
+
+static util::TableInteger TableRowFlags[] = {
+    ENUM(ImGuiTableRowFlags, None),
+    ENUM(ImGuiTableRowFlags, Headers),
+};
+
+static util::TableInteger DrawFlags[] = {
+    ENUM(ImDrawFlags, None),
+    ENUM(ImDrawFlags, Closed),
+    ENUM(ImDrawFlags, RoundCornersTopLeft),
+    ENUM(ImDrawFlags, RoundCornersTopRight),
+    ENUM(ImDrawFlags, RoundCornersBottomLeft),
+    ENUM(ImDrawFlags, RoundCornersBottomRight),
+    ENUM(ImDrawFlags, RoundCornersNone),
+    ENUM(ImDrawFlags, RoundCornersTop),
+    ENUM(ImDrawFlags, RoundCornersBottom),
+    ENUM(ImDrawFlags, RoundCornersLeft),
+    ENUM(ImDrawFlags, RoundCornersRight),
+    ENUM(ImDrawFlags, RoundCornersAll),
+};
+
+static util::TableInteger DrawListFlags[] = {
+    ENUM(ImDrawListFlags, None),
+    ENUM(ImDrawListFlags, AntiAliasedLines),
+    ENUM(ImDrawListFlags, AntiAliasedLinesUseTex),
+    ENUM(ImDrawListFlags, AntiAliasedFill),
+    ENUM(ImDrawListFlags, AllowVtxOffset),
+};
+
+static util::TableInteger FontAtlasFlags[] = {
+    ENUM(ImFontAtlasFlags, None),
+    ENUM(ImFontAtlasFlags, NoPowerOfTwoHeight),
+    ENUM(ImFontAtlasFlags, NoMouseCursors),
+    ENUM(ImFontAtlasFlags, NoBakedLines),
+};
+
+static util::TableInteger ViewportFlags[] = {
+    ENUM(ImGuiViewportFlags, None),
+    ENUM(ImGuiViewportFlags, IsPlatformWindow),
+    ENUM(ImGuiViewportFlags, IsPlatformMonitor),
+    ENUM(ImGuiViewportFlags, OwnedByApp),
+    ENUM(ImGuiViewportFlags, NoDecoration),
+    ENUM(ImGuiViewportFlags, NoTaskBarIcon),
+    ENUM(ImGuiViewportFlags, NoFocusOnAppearing),
+    ENUM(ImGuiViewportFlags, NoFocusOnClick),
+    ENUM(ImGuiViewportFlags, NoInputs),
+    ENUM(ImGuiViewportFlags, NoRendererClear),
+    ENUM(ImGuiViewportFlags, NoAutoMerge),
+    ENUM(ImGuiViewportFlags, TopMost),
+    ENUM(ImGuiViewportFlags, CanHostOtherWindows),
+    ENUM(ImGuiViewportFlags, IsMinimized),
+    ENUM(ImGuiViewportFlags, IsFocused),
+};
+
 static util::TableInteger DataType[] = {
     ENUM(ImGuiDataType, S8),
     ENUM(ImGuiDataType, U8),
@@ -391,31 +579,13 @@ static util::TableInteger Key[] = {
     ENUM(ImGuiKey, MouseWheelY),
 };
 
-static util::TableInteger ConfigFlags[] = {
-    ENUM(ImGuiConfigFlags, None),
-    ENUM(ImGuiConfigFlags, NavEnableKeyboard),
-    ENUM(ImGuiConfigFlags, NavEnableGamepad),
-    ENUM(ImGuiConfigFlags, NavEnableSetMousePos),
-    ENUM(ImGuiConfigFlags, NavNoCaptureKeyboard),
-    ENUM(ImGuiConfigFlags, NoMouse),
-    ENUM(ImGuiConfigFlags, NoMouseCursorChange),
-    ENUM(ImGuiConfigFlags, DockingEnable),
-    ENUM(ImGuiConfigFlags, ViewportsEnable),
-    ENUM(ImGuiConfigFlags, DpiEnableScaleViewports),
-    ENUM(ImGuiConfigFlags, DpiEnableScaleFonts),
-    ENUM(ImGuiConfigFlags, IsSRGB),
-    ENUM(ImGuiConfigFlags, IsTouchScreen),
-};
-
-static util::TableInteger BackendFlags[] = {
-    ENUM(ImGuiBackendFlags, None),
-    ENUM(ImGuiBackendFlags, HasGamepad),
-    ENUM(ImGuiBackendFlags, HasMouseCursors),
-    ENUM(ImGuiBackendFlags, HasSetMousePos),
-    ENUM(ImGuiBackendFlags, RendererHasVtxOffset),
-    ENUM(ImGuiBackendFlags, PlatformHasViewports),
-    ENUM(ImGuiBackendFlags, HasMouseHoveredViewport),
-    ENUM(ImGuiBackendFlags, RendererHasViewports),
+static util::TableInteger Mod[] = {
+    ENUM(ImGuiMod, None),
+    ENUM(ImGuiMod, Ctrl),
+    ENUM(ImGuiMod, Shift),
+    ENUM(ImGuiMod, Alt),
+    ENUM(ImGuiMod, Super),
+    ENUM(ImGuiMod, Shortcut),
 };
 
 static util::TableInteger Col[] = {
@@ -509,48 +679,6 @@ static util::TableInteger StyleVar[] = {
     ENUM(ImGuiStyleVar, DockingSeparatorSize),
 };
 
-static util::TableInteger ButtonFlags[] = {
-    ENUM(ImGuiButtonFlags, None),
-    ENUM(ImGuiButtonFlags, MouseButtonLeft),
-    ENUM(ImGuiButtonFlags, MouseButtonRight),
-    ENUM(ImGuiButtonFlags, MouseButtonMiddle),
-};
-
-static util::TableInteger ColorEditFlags[] = {
-    ENUM(ImGuiColorEditFlags, None),
-    ENUM(ImGuiColorEditFlags, NoAlpha),
-    ENUM(ImGuiColorEditFlags, NoPicker),
-    ENUM(ImGuiColorEditFlags, NoOptions),
-    ENUM(ImGuiColorEditFlags, NoSmallPreview),
-    ENUM(ImGuiColorEditFlags, NoInputs),
-    ENUM(ImGuiColorEditFlags, NoTooltip),
-    ENUM(ImGuiColorEditFlags, NoLabel),
-    ENUM(ImGuiColorEditFlags, NoSidePreview),
-    ENUM(ImGuiColorEditFlags, NoDragDrop),
-    ENUM(ImGuiColorEditFlags, NoBorder),
-    ENUM(ImGuiColorEditFlags, AlphaBar),
-    ENUM(ImGuiColorEditFlags, AlphaPreview),
-    ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
-    ENUM(ImGuiColorEditFlags, HDR),
-    ENUM(ImGuiColorEditFlags, DisplayRGB),
-    ENUM(ImGuiColorEditFlags, DisplayHSV),
-    ENUM(ImGuiColorEditFlags, DisplayHex),
-    ENUM(ImGuiColorEditFlags, Uint8),
-    ENUM(ImGuiColorEditFlags, Float),
-    ENUM(ImGuiColorEditFlags, PickerHueBar),
-    ENUM(ImGuiColorEditFlags, PickerHueWheel),
-    ENUM(ImGuiColorEditFlags, InputRGB),
-    ENUM(ImGuiColorEditFlags, InputHSV),
-};
-
-static util::TableInteger SliderFlags[] = {
-    ENUM(ImGuiSliderFlags, None),
-    ENUM(ImGuiSliderFlags, AlwaysClamp),
-    ENUM(ImGuiSliderFlags, Logarithmic),
-    ENUM(ImGuiSliderFlags, NoRoundToFormat),
-    ENUM(ImGuiSliderFlags, NoInput),
-};
-
 static util::TableInteger MouseButton[] = {
     ENUM(ImGuiMouseButton, Left),
     ENUM(ImGuiMouseButton, Right),
@@ -584,139 +712,11 @@ static util::TableInteger Cond[] = {
     ENUM(ImGuiCond, Appearing),
 };
 
-static util::TableInteger TableFlags[] = {
-    ENUM(ImGuiTableFlags, None),
-    ENUM(ImGuiTableFlags, Resizable),
-    ENUM(ImGuiTableFlags, Reorderable),
-    ENUM(ImGuiTableFlags, Hideable),
-    ENUM(ImGuiTableFlags, Sortable),
-    ENUM(ImGuiTableFlags, NoSavedSettings),
-    ENUM(ImGuiTableFlags, ContextMenuInBody),
-    ENUM(ImGuiTableFlags, RowBg),
-    ENUM(ImGuiTableFlags, BordersInnerH),
-    ENUM(ImGuiTableFlags, BordersOuterH),
-    ENUM(ImGuiTableFlags, BordersInnerV),
-    ENUM(ImGuiTableFlags, BordersOuterV),
-    ENUM(ImGuiTableFlags, BordersH),
-    ENUM(ImGuiTableFlags, BordersV),
-    ENUM(ImGuiTableFlags, BordersInner),
-    ENUM(ImGuiTableFlags, BordersOuter),
-    ENUM(ImGuiTableFlags, Borders),
-    ENUM(ImGuiTableFlags, NoBordersInBody),
-    ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
-    ENUM(ImGuiTableFlags, SizingFixedFit),
-    ENUM(ImGuiTableFlags, SizingFixedSame),
-    ENUM(ImGuiTableFlags, SizingStretchProp),
-    ENUM(ImGuiTableFlags, SizingStretchSame),
-    ENUM(ImGuiTableFlags, NoHostExtendX),
-    ENUM(ImGuiTableFlags, NoHostExtendY),
-    ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
-    ENUM(ImGuiTableFlags, PreciseWidths),
-    ENUM(ImGuiTableFlags, NoClip),
-    ENUM(ImGuiTableFlags, PadOuterX),
-    ENUM(ImGuiTableFlags, NoPadOuterX),
-    ENUM(ImGuiTableFlags, NoPadInnerX),
-    ENUM(ImGuiTableFlags, ScrollX),
-    ENUM(ImGuiTableFlags, ScrollY),
-    ENUM(ImGuiTableFlags, SortMulti),
-    ENUM(ImGuiTableFlags, SortTristate),
-    ENUM(ImGuiTableFlags, HighlightHoveredColumn),
-};
-
-static util::TableInteger TableColumnFlags[] = {
-    ENUM(ImGuiTableColumnFlags, None),
-    ENUM(ImGuiTableColumnFlags, Disabled),
-    ENUM(ImGuiTableColumnFlags, DefaultHide),
-    ENUM(ImGuiTableColumnFlags, DefaultSort),
-    ENUM(ImGuiTableColumnFlags, WidthStretch),
-    ENUM(ImGuiTableColumnFlags, WidthFixed),
-    ENUM(ImGuiTableColumnFlags, NoResize),
-    ENUM(ImGuiTableColumnFlags, NoReorder),
-    ENUM(ImGuiTableColumnFlags, NoHide),
-    ENUM(ImGuiTableColumnFlags, NoClip),
-    ENUM(ImGuiTableColumnFlags, NoSort),
-    ENUM(ImGuiTableColumnFlags, NoSortAscending),
-    ENUM(ImGuiTableColumnFlags, NoSortDescending),
-    ENUM(ImGuiTableColumnFlags, NoHeaderLabel),
-    ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
-    ENUM(ImGuiTableColumnFlags, PreferSortAscending),
-    ENUM(ImGuiTableColumnFlags, PreferSortDescending),
-    ENUM(ImGuiTableColumnFlags, IndentEnable),
-    ENUM(ImGuiTableColumnFlags, IndentDisable),
-    ENUM(ImGuiTableColumnFlags, AngledHeader),
-    ENUM(ImGuiTableColumnFlags, IsEnabled),
-    ENUM(ImGuiTableColumnFlags, IsVisible),
-    ENUM(ImGuiTableColumnFlags, IsSorted),
-    ENUM(ImGuiTableColumnFlags, IsHovered),
-};
-
-static util::TableInteger TableRowFlags[] = {
-    ENUM(ImGuiTableRowFlags, None),
-    ENUM(ImGuiTableRowFlags, Headers),
-};
-
 static util::TableInteger TableBgTarget[] = {
     ENUM(ImGuiTableBgTarget, None),
     ENUM(ImGuiTableBgTarget, RowBg0),
     ENUM(ImGuiTableBgTarget, RowBg1),
     ENUM(ImGuiTableBgTarget, CellBg),
-};
-
-static util::TableInteger DrawFlags[] = {
-    ENUM(ImDrawFlags, None),
-    ENUM(ImDrawFlags, Closed),
-    ENUM(ImDrawFlags, RoundCornersTopLeft),
-    ENUM(ImDrawFlags, RoundCornersTopRight),
-    ENUM(ImDrawFlags, RoundCornersBottomLeft),
-    ENUM(ImDrawFlags, RoundCornersBottomRight),
-    ENUM(ImDrawFlags, RoundCornersNone),
-    ENUM(ImDrawFlags, RoundCornersTop),
-    ENUM(ImDrawFlags, RoundCornersBottom),
-    ENUM(ImDrawFlags, RoundCornersLeft),
-    ENUM(ImDrawFlags, RoundCornersRight),
-    ENUM(ImDrawFlags, RoundCornersAll),
-};
-
-static util::TableInteger DrawListFlags[] = {
-    ENUM(ImDrawListFlags, None),
-    ENUM(ImDrawListFlags, AntiAliasedLines),
-    ENUM(ImDrawListFlags, AntiAliasedLinesUseTex),
-    ENUM(ImDrawListFlags, AntiAliasedFill),
-    ENUM(ImDrawListFlags, AllowVtxOffset),
-};
-
-static util::TableInteger FontAtlasFlags[] = {
-    ENUM(ImFontAtlasFlags, None),
-    ENUM(ImFontAtlasFlags, NoPowerOfTwoHeight),
-    ENUM(ImFontAtlasFlags, NoMouseCursors),
-    ENUM(ImFontAtlasFlags, NoBakedLines),
-};
-
-static util::TableInteger ViewportFlags[] = {
-    ENUM(ImGuiViewportFlags, None),
-    ENUM(ImGuiViewportFlags, IsPlatformWindow),
-    ENUM(ImGuiViewportFlags, IsPlatformMonitor),
-    ENUM(ImGuiViewportFlags, OwnedByApp),
-    ENUM(ImGuiViewportFlags, NoDecoration),
-    ENUM(ImGuiViewportFlags, NoTaskBarIcon),
-    ENUM(ImGuiViewportFlags, NoFocusOnAppearing),
-    ENUM(ImGuiViewportFlags, NoFocusOnClick),
-    ENUM(ImGuiViewportFlags, NoInputs),
-    ENUM(ImGuiViewportFlags, NoRendererClear),
-    ENUM(ImGuiViewportFlags, NoAutoMerge),
-    ENUM(ImGuiViewportFlags, TopMost),
-    ENUM(ImGuiViewportFlags, CanHostOtherWindows),
-    ENUM(ImGuiViewportFlags, IsMinimized),
-    ENUM(ImGuiViewportFlags, IsFocused),
-};
-
-static util::TableInteger Mod[] = {
-    ENUM(ImGuiMod, None),
-    ENUM(ImGuiMod, Ctrl),
-    ENUM(ImGuiMod, Shift),
-    ENUM(ImGuiMod, Alt),
-    ENUM(ImGuiMod, Super),
-    ENUM(ImGuiMod, Shortcut),
 };
 
 #undef ENUM
@@ -7409,6 +7409,7 @@ static void init(lua_State* L) {
         GEN_ENUM(Dir),
         GEN_ENUM(SortDirection),
         GEN_ENUM(Key),
+        GEN_ENUM(Mod),
         GEN_ENUM(Col),
         GEN_ENUM(StyleVar),
         GEN_ENUM(MouseButton),
@@ -7416,7 +7417,6 @@ static void init(lua_State* L) {
         GEN_ENUM(MouseSource),
         GEN_ENUM(Cond),
         GEN_ENUM(TableBgTarget),
-        GEN_ENUM(Mod),
     };
     #undef GEN_ENUM
 

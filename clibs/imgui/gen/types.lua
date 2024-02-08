@@ -33,34 +33,8 @@ local reserve_type <const> = {
 
 local registered_type = {}
 
-local types = {}
-local enums = {}
-
-local function init(meta)
-    for _, typedef_meta in ipairs(meta.typedefs) do
-        types[typedef_meta.name] = typedef_meta
-    end
-    for _, struct_meta in ipairs(meta.structs) do
-        types[struct_meta.name] = struct_meta
-    end
-    for _, enum_meta in ipairs(meta.enums) do
-        if enum_meta.conditionals then
-            goto continue
-        end
-        local realname = enum_meta.name:match "(.-)_?$"
-        if enum_meta.is_flags_enum then
-            local name = realname:match "^ImGui(%a+)$" or realname:match "^Im(%a+)$"
-            enums[realname] = string.format("ImGui.%s", name)
-        else
-            local name = realname:match "^ImGui(%a+)$"
-            enums[realname] = string.format("ImGui.%s", name)
-        end
-        ::continue::
-    end
-end
-
-local function decode_docs(name, funcs_meta, writeln, write_func)
-    local meta = types[name]
+local function decode_docs(status, name, writeln, write_func)
+    local meta = status.types[name]
     assert(meta and meta.kind == "struct")
     registered_type[name] = name
     local lines = {}
@@ -90,11 +64,15 @@ local function decode_docs(name, funcs_meta, writeln, write_func)
             push_line(field, builtin_type[field.type.declaration])
             goto continue
         end
-        if enums[field.type.declaration] then
-            push_line(field, enums[field.type.declaration])
+        if status.flags[field.type.declaration] then
+            push_line(field, string.format("ImGui.%s", status.flags[field.type.declaration].name))
             goto continue
         end
-        local field_meta = types[field.type.declaration]
+        if status.enums[field.type.declaration] then
+            push_line(field, string.format("ImGui.%s", status.enums[field.type.declaration].name))
+            goto continue
+        end
+        local field_meta = status.types[field.type.declaration]
         if not field_meta then
             goto continue
         end
@@ -113,6 +91,7 @@ local function decode_docs(name, funcs_meta, writeln, write_func)
             writeln("---@field %s", fname)
         end
     end
+    local funcs_meta = status.struct_funcs[name] or {}
     if #funcs_meta == 0 then
         writeln ""
         return
@@ -151,7 +130,7 @@ local function decode_func_builtin(name, writeln, readonly, attris, builtin, fie
     writeln ""
 end
 
-local function decode_func_attris(name, writeln, readonly, meta)
+local function decode_func_attris(status, name, writeln, readonly, meta)
     local attris = {
         setters = {},
         getters = {},
@@ -165,7 +144,7 @@ local function decode_func_attris(name, writeln, readonly, meta)
             decode_func_builtin(name, writeln, readonly, attris, builtin, field)
             goto continue
         end
-        local field_meta = types[field.type.declaration]
+        local field_meta = status.types[field.type.declaration]
         if field_meta then
             if field_meta.kind == "struct" then
                 if field_meta.name == "ImVec2" then
@@ -225,17 +204,18 @@ local function decode_func_attris(name, writeln, readonly, meta)
     return attris
 end
 
-local function decode_func(name, funcs_meta, writeln, write_func, modes)
-    local meta = types[name]
+local function decode_func(status, name, writeln, write_func, modes)
+    local meta = status.types[name]
     assert(meta and meta.kind == "struct")
     writeln("namespace wrap_%s {", name)
     writeln ""
+    local funcs_meta = status.struct_funcs[name] or {}
     local funcs = {}
     for _, func_meta in ipairs(funcs_meta) do
         funcs[#funcs+1] = write_func(func_meta)
     end
     local readonly = #modes == 1 and modes[1] == "const_pointer"
-    local attris = decode_func_attris(name, writeln, readonly, meta)
+    local attris = decode_func_attris(status, name, writeln, readonly, meta)
     local funcs_args = "{}"
     local setters_args = "{}"
     local getters_args = "{}"
@@ -294,7 +274,6 @@ local function decode_func(name, funcs_meta, writeln, write_func, modes)
 end
 
 return {
-    init = init,
     decode_docs = decode_docs,
     decode_func = decode_func,
 }
