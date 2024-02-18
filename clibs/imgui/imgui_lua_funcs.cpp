@@ -98,6 +98,7 @@ static util::TableInteger PopupFlags[] = {
     ENUM(ImGuiPopupFlags, MouseButtonLeft),
     ENUM(ImGuiPopupFlags, MouseButtonRight),
     ENUM(ImGuiPopupFlags, MouseButtonMiddle),
+    ENUM(ImGuiPopupFlags, NoReopen),
     ENUM(ImGuiPopupFlags, NoOpenOverExistingPopup),
     ENUM(ImGuiPopupFlags, NoOpenOverItems),
     ENUM(ImGuiPopupFlags, AnyPopupId),
@@ -5080,6 +5081,20 @@ struct KeyRepeatRate {
     }
 };
 
+struct ConfigDebugIsDebuggerPresent {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigDebugIsDebuggerPresent);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigDebugIsDebuggerPresent = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
 struct ConfigDebugBeginReturnValueOnce {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
@@ -5701,6 +5716,7 @@ static luaL_Reg setters[] = {
     { "MouseDragThreshold", MouseDragThreshold::setter },
     { "KeyRepeatDelay", KeyRepeatDelay::setter },
     { "KeyRepeatRate", KeyRepeatRate::setter },
+    { "ConfigDebugIsDebuggerPresent", ConfigDebugIsDebuggerPresent::setter },
     { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::setter },
     { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::setter },
     { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::setter },
@@ -5774,6 +5790,7 @@ static luaL_Reg getters[] = {
     { "MouseDragThreshold", MouseDragThreshold::getter },
     { "KeyRepeatDelay", KeyRepeatDelay::getter },
     { "KeyRepeatRate", KeyRepeatRate::getter },
+    { "ConfigDebugIsDebuggerPresent", ConfigDebugIsDebuggerPresent::getter },
     { "ConfigDebugBeginReturnValueOnce", ConfigDebugBeginReturnValueOnce::getter },
     { "ConfigDebugBeginReturnValueLoop", ConfigDebugBeginReturnValueLoop::getter },
     { "ConfigDebugIgnoreFocusLoss", ConfigDebugIgnoreFocusLoss::getter },

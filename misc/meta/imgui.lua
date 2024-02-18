@@ -45,7 +45,7 @@ function ImGui.WindowFlags(flags) end
 
 --
 -- Flags for ImGui::BeginChild()
--- (Legacy: bot 0 must always correspond to ImGuiChildFlags_Border to be backward compatible with old API using 'bool border = false'.
+-- (Legacy: bit 0 must always correspond to ImGuiChildFlags_Border to be backward compatible with old API using 'bool border = false'.
 -- About using AutoResizeX/AutoResizeY flags:
 -- - May be combined with SetNextWindowSizeConstraints() to set a min/max size for each axis (see "Demo->Child->Auto-resize with Constraints").
 -- - Size measurement for a given axis is only performed when the child window is within visible boundaries, or is just appearing.
@@ -58,7 +58,7 @@ function ImGui.WindowFlags(flags) end
 
 ---@alias _ImGuiChildFlags_Name
 ---| "None"
----| "Border"                 #  Show an outer border and enable WindowPadding. (Important: this is always == 1 == true for legacy reason)
+---| "Border"                 #  Show an outer border and enable WindowPadding. (IMPORTANT: this is always == 1 == true for legacy reason)
 ---| "AlwaysUseWindowPadding" #  Pad with style.WindowPadding even if no border are drawn (no padding by default for non-bordered child windows because it makes more sense)
 ---| "ResizeX"                #  Allow resize from right border (layout direction). Enable .ini saving (unless ImGuiWindowFlags_NoSavedSettings passed to window flags)
 ---| "ResizeY"                #  Allow resize from bottom border (layout direction). "
@@ -135,8 +135,8 @@ function ImGui.TreeNodeFlags(flags) end
 
 --
 -- Flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
--- - To be backward compatible with older API which took an 'int mouse_button = 1' argument, we need to treat
---   small flags values as a mouse button index, so we encode the mouse button in the first few bits of the flags.
+-- - To be backward compatible with older API which took an 'int mouse_button = 1' argument instead of 'ImGuiPopupFlags flags',
+--   we need to treat small flags values as a mouse button index, so we encode the mouse button in the first few bits of the flags.
 --   It is therefore guaranteed to be legal to pass a mouse button index in ImGuiPopupFlags.
 -- - For the same reason, we exceptionally default the ImGuiPopupFlags argument of BeginPopupContextXXX functions to 1 instead of 0.
 --   IMPORTANT: because the default parameter is 1 (==ImGuiPopupFlags_MouseButtonRight), if you rely on the default parameter
@@ -150,6 +150,7 @@ function ImGui.TreeNodeFlags(flags) end
 ---| "MouseButtonLeft"         #  For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)
 ---| "MouseButtonRight"        #  For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)
 ---| "MouseButtonMiddle"       #  For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)
+---| "NoReopen"                #  For OpenPopup*(), BeginPopupContext*(): don't reopen same popup if already open (won't reposition, won't reinitialize navigation)
 ---| "NoOpenOverExistingPopup" #  For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack
 ---| "NoOpenOverItems"         #  For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
 ---| "AnyPopupId"              #  For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
@@ -684,6 +685,7 @@ ImGui.SortDirection = {}
 -- Since >= 1.89 we increased typing (went from int to enum), some legacy code may need a cast to ImGuiKey.
 -- Read details about the 1.87 and 1.89 transition : https://github.com/ocornut/imgui/issues/4921
 -- Note that "Keys" related to physical keys and are not the same concept as input "Characters", the later are submitted via io.AddInputCharacter().
+-- The keyboard key enum values are named after the keys on a standard US keyboard, and on other keyboard types the keys reported may not match the keycaps.
 --
 --
 -- Forward declared enum type ImGuiKey
@@ -1108,6 +1110,7 @@ function ImStringBuf:Resize(size) end
 ---@field MouseDragThreshold number                #  = 6.0f           // Distance threshold before considering we are dragging.
 ---@field KeyRepeatDelay number                    #  = 0.275f         // When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).
 ---@field KeyRepeatRate number                     #  = 0.050f         // When holding a key/button, rate at which it repeats, in seconds.
+---@field ConfigDebugIsDebuggerPresent boolean     #  = false          // Enable various tools calling IM_DEBUG_BREAK().
 ---@field ConfigDebugBeginReturnValueOnce boolean  #  = false          // First-time calls to Begin()/BeginChild() will return false. NEEDS TO BE SET AT APPLICATION BOOT TIME if you don't want to miss windows.
 ---@field ConfigDebugBeginReturnValueLoop boolean  #  = false          // Some calls to Begin()/BeginChild() will return false. Will cycle through window depths then repeat. Suggested use: add "io.ConfigDebugBeginReturnValue = io.KeyShift" in your main loop then occasionally press SHIFT. Windows should be flickering while running.
 ---@field ConfigDebugIgnoreFocusLoss boolean       #  = false          // Ignore io.AddFocusEvent(false), consequently not calling io.ClearInputKeys() in input processing.
@@ -1609,7 +1612,7 @@ function ImGui.End() end
 -- - Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
 -- - Before 1.90 (November 2023), the "ImGuiChildFlags child_flags = 0" parameter was "bool border = false".
 --   This API is backward compatible with old code, as we guarantee that ImGuiChildFlags_Border == true.
---   Consider updating your old call sites:
+--   Consider updating your old code:
 --      BeginChild("Name", size, false)   -> Begin("Name", size, 0); or Begin("Name", size, ImGuiChildFlags_None);
 --      BeginChild("Name", size, true)    -> Begin("Name", size, ImGuiChildFlags_Border);
 -- - Manual sizing (each axis can use a different setting e.g. ImVec2(0.0f, 400.0f)):
@@ -2480,6 +2483,7 @@ function ImGui.Bullet() end
 --
 -- Widgets: Images
 -- - Read about ImTextureID here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+-- - 'uv0' and 'uv1' are texture coordinates. Read about them from the same link above.
 -- - Note that Image() may add +2.0f to provided size if a border is visible, ImageButton() adds style.FramePadding*2.0f to provided size.
 --
 --
