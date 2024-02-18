@@ -35,6 +35,10 @@ function property_getter:textContent()
     return rmlui.TextGetText(self._handle)
 end
 
+function property_setter:textContent(text)
+    return rmlui.TextSetText(self._handle, text)
+end
+
 local property_mt = {}
 function property_mt:__index(name)
     local getter = property_getter[name]
