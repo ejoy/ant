@@ -21,7 +21,7 @@ local function safe_name(v)
     return KEYWORD[v] or v
 end
 
-local lua_type = {
+local lua_type <const> = {
     ["const char*"] = "string",
     ["bool"] = "boolean",
     ["float"] = "number",
@@ -29,7 +29,7 @@ local lua_type = {
     ["unsigned int"] = "integer",
     ["int"] = "integer",
     ["size_t"] = "integer",
-    ["ImGuiKeyChord"] = "ImGui.KeyChord",
+    ["ImGuiKeyChord"] = "ImGuiKeyChord",
     ["const ImGuiPayload*"] = "string | nil",
 }
 
@@ -438,17 +438,28 @@ local function write_func(func_meta)
         local type_func = special_arg[type_name]
         if type_func then
             type_func(type_meta, context)
-        elseif status.types[type_name] or lua_type[type_name] then
-            local luatype = status.types[type_name] and type_name or lua_type[type_name]
+        elseif status.types[type_name] then
             if type_meta.default_value then
                 local default_value = get_default_value(type_meta)
                 if default_value then
-                    writeln("---@param %s? %s | `%s`", safe_name(type_meta.name), luatype, default_value)
+                    writeln("---@param %s? %s | `%s`", safe_name(type_meta.name), type_name, default_value)
                 else
-                    writeln("---@param %s? %s", safe_name(type_meta.name), luatype)
+                    writeln("---@param %s? %s", safe_name(type_meta.name), type_name)
                 end
             else
-                writeln("---@param %s %s", safe_name(type_meta.name), luatype)
+                writeln("---@param %s %s", safe_name(type_meta.name), type_name)
+            end
+            context.arguments[#context.arguments+1] = safe_name(type_meta.name)
+        elseif lua_type[type_name] then
+            if type_meta.default_value then
+                local default_value = get_default_value(type_meta)
+                if default_value then
+                    writeln("---@param %s? %s | `%s`", safe_name(type_meta.name), lua_type[type_name], default_value)
+                else
+                    writeln("---@param %s? %s", safe_name(type_meta.name), lua_type[type_name])
+                end
+            else
+                writeln("---@param %s %s", safe_name(type_meta.name), lua_type[type_name])
             end
             context.arguments[#context.arguments+1] = safe_name(type_meta.name)
         else
@@ -461,9 +472,10 @@ local function write_func(func_meta)
         local type_func = special_ret[type_name]
         if type_func then
             type_func(func_meta)
-        elseif status.types[type_name] or lua_type[type_name] then
-            local luatype = status.types[type_name] and type_name or lua_type[type_name]
-            writeln("---@return %s", luatype)
+        elseif status.types[type_name] then
+            writeln("---@return %s", type_name)
+        elseif lua_type[type_name] then
+            writeln("---@return %s", lua_type[type_name])
         else
             error(string.format("undefined lua type `%s`", type_name))
         end
@@ -486,7 +498,7 @@ local function write_func(func_meta)
 end
 
 local function write_structs()
-    writeln "---@alias ImGui.KeyChord ImGui.Key | ImGui.Mod"
+    writeln "---@alias ImGuiKeyChord ImGui.Key | ImGui.Mod"
     writeln ""
     writeln "---@alias ImTextureID integer"
     writeln ""
@@ -508,7 +520,11 @@ local function write_structs()
     writeln "---@field y number"
     writeln ""
     for _, v in ipairs(status.types) do
-        writeln("---@alias %s %s", v.name, v.type)
+        if status.types[v.type] then
+            writeln("---@alias %s %s", v.name, v.type)
+        else
+            writeln("---@class %s", v.name)
+        end
         writeln ""
     end
     for _, v in ipairs(status.structs) do

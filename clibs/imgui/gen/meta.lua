@@ -180,7 +180,7 @@ local TodoType <const> = {
     ImGuiKeyChord = true,
 }
 
-local BuiltinType <const> = {
+local BuiltinLuaType <const> = {
     ["signed char"] = "integer",
     ["unsigned char"] = "integer",
     ["signed short"] = "integer",
@@ -260,14 +260,11 @@ local function is_function_pointer(meta)
     return meta.type.type_details.flavour == "function_pointer"
 end
 
-local function get_builtin_type(typename, types)
-    if BuiltinType[typename] then
-        return BuiltinType[typename]
+local function assert_lua_type(typename, types)
+    if BuiltinLuaType[typename] then
+        return
     end
-    if types[typename] then
-        return types[typename].type
-    end
-    assert(false, typename)
+    assert(types[typename], typename)
 end
 
 local function cimgui_json(AntDir)
@@ -402,9 +399,10 @@ function m.init(status)
             and not enums[typedef_meta.name]
             and not is_function_pointer(typedef_meta)
         then
+            assert_lua_type(typedef_meta.type.declaration, types)
             local type = {
                 name = typedef_meta.name,
-                type = get_builtin_type(typedef_meta.type.declaration, types),
+                type = typedef_meta.type.declaration,
             }
             types[type.name] = type
             types[#types+1] = type

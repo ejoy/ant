@@ -7,6 +7,7 @@ local viewIdPool = require "viewid_pool"
 local ImGui = require "imgui"
 local ImGuiBackend = require "imgui.backend"
 local ImGuiAnt = {}
+---@class ImGuiIO
 local ImGuiIO
 
 local FontAtlas = {}

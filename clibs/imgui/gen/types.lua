@@ -2,7 +2,6 @@ local builtin_type <const> = {
     ["bool"] = "boolean",
     ["int"] = "integer",
     ["unsigned int"] = "integer",
-    ["signed char"] = "integer",
     ["float"] = "number",
     ["void*"] = "lightuserdata",
 }
@@ -24,9 +23,8 @@ local builtin_get <const> = {
 }
 
 local reserve_type <const> = {
-    ["ImGuiID"] = "ImGuiID",
     ["ImTextureID"] = "ImTextureID",
-    ["ImGuiKeyChord"] = "ImGui.KeyChord",
+    ["ImGuiKeyChord"] = "ImGuiKeyChord",
     ["const ImWchar*"] = "ImFontRange",
     ["ImFontAtlas*"] = "ImFontAtlas",
     ["ImVec2"] = "ImVec2",
@@ -146,9 +144,8 @@ local function decode_docs(status, name, writeln, write_func)
             push_line(field, string.format("ImGui.%s", status.enums[field.type.declaration].name))
             goto continue
         end
-        local type_meta = status.types[field.type.declaration]
-        if type_meta then
-            push_line(field, type_meta.type)
+        if status.types[field.type.declaration] then
+            push_line(field, field.type.declaration)
             goto continue
         end
         ::continue::
@@ -221,13 +218,12 @@ local function decode_func_attris(status, name, writeln, readonly)
             decode_func_builtin(name, writeln, readonly, attris, "integer", field)
             goto continue
         end
-        if special[field.type.declaration] then
-            special[field.type.declaration](name, field, attris, writeln, readonly)
+        if status.types[field.type.declaration] then
+            decode_func_builtin(name, writeln, readonly, attris, "integer", field)
             goto continue
         end
-        local type_meta = status.types[field.type.declaration]
-        if type_meta then
-            decode_func_builtin(name, writeln, readonly, attris, type_meta.type, field)
+        if special[field.type.declaration] then
+            special[field.type.declaration](name, field, attris, writeln, readonly)
             goto continue
         end
         ::continue::

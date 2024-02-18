@@ -1028,7 +1028,7 @@ ImGui.Cond = {}
 ImGui.TableBgTarget = {}
 
 
----@alias ImGui.KeyChord ImGui.Key | ImGui.Mod
+---@alias ImGuiKeyChord ImGui.Key | ImGui.Mod
 
 ---@alias ImTextureID integer
 
@@ -1049,31 +1049,31 @@ function ImStringBuf:Resize(size) end
 ---@field x number
 ---@field y number
 
----@alias ImDrawIdx integer
+---@class ImDrawIdx
 
----@alias ImGuiID integer
+---@class ImGuiID
 
----@alias ImS8 integer
+---@class ImS8
 
----@alias ImU8 integer
+---@class ImU8
 
----@alias ImS16 integer
+---@class ImS16
 
----@alias ImU16 integer
+---@class ImU16
 
----@alias ImS32 integer
+---@class ImS32
 
----@alias ImU32 integer
+---@class ImU32
 
----@alias ImS64 integer
+---@class ImS64
 
----@alias ImU64 integer
+---@class ImU64
 
----@alias ImWchar32 integer
+---@class ImWchar32
 
----@alias ImWchar16 integer
+---@class ImWchar16
 
----@alias ImWchar integer
+---@alias ImWchar ImWchar32
 
 ---@class ImGuiIO
 ---@field ConfigFlags ImGui.ConfigFlags            #  = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
@@ -1116,7 +1116,7 @@ function ImStringBuf:Resize(size) end
 ---@field BackendRendererUserData lightuserdata    #  = NULL           // User data for renderer backend
 ---@field BackendLanguageUserData lightuserdata    #  = NULL           // User data for non C++ programming language backend
 ---@field ClipboardUserData lightuserdata
----@field PlatformLocaleDecimalPoint integer       #  '.'              // [Experimental] Configure decimal point e.g. '.' or ',' useful for some languages (e.g. German), generally pulled from *localeconv()->decimal_point
+---@field PlatformLocaleDecimalPoint ImWchar       #  '.'              // [Experimental] Configure decimal point e.g. '.' or ',' useful for some languages (e.g. German), generally pulled from *localeconv()->decimal_point
 ---@field WantCaptureMouse boolean                 #  Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
 ---@field WantCaptureKeyboard boolean              #  Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
 ---@field WantTextInput boolean                    #  Mobile/console: when set, you may display an on-screen keyboard. This is set by Dear ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
@@ -1139,16 +1139,16 @@ function ImStringBuf:Resize(size) end
 ---@field KeyShift boolean                         #  Keyboard modifier down: Shift
 ---@field KeyAlt boolean                           #  Keyboard modifier down: Alt
 ---@field KeySuper boolean                         #  Keyboard modifier down: Cmd/Super/Windows
----@field KeyMods ImGui.KeyChord                   #  Key mods flags (any of ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Alt/ImGuiMod_Super flags, same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags. DOES NOT CONTAINS ImGuiMod_Shortcut which is pretranslated). Read-only, updated by NewFrame()
+---@field KeyMods ImGuiKeyChord                    #  Key mods flags (any of ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Alt/ImGuiMod_Super flags, same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags. DOES NOT CONTAINS ImGuiMod_Shortcut which is pretranslated). Read-only, updated by NewFrame()
 ---@field WantCaptureMouseUnlessPopupClose boolean #  Alternative to WantCaptureMouse: (WantCaptureMouse == true && WantCaptureMouseUnlessPopupClose == false) when a click over void is expected to close a popup.
 ---@field MousePosPrev ImVec2                      #  Previous mouse position (note that MouseDelta is not necessary == MousePos-MousePosPrev, in case either position is invalid)
 ---@field MouseWheelRequestAxisSwap boolean        #  On a non-Mac system, holding SHIFT requests WheelY to perform the equivalent of a WheelX event. On a Mac system this is already enforced by the system.
 ---@field PenPressure number                       #  Touch/Pen pressure (0.0f to 1.0f, should be >0.0f only when MouseDown[0] == true). Helper storage currently unused by Dear ImGui.
 ---@field AppFocusLost boolean                     #  Only modify via AddFocusEvent()
 ---@field AppAcceptingEvents boolean               #  Only modify via SetAppAcceptingEvents()
----@field BackendUsingLegacyKeyArrays integer      #  -1: unknown, 0: using AddKeyEvent(), 1: using legacy io.KeysDown[]
+---@field BackendUsingLegacyKeyArrays ImS8         #  -1: unknown, 0: using AddKeyEvent(), 1: using legacy io.KeysDown[]
 ---@field BackendUsingLegacyNavInputArray boolean  #  0: using AddKeyAnalogEvent(), 1: writing to legacy io.NavInputs[] directly
----@field InputQueueSurrogate integer              #  For AddInputCharacterUTF16()
+---@field InputQueueSurrogate ImWchar16            #  For AddInputCharacterUTF16()
 local ImGuiIO = {}
 --
 -- Input Functions
@@ -1263,7 +1263,7 @@ function ImGuiIO.ClearInputKeys() end
 ---@field EventFlag ImGui.InputTextFlags#  One ImGuiInputTextFlags_Callback*    // Read-only
 ---@field Flags ImGui.InputTextFlags    #  What user passed to InputText()      // Read-only
 ---@field UserData lightuserdata        #  What user passed to InputText()      // Read-only
----@field EventChar integer             #  Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
+---@field EventChar ImWchar             #  Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
 ---@field EventKey ImGui.Key            #  Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
 ---@field BufTextLen integer            #  Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
 ---@field BufSize integer               #  Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
@@ -1307,7 +1307,7 @@ function ImGuiInputTextCallbackData.HasSelection() end
 ---@field FontBuilderFlags integer    #  0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
 ---@field RasterizerMultiply number   #  1.0f     // Linearly brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable. This is a silly thing we may remove in the future.
 ---@field RasterizerDensity number    #  1.0f     // DPI scale for rasterization, not altering other font metrics: make it easy to swap between e.g. a 100% and a 400% fonts for a zooming display. IMPORTANT: If you increase this it is expected that you increase font scale accordingly, otherwise quality may look lowered.
----@field EllipsisChar integer        #  -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+---@field EllipsisChar ImWchar        #  -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
 
 ---@class ImFontAtlas
 ---@field Flags ImGui.FontAtlasFlags#  Build flags (see ImFontAtlasFlags_)
@@ -4251,7 +4251,7 @@ function ImGui.IsKeyReleased(key) end
 --
 -- was key chord (mods + key) pressed, e.g. you can pass 'ImGuiMod_Ctrl | ImGuiKey_S' as a key-chord. This doesn't do any routing or focus check, please consider using Shortcut() function instead.
 --
----@param key_chord ImGui.KeyChord
+---@param key_chord ImGuiKeyChord
 ---@return boolean
 function ImGui.IsKeyChordPressed(key_chord) end
 
