@@ -336,13 +336,13 @@ function pickup_sys:entity_ready()
 			local dstres = which_material(e)
 
 			local mi = RM.create_instance(dstres.object)
-			assert(not fm.main_queue:isnull())
-			mi:set_state(create_pickup_state(fm.main_queue:get_state(), dstres.state))
+			local midx = queuemgr.material_index "main_queue"
+			mi:set_state(create_pickup_state(assert(fm[midx]):get_state(), dstres.state))
 			mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 			
-			local midx = queuemgr.material_index "pickup_queue"
-			fm[midx] = mi
-			R.set(ro.rm_idx, midx, mi:ptr())
+			local pidx = queuemgr.material_index "pickup_queue"
+			fm[pidx] = mi
+			R.set(ro.rm_idx, pidx, mi:ptr())
 		end
 	end
 end
