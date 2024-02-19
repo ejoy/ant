@@ -1,10 +1,19 @@
 #ifndef __fontmutex_h_
 #define __fontmutex_h_
 
-struct mutex_t;
-struct mutex_t* mutex_create();
-void mutex_destroy(struct mutex_t* m);
-void mutex_acquire(struct mutex_t* m);
-void mutex_release(struct mutex_t* m);
+#if defined(_WIN32)
+    #include <windows.h>
+    #define mutex_t SRWLOCK
+    #define mutex_init(m) InitializeSRWLock(&m)
+    #define mutex_acquire(m) AcquireSRWLockExclusive(&m)
+    #define mutex_release(m) ReleaseSRWLockExclusive(&m)
+#else
+    #include <pthread.h>
+    #define mutex_t pthread_mutex_t
+    #define mutex_init(m) pthread_mutex_init(&m)
+    #define mutex_acquire(m) pthread_mutex_lock(&m)
+    #define mutex_release(m) pthread_mutex_unlock(&m)
+#endif
+
 
 #endif

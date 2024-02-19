@@ -431,7 +431,7 @@ font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel){
 
 void
 font_manager_init(struct font_manager *F) {
-	F->mutex = mutex_create();	
+	mutex_init(F->mutex);
 	F->version = 1;
 	F->count = 0;
 	F->ttf = NULL;

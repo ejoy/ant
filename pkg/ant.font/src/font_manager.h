@@ -69,7 +69,7 @@ struct font_manager {
 	struct truetype_font* ttf;
 	void *L;
 	int dpi_perinch;
-	struct mutex_t* mutex;
+	mutex_t mutex;
 	uint16_t texture;
 
 	uint16_t (*font_manager_texture)(struct font_manager *F);
