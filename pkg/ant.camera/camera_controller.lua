@@ -110,13 +110,16 @@ function action.pan_reset(x, y)
     pan_x, pan_y = x, y
 end
 
-function action.pan(x, y, ce, rt)
+function action.pan(x, y)
     local dx, dy = x - pan_x, y - pan_y
     if dx == 0.0 and dy == 0.0 then
         return
     end
+
+    local mq = w:first "main_queue camera_ref:in render_target:in"
+    local ce<close> = world:entity(mq.camera_ref, "scene:in")
     pan_x, pan_y = x, y
-    dx, dy = dxdy(dx, dy, rt)
+    dx, dy = dxdy(dx, dy, mq.render_target.view_rect)
     local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
     right = math3d.normalize(right)
     local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
@@ -265,8 +268,7 @@ function cc_sys:camera_usage()
                 iom.rotate_forward_vector(ce, dy, dx)
             elseif motiontype == "move_pan" then
                 action.pan_reset(mouse_lastx, mouse_lasty)
-                local ce<close> = world:entity(mq.camera_ref)
-                action.pan(newx, newy, ce, mq.render_target.view_rect)
+                action.pan(newx, newy)
                 mouse_lastx, mouse_lasty = newx, newy
             end
         end

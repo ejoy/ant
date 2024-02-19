@@ -7,6 +7,8 @@ local PC    = util.proxy_creator()
 local common = ecs.require "common"
 local ot_sys = common.test_system "outline"
 
+local iol = ecs.require "ant.outline|outline"
+
 local outline_prefab
 
 function ot_sys.init_world()
@@ -20,9 +22,9 @@ local kb_mb = world:sub{"keyboard"}
 function ot_sys.data_changed()
     for _, key, press in kb_mb:unpack() do
         if key == "L" and press == 0 then
-            local ee <close> = world:entity(outline_prefab.tag['*'][1], "outline_info?update")
-            ee.outline_info.outline_color = {0, 1, 0, 1}
-            ee.outline_info.outline_scale = 0.8
+            local ee = world:entity(outline_prefab.tag['*'][1], "outline_info:in")
+            iol.update_outline_color(ee, {0, 1, 0, 1})
+            iol.update_ouline_scale(ee, 0.8)
         end
     end
 end

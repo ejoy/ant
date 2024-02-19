@@ -26,19 +26,6 @@ local DEFAULT_STENCIL<const> = bgfx.make_stencil{
     OP_PASS_Z =  "REPLACE"
 }
 
-function outline_system:end_filter()
-    for e in w:select "outline_info:update" do
-        if e.outline_info.outline_color then
-            local outline_scale, outline_color = e.outline_info.outline_scale, e.outline_info.outline_color
-            w:extend(e, "filter_material:in")
-            local fm = e.filter_material
-            fm["outline_queue"]["u_outlinescale"] = math3d.vector(outline_scale, 0, 0, 0)
-            fm["outline_queue"]["u_outlinecolor"] = math3d.vector(outline_color)
-            e.outline_info = {} 
-        end
-    end  
-end
-
 local function which_material(skinning)
     if skinning then
         return outline_skinning_material.object
@@ -88,23 +75,21 @@ function outline_system:init_world()
 end
 
 function outline_system:entity_ready()
-    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in outline_info?in" do
-        if e.visible_state["outline_queue"] then
-            local mo = assert(which_material(e.skinning))
-            local ro = e.render_object
-            local fm = e.filter_material
-            local mi = RM.create_instance(mo)
-            local outline_midx = queuemgr.material_index "outline_queue"
-            fm[outline_midx] = mi
+    for e in w:select "filter_result outline_info:in visible_state:in render_object:in filter_material:in skinning?in" do
+        local mo = assert(which_material(e.skinning))
+        local ro = e.render_object
+        local fm = e.filter_material
+        local mi = RM.create_instance(mo)
+        local outline_midx = assert(queuemgr.material_index "outline_queue", "Invalid 'outline_queue'")
+        fm[outline_midx] = mi
 
-            local mq_midx = queuemgr.material_index "outline_queue"
-            assert(fm[mq_midx]):set_stencil(DEFAULT_STENCIL)
-            R.set(ro.rm_idx, outline_midx, mi:ptr())
-            if e.outline_info then
-                mi["u_outlinescale"] = math3d.vector(e.outline_info.outline_scale, 0, 0, 0)
-                mi["u_outlinecolor"] = e.outline_info.outline_color
-            end
-        end
+        local mq_midx = queuemgr.material_index "outline_queue"
+        assert(fm[mq_midx]):set_stencil(DEFAULT_STENCIL)
+        R.set(ro.rm_idx, outline_midx, mi:ptr())
+
+        local oi = e.outline_info
+        mi["u_outlinescale"] = math3d.vector(oi.outline_scale, 0, 0, 0)
+        mi["u_outlinecolor"] = math3d.vector(oi.outline_color)
     end
 end
 
@@ -120,3 +105,26 @@ function outline_system:data_changed()
         w:submit(e)
     end
 end
+
+local ioutline = {}
+local function tomi(e)
+    local ol_idx = assert(queuemgr.material_index "outline_queue")
+    return assert(e.filter_material[ol_idx], "entity outline material instance is not ready")
+end
+function ioutline.update_outline_color(e, color)
+    w:extend(e, "outline_info:in filter_material:in")
+    e.outline_info.outline_color = color
+
+    local mi = tomi(e)
+    mi["u_outline_color"] = color
+end
+
+function ioutline.update_outline_scale(e, scale)
+    w:extend(e, "outline_info:in")
+    e.outline_info.outline_scale = scale
+
+    local mi = tomi(e)
+    mi["u_outline_scale"] = math3d.vector(scale, 0, 0, 0)
+end
+
+return ioutline
