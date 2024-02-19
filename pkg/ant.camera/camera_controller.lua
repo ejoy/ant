@@ -92,15 +92,14 @@ local function calc_cur_lookat()
 end
 
 local function camera_entity()
-    local mq = w:first("main_queue camera_ref:in render_target:in")
-    return world:entity(mq.camera_ref, "scene:update")
+    local mq = w:first "main_queue camera_ref:in render_target:in"
+    return world:entity(mq.camera_ref, "scene:in")
 end
 
 local action = {}
 
 function action.scale(v)
-    local mq = w:first("main_queue camera_ref:in render_target:in")
-    local ce <close> = world:entity(mq.camera_ref, "scene:update")
+    local ce <close> = camera_entity()
     calc_zoom_distance(v)
     local cur_lookat = calc_cur_lookat()
     iom.set_position(ce, math3d.add(last_ru, cur_lookat))
@@ -111,15 +110,13 @@ function action.pan_reset(x, y)
     pan_x, pan_y = x, y
 end
 
-function action.pan(x, y)
+function action.pan(x, y, ce, rt)
     local dx, dy = x - pan_x, y - pan_y
     if dx == 0.0 and dy == 0.0 then
         return
     end
     pan_x, pan_y = x, y
-    local mq = w:first("main_queue camera_ref:in render_target:in")
-    local ce <close> = world:entity(mq.camera_ref, "scene:update")
-    dx, dy = dxdy(dx, dy, mq.render_target.view_rect)
+    dx, dy = dxdy(dx, dy, rt)
     local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
     right = math3d.normalize(right)
     local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
@@ -222,8 +219,8 @@ function cc_sys:camera_usage()
     end
 
     if move_x then
-        local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = world:entity(mq.camera_ref, "scene:update")
+        local mq = w:first "main_queue camera_ref:in render_target:in"
+        local ce<close> = world:entity(mq.camera_ref, "scene:in")
         move_x  = move_x / mq.render_target.view_rect.w * 30
         local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(right, -move_x*math.max(1.0, distance)))
@@ -232,8 +229,8 @@ function cc_sys:camera_usage()
     end
 
     if move_y then
-        local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = world:entity(mq.camera_ref, "scene:update")
+        local mq = w:first "main_queue camera_ref:in render_target:in"
+        local ce<close> = world:entity(mq.camera_ref, "scene:in")
         move_y = move_y / mq.render_target.view_rect.h * 30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(up, -move_y*math.max(1.0,distance)))
@@ -244,31 +241,32 @@ function cc_sys:camera_usage()
     end
 
     if move_z then
-        local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = world:entity(mq.camera_ref, "scene:update")
+        local ce<close> = camera_entity()
         calc_zoom_distance(move_z)
         local cur_lookat = calc_cur_lookat()
         iom.set_position(ce, math3d.add(last_ru, cur_lookat))
     end
 
     if motiontype and newx and newy then
-        local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = world:entity(mq.camera_ref, "scene:update")
+        local mq = w:first "main_queue camera_ref:in render_target:in"
         local dx, dy = dxdy(newx-mouse_lastx, newy-mouse_lasty, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then
                 mouse_lastx, mouse_lasty = newx, newy
-                local ratio, newdir, pos=iom.rotate_around_point(ce, last_ru, 6*dy, 6*dx, ce.scene)
+                local ce<close> = world:entity(mq.camera_ref, "scene:in")
+                local ratio, newdir, pos = iom.rotate_around_point(ce, last_ru, 6*dy, 6*dx, ce.scene)
                 distance = ratio
                 lookat.v = newdir
                 local cur_lookat = calc_cur_lookat()
                 last_ru.v = math3d.sub(pos, cur_lookat)
             elseif motiontype == "rotate_forwardaxis" then
                 mouse_lastx, mouse_lasty = newx, newy
+                local ce<close> = world:entity(mq.camera_ref)
                 iom.rotate_forward_vector(ce, dy, dx)
             elseif motiontype == "move_pan" then
                 action.pan_reset(mouse_lastx, mouse_lasty)
-                action.pan(newx, newy)
+                local ce<close> = world:entity(mq.camera_ref)
+                action.pan(newx, newy, ce, mq.render_target.view_rect)
                 mouse_lastx, mouse_lasty = newx, newy
             end
         end
