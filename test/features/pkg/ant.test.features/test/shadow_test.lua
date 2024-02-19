@@ -72,19 +72,7 @@ local function simple_entities()
 			iom.set_position(root, math3d.vector(0.0, 3.0, 0.0, 1.0))
 		end
 	}
-	PC:create_entity{
-		policy = {
-			"ant.render|simplerender",
-		},
-		data = {
-			scene 		= {
-				s = {25, 1, 25},
-            },
-			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			visible_state= "main_view",
-			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
-		}
-	}
+	PC:add_entity(util.create_shadow_plane(25))
 
 	-- PC:create_instance{
 	-- 	prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", on_ready = function (e)

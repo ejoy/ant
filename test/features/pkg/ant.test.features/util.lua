@@ -2,21 +2,33 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+local imesh   = ecs.require "ant.asset|mesh"
+local ientity = ecs.require "ant.render|components.entity"
+
 local util = {}
+
+function util.create_shadow_plane(sx, sz)
+    sz = sz or sx
+    return world:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			scene 		= {
+				s = {sx, 1, sz},
+            },
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
+			visible_state= "main_view",
+			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+		}
+	}
+end
 
 function util.create_instance(p, on_ready)
     return world:create_instance {
         prefab = p,
         on_ready = on_ready,
     }
-end
-
-function util.prefab_entities(p)
-    local e = {}
-    for _, eid in ipairs(p.tag['*']) do
-        e[#e+1] = eid
-    end
-    return e
 end
 
 function util.remove_entities(e)

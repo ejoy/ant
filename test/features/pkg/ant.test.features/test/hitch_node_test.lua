@@ -73,6 +73,7 @@ end
 
 function hn_test_sys:init()
     create_simple_test_group()
+    PC:add_entity(util.create_shadow_plane(25))
 end
 
 local key_mb = world:sub {"keyboard"}
