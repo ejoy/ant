@@ -707,8 +707,8 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
 
 		local function add_vertex(...)
 			local offset = #vertices
-			for i=1, select(..., "#") do
-				vertices[offset+i] = select(..., i)
+			for i=1, select("#", ...) do
+				vertices[offset+i] = select(i, ...)
 			end
 		end
 
