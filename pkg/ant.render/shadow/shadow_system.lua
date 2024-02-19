@@ -287,8 +287,10 @@ function shadow_sys:update_camera()
 			D = w:first "make_shadow directional_light scene:in"
 		end
 		
-		local sb = w:first "shadow_bounding:in".shadow_bounding
-		init_light_info(C, D, sb.light_info)
+		if D then
+			local sb = w:first "shadow_bounding:in".shadow_bounding
+			init_light_info(C, D, sb.light_info)
+		end
 	end
 end
 
