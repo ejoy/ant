@@ -8,6 +8,7 @@ local common= ecs.require "common"
 
 local ig    = ecs.require "ant.group|group"
 local iom   = ecs.require "ant.objcontroller|obj_motion"
+local irender = ecs.require "ant.render|render"
 local group_test_sys = common.test_system "group"
 
 local util  = ecs.require "util"
@@ -79,14 +80,21 @@ end
 
 local kb_mb = world:sub{"keyboard"}
 
+local function switch_group_visible(who)
+    local g = group_states[who]
+    g.enable = not g.enable
+
+    local go = ig.obj "view_visible"
+    go:enable(g.gid, g.enable)
+    irender.group_flush(go)
+end
+
 function group_test_sys:data_changed()
     for _, key, press in kb_mb:unpack() do
         if key == "G" and press == 0 then
-            group_states["group_test1"].enable = not group_states["group_test1"].enable
-            ig.enable_from_name("group_test1", "view_visible", group_states["group_test1"])
+            switch_group_visible "group_test1"
         elseif key == "H" and press == 0 then
-            group_states["group_test2"].enable = not group_states["group_test2"].enable
-            ig.enable_from_name("group_test2", "view_visible", group_states["group_test2"])
+            switch_group_visible "group_test2"
         elseif key == "B" and press == 0 then
             PC:create_instance {
                 prefab = "/pkg/ant.resources.binary/meshes/base/ring.glb|mesh.prefab",

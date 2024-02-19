@@ -341,4 +341,12 @@ function irender.mark_group_visible(gid, enable)
 	ig.filter_group_tag(gid, enable, "render_object_visible", "view_visible", "render_object")
 end
 
+function irender.group_flush(go)
+	go:flush()
+    go:filter("render_object_visible", "render_object")
+    go:filter("hitch_visible", "hitch")
+
+	--go:filter("efk_visible", "efk")
+end
+
 return irender
