@@ -205,7 +205,7 @@ public:
     TextMaterial(const Shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset = 0, float width = 0.f)
         : tex_uniform(s.find_uniform("s_tex"), texid)
         , mask_uniform(s.find_uniform("u_mask"))
-        , mask_0(F->font_manager_sdf_mask(F) - F->font_manager_sdf_distance(F, edgeValueOffset))
+        , mask_0(font_manager_sdf_mask(F) - font_manager_sdf_distance(F, edgeValueOffset))
         , mask_2(width)
     { }
     void Submit(bgfx_encoder_t* encoder) override {
@@ -299,7 +299,7 @@ RenderImpl::RenderImpl(lua_State* L, int idx)
     , default_font_mat(std::make_unique<TextMaterial>(
         context.shader,
         context.font_mgr,
-        context.font_mgr->font_manager_texture(context.font_mgr)
+        font_manager_texture(context.font_mgr)
     ))
     , clip_uniform(std::make_unique<Uniform>(
         context.shader.find_uniform("u_clip_rect")
@@ -445,11 +445,11 @@ Material* RenderImpl::CreateFontMaterial(const TextEffect& effect) {
     }
     if (effect.shadow) {
         font_manager* F = context.font_mgr;
-        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
+        int8_t edgevalueOffset = int8_t(font_manager_sdf_mask(F) * 0.85f);
         auto material = std::make_unique<TextShadowMaterial>(
             context.shader,
             F,
-            F->font_manager_texture(F),
+            font_manager_texture(F),
             edgevalueOffset,
             effect.shadow->color,
             Point(effect.shadow->offset_h, effect.shadow->offset_v)
@@ -458,11 +458,11 @@ Material* RenderImpl::CreateFontMaterial(const TextEffect& effect) {
     }
     else if (effect.stroke) {
         font_manager* F = context.font_mgr;
-        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
+        int8_t edgevalueOffset = int8_t(font_manager_sdf_mask(F) * 0.85f);
         auto material = std::make_unique<TextStrokeMaterial>(
             context.shader,
             F,
-            F->font_manager_texture(F),
+            font_manager_texture(F),
             edgevalueOffset,
             effect.stroke->color,
             effect.stroke->width
@@ -496,7 +496,7 @@ union FontFace {
 
 FontFaceHandle RenderImpl::GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) {
     font_manager* F = context.font_mgr;
-    int fontid = F->font_manager_addfont_with_family(F, family.c_str());
+    int fontid = font_manager_addfont_with_family(F, family.c_str());
     if (fontid <= 0) {
         return static_cast<FontFaceHandle>(0);
     }
@@ -510,7 +510,7 @@ static struct font_glyph GetGlyph(const RendererContext& context, const FontFace
     struct font_glyph g, og;
     font_manager* F = context.font_mgr;
     //TODO: rasie err
-    F->font_manager_glyph(F, face.fontid, codepoint, face.pixelsize, &g, &og);
+    font_manager_glyph(F, face.fontid, codepoint, face.pixelsize, &g, &og);
     if (og_)
         *og_ = og;
     return g;
@@ -520,14 +520,14 @@ void RenderImpl::GetFontHeight(FontFaceHandle handle, int& ascent, int& descent,
     font_manager* F = context.font_mgr;
     FontFace face;
     face.handle = handle;
-    F->font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
+    font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
 }
 
 bool RenderImpl::GetUnderline(FontFaceHandle handle, float& position, float &thickness) {
     font_manager* F = context.font_mgr;
     FontFace face;
     face.handle = handle;
-    return 0 == F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
+    return 0 == font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
 float RenderImpl::GetFontWidth(FontFaceHandle handle, uint32_t codepoint) {

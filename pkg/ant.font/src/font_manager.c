@@ -1,4 +1,5 @@
 #include "font_manager.h"
+#include "fontmutex.h"
 #include "truetype.h"
 
 #include "bgfx_interface.h"
@@ -11,6 +12,74 @@
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb/stb_truetype.h>
+
+#define FONT_MANAGER_SLOTLINE (FONT_MANAGER_TEXSIZE/FONT_MANAGER_GLYPHSIZE)
+#define FONT_MANAGER_SLOTS (FONT_MANAGER_SLOTLINE*FONT_MANAGER_SLOTLINE)
+#define FONT_MANAGER_HASHSLOTS (FONT_MANAGER_SLOTS * 2)
+
+
+// --------------
+//
+//                       xmin                     xmax
+//                        |                         |
+//                        |<-------- width -------->|
+//                        |                         |
+//              |         +-------------------------+----------------- ymax
+//              |         |    ggggggggg   ggggg    |     ^        ^
+//              |         |   g:::::::::ggg::::g    |     |        |
+//              |         |  g:::::::::::::::::g    |     |        |
+//              |         | g::::::ggggg::::::gg    |     |        |
+//              |         | g:::::g     g:::::g     |     |        |
+//    offset_x -|-------->| g:::::g     g:::::g     |  offset_y    |
+//              |         | g:::::g     g:::::g     |     |        |
+//              |         | g::::::g    g:::::g     |     |        |
+//              |         | g:::::::ggggg:::::g     |     |        |
+//              |         |  g::::::::::::::::g     |     |      height
+//              |         |   gg::::::::::::::g     |     |        |
+//  baseline ---*---------|---- gggggggg::::::g-----*--------      |
+//            / |         |             g:::::g     |              |
+//     origin   |         |
+//              |         | g:::::gg   gg:::::g     |              |
+//              |         | g:::::gg   gg:::::g     |              |
+//              |         |  g::::::ggg:::::::g     |              |
+//              |         |   gg:::::::::::::g      |              |
+//              |         |     ggg::::::ggg        |              |
+//              |         |         gggggg          |              v
+//              |         +-------------------------+----------------- ymin
+//              |                                   |
+//              |------------- advance_x ---------->|
+
+struct font_slot {
+	uint32_t codepoint_key;	// high 8 bits (ttf index)
+	int16_t offset_x;
+	int16_t offset_y;
+	int16_t advance_x;
+	int16_t advance_y;
+	uint16_t w;
+	uint16_t h;
+};
+
+struct priority_list {
+	int version;
+	int16_t prev;
+	int16_t next;
+};
+
+struct truetype_font;
+
+struct font_manager {
+	int version;
+	int count;
+	int16_t list_head;
+	struct font_slot slots[FONT_MANAGER_SLOTS];
+	struct priority_list priority[FONT_MANAGER_SLOTS];
+	int16_t hash[FONT_MANAGER_HASHSLOTS];
+	struct truetype_font* ttf;
+	void *L;
+	int dpi_perinch;
+	mutex_t mutex;
+	uint16_t texture;
+};
 
 /*
 	F->priority is a circular linked list for the LRU cache.
@@ -429,6 +498,11 @@ font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel){
 	return (numpixel * PIXEL_DIST_SCALE) / 255.f;
 }
 
+size_t
+font_manager_sizeof() {
+	return sizeof(struct font_manager);
+}
+
 void
 font_manager_init(struct font_manager *F) {
 	mutex_init(F->mutex);
@@ -463,21 +537,6 @@ font_manager_init_lua(struct font_manager *F, void *L) {
 	lock(F);
 	F->ttf = truetype_cstruct(L);
 	F->L = L;
-	#define SETAPI(n) F->n = n
-	SETAPI(font_manager_texture);
-	SETAPI(font_manager_import);
-	SETAPI(font_manager_addfont_with_family);
-	SETAPI(font_manager_fontheight);
-	SETAPI(font_manager_pixelsize);
-	SETAPI(font_manager_glyph);
-	SETAPI(font_manager_touch);
-	SETAPI(font_manager_update);
-	SETAPI(font_manager_flush);
-	SETAPI(font_manager_scale);
-	SETAPI(font_manager_underline);
-	SETAPI(font_manager_sdf_mask);
-	SETAPI(font_manager_sdf_distance);
-	#undef SETAPI
 	unlock(F);
 }
 

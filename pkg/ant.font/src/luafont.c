@@ -143,7 +143,7 @@ luaopen_font_manager(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
-	struct font_manager * F = (struct font_manager *)lua_newuserdatauv(L, sizeof(*F), 0);
+	struct font_manager * F = (struct font_manager *)lua_newuserdatauv(L, font_manager_sizeof(), 0);
 	font_manager_init(F);
 	luaL_setfuncs(L, l, 1);
 	return 1;
