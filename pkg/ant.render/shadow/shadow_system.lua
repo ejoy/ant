@@ -265,34 +265,43 @@ local function build_sceneaabbLS(si, li)
 end
 
 local function check_changed()
-	if not w:check "scene_changed" and not w:check "camera_changed" then
-		return
+	local C = irq.main_camera_changed()
+	local D = w:first "make_shadow scene_changed directional_light"
+	if C or D then
+		return true, C, D
 	end
-
-	local D = w:first "make_shadow directional_light"
-	if not D then
-		return
-	end
-
-	w:extend(D, "scene:in")
-
-	return irq.main_camera_entity "scene:in camera:in", D
 end
 
 function shadow_sys:update_camera()
-	local C, D = check_changed()
-	if not C then
-		return
+	local changed, C, D = check_changed()
+	if changed then
+		if C then
+			w:extend(C, "camera:in scene:in")
+		else
+			C = irq.main_camera_entity "camera:in scene:in"
+		end
+	
+		if D then
+			w:extend(D, "scene:in")
+		else
+			D = w:first "make_shadow directional_light scene:in"
+		end
+		
+		local sb = w:first "shadow_bounding:in".shadow_bounding
+		init_light_info(C, D, sb.light_info)
 	end
-
-	local sb = w:first "shadow_bounding:in".shadow_bounding
-	init_light_info(C, D, sb.light_info)
 end
 
 function shadow_sys:update_camera_depend()
-	local C = check_changed()
-	if not C then
+	local changed, C = check_changed()
+	if not changed then
 		return
+	end
+
+	if C then
+		w:extend(C, "scene:in camera:in")
+	else
+		C = irq.main_camera_entity "camera:in scene:in"
 	end
 
 	local sb = w:first "shadow_bounding:in".shadow_bounding
