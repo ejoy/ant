@@ -312,8 +312,8 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.y = g_my;
         switch (eventType) {
         case NSEventTypeLeftMouseDragged:  msg.what = ant::window::mouse_buttons::left; break;
-        case NSEventTypeRightMouseDragged: msg.what = ant::window::mouse_buttons::middle; break;
-        case NSEventTypeOtherMouseDragged: msg.what = ant::window::mouse_buttons::right; break;
+        case NSEventTypeRightMouseDragged: msg.what = ant::window::mouse_buttons::right; break;
+        case NSEventTypeOtherMouseDragged: msg.what = ant::window::mouse_buttons::middle; break;
         default: msg.what = ant::window::mouse_buttons::none; break;
         }
         ant::window::input_message(cb, msg);
@@ -328,8 +328,8 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.y = g_my;
         switch (eventType) {
         case NSEventTypeLeftMouseDown:  msg.what = ant::window::mouse_button::left; break;
-        case NSEventTypeRightMouseDown: msg.what = ant::window::mouse_button::middle; break;
-        case NSEventTypeOtherMouseDown: msg.what = ant::window::mouse_button::right; break;
+        case NSEventTypeRightMouseDown: msg.what = ant::window::mouse_button::right; break;
+        case NSEventTypeOtherMouseDown: msg.what = ant::window::mouse_button::middle; break;
         default: break;
         }
         ant::window::input_message(cb, msg);
@@ -344,8 +344,8 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.y = g_my;
         switch (eventType) {
         case NSEventTypeLeftMouseUp:  msg.what = ant::window::mouse_button::left; break;
-        case NSEventTypeRightMouseUp: msg.what = ant::window::mouse_button::middle; break;
-        case NSEventTypeOtherMouseUp: msg.what = ant::window::mouse_button::right; break;
+        case NSEventTypeRightMouseUp: msg.what = ant::window::mouse_button::right; break;
+        case NSEventTypeOtherMouseUp: msg.what = ant::window::mouse_button::middle; break;
         default: break;
         }
         ant::window::input_message(cb, msg);
