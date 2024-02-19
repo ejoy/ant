@@ -3,7 +3,7 @@ local world = ecs.world
 local w 	= world.w
 local math3d = require "math3d"
 
-local ientity 	= ecs.require "ant.render|components.entity"
+local ientity 	= ecs.require "ant.entity|entity"
 local imesh		= ecs.require "ant.asset|mesh"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
 local ipt		= ecs.require "ant.landform|plane_terrain"

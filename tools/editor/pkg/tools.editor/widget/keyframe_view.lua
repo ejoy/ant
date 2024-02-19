@@ -1365,7 +1365,7 @@ local imaterial = ecs.require "ant.asset|material"
 local bone_color    = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
 local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 
-local ientity 	= ecs.require "ant.render|components.entity"
+local ientity 	= ecs.require "ant.entity|entity"
 local imesh 	= ecs.require "ant.asset|mesh"
 
 local function create_joint_entity(joint_name)

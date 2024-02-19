@@ -1,7 +1,9 @@
 local ecs	= ...
 local world = ecs.world
-local w		= world.w
-local layoutmgr   = require "vertexlayout_mgr"
+
+local renderpkg	= import_package "ant.render"
+local layoutmgr = renderpkg.layoutmgr
+
 local math3d    = require "math3d"
 local hwi		= import_package "ant.hwi"
 local geopkg    = import_package "ant.geometry"
@@ -11,7 +13,6 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local ivs		= ecs.require "ant.render|visible_state"
 local imaterial = ecs.require "ant.asset|material"
 local irender	= ecs.require "ant.render|render_system.render"
 local imesh 	= ecs.require "ant.asset|mesh"

@@ -7,7 +7,7 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local util      = ecs.require "util"
 local PC        = util.proxy_creator()
 local imesh     = ecs.require "ant.asset|mesh"
-local ientity 	= ecs.require "ant.render|components.entity"
+local ientity 	= ecs.require "ant.entity|entity"
 local imaterial = ecs.require "ant.asset|material"
 
 local math3d    = require "math3d"

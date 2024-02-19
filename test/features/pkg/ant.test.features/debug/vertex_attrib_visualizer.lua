@@ -8,7 +8,7 @@ local layoutmgr = import_package "ant.render".layoutmgr
 
 local ivav = {}
 local imaterial = ecs.require "ant.asset|material"
-local ientity   = ecs.require "ant.render|components.entity"
+local ientity   = ecs.require "ant.entity|entity"
 
 local function find_stream(vb, what)
     for i=1, #vb do

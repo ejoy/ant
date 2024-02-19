@@ -11,7 +11,7 @@ local m = ecs.system "main_system"
 local entities
 
 local imesh = ecs.require "ant.asset|mesh"
-local ientity = ecs.require "ant.render|components.entity"
+local ientity = ecs.require "ant.entity|entity"
 
 function m:init_world()
     world:create_instance {

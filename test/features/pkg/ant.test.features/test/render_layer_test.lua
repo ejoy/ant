@@ -7,7 +7,7 @@ local util  = ecs.require "util"
 local PC    = util.proxy_creator()
 
 local irl       = ecs.require "ant.render|render_layer.render_layer"
-local ientity   = ecs.require "ant.render|components.entity"
+local ientity   = ecs.require "ant.entity|entity"
 local imesh     = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"

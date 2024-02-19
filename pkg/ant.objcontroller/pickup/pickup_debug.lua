@@ -10,7 +10,7 @@ local fbmgr     = renderpkg.fbmgr
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
 
-local ientity   = ecs.require "ant.render|components.entity"
+local ientity   = ecs.require "ant.entity|entity"
 local imaterial = ecs.require "ant.asset|material"
 
 local frustum_entity

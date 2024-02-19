@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.require "ant.asset|material"
-local computil  = ecs.require "ant.render|components.entity"
+local computil  = ecs.require "ant.entity|entity"
 local ilight    = ecs.require "ant.render|light.light"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ivs       = ecs.require "ant.render|visible_state"

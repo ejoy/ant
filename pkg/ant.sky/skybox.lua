@@ -5,7 +5,7 @@ local w 		= world.w
 local geopkg 	= import_package "ant.geometry"
 local geo 		= geopkg.geometry
 
-local ientity	= ecs.require "ant.render|components.entity"
+local ientity	= ecs.require "ant.entity|entity"
 local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:component_init()

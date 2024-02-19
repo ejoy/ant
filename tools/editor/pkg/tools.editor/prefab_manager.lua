@@ -34,7 +34,7 @@ local vfs           = require "vfs"
 local global_data   = require "common.global_data"
 local access        = global_data.repo_access
 local editor_setting = require "editor_setting"
-local ientity       = ecs.require "ant.render|components.entity"
+local ientity       = ecs.require "ant.entity|entity"
 
 local TERRAIN_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/plane_terrain.material"
 local m = {

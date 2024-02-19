@@ -5,7 +5,7 @@ local starsky_system = ecs.system "starsky_system"
 local bgfx      = require "bgfx"
 local layoutmgr = ecs.require "ant.render|vertexlayout_mgr"
 local assetmgr  = import_package "ant.asset"
-local ientity   = ecs.require "ant.render|components.entity"
+local ientity   = ecs.require "ant.entity|entity"
 
 local function get_tex_ratio(vr, texinfo)
     local vw, vh = vr.w, vr.h

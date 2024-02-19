@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local imesh   = ecs.require "ant.asset|mesh"
-local ientity = ecs.require "ant.render|components.entity"
+local ientity = ecs.require "ant.entity|entity"
 
 local util = {}
 

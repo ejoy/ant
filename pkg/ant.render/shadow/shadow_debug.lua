@@ -53,7 +53,7 @@ local unique_color, unique_name; do
 end
 
 local DEBUG_ENTITIES = {}
-local ientity 		= ecs.require "components.entity"
+local ientity 		= ecs.require "ant.entity|entity"
 local imesh 		= ecs.require "ant.asset|mesh"
 local kbmb 			= world:sub{"keyboard"}
 

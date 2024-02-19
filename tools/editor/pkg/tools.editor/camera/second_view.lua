@@ -17,7 +17,7 @@ local irq       = ecs.require "ant.render|render_system.renderqueue"
 local icamera   = ecs.require "ant.camera|camera"
 local imesh     = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
-local ientity   = ecs.require "ant.render|components.entity"
+local ientity   = ecs.require "ant.entity|entity"
 
 local second_camera_sys = ecs.system "second_view_camera_system"
 
