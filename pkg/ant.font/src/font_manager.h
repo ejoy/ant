@@ -3,6 +3,7 @@
 
 #include <stb/stb_truetype.h>
 #include <stdint.h>
+#include <stddef.h>
 #include "font_define.h"
 
 struct font_manager;

@@ -10,7 +10,7 @@
 #else
     #include <pthread.h>
     #define mutex_t pthread_mutex_t
-    #define mutex_init(m) pthread_mutex_init(&m)
+    #define mutex_init(m) pthread_mutex_init(&m, NULL)
     #define mutex_acquire(m) pthread_mutex_lock(&m)
     #define mutex_release(m) pthread_mutex_unlock(&m)
 #endif
