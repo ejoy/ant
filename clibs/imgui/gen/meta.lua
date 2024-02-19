@@ -135,44 +135,30 @@ local TodoFunction <const> = {
     ImFontAtlas_GetCustomRectByIndex = true,
 }
 
-local IgnoreStruct <const> = {
-    ImVec2 = true,
-    ImVec4 = true,
-    __anonymous_type0 = true,
-}
-
 local TodoStruct <const> = {
     ImFont = true,
     ImFontGlyph = true,
     ImFontGlyphRangesBuilder = true,
     ImFontAtlasCustomRect = true,
     ImFontBuilderIO = true,
-    ImGuiContext = true,
     ImDrawData = true,
     ImDrawList = true,
     ImDrawCmd = true,
     ImDrawListSplitter = true,
     ImDrawListSharedData = true,
+    ImDrawVert = true,
+    ImGuiContext = true,
     ImGuiTextBuffer = true,
-    ImGuiTextFilter = true,
-    ImGuiTextFilter_ImGuiTextRange = true,
     ImGuiListClipper = true,
     ImGuiPayload = true,
-    ImGuiStorage = true,
     ImGuiStyle = true,
     ImGuiTableSortSpecs = true,
-    ImDrawVert = true,
-    ImDrawCmdHeader = true,
-    ImDrawChannel = true,
-    ImColor = true,
     ImGuiPlatformIO = true,
     ImGuiPlatformMonitor = true,
     ImGuiPlatformImeData = true,
     ImGuiTableColumnSortSpecs = true,
-    ImGuiKeyData = true,
     ImGuiSizeCallbackData = true,
     ImGuiWindowClass = true,
-    ImGuiStorage_ImGuiStoragePair = true,
 }
 
 local TodoType <const> = {
@@ -241,10 +227,16 @@ end
 
 local function allow_struct(struct_meta)
     local name = struct_meta.name
-    if name:match "^ImVector_" then
+    if struct_meta.is_internal then
         return
     end
-    if IgnoreStruct[name] then
+    if struct_meta.is_anonymous then
+        return
+    end
+    if struct_meta.by_value then
+        return
+    end
+    if name:match "^ImVector_" then
         return
     end
     if TodoStruct[name] then
@@ -379,7 +371,7 @@ function m.init(status)
     for _, func_meta in ipairs(meta.functions) do
         if allow_function(func_meta) then
             if func_meta.original_class then
-                if not TodoStruct[func_meta.original_class] then
+                if structs[func_meta.original_class] then
                     local v = structs[func_meta.original_class].funcs
                     if v then
                         v[#v+1] = func_meta
