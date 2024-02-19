@@ -504,7 +504,7 @@ font_manager_sizeof() {
 }
 
 void
-font_manager_init(struct font_manager *F) {
+font_manager_init(struct font_manager *F, void *L) {
 	mutex_init(F->mutex);
 	F->version = 1;
 	F->count = 0;
@@ -530,18 +530,12 @@ font_manager_init(struct font_manager *F) {
 	}
 	bgfx_texture_handle_t th = BGFX(create_texture_2d)(FONT_MANAGER_TEXSIZE, FONT_MANAGER_TEXSIZE, false, 1, BGFX_TEXTURE_FORMAT_A8, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, NULL);
 	F->texture = th.idx;
-}
-
-void
-font_manager_init_lua(struct font_manager *F, void *L) {
-	lock(F);
 	F->ttf = truetype_cstruct(L);
 	F->L = L;
-	unlock(F);
 }
 
 void*
-font_manager_release_lua(struct font_manager *F) {
+font_manager_shutdown(struct font_manager *F) {
 	lock(F);
 	void *L = F->L;
 	F->ttf = NULL;

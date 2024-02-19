@@ -8,9 +8,8 @@
 struct font_manager;
 
 size_t font_manager_sizeof();
-void font_manager_init(struct font_manager *);
-void font_manager_init_lua(struct font_manager *, void *L);
-void* font_manager_release_lua(struct font_manager *);
+void font_manager_init(struct font_manager *, void *L);
+void* font_manager_shutdown(struct font_manager *);
 void font_manager_import(struct font_manager *F, void* fontdata);
 
 uint16_t font_manager_texture(struct font_manager *F);

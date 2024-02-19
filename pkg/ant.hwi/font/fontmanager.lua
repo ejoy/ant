@@ -13,13 +13,13 @@ local fontvm = [[
 
 local m = {}
 
-local instance = manager.init(fontvm)
-local lfont = require "font" (instance)
+local instance, instance_ptr = manager.init(fontvm)
+local lfont = require "font" (instance_ptr)
 
 local imported = {}
 
 function m.instance()
-    return instance
+    return instance_ptr
 end
 
 function m.import(path)
@@ -37,8 +37,9 @@ function m.import(path)
 end
 
 function m.shutdown()
-    manager.shutdown()
+    manager.shutdown(instance)
     instance = nil
+    instance_ptr = nil
 end
 
 return m
