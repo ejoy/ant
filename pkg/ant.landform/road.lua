@@ -5,7 +5,7 @@ local w     = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
-local irender       = ecs.require "ant.render|render_system.render"
+local irender       = ecs.require "ant.render|render"
 local icompute      = ecs.require "ant.render|compute.compute"
 local idi           = ecs.require "ant.render|draw_indirect.draw_indirect"
 local renderpkg     = import_package "ant.render"

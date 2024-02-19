@@ -8,7 +8,7 @@ local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local irender   = ecs.require "ant.render|render_system.render"
+local irender   = ecs.require "ant.render|render"
 local imaterial = ecs.require "ant.asset|material"
 
 local DEFAULT_GRID_MATERIAL <const> = "/pkg/ant.grid/assets/grid.material"

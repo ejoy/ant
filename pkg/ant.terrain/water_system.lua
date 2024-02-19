@@ -5,7 +5,7 @@ local w     = world.w
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 
-local irender   = ecs.require "ant.render|render_system.render"
+local irender   = ecs.require "ant.render|render"
 
 local bgfx      = require "bgfx"
 

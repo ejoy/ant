@@ -17,7 +17,7 @@ local Q			= world:clibs "render.queue"
 
 local queuemgr	= ecs.require "queue_mgr"
 
-local irender	= ecs.require "ant.render|render_system.render"
+local irender	= ecs.require "ant.render|render"
 local imaterial = ecs.require "ant.asset|material"
 local imesh		= ecs.require "ant.asset|mesh"
 local itimer	= ecs.require "ant.timer|timer_system"

@@ -7,7 +7,7 @@ local world = ecs.world
 -- local ipp           = ecs.require "ant.render|postprocess"
 -- local iom           = ecs.require "ant.objcontroller|obj_motion"
 -- local imaterial = ecs.require "ant.asset|material"
--- local irender       = ecs.require "ant.render|render_system.render"
+-- local irender       = ecs.require "ant.render|render"
 -- local math3d        = require "math3d"
 
 -- local dof_sys       = ecs.system "dof_system"

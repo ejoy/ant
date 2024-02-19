@@ -11,7 +11,7 @@ local mc, mu    = mathpkg.constant, mathpkg.util
 
 local assetmgr  = import_package "ant.asset"
 
-local irender   = ecs.require "ant.render|render_system.render"
+local irender   = ecs.require "ant.render|render"
 local ivs       = ecs.require "ant.render|visible_state"
 
 local decl<const> = "p3|T4|t2"

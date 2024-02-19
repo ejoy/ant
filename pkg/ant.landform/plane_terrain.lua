@@ -6,7 +6,7 @@ local iplane_terrain  = {}
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
-local irender       = ecs.require "ant.render|render_system.render"
+local irender       = ecs.require "ant.render|render"
 
 local DEFAULT_TERRAIN_RENDER_LAYER <const> = "opacity"
 local DEFAULT_TILE_SIZE <const> = 10

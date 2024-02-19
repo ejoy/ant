@@ -7,7 +7,7 @@ local math3d 	    = require "math3d"
 local imaterial     = ecs.require "ant.asset|material"
 local imesh         = ecs.require "ant.asset|mesh"
 local icompute      = ecs.require "ant.render|compute.compute"
-local irender       = ecs.require "ant.render|render_system.render"
+local irender       = ecs.require "ant.render|render"
 
 local mc            = import_package "ant.math".constant
 local hwi           = import_package "ant.hwi"

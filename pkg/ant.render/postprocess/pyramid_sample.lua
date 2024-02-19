@@ -11,7 +11,7 @@ end
 
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
-local irender   = ecs.require "ant.render|render_system.render"
+local irender   = ecs.require "ant.render|render"
 
 local util      = ecs.require "postprocess.util"
 

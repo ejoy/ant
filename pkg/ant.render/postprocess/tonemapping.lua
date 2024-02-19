@@ -5,7 +5,7 @@ local w     = world.w
 local hwi       = import_package "ant.hwi"
 
 local tm_sys    = ecs.system "tonemapping_system"
-local irender   = ecs.require "ant.render|render_system.render"
+local irender   = ecs.require "ant.render|render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 local util      = ecs.require "postprocess.util"

@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local irender = ecs.require "ant.render|render_system.render"
+local irender = ecs.require "ant.render|render"
 
 local math3d = require "math3d"
 

@@ -4,7 +4,7 @@ local w = world.w
 
 local default	= import_package "ant.general".default
 local icamera	= ecs.require "ant.camera|camera"
-local irender	= ecs.require "ant.render|render_system.render"
+local irender	= ecs.require "ant.render|render"
 local iviewport = ecs.require "ant.render|viewport.state"
 
 local mathpkg	= import_package "ant.math"
