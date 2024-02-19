@@ -195,7 +195,7 @@ function EditText:widget()
 end
 
 function EditText:update()
-    self.uidata.text = self.modifier.getter()
+    self.uidata.text = ImGui.StringBuf(self.modifier.getter())
 end
 
 function EditText:value()
