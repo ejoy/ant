@@ -1,5 +1,6 @@
 local export_prefab     = require "model.export_prefab"
 local export_meshbin    = require "model.export_meshbin"
+local export_skinbin    = require "model.export_skinbin"
 local export_animation  = require "model.export_animation"
 local export_material   = require "model.export_material"
 local math3d_pool       = require "model.math3d_pool"
@@ -58,6 +59,7 @@ return function (input, output, setting, changed)
     status.scenetree = build_scene_tree(status.gltfscene)
 
     export_meshbin(status)
+    export_skinbin(status)
     export_material(status)
     export_animation(status)
     export_prefab(status)
