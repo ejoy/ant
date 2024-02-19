@@ -14,13 +14,18 @@ local util  = ecs.require "util"
 local PC    = util.proxy_creator()
 
 local group_states = {
-    group_test1 = true,
-    group_test2 = true,
+    group_test1 = {
+        gid = ig.register "group_test1",
+        enable = true,
+    },
+    group_test2 = {
+        gid = ig.register "group_test2",
+        enable = true,
+    }
 }
 
 function group_test_sys:init()
-    local g1 = ig.register "group_test1"
-    local g2 = ig.register "group_test2"
+    local g1, g2 = group_states.group_test1.gid, group_states.group_test2.gid
 
     PC:create_instance {
         prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
@@ -77,10 +82,10 @@ local kb_mb = world:sub{"keyboard"}
 function group_test_sys:data_changed()
     for _, key, press in kb_mb:unpack() do
         if key == "G" and press == 0 then
-            group_states["group_test1"] = not group_states["group_test1"]
+            group_states["group_test1"].enable = not group_states["group_test1"].enable
             ig.enable_from_name("group_test1", "view_visible", group_states["group_test1"])
         elseif key == "H" and press == 0 then
-            group_states["group_test2"] = not group_states["group_test2"]
+            group_states["group_test2"].enable = not group_states["group_test2"].enable
             ig.enable_from_name("group_test2", "view_visible", group_states["group_test2"])
         elseif key == "B" and press == 0 then
             PC:create_instance {
