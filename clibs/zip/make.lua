@@ -182,6 +182,11 @@ lm:source_set "zlib-ng" {
 }
 
 lm:source_set "minizip-ng" {
+    objdeps = {
+        "gen-zconf",
+        "gen-zlib",
+        "gen-zlib_name_mangling",
+    },
     defines = {
         "MZ_ZIP_NO_CRYPTO",
 		"HAVE_ZLIB",
