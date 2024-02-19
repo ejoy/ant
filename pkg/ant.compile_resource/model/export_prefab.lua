@@ -177,9 +177,7 @@ end
 local function has_skin(gltfscene, status, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
     if node.skin and status.animation then
-        if node.skin then
-            return true
-        end
+        return true
     end
 end
 
@@ -224,7 +222,7 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
 
         local policy = {}
 
-        local hasskin   = has_skin(gltfscene, status, nodeidx)
+        local hasskin = has_skin(gltfscene, status, nodeidx)
         if hasskin then
             policy[#policy+1] = "ant.render|skinrender"
             policy[#policy+1] = "ant.animation|skinning"
@@ -237,7 +235,7 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         entity = create_entity(status, {
             policy  = policy,
             data    = data,
-            parent  = hasskin and status.skin_entity or parent,
+            parent  = parent,
         }, prefabs)
     end
     return entity
@@ -260,9 +258,16 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status, pr
     }, prefabs)
 end
 
-local function create_skin_entity(status, parent, prefabs)
+local function create_root_entity(status, prefabs)
     if not status.animation then
-        return
+        return create_entity(status, {
+            policy = {
+                "ant.scene|scene_object",
+            },
+            data = {
+                scene = {},
+            },
+        }, prefabs)
     end
     local policy = {
         "ant.animation|animation",
@@ -272,10 +277,9 @@ local function create_skin_entity(status, parent, prefabs)
         animation = "animations/animation.ozz",
     }
     status.animation.meshskin = status.skin[1]
-    status.skin_entity = create_entity(status, {
+    return create_entity(status, {
         policy = policy,
         data = data,
-        parent = parent,
     }, prefabs)
 end
 
@@ -345,19 +349,11 @@ return function (status)
 
     local function build_prefabs(prefabs, suffix)
 
-        local rootid = create_entity(status, {
-            policy = {
-                "ant.scene|scene_object",
-            },
-            data = {
-                scene = {},
-            },
-        }, prefabs)
+        local rootid = create_root_entity(status, prefabs)
     
         local meshnodes = {}
         find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
     
-        create_skin_entity(status, rootid, prefabs)
     
         local C = {}
         local scenetree = status.scenetree

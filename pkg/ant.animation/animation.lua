@@ -35,15 +35,19 @@ end
 function m:component_init()
     local animations = {}
     for e in w:select "INIT scene:in eid:in animation?update skinning?update animation_changed?out" do
-        if e.skinning ~= nil then
-            local obj = assert(animations[e.scene.parent])
-            e.skinning = obj.skinning
-            animations[e.eid] = obj
-        elseif e.animation ~= nil then
+        if e.animation ~= nil then
             local obj = create(e.animation)
             e.animation = obj
             e.animation_changed = true
             animations[e.eid] = obj
+        elseif e.scene.parent ~= 0 then
+            local obj = animations[e.scene.parent]
+            if obj then
+                animations[e.eid] = obj
+                if e.skinning ~= nil then
+                    e.skinning = obj.skinning
+                end
+            end
         end
     end
 end
