@@ -24,16 +24,15 @@ function m:follow_scene_update()
 	for e in w:select "scene_changed animation animation_changed?out" do
 		e.animation_changed = true
 	end
-	w:propagate("scene", "animation_changed")
-	for e in w:select "animation_changed skinning:in scene:in" do
-		local skinning = e.skinning
+	for e in w:select "animation_changed animation:in scene:in" do
+		local skinning = e.animation.skinning
 		local sm = skinning.matrices
-		ozz.BuildSkinningMatrices(sm, skinning.models, skinning.inverseBindMatrices, skinning.jointsRemap)
 		local matrices = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		local mat = math3d.mul(e.scene.worldmat, r2l_mat)
 		math3d.unmark(skinning.matrices_id)
 		skinning.matrices_id = math3d.mark(math3d.mul_array(mat, matrices))
 	end
+	w:propagate("scene", "animation_changed")
 end
 
 if ENABLE_TAA then
@@ -58,7 +57,7 @@ else
 	end
 end
 
-function api.create(filename, skeleton, models)
+function api.create(filename, skeleton)
 	local skin = assetmgr.resource(filename)
 	local count = skin.jointsRemap
 		and #skin.jointsRemap
@@ -71,8 +70,11 @@ function api.create(filename, skeleton, models)
 		jointsRemap = skin.jointsRemap,
 		matrices = ozz.MatrixVector(count),
 		matrices_id = mathpkg.constant.NULL,
-		models = models,
 	}
+end
+
+function api.build(models, skinning)
+	ozz.BuildSkinningMatrices(skinning.matrices, models, skinning.inverseBindMatrices, skinning.jointsRemap)
 end
 
 return api

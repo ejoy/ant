@@ -12,6 +12,7 @@ local function create(filename)
     local data = assetmgr.resource(filename)
     local skeleton = data.skeleton
     local status = {}
+    local skins = {}
     for name, handle in pairs(data.animations) do
         status[name] = {
             handle = handle,
@@ -20,6 +21,9 @@ local function create(filename)
             weight = 0,
         }
     end
+    for i, skin in ipairs(data.skins) do
+        skins[i] = skinning.create(skin, skeleton)
+    end
     local obj = {
         skeleton = skeleton,
         status = status,
@@ -27,6 +31,7 @@ local function create(filename)
         blending_threshold = 0.1,
         locals_pool = {},
         models = ozz.MatrixVector(skeleton:num_joints()),
+        skins = skins,
     }
     return obj
 end
@@ -44,7 +49,7 @@ function m:component_init()
             if obj then
                 animations[e.eid] = obj
                 if e.skinning ~= nil then
-                    e.skinning = skinning.create(e.skinning, obj.skeleton, obj.models)
+                    e.skinning = obj.skins[e.skinning]
                 end
             end
         end
@@ -98,6 +103,9 @@ function m:animation_sample()
     for e in w:select "animation_changed animation:in" do
         local obj = e.animation
         sampling(obj)
+        for _, skin in ipairs(obj.skins) do
+            skinning.build(obj.models, skin)
+        end
     end
 end
 

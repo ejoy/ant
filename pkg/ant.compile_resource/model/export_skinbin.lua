@@ -94,11 +94,6 @@ end
 
 return function (status)
     local gltfscene = status.gltfscene
-    status.skin = {}
-    local skins = gltfscene.skins
-    if skins == nil then
-        return
-    end
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]
     local roots = FindSkinRootJointIndices(gltfscene, scene)
@@ -117,10 +112,11 @@ return function (status)
     end
     ImportNode(roots)
 
+    status.animation.skins = {}
     for skinidx, skin in ipairs(gltfscene.skins) do
         local skinname = skin.name and ("skin_"..skin.name) or ("skin"..skinidx)
         local resname =  "animations/"..skinname..".skinbin"
         utility.save_bin_file(status, resname, fetch_skininfo(status, gltfscene, skin, remap))
-        status.skin[skinidx] = resname
+        status.animation.skins[skinidx] = resname
     end
 end

@@ -45,10 +45,16 @@ return function (input, output, setting, changed)
     end
     status.gltfscene = gltf.decode(input, status.gltf_fetch)
 
+    local gltfscene = status.gltfscene
+    if gltfscene.animations then
+        status.animation = {}
+        export_animation(status)
+        if gltfscene.skins then
+            export_skinbin(status)
+        end
+    end
     export_meshbin(status)
-    export_skinbin(status)
     export_material(status)
-    export_animation(status)
     export_prefab(status)
     parallel_task.wait(status.tasks)
     parallel_task.wait(status.post_tasks)

@@ -4,6 +4,7 @@ local lfs               = require "bee.filesystem"
 local material_compile  = require "material.compile"
 local L                 = import_package "ant.render.core".layout
 local depends           = require "depends"
+local gltfutil          = require "model.glTF.util"
 
 local function create_entity(t, prefabs)
     if t.parent then
@@ -175,6 +176,31 @@ local function seri_material(status, filename, cfg)
     end
 end
 
+local function GetJointsMap(model, primitives)
+    local jointsMap = {}
+    local accessorIndex = primitives.attributes["JOINTS_0"]
+    if not accessorIndex then
+        return jointsMap
+    end
+    local accessor = model.accessors[accessorIndex+1]
+    local view = model.bufferViews[accessor.bufferView+1]
+    local compcount = gltfutil.type_count_mapper[accessor.type]
+    local compsize = gltfutil.comptype_size_mapper[accessor.componentType]
+    assert(compsize == 1)
+    assert(compcount == 4)
+    local buf = model.buffers[view.buffer+1]
+    for i = 0, accessor.count-1 do
+        local buf_offset = (view.byteOffset or 0) + accessor.byteOffset + i * view.byteStride
+        assert(buf_offset + 4 <= buf.byteLength)
+        local v1, v2, v3, v4 = string.unpack("I1I1I1I1", buf.bin:sub(buf_offset + 1, buf_offset + 4))
+        jointsMap[v1] = true
+        jointsMap[v2] = true
+        jointsMap[v3] = true
+        jointsMap[v4] = true
+    end
+    return jointsMap
+end
+
 local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
@@ -217,10 +243,11 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
         local policy = {}
 
         if node.skin and status.animation then
+            --local jointsMap = GetJointsMap(gltfscene, prim)
             policy[#policy+1] = "ant.render|skinrender"
             policy[#policy+1] = "ant.animation|skinning"
             data.scene = {}
-            data.skinning = status.skin[node.skin+1]
+            data.skinning = node.skin+1
         else
             policy[#policy+1] = "ant.render|render"
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
@@ -328,9 +355,6 @@ local function serialize_prefab(status, data)
             end
             if e.mesh then
                 e.mesh = serialize_path(e.mesh)
-            end
-            if e.skinning then
-                e.skinning = serialize_path(e.skinning)
             end
             if e.animation and e.animation ~= true then
                 e.animation = serialize_path(e.animation)
@@ -440,6 +464,11 @@ return function (status)
                 if t.animations then
                     for name, file in pairs(t.animations) do
                         t.animations[name] = compile_animation(status, t.skeleton, name, file)
+                    end
+                end
+                if t.skins then
+                    for i, file in ipairs(t.skins) do
+                        t.skins[i] = serialize_path(file)
                     end
                 end
                 t.skeleton = serialize_path(t.skeleton)

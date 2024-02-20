@@ -3,11 +3,6 @@ local GLTF2OZZ = require "tool_exe_path"("gltf2ozz")
 local subprocess = require "subprocess"
 
 return function (status)
-    local gltfscene = status.gltfscene
-    local skins = gltfscene.skins
-    if skins == nil then
-        return
-    end
     local input = status.input
     local output = status.output
     local folder = output / "animations"
@@ -46,8 +41,6 @@ return function (status)
         end
         animations[newname] = newname .. path:extension():string()
     end
-    status.animation = {
-        skeleton = "skeleton.bin",
-        animations = animations,
-    }
+    status.animation.skeleton = "skeleton.bin"
+    status.animation.animations = animations
 end
