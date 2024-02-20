@@ -2,7 +2,6 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-
 local setting   = import_package "ant.settings"
 local blur_sys  = ecs.system "blur_system"
 
@@ -13,24 +12,20 @@ end
 local math3d    = require "math3d"
 local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local hwi       = import_package "ant.hwi"
+local queuemgr  = ecs.require "queue_mgr"
+
+local BLUR_DOWNSAMPLE_NAME<const> = "blur_downsample"
+local BLUR_UPSAMPLE_NAME<const> = "blur_upsample"
 
 local BLUR_DS_VIEWID <const> = hwi.viewid_get "blur_ds1"
 local BLUR_US_VIEWID <const> = hwi.viewid_get "blur_us1"
-local VBLUR_VIEWID   <const> = hwi.viewid_get "vblur"
-local HBLUR_VIEWID   <const> = hwi.viewid_get "hblur"
 local BLUR_PARAM = math3d.ref(math3d.vector(0, 0, 0, 0))
-local BLUR_WIDTH, BLUR_HEIGHT
-local THREAD_GROUP_SIZE <const> = 16
 
-local iblur = {}
-
+local MIP_COUNT<const> = 4
 local function register_blur_queue()
-    local blur_mipcount = ips.get_pyramid_mipcount()
-    for i=1, blur_mipcount do
-        local ds_queue  = "blur_downsample"..i
-        local us_queue  = "blur_upsample"..i
-        w:register{name = ds_queue}
-        w:register{name = us_queue}
+    for i=1, MIP_COUNT do
+        queuemgr.register_queue(BLUR_DOWNSAMPLE_NAME..i)
+        queuemgr.register_queue(BLUR_UPSAMPLE_NAME..i)
     end
 end
 
@@ -59,16 +54,13 @@ local function create_blur_entity(mqvr)
         data = {
             blur = true,
             pyramid_sample = {
-                downsample_queue = "blur_downsample",
-                upsample_queue = "blur_upsample",
-                downsample_viewid = BLUR_DS_VIEWID,
-                upsample_viewid = BLUR_US_VIEWID,
-                queue_name = "blur_queue",
-                sample_params = BLUR_PARAM,
+                downsample      = ips.init_sample(MIP_COUNT, "blur_downsample", BLUR_DS_VIEWID),
+                upsample        = ips.init_sample(MIP_COUNT, "blur_upsample", BLUR_US_VIEWID),
+                sample_params   = BLUR_PARAM,
             },
             on_ready = function (e)
-                w:extend(e, "pyramid_sample:update")
-                ips.set_pyramid_sample_components(e, mqvr)
+                w:extend(e, "pyramid_sample:in")
+                ips.update(e, mqvr)
             end
             --gaussian_blur = build_gaussian_blur()
         }
@@ -82,7 +74,6 @@ end
 function blur_sys:init_world()
     local mq = w:first("main_queue render_target:in")
     local mqvr = mq.render_target.view_rect
-    BLUR_WIDTH, BLUR_HEIGHT = mqvr.w, mqvr.h
     create_blur_entity(mqvr)
 end
 

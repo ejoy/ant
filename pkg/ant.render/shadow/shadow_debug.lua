@@ -153,6 +153,7 @@ function shadowdebug_sys:init_world()
 			},
 			visible = true,
 			camera_ref = irq.camera "csm1_queue",
+			submit_queue = true,
 			queue_name = "shadow_debug_depth_queue",
 		}
 	}
@@ -173,6 +174,7 @@ function shadowdebug_sys:init_world()
 			},
 			visible = true,
 			camera_ref = irq.camera "csm1_queue",
+			submit_queue = true,
 			queue_name = "shadow_debug_queue",
 		},
 	}

@@ -15,8 +15,8 @@ local layoutmgr		= require "vertexlayout_mgr"
 local hwi			= import_package "ant.hwi"
 local sampler		= import_package "ant.render.core".sampler
 local iviewport		= ecs.require "ant.render|viewport.state"
-
-local ig 			= ecs.require "ant.group|group"
+local ED 			= world:clibs "entity.drawer"
+local queuemgr		= ecs.require "queue_mgr"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
@@ -90,6 +90,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 			},
 			[view_queuename]	= true,
 			queue_name			= view_queuename,
+			submit_queue		= true,
 			visible 			= visible or false,
 			watch_screen_buffer	= true,
 		}
@@ -137,6 +138,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			queue_name 		= "pre_depth_queue",
 			visible 		= true,
 			pre_depth_queue = true,
+			submit_queue	= true,
 			watch_screen_buffer = true,
 		}
 	}
@@ -182,6 +184,7 @@ function irender.create_main_queue(vr, camera_ref)
 			},
 			visible = true,
 			main_queue = true,
+			submit_queue = true,
 			watch_screen_buffer = true,
 			queue_name = "main_queue",
 		}
@@ -337,16 +340,27 @@ function irender.get_framebuffer_ratio(which)
 	return iviewport[which] or error ("Invalid ratio type:" .. which)
 end
 
-function irender.mark_group_visible(gid, enable)
-	ig.filter_group_tag(gid, enable, "render_object_visible", "view_visible", "render_object")
-end
-
 function irender.group_flush(go)
 	go:flush()
     go:filter("render_object_visible", "render_object")
     go:filter("hitch_visible", "hitch")
 
 	--go:filter("efk_visible", "efk")
+end
+
+local RA_FMT<const> = "HBB"
+function irender.pack_render_arg(name, viewid)
+    local qidx = queuemgr.queue_index(name)
+    local midx = queuemgr.material_index(name)
+    return RA_FMT:pack(viewid, qidx, midx)
+end
+
+function irender.draw(ra, eid)
+	ED.draw(ra, eid)
+end
+
+function irender.draw_with_tag(ra, tag)
+	irender.draw(ra, w:first(tag .. " eid:in").eid)
 end
 
 return irender

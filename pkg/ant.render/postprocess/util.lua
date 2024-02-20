@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local irender = ecs.require "ant.render|render"
-
+local queuemgr = ecs.require "queue_mgr"
 local math3d = require "math3d"
 
 local util = {}
@@ -19,7 +18,6 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
                 viewid = viewid,
                 fb_idx = fbidx,
             },
-            [queuename] = true,
             queue_name = queuename,
             visible = true,
         }
@@ -33,7 +31,7 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
         template.policy[#template.policy+1] = "ant.render|watch_screen_buffer"
         template.data.watch_screen_buffer = true
     end
-    world:create_entity(template)
+    return world:create_entity(template)
 end
 
 -- estimate of the size in pixel of a 1m tall/wide object viewed from 1m away (i.e. at z=1)

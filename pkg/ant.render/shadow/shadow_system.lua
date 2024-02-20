@@ -40,6 +40,7 @@ local moveCameraToOrigin<const> = false
 
 local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
 local function create_clear_shadowmap_queue(fbidx)
+	assert(queuemgr.has "clear_sm")
 	local rb = fbmgr.get_rb(fbidx, 1)
 	local ww, hh = rb.w, rb.h
 	world:create_entity{
@@ -97,6 +98,7 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			visible = false,
 			queue_name = queuename,
+			submit_queue = true,
 			[queuename] = true,
 		},
 	}
@@ -107,6 +109,7 @@ local shadow_material
 local di_shadow_material
 local gpu_skinning_material
 function shadow_sys:init()
+	queuemgr.register_queue "clear_sm"
 	local midx = queuemgr.material_index "csm1_queue"
 	assert(midx == queuemgr.material_index "csm2_queue")
 	assert(midx == queuemgr.material_index "csm3_queue")

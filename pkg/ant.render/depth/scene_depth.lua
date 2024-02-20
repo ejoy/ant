@@ -62,6 +62,7 @@ function sd_sys:post_init()
                 },
             },
             queue_name = "scene_depth_queue",
+            submit_queue = true,
             visible = false,
             scene_depth_queue = true,
             on_ready = function (e)

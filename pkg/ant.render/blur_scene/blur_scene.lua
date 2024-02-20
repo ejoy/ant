@@ -57,7 +57,7 @@ local function create_blur_scene_entity(count)
         data = {
             blur_scene = {
                 cur_count = 0,
-                max_count = 5,
+                max_count = max_count,
                 material  = "/pkg/ant.resources/materials/blend_scene.material"
             }
         },

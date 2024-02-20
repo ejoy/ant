@@ -10,6 +10,7 @@ local renderpkg     = import_package "ant.render"
 local fbmgr         = require "framebuffer_mgr"
 local bgfx          = require "bgfx"
 local math3d        = require "math3d"
+local queuemgr      = ecs.require "queue_mgr"
 local util          = ecs.require "postprocess.util"
 local imaterial     = ecs.require "ant.asset|material"
 local irender       = ecs.require "ant.render|render"
@@ -29,6 +30,8 @@ local DEFAULT_DISPATCH_GROUP_SIZE_X<const>, DEFAULT_DISPATCH_GROUP_SIZE_Y<const>
 if not ENABLE_FSR then
     return
 end
+
+local RENDER_ARG
 
 local fsr_sys = ecs.system "fsr_system"
 
@@ -164,6 +167,9 @@ local function create_fsr_resolve_entity(ratio)
 end
 
 function fsr_sys:init()
+    queuemgr.register_queue "fsr_resolve_queue"
+    RENDER_ARG = irender.pack_render_arg("fsr_resolve_queue", fsr_resolve_viewid)
+
     local vr = get_resolution()
     local function create_fsr_resolve_queue()
         local fsr_resolve_fbidx = fbmgr.create({rbidx = fbmgr.create_rb{w = vr.w, h = vr.h, layers = 1, format = "RGBA16F", flags = flags}}) 
@@ -244,6 +250,10 @@ function fsr_sys:fsr_rcas()
         dis.size = fsr_dispatch_size
         icompute.dispatch(fsr_rcas_viewid, dis)  
     end
+end
+
+function fsr_sys:render_submit()
+    irender.draw(RENDER_ARG, fsr_solve_entity)
 end
 
 return ifsr

@@ -218,6 +218,7 @@ local function create_pick_entity()
 				fb_idx = fbidx,
 			},
 			queue_name 	= "pickup_queue",
+			submit_queue = true,
 			pickup_queue= true,
 			visible		= false,
 		}

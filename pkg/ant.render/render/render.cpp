@@ -529,26 +529,26 @@ struct submit_cache{
 // }
 
 static inline void
-render_hitch_submit(lua_State *L, ecs_world* w, submit_cache &cc){
-	cc.hitch.collect();
-	cc.hitch.submit(cc.transforms);
+render_hitch_submit(lua_State *L, ecs_world* w){
+	w->submit_cache->hitch.collect();
+	w->submit_cache->hitch.submit(w->submit_cache->transforms);
 }
 
 static inline void
-render_submit(lua_State *L, struct ecs_world* w, submit_cache &cc){
-	cc.obj.collect();
-	cc.obj.submit(cc.transforms);
+render_submit(lua_State *L, struct ecs_world* w){
+	w->submit_cache->obj.collect();
+	w->submit_cache->obj.submit(w->submit_cache->transforms);
 }
 
 static int
 lrender_submit(lua_State *L) {
 	auto w = getworld(L);
-	w->submit_cache->clear();
 	w->submit_cache->init(L, w);
 
-	render_submit(L, w, *w->submit_cache);
-	render_hitch_submit(L, w, *w->submit_cache);
+	render_submit(L, w);
+	render_hitch_submit(L, w);
 	
+	w->submit_cache->clear();
 	return 0;
 }
 
@@ -699,6 +699,55 @@ luaopen_system_render(lua_State *L){
 		//{ "render_hitch_submit",lrender_hitch_submit},
 		//{ "render_postprocess", lrender_postprocess},
 		{ nullptr, 				nullptr },
+	};
+	luaL_newlibtable(L,l);
+	lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
+	return 1;
+}
+
+static_assert(sizeof(component::render_args) == 4, "Invalid render_args");
+
+static inline void
+set_world_transform(ecs_world *w, math_t wm){
+	w->bgfx->encoder_set_transform(w->holder->encoder, math_value(w->math3d->M, wm), 1);
+}
+
+static int
+lentity_draw(lua_State *L){
+	ecs_world *w = getworld(L);
+
+	const component::render_args* ra = (const component::render_args*)luaL_checkstring(L, 1);
+	const component::eid eid = (component::eid)luaL_checkinteger(L, 2);
+
+	auto de = ecs::find_entity(w->ecs, eid);
+	if (de.invalid()){
+		luaL_error(L, "Invalid entity id:%d", eid);
+	}
+	const component::render_object* ro = de.component<component::render_object>();
+	if (!ro){
+		luaL_error(L, "entity_draw need entity has 'render_object' component");
+	}
+	auto mi = find_submit_material(L, w, ra, ro->rm_idx);
+	if (mi){
+		const auto prog = material_prog(L, mi);
+		if (BGFX_HANDLE_IS_VALID(prog) && find_submit_mesh(ro, nullptr)){
+			apply_material_instance(L, mi, w);
+			mesh_submit(w, ro, ra->viewid);
+			set_world_transform(w, ro->worldmat);
+			
+			w->bgfx->encoder_submit(w->holder->encoder, ra->viewid, prog, ro->render_layer, BGFX_DISCARD_ALL);
+		}
+	}
+	return 0;
+}
+
+extern "C" int
+luaopen_entity_drawer(lua_State *L){
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "draw",		lentity_draw},
+		{ nullptr,		nullptr},
 	};
 	luaL_newlibtable(L,l);
 	lua_pushnil(L);

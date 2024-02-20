@@ -121,6 +121,7 @@ local function create_rt_queue(width, height, name, fbidx)
 			},
             [queuename]         = true,
 			queue_name			= queuename,
+            submit_queue        = true,
             visible = true,
 		}
 	}

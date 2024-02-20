@@ -269,11 +269,9 @@ function render_sys:entity_init()
 		check_update_main_queue_material(e)
 	end
 
-	for qe in w:select "INIT queue_name:in render_target:in" do
+	for qe in w:select "INIT submit_queue queue_name:in render_target:in" do
 		local qn = qe.queue_name
-		if not queuemgr.has(qn) then
-			queuemgr.register_queue(qn)
-		end
+		assert(queuemgr.has(qn))
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
@@ -339,14 +337,10 @@ end
 
 function render_sys:update_render_args()
 	w:clear "render_args"
-	if irender.stop_draw() then
-		for qe in w:select "swapchain_queue queue_name:in render_target:in render_args:new" do
+	if not irender.stop_draw() then
+		for qe in w:select "submit_queue visible queue_name:in render_target:in render_args:new" do
 			add_render_arg(qe)
 		end
-		return
-	end
-	for qe in w:select "visible queue_name:in render_target:in render_args:new" do
-		add_render_arg(qe)
 	end
 end
 

@@ -59,6 +59,7 @@ function second_camera_sys:init_world()
                 fb_idx = mqrt.fb_idx,
             },
             queue_name = "second_view",
+            submit_queue = true,
             second_view = true,
             visible = true,
         },

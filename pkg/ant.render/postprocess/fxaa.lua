@@ -23,9 +23,15 @@ local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
+local queuemgr  = ecs.require "queue_mgr"
 
+local fxaa_viewid<const> = hwi.viewid_get "fxaa"
+
+local RENDER_ARG
+local fxaadrawer_eid
 function fxaasys:init()
-    world:create_entity{
+    queuemgr.register_queue "fxaa_queue"
+    fxaadrawer_eid = world:create_entity{
         policy = {
             "ant.render|simplerender",
         },
@@ -37,6 +43,8 @@ function fxaasys:init()
             scene           = {},
         }
     }
+
+    RENDER_ARG = irender.pack_render_arg("fxaa_queue", fxaa_viewid)
 end
 
 local function create_fb(vr)
@@ -56,8 +64,6 @@ local function create_fb(vr)
         }
     }
 end
-
-local fxaa_viewid<const> = hwi.viewid_get "fxaa"
 
 function fxaasys:init_world()
     local vr = mu.copy_viewrect(iviewport.viewrect)
@@ -85,4 +91,8 @@ function fxaasys:fxaa()
         update_scene_ldr()
         break
     end
+end
+
+function fxaasys:render_submit()
+    irender.draw(RENDER_ARG, fxaadrawer_eid)
 end

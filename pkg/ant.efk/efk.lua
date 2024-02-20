@@ -20,7 +20,7 @@ local Q         = world:clibs "render.queue"
 
 local itimer    = ecs.require "ant.timer|timer_system"
 local ivs       = ecs.require "ant.render|visible_state"
-local qm        = ecs.require "ant.render|queue_mgr"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 local ilight    = ecs.require "ant.render|light.light"
 local iviewport = ecs.require "ant.render|viewport.state"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
@@ -76,6 +76,7 @@ local function createPlayHandle(efk_handle, speed, startframe, fadeout, worldmat
 end
 
 function efk_sys:init()
+    queuemgr.register_queue "efk_queue"
     EFK_SERVER = ltask.spawn "ant.efk|efk"
     ltask.call(EFK_SERVER, "init")
     ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "SAMPLER2D")
@@ -247,7 +248,7 @@ function efk_sys:follow_scene_update()
 
     for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
         local visible = e.visible_state.main_queue
-        Q.set(e.efk_object.visible_idx, qm.queue_index "main_queue", visible)
+        Q.set(e.efk_object.visible_idx, queuemgr.queue_index "main_queue", visible)
         e.efk.play_handle:set_visible(visible)
     end
 end

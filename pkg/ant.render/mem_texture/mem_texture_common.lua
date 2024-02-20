@@ -189,6 +189,7 @@ function m.register_new_rt()
                 },
                 [queue_name]         = true,
                 queue_name			 = queue_name,
+                submit_queue = true,
                 visible = true,
             }
         }

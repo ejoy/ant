@@ -13,7 +13,7 @@ local mu            = import_package "ant.math".util
 local fbmgr         = require "framebuffer_mgr"
 
 local util          = ecs.require "postprocess.util"
-
+local queuemgr      = ecs.require "queue_mgr"
 local imaterial     = ecs.require "ant.asset|material"
 local irender       = ecs.require "ant.render|render"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
@@ -24,8 +24,13 @@ local scene_ratio   = irender.get_framebuffer_ratio("scene_ratio")
 local NEED_UPSACLE <const>   = scene_ratio >= 0.5 and scene_ratio < 1
 local ENABLE_FSR   <const>   = setting:get "graphic/postprocess/fsr/enable" and (ENABLE_FXAA or ENABLE_TAA) and NEED_UPSACLE
 --local ENABLE_FSR   <const>   = nil
+
+local swapchain_viewid<const> = hwi.viewid_get "swapchain"
+local RENDER_ARG
+local swapchain_drawereid
 function sc_sys:init()
-    world:create_entity{
+    queuemgr.register_queue "swapchain_queue"
+    swapchain_drawereid = world:create_entity{
         policy = {
             "ant.render|simplerender",
         },
@@ -37,9 +42,9 @@ function sc_sys:init()
             scene            = {},
         }
     }
-end
 
-local swapchain_viewid<const> = hwi.viewid_get "swapchain"
+    RENDER_ARG = irender.pack_render_arg("swapchain_queue", swapchain_viewid)
+end
 
 function sc_sys:init_world()
     util.create_queue(swapchain_viewid, mu.copy_viewrect(iviewport.device_size), nil, "swapchain_queue", "swapchain_queue")
@@ -77,5 +82,9 @@ function sc_sys:swapchain()
     local fd = w:first "swapchain_drawer filter_material:in"
     imaterial.set_property(fd, "s_scene_color", get_scene_handle())
 
+end
+
+function sc_sys:render_submit()
+    irender.draw(RENDER_ARG, swapchain_drawereid)
 end
 
