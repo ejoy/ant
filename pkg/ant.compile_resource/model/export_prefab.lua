@@ -283,17 +283,21 @@ local function create_root_entity(status, prefabs)
     }, prefabs)
 end
 
-local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
-    for _, nodeidx in ipairs(scenenodes) do
-        local node = gltfscene.nodes[nodeidx+1]
-        if node.children then
-            find_mesh_nodes(gltfscene, node.children, meshnodes)
-        end
-
+local function find_mesh_nodes(model)
+    local meshnodes = {}
+    for nodeIndex = #model.nodes-1, 0, -1 do
+        local node = model.nodes[nodeIndex+1]
         if node.mesh then
-            meshnodes[#meshnodes+1] = nodeidx
+            meshnodes[nodeIndex] = true
+        elseif node.children then
+            for _, childIndex in ipairs(node.children) do
+                if meshnodes[childIndex] then
+                    meshnodes[nodeIndex] = true
+                end
+            end
         end
     end
+    return meshnodes
 end
 
 local function serialize_path(path)
@@ -347,42 +351,35 @@ return function (status)
     status.di_prefab = {}
     status.material_names = {}
 
-    local function build_prefabs(prefabs, suffix)
-
-        local rootid = create_root_entity(status, prefabs)
-    
-        local meshnodes = {}
-        find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
-    
-    
-        local C = {}
-        local scenetree = status.scenetree
-        local function check_create_node_entity(nodeidx)
-            local p_nodeidx = scenetree[nodeidx]
-            local parent
-            if p_nodeidx == nil then
-                parent = rootid
-            else
-                parent = C[p_nodeidx]
-                if parent == nil then
-                    parent = check_create_node_entity(p_nodeidx)
+    local meshnodes = find_mesh_nodes(gltfscene)
+    local parents = {}
+    for _, idx in ipairs(scene.nodes) do
+        parents[idx] = "root"
+    end
+    for i, node in ipairs(gltfscene.nodes) do
+        local nodeIndex = i - 1
+        if meshnodes[nodeIndex] then
+            if node.children then
+                for _, childIndex in ipairs(node.children) do
+                    parents[childIndex] = nodeIndex
                 end
             end
-    
-            local node = gltfscene.nodes[nodeidx+1]
-            local e
-            if node.mesh then
-                e = create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
-            else
-                e = create_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
-            end
-    
-            C[nodeidx] = e
-            return e
         end
-    
-        for _, nodeidx in ipairs(meshnodes) do
-            check_create_node_entity(nodeidx)
+    end
+
+    local function build_prefabs(prefabs, suffix)
+        local rootid = create_root_entity(status, prefabs)
+        local entities = { root = rootid }
+        for i, node in ipairs(gltfscene.nodes) do
+            local nodeIndex = i - 1
+            if meshnodes[nodeIndex] then
+                local parent = entities[parents[nodeIndex]]
+                if node.mesh then
+                    entities[nodeIndex] = create_mesh_node_entity(math3d, gltfscene, nodeIndex, parent, status, prefabs)
+                else
+                    entities[nodeIndex] = create_node_entity(math3d, gltfscene, nodeIndex, parent, status, prefabs)
+                end
+            end
         end
 
         if suffix and (not status.animation) then

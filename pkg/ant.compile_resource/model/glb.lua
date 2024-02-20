@@ -11,18 +11,6 @@ local parallel_task     = require "parallel_task"
 local lfs               = require "bee.filesystem"
 local base64            = require "model.glTF.base64"
 
-local function build_scene_tree(gltfscene)
-    local scenetree = {}
-	for nidx, node in ipairs(gltfscene.nodes) do
-		if node.children then
-			for _, cnidx in ipairs(node.children) do
-				scenetree[cnidx] = nidx-1
-			end
-		end
-	end
-    return scenetree
-end
-
 local function readall(filename)
     local f <close> = assert(io.open(filename, "rb"))
     return f:read "a"
@@ -56,7 +44,6 @@ return function (input, output, setting, changed)
         return readall(fullpath)
     end
     status.gltfscene = gltf.decode(input, status.gltf_fetch)
-    status.scenetree = build_scene_tree(status.gltfscene)
 
     export_meshbin(status)
     export_skinbin(status)
