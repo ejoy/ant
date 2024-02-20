@@ -28,6 +28,8 @@ local function create_simple_test_group()
                 group = hitch_test_group_id
             },
             visible_state = "main_view|cast_shadow|selectable",
+            receive_shadow = true,
+            cast_shadow = true,
             hitch_create = TEST_INDIRECT,
         }
     }
@@ -42,6 +44,8 @@ local function create_simple_test_group()
             hitch = {
                 group = hitch_test_group_id
             },
+            receive_shadow = true,
+            cast_shadow = true,
             visible_state = "main_view|cast_shadow|selectable",
             hitch_create = TEST_INDIRECT,
         }

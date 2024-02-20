@@ -33,30 +33,21 @@ end
 local main_viewid<const> = hwi.viewid_get "main_view"
 local hitch_sys = ecs.system "hitch_system"
 
-local function get_hitch_worldmat(e)
-    return e.scene.worldmat
-end
-
 local function get_hitch_worldmats_instance_memory(hitchs)
     local memory = {}
     for heid in pairs(hitchs) do
         local e<close> = world:entity(heid, "scene:in")
-        if e then
-            local wm = get_hitch_worldmat(e)
-            wm = math3d.transpose(wm)
-            local c1, c2, c3 = math3d.index(wm, 1, 2, 3)
-            memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
-        end
+        local c1, c2, c3 = math3d.index(math3d.transpose(e.scene.worldmat), 1, 2, 3)
+        memory[#memory+1] = ("%s%s%s"):format(math3d.serialize(c1), math3d.serialize(c2), math3d.serialize(c3))
     end
     return table.concat(memory, ""), #memory
 end
 
+local function to_dispath_num(indirectnum)
+    return (indirectnum+63) // 64
+end
+
 local function dispatch_instance_buffer(e, diid, draw_num)
-
-    local function to_dispath_num(indirectnum)
-        return (indirectnum+63) // 64
-    end
-
     local die = world:entity(diid, "draw_indirect:in")
     local di = die.draw_indirect
 
@@ -111,7 +102,7 @@ local function create_compute_entity(glbs, memory, draw_num)
             data = {
                 material = cs_material,
                 dispatch = {
-                    size = {((draw_num+63)//64), 1, 1},
+                    size = {1, 1, 1},   --update on dispatch_instance_buffer
                 },
                 on_ready = function (e)
                     w:extend(e, "dispatch:update")
@@ -188,18 +179,28 @@ function hitch_sys:finish_scene_update()
     for gid, hitchs in pairs(groups) do
         ig.enable(gid, "hitch_tag", true)
         -- draw instance in render_submit
-        ig.enable(gid, "view_visible", true)
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in material?in efk?in efk_visible?update" do
+        --ig.enable(gid, "view_visible", true)
+        local objaabb = math3d.aabb()
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
             if re.skinning or re.dynamic_mesh  then
                 DIRECT_DRAW_GROUPS[gid] = true
-                ig.enable(gid, "view_visible", false)
+                --ig.enable(gid, "view_visible", false)
+            end
+
+            if re.bounding.scene_aabb ~= mc.NULL then
+                objaabb = math3d.aabb_merge(objaabb, re.bounding.scene_aabb)
             end
         end
         ig.enable(gid, "hitch_tag", false)
         for _, heid in ipairs(hitchs) do
-            local e<close> = world:entity(heid, "hitch:in scene_needchange?out eid:in")
-            set_dirty_hitch_group(e.hitch, e.eid, true) 
-            e.scene_needchange = true
+            local he<close> = world:entity(heid, "hitch:in eid:in bounding:update scene:in scene_needchange?out")
+            set_dirty_hitch_group(he.hitch, he.eid, true)
+            he.scene_needchange = true
+
+            if math3d.aabb_isvalid(objaabb) then
+                he.bounding.aabb       = mu.M3D_mark(he.bounding.aabb, objaabb)
+                he.bounding.scene_aabb = mu.M3D_mark(he.bounding.scene_aabb, math3d.aabb_transform(he.scene.worldmat, objaabb))
+            end
         end
     end
     w:clear "hitch_create"
@@ -234,7 +235,7 @@ function hitch_sys:refine_camera()
             
             local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             local glbs = {}
-            for re in w:select "hitch_tag eid:in mesh_result:in draw_indirect:in render_object_visible?update" do
+            for re in w:select "hitch_tag mesh_result draw_indirect eid:in render_object_visible?update" do
                 -- render_object_visible only set in render_system entity_init by view_visible
                 re.render_object_visible = true
                 glbs[#glbs+1] = { diid = re.eid}
