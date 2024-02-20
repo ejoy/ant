@@ -24,15 +24,15 @@ function m:follow_scene_update()
 	for e in w:select "scene_changed animation animation_changed?out" do
 		e.animation_changed = true
 	end
-	for e in w:select "animation_changed animation:in scene:in" do
-		local skinning = e.animation.skinning
+	w:propagate("scene", "animation_changed")
+	for e in w:select "animation_changed skinning:in scene:in" do
+		local skinning = e.skinning
 		local sm = skinning.matrices
 		local matrices = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		local mat = math3d.mul(e.scene.worldmat, r2l_mat)
 		math3d.unmark(skinning.matrices_id)
 		skinning.matrices_id = math3d.mark(math3d.mul_array(mat, matrices))
 	end
-	w:propagate("scene", "animation_changed")
 end
 
 if ENABLE_TAA then
