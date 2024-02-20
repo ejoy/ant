@@ -70,29 +70,26 @@ local function FindSkinRootJointIndices(model, scene)
     return roots
 end
 
-local function fetch_skininfo(gltfscene, skin, remap)
+local function fetch_skininfo(status, gltfscene, skin, remap)
+    local math3d       = status.math3d
+    local r2l_mat      = math3d.ext_constant.R2L_MAT
     local ibm_idx      = skin.inverseBindMatrices
     local ibm          = gltfscene.accessors[ibm_idx+1]
     local ibm_bv       = gltfscene.bufferViews[ibm.bufferView+1]
     local start_offset = ibm_bv.byteOffset + 1
     local end_offset   = start_offset + ibm_bv.byteLength
     local joints       = skin.joints
-    local jointsbin = {}
+    local jointsRemap = {}
     for i = 1, #joints do
-        jointsbin[i] = string.pack("<I2", assert(remap[joints[i]]))
+        jointsRemap[i] = string.pack("<I2", assert(remap[joints[i]]))
     end
     local buf = gltfscene.buffers[ibm_bv.buffer+1]
+    local inverseBindMatrices = buf.bin:sub(start_offset, end_offset-1)
+    inverseBindMatrices = math3d.serialize(math3d.mul_array(math3d.array_matrix(inverseBindMatrices), r2l_mat))
     return {
-        inverse_bind_matrices = buf.bin:sub(start_offset, end_offset-1),
-        joints = table.concat(jointsbin),
+        inverseBindMatrices = inverseBindMatrices,
+        jointsRemap = table.concat(jointsRemap),
     }
-end
-
-local function get_obj_name(obj, idx, defname)
-    if obj.name then
-        return obj.name
-    end
-    return defname .. idx
 end
 
 return function (status)
@@ -121,9 +118,9 @@ return function (status)
     ImportNode(roots)
 
     for skinidx, skin in ipairs(gltfscene.skins) do
-        local skinname = get_obj_name(skin, skinidx, "skin")
+        local skinname = skin.name and ("skin_"..skin.name) or ("skin"..skinidx)
         local resname = skinname .. ".skinbin"
-        utility.save_bin_file(status, "animations/"..resname, fetch_skininfo(gltfscene, skin, remap))
+        utility.save_bin_file(status, "animations/"..resname, fetch_skininfo(status, gltfscene, skin, remap))
         status.skin[skinidx] = resname
     end
 end

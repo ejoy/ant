@@ -65,41 +65,16 @@ namespace ozzlua::MatrixVector {
 		return 1;
 	}
 
-	static int joint(lua_State* L) {
-		auto& bp = bee::lua::checkudata<ozzMatrixVector>(L, 1);
-		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
-		if (jointidx < 0 || jointidx > bp.size()){
-			luaL_error(L, "invalid joint index:%d", jointidx);
-		}
-
-		float * r = (float*)lua_touserdata(L, 3);
-		const ozz::math::Float4x4& trans = bp[jointidx];
-		assert(sizeof(trans) <= sizeof(float) * 16);
-		memcpy(r, &trans, sizeof(trans));
-		return 0;
-	}
-
 	static int pointer(lua_State* L) {
 		auto& bp = bee::lua::checkudata<ozzMatrixVector>(L, 1);
 		lua_pushlightuserdata(L, &bp[0]);
 		return 1;
 	}
 
-	static int transform(lua_State* L) {
-		auto& bp = bee::lua::checkudata<ozzMatrixVector>(L, 1);
-		auto trans = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
-		for (auto &p : bp) {
-			p = p * *trans;
-		}
-		return 0;
-	}
-
 	static void metatable(lua_State* L) {
 		static luaL_Reg lib[] = {
 			{ "count", count },
-			{ "joint", joint },
 			{ "pointer", pointer },
-			{ "transform", transform },
 			{ nullptr, nullptr }
 		};
 		luaL_newlibtable(L, lib);

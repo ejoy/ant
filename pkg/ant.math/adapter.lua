@@ -19,8 +19,6 @@ if not ozz.adapter then
 
     local mt = ozz.SkeletonMt().__index
     mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-    mt = ozz.MatrixVectorMt().__index
-    mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
 
     ozz.LocalToModelJob = math3d_adapter.getter(ozz.LocalToModelJob, "m", 2)
     ozz.BuildSkinningMatrices = math3d_adapter.matrix(ozz.BuildSkinningMatrices, 5)

@@ -97,24 +97,6 @@ local function create_prim_bounding(math3d, meshscene, prim)
 	end
 end
 
-local function fetch_skininfo(gltfscene, skin)
-	local ibm_idx 	= skin.inverseBindMatrices
-	local ibm 		= gltfscene.accessors[ibm_idx+1]
-	local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
-	local start_offset = ibm_bv.byteOffset + 1
-	local end_offset = start_offset + ibm_bv.byteLength
-	local joints = skin.joints
-	local jointsbin = {}
-	for i = 1, #joints do
-		jointsbin[i] = string.pack("<I2", joints[i])
-	end
-	local buf = gltfscene.buffers[ibm_bv.buffer+1]
-	return {
-		inverse_bind_matrices = buf.bin:sub(start_offset, end_offset-1),
-		joints = table.concat(jointsbin),
-	}
-end
-
 local function get_obj_name(obj, idx, defname)
 	if obj.name then
 		return obj.name
