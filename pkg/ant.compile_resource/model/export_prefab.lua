@@ -5,7 +5,7 @@ local material_compile  = require "material.compile"
 local L                 = import_package "ant.render.core".layout
 local depends           = require "depends"
 
-local function create_entity(status, t, prefabs)
+local function create_entity(t, prefabs)
     if t.parent then
         t.mount = t.parent
         t.data.scene = t.data.scene or {}
@@ -15,6 +15,7 @@ local function create_entity(status, t, prefabs)
         policy = t.policy,
         data = t.data,
         mount = t.mount,
+        tag = t.tag,
     }
     return #prefabs
 end
@@ -225,10 +226,11 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
         end
 
-        entity = create_entity(status, {
-            policy  = policy,
-            data    = data,
-            parent  = parent,
+        entity = create_entity({
+            policy = policy,
+            data   = data,
+            parent = parent,
+            tag    = node.name and { node.name } or nil,
         }, prefabs)
     end
     return entity
@@ -244,16 +246,17 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, status, pr
         scene = {s=srt.s,r=srt.r,t=srt.t}
     }
     --add_animation(gltfscene, status, nodeidx, policy, data)
-    return create_entity(status, {
+    return create_entity({
         policy = policy,
         data = data,
         parent = parent,
+        tag    = node.name and { node.name } or nil,
     }, prefabs)
 end
 
 local function create_root_entity(status, prefabs)
     if not status.animation then
-        return create_entity(status, {
+        return create_entity({
             policy = {
                 "ant.scene|scene_object",
             },
@@ -261,18 +264,17 @@ local function create_root_entity(status, prefabs)
                 scene = {},
             },
         }, prefabs)
+    else
+        return create_entity({
+            policy = {
+                "ant.animation|animation",
+            },
+            data = {
+                scene = {},
+                animation = "animations/animation.ozz",
+            },
+        }, prefabs)
     end
-    local policy = {
-        "ant.animation|animation",
-    }
-    local data = {
-        scene = {},
-        animation = "animations/animation.ozz",
-    }
-    return create_entity(status, {
-        policy = policy,
-        data = data,
-    }, prefabs)
 end
 
 local function has_mesh(model, nodeIndex, meshnodes)
