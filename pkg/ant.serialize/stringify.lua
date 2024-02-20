@@ -1,5 +1,4 @@
 local datalist = require 'datalist'
-local builtin = require 'builtin'
 
 local out
 local conv
@@ -48,6 +47,9 @@ local function stringify_basetype(v)
             return convertreal(v)
         end
     elseif t == 'string' then
+        if v:match "^%$" then
+            return v
+        end
         if v == "" or v == "true" or v == "false" or v == "nil" then
             return datalist.quote(v)
         end
@@ -147,20 +149,9 @@ local function stringify_map(n, prefix, t)
     end
 end
 
-local function stringify_builtin(n, prefix, v)
-    local t, arg = builtin.stringify(v)
-    if t then
-        out[#out+1] = indent(n)..prefix..' $'..t..' '..stringify_basetype(arg)
-        return true
-    end
-end
-
 function stringify_value(n, prefix, v)
     prefix, v = try_conv(prefix, v)
     if type(v) == "table" then
-        if stringify_builtin(n, prefix, v) then
-            return
-        end
         local first_value = next(v)
         if first_value == nil then
             out[#out+1] = indent(n)..prefix..' {}'
