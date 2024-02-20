@@ -8,7 +8,23 @@ local iplayback = ecs.require "ant.animation|playback"
 
 local m = {}
 
-function m.AnimationView(entities)
+function m.AnimationView(tags)
+    local entities = tags['*']
+    local names = {}
+    for i = 1, #entities do
+        local eid = entities[i]
+        names[eid] = {}
+    end
+    for tag, list in pairs(tags) do
+        if tag ~= '*' then
+            for _, eid in ipairs(list) do
+                table.insert(names[eid], tag)
+            end
+        end
+    end
+    for eid, list in pairs(names) do
+        names[eid] = table.concat(list, "|")
+    end
     if ImGui.Begin("entities", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
         local animation_eid
         if ImGui.TreeNode "mesh" then
@@ -17,7 +33,7 @@ function m.AnimationView(entities)
                 local e <close> = world:entity(eid, "render_object?in animation?in")
                 if e.render_object then
                     local value = { ivs.has_state(e, "main_view") }
-                    if ImGui.Checkbox(""..eid, value) then
+                    if ImGui.Checkbox(names[eid], value) then
                         ivs.set_state(e, "main_view", value[1])
                         ivs.set_state(e, "cast_shadow", value[1])
                     end

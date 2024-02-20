@@ -8,7 +8,7 @@ local widget = ecs.require "widget"
 
 local m = ecs.system "main_system"
 
-local entities
+local prefab
 
 local imesh = ecs.require "ant.asset|mesh"
 local ientity = ecs.require "ant.entity|entity"
@@ -32,20 +32,19 @@ function m:init_world()
 		}
 	}
 
-    local prefab = world:create_instance {
+    prefab = world:create_instance {
         prefab = "/pkg/ant.test.simple/resource/miner/miner.gltf|mesh.prefab",
         on_ready = function ()
             local main_queue = w:first "main_queue camera_ref:in"
             local main_camera <close> = world:entity(main_queue.camera_ref, "camera:in")
             local dir = math3d.vector(0, -1, 1)
-            if not icamera.focus_prefab(main_camera, entities, dir) then
+            if not icamera.focus_prefab(main_camera, prefab.tag['*'], dir) then
                 error "aabb not found"
             end
         end
     }
-    entities = prefab.tag['*']
 end
 
 function m:data_changed()
-    widget.AnimationView(entities)
+    widget.AnimationView(prefab.tag)
 end
