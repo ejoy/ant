@@ -119,8 +119,8 @@ return function (status)
 
     for skinidx, skin in ipairs(gltfscene.skins) do
         local skinname = skin.name and ("skin_"..skin.name) or ("skin"..skinidx)
-        local resname = skinname .. ".skinbin"
-        utility.save_bin_file(status, "animations/"..resname, fetch_skininfo(status, gltfscene, skin, remap))
+        local resname =  "animations/"..skinname..".skinbin"
+        utility.save_bin_file(status, resname, fetch_skininfo(status, gltfscene, skin, remap))
         status.skin[skinidx] = resname
     end
 end

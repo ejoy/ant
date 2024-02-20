@@ -27,7 +27,6 @@ local function create(filename)
         blending_threshold = 0.1,
         locals_pool = {},
         models = ozz.MatrixVector(skeleton:num_joints()),
-        skinning = skinning.create(data.meshskin, skeleton),
     }
     return obj
 end
@@ -45,7 +44,7 @@ function m:component_init()
             if obj then
                 animations[e.eid] = obj
                 if e.skinning ~= nil then
-                    e.skinning = obj.skinning
+                    e.skinning = skinning.create(e.skinning, obj.skeleton, obj.models)
                 end
             end
         end
@@ -99,7 +98,6 @@ function m:animation_sample()
     for e in w:select "animation_changed animation:in" do
         local obj = e.animation
         sampling(obj)
-        skinning.build(obj.models, obj.skinning)
     end
 end
 

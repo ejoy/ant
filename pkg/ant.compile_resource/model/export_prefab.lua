@@ -174,13 +174,6 @@ local function seri_material(status, filename, cfg)
     end
 end
 
-local function has_skin(gltfscene, status, nodeidx)
-    local node = gltfscene.nodes[nodeidx+1]
-    if node.skin and status.animation then
-        return true
-    end
-end
-
 local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
@@ -222,11 +215,11 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
 
         local policy = {}
 
-        local hasskin = has_skin(gltfscene, status, nodeidx)
-        if hasskin then
+        if node.skin and status.animation then
             policy[#policy+1] = "ant.render|skinrender"
             policy[#policy+1] = "ant.animation|skinning"
             data.scene = {}
+            data.skinning = status.skin[node.skin+1]
         else
             policy[#policy+1] = "ant.render|render"
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
@@ -276,7 +269,6 @@ local function create_root_entity(status, prefabs)
         scene = {},
         animation = "animations/animation.ozz",
     }
-    status.animation.meshskin = status.skin[1]
     return create_entity(status, {
         policy = policy,
         data = data,
@@ -317,6 +309,9 @@ local function serialize_prefab(status, data)
             end
             if e.mesh then
                 e.mesh = serialize_path(e.mesh)
+            end
+            if e.skinning then
+                e.skinning = serialize_path(e.skinning)
             end
             if e.animation and e.animation ~= true then
                 e.animation = serialize_path(e.animation)
@@ -439,9 +434,6 @@ return function (status)
                     end
                 end
                 t.skeleton = serialize_path(t.skeleton)
-            end
-            if t.meshskin then
-                t.meshskin = serialize_path(t.meshskin)
             end
             return t
         end)
