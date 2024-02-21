@@ -184,10 +184,16 @@ end
 local function read_vfsignore(rootpath)
 	if not lfs.exists(rootpath / ".vfsignore") then
 		return {
+			whitelist = whitelist,
 			block = block,
 		}
 	end
 	local r = datalist.parse(fastio.readall_f((rootpath / ".vfsignore"):string()))
+	if r.whitelist then
+		table_append(r.whitelist, whitelist)
+	else
+		r.whitelist = whitelist
+	end
 	if r.block then
 		table_append(r.block, block)
 	else
@@ -226,7 +232,7 @@ local function new_std(t)
 			path = repo._mountlpath[i]:string(),
 			filter = {
 				resource = resource,
-				whitelist = whitelist,
+				whitelist = vfsignore.whitelist,
 				block = vfsignore.block,
 				ignore = vfsignore.ignore,
 			},
