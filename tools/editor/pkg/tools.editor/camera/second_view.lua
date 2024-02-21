@@ -72,11 +72,6 @@ function second_camera_sys:init_world()
     }
 end
 
-
-
-function second_camera_sys:entity_init()
-end
-
 local event_mq_vr = world:sub{"view_rect_changed", "main_queue"}
 
 function second_camera_sys:data_changed()
@@ -92,8 +87,8 @@ function second_camera_sys:update_camera()
     if not svq then
         return
     end
-    local ce <close> = world:entity(svq.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
-    if ce.scene_changed or ce.camera_changed then
+    local ce <close> = world:entity(svq.camera_ref, "camera_changed?in camera:in scene:in")
+    if ce.camera_changed then
         local camera, scene = ce.camera, ce.scene
 
         local pos, dir = math3d.index(scene.worldmat, 4, 3)
