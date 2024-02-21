@@ -6,6 +6,7 @@ local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local ig        = ecs.require "ant.group|group"
+local irq       = ecs.require "render_system.renderqueue"
 local Q         = world:clibs "render.queue"
 local ivs       = ecs.require "ant.render|visible_state"
 local hwi       = import_package "ant.hwi"
@@ -213,15 +214,15 @@ function hitch_sys:refine_camera()
     for e in w:select "hitch_update hitch:in eid:in view_visible?in" do
         set_dirty_hitch_group(e.hitch, e.eid, e.view_visible)
     end
-
-    for e in w:select "hitch:in eid:in view_visible?in" do
-        local is_culled = not e.view_visible
-        if HITCH_CULL[e.eid] ~= is_culled then
-            HITCH_CULL[e.eid] = is_culled
-            set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
-        end
+    if irq.main_camera_changed() then
+        for e in w:select "hitch:in eid:in view_visible?in" do
+            local is_culled = not e.view_visible
+            if HITCH_CULL[e.eid] ~= is_culled then
+                HITCH_CULL[e.eid] = is_culled
+                set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
+            end
+        end        
     end
-
 
     for gid in pairs(DIRTY_GROUPS) do
         ig.enable(gid, "view_visible", true)
