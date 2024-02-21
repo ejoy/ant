@@ -69,7 +69,6 @@ jobs:
           LICENSE
     - uses: softprops/action-gh-release@v1
       with:
-        prerelease: true
         name: nightly
         tag_name: nightly
         fail_on_unmatched_files: true
