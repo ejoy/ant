@@ -1306,7 +1306,7 @@ function m:do_material_patch(eid, path, v)
     local tpl = info.template
     if not self.materials_names then
         -- local ret = utils.split_ant_path(tpl.data.material)
-        local fn = gd.virtual_prefab_path .. "/materials.names"
+        local fn = gd.virtual_prefab_path .. "/materials_names.ant"
         self.materials_names = serialize.parse(fn, aio.readall(fn))
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))

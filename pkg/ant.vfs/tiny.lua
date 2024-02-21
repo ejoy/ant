@@ -1,59 +1,7 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
-local datalist = require "datalist"
 local mount = dofile "/engine/mount.lua"
 local new_vfsrepo = require "vfsrepo".new
-
-local function read_vfsignore(rootpath)
-    if not lfs.exists(rootpath / ".vfsignore") then
-        return {}
-    end
-    return datalist.parse(fastio.readall_f((rootpath / ".vfsignore"):string()))
-end
-
-local block <const> = {
-    "/res",
-    "/pkg/ant.bake",
-    "/pkg/ant.resources.binary/meshes",
-    "/pkg/ant.resources.binary/test",
-}
-
-local resource <const> = { "material" , "glb" , "gltf" , "texture" }
-
-local compile_whitelist <const> = {
-    "ant",
-    -- ecs
-    "prefab",
-    "ecs",
-    -- script
-    "lua",
-    -- ui
-	"html",
-	"css",
-    -- effect
-    "efk",
-    -- font
-    "ttf",
-    "otf", --TODO: remove it?
-    "ttc", --TODO: remove it?
-    -- sound
-    "bank",
-    -- animation
-    "event",
-    "anim",
-    "bin",
-    -- material
-    "state",
-    "setting",
-    --compile
-    "sc",
-    "sh",
-    "png",
-    "hdr",
-    "dds",
-    "varyings",
-    "names"
-}
 
 local function new_tiny(rootpath)
     rootpath = lfs.path(rootpath)
@@ -65,14 +13,13 @@ local function new_tiny(rootpath)
     local repo = { _root = rootpath }
     mount.read(repo)
     local vfsrepo = new_vfsrepo()
-    local vfsignore = read_vfsignore(rootpath)
     local config = {
         hash = false,
         filter = {
-            resource = resource,
-            whitelist = compile_whitelist,
-            block = block,
-            ignore = vfsignore.ignore,
+            resource = { "material" , "glb" , "gltf" , "texture" },
+            block = { "/res" },
+            ignore = {},
+            whitelist = nil,
         },
     }
     for i = 1, #repo._mountlpath do

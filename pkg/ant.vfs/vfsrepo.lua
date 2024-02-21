@@ -8,9 +8,9 @@ local SLASH <const> = string.byte "/"
 
 local EMPTY = {}
 
-local function gen_set(s)
+local function gen_set(s, DEF)
 	if not s then
-		return EMPTY
+		return DEF
 	end
 	local r = {}
 	for _, name in ipairs(s) do
@@ -21,10 +21,10 @@ end
 
 local function init_filter(f)
 	return {
-		block = gen_set(f.block),
-		ignore = gen_set(f.ignore),
-		resource = gen_set(f.resource),
-		whitelist = gen_set(f.whitelist),
+		block = gen_set(f.block, EMPTY),
+		ignore = gen_set(f.ignore, EMPTY),
+		resource = gen_set(f.resource, EMPTY),
+		whitelist = gen_set(f.whitelist, nil),
 	}
 end
 
@@ -58,7 +58,7 @@ local function list_files(root, dir, fullpath, filter)
 			obj.resource = fullpath .. "/" .. name
 			obj.resource_path = pathname
 		else
-			if filter and not filter.whitelist[ext] then
+			if filter and filter.whitelist and not filter.whitelist[ext] then
 				goto continue
 			end
 			obj.path = pathname
@@ -110,7 +110,7 @@ local function patch_list_files(root, dir, fullpath, filter)
 				resource = fullpath .. "/" .. name
 			}
 		else
-			if not filter.whitelist[ext] then
+			if filter.whitelist and not filter.whitelist[ext] then
 				goto continue
 			end
 			obj = {

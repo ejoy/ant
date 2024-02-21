@@ -135,7 +135,7 @@ local block <const> = {
 
 local resource <const> = { "material" , "glb" , "gltf", "texture" }
 
-local game_whitelist <const> = {
+local whitelist <const> = {
 	"ant",
 	-- ecs
 	"prefab",
@@ -153,14 +153,9 @@ local game_whitelist <const> = {
 	"ttc", --TODO: remove it?
 	-- sound
 	"bank",
-	-- animation
-	"event",
-	"anim",
-	"bin",
 	-- material
-	"state",
-	"varyings",
-	"names"
+	"state",    --TODO: use ant
+	"varyings", --TODO: use ant
 }
 
 local function table_append(t, a)
@@ -231,7 +226,7 @@ local function new_std(t)
 			path = repo._mountlpath[i]:string(),
 			filter = {
 				resource = resource,
-				whitelist = game_whitelist,
+				whitelist = whitelist,
 				block = vfsignore.block,
 				ignore = vfsignore.ignore,
 			},
