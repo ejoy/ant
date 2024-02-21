@@ -26,6 +26,7 @@ local RM        = ecs.require "ant.material|material"
 
 local render_sys= ecs.system "render_system"
 local R			= world:clibs "render.render_material"
+local RC		= world:clibs "render.cache"
 
 function render_sys:device_check()
 	local caps = bgfx.get_caps()
@@ -53,6 +54,11 @@ end
 
 function render_sys:start_frame()
 	assetmgr.material_check()
+end
+
+function render_sys:post_init()
+	RC.set_queue_type("main_queue", queuemgr.queue_index "main_queue")
+	RC.set_queue_type("pre_depth_queue", queuemgr.queue_index "pre_depth_queue")
 end
 
 --[[

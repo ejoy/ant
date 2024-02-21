@@ -236,10 +236,23 @@ using group_queues = std::array<matrix_array, MAX_VISIBLE_QUEUE>;
 using group_collection = std::unordered_map<int, group_queues>;
 
 static constexpr uint16_t MAX_SUBMIT_NUM = 4096;
+enum queue_type : uint8_t{
+	main_queue = 0,
+	pre_depth_queue,
+	csm1_queue,
+	csm2_queue,
+	csm3_queue,
+	csm4_queue,
+	efk_queue,
+	UNKNOW_queue,
+	Count_queue = UNKNOW_queue,
+};
+
 struct submit_context {
 	lua_State *L = nullptr;
 	struct ecs_world* w = nullptr;
 	const component::render_args* ra[MAX_VISIBLE_QUEUE];
+	queue_type queue_types[MAX_VISIBLE_QUEUE] = {UNKNOW_queue};
 	uint8_t ra_count = 0;
 
 	int Qidx = -1;
@@ -266,40 +279,29 @@ struct submit_context {
 	}
 };
 
-struct obj_submiter {
-	struct submit_object {
+struct obj_submitter {
+	struct obj {
 		const component::render_object *ro;
-		const struct material_instance* mi;
-		bgfx_program_handle_t prog;
-
 		const component::indirect_object *io;
 	#ifdef RENDER_DEBUG
 		component::eid eid;
 	#endif //RENDER_DEBUG
 	};
 
-	void add(const component::render_object *ro, const component::indirect_object *io
-#ifdef RENDER_DEBUG
-	, component::eid eid
-#endif //RENDER_DEBUG
-	){
+	void add(const component::render_object *ro, const component::indirect_object *io){
 		if (!find_submit_mesh(ro, io))
 			return ;
 
-		//TODO
-		// auto mi = find_submit_material(ctx->L, ctx->w, ctx->ra, ro, io);
-		// if (!mi){
-		// 	return ;
-		// }
-
 		assert(num < MAX_SUBMIT_NUM);
-		objects[num++] = submit_object{
-			ro, nullptr, {UINT16_MAX}, io
-#ifdef RENDER_DEBUG
-			, eid
-#endif //RENDER_DEBUG
-		};
+		objects[num++] = obj_submitter::obj{ro, io};
 	}
+
+	#ifdef RENDER_DEBUG
+	void append_eid(component::eid eid){
+		assert(num > 0);
+		objects[num-1].eid = eid;
+	}
+	#endif //RENDER_DEBUG
 
 	//TODO
 	void sort(){}
@@ -309,11 +311,11 @@ struct obj_submiter {
 		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
 			auto ra = ctx->ra[ii];
 			for (uint16_t is=0; is<num; ++is){
-				const submit_object& so = objects[is];
+				const obj& so = objects[is];
 				if (obj_visible(ctx->w->Q, *so.ro, ra->queue_index)){
 					auto mi = find_submit_material(ctx->L, ctx->w, ra, so.ro->rm_idx);
 					if (mi){
-					const auto prog = material_prog(ctx->L, mi);
+						const auto prog = material_prog(ctx->L, mi);
 						if (BGFX_HANDLE_IS_VALID(prog)){
 							if (so.io){
 								draw_indirect_obj(ctx->L, ctx->w, ra->viewid, so.ro, so.io, mi, ra->material_index, prog, BGFX_DISCARD_ALL, trans);
@@ -336,11 +338,9 @@ struct obj_submiter {
 			const component::indirect_object* io = e.component<component::indirect_object>();
 			const auto& ro = e.get<component::render_object>();
 
-		#ifdef RENDER_DEBUG
-			auto eid = e.component<component::eid>();(void)eid;
-			add(&ro, io, eid);
-		#else
 			add(&ro, io);
+		#ifdef RENDER_DEBUG
+			append_eid(e.component<component::eid>());
 		#endif //RENDER_DEBUG
 		}
 	}
@@ -351,79 +351,121 @@ struct obj_submiter {
 	}
 
 	submit_context *ctx = nullptr;
-	submit_object objects[MAX_SUBMIT_NUM];
+	obj objects[MAX_SUBMIT_NUM];
 	uint16_t num = 0;
 
 	//TODO
 	//uint16_t submit_queues[MAX_VISIBLE_QUEUE][MAX_SUBMIT_NUM];
 };
 
-struct hitch_submiter {
-	struct submit_hitch{
-		const component::render_object *ro;
-		const struct material_instance* mi;
-		bgfx_program_handle_t prog;
+struct hitch_submitter {
+	struct hitch_objs{
+		struct obj {
+			const component::render_object *ro;
+			const group_queues* g;
 
-		const group_queues* g;
+		#ifdef RENDER_DEBUG
+			component::eid eid;
+		#endif //RENDER_DEBUG
+		};
+
+		#ifdef RENDER_DEBUG
+		void append_eid(component::eid eid){
+			assert(num > 0);
+			objects[num-1].eid = eid;
+		}
+		#endif //RENDER_DEBUG
+
+		void submit(submit_context *ctx, const component::render_args* ra, obj_transforms &trans) {
+			for (uint16_t ih=0; ih<num; ++ih){
+				const obj& h = objects[ih];
+				
+				const auto &mats = (*h.g)[ra->queue_index];
+				if (!mats.empty()){
+					if (queue_check(ctx->w->Q, h.ro->visible_idx, ra->queue_index)){
+						auto mi = find_submit_material(ctx->L, ctx->w, ra, h.ro->rm_idx);
+						if (mi){
+							const auto prog = material_prog(ctx->L, mi);
+							if (BGFX_HANDLE_IS_VALID(prog)){
+								draw_obj(ctx->L, ctx->w, ra->viewid, h.ro, mi, ra->material_index, prog, &mats, BGFX_DISCARD_ALL, trans);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		void add(const component::render_object *ro, const group_queues* g){
+			if (!find_submit_mesh(ro, nullptr)){
+				return ;
+			}
+
+			assert(num < MAX_SUBMIT_NUM);
+			objects[num++] = obj{ro, g};
+		}
+
+		void clear() {
+			num = 0;
+		}
+
+		obj objects[MAX_SUBMIT_NUM];
+		uint16_t num = 0;
+	};
+
+	struct hitch_efks {
+		struct obj {
 		const component::efk_object* eo;
+		const group_queues* g;
 	#ifdef RENDER_DEBUG
 		component::eid eid;
 	#endif //RENDER_DEBUG
-	};
+		};
 
-	void add(
-		const component::render_object *ro,
-		const component::efk_object *eo,
-		const group_queues* g
-#ifdef RENDER_DEBUG
-	, component::eid eid
-#endif //RENDER_DEBUG
-	){
-		if (ro && !find_submit_mesh(ro, nullptr)){
-			return ;
+		#ifdef RENDER_DEBUG
+		void append_eid(component::eid eid){
+			assert(num > 0);
+			objects[num-1].eid = eid;
+		}
+		#endif //RENDER_DEBUG
+
+		void add(const component::efk_object *eo, const group_queues* g){
+			assert(num < MAX_SUBMIT_NUM);
+			objects[num++] = obj{eo, g};
 		}
 
-		assert(ro || eo);
-		//TODO:
-		//auto mi = find_submit_material();
-		assert(num < MAX_SUBMIT_NUM);
-		hitchs[num++] = submit_hitch{
-			ro, nullptr, {UINT16_MAX}, g, eo
-#ifdef RENDER_DEBUG
-			, eid
-#endif //RENDER_DEBUG
-		};
-	}
+		void submit(const submit_context *ctx, const component::render_args* ra) {
+			for (uint16_t ie=0; ie<num; ++ie){
+				const obj& o = objects[ie];
+				const auto &mats = (*o.g)[ra->queue_index];
+				if (!mats.empty()){
+					submit_efk_obj(ctx->L, ctx->w, o.eo, mats);
+				}
+			}
+		}
+
+		void clear() {
+			num = 0;
+		}
+
+		obj objects[MAX_SUBMIT_NUM];
+		uint16_t num = 0;
+	};
 
 	//TODO:
 	void sort(){}
 
-	//
 	void submit(obj_transforms &trans) {
+		const component::render_args* efk_ra = nullptr;
 		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
 			auto ra = ctx->ra[ii];
-			for (uint16_t ih=0; ih<num; ++ih){
-				const submit_hitch& sh = hitchs[ih];
-				
-				const auto &mats = (*sh.g)[ra->queue_index];
-				if (!mats.empty()){
-					if (sh.ro && queue_check(ctx->w->Q, sh.ro->visible_idx, ra->queue_index)){
-						auto mi = find_submit_material(ctx->L, ctx->w, ra, sh.ro->rm_idx);
-						if (mi){
-							const auto prog = material_prog(ctx->L, mi);
-							if (BGFX_HANDLE_IS_VALID(prog)){
-								draw_obj(ctx->L, ctx->w, ra->viewid, sh.ro, mi, ra->material_index, prog, &mats, BGFX_DISCARD_ALL, trans);
-							}
-						}
-					}
-
-					if (sh.eo && queue_check(ctx->w->Q, sh.eo->visible_idx, ra->queue_index)){
-						submit_efk_obj(ctx->L, ctx->w, sh.eo, mats);
-					}
-				}
+			if (ctx->queue_types[ii] == queue_type::efk_queue){
+				efk_ra = ra;
 			}
+			objs.submit(ctx, ra, trans);
+		}
 
-			//ctx->w->bgfx->encoder_discard(w->holder->encoder, BGFX_DISCARD_ALL);
+		if (efk_ra){
+			efks.submit(ctx, efk_ra);
 		}
 	}
 
@@ -442,10 +484,25 @@ struct hitch_submiter {
 		}
 	}
 
+	bool find_queue_index(queue_type qt, uint8_t& qidx) const {
+		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
+			const auto t = ctx->queue_types[ii];
+			if (t != queue_type::UNKNOW_queue && t == qt){
+				qidx = ii;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	void collect(){
 		collect_groups();
 		// draw object which hanging on hitch node
 		ecs::clear_type<component::efk_hitch>(ctx->w->ecs);
+		uint8_t efk_qidx = 0;
+		const bool has_efkqueue = find_queue_index(queue_type::efk_queue, efk_qidx);
+
 		for (auto const& [groupid, g] : groups) {
 			int gids[] = {groupid};
 			ecs::group_enable<component::hitch_tag>(ctx->w->ecs, gids);
@@ -454,14 +511,25 @@ struct hitch_submiter {
 				const auto io = e.component<component::indirect_object>();
 				if (!io){
 					const auto ro = e.component<component::render_object>();
-					const auto eo = e.component<component::efk_object>();
-					if (ro || eo){
-					#ifdef RENDER_DEBUG
-						auto eid = e.component<component::eid>();
-						add(ro, eo, &g, eid);
-					#else
-						add(ro, eo, &g);
-					#endif //RENDER_DEBUG
+					
+				#ifdef RENDER_DEBUG
+					auto eid = e.component<component::eid>();
+				#endif //RENDER_DEBUG
+					if (ro){
+						objs.add(ro, &g);
+						#ifdef RENDER_DEBUG
+						objs.append_eid(eid);
+						#endif //RENDER_DEBUG
+					}
+
+					if (has_efkqueue){
+						const auto eo = e.component<component::efk_object>();
+						if (eo && queue_check(ctx->w->Q, eo->visible_idx, efk_qidx)){
+							efks.add(eo, &g);
+							#ifdef RENDER_DEBUG
+							efks.append_eid(eid);
+							#endif //RENDER_DEBUG
+						}
 					}
 				}
 			}
@@ -478,14 +546,15 @@ struct hitch_submiter {
 
 	void clear(){
 		clear_groups();
+		objs.clear();
+		efks.clear();
 		ctx = nullptr;
-		num = 0;
 	}
 
 	group_collection	groups;
 	submit_context *ctx = nullptr;
-	submit_hitch hitchs[MAX_SUBMIT_NUM];
-	uint16_t num = 0;
+	hitch_objs objs;
+	hitch_efks efks;
 
 	//uint16_t submit_queues[MAX_VISIBLE_QUEUE][MAX_SUBMIT_NUM];
 };
@@ -494,8 +563,8 @@ struct submit_cache{
 	obj_transforms	transforms;
 
 	submit_context		ctx;
-	obj_submiter		obj;
-	hitch_submiter		hitch;
+	obj_submitter		obj;
+	hitch_submitter		hitch;
 
 #ifdef RENDER_DEBUG
 	struct submit_stat{
@@ -676,15 +745,43 @@ lsubmit_stat(lua_State *L){
 	return 1;
 }
 
+static int
+lset_queue_type(lua_State *L){
+	auto w = getworld(L);
+	auto queue_types = w->submit_cache->ctx.queue_types;
+	const char* queuename = lua_tostring(L, 1);
+	const uint8_t qidx = (uint8_t)lua_tointeger(L, 2);
+	if (0 == strcmp(queuename, "main_queue")){
+		queue_types[qidx] = queue_type::main_queue;
+	} else if (0 == strcmp(queuename, "pre_depth_queue")){
+		queue_types[qidx] = queue_type::pre_depth_queue;
+	} else if (0 == strcmp(queuename, "csm1_queue")){
+		queue_types[qidx] = queue_type::csm1_queue;
+	} else if (0 == strcmp(queuename, "csm2_queue")){
+		queue_types[qidx] = queue_type::csm2_queue;
+	} else if (0 == strcmp(queuename, "csm3_queue")){
+		queue_types[qidx] = queue_type::csm3_queue;
+	} else if (0 == strcmp(queuename, "csm4_queue")){
+		queue_types[qidx] = queue_type::csm4_queue;
+	} else if (0 == strcmp(queuename, "efk_queue")){
+		queue_types[qidx] = queue_type::efk_queue;
+	} else {
+		queue_types[qidx] = queue_type::UNKNOW_queue;
+	}
+	return 0;
+}
+
 extern "C" int
-luaopen_render_stat(lua_State *L){
+luaopen_render_cache(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "submit_stat",	lsubmit_stat},
+		{ "set_queue_type", lset_queue_type},
 		{ nullptr, 			nullptr},
 	};
 	luaL_newlibtable(L,l);
-	luaL_setfuncs(L,l,0);
+	lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
 	return 1;
 }
 
@@ -746,8 +843,8 @@ extern "C" int
 luaopen_entity_drawer(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "draw",		lentity_draw},
-		{ nullptr,		nullptr},
+		{ "draw",	lentity_draw},
+		{ nullptr,	nullptr},
 	};
 	luaL_newlibtable(L,l);
 	lua_pushnil(L);

@@ -25,6 +25,7 @@ local ilight    = ecs.require "ant.render|light.light"
 local iviewport = ecs.require "ant.render|viewport.state"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local efk_sys = ecs.system "efk_system"
+local RC        = world:clibs "render.cache"
 local iefk = {}
 
 local handle_mt = {
@@ -80,6 +81,10 @@ function efk_sys:init()
     EFK_SERVER = ltask.spawn "ant.efk|efk"
     ltask.call(EFK_SERVER, "init")
     ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "SAMPLER2D")
+end
+
+function efk_sys:post_init()
+    RC.set_queue_type("efk_queue", queuemgr.queue_index "efk_queue")
 end
 
 local function cleanup_efk(efk)

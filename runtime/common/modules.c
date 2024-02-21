@@ -59,7 +59,7 @@ int luaopen_programan_client(lua_State *L);
 int luaopen_programan_server(lua_State *L);
 int luaopen_render_material(lua_State *L);
 int luaopen_render_queue(lua_State *L);
-int luaopen_render_stat(lua_State *L);
+int luaopen_render_cache(lua_State *L);
 int luaopen_rmlui(lua_State* L);
 int luaopen_system_cull(lua_State* L);
 int luaopen_system_render(lua_State *L);
@@ -121,7 +121,7 @@ void ant_loadmodules(lua_State* L) {
         { "render.render_material", luaopen_render_material},
         { "render.queue",           luaopen_render_queue},
         { "system.render",      luaopen_system_render},
-        { "render.stat",        luaopen_render_stat},
+        { "render.cache",        luaopen_render_cache},
         { "entity.drawer",      luaopen_entity_drawer},
         { "motion.sampler",     luaopen_motion_sampler},
         { "motion.tween",       luaopen_motion_tween},
