@@ -271,7 +271,7 @@ function render_sys:entity_init()
 
 	for qe in w:select "INIT submit_queue queue_name:in render_target:in" do
 		local qn = qe.queue_name
-		assert(queuemgr.has(qn))
+		local _ = queuemgr.has(qn) or error(("Invalid queue_name:%s, need register"):format(qn))
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
