@@ -8,8 +8,7 @@ local ServiceArguments = ltask.queryservice "s|arguments"
 local arg = ltask.call(ServiceArguments, "QUERY")
 local REPOPATH = fs.absolute(arg[1]):lexically_normal():string()
 
-local new_tiny = import_package "ant.vfs".new_tiny
-local tiny_vfs = new_tiny(REPOPATH)
+local tiny_vfs = vfsrepo.new_tiny(REPOPATH)
 
 local repo
 local compiling = 0
