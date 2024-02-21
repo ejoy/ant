@@ -27,11 +27,13 @@ jobs:
               });
             }
           }
-          await github.rest.git.deleteRef({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            ref: `tags/nightly`,
-          });
+          try {
+            await github.rest.git.deleteRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `tags/nightly`,
+            });
+          } catch (error) {}
   nightly:
     needs: init
     strategy:
