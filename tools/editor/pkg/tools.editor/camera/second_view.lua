@@ -14,8 +14,8 @@ local INF_F<const> = true
 local math3d    = require "math3d"
 
 local irq       = ecs.require "ant.render|render_system.renderqueue"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 local icamera   = ecs.require "ant.camera|camera"
-local imesh     = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.asset|material"
 local ientity   = ecs.require "ant.entity|entity"
 
@@ -34,8 +34,12 @@ end
 
 local DEFAULT_camera
 
+function second_camera_sys:init()
+    queuemgr.register_queue "second_view"
+end
+
 function second_camera_sys:init_world()
-    local mq = w:first("main_queue render_target:in")
+    local mq = w:first "main_queue render_target:in"
     local mqrt = mq.render_target
     local vr = calc_second_view_viewport(mqrt.view_rect)
     DEFAULT_camera = icamera.create{
@@ -43,7 +47,6 @@ function second_camera_sys:init_world()
         viewdir = mc.ZAXIS,
         updir   = mc.YAXIS,
         frustum = defaultcomp.frustum(vr.w / vr.h),
-        name    = "second_view_camera",
     }
     world:create_entity{
         policy = {
@@ -69,11 +72,6 @@ function second_camera_sys:init_world()
     }
 end
 
-
-
-function second_camera_sys:entity_init()
-end
-
 local event_mq_vr = world:sub{"view_rect_changed", "main_queue"}
 
 function second_camera_sys:data_changed()
@@ -89,8 +87,8 @@ function second_camera_sys:update_camera()
     if not svq then
         return
     end
-    local ce <close> = world:entity(svq.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
-    if ce.scene_changed or ce.camera_changed then
+    local ce <close> = world:entity(svq.camera_ref, "camera_changed?in camera:in scene:in")
+    if ce.camera_changed then
         local camera, scene = ce.camera, ce.scene
 
         local pos, dir = math3d.index(scene.worldmat, 4, 3)

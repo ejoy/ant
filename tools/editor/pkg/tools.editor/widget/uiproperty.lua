@@ -221,7 +221,7 @@ end
 function ResourcePath:update()
     local path = self.modifier.getter()
     self.path = path
-    self.uidata.text = path
+    self.uidata.text = ImGui.StringBuf(path)
 end
 
 local uiutils       = require "widget.utils"
@@ -252,7 +252,7 @@ function ResourcePath:show()
             if extension == self.extension then
                 local path_str = tostring(payload)
                 self.path = path_str
-                self.uidata.text = path_str
+                self.uidata.text = ImGui.StringBuf(path_str)
                 self.modifier.setter(path_str)
                 self:on_dragdrop()
             end

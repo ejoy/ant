@@ -64,7 +64,6 @@ local function FindSkinRootJointIndices(model)
         end
         if skin.skeleton then
             parents[skin.skeleton] = visited
-            skin.pivotPoint = skin.skeleton
             add_root(skin.skeleton)
             goto continue
         end
@@ -76,7 +75,6 @@ local function FindSkinRootJointIndices(model)
         if root ~= visited then
             add_root(root)
         end
-        skin.pivotPoint = root
         ::continue::
     end
     table.sort(roots)

@@ -341,7 +341,6 @@ function m:on_prefab_ready(prefab)
     end
     local j = 1
     local last_tpl
-    local anim_eid
     local tag_list = {}
     for i, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
@@ -359,9 +358,6 @@ function m:on_prefab_ready(prefab)
         else
             self.entities[#self.entities + 1] = eid
             local name = pt.tag and pt.tag[1]
-            if pt.data.animation then
-                anim_eid = eid
-            end
             if not name then
                 if i == 1 then
                     name = "Scene"
@@ -1310,7 +1306,7 @@ function m:do_material_patch(eid, path, v)
     local tpl = info.template
     if not self.materials_names then
         -- local ret = utils.split_ant_path(tpl.data.material)
-        local fn = gd.virtual_prefab_path .. "/materials.names"
+        local fn = gd.virtual_prefab_path .. "/materials_names.ant"
         self.materials_names = serialize.parse(fn, aio.readall(fn))
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))

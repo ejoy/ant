@@ -1,5 +1,17 @@
 name: build
-on: [ push, pull_request ]
+on:
+  push:
+    paths:
+      - '.github/workflows/build.yml'
+      - '3rd/**'
+      - 'clibs/**'
+      - 'engine/**'
+      - 'pkg/**'
+      - 'runtime/**'
+      - 'make.lua'
+  pull_request:
+    branches:
+    - master
 jobs:
   msvc:
     runs-on: windows-latest
