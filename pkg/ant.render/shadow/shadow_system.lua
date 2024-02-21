@@ -267,7 +267,7 @@ local function build_sceneaabbLS(si, li)
 	return PSRLS
 end
 
-local function check_changed()
+local function shadow_changed()
 	local C = irq.main_camera_changed()
 	local D = w:first "make_shadow scene_changed directional_light"
 	if C or D then
@@ -276,7 +276,7 @@ local function check_changed()
 end
 
 function shadow_sys:update_camera()
-	local changed, C, D = check_changed()
+	local changed, C, D = shadow_changed()
 	if changed then
 		if C then
 			w:extend(C, "camera:in scene:in")
@@ -298,7 +298,7 @@ function shadow_sys:update_camera()
 end
 
 function shadow_sys:update_camera_depend()
-	local changed, C = check_changed()
+	local changed, C = shadow_changed()
 	if not changed then
 		return
 	end
@@ -315,7 +315,6 @@ function shadow_sys:update_camera_depend()
 		return
 	end
 	si.sceneaabbLS = build_sceneaabbLS(si, li)
-
 	local CF = C.camera.frustum
 	si.view_near, si.view_far = CF.n, CF.f
 	local zn, zf = assert(si.zn), assert(si.zf)
@@ -414,3 +413,9 @@ function shadow_sys:entity_ready()
 		e.receive_shadow	= receiveshadow
 	end
 end
+
+
+local ishadow = {}
+ishadow.shadow_changed = shadow_changed
+
+return ishadow
