@@ -21,7 +21,7 @@ end}
 local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
 local DIRTY_GROUPS, DIRECT_DRAW_GROUPS = {}, {}
 local HITCH_MAPS = {}
-
+local HITCH_CULL = {}
 local h = ecs.component "hitch"
 function h.init(hh)
     assert(hh.group ~= nil)
@@ -195,6 +195,7 @@ function hitch_sys:finish_scene_update()
         for _, heid in ipairs(hitchs) do
             local he<close> = world:entity(heid, "hitch:in eid:in bounding:update scene:in scene_needchange?out")
             set_dirty_hitch_group(he.hitch, he.eid, true)
+            HITCH_CULL[heid] = false
             he.scene_needchange = true
 
             if math3d.aabb_isvalid(objaabb) then
@@ -206,24 +207,21 @@ function hitch_sys:finish_scene_update()
     w:clear "hitch_create"
 end
 
-local tick<const> = 10
-local cur_tick = 0
 
 function hitch_sys:refine_camera()
     -- remove hitch / hitch scene_update / reset hitch group
-    for e in w:select "hitch_update hitch:in eid:in" do
-        set_dirty_hitch_group(e.hitch, e.eid, true)
+    for e in w:select "hitch_update hitch:in eid:in view_visible?in" do
+        set_dirty_hitch_group(e.hitch, e.eid, e.view_visible)
     end
 
-    -- group cull
-    if cur_tick >= tick then
-        for e in w:select "hitch:in eid:in view_visible?in" do
+    for e in w:select "hitch:in eid:in view_visible?in" do
+        local is_culled = not e.view_visible
+        if HITCH_CULL[e.eid] ~= is_culled then
+            HITCH_CULL[e.eid] = is_culled
             set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
         end
-        cur_tick = 0
-    else
-        cur_tick = cur_tick + 1
-    end  
+    end
+
 
     for gid in pairs(DIRTY_GROUPS) do
         ig.enable(gid, "view_visible", true)
@@ -235,9 +233,11 @@ function hitch_sys:refine_camera()
             
             local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             local glbs = {}
-            for re in w:select "hitch_tag mesh_result draw_indirect eid:in render_object_visible?update" do
+            for re in w:select "hitch_tag mesh_result draw_indirect eid:in render_object_visible?update bounding?update" do
                 -- render_object_visible only set in render_system entity_init by view_visible
                 re.render_object_visible = true
+                re.bounding.aabb       = mu.M3D_mark(re.bounding.aabb, math3d.aabb())
+                re.bounding.scene_aabb = mu.M3D_mark(re.bounding.scene_aabb, math3d.aabb())
                 glbs[#glbs+1] = { diid = re.eid}
                 update_instance_buffer(re.eid, memory, draw_num)
             end
