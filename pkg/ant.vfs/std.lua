@@ -126,14 +126,12 @@ local resource_filter <const> = {
 	},
 }
 
+local resource <const> = { "material" , "glb" , "gltf", "texture" }
+
 local block <const> = {
     "/res",
     "/pkg/ant.bake",
-    "/pkg/ant.resources.binary/meshes/test",
-    "/pkg/ant.resources.binary/test",
 }
-
-local resource <const> = { "material" , "glb" , "gltf", "texture" }
 
 local whitelist <const> = {
 	"ant",
