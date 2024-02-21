@@ -341,7 +341,6 @@ function m:on_prefab_ready(prefab)
     end
     local j = 1
     local last_tpl
-    local anim_eid
     local tag_list = {}
     for i, pt in ipairs(self.prefab_template) do
         local eid = entitys[j]
@@ -359,9 +358,6 @@ function m:on_prefab_ready(prefab)
         else
             self.entities[#self.entities + 1] = eid
             local name = pt.tag and pt.tag[1]
-            if pt.data.animation then
-                anim_eid = eid
-            end
             if not name then
                 if i == 1 then
                     name = "Scene"
