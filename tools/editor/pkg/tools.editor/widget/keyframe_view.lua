@@ -769,7 +769,7 @@ end
 local ui_bindcamera = {false}
 local function anim_set_time(t)
     if current_anim.type == "ske" then
-        iani.set_time(anim_eid, t)
+        iani.set_time(anim_eid, t, current_anim.name)
         if ui_bindcamera[1] then
             world:pub {"UpdateCamera"}
         end
@@ -1114,7 +1114,7 @@ function m.show()
                 if anim_eid then
                     current_anim.is_playing = iani.is_playing(anim_eid)
                     if current_anim.is_playing then
-                        current_anim.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
+                        current_anim.current_frame = math.floor(iani.get_time(anim_eid, current_anim.name) * sample_ratio)
                     end
                 end
             end
@@ -1158,7 +1158,7 @@ function m.show()
             ImGui.SameLine()
             local current_time = 0
             if current_anim.type == "ske" then
-                current_time = anim_eid and iani.get_time(anim_eid) or 0
+                current_time = anim_eid and iani.get_time(anim_eid, current_anim.name) or 0
             else
                 for _, anim in ipairs(current_anim.target_anims) do
                     if anim.modifier then
