@@ -10,7 +10,7 @@ local Q         = world:clibs "render.queue"
 
 local queuemgr	= ecs.require "ant.render|queue_mgr"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
-
+local ishadow	= ecs.require "ant.render|shadow.shadow_system"
 local BOUNDING_NEED_UPDATE = true
 
 local sb_sys = ecs.system "scene_bounding_system"
@@ -104,8 +104,8 @@ local function build_scene_info(C, sb)
 end
 
 function sb_sys:update_camera_bounding()
-	local C
-    if BOUNDING_NEED_UPDATE or w:check "scene_changed scene bounding" then
+	local changed, C = ishadow.shadow_changed()
+    if BOUNDING_NEED_UPDATE or changed then
 		C = irq.main_camera_entity()
 	end
 

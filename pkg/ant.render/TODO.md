@@ -49,6 +49,8 @@
 19. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；(2023.12.01已经完成)
 20. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；（2024.01.24 利用bgfx的view_mode DepthAscending，结合submit的depth值（上层的render_layer就是传给这个depth），排序的问题基本能够解决了）
 21. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；（2024.01.01已经解决。目前在genshader.lua里面，根据具体的platform，会生成对应的.w的数据，而不是通过viewmat在着色器中在运算一次）
+22. 优化PBR的计算量：
+  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；（2024.02已经完成）
 
 
 ##### 未完成
@@ -71,12 +73,11 @@
   3) 优化VSM；
   4) 使用texture array，而不是一张拼接的2D贴图。使用texture array的好处是，使用MRT输出多张阴影图（不能够使用目前没有fs的depth pass，需要修改为MRT的方式）；
   5) 完成point light shadow；
-  6) 使用D16 format，并将阴影图的分辨率提升到2048。iOS并不支持D16的格式，尝试使用R16F/R16，并修改采样阴影图的方式，在着色器中判断是否在阴影中，而不是目前时候shadow2DProj的方式判断是否在阴影内（牵涉到两个地方的修改：1.阴影图的创建的flag不在使用compare；2.判断像素是否被遮挡），理论上就是时间换空间。是否真的能够提升性能还有待考察。iOS在较新的版本里已经支持D16的format，但bgfx目前并没有支持；
+  6) 使用D16 format，并将阴影图的分辨率提升到2048。iOS并不支持D16的格式，尝试使用R16F/R16，并修改采样阴影图的方式，在着色器中判断是否在阴影中，而不是目前时候shadow2DProj的方式判断是否在阴影内（牵涉到两个地方的修改：1.阴影图的创建的flag不在使用compare；2.判断像素是否被遮挡），理论上就是时间换空间。是否真的能够提升性能还有待考察。iOS在较新的版本里已经支持D16的format，但bgfx目前并没有支持；(2024.02.01。 iOS13以上的设备支持D16的格式，bgfx已经合拼PR)；
 10. 重构visible_state，将目前的visible_state作为render内部数据，统一使用visible tag作为外部控制物体是否可见的设定；
 11. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
 12. 优化compute shader使用到的resource（包括image、texture和buffer），目前的compute shader不应该使用超过8个的resource；
-13. 优化PBR的计算量：
-  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
+
 14. 资源编译生成inverse_bind_matrices这个属性下，理论上应该是在右手空间，但在ext_skinbin.lua里，会把它转成左手矩阵，最后在算蒙皮矩阵的时候，会和ozz内部的右手矩阵相乘，蒙皮矩阵最后会转到左手空间下，这个解决居然是对的。inverse_bind_matrices这个属性不应该是右手的；
 
 ##### 暂缓进行
