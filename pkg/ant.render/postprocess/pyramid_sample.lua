@@ -70,8 +70,7 @@ function ips.init_sample(count, basename, baseviewid)
     return s
 end
 
-local function create_sample_queues(e, mqvr)
-    local ps = e.pyramid_sample
+local function create_sample_queues(ps, mqvr)
     local downsample, upsample = ps.downsample, ps.upsample
 
     assert(#downsample == #upsample)
@@ -85,7 +84,7 @@ local function create_sample_queues(e, mqvr)
     local function init_sample(s, vr, fb)
         local qn = s.queue_name
         local _ = queuemgr.has(qn) or error(("%s: queue_name is not register"):format(qn))
-        s.queueeid = util.create_queue(s.viewid, vr, fb, qn, nil, true) -- 2 3 4 5 
+        s.queue = util.create_queue(s.viewid, vr, fb, qn)
         s.render_arg = irender.pack_render_arg(qn, s.viewid)
     end
     --downsample
@@ -107,8 +106,7 @@ local SCENE_COLOR_PROPERTY = {
     value   = nil,
 }
 
-local function create_drawers(e)
-    local ps = e.pyramid_sample
+local function create_drawers(ps)
     local ds, us = ps.downsample, ps.upsample
     assert(#ds == #us)
     local mipcount<const> = #ds
@@ -138,7 +136,7 @@ local function remove_sample_queues(ps)
     local ds, us = ps.downsample, ps.upsample
     local function remove_sample_entites(ss)
         for _, s in ipairs(ss) do
-            w:remove(s.queueeid)
+            w:remove(s.queue)
             --not remove drawereid
         end
     end
@@ -148,7 +146,7 @@ local function remove_sample_queues(ps)
 end
 
 local function last_queue_viewrect(ps)
-    local lasteid = ps.upsample[#ps.upsample].queueeid
+    local lasteid = ps.upsample[#ps.upsample].queue
     local e = world:entity(lasteid, "render_target:in")
     if e then
         return e.render_target.viewrect
@@ -174,9 +172,22 @@ function ps_sys:data_changed()
     end
 end
 
-function ips.update(e, mqvr)
-    create_sample_queues(e, mqvr)
-    create_drawers(e)
+local function create_pyramid_sample(ps)
+    return world:create_entity{
+        policy = {
+            "ant.render|pyramid_sample",
+        },
+        data = {
+            bloom = true,
+            pyramid_sample = ps,
+        }
+    }
+end
+
+function ips.create(pyramid_sample, mqvr)
+    create_sample_queues(pyramid_sample, mqvr)
+    create_drawers(pyramid_sample)
+    return create_pyramid_sample(pyramid_sample)
 end
 
 local function do_sample(sample_params, samplers, inputhandle, next_mip)

@@ -31,35 +31,21 @@ function bloom_sys:init()
     end
 end
 
-local function create_blur_entity()
-    world:create_entity{
-        policy = {
-            "ant.render|pyramid_sample",
-            "ant.render|bloom"
-        },
-        data = {
-            bloom = true,
-            pyramid_sample = {
-                downsample      = ips.init_sample(MIP_COUNT, DOWNSAMPLE_NAME,   BLOOM_DS_VIEWID),
-                upsample        = ips.init_sample(MIP_COUNT, UPSAMPLE_NAME,     BLOOM_US_VIEWID),
-                sample_params   = BLOOM_PARAM,
-            },
-            on_ready = function (e)
-                w:extend(e, "pyramid_sample:update")
-                local mq = w:first "main_queue render_target:in"
-                ips.update(e, mq.render_target.view_rect)
-            end
-        }
-    }
-end
-
+local pyramid_sampleeid
 function bloom_sys:init_world()
-    create_blur_entity()
+    local pyramid_sample = {
+        downsample      = ips.init_sample(MIP_COUNT, DOWNSAMPLE_NAME,   BLOOM_DS_VIEWID),
+        upsample        = ips.init_sample(MIP_COUNT, UPSAMPLE_NAME,     BLOOM_US_VIEWID),
+        sample_params   = BLOOM_PARAM,
+    }
+
+    local mq = w:first "main_queue render_target:in"
+    pyramid_sampleeid = ips.create(pyramid_sample, mq.render_target.view_rect)
 end
 
 function bloom_sys:bloom()
     local function update_bloom_handle(ps)
-        local lasteid = ps.upsample[#ps.upsample].queueeid
+        local lasteid = ps.upsample[#ps.upsample].queue
         local q = world:entity(lasteid, "render_target:in")
         if q then
             local pp = w:first "postprocess postprocess_input:in"
@@ -67,7 +53,7 @@ function bloom_sys:bloom()
         end
     end
 
-    local e = assert(w:first "bloom pyramid_sample:in")
+    local e = world:entity(pyramid_sampleeid, "pyramid_sample:in")
     local pp = w:first "postprocess postprocess_input:in"
     local input_handle = pp.postprocess_input.scene_color_handle
     ips.do_pyramid_sample(e, input_handle)

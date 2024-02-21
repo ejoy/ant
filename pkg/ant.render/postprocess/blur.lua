@@ -45,36 +45,19 @@ end
     return gb
 end ]]
 
-local function create_blur_entity(mqvr)
-    world:create_entity{
-        policy = {
-            "ant.render|pyramid_sample",
-            "ant.render|blur"
-        },
-        data = {
-            blur = true,
-            pyramid_sample = {
-                downsample      = ips.init_sample(MIP_COUNT, "blur_downsample", BLUR_DS_VIEWID),
-                upsample        = ips.init_sample(MIP_COUNT, "blur_upsample", BLUR_US_VIEWID),
-                sample_params   = BLUR_PARAM,
-            },
-            on_ready = function (e)
-                w:extend(e, "pyramid_sample:in")
-                ips.update(e, mqvr)
-            end
-            --gaussian_blur = build_gaussian_blur()
-        }
-    }
-end
-
 function blur_sys:init()
     register_blur_queue()
 end
 
 function blur_sys:init_world()
-    local mq = w:first("main_queue render_target:in")
+    local mq = w:first "main_queue render_target:in"
     local mqvr = mq.render_target.view_rect
-    create_blur_entity(mqvr)
+    local pyramid_sample = {
+        downsample      = ips.init_sample(MIP_COUNT, "blur_downsample", BLUR_DS_VIEWID),
+        upsample        = ips.init_sample(MIP_COUNT, "blur_upsample", BLUR_US_VIEWID),
+        sample_params   = BLUR_PARAM,
+    }
+    ips.create(pyramid_sample, mqvr)
 end
 
 --[[ function iblur.do_gaussian_blur(be)
