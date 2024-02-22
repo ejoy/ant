@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local math3d 	    = require "math3d"
-
+local assetmgr      = import_package "ant.asset"
 local imaterial     = ecs.require "ant.asset|material"
 local imesh         = ecs.require "ant.asset|mesh"
 local icompute      = ecs.require "ant.render|compute.compute"
@@ -147,6 +147,7 @@ local function create_sm_entity(gid, indices, mountain_material, cs_material, me
                 m.u_buffer_param = math3d.vector(drawnum, 0, 0, 0)
                 --just do it once
                 icompute.dispatch(main_viewid, e.dispatch)
+                assetmgr.material_mark(e.dispatch.fx.prog)
             end
         }
     }
