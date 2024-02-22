@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:required_version "1.5"
+lm:required_version "1.6"
 --lm.luaversion = "lua55"
 
 local plat = (function ()
@@ -23,66 +23,63 @@ lm.compile_commands = "build"
 
 lm.AntDir = lm:path "."
 
-local EnableEditor = true
-if lm.os == "ios" then
-    lm.arch = "arm64"
-    lm.sys = "ios16.0"
-    EnableEditor = false
-end
+local EnableEditor = lm.os ~= "ios" and lm.os ~= "android"
 
-if lm.os == "android" then
-    EnableEditor = false
-end
-
-lm.c = "c17"
-lm.cxx = "c++20"
-lm.msvc = {
-    defines = {
-        "_CRT_SECURE_NO_WARNINGS",
-        "_WIN32_WINNT=0x0601",
-    },
-    flags = {
-        "-wd5105"
-    }
-}
-
-lm:config "engine_config" {
+lm:conf {
+    c = "c17",
+    cxx = "c++20",
+    --TODO
+    visibility = "default",
+    defines = "BGFX_CONFIG_DEBUG_UNIFORM=0",
     msvc = {
-        flags = "/utf-8",
+        defines = {
+            "_CRT_SECURE_NO_WARNINGS",
+            "_WIN32_WINNT=0x0601",
+        },
+        flags = {
+            "/utf-8",
+            "/wd5105"
+        },
+        ldflags = lm.mode == "release" and {
+            "/DEBUG:FASTLINK"
+        }
     },
-    defines = "BGFX_CONFIG_DEBUG_UNIFORM=0"
-}
-
-lm.configs = {
-    "engine_config",
-    --"sanitize"
-}
-
-if lm.mode == "release" then
-    lm.msvc.ldflags = {
-        "/DEBUG:FASTLINK"
-    }
-end
-
-lm.ios = {
-    flags = {
-        "-fembed-bitcode",
-        "-fobjc-arc"
+    ios = {
+        arch = "arm64",
+        sys = "ios16.0",
+        flags = {
+            "-fembed-bitcode",
+            "-fobjc-arc"
+        }
+    },
+    android  = {
+        flags = "-fPIC",
+        arch = "aarch64",
+        vendor = "linux",
+        sys = "android33",
     }
 }
 
-lm.android  = {
-    flags = "-fPIC",
-}
+local EnableSanitize = false
 
-if lm.os == "android" then
-    lm.arch = "aarch64"
-    lm.vendor = "linux"
-    lm.sys = "android33"
+if EnableSanitize then
+    lm.builddir = ("build/%s/sanitize"):format(plat)
+    lm.bindir = ("bin/%s/sanitize"):format(plat)
+    lm.mode = "debug"
+    lm:conf {
+        flags = "-fsanitize=address",
+        gcc = {
+            ldflags = "-fsanitize=address"
+        },
+        clang = {
+            ldflags = "-fsanitize=address"
+        }
+    }
+    lm:msvc_copydll "copy_asan" {
+        type = "asan",
+        output = lm.bindir,
+    }
 end
-
---TODO
-lm.visibility = "default"
 
 lm:import "runtime/make.lua"
 
@@ -112,7 +109,13 @@ if EnableEditor then
             "tools",
         }
     }
-    lm:default "editor"
+    lm:default {
+        "editor",
+        lm.compiler == "msvc" and EnableSanitize and "copy_asan",
+    }
 else
-    lm:default "runtime"
+    lm:default {
+        "runtime",
+        lm.compiler == "msvc" and EnableSanitize and "copy_asan",
+    }
 end
