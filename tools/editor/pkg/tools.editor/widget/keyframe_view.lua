@@ -215,12 +215,12 @@ end
 
 local function build_animation(ske, ske_anim, sample_ratio)
     local joint_anims = ske_anim.target_anims
-    local raw_animation = ske_anim.raw_anim
 	local map = {}
 	for _, anim in ipairs(joint_anims) do
 		map[anim.target_name] = anim
 	end
 	local num_joints = ske:num_joints()
+    local raw_animation = ozzoffline.RawAnimation()
 	raw_animation:set_duration(ske_anim.duration)
 	raw_animation:resize(num_joints)
 	for joint_index = 1, num_joints do
@@ -233,19 +233,15 @@ local function build_animation(ske, ske_anim, sample_ratio)
 			push_anim_key(raw_animation, poseMat, sample_ratio, joint_index)
 		end
 	end
-    
-    local optimizer_setting = {
+	local raw_optimized_animation, statistics = ozzoffline.AnimationOptimizer(raw_animation, ske, {
 		tolerance = 0.001,
 		distance  = 0.1,
 		joints = {},
-	}
-
-	local raw_optimized_animation, statistics = ozzoffline.AnimationOptimizer(raw_animation, ske, optimizer_setting)
+	})
 	-- for k, v in pairs(statistics) do
 	-- 	print("\t animation optimizer statistics", k..":"..v)
 	-- end
 	return ozzoffline.AnimationBuilder(raw_optimized_animation)
-
     -- return ozzoffline.AnimationBuilder(raw_animation)
 end
 
@@ -525,11 +521,11 @@ local function show_current_detail()
         current_anim.frame_count = current_anim.frame_count_ui[1]
         local d = current_anim.frame_count / sample_ratio
         current_anim.duration = d
-        if anim_type == "ske" then
+        -- if anim_type == "ske" then
             -- current_anim.raw_anim._duration = d
-            current_anim.raw_anim:setup(current_skeleton, d)
+            -- current_anim.raw_anim:setup(current_skeleton, d)
             -- current_anim.raw_anim._handle = current_anim.raw_anim.raw_animation:build()
-        end
+        -- end
         current_anim.dirty = true
     end
     local target_name = get_current_target_name()
@@ -801,11 +797,6 @@ local function create_animation(animtype, name, duration, target_anims)
         local raw_anim
         if animtype == "mtl" or animtype == "srt" then
             raw_anim = {}
-        else
-            raw_anim = ozzoffline.RawAnimation()
-            -- _duration = td,
-            -- _sampling_context = ozz.new_sampling_context(1)
-            -- raw_anim:setup(current_skeleton, td)
         end
         local edit_anim = {
             type = animtype,
