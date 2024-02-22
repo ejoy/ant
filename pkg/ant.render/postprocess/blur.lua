@@ -13,6 +13,7 @@ local math3d    = require "math3d"
 local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local hwi       = import_package "ant.hwi"
 local queuemgr  = ecs.require "queue_mgr"
+local iviewport = ecs.require "viewport.state"
 
 local BLUR_DOWNSAMPLE_NAME<const> = "blur_downsample"
 local BLUR_UPSAMPLE_NAME<const> = "blur_upsample"
@@ -22,11 +23,19 @@ local BLUR_US_VIEWID <const> = hwi.viewid_get "blur_us1"
 local BLUR_PARAM = math3d.ref(math3d.vector(0, 0, 0, 0))
 
 local MIP_COUNT<const> = 4
-local function register_blur_queue()
+
+local function register_queues()
     for i=1, MIP_COUNT do
         queuemgr.register_queue(BLUR_DOWNSAMPLE_NAME..i)
         queuemgr.register_queue(BLUR_UPSAMPLE_NAME..i)
     end
+
+    local pyramid_sample = {
+        downsample      = ips.init_sample(MIP_COUNT, "blur_downsample", BLUR_DS_VIEWID),
+        upsample        = ips.init_sample(MIP_COUNT, "blur_upsample", BLUR_US_VIEWID),
+        sample_params   = BLUR_PARAM,
+    }
+    ips.create(pyramid_sample, iviewport.viewrect)
 end
 
 --[[ local function build_gaussian_blur()
@@ -46,18 +55,7 @@ end
 end ]]
 
 function blur_sys:init()
-    register_blur_queue()
-end
-
-function blur_sys:init_world()
-    local mq = w:first "main_queue render_target:in"
-    local mqvr = mq.render_target.view_rect
-    local pyramid_sample = {
-        downsample      = ips.init_sample(MIP_COUNT, "blur_downsample", BLUR_DS_VIEWID),
-        upsample        = ips.init_sample(MIP_COUNT, "blur_upsample", BLUR_US_VIEWID),
-        sample_params   = BLUR_PARAM,
-    }
-    ips.create(pyramid_sample, mqvr)
+    register_queues()
 end
 
 --[[ function iblur.do_gaussian_blur(be)

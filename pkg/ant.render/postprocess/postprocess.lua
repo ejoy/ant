@@ -68,9 +68,10 @@ local function update_postprocess_input()
     
         local mq = w:first "main_queue render_target:in camera_ref:in"
         local fb = fbmgr.get(mq.render_target.fb_idx)
-    
-        ppi.scene_color_handle = fbmgr.get_rb(fb[1].rbidx).handle
-        ppi.scene_depth_handle = fbmgr.get_rb(fb[#fb].rbidx).handle
+
+        assert(fbmgr.is_depth_rb(fbmgr.get_rb(fb[2].rbidx)))
+        ppi.scene_color_handle = fb[1].handle
+        ppi.scene_depth_handle = fb[2].handle
         need_update_scene_buffers = nil
     end
 end
