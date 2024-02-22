@@ -75,16 +75,25 @@ function ImGuiEvent.mouseclick(e)
     end
     if e.state == "DOWN" then
         ImGuiIO.AddMouseButtonEvent(btn, true)
-        CaptureMouse[btn] = ImGuiIO.WantCaptureMouse
+        if ImGuiIO.WantCaptureMouse then
+            CaptureMouse[e.what] = true
+        end
         return ImGuiIO.WantCaptureMouse
     elseif e.state == "UP" then
-        local capture = CaptureMouse[btn]
-        CaptureMouse[btn] = nil
+        local capture = CaptureMouse[e.what]
+        CaptureMouse[e.what] = nil
         ImGuiIO.AddMouseButtonEvent(btn, false)
         return capture
-    else
-        return CaptureMouse[btn]
     end
+end
+
+function ImGuiEvent.mousemove(e)
+    local capture
+    for btn in pairs(CaptureMouse) do
+        e.what[btn] = nil
+        capture = true
+    end
+    return capture and (next(e.what) == nil)
 end
 
 function ImGuiEvent.mousewheel(e)
