@@ -111,11 +111,11 @@ if EnableEditor then
     }
     lm:default {
         "editor",
-        EnableSanitize and "copy_asan",
+        lm.compiler == "msvc" and EnableSanitize and "copy_asan",
     }
 else
     lm:default {
         "runtime",
-        EnableSanitize and "copy_asan",
+        lm.compiler == "msvc" and EnableSanitize and "copy_asan",
     }
 end
