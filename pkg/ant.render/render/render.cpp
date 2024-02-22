@@ -458,7 +458,7 @@ struct hitch_submitter {
 		const component::render_args* efk_ra = nullptr;
 		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
 			auto ra = ctx->ra[ii];
-			if (ctx->queue_types[ii] == queue_type::efk_queue){
+			if (ctx->queue_types[ra->queue_index] == queue_type::efk_queue){
 				efk_ra = ra;
 			}
 			objs.submit(ctx, ra, trans);
