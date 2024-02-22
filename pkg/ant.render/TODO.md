@@ -77,8 +77,9 @@
 10. 重构visible_state，将目前的visible_state作为render内部数据，统一使用visible tag作为外部控制物体是否可见的设定；
 11. 使用meshoptimizer优化导入的glb文件。https://github.com/zeux/meshoptimizer；
 12. 优化compute shader使用到的resource（包括image、texture和buffer），目前的compute shader不应该使用超过8个的resource；
-
-14. 资源编译生成inverse_bind_matrices这个属性下，理论上应该是在右手空间，但在ext_skinbin.lua里，会把它转成左手矩阵，最后在算蒙皮矩阵的时候，会和ozz内部的右手矩阵相乘，蒙皮矩阵最后会转到左手空间下，这个解决居然是对的。inverse_bind_matrices这个属性不应该是右手的；
+13. 资源编译生成inverse_bind_matrices这个属性下，理论上应该是在右手空间，但在ext_skinbin.lua里，会把它转成左手矩阵，最后在算蒙皮矩阵的时候，会和ozz内部的右手矩阵相乘，蒙皮矩阵最后会转到左手空间下，这个解决居然是对的。inverse_bind_matrices这个属性不应该是右手的；
+14. 优化cluster shading。用更紧凑的方法存放lighting indices的buffer；
+15. 用compute shader patch用于shadow/pre-depth的vertex/indices buffer。在compute shader中进行frustum cull（意味着每个mesh都要带上一个bounding sphere/aabb），进而生成用于render的indices buffer（vertex buffer可以不动？），用一次/多次draw替换整个scene的draw；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
