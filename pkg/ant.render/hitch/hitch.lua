@@ -242,6 +242,9 @@ function hitch_sys:refine_camera()
                 glbs[#glbs+1] = { diid = re.eid}
                 update_instance_buffer(re.eid, memory, draw_num)
             end
+            for re in w:select "hitch_tag efk render_object_visible?update view_visible?update" do
+                ivs.set_state(re, "efk_queue", true)
+            end
             indirect_draw_group.glbs = glbs
             create_compute_entity(indirect_draw_group.glbs, memory, draw_num)
 

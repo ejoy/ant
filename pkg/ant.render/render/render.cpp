@@ -474,11 +474,9 @@ struct hitch_submitter {
 			const auto &h = e.get<component::hitch>();
 			for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
 				auto ra = ctx->ra[ii];
-				if (obj_visible(ctx->w->Q, h, ra->queue_index)){
-					const auto &s = e.get<component::scene>();
-					if (h.group != 0){
-						groups[h.group][ra->queue_index].emplace_back(s.worldmat);
-					}
+				const auto &s = e.get<component::scene>();
+				if (h.group != 0){
+					groups[h.group][ra->queue_index].emplace_back(s.worldmat);
 				}
 			}
 		}
@@ -486,9 +484,10 @@ struct hitch_submitter {
 
 	bool find_queue_index(queue_type qt, uint8_t& qidx) const {
 		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
-			const auto t = ctx->queue_types[ii];
+			auto ra = ctx->ra[ii];
+			const auto t = ctx->queue_types[ra->queue_index];
 			if (t != queue_type::UNKNOW_queue && t == qt){
-				qidx = ii;
+				qidx = ra->queue_index;
 				return true;
 			}
 		}

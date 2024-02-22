@@ -185,6 +185,8 @@ function efk_sys:init_world()
             "ant.render|watch_screen_buffer",
         },
         data = {
+            visible = true,
+            submit_queue = true,
             efk_queue = true,
             render_target = {
                 view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
@@ -253,7 +255,7 @@ function efk_sys:follow_scene_update()
 
     for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
         local visible = e.visible_state.main_queue
-        Q.set(e.efk_object.visible_idx, queuemgr.queue_index "main_queue", visible)
+        Q.set(e.efk_object.visible_idx, queuemgr.queue_index "efk_queue", visible)
         e.efk.play_handle:set_visible(visible)
     end
 end
