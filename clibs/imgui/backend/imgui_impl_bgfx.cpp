@@ -179,7 +179,7 @@ static void ImGui_ImplBgfx_CreateWindow(ImGuiViewport* viewport) {
 static void ImGui_ImplBgfx_DestroyWindow(ImGuiViewport* viewport) {
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	if (ud) {
-		if (!BGFX_HANDLE_IS_VALID(ud->fb)) {
+		if (BGFX_HANDLE_IS_VALID(ud->fb)) {
 			BGFX(destroy_frame_buffer)(ud->fb);
 		}
 		if (ud->viewid != -1) {
@@ -268,6 +268,7 @@ static void ImGui_ImplBgfx_DestroyFontsTexture() {
 
 void ImGui_ImplBgfx_Shutdown() {
 	ImGui_ImplBgfx_DestroyFontsTexture();
+	ImGui::DestroyPlatformWindows();
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	delete ud;
