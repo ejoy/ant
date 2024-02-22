@@ -178,10 +178,9 @@ local effect_viewid<const> = hwi.viewid_get "effect_view"
 local function create_fb()
     local tmq = w:first "tonemapping_queue render_target:in"
     local mq = w:first "main_queue render_target:in"
-    return fbmgr.create {
-        {rbidx = fbmgr.get_rb(tmq.render_target.fb_idx, 1)},
-        {rbidx = fbmgr.get_depth(mq.render_target.fb_idx)}
-    }
+    return fbmgr.create(
+        {rbidx = fbmgr.get(tmq.render_target.fb_idx)[1].rbidx},
+        {rbidx = fbmgr.get(mq.render_target.fb_idx)[2].rbidx})
 end
 
 function efk_sys:init_world()
