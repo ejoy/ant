@@ -216,6 +216,11 @@ local function allow_function(func_meta)
     if func_meta.is_manual_helper then
         return
     end
+    if func_meta.original_class then
+        if func_meta.original_fully_qualified_name:match "^_" then
+            return
+        end
+    end
     if not conditionals(func_meta) then
         return
     end
