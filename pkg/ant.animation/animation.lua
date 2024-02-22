@@ -21,8 +21,10 @@ local function create(filename)
             weight = 0,
         }
     end
-    for i, skin in ipairs(data.skins) do
-        skins[i] = skinning.create(skin, skeleton)
+    if data.skins then
+        for i, skin in ipairs(data.skins) do
+            skins[i] = skinning.create(skin, skeleton)
+        end
     end
     local obj = {
         skeleton = skeleton,

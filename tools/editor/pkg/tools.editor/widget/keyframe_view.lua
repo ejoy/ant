@@ -1258,7 +1258,7 @@ function m.save(path)
     end
     local filename
     if not path then
-        filename = widget_utils.get_saveas_path("Save Animation", "anim")
+        filename = widget_utils.get_saveas_path("Save Animation", (current_anim.type == "ske") and "anim" or "ant")
         if not filename then return end
     else
         filename = path

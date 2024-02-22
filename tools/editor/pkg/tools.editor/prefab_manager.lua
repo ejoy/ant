@@ -515,26 +515,18 @@ function m:choose_prefab()
     end
 end
 
-local function mount_dir(vroot, lpath, lroot)
-    for path in lfs.pairs(lfs.path(lpath)) do
+local function mount_memfs(vpath)
+    for path in fs.pairs(fs.path(vpath)) do
         if path:filename():string():sub(1,1) == "." then
             goto continue
         end
-        if lfs.is_directory(path) then
-            mount_dir(vroot, path, lroot)
+        if fs.is_directory(path) then
+            mount_memfs(path)
         else
-            local vp = vroot:string() .. "/" .. lfs.relative(path, lroot):string()
-            memfs.update(vp, path:string())
+            memfs.update(path:string(), path:localpath():string())
         end
         ::continue::
     end
-end
-
-local function compile_glb(vpath, lpath)
-    local config = cr.init_setting(vfs, "windows-direct3d11")
-    local current_compile_path = cr.compile_file(config, vpath:string(), lpath:string())
-    mount_dir(vpath, current_compile_path, current_compile_path)
-    return current_compile_path
 end
 
 local function cook_prefab(prefab_filename)
@@ -542,7 +534,11 @@ local function cook_prefab(prefab_filename)
     if not pl[2] then
         return
     end
-    local compile_path = compile_glb(lfs.path(pl[1]), lfs.path(gd.project_root:string()..pl[1]))
+    -- TODO: trigger glb compile
+    aio.readall(prefab_filename)
+
+    local current_compile_path = fs.path(pl[1]):localpath():string()
+    mount_memfs(pl[1])
     prefab_filename = prefab_filename:gsub("|", "/")
     local prefab_template = serialize.parse(prefab_filename, aio.readall(prefab_filename))
     for _, tpl in ipairs(prefab_template) do
@@ -550,12 +546,12 @@ local function cook_prefab(prefab_filename)
             cook_prefab(tpl.prefab)
         end
     end
-    return compile_path
+    return current_compile_path
 end
 
 function m:compile_current_glb()
-    local virtual_prefab_path = lfs.path('/') / lfs.relative(self.glb_filename, gd.project_root)
-    compile_glb(virtual_prefab_path, lfs.path(self.glb_filename))
+    -- TODO: trigger glb compile
+    aio.readall(self.prefab_filename)
 end
 
 function m:open(filename, prefab_name, patch_tpl)
