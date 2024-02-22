@@ -24,7 +24,7 @@ local function find_bindir()
     local antdir = os.getenv "antdir"
     local rootpath
     if antdir then
-        rootpath = lfs.path(antdir) / "bin" / platform.os
+        rootpath = lfs.path(antdir) / "bin" / platform.CRT
     else
         rootpath = lfs.exe_path():parent_path():parent_path()
     end
