@@ -402,7 +402,9 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
                 local eid = anim_prefab.tag["animation"][1]
                 local anim <close> = world:entity(eid, "animation?in animation_playback?in")
                 if anim.animation then
-                    return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name)), anim.animation_playback
+                    local models = anim.animation.models
+                    return math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), anim.animation.skeleton:joint_index(bone_name)), anim.animation_playback
+                    -- return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name)), anim.animation_playback
                 end
             end
         end)
