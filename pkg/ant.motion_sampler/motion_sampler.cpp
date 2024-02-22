@@ -170,16 +170,16 @@ static int lsample(lua_State *L){
 
 			if (mt->r.get()){
 				ozz::animation::QuaternionTrackSamplingJob job;
-				ozz::math::Quaternion r;
+				const math_t qid = math_import(M, NULL, MATH_TYPE_QUAT, 1);
 				job.track = mt->r.get();
-				job.result = &r;
+				job.result = (ozz::math::Quaternion*)math_value(M, qid);
 				job.ratio = ms.ratio;
 				if (!job.Run()){
 					luaL_error(L, "Sampling rotation failed");
 				}
 
 				math_unmark(M, scene.r);
-				scene.r = math_mark(M, math_import(M, &r.x, MATH_TYPE_QUAT, 1));
+				scene.r = math_mark(M, qid);
 			}
 
 			if (mt->t.get()){
