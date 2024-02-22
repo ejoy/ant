@@ -254,7 +254,7 @@ function efk_sys:follow_scene_update()
 	end
 
     for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
-        local visible = e.visible_state.main_queue
+        local visible = e.visible_state.main_queue and true or false
         Q.set(e.efk_object.visible_idx, queuemgr.queue_index "efk_queue", visible)
         e.efk.play_handle:set_visible(visible)
     end
