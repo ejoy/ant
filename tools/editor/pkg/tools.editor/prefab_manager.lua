@@ -529,14 +529,17 @@ local function mount_memfs(vpath)
     end
 end
 
+local function compile_glb(filename)
+    -- TODO: trigger glb compile
+    aio.readall(filename)
+end
+
 local function cook_prefab(prefab_filename)
     local pl = utils.split_ant_path(prefab_filename)
     if not pl[2] then
         return
     end
-    -- TODO: trigger glb compile
-    aio.readall(prefab_filename)
-
+    compile_glb(prefab_filename)
     local current_compile_path = fs.path(pl[1]):localpath():string()
     mount_memfs(pl[1])
     prefab_filename = prefab_filename:gsub("|", "/")
@@ -550,8 +553,7 @@ local function cook_prefab(prefab_filename)
 end
 
 function m:compile_current_glb()
-    -- TODO: trigger glb compile
-    aio.readall(self.prefab_filename)
+    compile_glb(self.prefab_filename)
 end
 
 function m:open(filename, prefab_name, patch_tpl)
@@ -741,6 +743,9 @@ function m:add_effect(filename)
         }
     }
     local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        self:update_tag_list()
+    end
     local efk_eid = world:create_entity(tpl)
     if self.current_prefab then
         self.current_prefab.tag[name] = {efk_eid}
