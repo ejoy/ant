@@ -470,7 +470,6 @@ function world:pipeline_func(what, step)
         if what == "_update" then
             return cpustat_update_then_print(w, funcs, symbols)
         end
-        return cpustat_update(w, funcs, symbols)
     end
     local ecs_world = w._ecs_world
     return function()
