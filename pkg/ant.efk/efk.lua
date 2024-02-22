@@ -175,9 +175,16 @@ local need_update_framebuffer
 
 local effect_viewid<const> = hwi.viewid_get "effect_view"
 
+local function create_fb()
+    local tmq = w:first "tonemapping_queue render_target:in"
+    local mq = w:first "main_queue render_target:in"
+    return fbmgr.create {
+        {rbidx = fbmgr.get_rb(tmq.render_target.fb_idx, 1)},
+        {rbidx = fbmgr.get_depth(mq.render_target.fb_idx)}
+    }
+end
+
 function efk_sys:init_world()
-    local mq = w:first("main_queue render_target:in camera_ref:in")
-    local main_fb = fbmgr.get(mq.render_target.fb_idx)
     local vr = iviewport.viewrect
     world:create_entity{
         policy = {
@@ -191,30 +198,12 @@ function efk_sys:init_world()
             render_target = {
                 view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 viewid = effect_viewid,
-                fb_idx = fbmgr.create(table.unpack(main_fb)),
+                fb_idx = create_fb(),
                 view_mode = "s",
-                clear_state = {
-                    clear = "",
-                },
+                clear_state = {clear = "",},
             },
             queue_name = "efk_queue",
             watch_screen_buffer = true,
-            on_ready = function(e)
-                local tmq = w:first "tonemapping_queue render_target:in"
-                w:extend(e, "render_target:update")
-                local fbidx = e.render_target.fb_idx
-                local tm_rb = fbmgr.get(tmq.render_target.fb_idx)[1]
-                local depth_rb = fbmgr.get(mq.render_target.fb_idx)[2]
-                local depth_rb_table = fbmgr.get_rb(depth_rb.rbidx)
-                local ww, hh = depth_rb_table.w, depth_rb_table.h
-                fbmgr.resize_rb(tm_rb.rbidx, ww, hh)
-                local fb = {
-                    {rbidx = tm_rb.rbidx},
-                    {rbidx = depth_rb.rbidx}
-                }
-                fbmgr.recreate(fbidx, fb)
-                need_update_framebuffer = true
-            end
         }
     }
 

@@ -28,8 +28,16 @@ local ENABLE_FSR   <const>   = setting:get "graphic/postprocess/fsr/enable" and 
 local swapchain_viewid<const> = hwi.viewid_get "swapchain"
 local RENDER_ARG
 local swapchain_drawereid
-function sc_sys:init()
+
+local function register_queue()
     queuemgr.register_queue "swapchain_queue"
+    RENDER_ARG = irender.pack_render_arg("swapchain_queue", swapchain_viewid)
+
+    util.create_queue(swapchain_viewid, mu.copy_viewrect(iviewport.device_size), nil, "swapchain_queue", "swapchain_queue")
+end
+
+function sc_sys:init()
+    register_queue()
     swapchain_drawereid = world:create_entity{
         policy = {
             "ant.render|simplerender",
@@ -38,16 +46,9 @@ function sc_sys:init()
             simplemesh       = irender.full_quad(),
             material         = "/pkg/ant.resources/materials/postprocess/swapchain.material",
             visible_state    = "swapchain_queue",
-            swapchain_drawer = true,
             scene            = {},
         }
     }
-
-    RENDER_ARG = irender.pack_render_arg("swapchain_queue", swapchain_viewid)
-end
-
-function sc_sys:init_world()
-    util.create_queue(swapchain_viewid, mu.copy_viewrect(iviewport.device_size), nil, "swapchain_queue", "swapchain_queue")
 end
 
 local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
@@ -59,29 +60,26 @@ function sc_sys:data_changed()
     end
 end
 
-function sc_sys:swapchain()
-
-    local function get_scene_handle()
-        local se = w:first "stop_scene"
-        if se then
-            local be = w:first "blur pyramid_sample:in"
-            return be.pyramid_sample.scene_color_property.value
+local function get_scene_handle()
+    local se = w:first "stop_scene"
+    if se then
+        local be = w:first "blur pyramid_sample:in"
+        return be.pyramid_sample.scene_color_property.value
+    else
+        if not ENABLE_FXAA then
+            local tqe = w:first "tonemapping_queue render_target:in"
+            return fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
+        elseif not ENABLE_FSR then
+            local fqe = w:first "fxaa_queue render_target:in"
+            return fbmgr.get_rb(fqe.render_target.fb_idx, 1).handle
         else
-            if not ENABLE_FXAA then
-                local tqe = w:first "tonemapping_queue render_target:in"
-                return fbmgr.get_rb(tqe.render_target.fb_idx, 1).handle
-            elseif not ENABLE_FSR then
-                local fqe = w:first "fxaa_queue render_target:in"
-                return fbmgr.get_rb(fqe.render_target.fb_idx, 1).handle
-            else
-                return ifsr.get_fsr_output_handle()
-            end
+            return ifsr.get_fsr_output_handle()
         end
     end
-
-    local fd = w:first "swapchain_drawer filter_material:in"
+end
+function sc_sys:swapchain()
+    local fd = world:entity(swapchain_drawereid, "filter_material:in")
     imaterial.set_property(fd, "s_scene_color", get_scene_handle())
-
 end
 
 function sc_sys:render_submit()
