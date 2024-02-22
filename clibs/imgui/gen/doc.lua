@@ -427,10 +427,10 @@ local function write_func(func_meta)
         arguments = {},
     }
     if func_meta.original_class then
-        realname = func_meta.name:match("^"..func_meta.original_class.."_([%w]+)$")
+        realname = func_meta.name:match("^"..func_meta.original_class.."_([%w_]+)$")
         context.i = 2
     else
-        realname = func_meta.name:match "^ImGui_([%w]+)$"
+        realname = func_meta.name:match "^ImGui_([%w_]+)$"
     end
     while context.i <= #context.args do
         local type_meta = context.args[context.i]

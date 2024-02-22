@@ -433,7 +433,7 @@ write_ret["ImGuiIO*"] = function()
     return 1
 end
 
-for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar", "ImWchar16", "ImGuiID", "ImGuiKeyChord"} do
+for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar", "ImWchar16", "ImDrawIdx", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, context)
         context.idx = context.idx + 1
         if type_meta.default_value then
@@ -508,13 +508,13 @@ local function write_func(func_meta)
         arguments = {},
     }
     if func_meta.original_class then
-        realname = func_meta.name:match("^"..func_meta.original_class.."_([%w]+)$")
+        realname = func_meta.name:match("^"..func_meta.original_class.."_([%w_]+)$")
         context.i = 2
         writeln("static int %s(lua_State* L) {", realname)
         writeln("    auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", func_meta.original_class)
         function_string = ("OBJ.%s"):format(func_meta.original_fully_qualified_name);
     else
-        realname = func_meta.name:match "^ImGui_([%w]+)$"
+        realname = func_meta.name:match "^ImGui_([%w_]+)$"
         writeln("static int %s(lua_State* L) {", realname)
         function_string = func_meta.original_fully_qualified_name
     end
