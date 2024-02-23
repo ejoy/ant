@@ -243,6 +243,11 @@ lm:source_set "minizip-ng" {
 }
 
 lm:lua_source "zip-binding" {
+    objdeps = {
+        "gen-zconf",
+        "gen-zlib",
+        "gen-zlib_name_mangling",
+    },
 	includes = {
 		lm.AntDir .. "/3rd/minizip-ng",
 		ZLIBDIR,
