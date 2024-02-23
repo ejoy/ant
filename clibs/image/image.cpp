@@ -6,6 +6,7 @@
 #include <bx/readerwriter.h>
 #include <bx/pixelformat.h>
 #include <bimg/decode.h>
+#include <numbers>
 
 #include <glm/glm.hpp>
 #include <glm/ext/scalar_constants.hpp>
@@ -17,6 +18,8 @@
 
 #include "lua2struct.h"
 #include "fastio.h"
+
+constexpr auto const_pi = std::numbers::pi_v<float>;
 
 namespace lua_struct {
     template <>
@@ -646,8 +649,6 @@ write_at(ImageType &face, size_t iw, size_t ih, const glm::vec3 &v){
 
 static int
 lcubemap2equirectangular(lua_State *L){
-    constexpr float pi = glm::pi<float>();
-
     size_t cmsize;
     const char* cmdata = luaL_checklstring(L, 1, &cmsize);
     const char* fmt = luaL_checkstring(L, 2);
@@ -668,8 +669,8 @@ lcubemap2equirectangular(lua_State *L){
             glm::vec3 c(0.0);
             // float x = 2.0f * (iw) / w - 1.0f;
             // float y = 1.0f - 2.0f * (ih) / h;
-            // float theta = x * pi;
-            // float phi = y * pi * 0.5f;
+            // float theta = x * const_pi;
+            // float phi = y * const_pi * 0.5f;
             // glm::vec3 s = {
             //         std::cos(phi) * std::sin(theta),
             //         std::sin(phi),
@@ -682,8 +683,8 @@ lcubemap2equirectangular(lua_State *L){
                 const glm::vec2 u = hammersley(uint32_t(sample), 1.0f / numSamples);
                 float x = 2.0f * (iw + u.x) / w - 1.0f;
                 float y = 1.0f - 2.0f * (ih + u.y) / h;
-                float theta = x * pi;
-                float phi = y * pi * 0.5f;
+                float theta = x * const_pi;
+                float phi = y * const_pi * 0.5f;
                 glm::vec3 s = {
                         std::cos(phi) * std::sin(theta),
                         std::sin(phi),
@@ -726,8 +727,7 @@ lequirectangular2cubemap(lua_State *L) {
         return d[y*equirectangular->m_width+x];
     };
 
-    // const float pi = glm::pi<float>();
-    // const float pioverone = 1.f / pi;
+    // const float pioverone = 1.f / const_pi;
 
     // auto toRectilinear = [=](glm::vec3 s){
     //     float xf = std::atan2(s.x, s.z) * pioverone;   // range [-1.0, 1.0]
@@ -741,10 +741,9 @@ lequirectangular2cubemap(lua_State *L) {
 
     auto dir2spherecoord = [](const glm::vec3 &v)
     {
-        const float pi = glm::pi<float>();
         return glm::vec2(
-            0.5f + 0.5f * atan2(v.z, v.x) / pi,
-            acos(v.y) / pi);
+            0.5f + 0.5f * atan2(v.z, v.x) / const_pi,
+            acos(v.y) / const_pi);
     };
 
     const float invsize = 1.f / facesize;

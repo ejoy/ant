@@ -2,10 +2,11 @@
 #include <core/Layout.h>
 #include <core/ComputedValues.h>
 #include <core/Element.h>
+#include <numbers>
 
 namespace Rml {
 
-static const auto PI = acosf(-1);
+static constexpr auto const_pi = std::numbers::pi_v<float>;
 
 void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geometry, Box& edge) {
 	EdgeInsets<Color> border_color {
@@ -85,7 +86,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 		{ border_radius.topLeft, border_radius.topLeft },
 		border_radius.topLeft,
 		border_radius.topLeft,
-		PI, PI * 1.5f
+		const_pi, const_pi * 1.5f
 	);
 	Geometry::Path topLeftInner;
 	if (topLeftInnerRounded) {
@@ -93,7 +94,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 			{ border_radius.topLeft, border_radius.topLeft },
 			border_radius.topLeft - border.left,
 			border_radius.topLeft - border.top,
-			PI, PI * 1.5f
+			const_pi, const_pi * 1.5f
 		);
 	}
 	else {
@@ -110,7 +111,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 		{ bounds.size.w - border_radius.topRight, border_radius.topRight },
 		border_radius.topRight,
 		border_radius.topRight,
-		PI * 1.5f, PI * 2.f
+		const_pi * 1.5f, const_pi * 2.f
 	);
 	Geometry::Path topRightInner;
 	if (topRightInnerRounded) {
@@ -118,7 +119,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 			{ bounds.size.w - border_radius.topRight, border_radius.topRight },
 			border_radius.topRight - border.right,
 			border_radius.topRight - border.top,
-			PI * 1.5f, PI * 2.f
+			const_pi * 1.5f, const_pi * 2.f
 		);
 	}
 	else {
@@ -135,7 +136,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 		{ bounds.size.w - border_radius.bottomRight, bounds.size.h - border_radius.bottomRight },
 		border_radius.bottomRight,
 		border_radius.bottomRight,
-		0, PI * 0.5f
+		0, const_pi * 0.5f
 	);
 	Geometry::Path bottomRightInner;
 	if (bottomRightInnerRounded) {
@@ -143,7 +144,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 			{ bounds.size.w - border_radius.bottomRight, bounds.size.h - border_radius.bottomRight },
 			border_radius.bottomRight - border.right,
 			border_radius.bottomRight - border.bottom,
-			0, PI * 0.5f
+			0, const_pi * 0.5f
 		);
 	}
 	else {
@@ -160,7 +161,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 		{ border_radius.bottomLeft, bounds.size.h - border_radius.bottomLeft },
 		border_radius.bottomLeft,
 		border_radius.bottomLeft,
-		PI * 0.5f, PI
+		const_pi * 0.5f, const_pi
 	);
 	Geometry::Path bottomLeftInner;
 	if (bottomLeftInnerRounded) {
@@ -168,7 +169,7 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 			{ border_radius.bottomLeft, bounds.size.h - border_radius.bottomLeft },
 			border_radius.bottomLeft - border.left,
 			border_radius.bottomLeft - border.bottom,
-			PI * 0.5f, PI
+			const_pi * 0.5f, const_pi
 		);
 	}
 	else {
