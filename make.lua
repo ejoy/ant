@@ -16,14 +16,11 @@ local plat = (function ()
     return lm.os
 end)()
 
-lm.mode = "debug"
-lm.builddir = ("build/%s/%s"):format(plat, lm.mode)
-lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
-lm.compile_commands = "build"
-
 lm.AntDir = lm:path "."
 
 lm:conf {
+    compile_commands = "build",
+    mode = "debug",
     c = "c17",
     cxx = "c++20",
     --TODO
@@ -60,11 +57,14 @@ lm:conf {
     }
 }
 
+lm.builddir = ("build/%s/%s"):format(plat, lm.mode)
+lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
+
 if lm.sanitize then
     lm.builddir = ("build/%s/sanitize"):format(plat)
     lm.bindir = ("bin/%s/sanitize"):format(plat)
-    lm.mode = "debug"
     lm:conf {
+        mode = "debug",
         flags = "-fsanitize=address",
         gcc = {
             ldflags = "-fsanitize=address"
