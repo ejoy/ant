@@ -47,8 +47,10 @@ local function load_material_file(mf)
 end
 
 local function material_template(eid)
-    local prefab = hierarchy:get_node_info(eid)
-    return load_material_file(prefab.template.data.material)
+    local info = hierarchy:get_node_info(eid)
+    if info then
+        return load_material_file(info.template.data.material)
+    end
 end
 
 local function state_template(eid)

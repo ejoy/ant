@@ -22,6 +22,7 @@ lm:source_set "imgui" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_ENABLE_EXPERIMENTAL",
         defines,
     },
 }
@@ -37,6 +38,7 @@ lm:lua_source "imgui" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_ENABLE_EXPERIMENTAL",
         defines,
     },
 }
