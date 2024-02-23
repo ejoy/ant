@@ -8,7 +8,7 @@ local function bounce_time(time)
     elseif time < 2 / 2.75 then
         time = time - 1.5 / 2.75
         return 7.5625 * time * time + 0.75
-    
+
     elseif time < 2.5 / 2.75 then
         time = time - 2.25 / 2.75
         return 7.5625 * time * time + 0.9375
@@ -89,7 +89,7 @@ function util.print_srt(e, numtab)
 			tab = tab .. '\t'
 		end
 	end
-	
+
 	local srt = e.transform
 	local s_str = tostring(srt.s)
 	local r_str = tostring(srt.r)
@@ -157,7 +157,7 @@ function util.world_to_screen(vpmat, vr, posWS)
 		screenNDC = math3d.set_index(screenNDC, 2, 1.0 - sy)
 	end
 	local r = math3d.mul(screenNDC, math3d.vector(vr.w, vr.h, 1.0))
-	
+
 	local ratio = vr.ratio
 	if ratio ~= nil and ratio ~= 1 then
 		local z = math3d.index(r, 3)
@@ -179,7 +179,7 @@ function util.pt_line_distance(p1, p2, p)
 		x = math3d.cross(constant.XAXIS, d)
 	end
 	local n = math3d.cross(d, x)
-	
+
 	return math3d.dot(p1, n) - math3d.dot(p, n)
 end
 
@@ -260,11 +260,25 @@ function util.calc_viewrect(vr, ratio)
 end
 
 function util.get_scene_view_rect(resolution, device, scene_ratio)
+	-- todo : unused scene_ratio
 	local resolution_ratio = resolution.w / resolution.h
-	local vr_h = scene_ratio * device.h
-	vr_h = vr_h >= resolution.h and vr_h or resolution.h
-	local vr_w = vr_h * resolution_ratio
-	return {x = 0, y = 0, w = math.floor(vr_w), h = math.floor(vr_h)}
+	local device_ration = device.w / device.h
+	local scale
+	if device_ration > resolution_ratio then
+		-- long
+		if device.h > resolution.h then
+			scale = resolution.h / device.h
+		end
+	else
+		if device.w > resolution.w then
+			scale = resolution.w / device.w
+		end
+	end
+	if scale then
+		return { x = 0, y = 0, w = math.floor(device.w * scale + 0.5), h = math.floor(device.h * scale + 0.5) }
+	else
+		return { x = 0, y = 0, w = device.w , h =device.h }
+	end
 end
 
 function util.get_fix_ratio_scene_viewrect(vp, aspect_ratio, scene_ratio)
@@ -343,7 +357,7 @@ function util.calc_texture_matrix()
 	if math3d.get_origin_bottom_left() then
 		m[6] = -m[6]
 	end
-	
+
 	if math3d.get_homogeneous_depth() then
 		m[11], m[15] = 0.5, 0.5
 	end
