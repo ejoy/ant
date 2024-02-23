@@ -2,11 +2,11 @@ local lm = require "luamake"
 
 if lm.os == "windows" then
     lm:copy "copy_fmod" {
-        input = {
+        inputs = {
             lm.AntDir .. "/3rd/fmod/windows/core/lib/x64/fmod.dll",
             lm.AntDir .. "/3rd/fmod/windows/studio/lib/x64/fmodstudio.dll",
         },
-        output = {
+        outputs = {
             "../../" .. lm.bindir .. "/fmod.dll",
             "../../" .. lm.bindir .. "/fmodstudio.dll",
         },

@@ -36,14 +36,14 @@ lm:runlua {
 }
 
 lm:phony {
-    input = {
+    inputs = {
         "FirmwareBootstrap.h",
         "FirmwareIo.h",
         "FirmwareVfs.h",
         "FirmwareInitThread.h",
         "FirmwareDebugger.h",
     },
-    output = "firmware.cpp",
+    outputs = "firmware.cpp",
 }
 
 lm:lua_source "firmware" {

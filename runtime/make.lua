@@ -60,8 +60,8 @@ for path in fs.pairs(fs.path(lm.workdir) / "../pkg") do
 end
 
 lm:copy "copy_mainlua" {
-    input = "common/main.lua",
-    output = "../"..lm.bindir.."/main.lua",
+    inputs = "common/main.lua",
+    outputs = "../"..lm.bindir.."/main.lua",
 }
 
 lm:lua_source "ant_common" {

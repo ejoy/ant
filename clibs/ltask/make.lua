@@ -1,12 +1,12 @@
 local lm = require "luamake"
 
 lm:copy "copy_task_lua" {
-    input = {
+    inputs = {
         lm.AntDir .. "/3rd/ltask/service/root.lua",
         lm.AntDir .. "/3rd/ltask/service/timer.lua",
         lm.AntDir .. "/3rd/ltask/service/service.lua",
     },
-    output = {
+    outputs = {
         lm.AntDir .. "/engine/service/root.lua",
         lm.AntDir .. "/engine/service/timer.lua",
         lm.AntDir .. "/engine/service/service.lua",

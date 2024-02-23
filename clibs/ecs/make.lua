@@ -1,8 +1,8 @@
 local lm = require "luamake"
 
 lm:copy "copy_ecs_lua" {
-    input = lm.AntDir .. "/3rd/luaecs/ecs.lua",
-    output = lm.AntDir .. "/pkg/ant.luaecs/ecs.lua"
+    inputs = lm.AntDir .. "/3rd/luaecs/ecs.lua",
+    outputs = lm.AntDir .. "/pkg/ant.luaecs/ecs.lua"
 }
 
 lm:lua_source "ecs" {

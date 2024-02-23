@@ -47,8 +47,8 @@ for idx, d in ipairs(inputpaths) do
 end
 
 lm:copy "copy_Meshbaker" {
-    input = inputpaths,
-    output = outputpaths,
+    inputs = inputpaths,
+    outputs = outputpaths,
 }
 
 lm:lua_source "bake" {
