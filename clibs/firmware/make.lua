@@ -3,36 +3,36 @@ local lm = require "luamake"
 lm:runlua {
     script = "embed.lua",
     args = { "$in", "$out" },
-    input = "../../engine/firmware/bootstrap.lua",
-    output = "FirmwareBootstrap.h",
+    inputs = "../../engine/firmware/bootstrap.lua",
+    outputs = "FirmwareBootstrap.h",
 }
 
 lm:runlua {
     script = "embed.lua",
     args = { "$in", "$out" },
-    input = "../../engine/firmware/io.lua",
-    output = "FirmwareIo.h",
+    inputs = "../../engine/firmware/io.lua",
+    outputs = "FirmwareIo.h",
 }
 
 lm:runlua {
     script = "embed.lua",
     args = { "$in", "$out" },
-    input = "../../engine/firmware/vfs.lua",
-    output = "FirmwareVfs.h",
+    inputs = "../../engine/firmware/vfs.lua",
+    outputs = "FirmwareVfs.h",
 }
 
 lm:runlua {
     script = "embed.lua",
     args = { "$in", "$out" },
-    input = "../../engine/firmware/init_thread.lua",
-    output = "FirmwareInitThread.h",
+    inputs = "../../engine/firmware/init_thread.lua",
+    outputs = "FirmwareInitThread.h",
 }
 
 lm:runlua {
     script = "embed.lua",
     args = { "$in", "$out" },
-    input = "../../engine/firmware/debugger.lua",
-    output = "FirmwareDebugger.h",
+    inputs = "../../engine/firmware/debugger.lua",
+    outputs = "FirmwareDebugger.h",
 }
 
 lm:phony {

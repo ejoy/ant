@@ -88,8 +88,8 @@ lm:runlua "compile_ecs" {
         "$out",
         "@pkg",
     },
-    inputs = "pkg/**/*.ecs",
-    output = "clibs/ecs/ecs/component.hpp",
+    inputs = lm.AntDir.."/pkg/**/*.ecs",
+    outputs = "clibs/ecs/ecs/component.hpp",
 }
 
 if lm.os ~= "ios" and lm.os ~= "android" then

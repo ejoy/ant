@@ -43,7 +43,7 @@ local inputpaths = {
 local outputpaths = {}
 
 for idx, d in ipairs(inputpaths) do
-    outputpaths[idx] = "../../" .. lm.bindir .. "/" .. fs.path(d):filename():string()
+    outputpaths[idx] = "$bin/" .. fs.path(d):filename():string()
 end
 
 lm:copy "copy_Meshbaker" {

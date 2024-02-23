@@ -6,22 +6,22 @@ local MINIZIPDIR = lm.AntDir.."/3rd/minizip-ng"
 lm:runlua "gen-zconf" {
     script = "configure_file.lua",
     args = { "$in", "$out" },
-    input = ZLIBDIR.."/zconf-ng.h.in",
-    output = "$builddir/gen-zlib/zconf-ng.h",
+    inputs = ZLIBDIR.."/zconf-ng.h.in",
+    outputs = "$builddir/gen-zlib/zconf-ng.h",
 }
 
 lm:runlua "gen-zlib" {
     script = "configure_file.lua",
     args = { "$in", "$out" },
-    input = ZLIBDIR.."/zlib-ng.h.in",
-    output = "$builddir/gen-zlib/zlib-ng.h",
+    inputs = ZLIBDIR.."/zlib-ng.h.in",
+    outputs = "$builddir/gen-zlib/zlib-ng.h",
 }
 
 lm:runlua "gen-zlib_name_mangling" {
     script = "configure_file.lua",
     args = { "$in", "$out" },
-    input = ZLIBDIR.."/zlib_name_mangling.h.empty",
-    output = "$builddir/gen-zlib/zlib_name_mangling-ng.h",
+    inputs = ZLIBDIR.."/zlib_name_mangling.h.empty",
+    outputs = "$builddir/gen-zlib/zlib_name_mangling-ng.h",
 }
 
 lm:source_set "zlib-ng-x86-simd" {

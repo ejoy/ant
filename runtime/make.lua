@@ -61,7 +61,7 @@ end
 
 lm:copy "copy_mainlua" {
     inputs = "common/main.lua",
-    outputs = "../"..lm.bindir.."/main.lua",
+    outputs = "$bin/main.lua",
 }
 
 lm:lua_source "ant_common" {
