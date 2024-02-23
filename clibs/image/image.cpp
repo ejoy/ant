@@ -19,7 +19,7 @@
 #include "lua2struct.h"
 #include "fastio.h"
 
-constexpr auto const_pi = std::numbers::pi_v<float>;
+static constexpr auto const_pi = std::numbers::pi_v<float>;
 
 namespace lua_struct {
     template <>
