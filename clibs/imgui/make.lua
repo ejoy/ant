@@ -84,8 +84,6 @@ lm:lua_source "imgui" {
         "backend/imgui_impl_bgfx.cpp",
     },
     defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
-        "GLM_ENABLE_EXPERIMENTAL",
         defines,
     },
 }

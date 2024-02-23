@@ -10,8 +10,6 @@ lm:lua_source "image" {
     },
     defines = {
         "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
-        "GLM_FORCE_QUAT_DATA_XYZW",
-        "GLM_ENABLE_EXPERIMENTAL",
     },
     includes = {
         BgfxInclude,

@@ -28,7 +28,12 @@ lm:conf {
     cxx = "c++20",
     --TODO
     visibility = "default",
-    defines = "BGFX_CONFIG_DEBUG_UNIFORM=0",
+    defines = {
+        "BGFX_CONFIG_DEBUG_UNIFORM=0",
+        "GLM_ENABLE_EXPERIMENTAL",
+        "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_FORCE_INTRINSICS",
+    },
     msvc = {
         defines = {
             "_CRT_SECURE_NO_WARNINGS",
@@ -36,10 +41,7 @@ lm:conf {
         },
         flags = {
             "/utf-8",
-            "/wd5105"
-        },
-        ldflags = lm.mode == "release" and {
-            "/DEBUG:FASTLINK"
+            "/arch:AVX2",
         }
     },
     ios = {

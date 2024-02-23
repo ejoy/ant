@@ -3,14 +3,9 @@
 #include <math.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
+#include <numbers>
 
-#include <version>
-#if defined(__cpp_lib_math_constants)
-#	include <numbers>
-static constexpr float const_pi = std::numbers::pi_v<float>;
-#else
-static constexpr float const_pi = static_cast<float>(3.141592653589793);
-#endif
+static constexpr auto const_pi = std::numbers::pi_v<float>;
 
 namespace Rml {
 

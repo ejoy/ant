@@ -78,14 +78,13 @@ local function update_vfs()
 		return
 	end
 	print("repo rebuild ...")
-	local c = changed
 	changed = {}
 	changed_mark = {}
 	changed_time = nil
 	repo:close()
-	repo = vfsrepo.new_std {
+	repo = assert(vfsrepo.new_std {
 		rootpath = fs.path(REPOPATH),
-	}
+	})
 	for _, s in pairs(CacheCompileS) do
 		s.resource_verify = true
 	end
@@ -96,12 +95,9 @@ end
 
 do
 	print("repo init ...")
-	repo = vfsrepo.new_std {
+	repo = assert(vfsrepo.new_std {
 		rootpath = fs.path(REPOPATH),
-	}
-	if repo == nil then
-		error "Create repo failed."
-	end
+	})
 	for _, mount in ipairs(repo:initconfig()) do
 		fswatch:add(mount.path)
 	end

@@ -15,8 +15,6 @@ lm:lua_source "render_core"{
         lm.AntDir .. "/pkg/ant.material",
     },
     defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
-        "GLM_ENABLE_EXPERIMENTAL",
         lm.mode == "debug" and "RENDER_DEBUG" or nil,
     },
     objdeps = "compile_ecs",
@@ -34,10 +32,6 @@ lm:lua_source "render" {
         lm.AntDir .. "/3rd/luaecs",
         lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/clibs/ecs",
-    },
-    defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
-        "GLM_ENABLE_EXPERIMENTAL",
     },
     sources = {
         "cull/cull.cpp",
