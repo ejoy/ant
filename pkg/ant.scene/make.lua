@@ -12,6 +12,7 @@ lm:lua_source "scene" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_ENABLE_EXPERIMENTAL",
     },
     deps = "foundation",
     objdeps = "compile_ecs",

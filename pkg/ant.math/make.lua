@@ -10,6 +10,7 @@ local sources = {
 local defines = {
     "_USE_MATH_DEFINES",
     "GLM_FORCE_QUAT_DATA_XYZW",
+    "GLM_ENABLE_EXPERIMENTAL",
 }
 
 if lm.mode == "debug" then

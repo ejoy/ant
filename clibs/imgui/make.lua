@@ -85,6 +85,7 @@ lm:lua_source "imgui" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_ENABLE_EXPERIMENTAL",
         defines,
     },
 }

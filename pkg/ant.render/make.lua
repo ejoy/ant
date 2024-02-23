@@ -16,6 +16,7 @@ lm:lua_source "render_core"{
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_ENABLE_EXPERIMENTAL",
         lm.mode == "debug" and "RENDER_DEBUG" or nil,
     },
     objdeps = "compile_ecs",
@@ -36,6 +37,7 @@ lm:lua_source "render" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_ENABLE_EXPERIMENTAL",
     },
     sources = {
         "cull/cull.cpp",
