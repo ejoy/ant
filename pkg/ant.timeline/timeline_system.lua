@@ -74,7 +74,7 @@ local function engine_event_handler(t, tid, event, ud)
 end
 
 function tl_sys.data_changed()
-	for e in w:select "start_timeline?out timeline:in" do
+	for e in w:select "start_timeline timeline:in" do
 		add_event(e.timeline.tid, e.timeline)
 	end
 	w:clear "start_timeline"
