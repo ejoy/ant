@@ -1,13 +1,44 @@
 local lm = require "luamake"
 
-local rootdir = "../../../../"
+lm:source_set "efk" {
+    includes = {
+        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/Effekseer",
+        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerRendererCommon",
+        lm.AntDir .. "/3rd/bgfx/include",
+        lm.AntDir .. "/3rd/bx/include",
+    },
+    sources = {
+        "efkbgfx/renderer/bgfxrenderer.cpp",
+        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/Effekseer/Effekseer/**/*.cpp",
+        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerMaterial/*.cpp",
+        lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerRendererCommon/**/*.cpp",
+    },
+    defines = {
+        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    },
+    gcc = {
+        flags = {
+            "-Wno-sign-compare",
+            "-Wno-unused-but-set-variable",
+            "-Wno-format",
+            "-Wno-unused-variable",
+        }
+    },
+    clang = {
+        flags = {
+            "-Wno-delete-non-abstract-non-virtual-dtor",
+            "-Wno-unused-but-set-variable",
+            "-Wno-unused-variable",
+            "-Wno-inconsistent-missing-override",
+        }
+    }
+}
 
-lm.EfkDir       = rootdir .. "3rd/"
-lm.BgfxBinDir   = lm.bindir
---BgfxDir/BxDir/BimgDir have been defined in clibs/bgfx/bgfx.lua
-lm:import "efkbgfx/luabinding/make.lua"
-lm:import "efkbgfx/renderer/make.lua"
-lm:import "efkbgfx/shaders/make.lua"
+lm:lua_source "efk" {
+    sources = {
+        "efkbgfx/luabinding/efkcallback.c",
+    }
+}
 
 lm:lua_source "efk" {
     includes = {
@@ -21,9 +52,5 @@ lm:lua_source "efk" {
     },
     sources = {
         "lefk.cpp",
-    },
-    deps = {
-        "source_efkbgfx_lib",
-        "source_effekseer_callback",
-    },
+    }
 }
