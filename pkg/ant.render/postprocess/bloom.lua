@@ -12,6 +12,7 @@ end
 local math3d    = require "math3d"
 local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local hwi       = import_package "ant.hwi"
+local iviewport = ecs.require "viewport.state"
 
 local queuemgr  = ecs.require "queue_mgr"
 
@@ -24,23 +25,24 @@ local BLOOM_PARAM = math3d.ref(math3d.vector(0, setting:get "graphic/postprocess
 
 local MIP_COUNT<const> = 4
 
-function bloom_sys:init()
+local pyramid_sampleeid
+local function register_queues()
     for i=1, MIP_COUNT do
         queuemgr.register_queue(DOWNSAMPLE_NAME..i)
         queuemgr.register_queue(UPSAMPLE_NAME..i)
     end
-end
 
-local pyramid_sampleeid
-function bloom_sys:init_world()
     local pyramid_sample = {
         downsample      = ips.init_sample(MIP_COUNT, DOWNSAMPLE_NAME,   BLOOM_DS_VIEWID),
         upsample        = ips.init_sample(MIP_COUNT, UPSAMPLE_NAME,     BLOOM_US_VIEWID),
         sample_params   = BLOOM_PARAM,
     }
 
-    local mq = w:first "main_queue render_target:in"
-    pyramid_sampleeid = ips.create(pyramid_sample, mq.render_target.view_rect)
+    pyramid_sampleeid = ips.create(pyramid_sample, iviewport.viewrect)
+end
+
+function bloom_sys:init()
+    register_queues()
 end
 
 function bloom_sys:bloom()

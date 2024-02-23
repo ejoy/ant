@@ -23,8 +23,6 @@ lm.compile_commands = "build"
 
 lm.AntDir = lm:path "."
 
-local EnableEditor = lm.os ~= "ios" and lm.os ~= "android"
-
 lm:conf {
     c = "c17",
     cxx = "c++20",
@@ -60,9 +58,7 @@ lm:conf {
     }
 }
 
-local EnableSanitize = false
-
-if EnableSanitize then
+if lm.sanitize then
     lm.builddir = ("build/%s/sanitize"):format(plat)
     lm.bindir = ("bin/%s/sanitize"):format(plat)
     lm.mode = "debug"
@@ -94,7 +90,7 @@ lm:runlua "compile_ecs" {
     output = "clibs/ecs/ecs/component.hpp",
 }
 
-if EnableEditor then
+if lm.os ~= "ios" and lm.os ~= "android" then
     lm:phony "tools" {
         deps = {
             "gltf2ozz",
@@ -111,11 +107,10 @@ if EnableEditor then
     }
     lm:default {
         "editor",
-        lm.compiler == "msvc" and EnableSanitize and "copy_asan",
+        lm.compiler == "msvc" and lm.sanitize and "copy_asan",
     }
 else
     lm:default {
         "runtime",
-        lm.compiler == "msvc" and EnableSanitize and "copy_asan",
     }
 end

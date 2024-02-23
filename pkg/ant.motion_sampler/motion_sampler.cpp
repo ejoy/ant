@@ -152,49 +152,48 @@ static int lsample(lua_State *L){
 
         if (needupdate){
 			auto &scene = e.get<component::scene>();
-
 			auto M = w->math3d->M;
 
 			if (mt->s.get()){
 				ozz::animation::Float3TrackSamplingJob job;
-				ozz::math::Float3 s;
+				const math_t sid = math_import(M, NULL, MATH_TYPE_VEC4, 1);
 				job.track = mt->s.get();
-				job.result = &s;
+				job.result = (ozz::math::Float3*)(math_value(M, sid));
 				job.ratio = ms.ratio;
 				if (!job.Run()){
 					luaL_error(L, "Sampling scale failed");
 				}
 
 				math_unmark(M, scene.s);
-				scene.s = math_mark(M, math_import(M, &s.x, MATH_TYPE_VEC4, 1));
+				scene.s = math_mark(M, sid);
 			}
 
 			if (mt->r.get()){
 				ozz::animation::QuaternionTrackSamplingJob job;
-				ozz::math::Quaternion r;
+				const math_t qid = math_import(M, NULL, MATH_TYPE_QUAT, 1);
 				job.track = mt->r.get();
-				job.result = &r;
+				job.result = (ozz::math::Quaternion*)math_value(M, qid);
 				job.ratio = ms.ratio;
 				if (!job.Run()){
 					luaL_error(L, "Sampling rotation failed");
 				}
 
 				math_unmark(M, scene.r);
-				scene.r = math_mark(M, math_import(M, &r.x, MATH_TYPE_QUAT, 1));
+				scene.r = math_mark(M, qid);
 			}
 
 			if (mt->t.get()){
 				ozz::animation::Float3TrackSamplingJob job;
-				ozz::math::Float3 t;
+				const math_t tid = math_import(M, NULL, MATH_TYPE_VEC4, 1);
 				job.track = mt->t.get();
-				job.result = &t;
+				job.result = (ozz::math::Float3*)(math_value(M, tid));
 				job.ratio = ms.ratio;
 				if (!job.Run()){
 					luaL_error(L, "Sampling translation failed");
 				}
 
 				math_unmark(M, scene.t);
-				scene.t = math_mark(M, math_import(M, &t.x, MATH_TYPE_VEC4, 1));
+				scene.t = math_mark(M, tid);
 			}
             e.enable_tag<component::scene_needchange>();
 		}

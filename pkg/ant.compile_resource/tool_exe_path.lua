@@ -21,13 +21,7 @@ local function check_tool_path_valid(path)
 end
 
 local function find_bindir()
-    local antdir = os.getenv "antdir"
-    local rootpath
-    if antdir then
-        rootpath = lfs.path(antdir) / "bin" / platform.os
-    else
-        rootpath = lfs.exe_path():parent_path():parent_path()
-    end
+    local rootpath = lfs.exe_path():parent_path():parent_path()
 
     local releasepath = rootpath / "release"
     if check_tool_path_valid(releasepath) then

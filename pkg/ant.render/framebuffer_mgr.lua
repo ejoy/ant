@@ -235,6 +235,10 @@ function mgr.get_depth(fbidx)
 	return rb
 end
 
+function mgr.is_depth_rb(rb)
+	return VALID_DEPTH_FMT[rb.format]
+end
+
 function mgr.clear()
 	for _, rb in pairs(RENDER_BUFFERS) do
 		if not rb.unmark then

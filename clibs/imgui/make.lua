@@ -3,8 +3,8 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 local defines = {
-    lm.os ~= "macos" and "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
-    lm.os ~= "macos" and "IMGUI_DISABLE_OBSOLETE_KEYIO",
+    "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
+    "IMGUI_DISABLE_OBSOLETE_KEYIO",
     "IMGUI_DISABLE_DEBUG_TOOLS",
     "IMGUI_DISABLE_DEMO_WINDOWS",
     "IMGUI_DISABLE_DEFAULT_ALLOCATORS",
