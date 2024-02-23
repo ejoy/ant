@@ -86,16 +86,18 @@ local function gen_commands(config)
 		end
 	end
 
+	local level = config.optimizelevel
+	local def_level
 	if config.debug then
 		commands[#commands+1] = "--debug"
+		def_level = 0
 	else
-		local level = config.optimizelevel
-		if not level then 
-			level = (config.renderer:match "direct3d" and config.stage == "cs") and 1 or 3
-		end
-		commands[#commands+1] = "-O"
-		commands[#commands+1] = tostring(level)
+		def_level = 3
 	end
+
+	level = level or assert(def_level)
+	commands[#commands+1] = "-O"
+	commands[#commands+1] = tostring(level)
 
 	if config.varying_path then
         commands[#commands+1] = "--varyingdef"
