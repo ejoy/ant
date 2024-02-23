@@ -341,9 +341,6 @@ function m.process_wait_queue()
                 local ee <close> = world:entity(eid, "visible_state?in mesh?in")
                 if ee.mesh and ee.visible_state then
                     ivs.set_state(ee, params.QUEUE_NAME, state)
-                    if state then
-                        irender.draw(RENDER_ARG, eid) 
-                    end
                 end
             end
         end
@@ -380,7 +377,6 @@ function m.process_wait_queue()
         local cur_name = wait_queue[1]
         local cur_prefab = params.PREFABS[cur_name]
         if not is_prefab_ready(cur_prefab) then
-            add_wait_queue(cur_name)
             goto continue
         end
         table.remove(wait_queue, 1)
