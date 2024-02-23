@@ -75,7 +75,7 @@ if lm.sanitize then
     }
     lm:msvc_copydll "copy_asan" {
         type = "asan",
-        output = lm.bindir,
+        outputs = lm.bindir,
     }
 end
 
