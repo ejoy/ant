@@ -13,7 +13,7 @@ local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"
 local hwi           = import_package "ant.hwi"
 local DEFAULT_SIZE<const> = 50
-
+local ROAD_ENTITIES = {}
 -- local ROT_TABLES = {
 --     N = {0,   270, 180, 0},
 --     E = {270, 0,   90,  0},
@@ -212,6 +212,12 @@ function road_sys:exit()
     if ROAD_MESH and ROAD_MESH.vb.handle then
         ROAD_MESH.vb.handle = destroy_handle(ROAD_MESH.vb.handle)
     end
+    for _, entities in pairs(ROAD_ENTITIES) do
+        for _, entity in pairs(entities) do
+            w:remove(entity.drawindirect)
+            w:remove(entity.compute)
+        end
+    end
 end
 
 local function to_dispath_num(indirectnum)
@@ -364,7 +370,6 @@ local function create_road_entities(gid, render_layer, road, indicator, road_mat
     }
 end
 
-local ROAD_ENTITIES = {}
 
 local iroad         = {}
 local function build_road_mesh(rw, rh)
