@@ -42,9 +42,6 @@ lm:conf {
         flags = {
             "/utf-8",
             "/arch:AVX2",
-        },
-        ldflags = lm.mode == "release" and {
-            "/DEBUG:FASTLINK"
         }
     },
     ios = {
