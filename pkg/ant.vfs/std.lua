@@ -11,6 +11,10 @@ function REPO_MT:__close()
 	self._lock:close()
 end
 
+function REPO_MT:close()
+	self._lock:close()
+end
+
 local function filelock(filepath)
 	filepath = filepath / "vfs.lock"
 	local f = lfs.filelock(filepath)
