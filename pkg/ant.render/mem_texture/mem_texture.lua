@@ -5,27 +5,23 @@ local mt_sys   = ecs.system "mem_texture_system"
 local ltask     = require "ltask"
 local mtc       = ecs.require "ant.render|mem_texture.mem_texture_common"
 
-function mt_sys:update_filter()
-    mtc.copy_main_material()
+function mt_sys:init()
+    mtc.register_new_rt()
 end
 
-function mt_sys:entity_init()
-    mtc.get_camera_srt()
+function mt_sys:update_filter()
+    mtc.copy_main_material()
 end
 
 function mt_sys:data_changed()
     mtc.process_wait_queue()
 end
 
-local S = ltask.dispatch()
-
-function mt_sys:init()
-    mtc.register_new_rt()
-end
-
 function mt_sys:exit()
     mtc.clear_prefab_cache()
 end
+
+local S = ltask.dispatch()
 
 function S.get_portrait_handle(name, width, height)
     return mtc.get_portrait_handle(name, width, height)
