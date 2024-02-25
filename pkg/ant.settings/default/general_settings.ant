@@ -1,5 +1,4 @@
 debug:
   show_bounding: false
-scene:
-  scene_ratio: 0.75
-  resolution: 1280x720
+#scene:
+  #resolution: 1024x768

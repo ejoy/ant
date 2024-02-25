@@ -38,7 +38,7 @@ local function calc_scene_viewrect()
     }
 end
 
-local scene_viewrect<const> = calc_scene_viewrect() --custom_vr and custom_vr or calc_scene_viewrect()
+local scene_viewrect<const> = custom_vr and custom_vr or calc_scene_viewrect()
 
 local function log_viewrect(scale_vr, device_vr)
     local sceneratio<const>         = scale_vr.w/device_vr.w
