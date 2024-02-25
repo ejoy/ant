@@ -2,6 +2,11 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+--disable
+if true then
+    return
+end
+
 local setting       = import_package "ant.settings"
 local hwi           = import_package "ant.hwi"
 local mu            = import_package "ant.math".util

@@ -17,7 +17,7 @@ local drag_file
 local m = {}
 
 local function cvt2scenept(x, y)
-    return x - iviewport.device_size.x, y - iviewport.device_size.y
+    return x - iviewport.device_viewrect.x, y - iviewport.device_viewrect.y
 end
 
 local function in_view(x, y)
@@ -77,7 +77,7 @@ function m.show()
         --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
         local x, y, ww, hh = ImGuiInternal.DockBuilderGetCentralRect(node_id)
         x, y = x - viewport.Pos.x, y - viewport.Pos.y
-        local vp = iviewport.device_size
+        local vp = iviewport.device_viewrect
         if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
             if platform.os == "macos" then
                 vp.x = x * viewport.DpiScale

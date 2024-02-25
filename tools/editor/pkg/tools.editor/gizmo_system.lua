@@ -35,7 +35,7 @@ local uniform_scale = false
 local local_space = false
 
 local function cvt2scenept(x, y)
-    return x - iviewport.device_size.x, y - iviewport.device_size.y
+    return x - iviewport.device_viewrect.x, y - iviewport.device_viewrect.y
 end
 
 function gizmo:update()

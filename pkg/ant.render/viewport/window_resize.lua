@@ -11,29 +11,28 @@ local iviewport = ecs.require "ant.render|viewport.state"
 local ENABLE_HVFILP<const> 	= setting:get "graphic/postprocess/hv_flip/enable"
 
 local function update_config(ww, hh)
-	local vp = {x = 0, y = 0, w = ww, h = hh}
-	local resolution = iviewport.resolution
-	local scene_ratio = iviewport.scene_ratio
-	local vr = mu.get_scene_view_rect(resolution, vp, scene_ratio)
+	--local vp = {x = 0, y = 0, w = ww, h = hh}
+	-- local resolution = iviewport.resolution
+	-- local scene_ratio = iviewport.scene_ratio
+	-- local vr = mu.get_scene_view_rect(resolution, vp, scene_ratio)
+	local vr = iviewport.viewrect
 	if ENABLE_HVFILP then
-		vp.w, vp.h = hh, ww
+		vr.w, vr.h = hh, ww
 	else
-		vp.w, vp.h = ww, hh
+		vr.w, vr.h = ww, hh
 	end
-	iviewport.viewrect = vr
-	iviewport.device_size = vp
 end
 
 local resize_mb			= world:sub {"resize"}
-local ratio_change_mb	= world:sub {"framebuffer_ratio_changed"}
 
 local winresize_sys = ecs.system "window_resize_system"
 
-
 local function winsize_update(s)
 	update_config(s.w, s.h)
+
+	local vp = iviewport.device_viewrect
 	rhwi.reset(nil, s.w, s.h)
-	local vp = iviewport.device_size
+	
 	local vr = iviewport.viewrect
 	log.info("device_size:", vp.x, vp.y, vp.w, vp.h)
 	log.info("main viewrect:", vr.x, vr.y, vr.w, vr.h)
@@ -41,17 +40,11 @@ local function winsize_update(s)
 end
 
 function winresize_sys:init_world()
-	local vp = iviewport.device_size
-	winsize_update({w=vp.w, h=vp.h})
+	winsize_update(iviewport.viewrect)
 end
 
 function winresize_sys:start_frame()
 	for _, ww, hh in resize_mb:unpack() do
-		winsize_update({w=ww, h=hh})
-	end
-
-	for _, which, ratio in ratio_change_mb:unpack() do
-		local _ = which == "scene_ratio" or error ("Invalid ratio type:" .. which)
-		world:pub{"scene_ratio_changed", ratio}
+		winsize_update{w=ww, h=hh}
 	end
 end
