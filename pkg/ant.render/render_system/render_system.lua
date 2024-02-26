@@ -160,24 +160,30 @@ local function update_default_material_index(e)
 end
 
 local function check_set_depth_state_as_equal(state)
-	local ss = bgfx.parse_state(state)
-	ss.DEPTH_TEST = "EQUAL"
-	local wm = ss.WRITE_MASK
-	ss.WRITE_MASK = wm and wm:gsub("Z", "") or "RGBA"
-	return bgfx.make_state(ss)
+	local ss = irender.has_depth_test(state)
+	if ss then
+		ss.DEPTH_TEST = "EQUAL"
+		if ss.WRITE_MASK then
+			ss.WRITE_MASK = ss.WRITE_MASK:gsub("Z", "")
+		end
+		return bgfx.make_state(ss)
+	end
 end
 
 local function check_update_main_queue_material(e)
 	w:extend(e, "visible_state:in")
+	--TODO: bug here, when we init with render_layer which is opacity layer, then we changed it as not opacity layer, it will has wrong state
 	if ENABLE_PRE_DEPTH and e.visible_state["main_queue"] and irl.is_opacity_layer(assert(e.render_layer)) then
 		w:extend(e, "filter_material:in")
 		local fm = e.filter_material
 		local mr = assetmgr.resource(e.material)
 		local mi = fm.DEFAULT_MATERIAL
 		if not mr.fx.setting.no_predepth then
-			local nmi = create_material_instance(e)
-			nmi:set_state(check_set_depth_state_as_equal(mi:get_state()))
-			mi = nmi
+			local ns = check_set_depth_state_as_equal(mi:get_state())
+			if ns then
+				mi = create_material_instance(e)
+				mi:set_state(ns)
+			end
 		end
 
 		local midx = queuemgr.material_index "main_queue"

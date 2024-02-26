@@ -332,6 +332,17 @@ function irender.align_buffer(s, alignsize)
     return s
 end
 
+local NO_DEPTH_TEST_STATES<const> = {
+    NEVER = true, ALWAYS = true, NONE = true
+}
+
+function irender.has_depth_test(s)
+	local ss = bgfx.parse_state(s)
+	if ss.DEPTH_TEST and not NO_DEPTH_TEST_STATES[ss.DEPTH_TEST] then
+        return ss
+    end
+end
+
 function irender.group_flush(go)
 	go:flush()
     go:filter("render_object_visible", "render_object")
