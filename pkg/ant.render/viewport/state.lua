@@ -8,41 +8,32 @@ local width, height = world.args.width, world.args.height
 local DEFAULT_RESOLUTION_WIDTH <const> = 1280
 local DEFAULT_RESOLUTION_HEIGHT <const> = 720
 
-local device_viewrect<const> = {
+local device_viewrect = {
     x = 0,
     y = 0,
     w = width,
     h = height
 }
 
-local function get_resolution()
-    local native = setting:get "scene/resolution/native"
-    if native then
-        return device_viewrect
-    end
-    local r = setting:get "scene/resolution/size"
-    if r then
-        local w, h = r:match "(%d+)%a(%d+)"
-        local _ = w or error(("Invalid scene/resolution define:%s, it should be define like this: 1280x720"):format(r))
-        return {x=0, y=0, w=tonumber(w), h=tonumber(h)}
-    end
-end
+local scene_ratio<const> = setting:get "scene/ratio"
 
-local custom_vr<const> = get_resolution()
-
-local function calc_scene_viewrect()
+local function calc_scene_size()
     assert(device_viewrect.h > 0)
     assert(device_viewrect.w > device_viewrect.h)
-    local r = device_viewrect.w / device_viewrect.h
-    local h = math.min(DEFAULT_RESOLUTION_HEIGHT, device_viewrect.h)
+    local dr = device_viewrect.w / device_viewrect.h
 
-    return {
-        x=0, y=0,
-        w=math.floor(r*h+0.5), h=h,
-    }
+    local h
+    if scene_ratio then
+        h = math.floor(device_viewrect.h * scene_ratio+0.5)
+    else
+        h = math.min(DEFAULT_RESOLUTION_HEIGHT, device_viewrect.h)
+    end
+
+    return math.floor(dr*h+0.5), h
 end
 
-local scene_viewrect<const> = custom_vr and custom_vr or calc_scene_viewrect()
+local scene_viewrect = {x=0, y=0}
+scene_viewrect.w, scene_viewrect.h = calc_scene_size()
 
 local function log_viewrect(scale_vr, device_vr)
     local sceneratio<const>         = scale_vr.w/device_vr.w
@@ -57,9 +48,14 @@ end
 
 log_viewrect(scene_viewrect, device_viewrect)
 
+local function resize(w, h)
+    device_viewrect.w, device_viewrect.h = w, h
+    scene_viewrect.w, scene_viewrect.h = calc_scene_size()
+end
+
 return {
     viewrect        = scene_viewrect,
-    custom_vr       = custom_vr,
+    resize          = resize,
     device_viewrect = device_viewrect,
     calc_scene_viewrect = calc_scene_viewrect
 }

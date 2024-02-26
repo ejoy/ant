@@ -29,65 +29,46 @@ add_view "csm1"
 add_view "csm2"
 add_view "csm3"
 add_view "csm4"			-- 5
---TODO: vblur and hblur can use only 1 viewid
-add_view "vblur"
-add_view "hblur"
--- NOTE: omni shadowmap is not use right now
--- add_view "omni_Green"
--- add_view "omni_Yellow"
--- add_view "omni_Blue"
--- add_view "omni_Red"
-add_view "panorama2cubmap"
-add_view "panorama2cubmapMips"
-add_view "ibl"					--10
-add_view "ibl_SH_readback"
+add_view "ibl"
 add_view "pre_depth"
 add_view "scene_depth"
-add_view "depth_resolve"
-add_view "depth_mipmap"			--15
 add_view "ssao"
-add_view "main_view"
+add_view "main_view"	--10
 add_view "outline"
 add_view "velocity"
-add_view "svblur"
-add_view "shblur"
---start postprocess
-add_view "postprocess_obj"
---add_view "blur"
+--TODO: blur and bloom can merge?
+--blur
 add_view "blur_ds1"
 add_view "blur_ds2"
-add_view "blur_ds3"
+add_view "blur_ds3"		--15
 add_view "blur_ds4"
 add_view "blur_us1"
 add_view "blur_us2"
 add_view "blur_us3"
-add_view "blur_us4"
-add_view "vblur"
-add_view "hblur"
---add_view "bloom"
+add_view "blur_us4"		--20
+--bloom
 add_view "bloom_ds1"
 add_view "bloom_ds2"
 add_view "bloom_ds3"
 add_view "bloom_ds4"
-add_view "bloom_us1"
+add_view "bloom_us1"	--25
 add_view "bloom_us2"
 add_view "bloom_us3"
 add_view "bloom_us4"
 add_view "tonemapping"
-add_view "effect_view"
+add_view "effect_view"	--30
 add_view "taa"
 add_view "taa_copy"
 add_view "taa_present"
 add_view "fxaa"
-add_view "fsr_resolve"
+add_view "fsr_resolve"	--35
 add_view "fsr_easu"
 add_view "fsr_rcas"
 add_view "swapchain"
 --end postprocess
 
-add_view "lightmap_storage"
-add_view "pickup"
-add_view "pickup_blit"			--25
+add_view "pickup"	
+add_view "pickup_blit"	--40
 add_view "mem_texture"
 add_view "uiruntime"
 
