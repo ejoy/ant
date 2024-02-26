@@ -35,27 +35,29 @@ end
 local scene_viewrect = {x=0, y=0}
 scene_viewrect.w, scene_viewrect.h = calc_scene_size()
 
-local function log_viewrect(scale_vr, device_vr)
-    log.info("scene viewrect: ",    scale_vr.x, scale_vr.y, scale_vr.w, scale_vr.h)
-    log.info("device viewport: ",   device_vr.x, device_vr.y, device_vr.w, device_vr.h)
+local function log_viewrect()
+    local vr, dvr = scene_viewrect, device_viewrect
+    log.info("scene viewrect: ",    vr.x, vr.y, vr.w, vr.h)
+    log.info("device viewport: ",   dvr.x, dvr.y, dvr.w, dvr.h)
 
-    local scene_scale_ratio<const>  = scale_vr.w/device_vr.w
+    local scene_scale_ratio<const>  = vr.w/dvr.w
     log.info("scene scale ratio: ", scene_scale_ratio)
 
-    log.info("device width/hegiht:", device_vr.w/device_vr.h)
-    log.info("scene width/hegiht:",  scale_vr.w/scale_vr.h)
+    log.info("scene width/hegiht:",  vr.w/vr.h)
+    log.info("device width/hegiht:", dvr.w/dvr.h)
 end
 
-log_viewrect(scene_viewrect, device_viewrect)
+log_viewrect()
 
 local function resize(w, h)
     device_viewrect.w, device_viewrect.h = w, h
     scene_viewrect.w, scene_viewrect.h = calc_scene_size()
+
+    log_viewrect()
 end
 
 return {
     viewrect        = scene_viewrect,
     resize          = resize,
     device_viewrect = device_viewrect,
-    calc_scene_viewrect = calc_scene_viewrect
 }
