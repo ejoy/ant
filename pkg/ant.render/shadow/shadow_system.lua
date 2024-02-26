@@ -130,7 +130,7 @@ function shadow_sys:init()
 	imaterial.system_attrib_update("u_shadow_param1", shadowcfg.shadow_param1())
 	local ssp = shadowcfg.soft_shadow_param()
 	if ssp then
-		imaterial.system_attrib_update("u_soft_shadow_param", ssp)
+		imaterial.system_attrib_update("u_shadow_filter_param", ssp)
 	end
 end
 

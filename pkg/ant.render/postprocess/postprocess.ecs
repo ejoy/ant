@@ -116,6 +116,3 @@ system "fsr_system"
 
 -- system "simpledof_system"
 --     .implement "postprocess/DoF2.lua"
-
-feature "hv_flip"
-    .import "postprocess/hv_flip/hv_flip.lua"
