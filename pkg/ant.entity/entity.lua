@@ -700,7 +700,7 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 	}
 end
 
-function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide, render_layer)
+function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide, render_layer, on_ready)
     assert(quadnum > 0)
     local hw = width * 0.5
     local function create_vertex_buffer()
@@ -753,6 +753,7 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
             simplemesh = create_mesh(create_vertex_buffer(), create_index_buffer()),
 			material = material,
 			render_layer = render_layer,
+			on_ready = on_ready,
         }
     }
 end
