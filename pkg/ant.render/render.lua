@@ -332,14 +332,6 @@ function irender.align_buffer(s, alignsize)
     return s
 end
 
-function irender.set_framebuffer_ratio(which, ratio)
-	world:pub{"framebuffer_ratio_changed", which, ratio}
-end
-
-function irender.get_framebuffer_ratio(which)
-	return iviewport[which] or error ("Invalid ratio type:" .. which)
-end
-
 function irender.group_flush(go)
 	go:flush()
     go:filter("render_object_visible", "render_object")

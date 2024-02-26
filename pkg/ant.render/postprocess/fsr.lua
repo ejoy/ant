@@ -24,8 +24,8 @@ local icompute      = ecs.require "ant.render|compute.compute"
 local iviewport     = ecs.require "ant.render|viewport.state"
 local layoutmgr     = renderpkg.layoutmgr
 local layout        = layoutmgr.get "p3|t20"
-local scene_ratio   = irender.get_framebuffer_ratio("scene_ratio")
-local NEED_UPSACLE <const>   = scene_ratio >= 0.5 and scene_ratio < 1
+assert(false, "Not work right now")
+local NEED_UPSACLE <const>   = false
 local ENABLE_FXAA  <const>   = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA   <const>   = setting:get "graphic/postprocess/taa/enable"
 local ENABLE_FSR   <const>   = setting:get "graphic/postprocess/fsr/enable" and (ENABLE_FXAA or ENABLE_TAA) and NEED_UPSACLE

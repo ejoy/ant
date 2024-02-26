@@ -5,11 +5,15 @@ local setting = import_package "ant.settings"
 
 local width, height = world.args.width, world.args.height
 
-local RESOLUTION_WIDTH <const> = 1280
-local RESOLUTION_HEIGHT <const> = 720
+local DEFAULT_RESOLUTION_WIDTH <const> = 1280
+local DEFAULT_RESOLUTION_HEIGHT <const> = 720
 
 local function get_resolution()
-    local r = setting:get "scene/resolution"
+    local native = setting:get "scene/resolution/native"
+    if native then
+        return 
+    end
+    local r = setting:get "scene/resolution/size"
     if r then
         local w, h = r:match "(%d+)%a(%d+)"
         local _ = w or error(("Invalid scene/resolution define:%s, it should be define like this: 1280x720"):format(r))
@@ -29,12 +33,12 @@ local device_viewrect<const> = {
 local function calc_scene_viewrect()
     assert(device_viewrect.h > 0)
     assert(device_viewrect.w > device_viewrect.h)
-    local r = device_viewrect.h / device_viewrect.w
-    local w = math.min(RESOLUTION_WIDTH, device_viewrect.w)
+    local r = device_viewrect.w / device_viewrect.h
+    local h = math.min(DEFAULT_RESOLUTION_HEIGHT, device_viewrect.h)
 
     return {
         x=0, y=0,
-        w=w, h=math.floor(r*w+0.5),
+        w=math.floor(r*h+0.5), h=h,
     }
 end
 

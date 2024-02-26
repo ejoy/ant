@@ -1,4 +1,6 @@
 debug:
   show_bounding: false
-#scene:
-  #resolution: 1024x768
+scene:
+  resolution:
+    native: true
+    size: 1024x768
