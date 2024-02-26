@@ -20,10 +20,12 @@ local function completion_func(e, status, ratio)
     elseif status.completion == COMPLETION_STOP then
         status.play = nil
         status.ratio = 1
+        status.weight = 1
         e.animation_changed = true
     else
         status.play = nil
         status.ratio = 0
+        status.weight = 0
         e.animation_changed = true
     end
 end
