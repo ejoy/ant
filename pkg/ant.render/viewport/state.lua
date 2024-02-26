@@ -8,10 +8,17 @@ local width, height = world.args.width, world.args.height
 local DEFAULT_RESOLUTION_WIDTH <const> = 1280
 local DEFAULT_RESOLUTION_HEIGHT <const> = 720
 
+local device_viewrect<const> = {
+    x = 0,
+    y = 0,
+    w = width,
+    h = height
+}
+
 local function get_resolution()
     local native = setting:get "scene/resolution/native"
     if native then
-        return 
+        return device_viewrect
     end
     local r = setting:get "scene/resolution/size"
     if r then
@@ -22,13 +29,6 @@ local function get_resolution()
 end
 
 local custom_vr<const> = get_resolution()
-
-local device_viewrect<const> = {
-    x = 0,
-    y = 0,
-    w = width,
-    h = height
-}
 
 local function calc_scene_viewrect()
     assert(device_viewrect.h > 0)
