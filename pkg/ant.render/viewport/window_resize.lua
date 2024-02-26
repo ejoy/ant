@@ -11,7 +11,7 @@ function winresize_sys:start_frame()
 	for _, ww, hh in resize_mb:unpack() do
 		iviewport.resize(ww, hh)
 		rhwi.reset(nil, ww, hh)
-
 		world:pub{"scene_viewrect_changed", iviewport.viewrect}
+		world:pub{"device_viewrect_changed"}
 	end
 end
