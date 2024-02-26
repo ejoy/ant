@@ -339,7 +339,7 @@ function m.process_wait_queue()
         if prefab and prefab.objects then
             for _, eid in ipairs(prefab.objects) do
                 local ee <close> = world:entity(eid, "visible_state?in mesh?in")
-                if ee.mesh and ee.visible_state then
+                if ee.visible_state then
                     ivs.set_state(ee, params.QUEUE_NAME, state)
                 end
             end
@@ -379,24 +379,20 @@ function m.process_wait_queue()
         if not is_prefab_ready(cur_prefab) then
             goto continue
         end
+
         table.remove(wait_queue, 1)
         local fb, camera_srt = cur_prefab.fb, cur_prefab.camera_srt
         update_fb(fb)
         set_camera_srt(camera_srt)
         set_objects_visible_state(cur_prefab, true)
         adjust_prefab_rot(cur_prefab)
-        params.LAST_PREFAB = cur_name
-    elseif params.LAST_PREFAB then
-        local last_name = params.LAST_PREFAB
-        local last_prefab = params.PREFABS[last_name]
-        if not is_prefab_ready(last_prefab) then
-            goto continue
+        if (params.LAST_PREFAB and params.LAST_PREFAB ~= cur_name) or (not params.LAST_PREFAB) then
+            set_objects_visible_state(params.PREFABS[params.LAST_PREFAB], false)
         end
-        set_objects_visible_state(last_prefab, false)
-        update_fb(params.DEFAULT_FB)
-        params.LAST_PREFAB = nil
+        params.LAST_PREFAB = cur_name
     end
     ::continue::
+
 end
 
 return m
