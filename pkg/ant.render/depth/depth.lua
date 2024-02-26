@@ -9,7 +9,7 @@ if setting:get "graphic/disable_pre_z" then
 end
 
 local bgfx          = require "bgfx"
-local idi           = ecs.require "ant.render|draw_indirect.draw_indirect"
+local irender       = ecs.require "ant.render|render"
 local queuemgr      = ecs.require "queue_mgr"
 
 local R             = world:clibs "render.render_material"
@@ -56,17 +56,6 @@ function s:data_changed()
     end
 end
 
-local NO_DEPTH_TEST_STATES<const> = {
-    NEVER = true, ALWAYS = true, NONE = true
-}
-
-local function has_depth_test(dt)
-    if dt then
-        return not NO_DEPTH_TEST_STATES[dt]
-    end
-    return false
-end
-
 local function get_depth_state()
     return {
         ALPHA_REF   = 0,
@@ -77,8 +66,8 @@ local function get_depth_state()
 end
 
 local function create_depth_state(originstate)
-    local s = bgfx.parse_state(originstate)
-    if has_depth_test(s.DEPTH_TEST) then
+    local s = irender.has_depth_test(originstate)
+    if s then
         local d = get_depth_state()
         d.PT, d.CULL = s.PT, s.CULL
         d.DEPTH_TEST = "GREATER"
