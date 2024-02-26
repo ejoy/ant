@@ -72,181 +72,175 @@ float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord)
 #endif //PCF_FIX4
 
 
-// //code from: https://github.com/TheRealMJP/Shadows
+//code from: https://github.com/TheRealMJP/Shadows
 
-// vec2 ComputeReceiverPlaneDepthBias(vec3 texCoordDX, vec3 texCoordDY)
-// {
-//     vec2 biasUV = vec2( texCoordDY.y * texCoordDX.z - texCoordDX.y * texCoordDY.z,
-//                         texCoordDX.x * texCoordDY.z - texCoordDY.x * texCoordDX.z);
-//     biasUV *= 1.0f / ((texCoordDX.x * texCoordDY.y) - (texCoordDX.y * texCoordDY.x));
-//     return biasUV;
-// }
+vec2 ComputeReceiverPlaneDepthBias(vec3 texCoordDX, vec3 texCoordDY)
+{
+    vec2 biasUV = vec2( texCoordDY.y * texCoordDX.z - texCoordDX.y * texCoordDY.z,
+                        texCoordDX.x * texCoordDY.z - texCoordDY.x * texCoordDX.z);
+    biasUV *= 1.0f / ((texCoordDX.x * texCoordDY.y) - (texCoordDX.y * texCoordDY.x));
+    return biasUV;
+}
 
-// //-------------------------------------------------------------------------------------------------
-// // Samples the shadow map with a fixed-size PCF kernel optimized with GatherCmp. Uses code
-// // from "Fast Conventional Shadow Filtering" by Holger Gruen, in GPU Pro.
-// //-------------------------------------------------------------------------------------------------
-// float SampleShadowMapFixedSizePCF(in vec3 shadowPos, in vec3 shadowPosDX,
-//                          in vec3 shadowPosDY, in uint cascadeIdx) {
-//     vec2 shadowMapSize;
-//     float numSlices;
-//     ShadowMap.GetDimensions(shadowMapSize.x, shadowMapSize.y, numSlices);
+//-------------------------------------------------------------------------------------------------
+// Samples the shadow map with a fixed-size PCF kernel optimized with GatherCmp. Uses code
+// from "Fast Conventional Shadow Filtering" by Holger Gruen, in GPU Pro.
+//-------------------------------------------------------------------------------------------------
 
-//     float lightDepth = shadowPos.z;
+float CalcBias(vec3 shadowPosDX, vec3 shadowPosDY) {
+    #if UsePlaneDepthBias_
+        vec2 texelSize = 1.0f / shadowMapSize;
 
-//     const float bias = Bias;
+        vec2 receiverPlaneDepthBias = ComputeReceiverPlaneDepthBias(shadowPosDX, shadowPosDY);
 
-//     #if UsePlaneDepthBias_
-//         vec2 texelSize = 1.0f / shadowMapSize;
+        // Static depth biasing to make up for incorrect fractional sampling on the shadow map grid
+        float fractionalSamplingError = dot(vec2(1.0f, 1.0f) * texelSize, abs(receiverPlaneDepthBias));
+        return min(fractionalSamplingError, 0.01f);
+    #else
+        return Bias;
+    #endif
+}
 
-//         vec2 receiverPlaneDepthBias = ComputeReceiverPlaneDepthBias(shadowPosDX, shadowPosDY);
 
-//         // Static depth biasing to make up for incorrect fractional sampling on the shadow map grid
-//         float fractionalSamplingError = dot(vec2(1.0f, 1.0f) * texelSize, abs(receiverPlaneDepthBias));
-//         lightDepth -= min(fractionalSamplingError, 0.01f);
-//     #else
-//         lightDepth -= bias;
-//     #endif
+float SampleShadowMapFixedSizePCF(vec3 shadowPos, float bias) {
+    float lightDepth = shadowPos.z;
+    lightDepth -= bais;
 
-//     #if FilterSize_ == 2
-//         return ShadowMap.SampleCmpLevelZero(ShadowSamplerPCF, vec3(shadowPos.xy, cascadeIdx), lightDepth);
-//     #else
-//         const int FS_2 = FilterSize_ / 2;
+    const int FS_2 = FilterSize_ / 2;
 
-//         vec2 tc = shadowPos.xy;
+    vec2 tc = shadowPos.xy;
 
-//         vec4 s = 0.0f;
-//         vec2 stc = (shadowMapSize * tc.xy) + vec2(0.5f, 0.5f);
-//         vec2 tcs = floor(stc);
-//         vec2 fc;
-//         int row;
-//         int col;
-//         float w = 0.0f;
-//         vec4 v1[FS_2 + 1];
-//         vec2 v0[FS_2 + 1];
+    vec4 s = 0.0f;
+    vec2 stc = (shadowMapSize * tc.xy) + vec2(0.5f, 0.5f);
+    vec2 tcs = floor(stc);
+    vec2 fc;
+    int row;
+    int col;
+    float w = 0.0f;
+    vec4 v1[FS_2 + 1];
+    vec2 v0[FS_2 + 1];
 
-//         fc.xy = stc - tcs;
-//         tc.xy = tcs / shadowMapSize;
+    fc.xy = stc - tcs;
+    tc.xy = tcs / shadowMapSize;
 
-//         for(row = 0; row < FilterSize_; ++row)
-//             for(col = 0; col < FilterSize_; ++col)
-//                 w += W[row][col];
+    for(row = 0; row < FilterSize_; ++row)
+        for(col = 0; col < FilterSize_; ++col)
+            w += W[row][col];
 
-//         // -- loop over the rows
-//         [unroll]
-//         for(row = -FS_2; row <= FS_2; row += 2)
-//         {
-//             [unroll]
-//             for(col = -FS_2; col <= FS_2; col += 2)
-//             {
-//                 float value = W[row + FS_2][col + FS_2];
+    // -- loop over the rows
+    [unroll]
+    for(row = -FS_2; row <= FS_2; row += 2)
+    {
+        [unroll]
+        for(col = -FS_2; col <= FS_2; col += 2)
+        {
+            float value = W[row + FS_2][col + FS_2];
 
-//                 if(col > -FS_2)
-//                     value += W[row + FS_2][col + FS_2 - 1];
+            if(col > -FS_2)
+                value += W[row + FS_2][col + FS_2 - 1];
 
-//                 if(col < FS_2)
-//                     value += W[row + FS_2][col + FS_2 + 1];
+            if(col < FS_2)
+                value += W[row + FS_2][col + FS_2 + 1];
 
-//                 if(row > -FS_2) {
-//                     value += W[row + FS_2 - 1][col + FS_2];
+            if(row > -FS_2) {
+                value += W[row + FS_2 - 1][col + FS_2];
 
-//                     if(col < FS_2)
-//                         value += W[row + FS_2 - 1][col + FS_2 + 1];
+                if(col < FS_2)
+                    value += W[row + FS_2 - 1][col + FS_2 + 1];
 
-//                     if(col > -FS_2)
-//                         value += W[row + FS_2 - 1][col + FS_2 - 1];
-//                 }
+                if(col > -FS_2)
+                    value += W[row + FS_2 - 1][col + FS_2 - 1];
+            }
 
-//                 if(value != 0.0f)
-//                 {
-//                     float sampleDepth = lightDepth;
+            if(value != 0.0f)
+            {
+                float sampleDepth = lightDepth;
 
-//                     #if UsePlaneDepthBias_
-//                         // Compute offset and apply planar depth bias
-//                         vec2 offset = vec2(col, row) * texelSize;
-//                         sampleDepth += dot(offset, receiverPlaneDepthBias);
-//                     #endif
+                #if UsePlaneDepthBias_
+                    // Compute offset and apply planar depth bias
+                    vec2 offset = vec2(col, row) * texelSize;
+                    sampleDepth += dot(offset, receiverPlaneDepthBias);
+                #endif
 
-//                     v1[(col + FS_2) / 2] = ShadowMap.GatherCmp(ShadowSampler, vec3(tc.xy, cascadeIdx),
-//                                                                  sampleDepth, int2(col, row));
-//                 }
-//                 else
-//                     v1[(col + FS_2) / 2] = 0.0f;
+                v1[(col + FS_2) / 2] = ShadowMap.GatherCmp(ShadowSampler, vec3(tc.xy, cascadeIdx),
+                                                                sampleDepth, int2(col, row));
+            }
+            else
+                v1[(col + FS_2) / 2] = 0.0f;
 
-//                 if(col == -FS_2)
-//                 {
-//                     s.x += (1.0f - fc.y) * (v1[0].w * (W[row + FS_2][col + FS_2]
-//                                          - W[row + FS_2][col + FS_2] * fc.x)
-//                                          + v1[0].z * (fc.x * (W[row + FS_2][col + FS_2]
-//                                          - W[row + FS_2][col + FS_2 + 1.0f])
-//                                          + W[row + FS_2][col + FS_2 + 1]));
-//                     s.y += fc.y * (v1[0].x * (W[row + FS_2][col + FS_2]
-//                                          - W[row + FS_2][col + FS_2] * fc.x)
-//                                          + v1[0].y * (fc.x * (W[row + FS_2][col + FS_2]
-//                                          - W[row + FS_2][col + FS_2 + 1])
-//                                          +  W[row + FS_2][col + FS_2 + 1]));
-//                     if(row > -FS_2)
-//                     {
-//                         s.z += (1.0f - fc.y) * (v0[0].x * (W[row + FS_2 - 1][col + FS_2]
-//                                                - W[row + FS_2 - 1][col + FS_2] * fc.x)
-//                                                + v0[0].y * (fc.x * (W[row + FS_2 - 1][col + FS_2]
-//                                                - W[row + FS_2 - 1][col + FS_2 + 1])
-//                                                + W[row + FS_2 - 1][col + FS_2 + 1]));
-//                         s.w += fc.y * (v1[0].w * (W[row + FS_2 - 1][col + FS_2]
-//                                             - W[row + FS_2 - 1][col + FS_2] * fc.x)
-//                                             + v1[0].z * (fc.x * (W[row + FS_2 - 1][col + FS_2]
-//                                             - W[row + FS_2 - 1][col + FS_2 + 1])
-//                                             + W[row + FS_2 - 1][col + FS_2 + 1]));
-//                     }
-//                 }
-//                 else if(col == FS_2)
-//                 {
-//                     s.x += (1 - fc.y) * (v1[FS_2].w * (fc.x * (W[row + FS_2][col + FS_2 - 1]
-//                                          - W[row + FS_2][col + FS_2]) + W[row + FS_2][col + FS_2])
-//                                          + v1[FS_2].z * fc.x * W[row + FS_2][col + FS_2]);
-//                     s.y += fc.y * (v1[FS_2].x * (fc.x * (W[row + FS_2][col + FS_2 - 1]
-//                                          - W[row + FS_2][col + FS_2] ) + W[row + FS_2][col + FS_2])
-//                                          + v1[FS_2].y * fc.x * W[row + FS_2][col + FS_2]);
-//                     if(row > -FS_2) {
-//                         s.z += (1 - fc.y) * (v0[FS_2].x * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
-//                                             - W[row + FS_2 - 1][col + FS_2])
-//                                             + W[row + FS_2 - 1][col + FS_2])
-//                                             + v0[FS_2].y * fc.x * W[row + FS_2 - 1][col + FS_2]);
-//                         s.w += fc.y * (v1[FS_2].w * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
-//                                             - W[row + FS_2 - 1][col + FS_2])
-//                                             + W[row + FS_2 - 1][col + FS_2])
-//                                             + v1[FS_2].z * fc.x * W[row + FS_2 - 1][col + FS_2]);
-//                     }
-//                 }
-//                 else
-//                 {
-//                     s.x += (1 - fc.y) * (v1[(col + FS_2) / 2].w * (fc.x * (W[row + FS_2][col + FS_2 - 1]
-//                                         - W[row + FS_2][col + FS_2 + 0] ) + W[row + FS_2][col + FS_2 + 0])
-//                                         + v1[(col + FS_2) / 2].z * (fc.x * (W[row + FS_2][col + FS_2 - 0]
-//                                         - W[row + FS_2][col + FS_2 + 1]) + W[row + FS_2][col + FS_2 + 1]));
-//                     s.y += fc.y * (v1[(col + FS_2) / 2].x * (fc.x * (W[row + FS_2][col + FS_2-1]
-//                                         - W[row + FS_2][col + FS_2 + 0]) + W[row + FS_2][col + FS_2 + 0])
-//                                         + v1[(col + FS_2) / 2].y * (fc.x * (W[row + FS_2][col + FS_2 - 0]
-//                                         - W[row + FS_2][col + FS_2 + 1]) + W[row + FS_2][col + FS_2 + 1]));
-//                     if(row > -FS_2) {
-//                         s.z += (1 - fc.y) * (v0[(col + FS_2) / 2].x * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
-//                                                 - W[row + FS_2 - 1][col + FS_2 + 0]) + W[row + FS_2 - 1][col + FS_2 + 0])
-//                                                 + v0[(col + FS_2) / 2].y * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 0]
-//                                                 - W[row + FS_2 - 1][col + FS_2 + 1]) + W[row + FS_2 - 1][col + FS_2 + 1]));
-//                         s.w += fc.y * (v1[(col + FS_2) / 2].w * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
-//                                                 - W[row + FS_2 - 1][col + FS_2 + 0]) + W[row + FS_2 - 1][col + FS_2 + 0])
-//                                                 + v1[(col + FS_2) / 2].z * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 0]
-//                                                 - W[row + FS_2 - 1][col + FS_2 + 1]) + W[row + FS_2 - 1][col + FS_2 + 1]));
-//                     }
-//                 }
+            if(col == -FS_2)
+            {
+                s.x += (1.0f - fc.y) * (v1[0].w * (W[row + FS_2][col + FS_2]
+                                        - W[row + FS_2][col + FS_2] * fc.x)
+                                        + v1[0].z * (fc.x * (W[row + FS_2][col + FS_2]
+                                        - W[row + FS_2][col + FS_2 + 1.0f])
+                                        + W[row + FS_2][col + FS_2 + 1]));
+                s.y += fc.y * (v1[0].x * (W[row + FS_2][col + FS_2]
+                                        - W[row + FS_2][col + FS_2] * fc.x)
+                                        + v1[0].y * (fc.x * (W[row + FS_2][col + FS_2]
+                                        - W[row + FS_2][col + FS_2 + 1])
+                                        +  W[row + FS_2][col + FS_2 + 1]));
+                if(row > -FS_2)
+                {
+                    s.z += (1.0f - fc.y) * (v0[0].x * (W[row + FS_2 - 1][col + FS_2]
+                                            - W[row + FS_2 - 1][col + FS_2] * fc.x)
+                                            + v0[0].y * (fc.x * (W[row + FS_2 - 1][col + FS_2]
+                                            - W[row + FS_2 - 1][col + FS_2 + 1])
+                                            + W[row + FS_2 - 1][col + FS_2 + 1]));
+                    s.w += fc.y * (v1[0].w * (W[row + FS_2 - 1][col + FS_2]
+                                        - W[row + FS_2 - 1][col + FS_2] * fc.x)
+                                        + v1[0].z * (fc.x * (W[row + FS_2 - 1][col + FS_2]
+                                        - W[row + FS_2 - 1][col + FS_2 + 1])
+                                        + W[row + FS_2 - 1][col + FS_2 + 1]));
+                }
+            }
+            else if(col == FS_2)
+            {
+                s.x += (1 - fc.y) * (v1[FS_2].w * (fc.x * (W[row + FS_2][col + FS_2 - 1]
+                                        - W[row + FS_2][col + FS_2]) + W[row + FS_2][col + FS_2])
+                                        + v1[FS_2].z * fc.x * W[row + FS_2][col + FS_2]);
+                s.y += fc.y * (v1[FS_2].x * (fc.x * (W[row + FS_2][col + FS_2 - 1]
+                                        - W[row + FS_2][col + FS_2] ) + W[row + FS_2][col + FS_2])
+                                        + v1[FS_2].y * fc.x * W[row + FS_2][col + FS_2]);
+                if(row > -FS_2) {
+                    s.z += (1 - fc.y) * (v0[FS_2].x * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
+                                        - W[row + FS_2 - 1][col + FS_2])
+                                        + W[row + FS_2 - 1][col + FS_2])
+                                        + v0[FS_2].y * fc.x * W[row + FS_2 - 1][col + FS_2]);
+                    s.w += fc.y * (v1[FS_2].w * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
+                                        - W[row + FS_2 - 1][col + FS_2])
+                                        + W[row + FS_2 - 1][col + FS_2])
+                                        + v1[FS_2].z * fc.x * W[row + FS_2 - 1][col + FS_2]);
+                }
+            }
+            else
+            {
+                s.x += (1 - fc.y) * (v1[(col + FS_2) / 2].w * (fc.x * (W[row + FS_2][col + FS_2 - 1]
+                                    - W[row + FS_2][col + FS_2 + 0] ) + W[row + FS_2][col + FS_2 + 0])
+                                    + v1[(col + FS_2) / 2].z * (fc.x * (W[row + FS_2][col + FS_2 - 0]
+                                    - W[row + FS_2][col + FS_2 + 1]) + W[row + FS_2][col + FS_2 + 1]));
+                s.y += fc.y * (v1[(col + FS_2) / 2].x * (fc.x * (W[row + FS_2][col + FS_2-1]
+                                    - W[row + FS_2][col + FS_2 + 0]) + W[row + FS_2][col + FS_2 + 0])
+                                    + v1[(col + FS_2) / 2].y * (fc.x * (W[row + FS_2][col + FS_2 - 0]
+                                    - W[row + FS_2][col + FS_2 + 1]) + W[row + FS_2][col + FS_2 + 1]));
+                if(row > -FS_2) {
+                    s.z += (1 - fc.y) * (v0[(col + FS_2) / 2].x * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
+                                            - W[row + FS_2 - 1][col + FS_2 + 0]) + W[row + FS_2 - 1][col + FS_2 + 0])
+                                            + v0[(col + FS_2) / 2].y * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 0]
+                                            - W[row + FS_2 - 1][col + FS_2 + 1]) + W[row + FS_2 - 1][col + FS_2 + 1]));
+                    s.w += fc.y * (v1[(col + FS_2) / 2].w * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 1]
+                                            - W[row + FS_2 - 1][col + FS_2 + 0]) + W[row + FS_2 - 1][col + FS_2 + 0])
+                                            + v1[(col + FS_2) / 2].z * (fc.x * (W[row + FS_2 - 1][col + FS_2 - 0]
+                                            - W[row + FS_2 - 1][col + FS_2 + 1]) + W[row + FS_2 - 1][col + FS_2 + 1]));
+                }
+            }
 
-//                 if(row != FS_2)
-//                     v0[(col + FS_2) / 2] = v1[(col + FS_2) / 2].xy;
-//             }
-//         }
+            if(row != FS_2)
+                v0[(col + FS_2) / 2] = v1[(col + FS_2) / 2].xy;
+        }
+    }
 
-//         return dot(s, 1.0f) / w;
-//     #endif
-// }
+    return dot(s, 1.0f) / w;
+}
 
 #endif //__SHADOW_FILTERING_PCF__

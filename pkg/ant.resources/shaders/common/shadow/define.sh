@@ -23,14 +23,14 @@ uniform vec4 u_shadow_param1;
 #define u_shadowmap_texelsize	u_shadow_param1.y
 #define u_max_cascade_level		u_shadow_param1.z
 
-uniform vec4 u_soft_shadow_param;
+uniform vec4 u_shadow_filter_param;
 
 #if defined(SM_PCF)
-#define u_pcf_kernelsize		u_soft_shadow_param.x
+#define u_pcf_kernelsize		u_shadow_filter_param.x
 #elif defined(SM_ESM)
-#define u_far_offset			u_soft_shadow_param.x
-#define u_minVariance 			u_soft_shadow_param.y
-#define u_depthMultiplier 		u_soft_shadow_param.z
+#define u_far_offset			u_shadow_filter_param.x
+#define u_minVariance 			u_shadow_filter_param.y
+#define u_depthMultiplier 		u_shadow_filter_param.z
 #endif 
 
 // omni
