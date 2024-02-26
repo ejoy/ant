@@ -57,4 +57,5 @@ return {
     viewrect        = scene_viewrect,
     custom_vr       = custom_vr,
     device_viewrect = device_viewrect,
+    calc_scene_viewrect = calc_scene_viewrect
 }

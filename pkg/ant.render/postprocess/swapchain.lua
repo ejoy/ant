@@ -48,6 +48,15 @@ function sc_sys:init()
     }
 end
 
+local device_viewrect_changed_mb = world:sub{"device_viewrect_changed"}
+
+function sc_sys:data_changed()
+    for _, _ in device_viewrect_changed_mb:unpack() do
+        irq.set_view_rect("swapchain_queue", iviewport.device_viewrect)
+        break
+    end
+end
+
 local function get_scene_handle()
     local se = w:first "stop_scene"
     if se then
