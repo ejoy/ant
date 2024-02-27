@@ -6,7 +6,6 @@ lm:lua_source "motion_sampler" {
     },
     includes = {
         lm.AntDir .. "/3rd/math3d",
-        --lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/3rd/luaecs",
         lm.AntDir .. "/3rd/ozz-animation/include",
         lm.AntDir .. "/clibs/ecs",

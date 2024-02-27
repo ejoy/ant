@@ -27,9 +27,6 @@ lm:conf {
     visibility = "default",
     defines = {
         "BGFX_CONFIG_DEBUG_UNIFORM=0",
-        "GLM_ENABLE_EXPERIMENTAL",
-        "GLM_FORCE_QUAT_DATA_XYZW",
-        "GLM_FORCE_INTRINSICS",
     },
     msvc = {
         defines = {
@@ -55,6 +52,17 @@ lm:conf {
         vendor = "linux",
         sys = "android33",
     }
+}
+
+lm:conf "glm" {
+    defines = {
+        "GLM_ENABLE_EXPERIMENTAL",
+        "GLM_FORCE_QUAT_DATA_XYZW",
+        "GLM_FORCE_INTRINSICS",
+    },
+    includes = {
+        lm.AntDir .. "/3rd/glm",
+    },
 }
 
 lm.builddir = ("build/%s/%s"):format(plat, lm.mode)

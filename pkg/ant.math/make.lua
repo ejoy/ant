@@ -17,8 +17,8 @@ if lm.mode == "debug" then
 end
 
 lm:lua_source "math" {
+    confs = { "glm" },
     includes = {
-        lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/3rd/math3d",
     },
     sources = sources,

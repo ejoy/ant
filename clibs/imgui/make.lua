@@ -73,10 +73,10 @@ lm:source_set "imgui" {
 }
 
 lm:lua_source "imgui" {
+    confs = { "glm" },
     includes = {
         ".",
         lm.AntDir .. "/3rd/imgui",
-        lm.AntDir .. "/3rd/glm",
         BgfxInclude,
         "../bgfx",
     },

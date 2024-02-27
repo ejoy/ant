@@ -1,9 +1,7 @@
 local lm = require "luamake"
 
 lm:lua_source "noise" {
-    includes = {
-        lm.AntDir .. "/3rd/glm"
-    },
+    confs = { "glm" },
     sources = {
         "noise.cpp",
     },

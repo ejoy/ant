@@ -5,10 +5,9 @@ local fs = require "bee.filesystem"
 
 lm.defines = lm.mode ~= "release" and "_DEBUG"
 
-local GLMInclude = lm.AntDir .. "/3rd/glm"
 lm:source_set "Meshbaker" {
+    confs = { "glm" },
     includes = {
-        GLMInclude,
         "./Meshbaker",
         "./Meshbaker/BakingLab",
         "./Meshbaker/SampleFramework11/v1.02",

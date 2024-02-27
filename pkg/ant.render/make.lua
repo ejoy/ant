@@ -1,6 +1,7 @@
 local lm = require "luamake"
 
-lm:lua_source "render_core"{
+lm:lua_source "render_core" {
+    confs = { "glm" },
     includes = {
         lm.AntDir .. "/3rd/bgfx/include",
         lm.AntDir .. "/3rd/bx/include",
@@ -8,7 +9,6 @@ lm:lua_source "render_core"{
         lm.AntDir .. "/3rd/math3d",
         lm.AntDir .. "/clibs/foundation",
         lm.AntDir .. "/clibs/luabind",
-        lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/3rd/luaecs",
         lm.AntDir .. "/clibs/ecs",
         lm.AntDir .. "/pkg/ant.resource_manager/src",
@@ -26,11 +26,11 @@ lm:lua_source "render_core"{
 }
 
 lm:lua_source "render" {
+    confs = { "glm" },
     includes = {
         lm.AntDir .. "/3rd/math3d",
         lm.AntDir .. "/clibs/luabind",
         lm.AntDir .. "/3rd/luaecs",
-        lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/clibs/ecs",
     },
     sources = {

@@ -13,9 +13,9 @@ local defines = {
 lm:source_set "imgui" {
     includes = {
         "../imgui",
-        lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/3rd/imgui",
     },
+    confs = { "glm" },
     sources = {
         "zmo/*.cpp",
         "widgets/*.cpp",
@@ -26,9 +26,9 @@ lm:source_set "imgui" {
 }
 
 lm:lua_source "imgui" {
+    confs = { "glm" },
     includes = {
         "../imgui",
-        lm.AntDir .. "/3rd/glm",
         lm.AntDir .. "/3rd/imgui",
     },
     sources = {
