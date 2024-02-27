@@ -1,7 +1,5 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
 local defines = {
     "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
     "IMGUI_DISABLE_OBSOLETE_KEYIO",
@@ -73,11 +71,10 @@ lm:source_set "imgui" {
 }
 
 lm:lua_source "imgui" {
-    confs = { "glm" },
+    confs = { "glm", "bgfx" },
     includes = {
         ".",
         lm.AntDir .. "/3rd/imgui",
-        BgfxInclude,
         "../bgfx",
     },
     sources = {
@@ -89,12 +86,12 @@ lm:lua_source "imgui" {
 }
 
 lm:lua_source "imgui" {
+    confs = { "bgfx" },
     deps = "luabind",
     includes = {
         ".",
         lm.AntDir .. "/3rd/imgui",
         lm.AntDir .. "/3rd/bee.lua",
-        BgfxInclude,
         "../luabind"
     },
     sources = {

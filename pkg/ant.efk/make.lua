@@ -13,9 +13,6 @@ lm:source_set "efk" {
         lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerMaterial/*.cpp",
         lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerRendererCommon/**/*.cpp",
     },
-    defines = {
-        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
-    },
     gcc = {
         flags = {
             "-Wno-sign-compare",
@@ -41,11 +38,10 @@ lm:lua_source "efk" {
 }
 
 lm:lua_source "efk" {
+    confs = { "bgfx" },
     includes = {
         lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/Effekseer",
         lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/EffekseerRendererCommon",
-        lm.AntDir .. "/3rd/bgfx/include",
-        lm.AntDir .. "/3rd/bx/include",
         lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/clibs/luabind",
         lm.AntDir .. "/pkg/ant.resource_manager/src",
