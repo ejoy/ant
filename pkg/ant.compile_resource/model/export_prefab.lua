@@ -201,7 +201,7 @@ local function GetJointsMap(model, primitives)
     return jointsMap
 end
 
-local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, status, prefabs)
+local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodeidx, parent, status, prefabs)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local meshidx = node.mesh
@@ -253,6 +253,14 @@ local function create_mesh_node_entity(math3d, gltfscene, nodeidx, parent, statu
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
         end
 
+        --TODO: mesh node's parent is bone node
+        local parentNode = parentNodeIndex and gltfscene.nodes[parentNodeIndex+1]
+        if parentNode and not parentNode.mesh and parentNode.name ~= "Armature" then
+            policy[#policy+1] = "ant.modifier|modifier"
+            parent = 1
+            data.modifier = { parentNode.name, node.name }
+        end
+
         entity = create_entity({
             policy = policy,
             data   = data,
@@ -300,6 +308,7 @@ local function create_root_entity(status, prefabs)
                 scene = {},
                 animation = "animations/animation.ozz",
             },
+            tag = {"animation"},
         }, prefabs)
     end
 end
@@ -392,18 +401,19 @@ return function (status)
     local meshnodes = find_mesh_nodes(gltfscene, scene)
     local function build_prefabs(prefabs, suffix)
         local rootid = create_root_entity(status, prefabs)
-        local function ImportNode(parent, nodes)
+        local function ImportNode(parent, nodes, parentNodeIndex)
             for _, nodeIndex in ipairs(nodes) do
                 if meshnodes[nodeIndex] then
                     local node = gltfscene.nodes[nodeIndex+1]
                     local entity
                     if node.mesh then
-                        entity = create_mesh_node_entity(math3d, gltfscene, nodeIndex, parent, status, prefabs)
-                    else
-                        entity = create_node_entity(math3d, gltfscene, nodeIndex, parent, status, prefabs)
+                        entity = create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodeIndex, parent, status, prefabs)
+                    -- TODO: don't export bone node
+                    -- else
+                    --     entity = create_node_entity(math3d, gltfscene, nodeIndex, parent, status, prefabs)
                     end
                     if node.children then
-                        ImportNode(entity, node.children)
+                        ImportNode(entity or parent, node.children, nodeIndex)
                     end
                 end
             end

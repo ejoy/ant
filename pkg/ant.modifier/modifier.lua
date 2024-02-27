@@ -42,13 +42,27 @@ function modifier_sys:start_frame()
         ::continue::
     end
 end
+
+function modifier_sys:component_init()
+    for e in w:select "INIT scene:in modifier:update" do
+        local ae <close> = world:entity(e.scene.parent, "animation?in")
+        if ae and ae.animation then
+            e.modifier.animation = ae.animation
+            e.modifier.parent_index = ae.animation.skeleton:joint_index(e.modifier[1])
+            e.modifier.self_index = ae.animation.skeleton:joint_index(e.modifier[2])
+        end
+    end
+end
+
 function modifier_sys:update_modifier()
     local delta_time = timer.delta() * 0.001
     local to_destroy = {}
-    for e in w:select "modifier:in eid:in" do
-        local destroy = e.modifier:update(delta_time)
-        if destroy then
-            to_destroy[#to_destroy + 1] = e.eid
+    for e in w:select "scene:in modifier:in eid:in skinning?in" do
+        if e.modifier.update then
+            local destroy = e.modifier:update(delta_time)
+            if destroy then
+                to_destroy[#to_destroy + 1] = e.eid
+            end
         end
     end
     for _, eid in ipairs(to_destroy) do
@@ -60,6 +74,19 @@ function modifier_sys:update_modifier()
     end
 end
 
+function modifier_sys:follow_scene_update()
+    for e in w:select "scene:in modifier:in render_object:update" do
+        if not e.modifier.update then
+            if e.modifier.animation then
+                local pe <close> = world:entity(e.scene.parent, "scene:in animation?in skinning?in")
+                local models = e.modifier.animation.models
+                local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.self_index)
+                -- e.render_object.worldmat = math3d.mul(pe.scene.worldmat, bone_mat)
+                e.render_object.worldmat = math3d.mul(pe.scene.worldmat, math3d.mul(mc.R2L_MAT, bone_mat))
+            end
+        end
+    end
+end
 
 function modifier_sys:entity_ready()
 
@@ -404,7 +431,6 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
                 if anim.animation then
                     local models = anim.animation.models
                     return math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), anim.animation.skeleton:joint_index(bone_name)), anim.animation_playback
-                    -- return anim.animation.models:joint(anim.animation.skeleton:joint_index(bone_name)), anim.animation_playback
                 end
             end
         end)
