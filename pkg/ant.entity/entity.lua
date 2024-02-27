@@ -248,14 +248,11 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 	}
 end
 
-local function quad_mesh(rect)
-	local origin_bottomleft = hwi.get_caps().originBottomLeft
-	local minv, maxv
-	if origin_bottomleft then
-		minv, maxv = 0, 1
-	else
-		minv, maxv = 1, 0
-	end
+local function quad_mesh(rect, xzplane, uvrect)
+	--assume uv are top left position
+	uvrect = uvrect or {
+		x=0, y=0, w=1, h=1,
+	}
 	local x, y, w, h
 	if rect then
 		x, y = rect.x or 0, rect.y or 0
@@ -264,11 +261,25 @@ local function quad_mesh(rect)
 		x, y = -1, -1
 		w, h = 2, 2
 	end
+
+	local x0, x1 = x, x+w
+	local y0, y1 = y, y+h
+	local u0, u1 = uvrect.x, uvrect.x+uvrect.w
+	local v0, v1 = uvrect.y, uvrect.x+uvrect.h
+
+	if xzplane then
+		return create_mesh({"p3|t2", {
+			x0,  0, y0, u0, v1,	--bottom left
+			x0,	 0, y1, u0, v0,	--top left
+			x1,  0, y0, u1, v1,	--bottom right
+			x1,  0, y1, u1, v0,	--top right
+		}})
+	end
 	return create_mesh({"p3|t2", {
-		x, 		y, 		0, 	0, minv,	--bottom left
-		x,		y + h, 	0, 	0, maxv,	--top left
-		x + w, 	y, 		0, 	1, minv,	--bottom right
-		x + w, 	y + h, 	0, 	1, maxv,	--top right
+		x0, y0, 0, u0, v1,	--bottom left
+		x0,	y1, 0, u0, v0,	--top left
+		x1, y0, 0, u1, v1,	--bottom right
+		x1, y1, 0, u1, v0,	--top right
 	}})
 end
 
@@ -282,12 +293,12 @@ end
 
 ientity.fullquad_mesh = fullquad_mesh
 
-function ientity.quad_mesh(rect)
+function ientity.quad_mesh(rect, xzplane, uvrect)
 	if rect == nil then
 		return fullquad_mesh()
 	end
 
-	return quad_mesh(rect)
+	return quad_mesh(rect, xzplane, uvrect)
 end
 
 function ientity.create_quad_entity(rect, material, render_layer)
@@ -754,6 +765,20 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
 			material = material,
 			render_layer = render_layer,
 			on_ready = on_ready,
+        }
+    }
+end
+
+function ientity.create_quad_entity(material, srt, rect, uvrect)
+    return world:create_entity{
+        policy = {"ant.render|simplerender",},
+        data = {
+            material 	= material,
+            simplemesh 	= ientity.quad_mesh(rect, true, uvrect),
+            owned_mesh_buffer = true,
+            visible_state = "main_view",
+            scene 		= srt,
+            render_layer= "translucent",
         }
     }
 end
