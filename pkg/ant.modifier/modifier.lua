@@ -74,16 +74,14 @@ function modifier_sys:update_modifier()
     end
 end
 
-function modifier_sys:follow_scene_update()
+function modifier_sys:finish_scene_update()
     for e in w:select "scene:in modifier:in render_object:update" do
-        if not e.modifier.update then
-            if e.modifier.animation then
-                local pe <close> = world:entity(e.scene.parent, "scene:in animation?in skinning?in")
-                local models = e.modifier.animation.models
-                local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.self_index)
-                -- e.render_object.worldmat = math3d.mul(pe.scene.worldmat, bone_mat)
-                e.render_object.worldmat = math3d.mul(pe.scene.worldmat, math3d.mul(mc.R2L_MAT, bone_mat))
-            end
+        if not e.modifier.update and e.modifier.animation then
+            local pe <close> = world:entity(e.scene.parent, "scene:in animation?in skinning?in")
+            local models = e.modifier.animation.models
+            local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.self_index)
+            -- e.render_object.worldmat = math3d.mul(pe.scene.worldmat, bone_mat)
+            e.render_object.worldmat = math3d.mul(pe.scene.worldmat, math3d.mul(mc.R2L_MAT, bone_mat))
         end
     end
 end
