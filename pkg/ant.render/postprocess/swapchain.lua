@@ -48,10 +48,10 @@ function sc_sys:init()
     }
 end
 
-local device_viewrect_changed_mb = world:sub{"device_viewrect_changed"}
+local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
 
 function sc_sys:data_changed()
-    for _, _ in device_viewrect_changed_mb:unpack() do
+    for _, _ in scene_viewrect_changed_mb:unpack() do
         irq.set_view_rect("swapchain_queue", iviewport.device_viewrect)
         break
     end
