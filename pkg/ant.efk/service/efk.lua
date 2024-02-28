@@ -116,8 +116,25 @@ local efk_cb_handle = efk_cb.callback{
 local EFKCTX
 local EFKFILES = {}
 
+local function check_release_efks(force)
+    for efkname, e in pairs(EFKFILES) do
+        if 0 == e.count or force then
+            if force then
+                log.info("Force destory efk file:", efkname, ", ref count: ", e.count)
+            else
+                log.info("Destroy efk file:", efkname)
+            end
+
+            EFKFILES[efkname] = nil
+            e.obj:release()
+            e.obj = nil
+        end
+    end
+end
+
 local function shutdown()
     if EFKCTX then
+        check_release_efks()
         efk.shutdown(EFKCTX)
         EFKCTX = nil
     end
@@ -128,9 +145,8 @@ local function shutdown()
 end
 
 function S.init()
-    assert(not EFKCTX, "efk context need clean before efk service init")
     EFKCTX = efk.startup{
-        max_count       = 2000,
+        max_count       = 4096,
         viewid          = effect_viewid,
         shader_load     = efk_cb.shader_load,
         texture_load    = efk_cb.texture_load,
@@ -144,7 +160,6 @@ function S.init()
 end
 
 function S.exit()
-    assert(not next(EFKFILES), "efk files should cleanup after shutdown")
     shutdown()
 end
 
@@ -248,20 +263,9 @@ local function check_load_textures()
     end
 end
 
-local function check_release_efks()
-    for efkname, e in pairs(EFKFILES) do
-        if 0 == e.count then
-            log.info("Destroy efk file:", efkname)
-            EFKFILES[efkname] = nil
-            e.obj:release()
-            e.obj = nil
-        end
-    end
-end
-
 local last = ltask.walltime()
 
-local checktime = 1000
+local checktime<const> = 1000
 
 local loop = DISABLE_EFK and function () end or
 function ()
