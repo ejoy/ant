@@ -5,6 +5,8 @@ local platform      = require "bee.platform"
 local fontmanager
 local cell = import_package "ant.textcell"
 
+ltask.uniqueservice "ant.hwi|event"
+
 local initialized = false
 
 local CALL = {
@@ -241,49 +243,6 @@ function S.continue()
     ltask.wakeup(continue_token)
 end
 
-local WORLD_CAMERA_STATE = {
-    viewmat = nil,
-    projmat = nil,
-    deltatime = 0,
-    which_consumer  = nil,
-    clear = function (self)
-        self.viewmat = nil
-        self.projmat = nil
-        self.deltatime = 0
-    end,
-    update = function(self, viewmat, projmat, deltatime)
-        assert(not self:already_update())
-        self.viewmat = viewmat
-        self.projmat = projmat
-        self.deltatime = deltatime
-        self:check_wakeup()
-    end,
-    already_update = function(self)
-        return nil ~= self.viewmat
-    end,
-    check_wakeup = function (self)
-        if nil ~= self.which_consumer then
-            ltask.wakeup(self.which_consumer)
-        end
-    end,
-    check_and_wait = function (self)
-        if not self:already_update() then
-            self.which_consumer = coroutine.running()
-            ltask.wait(self.which_consumer)
-            self.which_consumer = nil
-        end
-    end,
-}
-
-function S.fetch_world_camera()
-    WORLD_CAMERA_STATE:check_and_wait()
-    return WORLD_CAMERA_STATE.viewmat, WORLD_CAMERA_STATE.projmat, WORLD_CAMERA_STATE.deltatime
-end
-
-function S.update_world_camera(...)
-    WORLD_CAMERA_STATE:update(...)
-end
-
 function S.frame()
     if not continue_token then
         error "Can only be used in pause."
@@ -431,7 +390,6 @@ local function mainloop()
             end
             frame_control()
             ltask.multi_wakeup("bgfx.frame", f)
-            WORLD_CAMERA_STATE:clear()
             ltask.sleep(0)
             profile_begin()
         else
@@ -509,4 +467,5 @@ end
 S.viewid_get        = viewidmgr.get
 S.viewid_generate   = viewidmgr.generate
 S.viewid_name       = viewidmgr.name
+
 return S

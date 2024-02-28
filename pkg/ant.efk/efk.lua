@@ -14,7 +14,7 @@ local iexposure = ecs.require "ant.camera|exposure"
 local hwi       = import_package "ant.hwi"
 local mc        = import_package "ant.math".constant
 
-local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
+local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
 
 local Q         = world:clibs "render.queue"
 
@@ -233,7 +233,7 @@ function efk_sys:camera_usage()
         update_framebuffer_texutre(camera.infprojmat)
         need_update_framebuffer = nil
     end
-    ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
+    ltask.send(ServiceBgfxEvent, "set", "world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
 function efk_sys:follow_scene_update()

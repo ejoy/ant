@@ -14,7 +14,7 @@ local aio = import_package "ant.io"
 local setting   = import_package "ant.settings"
 local DISABLE_EFK<const> = setting:get "efk/disable"
 
-local bgfxmainS = ltask.queryservice "ant.hwi|bgfx"
+local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
 
 local hwi       = import_package "ant.hwi"
 hwi.init_bgfx()
@@ -259,7 +259,7 @@ function ()
     while true do
         if EFKCTX then
             check_load_textures()
-            local viewmat, projmat, deltatime = ltask.call(bgfxmainS, "fetch_world_camera")
+            local viewmat, projmat, deltatime = ltask.call(ServiceBgfxEvent, "wait", "world_camera")
             EFKCTX:render(viewmat, projmat, deltatime)
         end
         bgfx.encoder_frame()
