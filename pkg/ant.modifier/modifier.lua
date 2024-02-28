@@ -44,7 +44,7 @@ function modifier_sys:start_frame()
 end
 
 function modifier_sys:component_init()
-    for e in w:select "INIT scene:in modifier:update" do
+    for e in w:select "INIT modifier:update scene:in" do
         local ae <close> = world:entity(e.scene.parent, "animation?in")
         if ae and ae.animation then
             e.modifier.animation = ae.animation
@@ -195,10 +195,13 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                     end
                     local e <close> = world:entity(self.target)
                     if not e then
-                        return
+                        return true
                     end
                     imaterial.set_property(e, self.property, apply_value)
                     self.continue = running
+                    if not running and self.destroy then
+                        return true
+                    end
                 end
             }
         }
