@@ -174,14 +174,9 @@ end
 
 function S.destroy(filename, handle)
     local info = EFKFILES[filename] or error ("Invalid efk file: " .. filename)
+    assert(info.count > 0)
     info.count = info.count - 1
     EFKCTX:destroy(handle)
-    if 0 == info.count then
-        log.info("Destroy efk file:", filename)
-        EFKFILES[filename] = nil
-        info.obj:release()
-        info.obj = nil
-    end
 end
 
 function S.play(handle, speed, startframe, fadeout)
@@ -253,6 +248,21 @@ local function check_load_textures()
     end
 end
 
+local function check_release_efks()
+    for efkname, e in pairs(EFKFILES) do
+        if 0 == e.count then
+            log.info("Destroy efk file:", efkname)
+            EFKFILES[efkname] = nil
+            e.obj:release()
+            e.obj = nil
+        end
+    end
+end
+
+local last = ltask.walltime()
+
+local checktime = 1000
+
 local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
@@ -261,6 +271,13 @@ function ()
             check_load_textures()
             local viewmat, projmat, deltatime = ltask.call(ServiceBgfxEvent, "wait", "world_camera")
             EFKCTX:render(viewmat, projmat, deltatime)
+
+            local now = ltask.walltime()
+            local d = now - last
+            if d >= checktime then
+                last = now
+                check_release_efks()
+            end
         end
         bgfx.encoder_frame()
     end
