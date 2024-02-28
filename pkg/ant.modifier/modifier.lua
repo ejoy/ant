@@ -48,8 +48,7 @@ function modifier_sys:component_init()
         local ae <close> = world:entity(e.scene.parent, "animation?in")
         if ae and ae.animation then
             e.modifier.animation = ae.animation
-            e.modifier.parent_index = ae.animation.skeleton:joint_index(e.modifier[1])
-            e.modifier.self_index = ae.animation.skeleton:joint_index(e.modifier[2])
+            e.modifier.bone_index = ae.animation.skeleton:joint_index(e.modifier[1])
         end
     end
 end
@@ -79,8 +78,7 @@ function modifier_sys:finish_scene_update()
         if not e.modifier.update and e.modifier.animation then
             local pe <close> = world:entity(e.scene.parent, "scene:in animation?in")
             local models = e.modifier.animation.models
-            local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.self_index)
-            -- e.render_object.worldmat = math3d.mul(pe.scene.worldmat, bone_mat)
+            local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.bone_index)
             e.render_object.worldmat = math3d.mul(pe.scene.worldmat, math3d.mul(mc.R2L_MAT, bone_mat))
         end
     end

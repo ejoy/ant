@@ -258,7 +258,7 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
         if parentNode and not parentNode.mesh and parentNode.name ~= "Armature" then
             policy[#policy+1] = "ant.modifier|modifier"
             parent = 1
-            data.modifier = { parentNode.name, node.name }
+            data.modifier = { node.name }
         end
 
         entity = create_entity({
