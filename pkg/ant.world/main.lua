@@ -427,15 +427,15 @@ local function cpustat_update_then_print(w, funcs, symbols)
             end
             w._cpu_stat = {}
         end
-        local ecs = w.w
-        local components = {}
-        for _, name in ipairs { "eid", "scene", "render_object", "modifier" } do
-            if ecs:has_component(name) then
-                components[#components+1] = name..":"..ecs:count(name)
-            end
-        end
-        dbg_print(0, 2, 0x02, "--- "..table.concat(components, " "))
-        --dbg_print(0, 2, 0x02, "--- system")
+        --local ecs = w.w
+        --local components = {}
+        --for _, name in ipairs { "eid", "scene", "render_object", "modifier" } do
+        --    if ecs:has_component(name) then
+        --        components[#components+1] = name..":"..ecs:count(name)
+        --    end
+        --end
+        --dbg_print(0, 2, 0x02, "--- "..table.concat(components, " "))
+        dbg_print(0, 2, 0x02, "--- system")
         for i = 1, MaxText do
             dbg_print(2, 2+i, 0x02, printtext[i])
         end
