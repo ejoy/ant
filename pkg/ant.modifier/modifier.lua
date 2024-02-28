@@ -57,7 +57,7 @@ end
 function modifier_sys:update_modifier()
     local delta_time = timer.delta() * 0.001
     local to_destroy = {}
-    for e in w:select "scene:in modifier:in eid:in skinning?in" do
+    for e in w:select "modifier:in eid:in" do
         if e.modifier.update then
             local destroy = e.modifier:update(delta_time)
             if destroy then
@@ -75,9 +75,9 @@ function modifier_sys:update_modifier()
 end
 
 function modifier_sys:finish_scene_update()
-    for e in w:select "scene:in modifier:in render_object:update" do
+    for e in w:select "modifier:in render_object:update scene:in" do
         if not e.modifier.update and e.modifier.animation then
-            local pe <close> = world:entity(e.scene.parent, "scene:in animation?in skinning?in")
+            local pe <close> = world:entity(e.scene.parent, "scene:in animation?in")
             local models = e.modifier.animation.models
             local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.self_index)
             -- e.render_object.worldmat = math3d.mul(pe.scene.worldmat, bone_mat)
