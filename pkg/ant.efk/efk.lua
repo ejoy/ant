@@ -233,7 +233,7 @@ function efk_sys:camera_usage()
         update_framebuffer_texutre(camera.infprojmat)
         need_update_framebuffer = nil
     end
-    ltask.send(ServiceBgfxEvent, "set", "world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
+    ltask.send(EFK_SERVER, "set_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
 function efk_sys:follow_scene_update()
@@ -288,6 +288,8 @@ function efk_sys:render_postprocess()
         local data = w:swap("efk_hitch", "efk_hitch_backbuffer")
         ltask.send(EFK_SERVER, "update_transforms", num, data)
     end
+
+    ltask.send(EFK_SERVER, "end_frame")
 end
 
 function iefk.create(filename, config)

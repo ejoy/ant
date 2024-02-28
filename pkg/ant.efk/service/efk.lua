@@ -194,6 +194,10 @@ function S.destroy(filename, handle)
     EFKCTX:destroy(handle)
 end
 
+function S.end_frame()
+    ltask.send(ServiceBgfxEvent, "set", "wake")
+end
+
 function S.play(handle, speed, startframe, fadeout)
     EFKCTX:play(handle, speed, startframe, fadeout)
 end
@@ -256,6 +260,11 @@ function S.set_ambient_color(ambient)
     EFKCTX:set_ambient_color(ambient)
 end
 
+local viewmat, projmat, deltatime
+function S.set_camera(vm, pm, dt)
+    viewmat, projmat, deltatime = vm, pm, dt
+end
+
 local function check_load_textures()
     while not TEXTURE_LOAD_QUEUE:empty() do
         local tn = TEXTURE_LOAD_QUEUE:pop()
@@ -273,9 +282,9 @@ function ()
     while true do
         if EFKCTX then
             check_load_textures()
-            local viewmat, projmat, deltatime = ltask.call(ServiceBgfxEvent, "wait", "world_camera")
+            ltask.call(ServiceBgfxEvent, "wait", "wake")
             EFKCTX:render(viewmat, projmat, deltatime)
-
+            viewmat, projmat, deltatime = nil, nil, nil
             local now = ltask.walltime()
             local d = now - last
             if d >= checktime then
