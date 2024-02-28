@@ -1,16 +1,19 @@
 local ltask = require "ltask"
 
 local events = {}
+local quit
 
 ltask.fork(function ()
     local bgfx = require "bgfx"
     local hwi = import_package "ant.hwi"
     hwi.init_bgfx()
+    bgfx.init()
     bgfx.encoder_create "event"
-    while true do
+    while not quit do
         events = {}
         bgfx.encoder_frame()
     end
+    bgfx.shutdown()
 end)
 
 local S = {}
@@ -43,6 +46,12 @@ function S.wait(name)
         ltask.multi_wait(ev.token)
     end
     return table.unpack(ev.data, 1, ev.data.n)
+end
+
+function S.quit()
+    quit = {}
+    ltask.wait(quit)
+    ltask.quit()
 end
 
 return S
