@@ -133,6 +133,14 @@ local function build_irradiance_sh(cm)
 	return serialize_results(Eml)
 end
 
+local function parse_lattice(lattice)
+	local new_lattice = {}
+	for k, v in pairs(lattice) do
+		new_lattice[k] = v / 100
+	end
+	return new_lattice
+end
+
 local TextureExtensions <const> = {
 	direct3d11 = "dds",
 	direct3d12 = "dds",
@@ -197,7 +205,9 @@ return function (output, setting, param)
 
 		local info = image.parse(fastio.readall_f(output_bin:string()))
 		config.info = info
-
+		if param.lattice then
+			config.info.lattice = parse_lattice(param.lattice)
+		end
 		if config.build_irradianceSH then
 			local nomip<const> = true
 			local info, content = image.parse(fastio.readall_f(output_bin:string()), true, "RGBA32F", nomip)

@@ -12,6 +12,14 @@ local mem_formats <const> = {
     RGBA32F = "ffff",
 }
 
+local function getTextureType(c)
+    if c.info.lattice then
+        return 1
+    else
+        return 0
+    end
+end
+
 local function createTexture(c)
     local h
     if c.value then
@@ -259,7 +267,7 @@ ltask.fork(function ()
             local handle = textureData.handle or createTexture(textureData)
             c.handle = handle
             c.flag   = textureData.flag
-            textureman.texture_set(c.id, handle)
+            textureman.texture_set(c.id, handle, getTextureType(textureData))
             local block_token = blockQueue[name]
             if block_token then
                 blockQueue[name] = nil

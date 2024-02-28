@@ -38,6 +38,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
                 id = info.id,
                 width = info.texinfo.width,
                 height = info.texinfo.height,
+                lattice = info.texinfo.lattice
             }
             pendQueue[path] = nil
         end)

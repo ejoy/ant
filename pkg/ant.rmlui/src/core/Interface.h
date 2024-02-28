@@ -44,12 +44,27 @@ struct Line {
 
 typedef std::vector<Line> LineList;
 
-struct TextureData {
+class TextureData {
+public:
 	TextureId handle = UINT16_MAX;
 	Size      dimensions = {0, 0};
 	explicit operator bool () const {
 		return handle != UINT16_MAX;
 	}
+};
+
+class LatticeData : public TextureData {
+public:
+	struct Lattice {
+		float x1;
+		float y1;
+		float x2;
+		float y2;
+		float u;
+		float v;
+	};
+
+	Lattice lattice;
 };
 
 class Render {

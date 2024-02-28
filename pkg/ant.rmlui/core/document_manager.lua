@@ -332,7 +332,12 @@ local function updateTexture()
     for i = 1, #q do
         local v = q[i]
         if v.id then
-            rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
+            if v.lattice then
+                local x1, y1, x2, y2, uu, vv = v.lattice.x1, v.lattice.y1, v.lattice.x2, v.lattice.y2, v.lattice.u, v.lattice.v
+                rmlui.RenderSetLatticeTexture(v.path, v.id, v.width, v.height, x1, y1 ,x2, y2, uu, vv)
+            else
+                rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
+            end
             for _, e in ipairs(v.elements) do
                 if e._handle then
                     rmlui.ElementDirtyImage(e._handle)
