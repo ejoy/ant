@@ -27,9 +27,6 @@ local CALL = {
     "fontimport",
     "show_profile",
     "event_suspend",
-
-    "fetch_world_camera",
-    "update_world_camera",
 }
 
 local SEND = {
