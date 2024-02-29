@@ -18,11 +18,10 @@ pipeline "_init"
     .pipeline "init"
     .pipeline "_frame_finish"
     .stage "init_world"
-    .pipeline "_frame_finish"
 
 pipeline "_update"
-    .pipeline "update"
     .pipeline "_frame_finish"
+    .pipeline "update"
 
 pipeline "_exit"
     .pipeline "exit"
