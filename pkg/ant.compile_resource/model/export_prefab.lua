@@ -260,7 +260,7 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
             if joint_index and (joint_index ~= 1) then
                 policy[#policy+1] = "ant.modifier|modifier"
                 parent = 1
-                data.modifier = { node.name }
+                data.modifier = { parentNode.name }
             end
         end
 
