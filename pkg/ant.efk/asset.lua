@@ -124,7 +124,4 @@ function efkasset.check_load_textures()
     end
 end
 
-function efkasset.unload_textures()
-end
-
 return efkasset
