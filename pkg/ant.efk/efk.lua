@@ -2,8 +2,8 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local ltask     = require "ltask"
-local EFK_SERVER
+-- local ltask     = require "ltask"
+-- local EFK_SERVER
 
 
 local math3d    = require "math3d"
@@ -26,48 +26,59 @@ local efk_sys = ecs.system "efk_system"
 local RC        = world:clibs "render.cache"
 local iefk = {}
 
+local efkS      = ecs.require "service.efk"
+
 local handle_mt = {
     realive = function (self, speed, startframe, fadeout)
-        ltask.call(EFK_SERVER, "play", self.handle, speed, startframe, fadeout)
+        --ltask.call(EFK_SERVER, "play", self.handle, speed, startframe, fadeout)
+        efkS.play(self.handle, speed, startframe, fadeout)
     end,
     is_alive = function(self)
-        ltask.fork(function ()
-            self.alive = ltask.call(EFK_SERVER, "is_alive", self.handle)
-        end)
-        return self.alive
+        efkS.is_alive(self.handle)
+        -- ltask.fork(function ()
+        --     self.alive = ltask.call(EFK_SERVER, "is_alive", self.handle)
+        -- end)
+        -- return self.alive
     end,
     set_stop = function(self, delay)
-        ltask.send(EFK_SERVER, "set_stop", self.handle, delay)
+        --ltask.send(EFK_SERVER, "set_stop", self.handle, delay)
+        efkS.set_stop(self.handle, delay)
     end,
 
     set_time = function(self, time)
-        ltask.send(EFK_SERVER, "set_time", self.handle, time)
+        --ltask.send(EFK_SERVER, "set_time", self.handle, time)
+        efkS.set_time(self.handle, time)
     end,
     set_pause = function(self, p)
-        assert(p ~= nil)
-        ltask.send(EFK_SERVER, "set_pause", self.handle, p)
+        -- assert(p ~= nil)
+        -- ltask.send(EFK_SERVER, "set_pause", self.handle, p)
+        efkS.set_pause(self.handle, p)
     end,
     
     set_speed = function(self, speed)
-        assert(speed ~= nil)
-        ltask.send(EFK_SERVER, "set_speed", self.handle, speed)
+        -- assert(speed ~= nil)
+        -- ltask.send(EFK_SERVER, "set_speed", self.handle, speed)
+        efkS.set_speed(self.handle, speed)
     end,
     
     set_visible = function(self, v)
-        ltask.send(EFK_SERVER, "set_visible", self.handle, v)
+        --ltask.send(EFK_SERVER, "set_visible", self.handle, v)
+        efkS.set_visible(self.handle, v)
     end,
 
     update_transform = function(self, mat)
-        ltask.send(EFK_SERVER, "update_transform", self.handle, math3d.serialize(mat))
+        --ltask.send(EFK_SERVER, "update_transform", self.handle, math3d.serialize(mat))
+        efkS.update_transform(self.handle, math3d.serialize(mat))
     end,
 }
 
 local function createPlayHandle(efk_handle, speed, startframe, fadeout, worldmat)
-    ltask.call(EFK_SERVER, "play", efk_handle, speed, startframe, fadeout)
+    --ltask.call(EFK_SERVER, "play", efk_handle, speed, startframe, fadeout)
     local h = setmetatable({
         alive       = true,
         handle      = efk_handle,
     }, {__index = handle_mt})
+    h:realive(speed, startframe, fadeout)
     if worldmat then
         h:update_transform(worldmat)
     end
@@ -76,9 +87,12 @@ end
 
 function efk_sys:init()
     queuemgr.register_queue "efk_queue"
-    EFK_SERVER = ltask.spawn "ant.efk|efk"
-    ltask.call(EFK_SERVER, "init")
-    ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "SAMPLER2D")
+    --EFK_SERVER = ltask.spawn "ant.efk|efk"
+    --ltask.call(EFK_SERVER, "init")
+    --ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "SAMPLER2D")
+
+    efkS.init()
+    efkS.init_default_tex2d(assetmgr.default_textureid "SAMPLER2D")
 end
 
 function efk_sys:post_init()
@@ -92,7 +106,8 @@ local function cleanup_efk(efk)
     end
 
     if efk.handle then
-        ltask.send(EFK_SERVER, "destroy", efk.path, efk.handle)
+        --ltask.send(EFK_SERVER, "destroy", efk.path, efk.handle)
+        efkS.destroy(efk.path, efk.handle)
         efk.path = nil
         efk.handle = nil
     end
@@ -104,12 +119,15 @@ function efk_sys:exit()
         cleanup_efk(e.efk)
     end
 
-    ltask.call(EFK_SERVER, "exit")
-    ltask.call(EFK_SERVER, "quit")
+    efkS.exit()
+    efkS.quit()
+    -- ltask.call(EFK_SERVER, "exit")
+    -- ltask.call(EFK_SERVER, "quit")
 end
 
 local function init_efk(efk)
-    efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
+    --efk.handle = ltask.call(EFK_SERVER, "create", efk.path)
+    efk.handle = efkS.create(efk.path)
     efk.speed = efk.speed or 1.0
     efk.startframe = efk.startframe or 0
     efk.fadeout = efk.fadeout or false
@@ -166,7 +184,8 @@ local function update_framebuffer_texutre(projmat)
         m43, m44,
     }
 
-    ltask.call(EFK_SERVER, "update_cb_data", fb[1].handle, depth)
+    --ltask.call(EFK_SERVER, "update_cb_data", fb[1].handle, depth)
+    efkS.update_cb_data(fb[1].handle, depth)
 end
 
 local need_update_framebuffer
@@ -231,7 +250,8 @@ function efk_sys:camera_usage()
         update_framebuffer_texutre(camera.infprojmat)
         need_update_framebuffer = nil
     end
-    ltask.send(EFK_SERVER, "set_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
+    --ltask.send(EFK_SERVER, "set_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
+    efkS.set_camera(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
 local function normalize_color(color)
@@ -268,8 +288,11 @@ function efk_sys:follow_scene_update()
     local dl        = w:first "directional_light light:in scene:in"
     if dl then
         local direction, color = get_light_direction(dl), get_light_color(dl)
-        ltask.send(EFK_SERVER, "set_light_direction", direction)
-        ltask.send(EFK_SERVER, "set_light_color", color) 
+        -- ltask.send(EFK_SERVER, "set_light_direction", direction)
+        -- ltask.send(EFK_SERVER, "set_light_color", color) 
+
+        efkS.set_light_direction(direction)
+        efkS.set_light_color(color)
     end
     for e in w:select "efk_visible efk:in scene:in" do
         --update_transform will check efk is alive and visible or not
@@ -282,10 +305,12 @@ function efk_sys:render_postprocess()
     local num = w:count "efk_hitch"
     if num > 0 then
         local data = w:swap("efk_hitch", "efk_hitch_backbuffer")
-        ltask.send(EFK_SERVER, "update_transforms", num, data)
+        efkS.update_transforms(num, data)
+        --ltask.send(EFK_SERVER, "update_transforms", num, data)
     end
 
-    ltask.send(EFK_SERVER, "end_frame")
+    efkS.update()
+    --ltask.send(EFK_SERVER, "end_frame")
 end
 
 function iefk.create(filename, config)

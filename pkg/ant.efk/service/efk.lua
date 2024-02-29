@@ -207,9 +207,9 @@ function S.destroy(filename, handle)
     EFKCTX:destroy(handle)
 end
 
-function S.end_frame()
-    ltask.send(ServiceBgfxEvent, "set", "wake")
-end
+-- function S.end_frame()
+--     ltask.send(ServiceBgfxEvent, "set", "wake")
+-- end
 
 function S.play(handle, speed, startframe, fadeout)
     EFKCTX:play(handle, speed, startframe, fadeout)
@@ -253,12 +253,12 @@ function S.set_visible(handle, v)
 end
 
 function S.quit()
-    if not DISABLE_EFK then
-        bgfx.encoder_destroy()
-    end
+    -- if not DISABLE_EFK then
+    --     bgfx.encoder_destroy()
+    -- end
 
-    bgfx.shutdown()
-    ltask.quit()
+    -- bgfx.shutdown()
+    -- ltask.quit()
 end
 
 function S.set_light_direction(direction)
@@ -285,23 +285,27 @@ local function check_load_textures()
     end
 end
 
-local loop = DISABLE_EFK and function () end or
-function ()
-    bgfx.encoder_create "efx"
-    while true do
-        if EFKCTX then
-            check_load_textures()
-            ltask.call(ServiceBgfxEvent, "wait", "wake")
-            EFKCTX:render(viewmat, projmat, deltatime)
-            viewmat, projmat, deltatime = nil, nil, nil
-            check_release_efks()
-        end
-        bgfx.encoder_frame()
-    end
+function S.update()
+    check_load_textures()
+    --ltask.call(ServiceBgfxEvent, "wait", "wake")
+    EFKCTX:render(viewmat, projmat, deltatime)
+    viewmat, projmat, deltatime = nil, nil, nil
+    check_release_efks()
 end
 
-ltask.fork(
-    loop
-)
+-- local loop = DISABLE_EFK and function () end or
+-- function ()
+--     bgfx.encoder_create "efx"
+--     while true do
+--         if EFKCTX then
+--             check_load_textures()
+--             ltask.call(ServiceBgfxEvent, "wait", "wake")
+--             EFKCTX:render(viewmat, projmat, deltatime)
+--             viewmat, projmat, deltatime = nil, nil, nil
+--             check_release_efks()
+--         end
+--         bgfx.encoder_frame()
+--     end
+-- end
 
 return S
