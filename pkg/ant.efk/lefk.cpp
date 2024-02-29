@@ -369,11 +369,11 @@ lefkctx_play(lua_State *L) {
 	slot->fadeout = false;
 	if (ctx->manager->Exists(slot->inst)) {
 		bool fadeout = lua_toboolean(L, 5);
+		ctx->manager->SetShown(slot->inst, fadeout);
 		stop_all(ctx, slot, fadeout);
 	}
 	int32_t startFrame = (int32_t)luaL_optinteger(L, 4, 0);
 	slot->inst = ctx->manager->Play(slot->eptr, Effekseer::Vector3D(0, 0, 0), startFrame);
-	
 	float speed = (float)luaL_optnumber(L, 3, 1.0f);
 	ctx->manager->SetSpeed(slot->inst, speed);
 
