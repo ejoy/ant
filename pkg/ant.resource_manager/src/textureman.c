@@ -118,7 +118,7 @@ ltexture_timestamp(lua_State *L) {
 static inline int
 is_invalid(int id, uint16_t* filter, size_t filter_n) {
 	for (size_t i = 0; i < filter_n; ++i) {
-		if (g_texture[id] == filter[i]) {
+		if ((g_texture[id] & 0xffff) == filter[i]) {
 			return 1;
 		}
 	}
