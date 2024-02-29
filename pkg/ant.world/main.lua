@@ -14,7 +14,7 @@ local world_metatable = {}
 local world = {}
 world_metatable.__index = world
 
-local DEBUG <const> = luaecs.DEBUG
+local DEBUG <const> = false -- luaecs.DEBUG
 
 local function update_group_tag(w, groupid, data)
     for tag, t in pairs(w._group_tags) do
