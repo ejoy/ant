@@ -380,7 +380,10 @@ end
 
 local function cpustat_update(w, funcs, symbols)
     local ecs_world = w._ecs_world
-    local get_time = ltask.counter
+    local get_time = function ()
+        local _, t = ltask.now()
+        return t / 100
+    end
     return function()
         local stat = w._cpu_stat
         for i = 1, #funcs do
