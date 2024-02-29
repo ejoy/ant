@@ -1,6 +1,8 @@
 local lfs = require "bee.filesystem"
 local GLTF2OZZ = require "tool_exe_path"("gltf2ozz")
 local subprocess = require "subprocess"
+local loc_fastio = require "fastio"
+local ozz 		= require "ozz"
 
 return function (status)
     local input = status.input
@@ -22,6 +24,7 @@ return function (status)
     if not lfs.exists(folder / "skeleton.bin") then
         error("NO SKELETON export!")
     end
+    status.skeleton = ozz.load(loc_fastio.readall_f((folder / "skeleton.bin"):string()))
     local list = {}
     for path in lfs.pairs(folder) do
         if path:equal_extension ".bin" then

@@ -253,12 +253,15 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
         end
 
-        --TODO: mesh node's parent is bone node
+        --mesh node's parent is bone node
         local parentNode = parentNodeIndex and gltfscene.nodes[parentNodeIndex+1]
-        if parentNode and not parentNode.mesh and parentNode.name ~= "Armature" then
-            policy[#policy+1] = "ant.modifier|modifier"
-            parent = 1
-            data.modifier = { node.name }
+        if status.skeleton and parentNode then
+            local joint_index = status.skeleton:joint_index(parentNode.name)
+            if joint_index and (joint_index ~= 1) then
+                policy[#policy+1] = "ant.modifier|modifier"
+                parent = 1
+                data.modifier = { node.name }
+            end
         end
 
         entity = create_entity({
