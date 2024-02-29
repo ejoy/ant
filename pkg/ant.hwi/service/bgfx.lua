@@ -191,6 +191,7 @@ function S.encoder_destroy()
         encoder_cur = encoder_cur - 1
     end
     encoder[who] = nil
+    profile[who] = nil
     encoder_num = encoder_num - 1
 end
 
