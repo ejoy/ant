@@ -28,6 +28,9 @@ local iefk = {}
 
 local efkS      = ecs.require "service.efk"
 
+local ltask = require "ltask"
+local ServiceEfkUpdate
+
 local handle_mt = {
     realive = function (self, speed, startframe, fadeout)
         --ltask.call(EFK_SERVER, "play", self.handle, speed, startframe, fadeout)
@@ -87,6 +90,7 @@ end
 
 function efk_sys:init()
     queuemgr.register_queue "efk_queue"
+    ServiceEfkUpdate = ltask.spawn "ant.efk|update"
     --EFK_SERVER = ltask.spawn "ant.efk|efk"
     --ltask.call(EFK_SERVER, "init")
     --ltask.call(EFK_SERVER, "init_default_tex2d", assetmgr.default_textureid "SAMPLER2D")
@@ -114,6 +118,7 @@ local function cleanup_efk(efk)
 end
 
 function efk_sys:exit()
+    ltask.call(ServiceEfkUpdate, "quit")
     for e in w:select "efk:in eid:in" do
         log.warn(("'efk_system' is exiting, but efk entity:%d is not REMOVED"):format(e.eid))
         cleanup_efk(e.efk)
@@ -156,6 +161,10 @@ end
 
 local function cleanup_efk_object(eo)
     Q.dealloc(eo.visible_idx)
+end
+
+function efk_sys:frame_start()
+    efkS.start_frame()
 end
 
 function efk_sys:entity_remove()

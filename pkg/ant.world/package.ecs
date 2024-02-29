@@ -20,6 +20,7 @@ pipeline "_init"
     .stage "init_world"
 
 pipeline "_update"
+    .stage "frame_start"
     .pipeline "_frame_finish"
     .pipeline "update"
 
