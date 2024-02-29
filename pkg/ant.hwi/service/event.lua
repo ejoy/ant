@@ -1,19 +1,18 @@
 local ltask = require "ltask"
+local bgfx = require "bgfx"
+local hwi = import_package "ant.hwi"
+hwi.init_bgfx()
+bgfx.init()
+bgfx.encoder_create "event"
 
 local events = {}
 local quit
 
 ltask.fork(function ()
-    local bgfx = require "bgfx"
-    local hwi = import_package "ant.hwi"
-    hwi.init_bgfx()
-    bgfx.init()
-    bgfx.encoder_create "event"
     while not quit do
         events = {}
         bgfx.encoder_frame()
     end
-    bgfx.shutdown()
 end)
 
 local S = {}
@@ -50,7 +49,7 @@ end
 
 function S.quit()
     quit = {}
-    ltask.wait(quit)
+    bgfx.shutdown()
     ltask.quit()
 end
 
