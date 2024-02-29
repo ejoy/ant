@@ -38,13 +38,7 @@ pipeline "scene_render"
     .pipeline "render"
 
 pipeline "scene_changed"
-    .pipeline "ui"
     .stage "data_changed"
 
 pipeline "input"
     .stage "input_filter"
-
-pipeline "ui"
-    .stage "ui_start"
-    .stage "ui_update"
-    .stage "ui_end"

@@ -10,7 +10,7 @@ local rmlui_sys = ecs.system "rmlui_system"
 
 local windows = {}
 
-function rmlui_sys:ui_update()
+function rmlui_sys:start_frame()
     message.dispatch()
 end
 

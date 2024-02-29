@@ -9,7 +9,7 @@ local bst_sys = common.test_system "blur_scene"
 
 local kb_mb         = world:sub{"keyboard"}
 
-function bst_sys.ui_update()
+function bst_sys.data_changed()
     for _, key, press in kb_mb:unpack() do
         if key == "A" and press == 0 then
             ibs.blur_scene()

@@ -102,14 +102,8 @@ pipeline "update"
     .pipeline "animation"
     .pipeline "render"
     .pipeline "select"
-    .pipeline "ui"
     .stage "end_frame"
     .stage "final"
-
-pipeline "ui"
-    .stage "ui_start"
-    .stage "ui_update"
-    .stage "ui_end"
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\package.ecs")), ecs)
 end

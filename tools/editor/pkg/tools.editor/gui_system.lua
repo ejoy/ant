@@ -58,7 +58,7 @@ function m:init_world()
 end
 
 local event_ui_layout = world:sub {"UILayout"}
-function m:ui_update()
+function m:data_changed()
     for _, action in event_ui_layout:unpack() do
         if action == "save" then
             widget_utils.save_ui_layout()
