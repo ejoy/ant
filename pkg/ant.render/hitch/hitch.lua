@@ -13,11 +13,9 @@ local hwi       = import_package "ant.hwi"
 local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local cs_material = "/pkg/ant.resources/materials/hitch/hitch_compute.material"
-local GID_MT<const> = {__index=function(t, gid)
-    local gg = {}
-    t[gid] = gg
-    return gg
-end}
+local assetmgr  = import_package "ant.asset"
+
+local GID_MT<const> = {__index=function(t, gid) local gg = {}; t[gid] = gg; return gg; end}
 
 local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
 local DIRTY_GROUPS, DIRECT_DRAW_GROUPS = {}, {}
@@ -107,6 +105,8 @@ local function create_compute_entity(glbs, memory, draw_num)
                 },
                 on_ready = function (e)
                     w:extend(e, "dispatch:update")
+                    --TODO: this compute shader should not mark
+                    assetmgr.material_mark(e.dispatch.fx.prog)
                     dispatch_instance_buffer(e, diid, draw_num)
                 end
             }
