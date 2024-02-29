@@ -78,8 +78,9 @@ function modifier_sys:finish_scene_update()
         if not e.modifier.update and e.modifier.animation then
             local pe <close> = world:entity(e.scene.parent, "scene:in animation?in")
             local models = e.modifier.animation.models
-            local bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.bone_index)
-            e.render_object.worldmat = math3d.mul(pe.scene.worldmat, math3d.mul(mc.R2L_MAT, bone_mat))
+            local parent_bone_mat = math3d.array_index(math3d.array_matrix_ref(models:pointer(), models:count()), e.modifier.bone_index)
+            local bone_srt = math3d.matrix(e.scene)
+            e.render_object.worldmat = math3d.mul(pe.scene.worldmat, math3d.mul(mc.R2L_MAT, math3d.mul(parent_bone_mat, math3d.mul(mc.R2L_MAT, bone_srt))))
         end
     end
 end
