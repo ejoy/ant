@@ -271,13 +271,4 @@ function S.update()
     ltask.send(ServiceBgfxEvent, "set", "efk", EFKCTX_HANDLE:handle(), EFKCTX_HANDLE.render)
 end
 
-function S.quit()
-    -- if not DISABLE_EFK then
-    --     bgfx.encoder_destroy()
-    -- end
-
-    -- bgfx.shutdown()
-    -- ltask.quit()
-end
-
 return S

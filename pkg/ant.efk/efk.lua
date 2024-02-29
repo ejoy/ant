@@ -119,15 +119,8 @@ end
 
 function efk_sys:exit()
     ltask.call(ServiceEfkUpdate, "quit")
-    for e in w:select "efk:in eid:in" do
-        log.warn(("'efk_system' is exiting, but efk entity:%d is not REMOVED"):format(e.eid))
-        cleanup_efk(e.efk)
-    end
-
     efkS.exit()
-    efkS.quit()
     -- ltask.call(EFK_SERVER, "exit")
-    -- ltask.call(EFK_SERVER, "quit")
 end
 
 local function init_efk(efk)
