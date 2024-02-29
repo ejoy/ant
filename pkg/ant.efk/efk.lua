@@ -2,17 +2,18 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
--- local ltask     = require "ltask"
--- local EFK_SERVER
-
-
 local math3d    = require "math3d"
+local fs        = require "filesystem"
+local lefk      = require "efk"
+local efkasset  = require "asset"
+
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
 local iexposure = ecs.require "ant.camera|exposure"
 local hwi       = import_package "ant.hwi"
 local mc        = import_package "ant.math".constant
+local aio       = import_package "ant.io"
 
 local Q         = world:clibs "render.queue"
 
@@ -22,25 +23,84 @@ local queuemgr  = ecs.require "ant.render|queue_mgr"
 local ilight    = ecs.require "ant.render|light.light"
 local iviewport = ecs.require "ant.render|viewport.state"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local efk_sys = ecs.system "efk_system"
-local RC        = world:clibs "render.cache"
-local iefk = {}
 
-local efkS      = ecs.require "service.efk"
+local efk_sys   = ecs.system "efk_system"
+local RC        = world:clibs "render.cache"
+
+local effect_viewid <const> = hwi.viewid_get "effect_view"
 
 local ltask = require "ltask"
 local ServiceEfkUpdate
+local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
+
+local EFKCTX
+local EFKCTX_HANDLE
 
 local HANDLE_MT = {
     update_transform = function(self, mat)
-        efkS.update_transform(self.handle, math3d.serialize(mat))
+        EFKCTX:update_transform(self.handle, math3d.serialize(mat))
+    end,
+    update_transforms = function(num, data)
+        EFKCTX:update_transforms(num, data)
     end,
 }
 
 for _, n in ipairs{"play", "is_alive", "set_stop", "set_time", "set_pause", "set_speed", "set_visible"} do
     HANDLE_MT[n] = function (self, ...)
-        return efkS[n](self.handle, ...)
+        return EFKCTX[n](EFKCTX, self.handle, ...)
     end
+end
+
+local EFKFILES = {}
+
+local function release_efks(force)
+    for efkname, e in pairs(EFKFILES) do
+        if 0 == e.count or force then
+            if force then
+                log.info("Force destory efk file:", efkname, ", ref count: ", e.count)
+            else
+                log.info("Destroy efk file:", efkname)
+            end
+
+            EFKFILES[efkname] = nil
+            e.obj:release()
+            e.obj = nil
+        end
+    end
+end
+
+local function shutdown()
+    release_efks(true)
+    if EFKCTX then
+        lefk.shutdown(EFKCTX)
+        EFKCTX = nil
+        EFKCTX_HANDLE = nil
+    end
+
+    if next(EFKFILES) then
+        error("efk file is not removed before 'shutdown'")
+    end
+end
+
+local check_release_efks; do
+    local last = ltask.walltime()
+
+    local checktime<const> = 1000
+    function check_release_efks()
+        local now = ltask.walltime()
+        local d = now - last
+        if d >= checktime then
+            last = now
+            release_efks()
+        end
+    end
+end
+
+local function destroy_efk(filename, handle)
+    local info = EFKFILES[filename] or error ("Invalid efk file: " .. filename)
+    assert(info.count > 0)
+    info.count = info.count - 1
+    EFKCTX:destroy(handle)
 end
 
 local function createPlayHandle(efk_handle, speed, startframe, fadeout, worldmat)
@@ -55,17 +115,18 @@ local function createPlayHandle(efk_handle, speed, startframe, fadeout, worldmat
     return h
 end
 
+local function init_efk()
+    EFKCTX = efkasset.init_efk_ctx(4096, effect_viewid, assetmgr.default_textureid "SAMPLER2D")
+    EFKCTX_HANDLE = EFKCTX
+end
+
 function efk_sys:init()
     queuemgr.register_queue "efk_queue"
     RC.set_queue_type("efk_queue", queuemgr.queue_index "efk_queue")
 
     ServiceEfkUpdate = ltask.spawn "ant.efk|update"
-    efkS.init()
-    efkS.init_default_tex2d(assetmgr.default_textureid "SAMPLER2D")
-end
 
-function efk_sys:post_init()
-    
+    init_efk()
 end
 
 local function cleanup_efk(efk)
@@ -75,7 +136,7 @@ local function cleanup_efk(efk)
     end
 
     if efk.handle then
-        efkS.destroy(efk.path, efk.handle)
+        destroy_efk(efk.path, efk.handle)
         efk.path = nil
         efk.handle = nil
     end
@@ -83,14 +144,29 @@ end
 
 function efk_sys:exit()
     ltask.call(ServiceEfkUpdate, "quit")
-    efkS.exit()
+    shutdown()
 end
 
-local function init_efk(efk)
+local function create_efk(filename)
+    local info = EFKFILES[filename]
+    if not info then
+        log.info("Create efk file:", filename)
+        local c = aio.readall(filename)
+        info = {
+            obj = EFKCTX:new(c, fs.path(filename):parent_path():string()),
+            count = 0,
+        }
+        EFKFILES[filename] = info
+    end
+    info.count = info.count + 1
+    return EFKCTX:create(info.obj)
+end
+
+local function init_efk_component(efk)
     efk.speed       = efk.speed or 1.0
     efk.startframe  = efk.startframe or 0
     efk.fadeout     = efk.fadeout or false
-    efk.handle      = efkS.create(efk.path)
+    efk.handle      = create_efk(efk.path)
     efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe, efk.fadeout)
 end
 
@@ -100,7 +176,7 @@ end
 
 function efk_sys:component_init()
     for e in w:select "INIT efk_object:update efk:in" do
-        init_efk(e.efk)
+        init_efk_component(e.efk)
         init_efk_object(e.efk_object)
     end
 end
@@ -119,7 +195,7 @@ local function cleanup_efk_object(eo)
 end
 
 function efk_sys:frame_start()
-    efkS.start_frame()
+    EFKCTX = EFKCTX_HANDLE
 end
 
 function efk_sys:entity_remove()
@@ -148,7 +224,7 @@ local function update_framebuffer_texutre(projmat)
         m43, m44,
     }
 
-    efkS.update_cb_data(fb[1].handle, depth)
+    efkasset.update_cb_data(fb[1].handle, depth)
 end
 
 local need_update_framebuffer
@@ -213,7 +289,7 @@ function efk_sys:camera_usage()
         update_framebuffer_texutre(camera.infprojmat)
         need_update_framebuffer = nil
     end
-    efkS.set_camera(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
+    EFKCTX:setstate(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
 local function normalize_color(color)
@@ -250,8 +326,8 @@ function efk_sys:follow_scene_update()
     local dl        = w:first "directional_light light:in scene:in"
     if dl then
         local direction, color = get_light_direction(dl), get_light_color(dl)
-        efkS.set_light_direction(direction)
-        efkS.set_light_color(color)
+        EFKCTX:set_light_direction(direction)
+        EFKCTX:set_light_color(color)
     end
 
     for e in w:select "efk_visible efk:in scene:in" do
@@ -260,16 +336,27 @@ function efk_sys:follow_scene_update()
     end
 end
 
-function efk_sys:render_postprocess()
+local function efk_render()
+    check_release_efks()
+    efkasset.check_load_textures()
+    EFKCTX = nil
+    ltask.send(ServiceBgfxEvent, "set", "efk", EFKCTX_HANDLE:handle(), EFKCTX_HANDLE.render)
+end
+
+local function update_hitch_efks()
     local num = w:count "efk_hitch"
     if num > 0 then
         local data = w:swap("efk_hitch", "efk_hitch_backbuffer")
-        efkS.update_transforms(num, data)
+        EFKCTX:update_transforms(num, data)
     end
-
-    efkS.render()
 end
 
+function efk_sys:render_postprocess()
+    update_hitch_efks()
+    efk_render()
+end
+
+local iefk = {}
 function iefk.create(filename, config)
     return world:create_entity {
         group = config.group,
