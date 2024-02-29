@@ -12,8 +12,8 @@ local mem_formats <const> = {
     RGBA32F = "ffff",
 }
 
-local function getTextureType(c)
-    if c.info.lattice then
+local function getTextureType(info)
+    if info.lattice then
         return 1
     else
         return 0
@@ -238,7 +238,7 @@ local function asyncDestroyTexture(c)
 	else
 	    destroyQueue[#destroyQueue+1] = c.handle
 	end
-    textureman.texture_set(c.id, DefaultTexture[c.type])
+    textureman.texture_set(c.id, DefaultTexture[c.type], getTextureType(c.texinfo))
     c.handle = nil
 end
 
@@ -267,7 +267,7 @@ ltask.fork(function ()
             local handle = textureData.handle or createTexture(textureData)
             c.handle = handle
             c.flag   = textureData.flag
-            textureman.texture_set(c.id, handle, getTextureType(textureData))
+            textureman.texture_set(c.id, handle, getTextureType(textureData.info))
             local block_token = blockQueue[name]
             if block_token then
                 blockQueue[name] = nil
