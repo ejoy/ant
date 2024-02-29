@@ -264,7 +264,7 @@ local function check_load_textures()
     end
 end
 
-function S.update()
+function S.render()
     check_release_efks()
     check_load_textures()
     EFKCTX = nil
