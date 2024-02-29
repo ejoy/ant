@@ -236,18 +236,6 @@ function efk_sys:camera_usage()
     ltask.send(EFK_SERVER, "set_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
-function efk_sys:follow_scene_update()
-	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
-		e.efk_object.worldmat = e.scene.worldmat
-	end
-
-    for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
-        local visible = e.visible_state.main_queue and true or false
-        Q.set(e.efk_object.visible_idx, queuemgr.queue_index "efk_queue", visible)
-        e.efk.play_handle:set_visible(visible)
-    end
-end
-
 local function normalize_color(color)
     local nc = math3d.normalize(color)
     return math3d.set_index(nc, 4, 1.0)
@@ -268,7 +256,17 @@ local function get_light_direction(dl)
     return math3d.serialize(iom.get_direction(dl))
 end
 
-function efk_sys:render_submit()
+function efk_sys:follow_scene_update()
+	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
+		e.efk_object.worldmat = e.scene.worldmat
+	end
+
+    for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
+        local visible = e.visible_state.main_queue and true or false
+        Q.set(e.efk_object.visible_idx, queuemgr.queue_index "efk_queue", visible)
+        e.efk.play_handle:set_visible(visible)
+    end
+
     local dl        = w:first "directional_light light:in scene:in"
     if dl then
         local direction, color = get_light_direction(dl), get_light_color(dl)
