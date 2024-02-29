@@ -1,30 +1,16 @@
 local S = {}
 
-local ltask     = require "ltask"
-local bgfx      = require "bgfx"
-
-local fs        = require "filesystem"
-
-local efk_cb    = require "effekseer.callback"
-local efk       = require "efk"
-local textureman= require "textureman.client"
-
-local aio = import_package "ant.io"
-
-local setting   = import_package "ant.settings"
-local DISABLE_EFK<const> = setting:get "efk/disable"
+local ltask      = require "ltask"
+local fs         = require "filesystem"
+local efk_cb     = require "effekseer.callback"
+local efk        = require "efk"
+local textureman = require "textureman.client"
+local aio        = import_package "ant.io"
+local hwi        = import_package "ant.hwi"
+local assetmgr   = import_package "ant.asset"
 
 local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
-
-local hwi       = import_package "ant.hwi"
-hwi.init_bgfx()
-
-local assetmgr  = import_package "ant.asset"
-
-local effect_viewid<const> = hwi.viewid_get "effect_view"
-
-bgfx.init()
-assetmgr.init()
+local effect_viewid <const> = hwi.viewid_get "effect_view"
 
 local function init_fx_files()
     local tasks = {}
