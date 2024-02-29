@@ -432,7 +432,7 @@ local function cpustat_update_then_print(w, funcs, symbols)
         end
         local ecs = w.w
         local components = {}
-        for _, name in ipairs { "eid", "scene", "render_object", "modifier" } do
+        for _, name in ipairs { "eid", "scene", "render_object", "hitch" } do
             if ecs:type(name) then
                 components[#components+1] = name..":"..ecs:count(name)
             end
