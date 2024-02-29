@@ -14,8 +14,6 @@ local iexposure = ecs.require "ant.camera|exposure"
 local hwi       = import_package "ant.hwi"
 local mc        = import_package "ant.math".constant
 
-local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
-
 local Q         = world:clibs "render.queue"
 
 local itimer    = ecs.require "ant.timer|timer_system"
