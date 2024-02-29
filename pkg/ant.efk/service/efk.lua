@@ -115,8 +115,7 @@ local efk_cb_handle = efk_cb.callback{
 
 local EFKCTX
 local EFKFILES = {}
-
-local function check_release_efks(force)
+local function release_efks(force)
     for efkname, e in pairs(EFKFILES) do
         if 0 == e.count or force then
             if force then
@@ -132,9 +131,23 @@ local function check_release_efks(force)
     end
 end
 
+local check_release_efks; do
+    local last = ltask.walltime()
+
+    local checktime<const> = 1000
+    function check_release_efks()
+        local now = ltask.walltime()
+        local d = now - last
+        if d >= checktime then
+            last = now
+            release_efks()
+        end
+    end
+end
+
 local function shutdown()
     if EFKCTX then
-        check_release_efks()
+        release_efks(true)
         efk.shutdown(EFKCTX)
         EFKCTX = nil
     end
@@ -272,10 +285,6 @@ local function check_load_textures()
     end
 end
 
-local last = ltask.walltime()
-
-local checktime<const> = 1000
-
 local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
@@ -285,12 +294,7 @@ function ()
             ltask.call(ServiceBgfxEvent, "wait", "wake")
             EFKCTX:render(viewmat, projmat, deltatime)
             viewmat, projmat, deltatime = nil, nil, nil
-            local now = ltask.walltime()
-            local d = now - last
-            if d >= checktime then
-                last = now
-                check_release_efks()
-            end
+            check_release_efks()
         end
         bgfx.encoder_frame()
     end
