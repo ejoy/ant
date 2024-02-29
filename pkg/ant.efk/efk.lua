@@ -45,7 +45,7 @@ local HANDLE_MT = {
     end,
 }
 
-for _, n in ipairs{"play", "is_alive", "set_stop", "set_time", "set_pause", "set_speed", "set_visible"} do
+for _, n in ipairs{"play", "is_alive", "set_stop", "set_time", "pause", "set_speed", "set_visible"} do
     HANDLE_MT[n] = function (self, ...)
         return EFKCTX[n](EFKCTX, self.handle, ...)
     end
@@ -384,7 +384,7 @@ function iefk.play(e)
 end
 
 function iefk.pause(e, b)
-    e.efk.play_handle:set_pause(b)
+    e.efk.play_handle:pause(b)
 end
 
 function iefk.set_time(e, t)
