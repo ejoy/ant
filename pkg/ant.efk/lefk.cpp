@@ -92,14 +92,28 @@ TOC(lua_State *L, int index){
 }
 
 static int
-lefkctx_render(lua_State *L){
+lefkctx_handle(lua_State *L) {
+	auto ctx = EC(L);
+	lua_pushlightuserdata(L, ctx);
+	return 1;
+}
+
+static int
+lefkctx_setstate(lua_State *L) {
 	auto ctx = EC(L);
 	auto viewmat = TOM(L, 2);
 	auto projmat = TOM(L, 3);
 	auto delta = (float)luaL_checknumber(L, 4) * 0.001f;
-
 	ctx->renderer->SetCameraMatrix(*viewmat);
 	ctx->renderer->SetProjectionMatrix(*projmat);
+	ctx->renderer->SetTime(ctx->renderer->GetTime() + delta);
+	return 0;
+}
+
+static int
+lefkctx_render(lua_State *L){
+	auto ctx = EC(L);
+
 	// Stabilize in	a variable frame environment
 	// float deltaFrames = delta * 60.0f;
 	// int iterations =	std::max(1,	(int)roundf(deltaFrames));
@@ -108,7 +122,6 @@ lefkctx_render(lua_State *L){
 	//	   ctx->manager->Update(advance);
 	// }
 	ctx->manager->Update();
-	ctx->renderer->SetTime(ctx->renderer->GetTime() + delta);
 	ctx->renderer->BeginRendering();
 	Effekseer::Manager::DrawParameter drawParameter;
 	drawParameter.ZNear = 0.0f;
@@ -510,6 +523,8 @@ lefk_startup(lua_State *L){
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 		luaL_Reg l[] = {
+			{"handle",				lefkctx_handle},
+			{"setstate",			lefkctx_setstate},
 			{"render",				lefkctx_render},
 			{"new",					lefkctx_new},
 			{"create",				lefkctx_create},

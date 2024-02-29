@@ -1,30 +1,16 @@
 local S = {}
 
-local ltask     = require "ltask"
-local bgfx      = require "bgfx"
-
-local fs        = require "filesystem"
-
-local efk_cb    = require "effekseer.callback"
-local efk       = require "efk"
-local textureman= require "textureman.client"
-
-local aio = import_package "ant.io"
-
-local setting   = import_package "ant.settings"
-local DISABLE_EFK<const> = setting:get "efk/disable"
+local ltask      = require "ltask"
+local fs         = require "filesystem"
+local efk_cb     = require "effekseer.callback"
+local efk        = require "efk"
+local textureman = require "textureman.client"
+local aio        = import_package "ant.io"
+local hwi        = import_package "ant.hwi"
+local assetmgr   = import_package "ant.asset"
 
 local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
-
-local hwi       = import_package "ant.hwi"
-hwi.init_bgfx()
-
-local assetmgr  = import_package "ant.asset"
-
-local effect_viewid<const> = hwi.viewid_get "effect_view"
-
-bgfx.init()
-assetmgr.init()
+local effect_viewid <const> = hwi.viewid_get "effect_view"
 
 local function init_fx_files()
     local tasks = {}
@@ -114,7 +100,9 @@ local efk_cb_handle = efk_cb.callback{
 }
 
 local EFKCTX
+local EFKCTX_HANDLE
 local EFKFILES = {}
+
 local function release_efks(force)
     for efkname, e in pairs(EFKFILES) do
         if 0 == e.count or force then
@@ -146,10 +134,11 @@ local check_release_efks; do
 end
 
 local function shutdown()
+    release_efks(true)
     if EFKCTX then
-        release_efks(true)
         efk.shutdown(EFKCTX)
         EFKCTX = nil
+        EFKCTX_HANDLE = nil
     end
 
     if next(EFKFILES) then
@@ -170,6 +159,7 @@ function S.init()
             callback = efk_cb_handle,
         }
     }
+    EFKCTX_HANDLE = EFKCTX
 end
 
 function S.exit()
@@ -183,6 +173,14 @@ end
 function S.update_cb_data(background_handle, depth)
     efk_cb_handle.background = background_handle
     efk_cb_handle.depth = depth
+end
+
+-- function S.end_frame()
+--     ltask.send(ServiceBgfxEvent, "set", "wake")
+-- end
+
+function S.start_frame()
+    EFKCTX = EFKCTX_HANDLE
 end
 
 function S.create(filename)
@@ -207,10 +205,6 @@ function S.destroy(filename, handle)
     EFKCTX:destroy(handle)
 end
 
-function S.end_frame()
-    ltask.send(ServiceBgfxEvent, "set", "wake")
-end
-
 function S.play(handle, speed, startframe, fadeout)
     EFKCTX:play(handle, speed, startframe, fadeout)
 end
@@ -232,11 +226,6 @@ function S.update_transform(handle, mat)
 end
 
 function S.update_transforms(num, data)
-    -- for idx, handle in ipairs(handles) do
-    --     local offset = 1+(idx-1)*64
-    --     EFKCTX:update_transform(handle, mats:sub(offset, offset+64))
-    -- end
-
     EFKCTX:update_transforms(num, data)
 end
 
@@ -252,15 +241,6 @@ function S.set_visible(handle, v)
     EFKCTX:set_visible(handle, v)
 end
 
-function S.quit()
-    if not DISABLE_EFK then
-        bgfx.encoder_destroy()
-    end
-
-    bgfx.shutdown()
-    ltask.quit()
-end
-
 function S.set_light_direction(direction)
     EFKCTX:set_light_direction(direction)
 end
@@ -273,9 +253,8 @@ function S.set_ambient_color(ambient)
     EFKCTX:set_ambient_color(ambient)
 end
 
-local viewmat, projmat, deltatime
-function S.set_camera(vm, pm, dt)
-    viewmat, projmat, deltatime = vm, pm, dt
+function S.set_camera(viewmat, projmat, deltatime)
+    EFKCTX:setstate(viewmat, projmat, deltatime)
 end
 
 local function check_load_textures()
@@ -285,23 +264,11 @@ local function check_load_textures()
     end
 end
 
-local loop = DISABLE_EFK and function () end or
-function ()
-    bgfx.encoder_create "efx"
-    while true do
-        if EFKCTX then
-            check_load_textures()
-            ltask.call(ServiceBgfxEvent, "wait", "wake")
-            EFKCTX:render(viewmat, projmat, deltatime)
-            viewmat, projmat, deltatime = nil, nil, nil
-            check_release_efks()
-        end
-        bgfx.encoder_frame()
-    end
+function S.update()
+    check_release_efks()
+    check_load_textures()
+    EFKCTX = nil
+    ltask.send(ServiceBgfxEvent, "set", "efk", EFKCTX_HANDLE:handle(), EFKCTX_HANDLE.render)
 end
-
-ltask.fork(
-    loop
-)
 
 return S
