@@ -39,7 +39,11 @@ ltask.fork(function()
                 message[i] = nil
             end
         end
-        exclusive.sleep(1)
+        if platform.os == "windows" then
+            exclusive.sleep(0)
+        else
+            exclusive.sleep(1)
+        end
         ltask.sleep(0)
     until not window.peek_message()
     if #message > 0 then
