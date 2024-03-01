@@ -57,12 +57,12 @@ static glm::mat4x4 compose(const glm::vec3& translation, const glm::vec3& scale,
 	return matrix;
 }
 
-static glm::mat4x4 matrix2d(const glm::mat3x2& m) {
+static glm::mat4x4 matrix2d(const Transforms::Matrix2D& m) {
 	return {
-		{ m[0][0], m[1][0], 0, m[2][0] },
-		{ m[0][1], m[1][1], 0, m[2][1] },
-		{ 0, 0, 1, 0},
-		{ 0, 0, 0, 1}
+		{ m.a, m.c, 0, m.tx },
+		{ m.b, m.d, 0, m.ty },
+		{ 0, 0, 1, 0 },
+		{ 0, 0, 0, 1 }
 	};
 }
 
@@ -93,7 +93,7 @@ struct MultiplyVisitor {
 	glm::mat4x4 matrix{ 1 };
 
 	void operator()(const Transforms::Matrix2D& p) {
-		matrix *= matrix2d((glm::mat3x2&)p);
+		matrix *= matrix2d(p);
 	}
 	void operator()(const Transforms::Matrix3D& p) {
 		matrix *= (const glm::mat4x4&)p;
@@ -238,7 +238,7 @@ struct PrepareVisitor {
 		else { ok = false; };
 	}
 	void operator()(Matrix2D& p) {
-		auto d = decompose(matrix2d((const glm::mat3x2&)p));
+		auto d = decompose(matrix2d(p));
 		if (d) { t = *d; }
 		else { ok = false; };
 	}
@@ -425,9 +425,9 @@ struct ToStringVisitor {
 	}
 	std::string operator()(const Transforms::Matrix2D& p) {
 		return "matrix("
-			+ ToString(p[0][0]) + "," + ToString(p[0][1]) + ","
-			+ ToString(p[1][0]) + "," + ToString(p[1][1]) + ","
-			+ ToString(p[2][0]) + "," + ToString(p[2][1])
+			+ ToString(p.a) + "," + ToString(p.b) + ","
+			+ ToString(p.c) + "," + ToString(p.d) + ","
+			+ ToString(p.tx) + "," + ToString(p.ty)
 			+ ")";
 	}
 	std::string operator()(const Transforms::Matrix3D& p) {

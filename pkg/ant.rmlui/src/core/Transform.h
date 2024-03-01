@@ -9,9 +9,13 @@
 namespace Rml {
 namespace Transforms {
 
-struct Matrix2D : glm::mat3x2 {
-	Matrix2D() : glm::mat3x2(1) {}
-	Matrix2D(glm::mat3x2&& o) : glm::mat3x2(std::forward<glm::mat3x2>(o)) {}
+struct Matrix2D {
+	float a = 1.f;
+	float b = 0.f;
+	float c = 0.f;
+	float d = 1.f;
+	float tx = 0.f;
+	float ty = 0.f;
 };
 
 struct Matrix3D : glm::mat4x4 {
