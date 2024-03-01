@@ -57,6 +57,7 @@ public:
 
 		drawParameter.ZNear = 0.f;
 		drawParameter.ZFar = 0.f;
+		return true;
 	}
 
 	void set_state(const Effekseer::Matrix44 &viewmat, const Effekseer::Matrix44 &projmat, float delta) {
@@ -132,7 +133,7 @@ public:
 
 	int slot_new(Effekseer::EffectRef ep) {
 		const int handle = alloc_efk_slot();
-		assert(slot_valid(handle));
+		assert(0 <= handle && handle < (int)effects.size());
 		auto& slot = effects[handle];
 		slot.eptr = ep;
 		slot.inst = -1;
@@ -279,7 +280,7 @@ public:
 
 static efk_ctx*
 EC(lua_State *L, int idx=1){
-	return (efk_ctx*)luaL_checkudata(L, idx, "EFK_CTX");
+	return (efk_ctx*)lua_touserdata(L, idx);
 }
 
 static inline Effekseer::Matrix44*
