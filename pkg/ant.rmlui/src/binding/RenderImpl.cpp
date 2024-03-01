@@ -356,7 +356,7 @@ void RenderImpl::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, 
     if (!state.needShaderClipRect)
         return;
 
-    glm::mat4 m(1.f);
+    glm::mat4x4 m(1.f);
     BGFX(encoder_set_transform)(encoder, &m, 1);
 
     static bgfx_vertex_layout_t debugLayout;

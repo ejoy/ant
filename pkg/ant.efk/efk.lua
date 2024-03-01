@@ -22,6 +22,7 @@ local ivs       = ecs.require "ant.render|visible_state"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local ilight    = ecs.require "ant.render|light.light"
 local iviewport = ecs.require "ant.render|viewport.state"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local efk_sys   = ecs.system "efk_system"
@@ -119,7 +120,7 @@ local function create_fb()
         {rbidx = fbmgr.get(mq.render_target.fb_idx)[2].rbidx})
 end
 
-local need_update_framebuffer = true
+local need_update_cb_data = true
 
 function efk_sys:init()
     queuemgr.register_queue "efk_queue"
@@ -237,7 +238,7 @@ end
 local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
 local mq_camera_changed = world:sub{"main_queue", "camera_changed"}
 
-local function update_framebuffer_texutre(projmat)
+local function update_cb_data(projmat)
     local eq = w:first "efk_queue render_target:in"
     local fb = fbmgr.get(eq.render_target.fb_idx)
 
@@ -257,28 +258,27 @@ end
 
 function efk_sys:camera_usage()
     for _ in mq_camera_changed:each() do
-        need_update_framebuffer = true
+        need_update_cb_data = true
     end
 
     for _ in mq_vr_mb:each() do
-        need_update_framebuffer = true
+        need_update_cb_data = true
     end
 
-    if not need_update_framebuffer then
-        local mq = w:first "main_queue camera_ref:in"
-        local ce = world:entity(mq.camera_ref, "camera_changed?in")
-        need_update_framebuffer = ce.camera_changed
-    end
+    local C = irq.main_camera_changed()
 
-    local mq = w:first "main_queue camera_ref:in"
-    local ce <close> = world:entity(mq.camera_ref, "camera:in camera_changed?in scene_changed?in")
-    local camera = ce.camera
+    if need_update_cb_data or C then
+        if C then
+            w:extend(C, "camera:in")
+        else
+            C = irq.main_camera_entity "camera:in"
+        end
+        local camera = C.camera
+        update_cb_data(camera.infprojmat)
+        EFKCTX:setstate(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 
-    if need_update_framebuffer then
-        update_framebuffer_texutre(camera.infprojmat)
-        need_update_framebuffer = false
+        need_update_cb_data = false
     end
-    EFKCTX:setstate(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
 end
 
 local function normalize_color(color)
@@ -340,7 +340,7 @@ local function update_hitch_efks()
     end
 end
 
-function efk_sys:render_postprocess()
+function efk_sys:render_submit()
     update_hitch_efks()
     efk_render()
 end

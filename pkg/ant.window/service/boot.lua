@@ -2,7 +2,7 @@ local ltask = require "ltask"
 local config = ...
 
 if config.boot then
-	ltask.uniqueservice(config.boot, config)
+	ltask.spawn(config.boot, config)
 end
 
 local ServiceWindow = ltask.uniqueservice("ant.window|window", ...)

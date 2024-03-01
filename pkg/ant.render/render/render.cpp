@@ -455,17 +455,24 @@ struct hitch_submitter {
 	void sort(){}
 
 	void submit(obj_transforms &trans) {
-		const component::render_args* efk_ra = nullptr;
 		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
-			auto ra = ctx->ra[ii];
-			if (ctx->queue_types[ra->queue_index] == queue_type::efk_queue){
-				efk_ra = ra;
-			}
-			objs.submit(ctx, ra, trans);
+			objs.submit(ctx, ctx->ra[ii], trans);
 		}
+	}
 
-		if (efk_ra){
-			efks.submit(ctx, efk_ra);
+	const component::render_args* find_efk_queue() const {
+		for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
+			if (ctx->queue_types[ctx->ra[ii]->queue_index] == queue_type::efk_queue){
+				return ctx->ra[ii];
+			}
+		}
+		return nullptr;
+	}
+
+	void submit_efks(){
+		auto efkra = find_efk_queue();
+		if (efkra){
+			efks.submit(ctx, efkra);
 		}
 	}
 
@@ -596,39 +603,27 @@ struct submit_cache{
 // 	return viewid == 2 || viewid == 3 || viewid == 4 || viewid == 5 || viewid == 12;
 // }
 
-static inline void
-render_hitch_submit(lua_State *L, ecs_world* w){
-	w->submit_cache->hitch.collect();
-	w->submit_cache->hitch.submit(w->submit_cache->transforms);
-}
-
-static inline void
-render_submit(lua_State *L, struct ecs_world* w){
-	w->submit_cache->obj.collect();
-	w->submit_cache->obj.submit(w->submit_cache->transforms);
-}
-
 static int
 lrender_submit(lua_State *L) {
 	auto w = getworld(L);
-	w->submit_cache->init(L, w);
+	w->submit_cache->obj.submit(w->submit_cache->transforms);
+	w->submit_cache->hitch.submit(w->submit_cache->transforms);
 
-	render_submit(L, w);
-	render_hitch_submit(L, w);
-	
 	w->submit_cache->clear();
 	return 0;
 }
 
-// static int
-// lrender_preprocess(lua_State *L){
-// 	auto w = getworld(L);
-// 	cc.clear();
+static int
+lrender_preprocess(lua_State *L){
+	auto w = getworld(L);
+	w->submit_cache->init(L, w);
 
-// 	find_render_args(w, cc);
-// 	build_hitch_info(w, cc);
-// 	return 0;
-// }
+	w->submit_cache->obj.collect();
+	w->submit_cache->hitch.collect();
+	// submit efk here, to make efk thread can submit parallel with world render submit
+	w->submit_cache->hitch.submit_efks();
+	return 0;
+}
 
 // static int
 // lrender_hitch_submit(lua_State *L){
@@ -790,7 +785,7 @@ luaopen_system_render(lua_State *L){
 	luaL_Reg l[] = {
 		{ "init_system",		linit_system},
 		{ "exit",				lexit},
-		//{ "render_preprocess",	lrender_preprocess},
+		{ "render_preprocess",	lrender_preprocess},
 		{ "render_submit", 		lrender_submit},
 		//{ "render_hitch_submit",lrender_hitch_submit},
 		//{ "render_postprocess", lrender_postprocess},

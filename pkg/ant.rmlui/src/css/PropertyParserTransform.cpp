@@ -155,10 +155,10 @@ Property PropertyParseTransform(PropertyId id, const std::string& value) {
 		}
 		else if (Scan(bytes_read, next, "matrix", number6, args, 6))
 		{
-			transform.emplace_back(Matrix2D(glm::mat3x2 {
-				{args[0].value, args[1].value},
-				{args[2].value, args[3].value},
-				{args[4].value, args[5].value},
+			transform.emplace_back(Matrix2D({
+				args[0].value, args[1].value,
+				args[2].value, args[3].value,
+				args[4].value, args[5].value,
 			}));
 		}
 		else if (Scan(bytes_read, next, "matrix3d", number16, args, 16))

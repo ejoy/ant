@@ -1185,10 +1185,10 @@ void Element::UpdateClip() {
 		&& corners[2].y == corners[3].y
 	) {
 		clip.type = ElementClip::Type::Scissor;
-		clip.scissor.x = clamp(std::floor(corners[0].x)                , (glm::u16)0, std::numeric_limits<glm::u16>::max());
-		clip.scissor.y = clamp(std::floor(corners[0].y)                , (glm::u16)0, std::numeric_limits<glm::u16>::max());
-		clip.scissor.z = clamp(std::ceil(corners[2].x - clip.scissor.x), (glm::u16)0, std::numeric_limits<glm::u16>::max());
-		clip.scissor.w = clamp(std::ceil(corners[2].y - clip.scissor.y), (glm::u16)0, std::numeric_limits<glm::u16>::max());
+		clip.scissor.x = clamp(std::floor(corners[0].x)                , std::numeric_limits<uint16_t>::min(), std::numeric_limits<uint16_t>::max());
+		clip.scissor.y = clamp(std::floor(corners[0].y)                , std::numeric_limits<uint16_t>::min(), std::numeric_limits<uint16_t>::max());
+		clip.scissor.z = clamp(std::ceil(corners[2].x - clip.scissor.x), std::numeric_limits<uint16_t>::min(), std::numeric_limits<uint16_t>::max());
+		clip.scissor.w = clamp(std::ceil(corners[2].y - clip.scissor.y), std::numeric_limits<uint16_t>::min(), std::numeric_limits<uint16_t>::max());
 	}
 	else {
 		clip.type = ElementClip::Type::Shader;
