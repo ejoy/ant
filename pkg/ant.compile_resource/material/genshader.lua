@@ -20,7 +20,24 @@ local function soft_shadow_type(sst)
 end
 
 local SOFT_SHADOW_TYPE<const> = soft_shadow_type(settings:get "graphic/shadow/soft_shadow") .. "=1"
-local SOFT_SHADOW_PCF_FIX4<const> = SOFT_SHADOW_TYPE:match "PCF" and settings:get "graphic/shadow/pcf/fix4"
+local PCF_TYPE_DEFINES<const> = {
+    fast = 1,
+    fix4 = 2,
+    simple = 3,
+}
+
+local PCF_FILTER_TYPES<const> = {
+    disc            = 1,
+    triangle        = 2,
+    halfmoon        = 3,
+    uniform         = 4,
+    gaussian_like   = 5,
+}
+
+local PCF_TYPE<const>           = settings:get "graphic/shadow/pcf/type"
+local PCF_FILTER_SIZE<const>    = settings:get "graphic/shadow/pcf/size"
+local pcf_filter                = settings:get "graphic/shadow/pcf/filter"
+local PCF_FILTER_TYPE<const>    = pcf_filter and PCF_FILTER_TYPES[pcf_filter] or nil
 
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
@@ -705,8 +722,14 @@ local function macros_from_setting(setting, m)
     if ENABLE_SHADOW and setting.receive_shadow == "on" then
         m[#m+1] = "ENABLE_SHADOW=1"
         m[#m+1] = SOFT_SHADOW_TYPE
-        if SOFT_SHADOW_PCF_FIX4 then
-            m[#m+1] = "PCF_FIX4=1"
+
+        if PCF_TYPE then
+            m[#m+1] = "PCF_TYPE=" .. PCF_TYPE_DEFINES[PCF_TYPE]
+            m[#m+1] = "PCF_FILTER_SIZE=" .. assert(PCF_FILTER_SIZE)
+            assert(PCF_TYPE ~= "fast" or nil ~= PCF_FILTER_TYPE, "fast pcf need define PCF_FILTER_TYPE")
+            if PCF_FILTER_TYPE then
+                m[#m+1] = "PCF_FILTER_TYPE=" .. PCF_FILTER_TYPE
+            end
         end
     end
 

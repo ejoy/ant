@@ -60,14 +60,6 @@ SHADOW_CFG.split_frustums	= {nil, nil, nil, nil}
 --check soft shadow
 if SHADOW_CFG.soft_shadow == "vsm" then
 	SHADOW_CFG.soft_shadow_param = math3d.ref(math3d.vector(SHADOW_CFG.depth_multiplier, SHADOW_CFG.min_variance, SHADOW_CFG.far_offset, 0.0))
-elseif SHADOW_CFG.soft_shadow == "pcf" then
-	if not SHADOW_CFG.pcf.fix4 then
-		local k = SHADOW_CFG.pcf.kernelsize
-		if 2.0 ~= k and 4.0 ~= k and 8.0 ~= k then
-			error(("PCF kernel size should only be: 2.0/4.0/8.0, kernelsize: %2f is not valid"):format(k))
-		end
-		SHADOW_CFG.soft_shadow_param = math3d.ref(math3d.vector(k, 0.0, 0.0, 0.0))
-	end
 end
 
 SHADOW_CFG.shadow_param1	= math3d.ref(math3d.vector(SHADOW_CFG.normal_offset, 1.0/SHADOW_CFG.shadowmap_size, SHADOW_CFG.split_num, 0.0))
