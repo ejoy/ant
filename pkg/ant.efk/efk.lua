@@ -32,7 +32,6 @@ local effect_viewid <const> = hwi.viewid_get "effect_view"
 
 local ltask = require "ltask"
 local ServiceEfkUpdate
-local ServiceBgfxEvent <const> = ltask.queryservice "ant.hwi|event"
 
 local EFKCTX
 local EFKCTX_HANDLE
@@ -125,8 +124,8 @@ local need_update_cb_data = true
 function efk_sys:init()
     queuemgr.register_queue "efk_queue"
     RC.set_queue_type("efk_queue", queuemgr.queue_index "efk_queue")
-    ServiceEfkUpdate = ltask.spawn "ant.efk|update"
     init_efk()
+    ServiceEfkUpdate = ltask.spawn("ant.efk|update", EFKCTX:handle(), EFKCTX.render)
     for _, n in ipairs{"play", "is_alive", "stop", "set_time", "pause", "set_speed", "set_visible"} do
         local f = EFKCTX[n] or error(("Invalid function name:%s"):format(n))
         HANDLE_MT[n] = function (self, ...)
@@ -329,7 +328,7 @@ local function efk_render()
     check_release_efks()
     efkasset.check_load_textures()
     EFKCTX = nil
-    ltask.send(ServiceBgfxEvent, "set", "efk", EFKCTX_HANDLE:handle(), EFKCTX_HANDLE.render)
+    ltask.send(ServiceEfkUpdate, "update")
 end
 
 local function update_hitch_efks()

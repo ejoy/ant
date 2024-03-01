@@ -5,10 +5,6 @@ local platform      = require "bee.platform"
 local fontmanager
 local cell = import_package "ant.textcell"
 
-ltask.fork(function ()
-    ltask.uniqueservice "ant.hwi|event"
-end)
-
 local initialized = false
 
 local CALL = {
