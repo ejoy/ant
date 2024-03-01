@@ -19,6 +19,10 @@ vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 wm)
 {
 #define DELTA_RADIAN (PI*0.1)
 	wm = calc_rotator_transform(DELTA_RADIAN * u_current_time);
+#ifdef DRAW_INDIRECT
+	mat4 hitchmat = mat4(vsinput.data0, vsinput.data1, vsinput.data2, vec4(0.0, 0.0, 0.0, 1.0));
+	wm = mul(hitchmat, wm);
+#endif
 	vec4 posCS; varyings.posWS = transform_worldpos(wm, vsinput.position, posCS);
 	return posCS;
 #undef DELTA_RADIAN

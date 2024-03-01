@@ -158,13 +158,15 @@ local function remove_duplicate_macros(macros)
     return mm
 end
 
-local function get_macros(setting, mat)
+local function get_macros(setting, mat, stage)
     local macros = default_macros(setting)
     CHECK_SETTING(mat, macros)
     if mat.fx.macros then
         table.move(mat.fx.macros, 1, #mat.fx.macros, #macros+1, macros)
     end
-
+    if stage:match "di" then
+        macros[#macros+1] = "DRAW_INDIRECT=1"
+    end
     return remove_duplicate_macros(macros)
 end
 
@@ -568,7 +570,7 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
                 includes    = shader_includes(inputfolder),
                 stage       = assert(STAGES[stage]),
                 varying_path= find_varying_path(setting, fx, stage),
-                macros      = get_macros(setting, mat),
+                macros      = get_macros(setting, mat, stage),
                 debug       = compile_debug_shader(setting.os, setting.renderer),
                 setting     = setting,
             }
