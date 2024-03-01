@@ -469,7 +469,7 @@ struct hitch_submitter {
 		return nullptr;
 	}
 
-	void submit_efks(){
+	void collect_submit_efks(){
 		auto efkra = find_efk_queue();
 		if (efkra){
 			efks.submit(ctx, efkra);
@@ -614,14 +614,14 @@ lrender_submit(lua_State *L) {
 }
 
 static int
-lrender_preprocess(lua_State *L){
+lrender_correct(lua_State *L){
 	auto w = getworld(L);
 	w->submit_cache->init(L, w);
 
 	w->submit_cache->obj.collect();
 	w->submit_cache->hitch.collect();
 	// submit efk here, to make efk thread can submit parallel with world render submit
-	w->submit_cache->hitch.submit_efks();
+	w->submit_cache->hitch.collect_submit_efks();
 	return 0;
 }
 
@@ -783,10 +783,10 @@ extern "C" int
 luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init_system",		linit_system},
-		{ "exit",				lexit},
-		{ "render_preprocess",	lrender_preprocess},
-		{ "render_submit", 		lrender_submit},
+		{ "init_system",	linit_system},
+		{ "exit",			lexit},
+		{ "render_collect",	lrender_correct},
+		{ "render_submit",	lrender_submit},
 		//{ "render_hitch_submit",lrender_hitch_submit},
 		//{ "render_postprocess", lrender_postprocess},
 		{ nullptr, 				nullptr },

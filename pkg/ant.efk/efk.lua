@@ -340,7 +340,7 @@ local function update_hitch_efks()
     end
 end
 
-function efk_sys:render_submit()
+function efk_sys:render_preprocess()
     update_hitch_efks()
     efk_render()
 end
