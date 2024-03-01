@@ -279,6 +279,7 @@ ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst) {
 static void
 clone_effect(efk_ctx *ctx, struct efk_instance *slot, const	Effekseer::Matrix43 &mat) {
 	auto handle = ctx->manager->Play(slot->eptr, 0, 0, 0);
+	ctx->manager->SetShown(handle, slot->shown);
 	float speed = ctx->manager->GetSpeed(slot->inst);
 	ctx->manager->SetSpeed(handle, speed);
 	bool paused = ctx->manager->GetPaused(slot->inst);
@@ -370,6 +371,9 @@ lefkctx_play(lua_State *L) {
 	if (ctx->manager->Exists(slot->inst)) {
 		bool fadeout = lua_toboolean(L, 5);
 		ctx->manager->SetShown(slot->inst, fadeout);
+		for (auto &c : slot->clone){
+			ctx->manager->SetShown(c, fadeout);
+		}
 		stop_all(ctx, slot, fadeout);
 	}
 	int32_t startFrame = (int32_t)luaL_optinteger(L, 4, 0);
