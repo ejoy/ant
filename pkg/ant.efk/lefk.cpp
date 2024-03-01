@@ -13,7 +13,7 @@ extern "C" {
 	#include <textureman.h>
 }
 
-struct efk_instance {
+struct efk_slot {
 	Effekseer::EffectRef eptr;
 	Effekseer::Handle inst;
 	union {
@@ -25,21 +25,261 @@ struct efk_instance {
 	std::vector<Effekseer::Handle> clone;
 };
 
+static inline void
+ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst) {
+	for (int m = 0; m < 4; m++) {
+		for (int n = 0; n < 3; n++) {
+			dst.Value[m][n] = src.Values[m][n];
+		}
+	}
+}
+
 class efk_ctx {
 public:
 	efk_ctx() = default;
 	~efk_ctx() = default;
+public:
+	bool init(EffekseerRendererBGFX::InitArgs &efkargs) {
+		renderer = EffekseerRendererBGFX::CreateRenderer(&efkargs);
+		if (renderer == nullptr){
+			return false;
+		}
+		manager = Effekseer::Manager::Create(efkargs.squareMaxCount);
+		manager->GetSetting()->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 
-	EffekseerRenderer::RendererRef renderer;
-	Effekseer::ManagerRef manager;
-	
+		manager->SetModelRenderer(CreateModelRenderer(renderer, &efkargs));
+		manager->SetSpriteRenderer(renderer->CreateSpriteRenderer());
+		manager->SetRibbonRenderer(renderer->CreateRibbonRenderer());
+		manager->SetRingRenderer(renderer->CreateRingRenderer());
+		manager->SetTrackRenderer(renderer->CreateTrackRenderer());
+		manager->SetTextureLoader(renderer->CreateTextureLoader());
+		manager->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
+
+		drawParameter.ZNear = 0.f;
+		drawParameter.ZFar = 0.f;
+	}
+
+	void set_state(const Effekseer::Matrix44 &viewmat, const Effekseer::Matrix44 &projmat, float delta) {
+		renderer->SetCameraMatrix(viewmat);
+		renderer->SetProjectionMatrix(projmat);
+		renderer->SetTime(renderer->GetTime() + delta);
+		drawParameter.ViewProjectionMatrix = renderer->GetCameraProjectionMatrix();
+	}
+
+	void update() {
+		// Stabilize in	a variable frame environment
+		// float deltaFrames = delta * 60.0f;
+		// int iterations =	std::max(1,	(int)roundf(deltaFrames));
+		// float advance = deltaFrames / iterations;
+		// for (int	i =	0; i < iterations; i++)	{
+		//	   ctx->manager->Update(advance);
+		// }
+		manager->Update();
+	}
+
+	void render() {
+		renderer->BeginRendering();
+		manager->Draw(drawParameter);
+		renderer->EndRendering();
+	}
+
+	void reset(){
+		// set invisible
+		for (auto &slot : effects) {
+			if (slot.eptr != nullptr) {
+				manager->SetShown(slot.inst, false);
+				if (slot.n == 0) {
+					for (auto handle : slot.clone) {
+						manager->StopEffect(handle);
+					}
+					slot.clone.resize(0);
+				} else {
+					for (auto handle : slot.clone) {
+						manager->SetShown(handle, false);
+					}
+					slot.n = 0;
+				}
+			}
+		}
+	}
+private:
+	inline int
+	alloc_efk_slot(){
+		if (freelist >= 0) {
+			auto slot = effects[freelist];
+			const int handle = freelist;
+			freelist = slot.next;
+			return handle;
+		}
+
+		const int handle = (int)effects.size();
+		effects.resize(handle + 1);
+		return handle;
+	}
+
+public:
+	inline bool
+	slot_valid(int handle) const {
+		return (0 <= handle && handle < (int)effects.size()) && (effects[handle].eptr != nullptr);
+	}
+
+	inline void
+	slot_valid(lua_State *L, int handle) {
+		if (!slot_valid(handle)) {
+			luaL_error(L, "invalid handle: %d", handle);
+		}
+	}
+
+	int slot_new(Effekseer::EffectRef ep) {
+		const int handle = alloc_efk_slot();
+		assert(slot_valid(handle));
+		auto& slot = effects[handle];
+		slot.eptr = ep;
+		slot.inst = -1;
+		slot.n = 0;
+		slot.shown = true;
+		slot.fadeout = false;
+		return handle;
+	}
+
+	void
+	slot_remove(int handle) {
+		assert(slot_valid(handle));
+		auto& slot = effects[handle];
+		slot_stop(slot, false);
+		slot.eptr = nullptr;
+		slot.next = this->freelist;
+		this->freelist = handle;
+	}
+
+	struct efk_slot&
+	slot_from_lua(lua_State *L, int index)	{
+		const int handle = (int)luaL_checkinteger(L, index);
+		slot_valid(L, handle);
+		return effects[handle];
+	}
+
+	void
+	slot_show(struct efk_slot &slot, bool show){
+		manager->SetShown(slot.inst, show);
+		for (auto &c : slot.clone){
+			manager->SetShown(c, show);
+		}
+	}
+
+	void
+	slot_stop(struct efk_slot& slot, bool fadeout) {
+		if (slot.inst < 0)
+			return;
+
+		if (fadeout) {
+			manager->SetSpawnDisabled(slot.inst, true);
+			for (auto handle : slot.clone) {
+				manager->SetSpawnDisabled(handle, true);
+			}
+		} else {
+			manager->StopEffect(slot.inst);
+			for (auto handle : slot.clone) {
+				manager->StopEffect(handle);
+			}
+		}
+		slot.inst = -1;
+		slot.clone.resize(0);
+		slot.n = 0;
+	}
+
+	void
+	slot_pause(struct efk_slot &slot, bool pause) {
+		manager->SetPaused(slot.inst, pause);
+		for (auto handle : slot.clone) {
+			manager->SetPaused(handle, pause);
+		}
+	}
+
+	void
+	slot_set_time(struct efk_slot &slot, float frame) {
+		manager->SetPaused(slot.inst, false);
+		manager->UpdateHandleToMoveToFrame(slot.inst, frame);
+		manager->SetPaused(slot.inst, true);
+
+		for (auto handle : slot.clone) {
+			manager->SetPaused(handle, false);
+			manager->UpdateHandleToMoveToFrame(handle, frame);
+			manager->SetPaused(handle, true);
+		}
+	}
+
+	void
+	slot_speed(struct efk_slot &slot, float speed) {
+		manager->SetSpeed(slot.inst, speed);
+		for (auto handle : slot.clone)	{
+			manager->SetSpeed(handle, speed);
+		}
+	}
+
+	void
+	slot_play(struct efk_slot& slot, float speed, int32_t startframe, bool fadeout){
+		if (manager->Exists(slot.inst)) {
+			slot_show(slot, fadeout);
+			slot_stop(slot, fadeout);
+		}
+
+		slot.fadeout = false;	//reset fadeout to false
+		slot.inst = manager->Play(slot.eptr, Effekseer::Vector3D(0, 0, 0), startframe);
+		manager->SetSpeed(slot.inst, speed);
+	}
+
+	void
+	slot_clone(struct efk_slot& slot, const	Effekseer::Matrix43 &mat) {
+		const Effekseer::Handle handle = manager->Play(slot.eptr, 0, 0, 0);
+		manager->SetShown(handle, slot.shown);
+		const float speed = manager->GetSpeed(slot.inst);
+		manager->SetSpeed(handle, speed);
+		const bool paused = manager->GetPaused(slot.inst);
+		manager->SetPaused(handle, paused);
+		slot.clone.emplace_back(handle);
+		++slot.n;
+	}
+
+	void
+	slot_update(struct efk_slot& slot, const Effekseer::Matrix44& effekMat44){
+		if (manager->Exists(slot.inst)) {
+			if (slot.shown) {
+				Effekseer::Matrix43 effekMat; ToMatrix43(effekMat44, effekMat);
+				if (slot.n == 0) {
+					manager->SetMatrix(slot.inst, effekMat);
+					manager->SetShown(slot.inst, true);
+					slot.n = 1;
+				} else {
+					const int	idx = slot.n - 1;
+					if (idx < (int)slot.clone.size()) {
+						manager->SetMatrix(slot.clone[idx], effekMat);
+						manager->SetShown(slot.clone[idx], true);
+						++slot.n;
+					} else {
+						slot_clone(slot, effekMat);
+					}
+				}
+				if (slot.fadeout) {
+					slot_stop(slot, true);
+				}
+			} else {
+				slot_stop(slot, false);
+			}
+		}
+	}
+public:
+	EffekseerRenderer::RendererRef		renderer;
+	Effekseer::ManagerRef				manager;
+	Effekseer::Manager::DrawParameter	drawParameter;
+
+	std::vector<efk_slot> 				effects;
 	int	freelist = -1;
-	std::vector<efk_instance> effects;
 };
 
 static efk_ctx*
-EC(lua_State *L){
-	return (efk_ctx*)lua_touserdata(L, 1);
+EC(lua_State *L, int idx=1){
+	return (efk_ctx*)luaL_checkudata(L, idx, "EFK_CTX");
 }
 
 static inline Effekseer::Matrix44*
@@ -93,60 +333,27 @@ TOC(lua_State *L, int index){
 
 static int
 lefkctx_handle(lua_State *L) {
-	auto ctx = EC(L);
-	lua_pushlightuserdata(L, ctx);
+	lua_pushlightuserdata(L, EC(L, 1));
 	return 1;
 }
 
 static int
 lefkctx_setstate(lua_State *L) {
-	auto ctx = EC(L);
+	auto ctx = EC(L, 1);
 	auto viewmat = TOM(L, 2);
 	auto projmat = TOM(L, 3);
 	auto delta = (float)luaL_checknumber(L, 4) * 0.001f;
-	ctx->renderer->SetCameraMatrix(*viewmat);
-	ctx->renderer->SetProjectionMatrix(*projmat);
-	ctx->renderer->SetTime(ctx->renderer->GetTime() + delta);
+
+	ctx->set_state(*viewmat, *projmat, delta);
 	return 0;
 }
 
 static int
 lefkctx_render(lua_State *L){
-	auto ctx = EC(L);
-
-	// Stabilize in	a variable frame environment
-	// float deltaFrames = delta * 60.0f;
-	// int iterations =	std::max(1,	(int)roundf(deltaFrames));
-	// float advance = deltaFrames / iterations;
-	// for (int	i =	0; i < iterations; i++)	{
-	//	   ctx->manager->Update(advance);
-	// }
-	ctx->manager->Update();
-	ctx->renderer->BeginRendering();
-	Effekseer::Manager::DrawParameter drawParameter;
-	drawParameter.ZNear = 0.0f;
-	drawParameter.ZFar = 1.0f;
-	drawParameter.ViewProjectionMatrix = ctx->renderer->GetCameraProjectionMatrix();
-	ctx->manager->Draw(drawParameter);
-	ctx->renderer->EndRendering();
-
-	// set invisible
-	for (auto &slot : ctx->effects) {
-		if (slot.eptr != nullptr) {
-			ctx->manager->SetShown(slot.inst, false);
-			if (slot.n == 0) {
-				for (auto handle : slot.clone) {
-					ctx->manager->StopEffect(handle);
-				}
-				slot.clone.resize(0);
-			} else {
-				for (auto handle : slot.clone) {
-					ctx->manager->SetShown(handle, false);
-				}
-				slot.n = 0;
-			}
-		}
-	}
+	auto ctx = EC(L, 1);
+	ctx->update();
+	ctx->render();
+	ctx->reset();
 	return 0;
 }
 
@@ -163,7 +370,7 @@ lefk_release(lua_State *L) {
 
 static int
 lefkctx_new(lua_State *L) {
-	auto ctx = EC(L);
+	auto ctx = EC(L, 1);
 	auto content = getmemory(L, 2);
 	char16_t u16_materialPath[1024];
 	auto materialPath = luaL_checkstring(L, 3);
@@ -187,140 +394,26 @@ lefkctx_new(lua_State *L) {
 
 static int
 lefkctx_create(lua_State *L) {
-	auto ctx = EC(L);
+	auto ctx = EC(L, 1);
 	struct efk_box *box = (struct efk_box *)luaL_checkudata(L, 2, "EFK_INSTANCE");
 	if (box->eptr == nullptr) {
 		return luaL_error(L, "Released effect");
 	}
 
-	int handle;
-
-	if (ctx->freelist >= 0) {
-		auto slot = &ctx->effects[ctx->freelist];
-		handle = ctx->freelist;
-		ctx->freelist = slot->next;
-	} else {
-		handle = (int)ctx->effects.size();
-		ctx->effects.resize(handle + 1);
-	}
-
-
-	struct efk_instance *slot = &ctx->effects[handle];
-	slot->eptr = box->eptr;
-	slot->inst = -1;
-	slot->n = 0;
-	slot->shown = true;
-	slot->fadeout = false;
-	lua_pushinteger(L, handle);
+	lua_pushinteger(L, ctx->slot_new(box->eptr));
 	return 1;
-}
-
-static inline bool
-handl_is_valid(efk_ctx *ctx, int handle){
-	return (0 <= handle && handle < (int)ctx->effects.size()) && (ctx->effects[handle].eptr != nullptr);
-}
-
-static void
-check_effect_valid(lua_State *L, efk_ctx *ctx, int handle){
-	if (!handl_is_valid(ctx, handle)) {
-		luaL_error(L, "invalid handle: %d", handle);
-	}
-}
-
-static struct efk_instance *
-get_instance(lua_State *L, efk_ctx *ctx, int index)	{
-	int handle = (int)luaL_checkinteger(L, index);
-	check_effect_valid(L, ctx, handle);
-	return &ctx->effects[handle];
-}
-
-static void
-stop_all(efk_ctx* ctx, struct efk_instance *slot, int fadeout) {
-	if (slot->inst < 0)
-		return;
-	if (fadeout) {
-		ctx->manager->SetSpawnDisabled(slot->inst, true);
-		for (auto handle : slot->clone) {
-			ctx->manager->SetSpawnDisabled(handle, true);
-		}
-	} else {
-		ctx->manager->StopEffect(slot->inst);
-		for (auto handle : slot->clone) {
-			ctx->manager->StopEffect(handle);
-		}
-	}
-	slot->inst = -1;
-	slot->clone.resize(0);
-	slot->n = 0;
 }
 
 static int
 lefkctx_destroy(lua_State *L) {
-	auto ctx = EC(L);
-	int handle = (int)luaL_checkinteger(L, 2);
-	check_effect_valid(L, ctx, handle);
-	auto slot = &ctx->effects[handle];
-	slot->eptr = nullptr;
-	stop_all(ctx, slot, false);
-	slot->next = ctx->freelist;
-	ctx->freelist = handle;
+	EC(L, 1)->slot_remove((int)luaL_checkinteger(L, 2));
 	return 0;
-}
-
-static inline void
-ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst) {
-	for (int m = 0; m < 4; m++) {
-		for (int n = 0; n < 3; n++) {
-			dst.Value[m][n] = src.Values[m][n];
-		}
-	}
-}
-
-static void
-clone_effect(efk_ctx *ctx, struct efk_instance *slot, const	Effekseer::Matrix43 &mat) {
-	auto handle = ctx->manager->Play(slot->eptr, 0, 0, 0);
-	ctx->manager->SetShown(handle, slot->shown);
-	float speed = ctx->manager->GetSpeed(slot->inst);
-	ctx->manager->SetSpeed(handle, speed);
-	bool paused = ctx->manager->GetPaused(slot->inst);
-	ctx->manager->SetPaused(handle, paused);
-	slot->clone.emplace_back(handle);
-	++slot->n;
-}
-
-static inline void 
-update_transform(efk_ctx* ctx, struct efk_instance * slot, const Effekseer::Matrix44* effekMat44){
-	if (ctx->manager->Exists(slot->inst)) {
-		if (slot->shown) {
-			Effekseer::Matrix43 effekMat; ToMatrix43(*effekMat44, effekMat);
-			if (slot->n == 0) {
-				ctx->manager->SetMatrix(slot->inst, effekMat);
-				ctx->manager->SetShown(slot->inst, true);
-				slot->n = 1;
-			} else {
-				int	idx = slot->n - 1;
-				if (idx < (int)slot->clone.size()) {
-					ctx->manager->SetMatrix(slot->clone[idx], effekMat);
-					ctx->manager->SetShown(slot->clone[idx], true);
-					++slot->n;
-				} else {
-					clone_effect(ctx, slot, effekMat);
-				}
-			}
-			if (slot->fadeout) {
-				stop_all(ctx, slot, true);
-			}
-		} else {
-			stop_all(ctx, slot, false);
-		}
-	}
 }
 
 static int
 lefkctx_update_transform(lua_State *L) {
-	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
-	update_transform(ctx, slot, TOM(L, 3));
+	auto ctx = EC(L, 1);
+	ctx->slot_update(ctx->slot_from_lua(L, 2), *TOM(L, 3));
 	return 0;
 }
 
@@ -344,9 +437,8 @@ lefkctx_update_transforms(lua_State *L){
 
 	for	(uint32_t ii=0; ii<num; ++ii){
 		const auto& t = td[ii];
-		check_effect_valid(L, ctx, t.handle);
-		auto& slot = ctx->effects[t.handle];
-		update_transform(ctx, &slot, reinterpret_cast<const Effekseer::Matrix44*>(t.data));
+		ctx->slot_valid(L, t.handle);
+		ctx->slot_update(ctx->effects[t.handle], *reinterpret_cast<const Effekseer::Matrix44*>(t.data));
 	}
 
 	return 0;
@@ -358,111 +450,66 @@ lefkctx_is_alive(lua_State *L) {
 	const int handle = (int)luaL_checkinteger(L, 2);
 
 	lua_pushboolean(L,
-		handl_is_valid(ctx, handle) &&
+		ctx->slot_valid(handle) &&
 		ctx->manager->Exists(ctx->effects[handle].inst));
 	return 1;
 }
 
 static int
 lefkctx_play(lua_State *L) {
-	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
-	slot->fadeout = false;
-	if (ctx->manager->Exists(slot->inst)) {
-		bool fadeout = lua_toboolean(L, 5);
-		ctx->manager->SetShown(slot->inst, fadeout);
-		for (auto &c : slot->clone){
-			ctx->manager->SetShown(c, fadeout);
-		}
-		stop_all(ctx, slot, fadeout);
-	}
-	int32_t startFrame = (int32_t)luaL_optinteger(L, 4, 0);
-	slot->inst = ctx->manager->Play(slot->eptr, Effekseer::Vector3D(0, 0, 0), startFrame);
-	float speed = (float)luaL_optnumber(L, 3, 1.0f);
-	ctx->manager->SetSpeed(slot->inst, speed);
-
+	auto ctx = EC(L, 1);
+	auto& slot = ctx->slot_from_lua(L, 2);
+	const float speed = (float)luaL_optnumber(L, 3, 1.0f);
+	const int32_t startframe = (int32_t)luaL_optinteger(L, 4, 0);
+	const bool fadeout = lua_toboolean(L, 5);
+	ctx->slot_play(slot, speed, startframe, fadeout);
 	return 0;
 }
 
 static int
 lefkctx_stop(lua_State *L){
 	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
-	bool fadeout = lua_toboolean(L, 3);
+	auto& slot = ctx->slot_from_lua(L, 2);
+	const bool fadeout = lua_toboolean(L, 3);
 	if (fadeout) {
-		slot->fadeout = true;
+		slot.fadeout = true;
 	} else {
-		stop_all(ctx, slot, false);
+		ctx->slot_stop(slot, false);
 	}
 	return 0;
 }
 
 static int
 lefkctx_set_visible(lua_State *L) {
-	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
-	bool visible = true;
-	if (lua_type(L, 3) == LUA_TBOOLEAN) {
-		visible = lua_toboolean(L, 3);
-	}
-	slot->shown = visible;
+	auto ctx = EC(L, 1);
+	auto& slot = ctx->slot_from_lua(L, 2);
+	slot.shown = (lua_type(L, 3) == LUA_TBOOLEAN) ? lua_toboolean(L, 3) : true;
 	return 0;
 }
 
 static int
 lefkctx_pause(lua_State *L) {
-	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
-
-	bool pause = false;
-	if (lua_type(L, 3) == LUA_TBOOLEAN) {
-		pause = lua_toboolean(L, 3);
-	}
-	ctx->manager->SetPaused(slot->inst, pause);
-	for (auto handle : slot->clone) {
-		ctx->manager->SetPaused(handle, pause);
-	}
+	auto ctx = EC(L, 1);
+	auto& slot = ctx->slot_from_lua(L, 2);
+	ctx->slot_pause(slot, lua_type(L, 3) == LUA_TBOOLEAN ? lua_toboolean(L, 3) : false);
 	return 0;
 }
 
 static int
 lefkctx_set_time(lua_State *L) {
-	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
-
-	float frame = 0.0f;
-	if (lua_type(L, 3) == LUA_TNUMBER) {
-		frame = (float)lua_tonumber(L, 3);
-		if (frame < 0.0f) {
-			frame = 0.0f;
-		}
-	}
-
-	auto play_handle = slot->inst;
-	ctx->manager->SetPaused(play_handle, false);
-	ctx->manager->UpdateHandleToMoveToFrame(slot->inst, frame);
-	ctx->manager->SetPaused(play_handle, true);
-
-	for (auto handle : slot->clone) {
-		ctx->manager->SetPaused(handle, false);
-		ctx->manager->UpdateHandleToMoveToFrame(handle, frame);
-		ctx->manager->SetPaused(handle, true);
-	}
-
+	auto ctx = EC(L, 1);
+	const float frame = std::max(0.f, (float)luaL_optnumber(L, 3, 0.f));
+	ctx->slot_set_time(ctx->slot_from_lua(L, 2), frame);
 	return 0;
 }
 
 static int
 lefkctx_set_speed(lua_State *L) {
 	auto ctx = EC(L);
-	auto slot = get_instance(L, ctx, 2);
+	auto& slot = ctx->slot_from_lua(L, 2);
 
-	float speed = (float)lua_tonumber(L, 3);
-
-	ctx->manager->SetSpeed(slot->inst, speed);
-	for (auto handle : slot->clone)	{
-		ctx->manager->SetSpeed(handle, speed);
-	}
+	const float speed = (float)lua_tonumber(L, 3);
+	ctx->slot_speed(slot, speed);
 	return 0;
 }
 
@@ -476,7 +523,7 @@ lefkctx_set_light_direction(lua_State *L) {
 
 static int
 lefkctx_set_light_color(lua_State *L) {
-	auto ctx = EC(L);
+	auto ctx = EC(L, 1);
 	auto color = TOC(L,	2);
 	ctx->renderer->SetLightColor(*color);
 	return 0;
@@ -484,18 +531,15 @@ lefkctx_set_light_color(lua_State *L) {
 
 static int
 lefkctx_set_ambient_color(lua_State *L) {
-	auto ctx = EC(L);
+	auto ctx = EC(L, 1);
 	auto ambient = TOC(L, 2);
 	ctx->renderer->SetLightAmbientColor(*ambient);
 	return 0;
 }
 
-static int
-lefk_startup(lua_State *L){
-	luaL_checktype(L, 1, LUA_TTABLE);
-
-	EffekseerRendererBGFX::InitArgs	efkArgs;
-	efkArgs.invz = true;	//we use inverse z
+static inline void
+fetch_efk_args(lua_State *L, int index, EffekseerRendererBGFX::InitArgs &args) {
+	args.invz = true;	//we use inverse z
 	auto get_field = [L](const char* name, int idx, int luatype, auto op){
 		auto ltype = lua_getfield(L, idx, name);
 		if (luatype	== ltype){
@@ -507,19 +551,27 @@ lefk_startup(lua_State *L){
 		lua_pop(L, 1);
 	};
 	
-	get_field("max_count", 1, LUA_TNUMBER,	[&](){efkArgs.squareMaxCount = (int)lua_tointeger(L, -1);});
-	get_field("viewid", 1, LUA_TNUMBER,	[&](){efkArgs.viewid = (bgfx_view_id_t)lua_tointeger(L, -1);});
+	get_field("max_count", 1, LUA_TNUMBER,	[&](){args.squareMaxCount = (int)lua_tointeger(L, -1);});
+	get_field("viewid", 1, LUA_TNUMBER,	[&](){args.viewid = (bgfx_view_id_t)lua_tointeger(L, -1);});
 
-	efkArgs.bgfx = bgfx_inf_;
+	args.bgfx = bgfx_inf_;
 
-	get_field("shader_load", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.shader_load = (decltype(efkArgs.shader_load))lua_touserdata(L, -1);});
-	get_field("texture_load", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_load = (decltype(efkArgs.texture_load))lua_touserdata(L, -1);});
-	get_field("texture_get", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_get = (decltype(efkArgs.texture_get))lua_touserdata(L, -1);});
-	get_field("texture_unload", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_unload = (decltype(efkArgs.texture_unload))lua_touserdata(L, -1);});
-	get_field("texture_handle", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_handle = (decltype(efkArgs.texture_handle))lua_touserdata(L, -1);});
+	get_field("shader_load", 1, LUA_TLIGHTUSERDATA, [&](){args.shader_load = (decltype(args.shader_load))lua_touserdata(L, -1);});
+	get_field("texture_load", 1, LUA_TLIGHTUSERDATA, [&](){args.texture_load = (decltype(args.texture_load))lua_touserdata(L, -1);});
+	get_field("texture_get", 1, LUA_TLIGHTUSERDATA, [&](){args.texture_get = (decltype(args.texture_get))lua_touserdata(L, -1);});
+	get_field("texture_unload", 1, LUA_TLIGHTUSERDATA, [&](){args.texture_unload = (decltype(args.texture_unload))lua_touserdata(L, -1);});
+	get_field("texture_handle", 1, LUA_TLIGHTUSERDATA, [&](){args.texture_handle = (decltype(args.texture_handle))lua_touserdata(L, -1);});
 	get_field("userdata", 1, LUA_TTABLE, [&]() {
-		get_field("callback", -1, LUA_TUSERDATA, [&](){efkArgs.ud = lua_touserdata(L, -1);});
+		get_field("callback", -1, LUA_TUSERDATA, [&](){args.ud = lua_touserdata(L, -1);});
 	});
+}
+
+static int
+lefk_startup(lua_State *L){
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+	EffekseerRendererBGFX::InitArgs	efkArgs;
+	fetch_efk_args(L, 2, efkArgs);
 
 	auto ctx = (efk_ctx*)lua_newuserdatauv(L, sizeof(efk_ctx), 0);
 	new	(ctx)efk_ctx();
@@ -554,21 +606,9 @@ lefk_startup(lua_State *L){
 
 	new	(ctx) efk_ctx();
 
-	ctx->renderer = EffekseerRendererBGFX::CreateRenderer(&efkArgs);
-	if (ctx->renderer == nullptr){
-		return luaL_error(L, "create efkbgfx renderer failed");
+	if (!ctx->init(efkArgs)){
+		return luaL_error(L, "create efk_ctx init failed");
 	}
-	ctx->manager = Effekseer::Manager::Create(efkArgs.squareMaxCount);
-	ctx->manager->GetSetting()->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
-
-	ctx->manager->SetModelRenderer(CreateModelRenderer(ctx->renderer, &efkArgs));
-	ctx->manager->SetSpriteRenderer(ctx->renderer->CreateSpriteRenderer());
-	ctx->manager->SetRibbonRenderer(ctx->renderer->CreateRibbonRenderer());
-	ctx->manager->SetRingRenderer(ctx->renderer->CreateRingRenderer());
-	ctx->manager->SetTrackRenderer(ctx->renderer->CreateTrackRenderer());
-	ctx->manager->SetTextureLoader(ctx->renderer->CreateTextureLoader());
-	ctx->manager->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
-
 	return 1;
 }
 
