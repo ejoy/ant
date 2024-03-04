@@ -14,8 +14,10 @@ function ic.dispatch(viewid, ds)
 	ds.material()
 
 	local s = ds.size
-    assert(assetmgr.material_isvalid(ds.fx.prog), "Invalid compute program")
-    bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
+    --assert(assetmgr.material_isvalid(ds.fx.prog), "Invalid compute program")
+    if assetmgr.material_isvalid(ds.fx.prog) then
+        bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3]) 
+    end
 end
 
 function ic.create_compute_entity(name, materialfile, size, onready)
