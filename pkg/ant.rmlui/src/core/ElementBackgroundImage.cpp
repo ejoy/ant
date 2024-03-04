@@ -65,9 +65,20 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	if (path.empty()) {
 		return false;
 	}
+
 	const auto& bounds = element->GetBounds();
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
+
+	bool isRT = false;
+	if (regex_match(path, std::regex("<.*>"))) {
+		isRT = true;
+		path = regex_replace(path, std::regex("[<>]"), std::string(""));
+	}
+	auto const& texture = isRT? Texture::Fetch(element, path, bounds.size): Texture::Fetch(element, path);
+	if (!texture) {
+		return false;
+	}
 
 	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin).GetEnum<Style::BoxType>();
 	Rect surface = Rect { {0, 0}, bounds.size };
@@ -104,16 +115,6 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	color.ApplyOpacity(element->GetOpacity());
 	if (!color.IsVisible())
 		return false;
-
-	bool isRT = false;
-	if (regex_match(path, std::regex("<.*>"))) {
-		isRT = true;
-		path = regex_replace(path, std::regex("[<>]"), std::string(""));
-	}
-	auto const& texture = isRT? Texture::Fetch(element, path, surface.size): Texture::Fetch(element, path);
-	if (!texture) {
-		return false;
-	}
 
 	Rect background {};
 	background.origin = surface.origin + Point {
