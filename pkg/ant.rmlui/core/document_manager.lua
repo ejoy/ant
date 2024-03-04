@@ -324,6 +324,13 @@ function m.getPendingTexture(doc)
     return pending[doc] or 0
 end
 
+local function parse_atlas(width, height, atlas)
+	local x, y, w, h
+	x, y = atlas.x / width, atlas.y / height
+	w, h = atlas.w / width, atlas.h / height
+	return x, y, w, h
+end
+
 local function updateTexture()
     local q = textureloader.updateTexture()
     if not q then
@@ -335,6 +342,9 @@ local function updateTexture()
             if v.lattice then
                 local x1, y1, x2, y2, uu, vv = v.lattice.x1, v.lattice.y1, v.lattice.x2, v.lattice.y2, v.lattice.u, v.lattice.v
                 rmlui.RenderSetLatticeTexture(v.path, v.id, v.width, v.height, x1, y1 ,x2, y2, uu, vv)
+            elseif v.atlas then
+                local x, y, w, h = parse_atlas(v.width, v.height, v.atlas)
+                rmlui.RenderSetTextureAtlas(v.path, v.id, v.atlas.w, v.atlas.h, x, y, w, h, v.atlas.dx, v.atlas.dy)
             else
                 rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
             end

@@ -624,6 +624,25 @@ lRenderSetLatticeTexture(lua_State* L) {
     return 0;
 }
 
+static int
+lRenderSetTextureAtlas(lua_State* L) {
+	Rml::AtlasData* data = new Rml::AtlasData();
+	if (lua_gettop(L) >= 8) {
+		data->handle = (Rml::TextureId)luaL_checkinteger(L, 2);
+		data->dimensions.w = (float)luaL_checkinteger(L, 3);
+		data->dimensions.h = (float)luaL_checkinteger(L, 4);
+		data->info.origin.x = (float)luaL_checknumber(L, 5);
+		data->info.origin.y = (float)luaL_checknumber(L, 6);
+		data->info.size.w = (float)luaL_checknumber(L, 7);
+		data->info.size.h = (float)luaL_checknumber(L, 8);
+		data->info.offset.x = (float)luaL_optnumber(L, 9, 0);
+		data->info.offset.y = (float)luaL_optnumber(L, 10, 0);
+		Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(data));
+	}
+	Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(data));
+    return 0;
+}
+
 }
 
 extern "C"
@@ -692,6 +711,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "RenderFrame", lRenderFrame },
 		{ "RenderSetTexture", lRenderSetTexture },
 		{ "RenderSetLatticeTexture", lRenderSetLatticeTexture },
+		{ "RenderSetTextureAtlas", lRenderSetTextureAtlas },
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
 		{ NULL, NULL },

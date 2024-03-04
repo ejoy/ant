@@ -40,6 +40,12 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	return uv;
 }
 
+static void UpdateUV(Rect& uv, AtlasData* texture) {
+	uv.origin = uv.origin + texture->info.origin;
+	uv.size.w = uv.size.w * texture->info.size.w;
+	uv.size.h = uv.size.h * texture->info.size.h;
+}
+
 static auto GetSamplerFlag(Style::BackgroundRepeat v) {
 	switch (v) {
 	case Style::BackgroundRepeat::NoRepeat:
@@ -175,6 +181,10 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect uv = CalcUV(surface, background);
+	if (Texture::GetType(texture->handle) == Texture::TextureType::atlas) {
+		UpdateUV(uv, (AtlasData*)texture);
+	}
+
 	auto backgroundRepeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
 
 	if (backgroundRepeat == Style::BackgroundRepeat::Repeat){

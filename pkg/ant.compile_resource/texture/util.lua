@@ -208,6 +208,9 @@ return function (output, setting, param)
 		if param.lattice then
 			config.info.lattice = parse_lattice(param.lattice)
 		end
+		if param.atlas then
+			config.info.atlas = param.atlas
+		end
 		if config.build_irradianceSH then
 			local nomip<const> = true
 			local info, content = image.parse(fastio.readall_f(output_bin:string()), true, "RGBA32F", nomip)

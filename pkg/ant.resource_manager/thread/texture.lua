@@ -15,6 +15,8 @@ local mem_formats <const> = {
 local function getTextureType(info)
     if info.lattice then
         return 1
+    elseif info.atlas then
+        return 2
     else
         return 0
     end
