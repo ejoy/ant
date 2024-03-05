@@ -121,8 +121,29 @@ function WindowEvent.recreate(m)
     }
 end
 
+local PAUSE
 function WindowEvent.suspend(m)
-    bgfx.event_suspend(m.what)
+    if m.what == "will_suspend" then
+        bgfx.pause()
+        PAUSE = true
+        if platform.os ~= "ios" then
+            ltask.fork(function ()
+                local thread = require "bee.thread"
+                while PAUSE do
+                    window.peek_message()
+                    if #WindowQueue > 0 then
+                        ltask.wakeup(WindowToken)
+                        ltask.sleep(0)
+                    else
+                        thread.sleep(0.01)
+                    end
+                end
+            end)
+        end
+    elseif m.what == "did_resume" then
+        bgfx.continue()
+        PAUSE = nil
+    end
 end
 
 function WindowEvent.exit()
