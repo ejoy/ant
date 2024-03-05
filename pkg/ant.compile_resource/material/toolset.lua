@@ -87,17 +87,14 @@ local function gen_commands(config)
 	end
 
 	local level = config.optimizelevel
-	local def_level
 	if config.debug then
 		commands[#commands+1] = "--debug"
-		def_level = 0
 	else
-		def_level = 3
+		local DEFAULT_OPTIMIZE_LEVEL<const> = 3
+		level = level or DEFAULT_OPTIMIZE_LEVEL
+		commands[#commands+1] = "-O"
+		commands[#commands+1] = tostring(level)
 	end
-
-	level = level or assert(def_level)
-	commands[#commands+1] = "-O"
-	commands[#commands+1] = tostring(level)
 
 	if config.varying_path then
         commands[#commands+1] = "--varyingdef"

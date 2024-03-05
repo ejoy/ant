@@ -1,9 +1,15 @@
 local ltask    = require "ltask"
 local bgfx     = require "bgfx"
+local platform = require "bee.platform"
 local assetmgr = import_package "ant.asset"
 local audio    = import_package "ant.audio"
 local new_world = import_package "ant.world".new_world
 local rhwi     = import_package "ant.hwi"
+
+local window
+if platform.os ~= "ios" then
+    window = require "window"
+end
 
 import_package "ant.hwi".init_bgfx()
 
@@ -67,6 +73,12 @@ local function render(nwh, context, width, height, args, initialized)
     initialized = nil
 
     while true do
+        if platform.os ~= "ios" then
+            window.peek_message()
+            if #WindowQueue > 0 then
+                ltask.wakeup(WindowToken)
+            end
+        end
         world:dispatch_message { type = "update" }
         if WindowQuit then
             break
@@ -143,6 +155,9 @@ local m = {}
 
 function m.init(args)
     initargs = args
+    if platform.os ~= "ios" then
+        window.init(WindowQueue, initargs.window_size)
+    end
 end
 
 function m.reboot(args)
@@ -150,7 +165,7 @@ function m.reboot(args)
 end
 
 local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
+    table.move(a, 1, #a, #t+1, t)
 end
 
 function m.message(messages)

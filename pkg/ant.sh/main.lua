@@ -1,4 +1,4 @@
 return {
     sh      = require "sh",
-    texture = require "texture",
+    texture = import_package "ant.texture".cube
 }

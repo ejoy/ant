@@ -3,8 +3,6 @@ local function start(initargs)
     local exclusive = {}
     if platform.os == "ios" then
         exclusive[#exclusive+1] = "ant.window|ios"
-    else
-        exclusive[#exclusive+1] = { "ant.window|window", initargs }
     end
     exclusive[#exclusive+1] = "timer"
     exclusive[#exclusive+1] = "ant.hwi|bgfx"
@@ -14,6 +12,10 @@ local function start(initargs)
     dofile "/engine/ltask.lua" {
         bootstrap = { "ant.window|boot", initargs },
         exclusive = exclusive,
+        worker = 5,
+        worker_bind = {
+            ["ant.window|window"] = 4,
+        },
     }
 end
 
