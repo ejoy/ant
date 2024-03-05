@@ -199,6 +199,7 @@ return function (output, setting, param)
 
 		local info = image.parse(fastio.readall_f(output_bin:string()))
 		config.info = info
+		config.image = imgpath:string()
 		if param.lattice then
 			config.info.lattice = param.lattice
 		end
