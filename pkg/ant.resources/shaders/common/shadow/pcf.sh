@@ -53,7 +53,28 @@ vec4 bgfxTextureGatherCmpOffset3(BgfxSampler2DShadow _sampler, vec2 _coord, floa
 }
 
 #define textureGatherCmpOffset(_sampler, _coord, _cmpvalue, _offset, _comp) bgfxTextureGatherCmpOffset ## _comp(_sampler, _coord, _cmpvalue, _offset)
+
+float shadow2DProjOffset(sampler2DShadow shadowsampler, vec4 shadowcoord, ivec2 offset)
+{
+	return shadowsampler.m_texture.SampleCmpLevelZero(shadowsampler.m_sampler, shadowcoord.xyz, shadowcoord.w, offset);
+}
+
+#elif BGFX_SHADER_LANGUAGE_SPIRV
+
+#define shadow2DProjOffset textureProjOffset
+
 #endif //!HLSL/METAL
+
+float total_weight() {
+	float w = 0.0;
+	for(int row = 0; row < PCF_FILTER_SIZE; ++row )
+	{
+		for(int col = 0; col < PCF_FILTER_SIZE; ++col )
+			w += W[row][col];
+	}
+
+	return w;
+}
 
 float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
 {
@@ -65,15 +86,9 @@ float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
 	vec2 fc = stc - tcs;
 	vec2 tc = tcs * u_shadowmap_texelsize;
 
-	float w = 0.0;
+	const float w = total_weight();
 	vec4 v1[HFS + 1];
 	vec2 v0[HFS + 1];
-
-	for(int row = 0; row < PCF_FILTER_SIZE; ++row )
-	{
-		for(int col = 0; col < PCF_FILTER_SIZE; ++col )
-			w += W[row][col];
-	}
 
 	UNROLL
 	for(int row = -HFS; row <= HFS; row += 2 )
@@ -102,7 +117,7 @@ float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
 			}
 			
 			if( fSumOfWeights != 0.0 ){
-				//v1[(col+HFS)/2] = ( tc.zzzz <= g_txShadowMap.Gather( g_samPoint, tc, int2( col, row ) ) ) ? (1.0).xxxx : (0.0).xxxx; 
+				//v1[(col+HFS)/2] = ( tc.zzzz <= g_txShadowMap.Gather( g_samPoint, tc, ivec2( col, row ) ) ) ? (1.0).xxxx : (0.0).xxxx; 
 				//use GatherComp for hlsl
 				// vec4 value = textureGatherOffset(shadowsampler, tc.xy, ivec2(col, row), 0);
 				// v1[(col+HFS)/2] = vec4_splat(depthlinear) <= value ? vec4_splat(1.0) : vec4_splat(0.0)
@@ -164,7 +179,59 @@ float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
    return dot(s, vec4_splat(1.0/w));
 }
 
-#define shadowPCF fastPCF
+float fastPCF1(sampler2DShadow shadowsampler, vec4 shadowcoord)
+{
+	//shadowcoord from [0, 1]
+	//stc from [0, shadowmapsize]
+	const float smsize = 1.0/u_shadowmap_texelsize;
+	vec2 stc = (smsize * shadowcoord.xy) + vec2(0.5, 0.5);	//sm coordinate
+	vec2 tcs = floor(stc);									//sm coordinate
+
+	vec2 fc = stc - tcs;									//sm coordinate
+	vec2 tc = shadowcoord.xy - (fc * u_shadowmap_texelsize);//normalize sm coordinate
+	fc.y  *= u_shadowmap_texelsize;							//normalize sm coordinate
+
+	const float w = total_weight();
+
+	float s = 0.0;
+	UNROLL
+	for(int row = 0; row < PCF_FILTER_SIZE; ++row)
+	{
+		UNROLL
+		for(int col = -HFS; col <= HFS; col += 2)
+		{
+			if( col == -HFS )
+			{
+				if( W[row][col+HFS+1] != 0 ||  W[row][col+HFS] != 0 ){
+					const vec2 coord = vec2(u_shadowmap_texelsize * ((W[row][col+HFS+1] - fc.x*(W[row][col+HFS+1] - W[row][col+HFS])) / ((1.0 - fc.x)*W[row][col+HFS+1] + W[row][col+HFS])), fc.y);
+					const float visibility = shadow2DProjOffset(shadowsampler, vec4(tc+coord, shadowcoord.zw), ivec2(col, row - HFS));
+					s += ((1.0 - fc.x) * W[row][col+HFS+1] + W[row][col+HFS]) * visibility;
+				}
+			}
+			else if( col == HFS )
+			{
+				if( W[row][col+HFS-1] != 0 ||  W[row][col+HFS] != 0 ){
+					const vec2 coord = vec2(u_shadowmap_texelsize * ((fc.x * W[row][col+HFS] ) / (fc.x * W[row][col+HFS-1] + W[row][col+HFS])), fc.y);
+					const float visibility = shadow2DProjOffset(shadowsampler, vec4(tc + coord, shadowcoord.zw), ivec2(col, row - HFS));
+					s += (fc.x * W[row][col+HFS-1] + W[row][col+HFS] ) * visibility;
+				}
+			}
+			else
+			{
+				if((W[row][col+HFS-1] - W[row][col+HFS+1]) != 0 || (W[row][col+HFS] + W[row][col+HFS+1]) != 0 ){
+					const vec2 coord = vec2(u_shadowmap_texelsize * ((W[row][col+HFS+1] - fc.x*( W[row][col+HFS+1] - W[row][col+HFS]))/(fc.x*(W[row][col+HFS-1] - W[row][col+HFS+1]) + W[row][col+HFS] + W[row][col+HFS+1])), fc.y);
+					const float visibility = shadow2DProjOffset(shadowsampler, vec4(tc+coord, shadowcoord.zw), ivec2(col, row-HFS));
+					s += (fc.x * (W[row][col+HFS-1] - W[row][col+HFS+1]) + W[row][col+HFS] + W[row][col+HFS+1] ) * visibility;
+				}
+			}
+		}
+	}	
+
+	return s/w;
+}
+
+
+#define shadowPCF fastPCF1
 
 #elif PCF_TYPE == PCF_TYPE_FIX4
 //see: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
