@@ -230,8 +230,59 @@ float fastPCF1(sampler2DShadow shadowsampler, vec4 shadowcoord)
 	return s/w;
 }
 
+float fastUniformPCF(sampler2DShadow shadowsampler, vec4 tc)
+{
+	const float smsize = 1.0/u_shadowmap_texelsize;
+	vec2 stc = ( smsize * tc.xy ) + vec2 ( 0.5, 0.5 );
+	vec2 tcs = floor ( stc );
+	vec2 fc;
+	fc = stc - tcs ;
+	tc.xy = tc.xy - (fc * u_shadowmap_texelsize);
 
-#define shadowPCF fastPCF1
+	vec2 pwAB = (vec2_splat(2.0) - fc);
+	vec2 tcAB = u_shadowmap_texelsize / pwAB;
+	vec2 tcM  = vec2_splat(0.5 * u_shadowmap_texelsize);
+	vec2 pwGH = (vec2_splat(1.0) + fc);
+	vec2 tcGH = u_shadowmap_texelsize*(fc / pwGH);
+
+	float s = 0.0;
+	for (int row = -HFS; row <= HFS ; row += 2)
+	{
+		for (int col = -HFS; col <= HFS ; col += 2)
+		{
+			if( row == -HFS ) // Top row
+			{
+				if( col == -HFS ) // left
+					s += (pwAB.x * pwAB.y) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + tcAB , tc.z, 1.0), ivec2(col , row));
+				else if( col == HFS ) // Right
+					s += (pwGH.x * pwAB.y) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + vec2(tcGH.x, tcAB.y), tc.z, 1.0), ivec2 (col, row));
+				else // center
+					s += (2.0*pwAB.y ) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + vec2(tcM.x, tcAB.y), tc.z, 1.0), ivec2(col, row));
+			}
+			else if( row == HFS ) // Bottom row
+			{
+				if( col == -HFS ) // Left
+					s += (pwAB.x * pwGH.y) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + vec2( tcAB.x, tcGH.y ), tc.z, 1.0), ivec2 (col , row));
+				else if( col == HFS ) // Right
+					s += (pwGH .x * pwGH.y) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + tcGH, tc.z, 1.0), ivec2(col, row));
+				else // Center
+					s += (2.0 * pwGH.y) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + vec2 (tcM.x, tcGH.y), tc.z, 1.0), ivec2(col, row));
+			}
+			else // Center rows
+			{
+				if( col == -HFS ) // Left
+					s += (pwAB.x * 2.0) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + vec2(tcAB.x, tcM.y), tc.z, 1.0), ivec2(col, row));
+				else if( col == HFS ) // Right
+					s += (pwGH.x * 2.0) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + vec2(tcGH.x, tcM.y), tc.z, 1.0), ivec2(col, row));
+				else // Center
+					s += (2.0 * 2.0) * shadow2DProjOffset(shadowsampler, vec4(tc.xy + tcM, tc.z, 1.0), ivec2(col, row));
+			}
+		}
+	}
+	return s/(PCF_FILTER_SIZE*PCF_FILTER_SIZE);
+}
+
+#define shadowPCF fastUniformPCF
 
 #elif PCF_TYPE == PCF_TYPE_FIX4
 //see: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
