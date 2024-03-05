@@ -10,8 +10,10 @@ local stringify 	= import_package "ant.serialize".stringify
 
 local TEXTUREC 		= require "tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
+local SH			= shpkg.sh
+local texcube		= import_package "ant.texture".cube
+
 local setting		= import_package "ant.settings"
-local SH, texutil	= shpkg.sh, shpkg.texture
 
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
@@ -218,7 +220,7 @@ return function (output, setting, param)
 				error "build SH need cubemap texture"
 			end
 			assert(info.bitsPerPixel // 8 == 16)
-			local cm = texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
+			local cm = texcube.create{w=info.width, h=info.height, texelsize=16, data=content}
 			config.irradiance_SH = build_irradiance_sh(cm)
 		end
 	else
