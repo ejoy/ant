@@ -92,7 +92,6 @@ local function render(nwh, context, width, height, args, initialized)
         bgfx.encoder_end()
         audio.frame()
         bgfx.encoder_frame()
-        ltask.sleep(0)
     end
     if ServiceRmlUi then
         ltask.send(ServiceRmlUi, "shutdown")
