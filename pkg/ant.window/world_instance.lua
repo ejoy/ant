@@ -11,7 +11,7 @@ if platform.os ~= "ios" then
     window = require "window"
 end
 
-import_package "ant.hwi".init_bgfx()
+rhwi.init_bgfx()
 
 local ServiceRmlUi
 ltask.fork(function ()
@@ -91,7 +91,7 @@ local function render(nwh, context, width, height, args, initialized)
         world:pipeline_update()
         bgfx.encoder_end()
         audio.frame()
-        rhwi.frame()
+        bgfx.encoder_frame()
         ltask.sleep(0)
     end
     if ServiceRmlUi then
