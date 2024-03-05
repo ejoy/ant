@@ -126,7 +126,7 @@ function efk_sys:init()
     RC.set_queue_type("efk_queue", queuemgr.queue_index "efk_queue")
     init_efk()
     ServiceEfkUpdate = ltask.spawn("ant.efk|update", EFKCTX:handle(), EFKCTX.render)
-    for _, n in ipairs{"play", "is_alive", "stop", "set_time", "pause", "set_speed", "set_visible"} do
+    for _, n in ipairs{"play", "is_alive", "stop", "set_time", "pause", "set_speed", "set_visible", "set_texture"} do
         local f = EFKCTX[n] or error(("Invalid function name:%s"):format(n))
         HANDLE_MT[n] = function (self, ...)
             return f(EFKCTX, self.handle, ...)
@@ -394,6 +394,11 @@ end
 
 function iefk.is_playing(e)
     return e.efk.play_handle:is_alive()
+end
+
+function iefk.set_texture(e, texpath, textype, texindex)
+    textype = textype or "color"    --color/normal/distortion
+    return e.efk.play_handle:set_texture(texpath, textype, texindex)
 end
 
 return iefk

@@ -1,7 +1,7 @@
 local ltask         = require "ltask"
-local exclusive     = require "ltask.exclusive"
 local bgfx          = require "bgfx"
 local platform      = require "bee.platform"
+local thread        = require "bee.thread"
 local fontmanager
 local cell = import_package "ant.textcell"
 
@@ -24,7 +24,8 @@ local CALL = {
     "fontmanager",
     "fontimport",
     "show_profile",
-    "event_suspend",
+    "pause",
+    "continue",
 }
 
 local SEND = {
@@ -187,10 +188,12 @@ function S.encoder_destroy()
     local who = ltask.current_session().from
     if encoder[who] == encoder_frame then
         encoder_cur = encoder_cur - 1
+        ltask.wakeup "encoder"
     end
     encoder[who] = nil
     profile[who] = nil
     encoder_num = encoder_num - 1
+    ltask.wakeup "encoder"
 end
 
 function S.encoder_frame()
@@ -199,6 +202,7 @@ function S.encoder_frame()
         encoder[who] = encoder_frame
         encoder_cur = encoder_cur + 1
         profile_end(who)
+        ltask.wakeup "encoder"
 --  textcell test
 --	cell.color(0x3)
 --	cell.open ">40% =3"
@@ -214,14 +218,6 @@ end
 
 local pause_token
 local continue_token
-
-function S.event_suspend(what)
-    if what == "will_suspend" then
-        S.pause()
-    elseif what == "did_resume" then
-        S.continue()
-    end
-end
 
 function S.pause()
     if pause_token then
@@ -333,12 +329,12 @@ local frame_control; do
         print_fps()
         print_time()
         if maxfps and fps > maxfps then
-            local waittime = math.ceil((1/maxfps - delta)*1000)
+            local waittime = 1/maxfps - delta
             if waittime > 0 then
-                if waittime < 10 then
-                    waittime = 10
+                if waittime < 0.01 then
+                    waittime = 0.01
                 end
-                exclusive.sleep(waittime)
+                thread.sleep(waittime)
             end
         end
         lasttime = ltask.counter()
@@ -386,11 +382,9 @@ local function mainloop()
             end
             frame_control()
             ltask.multi_wakeup("bgfx.frame", f)
-            ltask.sleep(0)
             profile_begin()
         else
-            exclusive.sleep(1)
-            ltask.sleep(0)
+            ltask.wait "encoder"
         end
     end
 end

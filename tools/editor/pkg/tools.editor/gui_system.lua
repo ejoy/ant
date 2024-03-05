@@ -300,7 +300,7 @@ end
 function m:widget()
 end
 
-function m.end_animation()
+function m.update_modifier()
     joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
     keyframe_view.end_animation()
 end

@@ -88,7 +88,7 @@ end
 
 local efkeid_group
 function efk_test_sys:init()
-    hitch_test()
+    efkeid_group = hitch_test()
 end
 
 function efk_test_sys:init_world()
@@ -108,6 +108,10 @@ function efk_test_sys:data_changed()
         elseif press == 0 and key == "R" then
             print(w:count "hitch")
             print(w:count "hitch view_visible")
+        elseif press == 0 and key == "K" then
+            local texpath = "/pkg/ant.test.features/assets/test.texture"
+            local e <close> = world:entity(efkeid_group, "efk:in")
+            iefk.set_texture(e, texpath, "color")
         end
     end
 end

@@ -32,7 +32,7 @@ local file_path
 local joints_map
 local joints_list
 local current_skeleton
-local joint_scale = 0.5
+local joint_scale = 0.06
 local sample_ratio = 30.0
 local anim_eid
 local current_joint
@@ -917,10 +917,11 @@ function m.clear(keep_skel)
         current_skeleton = nil
         if joints_list then
             for _, joint in ipairs(joints_list) do
-                if joint.mesh then
-                    w:remove(joint.mesh)
+                if joint.bone_mesh then
+                    w:remove(joint.bone_mesh[1])
+                    w:remove(joint.bone_mesh[2])
+                    joint.bone_mesh = nil
                 end
-                joint.mesh = nil
             end
         end
         joint_utils.on_select_joint = nil
@@ -1468,7 +1469,7 @@ function m.on_eid_delete(eid)
         end
     end
 end
-
+local joint_scale_map
 function m.init(skeleton)
     for e in w:select "eid:in animation:in" do
         if e.animation.skeleton == skeleton then
@@ -1476,14 +1477,19 @@ function m.init(skeleton)
         end
     end
     current_skeleton = skeleton
+    joint_scale_map = {}
     joint_utils.on_select_joint = function(old, new)
-        if old and old.mesh then
-            local e <close> = world:entity(old.mesh)
-            imaterial.set_property(e, "u_basecolor_factor", bone_color)
+        if old and old.bone_mesh then
+            local e1 <close> = world:entity(old.bone_mesh[1])
+            imaterial.set_property(e1, "u_basecolor_factor", bone_color)
+            local e2 <close> = world:entity(old.bone_mesh[2])
+            imaterial.set_property(e2, "u_basecolor_factor", bone_color)
         end
         if new then
-            local e <close> = world:entity(new.mesh)
-            imaterial.set_property(e, "u_basecolor_factor", bone_highlight_color)
+            local e1 <close> = world:entity(new.bone_mesh[1])
+            imaterial.set_property(e1, "u_basecolor_factor", bone_highlight_color)
+            local e2 <close> = world:entity(new.bone_mesh[2])
+            imaterial.set_property(e2, "u_basecolor_factor", bone_highlight_color)
             if current_anim then
                 local layer_index = find_anim_by_name(new.name) or 0
                 if layer_index ~= 0 then
@@ -1509,56 +1515,55 @@ function m.init(skeleton)
         end
         if animation then
             for _, joint in ipairs(jlist) do
-                if joint.mesh then
-                    local mesh_e <close> = world:entity(joint.mesh, "scene?in")
-                    if mesh_e.scene then
-                        -- joint
-                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(animation.models:joint(joint.index), math3d.matrix{s=joint_scale}))))
-                        -- bone
-                        local bone_mesh_e <close> = world:entity(joint.bone_mesh, "scene?in")
-                        local parent_idx = skeleton:parent(joint.index)
-                        local show = false
-                        if parent_idx > 0 then
-                            local bone_mat
-                            local mat_parent = animation.models:joint(parent_idx)
-                            local mat_current = animation.models:joint(joint.index)
-                            local bone_dir = math3d.sub(math3d.index(mat_current, 4), math3d.index(mat_parent, 4))
-                            
-                            local zdir = math3d.index(mat_parent, 3)
-                            local dot1 = math3d.dot(zdir, bone_dir)
-                            local xdir = math3d.index(mat_parent, 1)
-                            local dot2 = math3d.dot(xdir, bone_dir)
-                            local binormal = math.abs(dot1) < math.abs(dot2) and zdir or xdir
-                            
-                            local bone_len = math3d.length(bone_dir)
-                            local show_bone = bone_len > 0.0001
-                            if show_bone then
-                                local xaxis = bone_dir
-                                local yaxis = math3d.mul(bone_len, math3d.normalize(math3d.cross(binormal, bone_dir)))
-                                local zaxis = math3d.mul(bone_len, math3d.normalize(math3d.cross(bone_dir, yaxis)))
-                                bone_mat = math3d.matrix(xaxis, yaxis, zaxis, math3d.index(mat_parent, 4))
-                                iom.set_srt_matrix(bone_mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, bone_mat)))
-                                show = true
-                            end
-                            show = show_bone
+                if joint.bone_mesh then
+                    local mesh_e <close> = world:entity(joint.bone_mesh[2], "scene?in")
+                    -- joint
+                    local models = animation.models
+                    local models_ref = math3d.array_matrix_ref(models:pointer(), models:count())
+                    local joint_mat = math3d.array_index(models_ref, joint.index)
+                    iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(joint_mat, math3d.matrix{s=joint_scale_map[joint.index] and joint_scale_map[joint.index] or 0.02}))))
+                    -- bone
+                    local bone_mesh_e <close> = world:entity(joint.bone_mesh[1], "scene?in")
+                    local parent_idx = skeleton:parent(joint.index)
+                    local show = false
+                    if parent_idx > 0 then
+                        local bone_mat
+                        local mat_parent = math3d.array_index(models_ref, parent_idx)
+                        local mat_current = joint_mat
+                        local bone_dir = math3d.sub(math3d.index(mat_current, 4), math3d.index(mat_parent, 4))
+                        
+                        local zdir = math3d.index(mat_parent, 3)
+                        local dot1 = math3d.dot(zdir, bone_dir)
+                        local xdir = math3d.index(mat_parent, 1)
+                        local dot2 = math3d.dot(xdir, bone_dir)
+                        local binormal = math.abs(dot1) < math.abs(dot2) and zdir or xdir
+                        
+                        local bone_len = math3d.length(bone_dir)
+                        local show_bone = bone_len > 0.0001
+                        if show_bone then
+                            local xaxis = bone_dir
+                            local yaxis = math3d.mul(bone_len, math3d.normalize(math3d.cross(binormal, bone_dir)))
+                            local zaxis = math3d.mul(bone_len, math3d.normalize(math3d.cross(bone_dir, yaxis)))
+                            bone_mat = math3d.matrix(xaxis, yaxis, zaxis, math3d.index(mat_parent, 4))
+                            iom.set_srt_matrix(bone_mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, bone_mat)))
+                            show = true
                         end
-                        ivs.set_state(bone_mesh_e, "main_view", show)
+                        show = show_bone
+                        if not joint_scale_map[joint.index] then
+                            joint_scale_map[joint.index] = bone_len * joint_scale
+                        end
                     end
+                    ivs.set_state(mesh_e, "main_view", show)
+                    ivs.set_state(bone_mesh_e, "main_view", show)
                 end
             end
         end
     end
-    local _, list = joint_utils:get_joints()
-    for _, joint in ipairs(list) do
-        if joint.mesh then
-            w:remove(joint.mesh)
-        end
-    end
+
     joints_map, joints_list = joint_utils:init(skeleton)
     for _, joint in ipairs(joints_list) do
-        if not joint.mesh then
-            joint.bone_mesh = create_bone_entity(joint.name)
-            joint.mesh = create_joint_entity(joint.name)
+        if not joint.bone_mesh then
+            joint.bone_mesh = {create_bone_entity(joint.name), create_joint_entity(joint.name)}
         end
     end
 end

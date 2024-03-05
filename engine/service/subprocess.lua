@@ -1,5 +1,4 @@
 local ltask = require "ltask"
-local exclusive = require "ltask.exclusive"
 local subprocess = require "bee.subprocess"
 
 local S = {}
@@ -9,6 +8,7 @@ local output = {}
 
 local MaxSubprocess <const> = 8
 local WaitQueue = {}
+local UpdateToken = {}
 
 function S.run(command)
     while #progs > MaxSubprocess do
@@ -20,6 +20,9 @@ function S.run(command)
         return nil, err
     end
     progs[#progs+1] = prog
+    if #progs == 1 then
+        ltask.wakeup(UpdateToken)
+    end
     return ltask.wait(prog)
 end
 
@@ -82,9 +85,8 @@ end
 
 ltask.fork(function()
     while true do
-        ltask.sleep(0)
         if #progs == 0 then
-            exclusive.sleep(100)
+            ltask.wait(UpdateToken)
         else
             update()
         end

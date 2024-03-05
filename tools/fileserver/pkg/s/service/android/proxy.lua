@@ -1,7 +1,7 @@
 local adb, deviceid, port = ...
 local ltask = require "ltask"
 local socket = require "socket"
-local ServiceSubprocess = ltask.queryservice "subprocess"
+local ServiceSubprocess = ltask.uniqueservice "subprocess"
 
 local STATUS
 local CLIENT_FD

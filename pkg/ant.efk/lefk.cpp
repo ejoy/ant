@@ -219,6 +219,15 @@ public:
 	}
 
 	void
+	slot_set_texture(struct efk_slot &slot, const char* texpath, Effekseer::TextureType tt, int texindex){
+		auto tl = this->manager->GetTextureLoader();
+		char16_t wtexpath[512];
+		Effekseer::ConvertUtf8ToUtf16(wtexpath, 512, texpath);
+		auto tex = tl->Load(wtexpath, tt);
+		slot.eptr->SetTexture(texindex, tt, tex);
+	}
+
+	void
 	slot_play(struct efk_slot& slot, float speed, int32_t startframe, bool fadeout){
 		if (manager->Exists(slot.inst)) {
 			slot_show(slot, fadeout);
@@ -506,11 +515,40 @@ lefkctx_set_time(lua_State *L) {
 
 static int
 lefkctx_set_speed(lua_State *L) {
-	auto ctx = EC(L);
+	auto ctx = EC(L, 1);
 	auto& slot = ctx->slot_from_lua(L, 2);
 
 	const float speed = (float)lua_tonumber(L, 3);
 	ctx->slot_speed(slot, speed);
+	return 0;
+}
+
+static Effekseer::TextureType totexturetype(lua_State *L, int index){
+	const char* textype = luaL_checkstring(L, index);
+	if (strcmp(textype, "color") == 0){
+		return Effekseer::TextureType::Color;
+	}
+
+	if (strcmp(textype, "normal") == 0){
+		return Effekseer::TextureType::Normal;
+	}
+
+	if (strcmp(textype, "distortion") == 0){
+		return Effekseer::TextureType::Distortion;
+	}
+
+	luaL_error(L, "Invalid efk texture type: %s", textype);
+	return Effekseer::TextureType::Color;
+}
+
+static int
+lefkctx_set_texture(lua_State *L){
+	auto ctx = EC(L, 1);
+	auto& slot = ctx->slot_from_lua(L, 2);
+	const char* tex = luaL_checkstring(L, 3);
+	const Effekseer::TextureType tt = totexturetype(L, 4);
+	const int texindex = luaL_optinteger(L, 5, 0);
+	ctx->slot_set_texture(slot, tex, tt, texindex);
 	return 0;
 }
 
@@ -592,6 +630,7 @@ lefk_startup(lua_State *L){
 			{"pause",				lefkctx_pause},
 			{"set_time",			lefkctx_set_time},
 			{"set_speed",			lefkctx_set_speed},
+			{"set_texture",			lefkctx_set_texture},
 			{"update_transform",	lefkctx_update_transform},
 			{"update_transforms",	lefkctx_update_transforms},
 			{"is_alive",			lefkctx_is_alive},

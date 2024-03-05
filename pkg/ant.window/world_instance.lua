@@ -11,7 +11,7 @@ if platform.os ~= "ios" then
     window = require "window"
 end
 
-import_package "ant.hwi".init_bgfx()
+rhwi.init_bgfx()
 
 local ServiceRmlUi
 ltask.fork(function ()
@@ -91,8 +91,7 @@ local function render(nwh, context, width, height, args, initialized)
         world:pipeline_update()
         bgfx.encoder_end()
         audio.frame()
-        rhwi.frame()
-        ltask.sleep(0)
+        bgfx.encoder_frame()
     end
     if ServiceRmlUi then
         ltask.send(ServiceRmlUi, "shutdown")
@@ -122,8 +121,29 @@ function WindowEvent.recreate(m)
     }
 end
 
+local PAUSE
 function WindowEvent.suspend(m)
-    bgfx.event_suspend(m.what)
+    if m.what == "will_suspend" then
+        bgfx.pause()
+        PAUSE = true
+        if platform.os ~= "ios" then
+            ltask.fork(function ()
+                local thread = require "bee.thread"
+                while PAUSE do
+                    window.peek_message()
+                    if #WindowQueue > 0 then
+                        ltask.wakeup(WindowToken)
+                        ltask.sleep(0)
+                    else
+                        thread.sleep(0.01)
+                    end
+                end
+            end)
+        end
+    elseif m.what == "did_resume" then
+        bgfx.continue()
+        PAUSE = nil
+    end
 end
 
 function WindowEvent.exit()

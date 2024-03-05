@@ -534,10 +534,10 @@ local function show_skeleton(b)
         return
     end
     for _, joint in ipairs(joints_list) do
-        if joint.mesh then
-            local e <close> = world:entity(joint.mesh)
+        if joint.bone_mesh then
+            local e <close> = world:entity(joint.bone_mesh[1])
             ivs.set_state(e, "main_view", b)
-            local be <close> = world:entity(joint.bone_mesh)
+            local be <close> = world:entity(joint.bone_mesh[2])
             ivs.set_state(be, "main_view", b)
         end
     end
