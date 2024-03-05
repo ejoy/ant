@@ -5,7 +5,7 @@ if adb == "" then
 end
 
 local ltask = require "ltask"
-local ServiceSubprocess = ltask.queryservice "subprocess"
+local ServiceSubprocess = ltask.uniqueservice "subprocess"
 
 local devices = {}
 

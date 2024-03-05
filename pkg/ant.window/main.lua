@@ -5,9 +5,6 @@ local function start(initargs)
         exclusive[#exclusive+1] = "ant.window|ios"
     end
     exclusive[#exclusive+1] = "timer"
-    if not __ANT_RUNTIME__ then
-        exclusive[#exclusive+1] = "subprocess"
-    end
     dofile "/engine/ltask.lua" {
         bootstrap = { "ant.window|boot", initargs },
         exclusive = exclusive,
