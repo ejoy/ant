@@ -72,6 +72,15 @@ local function init(c)
 	if not config.worker then
 		config.worker = 4
 	end
+	if config.worker_bind then
+		local map = {}
+		for i = #config.worker_bind, 1, -1 do
+			local name = config.worker_bind[i]
+			map[name] = config.worker
+			config.worker = config.worker + 1
+		end
+		config.worker_bind = map
+	end
 
 	config.lua_path = nil
 	config.lua_cpath = ""

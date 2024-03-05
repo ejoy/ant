@@ -11,10 +11,9 @@ local function start(initargs)
     dofile "/engine/ltask.lua" {
         bootstrap = { "ant.window|boot", initargs },
         exclusive = exclusive,
-        worker = 6,
         worker_bind = {
-            ["ant.hwi|bgfx"] = 4,
-            ["ant.window|window"] = 5,
+            "ant.window|window",
+            "ant.hwi|bgfx",
         },
     }
 end
