@@ -331,6 +331,14 @@ local function parse_atlas(width, height, atlas)
 	return x, y, w, h
 end
 
+local function parse_lattice(lattice)
+	local new_lattice = {}
+	for k, v in pairs(lattice) do
+		new_lattice[k] = v / 100
+	end
+	return new_lattice
+end
+
 local function updateTexture()
     local q = textureloader.updateTexture()
     if not q then
@@ -340,11 +348,11 @@ local function updateTexture()
         local v = q[i]
         if v.id then
             if v.lattice then
-                local x1, y1, x2, y2, uu, vv = v.lattice.x1, v.lattice.y1, v.lattice.x2, v.lattice.y2, v.lattice.u, v.lattice.v
-                rmlui.RenderSetLatticeTexture(v.path, v.id, v.width, v.height, x1, y1 ,x2, y2, uu, vv)
+                local nl = parse_lattice(v.lattice)
+                rmlui.RenderSetLatticeTexture(v.path, v.id, v.width, v.height, nl.x1, nl.y1, nl.x2, nl.y2, nl.u, nl.v)
             elseif v.atlas then
                 local x, y, w, h = parse_atlas(v.width, v.height, v.atlas)
-                rmlui.RenderSetTextureAtlas(v.path, v.id, v.atlas.w, v.atlas.h, x, y, w, h, v.atlas.dx, v.atlas.dy)
+                rmlui.RenderSetTextureAtlas(v.path, v.id, v.atlas.w, v.atlas.h, x, y, w, h, v.atlas.dx, v.atlas.dy, v.atlas.dw, v.atlas.dh)
             else
                 rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
             end

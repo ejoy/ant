@@ -55,13 +55,8 @@ public:
 
 class AtlasData : public TextureData {
 public:
-	struct AtlasInfo {
-		Point origin;
-		Point offset;
-		Size size;
-	};
-
-	AtlasInfo info;
+	Rect atlas;
+	Rect surface;
 };
 
 class LatticeData : public TextureData {

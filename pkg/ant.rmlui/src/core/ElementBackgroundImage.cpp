@@ -41,9 +41,13 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 }
 
 static void UpdateUV(Rect& uv, AtlasData* texture) {
-	uv.origin = uv.origin + texture->info.origin;
-	uv.size.w = uv.size.w * texture->info.size.w;
-	uv.size.h = uv.size.h * texture->info.size.h;
+	uv.origin = uv.origin + texture->atlas.origin;
+	uv.size.w = uv.size.w * texture->atlas.size.w;
+	uv.size.h = uv.size.h * texture->atlas.size.h;
+}
+
+static float CalcLength(float percent, Element* e) {
+	return percent * e->GetBounds().size.w * 0.01f;
 }
 
 static auto GetSamplerFlag(Style::BackgroundRepeat v) {
@@ -85,6 +89,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	if (!texture) {
 		return false;
 	}
+	bool isAtlas = Texture::GetType(texture->handle) == Texture::TextureType::atlas;
 
 	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin).GetEnum<Style::BoxType>();
 	Rect surface = Rect { {0, 0}, bounds.size };
@@ -181,8 +186,12 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect uv = CalcUV(surface, background);
-	if (Texture::GetType(texture->handle) == Texture::TextureType::atlas) {
-		UpdateUV(uv, (AtlasData*)texture);
+	if (isAtlas) {
+		Rect surface = ((AtlasData*)texture)->surface;
+		background.origin = background.origin + Point { CalcLength(surface.origin.x, element), CalcLength(surface.origin.y, element)};
+		background.size.w = std::min(background.size.w , CalcLength(surface.size.w, element));
+		background.size.h = std::min(background.size.h , CalcLength(surface.size.h, element));
+		UpdateUV(uv, (AtlasData*)texture);	
 	}
 
 	auto backgroundRepeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
