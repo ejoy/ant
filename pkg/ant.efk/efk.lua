@@ -160,7 +160,7 @@ end
 
 local function cleanup_efk(efk)
     if efk.play_handle then
-        efk.play_handle:set_stop()
+        efk.play_handle:stop()
         efk.play_handle = nil
     end
 
