@@ -278,13 +278,13 @@ function world:create_instance(args)
     }
     local on_ready = args.on_ready
     if on_ready then
-        local proxy_entity = {}
         local proxy
-        function proxy_entity.on_ready()
+        local data = {}
+        function data.on_ready()
             on_ready(instance)
             w:remove_entity(proxy)
         end
-        proxy = create_entity_by_data(w, args.group, proxy_entity, debuginfo)
+        proxy = create_entity_by_data(w, args.group, data, debuginfo)
     end
     return instance
 end
