@@ -277,14 +277,14 @@ function world:create_instance(args)
         debuginfo = debuginfo,
     }
     local on_ready = args.on_ready
-    local proxy_entity = {}
     if on_ready then
+        local proxy_entity = {}
+        local proxy
         function proxy_entity.on_ready()
             on_ready(instance)
+            w:remove_entity(proxy)
         end
-    end
-    if next(proxy_entity) then
-        instance.proxy = create_entity_by_data(w, args.group, proxy_entity, debuginfo)
+        proxy = create_entity_by_data(w, args.group, proxy_entity, debuginfo)
     end
     return instance
 end
@@ -629,10 +629,6 @@ function world:entity(eid, pattern)
     if v then
         return setmetatable(v, submit[self.w])
     end
-end
-
-function world:instance_message(instance, ...)
-    self:pub {"EntityMessage", instance.proxy, ...}
 end
 
 function world:import_feature(name)

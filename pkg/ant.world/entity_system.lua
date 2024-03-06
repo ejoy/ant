@@ -25,9 +25,6 @@ function update_sys:frame_remove()
     --step1. Remove prefab
     for _, instance in evOnRemoveInstance:unpack() do
         instance.REMOVED = true
-        if instance.proxy then
-            w:remove(instance.proxy)
-        end
         for _, entity in ipairs(instance.tag["*"]) do
             w:remove(entity)
         end
