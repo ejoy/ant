@@ -277,16 +277,10 @@ function world:create_instance(args)
         debuginfo = debuginfo,
     }
     local on_ready = args.on_ready
-    local on_message = args.on_message
     local proxy_entity = {}
     if on_ready then
         function proxy_entity.on_ready()
             on_ready(instance)
-        end
-    end
-    if on_message then
-        function proxy_entity.on_message(_, ...)
-            on_message(instance, ...)
         end
     end
     if next(proxy_entity) then
@@ -635,10 +629,6 @@ function world:entity(eid, pattern)
     if v then
         return setmetatable(v, submit[self.w])
     end
-end
-
-function world:entity_message(eid, ...)
-    self:pub {"EntityMessage", eid, ...}
 end
 
 function world:instance_message(instance, ...)

@@ -6,7 +6,6 @@ local math3d = require "math3d"
 local update_sys = ecs.system "entity_update_system"
 local init_sys = ecs.system "entity_init_system"
 
-local evOnMessage = world:sub {"EntityMessage"}
 local evOnRemoveInstance = world:sub {"OnRemoveInstance"}
 
 local PipelineEntityRemove
@@ -16,17 +15,6 @@ function update_sys:entity_ready()
         v:on_ready()
     end
     w:clear "on_ready"
-end
-
-function update_sys:data_changed()
-    for msg in evOnMessage:each() do
-        local eid = msg[2]
-        local v = w:fetch(eid, "on_message:in")
-        if v then
-            v:on_message(table.unpack(msg, 3))
-            w:submit(v)
-        end
-    end
 end
 
 function update_sys:pipeline()

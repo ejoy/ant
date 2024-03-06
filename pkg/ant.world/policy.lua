@@ -16,7 +16,6 @@ end
 
 local allow <const> = {
     on_ready = true,
-    on_message = true,
 }
 
 local function verify(w, policies, data)
