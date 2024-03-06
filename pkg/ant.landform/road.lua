@@ -4,7 +4,7 @@ local w     = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-
+local assetmgr  = import_package "ant.asset"
 local irender       = ecs.require "ant.render|render"
 local icompute      = ecs.require "ant.render|compute.compute"
 local idi           = ecs.require "ant.render|draw_indirect.draw_indirect"
@@ -352,6 +352,7 @@ local function create_road_obj(gid, render_layer, buffer, dimaterial, cs_materia
             },
             on_ready = function (e)
                 w:extend(e, "dispatch:update")
+                assetmgr.material_mark(e.dispatch.fx.prog)
                 dispath_road_indirect_buffer(e, dieid)
             end
         }
