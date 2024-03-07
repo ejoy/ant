@@ -18,9 +18,10 @@ local assetmgr  = import_package "ant.asset"
 local GID_MT<const> = {__index=function(t, gid) local gg = {}; t[gid] = gg; return gg; end}
 
 local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
-local DIRTY_GROUPS, DIRECT_DRAW_GROUPS = {}, {}
+local DIRTY_GROUPS, MARK_GROUPS, DIRECT_DRAW_GROUPS = {}, {}, {}
 local HITCH_MAPS = {}
 local HITCH_CULL = {}
+local ih = {}
 local h = ecs.component "hitch"
 function h.init(hh)
     assert(hh.group ~= nil)
@@ -29,8 +30,27 @@ function h.init(hh)
     return hh
 end
 
-local main_viewid<const> = hwi.viewid_get "main_view"
+local viewid<const> = hwi.viewid_get "csm_fb"
 local hitch_sys = ecs.system "hitch_system"
+
+function ih.create_compute_entity()
+    return world:create_entity{
+        policy = {
+            "ant.render|compute",
+        },
+        data = {
+            material = cs_material,
+            dispatch = {
+                size = {1, 1, 1},   --update on dispatch_instance_buffer
+            },
+            on_ready = function (e)
+                w:extend(e, "dispatch:update")
+                --TODO: this compute shader should not mark
+                assetmgr.material_mark(e.dispatch.fx.prog)
+            end
+        }
+    }
+end
 
 local function get_hitch_worldmats_instance_memory(hitchs)
     local memory = {}
@@ -63,7 +83,7 @@ local function dispatch_instance_buffer(e, diid, draw_num)
             value = di.handle,
             stage = 0,
         }
-        icompute.dispatch(main_viewid, dis)
+        icompute.dispatch(viewid, dis)
     end
 end
 
@@ -87,34 +107,6 @@ local function update_group_instance_buffer(indirect_draw_group)
     end
 end
 
-local function create_compute_entity(glbs, memory, draw_num)
-    for _, glb in ipairs(glbs) do
-        local diid = glb.diid
-        local die = world:entity(diid, "draw_indirect:update mesh_result:in")
-        idi.update_instance_buffer(die, memory, draw_num)
-        die.draw_indirect.instance_buffer.params =  {draw_num, 0, 0, die.mesh_result.ib.num}
-        w:submit(die)
-        local cid = world:create_entity{
-            policy = {
-                "ant.render|compute",
-            },
-            data = {
-                material = cs_material,
-                dispatch = {
-                    size = {1, 1, 1},   --update on dispatch_instance_buffer
-                },
-                on_ready = function (e)
-                    w:extend(e, "dispatch:update")
-                    --TODO: this compute shader should not mark
-                    assetmgr.material_mark(e.dispatch.fx.prog)
-                    dispatch_instance_buffer(e, diid, draw_num)
-                end
-            }
-        }
-        glb.cid = cid
-    end
-end
-
 local function set_dirty_hitch_group(hitch, hid, state)
     if DIRECT_DRAW_GROUPS[hitch.group] then
         return
@@ -127,7 +119,11 @@ local function set_dirty_hitch_group(hitch, hid, state)
     if old_gid and old_gid ~= gid then
         local old_indirect_draw_group = INDIRECT_DRAW_GROUPS[old_gid]
         old_indirect_draw_group.hitchs[hid] = nil
-        DIRTY_GROUPS[old_gid] = true
+        if not indirect_draw_group.glbs then
+            MARK_GROUPS[old_gid] = true
+        else
+            DIRTY_GROUPS[old_gid] = true 
+        end
     end
     HITCH_MAPS[hid] = gid
 
@@ -225,35 +221,43 @@ function hitch_sys:refine_camera()
     end
 
     for gid in pairs(DIRTY_GROUPS) do
+        if MARK_GROUPS[gid] then
+            goto continue
+        end
         ig.enable(gid, "view_visible", true)
         local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
         if indirect_draw_group.glbs then
             update_group_instance_buffer(indirect_draw_group)
+            DIRTY_GROUPS[gid] = nil
         else
             ig.enable(gid, "hitch_tag", true)
             
             local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             local glbs = {}
-            for re in w:select "hitch_tag mesh_result draw_indirect eid:in render_object_visible?update bounding?update" do
+            for re in w:select "hitch_tag mesh_result:in draw_indirect:update eid:in render_object_visible?update bounding?update" do
                 -- render_object_visible only set in render_system entity_init by view_visible
                 re.render_object_visible = true
                 re.bounding.aabb       = mu.M3D_mark(re.bounding.aabb, math3d.aabb())
                 re.bounding.scene_aabb = mu.M3D_mark(re.bounding.scene_aabb, math3d.aabb())
-                glbs[#glbs+1] = { diid = re.eid}
+                glbs[#glbs+1] = { diid = re.eid, cid = re.draw_indirect.cid}
                 update_instance_buffer(re.eid, memory, draw_num)
+                idi.update_instance_buffer(re, memory, draw_num)
+                re.draw_indirect.instance_buffer.params =  {draw_num, 0, 0, re.mesh_result.ib.num}
             end
             for re in w:select "hitch_tag efk render_object_visible?update view_visible?update" do
                 ivs.set_state(re, "efk_queue", true)
             end
             indirect_draw_group.glbs = glbs
-            create_compute_entity(indirect_draw_group.glbs, memory, draw_num)
 
             ig.enable(gid, "hitch_tag", false)
         end
+        ::continue::
     end
-
-    DIRTY_GROUPS = {}
+    for gid in pairs(MARK_GROUPS) do
+        DIRTY_GROUPS[gid] = true
+    end
+    MARK_GROUPS = {}
     w:clear "hitch_update"
 end
 
-
+return ih
