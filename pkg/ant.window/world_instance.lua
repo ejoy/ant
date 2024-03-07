@@ -91,7 +91,7 @@ local function render(nwh, context, width, height, args, initialized)
         world:pipeline_update()
         bgfx.encoder_end()
         audio.frame()
-        bgfx.encoder_frame()
+        world._frametime = bgfx.encoder_frame()
     end
     if ServiceRmlUi then
         ltask.send(ServiceRmlUi, "shutdown")

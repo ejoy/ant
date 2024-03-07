@@ -1,31 +1,23 @@
 local ecs = ...
+local world = ecs.world
 
-local ltask = require "ltask"
-
-local function gettime()
-	local _, now = ltask.now()
-	return now * 10
-end
-
-local previous
+local now
 local delta
 local pause
 
 local time_sys = ecs.system "time_system"
 
 function time_sys:init()
-	previous = gettime()
+	now = 0
 	delta = 0
 end
 
 function time_sys:timer()
 	if pause then
 		delta = 0
-		previous = gettime()
 	else
-		local now = gettime()
-		delta = now - previous
-		previous = now
+		delta = world:get_frame_time()
+		now = now + delta
 	end
 end
 
@@ -33,6 +25,10 @@ local m = {}
 
 function m.delta()
 	return delta
+end
+
+function m.now()
+	return now
 end
 
 function m.pause()
