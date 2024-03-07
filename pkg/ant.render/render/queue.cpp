@@ -174,6 +174,23 @@ lqueue_set(lua_State *L){
 }
 
 static int
+lqueue_fetch(lua_State *L){
+    auto w = getworld(L);
+    const int Qidx = (int)luaL_checkinteger(L, 1);
+    if (!w->Q->isvalid(Qidx)){
+        luaL_error(L, "Invalid Qidx");
+    }
+
+    uint64_t masks[queue_node::NUM_MASK];
+    queue_fetch(w->Q, Qidx, masks);
+
+    for (uint8_t ii=0; ii<queue_node::NUM_MASK; ++ii){
+        lua_pushinteger(L, masks[ii]);
+    }
+    return queue_node::NUM_MASK;
+}
+
+static int
 lqueue_check(lua_State *L){
     auto w = getworld(L);
     const int Qidx = (int)luaL_checkinteger(L, 1);
@@ -193,6 +210,7 @@ luaopen_render_queue(lua_State *L){
 		{ "dealloc",lqueue_dealloc},
 		{ "alloc",	lqueue_alloc},
 		{ "set",	lqueue_set},
+        { "fetch",  lqueue_fetch},
         { "check",  lqueue_check},
 		{ nullptr, 	nullptr },
 	};

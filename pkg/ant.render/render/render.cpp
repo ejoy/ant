@@ -482,7 +482,7 @@ struct hitch_submitter {
 			for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
 				auto ra = ctx->ra[ii];
 				const auto &s = e.get<component::scene>();
-				if (h.group != 0){
+				if (h.group != 0 && queue_check(ctx->w->Q, h.visible_idx, ra->queue_index)){
 					groups[h.group][ra->queue_index].emplace_back(s.worldmat);
 				}
 			}
