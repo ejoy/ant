@@ -6,7 +6,7 @@ local tl_sys = ecs.system "timeline_system"
 local itl 	= ecs.require "ant.timeline|timeline"
 local iani 	= ecs.require "ant.anim_ctrl|state_machine"
 local imodifier = ecs.require "ant.modifier|modifier"
-
+local audio = import_package "ant.audio"
 function itl:start(e, context)
 	if #e.timeline.key_event <= 0 then
 		return 0
@@ -45,6 +45,7 @@ function engine_event:Effect(tid, ud)
 end
 
 function engine_event:Sound(tid, ud)
+	audio.play(ud.ev.sound_event)
 end
 
 function engine_event:Message(tid, ud)

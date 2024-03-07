@@ -15,7 +15,6 @@ local bfs 			= require "bee.filesystem"
 local global_data	= require "common.global_data"
 local icons         = require "common.icons"
 local math3d        = require "math3d"
-local fmod 			= require "fmod"
 local log_widget        = require "widget.log"
 local console_widget    = require "widget.console"
 local widget_utils      = require "widget.utils"
@@ -118,7 +117,6 @@ function m:init()
 		fw:add(global_data.project_root:string())
 		global_data.filewatch = fw
 	end
-	global_data.audio = fmod.init()
 	
 	init_font()
 
@@ -157,10 +155,8 @@ function m:post_init()
 end
 
 function m:data_changed()
-	global_data.audio:update()
 end
 
 function m:exit()
 	widget_utils:save_ui_layout()
-	global_data.audio:shutdown()
 end

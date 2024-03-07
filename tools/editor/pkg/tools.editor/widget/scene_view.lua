@@ -319,7 +319,6 @@ function m.show()
         end
         ImGui.Separator()
         if ImGui.BeginTable("InspectorTable", 3, ImGui.TableFlags {'ScrollY'}) then
-            -- local child_width, child_height = ImGui.GetContentRegionAvail()
             ImGui.TableSetupColumnEx("Entity", ImGui.TableColumnFlags {'NoHide', 'WidthStretch'}, 1.0)
             local fw = 24.0 * icons.scale
             ImGui.TableSetupColumnEx("Lock", ImGui.TableColumnFlags {'WidthFixed'}, fw)

@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local rhwi  = import_package "ant.hwi"
 local m     = ecs.system 'input_system'
 local event_mouse = world:sub {"mouse"}
 local last_mouse

@@ -17,10 +17,10 @@ function m.imguiEndToolbar()
     ImGui.PopStyleColorEx(3)
 end
 
-local function imgui_tooltip(text, wrap)
+local function imgui_tooltip(text)
     if ImGui.IsItemHovered() then
         if ImGui.BeginTooltip() then
-            ImGui.TextWrapped(text, wrap or 200)
+            ImGui.Text(text)
             ImGui.EndTooltip()
         end
     end
