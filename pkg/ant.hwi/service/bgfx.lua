@@ -381,7 +381,7 @@ local function mainloop()
                 continue_token = nil
             end
             frame_control()
-            ltask.multi_wakeup("bgfx.frame", 1 / (maxfps or fps))
+            ltask.multi_wakeup("bgfx.frame", 1000. / (maxfps or fps))
             profile_begin()
         else
             ltask.wait "encoder"
