@@ -325,10 +325,17 @@ function m.getPendingTexture(doc)
 end
 
 local function parse_atlas(width, height, atlas)
-	local x, y, w, h
-	x, y = atlas.x / width, atlas.y / height
-	w, h = atlas.w / width, atlas.h / height
-	return x, y, w, h
+	local uv_rect, vertex_factor = {}, {}
+    local dl, dr, dt, db = atlas.dl and atlas.dl or 0, atlas.dr and atlas.dr or 0, atlas.dt and atlas.dt or 0, atlas.db and atlas.db or 0
+    local surface_width, surface_height = atlas.w + dl + dr, atlas.h + dt + db
+    uv_rect.x, uv_rect.y, uv_rect.w, uv_rect.h = atlas.x/width, atlas.y/height, atlas.w/width, atlas.h/height
+    vertex_factor.x, vertex_factor.y = dl/surface_width, dt/surface_height
+    vertex_factor.w, vertex_factor.h = atlas.w/surface_width, atlas.h/surface_height
+    return {
+        w = atlas.w, h = atlas.h, 
+        ax = uv_rect.x, ay = uv_rect.y, aw = uv_rect.w, ah = uv_rect.h,
+        fx = vertex_factor.x, fy = vertex_factor.y, fw = vertex_factor.w, fh = vertex_factor.h,
+    }
 end
 
 local function parse_lattice(lattice)
@@ -351,8 +358,8 @@ local function updateTexture()
                 local nl = parse_lattice(v.lattice)
                 rmlui.RenderSetLatticeTexture(v.path, v.id, v.width, v.height, nl.x1, nl.y1, nl.x2, nl.y2, nl.u, nl.v)
             elseif v.atlas then
-                local x, y, w, h = parse_atlas(v.width, v.height, v.atlas)
-                rmlui.RenderSetTextureAtlas(v.path, v.id, v.atlas.w, v.atlas.h, x, y, w, h, v.atlas.dx, v.atlas.dy, v.atlas.dw, v.atlas.dh)
+                local at = parse_atlas(v.width, v.height, v.atlas)
+                rmlui.RenderSetTextureAtlas(v.path, v.id, at.w, at.h, at.ax, at.ay, at.aw, at.ah, at.fx, at.fy, at.fw, at.fh)
             else
                 rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
             end

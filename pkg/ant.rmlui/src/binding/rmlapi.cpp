@@ -631,14 +631,14 @@ lRenderSetTextureAtlas(lua_State* L) {
 		data->handle           = (Rml::TextureId)luaL_checkinteger(L, 2);
 		data->dimensions.w     = (float)luaL_checkinteger(L, 3);
 		data->dimensions.h     = (float)luaL_checkinteger(L, 4);
-		data->atlas.origin.x   = (float)luaL_checknumber(L, 5);
-		data->atlas.origin.y   = (float)luaL_checknumber(L, 6);
-		data->atlas.size.w     = (float)luaL_checknumber(L, 7);
-		data->atlas.size.h     = (float)luaL_checknumber(L, 8);
-		data->surface.origin.x = (float)luaL_optnumber(L, 9, 0);
-		data->surface.origin.y = (float)luaL_optnumber(L, 10, 0);
-		data->surface.size.w   = (float)luaL_optnumber(L, 11, 100);
-		data->surface.size.h   = (float)luaL_optnumber(L, 12, 100);
+		data->uv_rect.origin.x   = (float)luaL_checknumber(L, 5);
+		data->uv_rect.origin.y   = (float)luaL_checknumber(L, 6);
+		data->uv_rect.size.w     = (float)luaL_checknumber(L, 7);
+		data->uv_rect.size.h     = (float)luaL_checknumber(L, 8);
+		data->vertex_factor.origin.x = (float)luaL_optnumber(L, 9, 0);
+		data->vertex_factor.origin.y = (float)luaL_optnumber(L, 10, 0);
+		data->vertex_factor.size.w   = (float)luaL_optnumber(L, 11, 1);
+		data->vertex_factor.size.h   = (float)luaL_optnumber(L, 12, 11);
 		Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(data));
 	}
 	Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(data));

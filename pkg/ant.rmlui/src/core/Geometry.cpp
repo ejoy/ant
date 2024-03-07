@@ -240,6 +240,18 @@ void Geometry::AddRectFilled(const Rect& rect, Color col) {
 	DrawRect(vtx, idx, (Index)vsz, rect, col);
 }
 
+void Geometry::UpdateRectFilled(const Rect& rect, size_t vsz, size_t isz, Color col) {
+	if (!col.IsVisible()) {
+		return;
+	}
+	if (rect.size.w == 0 || rect.size.h == 0) {
+		return;
+	}
+	Vertex* vtx = &vertices[vsz];
+	Index* idx = &indices[isz];
+	DrawRect(vtx, idx, (Index)vsz, rect, col);
+}
+
 void Geometry::AddQuad(const Quad& quad, Color col) {
 	if (!col.IsVisible()) {
 		return;
@@ -395,7 +407,8 @@ Geometry::Path Geometry::ClipPolygon(const Path& poly1, const Rect& rect) {
 	return PolygonClip(poly1, poly2);
 }
 
-void Geometry::UpdateUV(size_t count, const Rect& surface, const Rect& uv) {
+void Geometry::
+UpdateUV(size_t count, const Rect& surface, const Rect& uv) {
 	Vertex* vtx = &vertices[vertices.size() - count];
 	const Size size = surface.size;
 	const Size uv_size = uv.size;

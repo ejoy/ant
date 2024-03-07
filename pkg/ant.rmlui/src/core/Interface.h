@@ -55,8 +55,8 @@ public:
 
 class AtlasData : public TextureData {
 public:
-	Rect atlas;
-	Rect surface;
+	Rect uv_rect;	//texture uv
+	Rect vertex_factor;	//factor of vertex offset in background
 };
 
 class LatticeData : public TextureData {

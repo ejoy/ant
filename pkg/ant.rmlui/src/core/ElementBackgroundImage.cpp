@@ -41,9 +41,9 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 }
 
 static void UpdateUV(Rect& uv, AtlasData* texture) {
-	uv.origin = uv.origin + texture->atlas.origin;
-	uv.size.w = uv.size.w * texture->atlas.size.w;
-	uv.size.h = uv.size.h * texture->atlas.size.h;
+	uv.origin = uv.origin + texture->uv_rect.origin;
+	uv.size.w = uv.size.w * texture->uv_rect.size.w;
+	uv.size.h = uv.size.h * texture->uv_rect.size.h;
 }
 
 static float CalcLength(float percent, Element* e) {
@@ -187,10 +187,6 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 
 	Rect uv = CalcUV(surface, background);
 	if (isAtlas) {
-		Rect surface = ((AtlasData*)texture)->surface;
-		background.origin = background.origin + Point { CalcLength(surface.origin.x, element), CalcLength(surface.origin.y, element)};
-		background.size.w = std::min(background.size.w , CalcLength(surface.size.w, element));
-		background.size.h = std::min(background.size.h , CalcLength(surface.size.h, element));
 		UpdateUV(uv, (AtlasData*)texture);	
 	}
 
@@ -256,6 +252,13 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 				if (!background.IsEmpty()) {
 					geometry.AddRectFilled(background, color);
 					geometry.UpdateUV(4, surface, uv);
+ 					if (isAtlas) {
+						Rect vf = ((AtlasData*)texture)->vertex_factor;
+						background.origin = background.origin + Point {vf.origin.x * background.size.w, vf.origin.y * background.size.h};
+						background.size.w = vf.size.w * background.size.w;
+						background.size.h = vf.size.h * background.size.h;
+						geometry.UpdateRectFilled(background, 0, 0, color);
+					}
 				}
 			}
 			else {

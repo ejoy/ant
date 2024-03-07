@@ -59,6 +59,7 @@ public:
 		std::vector<Point> points;
 	};
 
+	void UpdateRectFilled(const Rect& rect, size_t vsz, size_t isz, Color col);
 	void AddRectFilled(const Rect& rect, Color col);
 	void AddRectFilled(const Rect& rect, const Rect& uv, Color col);
 	void AddRect(const Rect& inner, float width, Color col);
