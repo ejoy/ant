@@ -13,21 +13,10 @@ require "core.DOM.constructor":init()
 
 local quit
 
-local _, last = ltask.now()
-local function getDelta()
-    local _, now = ltask.now()
-    local delta = now - last
-    last = now
-    if delta > 10 then
-        delta = 10
-    end
-    return delta * 10
-end
-
 local function Render()
     bgfx.encoder_create "rmlui"
+    local delta = 0
     while not quit do
-        local delta = getDelta()
         if delta > 0 then
             timer.update(delta)
         end
@@ -35,7 +24,7 @@ local function Render()
         document_manager.update(delta)
         task.update()
         audio.frame()
-        bgfx.encoder_frame()
+        delta = bgfx.encoder_frame()
     end
     bgfx.encoder_destroy()
     ltask.wakeup(quit)

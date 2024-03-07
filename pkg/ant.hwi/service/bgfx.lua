@@ -257,13 +257,13 @@ function S.show_profile(what, show)
 end
 
 local maxfps = 30
+local fps = 0
 local frame_control; do
     local MaxTimeCachedFrame <const> = 1 --*1s
     local frame_first = 1
     local frame_last  = 0
     local frame_time = {}
     local frame_delta = {}
-    local fps = 0
     local lasttime = ltask.counter()
     local printtime = 0
     local printtext = ""
@@ -372,7 +372,7 @@ local function mainloop()
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
             viewidmgr.check_remapping()
-            local f = bgfx.frame()
+            bgfx.frame()
             bgfx.dbg_text_clear()
             if pause_token then
                 ltask.wakeup(pause_token)
@@ -381,7 +381,7 @@ local function mainloop()
                 continue_token = nil
             end
             frame_control()
-            ltask.multi_wakeup("bgfx.frame", f)
+            ltask.multi_wakeup("bgfx.frame", 1000. / (maxfps or fps))
             profile_begin()
         else
             ltask.wait "encoder"

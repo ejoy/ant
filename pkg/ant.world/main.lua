@@ -676,6 +676,10 @@ function world:dispatch_imgui(msg)
     return self._dispatch_imgui(msg)
 end
 
+function world:get_frame_time()
+    return self._frametime
+end
+
 local m = {}
 
 function m.new_world(config)
@@ -718,6 +722,7 @@ function m.new_world(config)
             system = {},
         },
         _mouse = { x = 0, y = 0 },
+        _frametime = 0,
         w = ecs,
     }, world_metatable)
 

@@ -3,7 +3,6 @@ local sampler 		= import_package "ant.render.core".sampler
 local lfs 			= require "bee.filesystem"
 local image 		= require "image"
 local math3d		= require "math3d"
-local ltask			= require "ltask"
 local fastio		= require "fastio"
 
 local stringify 	= import_package "ant.serialize".stringify
@@ -114,11 +113,9 @@ local compress_SH; do
 end
 
 local function build_Eml(cm)
-    local _, begin = ltask.now()
     print("start build irradiance SH, bandnum:", irradianceSH_bandnum)
     local Eml = SH.calc_Eml(cm, irradianceSH_bandnum)
-    local _, now = ltask.now()
-    print("finish build irradiance SH, time used:", now - begin)
+    print("finish build irradiance SH")
     return Eml
 end
 
