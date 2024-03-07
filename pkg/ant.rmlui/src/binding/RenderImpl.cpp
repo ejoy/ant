@@ -371,7 +371,7 @@ void RenderImpl::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, 
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, 4, &debugLayout);
 
-    memcpy(tvb.data, &state.rectVerteices, sizeof(glm::vec2)*4);
+    memcpy(tvb.data, &state.rectVerteices, sizeof(state.rectVerteices));
     BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, 0, 4);
 
     bgfx_transient_index_buffer_t tib;

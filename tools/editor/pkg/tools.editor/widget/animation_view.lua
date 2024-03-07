@@ -21,6 +21,7 @@ local utils     = require "common.utils"
 local faicons   = require "common.fa_icons"
 local fmod      = require "fmod"
 local global_data = require "common.global_data"
+local iaudio     = import_package "ant.audio"
 local access    = global_data.repo_access
 
 local edit_timeline
@@ -46,7 +47,7 @@ local anim_state = {
     selected_clip_index = 0,
     current_event_list = {}
 }
-
+local mount_sound_flag = {}
 local ui_loop = {false}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local ui_timeline_duration = {1, min = 1, max = 300, speed = 1}
@@ -54,7 +55,6 @@ local event_type = {"Animation", "Effect", "Sound", "Message"}
 
 local current_event
 local current_event_index
-local current_clip
 local anim_key_event = {}
 local function find_index(t, item)
     for i, c in ipairs(t) do
@@ -276,76 +276,79 @@ local function show_events()
 end
 
 local sound_event_name_list = {}
-local sound_event_list = {}
-local bank_path
-
+local sound_bank_list = {}
+local bank_path = ""
+local lfs = require "bee.filesystem"
+local vfs = require "vfs"
 local function show_current_event()
     if not current_event then return end
     ImGuiWidgets.PropertyLabel("EventType")
     ImGui.Text(current_event.event_type)
-
     local dirty
     if current_event.event_type == "Sound" then
-        if not bank_path and ImGui.Button("SelectBankPath") then
+        if ImGui.Button("SelectBankPath") then
             local filename = uiutils.get_open_file_path("Bank", "bank")
             if filename then
-                bank_path = filename:match("^(.+/)[%w*?_.%-]*$")
-                for _, pkg in ipairs(global_data.packages) do
-                    local pv = tostring(pkg.path)
-                    if pv == string.sub(bank_path, 1, #pv) then
-                        bank_path = "/pkg/"..pkg.name .. string.sub(bank_path, #pv + 1)
-                        break;
+                -- local fullpath = (lfs.path('/') / lfs.relative(filename, global_data.project_root)):string()
+                bank_path = (lfs.path('/') / lfs.relative(filename:match("^(.+/)[%w*?_.%-]*$"), global_data.project_root)):string()
+                if not mount_sound_flag[bank_path] then
+                    mount_sound_flag[bank_path] = true
+                    utils.mount_memfs(bank_path)
+                    local bank_files = {
+                        bank_path .. "/Master.strings.bank",
+                        bank_path .. "/Master.bank"
+                    }
+                    for value in fs.pairs(fs.path(bank_path)) do
+                        local strv = value:filename():string()
+                        if string.sub(strv, -5) == ".bank" and (strv ~= "Master.strings.bank") and (strv ~= "Master.bank") then
+                            bank_files[#bank_files + 1] = value:string()
+                            sound_bank_list[#sound_bank_list + 1] = bank_files[#bank_files]
+                        end
                     end
-                end
-                local bank_files = {
-                    bank_path .. "Master.strings.bank",
-                    bank_path .. "Master.bank"
-                }
-                for value in fs.pairs(fs.path(bank_path)) do
-                    if string.sub(value, -5) == ".bank" and (value ~= "Master.strings.bank") and (value ~= "Master.bank") then
-                        bank_files[#bank_files + 1] = bank_path .. value
+                    local audio_native = fmod.init()
+                    for _, file in ipairs(bank_files) do
+                        local event_list = {}
+                        local data = vfs.read(file)
+                        audio_native:load_bank(fastio.tostring(data), event_list)
+                        local name_list = {}
+                        for key, _ in pairs(event_list) do
+                            name_list[#name_list + 1] = key
+                        end
+                        sound_event_name_list[file] = name_list
                     end
-                end
-                local audio = global_data.audio
-                for _, file in ipairs(bank_files) do
-                    audio:load_bank(file, sound_event_list)
-                end
-                for key, _ in pairs(sound_event_list) do
-                    sound_event_name_list[#sound_event_name_list + 1] = key
-                end
-                world.sound_event_list = sound_event_list
-            --     local rp = lfs.relative(lfs.path(path), global_data.project_root)
-            --     local fullpath = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
-            --     local bank = iaudio.load_bank(fullpath)
-            --     if not bank then
-            --         print("LoadBank Faied. :", fullpath)
-            --     end
-            --     local bankname = fullpath:sub(1, -5) .. "strings.bank"
-            --     local bank_string = iaudio.load_bank(bankname)
-            --     if not bank_string then
-            --         print("LoadBank Faied. :", bankname)
-            --     end
-            --     local event_list = iaudio.get_event_list(bank)
-            --     sound_event_list = {}
-            --     for _, v in ipairs(event_list) do
-            --         sound_event_list[#sound_event_list + 1] = iaudio.get_event_name(v)
-            --     end
-            --     current_event.asset_path_ui.text = fullpath
-            --     current_event.asset_path = fullpath
-            --     dirty = true
-            end
-        end
-        ImGui.Text("BankPath : " .. current_event.asset_path)
-        ImGui.Text("SoundEvent : " .. current_event.sound_event)
-        ImGui.Separator();
-        for _, se in ipairs(sound_event_name_list) do
-            if ImGui.SelectableEx(se, current_event.sound_event == se, ImGui.SelectableFlags {"AllowDoubleClick"}) then
-                current_event.sound_event = se
-                if (ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left)) then
-                    fmod.play(sound_event_list[se])
+                    audio_native:shutdown()
+                    iaudio.load(bank_files)
+                    current_event.asset_path = ""
+                    current_event.sound_event = ""
                     dirty = true
                 end
             end
+        end
+        ImGui.SameLine()
+        ImGui.Text(" : "..bank_path)
+        ImGuiWidgets.PropertyLabel("BankPath")
+        local bank_file_name = current_event.asset_path
+        if ImGui.BeginCombo("##BankPath", bank_file_name) then
+            for _, bank in ipairs(sound_bank_list) do
+                if ImGui.SelectableEx(bank, bank_file_name == bank) then
+                    current_event.asset_path = bank
+                    dirty = true
+                end
+            end
+            ImGui.EndCombo()
+        end
+        ImGuiWidgets.PropertyLabel("SoundEvent")
+        local sound_event = current_event.sound_event
+        if ImGui.BeginCombo("##SoundEvent", sound_event) then
+            local eventlist = sound_event_name_list[current_event.asset_path] or {}
+            for _, event in ipairs(eventlist) do
+                if ImGui.SelectableEx(event, sound_event == event) then
+                    current_event.sound_event = event
+                    iaudio.play(event)
+                    dirty = true
+                end
+            end
+            ImGui.EndCombo()
         end
     elseif current_event.event_type == "Effect" or current_event.event_type == "Animation" then
         local action_list = {}
@@ -434,7 +437,6 @@ local function on_move_keyframe(frame_idx, move_type)
     anim_state.selected_frame = frame_idx
     local ke = anim_key_event[tostring(frame_idx)]
     anim_state.current_event_list = ke and ke or {}
-    --if not current_clip or not current_clip.key_event then return end
     local newkey = tostring(anim_state.selected_frame)
     if move_type == 0 then
         local oldkey = tostring(old_selected_frame)
@@ -581,7 +583,6 @@ function m.clear()
     current_anim = nil
     current_event = nil
     current_event_index = 0
-    current_clip = nil
     edit_anims = nil
     keyframe_view.clear()
     timeline_eid = nil
@@ -589,6 +590,7 @@ function m.clear()
     anim_state.key_event = {}
     anim_state.current_event_list = {}
     anim_state.selected_frame = -1
+    mount_sound_flag = {}
 end
 
 function m.get_title()

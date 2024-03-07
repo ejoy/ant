@@ -8,10 +8,7 @@ local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
 local aio           = import_package "ant.io"
-local layoutmgr     = import_package "ant.render".layoutmgr
 local stringify     = import_package "ant.serialize".stringify
-local cr            = import_package "ant.compile_resource"
-local memfs         = import_package "ant.vfs".memory
 
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
@@ -30,11 +27,11 @@ local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "bee.filesystem"
 local fastio        = require "fastio"
-local vfs           = require "vfs"
 local global_data   = require "common.global_data"
 local access        = global_data.repo_access
 local editor_setting = require "editor_setting"
 local ientity       = ecs.require "ant.entity|entity"
+local memfs         = import_package "ant.vfs".memory
 
 local TERRAIN_MATERIAL <const> = "/pkg/vaststars.resources/materials/terrain/plane_terrain.material"
 local m = {
@@ -418,7 +415,7 @@ end
 local prefabe_name_ui = ImGui.StringBuf()
 local prefab_list = {}
 local patch_template
-local faicons   = require "common.fa_icons"
+
 local function reset_open_context()
     gd.glb_filename = nil
     gd.is_opening = false
@@ -443,6 +440,7 @@ local function get_prefabs_and_patch_template(glbfilename)
     return prefabs, patch_tpl
 end
 
+local faicons   = require "common.fa_icons"
 function m:choose_prefab()
     if not gd.glb_filename then
         return
@@ -515,20 +513,6 @@ function m:choose_prefab()
     end
 end
 
-local function mount_memfs(vpath)
-    for path in fs.pairs(fs.path(vpath)) do
-        if path:filename():string():sub(1,1) == "." then
-            goto continue
-        end
-        if fs.is_directory(path) then
-            mount_memfs(path)
-        else
-            memfs.update(path:string(), path:localpath():string())
-        end
-        ::continue::
-    end
-end
-
 local function compile_glb(filename)
     -- TODO: trigger glb compile
     aio.readall(filename)
@@ -541,7 +525,7 @@ local function cook_prefab(prefab_filename)
     end
     compile_glb(prefab_filename)
     local current_compile_path = fs.path(pl[1]):localpath():string()
-    mount_memfs(pl[1])
+    utils.mount_memfs(pl[1])
     prefab_filename = prefab_filename:gsub("|", "/")
     local prefab_template = serialize.parse(prefab_filename, aio.readall(prefab_filename))
     for _, tpl in ipairs(prefab_template) do

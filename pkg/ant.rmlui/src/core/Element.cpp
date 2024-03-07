@@ -241,14 +241,14 @@ bool Element::Project(Point& point) const noexcept {
 	glm::vec4 window_points[2] = { { point.x, point.y, -10, 1}, { point.x, point.y, 10, 1 } };
 	window_points[0] = *inv_transform * window_points[0];
 	window_points[1] = *inv_transform * window_points[1];
-	glm::vec3 local_points[2] = {
+	glm::vec4 local_points[2] = {
 		window_points[0] / window_points[0].w,
 		window_points[1] / window_points[1].w
 	};
-	glm::vec3 ray = local_points[1] - local_points[0];
+	glm::vec4 ray = local_points[1] - local_points[0];
 	if (std::fabs(ray.z) > 1.0f) {
 		float t = -local_points[0].z / ray.z;
-		glm::vec3 p = local_points[0] + ray * t;
+		glm::vec4 p = local_points[0] + ray * t;
 		point = Point(p.x, p.y);
 		return true;
 	}
@@ -919,7 +919,7 @@ void Element::UpdateTransform() {
 	if (!dirty.contains(Dirty::Transform))
 		return;
 	dirty.erase(Dirty::Transform);
-	glm::mat4x4 new_transform(1);
+	glm::mat4x4 new_transform(1.f);
 	Point origin2d = GetBounds().origin;
 	if (auto parent = GetParentNode()) {
 		origin2d = origin2d - parent->GetScrollOffset();
@@ -970,7 +970,7 @@ void Element::UpdatePerspective() {
 		float y = PropertyComputeY(this, originY);
 		glm::vec3 origin = { x, y, 0.f };
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
-		glm::mat4x4 new_perspective = {
+		glm::mat4x4 new_perspective {
 			{ 1, 0, 0, 0 },
 			{ 0, 1, 0, 0 },
 			{ -origin.x / distance, -origin.y / distance, 1, -1 / distance },
@@ -1028,9 +1028,9 @@ void Element::CalculateLayout() {
 	content_rect.Union(content);
 }
 
-static float checkSign(glm::vec2 a, glm::vec2 b, glm::vec2 p) {
-	glm::vec2 ab = b - a;
-	glm::vec2 ap = p - a;
+static float checkSign(Point a, Point b, Point p) {
+	Point ab = b - a;
+	Point ap = p - a;
 	return ab.x * ap.y - ab.y * ap.x;
 }
 
@@ -1041,11 +1041,11 @@ static bool InClip(ElementClip& clip, Point point) {
 	case ElementClip::Type::Any:
 		return false;
 	case ElementClip::Type::Shader: {
-		glm::vec2 lt { clip.shader[0].x, clip.shader[0].y };
-		glm::vec2 rt { clip.shader[0].z, clip.shader[0].w };
-		glm::vec2 lb { clip.shader[1].x, clip.shader[1].y };
-		glm::vec2 rb { clip.shader[1].z, clip.shader[1].w };
-		glm::vec2 p  { point.x, point.y };
+		Point lt { clip.shader[0].x, clip.shader[0].y };
+		Point rt { clip.shader[0].z, clip.shader[0].w };
+		Point lb { clip.shader[1].x, clip.shader[1].y };
+		Point rb { clip.shader[1].z, clip.shader[1].w };
+		Point p  { point.x, point.y };
 		float sign1 = checkSign(lt, rt, p);
 		float sign2 = checkSign(rt, rb, p);
 		float sign3 = checkSign(rb, lb, p);
@@ -1113,7 +1113,7 @@ static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {
 	auto y = std::max(a.y, b.y);
 	auto mx = std::min(a.x+a.z, b.x+b.z);
 	auto my = std::min(a.y+a.w, b.y+b.w);
-	return {x, y, mx - x, my - y};
+	return {x, y, (uint16_t)(mx - x), (uint16_t)(my - y)};
 }
 
 void Element::UnionClip(ElementClip& c) {

@@ -127,4 +127,19 @@ function utils.split_ant_path(path)
     return r
 end
 
+local memfs         = import_package "ant.vfs".memory
+function utils.mount_memfs(vpath)
+    for path in fs.pairs(fs.path(vpath)) do
+        if path:filename():string():sub(1,1) == "." then
+            goto continue
+        end
+        if fs.is_directory(path) then
+            utils.mount_memfs(path)
+        else
+            memfs.update(path:string(), path:localpath():string())
+        end
+        ::continue::
+    end
+end
+
 return utils

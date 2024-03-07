@@ -47,7 +47,7 @@ struct RendererContext {
 };
 
 struct RenderState {
-    glm::vec4 rectVerteices[2] {glm::vec4(0), glm::vec4(0)};
+    glm::vec4 rectVerteices[2] {glm::vec4(0.f), glm::vec4(0.f)};
     uint16_t lastScissorId = UINT16_MAX;
     bool needShaderClipRect = false;
 };

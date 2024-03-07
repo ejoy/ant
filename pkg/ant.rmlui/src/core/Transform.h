@@ -19,7 +19,7 @@ struct Matrix2D {
 };
 
 struct Matrix3D : glm::mat4x4 {
-	Matrix3D() : glm::mat4x4(1) {}
+	Matrix3D() : glm::mat4x4(1.f) {}
 	Matrix3D(glm::mat4x4&& o) : glm::mat4x4(std::forward<glm::mat4x4>(o)) {}
 };
 
@@ -86,7 +86,7 @@ struct Rotate2D {
 };
 
 struct Rotate3D {
-	glm::vec3 axis = glm::vec3(0, 0, 1);
+	glm::vec3 axis = glm::vec3(0.f, 0.f, 1.f);
 	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
@@ -105,11 +105,11 @@ struct Perspective {
 };
 
 struct DecomposedMatrix4 {
-	glm::vec4 perspective = glm::vec4(0, 0, 0, 1);
-	glm::quat quaternion = glm::quat(0, 0, 0, 1);
-	glm::vec3 translation = glm::vec3(0, 0, 0);
-	glm::vec3 scale = glm::vec3(1, 1, 1);
-	glm::vec3 skew = glm::vec3(0, 0, 0);
+	glm::vec4 perspective = glm::vec4(0.f, 0.f, 0.f, 1.f);
+	glm::quat quaternion = glm::quat(0.f, 0.f, 0.f, 1.f);
+	glm::vec3 translation = glm::vec3(0.f, 0.f, 0.f);
+	glm::vec3 scale = glm::vec3(1.f, 1.f, 1.f);
+	glm::vec3 skew = glm::vec3(0.f, 0.f, 0.f);
 };
 
 using Primitive = std::variant<
