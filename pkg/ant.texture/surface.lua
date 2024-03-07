@@ -18,7 +18,7 @@ local function create_sample_box(so, sampler, u, v)
     local tx, ty = math.max(0, floor(x - 0.5)), math.max(0, floor(y - 0.5))
     local ntx, nty = math.min(w-1, tx+1), math.min(h-1, ty+1)
 
-    local ltx, lty = tx * w + 0.5, ty * h + 0.5 --left top point
+    local ltx, lty = tx + 0.5, ty + 0.5 --left top point
     local px, py = x - ltx, y - lty
     local _ = (px >= 0 and py >= 0) or error(("px and py should >= 0, px = %f, py = %f"):format(px, py))
     return {

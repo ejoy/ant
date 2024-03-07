@@ -102,7 +102,7 @@ local cm_mt = {
         --fitler cubemap is wrong right now, if we sample one of the face, and need the filter to access adjacent face to perform a filter operation(like box filter), it will produce a wrong result
         local so = {
             w=self.w, h=self.h,
-            load = function (x, y)
+            load = function (_, x, y)
                 return self:load_fxy(face, x, y)
             end
         }

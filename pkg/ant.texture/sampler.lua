@@ -24,8 +24,8 @@ local FILTER_MODES<const> = {
         local tx, ty = box.tx+1, box.ty+1
         local ntx, nty=box.ntx+1, box.nty+1
 
-        local lt, rt = so.load(tx, ty),  so.load(ntx, ty)
-        local lb, rb = so.load(tx, nty), so.load(ntx, nty)
+        local lt, rt = so:load(tx, ty),  so:load(ntx, ty)
+        local lb, rb = so:load(tx, nty), so:load(ntx, nty)
 
         local tv = math3d.lerp(lt, rt, px)
         local bv = math3d.lerp(lb, rb, px)

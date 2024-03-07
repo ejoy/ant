@@ -1,4 +1,4 @@
-require "test"
+--require "test"
 
 return {
     cube = require "cube",
