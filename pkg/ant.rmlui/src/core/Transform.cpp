@@ -18,7 +18,7 @@ static std::string ToString(const float& v) {
 static glm::mat4x4 skew(float angle_x, float angle_y) {
 	float skewX = tanf(angle_x);
 	float skewY = tanf(angle_y);
-	return glm::mat4x4{
+	return glm::mat4x4 {
 		{ 1, skewX, 0, 0 },
 		{ skewY, 1, 0, 0 },
 		{ 0, 0, 1, 0 },
@@ -27,7 +27,7 @@ static glm::mat4x4 skew(float angle_x, float angle_y) {
 }
 
 static glm::mat4x4 compose(const glm::vec3& translation, const glm::vec3& scale, const glm::vec3& skew, const glm::vec4& perspective, const glm::quat& quaternion) {
-	glm::mat4x4 matrix(1);
+	glm::mat4x4 matrix(1.f);
 	for (int i = 0; i < 4; i++)
 		matrix[i][3] = perspective[i];
 	for (int i = 0; i < 4; i++)
@@ -58,7 +58,7 @@ static glm::mat4x4 compose(const glm::vec3& translation, const glm::vec3& scale,
 }
 
 static glm::mat4x4 matrix2d(const Transforms::Matrix2D& m) {
-	return {
+	return glm::mat4x4 {
 		{ m.a, m.c, 0, m.tx },
 		{ m.b, m.d, 0, m.ty },
 		{ 0, 0, 1, 0 },
@@ -67,7 +67,7 @@ static glm::mat4x4 matrix2d(const Transforms::Matrix2D& m) {
 }
 
 static glm::mat4x4 perspective(float distance) {
-	return {
+	return glm::mat4x4 {
 		{ 1, 0, 0, 0 },
 		{ 0, 1, 0, 0 },
 		{ 0, 0, 1, -1.f / distance },
@@ -90,7 +90,7 @@ struct SetIdentityVisitor {
 
 struct MultiplyVisitor {
 	Element& e;
-	glm::mat4x4 matrix{ 1 };
+	glm::mat4x4 matrix = glm::mat4x4(1.f);
 
 	void operator()(const Transforms::Matrix2D& p) {
 		matrix *= matrix2d(p);
@@ -99,28 +99,28 @@ struct MultiplyVisitor {
 		matrix *= (const glm::mat4x4&)p;
 	}
 	void operator()(const Transforms::TranslateX& p) {
-		glm::vec3 v{ 0 };
+		glm::vec3 v(0.f);
 		v.x = p.x.ComputeW(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::TranslateY& p) {
-		glm::vec3 v{ 0 };
+		glm::vec3 v(0.f);
 		v.y = p.y.ComputeH(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::TranslateZ& p) {
-		glm::vec3 v{ 0 };
+		glm::vec3 v(0.f);
 		v.z = p.z.Compute(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::Translate2D& p) {
-		glm::vec3 v{ 0 };
+		glm::vec3 v(0.f);
 		v.x = p.x.ComputeW(&e);
 		v.y = p.y.ComputeH(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::Translate3D& p) {
-		glm::vec3 v{ 0 };
+		glm::vec3 v(0.f);
 		v.x = p.x.ComputeW(&e);
 		v.y = p.y.ComputeH(&e);
 		v.z = p.z.Compute(&e);

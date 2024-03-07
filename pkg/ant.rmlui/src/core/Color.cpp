@@ -18,16 +18,16 @@ Color::Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 Color Color::FromSRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 	auto linear = glm::convertSRGBToLinear(glm::vec4(r, g, b, a) / 255.f) * 255.f;
 	return {
-		uint8_t(linear.r),
-		uint8_t(linear.g),
-		uint8_t(linear.b),
-		uint8_t(linear.a),
+		uint8_t(linear.x),
+		uint8_t(linear.y),
+		uint8_t(linear.z),
+		uint8_t(linear.w),
 	};
 }
 
 std::string Color::ToString() const {
 	auto sRGB = glm::convertLinearToSRGB(glm::vec4(r, g, b, a) / 255.f) * 255.f;
-	return std::format("rgba({},{},{},{})", sRGB.r, sRGB.g, sRGB.b, sRGB.a);
+	return std::format("rgba({},{},{},{})", sRGB.x, sRGB.y, sRGB.z, sRGB.w);
 }
 
 Color Color::Interpolate(const Color& c1, float alpha) const {
