@@ -113,6 +113,12 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
+local ALPHA_MODE_STATES<const> = {
+    OPAQUE  = "/pkg/ant.resources/materials/states/default.state",
+    MASK    = "/pkg/ant.resources/materials/states/translucent.state",
+    BLEND   = "/pkg/ant.resources/materials/states/blend_with_depth_test.state",
+}
+
 local STATE_FILES = {}
 local function read_state_file(setting, statefile)
     local s = STATE_FILES[statefile]
@@ -121,6 +127,12 @@ local function read_state_file(setting, statefile)
     end
 
     return s
+end
+
+local function get_state(alphamode, setting)
+    alphamode = alphamode or "OPAQUE"
+    local s = ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode))
+    return read_state_file(setting, s)
 end
 
 return function (status)
@@ -269,14 +281,6 @@ return function (status)
         end
     end
 
-    local function get_state(isopaque)
-        local name = isopaque and 
-            "/pkg/ant.resources/materials/states/default.state" or
-            "/pkg/ant.resources/materials/states/translucent.state"
-        return read_state_file(setting, name)
-    end
-
-
     status.material = {}
     status.material_idx = {}
     status.material_cfg = {}
@@ -284,11 +288,10 @@ return function (status)
     for matidx, mat in ipairs(materials) do
         local name = mat.name or tostring(matidx)
         local pbr_mr = mat.pbrMetallicRoughness
-
-        local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
+        local alphamode = mat.alphaMode or "OPAQUE"
         local material = {
             fx          = {shader_type = "PBR"},
-            state       = get_state(isopaque),
+            state       = get_state(alphamode, setting),
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                 s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
@@ -308,18 +311,17 @@ return function (status)
 
         local macros = {}
         local setting = {}
-        if isopaque then
+        local switch = "off"
+        if alphamode == "OPAQUE" then
             macros[#macros+1] = "ALPHAMODE_OPAQUE=1"
-            setting.lighting = "on"
-            setting.cast_shadow = "on"
-            setting.receive_shadow = "on"
-        else
-            setting.lighting = "off"
+            switch = "on"
+        elseif alphamode == "MASK" then
+            macros[#macros+1] = "ALPHAMODE_MASK=" .. assert(mat.alphaCutoff)
         end
 
-        if mat.alphaCutoff then
-            macros[#macros+1] = "ALPHAMODE_MASK=1"
-        end
+        setting.lighting        = switch
+        setting.cast_shadow     = switch
+        setting.receive_shadow  = switch
 
         --Blender will always export glb with 'doubleSided' as true
         local function is_Blender_exporter()
