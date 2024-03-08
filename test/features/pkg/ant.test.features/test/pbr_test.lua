@@ -7,7 +7,7 @@ local PC        = util.proxy_creator()
 
 local pbr_test_sys = common.test_system "pbr"
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local math3d    = require "math3d"
 

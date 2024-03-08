@@ -6,7 +6,7 @@ local world = ecs.world
 -- local sampler       = import_package "ant.render.core".sampler
 -- local ipp           = ecs.require "ant.render|postprocess"
 -- local iom           = ecs.require "ant.objcontroller|obj_motion"
--- local imaterial = ecs.require "ant.asset|material"
+-- local imaterial = ecs.require "ant.render|material"
 -- local irender       = ecs.require "ant.render|render"
 -- local math3d        = require "math3d"
 

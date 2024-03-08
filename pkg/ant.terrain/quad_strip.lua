@@ -11,7 +11,7 @@ local layout    = layoutmgr.get(layoutfmt)
 local stride<const> = layout.stride
 
 local ipl       = ecs.require "ant.polyline|polyline"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 
 local function add_quad(p0, p1, normal, ww, offset, clr, vertices)
     local d = math3d.sub(p1, p0)

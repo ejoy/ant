@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local assetmgr = import_package "ant.asset"
 
 local lm_sys = ecs.system "lightmap_system"

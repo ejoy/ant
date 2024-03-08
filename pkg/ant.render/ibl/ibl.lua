@@ -15,7 +15,7 @@ local aio       = import_package "ant.io"
 
 local icompute  = ecs.require "ant.render|compute.compute"
 local iexposure = ecs.require "ant.camera|exposure"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 
 local setting   = import_package "ant.settings"
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"

@@ -6,5 +6,5 @@ system "compute_system"
 component "dispatch".type "lua"
 
 policy "compute"
-    .include_policy "ant.asset|material"
+    .component "material"
     .component "dispatch"

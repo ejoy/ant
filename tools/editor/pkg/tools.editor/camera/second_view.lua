@@ -16,7 +16,7 @@ local math3d    = require "math3d"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local icamera   = ecs.require "ant.camera|camera"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local ientity   = ecs.require "ant.entity|entity"
 
 local second_camera_sys = ecs.system "second_view_camera_system"

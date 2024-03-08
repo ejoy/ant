@@ -12,7 +12,7 @@ local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local irender   = ecs.require "ant.render|render"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local ibs  = {}
 

@@ -11,7 +11,7 @@ local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
 
 local ientity   = ecs.require "ant.entity|entity"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 
 local frustum_entity
 local function create_frustum_entity()

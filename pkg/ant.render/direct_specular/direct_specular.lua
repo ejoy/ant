@@ -12,7 +12,7 @@ local sampler   = renderpkg.sampler
 
 local hwi       = import_package "ant.hwi"
 local aio       = import_package "ant.io"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local icompute  = ecs.require "ant.render|compute.compute"
 local viewid<const> = hwi.viewid_get "csm_fb"
 

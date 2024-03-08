@@ -13,7 +13,7 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local irender	= ecs.require "ant.render|render"
 local imesh 	= ecs.require "ant.asset|mesh"
 local bgfx 		= require "bgfx"

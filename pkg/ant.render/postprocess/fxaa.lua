@@ -19,7 +19,7 @@ local fbmgr     = require "framebuffer_mgr"
 
 local util      = ecs.require "postprocess.util"
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local irender   = ecs.require "ant.render|render"
 local irq       = ecs.require "ant.render|render_system.renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"

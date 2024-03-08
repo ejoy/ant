@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local math3d = require "math3d"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 
 --[[
     TODO:

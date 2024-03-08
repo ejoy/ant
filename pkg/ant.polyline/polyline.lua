@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local irender   = ecs.require "ant.render|render"
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr

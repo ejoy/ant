@@ -4,7 +4,7 @@ local w     = world.w
 
 local math3d    = require "math3d"
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local ilight    = ecs.require "ant.render|light.light"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 

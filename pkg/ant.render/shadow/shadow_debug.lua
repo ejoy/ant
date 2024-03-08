@@ -11,7 +11,7 @@ local math3d    = require "math3d"
 
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ivs		= ecs.require "ant.render|visible_state"
-local imaterial	= ecs.require "ant.asset|material"
+local imaterial	= ecs.require "ant.render|material"
 
 local queuemgr	= ecs.require "queue_mgr"
 local sampler	= import_package "ant.render.core".sampler

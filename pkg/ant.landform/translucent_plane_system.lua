@@ -8,7 +8,7 @@ local irender   = ecs.require "ant.render|render"
 local renderpkg = import_package "ant.render"
 local layoutmgr = renderpkg.layoutmgr
 local layout    = layoutmgr.get "p3|t20"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local tp_sys    = ecs.system 'translucent_plane_system'
 
 local DEFAULT_TP_RENDER_LAYER <const> = "translucent"

@@ -1358,7 +1358,7 @@ function m.load(path_str)
 end
 
 local ivs		= ecs.require "ant.render|visible_state"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local bone_color    = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
 local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 

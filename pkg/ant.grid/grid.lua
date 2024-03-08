@@ -9,7 +9,7 @@ local layoutmgr = renderpkg.layoutmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local irender   = ecs.require "ant.render|render"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 
 local DEFAULT_GRID_MATERIAL <const> = "/pkg/ant.grid/assets/grid.material"
 local DEFAULT_GRID_COLOR = math3d.ref(math3d.vector(1.0, 1.0, 1.0, 1.0))

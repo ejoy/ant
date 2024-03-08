@@ -6,7 +6,7 @@ local world = ecs.world
 
 -- local ipp       = ecs.require "ant.render|postprocess"
 -- local iom       = ecs.require "ant.objcontroller|obj_motion"
--- local imaterial = ecs.require "ant.asset|material"
+-- local imaterial = ecs.require "ant.render|material"
 -- local icamera   = ecs.require "ant.camera|camera"
 
 -- local mathpkg   = import_package "ant.math"

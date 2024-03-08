@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local ivs = ecs.require "ant.render|visible_state"
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"

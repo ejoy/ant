@@ -622,7 +622,7 @@ end
 
 function m:create_ground()
     if not self.plane then
-        local imaterial = ecs.require "ant.asset|material"
+        local imaterial = ecs.require "ant.render|material"
         self.plane = world:create_entity {
             policy = {
                 "ant.render|render",

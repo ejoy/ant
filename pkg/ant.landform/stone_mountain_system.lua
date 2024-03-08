@@ -4,7 +4,7 @@ local w = world.w
 
 local math3d 	    = require "math3d"
 local assetmgr      = import_package "ant.asset"
-local imaterial     = ecs.require "ant.asset|material"
+local imaterial     = ecs.require "ant.render|material"
 local imesh         = ecs.require "ant.asset|mesh"
 local icompute      = ecs.require "ant.render|compute.compute"
 local irender       = ecs.require "ant.render|render"

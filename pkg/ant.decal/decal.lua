@@ -4,7 +4,7 @@ local w = world.w
 
 local math3d = require "math3d"
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local icamera   = ecs.require "ant.camera|camera"
 
 local function update_decal(decal)

@@ -9,7 +9,7 @@ if USE_CS_SKINNING then
 end
 local ENABLE_TAA <const> = setting:get "graphic/postprocess/taa/enable"
 
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local mathpkg = import_package "ant.math"
 local assetmgr = import_package "ant.asset"
 local ozz = require "ozz"

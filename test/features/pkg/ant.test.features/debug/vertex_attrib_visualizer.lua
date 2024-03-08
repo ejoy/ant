@@ -7,7 +7,7 @@ local math3d = require "math3d"
 local layoutmgr = import_package "ant.render".layoutmgr
 
 local ivav = {}
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local ientity   = ecs.require "ant.entity|entity"
 
 local function find_stream(vb, what)

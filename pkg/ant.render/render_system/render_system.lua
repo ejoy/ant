@@ -18,7 +18,7 @@ local Q			= world:clibs "render.queue"
 local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render"
-local imaterial = ecs.require "ant.asset|material"
+local imaterial = ecs.require "ant.render|material"
 local imesh		= ecs.require "ant.asset|mesh"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer.render_layer"
@@ -129,10 +129,6 @@ local function update_visible_masks(e)
 		update_masks(e.render_object)
 		update_masks(e.hitch)
 	end
-end
-
-function render_sys:init()
-	assert(imaterial.default_material_index() == queuemgr.default_material_index())
 end
 
 local function create_material_instance(e)

@@ -14,7 +14,7 @@ local fbmgr         = require "framebuffer_mgr"
 
 local util          = ecs.require "postprocess.util"
 local queuemgr      = ecs.require "queue_mgr"
-local imaterial     = ecs.require "ant.asset|material"
+local imaterial     = ecs.require "ant.render|material"
 local irender       = ecs.require "ant.render|render"
 local irq           = ecs.require "ant.render|render_system.renderqueue"
 local ifsr          = ecs.require "ant.render|postprocess.fsr"
