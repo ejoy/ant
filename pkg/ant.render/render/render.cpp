@@ -232,8 +232,8 @@ draw_obj(lua_State *L, struct ecs_world *w, bgfx_view_id_t viewid,
 	w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->render_layer, discardflags);
 }
 
-using group_queues = std::array<matrix_array, MAX_VISIBLE_QUEUE>;
-using group_collection = std::unordered_map<int, group_queues>;
+//using group_queues = std::array<matrix_array, MAX_VISIBLE_QUEUE>;
+using group_collection = std::unordered_map<int, matrix_array>;
 
 static constexpr uint16_t MAX_SUBMIT_NUM = 4096;
 enum queue_type : uint8_t{
@@ -362,7 +362,7 @@ struct hitch_submitter {
 	struct hitch_objs{
 		struct obj {
 			const component::render_object *ro;
-			const group_queues* g;
+			const matrix_array* g;
 
 		#ifdef RENDER_DEBUG
 			component::eid eid;
@@ -379,23 +379,23 @@ struct hitch_submitter {
 		void submit(submit_context *ctx, const component::render_args* ra, obj_transforms &trans) {
 			for (uint16_t ih=0; ih<num; ++ih){
 				const obj& h = objects[ih];
-				
-				const auto &mats = (*h.g)[ra->queue_index];
-				if (!mats.empty()){
-					if (queue_check(ctx->w->Q, h.ro->visible_idx, ra->queue_index)){
-						auto mi = find_submit_material(ctx->L, ctx->w, ra, h.ro->rm_idx);
-						if (mi){
-							const auto prog = material_prog(ctx->L, mi);
-							if (BGFX_HANDLE_IS_VALID(prog)){
-								draw_obj(ctx->L, ctx->w, ra->viewid, h.ro, mi, ra->material_index, prog, &mats, BGFX_DISCARD_ALL, trans);
-							}
+				if (h.g->empty())
+					continue;
+
+				if (queue_check(ctx->w->Q, h.ro->visible_idx, ra->queue_index)){
+					const auto &mats = (*h.g)[ra->queue_index];
+					auto mi = find_submit_material(ctx->L, ctx->w, ra, h.ro->rm_idx);
+					if (mi){
+						const auto prog = material_prog(ctx->L, mi);
+						if (BGFX_HANDLE_IS_VALID(prog)){
+							draw_obj(ctx->L, ctx->w, ra->viewid, h.ro, mi, ra->material_index, prog, h.g, BGFX_DISCARD_ALL, trans);
 						}
 					}
 				}
 			}
 		}
 
-		void add(const component::render_object *ro, const group_queues* g){
+		void add(const component::render_object *ro, const matrix_array* g){
 			if (!find_submit_mesh(ro, nullptr)){
 				return ;
 			}
@@ -415,7 +415,7 @@ struct hitch_submitter {
 	struct hitch_efks {
 		struct obj {
 		const component::efk_object* eo;
-		const group_queues* g;
+		const matrix_array* g;
 	#ifdef RENDER_DEBUG
 		component::eid eid;
 	#endif //RENDER_DEBUG
@@ -428,17 +428,16 @@ struct hitch_submitter {
 		}
 		#endif //RENDER_DEBUG
 
-		void add(const component::efk_object *eo, const group_queues* g){
+		void add(const component::efk_object *eo, const matrix_array* g){
 			assert(num < MAX_SUBMIT_NUM);
 			objects[num++] = obj{eo, g};
 		}
 
-		void submit(const submit_context *ctx, const component::render_args* ra) {
+		void submit(const submit_context *ctx) {
 			for (uint16_t ie=0; ie<num; ++ie){
 				const obj& o = objects[ie];
-				const auto &mats = (*o.g)[ra->queue_index];
-				if (!mats.empty()){
-					submit_efk_obj(ctx->L, ctx->w, o.eo, mats);
+				if (!o.g->empty()){
+					submit_efk_obj(ctx->L, ctx->w, o.eo, *(o.g));
 				}
 			}
 		}
@@ -470,21 +469,15 @@ struct hitch_submitter {
 	}
 
 	void collect_submit_efks(){
-		auto efkra = find_efk_queue();
-		if (efkra){
-			efks.submit(ctx, efkra);
-		}
+		efks.submit(ctx);
 	}
 
 	void collect_groups(){
 		for (auto e : ecs::select<component::hitch_visible, component::hitch, component::scene>(ctx->w->ecs)) {
 			const auto &h = e.get<component::hitch>();
-			for (uint8_t ii=0; ii<ctx->ra_count; ++ii){
-				auto ra = ctx->ra[ii];
+			if (h.group != 0){
 				const auto &s = e.get<component::scene>();
-				if (h.group != 0 && queue_check(ctx->w->Q, h.visible_idx, ra->queue_index)){
-					groups[h.group][ra->queue_index].emplace_back(s.worldmat);
-				}
+				groups[h.group].emplace_back(s.worldmat);
 			}
 		}
 	}
@@ -544,9 +537,7 @@ struct hitch_submitter {
 
 	void clear_groups(){
 		for (auto &g : groups){
-			for (std::vector<math_t> &q : g.second){
-				q.clear();
-			}
+			g.second.clear();
 		}
 	}
 
