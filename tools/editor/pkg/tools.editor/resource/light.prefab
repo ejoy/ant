@@ -3,7 +3,7 @@ data:
   material: /pkg/ant.resources.test/sky/skybox.material
   render_layer: translucent
   scene: {}
-  simplemesh: false
+  mesh_result: false
   skybox: true
   visible_state: main_view
 policy:
