@@ -73,7 +73,7 @@ local function create_grid_entity(grid_params, grid_color, grid_render_layer, gr
         },
         data = {
             scene = grid_srt,
-            simplemesh  = DEFAULT_GRID_MESH and DEFAULT_GRID_MESH or get_quad_mesh(),
+            mesh_result = DEFAULT_GRID_MESH or get_quad_mesh(),
             material    = DEFAULT_GRID_MATERIAL,
             visible_state = "main_view|selectable",
             render_layer = grid_render_layer,

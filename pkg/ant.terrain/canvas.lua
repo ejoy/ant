@@ -188,7 +188,7 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
             "ant.terrain|canvas_drawer",
         },
         data = {
-            simplemesh  = {
+            mesh_result  = {
                 vb = {
                     start = 0,
                     num = 0,

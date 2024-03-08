@@ -25,12 +25,14 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 			start = 0,
 			num = 0,
 			declname = "p3|c40niu",
-			handle=bgfx.create_dynamic_vertex_buffer(vb_size, layoutmgr.get(layout).handle, "a")
+			handle=bgfx.create_dynamic_vertex_buffer(vb_size, layoutmgr.get(layout).handle, "a"),
+			owned = true,
 		},
 		ib = {
 			start = 0,
 			num = 0,
-			handle = bgfx.create_dynamic_index_buffer(ib_size, "a")
+			handle = bgfx.create_dynamic_index_buffer(ib_size, "a"),
+			owned = true,
 		}
 	}
 end
@@ -48,7 +50,8 @@ function widget_drawer_sys:init()
 		},
 		data = {
 			scene = {},
-			simplemesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
+			mesh_result = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
+			owned_mesh_buffer = true,
 			material = "/pkg/ant.resources/materials/line.material",
 			render_layer = "translucent",
 			visible_state = "main_view",

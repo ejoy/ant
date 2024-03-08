@@ -50,7 +50,8 @@ function qs_sys:entity_init()
                 "ant.render|simplerender",
             },
             data = {
-                simplemesh = quadstrip_mesh,
+                mesh_result = quadstrip_mesh,
+                owned_mesh_buffer = true,
                 material = e.material,
                 visible_state = "main_view",
                 scene = {

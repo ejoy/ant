@@ -37,7 +37,7 @@ local function create_blend_scene_entity(material)
         },
         data = {
             blend_scene      = true,
-            simplemesh       = irender.full_quad(),
+            mesh_result      = irender.full_quad(),
             material         = material,
             visible_state    = queue,
             scene            = {},

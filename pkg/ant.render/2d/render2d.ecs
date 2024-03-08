@@ -1,0 +1,13 @@
+component "viewrect".type "lua"
+component "texturequad"
+
+policy "render2d"
+    .include_policy "ant.render|render_object"
+    .include_policy "ant.scene|scene_object"
+    .include_policy "ant.render|material"
+    .component_opt "render_layer"
+    .component_opt "mesh_result"
+    .component "visible_state"
+
+system "render_system2d"
+    .implement "2d/render_system2d.lua"

@@ -64,7 +64,8 @@ local function create_light_billboard(light_eid, lighttype)
             },
             visible_state = "main_view",
             material = "/pkg/tools.editor/resource/materials/billboard_"..lighttype..".material",
-            simplemesh = ientity.create_mesh{"p3|t2", vbdata},
+            mesh_result = ientity.create_mesh{"p3|t2", vbdata},
+            owned_mesh_buffer = true,
         }
     }
 end

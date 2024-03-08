@@ -2,7 +2,6 @@ import_feature "ant.material"
 
 component "material".type "lua"
 component "mesh".type "lua"
-component "simplemesh".type "lua"
 
 component "procedural_mesh"
 component "owned_mesh_buffer"

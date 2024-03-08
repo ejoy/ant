@@ -96,7 +96,7 @@ local function create_sm_entity(gid, indices, mountain_material, cs_material, me
          },
         data = {
             scene         = {},
-            simplemesh    = MERGE_MESH,
+            mesh_result   = MERGE_MESH,
             material      = mountain_material, 
             visible_state = "main_view|cast_shadow",
             stonemountain = {

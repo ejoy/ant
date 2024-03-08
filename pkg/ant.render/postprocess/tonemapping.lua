@@ -59,7 +59,7 @@ function tm_sys:init()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh      = irender.full_quad(),
+            mesh_result     = irender.full_quad(),
             material        = drawer_material,
             visible_state   = "",
             tonemapping_drawer=true,

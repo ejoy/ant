@@ -208,10 +208,6 @@ function render_sys:component_init()
 	for e in w:select "INIT mesh:in mesh_result?update" do
 		e.mesh_result = assetmgr.resource(e.mesh)
 	end
-
-	for e in w:select "INIT simplemesh:update mesh_result?update" do
-		e.mesh_result = e.simplemesh
-	end
 end
 
 local function read_mat_varyings(varyings)
@@ -371,8 +367,8 @@ local function clear_render_object(ro)
 end
 
 function render_sys:entity_remove()
-	for e in w:select "REMOVED owned_mesh_buffer simplemesh:in" do
-		imesh.delete_mesh(e.simplemesh)
+	for e in w:select "REMOVED owned_mesh_buffer mesh_result:in" do
+		imesh.delete_mesh(e.mesh_result)
 	end
 
 	for e in w:select "REMOVED render_object:update filter_material:in" do

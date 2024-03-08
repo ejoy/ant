@@ -40,7 +40,7 @@ function taasys:init()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh      = irender.full_quad(),
+            mesh_result     = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa.material",
             visible_state   = "taa_queue",
             taa_drawer     = true,
@@ -60,7 +60,7 @@ function taasys:init()
         },
         data = {
             owned_mesh_buffer = true,
-            simplemesh      = fullquad,
+            mesh_result     = fullquad,
             material        = "/pkg/ant.resources/materials/postprocess/taa_first_frame.material",
             visible_state   = "taa_queue",
             taa_first_frame_drawer     = true,
@@ -72,7 +72,7 @@ function taasys:init()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh      = irender.full_quad(),
+            mesh_result     = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
             visible_state   = "taa_copy_queue",
             taa_copy_drawer     = true,
@@ -85,7 +85,7 @@ function taasys:init()
                 "ant.render|simplerender",
             },
             data = {
-                simplemesh      = irender.full_quad(),
+                mesh_result     = irender.full_quad(),
                 material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
                 visible_state   = "taa_present_queue",
                 taa_present_drawer     = true,

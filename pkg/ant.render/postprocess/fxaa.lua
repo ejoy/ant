@@ -62,7 +62,7 @@ function fxaasys:init()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh      = irender.full_quad(),
+            mesh_result     = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/fxaa.material",
             visible_state   = "",
             scene           = {},

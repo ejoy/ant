@@ -102,7 +102,7 @@ local function create_plane_entity(gid, size, xypos, mesh, material, render_laye
         },
         data = {
             scene               = {s = {size, 1, size}, t = {xypos.x, 0, xypos.y}},
-            simplemesh          = assert(mesh),
+            mesh_result         = assert(mesh),
             material            = material,
             visible_state       = "main_view|selectable",
             render_layer        = render_layer,

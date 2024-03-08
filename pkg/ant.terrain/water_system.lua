@@ -57,11 +57,11 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
 end
 
 function water_sys:component_init()
-    for e in w:select "INIT water:in simplemesh:out mesh_result:out" do
+    for e in w:select "INIT water:in mesh_result:out owned_mesh_buffer?out" do
         local water = e.water
         local gw, gh = water.grid_width, water.grid_height
         local unit = water.unit
-        e.simplemesh = gen_water_grid_mesh(gw, gh, unit)
-        e.mesh_result = e.simplemesh
+        e.mesh_result = gen_water_grid_mesh(gw, gh, unit)
+        e.owned_mesh_buffer = true
     end
 end

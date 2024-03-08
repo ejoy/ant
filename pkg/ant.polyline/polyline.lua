@@ -162,7 +162,7 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
                 color = math3d.ref(math3d.vector(color)),
             },
             scene = {s = srt.s, r = srt.r, t = srt.t, parent = srt.parent},
-            simplemesh  = polymesh,
+            mesh_result = polymesh,
             material    = material,
             visible_state= hide and "" or "main_view|velocity_queue",
             render_layer= render_layer or "background",

@@ -184,7 +184,7 @@ function shadowdebug_sys:init_world()
 			"ant.render|simplerender",
 		},
 		data = {
-			simplemesh = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
+			mesh_result = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_queue",
 			scene = {},
@@ -210,7 +210,7 @@ local function draw_lines(lines)
 	return world:create_entity{
 		policy = {"ant.render|simplerender"},
 		data = {
-			simplemesh = ientity.create_mesh{"p3|c40", lines,},
+			mesh_result = ientity.create_mesh{"p3|c40", lines,},
 			material = "/pkg/ant.resources/materials/line.material",
 			scene = {},
 			render_layer = "translucent",
@@ -241,7 +241,7 @@ local function draw_box(points, M)
 	world:create_entity{
 		policy = {"ant.render|simplerender"},
 		data = {
-			simplemesh = ientity.create_mesh(
+			mesh_result = ientity.create_mesh(
 				{"p3|c40", s,},
 				{
 					0, 4, 1, 5,

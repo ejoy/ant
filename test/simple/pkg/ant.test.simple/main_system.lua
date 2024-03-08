@@ -28,7 +28,8 @@ function m:init_world()
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
-			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+			mesh_result	= imesh.init_mesh(ientity.plane_mesh(), true),
+            owned_mesh_buffer = true,
 		}
 	}
 

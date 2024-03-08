@@ -35,7 +35,7 @@ function rlt_sys.init_world()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh = ientity.plane_mesh(),
+            mesh_result= ientity.plane_mesh(),
             scene = {t = {-10, 0, 0}, s = 10},
             material = "/pkg/ant.test.features/assets/render_layer_test.material",
             render_layer = "translucent_plane",

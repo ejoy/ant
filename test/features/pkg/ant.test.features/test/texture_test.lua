@@ -35,16 +35,18 @@ function dtt_sys:init()
             },
             visible_state = "main_view",
             material = "/pkg/ant.test.features/assets/billboard_test.material",
-            simplemesh={
+            mesh_result={
                 vb={
                     start=0,
                     num=4,
                     handle=bgfx.create_vertex_buffer(
                         bgfx.memory_buffer("fffff", m),
                         layout.handle
-                    )
+                    ),
+                    owned = true,
                 },
             },
+            owned_mesh_buffer = true,
             on_ready = function (e)
                 local x, y, ww, hh = 0, 0, 1, 1
                 local gen_mipmap = false

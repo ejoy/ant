@@ -114,7 +114,7 @@ local function create_drawers(ps)
         ds[i].drawer = world:create_entity{
             policy = {"ant.render|simplerender",},
             data = {
-                simplemesh        = irender.full_quad(),
+                mesh_result       = irender.full_quad(),
                 material          = "/pkg/ant.resources/materials/postprocess/downsample.material",
                 visible_state     = "",
                 scene             = {},
@@ -123,7 +123,7 @@ local function create_drawers(ps)
         us[i].drawer = world:create_entity{
             policy = {"ant.render|simplerender",},
             data = {
-                simplemesh        = irender.full_quad(),
+                mesh_result       = irender.full_quad(),
                 material          = "/pkg/ant.resources/materials/postprocess/upsample.material",
                 visible_state     = "",
                 scene             = {},

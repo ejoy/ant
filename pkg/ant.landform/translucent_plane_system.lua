@@ -83,7 +83,7 @@ local function create_tp_entity(info, render_layer, tile_size, material)
         },
         data = {
             scene = {s = {info.w, 1, info.h}, t = {info.x, 0, info.y}},
-            simplemesh  = mesh,
+            mesh_result = mesh,
             material    = material,
             visible_state = "main_view|selectable",
             render_layer = render_layer,

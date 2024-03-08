@@ -78,7 +78,7 @@ local function simple_render_entity_data(material, mesh, scene, uniforms, hide, 
 		data = {
 			scene 		= scene or {},
 			material	= material,
-			simplemesh	= imesh.init_mesh(mesh, true),
+			mesh_result	= imesh.init_mesh(mesh, true),
 			render_layer= render_layer,
 			visible_state= visible_state,
 			on_ready 	= function(e)
@@ -108,7 +108,7 @@ local function grid_mesh_entity_data(materialpath, vb, ib, render_layer)
 			material 	= materialpath,
 			visible_state= "main_view",
 			render_layer= render_layer,
-			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
+			mesh_result	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 		},
 	}
 end
@@ -240,7 +240,7 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 			material 	= materialpath,
 			visible_state= hide and "" or "main_view",
 			render_layer= render_layer,
-			simplemesh 	= create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}),
+			mesh_result 	= create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}),
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -372,7 +372,7 @@ function ientity.create_screen_axis_entity(screen_3dobj, scene, color)
 			scene 		= scene or {},
 			material	= "/pkg/ant.resources/materials/line.material",
 			render_layer= "translucent",
-			simplemesh	= imesh.init_mesh(mesh, true),
+			mesh_result	= imesh.init_mesh(mesh, true),
 			visible_state= "main_view",
 		}
 	}
@@ -485,7 +485,7 @@ function ientity.create_skybox(material)
 			},
 			skybox = {},
 			owned_mesh_buffer = true,
-			simplemesh = get_skybox_mesh(),
+			mesh_result = get_skybox_mesh(),
 		}
 	}
 end
@@ -553,7 +553,7 @@ function ientity.create_procedural_sky(settings)
 			visible_state = "main_view",
 			owned_mesh_buffer = true,
 			render_layer = "background",
-			simplemesh = create_sky_mesh(32, 32),
+			mesh_result = create_sky_mesh(32, 32),
 		}
 	}
 end
@@ -566,7 +566,7 @@ function ientity.create_gamma_test_entity()
         data = {
             material = "/pkg/ant.resources/materials/gamma_test.material",
 			render_layer = "translucent",
-            simplemesh = {
+            mesh_result = {
                 ib = {
                     start = 0,
                     num = 6,
@@ -700,7 +700,7 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 			"ant.render|simplerender",
 		},
 		data = {
-			simplemesh = arrow_mesh(headratio),
+			mesh_result = arrow_mesh(headratio),
 			material = material,
 			visible_state = "main_view",
 			scene = scene or {},
@@ -761,7 +761,7 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
         data = {
 			scene = scene or {},
 			visible_state = hide and "" or "main_view",
-            simplemesh = create_mesh(create_vertex_buffer(), create_index_buffer()),
+            mesh_result = create_mesh(create_vertex_buffer(), create_index_buffer()),
 			material = material,
 			render_layer = render_layer,
 			on_ready = on_ready,
@@ -774,7 +774,7 @@ function ientity.create_quad_entity(material, srt, rect, uvrect)
         policy = {"ant.render|simplerender",},
         data = {
             material 	= material,
-            simplemesh 	= ientity.quad_mesh(rect, true, uvrect),
+            mesh_result = ientity.quad_mesh(rect, true, uvrect),
             owned_mesh_buffer = true,
             visible_state = "main_view",
             scene 		= srt,

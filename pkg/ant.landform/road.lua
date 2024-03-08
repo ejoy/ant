@@ -322,7 +322,7 @@ local function create_road_obj(gid, render_layer, buffer, dimaterial, cs_materia
         },
         data = {
             scene = {},
-            simplemesh  = assert(ROAD_MESH),
+            mesh_result = assert(ROAD_MESH),
             material    = dimaterial,
             visible_state = "main_view|selectable",
             road = {

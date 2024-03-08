@@ -16,7 +16,7 @@ data:
   material: $path ../skybox.material
   render_layer: background
   scene: {}
-  simplemesh: false
+  mesh_result: false
   skybox: true
   visible_state: main_view
 policy:

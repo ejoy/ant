@@ -1444,7 +1444,8 @@ local function create_bone_entity(joint_name)
 			scene 		= {},
 			material	= "/pkg/tools.editor/resource/materials/joint.material",
             render_layer = "translucent",
-			simplemesh	= imesh.init_mesh(ientity.create_mesh({"p3|n3|t2", bone_vert}), true),
+			mesh_result	= ientity.create_mesh({"p3|n3|t2", bone_vert}),
+            owned_mesh_buffer = true,
 			visible_state= "selectable",
 			on_ready 	= function(e)
                 imaterial.set_property(e, "u_basecolor_factor", bone_color)

@@ -32,7 +32,7 @@ local function create_view_buffer_entity()
 		},
 		data = {
 			owned_mesh_buffer = true,
-			simplemesh = m,
+			mesh_result = m,
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_view",
 			render_layer = "translucent",

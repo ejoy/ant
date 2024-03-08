@@ -19,7 +19,7 @@ function util.create_shadow_plane(sx, sz)
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_state= "main_view",
-			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+			mesh_result = imesh.init_mesh(ientity.plane_mesh()),
 		}
 	}
 end

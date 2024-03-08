@@ -40,10 +40,10 @@ function sc_sys:init()
             "ant.render|simplerender",
         },
         data = {
-            simplemesh       = irender.full_quad(),
-            material         = "/pkg/ant.resources/materials/postprocess/swapchain.material",
-            visible_state    = "swapchain_queue",
-            scene            = {},
+            mesh_result  = irender.full_quad(),
+            material     = "/pkg/ant.resources/materials/postprocess/swapchain.material",
+            visible_state= "swapchain_queue",
+            scene        = {},
         }
     }
 end
