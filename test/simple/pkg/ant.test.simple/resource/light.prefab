@@ -17,7 +17,7 @@ data:
         facesize: 512
     material: $path ./skybox.material
     render_layer: "background"
-    simplemesh: false
+    mesh_result: false
     skybox:
         facesize: 512
 ---

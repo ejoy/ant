@@ -11,7 +11,7 @@ data:
   material: $path ../skybox.material
   render_layer: background
   scene: {}
-  simplemesh: false
+  mesh_result: false
   skybox:
     facesize: 512
   visible_state: main_view
