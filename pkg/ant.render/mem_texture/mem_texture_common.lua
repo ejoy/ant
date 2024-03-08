@@ -253,43 +253,12 @@ local bgfx = require "bgfx"
 local RM            = ecs.require "ant.material|material"
 
 function m.copy_main_material()
-
-    local function get_state()
-        return {
-            ALPHA_REF   = 0,
-            CULL        = "CCW",
-            MSAA        = true,
-            WRITE_MASK  = "RGBAZ",
-        }
-    end
-
-    local NO_DEPTH_TEST_STATES<const> = {
-        NEVER = true, ALWAYS = true, NONE = true
-    }
-
-    local function has_depth_test(dt)
-        if dt then
-            return not NO_DEPTH_TEST_STATES[dt]
-        end
-        return false
-    end
-
-    local function create_depth_state(originstate)
-        local s = bgfx.parse_state(originstate)
-        if has_depth_test(s.DEPTH_TEST) then
-            local d = get_state()
-            d.PT, d.CULL = s.PT, s.CULL
-            d.DEPTH_TEST = "GREATER"
-            return bgfx.make_state(d)
-        end
-    end
-
     for e in w:select "mem_texture_ready:update filter_result visible_state:in render_object:in filter_material:in material:in" do
         ivs.set_state(e, "main_view|selectable|cast_shadow", false)
         local fm = e.filter_material
         local matres = assetmgr.resource(e.material)
         local Dmi = fm.DEFAULT_MATERIAL
-        local newstate = create_depth_state(Dmi:get_state())
+        local newstate = irender.create_depth_state(Dmi:get_state())
         if newstate then
             local mi = RM.create_instance(matres.object)
             mi:set_state(newstate)

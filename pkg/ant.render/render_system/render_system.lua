@@ -157,7 +157,7 @@ end
 
 local function check_set_depth_state_as_equal(state)
 	local ss = irender.has_depth_test(state)
-	if ss then
+	if ss and not ss.BLEND then
 		ss.DEPTH_TEST = "EQUAL"
 		if ss.WRITE_MASK then
 			ss.WRITE_MASK = ss.WRITE_MASK:gsub("Z", "")

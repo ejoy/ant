@@ -343,6 +343,15 @@ function irender.has_depth_test(s)
     end
 end
 
+function irender.create_depth_state(os)
+    local s = irender.has_depth_test(os)
+    if s and not s.BLEND then
+        s.DEPTH_TEST = "GREATER"
+		s.WRITE_MASK = "Z"
+        return bgfx.make_state(s)
+    end
+end
+
 function irender.group_flush(go)
 	go:flush()
     go:filter("render_object_visible", "render_object")
