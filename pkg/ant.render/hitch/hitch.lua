@@ -11,18 +11,17 @@ local Q         = world:clibs "render.queue"
 local ivs       = ecs.require "ant.render|visible_state"
 local hwi       = import_package "ant.hwi"
 local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
-local queuemgr  = ecs.require "ant.render|queue_mgr"
 local cs_material = "/pkg/ant.resources/materials/hitch/hitch_compute.material"
 local assetmgr  = import_package "ant.asset"
 
 local GID_MT<const> = {__index=function(t, gid) local gg = {}; t[gid] = gg; return gg; end}
-
 local INDIRECT_DRAW_GROUPS = setmetatable({}, GID_MT)
-local DIRTY_GROUPS, MARK_GROUPS, DIRECT_DRAW_GROUPS = {}, {}, {}
-local HITCH_MAPS = {}
-local HITCH_CULL = {}
+local DIRTY_GROUPS, MARKED_GROUPS, DIRECT_DRAW_GROUPS = {}, {}, {}
+local LAST_HITCH_GROUPS = {}
+local HITCH_CULL_STATES = {}
 local ih = {}
 local h = ecs.component "hitch"
+
 function h.init(hh)
     assert(hh.group ~= nil)
     hh.visible_idx  = 0xffffffff
@@ -108,24 +107,24 @@ local function update_group_instance_buffer(indirect_draw_group)
 end
 
 local function set_dirty_hitch_group(hitch, hid, state)
-    if DIRECT_DRAW_GROUPS[hitch.group] then
+    local gid = hitch.group
+    if DIRECT_DRAW_GROUPS[gid] then
         return
     end
-    local gid = hitch.group
     DIRTY_GROUPS[gid] = true
     local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
 
-    local old_gid = HITCH_MAPS[hid]
+    local old_gid = LAST_HITCH_GROUPS[hid]
     if old_gid and old_gid ~= gid then
         local old_indirect_draw_group = INDIRECT_DRAW_GROUPS[old_gid]
         old_indirect_draw_group.hitchs[hid] = nil
         if not indirect_draw_group.glbs then
-            MARK_GROUPS[old_gid] = true
+            MARKED_GROUPS[old_gid] = true
         else
             DIRTY_GROUPS[old_gid] = true 
         end
     end
-    HITCH_MAPS[hid] = gid
+    LAST_HITCH_GROUPS[hid] = gid
 
     if not indirect_draw_group.hitchs then
         indirect_draw_group.hitchs = {}
@@ -160,30 +159,30 @@ function hitch_sys:follow_scene_update()
     for e in w:select "scene_changed hitch hitch_update?out" do
         e.hitch_update = true
     end
+
+    for e in w:select "visible_state_changed hitch hitch_update?out" do
+        e.hitch_update = true
+    end
+
 end
 
 function hitch_sys:finish_scene_update()
-    if not w:check "hitch_create" then
-        return
-    end
-
     local groups = setmetatable({}, GID_MT)
-    for e in w:select "hitch_create hitch:in eid:in" do
+    for e in w:select "hitch_update hitch:in eid:in" do
         local group = groups[e.hitch.group]
         group[#group+1] = e.eid
     end
 
     for gid, hitchs in pairs(groups) do
+        if DIRECT_DRAW_GROUPS[gid] or INDIRECT_DRAW_GROUPS[gid].glbs then
+            goto continue
+        end
         ig.enable(gid, "hitch_tag", true)
-        -- draw instance in render_submit
-        --ig.enable(gid, "view_visible", true)
         local objaabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
             if re.skinning or re.dynamic_mesh  then
                 DIRECT_DRAW_GROUPS[gid] = true
-                --ig.enable(gid, "view_visible", false)
             end
-
             if re.bounding.scene_aabb ~= mc.NULL then
                 objaabb = math3d.aabb_merge(objaabb, re.bounding.scene_aabb)
             end
@@ -191,37 +190,33 @@ function hitch_sys:finish_scene_update()
         ig.enable(gid, "hitch_tag", false)
         for _, heid in ipairs(hitchs) do
             local he<close> = world:entity(heid, "hitch:in eid:in bounding:update scene:in scene_needchange?out")
-            set_dirty_hitch_group(he.hitch, he.eid, true)
-            HITCH_CULL[heid] = false
+            HITCH_CULL_STATES[heid] = false
             he.scene_needchange = true
-
             if math3d.aabb_isvalid(objaabb) then
                 he.bounding.aabb       = mu.M3D_mark(he.bounding.aabb, objaabb)
                 he.bounding.scene_aabb = mu.M3D_mark(he.bounding.scene_aabb, math3d.aabb_transform(he.scene.worldmat, objaabb))
             end
         end
+        ::continue::
     end
-    w:clear "hitch_create"
 end
 
-
 function hitch_sys:refine_camera()
-    -- remove hitch / hitch scene_update / reset hitch group
-    for e in w:select "hitch_update hitch:in eid:in view_visible?in" do
-        set_dirty_hitch_group(e.hitch, e.eid, e.view_visible)
+    for e in w:select "hitch_update hitch:in eid:in view_visible?in visible_state:in" do
+        set_dirty_hitch_group(e.hitch, e.eid, e.view_visible and ivs.has_state(e, "main_view"))
     end
     if irq.main_camera_changed() then
         for e in w:select "hitch:in eid:in view_visible?in" do
             local is_culled = not e.view_visible
-            if HITCH_CULL[e.eid] ~= is_culled then
-                HITCH_CULL[e.eid] = is_culled
+            if HITCH_CULL_STATES[e.eid] ~= is_culled then
+                HITCH_CULL_STATES[e.eid] = is_culled
                 set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
             end
         end        
     end
 
     for gid in pairs(DIRTY_GROUPS) do
-        if MARK_GROUPS[gid] then
+        if MARKED_GROUPS[gid] then
             goto continue
         end
         ig.enable(gid, "view_visible", true)
@@ -253,10 +248,10 @@ function hitch_sys:refine_camera()
         end
         ::continue::
     end
-    for gid in pairs(MARK_GROUPS) do
+    for gid in pairs(MARKED_GROUPS) do
         DIRTY_GROUPS[gid] = true
     end
-    MARK_GROUPS = {}
+    MARKED_GROUPS = {}
     w:clear "hitch_update"
 end
 

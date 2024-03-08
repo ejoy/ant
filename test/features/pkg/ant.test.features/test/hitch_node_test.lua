@@ -30,7 +30,7 @@ local function create_simple_test_group()
             visible_state = "main_view|cast_shadow|selectable",
             receive_shadow = true,
             cast_shadow = true,
-            hitch_create = TEST_INDIRECT,
+            hitch_update = TEST_INDIRECT,
         }
     }
     h2 = PC:create_entity {
@@ -47,7 +47,7 @@ local function create_simple_test_group()
             receive_shadow = true,
             cast_shadow = true,
             visible_state = "main_view|cast_shadow|selectable",
-            hitch_create = TEST_INDIRECT,
+            hitch_update = TEST_INDIRECT,
         }
     }
 
