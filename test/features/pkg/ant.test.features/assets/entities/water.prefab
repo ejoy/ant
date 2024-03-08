@@ -7,7 +7,7 @@ data:
     grid_width: 1
     grid_height: 1
     unit: 1
-  simplemesh: true
+  mesh_result: true
   material: /pkg/ant.terrain/assets/water2.material
   render_layer: translcuent
   visible_state: ""
