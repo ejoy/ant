@@ -28,6 +28,7 @@ DEFINE_TEST "blur_scene"
 
 DEFINE_TEST "empty"
 DEFINE_TEST "point_light"
+DEFINE_TEST "viewrect2d"
 
 -- NOT work right now
 --DEFINE_TEST "decal"

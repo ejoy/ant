@@ -1,0 +1,12 @@
+fx:
+  vs: /pkg/ant.resources/shaders/2d/vs_quad2d.sc
+  fs: /pkg/ant.resources/shaders/2d/fs_quad2d.sc
+  setting:
+    lighting: off
+  varyings: /pkg/ant.resources/materials/nolighting2d.varyings
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.resources/textures/default.texture
+  u_param: {0.0, 0.0, 0.0, 0.0}
+state: /pkg/ant.resources/materials/states/quad.state

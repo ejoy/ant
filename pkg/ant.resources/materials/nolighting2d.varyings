@@ -1,0 +1,5 @@
+a_position:   vec2
+a_texcoord0:  vec2
+a_color0:     "vec4 COLOR0"
+v_texcoord0:  "vec2 TEXCOORD0"
+v_color0:     "vec4 TEXCOORD1"

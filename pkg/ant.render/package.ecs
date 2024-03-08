@@ -15,3 +15,4 @@ feature "lightmap"
 
 import "renderqueue.ecs"
 import "render.ecs"
+import "2d/render2d.ecs"
