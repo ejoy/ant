@@ -23,7 +23,7 @@ policy "watch_screen_buffer"
     .component "watch_screen_buffer"
 
 system "render_target_system"
-    .implement "render_system/renderqueue.lua"
+    .implement "renderqueue.lua"
 
 component "render_target".type "lua"
 

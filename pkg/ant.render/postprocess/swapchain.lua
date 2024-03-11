@@ -16,7 +16,7 @@ local util          = ecs.require "postprocess.util"
 local queuemgr      = ecs.require "queue_mgr"
 local imaterial     = ecs.require "ant.render|material"
 local irender       = ecs.require "ant.render|render"
-local irq           = ecs.require "ant.render|render_system.renderqueue"
+local irq           = ecs.require "ant.render|renderqueue"
 local ifsr          = ecs.require "ant.render|postprocess.fsr"
 local iviewport     = ecs.require "ant.render|viewport.state"
 

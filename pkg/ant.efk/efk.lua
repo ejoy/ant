@@ -22,7 +22,7 @@ local ivs       = ecs.require "ant.render|visible_state"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local ilight    = ecs.require "ant.render|light.light"
 local iviewport = ecs.require "ant.render|viewport.state"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local irq       = ecs.require "ant.render|renderqueue"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 
 local efk_sys   = ecs.system "efk_system"

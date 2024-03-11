@@ -9,7 +9,7 @@ local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local ImGui = require "imgui"
 local ImGuiInternal = require "imgui.internal"
-local irq   = ecs.require "ant.render|render_system.renderqueue"
+local irq   = ecs.require "ant.render|renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 
 local drag_file

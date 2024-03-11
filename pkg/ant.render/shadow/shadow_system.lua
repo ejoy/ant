@@ -26,7 +26,7 @@ local queuemgr  = ecs.require "queue_mgr"
 
 local shadowcfg	= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
-local irq       = ecs.require "render_system.renderqueue"
+local irq       = ecs.require "renderqueue"
 local imaterial = ecs.require "ant.render|material"
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}

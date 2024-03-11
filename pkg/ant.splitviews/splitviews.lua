@@ -6,7 +6,7 @@ local math3d    = require "math3d"
 local icamera   = ecs.require "ant.camera|camera"
 local irender   = ecs.require "ant.render|render"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local irq       = ecs.require "ant.render|renderqueue"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 
 local hwi       = import_package "ant.hwi"

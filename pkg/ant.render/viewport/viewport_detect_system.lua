@@ -10,7 +10,7 @@ local mu		= mathpkg.util
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
 local icamera	= ecs.require "ant.camera|camera"
-local irq		= ecs.require "ant.render|render_system.renderqueue"
+local irq		= ecs.require "ant.render|renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 
 local fb_cache, rb_cache

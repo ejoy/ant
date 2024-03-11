@@ -9,7 +9,7 @@ local hwi		= import_package "ant.hwi"
 
 local math3d    = require "math3d"
 
-local irq		= ecs.require "ant.render|render_system.renderqueue"
+local irq		= ecs.require "ant.render|renderqueue"
 local ivs		= ecs.require "ant.render|visible_state"
 local imaterial	= ecs.require "ant.render|material"
 
