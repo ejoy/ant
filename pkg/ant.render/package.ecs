@@ -12,7 +12,5 @@ pipeline "render"
 
 feature "lightmap"
     .import "lightmap/lightmap.ecs"
-
-import "renderqueue.ecs"
 import "render.ecs"
 import "2d/render2d.ecs"

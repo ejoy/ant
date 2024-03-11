@@ -5,7 +5,7 @@ component "indirect_object"
     .field "itb_handle:dword"
     .field "draw_num:dword"
 
-    .implement "render_system/indirect_object.lua"
+    .implement "draw_indirect/indirect_object.lua"
 
 policy "draw_indirect"
     .component "draw_indirect"
