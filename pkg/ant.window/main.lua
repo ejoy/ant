@@ -1,18 +1,30 @@
 local function start(initargs)
     local platform = require "bee.platform"
-    local exclusive = {}
     if platform.os == "ios" then
-        exclusive[#exclusive+1] = "ant.window|ios"
+        dofile "/engine/ltask.lua" {
+            bootstrap = { "ant.window|boot", initargs },
+            exclusive = {
+                "ant.window|ios",
+                "timer",
+            },
+            worker_bind = {
+                "ant.window|window",
+                "ant.hwi|bgfx",
+            },
+        }
+    else
+        dofile "/engine/ltask.lua" {
+            bootstrap = { "ant.window|boot", initargs },
+            mainthread = "worker",
+            exclusive = {
+                "timer"
+            },
+            worker_bind = {
+                "ant.window|window",
+                "ant.hwi|bgfx",
+            },
+        }
     end
-    exclusive[#exclusive+1] = "timer"
-    dofile "/engine/ltask.lua" {
-        bootstrap = { "ant.window|boot", initargs },
-        exclusive = exclusive,
-        worker_bind = {
-            "ant.window|window",
-            "ant.hwi|bgfx",
-        },
-    }
 end
 
 local function newproxy(t, k)
