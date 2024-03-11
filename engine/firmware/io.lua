@@ -38,11 +38,56 @@ local config, fddata = io_req:bpop()
 local QUIT = false
 local OFFLINE = false
 
-local _print = _G.print
-if platform.os == 'android' then
-	local android = require "android"
-	_print = function (text)
-		android.rawlog("info", "IO", text)
+local LOG; do
+	local fs = require "bee.filesystem"
+	local AppPath
+	if platform.os == "ios" then
+		local ios = require "ios"
+		AppPath = fs.path(ios.directory(ios.NSDocumentDirectory)):string()
+	elseif platform.os == 'android' then
+		local android = require "android"
+		AppPath = fs.path(android.directory(android.ExternalDataPath)):string()
+	else
+		AppPath = fs.current_path():string()
+	end
+	local logfile = AppPath .. "/io_thread.log"
+	fs.create_directories(AppPath)
+	if fs.exists(logfile) then
+		fs.rename(logfile, AppPath .. "/io_thread_1.log")
+	end
+	local function LOGRAW(data)
+		local f <close> = io.open(logfile, "a+")
+		if f then
+			f:write(data)
+			f:write("\n")
+		end
+	end
+
+	local origin = os.time() - os.clock()
+	local function os_date(fmt)
+		local ti, tf = math.modf(origin + os.clock())
+		return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
+	end
+	local function round(x, increment)
+		increment = increment or 1
+		x = x / increment
+		return (x > 0 and math.floor(x + 0.5) or math.ceil(x - 0.5)) * increment
+	end
+	local function packstring(...)
+		local t = {}
+		for i = 1, select('#', ...) do
+			local x = select(i, ...)
+			if math.type(x) == 'float' then
+				x = round(x, 0.01)
+			end
+			t[#t + 1] = tostring(x)
+		end
+		return table.concat(t, '\t')
+	end
+	function LOG(...)
+		local info = debug.getinfo(2, 'Sl')
+		local text = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
+		LOGRAW(text)
 	end
 end
 
@@ -69,51 +114,20 @@ end
 
 local function init_channels()
 	io_req = thread.channel "IOreq"
-
-	local origin = os.time() - os.clock()
-	local function os_date(fmt)
-		local ti, tf = math.modf(origin + os.clock())
-		return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
-	end
-	local function round(x, increment)
-		increment = increment or 1
-		x = x / increment
-		return (x > 0 and math.floor(x + 0.5) or math.ceil(x - 0.5)) * increment
-	end
-	local function packstring(...)
-		local t = {}
-		for i = 1, select('#', ...) do
-			local x = select(i, ...)
-			if math.type(x) == 'float' then
-				x = round(x, 0.01)
-			end
-			t[#t + 1] = tostring(x)
-		end
-		return table.concat(t, '\t')
-	end
-	function _G.print(...)
-		local info = debug.getinfo(2, 'Sl')
-		local text = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
-		if OFFLINE then
-			_print(text)
-		else
-			connection_send("LOG", text)
-		end
-	end
 end
 
 local function connect_server(address, port)
-	print("Connecting", address, port)
+	LOG("Connecting", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		_print("[ERROR]: "..err)
+		LOG("[ERROR]: "..err)
 		return
 	end
 	local ok
 	ok, err = fd:connect(address, port)
 	if ok == nil then
 		fd:close()
-		_print("[ERROR]: "..err)
+		LOG("[ERROR]: "..err)
 		return
 	end
 	if ok == false then
@@ -124,30 +138,30 @@ local function connect_server(address, port)
 	local ok, err = fd:status()
 	if not ok then
 		fd:close()
-		_print("[ERROR]: "..err)
+		LOG("[ERROR]: "..err)
 		return
 	end
-	print("Connected")
+	LOG("Connected")
 	return fd
 end
 
 local function listen_server(address, port)
-	print("Listening", address, port)
+	LOG("Listening", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		_print("[ERROR] socket: "..err)
+		LOG("[ERROR] socket: "..err)
 		return
 	end
 	fd:option("reuseaddr", 1)
 	local ok
 	ok, err = fd:bind(address, port)
 	if not ok then
-		_print("[ERROR] bind: "..err)
+		LOG("[ERROR] bind: "..err)
 		return
 	end
 	ok, err = fd:listen()
 	if not ok then
-		_print("[ERROR] listen: "..err)
+		LOG("[ERROR] listen: "..err)
 		return
 	end
 	selector:event_add(fd, SELECT_READ)
@@ -156,15 +170,15 @@ local function listen_server(address, port)
 		if not newfd then
 			selector:event_del(fd)
 			fd:close()
-			_print("[ERROR] accept: "..err)
+			LOG("[ERROR] accept: "..err)
 			return
 		end
-		print("Accepted")
+		LOG("Accepted")
 		selector:event_del(fd)
 		fd:close()
 		return newfd
 	end
-	_print("[ERROR] select: timeout")
+	LOG("[ERROR] select: timeout")
 	selector:event_del(fd)
 	fd:close()
 end
@@ -190,7 +204,7 @@ local function response_id(id, ...)
 end
 
 local function response_err(id, msg)
-	print("[ERROR]", msg)
+	LOG("[ERROR]", msg)
 	response_id(id, nil)
 end
 
@@ -234,7 +248,7 @@ end
 
 local function request_start_with_token(req, args, token, promise)
 	if OFFLINE then
-		print("[ERROR] " .. req .. " failed in offline mode.")
+		LOG("[ERROR] " .. req .. " failed in offline mode.")
 		promise.reject()
 		return
 	end
@@ -296,11 +310,11 @@ local response = {}
 
 function response.ROOT(hash)
 	if hash == '' then
-		_print("[ERROR] INVALID ROOT")
+		LOG("[ERROR] INVALID ROOT")
 		os.exit(-1, true)
 		return
 	end
-	print("[response] ROOT", hash)
+	LOG("[response] ROOT", hash)
 	local resources = repo:init(hash)
 	for path in pairs(resources) do
 		CMD.LIST(nil, path)
@@ -311,31 +325,31 @@ end
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
 function response.BLOB(hash, data)
-	print("[response] BLOB", hash, #data)
+	LOG("[response] BLOB", hash, #data)
 	if repo:write_blob(hash, data) then
 		request_resolve(hash)
 	end
 end
 
 function response.FILE(hash, size)
-	print("[response] FILE", hash, size)
+	LOG("[response] FILE", hash, size)
 	repo:write_file(hash, size)
 end
 
 function response.MISSING(hash)
-	print("[response] MISSING", hash)
+	LOG("[response] MISSING", hash)
 	request_reject(hash, "MISSING "..hash)
 end
 
 function response.SLICE(hash, offset, data)
-	print("[response] SLICE", hash, offset, #data)
+	LOG("[response] SLICE", hash, offset, #data)
 	if repo:write_slice(hash, offset, data) then
 		request_resolve(hash)
 	end
 end
 
 function response.RESOURCE(fullpath, hash)
-	print("[response] RESOURCE", fullpath, hash)
+	LOG("[response] RESOURCE", fullpath, hash)
 	repo:add_resource(fullpath, hash)
 	request_resolve(fullpath)
 end
@@ -345,7 +359,7 @@ local ListNeedResource <const> = 4
 
 function CMD.LIST(id, fullpath)
 	fullpath = fullpath:gsub("|", "/")
---	print("[request] LIST", path)
+--	LOG("[request] LIST", path)
 	local dir, r, hash = repo:list(fullpath)
 	if dir then
 		response_id(id, dir)
@@ -364,7 +378,7 @@ end
 
 function CMD.TYPE(id, fullpath)
 	fullpath = fullpath:gsub("|", "/")
-	--	print("[request] TYPE", fullpath)
+	--	LOG("[request] TYPE", fullpath)
 	if fullpath == "/" then
 		response_id(id, "dir")
 		return
@@ -429,7 +443,7 @@ function CMD.READ(id, fullpath)
 end
 
 function CMD.RESOURCE_SETTING(_, setting)
---	print("[request] RESOURCE_SETTING", setting)
+--	LOG("[request] RESOURCE_SETTING", setting)
 	repo:resource_setting(setting)
 	request_send("RESOURCE_SETTING", setting)
 end
@@ -451,7 +465,7 @@ end
 local function dispatch_net(cmd, ...)
 	local f = response[cmd]
 	if not f then
-		print("[ERROR] Unsupport net command", cmd)
+		LOG("[ERROR] Unsupport net command", cmd)
 		return
 	end
 	f(...)
@@ -464,7 +478,7 @@ local function dispatch(ok, id, cmd, ...)
 	end
 	local f = CMD[cmd]
 	if not f then
-		print("[ERROR] Unsupported command : ", cmd)
+		LOG("[ERROR] Unsupported command : ", cmd)
 	else
 		f(id, ...)
 	end
@@ -695,7 +709,7 @@ local function main()
 	if QUIT then
 		return
 	end
-	print("Working offline")
+	LOG("Working offline")
 	work_offline()
 end
 
