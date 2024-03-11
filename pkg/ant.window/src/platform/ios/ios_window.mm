@@ -1,9 +1,5 @@
 #include "../../window.h"
 
-extern "C" {
-#include <lua-seri.h>
-}
-
 #import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
