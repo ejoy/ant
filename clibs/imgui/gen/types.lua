@@ -105,10 +105,7 @@ end
 special["ImTextureID"] = function ()
 end
 
-local registered_type = {}
-
 local function decode_docs(status, name, writeln, write_func)
-    registered_type[name] = name
     local lines = {}
     local maxn = 0
     local function push_line(field, typename)
@@ -122,10 +119,6 @@ local function decode_docs(status, name, writeln, write_func)
     end
     for _, field in ipairs(status.structs[name].fields) do
         if field.conditionals then
-            goto continue
-        end
-        if registered_type[field.type.declaration] then
-            push_line(field, registered_type[field.type.declaration])
             goto continue
         end
         if reserve_type[field.type.declaration] then
