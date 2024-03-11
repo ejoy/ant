@@ -57,11 +57,11 @@ static void handle_cmd(android_app* app, int32_t cmd) {
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
             if (!g_initialized) {
-                window_message_init(g_cb, app->window, NULL, w, h);
+                window_message_init(g_cb, app->window, app->window, NULL, w, h);
                 g_initialized = true;
             }
             else {
-                window_message_recreate(g_cb, app->window, NULL, w, h);
+                window_message_recreate(g_cb, app->window,  app->window, NULL, w, h);
             }
             break;
         }

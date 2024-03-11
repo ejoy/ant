@@ -271,7 +271,7 @@ void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
     g_cb = cb;
 
     float scale = [win backingScaleFactor];
-    window_message_init(cb, win, 0, w * scale, h * scale);
+    window_message_init(cb, win, win, 0, w * scale, h * scale);
     return (void*)win;
 }
 

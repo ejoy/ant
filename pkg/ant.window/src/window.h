@@ -28,8 +28,8 @@ void loopwindow_mainloop();
 
 void window_maxfps(float fps);
 
-void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h);
-void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h);
+void window_message_init(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h);
+void window_message_recreate(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h);
 void window_message_exit(struct ant_window_callback* cb);
 void window_message_size(struct ant_window_callback* cb, int x, int y);
 void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files);

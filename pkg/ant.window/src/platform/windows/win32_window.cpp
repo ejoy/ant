@@ -312,7 +312,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
 		RECT r;
 		GetClientRect(hWnd, &r);
-		window_message_init(cb, hWnd, 0, r.right-r.left, r.bottom-r.top);
+		window_message_init(cb, hWnd, hWnd, 0, r.right-r.left, r.bottom-r.top);
 		break;
 	}
 	case WM_DESTROY:
