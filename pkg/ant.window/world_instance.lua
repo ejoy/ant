@@ -41,8 +41,8 @@ local function render(init, args, initialized)
         ecs = args,
         nwh = init.nwh,
         context = init.context,
-        width = init.width,
-        height = init.height,
+        width = init.w,
+        height = init.h,
     }
     rhwi.init {
         window  = config.window,
