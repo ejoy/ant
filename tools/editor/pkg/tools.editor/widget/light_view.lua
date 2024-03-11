@@ -191,10 +191,13 @@ function LightView:update()
     end
     self.light_property:update()
 end
-
+local event_gizmo = world:sub {"Gizmo"}
 function LightView:show()
     if not self.eid then
         return
+    end
+    for _, _, _, _ in event_gizmo:unpack() do
+        self:update()
     end
     self.light_property:show()
 end

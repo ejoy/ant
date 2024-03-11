@@ -751,9 +751,13 @@ local function move_light_gizmo(x, y)
 		circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(le)}, 1)
 	end
 	local lightPos = iom.get_position(le)
+	local info = hierarchy:get_node_info(light_gizmo.current_light)
 	if light_gizmo_mode == 4 then
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_spot_light), pos = math3d.totable(circle_centre)})
-		ilight.set_outter_radian(le, 2.0 * math.atan(math3d.length(math3d.sub(curpos, circle_centre)), ilight.range(le)))
+		local value = 2.0 * math.atan(math3d.length(math3d.sub(curpos, circle_centre)), ilight.range(le))
+		ilight.set_outter_radian(le, value)
+		info.template.data.light.outter_radian = value
+		world:pub { "PatchEvent", light_gizmo.current_light, "/data/light/outter_radian", value }
 	elseif light_gizmo_mode == 5 then
 		local move_dir = math3d.sub(circle_centre, lightPos)
 		local ce <close> = world:entity(irq.main_camera(), "camera:in")
@@ -762,10 +766,16 @@ local function move_light_gizmo(x, y)
 		if math3d.length(math3d.sub(new_offset, lightPos)) < math3d.length(math3d.sub(init_offset, lightPos)) then
 			offset = -offset
 		end
-		ilight.set_range(le, last_spot_range + offset)
+		local value = last_spot_range + offset
+		ilight.set_range(le, value)
+		info.template.data.light.range = value
+		world:pub { "PatchEvent", light_gizmo.current_light, "/data/light/range", value }
 	else
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_point_light), pos = math3d.totable(lightPos)})
-		ilight.set_range(le, math3d.length(math3d.sub(curpos, lightPos)))
+		local value = math3d.length(math3d.sub(curpos, lightPos))
+		ilight.set_range(le, value)
+    	info.template.data.light.range = value
+		world:pub { "PatchEvent", light_gizmo.current_light, "/data/light/range", value }
 	end
 	light_gizmo.update_gizmo()
 	light_gizmo.highlight(true)

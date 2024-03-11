@@ -808,6 +808,7 @@ function m.show()
             on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
         end
         ImGui.Separator()
+        -- ImGui.GetIO().WantCaptureMouse = true
         if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.TableFlags {'Resizable', 'ScrollY'}) then
             if not edit_timeline then
                 ImGui.TableSetupColumnEx("Bones", ImGui.TableColumnFlags {'WidthStretch'}, 1.0)

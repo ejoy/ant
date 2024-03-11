@@ -142,17 +142,21 @@ end
 
 local function create_default_light(type, parent)
     local light, tpl = ilight.create {
-        srt = {t = {0, 5, 0}, r = type == "directional" and {math.rad(130), 0, 0} or nil, parent = parent},
+        srt = {
+            t = {0, 5, 0},
+            r = (type == "directional") and {math.rad(130), 0, 0} or nil,
+            parent = parent
+        },
         name            = type .. gen_light_id(),
         type            = type,
         color           = {1, 1, 1, 1},
-        make_shadow     = false,
-        intensity       = 130000,--ilight.default_intensity(lt),
+        make_shadow     = true,
+        intensity       = 130000,
         intensity_unit  = ilight.default_intensity_unit(type),
-        range           = 10,
+        range           = (type ~= "directional") and 10 or nil,
         motion_type     = "dynamic",
-        inner_radian    = math.rad(10),
-        outter_radian   = math.rad(30)
+        inner_radian    = (type == "spot") and math.rad(10) or nil,
+        outter_radian   = (type == "spot") and math.rad(30) or nil
     }
     create_light_billboard(light, type)
     return light, utils.deep_copy(tpl)
@@ -370,7 +374,7 @@ function m:on_prefab_ready(prefab)
         last_tpl = pt
         if e.light then
             create_light_billboard(eid, e.light.type)
-            light_gizmo.bind(eid)
+            light_gizmo.on_target(eid)
             light_gizmo.show(false)
         end
     end
