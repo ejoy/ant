@@ -258,7 +258,7 @@ function m.copy_main_material()
         local fm = e.filter_material
         local matres = assetmgr.resource(e.material)
         local Dmi = fm.DEFAULT_MATERIAL
-        local newstate = irender.create_depth_state(Dmi:get_state())
+        local newstate = irender.create_write_state(Dmi:get_state())
         if newstate then
             local mi = RM.create_instance(matres.object)
             mi:set_state(newstate)
