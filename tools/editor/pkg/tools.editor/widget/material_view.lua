@@ -25,38 +25,35 @@ local access    = global_data.repo_access
 local rb        = ecs.require "widget.resource_browser"
 
 local MaterialView = {}
-local file_cache = {}
 
-local function read_datalist_file(p)
-    local c = file_cache[p]
-    if c == nil then
-        local vpath = (p:sub(1, 5) == "/pkg/") and p or global_data:lpath_to_vpath(p)
-        c = serialize.parse(p, aio.readall(vpath))
-        file_cache[p] = c
-    end
+local function is_virtual_path(p)
+    return nil ~= p:match "^/pkg/"
+end
+
+local FILE_CACHES = setmetatable({}, {__index=function(t, fp)
+    local vpath = is_virtual_path(fp) and fp or global_data:lpath_to_vpath(fp)
+    local c = serialize.parse(fp, aio.readall(vpath))
+    t[vpath] = c
     return c
+end})
+
+local DEFAULT_STTINGS = FILE_CACHES["/pkg/ant.settings/default/graphic_settings.ant"]
+
+local function compiled_res_content(path)
+    return FILE_CACHES[path .. "/source.ant"]
 end
 
-local default_setting = read_datalist_file "/pkg/ant.settings/default/graphic_settings.ant"
-
-local function load_material_file(mf)
-    if not mf then
-        return
-    end
-    return read_datalist_file(mf .. "/source.ant")
-end
+local material_content = compiled_res_content
 
 local function material_template(eid)
-    local info = hierarchy:get_node_info(eid)
-    if info then
-        return load_material_file(info.template.data.material)
-    end
+    local info = assert(hierarchy:get_node_info(eid), "Invalid eid")
+    return material_content(assert(info.template.data.material))
 end
 
 local function state_template(eid)
     local t = material_template(eid)
     if type(t.state) == "string" then
-        return read_datalist_file(t.state)
+        return FILE_CACHES[t.state]
     end
     return t.state
 end
@@ -76,8 +73,8 @@ local function build_fx_ui(mv)
 
     local function setting_filed(which)
         local s = material_template(mv.eid).fx.setting
-        s = s or default_setting
-        return s[which] or default_setting[which]
+        s = s or DEFAULT_STTINGS
+        return s[which] or DEFAULT_STTINGS[which]
     end
 
     local function check_set_setting(n, v)
@@ -969,7 +966,7 @@ local function refine_material_data(eid, newmaterial_path)
     local oldmaterial_path = fs.path(prefab.template.data.material)
     if oldmaterial_path ~= newmaterial_path then
         local basepath = oldmaterial_path:parent_path()
-        local t = load_material_file(oldmaterial_path:string())
+        local t = FILE_CACHES[oldmaterial_path:string()]
         for k, p in pairs(t.properties) do
             if p.texture then
                 local texpath = fs.path(p.texture)
@@ -1149,16 +1146,17 @@ function MaterialView:handle_event()
         image_info = {}
         sampler_info = {}
         for _, eid in ipairs(entitys) do
-            local t = material_template(eid)
-            if not t then
+            local node = hierarchy:get_node_info(eid)
+            local mtlpath = node.template.data.material
+            if not mtlpath then
                 goto continue
             end
-            local mtlpath = hierarchy:get_node_info(eid).template.data.material
+
+            local t = material_content(mtlpath)
             for k, v in pairs(t.properties) do
                 if v.texture then
                     local texpath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
-                    local tp = texpath:string() .. "/source.ant"
-                    local data = datalist.parse(aio.readall(tp))
+                    local data = compiled_res_content(texpath:string())
                     if not image_info[v.texture] then
                         image_info[v.texture] = {width = data.info.width, height = data.info.height}
                     end
