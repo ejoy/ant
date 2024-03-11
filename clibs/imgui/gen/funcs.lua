@@ -10,6 +10,7 @@ end
 
 local struct_constructor <const> = {
     "ImFontConfig",
+    "ImFontAtlas",
 }
 
 local write_arg = {}
@@ -171,6 +172,18 @@ write_arg["const ImFontConfig*"] = function(type_meta, context)
     end
 end
 
+write_arg["ImFontAtlas*"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
+    if type_meta.default_value == nil then
+        writeln("    auto %s = *(ImFontAtlas**)lua_touserdata(L, %d);", type_meta.name, context.idx)
+    elseif type_meta.default_value == "NULL" then
+        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(ImFontAtlas**)lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
+    else
+        assert(false)
+    end
+end
+
 write_arg["ImFont*"] = function(type_meta, context)
     assert(type_meta.default_value == nil)
     context.idx = context.idx + 1
@@ -216,10 +229,6 @@ write_ret["ImGuiContext*"] = function()
     --NOTICE: Ignore ImGuiContext for now.
     writeln("   (void)_retval;")
     return 0
-end
-
-write_arg["ImFontAtlas*"] = function()
-    --NOTICE: Ignore ImFontAtlas for now.
 end
 
 write_arg["float"] = function(type_meta, context)

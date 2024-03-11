@@ -129,6 +129,17 @@ special_arg["const ImFontConfig*"] = function(type_meta, status)
     end
 end
 
+special_arg["ImFontAtlas*"] = function(type_meta, status)
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    if type_meta.default_value == nil then
+        writeln("---@param %s ImFontAtlas", safe_name(type_meta.name))
+    elseif type_meta.default_value == "NULL" then
+        writeln("---@param %s? ImFontAtlas", safe_name(type_meta.name))
+    else
+        assert(false)
+    end
+end
+
 special_arg["ImFont*"] = function(type_meta, status)
     assert(type_meta.default_value == nil)
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
@@ -162,10 +173,6 @@ end
 
 special_ret["ImGuiContext*"] = function()
     --NOTICE: Ignore ImGuiContext for now.
-end
-
-special_arg["ImFontAtlas*"] = function()
-    --NOTICE: Ignore ImFontAtlas for now.
 end
 
 special_arg["unsigned int*"] = function (type_meta, status)

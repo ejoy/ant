@@ -26,7 +26,6 @@ local reserve_type <const> = {
     ["ImTextureID"] = "ImTextureID",
     ["ImGuiKeyChord"] = "ImGuiKeyChord",
     ["const ImWchar*"] = "ImFontRange",
-    ["ImFontAtlas*"] = "ImFontAtlas",
     ["ImVec2"] = "ImVec2",
 }
 
@@ -65,18 +64,6 @@ special["const ImWchar*"] = function (name, field, attris, writeln, readonly)
         writeln "    }"
         attris.setters[#attris.setters+1] = field.name
     end
-    writeln "};"
-    writeln ""
-end
-
-special["ImFontAtlas*"] = function (name, field, attris, writeln)
-    writeln("struct %s {", field.name)
-    writeln "    static int getter(lua_State* L) {"
-    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
-    writeln("        wrap_ImFontAtlas::const_pointer(L, *OBJ.%s);", field.name)
-    writeln "        return 1;"
-    writeln "    }"
-    attris.getters[#attris.getters+1] = field.name
     writeln "};"
     writeln ""
 end
@@ -120,6 +107,15 @@ local function decode_docs(status, name, writeln, write_func)
     for _, field in ipairs(status.structs[name].fields) do
         if field.conditionals then
             goto continue
+        end
+        if field.is_internal then
+            goto continue
+        end
+        if field.type.description.kind == "Pointer" then
+            if status.structs[field.type.description.inner_type.name] then
+                push_line(field, field.type.description.inner_type.name)
+                goto continue
+            end
         end
         if reserve_type[field.type.declaration] then
             push_line(field, reserve_type[field.type.declaration])
@@ -190,6 +186,18 @@ local function decode_func_builtin(name, writeln, readonly, attris, builtin, fie
     writeln ""
 end
 
+local function decode_func_structs(name, writeln, readonly, attris, struct_name, field)
+    writeln("struct %s {", field.name)
+    writeln "    static int getter(lua_State* L) {"
+    writeln("        auto& OBJ = **(%s**)lua_touserdata(L, lua_upvalueindex(1));", name)
+    writeln("        wrap_%s::pointer(L, *OBJ.%s);", struct_name, field.name)
+    writeln "        return 1;"
+    writeln "    }"
+    attris.getters[#attris.getters+1] = field.name
+    writeln "};"
+    writeln ""
+end
+
 local function decode_func_attris(status, name, writeln, readonly)
     local attris = {
         setters = {},
@@ -198,6 +206,15 @@ local function decode_func_attris(status, name, writeln, readonly)
     for _, field in ipairs(status.structs[name].fields) do
         if field.conditionals then
             goto continue
+        end
+        if field.is_internal then
+            goto continue
+        end
+        if field.type.description.kind == "Pointer" then
+            if status.structs[field.type.description.inner_type.name] then
+                decode_func_structs(name, writeln, readonly, attris, field.type.description.inner_type.name, field)
+                goto continue
+            end
         end
         if builtin_type[field.type.declaration] then
             decode_func_builtin(name, writeln, readonly, attris, builtin_type[field.type.declaration], field)

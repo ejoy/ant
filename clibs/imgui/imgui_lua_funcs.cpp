@@ -732,7 +732,7 @@ namespace wrap_ImFontConfig {
     void pointer(lua_State* L, ImFontConfig& v);
 }
 namespace wrap_ImFontAtlas {
-    void const_pointer(lua_State* L, ImFontAtlas& v);
+    void pointer(lua_State* L, ImFontAtlas& v);
 }
 namespace wrap_ImGuiViewport {
     void const_pointer(lua_State* L, ImGuiViewport& v);
@@ -745,13 +745,21 @@ static int FontConfig(lua_State* L) {
     return 2;
 }
 
+static int FontAtlas(lua_State* L) {
+    auto _retval = (ImFontAtlas*)lua_newuserdatauv(L, sizeof(ImFontAtlas), 0);
+    new (_retval) ImFontAtlas;
+    wrap_ImFontAtlas::pointer(L, *_retval);
+    return 2;
+}
+
 static int StringBuf(lua_State* L) {
     util::strbuf_create(L, 1);
     return 1;
 }
 
 static int CreateContext(lua_State* L) {
-    auto&& _retval = ImGui::CreateContext();
+    auto shared_font_atlas = lua_isnoneornil(L, 1)? NULL: *(ImFontAtlas**)lua_touserdata(L, 1);
+    auto&& _retval = ImGui::CreateContext(shared_font_atlas);
    (void)_retval;
     return 0;
 }
@@ -4728,7 +4736,7 @@ struct UserData {
 struct Fonts {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
-        wrap_ImFontAtlas::const_pointer(L, *OBJ.Fonts);
+        wrap_ImFontAtlas::pointer(L, *OBJ.Fonts);
         return 1;
     }
 };
@@ -6622,6 +6630,12 @@ struct Flags {
         lua_pushinteger(L, OBJ.Flags);
         return 1;
     }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Flags = (ImFontAtlasFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
 };
 
 struct TexDesiredWidth {
@@ -6629,6 +6643,12 @@ struct TexDesiredWidth {
         auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
         lua_pushinteger(L, OBJ.TexDesiredWidth);
         return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.TexDesiredWidth = (int)luaL_checkinteger(L, 1);
+        return 0;
     }
 };
 
@@ -6638,6 +6658,12 @@ struct TexGlyphPadding {
         lua_pushinteger(L, OBJ.TexGlyphPadding);
         return 1;
     }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.TexGlyphPadding = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
 };
 
 struct Locked {
@@ -6645,6 +6671,12 @@ struct Locked {
         auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
         lua_pushboolean(L, OBJ.Locked);
         return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Locked = (bool)!!lua_toboolean(L, 1);
+        return 0;
     }
 };
 
@@ -6654,85 +6686,12 @@ struct UserData {
         lua_pushlightuserdata(L, OBJ.UserData);
         return 1;
     }
-};
 
-struct TexReady {
-    static int getter(lua_State* L) {
+    static int setter(lua_State* L) {
         auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.TexReady);
-        return 1;
-    }
-};
-
-struct TexPixelsUseColors {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushboolean(L, OBJ.TexPixelsUseColors);
-        return 1;
-    }
-};
-
-struct TexWidth {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.TexWidth);
-        return 1;
-    }
-};
-
-struct TexHeight {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.TexHeight);
-        return 1;
-    }
-};
-
-struct TexUvScale {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, OBJ.TexUvScale.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, OBJ.TexUvScale.y);
-        lua_setfield(L, -2, "y");
-        return 1;
-    }
-};
-
-struct TexUvWhitePixel {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, OBJ.TexUvWhitePixel.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, OBJ.TexUvWhitePixel.y);
-        lua_setfield(L, -2, "y");
-        return 1;
-    }
-};
-
-struct FontBuilderFlags {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.FontBuilderFlags);
-        return 1;
-    }
-};
-
-struct PackIdMouseCursors {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.PackIdMouseCursors);
-        return 1;
-    }
-};
-
-struct PackIdLines {
-    static int getter(lua_State* L) {
-        auto& OBJ = **(ImFontAtlas**)lua_touserdata(L, lua_upvalueindex(1));
-        lua_pushinteger(L, OBJ.PackIdLines);
-        return 1;
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.UserData = (void*)lua_touserdata(L, 1);
+        return 0;
     }
 };
 
@@ -6763,34 +6722,33 @@ static luaL_Reg funcs[] = {
     { "AddCustomRectFontGlyph", AddCustomRectFontGlyph },
 };
 
+static luaL_Reg setters[] = {
+    { "Flags", Flags::setter },
+    { "TexDesiredWidth", TexDesiredWidth::setter },
+    { "TexGlyphPadding", TexGlyphPadding::setter },
+    { "Locked", Locked::setter },
+    { "UserData", UserData::setter },
+};
+
 static luaL_Reg getters[] = {
     { "Flags", Flags::getter },
     { "TexDesiredWidth", TexDesiredWidth::getter },
     { "TexGlyphPadding", TexGlyphPadding::getter },
     { "Locked", Locked::getter },
     { "UserData", UserData::getter },
-    { "TexReady", TexReady::getter },
-    { "TexPixelsUseColors", TexPixelsUseColors::getter },
-    { "TexWidth", TexWidth::getter },
-    { "TexHeight", TexHeight::getter },
-    { "TexUvScale", TexUvScale::getter },
-    { "TexUvWhitePixel", TexUvWhitePixel::getter },
-    { "FontBuilderFlags", FontBuilderFlags::getter },
-    { "PackIdMouseCursors", PackIdMouseCursors::getter },
-    { "PackIdLines", PackIdLines::getter },
 };
 
-static int tag_const_pointer = 0;
+static int tag_pointer = 0;
 
-void const_pointer(lua_State* L, ImFontAtlas& v) {
-    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
+void pointer(lua_State* L, ImFontAtlas& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
     auto** ptr = (ImFontAtlas**)lua_touserdata(L, -1);
     *ptr = &v;
 }
 
 static void init(lua_State* L) {
-    util::struct_gen(L, "ImFontAtlas", funcs, {}, getters);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_const_pointer);
+    util::struct_gen(L, "ImFontAtlas", funcs, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
 }
 
 }
@@ -6999,6 +6957,7 @@ static void init(lua_State* L) {
 static void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "FontConfig", FontConfig },
+        { "FontAtlas", FontAtlas },
         { "StringBuf", StringBuf },
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
