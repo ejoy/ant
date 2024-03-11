@@ -201,6 +201,12 @@ local function GetJointsMap(model, primitives)
     return jointsMap
 end
 
+local function find_render_layer(state)
+    if state.BLEND then
+        return "translucent"
+    end
+end
+
 local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodeidx, parent, status, prefabs)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
@@ -222,22 +228,20 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
         local mode      = prim.mode or 4
         assert(mode == 4, "Only 'TRIANGLES' primitive mode is supported")
 
-        local materialfile = status.material_idx[prim.material+1]
-        local meshfile = em.meshbinfile
-        if meshfile == nil then
-            error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
-        end
+        local materialfile = status.material_idx[prim.material+1] or error(("Invalid prim.material index:%d"):format(prim.material+1))
+        local meshfile = em.meshbinfile or error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
 
         status.material_cfg[meshfile] = {
             pack_tangent_frame      = em.pack_tangent_frame and "P" or "",
             binded_declname         = mesh_declname(em),
         }
 
+        local materialcontent = status.material[materialfile] or error(("Invalid material file:%s, not found material content"):format(materialfile))
         local data = {
-            mesh        = meshfile,
----@diagnostic disable-next-line: need-check-nil
-            material    = materialfile,
-            visible_state= DEFAULT_STATE,
+            mesh            = meshfile,
+            material        = assert(materialfile, "Not found material file"),
+            render_layer    = find_render_layer(materialcontent.state),
+            visible_state   = DEFAULT_STATE,
         }
 
         local policy = {}
@@ -362,8 +366,7 @@ local function serialize_prefab(status, data)
         local e = v.data
         if e then
             if e.material then
-                e.material = seri_material(status, e.material, status.material_cfg[e.mesh])
-                e.material = serialize_path(e.material)
+                e.material = serialize_path(seri_material(status, e.material, status.material_cfg[e.mesh]))
             end
             if e.mesh then
                 e.mesh = serialize_path(e.mesh)
