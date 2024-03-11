@@ -39,6 +39,7 @@ end
 local function render(init, args, initialized)
     local config = {
         ecs = args,
+        window = init.window,
         nwh = init.nwh,
         context = init.context,
         width = init.w,
