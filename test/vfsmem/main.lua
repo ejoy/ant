@@ -2,6 +2,11 @@ package.path = "/engine/?.lua"
 require "bootstrap"
 
 dofile "/engine/ltask.lua" {
-    bootstrap = { "test|main" },
+    bootstrap = {
+        ["logger"] = {},
+        ["test|main"] = {
+            unique = false,
+        }
+    },
     exclusive =  { "timer" },
 }

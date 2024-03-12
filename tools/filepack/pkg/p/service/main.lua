@@ -5,9 +5,10 @@ local zip = require "zip"
 local vfsrepo = import_package "ant.vfs"
 local cr = import_package "ant.compile_resource"
 
-local arg = ...
+local arg, config_os = ...
+config_os = config_os or platform.os
 
-local repopath = fs.absolute(arg[1]):lexically_normal()
+local repopath = fs.absolute(arg):lexically_normal()
 local resource_cache = {}
 
 local platform_relates <const> = {
@@ -17,7 +18,6 @@ local platform_relates <const> = {
     android = "vulken",
 }
 
-local config_os = arg[2] or platform.os
 local config_resource = {
     ("%s-%s"):format(config_os, platform_relates[config_os]),
 }

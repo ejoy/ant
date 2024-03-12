@@ -2,7 +2,13 @@ local M = {}
 
 function M.start(arg)
 	dofile "/engine/ltask.lua" {
-		bootstrap = { "main|startup", table.unpack(arg) },
+		bootstrap = {
+			["logger"] = {},
+			["main|startup"] = {
+				args = arg,
+				unique = false,
+			}
+		},
 		exclusive = { "timer" },
 	}
 end

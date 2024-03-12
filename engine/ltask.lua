@@ -23,7 +23,6 @@ local ConfigCatalog <const> = {
 	service_path = RootConfig,
 	exclusive = RootConfig,
 	preinit = RootConfig,
-	logger = RootConfig,
 	bootstrap = RootConfig,
 	mainthread = BootConfig
 }
@@ -108,9 +107,6 @@ local function init(c)
 		coreConfig.worker = 4
 	end
 
-	if not rootConfig.logger then
-		rootConfig.logger = { "logger" }
-	end
 	if rootConfig.worker_bind then
 		local map = {}
 		for i = #rootConfig.worker_bind, 1, -1 do
@@ -120,6 +116,7 @@ local function init(c)
 		end
 		rootConfig.worker_bind = map
 	end
+
 	if bootConfig.mainthread == "worker" then
 		bootConfig.mainthread = coreConfig.worker - 1
 	else
@@ -217,8 +214,7 @@ return function (c)
 	boot.init(coreConfig)
 	local _ <close> = toclose(boot.deinit)
 	boot.init_timer()
-	for i, t in ipairs(rootConfig.exclusive) do
-		local label = type(t) == "table" and t[1] or t
+	for i, label in ipairs(rootConfig.exclusive) do
 		local id = i + 1
 		exclusive_thread(label, id)
 	end

@@ -2,7 +2,13 @@ local function start(initargs)
     local platform = require "bee.platform"
     if platform.os == "ios" then
         dofile "/engine/ltask.lua" {
-            bootstrap = { "ant.window|boot", initargs },
+            bootstrap = {
+                ["logger"] = {},
+                ["ant.window|boot"] = {
+                    args = {initargs},
+                    unique = false,
+                }
+            },
             exclusive = {
                 "ant.window|ios",
                 "timer",
@@ -14,7 +20,13 @@ local function start(initargs)
         }
     else
         dofile "/engine/ltask.lua" {
-            bootstrap = { "ant.window|boot", initargs },
+            bootstrap = {
+                ["logger"] = {},
+                ["ant.window|boot"] = {
+                    args = {initargs},
+                    unique = false,
+                }
+            },
             mainthread = "worker",
             exclusive = {
                 "timer"
