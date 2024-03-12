@@ -53,7 +53,7 @@ function qs_sys:entity_init()
                 mesh_result = quadstrip_mesh,
                 owned_mesh_buffer = true,
                 material = e.material,
-                visible_state = "main_view",
+                visible = true,
                 scene = {
                     parent = e.eid,
                 },

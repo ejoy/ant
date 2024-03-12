@@ -8,6 +8,8 @@ local assetmgr  = import_package "ant.asset"
 
 local hwi       = import_package "ant.hwi"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
+local ivm       = ecs.require "ant.render|visible_mask"
+
 local R         = world:clibs "render.render_material"
 local RM        = ecs.require "ant.material|material"
 local iviewport = ecs.require "ant.render|viewport.state"
@@ -75,7 +77,8 @@ function outline_system:init_world()
 end
 
 function outline_system:entity_ready()
-    for e in w:select "filter_result outline_info:in visible_state:in render_object:in filter_material:in skinning?in" do
+    for e in w:select "filter_result outline_info:in render_object:in filter_material:in skinning?in" do
+        assert(ivm.check(e, "outline_queue"))
         local mo = assert(which_material(e.skinning))
         local ro = e.render_object
         local fm = e.filter_material

@@ -12,7 +12,8 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
   material: /pkg/tools.editor/resource/Duck.glb|materials/blinn3-fx.material
   mesh: /pkg/tools.editor/resource/Duck.glb|meshes/LOD3spShape_P1.meshbin
   scene: {}

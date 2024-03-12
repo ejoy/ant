@@ -324,7 +324,8 @@ local function create_road_obj(gid, render_layer, buffer, dimaterial, cs_materia
             scene = {},
             mesh_result = assert(ROAD_MESH),
             material    = dimaterial,
-            visible_state = "main_view|selectable",
+            visible     = true,
+            visible_masks = "main_view|selectable",
             road = {
                 handle = create_mesh_buffer(buffer.meshbuffer),
             },

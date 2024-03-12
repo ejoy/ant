@@ -4,7 +4,6 @@ local w = world.w
 
 local assetmgr  = import_package "ant.asset"
 local gizmo     = ecs.require "gizmo.gizmo"
-local ivs       = ecs.require "ant.render|visible_state"
 local hierarchy = ecs.require "hierarchy_edit"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
@@ -191,14 +190,14 @@ local function show_scene_node(node)
         ImGui.TableNextColumn();
         ImGui.PushID(tostring(eid))
         local current_visible = hierarchy:is_visible(eid)
-        local e <close> = world:entity(eid, "visible_state?in")
-        if e.visible_state then
-            local rv = ivs.has_state(e, "main_view")
+        local e <close> = world:entity(eid, "visible?out"); do
+            local rv = e.visible
             if current_visible ~= rv then
                 hierarchy:set_visible(nd, rv)
                 current_visible = rv
             end
         end
+
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         imagesize = icon.texinfo.width * icons.scale
         if ImGui.ImageButton("visible", assetmgr.textures[icon.id], imagesize, imagesize) then

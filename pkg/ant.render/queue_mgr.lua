@@ -1,6 +1,8 @@
 local ecs = ...
 assert(ecs.world)
 
+--TODO: if queue number larger than 64, we should use render.queue module to alloc queue_masks(like: local Q = require "render.queue"; local qidx = Q.alloc())
+
 local m = {}
 local QUEUE_MATERIALS = {}
 

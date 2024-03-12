@@ -166,10 +166,10 @@ end
 local bc_mb = world:sub{"bind_camera"}
 
 function irq.set_visible(queuename, b)
-	local e = w:first(queuename .." visible?out")
+	local e = w:first(queuename .." visible?out visible_changed?out")
 	e.visible = b
+	e.visible_changed = true
 	w:submit(e)
-	world:pub{"queue_visible_changed", queuename, b}
 end
 
 function irq.update_rendertarget(queuename, rt, need_touch)

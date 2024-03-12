@@ -8,7 +8,6 @@ local mc, mu    = mathpkg.constant, mathpkg.util
 local ig        = ecs.require "ant.group|group"
 local irq       = ecs.require "renderqueue"
 local Q         = world:clibs "render.queue"
-local ivs       = ecs.require "ant.render|visible_state"
 local hwi       = import_package "ant.hwi"
 local idi       = ecs.require "ant.render|draw_indirect.draw_indirect"
 local cs_material = "/pkg/ant.resources/materials/hitch/hitch_compute.material"
@@ -106,7 +105,7 @@ local function update_group_instance_buffer(indirect_draw_group)
     end
 end
 
-local function set_dirty_hitch_group(hitch, hid, state)
+local function set_dirty_hitch_group(hitch, hid, visible)
     local gid = hitch.group
     if DIRECT_DRAW_GROUPS[gid] then
         return
@@ -129,7 +128,7 @@ local function set_dirty_hitch_group(hitch, hid, state)
     if not indirect_draw_group.hitchs then
         indirect_draw_group.hitchs = {}
     end
-    indirect_draw_group.hitchs[hid] = state
+    indirect_draw_group.hitchs[hid] = visible
 end
 
 function hitch_sys:component_init()
@@ -160,7 +159,7 @@ function hitch_sys:follow_scene_update()
         e.hitch_update = true
     end
 
-    for e in w:select "visible_state_changed hitch hitch_update?out" do
+    for e in w:select "visible_changed hitch hitch_update?out" do
         e.hitch_update = true
     end
 
@@ -202,17 +201,17 @@ function hitch_sys:finish_scene_update()
 end
 
 function hitch_sys:refine_camera()
-    for e in w:select "hitch_update hitch:in eid:in view_visible?in visible_state:in" do
-        set_dirty_hitch_group(e.hitch, e.eid, e.view_visible and ivs.has_state(e, "main_view"))
+    for e in w:select "hitch_update hitch:in eid:in view_visible?in visible?in" do
+        set_dirty_hitch_group(e.hitch, e.eid, e.view_visible and e.visible)
     end
     if irq.main_camera_changed() then
-        for e in w:select "hitch:in eid:in view_visible?in" do
+        for e in w:select "hitch:in eid:in view_visible?in visible?in" do
             local is_culled = not e.view_visible
             if HITCH_CULL_STATES[e.eid] ~= is_culled then
                 HITCH_CULL_STATES[e.eid] = is_culled
-                set_dirty_hitch_group(e.hitch, e.eid, e.view_visible) 
+                set_dirty_hitch_group(e.hitch, e.eid, e.view_visible and e.visible)
             end
-        end        
+        end
     end
 
     for gid in pairs(DIRTY_GROUPS) do
@@ -238,9 +237,6 @@ function hitch_sys:refine_camera()
                 update_instance_buffer(re.eid, memory, draw_num)
                 idi.update_instance_buffer(re, memory, draw_num)
                 re.draw_indirect.instance_buffer.params =  {draw_num, 0, 0, re.mesh_result.ib.num}
-            end
-            for re in w:select "hitch_tag efk render_object_visible?update view_visible?update" do
-                ivs.set_state(re, "efk_queue", true)
             end
             indirect_draw_group.glbs = glbs
 

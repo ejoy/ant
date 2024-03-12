@@ -10,8 +10,8 @@ local hwi		= import_package "ant.hwi"
 local math3d    = require "math3d"
 
 local irq		= ecs.require "ant.render|renderqueue"
-local ivs		= ecs.require "ant.render|visible_state"
 local imaterial	= ecs.require "ant.render|material"
+local ivm		= ecs.require "ant.render|visible_mask"
 
 local queuemgr	= ecs.require "queue_mgr"
 local sampler	= import_package "ant.render.core".sampler
@@ -94,9 +94,10 @@ local function update_visible_state(e)
 	end
 
 	local function update_queue(whichqueue, matchqueue)
-		if e.visible_state["pre_depth_queue"] then
+		--only pre_depth_queue render_object will produce shadow
+		if ivm.check(e, "pre_depth_queue") then
 			local qn = DEBUG_view.queue[whichqueue].queue_name
-			ivs.set_state(e, qn, true)
+			ivm.set_masks(e, qn, true)
 			w:extend(e, "filter_material:update")
 			e.filter_material[qn] = e.filter_material[matchqueue]
 		end
@@ -157,7 +158,7 @@ function shadowdebug_sys:init_world()
 			queue_name = "shadow_debug_depth_queue",
 		}
 	}
-	
+
 	DEBUG_view.queue.color.queue_eid = world:create_entity{
 		policy = {
 			"ant.render|render_queue",
@@ -186,7 +187,6 @@ function shadowdebug_sys:init_world()
 		data = {
 			mesh_result = imesh.init_mesh(ientity.quad_mesh(mu.rect2ndc({x=0, y=0, w=fbw, h=fbh}, irq.view_rect "main_queue")), true),
 			material = "/pkg/ant.resources/materials/texquad.material",
-			visible_state = "main_queue",
 			scene = {},
 			render_layer = "translucent",
 			on_ready = function (e)
@@ -195,13 +195,13 @@ function shadowdebug_sys:init_world()
 		}
 	}
 
-	for e in w:select "render_object visible_state:in" do
+	for e in w:select "render_object" do
 		update_visible_state(e)
 	end
 end
 
 function shadowdebug_sys:entity_init()
-	for e in w:select "INIT render_object visible_state:in" do
+	for e in w:select "INIT render_object" do
 		update_visible_state(e)
 	end
 end
@@ -214,7 +214,7 @@ local function draw_lines(lines)
 			material = "/pkg/ant.resources/materials/line.material",
 			scene = {},
 			render_layer = "translucent",
-			visible_state = "main_view",
+			visible = true,
 			owned_mesh_buffer = true,
 		}
 	}
@@ -257,7 +257,7 @@ local function draw_box(points, M)
 			material = "/pkg/ant.resources/materials/line.material",
 			scene = {},
 			render_layer = "translucent",
-			visible_state = "main_view",
+			visible = true,
 			owned_mesh_buffer = true,
 		}
 	}

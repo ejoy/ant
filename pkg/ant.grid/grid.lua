@@ -75,7 +75,8 @@ local function create_grid_entity(grid_params, grid_color, grid_render_layer, gr
             scene = grid_srt,
             mesh_result = DEFAULT_GRID_MESH or get_quad_mesh(),
             material    = DEFAULT_GRID_MATERIAL,
-            visible_state = "main_view|selectable",
+            visible     = true,
+            visible_masks = "main_view|selectable",
             render_layer = grid_render_layer,
             on_ready = function (e)
                 imaterial.set_property(e, "u_grid_params", grid_params)

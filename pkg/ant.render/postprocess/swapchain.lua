@@ -47,7 +47,7 @@ function sc_sys:init()
         data = {
             mesh_result  = irender.full_quad(),
             material     = "/pkg/ant.resources/materials/postprocess/swapchain.material",
-            visible_state= "swapchain_queue",
+            visible_masks= "",
             scene        = {},
         }
     }

@@ -12,6 +12,7 @@ local mu		= mathpkg.util
 
 local ientity   = ecs.require "ant.entity|entity"
 local imaterial = ecs.require "ant.render|material"
+local ivm		= ecs.require "ant.render|visible_mask"
 
 local frustum_entity
 local function create_frustum_entity()
@@ -34,7 +35,7 @@ local function create_view_buffer_entity()
 			owned_mesh_buffer = true,
 			mesh_result = m,
 			material = "/pkg/ant.resources/materials/texquad.material",
-			visible_state = "main_view",
+			visible = true,
 			render_layer = "translucent",
 			scene = {},
 			on_ready = function (e)
@@ -53,8 +54,8 @@ end
 local function log_pickup_queue_entities()
 	log.info "pickup queue entities:"
 	local entities = {}
-	for e in w:select "visible_state:in eid:input" do
-		if e.visible_state["pickup_queue"] then
+	for e in w:select "visible eid:input" do
+		if ivm.check(e, "pickup_queue") then
 			entities[#entities+1] = ("%d"):format(e.eid)
 		end
 	end

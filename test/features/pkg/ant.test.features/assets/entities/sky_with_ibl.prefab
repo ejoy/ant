@@ -18,7 +18,7 @@ data:
   scene: {}
   mesh_result: false
   skybox: true
-  visible_state: main_view
+  visible: true
 policy:
   ant.sky|skybox
   ant.render|simplerender

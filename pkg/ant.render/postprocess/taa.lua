@@ -32,17 +32,17 @@ local irender   = ecs.require "ant.render|render"
 local irq       = ecs.require "ant.render|renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 
-local taa_first_frame_eid
+local taa_eid, taa_first_frame_eid
 local taa_after_first_frame
 function taasys:init()
-     world:create_entity{
+    taa_eid = world:create_entity{
         policy = {
             "ant.render|simplerender",
         },
         data = {
             mesh_result     = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa.material",
-            visible_state   = "taa_queue",
+            visible_masks   = "",
             taa_drawer     = true,
             scene           = {},
         }
@@ -52,6 +52,7 @@ function taasys:init()
         vb = {
             start = 0, num = 3,
             handle = fullquad_vbhandle,
+            owned = true,
         }
     }
     taa_first_frame_eid = world:create_entity{
@@ -59,10 +60,10 @@ function taasys:init()
             "ant.render|simplerender",
         },
         data = {
-            owned_mesh_buffer = true,
             mesh_result     = fullquad,
             material        = "/pkg/ant.resources/materials/postprocess/taa_first_frame.material",
-            visible_state   = "taa_queue",
+            visible_masks   = "",
+            owned_mesh_buffer = true,
             taa_first_frame_drawer     = true,
             scene           = {},
         }
@@ -74,8 +75,8 @@ function taasys:init()
         data = {
             mesh_result     = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
-            visible_state   = "taa_copy_queue",
-            taa_copy_drawer     = true,
+            visible_masks   = "",
+            taa_copy_drawer = true,
             scene           = {},
         }
     }
@@ -87,10 +88,9 @@ function taasys:init()
             data = {
                 mesh_result     = irender.full_quad(),
                 material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
-                visible_state   = "taa_present_queue",
-                taa_present_drawer     = true,
+                visible_masks   = "",
+                taa_present_drawer = true,
                 scene           = {},
-                
             }
         } 
     end
@@ -204,6 +204,10 @@ function taasys:taa_present()
     end
 end
 
+function taasys:render_submit()
+    irender.draw(RENDER_ARG, taa_first_frame_eid)
+    irender.draw(RENDER_ARG, taa_eid)
+end
 
 function taasys:end_frame()
     if taa_first_frame_eid then

@@ -28,11 +28,6 @@ local function build_test_srts(rows, cols)
 end
 
 function dit_sys.init_world()
-
-    local test_mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
-    local test_material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material"
-    local test_visible_state = "main_view|selectable|cast_shadow"
-    local test_render_layer = "opacity"
     local test_srts = build_test_srts(4, 4)
 
     -- indirect_entity's visibility depends on its binding group
@@ -44,12 +39,13 @@ function dit_sys.init_world()
         },
         data = {
             indirect_entity = {
-                gid = draw_indirect_test_group_id,
-                mesh = test_mesh,
-                material = test_material,
-                visible_state = test_visible_state,
-                render_layer = test_render_layer,
-                srts = test_srts
+                gid         = draw_indirect_test_group_id,
+                mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+                material    = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
+                visible     = true,
+                visible_masks="main_view|selectable|cast_shadow",
+                render_layer= "opacity",
+                srts        = test_srts
             }
         }
     }

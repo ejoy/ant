@@ -10,8 +10,6 @@ local setting			= import_package "ant.settings"
 local layoutmgr			= import_package "ant.render".layoutmgr
 local mc				= import_package "ant.math".constant
 
-local ivs		= ecs.require "ant.render|visible_state"
-
 local widget_drawer_sys = ecs.system "widget_drawer_system"
 
 local function create_dynamic_buffer(layout, num_vertices, num_indices)
@@ -54,7 +52,7 @@ function widget_drawer_sys:init()
 			owned_mesh_buffer = true,
 			material = "/pkg/ant.resources/materials/line.material",
 			render_layer = "translucent",
-			visible_state = "main_view",
+			visible = true,
 			widget_drawer = wd,
 		}
 	}
@@ -192,12 +190,14 @@ end
 
 local rmb_sys = ecs.system "render_mesh_bounding_system"
 
-function rmb_sys:follow_scene_update()
-	if setting:get "debug" and setting:get "debug/show_bounding" then
+local SHOW_BOUNDING<const> = setting:get "debug/show_bounding"
+
+if SHOW_BOUNDING then
+	function rmb_sys:follow_scene_update()
 		local desc={vb={}, ib={}}
-		for e in w:select "render_object scene bounding:in" do
+		for e in w:select "visible render_object scene bounding:in" do
 			local aabb = e.bounding.scene_aabb
-			if aabb ~= mc.NULL and ivs.has_state(e, "main_view") then
+			if aabb ~= mc.NULL then
 				local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
 				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
 				local voffset = #desc.vb//4
@@ -213,5 +213,4 @@ function rmb_sys:follow_scene_update()
 		append_buffers("fffd", desc.vb, "w", desc.ib)
 	end
 end
-
 return iwd

@@ -12,4 +12,4 @@ data:
         y: 0
         w: 32
         h: 32
-    visible_state: main_view
+    visible: true

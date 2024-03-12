@@ -1,7 +1,1 @@
-system "visible_state_system"
-    .implement "visible_state.lua"
 
-component "visible_state"
-    .type "lua"
-
-component "visible_state_changed"

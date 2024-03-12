@@ -3,14 +3,11 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.require "ant.render|material"
-local computil  = ecs.require "ant.entity|entity"
 local ilight    = ecs.require "ant.render|light.light"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local ivs       = ecs.require "ant.render|visible_state"
-local geo_utils = ecs.require "editor.geometry_utils"
 local math3d    = require "math3d"
-local gizmo_const = require "gizmo.const"
-local bgfx = require "bgfx"
+local gizmo_const= require "gizmo.const"
+
 
 local m = {
     directional = {
@@ -24,13 +21,10 @@ local m = {
     },
     billboard = {}
 }
-local NORMAL_COLOR = {1, 1, 1, 1}
-local HIGHLIGHT_COLOR = {0.5, 0.5, 0, 1}
+
 local RADIUS = 0.25
 local SLICES = 10
 local LENGTH = 1
-local DEFAULT_POSITION = {0, 0, 0}
-local DEFAULT_ROTATE = {2.4, 0, 0}
 
 function m.on_target(eid)
     m.show(false)
@@ -67,8 +61,8 @@ end
 function m.show(b)
     if m.current_gizmo then
         for i, eid in ipairs(m.current_gizmo.eid) do
-            local e <close> = world:entity(eid)
-            ivs.set_state(e, "main_view", b)
+            local e <close> = world:entity(eid, "visible?out")
+            e.visible = true
         end
     end
 end

@@ -66,7 +66,7 @@ function tm_sys:init()
         data = {
             mesh_result     = irender.full_quad(),
             material        = drawer_material,
-            visible_state   = "",
+            visible_masks   = "",
             tonemapping_drawer=true,
             scene           = {},
         }

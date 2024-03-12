@@ -18,11 +18,11 @@ local aio       = import_package "ant.io"
 local Q         = world:clibs "render.queue"
 
 local itimer    = ecs.require "ant.timer|timer_system"
-local ivs       = ecs.require "ant.render|visible_state"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local ilight    = ecs.require "ant.render|light.light"
 local iviewport = ecs.require "ant.render|viewport.state"
 local irq       = ecs.require "ant.render|renderqueue"
+local ivm       = ecs.require "ant.render|visible_mask"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ifg       = ecs.require "ant.render|postprocess.postprocess"
 local efk_sys   = ecs.system "efk_system"
@@ -211,12 +211,14 @@ local function init_efk_component(efk)
     efk.speed       = efk.speed or 1.0
     efk.startframe  = efk.startframe or 0
     efk.fadeout     = efk.fadeout or false
+    efk.time        = efk.time or 0
     efk.handle      = create_efk(efk.path)
     efk.play_handle = createPlayHandle(efk.handle, efk.speed, efk.startframe, efk.fadeout)
 end
 
 local function init_efk_object(eo)
     eo.visible_idx = Q.alloc()
+    ivm.set_masks_by_idx(eo.visible_idx, "efk_queue", true)
 end
 
 function efk_sys:component_init()
@@ -325,12 +327,6 @@ function efk_sys:follow_scene_update()
 		e.efk_object.worldmat = e.scene.worldmat
 	end
 
-    for e in w:select "visible_state_changed efk_object:update efk:in visible_state:in" do
-        local visible = e.visible_state.main_queue and true or false
-        Q.set(e.efk_object.visible_idx, queuemgr.queue_index "efk_queue", visible)
-        e.efk.play_handle:set_visible(visible)
-    end
-
     local dl        = w:first "directional_light light:in scene:in"
     if dl then
         local direction, color = get_light_direction(dl), get_light_color(dl)
@@ -338,7 +334,7 @@ function efk_sys:follow_scene_update()
         EFKCTX:set_light_color(color)
     end
 
-    for e in w:select "efk_visible efk:in scene:in" do
+    for e in w:select "efk_visible visible efk:in scene:in" do
         local ph = e.efk.play_handle
         ph:update_transform(e.scene.worldmat)
     end
@@ -372,6 +368,10 @@ end
 
 local iefk = {}
 function iefk.create(filename, config)
+    local visible = true
+    if config.visible ~= nil then
+        visible = config.visible
+    end
     return world:create_entity {
         group = config.group,
         policy = {
@@ -382,11 +382,11 @@ function iefk.create(filename, config)
             scene = config.scene or {},
             efk = {
                 path        = filename,
-                speed       = config.speed or 1.0,
-                time        = config.time or 0.0,
-                startframe  = config.startframe or 0,
+                speed       = config.speed,
+                time        = config.time,
+                startframe  = config.startframe,
             },
-            visible_state = config.visible_state,
+            visible         = visible,
         },
     }
 end
@@ -410,8 +410,9 @@ function iefk.set_speed(e, s)
 end
 
 function iefk.set_visible(e, b)
+    w:extend(e, "visible?update")
+    e.visible = b
     e.efk.play_handle:set_visible(b)
-    ivs.set_state(e, "main_queue", b)
 end
 
 function iefk.stop(e, delay)

@@ -12,12 +12,8 @@ local mc, mu    = mathpkg.constant, mathpkg.util
 local assetmgr  = import_package "ant.asset"
 
 local irender   = ecs.require "ant.render|render"
-local ivs       = ecs.require "ant.render|visible_state"
-
 local decl<const> = "p3|T4|t2"
 local layout<const> = layoutmgr.get(decl)
-
-local canvas_sys = ecs.system "canvas_system"
 
 --[[
     fff-> position
@@ -207,7 +203,8 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
                 parent = canvas_eid,
             },
             render_layer = render_layer or "ui",
-            visible_state= show and "main_view|selectable" or "",
+            visible = show,
+            visible_masks = "main_view|selectable",
             canvas_drawer = {
                 type = "texture",
                 items = {},
@@ -284,8 +281,8 @@ function icanvas.show(e, b)
     canvas.show = b
 
     for _, eid in pairs(canvas.materials) do
-        local re <close> = world:entity(eid)
-        ivs.set_state(re, "main_view|selectable", b)
+        local re <close> = world:entity(eid, "visible?out")
+        re.visible = b
     end
 end
 

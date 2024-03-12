@@ -42,7 +42,7 @@ local function get_transform(math3d, node)
     }
 end
 
-local DEFAULT_STATE = "main_view|selectable|cast_shadow"
+local DEFAULT_MASKS<const> = "main_view|selectable|cast_shadow"
 
 local function duplicate_table(m)
     local t = {}
@@ -241,7 +241,8 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
             mesh            = meshfile,
             material        = assert(materialfile, "Not found material file"),
             render_layer    = find_render_layer(materialcontent.state),
-            visible_state   = DEFAULT_STATE,
+            visible_masks   = DEFAULT_MASKS,
+            visible         = true,
         }
 
         local policy = {}

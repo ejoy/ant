@@ -4,7 +4,7 @@ policy:
     ant.render|ibl
     ant.render|simplerender
 data:
-    visible_state: main_queue
+    visible: true
     scene: {}
     ibl:
       LUT:

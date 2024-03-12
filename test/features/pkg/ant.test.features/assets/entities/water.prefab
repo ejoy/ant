@@ -10,7 +10,8 @@ data:
   mesh_result: true
   material: /pkg/ant.terrain/assets/water2.material
   render_layer: translcuent
-  visible_state: ""
+  visible_masks: ""
+  visible: true
   postprocess_obj: true
   scene:
     s: 10

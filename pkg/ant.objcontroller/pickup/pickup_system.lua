@@ -7,6 +7,7 @@ local R         = world:clibs "render.render_material"
 local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
 local icamera	= ecs.require "ant.camera|camera"
+local ivm		= ecs.require "ant.render|visible_mask"
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
@@ -329,8 +330,8 @@ local function create_pickup_state(srcstate, dststate)
 end
 
 function pickup_sys:entity_ready()
-	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in" do
-		if e.visible_state["pickup_queue"] then
+	for e in w:select "filter_result render_object:update filter_material:in eid:in" do
+		if ivm.check(e, "pickup_queue") then
 			local ro = e.render_object
 			local fm = e.filter_material
 

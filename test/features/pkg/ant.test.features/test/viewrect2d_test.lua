@@ -22,7 +22,7 @@ function viewrect2d_test_sys:init()
             material = "/pkg/ant.resources/materials/default2d.material",
             texturequad = "/pkg/ant.test.features/assets/textures/test_quad.texture",
             render_layer = "translucent",
-            visible_state = "main_view",
+            visible     = true,
         }
     }
 end

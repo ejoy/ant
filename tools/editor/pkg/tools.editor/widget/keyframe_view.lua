@@ -1357,13 +1357,11 @@ function m.load(path_str)
     file_path = path:string()
 end
 
-local ivs		= ecs.require "ant.render|visible_state"
 local imaterial = ecs.require "ant.render|material"
 local bone_color    = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
 local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 
 local ientity 	= ecs.require "ant.entity|entity"
-local imesh 	= ecs.require "ant.asset|mesh"
 
 local function create_joint_entity(joint_name)
     local template = {
@@ -1372,7 +1370,8 @@ local function create_joint_entity(joint_name)
         },
         data = {
             scene = {},
-            visible_state = "selectable",
+            visible_masks = "selectable",
+            visible = true,
             material = "/pkg/tools.editor/resource/materials/joint.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.editor/resource/meshes/joint.meshbin",
             render_layer = "translucent",
@@ -1446,7 +1445,8 @@ local function create_bone_entity(joint_name)
             render_layer = "translucent",
 			mesh_result	= ientity.create_mesh({"p3|n3|t2", bone_vert}),
             owned_mesh_buffer = true,
-			visible_state= "selectable",
+			visible = true,
+            visible_masks = "selectable",
 			on_ready 	= function(e)
                 imaterial.set_property(e, "u_basecolor_factor", bone_color)
 			end

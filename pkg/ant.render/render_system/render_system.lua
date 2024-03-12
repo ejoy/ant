@@ -19,6 +19,7 @@ local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render"
 local imaterial = ecs.require "ant.render|material"
+local ivm		= ecs.require "ant.render|visible_mask"
 local imesh		= ecs.require "ant.asset|mesh"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer.render_layer"
@@ -61,28 +62,6 @@ function render_sys:post_init()
 	RC.set_queue_type("pre_depth_queue", queuemgr.queue_index "pre_depth_queue")
 end
 
---[[
-about rm_idx/Qidx(queue index): (visible_idx|cull_idx):
-	*_idx: all of then are allocated in c file, rm_idx in render_material.c, Qidx in queue.cpp
-	rm_idx: it's a handle pointing in a memory allocated in render_material.c, it keep multiple 'material_instance' pointer for rendering.
-		one render entity(with render_object entity), can be render in multi queue
-		one queue for correspond to some render output
-		visible_state indicate this render entity should render in which queues
-		ex:
-			a simple opaticy render entity's visible_state: main_view|cast_shadow|selectable
-			'main_view' mean it should first render in 'pre_depth_queue'(use one special vertex only shader, see depth.lua), than render in 'main_queue'(depth write disable, depth test set to equal)
-			it will be submit twice with difference shader
-			'material_index' of 'main_queue'  in 'rm_idx' slot is 0, and 'material_index' of 'pre_depth_queue' in 'rm_idx' slot is 1, see queue_mgr.lua
-
-		so, if we create a new queue, and we want to create some entities only render in this queue, we need:
-			1. use queuemgr.alloc_material to alloc 'material_index', and use queue_mgr.register, to bind this queue with allocated 'material_index'(if call queuemgr.register without 'material_index', it will use default material index which is 0);
-			2. create entity, and specify visible_state with this new queue_name;
-			3. if the new queue need special material, we should create a system with update_fitler/update_filter_depend stage, add a new material for this 'material_index' reigter with this queue;
-			4. if this queue still need to render in 'main_queue', the 'material_index' register with this queue should use a different 'material_index' with 'main_queue' 'material_index';
-
-	visible_idx|cull_idx: it indicates which queue is visibled/culled.
-]]
-
 local function update_ro(ro, m)
 	local vb = m.vb
  	ro.vb_start = vb.start
@@ -112,24 +91,6 @@ local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 	t[k] = v
 	return v
 end})
-
-local function update_visible_masks(e)
-	local vs = e.visible_state
-	for qe in w:select "queue_name:in" do
-		local qn = qe.queue_name
-		
-		local index = assert(queuemgr.queue_index(qn))
-
-		local function update_masks(o)
-			if o then
-				Q.set(o.visible_idx, index, vs[qn])
-			end
-		end
-
-		update_masks(e.render_object)
-		update_masks(e.hitch)
-	end
-end
 
 local function create_material_instance(e)
 	--TODO: add render_features flag to replace skinning and draw_indirect component check
@@ -167,9 +128,8 @@ local function check_set_depth_state_as_equal(state)
 end
 
 local function check_update_main_queue_material(e)
-	w:extend(e, "visible_state:in")
 	--TODO: bug here, when we init with render_layer which is opacity layer, then we changed it as not opacity layer, it will has wrong state
-	if ENABLE_PRE_DEPTH and e.visible_state["main_queue"] and irl.is_opacity_layer(assert(e.render_layer)) then
+	if ENABLE_PRE_DEPTH and ivm.check(e,"main_queue") and irl.is_opacity_layer(assert(e.render_layer)) then
 		w:extend(e, "filter_material:in")
 		local fm = e.filter_material
 		local mr = assetmgr.resource(e.material)
@@ -256,6 +216,11 @@ function render_sys:entity_init()
 		update_ro(e.render_object, e.mesh_result)
 		check_varyings(e.mesh_result, e.material)
 
+		--visible_masks
+		w:extend(e, "visible_masks?update")
+		ivm.set_masks(e, e.visible_masks or "main_view", true)
+		e.visible_masks = nil	--no longer needed
+
 		--render_layer
 		w:extend(e, "render_layer?update")
 		local rl = e.render_layer
@@ -277,10 +242,6 @@ function render_sys:entity_init()
 		local qn = qe.queue_name
 		local _ = queuemgr.has(qn) or error(("Invalid queue_name:%s, need register"):format(qn))
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
-	end
-
-	for e in w:select "INIT visible_state visible_state_changed?out" do
-		e.visible_state_changed = true
 	end
 end
 
@@ -332,10 +293,6 @@ end
 function render_sys:follow_scene_update()
 	for e in w:select "scene_changed scene:in render_object:update skinning:absent" do
 		e.render_object.worldmat = e.scene.worldmat
-	end
-
-	for e in w:select "visible_state_changed visible_state:in render_object?update hitch?update" do
-		update_visible_masks(e)
 	end
 end
 
