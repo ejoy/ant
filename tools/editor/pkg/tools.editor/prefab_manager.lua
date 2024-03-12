@@ -517,6 +517,33 @@ function m:choose_prefab()
         ImGui.EndPopup()
     end
 end
+-- compile sandbox
+-- local platform_path = "windows-direct3d11"
+-- local vfsrepo = import_package "ant.vfs"
+-- local cr = import_package "ant.compile_resource"
+-- local function msgh(errmsg)
+--     return debug.traceback(errmsg)
+-- end
+-- local function compile_resource(cfg, name, path)
+--     local ok, lpath = xpcall(cr.compile_file, msgh, cfg, name, path)
+--     if ok then
+--         return lpath
+--     end
+--     print(string.format("compile failed:\n\tvpath: %s\n\tlpath: %s\n%s", name, path, lpath))
+-- end
+-- local function compile_glb(glb_lpath)
+--     local vpath = (lfs.path('/') / lfs.relative(glb_lpath, gd.project_root)):string()
+--     local repopath = global_data.editor_root / "temp"--gd.project_root:string()--fs.path(glb_lpath):parent_path():string()
+--     local std_vfs <close> = vfsrepo.new_std {
+--         rootpath = repopath,
+--         nohash = true,
+--     }
+--     local tiny_vfs = vfsrepo.new_tiny(repopath)
+--     local cfg = cr.init_setting(tiny_vfs, platform_path)
+--     local compile_path = compile_resource(cfg, vpath, glb_lpath)
+--     utils.mount_memfs2(compile_path, vpath, compile_path)
+--     return vpath, compile_path
+-- end
 
 local function compile_glb(filename)
     -- TODO: trigger glb compile
@@ -557,7 +584,7 @@ function m:open(filename, prefab_name, patch_tpl)
     if #path_list > 1 then
         self.glb_filename = path_list[1]
         self.prefab_name = path_list[2]
-        gd.virtual_prefab_path = virtual_prefab_path
+        gd.virtual_glb_path = virtual_prefab_path
         gd.current_compile_path = cook_prefab(virtual_prefab_path .. "|".. self.prefab_name)
         virtual_prefab_path = virtual_prefab_path .. "/" .. self.prefab_name
         self.prefab_template = serialize.parse(virtual_prefab_path, aio.readall(virtual_prefab_path))
@@ -925,7 +952,7 @@ function m:save(path)
             end
             if #final_template > 0 then
                 utils.write_file(self.glb_filename..".patch", stringify(final_template))
-                assetmgr.unload(gd.virtual_prefab_path.."/" .. self.anim_file)
+                assetmgr.unload(gd.virtual_glb_path.."/" .. self.anim_file)
                 assetmgr.unload(self.glb_filename..".patch")
                 assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
                 world:pub {"Save"}
@@ -1296,7 +1323,7 @@ function m:do_material_patch(eid, path, v)
     local tpl = info.template
     if not self.materials_names then
         -- local ret = utils.split_ant_path(tpl.data.material)
-        local fn = gd.virtual_prefab_path .. "/materials_names.ant"
+        local fn = gd.virtual_glb_path .. "/materials_names.ant"
         self.materials_names = serialize.parse(fn, aio.readall(fn))
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))
