@@ -33,13 +33,13 @@ local rootConfig
 local bootConfig
 
 local function new_service(label, id)
-	local sid = boot.new_service(label, rootConfig.init_service, id)
+	local sid = assert(boot.new_service(label, rootConfig.init_service, id))
 	assert(sid == id)
 	return sid
 end
 
 local function root_thread()
-	boot.new_service("root", rootConfig.init_service, SERVICE_ROOT)
+	assert(boot.new_service("root", rootConfig.init_service, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
@@ -66,7 +66,7 @@ local function exclusive_thread(label, id)
 end
 
 local function io_thread(label, id)
-	local sid = boot.new_service_preinit(label, id, vfs.iothread)
+	local sid = assert(boot.new_service_preinit(label, id, vfs.iothread))
 	boot.new_thread(sid)
 end
 
