@@ -6,6 +6,7 @@ local irq           = ecs.require "ant.render|renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
 local mathutils     = ecs.require "mathutils"
 local gridmesh_view = ecs.require "widget.gridmesh_view"
+local irender       = ecs.require "ant.render|render"
 local brush_sys     = ecs.system "grid_brush_system"
 
 local widget_utils  = require "widget.utils"
@@ -119,7 +120,7 @@ function grid:show(show)
     if not grid_eid then return end
     self.visible = show
     local e <close> = world.world:entity(grid_eid, "visible?out")
-    e.visible = show
+    irender.set_visible(e, show)
 end
 
 function grid:load(path)

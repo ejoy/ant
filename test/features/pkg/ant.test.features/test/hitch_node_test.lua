@@ -9,6 +9,7 @@ local util  = ecs.require "util"
 local PC    = util.proxy_creator()
 local iom   = ecs.require "ant.objcontroller|obj_motion"
 local ig    = ecs.require "ant.group|group"
+local irender = ecs.require "ant.render|render"
 
 local hn_test_sys = common.test_system "hitch_node"
 
@@ -110,7 +111,8 @@ function hn_test_sys:data_changed()
             }
         elseif key == "Y" and press == 0 then
             local he<close> = world:entity(h1, "visible?out")
-            he.visible = not visible
+            visible = not visible
+            irender.set_visible(he, visible)
         end
     end
 

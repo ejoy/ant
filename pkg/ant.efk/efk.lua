@@ -25,6 +25,8 @@ local irq       = ecs.require "ant.render|renderqueue"
 local ivm       = ecs.require "ant.render|visible_mask"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ifg       = ecs.require "ant.render|postprocess.postprocess"
+local irender   = ecs.require "ant.render|render"
+
 local efk_sys   = ecs.system "efk_system"
 local RC        = world:clibs "render.cache"
 local sampler   = import_package "ant.render.core".sampler
@@ -410,8 +412,7 @@ function iefk.set_speed(e, s)
 end
 
 function iefk.set_visible(e, b)
-    w:extend(e, "visible?update")
-    e.visible = b
+    irender.set_visible(e, b)
     e.efk.play_handle:set_visible(b)
 end
 

@@ -282,7 +282,7 @@ function icanvas.show(e, b)
 
     for _, eid in pairs(canvas.materials) do
         local re <close> = world:entity(eid, "visible?out")
-        re.visible = b
+        irender.set_visible(re, b)
     end
 end
 

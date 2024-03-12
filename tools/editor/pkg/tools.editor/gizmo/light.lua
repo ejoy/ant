@@ -4,6 +4,8 @@ local w = world.w
 
 local imaterial = ecs.require "ant.render|material"
 local ilight    = ecs.require "ant.render|light.light"
+local irender   = ecs.require "ant.render|render"
+
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local math3d    = require "math3d"
 local gizmo_const= require "gizmo.const"
@@ -61,8 +63,7 @@ end
 function m.show(b)
     if m.current_gizmo then
         for i, eid in ipairs(m.current_gizmo.eid) do
-            local e <close> = world:entity(eid, "visible?out")
-            e.visible = true
+            irender.set_visible_by_eid(eid, true)
         end
     end
 end
