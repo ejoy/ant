@@ -45,8 +45,12 @@ local frame_graph = get_frame_graph()
 
 local ifg = {}
 
-function ifg.get_stage_input(stage)
-    return frame_graph[stage].input
+function ifg.get_stage_input(stage, idx)
+    if idx then
+        return frame_graph[stage].input[idx]
+    else
+        return frame_graph[stage].input
+    end
 end
 
 function ifg.get_stage_output(stage)
@@ -55,6 +59,11 @@ end
 
 function ifg.set_stage_output(stage, handle)
     frame_graph[stage].output = handle
+end
+
+function ifg.get_last_output(stage, idx)
+    local current_input_stage = ifg.get_stage_input(stage, idx)
+    return ifg.get_stage_output(current_input_stage)
 end
 
 

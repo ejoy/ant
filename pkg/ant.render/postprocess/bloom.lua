@@ -57,8 +57,7 @@ function bloom_sys:bloom()
     end
 
     local e = world:entity(pyramid_sampleeid, "pyramid_sample:in")
-    local current_input  = ifg.get_stage_input("bloom")
-    local last_output    = ifg.get_stage_output(current_input)
+    local last_output = ifg.get_last_output("bloom")
     ips.do_pyramid_sample(e, last_output)
     update_bloom_handle(e.pyramid_sample)
 end

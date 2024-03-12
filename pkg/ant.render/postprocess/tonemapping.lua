@@ -79,11 +79,10 @@ local function update_properties(material)
     --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
     -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
     -- render target here, is one of the virtual resource
-
-    local current_input = ifg.get_stage_input("tonemapping")
-    local last_output = ifg.get_stage_output(current_input[1])
-    material.s_scene_color = last_output
-    local bloomhandle = ifg.get_stage_output(current_input[2])
+    
+    local scenehandle = ifg.get_last_output("tonemapping", 1)
+    material.s_scene_color = scenehandle
+    local bloomhandle = ifg.get_last_output("tonemapping", 2)
     if bloomhandle then
         assert(ENABLE_BLOOM)
         material.s_bloom_color = bloomhandle

@@ -29,6 +29,8 @@ graphic:
     tonemapping:
       use_lut: true
       lut_dim: 32
+    effect:
+      enable: true
     taa:
       enable: nil
     fsr:

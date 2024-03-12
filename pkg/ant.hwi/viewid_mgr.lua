@@ -56,6 +56,7 @@ add_view "bloom_us2"
 add_view "bloom_us3"
 add_view "bloom_us4"
 add_view "tonemapping"
+add_view "tonemapping_blit"
 add_view "effect_view"	--30
 add_view "taa"
 add_view "taa_copy"

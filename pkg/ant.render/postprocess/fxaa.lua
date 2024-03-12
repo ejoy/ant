@@ -82,8 +82,7 @@ local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
 local function update_scene_ldr()
     local fd = world:entity(fxaadrawer_eid, "filter_material:in")
-    local current_input  = ifg.get_stage_input("fxaa")
-    local last_output    = ifg.get_stage_output(current_input)
+    local last_output    = ifg.get_last_output("fxaa")
     imaterial.set_property(fd, "s_scene_ldr_color", last_output)
 end
 
@@ -93,6 +92,11 @@ function fxaasys:fxaa()
         local new_vr = ENABLE_FSR and vr or iviewport.device_viewrect
         irq.set_view_rect("fxaa_queue", new_vr)
         update_scene_ldr()
+        if ENABLE_FSR then
+            local q = w:first "fxaa_queue render_target:in"
+            local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
+            ifg.set_stage_output("fxaa", handle)
+        end
         break
     end
 end
