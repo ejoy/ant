@@ -548,7 +548,7 @@ end
 
 local function compile_glb(filename)
     -- TODO: trigger glb compile
-    aio.readall(filename)
+    -- aio.readall(filename)
 end
 
 local function cook_prefab(prefab_filename)
@@ -558,7 +558,7 @@ local function cook_prefab(prefab_filename)
     end
     compile_glb(prefab_filename)
     local current_compile_path = fs.path(pl[1]):localpath():string()
-    utils.mount_memfs(pl[1])
+    -- utils.mount_memfs(pl[1])
     prefab_filename = prefab_filename:gsub("|", "/")
     local prefab_template = serialize.parse(prefab_filename, aio.readall(prefab_filename))
     for _, tpl in ipairs(prefab_template) do
@@ -570,7 +570,8 @@ local function cook_prefab(prefab_filename)
 end
 
 function m:compile_current_glb()
-    compile_glb(self.prefab_filename)
+    --
+    aio.readall(self.prefab_filename)
 end
 
 function m:open(filename, prefab_name, patch_tpl)
@@ -581,14 +582,14 @@ function m:open(filename, prefab_name, patch_tpl)
         isglb = true
     end
     local path_list = isglb and utils.split_ant_path(filename) or {}
-    local virtual_prefab_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or filename, gd.project_root)):string()
+    local virtual_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or filename, gd.project_root)):string()
     if #path_list > 1 then
         self.glb_filename = path_list[1]
         self.prefab_name = path_list[2]
-        gd.virtual_glb_path = virtual_prefab_path
-        gd.current_compile_path = cook_prefab(virtual_prefab_path .. "|".. self.prefab_name)
-        virtual_prefab_path = virtual_prefab_path .. "/" .. self.prefab_name
-        self.prefab_template = serialize.parse(virtual_prefab_path, aio.readall(virtual_prefab_path))
+        gd.virtual_glb_path = virtual_path
+        -- gd.current_compile_path = cook_prefab(virtual_path .. "|".. self.prefab_name)
+        virtual_path = virtual_path .. "/" .. self.prefab_name
+        self.prefab_template = serialize.parse(virtual_path, aio.readall(virtual_path))
 
         self.origin_patch_template = patch_tpl or {}
         self.patch_template = {}
@@ -623,14 +624,14 @@ function m:open(filename, prefab_name, patch_tpl)
     end
 
     self.current_prefab = world:create_instance {
-        prefab = virtual_prefab_path,
+        prefab = virtual_path,
         on_ready = function(instance)
             self:on_prefab_ready(instance)
         end
     }
     local glbfile, _ = filename:match "([^|]+)|([%a%.]+)"
     editor_setting.add_recent_file(glbfile and glbfile or filename)
-    world:pub {"WindowTitle", virtual_prefab_path}
+    world:pub {"WindowTitle", virtual_path}
 end
 
 local function remove_entity_self(eid)
@@ -732,10 +733,10 @@ function m:reload()
 end
 
 function m:add_effect(filename)
-    for path in lfs.pairs(lfs.path(filename):parent_path()) do
-        local vpath = (lfs.path('/') / lfs.relative(path, gd.project_root)):string()
-        memfs.update(vpath, path:string())
-    end
+    -- for path in lfs.pairs(lfs.path(filename):parent_path()) do
+    --     local vpath = (lfs.path('/') / lfs.relative(path, gd.project_root)):string()
+    --     memfs.update(vpath, path:string())
+    -- end
     local virtual_path = (lfs.path('/') / lfs.relative(filename, gd.project_root)):string()
     if not self.root then
         self:reset_prefab()
@@ -778,7 +779,7 @@ function m:add_prefab(path)
     local virtual_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or path, gd.project_root)):string()
     if #path_list > 1 then
         virtual_path = virtual_path .. "|".. path_list[2]
-        cook_prefab(virtual_path)
+        -- cook_prefab(virtual_path)
     end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local v_root, temp = create_simple_entity(tostring(fs.path(path):stem()), parent)
@@ -1038,18 +1039,20 @@ function m:update_tag_list()
     local srt_mtl_list = {""}
     local mtl_list = {""}
     local efk_list = {}
-    for k, value in pairs(self.current_prefab.tag) do
-        if k ~= "*" and k ~= "animation" then
-            for _, eid in ipairs(value) do
-                local ee <close> = world:entity(eid, "scene?in material?in efk?in")
-                if ee.scene or ee.material then
-                    srt_mtl_list[#srt_mtl_list + 1] = k
-                    if ee.material then
-                        mtl_list[#mtl_list + 1] = k
+    if self.current_prefab then
+        for k, value in pairs(self.current_prefab.tag) do
+            if k ~= "*" and k ~= "animation" then
+                for _, eid in ipairs(value) do
+                    local ee <close> = world:entity(eid, "scene?in material?in efk?in")
+                    if ee.scene or ee.material then
+                        srt_mtl_list[#srt_mtl_list + 1] = k
+                        if ee.material then
+                            mtl_list[#mtl_list + 1] = k
+                        end
                     end
-                end
-                if ee.efk then
-                    efk_list[#efk_list + 1] = k
+                    if ee.efk then
+                        efk_list[#efk_list + 1] = k
+                    end
                 end
             end
         end

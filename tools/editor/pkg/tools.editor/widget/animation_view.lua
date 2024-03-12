@@ -295,7 +295,7 @@ local function show_current_event()
                 bank_path = (lfs.path('/') / lfs.relative(filename:match("^(.+/)[%w*?_.%-]*$"), global_data.project_root)):string()
                 if not mount_sound_flag[bank_path] then
                     mount_sound_flag[bank_path] = true
-                    utils.mount_memfs(bank_path)
+                    -- utils.mount_memfs(bank_path)
                     local bank_files = {
                         bank_path .. "/Master.strings.bank",
                         bank_path .. "/Master.bank"
