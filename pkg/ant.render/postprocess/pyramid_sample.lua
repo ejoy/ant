@@ -116,7 +116,7 @@ local function create_drawers(ps)
             data = {
                 mesh_result       = irender.full_quad(),
                 material          = "/pkg/ant.resources/materials/postprocess/downsample.material",
-                visible_state     = "",
+                visible_masks     = "",
                 scene             = {},
             }
         }
@@ -125,7 +125,7 @@ local function create_drawers(ps)
             data = {
                 mesh_result       = irender.full_quad(),
                 material          = "/pkg/ant.resources/materials/postprocess/upsample.material",
-                visible_state     = "",
+                visible_masks     = "",
                 scene             = {},
             }
         }

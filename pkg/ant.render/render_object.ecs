@@ -10,10 +10,8 @@ component "render_object"
     --materials
     .field "rm_idx:dword"
     --visible
-    -- .field "visible_masks:int64"  -- determiate which queue can see the render_object(main_view/cast_shadow/selectable, etc ...)
-    -- .field "cull_masks:int64"
-    .field "visible_idx:int"
-    .field "cull_idx:int"
+    .field "visible_idx:int"    --which queues are visbled
+    .field "cull_idx:int"       --which queues are culled
 
     --mesh
     .field "vb_start:dword"
@@ -32,5 +30,3 @@ component "render_object"
     .field "discard_flags:byte"
 
     .implement "render_object.lua"
-
-component "filter_material".type "lua"

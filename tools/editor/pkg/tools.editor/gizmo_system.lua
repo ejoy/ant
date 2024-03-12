@@ -6,7 +6,6 @@ local mc, mu	= mathpkg.constant, mathpkg.util
 
 local icamera	= ecs.require "ant.camera|camera"
 local iom 		= ecs.require "ant.objcontroller|obj_motion"
-local ivs 		= ecs.require "ant.render|visible_state"
 local ientity 	= ecs.require "ant.entity|entity"
 local ilight 	= ecs.require "ant.render|light.light"
 local irq		= ecs.require "ant.render|renderqueue"
@@ -203,7 +202,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 		},
 		data = {
-			visible_state = "",
+			visible = true,
 			scene = {
 				s = {0.004, 0.1, 0.004},
 				r = local_rotator,
@@ -226,7 +225,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 		},
 		data = {
-			visible_state = "",
+			visible = true,
 			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 			render_layer = "translucent",
@@ -432,7 +431,7 @@ function gizmo_sys:post_init()
 				"ant.scene|scene_object",
 			},
 			data = {
-				visible_state = "",
+				visible = true,
 				scene = scene or {},
 				material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
@@ -799,7 +798,8 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 			end
 			local e4num = math.floor(extra_angle * step_angle) * 3
 			ro4.ib_num = e4num
-			ivs.set_state(e4, "main_view", e4num > 0)
+			world.w:extend(e4, "visible?out")
+			e4.visible = e4num > 0
 		end
 		e3_num = math.floor(delta_angle * step_angle + 1) * 3
 	else
@@ -815,7 +815,8 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 				e4start = 0
 			end
 			ro4.ib_start, ro4.ib_num = e4start, e4num
-			ivs.set_state(e4, "main_view", e4num > 0)
+			world.w:extend(e4, "visible?out")
+			e4.visible = e4num > 0
 		else
 			e3_num = math.floor(-delta_angle * step_angle + 1) * 3
 			e3_start = math.floor(start_angle * step_angle) * 3 - e3_num
@@ -830,7 +831,8 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 	ro3.ib_start, ro3.ib_num = e3_start, e3_num
 
 	local e3_visible = e3_num > 0
-	ivs.set_state(e3, "main_view", e3_visible)
+	world.w:extend(e3, "visible?out")
+	e3.visible = e3_visible
 end
 
 local init_screen_offest = math3d.ref()

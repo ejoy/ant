@@ -33,7 +33,7 @@ function dtt_sys:init()
             scene = {
                 t = {0, 4.0,-4.0},
             },
-            visible_state = "main_view",
+            visible     = true,
             material = "/pkg/ant.test.features/assets/billboard_test.material",
             mesh_result={
                 vb={

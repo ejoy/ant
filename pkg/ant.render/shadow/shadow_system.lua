@@ -28,6 +28,7 @@ local shadowcfg	= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "renderqueue"
 local imaterial = ecs.require "ant.render|material"
+local ivm		= ecs.require "ant.render|visible_mask"
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
@@ -373,27 +374,14 @@ local function create_depth_state(srcstate, dststate)
 	return bgfx.make_state(d)
 end
 
-function shadow_sys:follow_scene_update()
-	for e in w:select "visible_state_changed visible_state:in material:in cast_shadow?out" do
-		local castshadow
-		if e.visible_state["cast_shadow"] then
-			local mt = assetmgr.resource(e.material)
-			castshadow = mt.fx.setting.cast_shadow == "on"
-		end
-
-		e.cast_shadow		= castshadow
-	end
-end
-
-
 function shadow_sys:entity_ready()
-    for e in w:select "filter_result visible_state:in render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
+    for e in w:select "filter_result render_object:in material:in bounding:in cast_shadow?out receive_shadow?out" do
 		local mt = assetmgr.resource(e.material)
 		local hasaabb = e.bounding.aabb ~= mc.NULL
 		local receiveshadow = hasaabb and mt.fx.setting.receive_shadow == "on"
 
 		local castshadow
-		if e.visible_state["cast_shadow"] then
+		if ivm.check(e, "cast_shadow") then
 			local ro = e.render_object
 			local midx = queuemgr.material_index "csm1_queue"
 

@@ -1,16 +1,15 @@
 local ecs       = ...
 local world     = ecs.world
 
-local ImGui     = require "imgui"
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
-local window    = import_package "ant.window"
+local ImGui             = require "imgui"
+local mathpkg           = import_package "ant.math"
+local mc                = mathpkg.constant
+local window            = import_package "ant.window"
 
-local ivs       = ecs.require "ant.render|visible_state"
-local iwd       = ecs.require "ant.widget|widget"
-local iefk      = ecs.require "ant.efk|efk"
-local iRmlUi    = ecs.require "ant.rmlui|rmlui_system"
-local cmd_queue = ecs.require "gizmo.command_queue"
+local iwd               = ecs.require "ant.widget|widget"
+local iefk              = ecs.require "ant.efk|efk"
+local iRmlUi            = ecs.require "ant.rmlui|rmlui_system"
+local cmd_queue         = ecs.require "gizmo.command_queue"
 local light_gizmo       = ecs.require "gizmo.light"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
@@ -25,6 +24,7 @@ local camera_mgr        = ecs.require "camera.camera_manager"
 local mtl_view          = ecs.require "widget.material_view"()
 local hierarchy         = ecs.require "hierarchy_edit"
 local prefab_mgr        = ecs.require "prefab_manager"
+
 local math3d            = require "math3d"
 local joint_utils       = require "widget.joint_utils"
 local widget_utils      = require "widget.utils"
@@ -149,13 +149,7 @@ function hierarchy:set_adaptee_visible(nd, b, recursion)
         hierarchy:set_visible(self:get_node(e), b, recursion)
     end
 end
-local function set_visible(e, visible)
-    ivs.set_state(e, "main_view", visible)
-    ivs.set_state(e, "cast_shadow", visible)
-end
-local function combine_state(states, st)
-    return (states == "") and st or (states .."|"..st)
-end
+
 local function update_visible(node, visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
@@ -163,36 +157,20 @@ local function update_visible(node, visible)
     local rv
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
-        local e <close> = world:entity(eid, "visible_state?in")
-        if e.visible_state then
-            set_visible(e, visible)
-            if not rv then
-                rv = ivs.has_state(e, "main_view")
-            end
+        local e <close> = world:entity(eid, "visible?out")
+        if not rv then
+            rv = e.visible
         end
+        e.visible = visible
     end
-    local ne <close> = world:entity(node.eid, "visible_state?in")
-    if ne.visible_state then
-        set_visible(ne, visible)
-        local info = hierarchy:get_node_info(node.eid)
-        local visible_state = ""
-        local shadow = false
-        for key, value in pairs(ne.visible_state) do
-            if value then
-                if key == "pickup_queue" then
-                    visible_state = combine_state(visible_state, "selectable")
-                elseif key == "main_queue" then
-                    visible_state = combine_state(visible_state, "main_view")
-                elseif key == "csm1_queue" or key == "csm2_queue" or key == "csm3_queue" or key == "csm4_queue" then
-                    shadow = true
-                end
-            end
-        end
-        if shadow then
-            visible_state = combine_state(visible_state, "cast_shadow")
-        end
-        info.template.data.visible_state = visible_state
-    elseif rv and rv ~= visible then
+
+    local ne <close> = world:entity(node.eid, "visible?out")
+    ne.visible = visible
+
+    local info = assert(hierarchy:get_node_info(node.eid), "Invalid eid")
+    info.template.data.visible = visible
+
+    if nil ~= rv and rv ~= visible then
         hierarchy:set_visible(node, rv)
     end
     return rv

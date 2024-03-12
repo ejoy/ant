@@ -7,4 +7,5 @@ data:
         t: {0, 0, 8, 1}
     material: /pkg/ant.resources/materials/pbr_default.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
-    visible_state: main_view|selectable
+    visible_masks: main_view|selectable
+    visible: true

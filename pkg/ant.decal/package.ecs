@@ -3,7 +3,7 @@ import_feature "ant.render"
 
 component "decal".type "lua"
 policy "decal"
-    .component "visible_state"
+    .component_opt "visible_masks"
     .component "decal"
     .component "material"
     .component "render_layer"

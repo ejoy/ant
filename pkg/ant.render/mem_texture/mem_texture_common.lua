@@ -1,7 +1,7 @@
 local ecs       = ...
 local world     = ecs.world
 local w         = world.w
-local ivs		= ecs.require "ant.render|visible_state"
+local ivm		= ecs.require "ant.render|visible_mask"
 local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
@@ -13,7 +13,6 @@ local R         = world:clibs "render.render_material"
 local hwi       = import_package "ant.hwi"
 local mc        = import_package "ant.math".constant
 local irender   = ecs.require "ant.render|render"
-local RENDER_ARG
 
 local function get_diagonal_length(a, b, c)
     return math.sqrt(a^2+b^2+c^2)
@@ -253,8 +252,8 @@ local bgfx = require "bgfx"
 local RM            = ecs.require "ant.material|material"
 
 function m.copy_main_material()
-    for e in w:select "mem_texture_ready:update filter_result visible_state:in render_object:in filter_material:in material:in" do
-        ivs.set_state(e, "main_view|selectable|cast_shadow", false)
+    for e in w:select "mem_texture_ready:update filter_result render_object:in filter_material:in material:in" do
+        ivm.set_masks(e, "main_view|selectable|cast_shadow", false)
         local fm = e.filter_material
         local matres = assetmgr.resource(e.material)
         local Dmi = fm.DEFAULT_MATERIAL
@@ -327,10 +326,8 @@ function m.process_wait_queue()
     local function set_objects_visible_state(prefab, state)
         if prefab and prefab.objects then
             for _, eid in ipairs(prefab.objects) do
-                local ee <close> = world:entity(eid, "visible_state?in mesh?in")
-                if ee.visible_state then
-                    ivs.set_state(ee, params.QUEUE_NAME, state)
-                end
+                local ee <close> = world:entity(eid, "visible?out")
+                ee.visible = state
             end
         end
     end

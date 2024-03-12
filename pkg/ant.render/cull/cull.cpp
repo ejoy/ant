@@ -66,8 +66,8 @@ struct cullqueue_cache {
 
 struct cull_cached {
 	cull_cached(struct ecs_context* ctx) : render_obj(ctx), hitch_obj(ctx){}
-	ecs::cached_context<component::render_object_visible, component::render_object, component::bounding> render_obj;
-	ecs::cached_context<component::hitch_visible, component::hitch, component::bounding> hitch_obj;
+	ecs::cached_context<component::render_object_visible, component::render_object, component::visible, component::bounding> render_obj;
+	ecs::cached_context<component::hitch_visible, component::hitch, component::visible, component::bounding> hitch_obj;
 }; 
 
 template<typename ObjType>

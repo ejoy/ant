@@ -18,6 +18,7 @@ local RM            = ecs.require "ant.material|material"
 local queuemgr      = ecs.require "queue_mgr"
 local R             = world:clibs "render.render_material"
 local irq           = ecs.require "ant.render|renderqueue"
+local ivm           = ecs.require "ant.render|visible_mask"
 local iviewport     = ecs.require "ant.render|viewport.state"
 local fbmgr         = require "framebuffer_mgr"
 local sampler       = import_package "ant.render.core".sampler
@@ -33,8 +34,9 @@ function velocity_system:end_frame()
     local mq = w:first("main_queue camera_ref:in")
     local camera <close> = world:entity(mq.camera_ref, "camera:in scene:in")
     local viewprojmat = camera.camera.viewprojmat
-    for e in w:select "render_object:in visible_state:in filter_material:in polyline?in skinning?in" do
-        if e.visible_state["velocity_queue"] then
+    for e in w:select "render_object:in filter_material:in polyline?in skinning?in" do
+        --TODO: why need this check???
+        if ivm.check(e, "velocity_queue") then
             if e.polyline then
                 local pl = e.polyline
                 imaterial.set_property(e, "u_line_info", math3d.vector(pl.width, 0.0, 0.0, 0.0), "velocity_queue")
@@ -116,9 +118,9 @@ function velocity_system:init_world()
 end
 
 function velocity_system:entity_ready()
-     for e in w:select "filter_result visible_state:in" do
-        if e.visible_state["velocity_queue"] then
-            w:extend(e, "render_layer:in render_object:update filter_material:in skinning?in polyline?in")
+     for e in w:select "filter_result render_object:update" do
+        if ivm.check(e, "velocity_queue") then
+            w:extend(e, "render_layer:in filter_material:in skinning?in polyline?in")
             local mo = assert(which_material(e.polyline, e.skinning))
             local ro = e.render_object
             local fm = e.filter_material

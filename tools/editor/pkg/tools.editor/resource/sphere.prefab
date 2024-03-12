@@ -9,7 +9,8 @@ data:
   mesh: /pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin
   scene:
     t: {0, 1, 0, 1}
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
 mount: 1
 policy:
   ant.render|render

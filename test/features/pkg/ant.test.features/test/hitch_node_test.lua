@@ -9,7 +9,6 @@ local util  = ecs.require "util"
 local PC    = util.proxy_creator()
 local iom   = ecs.require "ant.objcontroller|obj_motion"
 local ig    = ecs.require "ant.group|group"
-local ivs   = ecs.require "ant.render|visible_state"
 
 local hn_test_sys = common.test_system "hitch_node"
 
@@ -29,7 +28,8 @@ local function create_simple_test_group()
             hitch = {
                 group = hitch_test_group_id
             },
-            visible_state = "main_view|cast_shadow|selectable",
+            visible_masks = "main_view|cast_shadow",
+            visible = true,
             receive_shadow = true,
             cast_shadow = true,
             hitch_update = TEST_INDIRECT,
@@ -48,7 +48,8 @@ local function create_simple_test_group()
             },
             receive_shadow = true,
             cast_shadow = true,
-            visible_state = "main_view|cast_shadow|selectable",
+            visible_masks = "main_view|cast_shadow",
+            visible = true,
             hitch_update = TEST_INDIRECT,
         }
     }
@@ -104,13 +105,12 @@ function hn_test_sys:data_changed()
                     hitch = {
                         group = hitch_test_group_id
                     },
-                    visible_state = "main_view",
+                    visible = true,
                 }
             }
         elseif key == "Y" and press == 0 then
-            local he = world:entity(h1, "visible_state:in")
-            visible = not visible
-            ivs.set_state(he, "main_view|selectable|cast_shadow", visible)
+            local he<close> = world:entity(h1, "visible?out")
+            he.visible = not visible
         end
     end
 

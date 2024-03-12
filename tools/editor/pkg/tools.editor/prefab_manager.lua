@@ -62,7 +62,7 @@ local function create_light_billboard(light_eid, lighttype)
             scene = {
                 parent = light_eid
             },
-            visible_state = "main_view",
+            visible = true,
             material = "/pkg/tools.editor/resource/materials/billboard_"..lighttype..".material",
             mesh_result = ientity.create_mesh{"p3|t2", vbdata},
             owned_mesh_buffer = true,
@@ -260,7 +260,8 @@ function m:create(what, config)
                 },
                 data = {
                     scene = {t = {0, offsety , 0}},
-                    visible_state = "main_view|selectable",
+                    visible_masks = "main_view|selectable",
+                    visible = true,
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                 },
@@ -637,7 +638,7 @@ function m:create_ground()
                 mesh  = "/pkg/tools.editor/resource/plane.glb|meshes/Plane_P1.meshbin",
                 material    = "/pkg/tools.editor/resource/materials/texture_plane.material",
                 render_layer = "background",
-                visible_state= "main_view",
+                visible = true,
                 on_ready = function (e)
                     imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
                 end
@@ -725,7 +726,7 @@ function m:add_effect(filename)
                 path = virtual_path,
                 speed = 1.0,
             },
-            visible_state = "main_queue"
+            visible = true,
 		},
         tag = {
             name
@@ -786,7 +787,7 @@ function m:get_hitch_content()
                 hitch = {
                     group = 0,
                 },
-                visible_state = "main_view|cast_shadow|selectable",
+                visible = true,
             },
             tag = {
                 "hitch"

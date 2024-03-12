@@ -1,19 +1,17 @@
 local ecs = ...
 local world = ecs.world
 local iom           = ecs.require "ant.objcontroller|obj_motion"
-local ivs		    = ecs.require "ant.render|visible_state"
 local computil      = ecs.require "ant.entity|entity"
 local irq           = ecs.require "ant.render|renderqueue"
 local icamera       = ecs.require "ant.camera|camera"
 local mathutils     = ecs.require "mathutils"
-local camera_mgr    = ecs.require "camera.camera_manager"
 local gridmesh_view = ecs.require "widget.gridmesh_view"
 local brush_sys     = ecs.system "grid_brush_system"
+
 local widget_utils  = require "widget.utils"
 local math3d        = require "math3d"
 local bgfx          = require "bgfx"
 local utils         = require "common.utils"
-local global_data   = require "common.global_data"
 local brush_def     = require "brush_def"
 --local default_color = {1.0, 1.0, 1.0, 0.5}
 local current_brush_color = 0x7fffffff
@@ -23,7 +21,6 @@ local grid = {
 }
 local brush_size = 1
 local grid_vb
-local grid_ib
 local grid_eid
 
 local function color_clamp(c)
@@ -121,8 +118,8 @@ end
 function grid:show(show)
     if not grid_eid then return end
     self.visible = show
-    local e <close> = world.world:entity(grid_eid)
-    ivs.set_state(e, "main_view", show)
+    local e <close> = world.world:entity(grid_eid, "visible?out")
+    e.visible = show
 end
 
 function grid:load(path)

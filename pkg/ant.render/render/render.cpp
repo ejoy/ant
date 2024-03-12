@@ -289,9 +289,6 @@ struct obj_submitter {
 	};
 
 	void add(const component::render_object *ro, const component::indirect_object *io){
-		if (!find_submit_mesh(ro, io))
-			return ;
-
 		assert(num < MAX_SUBMIT_NUM);
 		objects[num++] = obj_submitter::obj{ro, io};
 	}
@@ -312,19 +309,21 @@ struct obj_submitter {
 			auto ra = ctx->ra[ii];
 			for (uint16_t is=0; is<num; ++is){
 				const obj& so = objects[is];
-				if (obj_visible(ctx->w->Q, *so.ro, ra->queue_index)){
-					auto mi = find_submit_material(ctx->L, ctx->w, ra, so.ro->rm_idx);
-					if (mi){
-						const auto prog = material_prog(ctx->L, mi);
-						if (BGFX_HANDLE_IS_VALID(prog)){
-							if (so.io){
-								draw_indirect_obj(ctx->L, ctx->w, ra->viewid, so.ro, so.io, mi, ra->material_index, prog, BGFX_DISCARD_ALL, trans);
-							} else {
-								draw_obj(ctx->L, ctx->w, ra->viewid, so.ro, mi, ra->material_index, prog, nullptr, BGFX_DISCARD_ALL, trans);
-							}
-						}
+				if (!obj_visible(ctx->w->Q, *so.ro, ra->queue_index))
+					continue;
 
-					}
+				auto mi = find_submit_material(ctx->L, ctx->w, ra, so.ro->rm_idx);
+				if (!mi)
+					continue;
+
+				const auto prog = material_prog(ctx->L, mi);
+				if (!BGFX_HANDLE_IS_VALID(prog))
+					continue;
+
+				if (so.io){
+					draw_indirect_obj(ctx->L, ctx->w, ra->viewid, so.ro, so.io, mi, ra->material_index, prog, BGFX_DISCARD_ALL, trans);
+				} else {
+					draw_obj(ctx->L, ctx->w, ra->viewid, so.ro, mi, ra->material_index, prog, nullptr, BGFX_DISCARD_ALL, trans);
 				}
 			}
 			//ctx->w->bgfx->encoder_discard(w->holder->encoder, BGFX_DISCARD_ALL);
@@ -334,11 +333,14 @@ struct obj_submitter {
 
 	void collect(){
 		// draw simple objects
-		for (auto& e : ecs::select<component::render_object_visible, component::render_object>(ctx->w->ecs)) {
+		for (auto& e : ecs::select<component::render_object_visible, component::visible, component::render_object>(ctx->w->ecs)) {
 			const component::indirect_object* io = e.component<component::indirect_object>();
-			const auto& ro = e.get<component::render_object>();
+			const auto ro = &e.get<component::render_object>();
 
-			add(&ro, io);
+			if (!find_submit_mesh(ro, io))
+				continue;
+
+			add(ro, io);
 		#ifdef RENDER_DEBUG
 			append_eid(e.component<component::eid>());
 		#endif //RENDER_DEBUG
@@ -379,27 +381,20 @@ struct hitch_submitter {
 		void submit(submit_context *ctx, const component::render_args* ra, obj_transforms &trans) {
 			for (uint16_t ih=0; ih<num; ++ih){
 				const obj& h = objects[ih];
-				if (h.g->empty())
+				if (h.g->empty() || !queue_check(ctx->w->Q, h.ro->visible_idx, ra->queue_index))
 					continue;
 
-				if (queue_check(ctx->w->Q, h.ro->visible_idx, ra->queue_index)){
-					const auto &mats = (*h.g)[ra->queue_index];
-					auto mi = find_submit_material(ctx->L, ctx->w, ra, h.ro->rm_idx);
-					if (mi){
-						const auto prog = material_prog(ctx->L, mi);
-						if (BGFX_HANDLE_IS_VALID(prog)){
-							draw_obj(ctx->L, ctx->w, ra->viewid, h.ro, mi, ra->material_index, prog, h.g, BGFX_DISCARD_ALL, trans);
-						}
+				auto mi = find_submit_material(ctx->L, ctx->w, ra, h.ro->rm_idx);
+				if (mi){
+					const auto prog = material_prog(ctx->L, mi);
+					if (BGFX_HANDLE_IS_VALID(prog)){
+						draw_obj(ctx->L, ctx->w, ra->viewid, h.ro, mi, ra->material_index, prog, h.g, BGFX_DISCARD_ALL, trans);
 					}
 				}
 			}
 		}
 
 		void add(const component::render_object *ro, const matrix_array* g){
-			if (!find_submit_mesh(ro, nullptr)){
-				return ;
-			}
-
 			assert(num < MAX_SUBMIT_NUM);
 			objects[num++] = obj{ro, g};
 		}
@@ -434,6 +429,7 @@ struct hitch_submitter {
 		}
 
 		void submit(const submit_context *ctx) {
+			ecs::clear_type<component::efk_hitch>(ctx->w->ecs);
 			for (uint16_t ie=0; ie<num; ++ie){
 				const obj& o = objects[ie];
 				if (!o.g->empty()){
@@ -473,7 +469,7 @@ struct hitch_submitter {
 	}
 
 	void collect_groups(){
-		for (auto e : ecs::select<component::hitch_visible, component::hitch, component::scene>(ctx->w->ecs)) {
+		for (auto e : ecs::select<component::hitch_visible, component::visible, component::hitch, component::scene>(ctx->w->ecs)) {
 			const auto &h = e.get<component::hitch>();
 			if (h.group != 0){
 				const auto &s = e.get<component::scene>();
@@ -498,7 +494,6 @@ struct hitch_submitter {
 	void collect(){
 		collect_groups();
 		// draw object which hanging on hitch node
-		ecs::clear_type<component::efk_hitch>(ctx->w->ecs);
 		uint8_t efk_qidx = 0;
 		const bool has_efkqueue = find_queue_index(queue_type::efk_queue, efk_qidx);
 
@@ -506,7 +501,7 @@ struct hitch_submitter {
 			int gids[] = {groupid};
 			ecs::group_enable<component::hitch_tag>(ctx->w->ecs, gids);
 
-			for (auto& e : ecs::select<component::hitch_tag>(ctx->w->ecs)) {
+			for (auto& e : ecs::select<component::hitch_tag, component::visible>(ctx->w->ecs)) {
 				const auto io = e.component<component::indirect_object>();
 				if (!io){
 					const auto ro = e.component<component::render_object>();
@@ -514,7 +509,7 @@ struct hitch_submitter {
 				#ifdef RENDER_DEBUG
 					auto eid = e.component<component::eid>();
 				#endif //RENDER_DEBUG
-					if (ro){
+					if (ro && find_submit_mesh(ro, nullptr)){
 						objs.add(ro, &g);
 						#ifdef RENDER_DEBUG
 						objs.append_eid(eid);

@@ -25,7 +25,7 @@ function S.init_world()
 	-- 		mesh  = "/pkg/tools.prefab_viewer/assets/glb/plane.glb|meshes/Plane_P1.meshbin",
 	-- 		material    = "/pkg/tools.prefab_viewer/assets/materials/texture_plane.material",
 	-- 		render_layer = "background",
-	-- 		visible_state= "main_view",
+	-- 		visible		= true,
 	-- 		on_ready = function (e)
 	-- 			imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
 	-- 		end

@@ -6,8 +6,7 @@ data:
         s: 100
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
-    visible_state: main_view
-    render_layer: opacity
+    visible: true
 ---
 policy:
     ant.decal|decal
@@ -16,7 +15,8 @@ data:
     scene:
         t: {0, 0, 1, 1}
     material: /pkg/ant.test.features/assets/decal_test.material
-    visible_state: main_view|selectable
+    visible_masks: main_view|selectable
+    visible: true
     render_layer: decal
     decal:
         w: 2.5

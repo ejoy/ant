@@ -19,7 +19,8 @@ data:
   mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder_P1.meshbin
   scene:
     t: {-1.3385653495788574, 2, 0}
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
 mount: 1
 policy:
   ant.render|render
@@ -28,7 +29,8 @@ data:
   material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
   mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder.001_P1.meshbin
   skinning: true
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
 policy:
   ant.render|skinrender
 ---
@@ -36,7 +38,8 @@ data:
   material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
   mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/BezierCurve.001_P1.meshbin
   skinning: true
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
 policy:
   ant.render|skinrender
 ---
@@ -44,7 +47,8 @@ data:
   material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
   mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder.005_P1.meshbin
   skinning: true
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
 policy:
   ant.render|skinrender
 ---
@@ -52,7 +56,8 @@ data:
   material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
   mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Plane_P1.meshbin
   skinning: true
-  visible_state: main_view|selectable|cast_shadow
+  visible_masks: main_view|selectable|cast_shadow
+  visible: true
 policy:
   ant.render|skinrender
 ---

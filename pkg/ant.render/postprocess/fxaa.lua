@@ -64,7 +64,7 @@ function fxaasys:init()
         data = {
             mesh_result     = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/fxaa.material",
-            visible_state   = "",
+            visible_masks   = "",
             scene           = {},
         }
     }

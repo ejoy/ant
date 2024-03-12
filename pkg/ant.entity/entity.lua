@@ -62,15 +62,8 @@ local ientity 	= {}
 
 ientity.create_mesh = create_mesh
 
-local function simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer, queue)
-	local visible_state
-	if queue then
-		visible_state = queue
-	elseif hide then
-		visible_state = ""
-	else
-		visible_state = "main_view"
-	end
+local function simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer)
+	local visible; if not hide then visible = true end
 	return {
 		policy = {
 			"ant.render|simplerender",
@@ -80,7 +73,7 @@ local function simple_render_entity_data(material, mesh, scene, uniforms, hide, 
 			material	= material,
 			mesh_result	= imesh.init_mesh(mesh, true),
 			render_layer= render_layer,
-			visible_state= visible_state,
+			visible		= visible,
 			on_ready 	= function(e)
 				for key, value in pairs(uniforms) do
 					imaterial.set_property(e, key, math3d.vector(value))
@@ -91,8 +84,8 @@ local function simple_render_entity_data(material, mesh, scene, uniforms, hide, 
 	}
 end
 
-local function create_simple_render_entity(material, mesh, scene, uniforms, hide, render_layer, queue)
-	return world:create_entity(simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer, queue))
+local function create_simple_render_entity(material, mesh, scene, uniforms, hide, render_layer)
+	return world:create_entity(simple_render_entity_data(material, mesh, scene, uniforms, hide, render_layer))
 end
 
 ientity.create_simple_render_entity = create_simple_render_entity
@@ -106,7 +99,7 @@ local function grid_mesh_entity_data(materialpath, vb, ib, render_layer)
 		data = {
 			scene 		= {},
 			material 	= materialpath,
-			visible_state= "main_view",
+			visible		= true,
 			render_layer= render_layer,
 			mesh_result	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 		},
@@ -231,6 +224,7 @@ local plane_vb<const> = {
 }
 
 function ientity.create_prim_plane_entity(materialpath, scene, color, hide, render_layer)
+	local visible; if not hide then visible = true end
 	return world:create_entity{
 		policy = {
 			"ant.render|simplerender",
@@ -238,7 +232,7 @@ function ientity.create_prim_plane_entity(materialpath, scene, color, hide, rend
 		data = {
 			scene 		= scene or {},
 			material 	= materialpath,
-			visible_state= hide and "" or "main_view",
+			visible		= visible,
 			render_layer= render_layer,
 			mesh_result 	= create_mesh({"p3|n3", plane_vb}, nil, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}}),
 			on_ready = function (e)
@@ -373,7 +367,7 @@ function ientity.create_screen_axis_entity(screen_3dobj, scene, color)
 			material	= "/pkg/ant.resources/materials/line.material",
 			render_layer= "translucent",
 			mesh_result	= imesh.init_mesh(mesh, true),
-			visible_state= "main_view",
+			visible		= true,
 		}
 	}
 end
@@ -477,7 +471,7 @@ function ientity.create_skybox(material)
             scene = {},
 			material = assert(material, "material must provided"),
 			render_layer = "background",
-			visible_state = "main_view",
+			visible = true,
 			ibl = {
 				irradiance = {size=64},
 				prefilter = {size=256},
@@ -550,7 +544,7 @@ function ientity.create_procedural_sky(settings)
 					size = 256,
 				}
 			},
-			visible_state = "main_view",
+			visible = true,
 			owned_mesh_buffer = true,
 			render_layer = "background",
 			mesh_result = create_sky_mesh(32, 32),
@@ -587,7 +581,7 @@ function ientity.create_gamma_test_entity()
             },
 			owned_mesh_buffer = true,
             scene = {},
-            visible_state = "main_view",
+            visible = true,
         }
     }
 end
@@ -702,7 +696,7 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 		data = {
 			mesh_result = arrow_mesh(headratio),
 			material = material,
-			visible_state = "main_view",
+			visible = true,
 			scene = scene or {},
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
@@ -754,13 +748,15 @@ function ientity.create_quad_lines_entity(scene, material, quadnum, width, hide,
 		return ib
 	end
 
+	local visible; if not hide then visible = true end
+
     return world:create_entity {
         policy = {
             "ant.render|simplerender",
         },
         data = {
 			scene = scene or {},
-			visible_state = hide and "" or "main_view",
+			visible = visible,
             mesh_result = create_mesh(create_vertex_buffer(), create_index_buffer()),
 			material = material,
 			render_layer = render_layer,
@@ -776,7 +772,7 @@ function ientity.create_quad_entity(material, srt, rect, uvrect)
             material 	= material,
             mesh_result = ientity.quad_mesh(rect, true, uvrect),
             owned_mesh_buffer = true,
-            visible_state = "main_view",
+            visible		= true,
             scene 		= srt,
             render_layer= "translucent",
         }

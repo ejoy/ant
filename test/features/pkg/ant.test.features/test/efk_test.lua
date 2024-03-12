@@ -29,7 +29,7 @@ local function hitch_test()
             efk = {
                 path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
             },
-            visible_state = "main_queue",
+            visible = true,
         }
     }
 
@@ -41,11 +41,10 @@ local function hitch_test()
             hitch = {
                 group = test_gid,
             },
-            visible_state = "main_view",
+            visible = true,
             scene = {
                 t = {5, 2, 0, 1}
             },
-            view_visible = true,
         }
     }
 
@@ -65,7 +64,7 @@ local function simple_test()
             efk = {
                 path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
             },
-            visible_state = "main_queue",
+            visible = true,
         }
     }
 
@@ -81,7 +80,7 @@ local function simple_test()
             efk = {
                 path = "/pkg/ant.test.features/assets/efk/miner_efk/miner_dust.efk",
             },
-            visible_state = "main_queue",
+            visible = true,
         }
     }
 end

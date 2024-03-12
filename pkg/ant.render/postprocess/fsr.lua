@@ -164,7 +164,7 @@ local function create_fsr_resolve_entity(ratio)
         data = {
             mesh_result         = to_mesh_buffer(vb, irender.quad_ib()),
             material            = "/pkg/ant.resources/materials/postprocess/fsr_resolve.material",
-            visible_state       = "fsr_resolve_queue",
+            visible_masks       = "",
             fsr_resolve_drawer  = true,
             scene               = {},
         }

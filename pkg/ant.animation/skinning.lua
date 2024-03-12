@@ -10,6 +10,7 @@ end
 local ENABLE_TAA <const> = setting:get "graphic/postprocess/taa/enable"
 
 local imaterial = ecs.require "ant.render|material"
+local ivm		= ecs.require "ant.render|visible_mask"
 local mathpkg = import_package "ant.math"
 local assetmgr = import_package "ant.asset"
 local ozz = require "ozz"
@@ -37,9 +38,9 @@ end
 
 if ENABLE_TAA then
 	function m:skin_mesh()
-		for e in w:select "animation_changed skinning:in render_object:update visible_state:in" do
+		for e in w:select "animation_changed skinning:in render_object:update visible?in" do
 			local skinning = e.skinning
-			if e.visible_state["velocity_queue"] then
+			if e.visible and ivm.check(e, "velocity_queue") then
 				imaterial.set_property(e, "u_prev_model", skinning.prev_matrices_id or skinning.matrices_id, "velocity_queue")
 			end
 			if skinning.prev_matrices_id ~= nil then

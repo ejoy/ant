@@ -39,7 +39,7 @@ local function create_blend_scene_entity(material)
             blend_scene      = true,
             mesh_result      = irender.full_quad(),
             material         = material,
-            visible_state    = queue,
+            visible          = true,
             scene            = {},
             on_ready = function(e)
                 imaterial.set_property(e, "s_scene_color", be.pyramid_sample.input_handle)

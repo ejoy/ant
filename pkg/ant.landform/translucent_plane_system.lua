@@ -85,7 +85,8 @@ local function create_tp_entity(info, render_layer, tile_size, material)
             scene = {s = {info.w, 1, info.h}, t = {info.x, 0, info.y}},
             mesh_result = mesh,
             material    = material,
-            visible_state = "main_view|selectable",
+            visible     = true,
+            visible_masks = "main_view|selectable",
             render_layer = render_layer,
             on_ready = function (e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))

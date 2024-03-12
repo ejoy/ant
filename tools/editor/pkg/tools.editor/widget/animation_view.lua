@@ -3,7 +3,6 @@ local world = ecs.world
 local fs        = require "filesystem"
 local fastio    = require "fastio"
 local iani      = ecs.require "ant.anim_ctrl|state_machine"
-local ivs       = ecs.require "ant.render|visible_state"
 local iefk      = ecs.require "ant.efk|efk"
 local itl       = ecs.require "ant.timeline|timeline"
 local keyframe_view = ecs.require "widget.keyframe_view"
@@ -537,10 +536,11 @@ local function show_skeleton(b)
     end
     for _, joint in ipairs(joints_list) do
         if joint.bone_mesh then
-            local e <close> = world:entity(joint.bone_mesh[1])
-            ivs.set_state(e, "main_view", b)
-            local be <close> = world:entity(joint.bone_mesh[2])
-            ivs.set_state(be, "main_view", b)
+            local e <close> = world:entity(joint.bone_mesh[1], "visible?out")
+            e.visible = b
+
+            local be <close> = world:entity(joint.bone_mesh[2], "visible?out")
+            be.visible = b
         end
     end
     joint_utils.show_skeleton = b
@@ -601,10 +601,7 @@ function m.show()
     for _, action, path in event_keyframe:unpack() do
         if action == "effect" then
             if not effect_map[path] then
-                effect_map[path] = iefk.create(path, {
-                    scene = {},
-                    visible_state = "main_queue",
-                })
+                effect_map[path] = iefk.create(path)
             else
                 local e <close> = world:entity(effect_map[path], "efk:in")
                 iefk.play(e)

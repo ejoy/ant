@@ -110,13 +110,14 @@ end
 
 function EffectView:on_get_auto_play()
     local info = hierarchy:get_node_info(self.eid)
-    return info.template.data.visible_state == "main_queue"
+    return info.template.data.visible
 end
 
 function EffectView:on_set_auto_play(value)
     local info = hierarchy:get_node_info(self.eid)
-    info.template.data.visible_state = value and "main_queue" or ""
-    world:pub { "PatchEvent", self.eid, "/data/visible_state", value and "main_queue" or "" }
+    local visible = not (not value)    --yeah not not here
+    info.template.data.visible = visible
+    world:pub { "PatchEvent", self.eid, "/data/visible", visible}
 end
 
 return function ()

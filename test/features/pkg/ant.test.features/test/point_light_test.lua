@@ -50,8 +50,8 @@ function plt_sys.init_world()
 				s = {25, 1, 25},
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			visible_state= "main_view",
 			mesh_result	= imesh.init_mesh(ientity.plane_mesh()),
+            visible     = true,
 		}
 	}
 

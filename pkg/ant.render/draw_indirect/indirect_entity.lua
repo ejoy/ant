@@ -51,21 +51,23 @@ local function dispatch_compute_entity(e, dieid)
     end
 end
 
-local function create_draw_indirect_entity(gid, srts, mesh, material, render_layer, visible_state, draw_num)
-    local memory = build_instance_buffer(srts)
-    local ib_num = datalist.parse(aio.readall(mesh)).ib.num
+local function create_draw_indirect_entity(ie)
+    local memory = build_instance_buffer(ie.srts)
+    local ib_num = datalist.parse(aio.readall(ie.mesh)).ib.num
+    local draw_num = #ie.srts
     return world:create_entity {
-        group = gid,
+        group = ie.gid,
         policy = {
             "ant.render|render",
             "ant.render|draw_indirect",
         },
         data = {
-            scene = {},
-            mesh  = mesh,
-            material    = material,
-            visible_state = visible_state,
-            render_layer = render_layer,
+            scene       = {},
+            mesh        = ie.mesh,
+            material    = ie.material,
+            visible     = ie.visible,
+            visible_masks = ie.visible_masks,
+            render_layer = ie.render_layer,
             draw_indirect = {
                 instance_buffer = {
                     memory  = memory,
@@ -116,9 +118,8 @@ end
 function ie_sys:entity_init()
     for e in w:select "INIT indirect_entity:in" do
         local ie = e.indirect_entity
-        local gid, srts, mesh, material, render_layer, visible_state = ie.gid, ie.srts, ie.mesh, ie.material, ie.render_layer, ie.visible_state
-        local draw_num = srts and #srts or 0
-        local dieid = create_draw_indirect_entity(gid, srts, mesh, material, render_layer, visible_state, draw_num)
+        local draw_num = #assert(ie.srts, "Invalid indirect_entity, need srts")
+        local dieid = create_draw_indirect_entity(ie)
         local ceid  = create_compute_entity(dieid, draw_num)
         ie.dieid, ie.ceid = dieid, ceid
     end

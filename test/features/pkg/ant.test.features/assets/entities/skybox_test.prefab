@@ -14,7 +14,7 @@ data:
   mesh_result: false
   skybox:
     facesize: 512
-  visible_state: main_view
+  visible: true
 policy:
   ant.sky|skybox
   ant.render|simplerender
