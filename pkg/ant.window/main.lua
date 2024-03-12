@@ -27,7 +27,7 @@ local function start(initargs)
                     unique = false,
                 }
             },
-            mainthread = "worker",
+            mainthread = 0,
             exclusive = {
                 "timer"
             },
