@@ -2,6 +2,11 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+--disable
+if true then
+    return
+end
+
 local setting = import_package "ant.settings"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA   <const>  = setting:get "graphic/postprocess/taa/enable"

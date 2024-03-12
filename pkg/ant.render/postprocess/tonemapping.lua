@@ -18,6 +18,7 @@ local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
 local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_lut"
+local ifg = ecs.require "ant.render|postprocess.postprocess"
 local tm_viewid<const>      = hwi.viewid_get "tonemapping"
 local queuemgr              = ecs.require "queue_mgr"
 
@@ -27,7 +28,7 @@ local tonemapping_drawer_eid
 local function check_create_fb(vr)
     if ENABLE_TAA or ENABLE_FXAA then
         local minmag_flag<const> = ENABLE_TAA and "POINT" or "LINEAR"
-        return fbmgr.create{
+        local fbidx = fbmgr.create{
             rbidx = fbmgr.create_rb{
                 w = vr.w, h = vr.h, layers = 1,
                 format = "RGBA8",
@@ -40,6 +41,9 @@ local function check_create_fb(vr)
                 },
             }
         }
+        local handle = fbmgr.get_rb(fbidx, 1).handle
+        ifg.set_stage_output("tonemapping", handle)
+        return fbidx
     end
 end
 
@@ -48,7 +52,8 @@ local function register_queue()
     RENDER_ARG = irender.pack_render_arg("tonemapping_queue", tm_viewid)
 
     local vr = mu.copy_viewrect(iviewport.viewrect)
-    util.create_queue(tm_viewid, vr, check_create_fb(vr), "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA or ENABLE_TAA)
+    local fbidx = check_create_fb(vr)
+    util.create_queue(tm_viewid, vr, fbidx, "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA or ENABLE_TAA)
 end
 
 function tm_sys:init()
@@ -70,28 +75,30 @@ end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
-function tm_sys:data_changed()
-    for _, _, vr in vr_mb:unpack() do
-        irq.set_view_rect("tonemapping_queue", vr)
-        break
-    end
-end
-
 local function update_properties(material)
     --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
     -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
     -- render target here, is one of the virtual resource
-    local pp = w:first "postprocess postprocess_input:in"
-    local ppi = pp.postprocess_input
-    material.s_scene_color = assert(ppi.scene_color_handle)
-    local bloomhandle = ppi.bloom_color_handle
+
+    local current_input = ifg.get_stage_input("tonemapping")
+    local last_output = ifg.get_stage_output(current_input[1])
+    material.s_scene_color = last_output
+    local bloomhandle = ifg.get_stage_output(current_input[2])
     if bloomhandle then
         assert(ENABLE_BLOOM)
-        material.s_bloom_color = ppi.bloom_color_handle
+        material.s_bloom_color = bloomhandle
     end
 end
 
 function tm_sys:tonemapping()
+    for _, _, vr in vr_mb:unpack() do
+        irq.set_view_rect("tonemapping_queue", vr)
+        local q = w:first "tonemapping_queue render_target:in"
+        local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
+        ifg.set_stage_output("tonemapping", handle)
+        break
+    end
+
     local m = w:first "tonemapping_drawer filter_material:in"
     update_properties(m.filter_material.DEFAULT_MATERIAL)
 end
