@@ -5,24 +5,49 @@ local vfs = require "vfs"
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
 
-local config
+local CoreConfig <const> = 0
+local RootConfig <const> = 1
+local BootConfig <const> = 1
+
+local ConfigCatalog <const> = {
+	worker = CoreConfig,
+	queue = CoreConfig,
+	queue_sending = CoreConfig,
+	max_service = CoreConfig,
+	crashlog = CoreConfig,
+	debuglog = CoreConfig,
+	worker_bind = RootConfig,
+	preload = RootConfig,
+	lua_path = RootConfig,
+	lua_cpath = RootConfig,
+	service_path = RootConfig,
+	exclusive = RootConfig,
+	preinit = RootConfig,
+	logger = RootConfig,
+	bootstrap = RootConfig,
+	mainthread = BootConfig
+}
+
+local coreConfig
+local rootConfig
+local bootConfig
 
 local function new_service(label, id)
-	local sid = boot.new_service(label, config.init_service, id)
+	local sid = boot.new_service(label, rootConfig.init_service, id)
 	assert(sid == id)
 	return sid
 end
 
 local function root_thread()
-	boot.new_service("root", config.init_service, SERVICE_ROOT)
+	boot.new_service("root", rootConfig.init_service, SERVICE_ROOT)
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
-		lua_path = config.lua_path,
-		lua_cpath = config.lua_cpath,
+		lua_path = rootConfig.lua_path,
+		lua_cpath = rootConfig.lua_cpath,
 		service_path = "/engine/service/root.lua",
 		name = "root",
-		args = {config}
+		args = {rootConfig}
 	})
 	-- self bootstrap
 	boot.post_message {
@@ -56,40 +81,54 @@ local function readall(path)
 end
 
 local function init(c)
-	config = c
+	coreConfig = {}
+	rootConfig = {}
+	bootConfig = {}
+	for k, v in pairs(c) do
+		if ConfigCatalog[k] == CoreConfig then
+			coreConfig[k] = v
+		elseif ConfigCatalog[k] == RootConfig then
+			rootConfig[k] = v
+		elseif ConfigCatalog[k] == BootConfig then
+			bootConfig[k] = v
+		else
+			assert(false, k)
+		end
+	end
 
 	local directory = require "directory"
 	local log_path = directory.app_path()
-	if not config.debuglog then
-		config.debuglog = (log_path / "debug.log"):string()
+	if not coreConfig.debuglog then
+		coreConfig.debuglog = (log_path / "debug.log"):string()
 	end
-	if not config.crashlog then
-		config.crashlog = (log_path / "crash.log"):string()
+	if not coreConfig.crashlog then
+		coreConfig.crashlog = (log_path / "crash.log"):string()
 	end
-	if not config.logger then
-		config.logger = { "logger" }
-	end
-	if not config.worker then
-		config.worker = 4
-	end
-	if config.worker_bind then
-		local map = {}
-		for i = #config.worker_bind, 1, -1 do
-			local name = config.worker_bind[i]
-			map[name] = config.worker
-			config.worker = config.worker + 1
-		end
-		config.worker_bind = map
-	end
-	if config.mainthread == "worker" then
-		config.mainthread = config.worker - 1
-	else
-		config.mainthread = nil
+	if not coreConfig.worker then
+		coreConfig.worker = 4
 	end
 
-	config.lua_path = nil
-	config.lua_cpath = ""
-	config.service_path = "${package}/service/?.lua;/engine/service/?.lua"
+	if not rootConfig.logger then
+		rootConfig.logger = { "logger" }
+	end
+	if rootConfig.worker_bind then
+		local map = {}
+		for i = #rootConfig.worker_bind, 1, -1 do
+			local name = rootConfig.worker_bind[i]
+			map[name] = coreConfig.worker
+			coreConfig.worker = coreConfig.worker + 1
+		end
+		rootConfig.worker_bind = map
+	end
+	if bootConfig.mainthread == "worker" then
+		bootConfig.mainthread = coreConfig.worker - 1
+	else
+		bootConfig.mainthread = nil
+	end
+
+	rootConfig.lua_path = nil
+	rootConfig.lua_cpath = ""
+	rootConfig.service_path = "${package}/service/?.lua;/engine/service/?.lua"
 
 	local servicelua = readall "/engine/service/service.lua"
 
@@ -107,9 +146,9 @@ assert(loadfile '/engine/debugger.lua')()
 ]]
 	end
 
-config.init_service = initstr .. servicelua
+rootConfig.init_service = initstr .. servicelua
 
-	config.preload = [[
+	rootConfig.preload = [[
 package.path = "/engine/?.lua"
 local ltask = require "ltask"
 local vfs = require "vfs"
@@ -175,17 +214,17 @@ end
 
 return function (c)
 	init(c)
-	boot.init(config)
+	boot.init(coreConfig)
 	local _ <close> = toclose(boot.deinit)
 	boot.init_timer()
-	for i, t in ipairs(config.exclusive) do
+	for i, t in ipairs(rootConfig.exclusive) do
 		local label = type(t) == "table" and t[1] or t
 		local id = i + 1
 		exclusive_thread(label, id)
 	end
-	config.preinit = { "io" }
+	rootConfig.preinit = { "io" }
 	root_thread()
 	io_switch()
-	io_thread("io", 2 + #config.exclusive)
-	boot.run(config.mainthread)
+	io_thread("io", 2 + #rootConfig.exclusive)
+	boot.run(bootConfig.mainthread)
 end
