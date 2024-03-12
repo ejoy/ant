@@ -1319,15 +1319,6 @@ function ImGuiInputTextCallbackData.HasSelection() end
 ---@field TexGlyphPadding integer   #  Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0 (will also need to set AntiAliasedLinesUseTex = false).
 ---@field Locked boolean            #  Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
 ---@field UserData lightuserdata    #  Store your own atlas related user-data (if e.g. you have multiple font atlas).
----@field TexReady boolean          #  Set when texture was built matching current font input
----@field TexPixelsUseColors boolean#  Tell whether our texture data is known to use colors (rather than just alpha channel), in order to help backend select a format.
----@field TexWidth integer          #  Texture width calculated during Build().
----@field TexHeight integer         #  Texture height calculated during Build().
----@field TexUvScale ImVec2         #  = (1.0f/TexWidth, 1.0f/TexHeight)
----@field TexUvWhitePixel ImVec2    #  Texture coordinates to a white pixel
----@field FontBuilderFlags integer  #  Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
----@field PackIdMouseCursors integer#  Custom texture rectangle ID for white pixel and mouse cursors
----@field PackIdLines integer       #  Custom texture rectangle ID for baked anti-aliased lines
 local ImFontAtlas = {}
 ---@param font_cfg ImFontConfig
 ---@return ImFont
@@ -1547,7 +1538,8 @@ function ImGui.StringBuf(str) end
 -- - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
 --   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 --
-function ImGui.CreateContext() end
+---@param shared_font_atlas? ImFontAtlas
+function ImGui.CreateContext(shared_font_atlas) end
 
 --
 -- NULL = destroy current context

@@ -1,6 +1,7 @@
 #include <Cocoa/Cocoa.h>
 #include "../../window.h"
 #include <Carbon/Carbon.h>
+#import <QuartzCore/CAMetalLayer.h>
 #include <stdio.h>
 
 static ant::window::keyboard_state get_keyboard_state(NSEvent* event) {
@@ -231,6 +232,14 @@ WindowDelegate* g_wd = nil;
 int32_t g_mx = 0;
 int32_t g_my = 0;
 
+CALayer* getLayer(NSWindow* nsWindow) {
+	NSView* contentView = [nsWindow contentView];
+	[contentView setWantsLayer:YES];
+    CALayer* metalLayer = [CAMetalLayer layer];
+    [contentView setLayer:metalLayer];
+	return metalLayer;
+}
+
 void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 	NSScreen *screen = [NSScreen mainScreen];
 	NSRect visibleFrame = screen.visibleFrame;
@@ -271,7 +280,7 @@ void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
     g_cb = cb;
 
     float scale = [win backingScaleFactor];
-    window_message_init(cb, win, 0, w * scale, h * scale);
+    window_message_init(cb, win, getLayer(win), 0, w * scale, h * scale);
     return (void*)win;
 }
 

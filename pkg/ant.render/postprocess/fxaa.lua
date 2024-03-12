@@ -22,7 +22,7 @@ local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.require "ant.render|material"
 local irender   = ecs.require "ant.render|render"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local irq       = ecs.require "ant.render|renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 local queuemgr  = ecs.require "queue_mgr"
 local ifg = ecs.require "ant.render|postprocess.postprocess"

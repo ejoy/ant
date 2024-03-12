@@ -179,7 +179,6 @@ local BuiltinLuaType <const> = {
 
 local Readonly <const> = {
     ImGuiViewport = true,
-    ImFontAtlas = true,
 }
 
 local Marcos <const> = {

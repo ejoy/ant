@@ -31,6 +31,6 @@ component "render_object"
     .field "render_layer:dword"
     .field "discard_flags:byte"
 
-    .implement "render_system/render_object.lua"
+    .implement "render_object.lua"
 
 component "filter_material".type "lua"

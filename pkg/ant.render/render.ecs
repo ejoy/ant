@@ -1,5 +1,7 @@
 import_feature "ant.shadow_bounding"
 
+import "render_object.ecs"
+import "renderqueue.ecs"
 import "mesh_bounding.ecs"
 import "visible_state.ecs"
 import "render_system/render_system.ecs"

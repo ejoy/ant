@@ -30,4 +30,3 @@ system "render_system"
 
 import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"
-import "render_system/render_object.ecs"

@@ -26,7 +26,7 @@ local sampler   = import_package "ant.render.core".sampler
 local fbmgr     = require "framebuffer_mgr"
 
 
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local irq       = ecs.require "ant.render|renderqueue"
 function sd_sys:init()
     --make "scene_depth_queue" with the same 'material_index' of "pre_depth_queue"
     queuemgr.register_queue("scene_depth_queue", queuemgr.material_index "pre_depth_queue")

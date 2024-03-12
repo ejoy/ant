@@ -206,20 +206,22 @@ static void push_message(struct ant_window_callback* cb, Args&&... args) {
 	lua_seti(L, 1, luaL_len(L, 1)+1);
 }
 
-void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h) {
+void window_message_init(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h) {
 	push_message(cb,
 		"type", "init",
-		"nwh", window,
+		"window", window,
+		"nwh", nwh,
 		"context", context,
 		"w", w,
 		"h", h
 	);
 }
 
-void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h) {
+void window_message_recreate(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h) {
 	push_message(cb,
 		"type", "recreate",
-		"nwh", window,
+		"window", window,
+		"nwh", nwh,
 		"context", context,
 		"w", w,
 		"h", h

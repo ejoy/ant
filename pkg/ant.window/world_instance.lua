@@ -36,15 +36,17 @@ local function reboot(args)
     world:pipeline_init()
 end
 
-local function render(nwh, context, width, height, args, initialized)
+local function render(init, args, initialized)
     local config = {
         ecs = args,
-        nwh = nwh,
-        context = context,
-        width = width,
-        height = height,
+        window = init.window,
+        nwh = init.nwh,
+        context = init.context,
+        width = init.w,
+        height = init.h,
     }
     rhwi.init {
+        window  = config.window,
         nwh     = config.nwh,
         context = config.context,
         w       = config.width,
@@ -106,7 +108,7 @@ end
 
 function WindowEvent.init(m)
     local initialized = {}
-    ltask.fork(render, m.nwh, m.context, m.w, m.h, initargs, initialized)
+    ltask.fork(render, m, initargs, initialized)
     ltask.wait(initialized)
 end
 

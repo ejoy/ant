@@ -5,7 +5,7 @@ local w     = world.w
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-local irq = ecs.require "ant.render|render_system.renderqueue"
+local irq = ecs.require "ant.render|renderqueue"
 local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local math3d = require "math3d"

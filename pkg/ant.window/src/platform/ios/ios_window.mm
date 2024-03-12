@@ -1,9 +1,5 @@
 #include "../../window.h"
 
-extern "C" {
-#include <lua-seri.h>
-}
-
 #import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
@@ -95,7 +91,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         w = h;
         h = tmp;
     }
-    window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
+    window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
 
     g_gesture = init_gesture();
     return self;

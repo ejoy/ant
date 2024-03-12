@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local irq         = ecs.require "ant.render|render_system.renderqueue"
+local irq         = ecs.require "ant.render|renderqueue"
 local utils   = require "common.utils"
 local math3d  = require "math3d"
 

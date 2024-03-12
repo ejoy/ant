@@ -13,7 +13,7 @@ local INV_Z<const> = true
 local INF_F<const> = true
 local math3d    = require "math3d"
 
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local irq       = ecs.require "ant.render|renderqueue"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local icamera   = ecs.require "ant.camera|camera"
 local imaterial = ecs.require "ant.render|material"

@@ -11,7 +11,7 @@ local aio           = import_package "ant.io"
 local stringify     = import_package "ant.serialize".stringify
 
 local iom           = ecs.require "ant.objcontroller|obj_motion"
-local irq           = ecs.require "ant.render|render_system.renderqueue"
+local irq           = ecs.require "ant.render|renderqueue"
 local ilight        = ecs.require "ant.render|light.light"
 local imodifier     = ecs.require "ant.modifier|modifier"
 local camera_mgr    = ecs.require "camera.camera_manager"

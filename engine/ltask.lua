@@ -81,6 +81,11 @@ local function init(c)
 		end
 		config.worker_bind = map
 	end
+	if config.mainthread == "worker" then
+		config.mainthread = config.worker - 1
+	else
+		config.mainthread = nil
+	end
 
 	config.lua_path = nil
 	config.lua_cpath = ""
@@ -182,5 +187,5 @@ return function (c)
 	root_thread()
 	io_switch()
 	io_thread("io", 2 + #config.exclusive)
-	boot.run()
+	boot.run(config.mainthread)
 end

@@ -2,7 +2,6 @@ local lm = require "luamake"
 
 lm:lua_source "window" {
     includes = {
-        lm.AntDir .. "/3rd/bee.lua/3rd/lua-seri",
         lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/3rd/imgui",
     },

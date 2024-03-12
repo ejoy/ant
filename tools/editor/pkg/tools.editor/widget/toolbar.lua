@@ -1,7 +1,7 @@
 local ecs   = ...
 local world = ecs.world
 
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local irq       = ecs.require "ant.render|renderqueue"
 local gizmo     = ecs.require "gizmo.gizmo"
 local ImGui     = require "imgui"
 local uiconfig  = require "widget.config"

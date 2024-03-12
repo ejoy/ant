@@ -48,7 +48,7 @@ function m:update_project_root(rootpath)
 end
 
 function m:lpath_to_vpath(lpath)
-    return self.virtual_prefab_path:string() .. "/" .. lfs.relative(lpath, self.current_compile_path):string()
+    return (self.virtual_prefab_path / lfs.relative(lpath, self.current_compile_path)):string()
 end
 
 return m

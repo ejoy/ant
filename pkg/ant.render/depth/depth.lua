@@ -15,7 +15,7 @@ local queuemgr      = ecs.require "queue_mgr"
 local R             = world:clibs "render.render_material"
 local RM            = ecs.require "ant.material|material"
 
-local irq           = ecs.require "ant.render|render_system.renderqueue"
+local irq           = ecs.require "ant.render|renderqueue"
 local irl		    = ecs.require "ant.render|render_layer.render_layer"
 
 local assetmgr      = import_package "ant.asset"

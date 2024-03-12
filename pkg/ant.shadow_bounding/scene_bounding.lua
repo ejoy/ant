@@ -9,7 +9,7 @@ local mc, mu    = mathpkg.constant, mathpkg.util
 local Q         = world:clibs "render.queue"
 
 local queuemgr	= ecs.require "ant.render|queue_mgr"
-local irq		= ecs.require "ant.render|render_system.renderqueue"
+local irq		= ecs.require "ant.render|renderqueue"
 local ishadow	= ecs.require "ant.render|shadow.shadow_system"
 local BOUNDING_NEED_UPDATE = true
 

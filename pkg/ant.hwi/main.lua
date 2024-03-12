@@ -48,12 +48,13 @@ local function bgfx_init(args)
 	local LOG_TRACE <const> = 4
 
 	init_args = {
-		nwh 	= args.nwh,
-		width 	= args.w,
-		height 	= args.h,
-		renderer= check_renderer(args.renderer),
-		loglevel= args.loglevel or LOG_WARN,
-		reset 	= args.reset or cvt_flags{
+		window   = args.window,
+		nwh      = args.nwh,
+		width    = args.w,
+		height   = args.h,
+		renderer = check_renderer(args.renderer),
+		loglevel = args.loglevel or LOG_WARN,
+		reset    = args.reset or cvt_flags {
 			s = true,
 		},
 		--debug = true,
@@ -69,7 +70,7 @@ function hw.init(args)
 end
 
 function hw.native_window()
-	return init_args.nwh
+	return init_args.window
 end
 
 local DEBUG_FLAGS<const> = {
