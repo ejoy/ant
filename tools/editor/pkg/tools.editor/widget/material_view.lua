@@ -1146,8 +1146,8 @@ function MaterialView:handle_event()
         image_info = {}
         sampler_info = {}
         for _, eid in ipairs(entitys) do
-            local node = hierarchy:get_node_info(eid)
-            local mtlpath = node.template.data.material
+            local info = hierarchy:get_node_info(eid)
+            local mtlpath = info and info.template.data.material
             if not mtlpath then
                 goto continue
             end
