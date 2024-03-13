@@ -107,15 +107,6 @@ local function init(c)
 		coreConfig.worker = 6
 	end
 
-	if rootConfig.worker_bind then
-		local map = {}
-		for i, name in ipairs(rootConfig.worker_bind) do
-			map[name] = i-1
-			coreConfig.worker = coreConfig.worker + 1
-		end
-		rootConfig.worker_bind = map
-	end
-
 	rootConfig.bootstrap["timer"] = {}
 	rootConfig.exclusive = rootConfig.exclusive or {}
 
