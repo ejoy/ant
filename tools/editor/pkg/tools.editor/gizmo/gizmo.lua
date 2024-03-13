@@ -3,8 +3,10 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.require "ant.render|material"
-local math3d = require "math3d"
-local gizmo_const = require "gizmo.const"
+local irender	= ecs.require "ant.render|render"
+
+local math3d 		= require "math3d"
+local gizmo_const 	= require "gizmo.const"
 local gizmo = {
     mode = gizmo_const.SELECT,
 	scale = 1.0,
@@ -66,8 +68,8 @@ function gizmo:highlight_axis_or_plane(axis)
 end
 
 local function set_visible(eid, b)
-	local e <close> = world:entity(eid, "visible?out")
-	e.visible = b
+	local e <close> = world:entity(eid)
+	irender.set_visible(e, b)
 end
 
 function gizmo:click_axis(axis)

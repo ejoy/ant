@@ -29,6 +29,7 @@ local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "renderqueue"
 local imaterial = ecs.require "ant.render|material"
 local ivm		= ecs.require "ant.render|visible_mask"
+local irender	= ecs.require "ant.render|render"
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
@@ -136,8 +137,8 @@ function shadow_sys:init()
 end
 
 local function set_csm_visible(enable)
-	for v in w:select "csm visible?out" do
-		v.visible = enable
+	for v in w:select "csm" do
+		irender.set_visible(v, enable)
 	end
 end
 

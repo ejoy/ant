@@ -104,23 +104,16 @@ local function init(c)
 		coreConfig.crashlog = (log_path / "crash.log"):string()
 	end
 	if not coreConfig.worker then
-		coreConfig.worker = 4
+		coreConfig.worker = 6
 	end
 
 	if rootConfig.worker_bind then
 		local map = {}
-		for i = #rootConfig.worker_bind, 1, -1 do
-			local name = rootConfig.worker_bind[i]
-			map[name] = coreConfig.worker
+		for i, name in ipairs(rootConfig.worker_bind) do
+			map[name] = i-1
 			coreConfig.worker = coreConfig.worker + 1
 		end
 		rootConfig.worker_bind = map
-	end
-
-	if bootConfig.mainthread == "worker" then
-		bootConfig.mainthread = coreConfig.worker - 1
-	else
-		bootConfig.mainthread = nil
 	end
 
 	rootConfig.lua_path = nil

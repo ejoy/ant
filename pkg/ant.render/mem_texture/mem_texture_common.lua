@@ -327,7 +327,7 @@ function m.process_wait_queue()
         if prefab and prefab.objects then
             for _, eid in ipairs(prefab.objects) do
                 local ee <close> = world:entity(eid, "visible?out")
-                ee.visible = state
+                irender.set_visible(ee, state)
             end
         end
     end

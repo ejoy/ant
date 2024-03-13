@@ -2,26 +2,29 @@ local ecs = ...
 local world = ecs.world
 local fs        = require "filesystem"
 local fastio    = require "fastio"
-local iani      = ecs.require "ant.anim_ctrl|state_machine"
-local iefk      = ecs.require "ant.efk|efk"
-local itl       = ecs.require "ant.timeline|timeline"
+local iani          = ecs.require "ant.anim_ctrl|state_machine"
+local iefk          = ecs.require "ant.efk|efk"
+local itl           = ecs.require "ant.timeline|timeline"
 local keyframe_view = ecs.require "widget.keyframe_view"
-local prefab_mgr = ecs.require "prefab_manager"
-local hierarchy = ecs.require "hierarchy_edit"
-local assetmgr  = import_package "ant.asset"
-local ImGui     =  require "imgui"
-local icons     = require "common.icons"
-local logger    = require "widget.log"
-local ImGuiWidgets = require "imgui.widgets"
-local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
-local joint_utils = require "widget.joint_utils"
-local utils     = require "common.utils"
-local faicons   = require "common.fa_icons"
-local fmod      = require "fmod"
-local global_data = require "common.global_data"
-local iaudio     = import_package "ant.audio"
-local access    = global_data.repo_access
+local prefab_mgr    = ecs.require "prefab_manager"
+local hierarchy     = ecs.require "hierarchy_edit"
+local irender       = ecs.require "ant.render|render"
+
+local ImGui         = require "imgui"
+local icons         = require "common.icons"
+local logger        = require "widget.log"
+local ImGuiWidgets  = require "imgui.widgets"
+local uiconfig      = require "widget.config"
+local uiutils       = require "widget.utils"
+local joint_utils   = require "widget.joint_utils"
+local utils         = require "common.utils"
+local faicons       = require "common.fa_icons"
+local fmod          = require "fmod"
+local global_data   = require "common.global_data"
+
+local assetmgr      = import_package "ant.asset"
+local iaudio        = import_package "ant.audio"
+local access        = global_data.repo_access
 
 local edit_timeline
 local timeline_eid
@@ -292,7 +295,7 @@ local function show_current_event()
                 bank_path = (lfs.path('/') / lfs.relative(filename:match("^(.+/)[%w*?_.%-]*$"), global_data.project_root)):string()
                 if not mount_sound_flag[bank_path] then
                     mount_sound_flag[bank_path] = true
-                    utils.mount_memfs(bank_path)
+                    -- utils.mount_memfs(bank_path)
                     local bank_files = {
                         bank_path .. "/Master.strings.bank",
                         bank_path .. "/Master.bank"
@@ -536,11 +539,8 @@ local function show_skeleton(b)
     end
     for _, joint in ipairs(joints_list) do
         if joint.bone_mesh then
-            local e <close> = world:entity(joint.bone_mesh[1], "visible?out")
-            e.visible = b
-
-            local be <close> = world:entity(joint.bone_mesh[2], "visible?out")
-            be.visible = b
+            irender.set_visible_by_eid(joint.bone_mesh[1], b)
+            irender.set_visible_by_eid(joint.bone_mesh[2], b)
         end
     end
     joint_utils.show_skeleton = b

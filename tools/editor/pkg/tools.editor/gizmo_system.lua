@@ -11,8 +11,9 @@ local ilight 	= ecs.require "ant.render|light.light"
 local irq		= ecs.require "ant.render|renderqueue"
 local imaterial = ecs.require "ant.render|material"
 local imodifier = ecs.require "ant.modifier|modifier"
-local prefab_mgr = ecs.require "prefab_manager"
+local prefab_mgr= ecs.require "prefab_manager"
 local iviewport = ecs.require "ant.render|viewport.state"
+local irender	= ecs.require "ant.render|render"
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local utils 	= ecs.require "mathutils"
@@ -798,8 +799,7 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 			end
 			local e4num = math.floor(extra_angle * step_angle) * 3
 			ro4.ib_num = e4num
-			world.w:extend(e4, "visible?out")
-			e4.visible = e4num > 0
+			irender.set_visible(e4, e4num > 0)
 		end
 		e3_num = math.floor(delta_angle * step_angle + 1) * 3
 	else
@@ -815,8 +815,7 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 				e4start = 0
 			end
 			ro4.ib_start, ro4.ib_num = e4start, e4num
-			world.w:extend(e4, "visible?out")
-			e4.visible = e4num > 0
+			irender.set_visible(e4, e4num > 0)
 		else
 			e3_num = math.floor(-delta_angle * step_angle + 1) * 3
 			e3_start = math.floor(start_angle * step_angle) * 3 - e3_num
@@ -830,9 +829,7 @@ local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 	local ro3 = e3.render_object
 	ro3.ib_start, ro3.ib_num = e3_start, e3_num
 
-	local e3_visible = e3_num > 0
-	world.w:extend(e3, "visible?out")
-	e3.visible = e3_visible
+	irender.set_visible(e3, e3_num > 0)
 end
 
 local init_screen_offest = math3d.ref()

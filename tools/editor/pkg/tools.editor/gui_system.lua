@@ -24,6 +24,7 @@ local camera_mgr        = ecs.require "camera.camera_manager"
 local mtl_view          = ecs.require "widget.material_view"()
 local hierarchy         = ecs.require "hierarchy_edit"
 local prefab_mgr        = ecs.require "prefab_manager"
+local irender           = ecs.require "ant.render|render"
 
 local math3d            = require "math3d"
 local joint_utils       = require "widget.joint_utils"
@@ -161,11 +162,11 @@ local function update_visible(node, visible)
         if not rv then
             rv = e.visible
         end
-        e.visible = visible
+        irender.set_visible(e, visible)
     end
 
     local ne <close> = world:entity(node.eid, "visible?out")
-    ne.visible = visible
+    irender.set_visible(ne, visible)
 
     local info = assert(hierarchy:get_node_info(node.eid), "Invalid eid")
     info.template.data.visible = visible
