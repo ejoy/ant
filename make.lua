@@ -35,9 +35,12 @@ lm:conf {
             "/arch:AVX2",
         }
     },
+    macos = {
+        sys = "macos13.3",
+    },
     ios = {
         arch = "arm64",
-        sys = "ios16.0",
+        sys = "ios16.3",
         flags = {
             "-fembed-bitcode",
             "-fobjc-arc"
