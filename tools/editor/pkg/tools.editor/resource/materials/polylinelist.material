@@ -1,9 +1,9 @@
 fx:
     vs: /pkg/ant.resources/shaders/polyline/vs_polylinelist.sc
     fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
-    setting:
-        FIX_WIDTH: 1
-        cast_shadow: off
+    macros:
+        "FIX_WIDTH=1"
+    setting: /pkg/ant.resources/settings/nolighting.ant
 properties:
     s_tex:
         stage: 0

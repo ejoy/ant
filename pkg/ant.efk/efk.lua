@@ -79,11 +79,15 @@ local function shutdown()
 end
 
 local check_release_efks; do
-    local last = ltask.walltime()
+    local get_time = function ()
+        local _, t = ltask.now()
+        return t * 10
+    end
+    local last = get_time()
 
     local checktime<const> = 1000
     function check_release_efks()
-        local now = ltask.walltime()
+        local now = get_time()
         local d = now - last
         if d >= checktime then
             last = now

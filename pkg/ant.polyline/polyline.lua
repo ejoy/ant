@@ -151,7 +151,6 @@ local function generate_stripline_vertices(points, uv_rotation, loop)
 end
 
 local function add_polylines(polymesh, line_width, color, material, srt, render_layer, hide)
-    local visible; if not hide then visible = true end
     return world:create_entity {
         policy = {
             "ant.render|simplerender",
@@ -165,9 +164,7 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
             scene = {s = srt.s, r = srt.r, t = srt.t, parent = srt.parent},
             mesh_result = polymesh,
             material    = material,
-            visible     = visible,
-            --visible_masks = hide and "" or "main_view|velocity_queue",
-            visible_masks = hide and "" or "main_view",
+            visible     = not hide,
             render_layer= render_layer or "background",
             on_ready = function (e)
                 w:extend(e, "polyline:in")
