@@ -205,6 +205,7 @@ function m:show_terrain(enable)
         iterrain.create_plane_terrain({[0] = {{x = -500, y = -500, type = "terrain"}}}, "opacity", 1000, TERRAIN_MATERIAL)
     end
 end
+
 function m:clone(eid)
     local srctpl = hierarchy:get_node_info(eid)
     if srctpl.filename then
@@ -311,7 +312,8 @@ end
 
 function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
-    local function find_e(entitys, id)
+
+    local function find_e(id)
         for _, eid in ipairs(entitys) do
             local e <close> = world:entity(eid, "eid:in")
             if e.eid == id then
@@ -349,7 +351,7 @@ function m:on_prefab_ready(prefab)
         local eid = entitys[j]
         local e <close> = world:entity(eid, "scene?in light?in")
         local scene = e.scene
-        local parent = scene and find_e(entitys, scene.parent)
+        local parent = scene and find_e(scene.parent)
         if pt.prefab then
             last_tpl.filename = pt.prefab
             local children = sub_tree(parent, j)
@@ -655,25 +657,26 @@ local function remove_entity_self(eid)
 end
 
 function m:create_ground()
-    if not self.plane then
-        local imaterial = ecs.require "ant.render|material"
-        self.plane = world:create_entity {
-            policy = {
-                "ant.render|render",
-            },
-            data = {
-                scene = {s = {200, 1, 200}},
-                mesh  = "/pkg/tools.editor/resource/plane.glb|meshes/Plane_P1.meshbin",
-                material    = "/pkg/tools.editor/resource/materials/texture_plane.material",
-                render_layer = "background",
-                visible = true,
-                on_ready = function (e)
-                    imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
-                end
-            },
-            tag = { "ground" }
-        }
+    if self.plane then
+        return
     end
+    local imaterial = ecs.require "ant.render|material"
+    self.plane = world:create_entity {
+        policy = {
+            "ant.render|render",
+        },
+        data = {
+            scene           = {s = {200, 1, 200}},
+            mesh            = "/pkg/tools.editor/resource/plane.glb|meshes/Plane_P1.meshbin",
+            material        = "/pkg/tools.editor/resource/materials/texture_plane.material",
+            render_layer    = "background",
+            visible = true,
+            on_ready = function (e)
+                imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
+            end
+        },
+        tag = { "ground" }
+    }
 end
 
 function m:reset_prefab(noscene)
@@ -733,10 +736,6 @@ function m:reload()
 end
 
 function m:add_effect(filename)
-    -- for path in lfs.pairs(lfs.path(filename):parent_path()) do
-    --     local vpath = (lfs.path('/') / lfs.relative(path, gd.project_root)):string()
-    --     memfs.update(vpath, path:string())
-    -- end
     local virtual_path = (lfs.path('/') / lfs.relative(filename, gd.project_root)):string()
     if not self.root then
         self:reset_prefab()

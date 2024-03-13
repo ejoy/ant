@@ -304,7 +304,6 @@ function gizmo:update_scale()
 	iom.set_srt_matrix(rze, math3d.mul(get_mat(origin, cam_to_origin, mc.ZAXIS), math3d.matrix{s = gizmo.scale}))
 end
 
-local test_bone
 local ipl = ecs.require "ant.polyline|polyline"
 local geopkg = import_package "ant.geometry"
 local geolib = geopkg.geometry
@@ -461,7 +460,6 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 	
     -- ientity.create_grid_entity(64, 64, 1, 1)
-	-- test_bone = ientity.create_bone_mesh("testbone", "/pkg/tools.editor/resource/materials/joint.material", {s = 5}, gizmo.rz.color, false)
 end
 local event_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 
