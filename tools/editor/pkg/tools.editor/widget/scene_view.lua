@@ -190,14 +190,6 @@ local function show_scene_node(node)
         ImGui.TableNextColumn();
         ImGui.PushID(tostring(eid))
         local current_visible = hierarchy:is_visible(eid)
-        local e <close> = world:entity(eid, "visible?out"); do
-            local rv = e.visible
-            if current_visible ~= rv then
-                hierarchy:set_visible(nd, rv)
-                current_visible = rv
-            end
-        end
-
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         imagesize = icon.texinfo.width * icons.scale
         if ImGui.ImageButton("visible", assetmgr.textures[icon.id], imagesize, imagesize) then
