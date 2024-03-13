@@ -42,21 +42,27 @@ local function register_queues()
     pyramid_sampleeid = ips.create(pyramid_sample, iviewport.viewrect)
 end
 
+local function update_bloom_handle(ps)
+    local lasteid = ps.upsample[#ps.upsample].queue
+    local q = world:entity(lasteid, "render_target:in")
+    if q then
+        local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
+        ifg.set_stage_output("bloom", handle)
+    end
+end
+
 function bloom_sys:init()
     register_queues()
+end
+
+function bloom_sys:init_world()
+    local e = world:entity(pyramid_sampleeid, "pyramid_sample:in")
+    update_bloom_handle(e.pyramid_sample)
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
 function bloom_sys:bloom()
-    local function update_bloom_handle(ps)
-        local lasteid = ps.upsample[#ps.upsample].queue
-        local q = world:entity(lasteid, "render_target:in")
-        if q then
-            local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
-            ifg.set_stage_output("bloom", handle)
-        end
-    end
 
     local e = world:entity(pyramid_sampleeid, "pyramid_sample:in")
     local last_output = ifg.get_last_output("bloom")

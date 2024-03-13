@@ -89,6 +89,11 @@ local function update_properties(material)
     end
 end
 
+function tm_sys:init_world()
+    local m = w:first "tonemapping_drawer filter_material:in"
+    update_properties(m.filter_material.DEFAULT_MATERIAL)
+end
+
 function tm_sys:tonemapping()
     for _, _, vr in vr_mb:unpack() do
         irq.set_view_rect("tonemapping_queue", vr)

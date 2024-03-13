@@ -86,6 +86,9 @@ local function update_scene_ldr()
     imaterial.set_property(fd, "s_scene_ldr_color", last_output)
 end
 
+function fxaasys:init_world()
+    update_scene_ldr()
+end
 
 function fxaasys:fxaa()
     for _, _, vr in vr_mb:unpack() do
