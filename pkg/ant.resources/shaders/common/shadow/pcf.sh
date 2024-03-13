@@ -34,23 +34,23 @@ float sample_shadow_hardware(sampler2DShadow shadowsampler, vec4 shadowcoord, ve
 #if BGFX_SHADER_LANGUAGE_HLSL || BGFX_SHADER_LANGUAGE_METAL
 vec4 bgfxTextureGatherCmpOffset0(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
 {
-	return _sampler.m_texture.GatherCmpRed(_sampler.m_sampler, _coord, _cmpvalue, _offset);
+	return _sampler.m_texture.GatherCmp(_sampler.m_sampler, _coord, _cmpvalue, _offset);
 }
 
-vec4 bgfxTextureGatherCmpOffset1(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
-{
-	return _sampler.m_texture.GatherCmpGreen(_sampler.m_sampler, _coord, _cmpvalue, _offset);
-}
+// vec4 bgfxTextureGatherCmpOffset1(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
+// {
+// 	return _sampler.m_texture.GatherCmpGreen(_sampler.m_sampler, _coord, _cmpvalue, _offset);
+// }
 
-vec4 bgfxTextureGatherCmpOffset2(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
-{
-	return _sampler.m_texture.GatherCmpBlue(_sampler.m_sampler, _coord, _cmpvalue, _offset);
-}
+// vec4 bgfxTextureGatherCmpOffset2(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
+// {
+// 	return _sampler.m_texture.GatherCmpBlue(_sampler.m_sampler, _coord, _cmpvalue, _offset);
+// }
 
-vec4 bgfxTextureGatherCmpOffset3(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
-{
-	return _sampler.m_texture.GatherCmpAlpha(_sampler.m_sampler, _coord, _cmpvalue, _offset);
-}
+// vec4 bgfxTextureGatherCmpOffset3(BgfxSampler2DShadow _sampler, vec2 _coord, float _cmpvalue, ivec2 _offset)
+// {
+// 	return _sampler.m_texture.GatherCmpAlpha(_sampler.m_sampler, _coord, _cmpvalue, _offset);
+// }
 
 #define textureGatherCmpOffset(_sampler, _coord, _cmpvalue, _offset, _comp) bgfxTextureGatherCmpOffset ## _comp(_sampler, _coord, _cmpvalue, _offset)
 
@@ -121,8 +121,7 @@ float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
 				//use GatherComp for hlsl
 				// vec4 value = textureGatherOffset(shadowsampler, tc.xy, ivec2(col, row), 0);
 				// v1[(col+HFS)/2] = vec4_splat(depthlinear) <= value ? vec4_splat(1.0) : vec4_splat(0.0)
-				vec4 r = textureGatherCmpOffset(shadowsampler, tc, depthlinear, ivec2(col, row), 0);
-				v1[(col+HFS)/2] = r;
+				v1[(col+HFS)/2] = textureGatherCmpOffset(shadowsampler, tc, depthlinear, ivec2(col, row), 0);
 			} else {
 				v1[(col+HFS)/2] = vec4_splat(0.0);
 			}

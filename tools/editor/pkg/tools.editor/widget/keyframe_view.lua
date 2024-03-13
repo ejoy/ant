@@ -1244,6 +1244,7 @@ function m.show()
 end
 local memfs = import_package "ant.vfs".memory
 local lfs   = require "bee.filesystem"
+local global_data    = require "common.global_data"
 function m.save(path)
     if not next(allanims) then
         return
@@ -1282,19 +1283,8 @@ function m.save(path)
         }
     end
     utils.write_file(filename, stringify(animdata))
-    -- if isSke then
-    --     local bin_file = filename:sub(1, -5) .. "bin"
-    --     local mount = false
-    --     local lpath = lfs.path(bin_file)
-    --     if not lfs.exists(lpath) then
-    --         mount = true
-    --     end
-    --     local e <close> = world:entity(anim_eid, "animation:in")
-    --     ozzoffline.save(e.animation.status[current_anim.name].handle, bin_file)
-    --     if mount then
-    --         memfs.update("/" .. lfs.relative(lpath, gd.project_root):string(), lpath:string())
-    --     end
-    -- end
+    local lpath = lfs.path(filename)
+    memfs.update("/" .. lfs.relative(lpath, global_data.project_root):string(), lpath:string())
     if file_path ~= filename then
         file_path = filename
     end
@@ -1471,6 +1461,7 @@ function m.on_eid_delete(eid)
     end
 end
 local joint_scale_map
+local irender	= ecs.require "ant.render|render"
 function m.init(skeleton)
     for e in w:select "eid:in animation:in" do
         if e.animation.skeleton == skeleton then
@@ -1554,8 +1545,8 @@ function m.init(skeleton)
                             joint_scale_map[joint.index] = bone_len * joint_scale
                         end
                     end
-                    ivs.set_state(mesh_e, "main_view", show)
-                    ivs.set_state(bone_mesh_e, "main_view", show)
+                    irender.set_visible(mesh_e, show)
+                    irender.set_visible(bone_mesh_e, show)
                 end
             end
         end

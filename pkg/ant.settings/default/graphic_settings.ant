@@ -32,9 +32,9 @@ graphic:
     effect:
       enable: true
     taa:
-      enable: nil
+      enable: false
     fsr:
-      enable: nil
+      enable: false
   render:
     clear: CDS
     clear_color: 255
@@ -48,8 +48,8 @@ graphic:
       {0.00, 1.00}
     soft_shadow: pcf
     pcf:
-      type: fast
-      size: 3
+      type: fix4
+      size: 4
       filter: uniform
     vsm:
       depth_multiplier: 100
