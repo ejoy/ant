@@ -16,7 +16,6 @@ local function start(initargs)
             worker_bind = {
                 ["ant.window|window"] = 0,
                 ["ant.hwi|bgfx"] = 1,
-                ["timer"] = 2,
             },
         }
     else
@@ -33,7 +32,6 @@ local function start(initargs)
             worker_bind = {
                 ["ant.window|window"] = 0,
                 ["ant.hwi|bgfx"] = 1,
-                ["timer"] = 2,
             },
         }
     end
