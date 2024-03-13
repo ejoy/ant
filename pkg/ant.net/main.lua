@@ -2,6 +2,8 @@ local ltask = require "ltask"
 local network = require "network"
 local patch = import_package "ant.general".patch
 
+local pkg_name <const> = "ant.net"
+
 local find_upvalues = patch.find_upvalues
 local new_network = network.new
 
@@ -18,11 +20,26 @@ local function register(uv, cmd)
 	end
 end
 
+local function check_init(uv)
+	local ltask = assert(uv.ltask)
+	local CMD = ltask.dispatch()
+	local f = CMD.NETWORK_PKG
+	if not f then
+		return
+	end
+	assert(f() == pkg_name)
+	return true
+end
+
 local function init_network()
 	local uv = find_upvalues "/io.lua"
+	if check_init(uv) then
+		return
+	end
 	local selector = assert(uv.selector)
 	local net = new_network(selector)
 	local CMD = {
+		NETWORK_PKG = function() return pkg_name end,
 		NETWORK_LISTEN = assert(net.listen),
 		NETWORK_CONNECT = assert(net.connect),
 		NETWORK_ACCEPT = assert(net.accept),
