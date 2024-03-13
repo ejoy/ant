@@ -1,6 +1,6 @@
 #pragma once
 
-#if !defined(__GLIBCXX__)
+#if !defined(__GLIBCXX__) && !defined(__APPLE__)
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/print.h>
 

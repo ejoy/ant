@@ -33,7 +33,7 @@ namespace Rml {
 
     template <typename E, std::size_t I = 0>
     constexpr auto EnumCount() noexcept {
-#if defined(__clang__) && __clang_major__ >= 16
+#if defined(__clang__) && __clang_major__ >= 15
         constexpr E e = __builtin_bit_cast(E, static_cast<std::underlying_type_t<E>>(I));
 #else
         constexpr E e = static_cast<E>(static_cast<std::underlying_type_t<E>>(I));
