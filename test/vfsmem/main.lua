@@ -7,6 +7,5 @@ dofile "/engine/ltask.lua" {
         ["test|main"] = {
             unique = false,
         }
-    },
-    exclusive =  { "timer" },
+    }
 }

@@ -8,8 +8,7 @@ function M.start(arg)
 				args = arg,
 				unique = false,
 			}
-		},
-		exclusive = { "timer" },
+		}
 	}
 end
 
