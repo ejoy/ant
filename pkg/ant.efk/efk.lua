@@ -278,9 +278,9 @@ function efk_sys:camera_usage()
         need_update_cb_data = true
     end
 
-    for _ in mq_vr_mb:each() do
+    for _, _, vr in mq_vr_mb:unpack() do
         need_update_cb_data = true
-        irq.set_view_rect("efk_queue", iviewport.viewrect)
+        irq.set_view_rect("efk_queue", vr)
         local q = w:first "efk_queue render_target:in"
         local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
         ifg.set_stage_output("effect", handle)
@@ -288,6 +288,21 @@ function efk_sys:camera_usage()
 
     local C = irq.main_camera_changed()
 
+    if need_update_cb_data or C then
+        if C then
+            w:extend(C, "camera:in")
+        else
+            C = irq.main_camera_entity "camera:in"
+        end
+        local camera = C.camera
+        update_cb_data(camera.infprojmat)
+        EFKCTX:setstate(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
+
+        need_update_cb_data = false
+    end
+end
+
+function efk_sys:effect()
     if need_update_cb_data or C then
         if C then
             w:extend(C, "camera:in")
