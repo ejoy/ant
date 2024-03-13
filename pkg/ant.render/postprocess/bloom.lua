@@ -46,6 +46,8 @@ function bloom_sys:init()
     register_queues()
 end
 
+local vr_mb = world:sub{"view_rect_changed", "main_queue"}
+
 function bloom_sys:bloom()
     local function update_bloom_handle(ps)
         local lasteid = ps.upsample[#ps.upsample].queue
@@ -59,5 +61,10 @@ function bloom_sys:bloom()
     local e = world:entity(pyramid_sampleeid, "pyramid_sample:in")
     local last_output = ifg.get_last_output("bloom")
     ips.do_pyramid_sample(e, last_output)
-    update_bloom_handle(e.pyramid_sample)
+
+    for _, _, _ in vr_mb:unpack() do
+        update_bloom_handle(e.pyramid_sample)
+        break
+    end
+
 end
