@@ -7,7 +7,7 @@ local MESSSAGE_SYSTEM <const> = 0
 
 local CoreConfig <const> = 0
 local RootConfig <const> = 1
-local BootConfig <const> = 1
+local BootConfig <const> = 2
 
 local ConfigCatalog <const> = {
 	worker = CoreConfig,
