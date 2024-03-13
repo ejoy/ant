@@ -1,4 +1,4 @@
-local ecs   = ...
+--[[ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
@@ -66,4 +66,4 @@ end
 
 function dit_sys:exit()
     PC:clear()
-end
+end ]]
