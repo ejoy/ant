@@ -95,11 +95,10 @@ function tm_sys:tonemapping()
         local q = w:first "tonemapping_queue render_target:in"
         local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
         ifg.set_stage_output("tonemapping", handle)
+        local m = w:first "tonemapping_drawer filter_material:in"
+        update_properties(m.filter_material.DEFAULT_MATERIAL)
         break
     end
-
-    local m = w:first "tonemapping_drawer filter_material:in"
-    update_properties(m.filter_material.DEFAULT_MATERIAL)
 end
 
 function tm_sys:render_submit()

@@ -116,6 +116,9 @@ local function init(c)
 		rootConfig.worker_bind = map
 	end
 
+	rootConfig.bootstrap["timer"] = {}
+	rootConfig.exclusive = rootConfig.exclusive or {}
+
 	rootConfig.lua_path = nil
 	rootConfig.lua_cpath = ""
 	rootConfig.service_path = "${package}/service/?.lua;/engine/service/?.lua"

@@ -304,21 +304,6 @@ function efk_sys:camera_usage()
     end
 end
 
-function efk_sys:effect()
-    if need_update_cb_data or C then
-        if C then
-            w:extend(C, "camera:in")
-        else
-            C = irq.main_camera_entity "camera:in"
-        end
-        local camera = C.camera
-        update_cb_data(camera.infprojmat)
-        EFKCTX:setstate(math3d.serialize(camera.viewmat), math3d.serialize(camera.infprojmat), itimer.delta())
-
-        need_update_cb_data = false
-    end
-end
-
 local function normalize_color(color)
     local nc = math3d.normalize(color)
     return math3d.set_index(nc, 4, 1.0)

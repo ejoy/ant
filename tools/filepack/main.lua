@@ -8,6 +8,5 @@ dofile "/engine/ltask.lua" {
             args = arg,
             unique = false,
         }
-    },
-    exclusive = { "timer" },
+    }
 }

@@ -11,7 +11,6 @@ local function start(initargs)
             },
             exclusive = {
                 "ant.window|ios",
-                "timer",
             },
             worker_bind = {
                 "ant.window|window",
@@ -28,9 +27,6 @@ local function start(initargs)
                 }
             },
             mainthread = 0,
-            exclusive = {
-                "timer"
-            },
             worker_bind = {
                 "ant.window|window",
                 "ant.hwi|bgfx",
