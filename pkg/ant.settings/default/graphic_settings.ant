@@ -32,9 +32,9 @@ graphic:
     effect:
       enable: true
     taa:
-      enable: nil
+      enable: false
     fsr:
-      enable: nil
+      enable: false
   render:
     clear: CDS
     clear_color: 255
