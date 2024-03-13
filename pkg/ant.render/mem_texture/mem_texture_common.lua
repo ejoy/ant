@@ -254,6 +254,7 @@ local RM            = ecs.require "ant.material|material"
 function m.copy_main_material()
     for e in w:select "mem_texture_ready:update filter_result render_object:in filter_material:in material:in" do
         ivm.set_masks(e, "main_view|selectable|cast_shadow", false)
+        ivm.set_masks(e, params.QUEUE_NAME, true)
         local fm = e.filter_material
         local matres = assetmgr.resource(e.material)
         local Dmi = fm.DEFAULT_MATERIAL
