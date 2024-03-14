@@ -48,20 +48,12 @@ lmainloop(lua_State *L) {
 	return 0;
 }
 
-static int
-lmaxfps(lua_State *L) {
-	float fps = (float)luaL_checknumber(L, 1);
-	window_maxfps(fps);
-	return 0;
-}
-
 extern "C" int
 luaopen_window_ios(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "init", linit },
 		{ "mainloop", lmainloop },
-		{ "maxfps", lmaxfps },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

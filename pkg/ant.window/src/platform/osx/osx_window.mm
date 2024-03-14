@@ -399,5 +399,5 @@ void window_set_title(bee::zstring_view title) {
     //TODO
 }
 
-void window_maxfps(float fps) {
+void window_set_maxfps(float fps) {
 }

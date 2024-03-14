@@ -194,8 +194,13 @@ static void push_message_args(lua_State*L, K&& k, V&& v, Args&&... args) {
 	}
 }
 
-static lua_CFunction MessageFetch = NULL;
-void window_message_set_fetch_func(lua_CFunction func) {
+static void DefaultMessageFetch(lua_State* L) {
+	lua_seti(L, 1, luaL_len(L, 1)+1);
+	lua_settop(L, 1);
+}
+
+static void (*MessageFetch)(lua_State*) = DefaultMessageFetch;
+void window_message_set_fetch_func(void (*func)(lua_State*)) {
 	MessageFetch = func;
 }
 

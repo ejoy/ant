@@ -7,23 +7,11 @@ static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 	return { str, sz };
 }
 
-#if !defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
-static int MessageFetch(lua_State* L) {
-	lua_seti(L, 1, luaL_len(L, 1)+1);
-	lua_settop(L, 1);
-	return 0;
-}
-#endif
-
 static int init(lua_State *L) {
 	lua_State* messageL = lua_newthread(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 	lua_pushvalue(L, 1);
 	lua_xmove(L, messageL, 1);
-
-#if !defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
-	window_message_set_fetch_func(MessageFetch);
-#endif
 
 	const char* size = lua_tostring(L, 2);
 	bool ok = window_init(messageL, size);
@@ -55,9 +43,9 @@ static int set_title(lua_State* L) {
 	return 0;
 }
 
-static int maxfps(lua_State *L) {
+static int set_maxfps(lua_State *L) {
 	float fps = (float)luaL_checknumber(L, 1);
-	window_maxfps(fps);
+	window_set_maxfps(fps);
 	return 0;
 }
 
@@ -70,7 +58,7 @@ luaopen_window(lua_State *L) {
 		{ "peek_message", peek_message },
 		{ "set_cursor", set_cursor },
 		{ "set_title", set_title },
-		{ "maxfps", maxfps },
+		{ "set_maxfps", set_maxfps },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

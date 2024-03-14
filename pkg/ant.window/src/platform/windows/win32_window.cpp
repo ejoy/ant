@@ -612,5 +612,5 @@ void window_set_title(bee::zstring_view title) {
     ::SetWindowTextW(G.hWnd, bee::win::u2w(title).c_str());
 }
 
-void window_maxfps(float fps) {
+void window_set_maxfps(float fps) {
 }

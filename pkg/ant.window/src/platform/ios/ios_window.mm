@@ -228,10 +228,9 @@ private:
 
 static MessageQueue g_msqueue;
 
-static int MessageFetch(lua_State* L) {
+static void MessageFetch(lua_State* L) {
     g_msqueue.push(seri_pack(L, 0, NULL));
     lua_settop(L, 0);
-    return 0;
 }
 
 void loopwindow_init(struct ant_window_callback* cb) {
@@ -285,7 +284,7 @@ void window_set_cursor(int cursor) {
 void window_set_title(bee::zstring_view title) {
 }
 
-void window_maxfps(float fps) {
+void window_set_maxfps(float fps) {
     //TODO
     //if (global_window) {
     //    [global_window maxfps: fps];

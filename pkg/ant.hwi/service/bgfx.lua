@@ -347,8 +347,8 @@ function S.maxfps(v)
         maxfps = v
     end
     if platform.os == "ios" then
-        local ServiceWindow = ltask.queryservice "ant.window|ios"
-        ltask.call(ServiceWindow, "maxfps", maxfps)
+        local ServiceWindow = ltask.queryservice "ant.window|window"
+        ltask.call(ServiceWindow, "set_maxfps", maxfps)
     end
     return maxfps
 end
