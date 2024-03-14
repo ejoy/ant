@@ -7,42 +7,36 @@ extern "C" {
 }
 namespace Rml::Texture {
 
-using TextureMap = std::unordered_map<std::string, TextureData*>;
+using TextureMap = std::unordered_map<std::string, TextureData>;
 static TextureMap textures;
 
 void Shutdown() {
-	for (auto iterator = textures.begin(); iterator != textures.end(); ++iterator) {
-		if (iterator->second != nullptr){
-			delete iterator->second;
-		}
-		iterator->second = nullptr;
-	}
 	textures.clear();
 }
 
 static TextureData InvalidTexture;
 
-TextureData* Fetch(Element* e, const std::string& path) {
+TextureData Fetch(Element* e, const std::string& path) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
 	Rml::GetScript()->OnLoadTexture(e->GetOwnerDocument(), e, path);
-	return &InvalidTexture;
+	return InvalidTexture;
 }
 
-TextureData* Fetch(Element* e, const std::string& path, Size size) {
+TextureData Fetch(Element* e, const std::string& path, Size size) {
 	auto iterator = textures.find(path);
 	Rml::GetScript()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
 	else{
-		return &InvalidTexture;
+		return InvalidTexture;
 	}
 }
 
-void Set(const std::string& path, TextureData*&& data) {
+void Set(const std::string& path, TextureData&& data) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		iterator->second = data;

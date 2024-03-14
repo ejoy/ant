@@ -14,9 +14,9 @@ namespace Rml {
 			unknow
 		};
 		void Shutdown();
-		TextureData* Fetch(Element* e, const std::string& path);
-		TextureData* Fetch(Element* e, const std::string& path, Size size);
-		void Set(const std::string& path, TextureData*&& data);
+		TextureData Fetch(Element* e, const std::string& path);
+		TextureData Fetch(Element* e, const std::string& path, Size size);
+		void Set(const std::string& path, TextureData&& data);
 		TextureType GetType(TextureId id);
 	}
 }
