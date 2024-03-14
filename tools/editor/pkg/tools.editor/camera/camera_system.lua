@@ -1,9 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local gizmo		= ecs.require "gizmo.gizmo"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
-local irq		= ecs.require "ant.render|renderqueue"
 local math3d	= require "math3d"
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
@@ -34,44 +32,53 @@ local animation = {
 	totoal_time		= 0.5,
 	current_time	= 0,
 }
-
-local function on_key(key, press)
-	if global_data.camera_lock then
-		return
-	end
-	local pressed = press == 1 or press == 2
-	if not pressed then -- or not rotate_mode
-		return
-	end
-	local pan = false
-	if key == "A" or key == "D" or key == "W" or key == "S" or key == "F" then
-		pan = true
-	end
-	if not pan then
-		return
-	end
-	local mq = w:first("main_queue camera_ref:in render_target:in")
-	local ce<close> = world:entity(mq.camera_ref, "scene:update")
-	local pos = iom.get_position(ce)
-	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
-	local xdir = math3d.normalize(math3d.index(mat, 1))
-	local zdir = math3d.normalize(math3d.index(mat, 3))
-	local dt = move_speed * camera_speed
-	local newpos
-	if key == "A" then
-		newpos = math3d.add(pos, math3d.mul(math3d.normalize(xdir), -dt))
-	elseif key == "D" then
-		newpos = math3d.add(pos, math3d.mul(math3d.normalize(xdir), dt))
-	elseif key == "W" then
-		newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), dt))
-	elseif key == "S" then
-		newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), -dt))
-	elseif key == "F" and press == 1 then
-		world:pub {"LookAtTarget", nil, true}
-	end
-	if newpos then
-		iom.set_position(ce, newpos)
-		world:pub {"camera", "move"}
+local move_state = {
+	A = false,
+	D = false,
+	W = false,
+	S = false,
+}
+local function move_camera()
+	-- if global_data.camera_lock then
+	-- 	return
+	-- end
+	-- local pressed = press == 1 or press == 2
+	-- if not pressed then -- or not rotate_mode
+	-- 	return
+	-- end
+	-- local pan = false
+	-- if key == "A" or key == "D" or key == "W" or key == "S" or key == "F" then
+	-- 	pan = true
+	-- end
+	-- if not pan then
+	-- 	return
+	-- end
+	if move_state.A or move_state.D or move_state.W or move_state.S then
+		local mq = w:first("main_queue camera_ref:in render_target:in")
+		local ce<close> = world:entity(mq.camera_ref, "scene:update")
+		local pos = iom.get_position(ce)
+		local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
+		local xdir = math3d.normalize(math3d.index(mat, 1))
+		local zdir = math3d.normalize(math3d.index(mat, 3))
+		local dt = move_speed * camera_speed
+		local newpos
+		if move_state.A then
+			newpos = math3d.add(pos, math3d.mul(math3d.normalize(xdir), -dt))
+		elseif move_state.D then
+			newpos = math3d.add(pos, math3d.mul(math3d.normalize(xdir), dt))
+		end
+		if move_state.W then
+			newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), dt))
+		elseif move_state.S then
+			newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), -dt))
+		end
+		-- if key == "F" and press == 1 then
+		-- 	world:pub {"LookAtTarget", nil, true}
+		-- end
+		if newpos then
+			iom.set_position(ce, newpos)
+			world:pub {"camera", "move"}
+		end
 	end
 end
 
@@ -216,6 +223,13 @@ function camera_sys:handle_input()
 		if key == "LeftShift" then
 			shift_down = (press == 1 or press == 2)
 		end
-		on_key(key, press)
+		if key == "A" or key == "D" or key == "W" or key == "S" then
+			if press == 1 then
+				move_state[key] = true
+			elseif press == 0 then
+				move_state[key] = false
+			end
+		end
 	end
+	move_camera()
 end
