@@ -69,6 +69,7 @@ int luaopen_textureman_client(lua_State *L);
 int luaopen_textureman_server(lua_State *L);
 int luaopen_vfs(lua_State* L);
 int luaopen_window(lua_State* L);
+int luaopen_window_ios(lua_State* L);
 int luaopen_zip(lua_State* L);
 int luaopen_cell_core(lua_State *L);
 
@@ -130,9 +131,10 @@ void ant_loadmodules(lua_State* L) {
         { "imgui.backend", luaopen_imgui_backend },
         { "imgui.internal", luaopen_imgui_internal },
         { "imgui.widgets", luaopen_imgui_widgets },
-		{ "cell.core", luaopen_cell_core },
+        { "cell.core", luaopen_cell_core },
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
+        { "window.ios", luaopen_window_ios },
 #endif
 #if BX_PLATFORM_ANDROID
         { "android", luaopen_android },

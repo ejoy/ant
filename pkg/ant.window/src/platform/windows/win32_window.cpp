@@ -549,9 +549,9 @@ static RECT createWindowRect(const char *size) {
 	return rect;
 }
 
-void* window_init(lua_State* L, const char *size) {
+bool window_init(lua_State* L, const char *size) {
 	if (FAILED(OleInitialize(NULL))) {
-		return nullptr;
+		return false;
 	}
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
@@ -574,14 +574,14 @@ void* window_init(lua_State* L, const char *size) {
 		GetModuleHandleW(0),
 		L);
 	if (wnd == NULL) {
-		return nullptr;
+		return false;
 	}
 	G.hWnd = wnd;
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 	G.DropManager.Register(wnd, L);
 	UpdateKeyboardCodePage();
-	return (void*)wnd;
+	return true;
 }
 
 void window_close() {

@@ -240,7 +240,7 @@ CALayer* getLayer(NSWindow* nsWindow) {
 	return metalLayer;
 }
 
-void* window_init(lua_State* L, const char *size) {
+bool window_init(lua_State* L, const char *size) {
 	NSScreen *screen = [NSScreen mainScreen];
 	NSRect visibleFrame = screen.visibleFrame;
 	int w = (int)(visibleFrame.size.width * 0.7f);
@@ -281,7 +281,7 @@ void* window_init(lua_State* L, const char *size) {
 
     float scale = [win backingScaleFactor];
     window_message_init(L, win, getLayer(win), 0, w * scale, h * scale);
-    return (void*)win;
+    return true;
 }
 
 static NSEvent* peek_event() {

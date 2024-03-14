@@ -7,25 +7,29 @@ static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 	return { str, sz };
 }
 
+#if !defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
 static int MessageFetch(lua_State* L) {
 	lua_seti(L, 1, luaL_len(L, 1)+1);
 	lua_settop(L, 1);
 	return 0;
 }
+#endif
 
 static int init(lua_State *L) {
 	lua_State* messageL = lua_newthread(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 	lua_pushvalue(L, 1);
 	lua_xmove(L, messageL, 1);
+
+#if !defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
 	window_message_set_fetch_func(MessageFetch);
+#endif
 
 	const char* size = lua_tostring(L, 2);
-	void* window = window_init(messageL, size);
-	if (!window) {
+	bool ok = window_init(messageL, size);
+	if (!ok) {
 		return luaL_error(L, "window init failed");
 	}
-	lua_pushlightuserdata(L, window);
 	return 1;
 }
 

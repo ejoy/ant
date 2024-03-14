@@ -6,10 +6,7 @@ local audio    = import_package "ant.audio"
 local new_world = import_package "ant.world".new_world
 local rhwi     = import_package "ant.hwi"
 
-local window
-if platform.os ~= "ios" then
-    window = require "window"
-end
+local window = require "window"
 
 rhwi.init_bgfx()
 
@@ -75,11 +72,9 @@ local function render(init, args, initialized)
     initialized = nil
 
     while true do
-        if platform.os ~= "ios" then
-            window.peek_message()
-            if #WindowQueue > 0 then
-                ltask.wakeup(WindowToken)
-            end
+        window.peek_message()
+        if #WindowQueue > 0 then
+            ltask.wakeup(WindowToken)
         end
         world:dispatch_message { type = "update" }
         if WindowQuit then
@@ -128,20 +123,18 @@ function WindowEvent.suspend(m)
     if m.what == "will_suspend" then
         bgfx.pause()
         PAUSE = true
-        if platform.os ~= "ios" then
-            ltask.fork(function ()
-                local thread = require "bee.thread"
-                while PAUSE do
-                    window.peek_message()
-                    if #WindowQueue > 0 then
-                        ltask.wakeup(WindowToken)
-                        ltask.sleep(0)
-                    else
-                        thread.sleep(0.01)
-                    end
+        ltask.fork(function ()
+            local thread = require "bee.thread"
+            while PAUSE do
+                window.peek_message()
+                if #WindowQueue > 0 then
+                    ltask.wakeup(WindowToken)
+                    ltask.sleep(0)
+                else
+                    thread.sleep(0.01)
                 end
-            end)
-        end
+            end
+        end)
     elseif m.what == "did_resume" then
         bgfx.continue()
         PAUSE = nil
@@ -177,9 +170,7 @@ local m = {}
 
 function m.init(args)
     initargs = args
-    if platform.os ~= "ios" then
-        window.init(WindowQueue, initargs.window_size)
-    end
+    window.init(WindowQueue, initargs.window_size)
 end
 
 function m.reboot(args)

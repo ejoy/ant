@@ -1,4 +1,5 @@
 #include "../../window.h"
+#include "luabind.h"
 
 #import <UIKit/UIKit.h>
 

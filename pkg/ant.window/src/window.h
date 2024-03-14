@@ -11,7 +11,7 @@
 
 struct lua_State;
 
-void* window_init(lua_State* L, const char* size);
+bool window_init(lua_State* L, const char* size);
 void window_close();
 bool window_peek_message();
 void window_set_cursor(int cursor);

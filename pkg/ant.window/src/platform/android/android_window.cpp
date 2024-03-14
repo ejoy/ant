@@ -17,10 +17,10 @@ enum class AndroidPath {
     ExternalDataPath,
 };
 
-void* window_init(lua_State* L, const char *size) {
+bool window_init(lua_State* L, const char *size) {
     (void)size;
     g_L = L;
-    return nullptr;
+    return true;
 }
 
 void window_close() {
