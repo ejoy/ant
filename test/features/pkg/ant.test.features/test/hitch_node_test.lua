@@ -83,10 +83,9 @@ function hn_test_sys:data_changed()
             iom.set_position(e, math3d.tovalue(math3d.add(math3d.vector(0, 3, 0), e.scene.t)))
         elseif key == "X" and press == 0 then
             h1_enable = not h1_enable
-            ig.enable(H1_GROUPID, "view_visible", h1_enable)
-            local go = ig.obj "view_visible"
+            local go = irender.group_obj "view_visible"
             go:enable(H1_GROUPID, h1_enable)
-            irender.group_flush(go)
+            go:filter_flush()
         elseif key == "C" and press == 0 then
             h3 = create_hitch(HITCH_REF_GROUPID, {t = {0, 0, 3}})
         elseif key == "Y" and press == 0 then

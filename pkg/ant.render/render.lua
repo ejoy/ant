@@ -16,6 +16,7 @@ local hwi			= import_package "ant.hwi"
 local sampler		= import_package "ant.render.core".sampler
 local ED 			= world:clibs "entity.drawer"
 
+local ig			= ecs.require "ant.group|group"
 local ivm			= ecs.require "visible_mask"
 local queuemgr		= ecs.require "queue_mgr"
 
@@ -393,12 +394,20 @@ function irender.create_write_state(os)
     end
 end
 
-function irender.group_flush(go)
+local function group_filter_flush(go)
 	go:flush()
     go:filter("render_object_visible", "render_object")
     go:filter("hitch_visible", "hitch")
-
 	--go:filter("efk_visible", "efk")
+end
+
+irender.group_flush = group_filter_flush
+
+function irender.group_obj(tag)
+	local go = ig.obj(tag)
+	assert(not go.filter_flush)
+	go.filter_flush = group_filter_flush
+	return go
 end
 
 local RA_FMT<const> = "HBB"
