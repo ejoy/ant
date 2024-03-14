@@ -240,7 +240,7 @@ CALayer* getLayer(NSWindow* nsWindow) {
 	return metalLayer;
 }
 
-void* peekwindow_init(lua_State* L, const char *size) {
+void* window_init(lua_State* L, const char *size) {
 	NSScreen *screen = [NSScreen mainScreen];
 	NSRect visibleFrame = screen.visibleFrame;
 	int w = (int)(visibleFrame.size.width * 0.7f);
@@ -378,10 +378,10 @@ static bool dispatch_event(lua_State* L, NSEvent* event) {
     return true;
 }
 
-void peekwindow_close() {
+void window_close() {
 }
 
-bool peekwindow_peek_message() {
+bool window_peek_message() {
     if ([g_dg applicationHasTerminated]) {
         return false;
     }
@@ -391,10 +391,13 @@ bool peekwindow_peek_message() {
     return true;
 }
 
-void peekwindow_set_cursor(int cursor) {
+void window_set_cursor(int cursor) {
     //TODO
 }
 
-void peekwindow_set_title(bee::zstring_view title) {
+void window_set_title(bee::zstring_view title) {
     //TODO
+}
+
+void window_maxfps(float fps) {
 }

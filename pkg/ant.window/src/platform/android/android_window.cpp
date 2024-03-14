@@ -17,16 +17,16 @@ enum class AndroidPath {
     ExternalDataPath,
 };
 
-void* peekwindow_init(lua_State* L, const char *size) {
+void* window_init(lua_State* L, const char *size) {
     (void)size;
     g_L = L;
     return nullptr;
 }
 
-void peekwindow_close() {
+void window_close() {
 }
 
-bool peekwindow_peek_message() {
+bool window_peek_message() {
     for (;;) {
         if (g_app->destroyRequested) {
             return false;

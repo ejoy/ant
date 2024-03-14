@@ -1,5 +1,5 @@
 #include <lua.hpp>
-#include "../window.h"
+#include "window.h"
 
 static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 	size_t sz = 0;
@@ -13,7 +13,7 @@ static int init(lua_State *L) {
 	lua_pushvalue(L, 1);
 	lua_xmove(L, messageL, 1);
 	const char* size = lua_tostring(L, 2);
-	void* window = peekwindow_init(messageL, size);
+	void* window = window_init(messageL, size);
 	if (!window) {
 		return luaL_error(L, "window init failed");
 	}
@@ -22,24 +22,30 @@ static int init(lua_State *L) {
 }
 
 static int close(lua_State *L) {
-	peekwindow_close();
+	window_close();
 	return 0;
 }
 
 static int peek_message(lua_State *L) {
-	lua_pushboolean(L, peekwindow_peek_message());
+	lua_pushboolean(L, window_peek_message());
 	return 1;
 }
 
 static int set_cursor(lua_State* L) {
 	lua_Integer cursor = luaL_checkinteger(L, 1);
-	peekwindow_set_cursor((int)cursor);
+	window_set_cursor((int)cursor);
 	return 0;
 }
 
 static int set_title(lua_State* L) {
 	auto title = lua_checkstrview(L, 1);
-	peekwindow_set_title(title);
+	window_set_title(title);
+	return 0;
+}
+
+static int maxfps(lua_State *L) {
+	float fps = (float)luaL_checknumber(L, 1);
+	window_maxfps(fps);
 	return 0;
 }
 
@@ -52,6 +58,7 @@ luaopen_window(lua_State *L) {
 		{ "peek_message", peek_message },
 		{ "set_cursor", set_cursor },
 		{ "set_title", set_title },
+		{ "maxfps", maxfps },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

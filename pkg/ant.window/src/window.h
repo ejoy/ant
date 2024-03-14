@@ -11,21 +11,11 @@
 
 struct lua_State;
 
-struct ant_window_callback {
-	void (*update)(struct ant_window_callback* cb);
-	struct lua_State* messageL;
-	struct lua_State* updateL;
-};
-
-void* peekwindow_init(lua_State* L, const char* size);
-void peekwindow_close();
-bool peekwindow_peek_message();
-void peekwindow_set_cursor(int cursor);
-void peekwindow_set_title(bee::zstring_view title);
-
-void loopwindow_init(struct ant_window_callback* cb);
-void loopwindow_mainloop();
-
+void* window_init(lua_State* L, const char* size);
+void window_close();
+bool window_peek_message();
+void window_set_cursor(int cursor);
+void window_set_title(bee::zstring_view title);
 void window_maxfps(float fps);
 
 void window_message_init(lua_State* L, void* window, void* nwh, void* context, int w, int h);

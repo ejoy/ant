@@ -549,7 +549,7 @@ static RECT createWindowRect(const char *size) {
 	return rect;
 }
 
-void* peekwindow_init(lua_State* L, const char *size) {
+void* window_init(lua_State* L, const char *size) {
 	if (FAILED(OleInitialize(NULL))) {
 		return nullptr;
 	}
@@ -584,12 +584,12 @@ void* peekwindow_init(lua_State* L, const char *size) {
 	return (void*)wnd;
 }
 
-void peekwindow_close() {
+void window_close() {
 	G.DropManager.Revoke();
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
 
-bool peekwindow_peek_message() {
+bool window_peek_message() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -604,10 +604,13 @@ bool peekwindow_peek_message() {
 	}
 }
 
-void peekwindow_set_cursor(int cursor) {
+void window_set_cursor(int cursor) {
 	G.MouseCursor = (ImGuiMouseCursor)cursor;
 }
 
-void peekwindow_set_title(bee::zstring_view title) {
+void window_set_title(bee::zstring_view title) {
     ::SetWindowTextW(G.hWnd, bee::win::u2w(title).c_str());
+}
+
+void window_maxfps(float fps) {
 }

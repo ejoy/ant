@@ -11,7 +11,6 @@ lm:lua_source "window" {
     windows = {
         sources = {
             "src/platform/windows/*.cpp",
-            "src/peek/*.cpp",
         },
         links = {
             "user32",
@@ -21,13 +20,12 @@ lm:lua_source "window" {
     macos = {
         sources = {
             "src/platform/osx/*.mm",
-            "src/peek/*.cpp",
         },
     },
     ios = {
         sources = {
             "src/platform/ios/*.mm",
-            "src/loop/*.cpp",
+            "src/platform/ios/*.cpp",
         },
     },
     android = {

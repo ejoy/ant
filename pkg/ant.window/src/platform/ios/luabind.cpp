@@ -1,7 +1,14 @@
 #include <lua.hpp>
 #include <stdio.h>
-#include "../window.h"
+#include "../../window.h"
 
+struct ant_window_callback {
+	void (*update)(struct ant_window_callback* cb);
+	struct lua_State* messageL;
+	struct lua_State* updateL;
+};
+void loopwindow_init(struct ant_window_callback* cb);
+void loopwindow_mainloop();
 
 static void
 update_callback(struct ant_window_callback* cb) {
