@@ -94,13 +94,14 @@ function LightView:set_eid(eid, base_panel)
         return
     end
     self.eid = eid
-    local subproperty = {}
-    subproperty[#subproperty + 1] = self.subproperty.color
-    subproperty[#subproperty + 1] = self.subproperty.intensity
-    subproperty[#subproperty + 1] = self.subproperty.motion_type
-    subproperty[#subproperty + 1] = self.subproperty.make_shadow
-    subproperty[#subproperty + 1] = self.subproperty.bake
-    subproperty[#subproperty + 1] = self.subproperty.angular_radius
+    local subproperty = {
+        self.subproperty.color,
+        self.subproperty.intensity,
+        self.subproperty.motion_type,
+        self.subproperty.make_shadow,
+        self.subproperty.bake,
+        self.subproperty.angular_radius
+    }
     if e.light.type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
         if e.light.type == "spot" then

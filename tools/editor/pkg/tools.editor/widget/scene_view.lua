@@ -35,30 +35,29 @@ local function can_delete(eid)
     if is_scene_node(eid) then
         return false
     end
-    local can_delete = true
+    local can = true
     if as_main_camera_mode() then
         local e <close> = world:entity(eid, "camera?in animation?in")
         if e.camera or e.animation then
-            can_delete = false
+            can = false
         else
             local children = hierarchy:get_node(eid).children
             if #children > 0 then
                 --TODO: for camera
                 local ce <close> = world:entity(children[1].eid, "camera?in")
                 if ce.camera then
-                    can_delete = false
+                    can = false
                 end
             end
         end
     end
-    return can_delete
+    return can
 end
 
 local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then
         return
     end
-    
     if ImGui.BeginPopupContextItemEx(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         local tpl = hierarchy:get_node_info(eid)
@@ -97,10 +96,10 @@ local function node_context_menu(eid)
             if ImGui.MenuItem(faicons.ICON_FA_ARROWS_DOWN_TO_LINE.." MoveBottom") then
                 world:pub { "HierarchyEvent", "movebottom", eid }
             end
-        end
-        ImGui.Separator()
-        if ImGui.MenuItem("NoParent") then
-            world:pub { "EntityEvent", "parent", eid }
+            ImGui.Separator()
+            if ImGui.MenuItem("NoParent") then
+                world:pub { "EntityEvent", "parent", eid }
+            end
         end
         ImGui.EndPopup()
     end
@@ -143,10 +142,6 @@ local function get_icon_by_object_type(node)
 end
 local imodifier 		= ecs.require "ant.modifier|modifier"
 local function show_scene_node(node)
-    -- local e <close> = world:entity(node.eid, "animation?in")
-    -- if e.animation then
-    --     return
-    -- end
     ImGui.TableNextRow();
     ImGui.TableNextColumn();
     local function select_or_move(nd)
@@ -231,14 +226,6 @@ local function show_scene_node(node)
         end
         ImGui.TreePop()
     end
-    --key == "DELETE"
-    -- if ImGui.IsKeyPressed('a') or ImGui.IsKeyPressed('A') then
-    --     print("press a/A")
-    -- end
-    -- if ImGui.IsKeyPressed(10) then
-    --     print("press delete")
-    --     world:pub { "EntityState", "delete", eid }
-    -- end
 end
 
 local light_types = {
@@ -261,6 +248,13 @@ function m.get_title()
 end
 
 local prefab_mgr  = ecs.require "prefab_manager"
+function m.handle_input(key, press, state)
+    if key == "Delete" and press == 1 then
+        if gizmo.target_eid and can_delete(gizmo.target_eid) then
+            world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
+        end
+    end
+end
 
 function m.show()
     local viewport = ImGui.GetMainViewport()
