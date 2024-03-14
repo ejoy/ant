@@ -57,6 +57,10 @@ local function finish_output(prog)
 end
 
 local function update()
+    if #progs == 0 then
+        ltask.wait(UpdateToken)
+        return
+    end
     local ok = subprocess.select(progs, 100)
     if not ok then
         return
@@ -85,11 +89,7 @@ end
 
 ltask.fork(function()
     while true do
-        if #progs == 0 then
-            ltask.wait(UpdateToken)
-        else
-            update()
-        end
+        update()
     end
 end)
 
