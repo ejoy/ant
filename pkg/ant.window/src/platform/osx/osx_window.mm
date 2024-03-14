@@ -179,7 +179,7 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 }
 - (id)init;
 - (void)getMouseX:(int32_t*)outx getMouseY:(int32_t*)outy;
-- (void)windowCreated:(NSWindow*)window initCallback:(lua_State*)L ;
+- (void)windowCreated:(NSWindow*)window lua:(lua_State*)L ;
 - (void)windowWillClose:(NSNotification*)notification;
 - (BOOL)windowShouldClose:(NSWindow*)window;
 @end
@@ -203,7 +203,7 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 	*outx = scale * clamp(x, 0, (int32_t)adjustFrame.size.width);
 	*outy = scale * clamp(y, 0, (int32_t)adjustFrame.size.height);
 }
-- (void)windowCreated:(NSWindow*)window initCallback:(lua_State*)L {
+- (void)windowCreated:(NSWindow*)window lua:(lua_State*)L {
 	assert(window);
     m_window = window;
     m_L = L;
@@ -269,7 +269,7 @@ void* peekwindow_init(lua_State* L, const char *size) {
     [win makeMainWindow];
 
     g_wd = [WindowDelegate new];
-    [g_wd windowCreated:win initCallback:l];
+    [g_wd windowCreated:win lua:L];
 
     [NSApplication sharedApplication];
     g_dg = [AppDelegate new];
