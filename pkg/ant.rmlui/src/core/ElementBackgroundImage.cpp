@@ -40,13 +40,6 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	return uv;
 }
 
-static void UpdateUV(Rect& uv, const TextureData& texture) {
-	uv.origin.x = uv.origin.x + texture.atlas.ux;
-	uv.origin.x = uv.origin.x + texture.atlas.uy;
-	uv.size.w = uv.size.w * texture.atlas.uw;
-	uv.size.h = uv.size.h * texture.atlas.uh;
-}
-
 static float CalcLength(float percent, Element* e) {
 	return percent * e->GetBounds().size.w * 0.01f;
 }
@@ -90,7 +83,6 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	if (!texture) {
 		return false;
 	}
-	bool isAtlas = Texture::GetType(texture.handle) == Texture::TextureType::atlas;
 
 	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin).GetEnum<Style::BoxType>();
 	Rect surface = Rect { {0, 0}, bounds.size };
@@ -187,8 +179,12 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	}
 
 	Rect uv = CalcUV(surface, background);
-	if (isAtlas) {
-		UpdateUV(uv, texture);	
+	auto atlasData = std::get_if<TextureData::Atlas>(&texture.extra);
+	if (atlasData) {
+		uv.origin.x = uv.origin.x + atlasData->ux;
+		uv.origin.x = uv.origin.x + atlasData->uy;
+		uv.size.w = uv.size.w * atlasData->uw;
+		uv.size.h = uv.size.h * atlasData->uh;
 	}
 
 	auto backgroundRepeat = element->GetComputedProperty(PropertyId::BackgroundRepeat).GetEnum<Style::BackgroundRepeat>();
@@ -208,17 +204,17 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	Material* material = GetRender()->CreateTextureMaterial(texture.handle, GetSamplerFlag(backgroundRepeat));
 	geometry.SetMaterial(material);
 
-	if (Texture::GetType(texture.handle) == Texture::TextureType::lattice) {
+	if (auto latticeData = std::get_if<TextureData::Lattice>(&texture.extra)) {
 		if (origin == Style::BoxType::ContentBox && edge.padding.size() != 4) {
 			return false;
 		}
 		else {
-			float x1 = texture.lattice.x1;
-			float x2 = texture.lattice.x2;
-			float y1 = texture.lattice.y1;
-			float y2 = texture.lattice.y2;
-			float u  = texture.lattice.u;
-			float v  = texture.lattice.v;	
+			float x1 = latticeData->x1;
+			float x2 = latticeData->x2;
+			float y1 = latticeData->y1;
+			float y2 = latticeData->y2;
+			float u  = latticeData->u;
+			float v  = latticeData->v;	
 			std::vector<Rect> surface_array(9);
 			std::vector<Rect> uv_array(9);
 			GetRectArray(x1, y1, x2, y2, surface, surface_array);
@@ -252,10 +248,10 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 				if (!background.IsEmpty()) {
 					geometry.AddRectFilled(background, color);
 					geometry.UpdateUV(4, surface, uv);
- 					if (isAtlas) {
-						background.origin = background.origin + Point {texture.atlas.fx * background.size.w, texture.atlas.fy* background.size.h};
-						background.size.w = texture.atlas.fw * background.size.w;
-						background.size.h = texture.atlas.fh * background.size.h;
+ 					if (atlasData) {
+						background.origin = background.origin + Point {atlasData->fx * background.size.w, atlasData->fy* background.size.h};
+						background.size.w = atlasData->fw * background.size.w;
+						background.size.h = atlasData->fh * background.size.h;
 						geometry.UpdateRectFilled(background, 0, 0, color);
 					}
 				}

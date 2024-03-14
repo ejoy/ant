@@ -57,10 +57,7 @@ struct TextureData {
 
 	TextureId handle = UINT16_MAX;
 	Size      dimensions = {0, 0};
-	union {
-		Lattice lattice;
-		Atlas atlas;
-	};
+	std::variant<std::monostate, Lattice, Atlas> extra;
 
 	explicit operator bool () const {
 		return handle != UINT16_MAX;
