@@ -194,15 +194,19 @@ static void push_message_args(lua_State*L, K&& k, V&& v, Args&&... args) {
 	}
 }
 
+static lua_CFunction MessageFetch = NULL;
+void window_message_set_fetch_func(lua_CFunction func) {
+	MessageFetch = func;
+}
+
 template <typename... Args>
 static void push_message(lua_State* L, Args&&... args) {
 	static_assert(sizeof...(args) % 2 == 0);
-	lua_settop(L, 1);
 	lua_createtable(L, 0, 1 + sizeof...(args) / 2);
 	lua_pushinteger(L, get_timestamp());
 	lua_setfield(L, -2, "timestamp");
 	push_message_args(L, std::forward<Args>(args)...);
-	lua_seti(L, 1, luaL_len(L, 1)+1);
+	MessageFetch(L);
 }
 
 void window_message_init(lua_State* L, void* window, void* nwh, void* context, int w, int h) {

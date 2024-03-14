@@ -7,11 +7,19 @@ static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 	return { str, sz };
 }
 
+static int MessageFetch(lua_State* L) {
+	lua_seti(L, 1, luaL_len(L, 1)+1);
+	lua_settop(L, 1);
+	return 0;
+}
+
 static int init(lua_State *L) {
 	lua_State* messageL = lua_newthread(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 	lua_pushvalue(L, 1);
 	lua_xmove(L, messageL, 1);
+	window_message_set_fetch_func(MessageFetch);
+
 	const char* size = lua_tostring(L, 2);
 	void* window = window_init(messageL, size);
 	if (!window) {
