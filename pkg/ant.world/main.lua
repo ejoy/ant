@@ -1,8 +1,8 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
 local aio = import_package "ant.io"
+local btime = require "bee.time"
 local inputmgr = require "inputmgr"
-local ltask = require "ltask"
 local bgfx = require "bgfx"
 local policy = require "policy"
 local event = require "event"
@@ -374,17 +374,13 @@ end
 
 local function cpustat_update(w, funcs, symbols)
     local ecs_world = w._ecs_world
-    local get_time = function ()
-        local _, t = ltask.now()
-        return t / 100
-    end
     return function()
         local stat = w._cpu_stat
         for i = 1, #funcs do
             local f = funcs[i]
-            local now = get_time()
+            local now = btime.monotonic()
             f(ecs_world)
-            local time = get_time() - now
+            local time = btime.monotonic() - now
             local name = symbols[i]
             if stat[name] then
                 stat[name] = stat[name] + time
@@ -420,7 +416,7 @@ local function cpustat_update_then_print(w, funcs, symbols)
             for i = 1, MaxText do
                 local name = stat[i]
                 local v = stat[name]
-                printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame * 1000)
+                printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame)
             end
             w._cpu_stat = {}
         end
