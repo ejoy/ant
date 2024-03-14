@@ -572,8 +572,8 @@ local function cook_prefab(prefab_filename)
 end
 
 function m:compile_current_glb()
-    --
-    aio.readall(self.prefab_filename)
+    local vpath = (lfs.path('/') / lfs.relative(self.glb_filename, gd.project_root)):string()
+    aio.readall(vpath)
 end
 
 function m:open(filename, prefab_name, patch_tpl)
@@ -589,7 +589,6 @@ function m:open(filename, prefab_name, patch_tpl)
         self.glb_filename = path_list[1]
         self.prefab_name = path_list[2]
         gd.virtual_glb_path = virtual_path
-        -- gd.current_compile_path = cook_prefab(virtual_path .. "|".. self.prefab_name)
         virtual_path = virtual_path .. "/" .. self.prefab_name
         self.prefab_template = serialize.parse(virtual_path, aio.readall(virtual_path))
 

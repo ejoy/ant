@@ -173,7 +173,7 @@ local function show_scene_node(node)
     end
     local function lock_visible(nd)
         local eid = nd.eid
-        ImGui.TableNextColumn();
+        ImGui.TableNextColumn()
         ImGui.PushID(tostring(eid))
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
@@ -182,7 +182,7 @@ local function show_scene_node(node)
             world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         ImGui.PopID()
-        ImGui.TableNextColumn();
+        ImGui.TableNextColumn()
         ImGui.PushID(tostring(eid))
         local current_visible = hierarchy:is_visible(eid)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
