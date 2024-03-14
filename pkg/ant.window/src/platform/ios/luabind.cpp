@@ -32,7 +32,7 @@ linit(lua_State *L) {
 	lua_setiuservalue(L, -2, 1);
 	cb->updateL = lua_newthread(L);
 	lua_setiuservalue(L, -2, 2);
-	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
+	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CALLBACK");
 
 	lua_pushcfunction(cb->updateL, ltraceback);
 	lua_pushvalue(L, 2);
