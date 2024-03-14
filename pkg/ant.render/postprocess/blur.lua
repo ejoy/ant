@@ -24,6 +24,7 @@ local BLUR_PARAM = math3d.ref(math3d.vector(0, 0, 0, 0))
 
 local MIP_COUNT<const> = 4
 
+local pyramid_eid
 local function register_queues()
     for i=1, MIP_COUNT do
         queuemgr.register_queue(BLUR_DOWNSAMPLE_NAME..i)
@@ -35,7 +36,7 @@ local function register_queues()
         upsample        = ips.init_sample(MIP_COUNT, "blur_upsample", BLUR_US_VIEWID),
         sample_params   = BLUR_PARAM,
     }
-    ips.create(pyramid_sample, iviewport.viewrect)
+    pyramid_eid = ips.create(pyramid_sample, iviewport.viewrect)
 end
 
 --[[ local function build_gaussian_blur()
@@ -56,6 +57,14 @@ end ]]
 
 function blur_sys:init()
     register_queues()
+end
+
+local vr_mb = world:sub{"view_rect_changed", "main_queue"}
+function blur_sys:blur_scene()
+    for _, _, vr in vr_mb:unpack() do
+        local e = world:entity(pyramid_eid, "pyramid_sample:in")
+        ips.update_viewrect(e, vr)
+    end
 end
 
 --[[ function iblur.do_gaussian_blur(be)

@@ -2,13 +2,6 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local setting   = import_package "ant.settings"
-local ps_sys = ecs.system "pyramid_sample_system"
-
-if (not setting:get "graphic/postprocess/blur/enable") and (not setting:get "graphic/postprocess/bloom/enable") then
-    return
-end
-
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 local irender   = ecs.require "ant.render|render"
@@ -153,22 +146,15 @@ local function last_queue_viewrect(ps)
     end
 end
 
-local vr_mb = world:sub{"view_rect_changed", "main_queue"}
-function ps_sys:data_changed()
-    for _,_, vp in vr_mb:unpack() do
-        for e in w:select "pyramid_sample:in" do
-            local ps = e.pyramid_sample
-            local lq = last_queue_viewrect(ps)
-            if lq then
-                local vr = lq.render_target.view_rect
-                if vp.w ~= vr.w or vp.h ~= vr.h then
-                    remove_sample_queues(ps)
-                    create_sample_queues(e, vp)
-                end
-            end
+function ips.update_viewrect(e, vp)
+    local ps = e.pyramid_sample
+    local lq = last_queue_viewrect(ps)
+    if lq then
+        local vr = lq.render_target.view_rect
+        if vp.w ~= vr.w or vp.h ~= vr.h then
+            remove_sample_queues(ps)
+            create_sample_queues(e, vp)
         end
-
-        break   --do once
     end
 end
 
