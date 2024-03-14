@@ -49,7 +49,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         msg.id = (uintptr_t)touch;
         msg.x = pt.x;
         msg.y = pt.y;
-        ant::window::input_message(g_cb, msg);
+        ant::window::input_message(g_cb->messageL, msg);
     }
 }
 
@@ -91,7 +91,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         w = h;
         h = tmp;
     }
-    window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
+    window_message_init(g_cb->messageL, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
 
     g_gesture = init_gesture();
     return self;
@@ -99,7 +99,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 - (void)layoutSubviews {
     uint32_t frameW = (uint32_t)(self.contentScaleFactor * self.frame.size.width);
     uint32_t frameH = (uint32_t)(self.contentScaleFactor * self.frame.size.height);
-    window_message_size(g_cb, frameW, frameH);
+    window_message_size(g_cb->messageL, frameW, frameH);
 }
 - (void)start {
     if (nil == self.m_displayLink) {
@@ -157,34 +157,34 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 }
 - (void) applicationWillTerminate:(UIApplication *)application {
     writelog("\n***applicationWillTerminate***\n");
-    window_message_exit(g_cb);
+    window_message_exit(g_cb->messageL);
     g_cb->update(g_cb);
     [self.m_view stop];
 }
 - (void)applicationWillResignActive:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::will_suspend;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
     [self.m_view stop];
 }
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::did_suspend;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
 }
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::will_resume;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [self.m_view start];
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::did_resume;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
 }
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {

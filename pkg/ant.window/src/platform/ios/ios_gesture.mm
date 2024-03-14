@@ -52,7 +52,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     struct ant::window::msg_gesture_tap msg;
     msg.x = pt.x;
     msg.y = pt.y;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
 }
 -(void)handlePinch:(UIPinchGestureRecognizer *)gesture {
     auto state = getState(gesture.state);
@@ -65,7 +65,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     msg.x = pt.x;
     msg.y = pt.y;
     msg.velocity = gesture.velocity;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
 }
 -(void)handleLongPress:(UILongPressGestureRecognizer *)gesture {
     auto state = getState(gesture.state);
@@ -77,7 +77,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     msg.state = state;
     msg.x = pt.x;
     msg.y = pt.y;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
 }
 -(void)handlePan:(UIPanGestureRecognizer *)gesture {
     auto state = getState(gesture.state);
@@ -94,7 +94,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     velocity.y *= global_window.contentScaleFactor;
     msg.velocity_x = velocity.x;
     msg.velocity_y = velocity.y;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
 }
 -(void)handleSwipe:(UISwipeGestureRecognizer *)gesture {
     auto state = getState(gesture.state);
@@ -107,7 +107,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     msg.x = pt.x;
     msg.y = pt.y;
     msg.direction = (ant::window::swipe_direction)gesture.direction;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
 }
 @end
 
