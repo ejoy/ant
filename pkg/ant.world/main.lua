@@ -564,24 +564,30 @@ local function system_changed(w)
         local func = w:pipeline_func("_exit", slove_system(exitsystems))
         func()
     end
-    if has_initsystem then
-        for name, s in pairs(initsystems) do
-            updatesystems[name] = s
-        end
-        initsystems["ant.world|entity_init_system"] = w._systems["ant.world|entity_init_system"]
-        local step = slove_system(initsystems)
-        w:pipeline_func("_init", step)()
+    if not has_initsystem then
+        log.info("System refreshed.")
+        return
     end
+    for name, s in pairs(initsystems) do
+        updatesystems[name] = s
+    end
+    initsystems["ant.world|entity_init_system"] = w._systems["ant.world|entity_init_system"]
+    local func = w:pipeline_func("_init", slove_system(initsystems))
     log.info("System refreshed.")
+    return func
 end
 
 function world:pipeline_init()
-    system_changed(self)
+    local w = self
+    local changed = system_changed(w)
+    if changed then
+        changed()
+    end
 end
 
 function world:pipeline_update()
     local w = self
-    system_changed(w)
+    w._system_changed_func = system_changed(w)
     w._pipeline_update()
 end
 
@@ -591,7 +597,10 @@ function world:pipeline_exit()
     w._exitsystems = w._systems
     w._initsystems = {}
     w._systems = {}
-    system_changed(self)
+    local changed = system_changed(w)
+    if changed then
+        changed()
+    end
 end
 
 function world:clibs(name)
