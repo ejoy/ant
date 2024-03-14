@@ -18,7 +18,7 @@ static int init(lua_State *L) {
 	if (!ok) {
 		return luaL_error(L, "window init failed");
 	}
-	return 1;
+	return 0;
 }
 
 static int close(lua_State *L) {
