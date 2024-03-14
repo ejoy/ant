@@ -12,7 +12,7 @@
 
 static_assert(sizeof(struct ant::window::msg) < PIPE_BUF);
 
-extern struct ant_window_callback* g_cb;
+extern lua_State* g_L;
 
 void android_gesture::queue_push(struct ant::window::msg const& msg) {
     int r;
@@ -35,7 +35,7 @@ void android_gesture::queue_process() {
         if (!queue_pop(msg)) {
             break;
         }
-        ant::window::input_message(g_cb, msg);
+        ant::window::input_message(g_L, msg);
     }
 }
 

@@ -8,17 +8,12 @@ static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 }
 
 static int init(lua_State *L) {
-	struct ant_window_callback* cb = (struct ant_window_callback*)lua_newuserdatauv(L, sizeof(*cb), 1);
-	cb->messageL = lua_newthread(L);
-	lua_setiuservalue(L, -2, 1);
+	lua_State* messageL = lua_newthread(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
-
 	lua_pushvalue(L, 1);
-	lua_xmove(L, cb->messageL, 1);
-
-	const char * size = lua_tostring(L, 2);
-
-	void* window = peekwindow_init(cb, size);
+	lua_xmove(L, messageL, 1);
+	const char* size = lua_tostring(L, 2);
+	void* window = peekwindow_init(messageL, size);
 	if (!window) {
 		return luaL_error(L, "window init failed");
 	}
