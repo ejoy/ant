@@ -155,13 +155,9 @@ local function update_visible(node, visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
     end
-    local rv
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
         local e <close> = world:entity(eid, "visible?out")
-        if not rv then
-            rv = e.visible
-        end
         irender.set_visible(e, visible)
     end
 
@@ -170,11 +166,7 @@ local function update_visible(node, visible)
 
     local info = assert(hierarchy:get_node_info(node.eid), "Invalid eid")
     info.template.data.visible = visible
-
-    if nil ~= rv and rv ~= visible then
-        hierarchy:set_visible(node, rv)
-    end
-    return rv
+    hierarchy:set_visible(node, visible)
 end
 
 local event_keyboard        = world:sub {"keyboard"}
