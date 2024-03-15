@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:required_version "1.7"
+lm:required_version "1.8"
 --lm.luaversion = "lua55"
 
 local plat = (function ()

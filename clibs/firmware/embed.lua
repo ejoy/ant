@@ -20,7 +20,7 @@ writeline(f, [[#pragma once]])
 writeline(f)
 local data = readfile(input)
 if #data >= 16380 then
-    writeline(f, ([[const char g%sData[] = {]]):format(name))
+    writeline(f, ([[const char embed_%s[] = {]]):format(name))
     local n = #data - #data % 16
     for i = 1, n, 16 do
         local b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b0a, b0b, b0c, b0d, b0e, b0f = string.byte(data, i, i + 15)
@@ -33,7 +33,7 @@ if #data >= 16380 then
     writeline(f)
     writeline(f, [[};]])
 else
-    f:write(([[const char g%sData[] = R"firmware(]]):format(name))
+    f:write(([[const char embed_%s[] = R"firmware(]]):format(name))
     f:write(data)
     f:write([[)firmware";]])
     f:write "\r\n"
