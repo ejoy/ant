@@ -596,7 +596,17 @@ end
 function m.get_title()
     return "Animation"
 end
-
+local function play_or_pause()
+    if not edit_timeline then
+        if anim_state.is_playing then
+            iani.pause(anim_eid, true, current_anim.name)
+        else
+            iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1]})
+        end
+    else
+        play_timeline()
+    end
+end
 function m.show()
     for _, action, path in event_keyframe:unpack() do
         if action == "effect" then
@@ -717,15 +727,7 @@ function m.show()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         local imagesize = icon.texinfo.width * icons.scale
         if ImGui.ImageButton("##play", assetmgr.textures[icon.id], imagesize, imagesize) then
-            if not edit_timeline then
-                if anim_state.is_playing then
-                    iani.pause(anim_eid, true, current_anim.name)
-                else
-                    iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1]})
-                end
-            else
-                play_timeline()
-            end
+            play_or_pause()
         end
         ImGui.SameLine()
         if ImGui.Checkbox("loop", ui_loop) then
@@ -872,34 +874,33 @@ function m.on_target(eid)
     stop_timeline()
     edit_timeline = nil
     timeline_eid = nil
-    if not eid then
-        return
-    end
-    local e <close> = world:entity(eid, "timeline?in")
-    if e.timeline then
-        if not e.timeline.eid_map then
-            e.timeline.eid_map = prefab_mgr.current_prefab.tag
+    if eid then
+        local e <close> = world:entity(eid, "timeline?in")
+        if e.timeline then
+            if not e.timeline.eid_map then
+                e.timeline.eid_map = prefab_mgr.current_prefab.tag
+            end
+            
+            timeline_eid = eid
+            edit_timeline = {
+                dirty = true
+            }
+            edit_timeline["timeline"] = {
+                name = "timeline",
+                duration = e.timeline.duration,
+                key_event = from_runtime_event(e.timeline.key_event),
+            }
+            local frame = math.floor(e.timeline.duration * sample_ratio)
+            ui_loop[1] = e.timeline.loop
+            ui_timeline_duration[1] = frame
+            local current_timeline = edit_timeline["timeline"]
+            anim_state.anim_name = current_timeline.name
+            anim_state.key_event = current_timeline.key_event
+            anim_key_event = current_timeline.key_event
+            anim_state.duration = current_timeline.duration
+            anim_state.current_frame = 0
+            set_event_dirty(-1)
         end
-        
-        timeline_eid = eid
-        edit_timeline = {
-            dirty = true
-        }
-        edit_timeline["timeline"] = {
-            name = "timeline",
-            duration = e.timeline.duration,
-            key_event = from_runtime_event(e.timeline.key_event),
-        }
-        local frame = math.floor(e.timeline.duration * sample_ratio)
-        ui_loop[1] = e.timeline.loop
-        ui_timeline_duration[1] = frame
-        local current_timeline = edit_timeline["timeline"]
-        anim_state.anim_name = current_timeline.name
-        anim_state.key_event = current_timeline.key_event
-        anim_key_event = current_timeline.key_event
-        anim_state.duration = current_timeline.duration
-        anim_state.current_frame = 0
-        set_event_dirty(-1)
     elseif current_anim then
         anim_state.anim_name = current_anim.name
         anim_state.key_event = current_anim.key_event
@@ -934,5 +935,9 @@ function m:handle_event()
         self.clear()
     end
 end
-
+function m.handle_input(key, press, state)
+    if key == "Space" and press == 1 then
+        play_or_pause()
+    end
+end
 return m

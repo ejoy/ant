@@ -173,6 +173,7 @@ local event_keyboard        = world:sub {"keyboard"}
 function m:handle_input()
     for _, key, press, state in event_keyboard:unpack() do
         scene_view.handle_input(key, press, state)
+        anim_view.handle_input(key, press, state)
         if (key == "Escape" or key == "GraveAccent") and press == 1 then
             world:pub { "GizmoMode", "select" }
         elseif key == "1" and press == 1 then
