@@ -1,41 +1,34 @@
 local function start(initargs)
+    local boot = dofile "/engine/ltask.lua"
+    local config = {
+        bootstrap = {
+            ["logger"] = {},
+            ["ant.window|boot"] = {
+                args = {initargs},
+                unique = false,
+            }
+        },
+        worker = 6,
+        worker_bind = {
+            ["ant.window|window"] = 0,
+            ["ant.hwi|bgfx"] = 1,
+        },
+    }
     local platform = require "bee.platform"
     if platform.os == "ios" then
-        dofile "/engine/ltask.lua" {
-            bootstrap = {
-                ["logger"] = {},
-                ["ant.window|boot"] = {
-                    args = {initargs},
-                    unique = false,
-                }
-            },
-            exclusive = {
-                "ant.window|ios",
-            },
-            mainthread = -1,
-            worker = 6,
-            worker_bind = {
-                ["ant.window|window"] = 0,
-                ["ant.hwi|bgfx"] = 1,
-            },
-        }
-    else
-        dofile "/engine/ltask.lua" {
-            bootstrap = {
-                ["logger"] = {},
-                ["ant.window|boot"] = {
-                    args = {initargs},
-                    unique = false,
-                }
-            },
-            mainthread = 0,
-            worker = 6,
-            worker_bind = {
-                ["ant.window|window"] = 0,
-                ["ant.hwi|bgfx"] = 1,
-            },
-        }
+        local window = require "window.ios"
+        window.mainloop(function (what)
+            if what == "init" then
+                boot:start(config)
+            elseif what == "exit" then
+                boot:wait()
+            end
+        end)
+        return
     end
+    config.mainthread = 0
+    boot:start(config)
+    boot:wait()
 end
 
 local function newproxy(t, k)
