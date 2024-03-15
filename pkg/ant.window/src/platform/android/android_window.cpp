@@ -6,7 +6,7 @@
 #include <cassert>
 #include "runtime.h"
 
-struct ant_window_callback* g_cb = NULL;
+lua_State* g_L = NULL;
 
 static struct android_app* g_app = NULL;
 static ANativeWindow* g_window = NULL;
@@ -17,16 +17,16 @@ enum class AndroidPath {
     ExternalDataPath,
 };
 
-void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
+bool window_init(lua_State* L, const char *size) {
     (void)size;
-    g_cb = cb;
-    return nullptr;
+    g_L = L;
+    return true;
 }
 
-void peekwindow_close() {
+void window_close() {
 }
 
-bool peekwindow_peek_message() {
+bool window_peek_message() {
     for (;;) {
         if (g_app->destroyRequested) {
             return false;
@@ -57,11 +57,11 @@ static void handle_cmd(android_app* app, int32_t cmd) {
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
             if (!g_initialized) {
-                window_message_init(g_cb, app->window, app->window, NULL, w, h);
+                window_message_init(g_L, app->window, app->window, NULL, w, h);
                 g_initialized = true;
             }
             else {
-                window_message_recreate(g_cb, app->window,  app->window, NULL, w, h);
+                window_message_recreate(g_L, app->window,  app->window, NULL, w, h);
             }
             break;
         }
@@ -69,13 +69,13 @@ static void handle_cmd(android_app* app, int32_t cmd) {
             g_window = NULL;
             break;
         case APP_CMD_DESTROY: {
-            window_message_exit(g_cb);
+            window_message_exit(g_L);
             break;
         }
         case APP_CMD_WINDOW_RESIZED: {
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
-            window_message_size(g_cb, w, h);
+            window_message_size(g_L, w, h);
             break;
         }
         case APP_CMD_LOST_FOCUS:

@@ -609,36 +609,40 @@ static int
 lRenderSetLatticeTexture(lua_State* L) {
 	Rml::TextureData texture_data;
 	if (lua_gettop(L) >= 10) {
-		texture_data.handle            = (Rml::TextureId)luaL_checkinteger(L, 2);
-		texture_data.dimensions.w 	   = (float)luaL_checkinteger(L, 3);
-		texture_data.dimensions.h 	   = (float)luaL_checkinteger(L, 4);
-		texture_data.lattice.x1   = (float)luaL_checknumber(L, 5);
-		texture_data.lattice.y1   = (float)luaL_checknumber(L, 6);
-		texture_data.lattice.x2   = (float)luaL_checknumber(L, 7);
-		texture_data.lattice.y2   = (float)luaL_checknumber(L, 8);
-		texture_data.lattice.u    = (float)luaL_checknumber(L, 9);
-		texture_data.lattice.v    = (float)luaL_checknumber(L, 10);
+		texture_data.handle       = (Rml::TextureId)luaL_checkinteger(L, 2);
+		texture_data.dimensions.w = (float)luaL_checkinteger(L, 3);
+		texture_data.dimensions.h = (float)luaL_checkinteger(L, 4);
+		texture_data.extra = Rml::TextureData::Lattice {
+			.x1 = (float)luaL_checknumber(L, 5),
+			.y1 = (float)luaL_checknumber(L, 6),
+			.x2 = (float)luaL_checknumber(L, 7),
+			.y2 = (float)luaL_checknumber(L, 8),
+			.u  = (float)luaL_checknumber(L, 9),
+			.v  = (float)luaL_checknumber(L, 10),
+		};
 		Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(texture_data));
 	}
 	Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(texture_data));
-    return 0;
+	return 0;
 }
 
 static int
 lRenderSetTextureAtlas(lua_State* L) {
 	Rml::TextureData texture_data;
 	if (lua_gettop(L) >= 12) {
-		texture_data.handle           = (Rml::TextureId)luaL_checkinteger(L, 2);
-		texture_data.dimensions.w     = (float)luaL_checkinteger(L, 3);
-		texture_data.dimensions.h     = (float)luaL_checkinteger(L, 4);
-		texture_data.atlas.ux    = (float)luaL_checknumber(L, 5);
-		texture_data.atlas.uy    = (float)luaL_checknumber(L, 6);
-		texture_data.atlas.uw    = (float)luaL_checknumber(L, 7);
-		texture_data.atlas.uh    = (float)luaL_checknumber(L, 8);
-		texture_data.atlas.fx    = (float)luaL_optnumber(L, 9, 0);
-		texture_data.atlas.fy    = (float)luaL_optnumber(L, 10, 0);
-		texture_data.atlas.fw    = (float)luaL_optnumber(L, 11, 1);
-		texture_data.atlas.fh    = (float)luaL_optnumber(L, 12, 11);
+		texture_data.handle       = (Rml::TextureId)luaL_checkinteger(L, 2);
+		texture_data.dimensions.w = (float)luaL_checkinteger(L, 3);
+		texture_data.dimensions.h = (float)luaL_checkinteger(L, 4);
+		texture_data.extra = Rml::TextureData::Atlas {
+			.ux = (float)luaL_checknumber(L, 5),
+			.uy = (float)luaL_checknumber(L, 6),
+			.uw = (float)luaL_checknumber(L, 7),
+			.uh = (float)luaL_checknumber(L, 8),
+			.fx = (float)luaL_optnumber(L, 9, 0),
+			.fy = (float)luaL_optnumber(L, 10, 0),
+			.fw = (float)luaL_optnumber(L, 11, 1),
+			.fh = (float)luaL_optnumber(L, 12, 11),
+		};
 		Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(texture_data));
 	}
 	Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(texture_data));

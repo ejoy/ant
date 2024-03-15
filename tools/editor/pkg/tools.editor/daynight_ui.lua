@@ -7,12 +7,7 @@ local idn           = ecs.require "ant.daynight|daynight"
 
 local idnui = {}
 
-local ltask = require "ltask"
-
-local function gettime()
-    local _, now = ltask.now()
-    return now * 10
-end
+local btime = require "bee.time"
 
 local sum_second = 10000
 local base_second <const> = 1000
@@ -21,7 +16,7 @@ local factor_second = 10
 function dnui_sys:data_changed()
     local dne = w:first "daynight:in"
     if dne then
-        local cycle = (gettime() % sum_second) / sum_second
+        local cycle = (btime.monotonic() % sum_second) / sum_second
         idn.update_cycle(dne, cycle)
     end
 end

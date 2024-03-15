@@ -26,7 +26,7 @@ struct DropManager : public IDropTarget {
 	//---------------------------------------------
 	//---------------------------------------------
 	std::vector<std::string> m_files;
-	struct ant_window_callback* m_cb = NULL;
+	lua_State* m_L = NULL;
 	HWND m_window = NULL;
 
 	HRESULT DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
@@ -64,14 +64,14 @@ struct DropManager : public IDropTarget {
 		return S_OK;
 	}
 	HRESULT Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
-		window_message_dropfiles(m_cb, m_files);
+		window_message_dropfiles(m_L, m_files);
 		m_files.clear();
 		*pdwEffect &= DROPEFFECT_COPY;
 		return S_OK;
 	}
-	void Register(HWND window, struct ant_window_callback* cb) {
+	void Register(HWND window, lua_State* L) {
 		m_window = window;
-		m_cb = cb;
+		m_L = L;
 		RegisterDragDrop(m_window, this);
 	}
 	void Revoke() {
@@ -304,32 +304,32 @@ static void UpdateMouseCursor(ImGuiMouseCursor cursor) {
 }
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	struct ant_window_callback *cb = NULL;
+	lua_State* L = NULL;
 	switch (message) {
 	case WM_CREATE: {
 		LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
-		cb = (struct ant_window_callback *)cs->lpCreateParams;
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
+		L = (lua_State*)cs->lpCreateParams;
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)L);
 		RECT r;
 		GetClientRect(hWnd, &r);
-		window_message_init(cb, hWnd, hWnd, 0, r.right-r.left, r.bottom-r.top);
+		window_message_init(L, hWnd, hWnd, 0, r.right-r.left, r.bottom-r.top);
 		break;
 	}
 	case WM_DESTROY:
-		cb = (struct ant_window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		PostQuitMessage(0);
-		window_message_exit(cb);
+		window_message_exit(L);
 		return 0;
 	case WM_MOUSEWHEEL: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mousewheel msg;
 		msg.delta = 1.0f * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
 		get_xy(lParam, &msg.x, &msg.y);
-		ant::window::input_message(cb, msg);
+		ant::window::input_message(L, msg);
 		break;
 	}
 	case WM_MOUSEMOVE:
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mousemove msg;
 		msg.what = ant::window::mouse_buttons::none;
 		get_xy(lParam, &msg.x, &msg.y);
@@ -342,12 +342,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		if (wParam & MK_RBUTTON) {
 			msg.what |= ant::window::mouse_buttons::right;
 		}
-		ant::window::input_message(cb, msg);
+		ant::window::input_message(L, msg);
 		break;
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:{
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouseclick msg;
 		switch (message) {
 		case WM_LBUTTONDOWN:
@@ -364,13 +364,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		}
 		msg.state = ant::window::mouse_state::down;
 		get_xy(lParam, &msg.x, &msg.y);
-		ant::window::input_message(cb, msg);
+		ant::window::input_message(L, msg);
 		break;
 	}
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_mouseclick msg;
 		switch (message) {
 		case WM_LBUTTONUP:
@@ -387,12 +387,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		}
 		msg.state = ant::window::mouse_state::up;
 		get_xy(lParam, &msg.x, &msg.y);
-		ant::window::input_message(cb, msg);
+		ant::window::input_message(L, msg);
 		break;
 	}
 	case WM_KEYDOWN:
 	case WM_KEYUP: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		const bool is_key_down = message == WM_KEYDOWN;
 		uint8_t press;
 		if (message == WM_KEYUP) {
@@ -414,31 +414,31 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		if (vk == VK_SHIFT) {
 			if (IsVkDown(VK_LSHIFT) == is_key_down) {
 				msg.key = ImGuiKey_LeftShift;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 			if (IsVkDown(VK_RSHIFT) == is_key_down) {
 				msg.key = ImGuiKey_RightShift;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 		}
 		else if (vk == VK_CONTROL) {
 			if (IsVkDown(VK_LCONTROL) == is_key_down) {
 				msg.key = ImGuiKey_LeftCtrl;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 			if (IsVkDown(VK_RCONTROL) == is_key_down) {
 				msg.key = ImGuiKey_RightCtrl;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 		}
 		else if (vk == VK_MENU) {
 			if (IsVkDown(VK_LMENU) == is_key_down) {
 				msg.key = ImGuiKey_LeftAlt;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 			if (IsVkDown(VK_RMENU) == is_key_down) {
 				msg.key = ImGuiKey_RightAlt;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 		}
 		else {
@@ -447,26 +447,26 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				k = ScancodeToImGuiKey((lParam >> 16) & 0xff);
 			}
 			msg.key = k;
-			ant::window::input_message(cb, msg);
+			ant::window::input_message(L, msg);
 		}
 		break;
 	}
 	case WM_SIZE: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		int x = LOWORD(lParam);
 		int y = HIWORD(lParam);
 		if (wParam == SIZE_MINIMIZED) {
 			G.Minimized = true;
-			ant::window::input_message(cb, {ant::window::suspend::will_suspend});
-			ant::window::input_message(cb, {ant::window::suspend::did_suspend});
+			ant::window::input_message(L, {ant::window::suspend::will_suspend});
+			ant::window::input_message(L, {ant::window::suspend::did_suspend});
 		}
 		else if (G.Minimized) {
 			G.Minimized = false;
-			ant::window::input_message(cb, {ant::window::suspend::will_resume});
-			ant::window::input_message(cb, {ant::window::suspend::did_resume});
+			ant::window::input_message(L, {ant::window::suspend::will_resume});
+			ant::window::input_message(L, {ant::window::suspend::did_resume});
 		}
 		else {
-			window_message_size(cb, x, y);
+			window_message_size(L, x, y);
 		}
 		break;
 	}
@@ -474,13 +474,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		UpdateKeyboardCodePage();
 		break;
 	case WM_CHAR: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		if (::IsWindowUnicode(hWnd)) {
 			if (wParam > 0 && wParam < 0x10000) {
 				struct ant::window::msg_inputchar msg;
 				msg.what = ant::window::inputchar_type::utf16;
 				msg.code = (uint16_t)wParam;
-				ant::window::input_message(cb, msg);
+				ant::window::input_message(L, msg);
 			}
 		} else {
 			wchar_t wch = 0;
@@ -488,16 +488,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			struct ant::window::msg_inputchar msg;
 			msg.what = ant::window::inputchar_type::native;
 			msg.code = (uint16_t)wch;
-			ant::window::input_message(cb, msg);
+			ant::window::input_message(L, msg);
 		}
 		break;
 	}
 	case WM_SETFOCUS:
 	case WM_KILLFOCUS: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		L = (lua_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		struct ant::window::msg_focus msg;
 		msg.focused = message == WM_SETFOCUS;
-		ant::window::input_message(cb, msg);
+		ant::window::input_message(L, msg);
 		break;
 	}
 	case WM_SETCURSOR:
@@ -549,9 +549,9 @@ static RECT createWindowRect(const char *size) {
 	return rect;
 }
 
-void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
+bool window_init(lua_State* L, const char *size) {
 	if (FAILED(OleInitialize(NULL))) {
-		return nullptr;
+		return false;
 	}
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
@@ -572,24 +572,24 @@ void* peekwindow_init(struct ant_window_callback* cb, const char *size) {
 		rect.bottom-rect.top,
 		0, 0,
 		GetModuleHandleW(0),
-		cb);
+		L);
 	if (wnd == NULL) {
-		return nullptr;
+		return false;
 	}
 	G.hWnd = wnd;
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
-	G.DropManager.Register(wnd, cb);
+	G.DropManager.Register(wnd, L);
 	UpdateKeyboardCodePage();
-	return (void*)wnd;
+	return true;
 }
 
-void peekwindow_close() {
+void window_close() {
 	G.DropManager.Revoke();
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
 
-bool peekwindow_peek_message() {
+bool window_peek_message() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -604,10 +604,13 @@ bool peekwindow_peek_message() {
 	}
 }
 
-void peekwindow_set_cursor(int cursor) {
+void window_set_cursor(int cursor) {
 	G.MouseCursor = (ImGuiMouseCursor)cursor;
 }
 
-void peekwindow_set_title(bee::zstring_view title) {
+void window_set_title(bee::zstring_view title) {
     ::SetWindowTextW(G.hWnd, bee::win::u2w(title).c_str());
+}
+
+void window_set_maxfps(float fps) {
 }

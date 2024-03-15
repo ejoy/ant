@@ -21,7 +21,7 @@ function update_sys:pipeline()
     PipelineEntityRemove = world:pipeline_func "_entity_remove"
 end
 
-function update_sys:frame_remove()
+function update_sys:frame_remove_entity()
     --step1. Remove prefab
     for _, instance in evOnRemoveInstance:unpack() do
         instance.REMOVED = true
@@ -52,7 +52,13 @@ function update_sys:frame_remove()
     math3d.reset()
 end
 
-function init_sys:frame_create()
+function update_sys:frame_system_changed()
+    if world._system_changed_func then
+        world._system_changed_func()
+    end
+end
+
+function init_sys:frame_create_entity()
     world:_flush_instance_queue()
     world:_flush_entity_queue()
 end

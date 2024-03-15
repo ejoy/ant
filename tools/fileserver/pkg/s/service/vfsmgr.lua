@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
+local btime = require "bee.time"
 local vfsrepo = import_package "ant.vfs"
 local cr = import_package "ant.compile_resource"
 
@@ -37,11 +38,6 @@ local changed = {}
 local changed_mark = {}
 local changed_time
 
-local function now()
-	local _, t = ltask.now()
-	return t * 10
-end
-
 local function add_changed(type, lpath)
 	local originpath = lpath:string()
 	local path = lpath:remove_filename():string()
@@ -51,7 +47,7 @@ local function add_changed(type, lpath)
 	print(type, originpath)
 	changed_mark[path] = true
 	changed[#changed+1] = path
-	changed_time = now()
+	changed_time = btime.monotonic()
 end
 
 local function update_watch()
@@ -74,7 +70,7 @@ local function update_watch()
 end
 
 local function update_vfs()
-	if #changed == 0 or compiling > 0 or now() - changed_time <= 1000 then
+	if #changed == 0 or compiling > 0 or btime.monotonic() - changed_time <= 1000 then
 		return
 	end
 	print("repo rebuild ...")

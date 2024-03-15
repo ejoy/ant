@@ -194,20 +194,28 @@ static void push_message_args(lua_State*L, K&& k, V&& v, Args&&... args) {
 	}
 }
 
-template <typename... Args>
-static void push_message(struct ant_window_callback* cb, Args&&... args) {
-	static_assert(sizeof...(args) % 2 == 0);
-	lua_State* L = cb->messageL;
+static void DefaultMessageFetch(lua_State* L) {
+	lua_seti(L, 1, luaL_len(L, 1)+1);
 	lua_settop(L, 1);
+}
+
+static void (*MessageFetch)(lua_State*) = DefaultMessageFetch;
+void window_message_set_fetch_func(void (*func)(lua_State*)) {
+	MessageFetch = func;
+}
+
+template <typename... Args>
+static void push_message(lua_State* L, Args&&... args) {
+	static_assert(sizeof...(args) % 2 == 0);
 	lua_createtable(L, 0, 1 + sizeof...(args) / 2);
 	lua_pushinteger(L, get_timestamp());
 	lua_setfield(L, -2, "timestamp");
 	push_message_args(L, std::forward<Args>(args)...);
-	lua_seti(L, 1, luaL_len(L, 1)+1);
+	MessageFetch(L);
 }
 
-void window_message_init(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h) {
-	push_message(cb,
+void window_message_init(lua_State* L, void* window, void* nwh, void* context, int w, int h) {
+	push_message(L,
 		"type", "init",
 		"window", window,
 		"nwh", nwh,
@@ -217,8 +225,8 @@ void window_message_init(struct ant_window_callback* cb, void* window, void* nwh
 	);
 }
 
-void window_message_recreate(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h) {
-	push_message(cb,
+void window_message_recreate(lua_State* L, void* window, void* nwh, void* context, int w, int h) {
+	push_message(L,
 		"type", "recreate",
 		"window", window,
 		"nwh", nwh,
@@ -228,30 +236,30 @@ void window_message_recreate(struct ant_window_callback* cb, void* window, void*
 	);
 }
 
-void window_message_exit(struct ant_window_callback* cb) {
-	push_message(cb,
+void window_message_exit(lua_State* L) {
+	push_message(L,
 		"type", "exit"
 	);
 }
 
-void window_message_size(struct ant_window_callback* cb, int x, int y) {
-	push_message(cb,
+void window_message_size(lua_State* L, int x, int y) {
+	push_message(L,
 		"type", "size",
 		"w", x,
 		"h", y
 	);
 }
 
-void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files) {
-	push_message(cb,
+void window_message_dropfiles(lua_State* L, std::vector<std::string> const& files) {
+	push_message(L,
 		"type", "dropfiles",
 		"files", files
 	);
 }
 
 namespace ant::window {
-void input_message(struct ant_window_callback* cb, struct msg_keyboard const& keyboard) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_keyboard const& keyboard) {
+	push_message(L,
 		"type", "keyboard",
 		"key", keyboard.key,
 		"press", keyboard.press,
@@ -259,8 +267,8 @@ void input_message(struct ant_window_callback* cb, struct msg_keyboard const& ke
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_mouseclick const& mouseclick) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_mouseclick const& mouseclick) {
+	push_message(L,
 		"type", "mouseclick",
 		"what", mouseclick.what,
 		"x", mouseclick.x,
@@ -269,8 +277,8 @@ void input_message(struct ant_window_callback* cb, struct msg_mouseclick const& 
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_mousemove const& mousemove) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_mousemove const& mousemove) {
+	push_message(L,
 		"type", "mousemove",
 		"what", mousemove.what,
 		"x", mousemove.x,
@@ -278,8 +286,8 @@ void input_message(struct ant_window_callback* cb, struct msg_mousemove const& m
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_mousewheel const& mousewheel) {
+	push_message(L,
 		"type", "mousewheel",
 		"x", mousewheel.x,
 		"y", mousewheel.y,
@@ -287,23 +295,23 @@ void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& 
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_inputchar const& inputchar) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_inputchar const& inputchar) {
+	push_message(L,
 		"type", "inputchar",
 		"what", inputchar.what,
 		"code", inputchar.code
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_focus const& focus) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_focus const& focus) {
+	push_message(L,
 		"type", "focus",
 		"focused", focus.focused
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_touch const& touch) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_touch const& touch) {
+	push_message(L,
 		"type", "touch",
 		"x", touch.x,
 		"y", touch.y,
@@ -312,8 +320,8 @@ void input_message(struct ant_window_callback* cb, struct msg_touch const& touch
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const& gesture) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_gesture_tap const& gesture) {
+	push_message(L,
 		"type", "gesture",
 		"what", "tap",
 		"x", gesture.x,
@@ -321,8 +329,8 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const&
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_gesture_pinch const& gesture) {
+	push_message(L,
 		"type", "gesture",
 		"what", "pinch",
 		"state", gesture.state,
@@ -332,8 +340,8 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch cons
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress const& gesture) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_gesture_longpress const& gesture) {
+	push_message(L,
 		"type", "gesture",
 		"what", "longpress",
 		"state", gesture.state,
@@ -342,8 +350,8 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress 
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_gesture_pan const& gesture) {
+	push_message(L,
 		"type", "gesture",
 		"what", "pan",
 		"state", gesture.state,
@@ -354,8 +362,8 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const&
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe const& gesture) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_gesture_swipe const& gesture) {
+	push_message(L,
 		"type", "gesture",
 		"what", "swipe",
 		"state", gesture.state,
@@ -365,8 +373,8 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe cons
 	);
 }
 
-void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend) {
-	push_message(cb,
+void input_message(lua_State* L, struct msg_suspend const& suspend) {
+	push_message(L,
 		"type", "suspend",
 		"what", suspend.what
 	);

@@ -2,6 +2,7 @@ local ltask         = require "ltask"
 local bgfx          = require "bgfx"
 local platform      = require "bee.platform"
 local thread        = require "bee.thread"
+local btime         = require "bee.time"
 local fontmanager
 local cell = import_package "ant.textcell"
 
@@ -125,7 +126,7 @@ local function profile_print()
         add_text "--- encoder"
         for i = 1, #r do
             local who, time = r[i][1], r[i][2]
-            local m = time / MaxFrame * 1000
+            local m = time / MaxFrame
             local name = ("%s(%d)"):format(profile_label[who], who)
             add_text(format_text(name, (" | %.02fms   "):format(m)))
             profile[who] = 0
@@ -164,11 +165,11 @@ local function profile_init(who, label)
 end
 local function profile_begin()
     profile_print()
-    local now = ltask.counter()
+    local now = btime.counter()
     profile_time = now
 end
 local function profile_end(who)
-    local now = ltask.counter()
+    local now = btime.counter()
     profile[who] = profile[who] + (now - profile_time)
 end
 
@@ -259,12 +260,12 @@ end
 local maxfps = 30
 local fps = 0
 local frame_control; do
-    local MaxTimeCachedFrame <const> = 1 --*1s
+    local MaxTimeCachedFrame <const> = 1000 --*1s
     local frame_first = 1
     local frame_last  = 0
     local frame_time = {}
     local frame_delta = {}
-    local lasttime = ltask.counter()
+    local lasttime = btime.counter()
     local printtime = 0
     local printtext = ""
     local function clean(time)
@@ -284,10 +285,10 @@ local frame_control; do
             if frame_last == 1 then
                 fps = 0
             else
-                fps = frame_last / (frame_time[frame_last] - frame_time[1])
+                fps = frame_last / (frame_time[frame_last] - frame_time[1]) * 1000.
             end
         else
-            fps = (frame_last - frame_first + 1) / (MaxTimeCachedFrame)
+            fps = (frame_last - frame_first + 1) / (MaxTimeCachedFrame) * 1000.
         end
         if lasttime - printtime >= 1 then
             printtime = lasttime
@@ -317,10 +318,10 @@ local frame_control; do
             end
         end
         avg = avg / (frame_last - frame_first)
-        S.dbg_text_print(0, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg*1000, max*1000, min*1000))
+        S.dbg_text_print(0, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg, max, min))
     end
     function frame_control()
-        local time = ltask.counter()
+        local time = btime.counter()
         local delta = time - lasttime
         clean(time - MaxTimeCachedFrame)
         frame_last = frame_last + 1
@@ -329,7 +330,7 @@ local frame_control; do
         print_fps()
         print_time()
         if maxfps and fps > maxfps then
-            local waittime = 1/maxfps - delta
+            local waittime = 1/maxfps - delta / 1000.
             if waittime > 0 then
                 if waittime < 0.01 then
                     waittime = 0.01
@@ -337,7 +338,7 @@ local frame_control; do
                 thread.sleep(waittime)
             end
         end
-        lasttime = ltask.counter()
+        lasttime = btime.counter()
     end
 end
 
@@ -346,8 +347,8 @@ function S.maxfps(v)
         maxfps = v
     end
     if platform.os == "ios" then
-        local ServiceWindow = ltask.queryservice "ant.window|ios"
-        ltask.call(ServiceWindow, "maxfps", maxfps)
+        local ServiceWindow = ltask.queryservice "ant.window|window"
+        ltask.call(ServiceWindow, "set_maxfps", maxfps)
     end
     return maxfps
 end

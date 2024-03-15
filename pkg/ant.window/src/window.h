@@ -11,28 +11,19 @@
 
 struct lua_State;
 
-struct ant_window_callback {
-	void (*update)(struct ant_window_callback* cb);
-	struct lua_State* messageL;
-	struct lua_State* updateL;
-};
+bool window_init(lua_State* L, const char* size);
+void window_close();
+bool window_peek_message();
+void window_set_cursor(int cursor);
+void window_set_title(bee::zstring_view title);
+void window_set_maxfps(float fps);
 
-void* peekwindow_init(struct ant_window_callback* cb, const char* size);
-void peekwindow_close();
-bool peekwindow_peek_message();
-void peekwindow_set_cursor(int cursor);
-void peekwindow_set_title(bee::zstring_view title);
-
-void loopwindow_init(struct ant_window_callback* cb);
-void loopwindow_mainloop();
-
-void window_maxfps(float fps);
-
-void window_message_init(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h);
-void window_message_recreate(struct ant_window_callback* cb, void* window, void* nwh, void* context, int w, int h);
-void window_message_exit(struct ant_window_callback* cb);
-void window_message_size(struct ant_window_callback* cb, int x, int y);
-void window_message_dropfiles(struct ant_window_callback* cb, std::vector<std::string> const& files);
+void window_message_set_fetch_func(void (*func)(lua_State*));
+void window_message_init(lua_State* L, void* window, void* nwh, void* context, int w, int h);
+void window_message_recreate(lua_State* L, void* window, void* nwh, void* context, int w, int h);
+void window_message_exit(lua_State* L);
+void window_message_size(lua_State* L, int x, int y);
+void window_message_dropfiles(lua_State* L, std::vector<std::string> const& files);
 
 namespace ant::window {
 	enum class swipe_direction : uint8_t {
@@ -194,18 +185,18 @@ ENUM_FLAG_OPERATORS(mouse_buttons)
 		};
 	};
 
-	void input_message(struct ant_window_callback* cb, struct msg_keyboard const& keyboard);
-	void input_message(struct ant_window_callback* cb, struct msg_mouseclick const& mouseclick);
-	void input_message(struct ant_window_callback* cb, struct msg_mousemove const& mousemove);
-	void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel);
-	void input_message(struct ant_window_callback* cb, struct msg_inputchar const& inputchar);
-	void input_message(struct ant_window_callback* cb, struct msg_focus const& focus);
-	void input_message(struct ant_window_callback* cb, struct msg_touch const& touch);
-	void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const& gesture);
-	void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture);
-	void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress const& gesture);
-	void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture);
-	void input_message(struct ant_window_callback* cb, struct msg_gesture_swipe const& gesture);
-	void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend);
+	void input_message(lua_State* L, struct msg_keyboard const& keyboard);
+	void input_message(lua_State* L, struct msg_mouseclick const& mouseclick);
+	void input_message(lua_State* L, struct msg_mousemove const& mousemove);
+	void input_message(lua_State* L, struct msg_mousewheel const& mousewheel);
+	void input_message(lua_State* L, struct msg_inputchar const& inputchar);
+	void input_message(lua_State* L, struct msg_focus const& focus);
+	void input_message(lua_State* L, struct msg_touch const& touch);
+	void input_message(lua_State* L, struct msg_gesture_tap const& gesture);
+	void input_message(lua_State* L, struct msg_gesture_pinch const& gesture);
+	void input_message(lua_State* L, struct msg_gesture_longpress const& gesture);
+	void input_message(lua_State* L, struct msg_gesture_pan const& gesture);
+	void input_message(lua_State* L, struct msg_gesture_swipe const& gesture);
+	void input_message(lua_State* L, struct msg_suspend const& suspend);
 }
 

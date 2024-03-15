@@ -1,9 +1,20 @@
 #include "../../window.h"
+#include "luabind.h"
 
 #import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 #include <Foundation/Foundation.h>
+
+#include <functional>
+#include <mutex>
+#include <vector>
+#include <bee/thread/spinlock.h>
+#include <lua.hpp>
+
+extern "C" {
+#include <3rd/lua-seri/lua-seri.h>
+}
 
 static int writelog(const char* msg) {
     NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -22,7 +33,6 @@ static int writelog(const char* msg) {
     return 0;
 }
 
-
 @interface View : UIView
     @property (nonatomic, retain) CADisplayLink* m_displayLink;
 @end
@@ -36,7 +46,8 @@ id init_gesture();
 
 View* global_window = NULL;
 static id<MTLDevice> g_device = NULL;
-struct ant_window_callback* g_cb = NULL;
+static struct ant_window_callback s_cb;
+struct ant_window_callback* g_cb = &s_cb;
 id g_gesture;
 
 static void push_touch_message(ant::window::touch_state state, UIView* view, NSSet* touches) {
@@ -49,7 +60,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         msg.id = (uintptr_t)touch;
         msg.x = pt.x;
         msg.y = pt.y;
-        ant::window::input_message(g_cb, msg);
+        ant::window::input_message(g_cb->messageL, msg);
     }
 }
 
@@ -91,7 +102,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         w = h;
         h = tmp;
     }
-    window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
+    window_message_init(g_cb->messageL, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
 
     g_gesture = init_gesture();
     return self;
@@ -99,7 +110,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 - (void)layoutSubviews {
     uint32_t frameW = (uint32_t)(self.contentScaleFactor * self.frame.size.width);
     uint32_t frameH = (uint32_t)(self.contentScaleFactor * self.frame.size.height);
-    window_message_size(g_cb, frameW, frameH);
+    window_message_size(g_cb->messageL, frameW, frameH);
 }
 - (void)start {
     if (nil == self.m_displayLink) {
@@ -157,34 +168,34 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 }
 - (void) applicationWillTerminate:(UIApplication *)application {
     writelog("\n***applicationWillTerminate***\n");
-    window_message_exit(g_cb);
+    window_message_exit(g_cb->messageL);
     g_cb->update(g_cb);
     [self.m_view stop];
 }
 - (void)applicationWillResignActive:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::will_suspend;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
     [self.m_view stop];
 }
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::did_suspend;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
 }
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::will_resume;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [self.m_view start];
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::did_resume;
-    ant::window::input_message(g_cb, msg);
+    ant::window::input_message(g_cb->messageL, msg);
     g_cb->update(g_cb);
 }
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
@@ -192,8 +203,41 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 }
 @end
 
+typedef void(^SelectHandler)(void* data);
+
+class MessageQueue {
+public:
+    void push(void* data) {
+        std::unique_lock<bee::spinlock> lk(mutex);
+        queue.push_back(data);
+    }
+    void select(std::function<void(void*)> handler) {
+        std::unique_lock<bee::spinlock> lk(mutex);
+        if (queue.empty()) {
+            return;
+        }
+        for (void* data: queue) {
+            handler(data);
+        }
+        queue.clear();
+    }
+private:
+    std::vector<void*> queue;
+    bee::spinlock mutex;
+};
+
+static MessageQueue g_msqueue;
+
+static void MessageFetch(lua_State* L) {
+    g_msqueue.push(seri_pack(L, 0, NULL));
+    lua_settop(L, 0);
+}
+
 void loopwindow_init(struct ant_window_callback* cb) {
-    g_cb = cb;
+    g_cb->update = cb->update;
+    g_cb->messageL = cb->messageL;
+    g_cb->updateL = cb->updateL;
+    window_message_set_fetch_func(MessageFetch);
 }
 
 void loopwindow_mainloop() {
@@ -202,8 +246,47 @@ void loopwindow_mainloop() {
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
 }
 
-void window_maxfps(float fps) {
-    if (global_window) {
-        [global_window maxfps: fps];
+static bool peekmessage() {
+    lua_State* L = g_cb->peekL;
+    lua_Integer len = luaL_len(L, 1);
+    g_msqueue.select([&](void* data){
+        int n = seri_unpackptr(L, data);
+        if (n > 0) {
+            lua_settop(L, 2);
+            lua_seti(L, 1, ++len);
+        }
+    });
+    return len > 0;
+}
+
+bool window_init(lua_State* L, const char *size) {
+    g_cb->peekL = L;
+    while (true) {
+        if (peekmessage()) {
+            break;
+        }
+        sleep(1);
     }
+    return true;
+}
+
+void window_close() {
+}
+
+bool window_peek_message() {
+    peekmessage();
+    return true;
+}
+
+void window_set_cursor(int cursor) {
+}
+
+void window_set_title(bee::zstring_view title) {
+}
+
+void window_set_maxfps(float fps) {
+    //TODO
+    //if (global_window) {
+    //    [global_window maxfps: fps];
+    //}
 }

@@ -391,11 +391,11 @@ local function build_input_var(varyingcontent)
     }
 end
 
-local function build_custom_vs_position_func(d, varyings, isdi)
+local function build_custom_vs_position_func(d, varyings, mat, isdi)
     local ac0, ac1 = code_gen(d, 0, 1)
     ac0 "//code gen by genshader.lua"
     ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
-    if varyings.a_indices and varyings.a_weight then
+    if (varyings.a_indices and varyings.a_weight) and (not mat.fx.setting.no_skinning) then
         ac1 "worldmat = calc_bone_transform(vsinput.indices, vsinput.weight);"
     else
         ac1 "worldmat = u_model[0];"
@@ -495,7 +495,7 @@ end
 
 local function build_vs_code(mat, varyings, isdi)
     local d = {}
-    build_custom_vs_position_func(d, varyings, isdi)
+    build_custom_vs_position_func(d, varyings, mat, isdi)
     build_custom_vs_func(d, varyings, mat)
 
     return table.concat(d, "\n")
@@ -782,7 +782,7 @@ local function build_fx_macros(mat, varyings)
         m[#m+1] = "HAS_OCCLUSION_TEXTURE=1"
     end
 
-    if varyings.a_indices or varyings.a_weight then
+    if varyings.a_indices and varyings.a_weight and (not mat.fx.setting.no_skinning) then
         m[#m+1] = "GPU_SKINNING=1"
     end
 

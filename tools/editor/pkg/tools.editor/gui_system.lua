@@ -172,11 +172,8 @@ end
 local event_keyboard        = world:sub {"keyboard"}
 function m:handle_input()
     for _, key, press, state in event_keyboard:unpack() do
-        if key == "Delete" and press == 1 then
-            if gizmo.target_eid then
-                world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
-            end
-        elseif (key == "Escape" or key == "GraveAccent") and press == 1 then
+        scene_view.handle_input(key, press, state)
+        if (key == "Escape" or key == "GraveAccent") and press == 1 then
             world:pub { "GizmoMode", "select" }
         elseif key == "1" and press == 1 then
             world:pub { "GizmoMode", "move" }
@@ -201,7 +198,6 @@ function m:handle_event()
     end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
-            inspector.update_ui()
             if action == "ontarget" then
                 on_target(value1, value2)
             elseif action == "update" then

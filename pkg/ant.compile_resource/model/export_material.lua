@@ -341,7 +341,7 @@ return function (status)
         material.fx.macros = macros
         material.fx.setting = setting
         local function refine_name(name)
-            local newname = name:gsub("['\\/:*?\"<>|]", "_")
+            local newname = name:gsub("['\\/:*?\"<>|#%s]", "_")
             return newname
         end
         local materialname = refine_name(name)

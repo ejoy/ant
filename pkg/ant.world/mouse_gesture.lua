@@ -1,5 +1,5 @@
 local ltask = require "ltask"
-local time = require "bee.time"
+local btime = require "bee.time"
 
 local Mouse2Touch <const> = {
     LEFT = 1,
@@ -21,11 +21,6 @@ local function stop_timer(t)
     t.stop = true
 end
 
-local function get_time()
-    local _, now = ltask.now()
-    return now / 100
-end
-
 return function (world)
     local lastX
     local lastY
@@ -45,7 +40,7 @@ return function (world)
             x = downX,
             y = downY,
             state = "began",
-            timestamp = time.monotonic(),
+            timestamp = btime.monotonic(),
         }})
         inLongPress = true
     end
@@ -84,7 +79,7 @@ return function (world)
             local distance = (deltaX * deltaX) + (deltaY * deltaY)
             if distance > touchSlopSquare then
                 if not inScrolling then
-                    inScrolling = get_time()
+                    inScrolling = btime.monotonic()
                     world:dispatch_message {
                         type = "gesture",
                         what = "pan",
@@ -113,7 +108,7 @@ return function (world)
             end
         elseif math.abs(scrollX) >= 1 or math.abs(scrollY) >= 1 then
             if not inScrolling then
-                inScrolling = get_time()
+                inScrolling = btime.monotonic()
                 world:dispatch_message {
                     type = "gesture",
                     what = "pan",

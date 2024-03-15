@@ -104,6 +104,7 @@ do
         uv_motion       = true,
         position_only   = true,
         no_predepth     = true,
+        no_skinning     = true,
     }
 
     function CHECK_SETTING(mat, macros)

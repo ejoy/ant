@@ -44,7 +44,6 @@ function gizmo:update()
 	self:update_scale()
 	self:updata_uniform_scale()
 	self:update_axis_plane()
-	inspector.update_ui()
 end
 
 function gizmo:set_target(eid)

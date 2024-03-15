@@ -1,7 +1,7 @@
 #include <lua.hpp>
 #include <stdio.h>
-#include "../window.h"
-
+#include "../../window.h"
+#include "luabind.h"
 
 static void
 update_callback(struct ant_window_callback* cb) {
@@ -32,10 +32,7 @@ linit(lua_State *L) {
 	lua_setiuservalue(L, -2, 1);
 	cb->updateL = lua_newthread(L);
 	lua_setiuservalue(L, -2, 2);
-	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
-
-	lua_pushvalue(L, 1);
-	lua_xmove(L, cb->messageL, 1);
+	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CALLBACK");
 
 	lua_pushcfunction(cb->updateL, ltraceback);
 	lua_pushvalue(L, 2);
@@ -51,20 +48,12 @@ lmainloop(lua_State *L) {
 	return 0;
 }
 
-static int
-lmaxfps(lua_State *L) {
-	float fps = (float)luaL_checknumber(L, 1);
-	window_maxfps(fps);
-	return 0;
-}
-
 extern "C" int
-luaopen_window(lua_State *L) {
+luaopen_window_ios(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "init", linit },
 		{ "mainloop", lmainloop },
-		{ "maxfps", lmaxfps },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

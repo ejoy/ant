@@ -7,6 +7,7 @@ local fs        = require "filesystem"
 local lefk      = require "efk"
 local efkasset  = require "asset"
 local bgfx      = require "bgfx"
+local btime     = require "bee.time"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
@@ -79,15 +80,11 @@ local function shutdown()
 end
 
 local check_release_efks; do
-    local get_time = function ()
-        local _, t = ltask.now()
-        return t * 10
-    end
-    local last = get_time()
+    local last = btime.monotonic()
 
     local checktime<const> = 1000
     function check_release_efks()
-        local now = get_time()
+        local now = btime.monotonic()
         local d = now - last
         if d >= checktime then
             last = now

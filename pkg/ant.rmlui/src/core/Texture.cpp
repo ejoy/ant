@@ -2,9 +2,7 @@
 #include <binding/Context.h>
 #include <core/Element.h>
 #include <unordered_map>
-extern "C" {
-	#include <textureman.h>
-}
+
 namespace Rml::Texture {
 
 using TextureMap = std::unordered_map<std::string, TextureData>;
@@ -16,7 +14,7 @@ void Shutdown() {
 
 static TextureData InvalidTexture;
 
-TextureData Fetch(Element* e, const std::string& path) {
+const TextureData& Fetch(Element* e, const std::string& path) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		return iterator->second;
@@ -25,7 +23,7 @@ TextureData Fetch(Element* e, const std::string& path) {
 	return InvalidTexture;
 }
 
-TextureData Fetch(Element* e, const std::string& path, Size size) {
+const TextureData& Fetch(Element* e, const std::string& path, Size size) {
 	auto iterator = textures.find(path);
 	Rml::GetScript()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
 	if (iterator != textures.end()) {
@@ -44,10 +42,6 @@ void Set(const std::string& path, TextureData&& data) {
 	else{
 		textures.emplace(path, std::move(data));
 	}
-}
-
-TextureType GetType(TextureId id) {
-	return (TextureType)texture_type(id);
 }
 
 }

@@ -1,8 +1,8 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
 local aio = import_package "ant.io"
+local btime = require "bee.time"
 local inputmgr = require "inputmgr"
-local ltask = require "ltask"
 local bgfx = require "bgfx"
 local policy = require "policy"
 local event = require "event"
@@ -374,17 +374,13 @@ end
 
 local function cpustat_update(w, funcs, symbols)
     local ecs_world = w._ecs_world
-    local get_time = function ()
-        local _, t = ltask.now()
-        return t / 100
-    end
     return function()
         local stat = w._cpu_stat
         for i = 1, #funcs do
             local f = funcs[i]
-            local now = get_time()
+            local now = btime.monotonic()
             f(ecs_world)
-            local time = get_time() - now
+            local time = btime.monotonic() - now
             local name = symbols[i]
             if stat[name] then
                 stat[name] = stat[name] + time
@@ -420,7 +416,7 @@ local function cpustat_update_then_print(w, funcs, symbols)
             for i = 1, MaxText do
                 local name = stat[i]
                 local v = stat[name]
-                printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame * 1000)
+                printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame)
             end
             w._cpu_stat = {}
         end
@@ -568,24 +564,30 @@ local function system_changed(w)
         local func = w:pipeline_func("_exit", slove_system(exitsystems))
         func()
     end
-    if has_initsystem then
-        for name, s in pairs(initsystems) do
-            updatesystems[name] = s
-        end
-        initsystems["ant.world|entity_init_system"] = w._systems["ant.world|entity_init_system"]
-        local step = slove_system(initsystems)
-        w:pipeline_func("_init", step)()
+    if not has_initsystem then
+        log.info("System refreshed.")
+        return
     end
+    for name, s in pairs(initsystems) do
+        updatesystems[name] = s
+    end
+    initsystems["ant.world|entity_init_system"] = w._systems["ant.world|entity_init_system"]
+    local func = w:pipeline_func("_init", slove_system(initsystems))
     log.info("System refreshed.")
+    return func
 end
 
 function world:pipeline_init()
-    system_changed(self)
+    local w = self
+    local changed = system_changed(w)
+    if changed then
+        changed()
+    end
 end
 
 function world:pipeline_update()
     local w = self
-    system_changed(w)
+    w._system_changed_func = system_changed(w)
     w._pipeline_update()
 end
 
@@ -595,7 +597,10 @@ function world:pipeline_exit()
     w._exitsystems = w._systems
     w._initsystems = {}
     w._systems = {}
-    system_changed(self)
+    local changed = system_changed(w)
+    if changed then
+        changed()
+    end
 end
 
 function world:clibs(name)
