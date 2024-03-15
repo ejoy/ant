@@ -12,6 +12,7 @@ local function start(initargs)
             exclusive = {
                 "ant.window|ios",
             },
+            mainthread = -1,
             worker = 6,
             worker_bind = {
                 ["ant.window|window"] = 0,

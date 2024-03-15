@@ -209,5 +209,6 @@ return function (c)
 	root_thread()
 	io_switch()
 	io_thread("io", 2 + #rootConfig.exclusive)
-	boot.run(bootConfig.mainthread)
+	local ctx = boot.run(bootConfig.mainthread)
+	boot.wait(ctx)
 end
