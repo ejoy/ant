@@ -1,2 +1,4 @@
 local window = require "window.ios"
-window.mainloop()
+window.mainloop(function (what)
+    print(what)
+end)
