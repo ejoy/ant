@@ -69,10 +69,6 @@ local function io_thread(label, id)
 	boot.new_thread(sid)
 end
 
-local function toclose(f)
-	return setmetatable({}, {__close=f})
-end
-
 local function readall(path)
 	local fastio = require "fastio"
 	local mem = vfs.read(path)
@@ -196,10 +192,11 @@ local function io_switch()
 	vfs.send("SWITCH", servicelua, mem)
 end
 
-return function (c)
+local m = {}
+
+function m:start(c)
 	init(c)
 	boot.init(coreConfig)
-	local _ <close> = toclose(boot.deinit)
 	boot.init_timer()
 	for i, label in ipairs(rootConfig.exclusive) do
 		local id = i + 1
@@ -209,6 +206,19 @@ return function (c)
 	root_thread()
 	io_switch()
 	io_thread("io", 2 + #rootConfig.exclusive)
-	local ctx = boot.run(bootConfig.mainthread)
-	boot.wait(ctx)
+	self._ctx = boot.run(bootConfig.mainthread)
 end
+
+function m:wait()
+	boot.wait(self._ctx)
+	boot.deinit()
+end
+
+local mt = {}
+mt.__index = m
+function mt:__call(c)
+	self:start(c)
+	self:wait()
+end
+
+return setmetatable({}, mt)
