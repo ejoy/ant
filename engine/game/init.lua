@@ -30,7 +30,7 @@ io_req:push(io_initargs)
 
 vfs.iothread = boot.preinit [[
     -- IO thread
-    local dbg = dofile "engine/debugger.lua"
+    local dbg = dofile "/engine/debugger.lua"
     if dbg then
         dbg:event("setThreadName", "Thread: IO")
         dbg:event "wait"
@@ -41,4 +41,4 @@ vfs.iothread = boot.preinit [[
     fastio.loadfile "engine/game/io.lua" (io_req:bpop())
 ]]
 
-vfs.initfunc("engine/firmware/init_thread.lua", vfs_initargs)
+vfs.initfunc("/engine/firmware/init_thread.lua", vfs_initargs)
