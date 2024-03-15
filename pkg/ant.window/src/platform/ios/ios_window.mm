@@ -1,5 +1,4 @@
 #include "../../window.h"
-#include "luabind.h"
 
 #import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
@@ -44,11 +43,11 @@ static int writelog(const char* msg) {
 
 id init_gesture();
 
-View* global_window = NULL;
+static View* global_window = NULL;
 static id<MTLDevice> g_device = NULL;
-static struct ant_window_callback s_cb;
-struct ant_window_callback* g_cb = &s_cb;
-id g_gesture;
+static id g_gesture;
+static struct lua_State* g_peekL = NULL;
+static struct lua_State* g_messageL = NULL;
 
 static void push_touch_message(ant::window::touch_state state, UIView* view, NSSet* touches) {
     struct ant::window::msg_touch msg;
@@ -60,7 +59,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         msg.id = (uintptr_t)touch;
         msg.x = pt.x;
         msg.y = pt.y;
-        ant::window::input_message(g_cb->messageL, msg);
+        ant::window::input_message(g_peekL, msg);
     }
 }
 
@@ -102,7 +101,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
         w = h;
         h = tmp;
     }
-    window_message_init(g_cb->messageL, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
+    window_message_init(g_peekL, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
 
     g_gesture = init_gesture();
     return self;
@@ -110,7 +109,7 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 - (void)layoutSubviews {
     uint32_t frameW = (uint32_t)(self.contentScaleFactor * self.frame.size.width);
     uint32_t frameH = (uint32_t)(self.contentScaleFactor * self.frame.size.height);
-    window_message_size(g_cb->messageL, frameW, frameH);
+    window_message_size(g_peekL, frameW, frameH);
 }
 - (void)start {
     if (nil == self.m_displayLink) {
@@ -125,7 +124,6 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
     }
 }
 - (void)renderFrame {
-    g_cb->update(g_cb);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     push_touch_message(ant::window::touch_state::began, self, [event allTouches]);
@@ -168,42 +166,154 @@ static void push_touch_message(ant::window::touch_state state, UIView* view, NSS
 }
 - (void) applicationWillTerminate:(UIApplication *)application {
     writelog("\n***applicationWillTerminate***\n");
-    window_message_exit(g_cb->messageL);
-    g_cb->update(g_cb);
+    window_message_exit(g_peekL);
     [self.m_view stop];
 }
 - (void)applicationWillResignActive:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::will_suspend;
-    ant::window::input_message(g_cb->messageL, msg);
-    g_cb->update(g_cb);
+    ant::window::input_message(g_peekL, msg);
     [self.m_view stop];
 }
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::did_suspend;
-    ant::window::input_message(g_cb->messageL, msg);
-    g_cb->update(g_cb);
+    ant::window::input_message(g_peekL, msg);
 }
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::will_resume;
-    ant::window::input_message(g_cb->messageL, msg);
-    g_cb->update(g_cb);
+    ant::window::input_message(g_peekL, msg);
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [self.m_view start];
     struct ant::window::msg_suspend msg;
     msg.what = ant::window::suspend::did_resume;
-    ant::window::input_message(g_cb->messageL, msg);
-    g_cb->update(g_cb);
+    ant::window::input_message(g_peekL, msg);
 }
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     return UIInterfaceOrientationMaskLandscape;
 }
 @end
 
-typedef void(^SelectHandler)(void* data);
+static  ant::window::gesture_state getState(UIGestureRecognizerState v) {
+    switch (v) {
+    case UIGestureRecognizerStateBegan:
+        return ant::window::gesture_state::began;
+    case UIGestureRecognizerStateChanged:
+        return ant::window::gesture_state::changed;
+    case UIGestureRecognizerStateEnded:
+    case UIGestureRecognizerStateCancelled:
+        return ant::window::gesture_state::ended;
+    case UIGestureRecognizerStatePossible:
+    case UIGestureRecognizerStateFailed:
+    default:
+        return ant::window::gesture_state::unknown;
+    }
+}
+
+static CGPoint getLocationInView(UIGestureRecognizer* gesture) {
+    CGPoint pt = [gesture locationInView:global_window];
+    pt.x *= global_window.contentScaleFactor;
+    pt.y *= global_window.contentScaleFactor;
+    return pt;
+}
+
+static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
+    NSUInteger n = gesture.numberOfTouches;
+    CGPoint sum;
+    sum.x = 0;
+    sum.y = 0;
+    for (NSUInteger i = 0; i < n; ++i) {
+        CGPoint pt = [gesture locationOfTouch:i inView:global_window];
+        sum.x += pt.x;
+        sum.y += pt.y;
+    }
+    sum.x *= global_window.contentScaleFactor / n;
+    sum.y *= global_window.contentScaleFactor / n;
+    return sum;
+}
+
+@interface LuaGestureHandler : NSObject {
+}
+@end
+@implementation LuaGestureHandler
+-(void)handleTap:(UITapGestureRecognizer *)gesture {
+    auto pt = getLocationInView(gesture);
+    struct ant::window::msg_gesture_tap msg;
+    msg.x = pt.x;
+    msg.y = pt.y;
+    ant::window::input_message(g_peekL, msg);
+}
+-(void)handlePinch:(UIPinchGestureRecognizer *)gesture {
+    auto state = getState(gesture.state);
+    if (state == ant::window::gesture_state::unknown) {
+        return;
+    }
+    auto pt = getLocationOfTouch(gesture);
+    struct ant::window::msg_gesture_pinch msg;
+    msg.state = state;
+    msg.x = pt.x;
+    msg.y = pt.y;
+    msg.velocity = gesture.velocity;
+    ant::window::input_message(g_peekL, msg);
+}
+-(void)handleLongPress:(UILongPressGestureRecognizer *)gesture {
+    auto state = getState(gesture.state);
+    if (state == ant::window::gesture_state::unknown) {
+        return;
+    }
+    auto pt = getLocationInView(gesture);
+    struct ant::window::msg_gesture_longpress msg;
+    msg.state = state;
+    msg.x = pt.x;
+    msg.y = pt.y;
+    ant::window::input_message(g_peekL, msg);
+}
+-(void)handlePan:(UIPanGestureRecognizer *)gesture {
+    auto state = getState(gesture.state);
+    if (state == ant::window::gesture_state::unknown) {
+        return;
+    }
+    struct ant::window::msg_gesture_pan msg;
+    auto pt = getLocationInView(gesture);
+    CGPoint velocity = [gesture velocityInView:global_window];
+    msg.state = state;
+    msg.x = pt.x;
+    msg.y = pt.y;
+    velocity.x *= global_window.contentScaleFactor;
+    velocity.y *= global_window.contentScaleFactor;
+    msg.velocity_x = velocity.x;
+    msg.velocity_y = velocity.y;
+    ant::window::input_message(g_peekL, msg);
+}
+-(void)handleSwipe:(UISwipeGestureRecognizer *)gesture {
+    auto state = getState(gesture.state);
+    if (state == ant::window::gesture_state::unknown) {
+        return;
+    }
+    struct ant::window::msg_gesture_swipe msg;
+    auto pt = getLocationInView(gesture);
+    msg.state = state;
+    msg.x = pt.x;
+    msg.y = pt.y;
+    msg.direction = (ant::window::swipe_direction)gesture.direction;
+    ant::window::input_message(g_peekL, msg);
+}
+@end
+
+id init_gesture() {
+    LuaGestureHandler* handler = [[LuaGestureHandler alloc] init];
+    UITapGestureRecognizer* tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:handler action:@selector(handleTap:)];
+    UIPinchGestureRecognizer* pinchGesture = [[UIPinchGestureRecognizer alloc] initWithTarget:handler action:@selector(handlePinch:)];
+    UILongPressGestureRecognizer* longPressGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:handler action:@selector(handleLongPress:)];
+    UIPanGestureRecognizer* panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:handler action:@selector(handlePan:)];
+    [global_window addGestureRecognizer:tapGesture];
+    [global_window addGestureRecognizer:pinchGesture];
+    [global_window addGestureRecognizer:longPressGesture];
+    [global_window addGestureRecognizer:panGesture];
+    return handler;
+}
 
 class MessageQueue {
 public:
@@ -233,21 +343,8 @@ static void MessageFetch(lua_State* L) {
     lua_settop(L, 0);
 }
 
-void loopwindow_init(struct ant_window_callback* cb) {
-    g_cb->update = cb->update;
-    g_cb->messageL = cb->messageL;
-    g_cb->updateL = cb->updateL;
-    window_message_set_fetch_func(MessageFetch);
-}
-
-void loopwindow_mainloop() {
-    int argc = 0;
-    char **argv = 0;
-    UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
-}
-
 static bool peekmessage() {
-    lua_State* L = g_cb->peekL;
+    lua_State* L = g_messageL;
     lua_Integer len = luaL_len(L, 1);
     g_msqueue.select([&](void* data){
         int n = seri_unpackptr(L, data);
@@ -260,7 +357,7 @@ static bool peekmessage() {
 }
 
 bool window_init(lua_State* L, const char *size) {
-    g_cb->peekL = L;
+    g_messageL = L;
     while (true) {
         if (peekmessage()) {
             break;
@@ -289,4 +386,25 @@ void window_set_maxfps(float fps) {
     //if (global_window) {
     //    [global_window maxfps: fps];
     //}
+}
+
+static int lmainloop(lua_State *L) {
+    g_peekL = lua_newthread(L);
+    lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_MESSAGE_IOS");
+    window_message_set_fetch_func(MessageFetch);
+    int argc = 0;
+    char **argv = 0;
+    UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+	return 0;
+}
+
+extern "C"
+int luaopen_window_ios(lua_State *L) {
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "mainloop", lmainloop },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, l);
+	return 1;
 }

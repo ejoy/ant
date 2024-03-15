@@ -25,7 +25,6 @@ lm:lua_source "window" {
     ios = {
         sources = {
             "src/platform/ios/*.mm",
-            "src/platform/ios/*.cpp",
         },
     },
     android = {

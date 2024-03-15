@@ -7,9 +7,9 @@ static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
 	return { str, sz };
 }
 
-static int init(lua_State *L) {
+static int init(lua_State* L) {
 	lua_State* messageL = lua_newthread(L);
-	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
+	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_MESSAGE");
 	lua_pushvalue(L, 1);
 	lua_xmove(L, messageL, 1);
 
