@@ -3,17 +3,19 @@ local depends = require "depends"
 
 return function (content, output, setting, depfiles)
 	if not content.path then
-		assert(content.value, "memory texture should define the texture memory")
+		if not content.dynamic then
+			assert(content.value, "memory texture should define the texture memory")
 	
-		if content.format ~= "RGBA8" then
-			error(("memory texture only support format RGBA8, format:%s provided"):format(content.format))
-		end
-		
-		local s = content.size
-		local w,h = s[1], s[2]
-		local numlayers = content.numLayers or 1
-		if numlayers*w*h*4 ~= #content.value then
-			error(("invalid image size [w, h]=[%d, %d], numLayers=%d, format:%s, value count:%d"):format(w, h, content.numLayers, content.format, #content.value))
+			if content.format ~= "RGBA8" then
+				error(("memory texture only support format RGBA8, format:%s provided"):format(content.format))
+			end
+			
+			local s = content.size
+			local w,h = s[1], s[2]
+			local numlayers = content.numLayers or 1
+			if numlayers*w*h*4 ~= #content.value then
+				error(("invalid image size [w, h]=[%d, %d], numLayers=%d, format:%s, value count:%d"):format(w, h, content.numLayers, content.format, #content.value))
+			end
 		end
 	end
 

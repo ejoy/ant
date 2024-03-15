@@ -1,0 +1,13 @@
+colorspace: sRGB
+normalmap: false
+mipmap: false
+dynamic: true
+format: RGBA8
+size: {32, 32}
+sampler:
+  MAG: POINT
+  MIN: POINT
+  MIP: POINT
+  U: CLAMP
+  V: CLAMP
+type: texture

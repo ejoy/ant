@@ -39,6 +39,9 @@ local function createTexture(c)
             --error "not support 3d texture right now"
             h = bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.format, c.flag, m)
         end
+    elseif c.dynamic then
+        local ti = c.info
+        h = bgfx.create_texture2d(ti.width, ti.height, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag)
     else
         h = bgfx.create_texture(bgfx.memory_buffer(aio.readall(c.name.."|main.bin")), c.flag)
     end

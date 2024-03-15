@@ -14,3 +14,20 @@ policy "render2d"
 
 system "viewrect2d_system"
     .implement "2d/viewrect2d.lua"
+
+component "dynamicquad".type "lua"
+component "dynamicquad_update"
+component "dynamicquad_ready"
+
+policy "dynamic2d"
+    .include_policy "ant.render|render_object"
+    .include_policy "ant.scene|scene_object"
+    .component_opt "render_layer"
+    .component_opt "mesh_result"
+    .component_opt "dynamicquad"
+    .component_opt "viewrect2d"
+    .component_opt "visible_masks"
+    .component "material"
+
+system "dynamic2d_system"
+    .implement "2d/dynamic2d.lua"

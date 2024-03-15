@@ -156,6 +156,10 @@ return function (output, setting, param)
     if param.colorspace == "sRGB" then
         config.flag = config.flag .. 'Sg'
     end
+	if param.dynamic then
+		config.flag = config.flag .. "rt"
+		config.dynamic = true
+	end
 	local imgpath = param.path
 
 	config.build_irradianceSH = param.build_irradianceSH
@@ -226,7 +230,11 @@ return function (output, setting, param)
 		ti.numLayers = param.numLayers or 1
 		ti.cubeMap = param.cubemap or false
 		ti.storageSize = w*h*4
-		ti.numMips = 1
+		if param.dynamic then
+			ti.numMips = 0
+		else
+			ti.numMips = 1
+		end
 		ti.bitsPerPixel = 32
 		config.info = ti
 		config.value = param.value
