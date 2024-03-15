@@ -40,10 +40,6 @@ static Rect CalcUV(const Rect& surface, const Rect& texture) {
 	return uv;
 }
 
-static float CalcLength(float percent, Element* e) {
-	return percent * e->GetBounds().size.w * 0.01f;
-}
-
 static auto GetSamplerFlag(Style::BackgroundRepeat v) {
 	switch (v) {
 	case Style::BackgroundRepeat::NoRepeat:
