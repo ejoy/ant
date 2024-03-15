@@ -217,7 +217,7 @@ local function ltask_init(path, mem)
 	assert(fastio.loadlua(mem, path))(true)
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
-	local waitfunc, fd = exclusive.eventinit()
+	local waitfunc, fd = ltask.eventinit()
 	local ltaskfd = socket.fd(fd)
 	-- replace schedule_message
 	function schedule_message()

@@ -535,7 +535,7 @@ local function ltask_init(path, mem)
 		f(data)
 	end
 
-	local waitfunc, fd = exclusive.eventinit()
+	local waitfunc, fd = ltask.eventinit()
 	local ltaskfd = socket.fd(fd)
 	local function read_ltaskfd()
 		waitfunc()
