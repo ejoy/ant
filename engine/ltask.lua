@@ -17,13 +17,10 @@ local ConfigCatalog <const> = {
 	crashlog = CoreConfig,
 	debuglog = CoreConfig,
 	worker_bind = RootConfig,
-	preload = RootConfig,
-	lua_path = RootConfig,
-	lua_cpath = RootConfig,
-	service_path = RootConfig,
 	exclusive = RootConfig,
 	preinit = RootConfig,
 	bootstrap = RootConfig,
+	initfunc = RootConfig,
 	mainthread = BootConfig
 }
 
@@ -41,10 +38,18 @@ local function root_thread()
 	assert(boot.new_service("root", rootConfig.service_source, rootConfig.service_chunkname, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
+	local initfunc = [[
+local name = ...
+package.path = nil
+package.cpath = ""
+local filename, err = package.searchpath(name, "/engine/service/root.lua")
+if not filename then
+	return nil, err
+end
+return loadfile(filename)
+]]
 	local init_msg, sz = ltask.pack("init", {
-		lua_path = rootConfig.lua_path,
-		lua_cpath = rootConfig.lua_cpath,
-		service_path = "/engine/service/root.lua",
+		initfunc = initfunc,
 		name = "root",
 		args = {rootConfig}
 	})
@@ -106,10 +111,6 @@ local function init(c)
 	rootConfig.bootstrap["timer"] = {}
 	rootConfig.exclusive = rootConfig.exclusive or {}
 
-	rootConfig.lua_path = nil
-	rootConfig.lua_cpath = ""
-	rootConfig.service_path = "${package}/service/?.lua;/engine/service/?.lua"
-
 	local servicelua = readall "/engine/service/service.lua"
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
@@ -124,10 +125,12 @@ local function init(c)
 	rootConfig.service_source = servicelua
 	rootConfig.service_chunkname = "@/engine/service/service.lua"
 
-	rootConfig.preload = [[
+	rootConfig.initfunc = [[
 package.path = "/engine/?.lua"
+package.cpath = ""
 local ltask = require "ltask"
 local vfs = require "vfs"
+local fastio = require "fastio"
 local thread = require "bee.thread"
 local ServiceIO = ltask.uniqueservice "io"
 local function call(...)
@@ -153,31 +156,28 @@ end
 function vfs.version()
 	return call("VERSION")
 end
-local rawsearchpath = package.searchpath
-package.searchpath = function(name, path, sep, dirsep)
-	local package, file = name:match "^([^|]*)|(.*)$"
-	if package and file then
-		path = path:gsub("%$%{([^}]*)%}", {
-			package = "/pkg/"..package,
-		})
-		name = file
-	else
-		path = path:gsub("%$%{([^}]*)%}[^;]*;", "")
+
+local function loadlua(path, env)
+	local mem, symbol = vfs.read(path)
+	if not mem then
+		return nil, ("file '%s' not found"):format(path)
 	end
-	return rawsearchpath(name, path, sep, dirsep)
+	local func, err = fastio.loadlua(mem, symbol, env)
+	if not func then
+		return nil, ("error loading file '%s':\n\t%s"):format(path, err)
+	end
+	return func
 end
 
-local rawloadfile = loadfile
-function loadfile(filename, mode, env)
-	if env == nil then
-		local package, file = filename:match "^/pkg/([^/]+)/(.+)$"
-		if package and file then
-			local pm = require "packagemanager"
-			return rawloadfile(filename, mode or "bt", pm.loadenv(package))
-		end
-		return rawloadfile(filename, mode)
-	end
-	return rawloadfile(filename, mode, env)
+local name = ...
+local package, file = name:match "^([^|]*)|(.*)$"
+if package and file then
+	local pm = require "packagemanager"
+	local filename = "/pkg/"..package.."/service/"..file..".lua"
+	return loadlua(filename, pm.loadenv(package))
+else
+	local filename = "/engine/service/"..name..".lua"
+	return loadlua(filename)
 end
 ]]
 end
