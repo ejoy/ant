@@ -32,13 +32,13 @@ local rootConfig
 local bootConfig
 
 local function new_service(label, id)
-	local sid = assert(boot.new_service(label, rootConfig.init_service, id))
+	local sid = assert(boot.new_service(label, rootConfig.service_source, rootConfig.service_chunkname, id))
 	assert(sid == id)
 	return sid
 end
 
 local function root_thread()
-	assert(boot.new_service("root", rootConfig.init_service, SERVICE_ROOT))
+	assert(boot.new_service("root", rootConfig.service_source, rootConfig.service_chunkname, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
@@ -111,22 +111,18 @@ local function init(c)
 	rootConfig.service_path = "${package}/service/?.lua;/engine/service/?.lua"
 
 	local servicelua = readall "/engine/service/service.lua"
-
-	local initstr = ""
-
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
 		dbg:event("setThreadName", "Thread: Bootstrap")
-		initstr = [[
-local ltask = require "ltask"
-local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")
-assert(loadfile '/engine/debugger.lua')()
-	: event("setThreadName", name)
-	: event "wait"
-]]
+		servicelua = table.concat({
+			[[local ltask = require "ltask"]],
+			[[local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")]],
+			[[assert(loadfile '/engine/debugger.lua')(): event("setThreadName", name): event "wait"]],
+			servicelua,
+		}, ";")
 	end
-
-rootConfig.init_service = initstr .. servicelua
+	rootConfig.service_source = servicelua
+	rootConfig.service_chunkname = "@/engine/service/service.lua"
 
 	rootConfig.preload = [[
 package.path = "/engine/?.lua"
