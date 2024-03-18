@@ -38,18 +38,8 @@ local function root_thread()
 	assert(boot.new_service("root", rootConfig.service_source, rootConfig.service_chunkname, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
-	local initfunc = [[
-local name = ...
-package.path = nil
-package.cpath = ""
-local filename, err = package.searchpath(name, "/engine/service/root.lua")
-if not filename then
-	return nil, err
-end
-return loadfile(filename)
-]]
 	local init_msg, sz = ltask.pack("init", {
-		initfunc = initfunc,
+		initfunc = [[return loadfile "/engine/service/root.lua"]],
 		name = "root",
 		args = {rootConfig}
 	})
