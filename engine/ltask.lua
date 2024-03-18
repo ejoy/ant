@@ -108,7 +108,7 @@ local function init(c)
 		coreConfig.worker = 6
 	end
 
-	rootConfig.bootstrap["timer"] = {}
+	rootConfig.bootstrap["ant.ltask|timer"] = {}
 	rootConfig.exclusive = rootConfig.exclusive or {}
 
 	local servicelua = readall "/engine/service/service.lua"
@@ -157,28 +157,20 @@ function vfs.version()
 	return call("VERSION")
 end
 
-local function loadlua(path, env)
-	local mem, symbol = vfs.read(path)
-	if not mem then
-		return nil, ("file '%s' not found"):format(path)
-	end
-	local func, err = fastio.loadlua(mem, symbol, env)
-	if not func then
-		return nil, ("error loading file '%s':\n\t%s"):format(path, err)
-	end
-	return func
-end
-
+local pm = require "packagemanager"
 local name = ...
 local package, file = name:match "^([^|]*)|(.*)$"
-if package and file then
-	local pm = require "packagemanager"
-	local filename = "/pkg/"..package.."/service/"..file..".lua"
-	return loadlua(filename, pm.loadenv(package))
-else
-	local filename = "/engine/service/"..name..".lua"
-	return loadlua(filename)
+local filename = "/pkg/"..package.."/service/"..file..".lua"
+local mem, symbol = vfs.read(filename)
+if not mem then
+	return nil, ("file '%s' not found"):format(filename)
 end
+local func, err = fastio.loadlua(mem, symbol, pm.loadenv(package))
+if not func then
+	return nil, ("error loading file '%s':\n\t%s"):format(filename, err)
+end
+return func
+
 ]]
 end
 

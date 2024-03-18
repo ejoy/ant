@@ -2,7 +2,7 @@ local function start(initargs)
     local boot = dofile "/engine/ltask.lua"
     local config = {
         bootstrap = {
-            ["logger"] = {},
+            ["ant.ltask|logger"] = {},
             ["ant.window|boot"] = {
                 args = {initargs},
                 unique = false,
