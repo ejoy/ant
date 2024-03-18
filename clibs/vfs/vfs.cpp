@@ -48,6 +48,11 @@ local function searcher_lua(name)
     end
     return "no file '"..path.."'"
 end
+local searcher_preload = package.searchers[1]
+package.searchers = {
+    searcher_preload,
+    searcher_lua,
+}
 if initfunc then
     if __ANT_RUNTIME__ then
         local fw = require "firmware"
@@ -55,23 +60,6 @@ if initfunc then
     else
         assert(loadfile(initfunc))(vfs, initargs)
     end
-end
-local searcher_preload = package.searchers[1]
-package.searchers = {
-    searcher_preload,
-    searcher_lua,
-}
-function package.searchpath(name, path)
-    local err = ''
-    name = string.gsub(name, '%.', '/')
-    for c in string.gmatch(path, '[^;]+') do
-        local filename = string.gsub(c, '%?', name)
-        if vfs.type(filename) ~= nil then
-            return filename
-        end
-        err = err .. ("\n\tno file '%s'"):format(filename)
-    end
-    return nil, err
 end
 return vfs
 )";
