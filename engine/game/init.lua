@@ -15,30 +15,18 @@ thread.newchannel "IOreq"
 local s, c = socket.pair()
 local io_req = thread.channel "IOreq"
 
-local io_initargs = {
+io_req:push {
     repopath = repopath,
     fd = s:detach(),
     editor = __ANT_EDITOR__,
 }
 
-local vfs_initargs = {
-    fd = c:detach(),
-    editor = __ANT_EDITOR__,
-}
-
-io_req:push(io_initargs)
-
 vfs.iothread = boot.preinit [[
-    -- IO thread
-    local dbg = dofile "/engine/debugger.lua"
-    if dbg then
-        dbg:event("setThreadName", "Thread: IO")
-        dbg:event "wait"
-    end
-    local fastio = require "fastio"
-    local thread = require "bee.thread"
-    local io_req = thread.channel "IOreq"
-    assert(loadfile "/engine/game/io.lua")(io_req:bpop())
+-- IO thread
+assert(loadfile "/engine/game/io.lua")()
 ]]
 
-vfs.initfunc("/engine/firmware/init_thread.lua", vfs_initargs)
+vfs.initfunc("/engine/firmware/init_thread.lua", {
+    fd = c:detach(),
+    editor = __ANT_EDITOR__,
+})

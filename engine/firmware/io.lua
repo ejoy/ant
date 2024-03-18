@@ -31,7 +31,9 @@ local SELECT_READ <const> = bee_select.SELECT_READ
 local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 
 local io_req = thread.channel "IOreq"
-local config, fddata = io_req:bpop()
+local initargs = io_req:bpop()
+
+local config = initargs.config
 
 local QUIT = false
 local OFFLINE = false
@@ -89,7 +91,7 @@ local LOG; do
 	end
 end
 
-local channelfd = socket.fd(fddata)
+local channelfd = socket.fd(initargs.fd)
 local channelfd_init = false
 
 thread.setname "ant - IO thread"

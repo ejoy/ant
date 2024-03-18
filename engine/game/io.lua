@@ -1,17 +1,22 @@
-local initargs = ...
-
-__ANT_EDITOR__ = initargs.editor
+local dbg = dofile "/engine/debugger.lua"
+if dbg then
+	dbg:event("setThreadName", "Thread: IO")
+	dbg:event "wait"
+end
+local fastio = require "fastio"
+local socket = require "bee.socket"
+local thread = require "bee.thread"
+local select = require "bee.select"
 
 package.path = "/engine/?.lua"
 package.cpath = ""
-
-local fastio = require "fastio"
-local thread = require "bee.thread"
-local socket = require "bee.socket"
-local io_req = thread.channel "IOreq"
 thread.setname "ant - IO thread"
 
-local select = require "bee.select"
+local io_req = thread.channel "IOreq"
+local initargs = io_req:bpop()
+
+__ANT_EDITOR__ = initargs.editor
+
 local selector = select.create()
 local SELECT_READ <const> = select.SELECT_READ
 local SELECT_WRITE <const> = select.SELECT_WRITE

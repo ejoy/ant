@@ -139,7 +139,11 @@ thread.newchannel "IOreq"
 
 local s, c = socket.pair()
 local io_req = thread.channel "IOreq"
-io_req:push(config, s:detach())
+
+io_req:push {
+    config = config,
+    fd = s:detach(),
+}
 
 vfs.iothread = boot.preinit [[
 -- IO thread
@@ -150,4 +154,5 @@ vfs.initfunc("/engine/firmware/init_thread.lua", {
 	fd = c:detach(),
 	editor = __ANT_EDITOR__,
 })
+
 dofile "/main.lua"
