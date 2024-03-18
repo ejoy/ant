@@ -5,7 +5,7 @@
 #include <memory>
 
 extern "C" {
-#include "luazip.h"
+#include "memfile.h"
 }
 
 static std::wstring u2w(const std::string_view& str) {
@@ -39,15 +39,14 @@ static int systemfont(lua_State* L) {
         DeleteDC(hdc);
         return luaL_error(L, "Create font failed: %d", GetLastError());
     }
-    zip_reader_cache* cache = nullptr;
+    memory_file* file = nullptr;
     bool ok = false;
     HGDIOBJ oldobj = SelectObject(hdc, hfont);
     for (uint32_t tag : {0x66637474/*ttcf*/, 0}) {
         DWORD bytes = GetFontData(hdc, tag, 0, 0, 0);
         if (bytes != GDI_ERROR) {
-            cache = luazip_new(bytes, NULL);
-            void* table = luazip_data(cache, nullptr);
-            bytes = GetFontData(hdc, tag, 0, (unsigned char*)table, bytes);
+            file = memory_file_alloc(bytes);
+            bytes = GetFontData(hdc, tag, 0, (unsigned char*)file->data, file->sz);
             if (bytes != GDI_ERROR) {
                 ok = true;
                 break;
@@ -58,10 +57,10 @@ static int systemfont(lua_State* L) {
     DeleteObject(hfont);
     DeleteDC(hdc);
     if (!ok) {
-        luazip_close(cache);
+        memory_file_close(file);
         return luaL_error(L, "Read font data failed");
     }
-    lua_pushlightuserdata(L, cache);
+    lua_pushlightuserdata(L, file);
     return 1;
 }
 
