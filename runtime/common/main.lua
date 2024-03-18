@@ -1,9 +1,6 @@
 local function LoadFile(path, env)
     local fastio = require "fastio"
     local data = fastio.readall_v(path, path)
-    if not data then
-        error(('%s:No such file or directory.'):format(path))
-    end
     local func, err = fastio.loadlua(data, path, env)
     if not func then
         error(err)
