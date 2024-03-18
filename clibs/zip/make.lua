@@ -248,18 +248,19 @@ lm:lua_source "zip-binding" {
         "gen-zlib",
         "gen-zlib_name_mangling",
     },
-	includes = {
-		lm.AntDir .. "/3rd/minizip-ng",
-		ZLIBDIR,
+    includes = {
+        lm.AntDir .. "/3rd/minizip-ng",
+        lm.AntDir .. "/clibs/foundation",
+        ZLIBDIR,
         "$builddir/gen-zlib",
-	},
-	sources = "*.c",
+    },
+    sources = "*.c",
 }
 
 lm:lua_source "zip" {
-	deps = {
-		"zlib-ng",
-		"minizip-ng",
-		"zip-binding",
-	}
+    deps = {
+        "zlib-ng",
+        "minizip-ng",
+        "zip-binding",
+    }
 }

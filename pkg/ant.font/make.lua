@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 lm:lua_source "font-systemfont" {
     includes = {
-        lm.AntDir .. "/clibs/zip"
+        lm.AntDir .. "/clibs/foundation",
     },
     windows = {
         sources = {

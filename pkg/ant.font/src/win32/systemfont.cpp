@@ -3,10 +3,7 @@
 #include <string>
 #include <string_view>
 #include <memory>
-
-extern "C" {
 #include "memfile.h"
-}
 
 static std::wstring u2w(const std::string_view& str) {
     if (str.empty()) {
@@ -46,7 +43,7 @@ static int systemfont(lua_State* L) {
         DWORD bytes = GetFontData(hdc, tag, 0, 0, 0);
         if (bytes != GDI_ERROR) {
             file = memory_file_alloc(bytes);
-            bytes = GetFontData(hdc, tag, 0, (unsigned char*)file->data, file->sz);
+            bytes = GetFontData(hdc, tag, 0, (unsigned char*)file->data, (DWORD)file->sz);
             if (bytes != GDI_ERROR) {
                 ok = true;
                 break;

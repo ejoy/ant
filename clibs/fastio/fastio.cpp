@@ -3,9 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <array>
-extern "C" {
-#include "../zip/memfile.h"
-}
+#include "memfile.h"
 
 extern "C" {
 #include "sha1.h"
