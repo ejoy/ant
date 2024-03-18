@@ -160,16 +160,7 @@ end
 local pm = require "packagemanager"
 local name = ...
 local package, file = name:match "^([^|]*)|(.*)$"
-local filename = "/pkg/"..package.."/service/"..file..".lua"
-local mem, symbol = vfs.read(filename)
-if not mem then
-	return nil, ("file '%s' not found"):format(filename)
-end
-local func, err = fastio.loadlua(mem, symbol, pm.loadenv(package))
-if not func then
-	return nil, ("error loading file '%s':\n\t%s"):format(filename, err)
-end
-return func
+return pm.loadenv(package).loadfile("service/"..file..".lua")
 
 ]]
 end

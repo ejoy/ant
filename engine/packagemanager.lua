@@ -8,8 +8,6 @@ local fastio = require "fastio"
 
 local registered = {}
 
-local loadenv
-
 local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
@@ -78,19 +76,15 @@ local function sandbox_env(packagename)
         error(("module '%s' not found:\n\tno field package.preload['%s']\n\tno file '%s'"):format(name, name, path))
     end
 
-    --TODO: remove it
     function env.loadfile(path)
-        local package = path:match "^/pkg/([^/]+)/.+$"
-        if not package then
-            return nil, ("invalid path: %s"):format(path)
-        end
-        local mem, symbol = vfs.read(path)
+        local filename = "/pkg/"..packagename.."/"..path
+        local mem, symbol = vfs.read(filename)
         if not mem then
-            return nil, ("file '%s' not found"):format(path)
+            return nil, ("file '%s' not found"):format(filename)
         end
-        local func, err = fastio.loadlua(mem, symbol, loadenv(package))
+        local func, err = fastio.loadlua(mem, symbol, env)
         if not func then
-            return nil, ("error loading file '%s':\n\t%s"):format(path, err)
+            return nil, ("error loading file '%s':\n\t%s"):format(filename, err)
         end
         return func
     end
@@ -110,7 +104,7 @@ local function sandbox_env(packagename)
     return env
 end
 
-function loadenv(name)
+local function loadenv(name)
     local env = registered[name]
     if not env then
         if vfs.type("/pkg/"..name) ~= 'dir' then
