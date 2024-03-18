@@ -191,31 +191,6 @@ static int readall_f(lua_State *L) {
 }
 
 template <bool RAISE>
-static int readall_u(lua_State *L) {
-    const char* filename = getfile(L);
-    lua_settop(L, 2);
-    file_t f = file_t::open(L, filename);
-    if (!f.suc()) {
-        return raise_error<RAISE>(L, "open", getsymbol(L, filename));
-    }
-    size_t size = f.size();
-    void* data = lua_newuserdatauv(L, size, 0);
-    if (!data) {
-        f.close();
-        return luaL_error(L, "not enough memory");
-    }
-    size_t nr = f.read(data, size);
-    assert(nr == size);
-    if (nr != size) {
-        lua_pushlightuserdata(L, data);
-        lua_pushinteger(L, nr);
-        lua_rotate(L, -3, 2);
-        return 3;
-    }
-    return 1;
-}
-
-template <bool RAISE>
 static int readall_s(lua_State *L) {
     const char* filename = getfile(L);
     lua_settop(L, 2);
@@ -362,7 +337,6 @@ luaopen_fastio(lua_State* L) {
         {"readall_v", readall_v<true>},
         {"readall_v_noerr", readall_v<false>},
         {"readall_f", readall_f<true>},
-        {"readall_u", readall_u<true>},
         {"readall_s", readall_s<true>},
         {"readall_s_noerr", readall_s<false>},
         {"sha1", sha1<true>},
