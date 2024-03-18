@@ -1,5 +1,3 @@
-local fw = require "firmware"
-
 local path = os.getenv "LUA_DEBUG_PATH"
 if path then
 	local function load_dbg()
@@ -9,7 +7,7 @@ if path then
 			f:close()
 			return assert(load(str, "=(debugger.lua)"))(path)
 		end
-		return assert(fw.loadfile "debugger.lua", "=(debugger.lua)")()
+		return assert(loadfile "/engine/firmware/debugger.lua", "=(debugger.lua)")()
 	end
 	load_dbg()
 		: attach {}
@@ -96,7 +94,7 @@ local channelfd_init = false
 
 thread.setname "ant - IO thread"
 
-local vfs = assert(fw.loadfile "vfs.lua")()
+local vfs = assert(loadfile "/engine/firmware/vfs.lua")()
 local repo = vfs.new(config.vfs)
 
 local connection = {

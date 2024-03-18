@@ -131,11 +131,10 @@ io_req:push(config, s:detach())
 
 vfs.iothread = boot.preinit [[
 -- IO thread
-local fw = require "firmware"
-assert(fw.loadfile "io.lua")()
+assert(loadfile "/engine/firmware/io.lua")()
 ]]
 
-vfs.initfunc("init_thread.lua", {
+vfs.initfunc("/engine/firmware/init_thread.lua", {
 	fd = c:detach(),
 	editor = __ANT_EDITOR__,
 })

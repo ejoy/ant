@@ -14,8 +14,16 @@ local initfunc, initargs = ...
 local vfs = {}
 local fastio = require "fastio"
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
-if not __ANT_RUNTIME__ then
+if __ANT_RUNTIME__ then
+    local fw = require "firmware"
     function vfs.read(path)
+        assert(path:sub(1, 17) == "/engine/firmware/")
+        local data = fw.readall_v(path:sub(18))
+        return data, path
+    end
+else
+    function vfs.read(path)
+        assert(path:sub(1, 8) == "/engine/")
         local lpath = path:sub(2)
         local data = fastio.readall_v(lpath, path)
         return data, lpath
@@ -54,12 +62,7 @@ package.searchers = {
     searcher_lua,
 }
 if initfunc then
-    if __ANT_RUNTIME__ then
-        local fw = require "firmware"
-        assert(fw.loadfile(initfunc))(vfs, initargs)
-    else
-        assert(loadfile(initfunc))(vfs, initargs)
-    end
+    assert(loadfile(initfunc))(vfs, initargs)
 end
 return vfs
 )";
@@ -67,12 +70,7 @@ return vfs
 static const std::string_view updateinitfunc = R"(
 local vfs, initfunc, initargs = ...
 if initfunc then
-    if package.preload.firmware ~= nil then
-        local fw = require "firmware"
-        assert(fw.loadfile(initfunc))(vfs, initargs)
-    else
-        assert(loadfile(initfunc))(vfs, initargs)
-    end
+    assert(loadfile(initfunc))(vfs, initargs)
 end
 )";
 
