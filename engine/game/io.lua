@@ -19,16 +19,12 @@ local SELECT_WRITE <const> = select.SELECT_WRITE
 local quit = false
 local channelfd = socket.fd(initargs.fd)
 
-local function dofile(path)
-	return fastio.loadfile(path)()
-end
-
-dofile "engine/log.lua"
-package.loaded["vfsrepo"] = dofile "pkg/ant.vfs/vfsrepo.lua"
+dofile "/engine/log.lua"
+package.loaded["vfsrepo"] = dofile "/pkg/ant.vfs/vfsrepo.lua"
 
 do
 	local vfs = require "vfs"
-	local new_tiny = dofile "pkg/ant.vfs/tiny.lua"
+	local new_tiny = dofile "/pkg/ant.vfs/tiny.lua"
 	for k, v in pairs(new_tiny(initargs.repopath)) do
 		vfs[k] = v
 	end
@@ -37,7 +33,7 @@ end
 local CMD = {}
 
 do
-	local new_std = dofile "pkg/ant.vfs/std.lua"
+	local new_std = dofile "/pkg/ant.vfs/std.lua"
 	local repo = new_std {
 		rootpath = initargs.repopath,
 		nohash = true,

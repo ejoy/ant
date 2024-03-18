@@ -1,20 +1,32 @@
-local _dofile = dofile
-function dofile(path)
-	local fastio = require "fastio"
-    return fastio.loadfile(path)()
+local function LoadFile(path, env)
+    local fastio = require "fastio"
+    local data = fastio.readall_v(path, path)
+    local func, err = fastio.loadlua(data, path, env)
+    if not func then
+        error(err)
+    end
+    return func
 end
+
+local function LoadDbg(expr)
+    local env = setmetatable({}, {__index = _G})
+    function env.dofile(path)
+        return LoadFile(path, env)()
+    end
+    assert(load(expr, "=(expr)", "t", env))()
+end
+
 local i = 1
 while true do
     if arg[i] == '-e' then
         i = i + 1
         assert(arg[i], "'-e' needs argument")
-        load(arg[i], "=(expr)")()
+        LoadDbg(arg[i])
     elseif arg[i] == nil then
         break
     end
     i = i + 1
 end
-dofile = _dofile
 
 __ANT_RUNTIME__ = true
 

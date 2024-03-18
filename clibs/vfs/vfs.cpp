@@ -23,7 +23,7 @@ if __ANT_RUNTIME__ then
     end
 else
     function vfs.read(path)
-        assert(path:sub(1, 8) == "/engine/")
+        assert(path:sub(1, 1) == "/")
         local lpath = path:sub(2)
         local data = fastio.readall_v(lpath, path)
         return data, lpath
