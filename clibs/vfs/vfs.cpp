@@ -15,18 +15,11 @@ local vfs = {}
 local fastio = require "fastio"
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
 if not __ANT_RUNTIME__ then
-    local function realpath(path)
-        if path:sub(1,8) == "/engine/" then
-            return path:sub(2)
-        end
-        return path
-    end
     function vfs.read(path)
-        local lpath = realpath(path)
+        local lpath = path:sub(2)
         local data = fastio.readall_v(lpath, path)
         return data, lpath
     end
-    vfs.realpath = realpath
 end
 function loadfile(path, _, env)
     local mem, symbol = vfs.read(path)
