@@ -159,15 +159,13 @@ static int readall_v(lua_State *L) {
     auto cache = luazip_new(size, NULL);
     if (!cache) {
         f.close();
-        luaL_error(L, "not enough memory");
-        return 0;
+        return luaL_error(L, "not enough memory");
     }
     auto buf = luazip_data(cache, nullptr);
     size_t nr = f.read(buf, size);
     if (nr != size) {
         luazip_close(cache);
-        luaL_error(L, "unknown read error");
-        return 0;
+        return luaL_error(L, "unknown read error");
     }
     lua_pushlightuserdata(L, cache);
     return 1;
@@ -185,15 +183,13 @@ static int readall_f(lua_State *L) {
     auto cache = luazip_new(size, NULL);
     if (!cache) {
         f.close();
-        luaL_error(L, "not enough memory");
-        return 0;
+        return luaL_error(L, "not enough memory");
     }
     auto buf = luazip_data(cache, nullptr);
     size_t nr = f.read(buf, size);
     if (nr != size) {
         luazip_close(cache);
-        luaL_error(L, "unknown read error");
-        return 0;
+        return luaL_error(L, "unknown read error");
     }
     lua_pushlightuserdata(L, cache);
     lua_pushcclosure(L, wrap_closure, 1);
@@ -212,8 +208,7 @@ static int readall_u(lua_State *L) {
     void* data = lua_newuserdatauv(L, size, 0);
     if (!data) {
         f.close();
-        luaL_error(L, "not enough memory");
-        return 0;
+        return luaL_error(L, "not enough memory");
     }
     size_t nr = f.read(data, size);
     assert(nr == size);
@@ -238,8 +233,7 @@ static int readall_s(lua_State *L) {
     void* data = lua_newuserdatauv(L, size, 0);
     if (!data) {
         f.close();
-        luaL_error(L, "not enough memory");
-        return 0;
+        return luaL_error(L, "not enough memory");
     }
     size_t nr = f.read(data, size);
     lua_pushlstring(L, (const char*)data, nr);
