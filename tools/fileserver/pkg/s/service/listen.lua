@@ -18,8 +18,8 @@ while true do
     print(err)
     ltask.sleep(10)
 end
-post_spawn "s|ios.event"
-post_spawn "s|android.event"
+post_spawn "s|ios/event"
+post_spawn "s|android/event"
 while true do
     local newfd, err = socket.listen(fd)
     if newfd then

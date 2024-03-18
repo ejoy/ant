@@ -41,7 +41,7 @@ local function update_devices(msg)
             if devices[k] == nil then
                 print('Android Device Attached:', k)
                 devices[k] = {
-                    sid = ltask.spawn("s|android.proxy", adb, k, 17001),
+                    sid = ltask.spawn("s|android/proxy", adb, k, 17001),
                 }
                 ltask.send(devices[k].sid, "Attached")
             end

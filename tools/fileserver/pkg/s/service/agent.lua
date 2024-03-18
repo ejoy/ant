@@ -9,7 +9,7 @@ local quit = false
 local message = {}
 local ServiceDebugProxy
 local ServiceVfsMgr = ltask.queryservice "s|vfsmgr"
-local ServiceLogManager = ltask.uniqueservice "s|log.manager"
+local ServiceLogManager = ltask.uniqueservice "s|log/manager"
 local ServiceEditor = ltask.uniqueservice "s|editor"
 local CompileId
 

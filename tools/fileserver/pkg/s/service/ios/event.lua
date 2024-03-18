@@ -44,7 +44,7 @@ while true do
         local info = devices[event.DeviceID]
         if not info then
             info = {}
-            info.sid = ltask.spawn("s|ios.proxy", event.DeviceID)
+            info.sid = ltask.spawn("s|ios/proxy", event.DeviceID)
             devices[event.DeviceID] = info
         end
         info.sn = event.Properties.SerialNumber
