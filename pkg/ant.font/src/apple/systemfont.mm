@@ -17,7 +17,7 @@ static int systemfont(lua_State* L) {
     size_t len = (size_t)ftell(f);
     fseek(f, 0, SEEK_SET);
     auto file = memory_file_alloc(len);
-    fread(file->data, file->sz, 1, f);
+    fread((void*)ile->data, file->sz, 1, f);
     fclose(f);
     lua_pushlightuserdata(L, file);
     return 1;
