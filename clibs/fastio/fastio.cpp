@@ -373,7 +373,7 @@ static int tostring(lua_State *L) {
     const size_t offset = (size_t)luaL_optinteger(L, 2, 1) - 1;
     const size_t size = (size_t)luaL_checkinteger(L, 3);
     lua_pushlstring(L, (const char*)file->data+offset, size);
-    //TODO: close?
+    memory_file_close(file);
     return 1;
 }
 
