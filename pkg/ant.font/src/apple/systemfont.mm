@@ -1,10 +1,7 @@
 #include <lua.hpp>
 #include <Foundation/Foundation.h>
 #include <CoreText/CoreText.h>
-
-extern "C" {
-#include "luazip.h"
-}
+#include "memfile.h"
 
 static int systemfont(lua_State* L) {
     const char* familyName = luaL_checkstring(L, 1);
@@ -19,11 +16,10 @@ static int systemfont(lua_State* L) {
     fseek(f, 0, SEEK_END);
     size_t len = (size_t)ftell(f);
     fseek(f, 0, SEEK_SET);
-    auto cache = luazip_new(len, NULL);
-    void* buffer = luazip_data(cache, nullptr);
-    fread(buffer, len, 1, f);
+    auto file = memory_file_alloc(len);
+    fread(file->data, file->sz, 1, f);
     fclose(f);
-    lua_pushlightuserdata(L, cache);
+    lua_pushlightuserdata(L, file);
     return 1;
 }
 
