@@ -1,21 +1,6 @@
 local interface = require "interface"
-local fastio = require "fastio"
-local vfs = require "vfs"
 local pm = require "packagemanager"
 local serialization = require "bee.serialization"
-
-local function package_loadfile(packname, file, env)
-	local path = "/pkg/"..packname.."/"..file
-	local mem, symbol = vfs.read(path)
-	if not mem then
-		error(("file '%s' not found"):format(path))
-	end
-	local func, err = fastio.loadlua(mem, symbol, env)
-	if not func then
-		error(("error loading file '%s':\n\t%s"):format(path, err))
-	end
-	return func
-end
 
 local create_ecs
 
@@ -34,7 +19,10 @@ local function package_require(w, packname, file)
 		return p
 	end
 	local env = pm.loadenv(packname)
-	local initfunc = package_loadfile(packname, file, env)
+	local initfunc, err = env.loadfile(file)
+	if not initfunc then
+		error(err)
+	end
 	local r = initfunc(_PACKAGE.ecs)
 	if r == nil then
 		r = true
@@ -149,7 +137,7 @@ end
 local function import(w, features)
 	local newdecl = w._newdecl
 	for _, k in ipairs(features) do
-		interface.import_feature(w._envs, w._decl, newdecl, package_loadfile, k)
+		interface.import_feature(w._envs, w._decl, newdecl, k)
 	end
 	for name, v in pairs(newdecl.system) do
 		local impl = v.implement[1]
