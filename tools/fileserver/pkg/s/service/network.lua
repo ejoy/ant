@@ -1,6 +1,5 @@
 local ltask = require "ltask"
 local socket = require "bee.socket"
-
 local select = require "bee.select"
 local selector = select.create()
 local SELECT_READ <const> = select.SELECT_READ
@@ -353,9 +352,21 @@ function S.close(h)
     end
 end
 
+do
+    local waitfunc, fd = ltask.eventinit()
+    local ltaskfd = socket.fd(fd)
+    status[ltaskfd] = {
+        on_read = function ()
+            waitfunc()
+            ltask.sleep(0)
+        end
+    }
+    selector:event_add(ltaskfd, SELECT_READ)
+end
+
 ltask.fork(function()
     while true do
-        for fd, event in selector:wait(0.001) do
+        for fd, event in selector:wait() do
             if event & SELECT_READ ~= 0 then
                 local s = status[fd]
                 s:on_read()
@@ -365,11 +376,7 @@ ltask.fork(function()
                 s:on_write()
             end
         end
-        ltask.sleep(0)
     end
 end)
-
-function S.quit()
-end
 
 return S
