@@ -1,4 +1,10 @@
+local ltask = require "ltask"
+
 local function start(initargs)
+    if not __ANT_RUNTIME__ then
+        ltask.spawn("ant.window|boot", initargs)
+        return
+    end
     local boot = dofile "/engine/ltask.lua"
     local config = {
         bootstrap = {
@@ -8,10 +14,6 @@ local function start(initargs)
             }
         },
         worker = 6,
-        worker_bind = {
-            ["ant.window|window"] = 0,
-            ["ant.hwi|bgfx"] = 1,
-        },
     }
     local platform = require "bee.platform"
     if platform.os == "ios" then
@@ -31,7 +33,6 @@ local function start(initargs)
 end
 
 local function newproxy(t, k)
-    local ltask = require "ltask"
     local ServiceWindow = ltask.queryservice "ant.window|window"
 
     local function reboot(initargs)

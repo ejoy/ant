@@ -26,3 +26,13 @@ vfs.initfunc("/engine/firmware/init_thread.lua", {
     fd = c:detach(),
     editor = __ANT_EDITOR__,
 })
+
+dofile "/engine/ltask.lua" {
+    bootstrap = {
+        ["main"] = {
+            args = { arg },
+            unique = false,
+        }
+    },
+    worker = 6,
+}

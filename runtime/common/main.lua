@@ -41,4 +41,3 @@ for j = #arg - i + 1, #arg do
 end
 
 dofile "/engine/console/bootstrap.lua"
-LoadFile(arg[0])(table.unpack(arg))

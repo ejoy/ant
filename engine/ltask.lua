@@ -140,6 +140,9 @@ function vfs.version()
 	return call("VERSION")
 end
 
+if name == "main" then
+	return loadfile "/main.lua"
+end
 local pm = require "packagemanager"
 local package, file = name:match "^([^|]*)|(.*)$"
 return pm.loadenv(package).loadfile("service/"..file..".lua")
