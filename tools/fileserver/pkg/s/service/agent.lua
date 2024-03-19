@@ -27,7 +27,7 @@ ltask.fork(function ()
 				fp:write('\n')
 			end
 		end
-		ltask.sleep(1)
+		ltask.wait(LoggerQueue)
 	end
 end)
 
@@ -242,7 +242,10 @@ end
 
 function message.LOG(data)
 	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
-    LoggerQueue[#LoggerQueue+1] = data
+	LoggerQueue[#LoggerQueue+1] = data
+	if #LoggerQueue == 1 then
+		ltask.wakeup(LoggerQueue)
+	end
 end
 
 local ignore_log = {
