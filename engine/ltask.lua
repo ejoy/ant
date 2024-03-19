@@ -99,6 +99,7 @@ local function init(c)
 	end
 
 	rootConfig.bootstrap["ant.ltask|timer"] = {}
+	rootConfig.bootstrap["ant.ltask|logger"] = {}
 	rootConfig.exclusive = rootConfig.exclusive or {}
 
 	local servicelua = readall "/engine/service/service.lua"
