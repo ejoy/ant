@@ -27,10 +27,13 @@ lm:lua_source "font" {
         lm.AntDir .. "/3rd/bgfx/include",
         lm.AntDir .. "/3rd/bx/include",
         lm.AntDir .. "/3rd/bgfx/3rdparty",
-        lm.AntDir .. "/clibs/bgfx"
+        lm.AntDir .. "/3rd/bee.lua",
+        lm.AntDir .. "/clibs/bgfx",
+        lm.AntDir .. "/clibs/luabind",
     },
     sources = {
         "src/*.c",
+        "src/*.cpp",
     },
     msvc = {
         flags = {
