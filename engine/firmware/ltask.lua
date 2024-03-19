@@ -39,7 +39,7 @@ local function root_thread()
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
-		initfunc = [[return loadfile "/engine/service/root.lua"]],
+		initfunc = [[return loadfile "/engine/firmware/root.lua"]],
 		name = "root",
 		args = {rootConfig}
 	})
@@ -94,7 +94,7 @@ local function init(c)
 	rootConfig.bootstrap["ant.ltask|logger"] = {}
 	rootConfig.exclusive = rootConfig.exclusive or {}
 
-	local servicelua = readall "/engine/service/service.lua"
+	local servicelua = readall "/engine/firmware/service.lua"
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
 		dbg:event("setThreadName", "Thread: Bootstrap")
@@ -106,7 +106,7 @@ local function init(c)
 		}, ";")
 	end
 	rootConfig.service_source = servicelua
-	rootConfig.service_chunkname = "@/engine/service/service.lua"
+	rootConfig.service_chunkname = "@/engine/firmware/service.lua"
 
 	rootConfig.initfunc = [[
 local name = ...
@@ -151,7 +151,7 @@ return pm.loadenv(package).loadfile("service/"..file..".lua")
 end
 
 local function io_switch()
-	local servicelua = "/engine/service/service.lua"
+	local servicelua = "/engine/firmware/service.lua"
 	local mem = vfs.read(servicelua)
 	vfs.send("SWITCH", servicelua, mem)
 end

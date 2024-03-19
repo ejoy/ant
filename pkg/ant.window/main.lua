@@ -1,35 +1,19 @@
 local ltask = require "ltask"
 
-local function start(initargs)
-    if not __ANT_RUNTIME__ then
-        ltask.spawn("ant.window|boot", initargs)
-        return
+local function start(config)
+    if config.boot then
+        ltask.spawn(config.boot, config)
     end
-    local boot = dofile "/engine/ltask.lua"
-    local config = {
-        bootstrap = {
-            ["ant.window|boot"] = {
-                args = {initargs},
-                unique = false,
-            }
-        },
-        worker = 6,
-    }
-    local platform = require "bee.platform"
-    if platform.os == "ios" then
-        local window = require "window.ios"
-        window.mainloop(function (what)
-            if what == "init" then
-                boot:start(config)
-            elseif what == "exit" then
-                boot:wait()
-            end
-        end)
-        return
-    end
-    config.mainthread = 0
-    boot:start(config)
-    boot:wait()
+
+    local SERVICE_ROOT <const> = 1
+    ltask.fork(function ()
+        ltask.call(SERVICE_ROOT, "worker_bind", "ant.window|window", 0)
+        ltask.uniqueservice "ant.hwi|bgfx"
+    end)
+
+    ltask.call(SERVICE_ROOT, "worker_bind", "ant.hwi|bgfx", 1)
+    local ServiceWindow = ltask.uniqueservice("ant.window|window", config)
+    ltask.call(ServiceWindow, "wait")
 end
 
 local function newproxy(t, k)

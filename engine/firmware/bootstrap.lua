@@ -155,4 +155,27 @@ vfs.initfunc("/engine/firmware/init_thread.lua", {
 	editor = __ANT_EDITOR__,
 })
 
-dofile "/main.lua"
+local ltask_config = {
+    bootstrap = {
+        ["main"] = {
+            args = { arg },
+            unique = false,
+        }
+    },
+    worker = 6,
+}
+local ltask_boot = dofile "/engine/firmware/ltask.lua"
+if platform.os == "ios" then
+	local window = require "window.ios"
+	window.mainloop(function (what)
+		if what == "init" then
+			ltask_boot:start(ltask_config)
+		elseif what == "exit" then
+			ltask_boot:wait()
+		end
+	end)
+	return
+end
+ltask_config.mainthread = 0
+ltask_boot:start(ltask_config)
+ltask_boot:wait()

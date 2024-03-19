@@ -27,7 +27,7 @@ vfs.initfunc("/engine/firmware/init_thread.lua", {
     editor = __ANT_EDITOR__,
 })
 
-dofile "/engine/ltask.lua" {
+dofile "/engine/firmware/ltask.lua" {
     bootstrap = {
         ["main"] = {
             args = { arg },

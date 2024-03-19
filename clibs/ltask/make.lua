@@ -7,8 +7,8 @@ lm:copy "copy_task_lua" {
         lm.AntDir .. "/3rd/ltask/service/timer.lua",
     },
     outputs = {
-        lm.AntDir .. "/engine/service/root.lua",
-        lm.AntDir .. "/engine/service/service.lua",
+        lm.AntDir .. "/engine/firmware/root.lua",
+        lm.AntDir .. "/engine/firmware/service.lua",
         lm.AntDir .. "/pkg/ant.ltask/service/timer.lua",
     }
 }
