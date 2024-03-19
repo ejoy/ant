@@ -86,14 +86,6 @@ local function init(c)
 		end
 	end
 
-	local directory = require "directory"
-	local log_path = directory.app_path()
-	if not coreConfig.debuglog then
-		coreConfig.debuglog = (log_path / "debug.log"):string()
-	end
-	if not coreConfig.crashlog then
-		coreConfig.crashlog = (log_path / "crash.log"):string()
-	end
 	if not coreConfig.worker then
 		coreConfig.worker = 6
 	end
@@ -117,12 +109,12 @@ local function init(c)
 	rootConfig.service_chunkname = "@/engine/service/service.lua"
 
 	rootConfig.initfunc = [[
+local name = ...
+
 package.path = "/engine/?.lua"
 package.cpath = ""
 local ltask = require "ltask"
 local vfs = require "vfs"
-local fastio = require "fastio"
-local thread = require "bee.thread"
 local ServiceIO = ltask.uniqueservice "io"
 local function call(...)
 	return ltask.call(ServiceIO, ...)
@@ -149,7 +141,6 @@ function vfs.version()
 end
 
 local pm = require "packagemanager"
-local name = ...
 local package, file = name:match "^([^|]*)|(.*)$"
 return pm.loadenv(package).loadfile("service/"..file..".lua")
 
