@@ -356,25 +356,20 @@ do
     local waitfunc, fd = ltask.eventinit()
     local ltaskfd = socket.fd(fd)
     status[ltaskfd] = {
-        on_read = function ()
-            waitfunc()
-            ltask.sleep(0)
-        end
+        on_read = waitfunc
     }
     selector:event_add(ltaskfd, SELECT_READ)
 end
 
-ltask.fork(function()
-    while true do
-        for fd, event in selector:wait() do
-            if event & SELECT_READ ~= 0 then
-                local s = status[fd]
-                s:on_read()
-            end
-            if event & SELECT_WRITE ~= 0 then
-                local s = status[fd]
-                s:on_write()
-            end
+ltask.idle_handler(function()
+    for fd, event in selector:wait() do
+        if event & SELECT_READ ~= 0 then
+            local s = status[fd]
+            s:on_read()
+        end
+        if event & SELECT_WRITE ~= 0 then
+            local s = status[fd]
+            s:on_write()
         end
     end
 end)
