@@ -1,8 +1,4 @@
 local thread = require "bee.thread"
-if thread.id ~= 0 then
-    return
-end
-
 local socket = require "bee.socket"
 local boot = require "ltask.bootstrap"
 local lfs = require "bee.filesystem"
@@ -23,7 +19,7 @@ io_req:push {
 
 vfs.iothread = boot.preinit [[
 -- IO thread
-assert(loadfile "/engine/game/io.lua")()
+assert(loadfile "/engine/console/io.lua")()
 ]]
 
 vfs.initfunc("/engine/firmware/init_thread.lua", {
