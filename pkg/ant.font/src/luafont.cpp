@@ -89,37 +89,33 @@ luavm_init(lua_State *L) {
 	luaL_openlibs(L);
 	const char* data = (const char*)lua_touserdata(L, 1);
 	size_t size = (size_t)lua_tointeger(L, 2);
-	if (luaL_loadbuffer(L, data, size, data) != LUA_OK) {
+	const char* chunkname = (const char*)lua_touserdata(L, 3);
+	if (luaL_loadbuffer(L, data, size, chunkname) != LUA_OK) {
 		return lua_error(L);
 	}
 	lua_call(L, 0, 0);
 	return 0;
 }
 
-static lua_State*
-luavm_create(lua_State *L, std::string_view boot) {
-	lua_State* vL = luaL_newstate();
-	if (!vL) {
-		luaL_error(L, "not enough memory");
-		return NULL;
-	}
-	lua_pushcfunction(vL, luavm_init);
-	lua_pushlightuserdata(vL, (void*)boot.data());
-	lua_pushinteger(vL, (lua_Integer)boot.size());
-	if (lua_pcall(vL, 2, 0, 0) != LUA_OK) {
-		lua_pushstring(L, lua_tostring(vL, -1));
-		lua_close(vL);
-		lua_error(L);
-		return NULL;
-	}
-	return vL;
-}
-
 static int
 fontm_init(lua_State *L) {
 	struct font_manager* F = (struct font_manager *)lua_newuserdatauv(L, font_manager_sizeof(), 0);
 	auto boot = getmemory(L, 1);
-	void* managerL = luavm_create(L, boot);
+	lua_State* managerL = luaL_newstate();
+	if (!managerL) {
+		luaL_error(L, "not enough memory");
+		return 0;
+	}
+	lua_pushcfunction(managerL, luavm_init);
+	lua_pushlightuserdata(managerL, (void*)boot.data());
+	lua_pushinteger(managerL, (lua_Integer)boot.size());
+	lua_pushlightuserdata(managerL, (void*)luaL_checkstring(L, 2));
+	if (lua_pcall(managerL, 3, 0, 0) != LUA_OK) {
+		lua_pushstring(L, lua_tostring(managerL, -1));
+		lua_close(managerL);
+		lua_error(L);
+		return 0;
+	}
 	font_manager_init(F, managerL);
 	lua_pushlightuserdata(L, F);
 	return 2;
