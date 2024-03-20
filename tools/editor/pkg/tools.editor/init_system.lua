@@ -22,19 +22,9 @@ local widget_utils      = require "widget.utils"
 local m = ecs.system 'init_system'
 
 local function start_fileserver(luaexe, path)
-    local cthread = require "bee.thread"
-    cthread.newchannel "log_channel"
-    cthread.newchannel "fileserver_channel"
-    cthread.newchannel "console_channel"
-    local produce = cthread.channel "fileserver_channel"
-    produce:push(luaexe, path)
-
-    return cthread.thread [[
-        package.path = "/engine/?.lua"
-        package.cpath = ""
-        local fileserver = dofile "/pkg/tools.editor/fileserver_adapter.lua"()
-        fileserver.run()
-    ]]
+	local fsa = require "fileserver_adapter"
+	fsa.init(luaexe, path)
+	global_data.fileserver = fsa
 end
 
 local function init_font()
@@ -108,8 +98,8 @@ function m:init()
 	--
 	global_data:update_project_root(__ANT_EDITOR__)
     start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
-    log_widget.init_log_receiver()
-    console_widget.init_console_sender()
+    -- log_widget.init_log_receiver()
+    -- console_widget.init_console_sender()
 	--filewatch
 	if global_data.project_root then
 		local bfw = require "bee.filewatch"
