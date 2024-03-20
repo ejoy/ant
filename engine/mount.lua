@@ -40,17 +40,6 @@ end
 function mount.read(repo)
 	repo._mountvpath = {}
 	repo._mountlpath = {}
-	do
-		local rootpath = repo._root
-		local cfg = loadmount(rootpath)
-		for i = 1, #cfg.mount, 2 do
-			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
-			addmount(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
-				engine = fs.current_path():string(),
-				project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
-			}))
-		end
-	end
 	if __ANT_EDITOR__ then
 		local rootpath = fs.absolute(__ANT_EDITOR__)
 		local cfg = loadmount(rootpath)
@@ -61,6 +50,17 @@ function mount.read(repo)
 					project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
 				}))
 			end
+		end
+	end
+	do
+		local rootpath = repo._root
+		local cfg = loadmount(rootpath)
+		for i = 1, #cfg.mount, 2 do
+			local vpath, lpath = cfg.mount[i], cfg.mount[i+1]
+			addmount(repo, vpath, lpath:gsub("%%([^%%]*)%%", {
+				engine = fs.current_path():string(),
+				project = rootpath:string():gsub("(.-)[/\\]?$", "%1"),
+			}))
 		end
 	end
 end

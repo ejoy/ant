@@ -3,6 +3,10 @@ local vfs = require "vfs"
 
 local entry = lfs.absolute(arg[0])
 
+if entry:parent_path():filename():string() == "editor" then
+    __ANT_EDITOR__ = arg[1]
+end
+
 vfs.initfunc("/engine/firmware/init_thread.lua", {
     editor = __ANT_EDITOR__,
 }, true)
