@@ -2,17 +2,20 @@ local ltask = require "ltask"
 
 local function start(config)
     if config.boot then
-        ltask.spawn(config.boot, config)
+        --ltask.spawn(config.boot, config)
     end
 
-    local SERVICE_ROOT <const> = 1
-    ltask.fork(function ()
-        ltask.call(SERVICE_ROOT, "worker_bind", "ant.window|window", 0)
-        ltask.uniqueservice "ant.hwi|bgfx"
-    end)
-
-    ltask.call(SERVICE_ROOT, "worker_bind", "ant.hwi|bgfx", 1)
-    local ServiceWindow = ltask.uniqueservice("ant.window|window", config)
+    ltask.spawn_service {
+        unique = true,
+        name = "ant.hwi|bgfx",
+        worker_id = 1,
+    }
+    local ServiceWindow = ltask.spawn_service {
+        unique = true,
+        name = "ant.window|window",
+        args = { config },
+        worker_id = 0,
+    }
     ltask.call(ServiceWindow, "wait")
 end
 

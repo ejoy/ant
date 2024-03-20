@@ -16,26 +16,20 @@ if path then
 end
 
 -- C libs only
-local fastio = require "fastio"
 local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
 local serialization = require "bee.serialization"
 local protocol = require "protocol"
-local exclusive = require "ltask.exclusive"
-local ltask
+local ltask = require "ltask"
 
 local bee_select = require "bee.select"
 local selector = bee_select.create()
 local SELECT_READ <const> = bee_select.SELECT_READ
 local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 
-local io_req = thread.channel "IOreq"
-local initargs = io_req:bpop()
+local config = ...
 
-local config = initargs.config
-
-local QUIT = false
 local OFFLINE = false
 
 local LOG; do
@@ -56,6 +50,7 @@ local LOG; do
 		fs.rename(logfile, AppPath .. "/io_thread_1.log")
 	end
 	local function LOGRAW(data)
+		io.write(data.."\n")
 		local f <close> = io.open(logfile, "a+")
 		if f then
 			f:write(data)
@@ -91,9 +86,6 @@ local LOG; do
 	end
 end
 
-local channelfd = socket.fd(initargs.fd)
-local channelfd_init = false
-
 thread.setname "ant - IO thread"
 
 local vfs = assert(loadfile "/engine/firmware/vfs.lua")()
@@ -110,10 +102,6 @@ local connection = {
 local function connection_send(...)
 	local pack = string.pack("<s2", serialization.packstring(...))
 	table.insert(connection.sendq, 1, pack)
-end
-
-local function init_channels()
-	io_req = thread.channel "IOreq"
 end
 
 local function connect_server(address, port)
@@ -210,35 +198,6 @@ end
 
 local CMD = {}
 
-
-local function schedule_message()
-	local SCHEDULE_IDLE <const> = 1
-	while true do
-		local s = ltask.schedule_message()
-		if s == SCHEDULE_IDLE then
-			break
-		end
-		coroutine.yield()
-	end
-end
-
-local function event_select(timeout)
-	if connection.fd then
-		local sending = connection.sendq
-		if #sending > 0  then
-			selector:event_mod(connection.fd, connection.flags)
-		else
-			selector:event_mod(connection.fd, connection.flags & (~SELECT_WRITE))
-		end
-	end
-	for func, event in selector:wait(timeout) do
-		func(event)
-	end
-	if ltask then
-		schedule_message()
-	end
-end
-
 local function request_send(...)
 	if OFFLINE then
 		return
@@ -319,6 +278,7 @@ function response.ROOT(hash)
 	for path in pairs(resources) do
 		CMD.LIST(nil, path)
 	end
+	ltask.multi_wakeup "ROOT"
 end
 
 -- REMARK: Main thread may reading the file while writing, if file server update file.
@@ -502,6 +462,9 @@ local S = {}; do
 	local session = 0
 	for v in pairs(CMD) do
 		S[v] = function (...)
+			if repo.root == nil then
+				ltask.multi_wait "ROOT"
+			end
 			session = session + 1
 			ltask.fork(function (...)
 				dispatch(true, ...)
@@ -521,80 +484,18 @@ local S = {}; do
 	end
 end
 
-local function ltask_ready()
-	return coroutine.yield() == nil
-end
-
-local function ltask_init(path, mem)
-	assert(fastio.loadlua(mem, path))(true)
-	ltask = require "ltask"
-	local SS = ltask.dispatch(S)
-
-	function SS.PATCH(code, data)
-		local f = load(code)
-		f(data)
-	end
-
-	local waitfunc, fd = ltask.eventinit()
-	local ltaskfd = socket.fd(fd)
-	local function read_ltaskfd()
-		waitfunc()
-		local SCHEDULE_IDLE <const> = 1
-		while true do
-			local s = ltask.schedule_message()
-			if s == SCHEDULE_IDLE then
-				break
-			end
-			coroutine.yield()
-		end
-	end
-	selector:event_add(ltaskfd, SELECT_READ, read_ltaskfd)
-end
-
-function CMD.SWITCH(_, path, mem)
-	while not ltask_ready() do
-		exclusive.sleep(1)
-	end
-	ltask_init(path, mem)
+function S.PATCH(code, data)
+	local f = load(code)
+	f(data)
 end
 
 local function work_offline()
 	OFFLINE = true
-
-	while true do
-		event_select()
-	end
 end
 
 local function work_online()
 	request_send("SHAKEHANDS")
 	request_send("ROOT")
-	while not QUIT do
-		event_select()
-	end
-end
-
-
-local function init_channelfd()
-	if channelfd_init then
-		return
-	end
-	channelfd_init = true
-	local function read_channelfd()
-		while true do
-			local r = channelfd:recv()
-			if r == nil then
-				selector:event_del(channelfd)
-				return
-			end
-			if r == false then
-				return
-			end
-			while dispatch(io_req:pop()) do
-			end
-		end
-	end
-	selector:event_add(channelfd, SELECT_READ, read_channelfd)
 end
 
 local function init_event()
@@ -611,7 +512,6 @@ local function init_event()
 					dispatch_net(table.unpack(req))
 				end
 				reqs = nil
-				init_channelfd()
 			end
 		else
 			dispatch_net(cmd, ...)
@@ -635,10 +535,6 @@ local function init_event()
 				break
 			end
 			dispatch_netmsg(serialization.unpack(msg))
-		end
-		if ltask then
-			ltask.dispatch_wakeup()
-			coroutine.yield()
 		end
 		return true
 	end
@@ -689,28 +585,47 @@ local function init_event()
 	selector:event_add(connection.fd, SELECT_READ | SELECT_WRITE, update_fd)
 end
 
-local function main()
-	init_channels()
+
+do
+	local waitfunc, fd = ltask.eventinit()
+	selector:event_add(socket.fd(fd), SELECT_READ, waitfunc)
+end
+
+ltask.idle_handler(function()
+	if connection.fd then
+		local sending = connection.sendq
+		if #sending > 0  then
+			selector:event_mod(connection.fd, connection.flags)
+		else
+			selector:event_mod(connection.fd, connection.flags & (~SELECT_WRITE))
+		end
+	end
+	for func, event in selector:wait() do
+		func(event)
+	end
+end)
+
+ltask.fork(function ()
 	connection.fd = wait_server()
 	if connection.fd then
 		init_event()
 		work_online()
 		-- socket error or closed
 	end
-	repo:init()
-	init_channelfd()
-	local uncomplete_req = {}
-	for hash in pairs(connection.request) do
-		table.insert(uncomplete_req, hash)
-	end
-	for _, hash in ipairs(uncomplete_req) do
-		request_reject(hash, "UNCOMPLETE "..hash)
-	end
-	if QUIT then
-		return
-	end
-	LOG("Working offline")
-	work_offline()
-end
+	--repo:init()
+	--local uncomplete_req = {}
+	--for hash in pairs(connection.request) do
+	--	table.insert(uncomplete_req, hash)
+	--end
+	--for _, hash in ipairs(uncomplete_req) do
+	--	request_reject(hash, "UNCOMPLETE "..hash)
+	--end
+	--if QUIT then
+	--	return
+	--end
+	--LOG("Working offline")
+	--ltask.multi_wakeup "ROOT"
+	--work_offline()
+end)
 
-main()
+return S

@@ -5,43 +5,14 @@ local vfs = require "vfs"
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
 
-local CoreConfig <const> = 0
-local RootConfig <const> = 1
-local BootConfig <const> = 2
-
-local ConfigCatalog <const> = {
-	worker = CoreConfig,
-	queue = CoreConfig,
-	queue_sending = CoreConfig,
-	max_service = CoreConfig,
-	crashlog = CoreConfig,
-	debuglog = CoreConfig,
-	worker_bind = RootConfig,
-	exclusive = RootConfig,
-	preinit = RootConfig,
-	bootstrap = RootConfig,
-	initfunc = RootConfig,
-	mainthread = BootConfig
-}
-
-local coreConfig
-local rootConfig
-local bootConfig
-
-local function new_service(label, id)
-	local sid = assert(boot.new_service(label, rootConfig.service_source, rootConfig.service_chunkname, id))
-	assert(sid == id)
-	return sid
-end
-
-local function root_thread()
-	assert(boot.new_service("root", rootConfig.service_source, rootConfig.service_chunkname, SERVICE_ROOT))
+local function root_thread(config)
+	assert(boot.new_service("root", config.root.service_source, config.root.service_chunkname, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
 		initfunc = [[return loadfile "/engine/firmware/root.lua"]],
 		name = "root",
-		args = {rootConfig}
+		args = { config.root }
 	})
 	-- self bootstrap
 	boot.post_message {
@@ -54,46 +25,13 @@ local function root_thread()
 	}
 end
 
-local function exclusive_thread(label, id)
-	local sid = new_service(label, id)
-	boot.new_thread(sid)
-end
-
-local function io_thread(label, id)
-	local sid = assert(boot.new_service_preinit(label, id, vfs.iothread))
-	boot.new_thread(sid)
-end
-
 local function readall(path)
 	local fastio = require "fastio"
 	local mem = vfs.read(path)
 	return fastio.tostring(mem)
 end
 
-local function init(c)
-	coreConfig = {}
-	rootConfig = {}
-	bootConfig = {}
-	for k, v in pairs(c) do
-		if ConfigCatalog[k] == CoreConfig then
-			coreConfig[k] = v
-		elseif ConfigCatalog[k] == RootConfig then
-			rootConfig[k] = v
-		elseif ConfigCatalog[k] == BootConfig then
-			bootConfig[k] = v
-		else
-			assert(false, k)
-		end
-	end
-
-	if not coreConfig.worker then
-		coreConfig.worker = 6
-	end
-
-	rootConfig.bootstrap["ant.ltask|timer"] = {}
-	rootConfig.bootstrap["ant.ltask|logger"] = {}
-	rootConfig.exclusive = rootConfig.exclusive or {}
-
+local function init_config(config)
 	local servicelua = readall "/engine/firmware/service.lua"
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
@@ -105,10 +43,10 @@ local function init(c)
 			servicelua,
 		}, ";")
 	end
-	rootConfig.service_source = servicelua
-	rootConfig.service_chunkname = "@/engine/firmware/service.lua"
+	config.root.service_source = servicelua
+	config.root.service_chunkname = "@/engine/firmware/service.lua"
 
-	rootConfig.initfunc = [[
+	config.root.initfunc = [[
 local name = ...
 
 package.path = "/engine/?.lua"
@@ -139,38 +77,28 @@ end
 function vfs.version()
 	return call("VERSION")
 end
+function vfs.repopath()
+	return call("REPOPATH")
+end
 
-if name == "main" then
-	return loadfile "/main.lua"
+local package, file = name:match "^([^|]*)|(.*)$"
+if not package or not file then
+	return loadfile(name)
 end
 local pm = require "packagemanager"
-local package, file = name:match "^([^|]*)|(.*)$"
 return pm.loadenv(package).loadfile("service/"..file..".lua")
 
 ]]
 end
 
-local function io_switch()
-	local servicelua = "/engine/firmware/service.lua"
-	local mem = vfs.read(servicelua)
-	vfs.send("SWITCH", servicelua, mem)
-end
-
 local m = {}
 
-function m:start(c)
-	init(c)
-	boot.init(coreConfig)
+function m:start(config)
+	init_config(config)
+	boot.init(config.core)
 	boot.init_timer()
-	for i, label in ipairs(rootConfig.exclusive) do
-		local id = i + 1
-		exclusive_thread(label, id)
-	end
-	rootConfig.preinit = { "io" }
-	root_thread()
-	io_switch()
-	io_thread("io", 2 + #rootConfig.exclusive)
-	self._ctx = boot.run(bootConfig.mainthread)
+	root_thread(config)
+	self._ctx = boot.run(config.mainthread)
 end
 
 function m:wait()
@@ -178,11 +106,4 @@ function m:wait()
 	boot.deinit()
 end
 
-local mt = {}
-mt.__index = m
-function mt:__call(c)
-	self:start(c)
-	self:wait()
-end
-
-return setmetatable({}, mt)
+return m

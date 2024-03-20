@@ -1,38 +1,40 @@
-local thread = require "bee.thread"
-local socket = require "bee.socket"
-local boot = require "ltask.bootstrap"
 local lfs = require "bee.filesystem"
 local vfs = require "vfs"
 
-local repopath = lfs.absolute(lfs.path(arg[0])):remove_filename():string()
-
-thread.newchannel "IOreq"
-
-local s, c = socket.pair()
-local io_req = thread.channel "IOreq"
-
-io_req:push {
-    repopath = repopath,
-    fd = s:detach(),
-    editor = __ANT_EDITOR__,
-}
-
-vfs.iothread = boot.preinit [[
--- IO thread
-assert(loadfile "/engine/console/io.lua")()
-]]
+local entry = lfs.absolute(arg[0])
 
 vfs.initfunc("/engine/firmware/init_thread.lua", {
-    fd = c:detach(),
     editor = __ANT_EDITOR__,
-})
+}, true)
 
-dofile "/engine/firmware/ltask.lua" {
-    bootstrap = {
-        ["main"] = {
-            args = { arg },
-            unique = false,
-        }
+local boot = dofile "/engine/firmware/ltask.lua"
+boot:start {
+    core = {
+        worker = 8,
     },
-    worker = 6,
+    root = {
+        bootstrap = {
+            {
+                name = "io",
+                unique = true,
+                initfunc = [[return loadfile "/engine/console/io.lua"]],
+                args = { entry:parent_path():string(), __ANT_EDITOR__ },
+                worker_id = 3,
+            },
+            {
+                name = "ant.ltask|timer",
+                unique = true,
+            },
+            {
+                name = "ant.ltask|logger",
+                unique = true,
+            },
+            {
+                name = "/"..entry:filename():string(),
+                args = { arg },
+            },
+        },
+    },
+    mainthread = 0,
 }
+boot:wait()
