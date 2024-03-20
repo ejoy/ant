@@ -8,12 +8,6 @@ static std::string_view luaL_checkstrview(lua_State* L, int idx) {
 	return std::string_view(str, sz);
 }
 
-static std::string_view luaL_optstrview(lua_State* L, int idx, const char* def) {
-	size_t sz = 0;
-	const char* str = luaL_optlstring(L, idx, def, &sz);
-	return std::string_view(str, sz);
-}
-
 static int readall_v(lua_State* L) {
 	std::string_view filename = luaL_checkstrview(L, 1);
 	auto it = firmware.find(filename);
