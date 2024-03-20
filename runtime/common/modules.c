@@ -39,7 +39,6 @@ int luaopen_imgui_widgets(lua_State* L);
 int luaopen_ios(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
-int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_luadebug(lua_State* L);
 int luaopen_luadebug_hookmgr(lua_State* L);
 int luaopen_luadebug_stdio(lua_State* L);
@@ -112,7 +111,6 @@ void ant_loadmodules(lua_State* L) {
         { "fmod", luaopen_fmod},
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
-        { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
         { "ecs.components", luaopen_ecs_components},
         { "ecs.util", luaopen_ecs_util},
