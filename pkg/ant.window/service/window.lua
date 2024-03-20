@@ -8,11 +8,6 @@ local rhwi      = import_package "ant.hwi"
 
 rhwi.init_bgfx()
 
-local ServiceRmlUi
-ltask.fork(function ()
-    ServiceRmlUi = ltask.uniqueservice("ant.rmlui|rmlui", ltask.self())
-end)
-
 local world
 local WillReboot
 local initargs = ...
@@ -87,10 +82,6 @@ local function render(init, args, initialized)
         bgfx.encoder_end()
         audio.frame()
         world._frametime = bgfx.encoder_frame()
-    end
-    if ServiceRmlUi then
-        ltask.send(ServiceRmlUi, "shutdown")
-        ServiceRmlUi = nil
     end
     world:pipeline_exit()
     world = nil

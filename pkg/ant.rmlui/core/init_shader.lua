@@ -14,7 +14,7 @@ local shaders <const> = {
     debug_draw      = "/pkg/ant.rmlui/materials/debug_draw.material",
 }
 
-local ServiceResource = ltask.uniqueservice "ant.resource_manager|resource"
+local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local progs = {}
 local uniforms = {}
 local tasks = {}

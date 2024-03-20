@@ -52,7 +52,7 @@ package.path = "/engine/?.lua"
 package.cpath = ""
 local ltask = require "ltask"
 local vfs = require "vfs"
-local ServiceIO = ltask.uniqueservice "io"
+local ServiceIO = ltask.queryservice "io"
 local function call(...)
 	return ltask.call(ServiceIO, ...)
 end

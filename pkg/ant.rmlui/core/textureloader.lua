@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
 
+local ServiceWindow = ltask.queryservice "ant.window|window"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local m = {}
 

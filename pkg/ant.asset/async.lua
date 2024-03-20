@@ -6,7 +6,7 @@ local PM = require "programan.client"
 local m = {}
 
 function m.init()
-    ServiceResource = ltask.uniqueservice "ant.resource_manager|resource"
+    ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 end
 
 function m.material_create(filename)

@@ -1,22 +1,35 @@
 local ltask = require "ltask"
 
 local function start(config)
-    if config.boot then
-        --ltask.spawn(config.boot, config)
+    local function spawn_window()
+        local ServiceWindow = ltask.spawn_service {
+            unique = true,
+            name = "ant.window|window",
+            args = { config },
+            worker_id = 0,
+        }
+        ltask.call(ServiceWindow, "wait")
     end
-
-    ltask.spawn_service {
-        unique = true,
-        name = "ant.hwi|bgfx",
-        worker_id = 1,
-    }
-    local ServiceWindow = ltask.spawn_service {
-        unique = true,
-        name = "ant.window|window",
-        args = { config },
-        worker_id = 0,
-    }
-    ltask.call(ServiceWindow, "wait")
+    local function spawn_bgfx()
+        ltask.spawn_service {
+            unique = true,
+            name = "ant.hwi|bgfx",
+            worker_id = 1,
+        }
+    end
+    local function spawn_rmlui()
+        ltask.uniqueservice "ant.rmlui|rmlui"
+    end
+    local function spawn_resource()
+        ltask.uniqueservice "ant.resource_manager|resource"
+    end
+    for _ in ltask.parallel {
+        { spawn_window },
+        { spawn_bgfx },
+        { spawn_rmlui },
+        { spawn_resource },
+    } do
+    end
 end
 
 local function newproxy(t, k)
