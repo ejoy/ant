@@ -1,5 +1,4 @@
 local boot = require "ltask.bootstrap"
-local ltask = require "ltask"
 local vfs = require "vfs"
 
 local SERVICE_ROOT <const> = 1
@@ -9,7 +8,7 @@ local function root_thread(config)
 	assert(boot.new_service("root", config.root.service_source, config.root.service_chunkname, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
-	local init_msg, sz = ltask.pack("init", {
+	local init_msg, sz = boot.pack("init", {
 		initfunc = [[return loadfile "/engine/firmware/root.lua"]],
 		name = "root",
 		args = { config.root }

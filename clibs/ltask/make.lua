@@ -38,14 +38,8 @@ lm:lua_source "ltask" {
         flags = {
             "/experimental:c11atomics"
         },
-        ldflags = {
-            "-export:luaopen_ltask",
-            "-export:luaopen_ltask_bootstrap",
-            "-export:luaopen_ltask_root",
-        },
     },
     gcc = {
         links = "pthread",
-        visibility = "default",
     },
 }

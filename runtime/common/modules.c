@@ -37,7 +37,6 @@ int luaopen_imgui_backend(lua_State* L);
 int luaopen_imgui_internal(lua_State* L);
 int luaopen_imgui_widgets(lua_State* L);
 int luaopen_ios(lua_State* L);
-int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
 int luaopen_luadebug(lua_State* L);
 int luaopen_luadebug_hookmgr(lua_State* L);
@@ -109,7 +108,6 @@ void ant_loadmodules(lua_State* L) {
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fmod", luaopen_fmod},
-        { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ecs.core", luaopen_ecs_core},
         { "ecs.components", luaopen_ecs_components},
