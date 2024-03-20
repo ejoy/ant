@@ -1,3 +1,4 @@
+local arg = ...
 __ANT_EDITOR__ = arg[1]-- or "../../startup"
 
 package.path = "/engine/?.lua"
