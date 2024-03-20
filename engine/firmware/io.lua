@@ -30,6 +30,7 @@ local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 
 local config = ...
 
+local ENTRY_OFFLINE = false
 local OFFLINE = false
 
 local LOG; do
@@ -417,8 +418,8 @@ function CMD.VERSION(id)
 end
 
 function CMD.quit(id)
-	QUIT = true
 	response_id(id)
+	ltask.quit()
 end
 
 -- dispatch package from connection
@@ -490,7 +491,16 @@ function S.PATCH(code, data)
 end
 
 local function work_offline()
-	OFFLINE = true
+	repo:init()
+	local uncomplete_req = {}
+	for hash in pairs(connection.request) do
+		table.insert(uncomplete_req, hash)
+	end
+	for _, hash in ipairs(uncomplete_req) do
+		request_reject(hash, "UNCOMPLETE "..hash)
+	end
+	LOG("Working offline")
+	ltask.multi_wakeup "ROOT"
 end
 
 local function work_online()
@@ -567,7 +577,7 @@ local function init_event()
 				connection.flags = connection.flags & (~SELECT_READ)
 				if connection.flags == 0 then
 					selector:event_del(connection.fd)
-					QUIT = true
+					ENTRY_OFFLINE = true
 				end
 			end
 		end
@@ -576,7 +586,7 @@ local function init_event()
 				connection.flags = connection.flags & (~SELECT_WRITE)
 				if connection.flags == 0 then
 					selector:event_del(connection.fd)
-					QUIT = true
+					ENTRY_OFFLINE = true
 				end
 			end
 		end
@@ -592,6 +602,11 @@ do
 end
 
 ltask.idle_handler(function()
+	if ENTRY_OFFLINE then
+		ENTRY_OFFLINE = false
+		work_offline()
+		return
+	end
 	if connection.fd then
 		local sending = connection.sendq
 		if #sending > 0  then
@@ -611,21 +626,9 @@ ltask.fork(function ()
 		init_event()
 		work_online()
 		-- socket error or closed
+	else
+		ENTRY_OFFLINE = true
 	end
-	--repo:init()
-	--local uncomplete_req = {}
-	--for hash in pairs(connection.request) do
-	--	table.insert(uncomplete_req, hash)
-	--end
-	--for _, hash in ipairs(uncomplete_req) do
-	--	request_reject(hash, "UNCOMPLETE "..hash)
-	--end
-	--if QUIT then
-	--	return
-	--end
-	--LOG("Working offline")
-	--ltask.multi_wakeup "ROOT"
-	--work_offline()
 end)
 
 return S
