@@ -12,7 +12,7 @@ local vpath = "/pkg/ant.resources/textures/atlas"
 local atlas = {
     name = "test", x = 1, y = 1, w = 1024, h = 1024, bottom_y = 1,
     vpath = vpath,
-    rpath = fs.path(vfs.repopath()):parent_path():parent_path():parent_path():string() .. vpath
+    rpath = fs.path(vfs.repopath()):parent_path():parent_path():string() .. vpath
 }
 
 function m:init_world()
