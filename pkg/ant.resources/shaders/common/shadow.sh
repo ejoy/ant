@@ -88,7 +88,7 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 		return 0.0;	// not in shadow
 #endif //USE_VIEW_SPACE_DISTANCE
 
-	return sample_visibility(shadowcoord);
+	return sample_visibility(shadowcoord, cascadeidx);
 }
 #endif //ENABLE_SHADOW
 #endif //__SHADER_SHADOW_SH__

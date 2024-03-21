@@ -345,7 +345,7 @@ function util.isnan_math3dvec(v)
 	return isnan(math3d.index(v, 1, 2, 3, 4))
 end
 
-function util.calc_texture_matrix()
+do
 	-- topleft origin and homogeneous depth matrix
 	local m = {
 		0.5, 0.0, 0.0, 0.0,
@@ -362,7 +362,7 @@ function util.calc_texture_matrix()
 		m[11], m[15] = 0.5, 0.5
 	end
 
-	return math3d.ref(math3d.matrix(m))
+	util.texture_bias_matrix = math3d.ref(math3d.matrix(m))
 end
 
 function util.create_ray(s0, s1)
