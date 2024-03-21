@@ -139,7 +139,7 @@ void
 attrib_arena_clear_all_uniforms(struct attrib_arena *A, struct math_context *M){
 	for (int i=0; i<A->attrib_n; ++i){
 		attrib_type* a = get_attrib(A, (attrib_id)i);
-		if (a->h.type == ATTRIB_UNIFORM){
+		if (a->h.type == ATTRIB_UNIFORM || a->h.type == ATTRIB_UNIFORM_INSTANCE){
 			math_unmark(M, a->u.u.m);
 		}
 	}
