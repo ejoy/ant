@@ -154,7 +154,9 @@ local function listen_server(address, port)
 		return
 	end
 	selector:event_add(fd, SELECT_READ)
-	while true do
+	local quit
+	while not quit do
+		quit = true
 		for _ in selector:wait(2) do
 			local newfd, err = fd:accept()
 			if newfd == nil then
@@ -162,7 +164,9 @@ local function listen_server(address, port)
 				fd:close()
 				LOG("[ERROR] accept: "..err)
 				return
-			elseif newfd ~= false then
+			elseif newfd == false then
+				quit = false
+			else
 				LOG("Accepted")
 				selector:event_del(fd)
 				fd:close()
