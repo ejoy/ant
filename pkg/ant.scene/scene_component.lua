@@ -70,9 +70,9 @@ end
 
 function m.unmarshal(s)
 	local scene = serialization.unpack(s)
-    math3d.mark(scene.s)
-    math3d.mark(scene.r)
-    math3d.mark(scene.t)
-    math3d.mark(scene.updir)
+    scene.s = math3d.mark(scene.s)
+    scene.r = math3d.mark(scene.r)
+    scene.t = math3d.mark(scene.t)
+    scene.updir = math3d.mark(scene.updir)
 	return scene
 end
