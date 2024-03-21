@@ -13,6 +13,7 @@
 #include <luabgfx.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define MAX_ATTRIB 1024
 
@@ -482,7 +483,9 @@ set_attrib(lua_State *L, struct attrib_arena *A, int id, int index) {
 		math_t m = fetch_math_id(L, w, index);
 		if (t == ATTRIB_UNIFORM_INSTANCE) {
 			m = attrib_arena_set_uniform_instance(A, id, math_mark(w->math3d->M, m));
-			math_unmark(w->math3d->M, m);
+			int r = math_unmark(w->math3d->M, m);
+			assert(r >= 0);
+			(void)r;
 		} else {
 			const float *v = math_value(w->math3d->M, m);
 			attrib_arena_set_uniform(A, id, v);
@@ -620,7 +623,9 @@ linstance_release(lua_State *L) {
 	mi->patch_attrib = INVALID_ATTRIB;
 	while (iter != INVALID_ATTRIB) {
 		math_t m = attrib_arena_remove(A, &iter);
-		math_unmark(w->math3d->M, m);
+		int r = math_unmark(w->math3d->M, m);
+		assert(r >= 0);
+		(void)r;
 	}
 	return 0;
 }

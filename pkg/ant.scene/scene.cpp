@@ -25,7 +25,9 @@ struct math3d_checkpoint {
 
 static void
 math3d_update(struct math_context* math3d, math_t& id, math_t const& m) {
-	math_unmark(math3d, id);
+	int r = math_unmark(math3d, id);
+	assert(r >= 0);
+	(void)r;
 	id = math_mark(math3d, m);
 }
 
