@@ -294,4 +294,8 @@ function S.start(conf)
 	init(conf, http_request)
 end
 
+function S.quit()
+	ltask.quit()
+end
+
 return S
