@@ -149,4 +149,15 @@ function idn.delete_property_cycle(e, pn)
     return true
 end
 
+local c = ecs.component "daynight"
+
+function c.remove(v)
+    local daynight_rt = v.rt
+    for _, pt in pairs(daynight_rt) do
+        for _, tt in ipairs(pt) do
+            math3d.unmark(tt.value)
+        end
+    end
+end
+
 return idn

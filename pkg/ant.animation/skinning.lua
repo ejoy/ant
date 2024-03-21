@@ -78,4 +78,15 @@ function api.build(models, skinning)
 	ozz.BuildSkinningMatrices(skinning.matrices, models, skinning.inverseBindMatrices, skinning.jointsRemap)
 end
 
+local c = ecs.component "skinning"
+
+function c.remove(v)
+	if ENABLE_TAA then
+		if v.prev_matrices_id ~= nil then
+			math3d.unmark(v.prev_matrices_id)
+		end
+	end
+	math3d.unmark(v.matrices_id)
+end
+
 return api
