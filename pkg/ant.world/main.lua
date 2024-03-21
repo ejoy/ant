@@ -688,8 +688,6 @@ end
 local m = {}
 
 function m.new_world(config)
-    local math3d = require "math3d"
-    math3d.mark = math3d.mark_clone
     do
         local cfg = config.ecs
         if cfg then
