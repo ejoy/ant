@@ -5,7 +5,7 @@ if adb == "" then
 end
 
 local ltask = require "ltask"
-local ServiceSubprocess = ltask.uniqueservice "subprocess"
+local ServiceSubprocess = ltask.uniqueservice "ant.ltask|subprocess"
 
 local devices = {}
 
@@ -41,7 +41,7 @@ local function update_devices(msg)
             if devices[k] == nil then
                 print('Android Device Attached:', k)
                 devices[k] = {
-                    sid = ltask.spawn("s|android.proxy", adb, k, 17001),
+                    sid = ltask.spawn("s|android/proxy", adb, k, 17001),
                 }
                 ltask.send(devices[k].sid, "Attached")
             end

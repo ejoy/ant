@@ -48,7 +48,8 @@ function m:update_project_root(rootpath)
 end
 
 function m:lpath_to_vpath(lpath)
-    return (self.virtual_glb_path / lfs.relative(lpath, self.current_compile_path)):string()
+    -- return (self.virtual_glb_path / lfs.relative(lpath, self.current_compile_path)):string()
+    return (lfs.path('/') / lfs.relative(lpath, self.project_root)):string()
 end
 
 return m

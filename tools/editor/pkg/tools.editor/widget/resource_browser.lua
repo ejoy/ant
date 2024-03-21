@@ -11,7 +11,7 @@ local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
 local global_data = require "common.global_data"
 local editor_setting=require "editor_setting"
-
+local aio       = import_package "ant.io"
 local m = {
     dirty = true
 }
@@ -437,16 +437,24 @@ function m.show()
                                 me.open(path)
                             end
                         end
+                        
                         if path:equal_extension(".png") then
                             if not preview_images[selected_file] then
-                                local pkg_path = path:string()
+                                local parent_path = path:parent_path()
+                                local dirname = parent_path:string():match("([^/]*)$")
+                                local filename = path:filename():stem():string() .. '.texture'
+                                local gltf_filaname = parent_path / dirname .. '.gltf'
+                                local pkg_path = global_data:lpath_to_vpath(gltf_filaname:string())
+                                -- TODO : make sure compile gltf
+                                aio.readall(pkg_path .. "/mesh.prefab")
+                                pkg_path = pkg_path .. "/images/" .. filename
                                 preview_images[selected_file] = assetmgr.resource(pkg_path, { compile = true })
                             end
                         end
 
                         if path:equal_extension(".texture") then
                             if not texture_detail[selected_file] then
-                                local pkg_path = path:string()
+                                local pkg_path = global_data:lpath_to_vpath(path:string())
                                 texture_detail[selected_file] = utils.readtable(pkg_path)
                                 local t = assetmgr.resource(pkg_path)
                                 local s = t.sampler

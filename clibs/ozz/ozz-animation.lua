@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-local EnableEditor = lm.os ~= "ios"
+local EnableEditor = lm.os ~= "ios" and lm.os ~= "android"
 
 lm.rootdir = lm.AntDir .. "/3rd/ozz-animation"
 

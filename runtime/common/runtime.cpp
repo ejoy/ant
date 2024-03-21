@@ -74,10 +74,9 @@ static int pmain(lua_State *L) {
     createargtable(L, argc, argv);
     lua_gc(L, LUA_GCGEN, 0, 0);
     dostring(L, R"=(
-local supportFirmware = package.preload.firmware ~= nil
-if supportFirmware then
-    local fw = require 'firmware'
-    assert(fw.loadfile 'bootstrap.lua')(...)
+local __ANT_RUNTIME__ = package.preload.firmware ~= nil
+if __ANT_RUNTIME__ then
+    assert(loadfile '/engine/firmware/bootstrap.lua')(...)
 else
     local root = ...
     local f = assert(io.open(root.."main.lua"))

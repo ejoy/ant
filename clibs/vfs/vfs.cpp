@@ -14,19 +14,20 @@ local initfunc, initargs = ...
 local vfs = {}
 local fastio = require "fastio"
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
-if not __ANT_RUNTIME__ then
-    local function realpath(path)
-        if path:sub(1,8) == "/engine/" then
-            return path:sub(2)
-        end
-        return path
-    end
+if __ANT_RUNTIME__ then
+    local fw = require "firmware"
     function vfs.read(path)
-        local lpath = realpath(path)
+        assert(path:sub(1, 17) == "/engine/firmware/")
+        local data = fw.readall_v(path:sub(18))
+        return data, path
+    end
+else
+    function vfs.read(path)
+        assert(path:sub(1, 1) == "/")
+        local lpath = path:sub(2)
         local data = fastio.readall_v(lpath, path)
         return data, lpath
     end
-    vfs.realpath = realpath
 end
 function loadfile(path, _, env)
     local mem, symbol = vfs.read(path)
@@ -55,30 +56,13 @@ local function searcher_lua(name)
     end
     return "no file '"..path.."'"
 end
-if initfunc then
-    if __ANT_RUNTIME__ then
-        local fw = require "firmware"
-        assert(fw.loadfile(initfunc))(vfs, initargs)
-    else
-        assert(loadfile(initfunc))(vfs, initargs)
-    end
-end
 local searcher_preload = package.searchers[1]
 package.searchers = {
     searcher_preload,
     searcher_lua,
 }
-function package.searchpath(name, path)
-    local err = ''
-    name = string.gsub(name, '%.', '/')
-    for c in string.gmatch(path, '[^;]+') do
-        local filename = string.gsub(c, '%?', name)
-        if vfs.type(filename) ~= nil then
-            return filename
-        end
-        err = err .. ("\n\tno file '%s'"):format(filename)
-    end
-    return nil, err
+if initfunc then
+    assert(loadfile(initfunc))(vfs, initargs)
 end
 return vfs
 )";
@@ -86,12 +70,7 @@ return vfs
 static const std::string_view updateinitfunc = R"(
 local vfs, initfunc, initargs = ...
 if initfunc then
-    if package.preload.firmware ~= nil then
-        local fw = require "firmware"
-        assert(fw.loadfile(initfunc))(vfs, initargs)
-    else
-        assert(loadfile(initfunc))(vfs, initargs)
-    end
+    assert(loadfile(initfunc))(vfs, initargs)
 end
 )";
 

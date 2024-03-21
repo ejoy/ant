@@ -2,10 +2,13 @@ local rmlui = require "rmlui"
 local timer = require "core.timer"
 local task = require "core.task"
 local event = require "core.event"
+local ltask = require "ltask"
 local document_manager = require "core.document_manager"
 local datamodel = require "core.datamodel.api"
 local eventListener = require "core.event.listener"
 local message = require "core.message"
+
+local ServiceWindow = ltask.queryservice "ant.window|window"
 
 local createWindowByPool
 

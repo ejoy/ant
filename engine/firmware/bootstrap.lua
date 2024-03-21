@@ -1,20 +1,32 @@
-local _dofile = dofile
-function dofile(path)
+local function LoadFile(path, env)
 	local fastio = require "fastio"
-    return fastio.loadfile(path)()
+	local data = fastio.readall_v(path, path)
+	local func, err = fastio.loadlua(data, path, env)
+	if not func then
+		error(err)
+	end
+	return func
 end
+
+local function LoadDbg(expr)
+	local env = setmetatable({}, {__index = _G})
+	function env.dofile(path)
+		return LoadFile(path, env)()
+	end
+	assert(load(expr, "=(expr)", "t", env))()
+end
+
 local i = 1
 while true do
-    if arg[i] == '-e' then
-        i = i + 1
-        assert(arg[i], "'-e' needs argument")
-        load(arg[i], "=(expr)")()
-    elseif arg[i] == nil then
-        break
-    end
-    i = i + 1
+	if arg[i] == '-e' then
+		i = i + 1
+		assert(arg[i], "'-e' needs argument")
+		LoadDbg(arg[i])
+	elseif arg[i] == nil then
+		break
+	end
+	i = i + 1
 end
-dofile = _dofile
 
 __ANT_RUNTIME__ = true
 
@@ -118,25 +130,51 @@ if needcleanup then
 end
 fs.create_directories(config.vfs.localpath)
 
-local boot = require "ltask.bootstrap"
-local vfs = require "vfs"
-local thread = require "bee.thread"
-local socket = require "bee.socket"
+do
+	local vfs = require "vfs"
+	vfs.initfunc("/engine/firmware/init_thread.lua", {}, true)
+end
 
-thread.newchannel "IOreq"
-
-local s, c = socket.pair()
-local io_req = thread.channel "IOreq"
-io_req:push(config, s:detach())
-
-vfs.iothread = boot.preinit [[
--- IO thread
-local fw = require "firmware"
-assert(fw.loadfile "io.lua")()
-]]
-
-vfs.initfunc("init_thread.lua", {
-	fd = c:detach(),
-	editor = __ANT_EDITOR__,
-})
-dofile "/main.lua"
+local ltask_config = {
+	core = {
+		worker = 8,
+	},
+	root = {
+		bootstrap = {
+			{
+				name = "io",
+				unique = true,
+				initfunc = [[return loadfile "/engine/firmware/io.lua"]],
+				args = { config },
+				worker_id = 3,
+			},
+			{
+				name = "ant.ltask|timer",
+				unique = true,
+			},
+			{
+				name = "ant.ltask|logger",
+				unique = true,
+			},
+			{
+				name = "/main.lua",
+				args = { arg },
+			},
+		},
+	}
+}
+local boot = dofile "/engine/firmware/ltask.lua"
+if platform.os == "ios" then
+	local window = require "window.ios"
+	window.mainloop(function (what)
+		if what == "init" then
+			boot:start(ltask_config)
+		elseif what == "exit" then
+			boot:wait()
+		end
+	end)
+	return
+end
+ltask_config.mainthread = 0
+boot:start(ltask_config)
+boot:wait()

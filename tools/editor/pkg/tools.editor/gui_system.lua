@@ -173,6 +173,7 @@ local event_keyboard        = world:sub {"keyboard"}
 function m:handle_input()
     for _, key, press, state in event_keyboard:unpack() do
         scene_view.handle_input(key, press, state)
+        anim_view.handle_input(key, press, state)
         if (key == "Escape" or key == "GraveAccent") and press == 1 then
             world:pub { "GizmoMode", "select" }
         elseif key == "1" and press == 1 then
@@ -193,6 +194,9 @@ local entity_event          = world:sub {"EntityEvent"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_gizmo           = world:sub {"Gizmo"}
 function m:handle_event()
+    if global_data.fileserver then
+        global_data.fileserver.handle_event()
+    end
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
     end

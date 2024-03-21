@@ -11,6 +11,7 @@ local TEXTUREC 		= require "tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
 local SH			= shpkg.sh
 local texcube		= import_package "ant.texture".cube
+local btime			= require "bee.time"
 
 local setting		= import_package "ant.settings"
 
@@ -114,8 +115,9 @@ end
 
 local function build_Eml(cm)
     print("start build irradiance SH, bandnum:", irradianceSH_bandnum)
+	local now = btime.monotonic()
     local Eml = SH.calc_Eml(cm, irradianceSH_bandnum)
-    print("finish build irradiance SH")
+    print("finish build irradiance SH, time used: ", btime.monotonic() - now, " ms")
     return Eml
 end
 

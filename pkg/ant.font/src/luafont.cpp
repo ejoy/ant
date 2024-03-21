@@ -1,14 +1,12 @@
-#define LUA_LIB
-
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include <lua.hpp>
 #include "../bgfx/bgfx_interface.h"
+#include "fastio.h"
+
+extern "C" {
 #include "luabgfx.h"
-
 #include "font_manager.h"
-
 #include "truetype.h"
+}
 
 #include <string.h>
 #include <stdint.h>
@@ -59,7 +57,18 @@ lname(lua_State *L) {
 
 static int
 initfont(lua_State *L) {
-	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	switch (lua_type(L, 2)) {
+	case LUA_TUSERDATA:
+		lua_pushlightuserdata(L, lua_touserdata(L, 2));
+		lua_replace(L, 2);
+		break;
+	case LUA_TLIGHTUSERDATA:
+		break;
+	default:
+		luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+		break;
+	}
+	lua_settop(L, 2);
 	luaL_Reg l[] = {
 		{ "texture",			ltexture },
 		{ "import",				limport },
@@ -67,7 +76,6 @@ initfont(lua_State *L) {
 		{ "submit",				lsubmit },
 		{ NULL, 				NULL },
 	};
-	lua_settop(L, 2);
 	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
 	lua_setfield(L, 1, "fonttexture_size");
 	luaL_setfuncs(L, l, 1);
@@ -75,8 +83,8 @@ initfont(lua_State *L) {
 	return 1;
 }
 
-LUAMOD_API int
-luaopen_font(lua_State *L) {
+extern "C"
+int luaopen_font(lua_State *L) {
 	luaL_checkversion(L);
 	lua_newtable(L);
 	lua_newtable(L);
@@ -89,40 +97,35 @@ luaopen_font(lua_State *L) {
 static int
 luavm_init(lua_State *L) {
 	luaL_openlibs(L);
-	const char* boot = (const char*)lua_touserdata(L, 1);
-	if (luaL_loadstring(L, boot) != LUA_OK) {
+	const char* data = (const char*)lua_touserdata(L, 1);
+	size_t size = (size_t)lua_tointeger(L, 2);
+	const char* chunkname = (const char*)lua_touserdata(L, 3);
+	if (luaL_loadbuffer(L, data, size, chunkname) != LUA_OK) {
 		return lua_error(L);
 	}
 	lua_call(L, 0, 0);
 	return 0;
 }
 
-static lua_State*
-luavm_create(lua_State *L, const char* boot) {
-	lua_State* vL = luaL_newstate();
-	if (!vL) {
-		luaL_error(L, "not enough memory");
-		return NULL;
-	}
-	lua_pushcfunction(vL, luavm_init);
-	lua_pushlightuserdata(vL, (void*)boot);
-	if (lua_pcall(vL, 1, 0, 0) != LUA_OK) {
-		lua_pushstring(L, lua_tostring(vL, -1));
-		lua_close(vL);
-		lua_error(L);
-		return NULL;
-	}
-	return vL;
-}
-
 static int
 fontm_init(lua_State *L) {
 	struct font_manager* F = (struct font_manager *)lua_newuserdatauv(L, font_manager_sizeof(), 0);
-	const char* boot = luaL_checkstring(L, 1);
-	void* managerL = luavm_create(L, boot);
+	auto boot = getmemory(L, 1);
+	lua_State* managerL = luaL_newstate();
+	if (!managerL) {
+		return luaL_error(L, "not enough memory");
+	}
+	lua_pushcfunction(managerL, luavm_init);
+	lua_pushlightuserdata(managerL, (void*)boot.data());
+	lua_pushinteger(managerL, (lua_Integer)boot.size());
+	lua_pushlightuserdata(managerL, (void*)luaL_checkstring(L, 2));
+	if (lua_pcall(managerL, 3, 0, 0) != LUA_OK) {
+		lua_pushstring(L, lua_tostring(managerL, -1));
+		lua_close(managerL);
+		return lua_error(L);
+	}
 	font_manager_init(F, managerL);
-	lua_pushlightuserdata(L, F);
-	return 2;
+	return 1;
 }
 
 static int
@@ -130,13 +133,13 @@ fontm_shutdown(lua_State *L) {
 	struct font_manager* F = (struct font_manager*)lua_touserdata(L, 1);
 	void* managerL = font_manager_shutdown(F);
 	if (managerL) {
-		lua_close(managerL);
+		lua_close((lua_State*)managerL);
 	}
 	return 0;
 }
 
-LUAMOD_API int
-luaopen_font_manager(lua_State *L) {
+extern "C"
+int luaopen_font_manager(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "init", fontm_init },

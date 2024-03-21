@@ -32,11 +32,12 @@ end
 
 local S = {}
 
-function S.shutdown()
+function S.quit()
     quit = {}
     ltask.wait(quit)
     rmlui.RmlShutdown()
     bgfx.shutdown()
+    ltask.quit()
 end
 
 function S.open(...)

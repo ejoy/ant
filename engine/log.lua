@@ -9,32 +9,15 @@ local LEVELS <const> = {
 
 local LOG = {}
 
-if not debug.getregistry().LTASK_ID then
-    --TODO
-    for _, level in ipairs(LEVELS) do
-        LOG[level] = function (...)
-            local t = table.pack(...)
-            local str = {}
-            for i = 1, t.n do
-                str[#str+1] = tostring(t[i])
-            end
-            local message = table.concat(str, "\t")
-            io.write(string.format("[%-5s]", level:upper()))
-            io.write(message)
-            io.write "\n"
+for _, level in ipairs(LEVELS) do
+    LOG[level] = function (...)
+        local t = table.pack(...)
+        local str = {}
+        for i = 1, t.n do
+            str[#str+1] = tostring(t[i])
         end
-    end
-else
-    for _, level in ipairs(LEVELS) do
-        LOG[level] = function (...)
-            local t = table.pack(...)
-            local str = {}
-            for i = 1, t.n do
-                str[#str+1] = tostring(t[i])
-            end
-            local message = table.concat(str, "\t")
-            ltask.pushlog(ltask.pack(level, message))
-        end
+        local message = table.concat(str, "\t")
+        ltask.pushlog(ltask.pack(level, message))
     end
 end
 

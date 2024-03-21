@@ -76,6 +76,19 @@ local function sandbox_env(packagename)
         error(("module '%s' not found:\n\tno field package.preload['%s']\n\tno file '%s'"):format(name, name, path))
     end
 
+    function env.loadfile(path)
+        local filename = "/pkg/"..packagename.."/"..path
+        local mem, symbol = vfs.read(filename)
+        if not mem then
+            return nil, ("file '%s' not found"):format(filename)
+        end
+        local func, err = fastio.loadlua(mem, symbol, env)
+        if not func then
+            return nil, ("error loading file '%s':\n\t%s"):format(filename, err)
+        end
+        return func
+    end
+
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
