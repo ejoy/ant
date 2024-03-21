@@ -32,6 +32,7 @@ attrib_id attrib_arena_clone(struct attrib_arena *A, attrib_id prev, attrib_id h
 attrib_id attrib_arena_find(struct attrib_arena *A, attrib_id head, name_id key, attrib_id *prev);
 math_t attrib_arena_remove(struct attrib_arena *A, attrib_id *prev);
 void attrib_arena_set_uniform(struct attrib_arena *A, int id, const float *v);
+void attrib_arena_clear_all_uniforms(struct attrib_arena *A, struct math_context *M);
 math_t attrib_arena_set_uniform_instance(struct attrib_arena *A, int id, math_t m);
 void attrib_arena_set_handle(struct attrib_arena *A, int id, uint32_t handle);
 void attrib_arena_set_sampler(struct attrib_arena *A, int id, uint32_t handle, int stage);

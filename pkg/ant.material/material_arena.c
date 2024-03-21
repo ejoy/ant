@@ -135,6 +135,16 @@ attrib_arena_init_uniform(struct attrib_arena *A, int id, bgfx_uniform_handle_t 
 	return NULL;
 }
 
+void
+attrib_arena_clear_all_uniforms(struct attrib_arena *A, struct math_context *M){
+	for (int i=0; i<A->attrib_n; ++i){
+		attrib_type* a = get_attrib(A, (attrib_id)i);
+		if (a->h.type == ATTRIB_UNIFORM){
+			math_unmark(M, a->u.u.m);
+		}
+	}
+}
+
 const char *
 attrib_arena_init_sampler(struct attrib_arena *A, int id, bgfx_uniform_handle_t h, uint32_t handle, uint8_t stage) {
 	attrib_type *a = get_attrib_from_id(A, id);
