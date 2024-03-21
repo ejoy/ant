@@ -14,7 +14,7 @@ local world_metatable = {}
 local world = {}
 world_metatable.__index = world
 
-local DEBUG <const> = false -- luaecs.DEBUG
+local DEBUG <const> = luaecs.DEBUG
 
 local function update_group_tag(w, groupid, data)
     for tag, t in pairs(w._group_tags) do
@@ -688,6 +688,8 @@ end
 local m = {}
 
 function m.new_world(config)
+    local math3d = require "math3d"
+    math3d.mark = math3d.mark_clone
     do
         local cfg = config.ecs
         if cfg then
