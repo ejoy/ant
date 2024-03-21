@@ -170,7 +170,7 @@ end
 local function update_camera(c, Lv, Lp)
 	c.viewmat		= Lv
 	c.projmat		= Lp
-	c.infprojmat	= math3d.mark(Lp)	--copy Lp
+	c.infprojmat	= Lp	--copy Lp
 	c.viewprojmat	= math3d.mul(Lp, Lv)
 end
 
@@ -402,7 +402,6 @@ function shadow_sys:entity_ready()
 		e.receive_shadow	= receiveshadow
 	end
 end
-
 
 local ishadow = {}
 ishadow.shadow_changed = shadow_changed
