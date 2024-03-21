@@ -7,11 +7,9 @@ if not dbg then
     return
 end
 
-local vfs = require "vfs"
+local directory = require "directory"
 local lfs = require "bee.filesystem"
-local LogDir = vfs.repopath
-    and lfs.path(vfs.repopath()) / ".log"
-    or lfs.current_path() / ".log"
+local LogDir = directory.app_path()
 lfs.create_directories(LogDir)
 
 local world = ecs.world
