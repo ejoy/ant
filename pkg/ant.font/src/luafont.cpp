@@ -57,7 +57,18 @@ lname(lua_State *L) {
 
 static int
 initfont(lua_State *L) {
-	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	switch (lua_type(L, 2)) {
+	case LUA_TUSERDATA:
+		lua_pushlightuserdata(L, lua_touserdata(L, 2));
+		lua_replace(L, 2);
+		break;
+	case LUA_TLIGHTUSERDATA:
+		break;
+	default:
+		luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+		break;
+	}
+	lua_settop(L, 2);
 	luaL_Reg l[] = {
 		{ "texture",			ltexture },
 		{ "import",				limport },
@@ -65,7 +76,6 @@ initfont(lua_State *L) {
 		{ "submit",				lsubmit },
 		{ NULL, 				NULL },
 	};
-	lua_settop(L, 2);
 	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
 	lua_setfield(L, 1, "fonttexture_size");
 	luaL_setfuncs(L, l, 1);
@@ -103,8 +113,7 @@ fontm_init(lua_State *L) {
 	auto boot = getmemory(L, 1);
 	lua_State* managerL = luaL_newstate();
 	if (!managerL) {
-		luaL_error(L, "not enough memory");
-		return 0;
+		return luaL_error(L, "not enough memory");
 	}
 	lua_pushcfunction(managerL, luavm_init);
 	lua_pushlightuserdata(managerL, (void*)boot.data());
@@ -113,12 +122,10 @@ fontm_init(lua_State *L) {
 	if (lua_pcall(managerL, 3, 0, 0) != LUA_OK) {
 		lua_pushstring(L, lua_tostring(managerL, -1));
 		lua_close(managerL);
-		lua_error(L);
-		return 0;
+		return lua_error(L);
 	}
 	font_manager_init(F, managerL);
-	lua_pushlightuserdata(L, F);
-	return 2;
+	return 1;
 }
 
 static int

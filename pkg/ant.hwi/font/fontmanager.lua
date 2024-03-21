@@ -2,6 +2,7 @@ local manager = require "font.manager"
 local fontutil = require "font.util"
 local vfs = require "vfs"
 local fastio = require "fastio"
+local serialization = require "bee.serialization"
 
 local function readall_v(path)
     local mem = vfs.read(path)
@@ -21,14 +22,16 @@ end
 
 local m = {}
 
-local script <const> = "/pkg/ant.hwi/font/manager.lua"
-local instance, instance_ptr = manager.init(readall "/pkg/ant.hwi/font/manager.lua")
-local lfont = require "font" (instance_ptr)
+local instance = manager.init(readall "/pkg/ant.hwi/font/manager.lua")
+local lfont = require "font" (instance)
 
 local imported = {}
 
 function m.instance()
-    return instance_ptr
+    if not instance then
+        return
+    end
+    return serialization.lightuserdata(instance)
 end
 
 function m.import(path)
@@ -47,7 +50,6 @@ end
 function m.shutdown()
     manager.shutdown(instance)
     instance = nil
-    instance_ptr = nil
 end
 
 return m
