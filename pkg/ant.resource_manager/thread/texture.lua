@@ -43,7 +43,7 @@ local function createTexture(c)
         local ti = c.info
         h = bgfx.create_texture2d(ti.width, ti.height, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag)
     else
-        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall(c.name.."|main.bin")), c.flag)
+        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall((c.info.atlas and c.info.atlas.path or c.name) .."|main.bin")), c.flag)
     end
     bgfx.set_name(h, c.name)
     return h
@@ -62,11 +62,23 @@ local function loadExt(protocol, path, config, name)
 	return c
 end
 
+local function loadAtlas(name)
+    local sc = datalist.parse(aio.readall(name))
+    local path = sc.atlas.path .. "|source.ant"
+    local pc = datalist.parse(aio.readall(path))
+    pc.info.atlas = sc.atlas
+    pc.name = name
+    return pc
+end
+
 local function loadTexture(name)
 	local protocol, path, config = name:match "(%w+):(.*)%s(.*)"
 	if protocol then
 		return loadExt(protocol, path, config, name)
 	end
+    if name:find ".atlas" then
+        return loadAtlas(name)
+    end
     local path = name.."|source.ant"
     local c = datalist.parse(aio.readall(path))
     c.name = name

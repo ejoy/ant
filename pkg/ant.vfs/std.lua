@@ -158,6 +158,7 @@ local whitelist <const> = {
 	-- material
 	"state",    --TODO: use ant
 	"varyings", --TODO: use ant
+	"atlas"
 }
 
 local function table_append(t, a)

@@ -3,7 +3,7 @@ local depends = require "depends"
 
 return function (content, output, setting, depfiles)
 	if not content.path then
-		if not content.dynamic then
+		if not content.dynamic and (not content.atlas) then
 			assert(content.value, "memory texture should define the texture memory")
 	
 			if content.format ~= "RGBA8" then

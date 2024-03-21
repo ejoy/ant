@@ -139,6 +139,93 @@ static void replace_debug_mipmap_image(const bimg::ImageContainer *srt_image, co
 }
 
 static int
+lclip_rect(lua_State *L) {
+    auto src_memory = getmemory(L, 1);
+
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
+    auto srt_image = bimg::imageParse(&allocator, (const void*)src_memory.data(), (uint32_t)src_memory.size(), bimg::TextureFormat::Count, nullptr);
+    const uint8_t* src_data = (uint8_t*)srt_image->m_data;
+    bimg::UnpackFn unpack = bimg::getUnpack(srt_image->m_format);
+    const uint32_t bpp = bimg::getBitsPerPixel(srt_image->m_format);
+    if (!srt_image){
+        lua_pushstring(L, "Invalid src image content");
+        return lua_error(L);
+    }
+    uint32_t minx = srt_image->m_width - 1;
+    uint32_t miny = srt_image->m_height - 1;
+    uint32_t maxx = 0;
+    uint32_t maxy = 0;
+    for (uint32_t yy = 0; yy < srt_image->m_height; ++yy) {
+        for (uint32_t xx = 0; xx < srt_image->m_width; ++xx) {
+            float rgba[4];
+            uint32_t pitch = (yy * srt_image->m_width + xx) * bpp / 8;
+            unpack(rgba, &src_data[pitch]);
+            if (rgba[3] != 0) {
+                if (xx > maxx) {
+                    maxx = xx;
+                }
+                if (xx < minx) {
+                    minx = xx;
+                }
+                if (yy > maxy) {
+                    maxy = yy;
+                }
+                if (yy < miny) {
+                    miny = yy;
+                }
+            }
+        }
+    }
+    lua_pushnumber(L, srt_image->m_width);
+    lua_pushnumber(L, srt_image->m_height);
+    lua_pushnumber(L, minx + 1);     //dx
+    lua_pushnumber(L, miny + 1);     //dy
+    lua_pushnumber(L, maxx - minx);  //dw
+    lua_pushnumber(L, maxy - miny);  //dh
+    lua_pushlstring(L, (const char*)src_data, srt_image->m_size);
+    bimg::imageFree(srt_image);
+    return 7;
+}
+
+static int
+lupdate_atlas(lua_State *L) {
+
+    auto atlas_memory = getmemory(L, 1).data();
+    auto rect_memory  = getmemory(L, 2).data();
+    auto ax = (uint32_t)luaL_checkinteger(L, 3) - 1;
+    auto ay = (uint32_t)luaL_checkinteger(L, 4) - 1;
+    auto dx = (uint32_t)luaL_checkinteger(L, 5) - 1;
+    auto dy = (uint32_t)luaL_checkinteger(L, 6) - 1;
+    auto dw = (uint32_t)luaL_checkinteger(L, 7);
+    auto dh = (uint32_t)luaL_checkinteger(L, 8);
+    auto rw = (uint32_t)luaL_checkinteger(L, 9);
+    auto aw = (uint32_t)luaL_checkinteger(L, 10);
+
+    uint8_t* atlas_data = (uint8_t*)atlas_memory;
+    const uint8_t* rect_data = (uint8_t*)rect_memory;
+    auto format = bimg::TextureFormat::RGBA8;
+    bimg::UnpackFn unpack = bimg::getUnpack(format);
+    bimg::PackFn pack = bimg::getPack(format);
+    const uint32_t bpp = bimg::getBitsPerPixel(format);
+
+    for (uint32_t yy = 0; yy < dh; ++yy) {
+        for (uint32_t xx = 0; xx < dw; ++xx) {
+            float rgba[4];
+            uint32_t rect_x = xx + dx;
+            uint32_t rect_y = yy + dy;
+            uint32_t atlas_x = xx + ax;
+            uint32_t atlas_y = yy + ay;
+            uint32_t rect_pitch = (rect_y * rw + rect_x) * bpp / 8;
+            uint32_t atlas_pitch = (atlas_y * aw + atlas_x) * bpp / 8;
+            unpack(rgba, &rect_data[rect_pitch]);
+            pack(&atlas_data[atlas_pitch], rgba);
+        }
+    }
+    return 0;
+}
+
+static int
 lreplace_debug_mipmap(lua_State *L) {
     auto src_memory = getmemory(L, 1);
     auto dst_memory = getmemory(L, 2);
@@ -400,7 +487,9 @@ create_png_lib(lua_State *L){
     lua_newtable(L);
     luaL_Reg pnglib[] = {
         {"convert", lpng_convert},
-        {"gray2rgba",lpng_gray2rgba},
+        {"gray2rgba", lpng_gray2rgba},
+        {"cliprect", lclip_rect},
+        {"updateAtlas", lupdate_atlas},
         {nullptr, nullptr},
     };
     luaL_setfuncs(L, pnglib, 0);

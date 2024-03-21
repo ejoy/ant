@@ -358,7 +358,7 @@ local function updateTexture()
                 local nl = parse_lattice(v.lattice)
                 rmlui.RenderSetLatticeTexture(v.path, v.id, v.width, v.height, nl.x1, nl.y1, nl.x2, nl.y2, nl.u, nl.v)
             elseif v.atlas then
-                local at = parse_atlas(v.width, v.height, v.atlas)
+                local at = parse_atlas(v.width, v.height, v.atlas.rect)
                 rmlui.RenderSetTextureAtlas(v.path, v.id, at.w, at.h, at.ax, at.ay, at.aw, at.ah, at.fx, at.fy, at.fw, at.fh)
             else
                 rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
