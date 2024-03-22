@@ -1,0 +1,35 @@
+---
+file: animations/animation.ozz
+op: replace
+path: /animations
+value:
+  work: /pkg/ant.test.simple/resource/miner/miner.anim
+---
+file: mesh.prefab
+op: copyfile
+path: test.prefab
+---
+file: test.prefab
+op: replace
+path: /2/data/visible_masks
+value: ""
+---
+file: test.prefab
+op: replace
+path: /3/data/visible_masks
+value: ""
+---
+file: test.prefab
+op: replace
+path: /4/data/visible_masks
+value: ""
+---
+file: test.prefab
+op: replace
+path: /5/data/visible_masks
+value: ""
+---
+file: test.prefab
+op: replace
+path: /6/data/visible_masks
+value: ""
