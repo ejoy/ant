@@ -1,11 +1,9 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local vfs = require "vfs"
 local image  = require "image"
 local fastio = require "fastio"
 local fs = require "bee.filesystem"
-local as = ecs.system "atlas_system"
 local bgfx = require "bgfx"
 local serialize = import_package "ant.serialize"
 local iatlas = {}
