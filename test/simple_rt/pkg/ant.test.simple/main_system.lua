@@ -28,7 +28,7 @@ local default_clear_state = {
 }
 
 local view_ratio = {
-    x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+    x = 0.5, y = 0.0, w = 0.5, h = 0.5,
 }
 
 local prefab
@@ -65,7 +65,7 @@ function m:entity_init()
             data = {
                 render_target       = {
                     viewid		        = hwi.viewid_get(queuename),
-                    clear_state	        = default_clear_state,
+                    clear_state	        = {clear = ""},
                     view_rect	        = view_rect,
                     fb_idx		        = fbmgr.get_fb_idx(hwi.viewid_get "main_view"),
                 },
@@ -91,7 +91,7 @@ local function create_scene(is_test)
                     local e <close> = world:entity(eid)
                     w:extend(e, "render_object?in")
                     if e.render_object then
-                        test_entities[#test_entities+1] = eid
+                        --test_entities[#test_entities+1] = eid
                     end
                 end
             end
@@ -136,7 +136,7 @@ local function create_scene(is_test)
     }
 
     if is_test then
-        test_entities[#test_entities+1] = plane
+        --test_entities[#test_entities+1] = plane
     end
 end
 
