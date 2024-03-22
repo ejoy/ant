@@ -93,21 +93,16 @@ local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 end})
 
 local function create_material_instance(e)
-	--TODO: add render_features flag to replace skinning and draw_indirect component check
-	w:extend(e, "draw_indirect?in")
+	local fs = e.feature_set
 	local mr = assetmgr.resource(e.material)
-	if e.draw_indirect then
-		local di = mr.di
-		if not di then
-			error("use draw_indirect component, but material file not define draw_indirect material")
-		end
-
-		return RM.create_instance(di.object)
-	end
-	return RM.create_instance(mr.object)
+	local mo = fs.DRAW_INDIRECT and assert(mr.di, "use draw_indirect component, but material file not define draw_indirect material") or mr
+	return RM.create_instance(mo.object)
 end
 
 local function update_default_material_index(e)
+	w:extend(e, "material:in")
+	w:extend(e, "feature_set:in")
+	w:extend(e, "filter_material:in")
 	local ro = e.render_object
 	local mi = create_material_instance(e)
 	local midx = queuemgr.default_material_index()
@@ -148,21 +143,23 @@ local function check_update_main_queue_material(e)
 	end
 end
 
+function render_sys:opt_component_init()
+	for e in w:select "INIT feature_set:update" do
+		e.feature_set = {}
+	end
+
+	for e in w:select "INIT filter_material:update" do
+		e.filter_material	= {}
+	end
+end
 
 function render_sys:component_init()
-	for e in w:select "INIT material:in render_object:update filter_material:update filter_result:new" do
+	for e in w:select "INIT render_object:update" do
 		local ro = e.render_object
 		ro.rm_idx = R.alloc()
 
 		ro.visible_idx	= Q.alloc()
 		ro.cull_idx		= Q.alloc()
-
-		e.filter_material	= {}
-
-		--filter_material&filter_result
-		w:extend(e, "filter_material:in filter_result:new")
-		e.filter_result = true
-		update_default_material_index(e)
 	end
 
 	for e in w:select "INIT mesh:in mesh_result?update" do
@@ -211,8 +208,13 @@ end
 
 function render_sys:entity_init()
 	for e in w:select "INIT render_object:update" do
+		--filter_result
+		w:extend(e, "filter_result?out")
+		e.filter_result = true
+		update_default_material_index(e)
+
 		--mesh & material
-		w:extend(e, "mesh_result:in material:in")
+		w:extend(e, "mesh_result:in")
 		update_ro(e.render_object, e.mesh_result)
 		check_varyings(e.mesh_result, e.material)
 

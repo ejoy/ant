@@ -147,15 +147,13 @@ function shadow_sys:init()
 	}
 
 	local function create_fb(rb, refidx)
-		return fbmgr.create(
-			{
+		return fbmgr.create{
 				rbidx = rb,
 				layer = refidx-1,
 				mip = 0,
 				resolve = "",
 				access = "w",
 			}
-		)
 	end
 
 	for ii=1, ics.split_num do

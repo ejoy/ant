@@ -1,4 +1,5 @@
 pipeline "_entity_init"
+    .stage "opt_component_init"
     .stage "component_init"
     .stage "entity_init"
     .stage "entity_ready"

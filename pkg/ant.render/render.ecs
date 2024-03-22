@@ -7,6 +7,7 @@ component "filter_material".type "lua"
 component "visible_masks".type "lua"
 
 component "mesh_result".type "lua"
+component "feature_set".type "lua"
 
 import "render_object.ecs"
 import "renderqueue.ecs"
@@ -19,6 +20,7 @@ policy "render"
     .component_opt "render_layer"
     .component_opt "mesh_result"
     .component_opt "visible_masks"
+    .component_opt "feature_set"
     .component "material"
     .component "mesh"
 
@@ -28,6 +30,7 @@ policy "simplerender"
     .include_policy "ant.scene|bounding"
     .component_opt "render_layer"
     .component_opt "visible_masks"
+    .component_opt "feature_set"
     .component "mesh_result"
     .component "material"
 

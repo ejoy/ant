@@ -18,28 +18,25 @@ local RM            = ecs.require "ant.material|material"
 local irq           = ecs.require "ant.render|renderqueue"
 local irl		    = ecs.require "ant.render|render_layer.render_layer"
 
+local featureset    = require "feature_set"
+
 local assetmgr      = import_package "ant.asset"
 
-local pre_depth_material
-local pre_depth_skinning_material
-local pre_di_depth_material
+local FEATURE_MATERIALS = {}
 
 local function which_material(e, matres)
     if matres.fx.depth then
         return matres
     end
-    w:extend(e, "skinning?in draw_indirect?in")
-    if e.draw_indirect then
-        return pre_di_depth_material
-    else
-        return e.skinning and pre_depth_skinning_material or pre_depth_material 
-    end
+    w:extend(e, "feature_set:in")
+    local flag = featureset.flag_from_featureset(e.feature_set)
+    return assert(FEATURE_MATERIALS[flag], "Invalid featureset")
 end
 
 function s:init()
-    pre_depth_material 			    = assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_skinning_material     = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-    pre_di_depth_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
+    FEATURE_MATERIALS[featureset.flag ""]               = assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
+    FEATURE_MATERIALS[featureset.flag "GPU_SKINNING"]   = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+    FEATURE_MATERIALS[featureset.flag "DRAW_INDIRECT"]  = assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
