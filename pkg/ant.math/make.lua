@@ -9,6 +9,7 @@ local sources = {
 
 local defines = {
     "_USE_MATH_DEFINES",
+    --"MATHIDSOURCE",
 }
 
 if lm.mode == "debug" then

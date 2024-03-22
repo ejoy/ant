@@ -36,7 +36,7 @@ end
 
 function b.unmarshal(v)
 	local bounding = serialization.unpack(v)
-	math3d.mark(bounding.aabb)
-	math3d.mark(bounding.scene_aabb)
+	bounding.aabb = math3d.mark(bounding.aabb)
+	bounding.scene_aabb = math3d.mark(bounding.scene_aabb)
 	return bounding
 end

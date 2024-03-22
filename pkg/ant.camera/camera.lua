@@ -207,13 +207,6 @@ local function init_camera(c)
         t.matrices[k] = math3d.mark(v)
     end
 
-    local function unmark_matrices(t)
-        local m = t.matrices
-        math3d.unmark(m.viewmat)
-        math3d.unmark(m.projmat)
-        math3d.unmark(m.infprojmat)
-        math3d.unmark(m.viewprojmat)
-    end
     return setmetatable({
         frustum     = c.frustum,
         dof         = c.dof,
@@ -223,7 +216,6 @@ local function init_camera(c)
     }, {
         __index     = m,
         __newindex  = access_matrices,
-        __gc        = unmark_matrices,
     })
 end
 
@@ -245,6 +237,18 @@ function cameraview_sys:update_camera()
     for e in w:select "camera_changed camera_depend:absent camera:in scene:in" do
         update_camera_matrices(e.camera, math3d.inverse_fast(e.scene.worldmat), e.camera.frustum)
     end
+end
+
+local c = ecs.component "camera"
+
+function c.remove(v)
+    if not v.viewmat then
+        return
+    end
+	math3d.unmark(v.viewmat)
+	math3d.unmark(v.projmat)
+	math3d.unmark(v.infprojmat)
+	math3d.unmark(v.viewprojmat)
 end
 
 return ic

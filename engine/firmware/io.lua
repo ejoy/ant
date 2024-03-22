@@ -154,18 +154,25 @@ local function listen_server(address, port)
 		return
 	end
 	selector:event_add(fd, SELECT_READ)
-	for _ in selector:wait(2) do
-		local newfd, err = fd:accept()
-		if not newfd then
-			selector:event_del(fd)
-			fd:close()
-			LOG("[ERROR] accept: "..err)
-			return
+	local quit
+	while not quit do
+		quit = true
+		for _ in selector:wait(2) do
+			local newfd, err = fd:accept()
+			if newfd == nil then
+				selector:event_del(fd)
+				fd:close()
+				LOG("[ERROR] accept: "..err)
+				return
+			elseif newfd == false then
+				quit = false
+			else
+				LOG("Accepted")
+				selector:event_del(fd)
+				fd:close()
+				return newfd
+			end
 		end
-		LOG("Accepted")
-		selector:event_del(fd)
-		fd:close()
-		return newfd
 	end
 	LOG("[ERROR] select: timeout")
 	selector:event_del(fd)

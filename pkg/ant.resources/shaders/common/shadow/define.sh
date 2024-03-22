@@ -45,17 +45,17 @@ uniform vec4 u_omni_param;
 #define u_omni_count u_omni_param.x
 
 #ifdef USE_SHADOW_COMPARE
-#define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
-#define shadow_sampler_type sampler2DShadow
+#define SHADOW_SAMPLER2DARRAY	SAMPLER2DARRAYSHADOW
+#define shadow_sampler_type sampler2DArrayShadow
 #else
-#define SHADOW_SAMPLER2D	SAMPLER2D
-#define shadow_sampler_type sampler2D 
+#define SHADOW_SAMPLER2DARRAY	SAMPLER2DARRAY
+#define shadow_sampler_type sampler2DArray
 #endif
 
-SHADOW_SAMPLER2D(s_shadowmap, 8);
+SHADOW_SAMPLER2DARRAY(s_shadowmap, 8);
 
 #ifdef USE_SHADOW_COMPARE
-#define sample_shadow sample_shadow_hardware
+#define sample_shadow sample_shadow_compare
 #else //!USE_SHADOW_COMPARE
 #define sample_shadow sample_shadow_directly
 #endif //USE_SHADOW_COMPARE

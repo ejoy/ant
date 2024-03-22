@@ -25,6 +25,7 @@ pipeline "_update"
 
 pipeline "_exit"
     .pipeline "exit"
+    --.stage "exit_stat"
 
 pipeline "_pipeline"
     .stage "pipeline"

@@ -2,6 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+--it's CSM shadow system
 local shadow_sys = ecs.system "shadow_system"
 
 local setting	= import_package "ant.settings"
@@ -14,6 +15,7 @@ local assetmgr  = import_package "ant.asset"
 local hwi       = import_package "ant.hwi"
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
+local sampler   = import_package "ant.render.core".sampler
 
 local RM        = ecs.require "ant.material|material"
 local R         = world:clibs "render.render_material"
@@ -24,12 +26,13 @@ local math3d    = require "math3d"
 local fbmgr     = require "framebuffer_mgr"
 local queuemgr  = ecs.require "queue_mgr"
 
-local shadowcfg	= ecs.require "shadow.shadowcfg"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "renderqueue"
 local imaterial = ecs.require "ant.render|material"
 local ivm		= ecs.require "ant.render|visible_mask"
 local irender	= ecs.require "ant.render|render"
+
+bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
@@ -40,29 +43,32 @@ local usePSCFar<const> = false
 
 local moveCameraToOrigin<const> = false
 
-local CLEAR_SM_viewid<const> = hwi.viewid_get "csm_fb"
-local function create_clear_shadowmap_queue(fbidx)
-	assert(queuemgr.has "clear_sm")
-	local rb = fbmgr.get_rb(fbidx, 1)
-	local ww, hh = rb.w, rb.h
-	world:create_entity{
-		policy = {
-			"ant.render|postprocess_queue",
-		},
-		data = {
-			render_target = {
-                clear_state = {
-                    depth = 0,
-                    clear = "D",
-                },
-				fb_idx = fbidx,
-				viewid = CLEAR_SM_viewid,
-				view_rect = {x=0, y=0, w=ww, h=hh},
-			},
-			need_touch = true,
-			clear_sm = true,
-			queue_name = "clear_sm",
-		}
+local SM_SIZE<const>		= setting:get "graphic/shadow/size"
+local NORMAL_OFFSET<const>	= setting:get "graphic/shadow/normal_offset"	or 0.012
+local ics					= require "shadow.csm_split"
+local TEXTURE_BIAS_MATRIX<const> = mu.texture_bias_matrix
+
+local SHADOW_PARAM<const>	= math3d.ref(math3d.vector(NORMAL_OFFSET, 1.0/SM_SIZE, ics.split_num, 0.0))
+
+local function calc_focus_matrix(aabb)
+	local center, extents = math3d.aabb_center_extents(aabb)
+
+	local ex, ey = math3d.index(extents, 1, 2)
+	local sx, sy = 1.0/ex, 1.0/ey
+
+	local tx, ty = math3d.index(center, 1, 2)
+
+	local quantizer = 16
+	sx, sy = quantizer / math.ceil(quantizer / sx),  quantizer / math.ceil(quantizer / sy)
+
+	tx, ty =  tx * sx, ty * sy
+	local hs = SM_SIZE * 0.5
+	tx, ty = -math.ceil(tx * hs) / hs, -math.ceil(ty * hs) / hs
+	return math3d.matrix{
+		sx,  0, 0, 0,
+			0, sy, 0, 0,
+			0,  0, 1, 0,
+		tx, ty, 0, 1
 	}
 end
 
@@ -94,7 +100,8 @@ local function create_csm_entity(index, vr, fbidx)
 				viewid = hwi.viewid_get(csmname),
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
-					clear = "",
+					clear = "D",
+					depth = 0,
 				},
 				fb_idx = fbidx,
 			},
@@ -117,23 +124,47 @@ function shadow_sys:init()
 	assert(midx == queuemgr.material_index "csm3_queue")
 	assert(midx == queuemgr.material_index "csm4_queue")
 
-	local fbidx = shadowcfg.fb_index()
-	local s     = shadowcfg.shadowmap_size()
-	create_clear_shadowmap_queue(fbidx)
 	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
 	di_shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
 	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
-	for ii=1, shadowcfg.split_num() do
-		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
-		create_csm_entity(ii, vr, fbidx)
+
+	--this rb will remove when world is exit
+	local rb_arrays = fbmgr.create_rb{
+		format = "D16",
+		w=SM_SIZE,
+		h=SM_SIZE,
+		layers=math.max(2, ics.split_num), --walk around bgfx bug, layers == 1, it will not create texture arrays
+		flags=sampler{
+			RT="RT_ON",
+			--LINEAR for pcf2x2 with shadow2DProj in shader
+			MIN="LINEAR",
+			MAG="LINEAR",
+			U="BORDER",
+			V="BORDER",
+			COMPARE="COMPARE_GEQUAL",
+			BOARD_COLOR="0",
+		},
+	}
+
+	local function create_fb(rb, refidx)
+		return fbmgr.create(
+			{
+				rbidx = rb,
+				layer = refidx-1,
+				mip = 0,
+				resolve = "",
+				access = "w",
+			}
+		)
 	end
 
-	imaterial.system_attrib_update("s_shadowmap", fbmgr.get_rb(shadowcfg.fb_index(), 1).handle)
-	imaterial.system_attrib_update("u_shadow_param1", shadowcfg.shadow_param1())
-	local ssp = shadowcfg.soft_shadow_param()
-	if ssp then
-		imaterial.system_attrib_update("u_shadow_filter_param", ssp)
+	for ii=1, ics.split_num do
+		local vr = {x=0, y=0, w=SM_SIZE, h=SM_SIZE}
+		create_csm_entity(ii, vr, create_fb(rb_arrays, ii))
 	end
+
+	imaterial.system_attrib_update("s_shadowmap",		fbmgr.get_rb(rb_arrays).handle)
+	imaterial.system_attrib_update("u_shadow_param1",	SHADOW_PARAM)
 end
 
 local function set_csm_visible(enable)
@@ -170,7 +201,7 @@ end
 local function update_camera(c, Lv, Lp)
 	c.viewmat		= Lv
 	c.projmat		= Lp
-	c.infprojmat	= math3d.mark(Lp)	--copy Lp
+	c.infprojmat	= Lp	--copy Lp
 	c.viewprojmat	= math3d.mul(Lp, Lv)
 end
 
@@ -219,7 +250,7 @@ local function update_shadow_matrices(si, li, c, viewfrustum)
 		si.nearLS, si.farLS = n, f
 		li.Lp = math3d.projmat(c.frustum, INV_Z)
 
-		local F = shadowcfg.calc_focus_matrix(math3d.minmax(intersectpointsLS, li.Lp))
+		local F 	= calc_focus_matrix(math3d.minmax(intersectpointsLS, li.Lp))
 		li.Lp 		= math3d.mul(F, li.Lp)
 	else
 		li.Lp		= math3d.projmat(c.frustum, INV_Z)
@@ -322,7 +353,7 @@ function shadow_sys:update_camera_depend()
 	local zn, zf = assert(si.zn), assert(si.zf)
 	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
-	local csmfrustums = shadowcfg.split_viewfrustum(zn, zf, CF)
+	local csmfrustums = ics.split_viewfrustum(zn, zf, CF)
 
     for e in w:select "csm:in camera_ref:in queue_name:in" do
         local ce<close> = world:entity(e.camera_ref, "scene:update camera:in")	--update scene.worldmat
@@ -334,15 +365,11 @@ function shadow_sys:update_camera_depend()
 
 		ce.scene.worldmat = mu.M3D_mark(ce.scene.worldmat, li.Lw)
 
-		csm_matrices[csm.index].m = math3d.mul(shadowcfg.crop_matrix(csm.index), c.viewprojmat)
+		csm_matrices[csm.index].m = math3d.mul(TEXTURE_BIAS_MATRIX, c.viewprojmat)
 		split_distances_VS[csm.index] = viewfrustum.f
     end
 
 	commit_csm_matrices_attribs()
-end
-
-function shadow_sys:render_preprocess()
-	bgfx.touch(CLEAR_SM_viewid)
 end
 
 local function which_material(e, matres)
@@ -402,7 +429,6 @@ function shadow_sys:entity_ready()
 		e.receive_shadow	= receiveshadow
 	end
 end
-
 
 local ishadow = {}
 ishadow.shadow_changed = shadow_changed

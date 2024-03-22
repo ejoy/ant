@@ -13,6 +13,7 @@
 #include <luabgfx.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define MAX_ATTRIB 1024
 
@@ -482,7 +483,9 @@ set_attrib(lua_State *L, struct attrib_arena *A, int id, int index) {
 		math_t m = fetch_math_id(L, w, index);
 		if (t == ATTRIB_UNIFORM_INSTANCE) {
 			m = attrib_arena_set_uniform_instance(A, id, math_mark(w->math3d->M, m));
-			math_unmark(w->math3d->M, m);
+			int r = math_unmark(w->math3d->M, m);
+			assert(r >= 0);
+			(void)r;
 		} else {
 			const float *v = math_value(w->math3d->M, m);
 			attrib_arena_set_uniform(A, id, v);
@@ -620,7 +623,9 @@ linstance_release(lua_State *L) {
 	mi->patch_attrib = INVALID_ATTRIB;
 	while (iter != INVALID_ATTRIB) {
 		math_t m = attrib_arena_remove(A, &iter);
-		math_unmark(w->math3d->M, m);
+		int r = math_unmark(w->math3d->M, m);
+		assert(r >= 0);
+		(void)r;
 	}
 	return 0;
 }
@@ -775,13 +780,22 @@ lsystem_attrib_update_init(lua_State *L) {
 	return 1;
 }
 
+static int
+lclear_all_uniform(lua_State *L){
+	struct attrib_arena *A = (struct attrib_arena *)lua_touserdata(L, 1);
+	struct ecs_world* w = getworld(L);
+	attrib_arena_clear_all_uniforms(A, w->math3d->M);
+	return 0;
+}
+
 int
 luaopen_material_core(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "instance",      lmaterial_instance_init },
-		{ "system_attrib_update", lsystem_attrib_update_init },
-		{ NULL,            NULL },
+		{ "instance",				lmaterial_instance_init },
+		{ "system_attrib_update",	lsystem_attrib_update_init },
+		{ "clear_all_uniforms",		lclear_all_uniform},
+		{ NULL,            			NULL },
 	};
 	luaL_newlibtable(L, l);
 	lua_pushnil(L);	// world

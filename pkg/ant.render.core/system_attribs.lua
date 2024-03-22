@@ -79,9 +79,9 @@ local SYS_ATTRIBS = {
 	u_csm_split_distances= uniform_value(ZERO),
 	u_depth_scale_offset = uniform_value(ZERO),
 	u_shadow_param1		 = uniform_value(ZERO),
-	u_shadow_filter_param	 = uniform_value(ZERO),
+	u_shadow_filter_param= uniform_value(ZERO),
 
-	s_shadowmap			 = texture_value(8, "SAMPLER2D"),
+	s_shadowmap			 = texture_value(8, "SAMPLER2DARRAY"),
 	--u_main_camera_matrix = uniform_value(mc.IDENTITY_MAT),
 	--   omni
 	u_omni_matrix = uniform_value(matutil.append_values(

@@ -11,10 +11,10 @@
 #error "need define PCF_FILTER_SIZE"
 #endif //PCF_FILTER_SIZE
 
-float sample_shadow_hardware(sampler2DShadow shadowsampler, vec4 shadowcoord, vec2 offset)
+float sample_shadow_compare(sampler2DShadow shadowsampler, vec4 shadowcoord, uint cascadeidx, vec2 offset)
 {
 	const vec4 coord = vec4(shadowcoord.xy + offset, shadowcoord.z, shadowcoord.w);
-	return sample_shadow_hardware(shadowsampler, coord);
+	return sample_shadow_compare(shadowsampler, coord, cascadeidx);
 }
 
 #define PCF_TYPE_FAST_CONVENTIONAL_SHADOW_FILTERING 1
@@ -191,10 +191,10 @@ float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord)
 		offset.y = 0;
 
 	const float SM_TEXEL_SIZE = 1.0/1024.0;
-	return (sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2(-1.5,  0.5))*u_shadowmap_texelsize)
-		   +sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2( 0.5,  0.5))*u_shadowmap_texelsize)
-		   +sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2(-1.5, -1.5))*u_shadowmap_texelsize)
-		   +sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2( 0.5, -1.5))*u_shadowmap_texelsize)) * 0.25;
+	return (sample_shadow_compare(shadowsampler, shadowcoord, (offset + vec2(-1.5,  0.5))*u_shadowmap_texelsize)
+		   +sample_shadow_compare(shadowsampler, shadowcoord, (offset + vec2( 0.5,  0.5))*u_shadowmap_texelsize)
+		   +sample_shadow_compare(shadowsampler, shadowcoord, (offset + vec2(-1.5, -1.5))*u_shadowmap_texelsize)
+		   +sample_shadow_compare(shadowsampler, shadowcoord, (offset + vec2( 0.5, -1.5))*u_shadowmap_texelsize)) * 0.25;
 }
 
 #define shadowPCF PCF4x4_fix4
@@ -233,7 +233,7 @@ float PCF(shadow_sampler_type shadowsampler, vec4 shadowcoord)
 	{
 		for (float x = -s; x <= s; x += 1.0)
 		{
-			visibility += sample_shadow_hardware(shadowsampler, shadowcoord, vec2(x, y) * u_shadowmap_texelsize);
+			visibility += sample_shadow_compare(shadowsampler, shadowcoord, vec2(x, y) * u_shadowmap_texelsize);
 		}
 	}
 	return visibility / (PCF_FILTER_SIZE * PCF_FILTER_SIZE);

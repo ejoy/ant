@@ -46,7 +46,7 @@ graphic:
     size: 1024
     split_ratios:
       {0.00, 1.00}
-    soft_shadow: pcf
+    filter_mode: pcf
     pcf:
       type: fix4
       size: 4
