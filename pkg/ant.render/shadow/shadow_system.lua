@@ -133,7 +133,7 @@ function shadow_sys:init()
 		format = "D16",
 		w=SM_SIZE,
 		h=SM_SIZE,
-		layers=ics.split_num,
+		layers=math.max(2, ics.split_num), --walk around bgfx bug, layers == 1, it will not create texture arrays
 		flags=sampler{
 			RT="RT_ON",
 			--LINEAR for pcf2x2 with shadow2DProj in shader
