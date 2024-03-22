@@ -1,6 +1,9 @@
 system "shadow_system"
     .implement "shadow/shadow_system.lua"
 
+system "shadow_filter"
+    .implement "shadow/shadow_filter.lua"
+
 component "csm_directional_light"
 component "csm".type "lua"
 policy "csm_queue"

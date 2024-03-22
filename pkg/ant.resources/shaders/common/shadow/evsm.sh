@@ -32,7 +32,7 @@ float VSM(
 }
 #endif //SM_VSM
 
-#ifdef SM_ESM
+#ifdef SM_EVSM
 float ESM(
 	shadow_sampler_type _sampler,
 	vec4 _shadowCoord,
@@ -54,6 +54,6 @@ float ESM(
 	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
 	return visibility;
 }
-#endif //SM_ESM
+#endif //SM_EVSM
 
 #endif //__SHADOW_EVSM_SH__

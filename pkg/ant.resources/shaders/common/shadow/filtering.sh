@@ -5,7 +5,7 @@
 #include "common/shadow/pcf.sh"
 #endif //SM_PCF
 
-#if defined(SM_VSM) || defined(SM_ESM)
+#if defined(SM_EVSM)
 #include "common/shadow/evsm.sh"
 #endif //
 
@@ -19,14 +19,9 @@ float sample_visibility(vec4 shadowcoord, uint cascadeidx)
 	return shadowPCF(s_shadowmap, shadowcoord, cascadeidx);
 #endif //SM_PCF
 
-#ifdef SM_ESM
+#ifdef SM_EVSM
 	return ESM(s_shadowmap, shadowcoord, u_depthMultiplier, cascadeidx);
-#endif //SM_ESM
-
-#ifdef SM_VSM
-	return VSM(s_shadowmap, shadowcoord, 1, 0.012, cascadeidx);
-#endif //SM_VSM
-
+#endif //SM_EVSM
 	return 0.0;
 }
 

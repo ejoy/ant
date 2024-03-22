@@ -6,7 +6,7 @@
 
 //#define SM_HARD 
 //#define SM_PCF
-//#define SM_ESM
+//#define SM_EVSM
 
 #ifndef USE_SHADOW_COMPARE
 #define USE_SHADOW_COMPARE	//define by default
@@ -27,7 +27,7 @@ uniform vec4 u_shadow_filter_param;
 
 #if defined(SM_PCF)
 #define u_pcf_kernelsize		u_shadow_filter_param.x
-#elif defined(SM_ESM)
+#elif defined(SM_EVSM)
 #define u_far_offset			u_shadow_filter_param.x
 #define u_minVariance 			u_shadow_filter_param.y
 #define u_depthMultiplier 		u_shadow_filter_param.z

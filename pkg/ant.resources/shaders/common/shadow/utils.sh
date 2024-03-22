@@ -32,6 +32,7 @@ float bgfxShadow2DArrayProj(BgfxSampler2DArrayShadow _sampler, vec4 _coord, uint
 
 float sample_shadow_compare(sampler2DArrayShadow shadowsampler, vec4 shadowcoord, uint cascadeidx)
 {
+	//TODO: need implement shadow2DArrayProjOffset, offset with integer(ivec2)
 	return shadow2DArrayProj(shadowsampler, shadowcoord, cascadeidx);
 }
 

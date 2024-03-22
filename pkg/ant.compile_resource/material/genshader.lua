@@ -7,37 +7,45 @@ local L             = import_package "ant.render.core".layout
 local settings      = import_package "ant.settings"
 local ENABLE_SHADOW<const>      = settings:get "graphic/shadow/enable"
 
-local function soft_shadow_type(sst)
-    if sst then
-        local SST<const> = {
-            pcf = "SM_PCF",
-            vsm = "SM_VSM",
-            esm = "SM_ESM",
+local FILTER_MODE_MACROS<const> = {
+    pcf  = "SM_PCF=1",
+    evsm = "SM_EVSM=1",
+    hard = "SM_HARD=1",
+}
+
+local FILTER_MODE<const> = settings:get "graphic/shadow/filter_mode" or "hard"
+local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
+    if fm == "pcf" then
+        local PCF = settings:get "graphic/shadow/pcf"
+        local _ = PCF or error "Invalid setting for filter mode:pcf, need define 'graphic/shadow/pcf'"
+
+        local PCF_TYPE_DEFINES<const> = {
+            fast = 1,
+            fix4 = 2,
+            simple = 3,
         }
-        return assert(SST[sst])
+
+        local PCF_TYPE<const>           = assert(PCF.type, "'pcf' needed 'type'")
+        local PCF_FILTER_SIZE<const>    = assert(PCF.size, "'pcf' needed 'size'")
+        
+        local r = {}
+        r[#r+1] = "PCF_TYPE=" .. PCF_TYPE_DEFINES[PCF_TYPE]
+        r[#r+1] = "PCF_FILTER_SIZE=" .. assert(PCF_FILTER_SIZE)
+        if PCF_TYPE == "fast" then
+            local PCF_FILTER_TYPES<const> = {
+                disc            = 1,
+                triangle        = 2,
+                halfmoon        = 3,
+                uniform         = 4,
+                gaussian_like   = 5,
+            }
+            r[#r+1] = "PCF_FILTER_TYPE=" .. PCF_FILTER_TYPES[PCF.filter or "uniform"]
+        end
+
+        t[fm] = r
+        return r
     end
-    return "SM_HARD"
-end
-
-local SOFT_SHADOW_TYPE<const> = soft_shadow_type(settings:get "graphic/shadow/soft_shadow") .. "=1"
-local PCF_TYPE_DEFINES<const> = {
-    fast = 1,
-    fix4 = 2,
-    simple = 3,
-}
-
-local PCF_FILTER_TYPES<const> = {
-    disc            = 1,
-    triangle        = 2,
-    halfmoon        = 3,
-    uniform         = 4,
-    gaussian_like   = 5,
-}
-
-local PCF_TYPE<const>           = settings:get "graphic/shadow/pcf/type"
-local PCF_FILTER_SIZE<const>    = settings:get "graphic/shadow/pcf/size"
-local pcf_filter                = settings:get "graphic/shadow/pcf/filter"
-local PCF_FILTER_TYPE<const>    = pcf_filter and PCF_FILTER_TYPES[pcf_filter] or nil
+end})
 
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
@@ -721,15 +729,10 @@ local function macros_from_setting(setting, m)
 
     if ENABLE_SHADOW and setting.receive_shadow == "on" then
         m[#m+1] = "ENABLE_SHADOW=1"
-        m[#m+1] = SOFT_SHADOW_TYPE
-
-        if PCF_TYPE then
-            m[#m+1] = "PCF_TYPE=" .. PCF_TYPE_DEFINES[PCF_TYPE]
-            m[#m+1] = "PCF_FILTER_SIZE=" .. assert(PCF_FILTER_SIZE)
-            assert(PCF_TYPE ~= "fast" or nil ~= PCF_FILTER_TYPE, "fast pcf need define PCF_FILTER_TYPE")
-            if PCF_FILTER_TYPE then
-                m[#m+1] = "PCF_FILTER_TYPE=" .. PCF_FILTER_TYPE
-            end
+        m[#m+1] = FILTER_MODE_MACROS[FILTER_MODE]
+        local mm = SHADOW_FILTER_MACROS[FILTER_MODE]
+        if mm then
+            table.move(mm, 1, #mm, #m+1, m)
         end
     end
 
