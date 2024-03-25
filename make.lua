@@ -124,6 +124,7 @@ if lm.os ~= "ios" and lm.os ~= "android" then
             "gltf2ozz",
             "shaderc",
             "texturec",
+            "tools_version",
         }
     }
     lm:phony "all" {
