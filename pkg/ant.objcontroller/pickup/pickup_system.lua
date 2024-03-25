@@ -14,7 +14,7 @@ local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
 
 local assetmgr  = import_package "ant.asset"
-local featureset= import_package "ant.main".featureset
+local featureset= import_package "ant.render".featureset
 
 local RM		= ecs.require "ant.material|material"
 
