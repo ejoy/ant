@@ -137,6 +137,7 @@ function m:init_world()
     init_camera()
     light_gizmo.init()
     prefab_mgr:reset_prefab()
+	world:pub { "save_layout", tostring(global_data.editor_root) .. "/imgui.layout" }
 end
 
 function m:post_init()
@@ -148,5 +149,4 @@ function m:data_changed()
 end
 
 function m:exit()
-	widget_utils:save_ui_layout()
 end

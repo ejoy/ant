@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w     = world.w
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 
@@ -20,7 +20,6 @@ local utils 	= ecs.require "mathutils"
 local camera_mgr= ecs.require "camera.camera_manager"
 local gizmo 	= ecs.require "gizmo.gizmo"
 local light_gizmo = ecs.require "gizmo.light"
-local inspector = ecs.require "widget.inspector"
 
 local hierarchy = ecs.require "hierarchy_edit"
 local gizmo_const= require "gizmo.const"
@@ -33,7 +32,8 @@ local move_axis
 local rotate_axis
 local uniform_scale = false
 local local_space = false
-
+local navi_axis = {}
+local navi_axis_view_size = 256
 local function cvt2scenept(x, y)
     return x - iviewport.device_viewrect.x, y - iviewport.device_viewrect.y
 end
@@ -248,9 +248,70 @@ local function create_arrow_widget(axis_root, axis_str)
 	end
 	axis.eid = {cylindereid, coneeid}
 end
+local queuename = "navi_axis_queue"
+local queuemgr  = ecs.require "ant.render|queue_mgr"
+local hwi       = import_package "ant.hwi"
+local navi_axis_viewid = hwi.viewid_generate("navi_axis_queue", "main_view")
+local function register_queue()
+    queuemgr.register_queue(queuename)
+    RENDER_ARG = irender.pack_render_arg(queuename, navi_axis_viewid)
+    w:register{name = queuename}
+end
 
+local navi_camera
 function gizmo_sys:init()
+	register_queue()
+end
 
+local renderpkg = import_package "ant.render"
+local fbmgr     = renderpkg.fbmgr
+function gizmo_sys:entity_init()
+	local function on_ready(e)
+		local eye, at = math3d.vector(0, 0, -3), mc.ZERO_PT
+    	iom.set_position(e, eye)
+    	iom.set_direction(e, math3d.normalize(math3d.sub(at, eye)))
+	end
+    for e in w:select "INIT main_queue render_target:in" do
+		navi_camera = icamera.create({
+			name = "navi_camera",
+			frustum = {
+				n		= 1,
+				f		= 100,
+				fov		= 60,
+				aspect	= 1.0,
+			},
+			exposure = {
+				type 			= "manual",
+				aperture 		= 16.0,
+				shutter_speed 	= 0.008,
+				ISO 			= 100,
+			}
+		}, on_ready)
+        local vr = iviewport.device_viewrect
+        world:create_entity {
+            policy = {
+                "ant.render|render_queue",
+            },
+            data = {
+                render_target       = {
+                    viewid		        = hwi.viewid_get(queuename),
+                    clear_state	        = {clear = ""},
+                    view_rect	        = {
+						x = vr.w - navi_axis_view_size,
+						y = 0,
+						w = navi_axis_view_size,
+						h = navi_axis_view_size,
+					},
+                    fb_idx		        = fbmgr.get_fb_idx(hwi.viewid_get "main_view"),
+                },
+                camera_ref          = navi_camera,--assert(e.camera_ref),--
+                [queuename]	        = true,
+                queue_name			= queuename,
+                submit_queue		= true,
+                visible 			= true,
+            }
+        }
+    end
 end
 
 local function mouse_hit_plane(screen_pos, plane_info)
@@ -258,9 +319,26 @@ local function mouse_hit_plane(screen_pos, plane_info)
 	return utils.ray_hit_plane(iom.ray(c.camera.viewprojmat, screen_pos), plane_info)
 end
 
-local function create_global_axes(scene)
-	local offset = 0.1
-	ientity.create_screen_axis_entity({type = "percent", screen_pos = {offset, 1 - offset}}, scene)
+local ipl = ecs.require "ant.polyline|polyline"
+local POLYLINE_MTL = "/pkg/tools.editor/resource/materials/polyline.material"
+local function create_navi_axis(scene)
+	-- local offset = 0.1
+	-- ientity.create_screen_axis_entity({type = "percent", screen_pos = {offset, 1 - offset}}, scene)
+	local axis_parent = world:create_entity {
+		policy = {
+			"ant.scene|scene_object",
+		},
+		data = {
+			scene = {},
+		},
+		tag = {
+			"nav_axis root"
+		}
+	}
+	navi_axis[#navi_axis + 1] = axis_parent
+	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{1.0, 0, 0}}, 5, gizmo.tx.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
+	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0, 1.0, 0}}, 5, gizmo.ty.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
+	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0, 0, 1.0}}, 5, gizmo.tz.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
 end
 
 function gizmo:update_scale()
@@ -303,7 +381,6 @@ function gizmo:update_scale()
 	iom.set_srt_matrix(rze, math3d.mul(get_mat(origin, cam_to_origin, mc.ZAXIS), math3d.matrix{s = gizmo.scale}))
 end
 
-local ipl = ecs.require "ant.polyline|polyline"
 local geopkg = import_package "ant.geometry"
 local geolib = geopkg.geometry
 local LINEWIDTH = 3
@@ -396,7 +473,7 @@ function gizmo_sys:post_init()
 		return points
 	end
 	local function create_polyline(points, color, srt)
-		return ipl.add_strip_lines(points, LINEWIDTH, color, "/pkg/tools.editor/resource/materials/polyline.material", false, srt, "translucent", true)
+		return ipl.add_strip_lines(points, LINEWIDTH, color, POLYLINE_MTL, false, srt, "translucent", true)
 	end
 	local vertices, _ = geolib.circle(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES)
 	local uniform_rot_eid = create_polyline(get_points(vertices), gizmo_const.COLOR.GRAY, {parent = uniform_rot_root})
@@ -463,7 +540,7 @@ end
 local event_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 function gizmo_sys:init_world()
-	create_global_axes{s=0.1}
+	create_navi_axis{s=0.1}
 end
 function gizmo_sys:entity_ready()
 	for _ in event_main_camera_changed:each() do
@@ -1073,11 +1150,56 @@ local function focus_aabb(ce, aabb)
     iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
 end
 
+function gizmo_sys:render_submit()
+	for i = 2, #navi_axis do
+		irender.draw(RENDER_ARG, navi_axis[i])
+	end
+end
+
+function gizmo_sys:camera_changed()
+
+end
+local first_time = true
+local ivm		= ecs.require "ant.render|visible_mask"
+function gizmo_sys:camera_usage()
+	if first_time then
+		for i = 2, #navi_axis do
+			local e <close> = world:entity(navi_axis[i], "visible_masks?update")
+			ivm.set_masks(e, "main_view", false)
+		end
+	end
+	if w:check "scene_changed camera" then
+        local mq = w:first("main_queue camera_ref:in")
+        local ce <close> = world:entity(mq.camera_ref, "scene_changed?in camera:in scene:in")
+        if ce.scene_changed then
+			for i = 2, #navi_axis do
+				local e<close> = world:entity(navi_axis[i], "scene:update render_object:update")
+				-- iom.set_rotation(e, iom.get_rotation(ce))
+				local mat = math3d.inverse(math3d.matrix({r = iom.get_rotation(ce)}))
+				local scene = e.scene
+				math3d.unmark(scene.worldmat)
+				scene.worldmat = math3d.mark(mat)--math3d.marked_matrix(scene)
+				e.render_object.worldmat = scene.worldmat
+			end
+		end
+	end
+end
 local event_mouse_drag	= world:sub {"mousedrag"}
 local event_mouse_down	= world:sub {"mousedown"}
 local event_mouse_up	= world:sub {"mouseup"}
 local event_keypress	= world:sub {"keyboard"}
+local vr_mb 			= world:sub {"view_rect_changed", "main_queue"}
 function gizmo_sys:handle_input()
+	for _, _, _ in vr_mb:unpack() do
+		local vr = iviewport.device_viewrect
+        irq.set_view_rect(queuename, {
+			x = vr.w - navi_axis_view_size,
+			y = 0,
+			w = navi_axis_view_size,
+			h = navi_axis_view_size,
+		})
+        break
+    end
 	for _, what, x, y in event_mouse_down:unpack() do
 		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
