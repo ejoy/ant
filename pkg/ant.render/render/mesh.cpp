@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include <cassert>
+#include <cstring>
 
 static constexpr int MAX_MESH_NODE = 1024;
 
