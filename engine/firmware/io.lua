@@ -195,7 +195,8 @@ end
 local function response_id(id, ...)
 	if id then
 		assert(type(id) ~= "string")
-		thread.rpc_return(id, ...)
+		assert(type(id) ~= "userdata")
+		ltask.wakeup(id, ...)
 	end
 end
 
@@ -439,55 +440,22 @@ local function dispatch_net(cmd, ...)
 	f(...)
 end
 
-local function dispatch(ok, id, cmd, ...)
-	if not ok then
-		-- no req
-		return false
-	end
-	local f = CMD[cmd]
-	if not f then
-		LOG("[ERROR] Unsupported command : ", cmd)
-	else
-		f(id, ...)
-	end
-	return true
-end
-
 function CMD.REDIRECT(_, resp_command, service_id)
 	response[resp_command] = function(...)
 		ltask.send(service_id, resp_command, ...)
 	end
 end
 
-function CMD.REDIRECT_CHANNEL(_, resp_command, channel_name)
-	local channel = thread.channel(channel_name)
-	response[resp_command] = function(...)
-		channel:push(...)
-	end
-end
-
 local S = {}; do
 	local session = 0
-	for v in pairs(CMD) do
+	for v, func in pairs(CMD) do
 		S[v] = function (...)
 			if repo.root == nil then
 				ltask.multi_wait "ROOT"
 			end
 			session = session + 1
-			ltask.fork(function (...)
-				dispatch(true, ...)
-			end, session, v, ...)
+			ltask.fork(func, session, ...)
 			return ltask.wait(session)
-		end
-	end
-	function response_id(id, ...)
-		if id then
-			assert(type(id) ~= "string")
-			if type(id) == "userdata" then
-				thread.rpc_return(id, ...)
-			else
-				ltask.wakeup(id, ...)
-			end
 		end
 	end
 end
