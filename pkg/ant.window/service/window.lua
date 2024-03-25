@@ -124,6 +124,9 @@ function WindowEvent.suspend(m)
                 ltask.sleep(0)
             end
         end)
+    elseif m.what == "did_resume" then
+        bgfx.continue()
+        PAUSE = nil
     end
 end
 
@@ -133,12 +136,6 @@ function WindowEvent.exit()
     print "exit"
     ltask.multi_wakeup "quit"
 end
-
-local ResumeMsg <const> = {
-    mouseclick = true,
-    touch = true,
-    gesture = true,
-}
 
 ltask.fork(function ()
     while not WindowQuit do
@@ -151,10 +148,6 @@ ltask.fork(function ()
             if f then
                 f(msg)
             else
-                if PAUSE and ResumeMsg[msg.type] then
-                    bgfx.continue()
-                    PAUSE = nil
-                end
                 if not world:dispatch_imgui(msg) then
                     world:dispatch_message(msg)
                 end
