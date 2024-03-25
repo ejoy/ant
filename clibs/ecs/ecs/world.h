@@ -17,6 +17,7 @@ struct math3d_api;
 struct render_material;
 struct queue_container;
 struct submit_cache;
+struct mesh_container;
 
 struct bgfx_encoder_holder {
 	struct bgfx_encoder_s* encoder;
@@ -34,7 +35,7 @@ struct ecs_world {
 	uint64_t                      frame;
 	struct queue_container*       Q;
 	struct submit_cache*          submit_cache;
-	uint64_t                      unused0;
+	struct mesh_container*        MESH;
 	uint64_t                      unused1;
 	uint64_t                      unused2;
 };

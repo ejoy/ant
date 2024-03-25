@@ -6,6 +6,7 @@ local math3d = require "math3d"
 
 local imaterial = ecs.require "ant.render|material"
 local icamera   = ecs.require "ant.camera|camera"
+local MESH      = world:clibs "render.mesh"
 
 local function update_decal(decal)
     local hw, hh = decal.w * 0.5, decal.h * 0.5
@@ -18,21 +19,19 @@ local function update_decal(decal)
 end
 
 local ds = ecs.system "decal_system"
-
-local decl_mount_mb = world:sub{"decal_mount"}
-
 function ds:entity_init()
-    for msg in decl_mount_mb:each() do
-        local e, attach = msg[2], msg[3]
-        --TODO: 见上一个TODO
-        local attach_ro = attach.render_object
-        local ro = e.render_object
+    for e in w:select "INIT decal:in scene:in" do
+        --We assume parent is the attach object
+        local ae = world:entity(e.scene.parent, "render_object:in")
+        local aero = ae.render_object
 
-        ro.vb_start, ro.vb_num = attach_ro.vb_start, attach_ro.vb_num
-        ro.vb_handle = attach_ro.vb_handle
-
-        ro.ib_start, ro.ib_num = attach_ro.ib_start, attach_ro.ib_num
-        ro.ib_handle = attach_ro.ib_handle
+        for _, n in ipairs{"vb0", "vb1", "ib"} do
+            local start, num, handle = MESH.fetch(aero.mesh_idx, n)
+            if handle ~= 0xffff then
+                local ro = e.render_object
+                MESH.set(ro.mesh_idx, n, start, num, handle)
+            end
+        end
     end
 end
 
