@@ -64,7 +64,6 @@ function init_sys:frame_create_entity()
 end
 
 function update_sys:exit_stat()
-    w:update()
     world._templates = {}
     collectgarbage "collect"
     local material = ecs.require "ant.material|material"
