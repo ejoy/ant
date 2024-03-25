@@ -90,9 +90,11 @@ function c.remove(v)
 	if ENABLE_TAA then
 		if v.prev_matrices_id ~= nil then
 			math3d.unmark(v.prev_matrices_id)
+			v.prev_matrices_id = nil
 		end
 	end
 	math3d.unmark(v.matrices_id)
+	v.matrices_id = mathpkg.constant.NULL
 end
 
 return api

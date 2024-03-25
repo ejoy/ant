@@ -79,7 +79,7 @@ function update_sys:exit_stat()
         end
     end
     for name, func in pairs(world._component_remove) do
-        for v in w:select(name..":in") do
+        for v in w:select(name..":update") do
             func(v[name])
         end
     end
