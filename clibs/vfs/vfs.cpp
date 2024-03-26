@@ -22,12 +22,12 @@ else
         return data, lpath
     end
 end
-function loadfile(path, _, env)
+function loadfile(path)
     local mem, symbol = vfs.read(path)
     if not mem then
         return nil, ('%s:No such file or directory.'):format(path)
     end
-    return fastio.loadlua(mem, symbol, env)
+    return fastio.loadlua(mem, symbol)
 end
 function dofile(path)
     local f, err = loadfile(path)
@@ -41,7 +41,7 @@ local function searcher_lua(name)
     local path = package.path:gsub('%?', filename)
     local mem, symbol = vfs.read(path)
     if mem then
-        local func, err = fastio.loadlua(mem, symbol, env)
+        local func, err = fastio.loadlua(mem, symbol)
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
         end
