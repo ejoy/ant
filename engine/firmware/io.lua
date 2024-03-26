@@ -1,18 +1,20 @@
-local path = os.getenv "LUA_DEBUG_PATH"
-if path then
-	local function load_dbg()
-		if path:match "debugger%.lua$" then
-			local f = assert(io.open(path))
-			local str = f:read "a"
-			f:close()
-			return assert(load(str, "=(debugger.lua)"))(path)
+do
+	local path = os.getenv "LUA_DEBUG_PATH"
+	if path then
+		local function load_dbg()
+			if path:match "debugger%.lua$" then
+				local f = assert(io.open(path))
+				local str = f:read "a"
+				f:close()
+				return assert(load(str, "=(debugger.lua)"))(path)
+			end
+			return assert(loadfile "/engine/firmware/debugger.lua", "=(debugger.lua)")()
 		end
-		return assert(loadfile "/engine/firmware/debugger.lua", "=(debugger.lua)")()
+		load_dbg()
+			: attach {}
+			: event("setThreadName", "Thread: IO")
+			: event "wait"
 	end
-	load_dbg()
-		: attach {}
-		: event("setThreadName", "Thread: IO")
-		: event "wait"
 end
 
 local thread = require "bee.thread"
@@ -98,92 +100,6 @@ local connection = {
 	flags = 0,
 }
 
-local function connect_server(address, port)
-	LOG("Connecting", address, port)
-	local fd, err = socket "tcp"
-	if not fd then
-		LOG("[ERROR]: "..err)
-		return
-	end
-	local ok
-	ok, err = fd:connect(address, port)
-	if ok == nil then
-		fd:close()
-		LOG("[ERROR]: "..err)
-		return
-	end
-	if ok == false then
-		selector:event_add(fd, SELECT_WRITE)
-		selector:wait()
-		selector:event_del(fd)
-	end
-	local ok, err = fd:status()
-	if not ok then
-		fd:close()
-		LOG("[ERROR]: "..err)
-		return
-	end
-	LOG("Connected")
-	return fd
-end
-
-local function listen_server(address, port)
-	LOG("Listening", address, port)
-	local fd, err = socket "tcp"
-	if not fd then
-		LOG("[ERROR] socket: "..err)
-		return
-	end
-	fd:option("reuseaddr", 1)
-	local ok
-	ok, err = fd:bind(address, port)
-	if not ok then
-		LOG("[ERROR] bind: "..err)
-		return
-	end
-	ok, err = fd:listen()
-	if not ok then
-		LOG("[ERROR] listen: "..err)
-		return
-	end
-	selector:event_add(fd, SELECT_READ)
-	local quit
-	while not quit do
-		quit = true
-		for _ in selector:wait(2) do
-			local newfd, err = fd:accept()
-			if newfd == nil then
-				selector:event_del(fd)
-				fd:close()
-				LOG("[ERROR] accept: "..err)
-				return
-			elseif newfd == false then
-				quit = false
-			else
-				LOG("Accepted")
-				selector:event_del(fd)
-				fd:close()
-				return newfd
-			end
-		end
-	end
-	LOG("[ERROR] select: timeout")
-	selector:event_del(fd)
-	fd:close()
-end
-
-local function wait_server()
-	if config.nettype == nil then
-		return
-	end
-	if config.nettype == "listen" then
-		return listen_server(config.address, tonumber(config.port))
-	end
-	if config.nettype == "connect" then
-		return connect_server(config.address, tonumber(config.port))
-	end
-end
-
 local function connection_send(...)
 	local pack = string.pack("<s2", serialization.packstring(...))
 	table.insert(connection.sendq, 1, pack)
@@ -230,70 +146,10 @@ local function request_start(cmd, arg)
 	return ltask.multi_wait(arg)
 end
 
-local NETWORK = {}
-
-local getlist
-
-function NETWORK.ROOT(hash)
-	if hash == '' then
-		LOG("[ERROR] INVALID ROOT")
-		os.exit(-1, true)
-		return
-	end
-	LOG("[response] ROOT", hash)
-	local resources = repo:init(hash)
-	for path in pairs(resources) do
-		ltask.fork(getlist, path)
-	end
-	ltask.multi_wakeup "ROOT"
-end
-
--- REMARK: Main thread may reading the file while writing, if file server update file.
--- It's rare because the file name is sha1 of file content. We don't need update the file.
--- Client may not request the file already exist.
-function NETWORK.BLOB(hash, data)
-	LOG("[response] BLOB", hash, #data)
-	if repo:write_blob(hash, data) then
-		request_resolve(hash)
-	end
-end
-
-function NETWORK.FILE(hash, size)
-	LOG("[response] FILE", hash, size)
-	repo:write_file(hash, size)
-end
-
-function NETWORK.MISSING(hash)
-	LOG("[response] MISSING", hash)
-	request_reject(hash, "MISSING "..hash)
-end
-
-function NETWORK.SLICE(hash, offset, data)
-	LOG("[response] SLICE", hash, offset, #data)
-	if repo:write_slice(hash, offset, data) then
-		request_resolve(hash)
-	end
-end
-
-function NETWORK.RESOURCE(fullpath, hash)
-	LOG("[response] RESOURCE", fullpath, hash)
-	repo:add_resource(fullpath, hash)
-	request_resolve(fullpath)
-end
-
-local function dispatch_net(cmd, ...)
-	local f = NETWORK[cmd]
-	if not f then
-		LOG("[ERROR] Unsupport net command", cmd)
-		return
-	end
-	f(...)
-end
-
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-function getlist(fullpath)
+local function getlist(fullpath)
 	if repo.root == nil then
 		ltask.multi_wait "ROOT"
 	end
@@ -386,15 +242,73 @@ function S.SEND(...)
 	request_send(...)
 end
 
+function S.PATCH(code, data)
+	local f = assert(load(code))
+	f(data)
+end
+
+local NETWORK = {}
+
 function S.REDIRECT(resp_command, service_id)
 	NETWORK[resp_command] = function(...)
 		ltask.send(service_id, resp_command, ...)
 	end
 end
 
-function S.PATCH(code, data)
-	local f = assert(load(code))
-	f(data)
+function NETWORK.ROOT(hash)
+	if hash == '' then
+		LOG("[ERROR] INVALID ROOT")
+		os.exit(-1, true)
+		return
+	end
+	LOG("[response] ROOT", hash)
+	local resources = repo:init(hash)
+	for path in pairs(resources) do
+		ltask.fork(getlist, path)
+	end
+	ltask.multi_wakeup "ROOT"
+end
+
+-- REMARK: Main thread may reading the file while writing, if file server update file.
+-- It's rare because the file name is sha1 of file content. We don't need update the file.
+-- Client may not request the file already exist.
+function NETWORK.BLOB(hash, data)
+	LOG("[response] BLOB", hash, #data)
+	if repo:write_blob(hash, data) then
+		request_resolve(hash)
+	end
+end
+
+function NETWORK.FILE(hash, size)
+	LOG("[response] FILE", hash, size)
+	repo:write_file(hash, size)
+end
+
+function NETWORK.MISSING(hash)
+	LOG("[response] MISSING", hash)
+	request_reject(hash, "MISSING "..hash)
+end
+
+function NETWORK.SLICE(hash, offset, data)
+	LOG("[response] SLICE", hash, offset, #data)
+	if repo:write_slice(hash, offset, data) then
+		request_resolve(hash)
+	end
+end
+
+function NETWORK.RESOURCE(fullpath, hash)
+	LOG("[response] RESOURCE", fullpath, hash)
+	repo:add_resource(fullpath, hash)
+	request_resolve(fullpath)
+end
+
+local function dispatch_net(cmd, ...)
+	local f = NETWORK[cmd]
+	if not f then
+		LOG("[ERROR] Unsupport net command", cmd)
+		return
+	end
+	f(...)
 end
 
 local function work_offline()
@@ -413,6 +327,92 @@ end
 local function work_online()
 	request_send("SHAKEHANDS")
 	request_send("ROOT")
+end
+
+local function connect_server(address, port)
+	LOG("Connecting", address, port)
+	local fd, err = socket "tcp"
+	if not fd then
+		LOG("[ERROR]: "..err)
+		return
+	end
+	local ok
+	ok, err = fd:connect(address, port)
+	if ok == nil then
+		fd:close()
+		LOG("[ERROR]: "..err)
+		return
+	end
+	if ok == false then
+		selector:event_add(fd, SELECT_WRITE)
+		selector:wait()
+		selector:event_del(fd)
+	end
+	local ok, err = fd:status()
+	if not ok then
+		fd:close()
+		LOG("[ERROR]: "..err)
+		return
+	end
+	LOG("Connected")
+	return fd
+end
+
+local function listen_server(address, port)
+	LOG("Listening", address, port)
+	local fd, err = socket "tcp"
+	if not fd then
+		LOG("[ERROR] socket: "..err)
+		return
+	end
+	fd:option("reuseaddr", 1)
+	local ok
+	ok, err = fd:bind(address, port)
+	if not ok then
+		LOG("[ERROR] bind: "..err)
+		return
+	end
+	ok, err = fd:listen()
+	if not ok then
+		LOG("[ERROR] listen: "..err)
+		return
+	end
+	selector:event_add(fd, SELECT_READ)
+	local quit
+	while not quit do
+		quit = true
+		for _ in selector:wait(2) do
+			local newfd, err = fd:accept()
+			if newfd == nil then
+				selector:event_del(fd)
+				fd:close()
+				LOG("[ERROR] accept: "..err)
+				return
+			elseif newfd == false then
+				quit = false
+			else
+				LOG("Accepted")
+				selector:event_del(fd)
+				fd:close()
+				return newfd
+			end
+		end
+	end
+	LOG("[ERROR] select: timeout")
+	selector:event_del(fd)
+	fd:close()
+end
+
+local function wait_server()
+	if config.nettype == nil then
+		return
+	end
+	if config.nettype == "listen" then
+		return listen_server(config.address, tonumber(config.port))
+	end
+	if config.nettype == "connect" then
+		return connect_server(config.address, tonumber(config.port))
+	end
 end
 
 local function init_event()
