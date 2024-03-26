@@ -327,7 +327,6 @@ local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
 function CMD.LIST(id, fullpath)
-	fullpath = fullpath:gsub("|", "/")
 --	LOG("[request] LIST", path)
 	local dir, r, hash = repo:list(fullpath)
 	if dir then
@@ -346,7 +345,6 @@ function CMD.LIST(id, fullpath)
 end
 
 function CMD.TYPE(id, fullpath)
-	fullpath = fullpath:gsub("|", "/")
 	--	LOG("[request] TYPE", fullpath)
 	if fullpath == "/" then
 		response_id(id, "dir")
@@ -378,7 +376,6 @@ function CMD.TYPE(id, fullpath)
 end
 
 function CMD.READ(id, fullpath)
-	fullpath = fullpath:gsub("|", "/")
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir, r, hash = repo:list(path)
 	if not dir then

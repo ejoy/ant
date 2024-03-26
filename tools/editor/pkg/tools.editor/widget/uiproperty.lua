@@ -382,7 +382,7 @@ function TextureResource:show()
                 assert(vp)
                 glb_path = "/" .. vp
                 rc.compile(glb_path)
-                image_path = rc.compile(glb_path .. "|images")
+                image_path = rc.compile(glb_path .. "/images")
                 ImGui.OpenPopup("select_image")
             end
         end
@@ -393,7 +393,7 @@ function TextureResource:show()
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
                         if ImGui.SelectableEx(filename, false) then
-                            self:set_file(glb_path .. "|images/" .. filename)
+                            self:set_file(glb_path .. "/images/" .. filename)
                             image_path = nil
                         end
                     end

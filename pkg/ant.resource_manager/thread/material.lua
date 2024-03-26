@@ -152,7 +152,7 @@ local function normalize_path(fullname)
 	local first = (fullname:sub(1, 1) == "/") and "/" or ""
 	local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
-	for m, seq in fullname:gmatch("([^/|]+)([/|]?)") do
+	for m, seq in fullname:gmatch("([^/]+)(/?)") do
 		if m == ".." and next(t) then
 			table.remove(t, #t)
 			table.remove(t, #t)
@@ -168,7 +168,7 @@ local function absolute_path(path, base)
     if path:sub(1,1) == "/" then
         return path
     end
-    return normalize_path(base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path))
+    return normalize_path(base:match "^(.-)[^/]*$" .. (path:match "^%./(.+)$" or path))
 end
 
 local MATERIALS = {}
