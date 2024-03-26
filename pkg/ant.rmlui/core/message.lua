@@ -39,9 +39,10 @@ function m.dispatch()
             local what = msg[2]
             local func = msghandler[what]
             if func then
-                func(table.unpack(msg, 3))
+                ltask.wakeup(msg, func(table.unpack(msg, 3)))
+            else
+                ltask.wakeup(msg)
             end
-            ltask.wakeup(msg)
         end
     end
 end
