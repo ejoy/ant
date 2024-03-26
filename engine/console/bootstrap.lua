@@ -5,11 +5,10 @@ local entry = lfs.absolute(arg[0])
 
 if entry:parent_path():filename():string() == "editor" then
     __ANT_EDITOR__ = arg[1]
+    vfs.initfunc("/engine/console/init_thread.lua", {
+        __ANT_EDITOR__ = __ANT_EDITOR__,
+    }, true)
 end
-
-vfs.initfunc("/engine/firmware/init_thread.lua", {
-    editor = __ANT_EDITOR__,
-}, true)
 
 local boot = dofile "/engine/firmware/ltask.lua"
 boot:start {

@@ -13,7 +13,7 @@ static const std::string_view initscript = R"(
 local initfunc, initargs = ...
 local vfs = {}
 local fastio = require "fastio"
-local __ANT_RUNTIME__ = package.preload.firmware ~= nil
+__ANT_RUNTIME__ = package.preload.firmware ~= nil
 if __ANT_RUNTIME__ then
     local fw = require "firmware"
     function vfs.read(path)

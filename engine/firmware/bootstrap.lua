@@ -130,11 +130,6 @@ if needcleanup then
 end
 fs.create_directories(config.vfs.localpath)
 
-do
-	local vfs = require "vfs"
-	vfs.initfunc("/engine/firmware/init_thread.lua", {}, true)
-end
-
 local ltask_config = {
 	core = {
 		worker = 8,

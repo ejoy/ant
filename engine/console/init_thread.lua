@@ -1,0 +1,3 @@
+local _, initargs = ...
+
+__ANT_EDITOR__ = initargs.__ANT_EDITOR__
