@@ -275,10 +275,8 @@ function gizmo_sys:entity_init()
 		navi_camera = icamera.create({
 			name = "navi_camera",
 			frustum = {
-				n		= 1,
-				f		= 100,
-				fov		= 60,
-				aspect	= 1.0,
+				l = -1, r = 1, t = 1, b = -1,
+				n = 1, f = 100, ortho = true,
 			},
 			exposure = {
 				type 			= "manual",
@@ -304,7 +302,7 @@ function gizmo_sys:entity_init()
 					},
                     fb_idx		        = fbmgr.get_fb_idx(hwi.viewid_get "main_view"),
                 },
-                camera_ref          = navi_camera,--assert(e.camera_ref),--
+                camera_ref          = navi_camera,
                 [queuename]	        = true,
                 queue_name			= queuename,
                 submit_queue		= true,
@@ -321,9 +319,36 @@ end
 
 local ipl = ecs.require "ant.polyline|polyline"
 local POLYLINE_MTL = "/pkg/tools.editor/resource/materials/polyline.material"
+local function create_billboard(material)
+	local vbdata = {
+        -0.125, -0.125, 0, 0, 1,
+        -0.125,  0.125, 0, 0, 0,
+         0.125, -0.125, 0, 1, 1,
+         0.125,  0.125, 0, 1, 0,
+    }
+    return world:create_entity{
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            render_layer = "translucent",
+            scene = {},
+            visible = true,
+            material = material,
+            mesh_result = ientity.create_mesh{"p3|t2", vbdata},
+            owned_mesh_buffer = true,
+        }
+    }
+end
+local sorted_draw = {}
 local function create_navi_axis(scene)
-	-- local offset = 0.1
-	-- ientity.create_screen_axis_entity({type = "percent", screen_pos = {offset, 1 - offset}}, scene)
+	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0.5,0,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_px.material")}
+	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(-0.5,0,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_nx.material")}
+	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,0.5,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_py.material")}
+	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,-0.5,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_ny.material")}
+	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,0,0.5)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_pz.material")}
+	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,0,-0.5)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_nz.material")}
+	
 	local axis_parent = world:create_entity {
 		policy = {
 			"ant.scene|scene_object",
@@ -336,9 +361,9 @@ local function create_navi_axis(scene)
 		}
 	}
 	navi_axis[#navi_axis + 1] = axis_parent
-	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{1.0, 0, 0}}, 5, gizmo.tx.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
-	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0, 1.0, 0}}, 5, gizmo.ty.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
-	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0, 0, 1.0}}, 5, gizmo.tz.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
+	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0.5, 0, 0}}, 5, gizmo.tx.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
+	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0, 0.5, 0}}, 5, gizmo.ty.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
+	navi_axis[#navi_axis + 1] = ipl.add_strip_lines({{0, 0, 0},{0, 0, 0.5}}, 5, gizmo.tz.color, POLYLINE_MTL, false, {parent = axis_parent}, "translucent")
 end
 
 function gizmo:update_scale()
@@ -1154,11 +1179,11 @@ function gizmo_sys:render_submit()
 	for i = 2, #navi_axis do
 		irender.draw(RENDER_ARG, navi_axis[i])
 	end
+	for _, v in ipairs(sorted_draw) do
+		irender.draw(RENDER_ARG, v.eid)
+	end
 end
 
-function gizmo_sys:camera_changed()
-
-end
 local first_time = true
 local ivm		= ecs.require "ant.render|visible_mask"
 function gizmo_sys:camera_usage()
@@ -1167,20 +1192,29 @@ function gizmo_sys:camera_usage()
 			local e <close> = world:entity(navi_axis[i], "visible_masks?update")
 			ivm.set_masks(e, "main_view", false)
 		end
+		for _, v in ipairs(sorted_draw) do
+			local e <close> = world:entity(v.eid, "visible_masks?update")
+			ivm.set_masks(e, "main_view", false)
+		end
 	end
 	if w:check "scene_changed camera" then
         local mq = w:first("main_queue camera_ref:in")
         local ce <close> = world:entity(mq.camera_ref, "scene_changed?in camera:in scene:in")
         if ce.scene_changed then
-			for i = 2, #navi_axis do
-				local e<close> = world:entity(navi_axis[i], "scene:update render_object:update")
-				-- iom.set_rotation(e, iom.get_rotation(ce))
-				local mat = math3d.inverse(math3d.matrix({r = iom.get_rotation(ce)}))
+			local re <close> = world:entity(navi_axis[1])
+			local rotation = math3d.inverse(iom.get_rotation(ce))
+			iom.set_rotation(re, rotation)
+
+			for _, v in ipairs(sorted_draw) do
+				local e <close> = world:entity(v.eid, "scene:update render_object:update")
 				local scene = e.scene
 				math3d.unmark(scene.worldmat)
-				scene.worldmat = math3d.mark(mat)--math3d.marked_matrix(scene)
+				local pos = math3d.transform(rotation, v.pos, 1)
+				v.zvalue = math3d.index(pos, 3)
+				scene.worldmat = math3d.mark(math3d.matrix{t = pos})
 				e.render_object.worldmat = scene.worldmat
 			end
+			table.sort(sorted_draw, function (a, b) return a.zvalue > b.zvalue end)
 		end
 	end
 end
