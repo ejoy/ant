@@ -25,6 +25,6 @@ local function create(paths)
 end
 
 return create {
-	"/atlas.ant",
-	"/pkg/ant.atlas_setting/default/atlas.ant",
+	"/pkg/vaststars.settings/atlas_setting.ant",
+	"/pkg/ant.atlas_setting/default/atlas_setting.ant",
 }
