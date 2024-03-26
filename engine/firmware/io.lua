@@ -189,19 +189,6 @@ local function wait_server()
 	end
 end
 
-local function response_id(id, ...)
-	if id then
-		ltask.wakeup(id, ...)
-	end
-end
-
-local function response_err(id, msg)
-	LOG("[ERROR]", msg)
-	response_id(id)
-end
-
-local CMD = {}
-
 local function request_send(...)
 	if OFFLINE then
 		return
@@ -209,65 +196,41 @@ local function request_send(...)
 	connection_send(...)
 end
 
-local function request_start_with_token(req, args, token, promise)
+local function request_resolve(arg)
+	local req = connection.request[arg]
+	if not req then
+		return
+	end
+	connection.request[req] = nil
+	ltask.multi_wakeup(arg, true)
+end
+
+local function request_reject(arg, err)
+	local req = connection.request[arg]
+	if not req then
+		return
+	end
+	connection.request[arg] = nil
+	LOG("[ERROR] " .. err)
+	ltask.multi_wakeup(arg)
+end
+
+local function request_start(cmd, arg)
 	if OFFLINE then
-		LOG("[ERROR] " .. req .. " failed in offline mode.")
-		promise.reject()
+		LOG("[ERROR] `" .. cmd .. " ".. arg .. "` failed in offline mode.")
 		return
 	end
-	local list = connection.request[token]
-	if list then
-		list[#list+1] = promise
+	local req = connection.request[arg]
+	if req then
+		assert(req == cmd)
 	else
-		connection.request[token] = { promise }
-		connection_send(req, args)
+		connection.request[arg] = cmd
+		connection_send(cmd, arg)
 	end
+	return ltask.multi_wait(arg)
 end
 
-local function request_start(req, args, promise)
-	request_start_with_token(req, args, args, promise)
-end
-
-local function request_resolve(args, ...)
-	local list = connection.request[args]
-	if not list then
-		return
-	end
-	connection.request[args] = nil
-	for _, promise in ipairs(list) do
-		promise.resolve(args, ...)
-	end
-end
-
-local function request_reject(args, err)
-	local list = connection.request[args]
-	if not list then
-		return
-	end
-	connection.request[args] = nil
-	for _, promise in ipairs(list) do
-		promise.reject(args, err)
-	end
-end
-
-local function request_file(id, req, hash, res, path)
-	local promise = {
-		resolve = function ()
-			CMD[res](id, path)
-		end,
-		reject = function ()
-			local errmsg = "MISSING "
-			if type(path) == "table" then
-				errmsg = errmsg .. table.concat(path, " ")
-			else
-				errmsg = errmsg .. path
-			end
-			response_err(id, errmsg)
-		end
-	}
-	request_start(req, hash, promise)
-end
-
+local S = {}
 local NETWORK = {}
 
 function NETWORK.ROOT(hash)
@@ -279,7 +242,7 @@ function NETWORK.ROOT(hash)
 	LOG("[response] ROOT", hash)
 	local resources = repo:init(hash)
 	for path in pairs(resources) do
-		CMD.LIST(nil, path)
+		ltask.fork(S.LIST, path)
 	end
 	ltask.multi_wakeup "ROOT"
 end
@@ -317,91 +280,6 @@ function NETWORK.RESOURCE(fullpath, hash)
 	request_resolve(fullpath)
 end
 
-local ListNeedGet <const> = 3
-local ListNeedResource <const> = 4
-
-function CMD.LIST(id, fullpath)
-	--LOG("[request] LIST", path)
-	local dir, r, hash = repo:list(fullpath)
-	if dir then
-		response_id(id, dir)
-		return
-	end
-	if r == ListNeedGet then
-		request_file(id, "GET", hash, "LIST", fullpath)
-		return
-	end
-	if r == ListNeedResource then
-		request_file(id, "RESOURCE", hash, "LIST", fullpath)
-		return
-	end
-	response_id(id)
-end
-
-function CMD.TYPE(id, fullpath)
-	--LOG("[request] TYPE", fullpath)
-	if fullpath == "/" then
-		response_id(id, "dir")
-		return
-	end
-	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	local dir, r, hash = repo:list(path)
-	if dir then
-		local v = dir[name]
-		if not v then
-			response_id(id)
-		elseif v.type == 'f' then
-			response_id(id, "file")
-		else
-			response_id(id, "dir")
-		end
-		return
-	end
-
-	if r == ListNeedGet then
-		request_file(id, "GET", hash, "TYPE", fullpath)
-		return
-	end
-	if r == ListNeedResource then
-		request_file(id, "RESOURCE", hash, "TYPE", fullpath)
-		return
-	end
-	response_id(id)
-end
-
-function CMD.READ(id, fullpath)
-	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	local dir, r, hash = repo:list(path)
-	if not dir then
-		if r == ListNeedGet then
-			request_file(id, "GET", hash, "READ", fullpath)
-			return
-		end
-		if r == ListNeedResource then
-			request_file(id, "RESOURCE", hash, "READ", fullpath)
-			return
-		end
-		response_err(id, "Not exist path: " .. path)
-		return
-	end
-
-	local v = dir[name]
-	if not v then
-		response_err(id, "Not exist file: " .. fullpath)
-		return
-	end
-	if v.type ~= 'f' then
-		response_err(id, "Not a file: " .. fullpath)
-		return
-	end
-	local data = repo:open(v.hash)
-	if data then
-		response_id(id, data, fullpath)
-	else
-		request_file(id, "GET", v.hash, "READ", fullpath)
-	end
-end
-
 local function dispatch_net(cmd, ...)
 	local f = NETWORK[cmd]
 	if not f then
@@ -411,21 +289,120 @@ local function dispatch_net(cmd, ...)
 	f(...)
 end
 
-local S = {}; do
-	local session = 0
-	for v, func in pairs(CMD) do
-		S[v] = function (...)
-			if repo.root == nil then
-				ltask.multi_wait "ROOT"
+local ListNeedGet <const> = 3
+local ListNeedResource <const> = 4
+
+function S.LIST(fullpath)
+	if repo.root == nil then
+		ltask.multi_wait "ROOT"
+	end
+	--LOG("[request] LIST", path)
+	while true do
+		local dir, r, hash = repo:list(fullpath)
+		if dir then
+			return dir
+		end
+		if r == ListNeedGet then
+			if not request_start("GET", hash) then
+				return
 			end
-			session = session + 1
-			ltask.fork(func, session, ...)
-			return ltask.wait(session)
+		elseif r == ListNeedResource then
+			if not request_start("RESOURCE", hash) then
+				return
+			end
+		else
+			return
+		end
+	end
+end
+
+function S.TYPE(fullpath)
+	if repo.root == nil then
+		ltask.multi_wait "ROOT"
+	end
+	--LOG("[request] TYPE", fullpath)
+	if fullpath == "/" then
+		return "dir"
+	end
+	local path, name = fullpath:match "^(.*/)([^/]*)$"
+	while true do
+		local dir, r, hash = repo:list(path)
+		if dir then
+			local v = dir[name]
+			if not v then
+				return
+			elseif v.type == 'f' then
+				return "file"
+			else
+				return "dir"
+			end
+		end
+		if r == ListNeedGet then
+			if not request_start("GET", hash) then
+				return
+			end
+		elseif r == ListNeedResource then
+			if not request_start("RESOURCE", hash) then
+				return
+			end
+		else
+			return
+		end
+	end
+end
+
+function S.READ(fullpath)
+	if repo.root == nil then
+		ltask.multi_wait "ROOT"
+	end
+	--LOG("[request] READ", fullpath)
+	local path, name = fullpath:match "^(.*/)([^/]*)$"
+	local dir
+	while true do
+		local r, hash
+		dir, r, hash = repo:list(path)
+		if dir then
+			break
+		else
+			if r == ListNeedGet then
+				if not request_start("GET", hash) then
+					return
+				end
+			elseif r == ListNeedResource then
+				if not request_start("RESOURCE", hash) then
+					return
+				end
+			else
+				LOG("[ERROR]", "Not exist path: " .. path)
+				return
+			end
+		end
+	end
+	local v = dir[name]
+	if not v then
+		LOG("[ERROR]", "Not exist file: " .. fullpath)
+		return
+	end
+	if v.type ~= 'f' then
+		LOG("[ERROR]", "Not a file: " .. fullpath)
+		return
+	end
+	while true do
+		local data = repo:open(v.hash)
+		if data then
+			return data, fullpath
+		else
+			if not request_start("GET", v.hash) then
+				return
+			end
 		end
 	end
 end
 
 function S.RESOURCE_SETTING(setting)
+	if repo.root == nil then
+		ltask.multi_wait "ROOT"
+	end
 	--LOG("[request] RESOURCE_SETTING", setting)
 	repo:resource_setting(setting)
 	request_send("RESOURCE_SETTING", setting)
