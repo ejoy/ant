@@ -4,16 +4,13 @@ local vfs = require "vfs"
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
 
-local function root_thread(config)
+local function bootstrap_root(config)
 	assert(boot.new_service("root", config.root.service_source, config.root.service_chunkname, SERVICE_ROOT))
 	boot.init_root(SERVICE_ROOT)
-	-- send init message to root service
 	local init_msg, sz = boot.pack("init", {
 		initfunc = [[return loadfile "/engine/firmware/root.lua"]],
-		name = "root",
 		args = { config.root }
 	})
-	-- self bootstrap
 	boot.post_message {
 		from = SERVICE_ROOT,
 		to = SERVICE_ROOT,
@@ -96,7 +93,7 @@ function m:start(config)
 	init_config(config)
 	boot.init(config.core)
 	boot.init_timer()
-	root_thread(config)
+	bootstrap_root(config)
 	self._ctx = boot.run(config.mainthread)
 end
 
