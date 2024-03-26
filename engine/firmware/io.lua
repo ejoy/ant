@@ -31,8 +31,6 @@ local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 
 local config = ...
 
-local OFFLINE = false
-
 local LOG; do
 	local fs = require "bee.filesystem"
 	local AppPath
@@ -106,7 +104,7 @@ local function connection_send(...)
 end
 
 local function request_send(...)
-	if OFFLINE then
+	if connection.fd == nil then
 		return
 	end
 	connection_send(...)
@@ -132,7 +130,7 @@ local function request_reject(arg, err)
 end
 
 local function request_start(cmd, arg)
-	if OFFLINE then
+	if connection.fd == nil then
 		LOG("[ERROR] `" .. cmd .. " ".. arg .. "` failed in offline mode.")
 		return
 	end
@@ -462,10 +460,12 @@ local function init_event()
 	local function update_fd(event)
 		if event & SELECT_READ ~= 0 then
 			if not read_fd(connection.fd) then
+				LOG("[network] read close.")
 				connection.flags = connection.flags & (~SELECT_READ)
 				if connection.flags == 0 then
+					LOG("[network] disconnected.")
 					selector:event_del(connection.fd)
-					socket.close(connection.fd)
+					connection.fd:close()
 					connection.fd = nil
 					work_offline()
 				end
@@ -473,10 +473,12 @@ local function init_event()
 		end
 		if event & SELECT_WRITE ~= 0 then
 			if not write_fd(connection.fd) then
+				LOG("[network] write close.")
 				connection.flags = connection.flags & (~SELECT_WRITE)
 				if connection.flags == 0 then
+					LOG("[network] disconnected.")
 					selector:event_del(connection.fd)
-					socket.close(connection.fd)
+					connection.fd:close()
 					connection.fd = nil
 					work_offline()
 				end
