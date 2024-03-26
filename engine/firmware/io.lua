@@ -29,7 +29,6 @@ local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 
 local config = ...
 
-local ENTRY_OFFLINE = false
 local OFFLINE = false
 
 local LOG; do
@@ -477,47 +476,45 @@ local function init_event()
 	local reading = connection.recvq
 	local sending = connection.sendq
 	local function read_fd(fd)
-		local data, err = fd:recv()
-		if data == nil then
-			if err then
-				return nil, err
-			end
-			return nil, "Closed by remote"
-		elseif data == false then
-			return true
-		end
-		table.insert(reading, data)
 		while true do
-			local msg = protocol.readchunk(reading)
-			if not msg then
-				break
+			local data, err = fd:recv()
+			if data == nil then
+				if err then
+					return nil, err
+				end
+				return nil, "Closed by remote"
+			elseif data == false then
+				return true
 			end
-			dispatch_net(serialization.unpack(msg))
+			table.insert(reading, data)
+			while true do
+				local msg = protocol.readchunk(reading)
+				if not msg then
+					break
+				end
+				dispatch_net(serialization.unpack(msg))
+			end
 		end
-		return true
 	end
 	local function write_fd(fd)
 		while true do
 			local data = table.remove(sending)
 			if data == nil then
-				break
+				return true
 			end
 			local nbytes, err = fd:send(data)
-			if nbytes then
+			if nbytes == nil then
+				return nil, err
+			elseif nbytes == false then
+				table.insert(sending, data)
+				return true
+			else
 				if nbytes < #data then
 					table.insert(sending, data:sub(nbytes+1))
-					break
+					return true
 				end
-			else
-				if err then
-					return nil, err
-				else
-					table.insert(sending, data)
-				end
-				break
 			end
 		end
-		return true
 	end
 	local function update_fd(event)
 		if event & SELECT_READ ~= 0 then
@@ -525,7 +522,9 @@ local function init_event()
 				connection.flags = connection.flags & (~SELECT_READ)
 				if connection.flags == 0 then
 					selector:event_del(connection.fd)
-					ENTRY_OFFLINE = true
+					socket.close(connection.fd)
+					connection.fd = nil
+					work_offline()
 				end
 			end
 		end
@@ -534,7 +533,9 @@ local function init_event()
 				connection.flags = connection.flags & (~SELECT_WRITE)
 				if connection.flags == 0 then
 					selector:event_del(connection.fd)
-					ENTRY_OFFLINE = true
+					socket.close(connection.fd)
+					connection.fd = nil
+					work_offline()
 				end
 			end
 		end
@@ -550,11 +551,6 @@ do
 end
 
 ltask.idle_handler(function()
-	if ENTRY_OFFLINE then
-		ENTRY_OFFLINE = false
-		work_offline()
-		return
-	end
 	if connection.fd then
 		local sending = connection.sendq
 		if #sending > 0  then
@@ -574,7 +570,7 @@ ltask.fork(function ()
 		init_event()
 		work_online()
 	else
-		ENTRY_OFFLINE = true
+		work_offline()
 	end
 end)
 
