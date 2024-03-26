@@ -1,5 +1,5 @@
 local ltask = require "ltask"
-local atlas = import_package "ant.atlas"
+local atlas = import_package "ant.atlas_setting"
 local ServiceResource
 
 local PM = require "programan.client"

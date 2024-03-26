@@ -1,2 +1,0 @@
-system "atlas_system"
-    .implement "atlas.lua"

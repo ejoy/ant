@@ -351,7 +351,7 @@ local update; do
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
-                if c and (not rt_table[id]) and (not chain_table[id]) then
+                if c and (not rt_table[id]) and (not chain_table[id]) and (not c.texinfo.atlas) then
                     asyncDestroyTexture(c)
                     print("Destroy Texture: " .. c.name)
                 end
