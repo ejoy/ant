@@ -1,16 +1,9 @@
 #include <lua.hpp>
-#include <string>
 #include <string_view>
-#include <mutex>
 
-#include "../luabind/luavalue.h"
+using namespace std::literals;
 
-std::string initfunc;
-luavalue::table initargs;
-std::mutex mutex;
-
-static const std::string_view initscript = R"(
-local initfunc, initargs = ...
+static constexpr std::string_view initscript = R"(
 local vfs = {}
 local fastio = require "fastio"
 __ANT_RUNTIME__ = package.preload.firmware ~= nil
@@ -61,56 +54,14 @@ package.searchers = {
     searcher_preload,
     searcher_lua,
 }
-if initfunc then
-    assert(loadfile(initfunc))(vfs, initargs)
-end
 return vfs
-)";
-
-static const std::string_view updateinitfunc = R"(
-local vfs, initfunc, initargs = ...
-if initfunc then
-    assert(loadfile(initfunc))(vfs, initargs)
-end
-)";
-
-#define LoadScript(L, script) if (luaL_loadbuffer(L, script.data(), script.size(), "=(vfs)") != LUA_OK) { return lua_error(L); }
-
-static int setinitfunc(lua_State* L) {
-    size_t sz_initfunc = 0;
-    const char* s_initfunc = luaL_checklstring(L, 1, &sz_initfunc);
-    std::lock_guard<std::mutex> lock(mutex);
-    initfunc.assign(s_initfunc, sz_initfunc);
-    luavalue::set(L, 2, initargs);
-    if (!lua_toboolean(L, 3)) {
-        LoadScript(L, updateinitfunc);
-        lua_pushvalue(L, lua_upvalueindex(1));
-        lua_pushvalue(L, 1);
-        lua_pushvalue(L, 2);
-        lua_call(L, 3, 0);
-    }
-    return 0;
-}
-
-static int push_initfunc(lua_State* L) {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (initfunc.empty()) {
-        return 0;
-    }
-    lua_pushlstring(L, initfunc.data(), initfunc.size());
-    luavalue::get(L, initargs);
-    return 2;
-}
+)"sv;
 
 extern "C"
 int luaopen_vfs(lua_State* L) {
-    LoadScript(L, initscript);
-    lua_call(L, push_initfunc(L), 1);
-    luaL_Reg l[] = {
-        {"initfunc", setinitfunc},
-        {NULL, NULL},
-    };
-    lua_pushvalue(L, -1);
-    luaL_setfuncs(L, l, 1);
+    if (luaL_loadbuffer(L, initscript.data(), initscript.size(), "=(vfs)") != LUA_OK) {
+        return lua_error(L);
+    }
+    lua_call(L, 0, 1);
     return 1;
 }
