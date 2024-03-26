@@ -1,42 +1,37 @@
+require "bee.thread".setname "ant - IO thread"
+
 local dbg = dofile "/engine/debugger.lua"
 if dbg then
 	dbg:event("setThreadName", "Thread: IO")
 	dbg:event "wait"
 end
+
 local ltask = require "ltask"
 local fastio = require "fastio"
-local socket = require "bee.socket"
-local thread = require "bee.thread"
-local select = require "bee.select"
-local vfs = require "vfs"
 
 package.path = "/engine/?.lua"
 package.cpath = ""
-thread.setname "ant - IO thread"
 
 local repopath, AntEditor = ...
 
 __ANT_EDITOR__ = AntEditor
 
-local selector = select.create()
-local SELECT_READ <const> = select.SELECT_READ
-local SELECT_WRITE <const> = select.SELECT_WRITE
-
-dofile "/engine/log.lua"
 package.loaded["vfsrepo"] = dofile "/pkg/ant.vfs/vfsrepo.lua"
 
-local CMD = {}
-
-local new_tiny = dofile "/pkg/ant.vfs/tiny.lua"
-for k, v in pairs(new_tiny(repopath)) do
-	vfs[k] = v
+local tiny_vfs = dofile "/pkg/ant.vfs/tiny.lua" (repopath)
+do
+	local vfs = require "vfs"
+	for k, v in pairs(tiny_vfs) do
+		vfs[k] = v
+	end
 end
 
-local new_std = dofile "/pkg/ant.vfs/std.lua"
-local repo = new_std {
+local repo = dofile "/pkg/ant.vfs/std.lua" {
 	rootpath = repopath,
 	nohash = true,
 }
+
+local S = {}
 
 local function COMPILE(_,_)
 	error "resource is not ready."
@@ -85,7 +80,7 @@ local function getfile(pathname)
 	return subrepo:file(subpath)
 end
 
-function CMD.READ(pathname)
+function S.READ(pathname)
 	local file = getfile(pathname)
 	if not file then
 		return
@@ -100,20 +95,7 @@ function CMD.READ(pathname)
 	end
 end
 
-function CMD.REALPATH(pathname)
-	local file = getfile(pathname)
-	if not file then
-		return
-	end
-	if file.path then
-		return file.path
-	end
-	if __ANT_EDITOR__ and file.resource_path then
-		return file.resource_path
-	end
-end
-
-function CMD.LIST(pathname)
+function S.LIST(pathname)
 	local file = getfile(pathname)
 	if not file then
 		return
@@ -140,7 +122,7 @@ function CMD.LIST(pathname)
 	end
 end
 
-function CMD.TYPE(pathname)
+function S.TYPE(pathname)
 	local file = getfile(pathname)
 	if file then
 		if file.dir then
@@ -153,35 +135,38 @@ function CMD.TYPE(pathname)
 	end
 end
 
-function CMD.REPOPATH()
+function S.REPOPATH()
 	return repopath
 end
 
-function CMD.RESOURCE_SETTING(setting)
+function S.RESOURCE_SETTING(setting)
 	require "packagemanager"
 	local cr = import_package "ant.compile_resource"
-	local config = cr.init_setting(vfs, setting)
+	local config = cr.init_setting(tiny_vfs, setting)
 	function COMPILE(vpath, lpath)
 		return cr.compile_file(config, vpath, lpath)
 	end
 end
 
-function CMD.VERSION()
+function S.VERSION()
 	return "GAME"
 end
 
-function CMD.quit()
+function S.PATCH(code, data)
+	local func = assert(load(code))
+	func(data)
+end
+
+function S.quit()
 	ltask.quit()
 end
 
-function CMD.PATCH(code, data)
-	local f = load(code)
-	f(data)
-end
-
+local select = require "bee.select"
+local selector = select.create()
 do
+	local socket = require "bee.socket"
 	local waitfunc, fd = ltask.eventinit()
-	selector:event_add(socket.fd(fd), SELECT_READ, waitfunc)
+	selector:event_add(socket.fd(fd), select.SELECT_READ, waitfunc)
 end
 
 ltask.idle_handler(function()
@@ -190,4 +175,4 @@ ltask.idle_handler(function()
 	end
 end)
 
-return CMD
+return S

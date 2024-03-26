@@ -1,3 +1,5 @@
+require "bee.thread".setname "ant - IO thread"
+
 do
 	local path = os.getenv "LUA_DEBUG_PATH"
 	if path then
@@ -17,7 +19,6 @@ do
 	end
 end
 
-local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
 local serialization = require "bee.serialization"
@@ -84,8 +85,6 @@ local LOG; do
 		LOGRAW(text)
 	end
 end
-
-thread.setname "ant - IO thread"
 
 local vfs = assert(loadfile "/engine/firmware/vfs.lua")()
 local repo = vfs.new(config.vfs)
