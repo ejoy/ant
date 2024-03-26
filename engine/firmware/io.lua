@@ -15,7 +15,6 @@ if path then
 		: event "wait"
 end
 
--- C libs only
 local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
@@ -191,18 +190,15 @@ local function wait_server()
 	end
 end
 
--- response io request with id
 local function response_id(id, ...)
 	if id then
-		assert(type(id) ~= "string")
-		assert(type(id) ~= "userdata")
 		ltask.wakeup(id, ...)
 	end
 end
 
 local function response_err(id, msg)
 	LOG("[ERROR]", msg)
-	response_id(id, nil)
+	response_id(id)
 end
 
 local CMD = {}
@@ -273,10 +269,9 @@ local function request_file(id, req, hash, res, path)
 	request_start(req, hash, promise)
 end
 
--- response functions from file server (connection)
-local response = {}
+local NETWORK = {}
 
-function response.ROOT(hash)
+function NETWORK.ROOT(hash)
 	if hash == '' then
 		LOG("[ERROR] INVALID ROOT")
 		os.exit(-1, true)
@@ -293,31 +288,31 @@ end
 -- REMARK: Main thread may reading the file while writing, if file server update file.
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
-function response.BLOB(hash, data)
+function NETWORK.BLOB(hash, data)
 	LOG("[response] BLOB", hash, #data)
 	if repo:write_blob(hash, data) then
 		request_resolve(hash)
 	end
 end
 
-function response.FILE(hash, size)
+function NETWORK.FILE(hash, size)
 	LOG("[response] FILE", hash, size)
 	repo:write_file(hash, size)
 end
 
-function response.MISSING(hash)
+function NETWORK.MISSING(hash)
 	LOG("[response] MISSING", hash)
 	request_reject(hash, "MISSING "..hash)
 end
 
-function response.SLICE(hash, offset, data)
+function NETWORK.SLICE(hash, offset, data)
 	LOG("[response] SLICE", hash, offset, #data)
 	if repo:write_slice(hash, offset, data) then
 		request_resolve(hash)
 	end
 end
 
-function response.RESOURCE(fullpath, hash)
+function NETWORK.RESOURCE(fullpath, hash)
 	LOG("[response] RESOURCE", fullpath, hash)
 	repo:add_resource(fullpath, hash)
 	request_resolve(fullpath)
@@ -327,7 +322,7 @@ local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
 function CMD.LIST(id, fullpath)
---	LOG("[request] LIST", path)
+	--LOG("[request] LIST", path)
 	local dir, r, hash = repo:list(fullpath)
 	if dir then
 		response_id(id, dir)
@@ -341,11 +336,11 @@ function CMD.LIST(id, fullpath)
 		request_file(id, "RESOURCE", hash, "LIST", fullpath)
 		return
 	end
-	response_id(id, nil)
+	response_id(id)
 end
 
 function CMD.TYPE(id, fullpath)
-	--	LOG("[request] TYPE", fullpath)
+	--LOG("[request] TYPE", fullpath)
 	if fullpath == "/" then
 		response_id(id, "dir")
 		return
@@ -355,7 +350,7 @@ function CMD.TYPE(id, fullpath)
 	if dir then
 		local v = dir[name]
 		if not v then
-			response_id(id, nil)
+			response_id(id)
 		elseif v.type == 'f' then
 			response_id(id, "file")
 		else
@@ -372,7 +367,7 @@ function CMD.TYPE(id, fullpath)
 		request_file(id, "RESOURCE", hash, "TYPE", fullpath)
 		return
 	end
-	response_id(id, nil)
+	response_id(id)
 end
 
 function CMD.READ(id, fullpath)
@@ -387,17 +382,17 @@ function CMD.READ(id, fullpath)
 			request_file(id, "RESOURCE", hash, "READ", fullpath)
 			return
 		end
-		response_err(id, "Not exist<1> " .. path)
+		response_err(id, "Not exist path: " .. path)
 		return
 	end
 
 	local v = dir[name]
 	if not v then
-		response_err(id, "Not exist<2> " .. fullpath)
+		response_err(id, "Not exist file: " .. fullpath)
 		return
 	end
 	if v.type ~= 'f' then
-		response_id(id, false, v.hash)
+		response_err(id, "Not a file: " .. fullpath)
 		return
 	end
 	local data = repo:open(v.hash)
@@ -408,40 +403,13 @@ function CMD.READ(id, fullpath)
 	end
 end
 
-function CMD.RESOURCE_SETTING(id, setting)
---	LOG("[request] RESOURCE_SETTING", setting)
-	repo:resource_setting(setting)
-	request_send("RESOURCE_SETTING", setting)
-	response_id(id)
-end
-
-function CMD.SEND(_, ...)
-	request_send(...)
-end
-
-function CMD.VERSION(id)
-	response_id(id, repo.root or "RUNTIME")
-end
-
-function CMD.quit(id)
-	response_id(id)
-	ltask.quit()
-end
-
--- dispatch package from connection
 local function dispatch_net(cmd, ...)
-	local f = response[cmd]
+	local f = NETWORK[cmd]
 	if not f then
 		LOG("[ERROR] Unsupport net command", cmd)
 		return
 	end
 	f(...)
-end
-
-function CMD.REDIRECT(_, resp_command, service_id)
-	response[resp_command] = function(...)
-		ltask.send(service_id, resp_command, ...)
-	end
 end
 
 local S = {}; do
@@ -458,8 +426,32 @@ local S = {}; do
 	end
 end
 
+function S.RESOURCE_SETTING(setting)
+	--LOG("[request] RESOURCE_SETTING", setting)
+	repo:resource_setting(setting)
+	request_send("RESOURCE_SETTING", setting)
+end
+
+function S.VERSION()
+	return repo.root or "RUNTIME"
+end
+
+function S.quit()
+	ltask.quit()
+end
+
+function S.SEND(...)
+	request_send(...)
+end
+
+function S.REDIRECT(resp_command, service_id)
+	NETWORK[resp_command] = function(...)
+		ltask.send(service_id, resp_command, ...)
+	end
+end
+
 function S.PATCH(code, data)
-	local f = load(code)
+	local f = assert(load(code))
 	f(data)
 end
 
@@ -482,29 +474,12 @@ local function work_online()
 end
 
 local function init_event()
-	local reqs = {}
 	local reading = connection.recvq
 	local sending = connection.sendq
-	local function dispatch_netmsg(cmd, ...)
-		if reqs then
-			if cmd ~= "ROOT" then
-				table.insert(reqs, {cmd, ...})
-			else
-				dispatch_net(cmd, ...)
-				for _, req in ipairs(reqs) do
-					dispatch_net(table.unpack(req))
-				end
-				reqs = nil
-			end
-		else
-			dispatch_net(cmd, ...)
-		end
-	end
 	local function read_fd(fd)
 		local data, err = fd:recv()
 		if data == nil then
 			if err then
-				-- socket error
 				return nil, err
 			end
 			return nil, "Closed by remote"
@@ -517,7 +492,7 @@ local function init_event()
 			if not msg then
 				break
 			end
-			dispatch_netmsg(serialization.unpack(msg))
+			dispatch_net(serialization.unpack(msg))
 		end
 		return true
 	end
@@ -537,7 +512,7 @@ local function init_event()
 				if err then
 					return nil, err
 				else
-					table.insert(sending, data)	-- push back
+					table.insert(sending, data)
 				end
 				break
 			end
@@ -598,7 +573,6 @@ ltask.fork(function ()
 	if connection.fd then
 		init_event()
 		work_online()
-		-- socket error or closed
 	else
 		ENTRY_OFFLINE = true
 	end
