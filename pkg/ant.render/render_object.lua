@@ -19,15 +19,7 @@ function ro.init()
         cull_idx    = INVALID_VALUE,
 
         --mesh
-        vb_start    = 0,
-        vb_num      = 0,
-        vb_handle   = INVALID_VALUE,
-        vb2_start   = 0,
-        vb2_num     = 0,
-        vb2_handle  = INVALID_VALUE,
-        ib_start    = 0,
-        ib_num      = 0,
-        ib_handle   = INVALID_VALUE,
+        mesh_idx    = INVALID_VALUE,
         render_layer= 0,
         discard_flags=0xff,
     }

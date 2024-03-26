@@ -2,4 +2,3 @@ mount:
     /engine/ %engine%/engine
     /pkg/    %engine%/pkg
     /        %project%
-    /        %project%/..

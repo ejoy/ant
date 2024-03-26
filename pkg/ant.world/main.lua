@@ -71,7 +71,7 @@ local function create_entity_by_data(w, group, data, debuginfo)
     return eid
 end
 
-local function create_entity_by_template(w, group, template, has_scene, debuginfo)
+local function create_entity_by_template(w, group, template, debuginfo)
     local queue = w._create_entity_queue
     local eid = w.w:new {
         debug = debuginfo,
@@ -80,7 +80,6 @@ local function create_entity_by_template(w, group, template, has_scene, debuginf
         eid = eid,
         group = group,
         template = template,
-        has_scene = has_scene,
         data = {},
     }
     queue[#queue+1] = initargs
@@ -102,60 +101,33 @@ function world:remove_entity(e)
     w.w:remove(e)
 end
 
-local function table_append(t, a)
-    table.move(a, 1, #a, #t+1, t)
-end
-local table_insert = table.insert
-
 local function create_instance(w, group, data, debuginfo)
-    local entities = {}
-    local mounts = {}
-    local noparent_eid = {}
-    local noparent_data = {}
+    local eids = {}
+    local args = {}
     for i = 1, #data do
         local v = data[i]
-        local n_eid, n_data
-        if v.prefab then
-            entities[i], n_eid, n_data = create_instance(w, group, v.template, debuginfo)
-        else
-            local e, initargs = create_entity_by_template(w, group, v.template, v.has_scene, debuginfo)
-            entities[i], n_eid, n_data = e, e, initargs
-        end
         if v.mount then
             assert(
                 math.type(v.mount) == "integer"
                 and v.mount >= 1
                 and v.mount <= #data
+                and v.mount < i
                 and not data[v.mount].prefab
             )
-            assert(v.mount < i)
-            mounts[i] = n_data
+        end
+        if v.prefab then
+            eids[i], args[i] = create_instance(w, group, v.template, debuginfo)
         else
-            if v.prefab then
-                table_append(noparent_eid, n_eid)
-                table_append(noparent_data, n_data)
-            else
-                table_insert(noparent_eid, n_eid)
-                table_insert(noparent_data, n_data)
-            end
+            eids[i], args[i] = create_entity_by_template(w, group, v.template, debuginfo)
         end
     end
     for i = 1, #data do
         local v = data[i]
         if v.mount then
-            if v.prefab then
-                for _, m in ipairs(mounts[i]) do
-                    if m.has_scene then
-                        m.data.scene_parent = entities[v.mount]
-                    end
-                end
-            else
-                assert(mounts[i].has_scene)
-                mounts[i].data.scene_parent = entities[v.mount]
-            end
+            args[i].data.scene_parent = eids[v.mount]
         end
     end
-    return entities, noparent_eid, noparent_data
+    return eids, args[1]
 end
 
 local template_mt = {}
@@ -175,7 +147,6 @@ local function create_entity_template(w, v)
         mount = v.mount,
         template = w.w:template(v.data),
         tag = v.tag,
-        has_scene = v.data.scene ~= nil,
     }, template_mt)
 end
 
@@ -223,14 +194,9 @@ local function prefab_instance(w, v)
         return
     end
     local template = create_template(w, v.args.prefab)
-    local prefab, noparent_eid, noparent_data = create_instance(w, v.args.group, template, v.debuginfo)
-    v.instance.noparent = noparent_eid
+    local prefab, rootdata = create_instance(w, v.args.group, template, v.debuginfo)
     if v.args.parent then
-        for _, m in ipairs(noparent_data) do
-            if m.has_scene then
-                m.data.scene_parent = v.args.parent
-            end
-        end
+        rootdata.data.scene_parent = v.args.parent
     end
     local tags = v.instance.tag
     each_prefab(prefab, template, function (eid, tag)
@@ -263,7 +229,6 @@ function world:create_instance(args)
     args.group = args.group or 0
     local instance = {
         group = args.group,
-        noparent = {},
         tag = {['*']={}}
     }
     local debuginfo
@@ -291,7 +256,8 @@ end
 
 function world:instance_set_parent(instance, parent)
     local w = self
-    for _, eid in ipairs(instance.noparent) do
+    local eid = instance.tag['*'][1]
+    if eid then
         local e <close> = w:entity(eid, "scene?update scene_needchange?out")
         assert(eid > parent)
         if e.scene then

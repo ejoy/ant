@@ -118,10 +118,10 @@ function WindowEvent.suspend(m)
                 window.peek_message()
                 if #WindowQueue > 0 then
                     ltask.wakeup(WindowToken)
-                    ltask.sleep(0)
                 else
                     thread.sleep(0.01)
                 end
+                ltask.sleep(0)
             end
         end)
     elseif m.what == "did_resume" then
@@ -147,8 +147,10 @@ ltask.fork(function ()
             local f = WindowEvent[msg.type]
             if f then
                 f(msg)
-            elseif not world:dispatch_imgui(msg) then
-                world:dispatch_message(msg)
+            else
+                if not world:dispatch_imgui(msg) then
+                    world:dispatch_message(msg)
+                end
             end
         end
         ltask.wait(WindowToken)

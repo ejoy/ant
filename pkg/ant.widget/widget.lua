@@ -4,6 +4,7 @@ local w		= world.w
 
 local bgfx		= require "bgfx"
 local math3d	= require "math3d"
+local MESH		= world:clibs "render.mesh"
 
 local geometry_drawer	= import_package "ant.geometry".drawer
 local setting			= import_package "ant.settings"
@@ -62,8 +63,8 @@ function widget_drawer_sys:end_frame()
 	local e = w:first "widget_drawer render_object:update"
 	if e then
 		local ro = e.render_object
-		ro.vb_start, ro.vb_num = 0, 0
-		ro.ib_start, ro.ib_num = 0, 0
+		MESH.set_num(ro.mesh_idx, "vb0", 0)
+		MESH.set_num(ro.mesh_idx, "ib", 0)
 		w:submit(e)
 	end
 end
@@ -87,19 +88,22 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	end
 	local e = w:first "widget_drawer render_object:update"
 	local ro = e.render_object
-	local vbnum, vbhandle = ro.vb_num, ro.vb_handle
+	local _, vbnum, vbhandle = MESH.fetch(ro.mesh_idx, "vb0")
 
 	local vertex_offset = vbnum
 	bgfx.update(vbhandle, vertex_offset, bgfx.memory_buffer(vbfmt, vb));
 	ro.vb_num = vertex_offset + numvertices
 	local numindices = #ib
 	if numindices ~= 0 then
-		local index_offset = ro.ib_num
+		local _, ibnum, ibhandle = MESH.fetch(ro.mesh_idx, "ib")
+		local index_offset = ibnum
 		if index_offset == 0 then
 			offset_ib(index_offset, ib)
 		end
-		bgfx.update(ro.ib_handle, index_offset, bgfx.memory_buffer(ibfmt, ib))
-		ro.ib_num = index_offset + numindices
+		
+		bgfx.update(ibhandle, index_offset, bgfx.memory_buffer(ibfmt, ib))
+		local ib_num = index_offset + numindices
+		MESH.set_num(ro.mesh_idx, "ib", ib_num)
 	end
 	w:submit(e)
 end

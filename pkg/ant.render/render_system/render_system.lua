@@ -14,6 +14,7 @@ local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 
 local Q			= world:clibs "render.queue"
+local MESH		= world:clibs "render.mesh"
 
 local queuemgr	= ecs.require "queue_mgr"
 
@@ -64,23 +65,17 @@ end
 
 local function update_ro(ro, m)
 	local vb = m.vb
- 	ro.vb_start = vb.start
-	ro.vb_num 	= vb.num
-	ro.vb_handle= vb.handle
+	MESH.set(ro.mesh_idx, "vb0", vb.start, vb.num, vb.handle)
 
 	local vb2 = m.vb2
 	if vb2 then
-		ro.vb2_start	= vb2.start
-		ro.vb2_num		= vb2.num
-		ro.vb2_handle	= vb2.handle
+		MESH.set(ro.mesh_idx, "vb1", vb2.start, vb2.num, vb2.handle)
 	end
 
 	local ib = m.ib
 	if ib then
-		ro.ib_start = ib.start
-		ro.ib_num 	= ib.num
-		ro.ib_handle= ib.handle
-	end 
+		MESH.set(ro.mesh_idx, "ib", ib.start, ib.num, ib.handle)
+	end
 end
 
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
@@ -160,6 +155,7 @@ function render_sys:component_init()
 
 		ro.visible_idx	= Q.alloc()
 		ro.cull_idx		= Q.alloc()
+		ro.mesh_idx		= MESH.alloc()
 	end
 
 	for e in w:select "INIT mesh:in mesh_result?update" do

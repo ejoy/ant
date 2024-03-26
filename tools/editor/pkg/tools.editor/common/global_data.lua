@@ -4,7 +4,7 @@ local lfs               = require "bee.filesystem"
 local vfs               = require "vfs"
 local access            = require "common.vfs_access"
 m.repo_access = access
-m.editor_root = lfs.path(vfs.repopath())
+m.editor_root = (lfs.path(vfs.repopath()):filename():string() == "launch") and lfs.path(vfs.repopath()):parent_path() or lfs.path(vfs.repopath())
 
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}

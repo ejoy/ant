@@ -1,13 +1,10 @@
 #include "lua.hpp"
 #include "queue.h"
-
-#include <cstdint>
-#include <vector>
-#include <forward_list>
-
-#include <cassert>
+#include "node_container.h"
 
 #include "ecs/world.h"
+#include <cstdint>
+#include <cassert>
 
 struct queue_node {
 	static constexpr uint8_t NUM_MASK = MAX_VISIBLE_QUEUE / 64;
@@ -58,31 +55,10 @@ struct queue_node {
     }
 };
 
-struct queue_container {
-    queue_container(int c): nodes(c){}
-    int alloc(){
-        if (!freelist.empty()){
-            const int Qidx = freelist.front();
-            freelist.pop_front();
-            nodes[Qidx].clear();
-            return Qidx;
-        }
-
-        const int Qidx = n++;
-        if (n == (int)nodes.size()){
-            nodes.resize(n*2);
-        }
-        return Qidx;
-    }
-
-    void dealloc(int Qidx){
-        freelist.push_front(Qidx);
-    }
-
-    inline bool isvalid(int Qidx) const {
-        return 0 <= Qidx && Qidx < n;
-    }
-
+struct queue_container : public node_container<queue_node>{
+    queue_container(int c)
+        : node_container<queue_node>(c)
+        {}
     inline void fetch(int Qidx, uint64_t *outmask) const {
         return nodes[Qidx].fetch(outmask);
     }
@@ -98,10 +74,6 @@ struct queue_container {
     inline void set(int Qidx, int nextQidx, bool value) {
         nodes[Qidx].set(nodes[nextQidx], value);
     }
-
-    std::vector<queue_node> nodes;
-    std::forward_list<int>   freelist;
-    int n = 0;
 };
 
 struct queue_container* queue_create(){

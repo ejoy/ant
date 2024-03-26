@@ -21,3 +21,5 @@ data:
     decal:
         w: 2.5
         h: 2.5
+#use scene.parent as attach object
+mount: 1
