@@ -342,9 +342,9 @@ local function connect_server(address, port)
 		return
 	end
 	if ok == false then
-		selector:event_add(fd, SELECT_WRITE)
-		selector:wait()
-		selector:event_del(fd)
+		local sel <close> = bee_select.create()
+		sel:event_add(fd, SELECT_WRITE)
+		sel:wait()
 	end
 	local ok, err = fd:status()
 	if not ok then
@@ -375,14 +375,14 @@ local function listen_server(address, port)
 		LOG("[ERROR] listen: "..err)
 		return
 	end
-	selector:event_add(fd, SELECT_READ)
+	local sel <close> = bee_select.create()
+	sel:event_add(fd, SELECT_READ)
 	local quit
 	while not quit do
 		quit = true
-		for _ in selector:wait(2) do
+		for _ in sel:wait(2) do
 			local newfd, err = fd:accept()
 			if newfd == nil then
-				selector:event_del(fd)
 				fd:close()
 				LOG("[ERROR] accept: "..err)
 				return
@@ -390,14 +390,12 @@ local function listen_server(address, port)
 				quit = false
 			else
 				LOG("Accepted")
-				selector:event_del(fd)
 				fd:close()
 				return newfd
 			end
 		end
 	end
 	LOG("[ERROR] select: timeout")
-	selector:event_del(fd)
 	fd:close()
 end
 
