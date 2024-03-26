@@ -283,7 +283,7 @@ function TextureResource:do_update()
     if #r > 1 then
         self.metadata = serialize.parse(self.path, aio.readall(self.path))
         if self.metadata.path[1] ~= '/' then
-            self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
+            self.metadata.path = r[1] .. "/images/" .. fs.path(self.metadata.path):filename():string()
         end
     else
         self.metadata = utils.readtable(self.path)

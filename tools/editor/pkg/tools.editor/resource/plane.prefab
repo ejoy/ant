@@ -5,8 +5,8 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  material: /pkg/ant.resources.binary/meshes/base/Plane.glb|materials/Material.001.material
-  mesh: /pkg/ant.resources.binary/meshes/base/Plane.glb|meshes/Plane_P1.meshbin
+  material: /pkg/ant.resources.binary/meshes/base/Plane.glb/materials/Material.001.material
+  mesh: /pkg/ant.resources.binary/meshes/base/Plane.glb/meshes/Plane_P1.meshbin
   scene:
     t: {0, 0.0010000000474974513, 0, 1}
   visible_masks: main_view|selectable|cast_shadow

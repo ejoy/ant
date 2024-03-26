@@ -1363,7 +1363,7 @@ local function create_joint_entity(joint_name)
             visible_masks = "selectable",
             visible = true,
             material = "/pkg/tools.editor/resource/materials/joint.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.editor/resource/meshes/joint.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb/meshes/Sphere_P1.meshbin",--"/pkg/tools.editor/resource/meshes/joint.meshbin",
             render_layer = "translucent",
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", bone_color)

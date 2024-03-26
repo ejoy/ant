@@ -6,6 +6,6 @@ data:
     scene:
         s: 100
     material: /pkg/ant.resources/materials/singlecolor.material
-    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin"
     visible: true
 tag: cube

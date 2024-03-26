@@ -5,9 +5,9 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  meshskin: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Armature.skinbin
+  meshskin: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/meshes/Armature.skinbin
   scene: {}
-  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.bin
+  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/animations/skeleton.bin
   skinning: true
 mount: 1
 policy:
@@ -15,8 +15,8 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002.material
-  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder_P1.meshbin
+  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/materials/Material.002.material
+  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/meshes/Cylinder_P1.meshbin
   scene:
     t: {-1.3385653495788574, 2, 0}
   visible_masks: main_view|selectable|cast_shadow
@@ -26,8 +26,8 @@ policy:
   ant.render|render
 ---
 data:
-  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
-  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder.001_P1.meshbin
+  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/materials/Material.002_s.material
+  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/meshes/Cylinder.001_P1.meshbin
   skinning: true
   visible_masks: main_view|selectable|cast_shadow
   visible: true
@@ -35,8 +35,8 @@ policy:
   ant.render|skinrender
 ---
 data:
-  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
-  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/BezierCurve.001_P1.meshbin
+  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/materials/Material.002_s.material
+  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/meshes/BezierCurve.001_P1.meshbin
   skinning: true
   visible_masks: main_view|selectable|cast_shadow
   visible: true
@@ -44,8 +44,8 @@ policy:
   ant.render|skinrender
 ---
 data:
-  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
-  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder.005_P1.meshbin
+  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/materials/Material.002_s.material
+  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/meshes/Cylinder.005_P1.meshbin
   skinning: true
   visible_masks: main_view|selectable|cast_shadow
   visible: true
@@ -53,8 +53,8 @@ policy:
   ant.render|skinrender
 ---
 data:
-  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
-  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Plane_P1.meshbin
+  material: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/materials/Material.002_s.material
+  mesh: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/meshes/Plane_P1.meshbin
   skinning: true
   visible_masks: main_view|selectable|cast_shadow
   visible: true
@@ -63,9 +63,9 @@ policy:
 ---
 data:
   animation:
-    ArmatureAction: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/ArmatureAction.bin
+    ArmatureAction: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/animations/ArmatureAction.bin
     work: /pkg/tools.prefab_viewer/assets/prefabs/animation/miner_Bone.anim
   animation_birth: ArmatureAction
-  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozzbin
+  skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/animations/skeleton.ozzbin
 policy:
   ant.animation|animation

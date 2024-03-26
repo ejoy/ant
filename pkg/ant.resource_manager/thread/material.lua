@@ -178,7 +178,7 @@ local MATERIAL_MARKED = {}
 local function build_fxcfg(filename, fx)
     local function stage_filename(stage)
         if fx[stage] then
-            return ("%s|%s.bin"):format(filename, stage)
+            return ("%s/%s.bin"):format(filename, stage)
         end
     end
     return {
@@ -220,8 +220,8 @@ local function update_uniforms_handle(attrib, uniforms, filename)
 end
 
 local function material_create(filename)
-    local material  = serialize.parse(filename, aio.readall(filename .. "|source.ant"))
-    local attribute = serialize.parse(filename, aio.readall(filename .. "|attribute.ant"))
+    local material  = serialize.parse(filename, aio.readall(filename .. "/source.ant"))
+    local attribute = serialize.parse(filename, aio.readall(filename .. "/attribute.ant"))
     local fxcfg = build_fxcfg(filename, assert(material.fx, "Invalid material"))
     material.fx = create_fx(fxcfg)
     update_uniforms_handle(attribute.attribs, material.fx.uniforms, filename)

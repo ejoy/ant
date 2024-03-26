@@ -211,7 +211,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			},
 			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 			render_layer = "translucent",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin',
+			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb/meshes/Cylinder_P1.meshbin',
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -229,7 +229,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 			render_layer = "translucent",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin',
+			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb/meshes/Cone_P1.meshbin',
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -510,7 +510,7 @@ function gizmo_sys:post_init()
 				visible = false,
 				scene = scene or {},
 				material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
-				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
 				render_layer = "translucent",
 				on_ready = function (e)
 					imaterial.set_property(e, "u_color", math3d.vector(color))

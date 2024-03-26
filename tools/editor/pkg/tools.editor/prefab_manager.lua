@@ -71,12 +71,12 @@ local function create_light_billboard(light_eid, lighttype)
 end
 
 local geom_mesh_file = {
-    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
-    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin",
-    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
-    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/Torus_P1.meshbin",
-    ["plane"] = "/pkg/ant.resources.binary/meshes/base/plane.glb|meshes/Plane_P1.meshbin"
+    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
+    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb/meshes/Cone_P1.meshbin",
+    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb/meshes/Cylinder_P1.meshbin",
+    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb/meshes/Sphere_P1.meshbin",
+    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb/meshes/Torus_P1.meshbin",
+    ["plane"] = "/pkg/ant.resources.binary/meshes/base/plane.glb/meshes/Plane_P1.meshbin"
 }
 
 local slot_id = 1
@@ -505,9 +505,9 @@ function m:choose_prefab()
         for _, prefab in ipairs(prefab_list) do
             if ImGui.SelectableEx(prefab, false, ImGui.SelectableFlags {"AllowDoubleClick"}) then
                 if gd.is_opening then
-                    self:open(gd.glb_filename.."|".. prefab, prefab, patch_template)
+                    self:open(gd.glb_filename.."/".. prefab, prefab, patch_template)
                 else
-                    self:add_prefab(gd.glb_filename.."|"..prefab)
+                    self:add_prefab(gd.glb_filename.."/"..prefab)
                 end
                 reset_open_context()
             end
@@ -580,7 +580,7 @@ function m:open(filename, prefab_name, patch_tpl)
     self:reset_prefab(true)
     self.prefab_filename = filename
     local isglb = false
-    if filename:match('.glb|') or filename:match('.gltf|') then
+    if filename:match('.glb/') or filename:match('.gltf/') then
         isglb = true
     end
     local path_list = isglb and utils.split_ant_path(filename) or {}
@@ -666,7 +666,7 @@ function m:create_ground()
         },
         data = {
             scene           = {s = {200, 1, 200}},
-            mesh            = "/pkg/tools.editor/resource/plane.glb|meshes/Plane_P1.meshbin",
+            mesh            = "/pkg/tools.editor/resource/plane.glb/meshes/Plane_P1.meshbin",
             material        = "/pkg/tools.editor/resource/materials/texture_plane.material",
             render_layer    = "background",
             visible = true,
@@ -776,7 +776,7 @@ function m:add_prefab(path)
     local path_list = utils.split_ant_path(path)
     local virtual_path = (lfs.path('/') / lfs.relative((#path_list > 1) and path_list[1] or path, gd.project_root)):string()
     if #path_list > 1 then
-        virtual_path = virtual_path .. "|".. path_list[2]
+        virtual_path = virtual_path .. "/".. path_list[2]
         -- cook_prefab(virtual_path)
     end
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
@@ -954,7 +954,7 @@ function m:save(path)
                 utils.write_file(self.glb_filename..".patch", stringify(final_template))
                 assetmgr.unload(gd.virtual_glb_path.."/" .. self.anim_file)
                 assetmgr.unload(self.glb_filename..".patch")
-                assetmgr.unload(self.glb_filename.."|"..self.prefab_name)
+                assetmgr.unload(self.glb_filename.."/"..self.prefab_name)
                 world:pub {"Save"}
             end
         end

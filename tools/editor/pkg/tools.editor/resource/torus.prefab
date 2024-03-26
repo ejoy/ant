@@ -5,8 +5,8 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  material: /pkg/ant.resources.binary/meshes/base/torus.glb|materials/Material.001.material
-  mesh: /pkg/ant.resources.binary/meshes/base/torus.glb|meshes/Torus_P1.meshbin
+  material: /pkg/ant.resources.binary/meshes/base/torus.glb/materials/Material.001.material
+  mesh: /pkg/ant.resources.binary/meshes/base/torus.glb/meshes/Torus_P1.meshbin
   scene:
     t: {0, 0.25, 0, 1}
   visible_masks: main_view|selectable|cast_shadow

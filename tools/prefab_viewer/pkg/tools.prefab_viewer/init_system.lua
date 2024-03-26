@@ -22,7 +22,7 @@ function S.init_world()
 	-- 	},
 	-- 	data = {
 	-- 		scene = {s = {200, 1, 200}},
-	-- 		mesh  = "/pkg/tools.prefab_viewer/assets/glb/plane.glb|meshes/Plane_P1.meshbin",
+	-- 		mesh  = "/pkg/tools.prefab_viewer/assets/glb/plane.glb/meshes/Plane_P1.meshbin",
 	-- 		material    = "/pkg/tools.prefab_viewer/assets/materials/texture_plane.material",
 	-- 		render_layer = "background",
 	-- 		visible		= true,

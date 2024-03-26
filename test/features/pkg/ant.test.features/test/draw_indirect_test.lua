@@ -40,8 +40,8 @@ function dit_sys.init_world()
         data = {
             indirect_entity = {
                 gid         = draw_indirect_test_group_id,
-                mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-                material    = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
+                mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
+                material    = "/pkg/ant.resources.binary/meshes/base/cube.glb/materials/Material.001.material",
                 visible     = true,
                 visible_masks="main_view|selectable|cast_shadow",
                 render_layer= "opacity",

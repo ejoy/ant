@@ -947,7 +947,7 @@ local function is_readonly_resource(p)
     if is_glb_resource() then
         return true
     end
-    return p:match ".glb|" or p:match ".gltf|" or default_files[p]
+    return p:match ".glb/" or p:match ".gltf/" or default_files[p]
 end
 
 local function to_virtualpath(localpath)

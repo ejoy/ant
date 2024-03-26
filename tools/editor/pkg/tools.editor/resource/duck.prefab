@@ -14,8 +14,8 @@ policy:
 data:
   visible_masks: main_view|selectable|cast_shadow
   visible: true
-  material: /pkg/tools.editor/resource/Duck.glb|materials/blinn3-fx.material
-  mesh: /pkg/tools.editor/resource/Duck.glb|meshes/LOD3spShape_P1.meshbin
+  material: /pkg/tools.editor/resource/Duck.glb/materials/blinn3-fx.material
+  mesh: /pkg/tools.editor/resource/Duck.glb/meshes/LOD3spShape_P1.meshbin
   scene: {}
 mount: 2
 policy:
