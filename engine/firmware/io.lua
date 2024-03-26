@@ -408,10 +408,11 @@ function CMD.READ(id, fullpath)
 	end
 end
 
-function CMD.RESOURCE_SETTING(_, setting)
+function CMD.RESOURCE_SETTING(id, setting)
 --	LOG("[request] RESOURCE_SETTING", setting)
 	repo:resource_setting(setting)
 	request_send("RESOURCE_SETTING", setting)
+	response_id(id)
 end
 
 function CMD.SEND(_, ...)

@@ -70,18 +70,9 @@ end
 function vfs.type(path)
 	return call("TYPE", path)
 end
-
-local __ANT_RUNTIME__ = package.preload.firmware ~= nil
-if __ANT_RUNTIME__ then
-	function vfs.resource_setting(setting)
-		return send("RESOURCE_SETTING", setting)
-	end
-else
-	function vfs.resource_setting(setting)
-		return call("RESOURCE_SETTING", setting)
-	end
+function vfs.resource_setting(setting)
+	return call("RESOURCE_SETTING", setting)
 end
-
 function vfs.version()
 	return call("VERSION")
 end
