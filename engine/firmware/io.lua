@@ -98,11 +98,6 @@ local connection = {
 	flags = 0,
 }
 
-local function connection_send(...)
-	local pack = string.pack("<s2", serialization.packstring(...))
-	table.insert(connection.sendq, 1, pack)
-end
-
 local function connect_server(address, port)
 	LOG("Connecting", address, port)
 	local fd, err = socket "tcp"
@@ -189,6 +184,11 @@ local function wait_server()
 	end
 end
 
+local function connection_send(...)
+	local pack = string.pack("<s2", serialization.packstring(...))
+	table.insert(connection.sendq, 1, pack)
+end
+
 local function request_send(...)
 	if OFFLINE then
 		return
@@ -230,8 +230,9 @@ local function request_start(cmd, arg)
 	return ltask.multi_wait(arg)
 end
 
-local S = {}
 local NETWORK = {}
+
+local getlist
 
 function NETWORK.ROOT(hash)
 	if hash == '' then
@@ -242,7 +243,7 @@ function NETWORK.ROOT(hash)
 	LOG("[response] ROOT", hash)
 	local resources = repo:init(hash)
 	for path in pairs(resources) do
-		ltask.fork(S.LIST, path)
+		ltask.fork(getlist, path)
 	end
 	ltask.multi_wakeup "ROOT"
 end
@@ -292,11 +293,10 @@ end
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-function S.LIST(fullpath)
+function getlist(fullpath)
 	if repo.root == nil then
 		ltask.multi_wait "ROOT"
 	end
-	--LOG("[request] LIST", path)
 	while true do
 		local dir, r, hash = repo:list(fullpath)
 		if dir then
@@ -316,67 +316,37 @@ function S.LIST(fullpath)
 	end
 end
 
+local S = {}
+
+function S.LIST(fullpath)
+	return getlist(fullpath)
+end
+
 function S.TYPE(fullpath)
-	if repo.root == nil then
-		ltask.multi_wait "ROOT"
-	end
-	--LOG("[request] TYPE", fullpath)
 	if fullpath == "/" then
 		return "dir"
 	end
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	while true do
-		local dir, r, hash = repo:list(path)
-		if dir then
-			local v = dir[name]
-			if not v then
-				return
-			elseif v.type == 'f' then
-				return "file"
-			else
-				return "dir"
-			end
-		end
-		if r == ListNeedGet then
-			if not request_start("GET", hash) then
-				return
-			end
-		elseif r == ListNeedResource then
-			if not request_start("RESOURCE", hash) then
-				return
-			end
-		else
-			return
-		end
+	local dir = getlist(path)
+	if not dir then
+		return
+	end
+	local v = dir[name]
+	if not v then
+		return
+	elseif v.type == 'f' then
+		return "file"
+	else
+		return "dir"
 	end
 end
 
 function S.READ(fullpath)
-	if repo.root == nil then
-		ltask.multi_wait "ROOT"
-	end
-	--LOG("[request] READ", fullpath)
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	local dir
-	while true do
-		local r, hash
-		dir, r, hash = repo:list(path)
-		if dir then
-			break
-		else
-			if r == ListNeedGet then
-				if not request_start("GET", hash) then
-					return
-				end
-			elseif r == ListNeedResource then
-				if not request_start("RESOURCE", hash) then
-					return
-				end
-			else
-				LOG("[ERROR]", "Not exist path: " .. path)
-				return
-			end
-		end
+	local dir = getlist(path)
+	if not dir then
+		LOG("[ERROR]", "Not exist path: " .. path)
+		return
 	end
 	local v = dir[name]
 	if not v then
@@ -400,10 +370,6 @@ function S.READ(fullpath)
 end
 
 function S.RESOURCE_SETTING(setting)
-	if repo.root == nil then
-		ltask.multi_wait "ROOT"
-	end
-	--LOG("[request] RESOURCE_SETTING", setting)
 	repo:resource_setting(setting)
 	request_send("RESOURCE_SETTING", setting)
 end
