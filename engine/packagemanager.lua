@@ -116,14 +116,10 @@ local function loadenv(name)
     return env
 end
 
-local function import(name)
+function import_package(name)
     return loadenv(name).require "main"
 end
 
----@diagnostic disable-next-line: lowercase-global
-import_package = import
-
 return {
-    import = import,
     loadenv = loadenv,
 }
