@@ -46,7 +46,7 @@ local function create_simple_test_group()
     --standalone sub tree
     local p1 = PC:create_instance {
         group = HITCH_REF_GROUPID,
-        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|" .. prefabname,
+        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/" .. prefabname,
         on_ready = function (p)
             local root<close> = world:entity(p.tag['*'][1], "scene:update")
             iom.set_position(root, math3d.vector(0, 2, 0))
@@ -55,7 +55,7 @@ local function create_simple_test_group()
 
     PC:create_instance {
         group = HITCH_REF_GROUPID,
-        prefab = "/pkg/ant.resources.binary/meshes/base/cone.glb|" .. prefabname,
+        prefab = "/pkg/ant.resources.binary/meshes/base/cone.glb/" .. prefabname,
         on_ready = function (p)
             local root<close> = world:entity(p.tag['*'][1], "scene:update scene_needchange?out")
             iom.set_position(root, math3d.vector(1, 2, 3))

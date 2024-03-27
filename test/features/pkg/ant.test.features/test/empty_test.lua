@@ -14,7 +14,7 @@ end
 
 function empty_test_sys:init()
     -- PC:create_instance {
-    --     prefab = "/pkg/ant.test.features/assets/skeleton_test.glb|mesh.prefab"
+    --     prefab = "/pkg/ant.test.features/assets/skeleton_test.glb/mesh.prefab"
     -- }
 end
 

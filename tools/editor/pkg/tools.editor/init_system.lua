@@ -95,7 +95,7 @@ function m:init()
     world.__EDITOR__ = true
     widget_utils.load_imgui_layout(global_data.editor_root / "imgui.layout")
     window.set_title("Editor")
-	--
+	local __ANT_EDITOR__ = world.args.ecs.__ANT_EDITOR__
 	global_data:update_project_root(__ANT_EDITOR__)
     start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
     -- log_widget.init_log_receiver()

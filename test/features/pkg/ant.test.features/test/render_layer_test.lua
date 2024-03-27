@@ -18,7 +18,7 @@ local rlt_sys = common.test_system "render_layer"
 
 function rlt_sys.init_world()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
-    PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
+    PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/Duck.glb/mesh.prefab", function (e)
         local ee <close> = world:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))
         iom.set_scale(ee, 3)
@@ -43,7 +43,7 @@ function rlt_sys.init_world()
         }
     }
 
-    PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+    PC:add_instance(util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb/mesh.prefab", function (e)
         local ee <close> = world:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, 0, -1))
 

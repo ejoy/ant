@@ -283,7 +283,7 @@ function TextureResource:do_update()
     if #r > 1 then
         self.metadata = serialize.parse(self.path, aio.readall(self.path))
         if self.metadata.path[1] ~= '/' then
-            self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
+            self.metadata.path = r[1] .. "/images/" .. fs.path(self.metadata.path):filename():string()
         end
     else
         self.metadata = utils.readtable(self.path)
@@ -382,7 +382,7 @@ function TextureResource:show()
                 assert(vp)
                 glb_path = "/" .. vp
                 rc.compile(glb_path)
-                image_path = rc.compile(glb_path .. "|images")
+                image_path = rc.compile(glb_path .. "/images")
                 ImGui.OpenPopup("select_image")
             end
         end
@@ -393,7 +393,7 @@ function TextureResource:show()
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
                         if ImGui.SelectableEx(filename, false) then
-                            self:set_file(glb_path .. "|images/" .. filename)
+                            self:set_file(glb_path .. "/images/" .. filename)
                             image_path = nil
                         end
                     end

@@ -29,7 +29,7 @@ local function loader(filename)
 		material.depth = {
 			attribs = ad.attribs,
 			systems = ad.systems,
-			object = MA.material_load(filename .. "|depth", material.state, material.stencil, material.fx.depth.prog, ad.attribs, ad.systems)
+			object = MA.material_load(filename .. "/depth", material.state, material.stencil, material.fx.depth.prog, ad.attribs, ad.systems)
 		}
 	end
 	if material.fx.di then
@@ -37,7 +37,7 @@ local function loader(filename)
 		material.di = {
 			attribs = ad.attribs,
 			systems = ad.systems,
-			object = MA.material_load(filename .. "|di", material.state, material.stencil, material.fx.di.prog, ad.systems, ad.attribs)
+			object = MA.material_load(filename .. "/di", material.state, material.stencil, material.fx.di.prog, ad.systems, ad.attribs)
 		}
 	end
     return material

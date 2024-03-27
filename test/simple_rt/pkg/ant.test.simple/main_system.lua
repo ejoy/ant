@@ -115,7 +115,7 @@ local function create_scene(is_test)
 	}
 
     prefab = world:create_instance {
-        prefab = is_test and "/pkg/ant.test.simple/resource/miner/miner.gltf|test.prefab" or "/pkg/ant.test.simple/resource/miner/miner.gltf|mesh.prefab",
+        prefab = is_test and "/pkg/ant.test.simple/resource/miner/miner.gltf/test.prefab" or "/pkg/ant.test.simple/resource/miner/miner.gltf/mesh.prefab",
         on_ready = function (instance)
             local main_queue = w:first "main_queue camera_ref:in"
             local main_camera <close> = world:entity(main_queue.camera_ref, "camera:in")

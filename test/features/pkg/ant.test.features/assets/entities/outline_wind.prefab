@@ -6,14 +6,14 @@ data:
         s: 0.10
         t: {-5, 1, -5, 1}
     material: /pkg/ant.resources/materials/pbr_stencil.material
-    mesh: "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin"
+    mesh: "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb/meshes/Plane.003_P1.meshbin"
     visible_masks: main_view|selectable
     visible: true
 ---
 data:
-  meshskin: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Armature.skinbin
+  meshskin: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb/meshes/Armature.skinbin
   scene: {}
-  skeleton: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb|animations/skeleton.bin
+  skeleton: /pkg/ant.resources.binary/meshes/wind-turbine-1.glb/animations/skeleton.bin
   skinning: true
 policy:
   ant.render|meshskin
@@ -24,7 +24,7 @@ policy:
     ant.render|render
 data:
     scene: {}
-    mesh: "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin"
+    mesh: "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb/meshes/Plane.003_P1.meshbin"
     material: /pkg/ant.resources/materials/outline/scale.material
     visible: true
     render_layer: translucent_plane

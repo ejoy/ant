@@ -47,18 +47,18 @@ local function packstring(...)
     return table.concat(t, '\t')
 end
 
+local label = ltask.label()
+
 local m = {}
 m.level = __ANT_RUNTIME__ and 'debug' or 'info'
-m.skip = nil
 for i, level in ipairs(LEVELS) do
     levels[level] = i
     m[level] = function(...)
         if i < levels[m.level] then
             return
         end
-        local info = debug.getinfo(m.skip or 2, 'Sl')
-        m.skip = nil
-        local text = ('(%s:%d) %s'):format(info.short_src, info.currentline, packstring(...))
+        local info = debug.getinfo(2, 'Sl')
+        local text = ('( %s )(%s:%d) %s'):format(label, info.short_src, info.currentline, packstring(...))
         if not __ANT_RUNTIME__ and color[level] then
             text = color[level]..text.."\x1b[0m"
         end

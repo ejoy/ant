@@ -34,7 +34,7 @@ function m:init_world()
 	}
 
     prefab = world:create_instance {
-        prefab = "/pkg/ant.test.simple/resource/miner/miner.gltf|mesh.prefab",
+        prefab = "/pkg/ant.test.simple/resource/miner/miner.gltf/mesh.prefab",
         on_ready = function ()
             local main_queue = w:first "main_queue camera_ref:in"
             local main_camera <close> = world:entity(main_queue.camera_ref, "camera:in")

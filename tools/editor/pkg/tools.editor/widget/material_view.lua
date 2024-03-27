@@ -938,7 +938,7 @@ local default_files<const> = {
 local function is_glb_resource()
     local cp = prefab_mgr:get_current_filename()
     if cp then
-        return cp:match "%.glb%|mesh%.prefab$" or cp:match "%.gltf%|mesh%.prefab$"
+        return cp:match "%.glb%/mesh%.prefab$" or cp:match "%.gltf%/mesh%.prefab$"
     end
 end
 
@@ -947,7 +947,7 @@ local function is_readonly_resource(p)
     if is_glb_resource() then
         return true
     end
-    return p:match ".glb|" or p:match ".gltf|" or default_files[p]
+    return p:match ".glb/" or p:match ".gltf/" or default_files[p]
 end
 
 local function to_virtualpath(localpath)
@@ -1035,7 +1035,7 @@ local function absolute_path(path, base)
     if path:sub(1,1) == "/" then
         return path
     end
-    return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+    return base:match "^(.-)[^/]*$" .. (path:match "^%./(.+)$" or path)
 end
 function MaterialView:set_eid(eid)
     if self.eid == eid then

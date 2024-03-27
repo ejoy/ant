@@ -12,7 +12,7 @@ data:
 mount: 1
 ---
 mount: 2
-prefab: /pkg/ant.resources.binary/meshes/base/sphere.glb|mesh.prefab
+prefab: /pkg/ant.resources.binary/meshes/base/sphere.glb/mesh.prefab
 ---
 mount: 1
 prefab: $path ./light_point.prefab

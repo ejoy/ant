@@ -13,7 +13,7 @@ local math3d    = require "math3d"
 
 local function create_pbr_entity(pos, color, metallic, roughness)
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/sphere.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/base/sphere.glb/mesh.prefab",
         on_ready = function (e)
             local root<close> = world:entity(e.tag['*'][1], "scene:update")
             iom.set_position(root, pos)

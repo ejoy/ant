@@ -7,8 +7,8 @@ policy:
 data:
   visible_masks: main_view|selectable|cast_shadow
   visible: ture
-  material: /pkg/ant.test.features/asserts/glb/ground_01.glb|materials/Material.001.material
-  mesh: /pkg/ant.test.features/asserts/glb/ground_01.glb|meshes/Plane.007_P1.meshbin
+  material: /pkg/ant.test.features/asserts/glb/ground_01.glb/materials/Material.001.material
+  mesh: /pkg/ant.test.features/asserts/glb/ground_01.glb/meshes/Plane.007_P1.meshbin
   scene:
     r: {0, 0.7071068286895752, 0, -0.7071068286895752}
     s: {1.3333333730697632, 1, 1.3333333730697632}
