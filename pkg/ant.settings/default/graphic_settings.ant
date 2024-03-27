@@ -51,7 +51,8 @@ graphic:
       type: fix4
       size: 4
       filter: uniform
-    vsm:
-      depth_multiplier: 100
-      far_offset: 0
-      min_variance: 0.012
+    evsm:
+      exponents: {40, 5}
+      bias: 0.01
+      bleeding: 0.5
+      size: 3

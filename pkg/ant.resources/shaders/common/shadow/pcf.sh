@@ -3,6 +3,8 @@
 
 #include "common/shadow/define.sh"
 
+#define u_pcf_kernelsize		u_shadow_filter_param.x
+
 #ifndef USE_SHADOW_COMPARE
 #error "PCF4x4 need shadow2DProj work"
 #endif //USE_SHADOW_COMPARE
@@ -11,7 +13,7 @@
 #error "need define PCF_FILTER_SIZE"
 #endif //PCF_FILTER_SIZE
 
-float sample_shadow_compare_offset(sampler2DArrayShadow shadowsampler, vec4 shadowcoord, uint cascadeidx, vec2 offset)
+float sample_shadow_compare_offset(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint cascadeidx, vec2 offset)
 {
 	const vec4 coord = vec4(shadowcoord.xy + offset, shadowcoord.z, shadowcoord.w);
 	return sample_shadow_compare(shadowsampler, coord, cascadeidx);
@@ -76,7 +78,7 @@ float total_weight() {
 	return w;
 }
 
-float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord, uint cascadeidx)
+float fastPCF(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint cascadeidx)
 {
 	vec4 s = vec4_splat(0.0);
 	float depthlinear = shadowcoord.z;

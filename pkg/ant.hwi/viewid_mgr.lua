@@ -23,41 +23,42 @@ local function add_view(name, afterview_idx)
 	return id
 end
 
-add_view "csm_fb"		-- 0
+add_view "csm_fb"
 add_view "skinning"
 add_view "csm1"
 add_view "csm2"
 add_view "csm3"
-add_view "csm4"			-- 5
+add_view "csm4"
+add_view "evsm"
 add_view "ibl"
 add_view "pre_depth"
 add_view "scene_depth"
 add_view "ssao"
-add_view "main_view"	--10
+add_view "main_view"
 add_view "outline"
 add_view "velocity"
 --TODO: blur and bloom can merge?
 --blur
 add_view "blur_ds1"
 add_view "blur_ds2"
-add_view "blur_ds3"		--15
+add_view "blur_ds3"
 add_view "blur_ds4"
 add_view "blur_us1"
 add_view "blur_us2"
 add_view "blur_us3"
-add_view "blur_us4"		--20
+add_view "blur_us4"
 --bloom
 add_view "bloom_ds1"
 add_view "bloom_ds2"
 add_view "bloom_ds3"
 add_view "bloom_ds4"
-add_view "bloom_us1"	--25
+add_view "bloom_us1"
 add_view "bloom_us2"
 add_view "bloom_us3"
 add_view "bloom_us4"
 add_view "tonemapping"
 add_view "tonemapping_blit"
-add_view "effect_view"	--30
+add_view "effect_view"
 add_view "taa"
 add_view "taa_copy"
 add_view "taa_present"

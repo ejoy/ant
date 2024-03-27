@@ -1,58 +1,34 @@
 #ifndef __SHADOW_EVSM_SH__
 #define __SHADOW_EVSM_SH__
 
-#ifdef SM_VSM
-float VSM(
-	shadow_sampler_type _sampler,
-	vec4 _shadowCoord,
-	float _depthMultiplier, float _minVariance) 
-{
-	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
-	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
-				|| any(lessThan   (texCoord, vec2_splat(0.0)))
-				 ;
-
-	if (outside)
-	{
-		return 1.0;
-	}
-
-	float receiver = (_shadowCoord.z) / _shadowCoord.w * _depthMultiplier;
-	vec2  occluder = texture2D(_sampler, texCoord);
-	float depth    = occluder.x * _depthMultiplier;
-	float depthSq  = occluder.y * _depthMultiplier;
-	if (receiver > depth)
-	{
-		return 1.0;
-	}	
-	float variance = max(depth * depth - depthSq, _minVariance);
-	float d = depth - receiver;
-	float visibility = variance / (variance + d * d);
-	return visibility;
-}
-#endif //SM_VSM
-
 #ifdef SM_EVSM
-float ESM(
-	shadow_sampler_type _sampler,
-	vec4 _shadowCoord,
-	float _depthMultiplier) 
+#include "common/shadow/evsm_utils.sh"
+
+// float shadowEVSM(in float3 shadowPos, in float3 shadowPosDX,
+//                           in float3 shadowPosDY, uint cascadeIdx)
+
+#define u_shadow_filter_exponents	u_shadow_filter_param.xy
+#define u_shadow_filter_bias		u_shadow_filter_param.z
+#define u_shadow_filter_light_bleeding_reducation u_shadow_filter_param.w
+
+float shadowEVSM(shadow_sampler_type shadowsampler, vec4 shadowcoord, int cascadeidx)
 {
-	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
-	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
-				|| any(lessThan   (texCoord, vec2_splat(0.0)))
-				 ;
+    vec2 wd = warp_depth(shadowcoord.z, u_shadow_filter_exponents);
 
-	if (outside)
-	{
-		return 1.0;
-	}	
-	float receiver = (_shadowCoord.z + 0.005) / _shadowCoord.w;
+	vec4 occluder = texture2DArray(shadowsampler, vec3(shadowcoord.xy, cascadeidx));
 
-	float occluder = texture2D(_sampler, texCoord);	
+    // float4 occluder = ShadowMap.SampleGrad(shadowsampler, vec3(shadowcoord.xy, cascadeIdx),
+    //                                         shadowPosDX.xy, shadowPosDY.xy);
 
-	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
-	return visibility;
+    // Derivative of warping at depth
+    vec2 depthScale = u_shadow_filter_bias * 0.01 * u_shadow_filter_exponents * wd;
+    vec2 variance = depthScale * depthScale;
+
+	float p = ChebyshevUpperBound(occluder.xz, wd.x, variance.x, u_shadow_filter_light_bleeding_reducation);
+	float n = ChebyshevUpperBound(occluder.yw, wd.y, variance.y, u_shadow_filter_light_bleeding_reducation);
+	return min(p, n);
+
+    //return ChebyshevUpperBound(occluder.xy, wd.x, variance.x, u_shadow_filter_light_bleeding_reducation);
 }
 #endif //SM_EVSM
 

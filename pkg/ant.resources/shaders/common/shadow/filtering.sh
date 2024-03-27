@@ -20,7 +20,7 @@ float sample_visibility(vec4 shadowcoord, uint cascadeidx)
 #endif //SM_PCF
 
 #ifdef SM_EVSM
-	return ESM(s_shadowmap, shadowcoord, u_depthMultiplier, cascadeidx);
+	return shadowEVSM(s_shadowmap, shadowcoord, cascadeidx);
 #endif //SM_EVSM
 	return 0.0;
 }
