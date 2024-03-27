@@ -180,7 +180,6 @@ function m.register_new_rt()
     RENDER_ARG = irender.pack_render_arg(params.QUEUE_NAME,params.VIEWID)
 end
 
-
 function m.clear_prefab_cache()
     fbmgr.destroy_rb(params.DEFAULT_FB[1].rbidx, true)
     fbmgr.destroy_rb(params.DEFAULT_FB[2].rbidx, true)
@@ -284,12 +283,18 @@ function m.process_wait_queue()
     end
 
     local function set_camera_srt(prefab, name)
+        if prefab.camera_ready then return end
 
---[[         if prefab.camera_srt then
+        local objects, rotation, distance, camera_srt = prefab.objects, prefab.rotation, prefab.distance, prefab.camera_srt
+        
+        if prefab.camera_srt then
+            local select_tag = ("%s camera_ref:in"):format(params.QUEUE_NAME)
+            local mtq = w:first(select_tag)
+            local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+            iom.set_position(camera, camera_srt.t)
+            iom.set_rotation(camera, camera_srt.r)
             return
-        end ]]
-
-        local objects, rotation, distance = prefab.objects, prefab.rotation, prefab.distance
+        end
 
         local function calc_srt(camera_rot, aabb, distance)
             if not math3d.aabb_isvalid(aabb) then return end
@@ -298,7 +303,7 @@ function m.process_wait_queue()
             local r = get_diagonal_length(a, b, c) / params.DEFAULT_EXTENTS
             local view_dir = math3d.todirection(camera_rot)
             local view_len = params.DEFAULT_LENGTH * distance * r
-            local camera_pos = math3d.sub(origin_world_center, math3d.mul(view_dir, view_len))
+            local camera_pos = math3d.sub(math3d.vector(0,0,0), math3d.mul(view_dir, view_len))
             return camera_pos
         end
 
@@ -317,11 +322,8 @@ function m.process_wait_queue()
             local camera_pos = calc_srt(camera_rot, scene_aabb, distance)
             params.PREFABS[name].camera_srt = {r = math3d.mark(camera_rot), t = math3d.mark(camera_pos)}
             iom.set_position(camera, camera_pos)
-            iom.set_rotation(camera, camera_rot) 
+            iom.set_rotation(camera, camera_rot)
         end
-
---[[         local center, _ = math3d.aabb_center_extents(scene_aabb)
-        prefab.center = center ]]
     end
 
     local function set_objects_visible_state(prefab, state)
