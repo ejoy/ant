@@ -437,7 +437,7 @@ return function (status)
                                 flag    = "ra",
                                 layout  = "t45NIf|t46NIf|t47NIf",
                                 num     = 0,
-                                size    = 50,
+                                size    = 10,
                                 params  = {},
                             }
                         }

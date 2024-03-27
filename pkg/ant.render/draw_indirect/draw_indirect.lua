@@ -28,7 +28,7 @@ local function update_instance_buffer(e, instancememory, instancenum)
         create_indirect_buffer(ib.size)
     else
         if instancenum > ib.size then
-            ib.size = instancenum * 2
+            ib.size = instancenum
             bgfx.destroy(di.handle)
             create_indirect_buffer(ib.size)
         end
