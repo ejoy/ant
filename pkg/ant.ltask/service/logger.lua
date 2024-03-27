@@ -1,5 +1,6 @@
 local ltask = require "ltask"
 local platform = require "bee.platform"
+local dbg = require "bee.debugging"
 
 local S = {}
 
@@ -13,6 +14,19 @@ local LOG = (function ()
 			end
 		end
 	end
+	if dbg.is_debugger_present() then
+		if platform.os == "android" then
+			local android = require "android"
+			return function (level, data)
+				android.rawlog(level, "", data)
+			end
+		end
+		return function (_, data)
+			io.write(data)
+			io.write("\n")
+			io.flush()
+		end
+	end
 	if __ANT_RUNTIME__ then
 		local ServiceIO = ltask.queryservice "io"
 		local directory = require "directory"
@@ -23,37 +37,12 @@ local LOG = (function ()
 		if fs.exists(logfile) then
 			fs.rename(logfile, logpath .. "/game_1.log")
 		end
-		if platform.os == 'ios' then
-			return function (_, data)
-				ltask.send(ServiceIO, "SEND", "LOG", data)
-				local f <close> = io.open(logfile, "a+")
-				if f then
-					f:write(data)
-					f:write("\n")
-				end
-				io.write(data)
-				io.write("\n")
-				io.flush()
-			end
-		elseif platform.os == 'android' then
-			local android = require "android"
-			return function (level, data)
-				ltask.send(ServiceIO, "SEND", "LOG", data)
-				local f <close> = io.open(logfile, "a+")
-				if f then
-					f:write(data)
-					f:write("\n")
-				end
-				android.rawlog(level, "", data)
-			end
-		else
-			return function (_, data)
-				ltask.send(ServiceIO, "SEND", "LOG", data)
-				local f <close> = io.open(logfile, "a+")
-				if f then
-					f:write(data)
-					f:write("\n")
-				end
+		return function (_, data)
+			ltask.send(ServiceIO, "SEND", "LOG", data)
+			local f <close> = io.open(logfile, "a+")
+			if f then
+				f:write(data)
+				f:write("\n")
 			end
 		end
 	end

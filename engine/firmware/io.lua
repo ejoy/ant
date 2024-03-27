@@ -198,7 +198,7 @@ function S.READ(fullpath)
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
 	local dir = getlist(path)
 	if not dir then
-		LOG("[ERROR]", "Not exist path: " .. path)
+		LOG("[ERROR]", "Not exist path: " .. path .. " (" .. fullpath .. ")")
 		return
 	end
 	local v = dir[name]
