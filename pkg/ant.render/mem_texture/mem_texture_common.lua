@@ -303,7 +303,7 @@ function m.process_wait_queue()
             local r = get_diagonal_length(a, b, c) / params.DEFAULT_EXTENTS
             local view_dir = math3d.todirection(camera_rot)
             local view_len = params.DEFAULT_LENGTH * distance * r
-            local camera_pos = math3d.sub(math3d.vector(0,0,0), math3d.mul(view_dir, view_len))
+            local camera_pos = math3d.sub(math3d.vector(0, math3d.index(origin_world_center, 2), 0), math3d.mul(view_dir, view_len))
             return camera_pos
         end
 
