@@ -33,35 +33,62 @@ local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 local config = ...
 
 local LOG; do
-	local fs = require "bee.filesystem"
-	local AppPath
-	if platform.os == "ios" then
-		local ios = require "ios"
-		AppPath = fs.path(ios.directory(ios.NSDocumentDirectory)):string()
-	elseif platform.os == 'android' then
-		local android = require "android"
-		AppPath = fs.path(android.directory(android.ExternalDataPath)):string()
-	else
-		AppPath = fs.current_path():string()
-	end
-	local logfile = AppPath .. "/io_thread.log"
-	fs.create_directories(AppPath)
-	if fs.exists(logfile) then
-		fs.rename(logfile, AppPath .. "/io_thread_1.log")
-	end
-	local function LOGRAW(data)
-		io.write(data.."\n")
-		local f <close> = io.open(logfile, "a+")
-		if f then
-			f:write(data)
-			f:write("\n")
+	local LOGRAW = (function ()
+		if platform.os == 'windows' then
+			local windows = require "bee.windows"
+			if windows.isatty(io.stdout) then
+				return function (data)
+					windows.write_console(io.stdout, data)
+					windows.write_console(io.stdout, "\n")
+				end
+			end
+			return function (data)
+				io.write(data)
+				io.write("\n")
+			end
 		end
-	end
+		local dbg = require "bee.debugging"
+		if dbg.is_debugger_present() then
+			if platform.os == "android" then
+				local android = require "android"
+				return function (data)
+					android.rawlog("info", "", data)
+				end
+			end
+			return function (data)
+				io.write(data)
+				io.write("\n")
+			end
+		end
+		local fs = require "bee.filesystem"
+		local AppPath
+		if platform.os == "ios" then
+			local ios = require "ios"
+			AppPath = fs.path(ios.directory(ios.NSDocumentDirectory)):string()
+		elseif platform.os == "android" then
+			local android = require "android"
+			AppPath = fs.path(android.directory(android.ExternalDataPath)):string()
+		else
+			AppPath = fs.current_path():string()
+		end
+		local logfile = AppPath .. "/io_thread.log"
+		fs.create_directories(AppPath)
+		if fs.exists(logfile) then
+			fs.rename(logfile, AppPath .. "/io_thread_1.log")
+		end
+		return function (data)
+			local f <close> = io.open(logfile, "a+")
+			if f then
+				f:write(data)
+				f:write("\n")
+			end
+		end
+	end)()
 
 	local origin = os.time() - os.clock()
 	local function os_date(fmt)
 		local ti, tf = math.modf(origin + os.clock())
-		return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
+		return os.date(fmt, ti):gsub('{ms}', ('%02d'):format(math.floor(tf*100)))
 	end
 	local function round(x, increment)
 		increment = increment or 1
@@ -81,7 +108,7 @@ local LOG; do
 	end
 	function LOG(...)
 		local info = debug.getinfo(2, 'Sl')
-		local text = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
+		local text = ('[%s][IO   ](%s:%d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
 		LOGRAW(text)
 	end
 end

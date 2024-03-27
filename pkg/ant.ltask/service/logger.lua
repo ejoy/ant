@@ -1,11 +1,10 @@
 local ltask = require "ltask"
 local platform = require "bee.platform"
-local dbg = require "bee.debugging"
 
 local S = {}
 
 local LOG = (function ()
-	if platform.os == 'windows' then
+	if platform.os == "windows" then
 		local windows = require "bee.windows"
 		if windows.isatty(io.stdout) then
 			return function (_, data)
@@ -13,7 +12,13 @@ local LOG = (function ()
 				windows.write_console(io.stdout, "\n")
 			end
 		end
+		return function (_, data)
+			io.write(data)
+			io.write("\n")
+			io.flush()
+		end
 	end
+	local dbg = require "bee.debugging"
 	if dbg.is_debugger_present() then
 		if platform.os == "android" then
 			local android = require "android"
