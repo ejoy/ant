@@ -141,7 +141,6 @@ local ltask_config = {
 				unique = true,
 				initfunc = [[return loadfile "/engine/firmware/io.lua"]],
 				args = { config },
-				worker_id = 3,
 			},
 			{
 				name = "ant.ltask|timer",

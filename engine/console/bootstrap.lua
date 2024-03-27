@@ -18,7 +18,6 @@ boot:start {
                 unique = true,
                 initfunc = [[return loadfile "/engine/console/io.lua"]],
                 args = { entry:parent_path():string(), __ANT_EDITOR__ },
-                worker_id = 3,
             },
             {
                 name = "ant.ltask|timer",
