@@ -5,19 +5,7 @@ local bgfx = require "bgfx"
 local serialize = import_package "ant.serialize"
 local iatlas = {}
 
-function iatlas.collect_sub_files(atlas)
-    local files = {}
-    for p in fs.pairs(atlas.rpath) do
-        if p:equal_extension ".png" then
-            files[#files + 1] = p
-        end
-    end
-    atlas.files = files
-end
-
 function iatlas.generate_atlas_file(atlas)
-    local file_rpath = string.format("%s/%s.png", atlas.rpath, atlas.name and atlas.name or "atlas")
-    local file_vpath = string.format("%s/%s.png", atlas.vpath, atlas.name and atlas.name or "atlas")
     local storageSize = 4 * atlas.w * atlas.h
     local info = {
         format          = "RGBA8",
@@ -46,7 +34,7 @@ function iatlas.generate_atlas_file(atlas)
         colorspace = "sRGB",
         noresize = true,
         normalmap = false,
-        path = file_vpath,
+        path = atlas.ivpath,
         sampler = {
             MAG = "LINEAR",
             MIN = "LINEAR",
@@ -55,30 +43,22 @@ function iatlas.generate_atlas_file(atlas)
         },
         type = "texture",
     }
-    local texture_rpath = string.format("%s/%s.texture", atlas.trpath, atlas.name and atlas.name or "atlas")
-    local texture_vpath = string.format("%s/%s.texture", atlas.tvpath, atlas.name and atlas.name or "atlas")
-    atlas.file_path, atlas.texture_vpath, atlas.info, atlas.config = file_rpath, texture_vpath, info, config
-    local atlas_memory = bgfx.memory_buffer(storageSize)
+    atlas.info, atlas.config = info, config
+    local atlas_memory = bgfx.memory_buffer(('\0'):rep(storageSize))
     local content = image.encode_image(info, atlas_memory, config)
-    local fa <close> = assert(io.open(file_rpath, "wb"))
+    local fa <close> = assert(io.open(atlas.irpath, "wb"))
 	fa:write(content)
-    local ft <close> = assert(io.open(texture_rpath, "wb"))
+    local ft <close> = assert(io.open(atlas.trpath, "wb"))
     ft:write(serialize.stringify(texture_content)) 
 end
 
 function iatlas.clip_sub_rects(atlas)
-    local rects = {}
-    for _, file in ipairs(atlas.files) do
-        local tt = {}
-        local path = file:string()
+    for _, rect in ipairs(atlas.rects) do
+        local path = rect.irpath
         local c = fastio.readall_f(path)
-        tt.name = string.match(path, "%w/([%w%-%_]+).png")
-        tt.rpath = path
-        tt.vpath = string.format("%s/%s.png", atlas.vpath, tt.name)
-        tt.w, tt.h, tt.dx, tt.dy, tt.dw, tt.dh = image.png.cliprect(c)
-        rects[#rects+1] = tt
+        rect.name = string.match(path, "%w/([%w%-%_]+).png")
+        rect.w, rect.h, rect.dx, rect.dy, rect.dw, rect.dh = image.png.cliprect(c)
     end
-    atlas.rects = rects
 end
 
 function iatlas.pack_sub_rects(atlas, need_sort)
@@ -125,7 +105,6 @@ function iatlas.generate_sub_atlas(atlas)
     local rects = atlas.rects
     for _, rect in ipairs(rects) do
         if rect.was_packed then
-            local texture_rpath = string.format("%s/%s.atlas", atlas.trpath, rect.name)
             local texture_content = {
                 atlas = {
                     rect = {
@@ -138,33 +117,30 @@ function iatlas.generate_sub_atlas(atlas)
                         dw = rect.dw,
                         dh = rect.dh
                     },
-                    path = atlas.texture_vpath
+                    path = atlas.tvpath
                 }
             }
-            local f <close> = assert(io.open(texture_rpath, "wb"))
+            local f <close> = assert(io.open(rect.arpath, "wb"))
             f:write(serialize.stringify(texture_content)) 
         end  
     end
 end
 
 function iatlas.update_atlas_file(atlas)
-    local file_path = atlas.file_path
-    local _, atlas_memory = image.parse(fastio.readall_f(file_path), "true")
+    local _, atlas_memory = image.parse(fastio.readall_f(atlas.irpath), "true")
     for _, rect in ipairs(atlas.rects) do
-        local _, rect_memory = image.parse(fastio.readall_f(rect.rpath), "true")
+        local _, rect_memory = image.parse(fastio.readall_f(rect.irpath), "true")
         if rect.was_packed then
             image.png.updateAtlas(atlas_memory, rect_memory, rect.x, rect.y, rect.dx, rect.dy, rect.dw, rect.dh, rect.w, atlas.w) 
         end
     end
     local content = image.encode_image(atlas.info, bgfx.memory_buffer(atlas_memory), atlas.config)
-    local f <close> = assert(io.open(file_path, "w+b"))
+    local f <close> = assert(io.open(atlas.irpath, "w+b"))
     f:write(content)
 
 end
 
 function iatlas.set_atlas(atlas)
-
-    iatlas.collect_sub_files(atlas)
 
     iatlas.generate_atlas_file(atlas)
 
