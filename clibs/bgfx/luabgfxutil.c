@@ -107,7 +107,7 @@ parse_level(const char *format) {
 static void
 bgfx_pushlog(struct context* context, const char *file, uint16_t line, const char *format, va_list ap) {
     char tmp[MAX_LOGBUFFER];
-    int n = sprintf(tmp, "(%s:%d) ", file, line);
+    int n = sprintf(tmp, "( bgfx )(%s:%d) ", file, line);
     n += vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
     if (n > MAX_LOGBUFFER) {
             // truncated

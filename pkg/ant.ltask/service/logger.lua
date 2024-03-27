@@ -7,25 +7,21 @@ local command = {}
 local tasks = {}
 
 local builtin <const> = {
-	[0] = "system",
-	[0x62676678] = "bgfx",
+	[0] = "( system )",
+	[0x62676678] = "( bgfx )",
 }
 
-local function querylabel(id)
+local function service(id)
 	if not id then
-		return "unknown"
+		return "( unknown )"
 	end
 	if builtin[id] then
 		return builtin[id]
 	end
 	if lables[id] then
-		return lables[id]
+		return ("( %s )"):format(lables[id])
 	end
-	return ("(unknown:%x)"):format(id)
-end
-
-local function service(id)
-	return ("(%s:%d)"):format(querylabel(id), id)
+	return ("( unknown:%x )"):format(id)
 end
 
 function command.startup(id, label)
@@ -125,7 +121,7 @@ local function writelog()
 		message = string.gsub(message, "%$%{([^}]*)%}", function (s)
 			return parse(id, s)
 		end)
-		LOG(level, string.format("[%s.%02d][%-5s]( %s )%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, level:upper(), querylabel(id), message))
+		LOG(level, string.format("[%s.%02d][%-5s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, level:upper(), message))
 	end
 end
 
@@ -138,10 +134,6 @@ end)
 
 function S.quit()
 	writelog()
-end
-
-function S.labels()
-	return lables
 end
 
 return S
