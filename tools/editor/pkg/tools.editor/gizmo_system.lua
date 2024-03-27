@@ -342,17 +342,17 @@ local function create_billboard(material)
 end
 local sorted_draw = {}
 local function create_navi_axis(scene)
-	sorted_draw[#sorted_draw + 1] = {tp = {0.5,0,0}, pos = math3d.ref(math3d.vector(0.5,0,0)), name = "px", active_eid = 1,
+	sorted_draw[#sorted_draw + 1] = {tp = {0.5,0,0}, pos = math3d.ref(math3d.vector(0.5,0,0)), euler = {0, math.rad(-90), 0}, active_eid = 1,
 		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_px.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hpx.material")}}
-	sorted_draw[#sorted_draw + 1] = {tp = {-0.5,0,0}, pos = math3d.ref(math3d.vector(-0.5,0,0)), name = "nx", active_eid = 1,
+	sorted_draw[#sorted_draw + 1] = {tp = {-0.5,0,0}, pos = math3d.ref(math3d.vector(-0.5,0,0)), euler = {0, math.rad(90), 0}, active_eid = 1,
 		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_nx.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hnx.material")}}
-	sorted_draw[#sorted_draw + 1] = {tp = {0,0.5,0}, pos = math3d.ref(math3d.vector(0,0.5,0)), name = "py", active_eid = 1,
+	sorted_draw[#sorted_draw + 1] = {tp = {0,0.5,0}, pos = math3d.ref(math3d.vector(0,0.5,0)), euler = {math.rad(89), 0, 0}, active_eid = 1,
 		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_py.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hpy.material")}}
-	sorted_draw[#sorted_draw + 1] = {tp = {0,-0.5,0}, pos = math3d.ref(math3d.vector(0,-0.5,0)), name = "ny", active_eid = 1,
+	sorted_draw[#sorted_draw + 1] = {tp = {0,-0.5,0}, pos = math3d.ref(math3d.vector(0,-0.5,0)), euler = {math.rad(-85), 0, 0}, active_eid = 1,
 		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_ny.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hny.material")}}
-	sorted_draw[#sorted_draw + 1] = {tp = {0,0,0.5}, pos = math3d.ref(math3d.vector(0,0,0.5)), name = "pz", active_eid = 1,
+	sorted_draw[#sorted_draw + 1] = {tp = {0,0,0.5}, pos = math3d.ref(math3d.vector(0,0,0.5)), euler = {0, math.rad(180), 0}, active_eid = 1,
 		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_pz.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hpz.material")}}
-	sorted_draw[#sorted_draw + 1] = {tp = {0,0,-0.5}, pos = math3d.ref(math3d.vector(0,0,-0.5)), name = "nz", active_eid = 1,
+	sorted_draw[#sorted_draw + 1] = {tp = {0,0,-0.5}, pos = math3d.ref(math3d.vector(0,0,-0.5)), euler = {0, 0, 0}, active_eid = 1,
 		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_nz.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hnz.material")}}
 	
 	local axis_parent = world:create_entity {
@@ -1170,7 +1170,7 @@ local function navi_view_hit_test(x, y)
 	for _, it in ipairs(sorted_draw) do
 		if dist_to(nx, ny, it.tp[1], it.tp[2]) <= 20 then
 			it.active_eid = 2
-			return it.name
+			return it.euler
 		end
 	end
 end
@@ -1263,24 +1263,10 @@ local event_mouse_down	= world:sub {"mousedown"}
 local event_mouse_up	= world:sub {"mouseup"}
 local event_keypress	= world:sub {"keyboard"}
 local vr_mb 			= world:sub {"view_rect_changed", "main_queue"}
-local function on_click_navi_axis(name)
+local function on_click_navi_axis(euler)
 	local mq = w:first("main_queue camera_ref:in")
 	local ce <close> = world:entity(mq.camera_ref)
-	local rotation
-	if name == "px" then
-		rotation = math3d.quaternion({0, math.rad(-90), 0})
-	elseif name == "nx" then
-		rotation = math3d.quaternion({0, math.rad(90), 0})
-	elseif name == "py" then
-		rotation = math3d.quaternion({90, 0, 0})
-	elseif name == "ny" then
-		rotation = math3d.quaternion({-90, 0, 0})
-	elseif name == "pz" then
-		rotation = math3d.quaternion({0, math.rad(180), 0})
-	elseif name == "nz" then
-		rotation = math3d.quaternion({0, 0, 0})
-	end
-	iom.set_rotation(ce, rotation)
+	iom.set_rotation(ce, math3d.quaternion(euler))
 end
 function gizmo_sys:handle_input()
 	for _, _, _ in vr_mb:unpack() do
@@ -1296,9 +1282,9 @@ function gizmo_sys:handle_input()
 	for _, what, x, y in event_mouse_down:unpack() do
 		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
-			local name = navi_view_hit_test(x, y)
-			if name then
-				on_click_navi_axis(name)
+			local euler = navi_view_hit_test(x, y)
+			if euler then
+				on_click_navi_axis(euler)
 			else
 				gizmo_seleted = gizmo:select_gizmo(x, y)
 				gizmo:click_axis_or_plane(move_axis)
