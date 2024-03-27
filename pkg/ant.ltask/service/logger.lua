@@ -2,76 +2,36 @@ local ltask = require "ltask"
 local platform = require "bee.platform"
 
 local S = {}
-local lables = {}
-local command = {}
-local tasks = {}
 
-local builtin <const> = {
-	[0] = "( system )",
-	[0x62676678] = "( bgfx )",
-}
-
-local function service(id)
-	if not id then
-		return "( unknown )"
-	end
-	if builtin[id] then
-		return builtin[id]
-	end
-	if lables[id] then
-		return ("( %s )"):format(lables[id])
-	end
-	return ("( unknown:%x )"):format(id)
-end
-
-function command.startup(id, label)
-	lables[id] = label
-	return service(id) .. " startup."
-end
-
-function command.quit(id)
-	tasks[#tasks+1] = function ()
-		lables[id] = nil
-	end
-	return service(id) .. " quit."
-end
-
-function command.service(_, id)
-	id = tonumber(id)
-	return service(id)
-end
-
-local function parse(id, s)
-	local name, args = s:match "^([^:]*):(.*)$"
-	if not name then
-		name = s
-		args = nil
-	end
-	local f = command[name]
-	if f then
-		return f(id, args)
-	end
-	return s
-end
-
-local LOG_ERROR = (function ()
-	if platform.os == 'ios' then
-		return function (data)
+local LOG = (function ()
+	if platform.os == "windows" then
+		local windows = require "bee.windows"
+		if windows.isatty(io.stdout) then
+			return function (_, data)
+				windows.write_console(io.stdout, data)
+				windows.write_console(io.stdout, "\n")
+			end
+		end
+		return function (_, data)
 			io.write(data)
 			io.write("\n")
 			io.flush()
 		end
-	elseif platform.os == 'android' then
-		local android = require "android"
-		return function (data)
-			android.rawlog("error", "", data)
+	end
+	local dbg = require "bee.debugging"
+	if dbg.is_debugger_present() then
+		if platform.os == "android" then
+			local android = require "android"
+			return function (level, data)
+				android.rawlog(level, "", data)
+			end
+		end
+		return function (_, data)
+			io.write(data)
+			io.write("\n")
+			io.flush()
 		end
 	end
-	return function (_)
-	end
-end)()
-
-local LOG = (function ()
 	if __ANT_RUNTIME__ then
 		local ServiceIO = ltask.queryservice "io"
 		local directory = require "directory"
@@ -82,23 +42,12 @@ local LOG = (function ()
 		if fs.exists(logfile) then
 			fs.rename(logfile, logpath .. "/game_1.log")
 		end
-		return function (level, data)
+		return function (_, data)
 			ltask.send(ServiceIO, "SEND", "LOG", data)
 			local f <close> = io.open(logfile, "a+")
 			if f then
 				f:write(data)
 				f:write("\n")
-			end
-			if level == "error" then
-				LOG_ERROR(data)
-			end
-		end
-	elseif platform.os == 'windows' then
-		local windows = require "bee.windows"
-		if windows.isatty(io.stdout) then
-			return function (_, data)
-				windows.write_console(io.stdout, data)
-				windows.write_console(io.stdout, "\n")
 			end
 		end
 	end
@@ -111,16 +60,13 @@ end)()
 
 local function writelog()
 	while true do
-		local ti, id, msg, sz = ltask.poplog()
+		local ti, _, msg, sz = ltask.poplog()
 		if ti == nil then
 			break
 		end
 		local tsec = ti // 100
 		local msec = ti % 100
 		local level, message = ltask.unpack_remove(msg, sz)
-		message = string.gsub(message, "%$%{([^}]*)%}", function (s)
-			return parse(id, s)
-		end)
 		LOG(level, string.format("[%s.%02d][%-5s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, level:upper(), message))
 	end
 end

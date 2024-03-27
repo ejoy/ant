@@ -28,8 +28,6 @@ while true do
 	i = i + 1
 end
 
-__ANT_RUNTIME__ = true
-
 local platform = require "bee.platform"
 local fs = require "bee.filesystem"
 
