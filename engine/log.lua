@@ -12,41 +12,45 @@ local COLOR <const> = {
     error = "\x1b[31m",
 }
 
-local levels = {}
+local SupportColor <const> = not __ANT_RUNTIME__ --TODO
+local ServiceName <const> = ltask.label()
 
 local function round(x, increment)
-    increment = increment or 1
     x = x / increment
     return (x > 0 and math.floor(x + 0.5) or math.ceil(x - 0.5)) * increment
 end
 
 local function packstring(...)
-    local t = {}
-    for i = 1, select('#', ...) do
-        local x = select(i, ...)
+    local t = table.pack(...)
+    for i = 1, t.n do
+        local x = t[i]
         if math.type(x) == 'float' then
             x = round(x, 0.01)
         end
-        t[#t + 1] = tostring(x)
+        t[i] = tostring(x)
     end
     return table.concat(t, '\t')
 end
 
-local label = ltask.label()
 
 local m = {}
+
 m.level = __ANT_RUNTIME__ and 'debug' or 'info'
+
+local levels = {}
+
 for i, level in ipairs(LEVELS) do
     levels[level] = i
+    local fmt = ('( %s )(%%s:%%d) %%s'):format(ServiceName)
+    if SupportColor and COLOR[level] then
+        fmt = COLOR[level] .. fmt .. '\x1b[0m'
+    end
     m[level] = function (...)
         if i < levels[m.level] then
             return
         end
         local info = debug.getinfo(2, 'Sl')
-        local message = ('( %s )(%s:%d) %s'):format(label, info.short_src, info.currentline, packstring(...))
-        if not __ANT_RUNTIME__ and COLOR[level] then
-            message = COLOR[level]..message.."\x1b[0m"
-        end
+        local message = fmt:format(info.short_src, info.currentline, packstring(...))
         ltask.pushlog(ltask.pack(level, message))
     end
 end
