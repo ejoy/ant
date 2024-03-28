@@ -34,9 +34,9 @@ local LOG = (function ()
 	end
 	if __ANT_RUNTIME__ then
 		local ServiceIO = ltask.queryservice "io"
-		local directory = require "directory"
+		local engine = import_package "ant.engine"
 		local fs = require "bee.filesystem"
-		local logpath = directory.app_path():string()
+		local logpath = engine.app_path():string()
 		local logfile = logpath .. "/game.log"
 		fs.create_directories(logpath)
 		if fs.exists(logfile) then

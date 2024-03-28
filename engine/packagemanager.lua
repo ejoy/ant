@@ -1,7 +1,6 @@
 --TODO: remove they
 require "log"
 require "filesystem"
-require "directory"
 
 local vfs = require "vfs"
 local fastio = require "fastio"

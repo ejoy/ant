@@ -7,9 +7,9 @@ if not dbg then
     return
 end
 
-local directory = require "directory"
+local engine = import_package "ant.engine"
 local lfs = require "bee.filesystem"
-local LogDir = directory.app_path()
+local LogDir = engine.app_path()
 lfs.create_directories(LogDir)
 
 local world = ecs.world
