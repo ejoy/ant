@@ -23,7 +23,7 @@ end
 
 local function readall(path)
 	local fastio = require "fastio"
-	local mem = vfs.read(path)
+	local mem = vfs.read(path) or error(("`read `%s` failed."):format(path))
 	return fastio.tostring(mem)
 end
 
