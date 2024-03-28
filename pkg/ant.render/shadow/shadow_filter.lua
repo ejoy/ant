@@ -56,18 +56,22 @@ local EVSM_RESOLVER<const>, EVSM_H<const>, EVSM_V<const> = 1, 2, 3
 
 local EVSM_STEPS = {}
 local last_viewidname = "evsm"
+
+local function gen_viewid(basename, idx)
+    local name = basename .. idx
+    local viewid = hwi.viewid_get(name)
+    if not viewid then
+        viewid = hwi.viewid_generate(name, last_viewidname)
+    end
+    
+    last_viewidname = name
+    return name, viewid
+end
+
 for i=1, SPLIT_NUM do
-    local resolver_name = "evsm_resolver" .. i
-    local resolver_viewid = hwi.viewid_generate(resolver_name, last_viewidname)
-    last_viewidname = resolver_name
-
-    local blurh_name = "evsm_blurh" .. i
-    local blurh_viewid = hwi.viewid_generate(blurh_name, last_viewidname)
-    last_viewidname = blurh_name
-
-    local blurv_name = "evsm_blurv" .. i
-    local blurv_viewid = hwi.viewid_generate(blurv_name, last_viewidname)
-    last_viewidname = blurv_name
+    local resolver_name, resolver_viewid = gen_viewid("evsm_resolver", i)
+    local blurh_name, blurh_viewid = gen_viewid("evsm_blurh", i)
+    local blurv_name, blurv_viewid = gen_viewid("evsm_blurv", i)
 
     EVSM_STEPS[#EVSM_STEPS+1] = {
         [EVSM_RESOLVER] = {
