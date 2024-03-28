@@ -13,13 +13,14 @@ local function add_view(name, afterview_idx)
 		error(("not enough view id, max viewid: %d"):format(MAX_VIEWID))
 	end
 
-	local real_id = (afterview_idx and afterview_idx+1 or id)
-
 	BINDINGS[name] = id
 	VIEWID_NAMES[id] = name
 
 	assert(#REMAPPING_LIST == id)
-	table.insert(REMAPPING_LIST, real_id+1, id)
+
+	local insert_idx = (afterview_idx or id)
+	--+1 for insert after
+	table.insert(REMAPPING_LIST, insert_idx+1, id)
 	return id
 end
 
@@ -76,17 +77,22 @@ add_view "uiruntime"
 
 local remapping_need_update = true
 
-function mgr.generate(name, afterwho, count)
-	local _ = nil == mgr.get(name) or error (("%s already defined"):format(name))
-
-	count = count or 1
-	local viewid = add_view(name, mgr.get(afterwho))
-	for i=2, count do
-		add_view(name, viewid)
+local function find_remapping_idx(who)
+	if who then
+		local afterid = mgr.get(who)
+		for idx, id in ipairs(REMAPPING_LIST) do
+			if id == afterid then
+				return idx
+			end
+		end
 	end
+end
 
+function mgr.generate(name, afterwho)
+	local _ = nil == mgr.get(name) or error (("%s already defined"):format(name))
 	remapping_need_update = true
-	return viewid
+
+	return add_view(name, find_remapping_idx(afterwho))
 end
 
 function mgr.get(name)

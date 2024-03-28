@@ -40,6 +40,10 @@ local EVSM_RESOLVER<const>, EVSM_H<const>, EVSM_V<const> = 1, 2, 3
 local EVSM_STEPS = {}
 local last_viewidname = "evsm"
 for i=1, SPLIT_NUM do
+    local resolver_name = "evsm_resolver" .. i
+    local resolver_viewid = hwi.viewid_generate(resolver_name, last_viewidname)
+    last_viewidname = resolver_name
+
     local blurh_name = "evsm_blurh" .. i
     local blurh_viewid = hwi.viewid_generate(blurh_name, last_viewidname)
     last_viewidname = blurh_name
@@ -47,10 +51,6 @@ for i=1, SPLIT_NUM do
     local blurv_name = "evsm_blurv" .. i
     local blurv_viewid = hwi.viewid_generate(blurv_name, last_viewidname)
     last_viewidname = blurv_name
-
-    local resolver_name = "evsm_resolver" .. i
-    local resolver_viewid = hwi.viewid_generate(resolver_name, last_viewidname)
-    last_viewidname = resolver_name
 
     EVSM_STEPS[#EVSM_STEPS+1] = {
         [EVSM_RESOLVER] = {
@@ -91,7 +91,7 @@ local function create_queue(name, viewid, fbidx)
     }
 end
 
-local function create_drawer(material, onready)
+local function create_drawer(material, inputhandle, param)
     return world:create_entity{
         policy = {
             "ant.render|simplerender",
@@ -100,12 +100,16 @@ local function create_drawer(material, onready)
             mesh_result = irender.full_quad(),
             material    = material,
             scene       = {},
-            on_ready    = onready,
+            on_ready    = function (e)
+                imaterial.set_property(e, "s_input", inputhandle)
+                imaterial.set_property(e, "u_filter_param", param)
+            end
         }
     }
 end
 
-local S         = ecs.system "shadow_filter_system"
+local S = ecs.system "shadow_filter_system"
+
 function S:init()
     for _, s in ipairs(EVSM_STEPS) do
         for _, t in ipairs(s) do
@@ -167,24 +171,15 @@ function S:init_world()
         local inputhandle = fbmgr.get_rb(e.render_target.fb_idx, 1).handle
 
         local resolver = step[EVSM_RESOLVER]
-        resolver.drawereid = create_drawer(resolver.material, function (e)
-            imaterial.set_property(e, "s_input", inputhandle)
-            imaterial.set_property(e, "u_filter_param", math3d.vector(index, 0, EVSM_EXPONENTS[1], EVSM_EXPONENTS[2]))
-        end)
+        resolver.drawereid = create_drawer(resolver.material, inputhandle, math3d.vector(index, 0, EVSM_EXPONENTS[1], EVSM_EXPONENTS[2]))
         resolver.queueeid = create_queue(resolver.queuename, resolver.viewid, create_fb(evsm_texture, index))
 
         local blurH = step[EVSM_H]
-        blurH.drawereid = create_drawer(blurH.material, function (e)
-            imaterial.set_property(e, "s_input", evsm_texture)
-            imaterial.set_property(e, "u_filter_param", math3d.vector(index, EVSM_KERNELSIZE, SMSIZE, 0))
-        end)
+        blurH.drawereid = create_drawer(blurH.material, evsm_texture, math3d.vector(index, EVSM_KERNELSIZE, SMSIZE, 0))
         blurH.queueeid = create_queue(blurH.queuename, blurH.viewid, create_fb(blur_temp, index))
 
         local blurV = step[EVSM_V]
-        blurV.drawereid = create_drawer(blurH.material, function (e)
-            imaterial.set_property(e, "s_input", blur_temp)
-            imaterial.set_property(e, "u_filter_param", math3d.vector(index, EVSM_KERNELSIZE, SMSIZE, 0))
-        end)
+        blurV.drawereid = create_drawer(blurH.material, blur_temp, math3d.vector(index, EVSM_KERNELSIZE, SMSIZE, 0))
         blurV.queueeid = create_queue(blurV.queuename, blurV.viewid, create_fb(evsm_texture, index))
     end
 
