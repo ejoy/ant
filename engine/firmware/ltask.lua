@@ -77,6 +77,10 @@ function vfs.repopath()
 	return call("REPOPATH")
 end
 
+--TODO: remove they
+require "log"
+require "filesystem"
+
 local pm = require "packagemanager"
 local package, file = name:match "^([^|]*)|(.*)$"
 if not package or not file then

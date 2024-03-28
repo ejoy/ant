@@ -140,6 +140,10 @@ function S.REPOPATH()
 end
 
 function S.RESOURCE_SETTING(setting)
+	--TODO: remove they
+	require "log"
+	require "filesystem"
+
 	require "packagemanager"
 	local cr = import_package "ant.compile_resource"
 	local config = cr.init_setting(tiny_vfs, setting)
