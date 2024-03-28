@@ -77,11 +77,11 @@ function vfs.repopath()
 	return call("REPOPATH")
 end
 
+local pm = require "packagemanager"
 local package, file = name:match "^([^|]*)|(.*)$"
 if not package or not file then
 	return loadfile(name)
 end
-local pm = require "packagemanager"
 return pm.loadenv(package).loadfile("service/"..file..".lua")
 
 ]]

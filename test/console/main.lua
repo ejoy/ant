@@ -1,6 +1,3 @@
-package.path = "/engine/?.lua"
-require "bootstrap"
-
 print "Hello World"
 
 local arg = ...
