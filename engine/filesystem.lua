@@ -135,21 +135,21 @@ function fs.is_directory(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    return vfs.type(path) == "dir"
+    return vfs.type(path) == "d"
 end
 
 function fs.is_regular_file(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    return vfs.type(path) ~= "dir"
+    return vfs.type(path) ~= "d"
 end
 
 local status_mt = {}
 status_mt.__index = status_mt
 
 function status_mt:is_directory()
-    local file_type = self[1].type
+    local file_type = self[1]
     return file_type == "d" or file_type == "r"
 end
 

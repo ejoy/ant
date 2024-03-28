@@ -173,7 +173,7 @@ end
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-local function getlist(fullpath)
+local function getdir(fullpath)
 	if repo.root == nil then
 		ltask.multi_wait "ROOT"
 	end
@@ -199,31 +199,39 @@ end
 local S = {}
 
 function S.LIST(fullpath)
-	return getlist(fullpath)
+	local dir = getdir(fullpath)
+	if not dir then
+		return {}
+	end
+	local list = {}
+	for k, v in pairs(list) do
+		list[k] = v.type
+	end
+	return list
 end
 
 function S.TYPE(fullpath)
 	if fullpath == "/" then
-		return "dir"
+		return "d"
 	end
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	local dir = getlist(path)
+	local dir = getdir(path)
 	if not dir then
 		return
 	end
 	local v = dir[name]
 	if not v then
 		return
-	elseif v.type == 'f' then
-		return "file"
+	elseif v.type == "f" then
+		return "f"
 	else
-		return "dir"
+		return "d"
 	end
 end
 
 function S.READ(fullpath)
 	local path, name = fullpath:match "^(.*/)([^/]*)$"
-	local dir = getlist(path)
+	local dir = getdir(path)
 	if not dir then
 		LOG("[ERROR]", "Not exist path: " .. path .. " (" .. fullpath .. ")")
 		return
@@ -288,7 +296,7 @@ function NETWORK.ROOT(hash)
 	LOG("[response] ROOT", hash)
 	local resources = repo:init(hash)
 	for path in pairs(resources) do
-		ltask.fork(getlist, path)
+		ltask.fork(getdir, path)
 	end
 	ltask.multi_wakeup "ROOT"
 end

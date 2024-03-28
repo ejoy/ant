@@ -112,11 +112,11 @@ function S.LIST(pathname)
 		local dir = {}
 		for _, c in ipairs(file.dir) do
 			if c.dir then
-				dir[c.name] = { type = "d" }
+				dir[c.name] = "d"
 			elseif c.path then
-				dir[c.name] = { type = "f" }
+				dir[c.name] = "f"
 			elseif c.resource then
-				dir[c.name] = { type = "r" }
+				dir[c.name] = "r"
 			end
 		end
 		return dir
@@ -127,11 +127,11 @@ function S.TYPE(pathname)
 	local file = getfile(pathname)
 	if file then
 		if file.dir then
-			return "dir"
+			return "d"
 		elseif file.path then
-			return "file"
+			return "f"
 		elseif file.resource then
-			return "dir"
+			return "d"
 		end
 	end
 end

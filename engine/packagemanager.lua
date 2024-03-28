@@ -102,7 +102,7 @@ end
 local function loadenv(name)
     local env = registered[name]
     if not env then
-        if vfs.type("/pkg/"..name) ~= 'dir' then
+        if vfs.type("/pkg/"..name) ~= "d" then
             error(('`/pkg/%s` is not a directory.'):format(name))
         end
         env = sandbox_env(name)

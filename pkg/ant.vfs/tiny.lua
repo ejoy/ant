@@ -64,9 +64,9 @@ return function (repopath)
             local dir = {}
             for _, c in ipairs(file.dir) do
                 if c.dir then
-                    dir[c.name] = { type = "d" }
+                    dir[c.name] = "d"
                 elseif c.path then
-                    dir[c.name] = { type = "f" }
+                    dir[c.name] = "f"
                 end
             end
             return dir
@@ -76,9 +76,9 @@ return function (repopath)
         local file = repo:file(pathname)
         if file then
             if file.dir then
-                return "dir"
+                return "d"
             elseif file.path then
-                return "file"
+                return "f"
             end
         end
     end
