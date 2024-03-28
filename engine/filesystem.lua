@@ -2,17 +2,11 @@ local lfs = require "bee.filesystem"
 local vfs = require "vfs"
 
 local path_mt = {}
-path_mt.__name = 'vfs-filesystem'
+path_mt.__name = "vfs-filesystem"
 path_mt.__index = path_mt
 
 local function constructor(str)
-    if str == nil then
-        return setmetatable({_value = "" }, path_mt)
-    end
-    if type(str) == "string" then
-        return setmetatable({_value = str }, path_mt)
-    end
-    return setmetatable({_value = str._value }, path_mt)
+    return setmetatable({ _value = str or "" }, path_mt)
 end
 
 local function normalize(fullname)
@@ -22,35 +16,39 @@ local function normalize(fullname)
     local first = (fullname:sub(1, 1) == "/") and "/" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
-	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
-		if m == ".." and next(t) then
-			table.remove(t, #t)
+	for m in fullname:gmatch "([^/]+)/?" do
+		if m == ".." and #t > 0 then
+			t[#t] = nil
 		elseif m ~= "." then
-			table.insert(t, m)
+			t[#t+1] = m
 		end
 	end
 	return first .. table.concat(t, "/") .. last
+end
+
+local function concat(a, b)
+    if b:sub(1, 1) == "/" then
+        return constructor(b)
+    end
+    local value = a:gsub("(.-)/?$", "%1")
+    return constructor(value .. "/" .. b)
 end
 
 function path_mt:__tostring()
     return self._value
 end
 
-local function concat(a, b)
-    if b:sub(1, 1) == '/' then
-        return constructor(b)
-    end
-    local value = a:gsub("(.-)/?$", "%1")
-    return constructor(value .. '/' .. b)
-end
-
 function path_mt:__div(other)
-    other = (type(other) == 'string') and other or other._value
+    if type(other) ~= "string" then
+        other = other._value
+    end
     return concat(self._value,  other)
 end
 
 function path_mt:__concat(other)
-    other = (type(other) == 'string') and other or other._value
+    if type(other) ~= "string" then
+        other = other._value
+    end
     return constructor(self._value .. other)
 end
 
@@ -65,52 +63,54 @@ function path_mt:string()
 end
 
 function path_mt:filename()
-    return constructor(self._value:match("[/]?([^/]*)$"))
+    return constructor(self._value:match "/?([^/]*)$")
 end
 
 function path_mt:parent_path()
-    return constructor(self._value:match("^(.+)/[^/]*$"))
+    return constructor(self._value:match "^(.+)/[^/]*$")
 end
 
 function path_mt:stem()
-    return constructor(self._value:match("[/]?([%w*?_.%-]+)%.[%w*?_%-]*$") or self._value:match("[/]?([.]?[%w*?_%-]*)$"))
+    return constructor(self._value:match "/?([%w*?_.%-]+)%.[%w*?_%-]*$" or self._value:match "/?(.?[%w*?_%-]*)$")
 end
 
 function path_mt:extension()
-    return constructor(self._value:match("[^/](%.[%w*?_%-]*)$"))
+    return constructor(self._value:match "[^/](%.[%w*?_%-]*)$")
 end
 
 function path_mt:remove_filename()
-    self._value = self._value:match("^(.+/)[%w*?_.%-]*$") or ""
+    self._value = self._value:match "^(.+/)[%w*?_.%-]*$" or ""
     return self
 end
 
 function path_mt:replace_extension(ext)
     local stem = self:stem()
     self:remove_filename()
-    if ext:sub(1, 1) ~= '.' then
-        ext = '.' .. ext
+    if ext:sub(1, 1) ~= "." then
+        ext = "." .. ext
     end
     self._value = self._value .. stem._value .. ext
     return self
 end
 
 function path_mt:equal_extension(ext)
-    ext = (type(ext) == 'string') and ext or ext._value
-    local selfext = self._value:match("[^/](%.[%w*?_%-]*)$") or ""
+    if type(ext) ~= "string" then
+        ext = ext._value
+    end
+    local selfext = self._value:match "[^/](%.[%w*?_%-]*)$" or ""
     if selfext == "" then
         return ext == ""
     end
-    ext = (ext:sub(1,1) ~= '.') and ('.'..ext) or ext
+    ext = (ext:sub(1,1) ~= ".") and ("."..ext) or ext
     return selfext == ext
 end
 
 function path_mt:is_absolute()
-    return self._value:sub(1,1) == '/'
+    return self._value:sub(1,1) == "/"
 end
 
 function path_mt:is_relative()
-    return self._value:sub(1,1) ~= '/'
+    return self._value:sub(1,1) ~= "/"
 end
 
 function path_mt:normalize()
@@ -128,7 +128,12 @@ end
 
 local fs = {}
 
-fs.path = constructor
+function fs.path(str)
+    if type(str) ~= "string" then
+        str = str._value
+    end
+    return setmetatable({ _value = str }, path_mt)
+end
 
 function fs.exists(path)
     if type(path) ~= "string" then
@@ -141,14 +146,14 @@ function fs.is_directory(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    return vfs.type(path) == 'dir'
+    return vfs.type(path) == "dir"
 end
 
 function fs.is_regular_file(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    return vfs.type(path) ~= 'dir'
+    return vfs.type(path) ~= "dir"
 end
 
 local filestatus = {}
