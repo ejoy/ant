@@ -36,9 +36,10 @@ function dofile(path)
     end
     return f()
 end
+local PATH = "/engine/?.lua"
 local function searcher_lua(name)
     local filename = name:gsub('%.', '/')
-    local path = package.path:gsub('%?', filename)
+    local path = PATH:gsub('%?', filename)
     local mem, symbol = vfs.read(path)
     if mem then
         local func, err = fastio.loadlua(mem, symbol)
@@ -49,12 +50,13 @@ local function searcher_lua(name)
     end
     return "no file '"..path.."'"
 end
-local searcher_preload = package.searchers[1]
-package.path = "/engine/?.lua"
-package.cpath = ""
-package.searchers = {
-    searcher_preload,
-    searcher_lua,
+package = {
+    loaded = package.loaded,
+    preload = package.preload,
+    searchers = {
+        package.searchers[1],
+        searcher_lua,
+    }
 }
 return vfs
 )"sv;

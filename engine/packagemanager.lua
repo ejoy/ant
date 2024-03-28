@@ -3,19 +3,8 @@ local fastio = require "fastio"
 
 local registered = {}
 
-local function searchpath(name, path)
-    name = string.gsub(name, '%.', '/')
-    for c in string.gmatch(path, '[^;]+') do
-        local filename = string.gsub(c, '%?', name)
-        if vfs.type(filename) ~= nil then
-            return filename
-        end
-    end
-    return nil, "no file '"..path:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
-end
-
 local function sandbox_env(packagename)
-    local env = setmetatable({}, {__index=_G})
+    local env = {}
     local _LOADED = {}
     local _PRELOAD = package.preload
     local PATH = "/pkg/"..packagename..'/?.lua'
@@ -85,18 +74,14 @@ local function sandbox_env(packagename)
     end
 
     env.package = {
-        config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
         preload = _PRELOAD,
-        path = PATH,
-        cpath = "",
-        searchpath = searchpath,
         searchers = {
             searcher_preload,
             searcher_lua,
         }
     }
-    return env
+    return setmetatable(env, {__index=_G})
 end
 
 local function loadenv(name)
