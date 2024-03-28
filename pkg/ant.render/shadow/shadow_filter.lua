@@ -23,7 +23,24 @@ local EVSMSETTING<const>        = setting:get "graphic/shadow/evsm"
 local EVSM_EXPONENTS<const>     = EVSMSETTING.exponents
 local EVSM_BIAS<const>          = EVSMSETTING.bias
 local EVSM_BLEEDING<const>      = EVSMSETTING.bleeding
-local EVSM_KERNELSIZE<const>    = EVSMSETTING.size
+local EVSM_SAMPLE_RADIUS<const> = EVSMSETTING.sample_radius
+local EVSM_SM_FORMAT<const>     = EVSMSETTING.format
+
+local function check_evsm_exponents()
+    local VALID_FMT<const> = {
+        RGBA16F = 5.54,
+        RG16F = 5.54,
+        RGBA32F = 42,
+        RG32F = 42,
+    }
+    local MAX_EXPONENT = VALID_FMT[EVSM_SM_FORMAT] or error(("Invalid evsm shadowmap format:%s, should only be: [RGBA16F/RGBA32F/RG16F/RG32F] is valid"):format(EVSM_SM_FORMAT))
+    EVSM_EXPONENTS[1] = math.min(MAX_EXPONENT, EVSM_EXPONENTS[1])
+    EVSM_EXPONENTS[2] = math.min(MAX_EXPONENT, EVSM_EXPONENTS[2])
+
+    log.info("Evsm texture format:%s, positive exponent:%f, negative exponent:%f", EVSM_SM_FORMAT, EVSM_EXPONENTS[1], EVSM_EXPONENTS[2])
+end
+
+check_evsm_exponents()
 
 local ics                       = require "shadow.csm_split"
 
@@ -80,9 +97,7 @@ local function create_queue(name, viewid, fbidx)
             render_target = {
                 viewid = viewid,
                 view_rect = {x=0, y=0, w=SMSIZE, h=SMSIZE},
-                clear_state = {
-                    clear = "",
-                },
+                clear_state = {clear = "",},
                 fb_idx = fbidx,
             },
             queue_name = name,
@@ -124,7 +139,7 @@ function S:init_world()
     -- then insert a drawer to the last of csm queue, and relove the depth result to evsm texture which is a texture array with split_num layers
     -- then the temp texture should only be a 2d texture, and keep the blurH result, than do the blurV to make the result to evsm texture
     local evsm_texture = fbmgr.create_rb{
-		format = "RGBA8",
+		format = EVSM_SM_FORMAT,
 		w=SMSIZE,
 		h=SMSIZE,
 		layers=math.max(2, SPLIT_NUM), --walk around bgfx bug, layers == 1, it will not create texture arrays
@@ -138,8 +153,10 @@ function S:init_world()
 		},
 	}
 
+    local evsm_texture_handle = fbmgr.get_rb(evsm_texture).handle
+
     local blur_temp = fbmgr.create_rb{
-		format = "RGBA8",
+		format = EVSM_SM_FORMAT,
 		w=SMSIZE,
 		h=SMSIZE,
 		layers=math.max(2, SPLIT_NUM), --walk around bgfx bug, layers == 1, it will not create texture arrays
@@ -152,6 +169,7 @@ function S:init_world()
 			V="BORDER",
 		},
 	}
+    local blur_temp_handle = fbmgr.get_rb(blur_temp).handle
 
     local function create_fb(rb, refidx)
 		return fbmgr.create{
@@ -166,25 +184,26 @@ function S:init_world()
     for e in w:select "csm:in render_target:in" do
         local csm = e.csm
         local index = csm.index
-
+        local layeridx = index-1    --base0
         local step = EVSM_STEPS[index]
         local inputhandle = fbmgr.get_rb(e.render_target.fb_idx, 1).handle
 
         local resolver = step[EVSM_RESOLVER]
-        resolver.drawereid = create_drawer(resolver.material, inputhandle, math3d.vector(index, 0, EVSM_EXPONENTS[1], EVSM_EXPONENTS[2]))
-        resolver.queueeid = create_queue(resolver.queuename, resolver.viewid, create_fb(evsm_texture, index))
+        resolver.drawereid  = create_drawer(resolver.material, inputhandle, math3d.vector(layeridx, SMSIZE, EVSM_EXPONENTS[1], EVSM_EXPONENTS[2]))
+        resolver.queueeid   = create_queue(resolver.queuename, resolver.viewid, create_fb(evsm_texture, index))
 
+        local blurparam = math3d.vector(layeridx, SMSIZE, EVSM_SAMPLE_RADIUS, 0)
         local blurH = step[EVSM_H]
-        blurH.drawereid = create_drawer(blurH.material, evsm_texture, math3d.vector(index, EVSM_KERNELSIZE, SMSIZE, 0))
-        blurH.queueeid = create_queue(blurH.queuename, blurH.viewid, create_fb(blur_temp, index))
+        blurH.drawereid = create_drawer(blurH.material, evsm_texture_handle, blurparam)
+        blurH.queueeid  = create_queue(blurH.queuename, blurH.viewid, create_fb(blur_temp, index))
 
         local blurV = step[EVSM_V]
-        blurV.drawereid = create_drawer(blurH.material, blur_temp, math3d.vector(index, EVSM_KERNELSIZE, SMSIZE, 0))
-        blurV.queueeid = create_queue(blurV.queuename, blurV.viewid, create_fb(evsm_texture, index))
+        blurV.drawereid = create_drawer(blurV.material, blur_temp_handle, blurparam)
+        blurV.queueeid  = create_queue(blurV.queuename, blurV.viewid, create_fb(evsm_texture, index))
     end
 
     imaterial.system_attrib_update("u_shadow_filter_param", math3d.vector(EVSM_EXPONENTS[1], EVSM_EXPONENTS[2], EVSM_BIAS, EVSM_BLEEDING))
-    imaterial.system_attrib_update("s_shadowmap", evsm_texture)
+    imaterial.system_attrib_update("s_shadowmap", evsm_texture_handle)
 end
 
 function S:render_submit()

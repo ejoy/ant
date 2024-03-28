@@ -24,11 +24,15 @@ float shadowEVSM(shadow_sampler_type shadowsampler, vec4 shadowcoord, int cascad
     vec2 depthScale = u_shadow_filter_bias * 0.01 * u_shadow_filter_exponents * wd;
     vec2 variance = depthScale * depthScale;
 
+#if EVSM_COMPONENT == 2
+    return ChebyshevUpperBound(occluder.xy, wd.x, variance.x, u_shadow_filter_light_bleeding_reducation);
+#endif //
+
+#if EVSM_COMPONENT == 4
 	float p = ChebyshevUpperBound(occluder.xz, wd.x, variance.x, u_shadow_filter_light_bleeding_reducation);
 	float n = ChebyshevUpperBound(occluder.yw, wd.y, variance.y, u_shadow_filter_light_bleeding_reducation);
 	return min(p, n);
-
-    //return ChebyshevUpperBound(occluder.xy, wd.x, variance.x, u_shadow_filter_light_bleeding_reducation);
+#endif //
 }
 #endif //SM_EVSM
 

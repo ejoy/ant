@@ -15,6 +15,7 @@ local FILTER_MODE_MACROS<const> = {
 
 local FILTER_MODE<const> = settings:get "graphic/shadow/filter_mode" or "hard"
 local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
+    local r
     if fm == "pcf" then
         local PCF = settings:get "graphic/shadow/pcf"
         local _ = PCF or error "Invalid setting for filter mode:pcf, need define 'graphic/shadow/pcf'"
@@ -27,8 +28,8 @@ local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
 
         local PCF_TYPE<const>           = assert(PCF.type, "'pcf' needed 'type'")
         local PCF_FILTER_SIZE<const>    = assert(PCF.size, "'pcf' needed 'size'")
-        
-        local r = {}
+
+        r = {}
         r[#r+1] = "PCF_TYPE=" .. PCF_TYPE_DEFINES[PCF_TYPE]
         r[#r+1] = "PCF_FILTER_SIZE=" .. assert(PCF_FILTER_SIZE)
         if PCF_TYPE == "fast" then
@@ -41,10 +42,30 @@ local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
             }
             r[#r+1] = "PCF_FILTER_TYPE=" .. PCF_FILTER_TYPES[PCF.filter or "uniform"]
         end
-
-        t[fm] = r
-        return r
     end
+
+    if fm == "evsm" then
+        r = {}
+        local evsm = settings:get "graphic/shadow/evsm"
+        local format_count = {
+            RGBA16F = 4,
+            RGBA32F = 4,
+            RG16F   = 2,
+            RG32F   = 2,
+        }
+        
+        local c = format_count[evsm.format] or error(("Invalid format:%s"):format(evsm.format))
+        r[#r+1] = "EVSM_COMPONENT=" .. c
+
+        r[#r+1] = "EVSM_SAMPLE_RADIUS=" ..evsm.sample_radius
+    end
+
+    if nil == r then
+        error(("Not support filter_mode: %s"):format(FILTER_MODE))
+    end
+
+    t[fm] = r
+    return r
 end})
 
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"

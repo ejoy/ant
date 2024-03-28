@@ -162,6 +162,9 @@ local function get_macros(setting, mat, stage)
     local macros = default_macros(setting)
     CHECK_SETTING(mat, macros)
     if mat.fx.macros then
+        if #mat.fx.macros == 0 and nil ~= next(mat.fx.macros) then
+            error("material-macros feild should use the format: '{macro_name}={value}', like 'ENABLE_SHADOW=1', DO NOT use 'ENABLE_SHADOW: 1'")
+        end
         table.move(mat.fx.macros, 1, #mat.fx.macros, #macros+1, macros)
     end
     if stage:match "di" then

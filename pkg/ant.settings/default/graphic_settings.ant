@@ -55,4 +55,5 @@ graphic:
       exponents: {40, 5}
       bias: 0.01
       bleeding: 0.5
-      size: 3
+      sample_radius: 3
+      format: RGBA16F
