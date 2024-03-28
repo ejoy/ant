@@ -141,11 +141,11 @@ local ltask_config = {
 				args = { config },
 			},
 			{
-				name = "ant.ltask|timer",
+				name = "ant.engine|timer",
 				unique = true,
 			},
 			{
-				name = "ant.ltask|logger",
+				name = "ant.engine|logger",
 				unique = true,
 			},
 			{

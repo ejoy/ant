@@ -20,11 +20,11 @@ boot:start {
                 args = { entry:parent_path():string(), __ANT_EDITOR__ },
             },
             {
-                name = "ant.ltask|timer",
+                name = "ant.engine|timer",
                 unique = true,
             },
             {
-                name = "ant.ltask|logger",
+                name = "ant.engine|logger",
                 unique = true,
             },
             {
