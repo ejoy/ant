@@ -17,9 +17,6 @@ float shadowEVSM(shadow_sampler_type shadowsampler, vec4 shadowcoord, int cascad
 
 	vec4 occluder = texture2DArray(shadowsampler, vec3(shadowcoord.xy, cascadeidx));
 
-    // float4 occluder = ShadowMap.SampleGrad(shadowsampler, vec3(shadowcoord.xy, cascadeIdx),
-    //                                         shadowPosDX.xy, shadowPosDY.xy);
-
     // Derivative of warping at depth
     vec2 depthscale = u_shadow_filter_bias * 0.01 * u_shadow_filter_exponents * wd;
     vec2 variance = depthscale * depthscale;
