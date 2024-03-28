@@ -35,7 +35,7 @@ float ChebyshevUpperBound(vec2 moments, float mean, float minVariance,
     pMax = ReduceLightBleeding(pMax, lightBleedingReduction);
 
     // One-tailed Chebyshev
-    return (mean <= moments.x ? 1.0f : pMax);
+    return (mean > moments.x ? 1.0f : pMax);
 }
 
 #endif //__EVSM_UTILS_SH__
