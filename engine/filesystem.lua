@@ -1,8 +1,6 @@
-local lfs = require "bee.filesystem"
 local vfs = require "vfs"
 
 local path_mt = {}
-path_mt.__name = "vfs-filesystem"
 path_mt.__index = path_mt
 
 local function constructor(str)
@@ -15,15 +13,15 @@ local function normalize(fullname)
     end
     local first = (fullname:sub(1, 1) == "/") and "/" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
-	local t = {}
-	for m in fullname:gmatch "([^/]+)/?" do
-		if m == ".." and #t > 0 then
-			t[#t] = nil
-		elseif m ~= "." then
-			t[#t+1] = m
-		end
-	end
-	return first .. table.concat(t, "/") .. last
+    local t = {}
+    for m in fullname:gmatch "([^/]+)/?" do
+        if m == ".." and #t > 0 then
+            t[#t] = nil
+        elseif m ~= "." then
+            t[#t+1] = m
+        end
+    end
+    return first .. table.concat(t, "/") .. last
 end
 
 local function concat(a, b)
@@ -117,14 +115,6 @@ function path_mt:lexically_normal()
     return constructor(normalize(self._value))
 end
 
-if __ANT_EDITOR__ then
-    --TODO: remove it
-    function path_mt:localpath()
-        local localpath = vfs.realpath(normalize(self._value)) or error ("could not be find local path: ".. self._value)
-        return lfs.path(localpath)
-    end
-end
-
 local fs = {}
 
 function fs.path(str)
@@ -155,10 +145,10 @@ function fs.is_regular_file(path)
     return vfs.type(path) ~= "dir"
 end
 
-local filestatus = {}
-filestatus.__index = filestatus
+local status_mt = {}
+status_mt.__index = status_mt
 
-function filestatus:is_directory()
+function status_mt:is_directory()
     local file_type = self[1].type
     return file_type == "d" or file_type == "r"
 end
@@ -174,7 +164,7 @@ function fs.pairs(path)
         end
     end
     local name, status
-    local status_obj = setmetatable({}, filestatus)
+    local status_obj = setmetatable({}, status_mt)
     return function()
         name, status = next(list, name)
         if not name then
