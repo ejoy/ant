@@ -1,5 +1,3 @@
-require "bee.thread".setname "ant - IO thread"
-
 local dbg = dofile "/engine/firmware/debugger.lua"
 if dbg then
 	dbg:event("setThreadName", "Thread: IO")

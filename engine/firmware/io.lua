@@ -1,5 +1,3 @@
-require "bee.thread".setname "ant - IO thread"
-
 do
 	local path = os.getenv "LUA_DEBUG_PATH"
 	if path then
