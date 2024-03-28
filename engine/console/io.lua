@@ -7,9 +7,6 @@ end
 local ltask = require "ltask"
 local fastio = require "fastio"
 
-package.path = "/engine/?.lua"
-package.cpath = ""
-
 local repopath, AntEditor = ...
 
 __ANT_EDITOR__ = AntEditor

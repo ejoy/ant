@@ -50,6 +50,8 @@ local function searcher_lua(name)
     return "no file '"..path.."'"
 end
 local searcher_preload = package.searchers[1]
+package.path = "/engine/?.lua"
+package.cpath = ""
 package.searchers = {
     searcher_preload,
     searcher_lua,

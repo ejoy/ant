@@ -45,8 +45,6 @@ local function init_config(config)
 	config.root.initfunc = [[
 local name = ...
 
-package.path = "/engine/?.lua"
-package.cpath = ""
 local ltask = require "ltask"
 local vfs = require "vfs"
 local ServiceIO = ltask.queryservice "io"
