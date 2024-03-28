@@ -1,7 +1,5 @@
 local arg = ...
 
-package.path = "/engine/?.lua"
-require "bootstrap"
 import_package "ant.window".start {
     __ANT_EDITOR__ = arg[1],
     feature = {

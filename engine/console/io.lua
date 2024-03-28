@@ -1,6 +1,6 @@
 require "bee.thread".setname "ant - IO thread"
 
-local dbg = dofile "/engine/debugger.lua"
+local dbg = dofile "/engine/firmware/debugger.lua"
 if dbg then
 	dbg:event("setThreadName", "Thread: IO")
 	dbg:event "wait"
@@ -140,6 +140,10 @@ function S.REPOPATH()
 end
 
 function S.RESOURCE_SETTING(setting)
+	--TODO: remove they
+	require "log"
+	require "filesystem"
+
 	require "packagemanager"
 	local cr = import_package "ant.compile_resource"
 	local config = cr.init_setting(tiny_vfs, setting)

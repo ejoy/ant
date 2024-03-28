@@ -35,7 +35,7 @@ local function init_config(config)
 		servicelua = table.concat({
 			[[local ltask = require "ltask"]],
 			[[local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")]],
-			[[assert(loadfile '/engine/debugger.lua')(): event("setThreadName", name): event "wait"]],
+			[[assert(loadfile '/engine/firmware/debugger.lua')(): event("setThreadName", name): event "wait"]],
 			servicelua,
 		}, ";")
 	end
@@ -77,11 +77,15 @@ function vfs.repopath()
 	return call("REPOPATH")
 end
 
+--TODO: remove they
+require "log"
+require "filesystem"
+
+local pm = require "packagemanager"
 local package, file = name:match "^([^|]*)|(.*)$"
 if not package or not file then
 	return loadfile(name)
 end
-local pm = require "packagemanager"
 return pm.loadenv(package).loadfile("service/"..file..".lua")
 
 ]]

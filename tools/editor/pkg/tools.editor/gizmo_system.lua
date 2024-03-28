@@ -319,12 +319,14 @@ end
 
 local ipl = ecs.require "ant.polyline|polyline"
 local POLYLINE_MTL = "/pkg/tools.editor/resource/materials/polyline.material"
-local function create_billboard(material)
+local function create_navi_obj(material, size, zvalue)
+	local sz = size or 0.125
+	local z = zvalue or 0
 	local vbdata = {
-        -0.125, -0.125, 0, 0, 1,
-        -0.125,  0.125, 0, 0, 0,
-         0.125, -0.125, 0, 1, 1,
-         0.125,  0.125, 0, 1, 0,
+        -sz, -sz, z, 0, 1,
+        -sz,  sz, z, 0, 0,
+         sz, -sz, z, 1, 1,
+         sz,  sz, z, 1, 0,
     }
     return world:create_entity{
         policy = {
@@ -341,13 +343,22 @@ local function create_billboard(material)
     }
 end
 local sorted_draw = {}
+local navi_axis_background
+local show_navi_background = false
 local function create_navi_axis(scene)
-	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0.5,0,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_px.material")}
-	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(-0.5,0,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_nx.material")}
-	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,0.5,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_py.material")}
-	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,-0.5,0)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_ny.material")}
-	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,0,0.5)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_pz.material")}
-	sorted_draw[#sorted_draw + 1] = {zvalue = 0, pos = math3d.ref(math3d.vector(0,0,-0.5)), eid = create_billboard("/pkg/tools.editor/resource/materials/billboard_nz.material")}
+	navi_axis_background = create_navi_obj("/pkg/tools.editor/resource/materials/navi_background.material", 0.65, 1.0)
+	sorted_draw[#sorted_draw + 1] = {tp = {0.5,0,0}, pos = math3d.ref(math3d.vector(0.5,0,0)), euler = {0, math.rad(-90), 0}, active_eid = 1,
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_px.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hpx.material")}}
+	sorted_draw[#sorted_draw + 1] = {tp = {-0.5,0,0}, pos = math3d.ref(math3d.vector(-0.5,0,0)), euler = {0, math.rad(90), 0}, active_eid = 1,
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_nx.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hnx.material")}}
+	sorted_draw[#sorted_draw + 1] = {tp = {0,0.5,0}, pos = math3d.ref(math3d.vector(0,0.5,0)), euler = {math.rad(89), 0, 0}, active_eid = 1,
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_py.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hpy.material")}}
+	sorted_draw[#sorted_draw + 1] = {tp = {0,-0.5,0}, pos = math3d.ref(math3d.vector(0,-0.5,0)), euler = {math.rad(-85), 0, 0}, active_eid = 1,
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_ny.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hny.material")}}
+	sorted_draw[#sorted_draw + 1] = {tp = {0,0,0.5}, pos = math3d.ref(math3d.vector(0,0,0.5)), euler = {0, math.rad(180), 0}, active_eid = 1,
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_pz.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hpz.material")}}
+	sorted_draw[#sorted_draw + 1] = {tp = {0,0,-0.5}, pos = math3d.ref(math3d.vector(0,0,-0.5)), euler = {0, 0, 0}, active_eid = 1,
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_nz.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hnz.material")}}
 	
 	local axis_parent = world:create_entity {
 		policy = {
@@ -1145,12 +1156,45 @@ end
 
 local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
+local function navi_view_hit_test(x, y)
+	local navi_x = iviewport.device_viewrect.w - navi_axis_view_size
+	if x < navi_x or x > iviewport.device_viewrect.w or y < 0 or y > navi_axis_view_size then
+		return
+	end
+	
+	local function dist_to(px1, py1, x2, y2)
+		local px2 = (x2 + 1) * 0.5 * navi_axis_view_size
+		local py2 = (y2 + 1) * 0.5 * navi_axis_view_size
+		local dx = math.abs(px1 - px2)
+		local dy = math.abs(py1 - py2)
+		return math.sqrt(dx * dx + dy * dy)
+	end
+	local nx, ny = x - navi_x, navi_axis_view_size - y
+	show_navi_background = false
+	if dist_to(nx, ny, 0, 0) <= 90 then
+		show_navi_background = true
+	end
+	for _, it in ipairs(sorted_draw) do
+		it.active_eid = 1
+	end
+	for _, it in ipairs(sorted_draw) do
+		if dist_to(nx, ny, it.tp[1], it.tp[2]) <= 20 then
+			it.active_eid = 2
+			return it.euler
+		end
+	end
+end
+
 local function on_mouse_move()
+	local mp = world:get_mouse()
+	local x, y = cvt2scenept(mp.x, mp.y)
+	if navi_view_hit_test(x, y) then
+		return
+	end
 	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then
 		return
 	end
-	local mp = world:get_mouse()
-	local x, y = cvt2scenept(mp.x, mp.y)
+	
 	if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
 		last_mouse_pos_x = x
 		last_mouse_pos_y = y
@@ -1176,11 +1220,14 @@ local function focus_aabb(ce, aabb)
 end
 
 function gizmo_sys:render_submit()
+	if show_navi_background then
+		irender.draw(RENDER_ARG, navi_axis_background)
+	end
 	for i = 2, #navi_axis do
 		irender.draw(RENDER_ARG, navi_axis[i])
 	end
 	for _, v in ipairs(sorted_draw) do
-		irender.draw(RENDER_ARG, v.eid)
+		irender.draw(RENDER_ARG, v.eid[v.active_eid])
 	end
 end
 
@@ -1193,9 +1240,18 @@ function gizmo_sys:camera_usage()
 			ivm.set_masks(e, "main_view", false)
 		end
 		for _, v in ipairs(sorted_draw) do
-			local e <close> = world:entity(v.eid, "visible_masks?update")
+			local e <close> = world:entity(v.eid[1], "visible_masks?update")
 			ivm.set_masks(e, "main_view", false)
+			local e1 <close> = world:entity(v.eid[2], "visible_masks?update")
+			ivm.set_masks(e1, "main_view", false)
 		end
+	end
+	local function update_worldmat(eid, pos)
+		local e <close> = world:entity(eid, "scene:update render_object:update")
+		local scene = e.scene
+		math3d.unmark(scene.worldmat)
+		scene.worldmat = math3d.mark(math3d.matrix{t = pos})
+		e.render_object.worldmat = scene.worldmat
 	end
 	if w:check "scene_changed camera" then
         local mq = w:first("main_queue camera_ref:in")
@@ -1206,15 +1262,12 @@ function gizmo_sys:camera_usage()
 			iom.set_rotation(re, rotation)
 
 			for _, v in ipairs(sorted_draw) do
-				local e <close> = world:entity(v.eid, "scene:update render_object:update")
-				local scene = e.scene
-				math3d.unmark(scene.worldmat)
 				local pos = math3d.transform(rotation, v.pos, 1)
-				v.zvalue = math3d.index(pos, 3)
-				scene.worldmat = math3d.mark(math3d.matrix{t = pos})
-				e.render_object.worldmat = scene.worldmat
+				v.tp[1], v.tp[2], v.tp[3]= math3d.index(pos, 1), math3d.index(pos, 2), math3d.index(pos, 3)
+				update_worldmat(v.eid[1], pos)
+				update_worldmat(v.eid[2], pos)
 			end
-			table.sort(sorted_draw, function (a, b) return a.zvalue > b.zvalue end)
+			table.sort(sorted_draw, function (a, b) return a.tp[3] > b.tp[3] end)
 		end
 	end
 end
@@ -1223,6 +1276,11 @@ local event_mouse_down	= world:sub {"mousedown"}
 local event_mouse_up	= world:sub {"mouseup"}
 local event_keypress	= world:sub {"keyboard"}
 local vr_mb 			= world:sub {"view_rect_changed", "main_queue"}
+local function on_click_navi_axis(euler)
+	local mq = w:first("main_queue camera_ref:in")
+	local ce <close> = world:entity(mq.camera_ref)
+	iom.set_rotation(ce, math3d.quaternion(euler))
+end
 function gizmo_sys:handle_input()
 	for _, _, _ in vr_mb:unpack() do
 		local vr = iviewport.device_viewrect
@@ -1237,9 +1295,14 @@ function gizmo_sys:handle_input()
 	for _, what, x, y in event_mouse_down:unpack() do
 		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
-			gizmo_seleted = gizmo:select_gizmo(x, y)
-			gizmo:click_axis_or_plane(move_axis)
-			gizmo:click_axis(rotate_axis)
+			local euler = navi_view_hit_test(x, y)
+			if euler then
+				on_click_navi_axis(euler)
+			else
+				gizmo_seleted = gizmo:select_gizmo(x, y)
+				gizmo:click_axis_or_plane(move_axis)
+				gizmo:click_axis(rotate_axis)
+			end
 		elseif what == "MIDDLE" then
 		end
 	end
@@ -1318,7 +1381,7 @@ end
 
 local event_camera 			= world:sub {"camera"}
 local event_gizmo_mode 		= world:sub {"GizmoMode"}
-local event_look_at_target 	= world:sub{"LookAtTarget"}
+local event_look_at_target 	= world:sub {"LookAtTarget"}
 function gizmo_sys:handle_event()
 	for _ in event_camera:unpack() do
 		gizmo:update_scale()

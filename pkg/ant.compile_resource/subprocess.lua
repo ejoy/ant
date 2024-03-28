@@ -1,6 +1,6 @@
 local util = {}
 local ltask = require "ltask"
-local ServiceSubprocess = ltask.uniqueservice "ant.ltask|subprocess"
+local ServiceSubprocess = ltask.uniqueservice "ant.engine|subprocess"
 
 local function quote_arg(s)
     if #s == 0 then

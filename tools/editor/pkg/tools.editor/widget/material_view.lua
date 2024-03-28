@@ -1155,7 +1155,7 @@ function MaterialView:handle_event()
             local t = material_content(mtlpath)
             for k, v in pairs(t.properties) do
                 if v.texture then
-                    local texpath = fs.path(absolute_path(v.texture, mtlpath)):normalize()
+                    local texpath = fs.path(absolute_path(v.texture, mtlpath)):lexically_normal()
                     local data = compiled_res_content(texpath:string())
                     if not image_info[v.texture] then
                         image_info[v.texture] = {width = data.info.width, height = data.info.height}

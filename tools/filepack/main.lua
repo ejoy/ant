@@ -1,6 +1,3 @@
-package.path = "/engine/?.lua"
-require "bootstrap"
-
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local platform = require "bee.platform"

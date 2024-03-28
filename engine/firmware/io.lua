@@ -10,7 +10,7 @@ do
 				f:close()
 				return assert(load(str, "=(debugger.lua)"))(path)
 			end
-			return assert(loadfile "/engine/firmware/debugger.lua", "=(debugger.lua)")()
+			return assert(loadfile "/engine/firmware/init_debug.lua", "=(debugger.lua)")()
 		end
 		load_dbg()
 			: attach {}

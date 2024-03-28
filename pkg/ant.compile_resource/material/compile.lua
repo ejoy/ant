@@ -1,5 +1,4 @@
 local lfs           = require "bee.filesystem"
-local fs            = require "filesystem"
 
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
@@ -225,7 +224,7 @@ local function check_update_shader_type(fx)
                 fx.shader_type = "CUSTOM"
             end
         else
-            if fx.shader_type == "CUSTOM" and (fx.vs_code or fs.fs_code) then
+            if fx.shader_type == "CUSTOM" and (fx.vs_code or fx.fs_code) then
                 error "Define shader_type as 'CUSTOM', 'vs_code' or 'fs_code' should not define"
             end
             assert(fx.shader_type == "PBR" or fx.shader_type == "CUSTOM", "render shader 'shader_type' should only be 'PBR' or 'CUSTOM'")

@@ -1,6 +1,3 @@
-package.path = "/engine/?.lua"
-require "bootstrap"
-
 local memfs = import_package "ant.vfs".memory
 
 memfs.init()

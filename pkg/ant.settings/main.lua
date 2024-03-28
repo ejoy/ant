@@ -38,7 +38,7 @@ end
 local function create(paths)
 	local root = {}
 	for _, path in ipairs(paths) do
-		if fs.exists(fs.path(path)) then
+		if fs.exists(path) then
 			merge(root, assert(datalist.parse(aio.readall(path))))
 		end
 	end

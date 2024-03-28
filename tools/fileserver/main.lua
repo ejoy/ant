@@ -1,6 +1,3 @@
-package.path = "/engine/?.lua"
-require "bootstrap"
-
 local ltask = require "ltask"
 
 ltask.uniqueservice "s|network"

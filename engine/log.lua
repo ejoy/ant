@@ -7,26 +7,11 @@ local LEVELS <const> = {
     'error'
 }
 
-local LOG = {}
-
-for _, level in ipairs(LEVELS) do
-    LOG[level] = function (...)
-        local t = table.pack(...)
-        local str = {}
-        for i = 1, t.n do
-            str[#str+1] = tostring(t[i])
-        end
-        local message = table.concat(str, "\t")
-        ltask.pushlog(ltask.pack(level, message))
-    end
-end
-
-local color = {
-    debug = nil,
-    info = nil,
+local COLOR <const> = {
     warn = "\x1b[33m",
     error = "\x1b[31m",
 }
+
 local levels = {}
 
 local function round(x, increment)
@@ -53,16 +38,16 @@ local m = {}
 m.level = __ANT_RUNTIME__ and 'debug' or 'info'
 for i, level in ipairs(LEVELS) do
     levels[level] = i
-    m[level] = function(...)
+    m[level] = function (...)
         if i < levels[m.level] then
             return
         end
         local info = debug.getinfo(2, 'Sl')
-        local text = ('( %s )(%s:%d) %s'):format(label, info.short_src, info.currentline, packstring(...))
-        if not __ANT_RUNTIME__ and color[level] then
-            text = color[level]..text.."\x1b[0m"
+        local message = ('( %s )(%s:%d) %s'):format(label, info.short_src, info.currentline, packstring(...))
+        if not __ANT_RUNTIME__ and COLOR[level] then
+            message = COLOR[level]..message.."\x1b[0m"
         end
-        LOG[level](text)
+        ltask.pushlog(ltask.pack(level, message))
     end
 end
 

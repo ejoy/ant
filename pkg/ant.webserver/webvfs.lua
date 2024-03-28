@@ -148,11 +148,11 @@ local get_path = {}; do
 end
 
 local function get_directory(what)
-	local directory = require "directory"
+	local engine = import_package "ant.engine"
 	if what == "log" then
-		return directory.app_path():string()
+		return engine.app_path():string()
 	elseif what == "app" then
-		return directory.app_path():string()
+		return engine.app_path():string()
 	end
 end
 
