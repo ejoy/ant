@@ -80,6 +80,12 @@ lm:source_set "zlib-ng-x86" {
             "HAVE_ATTRIBUTE_ALIGNED",
         },
     },
+    macos = {
+        defines = {
+            "HAVE_THREAD_LOCAL",
+            "HAVE_ATTRIBUTE_ALIGNED",
+        },
+    },
 }
 
 lm:source_set "zlib-ng-arm" {
@@ -144,7 +150,7 @@ lm:source_set "zlib-ng" {
         deps = "zlib-ng-x86",
     },
     macos = {
-        deps = "zlib-ng-arm",
+        deps = "zlib-ng-x86",
     },
     ios = {
         deps = "zlib-ng-arm",
