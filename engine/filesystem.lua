@@ -128,18 +128,6 @@ function path_mt:normalize()
     return self
 end
 
-function path_mt:permissions()
-    error 'Not implemented'
-end
-
-function path_mt:add_permissions()
-    error 'Not implemented'
-end
-
-function path_mt:remove_permissions()
-    error 'Not implemented'
-end
-
 if __ANT_EDITOR__ then
     --TODO: remove it
     function path_mt:localpath()
@@ -152,10 +140,6 @@ local fs = {}
 
 fs.path = constructor
 
-function fs.current_path()
-    error 'Not implemented'
-end
-
 function fs.exists(path)
     return vfs.type(path._value) ~= nil
 end
@@ -166,18 +150,6 @@ end
 
 function fs.is_regular_file(path)
     return vfs.type(path._value) ~= 'dir'
-end
-
-function fs.rename()
-    error 'Not implemented'
-end
-
-function fs.remove()
-    error 'Not implemented'
-end
-
-function fs.remove_all()
-    error 'Not implemented'
 end
 
 function fs.absolute(path, base)
@@ -237,10 +209,6 @@ function fs.pairs(path)
         status_obj[1] = status
         return path / name, status_obj
     end
-end
-
-function fs.file_size(path)
-    return lfs.file_size(path:localpath())
 end
 
 return fs
