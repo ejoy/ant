@@ -113,9 +113,8 @@ function path_mt:is_relative()
     return self._value:sub(1,1) ~= "/"
 end
 
-function path_mt:normalize()
-    self._value = normalize(self._value)
-    return self
+function path_mt:lexically_normal()
+    return constructor(normalize(self._value))
 end
 
 if __ANT_EDITOR__ then
