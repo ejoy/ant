@@ -32,31 +32,21 @@ local function normalize(fullname)
 	return first .. table.concat(t, "/") .. last
 end
 
-local function normalize_split(fullname)
-    local root = (fullname:sub(1, 1) == "/") and "/" or ""
-    local stack = {}
-	for elem in fullname:gmatch("([^/\\]+)[/\\]?") do
-        if #elem == 0 and #stack ~= 0 then
-        elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
-            stack[#stack] = nil
-        elseif elem ~= '.' then
-            stack[#stack + 1] = elem
-        end
-    end
-    return root, stack
-end
-
 function path_mt:__tostring()
     return self._value
 end
 
+local function concat(a, b)
+    if b:sub(1, 1) == '/' then
+        return constructor(b)
+    end
+    local value = a:gsub("(.-)/?$", "%1")
+    return constructor(value .. '/' .. b)
+end
+
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if other:sub(1, 1) == '/' then
-        return constructor(other)
-    end
-    local value = self._value:gsub("(.-)/?$", "%1")
-    return constructor(value .. '/' .. other)
+    return concat(self._value,  other)
 end
 
 function path_mt:__concat(other)
@@ -141,47 +131,24 @@ local fs = {}
 fs.path = constructor
 
 function fs.exists(path)
-    return vfs.type(path._value) ~= nil
+    if type(path) ~= "string" then
+        path = path._value
+    end
+    return vfs.type(path) ~= nil
 end
 
 function fs.is_directory(path)
-    return vfs.type(path._value) == 'dir'
+    if type(path) ~= "string" then
+        path = path._value
+    end
+    return vfs.type(path) == 'dir'
 end
 
 function fs.is_regular_file(path)
-    return vfs.type(path._value) ~= 'dir'
-end
-
-function fs.absolute(path, base)
-    path = normalize(path._value)
-    if path:sub(1, 1) == '/' then
-        return constructor(path)
+    if type(path) ~= "string" then
+        path = path._value
     end
-    base = base or fs.current_path()
-    path = base / path
-    return constructor(normalize(path._value))
-end
-
-function fs.relative(path, base)
-    --TODO root
-    base = base or fs.current_path()
-    local _, pstack = normalize_split(path._value)
-    local _, bstack = normalize_split(base._value)
-    while #pstack > 0 and #bstack > 0 and pstack[1] == bstack[1] do
-        table.remove(pstack, 1)
-        table.remove(bstack, 1)
-    end
-    if #pstack == 0 and #bstack== 0 then
-        return "./"
-    end
-    local s = {}
-    for _ in ipairs(bstack) do
-        s[#s+1] = '..'
-    end
-    for _, e in ipairs(pstack) do
-        s[#s+1] = e
-    end
-    return constructor(table.concat(s, "/"))
+    return vfs.type(path) ~= 'dir'
 end
 
 local filestatus = {}
@@ -193,7 +160,10 @@ function filestatus:is_directory()
 end
 
 function fs.pairs(path)
-    local value = path._value:gsub("(.-)/?$", "%1")
+    if type(path) ~= "string" then
+        path = path._value
+    end
+    local value = path:gsub("(.-)/?$", "%1")
     local list = vfs.list(value .. "/")
     if not list then
         return function ()
@@ -207,7 +177,7 @@ function fs.pairs(path)
             return
         end
         status_obj[1] = status
-        return path / name, status_obj
+        return concat(path, name), status_obj
     end
 end
 
