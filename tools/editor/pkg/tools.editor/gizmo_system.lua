@@ -319,12 +319,14 @@ end
 
 local ipl = ecs.require "ant.polyline|polyline"
 local POLYLINE_MTL = "/pkg/tools.editor/resource/materials/polyline.material"
-local function create_billboard(material)
+local function create_navi_obj(material, size, zvalue)
+	local sz = size or 0.125
+	local z = zvalue or 0
 	local vbdata = {
-        -0.125, -0.125, 0, 0, 1,
-        -0.125,  0.125, 0, 0, 0,
-         0.125, -0.125, 0, 1, 1,
-         0.125,  0.125, 0, 1, 0,
+        -sz, -sz, z, 0, 1,
+        -sz,  sz, z, 0, 0,
+         sz, -sz, z, 1, 1,
+         sz,  sz, z, 1, 0,
     }
     return world:create_entity{
         policy = {
@@ -341,19 +343,22 @@ local function create_billboard(material)
     }
 end
 local sorted_draw = {}
+local navi_axis_background
+local show_navi_background = false
 local function create_navi_axis(scene)
+	navi_axis_background = create_navi_obj("/pkg/tools.editor/resource/materials/navi_background.material", 0.65, 1.0)
 	sorted_draw[#sorted_draw + 1] = {tp = {0.5,0,0}, pos = math3d.ref(math3d.vector(0.5,0,0)), euler = {0, math.rad(-90), 0}, active_eid = 1,
-		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_px.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hpx.material")}}
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_px.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hpx.material")}}
 	sorted_draw[#sorted_draw + 1] = {tp = {-0.5,0,0}, pos = math3d.ref(math3d.vector(-0.5,0,0)), euler = {0, math.rad(90), 0}, active_eid = 1,
-		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_nx.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hnx.material")}}
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_nx.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hnx.material")}}
 	sorted_draw[#sorted_draw + 1] = {tp = {0,0.5,0}, pos = math3d.ref(math3d.vector(0,0.5,0)), euler = {math.rad(89), 0, 0}, active_eid = 1,
-		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_py.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hpy.material")}}
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_py.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hpy.material")}}
 	sorted_draw[#sorted_draw + 1] = {tp = {0,-0.5,0}, pos = math3d.ref(math3d.vector(0,-0.5,0)), euler = {math.rad(-85), 0, 0}, active_eid = 1,
-		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_ny.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hny.material")}}
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_ny.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hny.material")}}
 	sorted_draw[#sorted_draw + 1] = {tp = {0,0,0.5}, pos = math3d.ref(math3d.vector(0,0,0.5)), euler = {0, math.rad(180), 0}, active_eid = 1,
-		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_pz.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hpz.material")}}
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_pz.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hpz.material")}}
 	sorted_draw[#sorted_draw + 1] = {tp = {0,0,-0.5}, pos = math3d.ref(math3d.vector(0,0,-0.5)), euler = {0, 0, 0}, active_eid = 1,
-		eid = {create_billboard("/pkg/tools.editor/resource/materials/billboard_nz.material"), create_billboard("/pkg/tools.editor/resource/materials/billboard_hnz.material")}}
+		eid = {create_navi_obj("/pkg/tools.editor/resource/materials/navi_nz.material"), create_navi_obj("/pkg/tools.editor/resource/materials/navi_hnz.material")}}
 	
 	local axis_parent = world:create_entity {
 		policy = {
@@ -1156,6 +1161,7 @@ local function navi_view_hit_test(x, y)
 	if x < navi_x or x > iviewport.device_viewrect.w or y < 0 or y > navi_axis_view_size then
 		return
 	end
+	
 	local function dist_to(px1, py1, x2, y2)
 		local px2 = (x2 + 1) * 0.5 * navi_axis_view_size
 		local py2 = (y2 + 1) * 0.5 * navi_axis_view_size
@@ -1164,6 +1170,10 @@ local function navi_view_hit_test(x, y)
 		return math.sqrt(dx * dx + dy * dy)
 	end
 	local nx, ny = x - navi_x, navi_axis_view_size - y
+	show_navi_background = false
+	if dist_to(nx, ny, 0, 0) <= 90 then
+		show_navi_background = true
+	end
 	for _, it in ipairs(sorted_draw) do
 		it.active_eid = 1
 	end
@@ -1210,6 +1220,9 @@ local function focus_aabb(ce, aabb)
 end
 
 function gizmo_sys:render_submit()
+	if show_navi_background then
+		irender.draw(RENDER_ARG, navi_axis_background)
+	end
 	for i = 2, #navi_axis do
 		irender.draw(RENDER_ARG, navi_axis[i])
 	end
