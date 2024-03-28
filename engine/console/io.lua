@@ -16,6 +16,7 @@ local repopath, AntEditor = ...
 
 __ANT_EDITOR__ = AntEditor
 
+package.loaded["mount"] = dofile "/pkg/ant.vfs/mount.lua"
 package.loaded["vfsrepo"] = dofile "/pkg/ant.vfs/vfsrepo.lua"
 
 local tiny_vfs = dofile "/pkg/ant.vfs/tiny.lua" (repopath)

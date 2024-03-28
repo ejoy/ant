@@ -1,7 +1,7 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
 local datalist = require "datalist"
-local mount = dofile "/engine/mount.lua"
+local mount = require "mount"
 local new_vfsrepo = require "vfsrepo".new
 
 local REPO_MT = {}

@@ -1,6 +1,6 @@
 local lfs = require "bee.filesystem"
 local fastio = require "fastio"
-local mount = dofile "/engine/mount.lua"
+local mount = require "mount"
 local new_vfsrepo = require "vfsrepo".new
 
 local function new_tiny(rootpath)
