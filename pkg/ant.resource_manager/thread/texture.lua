@@ -238,9 +238,6 @@ local function asyncLoadTexture(c)
         c.texinfo = textureData.info
         c.sampler = textureData.sampler
         c.lifespan = textureData.lifespan
-        if textureData.info.atlas and atlas[textureData.image] then
-            textureData.handle = atlas[textureData.image]
-        end
         asyncCreateTexture(c.name, textureData)
         loadQueue[c.id] = nil
         ltask.multi_wakeup(Token)
@@ -283,6 +280,9 @@ ltask.fork(function ()
                 ltask.sleep(10)
             end
             local textureData = createQueue[name]
+            if textureData.info.atlas and atlas[textureData.image] then
+                textureData.handle = atlas[textureData.image]
+            end
             createQueue[name] = nil
             local c = textureByName[name]
             local handle = textureData.handle or createTexture(textureData)
