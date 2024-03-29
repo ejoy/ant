@@ -14,30 +14,28 @@ local ServiceRmlui; do
     end)
 end
 
-local function create(world)
-    local function rmlui_sendmsg(...)
-        if ServiceRmlui then
-            return ltask.call(ServiceRmlui, ...)
-        end
+local function rmlui_sendmsg(...)
+    if ServiceRmlui then
+        return ltask.call(ServiceRmlui, ...)
     end
+end
+
+local function create(world)
     local event = {}
     function event.gesture(e)
-        if rmlui_sendmsg("gesture", e) then
+        if rmlui_sendmsg(e.type, e) then
             return
         end
-        world:pub { "gesture", e.what, e }
+        world:pub { e.type, e.what, e }
     end
     function event.touch(e)
-        if rmlui_sendmsg("touch", e) then
+        if rmlui_sendmsg(e.type, e) then
             return
         end
-        world:pub { "touch", e }
+        world:pub { e.type, e }
     end
     function event.keyboard(e)
-        world:pub {"keyboard", keymap[e.key], e.press, e.state}
-    end
-    function event.dropfiles(...)
-        world:pub {"dropfiles", ...}
+        world:pub { e.type, keymap[e.key], e.press, e.state }
     end
     local size
     local viewport
@@ -62,7 +60,7 @@ local function create(world)
                     h = size.h,
                 })
             end
-            world:pub {"resize", size.w, size.h}
+            world:pub { "resize", size.w, size.h }
         end
         if viewportChanged then
             viewportChanged = false
@@ -72,7 +70,7 @@ local function create(world)
                 w = viewport.w,
                 h = viewport.h,
             })
-            world:pub{"scene_viewrect_changed", viewport}
+            world:pub{ "scene_viewrect_changed", viewport }
         end
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
@@ -81,19 +79,19 @@ local function create(world)
         function event.mouseclick(e)
             world:set_mouse(e)
             mg.mouseclick(e)
-            world:pub {"mouse", e.what, e.state, e.x, e.y}
+            world:pub { "mouse", e.what, e.state, e.x, e.y }
         end
         function event.mousemove(e)
             world:set_mouse(e)
             mg.mousemove(e)
             if e.what.LEFT then
-                world:pub {"mouse", "LEFT", "MOVE", e.x, e.y}
+                world:pub { "mouse", "LEFT", "MOVE", e.x, e.y }
             end
             if e.what.MIDDLE then
-                world:pub {"mouse", "MIDDLE", "MOVE", e.x, e.y}
+                world:pub { "mouse", "MIDDLE", "MOVE", e.x, e.y }
             end
             if e.what.RIGHT then
-                world:pub {"mouse", "RIGHT", "MOVE", e.x, e.y}
+                world:pub { "mouse", "RIGHT", "MOVE", e.x, e.y }
             end
         end
     end
