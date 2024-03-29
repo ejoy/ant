@@ -60,6 +60,10 @@ local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
         r[#r+1] = "EVSM_SAMPLE_RADIUS=" ..evsm.sample_radius
     end
 
+    if fm == "hard" then
+        r = {}
+    end
+
     if nil == r then
         error(("Not support filter_mode: %s"):format(FILTER_MODE))
     end
