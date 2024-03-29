@@ -1,8 +1,8 @@
-local sha1          = require "sha1"
-local lfs           = require "bee.filesystem"
-local datalist      = require "datalist"
-local lfastio       = require "fastio"
-local L             = import_package "ant.render.core".layout
+local sha1     = require "sha1"
+local lfs      = require "bee.filesystem"
+local datalist = require "datalist"
+local fastio   = require "fastio"
+local L        = import_package "ant.render.core".layout
 
 local settings      = import_package "ant.settings"
 local ENABLE_SHADOW<const>      = settings:get "graphic/shadow/enable"
@@ -82,7 +82,7 @@ local DEF_SHADER_INFO <const> = {
             INPUT_INIT          = "@VSINPUT_INIT",
             OUTPUT_VARYINGS     = "@OUTPUT_VARYINGS",
         },
-        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
+        template                = fastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
         filename                = "vs_%s.sc",
     },
     di = {
@@ -96,7 +96,7 @@ local DEF_SHADER_INFO <const> = {
             INPUT_INIT          = "@VSINPUT_INIT",
             OUTPUT_VARYINGS     = "@OUTPUT_VARYINGS",
         },
-        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
+        template                = fastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
         filename                = "di_%s.sc",
     },
     fs = {
@@ -109,7 +109,7 @@ local DEF_SHADER_INFO <const> = {
     
             INPUT_INIT          = "@FSINPUT_INIT",
         },
-        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/fs_default.sc"):string()),
+        template                = fastio.readall_s((LOCAL_SHADER_BASE / "default/fs_default.sc"):string()),
         filename                = "fs_%s.sc",
     }
 }
@@ -244,7 +244,7 @@ local function read_varyings_input(setting, inputfolder, fx)
                 error(("Invalid varyings path:%s, not in resource folder:%s"):format(varyings, inputfolder:string()))
             end
         end
-        varyings = datalist.parse(lfastio.readall_s(varyings))
+        varyings = datalist.parse(fastio.readall_s(varyings))
     else
         assert(type(varyings) == "table")
     end

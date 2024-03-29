@@ -386,10 +386,10 @@ local function compile_animation(status, skeleton, name, file)
     end
     local anim2ozz = require "model.anim2ozz"
     local vfs_fastio = require "vfs_fastio"
-    local loc_fastio = require "fastio"
+    local fastio = require "fastio"
     local skecontent = skeleton:sub(1,1) == "/"
          and vfs_fastio.readall_f(status.setting, skeleton)
-         or loc_fastio.readall_f((status.output / "animations" / skeleton):string())
+         or fastio.readall_f((status.output / "animations" / skeleton):string())
     depends.add_vpath(status.depfiles, status.setting, file)
     anim2ozz(status.setting, skecontent, file, (status.output / "animations" / (name..".bin")):string())
     return serialize.path(name..".bin")
