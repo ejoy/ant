@@ -99,6 +99,8 @@ fs.create_directories(config.vfs.localpath)
 local ltask_config = {
 	core = {
 		worker = 8,
+		debuglog = directory.external .. "debug.log",
+		crashlog = directory.external .. "crash.log",
 	},
 	root = {
 		bootstrap = {

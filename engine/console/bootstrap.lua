@@ -30,11 +30,17 @@ do
     end
 end
 
-local lfs = require "bee.filesystem"
+local fs = require "bee.filesystem"
+local vfs = require "vfs"
 
-local entry = lfs.absolute(arg[0])
+local ENTRY = fs.absolute(arg[0])
+local REPOPATH = ENTRY:parent_path():string():gsub("/?$", "/")
 
-if entry:parent_path():filename():string() == "editor" then
+function vfs.repopath()
+    return REPOPATH
+end
+
+if ENTRY:parent_path():filename():string() == "editor" then
     __ANT_EDITOR__ = arg[1]
 end
 
@@ -42,6 +48,8 @@ local boot = dofile "/engine/firmware/ltask.lua"
 boot:start {
     core = {
         worker = 8,
+        debuglog = REPOPATH .. "debug.log",
+        crashlog = REPOPATH .. "crash.log",
     },
     root = {
         bootstrap = {
@@ -49,7 +57,7 @@ boot:start {
                 name = "io",
                 unique = true,
                 initfunc = [[return loadfile "/engine/console/io.lua"]],
-                args = { entry:parent_path():string(), __ANT_EDITOR__ },
+                args = { REPOPATH, __ANT_EDITOR__ },
             },
             {
                 name = "ant.engine|timer",
@@ -60,7 +68,7 @@ boot:start {
                 unique = true,
             },
             {
-                name = "/"..entry:filename():string(),
+                name = "/"..ENTRY:filename():string(),
                 args = { arg },
             },
         },
