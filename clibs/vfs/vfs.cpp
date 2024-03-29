@@ -56,7 +56,11 @@ package = {
     searchers = {
         package.searchers[1],
         searcher_lua,
-    }
+    },
+
+    -- compatible debugger
+    config = package.config,
+    loadlib = package.loadlib,
 }
 return vfs
 )"sv;
