@@ -4,8 +4,8 @@ if not __ANT_RUNTIME__ then
     local vfs = require "vfs"
     local app_path = vfs.repopath()
     return {
-        internal = app_path .."/.app/internal/",
-        external = app_path .."/.app/external/",
+        internal = app_path ..".app/internal/",
+        external = app_path ..".app/external/",
     }
 end
 
@@ -22,19 +22,22 @@ elseif platform.os == "android" then
         external = android.directory(android.ExternalDataPath):gsub("/?$", "/"),
     }
 else
+    local function envpath(name)
+        return os.getenv(name):gsub("/?$", "/")
+    end
     local app_path = (function ()
         if platform.os == "windows" then
-            return os.getenv "LOCALAPPDATA"
+            return envpath "LOCALAPPDATA"
         elseif platform.os == "linux" then
-            return os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")
+            return envpath "XDG_DATA_HOME" or (envpath "HOME" .. ".local/share/")
         elseif platform.os == "macos" then
-            return os.getenv "HOME" .. "/Library/Caches"
+            return envpath "HOME" .. "Library/Caches/"
         else
             error "unknown os"
         end
     end)()
     return {
-        internal = app_path .."/ant/internal/",
-        external = app_path .."/ant/external/",
+        internal = app_path .."ant/internal/",
+        external = app_path .."ant/external/",
     }
 end
