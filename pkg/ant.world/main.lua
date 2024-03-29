@@ -46,6 +46,11 @@ function world:_flush_entity_queue()
         update_group_tag(self, groupid, data)
         if template then
             ecs:template_instance(eid, template, data)
+            for name, updatefunc in pairs(initargs.update) do
+                local c = ecs:access(eid, name)
+                updatefunc(c)
+                ecs:access(eid, name, c)
+            end
         else
             ecs:import(eid, data)
         end
@@ -81,6 +86,7 @@ local function create_entity_by_template(w, group, template, debuginfo)
         group = group,
         template = template,
         data = {},
+        update = {},
     }
     queue[#queue+1] = initargs
     return eid, initargs
@@ -101,6 +107,24 @@ function world:remove_entity(e)
     w.w:remove(e)
 end
 
+local function parse_mount(arg, key, eid)
+    local component, path = key:match "^/([^/]+)(/?.-)$"
+    if path == "" then
+        arg.data.component = eid
+        return
+    end
+    local setter = ("c%s = %d"):format(path:gsub("/", "."), eid)
+    local list = arg.update[component]
+    if list == nil then
+        arg.update[component] = {
+            "local c = ...",
+            setter,
+        }
+    else
+        list[#list+1] = setter
+    end
+end
+
 local function create_instance(w, group, data, debuginfo)
     local eids = {}
     local args = {}
@@ -115,14 +139,22 @@ local function create_instance(w, group, data, debuginfo)
     for i = 1, #data do
         local v = data[i]
         if v.mount then
-            assert(
-                math.type(v.mount) == "integer"
-                and v.mount >= 1
-                and v.mount <= #data
-                and v.mount < i
-                and not data[v.mount].prefab
-            )
-            args[i].data.scene_parent = eids[v.mount]
+            if math.type(v.mount) == "integer" then
+                v.mount = {
+                    ["/scene/parent"] = v.mount,
+                }
+            else
+                assert(type(v.mount) == "table")
+            end
+            local arg = args[i]
+            for key, index in pairs(v.mount) do
+                assert(index >= 1 and index <= #data and not data[index].prefab)
+                assert(index < i)
+                parse_mount(arg, key, eids[index])
+            end
+            for name, updatefunc in pairs(arg.update) do
+                arg.update[name] = assert(load(table.concat(updatefunc, "\n")))
+            end
         end
     end
     return eids, args[1]
