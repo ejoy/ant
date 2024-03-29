@@ -206,7 +206,8 @@ function S:init_world()
         blurV.queueeid  = create_queue(blurV.queuename, blurV.viewid, create_fb(evsm_texture, index))
     end
 
-    imaterial.system_attrib_update("u_shadow_filter_param", math3d.vector(EVSM_EXPONENTS[1], EVSM_EXPONENTS[2], EVSM_BIAS, EVSM_BLEEDING))
+    local depthscale = EVSM_BIAS * 0.01
+    imaterial.system_attrib_update("u_shadow_filter_param", math3d.vector(EVSM_EXPONENTS[1], EVSM_EXPONENTS[2], depthscale, EVSM_BLEEDING))
     imaterial.system_attrib_update("s_shadowmap", evsm_texture_handle)
 end
 

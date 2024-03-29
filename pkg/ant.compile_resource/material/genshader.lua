@@ -55,9 +55,19 @@ local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
         }
         
         local c = format_count[evsm.format] or error(("Invalid format:%s"):format(evsm.format))
-        r[#r+1] = "EVSM_COMPONENT=" .. c
+        local sampleradius = evsm.sample_radius
+        if sampleradius ~= 1 and sampleradius ~= 2 and sampleradius ~= 3 then
+            error(("evsm sample radius should only be [1/2/3], %f defined"):format(sampleradius))
+        end
 
+        r[#r+1] = "EVSM_COMPONENT=" .. c
         r[#r+1] = "EVSM_SAMPLE_RADIUS=" ..evsm.sample_radius
+
+        local filter_types<const> = {
+            uniform = 1,
+            gaussian = 2,
+        }
+        r[#r+1] = "EVSM_FILTER_TYPE=" .. (filter_types[evsm.filter_type] or error(("Invalid filter type for evsm: %s, only [uniform/gaussian] is valid"):format(evsm.filter_type or "")))
     end
 
     if fm == "hard" then

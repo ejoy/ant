@@ -52,8 +52,9 @@ graphic:
       size: 4
       filter: uniform
     evsm:
-      exponents: {40, 5}
-      bias: 0.01
-      bleeding: 0.5
-      sample_radius: 3
-      format: RGBA16F
+      exponents: {40, 5}    #first element for positive exponent, second element for nagitive exponent, we will check exponent for different texture format
+      bias: 0.1
+      bleeding: 0           #range from[0, 1]
+      sample_radius: 2      #[1/2/3] mean: sample [3/5/7] times in evsm texture blur horizonal/vericial
+      filter_type: uniform  #mean: how to filter the reolved depth buffer. can be [gussian/uniform]
+      format: RGBA16F       #[RGBA16F/RGBA32F/RG16F/RG32F], use RGxxF format, mean it will degenerate to vsm
