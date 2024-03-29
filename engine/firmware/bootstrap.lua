@@ -33,41 +33,7 @@ end
 local platform = require "bee.platform"
 local fs = require "bee.filesystem"
 
-local function app_path(name)
-	if platform.os == "windows" then
-		return fs.path(os.getenv "LOCALAPPDATA") / name
-	elseif platform.os == "linux" then
-		return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
-	elseif platform.os == "macos" then
-		return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
-	else
-		error "unknown os"
-	end
-end
-
-local sandbox_path = (function ()
-	if platform.os == "ios" then
-		local ios = require "ios"
-		return fs.path(ios.directory(ios.NSDocumentDirectory))
-	elseif platform.os == "android" then
-		local android = require "android"
-		return fs.path(android.directory(android.ExternalDataPath))
-	else
-		return app_path "ant" / "sandbox"
-	end
-end)()
-
-local bundle_path = (function ()
-	if platform.os == "ios" then
-		local ios = require "ios"
-		return fs.path(ios.bundle())
-	elseif platform.os == "android" then
-		local android = require "android"
-		return fs.path(android.directory(android.InternalDataPath))
-	else
-		return app_path "ant" / "bundle"
-	end
-end)()
+local directory = dofile "/engine/firmware/directory.lua"
 
 local config = {
 	vfs = { slot = "" }
@@ -108,7 +74,7 @@ elseif platform.os == "android" then
 	config.port = 2018
 else
 	local datalist = require "datalist"
-	local f <close> = io.open((sandbox_path / "boot.settings"):string(), "rb")
+	local f <close> = io.open(directory.external .. "boot.settings", "rb")
 	if f then
 		local setting = datalist.parse(f:read "a")
 		config.nettype = setting.nettype
@@ -121,10 +87,10 @@ else
 	end
 end
 
-config.vfs.bundlepath = bundle_path:string():gsub("/?$", "/")
-config.vfs.localpath = (sandbox_path / "vfs"):string():gsub("/?$", "/")
-fs.create_directories(sandbox_path)
-fs.current_path(sandbox_path)
+config.vfs.bundlepath = directory.internal
+config.vfs.localpath = directory.external .. "vfs/"
+fs.create_directories(directory.external)
+fs.current_path(directory.external)
 if needcleanup then
 	fs.remove_all(config.vfs.localpath)
 end

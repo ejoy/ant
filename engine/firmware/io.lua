@@ -59,20 +59,11 @@ local LOG; do
 			end
 		end
 		local fs = require "bee.filesystem"
-		local AppPath
-		if platform.os == "ios" then
-			local ios = require "ios"
-			AppPath = fs.path(ios.directory(ios.NSDocumentDirectory)):string()
-		elseif platform.os == "android" then
-			local android = require "android"
-			AppPath = fs.path(android.directory(android.ExternalDataPath)):string()
-		else
-			AppPath = fs.current_path():string()
-		end
-		local logfile = AppPath .. "/io_thread.log"
-		fs.create_directories(AppPath)
+		local directory = dofile "/engine/firmware/directory.lua"
+		local logfile = directory.external .. "io_thread.log"
+		fs.create_directories(directory.external)
 		if fs.exists(logfile) then
-			fs.rename(logfile, AppPath .. "/io_thread_1.log")
+			fs.rename(logfile, directory.external .. "io_thread_1.log")
 		end
 		return function (data)
 			local f <close> = io.open(logfile, "a+")
