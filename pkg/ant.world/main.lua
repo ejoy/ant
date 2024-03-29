@@ -106,15 +106,6 @@ local function create_instance(w, group, data, debuginfo)
     local args = {}
     for i = 1, #data do
         local v = data[i]
-        if v.mount then
-            assert(
-                math.type(v.mount) == "integer"
-                and v.mount >= 1
-                and v.mount <= #data
-                and v.mount < i
-                and not data[v.mount].prefab
-            )
-        end
         if v.prefab then
             eids[i], args[i] = create_instance(w, group, v.template, debuginfo)
         else
@@ -124,6 +115,13 @@ local function create_instance(w, group, data, debuginfo)
     for i = 1, #data do
         local v = data[i]
         if v.mount then
+            assert(
+                math.type(v.mount) == "integer"
+                and v.mount >= 1
+                and v.mount <= #data
+                and v.mount < i
+                and not data[v.mount].prefab
+            )
             args[i].data.scene_parent = eids[v.mount]
         end
     end
