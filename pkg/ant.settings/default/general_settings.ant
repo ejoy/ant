@@ -26,7 +26,7 @@ graphic:
     size: 1024
     split_ratios:
       {0.00, 1.00}
-    filter_mode: evsm
+    filter_mode: pcf
     evsm:
       exponents: {40, 5}    #first element for positive exponent, second element for nagitive exponent, we will check exponent for different texture format
       bias: 0.1
