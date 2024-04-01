@@ -206,7 +206,7 @@ function S.LIST(fullpath)
 		return {}
 	end
 	local list = {}
-	for k, v in pairs(list) do
+	for k, v in pairs(dir) do
 		list[k] = v.type
 	end
 	return list

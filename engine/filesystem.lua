@@ -163,8 +163,7 @@ function fs.pairs(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    local value = path:gsub("(.-)/?$", "%1")
-    local list = vfs.list(value .. "/")
+    local list = vfs.list(path:gsub("/?$", "/"))
     if not list then
         return function ()
         end
