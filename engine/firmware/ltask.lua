@@ -71,8 +71,8 @@ end
 function vfs.version()
 	return call("VERSION")
 end
-function vfs.repopath()
-	return call("REPOPATH")
+function vfs.directory(what)
+	return call("DIRECTORY", what)
 end
 
 --TODO: remove they

@@ -22,6 +22,7 @@ local platform = require "bee.platform"
 local serialization = require "bee.serialization"
 local protocol = require "protocol"
 local ltask = require "ltask"
+local fs = require "bee.filesystem"
 
 local bee_select = require "bee.select"
 local selector = bee_select.create()
@@ -29,6 +30,16 @@ local SELECT_READ <const> = bee_select.SELECT_READ
 local SELECT_WRITE <const> = bee_select.SELECT_WRITE
 
 local config = ...
+
+local vfs_directory = config.directory.external .. "vfs/"
+do
+	fs.create_directories(config.directory.external)
+	fs.current_path(config.directory.external)
+	if config.vfs.needcleanup then
+		fs.remove_all(vfs_directory)
+	end
+	fs.create_directories(vfs_directory)
+end
 
 local LOG; do
 	local LOGRAW = (function ()
@@ -58,12 +69,9 @@ local LOG; do
 				io.write("\n")
 			end
 		end
-		local fs = require "bee.filesystem"
-		local directory = dofile "/engine/firmware/directory.lua"
-		local logfile = directory.external .. "io_thread.log"
-		fs.create_directories(directory.external)
+		local logfile = config.directory.external .. "io_thread.log"
 		if fs.exists(logfile) then
-			fs.rename(logfile, directory.external .. "io_thread_1.log")
+			fs.rename(logfile, config.directory.external .. "io_thread_1.log")
 		end
 		return function (data)
 			local f <close> = io.open(logfile, "a+")
@@ -103,7 +111,12 @@ local LOG; do
 end
 
 local vfs = assert(loadfile "/engine/firmware/vfs.lua")()
-local repo = vfs.new(config.vfs)
+
+local repo = vfs.new {
+	bundlepath = config.directory.internal,
+	localpath = vfs_directory,
+	slot = vfs.slot or "",
+}
 
 local connection = {
 	request = {},
@@ -243,6 +256,14 @@ function S.READ(fullpath)
 				return
 			end
 		end
+	end
+end
+
+function S.DIRECTORY(what)
+	if what == "external" then
+		return config.directory.external
+	elseif what == "internal" then
+		return config.directory.internal
 	end
 end
 

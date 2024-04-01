@@ -36,19 +36,17 @@ local fs = require "bee.filesystem"
 local directory = dofile "/engine/firmware/directory.lua"
 
 local config = {
-	vfs = { slot = "" }
+	vfs = {}
 }
-
-local needcleanup
 
 if platform.os == "ios" then
 	local ios = require "ios"
 	local clean_up_next_time = ios.setting "clean_up_next_time"
 	if clean_up_next_time == true then
 		ios.setting("clean_up_next_time", false)
-		needcleanup = true
+		config.vfs.needcleanup = true
 	end
-	config.vfs.slot = ios.setting "root_slot" or ""
+	config.vfs.slot = ios.setting "root_slot"
 	local server_type = ios.setting "server_type"
 	if server_type == nil or server_type == "usb" then
 		config.nettype = "listen"
@@ -87,14 +85,7 @@ else
 	end
 end
 
-config.vfs.bundlepath = directory.internal
-config.vfs.localpath = directory.external .. "vfs/"
-fs.create_directories(directory.external)
-fs.current_path(directory.external)
-if needcleanup then
-	fs.remove_all(config.vfs.localpath)
-end
-fs.create_directories(config.vfs.localpath)
+config.directory = directory
 
 local ltask_config = {
 	core = {

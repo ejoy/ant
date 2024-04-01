@@ -1,13 +1,6 @@
 local platform = require "bee.platform"
 
-if not __ANT_RUNTIME__ then
-    local vfs = require "vfs"
-    local app_path = vfs.repopath()
-    return {
-        internal = app_path ..".app/internal/",
-        external = app_path ..".app/external/",
-    }
-end
+assert(__ANT_RUNTIME__)
 
 if platform.os == "ios" then
     local ios = require "ios"

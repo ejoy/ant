@@ -9,7 +9,7 @@ local lfs     = require "bee.filesystem"
 
 local function init_setting(vfs, setting)
     local os, renderer = setting:match "^(%w+)-(%w+)$"
-    local rootpath = lfs.path(vfs.repopath())
+    local rootpath = lfs.path(vfs.directory "repo")
     local respath = rootpath / "res" / setting
     local scpath = rootpath / ".app" / "build" / "sc"
     local shaderpath = rootpath / ".app" / "build" / "shader"

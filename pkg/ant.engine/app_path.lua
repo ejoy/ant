@@ -1,7 +1,7 @@
 local fs = require "bee.filesystem"
-local directory = dofile "/engine/firmware/directory.lua"
+local vfs = require "vfs"
 
-local app_path = fs.path(directory.external)
+local app_path = fs.path(vfs.directory "external")
 
 return function ()
     return app_path

@@ -31,14 +31,9 @@ do
 end
 
 local fs = require "bee.filesystem"
-local vfs = require "vfs"
 
 local ENTRY = fs.absolute(arg[0])
 local REPOPATH = ENTRY:parent_path():string():gsub("/?$", "/")
-
-function vfs.repopath()
-    return REPOPATH
-end
 
 if ENTRY:parent_path():filename():string() == "editor" then
     __ANT_EDITOR__ = arg[1]

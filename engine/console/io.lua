@@ -144,8 +144,14 @@ function S.TYPE(pathname)
 	end
 end
 
-function S.REPOPATH()
-	return repopath
+function S.DIRECTORY(what)
+	if what == "external" then
+		return repopath ..".app/external/"
+	elseif what == "internal" then
+		return repopath ..".app/internal/"
+	elseif what == "repo" then
+		return repopath
+	end
 end
 
 function S.RESOURCE_SETTING(setting)

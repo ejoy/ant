@@ -41,7 +41,7 @@ local ICON_FA_BAN = "\xef\x81\x9e"
 local m = ecs.system 'init_system'
 
 function m:init_system()
-    local rf = io.open(lfs.path(vfs.repopath()):string().. "/pkg/launch/imgui.layout", "rb")
+    local rf = io.open(lfs.path(vfs.directory "repo"):string().. "/pkg/launch/imgui.layout", "rb")
     if rf then
         local setting = rf:read "a"
         rf:close()
