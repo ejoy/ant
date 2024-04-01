@@ -73,6 +73,14 @@ local function sandbox_env(packagename)
         return func
     end
 
+    function env.dofile(path)
+        local func, err = env.loadfile(path)
+        if not func then
+            error(err)
+        end
+        return func()
+    end
+
     env.package = {
         loaded = _LOADED,
         preload = _PRELOAD,

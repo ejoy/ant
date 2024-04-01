@@ -30,11 +30,11 @@ function loadfile(path)
     return fastio.loadlua(mem, symbol)
 end
 function dofile(path)
-    local f, err = loadfile(path)
-    if not f then
+    local func, err = loadfile(path)
+    if not func then
         error(err)
     end
-    return f()
+    return func()
 end
 local PATH = "/engine/?.lua"
 local function searcher_lua(name)
