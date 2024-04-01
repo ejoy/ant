@@ -24,7 +24,6 @@ local global_data   = require "common.global_data"
 
 local assetmgr      = import_package "ant.asset"
 local iaudio        = import_package "ant.audio"
-local access        = global_data.repo_access
 
 local edit_timeline
 local timeline_eid
@@ -364,7 +363,7 @@ local function show_current_event()
             if ImGui.Button("Modify") then
                 local localpath = uiutils.get_open_file_path("Modify Animation", "anim")
                 if localpath then
-                    current_event.asset_path_ui:Assgin(access.virtualpath(global_data.repo, localpath))
+                    current_event.asset_path_ui:Assgin(global_data:lpath_to_vpath(localpath))
                     update_asset_path(tostring(current_event.asset_path_ui))
                     dirty = true
                 end
@@ -678,7 +677,7 @@ function m.show()
                 if ImGui.Button("...") then
                     local localpath = uiutils.get_open_file_path("Select Animation", "anim")
                     if localpath then
-                        anim_path_ui:Assgin(access.virtualpath(global_data.repo, localpath))
+                        anim_path_ui:Assgin(global_data:lpath_to_vpath(localpath))
                     end
                 end
                 ImGui.Separator()

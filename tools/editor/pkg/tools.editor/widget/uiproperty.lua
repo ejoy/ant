@@ -6,7 +6,6 @@ local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
 local global_data = require "common.global_data"
-local access    = global_data.repo_access
 
 local utils     = require "common.utils"
 local rc        = import_package "ant.compile_resource"
@@ -378,7 +377,7 @@ function TextureResource:show()
         if ImGui.Button("Select...") then
             local glb_filename = uiutils.get_open_file_path("Textures", "glb")
             if glb_filename then
-                local vp = access.virtualpath(global_data.repo, glb_filename)
+                local vp = global_data:lpath_to_vpath(glb_filename)
                 assert(vp)
                 glb_path = "/" .. vp
                 rc.compile(glb_path)

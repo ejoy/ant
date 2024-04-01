@@ -28,7 +28,6 @@ local fs            = require "filesystem"
 local lfs           = require "bee.filesystem"
 local fastio        = require "fastio"
 local global_data   = require "common.global_data"
-local access        = global_data.repo_access
 local editor_setting = require "editor_setting"
 local ientity       = ecs.require "ant.entity|entity"
 local memfs         = import_package "ant.vfs".memory
@@ -967,7 +966,7 @@ function m:save(path)
             if not lpath then
                 return
             end
-            path = tostring(access.virtualpath(gd.repo, lpath))
+            path = tostring(gd:lpath_to_vpath(lpath))
         end
     end
     assert(path or self.prefab_filename)

@@ -21,7 +21,6 @@ local uiproperty= require "widget.uiproperty"
 local global_data=require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
-local access    = global_data.repo_access
 local rb        = ecs.require "widget.resource_browser"
 
 local MaterialView = {}
@@ -951,7 +950,7 @@ local function is_readonly_resource(p)
 end
 
 local function to_virtualpath(localpath)
-    local vpath = access.virtualpath(global_data.repo, localpath)
+    local vpath = global_data:lpath_to_vpath(localpath)
     if vpath == nil then
         error(("save path:%s, is not valid package"):format(localpath))
     end
