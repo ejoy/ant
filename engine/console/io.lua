@@ -8,21 +8,34 @@ local ltask = require "ltask"
 local fastio = require "fastio"
 
 local repopath, AntEditor = ...
-
 __ANT_EDITOR__ = AntEditor
 
-package.loaded["mount"] = dofile "/pkg/ant.vfs/mount.lua"
-package.loaded["vfsrepo"] = dofile "/pkg/ant.vfs/vfsrepo.lua"
+--TODO: remove they
+require "log"
+require "filesystem"
 
-local tiny_vfs = dofile "/pkg/ant.vfs/tiny.lua" (repopath)
+require "packagemanager"
+
 do
+	-- first step init vfs.
+	local vfs = require "vfs"
+	function vfs.type(path)
+		assert(path == "/pkg/ant.vfs")
+		return "d"
+	end
+end
+
+local vfsrepo = import_package "ant.vfs"
+local tiny_vfs = vfsrepo.new_tiny (repopath)
+do
+	-- second step init vfs.
 	local vfs = require "vfs"
 	for k, v in pairs(tiny_vfs) do
 		vfs[k] = v
 	end
 end
 
-local repo = dofile "/pkg/ant.vfs/std.lua" {
+local repo = vfsrepo.new_std {
 	rootpath = repopath,
 	nohash = true,
 }
@@ -136,11 +149,6 @@ function S.REPOPATH()
 end
 
 function S.RESOURCE_SETTING(setting)
-	--TODO: remove they
-	require "log"
-	require "filesystem"
-
-	require "packagemanager"
 	local cr = import_package "ant.compile_resource"
 	local config = cr.init_setting(tiny_vfs, setting)
 	function COMPILE(vpath, lpath)
