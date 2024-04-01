@@ -2,7 +2,7 @@ local access = {}
 
 local platform = require "bee.platform"
 local lfs = require "bee.filesystem"
-local mount = dofile "/engine/mount.lua"
+local mount = dofile "/pkg/ant.vfs/mount.lua"
 
 local isWindows <const> = platform.os == "windows"
 

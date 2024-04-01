@@ -1,5 +1,4 @@
 local m = {}
-local fs                = require "filesystem"
 local lfs               = require "bee.filesystem"
 local vfs               = require "vfs"
 local access            = require "common.vfs_access"
