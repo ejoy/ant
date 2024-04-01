@@ -192,7 +192,6 @@ float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint casc
 	if (offset.y > 1.1)
 		offset.y = 0;
 
-	const float SM_TEXEL_SIZE = 1.0/1024.0;
 	return (sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2(-1.5,  0.5))*u_shadowmap_texelsize)
 		   +sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2( 0.5,  0.5))*u_shadowmap_texelsize)
 		   +sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2(-1.5, -1.5))*u_shadowmap_texelsize)
