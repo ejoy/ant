@@ -125,6 +125,7 @@ function WindowEvent.suspend(m)
             end
         end)
     elseif m.what == "did_resume" then
+        world:dispatch_message(m)
         bgfx.continue()
         PAUSE = nil
     end

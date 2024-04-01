@@ -37,6 +37,9 @@ local function create(world)
     function event.keyboard(e)
         world:pub { e.type, keymap[e.key], e.press, e.state }
     end
+    function event.suspend(e)
+        world:pub { e.type, e }
+    end
     local size
     local viewport
     local sizeChanged = false
